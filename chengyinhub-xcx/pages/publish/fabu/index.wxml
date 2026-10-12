@@ -615,9 +615,13 @@
               <view class="story-node-block__body">
                 <text class="story-node-block__name">{{block._nodeName || '未命名'}}</text>
                 <text class="story-node-block__meta">{{block._nodeAddress ? block._nodeAddress : '点击选择地点'}}{{block._nodeAddress ? (block._nodeGameplayReady ? ' · 玩法已配' : ' · 玩法待配') : ''}}</text>
-                <!-- 2026-10-12 用户定:额外站点在故事流里标,不在章节设置里列。点一下依次切换
-                     计入完成 → 额外站点(不计入完成,本站自己一次)→ 机动(占全主题唯一一次机动额度)。 -->
-                <view wx:if="{{block._nodeId}}" class="story-node-role {{storyNodeRoles[block._nodeId] ? 'is-on' : ''}}" data-nodeid="{{block._nodeId}}" catchtap="cycleStoryNodeRole" aria-role="button" aria-label="切换站点计入方式" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">{{storyNodeRoles[block._nodeId] === 'mobile' ? '机动' : storyNodeRoles[block._nodeId] === 'extra' ? '额外站点' : '计入完成'}}</view>
+                <!-- 2026-10-12 用户定:额外站点在故事流里标,不在章节设置里列。点开选:计入完成 /
+                     额外站点·单独额度 / 与既有额度共用(同一份额度每队或每人只能用一次)。 -->
+<view wx:if="{{block._nodeId}}" catchtap="noop" class="story-node-role-wrap">
+                  <cy-dropdown topic-editor range="{{storyRoleOptions}}" range-key="label" value="{{-1}}" data-nodeid="{{block._nodeId}}" bind:change="onStoryNodeRole">
+                    <view class="story-node-role {{storyNodeRoles[block._nodeId] ? 'is-on' : ''}}" aria-role="button" aria-label="设置站点计入方式">{{storyNodeRoles[block._nodeId] || '计入完成'}}</view>
+                  </cy-dropdown>
+                </view>
               </view>
               <view class="story-block-x" wx:if="{{storyEditor.selectedBlockKey === block.key}}" data-blockkey="{{block.key}}" catchtap="removeStoryNode" aria-role="button" aria-label="删除节点块" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true"><view class="story-block-x__glyph"><cy-icon name="trash-2" size="28" /></view></view>
             </view>
@@ -968,8 +972,10 @@
       </view>
       <view class="temp-seg">
         <text class="temp-seg__tit">公共玩法库</text>
-        <text class="temp-seg__sub" wx:if="{{!publicTempList.length}}">暂时拉不到，可以先用下面自己的模板</text>
+        <text class="temp-seg__sub" wx:if="{{publicTempState === 'loading'}}">加载中…</text>
+        <text class="temp-seg__sub" wx:elif="{{publicTempState === 'ready' && !publicTempList.length}}">公共库里还没有玩法，可以先用下面自己的模板</text>
       </view>
+      <cy-inline-error wx:if="{{publicTempState === 'error'}}" kind="network" title="公共玩法库没加载出来" sub="可以先用下面自己的模板" action="重试" bind:action="getPublicTempList" />
       <scroll-view class="temp-rail" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{publicTempList.length}}">
         <view class="temp-rail__ul">
           <view bindtap="selectTemp" class="temp-rail__li {{selectedTempId === item.id && selectedTempSource === 'public' ? 'is-on' : ''}}" wx:for="{{publicTempList}}" wx:key="id" data-item="{{item}}" data-source="public" hover-class="cy-pressed" hover-stay-time="80">
@@ -1098,6 +1104,76 @@
             fixed="{{true}}" />
         </view>
 
+        <!-- 2026-10-12 用户定:章节里不再单设保温储备等数值消耗(数值消耗是通用的);额外站点改在故事流的站点块上标。
+             版式与位置照 Figma J3(5221:19016):紧跟章节名称(稿中「本章阶段」的位置),粗体小标题 + 同行灰字说明,下面整宽灰药丸。
+             完成要求 = 一个「全部完成」开关,默认开;关掉才填至少完成几站。 -->
+        <view class="ch-sec">
+          <view class="ch-sec__head"><text class="ch-sec__title">完成要求</text><text class="ch-sec__desc">默认全部完成；关掉后填至少完成几站</text></view>
+          <view class="ch-pill-row">
+            <text>全部完成</text>
+            <cy-switch checked="{{runtimeChapterRules.completionType !== 'ANY_N'}}" bindchange="onChapterCompleteAll" accessibility-label="全部完成" />
+          </view>
+          <block wx:if="{{runtimeChapterRules.completionType === 'ANY_N'}}">
+            <view class="ch-pill-row">
+              <text>至少完成几站</text>
+              <input class="ch-pill-row__input" type="number" value="{{runtimeChapterRules.quantity}}" placeholder="填写站数" bindinput="onChapterQuantity" aria-label="至少完成的站数" />
+            </view>
+            <cy-dropdown topic-editor range="{{runtimeOverflowOptions}}" range-key="label" value="{{-1}}" bind:change="onChapterOverflowPick">
+              <view class="ch-pill-row"><text>超出后补做一站</text><view class="ch-pill-row__value"><text>{{runtimeOverflowLabel}}</text><cy-icon name="chevron-right" size="24" /></view></view>
+            </cy-dropdown>
+            <text class="ch-sec__note">补做一站要占用一份额度；额度可以与故事流里的额外站点共用，同一份额度只能用一次。</text>
+          </block>
+        </view>
+        <view class="ch-sec">
+          <view class="ch-sec__head"><text class="ch-sec__title">章末配给</text><text class="ch-sec__desc">本章结束时消耗物品，不够时扣数值</text></view>
+          <view class="ch-pill-row">
+            <text>{{runtimeChapterRation.enabled ? '已开启' : '不消耗物品'}}</text>
+            <cy-switch checked="{{runtimeChapterRation.enabled}}" disabled="{{!!runtimeChapterRation.reason && !runtimeChapterRation.enabled}}" bindchange="onChapterRationToggle" accessibility-label="章末配给" />
+          </view>
+          <text class="ch-sec__note" wx:if="{{runtimeChapterRation.reason && !runtimeChapterRation.enabled}}">{{runtimeChapterRation.reason}}</text>
+          <block wx:if="{{runtimeChapterRation.enabled}}">
+            <cy-dropdown topic-editor range="{{runtimeChapterRation.items}}" range-key="name" value="{{runtimeChapterRation.itemIndex}}" bind:change="onChapterRationItem">
+              <view class="ch-pill-row"><text>消耗物品</text><view class="ch-pill-row__value"><text>{{runtimeChapterRation.itemLabel}}</text><cy-icon name="chevron-right" size="24" /></view></view>
+            </cy-dropdown>
+            <view class="ch-pill-row">
+              <text>每次数量</text>
+              <input class="ch-pill-row__input" type="number" value="{{runtimeChapterRation.quantity}}" bindinput="onChapterRationQuantity" aria-label="配给数量" />
+            </view>
+            <cy-dropdown topic-editor range="{{runtimeChapterRation.values}}" range-key="label" value="{{runtimeChapterRation.valueIndex}}" bind:change="onChapterRationValue">
+              <view class="ch-pill-row"><text>物品不够时减少</text><view class="ch-pill-row__value"><text>{{runtimeChapterRation.values[runtimeChapterRation.valueIndex].label || runtimeHpLabel}}</text><cy-icon name="chevron-right" size="24" /></view></view>
+            </cy-dropdown>
+            <view class="ch-pill-row">
+              <text>减少数量</text>
+              <input class="ch-pill-row__input" type="number" value="{{runtimeChapterRation.fallback}}" bindinput="onChapterRationFallback" aria-label="物品不够时减少的数量" />
+            </view>
+          </block>
+        </view>
+        <!-- 章末数值消耗(通用,不分主题):本章结束时扣的生命/幸运/自定义数值。运行端在章末照此扣除,
+             所以存量非零消耗必须在这里看得见、改得了;停用的数值标出来,不静默删。 -->
+        <view class="ch-sec" wx:if="{{runtimeChapterCostRows.length || runtimeChapterCostOptions.length}}">
+          <view class="ch-sec__head"><text class="ch-sec__title">章末消耗</text><text class="ch-sec__desc">本章结束时扣除的数值</text></view>
+          <view class="ch-pill-row" wx:for="{{runtimeChapterCostRows}}" wx:for-item="cost" wx:for-index="ci" wx:key="key">
+            <text>{{cost.label}}{{cost.inactive ? '（数值未启用）' : ''}}</text>
+            <view class="ch-pill-row__value">
+              <input class="ch-pill-row__input" type="number" value="{{cost.amount}}" data-index="{{ci}}" bindinput="onChapterCostAmount" aria-label="{{cost.label}}消耗" />
+              <text class="ch-group__del" data-index="{{ci}}" bindtap="removeChapterCost" aria-role="button" aria-label="移除{{cost.label}}消耗" hover-class="cy-pressed" hover-stay-time="80">移除</text>
+            </view>
+          </view>
+          <cy-dropdown wx:if="{{runtimeChapterCostOptions.length}}" topic-editor range="{{runtimeChapterCostOptions}}" range-key="label" value="{{-1}}" bind:change="addChapterCost">
+            <view class="ch-pill-btn"><cy-icon name="plus" size="24" /><text>添加章末消耗</text></view>
+          </cy-dropdown>
+        </view>
+        <view class="ch-sec">
+          <view class="ch-sec__head"><text class="ch-sec__title">互斥选项</text><text class="ch-sec__desc">同组站点只能完成其中一个</text></view>
+          <view class="ch-group" wx:for="{{runtimeChapterRules.groups}}" wx:for-item="group" wx:for-index="gi" wx:key="*this">
+            <view class="ch-group__head"><text>第{{gi + 1}}组</text><text class="ch-group__del" data-index="{{gi}}" bindtap="removeChapterExclusiveGroup" aria-role="button" aria-label="移除第{{gi + 1}}组" hover-class="cy-pressed" hover-stay-time="80">移除</text></view>
+            <view class="node-chips">
+              <view class="node-chip {{option.selected ? 'is-on' : ''}}" wx:for="{{group.options}}" wx:for-item="option" wx:key="id" data-index="{{gi}}" data-id="{{option.id}}" bindtap="toggleChapterExclusiveNode" aria-role="button" aria-label="{{option.selected ? '移出' : '加入'}}{{option.name}}" hover-class="cy-pressed" hover-stay-time="80">{{option.name}}</view>
+            </view>
+          </view>
+          <view class="ch-pill-btn" bindtap="addChapterExclusiveGroup" aria-role="button" aria-label="添加互斥组" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="24" /><text>添加互斥组</text></view>
+          <text class="ch-sec__note" wx:if="{{!runtimeChapterRules.nodes.length}}">先保存草稿，再选择本章站点。</text>
+        </view>
         <!-- 2026-09-04 拍板:音频从故事流的可重复块升成【章节的一个属性】,一章最多一段。
              它是这一章的背景旁白 —— 玩家进入本章时自动播放,所以它没有"插在第几段"这回事,
              留在故事流里就是给一个不存在的位置感。玩家端对应改动见 pages/play/index.js。 -->
@@ -1155,59 +1231,6 @@
         <!-- 2026-10-12 用户定:章节里不再单设保温储备等数值消耗(数值消耗是通用的);额外站点改在故事流的站点块上标。
              版式照 Figma J3(5221:19016)章节弹窗:粗体小标题 + 同行灰字说明,下面整宽灰药丸。
              完成要求 = 一个「全部完成」开关,默认开;关掉才填至少完成几站。 -->
-        <view class="ch-sec">
-          <view class="ch-sec__head"><text class="ch-sec__title">完成要求</text><text class="ch-sec__desc">默认全部完成；关掉后填至少完成几站</text></view>
-          <view class="ch-pill-row">
-            <text>全部完成</text>
-            <cy-switch checked="{{runtimeChapterRules.completionType !== 'ANY_N'}}" bindchange="onChapterCompleteAll" accessibility-label="全部完成" />
-          </view>
-          <block wx:if="{{runtimeChapterRules.completionType === 'ANY_N'}}">
-            <view class="ch-pill-row">
-              <text>至少完成几站</text>
-              <input class="ch-pill-row__input" type="number" value="{{runtimeChapterRules.quantity}}" placeholder="填写站数" bindinput="onChapterQuantity" aria-label="至少完成的站数" />
-            </view>
-            <view class="ch-pill-row">
-              <text>用机动额度补做一站</text>
-              <cy-switch checked="{{!!runtimeChapterRules.overflowSlot}}" bindchange="onChapterOverflowMobile" accessibility-label="用机动额度补做一站" />
-            </view>
-            <text class="ch-sec__note">机动额度全主题只有一次，与故事流里标为「机动」的站点共用。</text>
-          </block>
-        </view>
-        <view class="ch-sec">
-          <view class="ch-sec__head"><text class="ch-sec__title">章末配给</text><text class="ch-sec__desc">本章结束时消耗物品，不够时扣数值</text></view>
-          <view class="ch-pill-row">
-            <text>{{runtimeChapterRation.enabled ? '已开启' : '不消耗物品'}}</text>
-            <cy-switch checked="{{runtimeChapterRation.enabled}}" disabled="{{!!runtimeChapterRation.reason && !runtimeChapterRation.enabled}}" bindchange="onChapterRationToggle" accessibility-label="章末配给" />
-          </view>
-          <text class="ch-sec__note" wx:if="{{runtimeChapterRation.reason && !runtimeChapterRation.enabled}}">{{runtimeChapterRation.reason}}</text>
-          <block wx:if="{{runtimeChapterRation.enabled}}">
-            <cy-dropdown topic-editor range="{{runtimeChapterRation.items}}" range-key="name" value="{{runtimeChapterRation.itemIndex}}" bind:change="onChapterRationItem">
-              <view class="ch-pill-row"><text>消耗物品</text><view class="ch-pill-row__value"><text>{{runtimeChapterRation.itemLabel}}</text><cy-icon name="chevron-right" size="24" /></view></view>
-            </cy-dropdown>
-            <view class="ch-pill-row">
-              <text>每次数量</text>
-              <input class="ch-pill-row__input" type="number" value="{{runtimeChapterRation.quantity}}" bindinput="onChapterRationQuantity" aria-label="配给数量" />
-            </view>
-            <cy-dropdown topic-editor range="{{runtimeChapterRation.values}}" range-key="label" value="{{runtimeChapterRation.valueIndex}}" bind:change="onChapterRationValue">
-              <view class="ch-pill-row"><text>物品不够时减少</text><view class="ch-pill-row__value"><text>{{runtimeChapterRation.values[runtimeChapterRation.valueIndex].label || runtimeHpLabel}}</text><cy-icon name="chevron-right" size="24" /></view></view>
-            </cy-dropdown>
-            <view class="ch-pill-row">
-              <text>减少数量</text>
-              <input class="ch-pill-row__input" type="number" value="{{runtimeChapterRation.fallback}}" bindinput="onChapterRationFallback" aria-label="物品不够时减少的数量" />
-            </view>
-          </block>
-        </view>
-        <view class="ch-sec">
-          <view class="ch-sec__head"><text class="ch-sec__title">互斥选项</text><text class="ch-sec__desc">同组站点只能完成其中一个</text></view>
-          <view class="ch-group" wx:for="{{runtimeChapterRules.groups}}" wx:for-item="group" wx:for-index="gi" wx:key="*this">
-            <view class="ch-group__head"><text>第{{gi + 1}}组</text><text class="ch-group__del" data-index="{{gi}}" bindtap="removeChapterExclusiveGroup" aria-role="button" aria-label="移除第{{gi + 1}}组" hover-class="cy-pressed" hover-stay-time="80">移除</text></view>
-            <view class="node-chips">
-              <view class="node-chip {{option.selected ? 'is-on' : ''}}" wx:for="{{group.options}}" wx:for-item="option" wx:key="id" data-index="{{gi}}" data-id="{{option.id}}" bindtap="toggleChapterExclusiveNode" aria-role="button" aria-label="{{option.selected ? '移出' : '加入'}}{{option.name}}" hover-class="cy-pressed" hover-stay-time="80">{{option.name}}</view>
-            </view>
-          </view>
-          <view class="ch-pill-btn" bindtap="addChapterExclusiveGroup" aria-role="button" aria-label="添加互斥组" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="24" /><text>添加互斥组</text></view>
-          <text class="ch-sec__note" wx:if="{{!runtimeChapterRules.nodes.length}}">先保存草稿，再选择本章站点。</text>
-        </view>
         <!-- 结局章(2026-09-24 用户:「结局应该是添加章节,可以设定这个章节为结局,打开开关」)。
              R4 恢复：c092d03235 误删此入口后，R3 又撤掉主题级运行结局，导致无处写结局；按 R02「结局归最终章」原样接回。
              打开后这一章不在路线里:玩家通关时按条件挑一章播,都不中走兜底那章。 -->

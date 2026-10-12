@@ -4829,8 +4829,9 @@ page { background: var(--cy-btn-solid-bg); }
 .node-chip.is-on { background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); font-weight: 700; }
 
 /* 故事流站点块上的计入方式标记:计入完成(默认,淡)/ 额外站点 / 机动(反色)。 */
+.story-node-role-wrap { align-self: flex-start; margin-top: var(--cy-space-1); }
 .story-node-role {
-  align-self: flex-start; margin-top: var(--cy-space-1); padding: var(--cy-legacy-6) var(--cy-space-2);
+  width: fit-content; padding: var(--cy-legacy-6) var(--cy-space-2);
   border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface); color: var(--cy-color-text-tertiary);
   font-size: var(--cy-font-caption);
 }

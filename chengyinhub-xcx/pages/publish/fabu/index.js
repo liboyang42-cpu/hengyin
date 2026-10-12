@@ -28,6 +28,7 @@ const { createErrorBag, nonEmpty } = require('../utils/publish/publish-validator
 const { cityOrientationScheduleIssues, freeExplorationSaleScheduleIssues, freeExplorationValidityScheduleIssues } = require('../utils/publish/publish-ticket-schedule.js');
 const { createPublishWorkflow } = require('../utils/publish/publish-workflow.js');
 const { createServerDraftSaver } = require('../utils/publish/server-draft.js');
+const publishIntent = require('../../../utils/publish/publish-intent.js');
 const proEditorPolicy = require('../../../utils/publish/pro-editor-policy.js');
 const proEditorDraft = require('../../../utils/publish/pro-editor-draft.js');
 
@@ -234,6 +235,7 @@ Page({
     // 正在编辑的是服务端草稿(is_draft=1):底栏给「保存草稿」,发布走「先存后发」publish-draft
     editIsDraft: false,
     draftSaving: false,
+    publicTempState: 'loading',
     // 能不能开商家池(只有俱乐部主理人可以)。初值 true = 「还没判出来」,与
     // _syncMerchantPoolEligibility 的「快照不可靠时不压值」同一口径:宁可多显示一个开关,
     // 也不要在判不出资格时把主理人的招商静默关掉。
@@ -918,12 +920,14 @@ Page({
     }
     this._storyTextCursor = null;
     const when = this._storyWhenPatch();
+    const rolePatch = this._storyRolePatch();
     this.setData({
       'formData.chapters': chapters,
       storyWhenOptions: when.storyWhenOptions,
       storyWhenLabelOf: when.storyWhenLabelOf,
       storyEditor: { show: true, chapterIndex, insertMenuAt: -1, focusBlockKey: '', selectedBlockKey: '' },
-      storyNodeRoles: this._storyNodeRoles(),
+      storyNodeRoles: rolePatch.storyNodeRoles,
+      storyRoleOptions: rolePatch.storyRoleOptions,
       storyVarSheet: { show: false, blockKey: '', keys: [] },
       pendingInsertAt: null,
       // ⚠️ 这里**不**探时长。探时长要 wx.createInnerAudioContext,而动作台账是按调用图
@@ -2603,13 +2607,26 @@ Page({
     const reselect = [];
     if (formData.themeRuntimeConfig) {
       const runtime = templateBinding.parse(formData.themeRuntimeConfig);
+      // 互斥组与额外站点(含共用额度关系)跟着站点走:编号换成新草稿的 client:<key>,首次保存由服务端换回真实编号。
+      // 只有找不到对应站点的引用才要求重选,不整段丢掉。
       (runtime.chapters || []).forEach(ch => {
-        const fields = [];
-        if ((ch.exclusiveGroups || []).length) fields.push('互斥选项');
-        if ((ch.extraNodes || []).length) fields.push('额外节点');
-        if (fields.length) reselect.push('第' + (ch.index + 1) + '章' + fields.join('/'));
-        delete ch.exclusiveGroups;
-        delete ch.extraNodes;
+        const lost = [];
+        if (ch.exclusiveGroups) {
+          ch.exclusiveGroups = ch.exclusiveGroups.map(group => group.map(id => nodeKeys.get(String(id)))).filter(group => {
+            const ok = group.length >= 2 && group.every(Boolean);
+            if (!ok) lost.push('互斥选项');
+            return ok;
+          });
+          if (!ch.exclusiveGroups.length) delete ch.exclusiveGroups;
+        }
+        if (ch.extraNodes) {
+          ch.extraNodes = ch.extraNodes.map(item => Object.assign({}, item, { nodeId: nodeKeys.get(String(item.nodeId)) })).filter(item => {
+            if (!item.nodeId) lost.push('额外站点');
+            return !!item.nodeId;
+          });
+          if (!ch.extraNodes.length) delete ch.extraNodes;
+        }
+        if (lost.length) reselect.push('第' + (ch.index + 1) + '章' + Array.from(new Set(lost)).join('/'));
       });
       (runtime.scenes || []).forEach(scene => {
         if (!scene.nodeConfigs) return;
@@ -6988,7 +7005,7 @@ Page({
       const reply = (cb, check) => ({
         success: (res) => {
           if (res.code == '200' && (!check || check(res.data))) cb({ ok: true, data: res.data });
-          else cb({ ok: false, msg: res.code == '200' ? '回读到的主题内容不完整' : res.msg });
+          else cb({ ok: false, msg: res.code == '200' ? '云端保存的主题内容不完整' : res.msg });
         },
         fail: () => cb({ ok: false, networkError: true })
       });
@@ -6996,8 +7013,11 @@ Page({
         save: (payload, cb) => {
           const editingId = this.data.editingTopicId;
           const handlers = reply(cb);
+          // 首次建草稿带稳定意图键(按本机草稿,不随内容变):丢回包后的重试由服务端认出已建的那份,不再新建
+          const body = editingId ? Object.assign({}, payload, { id: editingId })
+            : Object.assign({}, payload, { requestId: this._draftCreateIntentKey() });
           sendUiStateRequest(app, this._topicEndpoint(payload, editingId), {
-            data: JSON.stringify(editingId ? Object.assign({}, payload, { id: editingId }) : payload),
+            data: JSON.stringify(body),
             method: 'POST',
             header: { 'Content-Type': 'application/json' },
             success: handlers.success,
@@ -7027,6 +7047,14 @@ Page({
     return this._serverDraftSaver;
   },
 
+  // 复用广场发布的意图键(utils/publish/publish-intent):按「账号 + 本机草稿」隔离,payload 固定为草稿号,
+  // 所以内容改了也沿用同一个键 —— 同一份本机草稿只对应一份服务端草稿;拿到主题号即结算。
+  _draftCreateIntentScope() { return 'topic_draft_create:' + (this.data.draftUuid || 'none'); },
+  _draftCreateIntentKey() {
+    const memberId = this.data.draftMemberId || app.getUserID();
+    return publishIntent.begin(wx, { scope: this._draftCreateIntentScope(), memberId, payload: [this.data.draftUuid || ''] }).key;
+  },
+
   // 「保存草稿」:存进服务端但不发布、不送审、不占在架额度;存好并回读确认后留在编辑页
   saveServerDraft() {
     if (this.data.submitting || this._serverDraftBusy()) return;
@@ -7054,13 +7082,16 @@ Page({
     const handlers = {
       onSaved: (topicId) => {
         if (String(this.data.editingTopicId) === String(topicId)) return;
+        const intent = publishIntent.pending(wx, this._draftCreateIntentScope(), memberId);
+        if (intent) publishIntent.settle(wx, this._draftCreateIntentScope(), memberId, intent.key, 'success');
         // 服务端已经建好这份草稿:之后的保存都 update 同一个主题 —— 回读失败后重试也不会再建一份
         this.setData({ editingTopicId: String(topicId), editIsDraft: true, editLoaded: true });
         this._persistDraftEnvelope();
       },
       onSuccess: (result) => {
         cyLoading.hide();
-        if (publish) {
+        // 发布,或上次发布结果不确定、这次查到其实已发布:都按已发布收口
+        if (publish || result.published) {
           this._onServerDraftPublished(result, previous, memberId);
           return;
         }
@@ -7090,11 +7121,16 @@ Page({
   },
 
   _onServerDraftFailed(res, publish, memberId) {
-    const reason = res.networkError
-      ? '网络暂时不可用，当前内容仍在本机，请重试'
-      : (res.msg || '保存失败，当前内容已保留，请重试');
+    const creating = !this.data.editingTopicId;
+    const reason = res.unknown
+      ? (res.stage === 'publish'
+        ? '网络中断，暂时确认不了是否已发布；稍后重试会先查询真实状态'
+        : creating ? '网络中断，暂时确认不了是否已保存；再点「保存草稿」会找回同一份草稿，不会重复创建'
+          : '网络中断，暂时确认不了是否已保存；重试会更新同一份草稿')
+      : res.networkError ? '网络暂时不可用，当前内容仍在本机，请重试'
+        : (res.msg || '保存失败，当前内容已保留，请重试');
     // 存进去了、只是发布这一步没成:先换上回读到的版本(拿到真实编号),本机恢复稿此时才可以清
-    if (res.stage === 'publish' && res.detail) {
+    if (res.stage === 'publish' && res.detail && res.unknown === false) {
       this._adoptServerDraft = { previous: null, memberId };
       this._draftAutosaveReady = false;
       this.applyEditingTopic(res.detail);
@@ -7107,12 +7143,16 @@ Page({
       return;
     }
     const sheet = res.stage === 'publish'
-      ? { title: '草稿已保存，但还没有发布', sub: '最新内容已经在云端草稿里，可以直接重试发布', meta: '' }
+      ? (res.unknown
+        ? { title: '发布结果待确认', sub: '最新内容已经在云端草稿里；重试前会先查询是否已发布', meta: '' }
+        : { title: '草稿已保存，但还没有发布', sub: '已确认这份草稿仍未发布，可以直接重试发布', meta: '' })
       : res.stage === 'readback'
-        ? { title: '草稿已存到云端，但没能读回确认', sub: '再点一次「保存草稿」会更新同一份草稿，不会重复创建', meta: '草稿仍在本机' }
-        : publish
-          ? { title: '这次还没有发布出去', sub: '最新内容没能存进草稿，所以没有发布旧版本；内容都还在，可以直接重试', meta: '草稿仍在本机' }
-          : { title: '草稿还没有保存到云端', sub: '内容都还在，修好后可以直接重试', meta: '草稿仍在本机' };
+        ? { title: '草稿已存到云端，但核对时发现与本机不一致', sub: '本机内容仍保留；再点一次「保存草稿」会更新同一份草稿，不会重复创建', meta: '草稿仍在本机' }
+        : res.unknown
+          ? { title: '保存结果待确认', sub: '内容都还在本机；重试会找回或更新同一份草稿', meta: '草稿仍在本机' }
+          : publish
+            ? { title: '这次还没有发布出去', sub: '最新内容没能存进草稿，所以没有发布旧版本；内容都还在，可以直接重试', meta: '草稿仍在本机' }
+            : { title: '草稿还没有保存到云端', sub: '内容都还在，修好后可以直接重试', meta: '草稿仍在本机' };
     this.setData({
       resultSheet: Object.assign({ show: true, kind: 'fail', why: reason, duration: RESULT_SHEET_MS }, sheet)
     });
@@ -7120,7 +7160,9 @@ Page({
 
   _onServerDraftPublished(result, previous, memberId) {
     const pub = (result && result.published) || {};
-    const pendingReview = !!(pub.commercialAwaitingReview || !pub.published && ['PENDING', 'ESCALATED'].includes(pub.reviewState));
+    // 丢回包后经回读确认的发布:按主题真实状态展示(status=1 已上架,否则在审核中)
+    const pendingReview = pub.recovered ? Number(pub.status) !== 1
+      : !!(pub.commercialAwaitingReview || !pub.published && ['PENDING', 'ESCALATED'].includes(pub.reviewState));
     const reviewNextStep = pub.commercialNextStep || '主题与引用的玩法将一起审核。';
     const topicId = result.topicId;
     // 发布的是刚存进去且回读确认过的那一版,本机恢复稿到这里才清
@@ -7685,6 +7727,7 @@ Page({
   // 切换到游戏选择视图
   showTemp: function () {
     this._refreshSupportMatrix();
+    if (this.data.publicTempState === 'error') this.getPublicTempList();
     const info = this.data.nodesForm && this.data.nodesForm.templateInfo;
     this.getStoryDraftList();
     this.setData({
@@ -7754,8 +7797,10 @@ Page({
   // 是同一个数据源(三处已在用),而 /api/template/list 必须带分类,拿"全部"没有稳妥参数。
   // ⚠️ 拉不到就留空并在界面上直说,不塞占位假模板:选中一个不存在的 templateId
   // 会让玩家端到了点位打不开玩法,而创作者这边显示"已配置"。
+  // 公共玩法库三态分开:加载中 / 已加载(可能为空) / 请求失败(给重试),别把「库里没有」说成「拉不到」
   getPublicTempList: function () {
     var that = this;
+    this.setData({ publicTempState: 'loading' });
     app.sendRequest({
       hideLoading: true,
       silentError: true,
@@ -7763,7 +7808,7 @@ Page({
       method: 'POST',
       data: {},
       success: function (res) {
-        if (!(res && res.code == '200' && res.data)) { that.setData({ publicTempList: [] }); return; }
+        if (!(res && res.code == '200' && res.data)) { that.setData({ publicTempList: [], publicTempState: 'error' }); return; }
         var d = res.data;
         var merged = [].concat(d.recommendList || [], d.hotList || [], d.latestList || []);
         var seen = {};
@@ -7772,10 +7817,10 @@ Page({
           seen[item.id] = true;
           return true;
         });
-        that.setData({ publicTempList: rows });
+        that.setData({ publicTempList: rows, publicTempState: 'ready' });
         that._refreshSupportMatrix();
       },
-      fail: function () { that.setData({ publicTempList: [] }); },
+      fail: function () { that.setData({ publicTempList: [], publicTempState: 'error' }); },
     });
   },
 
