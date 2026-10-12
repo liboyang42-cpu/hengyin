@@ -615,6 +615,9 @@
               <view class="story-node-block__body">
                 <text class="story-node-block__name">{{block._nodeName || '未命名'}}</text>
                 <text class="story-node-block__meta">{{block._nodeAddress ? block._nodeAddress : '点击选择地点'}}{{block._nodeAddress ? (block._nodeGameplayReady ? ' · 玩法已配' : ' · 玩法待配') : ''}}</text>
+                <!-- 2026-10-12 用户定:额外站点在故事流里标,不在章节设置里列。点一下依次切换
+                     计入完成 → 额外站点(不计入完成,本站自己一次)→ 机动(占全主题唯一一次机动额度)。 -->
+                <view wx:if="{{block._nodeId}}" class="story-node-role {{storyNodeRoles[block._nodeId] ? 'is-on' : ''}}" data-nodeid="{{block._nodeId}}" catchtap="cycleStoryNodeRole" aria-role="button" aria-label="切换站点计入方式" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">{{storyNodeRoles[block._nodeId] === 'mobile' ? '机动' : storyNodeRoles[block._nodeId] === 'extra' ? '额外站点' : '计入完成'}}</view>
               </view>
               <view class="story-block-x" wx:if="{{storyEditor.selectedBlockKey === block.key}}" data-blockkey="{{block.key}}" catchtap="removeStoryNode" aria-role="button" aria-label="删除节点块" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true"><view class="story-block-x__glyph"><cy-icon name="trash-2" size="28" /></view></view>
             </view>
@@ -789,7 +792,7 @@
        ⚠️ 不传 title:稿子的头是「左灰圆 × + 右黑药丸 完成」,而 cy-sheet 的 .sh__head 是
        「左标题 + 右 ×」且那段 wxml/wxss 被无障碍契约逐字锁死(不能改)。不传 title 时
        .sh__head 整段不渲染,头就完全交给这里画,不用 CSS 去盖组件的头。 -->
-  <cy-sheet variant="full" show="{{popChapterNodes}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="cancelPopChapter">
+  <cy-sheet variant="full" show="{{popChapterNodes}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="cancelPopChapter" class="node-sheet-host">
   <view class="pop-chapter node-sheet">
     <!-- 头是两态,写成两段而不是把 handler 名塞进 {{}}:事件名走数据绑定的话,
          「死链按钮门禁」(扫 bind* → 必须有同名 js 方法)就看不见它绑到哪儿了。
@@ -1028,7 +1031,7 @@
   </cy-sheet>
 
   <!-- 节点下一站：只显示“玩法结果 → 地点”，不把起点、结局或技术规则交给创作者。 -->
-  <cy-sheet variant="full" show="{{routeMappingShow}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeNodeRouteMapping">
+  <cy-sheet variant="full" show="{{routeMappingShow}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeNodeRouteMapping" class="node-sheet-host">
     <view class="route-mapping-sheet node-sheet">
       <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeNodeRouteMapping" aria-role="button" aria-label="关闭下一站编辑" hover-class="cy-pressed" hover-stay-time="80">退出</view>
         <view class="node-sheet__done" bindtap="finishNodeRouteMapping" aria-role="button" aria-label="完成下一站编辑" hover-class="cy-pressed" hover-stay-time="80">完成</view>
@@ -1149,47 +1152,61 @@
             <cy-switch checked="{{chapterHostUnlock}}" disabled="{{!!chapterHostUnlockDisabledReason && !chapterHostUnlock}}" bindchange="onChapterHostUnlock" accessibility-label="由工作人员开幕" />
           </view>
         </view>
-        <view class="node-card rt-two" wx:if="{{runtimeHpEnabled || runtimeLuckEnabled}}"><view class="rt-field" wx:if="{{runtimeHpEnabled}}"><text>{{runtimeHpLabel}}消耗</text><input type="number" value="{{runtimeChapterCosts.hpCost}}" data-field="hpCost" bindinput="onRuntimeChapterCost" /></view><view class="rt-field" wx:if="{{runtimeLuckEnabled}}"><text>{{runtimeLuckLabel}}消耗</text><input type="number" value="{{runtimeChapterCosts.luckCost}}" data-field="luckCost" bindinput="onRuntimeChapterCost" /></view></view>
-        <view class="node-card">
-          <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">本章完成要求</text></view></view>
-          <view class="tk-segment"><view class="tk-segment__item {{runtimeChapterRules.completionType === 'ALL' ? 'is-active' : ''}}" data-type="ALL" bindtap="onChapterCompletion" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">全部完成</view><view class="tk-segment__item {{runtimeChapterRules.completionType === 'ANY_N' ? 'is-active' : ''}}" data-type="ANY_N" bindtap="onChapterCompletion" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">任选 N 个</view></view>
-          <view class="rt-field" wx:if="{{runtimeChapterRules.completionType === 'ANY_N'}}"><text>任选数量</text><input type="number" value="{{runtimeChapterRules.quantity}}" placeholder="1～本章计入要求的站点数" bindinput="onChapterQuantity" /></view>
-          <view wx:if="{{runtimeChapterRules.completionType === 'ANY_N'}}">
-            <view class="rt-field"><text>超出数量后再做的站点消耗任务槽</text><input value="{{runtimeChapterRules.overflowSlot}}" maxlength="32" placeholder="选填；小写字母开头，可含数字和下划线" bindinput="onChapterOverflowSlot" /></view>
-            <view class="tk-segment" wx:if="{{runtimeChapterRules.slots.length}}"><view class="tk-segment__item {{runtimeChapterRules.overflowSlot === slot ? 'is-active' : ''}}" wx:for="{{runtimeChapterRules.slots}}" wx:for-item="slot" wx:key="*this" data-slot="{{slot}}" bindtap="reuseChapterOverflowSlot" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">沿用 {{slot}}</view></view>
+        <!-- 2026-10-12 用户定:章节里不再单设保温储备等数值消耗(数值消耗是通用的);额外站点改在故事流的站点块上标。
+             版式照 Figma J3(5221:19016)章节弹窗:粗体小标题 + 同行灰字说明,下面整宽灰药丸。
+             完成要求 = 一个「全部完成」开关,默认开;关掉才填至少完成几站。 -->
+        <view class="ch-sec">
+          <view class="ch-sec__head"><text class="ch-sec__title">完成要求</text><text class="ch-sec__desc">默认全部完成；关掉后填至少完成几站</text></view>
+          <view class="ch-pill-row">
+            <text>全部完成</text>
+            <cy-switch checked="{{runtimeChapterRules.completionType !== 'ANY_N'}}" bindchange="onChapterCompleteAll" accessibility-label="全部完成" />
           </view>
-          <text class="story-initial__example" wx:if="{{!runtimeChapterRules.nodes.length}}">互斥选项和额外节点须先保存主题及本章站点。</text>
-        </view>
-        <view class="node-card">
-          <view class="node-card__row">
-            <view class="node-card__main"><text class="node-card__title">章末配给</text></view>
-            <cy-switch checked="{{runtimeChapterRation.enabled}}" disabled="{{!!runtimeChapterRation.reason && !runtimeChapterRation.enabled}}" bindchange="onChapterRationToggle" accessibility-label="章末配给" />
-          </view>
-          <text class="story-initial__example" wx:if="{{runtimeChapterRation.reason && !runtimeChapterRation.enabled}}">{{runtimeChapterRation.reason}}</text>
-          <block wx:if="{{runtimeChapterRation.enabled}}">
-            <view class="rt-field"><text>消耗物品</text><cy-dropdown topic-editor range="{{runtimeChapterRation.items}}" range-key="name" value="{{runtimeChapterRation.itemIndex}}" bind:change="onChapterRationItem"><view class="rt-select">{{runtimeChapterRation.itemLabel}}<cy-icon name="chevron-right" size="24" /></view></cy-dropdown></view>
-            <view class="rt-two"><view class="rt-field"><text>数量</text><input type="number" value="{{runtimeChapterRation.quantity}}" bindinput="onChapterRationQuantity" /></view><view class="rt-field"><text>没有时减少</text><cy-dropdown topic-editor range="{{runtimeChapterRation.values}}" range-key="label" value="{{runtimeChapterRation.valueIndex}}" bind:change="onChapterRationValue"><view class="rt-select">{{runtimeChapterRation.values[runtimeChapterRation.valueIndex].label || runtimeHpLabel}}<cy-icon name="chevron-right" size="24" /></view></cy-dropdown></view><view class="rt-field"><text>减少数量</text><input type="number" value="{{runtimeChapterRation.fallback}}" bindinput="onChapterRationFallback" /></view></view>
+          <block wx:if="{{runtimeChapterRules.completionType === 'ANY_N'}}">
+            <view class="ch-pill-row">
+              <text>至少完成几站</text>
+              <input class="ch-pill-row__input" type="number" value="{{runtimeChapterRules.quantity}}" placeholder="填写站数" bindinput="onChapterQuantity" aria-label="至少完成的站数" />
+            </view>
+            <view class="ch-pill-row">
+              <text>用机动额度补做一站</text>
+              <cy-switch checked="{{!!runtimeChapterRules.overflowSlot}}" bindchange="onChapterOverflowMobile" accessibility-label="用机动额度补做一站" />
+            </view>
+            <text class="ch-sec__note">机动额度全主题只有一次，与故事流里标为「机动」的站点共用。</text>
           </block>
         </view>
-        <view class="node-card">
-          <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">互斥选项</text></view><view class="node-pill" bindtap="addChapterExclusiveGroup" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">添加组<cy-icon name="plus" size="24" /></view></view>
-          <text class="story-initial__example">每组至少选 2 个本章已保存站点；完成其中一个后，同组其他站点不可再做。</text>
-          <view wx:for="{{runtimeChapterRules.groups}}" wx:for-item="group" wx:for-index="gi" wx:key="*this">
-            <view class="node-card__hr"></view><view class="node-card__row"><view class="node-card__main"><text class="node-card__title">第{{gi + 1}}组</text></view><view class="node-pill" data-index="{{gi}}" bindtap="removeChapterExclusiveGroup" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">移除</view></view>
-            <view class="tk-segment" wx:for="{{group.options}}" wx:for-item="option" wx:key="id"><view class="tk-segment__item {{option.selected ? 'is-active' : ''}}" data-index="{{gi}}" data-id="{{option.id}}" bindtap="toggleChapterExclusiveNode" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">{{option.name}}</view></view>
+        <view class="ch-sec">
+          <view class="ch-sec__head"><text class="ch-sec__title">章末配给</text><text class="ch-sec__desc">本章结束时消耗物品，不够时扣数值</text></view>
+          <view class="ch-pill-row">
+            <text>{{runtimeChapterRation.enabled ? '已开启' : '不消耗物品'}}</text>
+            <cy-switch checked="{{runtimeChapterRation.enabled}}" disabled="{{!!runtimeChapterRation.reason && !runtimeChapterRation.enabled}}" bindchange="onChapterRationToggle" accessibility-label="章末配给" />
           </view>
+          <text class="ch-sec__note" wx:if="{{runtimeChapterRation.reason && !runtimeChapterRation.enabled}}">{{runtimeChapterRation.reason}}</text>
+          <block wx:if="{{runtimeChapterRation.enabled}}">
+            <cy-dropdown topic-editor range="{{runtimeChapterRation.items}}" range-key="name" value="{{runtimeChapterRation.itemIndex}}" bind:change="onChapterRationItem">
+              <view class="ch-pill-row"><text>消耗物品</text><view class="ch-pill-row__value"><text>{{runtimeChapterRation.itemLabel}}</text><cy-icon name="chevron-right" size="24" /></view></view>
+            </cy-dropdown>
+            <view class="ch-pill-row">
+              <text>每次数量</text>
+              <input class="ch-pill-row__input" type="number" value="{{runtimeChapterRation.quantity}}" bindinput="onChapterRationQuantity" aria-label="配给数量" />
+            </view>
+            <cy-dropdown topic-editor range="{{runtimeChapterRation.values}}" range-key="label" value="{{runtimeChapterRation.valueIndex}}" bind:change="onChapterRationValue">
+              <view class="ch-pill-row"><text>物品不够时减少</text><view class="ch-pill-row__value"><text>{{runtimeChapterRation.values[runtimeChapterRation.valueIndex].label || runtimeHpLabel}}</text><cy-icon name="chevron-right" size="24" /></view></view>
+            </cy-dropdown>
+            <view class="ch-pill-row">
+              <text>减少数量</text>
+              <input class="ch-pill-row__input" type="number" value="{{runtimeChapterRation.fallback}}" bindinput="onChapterRationFallback" aria-label="物品不够时减少的数量" />
+            </view>
+          </block>
         </view>
-        <view class="node-card">
-          <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">额外节点</text></view><view class="node-pill" bindtap="addChapterExtraNode" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">添加<cy-icon name="plus" size="24" /></view></view>
-          <text class="story-initial__example">额外节点不计入任选数量；同名任务槽可在不同章节共用。</text>
-          <view wx:for="{{runtimeChapterRules.extraNodes}}" wx:for-item="extra" wx:for-index="ei" wx:key="*this">
-            <view class="node-card__hr"></view>
-            <view class="rt-field"><text>站点</text><cy-dropdown topic-editor range="{{runtimeChapterRules.nodes}}" range-key="name" value="{{extra.nodeIndex}}" data-index="{{ei}}" bind:change="onChapterExtraNode"><view class="rt-select">{{extra.nodeName}}<cy-icon name="chevron-right" size="24" /></view></cy-dropdown></view>
-            <view class="rt-field"><text>任务槽名称</text><input value="{{extra.slot}}" maxlength="32" placeholder="小写字母开头，可含数字和下划线" data-index="{{ei}}" bindinput="onChapterExtraSlot" /></view>
-            <view class="tk-segment" wx:if="{{runtimeChapterRules.slots.length}}"><view class="tk-segment__item {{extra.slot === slot ? 'is-active' : ''}}" wx:for="{{runtimeChapterRules.slots}}" wx:for-item="slot" wx:key="*this" data-index="{{ei}}" data-slot="{{slot}}" bindtap="reuseChapterExtraSlot" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">沿用 {{slot}}</view></view>
-            <view class="node-pill" data-index="{{ei}}" bindtap="removeChapterExtraNode" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">移除额外节点</view>
+        <view class="ch-sec">
+          <view class="ch-sec__head"><text class="ch-sec__title">互斥选项</text><text class="ch-sec__desc">同组站点只能完成其中一个</text></view>
+          <view class="ch-group" wx:for="{{runtimeChapterRules.groups}}" wx:for-item="group" wx:for-index="gi" wx:key="*this">
+            <view class="ch-group__head"><text>第{{gi + 1}}组</text><text class="ch-group__del" data-index="{{gi}}" bindtap="removeChapterExclusiveGroup" aria-role="button" aria-label="移除第{{gi + 1}}组" hover-class="cy-pressed" hover-stay-time="80">移除</text></view>
+            <view class="node-chips">
+              <view class="node-chip {{option.selected ? 'is-on' : ''}}" wx:for="{{group.options}}" wx:for-item="option" wx:key="id" data-index="{{gi}}" data-id="{{option.id}}" bindtap="toggleChapterExclusiveNode" aria-role="button" aria-label="{{option.selected ? '移出' : '加入'}}{{option.name}}" hover-class="cy-pressed" hover-stay-time="80">{{option.name}}</view>
+            </view>
           </view>
-          <text class="story-initial__example" wx:if="{{!runtimeChapterRules.nodes.length}}">请先保存主题和本章站点，再配置额外节点。</text>
+          <view class="ch-pill-btn" bindtap="addChapterExclusiveGroup" aria-role="button" aria-label="添加互斥组" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="24" /><text>添加互斥组</text></view>
+          <text class="ch-sec__note" wx:if="{{!runtimeChapterRules.nodes.length}}">先保存草稿，再选择本章站点。</text>
         </view>
         <!-- 结局章(2026-09-24 用户:「结局应该是添加章节,可以设定这个章节为结局,打开开关」)。
              R4 恢复：c092d03235 误删此入口后，R3 又撤掉主题级运行结局，导致无处写结局；按 R02「结局归最终章」原样接回。
@@ -1605,7 +1622,7 @@
        两种模式的差别(要不要定集合时间地点、票怎么卖)全靠创作者自己知道,切错了
        整条票务链路的必填项都跟着变。改成先把两种模式摊开讲清楚再让人选。
        文案取自票种编辑器稿(2770:11762 / 2770:13325)的那两句模式说明,同一句话只有一份。 -->
-  <cy-sheet show="{{modePickerShow}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeModePicker">
+  <cy-sheet show="{{modePickerShow}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeModePicker" class="node-sheet-host">
     <view class="pd-topic-detail node-sheet">
       <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeModePicker" aria-role="button" aria-label="关闭模式选择" hover-class="cy-pressed" hover-stay-time="80">退出</view>
         <view class="node-sheet__done" bindtap="confirmModePicker" aria-role="button" aria-label="确认创作模式" hover-class="cy-pressed" hover-stay-time="80">使用此模式</view>
@@ -1644,7 +1661,7 @@
 
   <include src="./topic-detail-sheet.wxml" />
 
-  <cy-sheet show="{{valueEditor.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeValueEditor">
+  <cy-sheet show="{{valueEditor.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeValueEditor" class="node-sheet-host">
     <view class="node-sheet story-initial" wx:if="{{valueEditor.row}}">
       <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeValueEditor" aria-role="button" aria-label="关闭数值编辑" hover-class="cy-pressed">退出</view><view class="node-sheet__done" bindtap="saveValueEditor" aria-role="button" aria-label="保存数值" hover-class="cy-pressed">完成</view></view>
       <view class="node-sheet__titlebar"><text class="node-sheet__eyebrow">值域</text><text class="node-sheet__name node-sheet__name--static">{{valueEditor.index < 0 ? '添加数值' : '编辑数值'}}</text></view>
@@ -1680,7 +1697,7 @@
 <!-- 结局面板已撤(2026-09-24):结局 = 结局章,在章节设置里打开「设为结局」。 -->
 
 <!-- 编辑主题的伏笔配置：入口位于主题详情，仅编辑唯一伏笔的步数和文字。 -->
-<cy-sheet show="{{thoughtsEditor.show}}" variant="bottom" bind:close="closeThoughts">
+<cy-sheet show="{{thoughtsEditor.show}}" variant="bottom" bind:close="closeThoughts" class="node-sheet-host">
   <view class="node-sheet story-initial story-thought">
     <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeThoughts" aria-role="button" aria-label="关闭伏笔" hover-class="cy-pressed" hover-stay-time="80">退出</view>
 
@@ -1699,7 +1716,7 @@
   </view>
 </cy-sheet>
 
-<cy-sheet show="{{initialStateEditor.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeInitialState">
+<cy-sheet show="{{initialStateEditor.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeInitialState" class="node-sheet-host">
   <view class="node-sheet story-initial" wx:if="{{initialStateEditor.rules}}">
     <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeInitialState" aria-role="button" aria-label="关闭初始状态" hover-class="cy-pressed" hover-stay-time="80">退出</view>
       <view class="node-sheet__done" bindtap="saveInitialState" aria-role="button" aria-label="保存初始状态" hover-class="cy-pressed" hover-stay-time="80">完成</view>

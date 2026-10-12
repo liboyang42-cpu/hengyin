@@ -923,6 +923,7 @@ Page({
       storyWhenOptions: when.storyWhenOptions,
       storyWhenLabelOf: when.storyWhenLabelOf,
       storyEditor: { show: true, chapterIndex, insertMenuAt: -1, focusBlockKey: '', selectedBlockKey: '' },
+      storyNodeRoles: this._storyNodeRoles(),
       storyVarSheet: { show: false, blockKey: '', keys: [] },
       pendingInsertAt: null,
       // ⚠️ 这里**不**探时长。探时长要 wx.createInnerAudioContext,而动作台账是按调用图
@@ -3342,7 +3343,7 @@ Page({
       popChapter: true,
       popChapterIndex: chapterIndex,
       assignPendingLocalId: '',
-      chapterForm: emptyChapterForm(defaultChapterName), runtimeChapterCosts: this._runtimeCosts(currentChapterCount)
+      chapterForm: emptyChapterForm(defaultChapterName)
     });
     if (Number(this.data.formData.productType) === 2) this.loadMerchantCategories();
   },
@@ -3413,7 +3414,6 @@ Page({
     });
     this.setData({
       chapterForm: chapterForm,
-      runtimeChapterCosts: this._runtimeCosts(Number(chapterIndex)),
       popChapter: true,
       popChapterAction: 1,
       popChapterIndex: chapterIndex,
@@ -7663,9 +7663,9 @@ Page({
     const on = !!(e && e.detail && e.detail.value);
     if (on) {
       this.setData({ 'nodesForm.showTemplate': true });
-      // 2026-08-20 用户拍板:开「配置模板」不再停在 sheet 内的玩法选择视图,
-      // 没绑过模板就直接进模板编辑器(标题在编辑器里填);已绑过的走药丸改配置。
-      if (!Number(this.data.nodesForm.templateId)) this.onCreateGame();
+      // 2026-10-12 用户定(推翻 2026-08-20 那条「直接进模板编辑器」):开「配置模板」打开本弹层里的
+      // 玩法库视图 —— 底部横滑卡片选已保存的模板(公共库 / 我的草稿 / 我的模板),要新建再从那里进编辑器。
+      if (!Number(this.data.nodesForm.templateId)) this.showTemp();
       return;
     }
     this._nodeBindingSlots = [];
@@ -7698,7 +7698,9 @@ Page({
   cancelTemp: function () {
     this._nodeTemplateLoadToken = (this._nodeTemplateLoadToken || 0) + 1;
     this._loadingSelectedTemplate = 0;
+    // 开关开了却没选模板就退回来:开关跟着关(开关态按 templateId 派生),别留「开着但没挂玩法」的假已配置
     this.setData({
+      'nodesForm.showTemplate': !!Number((this.data.nodesForm || {}).templateId),
       nodeSheetView: 'detail',
       selectedTempId: null,
       selectedTempInfo: null
@@ -7708,7 +7710,9 @@ Page({
   backToNodeDetail: function () {
     this._nodeTemplateLoadToken = (this._nodeTemplateLoadToken || 0) + 1;
     this._loadingSelectedTemplate = 0;
+    // 开关开了却没选模板就退回来:开关跟着关(开关态按 templateId 派生),别留「开着但没挂玩法」的假已配置
     this.setData({
+      'nodesForm.showTemplate': !!Number((this.data.nodesForm || {}).templateId),
       nodeSheetView: 'detail',
       selectedTempId: null,
       selectedTempInfo: null

@@ -4282,10 +4282,15 @@ page { background: var(--cy-btn-solid-bg); }
    而卡片底 role-surface 也是纯白 —— 白卡贴白面板 = 卡片边界整个消失,一屏字全糊在
    一张白纸上(设计源码里面板是 #F7F7F8、卡是 #FFF,靠这一层差把卡分出来)。
    面板在组件内部(isolated),页面样式够不着,所以在 slot 这一层负边距出血铺 page 底色。 */
+/* 2026-10-12 按 Figma P4/P9:这类弹层整块是页面灰底、白卡左右各留 page-x。
+   原来靠 .node-sheet 负外边距把灰底撑到面板边,但全高弹层的 .sh__body 是滚动容器,
+   左侧负边距被裁成白条、右侧溢出成横向可拖 —— 看上去被截断。改成让面板本身就是灰底。 */
+.node-sheet-host {
+  --cy-comp-sheet-role-glass: var(--cy-comp-sheet-role-page);
+}
+
 .node-sheet {
-  margin: 0 calc(var(--cy-page-x) * -1);
-  padding: 0 var(--cy-page-x) var(--cy-space-3);
-  background: var(--cy-color-bg-page);
+  padding-bottom: var(--cy-space-3);
 }
 
 .node-route-entry:active,
@@ -4791,3 +4796,42 @@ page { background: var(--cy-btn-solid-bg); }
 .chapter-setting-row { margin-top: var(--cy-space-3); }
 
 @import "./game-rules.wxss"; /* 玩法规则编辑层（协调者设计） */
+
+/* 章节弹窗里的规则分区(2026-10-12,版式照 Figma J3 5221:19016):
+   粗体小标题 + 同行灰字说明;控件是整宽灰药丸(高 = 按钮高,圆角药丸)。 */
+.ch-sec { margin-top: var(--cy-space-4); }
+.ch-sec__head { display: flex; align-items: baseline; gap: var(--cy-space-2); margin-bottom: var(--cy-legacy-18); overflow: hidden; }
+.ch-sec__title { flex: none; font-size: var(--cy-font-subtitle); font-weight: 700; line-height: 1.25; color: var(--cy-color-text-primary); }
+.ch-sec__desc { min-width: 0; font-size: var(--cy-font-label); line-height: 1.5; color: var(--cy-color-text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ch-sec__note { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-font-caption); line-height: 1.6; color: var(--cy-color-text-tertiary); }
+.ch-pill-row {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-3);
+  min-height: var(--cy-btn-h); padding: 0 var(--cy-space-4); box-sizing: border-box;
+  border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface-subtle);
+  font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-color-text-primary);
+}
+.ch-pill-row + .ch-pill-row, cy-dropdown + .ch-pill-row, .ch-pill-row + cy-dropdown, cy-dropdown + cy-dropdown { margin-top: var(--cy-space-2); display: block; }
+.ch-pill-row__value { display: flex; align-items: center; gap: var(--cy-space-1); min-width: 0; font-weight: 400; color: var(--cy-color-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ch-pill-row__input { width: 200rpx; text-align: right; font-weight: 400; font-size: var(--cy-font-body); color: var(--cy-color-text-primary); }
+.ch-pill-btn {
+  display: flex; align-items: center; justify-content: center; gap: var(--cy-space-1); height: var(--cy-btn-h); margin-top: var(--cy-space-2);
+  border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface-subtle);
+  font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-color-text-primary);
+}
+.ch-group { margin-top: var(--cy-space-2); }
+.ch-group__head { display: flex; align-items: center; justify-content: space-between; font-size: var(--cy-font-label); color: var(--cy-color-text-secondary); }
+.ch-group__del { padding: var(--cy-space-1) 0 var(--cy-space-1) var(--cy-space-3); color: var(--cy-color-text-tertiary); }
+.node-chips { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); margin-top: var(--cy-space-2); }
+.node-chip {
+  padding: var(--cy-space-2) var(--cy-space-3); border-radius: var(--cy-radius-pill);
+  background: var(--cy-color-bg-surface-subtle); color: var(--cy-color-text-secondary); font-size: var(--cy-font-label);
+}
+.node-chip.is-on { background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); font-weight: 700; }
+
+/* 故事流站点块上的计入方式标记:计入完成(默认,淡)/ 额外站点 / 机动(反色)。 */
+.story-node-role {
+  align-self: flex-start; margin-top: var(--cy-space-1); padding: var(--cy-legacy-6) var(--cy-space-2);
+  border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface); color: var(--cy-color-text-tertiary);
+  font-size: var(--cy-font-caption);
+}
+.story-node-role.is-on { background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); font-weight: 700; }
