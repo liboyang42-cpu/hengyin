@@ -6723,7 +6723,10 @@ Page({
   },
 
   // 组装主题 payload:发布与「保存草稿」共用这一份(两条路存进去的必须是同一个东西);组装不出来返回 null
-  _buildSubmitPayload() {
+  // options.draft:存草稿不过「章节与到达关系」闸 —— 删改站点后那道闸本身就要求先存草稿拿到新编号再重设,
+  // 拦住存草稿会成死结;发布仍过这道闸,后端校验照旧。
+  _buildSubmitPayload(options) {
+    const draft = !!(options && options.draft);
     const productType = Number(this.data.formData.productType) === 2 ? 2 : 1;
     let chapters;
     try {
@@ -6747,7 +6750,7 @@ Page({
     }));
 
     // 准备API数据
-    const runtimeIssue = (this._structureIssue() || {}).error || this._validateRuntimeConfig(); // structure
+    const runtimeIssue = draft ? '' : (this._structureIssue() || {}).error || this._validateRuntimeConfig(); // structure
     if (runtimeIssue) { cyToast(runtimeIssue); return null; }
     let apiData = {
       name: this.data.formData.name,
@@ -7033,7 +7036,7 @@ Page({
       cyToast('先给主题起个名字，再保存草稿');
       return;
     }
-    const apiData = this._buildSubmitPayload();
+    const apiData = this._buildSubmitPayload({ draft: true });
     if (!apiData) return;
     this._runServerDraft(apiData, false);
   },

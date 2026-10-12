@@ -131,3 +131,15 @@ test('已发布主题不出现草稿保存：editIsDraft=false 时 saveServerDra
   page._doSubmit();
   assert.equal(sent[0].url, '/api/topic/v2/update'); assert.equal(JSON.parse(sent[0].data).saveDraft, undefined);
 });
+
+test('删改站点后：存草稿不被「章节与到达关系」闸拦住（那道闸要求先存草稿），发布仍过闸', () => {
+  const { page, sent } = loadPage();
+  const options = [];
+  page._buildSubmitPayload = (opts) => { options.push(opts || null); return JSON.parse(JSON.stringify(payload)); };
+  page.saveServerDraft();
+  assert.deepEqual(options[0], { draft: true });
+  assert.equal(sent[0].url, '/api/topic/v2/create');
+  sent[0].success({ code: 500, msg: '后端校验失败' });
+  page._doSubmit();
+  assert.equal(options[1], null, '发布不带 draft，结构闸照旧');
+});
