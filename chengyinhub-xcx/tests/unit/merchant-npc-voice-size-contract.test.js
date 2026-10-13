@@ -107,6 +107,15 @@ test('录音面板是三句逐句录制的 Voice mode', () => {
   assert.doesNotMatch(WXML, /npc-voice-script/)
 })
 
+test('声音入口明确展示 UNKNOWN 和待确认重置，不误提示上传', () => {
+  const expression = WXML.match(/value="\{\{([^"\n]*声音生成中[^"\n]*)\}\}"/)[1]
+  for (const [voiceStatus, voiceUnknown, voiceResetPending, expected] of [
+    [4, false, false, '声音结果待确认'], [0, true, false, '声音结果待确认'],
+    [2, true, true, '声音清除待确认'], [0, false, false, '上传语音'],
+    [1, false, false, '声音生成中'], [2, false, false, '声音可用'], [3, false, false, '生成失败 · 重试'],
+  ]) assert.equal(vm.runInNewContext(expression, { voiceStatus, voiceUnknown, voiceResetPending }), expected)
+})
+
 test('未确认声音权利时不能启动录音', async () => {
   const h = loadPage()
 
