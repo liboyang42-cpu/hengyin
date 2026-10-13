@@ -1045,7 +1045,7 @@ Page({
       const url = res && res[0];
       if (!url) return;
       const current = this.data.storyEditor.chapterIndex;
-      if (current !== chapterIndex || (this.data.formData.chapters[current] || {})._localId !== chapterKey) { cyToast('章节已切换，请回到原章节重新添加图片'); return; }
+      if (current !== chapterIndex || (this.data.formData.chapters[current] || {})._localId !== chapterKey) { cyToast('章节已切换，请回原章节重试'); return; }
       this._insertStoryMedia('image', index, { url });
     }, 1);
   },
