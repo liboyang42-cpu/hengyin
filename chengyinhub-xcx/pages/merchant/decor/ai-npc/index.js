@@ -80,6 +80,7 @@ Page({
     voicePlaying: false,
     voiceSample: '',
     voiceUnknown: false,
+    voiceResetPending: false,
     voiceConsent: false,
     voiceSentences: VOICE_SENTENCES,
     voiceSentenceIndex: 0,
@@ -108,7 +109,8 @@ Page({
   onShow() {
     merchantTheme.merchantPageShow();
     this._hidden = false;
-    if (this.data.voiceStatus === 1) this.refreshVoice();
+    this.restoreVoiceRequest();
+    if ([1, 4].includes(this.data.voiceStatus) || this._voiceRequestId) this.refreshVoice();
   },
   onHide() {
     this._hidden = true;
@@ -586,6 +588,7 @@ Page({
       toast('请先保存角色形象');
       return;
     }
+    this.restoreVoiceRequest();
     this.setData({ voiceVisible: true, voiceUnknown: true, voiceError: '' });
     this.refreshVoice();
   },
@@ -595,32 +598,110 @@ Page({
     this.setData({ voiceVisible: false });
     if (this._audio) this._audio.stop();
   },
+  voiceActor() {
+    return String(app.getUserID() || '');
+  },
+  voiceRecord(value) {
+    if (!value) return null;
+    if (typeof value === 'string') value = { requestId: value, profileId: null, generation: null, resetPending: false };
+    if (!value || typeof value !== 'object' || !/^[A-Za-z0-9_-]{1,64}$/.test(value.requestId || '')
+        || (value.profileId != null && !/^[1-9][0-9]*$/.test(String(value.profileId)))
+        || (value.generation != null && (!Number.isSafeInteger(value.generation) || value.generation < 0))
+        || typeof value.resetPending !== 'boolean'
+        || (value.resetPending && (value.profileId == null || value.generation == null))) throw Error('原声音请求记录无法确认');
+    return { requestId: value.requestId, profileId: value.profileId == null ? null : String(value.profileId),
+      generation: value.generation == null ? null : value.generation, resetPending: value.resetPending };
+  },
+  saveVoiceRecord(value) {
+    const record = this.voiceRecord(value), key = 'merchantNpcVoiceRequest:' + this.voiceActor();
+    try {
+      wx.setStorageSync(key, record);
+      if (JSON.stringify(this.voiceRecord(wx.getStorageSync(key))) !== JSON.stringify(record)) throw Error('声音请求记录未保存');
+    } catch (e) { this._voiceStorageBlocked = true; throw Error('声音请求记录未保存，请重新打开页面查询，勿重复生成'); }
+    this._voiceRecord = record;
+    this._voiceRequestId = record.requestId;
+    this._voiceStorageBlocked = false;
+    this.setData({ voiceResetPending: record.resetPending });
+  },
+  clearVoiceRecord() {
+    const key = 'merchantNpcVoiceRequest:' + this.voiceActor();
+    try { wx.removeStorageSync(key); if (wx.getStorageSync(key)) throw Error('声音请求记录未清除'); }
+    catch (e) { this._voiceStorageBlocked = true; throw e; }
+    this._voiceRecord = null;
+    this._voiceStorageBlocked = false;
+    this._voiceRequestId = '';
+    this._voicePendingSample = '';
+    this.setData({ voiceResetPending: false });
+  },
+  restoreVoiceRequest() {
+    const actor = this.voiceActor(), changed = this._voiceActor !== actor;
+    if (!changed && !this._voiceStorageBlocked) return;
+    if (changed) {
+      this._voiceRead = (this._voiceRead || 0) + 1;
+      this._voiceActor = actor;
+      this._voiceIdentityVersion = (this._voiceIdentityVersion || 0) + 1;
+      this._voiceSubmitted = false;
+      this._voiceProfileId = null; this._voiceGeneration = null; this._voiceCurrentRequestId = '';
+      if (this.data.voiceSessionActive && this._voiceRecorder) {
+        this._discardVoiceStop = true;
+        this._voiceRecorder.stop();
+      }
+      this._voicePendingSample = '';
+      if (this._audio) this._audio.stop();
+      this.setData({ voiceFile: null, voiceSample: '', voiceStatus: 0, voiceBusy: false, voiceConsent: false });
+    }
+    try {
+      this._voiceRecord = actor ? this.voiceRecord(wx.getStorageSync('merchantNpcVoiceRequest:' + actor)) : null;
+      this._voiceRequestId = this._voiceRecord ? this._voiceRecord.requestId : '';
+      this._voiceStorageBlocked = false;
+      this.setData({ voiceUnknown: !!this._voiceRequestId, voiceResetPending: !!(this._voiceRecord && this._voiceRecord.resetPending) });
+    } catch (e) {
+      this._voiceRecord = null; this._voiceRequestId = ''; this._voiceStorageBlocked = true;
+      this.setData({ voiceUnknown: true, voiceResetPending: false, voiceError: '原声音请求记录无法确认，请重新打开页面，勿重复生成。' });
+    }
+  },
   refreshVoice() {
     clearTimeout(this._voiceTimer);
     if (this._destroyed || this._hidden) return;
-    return this._request('/api/merchant/npc/voice/status')
+    const actor = this.voiceActor(), requestId = this._voiceRequestId || '', reset = this._voiceRecord && this._voiceRecord.resetPending,
+      read = this._voiceRead = (this._voiceRead || 0) + 1;
+    return this._request('/api/merchant/npc/voice/status', requestId && !reset ? { voiceRequestId: requestId } : {})
       .then((res) => {
-        if (this._destroyed) return;
-        const value = res.data || res,
-          status = Number(value.voiceStatus);
-        if (value.voiceStatus == null || ![0, 1, 2, 3].includes(status)) throw Error('声音状态暂时无法确认');
-        const confirmed =
-          (status === 1 || status === 2) &&
-          this.data.voiceFile &&
-          value.voiceSample === this.data.voiceFile.url;
-        const matched = !this._voicePendingSample || (value.voiceSample === this._voicePendingSample && [1, 2, 3].includes(status));
-        if (matched) this._voicePendingSample = '';
+        if (this._destroyed || actor !== this.voiceActor() || read !== this._voiceRead) return;
+        const value = res.data || res, status = Number(value.voiceStatus);
+        if (value.voiceStatus == null || ![0, 1, 2, 3, 4].includes(status)) throw Error('声音状态暂时无法确认');
+        if (reset) {
+          if (status === 0 && String(value.voiceProfileId) === this._voiceRecord.profileId
+              && Number(value.voiceGeneration) === this._voiceRecord.generation + 1 && !value.voiceRequestId) {
+            this.clearVoiceRecord();
+            this.setData({ voiceStatus: 0, voiceUnknown: false, voiceFile: null, voiceSample: '', voiceError: '' });
+          } else this.setData({ voiceUnknown: true, voiceError: '原声音清除结果待确认，请继续查询或继续清除原声音。' });
+          return;
+        }
+        const matched = requestId ? value.voiceRequestId === requestId && value.voiceCurrent !== false
+          : !this._voicePendingSample || (value.voiceSample === this._voicePendingSample && [1, 2, 3, 4].includes(status));
+        const unknown = this._voiceStorageBlocked || !matched || status === 4 || value.voiceUnknown === true;
+        if (matched) {
+          this._voiceProfileId = value.voiceProfileId;
+          this._voiceGeneration = value.voiceGeneration;
+          if (!requestId) this._voiceCurrentRequestId = value.voiceRequestId || '';
+          if (requestId && this._voiceRecord) this.saveVoiceRecord({ requestId, profileId: value.voiceProfileId,
+            generation: value.voiceGeneration == null ? null : Number(value.voiceGeneration), resetPending: false });
+        }
+        if (matched && !unknown) this._voicePendingSample = '';
         this.setData({
-          voiceStatus: status,
-          voiceSample: value.voiceSample || this.data.voiceSample,
-          voiceUnknown: !matched,
-          voiceError: matched ? '' : '尚未查到这段录音的生成结果，请稍后继续查询，勿重复生成。',
-          voiceFile: confirmed ? null : this.data.voiceFile,
+          voiceStatus: matched ? status : this.data.voiceStatus,
+          voiceSample: matched ? value.voiceSample || '' : this.data.voiceSample,
+          voiceUnknown: unknown,
+          voiceError: unknown ? '原声音结果尚未确认，请继续查询，勿重复生成。' : '',
+          voiceFile: matched && !unknown && [1, 2].includes(status) && this.data.voiceFile
+            && value.voiceSample === this.data.voiceFile.url ? null : this.data.voiceFile,
         });
-        if (status === 1 && !this._hidden) this._voiceTimer = setTimeout(() => this.refreshVoice(), 5000);
+        if (status === 1 && matched && !this._hidden) this._voiceTimer = setTimeout(() => this.refreshVoice(), 5000);
       })
-      .catch((e) => {
-        if (!this._destroyed) this.setData({ voiceUnknown: true, voiceError: '声音状态暂时无法确认，请稍后查询。' });
+      .catch(() => {
+        if (!this._destroyed && actor === this.voiceActor() && read === this._voiceRead)
+          this.setData({ voiceUnknown: true, voiceError: '声音状态暂时无法确认，请稍后查询原请求。' });
       });
   },
   onVoiceConsentChange(e) {
@@ -761,26 +842,34 @@ Page({
     this._voiceRecorder.stop();
   },
   resetVoiceRecording() {
-    if (this.data.voiceBusy || this.data.voiceUnknown) return;
-    if (this._audio) this._audio.stop();
-    if (this.data.voiceSessionActive && this._voiceRecorder) {
-      this._discardVoiceStop = true;
-      this._voiceRecorder.stop();
+    if (this.data.voiceBusy || (this.data.voiceUnknown && !this.data.voiceResetPending)) return;
+    const actor = this.voiceActor(), identityVersion = this._voiceIdentityVersion || 0;
+    const active = () => actor === this.voiceActor() && identityVersion === (this._voiceIdentityVersion || 0) && !this._destroyed;
+    const clear = () => {
+      if (!active()) return;
+      this._voiceRead = (this._voiceRead || 0) + 1;
+      this.clearVoiceRecord();
+      if (this._audio) this._audio.stop();
+      if (this.data.voiceSessionActive && this._voiceRecorder) { this._discardVoiceStop = true; this._voiceRecorder.stop(); }
+      this._voiceHoldReleased = true;
+      this.setData({ voiceFile: null, voiceStatus: 0, voiceUnknown: false, voiceError: '', voicePlaying: false,
+        voiceSentenceIndex: 0, voiceSentenceConfirmed: 0, voiceSentenceText: VOICE_SENTENCES[0], voiceSentenceReady: false,
+        voiceSessionActive: false, voiceHolding: false, voiceFinalizing: false });
+    };
+    if (this.data.voiceStatus === 2 || this.data.voiceResetPending) {
+      try {
+        this.saveVoiceRecord({ requestId: this._voiceRequestId || this._voiceCurrentRequestId || 'reset-' + Date.now().toString(36),
+          profileId: this._voiceRecord ? this._voiceRecord.profileId : this._voiceProfileId,
+          generation: this._voiceRecord ? this._voiceRecord.generation : Number(this._voiceGeneration), resetPending: true });
+      } catch (e) { this.setData({ voiceUnknown: true, voiceError: e.message }); return; }
+      this.setData({ voiceBusy: true });
+      return this._request('/api/merchant/npc/voice/reset', { id: this._voiceRecord.profileId,
+        voiceGeneration: this._voiceRecord.generation, voiceRequestId: this._voiceRequestId.startsWith('reset-') ? null : this._voiceRequestId })
+        .then(clear).catch(() => {
+          if (active()) this.setData({ voiceUnknown: true, voiceError: '清除结果待确认，请查询原声音状态。' });
+        }).finally(() => { if (active()) this.setData({ voiceBusy: false }); });
     }
-    this._voiceHoldReleased = true;
-    this.setData({
-      voiceFile: null,
-      voiceStatus: 0,
-      voiceError: '',
-      voicePlaying: false,
-      voiceSentenceIndex: 0,
-      voiceSentenceConfirmed: 0,
-      voiceSentenceText: VOICE_SENTENCES[0],
-      voiceSentenceReady: false,
-      voiceSessionActive: false,
-      voiceHolding: false,
-      voiceFinalizing: false,
-    });
+    try { clear(); } catch (e) { this.setData({ voiceUnknown: true, voiceError: '声音请求记录未清除，请查询原状态。' }); }
   },
   audio() {
     if (this._audio) return this._audio;
@@ -811,12 +900,14 @@ Page({
     this.setData({ voicePlaying: true });
   },
   uploadVoice() {
-    if (this.data.voiceBusy || this.data.voiceStatus === 1 || this.data.voiceUnknown || !this.data.voiceFile)
+    if (this.data.voiceBusy || this.data.voiceStatus === 1 || this.data.voiceUnknown || this._voiceStorageBlocked || !this.data.voiceFile)
       return;
     if (!this.data.voiceConsent) {
       this.setData({ voiceError: '请确认这是本人声音或已获得声音使用授权' });
       return;
     }
+    const actor = this.voiceActor(), identityVersion = this._voiceIdentityVersion || 0;
+    if (!actor) { this.setData({ voiceError: '请先登录' }); return; }
     this.audio().stop();
     this.setData({ voiceBusy: true, voiceError: '' });
     const upload = this.data.voiceFile.url
@@ -840,35 +931,43 @@ Page({
         });
     upload
       .then((url) => {
+        if (this._destroyed || actor !== this.voiceActor() || identityVersion !== (this._voiceIdentityVersion || 0)) throw Error('登录身份已改变，请重新打开页面');
         this.setData({ 'voiceFile.url': url });
+        const requestId = this._voiceRequestId || 'voice-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+        this.saveVoiceRecord({ requestId, profileId: this._voiceProfileId || null,
+          generation: this._voiceGeneration == null ? null : Number(this._voiceGeneration), resetPending: false });
         this._voiceSubmitted = true;
         this._voicePendingSample = url;
         return this._request('/api/merchant/npc/voice/enroll', {
           voiceSample: url,
           voiceConsent: this.data.voiceConsent,
+          voiceRequestId: this._voiceRequestId,
         });
       })
       .then((res) => {
-        if (this._destroyed) return;
+        if (this._destroyed || actor !== this.voiceActor() || identityVersion !== (this._voiceIdentityVersion || 0)) return;
         const d = res.data || res;
-        if (d.voiceStatus == null || ![1, 2, 3].includes(Number(d.voiceStatus))) throw Error('声音结果待确认，请查询状态');
+        if (d.voiceStatus == null || ![1, 2, 3, 4].includes(Number(d.voiceStatus)) || d.voiceRequestId !== this._voiceRequestId || d.voiceCurrent === false)
+          throw Error('声音结果待确认，请查询原请求');
+        this.saveVoiceRecord({ requestId: this._voiceRequestId, profileId: d.voiceProfileId,
+          generation: d.voiceGeneration == null ? null : Number(d.voiceGeneration), resetPending: false });
         this._voicePendingSample = '';
         this.setData({
           voiceBusy: false,
           voiceStatus: Number(d.voiceStatus),
-          voiceFile: null,
-          voiceUnknown: false,
+          voiceFile: Number(d.voiceStatus) === 4 ? this.data.voiceFile : null,
+          voiceUnknown: Number(d.voiceStatus) === 4 || d.voiceUnknown === true,
         });
         this.refreshVoice();
       })
       .catch((e) => {
-        if (this._destroyed) return;
-        this.setData({ voiceBusy: false, voiceError: e.message, voiceUnknown: !!this._voiceSubmitted });
+        if (this._destroyed || actor !== this.voiceActor() || identityVersion !== (this._voiceIdentityVersion || 0)) return;
+        this.setData({ voiceBusy: false, voiceError: e.message, voiceUnknown: !!this._voiceSubmitted || !!this._voiceStorageBlocked });
         // 可能已经提交成功，先查状态再允许重试，避免重复生成。
         if (this._voiceSubmitted) this.refreshVoice();
       })
       .finally(() => {
-        this._voiceSubmitted = false;
+        if (actor === this.voiceActor() && identityVersion === (this._voiceIdentityVersion || 0)) this._voiceSubmitted = false;
       });
   },
 });

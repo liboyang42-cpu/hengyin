@@ -29,6 +29,7 @@ function loadPage(relativePath, options = {}) {
   let definition
   const app = {
     globalData: { navBarHeight: 44 },
+    getUserID: () => '201',
     sendRequest(request) { requests.push(request) },
     getRequestErrorMessage(error, fallback) { return error && error.msg || fallback },
     chooseImage() {},

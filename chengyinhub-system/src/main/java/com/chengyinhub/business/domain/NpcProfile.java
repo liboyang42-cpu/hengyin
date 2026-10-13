@@ -29,7 +29,7 @@ public class NpcProfile
     /** 声音复刻音色 id(阿里云百炼返回)。没配声音时为 null。 */
     private String voiceId;
 
-    /** 0=未配置 1=复刻中 2=可用 3=复刻失败。默认 0 而不是 null —— null 参与比较恒为 null,
+    /** 0=未配置 1=复刻中 2=可用 3=复刻失败 4=结果未知。默认 0 而不是 null —— null 参与比较恒为 null,
      *  写出 voice_status = 2 之外的条件时很容易得到「永远取不到」而不报错。 */
     private Integer voiceStatus;
 
@@ -37,6 +37,16 @@ public class NpcProfile
     private String voiceSample;
     /** 本次复刻请求已取得声音权利人明确授权；仅作接口入参，不落库。 */
     private Boolean voiceConsent;
+    /** Persisted merchant voice request identity and generation; node NPC voice is separate. */
+    private String voiceRequestId;
+    private Long voiceGeneration;
+    private Long voiceRequestMemberId;
+    public String getVoiceRequestId() { return voiceRequestId; }
+    public void setVoiceRequestId(String value) { voiceRequestId = value; }
+    public Long getVoiceGeneration() { return voiceGeneration; }
+    public void setVoiceGeneration(Long value) { voiceGeneration = value; }
+    public Long getVoiceRequestMemberId() { return voiceRequestMemberId; }
+    public void setVoiceRequestMemberId(Long value) { voiceRequestMemberId = value; }
     private Date createTime;
     private Date updateTime;
     /** 后台列表联查 mms_merchant.name 用,不落库(insert/update 均不含该列)。 */

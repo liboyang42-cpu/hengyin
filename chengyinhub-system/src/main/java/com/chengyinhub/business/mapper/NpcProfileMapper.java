@@ -50,6 +50,12 @@ public interface NpcProfileMapper
 
     /** 只写声音字段,不碰形象 —— 两条独立的用户动作,合成一个 update 会互相清空。 */
     int updateMerchantNpcVoice(NpcProfile profile);
+    NpcProfile selectMerchantVoiceForUpdate(@Param("id") Long id, @Param("scopeId") Long scopeId);
+    NpcProfile selectMerchantVoiceRequest(@Param("scopeId") Long scopeId, @Param("voiceRequestId") String requestId);
+    int insertMerchantVoiceRequest(NpcProfile request);
+    int finishMerchantVoiceRequest(NpcProfile request);
+    int claimMerchantNpcVoice(NpcProfile profile);
+    int resetMerchantNpcVoice(NpcProfile profile);
 
     /** 软删除门店分身。 */
     int deleteMerchantNpcById(@Param("id") Long id);
