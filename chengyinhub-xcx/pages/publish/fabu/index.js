@@ -1547,6 +1547,7 @@ Page({
         block: removed.block,
         node: removed.node,
         binding: this._removeNodeTemplateBinding(removed.node),
+        ruleRefs: this._removeNodeRuleRefs(removed.node),
       };
       this._appendPendingRemoval(Object.assign({ kind: 'story' }, removalSnapshot));
       this._realignStoryRouteGraph(previousRouteNodes);
@@ -1562,7 +1563,7 @@ Page({
       if (this._pendingUndoTimer && typeof this._pendingUndoTimer.unref === 'function') {
         this._pendingUndoTimer.unref();
       }
-      cyToast('节点已删除');
+      cyToast(removalSnapshot.ruleRefs && removalSnapshot.ruleRefs.note ? '节点已删除，' + removalSnapshot.ruleRefs.note : '节点已删除');
     } catch (error) {
       cyToast(app.getRequestErrorMessage(error, '删除失败'));
     }
@@ -4052,6 +4053,7 @@ Page({
         const removed = nodes.splice(ni, 1)[0];
         const material = proEditorMaterials.materialFromNode(removed, 'node');
         const binding = this._removeNodeTemplateBinding(removed);
+        const ruleRefs = this._removeNodeRuleRefs(removed);
         chapters[ci].nodes = nodes;
         const pending = (this.data.pendingMaterials || [])
           .filter(item => item._localId !== material._localId)
@@ -4063,6 +4065,7 @@ Page({
           material,
           node: removed,
           binding,
+          ruleRefs,
         });
         if (this._pendingUndoTimer) clearTimeout(this._pendingUndoTimer);
         this.setData({
@@ -4076,7 +4079,7 @@ Page({
         this._pruneRouteGraphToCurrentNodes();
         this._commitNodeRouteEdit();
         this.updateAllStatistics();
-        cyToast('已移到待编排区');
+        cyToast(ruleRefs && ruleRefs.note ? '已移到待编排区，' + ruleRefs.note : '已移到待编排区');
         this._pendingUndoTimer = setTimeout(() => {
           this._pendingUndoTimer = null;
           this._pendingUndoSnapshot = null;
@@ -4117,6 +4120,22 @@ Page({
           if (removal.binding) {
             restoredRuntime.templateBindings = restoredRuntime.templateBindings || {};
             restoredRuntime.templateBindings[templateBinding.nodeKey(removal.node)] = removal.binding;
+            restoredBindings = true;
+          }
+          if (removal.ruleRefs) {
+            // 撤销删除:把删站点时移出的互斥组 / 额外站点原样放回
+            removal.ruleRefs.before.forEach((row) => {
+              restoredRuntime.chapters = restoredRuntime.chapters || [];
+              const target = restoredRuntime.chapters.find((item) => item.index === row.index);
+              if (!target) return;
+              ['exclusiveGroups', 'extraNodes'].forEach((field) => {
+                if (row[field]) target[field] = row[field]; else delete target[field];
+              });
+            });
+            if (removal.ruleRefs.questsBefore && restoredRuntime.gameplayRuntime) {
+              restoredRuntime.gameplayRuntime.quests = removal.ruleRefs.questsBefore.quests;
+              restoredRuntime.gameplayRuntime.acts = removal.ruleRefs.questsBefore.acts;
+            }
             restoredBindings = true;
           }
           if (removal.kind === 'material') {
@@ -7661,6 +7680,44 @@ Page({
     if (Object.keys(bindings).length) runtime.templateBindings = bindings;
     else delete runtime.templateBindings;
     this.setData({ 'formData.themeRuntimeConfig': JSON.stringify(runtime) });
+  },
+  /* 删除站点时把它从章节规则(互斥组 / 额外站点)里明确移出:不留悬空编号让保存被拒,也不改指别的站点。
+     返回被改动章节的原值供撤销恢复;同时给出一句「从哪些规则里移除了」的说明。 */
+  _removeNodeRuleRefs(node) {
+    const key = templateBinding.nodeKey(node);
+    if (!key || !this.data.formData.themeRuntimeConfig) return null;
+    const runtime = templateBinding.parse(this.data.formData.themeRuntimeConfig);
+    const same = ref => String(ref) === key || (Number(ref) > 0 && String(Number(ref)) === key);
+    const before = [], notes = [];
+    (runtime.chapters || []).forEach(ch => {
+      const groups = ch.exclusiveGroups || [], extras = ch.extraNodes || [];
+      const inGroup = groups.some(group => group.some(same)), inExtra = extras.some(item => same(item.nodeId));
+      if (!inGroup && !inExtra) return;
+      before.push({ index: ch.index, exclusiveGroups: ch.exclusiveGroups, extraNodes: ch.extraNodes });
+      if (inGroup) {
+        ch.exclusiveGroups = groups.map(group => group.filter(ref => !same(ref))).filter(group => group.length >= 2);
+        if (!ch.exclusiveGroups.length) delete ch.exclusiveGroups;
+        notes.push('第' + (ch.index + 1) + '章互斥选项');
+      }
+      if (inExtra) {
+        ch.extraNodes = extras.filter(item => !same(item.nodeId));
+        if (!ch.extraNodes.length) delete ch.extraNodes;
+        notes.push('第' + (ch.index + 1) + '章额外站点');
+      }
+    });
+    // 运行结构里这一站的任务一并移出(幕的任务列表、前置条件里的引用),否则保存时会因引用已删站点被拒
+    const game = runtime.gameplayRuntime;
+    let questsBefore = null;
+    if (game && (game.quests || []).some(q => same(q.nodeId))) {
+      questsBefore = { quests: game.quests, acts: game.acts };
+      const gone = new Set(game.quests.filter(q => same(q.nodeId)).map(q => q.questKey));
+      game.quests = game.quests.filter(q => !gone.has(q.questKey)).map(q => (q.prerequisites
+        ? Object.assign({}, q, { prerequisites: q.prerequisites.filter(k => !gone.has(k)) }) : q));
+      game.acts = (game.acts || []).map(act => Object.assign({}, act, { questKeys: (act.questKeys || []).filter(k => !gone.has(k)) }));
+    }
+    if (!before.length && !questsBefore) return null;
+    this.setData({ 'formData.themeRuntimeConfig': JSON.stringify(runtime) });
+    return { before, questsBefore, note: notes.length ? '已从' + notes.join('、') + '中移除这个站点' : '' };
   },
   _removeNodeTemplateBinding(node) {
     const runtime = templateBinding.parse(this.data.formData.themeRuntimeConfig);

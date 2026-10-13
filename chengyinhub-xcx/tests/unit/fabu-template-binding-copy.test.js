@@ -320,3 +320,25 @@ test('复制成新草稿：互斥组与额外站点(含共用额度)换成 clien
   assert.doesNotMatch(copied.copyReferenceNotice, /互斥|额外/);
 });
 
+
+test('删除站点：从互斥组/额外站点/运行任务里明确移出并说明，不足两站的互斥组整组去掉；不改指别的站点', () => {
+  const p = makePage();
+  p.data.formData = Object.assign({}, p.data.formData, { productType: 1, chapters: [{ name: '一', nodes: [{ id: 116 }, { id: 117 }, { id: 118 }] }] });
+  p.data.formData.themeRuntimeConfig = JSON.stringify({
+    chapters: [{ index: 3, hpCost: 0, luckCost: 0, grants: [], eggs: [], exclusiveGroups: [[116, 117, 118]] },
+      { index: 5, hpCost: 0, luckCost: 0, grants: [], eggs: [], exclusiveGroups: [[121, 118]], extraNodes: [{ nodeId: 118, slot: 'shared' }, { nodeId: 123, slot: 'shared' }] }],
+    gameplayRuntime: { runtimeScope: 'TEAM', quests: [{ questKey: 'node_118', nodeId: 118, actKey: 'a' }, { questKey: 'node_116', nodeId: 116, actKey: 'a', prerequisites: ['node_118'] }],
+      acts: [{ actKey: 'a', questKeys: ['node_116', 'node_118'] }] },
+  });
+  const refs = p._removeNodeRuleRefs({ id: 118 });
+  const c = JSON.parse(p.data.formData.themeRuntimeConfig);
+  assert.deepEqual(c.chapters[0].exclusiveGroups, [[116, 117]]);
+  assert.equal(Object.hasOwn(c.chapters[1], 'exclusiveGroups'), false, '只剩一站的互斥组整组去掉');
+  assert.deepEqual(c.chapters[1].extraNodes, [{ nodeId: 123, slot: 'shared' }], '共用额度里的其他站点不受影响');
+  assert.deepEqual(c.gameplayRuntime.quests, [{ questKey: 'node_116', nodeId: 116, actKey: 'a', prerequisites: [] }]);
+  assert.deepEqual(c.gameplayRuntime.acts[0].questKeys, ['node_116']);
+  assert.match(refs.note, /第4章互斥选项、第6章互斥选项、第6章额外站点/);
+  assert.equal(refs.before.length, 2);
+  assert.ok(refs.questsBefore);
+  assert.equal(p._removeNodeRuleRefs({ id: 999 }), null, '没被引用的站点不改配置');
+});
