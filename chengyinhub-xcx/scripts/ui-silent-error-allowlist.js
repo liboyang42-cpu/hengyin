@@ -101,5 +101,6 @@ module.exports = [
   { file: 'utils/analytics.js', count: 1, reason: '埋点是非阻断遥测，失败保留队列重试且不得打扰玩家。' },
   { file: 'utils/marketing-consent-entry.js', count: 1, reason: '支付成功面板/订单详情上取商家营销同意状态(GET /api/merchant/crm/marketing-consents)是非必要附属请求:失败只隐藏可选的同意勾选行(fail-closed),主流程(面板自愈跳转、订单详情)不受影响;支付刚成功就弹通道默认「网络错误」会让玩家以为没付成功(2026-09-17 总控裁定,release-0917 第三阶段 C)。保存同意(POST)仍不静默。' },
   { file: 'utils/roam-share-snapshot.js', count: 2, reason: '足迹分享快照的发布、作废、接收方读取失败分别由分享面板链接提示+重试、精确 toast、整页空态/重试承接，避免统一 toast 双弹。' },
+  { file: 'utils/community-post-api.js', count: 1, reason: '三个现有举报入口共享服务端原因读取与提交回调；当前账号和页面的业务、网络失败显式提示一次，取消、卸载和换号迟到结果不提示，86项transport/sheet/lifecycle回归覆盖，不增加未来CRUD静默额度。' },
   { file: 'utils/ui-state-request.js', count: 1, reason: '共享 UI-state wrapper 仅允许枚举端点且强制传入 fail；真实调用方均在 fail 写页内错误态，本层只抑制重复全局 toast。' },
 ]
