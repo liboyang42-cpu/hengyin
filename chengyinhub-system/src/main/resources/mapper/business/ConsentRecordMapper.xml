@@ -23,6 +23,14 @@
                 #{eventType}, #{occurredAt}, #{requestId}, #{ipAddress}, #{createTime})
     </insert>
 
+    <select id="selectByRequestIdForShare" resultMap="ConsentRecordResult" useCache="false" flushCache="true">
+        select id, member_id, doc_type, doc_version, scene, scope_type, scope_id,
+               event_type, occurred_at, request_id, ip_address, create_time
+        from consent_record
+        where request_id = #{requestId}
+        lock in share mode
+    </select>
+
     <select id="selectLatest" resultMap="ConsentRecordResult">
         select id, member_id, doc_type, doc_version, scene, scope_type, scope_id,
                event_type, occurred_at, request_id, ip_address, create_time
