@@ -330,6 +330,8 @@ function assertSaveFailurePreserves(outcome) {
   const drafts = require('../../utils/club-edit-draft.js')
   const current = Object.assign({}, harness.component.data)
   harness.component._draftKey = drafts.key(9, 9)
+  current.profileVersion = 1
+  harness.component._profileVersion = 1
   harness.component._draftBase = drafts.base(current)
   harness.component.save()
   const preflight = harness.requests[0]
@@ -337,7 +339,7 @@ function assertSaveFailurePreserves(outcome) {
   preflight.success({ code: 200, data: current })
   const request = harness.requests[1]
   assert.equal(request.url, '/api/club/update-mine')
-  if (outcome === 'business') request.success({ code: '500', msg: `save-${process.pid}` })
+  if (outcome === 'business') request.success({ code: '500', msg: `save-${process.pid}`, data: { saveRejected: true } })
   else request.fail({ errMsg: `save-${process.pid}` })
 
   assert.deepEqual(formSnapshot(harness.component), before, `${outcome} 保存失败不得清空用户字段`)

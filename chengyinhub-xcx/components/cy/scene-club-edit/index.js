@@ -54,6 +54,8 @@ Component({
       draftAvailable: false,
       draftBlocked: false,
       draftComparison: '',
+      pendingSave: false,
+      canReconcile: false,
       canSave: false,
       saving: false,
       dissolving: false,
@@ -77,7 +79,9 @@ Component({
       opCurrentText: ''
     },
   lifetimes: {
+    detached() { this._detached = true; this._editEpoch = (this._editEpoch || 0) + 1; },
     attached() {
+      this._detached = false;
       const clubId = this.data.clubId
       if (clubId) this.setData({ clubId })
       this.loadClub()
@@ -93,14 +97,16 @@ Component({
     },
 
     fetchDetail() {
+      if (this.data.saving || this._detached) return;
       var that = this;
       const scope = drafts.key(app.getUserID(), this.data.clubId);
+      const epoch = this._editEpoch = (this._editEpoch || 0) + 1;
       this._draftKey = scope;
       this.setData({ loadState: 'loading', loadErrorText: '' });
       app.sendRequest({
         url: '/api/club/detail', method: 'POST', data: jsonBody({ id: this.data.clubId }), header: jsonHeader(),
         success: function (res) {
-          if (scope !== drafts.key(app.getUserID(), that.data.clubId)) return;
+          if (that._detached || epoch !== that._editEpoch || scope !== drafts.key(app.getUserID(), that.data.clubId)) return;
           if (res.code == '200' && res.data) {
             var c = res.data;
             // 2026-08-26:管理员(viewerIsAdmin)也能改**展示信息**;经营配置与解散仍只给主理人。
@@ -114,6 +120,8 @@ Component({
               return;
             }
             that._draftBase = drafts.base(c);
+            that._profileVersion = c.profileVersion;
+            that._conflictLatest = c;
             that._nonOwnerMemberCount = Number(c.nonOwnerMemberCount) || 0;
             that.setData({
               name: c.name || '',
@@ -139,6 +147,7 @@ Component({
           }
         },
         fail: function () {
+          if (that._detached || epoch !== that._editEpoch || scope !== drafts.key(app.getUserID(), that.data.clubId)) return;
           that.setData({ loadState: 'network-error', loadErrorText: '网络异常，请重试' });
         }
       });
@@ -147,11 +156,14 @@ Component({
     offerDraft(latest) {
       const found = drafts.read(wx, this._draftKey);
       this._savedDraft = found.record || null;
+      const pending = found.record && found.record.pending;
       const conflict = found.record && found.record.base !== this._draftBase;
       this.setData({
-        draftAvailable: !!found.record && !conflict,
-        draftBlocked: !!conflict || ['corrupt', 'error'].includes(found.state),
-        draftNotice: found.record ? (conflict ? '资料已更新，旧草稿不会覆盖当前资料。请对比后放弃旧草稿再编辑。' : '发现本账号未提交的草稿，可恢复或放弃。')
+        draftAvailable: !!found.record && !conflict && !pending,
+        draftBlocked: !!pending || !!conflict || ['corrupt', 'error'].includes(found.state),
+        pendingSave: !!pending,
+        canReconcile: !!conflict && !pending,
+        draftNotice: pending ? '上次保存结果待确认。请先核对原请求，草稿仍保留。' : found.record ? (conflict ? '资料已更新，旧草稿仍保留。请重读并对比后继续核对。' : '发现本账号未提交的草稿，可恢复或放弃。')
           : (found.state === 'corrupt' ? '草稿无法读取，原记录已保留；可放弃后重新编辑。' : (found.state === 'error' ? '暂时无法读取草稿，请重新打开后重试。' : '')),
         draftComparison: conflict ? drafts.compare(found.record.form, latest) : '',
       });
@@ -171,12 +183,97 @@ Component({
       });
     },
     discardDraft() {
-      if (this._draftKey !== drafts.key(app.getUserID(), this.data.clubId)) return;
+      if (this._draftKey !== drafts.key(app.getUserID(), this.data.clubId) || this.data.saving || this.data.pendingSave) return;
       if (!drafts.remove(wx, this._draftKey)) { this.setData({ draftNotice: '草稿未能清除，请重试。' }); return; }
       this._savedDraft = null;
       this.setData({ draftAvailable: false, draftBlocked: false, draftNotice: '', draftComparison: '' });
       this.triggerEvent('dirtychange', { dirty: false });
       this.fetchDetail();
+    },
+
+    reloadLatest() {
+      if (this.data.saving || this.data.pendingSave || this._draftKey !== drafts.key(app.getUserID(), this.data.clubId)) return;
+      if (this.data.draftBlocked && this._savedDraft && !drafts.write(wx, this._draftKey, this._savedDraft.base, this._savedDraft.form)) {
+        this.setData({ draftNotice: '草稿未能保留，请勿退出；恢复存储后再重读或核对。' }); return;
+      }
+      this.fetchDetail();
+    },
+    reconcileDraft() {
+      if (!this.data.canReconcile || this.data.saving || this.data.pendingSave || !this._savedDraft || !this._conflictLatest ||
+          this._draftKey !== drafts.key(app.getUserID(), this.data.clubId)) return;
+      const original = drafts.base(this._conflictLatest);
+      if (!drafts.write(wx, this._draftKey, original, this._savedDraft.form)) {
+        this.setData({ draftNotice: '核对后的草稿未能保留，请勿退出。' }); return;
+      }
+      this._draftBase = original;
+      this._profileVersion = this._conflictLatest.profileVersion;
+      this.setData({ draftBlocked: false, draftAvailable: true, canReconcile: false });
+      this.restoreDraft();
+    },
+    showProfileConflict(latest, localForm) {
+      this._conflictLatest = latest || null;
+      this._savedDraft = localForm ? { base: this._draftBase, form: drafts.form(localForm) }
+        : drafts.read(wx, this._draftKey).record || this._savedDraft;
+      this.setData({ saving: false, pendingSave: false, draftBlocked: true, draftAvailable: false,
+        canReconcile: !!latest && !!this._savedDraft,
+        draftNotice: '资料已更新，草稿仍保留。请重读并对比，再载入草稿继续核对。',
+        draftComparison: latest && this._savedDraft ? drafts.compare(this._savedDraft.form, latest) : '' });
+    },
+    confirmPendingSave() {
+      if (this.data.saving || this._draftKey !== drafts.key(app.getUserID(), this.data.clubId)) return;
+      const found = drafts.read(wx, this._draftKey);
+      if (!found.record || !found.record.pending) return;
+      this._savedDraft = found.record;
+      this.setData({ saving: true, saveErrorText: '' });
+      this.submitProfile(found.record.pending, this._draftKey, found.record.form);
+    },
+    submitProfile(payload, scope, submitted) {
+      const that = this;
+      const visibleForm = JSON.stringify(drafts.form(this.data));
+      const epoch = this._editEpoch || 0;
+      const current = () => !that._detached && epoch === (that._editEpoch || 0) && scope === drafts.key(app.getUserID(), that.data.clubId) && scope === that._draftKey;
+      const uncertain = () => {
+        if (!current()) return;
+        that.setData({ saving: false, pendingSave: true, draftBlocked: true, canReconcile: false,
+          draftNotice: '上次保存结果待确认，请先核对原请求。',
+          saveErrorText: '保存结果待确认，请核对原请求；草稿仍保留。' });
+      };
+      app.sendRequest({
+        url: '/api/club/update-mine', method: 'POST', data: jsonBody(payload),
+        header: { ...jsonHeader(), Authorization: app.getAuthorization() },
+        success(res) {
+          if (!current()) return;
+          if (res && res.code == '200') {
+            if (!res.data || res.data.editRequestId !== payload.editRequestId || !Number.isSafeInteger(res.data.profileVersion)) { uncertain(); return; }
+            const found = drafts.read(wx, scope);
+            if (!found.record || !found.record.pending || found.record.pending.editRequestId !== payload.editRequestId) { uncertain(); return; }
+            if (JSON.stringify(drafts.form(that.data)) !== visibleForm) {
+              const kept = drafts.write(wx, scope, found.record.base, that.data);
+              that.setData({ saving: false, pendingSave: !kept, draftBlocked: true,
+                draftNotice: '原请求已保存，后续修改仍保留。请重读资料并核对草稿。', saveErrorText: '' });
+              that.triggerEvent('dirtychange', { dirty: true }); return;
+            }
+            const cleared = drafts.remove(wx, scope);
+            that.setData({ saving: false, pendingSave: !cleared, draftBlocked: !cleared, saveErrorText: '',
+              draftNotice: cleared ? '' : '原请求已保存，本机草稿未能清除，请再次核对。' });
+            toast.success('已保存');
+            that.triggerEvent('dirtychange', { dirty: !cleared });
+            if (cleared) setTimeout(() => { if (current()) { that.triggerEvent('saved'); that.triggerEvent('back'); } }, 800);
+          } else if (res && (res.code == '409' || (res.data && res.data.saveRejected === true))) {
+            const found = drafts.read(wx, scope);
+            const kept = found.record && drafts.write(wx, scope, found.record.base, submitted);
+            that.setData({ saving: false, pendingSave: !kept, draftBlocked: !kept, saveErrorText: res.msg || '保存未完成，草稿仍保留。' });
+            if (res.code == '409' && kept) {
+              that.showProfileConflict(null);
+              app.sendRequest({ url: '/api/club/detail', method: 'POST', data: jsonBody({ id: payload.id }), header: jsonHeader(),
+                success(latest) { if (current() && latest && latest.code == '200' && latest.data) that.showProfileConflict(latest.data); },
+                fail() {}, successStatusAbnormal() {} });
+            }
+          } else uncertain();
+        },
+        fail: uncertain,
+        successStatusAbnormal: uncertain,
+      });
     },
 
     validate() {
@@ -196,6 +293,7 @@ Component({
 
     // ===== 输入 =====
     markDirty() {
+      if (this._detached || this.data.saving || this.data.pendingSave) return;
       if (this._draftKey !== drafts.key(app.getUserID(), this.data.clubId)) { this.setData({ draftNotice: '账号已变化，请重新打开编辑页。' }); return; }
       if (!this.data.draftAvailable && !this.data.draftBlocked) {
         const saved = drafts.write(wx, this._draftKey, this._draftBase, this.data);
@@ -240,10 +338,12 @@ Component({
     closePicker() { this.setData({ pickerKind: '' }); },
 
     pickDraftType(e) {
+      if (this.data.saving || this.data.pendingSave || this.data.draftAvailable || this.data.draftBlocked) return;
       this.setData({ draftType: e.currentTarget.dataset.val });
     },
 
     toggleDraftDir(e) {
+      if (this.data.saving || this.data.pendingSave || this.data.draftAvailable || this.data.draftBlocked) return;
       var val = e.currentTarget.dataset.val;
       var arr = this.data.draftPrefs.slice();
       var i = arr.indexOf(val);
@@ -256,6 +356,7 @@ Component({
     },
 
     applyPicker() {
+      if (this.data.saving || this.data.pendingSave || this.data.draftAvailable || this.data.draftBlocked) return;
       // 两个分支各写各的字面量字段:动态 setData(计算键/展开)静态门禁核不了消费面,
       // 会被 U4 判成「无法核对 WXML 消费」。
       var kind = this.data.pickerKind;
@@ -268,14 +369,20 @@ Component({
     pickLogo() {
       if (this.data.saving || this.data.draftAvailable || this.data.draftBlocked) return;
       var that = this;
+      const scope = this._draftKey, epoch = this._editEpoch || 0;
       app.chooseImage(function (urls) {
+        if (that._detached || epoch !== (that._editEpoch || 0) || scope !== drafts.key(app.getUserID(), that.data.clubId) ||
+            that.data.saving || that.data.pendingSave || that.data.draftBlocked) return;
         if (urls && urls.length) that.setData({ logo: urls[0] }, () => that.markDirty());
       }, 1, { crop: true, cropScale: '1:1' });
     },
     pickCover() {
       if (this.data.saving || this.data.draftAvailable || this.data.draftBlocked) return;
       var that = this;
+      const scope = this._draftKey, epoch = this._editEpoch || 0;
       app.chooseImage(function (urls) {
+        if (that._detached || epoch !== (that._editEpoch || 0) || scope !== drafts.key(app.getUserID(), that.data.clubId) ||
+            that.data.saving || that.data.pendingSave || that.data.draftBlocked) return;
         if (urls && urls.length) that.setData({ cover: urls[0] }, () => that.markDirty());
       }, 1, { crop: true, cropScale: '16:9' });
     },
@@ -288,7 +395,7 @@ Component({
       if (this.data.loadState !== 'ready' || !this.data.canSave || this.data.saving || this.data.draftAvailable || this.data.draftBlocked) return;
       if (!this._draftKey || this._draftKey !== drafts.key(app.getUserID(), this.data.clubId)) { this.setData({ saveErrorText: '账号已变化，请重新打开编辑页。' }); return; }
       var d = this.data, that = this;
-      const submittedForm = JSON.stringify(drafts.form(d));
+      this._editEpoch = (this._editEpoch || 0) + 1;
       this.setData({ saving: true, saveErrorText: '' });
       var payload = {
         id: d.clubId,                 // 多俱乐部:必须带 id,改指定团(后端校验归属)
@@ -309,49 +416,38 @@ Component({
         memberReservedQuota: d.memberReservedQuota === '' ? 0 : Number(d.memberReservedQuota)
       };
       if (d.joinPolicySupported) payload.joinPolicy = d.joinPolicy;
-      const submit = () => app.sendRequest({
-        url: '/api/club/update-mine', method: 'POST',
-        data: JSON.stringify(payload),
-        header: {
-          'Content-Type': 'application/json',
-          'Authorization': app.getAuthorization()
-        },
-        success: function (res) {
-          if (res.code == '200') {
-            if (that._draftKey !== drafts.key(app.getUserID(), that.data.clubId)) return;
-            if (JSON.stringify(drafts.form(that.data)) !== submittedForm) {
-              that.setData({ saving: false, saveErrorText: '提交期间又有修改，草稿仍保留，请重新打开核对。' }); return;
-            }
-            const cleared = drafts.remove(wx, that._draftKey);
-            that.setData({ saving: false, saveErrorText: '', draftNotice: cleared ? '' : '资料已保存，本机草稿未能清除，重进时请核对。' });
-            toast.success('已保存');
-            that.triggerEvent('dirtychange', { dirty: false });
-            // 保存成功 ⇒ 关掉编辑层回到管理页,并让宿主重拉(原来是 navigateBack 猜页面栈)
-            var self = that;
-            setTimeout(function () { self.triggerEvent('saved'); self.triggerEvent('back'); }, 800);
-          } else {
-            that.setData({ saving: false, saveErrorText: res.msg || '请稍后重试' });
-          }
-        },
-        fail: function () {
-          that.setData({ saving: false, saveErrorText: '网络异常，请重试' });
-        },
-        successStatusAbnormal() { that.setData({ saving: false, saveErrorText: '保存结果暂无法确认，请重新打开核对，草稿仍保留。' }); }
-      });
+      if (!Number.isSafeInteger(this._profileVersion) || this._profileVersion < 1) {
+        this.setData({ saving: false, saveErrorText: '资料版本暂不可用，请重新打开核对。' }); return;
+      }
+      if (!d.isOwner) {
+        delete payload.operationConfigUpdated;
+        delete payload.prioritySignupEnabled;
+        delete payload.memberReservedQuota;
+        delete payload.joinPolicy;
+      }
+      payload.expectedVersion = this._profileVersion;
+      payload.editRequestId = drafts.requestId();
+      const scope = this._draftKey;
+      const submit = () => {
+        if (!drafts.write(wx, scope, that._draftBase, d, payload)) {
+          that.setData({ saving: false, saveErrorText: '保存标识未能保留，请勿退出；本次未提交。' }); return;
+        }
+        that.setData({ pendingSave: true });
+        that.submitProfile(payload, scope, drafts.form(d));
+      };
       app.sendRequest({
         url: '/api/club/detail', method: 'POST', data: jsonBody({ id: d.clubId }), header: jsonHeader(),
         success(res) {
-          if (that._draftKey !== drafts.key(app.getUserID(), that.data.clubId)) { that.setData({ saving: false }); return; }
+          if (that._detached || scope !== that._draftKey || scope !== drafts.key(app.getUserID(), that.data.clubId)) return;
           if (!res || res.code != '200' || !res.data) { that.setData({ saving: false, saveErrorText: '无法核对最新资料，请重试。' }); return; }
-          // shortcut: 这里只能拦截读取前的更新，原写接口加入条件版本后才能消除并发窗口。
           if (drafts.base(res.data) !== that._draftBase) {
-            that.setData({ saving: false, draftBlocked: true, draftNotice: '资料已更新，本次未提交。请对比并放弃旧草稿后重新编辑。', draftComparison: drafts.compare(d, res.data) });
+            that.showProfileConflict(res.data, d);
             return;
           }
           submit();
         },
-        fail() { that.setData({ saving: false, saveErrorText: '无法核对最新资料，请重试。' }); },
-        successStatusAbnormal() { that.setData({ saving: false, saveErrorText: '无法核对最新资料，请重试。' }); },
+        fail() { if (!that._detached && scope === drafts.key(app.getUserID(), that.data.clubId)) that.setData({ saving: false, saveErrorText: '无法核对最新资料，请重试。' }); },
+        successStatusAbnormal() { if (!that._detached && scope === drafts.key(app.getUserID(), that.data.clubId)) that.setData({ saving: false, saveErrorText: '无法核对最新资料，请重试。' }); },
       });
     },
 

@@ -457,7 +457,7 @@ public class ApiClubController extends BaseController {
     @PostMapping("/update-mine")
     public AjaxResult updateMine(@RequestBody Club body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = currentMemberId(); } catch (Exception e) { return rejectedProfileSave("请先登录"); }
         // 多俱乐部:带 id 则改指定团(校验归属);否则兼容旧单团前端取第一个
         Club club;
         if (body.getId() != null) {
@@ -465,34 +465,53 @@ public class ApiClubController extends BaseController {
             // 2026-08-26:展示资料放开给管理员(canGovernClub = owner 或 role=1)。
             // 真闸在 clubService.updateOwnedClubProfile 的行锁内再算一次,这里只是早退。
             if (club == null || !clubMemberService.canGovernClub(club, memberId)) {
-                return error("无权修改该俱乐部");
+                return rejectedProfileSave("无权修改该俱乐部");
             }
         } else {
             club = clubService.selectClubByMemberId(memberId);
-            if (club == null) return error("你还不是俱乐部");
+            if (club == null) return rejectedProfileSave("你还不是俱乐部");
         }
         boolean actorIsOwner = OwnershipUtils.isOwner(club.getMemberId(), memberId);
         // ★ 经营配置(成员优先报名 / 保留名额 / 折扣价)决定开卖时票怎么分、钱怎么收,只有主理人能改。
         //   管理员带着这几个字段来必须**报错**,不能悄悄忽略 —— 悄悄忽略会让他以为改成功了。
         if (!actorIsOwner && Boolean.TRUE.equals(body.getOperationConfigUpdated())) {
-            return error("只有主理人可以修改会员经营配置");
+            return rejectedProfileSave("只有主理人可以修改会员经营配置");
         }
         if (!actorIsOwner && body.getJoinPolicy() != null) {
-            return error("只有主理人可以修改加入方式");
+            return rejectedProfileSave("只有主理人可以修改加入方式");
         }
-        if (StringUtils.isEmpty(body.getName())) return error("请填写俱乐部名称");
+        if (StringUtils.isEmpty(body.getName())) return rejectedProfileSave("请填写俱乐部名称");
         String operationConfigError = validateOperationConfig(body);
-        if (operationConfigError != null) return error(operationConfigError);
+        if (operationConfigError != null) return rejectedProfileSave(operationConfigError);
         if (body.getJoinPolicy() != null && body.getJoinPolicy() != 0 && body.getJoinPolicy() != 1) {
-            return error("加入方式仅支持公开或需审批");
+            return rejectedProfileSave("加入方式仅支持公开或需审批");
+        }
+        if (body.getId() == null) body.setId(club.getId());
+        String requestHash;
+        try {
+            String requestJson = com.alibaba.fastjson2.JSON.toJSONString(body) + body.getMemberDiscountPriceProvided();
+            requestHash = String.format("%064x", new java.math.BigInteger(1,
+                    java.security.MessageDigest.getInstance("SHA-256").digest(requestJson.getBytes(java.nio.charset.StandardCharsets.UTF_8))));
+            // 已提交原请求只读回执，不因外部审核服务暂不可用变成一次新的资料写。
+            Map<String, Object> receipt = clubService.readOwnedClubProfileReceipt(body, memberId, body.getJoinPolicy(), requestHash);
+            if (receipt != null) return AjaxResult.success("已保存", receipt);
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return rejectedProfileSave(e.getMessage());
         }
         // 内容安全:改资料同样过文本检测,命中违规即拒
         String secMsg = wxContentSecurityService.checkText(
                 IWxContentSecurityService.joinText(body.getName(), body.getDescription(), body.getKeywords(),
                         body.getLeaderName(), body.getJoinReason(), body.getStyle(), body.getAddress()),
                 openidOf(memberId));
-        if (secMsg != null) return error(secMsg);
+        if (secMsg != null) return rejectedProfileSave(secMsg);
         // 仅白名单字段可改;status / memberId / memberCount / level 不允许前端篡改
+        Long clubId = club.getId();
+        club = new Club();
+        club.setId(clubId);
+        club.setExpectedVersion(body.getExpectedVersion());
+        club.setEditRequestId(body.getEditRequestId());
         club.setName(body.getName());
         club.setLogo(body.getLogo());
         club.setCover(body.getCover());
@@ -510,23 +529,26 @@ public class ApiClubController extends BaseController {
         if (Boolean.TRUE.equals(body.getOperationConfigUpdated())) {
             club.setOperationConfigUpdated(true);
             club.setPrioritySignupEnabled(body.getPrioritySignupEnabled());
-            club.setMemberDiscountPrice(body.getMemberDiscountPrice());
+            if (body.getMemberDiscountPriceProvided()) club.setMemberDiscountPrice(body.getMemberDiscountPrice());
             club.setMemberReservedQuota(body.getMemberReservedQuota());
         }
-        boolean joinPolicySupported;
+        Map<String, Object> saved;
         try {
-            joinPolicySupported = clubService.updateOwnedClubProfile(club, memberId, body.getJoinPolicy());
+            saved = clubService.saveOwnedClubProfile(club, memberId, body.getJoinPolicy(), requestHash);
+        } catch (java.util.ConcurrentModificationException e) {
+            return AjaxResult.error(409, e.getMessage());
         } catch (IllegalArgumentException | IllegalStateException e) {
-            return error(e.getMessage());
+            return rejectedProfileSave(e.getMessage());
         }
         try {
             wxContentSecurityService.submitMediaCheck(IWxContentSecurityService.BIZ_TYPE_CLUB_PROFILE, club.getId(),
                     mediaCsv(club.getLogo(), club.getCover(), club.getCaseImages()), openidOf(memberId));
         } catch (Exception ignore) {}
-        Map<String, Object> saved = new HashMap<>();
-        saved.put("joinPolicySupported", joinPolicySupported);
-        saved.put("joinPolicy", joinPolicySupported ? clubService.selectJoinPolicy(club.getId()) : 0);
         return AjaxResult.success("已保存", saved);
+    }
+
+    private AjaxResult rejectedProfileSave(String message) {
+        return AjaxResult.error(message, java.util.Collections.singletonMap("saveRejected", true));
     }
 
     private String validateOperationConfig(Club club) {

@@ -14,7 +14,8 @@ function form(value) {
   result.joinPolicy = Number(source.joinPolicy) === 1 ? 1 : 0;
   return result;
 }
-function base(value) { return JSON.stringify({ updateTime: value.updateTime || '', form: form(value) }); }
+function base(value) { return JSON.stringify({ profileVersion: value.profileVersion || null, updateTime: value.updateTime || '', form: form(value) }); }
+function requestId() { return 'club_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2) + '_' + Math.random().toString(36).slice(2); }
 function read(storage, storageKey) {
   if (!storageKey) return { state: 'unavailable' };
   try {
@@ -24,13 +25,15 @@ function read(storage, storageKey) {
         !FIELDS.every(field => Object.prototype.hasOwnProperty.call(record.form, field)) ||
         !Array.isArray(record.form.activityPrefs) || !record.form.activityPrefs.every(value => typeof value === 'string') ||
         !FIELDS.filter(field => !['activityPrefs', 'prioritySignupEnabled', 'joinPolicy'].includes(field)).every(field => typeof record.form[field] === 'string') ||
-        typeof record.form.prioritySignupEnabled !== 'boolean' || ![0, 1].includes(record.form.joinPolicy)) return { state: 'corrupt' };
+        typeof record.form.prioritySignupEnabled !== 'boolean' || ![0, 1].includes(record.form.joinPolicy) ||
+        (record.pending && (!record.pending.editRequestId || !Number.isSafeInteger(record.pending.expectedVersion) ||
+          record.pending.expectedVersion < 1 || String(record.pending.id) !== storageKey.split(':').pop()))) return { state: 'corrupt' };
     return { state: 'ready', record };
   } catch (e) { return { state: 'error' }; }
 }
-function write(storage, storageKey, original, value) {
+function write(storage, storageKey, original, value, pending) {
   if (!storageKey) return false;
-  try { storage.setStorageSync(storageKey, { schemaVersion: 1, base: original, form: form(value) }); return true; }
+  try { storage.setStorageSync(storageKey, { schemaVersion: 1, base: original, form: form(value), ...(pending ? { pending: JSON.parse(JSON.stringify(pending)) } : {}) }); return true; }
   catch (e) { return false; }
 }
 function remove(storage, storageKey) {
@@ -44,4 +47,4 @@ function compare(saved, latest) {
     return LABELS[FIELDS.indexOf(field)] + '：草稿「' + show(a[field]) + '」／当前「' + show(b[field]) + '」';
   }).join('\n');
 }
-module.exports = { key, form, base, read, write, remove, compare };
+module.exports = { key, form, base, read, write, remove, compare, requestId };

@@ -52,6 +52,10 @@ public interface IClubService
     /** 主理人资料与加入策略同一事务保存；返回当前库是否支持 join_policy。 */
     public boolean updateOwnedClubProfile(Club club, Long ownerId, Integer joinPolicy);
 
+    public java.util.Map<String, Object> saveOwnedClubProfile(Club club, Long actorId, Integer joinPolicy, String requestHash);
+
+    public java.util.Map<String, Object> readOwnedClubProfileReceipt(Club club, Long actorId, Integer joinPolicy, String requestHash);
+
     /**
      * 稿 M 268:223「开放设置 · 允许成员发帖」。只有主理人能改。
      * 关掉之后,只有主理人/管理员/拿到内容管理权限的人还能在俱乐部发帖。

@@ -7,6 +7,7 @@
 
     <resultMap type="Club" id="ClubResult">
         <result property="id"    column="id"    />
+        <result property="profileVersion" column="profile_version" />
         <result property="memberId"    column="member_id"    />
         <result property="name"    column="name"    />
         <result property="logo"    column="logo"    />
@@ -57,7 +58,7 @@
     </resultMap>
 
     <sql id="selectClubVo">
-        select id, member_id, name, logo, cover, description, club_type, club_types, activity_prefs, experience, join_reason, case_images, city, keywords, style, max_event_size, avg_event_size, can_design_route, can_design_task, can_npc, can_merchant_coop, has_guide_cert, cert_images, category_id, address, leader_name, phone, status, level, tags, reject_reason, audit_by, audit_time, member_count, priority_signup_enabled, member_discount_price, member_reserved_quota, public_visible, member_post_allowed, merchant_undertake_open, create_by, create_time, update_by, update_time, remark, del_flag from club
+        select id, profile_version, member_id, name, logo, cover, description, club_type, club_types, activity_prefs, experience, join_reason, case_images, city, keywords, style, max_event_size, avg_event_size, can_design_route, can_design_task, can_npc, can_merchant_coop, has_guide_cert, cert_images, category_id, address, leader_name, phone, status, level, tags, reject_reason, audit_by, audit_time, member_count, priority_signup_enabled, member_discount_price, member_reserved_quota, public_visible, member_post_allowed, merchant_undertake_open, create_by, create_time, update_by, update_time, remark, del_flag from club
     </sql>
 
     <select id="selectClubList" parameterType="Club" resultMap="ClubResult">
@@ -205,6 +206,7 @@
     <update id="updateClub" parameterType="Club">
         update club
         <trim prefix="SET" suffixOverrides=",">
+            profile_version = profile_version + 1,
             <if test="name != null">name = #{name},</if>
             <if test="logo != null">logo = #{logo},</if>
             <if test="cover != null">cover = #{cover},</if>
@@ -247,22 +249,36 @@
             <if test="remark != null">remark = #{remark},</if>
         </trim>
         where id = #{id}
+        <if test="expectedVersion != null">
+            and profile_version = #{expectedVersion} and member_id = #{memberId} and del_flag = 0
+        </if>
     </update>
+
+    <select id="selectProfileEditReceipt" resultType="map" useCache="false" flushCache="true">
+        select request_hash as requestHash, result_json as resultJson
+        from club_profile_edit_receipt
+        where club_id = #{clubId} and actor_id = #{actorId} and request_id = #{requestId} for update
+    </select>
+
+    <insert id="insertProfileEditReceipt">
+        insert into club_profile_edit_receipt(club_id, actor_id, request_id, request_hash, result_json)
+        values(#{clubId}, #{actorId}, #{requestId}, #{requestHash}, #{resultJson})
+    </insert>
 
     <!-- 稿 M「开放设置」的单个开关。不塞进 updateClub 的大动态更新:那条是整份资料表单
          用的,单点一个开关走它要凑齐一堆无关字段。 -->
     <update id="updatePublicVisible">
-        update club set public_visible = #{enabled}, update_time = now()
+        update club set public_visible = #{enabled}, profile_version = profile_version + 1, update_time = now()
         where id = #{clubId} and del_flag = 0
     </update>
 
     <update id="updateMemberPostAllowed">
-        update club set member_post_allowed = #{enabled}, update_time = now()
+        update club set member_post_allowed = #{enabled}, profile_version = profile_version + 1, update_time = now()
         where id = #{clubId} and del_flag = 0
     </update>
 
     <update id="updateMerchantUndertakeOpen">
-        update club set merchant_undertake_open = #{enabled}, update_time = now()
+        update club set merchant_undertake_open = #{enabled}, profile_version = profile_version + 1, update_time = now()
         where id = #{clubId} and del_flag = 0
     </update>
 
@@ -282,7 +298,7 @@
     </update>
 
     <update id="clearProfileMedia">
-        update club set logo = null, cover = null, case_images = null where id = #{id}
+        update club set logo = null, cover = null, case_images = null, profile_version = profile_version + 1 where id = #{id}
     </update>
 
     <!-- 兼容 join_policy 尚未落库：探针本身不引用业务列，缺列时也不会 500。 -->
@@ -299,7 +315,7 @@
     </select>
 
     <update id="updateJoinPolicy">
-        update club set join_policy = #{joinPolicy}, update_time = now()
+        update club set join_policy = #{joinPolicy}, profile_version = profile_version + 1, update_time = now()
         where id = #{clubId} and del_flag = 0
     </update>
 

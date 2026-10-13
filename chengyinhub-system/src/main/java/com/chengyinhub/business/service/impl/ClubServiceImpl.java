@@ -408,29 +408,15 @@ public class ClubServiceImpl implements IClubService
         {
             throw new IllegalArgumentException("俱乐部不存在");
         }
-        // 2026-08-26:展示资料放开给管理员。★ 判据在锁内重算 —— 期间可能被降级或俱乐部被解散,
-        // 拿调用方算好的布尔值进来就等于把闸挪到锁外,那是假闸。
-        boolean isOwner = locked.getMemberId() != null && locked.getMemberId().equals(ownerId);
-        boolean isAdmin = false;
-        if (!isOwner)
+        requireProfileActor(locked, ownerId, joinPolicy);
+        if (club.getExpectedVersion() != null && !club.getExpectedVersion().equals(locked.getProfileVersion()))
         {
-            ClubMember actor = clubMemberMapper.selectByClubAndMember(club.getId(), ownerId);
-            isAdmin = actor != null && Integer.valueOf(1).equals(actor.getRole())
-                    && Integer.valueOf(1).equals(actor.getStatus());
+            throw new java.util.ConcurrentModificationException("俱乐部资料已更新，请重新核对草稿");
         }
-        if (!isOwner && !isAdmin)
+        club.setMemberId(locked.getMemberId());
+        if (Boolean.TRUE.equals(club.getOperationConfigUpdated()) && !club.getMemberDiscountPriceProvided())
         {
-            throw new IllegalArgumentException("无权修改该俱乐部");
-        }
-        // 加入方式属于「经营配置」,只有主理人能改。管理员传了必须**报错**,
-        // 不能静默丢弃 —— 静默丢弃会让他以为改成功了。
-        if (!isOwner && joinPolicy != null)
-        {
-            throw new IllegalArgumentException("只有主理人可以修改加入方式");
-        }
-        if (joinPolicy != null && joinPolicy != 0 && joinPolicy != 1)
-        {
-            throw new IllegalArgumentException("加入方式仅支持公开或需审批");
+            club.setMemberDiscountPrice(locked.getMemberDiscountPrice());
         }
         boolean supported;
         try
@@ -454,6 +440,8 @@ public class ClubServiceImpl implements IClubService
                 {
                     throw new IllegalStateException("加入方式保存失败，请重试");
                 }
+                // 同一事务中的策略写也推进版本；最终资料 CAS 使用本事务刚产生的版本。
+                if (club.getExpectedVersion() != null) club.setExpectedVersion(club.getExpectedVersion() + 1);
             }
             catch (IllegalStateException e)
             {
@@ -471,6 +459,91 @@ public class ClubServiceImpl implements IClubService
             throw new IllegalStateException("俱乐部资料保存失败，请重试");
         }
         return supported;
+    }
+
+    private void requireProfileActor(Club locked, Long ownerId, Integer joinPolicy)
+    {
+        // 2026-08-26:展示资料放开给管理员。★ 判据在锁内重算 —— 期间可能被降级或俱乐部被解散,
+        // 拿调用方算好的布尔值进来就等于把闸挪到锁外,那是假闸。
+        boolean isOwner = locked.getMemberId() != null && locked.getMemberId().equals(ownerId);
+        boolean isAdmin = false;
+        if (!isOwner)
+        {
+            ClubMember actor = clubMemberMapper.selectByClubAndMember(locked.getId(), ownerId);
+            isAdmin = actor != null && Integer.valueOf(1).equals(actor.getRole())
+                    && Integer.valueOf(1).equals(actor.getStatus());
+        }
+        if (!isOwner && !isAdmin)
+        {
+            throw new IllegalArgumentException("无权修改该俱乐部");
+        }
+        // 加入方式属于「经营配置」,只有主理人能改。管理员传了必须**报错**,
+        // 不能静默丢弃 —— 静默丢弃会让他以为改成功了。
+        if (!isOwner && joinPolicy != null)
+        {
+            throw new IllegalArgumentException("只有主理人可以修改加入方式");
+        }
+        if (joinPolicy != null && joinPolicy != 0 && joinPolicy != 1)
+        {
+            throw new IllegalArgumentException("加入方式仅支持公开或需审批");
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public java.util.Map<String, Object> saveOwnedClubProfile(Club club, Long actorId, Integer joinPolicy, String requestHash)
+    {
+        boolean versioned = validateProfileEditCommand(club);
+        Club locked = clubMapper.selectClubByIdForUpdate(club.getId());
+        if (locked == null) throw new IllegalArgumentException("俱乐部不存在");
+        requireProfileActor(locked, actorId, joinPolicy);
+        if (versioned)
+        {
+            java.util.Map<String, Object> receipt = profileEditReceipt(club, actorId, requestHash);
+            if (receipt != null) return receipt;
+        }
+        boolean supported = updateOwnedClubProfile(club, actorId, joinPolicy);
+        Club saved = clubMapper.selectClubByIdForUpdate(club.getId());
+        java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("profileVersion", saved.getProfileVersion());
+        result.put("editRequestId", club.getEditRequestId());
+        result.put("joinPolicySupported", supported);
+        result.put("joinPolicy", supported ? clubMapper.selectJoinPolicy(club.getId()) : 0);
+        if (versioned && clubMapper.insertProfileEditReceipt(club.getId(), actorId, club.getEditRequestId(),
+                requestHash, com.alibaba.fastjson2.JSON.toJSONString(result)) != 1)
+            throw new IllegalStateException("保存回执写入失败，资料修改已回滚");
+        return result;
+    }
+
+    private boolean validateProfileEditCommand(Club club)
+    {
+        if (club == null || club.getId() == null) throw new IllegalArgumentException("俱乐部不存在");
+        boolean versioned = club.getExpectedVersion() != null;
+        if (versioned != (club.getEditRequestId() != null)
+                || (versioned && (club.getExpectedVersion() < 1
+                    || !club.getEditRequestId().matches("[a-zA-Z0-9_-]{16,64}"))))
+            throw new IllegalArgumentException("资料版本与保存标识必须同时提供且有效");
+        return versioned;
+    }
+
+    private java.util.Map<String, Object> profileEditReceipt(Club club, Long actorId, String requestHash)
+    {
+        java.util.Map<String, Object> receipt = clubMapper.selectProfileEditReceipt(club.getId(), actorId, club.getEditRequestId());
+        if (receipt == null) return null;
+        if (requestHash == null || !requestHash.equals(receipt.get("requestHash")))
+            throw new IllegalArgumentException("保存标识已用于不同修改，请重新核对草稿");
+        return com.alibaba.fastjson2.JSON.parseObject((String) receipt.get("resultJson"));
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public java.util.Map<String, Object> readOwnedClubProfileReceipt(Club club, Long actorId, Integer joinPolicy, String requestHash)
+    {
+        if (!validateProfileEditCommand(club)) return null;
+        Club locked = clubMapper.selectClubByIdForUpdate(club.getId());
+        if (locked == null) throw new IllegalArgumentException("俱乐部不存在");
+        requireProfileActor(locked, actorId, joinPolicy);
+        return profileEditReceipt(club, actorId, requestHash);
     }
 
     @Override
