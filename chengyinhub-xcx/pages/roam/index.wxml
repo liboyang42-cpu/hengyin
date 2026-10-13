@@ -41,7 +41,7 @@
                     sub="{{entryReadAccess === 'login' ? '登录后继续浏览地图' : '请返回后重新进入'}}"
                     primary="{{entryReadAccess === 'login' ? '去登录' : ''}}" bind:primary="loginForEntryRead" />
     <block wx:else>
-    <view wx:if="{{entryLoadError}}" aria-hidden="true"></view>
+    <cy-error wx:if="{{entryLoadError}}" load-failure="{{true}}" />
     <scroll-view wx:elif="{{entryCards.length}}" class="entry-peek__cards" scroll-x enhanced show-scrollbar="{{false}}">
       <view class="entry-card" wx:for="{{entryCards}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}"
             bindtap="onEntryCardTap" aria-role="button" aria-label="打开活动 {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
@@ -458,7 +458,8 @@
   </view>
   <swiper class="pois" next-margin="{{shopStrip.rows.length > 1 ? '96rpx' : '0rpx'}}" current="{{shopStrip.idx}}" bindchange="onShopStripSwipe">
     <swiper-item wx:for="{{shopStrip.rows}}" wx:key="id">
-      <view class="poi {{shopStrip.rows.length === 1 ? 'poi--solo' : ''}}">
+      <cy-error wx:if="{{merchantOffline}}" load-failure="{{true}}" />
+  <view class="poi {{shopStrip.rows.length === 1 ? 'poi--solo' : ''}}">
         <view class="poi__main">
           <view class="poi__title">
             <text class="poi__name">{{item.name}}</text>
@@ -717,7 +718,7 @@
   </view>
   <view class="drow">
     <view class="dic pic pic--info"></view>
-    <view class="dcopy"><text class="dt">附近的人位置分享</text><text class="ds">默认关闭 · 街区模糊位置</text></view>
+    <view class="dcopy"><text class="dt">附近的人位置分享</text><text class="ds">{{presenceSubmitting ? '正在保存设置' : '默认关闭 · 街区模糊位置'}}</text></view>
     <view class="dsw {{presenceVisible ? 'is-on' : ''}}" catchtap="togglePresenceSharing"
       aria-role="switch" aria-checked="{{presenceVisible}}" aria-disabled="{{presenceSubmitting}}"
       aria-label="附近的人位置分享，{{presenceVisible ? '已开启' : '已关闭'}}" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>

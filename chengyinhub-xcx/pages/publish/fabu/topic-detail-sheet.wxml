@@ -155,7 +155,7 @@
         <view class="node-card__main"><text class="node-card__title">允许再玩一次</text><text class="node-card__value">仅个人进行方式生效</text></view>
         <cy-switch checked="{{themeReplayEnabled}}" bindchange="toggleThemeReplay" accessibility-label="允许再玩一次" />
       </view>
-      <text class="node-binding__error pd-rules__error" wx:if="{{themeReplayError}}">{{themeReplayError}}</text>
+      <cy-inline-error class="node-binding__error pd-rules__error" wx:if="{{themeReplayError}}" kind="error" title="{{themeReplayError}}" />
       <!-- 旧版配置只读提示（R3）：主题设置不再编辑恢复/设施/运行结局；已有的旧配置照常运行 -->
       <block wx:if="{{legacyRuntimeSummary.hasLegacy}}">
         <view class="node-card__hr"></view>

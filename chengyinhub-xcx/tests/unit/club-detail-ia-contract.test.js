@@ -564,7 +564,7 @@ test('普通成员返页收到仅成员可见业务拒绝时立即清旧名单�
   assert.deepEqual(Array.from(page.data.members), [])
   assert.deepEqual(Array.from(page.data.memberStrip), [])
   assert.equal(page.data.membersState, 'idle')
-  assert.equal(page.data.clubAccessState, 'idle')
+  assert.equal(page._clubAccessState, 'idle')
   assert.equal(page.data.canReadMembers, false)
   assert.equal(page.data.canApproveMembers, false)
   assert.equal(page.data.canManageMembers, false)

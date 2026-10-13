@@ -24,6 +24,7 @@ function compareMessages(a, b) {
 
 Page({
   _closedReturnPath: '/subpackageB/pages/im/list/index',
+  _blockedByMe: false,
   data: {
     plusSheetShow: false,
     plusSheetItems: ['图片', '位置', '路线'],
@@ -63,7 +64,6 @@ Page({
     loadMoreError: '',
     toView: '',
     disabled: false,
-    blockedByMe: false,
     disabledText: '',
     // 非 ready 时输入栏为什么点不动,按真实原因给一句话。做成静态映射(而不是每个 setData
     // 站点各写一次)是为了不漏:loadState 的落点很多,漏一处就又变成"没有原因的死输入栏"。
@@ -232,8 +232,8 @@ Page({
           that.setData({ msgs, sending: msgs.some(m => m.sending), hasMore: !!res.data.hasMore, cursor: res.data.nextCursor || 0, loadState: 'ready', loadErrorText: '', loadMoreError: '' });
           // 拉黑只存服务端:重进会话按回包禁用输入框,不然能打字、一发就失败(3-22)
           const blockedByMe = res.data.blockedByMe === true;
-          that.setData({ disabled: that.data.readOnly || res.data.blocked === true, blockedByMe,
-            disabledText: that.data.readOnly ? '系统通知不支持回复，有新动态会出现在这里' : res.data.blocked === true ? (blockedByMe ? '你已拉黑对方，无法发送消息' : '对方暂不可联系，无法发送消息') : '',
+          that._blockedByMe = blockedByMe;
+          that.setData({ disabled: that.data.readOnly || res.data.blocked === true, disabledText: that.data.readOnly ? '系统通知不支持回复，有新动态会出现在这里' : res.data.blocked === true ? (blockedByMe ? '你已拉黑对方，无法发送消息' : '对方暂不可联系，无法发送消息') : '',
             moreSheetItems: that.data.readOnly ? ['隐藏会话'] : ['举报', blockedByMe ? '解除拉黑' : '拉黑', '隐藏会话'] });
           if (toBottom) that.scrollBottom();
           that._markReadWhenVisible(conversationId, memberId);
@@ -672,7 +672,7 @@ Page({
     if (!conversationId || !this._isReadContextCurrent(conversationId, memberId)) return;
     if (this._pendingBlock
         && this._isReadContextCurrent(this._pendingBlock.conversationId, this._pendingBlock.memberId)) return;
-    if (unblock === true && !this.data.blockedByMe) return;
+    if (unblock === true && !this._blockedByMe) return;
     const pending = { conversationId, memberId, submitting: true, unblock: unblock === true };
     this._pendingClear = null;
     this._pendingBlock = pending;
@@ -712,7 +712,7 @@ Page({
   },
 
   _submitUnblock(pending) {
-    if (!pending.targetId || pending.submitting || !this.data.blockedByMe) return;
+    if (!pending.targetId || pending.submitting || !this._blockedByMe) return;
     pending.submitting = true;
     const current = () => this._pendingBlock === pending
       && this._isReadContextCurrent(pending.conversationId, pending.memberId);
@@ -768,7 +768,8 @@ Page({
       success: (res) => {
         if (!current()) return;
         if (!isBizOk(res)) { failed((res && res.msg) || '拉黑失败，请重试'); return; }
-        this.setData({ disabled: true, blockedByMe: true, disabledText: '你已拉黑对方，无法发送消息', moreSheetItems: ['举报', '解除拉黑', '隐藏会话'] });
+        this._blockedByMe = true;
+        this.setData({ disabled: true, disabledText: '你已拉黑对方，无法发送消息', moreSheetItems: ['举报', '解除拉黑', '隐藏会话'] });
         this._pendingBlock = null;
         if (dc) dc.done();
       },

@@ -134,7 +134,7 @@
                  「已锁定 / 本场已取消」——「本场已取消」本身就是要看见的状态。 -->
             <view class="occurrence-list" wx:if="{{expandedSeriesId === item.id}}">
               <cy-skeleton wx:if="{{occurrenceState === 'loading'}}" type="list" count="2" />
-              <view wx:elif="{{occurrenceState === 'error'}}" aria-hidden="true"></view>
+              <cy-error wx:elif="{{occurrenceState === 'error'}}" load-failure="{{true}}" />
               <text wx:elif="{{occurrenceState === 'empty'}}" class="occurrence-note">这个系列还没有物化出场次。</text>
               <block wx:else>
                 <view class="occurrence-row" wx:for="{{occurrenceRows}}" wx:for-item="occ" wx:key="occurrenceId">

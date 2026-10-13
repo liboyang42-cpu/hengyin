@@ -850,12 +850,12 @@
         </view>
         <view class="node-shared" wx:if="{{nodesForm.templateId}}">
           <view wx:if="{{nodeSharedSites.length > 1}}">
-            <text class="node-card__value">此玩法用于 {{nodeSharedSites.length}} 个站点</text>
+            <text class="node-card__value">此玩法用于 {{nodeSharedSites.length || 0}} 个站点</text>
             <text class="node-card__value node-shared__site" wx:for="{{nodeSharedSites}}" wx:key="key">{{item.label}}</text>
             <view class="node-pill node-shared__action" wx:if="{{!nodeCopyUncertain}}" catchtap="onCopyBoundTemplate" aria-role="button" aria-label="仅为本站另存副本" hover-class="cy-pressed" hover-stay-time="80" aria-disabled="{{nodeCopyBusy}}">{{nodeCopyBusy ? '正在另存…' : '仅为本站另存副本'}}</view>
           </view>
           <view class="node-pill node-shared__action" catchtap="onEditBoundTemplate" aria-role="button" aria-label="修改原模板" hover-class="cy-pressed" hover-stay-time="80">修改原模板（影响 {{nodeSharedSites.length || 1}} 个站点）</view>
-          <text class="node-binding__error" wx:if="{{nodeCopyError}}">{{nodeCopyError}}</text>
+          <cy-inline-error class="node-binding__error" wx:if="{{nodeCopyError}}" kind="error" title="{{nodeCopyError}}" />
         </view>
         <text class="node-binding__error" wx:if="{{nodeSupportReason}}">{{nodeSupportReason}}</text>
         <view class="node-binding" wx:if="{{nodeBindingRows.length}}">
@@ -868,11 +868,11 @@
               </cy-dropdown>
               <text wx:else class="node-card__value">请先启用主题资源</text>
             </view>
-            <text class="node-binding__error" wx:if="{{nodeBindingErrorKey === slot.key}}">{{nodeBindingError}}</text>
+            <cy-inline-error class="node-binding__error" wx:if="{{nodeBindingErrorKey === slot.key}}" kind="error" title="{{nodeBindingError}}" />
           </view>
-          <text class="node-binding__error" wx:if="{{nodeBindingError && !nodeBindingErrorKey}}">{{nodeBindingError}}</text>
+          <cy-inline-error class="node-binding__error" wx:if="{{nodeBindingError && !nodeBindingErrorKey}}" kind="error" title="{{nodeBindingError}}" />
         </view>
-        <text class="node-binding__error" wx:elif="{{nodeBindingError}}">{{nodeBindingError}}</text>
+        <cy-inline-error class="node-binding__error" wx:elif="{{nodeBindingError}}" kind="error" title="{{nodeBindingError}}" />
         <!-- 终局表决的方案 → 最终章结局（R3 协调者设计）：与上方「对应主题资源」同一种行与下拉药丸，
              只在采用的模板含“决定结局”的表决时出现；选项只来自最终章已写好的结局。 -->
         <view class="node-binding" wx:if="{{nodePlanEndingRows.length}}">
@@ -886,7 +886,7 @@
               <text wx:else class="node-card__value">最终章</text>
             </view>
           </view>
-          <text class="node-binding__error" wx:if="{{nodePlanEndingError}}">{{nodePlanEndingError}}</text>
+          <cy-inline-error class="node-binding__error" wx:if="{{nodePlanEndingError}}" kind="error" title="{{nodePlanEndingError}}" />
         </view>
       </view>
 

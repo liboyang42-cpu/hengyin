@@ -205,6 +205,8 @@ Page({
   _routeMappingSourceNodeId: '',
   _routeMappingReturnToNodeEditor: false,
 
+  _nodeBindingSlots: [],
+  _nodeBindingDraft: null,
   data: {
     creatorLoginRequired: false,
     ...runtimeEditor.data,
@@ -370,7 +372,7 @@ Page({
       fragmentText: ''
     },
     nodesFormLocationReady: false,
-    nodeBindingSlots: [], nodeBindingDraft: null, nodeBindingRows: [], nodeBindingError: '', nodeBindingErrorKey: '',
+    nodeBindingRows: [], nodeBindingError: '', nodeBindingErrorKey: '',
     nodeSharedSites: [], nodeCopyBusy: false, nodeCopyUncertain: false, nodeCopyError: '',
     initialStateEditor: { show: false, rules: null, error: '' },
     initialStateOptions: storyInitialState.OPTIONS,
@@ -1063,6 +1065,8 @@ Page({
     if (e.currentTarget.dataset.kind !== 'game' && !this._canAddFormalNodes(1)) return;
     const pendingLocalId = this.data.storyPendingMaterialLocalId;
     const material = (this.data.pendingMaterials || []).find(item => item._localId === pendingLocalId);
+    this._nodeBindingSlots = [];
+    this._nodeBindingDraft = null;
     this.setData({
       pendingInsertAt: index,
       'storyEditor.insertMenuAt': -1,
@@ -1077,7 +1081,7 @@ Page({
       nodesForm: e.currentTarget.dataset.kind === 'game'
         ? Object.assign(this._emptyNodesForm(), { _storyGame: true, showTemplate: true })
         : (material ? proEditorMaterials.nodeFromMaterial(material, 1) : this._emptyNodesForm()),
-      nodeBindingSlots: [], nodeBindingDraft: null, nodeBindingRows: [], nodeBindingError: '', nodeBindingErrorKey: '',
+      nodeBindingRows: [], nodeBindingError: '', nodeBindingErrorKey: '',
       nodePlanEndingRows: [], nodePlanEndingError: '',
     });
   },
@@ -1628,6 +1632,8 @@ Page({
   },
 
   openPendingNodeDraft() {
+    this._nodeBindingSlots = [];
+    this._nodeBindingDraft = null;
     this.setData({
       popChapterNodes: true,
       popChapterNodesAction: 0,
@@ -1638,7 +1644,7 @@ Page({
       editTargetNodeLid: '',
       inlineEdit: null,
       nodesForm: this._emptyNodesForm(),
-      nodeBindingSlots: [], nodeBindingDraft: null, nodeBindingRows: [], nodeBindingError: '', nodeBindingErrorKey: '',
+      nodeBindingRows: [], nodeBindingError: '', nodeBindingErrorKey: '',
       nodePlanEndingRows: [], nodePlanEndingError: '',
     });
   },
@@ -3950,13 +3956,15 @@ Page({
     this._nodeTemplateLoadToken = (this._nodeTemplateLoadToken || 0) + 1;
     this._loadingSelectedTemplate = 0;
     this._rollbackNodeRouteEdit();
+    this._nodeBindingSlots = [];
+    this._nodeBindingDraft = null;
     this.setData({
       popChapterNodes: false,
       nodeSheetView: 'detail',
       editingPendingLocalId: '',
       nodeDraftDestination: 'formal',
       pendingInsertAt: null,
-      nodeBindingSlots: [], nodeBindingDraft: null, nodeBindingRows: [], nodeBindingError: '', nodeBindingErrorKey: '',
+      nodeBindingRows: [], nodeBindingError: '', nodeBindingErrorKey: '',
       nodePlanEndingRows: [], nodePlanEndingError: '',
       'storyEditor.insertMenuAt': -1,
     })
@@ -3971,6 +3979,8 @@ Page({
       cyToast(issue.message);
       return;
     }
+    this._nodeBindingSlots = [];
+    this._nodeBindingDraft = null;
     this.setData({
       popChapterNodes: true,
       popChapterNodesAction: 0,
@@ -3981,7 +3991,7 @@ Page({
       editTargetNodeLid: '',
       inlineEdit: null,
       nodesForm: this._emptyNodesForm(),
-      nodeBindingSlots: [], nodeBindingDraft: null, nodeBindingRows: [], nodeBindingError: '', nodeBindingErrorKey: '',
+      nodeBindingRows: [], nodeBindingError: '', nodeBindingErrorKey: '',
       nodePlanEndingRows: [], nodePlanEndingError: '',
     })
   },
@@ -7455,20 +7465,20 @@ Page({
     catch (error) { cyToast('玩法资源声明无法读取'); return; }
     const saved = (templateBinding.parse(this.data.formData.themeRuntimeConfig).templateBindings || {})[
       templateBinding.nodeKey(this.data.nodesForm)];
-    const previous = this.data.nodeBindingDraft || saved;
-    const previousSlots = (this.data.nodeBindingSlots || []).length ? this.data.nodeBindingSlots
+    const previous = this._nodeBindingDraft || saved;
+    const previousSlots = (this._nodeBindingSlots || []).length ? this._nodeBindingSlots
       : previous ? Object.keys(previous.values || {}).map(key => ({ key, kind: 'VALUE' }))
         .concat(Object.keys(previous.items || {}).map(key => ({ key, kind: 'ITEM' }))) : [];
     const binding = slots.length ? templateBinding.reconcile(slots, selectedTemplate.id, previous, previousSlots,
       this.data.formData.journeyRules, this.data.formData.themeRuntimeConfig, selectedTemplate) : null;
     const currentNode = Object.assign({}, this.data.nodesForm, { templateId: selectedTemplate.id });
+    this._nodeBindingSlots = slots;
+    this._nodeBindingDraft = binding;
     this.setData({
       nodeSheetView: 'detail', nodeSupportReason: '',
       'nodesForm.templateId': selectedTemplate.id,
       'nodesForm.templateInfo': selectedTemplate,
       'nodesForm.showTemplate': true,
-      nodeBindingSlots: slots,
-      nodeBindingDraft: binding,
       nodeBindingRows: slots.length ? templateBinding.rows(slots, binding,
         this.data.formData.journeyRules, this.data.formData.themeRuntimeConfig, selectedTemplate) : [],
       nodeBindingError: '', nodeBindingErrorKey: '',
@@ -7489,8 +7499,9 @@ Page({
     const old = (runtime.templateBindings || {})[templateBinding.nodeKey(node)];
     const binding = slots.length ? templateBinding.reconcile(slots, node.templateId, old, slots,
       this.data.formData.journeyRules, this.data.formData.themeRuntimeConfig, node.templateInfo) : null;
-    this.setData({ nodeBindingSlots: slots, nodeBindingDraft: binding,
-      nodeSharedSites: templateBinding.sharedSites(this.data.formData.chapters, node.templateId, node),
+    this._nodeBindingSlots = slots;
+    this._nodeBindingDraft = binding;
+    this.setData({ nodeSharedSites: templateBinding.sharedSites(this.data.formData.chapters, node.templateId, node),
       nodeBindingRows: slots.length ? templateBinding.rows(slots, binding,
         this.data.formData.journeyRules, this.data.formData.themeRuntimeConfig, node.templateInfo) : [],
       nodeBindingError: '', nodeBindingErrorKey: '' });
@@ -7578,15 +7589,16 @@ Page({
     });
   },
   onNodeBindingPick(e) {
-    const slot = (this.data.nodeBindingSlots || [])[Number(e.currentTarget.dataset.index)];
+    const slot = (this._nodeBindingSlots || [])[Number(e.currentTarget.dataset.index)];
     const option = slot && templateBinding.optionsFor(slot.kind, this.data.formData.journeyRules,
       this.data.formData.themeRuntimeConfig, this.data.nodesForm.templateInfo, slot.key)[Number(e.detail.value)];
     if (!option) return;
     try {
-      const binding = templateBinding.bind(this.data.nodeBindingDraft, this.data.nodeBindingSlots, slot.key,
+      const binding = templateBinding.bind(this._nodeBindingDraft, this._nodeBindingSlots, slot.key,
         option.value, this.data.formData.journeyRules, this.data.formData.themeRuntimeConfig,
         this.data.nodesForm.templateInfo);
-      this.setData({ nodeBindingDraft: binding, nodeBindingRows: templateBinding.rows(this.data.nodeBindingSlots,
+      this._nodeBindingDraft = binding;
+      this.setData({ nodeBindingRows: templateBinding.rows(this._nodeBindingSlots,
         binding, this.data.formData.journeyRules, this.data.formData.themeRuntimeConfig,
         this.data.nodesForm.templateInfo), nodeBindingError: '', nodeBindingErrorKey: '' });
     } catch (error) { this.setData({ nodeBindingError: error.message, nodeBindingErrorKey: slot.key }); }
@@ -7595,11 +7607,11 @@ Page({
     const runtime = this._runtimeConfig();
     const key = templateBinding.nodeKey(node);
     if (!key) return;
-    const hasPlanEndings = Object.keys(this.data.nodeBindingDraft?.planEndings || {}).length > 0;
-    if (!this.data.nodeBindingSlots.length && !hasPlanEndings && !(runtime.templateBindings && runtime.templateBindings[key])) return;
+    const hasPlanEndings = Object.keys(this._nodeBindingDraft?.planEndings || {}).length > 0;
+    if (!this._nodeBindingSlots.length && !hasPlanEndings && !(runtime.templateBindings && runtime.templateBindings[key])) return;
     const bindings = Object.assign({}, runtime.templateBindings || {});
-    if ((this.data.nodeBindingSlots.length || hasPlanEndings) && this.data.nodeBindingDraft && Number(node.templateId))
-      bindings[key] = this.data.nodeBindingDraft;
+    if ((this._nodeBindingSlots.length || hasPlanEndings) && this._nodeBindingDraft && Number(node.templateId))
+      bindings[key] = this._nodeBindingDraft;
     else delete bindings[key];
     if (Object.keys(bindings).length) runtime.templateBindings = bindings;
     else delete runtime.templateBindings;
@@ -7653,12 +7665,14 @@ Page({
       if (!Number(this.data.nodesForm.templateId)) this.onCreateGame();
       return;
     }
+    this._nodeBindingSlots = [];
+    this._nodeBindingDraft = null;
     this.setData({
       'nodesForm.showTemplate': false,
       'nodesForm.templateId': 0,
       'nodesForm.templateInfo': {},
       'nodesForm.templateName': '',
-      nodeBindingSlots: [], nodeBindingDraft: null, nodeBindingRows: [], nodeBindingError: '', nodeBindingErrorKey: '',
+      nodeBindingRows: [], nodeBindingError: '', nodeBindingErrorKey: '',
       nodePlanEndingRows: [], nodePlanEndingError: '',
       nodeSharedSites: [], nodeCopyBusy: false, nodeCopyUncertain: false, nodeCopyError: ''
     });

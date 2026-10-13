@@ -14,7 +14,7 @@ function page(config = {}) {
   p.data.formData.journeyStory = JSON.stringify({ ending: { endings: [{ chapterId: 901, code: 'stay', title: '继续守候' },
     { chapterId: 902, code: 'default', title: '离开现场', fallback: true }] } });
   p.data.nodesForm = { _localId: 'node_1', templateId: 55, templateInfo: vote() };
-  p.data.nodeBindingDraft = null;
+  p._nodeBindingDraft = null;
   return p;
 }
 test('旧配置只读摘要完整，不把站点工具生成的设施算作独立旧设施', () => {
@@ -77,11 +77,11 @@ test('终局采用只列已有结局章；无资源槽仍输出完整绑定，�
   assert.equal(p.onNodePlanEnding({ currentTarget: { dataset: { index: 0 } }, detail: { value: '901' } }), true);
   p.onNodePlanEnding({ currentTarget: { dataset: { index: 1 } }, detail: { value: '902' } });
   assert.equal(p.data.nodePlanEndingRows[0].targetLabel, '继续守候');
-  const selected = p.data.nodeBindingDraft;
+  const selected = p._nodeBindingDraft;
   assert.equal(selected.templateId, 55); assert.deepEqual(selected.values, {}); assert.deepEqual(selected.items, {});
   assert.equal(selected.slotDigest, binding.slotDigest([])); assert.deepEqual(selected.planEndings, { stay: '901', leave: '902' });
   assert.equal(ownership.planIssue(vote(), selected, p.data.formData, {}), null);
-  p._openNodePlanEndings(vote(), selected); assert.deepEqual(p.data.nodeBindingDraft, selected);
+  p._openNodePlanEndings(vote(), selected); assert.deepEqual(p._nodeBindingDraft, selected);
 });
 test('普通表决无结局要求；旧表决不改兼容目录；无效/已删除结局精确报错', () => {
   const p = page(); assert.equal(ownership.planIssue(vote(false), null, p.data.formData, {}), null);
@@ -119,15 +119,15 @@ test('方案摘要与后端 count/planKey/title 顺序一致，标题或旧方�
   ]) assert.equal(ownership.planDigest({ advancedConfigJson: { interactionTools: { plans } } }), expected);
   const p = page(); p._openNodePlanEndings(vote());
   for (const [index, value] of [[0, '901'], [1, '902']]) p.onNodePlanEnding({ currentTarget: { dataset: { index } }, detail: { value } });
-  const previous = copy(p.data.nodeBindingDraft), changed = vote();
+  const previous = copy(p._nodeBindingDraft), changed = vote();
   const config = JSON.parse(changed.advancedConfigJson); config.interactionTools.plans[0].title = '改名后的方案'; changed.advancedConfigJson = JSON.stringify(config);
   p.data.nodesForm.templateInfo = changed; p._openNodePlanEndings(changed, previous);
   assert.match(p.data.nodePlanEndingError, /重新选择各方案/);
   assert.match(ownership.planIssue(changed, previous, p.data.formData, {}).error, /重新选择/);
   p.onNodePlanEnding({ currentTarget: { dataset: { index: 0 } }, detail: { value: '901' } });
-  assert.deepEqual(p.data.nodeBindingDraft.planEndings, { stay: '901' });
+  assert.deepEqual(p._nodeBindingDraft.planEndings, { stay: '901' });
   // 只链接一个方案时，未链接的方案在最终章收场，不再要求逐项选择结局章
-  assert.equal(ownership.planIssue(changed, p.data.nodeBindingDraft, p.data.formData, {}), null);
+  assert.equal(ownership.planIssue(changed, p._nodeBindingDraft, p.data.formData, {}), null);
   assert.deepEqual(previous.planEndings, { stay: '901', leave: '902' });
 });
 test('已编译章节终局回读不依赖旧运行目录；删除结局章后仍拦截', () => {
@@ -141,8 +141,8 @@ test('当前场景覆盖模板方案时，采用回显、摘要和发布检查�
   const p = page({ currentScene: 'today', scenes: [{ id: 'today', nodeConfigs: { 'client:node_1': tools } }] });
   p._openNodePlanEndings(vote()); assert.equal(p.data.nodePlanEndingRows.length, 1);
   p.onNodePlanEnding({ currentTarget: { dataset: { index: 0 } }, detail: { value: '901' } });
-  assert.equal(p.data.nodeBindingDraft.planDigest, ownership.planDigest({ advancedConfigJson: tools }));
-  const c = p._runtimeConfig(); c.templateBindings = { 'client:node_1': copy(p.data.nodeBindingDraft) }; p._saveRuntime(c);
+  assert.equal(p._nodeBindingDraft.planDigest, ownership.planDigest({ advancedConfigJson: tools }));
+  const c = p._runtimeConfig(); c.templateBindings = { 'client:node_1': copy(p._nodeBindingDraft) }; p._saveRuntime(c);
   p.data.formData.chapters[0].nodes = [p.data.nodesForm];
   assert.deepEqual(p._nodePlanEndingIssues(), []);
 });

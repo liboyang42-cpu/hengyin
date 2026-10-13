@@ -12,6 +12,19 @@ function page(responder, play = true, clearResponder = () => ({code:200})) {
   Object.assign(instance, records.methods(async (...args) => { requests.push(args); return args[0]==='/api/play/run-session/clear'?clearResponder(...args):responder(...args); }, play));
   return { instance, requests, navigations };
 }
+test('ordinary record reads stay quiet but authorization and unknown replay failures stay visible', async () => {
+  const ordinary = page(() => ({ code: 500 }));
+  assert.equal(await ordinary.instance.openThemeHistory(), false);
+  assert.equal(ordinary.instance.data.themeRecordsReadFailure, true);
+  const denied = page(() => ({ code: 403 }));
+  assert.equal(await denied.instance.openThemeHistory(), false);
+  assert.equal(denied.instance.data.themeRecordsReadFailure, false);
+  const replay = page(() => ({ code: 500 }));
+  replay.instance._themeReplayAttempt = structuredClone(fixture.completed);
+  assert.equal(await replay.instance.checkThemeReplay(), false);
+  assert.equal(replay.instance.data.themeRecordsReadFailure, false);
+  assert.ok(replay.instance.data.themeRecordsError);
+});
 for (const allowed of [false, undefined, 'true']) test('重玩只接受明确 true，拒绝 '+String(allowed), async () => {
   const {instance, requests} = page(() => ({code:200,data:{...fixture.completed,replayAllowed:allowed}}));
   instance.data.themeBag.replayAllowed=allowed;

@@ -20,6 +20,8 @@ global.wx = {
   createMapContext: () => ({}), nextTick: f => f(), navigateTo() {}, pageScrollTo() {}
 };
 global.Page = cfg => { definition = cfg; };
+const getMatrix = p => Object.prototype.hasOwnProperty.call(p, '_supportMatrix') ? p._supportMatrix : p.data.supportMatrix;
+const setMatrix = (p, value) => { if (Object.prototype.hasOwnProperty.call(p, '_supportMatrix')) p._supportMatrix = value; else p.data.supportMatrix = value; };
 function page(kind) {
   sent = []; notices = [];
   app = { globalData: { statusBarHeight: 20, navBarHeight: 44 }, getUserID: () => 42,
@@ -38,7 +40,7 @@ function page(kind) {
   };
   p._refreshOutcomeContract = () => ({ items: [], errors: [] }); p._syncCheckDerived = () => {};
   p.refreshPreviewState = () => {}; p.hasModule = () => false;
-  p.data.supportMatrix = matrix;
+  setMatrix(p, matrix);
   return p;
 }
 const tap = key => ({ currentTarget: { dataset: { key } } });
@@ -109,7 +111,7 @@ test('每个 app 会话只读取一次；旧接口缺失、错误和畸形响应
 
 test('主题和模板支持信息读取失败可见且不阻断；重试重读并清除提示', async () => {
   for (const kind of ['fabu', 'temp']) {
-    const p = page(kind); p.data.supportMatrix = null;
+    const p = page(kind); setMatrix(p, null);
     p._syncRuntimeStats = () => {};
     const first = p._loadSupportMatrix();
     const request = sent.find(r => r.url === '/api/play/theme/support-matrix');
@@ -118,14 +120,14 @@ test('主题和模板支持信息读取失败可见且不阻断；重试重读�
     request.fail({}, 404); await first;
     assert.match(p.data.supportMatrixLoadError, /未加载，请重试/);
     assert.equal(p.data.supportMatrixLoading, false);
-    assert.equal(support.validate(p.data.supportMatrix, tpl({ estimate: { enabled: true }, ...cost })), '');
+    assert.equal(support.validate(getMatrix(p), tpl({ estimate: { enabled: true }, ...cost })), '');
     const retry = p.retrySupportMatrix();
     p.retrySupportMatrix();
     const requests = sent.filter(r => r.url === '/api/play/theme/support-matrix');
     assert.equal(requests.length, 2, '失败缓存被清除，进行中的重试不重复请求');
     requests[1].success(response); await retry;
     assert.equal(p.data.supportMatrixLoadError, '');
-    assert.deepEqual(Object.assign({}, p.data.supportMatrix, { constraints: matrix.constraints }), matrix);
+    assert.deepEqual(Object.assign({}, getMatrix(p), { constraints: matrix.constraints }), matrix);
     assert.equal(p.data.supportMatrixLoading, false);
   }
 });
@@ -154,7 +156,7 @@ test('工具子浮层保存不通过矩阵时保留输入；去掉旧工具后�
 });
 
 test('缺接口时页面仍展示原玩法，加载仅发一次且不改变任何配置', async () => {
-  const p = page('temp'); p.data.supportMatrix=null;
+  const p = page('temp'); setMatrix(p, null);
   p.fillFormWithTemplateData(tpl({estimate:{enabled:true},...cost})); const before=clone(p.data.advanced);
   p._loadSupportMatrix(); p._loadSupportMatrix(); assert.equal(sent.length,1);
   sent[0].fail({},404); await Promise.resolve(); await Promise.resolve();
@@ -236,17 +238,17 @@ test('旧主题原有效果引用 VALUE 槽时列表、选用与发布检查口�
     assert.equal(p._templateSupportReason(tpl(advanced)), '这种玩法暂时无法确认是否完成', field);
   }
   const denied = clone(matrix); denied.types.find(row => row.key === 'profile').effectSlotSupport = false;
-  p.data.supportMatrix = denied; p._refreshSupportMatrix();
+  setMatrix(p, denied); p._refreshSupportMatrix();
   assert.equal(p.data.publicSupportReasons[8], '这种玩法暂不支持所需数值资源');
   assert.equal(p._templateSupportReason(effect), '这种玩法暂不支持所需数值资源');
   assert.equal(p._supportPublishIssues()[0].label, '节点 11（站点）：这种玩法暂不支持所需数值资源');
   const scoped = clone(matrix); scoped.types.find(row => row.key === 'profile').effectSlotScopes = ['WORLD'];
-  p.data.supportMatrix = scoped;
+  setMatrix(p, scoped);
   assert.equal(p._templateSupportReason(effect), '这种玩法暂不支持所需数值资源');
   const old = clone(matrix); old.types.concat(old.addons).forEach(row => {
     delete row.effectSlotSupport; delete row.effectSlotScopes;
   });
-  p.data.supportMatrix = old; p._refreshSupportMatrix();
+  setMatrix(p, old); p._refreshSupportMatrix();
   assert.equal(p.data.publicSupportReasons[8], '', '旧矩阵缺字段时仍交给服务端发布校验');
   assert.deepEqual(p._supportPublishIssues(), []);
 });
@@ -322,7 +324,7 @@ test('归零挑战新面板选中筛选后的真实节点，旧无效选择报�
 
 
 test('矩阵尚未读回时通用组合不能抢先保存，缺接口回退后输入仍在且可保存', async () => {
-  const p=page('temp'); p.data.supportMatrix=null;
+  const p=page('temp'); setMatrix(p, null);
   p.fillFormWithTemplateData(tpl(cost,1)); const before=clone(p.data.advanced);
   p._loadSupportMatrix(); p.saveDraft(); assert.equal(sent.filter(r=>r.url==='/api/template/draft').length,0);
   assert.match(p.data.errors.advanced,/正在读取/);

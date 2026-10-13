@@ -9,7 +9,7 @@ const ROOT = path.resolve(__dirname, '../..')
 const read = () => fs.readFileSync(path.join(ROOT, 'pages/play/merchant/index.wxml'), 'utf8')
 
 function assertStateSemantics(view) {
-  assert.match(view, /class="mp-empty"[^>]*aria-hidden="true"/)
+  assert.match(view, /<cy-error class="mp-empty"[^>]*load-failure="\{\{true\}\}"/)
   assert.match(view, /class="mp-feedback"[^>]*wx:if="\{\{feedback\}\}"[^>]*aria-role="status"[^>]*aria-live="polite"/)
   // #821 之后这条同时承担「回执 unknown 时的再核对入口」,aria-role 因此是条件式:
   // 可点时报 button、否则报 alert;aria-live 恒为 assertive(降级消息必须被立刻播报)。

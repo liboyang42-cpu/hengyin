@@ -106,7 +106,7 @@ test('private XR refuses malformed geometry and emits recoverable error instead 
 const fullPage = top => Array.from({ length: 50 }, (_, index) => ({ assetId: String(BigInt(top) - BigInt(index)), mediaType: 'AUDIO', reviewState: 'HOLD' }));
 test('author cursor finds old rejected media after fifty new assets without offset drift', () => {
   const { state, page } = load(); state.calls[0].success({ code: 200, data: fullPage('70') });
-  assert.equal(page.data.mediaBeforeId, '21'); assert.equal(page.data.mediaHasMore, true); page.loadOlderMedia();
+  assert.equal(page._mediaBeforeId, '21'); assert.equal(page.data.mediaHasMore, true); page.loadOlderMedia();
   assert.equal(state.calls[1].url, '/api/media/asset/list?beforeId=21'); page.loadOlderMedia(); assert.equal(state.calls.length, 2);
   const older = Array.from({ length: 20 }, (_, index) => ({ assetId: String(20 - index), mediaType: 'AUDIO', reviewState: index === 19 ? 'REJECTED' : 'HOLD' }));
   state.calls[1].success({ code: 200, data: older }); assert.equal(page.data.mediaRows.length, 70); assert.equal(page.data.mediaRows[69].stateLabel, '未通过');
@@ -115,7 +115,7 @@ test('author cursor finds old rejected media after fifty new assets without offs
 });
 test('author pagination preserves exact long cursors and rejects duplicates and unsafe numeric IDs', () => {
   const { state, page } = load(); state.calls[0].success({ code: 200, data: fullPage('9223372036854775807') });
-  const cursor = page.data.mediaBeforeId; assert.equal(cursor, '9223372036854775758'); page.loadOlderMedia();
+  const cursor = page._mediaBeforeId; assert.equal(cursor, '9223372036854775758'); page.loadOlderMedia();
   assert.equal(state.calls[1].url, '/api/media/asset/list?beforeId=' + cursor);
   state.calls[1].success({ code: 200, data: [{ assetId: cursor, mediaType: 'AUDIO', reviewState: 'HOLD' }] });
   assert.equal(page.data.mediaRows.length, 50); assert.match(page.data.mediaError, /加载失败/);
@@ -128,7 +128,7 @@ test('older media requests clear on hide account switch and authentication failu
     if (failure === 'hide') { page.onHide(); state.calls[1].success({ code: 200, data: rows('REJECTED') }); }
     else if (failure === 'account') { state.member = 10; state.token = 'other-token'; state.calls[1].success({ code: 200, data: rows('REJECTED') }); }
     else state.calls[1].fail({ code: failure }, failure);
-    assert.deepEqual(page.data.mediaRows, []); assert.equal(page.data.mediaHasMore, false); assert.equal(page.data.mediaBeforeId, '');
+    assert.deepEqual(page.data.mediaRows, []); assert.equal(page.data.mediaHasMore, false); assert.equal(page._mediaBeforeId, '');
   }
 });
 test('older media failed request stays recoverable and refresh invalidates its late result', () => {

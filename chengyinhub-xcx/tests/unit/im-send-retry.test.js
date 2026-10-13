@@ -404,7 +404,7 @@ test('only a self-owned block offers unblock and a successful write rereads true
   assert.equal(h.page.data.disabled, true, 'write alone cannot claim both parties can send');
   h.requests[3].success({ code: 200, data: { list: [], blocked: true, blockedByMe: false } });
   assert.equal(h.page.data.disabled, true);
-  assert.equal(h.page.data.blockedByMe, false);
+  assert.equal(h.page._blockedByMe, false);
   assert.ok(!h.page.data.moreSheetItems.includes('解除拉黑'));
   h.page.loadMessages(false);
   h.requests[4].success({ code: 200, data: { list: [], blocked: false, blockedByMe: false } });
@@ -412,7 +412,7 @@ test('only a self-owned block offers unblock and a successful write rereads true
 });
 
 test('failed unblock and account-switched resolution cannot enable input or submit for another identity', () => {
-  const h = chat(); h.page.data.blockedByMe = true; h.page.data.disabled = true;
+  const h = chat(); h.page._blockedByMe = true; h.page.data.disabled = true;
   h.page.doBlock(true);
   h.requests[0].success({ code: 200, data: [{ conversationId: 26, type: 1, counterparty: { id: 2 } }] });
   h.requests[1].success({ code: 500 });

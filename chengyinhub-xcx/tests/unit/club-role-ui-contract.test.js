@@ -277,7 +277,7 @@ test('详情内容治理只认 access/me 的 club:write，旧 role=1 不能把�
     code: '200',
     data: { active: true, club: { id: 9 }, permissions: ['club:read', 'club:event:checkin'] },
   })
-  assert.equal(revoked.page.data.clubAccessState, 'ready')
+  assert.equal(revoked.page._clubAccessState, 'ready')
   assert.equal(revoked.page.data.canModerateContent, false)
 
   revoked.page.loadMembers()
@@ -299,7 +299,7 @@ test('详情内容治理只认 access/me 的 club:write，旧 role=1 不能把�
   const malformed = createDetailHarness()
   malformed.page.loadClubAccess()
   malformed.requests[0].success({ code: '200', data: { active: true, permissions: ['club:write'] } })
-  assert.equal(malformed.page.data.clubAccessState, 'error')
+  assert.equal(malformed.page._clubAccessState, 'error')
   assert.equal(malformed.page.data.canModerateContent, false)
 })
 
@@ -494,7 +494,7 @@ test('场次委派摘要必须角色与权限完全一致，畸形或越权组�
         eventAccesses: [eventAccess],
       },
     })
-    assert.equal(harness.page.data.clubAccessState, 'error')
+    assert.equal(harness.page._clubAccessState, 'error')
     assert.equal(harness.page.data.hasEventScope, false)
     assert.deepEqual(Array.from(harness.page.data.clubTabs, item => item.key),
       ['posts', 'events', 'overview'])
@@ -526,7 +526,7 @@ test('场次委派摘要必须角色与权限完全一致，畸形或越权组�
       ],
     },
   })
-  assert.equal(duplicateActivity.page.data.clubAccessState, 'error')
+  assert.equal(duplicateActivity.page._clubAccessState, 'error')
   assert.equal(duplicateActivity.page.data.hasEventScope, false)
 })
 
@@ -553,7 +553,7 @@ test('同一俱乐部 access/me 重叠请求只接纳最新响应，旧响应不
     },
   })
 
-  assert.equal(harness.page.data.clubAccessState, 'error')
+  assert.equal(harness.page._clubAccessState, 'error')
   assert.equal(harness.page.data.hasEventScope, false)
   assert.deepEqual(Object.keys(harness.page._eventAccessByActivity), [])
 })

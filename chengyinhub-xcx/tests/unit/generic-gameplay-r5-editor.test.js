@@ -136,7 +136,7 @@ function page() {
   const p = Object.assign({}, definition, { data: clone(definition.data) });
   p.setData = function(patch, done) { for (const [path, value] of Object.entries(patch)) { const keys = path.replace(/\[(\d+)\]/g, '.$1').split('.'); let at = this.data; for (const key of keys.slice(0, -1)) at = at[key]; at[keys.at(-1)] = value; } if (done) done(); };
   p._refreshOutcomeContract = () => ({ items: [], errors: [] }); p._syncCheckDerived = () => {}; p.refreshPreviewState = () => {}; p.hasModule = () => false;
-  p.data.supportMatrix = matrix; return p;
+  p._supportMatrix = matrix; return p;
 }
 
 test('真实页面：参与方式独立，形式切换不覆盖扫码/GPS，open→save 不迁移旧扫码', () => {
@@ -254,7 +254,7 @@ test('B 反馈下一段：矩阵声明后按过滤下标引用本节点步骤，
   assert.equal(p.data.afterEditor.draft.next, 'feedback_b'); p.pickAfterNextStep(event({}, 0)); assert.equal(p.saveAfterSheet(), true);
   assert.equal(p.data.advanced.outcomeRules.pass.nextStepId, undefined);
   p.data.advanced.outcomeRules.pass.nextStepId = 'feedback_b'; const before = clone(p.data.advanced);
-  const old = clone(matrix); delete old.outcomeRules; p.data.supportMatrix = old; p._refreshR5Editor();
+  const old = clone(matrix); delete old.outcomeRules; p._supportMatrix = old; p._refreshR5Editor();
   assert.equal(p.data.r5Editor.afterRows.find(row => row.path === 'outcomeRules.pass').disabled, true);
   assert.match(support.validate(old, { advancedConfigJson: before }), /暂未开放/); assert.deepEqual(p.data.advanced, before);
   const malformed = base(); malformed.branch = { steps: [{ id: 'bad space' }] }; malformed.outcomeRules.pass.nextStepId = 'bad space'; assert.match(after.validate(malformed), /有效步骤/);

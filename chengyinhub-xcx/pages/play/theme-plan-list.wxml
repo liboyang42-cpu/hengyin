@@ -2,7 +2,7 @@
   <text class="tb-section">共同方案</text>
   <text class="tb-purpose">{{themeBag.planPolicyText}} · {{themeBag.planPhaseText}}</text>
   <text class="tb-purpose tb-warning" wx:if="{{!themeBag.planReadback}}">操作信息尚未更新，当前只读</text>
-  <text class="tb-purpose tb-warning" wx:if="{{themePlanError}}" aria-live="polite">{{themePlanError}}</text>
+  <cy-inline-error class="tb-purpose tb-warning" wx:if="{{themePlanError}}" aria-live="polite" kind="error" title="{{themePlanError}}" />
   <view wx:if="{{themePlanUnknown}}" class="tb-button {{themeBagBusy ? 'is-busy' : ''}}" bindtap="checkThemePlanReceipt" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">核对方案操作结果</view>
   <view class="tb-group" wx:for="{{themeBag.planRows}}" wx:key="uiKey">
     <view class="tb-row" data-key="{{item.uiKey}}" bindtap="openThemePlan" aria-role="button" aria-label="查看{{item.title}}的投入与表决" hover-class="cy-pressed" hover-stay-time="80">

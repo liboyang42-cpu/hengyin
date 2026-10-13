@@ -445,6 +445,7 @@ function isDemoClubId(id) {
 }
 
 Page({
+  _clubAccessState: 'idle',
   data: {
     // 稿 40:3 末行「★ 减少动态效果兜底」的接线端。index.wxss 里 .cy-motion-reduced 的
     // 折叠面板兜底规则要靠根节点这个类才能匹配到 —— 之前 readReducedMotion 已 import
@@ -573,7 +574,6 @@ Page({
     ownerPickerShow: false,
     isMerchantViewer: false,
     canInviteCoop: false,
-    clubAccessState: 'idle', // idle | loading | ready | error
     canModerateContent: false,
     canReadMembers: false,
     canApproveMembers: false,
@@ -2032,7 +2032,7 @@ Page({
     const club = this.data.club;
     if (club && (this.canGovern(club) || this.data.canManageActivities || this.data.canOperateEvents
         || this.data.canCheckInEvents || this.data.canManageRoles)) return list;
-    if (this.data.clubAccessState !== 'ready' || !this.data.hasEventScope) return [];
+    if (this._clubAccessState !== 'ready' || !this.data.hasEventScope) return [];
     const topicIds = this._eventTopicIds || {};
     return list.filter(function (item) {
       const topicId = positiveId(item && item.id);
@@ -2107,8 +2107,8 @@ Page({
     this._eventTopicIds = {};
     const activeTab = !legacyCanGovern && this.data.activeTab === 'manage'
       ? this.defaultTabForClub(club) : this.data.activeTab;
+    this._clubAccessState = state || 'error';
     this.setData({
-      clubAccessState: state || 'error',
       canModerateContent: false,
       canReadMembers: legacyCanGovern,
       canApproveMembers: legacyCanGovern,
@@ -2188,8 +2188,8 @@ Page({
         if (requestedManage) that._requestedTab = '';
         that._eventAccessByActivity = eventAccess.byActivity;
         that._eventTopicIds = eventAccess.byTopic;
+        that._clubAccessState = 'ready';
         that.setData({
-          clubAccessState: 'ready',
           canModerateContent: canManageClub || canManageContent,
           canReadMembers: canReadMembers,
           canApproveMembers: canApproveMembers,

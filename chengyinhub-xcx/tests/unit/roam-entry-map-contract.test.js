@@ -29,7 +29,7 @@ test('附近活动只横滑且保持完整轮廓，失败空态留在抽屉内',
   assert.doesNotMatch(WXML, /entryPeekExpanded|toggleEntryPeek|onEntryPeekTouch|entry-peek__cards"[^>]*scroll-y/)
   assert.doesNotMatch(JS, /entryPeekExpanded|toggleEntryPeek|onEntryPeekTouch/)
   assert.doesNotMatch(WXML, />查看全部</)
-  assert.match(WXML, /<view wx:if="\{\{entryLoadError\}\}" aria-hidden="true"><\/view>/)
+  assert.match(WXML, /<cy-error wx:if="\{\{entryLoadError\}\}" load-failure="\{\{true\}\}"\s*\/>/)
   assert.match(WXSS, /\.entry-peek\s*\{[^}]*bottom:0[^}]*z-index:223[^}]*height:var\(--entry-peek-h\)[^}]*background:[^}]*var\(--cy-comp-sheet-player-glass\)/s)
   assert.match(WXSS, /\.entry-peek__head\s*\{[^}]*font-size:var\(--cy-type-section-title\)/s)
   assert.match(WXSS, /\.entry-card\s*\{[^}]*height:340rpx/s)

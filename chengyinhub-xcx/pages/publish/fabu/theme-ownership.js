@@ -105,9 +105,10 @@ const methods = {
   },
   _openNodePlanEndings(template, previous) {
     template = effectiveTemplate(this._runtimeConfig(), this.data.nodesForm, template);
-    const selected = withPlanEndings(template, this.data.nodeBindingDraft, previous), options = endingOptions(this.data.formData);
+    const selected = withPlanEndings(template, this._nodeBindingDraft, previous), options = endingOptions(this.data.formData);
     const stale = selected?.planEndings && selected.planDigest !== planDigest(template);
-    this.setData({ nodeBindingDraft: selected, nodePlanEndingError: stale ? '表决方案已修改，请重新选择各方案的结局章' : '', nodePlanEndingRows: terminalPlans(template).map(plan => {
+    this._nodeBindingDraft = selected;
+    this.setData({ nodePlanEndingError: stale ? '表决方案已修改，请重新选择各方案的结局章' : '', nodePlanEndingRows: terminalPlans(template).map(plan => {
       const value = selected?.planEndings?.[plan.planKey] || '';
       return { planKey: plan.planKey, label: plan.title || '表决方案', value, options,
         targetLabel: options.find(row => row.value === String(value))?.label || '最终章' };
@@ -119,10 +120,10 @@ const methods = {
     const option = row.options.find(o => o.value === String(e.detail.value)) || row.options[Number(e.detail.value)];
     if (!option) { this.setData({ nodePlanEndingError: '请先保存结局章，再选择表决结果' }); return false; }
     const template = effectiveTemplate(this._runtimeConfig(), this.data.nodesForm, this.data.nodesForm.templateInfo);
-    const selected = this.data.nodeBindingDraft || binding.reconcile([], template.id, null, [], '', '', template);
+    const selected = this._nodeBindingDraft || binding.reconcile([], template.id, null, [], '', '', template);
     const digest = planDigest(template), previous = selected.planDigest === digest ? selected.planEndings : {};
     const next = Object.assign({}, selected, { planDigest: digest, planEndings: Object.assign({}, previous, { [row.planKey]: option.value }) });
-    this.setData({ nodeBindingDraft: next }); this._openNodePlanEndings(template, next); return true;
+    this._nodeBindingDraft = next; this._openNodePlanEndings(template, next); return true;
   },
   _nodePlanEndingIssues() {
     const form = this.data.formData, config = binding.parse(form.themeRuntimeConfig), issues = [];

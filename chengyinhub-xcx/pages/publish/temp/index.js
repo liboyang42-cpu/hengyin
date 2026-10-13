@@ -178,6 +178,9 @@ Page({
   ...r5Editor.methods,
   MODULE_DEFS: MODULE_DEFS,
 
+  _supportMatrix: null,
+  _toolSelected: templateTools.selected({}),
+  _toolSummaries: templateTools.summaries({}),
   data: {
     creatorLoginRequired: false,
     qaAnswerModes: QA_ANSWER_MODES, qaTriesOptions: QA_TRIES, qaRevealOptions: QA_REVEAL, qaFbImgMax: QA_FB_IMG_MAX,
@@ -233,10 +236,8 @@ Page({
     /* 玩法模块:一个节点只选一个玩法(真源=原型「模板编辑页 v2」)。
        gameKey 是选中的那个,gameCurrent 是它在目录里的那一条,用来画已选卡。 */
     gameGroups: nodeGameCatalog.PICKER_GROUPS.map(group => ({ title: group.title, items: group.items.map(item => Object.assign({}, item, { key: item.gameKey || item.forms?.[0].gameKey || item.key })) })).concat({ title: '互动工具', items: templateTools.TOOLS.map(item => Object.assign({ tool: true }, item)) }),
-    supportMatrix: null, supportMatrixLoading: false, supportMatrixLoadError: '', supportError: '', supportReasons: {}, supportConditions: {},
+    supportMatrixLoading: false, supportMatrixLoadError: '', supportError: '', supportReasons: {}, supportConditions: {},
     toolDefs: templateTools.TOOLS,
-    toolSelected: templateTools.selected({}),
-    toolSummaries: templateTools.summaries({}),
     slotKinds: templateTools.SLOT_KINDS,
     toolScopes: templateTools.SCOPES,
     toolTargets: templateTools.TARGETS,
@@ -993,7 +994,7 @@ Page({
       effectErrors: templateTools.effectSlotErrors(advanced) });
   },
   openEffectResource: function (e, declareNew) {
-    const reason = supportMatrix.effectSlotPolicy(this.data.supportMatrix, this.data.advanced);
+    const reason = supportMatrix.effectSlotPolicy(this._supportMatrix, this.data.advanced);
     if (reason) { this.setData({ effectResourceError: { field: 'key', error: reason } }); return; }
     const { path, index } = e.currentTarget.dataset;
     if (!templateTools.effectPaths(this.data.advanced).includes(path)) return;
@@ -1018,7 +1019,7 @@ Page({
     this._setFormState({ advanced: result.value, effectResourceDraft: null, effectResourceError: null, advancedConfigError: '' });
   },
   pickEffectResource: function (e) {
-    const reason = supportMatrix.effectSlotPolicy(this.data.supportMatrix, this.data.advanced);
+    const reason = supportMatrix.effectSlotPolicy(this._supportMatrix, this.data.advanced);
     if (reason) { this.setData({ effectResourceError: { field: 'key', error: reason } }); return; }
     const choice = this.data.effectValueSlots[Number(e.detail.value)];
     if (!choice) return;
@@ -2458,11 +2459,12 @@ Page({
     if (this.data.supportMatrixLoading || (this._supportMatrixRequested && !retry)) return;
     this._supportMatrixRequested = true;
     this.setData({ supportMatrixLoading: true, supportMatrixLoadError: '' });
-    return supportMatrix.load(app, retry).then(matrix => { this.setData({ supportMatrix: matrix, supportMatrixLoading: false,
+    return supportMatrix.load(app, retry).then(matrix => { this._supportMatrix = matrix;
+        this.setData({ supportMatrixLoading: false,
       supportMatrixLoadError: matrix ? '' : '玩法支持信息未加载，请重试' }); this._refreshSupportMatrix(); });
   },
   _refreshSupportMatrix: function () {
-    const matrix = this.data.supportMatrix, advanced = this.data.advanced;
+    const matrix = this._supportMatrix, advanced = this.data.advanced;
     const reasons = {}, conditions = {};
     templateTools.TOOLS.forEach(tool => {
       reasons[tool.key] = supportMatrix.toolPolicy(matrix, this.data.gameKey, tool.key, advanced, this._supportContext);
@@ -2498,8 +2500,8 @@ Page({
   openToolSheet: function (e) {
     const key = e.currentTarget.dataset.key;
     if (!templateTools.TOOLS.some(tool => tool.key === key)) return;
-    const reason = supportMatrix.toolPolicy(this.data.supportMatrix, this.data.gameKey, key, this.data.advanced, this._supportContext);
-    if (reason && !this.data.toolSelected[key]) return toast(reason);
+    const reason = supportMatrix.toolPolicy(this._supportMatrix, this.data.gameKey, key, this.data.advanced, this._supportContext);
+    if (reason && !this._toolSelected[key]) return toast(reason);
     if (!this.data.gameKey) return toast('请先选择主玩法');
     if (this.data.gameKey === 'album') return toast('相册暂不支持叠加工具');
     if (key === 'vote' && Object.keys(this.data.advanced.interactionRules || {}).some(field => field !== 'resourceSlots')) {
@@ -2513,7 +2515,7 @@ Page({
   previewToolFromSheet: function (e) {
     const tool = templateTools.TOOLS.find(item => item.key === e.currentTarget.dataset.key);
     if (tool) modal.show({ title: tool.label,
-      content: tool.sub + (this.data.toolSelected[tool.key] ? '\n当前配置：' + this.data.toolSummaries[tool.key] : ''),
+      content: tool.sub + (this._toolSelected[tool.key] ? '\n当前配置：' + this._toolSummaries[tool.key] : ''),
       showCancel: false });
   },
   updateToolField: function (e) {
@@ -2661,15 +2663,18 @@ Page({
   saveTool: function () {
     const result = templateTools.apply(this.data.toolKey, this.data.toolDraft, this.data.advanced);
     if (result.error) { this.setData({ toolError: result }); return false; }
-    const reason = supportMatrix.validate(this.data.supportMatrix, Object.assign({}, this.data.formData, { advancedConfigJson: result.value }), this._supportContext);
+    const reason = supportMatrix.validate(this._supportMatrix, Object.assign({}, this.data.formData, { advancedConfigJson: result.value }), this._supportContext);
     if (reason) { this.setData({ toolError: { error: reason, field: this.data.toolKey } }); return false; }
-    this._setFormState({ advanced: result.value, toolSelected: templateTools.selected(result.value), toolSummaries: templateTools.summaries(result.value),
-      toolSheetOpen: false, toolError: null, advancedConfigError: '' });
+    this._toolSelected = templateTools.selected(result.value);
+    this._toolSummaries = templateTools.summaries(result.value);
+    this._setFormState({ advanced: result.value, toolSheetOpen: false, toolError: null, advancedConfigError: '' });
     return true;
   },
   removeTool: function (e) {
     const advanced = templateTools.remove(e.currentTarget.dataset.key, this.data.advanced);
-    this._setFormState({ advanced, toolSelected: templateTools.selected(advanced), toolSummaries: templateTools.summaries(advanced), advancedConfigError: '' });
+    this._toolSelected = templateTools.selected(advanced);
+    this._toolSummaries = templateTools.summaries(advanced);
+    this._setFormState({ advanced, advancedConfigError: '' });
   },
   changeTargetScope: function (e) {
     const choice = this.data.toolTargets[Number(e.detail.value)];
@@ -2680,7 +2685,7 @@ Page({
     if (choice.key === 'OWNER') delete advanced.interactionRules.targetScope;
     else advanced.interactionRules.targetScope = choice.key;
     if (!Object.keys(advanced.interactionRules).length) delete advanced.interactionRules;
-    const reason = supportMatrix.validate(this.data.supportMatrix, Object.assign({}, this.data.formData, { advancedConfigJson: advanced }), this._supportContext);
+    const reason = supportMatrix.validate(this._supportMatrix, Object.assign({}, this.data.formData, { advancedConfigJson: advanced }), this._supportContext);
     if (reason) { this.setData({ effectResourceError: { field: 'targetScope', error: reason } }); return; }
     this._setFormState({ advanced, effectResourceError: null, advancedConfigError: '' });
   },
@@ -2719,7 +2724,7 @@ Page({
     const game = nodeGameCatalog.findGame(key);
     if (!game) return;
     const locked = (this.data.lockedGames || {})[key]
-      || supportMatrix.choice(this.data.supportMatrix, key, this.data.advanced, this._supportContext);
+      || supportMatrix.choice(this._supportMatrix, key, this.data.advanced, this._supportContext);
     if (locked) { toast(locked); return; }
     /* 整段 advanced 一次写回,不用「advanced.xx.enabled」这种拼出来的路径 ——
        拼路径的写法过不了零消费门禁,也让人看不出到底动了哪几段。 */
@@ -3688,6 +3693,8 @@ Page({
       preferenceJson: formData.preferenceJson,
       advancedConfigJson: advancedResult.value
     });
+    that._toolSelected = templateTools.selected(advancedResult.value);
+    that._toolSummaries = templateTools.summaries(advancedResult.value);
     that.setData({
       formData: formData,
       descriptionMaxLength: Math.max(30, formData.description.length),
@@ -3699,8 +3706,6 @@ Page({
       preferencePreview: preferencePreview.rows,
       preferenceConfigError: formData.preferenceJson ? preferencePreview.error : '',
       advanced: advancedResult.value,
-      toolSelected: templateTools.selected(advancedResult.value),
-      toolSummaries: templateTools.summaries(advancedResult.value),
       gameKey: gameSlot.gameKey,
       gameCurrent: gameSlot.gameCurrent,
       gameSection: gameSlot.gameSection,

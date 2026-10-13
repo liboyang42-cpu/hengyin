@@ -295,7 +295,7 @@ test('C2 原个人效果按矩阵 OWNER 路径保存，默认范围不生成费�
   advanced.check.successEffects = [{ var: slot.key, op: 'INC', value: 2 }];
   advanced.interactionRules = { resourceSlots: [slot] };
   const self = page(advanced);
-  self.data.supportMatrix = require('./fixtures/gameplay-support-matrix.json').data;
+  self._supportMatrix = require('./fixtures/gameplay-support-matrix.json').data;
   self._supportContext = { runtime: { runtimeScope: 'TEAM', worldMode: 'WORLD_SHARED' } };
   self._refreshSupportMatrix = pageConfig._refreshSupportMatrix;
   self._refreshSupportMatrix();
@@ -308,9 +308,9 @@ test('C2 原个人效果按矩阵 OWNER 路径保存，默认范围不生成费�
   self.changeTargetScope({ detail: { value: 0 } });
   assert.equal(self.data.effectResourceError, null);
   assert.deepEqual(self.data.advanced.interactionRules, { resourceSlots: [slot] });
-  const denied = JSON.parse(JSON.stringify(self.data.supportMatrix));
+  const denied = JSON.parse(JSON.stringify(self._supportMatrix));
   denied.types.find(row => row.section === 'check').effectSlotSupport = false;
-  self.data.supportMatrix = denied; self._refreshSupportMatrix();
+  self._supportMatrix = denied; self._refreshSupportMatrix();
   assert.match(self.data.effectResourceDisabledReason, /数值资源/);
   self.openEffectResource(event('check.successEffects', 0));
   assert.equal(self.data.effectResourceDraft, null);

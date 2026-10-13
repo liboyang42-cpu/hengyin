@@ -2097,7 +2097,7 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
       }
       // 2026-09-17 第二轮拍板 22:play-run-session 同时有本机快照(无请求)与服务端会话三种请求。
       // 整份依赖扫描会让「调了 readPausedRun」的每个点击都带上 /save 写入;与 game-session-client 同法按方法取端点。
-      if (dependency === 'pages/play/utils/play-run-session.js') {
+      if (dependency === 'pages/play/utils/play-run-session.js' || dependency === 'utils/play-run-session.js') {
         const methods = {
           saveServerPausedRun: ['/api/play/run-session/save', 'POST'],
           clearServerRunSession: ['/api/play/run-session/clear', 'POST'],

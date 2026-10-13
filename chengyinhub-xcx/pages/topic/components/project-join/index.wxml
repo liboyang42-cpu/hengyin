@@ -7,8 +7,7 @@
   <cy-nav-bar overlay pill pillDark tint="light" />
 
   <!-- 整页错误态:原来接口失败只弹一条 toast,页面留一屏空白让人以为「没有数据」 -->
-  <view class="load-error" wx:if="{{ loadFailed }}" style="padding-top: {{ statusBarHeight + navBarHeight }}px;">
-  </view>
+  <cy-error class="load-error" wx:if="{{ loadFailed }}" load-failure="{{true}}" style="padding-top: {{ statusBarHeight + navBarHeight }}px;" />
 
   <block wx:else>
   <!-- 承接多站时的切换条(PR #585 放开多站)。只有 >1 站才出,单站时整块不渲染,

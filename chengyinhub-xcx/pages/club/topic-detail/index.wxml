@@ -227,7 +227,7 @@
           <input wx:else class="ctd-generic-ops__input" data-key="{{item.key}}" value="{{item.value}}" placeholder="{{item.label}}"
             maxlength="{{item.maxLength}}" disabled="{{writeLocked}}" bindinput="inputGenericOps" />
         </view>
-        <text class="ctd-director-note" wx:if="{{genericOpsError}}">{{genericOpsError}}</text>
+        <cy-inline-error class="ctd-director-note" wx:if="{{genericOpsError}}" kind="error" title="{{genericOpsError}}" />
         <view class="ctd-director-field__acts ctd-generic-ops__confirm">
           <view class="ctd-director-field__act" bindtap="closeGenericOps" aria-role="button" aria-label="取消运营操作" hover-class="cy-pressed" hover-stay-time="80">取消</view>
           <view class="ctd-director-field__act ctd-director-field__act--primary {{writeLocked || !genericOpsReady ? 'is-disabled' : ''}}" bindtap="confirmGenericOps"

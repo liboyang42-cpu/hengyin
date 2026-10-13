@@ -39,7 +39,7 @@
     <view class="sticky-nav-bar" style="height: {{ navBarHeight }}px;">
       <view class="sticky-back">
         <button bindtap="goBack" aria-role="button" aria-label="返回上一页">
-          <cy-icon name="back" size="40" color="var(--cy-color-text-primary)" />
+          <cy-icon name="back" size="40" />
         </button>
       </view>
     </view>
@@ -647,4 +647,4 @@
   bind:consentchange="onResultConsentChange" bind:consentretry="onResultConsentRetry"
   bind:close="onResultSheetClose" />
 
-<view class="theme-dark"><cy-theme-records title="{{topicName || info.name}}" history-open="{{themeHistoryOpen}}" rows="{{themeHistoryRows}}" more="{{themeHistoryMore}}" busy="{{themeRecordsBusy}}" error="{{themeRecordsError}}" card-session="{{themeCardSessionId}}" card="{{themeResultCard}}" replay-allowed="{{themeRecordsState.replayAllowed === true}}" replay-busy="{{themeReplayBusy}}" bind:closehistory="closeThemeHistory" bind:morehistory="loadMoreThemeHistory" bind:opencard="openThemeRecordCard" bind:closecard="closeThemeResultCard" bind:replay="replayThemeSession" bind:checkreplay="checkThemeReplay" replay-unconfirmed="{{themeReplayUnconfirmed}}" bind:retrycard="retryThemeResultCard" /></view>
+<view class="theme-dark"><cy-theme-records title="{{topicName || info.name}}" history-open="{{themeHistoryOpen}}" rows="{{themeHistoryRows}}" more="{{themeHistoryMore}}" busy="{{themeRecordsBusy}}" error="{{themeRecordsError}}" read-failure="{{themeRecordsReadFailure}}" card-session="{{themeCardSessionId}}" card="{{themeResultCard}}" replay-allowed="{{themeRecordsState.replayAllowed === true}}" replay-busy="{{themeReplayBusy}}" bind:closehistory="closeThemeHistory" bind:morehistory="loadMoreThemeHistory" bind:opencard="openThemeRecordCard" bind:closecard="closeThemeResultCard" bind:replay="replayThemeSession" bind:checkreplay="checkThemeReplay" replay-unconfirmed="{{themeReplayUnconfirmed}}" bind:retrycard="retryThemeResultCard" /></view>

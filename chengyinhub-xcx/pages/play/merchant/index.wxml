@@ -3,8 +3,7 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-  <view class="mp-empty" wx:if="{{notFound}}" style="padding-top:{{statusBarHeight + 120}}px" aria-hidden="true">
-  </view>
+  <cy-error class="mp-empty" wx:if="{{notFound}}" load-failure="{{true}}" style="padding-top:{{statusBarHeight + 120}}px" />
 
   <block wx:else>
     <view class="mp-hero">

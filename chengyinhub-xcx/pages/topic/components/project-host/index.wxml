@@ -6,8 +6,7 @@
   <!-- 2026-09-18 ✕统一裁决:打卡码弹层显示时导航退场,唯一出口是弹层✕/遮罩 -->
   <cy-nav-bar overlay pill pillDark tint="light" wx:if="{{!navHidden}}" />
 
-  <view class="load-error" wx:if="{{ loadFailed }}" style="padding-top: {{ statusBarHeight + navBarHeight }}px;">
-  </view>
+  <cy-error class="load-error" wx:if="{{ loadFailed }}" load-failure="{{true}}" style="padding-top: {{ statusBarHeight + navBarHeight }}px;" />
 
   <block wx:else>
   <view class="hero">

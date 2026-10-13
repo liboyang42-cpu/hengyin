@@ -29,7 +29,7 @@ test('俱乐部主页用真实资源与 DS 图标，不把字符伪装成按钮�
 
 test('俱乐部首载与错误恢复状态对读屏和触控均可感知', () => {
   const view = read('pages/club/detail/index.wxml')
-  assert.match(view, /<view wx:if="\{\{notFound\}\}" aria-hidden="true"><\/view>/)
+  assert.match(view, /<cy-error wx:if="\{\{notFound\}\}" load-failure="\{\{true\}\}"\s*\/>/)
   assert.doesNotMatch(view, /error-primary|error-secondary|重新加载俱乐部/)
   assert.match(view, /<cy-skeleton\b[^>]*wx:elif="\{\{!detailLoaded\}\}"[^>]*loading-label="正在加载俱乐部详情"/)
   assert.match(view, /ownerStage === 'loading'[\s\S]*aria-disabled="\{\{ownerStage === 'loading'\}\}"/)

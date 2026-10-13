@@ -137,9 +137,9 @@ test('共用玩法列出站点，另存副本传完整作者字段且成功后�
   draft.success({ code: '200', data: 88 });
   assert.equal(p.data.nodesForm.templateId, 88);
   assert.equal(p.data.formData.chapters[0].nodes[1].templateId, 31);
-  assert.deepEqual(p.data.nodeBindingDraft.values, { value_1: 'counter.focus' });
-  assert.equal(p.data.nodeBindingDraft.templateId, 88);
-  assert.equal(p.data.nodeBindingDraft.slotDigest, binding.slotDigest(binding.slotsOf(source)));
+  assert.deepEqual(p._nodeBindingDraft.values, { value_1: 'counter.focus' });
+  assert.equal(p._nodeBindingDraft.templateId, 88);
+  assert.equal(p._nodeBindingDraft.slotDigest, binding.slotDigest(binding.slotsOf(source)));
   assert.equal(p.data.nodeSharedSites.length, 1);
 });
 
@@ -153,7 +153,7 @@ test('另存失败或回包不确定保留原绑定且不自动重试', () => {
     if (kind === 'failure') draft.success({ code: 500, msg: '保存失败' });
     else draft.fail({}, 0);
     assert.equal(p.data.nodesForm.templateId, 31);
-    assert.equal(p.data.nodeBindingDraft.templateId, 31);
+    assert.equal(p._nodeBindingDraft.templateId, 31);
     assert.equal(p.data.formData.chapters[0].nodes[1].templateId, 31);
     assert.equal(sent.filter(r => r.url === '/api/template/draft').length, 1);
     if (kind === 'uncertain') {
@@ -173,9 +173,9 @@ test('另存回读资源槽类型变化时重新校验，不沿用旧数值对�
   sent.find(r => r.url === '/api/template/myinfo').success({ code: '200', data: updated });
   sent.find(r => r.url === '/api/template/draft').success({ code: '200', data: 89 });
   assert.equal(p.data.nodesForm.templateId, 89);
-  assert.deepEqual(p.data.nodeBindingDraft.values, {});
-  assert.deepEqual(p.data.nodeBindingDraft.items, {});
-  assert.equal(p.data.nodeBindingDraft.slotDigest, binding.slotDigest(binding.slotsOf(updated)));
+  assert.deepEqual(p._nodeBindingDraft.values, {});
+  assert.deepEqual(p._nodeBindingDraft.items, {});
+  assert.equal(p._nodeBindingDraft.slotDigest, binding.slotDigest(binding.slotsOf(updated)));
 });
 
 test('修改原模板入口明确沿用会员草稿 id 并返回主题编辑器', () => {

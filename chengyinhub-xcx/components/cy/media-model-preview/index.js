@@ -1,4 +1,4 @@
-const { fitModelOf } = require('../../../pages/play/components/playkit-scan/ar/ar-math.js');
+const { fitModelOf } = require('../../../utils/ar-math.js');
 Component({
   data: { angle: 0 },
   properties: { src: { type: String, value: '' } },

@@ -4,12 +4,12 @@ const presencePrivacy = require('../../utils/roam-presence-privacy.js');
 const bgTracker = require('../../utils/location/bg-tracker.js');
 
 Page({
+  _mediaBeforeId: '',
   data: {
     submitting: false,
     mediaRows: [],
     mediaLoading: false,
     mediaHasMore: false,
-    mediaBeforeId: '',
     mediaBusyId: '',
     mediaError: '',
     mediaAuthRequired: false,
@@ -47,7 +47,8 @@ Page({
     if (this._mediaDownload && this._mediaDownload.abort) this._mediaDownload.abort();
     this._mediaDownload = null;
     this._mediaRowsScope = null;
-    this.setData({ mediaRows: [], mediaLoading: false, mediaHasMore: false, mediaBeforeId: '', mediaBusyId: '', mediaError: '', mediaPreviewUrl: '', mediaPreviewType: '' });
+    this._mediaBeforeId = '';
+    this.setData({ mediaRows: [], mediaLoading: false, mediaHasMore: false, mediaBusyId: '', mediaError: '', mediaPreviewUrl: '', mediaPreviewType: '' });
   },
   mediaScope() {
     return { epoch: this._mediaEpoch || 0, owner: String(app.getUserID ? app.getUserID() || '' : ''),
@@ -72,7 +73,8 @@ Page({
       const code = Number(status == null ? res && res.code : status);
       if (code === 401 || code === 2 || code === 403) {
         this._mediaEpoch = (this._mediaEpoch || 0) + 1;
-        this.setData({ mediaRows: [], mediaLoading: false, mediaHasMore: false, mediaBeforeId: '', mediaBusyId: '', mediaPreviewUrl: '', mediaPreviewType: '',
+        this._mediaBeforeId = '';
+        this.setData({ mediaRows: [], mediaLoading: false, mediaHasMore: false, mediaBusyId: '', mediaPreviewUrl: '', mediaPreviewType: '',
           mediaAuthRequired: code !== 403, mediaAccessDenied: code === 403,
           mediaError: code === 403 ? '暂时无权查看媒体，请刷新重试' : '请重新登录查看本人媒体' });
         return;
@@ -92,10 +94,12 @@ Page({
     this._mediaEpoch = (this._mediaEpoch || 0) + 1;
     scope.epoch = this._mediaEpoch;
     if (!Number(scope.owner) || !scope.token) {
-      this.setData({ mediaRows: [], mediaLoading: false, mediaHasMore: false, mediaBeforeId: '', mediaAuthRequired: true, mediaAccessDenied: false });
+      this._mediaBeforeId = '';
+      this.setData({ mediaRows: [], mediaLoading: false, mediaHasMore: false, mediaAuthRequired: true, mediaAccessDenied: false });
       return;
     }
-    this.setData({ mediaRows: [], mediaLoading: true, mediaHasMore: false, mediaBeforeId: '', mediaError: '', mediaAuthRequired: false, mediaAccessDenied: false,
+    this._mediaBeforeId = '';
+    this.setData({ mediaRows: [], mediaLoading: true, mediaHasMore: false, mediaError: '', mediaAuthRequired: false, mediaAccessDenied: false,
       mediaPreviewUrl: '', mediaPreviewType: '' });
     this.requestOwnMedia('/api/media/asset/list', 'GET', scope, (error, rows) => {
       this.receiveOwnMediaPage(error, rows, false, '', scope);
@@ -122,18 +126,19 @@ Page({
     const mapped = rows.map(row => ({ assetId: String(row.assetId), reviewState: row.reviewState,
       reviewReason: String(row.reviewReason || ''), stateLabel: labels[row.reviewState], typeLabel: types[row.mediaType] || '媒体',
       mediaType: row.mediaType }));
+    this._mediaBeforeId = mapped.length ? mapped[mapped.length - 1].assetId : cursor;
     this.setData({ mediaLoading: false, mediaRows: append ? this.data.mediaRows.concat(mapped) : mapped,
-      mediaHasMore: rows.length === 50, mediaBeforeId: mapped.length ? mapped[mapped.length - 1].assetId : cursor });
+      mediaHasMore: rows.length === 50 });
   },
   loadOlderMedia() {
     if (this._mediaHidden || this.data.pendingAuthorization || this.data.mediaLoading || this.data.mediaBusyId
-        || !this.data.mediaHasMore || !this.validMediaId(this.data.mediaBeforeId)) return;
+        || !this.data.mediaHasMore || !this.validMediaId(this._mediaBeforeId)) return;
     if (!this._mediaRowsScope || !this.mediaScopeLive(this._mediaRowsScope)) {
       this.clearMediaState(); this._mediaHidden = false; this.loadOwnMedia(); return;
     }
     const scope = this.mediaScope();
     if (!Number(scope.owner) || !scope.token) { this.clearMediaState(); this._mediaHidden = false; this.setData({ mediaAuthRequired: true }); return; }
-    const cursor = this.data.mediaBeforeId;
+    const cursor = this._mediaBeforeId;
     this.setData({ mediaLoading: true, mediaError: '' });
     this.requestOwnMedia('/api/media/asset/list?beforeId=' + encodeURIComponent(cursor), 'GET', scope, (error, rows) => {
       this.receiveOwnMediaPage(error, rows, true, cursor, scope);

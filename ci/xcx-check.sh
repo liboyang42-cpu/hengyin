@@ -254,6 +254,7 @@ if ! node "$XCX_DIR/tests/lint/ui-integrity.js" --warn-as-error; then
 fi
 
 section "UI 有效性门禁(U1/U3/U4/U5;U2 复用上面的死链按钮门禁)"
+node --test ci/test_ui_validity_u1_mapping.js || mark_fail "U1 路由回归"
 node "$XCX_DIR/scripts/ui-validity-gates.js" --selftest || mark_fail 自证
 if ! node "$XCX_DIR/scripts/ui-validity-gates.js"; then
   mark_fail

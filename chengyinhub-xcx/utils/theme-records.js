@@ -1,4 +1,4 @@
-const { clearRunSession, clearServerRunSession, readServerPausedRun } = require('../pages/play/utils/play-run-session.js');
+const { clearRunSession, clearServerRunSession, readServerPausedRun } = require('./play-run-session.js');
 const PAGE_SIZE = 20;
 function historyRow(view) {
   const result = view.result || {};
@@ -38,12 +38,12 @@ function methods(req, playPage) {
       try {
         const res = await req('/api/play/theme/history', 'GET', query, null, true);
         if (epoch !== (this._themeRecordsEpoch || 0)) return false;
-        if (res.code != 200 || !Array.isArray(res.data)) { this.setData({ themeRecordsError: '游玩记录暂未加载，请稍后重试' }); return false; }
+        if (res.code != 200 || !Array.isArray(res.data)) { this.setData({ themeRecordsReadFailure: !['401', '403', '2'].includes(String(res.code)), themeRecordsError: '游玩记录暂未加载，请稍后重试' }); return false; }
         const seen = new Set(rows.map(row => String(row.sessionId)));
         this.setData({ themeHistoryRows: rows.concat(res.data.filter(row => !seen.has(String(row.sessionId))).map(historyRow)),
           themeHistoryMore: res.data.length === PAGE_SIZE });
         return true;
-      } catch (_) { if (epoch === (this._themeRecordsEpoch || 0)) this.setData({ themeRecordsError: '游玩记录暂未加载，请稍后重试' }); return false; }
+      } catch (_) { if (epoch === (this._themeRecordsEpoch || 0)) this.setData({ themeRecordsReadFailure: true, themeRecordsError: '游玩记录暂未加载，请稍后重试' }); return false; }
       finally { if (epoch === (this._themeRecordsEpoch || 0)) this.setData({ themeRecordsBusy: false }); }
     },
     async openThemeResultCard(e) {
@@ -54,20 +54,20 @@ function methods(req, playPage) {
       const epoch = this._themeRecordsEpoch = (this._themeRecordsEpoch || 0) + 1;
       if (view.scope === 'TEAM') {
         this.setData({ themeCardSessionId: view.sessionId, themeResultCard: view.resultCard ? resultCard(view.resultCard, view) : null,
-          themeRecordsState: null, themeRecordsBusy: false, themeRecordsError: view.resultCard ? '' : '本队结果暂未加载，请刷新后重试' });
+          themeRecordsState: null, themeRecordsBusy: false, themeRecordsReadFailure: true, themeRecordsError: view.resultCard ? '' : '本队结果暂未加载，请刷新后重试' });
         return !!view.resultCard;
       }
       this.setData({ themeCardSessionId: view.sessionId, themeResultCard: null, themeRecordsState: null, themeRecordsBusy: true, themeRecordsError: '' });
       try {
         const card = await req('/api/play/theme/card', 'GET', { sessionId: view.sessionId }, null, true);
         if (epoch !== this._themeRecordsEpoch) return false;
-        if (card.code != 200 || !card.data) { this.setData({ themeRecordsError: '本局结果暂未加载，请稍后重试' }); return false; }
+        if (card.code != 200 || !card.data) { this.setData({ themeRecordsReadFailure: !['401', '403', '2'].includes(String(card.code)), themeRecordsError: '本局结果暂未加载，请稍后重试' }); return false; }
         this.setData({ themeResultCard: resultCard(card.data, view) });
         const state = await req('/api/play/theme/state', 'GET', { topicId: view.topicId || this.data.topicId || this.data.id, sessionId: view.sessionId }, null, true);
         if (epoch !== this._themeRecordsEpoch) return false;
         if (state.code == 200 && state.data && String(state.data.sessionId) === String(view.sessionId)) this.setData({ themeRecordsState: state.data });
         return true;
-      } catch (_) { if (epoch === this._themeRecordsEpoch) this.setData({ themeRecordsError: '本局结果暂未加载，请稍后重试' }); return false; }
+      } catch (_) { if (epoch === this._themeRecordsEpoch) this.setData({ themeRecordsReadFailure: true, themeRecordsError: '本局结果暂未加载，请稍后重试' }); return false; }
       finally { if (epoch === this._themeRecordsEpoch) this.setData({ themeRecordsBusy: false }); }
     },
     retryThemeResultCard() {
@@ -99,7 +99,7 @@ function methods(req, playPage) {
         const read = await readServerPausedRun(req, scope);
         cleared = read.ok && !read.record && read.endedAt >= this._themeReplayClearAt;
       }
-      if (!cleared || !clearRunSession(wx, scope)) { this.setData({ themeRecordsError: '新一局已开启，旧行程用时暂未清理，请核对新一局' }); return false; }
+      if (!cleared || !clearRunSession(wx, scope)) { this.setData({ themeRecordsReadFailure: false, themeRecordsError: '新一局已开启，旧行程用时暂未清理，请核对新一局' }); return false; }
       if (this._themeRecordsDisposed) return false;
       const url = '/pages/play/index?topicId=' + encodeURIComponent(view.topicId) + (view.activityId ? '&activityId=' + encodeURIComponent(view.activityId) : '');
       const navigate = playPage ? wx.redirectTo : wx.navigateTo;
@@ -114,8 +114,8 @@ function methods(req, playPage) {
         const res = await req('/api/play/theme/state', 'GET', { topicId: old.topicId, ...(old.activityId ? { activityId: old.activityId } : {}) }, null, true);
         if (this._themeRecordsDisposed) return false;
         if (res.code == 200 && res.data && res.data.playInstanceId === 'replay:' + old.sessionId && String(res.data.sessionId) !== String(old.sessionId) && (!this._themeReplayConfirmedId || String(res.data.sessionId) === String(this._themeReplayConfirmedId))) return await this._enterThemeReplay(res.data);
-        this.setData({ themeRecordsError: '尚未确认新一局，请先查看游玩记录' }); return false;
-      } catch (_) { this.setData({ themeRecordsError: '尚未确认新一局，请先查看游玩记录' }); return false; }
+        this.setData({ themeRecordsReadFailure: false, themeRecordsError: '尚未确认新一局，请先查看游玩记录' }); return false;
+      } catch (_) { this.setData({ themeRecordsReadFailure: false, themeRecordsError: '尚未确认新一局，请先查看游玩记录' }); return false; }
       finally { this.setData({ themeReplayBusy: false }); }
     },
     async replayThemeSession() {
@@ -127,7 +127,7 @@ function methods(req, playPage) {
         const fresh = await req('/api/play/theme/state', 'GET', { topicId: old.topicId || this.data.topicId || this.data.id, sessionId: old.sessionId }, null, true);
         if (this._themeRecordsDisposed) return false;
         if (fresh.code != 200 || !fresh.data || fresh.data.replayAllowed !== true || String(fresh.data.sessionId) !== String(old.sessionId)) {
-          this.setData({ themeRecordsError: '这局暂不能再玩，请先查看游玩记录', themeRecordsState: fresh.code == 200 ? fresh.data : null }); return false;
+          this.setData({ themeRecordsReadFailure: false, themeRecordsError: '这局暂不能再玩，请先查看游玩记录', themeRecordsState: fresh.code == 200 ? fresh.data : null }); return false;
         }
         this._themeReplayAttempt = { ...fresh.data, topicId: fresh.data.topicId || this.data.topicId || this.data.id };
         this.setData({ themeReplayUnconfirmed: true });
@@ -145,4 +145,4 @@ function methods(req, playPage) {
   return recordMethods;
 }
 module.exports = { historyRow, resultCard, methods, data: { themeHistoryOpen: false, themeHistoryRows: [], themeHistoryMore: false,
-  themeCardSessionId: 0, themeResultCard: null, themeRecordsState: null, themeRecordsBusy: false, themeRecordsError: '', themeReplayBusy: false, themeReplayUnconfirmed: false } };
+  themeCardSessionId: 0, themeResultCard: null, themeRecordsState: null, themeRecordsBusy: false, themeRecordsError: '', themeRecordsReadFailure: false, themeReplayBusy: false, themeReplayUnconfirmed: false } };

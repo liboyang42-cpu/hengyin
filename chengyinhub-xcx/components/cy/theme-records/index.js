@@ -1,6 +1,6 @@
 Component({
   options: { addGlobalClass: true },
-  properties: { title: String, historyOpen: Boolean, rows: Array, more: Boolean, busy: Boolean, error: String,
+  properties: { title: String, historyOpen: Boolean, rows: Array, more: Boolean, busy: Boolean, error: String, readFailure: Boolean,
     cardSession: Number, card: Object, replayAllowed: Boolean, replayBusy: Boolean, replayUnconfirmed: Boolean },
   methods: {
     closeHistory() { this.triggerEvent('closehistory'); },
