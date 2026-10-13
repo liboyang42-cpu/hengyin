@@ -4132,10 +4132,7 @@ Page({
                 if (row[field]) target[field] = row[field]; else delete target[field];
               });
             });
-            if (removal.ruleRefs.questsBefore && restoredRuntime.gameplayRuntime) {
-              restoredRuntime.gameplayRuntime.quests = removal.ruleRefs.questsBefore.quests;
-              restoredRuntime.gameplayRuntime.acts = removal.ruleRefs.questsBefore.acts;
-            }
+            if (removal.ruleRefs.gameBefore) restoredRuntime.gameplayRuntime = removal.ruleRefs.gameBefore;
             restoredBindings = true;
           }
           if (removal.kind === 'material') {
@@ -7705,19 +7702,37 @@ Page({
         notes.push('第' + (ch.index + 1) + '章额外站点');
       }
     });
-    // 运行结构里这一站的任务一并移出(幕的任务列表、前置条件里的引用),否则保存时会因引用已删站点被拒
+    // 运行结构里属于这一站的东西一并移出:任务(含幕的任务列表与前置引用)、玩法工具为它生成的设施与方案、
+    // 以这一站为操作点的设施。否则保存时服务端会因引用已删站点拒收;撤销时整段运行结构原样放回。
     const game = runtime.gameplayRuntime;
-    let questsBefore = null;
-    if (game && (game.quests || []).some(q => same(q.nodeId))) {
-      questsBefore = { quests: game.quests, acts: game.acts };
-      const gone = new Set(game.quests.filter(q => same(q.nodeId)).map(q => q.questKey));
-      game.quests = game.quests.filter(q => !gone.has(q.questKey)).map(q => (q.prerequisites
-        ? Object.assign({}, q, { prerequisites: q.prerequisites.filter(k => !gone.has(k)) }) : q));
-      game.acts = (game.acts || []).map(act => Object.assign({}, act, { questKeys: (act.questKeys || []).filter(k => !gone.has(k)) }));
+    let gameBefore = null;
+    if (game) {
+      const nodeId = Number(node && node.id);
+      const facilityHit = f => f.facilityKey === 'tpl_node_' + nodeId || same(f.operationNodeId);
+      const toolRow = ((game.templateTools || {}).nodes || []).find(row => same(row.nodeId));
+      if ((game.quests || []).some(q => same(q.nodeId)) || (game.facilities || []).some(facilityHit) || toolRow) {
+        gameBefore = JSON.parse(JSON.stringify(game));
+        const gone = new Set((game.quests || []).filter(q => same(q.nodeId)).map(q => q.questKey));
+        const goneFacilities = new Set((game.facilities || []).filter(facilityHit).map(f => f.facilityKey));
+        game.quests = (game.quests || []).filter(q => !gone.has(q.questKey)).map(q => {
+          const next = q.prerequisites ? Object.assign({}, q, { prerequisites: q.prerequisites.filter(k => !gone.has(k)) }) : Object.assign({}, q);
+          if (goneFacilities.has(next.facilityKey)) delete next.facilityKey;
+          return next;
+        });
+        game.acts = (game.acts || []).map(act => Object.assign({}, act, { questKeys: (act.questKeys || []).filter(k => !gone.has(k)) }));
+        if (game.facilities) game.facilities = game.facilities.filter(f => !goneFacilities.has(f.facilityKey));
+        if (toolRow) {
+          const plans = new Set(toolRow.planKeys || []);
+          if (game.plans) game.plans = game.plans.filter(row => !plans.has(row.endingKey));
+          game.templateTools.nodes = game.templateTools.nodes.filter(row => row !== toolRow);
+          if (plans.size) notes.push('该站点玩法生成的表决方案');
+        }
+        if (goneFacilities.size) notes.push('该站点的设施');
+      }
     }
-    if (!before.length && !questsBefore) return null;
+    if (!before.length && !gameBefore) return null;
     this.setData({ 'formData.themeRuntimeConfig': JSON.stringify(runtime) });
-    return { before, questsBefore, note: notes.length ? '已从' + notes.join('、') + '中移除这个站点' : '' };
+    return { before, gameBefore, note: notes.length ? '已从' + notes.join('、') + '中移除这个站点' : '' };
   },
   _removeNodeTemplateBinding(node) {
     const runtime = templateBinding.parse(this.data.formData.themeRuntimeConfig);

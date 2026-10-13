@@ -327,8 +327,11 @@ test('删除站点：从互斥组/额外站点/运行任务里明确移出并说
   p.data.formData.themeRuntimeConfig = JSON.stringify({
     chapters: [{ index: 3, hpCost: 0, luckCost: 0, grants: [], eggs: [], exclusiveGroups: [[116, 117, 118]] },
       { index: 5, hpCost: 0, luckCost: 0, grants: [], eggs: [], exclusiveGroups: [[121, 118]], extraNodes: [{ nodeId: 118, slot: 'shared' }, { nodeId: 123, slot: 'shared' }] }],
-    gameplayRuntime: { runtimeScope: 'TEAM', quests: [{ questKey: 'node_118', nodeId: 118, actKey: 'a' }, { questKey: 'node_116', nodeId: 116, actKey: 'a', prerequisites: ['node_118'] }],
-      acts: [{ actKey: 'a', questKeys: ['node_116', 'node_118'] }] },
+    gameplayRuntime: { runtimeScope: 'TEAM', quests: [{ questKey: 'node_118', nodeId: 118, actKey: 'a' }, { questKey: 'node_116', nodeId: 116, actKey: 'a', prerequisites: ['node_118'], facilityKey: 'tpl_node_118' }],
+      acts: [{ actKey: 'a', questKeys: ['node_116', 'node_118'] }],
+      facilities: [{ facilityKey: 'tpl_node_118', operationNodeId: 118 }, { facilityKey: 'facility_1', operationNodeId: 116 }],
+      plans: [{ endingKey: 'plan_118' }, { endingKey: 'plan_keep' }],
+      templateTools: { nodes: [{ nodeId: 118, planKeys: ['plan_118'] }, { nodeId: 116, planKeys: [] }] } },
   });
   const refs = p._removeNodeRuleRefs({ id: 118 });
   const c = JSON.parse(p.data.formData.themeRuntimeConfig);
@@ -336,9 +339,12 @@ test('删除站点：从互斥组/额外站点/运行任务里明确移出并说
   assert.equal(Object.hasOwn(c.chapters[1], 'exclusiveGroups'), false, '只剩一站的互斥组整组去掉');
   assert.deepEqual(c.chapters[1].extraNodes, [{ nodeId: 123, slot: 'shared' }], '共用额度里的其他站点不受影响');
   assert.deepEqual(c.gameplayRuntime.quests, [{ questKey: 'node_116', nodeId: 116, actKey: 'a', prerequisites: [] }]);
+  assert.deepEqual(c.gameplayRuntime.facilities, [{ facilityKey: 'facility_1', operationNodeId: 116 }], '该站点生成/操作的设施移出,别的保留');
+  assert.deepEqual(c.gameplayRuntime.plans, [{ endingKey: 'plan_keep' }]);
+  assert.deepEqual(c.gameplayRuntime.templateTools.nodes, [{ nodeId: 116, planKeys: [] }]);
   assert.deepEqual(c.gameplayRuntime.acts[0].questKeys, ['node_116']);
-  assert.match(refs.note, /第4章互斥选项、第6章互斥选项、第6章额外站点/);
+  assert.match(refs.note, /第4章互斥选项、第6章互斥选项、第6章额外站点、该站点玩法生成的表决方案、该站点的设施/);
   assert.equal(refs.before.length, 2);
-  assert.ok(refs.questsBefore);
+  assert.equal(refs.gameBefore.facilities.length, 2, '撤销用的原运行结构完整保留');
   assert.equal(p._removeNodeRuleRefs({ id: 999 }), null, '没被引用的站点不改配置');
 });
