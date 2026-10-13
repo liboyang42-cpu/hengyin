@@ -37,6 +37,20 @@ import static org.mockito.Mockito.when;
  * 漏掉 compare 条目的 time / text,{@link #collectsCompareTimelineTexts()} 立刻红。
  */
 class JourneyReviewTextsTest {
+    @Test
+    void mediaAltTextUsesExistingReviewCollection() {
+        ChapterBlockDTO image = new ChapterBlockDTO();
+        image.setType("image"); image.setAltText("图片说明");
+        ChapterBlockDTO audio = new ChapterBlockDTO();
+        audio.setType("audio"); audio.setAltText("音频转写");
+        ChapterDTO chapter = new ChapterDTO();
+        chapter.setBlocks(Arrays.asList(image, audio));
+        assertEquals(Arrays.asList("图片说明", "音频转写"),
+                texts(JourneyReviewTexts.collectChapterNarrativeBlocks(Collections.singletonList(chapter))));
+        assertEquals(Collections.singletonList("图片说明"), texts(JourneyReviewTexts.collectChapterBlocks(
+                "[{\"type\":\"image\",\"altText\":\"图片说明\"}]", 1)));
+    }
+
 
     @Test
     void collectsEveryJourneyStoryTextField() {

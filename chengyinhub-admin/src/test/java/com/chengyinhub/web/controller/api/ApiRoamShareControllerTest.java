@@ -12,6 +12,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Map;
+import java.util.LinkedHashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -126,8 +127,10 @@ class ApiRoamShareControllerTest {
     @Test
     void read_is_anonymous_by_token_and_revoked_or_malformed_tokens_read_as_gone() {
         RoamShareSnapshotMapper mapper = mock(RoamShareSnapshotMapper.class);
-        when(mapper.selectSnapshotJsonByToken("0123456789abcdef0123456789abcdef"))
-                .thenReturn("{\"ts\":1699999200000,\"routeName\":\"外滩\",\"track\":[{\"lat\":31.2304567,\"lng\":121.4737123}]}");
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("snapshotJson", "{\"ts\":1699999200000,\"routeName\":\"外滩\",\"track\":[{\"lat\":31.2304567,\"lng\":121.4737123}]}");
+        row.put("version", 3);
+        when(mapper.selectSnapshotByToken("0123456789abcdef0123456789abcdef")).thenReturn(row);
         ApiRoamShareController anonymous = controller(0, mapper);
         AjaxResult ok = anonymous.read("0123456789abcdef0123456789abcdef");
         assertEquals(200, ok.get("code"));
@@ -135,12 +138,16 @@ class ApiRoamShareControllerTest {
         assertEquals("外滩", shared.getString("routeName"));
         assertEquals("31.230", shared.getJSONArray("track").getJSONObject(0).getBigDecimal("lat").toPlainString(),
                 "存量精确坐标在匿名读取时也必须量化");
+        assertEquals(3, shared.getIntValue("version"), "读侧带快照版本");
+        assertEquals("self_reported", shared.getString("memoryKind"), "分享内容标为自报回忆,不是履约凭证");
 
         AjaxResult gone = anonymous.read("fedcba9876543210fedcba9876543210");
         assertEquals(500, gone.get("code"));
         assertEquals(ApiRoamShareController.GONE, gone.get("msg"));
         assertEquals(500, anonymous.read("1 or 1=1").get("code"));
-        verify(mapper, never()).selectSnapshotJsonByToken("1 or 1=1");
+        verify(mapper, never()).selectSnapshotByToken("1 or 1=1");
+        verify(mapper, never()).selectSnapshotJsonByToken(anyString());
+        verify(mapper, never()).selectVersionByToken(anyString());
     }
 
     @Test
@@ -152,5 +159,87 @@ class ApiRoamShareControllerTest {
         assertEquals(3, ((Map<?, ?>) r.get("data")).get("revoked"));
         assertEquals(500, controller(0, mapper).revoke().get("code"));
         verify(mapper, times(1)).deleteByMember(anyLong());
+    }
+
+    private static final String TOKEN_A = "abcdef01abcdef01abcdef01abcdef01";
+
+    @Test
+    void revokeOne_onlyDeletesCallersOwnTokenAndOthersTokensAreRejected() {
+        RoamShareSnapshotMapper mapper = mock(RoamShareSnapshotMapper.class);
+        when(mapper.deleteByMemberToken(9L, TOKEN_A)).thenReturn(1);
+        AjaxResult mine = controller(9, mapper).revoke(TOKEN_A);
+        assertEquals(200, mine.get("code"));
+        assertEquals("one", ((Map<?, ?>) mine.get("data")).get("scope"));
+
+        // 他人令牌:WHERE member_id 不匹配 → 删 0 行 → 明确拒绝
+        AjaxResult others = controller(10, mapper).revoke(TOKEN_A);
+        assertEquals(500, others.get("code"));
+        assertEquals(ApiRoamShareController.NOT_OWNED, others.get("msg"));
+        assertEquals(500, controller(9, mapper).revoke("1 or 1=1").get("code"));
+        assertEquals(500, controller(0, mapper).revoke(TOKEN_A).get("code"), "未登录不能撤回");
+        verify(mapper, never()).deleteByMember(anyLong());
+        verify(mapper, never()).deleteByMemberToken(anyLong(), eq("1 or 1=1"));
+    }
+
+    @Test
+    void revokeAll_withoutTokenKeepsLegacyScope() {
+        RoamShareSnapshotMapper mapper = mock(RoamShareSnapshotMapper.class);
+        when(mapper.deleteByMember(9L)).thenReturn(2);
+        AjaxResult all = controller(9, mapper).revoke("");
+        assertEquals("all", ((Map<?, ?>) all.get("data")).get("scope"));
+        verify(mapper, never()).deleteByMemberToken(anyLong(), anyString());
+    }
+
+    @Test
+    void read_missingVersionOrRevokedSnapshotIsGone() {
+        RoamShareSnapshotMapper mapper = mock(RoamShareSnapshotMapper.class);
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("snapshotJson", "{\"ts\":1699999200000}");
+        when(mapper.selectSnapshotByToken(TOKEN_A)).thenReturn(row);
+        AjaxResult r = controller(0, mapper).read(TOKEN_A);
+        assertEquals(500, r.get("code"));
+        assertEquals(ApiRoamShareController.GONE, r.get("msg"));
+    }
+
+    @Test
+    void publish_withStaleExpectedVersionConflictsWithoutOverwriting() {
+        RoamShareSnapshotMapper mapper = mock(RoamShareSnapshotMapper.class);
+        when(mapper.updateSnapshotIfVersion(eq(9L), eq(5L), anyString(), eq(2))).thenReturn(0);
+        when(mapper.selectVersionByMemberTs(9L, 5L)).thenReturn(3);
+        AjaxResult r = controller(9, mapper).publish(5L, SNAPSHOT, 2);
+        assertEquals(500, r.get("code"));
+        assertEquals(ApiRoamShareController.CONFLICT, r.get("msg"));
+        assertEquals(Boolean.TRUE, ((Map<?, ?>) r.get("data")).get("conflict"));
+        assertEquals(3, ((Map<?, ?>) r.get("data")).get("version"));
+        verify(mapper, never()).upsertSnapshot(anyString(), anyLong(), anyLong(), anyString());
+
+        when(mapper.updateSnapshotIfVersion(eq(9L), eq(5L), anyString(), eq(3))).thenReturn(1);
+        when(mapper.selectTokenByMemberTs(9L, 5L)).thenReturn(TOKEN_A);
+        when(mapper.selectVersionByMemberTs(9L, 5L)).thenReturn(4);
+        AjaxResult ok = controller(9, mapper).publish(5L, SNAPSHOT, 3);
+        assertEquals(200, ok.get("code"));
+        assertEquals(TOKEN_A, ((Map<?, ?>) ok.get("data")).get("token"));
+        assertEquals(4, ((Map<?, ?>) ok.get("data")).get("version"));
+        assertEquals(500, controller(9, mapper).publish(5L, SNAPSHOT, 0).get("code"), "非法版本");
+    }
+
+    @Test
+    void publish_keepsRedactionDeclarationButNeverZoneCoordinatesAndRejectsUnknownVersion() {
+        RoamShareSnapshotMapper mapper = mock(RoamShareSnapshotMapper.class);
+        when(mapper.selectTokenByMemberTs(9L, 7L)).thenReturn(null, TOKEN_A);
+        ApiRoamShareController c = controller(9, mapper);
+        String ok = "{\"redaction\":{\"v\":1,\"clip\":true,\"pct\":10,\"zones\":2,\"home\":{\"lat\":31.2,\"lng\":121.4}}}";
+        assertEquals(200, c.publish(7L, ok).get("code"));
+        ArgumentCaptor<String> json = ArgumentCaptor.forClass(String.class);
+        verify(mapper).upsertSnapshot(anyString(), eq(9L), eq(7L), json.capture());
+        JSONObject redaction = JSON.parseObject(json.getValue()).getJSONObject("redaction");
+        assertEquals(2, redaction.getIntValue("zones"));
+        assertFalse(redaction.containsKey("home"), "遮挡区域坐标不得落库");
+
+        assertEquals(500, c.publish(7L, "{\"redaction\":{\"v\":2,\"clip\":true,\"pct\":10,\"zones\":0}}").get("code"),
+                "服务端不认识的去敏版本整份拒绝");
+        assertEquals(500, c.publish(7L, "{\"redaction\":{\"v\":1,\"clip\":true,\"pct\":10,\"zones\":[{\"lat\":1,\"lng\":1}]}}").get("code"),
+                "区域只能声明数量,不能夹带坐标");
+        assertEquals(500, c.publish(7L, "{\"redaction\":{\"v\":1,\"clip\":true,\"pct\":41,\"zones\":0}}").get("code"));
     }
 }

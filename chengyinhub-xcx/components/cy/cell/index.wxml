@@ -3,11 +3,11 @@
   hover-class="{{disabled ? '' : 'cell--press'}}"
   hover-stay-time="80"
   aria-role="button"
-  aria-label="{{title}}"
+  aria-label="{{title}}{{required ? '，必填' : ''}}{{value ? '，' + value : ''}}{{description ? '，' + description : ''}}"
   aria-disabled="{{disabled}}"
   catchtap="onTap"
 >
-  <image wx:if="{{icon}}" class="cell__icon" src="{{icon}}" mode="aspectFit" />
+  <image wx:if="{{icon}}" class="cell__icon" src="{{icon}}" mode="aspectFit" aria-hidden="true" />
   <view class="cell__body">
     <view class="cell__title">{{title}}<text wx:if="{{required}}" class="cell__required"> *</text></view>
     <view wx:if="{{description}}" class="cell__desc">{{description}}</view>
@@ -16,7 +16,7 @@
   <cy-icon wx:if="{{arrow || reserveArrow}}" style="opacity:{{arrow ? 1 : 0}}" class="cell__chevron" name="{{arrowIcon}}" size="32" />
 
   <!-- 微信 open-type 只能挂 button:透明覆盖整行,点击行为交给微信开放能力;disabled 时一并挡掉 -->
-  <button wx:if="{{openType && !disabled}}" class="cell__open" open-type="{{openType}}" aria-label="{{title}}"></button>
+  <button wx:if="{{openType && !disabled}}" class="cell__open" open-type="{{openType}}" aria-label="{{title}}{{required ? '，必填' : ''}}{{value ? '，' + value : ''}}{{description ? '，' + description : ''}}"></button>
 
   <view wx:if="{{hairline}}" class="cell__hairline"></view>
 </view>

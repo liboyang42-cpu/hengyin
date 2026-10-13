@@ -6,19 +6,19 @@
   </view>
 
   <view class="fd__control">
-    <textarea wx:if="{{variant === 'textarea'}}" class="fd__ta" value="{{value}}" placeholder="{{placeholder}}" placeholder-class="fd__ph" maxlength="{{showCount ? -1 : maxlength}}" disabled="{{disabled || readonly}}" bindinput="onInput" bindfocus="onFocus" bindblur="onBlur" />
-    <view wx:elif="{{variant === 'select'}}" class="fd__select" bindtap="onSelectTap" hover-class="fd__select--press" hover-stay-time="80">
+    <textarea aria-label="{{label || placeholder}}{{required ? '，必填' : ''}}{{readonly ? '，只读' : ''}}{{error && errorText ? '，' + errorText : ''}}" wx:if="{{variant === 'textarea'}}" class="fd__ta" value="{{value}}" placeholder="{{placeholder}}" placeholder-class="fd__ph" maxlength="{{showCount ? -1 : maxlength}}" disabled="{{disabled || readonly}}" bindinput="onInput" bindfocus="onFocus" bindblur="onBlur" />
+    <view wx:elif="{{variant === 'select'}}" class="fd__select" aria-role="button" aria-label="{{label || placeholder}}{{required ? '，必填' : ''}}{{readonly ? '，只读' : ''}}{{error && errorText ? '，' + errorText : ''}}{{displayValue ? '，' + displayValue : ''}}" aria-disabled="{{disabled || readonly}}" bindtap="onSelectTap" hover-class="fd__select--press" hover-stay-time="80">
       <text class="{{displayValue ? 'fd__val' : 'fd__ph'}}">{{displayValue || placeholder}}</text>
       <cy-icon name="arrow-right" size="32" class="fd__arrow {{active ? 'fd__arrow--up' : ''}}" />
     </view>
-    <input wx:else class="fd__input" value="{{value}}" placeholder="{{placeholder}}" placeholder-class="fd__ph" maxlength="{{showCount ? -1 : maxlength}}" disabled="{{disabled || readonly}}" bindinput="onInput" bindfocus="onFocus" bindblur="onBlur" />
+    <input aria-label="{{label || placeholder}}{{required ? '，必填' : ''}}{{readonly ? '，只读' : ''}}{{error && errorText ? '，' + errorText : ''}}" wx:else class="fd__input" value="{{value}}" placeholder="{{placeholder}}" placeholder-class="fd__ph" maxlength="{{showCount ? -1 : maxlength}}" disabled="{{disabled || readonly}}" bindinput="onInput" bindfocus="onFocus" bindblur="onBlur" />
 
     <cy-icon wx:if="{{variant !== 'select' && success}}" name="check" size="40" class="fd__tail fd__tail--ok" />
     <cy-icon wx:elif="{{variant !== 'select' && readonly}}" name="lock" size="36" class="fd__tail" />
-    <view wx:elif="{{variant === 'text' && clearable && value && !disabled && !readonly}}" class="fd__tail fd__clear" catchtap="onClear" aria-role="button" aria-label="清空" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view>
+    <view wx:elif="{{variant === 'text' && clearable && value && !disabled && !readonly}}" class="fd__tail fd__clear" catchtap="onClear" aria-role="button" aria-label="清空{{label || placeholder}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view>
   </view>
 
-  <view class="fd__help" wx:if="{{(error && errorText) || helperText}}">
+  <view class="fd__help" aria-role="status" aria-live="polite" wx:if="{{(error && errorText) || helperText}}">
     <block wx:if="{{error && errorText}}"><cy-icon name="warning" size="28" class="fd__err-i" /><text class="fd__err">{{errorText}}</text></block>
     <text wx:elif="{{helperText}}" class="fd__helper">{{helperText}}</text>
   </view>

@@ -1,3 +1,4 @@
+@import "../../../style/reduced-motion.wxss";
 :host { display: block; }
 
 .cy-empty {
@@ -116,3 +117,5 @@
 .cy-empty--sm .cy-empty-sub {
   margin-top: var(--cy-space-1);
 }
+
+.cy-empty--reduced-motion .cy-empty-spinner { animation: none; }

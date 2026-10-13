@@ -1,9 +1,12 @@
+const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
+
 /* cy-upload · 图片上传网格(DS §3.13)
  * 结构:说明行(比例/数量/用途,tipText)→ 网格(已传缩略 160rpx + 添加位)。
  * 组件纯展示 + 事件(add/remove/retry/preview),选图与上传网络逻辑留在页面。
  * uploading 传 true(整体上传中)或索引数组;errorIndexes 传失败索引——
  * 失败位保留并就地重试,禁静默丢图(§3.13)。达上限或 disabled 时隐藏添加位。 */
 Component({
+  behaviors: [reducedMotionBehavior],
   properties: {
     urls:         { type: Array,   value: [] },    // 已传图 src 列表
     max:          { type: Number,  value: 9 },

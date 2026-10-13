@@ -65,6 +65,14 @@ class RoamShareSnapshotConcurrencyMySqlIT {
         db = new JdbcTemplate(source);
         db.execute(new String(Files.readAllBytes(Paths.get("sql/migration_20260917_roam_share_snapshot.sql")),
                 StandardCharsets.UTF_8));
+        // 迁移用会话变量(@exist/@sql)做幂等守卫,必须在同一连接里逐句执行;只按引号外的分号切句(注释串里有分号)。
+        try (java.sql.Connection connection = source.getConnection();
+             java.sql.Statement statement = connection.createStatement()) {
+            for (String sql : new String(Files.readAllBytes(Paths.get("sql/migration_20261012_roam_share_snapshot_version.sql")),
+                    StandardCharsets.UTF_8).replaceAll("(?m)^--.*$", "").split(";(?=(?:[^']*'[^']*')*[^']*$)")) {
+                if (!sql.trim().isEmpty()) statement.execute(sql);
+            }
+        }
         db.execute("create table ums_member(id bigint primary key) engine=InnoDB");
         db.update("insert into ums_member(id) values(9)");
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
@@ -159,6 +167,33 @@ class RoamShareSnapshotConcurrencyMySqlIT {
         assertEquals(50, snapshots.countByMember(9L));
         assertEquals(existingToken, snapshots.selectTokenByMemberTs(9L, 25L), "更新已有足迹必须复用令牌");
         assertNotNull(snapshots.selectTokenByMemberTs(9L, 1L), "更新已有 token 不得误删别条分享");
+    }
+
+    @Test
+    void concurrentVersionUpdateAndOwnedRevokeUseRealMapper() throws Exception {
+        String token = snapshots.selectTokenByMemberTs(9L, 25L);
+        ApiRoamShareController controller = controller(snapshots);
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        CountDownLatch go = new CountDownLatch(1);
+        try {
+            Future<Object> a = pool.submit(() -> { go.await(); return controller.publish(25L, "{\"routeName\":\"A\"}", 1).get("code"); });
+            Future<Object> b = pool.submit(() -> { go.await(); return controller.publish(25L, "{\"routeName\":\"B\"}", 1).get("code"); });
+            go.countDown();
+            Object first = a.get(15, TimeUnit.SECONDS), second = b.get(15, TimeUnit.SECONDS);
+            assertTrue((first.equals(200) && second.equals(500)) || (first.equals(500) && second.equals(200)));
+            java.util.Map<String, Object> row = snapshots.selectSnapshotByToken(token);
+            assertEquals(2, ((Number) row.get("version")).intValue());
+            assertTrue(row.get("snapshotJson").toString().contains("A") || row.get("snapshotJson").toString().contains("B"));
+            assertEquals(0, snapshots.deleteByMemberToken(10L, token));
+            assertNotNull(snapshots.selectSnapshotByToken(token));
+            assertEquals(200, controller.revoke(token).get("code"));
+            assertNull(snapshots.selectSnapshotByToken(token));
+            assertEquals(500, controller.read(token).get("code"));
+            assertNotNull(snapshots.selectTokenByMemberTs(9L, 24L));
+            assertEquals(500, controller.publish(25L, "{}", 2).get("code"), "旧编辑不得复活已撤回快照");
+        } finally {
+            pool.shutdownNow();
+        }
     }
 
     private ApiRoamShareController controller(RoamShareSnapshotMapper mapper) {

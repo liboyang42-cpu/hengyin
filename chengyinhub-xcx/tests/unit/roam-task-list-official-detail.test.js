@@ -42,3 +42,30 @@ test('每个挂 cy-scene-roam-task-list 的宿主都绑了 official(漏绑 = 点
     }
   }
 })
+
+// F0403:列表只承接官方活动任务;未报名不标可参与,已报名的能追到「我的」事实。
+test('官方活动任务按本人报名事实区分可参与;摘要用「官方活动任务」命名', () => {
+  let def
+  const replies = {
+    '/api/official/events': { code: 200, data: [{ id: 1, title: 'A', status: 2 }, { id: 2, title: 'B', status: 2 }] },
+    '/api/official/my-events': { code: 200, data: [{ id: 2, title: 'B', status: 2 }] },
+  }
+  global.getApp = () => ({ sendRequest(o) { o.success(replies[o.url]) } })
+  global.Component = c => { def = c }
+  const mod = require.resolve('../../components/cy/scene-roam-task-list/index.js')
+  delete require.cache[mod]
+  require(mod)
+  const vm = Object.assign({ data: JSON.parse(JSON.stringify(def.data)) }, def.methods)
+  vm.setData = (patch, cb) => { Object.assign(vm.data, patch); if (cb) cb() }
+  vm.load()
+  const byId = Object.fromEntries(vm.data.all.map(item => [item.id, item]))
+  assert.equal(byId[1]._joined, false)
+  assert.match(byId[1]._sourceText, /未报名/)
+  assert.equal(byId[2]._joined, true)
+  assert.match(byId[2]._sourceText, /已报名/)
+  assert.match(vm.data.summary, /^官方活动任务/)
+  const fs = require('node:fs')
+  const path = require('node:path')
+  const roamWxml = fs.readFileSync(path.join(__dirname, '../../pages/roam/index.wxml'), 'utf8')
+  assert.doesNotMatch(roamWxml, /附近挑战/, '入口不能再用「附近挑战」掩盖它其实是官方活动列表')
+})

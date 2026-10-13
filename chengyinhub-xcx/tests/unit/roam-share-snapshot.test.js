@@ -42,6 +42,43 @@ function fakeApp(reply, userId) {
   }
 }
 
+test('单条撤回弱网待办按账号恢复，旧链接未核对前不发布新快照', async () => {
+  const storage = memoryStorage();
+  const offline = fakeApp(() => 'fail');
+  assert.deepEqual(await snapshot.revokeShareSnapshot(offline, TOKEN, storage), { ok: false, reason: 'failed' });
+  const other = fakeApp(() => ({ code: 200, data: { token: TOKEN } }), '10');
+  assert.equal((await snapshot.publishShareSnapshot(other, storage, SESSION)).token, TOKEN);
+  assert.deepEqual(other.sent.map(o => o.url), ['/api/roam/share/snapshot']);
+  offline.sent.length = 0;
+  assert.equal((await snapshot.publishShareSnapshot(offline, storage, SESSION)).reason, 'revoke-pending');
+  assert.deepEqual(offline.sent.map(o => o.url), ['/api/roam/share/revoke']);
+  const online = fakeApp(o => o.method === 'GET'
+    ? { code: 500, msg: '这条足迹已不再公开' }
+    : (o.url.endsWith('/revoke') ? { code: 500, msg: '这条分享不存在或不属于你' } : { code: 200, data: { token: TOKEN } }));
+  assert.equal((await snapshot.publishShareSnapshot(online, storage, SESSION)).token, TOKEN);
+  assert.deepEqual(online.sent.map(o => o.method), ['POST', 'GET', 'POST']);
+  assert.deepEqual(storage.data['roam_share_revoke_tokens:9'], []);
+});
+
+test('撤回队列存储失败明确停止，普通服务端错误不能当已撤回', async () => {
+  const app = fakeApp(() => ({ code: 500, msg: '数据库暂不可用' }));
+  const broken = { getStorageSync: () => '', setStorageSync: () => { throw Error('full'); } };
+  assert.deepEqual(await snapshot.revokeShareSnapshot(app, TOKEN, broken), { ok: false, reason: 'storage' });
+  assert.equal(app.sent.length, 0);
+  assert.deepEqual(await snapshot.readShareSnapshot(app, TOKEN), { state: 'error', session: null });
+});
+
+test('全撤迟到回包只清原账号待办，切账号后不继续发布', async () => {
+  let member = '9';
+  const storage = memoryStorage({ 'roam_share_revoke_pending:9': 1, 'roam_share_revoke_pending:10': 1 });
+  const app = fakeApp(() => { member = '10'; return { code: 200, data: { revoked: 1 } }; });
+  app.getUserID = () => member;
+  assert.equal((await snapshot.publishShareSnapshot(app, storage, SESSION)).reason, 'failed');
+  assert.deepEqual(app.sent.map(o => o.url), ['/api/roam/share/revoke']);
+  assert.equal(storage.data['roam_share_revoke_pending:9'], undefined);
+  assert.equal(storage.data['roam_share_revoke_pending:10'], 1);
+});
+
 test('拍板17 上传分享卡已裁剪的真实轨迹,由服务端统一量化', () => {
   const payload = snapshot.buildSharePayload(SESSION, { clipEnabled: true, clipPercent: 10 })
   assert.ok(payload.track.length >= 2)
@@ -59,7 +96,7 @@ test('拍板17 上传分享卡已裁剪的真实轨迹,由服务端统一量化'
 
 test('拍板17 发布:成功拿令牌;可见范围仅自己不发布;接口失败给出原因', async () => {
   const ok = fakeApp(() => ({ code: 200, data: { token: TOKEN } }))
-  assert.deepEqual(await snapshot.publishShareSnapshot(ok, memoryStorage(), SESSION), { token: TOKEN, reason: '' })
+  assert.deepEqual(await snapshot.publishShareSnapshot(ok, memoryStorage(), SESSION), { token: TOKEN, version: 0, reason: '' })
   assert.equal(ok.sent[0].url, '/api/roam/share/snapshot')
   assert.equal(ok.sent[0].data.clientTs, SESSION.ts)
   assert.equal(JSON.parse(ok.sent[0].data.snapshot).routeName, '武康大楼等2处足迹回看')
@@ -70,7 +107,7 @@ test('拍板17 发布:成功拿令牌;可见范围仅自己不发布;接口失�
   assert.equal(privateApp.sent.length, 0)
 
   const broken = fakeApp(() => ({ code: 500, msg: 'x' }))
-  assert.deepEqual(await snapshot.publishShareSnapshot(broken, memoryStorage(), SESSION), { token: '', reason: 'failed' })
+  assert.deepEqual(await snapshot.publishShareSnapshot(broken, memoryStorage(), SESSION), { token: '', version: 0, reason: 'failed' })
   const badToken = fakeApp(() => ({ code: 200, data: { token: '../../x' } }))
   assert.equal((await snapshot.publishShareSnapshot(badToken, memoryStorage(), SESSION)).token, '')
 })
@@ -148,6 +185,25 @@ test('拍板17 朋友点开带令牌的分享:不读本机、只读快照,直接
   assert.equal(page.onShareAppMessage().path, '/subpackageRoam/session/index?shareToken=' + TOKEN)
 })
 
+test('接收页从后台回来重验已撤回链接，旧异步响应不得复活缓存', async () => {
+  const requests = [];
+  const app = { globalData: {}, getUserID: () => '', sendRequest: o => requests.push(o) };
+  const page = loadPage(app, memoryStorage());
+  page.onLoad({ shareToken: TOKEN });
+  page.onShow();
+  page.onHide();
+  const next = page.onShow();
+  assert.equal(requests.length, 2);
+  requests[1].success({ code: 500, msg: '这条足迹已不再公开' });
+  await next;
+  assert.equal(page.data.sharedState, 'gone');
+  assert.equal(page.data.snapshot, null);
+  requests[0].success({ code: 200, data: { ts: 1, track: [], pois: [] } });
+  await flush();
+  assert.equal(page.data.sharedState, 'gone');
+  assert.equal(page.data.snapshot, null);
+});
+
 test('拍板17 分享者已作废 / 断网:落页内空态或重试,不冒充成一条空足迹', async () => {
   const gone = Object.assign(fakeApp(() => ({ code: 500, msg: '这条足迹已不再公开' })), { globalData: {}, getUserID: () => '' })
   const gonePage = loadPage(gone, { getStorageSync: () => '' })
@@ -215,4 +271,38 @@ test('拍板17 足迹正文组件收到快照就直接渲染(不读本机),并�
   assert.ok(instance.data.routeSegs.length > 0, '朋友能看到路线轨迹')
   const wxml = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../components/cy/scene-roam-session/index.wxml'), 'utf8')
   assert.match(wxml, /class="ss-ctaw" wx:if="\{\{!snapshot\}\}"/, '别人的足迹不给「分享足迹卡」按钮')
+})
+
+test('F0384 逐条撤回:只带本条令牌;服务端拒绝=not-owned,断网=failed 可重试', async () => {
+  const ok = fakeApp(() => ({ code: 200, data: { revoked: 1, scope: 'one' } }))
+  assert.deepEqual(await snapshot.revokeShareSnapshot(ok, TOKEN), { ok: true, reason: '' })
+  assert.equal(ok.sent[0].url, '/api/roam/share/revoke')
+  assert.deepEqual(ok.sent[0].data, { token: TOKEN })
+
+  const denied = fakeApp(() => ({ code: 500, msg: '这条分享不存在或不属于你' }))
+  assert.deepEqual(await snapshot.revokeShareSnapshot(denied, TOKEN), { ok: false, reason: 'not-owned' })
+  const offline = fakeApp(() => 'fail')
+  assert.deepEqual(await snapshot.revokeShareSnapshot(offline, TOKEN), { ok: false, reason: 'failed' })
+  const bad = fakeApp(() => ({ code: 200 }))
+  assert.deepEqual(await snapshot.revokeShareSnapshot(bad, '../x'), { ok: false, reason: 'not-owned' })
+  assert.equal(bad.sent.length, 0)
+})
+
+test('M0117 版本:带 expectedVersion 发布;服务端冲突返回 conflict 不当成功', async () => {
+  const app = fakeApp(() => ({ code: 200, data: { token: TOKEN, version: 3 } }))
+  assert.deepEqual(await snapshot.publishShareSnapshot(app, memoryStorage(), SESSION, { expectedVersion: 2 }), { token: TOKEN, version: 3, reason: '' })
+  assert.equal(app.sent[0].data.expectedVersion, 2)
+  const conflict = fakeApp(() => ({ code: 500, msg: '冲突', data: { conflict: true, version: 5 } }))
+  assert.deepEqual(await snapshot.publishShareSnapshot(conflict, memoryStorage(), SESSION, { expectedVersion: 4 }), { token: '', version: 5, reason: 'conflict' })
+  const legacy = fakeApp(() => ({ code: 200, data: { token: TOKEN, version: 1 } }))
+  await snapshot.publishShareSnapshot(legacy, memoryStorage(), SESSION)
+  assert.equal('expectedVersion' in legacy.sent[0].data, false)
+})
+
+test('N015 上传快照带去敏声明且遮挡区域内的点/地点不出现', () => {
+  const zone = { id: 'home', lat: SESSION.track[0].lat, lng: SESSION.track[0].lng, r: 100 }
+  const payload = snapshot.buildSharePayload(SESSION, { clipEnabled: false, maskZones: [zone] })
+  assert.deepEqual(payload.redaction, { v: 1, clip: false, pct: 0, zones: 1 })
+  assert.ok(payload.track.every((p) => !(p.lat === zone.lat && p.lng === zone.lng)))
+  assert.equal(JSON.stringify(payload).indexOf('"maskZones"'), -1)
 })

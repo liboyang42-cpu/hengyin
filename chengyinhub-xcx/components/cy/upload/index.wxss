@@ -1,3 +1,4 @@
+@import "../../../style/reduced-motion.wxss";
 /* cy-upload · 图片上传网格(DS §3.13)
  * 缩略与添加位 160×160rpx、圆角 sm;上传中转圈遮罩、失败保留位就地重试;
  * 只读 --cy-color-* 语义 token;图上遮罩/角标为恒暗层,不随主题(标 ds-ok)。 */
@@ -113,3 +114,7 @@
    只减淡不位移:位移要配 .cy-motion-reduced 兜底,而那个类挂在组件外的祖先上,
    isolated 下同样够不着 —— 与其留个撤不掉的位移,不如按仓库既有组件按压类的做法只减淡。 */
 .cy-pressed { opacity: .88; }
+
+.upload--reduced-motion .upload__spin { animation: none; }
+
+.upload__status { font-size: var(--cy-type-caption); color: var(--cy-color-action-primary-fg-on-dark); }

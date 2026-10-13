@@ -14,6 +14,7 @@ function loadComponent(relativePath) {
   const filename = path.join(ROOT, relativePath)
   let definition
   vm.runInNewContext(read(relativePath), {
+    require(name) { assert.match(name, /behaviors\/reduced-motion\.js$/); return {} },
     Component(value) { definition = value },
   }, { filename })
   assert.ok(definition, `${relativePath} 必须注册 Component`)

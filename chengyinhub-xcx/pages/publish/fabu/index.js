@@ -1036,11 +1036,16 @@ Page({
   // ⚠️ 先上传、拿到 url 再落块 —— 反过来先插一个空壳块再回填,上传失败时会留下一个
   // 既点不开也说不清的空块,而这块已经算进「每章 200 块」的额度里了。
   insertStoryImageAt(e) {
+    if (this._storyMediaUploadOperation && !this._storyMediaUploadOperation.isFinished() && !this._storyMediaUploadOperation.isAborted()) return;
+    const chapterIndex = this.data.storyEditor.chapterIndex;
+    const chapterKey = (this.data.formData.chapters[chapterIndex] || {})._localId;
     const index = Number(e.currentTarget.dataset.index);
     this.setData({ 'storyEditor.insertMenuAt': -1 });
-    app.chooseImage((res) => {
+    this._storyMediaUploadOperation = app.chooseImage((res) => {
       const url = res && res[0];
       if (!url) return;
+      const current = this.data.storyEditor.chapterIndex;
+      if (current !== chapterIndex || (this.data.formData.chapters[current] || {})._localId !== chapterKey) { cyToast('章节已切换，请回到原章节重新添加图片'); return; }
       this._insertStoryMedia('image', index, { url });
     }, 1);
   },
@@ -1063,9 +1068,18 @@ Page({
 
   // 点空音频块 → 选文件 → 回填到这个块上。文件名当场就有;
   // 时长要等播放器能播才知道,所以先回填 url、再异步补(见 _fillStoryAudioMeta)。
+  onStoryMediaAltText(e) {
+    try {
+      this._storyCommand({ type: 'setMediaAltText', blockKey: e.currentTarget.dataset.blockkey, altText: e.detail.value });
+    } catch (error) {
+      cyToast(app.getRequestErrorMessage(error, '文字替代保存失败'));
+    }
+  },
+
   uploadStoryAudio(e) {
+    if (this._storyMediaUploadOperation && !this._storyMediaUploadOperation.isFinished() && !this._storyMediaUploadOperation.isAborted()) return;
     const blockKey = e.currentTarget.dataset.blockkey;
-    app.chooseDocument((res) => {
+    this._storyMediaUploadOperation = app.chooseDocument((res) => {
       const file = res && res[0];
       if (!file || !file.url) return;
       try {
@@ -2448,10 +2462,11 @@ Page({
     if (this._lockedSnapshot === this._lockedFingerprint()) return true;
     modal.show({
       title: '这些改动存不下来',
-      content: '主题已过审开卖，开始/结束日期、章节站点结构、票种与价格都不能再改了。'
-        + '要改这些只能先下架 → 退款 → 重发。其余文案与图片的修改可以正常保存。',
-      showCancel: false,
-      confirmText: '知道了'
+      content: '主题已过审开卖，日期、章节站点与票务规则不能直接修改。可复制为新的本机草稿继续编辑；原主题和订单保留不变，新草稿仍需单独保存与发布。',
+      showCancel: true,
+      confirmText: '复制新草稿',
+      cancelText: '继续编辑',
+      success: (res) => { if (res.confirm) this._openCopiedDraft(this.data.formData.productType, false, false); }
     });
     return false;
   },
@@ -2506,7 +2521,9 @@ Page({
 
   _openCopiedDraft(mode, aiSimple, replaceCurrent) {
     const nextMode = Number(mode) === 2 ? 2 : 1;
-    writeAiDraft(this._buildCopiedDraft(nextMode, aiSimple));
+    if (!aiDraftStorageKey()) { cyToast('请先登录再复制草稿'); return; }
+    try { writeAiDraft(this._buildCopiedDraft(nextMode, aiSimple)); }
+    catch (error) { cyToast('草稿未能保存，请勿退出并重试'); return; }
     const navigate = replaceCurrent ? wx.redirectTo : wx.navigateTo;
     navigate({ url: '/pages/publish/fabu/index?mode=' + nextMode });
   },

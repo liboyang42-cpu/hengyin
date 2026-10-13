@@ -19,5 +19,20 @@ public interface RoamShareSnapshotMapper {
 
     String selectSnapshotJsonByToken(@Param("shareToken") String shareToken);
 
+    /** 一次读取内容和版本，避免并发重发时把旧内容标成新版。 */
+    java.util.Map<String, Object> selectSnapshotByToken(@Param("shareToken") String shareToken);
+
     int deleteByMember(@Param("memberId") Long memberId);
+
+    /** F0384:逐条撤回,只删本人名下的这一枚令牌;他人令牌删 0 行。 */
+    int deleteByMemberToken(@Param("memberId") Long memberId, @Param("shareToken") String shareToken);
+
+    /** M0117:当前快照版本(无行返回 null)。 */
+    Integer selectVersionByMemberTs(@Param("memberId") Long memberId, @Param("clientTs") Long clientTs);
+
+    Integer selectVersionByToken(@Param("shareToken") String shareToken);
+
+    /** M0117:版本条件更新;版本不一致返回 0(并发改图冲突),不覆盖。 */
+    int updateSnapshotIfVersion(@Param("memberId") Long memberId, @Param("clientTs") Long clientTs,
+                                @Param("snapshotJson") String snapshotJson, @Param("expectedVersion") Integer expectedVersion);
 }
