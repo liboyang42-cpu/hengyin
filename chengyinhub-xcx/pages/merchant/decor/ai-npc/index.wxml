@@ -58,7 +58,7 @@
           <cy-cell arrow-icon="chevron-right" title="角色形象" value="上传 / 更换" bind:tap="openAvatar" />
           <cy-cell arrow-icon="chevron-right"
             title="角色声音"
-            value="{{voiceStatus === 1 ? '声音生成中' : voiceStatus === 2 ? '声音可用' : voiceStatus === 3 ? '生成失败 · 重试' : '上传语音'}}"
+            value="{{voiceResetPending ? '声音清除待确认' : voiceUnknown || voiceStatus === 4 ? '声音结果待确认' : voiceStatus === 1 ? '声音生成中' : voiceStatus === 2 ? '声音可用' : voiceStatus === 3 ? '生成失败 · 重试' : '上传语音'}}"
             bind:tap="openVoice"
             hairline="{{false}}"
           />

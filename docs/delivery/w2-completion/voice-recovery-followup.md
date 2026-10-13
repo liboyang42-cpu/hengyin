@@ -20,7 +20,7 @@
 - `chengyinhub-admin/.../ApiMerchantController.java`：声音三个入口、对应私有辅助方法及事务管理器注入。
 - `chengyinhub-system/.../NpcProfile.java`、`NpcProfileMapper.java`、`NpcProfileMapper.xml`：声音请求字段、商家声音读写方法及 SQL；节点 NPC 方法未改。
 - `sql/migration_npc_voice_request_guard_20261013.sql`：只新增两个形象列和声音请求记录表；没有修改既有 migration。
-- `chengyinhub-xcx/pages/merchant/decor/ai-npc/index.js`：声音恢复和重置逻辑；`index.wxml` 仅增加使用已有重置 handler 的“继续清除原声音”按钮。
+- `chengyinhub-xcx/pages/merchant/decor/ai-npc/index.js`：声音恢复和重置逻辑；`index.wxml` 增加使用已有重置 handler 的“继续清除原声音”按钮，并让声音入口明确显示 UNKNOWN/待确认重置状态。
 - 专用 Java/MySQL 与端侧声音测试；相邻装修测试仅补现有 `getUserID` 身份桩。
 
 没有修改 NPC 对话状态、游玩、日历、俱乐部、共享 action-ledger 或 baseline。
@@ -45,10 +45,10 @@
 | `NpcProfileServiceTest` | 4/4，0 跳过 | 原形象消费选择逻辑 |
 | `ChapterBlockVoiceOddFlowTest` | 6/6，0 跳过 | 原章节声音异常流 |
 | `ApiAiNpcVoiceChatFormatTest` | 16/16，0 跳过 | 原声音格式消费者 |
-| 小程序声音 + 相邻装修/人设合同 | 43/43，0 跳过 | 26 项声音合同 + 17 项相邻合同 |
+| 小程序声音 + 相邻装修/人设合同 | 44/44，0 跳过 | 27 项声音合同 + 17 项相邻合同 |
 | 暂存树 VPS pre-commit compile | 随本提交强制执行，未绕过 | 指定 hook，正常迁移/配置/语法门禁保留 |
 
-后端共 74 项通过：最终受影响套件 30 项，原相邻套件 44 项。VPS Surefire 文本报告位于 `/w2/voice/chengyinhub-admin/target/surefire-reports/`；最终受影响套件日志为 `/w2/voice-affected-final-tests.log`。本地 Node 的 43 项合同测试均无失败、错误或跳过。
+后端共 74 项通过：最终受影响套件 30 项，原相邻套件 44 项。VPS Surefire 文本报告位于 `/w2/voice/chengyinhub-admin/target/surefire-reports/`；最终受影响套件日志为 `/w2/voice-affected-final-tests.log`。本地 Node 的 44 项合同测试均无失败、错误或跳过。
 
 真实 MySQL 的 10 项用例覆盖：提交领取后供应商仅消费一次；同时启动四个领取者；重置/新登记与旧完成竞争；重置与迟到查询竞争；重建 Controller 后使用原 voiceId 查询；丢失供应商响应并重启/重置后仍精确复用原现代请求；同 ID 改载荷/改会员及其他商家不能查询原记录；mapper 版本/形象/商家范围保护；旧客户端未知请求复用与明确重置后的新版本；现代重置幂等确认与延迟重置拒绝新版本。
 
