@@ -16,7 +16,7 @@
 
 - Node 专项 47/47 通过：registration-payment-verifier、baoming-page-reliability、baoming-load-state、club-waitlist-checkout、baoming-submit-inline-error；包括真实Page付款回调取原 registrationId 与稳定原事件键的断言。不是后端资金/身份或真机通过证据。
 - 修改 Mapper XML 语法解析、JS语法、git diff --check 通过。公开差异文件 gitleaks 扫描无新增命中（最终详见validation.json）。
-- 最终HEAD的migration-safety前四门（125分句器/41台账用例、实际新SQL分句、task bean注册）通过；第五门因共享ci/migration-dependencies.json缺新migration明确依赖条目而失败，协调者处理单一owner声明后再跑，不修改gate/workflow压错误。
+- migration-safety首次第五门因缺新migration明确依赖声明失败，原始输出保留。协调者唯一owner提供必要声明先导4db987a，A原样挑入173b869后migration-safety脚本通过（125分句器/41台账用例、实际新SQL分句、task bean注册、依赖顺序）。本地非PR事件跳过的声明门另用确切PR8正文运行pr-declare通过，输出独立保留；未改gate/workflow压错误。
 - Java编译、JUnit、H2、真实MySQL/Redis、渠道签名、真实身份、微信开发者工具与真机 **未执行**。新增Java用例数只按源码记录，不能视为运行通过。历史193个局部结果不转移至本分支。
 - VPS当前TCP grant未应用；HTTP80拒连只说明该HTTP入口未监听，不能证明SSH22不可达。既有CI不自动匹配交接base，CLI dispatch通路未具备；未改CI或依赖来压错误。
 
@@ -36,4 +36,4 @@
 5. 新/旧Java组、真实两连接竞争/回滚/重复worker、原库存/积分/券/余额/账独立回读未验；B/C依赖尚未合并。官方新MySQL用例覆盖旧RR快照最后名额，取消内支付用例覆盖原外层回滚，但均未运行。
 6. 真身份购票到使用及到期拒绝、实际渠道UNKNOWN/乱序、通知送达与微信/真机未验；不得以HTTP200、任务repaired计数或结构存在替代结果。
 
-最终修改白名单/源码SHA见source-manifest.json及file-ownership.json。首次先导提交曾用hooksPath覆盖命令，仓库没有激活hook；这不是编译证据，后续提交使用原hook。完成可用检查后创建draft PR，仅供review。
+最终修改白名单/源码SHA见source-manifest.json及file-ownership.json。共享ci/migration-dependencies.json仅原样挑入协调者声明先导，A未编辑该文件。首次先导提交曾用hooksPath覆盖命令，仓库没有激活hook；这不是编译证据，后续提交使用原hook。完成可用检查后创建draft PR，仅供review。
