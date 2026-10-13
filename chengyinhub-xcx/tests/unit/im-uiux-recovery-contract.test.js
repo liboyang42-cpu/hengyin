@@ -150,7 +150,7 @@ test('系统举报通知可回查完整结果，普通消息不能伪造结果�
   page.data.msgs[0].senderId = 8
   page.onCardTap({ currentTarget: { dataset: { msg: 51 } } })
   assert.equal(page.data.reviewResult, null)
-  assert.match(read('subpackageB/pages/im/chat/index.wxml'), /查看处理结果/)
+  assert.match(read('subpackageB/pages/im/chat/index.wxml'), /查看生成时处理记录/)
   assert.match(read('subpackageB/pages/im/chat/index.wxml'), /reviewResult.reason/)
 })
 
@@ -162,4 +162,32 @@ test('消息内容给完整导航栏留位，不能把胶囊高度当导航栏�
   h.page.onLoad()
   assert.equal(h.page.data.navBarHeight, 44)
   assert.equal(h.page.data.statusBarHeight + h.page.data.navBarHeight, 91)
+})
+
+
+test('系统结果卡打开当前原单时使用原卡动作，历史结果仍单独标记', () => {
+  const { page } = loadPage(CHAT_MODULE)
+  const navigations = []
+  global.wx.navigateTo = o => navigations.push(o.url)
+  page.data.msgs = [{ id: 5, senderId: 0, msgType: 3, card: { action: '/subpackageMember/orderinfo/orderinfo?id=8', result: { outcome: '已支付' } } }]
+  page.onCardTap({ currentTarget: { dataset: { msg: 5, current: true, url: '/wrong' } } })
+  assert.deepEqual(navigations, ['/subpackageMember/orderinfo/orderinfo?id=8'])
+  assert.equal(page.data.reviewResult, null)
+  assert.match(read('subpackageB/pages/im/chat/index.wxml'), /生成时记录 · 不代表当前履约状态/)
+});
+
+
+test('未知发送者或站外系统动作不得导航当前原单', () => {
+  for (const senderId of [null, undefined, '', 8]) {
+    const { page } = loadPage(CHAT_MODULE)
+    const navigations = []; global.wx.navigateTo = o => navigations.push(o.url)
+    page.data.msgs = [{ id: 5, senderId, msgType: 3, card: { action: '/pages/example/index' } }]
+    page.onCardTap({ currentTarget: { dataset: { msg: 5, current: true, url: '/wrong' } } })
+    assert.equal(navigations.length, 0)
+  }
+  const { page } = loadPage(CHAT_MODULE)
+  const navigations = []; global.wx.navigateTo = o => navigations.push(o.url)
+  page.data.msgs = [{ id: 5, senderId: 0, msgType: 3, card: { action: '//outside.example' } }]
+  page.onCardTap({ currentTarget: { dataset: { msg: 5, current: true } } })
+  assert.equal(navigations.length, 0)
 })

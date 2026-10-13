@@ -17,6 +17,8 @@ public interface IOfficialBroadcastService
      */
     OfficialBroadcast publish(OfficialBroadcast bc, Long actorMemberId);
 
+    OfficialBroadcast findByRequest(String requestScope, String requestId, Long actorMemberId);
+
     /** 仅发布者本人读取自己通知；V2 行还会逐条复核本场受控操作者范围。 */
     List<OfficialBroadcast> listBySender(Long senderAccount, Long actorMemberId);
 

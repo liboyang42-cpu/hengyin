@@ -78,6 +78,7 @@ Page({
       sourceCover: source.imgUrl || source.imgArr || '',
       sourceAddress: source.address || source.addressName || '地点待定',
       dateText: this.formatDateRange(source.startDate, source.endDate),
+      verificationText: Number(item.verificationStatus) === 1 ? '已核销' : ((item.verificationStatus === 0 || item.verificationStatus === '0') ? '尚未核销' : '核销状态待确认'),
       stateKey: orderState.key,
       stateText: orderState.text,
       stateVariant: orderState.key === 'not_started' ? 'info'
@@ -158,6 +159,13 @@ Page({
     const scene = getScene('member-participation-detail', { id });
     if (!scene) return;
     this.setData({ sceneStack: [scene], sceneCurrent: scene });
+  },
+  viewVoucher(e) {
+    const id = e.currentTarget.dataset.id;
+    const row = (this.allList || []).find(item => String(item.id) === String(id));
+    if (!row) return;
+    const stype = Number(row.ownerType) === 1 ? 0 : 2;
+    wx.navigateTo({ url: '/subpackageMember/signup/index?focusId=' + encodeURIComponent(row.id) + '&stype=' + stype });
   },
   blockSceneTouch() {},
   closeScene() {

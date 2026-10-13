@@ -9,6 +9,8 @@
       <el-button icon="el-icon-refresh" @click="getList">刷新队列</el-button>
     </cy-page-header>
 
+    <community-appeals />
+
     <section class="audit-overview" aria-label="本页审核概览">
       <button v-for="item in overview" :key="item.key" type="button" class="audit-overview__item" @click="filterByStatus(item.status)">
         <span class="audit-overview__label">{{ item.label }}</span>
@@ -187,6 +189,7 @@
 
 <script>
 import { getAuditTaskDetail, listAuditTasks, reviewAuditTask, submitTopicProjectReview, submitTopicSaleReview } from '@/api/business/auditWorkbench'
+import CommunityAppeals from './community-appeals.vue'
 import CyDataTable from '@/components/CyDataTable'
 import CyEntityHeader from '@/components/CyEntityHeader'
 import CyEntityLink from '@/components/CyEntityLink'
@@ -225,7 +228,8 @@ const TEAM_STATUS = { 0: '招募中', 1: '已满员', 2: '进行中', 3: '已结
 
 export default {
   name: 'BusinessAuditWorkbench',
-  components: { CyDataTable, CyEntityHeader, CyEntityLink, CyEvidencePanel, CyFilterBar, CyPageHeader, CyStatusTag, CyTimeline },
+  components: {
+    CommunityAppeals, CyDataTable, CyEntityHeader, CyEntityLink, CyEvidencePanel, CyFilterBar, CyPageHeader, CyStatusTag, CyTimeline },
   data() {
     return {
       loading: false,

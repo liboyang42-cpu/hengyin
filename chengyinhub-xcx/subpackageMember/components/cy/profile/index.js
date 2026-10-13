@@ -534,9 +534,9 @@ Component({
         return app.sendRequest(Object.assign({}, options, {
           autoErrorToast: false,
           success: function (res) { done({ status: 'success', response: res }); },
-          fail: function () { done({ status: 'failed', response: { code: 500, msg: '网络错误，请重试' } }); },
+          fail: function () { done({ status: 'unknown' }); },
           successStatusAbnormal: function (res) {
-            done({ status: 'failed', response: { code: 500, msg: (res && res.msg) || '核销失败，请重试' } });
+            done({ status: 'unknown' });
           }
         }));
       }, function (result) {

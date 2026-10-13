@@ -222,14 +222,41 @@
           <article class="cockpit-card"><header><div><p class="eyebrow">关键覆盖</p><h2>缺口不能假绿</h2></div></header><div v-if="!(activity360.coverage || []).length" class="inline-empty">此活动没有外部履约需求</div><div v-for="item in activity360.coverage || []" :key="item.requirementId" class="coverage-row"><span>{{ coverageTargetText(item) }}</span><el-tag size="mini" :type="Number(item.coveredBy) > 0 ? 'success' : 'danger'">{{ Number(item.coveredBy) > 0 ? '已覆盖' : '有缺口' }}</el-tag></div></article>
           <article class="cockpit-card wide"><header><div><p class="eyebrow">名单与奖励</p><h2>资格与投递状态</h2></div><el-button v-if="activity360.status === 4" v-hasPermi="['business:officialevent:settle']" type="text" @click="settle(activity360)">重试结算</el-button></header><el-table :data="activity360.participantsAndRewards || []" size="small"><el-table-column prop="memberId" label="成员" width="110" /><el-table-column label="参与状态" width="130"><template slot-scope="scope">{{ participationStateText(scope.row.state) }}</template></el-table-column><el-table-column prop="completedMissions" label="有效完成任务" width="140" /><el-table-column label="奖励投递" min-width="130"><template slot-scope="scope">{{ rewardStatusText(scope.row.rewardStatus) }}</template></el-table-column><el-table-column prop="failureReason" label="异常说明" min-width="180" /></el-table></article>
           <article class="cockpit-card wide"><header><div><p class="eyebrow">暂停控制</p><h2>影响、替代与通知必须可回读</h2></div></header><div v-if="activity360.pausedAt || activity360.resumeNote"><p class="risk-line"><strong>暂停开始：</strong>{{ fmt(activity360.pausedAt) }} · {{ activity360.pausedReason || '未记录原因' }}</p><p class="risk-line"><strong>影响范围：</strong>{{ activity360.pauseImpactScope || '未接入' }}</p><p class="risk-line"><strong>替代方案：</strong>{{ activity360.pauseAlternativePlan || '未接入' }}</p><p class="risk-line"><strong>通知策略 / 状态：</strong>{{ activity360.pauseNotificationPlan || '未接入' }} / {{ pauseNotificationText(activity360.pauseNotificationStatus) }}</p><p class="risk-line"><strong>恢复条件：</strong>{{ activity360.resumeConditions || '未接入' }}<span v-if="activity360.resumeNote">；最近处理：{{ activity360.resumeNote }}</span></p></div><div v-else class="inline-empty">尚无暂停记录。</div></article>
-          <article class="cockpit-card wide risk-card"><header><div><p class="eyebrow">通知与风险</p><h2>待发公告、阻塞与运行风险</h2></div></header><div v-if="(activity360.notifications || []).length"><p v-for="notice in activity360.notifications" :key="notice.id" class="risk-line"><i class="el-icon-bell"></i><strong>{{ notice.title || '未命名通知' }}</strong> · {{ broadcastStatusText(notice.status) }} · {{ fmt(notice.scheduledTime || notice.createTime) }} · 站内已触达 {{ notice.reachedCount || 0 }}</p></div><div v-else class="inline-empty">本活动尚未建立通知，首条通知不可预览。</div><div v-if="activity360.publishCheck && activity360.publishCheck.blockers && activity360.publishCheck.blockers.length"><p v-for="risk in activity360.publishCheck.blockers" :key="risk" class="risk-line"><i class="el-icon-warning-outline"></i>{{ risk }}</p></div><div v-else class="inline-empty">当前无发布合同阻塞项。点击和订阅消息总触达等未接入指标不会在这里估算。</div><div v-for="risk in activity360.sourceRisks || []" :key="risk" class="risk-line"><i class="el-icon-warning-outline"></i>{{ risk }}</div></article>
+          <article class="cockpit-card wide risk-card"><header><div><p class="eyebrow">通知与风险</p><h2>待发公告、阻塞与运行风险</h2></div></header><div v-if="(activity360.notifications || []).length"><p v-for="notice in activity360.notifications" :key="notice.id" class="risk-line"><i class="el-icon-bell"></i><strong>{{ notice.title || '未命名通知' }}</strong> · {{ broadcastStatusText(notice.status) }} · {{ fmt(notice.scheduledTime || notice.createTime) }} · 站内记录数 {{ notice.reachedCount == null ? '待确认' : notice.reachedCount }} <el-button v-hasPermi="['business:officialevent:list']" type="text" @click="openBroadcastStats(notice.id)">查看通知结果</el-button></p></div><div v-else class="inline-empty">本活动尚未建立通知，首条通知不可预览。</div><div v-if="activity360.publishCheck && activity360.publishCheck.blockers && activity360.publishCheck.blockers.length"><p v-for="risk in activity360.publishCheck.blockers" :key="risk" class="risk-line"><i class="el-icon-warning-outline"></i>{{ risk }}</p></div><div v-else class="inline-empty">当前无发布合同阻塞项。点击和订阅消息总触达等未接入指标不会在这里估算。</div><div v-for="risk in activity360.sourceRisks || []" :key="risk" class="risk-line"><i class="el-icon-warning-outline"></i>{{ risk }}</div></article>
         </section>
       </main>
     </section>
 
+    <el-dialog title="通知批次结果" :visible.sync="broadcastStatsOpen" width="620px" append-to-body>
+      <p>批次编号：{{ broadcastStatsId }}。以下统计不代替逐接收人、逐渠道的结果。</p>
+      <cy-resource-state v-if="broadcastStatsError" kind="error" title="通知结果暂时无法读取" description="请核对查看权限后重新读取，不要重新发送通知。" retry-text="重新读取" :retrying="broadcastStatsLoading" @retry="loadBroadcastStats" />
+      <el-descriptions v-else v-loading="broadcastStatsLoading" :column="1" border>
+        <el-descriptions-item label="目标人数">待确认</el-descriptions-item>
+        <el-descriptions-item label="站内持久保存">待确认</el-descriptions-item>
+        <el-descriptions-item label="微信接受">待确认</el-descriptions-item>
+        <el-descriptions-item label="渠道失败 / 未知">待确认（未提供分渠道结果）</el-descriptions-item>
+        <el-descriptions-item label="用户已读">待确认</el-descriptions-item>
+        <el-descriptions-item label="历史成功标记条数">{{ broadcastCount('reached') }}</el-descriptions-item>
+        <el-descriptions-item label="点击标记条数">{{ broadcastCount('clicked') }}</el-descriptions-item>
+      </el-descriptions>
+      <el-table v-if="broadcastStats && Array.isArray(broadcastStats.channelStats)" :data="broadcastStats.channelStats">
+        <el-table-column label="身份" prop="role" />
+        <el-table-column label="渠道" prop="channel" />
+        <el-table-column label="已记录尝试条数" prop="attempted" />
+        <el-table-column label="历史成功标记" prop="recorded_success" />
+        <el-table-column label="未确认条数" prop="unconfirmed" />
+        <el-table-column label="点击标记" prop="clicked" />
+      </el-table>
+      <el-alert title="历史标记跨渠道累计，未按人数去重；未确认包含跳过、失败或结果丢失，不能证明微信接受、到达或用户已读，也不能用总数推断某个身份的结果。" type="info" :closable="false" show-icon />
+      <div slot="footer"><el-button :loading="broadcastStatsLoading" @click="loadBroadcastStats">重新读取</el-button><el-button @click="broadcastStatsOpen = false">关闭</el-button></div>
+    </el-dialog>
+
     <el-dialog title="官方通知" :visible.sync="notifyOpen" width="620px" append-to-body :close-on-click-modal="false">
-      <el-form label-position="top"><el-form-item label="通知对象"><el-checkbox-group v-model="notify.audience"><el-checkbox label="player">玩家</el-checkbox><el-checkbox label="club">俱乐部</el-checkbox><el-checkbox label="merchant">商家</el-checkbox></el-checkbox-group></el-form-item><el-form-item label="标题"><el-input v-model="notify.title" /></el-form-item><el-form-item label="内容"><el-input v-model="notify.content" type="textarea" :rows="4" /></el-form-item><el-form-item label="渠道"><el-checkbox-group v-model="notify.channels"><el-checkbox label="inapp">站内信</el-checkbox><el-checkbox label="subscribe">订阅消息</el-checkbox></el-checkbox-group></el-form-item></el-form>
-      <div slot="footer"><el-button @click="notifyOpen = false">取消</el-button><el-button v-hasPermi="['business:officialevent:notify']" type="primary" @click="submitNotify">发送通知</el-button></div>
+      <el-alert title="目标人数按当前身份和同意情况确定，本页尚不能预览；提交、站内保存、微信接受与已读分别核对。" type="info" :closable="false" show-icon />
+      <el-alert v-if="notifyState === 'unknown'" title="提交结果待确认，请保留当前内容并核对活动通知记录，避免重复发送。" type="warning" :closable="false" show-icon />
+      <el-alert v-if="notifyState === 'submitted'" title="提交已返回，请查看原批次结果；不能据此认定全部送达。" type="info" :closable="false" show-icon />
+      <el-form label-position="top" :disabled="notifyState !== 'idle'"><el-form-item label="通知对象"><el-checkbox-group v-model="notify.audience"><el-checkbox label="player">玩家</el-checkbox><el-checkbox label="club">俱乐部</el-checkbox><el-checkbox label="merchant">商家</el-checkbox></el-checkbox-group></el-form-item><el-form-item label="标题"><el-input v-model="notify.title" /></el-form-item><el-form-item label="内容"><el-input v-model="notify.content" type="textarea" :rows="4" /></el-form-item><el-form-item label="渠道"><el-checkbox-group v-model="notify.channels"><el-checkbox label="inapp">站内信</el-checkbox><el-checkbox label="subscribe">订阅消息</el-checkbox></el-checkbox-group></el-form-item></el-form>
+      <div slot="footer"><el-button @click="notifyOpen = false">关闭</el-button><el-button v-if="notifyState === 'unknown' && notifyRequestId" :loading="notifyRecoveryBusy" @click="recoverNotify">查询原提交</el-button><el-button v-if="notifyBatchId" v-hasPermi="['business:officialevent:list']" @click="openBroadcastStats(notifyBatchId)">查看原批次结果</el-button><el-button v-hasPermi="['business:officialevent:notify']" type="primary" :loading="notifyState === 'sending'" :disabled="notifyState !== 'idle'" @click="submitNotify">提交通知</el-button></div>
     </el-dialog>
 
     <el-dialog title="暂停活动" :visible.sync="pauseOpen" width="620px" append-to-body :close-on-click-modal="false">
@@ -254,12 +281,14 @@
 
 <script>
 import {
-  listOfficialEvent, getOfficialEvent, settleOfficialEvent, broadcastOfficial,
+  listOfficialEvent, getOfficialEvent, settleOfficialEvent, broadcastOfficial, getBroadcastStats, getBroadcastByRequest,
   saveOfficialEventV2Draft, getOfficialEventV2Draft, checkOfficialEventV2Publish,
   scheduleOfficialEventV2, getOfficialEvent360, pauseOfficialEventV2, resumeOfficialEventV2,
   getOfficialEventV2OperatorIdentity, authorizeOfficialEventV2Operator, revokeOfficialEventV2Operator
 } from '@/api/business/officialevent'
+import CyResourceState from '@/components/CyResourceState'
 import auth from '@/plugins/auth'
+import cache from '@/plugins/cache'
 import { toTimestamp } from '@/utils/ruoyi'
 
 const STATUS = { 0: '草稿', 1: '已排期', 2: '报名中', 3: '进行中', 4: '待结算', 5: '已结束', 6: '已复盘', 9: '已下线' }
@@ -293,6 +322,11 @@ function enumText(map, value, fallback) {
   const key = String(value)
   return Object.prototype.hasOwnProperty.call(map, key) ? map[key] : fallback
 }
+function validBroadcastId(value) {
+  if (typeof value === 'number') return Number.isSafeInteger(value) && value > 0
+  return typeof value === 'string' && /^[1-9][0-9]{0,18}$/.test(value)
+    && (value.length < 19 || value <= '9223372036854775807')
+}
 let keySeed = 0
 
 // 官方活动日期控件用 value-format="timestamp"(epoch ms)，但 OfficialEvent 的 Date 字段
@@ -323,6 +357,7 @@ function localKey(prefix) { keySeed += 1; return prefix + '-' + Date.now() + '-'
 
 export default {
   name: 'OfficialEvent',
+  components: { CyResourceState },
   data() {
     return {
       view: 'list', loading: false, total: 0, list: [], editorStep: 0, publishCheck: null,
@@ -340,6 +375,9 @@ export default {
       draft: this.emptyDraft(), reward: this.emptyReward(), activity360: {},
       operatorIdentity: { sysUserId: null, memberId: null, authorized: false, authorizationStatus: 'UNBOUND' },
       operatorAuthOpen: false, operatorAuthForm: { sysUserId: null, memberId: null, reason: '' },
+      notifyState: 'idle', notifyBatchId: null, notifyRequestId: null, notifyRecoveryBusy: false,
+      broadcastStatsOpen: false, broadcastStatsLoading: false, broadcastStatsError: false,
+      broadcastStatsId: null, broadcastStats: null, broadcastStatsRequest: 0,
       notifyOpen: false, notifyEventId: null, notify: this.emptyNotify(), pauseOpen: false, pauseForm: this.emptyPause(), legacyOpenVisible: false, legacyEvent: null
     }
   },
@@ -353,7 +391,7 @@ export default {
       return this.canWriteV2 ? '当前主办会员 #' + this.operatorIdentity.memberId : '当前后台账号未绑定主办会员'
     }
   },
-  created() { this.getList(); this.loadOperatorIdentity() },
+  created() { this.restoreNotify(); this.getList(); this.loadOperatorIdentity() },
   methods: {
     emptyDraft() {
       return { event: { contractVersion: 2, category: 'city_light', fulfillmentPolicy: 'SELF_RUN', bannerEnabled: 0, collectiveEnabled: 0, collectiveMetric: 'complete_count', collectiveThreshold: 0, leaderboardEnabled: 0 }, bindings: [], missions: [], parties: [], fulfillmentRequirements: [] }
@@ -526,13 +564,87 @@ export default {
     openLegacy(row) { getOfficialEvent(row.id).then(res => { this.legacyEvent = res.data || row; this.legacyOpenVisible = true }) },
     openNotify(row) {
       if (!auth.hasPermi('business:officialevent:notify')) { this.$modal.msgWarning('没有通知权限'); return }
+      if (this.notifyState === 'sending' || this.notifyState === 'unknown') { this.notifyOpen = true; return }
+      this.notifyState = 'idle'; this.notifyBatchId = null; this.notifyRequestId = null
       this.notifyEventId = row ? row.id : null; this.notify = Object.assign(this.emptyNotify(), { title: row ? row.title : '', city: row ? row.city || '' : '' }); this.notifyOpen = true
     },
     submitNotify() {
+      if (this.notifyState !== 'idle') return
       if (!auth.hasPermi('business:officialevent:notify')) { this.$modal.msgWarning('没有通知权限'); return }
       if (!this.notify.audience.length) { this.$modal.msgWarning('请选择通知对象'); return }
-      const data = { eventId: this.notifyEventId, title: this.notify.title || '官方通知', audience: this.notify.audience.join(','), copyMode: 1, contentJson: JSON.stringify({ title: this.notify.title || '官方通知', sub: this.notify.content }), channels: this.notify.channels.join(',') || 'inapp', city: this.notify.city || null }
-      broadcastOfficial(data).then(res => { this.$modal.msgSuccess(res.msg || '通知已发送'); this.notifyOpen = false })
+      if (!this.notify.channels.length) { this.$modal.msgWarning('请选择通知渠道'); return }
+      this.notifyRequestId = localKey('notify') + '-' + Math.random().toString(36).slice(2, 10)
+      if (!this.persistNotify()) { this.$modal.msgWarning('无法保存恢复记录，通知尚未提交'); return }
+      const owner = this.notifyStorageKey()
+      const data = { requestId: this.notifyRequestId, eventId: this.notifyEventId, title: this.notify.title || '官方通知', audience: this.notify.audience.join(','), copyMode: 1, contentJson: JSON.stringify({ title: this.notify.title || '官方通知', sub: this.notify.content }), channels: this.notify.channels.join(','), city: this.notify.city || null }
+      this.notifyState = 'sending'
+      return broadcastOfficial(data).then(res => {
+        if (owner !== this.notifyStorageKey()) return
+        const id = res && res.data
+        this.notifyBatchId = validBroadcastId(id) ? id : null
+        this.notifyState = this.notifyBatchId ? 'submitted' : 'unknown'
+        this.persistNotify()
+        if (this.notifyBatchId) this.$modal.msgSuccess('通知提交已返回，请查看原批次结果')
+      }).catch(() => {
+        if (owner !== this.notifyStorageKey()) return
+        this.notifyState = 'unknown'
+      })
+    },
+    notifyStorageKey() {
+      const id = this.$store && this.$store.state.user.id
+      return id ? 'official-notify-pending:' + id : ''
+    },
+    persistNotify() {
+      const key = this.notifyStorageKey()
+      if (!key) return false
+      try { cache.local.setJSON(key, { requestId: this.notifyRequestId, batchId: this.notifyBatchId }); return true } catch (_) { return false }
+    },
+    restoreNotify() {
+      const key = this.notifyStorageKey()
+      if (!key) return
+      try {
+        const pending = cache.local.getJSON(key)
+        if (pending && typeof pending.requestId === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(pending.requestId)) {
+          this.notifyRequestId = pending.requestId; this.notifyBatchId = pending.batchId || null; this.notifyState = 'unknown'
+        }
+      } catch (_) { this.notifyState = 'unknown' }
+    },
+    recoverNotify() {
+      if (!this.notifyRequestId || this.notifyRecoveryBusy || !auth.hasPermi('business:officialevent:notify')) return
+      const owner = this.notifyStorageKey()
+      this.notifyRecoveryBusy = true
+      return getBroadcastByRequest(this.notifyRequestId).then(res => {
+        if (owner !== this.notifyStorageKey()) return
+        const id = res && res.data
+        if (validBroadcastId(id)) {
+          this.notifyBatchId = id; this.notifyState = 'submitted'; this.persistNotify()
+          this.$modal.msgSuccess('已找回原批次，请查询原批次结果')
+        } else this.$modal.msgWarning('尚未找到原批次，结果仍待确认，请勿重发')
+      }).catch(() => { this.$modal.msgWarning('原提交暂未读到，请稍后查询') }).finally(() => { this.notifyRecoveryBusy = false })
+    },
+    openBroadcastStats(id) {
+      this.broadcastStatsId = id
+      this.broadcastStatsOpen = true
+      return this.loadBroadcastStats()
+    },
+    loadBroadcastStats() {
+      const request = ++this.broadcastStatsRequest
+      this.broadcastStatsLoading = true
+      this.broadcastStatsError = false
+      this.broadcastStats = null
+      return getBroadcastStats(this.broadcastStatsId).then(res => {
+        if (request !== this.broadcastStatsRequest) return
+        if (!res.data || typeof res.data !== 'object') throw new Error('通知结果不完整')
+        this.broadcastStats = res.data
+      }).catch(() => {
+        if (request === this.broadcastStatsRequest) this.broadcastStatsError = true
+      }).finally(() => {
+        if (request === this.broadcastStatsRequest) this.broadcastStatsLoading = false
+      })
+    },
+    broadcastCount(field) {
+      const value = this.broadcastStats && this.broadcastStats[field]
+      return Number.isInteger(value) && value >= 0 ? value : '待确认'
     }
   }
 }

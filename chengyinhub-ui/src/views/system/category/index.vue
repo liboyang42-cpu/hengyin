@@ -1,5 +1,6 @@
 <template>
   <div class="app-container">
+    <el-alert title="类别配置使用范围" description="已接类别选择读取，按类型、显示状态和删除状态筛选；业务固定规则不会随类别名称改变。各入口采用版本与缓存刷新时间尚未提供，保存后请到对应入口核对。" type="info" :closable="false" show-icon />
     <el-form
       :model="queryParams"
       ref="queryForm"
@@ -71,7 +72,8 @@
       </el-col>
     </el-row>
 
-    <el-table
+    <cy-resource-state v-if="loadError" kind="error" title="类别配置暂时无法读取" description="请重新读取；若仍失败，请核对查看权限。" retry-text="重新读取" :retrying="loading" @retry="getList" />
+    <el-table v-else
       v-loading="loading"
       :data="categoryList"
       border
@@ -206,15 +208,19 @@
 </template>
 
 <script>
+import CyResourceState from '@/components/CyResourceState'
 import { listCategory, getCategory, delCategory, addCategory, updateCategory } from "@/api/system/category"
 import { getToken } from "@/utils/auth";
 
 export default {
+  components: { CyResourceState },
   name: "Category",
   data() {
     return {
       // 遮罩层
       loading: true,
+      loadError: false,
+      requestToken: 0,
       // 选中数组
       ids: [],
       // 非单个禁用
@@ -281,23 +287,20 @@ export default {
     
     /** 查询分类列表 */
     getList() {
-      this.loading = true;
-      const query = { 
-        ...this.queryParams,
-        parentId: 0
-      };
-      
-      console.log("查询参数:", query);
-      
-      listCategory(query).then((response) => {
-        console.log("列表接口返回:", response);
-        this.categoryList = response.rows || response.data || response || [];
-        this.loading = false;
-      }).catch((error) => {
-        console.error("查询失败:", error);
-        this.loading = false;
-        this.categoryList = [];
-      });
+      const requestToken = ++this.requestToken
+      this.loading = true
+      this.loadError = false
+      return listCategory({ ...this.queryParams, parentId: 0 }).then(response => {
+        if (requestToken !== this.requestToken) return
+        if (!Array.isArray(response.rows)) throw new Error('列表数据不完整')
+        this.categoryList = response.rows
+      }).catch(() => {
+        if (requestToken !== this.requestToken) return
+        this.categoryList = []
+        this.loadError = true
+      }).finally(() => {
+        if (requestToken === this.requestToken) this.loading = false
+      })
     },
     
     // 取消按钮
@@ -364,7 +367,7 @@ export default {
         parentId: row.parentId || 0,
         categoryName: row.categoryName || "",
         type: row.type ? row.type.toString() : this.queryParams.type,
-        status: row.status || 1,
+        status: row.status == null ? 1 : row.status,
         sortId: row.sortId || 0,
         icon: row.icon || null,
       };

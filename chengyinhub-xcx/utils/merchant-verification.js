@@ -16,6 +16,9 @@ function completionReceiptMessage(response, fallback) {
 function resolveVerificationResult(response, action) {
   const label = action || '核销';
   const message = (response && response.msg) || (label + '失败，请重试');
+  if (response && (response.code === 202 || response.code === '202')) {
+    return { state: 'unknown', title: label + '结果待确认', message, show: true };
+  }
   if (isDuplicate(response)) {
     return {
       state: 'duplicate',

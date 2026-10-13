@@ -28,7 +28,11 @@ function mount(relativePath, appOverrides, wxOverrides) {
     getPageSize() { return 20 },
     getUserID() { return 7 },
   }, appOverrides || {})
+  const storage = new Map()
   const wx = Object.assign({
+    getStorageSync(key) { return storage.get(key) },
+    setStorageSync(key, value) { storage.set(key, value) },
+    removeStorageSync(key) { storage.delete(key) },
     vibrateShort(options) { vibrations.push(options && options.type) },
     showToast() {},
   }, wxOverrides || {})
@@ -420,7 +424,7 @@ test('据点商家未知收费和营业状态如实显示，缺图时不再注�
   assert.doesNotMatch(wxml, /businessStatus == 0 \? '已打烊' : '营业中'/)
 })
 
-test('据点打卡业务拒绝给回输入机会，只有传输失败才按原答案续跑', () => {
+test('据点打卡业务拒绝给回输入机会，传输失败只查询原结果', () => {
   const relativePath = 'subpackageMember/components/cy/scene-roam-poi-detail/index.js'
   /* CU-M-52:业务拒绝后重试要重开输入框(走 modal),这里替掉外层 wx 的 showModal。 */
   const modalCalls = []
@@ -430,7 +434,7 @@ test('据点打卡业务拒绝给回输入机会，只有传输失败才按原�
     const harness = mount(relativePath, {}, {
       getLocation(options) { options.success({ latitude: 31.2, longitude: 121.5 }) },
     })
-    harness.instance.data.poiId = 'poi-1'
+    harness.instance.data.poiId = '21'
     harness.instance.data.node = { poiId: 21, status: 1, name: '测试据点', validationMethod: 1 }
 
     harness.instance.completeNode('保留的暗号')
@@ -448,19 +452,21 @@ test('据点打卡业务拒绝给回输入机会，只有传输失败才按原�
     assert.equal(harness.requests.length, 1, '业务拒绝不得重放旧答案')
     assert.equal(modalCalls.length, 1, '业务拒绝的重试必须重新打开输入框')
 
-    // 传输失败才是「原输入已保留」那句话说的那一档:仍按原答案续跑
+    // 传输失败可能已经写入，只允许查询原结果。
     const offline = mount(relativePath, {}, {
       getLocation(options) { options.success({ latitude: 31.2, longitude: 121.5 }) },
     })
-    offline.instance.data.poiId = 'poi-1'
+    offline.instance.data.poiId = '21'
     offline.instance.data.node = { poiId: 21, status: 1, name: '测试据点', validationMethod: 1 }
     offline.instance.completeNode('保留的暗号')
     offline.requests[0].fail({ errMsg: 'request:fail timeout' })
-    assert.match(offline.instance.data.interactionText, /原输入已保留/)
-    assert.equal(offline.instance.data.interactionActionText, '重试')
+    assert.match(offline.instance.data.interactionText, /暂不要重新提交/)
+    assert.equal(offline.instance.data.interactionActionText, '查询原结果')
     offline.instance.recoverInteraction()
     assert.equal(offline.requests.length, 2)
-    assert.equal(offline.requests[1].data.answer, '保留的暗号')
+    assert.equal(offline.requests[1].method, 'GET')
+    offline.instance.completeNode('重复')
+    assert.equal(offline.requests.length, 2)
   } finally {
     if (previousWx === undefined) delete global.wx
     else global.wx = previousWx
@@ -652,4 +658,49 @@ test('账户收益拒绝负余额，并忽略晚到的旧刷新结果', () => {
   assert.equal(harness.instance.data.state, 'ready')
   assert.equal(harness.instance.data.balance, '0.00')
   assert.equal(harness.requests[0].silentError, true)
+})
+
+
+test('据点组件重建先查询同一原据点，未确认不重发，明确完成才清除恢复标记', () => {
+  const storage = new Map()
+  const wx = {
+    getStorageSync: key => storage.get(key),
+    setStorageSync: (key, value) => storage.set(key, value),
+    removeStorageSync: key => storage.delete(key),
+    getLocation: options => options.success({ latitude: 31.2, longitude: 121.5 }),
+  }
+  const file = 'subpackageMember/components/cy/scene-roam-poi-detail/index.js'
+  const first = mount(file, {}, wx)
+  first.instance.data.poiId = '21'
+  first.instance.data.node = { status: 1 }
+  first.instance.completeNode('answer')
+  assert.equal(storage.get('citynode-completion-pending:7:21'), true, '写请求发出前必须留恢复标记')
+  first.requests[0].fail({})
+  const restored = mount(file, {}, wx)
+  restored.instance.data.poiId = '21'
+  restored.instance._load()
+  restored.requests[0].success({ code: 200, data: { id: 21, status: 1, completed: false } })
+  assert.equal(restored.instance.data.interactionState, 'unknown')
+  restored.instance.completeNode('again')
+  assert.equal(restored.requests.length, 1)
+  restored.instance.recoverInteraction()
+  restored.requests[1].success({ code: 200, data: { id: 21, status: 1, completed: true } })
+  assert.equal(storage.has('citynode-completion-pending:7:21'), false)
+  assert.equal(restored.instance.data.node.completed, true)
+  const other = mount(file, { getUserID: () => 8 }, wx)
+  other.instance.data.poiId = '21'; other.instance._load()
+  other.requests[0].success({ code: 200, data: { id: 21, status: 1, completed: false } })
+  assert.equal(other.instance.data.interactionState, 'idle')
+})
+
+test('恢复标记无法保存时据点不发送写请求', () => {
+  const h = mount('subpackageMember/components/cy/scene-roam-poi-detail/index.js', {}, {
+    setStorageSync() { throw Error('storage full') },
+    getLocation: options => options.success({ latitude: 31.2, longitude: 121.5 }),
+  })
+  h.instance.data.poiId = '21'; h.instance.data.node = { status: 1 }
+  h.instance.completeNode('answer')
+  assert.equal(h.requests.length, 0)
+  assert.equal(h.instance.data.completing, false)
+  assert.match(h.instance.data.interactionText, /无法保存/)
 })

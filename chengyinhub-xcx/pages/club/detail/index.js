@@ -891,9 +891,9 @@ Page({
         url: url, data: scan.data, method: 'POST', header: jsonHeader(),
         autoErrorToast: false,
         success(res) { done({ status: 'success', response: res }); },
-        fail() { done({ status: 'failed', response: { code: 500, msg: '网络错误，请重试' } }); },
+        fail() { done({ status: 'unknown' }); },
         successStatusAbnormal(res) {
-          done({ status: 'failed', response: { code: 500, msg: (res && res.msg) || '核销失败，请重试' } });
+          done({ status: 'unknown' });
         },
       }));
     }, function (result) {

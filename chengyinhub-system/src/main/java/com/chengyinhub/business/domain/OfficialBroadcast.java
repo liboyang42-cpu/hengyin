@@ -13,6 +13,9 @@ import java.util.Date;
 public class OfficialBroadcast
 {
     private Long id;
+    private String requestId;
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private String requestScope;
     private Long eventId;          // 可空=纯公告
     private String title;
     private String audience;       // player,club,merchant 逗号集
@@ -33,6 +36,13 @@ public class OfficialBroadcast
     public static final int ST_PENDING = 1;
     public static final int ST_SENT = 2;
     public static final int ST_REVOKED = 3;
+
+    public String getRequestId() { return requestId; }
+    public void setRequestId(String value) { requestId = value; }
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public String getRequestScope() { return requestScope; }
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public void setRequestScope(String value) { requestScope = value; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
