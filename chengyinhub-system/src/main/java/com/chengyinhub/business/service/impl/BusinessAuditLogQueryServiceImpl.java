@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Locale;
 
 @Service
 public class BusinessAuditLogQueryServiceImpl implements IBusinessAuditLogQueryService {
@@ -68,7 +69,7 @@ public class BusinessAuditLogQueryServiceImpl implements IBusinessAuditLogQueryS
         safe.setRelationId(source.getRelationId());
         safe.setBeforeJson(redactJson(source.getBeforeJson()));
         safe.setAfterJson(redactJson(source.getAfterJson()));
-        safe.setReason(source.getReason());
+        safe.setReason(redactText(source.getReason()));
         safe.setRequestId(source.getRequestId());
         safe.setCreateTime(source.getCreateTime());
         return safe;
@@ -100,11 +101,25 @@ public class BusinessAuditLogQueryServiceImpl implements IBusinessAuditLogQueryS
         }
     }
 
+    private String redactText(String value) {
+        if (value == null) return null;
+        return value.replaceAll("(?<![0-9])1[3-9][0-9]{9}(?![0-9])", "***")
+                .replaceAll("(?<![0-9])[0-9]{15,19}(?![0-9])", "***")
+                .replaceAll("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "***");
+    }
+
     private boolean isSensitive(String key) {
-        String normalized = key == null ? "" : key.toLowerCase();
+        String normalized = key == null ? "" : key.toLowerCase(Locale.ROOT);
         return normalized.contains("token") || normalized.contains("password")
                 || normalized.contains("phone") || normalized.contains("mobile")
                 || normalized.contains("openid") || normalized.contains("secret")
-                || normalized.contains("credential") || normalized.contains("authorization");
+                || normalized.contains("credential") || normalized.contains("authorization")
+                || normalized.contains("unionid") || normalized.contains("idcard")
+                || normalized.contains("identity") || normalized.contains("realname")
+                || normalized.contains("bank") || normalized.contains("cardnumber")
+                || normalized.contains("address") || normalized.contains("email")
+                || normalized.contains("latitude") || normalized.contains("longitude")
+                || normalized.contains("location") || normalized.contains("nickname")
+                || "name".equals(normalized) || "lat".equals(normalized) || "lng".equals(normalized);
     }
 }

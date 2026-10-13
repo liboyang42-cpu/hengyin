@@ -40,6 +40,25 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by id desc
     </select>
 
+    <select id="selectIdempotentEventForUpdate" parameterType="BizEventLog" resultMap="BizEventLogResult">
+        <include refid="selectBizEventLogVo"/>
+        where event_name = #{eventName}
+          and actor_scope = #{actorScope}
+          and idempotency_key = #{idempotencyKey}
+        for update
+    </select>
+
+    <select id="selectRegistrationEventFact" resultMap="BizEventLogResult">
+        select #{eventName} as event_name, member_id,
+               case when owner_type = 2 then 'activity' else 'topic' end as biz_type,
+               owner_id as biz_id,
+               case when #{eventName} = 'payment_success' then payment_time else create_time end as occurred_at
+        from cms_registration
+        where id = #{registrationId} and member_id = #{memberId}
+          and owner_type in (1, 2)
+          and payment_time is not null
+    </select>
+
     <insert id="insertBizEventLog" parameterType="BizEventLog" useGeneratedKeys="true" keyProperty="id">
         insert ignore into biz_event_log
         <trim prefix="(" suffix=")" suffixOverrides=",">

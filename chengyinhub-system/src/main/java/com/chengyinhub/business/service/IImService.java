@@ -18,6 +18,11 @@ public interface IImService
     /** 会话消息分页(校验我是参与者)；返回 { list(按时间正序), nextCursor, hasMore } */
     Map<String, Object> listMessages(Long memberId, Long conversationId, Long cursorId, int size);
 
+    Map<String, Object> listMessages(Long memberId, Long conversationId, Long cursorId, int size, Long afterId);
+
+    /** 只读原发送收据，不重新发消息。 */
+    ImMessage readSentMessage(Long memberId, Long conversationId, String clientMessageId);
+
     /** 发送消息(文本/图片)；内容安全前置；成功返回落库的消息 */
     ImMessage send(Long memberId, Long conversationId, Long targetMemberId, Integer msgType, String content, String extraJson);
 
@@ -32,6 +37,8 @@ public interface IImService
 
     /** 标记会话已读 */
     void markRead(Long memberId, Long conversationId);
+
+    void markRead(Long memberId, Long conversationId, Long readTo);
 
     /** 删除会话(仅对当前用户隐藏) */
     void deleteConversation(Long memberId, Long conversationId);
@@ -77,6 +84,12 @@ public interface IImService
 
     /** 外层广播事务内的 NESTED 保存点系统消息；外层失败时必须一起回滚。 */
     Long sendSystemInNestedTransaction(Long toMemberId, Integer msgType, String content, String extraJson);
+
+    /** 与原业务同事务持久化；同key异内容拒绝，不代表已经送达。 */
+    Long enqueueSystemNotification(Long toMemberId, Integer msgType, String content, String extraJson, String eventKey);
+
+    /** 原意图内部投递，已终态返回原收据，不新建事件。 */
+    Long deliverSystemNotification(Long intentId);
 
     /** 用户可控文本在进入系统消息通道前，按真实发送者身份执行内容安全检查。 */
     void checkUserGeneratedText(Long senderMemberId, String content);
