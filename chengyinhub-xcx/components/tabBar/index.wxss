@@ -132,18 +132,27 @@
   filter: brightness(0) invert(37%) sepia(10%) saturate(10000%) hue-rotate(206deg) brightness(125%) contrast(80%);
 }
 
-/* 商家底栏背景透明度渐变(2026-09-19 用户拍板,七次修正):
+/* 玩家与商家共用底栏背景透明度渐变(沿用 2026-09-19 商家确认效果):
    终态:单元素单渐变 + 0→0.96 直线,顶行完全透明、底部近白。
    禁磨砂(v2 否:白色雾边)、禁多段拼接(v5/v6 否:段界缝线)、
    禁中段钉档(v7 否:0.55@45% 让上半段爬太快,顶部看着不透明)、
    禁保留 border-top(透明 1rpx 边框在模拟器缩放下闪出一条近白线)。 */
-.tabbar.merchant .list {
+.tabbar .list,
+.tabbar.dark .list,
+.tabbar.monochrome .list,
+.tabbar.monochrome.dark .list {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.96) 100%); /* ds-ok: 单渐变 alpha 序列,token 无渐变档 */
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   /* 不是改色而是撤边:1rpx 透明边框在模拟器非整数缩放下,栏首行会闪出一条近白线(2026-09-19 v6 像素取证) */
   border-top: none;
   box-shadow: none;
+}
+
+/* 渐变收在底栏内部，到图标下沿转为黑底。 */
+.tabbar.dark .list,
+.tabbar.monochrome.dark .list {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, var(--cy-color-bg-page) 55%, var(--cy-color-bg-page) 100%); /* ds-ok: 玩家底栏透明到黑 */
 }
 
 /* 漫游地图沉浸态：只移除底栏面板，让地图连续铺到系统安全区。 */
