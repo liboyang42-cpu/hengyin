@@ -99,7 +99,7 @@ Component({
       const submitted = this._verificationWorkflow.run(key, function (done) {
         return app.sendRequest(Object.assign({}, options, {
           autoErrorToast: false,
-          success(r) { done({ status: 'success', response: r }); },
+          success(r) { done({ status: (!r || [202, '202'].includes(r.code)) ? 'unknown' : 'success', response: r }); },
           fail() { done({ status: 'unknown' }); },
           successStatusAbnormal(res) {
             done({ status: 'unknown' });

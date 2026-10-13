@@ -533,7 +533,7 @@ Component({
       var submitted = this._verificationWorkflow.run(key, function (done) {
         return app.sendRequest(Object.assign({}, options, {
           autoErrorToast: false,
-          success: function (res) { done({ status: 'success', response: res }); },
+          success: function (res) { done({ status: (!res || [202, '202'].includes(res.code)) ? 'unknown' : 'success', response: res }); },
           fail: function () { done({ status: 'unknown' }); },
           successStatusAbnormal: function (res) {
             done({ status: 'unknown' });

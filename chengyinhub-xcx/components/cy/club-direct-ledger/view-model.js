@@ -3,7 +3,7 @@ const STATUS = {
   REFUND_DUE: '待退回', REFUNDED: '已退回',
 };
 
-function positiveId(value) { return Number.isSafeInteger(Number(value)) && Number(value) > 0; }
+function positiveId(value) { return (typeof value === 'number' || (typeof value === 'string' && /^[1-9]\d*$/.test(value))) && Number.isSafeInteger(Number(value)) && Number(value) > 0; }
 function cents(value) {
   if (value === null || value === undefined || !/^\d+(\.\d{1,2})?$/.test(String(value))) return null;
   const amount = Math.round(Number(value) * 100);

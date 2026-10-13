@@ -78,7 +78,7 @@ Page({
       sourceCover: source.imgUrl || source.imgArr || '',
       sourceAddress: source.address || source.addressName || '地点待定',
       dateText: this.formatDateRange(source.startDate, source.endDate),
-      verificationText: Number(item.verificationStatus) === 1 ? '已核销' : ((item.verificationStatus === 0 || item.verificationStatus === '0') ? '尚未核销' : '核销状态待确认'),
+      verificationText: (item.verificationStatus === 1 || item.verificationStatus === '1') ? '已核销' : ((item.verificationStatus === 0 || item.verificationStatus === '0') ? '尚未核销' : '核销状态待确认'),
       stateKey: orderState.key,
       stateText: orderState.text,
       stateVariant: orderState.key === 'not_started' ? 'info'
