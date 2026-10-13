@@ -232,7 +232,7 @@ public class ApiAiNpcController extends BaseController
         {
             return ShopGate.deny(AjaxResult.error("这家店不存在或还没绑定商家"));
         }
-        if (playTeamMapper.hasPaidRegistration(userId, 1, node.getTopicId()) <= 0)
+        if (playTeamMapper.hasCurrentNpcRegistration(userId, node.getTopicId()) <= 0)
         {
             return ShopGate.deny(AjaxResult.error(HttpStatus.FORBIDDEN, "先拿到这个主题的通行证再来问我"));
         }
@@ -318,6 +318,10 @@ public class ApiAiNpcController extends BaseController
             // 拿空问题去调模型 = 白花钱且必然答非所问
             return AjaxResult.error("没听清，再说一次");
         }
+        // 转写可能跨过通行证有效期，进模型前重新读取当前资格与节点归属。
+        gate = gateShopChat(userId, nodeId);
+        if (gate.deny != null) return gate.deny;
+        node = gate.node;
         AjaxResult ok = success(npcChatService.chatWithShop(requestId, userId, node.getId(),
                 node.getMerchantMemberId(), shopMemoryOf(node), text));
         ok.put("asr", text);   // 回显识别文本:玩家要能看见自己"说了什么"被听成了什么

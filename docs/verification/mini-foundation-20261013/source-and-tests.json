@@ -1,6 +1,6 @@
 {
   "publicBase": "fafde98723211ccbc12b78a534a0cb2c1685e361",
-  "scope": "PAYING page progress, IM list response races, submitted draft ordering, consent event idempotency",
+  "scope": "PAYING page progress, IM list response races, submitted draft ordering, consent event idempotency, NPC current selfplay pass and post-ASR recheck",
   "sourceFiles": [
     {
       "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java",
@@ -49,6 +49,30 @@
     {
       "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ConsentRecordIdempotencyMySqlIT.java",
       "sha256": "698f2f572cb4e6791d33ef76f796de66437b3774637e48011c729768f6024c7d"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiNpcController.java",
+      "sha256": "e2d2701adc934aa6f588dc771f87f63af3c4f0ead7d316a068d7661e5da041e2"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayTeamMapper.java",
+      "sha256": "15f0ddfcf1c5073ca8150c732b62378f78d98d89150ae15d2f682f37a17a37f6"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/PlayTeamMapper.xml",
+      "sha256": "15cdb533d49c1282644450d75b98ef5286252a7c1c5a29135042ebf1dc76f9b3"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAiNpcVoiceChatFormatTest.java",
+      "sha256": "5e5cf7dcd482aff078c0ef7c3db74e6f8954ee7dd93b22f2a43ae5c20f32662d"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAiNpcPassExpiryTest.java",
+      "sha256": "81ff345974f51bd764024df2c241bcaf8152f78b7ac7bd786d647de5bd5973e5"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/NpcCurrentRegistrationMySqlIT.java",
+      "sha256": "961481929cd732c352ea1cc760b90231fa8a28073f385840bb19f50b92f0de25"
     }
   ],
   "backendTests": {
@@ -173,6 +197,72 @@
     "conclusion": "cancelled",
     "passedJobs": 9,
     "cancelledJobs": 1,
-    "currentHead": "pending"
-  }
+    "currentHead": "7046676: in progress, excludes NPC candidate"
+  },
+  "npcTests": {
+    "unitTests": 29,
+    "mysqlTests": 1,
+    "unitSuites": [
+      {
+        "name": "com.chengyinhub.web.controller.api.ApiAiNpcPassExpiryTest",
+        "tests": "6",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "failureMessages": [],
+        "errorMessages": []
+      },
+      {
+        "name": "com.chengyinhub.web.controller.api.ApiAiNpcVoiceChatFormatTest",
+        "tests": "16",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "failureMessages": [],
+        "errorMessages": []
+      },
+      {
+        "name": "com.chengyinhub.web.controller.api.ApiAiNpcChatDataTest",
+        "tests": "2",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "failureMessages": [],
+        "errorMessages": []
+      },
+      {
+        "name": "com.chengyinhub.business.mapper.PlayTeamMapperSqlTest",
+        "tests": "5",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "failureMessages": [],
+        "errorMessages": []
+      }
+    ],
+    "mysqlSuites": [
+      {
+        "name": "com.chengyinhub.business.service.NpcCurrentRegistrationMySqlIT",
+        "tests": "1",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "failureMessages": [],
+        "errorMessages": []
+      }
+    ],
+    "schemaSetUnchanged": true,
+    "redEntry": {
+      "tests": 2,
+      "failures": 2,
+      "errors": 0
+    },
+    "redPostAsr": {
+      "tests": 1,
+      "failures": 1,
+      "errors": 0
+    },
+    "context": "Stubbed ASR/model controller tests plus independent real MySQL query; no real provider, payment or authenticated HTTP proof."
+  },
+  "totalDistinctBackendTests": 129
 }

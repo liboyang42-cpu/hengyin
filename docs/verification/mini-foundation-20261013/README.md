@@ -27,3 +27,17 @@
 [上一轮 GitHub CI](https://github.com/liboyang42-cpu/hengyin/actions/runs/38365659866) 验证的是 `1a87263`：9 项门禁通过，小程序检查取消，因此整轮未通过；它不能作为新增同意修补的 CI 证据。当前提交仍待 CI。
 
 公开 CI 使用 GitHub 临时运行器；开发测试和数据库使用专用 VPS，不在 VPS 配置 GitHub Actions runner。后续新矩阵的 `max-parallel` 设为 20，不复制测试凑任务数。
+
+## NPC pass expiry follow-up
+
+New text and voice requests require a current paid selfplay pass. The voice path checks again after transcription. Renewal restores access; history export remains available. The shared legacy paid-registration query is unchanged. Activity exploration expiry is a separate pending package.
+
+- [x] Entry negative controls: 2 behavior failures on the old controller (200 instead of 403).
+- [x] Post-transcription negative control: 1 behavior failure when its second check is removed.
+- [x] 29 controller/mapper unit tests passed; separate real MySQL query test passed, zero skipped.
+- [x] Only this test's random schema was cleaned; existing schema set unchanged.
+- [ ] Staged-source VPS compilation for this source commit.
+- [ ] GitHub CI for the new NPC source commit. The running 7046676 CI covers the previous four packages.
+- [ ] Real authenticated HTTP, real ASR/model, WeChat/device, merge and deployment.
+
+Across the five packages, 129 distinct backend tests passed in separate invocations, plus 28 Node tests. Counts do not imply one combined run or full product acceptance.
