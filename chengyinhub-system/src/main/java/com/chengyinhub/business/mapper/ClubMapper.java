@@ -39,6 +39,13 @@ public interface ClubMapper
 
     public int updateClub(Club club);
 
+    java.util.Map<String, Object> selectProfileEditReceipt(@Param("clubId") Long clubId,
+            @Param("actorId") Long actorId, @Param("requestId") String requestId);
+
+    int insertProfileEditReceipt(@Param("clubId") Long clubId, @Param("actorId") Long actorId,
+            @Param("requestId") String requestId, @Param("requestHash") String requestHash,
+            @Param("resultJson") String resultJson);
+
     public int deleteClubById(Long id);
 
     public int deleteClubByIds(Long[] ids);

@@ -19,6 +19,21 @@ public class Club extends BaseEntity
     /** 主键 */
     private Long id;
 
+    private Long profileVersion;
+    /** 非持久：资料编辑的条件版本及重试标识。 */
+    private Long expectedVersion;
+    private String editRequestId;
+    private boolean memberDiscountPriceProvided;
+
+    public Long getProfileVersion() { return profileVersion; }
+    public void setProfileVersion(Long value) { profileVersion = value; }
+    public Long getExpectedVersion() { return expectedVersion; }
+    public void setExpectedVersion(Long value) { expectedVersion = value; }
+    public String getEditRequestId() { return editRequestId; }
+    public void setEditRequestId(String value) { editRequestId = value; }
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public boolean getMemberDiscountPriceProvided() { return memberDiscountPriceProvided; }
+
     /** 拥有者会员ID */
     @Excel(name = "会员ID")
     private Long memberId;
@@ -238,7 +253,7 @@ public class Club extends BaseEntity
     public Integer getPrioritySignupEnabled() { return prioritySignupEnabled; }
     public void setPrioritySignupEnabled(Integer prioritySignupEnabled) { this.prioritySignupEnabled = prioritySignupEnabled; }
     public BigDecimal getMemberDiscountPrice() { return memberDiscountPrice; }
-    public void setMemberDiscountPrice(BigDecimal memberDiscountPrice) { this.memberDiscountPrice = memberDiscountPrice; }
+    public void setMemberDiscountPrice(BigDecimal memberDiscountPrice) { this.memberDiscountPrice = memberDiscountPrice; this.memberDiscountPriceProvided = true; }
     public Integer getMemberReservedQuota() { return memberReservedQuota; }
     public void setMemberReservedQuota(Integer memberReservedQuota) { this.memberReservedQuota = memberReservedQuota; }
     public Boolean getOperationConfigUpdated() { return operationConfigUpdated; }

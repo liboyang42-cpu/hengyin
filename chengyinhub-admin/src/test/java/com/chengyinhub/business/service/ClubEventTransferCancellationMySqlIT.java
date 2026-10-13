@@ -148,7 +148,7 @@ class ClubEventTransferCancellationMySqlIT {
         try (Connection connection = DriverManager.getConnection(
                 url, mysql.user(), mysql.password())) {
             ItSchema.apply(connection, "it-schema/run41-prod-ddl.sql");
-            ItSchema.applyMigrations(connection, "sql/migration_club_role_event_ops_20260823.sql",
+            ItSchema.applyMigrations(connection, "sql/migration_20261013_club_profile_edit_version.sql", "sql/migration_club_role_event_ops_20260823.sql",
                     "sql/migration_20260930_registration_first_successful_scan.sql");
         }
 
