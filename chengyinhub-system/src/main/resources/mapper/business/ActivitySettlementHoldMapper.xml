@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ActivitySettlementHoldMapper">
+
+    <resultMap id="HoldResult" type="com.chengyinhub.business.domain.ActivitySettlementHold">
+        <id property="id" column="id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="registrationId" column="registration_id"/>
+        <result property="status" column="status"/>
+    </resultMap>
+
+    <!-- 未结客诉口径与 CoopComplaintMapper.countOpenByTopicId 同源:del_flag=0 且 status<3 -->
+    <insert id="holdOpenComplaintRegistrations">
+        INSERT IGNORE INTO cms_activity_settlement_hold (activity_id, registration_id, status, create_time)
+        SELECT r.owner_id, r.id, 0, NOW()
+        FROM cms_registration r
+        WHERE r.owner_type = 2 AND r.owner_id = #{activityId}
+          AND r.payment_status = 2 AND r.registration_status = 2
+          AND EXISTS (
+              SELECT 1 FROM coop_complaint c
+              WHERE c.registration_id = r.id AND c.del_flag = 0 AND c.status &lt; 3
+          )
+    </insert>
+
+    <select id="selectHeldSalesByActivityId" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(r.payable_amount), 0)
+        FROM cms_activity_settlement_hold h
+        JOIN cms_registration r ON r.id = h.registration_id
+        WHERE h.activity_id = #{activityId} AND h.status = 0
+          AND r.payment_status = 2 AND r.registration_status = 2
+    </select>
+
+    <select id="selectReleasableHolds" resultMap="HoldResult">
+        SELECT h.id, h.activity_id, h.registration_id, h.status
+        FROM cms_activity_settlement_hold h
+        WHERE h.status = 0
+          AND NOT EXISTS (
+              SELECT 1 FROM coop_complaint c
+              WHERE c.registration_id = h.registration_id AND c.del_flag = 0 AND c.status &lt; 3
+          )
+        ORDER BY h.id
+        LIMIT 500
+    </select>
+
+    <update id="claimHold">
+        UPDATE cms_activity_settlement_hold SET status = #{toStatus}, update_time = NOW()
+        WHERE id = #{id} AND status = 0
+    </update>
+
+    <!-- 加锁读:退款事务在 RR 快照下若用普通读,会看不到并发补结已提交的 status 0→1,
+         判「商家没拿到钱」而漏冲销。锁顺序与补结一致(先报名行、后暂扣行)。 -->
+    <select id="countHeldByRegistrationId" resultType="int">
+        SELECT COUNT(*) FROM cms_activity_settlement_hold WHERE registration_id = #{registrationId} AND status = 0
+        FOR UPDATE
+    </select>
+
+    <select id="countOpenComplaintsByRegistrationId" resultType="int">
+        SELECT COUNT(*) FROM coop_complaint
+        WHERE registration_id = #{registrationId} AND del_flag = 0 AND status &lt; 3
+        FOR UPDATE
+    </select>
+
+    <sql id="openComplaintRegistrations">
+        SELECT DISTINCT registration_id FROM coop_complaint WHERE del_flag = 0 AND status &lt; 3 AND registration_id IS NOT NULL
+    </sql>
+
+    <!-- 与 CmsActivityMapper.selectActivitiesForSettlement 同一批候选口径(已上架、未结算、非 FREE_EXPLORE);
+         退款截止口径与该选单的 NOT EXISTS 同源。 -->
+    <select id="selectUnsettledActivityFundsByMember" resultType="com.chengyinhub.business.domain.dto.MemberActivityFundsRow">
+        SELECT a.id AS activityId, a.topic_id AS topicId, a.end_date AS endDate,
+               COALESCE(SUM(CASE WHEN oc.registration_id IS NULL THEN r.payable_amount END), 0) AS normalSales,
+               COALESCE(SUM(CASE WHEN oc.registration_id IS NOT NULL THEN r.payable_amount END), 0) AS disputedSales,
+               MAX(CASE WHEN r.verification_status IS NULL OR r.verification_status &lt;&gt; 1
+                        THEN COALESCE(r.refund_deadline, DATE_SUB(a.start_date, INTERVAL 24 HOUR)) END) AS lastRefundDeadline
+        FROM cms_activity a
+        JOIN cms_registration r ON r.owner_type = 2 AND r.owner_id = a.id
+             AND r.payment_status = 2 AND r.registration_status = 2
+        LEFT JOIN (<include refid="openComplaintRegistrations"/>) oc ON oc.registration_id = r.id
+        WHERE a.member_id = #{memberId} AND a.del_flag = 0 AND a.status = 1 AND a.is_settlement = 0
+          AND (a.topic_id IS NULL
+               OR NOT EXISTS (SELECT 1 FROM cms_topic t WHERE t.id = a.topic_id AND t.product_type = 2))
+        GROUP BY a.id, a.topic_id, a.end_date
+    </select>
+
+    <select id="selectHeldActivityFundsByMember" resultType="com.chengyinhub.business.domain.dto.MemberActivityFundsRow">
+        SELECT a.id AS activityId, a.topic_id AS topicId, a.end_date AS endDate,
+               COALESCE(SUM(CASE WHEN oc.registration_id IS NULL THEN r.payable_amount END), 0) AS normalSales,
+               COALESCE(SUM(CASE WHEN oc.registration_id IS NOT NULL THEN r.payable_amount END), 0) AS disputedSales
+        FROM cms_activity_settlement_hold h
+        JOIN cms_activity a ON a.id = h.activity_id
+        JOIN cms_registration r ON r.id = h.registration_id
+             AND r.payment_status = 2 AND r.registration_status = 2
+        LEFT JOIN (<include refid="openComplaintRegistrations"/>) oc ON oc.registration_id = r.id
+        WHERE h.status = 0 AND a.member_id = #{memberId}
+        GROUP BY a.id, a.topic_id, a.end_date
+    </select>
+</mapper>

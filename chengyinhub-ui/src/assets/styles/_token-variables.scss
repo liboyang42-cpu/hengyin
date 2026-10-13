@@ -1,0 +1,58 @@
+/* Compile-time source of truth shared by CSS custom properties and Element UI. */
+$cy-ref-violet-700: #7A5CFF;
+$cy-ref-ink-900: #0F172B;
+$cy-ref-slate-700: #334155;
+$cy-ref-slate-600: #5D6C85;
+$cy-ref-orange-700: #96610A;
+$cy-ref-green-700: #0B7A57;
+$cy-ref-red-700: #D0323B;
+$cy-ref-blue-700: #2563EB;
+
+$cy-color-brand: $cy-ref-violet-700;
+$cy-color-brand-strong: #5E44DD;
+$cy-color-brand-soft: #F1EEFF;
+$cy-color-action-primary: $cy-ref-ink-900;
+$cy-color-bg-page: #F8F9FA;
+$cy-color-bg-surface: #FFFFFF;
+$cy-color-bg-subtle: #F1F4F7;
+$cy-color-text-primary: $cy-ref-ink-900;
+$cy-color-text-inverse: #FFFFFF;
+$cy-color-text-secondary: $cy-ref-slate-700;
+$cy-color-text-tertiary: $cy-ref-slate-600;
+$cy-color-border-subtle: #E8ECF1;
+$cy-color-border-strong: #D6DCE5;
+$cy-color-status-success: $cy-ref-green-700;
+$cy-color-status-success-soft: #E8F5EF;
+$cy-color-status-warning: $cy-ref-orange-700;
+$cy-color-status-warning-soft: #FFF5DD;
+$cy-color-status-danger: $cy-ref-red-700;
+$cy-color-status-danger-soft: #FDEBEC;
+$cy-color-status-info: $cy-ref-blue-700;
+$cy-color-status-info-soft: #EAF1FF;
+$cy-color-focus: rgba($cy-color-brand, .32);
+
+$cy-sidebar-width: 240px;
+$cy-control-height: 36px;
+$cy-table-row-height: 40px;
+$cy-task-row-height: 56px;
+$cy-radius-control: 6px;
+$cy-radius-card: 8px;
+$cy-radius-dialog: 12px;
+$cy-shadow-card: 0 1px 2px rgba($cy-ref-ink-900, .04), 0 8px 20px rgba($cy-ref-ink-900, .05);
+$cy-shadow-float: 0 14px 32px rgba($cy-ref-ink-900, .12);
+$cy-space-1: 4px;
+$cy-space-2: 8px;
+$cy-space-3: 12px;
+$cy-space-4: 16px;
+$cy-space-5: 20px;
+$cy-space-6: 24px;
+$cy-space-7: 32px;      /* v3 新增:延续4px阶梯的下一档,补space-6之后的序号空档 */
+$cy-space-0-5: 6px;     /* v3 新增:等分4-8中点 */
+$cy-space-1-5: 10px;    /* v3 新增:等分8-12中点 */
+$cy-space-2-5: 14px;    /* v3 新增:等分12-16中点 */
+$cy-space-3-5: 18px;    /* v3 新增:等分16-20中点,全站最高频缺口值 */
+$cy-space-4-5: 22px;    /* v3 新增:等分20-24中点 */
+/* v3 新增:高频历史值,非设计刻度,来自组件既有随手取值(不落在4px阶梯上),谨慎复用,不作为新写代码的首选间距 */
+$cy-legacy-3: 3px;
+$cy-legacy-5: 5px;
+$cy-legacy-15: 15px;

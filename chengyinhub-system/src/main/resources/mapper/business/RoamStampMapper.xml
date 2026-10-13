@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.RoamStampMapper">
+
+    <resultMap id="RoamStampResult" type="com.chengyinhub.business.domain.RoamStamp">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="picUrl" column="pic_url"/>
+        <result property="caption" column="caption"/>
+        <result property="kind" column="kind"/>
+        <result property="geohash7" column="geohash7"/>
+        <result property="lat" column="lat"/>
+        <result property="lng" column="lng"/>
+        <result property="cityCode" column="city_code"/>
+        <result property="checkState" column="check_state"/>
+        <result property="checkTrace" column="check_trace"/>
+        <result property="idemKey" column="idem_key"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <insert id="insertStamp" parameterType="com.chengyinhub.business.domain.RoamStamp"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into roam_stamp (member_id, pic_url, caption, kind, geohash7, lat, lng, city_code,
+                                check_state, check_trace, idem_key, del_flag, create_time)
+        values (#{memberId}, #{picUrl}, #{caption}, #{kind}, #{geohash7}, #{lat}, #{lng}, #{cityCode},
+                #{checkState}, #{checkTrace}, #{idemKey}, #{delFlag}, now())
+    </insert>
+
+    <select id="selectByMember" resultMap="RoamStampResult">
+        select id, member_id, pic_url, caption, kind, geohash7, lat, lng, city_code,
+               check_state, check_trace, del_flag, create_time
+        from roam_stamp
+        where member_id = #{memberId} and del_flag = 0 and check_state != 2
+        order by create_time desc, id desc
+        limit #{offset}, #{limit}
+    </select>
+
+    <select id="countByMember" resultType="int">
+        select count(*) from roam_stamp
+        where member_id = #{memberId} and del_flag = 0 and check_state != 2
+    </select>
+
+    <select id="selectById" resultMap="RoamStampResult">
+        select id, member_id, pic_url, caption, kind, geohash7, lat, lng, city_code,
+               check_state, check_trace, idem_key, del_flag, create_time
+        from roam_stamp where id = #{id}
+    </select>
+
+    <select id="selectByMemberAndIdemKey" resultMap="RoamStampResult">
+        select id, member_id, pic_url, caption, kind, geohash7, lat, lng, city_code,
+               check_state, check_trace, idem_key, del_flag, create_time
+        from roam_stamp
+        where member_id = #{memberId} and idem_key = #{idemKey}
+    </select>
+
+    <update id="updateCheckTrace">
+        update roam_stamp set check_trace = #{checkTrace} where id = #{id}
+    </update>
+
+    <!-- 只从 0 迁到 1:已判违规(2)的票绝不因一条迟到的 pass 回调复活。 -->
+    <update id="markCheckPassed">
+        update roam_stamp set check_state = 1 where id = #{id} and check_state = 0
+    </update>
+
+    <!-- 无条件置 2:违规判定永远赢。 -->
+    <update id="markCheckRisky">
+        update roam_stamp set check_state = 2 where id = #{id}
+    </update>
+
+    <!-- ══ 投一张换一张 ══════════════════════════════════════════════════════ -->
+
+    <resultMap id="RoamStampExchangeResult" type="com.chengyinhub.business.domain.RoamStampExchange">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="givenStampId" column="given_stamp_id"/>
+        <result property="receivedStampId" column="received_stamp_id"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <!--
+      能换给我的候选。三条硬筛少一条都出事:
+        ① member_id != 我 —— 换回自己那张不是交换
+        ② check_state = 1 —— 只发机审通过的。0=未送检是「先发后审」,自己看可以、
+           发给陌生人不行;所以机审关着的时候这里返空,前端如实说「还没有可换的」,
+           而不是把没审过的照片发给别人
+        ③ not exists 我收过的 —— 换出的必须是没见过的
+      order by create_time desc = 「上一个人那张」。
+    -->
+    <select id="selectExchangeCandidates" resultType="java.lang.Long">
+        select s.id
+        from roam_stamp s
+        where s.member_id &lt;&gt; #{memberId}
+          and s.del_flag = 0
+          and s.check_state = 1
+          and not exists (
+              select 1 from roam_stamp_exchange e
+              where e.member_id = #{memberId} and e.received_stamp_id = s.id
+          )
+        order by s.create_time desc, s.id desc
+        limit #{limit}
+    </select>
+
+    <insert id="insertExchange" parameterType="com.chengyinhub.business.domain.RoamStampExchange"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into roam_stamp_exchange (member_id, given_stamp_id, received_stamp_id, create_time)
+        values (#{memberId}, #{givenStampId}, #{receivedStampId}, now())
+    </insert>
+
+    <select id="selectExchangeByGiven" resultMap="RoamStampExchangeResult">
+        select id, member_id, given_stamp_id, received_stamp_id, create_time
+        from roam_stamp_exchange
+        where member_id = #{memberId} and given_stamp_id = #{givenStampId}
+    </select>
+
+    <!--
+      我换回来的那些。check_state != 2 要在**读的时候**再判一次:
+      票是换到手那一刻起就归我看,但它后来被判违规就必须立刻从我的册子里消失 ——
+      换的时候审过了不代表永远合规(人工复审、迟到的回调都会置 2)。
+    -->
+    <select id="selectReceivedByMember" resultMap="RoamStampResult">
+        select s.id, s.member_id, s.pic_url, s.caption, s.kind, s.geohash7, s.lat, s.lng,
+               s.city_code, s.check_state, s.del_flag, s.create_time
+        from roam_stamp_exchange e join roam_stamp s on s.id = e.received_stamp_id
+        where e.member_id = #{memberId} and s.del_flag = 0 and s.check_state != 2
+        order by e.create_time desc, e.id desc
+        limit #{offset}, #{limit}
+    </select>
+
+    <select id="countReceivedByMember" resultType="int">
+        select count(*)
+        from roam_stamp_exchange e join roam_stamp s on s.id = e.received_stamp_id
+        where e.member_id = #{memberId} and s.del_flag = 0 and s.check_state != 2
+    </select>
+</mapper>

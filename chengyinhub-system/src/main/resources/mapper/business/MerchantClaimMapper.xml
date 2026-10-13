@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantClaimMapper">
+    <resultMap id="ClaimResult" type="com.chengyinhub.business.domain.MerchantClaim">
+        <id property="id" column="id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="claimantMemberId" column="claimant_member_id"/>
+        <result property="contactName" column="contact_name"/>
+        <result property="contactPhone" column="contact_phone"/>
+        <result property="statement" column="claim_statement"/>
+        <result property="submitRequestId" column="submit_request_id"/>
+        <result property="submitFingerprint" column="submit_fingerprint"/>
+        <result property="status" column="status"/>
+        <result property="auditActorId" column="audit_actor_id"/>
+        <result property="auditReason" column="audit_reason"/>
+        <result property="auditRequestId" column="audit_request_id"/>
+        <result property="auditFingerprint" column="audit_fingerprint"/>
+        <result property="version" column="version"/>
+        <result property="submittedAt" column="submitted_at"/>
+        <result property="auditedAt" column="audited_at"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="BatchCommandResult" type="com.chengyinhub.business.domain.MerchantClaimBatchCommand">
+        <id property="id" column="id"/><result property="actorId" column="actor_id"/>
+        <result property="requestId" column="request_id"/><result property="requestFingerprint" column="request_fingerprint"/>
+        <result property="action" column="action"/><result property="createTime" column="create_time"/>
+    </resultMap>
+    <resultMap id="BatchResult" type="com.chengyinhub.business.domain.MerchantClaimBatchResult">
+        <id property="id" column="id"/><result property="batchCommandId" column="batch_command_id"/>
+        <result property="claimId" column="claim_id"/><result property="success" column="success"/>
+        <result property="code" column="result_code"/><result property="message" column="result_message"/>
+        <result property="currentStatus" column="current_status"/>
+    </resultMap>
+
+    <sql id="claimColumns">id, merchant_id, claimant_member_id, contact_name, contact_phone, claim_statement,
+        submit_request_id, submit_fingerprint, status, audit_actor_id, audit_reason, audit_request_id,
+        audit_fingerprint, version, submitted_at, audited_at, create_time, update_time</sql>
+
+    <select id="selectByClaimantRequestForUpdate" resultMap="ClaimResult">
+        select <include refid="claimColumns"/> from merchant_claim
+        where claimant_member_id = #{claimantMemberId} and submit_request_id = #{requestId} for update
+    </select>
+    <select id="selectActiveByMerchantForUpdate" resultMap="ClaimResult">
+        select <include refid="claimColumns"/> from merchant_claim
+        where merchant_id = #{merchantId} and status in ('PENDING','APPROVED') for update
+    </select>
+    <select id="selectById" resultMap="ClaimResult">
+        select <include refid="claimColumns"/> from merchant_claim where id = #{id}
+    </select>
+    <select id="selectByIdForUpdate" resultMap="ClaimResult">
+        select <include refid="claimColumns"/> from merchant_claim where id = #{id} for update
+    </select>
+    <select id="selectByClaimant" resultMap="ClaimResult">
+        select <include refid="claimColumns"/> from merchant_claim
+        where claimant_member_id = #{claimantMemberId} order by create_time desc, id desc
+    </select>
+    <select id="selectPending" resultMap="ClaimResult">
+        select <include refid="claimColumns"/> from merchant_claim
+        where status = 'PENDING' order by submitted_at asc, id asc limit #{limit}
+    </select>
+    <select id="selectProofsByClaimId" resultType="com.chengyinhub.business.domain.MerchantClaimProof">
+        select id, claim_id as claimId, proof_type as proofType, asset_id as assetId
+        from merchant_claim_proof where claim_id = #{claimId} order by id
+    </select>
+    <insert id="insertClaim" useGeneratedKeys="true" keyProperty="id">
+        insert into merchant_claim (merchant_id, claimant_member_id, contact_name, contact_phone, claim_statement,
+          submit_request_id, submit_fingerprint, status, version, submitted_at, create_time, update_time)
+        values (#{merchantId}, #{claimantMemberId}, #{contactName}, #{contactPhone}, #{statement},
+          #{submitRequestId}, #{submitFingerprint}, #{status}, #{version}, #{submittedAt}, #{createTime}, #{updateTime})
+    </insert>
+    <insert id="insertProof" useGeneratedKeys="true" keyProperty="id">
+        insert into merchant_claim_proof (claim_id, proof_type, asset_id, create_time)
+        values (#{claimId}, #{proofType}, #{assetId}, now())
+    </insert>
+    <update id="auditCas">
+        update merchant_claim set status = #{nextStatus}, audit_actor_id = #{actorId}, audit_reason = #{reason},
+          audit_request_id = #{requestId}, audit_fingerprint = #{fingerprint}, audited_at = now(),
+          version = version + 1, update_time = now()
+        where id = #{id} and status = #{expectedStatus} and version = #{expectedVersion}
+    </update>
+
+    <select id="selectBatchCommandForUpdate" resultMap="BatchCommandResult">
+        select id, actor_id, request_id, request_fingerprint, action, create_time
+        from merchant_claim_batch_command where actor_id = #{actorId} and request_id = #{requestId} for update
+    </select>
+    <insert id="insertBatchCommand" useGeneratedKeys="true" keyProperty="id">
+        insert into merchant_claim_batch_command (actor_id, request_id, request_fingerprint, action, create_time)
+        values (#{actorId}, #{requestId}, #{requestFingerprint}, #{action}, #{createTime})
+    </insert>
+    <select id="selectBatchResult" resultMap="BatchResult">
+        select id, batch_command_id, claim_id, success, result_code, result_message, current_status
+        from merchant_claim_batch_result where batch_command_id = #{batchCommandId} and claim_id = #{claimId}
+    </select>
+    <select id="selectBatchResults" resultMap="BatchResult">
+        select id, batch_command_id, claim_id, success, result_code, result_message, current_status
+        from merchant_claim_batch_result where batch_command_id = #{batchCommandId} order by id
+    </select>
+    <insert id="insertBatchResult" useGeneratedKeys="true" keyProperty="id">
+        insert into merchant_claim_batch_result
+          (batch_command_id, claim_id, success, result_code, result_message, current_status, create_time)
+        values (#{batchCommandId}, #{claimId}, #{success}, #{code}, #{message}, #{currentStatus}, now())
+    </insert>
+</mapper>

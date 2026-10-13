@@ -1,0 +1,568 @@
+[
+  {
+    "file": "components/cy/profile/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    }
+  },
+  {
+    "file": "pages/club/detail/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    }
+  },
+  {
+    "file": "pages/club/edit/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    }
+  },
+  {
+    "file": "pages/gerenziliao/gerenziliao.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    },
+    "revision": "round2"
+  },
+  {
+    "file": "pages/gerenziliao/gerenziliao.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 148308
+    },
+    "revision": "round2"
+  },
+  {
+    "file": "pages/merchant/index/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    }
+  },
+  {
+    "file": "pages/publish/activity/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    }
+  },
+  {
+    "file": "pages/publish/activity/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 148308
+    },
+    "revision": "round2"
+  },
+  {
+    "file": "pages/publish/temp/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    }
+  },
+  {
+    "file": "pages/publish/temp/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 146500
+    }
+  },
+  {
+    "file": "pages/shezhi/shezhi.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    }
+  },
+  {
+    "file": "pages/square/components/activity-picker/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    }
+  },
+  {
+    "file": "pages/square/components/activity-picker/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 146500
+    }
+  },
+  {
+    "file": "pages/topic/components/project-drawer/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    }
+  },
+  {
+    "file": "pages/topic/components/project-drawer/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 146500
+    }
+  },
+  {
+    "file": "pages/topic/merchantinfo/merchantinfo.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    }
+  },
+  {
+    "file": "pages/topic/merchantinfo/merchantinfo.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 148308
+    },
+    "revision": "round2"
+  },
+  {
+    "file": "pages/play/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    }
+  },
+  {
+    "file": "pages/play/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 146500
+    }
+  },
+  {
+    "file": "components/cy/field/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    }
+  },
+  {
+    "file": "components/cy/field/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 148308
+    }
+  },
+  {
+    "file": "style/tokens.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 148308
+    }
+  },
+  {
+    "file": "style/dark-mode.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 148308
+    }
+  },
+  {
+    "file": "style/merchant-light.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 148308
+    }
+  },
+  {
+    "file": "pages/publish/fabu/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    },
+    "revision": "round3",
+    "code_commit": "438e1fdbad7ecacfe319c95d6e8737365edb50e7"
+  },
+  {
+    "file": "pages/publish/fabu/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 148308
+    },
+    "revision": "round3",
+    "code_commit": "438e1fdbad7ecacfe319c95d6e8737365edb50e7"
+  },
+  {
+    "file": "pages/publish/temp/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 148308
+    },
+    "revision": "round3",
+    "code_commit": "438e1fdbad7ecacfe319c95d6e8737365edb50e7"
+  },
+  {
+    "file": "subpackageP3/pages/badge-wall/index/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 148308
+    },
+    "revision": "round3",
+    "code_commit": "438e1fdbad7ecacfe319c95d6e8737365edb50e7"
+  },
+  {
+    "file": "components/cy/category-sheet/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    },
+    "revision": "round3",
+    "code_commit": "438e1fdbad7ecacfe319c95d6e8737365edb50e7"
+  },
+  {
+    "file": "components/cy/category-sheet/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 148308
+    },
+    "revision": "round3",
+    "code_commit": "438e1fdbad7ecacfe319c95d6e8737365edb50e7"
+  },
+  {
+    "file": "components/cy/option-sheet/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    },
+    "revision": "round3",
+    "code_commit": "438e1fdbad7ecacfe319c95d6e8737365edb50e7"
+  },
+  {
+    "file": "components/cy/option-sheet/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 148308
+    },
+    "revision": "round3",
+    "code_commit": "438e1fdbad7ecacfe319c95d6e8737365edb50e7"
+  },
+  {
+    "file": "components/cy/scene-club-edit/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    },
+    "revision": "round3",
+    "code_commit": "438e1fdbad7ecacfe319c95d6e8737365edb50e7"
+  },
+  {
+    "file": "components/cy/scene-club-edit/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 148308
+    },
+    "revision": "round3",
+    "code_commit": "438e1fdbad7ecacfe319c95d6e8737365edb50e7"
+  },
+  {
+    "file": "components/cy/scene-roam-poi-detail/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    },
+    "revision": "round3",
+    "code_commit": "438e1fdbad7ecacfe319c95d6e8737365edb50e7"
+  },
+  {
+    "file": "pages/play/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    },
+    "revision": "round3",
+    "code_commit": "438e1fdbad7ecacfe319c95d6e8737365edb50e7"
+  },
+  {
+    "file": "components/cy/icon/icons.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 148308
+    },
+    "revision": "round3",
+    "code_commit": "438e1fdbad7ecacfe319c95d6e8737365edb50e7"
+  },
+  {
+    "file": "components/cy/category-sheet/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 148308
+    },
+    "revision": "category-point",
+    "code_commit": "766b49de18ba84db4ee1f6578b094bd9a924436e"
+  },
+  {
+    "file": "pages/publish/temp/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    },
+    "revision": "icon-alignment",
+    "code_commit": "575d156ba4b7c44ffd1003eefe43db983459577c"
+  },
+  {
+    "file": "pages/publish/temp/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 148308
+    },
+    "revision": "icon-alignment",
+    "code_commit": "575d156ba4b7c44ffd1003eefe43db983459577c"
+  },
+  {
+    "file": "components/cy/scene-club-edit/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    },
+    "revision": "selection-styles-round4",
+    "code_commit": "46d9599a83999e68f0b27b8ad666a368f4af3d27"
+  },
+  {
+    "file": "components/cy/scene-club-edit/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 148308
+    },
+    "revision": "selection-styles-round4",
+    "code_commit": "46d9599a83999e68f0b27b8ad666a368f4af3d27"
+  },
+  {
+    "file": "components/cy/option-sheet/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true,
+    "result": {
+      "success": true,
+      "codeLength": 40087
+    },
+    "revision": "selection-styles-round4",
+    "code_commit": "46d9599a83999e68f0b27b8ad666a368f4af3d27"
+  },
+  {
+    "file": "components/cy/option-sheet/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 148308
+    },
+    "revision": "selection-styles-round4",
+    "code_commit": "46d9599a83999e68f0b27b8ad666a368f4af3d27"
+  },
+  {
+    "file": "pages/club/detail/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true,
+    "result": {
+      "success": true,
+      "files": 2,
+      "fileList": [
+        "comm",
+        "page"
+      ],
+      "totalCodeLength": 148308
+    },
+    "revision": "selection-styles-round4",
+    "code_commit": "46d9599a83999e68f0b27b8ad666a368f4af3d27"
+  }
+]

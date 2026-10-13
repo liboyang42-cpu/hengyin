@@ -1,0 +1,304 @@
+package com.chengyinhub.business.service;
+
+import com.chengyinhub.business.domain.CmsMemberTemplate;
+import com.chengyinhub.business.domain.CmsTemplateLibrary;
+import com.chengyinhub.business.domain.dto.CmsTemplatePublishRequest;
+import com.chengyinhub.business.service.impl.TemplatePublishServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.Collections;
+import java.util.Date;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+/**
+ * P0-A:商家要能改自己那份玩法模板。
+ *
+ * <p>承接主题模板时 CmsTopicServiceImpl#copyTemplateForOwner 已经把节点模板深拷贝给了新归属,
+ * 但在这条改动之前发布链路只 INSERT,商家拿到属于自己的模板却没有任何入口能改题面与答案 ——
+ * 只能重建一个再换上去。本测试钉住「带 id 即改写自己那份」以及它的归属闸。
+ */
+class TemplateEditOwnershipTest {
+
+    private static final Long OWNER = 100L;
+    private static final Long STRANGER = 200L;
+    private static final Long TEMPLATE_ID = 77L;
+
+    private ICmsMemberTemplateService memberTemplateService;
+    private ICmsTemplateLibraryService templateLibraryService;
+    private IAuditTaskService auditTaskService;
+    private ICapabilityGuard capabilityGuard;
+    private TemplatePublishServiceImpl service;
+    private com.chengyinhub.business.mapper.CmsMemberTemplateMapper memberMapper;
+    private com.chengyinhub.business.mapper.CmsTemplateLibraryMapper libraryMapper;
+    private com.chengyinhub.business.mapper.AuditTaskMapper taskMapper;
+
+    @BeforeEach
+    void setUp() {
+        memberTemplateService = mock(ICmsMemberTemplateService.class);
+        templateLibraryService = mock(ICmsTemplateLibraryService.class);
+        auditTaskService = mock(IAuditTaskService.class);
+        capabilityGuard = mock(ICapabilityGuard.class);
+
+        service = new TemplatePublishServiceImpl();
+        memberMapper = mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class);
+        libraryMapper = mock(com.chengyinhub.business.mapper.CmsTemplateLibraryMapper.class);
+        taskMapper = mock(com.chengyinhub.business.mapper.AuditTaskMapper.class);
+        ReflectionTestUtils.setField(service, "memberTemplateMapper", memberMapper);
+        ReflectionTestUtils.setField(service, "libraryMapper", libraryMapper);
+        ReflectionTestUtils.setField(service, "auditTaskMapper", taskMapper);
+        when(memberMapper.selectCmsMemberTemplateByIdsForUpdate(any())).thenAnswer(inv -> {
+            Long id = ((java.util.List<Long>) inv.getArgument(0)).get(0);
+            CmsMemberTemplate row = memberTemplateService.selectCmsMemberTemplateById(id);
+            return row == null ? Collections.emptyList() : Collections.singletonList(row);
+        });
+        when(libraryMapper.selectByMemberTemplateForUpdate(anyLong())).thenReturn(Collections.emptyList());
+        ReflectionTestUtils.setField(service, "memberTemplateService", memberTemplateService);
+        ReflectionTestUtils.setField(service, "templateLibraryService", templateLibraryService);
+        ReflectionTestUtils.setField(service, "auditTaskService", auditTaskService);
+        ReflectionTestUtils.setField(service, "capabilityGuard", capabilityGuard);
+
+        when(capabilityGuard.checkAdvancedMechanics(anyLong(), any())).thenReturn(null);
+        when(capabilityGuard.checkDesignMedal(anyLong())).thenReturn(null);
+        when(memberTemplateService.updateCmsMemberTemplate(any())).thenAnswer(inv -> {
+            CmsMemberTemplate row = inv.getArgument(0);
+            when(memberTemplateService.selectCmsMemberTemplateById(row.getId())).thenReturn(row);
+            return 1;
+        });
+        when(memberTemplateService.insertCmsMemberTemplate(any())).thenAnswer(inv -> {
+            CmsMemberTemplate row = inv.getArgument(0); row.setId(99L);
+            when(memberTemplateService.selectCmsMemberTemplateById(99L)).thenReturn(row);
+            return 1;
+        });
+        when(templateLibraryService.selectCmsTemplateLibraryList(any()))
+                .thenReturn(Collections.<CmsTemplateLibrary>emptyList());
+    }
+
+    @Test
+    void merchantEndpointCannotReviveDeletedOrApproveOrdinaryTemplate() {
+        CmsMemberTemplate input = new CmsMemberTemplate(); input.setId(TEMPLATE_ID);
+        CmsMemberTemplate deleted = existing(OWNER, 2); deleted.setMerchantNodeEnabled(1);
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(deleted);
+        assertThrows(RuntimeException.class, () -> service.saveMerchantNodeTemplate(input, OWNER, "商家"));
+        CmsMemberTemplate ordinary = existing(OWNER, 0); ordinary.setMerchantNodeEnabled(0);
+        ordinary.setStatus(0L);
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(ordinary);
+        assertThrows(RuntimeException.class, () -> service.saveMerchantNodeTemplate(input, OWNER, "商家"));
+        verify(memberTemplateService, never()).updateCmsMemberTemplate(any());
+    }
+
+    @Test
+    void merchantEditWithdrawsMarketProjectionAndIgnoresClientLifecycleFields() {
+        CmsMemberTemplate existing = existing(OWNER, 0); existing.setMerchantNodeEnabled(1);
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(existing);
+        CmsTemplateLibrary projection = new CmsTemplateLibrary(); projection.setId(171L);
+        projection.setMemberTemplateId(TEMPLATE_ID); projection.setDelFlag(0);
+        projection.setStatus(1L); projection.setPublishStatus(1L);
+        when(libraryMapper.selectByMemberTemplateForUpdate(TEMPLATE_ID)).thenReturn(Collections.singletonList(projection));
+        when(templateLibraryService.updateCmsTemplateLibrary(any())).thenReturn(1);
+        CmsMemberTemplate input = new CmsMemberTemplate(); input.setId(TEMPLATE_ID);
+        input.setTitle("新据点玩法"); input.setStatus(2L); input.setCheckStatus(2); input.setDelFlag(2);
+        service.saveMerchantNodeTemplate(input, OWNER, "商家");
+        ArgumentCaptor<CmsMemberTemplate> saved = ArgumentCaptor.forClass(CmsMemberTemplate.class);
+        verify(memberTemplateService).updateCmsMemberTemplate(saved.capture());
+        assertEquals(0, saved.getValue().getDelFlag());
+        assertEquals(1, saved.getValue().getCheckStatus());
+        assertEquals(0L, projection.getPublishStatus());
+        verify(taskMapper).cancelOpenTemplateTasks("TEMPLATE_LIBRARY", 171L);
+        verify(taskMapper).cancelOpenTemplateTasks("TEMPLATE", TEMPLATE_ID);
+    }
+
+    /** 最小可发布请求:只填必要字段,其余走默认。 */
+    private CmsTemplatePublishRequest request(Long id) {
+        CmsTemplatePublishRequest request = new CmsTemplatePublishRequest();
+        request.setId(id);
+        request.setTitle("店里的暗号");
+        request.setDescription("文字暗号题");
+        request.setValidationMethod(1);
+        request.setQuestionName("墙上那个年份是多少?");
+        request.setQuestionAnswer("1997");
+        request.setIsSync(0);
+        return request;
+    }
+
+    private CmsMemberTemplate existing(Long memberId, Integer delFlag) {
+        CmsMemberTemplate existing = new CmsMemberTemplate();
+        existing.setId(TEMPLATE_ID);
+        existing.setMemberId(memberId);
+        existing.setDelFlag(delFlag);
+        existing.setCreateBy("原作者");
+        existing.setCreateTime(new Date(1_600_000_000_000L));
+        return existing;
+    }
+
+    @Test
+    void savingDeletedTemplateAsDraftCannotReviveIt() {
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID))
+                .thenReturn(existing(OWNER, 2));
+        assertThrows(RuntimeException.class,
+                () -> service.saveOrUpdateDraft(request(TEMPLATE_ID), OWNER, "原作者"));
+        verify(memberTemplateService, never()).updateCmsMemberTemplate(any());
+    }
+
+    @Test
+    void editDraftAndDeleteWithdrawExistingMarketProjectionRegardlessOfLegacySyncFlag() {
+        for (Integer sync : new Integer[] { null, 0, 1 }) {
+            for (String action : new String[] { "edit", "draft", "delete" }) {
+                setUp();
+                CmsMemberTemplate source = existing(OWNER, 0);
+                source.setIsSync(sync);
+                when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(source);
+                CmsTemplateLibrary projection = new CmsTemplateLibrary();
+                projection.setId(171L); projection.setMemberTemplateId(TEMPLATE_ID);
+                projection.setDelFlag(0); projection.setStatus(1L); projection.setPublishStatus(1L);
+                when(libraryMapper.selectByMemberTemplateForUpdate(TEMPLATE_ID))
+                        .thenReturn(Collections.singletonList(projection));
+                when(templateLibraryService.updateCmsTemplateLibrary(any())).thenReturn(1);
+                if ("edit".equals(action)) service.publishTemplateWithTransaction(request(TEMPLATE_ID), OWNER, "作者");
+                else if ("draft".equals(action)) service.saveOrUpdateDraft(request(TEMPLATE_ID), OWNER, "作者");
+                else assertTrue(service.deleteTemplateWithSync(TEMPLATE_ID, OWNER));
+
+                assertEquals(0L, projection.getPublishStatus(), action + ": isSync=" + sync);
+                assertEquals(2L, projection.getStatus());
+                assertEquals("delete".equals(action) ? 2 : 0, projection.getDelFlag());
+                verify(templateLibraryService).updateCmsTemplateLibrary(projection);
+                verify(taskMapper).cancelOpenTemplateTasks("TEMPLATE_LIBRARY", 171L);
+                verify(auditTaskService, never()).submitOrRefreshTemplateLibrary(any(), any(), any());
+            }
+        }
+    }
+
+    @Test
+    void editingOwnTemplateUpdatesInPlaceInsteadOfCreatingACopy() {
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID))
+                .thenReturn(existing(OWNER, 0));
+
+        Long returned = service.publishTemplateWithTransaction(request(TEMPLATE_ID), OWNER, "商家甲");
+
+        assertEquals(TEMPLATE_ID, returned, "编辑应返回原模板 id,不是新 id");
+        ArgumentCaptor<CmsMemberTemplate> saved = ArgumentCaptor.forClass(CmsMemberTemplate.class);
+        verify(memberTemplateService).updateCmsMemberTemplate(saved.capture());
+        verify(memberTemplateService, never()).insertCmsMemberTemplate(any());
+        assertEquals(TEMPLATE_ID, saved.getValue().getId());
+        assertEquals("1997", saved.getValue().getQuestionAnswer(), "改后的答案要落库");
+    }
+
+    @Test
+    void editingKeepsOriginalAuthorshipAndReSubmitsForReview() {
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID))
+                .thenReturn(existing(OWNER, 0));
+
+        service.publishTemplateWithTransaction(request(TEMPLATE_ID), OWNER, "商家甲");
+
+        ArgumentCaptor<CmsMemberTemplate> saved = ArgumentCaptor.forClass(CmsMemberTemplate.class);
+        verify(memberTemplateService).updateCmsMemberTemplate(saved.capture());
+        CmsMemberTemplate written = saved.getValue();
+        assertEquals("原作者", written.getCreateBy(), "创建者是出身信息,不接受客户端改写");
+        assertEquals(new Date(1_600_000_000_000L), written.getCreateTime(), "创建时间同上");
+        assertEquals("商家甲", written.getUpdateBy());
+        assertEquals(Long.valueOf(0L), written.getStatus(), "改了内容必须重新过审,不能保留已过审状态");
+        assertEquals(Long.valueOf(0L), written.getPublishStatus(), "重审期间不得留在架上");
+        verify(auditTaskService).submitOrRefreshTemplate(anyLong(), anyLong(), anyString());
+    }
+
+    @Test
+    void editingSomeoneElsesTemplateIsRejected() {
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID))
+                .thenReturn(existing(STRANGER, 0));
+
+        RuntimeException thrown = assertThrows(RuntimeException.class,
+                () -> service.publishTemplateWithTransaction(request(TEMPLATE_ID), OWNER, "商家甲"));
+
+        assertTrue(thrown.getMessage().contains("无权修改"),
+                "应报无权修改,实际:" + thrown.getMessage());
+        verify(memberTemplateService, never()).updateCmsMemberTemplate(any());
+        verify(memberTemplateService, never()).insertCmsMemberTemplate(any());
+    }
+
+    @Test
+    void editingDeletedTemplateIsRejected() {
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID))
+                .thenReturn(existing(OWNER, 2));
+
+        assertThrows(RuntimeException.class,
+                () -> service.publishTemplateWithTransaction(request(TEMPLATE_ID), OWNER, "商家甲"));
+        verify(memberTemplateService, never()).updateCmsMemberTemplate(any());
+    }
+
+    @Test
+    void editingMissingTemplateIsRejectedWithTheSameMessageAsForeignOnes() {
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(null);
+
+        RuntimeException thrown = assertThrows(RuntimeException.class,
+                () -> service.publishTemplateWithTransaction(request(TEMPLATE_ID), OWNER, "商家甲"));
+
+        // 「不存在」与「不是你的」共用一句话:分开说就等于给出一个模板 id 探测器
+        assertTrue(thrown.getMessage().contains("模板不存在或无权修改"), thrown.getMessage());
+    }
+
+    @Test
+    void editingDoesNotInflateSourceTemplatePopularity() {
+        CmsMemberTemplate adopted = existing(OWNER, 0);
+        adopted.setOriginalTemplateId(9001L);
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(adopted);
+
+        CmsTemplatePublishRequest request = request(TEMPLATE_ID);
+        request.setOriginalTemplateId(9001L);
+        service.publishTemplateWithTransaction(request, OWNER, "商家甲");
+
+        // 改一次加一次热度,榜单就变成「谁改得勤」而不是「谁被采用得多」
+        verify(templateLibraryService, never()).incrementUseNum(anyLong());
+    }
+
+    @Test
+    void creatingStillInsertsAndCountsPopularity() {
+        CmsTemplatePublishRequest request = request(null);
+        request.setOriginalTemplateId(9001L);
+        when(templateLibraryService.selectCmsTemplateLibraryById(9001L)).thenReturn(null);
+
+        service.publishTemplateWithTransaction(request, OWNER, "商家甲");
+
+        verify(memberTemplateService).insertCmsMemberTemplate(any());
+        verify(memberTemplateService, never()).updateCmsMemberTemplate(any());
+        verify(templateLibraryService).incrementUseNum(9001L);
+    }
+
+    @Test
+    void editingPersonalTemplateDoesNotTakeMarketProjectionDown() {
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID))
+                .thenReturn(existing(OWNER, 0));
+
+        CmsTemplatePublishRequest request = request(TEMPLATE_ID);
+        request.setIsSync(0);
+        service.publishTemplateWithTransaction(request, OWNER, "商家甲");
+
+        verify(templateLibraryService, never()).updateCmsTemplateLibrary(any());
+        verify(templateLibraryService, never()).insertCmsTemplateLibrary(any());
+    }
+
+    @Test
+    void editingPersonalTemplateWithLegacySyncFlagDoesNotOverwriteMarketProjection() {
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID))
+                .thenReturn(existing(OWNER, 0));
+
+        CmsTemplatePublishRequest request = request(TEMPLATE_ID);
+        request.setIsSync(1);
+        service.publishTemplateWithTransaction(request, OWNER, "商家甲");
+
+        verify(templateLibraryService, never()).updateCmsTemplateLibrary(any());
+        verify(templateLibraryService, never()).insertCmsTemplateLibrary(any());
+    }
+}

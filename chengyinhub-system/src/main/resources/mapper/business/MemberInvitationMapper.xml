@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MemberInvitationMapper">
+
+    <update id="bindInviterIfAbsent">
+        UPDATE ums_member target_member
+        JOIN ums_member inviter
+          ON inviter.id = #{inviterId}
+         AND inviter.status = 1
+         AND inviter.del_flag = 0
+        SET target_member.invite_user_id = CAST(#{inviterId} AS CHAR),
+            target_member.update_time = CURRENT_TIMESTAMP
+        WHERE target_member.id = #{memberId}
+          AND target_member.status = 1
+          AND target_member.del_flag = 0
+          AND target_member.id != inviter.id
+          AND (target_member.invite_user_id IS NULL
+               OR TRIM(target_member.invite_user_id) = '')
+    </update>
+
+</mapper>

@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "requires": [
+    {"op": "NODE_COMPLETED", "nodeId": 5002}
+  ],
+  "effects": [
+    {"op": "SET", "var": "counter.stage1_result", "value": 1}
+  ],
+  "check": {
+    "enabled": true,
+    "checkId": "convince_qiao",
+    "skill": "说服",
+    "tier": "hard",
+    "mods": [
+      {"when": {"var": "clue.proof_sample", "op": "GTE", "value": 1}, "value": 2, "label": "QL 核对样张"},
+      {"when": {"var": "clue.proof_scope", "op": "GTE", "value": 1}, "value": 2, "label": "原始检索札记"}
+    ],
+    "advantageIf": [{"var": "relation.xuwen", "op": "GTE", "value": 1}],
+    "disadvantageIf": [{"var": "counter.approach", "op": "EQ", "value": -1}],
+    "successEffects": [
+      {"op": "SET", "var": "clue.qiao_receipt", "value": 1},
+      {"op": "INC", "var": "relation.qiao", "value": 1}
+    ],
+    "failEffects": [
+      {"op": "SET", "var": "relation.qiao", "value": -1}
+    ],
+    "failCostTag": "tag.qiao_verbal_only",
+    "successText": "乔岚沉默了很久:「那个标记,是我的。」她在复核回执上签了名。",
+    "failText": "乔岚只说了一句「是我核的」,没有签回执。之后请人回联会更难。"
+  },
+  "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "multi": true,
+    "title": "把问题问回给委托人:哪些是记录,哪些是猜测?",
+    "lead": "可以勾选多项,只选能被材料支撑的那几条。",
+    "options": [
+      {"id": "record_order", "label": "预约单只写名字与时间", "correct": true},
+      {"id": "guess_qiao", "label": "乔岚的猜测也是证据", "correct": false},
+      {"id": "proof_mark", "label": "样张边栏有 QL 核对标记", "correct": true},
+      {"id": "accuse_xuwen", "label": "许闻的动机很可疑", "correct": false}
+    ],
+    "maxTries": 2,
+    "xp": 15
+  }
+}

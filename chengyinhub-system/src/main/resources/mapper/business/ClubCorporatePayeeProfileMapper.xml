@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ClubCorporatePayeeProfileMapper">
+
+    <!-- 敏感列一律绑 PiiCryptoTypeHandler（库里只落 v1: 密文），信用代码另有 blind index 列供精确检索。
+         ★缺 chengyin.pii.key 时两个 handler 自己就 fail-closed 拒写，不会静默降级明文。 -->
+    <resultMap id="PayeeProfileResult" type="ClubCorporatePayeeProfile">
+        <id property="id" column="id"/>
+        <result property="clubId" column="club_id"/>
+        <result property="version" column="profile_version"/>
+        <result property="current" column="is_current"/>
+        <result property="legalName" column="legal_name"
+                typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler"/>
+        <result property="unifiedSocialCreditCode" column="unified_social_credit_code"
+                typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler"/>
+        <result property="creditCodeIndex" column="credit_code_index"/>
+        <result property="licenseObjectKey" column="license_object_key"/>
+        <result property="licenseHash" column="license_hash"/>
+        <result property="bankAccountName" column="bank_account_name"
+                typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler"/>
+        <result property="bankName" column="bank_name"/>
+        <result property="corporateBankAccountNo" column="corporate_bank_account_no"
+                typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler"/>
+        <result property="invoiceType" column="invoice_type"/>
+        <result property="taxNo" column="tax_no"
+                typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler"/>
+        <result property="financeContactName" column="finance_contact_name"
+                typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler"/>
+        <result property="financeContactPhone" column="finance_contact_phone"
+                typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler"/>
+        <result property="factsHash" column="facts_hash"/>
+        <result property="verifyStatus" column="verify_status"/>
+        <result property="verifiedBy" column="verified_by"/>
+        <result property="verifiedAt" column="verified_at"/>
+        <result property="verifyResult" column="verify_result"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <sql id="payeeColumns">
+        id, club_id, profile_version, is_current, legal_name, unified_social_credit_code, credit_code_index,
+        license_object_key, license_hash, bank_account_name, bank_name, corporate_bank_account_no,
+        invoice_type, tax_no, finance_contact_name, finance_contact_phone, facts_hash,
+        verify_status, verified_by, verified_at, verify_result, created_by, created_at
+    </sql>
+
+    <insert id="insertVersion" parameterType="ClubCorporatePayeeProfile" useGeneratedKeys="true" keyProperty="id">
+        insert into club_corporate_payee_profile
+        (club_id, profile_version, is_current, legal_name, unified_social_credit_code, credit_code_index,
+         license_object_key, license_hash, bank_account_name, bank_name, corporate_bank_account_no,
+         invoice_type, tax_no, finance_contact_name, finance_contact_phone, facts_hash,
+         verify_status, created_by)
+        values (#{clubId}, #{version}, #{current},
+         #{legalName,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+         #{unifiedSocialCreditCode,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+         #{creditCodeIndex,typeHandler=com.chengyinhub.business.security.PiiBlindIndexTypeHandler},
+         #{licenseObjectKey}, #{licenseHash},
+         #{bankAccountName,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+         #{bankName},
+         #{corporateBankAccountNo,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+         #{invoiceType},
+         #{taxNo,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+         #{financeContactName,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+         #{financeContactPhone,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+         #{factsHash}, #{verifyStatus}, #{createdBy})
+    </insert>
+
+    <!-- 纯读，绝不带 for update：maskedView 跑在 @Transactional(readOnly = true) 里，
+         Spring setReadOnly(true) + Connector/J readOnlyPropagatesToServer 会让会话进入
+         TRANSACTION READ ONLY，锁定读当场 ERROR 1792。查掩码也不该拿行级排它锁。 -->
+    <select id="selectCurrent" resultMap="PayeeProfileResult">
+        select <include refid="payeeColumns"/> from club_corporate_payee_profile
+        where club_id = #{clubId} and is_current = 1
+    </select>
+
+    <select id="selectCurrentForUpdate" resultMap="PayeeProfileResult">
+        select <include refid="payeeColumns"/> from club_corporate_payee_profile
+        where club_id = #{clubId} and is_current = 1 for update
+    </select>
+
+    <select id="selectVerifiedCurrent" resultMap="PayeeProfileResult">
+        select <include refid="payeeColumns"/> from club_corporate_payee_profile
+        where club_id = #{clubId} and is_current = 1 and verify_status = 'VERIFIED'
+    </select>
+
+    <select id="selectById" resultMap="PayeeProfileResult">
+        select <include refid="payeeColumns"/> from club_corporate_payee_profile where id = #{id}
+    </select>
+
+    <update id="invalidateCurrent">
+        update club_corporate_payee_profile set is_current = 0
+        where club_id = #{clubId} and is_current = 1
+    </update>
+
+    <!-- 财务一次审核的 CAS：只有 current 且仍 PENDING 且执照 hash 未变的那一行会被改到；
+         两个财务并发审核同一 version，只有一个能拿到 rows=1。 -->
+    <update id="verifyVersionCas">
+        update club_corporate_payee_profile
+        set verify_status = #{verifyStatus}, verified_by = #{verifiedBy},
+            verified_at = #{verifiedAt}, verify_result = #{verifyResult}
+        where id = #{id} and club_id = #{clubId} and is_current = 1
+          and verify_status = 'PENDING' and license_hash = #{licenseHash}
+    </update>
+
+    <insert id="insertSaleSnapshot" parameterType="TopicSalePayeeSnapshot" useGeneratedKeys="true" keyProperty="id">
+        insert into topic_sale_payee_snapshot
+        (topic_id, club_id, profile_id, profile_version, facts_hash, license_hash, frozen_at)
+        values (#{topicId}, #{clubId}, #{profileId}, #{profileVersion}, #{factsHash}, #{licenseHash}, #{frozenAt})
+    </insert>
+
+    <select id="selectSaleSnapshot" resultType="TopicSalePayeeSnapshot">
+        select id, topic_id as topicId, club_id as clubId, profile_id as profileId,
+               profile_version as profileVersion, facts_hash as factsHash,
+               license_hash as licenseHash, frozen_at as frozenAt
+        from topic_sale_payee_snapshot where topic_id = #{topicId} and club_id = #{clubId}
+    </select>
+</mapper>

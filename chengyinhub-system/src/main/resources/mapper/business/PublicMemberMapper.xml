@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PublicMemberMapper">
+
+    <resultMap id="PublicMemberResult" type="com.chengyinhub.business.domain.vo.PublicMemberVO">
+        <id property="id" column="id"/>
+        <result property="nickname" column="nickname"/>
+        <result property="avatar" column="avatar"/>
+        <result property="levelId" column="level_id"/>
+        <result property="introduction" column="introduction"/>
+        <result property="casePics" column="case_pics"/>
+        <result property="caseIntroducton" column="case_introducton"/>
+        <result property="categoryIds" column="tag_ids"/>
+        <!-- 身份标签在 SQL 里就收敛成封顶枚举，不把账号级 user_type 带出库。
+             user_type 与 password/phone/openId 同属匿名响应禁止字段(ApiUserPublicInfoTest)。 -->
+        <result property="identityKind" column="identity_kind"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <sql id="publicMemberColumns">
+        m.id, m.nickname, m.avatar, coalesce(pg.level, 1) as level_id, m.introduction,
+        m.case_pics, m.case_introducton, m.tag_ids,
+        CASE WHEN m.user_type = 2 THEN 'BIZ' ELSE NULL END AS identity_kind
+    </sql>
+
+    <select id="selectPublicMemberList" resultMap="PublicMemberResult">
+        SELECT <include refid="publicMemberColumns"/>
+        FROM ums_member m
+        left join player_growth pg on pg.member_id = m.id
+        WHERE m.status = 1
+          AND m.del_flag = 0
+        <if test="userType != null">
+          AND m.user_type = #{userType}
+        </if>
+        <if test="keyword != null and keyword != ''">
+          AND m.nickname LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        ORDER BY m.id DESC
+    </select>
+
+    <select id="selectInvitedPublicMemberList" resultMap="PublicMemberResult">
+        SELECT <include refid="publicMemberColumns"/>, m.create_time
+        FROM ums_member m
+        left join player_growth pg on pg.member_id = m.id
+        WHERE m.status = 1
+          AND m.del_flag = 0
+          AND m.invite_user_id = #{inviterId}
+        ORDER BY m.id DESC
+    </select>
+
+    <select id="selectPublicMemberById" resultMap="PublicMemberResult">
+        SELECT <include refid="publicMemberColumns"/>
+        FROM ums_member m
+        left join player_growth pg on pg.member_id = m.id
+        WHERE m.id = #{memberId}
+          AND m.status = 1
+          AND m.del_flag = 0
+    </select>
+
+    <select id="selectPublicCategoriesByIds"
+            resultType="com.chengyinhub.business.domain.vo.PublicMemberVO$PublicCategoryVO">
+        SELECT id, category_name AS categoryName
+        FROM sys_category
+        WHERE id IN
+        <foreach item="id" collection="categoryIds" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+          AND status = 1
+          AND del_flag = 0
+        ORDER BY sort_id ASC, id ASC
+    </select>
+
+</mapper>

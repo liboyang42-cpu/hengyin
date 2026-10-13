@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.WxContentCallbackInboxMapper">
+
+    <resultMap id="InboxResult" type="com.chengyinhub.business.domain.WxContentCallbackInbox">
+        <id property="id" column="id"/>
+        <result property="traceHash" column="trace_hash_hex"/>
+        <result property="bizType" column="biz_type"/>
+        <result property="bizId" column="biz_id"/>
+        <result property="mediaHash" column="media_hash_hex"/>
+        <result property="verdict" column="verdict"/>
+        <result property="state" column="state"/>
+        <result property="ownerToken" column="owner_token_hex"/>
+        <result property="fenceToken" column="fence_token"/>
+        <result property="leaseUntil" column="lease_until"/>
+        <result property="attemptCount" column="attempt_count"/>
+        <result property="lastErrorCode" column="last_error_code"/>
+    </resultMap>
+
+    <sql id="columns">
+        id, HEX(trace_hash) trace_hash_hex, biz_type, biz_id, HEX(media_hash) media_hash_hex,
+        verdict, state, HEX(owner_token) owner_token_hex, fence_token, lease_until, attempt_count, last_error_code
+    </sql>
+
+    <insert id="insertIgnore" parameterType="com.chengyinhub.business.domain.WxContentCallbackInbox">
+        insert ignore into wx_content_callback_inbox
+            (trace_hash, biz_type, biz_id, media_hash, state, fence_token, attempt_count, create_time, update_time)
+        values
+            (UNHEX(#{traceHash}), #{bizType}, #{bizId},
+             <choose><when test="mediaHash != null">UNHEX(#{mediaHash})</when><otherwise>null</otherwise></choose>,
+             0, 0, 0, NOW(3), NOW(3))
+    </insert>
+
+    <select id="selectByTraceHash" resultMap="InboxResult">
+        select <include refid="columns"/> from wx_content_callback_inbox
+        where trace_hash = UNHEX(#{traceHash})
+    </select>
+
+    <select id="selectForUpdate" resultMap="InboxResult">
+        select <include refid="columns"/> from wx_content_callback_inbox
+        where trace_hash = UNHEX(#{traceHash}) for update
+    </select>
+
+    <!-- 调用方先锁 inbox 行。只有 WAITING/RETRYABLE/租约已过期 PROCESSING 能领取。 -->
+    <update id="claim">
+        update wx_content_callback_inbox
+        set state = 1,
+            owner_token = UNHEX(#{ownerToken}),
+            fence_token = fence_token + 1,
+            verdict = #{verdict},
+            lease_until = DATE_ADD(NOW(3), INTERVAL 60 SECOND),
+            attempt_count = attempt_count + 1,
+            update_time = NOW(3)
+        where trace_hash = UNHEX(#{traceHash})
+          and (state in (0, 3) or (state = 1 and lease_until &lt;= NOW(3)))
+    </update>
+
+    <!-- lease 只在进入最终事务时校验；事务随后一直持有 inbox+目标行锁，无 watchdog TOCTOU。 -->
+    <select id="selectOwnedForUpdate" resultMap="InboxResult">
+        select <include refid="columns"/> from wx_content_callback_inbox
+        where trace_hash = UNHEX(#{traceHash})
+          and state = 1
+          and owner_token = UNHEX(#{ownerToken})
+          and fence_token = #{fenceToken}
+          and lease_until &gt; NOW(3)
+        for update
+    </select>
+
+    <!-- 只读处置事实:违规回调记录不随清理删除,历史读取据此区分处置与普通下架。 -->
+    <select id="countRiskyCallback" resultType="int">
+        select count(*) from wx_content_callback_inbox
+        where biz_type = #{bizType} and biz_id = #{bizId} and verdict = 1
+    </select>
+
+    <!-- 固定表名 choose，禁止把用户输入拼进 SQL。返回 null 代表目标不存在。 -->
+    <select id="lockBusinessTarget" resultType="long">
+        <choose>
+            <when test="bizType == 1">select id from cms_topic where id = #{bizId} for update</when>
+            <when test="bizType == 2">select id from cms_activity where id = #{bizId} for update</when>
+            <when test="bizType == 3">select id from club_post where id = #{bizId} for update</when>
+            <when test="bizType == 4">select id from ums_member where id = #{bizId} for update</when>
+            <when test="bizType == 5">select id from club where id = #{bizId} for update</when>
+            <when test="bizType == 6">select id from mms_merchant where id = #{bizId} for update</when>
+            <when test="bizType == 9">select id from ums_creative_square where id = #{bizId} for update</when>
+            <when test="bizType == 10">select id from ums_comment where id = #{bizId} for update</when>
+            <when test="bizType == 11">select id from roam_stamp where id = #{bizId} for update</when>
+            <when test="bizType == 12">select id from im_message where id = #{bizId} for update</when>
+            <otherwise>select cast(null as signed)</otherwise>
+        </choose>
+    </select>
+
+    <update id="markDone">
+        update wx_content_callback_inbox
+        set state = 2, verdict = #{verdict}, lease_until = null, update_time = NOW(3)
+        where trace_hash = UNHEX(#{traceHash}) and state = 1
+          and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken}
+    </update>
+
+    <update id="markIgnoredStale">
+        update wx_content_callback_inbox
+        set state = 4, verdict = #{verdict}, lease_until = null, update_time = NOW(3)
+        where trace_hash = UNHEX(#{traceHash}) and state = 1
+          and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken}
+    </update>
+
+    <update id="markManualReview">
+        update wx_content_callback_inbox
+        set state = 5, verdict = #{verdict}, last_error_code = #{errorCode},
+            lease_until = null, update_time = NOW(3)
+        where trace_hash = UNHEX(#{traceHash}) and state = 1
+          and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken}
+    </update>
+
+    <update id="release">
+        update wx_content_callback_inbox
+        set state = 3, owner_token = null, lease_until = null, update_time = NOW(3)
+        where trace_hash = UNHEX(#{traceHash}) and state = 1
+          and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken}
+    </update>
+</mapper>

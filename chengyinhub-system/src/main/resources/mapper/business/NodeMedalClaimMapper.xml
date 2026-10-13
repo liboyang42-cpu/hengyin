@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.NodeMedalClaimMapper">
+
+    <!-- 刻意用 plain insert 而非 insert ignore:IGNORE 会把截断/类型错一起降级成 warning,
+         「抢不到牌」与「写坏了」长得一模一样 = fail-open。 -->
+    <insert id="insertClaim">
+        insert into node_medal_claim (node_id, medal_rank, member_id, activity_id, topic_id, progress_id)
+        values (#{nodeId}, #{medalRank}, #{memberId}, #{activityId}, #{topicId}, #{progressId})
+    </insert>
+
+    <select id="selectRankByProgress" resultType="java.lang.Integer">select medal_rank from node_medal_claim where node_id=#{nodeId} and member_id=#{memberId} and progress_id=#{progressId}</select>
+    <select id="selectRankByNodeAndMember" resultType="java.lang.Integer">
+        select medal_rank from node_medal_claim where node_id = #{nodeId} and member_id = #{memberId}
+    </select>
+
+</mapper>

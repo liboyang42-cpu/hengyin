@@ -1,0 +1,17 @@
+/* ds-ok: 用户指定 HTML 的 chapter-gate 色值与比例，375px 原稿按 2rpx/px 移植。 */
+.gate{position:fixed;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;background:#241a00;color:#fff;opacity:0;transition:opacity .3s ease;} /* ds-ok 用户指定章节开场原型的金色、字号和进度条比例 */
+.gate.is-in{opacity:1;}.gate.is-out{opacity:0;transition-duration:.38s;}
+.gate__canvas{position:absolute;inset:0;width:100%;height:100%;}
+.gate__number{position:absolute;top:22%;left:0;right:0;text-align:center;font-size:380rpx;line-height:1;font-weight:800;color:#fff0c8;} /* ds-ok 用户指定章节开场原型的金色、字号和进度条比例 */
+.gate__copy{position:absolute;left:44rpx;right:44rpx;top:70%;text-align:center;opacity:0;transform:translateY(28rpx);transition:opacity .7s ease .25s,transform .7s ease .25s;}
+.is-in .gate__copy{opacity:1;transform:translateY(0);}
+.gate__meta{color:#d8aa32;font-size:24rpx;letter-spacing:8rpx;} /* ds-ok 用户指定章节开场原型的金色、字号和进度条比例 */
+.gate__title{margin:24rpx 0 14rpx;font-size:58rpx;line-height:1.28;letter-spacing:-1rpx;font-weight:700;} /* ds-ok 用户指定章节开场原型的金色、字号和进度条比例 */
+.gate__sub{color:rgba(255,235,185,.62);font-size:26rpx;} /* ds-ok 用户指定章节开场原型的金色、字号和进度条比例 */
+.gate__bars{display:flex;justify-content:center;gap:16rpx;margin-top:44rpx;}
+.gate__bar{width:68rpx;max-width:8vw;height:6rpx;border-radius:4rpx;background:rgba(255,235,185,.18);} /* ds-ok 用户指定章节开场原型的金色、字号和进度条比例 */
+.gate__bar.is-past{background:rgba(255,235,185,.5);}.gate__bar.is-current{background:#d8aa32;transform:scaleX(0);transform-origin:left;transition:transform 1.1s ease .45s;} /* ds-ok 用户指定章节开场原型的金色、字号和进度条比例 */
+.is-in .gate__bar.is-current{transform:scaleX(1);}
+.gate__skip{position:absolute;left:0;right:0;bottom:calc(60rpx + env(safe-area-inset-bottom));text-align:center;color:rgba(255,235,185,.5);font-size:24rpx;} /* ds-ok 用户指定章节开场原型的金色、字号和进度条比例 */
+.is-reduced,.is-reduced .gate__copy,.is-reduced .gate__bar{transition:none;}
+.gate--pressed{filter:brightness(.9);}

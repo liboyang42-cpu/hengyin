@@ -1,0 +1,3282 @@
+[
+  {
+    "at": "2026-09-28T08:03:01.522Z",
+    "route": "pages/index/index",
+    "endpoint": "http://127.0.0.1:8099/api/user/info",
+    "method": "POST",
+    "ids": {
+      "member_id": 9004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 664,
+    "resultIds": {
+      "id": 9004,
+      "levelId": 1
+    }
+  },
+  {
+    "at": "2026-09-28T08:03:01.524Z",
+    "route": "pages/index/index",
+    "endpoint": "http://127.0.0.1:8099/api/registration/my-joined",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 650,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:03:01.525Z",
+    "route": "pages/index/index",
+    "endpoint": "http://127.0.0.1:8099/api/play/run-session/list",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 329,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:03:01.527Z",
+    "route": "pages/index/index",
+    "endpoint": "http://127.0.0.1:8099/api/topic/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 5
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 366,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:03:01.529Z",
+    "route": "pages/index/index",
+    "endpoint": "http://127.0.0.1:8099/api/activity/list",
+    "method": "POST",
+    "ids": {
+      "status": 2,
+      "pageSize": 4
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 227,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:03:01.531Z",
+    "route": "pages/index/index",
+    "endpoint": "http://127.0.0.1:8099/api/activity/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 4
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 409,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:03:01.583Z",
+    "route": "pages/index/index",
+    "endpoint": "http://127.0.0.1:8099/api/topic/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 20
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 391,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:03:01.586Z",
+    "route": "pages/index/index",
+    "endpoint": "http://127.0.0.1:8099/api/activity/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 20,
+      "status": 1
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 363,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:03:01.622Z",
+    "route": "pages/index/index",
+    "endpoint": "http://127.0.0.1:8099/api/user/info",
+    "method": "POST",
+    "ids": {
+      "member_id": 9004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 561,
+    "resultIds": {
+      "id": 9004,
+      "levelId": 1
+    }
+  },
+  {
+    "at": "2026-09-28T08:03:01.624Z",
+    "route": "pages/index/index",
+    "endpoint": "http://127.0.0.1:8099/api/registration/my-joined",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 557,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:03:01.625Z",
+    "route": "pages/index/index",
+    "endpoint": "http://127.0.0.1:8099/api/play/run-session/list",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 358,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:03:03.215Z",
+    "route": "pages/index/index",
+    "endpoint": "http://127.0.0.1:8099/api/activity/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 4
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 94,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:03:03.217Z",
+    "route": "pages/index/index",
+    "endpoint": "http://127.0.0.1:8099/api/map/reverse-geocode",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 72,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:03:45.502Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T08:03:45.507Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/im/unread-total",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T08:04:28.456Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 473,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:04:51.122Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 7001
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 495,
+    "resultIds": {
+      "id": 7001,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:04:51.126Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/topics",
+    "method": "POST",
+    "ids": {
+      "id": 7001
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 456,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:04:51.127Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/list",
+    "method": "POST",
+    "ids": {
+      "id": 7001,
+      "clubId": 7001
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 315,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:04:51.128Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/leaderboard",
+    "method": "POST",
+    "ids": {
+      "id": 7001
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 500,
+    "ms": 302,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:05:17.021Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/join",
+    "method": "POST",
+    "ids": {
+      "id": 7001
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 465,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:05:17.487Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 7001
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 45,
+    "resultIds": {
+      "id": 7001,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:05:17.539Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/members",
+    "method": "POST",
+    "ids": {
+      "clubId": 7001
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 50,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:05:17.545Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/access/me",
+    "method": "POST",
+    "ids": {
+      "clubId": 7001
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 67,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:06:16.511Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/quit",
+    "method": "POST",
+    "ids": {
+      "id": 7001
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 224,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:06:16.740Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 7001
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 49,
+    "resultIds": {
+      "id": 7001,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:06:36.611Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 117,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:06:36.618Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/im/unread-total",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 112,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:06:48.749Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 7001
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 193,
+    "resultIds": {
+      "id": 7001,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:06:48.752Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/topics",
+    "method": "POST",
+    "ids": {
+      "id": 7001
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 224,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:06:48.752Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/list",
+    "method": "POST",
+    "ids": {
+      "id": 7001,
+      "clubId": 7001
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 214,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:06:48.753Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/leaderboard",
+    "method": "POST",
+    "ids": {
+      "id": 7001
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 352,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:06:48.948Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/members",
+    "method": "POST",
+    "ids": {
+      "clubId": 7001
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 62,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:06:48.952Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/access/me",
+    "method": "POST",
+    "ids": {
+      "clubId": 7001
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 129,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:06:48.984Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/merchants",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T08:06:48.989Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club-compensation/editions",
+    "method": "POST",
+    "ids": {
+      "clubId": 7001
+    },
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T08:06:48.990Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/project/my",
+    "method": "POST",
+    "ids": {
+      "ownerType": "club",
+      "type": "all",
+      "pageSize": 200
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 311,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:06:48.994Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/coop/list",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 388,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:06:48.998Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/stats/club",
+    "method": "POST",
+    "ids": {
+      "clubId": "7001"
+    },
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T08:06:58.368Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/crm/customers/count",
+    "method": "POST",
+    "ids": {
+      "clubId": 7001
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 170,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:06:58.392Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/settlement/summary",
+    "method": "POST",
+    "ids": {
+      "clubId": 7001
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 150,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:07:19.927Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": "7001"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 190,
+    "resultIds": {
+      "id": 7001,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:09:38.057Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/update-mine",
+    "method": "POST",
+    "ids": {
+      "id": "7001"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 500,
+    "ms": 2320,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:10:28.007Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 114,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:10:28.014Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/im/unread-total",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 106,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:10:37.121Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 126,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:10:37.126Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/topics",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 112,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:10:37.128Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/list",
+    "method": "POST",
+    "ids": {
+      "id": 990004,
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 96,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:10:37.128Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/leaderboard",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 500,
+    "ms": 92,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:11:08.932Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/join",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 114,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:11:09.047Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 35,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:11:24.466Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 95,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:11:24.478Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/im/unread-total",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 29,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:11:33.875Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 121,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:11:33.880Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/topics",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 95,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:11:33.881Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/list",
+    "method": "POST",
+    "ids": {
+      "id": 990004,
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 106,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:11:33.882Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/leaderboard",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 107,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:11:34.002Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/members",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 84,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:11:34.009Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/access/me",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 80,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:11:34.010Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/merchants",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 110,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:11:34.016Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club-compensation/editions",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 189,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:11:34.018Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/project/my",
+    "method": "POST",
+    "ids": {
+      "ownerType": "club",
+      "type": "all",
+      "pageSize": 200
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 181,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:11:34.024Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/coop/list",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 165,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:11:34.027Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/stats/club",
+    "method": "POST",
+    "ids": {
+      "clubId": "990004"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 115,
+    "resultIds": {
+      "clubId": 990004
+    }
+  },
+  {
+    "at": "2026-09-28T08:11:40.429Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/crm/customers/count",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 126,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:11:40.440Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/settlement/summary",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 118,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:11:41.943Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/access/me",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 87,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:11:41.948Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/join-requests",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 74,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:12:10.364Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/join-request/approve",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004,
+      "memberId": 9004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 151,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:12:10.521Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 110,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:12:10.526Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/members",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 37,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:12:10.637Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/members",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 48,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:12:10.646Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/access/me",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 32,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:12:23.238Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 105,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:12:23.247Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/im/unread-total",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 94,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:12:29.993Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 86,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:12:29.997Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/topics",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 72,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:12:29.998Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/list",
+    "method": "POST",
+    "ids": {
+      "id": 990004,
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 69,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:12:29.998Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/leaderboard",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 119,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:12:30.085Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/members",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 52,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:12:30.089Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/access/me",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 53,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:12:33.736Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/registration/my-joined",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 90,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:12:50.593Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/create",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004,
+      "type": 0
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 500,
+    "ms": 2074,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:13:46.476Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 97,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:13:46.485Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/im/unread-total",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 23,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:13:53.213Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 152,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:13:53.218Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/topics",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 134,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:13:53.220Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/list",
+    "method": "POST",
+    "ids": {
+      "id": 990004,
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 141,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:13:53.221Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/leaderboard",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 500,
+    "ms": 127,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:13:54.908Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/join",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 105,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:13:55.014Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 36,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:13:57.740Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 67,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:13:57.748Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/im/unread-total",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 21,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:14:04.448Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 76,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:14:04.453Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/topics",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 97,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:14:04.454Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/list",
+    "method": "POST",
+    "ids": {
+      "id": 990004,
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 67,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:14:04.455Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/leaderboard",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 92,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:14:04.536Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/members",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 37,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:14:04.542Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/access/me",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 37,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:14:04.555Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/merchants",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 103,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:14:04.560Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club-compensation/editions",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 43,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:14:04.561Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/project/my",
+    "method": "POST",
+    "ids": {
+      "ownerType": "club",
+      "type": "all",
+      "pageSize": 200
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 145,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:14:04.564Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/coop/list",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 128,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:14:04.568Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/stats/club",
+    "method": "POST",
+    "ids": {
+      "clubId": "990004"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 28,
+    "resultIds": {
+      "clubId": 990004
+    }
+  },
+  {
+    "at": "2026-09-28T08:14:04.777Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/crm/customers/count",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 25,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:14:04.778Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/settlement/summary",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 50,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:14:06.082Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/access/me",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 84,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:14:06.086Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/join-requests",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 71,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:14:23.280Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 107,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:14:23.288Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/im/unread-total",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 48,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:14:30.002Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 99,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:14:30.005Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/topics",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 87,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:14:30.006Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/list",
+    "method": "POST",
+    "ids": {
+      "id": 990004,
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 76,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:14:30.008Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/leaderboard",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 500,
+    "ms": 69,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:14:57.556Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 78,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:14:57.562Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/im/unread-total",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 18,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:04.166Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 127,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:15:04.169Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/topics",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 119,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:04.170Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/list",
+    "method": "POST",
+    "ids": {
+      "id": 990004,
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 114,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:04.170Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/leaderboard",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 116,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:04.302Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/members",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 32,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:04.307Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/access/me",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 31,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:04.308Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/merchants",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 15,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:04.313Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club-compensation/editions",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 32,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:04.314Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/project/my",
+    "method": "POST",
+    "ids": {
+      "ownerType": "club",
+      "type": "all",
+      "pageSize": 200
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 115,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:04.317Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/coop/list",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 134,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:04.320Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/stats/club",
+    "method": "POST",
+    "ids": {
+      "clubId": "990004"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 31,
+    "resultIds": {
+      "clubId": 990004
+    }
+  },
+  {
+    "at": "2026-09-28T08:15:04.502Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/crm/customers/count",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 15,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:04.503Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/settlement/summary",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 21,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:05.785Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/access/me",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 80,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:05.792Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/join-requests",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 66,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:09.188Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/join-request/reject",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004,
+      "memberId": 9009
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 89,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:09.283Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 32,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:15:09.286Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/members",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 24,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:09.327Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/members",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 32,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:09.339Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/access/me",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 29,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:26.896Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 59,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:26.905Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/im/unread-total",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 75,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:33.578Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 141,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:15:33.582Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/topics",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 130,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:33.584Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/list",
+    "method": "POST",
+    "ids": {
+      "id": 990004,
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 150,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:33.585Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/leaderboard",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 500,
+    "ms": 144,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:38.390Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/join",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 57,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:38.448Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 30,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:15:40.566Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 68,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:40.574Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/im/unread-total",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 38,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:47.369Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 84,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:15:47.372Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/topics",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 72,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:47.373Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/list",
+    "method": "POST",
+    "ids": {
+      "id": 990004,
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 69,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:47.374Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/leaderboard",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 76,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:47.462Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/members",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 49,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:15:47.470Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/access/me",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 46,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:16:12.034Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/like",
+    "method": "POST",
+    "ids": {
+      "postId": 3
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 135,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:16:12.170Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/list",
+    "method": "POST",
+    "ids": {
+      "id": 990004,
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 21,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:16:12.830Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/comment/list",
+    "method": "POST",
+    "ids": {
+      "postId": 3
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 38,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:17:01.547Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/comment/list",
+    "method": "POST",
+    "ids": {
+      "postId": 3
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 115,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:17:16.320Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 151,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:17:16.328Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/im/unread-total",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 117,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:17:23.041Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 111,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:17:23.043Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/topics",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 103,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:17:23.044Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/list",
+    "method": "POST",
+    "ids": {
+      "id": 990004,
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 99,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:17:23.045Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/leaderboard",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 105,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:17:23.162Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/members",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 47,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:17:23.167Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/access/me",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 50,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:17:23.168Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/merchants",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 33,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:17:23.174Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club-compensation/editions",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 38,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:17:23.176Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/project/my",
+    "method": "POST",
+    "ids": {
+      "ownerType": "club",
+      "type": "all",
+      "pageSize": 200
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 56,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:17:23.178Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/coop/list",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 120,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:17:23.181Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/stats/club",
+    "method": "POST",
+    "ids": {
+      "clubId": "990004"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 46,
+    "resultIds": {
+      "clubId": 990004
+    }
+  },
+  {
+    "at": "2026-09-28T08:17:23.341Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/crm/customers/count",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 16,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:17:23.342Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/settlement/summary",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 17,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:17:24.049Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": "990004"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 37,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:18:13.732Z",
+    "route": "pages/club/roles/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/access/me",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 104,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:18:13.836Z",
+    "route": "pages/club/roles/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/roles/list",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 42,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:18:13.838Z",
+    "route": "pages/club/roles/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/members",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 24,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:18:43.033Z",
+    "route": "pages/club/roles/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/roles/assign",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004,
+      "targetMemberId": 9004,
+      "requestId": "club-role-mukz74r9-d854zykof3"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 143,
+    "resultIds": {
+      "id": 7,
+      "targetMemberId": 9004,
+      "scopeId": 990004
+    }
+  },
+  {
+    "at": "2026-09-28T08:18:43.184Z",
+    "route": "pages/club/roles/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/roles/list",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 18,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:14.623Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 78,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:14.630Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/im/unread-total",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 18,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:21.210Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 106,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:19:21.214Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/topics",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 95,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:21.216Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/list",
+    "method": "POST",
+    "ids": {
+      "id": 990004,
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 92,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:21.216Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/leaderboard",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 98,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:21.325Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/members",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 66,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:21.331Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/access/me",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 68,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:22.769Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/access/me",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 83,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:22.773Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/join-requests",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 83,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:26.772Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/join-request/approve",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004,
+      "memberId": 9009
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 119,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:26.898Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 38,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:19:26.905Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/members",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 27,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:26.942Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/members",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 58,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:26.949Z",
+    "route": "pages/club/join-requests/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/access/me",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 71,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:51.483Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 72,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:51.489Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/im/unread-total",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 17,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:58.110Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 85,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:19:58.113Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/topics",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 61,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:58.114Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/list",
+    "method": "POST",
+    "ids": {
+      "id": 990004,
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 58,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:58.114Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/leaderboard",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 113,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:58.204Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/members",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 38,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:58.208Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/access/me",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 84,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:58.209Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/merchants",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 22,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:58.215Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club-compensation/editions",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 74,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:58.216Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/project/my",
+    "method": "POST",
+    "ids": {
+      "ownerType": "club",
+      "type": "all",
+      "pageSize": 200
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 109,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:58.219Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/coop/list",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 155,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:58.223Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/stats/club",
+    "method": "POST",
+    "ids": {
+      "clubId": "990004"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 82,
+    "resultIds": {
+      "clubId": 990004
+    }
+  },
+  {
+    "at": "2026-09-28T08:19:58.408Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/crm/customers/count",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 11,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:58.409Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/settlement/summary",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 14,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:59.617Z",
+    "route": "pages/club/roles/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/access/me",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 79,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:59.697Z",
+    "route": "pages/club/roles/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/roles/list",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 19,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:19:59.697Z",
+    "route": "pages/club/roles/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/members",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 26,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:20:09.312Z",
+    "route": "pages/club/roles/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/roles/revoke",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004,
+      "assignmentId": 7,
+      "requestId": "club-role-mukz8zbo-2kt2newa32"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 146,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:20:09.467Z",
+    "route": "pages/club/roles/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/roles/list",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 25,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:20:12.052Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 51,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:20:12.058Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/im/unread-total",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 17,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:20:18.607Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 125,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:20:18.610Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/topics",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 116,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:20:18.611Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/list",
+    "method": "POST",
+    "ids": {
+      "id": 990004,
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 113,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:20:18.612Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/leaderboard",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 118,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:20:18.739Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/members",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 19,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:20:18.744Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/access/me",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 19,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:20:48.356Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 206,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:20:48.366Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/im/unread-total",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 178,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:20:53.296Z",
+    "route": "subpackageB/pages/im/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/im/conversations",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T08:20:53.301Z",
+    "route": "subpackageB/pages/im/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/merchant/access/me",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T08:21:12.575Z",
+    "route": "subpackageB/pages/im/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/im/conversations",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 125,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:22:16.245Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 103,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:22:16.251Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "http://127.0.0.1:8099/api/im/unread-total",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 90,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:22:24.805Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 161,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 9003
+    }
+  },
+  {
+    "at": "2026-09-28T08:22:24.809Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/topics",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 146,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:22:24.810Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/list",
+    "method": "POST",
+    "ids": {
+      "id": 990004,
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 149,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:22:24.811Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/leaderboard",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 152,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:22:24.978Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/members",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 21,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:22:24.986Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/access/me",
+    "method": "POST",
+    "ids": {
+      "clubId": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 19,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T08:26:30.192Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "http://127.0.0.1:8099/api/club/post/comment/list",
+    "method": "POST",
+    "ids": {
+      "postId": 3
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 131,
+    "resultIds": {}
+  }
+]

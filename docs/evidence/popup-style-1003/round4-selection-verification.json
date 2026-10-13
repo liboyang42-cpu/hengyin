@@ -1,0 +1,377 @@
+{
+  "code_commit": "46d9599a83999e68f0b27b8ad666a368f4af3d27",
+  "baseline_commit": "b0a5ba68a5daa330f6313f86c5614b421607eca7",
+  "scope": "非游戏选项弹窗及俱乐部定位选择；不含游戏内部",
+  "product_files": [
+    "chengyinhub-xcx/components/cy/scene-club-edit/index.wxml",
+    "chengyinhub-xcx/components/cy/scene-club-edit/index.wxss",
+    "chengyinhub-xcx/components/cy/option-sheet/index.wxml",
+    "chengyinhub-xcx/components/cy/option-sheet/index.wxss",
+    "chengyinhub-xcx/pages/club/detail/index.wxss"
+  ],
+  "product_sha256": {
+    "chengyinhub-xcx/components/cy/scene-club-edit/index.wxml": "6236b96f0d6b80340350f02fa9781bd7e222e9805e97cc47ee1340bcf491f6f6",
+    "chengyinhub-xcx/components/cy/scene-club-edit/index.wxss": "fbcafb07dc877f86d2346b60be56f690be20e99bc61d10e428261827fd1e7fb6",
+    "chengyinhub-xcx/components/cy/option-sheet/index.wxml": "d6de24abe642985f85b3f3a3ff54aa7450537e65036c27ced6b6f931de5c12a0",
+    "chengyinhub-xcx/components/cy/option-sheet/index.wxss": "1854ba48f0381a2e33d9ad7dd790b393dbe310629763740279e68f5fb048879e",
+    "chengyinhub-xcx/pages/club/detail/index.wxss": "80e7caf5b902770f243c64efaf823dd41aa32d1b12a7004e5111ae76b340e579"
+  },
+  "changes": [
+    "俱乐部类型与活动倾向移除重复16px内边距，标题、内容、按钮共用左右16px留白",
+    "俱乐部类型正文字号16px改14px，应用按钮复用cy-btn及固定footer，字号14px改16px",
+    "圆点选择的长标签增加8px横向间隔与上下留白，勾选模式和即时菜单不进入新增规则",
+    "俱乐部黑色编辑外壳移除描边，仅作用于club-edit宿主"
+  ],
+  "native_states": [
+    "nongame-round4-after/club-prefs-nested.png",
+    "nongame-round4-after/club-prefs.png",
+    "nongame-round4-after/club-type-nested.png",
+    "nongame-round4-after/club-type.png",
+    "nongame-round4-after/option-long.png",
+    "nongame-round4-after/option-sheet.png"
+  ],
+  "native_screenshot_sha256": {
+    "nongame-round4-after/club-prefs-nested.png": "88a3d1b24c42d131d16d9328bd0134b29dba890797848440c023f5c06d50cdb8",
+    "nongame-round4-after/club-prefs.png": "077c9251f2a431aa4141444ed24100b9fc48d0c44668fa2b58cb39b88af6a41a",
+    "nongame-round4-after/club-type-nested.png": "619b55c3be1c80ca2cfc95e8375cbc9118aafb81ee2c43c5b56f4f4c4e955033",
+    "nongame-round4-after/club-type.png": "cba43cd8604ba985351495e33bd08d37454bd6a9f17fa5d5b04a2e146db2b068",
+    "nongame-round4-after/option-long.png": "5b295310c84b4e5f4267ec7ce891bb73184b9fab2416117787a49ea83133193d",
+    "nongame-round4-after/option-sheet.png": "8936943a0eaab69a34fb5ba50edfaa9f8d33d91162c11dcf79a6037743f3b5b3"
+  },
+  "geometry_before": {
+    ".pk": {
+      "left": 16,
+      "top": 388,
+      "width": 358,
+      "height": 406,
+      "right": 374,
+      "bottom": 794,
+      "centerX": 195,
+      "centerY": 591
+    },
+    ".pk-opts": {
+      "left": 32,
+      "top": 388,
+      "width": 326,
+      "height": 329,
+      "right": 358,
+      "bottom": 717,
+      "centerX": 195,
+      "centerY": 552.5
+    },
+    ".pk-opt": {
+      "left": 32,
+      "top": 388,
+      "width": 326,
+      "height": 55,
+      "right": 358,
+      "bottom": 443,
+      "centerX": 195,
+      "centerY": 415.5
+    },
+    ".pk-opt-name": {
+      "left": 32,
+      "top": 391.906,
+      "width": 298,
+      "height": 26,
+      "right": 330,
+      "bottom": 417.906,
+      "centerX": 181,
+      "centerY": 404.906
+    },
+    ".pk-opt-tick": {
+      "left": 338,
+      "top": 405,
+      "width": 20,
+      "height": 20,
+      "right": 358,
+      "bottom": 425,
+      "centerX": 348,
+      "centerY": 415
+    },
+    ".pk-apply": {
+      "left": 32,
+      "top": 733,
+      "width": 326,
+      "height": 45,
+      "right": 358,
+      "bottom": 778,
+      "centerX": 195,
+      "centerY": 755.5
+    },
+    ".sh__panel": {
+      "left": 0,
+      "top": 307,
+      "width": 390,
+      "height": 537,
+      "right": 390,
+      "bottom": 844,
+      "centerX": 195,
+      "centerY": 575.5
+    },
+    ".sh__title": {
+      "left": 16,
+      "top": 335,
+      "width": 358,
+      "height": 45,
+      "right": 374,
+      "bottom": 380,
+      "centerX": 195,
+      "centerY": 357.5
+    },
+    ".sh__body": {
+      "left": 16,
+      "top": 384,
+      "width": 358,
+      "height": 414,
+      "right": 374,
+      "bottom": 798,
+      "centerX": 195,
+      "centerY": 591
+    },
+    "labelSize": "16px",
+    "buttonSize": "14px"
+  },
+  "geometry_after": {
+    ".pk": {
+      "left": 16,
+      "top": 388,
+      "width": 358,
+      "height": 353,
+      "right": 374,
+      "bottom": 741,
+      "centerX": 195,
+      "centerY": 564.5
+    },
+    ".pk-opts": {
+      "left": 16,
+      "top": 388,
+      "width": 358,
+      "height": 353,
+      "right": 374,
+      "bottom": 741,
+      "centerX": 195,
+      "centerY": 564.5
+    },
+    ".pk-opt": {
+      "left": 16,
+      "top": 388,
+      "width": 358,
+      "height": 59,
+      "right": 374,
+      "bottom": 447,
+      "centerX": 195,
+      "centerY": 417.5
+    },
+    ".pk-opt-name": {
+      "left": 16,
+      "top": 395.5,
+      "width": 330,
+      "height": 22,
+      "right": 346,
+      "bottom": 417.5,
+      "centerX": 181,
+      "centerY": 406.5
+    },
+    ".pk-opt-tick": {
+      "left": 354,
+      "top": 407,
+      "width": 20,
+      "height": 20,
+      "right": 374,
+      "bottom": 427,
+      "centerX": 364,
+      "centerY": 417
+    },
+    ".sh__panel": {
+      "left": 0,
+      "top": 307,
+      "width": 390,
+      "height": 537,
+      "right": 390,
+      "bottom": 844,
+      "centerX": 195,
+      "centerY": 575.5
+    },
+    ".sh__title": {
+      "left": 16,
+      "top": 335,
+      "width": 358,
+      "height": 45,
+      "right": 374,
+      "bottom": 380,
+      "centerX": 195,
+      "centerY": 357.5
+    },
+    ".sh__body": {
+      "left": 16,
+      "top": 384,
+      "width": 358,
+      "height": 361,
+      "right": 374,
+      "bottom": 745,
+      "centerX": 195,
+      "centerY": 564.5
+    },
+    "labelSize": "14px",
+    ".apply": {
+      "left": 16,
+      "top": 753,
+      "width": 358,
+      "height": 45,
+      "right": 374,
+      "bottom": 798,
+      "centerX": 195,
+      "centerY": 775.5
+    },
+    "buttonSize": "16px"
+  },
+  "long_label_before": {
+    "row": {
+      "left": 16,
+      "top": 509,
+      "width": 358,
+      "height": 58,
+      "right": 374,
+      "bottom": 567,
+      "centerX": 195,
+      "centerY": 538
+    },
+    "label": {
+      "left": 16,
+      "top": 515.102,
+      "width": 338,
+      "height": 45,
+      "right": 354,
+      "bottom": 560.102,
+      "centerX": 185,
+      "centerY": 537.602
+    },
+    "dot": {
+      "left": 354,
+      "top": 527.5,
+      "width": 20,
+      "height": 20,
+      "right": 374,
+      "bottom": 547.5,
+      "centerX": 364,
+      "centerY": 537.5
+    },
+    "gap": 0,
+    "labelSize": "14px",
+    "lineHeight": "22.4px"
+  },
+  "long_label_after": {
+    "row": {
+      "left": 16,
+      "top": 505.203,
+      "width": 358,
+      "height": 62,
+      "right": 374,
+      "bottom": 567.203,
+      "centerX": 195,
+      "centerY": 536.203
+    },
+    "label": {
+      "left": 16,
+      "top": 513.203,
+      "width": 330,
+      "height": 45,
+      "right": 346,
+      "bottom": 558.203,
+      "centerX": 181,
+      "centerY": 535.703
+    },
+    "dot": {
+      "left": 354,
+      "top": 525.602,
+      "width": 20,
+      "height": 20,
+      "right": 374,
+      "bottom": 545.602,
+      "centerX": 364,
+      "centerY": 535.602
+    },
+    "gap": 8,
+    "labelSize": "14px",
+    "lineHeight": "22.4px"
+  },
+  "club_selection": {
+    "typeDraft": true,
+    "typeCancel": true,
+    "typeApplyAndClose": true,
+    "typeReopen": true,
+    "prefsLimit": true,
+    "prefsApplyAndClose": true,
+    "prefsReopen": true,
+    "prefsCancel": true,
+    "storedProfileWrite": false,
+    "loadState": "missing-param"
+  },
+  "nested_host": {
+    "route": "pages/club/detail/index",
+    "controlled_scene": true,
+    "load_state": "missing-param",
+    "normal_business_entry": false,
+    "panel": {
+      "left": 0,
+      "top": 307,
+      "width": 390,
+      "height": 537,
+      "right": 390,
+      "bottom": 844,
+      "centerX": 195,
+      "centerY": 575.5
+    },
+    "title": {
+      "left": 16,
+      "top": 335,
+      "width": 358,
+      "height": 45,
+      "right": 374,
+      "bottom": 380,
+      "centerX": 195,
+      "centerY": 357.5
+    },
+    "button": {
+      "left": 16,
+      "top": 753,
+      "width": 358,
+      "height": 45,
+      "right": 374,
+      "bottom": 798,
+      "centerX": 195,
+      "centerY": 775.5
+    },
+    "type_close": true,
+    "prefs_close": true
+  },
+  "option_selection": {
+    "two_row_taps_read_back": true,
+    "close_read_back": true,
+    "confirm_business_action_executed": false
+  },
+  "tests": {
+    "passed": 62,
+    "failed": 0,
+    "skipped": 0,
+    "existing_test_files": 12,
+    "log": "round4-tests.txt"
+  },
+  "native_compile_success": 5,
+  "ui_gate": {
+    "status": "PASS",
+    "complete_isolated_snapshot": true,
+    "source_bytes_match": true,
+    "temporary_snapshot_removed": true,
+    "excluded_foreign_files": [
+      "chengyinhub-xcx/pages/publish/activity/index.wxml",
+      "chengyinhub-xcx/tests/unit/nav-polish-single-title-contract.test.js"
+    ]
+  },
+  "limits": [
+    "原生受控显示：合作评价、俱乐部深链和管理页嵌套宿主均缺业务编号；未绕过权限、保存资料或提交评价。",
+    "验证选择、取消、应用、重新打开和最多3项限制；未验证真实俱乐部正常业务入口或真机。",
+    "长选项使用临时显示文字，结束恢复；旧勋章长内容末端滚动和WebGL墙模式关闭回读仍未完成。"
+  ]
+}

@@ -1,0 +1,966 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ClubEventOpsMapper">
+    <resultMap id="seriesResult" type="com.chengyinhub.business.domain.ClubEventSeries">
+        <id property="id" column="id"/>
+        <result property="clubId" column="club_id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="recurrenceType" column="recurrence_type"/>
+        <result property="timezone" column="timezone"/>
+        <result property="defaultLeadMemberId" column="default_lead_member_id"/>
+        <result property="defaultCapacity" column="default_capacity"/>
+        <result property="waitlistEnabled" column="waitlist_enabled"/>
+        <result property="offerMinutes" column="offer_minutes"/>
+        <result property="status" column="status"/>
+        <result property="version" column="version"/>
+        <result property="createdByMemberId" column="created_by_member_id"/>
+        <result property="requestId" column="request_id"/>
+        <result property="requestFingerprint" column="request_fingerprint"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="waitlistResult" type="com.chengyinhub.business.domain.ClubWaitlistEntry">
+        <id property="id" column="id"/>
+        <result property="clubId" column="club_id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="ticketId" column="ticket_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="state" column="state"/>
+        <result property="joinedAt" column="joined_at"/>
+        <result property="offeredAt" column="offered_at"/>
+        <result property="offerExpiresAt" column="offer_expires_at"/>
+        <result property="offerTokenHash" column="offer_token_hash"/>
+        <result property="registrationId" column="registration_id"/>
+        <result property="version" column="version"/>
+    </resultMap>
+
+    <resultMap id="occurrenceResult" type="com.chengyinhub.business.domain.ClubEventOccurrence">
+        <id property="id" column="id"/>
+        <result property="seriesId" column="series_id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="occurrenceAt" column="occurrence_at"/>
+        <result property="defaultLeadMemberId" column="default_lead_member_id"/>
+        <result property="status" column="status"/>
+        <result property="version" column="version"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <resultMap id="cancellationStateResult"
+               type="com.chengyinhub.business.domain.vo.ClubEventCancellationStateVO">
+        <result property="clubId" column="club_id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="occurrenceStatus" column="occurrence_status"/>
+        <result property="activityCancelled" column="activity_cancelled"/>
+        <result property="publishStatus" column="publish_status"/>
+        <result property="cancelReason" column="cancel_reason"/>
+    </resultMap>
+
+    <sql id="seriesColumns">
+        id, club_id, topic_id, recurrence_type, timezone, default_lead_member_id, default_capacity,
+        waitlist_enabled, offer_minutes, status, version, created_by_member_id,
+        request_id, request_fingerprint, create_by, create_time, update_by, update_time
+    </sql>
+    <sql id="waitlistColumns">
+        id, club_id, activity_id, ticket_id, member_id, state, joined_at,
+        offered_at, offer_expires_at, offer_token_hash, registration_id, version
+    </sql>
+
+    <select id="selectSeriesByRequest" resultMap="seriesResult">
+        select <include refid="seriesColumns"/>
+        from club_event_series
+        where club_id = #{clubId} and created_by_member_id = #{actorMemberId}
+          and request_id = #{requestId}
+        limit 1
+    </select>
+
+    <select id="selectSeriesByRequestForUpdate" resultMap="seriesResult">
+        select <include refid="seriesColumns"/>
+        from club_event_series
+        where club_id = #{clubId} and created_by_member_id = #{actorMemberId}
+          and request_id = #{requestId}
+        limit 1 for update
+    </select>
+
+    <select id="selectActiveSeriesByClub" resultMap="seriesResult">
+        select <include refid="seriesColumns"/>
+        from club_event_series
+        where club_id = #{clubId} and status = 'ACTIVE'
+        order by update_time desc, id desc
+    </select>
+
+    <select id="selectActiveSeriesByIdAndClub" resultMap="seriesResult">
+        select <include refid="seriesColumns"/>
+        from club_event_series
+        where id = #{seriesId} and club_id = #{clubId} and status = 'ACTIVE'
+        limit 1
+    </select>
+
+    <select id="selectFutureOccurrences" resultMap="occurrenceResult">
+        select o.id, o.series_id, o.activity_id, o.occurrence_at,
+               o.default_lead_member_id, o.status, o.version, o.create_time
+        from club_event_occurrence o
+        inner join club_event_series s on s.id = o.series_id and s.club_id = #{clubId}
+          and s.status = 'ACTIVE'
+        inner join cms_activity a on a.id = o.activity_id and a.club_id = #{clubId}
+          and a.del_flag = 0 and a.start_date &gt; #{now}
+        where o.series_id = #{seriesId} and o.status = 'ACTIVE'
+        order by o.occurrence_at asc, o.id asc
+    </select>
+
+    <resultMap id="occurrenceRowResult" type="com.chengyinhub.business.domain.vo.ClubEventOccurrenceRowVO">
+        <result property="occurrenceId"  column="occurrence_id"  />
+        <result property="activityId"    column="activity_id"    />
+        <result property="occurrenceAt"  column="occurrence_at"  />
+        <result property="status"        column="status"         />
+        <result property="version"       column="version"        />
+        <result property="signupCount"   column="signup_count"   />
+        <result property="refundedCount" column="refunded_count" />
+    </resultMap>
+
+    <!-- Figma E1「日期清单」。与 selectFutureOccurrences 的区别:不过滤时间、不过滤状态。
+         报名数按 owner_type=2(活动)统计:registration_status 2=报名成功、3=已取消/已退款。 -->
+    <select id="selectSeriesOccurrenceRows" resultMap="occurrenceRowResult">
+        select o.id as occurrence_id, o.activity_id, o.occurrence_at, o.status, o.version,
+               (select count(*) from cms_registration r
+                 where r.owner_type = 2 and r.owner_id = o.activity_id
+                   and r.registration_status = 2) as signup_count,
+               (select count(*) from cms_registration r
+                 where r.owner_type = 2 and r.owner_id = o.activity_id
+                   and r.registration_status = 3) as refunded_count
+        from club_event_occurrence o
+        inner join club_event_series s on s.id = o.series_id and s.club_id = #{clubId}
+        inner join cms_activity a on a.id = o.activity_id and a.club_id = #{clubId} and a.del_flag = 0
+        where o.series_id = #{seriesId}
+        order by o.occurrence_at asc, o.id asc
+    </select>
+
+    <insert id="insertSeries" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.ClubEventSeries">
+        insert into club_event_series
+          (club_id, topic_id, recurrence_type, timezone, default_lead_member_id, default_capacity,
+           waitlist_enabled, offer_minutes, status, version, created_by_member_id,
+           request_id, request_fingerprint, create_by, create_time, update_by, update_time)
+        values
+          (#{clubId}, #{topicId}, #{recurrenceType}, #{timezone}, #{defaultLeadMemberId}, #{defaultCapacity},
+           #{waitlistEnabled}, #{offerMinutes}, #{status}, #{version}, #{createdByMemberId},
+           #{requestId}, #{requestFingerprint}, #{createBy}, #{createTime}, #{updateBy}, #{updateTime})
+    </insert>
+
+    <select id="selectActivityTicketIdsForUpdate" resultType="long">
+        select id from oms_ticket
+        where owner_type = 2 and owner_id = #{activityId} and del_flag = 0
+        order by id asc for update
+    </select>
+
+    <update id="updateUnsoldActivityTicketCapacity">
+        update oms_ticket
+        set total_inventory = #{capacity}, remaining_inventory = #{capacity}, update_time = now()
+        where id = #{ticketId} and owner_type = 2 and owner_id = #{activityId} and del_flag = 0
+          and total_inventory = remaining_inventory
+    </update>
+
+    <insert id="insertOccurrence" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.ClubEventOccurrence">
+        insert into club_event_occurrence
+          (series_id, activity_id, occurrence_at, default_lead_member_id, status, version, create_time)
+        values
+          (#{seriesId}, #{activityId}, #{occurrenceAt}, #{defaultLeadMemberId}, #{status}, #{version}, #{createTime})
+    </insert>
+
+    <select id="selectSeriesByIdForUpdate" resultMap="seriesResult">
+        select <include refid="seriesColumns"/>
+        from club_event_series where id = #{seriesId} for update
+    </select>
+
+    <!-- 半开未来窗：仅 start_date > now；已开始场次永远不进入可编辑集合。 -->
+    <select id="selectFutureOccurrencesForUpdate" resultMap="occurrenceResult">
+        select o.id, o.series_id, o.activity_id, o.occurrence_at,
+               o.default_lead_member_id, o.status, o.version, o.create_time
+        from club_event_occurrence o
+        inner join cms_activity a on a.id = o.activity_id and a.del_flag = 0
+        where o.series_id = #{seriesId} and o.status = 'ACTIVE' and a.start_date &gt; #{now}
+        order by o.occurrence_at asc, o.id asc
+        for update
+    </select>
+
+    <!-- 任意报名事实或结算领取都保护该活动，不能由系列重排改写。 -->
+    <select id="countProtectedActivityHistory" resultType="int">
+        select case when exists (
+          select 1 from cms_activity a
+          where a.id = #{activityId} and ifnull(a.is_settlement, 0) &lt;&gt; 0
+        ) or exists (
+          select 1 from cms_registration r
+          where r.owner_type = 2 and r.owner_id = #{activityId}
+        ) or exists (
+          select 1 from club_event_waitlist w
+          where w.activity_id = #{activityId} and w.state in ('WAITING','OFFERED','CLAIMED')
+        ) then 1 else 0 end
+    </select>
+
+    <update id="cancelFutureActivityCas">
+        update cms_activity a
+        set a.status = 0, a.publish_status = 0, a.cancel_time = #{now},
+            a.cancel_reason = '系列未来场次重排', a.update_by = #{username}, a.update_time = #{now}
+        where a.id = #{activityId} and a.del_flag = 0 and a.start_date &gt; #{now}
+          and ifnull(a.is_settlement, 0) = 0
+          and not exists (
+            select 1 from cms_registration r
+            where r.owner_type = 2 and r.owner_id = a.id
+          )
+    </update>
+
+    <update id="cancelOccurrenceCas">
+        update club_event_occurrence
+        set status = 'CANCELLED', version = version + 1
+        where id = #{id} and status = 'ACTIVE' and version = #{expectedVersion}
+    </update>
+
+    <update id="updateSeriesScheduleCas">
+        update club_event_series
+        set recurrence_type = #{recurrenceType}, version = version + 1,
+            update_by = #{username}, update_time = #{now}
+        where id = #{seriesId} and status = 'ACTIVE' and version = #{expectedVersion}
+    </update>
+
+    <sql id="seriesPolicyByActivity">
+        select s.id, s.club_id, s.topic_id, s.recurrence_type, s.timezone,
+               s.default_lead_member_id, s.default_capacity, s.waitlist_enabled, s.offer_minutes,
+               s.status, s.version, s.created_by_member_id, s.request_id, s.request_fingerprint,
+               s.create_by, s.create_time, s.update_by, s.update_time
+        from club_event_series s
+        inner join club_event_occurrence o on o.series_id = s.id
+          and o.activity_id = #{activityId} and o.status = 'ACTIVE'
+        inner join cms_activity a on a.id = o.activity_id
+          and a.club_id = s.club_id and a.del_flag = 0
+        where s.status = 'ACTIVE'
+    </sql>
+
+    <!-- activity_id + active occurrence + cms_activity.club_id 必须与 series.club_id 同时成立。 -->
+    <select id="selectSeriesPolicyByActivity" resultMap="seriesResult">
+        <include refid="seriesPolicyByActivity"/>
+    </select>
+
+    <select id="selectSeriesPolicyByActivityForUpdate" resultMap="seriesResult">
+        <include refid="seriesPolicyByActivity"/>
+        for update
+    </select>
+
+    <!-- OFFERED 过期即使系列随后关闭也必须先锁同一 series 并归还 hold。 -->
+    <select id="selectSeriesByActivityAnyStatusForUpdate" resultMap="seriesResult">
+        select s.id, s.club_id, s.topic_id, s.recurrence_type, s.timezone,
+               s.default_lead_member_id, s.default_capacity, s.waitlist_enabled, s.offer_minutes,
+               s.status, s.version, s.created_by_member_id, s.request_id, s.request_fingerprint,
+               s.create_by, s.create_time, s.update_by, s.update_time
+        from club_event_series s
+        inner join club_event_occurrence o on o.series_id = s.id and o.activity_id = #{activityId}
+        inner join cms_activity a on a.id = o.activity_id and a.club_id = s.club_id
+        limit 1 for update
+    </select>
+
+    <select id="selectActivityTopicForUpdate" resultType="java.lang.Long">
+        select topic_id
+        from cms_activity
+        where id = #{activityId} and club_id = #{clubId} and del_flag = 0
+        for update
+    </select>
+
+    <select id="selectOccurrenceByActivityAndClubForUpdate" resultMap="occurrenceResult">
+        select o.id, o.series_id, o.activity_id, o.occurrence_at,
+               o.default_lead_member_id, o.status, o.version, o.create_time
+        from club_event_occurrence o
+        inner join club_event_series s on s.id = o.series_id and s.club_id = #{clubId}
+        inner join cms_activity a on a.id = o.activity_id and a.club_id = s.club_id and a.del_flag = 0
+        where o.activity_id = #{activityId}
+        limit 1 for update
+    </select>
+
+    <select id="selectOccurrenceCancellationState" resultMap="cancellationStateResult">
+        select a.club_id, a.id as activity_id,
+               case when o.id is null
+                    then case when a.cancel_time is not null then 'CANCELLED' else 'ACTIVE' end
+                    else o.status end as occurrence_status,
+               case when a.cancel_time is not null then 1 else 0 end as activity_cancelled,
+               a.publish_status, a.cancel_reason
+        from cms_activity a
+        left join club_event_occurrence o on o.activity_id = a.id
+        left join club_event_series s on s.id = o.series_id
+        where a.id = #{activityId} and a.club_id = #{clubId} and a.del_flag = 0
+          and (o.id is null or s.club_id = #{clubId})
+        limit 1
+    </select>
+
+    <select id="isActiveParticipant" resultType="int">
+        select case when exists (
+          select 1 from club c
+          where c.id = #{clubId} and c.status = 1 and c.del_flag = 0
+            and (c.member_id = #{memberId} or exists (
+              select 1 from club_member cm
+              where cm.club_id = c.id and cm.member_id = #{memberId}
+                and cm.status = 1 and cm.del_flag = 0
+            ))
+        ) then 1 else 0 end
+    </select>
+
+    <!-- 所有可能触发晋级的路径先锁 club，统一正常报名的 club -> ticket 锁序。 -->
+    <select id="selectClubOwnerForUpdate" resultType="java.lang.Long">
+        select member_id from club
+        where id = #{clubId}
+        for update
+    </select>
+
+    <select id="selectActiveClubMemberForUpdate" resultType="java.lang.Long">
+        select member_id from club_member
+        where club_id = #{clubId} and member_id = #{memberId}
+          and status = 1 and del_flag = 0
+        limit 1 for update
+    </select>
+
+    <select id="countActiveRegistration" resultType="int">
+        select count(*) from cms_registration
+        where owner_type = 2 and owner_id = #{activityId} and ticket_id = #{ticketId}
+          and member_id = #{memberId}
+          and registration_status in (1, 2) and payment_status in (0, 1, 2)
+    </select>
+
+    <select id="selectActiveWaitlist" resultMap="waitlistResult">
+        select <include refid="waitlistColumns"/>
+        from club_event_waitlist
+        where member_id = #{memberId} and activity_id = #{activityId} and ticket_id = #{ticketId}
+          and state in ('WAITING','OFFERED','CLAIMED')
+        limit 1
+    </select>
+
+    <select id="selectLatestWaitlist" resultMap="waitlistResult">
+        select <include refid="waitlistColumns"/>
+        from club_event_waitlist
+        where member_id = #{memberId} and activity_id = #{activityId} and ticket_id = #{ticketId}
+        order by joined_at desc, id desc
+        limit 1
+    </select>
+
+    <select id="selectActiveWaitlistForUpdate" resultMap="waitlistResult">
+        select <include refid="waitlistColumns"/>
+        from club_event_waitlist
+        where member_id = #{memberId} and activity_id = #{activityId} and ticket_id = #{ticketId}
+          and state in ('WAITING','OFFERED','CLAIMED')
+        limit 1 for update
+    </select>
+
+    <update id="cancelActiveWaitlistCas">
+        update club_event_waitlist
+        set state = 'CANCELLED', version = version + 1
+        where id = #{id} and state = #{expectedState} and version = #{expectedVersion}
+          and member_id = #{memberId} and activity_id = #{activityId} and ticket_id = #{ticketId}
+    </update>
+
+    <select id="selectActiveWaitlistsForUpdate" resultMap="waitlistResult">
+        select <include refid="waitlistColumns"/>
+        from club_event_waitlist
+        where club_id = #{clubId} and activity_id = #{activityId}
+          and state in ('WAITING','OFFERED','CLAIMED')
+        order by ticket_id asc, id asc
+        for update
+    </select>
+
+    <update id="restoreWaitlistHold">
+        update oms_ticket
+        set remaining_inventory = remaining_inventory + 1,
+            update_time = now()
+        where id = #{ticketId} and owner_type = 2 and owner_id = #{activityId}
+          and del_flag = 0 and remaining_inventory &lt; total_inventory
+    </update>
+
+    <insert id="insertWaitlist" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.ClubWaitlistEntry">
+        insert into club_event_waitlist
+          (club_id, activity_id, ticket_id, member_id, state, joined_at, version)
+        values
+          (#{clubId}, #{activityId}, #{ticketId}, #{memberId}, #{state}, #{joinedAt}, #{version})
+    </insert>
+
+    <select id="selectFirstWaitingForUpdate" resultMap="waitlistResult">
+        select <include refid="waitlistColumns"/>
+        from club_event_waitlist
+        where activity_id = #{activityId} and ticket_id = #{ticketId} and state = 'WAITING'
+        order by joined_at asc, id asc
+        limit 1 for update
+    </select>
+
+    <update id="offerWaitingCas">
+        update club_event_waitlist
+        set state = 'OFFERED', offered_at = #{offeredAt}, offer_expires_at = #{expiresAt},
+            offer_token_hash = #{tokenHash}, version = version + 1
+        where id = #{id} and state = 'WAITING' and version = #{expectedVersion}
+    </update>
+
+    <select id="selectWaitlistByIdForUpdate" resultMap="waitlistResult">
+        select <include refid="waitlistColumns"/>
+        from club_event_waitlist where id = #{id} for update
+    </select>
+
+    <select id="selectWaitlistById" resultMap="waitlistResult">
+        select <include refid="waitlistColumns"/>
+        from club_event_waitlist where id = #{id}
+    </select>
+
+    <update id="claimOfferCas">
+        update club_event_waitlist
+        set state = 'CLAIMED', version = version + 1
+        where id = #{id} and state = 'OFFERED' and version = #{expectedVersion}
+          and member_id = #{memberId} and activity_id = #{activityId} and ticket_id = #{ticketId}
+          and offer_expires_at &gt; #{now}
+    </update>
+
+    <update id="bindClaimedRegistrationCas">
+        update club_event_waitlist
+        set registration_id = #{registrationId}, version = version + 1
+        where id = #{id} and state = 'CLAIMED' and registration_id is null
+    </update>
+
+    <select id="selectWaitlistByRegistrationForUpdate" resultMap="waitlistResult">
+        select <include refid="waitlistColumns"/>
+        from club_event_waitlist where registration_id = #{registrationId} for update
+    </select>
+
+    <select id="selectWaitlistByRegistration" resultMap="waitlistResult">
+        select <include refid="waitlistColumns"/>
+        from club_event_waitlist where registration_id = #{registrationId}
+    </select>
+
+    <update id="convertClaimedByRegistration">
+        update club_event_waitlist
+        set state = 'CONVERTED', version = version + 1
+        where registration_id = #{registrationId} and state = 'CLAIMED'
+    </update>
+
+    <select id="selectExpiredOfferedIds" resultType="long">
+        select id from club_event_waitlist
+        where state = 'OFFERED' and offer_expires_at &lt;= #{now}
+        order by offer_expires_at asc, id asc limit #{limit}
+    </select>
+
+    <update id="expireOfferedCas">
+        update club_event_waitlist
+        set state = 'EXPIRED', version = version + 1
+        where id = #{id} and state = 'OFFERED' and version = #{expectedVersion}
+          and offer_expires_at &lt;= #{now}
+    </update>
+
+    <select id="selectClaimedPaidRegistrationIds" resultType="long">
+        select w.registration_id
+        from club_event_waitlist w
+        inner join cms_registration r on r.id = w.registration_id
+        where w.state = 'CLAIMED' and r.payment_status = 2 and r.registration_status = 2
+        order by w.id asc limit #{limit}
+    </select>
+
+    <select id="selectClaimedTerminalRegistrationIds" resultType="long">
+        select w.registration_id
+        from club_event_waitlist w
+        inner join cms_registration r on r.id = w.registration_id
+        where w.state = 'CLAIMED'
+          and (r.registration_status in (3, 4) or r.payment_status in (3, 4))
+        order by w.id asc limit #{limit}
+    </select>
+
+    <update id="expireClaimedTerminalCas">
+        update club_event_waitlist w
+        inner join cms_registration r on r.id = w.registration_id
+        set w.state = 'EXPIRED', w.version = w.version + 1
+        where w.registration_id = #{registrationId} and w.state = 'CLAIMED'
+          and (r.registration_status in (3, 4) or r.payment_status in (3, 4))
+    </update>
+
+    <!-- 普通报名关单/取消已由既有流程回补库存；任务只发现有余量的 WAITING 队列并尝试晋级。 -->
+    <select id="selectPromotableWaitlistScopes" resultType="java.util.LinkedHashMap">
+        select w.activity_id as activityId, w.ticket_id as ticketId
+        from club_event_waitlist w
+        inner join club_event_occurrence o on o.activity_id = w.activity_id and o.status = 'ACTIVE'
+        inner join club_event_series s on s.id = o.series_id and s.club_id = w.club_id
+          and s.status = 'ACTIVE' and s.waitlist_enabled = 1
+        inner join cms_activity a on a.id = w.activity_id and a.club_id = w.club_id
+          and a.status = 1 and a.publish_status = 1 and a.del_flag = 0 and a.end_date &gt; #{now}
+        inner join oms_ticket t on t.id = w.ticket_id and t.owner_type = 2
+          and t.owner_id = w.activity_id and t.del_flag = 0 and t.remaining_inventory &gt; 0
+        where w.state = 'WAITING'
+          and (coalesce(t.signup_deadline, t.start_time) is null
+            or coalesce(t.signup_deadline, t.start_time) &gt; #{now})
+        group by w.activity_id, w.ticket_id
+        order by min(w.joined_at) asc, min(w.id) asc
+        limit #{limit}
+    </select>
+
+    <resultMap id="attendanceRowResult" type="java.util.LinkedHashMap" autoMapping="true">
+        <result property="baseArrivedAt" column="baseArrivedAt" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+        <result property="correctedArrivedAt" column="correctedArrivedAt" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 本场必要名册：只取昵称与到场事实，禁止手机号/邮箱/地址。 -->
+    <select id="selectPaidRoster" resultMap="attendanceRowResult">
+        select paid.member_id as memberId,
+               coalesce(nullif(m.nickname, ''), nullif(m.name, ''), concat('成员#', paid.member_id)) as nickname,
+               ck.arrived_at as baseArrivedAt,
+               corr.new_arrived as correctedArrived,
+               corr.new_arrived_at as correctedArrivedAt,
+               coalesce(corr.version, 0) as correctionVersion
+        from (
+          select distinct member_id
+          from cms_registration
+          where owner_type = 2 and owner_id = #{activityId}
+            and payment_status = 2 and registration_status = 2
+        ) paid
+        left join ums_member m on m.id = paid.member_id and m.del_flag = 0
+        left join club_lead_checkin ck on ck.activity_id = #{activityId} and ck.member_id = paid.member_id
+        left join club_event_attendance_correction corr on corr.id = (
+          select max(c2.id) from club_event_attendance_correction c2
+          where c2.activity_id = #{activityId} and c2.member_id = paid.member_id
+        )
+        order by paid.member_id asc
+    </select>
+
+    <select id="selectWaitlistRoster" resultType="java.util.LinkedHashMap">
+        select w.member_id as memberId,
+               coalesce(nullif(m.nickname, ''), nullif(m.name, ''), concat('成员#', w.member_id)) as nickname,
+               w.ticket_id as ticketId, w.state, w.joined_at as joinedAt,
+               w.offer_expires_at as offerExpiresAt
+        from club_event_waitlist w
+        left join ums_member m on m.id = w.member_id and m.del_flag = 0
+        where w.activity_id = #{activityId} and w.state in ('WAITING','OFFERED','CLAIMED')
+        order by w.joined_at asc, w.id asc
+    </select>
+
+    <select id="selectAttendanceTargetForUpdate" resultMap="attendanceRowResult">
+        select r.member_id as memberId, 1 as paidCount, ck.arrived_at as baseArrivedAt
+        from cms_registration r
+        left join club_lead_checkin ck on ck.activity_id = r.owner_id and ck.member_id = r.member_id
+        where r.owner_type = 2 and r.owner_id = #{activityId} and r.member_id = #{memberId}
+          and r.payment_status = 2 and r.registration_status = 2
+        order by r.id asc limit 1 for update
+    </select>
+
+    <select id="selectLatestCorrectionForUpdate"
+            resultType="com.chengyinhub.business.domain.ClubEventAttendanceCorrection">
+        select id, club_id as clubId, activity_id as activityId, member_id as memberId,
+               original_arrived as originalArrived, new_arrived as newArrived,
+               original_arrived_at as originalArrivedAt, new_arrived_at as newArrivedAt,
+               reason, actor_member_id as actorMemberId, request_id as requestId,
+               version, corrected_at as correctedAt
+        from club_event_attendance_correction
+        where activity_id = #{activityId} and member_id = #{memberId}
+        order by version desc limit 1 for update
+    </select>
+
+    <select id="selectAttendanceCorrectionByRequestForUpdate"
+            resultType="com.chengyinhub.business.domain.ClubEventAttendanceCorrection">
+        select id, club_id as clubId, activity_id as activityId, member_id as memberId,
+               original_arrived as originalArrived, new_arrived as newArrived,
+               original_arrived_at as originalArrivedAt, new_arrived_at as newArrivedAt,
+               reason, actor_member_id as actorMemberId, request_id as requestId,
+               version, corrected_at as correctedAt
+        from club_event_attendance_correction
+        where actor_member_id = #{actorMemberId} and request_id = #{requestId}
+        limit 1 for update
+    </select>
+
+    <insert id="insertAttendanceCorrection" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.ClubEventAttendanceCorrection">
+        insert into club_event_attendance_correction
+          (club_id, activity_id, member_id, original_arrived, new_arrived,
+           original_arrived_at, new_arrived_at, reason, actor_member_id,
+           request_id, version, corrected_at)
+        values
+          (#{clubId}, #{activityId}, #{memberId}, #{originalArrived}, #{newArrived},
+           #{originalArrivedAt}, #{newArrivedAt}, #{reason}, #{actorMemberId},
+           #{requestId}, #{version}, #{correctedAt})
+    </insert>
+
+    <resultMap id="campaignResult" type="com.chengyinhub.business.domain.ClubEventCampaign">
+        <id property="id" column="id"/>
+        <result property="clubId" column="club_id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="audienceType" column="audience_type"/>
+        <result property="channel" column="channel"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="status" column="status"/>
+        <result property="actorMemberId" column="actor_member_id"/>
+        <result property="requestId" column="request_id"/>
+        <result property="totalCount" column="total_count"/>
+        <result property="successCount" column="success_count"/>
+        <result property="failedCount" column="failed_count"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="deliveryResult" type="com.chengyinhub.business.domain.ClubEventDelivery">
+        <id property="id" column="id"/>
+        <result property="campaignId" column="campaign_id"/>
+        <result property="recipientMemberId" column="recipient_member_id"/>
+        <result property="channel" column="channel"/>
+        <result property="status" column="status"/>
+        <result property="attemptCount" column="attempt_count"/>
+        <result property="messageId" column="message_id"/>
+        <result property="lastError" column="last_error"/>
+        <result property="sentAt" column="sent_at"/>
+        <result property="version" column="version"/>
+    </resultMap>
+
+    <sql id="campaignColumns">
+        id, club_id, activity_id, audience_type, channel, title, content, status,
+        actor_member_id, request_id, total_count, success_count, failed_count, create_time, update_time
+    </sql>
+
+    <select id="selectCampaignByRequest" resultMap="campaignResult">
+        select <include refid="campaignColumns"/>
+        from club_event_notification_campaign
+        where club_id = #{clubId} and actor_member_id = #{actorMemberId} and request_id = #{requestId}
+        limit 1
+    </select>
+
+    <select id="selectCampaignById" resultMap="campaignResult">
+        select <include refid="campaignColumns"/>
+        from club_event_notification_campaign where id = #{id}
+    </select>
+
+    <insert id="insertCampaign" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.ClubEventCampaign">
+        insert into club_event_notification_campaign
+          (club_id, activity_id, audience_type, channel, title, content, status,
+           actor_member_id, request_id, total_count, success_count, failed_count, create_time, update_time)
+        values
+          (#{clubId}, #{activityId}, #{audienceType}, #{channel}, #{title}, #{content}, #{status},
+           #{actorMemberId}, #{requestId}, #{totalCount}, #{successCount}, #{failedCount}, #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="selectAllMemberRecipients" resultType="long">
+        select member_id from (
+          select c.member_id from club c
+          where c.id = #{clubId} and c.status = 1 and c.del_flag = 0
+          union
+          select cm.member_id from club_member cm
+          inner join club c on c.id = cm.club_id and c.status = 1 and c.del_flag = 0
+          where cm.club_id = #{clubId} and cm.status = 1 and cm.del_flag = 0
+        ) recipients order by member_id asc
+    </select>
+
+    <select id="selectAdminRecipients" resultType="long">
+        select member_id from (
+          select c.member_id from club c
+          where c.id = #{clubId} and c.status = 1 and c.del_flag = 0
+          union
+          select cra.target_member_id from club_role_assignment cra
+          inner join club_member cm on cm.club_id = cra.club_id
+            and cm.member_id = cra.target_member_id and cm.status = 1 and cm.del_flag = 0
+          where cra.club_id = #{clubId} and cra.scope_type = 'CLUB' and cra.scope_id = #{clubId}
+            and cra.role_code in ('CLUB_CO_OWNER','CLUB_OPERATOR')
+            and cra.status = 'ACTIVE' and (cra.expires_at is null or cra.expires_at &gt; now())
+        ) recipients order by member_id asc
+    </select>
+
+    <select id="selectRegisteredRecipients" resultType="long">
+        select distinct r.member_id
+        from cms_registration r
+        inner join cms_activity a on a.id = r.owner_id and a.club_id = #{clubId} and a.del_flag = 0
+        where r.owner_type = 2 and r.owner_id = #{activityId}
+          and r.payment_status = 2 and r.registration_status = 2
+        order by r.member_id asc
+    </select>
+
+    <select id="selectWaitlistRecipients" resultType="long">
+        select distinct w.member_id
+        from club_event_waitlist w
+        inner join cms_activity a on a.id = w.activity_id and a.club_id = w.club_id and a.del_flag = 0
+        where w.club_id = #{clubId} and w.activity_id = #{activityId}
+          and w.state in ('WAITING','OFFERED','CLAIMED')
+        order by w.member_id asc
+    </select>
+
+    <select id="selectNoShowRecipients" resultType="long">
+        select distinct r.member_id
+        from cms_registration r
+        inner join cms_activity a on a.id = r.owner_id
+          and a.club_id = #{clubId} and a.id = #{activityId} and a.del_flag = 0 and a.end_date &lt;= now()
+        left join club_lead_checkin ck on ck.activity_id = a.id and ck.member_id = r.member_id
+        left join club_event_attendance_correction corr on corr.id = (
+          select max(c2.id) from club_event_attendance_correction c2
+          where c2.activity_id = a.id and c2.member_id = r.member_id
+        )
+        where r.owner_type = 2 and r.payment_status = 2 and r.registration_status = 2
+          and case when corr.id is not null then corr.new_arrived = 0 else ck.id is null end
+        order by r.member_id asc
+    </select>
+
+    <!-- INACTIVE = 正常成员/owner 在本俱乐部最近 90 天没有已支付活动报名。 -->
+    <select id="selectInactiveRecipients" resultType="long">
+        select members.member_id
+        from (
+          select c.member_id from club c
+          where c.id = #{clubId} and c.status = 1 and c.del_flag = 0
+          union
+          select cm.member_id from club_member cm
+          where cm.club_id = #{clubId} and cm.status = 1 and cm.del_flag = 0
+        ) members
+        where not exists (
+          select 1 from cms_registration r
+          inner join cms_activity a on a.id = r.owner_id and a.club_id = #{clubId} and a.del_flag = 0
+          where r.owner_type = 2 and r.member_id = members.member_id
+            and r.payment_status = 2 and r.registration_status = 2
+            and r.payment_time &gt;= date_sub(now(), interval 90 day)
+        )
+        order by members.member_id asc
+    </select>
+
+    <insert id="insertDelivery" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.ClubEventDelivery">
+        insert into club_event_notification_delivery
+          (campaign_id, recipient_member_id, channel, status, attempt_count, version, create_time, update_time)
+        values
+          (#{campaignId}, #{recipientMemberId}, #{channel}, #{status}, #{attemptCount}, #{version}, now(), now())
+    </insert>
+
+    <insert id="insertOutbox">
+        insert into club_event_notification_outbox
+          (delivery_id, status, next_attempt_at, create_time, update_time)
+        values (#{deliveryId}, 'PENDING', #{nextAttemptAt}, now(), now())
+    </insert>
+
+    <update id="claimNotificationOutbox">
+        update club_event_notification_outbox
+        set next_attempt_at = #{leaseUntil}, update_time = now()
+        where delivery_id = #{deliveryId} and status = 'PENDING' and next_attempt_at &lt;= now()
+    </update>
+
+    <select id="selectDispatchableByCampaign" resultMap="deliveryResult">
+        select d.id, d.campaign_id, d.recipient_member_id, d.channel, d.status,
+               d.attempt_count, d.message_id, d.last_error, d.sent_at, d.version
+        from club_event_notification_delivery d
+        inner join club_event_notification_outbox o on o.delivery_id = d.id
+          and o.status = 'PENDING' and o.next_attempt_at &lt;= now()
+        where d.campaign_id = #{campaignId} and d.status in ('PENDING','FAILED') and d.attempt_count &lt; 5
+        order by d.id asc limit #{limit} for update
+    </select>
+
+    <select id="selectDeliveryByIdForUpdate" resultMap="deliveryResult">
+        select d.id, d.campaign_id, d.recipient_member_id, d.channel, d.status,
+               d.attempt_count, d.message_id, d.last_error, d.sent_at, d.version
+        from club_event_notification_delivery d
+        where d.id = #{id}
+        for update
+    </select>
+
+    <sql id="notificationRecipientNotBanned">
+        and not exists (
+          select 1 from club_governance_ban ban
+          where ban.club_id = #{clubId} and ban.target_member_id = #{recipientMemberId}
+            and ban.status = 'ACTIVE'
+            and (ban.source_type &lt;&gt; 'CLUB' or ban.expires_at is null or ban.expires_at &gt; now())
+        )
+    </sql>
+
+    <!-- 任务创建时的受众快照不等于发送时仍有资格；每次真实发送前按原 audience 合同精确复核。 -->
+    <select id="isEligibleNotificationRecipient" resultType="int">
+        <choose>
+            <when test='audienceType == "ALL_MEMBERS"'>
+                select exists (
+                  select 1 from club c
+                  where c.id = #{clubId} and c.status = 1 and c.del_flag = 0
+                    and c.member_id = #{recipientMemberId}
+                    <include refid="notificationRecipientNotBanned"/>
+                  union all
+                  select 1 from club_member cm
+                  inner join club c on c.id = cm.club_id and c.status = 1 and c.del_flag = 0
+                  where cm.club_id = #{clubId} and cm.member_id = #{recipientMemberId}
+                    and cm.status = 1 and cm.del_flag = 0
+                    <include refid="notificationRecipientNotBanned"/>
+                )
+            </when>
+            <when test='audienceType == "ADMINS"'>
+                select exists (
+                  select 1 from club c
+                  where c.id = #{clubId} and c.status = 1 and c.del_flag = 0
+                    and c.member_id = #{recipientMemberId}
+                    <include refid="notificationRecipientNotBanned"/>
+                  union all
+                  select 1 from club_role_assignment cra
+                  inner join club_member cm on cm.club_id = cra.club_id
+                    and cm.member_id = cra.target_member_id and cm.status = 1 and cm.del_flag = 0
+                  inner join club c on c.id = cra.club_id and c.status = 1 and c.del_flag = 0
+                  where cra.club_id = #{clubId} and cra.target_member_id = #{recipientMemberId}
+                    and cra.scope_type = 'CLUB' and cra.scope_id = #{clubId}
+                    and cra.role_code in ('CLUB_CO_OWNER','CLUB_OPERATOR')
+                    and cra.status = 'ACTIVE' and (cra.expires_at is null or cra.expires_at &gt; now())
+                    <include refid="notificationRecipientNotBanned"/>
+                )
+            </when>
+            <when test='audienceType == "REGISTERED"'>
+                select exists (
+                  select 1
+                  from club_event_notification_campaign nc
+                  inner join club_event_notification_delivery nd
+                    on nd.campaign_id = nc.id and nd.recipient_member_id = #{recipientMemberId}
+                  inner join cms_activity a on a.id = nc.activity_id
+                    and a.club_id = nc.club_id and a.del_flag = 0
+                    and a.cancel_time is not null and a.publish_status = 0
+                  inner join club_event_occurrence o on o.activity_id = a.id and o.status = 'CANCELLED'
+                  inner join club_event_series s on s.id = o.series_id and s.club_id = a.club_id
+                  inner join club c on c.id = a.club_id and c.status = 1 and c.del_flag = 0
+                  where nc.id = #{campaignId} and nc.club_id = #{clubId}
+                    and nc.activity_id = #{activityId} and nc.audience_type = 'REGISTERED'
+                    and nc.request_id like 'cancel-r-%'
+                    <include refid="notificationRecipientNotBanned"/>
+                  union all
+                  select 1 from cms_registration r
+                  inner join cms_activity a on a.id = r.owner_id
+                    and a.id = #{activityId} and a.club_id = #{clubId} and a.del_flag = 0
+                  inner join club c on c.id = a.club_id and c.status = 1 and c.del_flag = 0
+                  inner join club_event_notification_campaign nc on nc.id = #{campaignId}
+                    and nc.club_id = #{clubId} and nc.activity_id = #{activityId}
+                    and nc.audience_type = 'REGISTERED'
+                    and nc.request_id not like 'cancel-r-%' and nc.request_id not like 'cancel-w-%'
+                  where r.owner_type = 2 and r.owner_id = #{activityId}
+                    and r.member_id = #{recipientMemberId}
+                    and r.payment_status = 2 and r.registration_status = 2
+                    <include refid="notificationRecipientNotBanned"/>
+                )
+            </when>
+            <when test='audienceType == "WAITLIST"'>
+                select exists (
+                  select 1
+                  from club_event_notification_campaign nc
+                  inner join club_event_notification_delivery nd
+                    on nd.campaign_id = nc.id and nd.recipient_member_id = #{recipientMemberId}
+                  inner join cms_activity a on a.id = nc.activity_id
+                    and a.club_id = nc.club_id and a.del_flag = 0
+                    and a.cancel_time is not null and a.publish_status = 0
+                  inner join club_event_occurrence o on o.activity_id = a.id and o.status = 'CANCELLED'
+                  inner join club_event_series s on s.id = o.series_id and s.club_id = a.club_id
+                  inner join club c on c.id = a.club_id and c.status = 1 and c.del_flag = 0
+                  where nc.id = #{campaignId} and nc.club_id = #{clubId}
+                    and nc.activity_id = #{activityId} and nc.audience_type = 'WAITLIST'
+                    and nc.request_id like 'cancel-w-%'
+                    <include refid="notificationRecipientNotBanned"/>
+                  union all
+                  select 1 from club_event_waitlist w
+                  inner join cms_activity a on a.id = w.activity_id
+                    and a.club_id = w.club_id and a.del_flag = 0
+                  inner join club c on c.id = w.club_id and c.status = 1 and c.del_flag = 0
+                  inner join club_event_notification_campaign nc on nc.id = #{campaignId}
+                    and nc.club_id = #{clubId} and nc.activity_id = #{activityId}
+                    and nc.audience_type = 'WAITLIST'
+                    and nc.request_id not like 'cancel-r-%' and nc.request_id not like 'cancel-w-%'
+                  where w.club_id = #{clubId} and w.activity_id = #{activityId}
+                    and w.member_id = #{recipientMemberId}
+                    and w.state in ('WAITING','OFFERED','CLAIMED')
+                    and (c.member_id = #{recipientMemberId} or exists (
+                      select 1 from club_member cm
+                      where cm.club_id = w.club_id and cm.member_id = #{recipientMemberId}
+                        and cm.status = 1 and cm.del_flag = 0
+                    ))
+                    <include refid="notificationRecipientNotBanned"/>
+                )
+            </when>
+            <when test='audienceType == "NO_SHOW"'>
+                select exists (
+                  select 1 from cms_registration r
+                  inner join cms_activity a on a.id = r.owner_id
+                    and a.club_id = #{clubId} and a.id = #{activityId}
+                    and a.del_flag = 0 and a.end_date &lt;= now()
+                  inner join club c on c.id = a.club_id and c.status = 1 and c.del_flag = 0
+                  left join club_lead_checkin ck on ck.activity_id = a.id and ck.member_id = r.member_id
+                  left join club_event_attendance_correction corr on corr.id = (
+                    select max(c2.id) from club_event_attendance_correction c2
+                    where c2.activity_id = a.id and c2.member_id = r.member_id
+                  )
+                  where r.owner_type = 2 and r.member_id = #{recipientMemberId}
+                    and r.payment_status = 2 and r.registration_status = 2
+                    and case when corr.id is not null then corr.new_arrived = 0 else ck.id is null end
+                    <include refid="notificationRecipientNotBanned"/>
+                )
+            </when>
+            <when test='audienceType == "INACTIVE"'>
+                select exists (
+                  select 1
+                  from (
+                    select c.member_id from club c
+                    where c.id = #{clubId} and c.status = 1 and c.del_flag = 0
+                      and c.member_id = #{recipientMemberId}
+                      <include refid="notificationRecipientNotBanned"/>
+                    union
+                    select cm.member_id from club_member cm
+                    inner join club c on c.id = cm.club_id and c.status = 1 and c.del_flag = 0
+                    where cm.club_id = #{clubId} and cm.status = 1 and cm.del_flag = 0
+                      and cm.member_id = #{recipientMemberId}
+                      <include refid="notificationRecipientNotBanned"/>
+                  ) members
+                  where not exists (
+                    select 1 from cms_registration r
+                    inner join cms_activity a on a.id = r.owner_id
+                      and a.club_id = #{clubId} and a.del_flag = 0
+                    where r.owner_type = 2 and r.member_id = members.member_id
+                      and r.payment_status = 2 and r.registration_status = 2
+                      and r.payment_time &gt;= date_sub(now(), interval 90 day)
+                  )
+                )
+            </when>
+            <otherwise>select 0</otherwise>
+        </choose>
+    </select>
+
+    <select id="selectDueCampaignIds" resultType="long">
+        select distinct d.campaign_id
+        from club_event_notification_outbox o
+        inner join club_event_notification_delivery d on d.id = o.delivery_id
+          and d.status in ('PENDING','FAILED') and d.attempt_count &lt; 5
+        where o.status = 'PENDING' and o.next_attempt_at &lt;= #{now}
+        order by d.campaign_id asc limit #{limit}
+    </select>
+
+    <update id="markDeliverySentCas">
+        update club_event_notification_delivery
+        set status = 'SENT', attempt_count = attempt_count + 1, message_id = #{messageId},
+            sent_at = #{sentAt}, last_error = null, version = version + 1, update_time = #{sentAt}
+        where id = #{id} and status in ('PENDING','FAILED') and version = #{expectedVersion}
+    </update>
+
+    <update id="markDeliveryFailedCas">
+        update club_event_notification_delivery
+        set status = 'FAILED', attempt_count = attempt_count + 1, last_error = #{lastError},
+            version = version + 1, update_time = now()
+        where id = #{id} and status in ('PENDING','FAILED') and version = #{expectedVersion}
+    </update>
+
+    <update id="markDeliverySkippedIneligibleCas">
+        update club_event_notification_delivery
+        set status = 'SKIPPED_INELIGIBLE', message_id = null, sent_at = null,
+            last_error = 'RECIPIENT_NO_LONGER_ELIGIBLE', version = version + 1, update_time = now()
+        where id = #{id} and status in ('PENDING','FAILED') and version = #{expectedVersion}
+    </update>
+
+    <update id="completeOutbox">
+        update club_event_notification_outbox
+        set status = 'COMPLETED', update_time = now()
+        where delivery_id = #{deliveryId} and status = 'PENDING'
+    </update>
+
+    <update id="rescheduleOutbox">
+        update club_event_notification_outbox
+        set next_attempt_at = #{nextAttemptAt}, update_time = now()
+        where delivery_id = #{deliveryId} and status = 'PENDING'
+    </update>
+
+    <update id="refreshCampaignCounts">
+        update club_event_notification_campaign c
+        set total_count = (select count(*) from club_event_notification_delivery d where d.campaign_id = c.id),
+            success_count = (select count(*) from club_event_notification_delivery d where d.campaign_id = c.id and d.status = 'SENT'),
+            failed_count = (select count(*) from club_event_notification_delivery d where d.campaign_id = c.id and d.status = 'FAILED'),
+            status = case
+              when exists (select 1 from club_event_notification_delivery d where d.campaign_id = c.id and d.status = 'FAILED') then 'PARTIAL_FAILED'
+              when exists (select 1 from club_event_notification_delivery d where d.campaign_id = c.id and d.status = 'PENDING') then 'PROCESSING'
+              else 'COMPLETED' end,
+            update_time = now()
+        where c.id = #{campaignId}
+    </update>
+</mapper>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CoopPerkMapper">
+
+    <resultMap type="CoopPerk" id="CoopPerkResult">
+        <result property="id"    column="id"    />
+        <result property="inviteId"    column="invite_id"    />
+        <result property="merchantId"    column="merchant_id"    />
+        <result property="perkType"    column="perk_type"    />
+        <result property="name"    column="name"    />
+        <result property="unitCost"    column="unit_cost"    />
+        <result property="retailValue"    column="retail_value"    />
+        <result property="quota"    column="quota"    />
+        <result property="redeemRule"    column="redeem_rule"    />
+        <result property="validEnd"    column="valid_end"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="delFlag"    column="del_flag"    />
+    </resultMap>
+
+    <insert id="insertCoopPerk" parameterType="CoopPerk" useGeneratedKeys="true" keyProperty="id">
+        insert into coop_perk
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="inviteId != null">invite_id,</if>
+            <if test="merchantId != null">merchant_id,</if>
+            <if test="perkType != null">perk_type,</if>
+            <if test="name != null">name,</if>
+            <if test="unitCost != null">unit_cost,</if>
+            <if test="retailValue != null">retail_value,</if>
+            <if test="quota != null">quota,</if>
+            <if test="redeemRule != null">redeem_rule,</if>
+            <if test="validEnd != null">valid_end,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="delFlag != null">del_flag,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="inviteId != null">#{inviteId},</if>
+            <if test="merchantId != null">#{merchantId},</if>
+            <if test="perkType != null">#{perkType},</if>
+            <if test="name != null">#{name},</if>
+            <if test="unitCost != null">#{unitCost},</if>
+            <if test="retailValue != null">#{retailValue},</if>
+            <if test="quota != null">#{quota},</if>
+            <if test="redeemRule != null">#{redeemRule},</if>
+            <if test="validEnd != null">#{validEnd},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+        </trim>
+    </insert>
+
+    <!-- 显式列清单（非 select *）：新列不加在这里就查不出来，resultMap 配了也是空值 -->
+    <select id="selectByInviteId" resultMap="CoopPerkResult">
+        select id, invite_id, merchant_id, perk_type, name, unit_cost, retail_value, quota, redeem_rule, valid_end, create_time, del_flag
+        from coop_perk where invite_id = #{inviteId} and del_flag = 0
+        order by create_time asc
+    </select>
+
+    <select id="selectById" parameterType="Long" resultMap="CoopPerkResult">
+        select id, invite_id, merchant_id, perk_type, name, unit_cost, retail_value, quota, redeem_rule, valid_end, create_time, del_flag
+        from coop_perk where id = #{id} and del_flag = 0
+    </select>
+
+    <update id="deleteByInviteId">
+        update coop_perk set del_flag = 2 where invite_id = #{inviteId}
+    </update>
+
+    <!-- T10:主题定价成本构成的权益成本——已接受(status=1)邀约申报权益的单人成本合计 -->
+    <select id="sumUnitCostByTopicId" parameterType="Long" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(p.unit_cost), 0)
+        FROM coop_perk p
+        JOIN coop_invite i ON i.id = p.invite_id
+        WHERE i.topic_id = #{topicId}
+          AND i.status = 1
+          AND i.del_flag = 0
+          AND p.del_flag = 0
+    </select>
+
+</mapper>

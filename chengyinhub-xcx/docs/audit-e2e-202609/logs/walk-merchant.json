@@ -1,0 +1,362 @@
+[
+  {
+    "route": "pages/merchant/index/index",
+    "ok": true,
+    "landedOn": "pages/merchant/index/index",
+    "redirected": false,
+    "state": {
+      "keys": 35,
+      "statusBarHeight": 47
+    },
+    "shot": "merchant-index-index.png"
+  },
+  {
+    "route": "pages/merchant/apply/index",
+    "ok": true,
+    "landedOn": "pages/merchant/apply/index",
+    "redirected": false,
+    "state": {
+      "keys": 38,
+      "statusBarHeight": 47,
+      "canNext": true
+    },
+    "shot": "merchant-apply-index.png"
+  },
+  {
+    "route": "pages/merchant/ledger/index",
+    "ok": true,
+    "landedOn": "pages/merchant/ledger/index",
+    "redirected": false,
+    "state": {
+      "keys": 22,
+      "statusBarHeight": 47,
+      "loading": false,
+      "error": true
+    },
+    "shot": "merchant-ledger-index.png"
+  },
+  {
+    "route": "pages/merchant/ledger/order-detail/index",
+    "ok": true,
+    "landedOn": "pages/merchant/ledger/order-detail/index",
+    "redirected": false,
+    "state": {
+      "keys": 8,
+      "statusBarHeight": 47,
+      "errorKind": "data",
+      "errorText": "缺少核销记录标识"
+    },
+    "shot": "merchant-ledger-order-detail-index.png"
+  },
+  {
+    "route": "pages/merchant/ledger/batch-detail/index",
+    "ok": true,
+    "landedOn": "pages/merchant/ledger/batch-detail/index",
+    "redirected": false,
+    "state": {
+      "keys": 7,
+      "statusBarHeight": 47,
+      "errorKind": "data",
+      "errorText": "缺少结算批次标识"
+    },
+    "shot": "merchant-ledger-batch-detail-index.png"
+  },
+  {
+    "route": "pages/merchant/aftercare/index",
+    "ok": true,
+    "landedOn": "pages/merchant/aftercare/index",
+    "redirected": false,
+    "state": {
+      "keys": 12,
+      "statusBarHeight": 47,
+      "errorMessage": "",
+      "total": 0,
+      "loadingMore": false
+    },
+    "shot": "merchant-aftercare-index.png"
+  },
+  {
+    "route": "pages/merchant/aftercare/detail/index",
+    "ok": true,
+    "landedOn": "pages/merchant/aftercare/detail/index",
+    "redirected": false,
+    "state": {
+      "keys": 18,
+      "statusBarHeight": 47,
+      "errorMessage": "",
+      "canRespond": false,
+      "canSubmit": false
+    },
+    "shot": "merchant-aftercare-detail-index.png"
+  },
+  {
+    "route": "pages/merchant/predict/index",
+    "ok": true,
+    "landedOn": "pages/merchant/predict/index",
+    "redirected": false,
+    "state": {
+      "keys": 9,
+      "statusBarHeight": 47,
+      "errorMessage": "网络连接失败，请稍后重试"
+    },
+    "shot": "merchant-predict-index.png"
+  },
+  {
+    "route": "pages/merchant/profile/index",
+    "ok": true,
+    "landedOn": "pages/merchant/profile/index",
+    "redirected": false,
+    "state": {
+      "keys": 10,
+      "statusBarHeight": 47,
+      "state": "invalid",
+      "canBack": false
+    },
+    "shot": "merchant-profile-index.png"
+  },
+  {
+    "route": "pages/merchant/marketing/index",
+    "ok": true,
+    "landedOn": "pages/merchant/marketing/index",
+    "redirected": false,
+    "state": {
+      "keys": 22,
+      "statusBarHeight": 47
+    },
+    "shot": "merchant-marketing-index.png"
+  },
+  {
+    "route": "pages/merchant/marketing/ai-insight/index",
+    "ok": true,
+    "landedOn": "pages/merchant/marketing/ai-insight/index",
+    "redirected": false,
+    "state": {
+      "keys": 21,
+      "statusBarHeight": 47,
+      "loading": false,
+      "error": "商家资格已失效"
+    },
+    "shot": "merchant-marketing-ai-insight-index.png"
+  },
+  {
+    "route": "pages/merchant/reviews/index",
+    "ok": true,
+    "landedOn": "pages/merchant/index/index",
+    "redirected": true,
+    "state": {
+      "keys": 35,
+      "statusBarHeight": 47
+    },
+    "shot": "merchant-reviews-index.png"
+  },
+  {
+    "route": "pages/merchant/relation/index",
+    "ok": true,
+    "landedOn": "pages/merchant/index/index",
+    "redirected": true,
+    "state": {
+      "keys": 35,
+      "statusBarHeight": 47
+    },
+    "shot": "merchant-relation-index.png"
+  },
+  {
+    "route": "pages/merchant/citynode/index",
+    "ok": true,
+    "landedOn": "pages/merchant/index/index",
+    "redirected": true,
+    "state": {
+      "keys": 35,
+      "statusBarHeight": 47
+    },
+    "shot": "merchant-citynode-index.png"
+  },
+  {
+    "route": "pages/merchant/citynode/create/index",
+    "ok": true,
+    "landedOn": "pages/merchant/citynode/create/index",
+    "redirected": false,
+    "state": {
+      "keys": 21,
+      "statusBarHeight": 47,
+      "canSubmit": false,
+      "showLeaveConfirm": false
+    },
+    "shot": "merchant-citynode-create-index.png"
+  },
+  {
+    "route": "pages/merchant/decor/index",
+    "ok": true,
+    "landedOn": "pages/merchant/decor/index",
+    "redirected": false,
+    "state": {
+      "keys": 44,
+      "statusBarHeight": 47,
+      "showUpgradeTip": false
+    },
+    "shot": "merchant-decor-index.png"
+  },
+  {
+    "route": "pages/merchant/decor/ai-npc/index",
+    "ok": true,
+    "landedOn": "pages/merchant/decor/ai-npc/index",
+    "redirected": false,
+    "state": {
+      "keys": 35,
+      "statusBarHeight": 47,
+      "loading": false
+    },
+    "shot": "merchant-decor-ai-npc-index.png"
+  },
+  {
+    "route": "pages/merchant/decor/coop-setting/index",
+    "ok": true,
+    "landedOn": "pages/merchant/decor/coop-setting/index",
+    "redirected": false,
+    "state": {
+      "keys": 15,
+      "statusBarHeight": 47
+    },
+    "shot": "merchant-decor-coop-setting-index.png"
+  },
+  {
+    "route": "pages/merchant/decor/gallery/index",
+    "ok": true,
+    "landedOn": "pages/merchant/decor/gallery/index",
+    "redirected": false,
+    "state": {
+      "keys": 13,
+      "statusBarHeight": 47
+    },
+    "shot": "merchant-decor-gallery-index.png"
+  },
+  {
+    "route": "pages/merchant/decor/perks/index",
+    "ok": true,
+    "landedOn": "pages/merchant/decor/perks/index",
+    "redirected": false,
+    "state": {
+      "keys": 21,
+      "statusBarHeight": 47,
+      "canSave": false
+    },
+    "shot": "merchant-decor-perks-index.png"
+  },
+  {
+    "route": "pages/merchant/coop-center/index",
+    "ok": true,
+    "landedOn": "pages/merchant/coop-center/index",
+    "redirected": false,
+    "state": {
+      "keys": 21,
+      "statusBarHeight": 47
+    },
+    "shot": "merchant-coop-center-index.png"
+  },
+  {
+    "route": "pages/merchant/customer/index",
+    "ok": true,
+    "landedOn": "pages/merchant/customer/index",
+    "redirected": false,
+    "state": {
+      "keys": 59,
+      "statusBarHeight": 47,
+      "loading": false,
+      "error": "",
+      "emptyTitle": "客户名单这次没取回来",
+      "emptySub": "统计里有 1 位客户,但名单没加载出来。下拉刷新或稍后再看。",
+      "emptyCta": "重新加载",
+      "emptyAction": "retry",
+      "canSegment": true,
+      "canExport": true,
+      "canMarket": true,
+      "canCoupon": true
+    },
+    "shot": "merchant-customer-index.png"
+  },
+  {
+    "route": "pages/merchant/customer/detail/index",
+    "ok": true,
+    "landedOn": "pages/merchant/customer/detail/index",
+    "redirected": false,
+    "state": {
+      "keys": 18,
+      "statusBarHeight": 47,
+      "errorMessage": "客户ID无效",
+      "canEdit": false
+    },
+    "shot": "merchant-customer-detail-index.png"
+  },
+  {
+    "route": "pages/merchant/game-node/index",
+    "ok": true,
+    "landedOn": "pages/merchant/game-node/index",
+    "redirected": false,
+    "state": {
+      "keys": 31,
+      "statusBarHeight": 47,
+      "errorMessage": "页面参数不完整，请从商家项目卡重新进入",
+      "readyDraft": "{obj}",
+      "canRetryUnknownWrite": false
+    },
+    "shot": "merchant-game-node-index.png"
+  },
+  {
+    "route": "pages/merchant/team/index",
+    "ok": true,
+    "landedOn": "pages/merchant/team/index",
+    "redirected": false,
+    "state": {
+      "keys": 19,
+      "statusBarHeight": 47,
+      "canShareCreatedInvite": false
+    },
+    "shot": "merchant-team-index.png"
+  },
+  {
+    "route": "pages/play/merchant/index",
+    "ok": true,
+    "landedOn": "pages/play/merchant/index",
+    "redirected": false,
+    "state": {
+      "keys": 14,
+      "statusBarHeight": 47
+    },
+    "shot": "play-merchant-index.png"
+  },
+  {
+    "route": "pages/topic/merchantapply/index",
+    "ok": true,
+    "landedOn": "pages/topic/merchantapply/index",
+    "redirected": false,
+    "state": {
+      "keys": 39,
+      "errors": "{obj}",
+      "canSubmit": false
+    },
+    "shot": "topic-merchantapply-index.png"
+  },
+  {
+    "route": "pages/topic/merchantinfo/merchantinfo",
+    "ok": true,
+    "landedOn": "pages/topic/merchantinfo/merchantinfo",
+    "redirected": false,
+    "state": {
+      "keys": 115,
+      "statusBarHeight": 47,
+      "totalCount": 0,
+      "stateKey": "",
+      "stateText": "",
+      "stateClass": "",
+      "stateSub": "",
+      "showFulfillment": false,
+      "showPrep": false,
+      "prepHeadcount": "",
+      "isFreeExploreHost": false,
+      "isSelfTemplate": false,
+      "isJoin": 0,
+      "showCheckinQr": false
+    },
+    "shot": "topic-merchantinfo-merchantinfo.png"
+  }
+]

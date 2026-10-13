@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MetricsSnapshotMapper">
+
+    <resultMap type="MetricsSnapshot" id="MetricsSnapshotResult">
+        <result property="id"               column="id"                />
+        <result property="metricKey"        column="metric_key"        />
+        <result property="windowStart"      column="window_start"      />
+        <result property="windowEnd"        column="window_end"        />
+        <result property="source"           column="source"            />
+        <result property="numerator"        column="numerator"         />
+        <result property="denominator"      column="denominator"       />
+        <result property="value"            column="value"             />
+        <result property="thresholdVersion" column="threshold_version" />
+        <result property="status"           column="status"            />
+        <result property="sampledAt"        column="sampled_at"        />
+    </resultMap>
+
+    <insert id="upsertSnapshot" parameterType="MetricsSnapshot">
+        insert into metrics_snapshot
+        (metric_key, window_start, window_end, source, numerator, denominator, value, threshold_version, status, sampled_at)
+        values
+        (#{metricKey}, #{windowStart}, #{windowEnd}, #{source}, #{numerator}, #{denominator}, #{value}, #{thresholdVersion}, #{status}, #{sampledAt})
+        on duplicate key update
+            source = values(source),
+            numerator = values(numerator),
+            denominator = values(denominator),
+            value = values(value),
+            threshold_version = values(threshold_version),
+            status = values(status),
+            sampled_at = values(sampled_at)
+    </insert>
+
+    <select id="selectLatestSuccessfulSampledAt" resultType="java.util.Date">
+        select max(sampled_at)
+        from metrics_snapshot
+        where status = 'OK'
+    </select>
+
+</mapper>

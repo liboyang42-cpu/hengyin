@@ -1,0 +1,55 @@
+<view class="nearby-shell theme-merchant m-flush-nav">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <cy-option-sheet show="{{replacementSheetShow}}" title="选择补位操作"
+    items="{{replacementSheetItems}}" immediate="{{true}}"
+    bind:select="onReplacementSheetSelect" bind:cancel="onReplacementSheetCancel" />
+  <!-- E-01(2026-09-16 P0):去页级 merchant 守卫。两个接口都不要求商家身份:
+       /api/merchant/nearby 登录即可(电话另按 CRM 权限裁),/api/merchant/chapter-application/invitable
+       只要求主题发布者(scope 非 MERCHANT 时 principalMemberId 直接放行)。 -->
+<cy-nav-bar back="{{true}}"></cy-nav-bar>
+<view style="height:{{statusBarHeight + navBarHeight}}px;"></view>
+<cy-page-title title="{{pageTitle || '附近商家'}}" subtitle="{{topicName}}" safe-top="{{false}}" />
+
+<view class="nearby-page">
+  <view class="action-state action-state--ok" wx:if="{{actionReceipt}}" aria-role="status" aria-live="polite">{{actionReceipt}}</view>
+  <cy-inline-error class="action-state--error" wx:if="{{actionError}}" kind="data"
+    title="操作未完成" sub="{{actionError}}" />
+  <!-- bbb 标准:骨架屏代替"正在查找…"文字 -->
+  <cy-skeleton wx:if="{{pageState === 'loading'}}" type="list" count="{{4}}" />
+
+  <block wx:elif="{{pageState === 'ready'}}">
+    <view class="inline-state" wx:if="{{refreshing}}" aria-role="status" aria-live="polite">正在刷新附近商家…</view>
+    <view class="inline-state inline-state--error error-kind--{{refreshErrorKind}}" wx:if="{{refreshErrorText}}" aria-role="alert" aria-live="assertive">
+      {{refreshErrorText}}<text class="inline-retry" bindtap="retry" aria-role="button" aria-label="重试刷新附近商家" hover-class="cy-pressed" hover-stay-time="80">重试</text>
+    </view>
+    <block wx:if="{{merchants.length}}">
+    <view class="merchant-result" wx:for="{{merchants}}" wx:key="id" wx:if="{{item.name}}">
+      <cy-merchant-card variant="venue" interactive="{{!!item.memberId}}"
+        bind:tap="openMerchant" aria-label="查看{{item.name}}商家档案" data-memberid="{{item.memberId}}"
+        name="{{item.name}}" cover="{{item.coverUrl || item.coverImage || item.photo || ''}}" logo="{{item.logo || ''}}"
+        address="{{item.address || ''}}" available-time="{{item.businessTime || item.availableTime || ''}}"
+        capacity="{{item.capacity}}" charge-type="{{item.chargeType}}" coop-open="{{item.coopOpen}}"
+        suit-types="{{item.suitActivityTypes || item.chapterText || ''}}" />
+      <view class="contact-action" wx:if="{{!item.memberId && item.canCall}}">
+        <cy-btn variant="secondary" size="sm" bindtap="callMerchant"
+          loading="{{actionPendingKey === 'call:' + item.phone}}" disabled="{{!!actionPendingKey}}"
+          accessibility-label="电话联系{{item.name}}" data-phone="{{item.phone}}">电话联系</cy-btn>
+      </view>
+    </view>
+    </block>
+    <cy-empty size="lg" style="flex:1;min-height:0;" kind="empty" wx:else fill title="附近暂无可联系商家" sub="按当前定位没找到商家，刷新会重新定位再找一遍" cta="刷新附近商家" bind:cta="retry"></cy-empty>
+  </block>
+
+  <!-- aaa 标准:未定位/空态统一垂直居中 + 放大文字图片(cy-error 原生 fill 变体,不再自己包一层) -->
+  <cy-empty class="retry-lg" size="lg" style="flex:1;min-height:0;" kind="permission" wx:elif="{{pageState === 'permission'}}" fill title="当前无法查看附近商家" sub="{{errorText || '需要定位权限才能找附近商家'}}" cta="去设置" bind:cta="openLocationSettings"></cy-empty>
+
+  <cy-empty size="lg" style="flex:1;min-height:0;" kind="missing-param" wx:elif="{{pageState === 'missing-param'}}" fill title="主题参数无效" sub="{{errorText}}" cta="返回上一页" bind:cta="goBack"></cy-empty>
+
+  <cy-error class="retry-lg error-kind--{{errorKind}}" size="lg" style="flex:1;min-height:0;" wx:elif="{{pageState === 'error'}}" fill title="附近商家没加载出来" sub="{{errorText || '服务暂时不可用,请稍后重试'}}" auto-back custom-back bind:back="goBack" bind:retry="retry"></cy-error>
+
+  <cy-error class="retry-lg" size="lg" style="flex:1;min-height:0;" wx:else fill title="附近商家暂不可用" sub="请返回后重试" auto-back custom-back bind:back="goBack" bind:retry="retry"></cy-error>
+</view>
+</view>
+<cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />

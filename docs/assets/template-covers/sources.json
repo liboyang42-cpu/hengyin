@@ -1,0 +1,221 @@
+{
+  "retired": "2026-08-25",
+  "retiredReason": "封面改为自绘平涂场景 key art(ci/render_template_covers.py);24 个图源覆盖 43 个位置必然复用,实测一张照片被 5 个模板共用。本文件与 source-photos/ 仅作授权留痕归档,不再参与产出。",
+  "provider": "Pexels",
+  "license": "https://www.pexels.com/license/",
+  "sources": [
+    {
+      "id": 6315287,
+      "photographer": "Uriel Mont",
+      "page": "https://www.pexels.com/photo/black-male-friends-in-town-street-at-night-6315287/",
+      "downloadUrl": "https://images.pexels.com/photos/6315287/pexels-photo-6315287.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "1ad8fabb68a6f0bc17a36070c6b6e95b5ec2f6a606c7894eaf16d8aeb7872c69"
+    },
+    {
+      "id": 15149872,
+      "photographer": "Namzy",
+      "page": "https://www.pexels.com/photo/a-woman-standing-in-front-of-the-shelf-in-a-grocery-store-15149872/",
+      "downloadUrl": "https://images.pexels.com/photos/15149872/pexels-photo-15149872.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "14178aeaff7825e0bbabd7c532f28a5168085f82e1c192a31220dc75e81fe1e2"
+    },
+    {
+      "id": 16706708,
+      "photographer": "UMUT RAW",
+      "page": "https://www.pexels.com/photo/a-man-with-a-camera-on-the-street-at-night-16706708/",
+      "downloadUrl": "https://images.pexels.com/photos/16706708/pexels-photo-16706708.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "7b6a27b25a4748695b897271e2574488529d6918fc1c3faf5e738707c50a208e"
+    },
+    {
+      "id": 6358841,
+      "photographer": "Anna Tarazevich",
+      "page": "https://www.pexels.com/photo/a-person-using-a-stamp-on-a-paper-6358841/",
+      "downloadUrl": "https://images.pexels.com/photos/6358841/pexels-photo-6358841.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "90b1e0fe69311115f7c516fadbb8a1ba01b22b1a6e3840a408c85c65e6b83eb7"
+    },
+    {
+      "id": 16311689,
+      "photographer": "Ugurcan Ozmen",
+      "page": "https://www.pexels.com/photo/people-eating-in-a-restaurant-16311689/",
+      "downloadUrl": "https://images.pexels.com/photos/16311689/pexels-photo-16311689.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "1b666a83a4337949989e01a7dc5a37efb20310dab9b8a9d4d7640660d59272e2"
+    },
+    {
+      "id": 13929963,
+      "photographer": "Mizuno K",
+      "page": "https://www.pexels.com/photo/fashion-styling-reflecting-in-mirror-13929963/",
+      "downloadUrl": "https://images.pexels.com/photos/13929963/pexels-photo-13929963.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "d638daa2b4587f70fdd3d0c3553ec1737e90708ec05fc71fbe20e8cc0669579d"
+    },
+    {
+      "id": 7972658,
+      "photographer": "George Pak",
+      "page": "https://www.pexels.com/photo/photo-of-a-group-of-friends-talking-while-walking-7972658/",
+      "downloadUrl": "https://images.pexels.com/photos/7972658/pexels-photo-7972658.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "ec16ec32b4f96a1da286371e674a3b23954d6108bd7b911a0e3c5afa2c51450f"
+    },
+    {
+      "id": 13732969,
+      "photographer": "Brett Sayles",
+      "page": "https://www.pexels.com/photo/friends-walking-on-the-street-during-night-time-13732969/",
+      "downloadUrl": "https://images.pexels.com/photos/13732969/pexels-photo-13732969.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "e92da391339a26a1a7e70859bb7084d9e2cb7adc6ed35694fe20fb6b1ad5f49b"
+    },
+    {
+      "id": 5880082,
+      "photographer": "Erik Mclean",
+      "page": "https://www.pexels.com/photo/unrecognizable-friends-walking-on-pavement-in-night-town-5880082/",
+      "downloadUrl": "https://images.pexels.com/photos/5880082/pexels-photo-5880082.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "481b61feab0aa19f24e30cb14e0ad4146edbd7e2dddc76cd1f147c247228e46b"
+    },
+    {
+      "id": 29267533,
+      "photographer": "Matheus Bertelli",
+      "page": "https://www.pexels.com/photo/group-of-friends-posing-outdoors-in-urban-setting-29267533/",
+      "downloadUrl": "https://images.pexels.com/photos/29267533/pexels-photo-29267533.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "7daf2d61ebe1936dd30e608518b7ad1f01a5d55ee4a6408ecc21d24e2e1b1548"
+    },
+    {
+      "id": 35719571,
+      "photographer": "Jakub Zerdzicki",
+      "page": "https://www.pexels.com/photo/hand-writing-on-notebook-with-checklist-35719571/",
+      "downloadUrl": "https://images.pexels.com/photos/35719571/pexels-photo-35719571.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "85d0f543fd4b0d17eedb9d5ea15a86efe43ef2c2950fd3f236de179563f008fe"
+    },
+    {
+      "id": 4921403,
+      "photographer": "RDNE Stock project",
+      "page": "https://www.pexels.com/photo/person-holding-a-menu-4921403/",
+      "downloadUrl": "https://images.pexels.com/photos/4921403/pexels-photo-4921403.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "e4512736ab9d84b27151adec32184f33f166f5c701b7b6a54766146e91d6222f"
+    },
+    {
+      "id": 8111356,
+      "photographer": "Pavel Danilyuk",
+      "page": "https://www.pexels.com/photo/people-sitting-on-a-wooden-table-playing-board-game-8111356/",
+      "downloadUrl": "https://images.pexels.com/photos/8111356/pexels-photo-8111356.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "482440756808f1d9049aca930bd619cebe4f57ed5bde81209e71b48e0adc2296"
+    },
+    {
+      "id": 7368218,
+      "photographer": "Vlada Karpovich",
+      "page": "https://www.pexels.com/photo/person-packing-a-luggage-7368218/",
+      "downloadUrl": "https://images.pexels.com/photos/7368218/pexels-photo-7368218.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "051530110309e2e476d63efc387de0f9dd1c0e6ad8f1532c31d20684461f9ee8"
+    },
+    {
+      "id": 38133520,
+      "photographer": "Mary Se",
+      "page": "https://www.pexels.com/photo/urban-scene-with-person-and-headphones-38133520/",
+      "downloadUrl": "https://images.pexels.com/photos/38133520/pexels-photo-38133520.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "b67c2507a31b7c4fc3081375d707f8061129c29ec0c92d49ec35a7e44db8a3ce"
+    },
+    {
+      "id": 30818163,
+      "photographer": "damla selen demir",
+      "page": "https://www.pexels.com/photo/hands-holding-menu-at-restaurant-table-30818163/",
+      "downloadUrl": "https://images.pexels.com/photos/30818163/pexels-photo-30818163.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "ef6e03004ab2c0dbeb921db36743a03c0e0c1ac9a136b8956c34e0aa00fff9cf"
+    },
+    {
+      "id": 17126646,
+      "photographer": "Bhefan Tedjo",
+      "page": "https://www.pexels.com/photo/a-waitress-handing-the-menu-to-a-guest-17126646/",
+      "downloadUrl": "https://images.pexels.com/photos/17126646/pexels-photo-17126646.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "8d3c82bb09c0081b8baec43fbe34323d2d59d5d08ab555f9a773469b193e6957"
+    },
+    {
+      "id": 13799697,
+      "photographer": "Raffaele Giordano",
+      "page": "https://www.pexels.com/photo/close-up-of-a-bartender-making-a-drink-13799697/",
+      "downloadUrl": "https://images.pexels.com/photos/13799697/pexels-photo-13799697.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "ce16d83d0ddf43dc47e9c1626ad73ef0a39c684096c38b1eab29897601048baf"
+    },
+    {
+      "id": 7455686,
+      "photographer": "Jason Liao",
+      "page": "https://www.pexels.com/photo/walking-with-dog-on-street-7455686/",
+      "downloadUrl": "https://images.pexels.com/photos/7455686/pexels-photo-7455686.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "9dc57fa2bf98e222b4cd918cee73e307fd466b3c24bf95b700481211cb55574c"
+    },
+    {
+      "id": 30521399,
+      "photographer": "Nazli Isguven",
+      "page": "https://www.pexels.com/photo/acoustic-guitar-performance-in-istanbul-cafe-30521399/",
+      "downloadUrl": "https://images.pexels.com/photos/30521399/pexels-photo-30521399.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "38a3c78a123cf7cee3da59c9253dfd3dd99a07cef2475597f0eb10b5be994658"
+    },
+    {
+      "id": 20002073,
+      "photographer": "Orhan Pergel",
+      "page": "https://www.pexels.com/photo/pedestrians-walking-on-a-street-in-city-at-night-20002073/",
+      "downloadUrl": "https://images.pexels.com/photos/20002073/pexels-photo-20002073.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "833640905371a90bbf2a78534dfdd8c35e18aa1ef791d0e245fdd6c7808d0a14"
+    },
+    {
+      "id": 28354764,
+      "photographer": "Huy Nguyen",
+      "page": "https://www.pexels.com/photo/a-family-walking-down-a-hallway-with-a-little-girl-28354764/",
+      "downloadUrl": "https://images.pexels.com/photos/28354764/pexels-photo-28354764.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "df734fe69c0578fe23ce940aa4c6ed2f90e1597d69b290e97c4f476c88065632"
+    },
+    {
+      "id": 4947386,
+      "photographer": "Maria Orlova",
+      "page": "https://www.pexels.com/photo/interior-of-cozy-small-shop-4947386/",
+      "downloadUrl": "https://images.pexels.com/photos/4947386/pexels-photo-4947386.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "f31c862f7746c72f20838f2e4bfc5f2c273d692f3a1137c6328d5fea92651dd7"
+    },
+    {
+      "id": 7368308,
+      "photographer": "Vlada Karpovich",
+      "page": "https://www.pexels.com/photo/a-person-holding-a-pen-7368308/",
+      "downloadUrl": "https://images.pexels.com/photos/7368308/pexels-photo-7368308.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      "sha256": "fcf969fc10bc18c32369ab08248dfb062a6c7aaff0c175a8a2645faa8862d746"
+    }
+  ],
+  "assetSourceMap": {
+    "p01-tonights-passcode.webp": 6315287,
+    "p02-boss-secret-question.webp": 15149872,
+    "p03-capture-this-moment.webp": 16706708,
+    "p04-flavor-stamp.webp": 6358841,
+    "p05-new-product-blind-test.webp": 16311689,
+    "p06-todays-styling-task.webp": 13929963,
+    "p07-rally-light-up.webp": 7972658,
+    "p08-team-race-light-up.webp": 13732969,
+    "p09-street-corner-riddle.webp": 5880082,
+    "p10-city-framing-task.webp": 16706708,
+    "p11-city-relay.webp": 7972658,
+    "p12-todays-role-task.webp": 29267533,
+    "p13-life-outage-test.webp": 35719571,
+    "p14-what-to-choose-first.webp": 4921403,
+    "p15-bottom-line-three-choices.webp": 8111356,
+    "p16-business-hours-puzzle.webp": 8111356,
+    "p17-before-you-go-checklist.webp": 7368218,
+    "p18-worth-doing-now.webp": 35719571,
+    "p19-first-choice-offline.webp": 7368308,
+    "t01-hidden-menu.webp": 4921403,
+    "t02-in-store-treasure-hunt.webp": 15149872,
+    "t03-photo-challenge.webp": 16706708,
+    "t04-mysterious-clerk-passcode.webp": 6315287,
+    "t05-three-step-puzzle.webp": 8111356,
+    "t06-listen-and-identify.webp": 38133520,
+    "t07-three-quick-answers.webp": 8111356,
+    "t08-stamp-tour.webp": 6358841,
+    "t09-fork-in-the-road.webp": 7368308,
+    "t10-three-blind-boxes.webp": 4947386,
+    "t11-blind-taste-master.webp": 16311689,
+    "t12-menu-tongue-twister.webp": 30818163,
+    "t13-silent-ordering.webp": 17126646,
+    "t14-convenience-store-mixologist.webp": 13799697,
+    "t15-reverse-npc.webp": 8111356,
+    "t16-pawprint-street-tour.webp": 7455686,
+    "t17-healing-music-corner.webp": 30521399,
+    "t18-blind-style-mix.webp": 13929963,
+    "t19-life-backup.webp": 7368218,
+    "t20-after-work-switch.webp": 38133520,
+    "t21-solo-departure.webp": 20002073,
+    "t22-parent-child-happy.webp": 28354764,
+    "t23-photo-day.webp": 29267533,
+    "t24-night-owl-city.webp": 5880082
+  }
+}

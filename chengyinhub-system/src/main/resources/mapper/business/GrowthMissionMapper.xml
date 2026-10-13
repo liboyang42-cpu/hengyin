@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.GrowthMissionMapper">
+
+    <select id="selectActiveByCode" resultType="GrowthMission">
+        select id, mission_code as missionCode, mission_name as missionName,
+               mission_desc as missionDesc,
+               case when trigger_event = 'store_verify' then 'store_verify' else trigger_event end as triggerEvent,
+               exp_reward as expReward,
+               daily_limit as dailyLimit, status, sort_no as sortNo,
+               create_time as createTime, update_time as updateTime
+        from growth_mission
+        where mission_code = #{missionCode}
+          and status = '0'
+        limit 1
+    </select>
+
+    <select id="selectActiveByEvent" resultType="GrowthMission">
+        select id, mission_code as missionCode, mission_name as missionName,
+               mission_desc as missionDesc,
+               case when trigger_event = 'store_verify' then 'store_verify' else trigger_event end as triggerEvent,
+               exp_reward as expReward,
+               daily_limit as dailyLimit, status, sort_no as sortNo,
+               create_time as createTime, update_time as updateTime
+        from growth_mission
+        where trigger_event = #{triggerEvent}
+          and status = '0'
+        order by sort_no asc, id desc
+    </select>
+
+    <select id="selectVerifiedStoreMember" resultType="java.lang.Long">
+        select member_id from cms_registration
+        where id = #{registrationId} and payment_status = 2 and verification_status = 1
+        limit 1 for update
+    </select>
+
+    <select id="selectActiveMissionList" resultType="GrowthMission">
+        select id, mission_code as missionCode, mission_name as missionName,
+               mission_desc as missionDesc, trigger_event as triggerEvent,
+               exp_reward as expReward,
+               daily_limit as dailyLimit, status, sort_no as sortNo,
+               create_time as createTime, update_time as updateTime
+        from growth_mission
+        where status = '0'
+        order by sort_no asc, id desc
+    </select>
+
+    <select id="selectAdminMissionList" parameterType="GrowthMission" resultType="GrowthMission">
+        select id, mission_code as missionCode, mission_name as missionName,
+               mission_desc as missionDesc, trigger_event as triggerEvent,
+               exp_reward as expReward,
+               daily_limit as dailyLimit, status, sort_no as sortNo,
+               create_time as createTime, update_time as updateTime
+        from growth_mission
+        <where>
+            <if test="missionCode != null and missionCode != ''"> and mission_code like concat('%', #{missionCode}, '%')</if>
+            <if test="missionName != null and missionName != ''"> and mission_name like concat('%', #{missionName}, '%')</if>
+            <if test="triggerEvent != null and triggerEvent != ''"> and trigger_event = #{triggerEvent}</if>
+            <if test="status != null and status != ''"> and status = #{status}</if>
+        </where>
+        order by sort_no asc, id desc
+    </select>
+
+    <insert id="insertGrowthMission" parameterType="GrowthMission" useGeneratedKeys="true" keyProperty="id">
+        insert into growth_mission
+        (mission_code, mission_name, mission_desc, trigger_event, exp_reward, daily_limit, status, sort_no, create_time)
+        values
+        (#{missionCode}, #{missionName}, #{missionDesc}, #{triggerEvent}, #{expReward}, #{dailyLimit}, #{status}, #{sortNo}, #{createTime})
+    </insert>
+
+    <update id="updateGrowthMission" parameterType="GrowthMission">
+        update growth_mission
+        <set>
+            <if test="missionName != null">mission_name = #{missionName},</if>
+            <if test="missionDesc != null">mission_desc = #{missionDesc},</if>
+            <if test="triggerEvent != null">trigger_event = #{triggerEvent},</if>
+            <if test="expReward != null">exp_reward = #{expReward},</if>
+            <if test="dailyLimit != null">daily_limit = #{dailyLimit},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="sortNo != null">sort_no = #{sortNo},</if>
+            update_time = #{updateTime}
+        </set>
+        where id = #{id}
+    </update>
+</mapper>

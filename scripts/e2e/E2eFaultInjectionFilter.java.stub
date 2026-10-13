@@ -1,0 +1,39 @@
+package com.chengyinhub.e2e;
+
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+/**
+ * ★桩:故障注入(只用于 e2e 注入③)。只存在于本地 exploded jar,仓库产品码一行都没有。
+ * 由系统属性 -De2e.fail.path=/api/play/checkin 打开;不设该属性时整个过滤器是透明的。
+ */
+@Component
+@Order(1)
+public class E2eFaultInjectionFilter implements Filter {
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+        String failPath = System.getProperty("e2e.fail.path");
+        if (failPath != null && request instanceof HttpServletRequest) {
+            String uri = ((HttpServletRequest) request).getRequestURI();
+            if (uri != null && uri.startsWith(failPath)) {
+                HttpServletResponse resp = (HttpServletResponse) response;
+                resp.setStatus(500);
+                resp.setContentType("application/json;charset=UTF-8");
+                resp.getWriter().write("{\"code\":500,\"msg\":\"e2e 注入:打卡服务异常\"}");
+                return;
+            }
+        }
+        chain.doFilter(request, response);
+    }
+}

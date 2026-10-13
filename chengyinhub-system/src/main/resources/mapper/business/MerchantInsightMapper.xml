@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantInsightMapper">
+    <resultMap id="visitFact" type="com.chengyinhub.business.domain.dto.MerchantInsightVisitFact">
+        <result property="registrationId" column="registration_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="checkinAt" column="checkin_at"/>
+        <result property="redeemedAt" column="redeemed_at"/>
+    </resultMap>
+    <resultMap id="crowdFact" type="com.chengyinhub.business.domain.dto.MerchantInsightCrowdFact">
+        <result property="memberId" column="member_id"/>
+        <result property="sex" column="sex"/>
+        <result property="birthday" column="birthday"/>
+        <result property="level" column="lvl"/>
+        <result property="categoryWeightsJson" column="category_weights_json"/>
+    </resultMap>
+    <resultMap id="visitorEvent" type="com.chengyinhub.business.domain.dto.MerchantInsightVisitorEvent">
+        <result property="memberId" column="member_id"/>
+        <result property="nickname" column="nickname"/>
+        <result property="avatar" column="avatar"/>
+        <result property="topicName" column="topic_name"/>
+        <result property="checkinAt" column="checkin_at"/>
+        <result property="redeemedAt" column="redeemed_at"/>
+    </resultMap>
+    <resultMap id="supplyFact" type="com.chengyinhub.business.domain.dto.MerchantInsightSupplyFact">
+        <result property="topicName" column="topic_name"/>
+        <result property="quotaTotal" column="quota_total"/>
+        <result property="quotaUsed" column="quota_used"/>
+    </resultMap>
+
+    <!-- 本商家全部 offer 的报名事实 join 骨架(抄 ShopDayMerchantRosterMapper.selectRoster 的双 scope 绑定,
+         差异:跨 topic、不按 valid_end 过滤(历史核销也算数)、不过滤「已到店」(未到店行做核销率分母)。
+         纯 join 段,不含 where —— crowd 查询要在其后追加画像表 join。 -->
+    <sql id="merchantEntitlementJoins">
+          from merchant_chapter_offer o
+          join mms_merchant mm on mm.member_id = o.merchant_id and mm.status = 1
+             and (mm.account_status is null or mm.account_status != 2)
+             and (mm.del_flag is null or mm.del_flag != 2)
+          join registration_entitlement e on e.topic_id = o.topic_id and e.chapter_id = o.chapter_id
+             and e.status in (0, 1)
+          join cms_registration r on r.id = e.registration_id and r.owner_type = 2
+             and r.purchase_kind = 3 and r.payment_status = 2 and r.registration_status = 2
+          left join cms_topic_node n on n.topic_id = o.topic_id and n.chapter_id = o.chapter_id
+             and n.merchant_member_id = o.merchant_id
+          left join player_node_progress p on p.member_id = r.member_id and p.activity_id = r.owner_id
+             and p.topic_id = o.topic_id and p.node_id = n.id and p.checkin_time is not null and p.del_flag = 0
+          left join redemption rd on rd.registration_id = r.id and rd.topic_id = o.topic_id
+             and rd.chapter_id = o.chapter_id and rd.merchant_id = o.merchant_id and rd.status = 'ACTIVE'
+    </sql>
+
+    <select id="selectVisitFacts" resultMap="visitFact">
+        select e.registration_id, r.member_id,
+               min(p.checkin_time) checkin_at, min(rd.create_time) redeemed_at
+        <include refid="merchantEntitlementJoins"/>
+         where o.merchant_id = #{merchantMemberId} and o.status = 1
+           and r.create_time &gt;= #{since}
+         group by e.registration_id, e.chapter_id, r.member_id
+    </select>
+
+    <!-- 画像行只取聚合维度;禁止 select nickname/phone(PII 白名单,有 SQL 守卫测试锁着)。 -->
+    <select id="selectCrowdFacts" resultMap="crowdFact">
+        select distinct m.id member_id, m.sex, m.birthday, pg.level lvl, mip.category_weights_json
+        <include refid="merchantEntitlementJoins"/>
+          join ums_member m on m.id = r.member_id and m.del_flag = 0
+          left join player_growth pg on pg.member_id = m.id
+          left join member_interest_profile mip on mip.member_id = m.id
+         where o.merchant_id = #{merchantMemberId} and o.status = 1
+           and (p.checkin_time &gt;= #{since} or rd.create_time &gt;= #{since})
+    </select>
+
+    <select id="selectSupplyFacts" resultMap="supplyFact">
+        select t.name topic_name, o.quota_total, o.quota_used
+          from merchant_chapter_offer o
+          join cms_topic t on t.id = o.topic_id and t.del_flag = 0
+         where o.merchant_id = #{merchantMemberId} and o.status = 1
+           and (o.valid_end is null or o.valid_end &gt; now())
+    </select>
+    <!-- 曝光(升级5):我有节点的主题,近窗口被浏览了多少次。browse_type=1 主题(活动=2 的约定见 ApiActivityController)。 -->
+    <select id="countTopicExposure" resultType="int">
+        select count(*)
+          from tms_browse_record b
+         where b.browse_type = 1
+           and b.browse_time &gt;= #{since}
+           and b.target_id in (
+               select distinct n.topic_id from cms_topic_node n
+                where n.merchant_member_id = #{merchantMemberId})
+    </select>
+
+
+    <!-- 全历史访客事件行:仅页面展示与 Java 聚合;允许 nickname/avatar,禁 phone/real_name(SQL 守卫锁)。 -->
+    <select id="selectVisitorEvents" resultMap="visitorEvent">
+        select r.member_id, m.nickname, m.avatar, t.name topic_name,
+               min(p.checkin_time) checkin_at, min(rd.create_time) redeemed_at
+        <include refid="merchantEntitlementJoins"/>
+          join ums_member m on m.id = r.member_id and m.del_flag = 0
+          join cms_topic t on t.id = o.topic_id and t.del_flag = 0
+         where o.merchant_id = #{merchantMemberId} and o.status = 1
+           and (p.checkin_time is not null or rd.id is not null)
+         group by e.registration_id, e.chapter_id, r.member_id, m.nickname, m.avatar, t.name
+    </select>
+</mapper>

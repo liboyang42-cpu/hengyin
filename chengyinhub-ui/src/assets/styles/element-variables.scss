@@ -1,0 +1,30 @@
+@import './token-variables.scss';
+
+/* Element UI must consume the same compile-time source as CSS semantic tokens. */
+$--color-primary: $cy-color-brand;
+$--color-success: $cy-color-status-success;
+$--color-warning: $cy-color-status-warning;
+$--color-danger: $cy-color-status-danger;
+$--color-info: $cy-color-status-info;
+
+$--button-font-weight: 600;
+
+$--color-text-primary: $cy-color-text-primary;
+$--color-text-regular: $cy-color-text-secondary;
+$--color-text-secondary: $cy-color-text-tertiary;
+
+$--border-color-light: $cy-color-border-subtle;
+$--border-color-lighter: $cy-color-bg-subtle;
+
+$--table-border: 1px solid $cy-color-border-subtle;
+
+/* icon font path, required */
+$--font-path: '~element-ui/lib/theme-chalk/fonts';
+
+@import "~element-ui/packages/theme-chalk/src/index";
+
+// the :export directive is the magic sauce for webpack
+// https://www.bluematador.com/blog/how-to-share-variables-between-js-and-sass
+:export {
+  theme: $--color-primary;
+}

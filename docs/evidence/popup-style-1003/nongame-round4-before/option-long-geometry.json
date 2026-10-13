@@ -1,0 +1,35 @@
+{
+  "row": {
+    "left": 16,
+    "top": 509,
+    "width": 358,
+    "height": 58,
+    "right": 374,
+    "bottom": 567,
+    "centerX": 195,
+    "centerY": 538
+  },
+  "label": {
+    "left": 16,
+    "top": 515.102,
+    "width": 338,
+    "height": 45,
+    "right": 354,
+    "bottom": 560.102,
+    "centerX": 185,
+    "centerY": 537.602
+  },
+  "dot": {
+    "left": 354,
+    "top": 527.5,
+    "width": 20,
+    "height": 20,
+    "right": 374,
+    "bottom": 547.5,
+    "centerX": 364,
+    "centerY": 537.5
+  },
+  "gap": 0,
+  "labelSize": "14px",
+  "lineHeight": "22.4px"
+}

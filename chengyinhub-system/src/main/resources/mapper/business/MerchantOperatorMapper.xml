@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantOperatorMapper">
+    <resultMap id="MerchantOperatorResult" type="com.chengyinhub.business.domain.MerchantOperator">
+        <id property="id" column="id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="operatorMemberId" column="operator_member_id"/>
+        <result property="activeOperatorMemberId" column="active_operator_member_id"/>
+        <result property="roleCode" column="role_code"/>
+        <result property="status" column="status"/>
+        <result property="acceptedAt" column="accepted_at"/>
+        <result property="revokedByMemberId" column="revoked_by_member_id"/>
+        <result property="revokedAt" column="revoked_at"/>
+        <result property="revokeReason" column="revoke_reason"/>
+        <result property="version" column="version"/>
+        <result property="operatorNickname" column="operator_nickname"/>
+        <result property="operatorAvatar" column="operator_avatar"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="operatorColumns">
+        mo.id, mo.merchant_id, mo.operator_member_id, mo.active_operator_member_id,
+        mo.role_code, mo.status, mo.accepted_at, mo.revoked_by_member_id, mo.revoked_at,
+        mo.revoke_reason, mo.version, mo.create_time, mo.update_time
+    </sql>
+
+    <select id="selectActiveByMemberId" resultMap="MerchantOperatorResult">
+        select <include refid="operatorColumns"/>
+        from merchant_operator mo
+        where mo.active_operator_member_id = #{operatorMemberId}
+        limit 1
+    </select>
+
+    <select id="selectActiveByMemberIdForUpdate" resultMap="MerchantOperatorResult"
+            useCache="false" flushCache="true">
+        select <include refid="operatorColumns"/>
+        from merchant_operator mo
+        where mo.active_operator_member_id = #{operatorMemberId}
+        limit 1
+        for update
+    </select>
+
+    <select id="selectByIdForUpdate" resultMap="MerchantOperatorResult">
+        select <include refid="operatorColumns"/>
+        from merchant_operator mo
+        where mo.id = #{id}
+        for update
+    </select>
+
+    <select id="selectTeamByMerchantId" resultMap="MerchantOperatorResult">
+        select <include refid="operatorColumns"/>,
+               um.nickname as operator_nickname, um.avatar as operator_avatar
+        from merchant_operator mo
+        left join ums_member um on um.id = mo.operator_member_id
+        where mo.merchant_id = #{merchantId}
+        order by case when mo.status = 'ACTIVE' then 0 else 1 end, mo.id desc
+    </select>
+
+    <insert id="insertMerchantOperator" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.MerchantOperator">
+        insert into merchant_operator
+          (merchant_id, operator_member_id, role_code, status, accepted_at, version,
+           create_by, create_time, update_by, update_time)
+        values
+          (#{merchantId}, #{operatorMemberId}, #{roleCode}, #{status}, #{acceptedAt}, #{version},
+           #{createBy}, #{createTime}, #{updateBy}, #{updateTime})
+    </insert>
+
+    <update id="updateRoleCas">
+        update merchant_operator
+        set role_code = #{roleCode}, version = version + 1,
+            update_by = #{updateBy}, update_time = now()
+        where id = #{id} and merchant_id = #{merchantId}
+          and status = 'ACTIVE' and version = #{expectedVersion}
+    </update>
+
+    <update id="revokeCas">
+        update merchant_operator
+        set status = 'REVOKED', revoked_by_member_id = #{revokedByMemberId},
+            revoked_at = now(), revoke_reason = #{revokeReason}, version = version + 1,
+            update_by = #{updateBy}, update_time = now()
+        where id = #{id} and merchant_id = #{merchantId}
+          and status = 'ACTIVE' and version = #{expectedVersion}
+    </update>
+
+    <update id="revokeAllActiveByMerchantId">
+        update merchant_operator
+        set status = 'REVOKED', revoked_by_member_id = null,
+            revoked_at = now(), revoke_reason = #{revokeReason}, version = version + 1,
+            update_by = #{updateBy}, update_time = now()
+        where merchant_id = #{merchantId} and status = 'ACTIVE'
+    </update>
+</mapper>

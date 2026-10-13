@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-04",
+  "scope": "local backend only",
+  "baseCommit": "c955401b71d49bd523a62f3e53bcbdfa14a3048b",
+  "branch": "feature/theme-runtime-1004",
+  "fullDefaultRegression": {
+    "tests": 9347,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 510
+  },
+  "coreThemeTests": 35,
+  "targetedMySqlTests": 14,
+  "classes": [
+    {
+      "class": "com.chengyinhub.business.service.support.ThemeRuntimeEngineTest",
+      "tests": 22,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.it.ThemeRuntimeMySqlIT",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.service.support.ThemeRuntimeContentPackTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiThemeRuntimeControllerTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.it.JourneyFullFlowMySqlIT",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "database": "isolated loopback MySQL 8.0.45; migration executed from old table shape",
+  "imEvidence": "existing IImService mock fail/retry test; no physical-device notification test",
+  "package": "PASS",
+  "diffCheck": "PASS",
+  "notCompleted": [
+    "existing home/decay integration not located",
+    "UI",
+    "real city, media, NPC binding and balancing",
+    "physical/cross-device business walkthrough",
+    "PR/CI merge deployment migration release"
+  ],
+  "compileAndPackageExitCode": 0
+}

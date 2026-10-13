@@ -1,0 +1,7 @@
+t01-hidden-menu.webp
+t02-in-store-treasure-hunt.webp
+t05-three-step-puzzle.webp
+t08-stamp-tour.webp
+t10-three-blind-boxes.webp
+t12-menu-tongue-twister.webp
+t24-night-owl-city.webp

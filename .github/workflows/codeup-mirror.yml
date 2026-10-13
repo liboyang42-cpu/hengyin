@@ -1,0 +1,99 @@
+name: Mirror verified master to Codeup
+
+on:
+  workflow_run:
+    workflows: [GitHub CI]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  mirror:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'master'
+    # GitHub 托管 runner 当前因 Actions 账单不可用；本机公网 SSH/22 又会在 banner
+    # 前被复位。故使用本机免费 runner，但经 Session Manager → ECS 跳板访问 Codeup。
+    runs-on: [self-hosted, macOS, ARM64, chengyin]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+      - name: Mirror verified commit and verify Codeup master
+        env:
+          CODEUP_MIRROR_SSH_KEY: ${{ secrets.CODEUP_MIRROR_SSH_KEY }}
+          CODEUP_KNOWN_HOSTS: ${{ secrets.CODEUP_KNOWN_HOSTS }}
+          ECS_SSH_HOST: ${{ secrets.ECS_SSH_HOST }}
+          ECS_SSH_USER: ${{ secrets.ECS_SSH_USER }}
+          ECS_SSH_PRIVATE_KEY: ${{ secrets.ECS_SSH_PRIVATE_KEY }}
+          ECS_SSH_KNOWN_HOSTS: ${{ secrets.ECS_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          umask 077
+          for name in ECS_SSH_HOST ECS_SSH_USER ECS_SSH_PRIVATE_KEY ECS_SSH_KNOWN_HOSTS; do
+            test -n "${!name:-}" || { echo "::error::$name 未配置"; exit 1; }
+          done
+
+          codeup_key_file=$(mktemp)
+          codeup_known_hosts=$(mktemp)
+          ecs_key_file=$(mktemp)
+          ecs_known_hosts=$(mktemp)
+          ssh_config=$(mktemp)
+          cleanup() {
+            rm -f "$codeup_key_file" "$codeup_known_hosts" \
+              "$ecs_key_file" "$ecs_known_hosts" "$ssh_config"
+          }
+          trap cleanup EXIT
+
+          printf '%s\n' "$CODEUP_MIRROR_SSH_KEY" > "$codeup_key_file"
+          printf '%s\n' "$CODEUP_KNOWN_HOSTS" > "$codeup_known_hosts"
+          printf '%s\n' "$ECS_SSH_PRIVATE_KEY" > "$ecs_key_file"
+          printf '%s\n' "$ECS_SSH_KNOWN_HOSTS" > "$ecs_known_hosts"
+          chmod 600 "$codeup_key_file" "$codeup_known_hosts" \
+            "$ecs_key_file" "$ecs_known_hosts"
+
+          proxy_script="$GITHUB_WORKSPACE/ci/ecs-session-proxy.sh"
+          test -x "$proxy_script"
+          case "$proxy_script" in
+            *[[:space:]]*) echo "::error::ProxyCommand 路径含空白"; exit 1 ;;
+          esac
+          cat > "$ssh_config" <<EOF
+          Host chengyin-ecs-jump
+            HostName $ECS_SSH_HOST
+            HostKeyAlias $ECS_SSH_HOST
+            User $ECS_SSH_USER
+            IdentityFile $ecs_key_file
+            IdentitiesOnly yes
+            IdentityAgent none
+            BatchMode yes
+            StrictHostKeyChecking yes
+            UserKnownHostsFile $ecs_known_hosts
+            ConnectTimeout 20
+            ProxyCommand $proxy_script
+
+          Host codeup.aliyun.com
+            HostName codeup.aliyun.com
+            User git
+            IdentityFile $codeup_key_file
+            IdentitiesOnly yes
+            IdentityAgent none
+            BatchMode yes
+            StrictHostKeyChecking yes
+            UserKnownHostsFile $codeup_known_hosts
+            ConnectTimeout 20
+            ProxyJump chengyin-ecs-jump
+          EOF
+          chmod 600 "$ssh_config"
+
+          codeup_url='git@codeup.aliyun.com:6a1cf1a96bb471afdf23d855/chengyin.git'
+          ssh_cmd="ssh -F $ssh_config"
+          git -c core.sshCommand="$ssh_cmd" push "$codeup_url" HEAD:refs/heads/master
+
+          # push exit 0 只证明服务端接受了,不证明它写进了 refs/heads/master:
+          # 2026-07-15 Codeup 代码评审模式把这条 push 重定向到 refs/changes/4/head,
+          # 全绿了两天而 master 停在 dbd7fdf2。必须从 Codeup 读回 SHA 才算数。
+          expected=$(git rev-parse HEAD)
+          CODEUP_SSH_COMMAND="$ssh_cmd" bash ci/verify-codeup-mirror.sh "$expected" "$codeup_url"

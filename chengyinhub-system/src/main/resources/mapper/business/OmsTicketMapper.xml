@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.OmsTicketMapper">
+    
+    <resultMap type="OmsTicket" id="OmsTicketResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="ownerType"    column="owner_type"    />
+        <result property="ownerId"    column="owner_id"    />
+        <result property="sourceTicketId" column="source_ticket_id" />
+        <result property="name"    column="name"    />
+        <result property="price"    column="price"    />
+        <result property="startTime"    column="start_time"    />
+        <result property="endTime"    column="end_time"    />
+        <result property="saleStartTime"    column="sale_start_time"    />
+        <result property="saleEndTime"    column="sale_end_time"    />
+        <result property="totalInventory"    column="total_inventory"    />
+        <result property="remainingInventory"    column="remaining_inventory"    />
+        <result property="mode"    column="mode"    />
+        <result property="subType"    column="sub_type"    />
+        <result property="selfGuided" column="self_guided" />
+        <result property="meetingPoint"    column="meeting_point"    />
+        <result property="meetingPointAddress"    column="meeting_point_address"    />
+        <result property="teamSize"    column="team_size"    />
+        <result property="minPeople"    column="min_people"    />
+        <result property="maxPeople"    column="max_people"    />
+        <result property="signupDeadline"    column="signup_deadline"    />
+        <result property="gatherLng"    column="gather_lng"    />
+        <result property="gatherLat"    column="gather_lat"    />
+        <result property="teamStatus"    column="team_status"    />
+        <result property="refundRule"    column="refund_rule"    />
+        <result property="refundSupported"    column="refund_supported"    />
+        <result property="syncWithTheme"    column="sync_with_theme"    />
+        <result property="needAudit"    column="need_audit"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectOmsTicketVo">
+        select id, member_id, owner_type, owner_id, source_ticket_id, name, price, start_time, end_time, sale_start_time, sale_end_time, total_inventory, remaining_inventory, mode, sub_type, meeting_point, meeting_point_address, team_size, min_people, max_people, signup_deadline, gather_lng, gather_lat, team_status, refund_rule, refund_supported, sync_with_theme, need_audit, del_flag, create_by, create_time, update_by, update_time,
+        (owner_type = 2 and source_ticket_id is not null
+          and (sub_type is null or sub_type = '' or sub_type = 'self')
+          and exists (select 1 from cms_activity a join cms_topic t on t.id = a.topic_id
+            where a.id = oms_ticket.owner_id and a.member_id = t.member_id
+              and (a.club_id is null or a.club_id = 0)
+              and a.del_flag = 0 and t.del_flag = 0)) as self_guided
+        from oms_ticket
+    </sql>
+
+    <select id="selectOmsTicketList" parameterType="OmsTicket" resultMap="OmsTicketResult">
+        <include refid="selectOmsTicketVo"/>
+        <where>  
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="ownerType != null "> and owner_type = #{ownerType}</if>
+            <if test="ownerId != null "> and owner_id = #{ownerId}</if>
+            <if test="sourceTicketId != null "> and source_ticket_id = #{sourceTicketId}</if>
+            <if test="subType != null  and subType != ''"> and sub_type = #{subType}</if>
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="price != null "> and price = #{price}</if>
+            <if test="startTime != null "> and start_time = #{startTime}</if>
+            <if test="endTime != null "> and end_time = #{endTime}</if>
+            <if test="totalInventory != null "> and total_inventory = #{totalInventory}</if>
+            <if test="remainingInventory != null "> and remaining_inventory = #{remainingInventory}</if>
+            <if test="delFlag != null "> and del_flag = #{delFlag}</if>
+        </where>
+        <!-- [M3] 无 order by 时行序由 InnoDB 扫描路径决定,而 resolveMode 取「第一张有 mode 的票」
+             ⇒ 混票主题的玩法模式会随扫描路径变。id asc = 自增插入序,不需新索引。 -->
+        order by id asc
+    </select>
+    
+    <select id="selectOmsTicketById" parameterType="Long" resultMap="OmsTicketResult">
+        <include refid="selectOmsTicketVo"/>
+        where id = #{id}
+    </select>
+
+    <!-- 管理端部分更新先锁定行，防止并发请求各自只改一个时间端点而拼出非法窗口。 -->
+    <select id="selectOmsTicketByIdForUpdate" parameterType="Long" resultMap="OmsTicketResult">
+        <include refid="selectOmsTicketVo"/>
+        where id = #{id}
+        for update
+    </select>
+
+    <insert id="insertOmsTicket" parameterType="OmsTicket" useGeneratedKeys="true" keyProperty="id">
+        insert into oms_ticket
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="ownerType != null">owner_type,</if>
+            <if test="ownerId != null">owner_id,</if>
+            <if test="sourceTicketId != null">source_ticket_id,</if>
+            <if test="name != null">name,</if>
+            <if test="price != null">price,</if>
+            <if test="startTime != null">start_time,</if>
+            <if test="endTime != null">end_time,</if>
+            <if test="saleStartTime != null">sale_start_time,</if>
+            <if test="saleEndTime != null">sale_end_time,</if>
+            <if test="totalInventory != null">total_inventory,</if>
+            <if test="remainingInventory != null">remaining_inventory,</if>
+            <if test="mode != null">mode,</if>
+            <if test="subType != null">sub_type,</if>
+            <if test="meetingPoint != null">meeting_point,</if>
+            <if test="meetingPointAddress != null">meeting_point_address,</if>
+            <if test="teamSize != null">team_size,</if>
+            <if test="minPeople != null">min_people,</if>
+            <if test="maxPeople != null">max_people,</if>
+            <if test="signupDeadline != null">signup_deadline,</if>
+            <if test="gatherLng != null">gather_lng,</if>
+            <if test="gatherLat != null">gather_lat,</if>
+            <if test="teamStatus != null">team_status,</if>
+            <if test="refundRule != null">refund_rule,</if>
+            <if test="refundSupported != null">refund_supported,</if>
+            <if test="syncWithTheme != null">sync_with_theme,</if>
+            <if test="needAudit != null">need_audit,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="ownerType != null">#{ownerType},</if>
+            <if test="ownerId != null">#{ownerId},</if>
+            <if test="sourceTicketId != null">#{sourceTicketId},</if>
+            <if test="name != null">#{name},</if>
+            <if test="price != null">#{price},</if>
+            <if test="startTime != null">#{startTime},</if>
+            <if test="endTime != null">#{endTime},</if>
+            <if test="saleStartTime != null">#{saleStartTime},</if>
+            <if test="saleEndTime != null">#{saleEndTime},</if>
+            <if test="totalInventory != null">#{totalInventory},</if>
+            <if test="remainingInventory != null">#{remainingInventory},</if>
+            <if test="mode != null">#{mode},</if>
+            <if test="subType != null">#{subType},</if>
+            <if test="meetingPoint != null">#{meetingPoint},</if>
+            <if test="meetingPointAddress != null">#{meetingPointAddress},</if>
+            <if test="teamSize != null">#{teamSize},</if>
+            <if test="minPeople != null">#{minPeople},</if>
+            <if test="maxPeople != null">#{maxPeople},</if>
+            <if test="signupDeadline != null">#{signupDeadline},</if>
+            <if test="gatherLng != null">#{gatherLng},</if>
+            <if test="gatherLat != null">#{gatherLat},</if>
+            <if test="teamStatus != null">#{teamStatus},</if>
+            <if test="refundRule != null">#{refundRule},</if>
+            <if test="refundSupported != null">#{refundSupported},</if>
+            <if test="syncWithTheme != null">#{syncWithTheme},</if>
+            <if test="needAudit != null">#{needAudit},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateOmsTicket" parameterType="OmsTicket">
+        update oms_ticket
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="ownerType != null">owner_type = #{ownerType},</if>
+            <if test="ownerId != null">owner_id = #{ownerId},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="endTime != null">end_time = #{endTime},</if>
+            <if test="saleStartTime != null">sale_start_time = #{saleStartTime},</if>
+            <if test="saleEndTime != null">sale_end_time = #{saleEndTime},</if>
+            <if test="totalInventory != null">total_inventory = #{totalInventory},</if>
+            <if test="remainingInventory != null">remaining_inventory = #{remainingInventory},</if>
+            <if test="mode != null">mode = #{mode},</if>
+            <if test="subType != null">sub_type = #{subType},</if>
+            <if test="meetingPoint != null">meeting_point = #{meetingPoint},</if>
+            <if test="meetingPointAddress != null">meeting_point_address = #{meetingPointAddress},</if>
+            <if test="teamSize != null">team_size = #{teamSize},</if>
+            <if test="minPeople != null">min_people = #{minPeople},</if>
+            <if test="maxPeople != null">max_people = #{maxPeople},</if>
+            <if test="signupDeadline != null">signup_deadline = #{signupDeadline},</if>
+            <if test="gatherLng != null">gather_lng = #{gatherLng},</if>
+            <if test="gatherLat != null">gather_lat = #{gatherLat},</if>
+            <if test="teamStatus != null">team_status = #{teamStatus},</if>
+            <if test="refundRule != null">refund_rule = #{refundRule},</if>
+            <if test="refundSupported != null">refund_supported = #{refundSupported},</if>
+            <if test="syncWithTheme != null">sync_with_theme = #{syncWithTheme},</if>
+            <if test="needAudit != null">need_audit = #{needAudit},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+        <if test="totalInventory != null">
+            <!-- 容量变更必须同步改 remaining_inventory 并保持已占用量不变。
+                 用库中旧值再算一次，防止绕过 Service 的裸 Mapper 写入制造 total &lt; remaining。 -->
+            and #{remainingInventory} = remaining_inventory - (total_inventory - #{totalInventory})
+            and remaining_inventory - (total_inventory - #{totalInventory}) &gt;= 0
+        </if>
+    </update>
+
+    <!-- 主题编辑整体重建的主题票原地更新。与 updateOmsTicket 有意不同的三点，都是契约不是风格：
+         ① 下面列出的列(全部由发布器编辑器拥有)<b>无条件</b>写入 —— &lt;if test="x != null"&gt; 会让
+            「发布者把集合点清空」静默保留旧值，而旧路径(删了重插)是真清空的；
+            刻意<b>不</b>写 member_id / owner_type / owner_id / source_ticket_id / del_flag / create_* :
+            那是归属与出身，由 where 判定、不由本次编辑改写；sub_type / team_status 编辑器不产出(H11 已下线)；
+         ② where 带 owner_type/owner_id ⇒ 复用哪一行由服务端 scope 判定，跨主题/已删的行改不动(返回 0)；
+         ③ 沿用 updateOmsTicket 的库存一致性条件：用库中旧值再算一次，保住已占用量，
+            防并发改动后写出 total &lt; remaining。
+         为什么必须原地更新而不能删了重插：活动壳票的 source_ticket_id 就是主题票 id，
+         重插换新 id 会在同一事务里、在 syncTopicTicketsToActivity 之前把同步键销毁。 -->
+    <update id="updateTopicTicketOnRebuild" parameterType="OmsTicket">
+        update oms_ticket
+        set name = #{name},
+            price = #{price},
+            start_time = #{startTime},
+            end_time = #{endTime},
+            sale_start_time = #{saleStartTime},
+            sale_end_time = #{saleEndTime},
+            total_inventory = #{totalInventory},
+            remaining_inventory = #{remainingInventory},
+            mode = #{mode},
+            meeting_point = #{meetingPoint},
+            meeting_point_address = #{meetingPointAddress},
+            team_size = coalesce(#{teamSize}, team_size),
+            min_people = #{minPeople},
+            max_people = #{maxPeople},
+            signup_deadline = #{signupDeadline},
+            gather_lng = #{gatherLng},
+            gather_lat = #{gatherLat},
+            refund_rule = #{refundRule},
+            refund_supported = #{refundSupported},
+            sync_with_theme = #{syncWithTheme},
+            need_audit = coalesce(#{needAudit}, need_audit),
+            update_by = #{updateBy},
+            update_time = #{updateTime}
+        where id = #{id}
+          and owner_type = 1
+          and owner_id = #{ownerId}
+          and del_flag = 0
+          and #{remainingInventory} = remaining_inventory - (total_inventory - #{totalInventory})
+          and remaining_inventory - (total_inventory - #{totalInventory}) &gt;= 0
+    </update>
+
+    <delete id="deleteOmsTicketById" parameterType="Long">
+        delete from oms_ticket where id = #{id}
+    </delete>
+
+    <delete id="deleteUnsoldActivityOrphanTicket">
+        delete from oms_ticket
+        where id = #{id}
+          and owner_type = 2
+          and owner_id = #{activityId}
+          and source_ticket_id = #{sourceTicketId}
+          and del_flag = 0
+          and total_inventory is not null
+          and remaining_inventory is not null
+          and total_inventory &gt;= 0
+          and remaining_inventory = total_inventory
+    </delete>
+
+    <delete id="deleteOmsTicketByIds" parameterType="String">
+        delete from oms_ticket where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+
+    <select id="selectMinTicketPrice" parameterType="OmsTicket" resultType="java.math.BigDecimal">
+        SELECT
+        IFNULL(MIN(price),0) AS minTicketPrice
+        FROM
+        oms_ticket
+        <where>
+            <if test="ownerType != null">
+                AND owner_type = #{ownerType}
+            </if>
+            <if test="ownerId != null">
+                AND owner_id = #{ownerId}
+            </if>
+        </where>
+    </select>
+
+    <!-- 出发前提醒。原条件含 team_status = 1(已成团),而成团引擎从未生效、全库 team_status 恒为 0
+         ⇒ 本查询恒空 ⇒ 出发前提醒从没发出过一条。成团下线(2026-07-15)后摘除该依赖,
+         所有经典定向票的已支付成员均可收到提醒。
+         注:sys_job beforeStartNotifyTask(id=102)仍为暂停态,启用属独立决策,不随本次改动生效。 -->
+    <select id="selectTeamFormedStartingSoon" resultMap="OmsTicketResult">
+        <include refid="selectOmsTicketVo"/>
+        where mode = 1 and del_flag = 0
+          and start_time is not null and start_time &gt;= #{from} and start_time &lt;= #{to}
+    </select>
+
+    <select id="selectMinTicketPrices" resultType="map">
+        SELECT owner_id, IFNULL(MIN(price),0) AS minTicketPrice
+        FROM oms_ticket
+        WHERE owner_type = #{ownerType}
+          AND owner_id IN
+        <foreach item="oid" collection="ownerIds" open="(" separator="," close=")">
+            #{oid}
+        </foreach>
+        GROUP BY owner_id
+    </select>
+
+    <!-- 这条查询只负责【把事实原样搬出来】,判不判得了归 service。两点都是契约,不是优化:
+         ① LEFT JOIN:壳存不存在由 cms_activity 决定,壳有没有配对票不能决定壳可不可见。
+            INNER JOIN 会把「无票壳」整只 join 掉 ⇒ service 只看见剩下那一个 activityId、
+            误判「单壳无歧义」并发布确定余席。
+         ② 不在 ON 里过滤 source_ticket_id IS NOT NULL:未配对票是 R6 回填留下的歧义行
+            (见 migration_20260817_tandianri_r6_product_contracts.sql:「歧义行保持 NULL,读侧 fail-closed 并告警」),
+            它很可能就是某张主题票的另一份拷贝。过滤掉它 = 把「这个壳里还有一份不可归属的库存」这条事实删掉,
+            service 于是拿配对上的那张冒充真值。
+         ⇒ topicTicketId = NULL 的行统一表示「该壳存在不可归属/无配对的库存」,由 service 判整体 unknown。 -->
+    <select id="selectActivityShellTicketRemainingByTopic"
+            resultType="com.chengyinhub.business.domain.vo.ActivityShellTicketInventoryVO">
+        SELECT activity.id AS activityId,
+               activity_ticket.source_ticket_id AS topicTicketId,
+               activity_ticket.remaining_inventory AS remainingInventory
+        FROM cms_activity activity
+        LEFT JOIN oms_ticket activity_ticket
+          ON activity_ticket.owner_type = 2
+         AND activity_ticket.owner_id = activity.id
+         AND activity_ticket.del_flag = 0
+        WHERE activity.topic_id = #{topicId}
+          AND activity.del_flag = 0
+          AND activity.status = 1
+          AND activity.publish_status = 1
+    </select>
+
+    <!-- 原子扣减剩余库存(防并发超卖:够扣才扣) -->
+    <update id="deductInventory">
+        UPDATE oms_ticket
+        SET remaining_inventory = remaining_inventory - #{qty}
+        WHERE id = #{id}
+          AND remaining_inventory &gt;= #{qty}
+    </update>
+
+    <!-- 非成员扣库存时，SQL 条件同时保住俱乐部配置的会员名额，不能只在 Java 预读后判断。 -->
+    <update id="deductInventoryKeepingReserved">
+        UPDATE oms_ticket
+        SET remaining_inventory = remaining_inventory - #{qty}
+        WHERE id = #{id}
+          AND remaining_inventory - #{qty} &gt;= #{reservedQuota}
+    </update>
+
+    <!-- 原子恢复剩余库存(取消/关单回补) -->
+    <update id="restoreInventory">
+        UPDATE oms_ticket
+        SET remaining_inventory = remaining_inventory + #{qty}
+        WHERE id = #{id}
+          AND remaining_inventory + #{qty} &lt;= total_inventory
+    </update>
+</mapper>

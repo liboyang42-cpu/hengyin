@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ActivityCancelManualRefundCaseMapper">
+    <select id="selectPlayerCaseStatus" resultType="String">
+        select c.status
+        from activity_cancel_manual_refund_case c
+        join cms_registration r on ((r.owner_type = 2 and r.owner_id = c.activity_id)
+                or (r.owner_type = 1 and r.owner_id = c.topic_id))
+            and (r.parent_order_no = c.parent_order_no
+              or (c.case_type = 'PARTIAL_CHAPTERS' and c.payer_registration_id = r.id))
+            and r.member_id = c.payer_member_id
+        where r.id = #{registrationId} and r.member_id = #{memberId}
+          and (json_contains(c.verified_registration_ids_json, cast(r.id as char))
+            or json_contains(c.unverified_registration_ids_json, cast(r.id as char)))
+    </select>
+
+    <resultMap id="CaseResult" type="ActivityCancelManualRefundCase">
+        <id property="id" column="id"/>
+        <result property="clubId" column="club_id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="ownerMemberId" column="owner_member_id"/>
+        <result property="actorMemberId" column="actor_member_id"/>
+        <result property="parentOrderNo" column="parent_order_no"/>
+        <result property="payerRegistrationId" column="payer_registration_id"/>
+        <result property="payerMemberId" column="payer_member_id"/>
+        <result property="paidCashAmountFen" column="paid_cash_amount_fen"/>
+        <result property="verifiedRegistrationIdsJson" column="verified_registration_ids_json"/>
+        <result property="unverifiedRegistrationIdsJson" column="unverified_registration_ids_json"/>
+        <result property="caseType" column="case_type"/>
+        <result property="chapterSnapshotJson" column="chapter_snapshot_json"/>
+        <result property="status" column="status"/>
+        <result property="assessedRefundAmountFen" column="assessed_refund_amount_fen"/>
+        <result property="assessmentNote" column="assessment_note"/>
+        <result property="assessedByUserId" column="assessed_by_user_id"/>
+        <result property="assessmentRequestId" column="assessment_request_id"/>
+        <result property="assessedAt" column="assessed_at"/>
+        <result property="actualRefundAmountFen" column="actual_refund_amount_fen"/>
+        <result property="manualChannel" column="manual_channel"/>
+        <result property="evidenceObjectKey" column="evidence_object_key"/>
+        <result property="evidenceSha256" column="evidence_sha256_hex"/>
+        <result property="handleNote" column="handle_note"/>
+        <result property="handledByUserId" column="handled_by_user_id"/>
+        <result property="handleRequestId" column="handle_request_id"/>
+        <result property="handledAt" column="handled_at"/>
+        <result property="verificationNote" column="verification_note"/>
+        <result property="verifiedByUserId" column="verified_by_user_id"/>
+        <result property="verifyRequestId" column="verify_request_id"/>
+        <result property="verifiedAt" column="verified_at"/>
+        <result property="version" column="version"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="CaseColumns">
+        id, club_id, activity_id, topic_id, owner_member_id, actor_member_id, parent_order_no,
+        payer_registration_id, payer_member_id, paid_cash_amount_fen,
+        verified_registration_ids_json, unverified_registration_ids_json, case_type, chapter_snapshot_json, status,
+        assessed_refund_amount_fen, assessment_note, assessed_by_user_id,
+        assessment_request_id, assessed_at, actual_refund_amount_fen, manual_channel,
+        evidence_object_key, lower(hex(evidence_sha256)) as evidence_sha256_hex,
+        handle_note, handled_by_user_id,
+        handle_request_id, handled_at, verification_note, verified_by_user_id,
+        verify_request_id, verified_at, version, create_time, update_time
+    </sql>
+
+    <insert id="insertCase" parameterType="ActivityCancelManualRefundCase"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into activity_cancel_manual_refund_case
+          (club_id, activity_id, topic_id, owner_member_id, actor_member_id, parent_order_no,
+           payer_registration_id, payer_member_id, paid_cash_amount_fen,
+           verified_registration_ids_json, unverified_registration_ids_json,
+           case_type, chapter_snapshot_json, status, version, create_time, update_time)
+        values
+          (#{clubId}, #{activityId}, #{topicId}, #{ownerMemberId}, #{actorMemberId}, #{parentOrderNo},
+           #{payerRegistrationId}, #{payerMemberId}, #{paidCashAmountFen},
+           #{verifiedRegistrationIdsJson}, #{unverifiedRegistrationIdsJson},
+           #{caseType}, #{chapterSnapshotJson}, 'PENDING_ASSESSMENT', 0, now(3), now(3))
+    </insert>
+
+    <select id="selectById" resultMap="CaseResult">
+        select <include refid="CaseColumns"/>
+        from activity_cancel_manual_refund_case
+        where id = #{caseId}
+    </select>
+
+    <select id="selectByIdForUpdate" resultMap="CaseResult">
+        select <include refid="CaseColumns"/>
+        from activity_cancel_manual_refund_case
+        where id = #{caseId}
+        for update
+    </select>
+
+    <select id="selectByActivityAndParent" resultMap="CaseResult">
+        select <include refid="CaseColumns"/>
+        from activity_cancel_manual_refund_case
+        where activity_id = #{activityId} and parent_order_no = #{parentOrderNo}
+        for update
+    </select>
+
+    <select id="selectByTopicAndParent" resultMap="CaseResult">
+        select <include refid="CaseColumns"/>
+        from activity_cancel_manual_refund_case
+        where topic_id = #{topicId} and parent_order_no = #{parentOrderNo}
+        for update
+    </select>
+
+    <select id="selectByAssessmentRequestId" resultMap="CaseResult">
+        select <include refid="CaseColumns"/>
+        from activity_cancel_manual_refund_case
+        where assessment_request_id = #{requestId}
+        for update
+    </select>
+
+    <select id="selectByHandleRequestId" resultMap="CaseResult">
+        select <include refid="CaseColumns"/>
+        from activity_cancel_manual_refund_case
+        where handle_request_id = #{requestId}
+        for update
+    </select>
+
+    <select id="selectByVerifyRequestId" resultMap="CaseResult">
+        select <include refid="CaseColumns"/>
+        from activity_cancel_manual_refund_case
+        where verify_request_id = #{requestId}
+        for update
+    </select>
+
+    <select id="selectList" resultMap="CaseResult">
+        select <include refid="CaseColumns"/>
+        from activity_cancel_manual_refund_case
+        <where>
+            <if test="clubId != null">club_id = #{clubId}</if>
+            <if test="status != null">and status = #{status}</if>
+        </where>
+        order by id desc
+    </select>
+
+    <update id="assessCase">
+        update activity_cancel_manual_refund_case
+        set status = #{decision},
+            assessed_refund_amount_fen = #{amountFen},
+            assessment_note = #{note},
+            assessed_by_user_id = #{assessorUserId},
+            assessment_request_id = #{requestId},
+            assessed_at = #{assessedAt},
+            version = version + 1,
+            update_time = #{assessedAt}
+        where id = #{caseId}
+          and version = #{expectedVersion}
+          and status = 'PENDING_ASSESSMENT'
+          and assessment_request_id is null
+    </update>
+
+    <update id="handleCase">
+        update activity_cancel_manual_refund_case
+        set status = 'MANUAL_REFUND_RECORDED',
+            actual_refund_amount_fen = #{actualAmountFen},
+            manual_channel = #{channel},
+            evidence_object_key = #{evidenceObjectKey},
+            evidence_sha256 = unhex(#{evidenceSha256}),
+            handle_note = #{note},
+            handled_by_user_id = #{handlerUserId},
+            handle_request_id = #{requestId},
+            handled_at = #{handledAt},
+            version = version + 1,
+            update_time = #{handledAt}
+        where id = #{caseId}
+          and version = #{expectedVersion}
+          and status = 'MANUAL_REFUND_REQUIRED'
+          and handle_request_id is null
+          and #{actualAmountFen} = assessed_refund_amount_fen
+    </update>
+
+    <update id="verifyCase">
+        update activity_cancel_manual_refund_case
+        set status = 'MANUAL_REFUND_EVIDENCE_VERIFIED',
+            verification_note = #{note},
+            verified_by_user_id = #{verifierUserId},
+            verify_request_id = #{requestId},
+            verified_at = #{verifiedAt},
+            version = version + 1,
+            update_time = #{verifiedAt}
+        where id = #{caseId}
+          and version = #{expectedVersion}
+          and status = 'MANUAL_REFUND_RECORDED'
+          and verify_request_id is null
+          and handled_by_user_id &lt;&gt; #{verifierUserId}
+          and evidence_sha256 = unhex(#{evidenceSha256})
+    </update>
+
+    <update id="reworkCase">
+        update activity_cancel_manual_refund_case
+        set status = 'MANUAL_REFUND_REQUIRED',
+            actual_refund_amount_fen = null,
+            manual_channel = null,
+            evidence_object_key = null,
+            evidence_sha256 = null,
+            handle_note = null,
+            handled_by_user_id = null,
+            handle_request_id = null,
+            handled_at = null,
+            version = version + 1,
+            update_time = #{reworkedAt}
+        where id = #{caseId}
+          and version = #{expectedVersion}
+          and status = 'MANUAL_REFUND_RECORDED'
+          and verify_request_id is null
+    </update>
+
+    <update id="reopenAssessment">
+        update activity_cancel_manual_refund_case
+        set status = 'PENDING_ASSESSMENT',
+            assessed_refund_amount_fen = null,
+            assessment_note = null,
+            assessed_by_user_id = null,
+            assessment_request_id = null,
+            assessed_at = null,
+            version = version + 1,
+            update_time = #{reopenedAt}
+        where id = #{caseId}
+          and version = #{expectedVersion}
+          and status = 'NO_REFUND'
+          and actual_refund_amount_fen is null
+          and handled_by_user_id is null
+          and verified_by_user_id is null
+    </update>
+</mapper>

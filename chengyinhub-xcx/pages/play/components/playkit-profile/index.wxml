@@ -1,0 +1,63 @@
+<!-- 出生登记:一张表填完就有了身份。头像可选、题目来自商家配置(1–8 条)。
+     整屏台面与十九个玩法共用 cy-play-stage(退出 / 判定屏都是它那套):
+     这一屏没有计时也没有次数,台面只负责退出与判定层。 -->
+<view class="pf-shell {{inline ? 'pf-shell--inline' : ''}}">
+<cy-play-stage id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出" bind:back="onClose">
+  <view class="pf g-col {{inline ? 'pf--inline' : ''}} {{reducedMotion ? 'pk--reduced' : ''}}">
+    <view class="g-kicker">{{title || '出生登记'}}</view>
+    <view class="pf__lead pk-in" wx:if="{{lead}}">{{lead}}</view>
+
+    <!-- 2026-09-24 按原型:刚交上去时答案一行行像墨迹写进档案(pf--inked),写完盖章 -->
+    <view class="pf__summary {{inked ? 'pf--inked' : ''}}">
+      <view class="pf__form-title">{{title || '登记表'}}</view>
+      <view class="pf__row" wx:for="{{summary}}" wx:key="key">
+        <text class="pf__row-label">{{item.label}}</text>
+        <text class="pf__row-answer {{item.answer ? 'is-filled' : ''}}" style="transition-delay:{{index * 0.25}}s">{{item.answer}}</text>
+      </view>
+    </view>
+
+    <view class="pf__progress" wx:if="{{!done}}">
+      <view class="pf__previous" wx:if="{{step > 0}}" bindtap="onPrevious" hover-class="pf__opt--press"
+            aria-role="button" aria-label="上一题">上一题</view>
+      <text wx:else></text>
+      <text>{{step + 1}} / {{totalSteps}}</text>
+    </view>
+
+    <!-- 头像是最后一步；上传成功后才允许提交必填头像。 -->
+    <view class="pf__ava" wx:if="{{avatarStep || (done && avatarUrl)}}" bindtap="onAvatar"
+          aria-role="button" aria-label="{{avatarUrl ? '换一张头像' : '选一张头像'}}"
+          hover-class="pf__ava--press" hover-stay-time="80">
+      <image wx:if="{{avatarUrl}}" class="pf__ava-img" src="{{avatarUrl}}" mode="aspectFill" />
+      <view wx:else class="pf__ava-ph"><cy-icon name="camera" size="52" /></view>
+      <view class="pf__ava-t">{{avatarUrl ? '换一张' : (avatarRequired ? '放一张照片' : '放张照片（可选）')}}<text class="pf__req" wx:if="{{avatarRequired}}" aria-hidden="true">*</text></view>
+    </view>
+
+    <view class="pf__qs pk-in pk-in--2" wx:if="{{currentQuestion && !done}}">
+      <view class="pf__q">
+        <view class="pf__label">
+          <text>{{currentQuestion.label || currentQuestion.key}}</text><text class="pf__req" aria-hidden="true">*</text>
+        </view>
+        <input wx:if="{{currentQuestion.kind !== 'pick'}}" class="pf__input"
+               value="{{form[currentQuestion.key]}}" maxlength="{{currentQuestion.maxLength || 12}}"
+               placeholder="写在这里" placeholder-class="pf__input-ph"
+               data-key="{{currentQuestion.key}}" bindinput="onInput"
+               aria-label="{{currentQuestion.label || currentQuestion.key}}" />
+        <view class="pf__opts" wx:if="{{currentQuestion.options.length}}">
+          <view class="pf__opt {{form[currentQuestion.key] === opt.key ? 'is-on' : ''}}"
+                wx:for="{{currentQuestion.options}}" wx:for-item="opt" wx:key="key"
+                data-key="{{currentQuestion.key}}" data-opt="{{opt.key}}" bindtap="onPick"
+                aria-role="radio" aria-checked="{{form[currentQuestion.key] === opt.key}}"
+                hover-class="pf__opt--press" hover-stay-time="80">{{opt.label || opt.key}}</view>
+        </view>
+        <view class="pf__count" wx:if="{{currentQuestion.kind !== 'pick'}}">{{form[currentQuestion.key].length || 0}} / {{currentQuestion.maxLength || 12}}</view>
+      </view>
+    </view>
+
+    <view class="pf__seal {{sealed ? 'is-on' : ''}}" wx:if="{{done}}" aria-role="text" aria-label="档案已提交，各项指标在范围内">各项指标在范围内</view>
+  </view>
+
+  <view class="g-btn {{ctaDisabled ? 'g-btn--disabled' : ''}} {{inline ? 'pf__submit--inline' : ''}}" bindtap="onSubmit"
+        aria-role="button" aria-label="{{ctaLabel}}" aria-disabled="{{ctaDisabled}}"
+        hover-class="g-btn--press" hover-stay-time="80">{{ctaLabel}}</view>
+</cy-play-stage>
+</view>

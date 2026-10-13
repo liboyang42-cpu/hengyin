@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>编辑主题 · 伏笔弹窗</title>
+<style>body{margin:0;background:#f5f6f8;color:#171719;font:15px/1.65 system-ui,-apple-system,sans-serif}main{max-width:980px;margin:30px auto;padding:0 24px}h1{font-size:28px;margin:0 0 12px}h2{font-size:20px;margin:0 0 12px}h3{font-size:17px;margin:0 0 8px}p{color:#555966}a{color:#4944d7}section,details{background:#fff;border-radius:18px;padding:24px;margin:22px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:28px}figure{margin:0;text-align:center}img{width:100%;max-width:300px;height:auto;border-radius:16px}figcaption{font-size:13px;padding:10px}summary{cursor:pointer;font-weight:600}code{font-size:12px;overflow-wrap:anywhere}@media(max-width:600px){.grid{grid-template-columns:1fr}main{padding:0 16px}section,details{padding:18px}}</style></head><body><main>
+<h1>编辑主题里的原有伏笔弹窗</h1>
+<p><strong>入口：编辑主题 → 主题详情 → 伏笔。</strong> 保留之前确认的底部弹窗，只有步数和文字两个必填项，灰色输入框，底部“完成”。一个主题只配置一个伏笔。</p>
+<p>之前加入正文伏笔入口、要求在正文插入伏笔的流程说明已撤回。正文菜单恢复为文字、图片、音频、地点；玩法从地点配置里开启。</p>
+<section><h2>按原有入口操作</h2><div class="grid">
+<figure><h3>1 · 点“添加”打开配置</h3><a href="02-original-popup.png"><img src="02-original-popup.png" alt="从主题详情打开原有底部伏笔弹窗"></a><figcaption>步数在上，文字在下。没有名称、“内容”标题、垃圾桶或顶部完成。</figcaption></figure>
+<figure><h3>2 · 填写步数和文字</h3><a href="05-filled.png"><img src="05-filled.png" alt="步数3000，文字已填写，底部完成，缺填提示已消失"></a><figcaption>修改输入后清除上一次缺填提示，不再填好后仍显示“请输入步数”。</figcaption></figure>
+<figure><h3>3 · 点底部“完成”返回</h3><a href="06-completed.png"><img src="06-completed.png" alt="伏笔弹窗关闭，返回主题详情，伏笔入口变为编辑"></a><figcaption>伏笔配置关闭，回到原来的主题详情。“添加”变为“编辑”。</figcaption></figure>
+<figure><h3>4 · 重新打开仍是同一个</h3><a href="07-reopened.png"><img src="07-reopened.png" alt="重新编辑同一个伏笔，步数和文字正确回显"></a><figcaption>3000 步和文字保留，没有追加第二个伏笔。</figcaption></figure>
+</div></section>
+<section><h2>两项必填都已核对</h2><div class="grid">
+<figure><a href="03-required-text.png"><img src="03-required-text.png" alt="文字为空时提示请输入伏笔文字，保持弹窗打开"></a><figcaption>文字没填：提示“请输入伏笔文字”，不完成。</figcaption></figure>
+<figure><a href="04-required-steps.png"><img src="04-required-steps.png" alt="步数为空时提示请输入步数，保持弹窗打开"></a><figcaption>步数没填：提示“请输入步数”，不完成。</figcaption></figure>
+</div></section>
+<section><h2>撤掉误加的正文入口</h2><figure><a href="08-four-actions.png"><img src="08-four-actions.png" alt="正文菜单只有文字、图片、音频和地点四个选项"></a><figcaption>正文只保留文字、图片、音频、地点。地点内已有配置玩法开关，本轮没有把玩法单独加入正文。</figcaption></figure></section>
+<details><summary>验证记录</summary><p>45 项相关检查通过，语法、范围检查和原生模板/样式编译通过。入口与完成按钮使用模拟器原生点击；输入值通过组件 input 事件填写，未验证真机键盘。</p><p>测试草稿已经恢复；独立新页面读回：0 章节、0 伏笔，与测试前的本机存储一致。未保存真实主题、发布或进行正式玩家推进。</p><p>工作树：<code>/Users/arlan/.codex/worktrees/thought-config-1005/chengyin</code><br>分支：<code>feature/thought-config-1005</code><br>源码：<code>470a9403c745daa83a456090904fe12d23fdc8a9</code></p><p><a href="verification.json">本轮验证记录</a> · <a href="native-actions.json">原生动作记录</a> · <a href="tests.txt">45 项检查输出</a> · <a href="before.png">本轮修改前的原有弹窗</a></p><p>本页只验证编辑主题中的伏笔配置，不作为玩家获得或应验伏笔的全链路验收。之前将正文伏笔入口缺失判为缺陷，是错误理解，已撤回。</p></details></main></body></html>

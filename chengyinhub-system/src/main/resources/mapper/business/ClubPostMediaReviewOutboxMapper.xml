@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ClubPostMediaReviewOutboxMapper">
+
+    <resultMap id="OutboxResult" type="com.chengyinhub.business.domain.ClubPostMediaReviewOutbox">
+        <id property="id" column="id"/>
+        <result property="postId" column="post_id"/>
+        <result property="postVersion" column="post_version"/>
+        <result property="submitterMemberId" column="submitter_member_id"/>
+        <result property="mediaHash" column="media_hash_hex"/>
+        <result property="state" column="state"/>
+        <result property="ownerToken" column="owner_token_hex"/>
+        <result property="fenceToken" column="fence_token"/>
+        <result property="leaseUntil" column="lease_until"/>
+        <result property="attemptCount" column="attempt_count"/>
+        <result property="maxAttempts" column="max_attempts"/>
+        <result property="nextAttemptAt" column="next_attempt_at"/>
+        <result property="traceHash" column="trace_hash_hex"/>
+        <result property="lastErrorCode" column="last_error_code"/>
+    </resultMap>
+
+    <sql id="columns">
+        id, post_id, post_version, submitter_member_id, HEX(media_hash) media_hash_hex,
+        state, HEX(owner_token) owner_token_hex, fence_token, lease_until,
+        attempt_count, max_attempts, next_attempt_at, HEX(trace_hash) trace_hash_hex,
+        last_error_code
+    </sql>
+
+    <insert id="insertIgnore" parameterType="com.chengyinhub.business.domain.ClubPostMediaReviewOutbox">
+        insert ignore into club_post_media_review_outbox
+          (post_id, post_version, submitter_member_id, media_hash, state, fence_token,
+           attempt_count, max_attempts, next_attempt_at, create_time, update_time)
+        values
+          (#{postId}, #{postVersion}, #{submitterMemberId}, UNHEX(#{mediaHash}), 0, 0,
+           0, #{maxAttempts}, NOW(3), NOW(3), NOW(3))
+    </insert>
+
+    <select id="selectByKey" resultMap="OutboxResult">
+        select <include refid="columns"/>
+        from club_post_media_review_outbox
+        where post_id = #{postId} and post_version = #{postVersion}
+          and media_hash = UNHEX(#{mediaHash})
+    </select>
+
+    <select id="selectDueIds" resultType="long">
+        select id from club_post_media_review_outbox
+        where ((state in (0, 3) and next_attempt_at &lt;= NOW(3))
+               or (state = 1 and lease_until &lt;= NOW(3)))
+        order by next_attempt_at asc, id asc
+        limit #{limit}
+    </select>
+
+    <select id="countBacklog" resultType="long">
+        select count(*) from club_post_media_review_outbox
+        where state in (0, 1, 3)
+    </select>
+
+    <select id="selectOldestBacklogCreatedAt" resultType="java.util.Date">
+        select min(create_time)
+        from club_post_media_review_outbox
+        where state in (0, 1, 3)
+    </select>
+
+    <update id="claim">
+        update club_post_media_review_outbox
+        set state = 1, owner_token = UNHEX(#{ownerToken}), fence_token = fence_token + 1,
+            lease_until = TIMESTAMPADD(SECOND, 120, NOW(3)),
+            attempt_count = attempt_count + 1, update_time = NOW(3)
+        where id = #{id}
+          and ((state in (0, 3) and next_attempt_at &lt;= NOW(3))
+               or (state = 1 and lease_until &lt;= NOW(3)))
+    </update>
+
+    <select id="selectOwned" resultMap="OutboxResult">
+        select <include refid="columns"/>
+        from club_post_media_review_outbox
+        where id = #{id} and state = 1 and owner_token = UNHEX(#{ownerToken})
+          and lease_until &gt; NOW(3)
+    </select>
+
+    <update id="markSubmitted">
+        update club_post_media_review_outbox
+        set state = 2, trace_hash = UNHEX(#{traceHash}), owner_token = null,
+            lease_until = null, last_error_code = null, update_time = NOW(3)
+        where id = #{id} and state = 1
+          and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken}
+    </update>
+
+    <update id="markRetryable">
+        update club_post_media_review_outbox
+        set state = 3, owner_token = null, lease_until = null,
+            next_attempt_at = #{nextAttemptAt}, last_error_code = #{errorCode}, update_time = NOW(3)
+        where id = #{id} and state = 1
+          and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken}
+    </update>
+
+    <update id="markStale">
+        update club_post_media_review_outbox
+        set state = 4, owner_token = null, lease_until = null,
+            last_error_code = #{errorCode}, update_time = NOW(3)
+        where id = #{id} and state = 1
+          and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken}
+    </update>
+
+    <update id="markPoisoned">
+        update club_post_media_review_outbox
+        set state = 5, owner_token = null, lease_until = null,
+            last_error_code = #{errorCode}, update_time = NOW(3)
+        where id = #{id} and state = 1
+          and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken}
+    </update>
+</mapper>

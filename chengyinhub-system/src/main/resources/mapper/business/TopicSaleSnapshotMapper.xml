@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.TopicSaleSnapshotMapper">
+    <resultMap id="DraftResult" type="com.chengyinhub.business.domain.TopicSaleCanonicalDraft">
+        <id property="topicId" column="topic_id"/>
+        <result property="schemaVersion" column="schema_version"/>
+        <result property="parameterVersion" column="parameter_version"/>
+        <result property="canonicalJson" column="canonical_json"/>
+        <result property="updatedBy" column="updated_by"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+    <resultMap id="SnapshotResult" type="com.chengyinhub.business.domain.TopicSaleSnapshot">
+        <id property="id" column="id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="schemaVersion" column="schema_version"/>
+        <result property="parameterVersion" column="parameter_version"/>
+        <result property="sourceReviewTaskId" column="source_review_task_id"/>
+        <result property="canonicalJson" column="canonical_json"/>
+        <result property="frozenAt" column="frozen_at"/>
+    </resultMap>
+
+    <select id="selectDraftByTopicId" resultMap="DraftResult">
+        select topic_id, schema_version, parameter_version, canonical_json, updated_by, update_time
+        from topic_sale_canonical_draft where topic_id = #{topicId}
+    </select>
+    <select id="selectDraftByTopicIdForUpdate" resultMap="DraftResult">
+        select topic_id, schema_version, parameter_version, canonical_json, updated_by, update_time
+        from topic_sale_canonical_draft where topic_id = #{topicId} for update
+    </select>
+    <insert id="insertDraft" parameterType="com.chengyinhub.business.domain.TopicSaleCanonicalDraft">
+        insert into topic_sale_canonical_draft
+        (topic_id, schema_version, parameter_version, canonical_json, updated_by, update_time)
+        values (#{topicId}, #{schemaVersion}, #{parameterVersion}, #{canonicalJson}, #{updatedBy}, #{updateTime})
+    </insert>
+    <update id="updateDraftVersioned">
+        update topic_sale_canonical_draft
+        set schema_version = #{draft.schemaVersion},
+            parameter_version = parameter_version + 1,
+            canonical_json = #{draft.canonicalJson},
+            updated_by = #{draft.updatedBy},
+            update_time = #{draft.updateTime}
+        where topic_id = #{draft.topicId} and parameter_version = #{expectedVersion}
+    </update>
+    <update id="advanceDraftVersion">
+        update topic_sale_canonical_draft
+        set parameter_version = parameter_version + 1,
+            update_time = #{updateTime}
+        where topic_id = #{topicId} and parameter_version = #{expectedVersion}
+    </update>
+
+    <select id="selectSnapshotByTopicId" resultMap="SnapshotResult">
+        select id, topic_id, schema_version, parameter_version, source_review_task_id, canonical_json, frozen_at
+        from topic_sale_snapshot where topic_id = #{topicId}
+    </select>
+    <insert id="insertSnapshot" parameterType="com.chengyinhub.business.domain.TopicSaleSnapshot"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into topic_sale_snapshot
+        (topic_id, schema_version, parameter_version, source_review_task_id, canonical_json, frozen_at)
+        values (#{topicId}, #{schemaVersion}, #{parameterVersion}, #{sourceReviewTaskId}, #{canonicalJson}, #{frozenAt})
+    </insert>
+</mapper>

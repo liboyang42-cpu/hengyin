@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CreatorProfileMapper">
+
+    <sql id="CreatorProfileColumns">
+        id, member_id as memberId, creator_name as creatorName, bio, avatar_url as avatarUrl,
+        apply_status as applyStatus, reviewer_id as reviewerId, review_reason as reviewReason,
+        reviewed_at as reviewedAt, create_time as createTime, update_time as updateTime
+    </sql>
+
+    <select id="selectByMemberId" resultType="CreatorProfile">
+        select <include refid="CreatorProfileColumns" />
+        from creator_profile
+        where member_id = #{memberId}
+        limit 1
+    </select>
+
+    <select id="selectAdminCreatorList" parameterType="CreatorProfile" resultType="CreatorProfile">
+        select <include refid="CreatorProfileColumns" />
+        from creator_profile
+        <where>
+            <if test="memberId != null"> and member_id = #{memberId}</if>
+            <if test="creatorName != null and creatorName != ''"> and creator_name like concat('%', #{creatorName}, '%')</if>
+            <if test="applyStatus != null"> and apply_status = #{applyStatus}</if>
+        </where>
+        order by create_time desc, id desc
+    </select>
+
+    <insert id="insertCreatorProfile" parameterType="CreatorProfile" useGeneratedKeys="true" keyProperty="id">
+        insert into creator_profile
+        (member_id, creator_name, bio, avatar_url, apply_status, create_time, update_time)
+        values
+        (#{memberId}, #{creatorName}, #{bio}, #{avatarUrl}, #{applyStatus}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="updatePendingCreatorProfile" parameterType="CreatorProfile">
+        update creator_profile
+        set apply_status = #{applyStatus},
+            reviewer_id = #{reviewerId},
+            review_reason = #{reviewReason},
+            reviewed_at = #{reviewedAt},
+            update_time = #{updateTime}
+        where id = #{id}
+          and apply_status = 0
+    </update>
+</mapper>

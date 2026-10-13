@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.SettlementRuleMapper">
+
+    <resultMap id="SettlementRuleResult" type="com.chengyinhub.business.domain.SettlementRule">
+        <result property="id" column="id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="bizType" column="biz_type"/>
+        <result property="ruleName" column="rule_name"/>
+        <result property="settlementCycle" column="settlement_cycle"/>
+        <result property="platformCommissionRate" column="platform_commission_rate"/>
+        <result property="merchantRate" column="merchant_rate"/>
+        <result property="creatorRate" column="creator_rate"/>
+        <result property="inviterRate" column="inviter_rate"/>
+        <result property="guaranteeBaseRate" column="guarantee_base_rate"/>
+        <result property="guaranteeStepRate" column="guarantee_step_rate"/>
+        <result property="guaranteeMaxMerchant" column="guarantee_max_merchant"/>
+        <result property="unitPrice" column="unit_price"/>
+        <result property="entitlementMaxUsage" column="entitlement_max_usage"/>
+        <result property="entitlementDays" column="entitlement_days"/>
+        <result property="minSettlementAmount" column="min_settlement_amount"/>
+        <result property="refundDeadlineHours" column="refund_deadline_hours"/>
+        <result property="allowRefundAfterVerified" column="allow_refund_after_verified"/>
+        <result property="autoApproveRefund" column="auto_approve_refund"/>
+        <result property="status" column="status"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="selectSettlementRuleVo">
+        select id, merchant_id, biz_type, rule_name, settlement_cycle, platform_commission_rate,
+               merchant_rate, creator_rate, inviter_rate,
+               guarantee_base_rate, guarantee_step_rate, guarantee_max_merchant,
+               unit_price, entitlement_max_usage, entitlement_days, min_settlement_amount,
+               refund_deadline_hours, allow_refund_after_verified, auto_approve_refund,
+               status, del_flag, create_time, update_time
+        from settlement_rule
+    </sql>
+
+    <select id="selectRuleList" parameterType="com.chengyinhub.business.domain.SettlementRule" resultMap="SettlementRuleResult">
+        <include refid="selectSettlementRuleVo"/>
+        <where>
+            del_flag = 0
+            <if test="merchantId != null">and merchant_id = #{merchantId}</if>
+            <if test="bizType != null and bizType != ''">and biz_type = #{bizType}</if>
+            <if test="status != null">and status = #{status}</if>
+        </where>
+        order by merchant_id asc, biz_type asc, id desc
+    </select>
+
+    <select id="selectActiveRule" resultMap="SettlementRuleResult">
+        <include refid="selectSettlementRuleVo"/>
+        where merchant_id = #{merchantId}
+          and biz_type = #{bizType}
+          and status = 1
+          and del_flag = 0
+        order by id desc
+        limit 1
+    </select>
+
+    <insert id="insertSettlementRule" parameterType="com.chengyinhub.business.domain.SettlementRule" useGeneratedKeys="true" keyProperty="id">
+        insert into settlement_rule
+        (merchant_id, biz_type, rule_name, settlement_cycle, platform_commission_rate,
+         merchant_rate, creator_rate, inviter_rate,
+         guarantee_base_rate, guarantee_step_rate, guarantee_max_merchant,
+         unit_price, entitlement_max_usage, entitlement_days, min_settlement_amount,
+         refund_deadline_hours, allow_refund_after_verified, auto_approve_refund,
+         status, del_flag, create_time)
+        values
+        (#{merchantId}, #{bizType}, #{ruleName}, #{settlementCycle}, #{platformCommissionRate},
+         #{merchantRate}, #{creatorRate}, #{inviterRate},
+         #{guaranteeBaseRate}, #{guaranteeStepRate}, #{guaranteeMaxMerchant},
+         #{unitPrice}, #{entitlementMaxUsage}, #{entitlementDays}, #{minSettlementAmount},
+         #{refundDeadlineHours}, #{allowRefundAfterVerified}, #{autoApproveRefund},
+         #{status}, #{delFlag}, now())
+    </insert>
+
+    <update id="updateSettlementRule" parameterType="com.chengyinhub.business.domain.SettlementRule">
+        update settlement_rule
+        <trim prefix="set" suffixOverrides=",">
+            <if test="merchantId != null">merchant_id = #{merchantId},</if>
+            <if test="bizType != null">biz_type = #{bizType},</if>
+            <if test="ruleName != null">rule_name = #{ruleName},</if>
+            <if test="settlementCycle != null">settlement_cycle = #{settlementCycle},</if>
+            <if test="platformCommissionRate != null">platform_commission_rate = #{platformCommissionRate},</if>
+            <if test="merchantRate != null">merchant_rate = #{merchantRate},</if>
+            <if test="creatorRate != null">creator_rate = #{creatorRate},</if>
+            <if test="inviterRate != null">inviter_rate = #{inviterRate},</if>
+            <if test="guaranteeBaseRate != null">guarantee_base_rate = #{guaranteeBaseRate},</if>
+            <if test="guaranteeStepRate != null">guarantee_step_rate = #{guaranteeStepRate},</if>
+            <if test="guaranteeMaxMerchant != null">guarantee_max_merchant = #{guaranteeMaxMerchant},</if>
+            <if test="unitPrice != null">unit_price = #{unitPrice},</if>
+            <if test="entitlementMaxUsage != null">entitlement_max_usage = #{entitlementMaxUsage},</if>
+            <if test="entitlementDays != null">entitlement_days = #{entitlementDays},</if>
+            <if test="minSettlementAmount != null">min_settlement_amount = #{minSettlementAmount},</if>
+            <if test="refundDeadlineHours != null">refund_deadline_hours = #{refundDeadlineHours},</if>
+            <if test="allowRefundAfterVerified != null">allow_refund_after_verified = #{allowRefundAfterVerified},</if>
+            <if test="autoApproveRefund != null">auto_approve_refund = #{autoApproveRefund},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            update_time = now()
+        </trim>
+        where id = #{id}
+    </update>
+</mapper>

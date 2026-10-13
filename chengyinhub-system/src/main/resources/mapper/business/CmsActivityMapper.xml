@@ -1,0 +1,467 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CmsActivityMapper">
+    
+    <resultMap type="CmsActivity" id="CmsActivityResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="hasSignup"   column="has_signup"   />
+        <result property="name"    column="name"    />
+        <result property="description"    column="description"    />
+        <result property="imgUrl"    column="img_url"    />
+        <result property="imgArr"    column="img_arr"    />
+        <result property="categoryIds"    column="category_ids"    />
+        <result property="addressName"    column="address_name"    />
+        <result property="longitude"    column="longitude"    />
+        <result property="latitude"    column="latitude"    />
+        <result property="distance"    column="distance"    />
+        <result property="address"    column="address"    />
+        <result property="status"    column="status"    />
+        <result property="publishStatus"    column="publish_status"    />
+        <result property="cancelTime"    column="cancel_time"    />
+        <result property="cancelReason"    column="cancel_reason"    />
+        <result property="reason"    column="reason"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="startDate"    column="start_date"    />
+        <result property="endDate"    column="end_date"    />
+        <result property="templateId"    column="template_id"    />
+        <result property="topicId"    column="topic_id"    />
+        <!-- 瞬态:cms_activity 无此列,按 topic_id 关联 cms_topic 取回 -->
+        <result property="productType"    column="product_type"    />
+        <result property="teamMode"    column="team_mode"    />
+        <result property="teamMaxMembers"    column="team_max_members"    />
+        <result property="clubId"    column="club_id"    />
+        <result property="checkStatus"    column="check_status"    />
+        <result property="isSettlement"    column="is_settlement"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectCmsActivityVo">
+        select id, member_id, name, description, img_url, img_arr, category_ids, address_name, longitude, latitude, address, status,publish_status, cancel_time, cancel_reason, reason, del_flag,start_date,end_date,template_id,topic_id,club_id,check_status,is_settlement, create_by, create_time, update_by, update_time,
+        (select t.product_type from cms_topic t where t.id = cms_activity.topic_id) as product_type,
+        (select t.team_mode from cms_topic t where t.id = cms_activity.topic_id) as team_mode,
+        (select t.team_max_members from cms_topic t where t.id = cms_activity.topic_id) as team_max_members
+        from cms_activity
+    </sql>
+
+    <sql id="livePublicParentTopic">
+        (topic_id is null or topic_id = 0 or exists (
+            select 1 from cms_topic live_parent
+            where live_parent.id = cms_activity.topic_id and live_parent.del_flag = 0
+        ))
+    </sql>
+
+    <select id="selectCmsActivityList" parameterType="CmsActivity" resultMap="CmsActivityResult">
+        select id, member_id, name, description, img_url, img_arr, category_ids, address_name, longitude, latitude,
+        <if test="latitude != null  and latitude != ''  and latitude != null and longitude != ''">
+            ROUND(st_distance_sphere(point(#{longitude},#{latitude}),point(IFNULL(longitude,0), IFNULL(latitude,0)))) distance,
+        </if>
+        address, status,publish_status, reason, del_flag,start_date,end_date,template_id,
+        topic_id, club_id, create_by, create_time, update_by, update_time,
+        (select t.product_type from cms_topic t where t.id = cms_activity.topic_id) as product_type
+        from cms_activity
+        <where>  
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="description != null  and description != ''"> and description = #{description}</if>
+            <if test="imgUrl != null  and imgUrl != ''"> and img_url = #{imgUrl}</if>
+            <if test="imgArr != null  and imgArr != ''"> and img_arr = #{imgArr}</if>
+            <if test="categoryIds != null ">  AND FIND_IN_SET(#{categoryIds}, category_ids) > 0</if>
+            <if test="addressName != null  and addressName != ''"> and address_name like concat('%', #{addressName}, '%')</if>
+            <if test="address != null  and address != ''"> and address = #{address}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="publishStatus != null "> and publish_status = #{publishStatus}</if>
+            <if test="topicId != null "> and topic_id = #{topicId}</if>
+            <if test="clubId != null "> and club_id = #{clubId}</if>
+            <if test="publicOnly != null and publicOnly == 1"> and (club_id is null or club_id = 0)</if>
+            <if test="excludeCancelled != null and excludeCancelled == 1"> and cancel_time is null</if>
+            <if test="delFlag != null "> and del_flag = #{delFlag}</if>
+            <if test="activeClubOnly != null and activeClubOnly">
+                and (club_id is null or club_id = 0 or exists (
+                    select 1 from club active_club
+                    where active_club.id = cms_activity.club_id and active_club.del_flag = 0
+                ))
+                and not exists (
+                    select 1
+                    from cms_topic parent_topic
+                    left join club parent_club
+                      on parent_club.id = parent_topic.club_id and parent_club.del_flag = 0
+                    where parent_topic.id = cms_activity.topic_id
+                      and parent_topic.club_id is not null and parent_topic.club_id != 0
+                      and parent_club.id is null
+                )
+            </if>
+            <if test="reason != null  and reason != ''"> and reason = #{reason}</if>
+
+            <if test="checkStatus != null"> and check_status = #{checkStatus}</if>
+            <if test="isSettlement != null"> and is_settlement = #{isSettlement}</if>
+
+            <if test="isLiked == 1 "> and id in (select data_id from cms_activity_like where member_id=#{isLikedMemberId}) </if>
+
+            <if test="startTime != null  and startTime != '' ">
+                and create_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null  and endTime != '' ">
+                and create_time &lt;= #{endTime}
+            </if>
+
+            <if test="startDate != null  ">
+                and start_date &gt;= #{startDate}
+            </if>
+            <if test="endDate != null   ">
+                and end_date &lt;= #{endTime}
+            </if>
+            <if test="isNew == 1 "> and end_date > now() </if>
+
+            <if test="latitude != null  and latitude != ''  and latitude != null and longitude != ''">
+                and ROUND(st_distance_sphere(point(#{longitude},#{latitude}),point(IFNULL(longitude,0), IFNULL(latitude,0)))) &lt; 100000
+            </if>
+
+        </where>
+
+        <if test="sortType != null">
+            <if test="sortType ==1 ">
+                order by
+                <if test="latitude != null  and latitude != ''  and latitude != null and longitude != ''">
+                distance,
+                 </if>
+                create_time desc
+            </if>
+        </if>
+        <if test="sortType == null">
+            order by
+            <if test="latitude != null  and latitude != ''  and latitude != null and longitude != ''">
+                distance,
+            </if>
+            create_time desc
+        </if>
+    </select>
+
+    <!-- 公开查询不复用调用方可写的 status/publishStatus/delFlag/cancelTime 条件；四道 Gate 写死在 SQL。
+         「已取消」原本是可选的 <if excludeCancelled>，四个调用方里只有两个记得拨 ⇒ 收进硬编码，
+         它没有例外:任何公开面都不该出已取消的活动。
+         剩下两个维度(出不出社群活动 / 出不出已结束的)确实因调用方而异，但也不再是可选开关 ——
+         由 ICmsActivityService.selectPublicCmsActivityList 的 PublicActivityScope 必填参数统一拨。 -->
+    <select id="selectPublicCmsActivityList" parameterType="CmsActivity" resultMap="CmsActivityResult">
+        select id, member_id, name, description, img_url, img_arr, category_ids, address_name, longitude, latitude,
+        <if test="latitude != null and latitude != '' and longitude != null and longitude != ''">
+            ROUND(st_distance_sphere(point(#{longitude},#{latitude}),point(IFNULL(longitude,0), IFNULL(latitude,0)))) distance,
+        </if>
+        address, status, publish_status, reason, del_flag, start_date, end_date, template_id,
+        topic_id, club_id, create_by, create_time, update_by, update_time,
+        (select t.product_type from cms_topic t where t.id = cms_activity.topic_id) as product_type
+        from cms_activity
+        <where>
+            status = 1 and publish_status = 1 and del_flag = 0 and cancel_time is null
+            and <include refid="livePublicParentTopic"/>
+            and (club_id is null or club_id = 0 or exists (
+                select 1 from club active_club
+                where active_club.id = cms_activity.club_id and active_club.del_flag = 0
+            ))
+            and not exists (
+                select 1
+                from cms_topic parent_topic
+                left join club parent_club
+                  on parent_club.id = parent_topic.club_id and parent_club.del_flag = 0
+                where parent_topic.id = cms_activity.topic_id
+                  and parent_topic.club_id is not null and parent_topic.club_id != 0
+                  and parent_club.id is null
+            )
+            <if test="name != null and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="categoryIds != null"> and FIND_IN_SET(#{categoryIds}, category_ids) &gt; 0</if>
+            <if test="addressName != null and addressName != ''"> and address_name like concat('%', #{addressName}, '%')</if>
+            <if test="topicId != null"> and topic_id = #{topicId}</if>
+            <if test="productType != null">
+                and exists (select 1 from cms_topic filter_topic
+                    where filter_topic.id = cms_activity.topic_id
+                      and filter_topic.product_type = #{productType})
+            </if>
+            <if test="scheduleFilter == 'ONGOING'">
+                and start_date &lt;= now() and end_date &gt;= now()
+            </if>
+            <if test="scheduleFilter == 'UPCOMING'">
+                and start_date &gt; now()
+            </if>
+            <if test="publicOnly != null and publicOnly == 1"> and (club_id is null or club_id = 0)</if>
+            <if test="isLiked == 1"> and id in (select data_id from cms_activity_like where member_id=#{isLikedMemberId})</if>
+            <if test="startDate != null"> and start_date &gt;= #{startDate}</if>
+            <if test="isNew == 1"> and end_date &gt; now()</if>
+            <if test="distanceMeters != null and latitude != null and latitude != '' and longitude != null and longitude != ''">
+                and ROUND(st_distance_sphere(point(#{longitude},#{latitude}),point(IFNULL(longitude,0), IFNULL(latitude,0)))) &lt; #{distanceMeters}
+            </if>
+        </where>
+        order by
+        <if test="sortType == 1 and latitude != null and latitude != '' and longitude != null and longitude != ''">distance,</if>
+        create_time desc
+    </select>
+    
+    <select id="selectCmsActivityById" parameterType="Long" resultMap="CmsActivityResult">
+        <include refid="selectCmsActivityVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectCmsActivityByIdForUpdate" parameterType="Long" resultMap="CmsActivityResult">
+        <include refid="selectCmsActivityVo"/>
+        where id = #{id}
+        for update
+    </select>
+
+    <!-- 资损对账：合作合同已生效，却没有任何与 topic+club 同时绑定的带队场次。 -->
+    <select id="selectClubOrderTopicsWithoutClubSession"
+            resultType="com.chengyinhub.business.domain.vo.ClubSessionGapVO">
+        select distinct coop.topic_id as topicId, coop.to_id as clubId
+        from coop_order coop
+        where coop.to_type = 'club'
+          and coop.status = 0
+          and coop.del_flag = 0
+          and not exists (
+              select 1
+              from cms_activity activity
+              where activity.topic_id = coop.topic_id
+                and activity.club_id = coop.to_id
+                and activity.del_flag = 0
+          )
+        order by coop.topic_id, coop.to_id
+    </select>
+
+    <select id="selectPublicCmsActivityById" parameterType="Long" resultMap="CmsActivityResult">
+        <include refid="selectCmsActivityVo"/>
+        where id = #{id} and del_flag = 0 and status = 1 and publish_status = 1
+          and <include refid="livePublicParentTopic"/>
+          and (club_id is null or club_id = 0 or exists (
+              select 1 from club active_club
+              where active_club.id = cms_activity.club_id and active_club.del_flag = 0
+          ))
+          and not exists (
+              select 1
+              from cms_topic parent_topic
+              left join club parent_club
+                on parent_club.id = parent_topic.club_id and parent_club.del_flag = 0
+              where parent_topic.id = cms_activity.topic_id
+                and parent_topic.club_id is not null and parent_topic.club_id != 0
+                and parent_club.id is null
+          )
+    </select>
+
+    <!-- 活动详情:在可见性判定之外,再回答「当前这个人报过名没有」。
+         ⚠️ 为什么套一层子查询而不是把 has_signup 加进 selectCmsActivityVo:
+            那个 sql 片段是**共享**的,列表页等查询也在用,而它们根本没有 viewerMemberId 这个参数
+            —— 加进去会让所有调用方一起炸。这里外面包一层,列清单仍然来自同一个 include,不会漂移。
+         ⚠️ 「有效报名」的判据不是我这里发明的,照抄 ClubEventOpsMapper.countActiveRegistration
+            这个既有真源(owner_type=2 定位到活动 · registration_status in (1,2) · payment_status in (0,1,2));
+            两处口径必须一致,否则「按钮说你报过」和「服务端拦你重复报名」会各说各话。
+         ⚠️ viewerMemberId 为 0(未登录)时子查询恒为 0,不会误报成已报名。 -->
+    <select id="selectCmsActivityDetailById" resultMap="CmsActivityResult">
+        select detail.*,
+          (select count(*) from cms_registration r
+            where r.owner_type = 2 and r.owner_id = detail.id
+              and r.member_id = #{viewerMemberId}
+              and r.registration_status in (1, 2)
+              and r.payment_status in (0, 1, 2)) > 0 as has_signup
+        from (
+        <include refid="selectCmsActivityVo"/>
+        where id = #{id} and del_flag = 0
+          and (club_id is null or club_id = 0 or exists (
+              select 1 from club active_club
+              where active_club.id = cms_activity.club_id and active_club.del_flag = 0
+          ))
+          and not exists (
+              select 1
+              from cms_topic parent_topic
+              left join club parent_club
+                on parent_club.id = parent_topic.club_id and parent_club.del_flag = 0
+              where parent_topic.id = cms_activity.topic_id
+                and parent_topic.club_id is not null and parent_topic.club_id != 0
+                and parent_club.id is null
+          )
+          and ((status = 1 and publish_status = 1 and <include refid="livePublicParentTopic"/>)
+            or (#{viewerMemberId} is not null and #{viewerMemberId} &gt; 0 and member_id = #{viewerMemberId}))
+        ) detail
+    </select>
+
+    <insert id="insertCmsActivity" parameterType="CmsActivity" useGeneratedKeys="true" keyProperty="id">
+        insert into cms_activity
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="name != null">name,</if>
+            <if test="description != null">description,</if>
+            <if test="imgUrl != null">img_url,</if>
+            <if test="imgArr != null">img_arr,</if>
+            <if test="categoryIds != null">category_ids,</if>
+            <if test="addressName != null">address_name,</if>
+            <if test="longitude != null">longitude,</if>
+            <if test="latitude != null">latitude,</if>
+            <if test="address != null">address,</if>
+            <if test="status != null">status,</if>
+            <if test="reason != null">reason,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="checkStatus != null">check_status,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="publishStatus != null">publish_status,</if>
+            <if test="cancelTime != null">cancel_time,</if>
+            <if test="cancelReason != null">cancel_reason,</if>
+            <if test="startDate != null">start_date,</if>
+            <if test="endDate != null">end_date,</if>
+            <if test="templateId != null">template_id,</if>
+            <if test="topicId != null">topic_id,</if>
+            <if test="clubId != null">club_id,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="name != null">#{name},</if>
+            <if test="description != null">#{description},</if>
+            <if test="imgUrl != null">#{imgUrl},</if>
+            <if test="imgArr != null">#{imgArr},</if>
+            <if test="categoryIds != null">#{categoryIds},</if>
+            <if test="addressName != null">#{addressName},</if>
+            <if test="longitude != null">#{longitude},</if>
+            <if test="latitude != null">#{latitude},</if>
+            <if test="address != null">#{address},</if>
+            <if test="status != null">#{status},</if>
+            <if test="reason != null">#{reason},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="checkStatus != null">#{checkStatus},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="publishStatus != null">#{publishStatus},</if>
+            <if test="cancelTime != null">#{cancelTime},</if>
+            <if test="cancelReason != null">#{cancelReason},</if>
+            <if test="startDate != null">#{startDate},</if>
+            <if test="endDate != null">#{endDate},</if>
+            <if test="templateId != null">#{templateId},</if>
+            <if test="topicId != null">#{topicId},</if>
+            <if test="clubId != null">#{clubId},</if>
+
+         </trim>
+    </insert>
+
+    <update id="updateCmsActivity" parameterType="CmsActivity">
+        update cms_activity
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="clubId != null">club_id = #{clubId},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="imgUrl != null">img_url = #{imgUrl},</if>
+            <if test="imgArr != null">img_arr = #{imgArr},</if>
+            <if test="categoryIds != null">category_ids = #{categoryIds},</if>
+            <if test="addressName != null">address_name = #{addressName},</if>
+            <if test="longitude != null">longitude = #{longitude},</if>
+            <if test="latitude != null">latitude = #{latitude},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="dayNote != null">day_note = #{dayNote},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="reason != null">reason = #{reason},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="checkStatus != null">check_status = #{checkStatus},</if>
+            <if test="isSettlement != null">is_settlement = #{isSettlement},</if>
+
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="publishStatus != null">publish_status = #{publishStatus},</if>
+            <if test="cancelTime != null">cancel_time = #{cancelTime},</if>
+            <if test="cancelReason != null">cancel_reason = #{cancelReason},</if>
+            <if test="startDate != null">start_date = #{startDate},</if>
+            <if test="endDate != null">end_date = #{endDate},</if>
+            <if test="templateId != null">template_id = #{templateId},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <!-- 小程序内容更新：可编辑字段对齐 CmsActivityController.toEditableActivity。
+         WHERE 必须同时钉 id 与 member_id；member_id 不进 SET，防止把归属改到调用者。 -->
+    <update id="updateCmsActivityByOwner" parameterType="CmsActivity">
+        update cms_activity
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null">name = #{name},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="imgUrl != null">img_url = #{imgUrl},</if>
+            <if test="imgArr != null">img_arr = #{imgArr},</if>
+            <if test="categoryIds != null">category_ids = #{categoryIds},</if>
+            <if test="addressName != null">address_name = #{addressName},</if>
+            <if test="longitude != null">longitude = #{longitude},</if>
+            <if test="latitude != null">latitude = #{latitude},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="dayNote != null">day_note = #{dayNote},</if>
+            <if test="startDate != null">start_date = #{startDate},</if>
+            <if test="endDate != null">end_date = #{endDate},</if>
+            <if test="templateId != null">template_id = #{templateId},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id} and member_id = #{memberId}
+    </update>
+
+    <delete id="deleteCmsActivityById" parameterType="Long">
+        delete from cms_activity where id = #{id}
+    </delete>
+
+    <delete id="deleteCmsActivityByIds" parameterType="String">
+        delete from cms_activity where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="selectCmsActivityNumByMemberId" resultType="Integer">
+        select count(1) from cms_activity where member_id = #{member_id} and del_flag=0
+    </select>
+
+    <!-- 查询需要结算的活动；product_type=2 来自 ProductType.FREE_EXPLORE -->
+    <!-- 2026-09-16 用户硬规则「收款方的钱,等所有玩家都确定退不了才可提现」:结算即入余额可提现,
+         所以还有已付未退未核销、退款截止未到的票就不结。截止口径与 RefundPolicy 同源:
+         下单快照优先,否则集合时间前 24h。end_date 早于集合时间(发布未校验)时靠这一条兜住。 -->
+    <!-- 2026-09-16 晚拍板:客诉期 = 活动结束后 7 天,满 7 天才结算入余额(=可提现);
+         与上面的退款截止闸同时成立 ⇒ 取两者较晚。涉诉订单在结算时另行暂扣(ActivitySettlementHoldMapper)。 -->
+    <select id="selectActivitiesForSettlement" resultMap="CmsActivityResult">
+        <![CDATA[
+        SELECT activity.* FROM cms_activity activity
+        WHERE activity.del_flag = 0
+          AND activity.status = 1
+          AND activity.is_settlement = 0
+          AND activity.end_date <= DATE_SUB(NOW(), INTERVAL 7 DAY)
+          AND NOT EXISTS (
+              SELECT 1 FROM cms_registration r
+              WHERE r.owner_type = 2 AND r.owner_id = activity.id
+                AND r.payment_status = 2 AND r.registration_status = 2
+                AND (r.verification_status IS NULL OR r.verification_status <> 1)
+                AND COALESCE(r.refund_deadline, DATE_SUB(activity.start_date, INTERVAL 24 HOUR)) > NOW()
+          )
+          AND (
+              activity.topic_id IS NULL
+              OR NOT EXISTS (
+                  SELECT 1 FROM cms_topic topic
+                  WHERE topic.id = activity.topic_id
+                    AND topic.product_type = 2
+              )
+          )
+        ]]>
+    </select>
+
+    <select id="selectActiveActivityIdsByTopicId" resultType="java.lang.Long">
+        SELECT id
+        FROM cms_activity
+        WHERE topic_id = #{topicId}
+          AND del_flag = 0
+        ORDER BY id
+    </select>
+
+    <!-- HF-02(A-29): 原子领取活动进入结算,仅当 is_settlement=0 时才置 1,行锁保证并发/重复触发下只有一方成功 -->
+    <update id="claimActivityForSettlement">
+        UPDATE cms_activity
+        SET is_settlement = 1, update_by = 'system', update_time = NOW()
+        WHERE id = #{id} AND is_settlement = 0 AND del_flag = 0
+    </update>
+</mapper>

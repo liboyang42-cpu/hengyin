@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantSubscriptionMapper">
+
+    <resultMap type="MerchantSubscription" id="MerchantSubscriptionResult">
+        <result property="id"    column="id"    />
+        <result property="merchantId"    column="merchant_id"    />
+        <result property="subscriptionType"    column="subscription_type"    />
+        <result property="startDate"    column="start_date"    />
+        <result property="endDate"    column="end_date"    />
+        <result property="maxUsage"    column="max_usage"    />
+        <result property="usedCount"    column="used_count"    />
+        <result property="isActive"    column="is_active"    />
+        <result property="remark"    column="remark"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectVo">
+        select id, merchant_id, subscription_type, start_date, end_date, max_usage, used_count, is_active, remark, create_time, update_time from merchant_subscription
+    </sql>
+
+    <select id="selectMerchantSubscriptionList" parameterType="MerchantSubscription" resultMap="MerchantSubscriptionResult">
+        <include refid="selectVo"/>
+        <where>
+            <if test="merchantId != null"> and merchant_id = #{merchantId}</if>
+            <if test="subscriptionType != null and subscriptionType != ''"> and subscription_type = #{subscriptionType}</if>
+            <if test="isActive != null"> and is_active = #{isActive}</if>
+            <if test="isActive != null and isActive == 1"> and (end_date is null or end_date &gt;= now())</if>
+        </where>
+        order by id desc
+    </select>
+
+    <insert id="insertMerchantSubscription" parameterType="MerchantSubscription" useGeneratedKeys="true" keyProperty="id">
+        insert into merchant_subscription
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="merchantId != null">merchant_id,</if>
+            <if test="subscriptionType != null">subscription_type,</if>
+            <if test="startDate != null">start_date,</if>
+            <if test="endDate != null">end_date,</if>
+            <if test="maxUsage != null">max_usage,</if>
+            <if test="usedCount != null">used_count,</if>
+            <if test="isActive != null">is_active,</if>
+            <if test="remark != null">remark,</if>
+            create_time,
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="merchantId != null">#{merchantId},</if>
+            <if test="subscriptionType != null">#{subscriptionType},</if>
+            <if test="startDate != null">#{startDate},</if>
+            <if test="endDate != null">#{endDate},</if>
+            <if test="maxUsage != null">#{maxUsage},</if>
+            <if test="usedCount != null">#{usedCount},</if>
+            <if test="isActive != null">#{isActive},</if>
+            <if test="remark != null">#{remark},</if>
+            now(),
+        </trim>
+    </insert>
+
+    <insert id="grantMerchantSubscription" parameterType="MerchantSubscription">
+        insert into merchant_subscription
+        (merchant_id, subscription_type, start_date, end_date, max_usage, used_count, is_active, create_time, update_time)
+        values
+        (#{merchantId}, #{subscriptionType}, #{startDate}, #{endDate}, #{maxUsage}, 0, 1, now(), now())
+        on duplicate key update
+          start_date = least(coalesce(start_date, values(start_date)), values(start_date)),
+          end_date = greatest(coalesce(end_date, values(end_date)), values(end_date)),
+          max_usage = coalesce(max_usage, 0) + coalesce(values(max_usage), 0),
+          is_active = 1,
+          update_time = now()
+    </insert>
+</mapper>

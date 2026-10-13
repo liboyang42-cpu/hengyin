@@ -1,0 +1,12 @@
+{
+  "typeDraft": true,
+  "typeCancel": true,
+  "typeApplyAndClose": true,
+  "typeReopen": true,
+  "prefsLimit": true,
+  "prefsApplyAndClose": true,
+  "prefsReopen": true,
+  "prefsCancel": true,
+  "storedProfileWrite": false,
+  "loadState": "missing-param"
+}

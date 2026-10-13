@@ -1,0 +1,377 @@
+[
+  {
+    "name": "node-detail",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 92,
+      "width": 390,
+      "height": 587,
+      "right": 390,
+      "bottom": 679,
+      "centerX": 195,
+      "centerY": 385.5
+    },
+    "title": {
+      "left": 16,
+      "top": 192.195,
+      "width": 358,
+      "height": 22,
+      "right": 374,
+      "bottom": 214.195,
+      "centerX": 195,
+      "centerY": 203.195
+    },
+    "titleFont": "22px",
+    "content": {
+      "left": 75,
+      "top": 252.594,
+      "width": 285,
+      "height": 22,
+      "right": 360,
+      "bottom": 274.594,
+      "centerX": 217.5,
+      "centerY": 263.594
+    },
+    "contentFont": "14px",
+    "flag_after_close": false,
+    "closed": true
+  },
+  {
+    "name": "next-route",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 92,
+      "width": 390,
+      "height": 366,
+      "right": 390,
+      "bottom": 458,
+      "centerX": 195,
+      "centerY": 275
+    },
+    "title": {
+      "left": 16,
+      "top": 192.195,
+      "width": 358,
+      "height": 35,
+      "right": 374,
+      "bottom": 227.195,
+      "centerX": 195,
+      "centerY": 209.695
+    },
+    "titleFont": "22px",
+    "flag_after_close": false,
+    "closed": true
+  },
+  {
+    "name": "mode-picker",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 385.844,
+      "width": 390,
+      "height": 408,
+      "right": 390,
+      "bottom": 793.844,
+      "centerX": 195,
+      "centerY": 589.844
+    },
+    "title": {
+      "left": 16,
+      "top": 486.039,
+      "width": 358,
+      "height": 35,
+      "right": 374,
+      "bottom": 521.039,
+      "centerX": 195,
+      "centerY": 503.539
+    },
+    "titleFont": "22px",
+    "content": {
+      "left": 75,
+      "top": 559.234,
+      "width": 233,
+      "height": 22,
+      "right": 308,
+      "bottom": 581.234,
+      "centerX": 191.5,
+      "centerY": 570.234
+    },
+    "contentFont": "14px",
+    "flag_after_close": false,
+    "closed": true
+  },
+  {
+    "name": "topic-detail",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 92,
+      "width": 390,
+      "height": 1218,
+      "right": 390,
+      "bottom": 1310,
+      "centerX": 195,
+      "centerY": 701
+    },
+    "title": {
+      "left": 16,
+      "top": 173,
+      "width": 358,
+      "height": 35,
+      "right": 374,
+      "bottom": 208,
+      "centerX": 195,
+      "centerY": 190.5
+    },
+    "titleFont": "22px",
+    "content": {
+      "left": 75,
+      "top": 246.195,
+      "width": 285,
+      "height": 22,
+      "right": 360,
+      "bottom": 268.195,
+      "centerX": 217.5,
+      "centerY": 257.195
+    },
+    "contentFont": "14px",
+    "flag_after_close": false,
+    "closed": true
+  },
+  {
+    "name": "merchant-time",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 283.602,
+      "width": 390,
+      "height": 560,
+      "right": 390,
+      "bottom": 843.602,
+      "centerX": 195,
+      "centerY": 563.602
+    },
+    "title": {
+      "left": 16,
+      "top": 295.602,
+      "width": 358,
+      "height": 45,
+      "right": 374,
+      "bottom": 340.602,
+      "centerX": 195,
+      "centerY": 318.102
+    },
+    "titleFont": "18px",
+    "titleText": "可配合时间",
+    "content": {
+      "left": 38,
+      "top": 370.602,
+      "width": 125,
+      "height": 22,
+      "right": 163,
+      "bottom": 392.602,
+      "centerX": 100.5,
+      "centerY": 381.602
+    },
+    "contentFont": "14px",
+    "panelBorder": "0px",
+    "panelBorderColor": "rgb(0, 0, 0)",
+    "flag_after_close": false,
+    "closed": true
+  },
+  {
+    "name": "nearby-team",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 493.617,
+      "width": 390,
+      "height": 350,
+      "right": 390,
+      "bottom": 843.617,
+      "centerX": 195,
+      "centerY": 668.617
+    },
+    "title": {
+      "left": 16,
+      "top": 525.617,
+      "width": 358,
+      "height": 29,
+      "right": 374,
+      "bottom": 554.617,
+      "centerX": 195,
+      "centerY": 540.117
+    },
+    "titleFont": "18px",
+    "content": {
+      "left": 16,
+      "top": 560.414,
+      "width": 358,
+      "height": 19,
+      "right": 374,
+      "bottom": 579.414,
+      "centerX": 195,
+      "centerY": 569.914
+    },
+    "contentFont": "12px",
+    "flag_after_close": "",
+    "closed": true
+  },
+  {
+    "name": "nearby-leader",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 541.016,
+      "width": 390,
+      "height": 303,
+      "right": 390,
+      "bottom": 844.016,
+      "centerX": 195,
+      "centerY": 692.516
+    },
+    "title": {
+      "left": 16,
+      "top": 573.016,
+      "width": 358,
+      "height": 29,
+      "right": 374,
+      "bottom": 602.016,
+      "centerX": 195,
+      "centerY": 587.516
+    },
+    "titleFont": "18px",
+    "content": {
+      "left": 16,
+      "top": 607.813,
+      "width": 358,
+      "height": 19,
+      "right": 374,
+      "bottom": 626.813,
+      "centerX": 195,
+      "centerY": 617.313
+    },
+    "contentFont": "12px",
+    "flag_after_close": "",
+    "closed": true
+  },
+  {
+    "name": "nearby-mine",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 628.008,
+      "width": 390,
+      "height": 216,
+      "right": 390,
+      "bottom": 844.008,
+      "centerX": 195,
+      "centerY": 736.008
+    },
+    "title": {
+      "left": 16,
+      "top": 660.008,
+      "width": 358,
+      "height": 29,
+      "right": 374,
+      "bottom": 689.008,
+      "centerX": 195,
+      "centerY": 674.508
+    },
+    "titleFont": "18px",
+    "content": {
+      "left": 16,
+      "top": 694.805,
+      "width": 358,
+      "height": 19,
+      "right": 374,
+      "bottom": 713.805,
+      "centerX": 195,
+      "centerY": 704.305
+    },
+    "contentFont": "12px",
+    "flag_after_close": "",
+    "closed": true
+  },
+  {
+    "name": "nearby-topic",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 617.414,
+      "width": 390,
+      "height": 227,
+      "right": 390,
+      "bottom": 844.414,
+      "centerX": 195,
+      "centerY": 730.914
+    },
+    "title": {
+      "left": 16,
+      "top": 681.008,
+      "width": 358,
+      "height": 29,
+      "right": 374,
+      "bottom": 710.008,
+      "centerX": 195,
+      "centerY": 695.508
+    },
+    "titleFont": "18px",
+    "content": {
+      "left": 16,
+      "top": 715.805,
+      "width": 358,
+      "height": 19,
+      "right": 374,
+      "bottom": 734.805,
+      "centerX": 195,
+      "centerY": 725.305
+    },
+    "contentFont": "12px",
+    "flag_after_close": "",
+    "closed": true
+  },
+  {
+    "name": "route-review",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 255.203,
+      "width": 390,
+      "height": 589,
+      "right": 390,
+      "bottom": 844.203,
+      "centerX": 195,
+      "centerY": 549.703
+    },
+    "title": {
+      "left": 16,
+      "top": 267.203,
+      "width": 358,
+      "height": 45,
+      "right": 374,
+      "bottom": 312.203,
+      "centerX": 195,
+      "centerY": 289.703
+    },
+    "titleFont": "18px",
+    "titleText": "评价路线",
+    "content": {
+      "left": 16,
+      "top": 391.203,
+      "width": 358,
+      "height": 29,
+      "right": 374,
+      "bottom": 420.203,
+      "centerX": 195,
+      "centerY": 405.703
+    },
+    "contentFont": "18px",
+    "panelBorder": "0px",
+    "panelBorderColor": "rgb(255, 255, 255)",
+    "flag_after_close": false,
+    "closed": true
+  }
+]

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ClubDirectMerchantReceivableMapper">
+    <resultMap id="Receipt" type="com.chengyinhub.business.domain.ClubDirectMerchantReceivable">
+        <id property="id" column="id" />
+        <result property="claimId" column="claim_id" />
+        <result property="redemptionId" column="redemption_id" />
+        <result property="offerId" column="offer_id" />
+        <result property="topicId" column="topic_id" />
+        <result property="chapterId" column="chapter_id" />
+        <result property="payerClubId" column="payer_club_id" />
+        <result property="merchantMemberId" column="merchant_member_id" />
+        <result property="perHeadFeeSnapshot" column="per_head_fee_snapshot" />
+        <result property="status" column="status" />
+        <result property="settledAt" column="settled_at" />
+        <result property="settledBy" column="settled_by" />
+        <result property="payVoucherNo" column="pay_voucher_no" />
+        <result property="reversedAt" column="reversed_at" />
+        <result property="refundedAt" column="refunded_at" />
+        <result property="refundedBy" column="refunded_by" />
+        <result property="refundVoucherNo" column="refund_voucher_no" />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+    <sql id="columns">id, claim_id, redemption_id, offer_id, topic_id, chapter_id, payer_club_id,
+        merchant_member_id, per_head_fee_snapshot, status, settled_at, settled_by, pay_voucher_no,
+        reversed_at, refunded_at, refunded_by, refund_voucher_no, create_time</sql>
+    <sql id="owner">id = #{row.id} and topic_id = #{row.topicId} and payer_club_id = #{row.payerClubId}
+        and merchant_member_id = #{row.merchantMemberId}</sql>
+    <insert id="insertReceivable" useGeneratedKeys="true" keyProperty="id">
+        insert into club_direct_merchant_receivable
+            (claim_id, redemption_id, offer_id, topic_id, chapter_id, payer_club_id, merchant_member_id,
+             per_head_fee_snapshot, status)
+        values (#{claimId}, #{redemptionId}, #{offerId}, #{topicId}, #{chapterId}, #{payerClubId},
+             #{merchantMemberId}, #{perHeadFeeSnapshot}, 'OPEN')
+    </insert>
+    <select id="selectByRedemptionForUpdate" resultMap="Receipt">
+        select <include refid="columns"/> from club_direct_merchant_receivable
+        where redemption_id = #{redemptionId} for update
+    </select>
+    <select id="selectOwnedForUpdate" resultMap="Receipt">
+        select <include refid="columns"/> from club_direct_merchant_receivable
+        where id = #{id} and topic_id = #{topicId} and payer_club_id = #{payerClubId}
+          and merchant_member_id = #{merchantMemberId} for update
+    </select>
+    <select id="selectScoped" resultMap="Receipt">
+        select <include refid="columns"/> from club_direct_merchant_receivable
+        <where>
+            <if test="topicId != null">and topic_id = #{topicId}</if>
+            <if test="payerClubId != null">and payer_club_id = #{payerClubId}</if>
+            <if test="merchantMemberId != null">and merchant_member_id = #{merchantMemberId}</if>
+            <if test="topicId == null and payerClubId == null and merchantMemberId == null">and 1 = 0</if>
+        </where>
+        order by id desc
+    </select>
+    <update id="reverse">
+        update club_direct_merchant_receivable
+        set status = case status when 'SETTLED' then 'REFUND_DUE' else 'VOID' end, reversed_at = now()
+        where <include refid="owner"/> and redemption_id = #{row.redemptionId} and status in ('OPEN', 'SETTLED')
+    </update>
+    <update id="recordSettled">
+        update club_direct_merchant_receivable
+        set status = 'SETTLED', settled_at = now(), settled_by = #{actor}, pay_voucher_no = #{voucher}
+        where <include refid="owner"/> and status = 'OPEN' and per_head_fee_snapshot &gt; 0
+    </update>
+    <update id="recordRefunded">
+        update club_direct_merchant_receivable
+        set status = 'REFUNDED', refunded_at = now(), refunded_by = #{actor}, refund_voucher_no = #{voucher}
+        where <include refid="owner"/> and status = 'REFUND_DUE'
+    </update>
+</mapper>

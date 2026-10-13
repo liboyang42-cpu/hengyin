@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PlayNoteMapper">
+
+    <resultMap id="PlayNoteResult" type="com.chengyinhub.business.domain.PlayNote">
+        <id property="id" column="id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="nodeId" column="node_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="content" column="content"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.chengyinhub.business.domain.PlayNote"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into play_note (topic_id, node_id, member_id, content, del_flag, create_time)
+        values (#{topicId}, #{nodeId}, #{memberId}, #{content}, #{delFlag}, #{createTime})
+    </insert>
+
+    <select id="selectRecentByNode" resultMap="PlayNoteResult">
+        select id, topic_id, node_id, member_id, content, del_flag, create_time
+        from play_note
+        where node_id=#{nodeId} and del_flag=0
+        order by create_time desc, id desc
+        limit #{limit}
+    </select>
+</mapper>

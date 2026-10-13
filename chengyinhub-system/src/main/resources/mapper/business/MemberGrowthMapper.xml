@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MemberGrowthMapper">
+
+    <select id="selectByMemberId" resultType="MemberGrowth">
+        select id, member_id as memberId, level_no as levelNo, exp_value as expValue,
+               last_active_time as lastActiveTime, create_time as createTime, update_time as updateTime
+        from member_growth
+        where member_id = #{memberId}
+        limit 1
+    </select>
+
+    <select id="selectAdminGrowthList" parameterType="MemberGrowth" resultType="MemberGrowth">
+        select id, member_id as memberId, level_no as levelNo, exp_value as expValue,
+               last_active_time as lastActiveTime, create_time as createTime, update_time as updateTime
+        from member_growth
+        <where>
+            <if test="memberId != null"> and member_id = #{memberId}</if>
+        </where>
+        order by update_time desc, id desc
+    </select>
+
+    <insert id="insertMemberGrowth" parameterType="MemberGrowth" useGeneratedKeys="true" keyProperty="id">
+        insert into member_growth
+        (member_id, level_no, exp_value, last_active_time, create_time, update_time)
+        values
+        (#{memberId}, #{levelNo}, #{expValue}, #{lastActiveTime}, #{createTime}, #{updateTime})
+        on duplicate key update update_time = values(update_time)
+    </insert>
+
+    <update id="updateMemberGrowthReward" parameterType="MemberGrowth">
+        update member_growth
+        set level_no = greatest(level_no, floor((exp_value + #{expValue}) / 100) + 1),
+            exp_value = exp_value + #{expValue},
+            last_active_time = #{lastActiveTime},
+            update_time = #{updateTime}
+        where member_id = #{memberId}
+    </update>
+    <!-- 第二轮拍板第 4 条:后台撤销核销勾选「同时冲回积分和经验」用。 -->
+    <select id="selectExpForUpdate" resultType="java.lang.Integer">
+        select exp_value from member_growth where member_id = #{memberId} for update
+    </select>
+
+    <!-- 只扣到 0:调用方先 selectExpForUpdate 再按 min(应扣, 现有) 传入;等级不回退(与发放侧 greatest 同口径)。 -->
+    <update id="deductExp">
+        update member_growth
+        set exp_value = exp_value - #{exp}, update_time = now()
+        where member_id = #{memberId} and exp_value &gt;= #{exp}
+    </update>
+
+</mapper>

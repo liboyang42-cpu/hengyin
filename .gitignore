@@ -1,0 +1,133 @@
+######################################################################
+# Build Tools
+
+.gradle
+/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+######################################################################
+# IDE
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### JRebel ###
+rebel.xml
+
+### NetBeans ###
+nbproject/private/
+build/*
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+######################################################################
+# Node / 微信小程序
+node_modules/
+
+######################################################################
+# Others
+*.log
+*.xml.versionsBackup
+*.swp
+
+!*/build/*.java
+!*/build/*.html
+!*/build/*.xml
+
+# 已废除的小程序嵌套仓库备份(确认无碍后可手动删除)
+chengyinhub-xcx/.git_DISABLED_nested_backup_20260601/
+
+######################################################################
+# 本地备份 / 截图 / 系统文件 —— 严禁入库(2026-06-19 验收时补)
+/db_backup_*/
+/小程序截图/
+chengyinhub-xcx/小程序截图/
+.DS_Store
+**/.DS_Store
+/.serena/
+
+# 取证截图落点 —— 严禁入库(2026-08-10 补)
+# 并行 worktree 同时跑 automator / 浏览器取证时,图落在这个目录里而它没被忽略,
+# A 会话的图就会出现在 B 会话 `git status` 的未跟踪清单里,跟着 `git add` 进错 PR。
+# 已实际发生过:#465 把 8 张 png + 2 个审计脚本扫进 master(PR #678 正在删)。
+# 判据同仓库规矩:「机器生成的 / 只对我这台机器有意义」= 不进 git。
+# 注:chengyinhub-xcx/scripts/ 下的 _shots/ _shots_L/ 已被下面 `scripts/_*` 那条盖住。
+.screenshots/
+
+# 本地草稿产物 / 工具缓存 —— 严禁入库(2026-07-10 补)
+.serena/
+*.tar.gz
+chengyinhub-xcx/scripts/_*
+# 例外：截图矩阵这套的生成器与采集器。它们的**产物**（shot-matrix.js /
+# fixtures.json / selectors.json）都在库里，生成器却被上面这条规则挡在外面 ——
+# 结果每次修好 fixture 生成逻辑，换个 worktree 就退回旧行为，又拍出一批
+# 撞 md5 的假 stale。产物在库、生成它的代码不在，是倒置的。
+!chengyinhub-xcx/scripts/_gen_fixtures.js
+!chengyinhub-xcx/scripts/_gen_selectors.js
+# 同上:资金域两页的终态视觉回归 driver。2026-08-12 实证——上一版就是被 `scripts/_*`
+# 静默吞掉(git add 不报错、不提示),worktree 一回收就永久蒸发,想回归只能从零重写。
+# ⚠️ 不改成 `!_verify_*.js`:工作区 92 个 _verify_*,只有 42 个该在库里,放开会新暴露
+# 50 个本地垃圾 —— 把「静默丢文件」换成「静默进垃圾」。要留的 driver 就逐个列在这。
+!chengyinhub-xcx/scripts/_verify_merchant_finance_shots.js
+!chengyinhub-xcx/scripts/_verify_play_roadmap_shots.js
+# 写回执合同的运行时自证:unknown 期间界面不卡死、状态条与主 CTA 同视野、
+# 徽章墙按 badgeCode 真回读。单测证明不了这几条,丢了只能从零重写。
+!chengyinhub-xcx/scripts/_verify_play_receipt.js
+!chengyinhub-xcx/scripts/_shot_full_matrix.js
+!chengyinhub-xcx/scripts/_rebuild_manifest.js
+!chengyinhub-xcx/scripts/_ds_consistency_scan.js
+!chengyinhub-xcx/scripts/_infra.js
+!chengyinhub-xcx/scripts/_diag_unmet.js
+!chengyinhub-xcx/scripts/_merge_manifests.js
+!chengyinhub-xcx/scripts/_audit_palette.js
+!chengyinhub-xcx/scripts/_audit_shots_visual.js
+!chengyinhub-xcx/scripts/_audit_spec_compliance.js
+!chengyinhub-xcx/scripts/_build_review_html.js
+!chengyinhub-xcx/scripts/_prune_dead_css.js
+!chengyinhub-xcx/scripts/_audit_metrics.js
+.playwright-mcp/
+
+# impeccable design-lint 去重缓存(短命,勿提交;共享配置 config.json 照常入库)
+**/.impeccable/hook.cache.json
+
+# agent 执行台账/草稿,纯本地,永不入库
+.superpowers/
+
+# symlink 形态的 node_modules 用带斜杠的规则匹配不到(曾被跟踪成机器绝对路径的自指死链)
+node_modules
+
+# 密钥与证书只允许由部署环境提供，严禁进入版本库或打进 jar。
+*.pem
+*.p12
+*.pfx
+*.jks
+*.key
+cert/
+
+# 本地原型工程:npm 依赖 + 浏览器截图 + lock 文件,126M,机器生成且只对本机有意义。
+# 它不该被 git 看见 —— 2026-08-26 差点整个 commit 进去。
+/prototypes/
+
+# Python 字节码。跑 ci/ 下的门禁(unittest / 各 *_gate.py)就会在 ci/__pycache__ 生成,
+# 纯本机产物、跟解释器小版本绑定,不该入库。
+# 2026-08-27 真出过事:这些 .pyc 被 git add 带进来后,secret-file-gate 扫 Git tree
+# 时在 secret-file-gate.cpython-311.pyc 里读到了门禁自己那几条私钥特征串的字面量,
+# 判「包含私钥正文」直接红 —— 门禁没错,是编译产物本就不该被它看见。
+__pycache__/
+*.pyc

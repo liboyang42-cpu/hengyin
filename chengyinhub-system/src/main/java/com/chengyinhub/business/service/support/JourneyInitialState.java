@@ -1,0 +1,155 @@
+package com.chengyinhub.business.service.support;
+
+import com.chengyinhub.business.domain.JourneyRules;
+import com.chengyinhub.business.domain.ThemeStateKey;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/** 通用主题初始属性；运行期仍写入既有路线变量和标签，不创建第二份角色状态。 */
+public final class JourneyInitialState {
+    private static final ObjectMapper JSON = new ObjectMapper();
+
+    private JourneyInitialState() { }
+
+    public static ArrayNode normalize(JsonNode source) {
+        ArrayNode result = JSON.createArrayNode();
+        if (source == null) return result;
+        if (!source.isArray() || source.size() > 32) throw new IllegalArgumentException("初始属性最多配置 32 项");
+        Set<String> keys = new HashSet<String>();
+        for (JsonNode row : source) {
+            String key = row.path("key").asText("");
+            if (!ThemeStateKey.KEY_NAME.matcher(key).matches() || !keys.add(key)) {
+                throw new IllegalArgumentException("初始属性标识无效或重复：" + key);
+            }
+            JsonNode labelNode = row.get("label");
+            if (labelNode == null || !labelNode.isTextual() || labelNode.asText().trim().isEmpty()
+                    || labelNode.asText().trim().length() > 24) throw new IllegalArgumentException("属性名称须为 1 至 24 字");
+            boolean flag = key.startsWith("clue.") || key.startsWith("tag.");
+            int min = integer(row, "min", flag ? 0 : -10000);
+            int max = integer(row, "max", flag ? 1 : 10000);
+            int initial = integer(row, "initial", 0);
+            if (min < -10000 || max > 10000 || min > max || initial < min || initial > max
+                    || (flag && (min != 0 || max != 1))) throw new IllegalArgumentException("属性初始值或上下限无效：" + labelNode.asText());
+            JsonNode visible = row.get("visible");
+            if (visible != null && !visible.isBoolean()) throw new IllegalArgumentException("属性可见性必须是开关值");
+            ObjectNode target = result.addObject();
+            target.put("key", key); target.put("label", labelNode.asText().trim());
+            target.put("initial", initial); target.put("min", min); target.put("max", max);
+            target.put("visible", visible == null || visible.asBoolean());
+        }
+        return result;
+    }
+
+    private static int integer(JsonNode row, String key, int fallback) {
+        JsonNode value = row.get(key);
+        if (value == null) return fallback;
+        if (!value.isIntegralNumber() || !value.canConvertToInt()) throw new IllegalArgumentException("属性 " + key + " 必须是整数");
+        return value.intValue();
+    }
+
+    public static void initialize(JourneyRules rules, TopicRouteEngine.State state) {
+        if (!rules.isStateEnabled()) return;
+        for (JsonNode row : rules.getAttributes()) {
+            String key = row.path("key").asText();
+            if (key.startsWith("tag.")) {
+                if (row.path("initial").asInt() == 1) state.getTags().add(key);
+            } else state.getVariables().put(key, row.path("initial").asInt());
+        }
+    }
+
+    public static void clamp(JourneyRules rules, TopicRouteEngine.State state) {
+        if (!rules.isStateEnabled()) return;
+        for (JsonNode row : rules.getAttributes()) {
+            String key = row.path("key").asText();
+            Number value = state.getVariables().get(key);
+            if (value != null) state.getVariables().put(key,
+                    Math.max(row.path("min").asInt(), Math.min(row.path("max").asInt(), value.doubleValue())));
+        }
+    }
+
+    public static List<Map<String, Object>> playerView(JourneyRules rules, TopicRouteEngine.State state) {
+        List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
+        if (!rules.isStateEnabled()) return result;
+        for (JsonNode row : rules.getAttributes()) {
+            if (!row.path("visible").asBoolean()) continue;
+            String key = row.path("key").asText();
+            Map<String, Object> value = new LinkedHashMap<String, Object>();
+            value.put("key", key); value.put("label", row.path("label").asText());
+            value.put("min", row.path("min").asInt()); value.put("max", row.path("max").asInt());
+            value.put("value", key.startsWith("tag.") ? (state.getTags().contains(key) ? 1 : 0)
+                    : state.getVariables().getOrDefault(key, row.path("initial").asInt()));
+            result.add(value);
+        }
+        return result;
+    }
+
+    /** 将展示键随本局冻结，防止后来新增的属性进入旧局案件册。 */
+    public static void freezeKeys(ObjectNode snapshot, List<ThemeStateKey> keys, JourneyRules rules) {
+        ArrayNode frozen = snapshot.putArray("stateKeys");
+        Map<String, ThemeStateKey> all = new LinkedHashMap<String, ThemeStateKey>();
+        if (keys != null) for (ThemeStateKey key : keys) all.put(key.getStateKey(), key);
+        for (JsonNode row : rules.getAttributes()) {
+            ThemeStateKey key = new ThemeStateKey();
+            key.setStateKey(row.path("key").asText()); key.setLabel(row.path("label").asText());
+            all.put(key.getStateKey(), key);
+        }
+        for (ThemeStateKey key : all.values()) {
+            ObjectNode row = frozen.addObject();
+            row.put("key", key.getStateKey()); row.put("label", key.displayLabel());
+        }
+    }
+
+    public static List<ThemeStateKey> visibleKeys(List<ThemeStateKey> liveKeys, JourneyRules rules, String snapshot) {
+        List<ThemeStateKey> keys = liveKeys;
+        if (snapshot != null) {
+            try {
+                JsonNode frozen = JSON.readTree(snapshot).get("stateKeys");
+                if (frozen != null) {
+                    if (!frozen.isArray()) throw new IllegalArgumentException("状态键快照不可用");
+                    keys = new ArrayList<ThemeStateKey>();
+                    for (JsonNode row : frozen) {
+                        ThemeStateKey key = new ThemeStateKey();
+                        key.setStateKey(row.path("key").asText()); key.setLabel(row.path("label").asText());
+                        keys.add(key);
+                    }
+                }
+            } catch (Exception error) { throw new IllegalArgumentException("状态键快照不可用", error); }
+        }
+        return visibleKeys(keys, rules);
+    }
+
+    /** 案件册和结算共用本局冻结的可见性；旧主题未声明的键保留原有行为。 */
+    public static List<ThemeStateKey> visibleKeys(List<ThemeStateKey> keys, JourneyRules rules) {
+        Set<String> hidden = new HashSet<String>();
+        for (JsonNode row : rules.getAttributes()) {
+            if (!row.path("visible").asBoolean(true)) hidden.add(row.path("key").asText());
+        }
+        List<ThemeStateKey> visible = new ArrayList<ThemeStateKey>();
+        for (ThemeStateKey key : keys) {
+            if (key != null && !hidden.contains(key.getStateKey())) visible.add(key);
+        }
+        return visible;
+    }
+
+    /** 公共主题详情不暴露隐藏属性声明；编辑器及审核仍读取完整规则。 */
+    public static String publicRules(String raw) {
+        if (raw == null || raw.trim().isEmpty()) return raw;
+        try {
+            ObjectNode root = (ObjectNode) JSON.readTree(raw);
+            if (!root.has("attributes")) return raw;
+            ArrayNode visible = JSON.createArrayNode();
+            for (JsonNode row : root.path("attributes")) if (row.path("visible").asBoolean(true)) visible.add(row);
+            root.set("attributes", visible);
+            return JSON.writeValueAsString(root);
+        } catch (Exception error) { throw new IllegalArgumentException("主题初始状态不可用", error); }
+    }
+}

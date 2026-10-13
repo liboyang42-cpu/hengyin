@@ -1,0 +1,652 @@
+{
+  "schemaVersion": 1,
+  "dependencies": {
+    "ordinary_chapter_offer_withdraw_20261003": [
+      "perk_ledger_20260716"
+    ],
+    "ordinary_chapter_application_replacement_20261003": [
+      "chapter_recruitment_20260722"
+    ],
+    "20260924_stale_timer_untimed_game_fix": [
+      "20260822_advanced_game_runtime"
+    ],
+    "community_post_platform_20260909": [
+      "community_trust_20260828",
+      "compliance_consent_deregister_20260711",
+      "p3_platform_foundation"
+    ],
+    "community_post_platform_job_20260909": [
+      "community_post_platform_20260909"
+    ],
+    "community_legacy_projection_delflag_20260919": [
+      "community_post_platform_20260909"
+    ],
+    "theme_state_key_20260916": [],
+    "oms_ticket_sale_fields_20260918": [],
+    "topic_journey_rules_20260916": [],
+    "topic_journey_story_20260916": [],
+    "complaint_period_funds_gate_20260917": [
+      "coop_complaint"
+    ],
+    "20260913_member_follow_unique_pair": [],
+    "20260913_creative_square_publish_request_id": [],
+    "coop_deposit_refund_state_20260913": [
+      "coop_deposit"
+    ],
+    "im_send_idempotency_20260913": [
+      "im"
+    ],
+    "roam_session_recovery_20260913": [
+      "roam"
+    ],
+    "store_verify_growth_delivery_20260913": [],
+    "store_verify_growth_delivery_job_20260913": [
+      "store_verify_growth_delivery_20260913"
+    ],
+    "20260915_merchant_disable_reason": [],
+    "merchant_aftercare_timeout_20260917": [],
+    "merchant_aftercare_timeout_job_20260917": [
+      "merchant_aftercare_timeout_20260917"
+    ],
+    "merchant_derivative_benefits_20260912": [],
+    "merchant_npc_voice_20260909": [
+      "npc_profile"
+    ],
+    "club_customer_profile_20260902": [],
+    "20260902_node_medal_claim": [],
+    "community_trust_20260828": [],
+    "20260815_tandianri_h8_publisher_points_funds": [
+      "20260815_tandianri_batch3_funds_core"
+    ],
+    "20260815_tandianri_h8_rate_convergence": [
+      "20260815_tandianri_h8_publisher_points_funds"
+    ],
+    "20260816_tandianri_batch3_funds_club_compensation": [
+      "20260815_tandianri_batch3_funds_core",
+      "web_admin_roles_20260719"
+    ],
+    "20260817_tandianri_batch3_funds_ticket_source_payable": [
+      "20260816_tandianri_batch3_funds_club_compensation"
+    ],
+    "20260817_tandianri_r6_funds_final_closure": [
+      "20260817_tandianri_batch3_funds_ticket_source_payable",
+      "product_role_20260716"
+    ],
+    "20260817_tandianri_r6_product_contracts": [
+      "m7_xp_budget",
+      "product_type_purchase_kind_20260716"
+    ],
+    "20260817_tandianri_r7_distribution_backfill": [
+      "20260816_tandianri_batch3_funds_club_compensation",
+      "20260815_shop_day_organizer_actor"
+    ],
+    "20260817_tandianri_r7_distribution_singleton": [
+      "20260817_tandianri_r7_distribution_backfill"
+    ],
+    "20260816_tandianri_batch3_funds_club_payee": [
+      "20260815_tandianri_batch3_funds_core",
+      "web_admin_roles_20260719"
+    ],
+    "20260816_tandianri_batch3_funds_player_cooldown": [
+      "20260815_tandianri_batch3_funds_core",
+      "web_admin_roles_20260719"
+    ],
+    "20260817_tandianri_batch3_funds_club_hours_correction": [
+      "20260816_tandianri_batch3_funds_club_compensation",
+      "web_admin_roles_20260719"
+    ],
+    "20260816_tandianri_batch3_funds_legacy_edition_exemption": [
+      "20260816_tandianri_batch3_funds_club_compensation"
+    ],
+    "20260815_tandianri_batch3_funds_core": [
+      "club",
+      "product_type_purchase_kind_20260716"
+    ],
+    "20260817_tandianri_node_checkin_code_unique": [
+      "play_progress_points"
+    ],
+    "20260817_tandianri_batch5_admin_menus": [
+      "commerce_order_fields_and_verification_review_20260805",
+      "topic_source_menu_20260722",
+      "web_admin_nine_domains_20260719"
+    ],
+    "20260815_tandianri_roam_referral": [
+      "product_type_purchase_kind_20260716"
+    ],
+    "ai_log_token_trace_20260716": [
+      "ai_generation_log"
+    ],
+    "c3_team_job": [
+      "c3_team_fields"
+    ],
+    "chapter_offer_menu_20260721": [
+      "web_admin_nine_domains_20260719"
+    ],
+    "city_merchant_node": [
+      "roam"
+    ],
+    "club": [
+      "rbac_role"
+    ],
+    "club_leader": [
+      "club",
+      "club_multi"
+    ],
+    "club_menu_grant": [
+      "club"
+    ],
+    "club_multi": [
+      "club"
+    ],
+    "club_post_comment": [
+      "club_post"
+    ],
+    "club_post_like": [
+      "club_post"
+    ],
+    "club_topic_backfill": [
+      "club_topic_link"
+    ],
+    "circle_theme_batch2_20260821": [
+      "perk_ledger_20260716"
+    ],
+    "circle_theme_primary_schema_20260821": [
+      "circle_theme_batch2_20260821"
+    ],
+    "seed_life_backup_categories_20260820": [
+      "seed_topic_template_shelf_20260726"
+    ],
+    "seed_life_backup_games_20260820": [
+      "seed_topic_template_shelf_20260726",
+      "seed_life_backup_categories_20260820"
+    ],
+    "seed_circle_theme_batch2_20260821": [
+      "circle_theme_batch2_20260821",
+      "topic_template_meta_20260726"
+    ],
+    "seed_circle_theme_batch2_repair_20260821": [
+      "seed_circle_theme_batch2_20260821"
+    ],
+    "seed_circle_theme_primary_20260821": [
+      "circle_theme_batch2_20260821",
+      "circle_theme_primary_schema_20260821",
+      "topic_template_meta_20260726"
+    ],
+    "seed_circle_theme_supply_category_backfill_20260821": [
+      "seed_circle_theme_batch2_20260821",
+      "seed_circle_theme_primary_20260821"
+    ],
+    "console_menus_20260721": [
+      "web_admin_nine_domains_20260719"
+    ],
+    "coop_group_activity_settlement_20260722": [
+      "coop_group_verify_activity_20260722"
+    ],
+    "coop_group_verify_activity_20260722": [
+      "coop_group_verify"
+    ],
+    "d7_topic_rate_20260716": [
+      "settlement_rule_align_20260716"
+    ],
+    "im_menu": [
+      "im"
+    ],
+    "merchant_onsite_consent_scope_20260815": [
+      "compliance_consent_deregister_20260711"
+    ],
+    "merchant_service_line_20260820": [],
+    "node_unlock_after_20260820": [],
+    "player_activity_role_20260820": [],
+    "seed_playpack_templates_20260820": [
+      "level_editor_fields",
+      "level_editor_story_photo_review",
+      "m7_xp_budget",
+      "product_role_20260716",
+      "terms_mode_20260716",
+      "topic_template_20260707"
+    ],
+    "seed_template_library_12packs_20260820": [
+      "level_editor_fields",
+      "level_editor_story_photo_review"
+    ],
+    "20260821_template_official_flag": [],
+    "20260821_topic_beta_zone": [],
+    "seed_playpack_batch2_figma_20260821": [
+      "seed_playpack_templates_20260820"
+    ],
+    "seed_shanghai_solo_topics_20260822": [
+      "chapter_recruitment_20260722",
+      "level_editor_fields",
+      "m7_xp_budget",
+      "product_role_20260716",
+      "product_type_purchase_kind_20260716",
+      "terms_mode_20260716",
+      "topic_lifecycle_recruit",
+      "topic_template_20260707",
+      "topic_template_meta_20260726"
+    ],
+    "20260820_new_city_preference_chain": [
+      "m9_play_attempt_log",
+      "question_media_20260816"
+    ],
+    "20260821_new_city_preference_library": [
+      "20260820_new_city_preference_chain"
+    ],
+    "20260820_new_city_setup_plan": [],
+    "seed_new_city_lifestyle_category_20260821": [],
+    "seed_new_city_setup_plan_20260820": [
+      "20260820_new_city_setup_plan",
+      "chapter_merchant_node",
+      "chapter_recruitment_20260722",
+      "perk_ledger_20260716",
+      "product_role_20260716",
+      "product_type_purchase_kind_20260716",
+      "seed_new_city_lifestyle_category_20260821",
+      "terms_mode_20260716",
+      "topic_lifecycle_recruit",
+      "topic_template_20260707",
+      "topic_template_meta_20260726"
+    ],
+    "level_editor_story_photo_review": [
+      "level_editor_fields"
+    ],
+    "m1_permission_full": [
+      "rbac_role"
+    ],
+    "template_library_pack_type_20260905": [],
+    "npc_profile_merchant_fields_20260905": [
+      "npc_profile"
+    ],
+    "merchant_npc_chat_flag_20260905": [],
+    "npc_governance_v1": [
+      "npc_profile"
+    ],
+    "npc_profile_seed_20260716": [
+      "npc_governance_v1"
+    ],
+    "npc_roam_lines": [
+      "npc_governance_v1",
+      "npc_profile_seed_20260716"
+    ],
+    "official_broadcast": [
+      "official_event"
+    ],
+    "p3_phase_c_web_rules_refund": [
+      "p3_phase_c_crm_finance"
+    ],
+    "pii_backfill_job": [
+      "registration_pii_encryption"
+    ],
+    "preset_menu": [
+      "preset_route"
+    ],
+    "revshare_payable_20260717": [
+      "perk_ledger_20260716",
+      "terms_mode_20260716"
+    ],
+    "roam_prompt_lines_v2_20260722": [
+      "npc_governance_v1",
+      "npc_roam_lines"
+    ],
+    "terms_mode_20260716": [
+      "perk_ledger_20260716"
+    ],
+    "topic_commercial_review_20260814": [
+      "audit_open_task_guard_20260721",
+      "p3_platform_foundation"
+    ],
+    "seed_preset_demo": [
+      "preset_route"
+    ],
+    "seed_topic_template_shelf_20260726": [
+      "topic_template_meta_20260726"
+    ],
+    "shop_day_batch_capacity_20260815": [
+      "topic_template_meta_20260726"
+    ],
+    "20260815_shop_day_organizer_actor": [
+      "product_role_20260716"
+    ],
+    "topic_sale_canonical15_20260815": [
+      "topic_commercial_review_20260814"
+    ],
+    "topic_plaza_recommend_permission_20260723": [
+      "topic_source_menu_20260722"
+    ],
+    "topic_source_menu_20260722_02_content_slot_permission": [
+      "topic_source_menu_20260722"
+    ],
+    "verification_qrcode_repair_job": [
+      "reg_paid_qr_index"
+    ],
+    "20260814_tandianri_product_type_backfill": [
+      "product_type_purchase_kind_20260716"
+    ],
+    "20260815_tandianri_roam_revisit_report_indexes": [
+      "roam",
+      "roam_shop_visit_20260716"
+    ],
+    "20260815_tandianri_roam_revisit_report_permission": [
+      "p3_platform_foundation"
+    ],
+    "20260820_enable_roam_poi_arrival": [
+      "official_event_p0_v2_20260722"
+    ],
+    "20260822_disable_untrusted_roam_arrival": [
+      "20260820_enable_roam_poi_arrival"
+    ],
+    "20260820_close_stale_registration_scan_15": [],
+    "20260820_member_100096_to_player": [],
+    "20260820_questo_puzzle_atmosphere": [],
+    "20260820_play_team_core": [],
+    "20260820_play_team_expire_job": [
+      "20260820_play_team_core"
+    ],
+    "20260822_play_team_invite_code": [
+      "20260820_play_team_core"
+    ],
+    "20260915_play_team_public_apply": [
+      "20260820_play_team_core"
+    ],
+    "20260821_topic_team_config": [],
+    "20260821_commerce_order_idempotency": [
+      "commerce_order_fields_and_verification_review_20260805"
+    ],
+    "20260821_member_address_idempotency": [],
+    "app_open_id": [],
+    "app_sensor_template_fields_20260821": [],
+    "20260829_celebration_board_decommission": [
+      "celebration_board_20260821",
+      "fix_celebrate_copy_20260821",
+      "seed_celebrate_topic_20260821",
+      "topic_template_play_kind_20260821"
+    ],
+    "20260829_circle_theme_merge_free_explore": [
+      "seed_circle_theme_batch2_20260821",
+      "seed_circle_theme_primary_20260821"
+    ],
+    "celebration_board_20260821": [],
+    "fix_celebrate_copy_20260821": [],
+    "seed_celebrate_games_20260821": [
+      "seed_topic_template_shelf_20260726"
+    ],
+    "seed_celebrate_topic_20260821": [
+      "seed_celebrate_games_20260821"
+    ],
+    "topic_template_play_kind_20260821": [],
+    "20260819_purge_prelaunch_dirty_content": [],
+    "20260823_game_session_runtime": [],
+    "20260822_advanced_game_runtime": [
+      "20260820_new_city_preference_chain",
+      "20260821_new_city_preference_library"
+    ],
+    "seed_official_solo_story_topics_20260823": [
+      "20260822_advanced_game_runtime",
+      "chapter_recruitment_20260722",
+      "freeexplore_node_narrative",
+      "level_editor_fields",
+      "m2_self_play",
+      "node_unlock_after_20260820",
+      "m7_xp_budget",
+      "product_role_20260716",
+      "product_type_purchase_kind_20260716",
+      "terms_mode_20260716",
+      "topic_lifecycle_recruit",
+      "topic_template_20260707"
+    ],
+    "seed_merchant_game_a8_20260823": [
+      "20260822_advanced_game_runtime",
+      "level_editor_fields",
+      "level_editor_story_photo_review",
+      "question_media_20260816",
+      "seed_life_backup_categories_20260820"
+    ],
+    "seed_merchant_game_b27_20260823": [
+      "seed_merchant_game_a8_20260823",
+      "seed_new_city_lifestyle_category_20260821",
+      "seed_celebrate_topic_20260821"
+    ],
+    "20260822_template_cover_images": [
+      "seed_topic_template_shelf_20260726",
+      "seed_template_library_12packs_20260820",
+      "seed_playpack_templates_20260820",
+      "seed_life_backup_games_20260820",
+      "seed_celebrate_topic_20260821",
+      "seed_playpack_batch2_figma_20260821",
+      "seed_circle_theme_batch2_20260821"
+    ],
+    "20260823_topic_route_graph": [
+      "20260822_advanced_game_runtime"
+    ],
+    "20260823_topic_route_published_snapshot": [
+      "20260823_topic_route_graph",
+      "topic_draft_20260707"
+    ],
+    "20260825_cover_urls_off_package": [
+      "seed_official_solo_story_topics_20260823",
+      "seed_merchant_game_a8_20260823",
+      "seed_merchant_game_b27_20260823"
+    ],
+    "merchant_npc_menu_20260824": [],
+    "20260825_named_mechanic_advanced_config": [
+      "20260822_advanced_game_runtime"
+    ],
+    "20260826_team_race_multiplayer": [
+      "20260822_advanced_game_runtime"
+    ],
+    "20260825_club_headcount_component": [
+      "20260815_tandianri_batch3_funds_core",
+      "20260816_tandianri_batch3_funds_club_compensation"
+    ],
+    "20260825_ticket_source_retire": [
+      "20260825_club_headcount_component"
+    ],
+    "business_audit_event_20260823": [],
+    "approval_governance_20260828": [
+      "audit_open_task_guard_20260721",
+      "business_audit_event_20260823",
+      "p3_platform_foundation"
+    ],
+    "approval_governance_request_id_repair_20260830": [
+      "approval_governance_20260828"
+    ],
+    "event_cancel_manual_refund_case_20260826": [
+      "business_audit_event_20260823"
+    ],
+    "manual_refund_case_topic_20260918": [
+      "event_cancel_manual_refund_case_20260826"
+    ],
+    "club_post_announcement_20260823": [
+      "business_audit_event_20260823",
+      "club_post"
+    ],
+    "club_role_z_null_safety_repair_20260826": [
+      "club_post_announcement_20260823",
+      "club_role_governance_20260823"
+    ],
+    "club_role_assignment_20260823": [
+      "business_audit_event_20260823",
+      "club"
+    ],
+    "club_role_event_ops_20260823": [
+      "business_audit_event_20260823",
+      "club_role_assignment_20260823"
+    ],
+    "club_role_event_ops_job_20260825": [
+      "club_role_event_ops_20260823"
+    ],
+    "club_role_governance_20260823": [
+      "business_audit_event_20260823",
+      "club_role_assignment_20260823"
+    ],
+    "club_role_media_review_outbox_20260824": [
+      "club_post_announcement_20260823",
+      "wx_content_callback_inbox_20260724"
+    ],
+    "club_role_media_review_outbox_job_20260825": [
+      "club_role_media_review_outbox_20260824"
+    ],
+    "club_role_membership_20260823": [
+      "business_audit_event_20260823",
+      "club_role_assignment_20260823"
+    ],
+    "club_role_membership_resume_fence_20260826": [
+      "club_role_membership_20260823"
+    ],
+    "merchant_operator_20260823": [
+      "business_audit_event_20260823"
+    ],
+    "merchant_operator_aftercare_20260823": [
+      "business_audit_event_20260823",
+      "merchant_operator_20260823"
+    ],
+    "merchant_z_candidate_schema_repair_20260826": [
+      "merchant_operator_aftercare_20260823",
+      "merchant_operator_crm_phase1a_20260823"
+    ],
+    "merchant_operator_crm_followup_20260823": [
+      "p3_phase_c_crm_finance",
+      "merchant_operator_20260823"
+    ],
+    "merchant_operator_crm_phase1a_20260823": [
+      "business_audit_event_20260823",
+      "merchant_operator_crm_followup_20260823"
+    ],
+    "merchant_operator_crm_phase1a_delivery_20260823": [
+      "business_audit_event_20260823",
+      "merchant_operator_crm_phase1a_20260823"
+    ],
+    "merchant_operator_crm_phase1a_delivery_job_20260825": [
+      "merchant_operator_crm_phase1a_delivery_20260823"
+    ],
+    "merchant_z_quartz_jobs_pause_repair_20260826": [
+      "club_role_event_ops_job_20260825",
+      "club_role_media_review_outbox_job_20260825",
+      "merchant_operator_crm_phase1a_delivery_job_20260825"
+    ],
+    "merchant_review_20260823": [
+      "audit_open_task_guard_20260721",
+      "business_audit_event_20260823",
+      "merchant_operator_20260823",
+      "perk_ledger_20260716",
+      "p3_platform_foundation"
+    ],
+    "mms_merchant_member_index_20260824": [],
+    "seed_home_solo_activities_20260826": [],
+    "seed_home_solo_node_templates_20260826": [
+      "seed_home_solo_activities_20260826"
+    ],
+    "fix_stale_demo_activity_end_date_20260826": [],
+    "seed_merchant_game_v51_20260827": [
+      "20260822_advanced_game_runtime",
+      "seed_merchant_game_a8_20260823"
+    ],
+    "offline_test_topics_20260827": [],
+    "publish_solo_story_topics_20260827": [
+      "seed_official_solo_story_topics_20260823"
+    ],
+    "content_draft_im_poll_20260828": [
+      "im"
+    ],
+    "x09_drop_dead_feature_flags_20260827": [],
+    "nickname_uniqueness_20260828": [],
+    "spoiler_protection_20260828": [],
+    "20260828_merchant_claim_ops": [],
+    "fund_action_preflight_20260828": [],
+    "bank_withdrawal_idempotency_20260828": [],
+    "x10_chapter_audio_20260905": [],
+    "x11_decommission_route_eggs_20260907": [],
+    "club_topic_display_settings_20260906": [],
+    "club_open_settings_20260909": [],
+    "club_join_message_20260910": [],
+    "club_post_reference_20260910": [],
+    "club_waitlist_offer_window_20260911": [
+      "club_role_event_ops_20260823"
+    ],
+    "roam_hangout_20260905": [],
+    "roam_stamp_exchange_20260909": [],
+    "roam_presence_20260910": [],
+    "registration_merchant_audit_time_20260910": [],
+    "topic_chapter_finish_time_20260910": [],
+    "view_registration_merchant_ddl": [
+      "registration_merchant_audit_time_20260910"
+    ],
+    "predict_void_expired_job_decommission_20260911": [],
+    "predict_void_task_register_20260915": [
+      "predict_void_expired_job_decommission_20260911"
+    ],
+    "registration_paying_reconcile_job_20260915": [],
+    "registration_auto_verify_job_20260919": [],
+    "ums_member_identity_20260919": [],
+    "20260919_cms_registration_selfplay_ticket_columns_nullable": [],
+    "play_bingo_20260906": [],
+    "play_predict_20260906": [],
+    "predict_void_expired_job_20260906": [],
+    "template_merchant_guide_20260906": [],
+    "template_reward_rules_20260906": [],
+    "shop_npc_chat_on_20260912": [],
+    "node_npc_20260915": [
+      "npc_profile",
+      "npc_governance_v1"
+    ],
+    "sys_job_enable_paused_20260915": [
+      "c3_beforestart_job"
+    ],
+    "coupon_reverse_permission_20260916": [],
+    "redemption_reverse_permission_20260916": [],
+    "20260917_play_photo_review_off": [
+      "level_editor_story_photo_review"
+    ],
+    "merchant_crm_broadcast_20260916": [],
+    "20260917_roam_share_snapshot": [],
+    "20260921_roam_share_snapshot_privacy_backfill": [
+      "20260917_roam_share_snapshot"
+    ],
+    "zz_20260921_historical_schema_forward_fix": [
+      "p3_platform_foundation",
+      "view_registration_merchant_ddl"
+    ],
+    "20260917_player_run_session": [],
+    "20260917_play_note": [],
+    "role2_analytics_perm_20260918": [
+      "p3_platform_foundation"
+    ],
+    "seed_prefab_life_20260918": [
+      "20260822_advanced_game_runtime",
+      "20260917_play_note",
+      "freeexplore_node_narrative",
+      "m2_self_play",
+      "m7_xp_budget",
+      "node_unlock_after_20260820",
+      "product_role_20260716",
+      "product_type_purchase_kind_20260716",
+      "terms_mode_20260716",
+      "topic_lifecycle_recruit"
+    ],
+    "player_object_card_20260922": [],
+    "20260922_walkthrough_orphan_template_140": [],
+    "20260924_preset_life_template_origin_fix": [],
+    "20260930_game_station_public_checkpoint": [
+      "20260823_game_session_runtime"
+    ],
+    "20260930_registration_first_successful_scan": [],
+    "partial_chapter_aftercare_20261002": [
+      "event_cancel_manual_refund_case_20260826",
+      "manual_refund_case_topic_20260918"
+    ],
+    "20261003_merchant_offer_withdrawal_columns": [
+      "perk_ledger_20260716",
+      "terms_mode_20260716",
+      "chapter_merchant_node",
+      "chapter_recruitment_20260722"
+    ],
+    "theme_runtime_20261004": [
+      "20260822_advanced_game_runtime",
+      "m2_self_play",
+      "play_progress_points"
+    ],
+    "club_direct_merchant_receivable_20261004": [
+      "perk_ledger_20260716"
+    ]
+  }
+}

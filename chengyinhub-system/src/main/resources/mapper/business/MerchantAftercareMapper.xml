@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantAftercareMapper">
+    <resultMap id="RefundResult" type="com.chengyinhub.business.domain.RefundApplication">
+        <id property="id" column="id"/>
+        <result property="refundNo" column="refund_no"/>
+        <result property="sourceType" column="source_type"/>
+        <result property="sourceId" column="source_id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="refundAmount" column="refund_amount"/>
+        <result property="status" column="status"/>
+        <result property="reason" column="reason"/>
+        <result property="payoutStatus" column="payout_status"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="ResponseResult" type="com.chengyinhub.business.domain.MerchantAftercareResponse">
+        <id property="id" column="id"/>
+        <result property="refundApplicationId" column="refund_application_id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="merchantOwnerMemberId" column="merchant_owner_member_id"/>
+        <result property="actorMemberId" column="actor_member_id"/>
+        <result property="actorRoleCode" column="actor_role_code"/>
+        <result property="decision" column="decision"/>
+        <result property="content" column="content"/>
+        <result property="evidenceUrl" column="evidence_url"/>
+        <result property="requestId" column="request_id"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <resultMap id="ListRowResult" type="com.chengyinhub.business.domain.MerchantAftercareListRow">
+        <id property="id" column="id"/>
+        <result property="refundNo" column="refund_no"/>
+        <result property="sourceType" column="source_type"/>
+        <result property="sourceId" column="source_id"/>
+        <result property="refundAmount" column="refund_amount"/>
+        <result property="status" column="status"/>
+        <result property="reason" column="reason"/>
+        <result property="payoutStatus" column="payout_status"/>
+        <result property="merchantOpinion" column="merchant_opinion"/>
+        <result property="createTime" column="create_time"/>
+        <result property="activityTitle" column="activity_title"/>
+        <result property="customerNickname" column="customer_nickname"/>
+        <result property="platformTakeoverAt" column="platform_takeover_at"/>
+    </resultMap>
+
+    <resultMap id="PolicySnapshotResult" type="com.chengyinhub.business.domain.MerchantRefundPolicySnapshot">
+        <result property="policyCode" column="refund_policy_code"/>
+        <result property="policyVersion" column="refund_policy_version"/>
+        <result property="refundDeadline" column="refund_deadline"/>
+    </resultMap>
+
+    <sql id="refundColumns">
+        id, refund_no, source_type, source_id, merchant_id, refund_amount,
+        status, reason, payout_status, del_flag, create_time, update_time
+    </sql>
+
+    <!-- 同一商家售后写串行化：避免两个首次 requestId 在唯一索引空 gap 上互相升级为死锁。 -->
+    <select id="lockActiveMerchantOwner" resultType="java.lang.Long">
+        select id
+        from mms_merchant
+        where id = #{merchantId} and member_id = #{ownerMemberId}
+          and status = 1 and account_status = 1 and del_flag = 0
+        for update
+    </select>
+
+    <!-- 旧退款只保存 owner memberId；新增回应以 merchant_id 绑定门店。未绑定且同 owner 多门店时 fail closed。 -->
+    <sql id="exactMerchantRefundScope">
+        r.merchant_id = #{ownerMemberId}
+        and (
+          exists (
+            select 1 from merchant_aftercare_response scoped
+            where scoped.refund_application_id = r.id and scoped.merchant_id = #{merchantId}
+          )
+          or (
+            not exists (
+              select 1 from merchant_aftercare_response bound
+              where bound.refund_application_id = r.id
+            )
+            and not exists (
+              select 1 from mms_merchant sibling
+              where sibling.member_id = #{ownerMemberId} and sibling.id &lt;&gt; #{merchantId}
+                and sibling.status = 1 and sibling.account_status = 1 and sibling.del_flag = 0
+            )
+          )
+        )
+    </sql>
+
+    <select id="selectOwnedRefundById" resultMap="RefundResult">
+        select <include refid="refundColumns"/>
+        from refund_application r
+        where r.id = #{refundId} and <include refid="exactMerchantRefundScope"/> and r.del_flag = 0
+        limit 1
+    </select>
+
+    <select id="selectOwnedRefundByIdForUpdate" resultMap="RefundResult">
+        select <include refid="refundColumns"/>
+        from refund_application r
+        where r.id = #{refundId} and <include refid="exactMerchantRefundScope"/> and r.del_flag = 0
+        for update
+    </select>
+
+    <!-- sourceId 只能在已经按服务端 owner 绑定的退款申请里解释，不能由客户端直接查报名快照。 -->
+    <select id="selectOwnedRefundPolicySnapshot" resultMap="PolicySnapshotResult">
+        select reg.refund_policy_code, reg.refund_policy_version, reg.refund_deadline
+        from refund_application r
+        inner join cms_registration reg on reg.id = r.source_id
+        where r.id = #{refundId}
+          and <include refid="exactMerchantRefundScope"/>
+          and r.source_type = 'registration'
+          and r.del_flag = 0
+        limit 1
+    </select>
+
+    <!-- 展示用只读列(列表/详情头):活动或主题名、申请人昵称、超时转平台时间。
+         ★ 全用标量子查询,不 join:join 报名/会员表一旦出现多行会把退款行放大,分页与 count 就对不上。
+         ★ 活动名:报名单 owner_type 1=主题(cms_topic.name) 2=活动(cms_activity.name),取不到回落报名单冗余 activity_title,再不到为 null。
+         ★ 昵称口径同商家客户页(MerchantCrmAppMapper):ums_member.del_flag = 0 且非空;只取昵称,不取手机号/openid/头像。
+           是否真下发给当前岗位由 service 按 CRM 读权限决定(财务岗有售后读、无 CRM 读 ⇒ 不下发)。 -->
+    <sql id="refundDisplayColumns">
+        case when r.source_type = 'registration' then (
+            select nullif(coalesce(
+                     nullif(case reg.owner_type
+                              when 2 then (select a.name from cms_activity a where a.id = reg.owner_id)
+                              when 1 then (select t.name from cms_topic t where t.id = reg.owner_id)
+                            end, ''),
+                     reg.activity_title), '')
+            from cms_registration reg where reg.id = r.source_id
+        ) end as activity_title,
+        (select nullif(u.nickname, '') from ums_member u
+          where u.id = r.member_id and u.del_flag = 0) as customer_nickname,
+        r.platform_takeover_at
+    </sql>
+
+    <select id="selectOwnedRefundDisplay" resultMap="ListRowResult">
+        select r.id, <include refid="refundDisplayColumns"/>
+        from refund_application r
+        where r.id = #{refundId} and <include refid="exactMerchantRefundScope"/> and r.del_flag = 0
+        limit 1
+    </select>
+
+    <sql id="latestMerchantOpinionJoin">
+        left join (
+            select merchant_id, refund_application_id, max(id) as latest_opinion_id
+            from merchant_aftercare_response
+            where merchant_id = #{merchantId}
+              and decision in ('AGREE', 'REJECT')
+            group by merchant_id, refund_application_id
+        ) latest on latest.refund_application_id = r.id
+        left join merchant_aftercare_response opinion on opinion.id = latest.latest_opinion_id
+          and opinion.merchant_id = #{merchantId}
+    </sql>
+
+    <sql id="aftercareBucketFilter">
+        <choose>
+            <when test="bucket == 'PENDING'">
+                and r.status = 0 and latest.latest_opinion_id is null
+            </when>
+            <when test="bucket == 'PROCESSING'">
+                and ((r.status = 0 and latest.latest_opinion_id is not null)
+                  or (r.status = 1 and (r.payout_status is null or r.payout_status not in (1, 4))))
+            </when>
+            <when test="bucket == 'COMPLETED'">
+                and (r.status = 2 or (r.status = 1 and r.payout_status in (1, 4)))
+            </when>
+        </choose>
+    </sql>
+
+    <select id="selectOwnedRefundList" resultMap="ListRowResult">
+        select r.id, r.refund_no, r.source_type, r.source_id, r.refund_amount,
+               r.status, r.reason, r.payout_status, r.create_time,
+               coalesce(opinion.decision, 'PENDING') as merchant_opinion,
+               <include refid="refundDisplayColumns"/>
+        from refund_application r
+        <include refid="latestMerchantOpinionJoin"/>
+        where <include refid="exactMerchantRefundScope"/> and r.del_flag = 0
+        <include refid="aftercareBucketFilter"/>
+        order by r.create_time desc, r.id desc
+        limit #{offset}, #{limit}
+    </select>
+
+    <select id="countOwnedRefundList" resultType="java.lang.Long">
+        select count(1)
+        from refund_application r
+        <include refid="latestMerchantOpinionJoin"/>
+        where <include refid="exactMerchantRefundScope"/> and r.del_flag = 0
+        <include refid="aftercareBucketFilter"/>
+    </select>
+
+    <select id="selectResponses" resultMap="ResponseResult">
+        select id, refund_application_id, merchant_id, merchant_owner_member_id, actor_member_id,
+               actor_role_code, decision, content, evidence_url, request_id, create_time
+        from merchant_aftercare_response
+        where merchant_id = #{merchantId}
+          and refund_application_id = #{refundId}
+        order by id asc
+    </select>
+
+    <select id="selectLatestOpinion" resultMap="ResponseResult">
+        select id, refund_application_id, merchant_id, merchant_owner_member_id, actor_member_id,
+               actor_role_code, decision, content, evidence_url, request_id, create_time
+        from merchant_aftercare_response
+        where merchant_id = #{merchantId}
+          and refund_application_id = #{refundId}
+          and decision in ('AGREE', 'REJECT')
+        order by id desc
+        limit 1
+    </select>
+
+    <!-- 唯一索引当前读：RR 下并发重复请求不能沿用事务旧快照而看不见先提交的记录。 -->
+    <select id="selectByRequestIdForUpdate" resultMap="ResponseResult">
+        select id, refund_application_id, merchant_id, merchant_owner_member_id, actor_member_id,
+               actor_role_code, decision, content, evidence_url, request_id, create_time
+        from merchant_aftercare_response
+        where merchant_id = #{merchantId} and request_id = #{requestId}
+        limit 1
+        for update
+    </select>
+
+    <select id="countEvidenceKeyUsedByOtherRefund" resultType="java.lang.Integer">
+        select count(1)
+        from merchant_aftercare_response
+        where evidence_url = #{evidenceKey}
+          and refund_application_id &lt;&gt; #{refundId}
+    </select>
+
+    <insert id="insertResponse" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.MerchantAftercareResponse">
+        insert into merchant_aftercare_response
+          (refund_application_id, merchant_id, merchant_owner_member_id, actor_member_id, actor_role_code,
+           decision, content, evidence_url, request_id, create_time)
+        values
+          (#{refundApplicationId}, #{merchantId}, #{merchantOwnerMemberId}, #{actorMemberId}, #{actorRoleCode},
+           #{decision}, #{content}, #{evidenceUrl}, #{requestId}, #{createTime})
+    </insert>
+</mapper>

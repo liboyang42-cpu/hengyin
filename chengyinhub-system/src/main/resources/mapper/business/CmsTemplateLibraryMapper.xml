@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CmsTemplateLibraryMapper">
+    
+    <resultMap type="CmsTemplateLibrary" id="CmsTemplateLibraryResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="memberTemplateId"    column="member_template_id"    />
+        <result property="categoryId"    column="category_id"    />
+        <result property="title"    column="title"    />
+        <result property="description"    column="description"    />
+        <result property="imgUrl"    column="img_url"    />
+
+        <result property="players"    column="players"    />
+        <result property="usageLocation"    column="usage_location"    />
+        <result property="requiredMaterials"    column="required_materials"    />
+
+
+
+
+
+        <result property="duration"    column="duration"    />
+        <result property="difficulty"    column="difficulty"    />
+        <result property="isSync"    column="is_sync"    />
+        <result property="ruleInstructions"    column="rule_instructions"    />
+        <result property="merchantGuide"       column="merchant_guide"       />
+        <result property="rewardRulesJson"  column="reward_rules_json"  />
+        <result property="validationMethod"    column="validation_method"    />
+        <result property="sensorType"    column="sensor_type"    />
+        <result property="sensorConfig"    column="sensor_config"    />
+        <result property="questionName"    column="question_name"    />
+        <result property="questionAnswer"    column="question_answer"    />
+        <result property="feedbackText"    column="feedback_text"    />
+        <result property="couponId"    column="coupon_id"    />
+        <result property="storyText"    column="story_text"    />
+        <result property="storyImg"    column="story_img"    />
+        <result property="storyJson"    column="story_json"    />
+        <result property="hint1"    column="hint1"    />
+        <result property="hint2"    column="hint2"    />
+        <result property="answerReveal"    column="answer_reveal"    />
+        <result property="photoRequireDesc"    column="photo_require_desc"    />
+        <result property="photoReview"    column="photo_review"    />
+        <result property="audioUrl"    column="audio_url"    />
+        <result property="audioDuration"    column="audio_duration"    />
+        <result property="questionA"    column="question_a"    />
+        <result property="questionB"    column="question_b"    />
+        <result property="questionC"    column="question_c"    />
+        <result property="questionD"    column="question_d"    />
+        <result property="correctAnswer"    column="correct_answer"    />
+        <result property="questionImg"    column="question_img"    />
+        <result property="questionAudio"    column="question_audio"    />
+        <result property="questionOptionMediaJson"    column="question_option_media_json"    />
+        <result property="preferenceJson"    column="preference_json"    />
+        <result property="advancedConfigJson"    column="advanced_config_json"    />
+        <result property="activityCategoryids"    column="activity_categoryids"    />
+        <result property="status"    column="status"    />
+        <result property="publishStatus"    column="publish_status"    />
+        <result property="reason"    column="reason"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="rating"    column="rating"    />
+        <result property="useNum"    column="use_num"    />
+        <result property="packType"  column="pack_type"  />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <resultMap type="TemplateLibraryVO" id="TemplateLibraryVOResult" extends="CmsTemplateLibraryResult">
+        <result property="categoryName" column="category_name"/>
+        <result property="icon" column="icon"/>
+    </resultMap>
+
+
+
+
+
+    <sql id="selectCmsTemplateLibraryVo">
+        select id, member_id,member_template_id, category_id, title, description, img_url,players,usage_location,required_materials, duration, difficulty, is_sync, rule_instructions, merchant_guide, reward_rules_json, validation_method, sensor_type, sensor_config, question_name, question_answer, feedback_text, coupon_id, story_text, story_img, story_json, hint1, hint2, answer_reveal, photo_require_desc, photo_review, audio_url, audio_duration, question_a, question_b, question_c, question_d, correct_answer, question_img, question_audio, question_option_media_json, preference_json, advanced_config_json, activity_categoryids, status, publish_status, reason, del_flag,rating,use_num,pack_type, create_by, create_time, update_by, update_time from cms_template_library
+    </sql>
+
+    <select id="selectByMemberTemplateForUpdate" resultMap="CmsTemplateLibraryResult">
+        <include refid="selectCmsTemplateLibraryVo"/>
+        where member_template_id = #{memberTemplateId} order by id for update
+    </select>
+
+    <select id="selectCmsTemplateLibraryList" parameterType="CmsTemplateLibrary" resultMap="CmsTemplateLibraryResult">
+        <include refid="selectCmsTemplateLibraryVo"/>
+        <where>  
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="memberTemplateId != null "> and member_template_id = #{memberTemplateId}</if>
+            <if test="categoryId != null "> and category_id = #{categoryId}</if>
+            <if test="title != null  and title != ''"> and title like concat('%', #{title}, '%')</if>
+            <if test="description != null  and description != ''"> and description = #{description}</if>
+            <if test="imgUrl != null  and imgUrl != ''"> and img_url = #{imgUrl}</if>
+            <if test="duration != null "> and duration = #{duration}</if>
+            <if test="difficulty != null  and difficulty != ''"> and difficulty = #{difficulty}</if>
+            <if test="isSync != null "> and is_sync = #{isSync}</if>
+            <if test="ruleInstructions != null  and ruleInstructions != ''"> and rule_instructions = #{ruleInstructions}</if>
+            <if test="validationMethod != null "> and validation_method = #{validationMethod}</if>
+            <if test="sensorType != null and sensorType != ''"> and sensor_type = #{sensorType}</if>
+            <if test="questionName != null  and questionName != ''"> and question_name like concat('%', #{questionName}, '%')</if>
+            <if test="questionAnswer != null  and questionAnswer != ''"> and question_answer = #{questionAnswer}</if>
+            <if test="feedbackText != null  and feedbackText != ''"> and feedback_text = #{feedbackText}</if>
+            <if test="couponId != null "> and coupon_id = #{couponId}</if>
+            <if test="questionA != null  and questionA != ''"> and question_a = #{questionA}</if>
+            <if test="questionB != null  and questionB != ''"> and question_b = #{questionB}</if>
+            <if test="questionC != null  and questionC != ''"> and question_c = #{questionC}</if>
+            <if test="questionD != null  and questionD != ''"> and question_d = #{questionD}</if>
+            <if test="correctAnswer != null  and correctAnswer != ''"> and correct_answer = #{correctAnswer}</if>
+            <if test="activityCategoryids != null  and activityCategoryids != ''"> AND FIND_IN_SET(#{activityCategoryids}, activity_categoryids) > 0</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="publishStatus != null "> and publish_status = #{publishStatus}</if>
+            <if test="reason != null  and reason != ''"> and reason = #{reason}</if>
+            <if test="delFlag != null "> and del_flag = #{delFlag}</if>
+            <!-- 模板形态筛选。★ 不传 = 不过滤(全部形态),不是「只看单节点」——
+                 缺省过滤成 0 会让剧情包与 IP 包在默认列表里凭空消失。 -->
+            <if test="packType != null "> and pack_type = #{packType}</if>
+        </where>
+
+        <!-- 模板市场:采用数(use_num)高的浮上来,同热度按新旧 -->
+        order by ifnull(use_num, 0) desc, id desc
+    </select>
+
+    <!-- 模板市场热度:被采用一次 +1(原子自增,避免读改写竞态) -->
+    <update id="incrementUseNum" parameterType="Long">
+        update cms_template_library set use_num = ifnull(use_num, 0) + 1 where id = #{id}
+    </update>
+
+
+
+
+    <select id="selectTemplatesByCategoryIds" resultMap="TemplateLibraryVOResult">
+        SELECT
+        mt.id, mt.member_id,mt.member_template_id, mt.category_id, mt.title,
+        mt.description, mt.img_url,mt.players,mt.usage_location,mt.required_materials, mt.duration, mt.difficulty, mt.is_sync,
+        mt.rule_instructions, mt.validation_method, mt.sensor_type, mt.sensor_config, mt.question_name, mt.question_answer, mt.feedback_text, mt.coupon_id, mt.story_text, mt.story_img, mt.story_json, mt.hint1, mt.hint2, mt.answer_reveal, mt.photo_require_desc, mt.photo_review, mt.audio_url, mt.audio_duration, mt.question_a,
+        mt.question_b, mt.question_c, mt.question_d, mt.correct_answer, mt.question_img, mt.question_audio, mt.question_option_media_json, mt.preference_json, mt.advanced_config_json, mt.activity_categoryids, mt.status, mt.publish_status, mt.reason, mt.del_flag,
+        mt.rating,mt.use_num,mt.create_by, mt.create_time, mt.update_by, mt.update_time,
+        c.category_name,
+        c.icon
+        FROM
+        cms_template_library mt
+        LEFT JOIN
+        sys_category c ON mt.category_id = c.id
+        WHERE
+        mt.del_flag = 0
+        AND mt.publish_status = 1
+        AND c.del_flag = 0
+        AND c.status = 1
+        AND mt.category_id IN
+        <foreach item="categoryId" collection="categoryIds" open="(" separator="," close=")">
+            #{categoryId}
+        </foreach>
+        ORDER BY
+        mt.create_time DESC
+    </select>
+    
+    <select id="selectCmsTemplateLibraryById" parameterType="Long" resultMap="CmsTemplateLibraryResult">
+        <include refid="selectCmsTemplateLibraryVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertCmsTemplateLibrary" parameterType="CmsTemplateLibrary" useGeneratedKeys="true" keyProperty="id">
+        insert into cms_template_library
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="memberTemplateId != null">member_template_id,</if>
+            <if test="packType != null">pack_type,</if>
+            <if test="categoryId != null">category_id,</if>
+            <if test="title != null and title != ''">title,</if>
+            <if test="description != null">description,</if>
+            <if test="imgUrl != null">img_url,</if>
+
+            <if test="players != null">players,</if>
+            <if test="usageLocation != null">usage_location,</if>
+            <if test="requiredMaterials != null">required_materials,</if>
+
+
+
+            <if test="duration != null">duration,</if>
+            <if test="difficulty != null">difficulty,</if>
+            <if test="isSync != null">is_sync,</if>
+            <if test="ruleInstructions != null">rule_instructions,</if>
+            <if test="merchantGuide != null">merchant_guide,</if>
+            <if test="rewardRulesJson != null">reward_rules_json,</if>
+            <if test="validationMethod != null">validation_method,</if>
+            <if test="sensorType != null">sensor_type,</if>
+            <if test="sensorConfig != null">sensor_config,</if>
+            <if test="questionName != null">question_name,</if>
+            <if test="questionAnswer != null">question_answer,</if>
+            <if test="feedbackText != null">feedback_text,</if>
+            <if test="couponId != null">coupon_id,</if>
+            <if test="storyText != null">story_text,</if>
+            <if test="storyImg != null">story_img,</if>
+            <if test="storyJson != null">story_json,</if>
+            <if test="hint1 != null">hint1,</if>
+            <if test="hint2 != null">hint2,</if>
+            <if test="answerReveal != null">answer_reveal,</if>
+            <if test="photoRequireDesc != null">photo_require_desc,</if>
+            <if test="photoReview != null">photo_review,</if>
+            <if test="audioUrl != null">audio_url,</if>
+            <if test="audioDuration != null">audio_duration,</if>
+            <if test="questionA != null">question_a,</if>
+            <if test="questionB != null">question_b,</if>
+            <if test="questionC != null">question_c,</if>
+            <if test="questionD != null">question_d,</if>
+            <if test="correctAnswer != null">correct_answer,</if>
+            <if test="questionImg != null">question_img,</if>
+            <if test="questionAudio != null">question_audio,</if>
+            <if test="questionOptionMediaJson != null">question_option_media_json,</if>
+            <if test="validationMethod != null and validationMethod == 6 and preferenceJson != null and preferenceJson.trim() != ''">preference_json,</if>
+            <if test="advancedConfigJson != null and advancedConfigJson.trim() != ''">advanced_config_json,</if>
+            <if test="activityCategoryids != null">activity_categoryids,</if>
+            <if test="status != null">status,</if>
+            <if test="publishStatus != null">publish_status,</if>
+            <if test="reason != null">reason,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="rating != null">rating,</if>
+            <if test="useNum != null">use_num,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="memberTemplateId != null">#{memberTemplateId},</if>
+            <if test="packType != null">#{packType},</if>
+            <if test="categoryId != null">#{categoryId},</if>
+            <if test="title != null and title != ''">#{title},</if>
+            <if test="description != null">#{description},</if>
+            <if test="imgUrl != null">#{imgUrl},</if>
+            <if test="players != null">#{players},</if>
+            <if test="usageLocation != null">#{usageLocation},</if>
+            <if test="requiredMaterials != null">#{requiredMaterials},</if>
+            <if test="duration != null">#{duration},</if>
+            <if test="difficulty != null">#{difficulty},</if>
+            <if test="isSync != null">#{isSync},</if>
+            <if test="ruleInstructions != null">#{ruleInstructions},</if>
+            <if test="merchantGuide != null">#{merchantGuide},</if>
+            <if test="rewardRulesJson != null">#{rewardRulesJson},</if>
+            <if test="validationMethod != null">#{validationMethod},</if>
+            <if test="sensorType != null">#{sensorType},</if>
+            <if test="sensorConfig != null">#{sensorConfig},</if>
+            <if test="questionName != null">#{questionName},</if>
+            <if test="questionAnswer != null">#{questionAnswer},</if>
+            <if test="feedbackText != null">#{feedbackText},</if>
+            <if test="couponId != null">#{couponId},</if>
+            <if test="storyText != null">#{storyText},</if>
+            <if test="storyImg != null">#{storyImg},</if>
+            <if test="storyJson != null">#{storyJson},</if>
+            <if test="hint1 != null">#{hint1},</if>
+            <if test="hint2 != null">#{hint2},</if>
+            <if test="answerReveal != null">#{answerReveal},</if>
+            <if test="photoRequireDesc != null">#{photoRequireDesc},</if>
+            <if test="photoReview != null">#{photoReview},</if>
+            <if test="audioUrl != null">#{audioUrl},</if>
+            <if test="audioDuration != null">#{audioDuration},</if>
+            <if test="questionA != null">#{questionA},</if>
+            <if test="questionB != null">#{questionB},</if>
+            <if test="questionC != null">#{questionC},</if>
+            <if test="questionD != null">#{questionD},</if>
+            <if test="correctAnswer != null">#{correctAnswer},</if>
+            <if test="questionImg != null">#{questionImg},</if>
+            <if test="questionAudio != null">#{questionAudio},</if>
+            <if test="questionOptionMediaJson != null">#{questionOptionMediaJson},</if>
+            <if test="validationMethod != null and validationMethod == 6 and preferenceJson != null and preferenceJson.trim() != ''">#{preferenceJson},</if>
+            <if test="advancedConfigJson != null and advancedConfigJson.trim() != ''">#{advancedConfigJson},</if>
+            <if test="activityCategoryids != null">#{activityCategoryids},</if>
+            <if test="status != null">#{status},</if>
+            <if test="publishStatus != null">#{publishStatus},</if>
+            <if test="reason != null">#{reason},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="rating != null">#{rating},</if>
+            <if test="useNum != null">#{useNum},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="applyAuditDecision">
+        update cms_template_library set status = #{row.status},
+            publish_status = #{row.publishStatus}, reason = #{row.reason}, update_time = now()
+        where id = #{row.id} and member_id = #{ownerId} and del_flag = 0 and status = 0 and member_template_id = #{row.memberTemplateId}
+    </update>
+
+    <update id="updateCmsTemplateLibrary" parameterType="CmsTemplateLibrary">
+        update cms_template_library
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="memberTemplateId != null">member_template_id = #{memberTemplateId},</if>
+            <if test="packType != null">pack_type = #{packType},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="title != null and title != ''">title = #{title},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="imgUrl != null">img_url = #{imgUrl},</if>
+            <if test="players != null">players = #{players},</if>
+            <if test="usageLocation != null">usage_location = #{usageLocation},</if>
+            <if test="requiredMaterials != null">required_materials = #{requiredMaterials},</if>
+            <if test="duration != null">duration = #{duration},</if>
+            <if test="difficulty != null">difficulty = #{difficulty},</if>
+            <if test="isSync != null">is_sync = #{isSync},</if>
+            <if test="ruleInstructions != null">rule_instructions = #{ruleInstructions},</if>
+            <if test="merchantGuide != null">merchant_guide = #{merchantGuide},</if>
+            <if test="rewardRulesJson != null">reward_rules_json = #{rewardRulesJson},</if>
+            <if test="validationMethod != null">validation_method = #{validationMethod},</if>
+            <choose>
+                <when test="validationMethod != null and (validationMethod != 7 and validationMethod != 2
+                        or validationMethod == 2 and sensorType != 'filter_shot')">
+                    sensor_type = NULL,
+                    sensor_config = NULL,
+                </when>
+                <otherwise>
+                    <if test="sensorType != null">sensor_type = #{sensorType},</if>
+                    <if test="sensorConfig != null">sensor_config = #{sensorConfig},</if>
+                </otherwise>
+            </choose>
+            <if test="questionName != null">question_name = #{questionName},</if>
+            <if test="questionAnswer != null">question_answer = #{questionAnswer},</if>
+            <if test="feedbackText != null">feedback_text = #{feedbackText},</if>
+            <if test="couponId != null">coupon_id = #{couponId},</if>
+            <if test="storyText != null">story_text = #{storyText},</if>
+            <if test="storyImg != null">story_img = #{storyImg},</if>
+            <if test="storyJson != null">story_json = #{storyJson},</if>
+            <if test="hint1 != null">hint1 = #{hint1},</if>
+            <if test="hint2 != null">hint2 = #{hint2},</if>
+            <if test="answerReveal != null">answer_reveal = #{answerReveal},</if>
+            <if test="photoRequireDesc != null">photo_require_desc = #{photoRequireDesc},</if>
+            <if test="photoReview != null">photo_review = #{photoReview},</if>
+            <!-- 同 CmsMemberTemplateMapper:patch 语义与 SET 顺序合同完全一致(见该文件注释);同地址判定同样用 BINARY 精确比较。 -->
+            <if test="audioUrl != null">
+                audio_duration = CASE
+                    WHEN #{audioUrl} = '' THEN NULL
+                    WHEN #{audioDuration} IS NOT NULL AND #{audioDuration} > 0 THEN #{audioDuration}
+                    WHEN BINARY #{audioUrl} = BINARY audio_url THEN audio_duration
+                    ELSE NULL
+                END,
+            </if>
+            <if test="audioUrl == null and audioDuration != null and audioDuration > 0">audio_duration = #{audioDuration},</if>
+            <if test="audioUrl != null">audio_url = #{audioUrl},</if>
+            <if test="questionA != null">question_a = #{questionA},</if>
+            <if test="questionB != null">question_b = #{questionB},</if>
+            <if test="questionC != null">question_c = #{questionC},</if>
+            <if test="questionD != null">question_d = #{questionD},</if>
+            <if test="correctAnswer != null">correct_answer = #{correctAnswer},</if>
+            <if test="questionImg != null">question_img = #{questionImg},</if>
+            <if test="questionAudio != null">question_audio = #{questionAudio},</if>
+            <if test="questionOptionMediaJson != null">question_option_media_json = #{questionOptionMediaJson},</if>
+            <choose>
+                <when test="validationMethod != null and (validationMethod != 6 or (preferenceJson != null and preferenceJson.trim() == ''))">
+                    preference_json = NULL,
+                </when>
+                <otherwise>
+                    <if test="preferenceJson != null">preference_json = #{preferenceJson},</if>
+                </otherwise>
+            </choose>
+            <choose>
+                <when test="advancedConfigJson != null and advancedConfigJson.trim() == ''">
+                    advanced_config_json = NULL,
+                </when>
+                <otherwise>
+                    <if test="advancedConfigJson != null">advanced_config_json = #{advancedConfigJson},</if>
+                </otherwise>
+            </choose>
+            <if test="activityCategoryids != null">activity_categoryids = #{activityCategoryids},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="publishStatus != null">publish_status = #{publishStatus},</if>
+            <if test="reason != null">reason = #{reason},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="rating != null">rating = #{rating},</if>
+            <if test="useNum != null">use_num = #{useNum},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCmsTemplateLibraryById" parameterType="Long">
+        delete from cms_template_library where id = #{id}
+    </delete>
+
+    <delete id="deleteCmsTemplateLibraryByIds" parameterType="String">
+        delete from cms_template_library where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

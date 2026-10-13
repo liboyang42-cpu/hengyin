@@ -1,0 +1,146 @@
+<!-- 主题详情弹窗:装「除章节、玩法、票务之外」的全部主题内容。
+     2026-08-10 按设计源码(编辑主题弹窗.dc.html)重做:标题区 = 主题名大标题,
+     正文 = 一张张白卡,卡内「圆图标 + 标题/副文 + 右侧灰药丸」,
+     多行之间隔 1px 线。和节点编辑弹窗(4029:14152)是同一套卡片语言,所以直接复用
+     .node-card / .node-pill,不再造第二套。
+     ⚠️ 不传 title:cy-sheet 的 .sh__head 是「左标题 + 右 ×」且被无障碍契约逐字锁死;
+     不传 title 时那段整段不渲染,头完全在这里画。 -->
+<cy-sheet variant="full" show="{{topicDetailShow && !runtimeRewardOpen}}" stacked="{{runtimeEditor.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeTopicDetail">
+  <view class="pd-topic-detail node-sheet">
+    <!-- 2026-09-24 CU-C-156:✕ 收到右上角(全仓统一),「完成」紧贴其左 ——
+         原来 ✕ 在左上,和相邻弹层的右上 ✕ 反向,找关闭要换方向。
+         标题只留主题名一处:「编辑主题」那颗小字和下面放大的主题名是两个标题,
+         而主题名不在这一层改(命名由前一步的命名页负责),所以撤的是小字那行。 -->
+    <view class="node-sheet__top">
+      <view class="node-sheet__done" bindtap="closeTopicDetail" aria-role="button" aria-label="完成主题详情编辑" hover-class="cy-pressed" hover-stay-time="80">完成</view>
+      <view class="node-sheet__close" bindtap="closeTopicDetail" aria-role="button" aria-label="关闭编辑主题" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="node-sheet__close-circle"><cy-icon name="close-sm" size="44" /></view>
+      </view>
+    </view>
+    <view class="node-sheet__titlebar">
+      <text class="node-sheet__name node-sheet__name--static">{{formData.name || '未命名主题'}}</text>
+    </view>
+
+    <view class="node-card" id="fieldSubtitle"><view class="node-card__row"><view class="node-card__ico"><cy-icon name="edit" size="32" /></view><view class="node-card__main"><text class="node-card__title">主题描述<text class="g-req">*</text></text><text wx:if="{{!subtitleEditing && formData.subtitle}}" class="node-card__value">{{formData.subtitle}}</text></view><view class="node-pill" bindtap="toggleSubtitleEditing" hover-class="cy-pressed" hover-stay-time="80">编辑<cy-icon name="chevron-right" size="24" /></view></view><textarea wx:if="{{subtitleEditing}}" class="pd-card-textarea" placeholder="填写主题描述" value="{{formData.subtitle}}" bindinput="onSubtitleChange" maxlength="30" fixed /></view>
+    <view class="node-card" id="fieldCategory" bindtap="navigateToCategorySelect" aria-role="button" aria-label="选择主题类别" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="node-card__row">
+        <view class="node-card__ico"><cy-icon name="filter" size="32" /></view>
+        <view class="node-card__main">
+          <text class="node-card__title">主题类别<text class="g-req">*</text></text>
+        </view>
+        <view class="node-pill"><text>{{selectedCategoryNamesStr || '选择类别'}}</text><cy-icon name="chevron-right" size="24" /></view>
+      </view>
+    </view>
+
+    <!-- 视觉素材:两条封面同卡、中间一条线(设计源码里就是一张卡两行) -->
+    <view class="node-card" id="fieldVisual">
+      <view class="node-card__row">
+        <view class="node-card__ico"><cy-icon name="image" size="32" /></view>
+        <view class="node-card__main">
+          <text class="node-card__title">竖版封面<text class="g-req">*</text></text>
+        </view>
+        <view class="node-pill node-pill--solid" catchtap="uploadBanner" aria-role="button" aria-label="{{formData.imgUrl ? '更换竖版封面' : '上传竖版封面'}}" hover-class="cy-pressed" hover-stay-time="80">
+          <text wx:if="{{formData.imgUrl}}">已上传</text>
+          <block wx:else><cy-icon name="plus" size="24" /><text>上传 3:4</text></block>
+          <image wx:if="{{formData.imgUrl}}" class="pd-pill-thumb pd-pill-thumb--portrait" src="{{formData.imgUrl}}" mode="aspectFill" />
+        </view>
+      </view>
+
+      <view class="node-card__hr"></view>
+
+      <view class="node-card__row">
+        <view class="node-card__ico"><cy-icon name="image" size="32" /></view>
+        <view class="node-card__main">
+          <text class="node-card__title">横版封面</text>
+        </view>
+        <view class="node-pill" catchtap="uploadImgArr" wx:if="{{imgArrList.length < imgArrMax}}" aria-role="button" aria-label="{{imgArrList.length ? '继续上传横版封面' : '上传横版封面'}}" hover-class="cy-pressed" hover-stay-time="80">
+          <text wx:if="{{imgArrList.length}}">已上传</text>
+          <block wx:else><cy-icon name="plus" size="24" /><text>上传 16:9</text></block>
+        </view>
+      </view>
+      <view class="pd-gallery" wx:if="{{imgArrList.length}}">
+        <view wx:for="{{imgArrList}}" wx:key="*this" class="pd-gitem">
+          <image src="{{item}}" mode="aspectFill" class="pd-gimg" />
+          <view class="pd-gdel" catchtap="removeImgArr" data-i="{{index}}" aria-role="button" aria-label="删除横版封面 {{index + 1}}" hover-class="cy-pressed" hover-stay-time="80"><view class="pd-gdel__surface"><cy-icon name="close-sm" size="24" /></view></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="node-card" id="fieldDescription">
+      <view class="node-card__row">
+        <view class="node-card__ico"><cy-icon name="flag" size="32" /></view>
+        <view class="node-card__main">
+          <text class="node-card__title">剧情详情<text class="g-req">*</text></text>
+        </view>
+      </view>
+      <textarea class="pd-card-textarea" placeholder="写下这个主题的故事…" placeholder-class="slopes-story-placeholder" value="{{formData.description}}" bindinput="onIntroductionChange" maxlength="1000" show-confirm-bar="{{false}}" fixed="{{true}}" />
+    </view>
+
+    <!-- 伏笔(2026-09-24 用户:「伏笔应该是在主题详情里配置」):面板照旧,只是入口从创作页挪到这里 -->
+    <view class="node-card" bindtap="openThoughts" aria-role="button" aria-label="{{thoughtOptions.length ? '编辑伏笔' : '添加伏笔'}}" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="node-card__row">
+        <view class="node-card__ico"><cy-icon name="flag" size="32" /></view>
+        <view class="node-card__main">
+          <text class="node-card__title">伏笔</text>
+          <text class="node-card__value" wx:if="{{thoughtOptions.length}}">{{thoughtOptions.length > 1 ? '请保留一个伏笔' : thoughtOptions[0].name}}</text>
+        </view>
+        <view class="node-pill"><text>{{thoughtOptions.length ? '编辑' : '添加'}}</text><cy-icon name="chevron-right" size="24" /></view>
+      </view>
+    </view>
+
+    <view class="node-card"><view class="node-card__row"><view class="node-card__main"><text class="node-card__title">生命值</text></view><cy-switch checked="{{runtimeHpEnabled}}" data-stat="hp" bindchange="onRuntimeStatToggle" /></view><view class="node-card__hr"></view><view class="node-card__row"><view class="node-card__main"><text class="node-card__title">幸运值</text></view><cy-switch checked="{{runtimeLuckEnabled}}" data-stat="luck" bindchange="onRuntimeStatToggle" /></view></view>
+    <view class="node-card" id="fieldCompleteReward" bindtap="openThemeRewards" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><view class="node-card__ico"><cy-icon name="gift" size="32" /></view><view class="node-card__main"><text class="node-card__title">主题通关奖励</text></view><view class="node-pill">配置<cy-icon name="chevron-right" size="24" /></view></view></view>
+    <!-- 主题级 N/M：自由探索继续认商家权益核销，不能被节点数量覆盖。 -->
+    <view class="node-card" id="fieldCompletionRule">
+      <view class="node-card__row">
+        <view class="node-card__ico"><cy-icon name="flag" size="32" /></view>
+        <view class="node-card__main">
+          <text class="node-card__title">通关条件</text>
+        </view>
+        <cy-switch wx:if="{{formData.productType === 1}}" checked="{{completionRuleMode === 'AT_LEAST'}}" bindchange="onCompletionRuleToggle" />
+      </view>
+      <block wx:if="{{formData.productType === 1 && completionRuleMode === 'AT_LEAST'}}">
+        <view class="node-card__hr"></view>
+        <view class="pd-completion-rule">
+          <text>完成</text>
+          <input class="pd-completion-rule__input {{completionRuleError || errors.completionRule ? 'is-error' : ''}}" type="number" value="{{completionRequiredCount}}" bindinput="onCompletionRequiredCountInput" />
+          <text>/ {{totalNodes || 0}} 个站点即通关</text>
+        </view>
+        <cy-inline-error class="pd-completion-rule__error" wx:if="{{completionRuleError || errors.completionRule}}" title="{{completionRuleError || errors.completionRule}}" />
+      </block>
+    </view>
+
+    <view class="node-card" id="fieldBingo" bindtap="openThemeBingo" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><view class="node-card__ico"><view class="rt-grid-glyph"><view wx:for="{{[1,2,3,4,5,6,7,8,9]}}" wx:key="*this"></view></view></view><view class="node-card__main"><text class="node-card__title">宾果九宫格</text></view><view class="node-pill">配置<cy-icon name="chevron-right" size="24" /></view></view></view>
+    <!-- 举办方式。设计源码里这张卡是「需要商家参与 / 发布到创意广场」两个开关,
+         但商家承接在本仓是【章节级】字段、且发布后才配得准(招商要等商家看得到主题),
+         主题层没有这个开关 —— 不凭空造一个点了不生效的假开关,只留真有的那两项。 -->
+    <view class="node-card">
+      <view class="node-card__row">
+        <view class="node-card__ico"><cy-icon name="tab-feed" size="32" /></view>
+        <view class="node-card__main">
+          <text class="node-card__title">发布到创意广场</text>
+        </view>
+        <cy-switch checked="{{publishToCreative}}" bindchange="onPublishToCreativeChange" />
+      </view>
+      <block wx:if="{{myClubs.length > 0}}">
+        <view class="node-card__hr"></view>
+        <cy-dropdown range="{{myClubs}}" range-key="name" value="{{clubIndex}}" bind:change="onClubChange">
+          <view class="node-card__row">
+            <view class="node-card__ico"><cy-icon name="tab-club" size="32" /></view>
+            <view class="node-card__main">
+              <text class="node-card__title">归属俱乐部</text>
+              <text class="node-card__value">{{clubIndex >= 0 ? myClubs[clubIndex].name : '未选择'}}</text>
+            </view>
+            <view class="node-pill"><text>选择</text><cy-icon name="chevron-right" size="24" /></view>
+          </view>
+        </cy-dropdown>
+      </block>
+    </view>
+
+
+    <!-- 「清空本地草稿」原先挂在创作页那条常驻提示条上,提示条 2026-08-11 下线后
+         入口挪到这里 —— 它是"把这份草稿丢掉重来"的破坏性动作,本来也不该常驻在
+         首屏第一眼的位置。 -->
+    <view class="node-card node-card--danger" bindtap="clearLocalDraft" aria-role="button" aria-label="清空本地草稿" hover-class="cy-pressed" hover-stay-time="80">清空本地草稿</view>
+  </view>
+</cy-sheet>

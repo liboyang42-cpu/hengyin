@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PlayJourneyReadMapper">
+
+    <resultMap type="com.chengyinhub.business.domain.TopicRouteAction" id="PlayJourneyActionResult">
+        <result property="id"           column="id"            />
+        <result property="sessionId"    column="session_id"    />
+        <result property="memberId"     column="member_id"     />
+        <result property="nodeId"       column="node_id"       />
+        <result property="actionId"     column="action_id"     />
+        <result property="receiptId"    column="receipt_id"    />
+        <result property="outcomeCode"  column="outcome_code"  />
+        <result property="responseJson" column="response_json" />
+        <result property="createTime"   column="create_time"   />
+    </resultMap>
+
+    <select id="selectActionsBySession" resultMap="PlayJourneyActionResult">
+        select id, session_id, member_id, node_id, action_id, receipt_id, outcome_code, response_json, create_time
+        from topic_route_action
+        where session_id = #{sessionId}
+        order by create_time asc, id asc
+    </select>
+
+    <!-- R8-STORY 的列;R11-C 起列已存在,读取失败不再按「未配置」吞掉,原样抛给上层。 -->
+    <select id="selectJourneyStoryJson" resultType="string">
+        select journey_story_json from cms_topic where id = #{topicId}
+    </select>
+
+</mapper>

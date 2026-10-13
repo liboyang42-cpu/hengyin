@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.UmsCreativeSquareLikeMapper">
+    
+    <resultMap type="UmsCreativeSquareLike" id="UmsCreativeSquareLikeResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="dataId"    column="data_id"    />
+        <result property="likeType"    column="like_type"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectUmsCreativeSquareLikeVo">
+        select id, member_id, data_id, like_type, create_by, create_time, update_by, update_time from ums_creative_square_like
+    </sql>
+
+    <select id="selectUmsCreativeSquareLikeList" parameterType="UmsCreativeSquareLike" resultMap="UmsCreativeSquareLikeResult">
+        <include refid="selectUmsCreativeSquareLikeVo"/>
+        <where>  
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="dataId != null "> and data_id = #{dataId}</if>
+            <if test="likeType != null "> and like_type = #{likeType}</if>
+        </where>
+    </select>
+    
+    <select id="selectUmsCreativeSquareLikeById" parameterType="Long" resultMap="UmsCreativeSquareLikeResult">
+        <include refid="selectUmsCreativeSquareLikeVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertUmsCreativeSquareLike" parameterType="UmsCreativeSquareLike" useGeneratedKeys="true" keyProperty="id">
+        insert into ums_creative_square_like
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="dataId != null">data_id,</if>
+            <if test="likeType != null">like_type,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="dataId != null">#{dataId},</if>
+            <if test="likeType != null">#{likeType},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateUmsCreativeSquareLike" parameterType="UmsCreativeSquareLike">
+        update ums_creative_square_like
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="dataId != null">data_id = #{dataId},</if>
+            <if test="likeType != null">like_type = #{likeType},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+
+    <select id="selectUmsMemberLikeNumByMemberId" resultType="Integer">
+        select count(1) from ums_creative_square_like where member_id = #{member_id}
+    </select>
+
+    <delete id="deleteUmsCreativeSquareLikeById" parameterType="Long">
+        delete from ums_creative_square_like where id = #{id}
+    </delete>
+
+    <delete id="deleteUmsCreativeSquareLikeByIds" parameterType="String">
+        delete from ums_creative_square_like where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,729 @@
+{
+  "total": 79,
+  "pass": 77,
+  "redirect": 2,
+  "fail": 0,
+  "pagesWithErrors": 3,
+  "results": [
+    {
+      "page": "/pages/index/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/role/center/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/square/list/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/square/detail/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 1,
+      "warns": 1
+    },
+    {
+      "page": "/pages/template/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/talent/list/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageTalent/search/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 5
+    },
+    {
+      "page": "/pages/search2/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/searchmap/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageMember/signup/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 1,
+      "warns": 0
+    },
+    {
+      "page": "/pages/activity/detail/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 1
+    },
+    {
+      "page": "/pages/member/index/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 1
+    },
+    {
+      "page": "/pages/templatedetail/templatedetail",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/templatedetail2/templatedetail2",
+      "status": "REDIRECT",
+      "detail": "实际 /pages/templatedetail/templatedetail",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/address/address",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/addressinfo/addressinfo",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/activity/baoming/baoming",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 2
+    },
+    {
+      "page": "/pages/jifen/jifen",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 3
+    },
+    {
+      "page": "/pages/play/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/shezhi/shezhi",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/shanghuziliao/shanghuziliao",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/gerenziliao/gerenziliao",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/profile/profile",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/toupiao/toupiao",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 4
+    },
+    {
+      "page": "/subpackageMember/mytemplate/mytemplate",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageMember/signupInfo/signupInfo",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 1
+    },
+    {
+      "page": "/subpackageMember/signupInfo2/signupInfo2",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageMember/coupon/coupon",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageMember/couponInfo/couponInfo",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageMember/order/order",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 4
+    },
+    {
+      "page": "/pages/member/badges/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageMember/orderinfo/orderinfo",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/userinfo/userinfo",
+      "status": "PASS",
+      "detail": "",
+      "errors": 1,
+      "warns": 1
+    },
+    {
+      "page": "/subpackageMember/tixian/tixian",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageMember/tixianjilu/tixianjilu",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 3
+    },
+    {
+      "page": "/pages/mytemplatedetail/mytemplatedetail",
+      "status": "REDIRECT",
+      "detail": "实际 /pages/templatedetail/templatedetail",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/mylike/mylike",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageMember/mycanyu/mycanyu",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageMember/mycanyuinfo/mycanyuinfo",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageA/pages/project/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageA/pages/infomation/infomation",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageA/pages/infomationdetail/infomationdetail",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageA/pages/assetcenter/income-topic/income-topic",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageA/pages/assetcenter/income-invite/income-invite",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageA/pages/assetcenter/income-brand/income-brand",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageA/pages/assetcenter/income-detail/income-detail",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageP3/pages/growth/index/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageP3/pages/world/index/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageP3/pages/creator/index/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageP3/pages/growthcenter/index/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageP3/pages/ai/theme-plan/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageB/pages/im/list/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/subpackageB/pages/im/chat/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/publish/fabu/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/publish/simple/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/publish/temp/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/publish/activity/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/publish/biaoqian/biaoqian",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 1
+    },
+    {
+      "page": "/pages/publish/topicadd/topicadd",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/publish/templateadd/templateadd",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/club/apply/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/club/create/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/club/detail/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/club/index/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/club/edit/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/club/enroll/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/topic/index/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 1
+    },
+    {
+      "page": "/pages/topic/merchantinfo/merchantinfo",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/topic/merchantapply1/merchantapply1",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/topic/merchantapply2/merchantapply2",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/topic/merchantapply3/merchantapply3",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/topic/settlement/settlement",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 2
+    },
+    {
+      "page": "/pages/merchant/index/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/merchant/apply/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/merchant/coop/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/merchant/ledger/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/merchant/profile/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/coop/list/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    },
+    {
+      "page": "/pages/coop/invite/index",
+      "status": "PASS",
+      "detail": "",
+      "errors": 0,
+      "warns": 0
+    }
+  ],
+  "issues": [
+    {
+      "page": "/pages/square/detail/index",
+      "kind": "console.warn",
+      "text": "Setting data field \"id\" to undefined is invalid."
+    },
+    {
+      "page": "/pages/square/detail/index",
+      "kind": "exception",
+      "text": "Cannot read property 'length' of undefined"
+    },
+    {
+      "page": "/subpackageTalent/search/index",
+      "kind": "console.warn",
+      "text": "WXMLRT_$gwx_XC_49:./subpackageTalent/search/index.wxml:view:37:8: Now you can provide attr `wx:key` for a `wx:for` to improve performance."
+    },
+    {
+      "page": "/subpackageTalent/search/index",
+      "kind": "console.warn",
+      "text": "WXMLRT_$gwx_XC_49:./subpackageTalent/search/index.wxml:view:37:8: Now you can provide attr `wx:key` for a `wx:for` to improve performance."
+    },
+    {
+      "page": "/subpackageTalent/search/index",
+      "kind": "console.warn",
+      "text": "WXMLRT_$gwx_XC_49:./subpackageTalent/search/index.wxml:view:37:8: Now you can provide attr `wx:key` for a `wx:for` to improve performance."
+    },
+    {
+      "page": "/subpackageTalent/search/index",
+      "kind": "console.warn",
+      "text": "WXMLRT_$gwx_XC_49:./subpackageTalent/search/index.wxml:view:37:8: Now you can provide attr `wx:key` for a `wx:for` to improve performance."
+    },
+    {
+      "page": "/subpackageTalent/search/index",
+      "kind": "console.warn",
+      "text": "WXMLRT_$gwx_XC_49:./subpackageTalent/search/index.wxml:view:37:8: Now you can provide attr `wx:key` for a `wx:for` to improve performance."
+    },
+    {
+      "page": "/subpackageMember/signup/index",
+      "kind": "exception",
+      "text": "Cannot read property 'length' of undefined"
+    },
+    {
+      "page": "/pages/activity/detail/index",
+      "kind": "console.warn",
+      "text": "Setting data field \"id\" to undefined is invalid."
+    },
+    {
+      "page": "/pages/member/index/index",
+      "kind": "console.warn",
+      "text": "[Component] property \"role\" of \"components/roleBadge/index\" received type-uncompatible value: expected <String> but get null value. Use empty string instead."
+    },
+    {
+      "page": "/pages/activity/baoming/baoming",
+      "kind": "console.warn",
+      "text": "Setting data field \"activityId\" to undefined is invalid."
+    },
+    {
+      "page": "/pages/activity/baoming/baoming",
+      "kind": "console.warn",
+      "text": "Setting data field \"ticketId\" to undefined is invalid."
+    },
+    {
+      "page": "/pages/jifen/jifen",
+      "kind": "console.warn",
+      "text": "WXMLRT_$gwx_XC_22:./pages/jifen/jifen.wxml:view:42:6: Now you can provide attr `wx:key` for a `wx:for` to improve performance."
+    },
+    {
+      "page": "/pages/jifen/jifen",
+      "kind": "console.warn",
+      "text": "WXMLRT_$gwx_XC_22:./pages/jifen/jifen.wxml:view:42:6: Now you can provide attr `wx:key` for a `wx:for` to improve performance."
+    },
+    {
+      "page": "/pages/jifen/jifen",
+      "kind": "console.warn",
+      "text": "WXMLRT_$gwx_XC_22:./pages/jifen/jifen.wxml:view:42:6: Now you can provide attr `wx:key` for a `wx:for` to improve performance."
+    },
+    {
+      "page": "/pages/toupiao/toupiao",
+      "kind": "console.warn",
+      "text": "at ei.getStatusText (weapp:///pages/toupiao/toupiao.js:258:17) new Date(\"2025-10-01 00:00:00\") 在部分 iOS 下无法正常使用，iOS 只支持 \"yyyy/MM/dd\"、\"yyyy/MM/dd HH:mm:ss\"、\"yyyy-MM-dd\"、\"yyyy-MM-ddTHH:mm:ss\"、\"yyyy-MM-ddTHH:mm:ss+HH:mm\" 的格式，点击 null 下次编译后生效"
+    },
+    {
+      "page": "/pages/toupiao/toupiao",
+      "kind": "console.warn",
+      "text": "at ei.getStatusText (weapp:///pages/toupiao/toupiao.js:259:15) new Date(\"2025-12-12 00:00:00\") 在部分 iOS 下无法正常使用，iOS 只支持 \"yyyy/MM/dd\"、\"yyyy/MM/dd HH:mm:ss\"、\"yyyy-MM-dd\"、\"yyyy-MM-ddTHH:mm:ss\"、\"yyyy-MM-ddTHH:mm:ss+HH:mm\" 的格式，点击 null 下次编译后生效"
+    },
+    {
+      "page": "/pages/toupiao/toupiao",
+      "kind": "console.warn",
+      "text": "at ei.getStatusText (weapp:///pages/toupiao/toupiao.js:258:17) new Date(\"2025-12-09 15:12:27\") 在部分 iOS 下无法正常使用，iOS 只支持 \"yyyy/MM/dd\"、\"yyyy/MM/dd HH:mm:ss\"、\"yyyy-MM-dd\"、\"yyyy-MM-ddTHH:mm:ss\"、\"yyyy-MM-ddTHH:mm:ss+HH:mm\" 的格式，点击 null 下次编译后生效"
+    },
+    {
+      "page": "/pages/toupiao/toupiao",
+      "kind": "console.warn",
+      "text": "at ei.getStatusText (weapp:///pages/toupiao/toupiao.js:259:15) new Date(\"2025-12-12 00:00:00\") 在部分 iOS 下无法正常使用，iOS 只支持 \"yyyy/MM/dd\"、\"yyyy/MM/dd HH:mm:ss\"、\"yyyy-MM-dd\"、\"yyyy-MM-ddTHH:mm:ss\"、\"yyyy-MM-ddTHH:mm:ss+HH:mm\" 的格式，点击 null 下次编译后生效"
+    },
+    {
+      "page": "/subpackageMember/signupInfo/signupInfo",
+      "kind": "console.warn",
+      "text": "WXMLRT_$gwx_XC_33:./subpackageMember/signupInfo/signupInfo.wxml:swiper-item:84:6: Now you can provide attr `wx:key` for a `wx:for` to improve performance."
+    },
+    {
+      "page": "/subpackageMember/order/order",
+      "kind": "console.warn",
+      "text": "WXMLRT_$gwx_XC_30:./subpackageMember/order/order.wxml:view:29:4: Now you can provide attr `wx:key` for a `wx:for` to improve performance."
+    },
+    {
+      "page": "/subpackageMember/order/order",
+      "kind": "console.warn",
+      "text": "WXMLRT_$gwx_XC_30:./subpackageMember/order/order.wxml:view:29:4: Now you can provide attr `wx:key` for a `wx:for` to improve performance."
+    },
+    {
+      "page": "/subpackageMember/order/order",
+      "kind": "console.warn",
+      "text": "WXMLRT_$gwx_XC_30:./subpackageMember/order/order.wxml:view:29:4: Now you can provide attr `wx:key` for a `wx:for` to improve performance."
+    },
+    {
+      "page": "/subpackageMember/order/order",
+      "kind": "console.warn",
+      "text": "WXMLRT_$gwx_XC_30:./subpackageMember/order/order.wxml:view:29:4: Now you can provide attr `wx:key` for a `wx:for` to improve performance."
+    },
+    {
+      "page": "/pages/userinfo/userinfo",
+      "kind": "console.warn",
+      "text": "Setting data field \"id\" to undefined is invalid."
+    },
+    {
+      "page": "/pages/userinfo/userinfo",
+      "kind": "exception",
+      "text": "Cannot read property 'length' of undefined"
+    },
+    {
+      "page": "/subpackageMember/tixianjilu/tixianjilu",
+      "kind": "console.warn",
+      "text": "WXMLRT_$gwx_XC_36:./subpackageMember/tixianjilu/tixianjilu.wxml:view:2:4: Now you can provide attr `wx:key` for a `wx:for` to improve performance."
+    },
+    {
+      "page": "/subpackageMember/tixianjilu/tixianjilu",
+      "kind": "console.warn",
+      "text": "WXMLRT_$gwx_XC_36:./subpackageMember/tixianjilu/tixianjilu.wxml:view:2:4: Now you can provide attr `wx:key` for a `wx:for` to improve performance."
+    },
+    {
+      "page": "/subpackageMember/tixianjilu/tixianjilu",
+      "kind": "console.warn",
+      "text": "WXMLRT_$gwx_XC_36:./subpackageMember/tixianjilu/tixianjilu.wxml:view:2:4: Now you can provide attr `wx:key` for a `wx:for` to improve performance."
+    },
+    {
+      "page": "/pages/publish/biaoqian/biaoqian",
+      "kind": "console.warn",
+      "text": "Setting data field \"type\" to undefined is invalid."
+    },
+    {
+      "page": "/pages/topic/index/index",
+      "kind": "console.warn",
+      "text": "Setting data field \"id\" to undefined is invalid."
+    },
+    {
+      "page": "/pages/topic/settlement/settlement",
+      "kind": "console.warn",
+      "text": "Setting data field \"topicId\" to undefined is invalid."
+    },
+    {
+      "page": "/pages/topic/settlement/settlement",
+      "kind": "console.warn",
+      "text": "Setting data field \"ticketId\" to undefined is invalid."
+    }
+  ]
+}

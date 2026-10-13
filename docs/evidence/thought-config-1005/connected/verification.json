@@ -1,0 +1,212 @@
+{
+  "date": "2026-10-05",
+  "timezone": "America/Los_Angeles",
+  "worktree": "/Users/arlan/.codex/worktrees/thought-config-1005/chengyin",
+  "branch": "feature/thought-config-1005",
+  "sourceCommit": "3bb834d561b3b675cc86a430b7cfad184684f0fb",
+  "scope": "已授权三处伏笔链路修复与按步骤模拟器截图",
+  "status": "三处修复已完成；本机草稿和本地试玩通过，真实服务与微信全链路待验",
+  "repairs": [
+    {
+      "id": "TH-FLOW-01",
+      "status": "已修复、本机复测通过",
+      "result": "两个正文插入菜单引用主题已保存的唯一伏笔"
+    },
+    {
+      "id": "TH-FLOW-02",
+      "status": "已修复、本机复测通过",
+      "result": "新章节使用干净表单；三个标识唯一，新的普通章不继承旧结局"
+    },
+    {
+      "id": "TH-FLOW-03",
+      "status": "已修复、相关时序测试通过",
+      "result": "所有推进入口在写入前等待认领和步数同步，使用同步后的版本；真实末站未复现"
+    }
+  ],
+  "screenshots": [
+    {
+      "step": 1,
+      "title": "添加伏笔",
+      "note": "主题详情 → 添加伏笔。仍只配置一个伏笔，底部弹窗保留步数和文字两个必填项。",
+      "files": [
+        "01-add-thought.png"
+      ],
+      "evidenceKind": "native-local-draft"
+    },
+    {
+      "step": 2,
+      "title": "填写两个必填项",
+      "note": "步数放在上方，文字放在下方；填写后点底部“完成”。本次输入值通过组件输入事件写入，完成按钮为模拟器原生点击。",
+      "files": [
+        "02-required-filled.png"
+      ],
+      "evidenceKind": "native-local-draft"
+    },
+    {
+      "step": 3,
+      "title": "完成返回主题详情",
+      "note": "点“完成”后关闭伏笔配置，回到主题详情，后续正文引用已保存的同一个伏笔。",
+      "files": [
+        "03-complete-return.png"
+      ],
+      "evidenceKind": "native-local-draft"
+    },
+    {
+      "step": 4,
+      "title": "在正文里添加伏笔",
+      "note": "章节正文的加号菜单已补回“伏笔”。中间和末尾两种插入位置均可用，六个动作排列为两行。",
+      "files": [
+        "04-insert-menu.png"
+      ],
+      "evidenceKind": "native-local-draft"
+    },
+    {
+      "step": 5,
+      "title": "插入同一个伏笔",
+      "note": "正文增加伏笔块，引用主题详情已保存的文字与步数。这里不再添加第二个配置。",
+      "files": [
+        "05-inserted-thought.png"
+      ],
+      "evidenceKind": "native-local-draft"
+    },
+    {
+      "step": 6,
+      "title": "配置兜底结局",
+      "note": "在现有章节设置中，将“未完的故事”设为结局，选择“其它结局都不中时”。",
+      "files": [
+        "06-fallback-ending.png"
+      ],
+      "evidenceKind": "native-local-draft"
+    },
+    {
+      "step": 7,
+      "title": "再添加章节，默认普通章",
+      "note": "新章节不继承刚才的结局条件。独立读回三个章节标识均不重复，新章初始结局为空。",
+      "files": [
+        "07-new-chapter-clean.png"
+      ],
+      "evidenceKind": "native-local-draft"
+    },
+    {
+      "step": 8,
+      "title": "配置伏笔应验结局",
+      "note": "将“窗后的光”设为结局，选择“某个伏笔应验了”及主题里的唯一伏笔。开关和下拉在本轮通过组件 change 事件验证回填，未验物理控件操作。",
+      "files": [
+        "08-thought-ending.png"
+      ],
+      "evidenceKind": "native-local-draft"
+    },
+    {
+      "step": 9,
+      "title": "重新打开草稿",
+      "note": "独立新页面恢复草稿，正文与伏笔引用保留；两个结局也保留。",
+      "files": [
+        "09-reopened-story.png"
+      ],
+      "evidenceKind": "native-local-draft"
+    },
+    {
+      "step": 10,
+      "title": "进入本地试玩",
+      "note": "显示“草稿预览”，复用现有玩家页面。",
+      "files": [
+        "10-preview-start.png"
+      ],
+      "evidenceKind": "existing-local-preview"
+    },
+    {
+      "step": 11,
+      "title": "在正文里遇到伏笔",
+      "note": "剧情后显示伏笔文字及 3000 步。本地试玩不向服务器认领或上传微信运动。",
+      "files": [
+        "11-player-thought.png"
+      ],
+      "evidenceKind": "existing-local-preview"
+    },
+    {
+      "step": 12,
+      "title": "查看未应验时的兜底结局",
+      "note": "本地试玩选“未完的故事”：先播放结局章正文，继续后显示结局卡。",
+      "files": [
+        "12-fallback-story.png",
+        "13-ending-options.png"
+      ],
+      "evidenceKind": "existing-local-preview"
+    },
+    {
+      "step": 13,
+      "title": "查看伏笔应验结局",
+      "note": "在本地试玩中手动选“窗后的光”：先播放结局章，再显示对应结局卡。截图不代表微信运动已达标。",
+      "files": [
+        "14-thought-ending-story.png",
+        "15-thought-ending-card.png"
+      ],
+      "evidenceKind": "existing-local-preview"
+    },
+    {
+      "step": 14,
+      "title": "试玩结束，返回编辑页",
+      "note": "退出本地试玩后回到作者编辑页。这里是试玩返回，不是真实玩家的通关完成弹窗。",
+      "files": [
+        "16-preview-ended.png"
+      ],
+      "evidenceKind": "existing-local-preview"
+    }
+  ],
+  "localReadback": "local-readback.json",
+  "nativeActions": "native-actions.json",
+  "checks": {
+    "miniTests": {
+      "passed": 123,
+      "failed": 0,
+      "logs": [
+        "unit-tests.txt",
+        "related-tests.txt"
+      ]
+    },
+    "syntax": true,
+    "scopeLint": true,
+    "nativeWxmlCompile": true,
+    "nativeWxssCompile": true,
+    "fullUiGate": {
+      "passed": false,
+      "before": 38,
+      "after": 38,
+      "newNormalizedIssues": 0,
+      "comparison": "ui-gate-comparison.json"
+    }
+  },
+  "restoration": {
+    "initialRestored": {
+      "route": "pages/publish/fabu/index",
+      "chapterCount": 0,
+      "rulesEmpty": true,
+      "sameForm": true
+    },
+    "freshPageReadback": {
+      "route": "pages/publish/fabu/index",
+      "draftUuid": "muv1wb1v-kryk37",
+      "chapterCount": 0,
+      "rulesEmpty": true,
+      "thoughtCount": 0,
+      "editorOpen": false,
+      "fromStoredDraft": true
+    }
+  },
+  "limits": [
+    "未验证真机键盘及章节开关/下拉的物理操作",
+    "示例无正式节点，不是可发布主题",
+    "本地试玩经现有页面方法进入，结局手动选择，不是服务器步数触发",
+    "未验合法作者服务器保存、正式玩家认领/步数/通关与完成弹窗",
+    "112 项后端内部检查来自修复前走查，本轮未修改或重跑后端"
+  ],
+  "productionWrites": 0,
+  "releaseActions": 0,
+  "next": [
+    "允许测试的主题/场次和合法作者、玩家",
+    "保存并独立重开及服务器读回",
+    "真机运动：获得、累计、重复、拒绝授权、跨日和最后一站刚好达标",
+    "服务端选择应验/兜底结局、结局章、结局卡、完成弹窗、重进"
+  ],
+  "supersededCorrection": "该截图页里的正文插入伏笔方案已撤回；测试输出仅保留为历史记录，最新主题弹窗验收见 ../theme-popup/verification.json"
+}

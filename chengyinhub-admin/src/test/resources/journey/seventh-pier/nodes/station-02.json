@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "requires": [
+    {"op": "NODE_COMPLETED", "nodeId": 5001}
+  ],
+  "effects": [
+    {"op": "SET", "var": "clue.notes_restored", "value": 1},
+    {"op": "SET", "var": "clue.proof_scope", "value": 1},
+    {"op": "SET", "var": "clue.proof_sample", "value": 1},
+    {"op": "SET", "var": "counter.approach", "value": 1}
+  ],
+  "check": {
+    "enabled": true,
+    "checkId": "search_archive",
+    "skill": "翻找",
+    "tier": "easy",
+    "mods": [
+      {"when": {"var": "clue.receipt_071", "op": "GTE", "value": 1}, "value": 2, "label": "签收联 071"},
+      {"when": {"var": "clue.notes_restored", "op": "GTE", "value": 1}, "value": 2, "label": "札记已按顺序复原"}
+    ],
+    "advantageIf": [{"var": "relation.arong", "op": "GTE", "value": 1}],
+    "successEffects": [{"op": "SET", "var": "clue.oral_note", "value": 1}],
+    "successText": "最底层夹着一张口述补注原件:「居民称这处渡口为第七码头。」你把它收进案件册。",
+    "failText": "翻出来的都是复印件,补注原件不在架上。灰尘呛得你退了一步。"
+  },
+  "classify": {
+    "enabled": true,
+    "prompt": "把六份材料放回它们能回答的问题下面",
+    "bins": [
+      {"id": "numbered", "label": "有官方编号可查"},
+      {"id": "spoken", "label": "口述与补注"},
+      {"id": "doubtful", "label": "尚未核对的转述"}
+    ],
+    "items": [
+      {"id": "transfer_071", "label": "交接单 071"},
+      {"id": "index_copy", "label": "复制索引"},
+      {"id": "oral_note", "label": "口述补注原件"},
+      {"id": "label_text", "label": "展签「从未存在」"},
+      {"id": "notes", "label": "检索札记"},
+      {"id": "sample_mark", "label": "样张边栏 QL 标记"}
+    ],
+    "answer": {
+      "transfer_071": "numbered",
+      "index_copy": "numbered",
+      "oral_note": "spoken",
+      "label_text": "doubtful",
+      "notes": "numbered",
+      "sample_mark": "doubtful"
+    },
+    "xp": 15
+  }
+}

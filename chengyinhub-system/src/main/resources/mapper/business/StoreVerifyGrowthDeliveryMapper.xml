@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.StoreVerifyGrowthDeliveryMapper">
+    <resultMap id="delivery" type="java.util.HashMap">
+        <result property="memberId" column="member_id" javaType="java.lang.Long"/>
+        <result property="missionsJson" column="missions_json" javaType="java.lang.String"/>
+        <result property="createTime" column="create_time" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <insert id="enqueue">
+        insert into store_verify_growth_delivery(registration_id,member_id,missions_json,create_time,next_attempt_at)
+        values(#{registrationId},#{memberId},#{missionsJson},now(),now())
+        on duplicate key update registration_id=values(registration_id)
+    </insert>
+    <select id="selectForUpdate" resultMap="delivery">
+        select member_id, missions_json, create_time
+        from store_verify_growth_delivery
+        where registration_id=#{registrationId} and processed_at is null for update
+    </select>
+    <select id="selectDue" resultType="long">
+        select registration_id from store_verify_growth_delivery
+        where processed_at is null and next_attempt_at &lt;= now()
+        order by next_attempt_at,registration_id limit 50
+    </select>
+    <update id="markProcessed">
+        update store_verify_growth_delivery set processed_at=now(),last_error=null
+        where registration_id=#{registrationId} and processed_at is null
+    </update>
+    <update id="recordFailure">
+        update store_verify_growth_delivery
+        set attempt_count=attempt_count+1,last_error=#{error},next_attempt_at=date_add(now(), interval 1 minute)
+        where registration_id=#{registrationId} and processed_at is null
+    </update>
+    <!-- 拍板4 冲回:删掉这张票的到店成长待办(已发/未发都删)。未发的不再迟到补发;
+         已发的删掉后,真到店再核销会重新 enqueue 一份新快照。 -->
+    <delete id="deleteByRegistration">
+        delete from store_verify_growth_delivery where registration_id = #{registrationId}
+    </delete>
+</mapper>

@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ViewMemberCartMapper">
+    
+    <resultMap type="ViewMemberCart" id="ViewMemberCartResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="merchantId"    column="merchant_id"    />
+        <result property="cartType"    column="cart_type"    />
+        <result property="productId"    column="product_id"    />
+        <result property="skuId"    column="sku_id"    />
+        <result property="spData"    column="sp_data"    />
+        <result property="quantity"    column="quantity"    />
+        <result property="status"    column="status"    />
+        <result property="isBuy"    column="is_buy"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="productName"    column="product_name"    />
+        <result property="productPic"    column="product_pic"    />
+        <result property="price"    column="price"    />
+        <result property="originalPrice"    column="original_price"    />
+        <result property="skuName"    column="sku_name"    />
+        <result property="skuNameAr"    column="sku_name_ar"    />
+        <result property="skuPic"    column="sku_pic"    />
+        <result property="weight"    column="weight"    />
+    </resultMap>
+
+    <sql id="selectViewMemberCartVo">
+        select id, member_id, merchant_id, cart_type, product_id, sku_id, sp_data, quantity, status, is_buy, create_by, create_time, update_by, update_time, product_name, product_pic, price, original_price, sku_name, sku_name_ar, sku_pic, weight from view_member_cart
+    </sql>
+
+    <select id="selectViewMemberCartList" parameterType="ViewMemberCart" resultMap="ViewMemberCartResult">
+        <include refid="selectViewMemberCartVo"/>
+        <where>  
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="merchantId != null "> and merchant_id = #{merchantId}</if>
+            <if test="cartType != null "> and cart_type = #{cartType}</if>
+            <if test="productId != null "> and product_id = #{productId}</if>
+            <if test="skuId != null "> and sku_id = #{skuId}</if>
+            <if test="spData != null  and spData != ''"> and sp_data = #{spData}</if>
+            <if test="quantity != null "> and quantity = #{quantity}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="isBuy != null "> and is_buy = #{isBuy}</if>
+            <if test="productName != null  and productName != ''"> and product_name like concat('%', #{productName}, '%')</if>
+            <if test="productPic != null  and productPic != ''"> and product_pic = #{productPic}</if>
+            <if test="price != null "> and price = #{price}</if>
+            <if test="originalPrice != null "> and original_price = #{originalPrice}</if>
+            <if test="skuName != null  and skuName != ''"> and sku_name like concat('%', #{skuName}, '%')</if>
+            <if test="skuNameAr != null  and skuNameAr != ''"> and sku_name_ar = #{skuNameAr}</if>
+            <if test="skuPic != null  and skuPic != ''"> and sku_pic = #{skuPic}</if>
+            <if test="weight != null "> and weight = #{weight}</if>
+        </where>
+    </select>
+    
+    <select id="selectViewMemberCartById" parameterType="Long" resultMap="ViewMemberCartResult">
+        <include refid="selectViewMemberCartVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertViewMemberCart" parameterType="ViewMemberCart">
+        insert into view_member_cart
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="memberId != null">member_id,</if>
+            <if test="merchantId != null">merchant_id,</if>
+            <if test="cartType != null">cart_type,</if>
+            <if test="productId != null">product_id,</if>
+            <if test="skuId != null">sku_id,</if>
+            <if test="spData != null">sp_data,</if>
+            <if test="quantity != null">quantity,</if>
+            <if test="status != null">status,</if>
+            <if test="isBuy != null">is_buy,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="productName != null and productName != ''">product_name,</if>
+            <if test="productPic != null">product_pic,</if>
+            <if test="price != null">price,</if>
+            <if test="originalPrice != null">original_price,</if>
+            <if test="skuName != null">sku_name,</if>
+            <if test="skuNameAr != null">sku_name_ar,</if>
+            <if test="skuPic != null">sku_pic,</if>
+            <if test="weight != null">weight,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="memberId != null">#{memberId},</if>
+            <if test="merchantId != null">#{merchantId},</if>
+            <if test="cartType != null">#{cartType},</if>
+            <if test="productId != null">#{productId},</if>
+            <if test="skuId != null">#{skuId},</if>
+            <if test="spData != null">#{spData},</if>
+            <if test="quantity != null">#{quantity},</if>
+            <if test="status != null">#{status},</if>
+            <if test="isBuy != null">#{isBuy},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="productName != null and productName != ''">#{productName},</if>
+            <if test="productPic != null">#{productPic},</if>
+            <if test="price != null">#{price},</if>
+            <if test="originalPrice != null">#{originalPrice},</if>
+            <if test="skuName != null">#{skuName},</if>
+            <if test="skuNameAr != null">#{skuNameAr},</if>
+            <if test="skuPic != null">#{skuPic},</if>
+            <if test="weight != null">#{weight},</if>
+         </trim>
+    </insert>
+
+    <update id="updateViewMemberCart" parameterType="ViewMemberCart">
+        update view_member_cart
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="merchantId != null">merchant_id = #{merchantId},</if>
+            <if test="cartType != null">cart_type = #{cartType},</if>
+            <if test="productId != null">product_id = #{productId},</if>
+            <if test="skuId != null">sku_id = #{skuId},</if>
+            <if test="spData != null">sp_data = #{spData},</if>
+            <if test="quantity != null">quantity = #{quantity},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="isBuy != null">is_buy = #{isBuy},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="productName != null and productName != ''">product_name = #{productName},</if>
+            <if test="productPic != null">product_pic = #{productPic},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="originalPrice != null">original_price = #{originalPrice},</if>
+            <if test="skuName != null">sku_name = #{skuName},</if>
+            <if test="skuNameAr != null">sku_name_ar = #{skuNameAr},</if>
+            <if test="skuPic != null">sku_pic = #{skuPic},</if>
+            <if test="weight != null">weight = #{weight},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteViewMemberCartById" parameterType="Long">
+        delete from view_member_cart where id = #{id}
+    </delete>
+
+    <delete id="deleteViewMemberCartByIds" parameterType="String">
+        delete from view_member_cart where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+
+    <select id="selectViewMemberCartByIds" parameterType="String" resultMap="ViewMemberCartResult">
+        select * from view_member_cart where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+</mapper>

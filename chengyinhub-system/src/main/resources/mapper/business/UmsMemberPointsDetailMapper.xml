@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.UmsMemberPointsDetailMapper">
+    
+    <resultMap type="UmsMemberPointsDetail" id="UmsMemberPointsDetailResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="currentPoints"    column="current_points"    />
+        <result property="afterPoints"    column="after_points"    />
+        <result property="changePoints"    column="change_points"    />
+        <result property="changeReason"    column="change_reason"    />
+        <result property="eventType"    column="event_type"    />
+        <result property="eventId"    column="event_id"    />
+        <result property="rewardBusinessKey" column="reward_business_key" />
+        <result property="pointsRuleId" column="points_rule_id" />
+        <result property="pointsRuleVersion" column="points_rule_version" />
+        <result property="pointsRuleValue" column="points_rule_value" />
+        <result property="publisherSettlementTopicId" column="publisher_settlement_topic_id" />
+        <result property="changeType"    column="change_type"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <!-- 通用 Vo 一个 H8 新列都不带：points_rule_* 与 publisher_settlement_topic_id 只由
+         ORDER 1/2 迁移建，而这份 Vo 被小程序积分明细页、后台明细列表、以及通用 CRUD 的
+         按 id 回读共用 ⇒ 无条件带上它们 = 迁移没跑就全站积分读 ERROR 1054。
+         ⚠️ 连带后果(已知且有界):UmsMemberPointsDetailServiceImpl.rejectPublisherSettlementMutation
+         对【既存行】的判据退化成 event_type = 15 —— 而 ORDER 1/2 的写前 guard 与 ORDER 2/2 的
+         探针都断言了「publisher_settlement_topic_id IS NOT NULL ⇒ event_type = 15 AND change_type = 1
+         AND publisher_settlement_topic_id = event_id」，两者在库上等价；
+         对【入参 payload】的那一半判据不受影响，伪造投影列仍然当场被拒。 -->
+    <sql id="selectUmsMemberPointsDetailVo">
+        select id, member_id, current_points, after_points, change_points, change_reason, event_type, event_id,
+               reward_business_key,
+               change_type, del_flag, create_by, create_time, update_by, update_time
+        from ums_member_points_detail
+    </sql>
+
+    <select id="selectUmsMemberPointsDetailList" parameterType="UmsMemberPointsDetail" resultMap="UmsMemberPointsDetailResult">
+        <include refid="selectUmsMemberPointsDetailVo"/>
+        <where>  
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="currentPoints != null "> and current_points = #{currentPoints}</if>
+            <if test="afterPoints != null "> and after_points = #{afterPoints}</if>
+            <if test="changePoints != null "> and change_points = #{changePoints}</if>
+            <if test="changeReason != null  and changeReason != ''"> and change_reason = #{changeReason}</if>
+            <if test="eventType != null "> and event_type = #{eventType}</if>
+            <if test="eventId != null "> and event_id = #{eventId}</if>
+            <if test="rewardBusinessKey != null and rewardBusinessKey != ''"> and reward_business_key = #{rewardBusinessKey}</if>
+            <if test="changeType != null "> and change_type = #{changeType}</if>
+            <if test="delFlag != null "> and del_flag = #{delFlag}</if>
+        </where>
+        order by id desc
+    </select>
+
+    <select id="selectUmsMemberPointsDetailCount" parameterType="UmsMemberPointsDetail" resultType="int">
+        select count(*) from ums_member_points_detail
+        <where>
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="currentPoints != null "> and current_points = #{currentPoints}</if>
+            <if test="afterPoints != null "> and after_points = #{afterPoints}</if>
+            <if test="changePoints != null "> and change_points = #{changePoints}</if>
+            <if test="changeReason != null  and changeReason != ''"> and change_reason = #{changeReason}</if>
+            <if test="eventType != null "> and event_type = #{eventType}</if>
+            <if test="eventId != null "> and event_id = #{eventId}</if>
+            <if test="rewardBusinessKey != null and rewardBusinessKey != ''"> and reward_business_key = #{rewardBusinessKey}</if>
+            <if test="changeType != null "> and change_type = #{changeType}</if>
+            <if test="delFlag != null "> and del_flag = #{delFlag}</if>
+        </where>
+    </select>
+
+    <select id="selectUmsMemberPointsDetailById" parameterType="Long" resultMap="UmsMemberPointsDetailResult">
+        <include refid="selectUmsMemberPointsDetailVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertUmsMemberPointsDetail" parameterType="UmsMemberPointsDetail" useGeneratedKeys="true" keyProperty="id">
+        insert into ums_member_points_detail
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="currentPoints != null">current_points,</if>
+            <if test="afterPoints != null">after_points,</if>
+            <if test="changePoints != null">change_points,</if>
+            <if test="changeReason != null">change_reason,</if>
+            <if test="eventType != null">event_type,</if>
+            <if test="eventId != null">event_id,</if>
+            <if test="rewardBusinessKey != null">reward_business_key,</if>
+            <if test="changeType != null">change_type,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="currentPoints != null">#{currentPoints},</if>
+            <if test="afterPoints != null">#{afterPoints},</if>
+            <if test="changePoints != null">#{changePoints},</if>
+            <if test="changeReason != null">#{changeReason},</if>
+            <if test="eventType != null">#{eventType},</if>
+            <if test="eventId != null">#{eventId},</if>
+            <if test="rewardBusinessKey != null">#{rewardBusinessKey},</if>
+            <if test="changeType != null">#{changeType},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <!-- 通用业务键写入口：核销奖励积分(CmsRegistrationServiceImpl.awardPointsOnce)在用，
+         它从来不设 H8 的四个快照字段 ⇒ 这里不许引用它们，否则迁移没跑就核销接口 500。
+         reward_business_key 是本分支之前就有的列，不在 ORDER 1/2 的新列范围内。 -->
+    <insert id="insertUmsMemberPointsDetailWithBusinessKey" parameterType="UmsMemberPointsDetail">
+        insert into ums_member_points_detail
+        (member_id, current_points, after_points, change_points, change_reason,
+         event_type, event_id, reward_business_key, change_type, del_flag, create_time)
+        values
+        (#{memberId}, #{currentPoints}, #{afterPoints}, #{changePoints}, #{changeReason},
+         #{eventType}, #{eventId}, #{rewardBusinessKey}, #{changeType}, #{delFlag}, #{createTime})
+    </insert>
+
+    <!-- H8 专用写入口：只服务 PointsAwardServiceImpl.awardPublisherSettlement。
+         四个快照列【无条件】写死在这里 —— publisher_settlement_topic_id 必须真被写进去，
+         否则 ORDER 1/2 建的全局唯一键 uk_publisher_settlement_topic 就是一条空索引，
+         「主题级全链路至多一次」失效。缺列时在这里 ERROR 1054 是【要的】行为:
+         H8 路径必须响亮 fail-closed，不许 try/catch 1054、不许把快照降级成 null。 -->
+    <insert id="insertPublisherSettlementPointsDetail" parameterType="UmsMemberPointsDetail">
+        insert into ums_member_points_detail
+        (member_id, current_points, after_points, change_points, change_reason,
+         event_type, event_id, reward_business_key, points_rule_id, points_rule_version,
+         points_rule_value, publisher_settlement_topic_id, change_type, del_flag, create_time)
+        values
+        (#{memberId}, #{currentPoints}, #{afterPoints}, #{changePoints}, #{changeReason},
+         #{eventType}, #{eventId}, #{rewardBusinessKey}, #{pointsRuleId}, #{pointsRuleVersion},
+         #{pointsRuleValue}, #{publisherSettlementTopicId}, #{changeType}, #{delFlag}, #{createTime})
+    </insert>
+
+    <select id="selectByRewardBusinessKey" resultMap="UmsMemberPointsDetailResult">
+        <include refid="selectUmsMemberPointsDetailVo"/>
+        where member_id = #{memberId}
+          and reward_business_key = #{rewardBusinessKey}
+        limit 1
+        for update
+    </select>
+
+    <select id="selectByEventTypeAndEventId" resultMap="UmsMemberPointsDetailResult">
+        <include refid="selectUmsMemberPointsDetailVo"/>
+        where event_type = #{eventType}
+          and event_id = #{eventId}
+          and change_type = 1
+        limit 1
+        for update
+    </select>
+
+    <update id="updateUmsMemberPointsDetail" parameterType="UmsMemberPointsDetail">
+        update ums_member_points_detail
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="currentPoints != null">current_points = #{currentPoints},</if>
+            <if test="afterPoints != null">after_points = #{afterPoints},</if>
+            <if test="changePoints != null">change_points = #{changePoints},</if>
+            <if test="changeReason != null">change_reason = #{changeReason},</if>
+            <if test="eventType != null">event_type = #{eventType},</if>
+            <if test="eventId != null">event_id = #{eventId},</if>
+            <if test="rewardBusinessKey != null">reward_business_key = #{rewardBusinessKey},</if>
+            <if test="changeType != null">change_type = #{changeType},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteUmsMemberPointsDetailById" parameterType="Long">
+        delete from ums_member_points_detail where id = #{id}
+    </delete>
+
+    <delete id="deleteUmsMemberPointsDetailByIds" parameterType="String">
+        delete from ums_member_points_detail where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+
+    <!-- 获取用户本周积分收入总和 -->
+    <select id="selectWeekPointsIncome" resultType="java.math.BigDecimal">
+        <![CDATA[
+        SELECT
+        COALESCE(SUM(change_points), 0)
+        FROM
+        ums_member_points_detail
+        WHERE
+        member_id = #{memberId}
+        AND change_type = 1
+        AND del_flag = 0
+        AND create_time >= DATE_SUB(CURDATE(), INTERVAL (DAYOFWEEK(CURDATE()) - 2) DAY)
+        AND create_time < DATE_ADD(DATE_SUB(CURDATE(), INTERVAL (DAYOFWEEK(CURDATE()) - 2) DAY), INTERVAL 7 DAY)
+        ]]>
+    </select>
+
+    <!-- 第二轮拍板第 4 条:后台撤销核销勾选「同时冲回积分和经验」用。 -->
+    <select id="selectGrantForClawback" resultMap="UmsMemberPointsDetailResult">
+        <include refid="selectUmsMemberPointsDetailVo"/>
+        where member_id = #{memberId}
+          and event_type = #{eventType}
+          and event_id = #{eventId}
+          and change_type = 1
+        limit 1
+        for update
+    </select>
+
+    <!-- 冲回后把原发放行从 (member,eventType,eventId) 判重键上摘下来:event_id 置空,来源记进 reward_business_key。
+         PointsAwardServiceImpl.award 按这三列判重 ⇒ 撤销冲回后玩家真到店再核销能重新拿到分;
+         冲回动作本身再也找不到这一行 ⇒ 同一笔发放最多冲一次。 -->
+    <update id="detachGrant">
+        update ums_member_points_detail
+        set event_id = null,
+            reward_business_key = #{rewardBusinessKey},
+            update_time = now()
+        where id = #{id}
+          and event_id is not null
+          and reward_business_key is null
+    </update>
+
+</mapper>

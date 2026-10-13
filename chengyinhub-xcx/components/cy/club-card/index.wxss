@@ -1,0 +1,9 @@
+@import "../../../style/photo-card.wxss";
+.cc__gradient { background: linear-gradient(180deg, rgba(0,0,0,.24) 0%, rgba(0,0,0,.14) 32%, rgba(0,0,0,.7) 60%, rgba(0,0,0,.94) 100%); } /* ds-ok 仅图片装饰遮罩：保留俱乐部卡四段透明度与节点位置，内容色另读 photo-card token。 */
+.cc .photo-card__top { gap: 16rpx; }
+.cc__city { display: flex; align-items: center; gap: 8rpx; font-size: var(--cy-type-label); line-height: 30rpx; color: var(--cy-color-photo-card-city-fg); }
+.cc__data { gap: 10rpx; color: var(--cy-color-photo-card-data-fg); }
+.cc__members { width: 26rpx; height: 26rpx; flex: 0 0 26rpx; }
+.cc__bottom { align-items: flex-end; gap: 16rpx; }
+.cc__tags { display: flex; flex: 1; flex-wrap: wrap; gap: 12rpx; min-width: 0; }
+.cc__tag { padding: 6rpx 14rpx; border-radius: var(--cy-radius-md); background: var(--cy-color-photo-card-tag-glass); color: var(--cy-comp-photo-card-muted); font-size: var(--cy-type-caption); line-height: 28rpx; }

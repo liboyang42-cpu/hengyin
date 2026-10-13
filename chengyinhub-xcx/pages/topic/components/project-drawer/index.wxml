@@ -1,0 +1,28 @@
+<!-- 项目长列表避开微信导航，客户名单使用普通半屏；动作固定在底部。 -->
+<block wx:if="{{ show }}">
+<!-- 面板外的页面由统一遮罩压暗。 -->
+<view class="dw-mask" bindtap="onClose" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"></view>
+<view class="dw {{customerMode ? 'dw--customer' : ''}} {{compact ? 'dw--compact' : ''}}" style="--cy-drawer-top:{{panelTop}}px;--cy-drawer-max-height:calc(100vh - {{panelTop}}px)">
+  <view class="dw-head">
+    <view class="dw-head-text">
+      <text class="dw-title">{{ title }}</text>
+      <!-- 稿 468:*:标题下那句「这一套为什么长这样」。没传就整行不出,不留空位。 -->
+      <text class="dw-sub" wx:if="{{ subtitle }}">{{ subtitle }}</text>
+    </view>
+    <view class="dw-close" catchtap="onClose" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="44" /></view>
+  </view>
+
+  <scroll-view class="dw-scroll" scroll-y>
+    <view class="dw-scroll-content">
+      <slot></slot>
+      <view class="dw-scroll-pad"></view>
+    </view>
+  </scroll-view>
+
+  <view class="dw-cta" wx:if="{{ actions.length }}">
+    <view class="dw-btn {{ item.ghost ? 'dw-btn--ghost' : '' }}"
+          wx:for="{{ actions }}" wx:key="key"
+          data-key="{{ item.key }}" catchtap="onAction" hover-class="cy-pressed" hover-stay-time="80">{{ item.label }}</view>
+  </view>
+</view>
+</block>

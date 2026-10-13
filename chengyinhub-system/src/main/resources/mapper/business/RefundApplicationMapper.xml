@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.RefundApplicationMapper">
+
+    <resultMap id="RefundApplicationResult" type="com.chengyinhub.business.domain.RefundApplication">
+        <result property="id" column="id"/>
+        <result property="refundNo" column="refund_no"/>
+        <result property="sourceType" column="source_type"/>
+        <result property="sourceId" column="source_id"/>
+        <result property="ownerType" column="owner_type"/>
+        <result property="ownerId" column="owner_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="paidAmount" column="paid_amount"/>
+        <result property="refundAmount" column="refund_amount"/>
+        <result property="status" column="status"/>
+        <result property="reason" column="reason"/>
+        <result property="rejectReason" column="reject_reason"/>
+        <result property="reviewerId" column="reviewer_id"/>
+        <result property="reviewedAt" column="reviewed_at"/>
+        <result property="createdByUserId" column="created_by_user_id"/>
+        <result property="adjustmentCreated" column="adjustment_created"/>
+        <result property="idempotencyKey" column="idempotency_key"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="payoutStatus" column="payout_status"/>
+        <result property="payoutMethod" column="payout_method"/>
+        <result property="payoutReceiptUrl" column="payout_receipt_url"/>
+        <result property="payoutHandlerId" column="payout_handler_id"/>
+        <result property="payoutHandledAt" column="payout_handled_at"/>
+        <result property="payoutReviewer2Id" column="payout_reviewer2_id"/>
+        <result property="payoutReviewed2At" column="payout_reviewed2_at"/>
+        <result property="payoutRemark" column="payout_remark"/>
+        <result property="payoutLeaseToken" column="payout_lease_token"/>
+        <result property="payoutLeaseOwner" column="payout_lease_owner"/>
+        <result property="payoutLeaseExpiresAt" column="payout_lease_expires_at"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="platformTakeoverAt" column="platform_takeover_at"/>
+    </resultMap>
+
+    <sql id="selectRefundApplicationVo">
+        select id, refund_no, source_type, source_id, owner_type, owner_id, member_id,
+               merchant_id, paid_amount, refund_amount, status, reason, reject_reason,
+               reviewer_id, reviewed_at, created_by_user_id, adjustment_created, idempotency_key, del_flag,
+               payout_status, payout_method, payout_receipt_url, payout_handler_id, payout_handled_at,
+               payout_reviewer2_id, payout_reviewed2_at, payout_remark, payout_lease_token,
+               payout_lease_owner, payout_lease_expires_at,
+               create_time, update_time, platform_takeover_at
+        from refund_application
+    </sql>
+
+    <select id="selectRefundApplicationList" parameterType="com.chengyinhub.business.domain.RefundApplication" resultMap="RefundApplicationResult">
+        <include refid="selectRefundApplicationVo"/>
+        <where>
+            del_flag = 0
+            <if test="sourceType != null and sourceType != ''">and source_type = #{sourceType}</if>
+            <if test="sourceId != null">and source_id = #{sourceId}</if>
+            <if test="merchantId != null">and merchant_id = #{merchantId}</if>
+            <if test="memberId != null">and member_id = #{memberId}</if>
+            <if test="status != null">and status = #{status}</if>
+            <!-- 退款台:商家售后超时转平台筛选(1=已转平台,0=未转,null=全部) -->
+            <if test="platformTakeover != null and platformTakeover == 1">and platform_takeover_at is not null</if>
+            <if test="platformTakeover != null and platformTakeover == 0">and platform_takeover_at is null</if>
+        </where>
+        <choose>
+            <!-- 退款台:按转平台时间倒序;未转的(时间戳为空)一律排最后 -->
+            <when test="takeoverOrder != null and takeoverOrder == 1">
+                order by platform_takeover_at is null asc, platform_takeover_at desc, id desc
+            </when>
+            <otherwise>order by id desc</otherwise>
+        </choose>
+    </select>
+
+    <select id="selectRefundApplicationById" resultMap="RefundApplicationResult">
+        <include refid="selectRefundApplicationVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertRefundApplication" parameterType="com.chengyinhub.business.domain.RefundApplication" useGeneratedKeys="true" keyProperty="id">
+        insert into refund_application
+        (refund_no, source_type, source_id, owner_type, owner_id, member_id, merchant_id,
+         paid_amount, refund_amount, status, reason, adjustment_created, idempotency_key,
+         created_by_user_id, del_flag, payout_status, create_time)
+        values
+        (#{refundNo}, #{sourceType}, #{sourceId}, #{ownerType}, #{ownerId}, #{memberId}, #{merchantId},
+         #{paidAmount}, #{refundAmount}, #{status}, #{reason}, 0, #{idempotencyKey},
+         #{createdByUserId}, #{delFlag}, #{payoutStatus}, now())
+    </insert>
+
+    <update id="updateRefundStatusIfPending">
+        update refund_application
+        set status = #{status},
+            reviewer_id = #{reviewerId},
+            reviewed_at = #{reviewedAt},
+            reject_reason = #{rejectReason},
+            update_time = #{reviewedAt}
+        where id = #{id}
+          and status = 0
+          and del_flag = 0
+    </update>
+
+    <!-- §6.1 打款结果:派发中(6)/原路受理(0)/失败待人工(2)。仅从未终态置位,防回调与同步覆盖人工终态。 -->
+    <update id="updatePayoutResult">
+        update refund_application
+        set payout_status = #{payoutStatus},
+            payout_remark = #{payoutRemark},
+            payout_lease_token = null,
+            update_time = now()
+        where id = #{id}
+          and del_flag = 0
+          and (payout_status is null or payout_status in (0, 2, 5, 6))
+    </update>
+
+    <update id="claimPayoutDispatch">
+        update refund_application
+        set payout_status = 6,
+            payout_remark = '原路退款派发中',
+            payout_lease_token = #{leaseToken},
+            update_time = now()
+        where id = #{id}
+          and status = 1
+          and del_flag = 0
+          and (
+            payout_status is null
+            or payout_status = 5
+            <!-- ⚠️ 陈旧租约的基准时间必须由 **数据库自己** 生成(NOW()),绝不能从 Java 传一个
+                 Date 进来比。这里读到的 update_time 一定是 MySQL 的 now() 写的 —— 因为本条件
+                 只在 payout_status=6 时成立,而进入 6 态的那次 UPDATE 就是本语句自己做的
+                 (下方 set update_time = now())。
+                 (注意别把这句读成「update_time 总是 MySQL 写的」:updateRefundStatusIfPending
+                  走审核路径时写的是 JVM 的 #{reviewedAt},只是那条路 payout_status 不为 6。)
+                 若基准来自 JVM,这个比较就
+                 跨越了 JVM 与 DB 两套时区:JDBC 会按连接上声明的 serverTimezone 把 Date 转成
+                 墙钟字符串,只要它与 MySQL 服务器实际时区不一致,偏差就以小时计,远超 30 分钟窗口。
+                 2026-08-01 实测:JDBC 声明 Asia/Shanghai 而 MySQL 跑在 PDT 时,
+                 '2026-07-31 21:47' < '2026-08-01 12:17' 恒真 —— 每一条派发中的记录都被判成
+                 「陈旧」,租约形同虚设,两个并发 worker 同时领到同一笔退款并各调一次微信退款。
+                 用 NOW() 后两边都是同一台 MySQL 的同一套时钟,不存在可错配的前提。 -->
+            or (payout_status = 6
+                and COALESCE(update_time, create_time) &lt; NOW(3) - INTERVAL #{staleMinutes} MINUTE)
+          )
+    </update>
+
+    <update id="releasePayoutDispatch">
+        update refund_application
+        set payout_status = 5,
+            payout_remark = #{payoutRemark},
+            payout_lease_token = null,
+            update_time = now()
+        where id = #{id}
+          and del_flag = 0
+          and payout_status = 6
+          and payout_lease_token = #{leaseToken}
+    </update>
+
+    <update id="updatePayoutResultWithLease">
+        update refund_application
+        set payout_status = #{payoutStatus},
+            payout_remark = #{payoutRemark},
+            payout_lease_token = null,
+            update_time = now()
+        where id = #{id}
+          and del_flag = 0
+          and payout_status = 6
+          and payout_lease_token = #{leaseToken}
+    </update>
+
+    <update id="ensureRefundNo">
+        update refund_application
+        set refund_no = #{refundNo}, update_time = now()
+        where id = #{id}
+          and del_flag = 0
+          and (refund_no is null or refund_no = '' or refund_no = #{refundNo})
+    </update>
+
+    <!--
+      领取:空租约谁都能领;已过期的租约只有**它自己的 owner** 能续。
+      跨人抢过期租约仍然禁止(钱可能已经线下打出去了),那条路只走显式的 takeoverExpiredManualPayout。
+    -->
+    <update id="claimManualPayout">
+        update refund_application
+        set payout_lease_owner = #{handlerId},
+            payout_lease_token = #{leaseToken},
+            payout_lease_expires_at = NOW(3) + INTERVAL #{leaseMinutes} MINUTE,
+            update_time = now()
+        where id = #{id}
+          and del_flag = 0
+          and payout_status = 2
+          and (
+            payout_lease_token is null
+            or (payout_lease_owner = #{handlerId}
+              and payout_lease_expires_at is not null
+              and payout_lease_expires_at &lt; now())
+          )
+    </update>
+
+    <!--
+      释放只把单子放回队列、不动钱,所以**不看是否过期**:旧写法要求 lease 未过期,
+      而领取又要求 token 为空 ⇒ 过期后既领不了也放不掉,这笔人工退款永久卡死。
+      owner + token 双 fence 保留:别人和旧 token 都摘不掉在途租约。
+    -->
+    <update id="releaseManualPayoutClaim">
+        update refund_application
+        set payout_lease_owner = null,
+            payout_lease_token = null,
+            payout_lease_expires_at = null,
+            update_time = now()
+        where id = #{id}
+          and del_flag = 0
+          and payout_status = 2
+          and payout_lease_owner = #{handlerId}
+          and payout_lease_token = #{leaseToken}
+          and payout_lease_expires_at is not null
+    </update>
+
+    <!-- 接管:只允许接管他人**已过期**的租约,新 token 令旧 owner 的登记 CAS 直接失效(可见冲突,不是双花)。 -->
+    <update id="takeoverExpiredManualPayout">
+        update refund_application
+        set payout_lease_owner = #{handlerId},
+            payout_lease_token = #{leaseToken},
+            payout_lease_expires_at = NOW(3) + INTERVAL #{leaseMinutes} MINUTE,
+            payout_remark = #{payoutRemark},
+            update_time = now()
+        where id = #{id}
+          and del_flag = 0
+          and payout_status = 2
+          and payout_lease_owner is not null
+          and payout_lease_owner &lt;&gt; #{handlerId}
+          and payout_lease_expires_at is not null
+          and payout_lease_expires_at &lt; now()
+    </update>
+
+    <!-- 人工处理:必须先持有 owner+lease+fence，完成也按本次 token CAS。 -->
+    <update id="completeManualPayout">
+        update refund_application
+        set payout_status = 3,
+            payout_method = #{payoutMethod},
+            payout_receipt_url = #{payoutReceiptUrl},
+            payout_handler_id = #{handlerId},
+            payout_handled_at = #{handledAt},
+            payout_remark = #{payoutRemark},
+            update_time = now()
+        where id = #{id}
+          and del_flag = 0
+          and payout_status = 2
+          and payout_lease_owner = #{handlerId}
+          and payout_lease_token = #{leaseToken}
+          and payout_lease_expires_at is not null
+          and payout_lease_expires_at >= now()
+    </update>
+
+    <!-- 双人复核:人工已退待复核(3) → 复核完成(4)。DB 层再兜一层 handler≠复核人(应用层已校验)。 -->
+    <update id="markPayoutVerified">
+        update refund_application
+        set payout_status = 4,
+            payout_reviewer2_id = #{reviewer2Id},
+            payout_reviewed2_at = #{reviewed2At},
+            payout_lease_owner = null,
+            payout_lease_expires_at = null,
+            update_time = now()
+        where id = #{id}
+          and del_flag = 0
+          and payout_status = 3
+          and (payout_handler_id is null or payout_handler_id != #{reviewer2Id})
+    </update>
+
+    <select id="selectManualPayoutQueue" resultMap="RefundApplicationResult">
+        <include refid="selectRefundApplicationVo"/>
+        where del_flag = 0 and payout_status in (2, 3)
+        order by id asc
+    </select>
+
+    <select id="selectByRefundNo" resultMap="RefundApplicationResult">
+        <include refid="selectRefundApplicationVo"/>
+        where refund_no = #{refundNo} and del_flag = 0
+        order by id desc limit 1
+    </select>
+
+    <select id="selectStalePayoutProcessing" resultMap="RefundApplicationResult">
+        <include refid="selectRefundApplicationVo"/>
+        where del_flag = 0
+          and (payout_status = 0 or (payout_status in (5, 6) and status = 1))
+          and COALESCE(update_time, create_time) &lt; DATE_SUB(now(), INTERVAL #{minutes} MINUTE)
+        order by id asc limit 200
+    </select>
+
+    <!-- 期级 FINAL 的退款事实门：该期还有没落定的退款单就不许终结。
+         owner_type=2 走活动壳经 cms_activity.topic_id 归期；owner_type=1 是旧主题票直接就是 topic_id。
+         终态判据取 payout_status ∈ (1 原路确认到账, 4 人工双人复核完成)，其余(含 NULL)都算在途。 -->
+    <select id="countUnsettledRefundsByTopic" resultType="int">
+        select count(1) from refund_application r
+        left join cms_activity a on a.id = r.owner_id
+        where r.del_flag = 0
+          and ((r.owner_type = 2 and a.topic_id = #{topicId})
+               or (r.owner_type = 1 and r.owner_id = #{topicId}))
+          and (r.status = 0
+               or (r.status = 1 and (r.payout_status is null or r.payout_status not in (1, 4))))
+    </select>
+
+    <select id="countManualPayoutBacklog" resultType="int">
+        select count(1) from refund_application where del_flag = 0 and payout_status in (2, 3)
+    </select>
+
+    <select id="countStuckPayoutDispatch" resultType="int">
+        select count(1) from refund_application
+        where del_flag = 0
+          and status = 1
+          and payout_status in (5, 6)
+          and COALESCE(update_time, create_time) &lt; DATE_SUB(now(), INTERVAL #{minutes} MINUTE)
+    </select>
+</mapper>

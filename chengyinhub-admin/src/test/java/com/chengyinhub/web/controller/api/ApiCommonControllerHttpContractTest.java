@@ -1,0 +1,62 @@
+package com.chengyinhub.web.controller.api;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+import com.chengyinhub.common.core.redis.RedisCache;
+import com.chengyinhub.common.utils.http.HttpRequestException;
+import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+class ApiCommonControllerHttpContractTest {
+
+    @Test
+    void tokenNetworkFailureBlocksUploadWithoutLoggingCredentials() {
+        String secret = "app-secret-must-not-log";
+        FailingTokenService service = new FailingTokenService(secret);
+        RedisCache redisCache = mock(RedisCache.class);
+        when(redisCache.getCacheObject("wx:mini:access_token")).thenReturn(null);
+        ReflectionTestUtils.setField(service, "redisCache", redisCache);
+        Logger logger = (Logger) LoggerFactory.getLogger(service.getClass());
+        Level originalLevel = logger.getLevel();
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.setLevel(Level.WARN);
+        logger.addAppender(appender);
+        try {
+            assertNull(service.getWxAccessToken("wx-appid", secret));
+            String logs = appender.list.stream().map(ILoggingEvent::getFormattedMessage)
+                    .collect(Collectors.joining("\n"));
+            assertFalse(logs.contains(secret));
+            assertFalse(logs.contains("token=provider-token-must-not-log"));
+        } finally {
+            logger.detachAppender(appender);
+            logger.setLevel(originalLevel);
+            appender.stop();
+        }
+    }
+
+    private static final class FailingTokenService extends AppUploadService {
+        private final String secret;
+
+        private FailingTokenService(String secret) {
+            this.secret = secret;
+        }
+
+        @Override
+        String requestWxAccessToken(String appId, String secret) {
+            throw new HttpRequestException("provider url secret=" + this.secret
+                    + " token=provider-token-must-not-log", 0, false);
+        }
+    }
+}

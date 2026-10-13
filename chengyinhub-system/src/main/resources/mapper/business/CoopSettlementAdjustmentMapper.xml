@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CoopSettlementAdjustmentMapper">
+    <resultMap id="AdjustmentResult" type="CoopSettlementAdjustment">
+        <result property="id" column="id"/>
+        <result property="settlementId" column="settlement_id"/>
+        <result property="claimId" column="claim_id"/>
+        <result property="entryKind" column="entry_kind"/>
+        <result property="eventKey" column="event_key"/>
+        <result property="amount" column="amount"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+    <insert id="insertIgnoreAdjustment" parameterType="CoopSettlementAdjustment" useGeneratedKeys="true" keyProperty="id">
+        insert ignore into coop_settlement_adjustment
+            (settlement_id, claim_id, entry_kind, event_key, amount, status, create_time)
+        values
+            (#{settlementId}, #{claimId}, #{entryKind}, #{eventKey}, #{amount}, #{status}, #{createTime})
+    </insert>
+    <select id="selectByClaimEventForUpdate" resultMap="AdjustmentResult">
+        select id, settlement_id, claim_id, entry_kind, event_key, amount, status, create_time
+        from coop_settlement_adjustment
+        where claim_id = #{claimId} and entry_kind = #{entryKind} and event_key = #{eventKey}
+        for update
+    </select>
+    <select id="sumExecutedBySettlement" resultType="java.math.BigDecimal">
+        select coalesce(sum(amount), 0) from coop_settlement_adjustment
+        where settlement_id = #{settlementId} and status = 'EXECUTED'
+    </select>
+</mapper>

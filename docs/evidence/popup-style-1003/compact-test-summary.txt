@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "total": 7667,
+  "passed": 7665,
+  "skipped": 2,
+  "duration_ms": 289233.484375
+}
+
+UI-GATE-0:PASS
+JS-SCOPE PASS:544
+ACTION-LEDGER PASS:4382
+Target tests:82 pass

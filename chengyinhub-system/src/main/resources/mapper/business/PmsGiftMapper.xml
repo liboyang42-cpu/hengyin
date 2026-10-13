@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PmsGiftMapper">
+    
+    <resultMap type="PmsGift" id="PmsGiftResult">
+        <result property="id"    column="id"    />
+        <result property="giftName"    column="gift_name"    />
+        <result property="picUrl"    column="pic_url"    />
+        <result property="contents"    column="contents"    />
+        <result property="point"    column="point"    />
+        <result property="status"    column="status"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectPmsGiftVo">
+        select id, gift_name, pic_url, contents, point, status, del_flag, create_by, create_time, update_by, update_time from pms_gift
+    </sql>
+
+    <select id="selectPmsGiftList" parameterType="PmsGift" resultMap="PmsGiftResult">
+        <include refid="selectPmsGiftVo"/>
+        <where>  
+            <if test="giftName != null  and giftName != ''"> and gift_name like concat('%', #{giftName}, '%')</if>
+            <if test="picUrl != null  and picUrl != ''"> and pic_url = #{picUrl}</if>
+            <if test="contents != null  and contents != ''"> and contents = #{contents}</if>
+            <if test="point != null "> and point = #{point}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="delFlag != null "> and del_flag = #{delFlag}</if>
+        </where>
+    </select>
+
+    <select id="selectAvailablePmsGiftList" resultMap="PmsGiftResult">
+        <include refid="selectPmsGiftVo"/>
+        where status = 1
+          and del_flag = 0
+          and point &gt; 0
+          and point &lt;= 2147483647
+        order by id asc
+    </select>
+    
+    <select id="selectPmsGiftById" parameterType="Long" resultMap="PmsGiftResult">
+        <include refid="selectPmsGiftVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectPmsGiftByIdForUpdate" parameterType="Long" resultMap="PmsGiftResult">
+        <include refid="selectPmsGiftVo"/>
+        where id = #{id}
+        for update
+    </select>
+
+    <insert id="insertPmsGift" parameterType="PmsGift" useGeneratedKeys="true" keyProperty="id">
+        insert into pms_gift
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="giftName != null">gift_name,</if>
+            <if test="picUrl != null">pic_url,</if>
+            <if test="contents != null">contents,</if>
+            <if test="point != null">point,</if>
+            <if test="status != null">status,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="giftName != null">#{giftName},</if>
+            <if test="picUrl != null">#{picUrl},</if>
+            <if test="contents != null">#{contents},</if>
+            <if test="point != null">#{point},</if>
+            <if test="status != null">#{status},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updatePmsGift" parameterType="PmsGift">
+        update pms_gift
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="giftName != null">gift_name = #{giftName},</if>
+            <if test="picUrl != null">pic_url = #{picUrl},</if>
+            <if test="contents != null">contents = #{contents},</if>
+            <if test="point != null">point = #{point},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deletePmsGiftById" parameterType="Long">
+        delete from pms_gift where id = #{id}
+    </delete>
+
+    <delete id="deletePmsGiftByIds" parameterType="String">
+        delete from pms_gift where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

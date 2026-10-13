@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CmsRegistrationMerchantMapper">
+    
+    <resultMap type="CmsRegistrationMerchant" id="CmsRegistrationMerchantResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="topicId"    column="topic_id"    />
+        <result property="mode"    column="mode"    />
+        <result property="nodeId"    column="node_id"    />
+
+        <result property="addressName"    column="address_name"    />
+        <result property="longitude"    column="longitude"    />
+        <result property="latitude"    column="latitude"    />
+        <result property="address"    column="address"    />
+        <result property="templateId"    column="template_id"    />
+        <result property="picUrl"    column="pic_url"    />
+        <result property="email"    column="email"    />
+        <result property="startDate"    column="start_date"    />
+        <result property="endDate"    column="end_date"    />
+        <result property="cooperateDate"    column="cooperate_date"    />
+        <result property="activityDesc"    column="activity_desc"    />
+        <result property="limitNum"    column="limit_num"    />
+        <result property="ruleInstructions"    column="rule_instructions"    />
+        <result property="validationMethod"    column="validation_method"    />
+        <result property="questionName"    column="question_name"    />
+        <result property="questionAnswer"    column="question_answer"    />
+        <result property="feedbackText"    column="feedback_text"    />
+        <result property="couponId"    column="coupon_id"    />
+        <result property="questionA"    column="question_a"    />
+        <result property="questionB"    column="question_b"    />
+        <result property="questionC"    column="question_c"    />
+        <result property="questionD"    column="question_d"    />
+        <result property="correctAnswer"    column="correct_answer"    />
+        <result property="sharingRate"    column="sharing_rate"    />
+
+        <result property="sharingAmount"    column="sharing_amount"    />
+        <result property="status"    column="status"    />
+        <result property="auditStatus"    column="audit_status"    />
+        <result property="auditTime"      column="audit_time"      />
+        <result property="reason"    column="reason"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+
+    </resultMap>
+
+    <sql id="selectCmsRegistrationMerchantVo">
+        select id, member_id, topic_id, mode, node_id, address_name, longitude, latitude, address, template_id,pic_url, email, start_date, end_date, cooperate_date,activity_desc, limit_num, rule_instructions, validation_method, question_name, question_answer, feedback_text, coupon_id, question_a, question_b, question_c, question_d, correct_answer,status,audit_status,audit_time,sharing_rate,sharing_amount,reason,del_flag, create_by, create_time, update_by, update_time from cms_registration_merchant
+    </sql>
+
+    <select id="selectCmsRegistrationMerchantList" parameterType="CmsRegistrationMerchant" resultMap="CmsRegistrationMerchantResult">
+        <include refid="selectCmsRegistrationMerchantVo"/>
+        <where>  
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="topicId != null "> and topic_id = #{topicId}</if>
+            <if test="mode != null "> and mode = #{mode}</if>
+            <if test="nodeId != null "> and node_id = #{nodeId}</if>
+            <if test="address != null  and address != ''"> and address = #{address}</if>
+            <if test="templateId != null "> and template_id = #{templateId}</if>
+            <if test="email != null  and email != ''"> and email = #{email}</if>
+            <if test="startDate != null "> and start_date = #{startDate}</if>
+            <if test="endDate != null "> and end_date = #{endDate}</if>
+            <if test="cooperateDate != null  and cooperateDate != ''"> and cooperate_date = #{cooperateDate}</if>
+            <if test="limitNum != null "> and limit_num = #{limitNum}</if>
+            <if test="ruleInstructions != null  and ruleInstructions != ''"> and rule_instructions = #{ruleInstructions}</if>
+            <if test="validationMethod != null "> and validation_method = #{validationMethod}</if>
+            <if test="questionName != null  and questionName != ''"> and question_name like concat('%', #{questionName}, '%')</if>
+            <if test="questionAnswer != null  and questionAnswer != ''"> and question_answer = #{questionAnswer}</if>
+            <if test="feedbackText != null  and feedbackText != ''"> and feedback_text = #{feedbackText}</if>
+            <if test="couponId != null "> and coupon_id = #{couponId}</if>
+            <if test="questionA != null  and questionA != ''"> and question_a = #{questionA}</if>
+            <if test="questionB != null  and questionB != ''"> and question_b = #{questionB}</if>
+            <if test="questionC != null  and questionC != ''"> and question_c = #{questionC}</if>
+            <if test="questionD != null  and questionD != ''"> and question_d = #{questionD}</if>
+            <if test="correctAnswer != null  and correctAnswer != ''"> and correct_answer = #{correctAnswer}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="auditStatus != null "> and audit_status = #{auditStatus}</if>
+            <if test="delFlag != null "> and del_flag = #{delFlag}</if>
+            <if test="reason != null  and reason != ''"> and reason = #{reason}</if>
+
+        </where>
+
+        order by id desc
+    </select>
+    
+    <select id="selectCmsRegistrationMerchantById" parameterType="Long" resultMap="CmsRegistrationMerchantResult">
+        <include refid="selectCmsRegistrationMerchantVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectCmsRegistrationMerchantByIdForUpdate" parameterType="Long" resultMap="CmsRegistrationMerchantResult">
+        <include refid="selectCmsRegistrationMerchantVo"/>
+        where id = #{id}
+        for update
+    </select>
+
+    <insert id="insertCmsRegistrationMerchant" parameterType="CmsRegistrationMerchant" useGeneratedKeys="true" keyProperty="id">
+        insert into cms_registration_merchant
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="topicId != null">topic_id,</if>
+            <if test="mode != null">mode,</if>
+            <if test="nodeId != null">node_id,</if>
+            <if test="addressName != null">address_name,</if>
+            <if test="longitude != null">longitude,</if>
+            <if test="latitude != null">latitude,</if>
+            <if test="address != null">address,</if>
+            <if test="templateId != null">template_id,</if>
+
+            <if test="picUrl != null">pic_url,</if>
+
+
+
+            <if test="email != null">email,</if>
+            <if test="startDate != null">start_date,</if>
+            <if test="endDate != null">end_date,</if>
+            <if test="cooperateDate != null">cooperate_date,</if>
+            <if test="activityDesc != null">activity_desc,</if>
+            <if test="limitNum != null">limit_num,</if>
+            <if test="ruleInstructions != null">rule_instructions,</if>
+            <if test="validationMethod != null">validation_method,</if>
+            <if test="questionName != null">question_name,</if>
+            <if test="questionAnswer != null">question_answer,</if>
+            <if test="feedbackText != null">feedback_text,</if>
+            <if test="couponId != null">coupon_id,</if>
+            <if test="questionA != null">question_a,</if>
+            <if test="questionB != null">question_b,</if>
+            <if test="questionC != null">question_c,</if>
+            <if test="questionD != null">question_d,</if>
+            <if test="correctAnswer != null">correct_answer,</if>
+            <if test="status != null">status,</if>
+            <if test="auditStatus != null">audit_status,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="reason != null">reason,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="topicId != null">#{topicId},</if>
+            <if test="mode != null">#{mode},</if>
+            <if test="nodeId != null">#{nodeId},</if>
+            <if test="addressName != null">#{addressName},</if>
+            <if test="longitude != null">#{longitude},</if>
+            <if test="latitude != null">#{latitude},</if>
+            <if test="address != null">#{address},</if>
+            <if test="templateId != null">#{templateId},</if>
+            <if test="picUrl != null">#{picUrl},</if>
+
+            <if test="email != null">#{email},</if>
+            <if test="startDate != null">#{startDate},</if>
+            <if test="endDate != null">#{endDate},</if>
+            <if test="cooperateDate != null">#{cooperateDate},</if>
+            <if test="activityDesc != null">#{activityDesc},</if>
+            <if test="limitNum != null">#{limitNum},</if>
+            <if test="ruleInstructions != null">#{ruleInstructions},</if>
+            <if test="validationMethod != null">#{validationMethod},</if>
+            <if test="questionName != null">#{questionName},</if>
+            <if test="questionAnswer != null">#{questionAnswer},</if>
+            <if test="feedbackText != null">#{feedbackText},</if>
+            <if test="couponId != null">#{couponId},</if>
+            <if test="questionA != null">#{questionA},</if>
+            <if test="questionB != null">#{questionB},</if>
+            <if test="questionC != null">#{questionC},</if>
+            <if test="questionD != null">#{questionD},</if>
+            <if test="correctAnswer != null">#{correctAnswer},</if>
+            <if test="status != null">#{status},</if>
+            <if test="auditStatus != null">#{auditStatus},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="reason != null">#{reason},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <!-- A-13 防双中标:compare-and-set 原子占槽,仅待定(audit_status=0/null)可置中标 -->
+    <update id="confirmWinnerIfPending" parameterType="java.lang.Long">
+        update cms_registration_merchant
+        set audit_status = 1, status = 1, audit_time = now(), update_time = now()
+        where id = #{id}
+          and (audit_status is null or audit_status = 0)
+    </update>
+
+    <!-- 调配驳回与选中共用 audit_status=0/null 起点；两个 CAS 并发时只能一个成功。 -->
+    <update id="rejectIfPending">
+        update cms_registration_merchant
+        set audit_status = 2,
+            status = 3,
+            reason = #{reason},
+            audit_time = now(),
+            update_time = now()
+        where id = #{id}
+          and del_flag = 0
+          and (audit_status is null or audit_status = 0)
+    </update>
+
+    <!--
+      商家编辑专用 CAS。不能复用按 id 的通用 update：审核方可能在“先读后写”窗口中标，
+      也只有本语句能把“限定人数”从数字明确清回 NULL。
+    -->
+    <update id="updateEditableFieldsIfStateMatches">
+        update cms_registration_merchant
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="patch.picUrl != null">pic_url = #{patch.picUrl},</if>
+            <if test="patch.address != null">address = #{patch.address},</if>
+            <if test="patch.addressName != null">address_name = #{patch.addressName},</if>
+            <if test="patch.longitude != null">longitude = #{patch.longitude},</if>
+            <if test="patch.latitude != null">latitude = #{patch.latitude},</if>
+            <if test="patch.cooperateDate != null">cooperate_date = #{patch.cooperateDate},</if>
+            <if test="patch.activityDesc != null">activity_desc = #{patch.activityDesc},</if>
+            limit_num = #{patch.limitNum},
+            <if test="patch.startDate != null">start_date = #{patch.startDate},</if>
+            <if test="patch.endDate != null">end_date = #{patch.endDate},</if>
+            <if test="rejected">
+                status = 0,
+                audit_status = 0,
+                reason = '',
+                <!-- 退回待定 ⇒ 上一次审核作废,时间跟着清掉。留着会让进度行印一个
+                     「审核通过」时刻,而当前状态其实是「审核中」。 -->
+                audit_time = null,
+            </if>
+            <if test="patch.updateBy != null">update_by = #{patch.updateBy},</if>
+            <if test="patch.updateTime != null">update_time = #{patch.updateTime},</if>
+        </trim>
+        where id = #{patch.id}
+          and member_id = #{memberId}
+          and coalesce(del_flag, 0) = 0
+          and coalesce(status, 0) = #{expectedStatus}
+          and coalesce(audit_status, 0) = #{expectedAuditStatus}
+    </update>
+
+    <update id="updateCmsRegistrationMerchant" parameterType="CmsRegistrationMerchant">
+        update cms_registration_merchant
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="topicId != null">topic_id = #{topicId},</if>
+            <if test="mode != null">mode = #{mode},</if>
+            <if test="nodeId != null">node_id = #{nodeId},</if>
+            <if test="addressName != null">address_name = #{addressName},</if>
+            <if test="longitude != null">longitude = #{longitude},</if>
+            <if test="latitude != null">latitude = #{latitude},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="templateId != null">template_id = #{templateId},</if>
+            <if test="picUrl != null">pic_url = #{picUrl},</if>
+
+            <if test="email != null">email = #{email},</if>
+            <if test="startDate != null">start_date = #{startDate},</if>
+            <if test="endDate != null">end_date = #{endDate},</if>
+            <if test="cooperateDate != null">cooperate_date = #{cooperateDate},</if>
+            <if test="activityDesc != null">activity_desc = #{activityDesc},</if>
+            <if test="limitNum != null">limit_num = #{limitNum},</if>
+            <if test="ruleInstructions != null">rule_instructions = #{ruleInstructions},</if>
+            <if test="validationMethod != null">validation_method = #{validationMethod},</if>
+            <if test="questionName != null">question_name = #{questionName},</if>
+            <if test="questionAnswer != null">question_answer = #{questionAnswer},</if>
+            <if test="feedbackText != null">feedback_text = #{feedbackText},</if>
+            <if test="couponId != null">coupon_id = #{couponId},</if>
+            <if test="questionA != null">question_a = #{questionA},</if>
+            <if test="questionB != null">question_b = #{questionB},</if>
+            <if test="questionC != null">question_c = #{questionC},</if>
+            <if test="questionD != null">question_d = #{questionD},</if>
+            <if test="correctAnswer != null">correct_answer = #{correctAnswer},</if>
+            <if test="sharingRate != null">sharing_rate = #{sharingRate},</if>
+            <if test="sharingAmount != null">sharing_amount = #{sharingAmount},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="auditStatus != null">audit_status = #{auditStatus},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="reason != null">reason = #{reason},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCmsRegistrationMerchantById" parameterType="Long">
+        delete from cms_registration_merchant where id = #{id}
+    </delete>
+
+    <delete id="deleteCmsRegistrationMerchantByIds" parameterType="String">
+        delete from cms_registration_merchant where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    
+
+    <select id="countByTopicId" parameterType="Long" resultType="int">
+        select count(1) from cms_registration_merchant where topic_id = #{topicId} and status = 1 and del_flag = 0
+    </select>
+
+    <select id="countByTopicIds" resultType="map">
+        select topic_id as topicId, count(*) as merchantCount
+        from cms_registration_merchant
+        where status = 1 and del_flag = 0
+          and topic_id in
+          <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">
+              #{topicId}
+          </foreach>
+        group by topic_id
+    </select>
+
+</mapper>

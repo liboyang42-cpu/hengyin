@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CoopCreditLogMapper">
+
+    <insert id="insertCoopCreditLog" parameterType="CoopCreditLog" useGeneratedKeys="true" keyProperty="id">
+        insert into coop_credit_log
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="eventType != null">event_type,</if>
+            <if test="inviteId != null">invite_id,</if>
+            <if test="reason != null">reason,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="eventType != null">#{eventType},</if>
+            <if test="inviteId != null">#{inviteId},</if>
+            <if test="reason != null">#{reason},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <resultMap type="CoopCreditLog" id="CoopCreditLogResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="eventType"    column="event_type"    />
+        <result property="inviteId"    column="invite_id"    />
+        <result property="reason"    column="reason"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <select id="selectRecentByMember" resultMap="CoopCreditLogResult">
+        select id, member_id, event_type, invite_id, reason, create_time
+        from coop_credit_log
+        where member_id = #{memberId}
+        <if test="since != null"> and create_time &gt;= #{since}</if>
+        order by create_time desc
+    </select>
+
+</mapper>

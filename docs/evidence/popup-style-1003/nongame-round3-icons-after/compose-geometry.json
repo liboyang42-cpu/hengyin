@@ -1,0 +1,102 @@
+[
+  {
+    "selector": ".cmp-act",
+    "owner": {
+      "left": 350,
+      "top": 107.797,
+      "width": 24,
+      "height": 24,
+      "right": 374,
+      "bottom": 131.797,
+      "centerX": 362,
+      "centerY": 119.797
+    },
+    "glyph": {
+      "left": 350,
+      "top": 107.797,
+      "width": 24,
+      "height": 24,
+      "right": 374,
+      "bottom": 131.797,
+      "centerX": 362,
+      "centerY": 119.797
+    },
+    "deltaX": 0,
+    "deltaY": 0
+  },
+  {
+    "selector": ".cmp-tool",
+    "owner": {
+      "left": 65,
+      "top": 253.992,
+      "width": 22,
+      "height": 22,
+      "right": 87,
+      "bottom": 275.992,
+      "centerX": 76,
+      "centerY": 264.992
+    },
+    "glyph": {
+      "left": 65,
+      "top": 253.992,
+      "width": 22,
+      "height": 22,
+      "right": 87,
+      "bottom": 275.992,
+      "centerX": 76,
+      "centerY": 264.992
+    },
+    "deltaX": 0,
+    "deltaY": 0
+  },
+  {
+    "selector": ".cmp-tool",
+    "owner": {
+      "left": 107,
+      "top": 253.992,
+      "width": 22,
+      "height": 22,
+      "right": 129,
+      "bottom": 275.992,
+      "centerX": 118,
+      "centerY": 264.992
+    },
+    "glyph": {
+      "left": 107,
+      "top": 253.992,
+      "width": 22,
+      "height": 22,
+      "right": 129,
+      "bottom": 275.992,
+      "centerX": 118,
+      "centerY": 264.992
+    },
+    "deltaX": 0,
+    "deltaY": 0
+  },
+  {
+    "selector": ".cmp-tool",
+    "owner": {
+      "left": 149,
+      "top": 253.992,
+      "width": 22,
+      "height": 22,
+      "right": 171,
+      "bottom": 275.992,
+      "centerX": 160,
+      "centerY": 264.992
+    },
+    "glyph": {
+      "left": 149,
+      "top": 253.992,
+      "width": 22,
+      "height": 22,
+      "right": 171,
+      "bottom": 275.992,
+      "centerX": 160,
+      "centerY": 264.992
+    },
+    "deltaX": 0,
+    "deltaY": 0
+  }
+]

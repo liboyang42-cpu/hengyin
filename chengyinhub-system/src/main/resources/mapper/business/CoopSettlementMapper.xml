@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CoopSettlementMapper">
+
+    <resultMap type="CoopSettlement" id="CoopSettlementResult">
+        <result property="id"    column="id"    />
+        <result property="settlementRoute" column="settlement_route"/>
+        <result property="sourceContractType" column="source_contract_type"/>
+        <result property="sourceContractId" column="source_contract_id"/>
+        <result property="commercialContextType" column="commercial_context_type"/>
+        <result property="commercialContextId" column="commercial_context_id"/>
+        <result property="beneficiaryRole" column="beneficiary_role"/>
+        <result property="beneficiaryId" column="beneficiary_id"/>
+        <result property="serviceUnit" column="service_unit"/>
+        <result property="topicId"    column="topic_id"    />
+        <result property="coopOrderId"    column="coop_order_id"    />
+        <result property="merchantId"    column="merchant_id"    />
+        <result property="shareMode"    column="share_mode"    />
+        <result property="shareRate"    column="share_rate"    />
+        <result property="fixedFee"    column="fixed_fee"    />
+        <result property="verifiedHeads"    column="verified_heads"    />
+        <result property="verifiedSales"    column="verified_sales"    />
+        <result property="amount"    column="amount"    />
+        <result property="verifiedRegIds"    column="verified_reg_ids"    />
+        <result property="status"    column="status"    />
+        <result property="payableTime"    column="payable_time"    />
+        <result property="settleTime"    column="settle_time"    />
+        <result property="payoutTime"    column="payout_time"    />
+        <result property="lineType"    column="line_type"    />
+        <result property="payeeType"    column="payee_type"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="delFlag"    column="del_flag"    />
+    </resultMap>
+
+    <sql id="cols">
+        id, settlement_route, source_contract_type, source_contract_id, commercial_context_type,
+        commercial_context_id, beneficiary_role, beneficiary_id, service_unit,
+        topic_id, coop_order_id, merchant_id, share_mode, share_rate, fixed_fee,
+        verified_heads, verified_sales, amount, verified_reg_ids, status, payable_time, settle_time, payout_time,
+        line_type, payee_type, create_time, del_flag
+    </sql>
+
+    <!-- D1 历史 type2 仅保留只读展示：既有合作单衍生的结算也不得再发生状态或资金写入。 -->
+    <sql id="excludeLegacyType2Settlement">
+        and not exists (
+            select 1
+            from coop_order legacy_order
+            join coop_invite legacy_invite on legacy_invite.id = legacy_order.invite_id
+            where legacy_order.id = coop_settlement.coop_order_id
+              and legacy_invite.invite_type = 2
+        )
+    </sql>
+
+    <insert id="insertCoopSettlement" parameterType="CoopSettlement" useGeneratedKeys="true" keyProperty="id">
+        insert into coop_settlement
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="settlementRoute != null">settlement_route,</if>
+            <if test="sourceContractType != null">source_contract_type,</if>
+            <if test="sourceContractId != null">source_contract_id,</if>
+            <if test="commercialContextType != null">commercial_context_type,</if>
+            <if test="commercialContextId != null">commercial_context_id,</if>
+            <if test="beneficiaryRole != null">beneficiary_role,</if>
+            <if test="beneficiaryId != null">beneficiary_id,</if>
+            <if test="serviceUnit != null">service_unit,</if>
+            <if test="topicId != null">topic_id,</if>
+            <if test="coopOrderId != null">coop_order_id,</if>
+            <if test="merchantId != null">merchant_id,</if>
+            <if test="shareMode != null">share_mode,</if>
+            <if test="shareRate != null">share_rate,</if>
+            <if test="fixedFee != null">fixed_fee,</if>
+            <if test="verifiedHeads != null">verified_heads,</if>
+            <if test="verifiedSales != null">verified_sales,</if>
+            <if test="amount != null">amount,</if>
+            <if test="verifiedRegIds != null">verified_reg_ids,</if>
+            <if test="status != null">status,</if>
+            <if test="payableTime != null">payable_time,</if>
+            <if test="settleTime != null">settle_time,</if>
+            <if test="payoutTime != null">payout_time,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="lineType != null">line_type,</if>
+            <if test="payeeType != null">payee_type,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="settlementRoute != null">#{settlementRoute},</if>
+            <if test="sourceContractType != null">#{sourceContractType},</if>
+            <if test="sourceContractId != null">#{sourceContractId},</if>
+            <if test="commercialContextType != null">#{commercialContextType},</if>
+            <if test="commercialContextId != null">#{commercialContextId},</if>
+            <if test="beneficiaryRole != null">#{beneficiaryRole},</if>
+            <if test="beneficiaryId != null">#{beneficiaryId},</if>
+            <if test="serviceUnit != null">#{serviceUnit},</if>
+            <if test="topicId != null">#{topicId},</if>
+            <if test="coopOrderId != null">#{coopOrderId},</if>
+            <if test="merchantId != null">#{merchantId},</if>
+            <if test="shareMode != null">#{shareMode},</if>
+            <if test="shareRate != null">#{shareRate},</if>
+            <if test="fixedFee != null">#{fixedFee},</if>
+            <if test="verifiedHeads != null">#{verifiedHeads},</if>
+            <if test="verifiedSales != null">#{verifiedSales},</if>
+            <if test="amount != null">#{amount},</if>
+            <if test="verifiedRegIds != null">#{verifiedRegIds},</if>
+            <if test="status != null">#{status},</if>
+            <if test="payableTime != null">#{payableTime},</if>
+            <if test="settleTime != null">#{settleTime},</if>
+            <if test="payoutTime != null">#{payoutTime},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="lineType != null">#{lineType},</if>
+            <if test="payeeType != null">#{payeeType},</if>
+        </trim>
+    </insert>
+
+    <update id="updateCoopSettlement" parameterType="CoopSettlement">
+        update coop_settlement
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="status != null">status = #{status},</if>
+            <if test="payoutTime != null">payout_time = #{payoutTime},</if>
+            <if test="amount != null">amount = #{amount},</if>
+        </trim>
+        where id = #{id}
+        <include refid="excludeLegacyType2Settlement"/>
+    </update>
+
+    <select id="countByOrderId" parameterType="Long" resultType="int">
+        select count(1) from coop_settlement where coop_order_id = #{coopOrderId} and del_flag = 0
+    </select>
+
+    <select id="selectDuePayouts" resultMap="CoopSettlementResult">
+        select <include refid="cols"/> from coop_settlement
+        where del_flag = 0 and status = 0 and payable_time is not null and payable_time &lt;= #{now}
+        <include refid="excludeLegacyType2Settlement"/>
+    </select>
+
+    <select id="selectDuePayoutForUpdate" resultMap="CoopSettlementResult">
+        select <include refid="cols"/> from coop_settlement
+        where id = #{id} and del_flag = 0 and status = 0
+          and payable_time is not null and payable_time &lt;= #{now}
+        <include refid="excludeLegacyType2Settlement"/>
+        for update
+    </select>
+
+    <update id="markPaidIfPending">
+        update coop_settlement
+        set status = 1, payout_time = #{payoutTime}
+        where id = #{id} and del_flag = 0 and status = 0
+        <include refid="excludeLegacyType2Settlement"/>
+    </update>
+
+    <select id="selectByMerchant" resultMap="CoopSettlementResult">
+        select <include refid="cols"/> from coop_settlement
+        where del_flag = 0 and merchant_id = #{merchantId}
+        order by create_time desc
+    </select>
+
+    <select id="selectByBeneficiary" resultMap="CoopSettlementResult">
+        select <include refid="cols"/> from coop_settlement
+        where del_flag = 0 and beneficiary_role = #{role} and beneficiary_id = #{beneficiaryId}
+        order by create_time desc
+    </select>
+
+    <resultMap id="ClubSummaryResult" type="com.chengyinhub.business.domain.vo.ClubSettlementSummaryRow" extends="CoopSettlementResult">
+        <result property="executedAdjustmentAmount" column="executed_adjustment_amount"/>
+        <result property="actualPaidAmount" column="actual_paid_amount"/>
+        <result property="actualPayoutTime" column="actual_payout_time"/>
+        <result property="topicName" column="topic_name"/>
+    </resultMap>
+
+    <!-- 分润展示唯一口径:净额 = 原额 + 已执行调整;已入账以实付流水为准。俱乐部汇总与发起人分润页(clubFinance)共用。 -->
+    <sql id="summarySelectFrom">
+        select s.id, s.topic_id, s.payee_type, s.amount, s.status, s.payable_time, s.settle_time, s.payout_time,
+               case when a.settlement_id is null then 0 else a.executed_amount end as executed_adjustment_amount,
+               paid.change_balance as actual_paid_amount, paid.create_time as actual_payout_time,
+               t.name as topic_name
+        from coop_settlement s
+        left join cms_topic t on t.id = s.topic_id
+        left join (
+            select settlement_id,
+                   case when count(*) = count(amount) then sum(amount) else null end as executed_amount
+            from coop_settlement_adjustment where status = 'EXECUTED' group by settlement_id
+        ) a on a.settlement_id = s.id
+        left join ums_member_balance_detail paid
+          on paid.coop_settlement_payout_id = s.id
+         and paid.member_id = s.merchant_id and paid.change_type = 1 and paid.del_flag = 0
+    </sql>
+
+    <select id="selectSummaryByBeneficiary" resultMap="ClubSummaryResult">
+        <include refid="summarySelectFrom"/>
+        where s.del_flag = 0 and s.beneficiary_role = #{role} and s.beneficiary_id = #{beneficiaryId}
+        order by s.create_time desc, s.id desc
+    </select>
+
+    <select id="selectSummaryByTopicId" resultMap="ClubSummaryResult">
+        <include refid="summarySelectFrom"/>
+        where s.del_flag = 0 and s.topic_id = #{topicId}
+        order by s.create_time desc, s.id desc
+    </select>
+
+    <select id="selectByTopicId" resultMap="CoopSettlementResult">
+        select <include refid="cols"/> from coop_settlement
+        where del_flag = 0 and topic_id = #{topicId}
+        order by create_time desc
+    </select>
+
+    <update id="voidUnpaidByTopic">
+        update coop_settlement set status = 2
+        where del_flag = 0 and status = 0 and topic_id = #{topicId}
+        <include refid="excludeLegacyType2Settlement"/>
+    </update>
+
+    <select id="countPaidByTopicAndPayee" resultType="int">
+        select count(1) from coop_settlement
+        where del_flag = 0 and status = 1
+          and topic_id = #{topicId} and merchant_id = #{payeeId}
+    </select>
+
+</mapper>

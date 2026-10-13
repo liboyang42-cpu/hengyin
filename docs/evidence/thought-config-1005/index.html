@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>伏笔配置 · 两个必填项</title>
+<style>body{margin:0;background:#f5f6f8;color:#171719;font:15px/1.65 system-ui,-apple-system,sans-serif}main{max-width:940px;margin:32px auto;padding:0 24px}section{background:#fff;border-radius:20px;padding:24px;margin:24px 0}h1{font-size:28px;margin:0 0 12px}h2{font-size:20px;margin:0 0 12px}p{color:#555966}a{color:#4944d7}.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}figure{margin:0;text-align:center}img{width:100%;max-width:300px;border-radius:18px}figcaption{font-size:13px;padding:10px}code{overflow-wrap:anywhere}@media(max-width:600px){.grid{grid-template-columns:1fr}main{padding:0 16px}section{padding:18px}}</style>
+</head><body><main>
+<h1>伏笔：步数、文字，两个必填</h1>
+<p>恢复底部弹窗。步数在上，输入文字在下，选框用灰色填充。没有名称输入、“内容”标题和垃圾桶，底部只有“完成”。只配置一个伏笔。</p>
+<section><h2>当前版本</h2><div class="grid">
+<figure><img src="simplify-draft.png" alt="底部伏笔弹窗：步数在上，输入文字在下，两个灰色选框与底部完成"><figcaption>进入配置 · 两个必填项</figcaption></figure>
+<figure><img src="simplify-reopened.png" alt="填写完成后重开，步数3000及文字正确回显"><figcaption>完成后重新打开 · 步数和文字保留</figcaption></figure>
+</div></section>
+<section><h2>必填与回显已核对</h2><p>模拟器实际点击“完成”：文字为空时提示“请输入伏笔文字”，步数为空时提示“请输入步数”，弹窗保持打开。两项填好后关闭，重新打开回显同一个伏笔。测试覆盖重复添加、非法步数、关闭放弃本轮修改，以及保留旧资料的引用和条件。</p>
+<p>105 项相关检查通过，原生模板与样式编译通过。测试值通过组件输入事件写入，完成按钮使用原生点击；未验证真机键盘。临时页面草稿已恢复为空，没有保存真实主题。</p>
+<p>本地修改 <code>7cb08c99e8f303efa2bd74fb9baaa0eadafb6c2e</code>，位于 <code>feature/thought-config-1005</code>。未合并、推送或上传微信。本页只记录伏笔配置验证，完整项目门禁仍有之前记录的遗留问题。</p>
+<p><a href="simplify-verification.json">验证记录</a> · <a href="simplify-unit-tests.txt">105 项检查输出</a></p>
+</section>
+<section><h2>修改前的版本已撤回</h2><div class="grid">
+<figure><img src="simplify-before.png" alt="撤回的旧方案，采用全屏配置及多余字段"><figcaption>旧方案 · 已撤回</figcaption></figure>
+<figure><img src="simplify-required-text.png" alt="当前底部弹窗缺少文字时阻止完成"><figcaption>当前方案 · 必填拦截</figcaption></figure>
+</div></section>
+<section id="flow-check"><h2>最新：主题里的原有伏笔弹窗</h2><p>伏笔配置仍在编辑主题 → 主题详情。已撤掉误加的正文入口，正文恢复文字、图片、音频、地点。两项必填、底部完成和重开回显已重新核对。</p><p><a href="theme-popup/index.html">查看当前按步骤截图</a> · <a href="flow/index.html">查看历史走查与理解纠正</a></p></section></main></body></html>

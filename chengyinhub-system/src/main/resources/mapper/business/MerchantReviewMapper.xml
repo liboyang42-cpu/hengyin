@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantReviewMapper">
+    <resultMap id="MerchantReviewResult" type="com.chengyinhub.business.domain.MerchantReview">
+        <id property="id" column="id"/>
+        <result property="merchantRowId" column="merchant_row_id"/>
+        <result property="merchantOwnerMemberId" column="merchant_owner_member_id"/>
+        <result property="registrationId" column="registration_id"/>
+        <result property="redemptionId" column="redemption_id"/>
+        <result property="authorMemberId" column="author_member_id"/>
+        <result property="rating" column="rating"/>
+        <result property="content" column="content"/>
+        <result property="imagesJson" column="images_json"/>
+        <result property="status" column="status"/>
+        <result property="replyContent" column="reply_content"/>
+        <result property="replyActorMemberId" column="reply_actor_member_id"/>
+        <result property="replyActorRoleCode" column="reply_actor_role_code"/>
+        <result property="replyRequestId" column="reply_request_id"/>
+        <result property="replyFingerprint" column="reply_fingerprint"/>
+        <result property="repliedAt" column="replied_at"/>
+        <result property="createRequestId" column="create_request_id"/>
+        <result property="createFingerprint" column="create_fingerprint"/>
+        <result property="moderationReason" column="moderation_reason"/>
+        <result property="moderatedAt" column="moderated_at"/>
+        <result property="version" column="version"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="authorNickname" column="author_nickname"/>
+        <result property="authorAvatar" column="author_avatar"/>
+    </resultMap>
+
+    <resultMap id="EligibilityResult" type="com.chengyinhub.business.domain.MerchantReviewEligibility">
+        <result property="merchantRowId" column="merchant_row_id"/>
+        <result property="merchantOwnerMemberId" column="merchant_owner_member_id"/>
+        <result property="registrationId" column="registration_id"/>
+        <result property="redemptionId" column="redemption_id"/>
+    </resultMap>
+
+    <resultMap id="ReportResult" type="com.chengyinhub.business.domain.MerchantReviewReport">
+        <id property="id" column="id"/>
+        <result property="reviewId" column="review_id"/>
+        <result property="merchantRowId" column="merchant_row_id"/>
+        <result property="merchantOwnerMemberId" column="merchant_owner_member_id"/>
+        <result property="reporterMemberId" column="reporter_member_id"/>
+        <result property="reporterRoleCode" column="reporter_role_code"/>
+        <result property="reasonText" column="reason_text"/>
+        <result property="requestId" column="request_id"/>
+        <result property="requestFingerprint" column="request_fingerprint"/>
+        <result property="auditTaskId" column="audit_task_id"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <sql id="reviewColumns">
+        mr.id, mr.merchant_row_id, mr.merchant_owner_member_id, mr.registration_id, mr.redemption_id,
+        mr.author_member_id, mr.rating, mr.content, mr.images_json, mr.status,
+        mr.reply_content, mr.reply_actor_member_id, mr.reply_actor_role_code, mr.reply_request_id,
+        mr.reply_fingerprint, mr.replied_at, mr.create_request_id, mr.create_fingerprint,
+        mr.moderation_reason, mr.moderated_at, mr.version, mr.create_time, mr.update_time
+    </sql>
+
+    <select id="lockActiveMember" resultType="long">
+        select id
+        from ums_member
+        where id = #{memberId} and status = 1 and del_flag = 0
+        for update
+    </select>
+
+    <select id="countActiveMerchantRowsForRow" resultType="int">
+        select count(1)
+        from mms_merchant target
+        join mms_merchant sibling
+          on sibling.member_id = target.member_id
+         and sibling.status = 1 and sibling.account_status = 1 and sibling.del_flag = 0
+        where target.id = #{merchantRowId}
+          and target.status = 1 and target.account_status = 1 and target.del_flag = 0
+    </select>
+
+    <!--
+      唯一资格真源：当前报名人 + 目标 merchant_row_id + ACTIVE 核销。
+      TODO(merchant-row-snapshot): redemption 仍只有 owner memberId；同 owner 多个活跃门店时
+      无法证明归属，必须 fail-closed，直到核销写入 merchant_row_id 真源。
+    -->
+    <select id="selectEligibility" resultMap="EligibilityResult">
+        select mm.id as merchant_row_id, mm.member_id as merchant_owner_member_id,
+               r.id as registration_id, rd.id as redemption_id
+        from redemption rd
+        straight_join cms_registration r
+          on r.id = rd.registration_id
+         and r.member_id = #{authorMemberId}
+        straight_join mms_merchant mm
+          on mm.id = #{merchantRowId}
+         and mm.member_id = rd.merchant_id
+         and mm.status = 1 and mm.account_status = 1 and mm.del_flag = 0
+        where rd.registration_id = #{registrationId}
+          and rd.status = 'ACTIVE'
+          and not exists (
+            select 1
+            from mms_merchant sibling
+            where sibling.member_id = mm.member_id
+              and sibling.status = 1 and sibling.account_status = 1 and sibling.del_flag = 0
+              and sibling.id &lt;&gt; mm.id
+          )
+        order by rd.create_time desc, rd.id desc
+        limit 1
+        for update
+    </select>
+
+    <select id="selectLatestEligibility" resultMap="EligibilityResult">
+        select mm.id as merchant_row_id, mm.member_id as merchant_owner_member_id,
+               r.id as registration_id, rd.id as redemption_id
+        from cms_registration r
+        join redemption rd
+          on rd.registration_id = r.id
+         and rd.status = 'ACTIVE'
+        join mms_merchant mm
+          on mm.id = #{merchantRowId}
+         and mm.member_id = rd.merchant_id
+         and mm.status = 1 and mm.account_status = 1 and mm.del_flag = 0
+        where r.member_id = #{authorMemberId}
+          and not exists (
+            select 1
+            from mms_merchant sibling
+            where sibling.member_id = mm.member_id
+              and sibling.status = 1 and sibling.account_status = 1 and sibling.del_flag = 0
+              and sibling.id &lt;&gt; mm.id
+          )
+          and not exists (
+            select 1 from merchant_review used
+             where used.registration_id = r.id
+               and used.merchant_owner_member_id = mm.member_id
+          )
+        order by rd.create_time desc, rd.id desc
+        limit 1
+    </select>
+
+    <select id="selectByAuthorRequestForUpdate" resultMap="MerchantReviewResult">
+        select <include refid="reviewColumns"/>
+        from merchant_review mr
+        where mr.author_member_id = #{authorMemberId}
+          and mr.create_request_id = #{requestId}
+        for update
+    </select>
+
+    <select id="selectByRegistrationMerchant" resultMap="MerchantReviewResult">
+        select <include refid="reviewColumns"/>
+        from merchant_review mr
+        where mr.registration_id = #{registrationId}
+          and mr.merchant_owner_member_id = #{merchantOwnerMemberId}
+    </select>
+
+    <select id="selectReviewByIdForUpdate" resultMap="MerchantReviewResult">
+        select <include refid="reviewColumns"/>
+        from merchant_review mr
+        where mr.id = #{id}
+        for update
+    </select>
+
+    <insert id="insertReview" parameterType="com.chengyinhub.business.domain.MerchantReview"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into merchant_review
+          (merchant_row_id, merchant_owner_member_id, registration_id, redemption_id,
+           author_member_id, rating, content, images_json, status,
+           create_request_id, create_fingerprint, version, create_time, update_time)
+        values
+          (#{merchantRowId}, #{merchantOwnerMemberId}, #{registrationId}, #{redemptionId},
+           #{authorMemberId}, #{rating}, #{content}, #{imagesJson}, #{status},
+           #{createRequestId}, #{createFingerprint}, #{version}, #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="countPublicReviews" resultType="long">
+        select count(1)
+        from merchant_review mr
+        where mr.merchant_row_id = #{merchantRowId}
+          and mr.status = 'VISIBLE'
+    </select>
+
+    <select id="selectPublicReviews" resultMap="MerchantReviewResult">
+        select <include refid="reviewColumns"/>,
+               u.nickname as author_nickname, u.avatar as author_avatar
+        from merchant_review mr
+        left join ums_member u on u.id = mr.author_member_id
+        where mr.merchant_row_id = #{merchantRowId}
+          and mr.status = 'VISIBLE'
+        order by mr.create_time desc, mr.id desc
+        limit #{offset}, #{limit}
+    </select>
+
+    <select id="selectPublicRatingSummary" resultType="java.util.HashMap">
+        select count(1) as reviewCount, round(avg(mr.rating), 1) as averageRating
+        from merchant_review mr
+        where mr.merchant_row_id = #{merchantRowId}
+          and mr.status = 'VISIBLE'
+    </select>
+
+    <select id="selectPublicReviewsUpdatedAt" resultType="java.util.Date">
+        select max(coalesce(mr.update_time, mr.create_time))
+        from merchant_review mr
+        where mr.merchant_row_id = #{merchantRowId}
+          and mr.status = 'VISIBLE'
+    </select>
+
+    <select id="selectReviewStats" resultType="java.util.HashMap">
+        select
+          coalesce(sum(case when mr.status = 'VISIBLE' and mr.reply_content is null then 1 else 0 end), 0) as pendingReplyCount,
+          coalesce(sum(case
+            when mr.create_time &gt;= date_format(curdate(), '%Y-%m-01')
+             and mr.create_time &lt; date_add(date_format(curdate(), '%Y-%m-01'), interval 1 month)
+            then 1 else 0 end), 0) as monthNewCount,
+          case
+            when coalesce(sum(case when mr.status = 'VISIBLE' then 1 else 0 end), 0) = 0 then 0
+            else round(
+              coalesce(sum(case when mr.status = 'VISIBLE' and mr.reply_content is not null then 1 else 0 end), 0)
+              * 100
+              / sum(case when mr.status = 'VISIBLE' then 1 else 0 end),
+              0
+            )
+          end as replyRatePct
+        from merchant_review mr
+        where mr.merchant_row_id = #{merchantRowId}
+    </select>
+
+    <select id="countManageReviews" resultType="long">
+        select count(1)
+        from merchant_review mr
+        where mr.merchant_row_id = #{merchantRowId}
+    </select>
+
+    <select id="selectManageReviews" resultMap="MerchantReviewResult">
+        select <include refid="reviewColumns"/>,
+               u.nickname as author_nickname, u.avatar as author_avatar
+        from merchant_review mr
+        left join ums_member u on u.id = mr.author_member_id
+        where mr.merchant_row_id = #{merchantRowId}
+        order by mr.create_time desc, mr.id desc
+        limit #{offset}, #{limit}
+    </select>
+
+    <update id="replyCas">
+        update merchant_review
+        set reply_content = #{content}, reply_actor_member_id = #{actorMemberId},
+            reply_actor_role_code = #{actorRoleCode}, reply_request_id = #{requestId},
+            reply_fingerprint = #{fingerprint}, replied_at = now(),
+            version = version + 1, update_time = now()
+        where id = #{id}
+          and merchant_row_id = #{merchantRowId}
+          and merchant_owner_member_id = #{merchantOwnerMemberId}
+          and version = #{expectedVersion}
+          and reply_content is null
+    </update>
+
+    <!--
+      改回复:只允许在「已有回复」上改(创建走 replyCas)。两个 CAS 分开写死,
+      是为了让「第一次回复」与「改回复」不能互相顶替:合成一条不加条件的 update,
+      会把并发下的创建/修改都放行,而 version 只保证不丢更新,不保证语义正确。
+    -->
+    <update id="updateReplyCas">
+        update merchant_review
+        set reply_content = #{content}, reply_actor_member_id = #{actorMemberId},
+            reply_actor_role_code = #{actorRoleCode}, reply_request_id = #{requestId},
+            reply_fingerprint = #{fingerprint}, replied_at = now(),
+            version = version + 1, update_time = now()
+        where id = #{id}
+          and merchant_row_id = #{merchantRowId}
+          and merchant_owner_member_id = #{merchantOwnerMemberId}
+          and version = #{expectedVersion}
+          and reply_content is not null
+    </update>
+
+    <!--
+      删回复:清空回复字段。回复删掉后该评价回到「待回复」,商家可以重新回复 ——
+      这是有意的,不是漏洞;被覆盖的旧回复文本不可恢复,审计里留 MERCHANT_REVIEW_REPLY_DELETED。
+    -->
+    <update id="deleteReplyCas">
+        update merchant_review
+        set reply_content = null, reply_actor_member_id = null, reply_actor_role_code = null,
+            reply_request_id = null, reply_fingerprint = null, replied_at = null,
+            version = version + 1, update_time = now()
+        where id = #{id}
+          and merchant_row_id = #{merchantRowId}
+          and merchant_owner_member_id = #{merchantOwnerMemberId}
+          and version = #{expectedVersion}
+          and reply_content is not null
+    </update>
+
+    <update id="moderateCas">
+        update merchant_review
+        set status = #{status}, moderation_reason = #{reason}, moderated_at = now(),
+            version = version + 1, update_time = now()
+        where id = #{id}
+          and status = #{expectedStatus}
+          and version = #{expectedVersion}
+    </update>
+
+    <select id="selectReportByReporterRequestForUpdate" resultMap="ReportResult">
+        select id, review_id, merchant_row_id, merchant_owner_member_id, reporter_member_id,
+               reporter_role_code, reason_text, request_id, request_fingerprint, audit_task_id, create_time
+        from merchant_review_report
+        where reporter_member_id = #{reporterMemberId}
+          and request_id = #{requestId}
+        for update
+    </select>
+
+    <insert id="insertReport" parameterType="com.chengyinhub.business.domain.MerchantReviewReport"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into merchant_review_report
+          (review_id, merchant_row_id, merchant_owner_member_id, reporter_member_id,
+           reporter_role_code, reason_text, request_id, request_fingerprint, audit_task_id, create_time)
+        values
+          (#{reviewId}, #{merchantRowId}, #{merchantOwnerMemberId}, #{reporterMemberId},
+           #{reporterRoleCode}, #{reasonText}, #{requestId}, #{requestFingerprint}, #{auditTaskId}, #{createTime})
+    </insert>
+</mapper>

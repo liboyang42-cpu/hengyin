@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CreatorIncomeDetailMapper">
+
+    <select id="selectRecentIncome" resultType="CreatorIncomeDetail">
+        select id, creator_id as creatorId, source_type as sourceType, source_id as sourceId,
+               amount, income_status as incomeStatus, occur_time as occurTime,
+               create_time as createTime, update_time as updateTime
+        from creator_income_detail
+        where creator_id = #{creatorId}
+        order by occur_time desc, id desc
+        limit 20
+    </select>
+</mapper>

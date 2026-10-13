@@ -1,0 +1,37 @@
+@import '../../../style/merchant-light.wxss';
+
+/* display:flex 列贯穿 shell → page 两层,让 cy-error/cy-empty 的 fill 变体吃到「标题下方到
+   屏幕底部」这段真实剩余空间,而不是退化成 min-height:60vh 的兜底 */
+.nearby-shell { min-height: 100vh; display: flex; flex-direction: column; background: var(--cy-bg-page); }
+
+.nearby-page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--cy-bg-page);
+  padding: 0 var(--cy-page-x, 32rpx) var(--cy-space-3);
+  box-sizing: border-box;
+}
+
+.retry-lg { --cy-btn-h-sm: var(--cy-btn-h); }
+
+.action-state,
+.inline-state {
+  min-height: 88rpx;
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--cy-space-2);
+  padding: 0 var(--cy-space-2-5);
+  box-sizing: border-box;
+  border-radius: var(--cy-radius-md);
+  background: var(--cy-bg-card);
+  color: var(--cy-text-secondary);
+  font-size: var(--cy-font-label);
+}
+.action-state--ok { color: var(--cy-success); }
+.action-state--error,
+.inline-state--error { color: var(--cy-danger); }
+.inline-retry { margin-left: auto; min-height: 88rpx; display: flex; align-items: center; color: var(--cy-text-title); font-weight: 600; }
+
+.merchant-result { margin-bottom: var(--cy-space-3); }
+.contact-action { display: flex; justify-content: flex-end; margin-top: var(--cy-space-2); }

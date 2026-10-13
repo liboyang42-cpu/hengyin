@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CoopInviteMapper">
+
+    <resultMap type="CoopInvite" id="CoopInviteResult">
+        <result property="id"    column="id"    />
+        <result property="inviteType"    column="invite_type"    />
+        <result property="fromType"    column="from_type"    />
+        <result property="fromId"    column="from_id"    />
+        <result property="toType"    column="to_type"    />
+        <result property="toId"    column="to_id"    />
+        <result property="topicId"    column="topic_id"    />
+        <result property="originApplyId"    column="origin_apply_id"    />
+        <result property="nodeId"    column="node_id"    />
+        <result property="gameId"    column="game_id"    />
+        <result property="targetLevel"    column="target_level"    />
+        <result property="status"    column="status"    />
+        <result property="message"    column="message"    />
+        <result property="handleTime"    column="handle_time"    />
+        <result property="handleReason"  column="handle_reason"  />
+        <result property="expireTime"    column="expire_time"    />
+        <result property="configDeadline"    column="config_deadline"    />
+        <result property="shareMode"    column="share_mode"    />
+        <result property="shareRate"    column="share_rate"    />
+        <result property="fixedFee"    column="fixed_fee"    />
+        <result property="depositAmount"     column="deposit_amount"       />
+        <result property="depositStatus"     column="deposit_status"       />
+        <result property="depositOutTradeNo" column="deposit_out_trade_no" />
+        <result property="depositRefundNo"   column="deposit_refund_no"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="depositRefundState" column="deposit_refund_state"/>
+        <result property="depositRefundAmount" column="deposit_refund_amount"/>
+        <result property="depositRefundLeaseToken" column="deposit_refund_lease_token"/>
+        <result property="depositRefundLeaseAt" column="deposit_refund_lease_at"/>
+        <result property="depositRefundRequestedAt" column="deposit_refund_requested_at"/>
+        <result property="depositRefundConfirmedAt" column="deposit_refund_confirmed_at"/>
+        <result property="depositPaidTransactionId" column="deposit_paid_transaction_id"/>
+    </resultMap>
+
+    <sql id="selectCoopInviteVo">
+        select id, invite_type, from_type, from_id, to_type, to_id, topic_id, origin_apply_id, node_id, game_id, target_level, status, message, handle_time, handle_reason, expire_time, config_deadline, share_mode, share_rate, fixed_fee, deposit_amount, deposit_status, deposit_out_trade_no, deposit_refund_no, deposit_refund_state, deposit_refund_amount, deposit_refund_lease_token, deposit_refund_lease_at, deposit_refund_requested_at, deposit_refund_confirmed_at, deposit_paid_transaction_id, create_by, create_time, update_by, update_time, del_flag from coop_invite
+    </sql>
+
+    <select id="selectCoopInviteList" parameterType="CoopInvite" resultMap="CoopInviteResult">
+        <include refid="selectCoopInviteVo"/>
+        <where>
+            del_flag = 0
+            <if test="inviteType != null"> and invite_type = #{inviteType}</if>
+            <if test="fromType != null and fromType != ''"> and from_type = #{fromType}</if>
+            <if test="fromId != null"> and from_id = #{fromId}</if>
+            <if test="toType != null and toType != ''"> and to_type = #{toType}</if>
+            <if test="toId != null"> and to_id = #{toId}</if>
+            <if test="topicId != null"> and topic_id = #{topicId}</if>
+            <if test="gameId != null"> and game_id = #{gameId}</if>
+            <if test="status != null"> and status = #{status}</if>
+        </where>
+        order by create_time desc
+    </select>
+
+    <resultMap id="CoopInviteReadResult" type="CoopInvite" extends="CoopInviteResult">
+        <result property="status" column="effective_status"/>
+    </resultMap>
+
+    <!-- 与 expirePendingInvites 使用相同的 JDBC now 和 SQL DATE_SUB，不在 Java 重算日期。
+         先投影再筛状态；update_time 仍为真实持久化值。已接受配置截止只由原 job 处理。 -->
+    <select id="selectCoopInviteListReadOnly" resultMap="CoopInviteReadResult">
+        select t.* from (
+            select i.*, case when i.status = 0 and i.invite_type != 2
+                and ((i.expire_time is not null and i.expire_time &lt;= #{now})
+                  or (i.create_time is not null and i.create_time &lt;= DATE_SUB(#{now}, INTERVAL 48 HOUR)))
+                then 5 else i.status end as effective_status
+            from coop_invite i where i.del_flag = 0
+        ) t
+        <where>
+            <if test="query.inviteType != null"> and t.invite_type = #{query.inviteType}</if>
+            <if test="query.fromType != null and query.fromType != ''"> and t.from_type = #{query.fromType}</if>
+            <if test="query.fromId != null"> and t.from_id = #{query.fromId}</if>
+            <if test="query.toType != null and query.toType != ''"> and t.to_type = #{query.toType}</if>
+            <if test="query.toId != null"> and t.to_id = #{query.toId}</if>
+            <if test="query.topicId != null"> and t.topic_id = #{query.topicId}</if>
+            <if test="query.gameId != null"> and t.game_id = #{query.gameId}</if>
+            <if test="query.status != null"> and t.effective_status = #{query.status}</if>
+        </where>
+        order by t.create_time desc
+    </select>
+
+    <select id="selectCoopInviteById" parameterType="Long" resultMap="CoopInviteResult">
+        <include refid="selectCoopInviteVo"/>
+        where id = #{id} and del_flag = 0
+    </select>
+
+    <!-- B1-4:同意路径按行锁,防两家同时点同意抢同一槽位 -->
+    <select id="selectCoopInviteByIdForUpdate" parameterType="Long" resultMap="CoopInviteResult">
+        <include refid="selectCoopInviteVo"/>
+        where id = #{id} and del_flag = 0 for update
+    </select>
+
+    <insert id="insertCoopInvite" parameterType="CoopInvite" useGeneratedKeys="true" keyProperty="id">
+        insert into coop_invite
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="inviteType != null">invite_type,</if>
+            <if test="fromType != null">from_type,</if>
+            <if test="fromId != null">from_id,</if>
+            <if test="toType != null">to_type,</if>
+            <if test="toId != null">to_id,</if>
+            <if test="topicId != null">topic_id,</if>
+            <if test="originApplyId != null">origin_apply_id,</if>
+            <if test="nodeId != null">node_id,</if>
+            <if test="gameId != null">game_id,</if>
+            <if test="targetLevel != null">target_level,</if>
+            <if test="status != null">status,</if>
+            <if test="message != null">message,</if>
+            <if test="handleTime != null">handle_time,</if>
+            <if test="handleReason != null">handle_reason,</if>
+            <if test="expireTime != null">expire_time,</if>
+            <if test="configDeadline != null">config_deadline,</if>
+            <if test="shareMode != null">share_mode,</if>
+            <if test="shareRate != null">share_rate,</if>
+            <if test="fixedFee != null">fixed_fee,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="delFlag != null">del_flag,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="inviteType != null">#{inviteType},</if>
+            <if test="fromType != null">#{fromType},</if>
+            <if test="fromId != null">#{fromId},</if>
+            <if test="toType != null">#{toType},</if>
+            <if test="toId != null">#{toId},</if>
+            <if test="topicId != null">#{topicId},</if>
+            <if test="originApplyId != null">#{originApplyId},</if>
+            <if test="nodeId != null">#{nodeId},</if>
+            <if test="gameId != null">#{gameId},</if>
+            <if test="targetLevel != null">#{targetLevel},</if>
+            <if test="status != null">#{status},</if>
+            <if test="message != null">#{message},</if>
+            <if test="handleTime != null">#{handleTime},</if>
+            <if test="handleReason != null">#{handleReason},</if>
+            <if test="expireTime != null">#{expireTime},</if>
+            <if test="configDeadline != null">#{configDeadline},</if>
+            <if test="shareMode != null">#{shareMode},</if>
+            <if test="shareRate != null">#{shareRate},</if>
+            <if test="fixedFee != null">#{fixedFee},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+        </trim>
+    </insert>
+
+    <update id="updateCoopInvite" parameterType="CoopInvite">
+        update coop_invite
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="inviteType != null">invite_type = #{inviteType},</if>
+            <if test="nodeId != null">node_id = #{nodeId},</if>
+            <if test="gameId != null">game_id = #{gameId},</if>
+            <if test="targetLevel != null">target_level = #{targetLevel},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="message != null">message = #{message},</if>
+            <if test="handleTime != null">handle_time = #{handleTime},</if>
+            <if test="handleReason != null">handle_reason = #{handleReason},</if>
+            <if test="expireTime != null">expire_time = #{expireTime},</if>
+            <if test="configDeadline != null">config_deadline = #{configDeadline},</if>
+            <if test="shareMode != null">share_mode = #{shareMode},</if>
+            <if test="shareRate != null">share_rate = #{shareRate},</if>
+            <if test="fixedFee != null">fixed_fee = #{fixedFee},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+        </trim>
+        where id = #{id} and invite_type != 2
+    </update>
+
+    <!-- 挂起邀约(status=0)超过显式截止或创建后48h 未处理 → 5已过期。status=0 是幂等闸。 -->
+    <update id="expirePendingInvites" parameterType="java.util.Date">
+        update coop_invite
+        set status = 5, update_time = #{now}
+        where del_flag = 0 and status = 0 and invite_type != 2
+          and ((expire_time is not null and expire_time &lt;= #{now})
+            or (create_time is not null and create_time &lt;= DATE_SUB(#{now}, INTERVAL 48 HOUR)))
+    </update>
+
+    <!-- W2 招募窗口关闭:本期还挂着的 pending 邀约。where 与下面 expirePendingInvitesByTopic 逐字同口径,
+         否则「先数后写」两边判据不一致,数出来的行数就证明不了写下去的行数。 -->
+    <select id="countPendingByTopic" resultType="int">
+        select count(*) from coop_invite
+        where topic_id = #{topicId} and del_flag = 0 and status = 0 and invite_type != 2
+    </select>
+
+    <!-- W2 招募窗口关闭:本期 pending 邀约 → 5已过期。只按 topic_id 圈,绝不跨期;
+         status = 0 写在 where 里 ⇒ 重放第二次命中 0 行(幂等)。 -->
+    <update id="expirePendingInvitesByTopic">
+        update coop_invite
+        set status = 5, update_time = #{now}
+        where topic_id = #{topicId} and del_flag = 0 and status = 0 and invite_type != 2
+    </update>
+
+    <!-- 保证金:按微信商户订单号查邀约(回调路由用) -->
+    <select id="selectByDepositOutTradeNo" resultMap="CoopInviteResult">
+        <include refid="selectCoopInviteVo"/>
+        where deposit_out_trade_no = #{outTradeNo} and del_flag = 0
+        limit 1
+    </select>
+
+    <select id="selectByDepositOutTradeNoForUpdate" resultMap="CoopInviteResult">
+        <include refid="selectCoopInviteVo"/>
+        where deposit_out_trade_no = #{outTradeNo} and del_flag = 0
+        limit 1 for update
+    </select>
+
+    <!-- 保证金:更新保证金字段(只改传入的非空项) -->
+    <update id="updateDeposit">
+        update coop_invite
+        <set>
+            <if test="status != null">deposit_status = #{status},</if>
+            <if test="outTradeNo != null">deposit_out_trade_no = #{outTradeNo},</if>
+            <if test="refundNo != null">deposit_refund_no = #{refundNo},</if>
+            <if test="amount != null">deposit_amount = #{amount},</if>
+            update_time = now()
+        </set>
+        where id = #{id} and invite_type != 2
+          and deposit_refund_state is null and (#{status} is null or #{status} != 4)
+    </update>
+
+
+    <select id="selectByDepositRefundNo" resultMap="CoopInviteResult" useCache="false" flushCache="true">
+        <include refid="selectCoopInviteVo"/> where deposit_refund_no = #{refundNo} and invite_type != 2
+    </select>
+    <update id="beginDepositRefund">
+        update coop_invite set deposit_refund_state='PENDING', deposit_refund_no=#{refundNo},
+            deposit_refund_amount=deposit_amount, deposit_refund_requested_at=now(), update_time=now()
+        where id=#{id} and del_flag=0 and invite_type != 2 and deposit_status=2
+          and deposit_refund_state is null and deposit_out_trade_no=#{outTradeNo}
+          and deposit_amount=#{amount} and deposit_amount &gt; 0
+          and (deposit_refund_no is null or deposit_refund_no=#{refundNo})
+    </update>
+    <update id="claimDepositRefundDispatch">
+        update coop_invite set deposit_refund_lease_token=#{token}, deposit_refund_lease_at=now(),
+          deposit_refund_state=case when deposit_status=4 and deposit_refund_state is null then 'LEGACY_UNCONFIRMED'
+             when deposit_refund_state='PENDING' then 'DISPATCHING' else deposit_refund_state end
+        where id=#{id} and invite_type != 2 and deposit_status in (2,4)
+          and (deposit_refund_state in ('PENDING','DISPATCHING','PROCESSING','UNKNOWN','LEGACY_UNCONFIRMED')
+               or (#{force} and deposit_refund_state='MANUAL')
+               or (deposit_status=4 and deposit_refund_state is null))
+          and (deposit_refund_lease_token is null or deposit_refund_lease_at &lt; date_sub(now(),interval 30 minute))
+          and (#{force} or deposit_refund_state='PENDING' or deposit_refund_lease_at is null
+               or deposit_refund_lease_at &lt; date_sub(now(),interval 30 minute))
+    </update>
+    <update id="renewDepositRefundDispatch">
+        update coop_invite set deposit_refund_lease_at=now()
+        where id=#{id} and deposit_refund_lease_token=#{token} and deposit_status=2
+          and deposit_refund_state in ('DISPATCHING','UNKNOWN')
+    </update>
+    <update id="finishDepositRefundDispatch">
+        update coop_invite set deposit_refund_state=#{state},deposit_refund_lease_token=null,
+          deposit_refund_lease_at=now(),update_time=now()
+        where id=#{id} and deposit_refund_lease_token=#{token} and deposit_status in (2,4)
+          and deposit_refund_state != 'SUCCESS'
+    </update>
+    <update id="confirmDepositRefundResult">
+        update coop_invite set deposit_refund_state=#{state},deposit_refund_lease_token=null,
+          deposit_refund_lease_at=now(), update_time=now()
+          <if test="state == 'SUCCESS'">,deposit_status=4,deposit_refund_confirmed_at=now()</if>
+        where id=#{id} and invite_type != 2 and deposit_status in (2,4)
+          and deposit_out_trade_no=#{outTradeNo} and deposit_refund_no=#{refundNo}
+          and coalesce(deposit_refund_amount,deposit_amount)=#{amount}
+          and (deposit_refund_state is null or deposit_refund_state != 'SUCCESS')
+    </update>
+    <update id="markDepositPaidConfirmed">
+        update coop_invite set deposit_status=2,deposit_paid_transaction_id=#{transactionId},update_time=now()
+        where id=#{id} and invite_type != 2 and del_flag=0 and deposit_status=1
+          and deposit_out_trade_no=#{outTradeNo} and deposit_amount=#{amount} and deposit_refund_state is null
+    </update>
+    <update id="deductHeldDeposit">
+        update coop_invite set deposit_status=3,update_time=now()
+        where id=#{id} and invite_type != 2 and del_flag=0 and deposit_status=2
+          and deposit_refund_state is null and deposit_refund_no is null
+    </update>
+    <update id="updateDepositIfCurrent">
+        update coop_invite set deposit_status=#{status},deposit_amount=#{amount},update_time=now()
+        where id=#{id} and invite_type != 2 and del_flag=0 and deposit_status &lt;=&gt; #{expectedStatus}
+          and deposit_amount &lt;=&gt; #{expectedAmount} and deposit_refund_state is null
+    </update>
+    <select id="selectDepositsForRefundReconcile" resultMap="CoopInviteResult" useCache="false" flushCache="true">
+        <include refid="selectCoopInviteVo"/>
+        where invite_type != 2 and deposit_status in (2,4)
+          and (deposit_refund_state in ('PENDING','DISPATCHING','PROCESSING','UNKNOWN','LEGACY_UNCONFIRMED')
+               or (deposit_status=4 and deposit_refund_state is null))
+          and (deposit_refund_lease_at is null or deposit_refund_lease_at &lt; date_sub(now(),interval 30 minute))
+        order by coalesce(deposit_refund_lease_at,create_time),id limit 100
+    </select>
+
+    <!-- 资金恢复按原事实读取，软删展示过滤不能吞掉已提交资金责任。 -->
+    <select id="selectDepositFactByIdForUpdate" resultMap="CoopInviteResult" useCache="false" flushCache="true">
+        <include refid="selectCoopInviteVo"/> where id=#{id} and invite_type != 2 for update
+    </select>
+    <!-- 历史4只读查验的当前身份；NOWAIT不与club治理/主题编辑形成等待环。MySQL8。 -->
+    <select id="selectClubOwnerForDepositQueryNowait" resultType="Long" useCache="false" flushCache="true">
+        select member_id from club where id=#{clubId} and del_flag=0 and status=1 for update nowait
+    </select>
+    <select id="selectAcceptedByTopicForUpdate" resultMap="CoopInviteResult" useCache="false" flushCache="true">
+        <include refid="selectCoopInviteVo"/> where topic_id=#{topicId} and status=1 and del_flag=0
+        order by id for update
+    </select>
+</mapper>

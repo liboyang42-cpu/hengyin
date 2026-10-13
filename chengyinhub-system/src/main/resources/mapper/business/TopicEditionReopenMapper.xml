@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.TopicEditionReopenMapper">
+
+    <resultMap id="RequestResult" type="com.chengyinhub.business.domain.TopicEditionReopenRequest">
+        <result property="id" column="id"/>
+        <result property="sourceTopicId" column="source_topic_id"/>
+        <result property="idempotencyKey" column="idempotency_key"/>
+        <result property="newTopicId" column="new_topic_id"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <resultMap id="SourceTopicResult" type="com.chengyinhub.business.domain.CmsTopic">
+        <result property="id" column="id"/>
+        <result property="productType" column="product_type"/>
+        <result property="name" column="name"/>
+        <result property="subtitle" column="subtitle"/>
+        <result property="description" column="description"/>
+        <result property="addressName" column="address_name"/>
+        <result property="totalTime" column="total_time"/>
+        <result property="totalMileage" column="total_mileage"/>
+        <result property="locationCount" column="location_count"/>
+        <result property="templateCount" column="template_count"/>
+        <result property="imgUrl" column="img_url"/>
+        <result property="imgArr" column="img_arr"/>
+        <result property="categoryIds" column="category_ids"/>
+        <result property="publishMode" column="publish_mode"/>
+        <result property="audioUrl" column="audio_url"/>
+        <result property="audioDuration" column="audio_duration"/>
+        <result property="selfPlay" column="self_play"/>
+        <result property="xpBudget" column="xp_budget"/>
+        <result property="finishMedalName" column="finish_medal_name"/>
+        <result property="finishMedalImg" column="finish_medal_img"/>
+        <result property="lifecycle" column="lifecycle"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="journeyRulesJson" column="journey_rules_json"/>
+        <result property="journeyStoryJson" column="journey_story_json"/>
+    </resultMap>
+
+    <resultMap id="ChapterResult" type="com.chengyinhub.business.domain.CmsTopicChapter">
+        <result property="id" column="id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <!-- 列名是 blocks 不是 blocks_json:见 CmsTopicChapterMapper.xml 的 resultMap 与生产快照
+             sql/base_schema_20260818.sql。写错时 Java 编译得过、Mockito 也测得过,只有真发给 MySQL
+             才会以 1054 现形 —— 由 TopicEditionReopenBlocksColumnMyBatisIT 在真库上钉住。 -->
+        <result property="blocksJson" column="blocks"/>
+        <result property="imgArr" column="img_arr"/>
+        <result property="totalTime" column="total_time"/>
+        <result property="totalMileage" column="total_mileage"/>
+        <result property="locationCount" column="location_count"/>
+        <result property="templateCount" column="template_count"/>
+        <result property="sortId" column="sort_id"/>
+        <result property="category" column="category"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="recruitEnabled" column="recruit_enabled"/>
+        <result property="perkMinValue" column="perk_min_value"/>
+        <result property="maxMerchant" column="max_merchant"/>
+        <result property="required" column="required"/>
+        <result property="termsMode" column="terms_mode"/>
+        <result property="maxPerHeadFee" column="max_per_head_fee"/>
+        <result property="allowedValidationMethods" column="allowed_validation_methods"/>
+        <result property="maxNodeXp" column="max_node_xp"/>
+    </resultMap>
+
+    <resultMap id="NodeResult" type="com.chengyinhub.business.domain.CmsTopicNode">
+        <result property="id" column="id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="chapterId" column="chapter_id"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="address" column="address"/>
+        <result property="longitude" column="longitude"/>
+        <result property="latitude" column="latitude"/>
+        <result property="imgUrl" column="img_url"/>
+        <result property="nodeTime" column="node_time"/>
+        <result property="templateId" column="template_id"/>
+        <result property="businessTime" column="business_time"/>
+        <result property="status" column="status"/>
+        <result property="sortId" column="sort_id"/>
+        <result property="xpValue" column="xp_value"/>
+        <result property="hookText" column="hook_text"/>
+        <result property="cardHookLong" column="card_hook_long"/>
+        <result property="fragmentText" column="fragment_text"/>
+    </resultMap>
+
+    <resultMap id="ContentResult" type="com.chengyinhub.business.domain.ProductRole">
+        <result property="id" column="id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="slot" column="slot"/>
+        <result property="entityType" column="entity_type"/>
+        <result property="entityId" column="entity_id"/>
+        <result property="status" column="status"/>
+    </resultMap>
+
+    <insert id="insertReopenRequest" parameterType="com.chengyinhub.business.domain.TopicEditionReopenRequest"
+            useGeneratedKeys="true" keyProperty="id">
+        insert ignore into topic_edition_reopen_request
+            (source_topic_id, idempotency_key, create_by, create_time)
+        values (#{sourceTopicId}, #{idempotencyKey}, #{createBy}, #{createTime})
+    </insert>
+
+    <select id="selectReopenRequest" resultMap="RequestResult">
+        select id, source_topic_id, idempotency_key, new_topic_id, create_by, create_time
+          from topic_edition_reopen_request
+         where source_topic_id = #{sourceTopicId} and idempotency_key = #{idempotencyKey}
+    </select>
+
+    <select id="selectSourceTopicForUpdate" resultMap="SourceTopicResult">
+        select id, product_type, name, subtitle, description, address_name, total_time, total_mileage,
+               location_count, template_count, img_url, img_arr, category_ids, publish_mode, audio_url,
+               audio_duration, self_play, xp_budget, finish_medal_name, finish_medal_img, lifecycle, del_flag,
+               journey_rules_json, journey_story_json
+          from cms_topic where id = #{sourceTopicId} for update
+    </select>
+
+    <select id="selectSourceContentForUpdate" resultMap="ContentResult">
+        select id, topic_id, slot, entity_type, entity_id, status
+          from product_role
+         where topic_id = #{sourceTopicId} and slot = 'CONTENT' and status = 1
+         for update
+    </select>
+
+    <select id="selectSourceChapters" resultMap="ChapterResult">
+        select id, topic_id, name, description, blocks, img_arr, total_time, total_mileage,
+               location_count, template_count, sort_id, category, category_id, recruit_enabled, perk_min_value,
+               max_merchant, required, terms_mode, max_per_head_fee, allowed_validation_methods, max_node_xp
+          from cms_topic_chapter
+         where topic_id = #{sourceTopicId}
+         order by sort_id asc, id asc
+    </select>
+
+    <select id="selectSourceNodes" resultMap="NodeResult">
+        select id, topic_id, chapter_id, name, description, address, longitude, latitude, img_url, node_time,
+               template_id, business_time, status, sort_id, xp_value, hook_text, card_hook_long, fragment_text
+          from cms_topic_node
+         where topic_id = #{sourceTopicId}
+         order by chapter_id asc, sort_id asc, id asc
+    </select>
+
+    <insert id="insertReopenedTopic" parameterType="com.chengyinhub.business.domain.CmsTopic"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into cms_topic
+            (member_id, club_id, topic_type, product_type, journey_rules_json, journey_story_json, name, subtitle, description, address_name,
+             total_time, total_mileage, location_count, template_count, img_url, img_arr, category_ids,
+             publish_mode, audio_url, audio_duration, self_play, xp_budget, finish_medal_name, finish_medal_img,
+             status, user_status, merchant_status, open_club_pool, del_flag, is_sync, is_recommend, check_status,
+             is_settlement, lifecycle, source_topic_id, create_by, create_time, update_by, update_time)
+        values
+            (#{memberId}, #{clubId}, #{topicType}, #{productType}, #{journeyRulesJson}, #{journeyStoryJson}, #{name}, #{subtitle}, #{description}, #{addressName},
+             #{totalTime}, #{totalMileage}, #{locationCount}, #{templateCount}, #{imgUrl}, #{imgArr}, #{categoryIds},
+             #{publishMode}, #{audioUrl}, #{audioDuration}, #{selfPlay}, #{xpBudget}, #{finishMedalName}, #{finishMedalImg},
+             #{status}, #{userStatus}, #{merchantStatus}, #{openClubPool}, #{delFlag}, #{isSync}, #{isRecommend}, #{checkStatus},
+             #{isSettlement}, #{lifecycle}, #{sourceTopicId}, #{createBy}, #{createTime}, #{updateBy}, #{updateTime})
+    </insert>
+
+    <insert id="insertReopenedChapter" parameterType="com.chengyinhub.business.domain.CmsTopicChapter"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into cms_topic_chapter
+            (topic_id, name, description, audio_url, atmosphere_preset, img_arr, total_time, total_mileage, location_count, template_count,
+             sort_id, category, category_id, recruit_enabled, perk_min_value, max_merchant, required, terms_mode,
+             max_per_head_fee, allowed_validation_methods, max_node_xp, create_by, create_time)
+        values
+            (#{topicId}, #{name}, #{description}, #{audioUrl}, #{atmospherePreset}, #{imgArr}, #{totalTime}, #{totalMileage}, #{locationCount}, #{templateCount},
+             #{sortId}, #{category}, #{categoryId}, #{recruitEnabled}, #{perkMinValue}, #{maxMerchant}, #{required}, #{termsMode},
+             #{maxPerHeadFee}, #{allowedValidationMethods}, #{maxNodeXp}, #{createBy}, #{createTime})
+    </insert>
+
+    <insert id="insertReopenedNode" parameterType="com.chengyinhub.business.domain.CmsTopicNode"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into cms_topic_node
+            (topic_id, chapter_id, name, description, address, longitude, latitude, img_url, node_time, template_id,
+             checkin_code, business_time, status, sort_id, xp_value, hook_text, card_hook_long, fragment_text,
+             create_by, create_time)
+        values
+            (#{topicId}, #{chapterId}, #{name}, #{description}, #{address}, #{longitude}, #{latitude}, #{imgUrl}, #{nodeTime}, #{templateId},
+             #{checkinCode}, #{businessTime}, #{status}, #{sortId}, #{xpValue}, #{hookText}, #{cardHookLong}, #{fragmentText},
+             #{createBy}, #{createTime})
+    </insert>
+
+    <update id="updateReopenedChapterBlocks">
+        update cms_topic_chapter set blocks = #{blocksJson} where id = #{chapterId}
+    </update>
+
+    <update id="updateReopenedJourneyStory">
+        update cms_topic set journey_story_json = #{journeyStoryJson} where id = #{topicId}
+    </update>
+
+    <update id="completeReopenRequest">
+        update topic_edition_reopen_request
+           set new_topic_id = #{newTopicId}
+         where id = #{requestId} and new_topic_id is null
+    </update>
+</mapper>

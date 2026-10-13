@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "startNodeId": 1,
+  "terminalNodeIds": [3],
+  "variables": {"clues": 1},
+  "edges": [
+    {
+      "id": "conditioned",
+      "fromNodeId": 1,
+      "toNodeId": 2,
+      "trigger": {"type": "CHOICE", "outcomeCode": "COMPLETED"},
+      "conditions": [{"var": "clues", "op": "GTE", "value": 1}],
+      "effects": [{"op": "INC", "var": "clues", "value": 1}]
+    },
+    {
+      "id": "finish",
+      "fromNodeId": 2,
+      "toNodeId": 3,
+      "trigger": {"type": "CHOICE", "outcomeCode": "COMPLETED"},
+      "conditions": [{"op": "NODE_COMPLETED", "nodeId": 1}]
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.RoamAiContentMapper">
+
+    <resultMap type="RoamAiContent" id="RoamAiContentResult">
+        <result property="id" column="id" />
+        <result property="contentType" column="content_type" />
+        <result property="contentKey" column="content_key" />
+        <result property="poiId" column="poi_id" />
+        <result property="contentText" column="content_text" />
+        <result property="auditStatus" column="audit_status" />
+        <result property="enabled" column="enabled" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="columns">id, content_type, content_key, poi_id, content_text, audit_status, enabled, create_time, update_time</sql>
+
+    <!-- 玩家侧只读审核通过且启用的内容；没有内容时返回空，绝不回退到 roam_poi.description。 -->
+    <select id="selectApprovedPoiMeaning" resultMap="RoamAiContentResult">
+        select <include refid="columns" /> from roam_ai_content
+        where content_type = 'POI_MEANING' and poi_id = #{poiId}
+          and audit_status = 1 and enabled = 1
+        limit 1
+    </select>
+
+    <select id="selectApprovedRouteStories" resultMap="RoamAiContentResult">
+        select <include refid="columns" /> from roam_ai_content
+        where content_type = 'ROUTE_STORY' and audit_status = 1 and enabled = 1
+        order by content_key asc, id asc
+    </select>
+
+    <!-- 后台运营看全量，审核状态不可由玩家侧查询绕过。 -->
+    <select id="selectRoamAiContentList" resultMap="RoamAiContentResult">
+        select <include refid="columns" /> from roam_ai_content
+        <where>
+            <if test="contentType != null and contentType != ''">and content_type = #{contentType}</if>
+            <if test="auditStatus != null">and audit_status = #{auditStatus}</if>
+            <if test="poiId != null">and poi_id = #{poiId}</if>
+        </where>
+        order by update_time desc, id desc
+    </select>
+
+    <select id="selectRoamAiContentById" resultMap="RoamAiContentResult">
+        select <include refid="columns" /> from roam_ai_content where id = #{id}
+    </select>
+
+    <insert id="insertRoamAiContent" parameterType="RoamAiContent" useGeneratedKeys="true" keyProperty="id">
+        insert into roam_ai_content
+        (content_type, content_key, poi_id, content_text, audit_status, enabled, create_time, update_time)
+        values
+        (#{contentType}, #{contentKey}, #{poiId}, #{contentText}, #{auditStatus}, #{enabled}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="updateRoamAiContent" parameterType="RoamAiContent">
+        update roam_ai_content
+        <set>
+            <if test="contentText != null">content_text = #{contentText},</if>
+            <if test="auditStatus != null">audit_status = #{auditStatus},</if>
+            <if test="enabled != null">enabled = #{enabled},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <update id="updateRoamAiContentAuditStatus">
+        update roam_ai_content set audit_status = #{auditStatus}, update_time = now() where id = #{id}
+    </update>
+
+    <delete id="deleteRoamAiContentById">
+        delete from roam_ai_content where id = #{id}
+    </delete>
+</mapper>

@@ -1,0 +1,292 @@
+name: Temporary upload approved non-official topic covers
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 已通过 CI 的完整 40 位 commit SHA
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: temporary-template-cover-preview-upload
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: [self-hosted, macOS, ARM64, chengyin]
+    environment: production
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+
+      - name: Negative control for byte readback and rollback
+        shell: bash
+        run: |
+          set -euo pipefail
+          probe_dir=$(mktemp -d)
+          trap 'rm -rf "$probe_dir"' EXIT
+          install -d "$probe_dir/remote" "$probe_dir/stage"
+          printf 'old-cover\n' > "$probe_dir/remote/probe.webp"
+          printf 'new-cover\n' > "$probe_dir/stage/probe.webp"
+          printf 'old-cover\n' > "$probe_dir/expected-old.webp"
+
+          if COVER_TXN_TEST_MODE=1 COVER_TXN_FAIL_AFTER_FOR_TESTS=1 \
+            COVER_TXN_WATCHDOG_SECONDS=2 \
+            bash ci/template-cover-transaction.sh apply \
+              "$probe_dir/remote" "$probe_dir/stage" "$probe_dir/backup-1" \
+              "$probe_dir/backup-1/confirmed" "$probe_dir/lock" \
+              "$probe_dir/owner" 100-1 probe.webp; then
+            echo "::error::负控没有变红：覆盖中途故障被误判为成功"
+            exit 1
+          fi
+          cmp "$probe_dir/expected-old.webp" "$probe_dir/remote/probe.webp"
+
+          COVER_TXN_TEST_MODE=1 COVER_TXN_WATCHDOG_SECONDS=1 \
+            bash ci/template-cover-transaction.sh apply \
+              "$probe_dir/remote" "$probe_dir/stage" "$probe_dir/backup-2" \
+              "$probe_dir/backup-2/never-confirmed" "$probe_dir/lock" \
+              "$probe_dir/owner" 100-2 probe.webp
+          sleep 2
+          cmp "$probe_dir/expected-old.webp" "$probe_dir/remote/probe.webp"
+
+          install -d "$probe_dir/stage-a" "$probe_dir/stage-b"
+          printf 'new-cover-a\n' > "$probe_dir/stage-a/probe.webp"
+          printf 'new-cover-b\n' > "$probe_dir/stage-b/probe.webp"
+          COVER_TXN_TEST_MODE=1 COVER_TXN_WATCHDOG_SECONDS=3 \
+            bash ci/template-cover-transaction.sh apply \
+              "$probe_dir/remote" "$probe_dir/stage-a" "$probe_dir/100-3" \
+              "$probe_dir/100-3/never-confirmed" "$probe_dir/lock" \
+              "$probe_dir/owner" 100-3 probe.webp
+          COVER_TXN_TEST_MODE=1 COVER_TXN_WATCHDOG_SECONDS=3 \
+            bash ci/template-cover-transaction.sh apply \
+              "$probe_dir/remote" "$probe_dir/stage-b" "$probe_dir/100-4" \
+              "$probe_dir/100-4/confirmed" "$probe_dir/lock" \
+              "$probe_dir/owner" 100-4 probe.webp
+          COVER_TXN_TEST_MODE=1 bash ci/template-cover-transaction.sh confirm \
+            "$probe_dir/100-4/confirmed" "$probe_dir/lock" \
+            "$probe_dir/owner" 100-4
+          COVER_TXN_TEST_MODE=1 bash ci/template-cover-transaction.sh confirm \
+            "$probe_dir/100-4/confirmed" "$probe_dir/lock" \
+            "$probe_dir/owner" 100-4
+          sleep 4
+          cmp "$probe_dir/stage-b/probe.webp" "$probe_dir/remote/probe.webp"
+          echo "Immediate rollback, watchdog rollback, and stale-watchdog isolation green"
+
+      - name: Upload, verify, and roll back on failure
+        shell: bash
+        env:
+          REQUESTED_REF: ${{ inputs.ref }}
+          GH_TOKEN: ${{ github.token }}
+          ECS_SSH_HOST: ${{ secrets.ECS_SSH_HOST }}
+          ECS_SSH_USER: ${{ secrets.ECS_SSH_USER }}
+          ECS_SSH_PRIVATE_KEY: ${{ secrets.ECS_SSH_PRIVATE_KEY }}
+          ECS_SSH_KNOWN_HOSTS: ${{ secrets.ECS_SSH_KNOWN_HOSTS }}
+          ECS_SSH_TRANSPORT: session-manager
+        run: |
+          set -euo pipefail
+          umask 077
+
+          source_dir="ops/template-cover-preview-20260830"
+          manifest="$source_dir/manifest.txt"
+          remote_dir="/www/wwwroot/uploadPath/template-covers"
+          run_key="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          stage_dir="/tmp/template-cover-preview-${run_key}"
+          backup_dir="/www/wwwroot/template-cover-backups/${run_key}"
+          transaction_script="$backup_dir/template-cover-transaction.sh"
+          confirm_file="$backup_dir/confirmed"
+          transaction_lock="/www/wwwroot/template-cover-backups/template-cover.lock"
+          transaction_owner="/www/wwwroot/template-cover-backups/template-cover-owner"
+          public_base="https://www.chengyinhub.com/prod-api/profile/template-covers"
+          requested_ref="$REQUESTED_REF"
+          files=()
+          while IFS= read -r file; do
+            files+=("$file")
+          done < "$manifest"
+
+          [[ "$requested_ref" =~ ^[0-9a-f]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$requested_ref"
+          git fetch origin master
+          git merge-base --is-ancestor "$requested_ref" origin/master
+          ci_success=$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$requested_ref&event=push&status=success&per_page=1" \
+            --jq '.total_count')
+          test "$ci_success" -ge 1
+          test "${#files[@]}" -eq 24
+          test "$(printf '%s\n' "${files[@]}" | sort -u | wc -l | tr -d ' ')" -eq 24
+          expected_files=(
+            t01-hidden-menu.webp
+            t02-in-store-treasure-hunt.webp
+            t03-photo-challenge.webp
+            t04-mysterious-clerk-passcode.webp
+            t05-three-step-puzzle.webp
+            t06-listen-and-identify.webp
+            t07-three-quick-answers.webp
+            t08-stamp-tour.webp
+            t09-fork-in-the-road.webp
+            t10-three-blind-boxes.webp
+            t11-blind-taste-master.webp
+            t12-menu-tongue-twister.webp
+            t13-silent-ordering.webp
+            t14-convenience-store-mixologist.webp
+            t15-reverse-npc.webp
+            t16-pawprint-street-tour.webp
+            t17-healing-music-corner.webp
+            t18-blind-style-mix.webp
+            t19-life-backup.webp
+            t20-after-work-switch.webp
+            t21-solo-departure.webp
+            t22-parent-child-happy.webp
+            t23-photo-day.webp
+            t24-night-owl-city.webp
+          )
+          diff -u <(printf '%s\n' "${expected_files[@]}") "$manifest"
+          for file in "${files[@]}"; do
+            [[ "$file" =~ ^t[0-9]{2}-[a-z0-9-]+\.webp$ ]]
+            test -s "$source_dir/$file"
+            size=$(wc -c < "$source_dir/$file" | tr -d ' ')
+            test "$size" -le 180000
+          done
+
+          key_file=$(mktemp)
+          known_hosts=$(mktemp)
+          local_sha=$(mktemp)
+          stage_sha=$(mktemp)
+          final_sha=$(mktemp)
+          readback_dir=$(mktemp -d)
+          rollback_readback_dir=$(mktemp -d)
+          rollback_needed=0
+
+          printf '%s\n' "$ECS_SSH_PRIVATE_KEY" > "$key_file"
+          printf '%s\n' "$ECS_SSH_KNOWN_HOSTS" > "$known_hosts"
+          chmod 600 "$key_file" "$known_hosts"
+          source ci/deploy-lib.sh
+          ssh_pin_identity "$key_file" "$known_hosts"
+          target="${ECS_SSH_USER}@${ECS_SSH_HOST}"
+
+          ssh_retry() {
+            local attempt last_status
+            for attempt in 1 2 3 4 5; do
+              if ssh "${ssh_opts[@]}" "$@"; then
+                return 0
+              else
+                last_status=$?
+              fi
+              if [ "$last_status" -ne 255 ]; then
+                return "$last_status"
+              fi
+              if [ "$attempt" -eq 5 ]; then
+                echo "::error::SSH failed after $attempt attempts" >&2
+                return "$last_status"
+              fi
+              echo "SSH attempt $attempt/5 failed; retrying" >&2
+              sleep $((attempt * 5))
+            done
+          }
+
+          scp_retry() {
+            local attempt last_status
+            for attempt in 1 2 3 4 5; do
+              if scp "${ssh_opts[@]}" "$@"; then
+                return 0
+              else
+                last_status=$?
+              fi
+              if [ "$attempt" -eq 5 ]; then
+                echo "::error::SCP failed after $attempt attempts" >&2
+                return "$last_status"
+              fi
+              echo "SCP attempt $attempt/5 failed; retrying" >&2
+              sleep $((attempt * 5))
+            done
+          }
+
+          cleanup() {
+            status=$?
+            set +e
+            if [ "$status" -ne 0 ] && [ "$rollback_needed" -eq 1 ]; then
+              ssh_retry "$target" \
+                "test -f '$backup_dir/transaction-ready'"
+              ready_status=$?
+              if [ "$ready_status" -eq 0 ]; then
+                echo "::warning::上传或回读失败，正在恢复 24 张旧封面"
+                ssh_retry "$target" \
+                  "bash '$transaction_script' rollback '$remote_dir' '$backup_dir' '$transaction_lock' '$transaction_owner' '$run_key' ${files[*]}"
+                rollback_status=$?
+              elif [ "$ready_status" -eq 1 ]; then
+                echo "上传在事务就绪前失败，生产文件尚未开始覆盖"
+                rollback_status=0
+              else
+                echo "::error::无法判断远端事务是否已开始，等待服务器 watchdog 兜底"
+                rollback_status=$ready_status
+              fi
+              if [ "$ready_status" -eq 0 ] && [ "$rollback_status" -eq 0 ]; then
+                for file in "${files[@]}"; do
+                  scp_retry "$target:$backup_dir/$file" \
+                    "$rollback_readback_dir/$file" || { rollback_status=$?; break; }
+                  curl --fail --silent --show-error --retry 4 --retry-delay 2 \
+                    -H 'Cache-Control: no-cache' \
+                    "$public_base/$file?rollback_run=$run_key" \
+                    -o "$readback_dir/$file" || { rollback_status=$?; break; }
+                  cmp "$rollback_readback_dir/$file" "$readback_dir/$file" \
+                    || { rollback_status=$?; break; }
+                done
+              fi
+              if [ "$rollback_status" -ne 0 ]; then
+                echo "::error::旧封面恢复或恢复后回读失败，必须人工处理 backup_dir=$backup_dir"
+                status=70
+              elif [ "$ready_status" -eq 0 ]; then
+                echo "24/24 old cover bytes restored on server and public URLs"
+              fi
+            fi
+            ssh_retry "$target" "rm -rf -- '$stage_dir'" 2>/dev/null || true
+            rm -f "$key_file" "$known_hosts" "$local_sha" "$stage_sha" "$final_sha"
+            rm -rf "$readback_dir" "$rollback_readback_dir"
+            exit "$status"
+          }
+          trap cleanup EXIT
+
+          (cd "$source_dir" && shasum -a 256 "${files[@]}") > "$local_sha"
+
+          ssh_retry "$target" \
+            "set -euo pipefail; test -d '$remote_dir'; command -v flock >/dev/null; for file in ${files[*]}; do test -f '$remote_dir/'\"\$file\"; done; install -d -m 0755 '$stage_dir' '$backup_dir'"
+
+          scp_retry "${files[@]/#/$source_dir/}" "$target:$stage_dir/"
+          scp_retry ci/template-cover-transaction.sh \
+            "$target:$stage_dir/template-cover-transaction.sh"
+          ssh_retry "$target" \
+            "install -m 0755 '$stage_dir/template-cover-transaction.sh' '$transaction_script'"
+          ssh_retry "$target" \
+            "cd '$stage_dir' && sha256sum ${files[*]}" > "$stage_sha"
+          diff -u "$local_sha" "$stage_sha"
+
+          rollback_needed=1
+          # apply 不是普通幂等读操作：若远端已执行、但连接在回执前断开，盲目重试会
+          # 与原事务并发。失败时交给 cleanup + owner/watchdog 判实况并回滚，整轮再重跑。
+          ssh "${ssh_opts[@]}" "$target" \
+            "bash '$transaction_script' apply '$remote_dir' '$stage_dir' '$backup_dir' '$confirm_file' '$transaction_lock' '$transaction_owner' '$run_key' ${files[*]}"
+
+          ssh_retry "$target" \
+            "cd '$remote_dir' && sha256sum ${files[*]}" > "$final_sha"
+          diff -u "$local_sha" "$final_sha"
+          echo "24/24 server cover bytes match the upload package"
+
+          for file in "${files[@]}"; do
+            curl --fail --silent --show-error --retry 4 --retry-delay 2 \
+              -H 'Cache-Control: no-cache' \
+              "$public_base/$file?preview_run=$run_key" \
+              -o "$readback_dir/$file"
+            cmp "$source_dir/$file" "$readback_dir/$file"
+          done
+          echo "24/24 public cover bytes match the upload package"
+          ssh_retry "$target" \
+            "bash '$transaction_script' confirm '$confirm_file' '$transaction_lock' '$transaction_owner' '$run_key'"
+          rollback_needed=0
+          echo "backup_dir=$backup_dir"

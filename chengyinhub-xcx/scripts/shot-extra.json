@@ -1,0 +1,199 @@
+[
+ {
+  "id": "E01",
+  "file": "E01-addressinfo-form.png",
+  "route": "/pages/addressinfo/addressinfo",
+  "role": "player",
+  "state": "form",
+  "data": null,
+  "expect": {
+   "selector": "input",
+   "min": 1
+  },
+  "control": "real-data",
+  "priority": "P0",
+  "blocked": "",
+  "note": "矩阵缺口补拍",
+  "fixtureVerified": false
+ },
+ {
+  "id": "E02",
+  "file": "E02-coop-withdraw.png",
+  "route": "/pages/coop/withdraw/index",
+  "role": "merchant",
+  "state": "normal",
+  "data": null,
+  "expect": {
+   "selector": "view",
+   "min": 1
+  },
+  "control": "real-data",
+  "priority": "P0",
+  "blocked": "",
+  "note": "矩阵缺口补拍",
+  "fixtureVerified": false
+ },
+ {
+  "id": "E03",
+  "file": "E03-coop-withdraw-records.png",
+  "route": "/pages/coop/withdraw/records/index",
+  "role": "merchant",
+  "state": "normal",
+  "data": null,
+  "expect": {
+   "selector": "view",
+   "min": 1
+  },
+  "control": "real-data",
+  "priority": "P0",
+  "blocked": "",
+  "note": "矩阵缺口补拍",
+  "fixtureVerified": false
+ },
+ {
+  "role": "player",
+  "control": "setData",
+  "priority": "P0",
+  "blocked": "",
+  "fixtureVerified": false,
+  "id": "E10",
+  "file": "E10-play-screen-intro.png",
+  "route": "/pages/play/index?mock=city",
+  "state": "normal",
+  "data": {
+   "screen": "intro"
+  },
+  "expect": {
+   "selector": ".full",
+   "min": 1
+  },
+  "note": "play intro 屏：矩阵 6 张 screen 全是空串，从没进过内屏"
+ },
+ {
+  "role": "player",
+  "control": "setData",
+  "priority": "P0",
+  "blocked": "",
+  "fixtureVerified": false,
+  "id": "E11",
+  "file": "E11-play-screen-gamelaunch.png",
+  "route": "/pages/play/index?mock=city",
+  "state": "normal",
+  "data": {
+   "screen": "gameLaunch",
+   "game": {
+    "nodeId": 3,
+    "num": 3,
+    "vm": 1,
+    "title": "旧书店的第三排",
+    "cover": "/images/route_city_cover.png",
+    "chips": [
+     {
+      "ic": "⏱",
+      "v": "15 分钟"
+     },
+     {
+      "ic": "◇",
+      "v": "中等"
+     }
+    ],
+    "story": "推门进去，右手第三排书架最上层，有一本没有书名的书。",
+    "rule": "找到那本书，翻到夹着书签的一页。",
+    "materials": "手机 · 一支笔",
+    "qname": "书签夹着的那一页，页码是多少？",
+    "opts": [
+     {
+      "k": "A",
+      "v": "37"
+     },
+     {
+      "k": "B",
+      "v": "73"
+     },
+     {
+      "k": "C",
+      "v": "137"
+     },
+     {
+      "k": "D",
+      "v": "173"
+     }
+    ],
+    "audioDur": "01:12",
+    "hint1": "从上往下数第三层。",
+    "hintCount": 2
+   },
+   "ruleOpen": false
+  },
+  "expect": {
+   "selector": ".gl-rule, .cta-orange",
+   "min": 1
+  },
+  "note": "节点任务 A · 启动屏"
+ },
+ {
+  "role": "player",
+  "control": "setData",
+  "priority": "P0",
+  "blocked": "",
+  "fixtureVerified": false,
+  "id": "E12",
+  "file": "E12-play-screen-gameplay.png",
+  "route": "/pages/play/index?mock=city",
+  "state": "normal",
+  "data": {
+   "screen": "gamePlay",
+   "game": {
+    "nodeId": 3,
+    "num": 3,
+    "vm": 1,
+    "title": "旧书店的第三排",
+    "cover": "/images/route_city_cover.png",
+    "chips": [
+     {
+      "ic": "⏱",
+      "v": "15 分钟"
+     },
+     {
+      "ic": "◇",
+      "v": "中等"
+     }
+    ],
+    "story": "推门进去，右手第三排书架最上层，有一本没有书名的书。",
+    "rule": "找到那本书，翻到夹着书签的一页。",
+    "materials": "手机 · 一支笔",
+    "qname": "书签夹着的那一页，页码是多少？",
+    "opts": [
+     {
+      "k": "A",
+      "v": "37"
+     },
+     {
+      "k": "B",
+      "v": "73"
+     },
+     {
+      "k": "C",
+      "v": "137"
+     },
+     {
+      "k": "D",
+      "v": "173"
+     }
+    ],
+    "audioDur": "01:12",
+    "hint1": "从上往下数第三层。",
+    "hintCount": 2
+   },
+   "answerSel": "",
+   "gWrong": false,
+   "canHint": true,
+   "hintLabel": "1/2"
+  },
+  "expect": {
+   "selector": ".gp-top",
+   "min": 1
+  },
+  "note": "节点任务 B · 进行屏，含 gp-top「退出 ›」——本次首拍"
+ }
+]

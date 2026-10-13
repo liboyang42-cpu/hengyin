@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.NpcLineCacheMapper">
+
+  <resultMap id="BaseResultMap" type="com.chengyinhub.business.domain.NpcLineCache">
+    <id column="id" property="id"/>
+    <result column="profile_id" property="profileId"/>
+    <result column="event_type" property="eventType"/>
+    <result column="node_id" property="nodeId"/>
+    <result column="variants_json" property="variantsJson"/>
+    <result column="audit_status" property="auditStatus"/>
+    <result column="create_time" property="createTime"/>
+    <result column="update_time" property="updateTime"/>
+  </resultMap>
+
+  <!--
+    取已审话术:优先绑定到具体 node 的(node_id DESC 让非 NULL 排前),再取通用的。
+    version DESC:话术更新走「新 version 行 + 旧行 audit_status 置 0」。
+    ⚠️ uk_line_version 唯一键<b>不阻止</b>两个 version 同时 audit_status=1,
+       所以 version DESC 是真防线不是装饰 —— 少了它,新旧两版同时生效时取哪条是掷骰子。
+    ⚠️ 既有行经 migration_npc_governance_v1.sql 的 DEFAULT 1 自动落 v1,本排序对其无害。
+  -->
+  <select id="selectByProfileAndEvent" resultMap="BaseResultMap">
+    SELECT * FROM npc_line_cache
+    WHERE profile_id = #{param1} AND event_type = #{param2}
+      AND audit_status = 1
+      AND (node_id = #{param3} OR node_id IS NULL)
+    ORDER BY node_id DESC, version DESC
+    LIMIT 1
+  </select>
+
+</mapper>

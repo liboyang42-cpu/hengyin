@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ClubCrmMapper">
+
+    <!-- 口径说明(改这段前先读):
+         · 归属:报名挂在本俱乐部的主题(cms_topic.club_id)或本俱乐部的社群活动(cms_activity.club_id)下。
+           不用 cms_registration.source_club_id —— 它只覆盖 2026-08-15 之后冻结的单,历史行是 NULL,
+           两条口径不等价,混用会让老客户凭空消失。
+         · 支付态:payment_status 2=已支付 4=已退款;只统计这两态(0/1/3 是没成交的单)。
+         · 到店:verification_status=1;待核销 = 已支付且未核销;已退款 = payment_status=4。
+         · 实付:payable_amount 缺失时回落 total_amount(与商家 CRM 同口径)。
+         · 手机号取 ums_member.phone(明文列);cms_registration.phone 是 AES-GCM 密文,取了没用。
+           这里**不做脱敏**,脱敏在 Service 统一做一次 —— SQL 里各写一份掩码表达式必然漂移。 -->
+
+    <sql id="ClubRegistrationScope">
+        r.payment_status in (2, 4)
+        and (
+            (r.owner_type = 1 and exists (
+                select 1 from cms_topic t
+                where t.id = r.owner_id and t.del_flag = 0 and t.club_id = #{clubId}))
+            or
+            (r.owner_type = 2 and exists (
+                select 1 from cms_activity a
+                where a.id = r.owner_id and a.del_flag = 0 and a.club_id = #{clubId}))
+        )
+    </sql>
+
+    <sql id="ClubCustomerAggregate">
+        r.member_id as member_id,
+        coalesce(nullif(max(u.nickname), ''), concat('成员#', r.member_id)) as display_name,
+        max(u.avatar) as avatar,
+        max(u.phone) as phone,
+        sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) as verified_count,
+        sum(case when r.payment_status = 2 and (r.verification_status is null or r.verification_status &lt;&gt; 1) then 1 else 0 end) as pending_count,
+        sum(case when r.payment_status = 4 then 1 else 0 end) as refunded_count,
+        coalesce(sum(case when r.payment_status = 2 then coalesce(r.payable_amount, r.total_amount, 0) else 0 end), 0) as paid_amount,
+        max(coalesce(r.verification_time, r.create_time)) as last_interaction_time
+    </sql>
+
+    <resultMap id="RawCustomer" type="com.chengyinhub.business.domain.vo.ClubCustomerVO$RawCustomer">
+        <result property="memberId" column="member_id"/>
+        <result property="displayName" column="display_name"/>
+        <result property="avatar" column="avatar"/>
+        <result property="phone" column="phone"/>
+        <result property="verifiedCount" column="verified_count"/>
+        <result property="pendingCount" column="pending_count"/>
+        <result property="refundedCount" column="refunded_count"/>
+        <result property="paidAmount" column="paid_amount"/>
+        <result property="lastInteractionTime" column="last_interaction_time"/>
+        <result property="lastTopicName" column="last_topic_name"/>
+    </resultMap>
+
+    <resultMap id="Record" type="com.chengyinhub.business.domain.vo.ClubCustomerVO$Record">
+        <result property="key" column="record_key"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="title" column="title"/>
+        <result property="occurredAt" column="occurred_at"/>
+        <result property="statusCode" column="status_code"/>
+    </resultMap>
+
+    <resultMap id="RawTopicRow" type="com.chengyinhub.business.domain.vo.ClubCustomerVO$RawTopicRow">
+        <result property="registrationId" column="registration_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="displayName" column="display_name"/>
+        <result property="avatar" column="avatar"/>
+        <result property="phone" column="phone"/>
+        <result property="orderNo" column="order_no"/>
+        <result property="paymentStatus" column="payment_status"/>
+        <result property="verificationStatus" column="verification_status"/>
+        <result property="verificationTime" column="verification_time"/>
+        <result property="sessionTime" column="session_time"/>
+        <result property="sessionId" column="session_id"/>
+        <result property="reviewTime" column="review_time"/>
+    </resultMap>
+
+    <resultMap id="Profile" type="com.chengyinhub.business.domain.vo.ClubCustomerVO$Profile">
+        <result property="memberId" column="member_id"/>
+        <result property="tagsJson" column="tags_json"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <select id="selectClubCustomers" resultMap="RawCustomer">
+        select agg.*, (
+            select coalesce(t2.name, a2.name)
+            from cms_registration r2
+            left join cms_topic t2 on t2.id = r2.owner_id and r2.owner_type = 1
+            left join cms_activity a2 on a2.id = r2.owner_id and r2.owner_type = 2
+            where r2.member_id = agg.member_id
+              and r2.payment_status = 2
+              and (
+                (r2.owner_type = 1 and t2.club_id = #{clubId} and t2.del_flag = 0)
+                or (r2.owner_type = 2 and a2.club_id = #{clubId} and a2.del_flag = 0))
+            order by r2.create_time desc
+            limit 1
+        ) as last_topic_name
+        from (
+            select <include refid="ClubCustomerAggregate"/>
+            from cms_registration r
+            join ums_member u on u.id = r.member_id and u.del_flag = 0
+            left join club_customer_profile p on p.club_id = #{clubId} and p.member_id = r.member_id
+            where <include refid="ClubRegistrationScope"/>
+            <!-- ⚠️ 2026-09-02 安全审查:原本还有 `or u.phone like concat('%', #{keyword}, '%')`。
+                 那一条把服务端的手机号掩码变成了**可枚举的预言机**:
+                 列表下发的是 PiiCryptoService.maskPhone 的 `138****5621`(前 3 后 4 已知),
+                 而 LIKE 是非锚定子串匹配 —— 拿 keyword 逐位延长试探,"这个客户在不在结果里"
+                 就是一个布尔回答,约 40 次请求即可把中间 4 位还原成完整 11 位号码。
+                 它还额外给出反向查询能力:拿一份外部号码名单逐个当 keyword 打进来,
+                 就能判定"这个号码是不是我俱乐部的客户"—— 这是掩码视图本身给不了的。
+                 ⇒ 字段确实没下发,号码照样能被取回,PR 声明「任何一档都不下发原始号码」在事实层面不成立。
+                 本端点也没有 @RateLimiter(同包内其它接口用了 25 次),无频控无审计。
+                 修法与兄弟实现对齐:商家 CRM 的同形功能刻意只搜昵称
+                 (MerchantCrmAppMapper.xml:122),这里跟它走。
+                 确需按手机号找人时,要做全 11 位精确等值匹配(不留部分匹配的试探面)
+                 且要求 MEMBER_LIST_READ,那是另一张卡。 -->
+            <if test="keyword != null and keyword != ''">
+                and coalesce(nullif(u.nickname, ''), '') like concat('%', #{keyword}, '%')
+            </if>
+            <if test="filter == 'remark'">
+                and (p.remark is not null and p.remark &lt;&gt; '')
+            </if>
+            group by r.member_id
+            <if test="filter == 'repeat'">
+                having sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) &gt;= 2
+            </if>
+            <if test="filter == 'new'">
+                having sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) &lt;= 1
+            </if>
+            order by last_interaction_time desc
+            limit #{limit}
+        ) agg
+    </select>
+
+    <select id="countClubCustomers" resultType="int">
+        select count(distinct r.member_id)
+        from cms_registration r
+        where <include refid="ClubRegistrationScope"/>
+    </select>
+
+    <select id="countClubCustomersNewThisMonth" resultType="int">
+        select count(*) from (
+            select r.member_id, min(r.create_time) as first_time
+            from cms_registration r
+            where <include refid="ClubRegistrationScope"/>
+            group by r.member_id
+            having first_time &gt;= date_format(curdate(), '%Y-%m-01')
+        ) firsts
+    </select>
+
+    <select id="selectClubCustomerSummary" resultMap="RawCustomer">
+        select <include refid="ClubCustomerAggregate"/>
+        from cms_registration r
+        join ums_member u on u.id = r.member_id and u.del_flag = 0
+        where r.member_id = #{memberId}
+          and <include refid="ClubRegistrationScope"/>
+        group by r.member_id
+    </select>
+
+    <select id="selectClubCustomerRecords" resultMap="Record">
+        select
+            concat('reg-', r.id) as record_key,
+            case when r.owner_type = 1 then r.owner_id else a.topic_id end as topic_id,
+            coalesce(t.name, a.name) as title,
+            date_format(coalesce(r.verification_time, r.create_time), '%Y-%m-%d') as occurred_at,
+            case when r.payment_status = 4 then 'REFUNDED'
+                 when r.verification_status = 1 then 'VERIFIED'
+                 else 'PENDING' end as status_code
+        from cms_registration r
+        left join cms_topic t on t.id = r.owner_id and r.owner_type = 1
+        left join cms_activity a on a.id = r.owner_id and r.owner_type = 2
+        where r.member_id = #{memberId}
+          and <include refid="ClubRegistrationScope"/>
+        order by coalesce(r.verification_time, r.create_time) desc
+        limit #{limit}
+    </select>
+
+    <!-- J2:主题内客户。场次 = 挂在这个主题下的 cms_activity;主题直售(owner_type=1)归到 session 0。 -->
+    <select id="selectTopicCustomers" resultMap="RawTopicRow">
+        select
+            r.id as registration_id,
+            r.member_id as member_id,
+            coalesce(nullif(u.nickname, ''), concat('成员#', r.member_id)) as display_name,
+            u.avatar as avatar,
+            u.phone as phone,
+            r.parent_order_no as order_no,
+            r.payment_status as payment_status,
+            r.verification_status as verification_status,
+            r.verification_time as verification_time,
+            coalesce(a.start_date, t.start_date) as session_time,
+            coalesce(a.id, 0) as session_id,
+            <!-- K3 稿的第四态「已评价」:评价事实在 merchant_review 上,按 registration_id 关联。
+                 只认对外可见的那一档(VISIBLE)—— 待审/被隐藏的评价不该让客户在俱乐部这边看起来「已评价」。
+                 同一单理论上只会有一条(下单-核销-评价一一对应),用 min 兜住历史脏数据,不让它翻倍成多行。 -->
+            (select min(mr.create_time) from merchant_review mr
+              where mr.registration_id = r.id and mr.status = 'VISIBLE') as review_time
+        from cms_registration r
+        join ums_member u on u.id = r.member_id and u.del_flag = 0
+        left join cms_topic t on t.id = r.owner_id and r.owner_type = 1
+        left join cms_activity a on a.id = r.owner_id and r.owner_type = 2
+        where r.payment_status in (2, 4)
+          and (
+            (r.owner_type = 1 and t.id = #{topicId} and t.club_id = #{clubId} and t.del_flag = 0)
+            or (r.owner_type = 2 and a.topic_id = #{topicId} and a.club_id = #{clubId} and a.del_flag = 0)
+          )
+        order by session_time asc, r.create_time asc
+    </select>
+
+    <!-- 第二轮拍板第 1 条:主理人侧统计。口径与 selectTopicCustomers 一致(主题单 + 本俱乐部场次单),只数已支付(2):
+         · nodeCount:主题下上架节点(status=1,与游玩侧下架闸 isDelistedNode 同口径);
+         · sessionHeadcount 是人数:按每单订票数 order_num 求和(与 selectCountGroupByDate 同口径,空值按 1);
+           待核销/我核销的仍按单计(核销以报名单为粒度);
+         · activityId 给了 = 「本场」:该场次的场次单,加上在该场次被带队核销的主题单(coop_group_member_verify);
+           未核销的主题单说不清属于哪一场,不计入本场;
+         · 我核销的 = cms_registration.verifier_id(核销 CAS 写入的核销人)是查看者本人。
+         主题不属于本俱乐部 / 已删 ⇒ where 不命中 ⇒ 返回 null,Service 判「不存在」。 -->
+    <select id="selectTopicManageStats" resultType="java.util.LinkedHashMap">
+        select
+            t.member_id as ownerMemberId,
+            (select count(*) from cms_topic_node n where n.topic_id = t.id and n.status = 1) as nodeCount,
+            coalesce(sum(case when r.id is null then 0 else ifnull(r.order_num, 1) end), 0) as sessionHeadcount,
+            coalesce(sum(case when r.verification_status is null or r.verification_status &lt;&gt; 1 then 1 else 0 end), 0) as pendingVerifyCount,
+            coalesce(sum(case when r.verification_status = 1 and r.verifier_id = #{viewerId} then 1 else 0 end), 0) as verifiedByMeCount,
+            <!-- 本场真状态(核销区可见性用):取消 > 游戏总局状态 > 按服务端时钟对排期。
+                 带 activityId 就是那一场(须属本主题本俱乐部);不带时主题下恰好一场才算,多场说不清是哪场给 null。 -->
+            (select case when a.cancel_time is not null then 'CANCELLED'
+                         when gs.status is not null then gs.status
+                         when a.end_date &lt;= now() then 'FINISHED'
+                         when a.start_date &lt;= now() then 'RUNNING'
+                         else 'NOT_PREPARED' end
+               from cms_activity a
+               left join game_session gs on gs.activity_id = a.id
+              where a.topic_id = t.id and a.club_id = #{clubId} and a.del_flag = 0
+              <choose>
+                  <when test="activityId != null">and a.id = #{activityId}</when>
+                  <otherwise>and 1 = (select count(*) from cms_activity a2
+                                      where a2.topic_id = t.id and a2.club_id = #{clubId} and a2.del_flag = 0)</otherwise>
+              </choose>) as sessionStatus
+        from cms_topic t
+        left join cms_registration r
+          on r.payment_status = 2
+         and (
+            <choose>
+                <when test="activityId != null">
+                    (r.owner_type = 2 and r.owner_id = #{activityId}
+                        and exists (select 1 from cms_activity a where a.id = #{activityId}
+                                    and a.topic_id = t.id and a.club_id = #{clubId} and a.del_flag = 0))
+                    or (r.owner_type = 1 and r.owner_id = t.id
+                        and exists (select 1 from coop_group_member_verify g
+                                    where g.registration_id = r.id and g.activity_id = #{activityId})
+                        <!-- 场次必须属于查看的俱乐部:否则承接方传发起方的 activityId 就能读到对方的主题票人数 -->
+                        and exists (select 1 from cms_activity a where a.id = #{activityId}
+                                    and a.topic_id = t.id and a.club_id = #{clubId} and a.del_flag = 0))
+                </when>
+                <otherwise>
+                    (r.owner_type = 1 and r.owner_id = t.id and t.club_id = #{clubId})
+                    or (r.owner_type = 2 and exists (select 1 from cms_activity a where a.id = r.owner_id
+                                    and a.topic_id = t.id and a.club_id = #{clubId} and a.del_flag = 0))
+                </otherwise>
+            </choose>
+         )
+        <!-- CU-C-13(2026-09-23):承接方俱乐部(主题有指向它的生效合作单,与 isTopicOwner / selectEffectiveOrdersByTopicId
+             同口径)也要能看自己承接的场次;场次与人数一律按「查看的俱乐部」自己的 cms_activity 数,
+             主题票(owner_type=1)只算给发起俱乐部。未承接的俱乐部仍然拿不到任何数。 -->
+        where t.id = #{topicId} and t.del_flag = 0
+          and (t.club_id = #{clubId}
+               or exists (select 1 from coop_order o
+                          where o.topic_id = t.id and o.to_type = 'club' and o.to_id = #{clubId}
+                            and o.status = 0 and o.del_flag = 0
+                            and not exists (select 1 from coop_invite legacy_invite
+                                            where legacy_invite.id = o.invite_id and legacy_invite.invite_type = 2)))
+        group by t.id
+    </select>
+
+    <select id="selectProfile" resultMap="Profile">
+        select member_id, tags_json, remark
+        from club_customer_profile
+        where club_id = #{clubId} and member_id = #{memberId}
+    </select>
+
+    <select id="selectProfiles" resultMap="Profile">
+        select member_id, tags_json, remark
+        from club_customer_profile
+        where club_id = #{clubId}
+    </select>
+
+    <!-- 覆盖式保存:(club_id, member_id) 唯一键上 upsert。requestId 只留痕,不做去重 —— 这一版
+         的写是幂等的(整列覆盖),重放同一份内容结果一致。 -->
+    <insert id="upsertProfile">
+        insert into club_customer_profile
+            (club_id, member_id, tags_json, remark, updated_by, request_id)
+        values
+            (#{clubId}, #{memberId}, #{tagsJson}, #{remark}, #{updatedBy}, #{requestId})
+        on duplicate key update
+            tags_json = values(tags_json),
+            remark = values(remark),
+            updated_by = values(updated_by),
+            request_id = values(request_id)
+    </insert>
+
+    <resultMap id="RawCheckinRow" type="com.chengyinhub.business.domain.vo.ClubCustomerVO$RawCheckinRow">
+        <result property="registrationId"     column="registration_id"/>
+        <result property="displayName"        column="display_name"/>
+        <result property="avatar"             column="avatar"/>
+        <result property="phone"              column="phone"/>
+        <result property="orderNo"            column="order_no"/>
+        <result property="ticketName"         column="ticket_name"/>
+        <result property="orderNum"           column="order_num"/>
+        <result property="payableAmount"      column="payable_amount"/>
+        <result property="paymentTime"        column="payment_time"/>
+        <result property="paymentStatus"      column="payment_status"/>
+        <result property="verificationStatus" column="verification_status"/>
+        <result property="verificationTime"   column="verification_time"/>
+        <result property="sessionTime"        column="session_time"/>
+        <result property="reviewTime"         column="review_time"/>
+        <result property="topicName"          column="topic_name"/>
+        <result property="topicCover"         column="topic_cover"/>
+        <result property="operatorName"       column="operator_name"/>
+        <result property="storeName"          column="store_name"/>
+    </resultMap>
+
+    <!-- Figma K3 核销详情 · 俱乐部端。归属判定与 selectTopicCustomers 同口径:
+         报名单必须落在本俱乐部的主题(或其活动)下,clubId 进 where 而不是查完再比。
+         核销门店/操作人取自 verifier:有商家身份给店名,没有就给 null,由服务端整形成「—」。 -->
+    <select id="selectCheckinDetail" resultMap="RawCheckinRow">
+        select
+            r.id as registration_id,
+            coalesce(nullif(u.nickname, ''), concat('成员#', r.member_id)) as display_name,
+            u.avatar as avatar,
+            u.phone as phone,
+            r.parent_order_no as order_no,
+            r.ticket_name as ticket_name,
+            r.order_num as order_num,
+            r.payable_amount as payable_amount,
+            r.payment_time as payment_time,
+            r.payment_status as payment_status,
+            r.verification_status as verification_status,
+            r.verification_time as verification_time,
+            coalesce(a.start_date, t.start_date) as session_time,
+            <!-- 与列表同一判据(见 selectTopicCustomers):只认对外可见的评价。
+                 详情页不查这一列,K3 那条四步轨迹的第四格永远亮不起来。 -->
+            (select min(mr.create_time) from merchant_review mr
+              where mr.registration_id = r.id and mr.status = 'VISIBLE') as review_time,
+            coalesce(t.name, a.name) as topic_name,
+            coalesce(t.img_url, a.img_url) as topic_cover,
+            nullif(vu.nickname, '') as operator_name,
+            nullif(vm.name, '') as store_name
+        from cms_registration r
+        join ums_member u on u.id = r.member_id and u.del_flag = 0
+        left join cms_topic t on t.id = r.owner_id and r.owner_type = 1
+        left join cms_activity a on a.id = r.owner_id and r.owner_type = 2
+        left join ums_member vu on vu.id = r.verifier_id and vu.del_flag = 0
+        left join mms_merchant vm on vm.member_id = r.verifier_id and vm.del_flag = 0
+        where r.id = #{registrationId}
+          and (
+            (r.owner_type = 1 and t.id is not null and t.club_id = #{clubId} and t.del_flag = 0)
+            or (r.owner_type = 2 and a.id is not null and a.club_id = #{clubId} and a.del_flag = 0)
+          )
+        limit 1
+    </select>
+</mapper>

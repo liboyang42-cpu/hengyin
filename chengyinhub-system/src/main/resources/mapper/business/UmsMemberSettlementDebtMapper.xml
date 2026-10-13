@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.UmsMemberSettlementDebtMapper">
+
+    <resultMap id="DebtResult" type="com.chengyinhub.business.domain.UmsMemberSettlementDebt">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="sourceType" column="source_type"/>
+        <result property="sourceId" column="source_id"/>
+        <result property="amount" column="amount"/>
+        <result property="repaidAmount" column="repaid_amount"/>
+        <result property="status" column="status"/>
+        <result property="dueTime" column="due_time"/>
+    </resultMap>
+
+    <insert id="insertIgnore" parameterType="com.chengyinhub.business.domain.UmsMemberSettlementDebt">
+        INSERT IGNORE INTO ums_member_settlement_debt
+            (member_id, source_type, source_id, amount, repaid_amount, status, due_time, create_time)
+        VALUES (#{memberId}, #{sourceType}, #{sourceId}, #{amount}, 0, 0, #{dueTime}, NOW())
+    </insert>
+
+    <select id="selectOpenByMemberForUpdate" resultMap="DebtResult">
+        SELECT id, member_id, source_type, source_id, amount, repaid_amount, status, due_time
+        FROM ums_member_settlement_debt
+        WHERE member_id = #{memberId} AND status = 0
+        ORDER BY id
+        FOR UPDATE
+    </select>
+
+    <!-- MySQL 单表 UPDATE 的 SET 自左向右求值:status 读到的是已加过的 repaid_amount -->
+    <update id="addRepaid">
+        UPDATE ums_member_settlement_debt
+        SET repaid_amount = repaid_amount + #{amount},
+            status = IF(repaid_amount &gt;= amount, 1, 0),
+            update_time = NOW()
+        WHERE id = #{id} AND status = 0 AND repaid_amount + #{amount} &lt;= amount
+    </update>
+
+    <select id="countOverdueByMember" resultType="int">
+        SELECT COUNT(*) FROM ums_member_settlement_debt
+        WHERE member_id = #{memberId} AND status = 0 AND due_time &lt;= NOW()
+    </select>
+</mapper>

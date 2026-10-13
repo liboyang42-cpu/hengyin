@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.FourLedgerReconcileMapper">
+
+    <!-- ★只读:六个字段的部分投影,供对账用,不是订单详情查询。 -->
+    <resultMap type="CmsRegistration" id="PaidWechatRegistrationResult">
+        <result property="id"                   column="id"                    />
+        <result property="registrationNo"       column="registration_no"      />
+        <result property="paymentStatus"        column="payment_status"       />
+        <result property="paymentType"          column="payment_type"         />
+        <result property="payableAmount"        column="payable_amount"       />
+        <result property="wechatPaymentAmount"  column="wechat_payment_amount"/>
+        <result property="pointPaymentAmount"   column="point_payment_amount" />
+        <result property="paymentTime"          column="payment_time"         />
+    </resultMap>
+
+    <!-- payment_status=2 已支付;payment_type in (1,2) 含微信支付部分(1纯微信/2积分+微信),
+         排除 payment_type=0(纯积分,无微信侧交易,不进本维度对账)。 -->
+    <select id="selectPaidWechatRegistrationsByBillDate" resultMap="PaidWechatRegistrationResult">
+        select id, registration_no, payment_status, payment_type,
+               payable_amount, wechat_payment_amount, point_payment_amount, payment_time
+        from cms_registration
+        where payment_status = 2
+          and payment_type in (1, 2)
+          and payment_time &gt;= #{billDate}
+          and payment_time &lt; date_add(#{billDate}, interval 1 day)
+    </select>
+
+    <select id="sumBalanceIncomeByMember" resultType="java.math.BigDecimal">
+        select sum(change_balance) from ums_member_balance_detail
+        where member_id = #{memberId} and change_type = 1 and del_flag = 0
+    </select>
+
+    <select id="sumBalanceExpenseByMember" resultType="java.math.BigDecimal">
+        select sum(change_balance) from ums_member_balance_detail
+        where member_id = #{memberId} and change_type = 2 and del_flag = 0
+    </select>
+
+</mapper>

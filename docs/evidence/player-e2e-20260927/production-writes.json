@@ -1,0 +1,103 @@
+[
+  {
+    "at": "2026-09-28T06:38:09.066Z",
+    "route": "pages/play/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/run-session/save",
+    "method": "POST",
+    "ids": {
+      "activityId": "24"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1676,
+    "resultIds": {},
+    "account": 100096
+  },
+  {
+    "at": "2026-09-28T06:38:22.370Z",
+    "route": "pages/template/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/run-session/save",
+    "method": "POST",
+    "ids": {
+      "activityId": "24"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2350,
+    "resultIds": {},
+    "account": 100096
+  },
+  {
+    "at": "2026-09-28T06:47:01.136Z",
+    "route": "pages/activity/baoming/baoming",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/compliance/consents",
+    "method": "POST",
+    "ids": {
+      "docType": "activity_host_data_sharing",
+      "scene": "activity_signup",
+      "eventType": "AGREE",
+      "requestId": "consent-1790578021135-fx98rpgz"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 7324,
+    "resultIds": {},
+    "account": 100096
+  },
+  {
+    "at": "2026-09-28T06:47:08.493Z",
+    "route": "pages/activity/baoming/baoming",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/create",
+    "method": "POST",
+    "ids": {
+      "ownerId": "24",
+      "ownerType": 2,
+      "ticketId": 93,
+      "requestId": "req_1790578028491_aowevkft"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1760,
+    "resultIds": {
+      "registrationId": 77
+    },
+    "account": 100096
+  },
+  {
+    "at": "2026-09-28T06:50:48.522Z",
+    "route": "pages/topic/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/run-session/save",
+    "method": "POST",
+    "ids": {
+      "activityId": "24"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2552,
+    "resultIds": {},
+    "account": 100096
+  },
+  {
+    "at": "2026-09-28T06:56:10.647Z",
+    "route": "pages/roam/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/compliance/consents",
+    "method": "POST",
+    "ids": {
+      "docType": "privacy_policy",
+      "scene": "roam_location",
+      "eventType": "AGREE",
+      "requestId": "consent-1790578570647-5lq23w8v"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2083,
+    "resultIds": {},
+    "account": 100096
+  }
+]

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.GrowthMissionProgressMapper">
+
+    <select id="hasRegistrationAward" resultType="boolean">
+        select count(*) from growth_mission_progress
+        where member_id = #{memberId} and mission_code = #{missionCode}
+          and biz_type = 'registration' and biz_id = #{registrationId}
+        for update
+    </select>
+
+    <insert id="insertMissionProgress" parameterType="GrowthMissionProgress">
+        insert ignore into growth_mission_progress
+        (member_id, mission_code, biz_type, biz_id, progress_date, complete_count, reward_exp, create_time, update_time)
+        values
+        (#{memberId}, #{missionCode}, #{bizType}, #{bizId}, date(#{progressDate}), #{completeCount}, #{rewardExp}, #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="selectMemberProgress" resultType="GrowthMissionProgress">
+        select id, member_id as memberId, mission_code as missionCode, biz_type as bizType,
+               biz_id as bizId, progress_date as progressDate, complete_count as completeCount,
+               reward_exp as rewardExp,
+               create_time as createTime, update_time as updateTime
+        from growth_mission_progress
+        where member_id = #{memberId}
+        order by progress_date desc, id desc
+        limit 100
+    </select>
+    <!-- 第二轮拍板第 4 条:通关奖励冲回标记。每项奖励一行(mission_code 区分积分/XP/券),reward_exp=0 不改周榜分数;
+         只在那项奖励确实被冲回时写,重新通关补发这项后即删(消费),防止换场次反复补发、防止倒补历史通关者。
+         for update:补发路径先锁会员行再当前读,两个并发通关请求只有一个能看到并消费标记。 -->
+    <select id="selectCompletionClawbackMarkersForUpdate" resultType="java.lang.String">
+        select distinct mission_code from growth_mission_progress
+        where member_id = #{memberId} and biz_type = 'topic_completion_clawback' and biz_id = #{topicId}
+        for update
+    </select>
+
+    <select id="countCompletionClawbackMarkers" resultType="int">
+        select count(*) from growth_mission_progress
+        where member_id = #{memberId} and biz_type = 'topic_completion_clawback' and biz_id = #{topicId}
+    </select>
+
+    <delete id="deleteCompletionClawbackMarker">
+        delete from growth_mission_progress
+        where member_id = #{memberId} and biz_type = 'topic_completion_clawback' and biz_id = #{topicId}
+          and mission_code = #{missionCode}
+    </delete>
+
+    <!-- 第二轮拍板第 4 条:后台撤销核销勾选「同时冲回积分和经验」用。 -->
+    <select id="selectRegistrationAwardsForUpdate" resultType="GrowthMissionProgress">
+        select id, member_id as memberId, mission_code as missionCode, biz_type as bizType,
+               biz_id as bizId, progress_date as progressDate, complete_count as completeCount,
+               reward_exp as rewardExp, create_time as createTime, update_time as updateTime
+        from growth_mission_progress
+        where member_id = #{memberId} and biz_type = 'registration' and biz_id = #{registrationId}
+        order by id
+        for update
+    </select>
+
+    <!-- 冲回后原发放行改挂 registration_clawed/自身 id:hasRegistrationAward 不再命中 ⇒ 再核销可重新发;
+         biz_id 用行自身 id 保证 uk_growth_progress_idem 永不撞(同日「核销→冲回→再核销→再冲回」)。 -->
+    <update id="markRegistrationAwardClawed">
+        update growth_mission_progress
+        set biz_type = 'registration_clawed', biz_id = id, update_time = now()
+        where id = #{id} and biz_type = 'registration'
+    </update>
+
+</mapper>

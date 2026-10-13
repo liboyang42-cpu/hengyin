@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.EventSignupMapper">
+
+    <resultMap type="EventSignup" id="EventSignupResult">
+        <result property="id"            column="id"             />
+        <result property="eventId"       column="event_id"       />
+        <result property="memberId"      column="member_id"      />
+        <result property="status"        column="status"         />
+        <result property="progress"      column="progress"       />
+        <result property="rewardClaimed" column="reward_claimed" />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectEventSignupVo">
+        select id, event_id, member_id, status, progress, reward_claimed, create_time, update_time
+        from event_signup
+    </sql>
+
+    <!-- uk_event_member 冲突时 insert ignore 幂等 -->
+    <insert id="insertIgnore" parameterType="EventSignup" useGeneratedKeys="true" keyProperty="id">
+        insert ignore into event_signup (event_id, member_id, status, progress, reward_claimed, create_time)
+        values (#{eventId}, #{memberId},
+                <choose><when test="status != null">#{status}</when><otherwise>1</otherwise></choose>,
+                <choose><when test="progress != null">#{progress}</when><otherwise>0</otherwise></choose>,
+                0, now())
+    </insert>
+
+    <select id="selectByEventAndMember" resultMap="EventSignupResult">
+        <include refid="selectEventSignupVo"/>
+        where event_id = #{eventId} and member_id = #{memberId} limit 1
+    </select>
+
+    <select id="countByEvent" resultType="int">
+        select count(1) from event_signup where event_id = #{eventId}
+    </select>
+
+    <select id="countDoneByEvent" resultType="int">
+        select count(1) from event_signup where event_id = #{eventId} and status &gt;= 3
+    </select>
+
+    <select id="sumProgressByEvent" resultType="int">
+        select coalesce(sum(progress), 0) from event_signup where event_id = #{eventId}
+    </select>
+
+    <select id="selectByMember" resultMap="EventSignupResult">
+        <include refid="selectEventSignupVo"/>
+        where member_id = #{memberId}
+        order by id desc
+    </select>
+
+    <select id="selectByEvent" resultMap="EventSignupResult">
+        <include refid="selectEventSignupVo"/>
+        where event_id = #{eventId}
+    </select>
+
+    <update id="updateEventSignup" parameterType="EventSignup">
+        update event_signup
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="status != null">status = #{status},</if>
+            <if test="progress != null">progress = #{progress},</if>
+            <if test="rewardClaimed != null">reward_claimed = #{rewardClaimed},</if>
+            update_time = now(),
+        </trim>
+        where id = #{id}
+    </update>
+
+    <!-- 原子领取:WHERE reward_claimed=0 保证并发/重跑下仅一次抢到,返回 1 才可发奖 -->
+    <update id="claimReward">
+        update event_signup
+        set reward_claimed = 1,
+            status = case when status is null or status &lt; #{rewardedStatus} then #{rewardedStatus} else status end,
+            update_time = now()
+        where id = #{id} and (reward_claimed is null or reward_claimed = 0)
+    </update>
+
+</mapper>

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ViewRegistrationMerchantMapper">
+
+    <resultMap type="ViewRegistrationMerchant" id="ViewRegistrationMerchantResult">
+        <!-- 原有字段映射保持不变 -->
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="topicId"    column="topic_id"    />
+        <result property="mode"    column="mode"    />
+        <result property="nodeId"    column="node_id"    />
+        <result property="address"    column="address"    />
+        <result property="addressName"    column="address_name"    />
+        <result property="longitude"    column="longitude"    />
+        <result property="latitude"    column="latitude"    />
+        <result property="templateId"    column="template_id"    />
+        <result property="picUrl"    column="pic_url"    />
+        <result property="email"    column="email"    />
+        <result property="startDate"    column="start_date"    />
+        <result property="endDate"    column="end_date"    />
+        <result property="cooperateDate"    column="cooperate_date"    />
+        <result property="activityDesc"    column="activity_desc"    />
+        <result property="limitNum"    column="limit_num"    />
+        <result property="ruleInstructions"    column="rule_instructions"    />
+        <result property="validationMethod"    column="validation_method"    />
+        <result property="questionName"    column="question_name"    />
+        <result property="questionAnswer"    column="question_answer"    />
+        <result property="feedbackText"    column="feedback_text"    />
+        <result property="couponId"    column="coupon_id"    />
+        <result property="questionA"    column="question_a"    />
+        <result property="questionB"    column="question_b"    />
+        <result property="questionC"    column="question_c"    />
+        <result property="questionD"    column="question_d"    />
+        <result property="correctAnswer"    column="correct_answer"    />
+        <result property="status"    column="status"    />
+        <result property="sharingRate"    column="sharing_rate"    />
+        <result property="sharingAmount"    column="sharing_amount"    />
+        <result property="reason"    column="reason"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="topicMemberId"    column="topic_member_id"    />
+        <result property="topicType"    column="topic_type"    />
+        <result property="relatedTopicId"    column="related_topic_id"    />
+        <result property="topicName"    column="topic_name"    />
+        <result property="topicSubtitle"    column="topic_subtitle"    />
+        <result property="topicDescription"    column="topic_description"    />
+        <result property="topicAddressName"    column="topic_address_name"    />
+        <result property="totalTime"    column="total_time"    />
+        <result property="totalMileage"    column="total_mileage"    />
+        <result property="locationCount"    column="location_count"    />
+        <result property="templateCount"    column="template_count"    />
+        <result property="topicStartDate"    column="topic_start_date"    />
+        <result property="topicEndDate"    column="topic_end_date"    />
+        <result property="topicImgUrl"    column="topic_img_url"    />
+        <result property="topicImgArr"    column="topic_img_arr"    />
+        <result property="categoryIds"    column="category_ids"    />
+        <result property="topicStatus"    column="topic_status"    />
+        <result property="topicReason"    column="topic_reason"    />
+        <result property="userStatus"    column="user_status"    />
+        <result property="merchantStatus"    column="merchant_status"    />
+        <result property="merchantSignUpStartDate"    column="merchant_sign_up_start_date"    />
+        <result property="merchantSignUpEndDate"    column="merchant_sign_up_end_date"    />
+        <result property="topicDelFlag"    column="topic_del_flag"    />
+        <result property="isSync"    column="is_sync"    />
+        <result property="isRecommend"    column="is_recommend"    />
+        <result property="topicCheckStatus"    column="topic_check_status"    />
+        <result property="isSettlement"    column="is_settlement"    />
+        <result property="topicCreateBy"    column="topic_create_by"    />
+        <result property="topicCreateTime"    column="topic_create_time"    />
+        <result property="topicUpdateBy"    column="topic_update_by"    />
+        <result property="topicUpdateTime"    column="topic_update_time"    />
+        <result property="displayStatus"    column="display_status"    />
+        <result property="isInProgress"    column="is_in_progress"    />
+        <result property="isEnded"    column="is_ended"    />
+        <result property="isUnderReview"    column="is_under_review"    />
+        <result property="isRejected"    column="is_rejected"    />
+
+        <!-- 新增searchStatus字段映射（如果需要在结果集中返回） -->
+        <result property="searchStatus"    column="search_status"    />
+    </resultMap>
+
+    <sql id="selectViewRegistrationMerchantVo">
+        select id, member_id, topic_id, mode, node_id, address, address_name, longitude, latitude, template_id, pic_url, email, start_date, end_date, cooperate_date, activity_desc, limit_num, rule_instructions, validation_method, question_name, question_answer, feedback_text, coupon_id, question_a, question_b, question_c, question_d, correct_answer, status, audit_time, sharing_rate, sharing_amount, reason, del_flag, create_by, create_time, update_by, update_time, topic_member_id, topic_type, related_topic_id, topic_name, topic_subtitle, topic_description, topic_address_name, total_time, total_mileage, location_count, template_count, topic_start_date, topic_end_date, topic_img_url, topic_img_arr, category_ids, topic_status, topic_reason, user_status, merchant_status, merchant_sign_up_start_date, merchant_sign_up_end_date, topic_del_flag, is_sync, is_recommend, topic_check_status, is_settlement, topic_create_by, topic_create_time, topic_update_by, topic_update_time, display_status, is_in_progress, is_ended, is_under_review, is_rejected from view_registration_merchant
+    </sql>
+
+    <select id="selectViewRegistrationMerchantList" parameterType="ViewRegistrationMerchant" resultMap="ViewRegistrationMerchantResult">
+        <include refid="selectViewRegistrationMerchantVo"/>
+        <where>
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="topicId != null "> and topic_id = #{topicId}</if>
+            <if test="mode != null "> and mode = #{mode}</if>
+            <if test="nodeId != null "> and node_id = #{nodeId}</if>
+
+            <!-- 新增searchStatus查询条件：使用视图中的计算字段 -->
+            <if test="searchStatus != null">
+                <choose>
+                    <!-- 0: 全部 -->
+                    <when test="searchStatus == 0">
+                        <!-- 不添加额外条件，显示全部 -->
+                    </when>
+
+                    <!-- 1: 进行中 -->
+                    <when test="searchStatus == 1">
+                        and is_in_progress = 1
+                    </when>
+
+                    <!-- 2: 审核中 -->
+                    <when test="searchStatus == 2">
+                        and is_under_review = 1
+                    </when>
+
+                    <!-- 3: 已驳回 -->
+                    <when test="searchStatus == 3">
+                        and is_rejected = 1
+                    </when>
+
+                    <!-- 4: 已结束 -->
+                    <when test="searchStatus == 4">
+                        and is_ended = 1
+                    </when>
+
+                    <!-- 如果searchStatus是其他值，可以添加默认处理 -->
+                    <otherwise>
+                        <!-- 可以按searchStatus的值直接匹配status字段 -->
+                        and status = #{searchStatus}
+                    </otherwise>
+                </choose>
+            </if>
+        </where>
+        order by id desc
+    </select>
+
+    <select id="selectViewRegistrationMerchantById" parameterType="Long" resultMap="ViewRegistrationMerchantResult">
+        <include refid="selectViewRegistrationMerchantVo"/>
+        where id = #{id}
+    </select>
+
+</mapper>

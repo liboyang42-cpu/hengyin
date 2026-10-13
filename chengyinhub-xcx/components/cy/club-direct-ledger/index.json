@@ -1,0 +1,7 @@
+{
+  "component": true,
+  "usingComponents": {
+    "cy-skeleton": "/components/cy/skeleton/index",
+    "cy-inline-error": "/components/cy/inline-error/index"
+  }
+}

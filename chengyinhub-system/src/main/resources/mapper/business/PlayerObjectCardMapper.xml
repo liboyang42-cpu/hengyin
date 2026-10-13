@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PlayerObjectCardMapper">
+
+    <resultMap type="PlayerObjectCard" id="PlayerObjectCardResult">
+        <result property="id"          column="id"           />
+        <result property="memberId"    column="member_id"    />
+        <result property="sourceUrl"   column="source_url"   />
+        <result property="cutoutUrl"   column="cutout_url"   />
+        <result property="cutoutBox"   column="cutout_box"   />
+        <result property="title"       column="title"        />
+        <result property="category"    column="category"     />
+        <result property="caption"     column="caption"      />
+        <result property="cardStyle"   column="card_style"   />
+        <result property="originType"  column="origin_type"  />
+        <result property="originId"    column="origin_id"    />
+        <result property="createTime"  column="create_time"  />
+        <result property="updateTime"  column="update_time"  />
+        <result property="genStatus"    column="gen_status"    />
+        <result property="framesPrefix" column="frames_prefix" />
+        <result property="frameCount"   column="frame_count"   />
+        <result property="place" column="place" />
+    </resultMap>
+
+    <sql id="selectPlayerObjectCardVo">
+        select id, member_id, source_url, cutout_url, cutout_box, title, category, caption, card_style,
+               origin_type, origin_id, create_time, update_time,
+               gen_status, frames_prefix, frame_count
+        from player_object_card
+    </sql>
+
+    <!-- 一条语句完成「没有就铸、有就覆盖」:覆盖哪一行完全由 uk_member_card_origin 决定。
+         create_time 不在更新列表里 —— 重拍改的是这张卡的内容,不是它第一次到手的日期。
+         抠图与分类跟新照片一起覆盖:它们是上一件东西的结果,留着就是新照片配旧贴纸。
+         照片换了,旧 3D 就不是它的了:覆盖时生成状态、帧、模型与服务商任务号一并清空。
+         ⚠️ 清掉 gen_task_id 后,还在路上的旧任务按 (gen_provider, gen_task_id) 找不到这一行 ——
+            生成任务必须把「找不到」当作结果作废,不能回写到别处(Phase 3)。 -->
+    <insert id="upsert" parameterType="PlayerObjectCard" useGeneratedKeys="true" keyProperty="id">
+        insert into player_object_card (member_id, source_url, cutout_url, cutout_box, title, category, caption,
+                                        card_style, origin_type, origin_id, create_time, update_time,
+                                        gen_status, frames_prefix, frame_count)
+        values (#{memberId}, #{sourceUrl}, #{cutoutUrl}, #{cutoutBox}, #{title}, #{category}, #{caption},
+                #{cardStyle}, #{originType}, #{originId}, #{createTime}, #{updateTime},
+                #{genStatus}, #{framesPrefix}, #{frameCount})
+        on duplicate key update
+            source_url = values(source_url),
+            cutout_url = values(cutout_url),
+            cutout_box = values(cutout_box),
+            title = values(title),
+            category = values(category),
+            caption = values(caption),
+            card_style = values(card_style),
+            update_time = values(update_time),
+            gen_status = values(gen_status),
+            frames_prefix = values(frames_prefix),
+            frame_count = values(frame_count),
+            model_url = null,
+            gen_task_id = null,
+            gen_provider = null,
+            gen_error = null,
+            gen_queued_at = null
+    </insert>
+
+    <!-- 藏品册:分类筛选在库里做(计数同一个条件,「共 N 件」才对得上)。
+         地点 = 主题名 · 节点名:origin_id 在 PLAY 时就是节点 id。节点删了就没有地点,卡照常列。 -->
+    <select id="selectByMember" resultMap="PlayerObjectCardResult">
+        select c.id, c.member_id, c.source_url, c.cutout_url, c.cutout_box, c.title, c.category, c.caption,
+               c.card_style, c.origin_type, c.origin_id, c.create_time, c.update_time,
+               c.gen_status, c.frames_prefix, c.frame_count,
+               nullif(concat_ws(' · ', t.name, n.name), '') as place
+        from player_object_card c
+        left join cms_topic_node n on c.origin_type = 'PLAY' and n.id = c.origin_id
+        left join cms_topic t on t.id = n.topic_id
+        where c.member_id = #{memberId}
+        <if test="category != null">and c.category = #{category}</if>
+        order by c.create_time desc, c.id desc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="countByMember" resultType="int">
+        select count(1) from player_object_card c
+        where c.member_id = #{memberId}
+        <if test="category != null">and c.category = #{category}</if>
+    </select>
+
+    <update id="renameOwned">
+        update player_object_card
+        set title = #{title}, update_time = now()
+        where id = #{id} and member_id = #{memberId}
+    </update>
+
+    <select id="selectOwnedById" resultMap="PlayerObjectCardResult">
+        <include refid="selectPlayerObjectCardVo"/>
+        where id = #{id} and member_id = #{memberId}
+    </select>
+
+</mapper>

@@ -1,0 +1,285 @@
+{
+  "date": "2026-10-05",
+  "timezone": "America/Los_Angeles",
+  "worktree": "/Users/arlan/.codex/worktrees/thought-config-1005/chengyin",
+  "branch": "feature/thought-config-1005",
+  "sourceCommit": "ffa5b50d0452467c4b70101473f0a5a1c3e824d9",
+  "productCommit": "7cb08c99e8f303efa2bd74fb9baaa0eadafb6c2e",
+  "service": "https://www.chengyinhub.com/prod-api",
+  "scope": "伏笔添加、配置完成、正文引用、结局关联、草稿恢复，以及玩家获得/应验/结束的待验链",
+  "result": "未完整通过",
+  "counts": {
+    "stages": 9,
+    "localPassed": 2,
+    "issues": 2,
+    "unverified": 5
+  },
+  "stages": [
+    {
+      "id": "F01",
+      "label": "主题详情添加伏笔、两个必填项、完成返回",
+      "status": "已验证通过",
+      "scope": "本地草稿；输入值通过组件 input 事件，入口和完成按钮使用原生 tap"
+    },
+    {
+      "id": "F02",
+      "label": "新页面恢复本机草稿",
+      "status": "已验证通过",
+      "scope": "独立新页面从同一 draftUuid 恢复文字、步数、引用；不代表服务器保存"
+    },
+    {
+      "id": "F03",
+      "label": "正文插入伏笔、玩家能遇到它",
+      "status": "发现问题",
+      "issue": "TH-FLOW-01"
+    },
+    {
+      "id": "F04",
+      "label": "结局章选择伏笔、完成回填",
+      "status": "未验证",
+      "scope": "组件 change 事件回填和完成保存已补充验证；原生开关和下拉的物理操作未验证"
+    },
+    {
+      "id": "F05",
+      "label": "编辑章后新建普通章、再配置结局章",
+      "status": "发现问题",
+      "issue": "TH-FLOW-02"
+    },
+    {
+      "id": "F06",
+      "label": "合法作者服务器保存、独立重开",
+      "status": "未验证",
+      "reason": "当前连接正式服务，尚未提供允许测试的主题/场次和对应合法作者；未执行正式写操作"
+    },
+    {
+      "id": "F07",
+      "label": "玩家获得伏笔、重开、重复认领、跨局隔离",
+      "status": "未验证",
+      "reason": "正常作者路径被正文插入入口缺失阻断；尚无本轮对应合法持票玩家"
+    },
+    {
+      "id": "F08",
+      "label": "真实微信步数累计、应验、拒绝授权与重复/跨日",
+      "status": "未验证",
+      "reason": "缺真机运动密文及合法玩家场次；内部规则测试通过不能代替真机"
+    },
+    {
+      "id": "F09",
+      "label": "正常通关播放应验结局、未应验兜底、结束后重开",
+      "status": "未验证",
+      "reason": "作者—服务器—真实玩家正向链尚未建立；不能用作者预览选结局代替服务端判定"
+    }
+  ],
+  "issues": [
+    {
+      "id": "TH-FLOW-01",
+      "priority": "P1",
+      "domain": "伏笔",
+      "role": "作者/玩家",
+      "prerequisite": "当前新建城市定向草稿；已在主题详情配置一个伏笔",
+      "steps": [
+        "主题详情→添加伏笔→填写步数和文字→完成",
+        "创建章节→点正文插入缝的＋"
+      ],
+      "expected": "能把已配置伏笔放入正文，在指定位置让玩家获得",
+      "actual": "菜单仅文字、图片、音频、地点、玩法，没有伏笔；中间插入缝和末尾插入缝均未绑定 insertStoryThoughtAt",
+      "evidence": [
+        "03-insert-menu-missing-thought.png",
+        "native-observations.json"
+      ],
+      "impact": "新配置只有步数和文字且没有 when 条件；玩家认领要求已到达正文 thought 块。定义完仍缺玩家获得的位置，应验结局的正常链中断。后半段是本地运行规则定位，不是正式服务器实跑。",
+      "root": "pages/publish/fabu/index.wxml 两个插入菜单没有绑定已存在的 insertStoryThoughtAt；后端认领读取冻结正文中的 thought 块",
+      "recommendation": "在两个正文插入缝接回现有伏笔插入动作；引用主题详情里完成后的同一个伏笔，不新增第二个配置真源",
+      "retest": "从正常添加配置进入正文插入，保存重开保留 thoughtKey；合法玩家读到后服务器认领/步数应验并读回，最后选择应验或兜底结局"
+    },
+    {
+      "id": "TH-FLOW-02",
+      "priority": "P2",
+      "domain": "章节/结局",
+      "role": "作者",
+      "prerequisite": "正常创建第一章，经下一步编辑章节信息后完成",
+      "steps": [
+        "完成第一章章节设置",
+        "点添加章节",
+        "配置第二章为伏笔应验结局并完成（本轮结局选择通过组件 change 事件）",
+        "再次正常点击添加章节"
+      ],
+      "expected": "新章节使用新标识，默认普通章，结局条件由作者明确设置",
+      "actual": "第二、第三章都沿用第一章 lid1；第三章未经设置自动继承第二章 ending，并在界面显示结局",
+      "evidence": [
+        "07-third-chapter-ending-label.png",
+        "native-observations.json"
+      ],
+      "impact": "新建普通章会被误标为结局，内部标识重复；未实跑正式保存后的错关联，不把该风险写为已发生的服务器数据损失",
+      "root": "_createChapterDirect 复用 chapterForm 未清 id/_localId/ending；confrimChapter 用已有 _localId 并在编辑后保留这些字段",
+      "recommendation": "新建时使用干净的章节草稿并生成新标识，清除上章的结局条件；继续复用既有编辑/完成动作",
+      "retest": "编辑普通章/结局章后连续创建三章；三个标识唯一，新章均默认普通章，之前结局和正文不串写"
+    }
+  ],
+  "releaseBlockers": [
+    "TH-FLOW-01 阻断新伏笔的正常作者—玩家路径",
+    "TH-FLOW-02 需修正新建章节状态隔离后再进行整本故事验证"
+  ],
+  "backendTests": {
+    "command": "mvn -q -pl chengyinhub-admin -am -Dtest=ApiPlayThoughtSyncTest,ChapterBlockThoughtFlowTest,ChapterEndingFlowTest,TopicRouteRuntimeServiceImplTest,PlayJourneyStoryServiceImplTest -Dsurefire.failIfNoSpecifiedTests=false test",
+    "exit": 0,
+    "summary": "backend-test-summary.json",
+    "log": "backend-tests.txt",
+    "limit": "五套内部/Mock测试，不是正式服务或微信真人验收"
+  },
+  "restored": {
+    "sameForm": true,
+    "chapterCount": 0,
+    "rulesEmpty": true
+  },
+  "freshRestore": {
+    "route": "pages/publish/fabu/index",
+    "chapterCount": 0,
+    "rulesEmpty": true,
+    "thoughtCount": 0,
+    "editorOpen": false,
+    "fromStoredDraft": true
+  },
+  "sourceEdits": 0,
+  "productionWrites": 0,
+  "releaseActions": 0,
+  "resumeOrder": [
+    "修正两个作者路径问题",
+    "正常配置正文 thought 块及一个应验结局、一个兜底结局",
+    "使用用户提供的允许测试主题/场次和合法作者、玩家身份，保存并跨页面/接口读回",
+    "真机授权微信运动，验证累计应验、重复、跨日和拒绝授权",
+    "真实通关后核对服务端结局、重进/重复操作；不重置原完成局"
+  ],
+  "historicalEvidence": [
+    "此前 105 项小程序配置检查已通过，此轮不重跑",
+    "桌面既有交接将伏笔合法服务器保存—玩家获得—应验仍列为待验，本轮未把旧单元/预览截图升级为完整通过"
+  ],
+  "connectionPlan": {
+    "newPageNeeded": false,
+    "flow": [
+      "主题详情添加唯一伏笔，填写步数和文字，底部完成保存配置",
+      "章节正文的加号引用同一个伏笔，确定玩家获得的位置",
+      "现有章节设置关联伏笔应验结局，并配置一个兜底结局",
+      "玩家读到正文获得伏笔，通过微信运动同步进度",
+      "正常通关后，服务端选应验或兜底结局，播放结局章，再进入完成页"
+    ],
+    "repairs": [
+      "接回两个正文插入菜单的既有伏笔动作",
+      "新建章节清除上一章标识和结局设置",
+      "在推进至结束前完成步数同步，覆盖所有完成入口"
+    ],
+    "sourceRisk": {
+      "id": "TH-FLOW-03",
+      "evidenceKind": "当前代码时序定位，未做真实末站复现",
+      "observation": "arrive 成功后才调用 _syncThoughts，且未等待；服务端完成动作会将路线局置为 COMPLETED，而 syncThoughts 仅允许 RUNNING。末站新增步数无法通过这次事后同步计入。扫码等其他完成入口未调用同步。",
+      "sources": [
+        "chengyinhub-xcx/pages/play/index.js:4452",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java:3011",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:674",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:332"
+      ],
+      "retest": "获得伏笔后，最后一段步数恰好达标，再正常完成末站；独立读回伏笔应验标签和服务端结局。未授权或同步失败的流程也需核对。"
+    },
+    "limit": "不新增独立伏笔页面，不改变已确认弹窗；真实作者保存、玩家认领、微信运动和通关尚未完成验收。",
+    "superseded": true,
+    "correction": "伏笔配置属于编辑主题；正文只有文字、图片、音频、地点，玩法位于地点中。不再以正文插入伏笔作为配置弹窗的验收条件。"
+  },
+  "snapshotKind": "历史走查；正文插入伏笔的流程假定已撤回，最新以 latestPopupCorrection 为准",
+  "currentRepair": {
+    "date": "2026-10-05",
+    "status": "三处修复已完成；本机草稿和本地试玩通过，真实服务与微信全链路待验",
+    "sourceCommit": "3bb834d561b3b675cc86a430b7cfad184684f0fb",
+    "repairs": [
+      {
+        "id": "TH-FLOW-01",
+        "status": "已修复、本机复测通过",
+        "result": "两个正文插入菜单引用主题已保存的唯一伏笔"
+      },
+      {
+        "id": "TH-FLOW-02",
+        "status": "已修复、本机复测通过",
+        "result": "新章节使用干净表单；三个标识唯一，新的普通章不继承旧结局"
+      },
+      {
+        "id": "TH-FLOW-03",
+        "status": "已修复、相关时序测试通过",
+        "result": "所有推进入口在写入前等待认领和步数同步，使用同步后的版本；真实末站未复现"
+      }
+    ],
+    "checks": {
+      "miniTests": {
+        "passed": 123,
+        "failed": 0,
+        "logs": [
+          "unit-tests.txt",
+          "related-tests.txt"
+        ]
+      },
+      "syntax": true,
+      "scopeLint": true,
+      "nativeWxmlCompile": true,
+      "nativeWxssCompile": true,
+      "fullUiGate": {
+        "passed": false,
+        "before": 38,
+        "after": 38,
+        "newNormalizedIssues": 0,
+        "comparison": "ui-gate-comparison.json"
+      }
+    },
+    "restoration": {
+      "initialRestored": {
+        "route": "pages/publish/fabu/index",
+        "chapterCount": 0,
+        "rulesEmpty": true,
+        "sameForm": true
+      },
+      "freshPageReadback": {
+        "route": "pages/publish/fabu/index",
+        "draftUuid": "muv1wb1v-kryk37",
+        "chapterCount": 0,
+        "rulesEmpty": true,
+        "thoughtCount": 0,
+        "editorOpen": false,
+        "fromStoredDraft": true
+      }
+    },
+    "productionWrites": 0,
+    "releaseActions": 0,
+    "stepGallery": "../connected/index.html",
+    "verification": "../connected/verification.json",
+    "remaining": [
+      "允许测试的主题/场次和合法作者、玩家",
+      "保存并独立重开及服务器读回",
+      "真机运动：获得、累计、重复、拒绝授权、跨日和最后一站刚好达标",
+      "服务端选择应验/兜底结局、结局章、结局卡、完成弹窗、重进"
+    ],
+    "supersededByPopupCorrection": true
+  },
+  "latestPopupCorrection": {
+    "sourceCommit": "470a9403c745daa83a456090904fe12d23fdc8a9",
+    "scope": "编辑主题→主题详情→原有伏笔弹窗；撤回错误正文入口及说明",
+    "withdrawnFinding": "TH-FLOW-01：正文没有伏笔插入入口并非用户要求的缺陷",
+    "requirements": [
+      "一个伏笔",
+      "步数在上、文字在下，两项必填",
+      "保留灰色输入框与原有底部弹窗",
+      "没有名称输入、内容标题、垃圾桶、顶部完成或继续添加",
+      "底部完成返回主题详情",
+      "正文仅文字、图片、音频、地点；玩法保留在地点配置"
+    ],
+    "status": "主题伏笔弹窗与四项正文菜单已核对",
+    "checks": {
+      "passed": 45,
+      "failed": 0,
+      "log": "tests.txt",
+      "syntax": true,
+      "scopeLint": true
+    },
+    "verification": "../theme-popup/verification.json",
+    "gallery": "../theme-popup/index.html"
+  },
+  "withdrawnFindings": [
+    "TH-FLOW-01"
+  ]
+}

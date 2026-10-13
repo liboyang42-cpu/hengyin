@@ -1,0 +1,1018 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.GameSessionRuntimeMapper">
+
+    <resultMap id="GameSessionResult" type="com.chengyinhub.business.domain.GameSession">
+        <id property="id" column="id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="clubId" column="club_id"/>
+        <result property="moduleConfigSnapshotJson" column="module_config_snapshot_json"/>
+        <result property="status" column="status"/>
+        <result property="currentChapterId" column="current_chapter_id"/>
+        <result property="revision" column="revision"/>
+        <result property="preparedBy" column="prepared_by"/>
+        <result property="startedBy" column="started_by"/>
+        <result property="finishedBy" column="finished_by"/>
+        <result property="startedAt" column="started_at"/>
+        <result property="finishedAt" column="finished_at"/>
+        <result property="leaderboardVisible" column="leaderboard_visible"/>
+        <result property="leaderboardUpdatedBy" column="leaderboard_updated_by"/>
+        <result property="leaderboardUpdatedAt" column="leaderboard_updated_at"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="GameStationResult" type="com.chengyinhub.business.domain.GameStationRun">
+        <id property="id" column="id"/>
+        <result property="gameSessionId" column="game_session_id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="nodeId" column="node_id"/>
+        <result property="nodeName" column="node_name"/>
+        <result property="stationCode" column="station_code"/>
+        <result property="merchantMemberId" column="merchant_member_id"/>
+        <result property="sourceType" column="source_type"/>
+        <result property="sourceId" column="source_id"/>
+        <result property="status" column="status"/>
+        <result property="preparationSnapshotJson" column="preparation_snapshot_json"/>
+        <result property="capacity" column="capacity"/>
+        <result property="serviceStartAt" column="service_start_at"/>
+        <result property="serviceEndAt" column="service_end_at"/>
+        <result property="pauseReasonCode" column="pause_reason_code"/>
+        <result property="pauseReason" column="pause_reason"/>
+        <result property="resumeEta" column="resume_eta"/>
+        <result property="fallbackNodeId" column="fallback_node_id"/>
+        <result property="fallbackPlanCode" column="fallback_plan_code"/>
+        <result property="fallbackPlanVersion" column="fallback_plan_version"/>
+        <result property="revision" column="revision"/>
+        <result property="pendingVerificationCount" column="pending_verification_count"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="GamePlayerNodeOutcomeResult" type="com.chengyinhub.business.domain.GamePlayerNodeOutcome">
+        <id property="id" column="id"/>
+        <result property="gameSessionId" column="game_session_id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="stationRunId" column="station_run_id"/>
+        <result property="nodeId" column="node_id"/>
+        <result property="teamId" column="team_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="status" column="status"/>
+        <result property="completionSource" column="completion_source"/>
+        <result property="sourceSubmissionId" column="source_submission_id"/>
+        <result property="sourceReceiptId" column="source_receipt_id"/>
+        <result property="fallbackPlanCode" column="fallback_plan_code"/>
+        <result property="fallbackPlanVersion" column="fallback_plan_version"/>
+        <result property="completedAt" column="completed_at"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <resultMap id="GameRoleResult" type="com.chengyinhub.business.domain.GameTeamRoleAssignment">
+        <id property="id" column="id"/>
+        <result property="gameSessionId" column="game_session_id"/>
+        <result property="teamId" column="team_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="roleCode" column="role_code"/>
+        <result property="roleName" column="role_name"/>
+        <result property="status" column="status"/>
+        <result property="assignedBy" column="assigned_by"/>
+        <result property="supersededBy" column="superseded_by"/>
+        <result property="supersededAt" column="superseded_at"/>
+        <result property="revision" column="revision"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="GameStoryResult" type="com.chengyinhub.business.domain.GameStoryState">
+        <id property="id" column="id"/>
+        <result property="gameSessionId" column="game_session_id"/>
+        <result property="ownerType" column="owner_type"/>
+        <result property="ownerId" column="owner_id"/>
+        <result property="variablesJson" column="variables_json"/>
+        <result property="appliedChoicesJson" column="applied_choices_json"/>
+        <result property="endingCode" column="ending_code"/>
+        <result property="status" column="status"/>
+        <result property="revision" column="revision"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="GameReceiptResult" type="com.chengyinhub.business.domain.GameCommandReceipt">
+        <id property="id" column="id"/>
+        <result property="gameSessionId" column="game_session_id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="nodeId" column="node_id"/>
+        <result property="actorMemberId" column="actor_member_id"/>
+        <result property="actorPerspective" column="actor_perspective"/>
+        <result property="requestId" column="request_id"/>
+        <result property="requestHash" column="request_hash"/>
+        <result property="action" column="action"/>
+        <result property="outcome" column="outcome"/>
+        <result property="reasonCode" column="reason_code"/>
+        <result property="revision" column="revision"/>
+        <result property="resultJson" column="result_json"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="GameSubmissionResult" type="com.chengyinhub.business.domain.GameTaskSubmission">
+        <id property="id" column="id"/>
+        <result property="gameSessionId" column="game_session_id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="stationRunId" column="station_run_id"/>
+        <result property="nodeId" column="node_id"/>
+        <result property="teamId" column="team_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="taskCode" column="task_code"/>
+        <result property="evidenceJson" column="evidence_json"/>
+        <result property="status" column="status"/>
+        <result property="decidedBy" column="decided_by"/>
+        <result property="decisionReasonCode" column="decision_reason_code"/>
+        <result property="decisionReason" column="decision_reason"/>
+        <result property="revision" column="revision"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="GameBroadcastResult" type="com.chengyinhub.business.domain.GameBroadcast">
+        <id property="id" column="id"/>
+        <result property="gameSessionId" column="game_session_id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="senderMemberId" column="sender_member_id"/>
+        <result property="targetType" column="target_type"/>
+        <result property="targetId" column="target_id"/>
+        <result property="roleCode" column="role_code"/>
+        <result property="content" column="content"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="GameDeliveryResult" type="com.chengyinhub.business.domain.GameBroadcastDelivery">
+        <id property="id" column="id"/>
+        <result property="broadcastId" column="broadcast_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="status" column="status"/>
+        <result property="messageId" column="message_id"/>
+        <result property="errorCode" column="error_code"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="sessionColumns">
+        id, activity_id, topic_id, club_id, module_config_snapshot_json, status, current_chapter_id,
+        revision, prepared_by, started_by, finished_by, started_at, finished_at,
+        leaderboard_visible, leaderboard_updated_by, leaderboard_updated_at, create_time, update_time
+    </sql>
+
+    <sql id="stationColumns">
+        s.id, s.game_session_id, s.activity_id, s.node_id, s.node_name, s.station_code,
+        s.merchant_member_id, s.source_type, s.source_id, s.status, s.preparation_snapshot_json,
+        s.capacity, s.service_start_at, s.service_end_at, s.pause_reason_code, s.pause_reason,
+        s.resume_eta, s.fallback_node_id, s.fallback_plan_code, s.fallback_plan_version,
+        s.revision, s.create_time, s.update_time,
+        (select count(1) from game_task_submission q
+          where q.station_run_id=s.id and q.status='PENDING') as pending_verification_count
+    </sql>
+
+    <sql id="paidActivityMemberExists">
+        exists (select 1 from cms_registration reg
+                 where reg.member_id=m.member_id and reg.owner_type=2 and reg.owner_id=t.owner_id
+                   and reg.payment_status=2 and reg.registration_status=2)
+    </sql>
+
+    <select id="selectSessionByActivity" resultMap="GameSessionResult">
+        select <include refid="sessionColumns"/> from game_session where activity_id=#{activityId} limit 1
+    </select>
+
+    <insert id="insertSession" parameterType="com.chengyinhub.business.domain.GameSession"
+            useGeneratedKeys="true" keyProperty="id">
+        insert ignore into game_session
+        (activity_id, topic_id, club_id, module_config_snapshot_json, status, current_chapter_id,
+         revision, prepared_by, started_by, finished_by, started_at, finished_at,
+         leaderboard_visible, leaderboard_updated_by, leaderboard_updated_at, create_time, update_time)
+        values
+        (#{activityId}, #{topicId}, #{clubId}, #{moduleConfigSnapshotJson}, #{status}, #{currentChapterId},
+         #{revision}, #{preparedBy}, #{startedBy}, #{finishedBy}, #{startedAt}, #{finishedAt},
+         #{leaderboardVisible}, #{leaderboardUpdatedBy}, #{leaderboardUpdatedAt}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="updateSessionCas">
+        update game_session
+           set current_chapter_id=coalesce(#{currentChapterId}, current_chapter_id),
+               started_by=case when #{toStatus}='RUNNING' and status&lt;&gt;'RUNNING' then #{actorMemberId} else started_by end,
+               started_at=case when #{toStatus}='RUNNING' and status&lt;&gt;'RUNNING' then #{now} else started_at end,
+               finished_by=case when #{toStatus}='FINISHED' then #{actorMemberId} else finished_by end,
+               finished_at=case when #{toStatus}='FINISHED' then #{now} else finished_at end,
+               status=#{toStatus}, revision=revision+1, update_time=#{now}
+         where id=#{id} and revision=#{expectedRevision} and status=#{fromStatus}
+           and status not in ('FINISHED','CANCELLED')
+    </update>
+
+    <update id="updateLeaderboardVisibilityCas">
+        update game_session
+           set leaderboard_visible=#{visible}, leaderboard_updated_by=#{actorMemberId},
+               leaderboard_updated_at=#{now}, revision=revision+1, update_time=#{now}
+         where id=#{id} and revision=#{expectedRevision} and status=#{status}
+           and status in ('PREPARING','READY','RUNNING')
+    </update>
+
+    <select id="selectSessionByActivityForUpdate" resultMap="GameSessionResult">
+        select <include refid="sessionColumns"/> from game_session where activity_id=#{activityId} for update
+    </select>
+
+    <select id="countMissingRouteReception" resultType="int">
+        select count(distinct prior.merchant_member_id)
+          from (
+                select s.activity_id, s.topic_id,
+                       case when fallback.id is not null then fallback.merchant_member_id
+                            else station.merchant_member_id end as merchant_member_id
+                  from game_session s
+                  join game_station_run station on station.game_session_id=s.id
+                  join cms_topic_node previous on previous.id=station.node_id and previous.topic_id=s.topic_id
+                  join cms_topic_node target on target.id=#{nodeId} and target.topic_id=s.topic_id
+                  left join cms_topic_node fallback on fallback.id=station.fallback_node_id
+                       and fallback.topic_id=s.topic_id
+                 where s.id=#{sessionId} and s.club_id &gt; 0
+                   and coalesce(previous.sort_id,0) &lt; coalesce(target.sort_id,0)
+               ) prior
+         where prior.merchant_member_id &gt; 0
+           and not exists (
+               select 1 from coop_group_verify receipt
+                where receipt.activity_id=prior.activity_id and receipt.topic_id=prior.topic_id
+                  and receipt.merchant_member_id=prior.merchant_member_id
+           )
+    </select>
+
+    <update id="readyRouteCheckpoints">
+        update game_station_run set status='READY', service_start_at=#{startAt}, service_end_at=#{endAt},
+               update_time=#{now}, revision=revision+1
+         where game_session_id=#{sessionId} and source_type='HOST_NODE' and merchant_member_id is null
+           and status='INVITED'
+    </update>
+
+    <select id="selectClubRouteTeamProgressProjection" resultType="map">
+        select t.id as teamId, coalesce(t.title, '队伍') as teamName,
+               count(distinct m.member_id) as memberCount,
+               count(distinct p.node_id) as completedNodes,
+               (select count(1) from game_station_run sr where sr.game_session_id=s.id) as totalNodes,
+               case when count(distinct p.node_id) &gt;= (select count(1) from game_station_run sr where sr.game_session_id=s.id)
+                    then 'COMPLETED' when count(p.id) &gt; 0 then 'RUNNING' else 'PREPARING' end as status
+          from game_session s
+          join play_team t on t.owner_type=2 and t.owner_id=s.activity_id and t.status in (0,1,2)
+          join play_team_member m on m.team_id=t.id and m.status=1
+          join cms_registration reg on reg.member_id=m.member_id and reg.owner_type=2 and reg.owner_id=s.activity_id
+               and reg.payment_status=2 and reg.registration_status=2
+          left join player_node_progress p on p.member_id=m.member_id and p.activity_id=s.activity_id
+               and p.topic_id=s.topic_id and p.status=1 and p.del_flag=0
+               and exists (select 1 from game_station_run sr where sr.game_session_id=s.id and sr.node_id=p.node_id)
+         where s.id=#{sessionId} group by s.id, t.id, t.title
+    </select>
+
+    <insert id="insertStationsFromTopic">
+        insert ignore into game_station_run
+        (game_session_id, activity_id, node_id, node_name, station_code, merchant_member_id,
+         source_type, source_id, status, revision, create_time, update_time)
+        select #{sessionId}, #{activityId}, n.id, n.name, concat('NODE_', n.id),
+               coalesce(n.merchant_member_id, rm.member_id),
+               case when n.merchant_member_id is not null then 'CHAPTER_NODE'
+                    when rm.id is not null then 'REGISTRATION_WINNER' else 'HOST_NODE' end,
+               case when n.merchant_member_id is not null then n.id
+                    when rm.id is not null then rm.id else n.id end,
+               'INVITED', 0, #{now}, #{now}
+          from cms_topic_node n
+          left join cms_registration_merchant rm
+            on rm.id=(select min(rm2.id) from cms_registration_merchant rm2
+                       where rm2.topic_id=#{topicId} and rm2.node_id=n.id and rm2.audit_status=1
+                         and rm2.status=1 and rm2.del_flag=0)
+         where n.topic_id=#{topicId} and n.status=1
+           and (n.merchant_member_id is null or n.node_audit_status=1)
+    </insert>
+
+    <update id="updateStationCode">
+        update game_station_run set station_code=#{stationCode}
+         where game_session_id=#{sessionId} and node_id=#{nodeId}
+    </update>
+
+    <select id="selectStations" resultMap="GameStationResult">
+        select <include refid="stationColumns"/> from game_station_run s
+         where s.game_session_id=#{sessionId} order by s.id
+    </select>
+
+    <select id="selectMerchantStations" resultMap="GameStationResult">
+        select <include refid="stationColumns"/> from game_station_run s
+         where s.game_session_id=#{sessionId} and s.merchant_member_id=#{merchantMemberId}
+         order by s.id
+    </select>
+
+    <select id="countMerchantOperableStation" resultType="int">
+        select count(1) from game_station_run
+         where merchant_member_id=#{merchantMemberId}
+           and node_id=#{nodeId}
+           and status in ('READY', 'ACTIVE')
+    </select>
+
+    <!-- 商家复盘只返回本站聚合计数；到场事实只用于去重计数，不返回玩家明细。 -->
+    <select id="selectMerchantStationRecaps" resultType="map">
+        select r.id as stationRunId,
+               (select count(distinct p.member_id)
+                  from player_node_progress p
+                 where p.activity_id=r.activity_id and p.topic_id=s.topic_id and p.node_id=r.node_id
+                   and p.checkin_time is not null and p.del_flag=0
+                   and exists (
+                       select 1
+                         from play_team t
+                         join play_team_member m on m.team_id=t.id and m.member_id=p.member_id and m.status=1
+                        where t.owner_type=2 and t.owner_id=r.activity_id and t.status in (0,1,2)
+                          and <include refid="paidActivityMemberExists"/>
+                   )) as arrivedPlayers,
+               (select count(1) from game_task_submission q
+                 where q.game_session_id=r.game_session_id and q.station_run_id=r.id) as submissionCount,
+               (select count(case when q.status='APPROVED' then 1 end) from game_task_submission q
+                 where q.game_session_id=r.game_session_id and q.station_run_id=r.id) as approvedCount,
+               (select count(case when q.status='REJECTED' then 1 end) from game_task_submission q
+                 where q.game_session_id=r.game_session_id and q.station_run_id=r.id) as rejectedCount,
+               (select count(case when q.status='RECORDED' then 1 end) from game_task_submission q
+                 where q.game_session_id=r.game_session_id and q.station_run_id=r.id) as recordedCount,
+               (select count(case when o.status='COMPLETED' then 1 end) from game_player_node_outcome o
+                 where o.game_session_id=r.game_session_id and o.station_run_id=r.id) as normalCompletedCount,
+               (select count(case when o.status='FALLBACK_COMPLETED' then 1 end) from game_player_node_outcome o
+                 where o.game_session_id=r.game_session_id and o.station_run_id=r.id) as fallbackCompletedCount,
+               (select count(1) from game_command_receipt c
+                 where c.game_session_id=r.game_session_id and c.node_id=r.node_id
+                   and c.actor_member_id=r.merchant_member_id and c.actor_perspective='MERCHANT'
+                   and c.action='STATION_PAUSE' and c.outcome='APPLIED') as pauseEventCount,
+               0 as authorizedContentCount,
+               'NO_PUBLIC_CONTENT' as contentPolicy
+          from game_station_run r
+          join game_session s on s.id=r.game_session_id
+         where r.game_session_id=#{sessionId} and r.merchant_member_id=#{merchantMemberId}
+         order by r.id
+    </select>
+
+    <select id="selectMerchantEntries" resultType="com.chengyinhub.business.domain.dto.GameMerchantEntryView">
+        select r.activity_id as activityId,
+               s.topic_id as topicId,
+               a.name as activityName,
+               a.start_date as startAt,
+               a.end_date as endAt,
+               count(distinct r.id) as stationCount
+          from game_station_run r
+          join game_session s on s.id=r.game_session_id and s.activity_id=r.activity_id
+          join cms_activity a on a.id=r.activity_id and a.del_flag=0
+         where r.merchant_member_id=#{merchantMemberId}
+         group by r.activity_id, s.topic_id, a.name, a.start_date, a.end_date
+         order by a.start_date desc, r.activity_id desc
+    </select>
+
+    <select id="selectStation" resultMap="GameStationResult">
+        select <include refid="stationColumns"/> from game_station_run s
+         where s.game_session_id=#{sessionId} and s.node_id=#{nodeId} limit 1
+    </select>
+
+    <update id="updateStationStatusCas">
+        update game_station_run
+           set status=#{toStatus}, preparation_snapshot_json=#{station.preparationSnapshotJson},
+               capacity=#{station.capacity}, service_start_at=#{station.serviceStartAt},
+               service_end_at=#{station.serviceEndAt}, pause_reason_code=#{station.pauseReasonCode},
+               pause_reason=#{station.pauseReason}, resume_eta=#{station.resumeEta},
+               fallback_node_id=#{station.fallbackNodeId}, fallback_plan_code=#{station.fallbackPlanCode},
+               fallback_plan_version=#{station.fallbackPlanVersion}, revision=revision+1, update_time=#{now}
+         where id=#{station.id} and game_session_id=#{station.gameSessionId}
+           and merchant_member_id &lt;=&gt; #{merchantMemberId} and status=#{fromStatus}
+           and revision=#{expectedRevision}
+    </update>
+
+    <update id="activateReadyStations">
+        update game_station_run target
+        left join game_station_run blocker
+          on blocker.game_session_id=target.game_session_id
+         and (blocker.status&lt;&gt;'READY'
+              or blocker.service_start_at is null or blocker.service_end_at is null
+              or blocker.service_start_at&gt;#{now} or blocker.service_end_at&lt;=#{now})
+           set target.status='ACTIVE', target.revision=target.revision+1, target.update_time=#{now}
+         where target.game_session_id=#{sessionId} and target.status='READY'
+           and target.service_start_at&lt;=#{now} and target.service_end_at&gt;#{now}
+           and blocker.id is null
+    </update>
+
+    <update id="closeStations">
+        update game_station_run set status='CLOSED', revision=revision+1, update_time=#{now}
+         where game_session_id=#{sessionId} and status&lt;&gt;'CLOSED'
+    </update>
+
+    <select id="countUnreadyStations" resultType="int">
+        select count(1) from game_station_run
+         where game_session_id=#{sessionId} and status&lt;&gt;'READY'
+    </select>
+
+    <select id="countActiveTeams" resultType="int">
+        select count(distinct t.id) from play_team t
+         where t.owner_type=2 and t.owner_id=#{activityId} and t.status in (0,1,2)
+           and exists (select 1 from play_team_member m where m.team_id=t.id and m.status=1
+                        and <include refid="paidActivityMemberExists"/>)
+    </select>
+
+    <select id="countTeamMembersWithoutRole" resultType="int">
+        select count(1)
+          from play_team t
+          join play_team_member m on m.team_id=t.id and m.status=1
+          left join game_team_role_assignment r
+            on r.game_session_id=#{sessionId} and r.team_id=t.id and r.member_id=m.member_id
+           and r.status='CONFIRMED'
+         where t.owner_type=2 and t.owner_id=#{activityId} and t.status in (0,1,2)
+           and <include refid="paidActivityMemberExists"/>
+           and r.id is null
+    </select>
+
+    <select id="selectActiveTeamId" resultType="long">
+        select t.id from play_team t
+        join play_team_member m on m.team_id=t.id and m.member_id=#{memberId} and m.status=1
+        where t.owner_type=2 and t.owner_id=#{activityId} and t.status in (0,1,2)
+        order by t.id desc limit 1
+    </select>
+
+    <select id="isActiveTeamMember" resultType="int">
+        select count(1) from play_team t
+        join play_team_member m on m.team_id=t.id and m.member_id=#{memberId} and m.status=1
+        where t.id=#{teamId} and t.owner_type=2 and t.owner_id=#{activityId} and t.status in (0,1,2)
+          and <include refid="paidActivityMemberExists"/>
+    </select>
+
+    <select id="isActiveTeam" resultType="int">
+        select count(1) from play_team
+         where id=#{teamId} and owner_type=2 and owner_id=#{activityId} and status in (0,1,2)
+    </select>
+
+    <select id="countRole" resultType="int">
+        select count(1) from game_team_role_assignment
+         where game_session_id=#{sessionId} and role_code=#{roleCode}
+           and status in ('ASSIGNED','CONFIRMED')
+    </select>
+
+    <select id="selectActiveRoleForUpdate" resultMap="GameRoleResult">
+        select id, game_session_id, team_id, member_id, role_code, role_name, status, assigned_by,
+               superseded_by, superseded_at, revision, create_time, update_time
+          from game_team_role_assignment
+         where game_session_id=#{sessionId} and member_id=#{memberId}
+           and status in ('ASSIGNED','CONFIRMED')
+         limit 1 for update
+    </select>
+
+    <update id="supersedeActiveRole">
+        update game_team_role_assignment
+           set status='SUPERSEDED', superseded_by=#{supersededBy}, superseded_at=#{now},
+               revision=revision+1, update_time=#{now}
+         where game_session_id=#{sessionId} and member_id=#{memberId}
+           and status in ('ASSIGNED','CONFIRMED')
+    </update>
+
+    <insert id="insertRole" parameterType="com.chengyinhub.business.domain.GameTeamRoleAssignment"
+            useGeneratedKeys="true" keyProperty="id">
+        insert ignore into game_team_role_assignment
+        (game_session_id, team_id, member_id, role_code, role_name, status, assigned_by,
+         superseded_by, superseded_at, revision, create_time, update_time)
+        values
+        (#{gameSessionId}, #{teamId}, #{memberId}, #{roleCode}, #{roleName}, #{status}, #{assignedBy},
+         #{supersededBy}, #{supersededAt}, #{revision}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="confirmRole">
+        update game_team_role_assignment set status=#{toStatus}, revision=revision+1, update_time=#{now}
+         where game_session_id=#{sessionId} and member_id=#{memberId} and status=#{fromStatus}
+    </update>
+
+    <select id="selectRole" resultMap="GameRoleResult">
+        select id, game_session_id, team_id, member_id, role_code, role_name, status, assigned_by,
+               superseded_by, superseded_at, revision, create_time, update_time
+          from game_team_role_assignment
+         where game_session_id=#{sessionId} and member_id=#{memberId}
+           and status in ('ASSIGNED','CONFIRMED')
+         order by id desc limit 1
+    </select>
+
+    <select id="selectRoles" resultMap="GameRoleResult">
+        select id, game_session_id, team_id, member_id, role_code, role_name, status, assigned_by,
+               superseded_by, superseded_at, revision, create_time, update_time
+          from game_team_role_assignment
+         where game_session_id=#{sessionId} and status in ('ASSIGNED','CONFIRMED')
+         order by team_id, id
+    </select>
+
+    <select id="selectClubMemberProjection" resultType="map">
+        select t.id as teamId, coalesce(t.title, '队伍') as teamName,
+               m.member_id as memberId, coalesce(u.nickname, '玩家') as memberName,
+               r.role_code as roleCode, r.role_name as roleName, r.status
+          from game_session s
+          join play_team t on t.owner_type=2 and t.owner_id=s.activity_id and t.status in (0,1,2)
+          join play_team_member m on m.team_id=t.id and m.status=1
+          left join ums_member u on u.id=m.member_id
+          left join game_team_role_assignment r
+            on r.game_session_id=s.id and r.team_id=t.id and r.member_id=m.member_id
+           and r.status in ('ASSIGNED','CONFIRMED')
+         where s.id=#{sessionId}
+           and <include refid="paidActivityMemberExists"/>
+         order by t.id, m.id
+    </select>
+
+    <!-- 导演台同局队伍进度摘要：卡点、提示和最近命令均来自同局权威事实，不选择证据、位置、手机号。 -->
+    <select id="selectClubTeamProgressProjection" resultType="map">
+        select t.id as teamId, coalesce(t.title, '队伍') as teamName,
+               count(distinct m.member_id) as memberCount,
+               count(distinct case when o.status in ('COMPLETED','FALLBACK_COMPLETED') then o.node_id end) as completedNodes,
+               (select count(1) from game_station_run sr where sr.game_session_id=s.id) as totalNodes,
+               stuck.node_id as currentStuckNodeId,
+               stuck.node_name as currentStuckNodeName,
+               stuck.status as currentStuckStationStatus,
+               stuck_submission.status as currentStuckSubmissionStatus,
+               (select max(cast(json_unquote(json_extract(hint.result_json, '$.hint.currentLevel')) as unsigned))
+                  from game_command_receipt hint
+                  join play_team_member hint_member
+                    on hint_member.team_id=t.id and hint_member.member_id=hint.actor_member_id
+                   and hint_member.status=1
+                 where hint.game_session_id=s.id and hint.node_id=stuck.node_id
+                   and hint.action='PLAYER_HINT' and hint.outcome='APPLIED'
+                   and json_valid(hint.result_json)=1
+                   and json_extract(hint.result_json, '$.hint.currentLevel') is not null
+                   and exists (select 1 from cms_registration hint_reg
+                                where hint_reg.member_id=hint_member.member_id
+                                  and hint_reg.owner_type=2 and hint_reg.owner_id=t.owner_id
+                                  and hint_reg.payment_status=2
+                                  and hint_reg.registration_status=2)) as hintLevel,
+               recent_event.request_id as recentEventRequestId,
+               recent_event.action as recentEventAction,
+               recent_event.outcome as recentEventOutcome,
+               recent_event.reason_code as recentEventReasonCode,
+               recent_event.revision as recentEventRevision,
+               recent_event.update_time as recentEventAt,
+               case
+                 when (select count(1) from game_station_run sr where sr.game_session_id=s.id) &gt; 0
+                  and count(distinct case when o.status in ('COMPLETED','FALLBACK_COMPLETED') then o.node_id end)
+                    &gt;= (select count(1) from game_station_run sr where sr.game_session_id=s.id)
+                   then 'COMPLETED'
+                 when stuck.status in ('PAUSED','CLOSED')
+                   or stuck_submission.status in ('PENDING','REJECTED') then 'BLOCKED'
+                 when count(o.id) &gt; 0 or recent_event.id is not null then 'RUNNING'
+                 else 'PREPARING'
+               end as status
+          from game_session s
+          join play_team t on t.owner_type=2 and t.owner_id=s.activity_id and t.status in (0,1,2)
+          join play_team_member m on m.team_id=t.id and m.status=1
+          left join game_player_node_outcome o on o.game_session_id=s.id and o.team_id=t.id
+          left join game_station_run stuck on stuck.id=(
+               select sr.id
+                 from game_station_run sr
+                where sr.game_session_id=s.id
+                  and not exists (
+                      select 1 from game_player_node_outcome done
+                       where done.game_session_id=s.id and done.team_id=t.id and done.node_id=sr.node_id)
+                order by case sr.status when 'PAUSED' then 0 when 'CLOSED' then 1 when 'ACTIVE' then 2
+                         when 'READY' then 3 when 'ACCEPTED' then 4 when 'INVITED' then 5 else 6 end,
+                         sr.id
+                limit 1)
+          left join game_task_submission stuck_submission on stuck_submission.id=(
+               select submitted.id
+                 from game_task_submission submitted
+                where submitted.game_session_id=s.id and submitted.team_id=t.id
+                  and submitted.node_id=stuck.node_id
+                order by submitted.id desc limit 1)
+          left join game_command_receipt recent_event on recent_event.id=(
+               select recent.id
+                 from game_command_receipt recent
+                 join play_team_member m_recent
+                   on recent.actor_member_id=m_recent.member_id and m_recent.team_id=t.id
+                  and m_recent.status=1
+                where recent.game_session_id=s.id and recent.actor_perspective='PLAYER'
+                  and recent.outcome in ('APPLIED','FAILED')
+                  and exists (select 1 from cms_registration recent_reg
+                               where recent_reg.member_id=m_recent.member_id
+                                 and recent_reg.owner_type=2 and recent_reg.owner_id=t.owner_id
+                                 and recent_reg.payment_status=2
+                                 and recent_reg.registration_status=2)
+                order by recent.id desc limit 1)
+         where s.id=#{sessionId}
+           and <include refid="paidActivityMemberExists"/>
+         group by s.id, t.id, t.title, stuck.node_id, stuck.node_name, stuck.status,
+                  stuck_submission.status, recent_event.id, recent_event.request_id, recent_event.action,
+                  recent_event.outcome, recent_event.reason_code, recent_event.revision, recent_event.update_time
+         order by t.id
+    </select>
+
+    <!-- 俱乐部复盘总览只返回同局聚合数字；命令事件只认 APPLIED 权威回执。 -->
+    <select id="selectFinishedRecapJson" resultType="string">
+        select json_extract(c.result_json, '$.recap')
+          from game_command_receipt c
+          join game_session s on s.id=c.game_session_id and s.activity_id=c.activity_id
+         where s.id=#{sessionId} and s.status='FINISHED'
+           and c.action='FINISH' and c.outcome='APPLIED' and c.revision=s.revision
+           and json_valid(c.result_json)=1
+           and json_unquote(json_extract(c.result_json, '$.recap.schemaVersion'))='GAME_RECAP_V1'
+         order by c.id desc limit 1
+    </select>
+
+    <select id="selectClubRecapAggregate" resultType="map">
+        select
+               (select count(distinct reg.member_id)
+                  from cms_registration reg
+                 where reg.owner_type=2 and reg.owner_id=s.activity_id
+                   and reg.payment_status=2 and reg.registration_status=2
+                   and exists (
+                       select 1 from play_team t
+                       join play_team_member m on m.team_id=t.id and m.member_id=reg.member_id and m.status=1
+                       where t.owner_type=2 and t.owner_id=s.activity_id and t.status in (0,1,2)
+                   )) as paidPlayers,
+               (select count(distinct p.member_id)
+                  from player_node_progress p
+                 where p.activity_id=s.activity_id and p.topic_id=s.topic_id
+                   and p.checkin_time is not null and p.del_flag=0
+                   and exists (
+                       select 1
+                         from play_team t
+                         join play_team_member m on m.team_id=t.id and m.member_id=p.member_id and m.status=1
+                        where t.owner_type=2 and t.owner_id=s.activity_id and t.status in (0,1,2)
+                          and <include refid="paidActivityMemberExists"/>
+                   )) as arrivedPlayers,
+               (select count(distinct q.member_id) from game_task_submission q
+                 where q.game_session_id=s.id) as taskSubmitters,
+               case when json_unquote(json_extract(s.module_config_snapshot_json, '$.playMode'))='ROUTE'
+                    then (select count(distinct p.member_id) from player_node_progress p
+                           where p.activity_id=s.activity_id and p.topic_id=s.topic_id and p.status=1 and p.del_flag=0
+                             and exists (select 1 from game_station_run sr where sr.game_session_id=s.id and sr.node_id=p.node_id)
+                             and exists (select 1 from play_team t
+                                          join play_team_member m on m.team_id=t.id and m.member_id=p.member_id and m.status=1
+                                         where t.owner_type=2 and t.owner_id=s.activity_id and t.status in (0,1,2)
+                                           and <include refid="paidActivityMemberExists"/>))
+                    else (select count(distinct case when o.status='COMPLETED' then o.member_id end)
+                            from game_player_node_outcome o where o.game_session_id=s.id) end as normalCompleters,
+               (select count(distinct case when o.status='FALLBACK_COMPLETED' then o.member_id end)
+                  from game_player_node_outcome o where o.game_session_id=s.id) as fallbackCompleters,
+               (select count(distinct t.id)
+                  from play_team t
+                 where t.owner_type=2 and t.owner_id=s.activity_id and t.status in (0,1,2)
+                   and exists (select 1 from play_team_member m
+                                where m.team_id=t.id and m.status=1
+                                  and <include refid="paidActivityMemberExists"/>)
+                   and (select count(1) from game_station_run sr where sr.game_session_id=s.id) &gt; 0
+                   and case when json_unquote(json_extract(s.module_config_snapshot_json, '$.playMode'))='ROUTE'
+                            then (select count(distinct p.node_id) from player_node_progress p
+                                   join play_team_member m on m.team_id=t.id and m.member_id=p.member_id and m.status=1
+                                  where p.activity_id=s.activity_id and p.topic_id=s.topic_id and p.status=1 and p.del_flag=0
+                                    and <include refid="paidActivityMemberExists"/>
+                                    and exists (select 1 from game_station_run sr where sr.game_session_id=s.id and sr.node_id=p.node_id))
+                            else (select count(distinct o.node_id) from game_player_node_outcome o
+                                   where o.game_session_id=s.id and o.team_id=t.id
+                                     and o.status in ('COMPLETED','FALLBACK_COMPLETED')) end
+                       &gt;= (select count(1) from game_station_run sr where sr.game_session_id=s.id)
+               ) as finishedTeams,
+               (select count(1) from game_command_receipt c
+                 where c.game_session_id=s.id and c.action='PLAYER_HINT' and c.outcome='APPLIED'
+                   and json_valid(c.result_json)=1
+                   and cast(json_unquote(json_extract(c.result_json, '$.hint.currentLevel')) as unsigned)=1
+               ) as level1Uses,
+               (select count(1) from game_command_receipt c
+                 where c.game_session_id=s.id and c.action='PLAYER_HINT' and c.outcome='APPLIED'
+                   and json_valid(c.result_json)=1
+                   and cast(json_unquote(json_extract(c.result_json, '$.hint.currentLevel')) as unsigned)=2
+               ) as level2Uses,
+               (select count(1) from game_command_receipt c
+                 where c.game_session_id=s.id and c.action='PLAYER_REVEAL' and c.outcome='APPLIED'
+               ) as answerReveals,
+               (select count(1) from game_command_receipt c
+                 where c.game_session_id=s.id and c.action in ('STATION_PAUSE','CLUB_STATION_PAUSE') and c.outcome='APPLIED'
+               ) as merchantPauseEvents,
+               (select count(1) from game_player_node_outcome o
+                 where o.game_session_id=s.id and o.status='FALLBACK_COMPLETED'
+                   and o.completion_source='FALLBACK_PLAN') as merchantFallbackCompletions,
+               (select count(1) from game_task_submission q
+                 where q.game_session_id=s.id and q.status='REJECTED') as playerRejectedSubmissions,
+               (select count(1) from game_command_receipt c
+                 where c.game_session_id=s.id and c.action='TAKEOVER_ROLE' and c.outcome='APPLIED'
+               ) as takeoverCount
+          from game_session s
+         where s.id=#{sessionId} and s.activity_id=#{activityId}
+    </select>
+
+    <!-- 导演台站点复盘：每站仅聚合到场、提交、完成、驳回和暂停事件。 -->
+    <select id="selectClubStationRecaps" resultType="map">
+        select r.node_id as nodeId, r.node_name as nodeName,
+               (select count(distinct p.member_id)
+                  from player_node_progress p
+                 where p.activity_id=r.activity_id and p.topic_id=s.topic_id and p.node_id=r.node_id
+                   and p.checkin_time is not null and p.del_flag=0
+                   and exists (
+                       select 1
+                         from play_team t
+                         join play_team_member m on m.team_id=t.id and m.member_id=p.member_id and m.status=1
+                        where t.owner_type=2 and t.owner_id=r.activity_id and t.status in (0,1,2)
+                          and <include refid="paidActivityMemberExists"/>
+                   )) as arrivedPlayers,
+               (select count(1) from game_task_submission q
+                 where q.game_session_id=r.game_session_id and q.station_run_id=r.id) as submissionCount,
+               case when json_unquote(json_extract(s.module_config_snapshot_json, '$.playMode'))='ROUTE'
+                    then (select count(distinct p.member_id) from player_node_progress p
+                           where p.activity_id=r.activity_id and p.topic_id=s.topic_id and p.node_id=r.node_id
+                             and p.status=1 and p.del_flag=0
+                             and exists (select 1 from play_team t
+                                          join play_team_member m on m.team_id=t.id and m.member_id=p.member_id and m.status=1
+                                         where t.owner_type=2 and t.owner_id=r.activity_id and t.status in (0,1,2)
+                                           and <include refid="paidActivityMemberExists"/>))
+                    else (select count(case when o.status='COMPLETED' then 1 end) from game_player_node_outcome o
+                           where o.game_session_id=r.game_session_id and o.station_run_id=r.id) end as normalCompletedCount,
+               (select count(case when o.status='FALLBACK_COMPLETED' then 1 end) from game_player_node_outcome o
+                 where o.game_session_id=r.game_session_id and o.station_run_id=r.id) as fallbackCompletedCount,
+               (select count(case when q.status='REJECTED' then 1 end) from game_task_submission q
+                 where q.game_session_id=r.game_session_id and q.station_run_id=r.id) as rejectedCount,
+               (select count(1) from game_command_receipt c
+                 where c.game_session_id=r.game_session_id and c.node_id=r.node_id
+                   and c.action in ('STATION_PAUSE','CLUB_STATION_PAUSE') and c.outcome='APPLIED') as pauseEventCount
+          from game_station_run r
+          join game_session s on s.id=r.game_session_id
+         where r.game_session_id=#{sessionId}
+         order by r.id
+    </select>
+
+    <!-- 角色协作只按队伍返回角色覆盖计数；接管前已完成的历史角色贡献不能被抹掉。 -->
+    <select id="selectClubRoleCollaboration" resultType="map">
+        select t.id as teamId,
+               count(distinct case when r.status='CONFIRMED' then r.role_code end) as assignedRoleCount,
+               count(distinct case when r.status in ('CONFIRMED','SUPERSEDED') and o.id is not null then r.role_code end)
+                   as contributedRoleCount
+          from play_team t
+          join play_team_member m on m.team_id=t.id and m.status=1
+          left join game_team_role_assignment r
+            on r.game_session_id=#{sessionId} and r.team_id=t.id and r.member_id=m.member_id
+          left join game_player_node_outcome o
+            on o.game_session_id=#{sessionId} and o.team_id=t.id and o.member_id=m.member_id
+           and o.status in ('COMPLETED','FALLBACK_COMPLETED')
+         where t.owner_type=2 and t.owner_id=#{activityId} and t.status in (0,1,2)
+           and <include refid="paidActivityMemberExists"/>
+         group by t.id
+         order by t.id
+    </select>
+
+    <select id="selectStoryState" resultMap="GameStoryResult">
+        select id, game_session_id, owner_type, owner_id, variables_json, applied_choices_json,
+               ending_code, status, revision, create_time, update_time
+          from game_story_state where game_session_id=#{sessionId} and owner_type=#{ownerType}
+           and owner_id=#{ownerId} limit 1
+    </select>
+
+    <insert id="insertStoryState" parameterType="com.chengyinhub.business.domain.GameStoryState"
+            useGeneratedKeys="true" keyProperty="id">
+        insert ignore into game_story_state
+        (game_session_id, owner_type, owner_id, variables_json, applied_choices_json,
+         ending_code, status, revision, create_time, update_time)
+        values
+        (#{gameSessionId}, #{ownerType}, #{ownerId}, #{variablesJson}, #{appliedChoicesJson},
+         #{endingCode}, #{status}, #{revision}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="updateStoryStateCas" parameterType="com.chengyinhub.business.domain.GameStoryState">
+        update game_story_state set variables_json=#{variablesJson}, applied_choices_json=#{appliedChoicesJson},
+               ending_code=#{endingCode}, status=#{status}, revision=revision+1, update_time=#{updateTime}
+         where id=#{id} and game_session_id=#{gameSessionId} and owner_type=#{ownerType}
+           and owner_id=#{ownerId} and revision=#{revision} and status&lt;&gt;'ENDING_RESOLVED'
+    </update>
+
+    <select id="selectReceipt" resultMap="GameReceiptResult">
+        select id, game_session_id, activity_id, node_id, actor_member_id, actor_perspective,
+               request_id, request_hash, action, outcome, reason_code, revision, result_json,
+               create_time, update_time
+          from game_command_receipt
+         where activity_id=#{activityId} and actor_member_id=#{actorMemberId} and request_id=#{requestId}
+         limit 1
+    </select>
+
+    <select id="selectReceiptForUpdate" resultMap="GameReceiptResult">
+        select id, game_session_id, activity_id, node_id, actor_member_id, actor_perspective,
+               request_id, request_hash, action, outcome, reason_code, revision, result_json,
+               create_time, update_time
+          from game_command_receipt
+         where activity_id=#{activityId} and actor_member_id=#{actorMemberId} and request_id=#{requestId}
+         limit 1 for update
+    </select>
+
+    <insert id="insertReceiptClaim" parameterType="com.chengyinhub.business.domain.GameCommandReceipt"
+            useGeneratedKeys="true" keyProperty="id">
+        insert ignore into game_command_receipt
+        (game_session_id, activity_id, node_id, actor_member_id, actor_perspective, request_id,
+         request_hash, action, outcome, reason_code, revision, result_json, create_time, update_time)
+        values
+        (#{gameSessionId}, #{activityId}, #{nodeId}, #{actorMemberId}, #{actorPerspective}, #{requestId},
+         #{requestHash}, #{action}, #{outcome}, #{reasonCode}, #{revision}, #{resultJson}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="completeReceipt" parameterType="com.chengyinhub.business.domain.GameCommandReceipt">
+        update game_command_receipt set game_session_id=#{gameSessionId}, outcome=#{outcome},
+               reason_code=#{reasonCode}, revision=#{revision}, result_json=#{resultJson}, update_time=#{updateTime}
+         where id=#{id} and outcome='PENDING' and request_hash=#{requestHash}
+    </update>
+
+    <insert id="insertSubmission" parameterType="com.chengyinhub.business.domain.GameTaskSubmission"
+            useGeneratedKeys="true" keyProperty="id">
+        insert ignore into game_task_submission
+        (game_session_id, activity_id, station_run_id, node_id, team_id, member_id, task_code,
+         evidence_json, status, decided_by, decision_reason_code, decision_reason, revision,
+         create_time, update_time)
+        values
+        (#{gameSessionId}, #{activityId}, #{stationRunId}, #{nodeId}, #{teamId}, #{memberId}, #{taskCode},
+         #{evidenceJson}, #{status}, #{decidedBy}, #{decisionReasonCode}, #{decisionReason}, #{revision},
+         #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="selectSubmission" resultMap="GameSubmissionResult">
+        select id, game_session_id, activity_id, station_run_id, node_id, team_id, member_id,
+               task_code, evidence_json, status, decided_by, decision_reason_code, decision_reason,
+               revision, create_time, update_time
+          from game_task_submission where id=#{id} limit 1
+    </select>
+
+    <!-- 俱乐部现场事件面:待核验与已驳回的提交。列里没有 evidence_json —— 俱乐部不看内容。 -->
+    <select id="selectClubSubmissionProjection" resultType="java.util.LinkedHashMap">
+        select s.id as submissionId, s.node_id as nodeId, r.node_name as nodeName,
+               s.team_id as teamId, s.status as status,
+               s.decision_reason as decisionReason, s.update_time as updatedAt
+          from game_task_submission s
+          left join game_station_run r on r.id = s.station_run_id
+         where s.game_session_id = #{sessionId}
+           and s.status in ('PENDING', 'REJECTED')
+         order by s.update_time desc, s.id desc
+         limit 50
+    </select>
+
+    <select id="selectActiveSubmission" resultMap="GameSubmissionResult">
+        select id, game_session_id, activity_id, station_run_id, node_id, team_id, member_id,
+               task_code, evidence_json, status, decided_by, decision_reason_code, decision_reason,
+               revision, create_time, update_time
+          from game_task_submission
+         where game_session_id=#{sessionId} and member_id=#{memberId}
+           and node_id=#{nodeId} and task_code=#{taskCode}
+           and status in ('PENDING','APPROVED','RECORDED')
+         order by id desc limit 1
+    </select>
+
+    <select id="selectActiveSubmissionForUpdate" resultMap="GameSubmissionResult">
+        select id, game_session_id, activity_id, station_run_id, node_id, team_id, member_id,
+               task_code, evidence_json, status, decided_by, decision_reason_code, decision_reason,
+               revision, create_time, update_time
+          from game_task_submission
+         where game_session_id=#{sessionId} and member_id=#{memberId}
+           and node_id=#{nodeId} and task_code=#{taskCode}
+           and status in ('PENDING','APPROVED','RECORDED')
+         order by id desc limit 1 for update
+    </select>
+
+    <update id="decideSubmissionCas" parameterType="com.chengyinhub.business.domain.GameTaskSubmission">
+        update game_task_submission set status=#{status}, decided_by=#{decidedBy},
+               decision_reason_code=#{decisionReasonCode}, decision_reason=#{decisionReason},
+               revision=revision+1, update_time=#{updateTime}
+         where id=#{id} and game_session_id=#{gameSessionId} and station_run_id=#{stationRunId}
+           and status='PENDING' and revision=#{revision}
+    </update>
+
+    <insert id="insertPlayerNodeOutcome" parameterType="com.chengyinhub.business.domain.GamePlayerNodeOutcome"
+            useGeneratedKeys="true" keyProperty="id">
+        insert ignore into game_player_node_outcome
+        (game_session_id, activity_id, station_run_id, node_id, team_id, member_id, status,
+         completion_source, source_submission_id, source_receipt_id, fallback_plan_code,
+         fallback_plan_version, completed_at, create_time)
+        values
+        (#{gameSessionId}, #{activityId}, #{stationRunId}, #{nodeId}, #{teamId}, #{memberId}, #{status},
+         #{completionSource}, #{sourceSubmissionId}, #{sourceReceiptId}, #{fallbackPlanCode},
+         #{fallbackPlanVersion}, #{completedAt}, #{createTime})
+    </insert>
+
+    <select id="selectPlayerNodeOutcome" resultMap="GamePlayerNodeOutcomeResult">
+        select id, game_session_id, activity_id, station_run_id, node_id, team_id, member_id, status,
+               completion_source, source_submission_id, source_receipt_id, fallback_plan_code,
+               fallback_plan_version, completed_at, create_time
+          from game_player_node_outcome
+         where game_session_id=#{sessionId} and member_id=#{memberId} and node_id=#{nodeId}
+         limit 1
+    </select>
+
+    <select id="selectPlayerNodeOutcomes" resultMap="GamePlayerNodeOutcomeResult">
+        select id, game_session_id, activity_id, station_run_id, node_id, team_id, member_id, status,
+               completion_source, source_submission_id, source_receipt_id, fallback_plan_code,
+               fallback_plan_version, completed_at, create_time
+          from game_player_node_outcome
+         where game_session_id=#{sessionId} and member_id=#{memberId}
+         order by id
+    </select>
+
+    <select id="selectPlayerHintLevels" resultType="map">
+        select node_id as nodeId,
+               max(cast(json_unquote(json_extract(result_json, '$.hint.currentLevel')) as unsigned)) as currentLevel
+          from game_command_receipt
+         where game_session_id=#{sessionId} and actor_member_id=#{memberId}
+           and action='PLAYER_HINT' and outcome='APPLIED' and json_valid(result_json)=1
+           and json_extract(result_json, '$.hint.currentLevel') is not null
+         group by node_id
+    </select>
+
+    <insert id="insertBroadcast" parameterType="com.chengyinhub.business.domain.GameBroadcast"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into game_broadcast
+        (game_session_id, activity_id, sender_member_id, target_type, target_id, role_code,
+         content, status, create_time, update_time)
+        values
+        (#{gameSessionId}, #{activityId}, #{senderMemberId}, #{targetType}, #{targetId}, #{roleCode},
+         #{content}, #{status}, #{createTime}, #{updateTime})
+    </insert>
+
+    <insert id="insertBroadcastDeliveries">
+        insert ignore into game_broadcast_delivery
+        (broadcast_id, member_id, status, message_id, error_code, create_time, update_time)
+        select distinct #{broadcastId}, m.member_id, 'PENDING', null, null, #{now}, #{now}
+          from play_team t
+          join play_team_member m on m.team_id=t.id and m.status=1
+          left join game_team_role_assignment r
+            on r.game_session_id=#{sessionId} and r.team_id=t.id and r.member_id=m.member_id
+           and r.status in ('ASSIGNED','CONFIRMED')
+         where t.owner_type=2 and t.owner_id=#{activityId} and t.status in (0,1,2)
+           and <include refid="paidActivityMemberExists"/>
+        <choose>
+            <when test="targetType == 'TEAM'">and t.id=#{targetId}</when>
+            <when test="targetType == 'ROLE'">and r.role_code=#{roleCode}</when>
+            <otherwise>and 1=1</otherwise>
+        </choose>
+    </insert>
+
+    <select id="selectPendingDeliveries" resultMap="GameDeliveryResult">
+        select id, broadcast_id, member_id, status, message_id, error_code, create_time, update_time
+          from game_broadcast_delivery where broadcast_id=#{broadcastId} and status='PENDING' order by id
+    </select>
+
+    <update id="markDelivery">
+        update game_broadcast_delivery set status=#{status}, message_id=#{messageId}, error_code=#{errorCode},
+               update_time=#{now} where id=#{id} and status='PENDING'
+    </update>
+
+    <select id="countBroadcastDeliveries" resultType="int">
+        select count(1) from game_broadcast_delivery where broadcast_id=#{broadcastId} and status=#{status}
+    </select>
+
+    <update id="updateBroadcastStatus">
+        update game_broadcast set status=#{toStatus}, update_time=#{now}
+         where id=#{id} and status=#{fromStatus}
+    </update>
+
+    <select id="selectBroadcasts" resultMap="GameBroadcastResult">
+        select id, game_session_id, activity_id, sender_member_id, target_type, target_id,
+               role_code, content, status, create_time, update_time
+          from game_broadcast where game_session_id=#{sessionId} order by id desc limit 50
+    </select>
+
+    <select id="selectSessionLeaderboard" resultType="map">
+        select row_number() over(order by scored.score desc, scored.teamId asc) as `rank`,
+               scored.teamId, scored.displayName, scored.score
+          from (
+            select t.id as teamId, coalesce(t.title, '队伍') as displayName,
+                   count(distinct case when o.status='COMPLETED' then o.node_id end) as score
+              from play_team t
+              join game_session s on s.id=#{sessionId} and t.owner_type=2 and t.owner_id=s.activity_id
+              left join game_player_node_outcome o on o.game_session_id=s.id and o.team_id=t.id
+             group by t.id, t.title
+          ) scored
+         order by `rank`
+    </select>
+
+    <!-- F07 只读同局同队公开协作字段；故意不选择 registration/phone/longitude/latitude/evidence_json。 -->
+    <select id="selectTeamActionProjection" resultType="map">
+        select m.member_id as memberId, coalesce(u.nickname, '玩家') as displayName,
+               r.role_code as roleCode,
+               coalesce((select case o.status
+                                      when 'COMPLETED' then 'COMPLETED'
+                                      when 'FALLBACK_COMPLETED' then 'FALLBACK_COMPLETED'
+                                      else 'CONFIRMED' end
+                           from game_player_node_outcome o
+                          where o.game_session_id=#{sessionId} and o.team_id=#{teamId}
+                            and o.member_id=m.member_id order by o.id desc limit 1),
+                        (select case q.status
+                                      when 'PENDING' then 'SUBMITTED'
+                                      else 'CONFIRMED' end
+                           from game_task_submission q
+                          where q.game_session_id=#{sessionId} and q.team_id=#{teamId}
+                            and q.member_id=m.member_id order by q.id desc limit 1), r.status, 'JOINED') as status
+          from play_team_member m
+          join game_session s on s.id=#{sessionId}
+          join play_team t on t.id=#{teamId} and t.owner_type=2 and t.owner_id=s.activity_id
+          left join ums_member u on u.id=m.member_id
+          left join game_team_role_assignment r
+            on r.game_session_id=s.id and r.team_id=t.id and r.member_id=m.member_id
+           and r.status in ('ASSIGNED','CONFIRMED')
+         where m.team_id=#{teamId} and m.status=1
+           and <include refid="paidActivityMemberExists"/>
+         order by m.id
+    </select>
+
+    <!-- 仅当前登录玩家本人、本局、有限公开字段；证据不进入玩家重进投影。 -->
+    <select id="selectMySubmissionProjection" resultType="map">
+        select id as submissionId, node_id as nodeId, task_code as taskCode, status,
+               decision_reason_code as reasonCode, decision_reason as reason
+          from game_task_submission
+         where game_session_id=#{sessionId} and member_id=#{memberId}
+         order by id desc limit 50
+    </select>
+</mapper>

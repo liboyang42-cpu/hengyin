@@ -1,0 +1,32 @@
+<view class="theme-merchant invite-theme">
+<cy-sheet show="{{show}}" title="发送邀约" handle inset footer mask-closable="{{!submitting}}" closable="{{!submitting}}" bind:close="close">
+  <view class="invite">
+    <block wx:if="{{!topicId}}">
+      <scroll-view wx:if="{{topics.length}}" scroll-x show-scrollbar="{{false}}" class="invite__rail" bindscrolltolower="moreTopics" aria-label="选择自己发布的主题">
+        <view class="invite__track"><view wx:for="{{topics}}" wx:key="id" class="invite__card" data-id="{{item.id}}" bindtap="pickTopic" hover-class="cy-pressed" hover-stay-time="80" aria-role="radio" aria-checked="{{selectedId == item.id}}" aria-label="{{item.name}}">
+          <view class="invite__cover invite__cover--{{item.tone}}"><image class="invite__cover-img" wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" /><text wx:else>{{item.number}}</text></view>
+          <view class="invite__name"><text class="invite__name-text">{{item.name}}</text><cy-icon wx:if="{{selectedId == item.id}}" name="check" size="24" /></view>
+        </view></view>
+      </scroll-view>
+      <text wx:if="{{loading}}" class="invite__hint">正在读取主题…</text>
+      <text wx:elif="{{!topics.length && !error}}" class="invite__hint">暂无自己发布的主题</text>
+    </block>
+    <text wx:if="{{selectedTopicName}}" class="invite__hint">{{selectedTopicName}}</text>
+    <text class="invite__target">{{targetName}}</text>
+    <block wx:if="{{!chapterId}}">
+      <scroll-view wx:if="{{chapters.length}}" scroll-x show-scrollbar="{{false}}" scroll-left="{{0}}" class="invite__rail" aria-label="选择章节">
+        <view class="invite__track"><view wx:for="{{chapters}}" wx:key="id" class="invite__card" data-id="{{item.id}}" bindtap="pickChapter" hover-class="cy-pressed" hover-stay-time="80" aria-role="radio" aria-checked="{{selectedChapterId == item.id}}" aria-label="{{item.name}}">
+          <view class="invite__cover invite__cover--{{item.tone}}"><image class="invite__cover-img" wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" /><text wx:else>{{item.number}}</text></view>
+          <view class="invite__name"><text class="invite__name-text">{{item.name}}</text><cy-icon wx:if="{{selectedChapterId == item.id}}" name="check" size="24" /></view>
+        </view></view>
+      </scroll-view>
+      <text wx:elif="{{chaptersLoading}}" class="invite__hint">正在读取章节…</text>
+      <text wx:elif="{{!error}}" class="invite__hint">{{selectedId ? '该主题暂无章节' : '请先选择上方主题'}}</text>
+    </block>
+    <textarea class="invite__message" value="{{message}}" bindinput="onMessage" placeholder="写下想对对方说的话" maxlength="100" disabled="{{submitting}}" />
+    <view wx:if="{{error}}" class="invite__error" aria-role="alert">{{error}}<text wx:if="{{!chapters.length}}" bindtap="retry" aria-role="button" aria-label="重试加载邀约主题和章节" hover-class="cy-pressed" hover-stay-time="80"> 重试</text></view>
+
+  </view>
+  <cy-btn slot="footer" class="invite__send" variant="primary" loading="{{submitting}}" disabled="{{!selectedChapterId || chaptersLoading}}" bindtap="send" accessibility-label="发送邀约">{{submitting ? '发送中…' : '发送邀约'}}</cy-btn>
+</cy-sheet>
+</view>

@@ -1,0 +1,162 @@
+package com.chengyinhub.web.controller.api;
+
+import com.chengyinhub.business.domain.Club;
+import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.service.ICmsRegistrationService;
+import com.chengyinhub.business.service.ICmsTopicService;
+import com.chengyinhub.business.service.IOmsTicketService;
+import com.chengyinhub.business.service.IClubService;
+import com.chengyinhub.business.service.IGameSessionRuntimeService;
+import org.apache.ibatis.builder.xml.XMLMapperBuilder;
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.session.Configuration;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+/** /api/club/topics 是公开读侧，不能复用可查草稿的运营查询。 */
+class ApiClubTopicVisibilityTest {
+
+    @Test
+    void topicListExposesOnlyFailClosedGameModuleAvailabilityFlag() {
+        ICmsTopicService topicService = mock(ICmsTopicService.class);
+        CmsTopic ordinary = topic(1L, null);
+        CmsTopic enabled = topic(2L,
+                "{\"schemaVersion\":1,\"roles\":[{\"code\":\"DETECTIVE\"}],"
+                        + "\"stations\":[{\"code\":\"CLOCK\"}]}");
+        CmsTopic malformed = topic(3L, "{not-json");
+        when(topicService.selectPublicCmsTopicList(any())).thenReturn(Arrays.asList(ordinary, enabled, malformed));
+
+        ApiClubController controller = new ApiClubController();
+        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
+        IGameSessionRuntimeService runtimeService = mock(IGameSessionRuntimeService.class);
+        when(runtimeService.isGameSessionEnabled(ordinary)).thenReturn(false);
+        when(runtimeService.isGameSessionEnabled(enabled)).thenReturn(true);
+        when(runtimeService.isGameSessionEnabled(malformed)).thenReturn(false);
+        ReflectionTestUtils.setField(controller, "gameSessionRuntimeService", runtimeService);
+        ICmsRegistrationService registrationService = mock(ICmsRegistrationService.class);
+        when(registrationService.selectCmsRegistrationList(any())).thenReturn(Collections.emptyList());
+        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
+        IOmsTicketService ticketService = mock(IOmsTicketService.class);
+        when(ticketService.selectOmsTicketList(any())).thenReturn(Collections.emptyList());
+        ReflectionTestUtils.setField(controller, "omsTicketService", ticketService);
+        ReflectionTestUtils.setField(controller, "cmsActivityService",
+                mock(com.chengyinhub.business.service.ICmsActivityService.class));
+        IClubService clubService = mock(IClubService.class);
+        Club activeClub = new Club();
+        activeClub.setId(73L);
+        when(clubService.selectClubById(73L)).thenReturn(activeClub);
+        ReflectionTestUtils.setField(controller, "clubService", clubService);
+
+        Club body = new Club();
+        body.setId(73L);
+        Object data = controller.topics(body).get("data");
+        List<?> rows = (List<?>) data;
+
+        assertFalse(((CmsTopic) rows.get(0)).getGameModuleEnabled());
+        assertTrue(((CmsTopic) rows.get(1)).getGameModuleEnabled());
+        assertFalse(((CmsTopic) rows.get(2)).getGameModuleEnabled());
+    }
+
+    @Test
+    void nonMemberUsesPublicClubScopedQueryInsteadOfDraftCapableQuery() {
+        ICmsTopicService topicService = mock(ICmsTopicService.class);
+        when(topicService.selectPublicCmsTopicList(any())).thenReturn(Collections.emptyList());
+        ApiClubController controller = new ApiClubController();
+        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
+        ReflectionTestUtils.setField(controller, "cmsRegistrationService", mock(ICmsRegistrationService.class));
+        ReflectionTestUtils.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
+        IClubService clubService = mock(IClubService.class);
+        Club activeClub = new Club();
+        activeClub.setId(73L);
+        when(clubService.selectClubById(73L)).thenReturn(activeClub);
+        ReflectionTestUtils.setField(controller, "clubService", clubService);
+
+        Club body = new Club();
+        body.setId(73L);
+        controller.topics(body);
+
+        ArgumentCaptor<CmsTopic> query = ArgumentCaptor.forClass(CmsTopic.class);
+        verify(topicService).selectPublicCmsTopicList(query.capture());
+        verify(topicService, never()).selectCmsTopicList(any());
+        assertEquals(Long.valueOf(73L), query.getValue().getClubId(), "公开查询必须仍限定目标俱乐部");
+    }
+
+    @Test
+    void publicTopicSqlPinsReviewPublishDeleteAndClubGates() throws Exception {
+        Configuration configuration = new Configuration();
+        configuration.getTypeAliasRegistry().registerAlias("CmsTopic", CmsTopic.class);
+        String resource = "mapper/business/CmsTopicMapper.xml";
+        try (InputStream input = Resources.getResourceAsStream(resource)) {
+            new XMLMapperBuilder(input, configuration, resource, configuration.getSqlFragments()).parse();
+        }
+        CmsTopic query = new CmsTopic();
+        query.setClubId(73L);
+        String sql = configuration.getMappedStatement(
+                        "com.chengyinhub.business.mapper.CmsTopicMapper.selectPublicCmsTopicList")
+                .getBoundSql(query).getSql().replaceAll("\\s+", " ").trim().toLowerCase();
+
+        assertTrue(sql.contains("status = 1 and user_status = 1 and del_flag = 0"), sql);
+        assertTrue(sql.contains("club_id = ?"), sql);
+        assertTrue(sql.contains("from coop_order") && sql.contains("to_type = 'club'")
+                        && sql.contains("to_id = ?") && sql.contains("status = 0")
+                        && sql.contains("del_flag = 0"),
+                "执行俱乐部的生效合作主题必须进入公开列表:" + sql);
+    }
+
+    private CmsTopic topic(Long id, String config) {
+        CmsTopic topic = new CmsTopic();
+        topic.setId(id);
+        topic.setGameModuleConfigJson(config);
+        return topic;
+    }
+
+    // CU-C-19:团卡「已报名」必须与名册同口径 —— 主题票 + 本俱乐部该主题各场次的场次票(owner_type=2)。
+    @Test
+    void signupCountIncludesSessionTicketRegistrations() {
+        ICmsTopicService topicService = mock(ICmsTopicService.class);
+        when(topicService.selectPublicCmsTopicList(any())).thenReturn(Collections.singletonList(topic(9L, null)));
+        ApiClubController controller = new ApiClubController();
+        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
+        ReflectionTestUtils.setField(controller, "gameSessionRuntimeService", mock(IGameSessionRuntimeService.class));
+        IOmsTicketService ticketService = mock(IOmsTicketService.class);
+        when(ticketService.selectOmsTicketList(any())).thenReturn(Collections.emptyList());
+        ReflectionTestUtils.setField(controller, "omsTicketService", ticketService);
+        com.chengyinhub.business.service.ICmsActivityService activityService =
+                mock(com.chengyinhub.business.service.ICmsActivityService.class);
+        com.chengyinhub.business.domain.CmsActivity session = new com.chengyinhub.business.domain.CmsActivity();
+        session.setId(501L);
+        when(activityService.selectCmsActivityList(any())).thenReturn(Collections.singletonList(session));
+        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
+        ICmsRegistrationService registrationService = mock(ICmsRegistrationService.class);
+        com.chengyinhub.business.domain.CmsRegistration paid = new com.chengyinhub.business.domain.CmsRegistration();
+        when(registrationService.selectCmsRegistrationList(org.mockito.ArgumentMatchers.argThat(
+                q -> q != null && Long.valueOf(2L).equals(q.getOwnerType()) && Long.valueOf(501L).equals(q.getOwnerId()))))
+                .thenReturn(Arrays.asList(paid, paid, paid, paid));
+        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
+        IClubService clubService = mock(IClubService.class);
+        Club club = new Club();
+        club.setId(73L);
+        when(clubService.selectClubById(73L)).thenReturn(club);
+        ReflectionTestUtils.setField(controller, "clubService", clubService);
+
+        Club body = new Club();
+        body.setId(73L);
+        List<?> rows = (List<?>) controller.topics(body).get("data");
+        assertEquals(Integer.valueOf(4), ((CmsTopic) rows.get(0)).getSignupCount(), "4 张已付场次票必须计入团卡人数");
+    }
+}

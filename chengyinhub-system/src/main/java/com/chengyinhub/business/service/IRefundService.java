@@ -1,0 +1,56 @@
+package com.chengyinhub.business.service;
+
+import com.chengyinhub.business.domain.RefundApplication;
+import com.chengyinhub.business.domain.dto.RefundReviewDTO;
+
+import java.util.List;
+
+public interface IRefundService {
+    List<RefundApplication> selectRefundList(RefundApplication query);
+
+    int saveRefund(RefundApplication refund);
+
+    /** 后台运营建单(RefundController.add):多票订单首单只能退同单还没退、也没核销的部分(FX-04)。 */
+    int saveBackOfficeRefund(RefundApplication refund);
+
+    int reviewRefund(RefundReviewDTO request, Long operatorId);
+
+    // ===== §6.1 退款失败人工兜底 =====
+
+    RefundApplication getRefundById(Long id);
+
+    /** 打款结果:原路受理成功→PROCESSING(0);受理失败→PENDING_MANUAL(2,不再自动转平台余额)。 */
+    void markPayoutResult(Long refundId, String leaseToken, boolean wxAccepted, String remark);
+
+    /** 人工退款待办队列(payout_status in 2待人工/3待复核)。 */
+    List<RefundApplication> selectManualPayoutQueue();
+
+    /** 钱移动前领取人工处理权；返回 fencing token，null 表示已被他人持有。 */
+    String claimManualPayout(Long refundId, Long handlerId);
+
+    /** 放弃人工处理权，只允许当前 owner 按 fencing token 释放；过期也能释放（释放不动钱）。 */
+    boolean releaseManualPayoutClaim(Long refundId, Long handlerId, String leaseToken);
+
+    /**
+     * 接管他人**已过期**的人工处理权；返回新 fencing token，null 表示不满足接管条件
+     * （租约未过期 / 无人持有 / 就是自己）。接管会把前一个 owner 写进备注留痕。
+     */
+    String takeoverExpiredManualPayout(Long refundId, Long handlerId);
+
+    /**
+     * 人工处理:登记退款方式+回执 → 待复核(2→3)。返回受影响行数(0=状态已变/非待人工)。
+     * receiptUrl 非空时必须过安全合同(HTTPS+白名单 host 或单斜杠站内路径),不合规抛
+     * IllegalArgumentException 且一行不落库 —— 它会被另一名财务在队列里直接点开。
+     */
+    int handleManualPayout(Long refundId, String method, String receiptUrl, String remark,
+                           Long handlerId, String leaseToken);
+
+    /** 双人复核确认:3→4,复核人须≠处理人;完成后通知用户。返回受影响行数(0=状态已变)。 */
+    int verifyManualPayout(Long refundId, Long reviewer2Id);
+
+    /**
+     * 退款结果通知回调:按 out_refund_no(=refund_no)反查退款单,回写打款终态。
+     * SUCCESS→原路成功(1);ABNORMAL/CLOSED→待人工(2);PROCESSING→保持。返回 true=已受理(可回 ACK)。
+     */
+    boolean handleRefundNotify(String outRefundNo, String refundStatus);
+}

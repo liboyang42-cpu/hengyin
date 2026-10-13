@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ApiMapMapper">
+
+    <!--
+      周边节点地理查询(只读)。
+      下划线转驼峰未开启,故列一律别名为 camelCase 以匹配 NearbyNodeVO 字段。
+      longitude/latitude 为 VARCHAR,先剔除空值再 CAST 计算 Haversine 直线距离(米)。
+      LEAST(1, ...) 防浮点误差导致 ACOS 入参 > 1 报错。
+    -->
+    <select id="selectNearbyNodes" resultType="com.chengyinhub.business.domain.vo.NearbyNodeVO">
+        select
+            id            as id,
+            topic_id      as topicId,
+            node_id       as nodeId,
+            address_name  as addressName,
+            longitude     as longitude,
+            latitude      as latitude,
+            address       as address,
+            pic_url       as picUrl,
+            (6371000 * acos(least(1,
+                cos(radians(#{lat})) * cos(radians(cast(latitude as decimal(12,7))))
+                * cos(radians(cast(longitude as decimal(12,7))) - radians(#{lng}))
+                + sin(radians(#{lat})) * sin(radians(cast(latitude as decimal(12,7))))
+            ))) as distance,
+            <!--
+              门店 AI 形象(npc_profile scope_type=2)。本表没有 merchant_id,只有 member_id,
+              所以要两跳:member_id → mms_merchant.id → npc_profile.scope_id。
+              ⚠️ 筛选口径必须与 NpcProfileMapper.selectEnabledByScope 完全一致
+                 (enabled/audit_status/del_flag + ORDER BY sort, id)——不一致就会出现
+                 「主页一张脸、地图另一张脸」或「后台停用了地图还在」,而且都不报错。
+                 MerchantNpcAvatarTest#allThreeAvatarQueriesShareTheSameFilterAndOrder 钉住这三处不许漂。
+              m.del_flag = 0:商家档案已删就别再露脸。
+            -->
+            (select n.avatar from npc_profile n
+               join mms_merchant m on m.id = n.scope_id
+              where n.scope_type = 2 and m.member_id = cms_registration_merchant.member_id
+                and m.del_flag = 0
+                and n.enabled = 1 and n.audit_status = 1 and n.del_flag = '0'
+              order by n.sort asc, n.id asc limit 1) as npcAvatar,
+            <!--
+              所属主题的玩法:1=城市定向 2=自由探索。地图上主题点位的描边色按它分
+              (定向绿 / 探索蓝,2026-09-09 裁决)。没挂主题 / 主题已删时为 NULL,
+              前端据此当「没有局的地方」画中性针,不硬当定向。
+            -->
+            (select t.product_type from cms_topic t
+              where t.id = cms_registration_merchant.topic_id) as productType
+        from cms_registration_merchant
+        where del_flag = '0'
+            and longitude is not null and longitude &lt;&gt; ''
+            and latitude is not null and latitude &lt;&gt; ''
+            <if test="status != null"> and status = #{status}</if>
+            <if test="auditStatus != null"> and audit_status = #{auditStatus}</if>
+        having distance &lt;= #{radius}
+        order by distance asc
+        limit #{limit}
+    </select>
+
+</mapper>

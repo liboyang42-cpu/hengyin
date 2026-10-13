@@ -1,0 +1,366 @@
+{
+  "code_commit": "575d156ba4b7c44ffd1003eefe43db983459577c",
+  "product_commits": [
+    "8c70830a0900dbd93351175ce308d64016919987",
+    "575d156ba4b7c44ffd1003eefe43db983459577c"
+  ],
+  "scope": "非游戏弹窗图标与通用人数/时长/场所选择器；不含游戏内部",
+  "product_files": [
+    "chengyinhub-xcx/pages/publish/temp/index.wxml",
+    "chengyinhub-xcx/pages/publish/temp/index.wxss"
+  ],
+  "changes": [
+    "添加模块加号移除文字行高，改为居中图标容器",
+    "通用picker三个入口补齐实心圆和中心点，未选中为空心圆，单行选项中心点沿用6pt",
+    "补齐单选语义及长标签的缩放空间"
+  ],
+  "glyph_geometry": {
+    "representatives": 11,
+    "tolerance_px": 2,
+    "module_plus_before_delta_y": 3.2421875,
+    "module_plus_after_delta_y": 0,
+    "records": [
+      {
+        "name": "module-plus",
+        "owner": {
+          "left": 343,
+          "top": 663.5,
+          "width": 16,
+          "height": 16,
+          "centerX": 351.0,
+          "centerY": 671.5
+        },
+        "iconHost": {
+          "left": 343,
+          "top": 663.5,
+          "width": 16,
+          "height": 16,
+          "centerX": 351.0,
+          "centerY": 671.5
+        },
+        "deltaX": 0.0,
+        "deltaY": 0.0
+      },
+      {
+        "name": "module-left-icon",
+        "owner": {
+          "left": 31,
+          "top": 649,
+          "width": 45,
+          "height": 45,
+          "centerX": 53.5,
+          "centerY": 671.5
+        },
+        "iconHost": {
+          "left": 43.5,
+          "top": 661.5,
+          "width": 20,
+          "height": 20,
+          "centerX": 53.5,
+          "centerY": 671.5
+        },
+        "deltaX": 0.0,
+        "deltaY": 0.0
+      },
+      {
+        "name": "module-close",
+        "owner": {
+          "left": 345,
+          "top": 555.8046875,
+          "width": 45,
+          "height": 45,
+          "centerX": 367.5,
+          "centerY": 578.3046875
+        },
+        "iconHost": {
+          "left": 356.5,
+          "top": 567.3046875,
+          "width": 22,
+          "height": 22,
+          "centerX": 367.5,
+          "centerY": 578.3046875
+        },
+        "deltaX": 0.0,
+        "deltaY": 0.0
+      },
+      {
+        "name": "catalog-icon",
+        "owner": {
+          "left": 22,
+          "top": 276.984375,
+          "width": 37,
+          "height": 37,
+          "centerX": 40.5,
+          "centerY": 295.484375
+        },
+        "iconHost": {
+          "left": 32,
+          "top": 286.984375,
+          "width": 17,
+          "height": 17,
+          "centerX": 40.5,
+          "centerY": 295.484375
+        },
+        "deltaX": 0.0,
+        "deltaY": 0.0
+      },
+      {
+        "selector": ".cmp-act",
+        "owner": {
+          "left": 350,
+          "top": 107.797,
+          "width": 24,
+          "height": 24,
+          "right": 374,
+          "bottom": 131.797,
+          "centerX": 362,
+          "centerY": 119.797
+        },
+        "glyph": {
+          "left": 350,
+          "top": 107.797,
+          "width": 24,
+          "height": 24,
+          "right": 374,
+          "bottom": 131.797,
+          "centerX": 362,
+          "centerY": 119.797
+        },
+        "deltaX": 0,
+        "deltaY": 0,
+        "name": "compose-draft"
+      },
+      {
+        "selector": ".cmp-tool",
+        "owner": {
+          "left": 65,
+          "top": 253.992,
+          "width": 22,
+          "height": 22,
+          "right": 87,
+          "bottom": 275.992,
+          "centerX": 76,
+          "centerY": 264.992
+        },
+        "glyph": {
+          "left": 65,
+          "top": 253.992,
+          "width": 22,
+          "height": 22,
+          "right": 87,
+          "bottom": 275.992,
+          "centerX": 76,
+          "centerY": 264.992
+        },
+        "deltaX": 0,
+        "deltaY": 0,
+        "name": "compose-image"
+      },
+      {
+        "selector": ".cmp-tool",
+        "owner": {
+          "left": 107,
+          "top": 253.992,
+          "width": 22,
+          "height": 22,
+          "right": 129,
+          "bottom": 275.992,
+          "centerX": 118,
+          "centerY": 264.992
+        },
+        "glyph": {
+          "left": 107,
+          "top": 253.992,
+          "width": 22,
+          "height": 22,
+          "right": 129,
+          "bottom": 275.992,
+          "centerX": 118,
+          "centerY": 264.992
+        },
+        "deltaX": 0,
+        "deltaY": 0,
+        "name": "compose-location"
+      },
+      {
+        "selector": ".cmp-tool",
+        "owner": {
+          "left": 149,
+          "top": 253.992,
+          "width": 22,
+          "height": 22,
+          "right": 171,
+          "bottom": 275.992,
+          "centerX": 160,
+          "centerY": 264.992
+        },
+        "glyph": {
+          "left": 149,
+          "top": 253.992,
+          "width": 22,
+          "height": 22,
+          "right": 171,
+          "bottom": 275.992,
+          "centerX": 160,
+          "centerY": 264.992
+        },
+        "deltaX": 0,
+        "deltaY": 0,
+        "name": "compose-activity"
+      },
+      {
+        "owner": {
+          "left": 358,
+          "top": 194,
+          "width": 20,
+          "height": 20,
+          "right": 378,
+          "bottom": 214,
+          "centerX": 368,
+          "centerY": 204
+        },
+        "glyph": {
+          "left": 358,
+          "top": 194.398,
+          "width": 20,
+          "height": 20,
+          "right": 378,
+          "bottom": 214.398,
+          "centerX": 368,
+          "centerY": 204.398
+        },
+        "deltaX": 0,
+        "deltaY": 0.39799999999999613,
+        "name": "draft-delete"
+      },
+      {
+        "name": "merchant-copy",
+        "owner": {
+          "left": 175.5,
+          "top": 675.2109375,
+          "width": 16,
+          "height": 23,
+          "centerX": 183.5,
+          "centerY": 686.7109375
+        },
+        "iconHost": {
+          "left": 177.5,
+          "top": 682.0546875,
+          "width": 12,
+          "height": 12,
+          "centerX": 183.5,
+          "centerY": 688.0546875
+        },
+        "deltaX": 0.0,
+        "deltaY": 1.34375
+      },
+      {
+        "name": "popover-follow",
+        "deltaX": null,
+        "deltaY": 0.20299999999997453,
+        "raw": {
+          "frame": {
+            "left": 265.68,
+            "top": 272.234,
+            "width": 110,
+            "height": 45,
+            "right": 375.68,
+            "bottom": 317.234,
+            "centerX": 320.68,
+            "centerY": 294.734
+          },
+          "glyph": {
+            "left": 277.68,
+            "top": 285.734,
+            "width": 18,
+            "height": 18,
+            "right": 295.68,
+            "bottom": 303.734,
+            "centerX": 286.68,
+            "centerY": 294.734
+          },
+          "label": {
+            "left": 303.68,
+            "top": 283.531,
+            "width": 58,
+            "height": 22,
+            "right": 361.68,
+            "bottom": 305.531,
+            "centerX": 332.68,
+            "centerY": 294.531
+          },
+          "iconTextDeltaY": 0.20299999999997453,
+          "iconFrameDeltaY": 0
+        }
+      }
+    ],
+    "boundary": "图标盒与容器/文字的几何抽样，不等于所有图标的光学重心或所有正常入口验收"
+  },
+  "picker_entries": [
+    {
+      "key": "players",
+      "options": 3,
+      "tapAndClosed": true,
+      "valueReadback": true,
+      "reopenedSelectionReadback": true,
+      "fixtureRestored": true
+    },
+    {
+      "key": "duration",
+      "options": 6,
+      "tapAndClosed": true,
+      "valueReadback": true,
+      "reopenedSelectionReadback": true,
+      "fixtureRestored": true
+    },
+    {
+      "key": "usageLocation",
+      "options": 7,
+      "tapAndClosed": true,
+      "valueReadback": true,
+      "reopenedSelectionReadback": true,
+      "fixtureRestored": true
+    }
+  ],
+  "native_geometry_methods": [
+    "复用 scripts/_verify_icon_geometry.js 的 elementRect 和 launchFixed",
+    "wechatide automation_element_action offset/size；受控原生状态"
+  ],
+  "native_screenshots": [
+    "nongame-round3-icons-after/add-module.png",
+    "nongame-round3-icons-after/game-catalog.png",
+    "nongame-round3-icons-after/picker-players.png",
+    "nongame-round3-icons-after/picker-duration.png",
+    "nongame-round3-icons-after/picker-usageLocation.png"
+  ],
+  "unchanged_layout_samples": [
+    "nongame-round3-icons-before/post-compose.png",
+    "nongame-round3-icons-before/merchant-copy.png"
+  ],
+  "native_boundary": "截图来自自有 popup-style-1003 工作区；部分为显示夹具。3个picker使用实际选项，临时修改本地表单并回读，未保存/发布。草稿图标等待800ms后几何回读，未将动画中的早期读数计为通过。胶囊和草稿本次有几何证据，没有新增稳定截图。",
+  "validation": {
+    "tests": 64,
+    "pass": 64,
+    "fail": 0,
+    "skip": 0,
+    "native_compile_success": 2,
+    "isolated_ui_gate": "PASS",
+    "isolation": {
+      "base": "8c70830a0900dbd93351175ce308d64016919987",
+      "owned_files": [
+        "chengyinhub-xcx/pages/publish/temp/index.wxss",
+        "chengyinhub-xcx/pages/publish/temp/index.wxml"
+      ],
+      "ui_gate_exit_code": 0,
+      "bytes_match": true,
+      "snapshot_removed": true
+    },
+    "workspace_ui_gate": "曾因未包含在本次提交的并行标题修改触发U4 stepHeading零消费；完整干净快照通过"
+  },
+  "source_sha256": {
+    "chengyinhub-xcx/pages/publish/temp/index.wxss": "36460d8a399c4291d3b839f388e7a5e5877417260a88a5af119004f87d8514a1",
+    "chengyinhub-xcx/pages/publish/temp/index.wxml": "7e66463c365241217c9cfd22d6dce37959722d6406b76e4abf3511aa174bdcf8"
+  },
+  "not_wechat_upload_or_device_acceptance": true,
+  "geometry_capture_note": "模块及未改动控件的几何读数来自本轮8c70830a09及未改动的70424820e4状态；最终提交新增的3种picker已单独截图和切换回读。"
+}

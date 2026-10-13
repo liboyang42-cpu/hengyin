@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PmsProductLikeMapper">
+    
+    <resultMap type="PmsProductLike" id="PmsProductLikeResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="productId"    column="product_id"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectPmsProductLikeVo">
+        select id, member_id, product_id, create_by, create_time, update_by, update_time from pms_product_like
+    </sql>
+
+    <select id="selectPmsProductLikeList" parameterType="PmsProductLike" resultMap="PmsProductLikeResult">
+        <include refid="selectPmsProductLikeVo"/>
+        <where>  
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="productId != null "> and product_id = #{productId}</if>
+        </where>
+    </select>
+    
+    <select id="selectPmsProductLikeById" parameterType="Long" resultMap="PmsProductLikeResult">
+        <include refid="selectPmsProductLikeVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertPmsProductLike" parameterType="PmsProductLike" useGeneratedKeys="true" keyProperty="id">
+        insert into pms_product_like
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="productId != null">product_id,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="productId != null">#{productId},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updatePmsProductLike" parameterType="PmsProductLike">
+        update pms_product_like
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="productId != null">product_id = #{productId},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deletePmsProductLikeById" parameterType="Long">
+        delete from pms_product_like where id = #{id}
+    </delete>
+
+    <delete id="deletePmsProductLikeByIds" parameterType="String">
+        delete from pms_product_like where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

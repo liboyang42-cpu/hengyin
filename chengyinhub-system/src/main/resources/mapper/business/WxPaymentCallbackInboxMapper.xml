@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.WxPaymentCallbackInboxMapper">
+
+    <resultMap id="InboxResult" type="com.chengyinhub.business.domain.WxPaymentCallbackInbox">
+        <id property="id" column="id"/>
+        <result property="notifyHash" column="notify_hash_hex"/>
+        <result property="bizType" column="biz_type"/>
+        <result property="bizId" column="biz_id"/>
+        <result property="eventType" column="event_type"/>
+        <result property="state" column="state"/>
+        <result property="ownerToken" column="owner_token_hex"/>
+        <result property="fenceToken" column="fence_token"/>
+        <result property="leaseUntil" column="lease_until"/>
+        <result property="attemptCount" column="attempt_count"/>
+        <result property="lastErrorCode" column="last_error_code"/>
+    </resultMap>
+
+    <sql id="columns">
+        id, HEX(notify_hash) notify_hash_hex, biz_type, biz_id, event_type,
+        state, HEX(owner_token) owner_token_hex, fence_token, lease_until, attempt_count, last_error_code
+    </sql>
+
+    <!-- notify_hash 唯一键是去重真源:同一回调重复投递只落一行,ignore 保证并发下不 500。 -->
+    <insert id="insertIgnore" parameterType="com.chengyinhub.business.domain.WxPaymentCallbackInbox">
+        insert ignore into wx_payment_callback_inbox
+            (notify_hash, biz_type, biz_id, event_type, state, fence_token, attempt_count, create_time, update_time)
+        values
+            (UNHEX(#{notifyHash}), #{bizType}, #{bizId}, #{eventType},
+             0, 0, 0, NOW(3), NOW(3))
+    </insert>
+
+    <select id="selectByNotifyHash" resultMap="InboxResult">
+        select <include refid="columns"/> from wx_payment_callback_inbox
+        where notify_hash = UNHEX(#{notifyHash})
+    </select>
+
+    <select id="selectForUpdate" resultMap="InboxResult">
+        select <include refid="columns"/> from wx_payment_callback_inbox
+        where notify_hash = UNHEX(#{notifyHash}) for update
+    </select>
+
+    <!-- 调用方先锁 inbox 行。只有 WAITING/RETRYABLE/租约已过期 PROCESSING 能领取。 -->
+    <update id="claim">
+        update wx_payment_callback_inbox
+        set state = 1,
+            owner_token = UNHEX(#{ownerToken}),
+            fence_token = fence_token + 1,
+            lease_until = DATE_ADD(NOW(3), INTERVAL 60 SECOND),
+            attempt_count = attempt_count + 1,
+            update_time = NOW(3)
+        where notify_hash = UNHEX(#{notifyHash})
+          and (state in (0, 3) or (state = 1 and lease_until &lt;= NOW(3)))
+    </update>
+
+    <!-- lease 只在进入最终事务时校验;事务随后一直持有 inbox+目标行锁,无 watchdog TOCTOU。 -->
+    <select id="selectOwnedForUpdate" resultMap="InboxResult">
+        select <include refid="columns"/> from wx_payment_callback_inbox
+        where notify_hash = UNHEX(#{notifyHash})
+          and state = 1
+          and owner_token = UNHEX(#{ownerToken})
+          and fence_token = #{fenceToken}
+          and lease_until &gt; NOW(3)
+        for update
+    </select>
+
+    <!-- 与 inbox 同一事务锁目标单据,串行化同单据的并发回调。返回 null 代表目标不存在。 -->
+    <select id="lockBusinessTarget" resultType="long">
+        <choose>
+            <when test="bizType == 1">select id from cms_registration where id = #{bizId} for update</when>
+            <when test="bizType == 2">select id from refund_application where id = #{bizId} for update</when>
+            <when test="bizType == 3">select id from member_cash_withdraw where id = #{bizId} for update</when>
+            <otherwise>select cast(null as signed)</otherwise>
+        </choose>
+    </select>
+
+    <update id="markDone">
+        update wx_payment_callback_inbox
+        set state = 2, lease_until = null, update_time = NOW(3)
+        where notify_hash = UNHEX(#{notifyHash}) and state = 1
+          and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken}
+    </update>
+
+    <!-- 事件对目标业务已过期(如已终态),终态标记但不再重试。 -->
+    <update id="markIgnoredStale">
+        update wx_payment_callback_inbox
+        set state = 4, last_error_code = #{errorCode}, lease_until = null, update_time = NOW(3)
+        where notify_hash = UNHEX(#{notifyHash}) and state = 1
+          and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken}
+    </update>
+
+    <update id="release">
+        update wx_payment_callback_inbox
+        set state = 3, owner_token = null, lease_until = null, update_time = NOW(3)
+        where notify_hash = UNHEX(#{notifyHash}) and state = 1
+          and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken}
+    </update>
+</mapper>

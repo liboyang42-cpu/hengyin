@@ -1,0 +1,207 @@
+[
+  {
+    "name": "rewards",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 484.008,
+      "width": 390,
+      "height": 360,
+      "right": 390,
+      "bottom": 844.008,
+      "centerX": 195,
+      "centerY": 664.008
+    },
+    "title": {
+      "left": 16,
+      "top": 512.008,
+      "width": 358,
+      "height": 45,
+      "right": 374,
+      "bottom": 557.008,
+      "centerX": 195,
+      "centerY": 534.508
+    },
+    "titleFont": "18px",
+    "titleText": "选择奖励",
+    "content": {
+      "left": 16,
+      "top": 635.305,
+      "width": 330,
+      "height": 22,
+      "right": 346,
+      "bottom": 657.305,
+      "centerX": 181,
+      "centerY": 646.305
+    },
+    "contentFont": "14px",
+    "panelBorder": "0px",
+    "panelBorderColor": "rgb(0, 0, 0)",
+    "flag_after_close": false,
+    "closed": true
+  },
+  {
+    "name": "reward-create",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 88,
+      "width": 390,
+      "height": 756,
+      "right": 390,
+      "bottom": 844,
+      "centerX": 195,
+      "centerY": 466
+    },
+    "title": {
+      "left": 16,
+      "top": 106.797,
+      "width": 309,
+      "height": 23,
+      "right": 325,
+      "bottom": 129.797,
+      "centerX": 170.5,
+      "centerY": 118.297
+    },
+    "titleFont": "18px",
+    "titleText": "创建优惠券",
+    "content": {
+      "left": 16,
+      "top": 159,
+      "width": 358,
+      "height": 22,
+      "right": 374,
+      "bottom": 181,
+      "centerX": 195,
+      "centerY": 170
+    },
+    "contentFont": "14px",
+    "panelBorder": "0px",
+    "panelBorderColor": "rgb(0, 0, 0)",
+    "flag_after_close": false,
+    "closed": true
+  },
+  {
+    "name": "merchant-time",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 331.602,
+      "width": 390,
+      "height": 512,
+      "right": 390,
+      "bottom": 843.602,
+      "centerX": 195,
+      "centerY": 587.602
+    },
+    "title": {
+      "left": 16,
+      "top": 343.602,
+      "width": 358,
+      "height": 45,
+      "right": 374,
+      "bottom": 388.602,
+      "centerX": 195,
+      "centerY": 366.102
+    },
+    "titleFont": "18px",
+    "titleText": "可配合时间",
+    "content": {
+      "left": 16,
+      "top": 396.602,
+      "width": 147,
+      "height": 22,
+      "right": 163,
+      "bottom": 418.602,
+      "centerX": 89.5,
+      "centerY": 407.602
+    },
+    "contentFont": "14px",
+    "panelBorder": "0px",
+    "panelBorderColor": "rgb(0, 0, 0)",
+    "flag_after_close": false,
+    "closed": true
+  },
+  {
+    "name": "project-actions",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 372,
+      "width": 390,
+      "height": 472,
+      "right": 390,
+      "bottom": 844,
+      "centerX": 195,
+      "centerY": 608
+    },
+    "title": {
+      "left": 16,
+      "top": 384,
+      "width": 358,
+      "height": 45,
+      "right": 374,
+      "bottom": 429,
+      "centerX": 195,
+      "centerY": 406.5
+    },
+    "titleFont": "18px",
+    "titleText": "活动选项",
+    "content": {
+      "left": 16,
+      "top": 449.5,
+      "width": 358,
+      "height": 22,
+      "right": 374,
+      "bottom": 471.5,
+      "centerX": 195,
+      "centerY": 460.5
+    },
+    "contentFont": "14px",
+    "panelBorder": "0px",
+    "panelBorderColor": "rgb(0, 0, 0)",
+    "flag_after_close": false,
+    "closed": true
+  },
+  {
+    "name": "footprint-share",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 253.203,
+      "width": 390,
+      "height": 591,
+      "right": 390,
+      "bottom": 844.203,
+      "centerX": 195,
+      "centerY": 548.703
+    },
+    "title": {
+      "left": 16,
+      "top": 265.203,
+      "width": 358,
+      "height": 45,
+      "right": 374,
+      "bottom": 310.203,
+      "centerX": 195,
+      "centerY": 287.703
+    },
+    "titleFont": "18px",
+    "titleText": "分享足迹卡",
+    "content": {
+      "left": 70.5,
+      "top": 761.477,
+      "width": 80,
+      "height": 21,
+      "right": 150.5,
+      "bottom": 782.477,
+      "centerX": 110.5,
+      "centerY": 771.977
+    },
+    "contentFont": "16px",
+    "panelBorder": "0px",
+    "panelBorderColor": "rgb(255, 255, 255)",
+    "flag_after_close": false,
+    "closed": true
+  }
+]

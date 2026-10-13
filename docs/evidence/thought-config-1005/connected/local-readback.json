@@ -1,0 +1,80 @@
+{
+  "route": "pages/publish/fabu/index",
+  "rules": {
+    "schemaVersion": 1,
+    "stateEnabled": false,
+    "hp": {
+      "enabled": false,
+      "init": 10,
+      "max": 10
+    },
+    "luck": {
+      "enabled": false,
+      "init": 3,
+      "max": 3
+    },
+    "thoughts": [
+      {
+        "key": "tmuv754e8",
+        "name": "伏笔",
+        "need": 3000,
+        "desc": "你想起了那扇亮着灯的窗。"
+      }
+    ],
+    "recovery": {
+      "stationEndIfHurt": 2,
+      "stageRestHpFloor": 6,
+      "stageRestLuckFloor": 1,
+      "exhaustRestHp": 5
+    }
+  },
+  "chapters": [
+    {
+      "name": "街角",
+      "blocks": [
+        {
+          "key": "lid3",
+          "type": "text",
+          "content": "沿着街角往前走，你看到窗里还亮着一盏灯。"
+        },
+        {
+          "type": "thought",
+          "key": "lid2",
+          "thoughtKey": "tmuv754e8"
+        }
+      ]
+    },
+    {
+      "name": "未完的故事",
+      "ending": {
+        "fallback": true
+      },
+      "blocks": [
+        {
+          "key": "lid5",
+          "type": "text",
+          "content": "有些答案还没出现，故事暂时停在这里。"
+        }
+      ]
+    },
+    {
+      "name": "窗后的光",
+      "ending": {
+        "when": [
+          {
+            "op": "HAS_TAG",
+            "value": "thought.tmuv754e8.done"
+          }
+        ]
+      },
+      "blocks": [
+        {
+          "key": "lid7",
+          "type": "text",
+          "content": "你终于明白，那扇窗一直亮着，是在等你回家。"
+        }
+      ]
+    }
+  ],
+  "draft": "muv1wb1v-kryk37"
+}

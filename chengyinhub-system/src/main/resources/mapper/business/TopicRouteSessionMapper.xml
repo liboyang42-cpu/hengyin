@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.TopicRouteSessionMapper">
+    <resultMap id="RouteSession" type="com.chengyinhub.business.domain.TopicRouteSession">
+        <id property="id" column="id"/><result property="activityId" column="activity_id"/>
+        <result property="topicId" column="topic_id"/><result property="memberId" column="member_id"/>
+        <result property="playInstanceId" column="play_instance_id"/><result property="configVersion" column="config_version"/>
+        <result property="configSnapshotJson" column="config_snapshot_json"/><result property="stateJson" column="state_json"/>
+        <result property="status" column="status"/><result property="currentNodeId" column="current_node_id"/>
+        <result property="recommendedNodeId" column="recommended_node_id"/><result property="seed" column="seed"/>
+        <result property="version" column="version"/><result property="completedAt" column="completed_at"/>
+        <result property="createTime" column="create_time"/><result property="updateTime" column="update_time"/>
+    </resultMap>
+    <resultMap id="RouteAction" type="com.chengyinhub.business.domain.TopicRouteAction">
+        <id property="id" column="id"/><result property="sessionId" column="session_id"/>
+        <result property="memberId" column="member_id"/><result property="nodeId" column="node_id"/>
+        <result property="actionId" column="action_id"/><result property="receiptId" column="receipt_id"/>
+        <result property="outcomeCode" column="outcome_code"/>
+        <result property="responseJson" column="response_json"/><result property="createTime" column="create_time"/>
+    </resultMap>
+    <sql id="sessionColumns">id,activity_id,topic_id,member_id,play_instance_id,config_version,
+        config_snapshot_json,state_json,status,current_node_id,recommended_node_id,seed,version,
+        completed_at,create_time,update_time</sql>
+    <insert id="insertSession" parameterType="com.chengyinhub.business.domain.TopicRouteSession" useGeneratedKeys="true" keyProperty="id">
+        insert into topic_route_session(activity_id,topic_id,member_id,play_instance_id,config_version,
+          config_snapshot_json,state_json,status,current_node_id,recommended_node_id,seed,version,
+          completed_at,create_time,update_time)
+        values(#{activityId},#{topicId},#{memberId},#{playInstanceId},#{configVersion},
+          #{configSnapshotJson},#{stateJson},#{status},#{currentNodeId},#{recommendedNodeId},#{seed},#{version},
+          #{completedAt},#{createTime},#{updateTime})
+    </insert>
+    <select id="selectEndingResults" resultType="string">
+        select JSON_EXTRACT(state_json,'$.themeRuntime.result') from topic_route_session
+        where member_id=#{memberId} and topic_id=#{topicId} and status in (1,2)
+          and JSON_EXTRACT(state_json,'$.themeRuntime.result.endingId') is not null
+        order by id desc
+    </select>
+    <select id="countRuns" resultType="int">select count(*) from topic_route_session where activity_id=#{activityId} and topic_id=#{topicId} and member_id=#{memberId}</select>
+    <select id="selectCurrentByOwner" resultMap="RouteSession">
+        select <include refid="sessionColumns"/> from topic_route_session
+        where activity_id=#{activityId} and topic_id=#{topicId} and member_id=#{memberId} order by id desc limit 1
+    </select>
+    <select id="selectHistoryPage" resultMap="RouteSession">
+        select <include refid="sessionColumns"/> from topic_route_session
+        where member_id=#{memberId} and topic_id=#{topicId}
+        <if test="beforeSessionId != null">and id &lt; #{beforeSessionId}</if>
+        order by id desc limit #{limit}
+    </select>
+    <select id="selectHistory" resultMap="RouteSession">
+        select <include refid="sessionColumns"/> from topic_route_session
+        where member_id=#{memberId} and topic_id=#{topicId} order by id desc limit 100
+    </select>
+    <select id="selectByOwner" resultMap="RouteSession">
+        select <include refid="sessionColumns"/> from topic_route_session
+        where activity_id=#{activityId} and topic_id=#{topicId} and member_id=#{memberId}
+          and play_instance_id=#{playInstanceId} limit 1
+    </select>
+    <!-- 最多两行即可判断旧请求能否唯一定位默认实例。 -->
+    <select id="selectMemberTopicSessions" resultMap="RouteSession">
+        select <include refid="sessionColumns"/> from topic_route_session
+        where member_id = #{memberId} and topic_id = #{topicId} and play_instance_id = 'default'
+        order by id limit 2
+    </select>
+    <select id="selectAccessibleById" resultMap="RouteSession">
+        select <include refid="sessionColumns"/> from topic_route_session where id=#{id} and member_id=#{memberId} limit 1
+    </select>
+    <select id="selectByOwners" resultMap="RouteSession">
+        select <include refid="sessionColumns"/> from topic_route_session
+        where id in (select max(id) from topic_route_session group by activity_id,topic_id,member_id)
+        <choose>
+            <when test="scopes != null and scopes.size() > 0">
+                and <foreach collection="scopes" item="scope" open="(" separator=" or " close=")">
+                    (activity_id=#{scope.activityId} and topic_id=#{scope.topicId} and member_id=#{scope.memberId})
+                </foreach>
+            </when>
+            <otherwise>and 1 = 0</otherwise>
+        </choose>
+    </select>
+    <update id="updateStateCas" parameterType="com.chengyinhub.business.domain.TopicRouteSession">
+        update topic_route_session set state_json=#{stateJson},status=#{status},current_node_id=#{currentNodeId},
+          recommended_node_id=#{recommendedNodeId},completed_at=#{completedAt},version=version+1,update_time=#{updateTime}
+        where id=#{id} and member_id=#{memberId} and version=#{version} and status=0
+    </update>
+    <select id="selectActionByAction" resultMap="RouteAction">
+        select id,session_id,member_id,node_id,action_id,receipt_id,outcome_code,response_json,create_time
+        from topic_route_action where session_id=#{sessionId} and member_id=#{memberId} and action_id=#{actionId} limit 1
+    </select>
+    <select id="selectActionByReceipt" resultMap="RouteAction">
+        select id,session_id,member_id,node_id,action_id,receipt_id,outcome_code,response_json,create_time
+        from topic_route_action where session_id=#{sessionId} and receipt_id=#{receiptId} limit 1
+    </select>
+    <insert id="insertAction" parameterType="com.chengyinhub.business.domain.TopicRouteAction" useGeneratedKeys="true" keyProperty="id">
+        insert into topic_route_action(session_id,member_id,node_id,action_id,receipt_id,outcome_code,response_json,create_time)
+        values(#{sessionId},#{memberId},#{nodeId},#{actionId},#{receiptId},#{outcomeCode},#{responseJson},#{createTime})
+    </insert>
+    <update id="updateActionResponse">
+        update topic_route_action set response_json=#{responseJson} where id=#{id} and member_id is not null
+    </update>
+    <select id="selectDistinctMemberIdsByTopic" resultType="long">
+        select distinct member_id from topic_route_session where topic_id=#{topicId}
+        <if test="status != null">and status=#{status}</if>
+    </select>
+    <select id="countDistinctMembersByTopic" resultType="int">
+        select count(distinct member_id) from topic_route_session where topic_id=#{topicId}
+        <if test="status != null">and status=#{status}</if>
+    </select>
+</mapper>

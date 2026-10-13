@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CmsTopicCompletionCouponRewardMapper">
+    <insert id="insertIgnore">
+        insert ignore into cms_topic_completion_coupon_reward_log
+        (topic_id, member_id, coupon_id, created_at)
+        values (#{topicId}, #{memberId}, #{couponId}, now())
+    </insert>
+
+    <!-- 批5 凭证面只读:这张幂等日志就是「券真发过」的事实,不去 sms_coupon_history 二次推断。 -->
+    <select id="selectGrantedAt" resultType="java.util.Date">
+        select created_at from cms_topic_completion_coupon_reward_log
+        where topic_id = #{topicId} and member_id = #{memberId}
+        order by created_at asc limit 1
+    </select>
+    <!-- 拍板4:通关券冲回作废后删发放日志,重新通关时 grantOnce 的 insertIgnore 才能再占位发一张。 -->
+    <delete id="deleteGrant">
+        delete from cms_topic_completion_coupon_reward_log where topic_id = #{topicId} and member_id = #{memberId}
+    </delete>
+
+    <!-- 第二轮拍板第 4 条:后台撤销核销勾选「同时冲回积分和经验」用。 -->
+    <select id="selectCouponId" resultType="java.lang.Long">
+        select coupon_id
+        from cms_topic_completion_coupon_reward_log
+        where topic_id = #{topicId} and member_id = #{memberId}
+        limit 1
+    </select>
+
+</mapper>

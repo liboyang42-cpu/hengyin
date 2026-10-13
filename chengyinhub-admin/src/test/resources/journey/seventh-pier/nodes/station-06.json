@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "requires": [
+    {"op": "NODE_COMPLETED", "nodeId": 5005}
+  ],
+  "check": {
+    "enabled": true,
+    "checkId": "persuade_laozhou",
+    "skill": "说服",
+    "tier": "medium",
+    "mods": [
+      {"when": {"op": "NODE_COMPLETED", "nodeId": 5004}, "value": 2, "label": "版本差异"},
+      {"when": {"op": "NODE_COMPLETED", "nodeId": 5005}, "value": 2, "label": "授权页摘录"}
+    ],
+    "advantageIf": [{"var": "clue.qiao_receipt", "op": "GTE", "value": 1}],
+    "disadvantageIf": [{"var": "clue.qiao_receipt", "op": "LTE", "value": 0}],
+    "successEffects": [
+      {"op": "SET", "var": "clue.direct_call", "value": 1},
+      {"op": "SET", "var": "relation.linzhou", "value": 1}
+    ],
+    "failEffects": [{"op": "SET", "var": "relation.linzhou", "value": 0}],
+    "successText": "老周接通了电话,把听筒递给你。",
+    "failText": "老周自己听完电话,只转述了大意。"
+  },
+  "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "title": "先讲明白:哪一条可以带着转交?",
+    "lead": "老周只认一句说得清楚的话。",
+    "options": [
+      {"id": "private_limit", "label": "被剪的是私人告别,未经许可不能公开", "correct": true},
+      {"id": "all_public", "label": "所有录音都可以公开", "correct": false},
+      {"id": "hide_limit", "label": "先不提限制,拿到回话再说", "correct": false},
+      {"id": "blame_lin", "label": "林舟是自己想消失的", "correct": false}
+    ],
+    "maxTries": 2,
+    "xp": 15
+  }
+}

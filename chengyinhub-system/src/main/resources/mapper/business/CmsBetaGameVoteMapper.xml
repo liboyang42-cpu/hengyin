@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CmsBetaGameVoteMapper">
+    
+    <resultMap type="CmsBetaGameVote" id="CmsBetaGameVoteResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="gameId"    column="game_id"    />
+        <result property="star"    column="star"    />
+        <result property="contents"    column="contents"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectCmsBetaGameVoteVo">
+        select id, member_id, game_id, star, contents, create_by, create_time, update_by, update_time from cms_beta_game_vote
+    </sql>
+
+    <select id="selectCmsBetaGameVoteList" parameterType="CmsBetaGameVote" resultMap="CmsBetaGameVoteResult">
+        <include refid="selectCmsBetaGameVoteVo"/>
+        <where>  
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="gameId != null "> and game_id = #{gameId}</if>
+            <if test="star != null "> and star = #{star}</if>
+            <if test="contents != null  and contents != ''"> and contents = #{contents}</if>
+        </where>
+    </select>
+    
+    <select id="selectCmsBetaGameVoteById" parameterType="Long" resultMap="CmsBetaGameVoteResult">
+        <include refid="selectCmsBetaGameVoteVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertCmsBetaGameVote" parameterType="CmsBetaGameVote" useGeneratedKeys="true" keyProperty="id">
+        insert into cms_beta_game_vote
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="gameId != null">game_id,</if>
+            <if test="star != null">star,</if>
+            <if test="contents != null">contents,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="gameId != null">#{gameId},</if>
+            <if test="star != null">#{star},</if>
+            <if test="contents != null">#{contents},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCmsBetaGameVote" parameterType="CmsBetaGameVote">
+        update cms_beta_game_vote
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="gameId != null">game_id = #{gameId},</if>
+            <if test="star != null">star = #{star},</if>
+            <if test="contents != null">contents = #{contents},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCmsBetaGameVoteById" parameterType="Long">
+        delete from cms_beta_game_vote where id = #{id}
+    </delete>
+
+    <delete id="deleteCmsBetaGameVoteByIds" parameterType="String">
+        delete from cms_beta_game_vote where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

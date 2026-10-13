@@ -1,0 +1,10 @@
+✔ inventory 与可持久化动态证据分离，freshness 不会抹掉执行结果 (3814.672083ms)
+✔ 内嵌创建表单保留有效期和投放数，完整日期使用整行 (6.363125ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3916.585958

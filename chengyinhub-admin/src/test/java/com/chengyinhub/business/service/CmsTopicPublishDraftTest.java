@@ -1,0 +1,280 @@
+package com.chengyinhub.business.service;
+
+import com.chengyinhub.business.domain.CmsActivity;
+import com.chengyinhub.business.domain.CmsMemberTemplate;
+import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.domain.CmsTopicNode;
+import com.chengyinhub.business.domain.ThemeStateKey;
+import com.chengyinhub.business.mapper.CmsActivityMapper;
+import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
+import com.chengyinhub.business.mapper.CmsTopicMapper;
+import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
+import com.chengyinhub.business.mapper.OmsTicketMapper;
+import com.chengyinhub.business.mapper.ThemeStateKeyMapper;
+import com.chengyinhub.business.service.impl.CmsTopicServiceImpl;
+import com.chengyinhub.business.service.support.ThemeStateKeyService;
+import com.chengyinhub.business.service.support.TopicStateKeyRefService;
+import com.chengyinhub.business.service.support.TopicBundleReviewService;
+import com.chengyinhub.common.exception.ServiceException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.Collections;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+/**
+ * B3 发布草稿 审核绕过防护单测。
+ * 核心:非草稿(rejected 审核未通过 / 已上架)不得借道 publish-draft 改状态 → clearDraftIfDraft 返 0 时不 mutate。
+ */
+class CmsTopicPublishDraftTest {
+
+    private CmsTopicMapper cmsTopicMapper;
+    private IAuditTaskService auditTaskService;
+    private CmsTopicNodeMapper cmsTopicNodeMapper;
+    private CmsMemberTemplateMapper cmsMemberTemplateMapper;
+    private ThemeStateKeyMapper themeStateKeyMapper;
+    private CmsActivityMapper cmsActivityMapper;
+    private TopicBundleReviewService topicBundleReviewService;
+    private CmsTopicServiceImpl svc;
+
+    @BeforeEach
+    void setUp() {
+        cmsTopicMapper = mock(CmsTopicMapper.class);
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(anyLong()))
+                .thenAnswer(inv -> cmsTopicMapper.selectCmsTopicById(inv.getArgument(0)));
+        auditTaskService = mock(IAuditTaskService.class);
+        cmsTopicNodeMapper = mock(CmsTopicNodeMapper.class);
+        cmsMemberTemplateMapper = mock(CmsMemberTemplateMapper.class);
+        themeStateKeyMapper = mock(ThemeStateKeyMapper.class);
+        cmsActivityMapper = mock(CmsActivityMapper.class);
+        topicBundleReviewService = mock(TopicBundleReviewService.class);
+        svc = new CmsTopicServiceImpl();
+        ReflectionTestUtils.setField(svc, "quotaService", mock(IQuotaService.class));
+        ReflectionTestUtils.setField(svc, "cmsTopicMapper", cmsTopicMapper);
+        ReflectionTestUtils.setField(svc, "auditTaskService", auditTaskService);
+        ReflectionTestUtils.setField(svc, "topicBundleReviewService", topicBundleReviewService);
+        when(topicBundleReviewService.freezeForSubmission(anyLong(), anyLong())).thenReturn(
+                new TopicBundleReviewService.Submission("{\"schemaVersion\":2}", Collections.singletonList(101L)));
+        when(auditTaskService.submitOrRefreshTopicBundle(anyLong(), anyLong(), anyString())).thenReturn(901L);
+        com.chengyinhub.business.domain.AuditTask pendingTask = new com.chengyinhub.business.domain.AuditTask();
+        pendingTask.setId(901L);
+        pendingTask.setStatus(com.chengyinhub.business.domain.AuditTask.STATUS_PENDING);
+        when(auditTaskService.selectAuditTaskById(901L)).thenReturn(pendingTask);
+        // F4 起专业版提交审核也验状态键,故三板斧齐备(无引用的老主题走不到注册表查询)。
+        ReflectionTestUtils.setField(svc, "cmsTopicNodeMapper", cmsTopicNodeMapper);
+        ReflectionTestUtils.setField(svc, "cmsMemberTemplateMapper", cmsMemberTemplateMapper);
+        ReflectionTestUtils.setField(svc, "themeStateKeyService", new ThemeStateKeyService(themeStateKeyMapper));
+        // R8 起引用收集在 TopicStateKeyRefService(节点块 + 数值规则),发布闸与试检查共用。
+        ReflectionTestUtils.setField(svc, "topicStateKeyRefService",
+                new TopicStateKeyRefService(cmsTopicNodeMapper, cmsMemberTemplateMapper,
+                mock(com.chengyinhub.business.mapper.CmsTopicChapterMapper.class)));
+        // R18-DRAFT:草稿期不预建自办活动壳,发布时要补建 —— 这条链路的两个协作者。
+        ReflectionTestUtils.setField(svc, "cmsActivityMapper", cmsActivityMapper);
+        ReflectionTestUtils.setField(svc, "omsTicketService", mock(IOmsTicketService.class));
+        // R19-DRAFT2:发布闸读票种(完整度),不在场就是 NPE 假红。
+        ReflectionTestUtils.setField(svc, "omsTicketMapper", mock(OmsTicketMapper.class));
+        // release-0917 同步 master:rule-funds 的欠款逾期闸在 publishDraft 提交口与 generateSelfHostActivity 里,手工装配须补上;mock 默认无逾期。
+        ReflectionTestUtils.setField(svc, "settlementDebtLedger",
+                mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
+        when(cmsTopicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
+        when(cmsTopicMapper.publishRouteSnapshot(anyLong(), nullable(String.class), any(java.util.Date.class))).thenReturn(1);
+    }
+
+    @Test
+    void notDraft_returnsFalse_noStatusMutation() {
+        // 非草稿(rejected/online):WHERE is_draft=1 命中 0 行
+        when(cmsTopicMapper.clearDraftIfDraft(9L)).thenReturn(0);
+        assertFalse(svc.publishDraft(9L), "非草稿不应发布(审核绕过防护)");
+        verify(cmsTopicMapper, never()).updateCmsTopic(any());
+        verify(cmsTopicMapper, never()).selectCmsTopicById(any());
+    }
+
+    @Test
+    void draftSimple_publishesOnline() {
+        when(cmsTopicMapper.clearDraftIfDraft(1L)).thenReturn(1);
+        when(cmsTopicMapper.publishRouteSnapshot(eq(1L), eq(null), any(java.util.Date.class))).thenReturn(1);
+        CmsTopic t = new CmsTopic();
+        t.setId(1L); t.setPublishMode("simple"); t.setMemberId(100L);
+        // R19-DRAFT2:可发布的主题必须有名字(草稿保存时已要求非空)。
+        t.setName("夜跑");
+        when(cmsTopicMapper.selectCmsTopicById(1L)).thenReturn(t);
+        assertTrue(svc.publishDraft(1L));
+        ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+        verify(cmsTopicMapper).updateCmsTopic(cap.capture());
+        assertEquals(Integer.valueOf(1), cap.getValue().getStatus(), "简易版发布 → 已上架");
+        assertEquals(Integer.valueOf(1), cap.getValue().getUserStatus());
+        verify(auditTaskService, never()).submit(anyString(), any(), any(), anyString(), anyString());
+    }
+
+    @Test
+    void draftAiSimple_publishesOnline() {
+        when(cmsTopicMapper.clearDraftIfDraft(3L)).thenReturn(1);
+        when(cmsTopicMapper.publishRouteSnapshot(eq(3L), eq(null), any(java.util.Date.class))).thenReturn(1);
+        CmsTopic t = new CmsTopic();
+        t.setId(3L); t.setPublishMode("ai_simple"); t.setMemberId(100L);
+        // R19-DRAFT2:简单 AI 发布要有名字 + 至少一个已确认地点。
+        t.setName("夜跑");
+        when(cmsTopicMapper.selectCmsTopicById(3L)).thenReturn(t);
+        CmsTopicNode aiNode = new CmsTopicNode();
+        aiNode.setId(31L); aiNode.setTopicId(3L); aiNode.setStatus(1L);
+        aiNode.setLatitude("31.23"); aiNode.setLongitude("121.45");
+        when(cmsTopicNodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
+                .thenReturn(Collections.singletonList(aiNode));
+
+        assertTrue(svc.publishDraft(3L));
+
+        ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+        verify(cmsTopicMapper).updateCmsTopic(cap.capture());
+        assertEquals(Integer.valueOf(1), cap.getValue().getStatus(), "简单 AI 草稿发布 → 已上架");
+        assertEquals(Integer.valueOf(1), cap.getValue().getUserStatus());
+        verify(auditTaskService, never()).submit(anyString(), any(), any(), anyString(), anyString());
+    }
+
+    @Test
+    void draftPro_publishesWhileAuditRemainsPending() {
+        when(cmsTopicMapper.clearDraftIfDraft(2L)).thenReturn(1);
+        CmsTopic t = new CmsTopic();
+        t.setId(2L); t.setPublishMode("pro"); t.setMemberId(100L); t.setName("夜跑");
+        when(cmsTopicMapper.selectCmsTopicById(2L)).thenReturn(t);
+        com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO result =
+                svc.publishDraftWithReview(2L);
+        ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+        verify(cmsTopicMapper).updateCmsTopic(cap.capture());
+        assertEquals(Integer.valueOf(1), cap.getValue().getStatus(), "专业版发布 → 上架待后审");
+        assertEquals(Integer.valueOf(0), cap.getValue().getCheckStatus());
+        assertTrue(result.isPublished());
+        assertEquals("PENDING", result.getReviewState());
+        verify(auditTaskService).submitOrRefreshTopicBundle(eq(2L), eq(100L), anyString());
+        verify(auditTaskService, never()).submit(eq("TOPIC"), eq(2L), eq(100L), anyString(), anyString());
+        verify(cmsTopicMapper).publishRouteSnapshot(
+                eq(2L), nullable(String.class), any(java.util.Date.class));
+    }
+
+    @Test
+    void directPublicationStillEnforcesOnlineQuota() {
+        when(cmsTopicMapper.clearDraftIfDraft(2L)).thenReturn(1);
+        CmsTopic topic = new CmsTopic();
+        topic.setId(2L); topic.setMemberId(100L); topic.setName("夜跑"); topic.setPublishMode("pro");
+        when(cmsTopicMapper.selectCmsTopicById(2L)).thenReturn(topic);
+        IQuotaService quota = (IQuotaService) ReflectionTestUtils.getField(svc, "quotaService");
+        when(quota.lockAndCheckThemeOnline(100L, 2L)).thenReturn("在架额度已满");
+        org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> svc.publishDraftWithReview(2L));
+        verify(cmsTopicMapper, never()).updateCmsTopic(any());
+        verify(cmsTopicMapper, never()).publishRouteSnapshot(anyLong(), nullable(String.class), any());
+    }
+
+    @Test
+    void refreshedEscalatedReviewReturnsItsPersistedState() {
+        when(cmsTopicMapper.clearDraftIfDraft(2L)).thenReturn(1);
+        CmsTopic topic = new CmsTopic();
+        topic.setId(2L); topic.setPublishMode("pro"); topic.setMemberId(100L); topic.setName("夜跑");
+        when(cmsTopicMapper.selectCmsTopicById(2L)).thenReturn(topic);
+        com.chengyinhub.business.domain.AuditTask task = new com.chengyinhub.business.domain.AuditTask();
+        task.setId(901L);
+        task.setStatus(com.chengyinhub.business.domain.AuditTask.STATUS_ESCALATED);
+        when(auditTaskService.selectAuditTaskById(901L)).thenReturn(task);
+
+        com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO result =
+                svc.publishDraftWithReview(2L);
+
+        assertEquals("ESCALATED", result.getReviewState());
+    }
+
+
+    /** F4:专业版提交审核时引用坏键 → 当场失败,不进审核、不写状态,别等过审才发现。 */
+    @Test
+    void draftPro_blocksUnregisteredStateKeyBeforeReview() {
+        when(cmsTopicMapper.clearDraftIfDraft(4L)).thenReturn(1);
+        CmsTopic t = new CmsTopic();
+        t.setId(4L); t.setPublishMode("pro"); t.setMemberId(100L); t.setName("夜跑");
+        when(cmsTopicMapper.selectCmsTopicById(4L)).thenReturn(t);
+        CmsTopicNode node = new CmsTopicNode();
+        node.setId(1L); node.setTopicId(4L); node.setName("书房"); node.setTemplateId(101L); node.setStatus(1L);
+        when(cmsTopicNodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
+                .thenReturn(Collections.singletonList(node));
+        CmsMemberTemplate template = new CmsMemberTemplate();
+        template.setAdvancedConfigJson("{\"requires\":[{\"var\":\"clue.ledger_page\",\"op\":\"EQ\",\"value\":1}]}");
+        when(cmsMemberTemplateMapper.selectCmsMemberTemplateById(101L)).thenReturn(template);
+        when(themeStateKeyMapper.selectByTopicId(4L)).thenReturn(Collections.<ThemeStateKey>emptyList());
+
+        ServiceException error = assertThrows(ServiceException.class, () -> svc.publishDraft(4L));
+
+        assertTrue(error.getMessage().contains("clue.ledger_page"), error.getMessage());
+        verify(cmsTopicMapper, never()).updateCmsTopic(any(CmsTopic.class));
+        verify(auditTaskService, never()).submit(anyString(), any(), any(), anyString(), anyString());
+    }
+
+    /**
+     * R18-DRAFT:草稿期不再预建自办活动壳(壳是公开可下单的),发布时必须补建 ——
+     * 缺了这一步,「草稿 → 发布」的自办主题发布后没有活动壳,玩家无票可买。
+     *
+     * <p>补建只发生在主题确已上架(status=1)时；简易版直发与专业版先发布、后台后审均适用。
+     * 这里第二次读(重读本事务刚写的状态)= 已上架。
+     */
+    @Test
+    void draftPublish_buildsSelfHostActivityShellWhenMissing() {
+        when(cmsTopicMapper.clearDraftIfDraft(5L)).thenReturn(1);
+        when(cmsTopicMapper.publishRouteSnapshot(eq(5L), eq(null), any(java.util.Date.class))).thenReturn(1);
+        CmsTopic t = new CmsTopic();
+        t.setId(5L); t.setPublishMode("simple"); t.setMemberId(100L); t.setCreateBy("publisher");
+        t.setName("夜跑");
+        CmsTopic published = new CmsTopic();
+        published.setId(5L); published.setPublishMode("simple"); published.setMemberId(100L);
+        published.setCreateBy("publisher"); published.setName("夜跑");
+        published.setStatus(1); published.setUserStatus(1);
+        when(cmsTopicMapper.selectCmsTopicById(5L)).thenReturn(t, published);
+        when(cmsActivityMapper.selectCmsActivityList(any(CmsActivity.class)))
+                .thenReturn(Collections.<CmsActivity>emptyList());
+
+        assertTrue(svc.publishDraft(5L));
+
+        verify(cmsActivityMapper).insertCmsActivity(any(CmsActivity.class));
+    }
+
+    /** 负控:进商家池的主题不由发布者自办,发布时不许建自办壳(壳由中标流程生成)。 */
+    @Test
+    void draftPublish_doesNotBuildShellForMerchantPoolTopic() {
+        when(cmsTopicMapper.clearDraftIfDraft(6L)).thenReturn(1);
+        CmsTopic t = new CmsTopic();
+        t.setId(6L); t.setPublishMode("pro"); t.setMemberId(100L); t.setName("夜跑");
+        t.setMerchantStatus(1);
+        when(cmsTopicMapper.selectCmsTopicById(6L)).thenReturn(t);
+
+        assertTrue(svc.publishDraft(6L));
+
+        verify(cmsActivityMapper, never()).insertCmsActivity(any(CmsActivity.class));
+    }
+
+    /** 壳已存在(老流程建的草稿)不重复建:发布是幂等补建,不是无脑插一条。 */
+    @Test
+    void draftPublish_doesNotDuplicateExistingShell() {
+        when(cmsTopicMapper.clearDraftIfDraft(7L)).thenReturn(1);
+        CmsTopic t = new CmsTopic();
+        t.setId(7L); t.setPublishMode("pro"); t.setMemberId(100L); t.setName("夜跑");
+        when(cmsTopicMapper.selectCmsTopicById(7L)).thenReturn(t);
+        CmsActivity existing = new CmsActivity();
+        existing.setId(9001L);
+        when(cmsActivityMapper.selectCmsActivityList(any(CmsActivity.class)))
+                .thenReturn(Collections.singletonList(existing));
+
+        assertTrue(svc.publishDraft(7L));
+
+        verify(cmsActivityMapper, never()).insertCmsActivity(any(CmsActivity.class));
+    }
+}

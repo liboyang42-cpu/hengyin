@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantClawbackApplicationMapper">
+
+    <resultMap type="MerchantClawbackApplication" id="MerchantClawbackApplicationResult">
+        <result property="id"    column="id"    />
+        <result property="merchantMemberId"    column="merchant_member_id"    />
+        <result property="reason"    column="reason"    />
+        <result property="amount"    column="amount"    />
+        <result property="settlePath"    column="settle_path"    />
+        <result property="targetBatchId"    column="target_batch_id"    />
+        <result property="status"    column="status"    />
+        <result property="initiatedBy"    column="initiated_by"    />
+        <result property="confirmedBy"    column="confirmed_by"    />
+        <result property="confirmedAt"    column="confirmed_at"    />
+        <result property="executedAt"    column="executed_at"    />
+        <result property="rejectReason"    column="reject_reason"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectMerchantClawbackApplicationVo">
+        select id, merchant_member_id, reason, amount, settle_path, target_batch_id, status,
+               initiated_by, confirmed_by, confirmed_at, executed_at, reject_reason, create_time
+        from merchant_clawback_application
+    </sql>
+
+    <insert id="insertApplication" parameterType="MerchantClawbackApplication" useGeneratedKeys="true" keyProperty="id">
+        insert into merchant_clawback_application
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="merchantMemberId != null">merchant_member_id,</if>
+            <if test="reason != null">reason,</if>
+            <if test="amount != null">amount,</if>
+            <if test="settlePath != null">settle_path,</if>
+            <if test="targetBatchId != null">target_batch_id,</if>
+            <if test="status != null">status,</if>
+            <if test="initiatedBy != null">initiated_by,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="merchantMemberId != null">#{merchantMemberId},</if>
+            <if test="reason != null">#{reason},</if>
+            <if test="amount != null">#{amount},</if>
+            <if test="settlePath != null">#{settlePath},</if>
+            <if test="targetBatchId != null">#{targetBatchId},</if>
+            <if test="status != null">#{status},</if>
+            <if test="initiatedBy != null">#{initiatedBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <select id="selectById" resultMap="MerchantClawbackApplicationResult">
+        <include refid="selectMerchantClawbackApplicationVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectByMerchantMemberId" resultMap="MerchantClawbackApplicationResult">
+        <include refid="selectMerchantClawbackApplicationVo"/>
+        where merchant_member_id = #{merchantMemberId}
+        order by create_time desc
+    </select>
+
+    <select id="selectList" parameterType="MerchantClawbackApplication" resultMap="MerchantClawbackApplicationResult">
+        <include refid="selectMerchantClawbackApplicationVo"/>
+        <where>
+            <if test="merchantMemberId != null">and merchant_member_id = #{merchantMemberId}</if>
+            <if test="status != null and status != ''">and status = #{status}</if>
+        </where>
+        order by create_time desc
+    </select>
+
+    <!-- ★ CAS:仅 PENDING_REVIEW 可置 EXECUTED。返回 0 = 已执行/已驳回,调用方必须当失败处理,
+         不能无条件 update(那会让已驳回的申请被复核通过、或把执行时间戳覆盖)。 -->
+    <update id="markExecutedIfPending">
+        update merchant_clawback_application
+           set status = 'EXECUTED', confirmed_by = #{confirmedBy}, confirmed_at = #{confirmedAt}, executed_at = #{executedAt}
+         where id = #{id} and status = 'PENDING_REVIEW'
+    </update>
+
+    <!-- ★ CAS:仅 PENDING_REVIEW 可置 REJECTED。 -->
+    <update id="markRejectedIfPending">
+        update merchant_clawback_application
+           set status = 'REJECTED', confirmed_by = #{confirmedBy}, confirmed_at = #{confirmedAt}, reject_reason = #{rejectReason}
+         where id = #{id} and status = 'PENDING_REVIEW'
+    </update>
+</mapper>

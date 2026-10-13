@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.IpWorldMapper">
+
+    <sql id="IpWorldColumns">
+        id, world_code as worldCode, world_name as worldName, subtitle, city_code as cityCode,
+        cover_url as coverUrl, intro, status, deleted, sort_no as sortNo,
+        create_time as createTime, update_time as updateTime
+    </sql>
+
+    <select id="selectPublishedWorlds" resultType="IpWorld">
+        select <include refid="IpWorldColumns" />
+        from ip_world
+        where status = '0'
+          and deleted = '0'
+        <if test="cityCode != null and cityCode != ''"> and city_code = #{cityCode}</if>
+        order by sort_no asc, id desc
+    </select>
+
+    <select id="selectAdminWorldList" parameterType="IpWorld" resultType="IpWorld">
+        select <include refid="IpWorldColumns" />
+        from ip_world
+        <where>
+            <if test="worldName != null and worldName != ''"> and world_name like concat('%', #{worldName}, '%')</if>
+            <if test="cityCode != null and cityCode != ''"> and city_code = #{cityCode}</if>
+            <if test="status != null and status != ''"> and status = #{status}</if>
+            and deleted = '0'
+        </where>
+        order by sort_no asc, id desc
+    </select>
+
+    <insert id="insertIpWorld" parameterType="IpWorld" useGeneratedKeys="true" keyProperty="id">
+        insert into ip_world
+        (world_code, world_name, subtitle, city_code, cover_url, intro, status, deleted, sort_no, create_time)
+        values
+        (#{worldCode}, #{worldName}, #{subtitle}, #{cityCode}, #{coverUrl}, #{intro}, #{status}, #{deleted}, #{sortNo}, #{createTime})
+    </insert>
+
+    <update id="updateIpWorld" parameterType="IpWorld">
+        update ip_world
+        <set>
+            <if test="worldName != null">world_name = #{worldName},</if>
+            <if test="subtitle != null">subtitle = #{subtitle},</if>
+            <if test="cityCode != null">city_code = #{cityCode},</if>
+            <if test="coverUrl != null">cover_url = #{coverUrl},</if>
+            <if test="intro != null">intro = #{intro},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="deleted != null">deleted = #{deleted},</if>
+            <if test="sortNo != null">sort_no = #{sortNo},</if>
+            update_time = #{updateTime}
+        </set>
+        where id = #{id}
+    </update>
+</mapper>

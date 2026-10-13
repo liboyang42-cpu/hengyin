@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CmsPresetRouteMapper">
+
+    <resultMap type="CmsPresetRoute" id="CmsPresetRouteResult">
+        <result property="id"    column="id"    />
+        <result property="city"    column="city"    />
+        <result property="name"    column="name"    />
+        <result property="previewImg"    column="preview_img"    />
+        <result property="routeGeometry"    column="route_geometry"    />
+        <result property="totalDistance"    column="total_distance"    />
+        <result property="totalTime"    column="total_time"    />
+        <result property="defaultCategoryIds"    column="default_category_ids"    />
+        <result property="sort"    column="sort"    />
+        <result property="status"    column="status"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectCmsPresetRouteVo">
+        select id, city, name, preview_img, route_geometry, total_distance, total_time, default_category_ids, sort, status, del_flag, create_by, create_time, update_by, update_time, remark from preset_route
+    </sql>
+
+    <select id="selectCmsPresetRouteList" parameterType="CmsPresetRoute" resultMap="CmsPresetRouteResult">
+        <include refid="selectCmsPresetRouteVo"/>
+        <where>
+            del_flag = 0
+            <if test="city != null  and city != ''"> and city = #{city}</if>
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+        order by sort asc, id asc
+    </select>
+
+    <select id="selectCmsPresetRouteById" parameterType="Long" resultMap="CmsPresetRouteResult">
+        <include refid="selectCmsPresetRouteVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertCmsPresetRoute" parameterType="CmsPresetRoute" useGeneratedKeys="true" keyProperty="id">
+        insert into preset_route
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="city != null">city,</if>
+            <if test="name != null">name,</if>
+            <if test="previewImg != null">preview_img,</if>
+            <if test="routeGeometry != null">route_geometry,</if>
+            <if test="totalDistance != null">total_distance,</if>
+            <if test="totalTime != null">total_time,</if>
+            <if test="defaultCategoryIds != null">default_category_ids,</if>
+            <if test="sort != null">sort,</if>
+            <if test="status != null">status,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="remark != null">remark,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="city != null">#{city},</if>
+            <if test="name != null">#{name},</if>
+            <if test="previewImg != null">#{previewImg},</if>
+            <if test="routeGeometry != null">#{routeGeometry},</if>
+            <if test="totalDistance != null">#{totalDistance},</if>
+            <if test="totalTime != null">#{totalTime},</if>
+            <if test="defaultCategoryIds != null">#{defaultCategoryIds},</if>
+            <if test="sort != null">#{sort},</if>
+            <if test="status != null">#{status},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="remark != null">#{remark},</if>
+        </trim>
+    </insert>
+
+    <update id="updateCmsPresetRoute" parameterType="CmsPresetRoute">
+        update preset_route
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="city != null">city = #{city},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="previewImg != null">preview_img = #{previewImg},</if>
+            <if test="routeGeometry != null">route_geometry = #{routeGeometry},</if>
+            <if test="totalDistance != null">total_distance = #{totalDistance},</if>
+            <if test="totalTime != null">total_time = #{totalTime},</if>
+            <if test="defaultCategoryIds != null">default_category_ids = #{defaultCategoryIds},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="deleteCmsPresetRouteById" parameterType="Long">
+        update preset_route set del_flag = 2 where id = #{id}
+    </update>
+
+    <update id="deleteCmsPresetRouteByIds" parameterType="String">
+        update preset_route set del_flag = 2 where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+</mapper>

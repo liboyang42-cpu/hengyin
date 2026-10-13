@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CmsRegistrationStatisticsMapper">
+    <!-- 根据 owner_type 和 owner_id 统计 销售金额 -->
+    <select id="statisticsSalesAmoutByOwner" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT
+        owner_type,
+        owner_id,
+        SUM(ticket_price) AS totalTicketPrice,  -- 总票价
+        AVG(ticket_price) AS avgTicketPrice,    -- 平均票价
+        MAX(ticket_price) AS maxTicketPrice,    -- 最高票价
+        MIN(ticket_price) AS minTicketPrice,    -- 最低票价
+        COUNT(*) AS recordCount                 -- 记录总数
+        FROM
+        cms_registration
+        <!-- 动态条件：根据传入的参数过滤 -->
+        <where>
+            <!-- 若传入 owner_type，则添加条件 -->
+            <if test="ownerType != null">
+                AND owner_type = #{ownerType}
+            </if>
+            <!-- 若传入 owner_id，则添加条件 -->
+            <if test="ownerId != null">
+                AND owner_id = #{ownerId}
+            </if>
+            <!-- 报名状态：1待支付 2报名成功 3已取消 4已过期 -->
+            <if test="registrationStatus != null">
+                AND registration_status = #{registrationStatus}
+            </if>
+        </where>
+        <!-- 按 owner_type 和 owner_id 分组 -->
+        GROUP BY
+        owner_type, owner_id
+        <!-- 可选：按总票价排序 -->
+        ORDER BY
+        totalTicketPrice DESC
+    </select>
+    <select id="statisticsSalesAmoutByOwners" resultType="map">
+        SELECT owner_id, SUM(ticket_price) AS totalTicketPrice
+        FROM cms_registration
+        WHERE owner_type = #{ownerType}
+          AND owner_id IN
+        <foreach item="oid" collection="ownerIds" open="(" separator="," close=")">
+            #{oid}
+        </foreach>
+        GROUP BY owner_id
+    </select>
+
+</mapper>

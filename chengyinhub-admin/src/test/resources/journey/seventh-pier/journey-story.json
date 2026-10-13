@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "call": {
+    "npcId": 101,
+    "opener": "第一次外勤?",
+    "options": [
+      {"id": "nervous", "line": "你听起来比我紧张。", "reply": "我把一杯茶热了三次。不要写进报告。"},
+      {"id": "what_first", "line": "先说要找什么。", "reply": "一个人,一份没交到的资料。先从订单查起。"},
+      {"id": "regret", "line": "如果只是送东西,我现在还能反悔吗?", "reply": "可以。但最好等我们知道,东西是不是送错了人。"}
+    ],
+    "brief": "「我们的档案员林舟昨晚没回执。他负责交接第七号档案盒。先找到盒子,也确认他平安。留白咖啡有张写着他名字的订单——你替我核实,别把我的猜测当记录。」"
+  },
+  "stages": [
+    {
+      "chapterId": 1001,
+      "question": "他真的来过吗?",
+      "end": {
+        "changed": [
+          {"text": "咖啡馆:预约不再被当作到场"},
+          {"when": {"var": "counter.stage1_result", "op": "GTE", "value": 1}, "text": "书店:展签登记更正"},
+          {"when": {"var": "counter.stage1_result", "op": "LTE", "value": 0}, "text": "书店:展签暂缓使用"},
+          {"when": {"var": "clue.qiao_receipt", "op": "GTE", "value": 1}, "text": "会客厅:乔岚签下具名回执"},
+          {"when": {"var": "clue.qiao_receipt", "op": "LTE", "value": 0}, "text": "会客厅:乔岚口头承认核对责任"}
+        ],
+        "open": "原始资料里,究竟有什么没有进入展览?"
+      }
+    },
+    {
+      "chapterId": 1002,
+      "question": "谁删掉了那一分钟?",
+      "end": {
+        "changed": [
+          {"when": {"var": "clue.voice", "op": "GTE", "value": 1}, "text": "书店:找回原声"},
+          {"when": {"var": "clue.voice", "op": "LTE", "value": 0}, "text": "书店:记下转写差异"},
+          {"when": {"var": "clue.photo_story", "op": "GTE", "value": 1}, "text": "咖啡馆:合照可带说明展出"},
+          {"when": {"var": "clue.photo_story", "op": "LTE", "value": 0}, "text": "咖啡馆:合照可无说明展出"},
+          {"when": {"var": "clue.direct_call", "op": "GTE", "value": 1}, "text": "会客厅:林舟亲自回话"},
+          {"when": {"var": "clue.direct_call", "op": "LTE", "value": 0}, "text": "会客厅:老周转述林舟的回话"}
+        ],
+        "open": "寄存的第七号档案盒,要怎么交接、怎么说明?"
+      }
+    },
+    {
+      "chapterId": 1003,
+      "question": "找到之后怎么办?",
+      "end": {
+        "changed": [
+          {"text": "档案盒已核验交接"},
+          {"text": "存在、编号、许可,分开说明"},
+          {"text": "处置:按分支玩法结果记入公开记录"}
+        ],
+        "open": "整季调查完成。"
+      }
+    }
+  ],
+  "ending": {
+    "dispositionNodeId": 5009,
+    "endings": [
+      {
+        "code": "correct",
+        "title": "更正说明,暂存原件",
+        "summary": "「从未存在」的断言被更正;原件暂不展出,目录、限制与待办留档。",
+        "when": [{"var": "sys.outcome.5009", "op": "EQ", "value": 1},
+                 {"var": "counter.disposition", "op": "EQ", "value": 1}]
+      },
+      {
+        "code": "exhibit",
+        "title": "展示获准材料",
+        "summary": "获准的合照与公共演奏被展出,来源、缺段与授权范围写在旁边。私人告别没有展出。",
+        "when": [{"var": "sys.outcome.5009", "op": "EQ", "value": 2},
+                 {"var": "counter.disposition", "op": "EQ", "value": 2}]
+      },
+      {
+        "code": "custody",
+        "title": "完整原件受限保管",
+        "summary": "完整原件交老周受限保管;目录、寄存说明和争议公开,私密原文不开放。",
+        "when": [{"var": "sys.outcome.5009", "op": "EQ", "value": 3},
+                 {"var": "counter.disposition", "op": "EQ", "value": 3}]
+      },
+      {
+        "code": "default",
+        "title": "暂缓处置",
+        "summary": "处置记录按现有材料归档;公开范围待复核。",
+        "fallback": true
+      }
+    ],
+    "epilogues": [
+      {"npcId": 101, "relationKey": "relation.qiao", "ally": "「这次,我把依据和限制一起写进去。核对人:乔岚。」", "neutral": "「更正我会签。其他的,按记录来。」", "guarded": "「更正我会签,但别指望我替你们背书。」"},
+      {"npcId": 102, "relationKey": "relation.arong", "ally": "「谢谢你没有把沉默当成同意。」", "neutral": "「合照挂出来就行,别的不用写。」", "guarded": "「授权页写得很清楚。照着做就行,别再追问。」"},
+      {"npcId": 103, "relationKey": "relation.xuwen", "ally": "「旧稿和更正记录我都留着,让后来的人知道我们改过什么。」", "neutral": "「我会照复核记录改。至于动机,你们没证据。」", "guarded": "「我会照记录改。你们没证据的事,别再问了。」"},
+      {"npcId": 104, "relationKey": "relation.laozhou", "ally": "「原件由我保管。封签完好,交接簿上一笔没改。」", "neutral": "「原件由我保管。记录怎么写,我照章办。」", "guarded": "「原件由我保管。你们能拿走的,只有记录。」"},
+      {"npcId": 105, "relationKey": "relation.linzhou", "ally": "「谢谢你们听我把理由说完。这些记忆,会在取得许可后被看见。」", "neutral": "「老周转告我了。谢谢。」", "guarded": "「理由还是说清楚比较好。别的,我不再解释。」"}
+    ],
+    "exhibits": [
+      {"when": {"var": "clue.voice", "op": "GTE", "value": 1}, "text": "原声 · 「我们都叫这里第七码头」"},
+      {"when": {"var": "clue.photo_story", "op": "GTE", "value": 1}, "text": "合照 P-02 · 附名字说明"}
+    ],
+    "badges": [
+      {"when": [{"op": "HAS_TAG", "value": "tag.injured"}], "title": "带伤结案的核查员"},
+      {"when": [{"op": "HAS_TAG", "value": "tag.seal_broken"}], "title": "付过代价的核查员"},
+      {"when": [{"op": "HAS_TAG", "value": "tag.qiao_verbal_only"}], "title": "付过代价的核查员"},
+      {"when": [
+        {"var": "clue.oral_note", "op": "GTE", "value": 1},
+        {"var": "clue.voice", "op": "GTE", "value": 1},
+        {"var": "clue.photo_story", "op": "GTE", "value": 1},
+        {"var": "clue.direct_call", "op": "GTE", "value": 1},
+        {"var": "clue.seal_intact", "op": "GTE", "value": 1}
+      ], "title": "严谨的核查员"},
+      {"title": "谨慎的核查员", "fallback": true}
+    ],
+    "optionalClues": [
+      "clue.oral_note",
+      "clue.voice",
+      "clue.photo_story",
+      "clue.direct_call",
+      "clue.seal_intact",
+      "clue.qiao_receipt"
+    ]
+  }
+}

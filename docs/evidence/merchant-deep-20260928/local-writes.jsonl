@@ -1,0 +1,2 @@
+{"at": "2026-09-28T08:10:23.489312+00:00", "action": "fixture-insert", "environment": "cy_e2e_53", "table": "club", "id": 990004, "owner": 9003, "note": "precondition only; UI save failed moderation"}
+{"at": "2026-09-28T08:13:37.216317+00:00", "action": "fixture-insert", "table": "club_post", "ids": [2, 3], "clubId": 990004, "note": "populated-state fixture; not a successful UI publish"}

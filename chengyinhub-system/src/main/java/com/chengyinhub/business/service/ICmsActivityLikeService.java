@@ -1,0 +1,73 @@
+package com.chengyinhub.business.service;
+
+import java.util.List;
+import com.chengyinhub.business.domain.CmsActivityLike;
+
+/**
+ * 活动点赞Service接口
+ * 
+ * @author webxh
+ * @date 2025-08-31
+ */
+public interface ICmsActivityLikeService 
+{
+
+    /**
+     * 查询用户点赞数
+     *
+     * @param member_id 用户ID
+     * @return 结果
+     */
+    public int selectUmsMemberLikeNumByMemberId(Long member_id);
+
+
+    /**
+     * 查询活动点赞
+     * 
+     * @param id 活动点赞主键
+     * @return 活动点赞
+     */
+    public CmsActivityLike selectCmsActivityLikeById(Long id);
+
+    /**
+     * 查询活动点赞列表
+     * 
+     * @param cmsActivityLike 活动点赞
+     * @return 活动点赞集合
+     */
+    public List<CmsActivityLike> selectCmsActivityLikeList(CmsActivityLike cmsActivityLike);
+
+    public List<CmsActivityLike> selectCmsActivityLikesByMemberAndDataIds(Long memberId, List<Long> dataIds);
+
+    /**
+     * 新增活动点赞
+     * 
+     * @param cmsActivityLike 活动点赞
+     * @return 结果
+     */
+    public int insertCmsActivityLike(CmsActivityLike cmsActivityLike);
+
+    /**
+     * 修改活动点赞
+     * 
+     * @param cmsActivityLike 活动点赞
+     * @return 结果
+     */
+    public int updateCmsActivityLike(CmsActivityLike cmsActivityLike);
+
+    /**
+     * 批量删除活动点赞
+     * 
+     * @param ids 需要删除的活动点赞主键集合
+     * @return 结果
+     */
+    public int deleteCmsActivityLikeByIds(Long[] ids);
+
+    /**
+     * 删除活动点赞信息
+     * 
+     * @param id 活动点赞主键
+     * @return 结果
+     */
+    public int deleteCmsActivityLikeById(Long id);
+}

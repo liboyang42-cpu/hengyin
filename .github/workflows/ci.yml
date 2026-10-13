@@ -1,0 +1,641 @@
+name: GitHub CI
+
+# 2026-09-01:检查改回 GitHub-hosted ubuntu-latest(不再占本机 runner)。
+#    部署(deploy.yml / deploy-ui.yml / codeup-mirror.yml)仍用 self-hosted Mac。
+#    额度:小程序单测只跑一遍 Asia/Shanghai;资金真库 IT 在无关 PR 上跳过重活。
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [master, feature/mini-unify-1003, feature/popup-ship-1005]
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  # master:用 run_id 让每个 run 独占一组,彼此不取消 —— 每次合并都必须跑完,才能触发 deploy(workflow_run success)
+  # PR/feature:按 ref 分组,同分支新 push 取消旧的 in-progress/queued CI,只保留最新 SHA
+  group: ci-${{ github.workflow }}-${{ github.ref == 'refs/heads/master' && github.run_id || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
+jobs:
+  changes:
+    name: Detect changed areas
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read     # dorny/paths-filter 在 PR 事件走 GitHub API 读变更文件,缺此权限报 Resource not accessible
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      ui: ${{ steps.filter.outputs.ui }}
+      xcx: ${{ steps.filter.outputs.xcx }}
+      dependency: ${{ steps.filter.outputs.dependency }}
+      migration: ${{ steps.filter.outputs.migration }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # 红线门禁的 H11 那一族要算 master 合并基线(同 mini_program 的 DS 门)
+          filter: blob:none     # 2026-08-28:只拉提交图不拉历史 blob。这些门禁只需算 merge-base,
+                                # 不需要历史文件内容;实测 unshallow 216s→46s。gitleaks 那处**不加**(它要扫内容)。
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          # 2026-09-15:变更清单改用本地 git 算,不走 GitHub diff API。
+          # 病历:0915 集成 PR(258 commit / 864 文件)上,API 直接返回
+          #   `Server Error: Sorry, this diff is taking too long to generate. {"code":"not_available"}`
+          #   ⇒ 本 job 失败 ⇒ 依赖它 outputs 的 7 道门禁全部 skipping ⇒ **这批代码一道门禁都没真跑过**。
+          #   重跑两次同样红,不是偶发:是 API 对大 diff 的硬上限。
+          # ⚠️ `base` 参数在 PR 事件下**会被显式忽略**(action 源码 main.ts:100-107 在 token 存在时
+          #   直接 core.warning 并走 API),唯一开关是把 token 置空 —— 别照文档想当然写 base。
+          # 上面的 checkout 已是 fetch-depth:0,提交图完整,git.getChanges(pr.base.sha, HEAD) 可用。
+          # 判据一条没改:filters 规则、输出名、下游 if 条件全部原样,只换「怎么拿到变更文件清单」。
+          token: ''
+          filters: |
+            backend:
+              - 'chengyinhub-admin/**'
+              - 'chengyinhub-system/**'
+              - 'chengyinhub-common/**'
+              - 'chengyinhub-framework/**'
+              - 'chengyinhub-quartz/**'
+              - 'chengyinhub-generator/**'
+              - 'pom.xml'
+              # Backend tests 直接执行的门禁脚本也必须触发本 job。
+              - 'ci/backend-test.sh'
+              - 'ci/role_permission_contract.py'
+              - 'ci/test_role_permission_contract.py'
+              - 'ci/deploy-restart.sh'
+              - 'ci/test_deploy_env_contract.sh'
+              - 'ci/test_deploy_jar_perm_contract.sh'
+              - 'ci/test_deploy_status_dir_contract.sh'
+              # H8 部署前置闸与它的负控；改闸或改接线都必须跑。
+              # ⚠️ 2026-08-26 起接线本体从 deploy.yml 搬进了 ci/deploy-push.sh ——
+              #   漏登记这几个文件的话,以后改部署链路不再触发 backend job,
+              #   H8 门禁会静默 skipped(绿得像跑过一样),正是「回执≠观测」的失效形态。
+              - 'ci/preflight-h8-schema.sh'
+              - 'ci/test_preflight_h8_schema.sh'
+              - '.github/workflows/deploy.yml'
+              - 'ci/deploy-lib.sh'
+              - 'ci/ecs-session-proxy.sh'
+              - 'ci/test_ecs_session_transport.sh'
+              - 'ci/deploy-classify.sh'
+              - 'ci/verify-built-jar.sh'
+              - 'ci/deploy-push.sh'
+              # 原子 migration runner 与它的真实 MySQL gate 自身变更也必须跑 backend job。
+              - 'ci/run_migration.py'
+              - 'ci/run_migration_skill_entry.py'
+              - 'ci/sql_splitter.py'
+              - 'ci/test_run_migration.py'
+              - 'ci/test_tandianri_mysql_integration.py'
+              - 'ci/test_circle_theme_seed_repair_mysql_integration.py'
+              - 'ci/test_club_constraint_null_safety_mysql_integration.py'
+              - 'ci/test_merchant_candidate_schema_repair_mysql_integration.py'
+              - 'ci/test_merchant_crm_delivery_check_mysql_integration.py'
+              - 'ci/test_quartz_jobs_pause_repair_mysql_integration.py'
+              - 'ci/test_migration_historical_schema_forward_fix_mysql_integration.py'
+              - 'ci/test_merchant_offer_withdrawal_columns_mysql_integration.py'
+              - 'ci/test_migration_runner_ci_contract.py'
+              - 'ci/funds-mysql-it-gate.sh'
+              # 改后端 job 自身时必须跑后端测试，不能靠 skipped 通过。
+              - '.github/workflows/ci.yml'
+            ui:
+              - 'chengyinhub-ui/**'
+              # 后台 UI 门禁自身(本 workflow + ui-build.sh)也必须触发这两个 ui job；
+              # 否则只改 workflow/脚本时 PR 上会跳过验证 —— 改门禁的那个 PR 恰恰最需要跑一次。
+              - '.github/workflows/ci.yml'
+              - 'ci/ui-build.sh'
+            xcx:
+              - 'chengyinhub-xcx/**'
+              - '!chengyinhub-xcx/docs/**'
+              # 跨栈埋点白名单合同直接读该服务端文件。
+              - 'chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java'
+              # 漫游红线门禁(scripts/roam-redline-gate.js)直接读这四个后端文件:
+              # 前三个是它的扫描面,第四个是前瞻指引口径的真源(R7 逐字比对)。
+              # 只挂 chengyinhub-xcx/** 的话,单改 Java/XML 的 PR 会跳过该 job = 假绿
+              # (《探店日施工审计 5》§六.6 点名过这个形态)。
+              - 'chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java'
+              - 'chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java'
+              - 'chengyinhub-system/src/main/resources/mapper/business/RoamMapper.xml'
+              - 'chengyinhub-system/src/main/java/com/chengyinhub/business/service/RoamRouteStoryPolicy.java'
+              # 小程序门禁自身也必须触发该 job；否则只改 workflow/脚本时会跳过验证。
+              - '.github/workflows/ci.yml'
+              - 'ci/xcx-check.sh'
+            dependency:
+              # 只在依赖清单、扫描器配置或扫描工作流变化时跑 SBOM/Grype。
+              # 业务源码变化不会改变依赖图，不再为每个 UI PR 付一次扫描费用。
+              - 'pom.xml'
+              - '**/pom.xml'
+              - '**/package.json'
+              - '**/package-lock.json'
+              - '**/yarn.lock'
+              - '**/pnpm-lock.yaml'
+              - 'ci/dependency-audit-gate.py'
+              - 'ci/test_dependency_audit_gate.py'
+              - 'ci/grype.yaml'
+              - 'ci/test_ci_cost_contract.py'
+              - '.github/workflows/ci.yml'
+            migration:
+              # bean/SQL/分类/CI 门禁有变更时才跑迁移两道闸；master push 仍强制全跑。
+              - 'chengyinhub-admin/**'
+              - 'chengyinhub-system/**'
+              - 'chengyinhub-common/**'
+              - 'chengyinhub-framework/**'
+              - 'chengyinhub-quartz/**'
+              - 'chengyinhub-generator/**'
+              - '**/migration_*.sql'
+              - 'ci/migration-*.sh'
+              - 'ci/migration_*.py'
+              - 'ci/test_migration_*.py'
+              - 'ci/run_migration.py'
+              - 'ci/run_migration_skill_entry.py'
+              - 'ci/test_run_migration.py'
+              - 'ci/test_tandianri_mysql_integration.py'
+              - 'ci/test_circle_theme_seed_repair_mysql_integration.py'
+              - 'ci/test_club_constraint_null_safety_mysql_integration.py'
+              - 'ci/test_merchant_candidate_schema_repair_mysql_integration.py'
+              - 'ci/test_merchant_crm_delivery_check_mysql_integration.py'
+              - 'ci/test_quartz_jobs_pause_repair_mysql_integration.py'
+              - 'ci/test_migration_historical_schema_forward_fix_mysql_integration.py'
+              - 'ci/test_merchant_offer_withdrawal_columns_mysql_integration.py'
+              - 'ci/sql_splitter.py'
+              - 'ci/migration-dependencies.json'
+              - 'ci/classify-runtime.sh'
+              - 'ci/classify-runtime-check.sh'
+              - 'ci/ci-config-guard.sh'
+              - 'ci/test_ci_cost_contract.py'
+              - 'scripts/release-manifest.sh'
+              # schema 重放策略和其 Git sourceCommit 信任锚必须进入有完整历史的迁移门禁。
+              - 'scripts/e2e/**'
+              - 'sql/base_schema_20260818.sql'
+              - 'sql/base_seed_20260818.sql'
+              - '.github/workflows/ci.yml'
+      - name: Verify CI cost routing contract
+        run: python3 ci/test_ci_cost_contract.py
+      - name: Verify template cover contract
+        # 挂**无条件** job:封面契约横跨 docs/assets、ci/ 与 chengyinhub-admin/sql,
+        # 挂任一 path filter 都会让另两处的 PR 整个 skip = 假绿。
+        # 2026-08-25 之前这个测试文件存在但没接进任何 workflow,从来没跑过。
+        # 纯 stdlib、毫秒级,不引入扫描成本。
+        run: python3 ci/test_template_cover_contract.py
+      - name: Run control-plane readback negative controls
+        # Detect changed areas 是 required context 且每次都跑；部署/镜像/漂移脚本不能落到可 skip 的盲区。
+        run: bash ci/test_control_plane_readbacks.sh
+      - name: Run 探店日/漫游 redline gate (self-test first)
+        # 挂在这个**无条件**的 job 上，不是挂 xcx/backend/ui 任一路径闸：H11 禁项可以落在后台 UI、
+        # 小程序或后端任一栈，只挂其中一条 filter 的话，另外两栈的 PR 会整个 skip 掉 = 假绿。
+        # xcx-check.sh 里还会再跑一遍(那边覆盖漫游那一族的四个后端文件)，重复跑是有意的。
+        run: |
+          node chengyinhub-xcx/scripts/roam-redline-gate.js --selftest
+          node chengyinhub-xcx/scripts/roam-redline-gate.js
+
+  fast_gates:
+    name: Fast gates (CWD / API existence / silentError)
+    # ★ 2026-08-28:由 cwd_independence / api_existence / silent_error 三个 job 合并而来。
+    #   三者条件完全相同(都【没有】needs 与 if,永远运行),各自只跑几十秒,却各做一次
+    #   checkout —— 这个仓库 6826 个文件,三次检出的开销比闸本身还大。
+    #   ⚠️ 合并的边界在哪:原 silent_error 的注释写明「不塞进 mini_program」,理由是并进
+    #      【required check】后一红会把它一起拖红,而 master 开着 enforce_admins ⇒ 所有 PR
+    #      都合不进去。这三个都不是 required check,合并后仍然不是,合并闸不受影响 ——
+    #      所以这次合并不违反那条,但**绝不能**把它们并进任何 required check。
+    #   ⚠️ 也不能并入 admin_ui_contract:那个带 `if: ui == 'true'`,并进来只有两种下场 ——
+    #      要么 E2E 契约闸每次都跑,要么这三道闸变成有条件的。而它们必须永远跑(见下面
+    #      各自保留的原注释),那就是把闸放错层。
+    #   ⚠️ 每道闸独立成 step 且带 `if: '!cancelled()'`:合并不能牺牲诊断信息 ——
+    #      第一道红了后面照跑照报,不退化成「只看得见最先失败的那个」。
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # 原 cwd_independence 需要完整历史;取三者的并集
+          filter: blob:none     # 2026-08-28:只拉提交图不拉历史 blob。这些门禁只需算 merge-base,
+                                # 不需要历史文件内容;实测 unshallow 216s→46s。gitleaks 那处**不加**(它要扫内容)。
+      # GitHub-hosted ubuntu 默认 Node 20;单测 glob / 若干门禁要 >= 21。
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # 第一道闸不带 `!cancelled()`:它前面只有 checkout / setup-node,没有可跳过的失败前序。
+      # 后面几道才需要 —— 那是为了「这道红了后面照跑照报」,不让合并牺牲诊断信息。
+      - name: Check CI scripts are CWD-independent
+        run: bash ci/test_cwd_independence.sh
+
+      # ★ 故意【不】挂 needs: changes / if: —— 这道闸的两侧分别是小程序和后端 Java,
+      #   任何一侧单独变动都可能把一条调用变成死链(后端删了个 @PostMapping,前端毫不知情)。
+      #   给它加路径过滤 = 亲手造一个盲区,而这道闸抓的恰恰是「两边各自看都正常」的缺陷。
+      - name: Self-test the API existence gate
+        if: '!cancelled()'
+        run: node ci/api-existence-gate.js --selftest
+      - name: Check every /api call has a backend @*Mapping
+        if: '!cancelled()'
+        run: node ci/api-existence-gate.js
+
+      # 同上不做路径过滤:册子(ci/silent-error-allowlist.txt)与调用点分居两处,
+      # 只按 chengyinhub-xcx/** 过滤会漏掉「只改册子把额度调大」这一半。
+      # 2026-08-18 立册:存量 77 处 / 43 文件登记为 UNREVIEWED_BASELINE_20260818 —— 不是豁免,
+      #   是把它变成有人签过字的已知债。此后任何【新增】都会撞上「申报处数 <= 冻结处数」。
+      - name: Self-test the silentError gate
+        if: '!cancelled()'
+        run: |
+          node ci/silent-error-gate.js --selftest
+          python3 ci/test_silent_error_hook_env.py
+      - name: Check every silentError:true is on the allowlist
+        if: '!cancelled()'
+        run: node ci/silent-error-gate.js
+
+  backend:
+    name: Backend tests
+    needs: changes
+    # PR 和 master push 都按路径跑。合一个小程序 PR 不必再付一遍 Java/SBOM。
+    # workflow_dispatch 仍全开,方便手动补跑。
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.backend == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # PublicVisibilityMyBatisTest 故意设计成"fixture 不可达即失败"(拒绝静默跳过),
+    # 硬编码连动态端口上的 mysql:8.0.45,自建表、用完即弃,与生产/funds-mysql-it.yml
+    # 用的远程测试库完全隔离。版本锁死见 ci/test_migration_runner_ci_contract.py。
+    # GitHub-hosted 有 Docker,继续用按 run 唯一的 docker run(不是 services:),避免并发互删容器。
+    steps:
+      - uses: actions/checkout@v4
+      # 镜像 tag 放 env MYSQL_IMAGE,供 ci/test_migration_runner_ci_contract.py 锁版本。
+      # 继续 docker run 而不是 services:,因为容器名/端口必须按 run 唯一(见下方 IT_NAME)。
+      - name: Ensure Docker is available
+        run: |
+          if ! docker info >/dev/null 2>&1; then
+            echo "::error::GitHub-hosted runner 上 Docker 不可用,backend MyBatis IT 起不来。"
+            exit 1
+          fi
+          docker info --format 'docker ok: {{.ServerVersion}} {{.OSType}}/{{.Architecture}}'
+      - name: Start MySQL for MyBatis IT
+        env:
+          MYSQL_IMAGE: mysql:8.0.45
+          # ★ 2026-08-27:容器名与端口都改成【按 run 唯一】。
+          #   此前是固定名 chengyin-mybatis-it + 固定端口 3307,而 concurrency group 按分支分
+          #   ⇒ 不同分支本来就允许并发,只是这台 Mac 只有一个 runner,单 runner 意外充当了互斥锁。
+          #   一旦加第二个 runner(队列已积压 8 个 run,加 runner 是显然的解法),潜伏 bug 就会暴露:
+          #     · run B 的 `docker rm -f` 会删掉 run A 正在跑测试的容器;
+          #     · 或 run A 的 JDBC 静默连上 run B 的容器,读到别人的数据。
+          #   后者不是响亮的失败,是【串数据】—— 比红更危险。
+          IT_NAME: chengyin-mybatis-it-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          # 端口只能动态取:run_id 推不出「保证空闲」的端口。
+          # bind→close→docker bind 之间有 TOCTOU 窗口,由下面的握手探活兜底:
+          # 端口被别人抢走时读不到 8.0.45 ⇒ 判红(fail-closed),不会静默连错库。
+          IT_PORT=$(python3 -c 'import socket;s=socket.socket();s.bind(("127.0.0.1",0));print(s.getsockname()[1]);s.close()')
+          echo "IT_PORT=$IT_PORT" >> "$GITHUB_ENV"
+          # ★ 必须带 -v:`docker rm -f` 只删容器、**不删匿名卷**。
+          #   2026-08-28 实测这台 Mac 上攒了 47 个孤儿卷共 9.97GB(约 46 次 CI/天 ×
+          #   一个 MySQL 数据卷),把磁盘吃到 93%。加到 4 个 runner 后漏速同步 ×4。
+          docker rm -f -v "$IT_NAME" >/dev/null 2>&1 || true
+
+          # 孤儿清扫:runner 进程被杀时 `Stop MySQL`(if: always())根本不会执行,
+          # 容器和卷就永久留在机器上。只清本前缀下【3 小时前创建】的 —— 远超单个 job
+          # 时长,绝不会误删并发中的兄弟 run。
+          # ⚠️ 不能用 `docker ps --filter until=`:ps **不支持** until(那是 container prune 的),
+          #   会报 `invalid filter 'until'` 再被 `|| true` 吞掉 —— 清理静默失效、机器照样堆。
+          #   2026-08-28 实测。改成比 .Created:它是 RFC3339 UTC,可直接字典序比较。
+          # ⚠️ 作用域边界:这段寄生在 backend job 里,而 backend 带 needs: changes + if,
+          #   所以【不碰后端的 PR 不会清扫】。可接受的理由:backend 的 if 第一个分支就是
+          #   refs/heads/master ⇒ 每次合并 master 都无条件跑(约 14 次/天),足够压住堆积。
+          #   若哪天孤儿仍在涨,应把这段挪去 drift-audit.yml 的 6h cron(那里是无条件的)。
+          cutoff=$(python3 -c 'import datetime;print((datetime.datetime.now(datetime.timezone.utc)-datetime.timedelta(hours=3)).strftime("%Y-%m-%dT%H:%M:%S"))')
+          # ⚠️ 必须【先赋值再循环】,不能写成 `for c in $(docker ps ...)`:
+          #   命令替换出现在 for 的词表里时 **`set -e` 不触发**(2026-08-28 负控实测:
+          #   `for x in $(false); do ...; done` 整段 rc=0)。docker daemon 挂掉时列表为空
+          #   ⇒ 循环零次 ⇒ 无输出、无红,和被 `|| true` 吞掉的 until filter 是同一种死法。
+          #   赋值形式会被 set -e 捕获(负控:`names=$(false)` 判红)。
+          candidates=$(docker ps -a --filter "name=chengyin-mybatis-it-" --format '{{.Names}}')
+          # 打印候选数:否则「零命中」与「整段没跑」在日志上一模一样,事后无从分辨。
+          echo "孤儿扫描:候选 $(printf '%s' "$candidates" | grep -c . || true) 个,阈值 $cutoff"
+          for c in $candidates; do
+            created=$(docker inspect -f '{{.Created}}' "$c" 2>/dev/null || true)
+            [ -n "$created" ] || continue
+            if [ "${created%%.*}" \< "$cutoff" ]; then
+              echo "清理 3 小时前遗留的孤儿容器:$c (created $created)"
+              docker rm -f -v "$c" >/dev/null 2>&1 || true
+            fi
+          done
+          docker run -d --name "$IT_NAME" \
+            -e MYSQL_ROOT_PASSWORD=root \
+            -e MYSQL_DATABASE=chengyin_mybatis_it \
+            -e MYSQL_USER=ituser \
+            -e MYSQL_PASSWORD=itpass \
+            -p "127.0.0.1:$IT_PORT:3306" "$MYSQL_IMAGE"
+          # ⚠️ 绝不能发 3306:这台 Mac 常驻着一个本机 mysqld(9.7.x)占着 127.0.0.1:3306,
+          #   容器再发 3306 时端口转发被顶掉,JDBC 会静默连上那个错的 MySQL ——
+          #   实测症状是 root/root「Access denied」,而容器本身完全健康。
+          # ⚠️ 探活必须在【主机侧】做协议握手并核版本,不能 docker exec mysqladmin ping:
+          #   ① exec 走容器内 socket,MySQL 8 初始化阶段的临时服务器只开 socket,会假就绪;
+          #   ② exec 只证明容器活着,证明不了主机端口转发指向的是这个容器(正是本次翻车面)。
+          #   MySQL 握手包自带版本串,读出来必须是 8.0.45 —— 连到别的服务器立刻判红。
+          for i in $(seq 1 90); do
+            if IT_PORT="$IT_PORT" python3 - <<'PY'
+          import os, socket, sys
+          try:
+              s = socket.create_connection(("127.0.0.1", int(os.environ["IT_PORT"])), timeout=2)
+              data = s.recv(128)
+              s.close()
+          except Exception:
+              sys.exit(1)
+          if len(data) < 6 or data[4] != 0x0a:
+              sys.exit(1)
+          end = data.index(b"\x00", 5)
+          sys.exit(0 if data[5:end].decode("ascii", "replace").startswith("8.0.45") else 1)
+          PY
+            then echo "mysql 8.0.45 ready on 127.0.0.1:$IT_PORT after ${i} tries"; exit 0; fi
+            sleep 2
+          done
+          echo "::error::MySQL 90 次主机侧握手探活仍未就绪(或 $IT_PORT 上不是 mysql:8.0.45)"; docker logs --tail 40 "$IT_NAME"; exit 1
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+          cache: maven
+      - name: Build and test backend
+        run: bash ci/backend-test.sh
+        env:
+          # 2026-08-19 一类一库:MyBatis 真库 IT 各自建自己的 schema(见 MybatisItDatabase),
+          # 建库要的权限 ituser 没有(service 只把 chengyin_mybatis_it 授给它)⇒ 走 root。
+          # 本机 root 是空口令、这个 service 是 root/root,所以密码在这里显式给,不写进代码默认值。
+          CHENGYIN_MYBATIS_IT_USER: root
+          CHENGYIN_MYBATIS_IT_PASSWORD: root
+          # 端口按 run 动态分配(见 Start MySQL 步的注释),不再是固定 3307
+          CHENGYIN_MYBATIS_IT_PORT: ${{ env.IT_PORT }}
+      - name: Run localhost atomic migration MySQL IT by exact class
+        run: |
+          python3 -m pip install --disable-pip-version-check PyMySQL==1.1.1
+          bash ci/funds-mysql-it-gate.sh atomic-migration
+        env:
+          CHENGYIN_TEST_MYSQL_HOST: 127.0.0.1
+          CHENGYIN_TEST_MYSQL_PORT: ${{ env.IT_PORT }}
+          CHENGYIN_TEST_MYSQL_USER: root
+          CHENGYIN_TEST_MYSQL_PASSWORD: root
+      - name: Check deploy env contract
+        run: bash ci/test_deploy_env_contract.sh
+      - name: Check deploy jar permission contract
+        run: bash ci/test_deploy_jar_perm_contract.sh
+      - name: Check deploy status directory contract
+        run: bash ci/test_deploy_status_dir_contract.sh
+      - name: Check ECS Session Manager transport contract
+        run: bash ci/test_ecs_session_transport.sh
+      - name: Check H8 migration preflight gate contract
+        run: bash ci/test_preflight_h8_schema.sh
+      # 同一测试文件里同一张表被 CREATE 两次(中间没 DROP)。
+      # 这类缺陷只在**合并结果**里出现:两边各自加一条、git 不冲突、单边都绿。
+      - name: Duplicate CREATE TABLE gate self-test
+        run: python3 ci/dup_create_table_gate.py --selftest
+      - name: Duplicate CREATE TABLE gate
+        run: python3 ci/dup_create_table_gate.py
+      # 自托管 runner 是长驻的:不清干净就会一直堆在机器上(容器名按 run 唯一之后不再
+      # 互相顶,但堆积照旧)。-v 见 Start MySQL 步的说明:不带它只删容器不删数据卷。
+      - name: Stop MySQL
+        if: always()
+        run: docker rm -f -v chengyin-mybatis-it-${{ github.run_id }}-${{ github.run_attempt }} >/dev/null 2>&1 || true
+
+  mini_program:
+    name: Mini program static checks
+    needs: changes
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.xcx == 'true' }}
+    runs-on: ubuntu-latest
+    # ★2026-09-01:单测只跑一遍 TZ=Asia/Shanghai。第二遍 America/Los_Angeles 把 ~4800 条
+    #   翻倍,额度上不值;UTC+8 已经能抓住「本地日 ≠ UTC 日」那类结构性缺陷。
+    # 全量单测在 hosted runner 约 16 分钟，保留后续静态门禁的执行时间。
+    timeout-minutes: 30
+    # ★ 用**生产用户的时区**跑,不要用 runner 默认的 UTC。
+    # 时区相关的缺陷在 UTC 下结构性地抓不到:UTC 机器上「UTC 日」恒等于「本地日」,
+    # 于是 toISOString() 与本地取值两种写法完全等价,写错了也永远绿。
+    # 2026-08-01 实证:发布页日期在 UTC+8 的 00:00~07:59 会提交成前一天,
+    # 而这条缺陷在 UTC runner 上从来没红过。用户全在 UTC+8,CI 就该站在用户的时区上。
+    env:
+      TZ: Asia/Shanghai
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # DS 硬编码门需完整历史算 origin/master 合并基线
+          filter: blob:none     # 2026-08-28:只拉提交图不拉历史 blob。这些门禁只需算 merge-base,
+                                # 不需要历史文件内容;实测 unshallow 216s→46s。gitleaks 那处**不加**(它要扫内容)。
+      # GitHub-hosted ubuntu 默认 Node 20;单测 glob / 若干门禁要 >= 21。
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify mini program unit discovery manifest
+        # 必须在 node --test 之外先跑；否则 glob 漏掉 smoke 本身时仍可假绿。
+        run: node ci/xcx-unit-manifest.js --selftest
+      - name: Run mini program unit contracts
+        run: npm --prefix chengyinhub-xcx run test:unit
+      - name: Check mini program UI integrity
+        run: npm --prefix chengyinhub-xcx run lint:ui
+      - name: Check mini program RequestBody contracts
+        run: npm --prefix chengyinhub-xcx run lint:requestbody
+      # 危险动作确认门禁:不可逆动作必须有确认弹窗且写明「此操作不可撤销」,新增裸删除判红。
+      # 先跑 --selftest 负控(构造该红的场景确认真判红),再跑全仓扫描 —— 顺序不能反:
+      # 门禁本身坏掉时全仓扫描会一路绿,那种绿比没有门禁更危险。
+      - name: Check mini program danger-action confirmations (selftest first)
+        run: |
+          npm --prefix chengyinhub-xcx run lint:danger-confirm:selftest
+          npm --prefix chengyinhub-xcx run lint:danger-confirm
+      # ci/xcx-check.sh 是小程序全部静态门禁的唯一入口,逐条「先 --selftest 负控、再全仓扫描」。
+      # 2026-08-18 起它里面点名跑的 wxml ↔ js 绑定与消费面三条(共用 scripts/lib/xcx-scan.js 一套解析):
+      #   U2 scripts/wxml-handler-lint.js       wxml 绑了 js 里不存在的方法 = 点了没反应
+      #   U3 scripts/js-orphan-handler-lint.js  js 有 handler 但 wxml 零绑定 = 按钮根本没上屏 / 死代码
+      #   U4 scripts/setdata-dead-field-lint.js setData 的字段 wxml 零消费 = 白算白传 / 只进无障碍属性
+      # ★ 三条都是棘轮:存量记在 chengyinhub-xcx/scripts/baselines/*.json,只对**新增**判红;
+      #   存量清单只能变小不能变大,修完存量跑 --update-baseline 收窄基线。硬红会把 master 的
+      #   门禁永久锁死(存量 503 条(U2 0 + U3 95 + U4 408)),直接放行又等于"测试存在但从没被跑过",棘轮是这两者之间唯一的解。
+      - name: Check mini program JavaScript and JSON (incl. U2/U3/U4 wxml-js bind gates)
+        run: bash ci/xcx-check.sh
+
+  admin_ui:
+    name: Admin UI build gate
+    needs: changes
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.ui == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      # GitHub-hosted ubuntu 默认 Node 20;单测 glob / 若干门禁要 >= 21。
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # 跑的就是部署链路那一份 ci/ui-build.sh:门禁绿 = 部署那条路能构建出产物。
+      - name: Build admin UI
+        run: bash ci/ui-build.sh "${{ github.sha }}"
+
+  admin_ui_contract:
+    name: Admin UI E2E contract gate
+    needs: changes
+    # 与 admin_ui 同一路径闸；手动 dispatch 才全开。
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.ui == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      # GitHub-hosted ubuntu 默认 Node 20;单测 glob / 若干门禁要 >= 21。
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # 这些合约测试当前只用 node 内置模块 + tests/e2e 下的本地 helper/fixture,
+      # 不依赖任何三方包;仍然装依赖,是为了跟本机 `npm run test:e2e:contract` 完全同路径 ——
+      # 以后有合约引入三方包时不会因为 CI 少装依赖而变成 MODULE_NOT_FOUND 型迷惑失败。
+      - name: Install admin UI dependencies
+        working-directory: chengyinhub-ui
+        run: npm ci --no-audit --no-fund
+      # 纯静态合约:解析 src/router/index.js + 视图源码,断言路由注册/权限声明/旧入口重定向
+      # 与四角色 fixture 一致。★不是浏览器真机 E2E(那条是 test:e2e / playwright),不需要
+      # 起服务、不需要浏览器,失败即门禁红。
+      - name: Run admin UI route/permission contracts
+        run: npm --prefix chengyinhub-ui run test:e2e:contract
+
+  secret_scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read     # gitleaks 在 PR 事件读提交列表用,只读
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # gitleaks 需完整历史扫描全部提交
+      - name: Clean stale gitleaks temp files
+        # self-hosted 是持久机器,$TMPDIR 不像 GitHub 云端 VM 那样每次全新;
+        # gitleaks-action 下载固定用 ${TMPDIR}gitleaks.tmp,背靠背跑几次不清理就会
+        # 撞上一次遗留文件报 "Destination file path ... already exists",
+        # 且该 action 这里错误处理有 bug,吞掉这个错误后继续跑导致更迷惑的
+        # "parameter 'file' is required" 崩溃。
+        # ★ 2026-08-28:原来连 ${TMPDIR}/gitleaks-* 一起删,把**解压后的版本缓存目录**也删了,
+        #   导致每次都要重下二进制。日志里出现自相矛盾的一幕:
+        #       Cache hit for: gitleaks-cache-8.24.3-darwin-arm64
+        #       Downloading gitleaks from https://github.com/.../gitleaks_8.24.3_darwin_arm64.tar.gz
+        #   网络抖动时就变成随机判红(could not install gitleaks from https://github.com)。
+        #   ⇒ 只删**下载中转文件**(它才是 "already exists" 的元凶),保留版本缓存目录。
+        run: rm -rf "${TMPDIR:-/tmp}/gitleaks.tmp"
+      - name: Reject tracked key and certificate files (negative control first)
+        run: |
+          python3 -m unittest ci/test_secret_file_gate.py
+          python3 ci/secret-file-gate.py
+      - name: Run gitleaks
+        if: github.event_name != 'workflow_dispatch'
+        uses: gitleaks/gitleaks-action@v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # 自动注入,个人账号无需 GITLEAKS_LICENSE
+          GITLEAKS_ENABLE_COMMENTS: "false"           # 关 PR 评论,避免需要 pull-requests: write
+          # 2026-08-28:关 SARIF artifact 上传。实测扫描本身早已完成(日志明写 "INF no leaks found"),
+          # 却在收尾 upload 时崩:Failed to FinalizeArtifact: Unable to make request: ECONNRESET,
+          # 然后整个 job 判红 —— 一个和代码无关的随机失败源。
+          # 判红判绿只依赖 gitleaks 的 exit code,artifact 只是留档,关掉不影响门禁效力。
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+      - name: Scan dispatched candidate commits and current source
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          set -euo pipefail
+          scanner="$RUNNER_TEMP/gitleaks-cli"
+          source_tree="$RUNNER_TEMP/gitleaks-current"
+          mkdir -p "$scanner" "$source_tree"
+          release=https://github.com/gitleaks/gitleaks/releases/download/v8.24.3
+          curl -fsSL "$release/gitleaks_8.24.3_linux_x64.tar.gz" -o "$scanner/gitleaks_8.24.3_linux_x64.tar.gz"
+          curl -fsSL "$release/gitleaks_8.24.3_checksums.txt" -o "$scanner/checksums.txt"
+          (cd "$scanner" && sha256sum --check --ignore-missing checksums.txt)
+          tar -xzf "$scanner/gitleaks_8.24.3_linux_x64.tar.gz" -C "$scanner" gitleaks
+          "$scanner/gitleaks" git --redact --log-opts='origin/master..HEAD' .
+          git archive HEAD | tar -x -C "$source_tree"
+          "$scanner/gitleaks" dir --redact --config .gitleaks.toml "$source_tree"
+
+  dependency_audit:
+    name: SBOM + dependency scan
+    needs: changes
+    # 依赖/扫描配置改动才跑；合页面 PR 进 master 也不再付一次 SBOM。
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.dependency == 'true' }}
+    runs-on: ubuntu-latest
+    # 2026-08-29:Grype DB cache 恢复在自托管 Mac 上实测接近 5 分钟,10 分钟会在
+    # 扫描完成后、dependency-audit-gate 读 JSON 前被取消。只放宽 job 上限,不改 fail-on 口径。
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test dependency gate contract
+        run: python3 -m unittest ci/test_dependency_audit_gate.py
+      - name: Generate SBOM (syft)
+        uses: anchore/sbom-action@v0.24.0
+        with:
+          path: .
+          format: spdx-json
+          syft-version: v1.24.0
+          artifact-name: chengyin-sbom.spdx.json
+          output-file: ${{ github.workspace }}/chengyin-sbom.spdx.json
+      - name: Scan dependencies (Grype)
+        uses: anchore/scan-action@v7.4.0
+        with:
+          sbom: ${{ github.workspace }}/chengyin-sbom.spdx.json
+          grype-version: v0.110.0
+          cache-db: true
+          config: ci/grype.yaml
+          # 由下一步解析固定格式 JSON；扫描器自身出错也不能 continue-on-error。
+          fail-build: false
+          severity-cutoff: high
+          output-format: json
+          output-file: ${{ github.workspace }}/chengyin-dependency-scan.json
+      - name: Block Critical and High dependency vulnerabilities
+        run: python3 ci/dependency-audit-gate.py chengyin-dependency-scan.json
+
+  migration_layout:
+    name: Migration layout gate
+    needs: changes
+    # 后端/SQL/分类门禁改动才跑；纯 xcx/UI 合进 master 也跳过。
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.migration == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # 前缀门需完整历史算 master 合并基线(同 mini_program 的 DS 门)
+          filter: blob:none     # 2026-08-28:只拉提交图不拉历史 blob。这些门禁只需算 merge-base,
+                                # 不需要历史文件内容;实测 unshallow 216s→46s。gitleaks 那处**不加**(它要扫内容)。
+      - name: Check migration_*.sql layout (dir + new-file prefix)
+        run: bash ci/migration-layout-check.sh
+      - name: Check runtime deployment classifier
+        run: bash ci/classify-runtime-check.sh
+      - name: Check CI runner config hasn't silently reverted
+        run: bash ci/ci-config-guard.sh
+
+  migration_safety:
+    name: Migration safety gate
+    needs: changes
+    # 后端/SQL/迁移门禁改动才跑；纯 xcx/UI 合进 master 也跳过。
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.migration == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # 迁移 SQL 增量门需完整历史算 master 合并基线(同 migration_layout)
+          filter: blob:none     # 2026-08-28:只拉提交图不拉历史 blob。这些门禁只需算 merge-base,
+                                # 不需要历史文件内容;实测 unshallow 216s→46s。gitleaks 那处**不加**(它要扫内容)。
+      - name: Check splitter, migration SQL, task registration, PR declaration
+        run: bash ci/migration-safety-check.sh
+        env:
+          # ⚠️ 必须走 env 注入,不能把 ${{ }} 直接写进 run: 的命令行 —— PR 标题/描述是外部可控文本,
+          # 内插进 shell = 脚本注入。env 传进去只是字符串,不会被 shell 解析。
+          # push 事件下 pull_request 为 null → 这里注入的是空字符串 → 脚本自己跳过门禁 3。
+          # ⚠️ 这两个值取自 event payload,是 run 派发那一刻冻结的快照,不是实时读 PR。
+          #    上面 on.pull_request 没写 types,默认只有 opened / synchronize / reopened
+          #    —— edited 不在内。所以改完 PR 描述不会重新派发,re-run 也只是复用同一份
+          #    旧 payload。要让迁移声明门看见新描述,必须再推一个提交(synchronize)。
+          #    2026-08-27 在 #877 上实测踩到:描述补了「## 影响分类 ③」,门禁照旧红。
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+      # scripts/e2e/test_chain_*.py 经 chain_lib 引入 pymysql;runner 镜像里没有,
+      # 缺了它 unittest 是 ImportError 而不是跳过 —— 装上,别让负控静默消失。
+      - name: Install e2e chain test deps
+        run: python3 -m pip install --quiet pymysql
+      - name: Run versioned migration runner unit and CI wiring contracts
+        run: python3 -m unittest -v ci/test_run_migration.py ci/test_migration_runner_ci_contract.py ci/test_migration_h8_registration_columns.py ci/test_migration_h8_rate_scope.py ci/test_migration_h8_detail_move.py ci/test_mapper_h8_column_isolation.py ci/test_migration_h8_publisher_guard.py scripts/e2e/test_build_schema.py scripts/e2e/test_chain_lib.py scripts/e2e/test_chain_merchant_club.py scripts/e2e/test_chain_platform.py scripts/e2e/test_chain_sale_close.py

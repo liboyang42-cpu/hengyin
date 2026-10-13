@@ -1,0 +1,467 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.OfficialEventV2Mapper">
+
+    <resultMap type="OfficialEventBinding" id="BindingResult">
+        <result property="id" column="id"/>
+        <result property="eventId" column="event_id"/>
+        <result property="bindingCode" column="binding_code"/>
+        <result property="bindingType" column="binding_type"/>
+        <result property="sourceMode" column="source_mode"/>
+        <result property="sourceRefId" column="source_ref_id"/>
+        <result property="city" column="city"/>
+        <result property="latitude" column="latitude"/>
+        <result property="longitude" column="longitude"/>
+        <result property="radiusM" column="radius_m"/>
+        <result property="geometryJson" column="geometry_json"/>
+        <result property="displayJson" column="display_json"/>
+        <result property="snapshotJson" column="snapshot_json"/>
+        <result property="status" column="status"/>
+        <result property="sort" column="sort"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap type="OfficialEventMission" id="MissionResult">
+        <result property="id" column="id"/>
+        <result property="eventId" column="event_id"/>
+        <result property="bindingId" column="binding_id"/>
+        <result property="missionCode" column="mission_code"/>
+        <result property="missionType" column="mission_type"/>
+        <result property="title" column="title"/>
+        <result property="shortDescription" column="short_description"/>
+        <result property="ruleJson" column="rule_json"/>
+        <result property="prerequisiteJson" column="prerequisite_json"/>
+        <result property="ruleVersion" column="rule_version"/>
+        <result property="requiredCount" column="required_count"/>
+        <result property="visibility" column="visibility"/>
+        <result property="status" column="status"/>
+        <result property="sort" column="sort"/>
+        <result property="availableStart" column="available_start"/>
+        <result property="availableEnd" column="available_end"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap type="OfficialEventParty" id="PartyResult">
+        <result property="id" column="id"/>
+        <result property="eventId" column="event_id"/>
+        <result property="partyType" column="party_type"/>
+        <result property="partyId" column="party_id"/>
+        <result property="identitySource" column="identity_source"/>
+        <result property="organizerAuthority" column="organizer_authority"/>
+        <result property="role" column="role"/>
+        <result property="targetType" column="target_type"/>
+        <result property="targetId" column="target_id"/>
+        <result property="windowStart" column="window_start"/>
+        <result property="windowEnd" column="window_end"/>
+        <result property="capacity" column="capacity"/>
+        <result property="responsibilitySummary" column="responsibility_summary"/>
+        <result property="contactRole" column="contact_role"/>
+        <result property="status" column="status"/>
+        <result property="invitedBy" column="invited_by"/>
+        <result property="invitedAt" column="invited_at"/>
+        <result property="statusBy" column="status_by"/>
+        <result property="statusAt" column="status_at"/>
+        <result property="statusReason" column="status_reason"/>
+        <result property="snapshotJson" column="snapshot_json"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap type="OfficialEventFulfillmentRequirement" id="RequirementResult">
+        <result property="id" column="id"/>
+        <result property="eventId" column="event_id"/>
+        <result property="missionId" column="mission_id"/>
+        <result property="targetType" column="target_type"/>
+        <result property="targetId" column="target_id"/>
+        <result property="windowStart" column="window_start"/>
+        <result property="windowEnd" column="window_end"/>
+        <result property="requiredRole" column="required_role"/>
+        <result property="requiredCapacity" column="required_capacity"/>
+        <result property="critical" column="critical"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap type="OfficialEventParticipation" id="ParticipationResult">
+        <result property="id" column="id"/>
+        <result property="eventId" column="event_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="signupId" column="signup_id"/>
+        <result property="state" column="state"/>
+        <result property="reason" column="reason"/>
+        <result property="joinedAt" column="joined_at"/>
+        <result property="invalidatedAt" column="invalidated_at"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap type="OfficialEventMissionEvidence" id="EvidenceResult">
+        <result property="id" column="id"/>
+        <result property="eventId" column="event_id"/>
+        <result property="missionId" column="mission_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="signupId" column="signup_id"/>
+        <result property="sourceType" column="source_type"/>
+        <result property="sourceFactId" column="source_fact_id"/>
+        <result property="dedupeKey" column="dedupe_key"/>
+        <result property="status" column="status"/>
+        <result property="reason" column="reason"/>
+        <result property="sourceSnapshotJson" column="source_snapshot_json"/>
+        <result property="ruleSnapshotJson" column="rule_snapshot_json"/>
+        <result property="occurredAt" column="occurred_at"/>
+        <result property="validatedAt" column="validated_at"/>
+        <result property="revokedAt" column="revoked_at"/>
+        <result property="operatedBy" column="operated_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap type="OfficialEventArrivalVerification" id="VerificationResult">
+        <result property="id" column="id"/>
+        <result property="eventId" column="event_id"/>
+        <result property="missionId" column="mission_id"/>
+        <result property="bindingId" column="binding_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="sessionId" column="session_id"/>
+        <result property="verificationType" column="verification_type"/>
+        <result property="requestId" column="request_id"/>
+        <result property="distanceM" column="distance_m"/>
+        <result property="accuracyBucket" column="accuracy_bucket"/>
+        <result property="ruleVersion" column="rule_version"/>
+        <result property="result" column="result"/>
+        <result property="riskCode" column="risk_code"/>
+        <result property="occurredAt" column="occurred_at"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <resultMap type="OfficialEventRewardIssuance" id="RewardIssuanceResult">
+        <result property="id" column="id"/>
+        <result property="eventId" column="event_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="rewardRuleVersion" column="reward_rule_version"/>
+        <result property="status" column="status"/>
+        <result property="issuanceKey" column="issuance_key"/>
+        <result property="payloadJson" column="payload_json"/>
+        <result property="failureReason" column="failure_reason"/>
+        <result property="sourceSnapshotJson" column="source_snapshot_json"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap type="OfficialEventOperatorAuthorization" id="OperatorAuthorizationResult">
+        <result property="id" column="id"/>
+        <result property="sysUserId" column="sys_user_id"/>
+        <result property="activeSysUserId" column="active_sys_user_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="status" column="status"/>
+        <result property="grantedBy" column="granted_by"/>
+        <result property="grantedAt" column="granted_at"/>
+        <result property="grantReason" column="grant_reason"/>
+        <result property="revokedBy" column="revoked_by"/>
+        <result property="revokedAt" column="revoked_at"/>
+        <result property="revokeReason" column="revoke_reason"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="bindingColumns">id,event_id,binding_code,binding_type,source_mode,source_ref_id,city,latitude,longitude,radius_m,geometry_json,display_json,snapshot_json,status,sort,create_time,update_time</sql>
+    <sql id="missionColumns">id,event_id,binding_id,mission_code,mission_type,title,short_description,rule_json,prerequisite_json,rule_version,required_count,visibility,status,sort,available_start,available_end,create_time,update_time</sql>
+    <sql id="partyColumns">id,event_id,party_type,party_id,identity_source,organizer_authority,role,target_type,target_id,window_start,window_end,capacity,responsibility_summary,contact_role,status,invited_by,invited_at,status_by,status_at,status_reason,snapshot_json,create_time,update_time</sql>
+    <sql id="requirementColumns">id,event_id,mission_id,target_type,target_id,window_start,window_end,required_role,required_capacity,critical,status,create_time,update_time</sql>
+    <sql id="participationColumns">id,event_id,member_id,signup_id,state,reason,joined_at,invalidated_at,create_time,update_time</sql>
+    <sql id="evidenceColumns">id,event_id,mission_id,member_id,signup_id,source_type,source_fact_id,dedupe_key,status,reason,source_snapshot_json,rule_snapshot_json,occurred_at,validated_at,revoked_at,operated_by,create_time,update_time</sql>
+    <sql id="verificationColumns">id,event_id,mission_id,binding_id,member_id,session_id,verification_type,request_id,distance_m,accuracy_bucket,rule_version,result,risk_code,occurred_at,create_time</sql>
+    <sql id="operatorAuthorizationColumns">id,sys_user_id,active_sys_user_id,member_id,status,granted_by,granted_at,grant_reason,revoked_by,revoked_at,revoke_reason,create_time,update_time</sql>
+
+    <insert id="insertBinding" parameterType="OfficialEventBinding" useGeneratedKeys="true" keyProperty="id">
+        insert into official_event_binding (event_id,binding_code,binding_type,source_mode,source_ref_id,city,latitude,longitude,radius_m,geometry_json,display_json,snapshot_json,status,sort,create_time,update_time)
+        values (#{eventId},#{bindingCode},#{bindingType},#{sourceMode},#{sourceRefId},#{city},#{latitude},#{longitude},#{radiusM},#{geometryJson},#{displayJson},#{snapshotJson},#{status},#{sort},now(),now())
+    </insert>
+    <delete id="deleteBindingsByEvent">delete from official_event_binding where event_id = #{eventId}</delete>
+    <update id="activateDraftBindings">update official_event_binding set status='ACTIVE',update_time=now() where event_id=#{eventId} and status='DRAFT'</update>
+    <update id="activateDraftMissions">update official_event_mission set status='ACTIVE',update_time=now() where event_id=#{eventId} and status='DRAFT'</update>
+    <update id="activateDraftRequirements">update official_event_fulfillment_requirement set status='ACTIVE',update_time=now() where event_id=#{eventId} and status='DRAFT'</update>
+    <select id="selectBindingsByEvent" resultMap="BindingResult">select <include refid="bindingColumns"/> from official_event_binding where event_id = #{eventId} order by sort,id</select>
+    <select id="selectBindingById" resultMap="BindingResult">select <include refid="bindingColumns"/> from official_event_binding where id = #{id}</select>
+    <select id="selectBindingByEventAndCode" resultMap="BindingResult">select <include refid="bindingColumns"/> from official_event_binding where event_id = #{eventId} and binding_code = #{bindingCode}</select>
+
+    <insert id="insertMission" parameterType="OfficialEventMission" useGeneratedKeys="true" keyProperty="id">
+        insert into official_event_mission (event_id,binding_id,mission_code,mission_type,title,short_description,rule_json,prerequisite_json,rule_version,required_count,visibility,status,sort,available_start,available_end,create_time,update_time)
+        values (#{eventId},#{bindingId},#{missionCode},#{missionType},#{title},#{shortDescription},#{ruleJson},#{prerequisiteJson},#{ruleVersion},#{requiredCount},#{visibility},#{status},#{sort},#{availableStart},#{availableEnd},now(),now())
+    </insert>
+    <delete id="deleteMissionsByEvent">delete from official_event_mission where event_id = #{eventId}</delete>
+    <select id="selectMissionsByEvent" resultMap="MissionResult">select <include refid="missionColumns"/> from official_event_mission where event_id = #{eventId} order by sort,id</select>
+    <select id="selectMissionByEventAndCode" resultMap="MissionResult">select <include refid="missionColumns"/> from official_event_mission where event_id = #{eventId} and mission_code = #{missionCode}</select>
+    <select id="selectActiveThemeMissions" resultMap="MissionResult">
+        select m.* from official_event_mission m
+        join official_event_binding b on b.id=m.binding_id
+        join official_event e on e.id=m.event_id
+        where m.mission_type='THEME_VERIFIED_FINISH' and m.status='ACTIVE'
+          and b.binding_type='THEME' and b.source_mode='REFERENCE' and b.source_ref_id=#{topicId} and b.status='ACTIVE'
+          and e.contract_version &gt;= 2 and e.status=3 and coalesce(e.control_state,'NORMAL')='NORMAL'
+    </select>
+
+    <insert id="insertParty" parameterType="OfficialEventParty" useGeneratedKeys="true" keyProperty="id">
+        insert into official_event_party (event_id,party_type,party_id,identity_source,organizer_authority,role,target_type,target_id,window_start,window_end,capacity,responsibility_summary,contact_role,status,invited_by,invited_at,status_by,status_at,status_reason,snapshot_json,create_time,update_time)
+        values (#{eventId},#{partyType},#{partyId},#{identitySource},#{organizerAuthority},#{role},#{targetType},#{targetId},#{windowStart},#{windowEnd},#{capacity},#{responsibilitySummary},#{contactRole},#{status},#{invitedBy},#{invitedAt},#{statusBy},#{statusAt},#{statusReason},#{snapshotJson},now(),now())
+    </insert>
+    <delete id="deletePartiesByEvent">delete from official_event_party where event_id = #{eventId}</delete>
+    <delete id="deleteInvitedPartiesByEvent">delete from official_event_party where event_id = #{eventId} and status='INVITED'</delete>
+    <select id="selectPartiesByEvent" resultMap="PartyResult">select <include refid="partyColumns"/> from official_event_party where event_id=#{eventId} order by role,id</select>
+    <select id="selectPartyById" resultMap="PartyResult">select <include refid="partyColumns"/> from official_event_party where id=#{id}</select>
+    <update id="updatePartyStatus">
+        update official_event_party set status=#{status}, status_by=#{operatorId}, status_at=now(), status_reason=#{reason}, update_time=now() where id=#{id}
+    </update>
+    <update id="updatePartyStatusAndOrganizerAuthority">
+        update official_event_party
+        set status=#{status}, organizer_authority=#{organizerAuthority}, status_by=#{operatorId}, status_at=now(), status_reason=#{reason}, update_time=now()
+        where id=#{id}
+    </update>
+    <select id="selectPartiesByEventForUpdate" resultMap="PartyResult">
+        select <include refid="partyColumns"/> from official_event_party where event_id=#{eventId} order by role,id for update
+    </select>
+    <select id="selectPartyInboxForMember" resultType="map">
+        select p.id partyId,p.event_id eventId,p.party_type partyType,p.party_id partyIdValue,p.identity_source identitySource,p.organizer_authority organizerAuthority,p.role,p.target_type targetType,p.target_id targetId,
+               p.window_start windowStart,p.window_end windowEnd,p.capacity,p.responsibility_summary responsibilitySummary,p.status,p.status_reason statusReason,
+               e.title eventTitle,e.city,e.status eventStatus,e.control_state controlState
+        from official_event_party p join official_event e on e.id=p.event_id
+        left join mms_merchant m on p.party_type='MERCHANT' and m.id=p.party_id and m.del_flag=0
+        left join club c on p.party_type='CLUB' and c.id=p.party_id and c.del_flag=0
+        where p.status in ('INVITED','ACCEPTED','ACTIVE') and e.contract_version &gt;= 2
+          and ((p.party_type='OFFICIAL' and p.identity_source='UMS_MEMBER' and p.party_id=#{memberId})
+            or (p.party_type='MERCHANT' and m.member_id=#{memberId})
+            or (p.party_type='CLUB' and c.member_id=#{memberId}))
+        order by case p.status when 'INVITED' then 0 else 1 end,p.update_time desc,p.id desc
+    </select>
+    <update id="activateAcceptedParties">update official_event_party set status='ACTIVE', status_at=now(), update_time=now() where event_id=#{eventId} and status='ACCEPTED'</update>
+    <update id="archiveActiveParties">update official_event_party set status='COMPLETED', status_at=now(), update_time=now() where event_id=#{eventId} and status in ('ACCEPTED','ACTIVE')</update>
+
+    <insert id="insertRequirement" parameterType="OfficialEventFulfillmentRequirement" useGeneratedKeys="true" keyProperty="id">
+        insert into official_event_fulfillment_requirement (event_id,mission_id,target_type,target_id,window_start,window_end,required_role,required_capacity,critical,status,create_time,update_time)
+        values (#{eventId},#{missionId},#{targetType},#{targetId},#{windowStart},#{windowEnd},#{requiredRole},#{requiredCapacity},#{critical},#{status},now(),now())
+    </insert>
+    <delete id="deleteRequirementsByEvent">delete from official_event_fulfillment_requirement where event_id=#{eventId}</delete>
+    <select id="selectRequirementsByEvent" resultMap="RequirementResult">select <include refid="requirementColumns"/> from official_event_fulfillment_requirement where event_id=#{eventId} order by id</select>
+
+    <insert id="insertParticipationIgnore" parameterType="OfficialEventParticipation" useGeneratedKeys="true" keyProperty="id">
+        insert ignore into official_event_participation (event_id,member_id,signup_id,state,reason,joined_at,create_time,update_time)
+        values (#{eventId},#{memberId},#{signupId},#{state},#{reason},#{joinedAt},now(),now())
+    </insert>
+    <select id="selectParticipation" resultMap="ParticipationResult">select <include refid="participationColumns"/> from official_event_participation where event_id=#{eventId} and member_id=#{memberId}</select>
+    <update id="updateParticipationState">
+        update official_event_participation set state=#{state},reason=#{reason},invalidated_at=if(#{state}='ACTIVE',null,now()),update_time=now() where event_id=#{eventId} and member_id=#{memberId}
+    </update>
+    <select id="countActiveParticipations" resultType="int">select count(1) from official_event_participation where event_id=#{eventId} and state='ACTIVE'</select>
+    <select id="selectActiveParticipationMemberIds" resultType="long">select member_id from official_event_participation where event_id=#{eventId} and state='ACTIVE' order by member_id</select>
+
+    <insert id="insertEvidenceIgnore" parameterType="OfficialEventMissionEvidence" useGeneratedKeys="true" keyProperty="id">
+        insert ignore into official_event_mission_evidence (event_id,mission_id,member_id,signup_id,source_type,source_fact_id,dedupe_key,status,reason,source_snapshot_json,rule_snapshot_json,occurred_at,validated_at,revoked_at,operated_by,create_time,update_time)
+        values (#{eventId},#{missionId},#{memberId},#{signupId},#{sourceType},#{sourceFactId},#{dedupeKey},#{status},#{reason},#{sourceSnapshotJson},#{ruleSnapshotJson},#{occurredAt},#{validatedAt},#{revokedAt},#{operatedBy},now(),now())
+    </insert>
+    <select id="selectEvidenceByDedupeKey" resultMap="EvidenceResult">select <include refid="evidenceColumns"/> from official_event_mission_evidence where dedupe_key=#{dedupeKey}</select>
+    <select id="selectEvidenceById" resultMap="EvidenceResult">select <include refid="evidenceColumns"/> from official_event_mission_evidence where id=#{id}</select>
+    <select id="selectEvidenceByEventAndMember" resultMap="EvidenceResult">select <include refid="evidenceColumns"/> from official_event_mission_evidence where event_id=#{eventId} and member_id=#{memberId} order by occurred_at,id</select>
+    <select id="countValidEvidence" resultType="int">select count(1) from official_event_mission_evidence where event_id=#{eventId} and mission_id=#{missionId} and member_id=#{memberId} and status='VALID'</select>
+    <select id="countValidEvidenceByEvent" resultType="int">select count(1) from official_event_mission_evidence where event_id=#{eventId} and status='VALID'</select>
+    <update id="revokeEvidenceById">
+        update official_event_mission_evidence set status='REVOKED',reason=#{reason},operated_by=#{operatorId},revoked_at=now(),update_time=now() where id=#{id} and status='VALID'
+    </update>
+    <update id="revokeEvidenceByMissionAndMember">
+        update official_event_mission_evidence set status='REVOKED',reason=#{reason},operated_by=#{operatorId},revoked_at=now(),update_time=now() where mission_id=#{missionId} and member_id=#{memberId} and status='VALID'
+    </update>
+    <update id="revokeEvidenceBySourceFact">
+        update official_event_mission_evidence set status='REVOKED',reason=#{reason},operated_by=#{operatorId},revoked_at=now(),update_time=now() where source_type=#{sourceType} and source_fact_id=#{sourceFactId} and status='VALID'
+    </update>
+    <select id="selectEventIdsByThemeExploreEvidence" resultType="long">
+        select distinct event_id from official_event_mission_evidence
+        where source_type='THEME_EXPLORE'
+          and source_fact_id like concat('registration:',#{registrationId},':topic:',#{topicId},':redemption:%')
+          and status='VALID'
+        order by event_id
+    </select>
+    <select id="selectEventIdsByThemeExploreEvidenceForUpdate" resultType="long">
+        select distinct event_id from official_event_mission_evidence
+        where source_type='THEME_EXPLORE'
+          and source_fact_id like concat('registration:',#{registrationId},':topic:',#{topicId},':redemption:%')
+          and status='VALID'
+        order by event_id for update
+    </select>
+    <update id="revokeThemeExploreEvidence">
+        update official_event_mission_evidence
+        set status='REVOKED',reason=#{reason},operated_by=#{operatorId},revoked_at=now(),update_time=now()
+        where source_type='THEME_EXPLORE'
+          and source_fact_id like concat('registration:',#{registrationId},':topic:',#{topicId},':redemption:%')
+          and status='VALID'
+    </update>
+
+    <insert id="insertRewardIssuanceIgnore" parameterType="OfficialEventRewardIssuance" useGeneratedKeys="true" keyProperty="id">
+        insert ignore into official_event_reward_issuance (event_id,member_id,reward_rule_version,status,issuance_key,payload_json,failure_reason,source_snapshot_json,create_time,update_time)
+        values (#{eventId},#{memberId},#{rewardRuleVersion},#{status},#{issuanceKey},#{payloadJson},#{failureReason},#{sourceSnapshotJson},now(),now())
+    </insert>
+    <select id="selectRewardIssuance" resultMap="RewardIssuanceResult">
+        select id,event_id,member_id,reward_rule_version,status,issuance_key,payload_json,failure_reason,source_snapshot_json,create_time,update_time
+        from official_event_reward_issuance where event_id=#{eventId} and member_id=#{memberId} and reward_rule_version=#{rewardRuleVersion}
+    </select>
+    <update id="claimPendingRewardIssuance">
+        update official_event_reward_issuance set status='ISSUED',failure_reason=null,update_time=now() where id=#{id} and status='PENDING_ISSUE'
+    </update>
+    <update id="updateRewardIssuanceStatus">
+        update official_event_reward_issuance set status=#{status},failure_reason=#{failureReason},update_time=now() where id=#{id}
+    </update>
+    <update id="markRewardManualReviewBySourceFact">
+        update official_event_reward_issuance ri join official_event_mission_evidence e on e.event_id=ri.event_id and e.member_id=ri.member_id
+        set ri.status='MANUAL_REVIEW',ri.failure_reason=#{reason},ri.update_time=now()
+        where e.source_type=#{sourceType} and e.source_fact_id=#{sourceFactId} and ri.status in ('PENDING_ISSUE','ISSUED','CLAIMED')
+    </update>
+    <update id="markRewardManualReviewByThemeExplore">
+        update official_event_reward_issuance ri join official_event_mission_evidence e on e.event_id=ri.event_id and e.member_id=ri.member_id
+        set ri.status='MANUAL_REVIEW',ri.failure_reason=#{reason},ri.update_time=now()
+        where e.source_type='THEME_EXPLORE'
+          and e.source_fact_id like concat('registration:',#{registrationId},':topic:',#{topicId},':redemption:%')
+          and ri.status in ('PENDING_ISSUE','ISSUED','CLAIMED')
+    </update>
+    <update id="markRewardManualReviewByEvidenceId">
+        update official_event_reward_issuance ri join official_event_mission_evidence e on e.event_id=ri.event_id and e.member_id=ri.member_id
+        set ri.status='MANUAL_REVIEW',ri.failure_reason=#{reason},ri.update_time=now()
+        where e.id=#{evidenceId} and ri.status in ('PENDING_ISSUE','ISSUED','CLAIMED')
+    </update>
+    <update id="markRewardManualReviewByEventAndMember">
+        update official_event_reward_issuance
+        set status='MANUAL_REVIEW',failure_reason=#{reason},update_time=now()
+        where event_id=#{eventId} and member_id=#{memberId} and status in ('PENDING_ISSUE','ISSUED','CLAIMED')
+    </update>
+
+    <insert id="insertArrivalVerificationIgnore" parameterType="OfficialEventArrivalVerification" useGeneratedKeys="true" keyProperty="id">
+        insert ignore into event_arrival_verification (event_id,mission_id,binding_id,member_id,session_id,verification_type,request_id,distance_m,accuracy_bucket,rule_version,result,risk_code,occurred_at,create_time)
+        values (#{eventId},#{missionId},#{bindingId},#{memberId},#{sessionId},#{verificationType},#{requestId},#{distanceM},#{accuracyBucket},#{ruleVersion},#{result},#{riskCode},#{occurredAt},now())
+    </insert>
+    <select id="selectArrivalVerificationByRequest" resultMap="VerificationResult">
+        select <include refid="verificationColumns"/> from event_arrival_verification where event_id=#{eventId} and mission_id=#{missionId} and member_id=#{memberId} and request_id=#{requestId}
+    </select>
+    <select id="selectLatestArrivalVerification" resultMap="VerificationResult">
+        select <include refid="verificationColumns"/> from event_arrival_verification
+        where event_id=#{eventId} and mission_id=#{missionId} and member_id=#{memberId}
+        order by occurred_at desc,id desc limit 1
+    </select>
+    <!-- 被接受的到达 = 人当时就在目标点半径内；用目标坐标当「上一次已知位置」锚点（误差 ≤ 半径+容差）。 -->
+    <select id="selectLastAcceptedArrivalLoc" resultType="java.util.HashMap">
+        select v.occurred_at as foundAt,
+               coalesce(p.lat, b.latitude) as lat,
+               coalesce(p.lng, b.longitude) as lng
+        from event_arrival_verification v
+        join official_event_binding b on b.id = v.binding_id
+        left join roam_poi p on b.binding_type = 'ROAM_POI' and p.id = b.source_ref_id
+        where v.member_id = #{memberId} and v.result = 'ACCEPTED'
+        order by v.occurred_at desc, v.id desc limit 1
+    </select>
+
+    <select id="selectMission360Rows" resultType="map">
+        select m.id missionId,m.mission_code missionCode,m.title,m.mission_type missionType,m.status,b.binding_type bindingType,b.binding_code bindingCode,
+               count(distinct case when e.status='VALID' then e.member_id end) validMembers,
+               count(case when e.status='VALID' then 1 end) validEvidence,
+               count(case when e.status='REVOKED' then 1 end) revokedEvidence
+        from official_event_mission m join official_event_binding b on b.id=m.binding_id
+        left join official_event_mission_evidence e on e.mission_id=m.id
+        where m.event_id=#{eventId} group by m.id,m.mission_code,m.title,m.mission_type,m.status,b.binding_type,b.binding_code order by m.sort,m.id
+    </select>
+    <select id="selectFulfillmentCoverageRows" resultType="map">
+        select r.id requirementId,r.mission_id missionId,r.target_type targetType,r.target_id targetId,r.window_start windowStart,r.window_end windowEnd,r.required_role requiredRole,r.required_capacity requiredCapacity,r.critical,
+               count(p.id) coveredBy
+        from official_event_fulfillment_requirement r
+        left join official_event_party p on p.event_id=r.event_id and p.status in ('ACCEPTED','ACTIVE')
+            and p.role=r.required_role and p.target_type=r.target_type and p.target_id=r.target_id
+            and ((r.required_role='FULFILLMENT_MERCHANT' and p.party_type='MERCHANT')
+              or (r.required_role='FULFILLMENT_CLUB' and p.party_type='CLUB'))
+            and coalesce(p.capacity,0) &gt;= coalesce(r.required_capacity,0)
+            and r.window_start is not null and r.window_end is not null
+            and p.window_start is not null and p.window_end is not null
+            and p.window_start &lt;= r.window_start
+            and p.window_end &gt;= r.window_end
+        where r.event_id=#{eventId} and r.status='ACTIVE'
+        group by r.id,r.mission_id,r.target_type,r.target_id,r.window_start,r.window_end,r.required_role,r.required_capacity,r.critical
+        order by r.id
+    </select>
+    <select id="selectParticipantRewardRows" resultType="map">
+        select p.member_id memberId,p.state,count(distinct case when e.status='VALID' then e.mission_id end) completedMissions,
+               ri.status rewardStatus,ri.failure_reason failureReason
+        from official_event_participation p
+        left join official_event_mission_evidence e on e.event_id=p.event_id and e.member_id=p.member_id
+        left join official_event_reward_issuance ri on ri.event_id=p.event_id and ri.member_id=p.member_id
+        where p.event_id=#{eventId}
+        group by p.member_id,p.state,ri.status,ri.failure_reason
+        order by p.member_id
+    </select>
+    <select id="selectActiveV2RoamEvents" resultType="map">
+        select distinct e.id,e.title,e.subtitle,e.city,e.status,e.activity_start activityStart,e.activity_end activityEnd,
+               case when p.id is null then false else true end signed
+        from official_event e
+        join official_event_mission m on m.event_id=e.id and m.status='ACTIVE' and m.mission_type in ('ROAM_POI_ARRIVAL','EVENT_POINT_ARRIVAL')
+        join official_event_binding b on b.id=m.binding_id and b.status='ACTIVE'
+        left join official_event_participation p on p.event_id=e.id and p.member_id=#{memberId} and p.state='ACTIVE'
+        where e.contract_version &gt;= 2 and e.status in (2,3) and coalesce(e.control_state,'NORMAL')='NORMAL'
+          and (#{city} is null or #{city}='' or e.city is null or e.city like concat('%',#{city},'%'))
+        order by e.sort desc,e.id desc
+    </select>
+    <select id="selectPublicV2Events" resultType="map">
+        select e.id,e.title,e.subtitle,e.category,e.cover_img coverImg,e.city,e.status,e.contract_version contractVersion,
+               e.fulfillment_policy fulfillmentPolicy,e.control_state controlState,e.banner_enabled bannerEnabled,e.signup_start signupStart,e.activity_start activityStart,
+               e.activity_end activityEnd,e.settle_time settleTime,
+               (select count(1) from official_event_participation p where p.event_id=e.id and p.state='ACTIVE') participants,
+               exists(select 1 from official_event_participation p where p.event_id=e.id and p.member_id=#{memberId} and p.state='ACTIVE') signed
+        from official_event e
+        where e.contract_version &gt;= 2 and e.status &gt;= 1 and e.status &lt;&gt; 9
+          and (#{city} is null or #{city}='' or e.city is null or e.city like concat('%',#{city},'%'))
+        order by e.sort desc,e.id desc
+    </select>
+    <select id="selectV2EventsByMember" resultType="map">
+        select e.id,e.title,e.subtitle,e.category,e.cover_img coverImg,e.city,e.status,e.contract_version contractVersion,
+               e.control_state controlState,e.banner_enabled bannerEnabled,e.signup_start signupStart,e.activity_start activityStart,
+               e.activity_end activityEnd,e.settle_time settleTime,p.state participationState,p.joined_at joinedAt
+        from official_event_participation p join official_event e on e.id=p.event_id
+        where p.member_id=#{memberId} and e.contract_version &gt;= 2
+        order by e.activity_end desc,e.id desc
+    </select>
+
+    <select id="selectActiveOperatorAuthorization" resultMap="OperatorAuthorizationResult">
+        select <include refid="operatorAuthorizationColumns"/>
+        from official_event_operator_authorization
+        where active_sys_user_id=#{sysUserId} and status='ACTIVE'
+        limit 1
+    </select>
+    <select id="selectActiveOperatorAuthorizationForUpdate" resultMap="OperatorAuthorizationResult">
+        select <include refid="operatorAuthorizationColumns"/>
+        from official_event_operator_authorization
+        where active_sys_user_id=#{sysUserId} and status='ACTIVE'
+        limit 1 for update
+    </select>
+    <insert id="insertOperatorAuthorization" parameterType="OfficialEventOperatorAuthorization" useGeneratedKeys="true" keyProperty="id">
+        insert into official_event_operator_authorization
+        (sys_user_id,active_sys_user_id,member_id,status,granted_by,granted_at,grant_reason,create_time,update_time)
+        values (#{sysUserId},#{activeSysUserId},#{memberId},#{status},#{grantedBy},#{grantedAt},#{grantReason},now(),now())
+    </insert>
+    <update id="revokeOperatorAuthorization">
+        update official_event_operator_authorization
+        set active_sys_user_id=null,status='REVOKED',revoked_by=#{revokedBy},revoked_at=now(),revoke_reason=#{revokeReason},update_time=now()
+        where id=#{id} and status='ACTIVE'
+    </update>
+
+    <update id="updateV2ControlState">
+        update official_event set control_state=#{controlState},paused_from_status=#{pausedFromStatus},paused_at=#{pausedAt},
+            paused_by=#{pausedBy},paused_reason=#{pausedReason},pause_impact_scope=#{pauseImpactScope},
+            pause_alternative_plan=#{pauseAlternativePlan},pause_notification_plan=#{pauseNotificationPlan},
+            pause_notification_status=#{pauseNotificationStatus},resume_note=#{resumeNote},update_time=now() where id=#{eventId}
+    </update>
+
+    <select id="selectAuditLogs" resultType="map">
+        select id,action operatorAction,operator_id operatorId,summary,before_json beforeJson,after_json afterJson,create_time createTime
+        from official_event_audit_log where event_id=#{eventId} order by id desc limit 50
+    </select>
+
+    <insert id="insertAuditLog">
+        insert into official_event_audit_log (event_id,action,operator_id,summary,before_json,after_json,create_time)
+        values (#{eventId},#{action},#{operatorId},#{summary},#{beforeJson},#{afterJson},now())
+    </insert>
+</mapper>

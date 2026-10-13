@@ -1,0 +1,4 @@
+Current product: 766b49de18ba84db4ee1f6578b094bd9a924436e
+Category point only: 17 passed, 0 failed, 0 skipped; 1 native WXSS compile PASS; dark/light native screenshots verified
+Prior popup revision 438e1fdbad: 153 related checks and 13 native compiles PASS
+Full business/device acceptance limits remain in verification.json

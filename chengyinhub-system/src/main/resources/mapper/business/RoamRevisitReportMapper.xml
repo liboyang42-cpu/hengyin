@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.RoamRevisitReportMapper">
+
+    <resultMap id="RoamRevisitFactResult" type="com.chengyinhub.business.domain.dto.RoamRevisitFact">
+        <constructor>
+            <arg column="member_id" javaType="java.lang.Long"/>
+            <arg column="session_id" javaType="java.lang.Long"/>
+            <arg column="source_type" javaType="java.lang.Integer"/>
+            <arg column="source_id" javaType="java.lang.Long"/>
+            <arg column="occurred_at" javaType="java.util.Date"/>
+        </constructor>
+    </resultMap>
+
+    <select id="selectShopDataCutoffAt" resultType="java.util.Date">
+        select max(visited_at) from roam_shop_visit
+    </select>
+
+    <select id="selectRoamDataCutoffAt" resultType="java.util.Date">
+        select max(started_at) from roam_session
+    </select>
+
+    <select id="selectShopVisitFacts" resultMap="RoamRevisitFactResult">
+        select member_id, session_id, source_type, source_id, visited_at as occurred_at
+        from roam_shop_visit
+        where visited_at &gt;= #{from} and visited_at &lt; #{to}
+    </select>
+
+    <select id="selectRoamSessionFacts" resultMap="RoamRevisitFactResult">
+        select member_id, id as session_id, null as source_type, null as source_id,
+               started_at as occurred_at
+        from roam_session
+        where started_at &gt;= #{from} and started_at &lt; #{to}
+    </select>
+
+</mapper>

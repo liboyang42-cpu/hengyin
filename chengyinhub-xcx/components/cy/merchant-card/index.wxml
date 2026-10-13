@@ -1,0 +1,23 @@
+<view wx:if="{{variant !== 'venue' || (coopOpen !== 0 && coopOpen !== '0')}}" class="photo-card mc mc--{{status}}" hover-class="{{status === 'disabled' || status === 'loading' ? '' : 'photo-card--pressed'}}" hover-stay-time="80" aria-role="{{interactive ? 'button' : ''}}" aria-label="查看商家：{{name}}" aria-disabled="{{status === 'disabled' || status === 'loading'}}" catchtap="onTap">
+  <view wx:if="{{status === 'loading'}}" class="photo-card__skeleton"><view class="photo-card__skeleton-logo"></view><view class="photo-card__space"></view><view class="photo-card__skeleton-line"></view><view class="photo-card__skeleton-line short"></view></view>
+  <block wx:else>
+    <image class="photo-card__cover" src="{{cover && !_coverFailed ? cover : '/images/cards/default-cover.png'}}" mode="aspectFill" binderror="onCoverError" />
+    <view class="photo-card__gradient mc__gradient" aria-hidden="true"></view>
+    <view class="photo-card__top">
+      <view class="photo-card__logo"><image class="{{logo && !_logoFailed ? 'photo-card__logo-image' : 'photo-card__brand'}}" src="{{logo && !_logoFailed ? logo : '/images/cards/citylink.svg'}}" mode="aspectFit" binderror="onLogoError" /></view>
+      <view class="mc__tags"><text wx:for="{{_tags}}" wx:key="*this" class="mc__tag">{{item}}</text></view>
+    </view>
+    <view class="photo-card__space"></view>
+    <view class="photo-card__body">
+      <text class="photo-card__name">{{name}}</text>
+      <view wx:if="{{availableTime}}" class="photo-card__detail mc__hours"><image class="photo-card__icon" src="/images/cards/clock.svg" /><text>{{availableTime}}</text></view>
+      <view wx:if="{{address}}" class="photo-card__detail"><image class="photo-card__icon" src="/images/cards/pin.svg" /><text>{{address}}</text></view>
+      <view class="photo-card__bottom">
+        <view wx:if="{{variant !== 'venue' && serviceText}}" class="mc__service" catchtap="onService" aria-role="button" aria-label="查看{{serviceTag}}：{{serviceText}}" hover-class="photo-card--pressed" hover-stop-propagation="true"><image class="mc__reward-icon" src="{{serviceTag === '券' || serviceTag === '优惠券' ? '/images/cards/coupon.svg' : '/images/cards/gift.svg'}}" /><text class="mc__service-text">{{serviceTag ? serviceTag + '  ' : ''}}{{serviceText}}</text></view>
+        <text wx:elif="{{variant === 'venue' && _suit}}" class="mc__suit">{{_suit}}</text>
+        <view wx:else class="photo-card__fill"></view>
+        <image class="photo-card__arrow" src="/images/cards/chevron.svg" aria-hidden="true" />
+      </view>
+    </view>
+  </block>
+</view>

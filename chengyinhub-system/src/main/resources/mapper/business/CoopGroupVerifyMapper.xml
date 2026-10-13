@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.chengyinhub.business.mapper.CoopGroupVerifyMapper">
+
+    <resultMap type="CoopGroupVerify" id="CoopGroupVerifyResult">
+        <result property="id"               column="id"                 />
+        <result property="topicId"          column="topic_id"           />
+        <result property="activityId"       column="activity_id"        />
+        <result property="coopOrderId"      column="coop_order_id"      />
+        <result property="merchantMemberId" column="merchant_member_id" />
+        <result property="leaderMemberId"   column="leader_member_id"   />
+        <result property="verifyTime"       column="verify_time"        />
+    </resultMap>
+
+    <!--
+      幂等靠库级唯一键 uk_group_verify_activity_merchant + INSERT IGNORE,不靠「先查后插」——
+      读判挡不住并发双扫(两个店员同时扫同一个团码 → 都查到无行 → 都插 → 基数翻倍)。
+      同一类问题在 confirmWinnerIfPending 已经踩过一次,那边补的也是库级唯一键。
+    -->
+    <insert id="insertIgnoreCoopGroupVerify" parameterType="CoopGroupVerify" useGeneratedKeys="true" keyProperty="id">
+        insert ignore into coop_group_verify
+            (topic_id, activity_id, coop_order_id, merchant_member_id, leader_member_id, verify_time)
+        values
+            (#{topicId}, #{activityId}, #{coopOrderId}, #{merchantMemberId}, #{leaderMemberId}, #{verifyTime})
+    </insert>
+
+    <select id="selectSettlementBasisByTopicAndMerchant"
+            resultType="com.chengyinhub.business.domain.dto.CoopGroupSettlementBasis">
+        select count(distinct registration.member_id) as verifiedHeads,
+               coalesce(sum(registration.payable_amount), 0) as verifiedSales
+        from coop_group_member_verify member_verify
+        inner join cms_registration registration on registration.id = member_verify.registration_id
+        where member_verify.topic_id = #{topicId}
+          and registration.owner_type = 1
+          and registration.owner_id = #{topicId}
+          and registration.payment_status = 2
+          and registration.verification_status = 1
+          and exists (
+              select 1
+              from coop_group_verify group_verify
+              where group_verify.topic_id = #{topicId}
+                and group_verify.activity_id = member_verify.activity_id
+                and group_verify.merchant_member_id = #{merchantMemberId}
+          )
+    </select>
+
+    <select id="selectSettlementEvidenceBasisByTopicAndMerchantIncludingActivityShell"
+            resultType="com.chengyinhub.business.domain.dto.CoopGroupSettlementBasis">
+        select count(distinct registration.member_id) as verifiedHeads,
+               coalesce(sum(registration.payable_amount), 0) as verifiedSales
+        from coop_group_member_verify member_verify
+        inner join cms_registration registration on registration.id = member_verify.registration_id
+        where member_verify.topic_id = #{topicId}
+          and ((registration.owner_type = 1 and registration.owner_id = #{topicId})
+              or (registration.owner_type = 2 and exists (
+                  select 1 from cms_activity activity
+                  where activity.id = registration.owner_id
+                    and activity.topic_id = #{topicId}
+                    and activity.del_flag = 0
+              )))
+          and registration.payment_status = 2
+          and registration.verification_status = 1
+          and exists (
+              select 1 from coop_group_verify group_verify
+              where group_verify.topic_id = #{topicId}
+                and group_verify.activity_id = member_verify.activity_id
+                and group_verify.merchant_member_id = #{merchantMemberId}
+          )
+    </select>
+
+    <select id="selectByTopicId" resultMap="CoopGroupVerifyResult">
+        select id, topic_id, activity_id, coop_order_id, merchant_member_id, leader_member_id, verify_time
+        from coop_group_verify
+        where topic_id = #{topicId}
+    </select>
+
+    <!-- 后台核销证据台(§4.5 只读):三筛全可空,穿透入口按参数预填 -->
+    <select id="selectAdminList" resultType="java.util.HashMap">
+        select gv.id as id, gv.topic_id as topicId, t.name as topicName,
+               gv.coop_order_id as coopOrderId,
+               gv.merchant_member_id as merchantMemberId, mm.nickname as merchantName,
+               gv.leader_member_id as leaderMemberId, lm.nickname as leaderName,
+               gv.verify_time as verifyTime
+          from coop_group_verify gv
+          left join cms_topic t on t.id = gv.topic_id
+          left join ums_member mm on mm.id = gv.merchant_member_id
+          left join ums_member lm on lm.id = gv.leader_member_id
+        <where>
+            <if test="topicId != null"> and gv.topic_id = #{topicId}</if>
+            <if test="merchantMemberId != null"> and gv.merchant_member_id = #{merchantMemberId}</if>
+            <if test="leaderMemberId != null"> and gv.leader_member_id = #{leaderMemberId}</if>
+        </where>
+        order by gv.verify_time desc
+    </select>
+
+    <select id="selectFulfillmentVerificationsByClub"
+            resultType="com.chengyinhub.business.domain.dto.ClubFulfillmentWorkspaceDTO$GroupVerification">
+        select verify.id as verificationId,
+               verify.topic_id as topicId,
+               verify.activity_id as activityId,
+               topic.name as topicName,
+               verify.coop_order_id as coopOrderId,
+               verify.merchant_member_id as merchantMemberId,
+               coalesce(nullif(merchant.nickname, ''), nullif(merchant.name, ''), concat('成员#', verify.merchant_member_id)) as merchantDisplayName,
+               verify.leader_member_id as leaderMemberId,
+               coalesce(nullif(leader.nickname, ''), nullif(leader.name, ''), concat('成员#', verify.leader_member_id)) as leaderDisplayName,
+               verify.verify_time as verifyTime
+        from coop_group_verify verify
+        inner join cms_activity ca on verify.activity_id = ca.id and verify.topic_id = ca.topic_id and ca.del_flag = 0
+        inner join club on club.id = ca.club_id and club.del_flag = 0
+        inner join cms_topic topic on topic.id = ca.topic_id and topic.del_flag = 0
+        left join ums_member merchant on merchant.id = verify.merchant_member_id and merchant.del_flag = 0
+        left join ums_member leader on leader.id = verify.leader_member_id and leader.del_flag = 0
+        where ca.club_id = #{clubId}
+          and exists (
+            select 1
+            from coop_order co
+            where co.topic_id = ca.topic_id
+              and co.to_type = 'club'
+              and co.to_id = ca.club_id
+              and co.status = 0
+              and co.del_flag = 0
+          )
+        order by verify.verify_time desc, verify.id desc
+    </select>
+
+</mapper>

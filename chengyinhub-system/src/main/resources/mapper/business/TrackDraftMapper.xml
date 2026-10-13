@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.TrackDraftMapper">
+
+    <resultMap type="TrackDraft" id="TrackDraftResult">
+        <result property="id" column="id" />
+        <result property="memberId" column="member_id" />
+        <result property="name" column="name" />
+        <result property="polyline" column="polyline" />
+        <result property="distanceM" column="distance_m" />
+        <result property="durationS" column="duration_s" />
+        <result property="waypointJson" column="waypoint_json" />
+        <result property="rawOssUrl" column="raw_oss_url" />
+        <result property="litBlocks" column="lit_blocks" />
+        <result property="status" column="status" />
+        <result property="createdAt" column="created_at" />
+        <result property="updatedAt" column="updated_at" />
+    </resultMap>
+
+    <sql id="cols">
+        id, member_id, name, polyline, distance_m, duration_s, waypoint_json, raw_oss_url, lit_blocks, status, created_at, updated_at
+    </sql>
+
+    <insert id="insertTrackDraft" parameterType="TrackDraft" useGeneratedKeys="true" keyProperty="id">
+        insert into track_draft
+        (member_id, name, polyline, distance_m, duration_s, waypoint_json, raw_oss_url, lit_blocks, status, created_at, updated_at)
+        values
+        (#{memberId}, #{name}, #{polyline}, #{distanceM}, #{durationS}, #{waypointJson}, #{rawOssUrl}, #{litBlocks}, #{status}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <select id="selectTrackDraftById" parameterType="Long" resultMap="TrackDraftResult">
+        select <include refid="cols"/> from track_draft where id = #{id}
+    </select>
+
+    <select id="selectTrackDraftList" parameterType="TrackDraft" resultMap="TrackDraftResult">
+        select <include refid="cols"/> from track_draft
+        <where>
+            <if test="memberId != null"> and member_id = #{memberId}</if>
+            <if test="status != null"> and status = #{status}</if>
+        </where>
+        order by id desc
+    </select>
+
+    <update id="updateTrackDraft" parameterType="TrackDraft">
+        update track_draft
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null">name = #{name},</if>
+            <if test="polyline != null">polyline = #{polyline},</if>
+            <if test="distanceM != null">distance_m = #{distanceM},</if>
+            <if test="durationS != null">duration_s = #{durationS},</if>
+            <if test="waypointJson != null">waypoint_json = #{waypointJson},</if>
+            <if test="rawOssUrl != null">raw_oss_url = #{rawOssUrl},</if>
+            <if test="litBlocks != null">lit_blocks = #{litBlocks},</if>
+            <if test="status != null">status = #{status},</if>
+            updated_at = #{updatedAt},
+        </trim>
+        where id = #{id}
+    </update>
+
+</mapper>

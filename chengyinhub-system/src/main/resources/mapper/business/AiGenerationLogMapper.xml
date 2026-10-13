@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.chengyinhub.business.mapper.AiGenerationLogMapper">
+
+    <resultMap type="AiGenerationLog" id="AiGenerationLogResult">
+        <result property="id"          column="id"           />
+        <result property="memberId"    column="member_id"    />
+        <result property="role"        column="role"         />
+        <result property="bizType"     column="biz_type"     />
+        <result property="provider"    column="provider"     />
+        <result property="inputBrief"  column="input_brief"  />
+        <result property="outputBrief" column="output_brief" />
+        <result property="safetyFlag"  column="safety_flag"  />
+        <result property="latencyMs"   column="latency_ms"   />
+        <result property="tokenEst"    column="token_est"    />
+        <result property="tokenIn"     column="token_in"     />
+        <result property="tokenOut"    column="token_out"    />
+        <result property="traceId"     column="trace_id"     />
+        <result property="delFlag"     column="del_flag"     />
+        <result property="createTime"  column="create_time"  />
+    </resultMap>
+
+    <sql id="selectAiGenerationLogVo">
+        select id, member_id, role, biz_type, provider, input_brief, output_brief,
+               safety_flag, latency_ms, token_est, token_in, token_out, trace_id, del_flag, create_time
+        from ai_generation_log
+    </sql>
+
+    <select id="selectAiGenerationLogList" parameterType="AiGenerationLog" resultMap="AiGenerationLogResult">
+        <include refid="selectAiGenerationLogVo"/>
+        <where>
+            del_flag = 0
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="bizType != null  and bizType != ''"> and biz_type = #{bizType}</if>
+            <if test="provider != null  and provider != ''"> and provider = #{provider}</if>
+            <if test="safetyFlag != null "> and safety_flag = #{safetyFlag}</if>
+            <!-- traceId 用 = 精确匹配(配 idx_ai_gen_trace);like 会让索引退化成全表扫 -->
+            <if test="traceId != null  and traceId != ''"> and trace_id = #{traceId}</if>
+            <if test="params.beginTime != null and params.beginTime != ''"><!-- 开始时间检索 -->
+                and date_format(create_time,'%Y%m%d') &gt;= date_format(#{params.beginTime},'%Y%m%d')
+            </if>
+            <if test="params.endTime != null and params.endTime != ''"><!-- 结束时间检索 -->
+                and date_format(create_time,'%Y%m%d') &lt;= date_format(#{params.endTime},'%Y%m%d')
+            </if>
+        </where>
+        order by id desc
+    </select>
+
+    <select id="selectAiGenerationLogById" parameterType="Long" resultMap="AiGenerationLogResult">
+        <include refid="selectAiGenerationLogVo"/>
+        where id = #{id} and del_flag = 0
+    </select>
+
+    <insert id="insertAiGenerationLog" parameterType="AiGenerationLog">
+        insert into ai_generation_log
+            (member_id, role, biz_type, provider, input_brief, output_brief,
+             safety_flag, latency_ms, token_est, token_in, token_out, trace_id, del_flag, create_time)
+        values (#{memberId}, #{role}, #{bizType}, #{provider}, #{inputBrief}, #{outputBrief},
+                #{safetyFlag}, #{latencyMs}, #{tokenEst}, #{tokenIn}, #{tokenOut}, #{traceId},
+                COALESCE(#{delFlag}, 0), sysdate())
+    </insert>
+
+</mapper>

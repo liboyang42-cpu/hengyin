@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MemberVisitedPoiMapper">
+
+    <insert id="insertVisitedPoiIgnore">
+        insert ignore into member_visited_poi (member_id, geo_key, poi_name, lat, lng, first_visit_time)
+        values (#{memberId}, #{geoKey}, #{poiName}, #{lat}, #{lng}, #{firstVisitTime})
+    </insert>
+
+</mapper>

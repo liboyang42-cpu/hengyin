@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CoopClubApplyMapper">
+
+    <resultMap type="CoopClubApply" id="CoopClubApplyResult">
+        <result property="id"    column="id"    />
+        <result property="topicId"    column="topic_id"    />
+        <result property="clubId"    column="club_id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="status"    column="status"    />
+        <result property="message"    column="message"    />
+        <result property="handleTime"    column="handle_time"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="delFlag"    column="del_flag"    />
+    </resultMap>
+
+    <sql id="selectCoopClubApplyVo">
+        select id, topic_id, club_id, member_id, status, message, handle_time, create_by, create_time, update_by, update_time, del_flag from coop_club_apply
+    </sql>
+
+    <select id="selectCoopClubApplyById" parameterType="Long" resultMap="CoopClubApplyResult">
+        <include refid="selectCoopClubApplyVo"/>
+        where id = #{id} and del_flag = 0
+    </select>
+
+    <select id="selectCoopClubApplyList" parameterType="CoopClubApply" resultMap="CoopClubApplyResult">
+        <include refid="selectCoopClubApplyVo"/>
+        <where>
+            del_flag = 0
+            <if test="topicId != null"> and topic_id = #{topicId}</if>
+            <if test="clubId != null"> and club_id = #{clubId}</if>
+            <if test="memberId != null"> and member_id = #{memberId}</if>
+            <if test="status != null"> and status = #{status}</if>
+        </where>
+        order by create_time desc
+    </select>
+
+    <select id="selectByTopicAndClub" resultMap="CoopClubApplyResult">
+        <include refid="selectCoopClubApplyVo"/>
+        where topic_id = #{topicId} and club_id = #{clubId} and del_flag = 0
+        limit 1
+    </select>
+
+    <select id="selectByClubIds" resultMap="CoopClubApplyResult">
+        <include refid="selectCoopClubApplyVo"/>
+        where del_flag = 0 and club_id in
+        <foreach item="cid" collection="clubIds" open="(" separator="," close=")">#{cid}</foreach>
+        order by create_time desc
+    </select>
+
+    <!-- 发布者「收到的」:我发布的全部主题上的俱乐部申请。归属闸就在 join 条件里 —— 别人主题的行查不出来 -->
+    <select id="selectByTopicOwner" resultMap="CoopClubApplyResult">
+        select a.id, a.topic_id, a.club_id, a.member_id, a.status, a.message, a.handle_time,
+               a.create_by, a.create_time, a.update_by, a.update_time, a.del_flag
+        from coop_club_apply a
+        join cms_topic t on t.id = a.topic_id
+        where a.del_flag = 0 and t.del_flag = 0 and t.member_id = #{memberId}
+        order by a.create_time desc, a.id desc
+    </select>
+
+    <insert id="insertCoopClubApply" parameterType="CoopClubApply" useGeneratedKeys="true" keyProperty="id">
+        insert into coop_club_apply
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="topicId != null">topic_id,</if>
+            <if test="clubId != null">club_id,</if>
+            <if test="memberId != null">member_id,</if>
+            <if test="status != null">status,</if>
+            <if test="message != null">message,</if>
+            <if test="handleTime != null">handle_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="delFlag != null">del_flag,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="topicId != null">#{topicId},</if>
+            <if test="clubId != null">#{clubId},</if>
+            <if test="memberId != null">#{memberId},</if>
+            <if test="status != null">#{status},</if>
+            <if test="message != null">#{message},</if>
+            <if test="handleTime != null">#{handleTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+        </trim>
+    </insert>
+
+    <update id="updateCoopClubApply" parameterType="CoopClubApply">
+        update coop_club_apply
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="status != null">status = #{status},</if>
+            <if test="message != null">message = #{message},</if>
+            <if test="handleTime != null">handle_time = #{handleTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="reapplyCoopClubApply">
+        update coop_club_apply
+        set status = 0, message = #{message}, handle_time = null, update_time = sysdate()
+        where id = #{id} and status != 0
+    </update>
+
+</mapper>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.IpCharacterMapper">
+
+    <select id="selectPublishedCharacters" resultType="IpCharacter">
+        select id, world_id as worldId, character_name as characterName,
+               avatar_url as avatarUrl, intro, status, sort_no as sortNo,
+               create_time as createTime, update_time as updateTime
+        from ip_character
+        where world_id = #{worldId}
+          and status = '0'
+        order by sort_no asc, id desc
+    </select>
+</mapper>

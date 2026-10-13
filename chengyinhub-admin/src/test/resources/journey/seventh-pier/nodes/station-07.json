@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "requires": [
+    {"op": "NODE_COMPLETED", "nodeId": 5006}
+  ],
+  "check": {
+    "enabled": true,
+    "checkId": "open_box",
+    "skill": "巧手",
+    "tier": "medium",
+    "mods": [
+      {"when": {"op": "NODE_COMPLETED", "nodeId": 5006}, "value": 2, "label": "寄存条存根"}
+    ],
+    "failCostTag": "tag.seal_broken",
+    "successEffects": [{"op": "SET", "var": "clue.seal_intact", "value": 1}],
+    "successText": "封签完整揭下,老周点了点头。",
+    "failText": "封签撕开了一道口子。东西没事,但交接记录上要写一笔。"
+  },
+  "hiddenObject": {
+    "enabled": true,
+    "title": "交接桌上的两只 LZ-07",
+    "hint": "原件盒只留了一处没被复制掉的痕迹",
+    "imageUrl": "/journey/seventh-pier/station-07-boxes.png",
+    "hotspots": [
+      {"id": "seal_204", "label": "封签编号 204", "x": 0.28, "y": 0.42, "r": 0.06},
+      {"id": "corner_flaw", "label": "右下缺角", "x": 0.66, "y": 0.30, "r": 0.05},
+      {"id": "paper_tint", "label": "泛黄的寄存纸", "x": 0.52, "y": 0.70, "r": 0.07}
+    ],
+    "xp": 15
+  }
+}

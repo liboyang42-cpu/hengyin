@@ -1,0 +1,144 @@
+package com.chengyinhub.e2e;
+
+import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.service.ICmsRegistrationService;
+import com.chengyinhub.business.service.IWechatPayService;
+import com.chengyinhub.business.service.RefundRequestResult;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+/**
+ * ★桩:支付可用性(环境依赖)。只存在于本地 e2e 运行时的 exploded jar 里,仓库产品码一行都没有。
+ *
+ * <p>桩掉的只有【外部支付通道】这一层:商户凭据、SDK 构造、官方验签、预下单。
+ * 「支付成功」仍然走【真实回调入口】 POST /api/registration/callback →
+ * ICmsRegistrationService.handleWechatPayCallback(resultMap),因此金额冻结校验
+ * (matchesFrozenWechatAmount)、订单状态机、entitlement 等业务侧一条都没被绕过。
+ * 绝不直接改 payment_status。
+ */
+@Component
+@Primary
+public class E2eWechatPayStub implements IWechatPayService {
+
+    private static final ObjectMapper JSON = new ObjectMapper();
+    // 用 @Lazy 字段注入而不是构造注入:产品码里 CmsTopicServiceImpl 也注入 IWechatPayService,
+    // 构造注入会形成 stub → registrationService → … → wechatPayService → stub 的循环。
+    @org.springframework.beans.factory.annotation.Autowired
+    @org.springframework.context.annotation.Lazy
+    private ICmsRegistrationService registrationService;
+
+    @Override
+    public boolean isReady() {
+        return true;
+    }
+
+    @Override
+    public boolean isAppReady() {
+        return true;
+    }
+
+    @Override
+    public Map<String, String> createOrder(CmsRegistration registration) {
+        Map<String, String> params = new LinkedHashMap<String, String>();
+        params.put("appId", "e2e-stub-appid");
+        params.put("timeStamp", "0");
+        params.put("nonceStr", "e2estub");
+        params.put("package", "prepay_id=e2e-stub");
+        params.put("signType", "RSA");
+        params.put("paySign", "e2e-stub");
+        return params;
+    }
+
+    @Override
+    public Map<String, String> createAppOrder(CmsRegistration registration) {
+        return createOrder(registration);
+    }
+
+    @Override
+    public Map<String, String> createGenericAppOrder(String outTradeNo, BigDecimal amountYuan,
+                                                     String description) {
+        return createOrder(null);
+    }
+
+    @Override
+    public Map<String, String> createGenericOrder(String outTradeNo, BigDecimal amountYuan,
+                                                  String description, String openid) {
+        return createOrder(null);
+    }
+
+    /** 受控参数从 body 直读(明文 JSON),再交给真实业务回调处理。 */
+    @Override
+    public String handlePayCallback(String requestBody, Map<String, String> headers) {
+        try {
+            JsonNode root = JSON.readTree(requestBody);
+            Map<String, String> resultMap = new HashMap<String, String>();
+            resultMap.put("out_trade_no", root.path("out_trade_no").asText(null));
+            resultMap.put("transaction_id", root.path("transaction_id").asText(null));
+            resultMap.put("trade_state", root.path("trade_state").asText(null));
+            if (root.hasNonNull("total")) {
+                resultMap.put("total", String.valueOf(root.path("total").asInt()));
+            }
+            String result = registrationService.handleWechatPayCallback(resultMap);
+            if (!"SUCCESS".equalsIgnoreCase(result)) {
+                return "{\"code\": \"FAIL\",\"message\": \"" + result + "\"}";
+            }
+            return "{\"code\": \"SUCCESS\",\"message\": \"成功\"}";
+        } catch (Exception e) {
+            return "{\"code\": \"FAIL\",\"message\": \"" + e.getClass().getSimpleName() + "\"}";
+        }
+    }
+
+    @Override
+    public String handleRefundCallback(String requestBody, Map<String, String> headers) {
+        return "{\"code\": \"FAIL\",\"message\": \"e2e stub 不处理退款回调\"}";
+    }
+
+    @Override
+    public String queryRefundStatus(String outRefundNo) {
+        return "UNKNOWN";
+    }
+
+    @Override
+    public Map<String, String> queryRefundFacts(String outRefundNo) {
+        return new LinkedHashMap<String, String>();
+    }
+
+    @Override
+    public String refreshPayoutFromWx(String outRefundNo) {
+        return "UNKNOWN";
+    }
+
+    @Override
+    public Map<String, String> queryOrderStatus(String outTradeNo) {
+        return new LinkedHashMap<String, String>();
+    }
+
+    @Override
+    public boolean closeOrder(String outTradeNo) {
+        return false;
+    }
+
+    @Override
+    public RefundRequestResult submitRefund(String outTradeNo, String outRefundNo, BigDecimal refundAmount,
+                                            BigDecimal totalAmount, String reason) {
+        return RefundRequestResult.DEFINITIVE_FAILED;
+    }
+
+    @Override
+    public Map<String, String> queryTransferResult(String outBatchNo, String outDetailNo) {
+        return new LinkedHashMap<String, String>();
+    }
+
+    @Override
+    public Map<String, String> transferToBalance(String outBatchNo, String outDetailNo, BigDecimal amountYuan,
+                                                 String openid, String remark, String appid) {
+        return new LinkedHashMap<String, String>();
+    }
+}

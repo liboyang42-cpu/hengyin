@@ -1,0 +1,23 @@
+{
+  "controlled_display": true,
+  "initial_loaded": true,
+  "initial_gl_fail": false,
+  "initial_view_mode": "list",
+  "real_catalog_count": 11,
+  "fixture_desc_chars": 875,
+  "body": {
+    "left": 0,
+    "top": 145,
+    "width": 390,
+    "height": 699,
+    "right": 390,
+    "bottom": 844,
+    "centerX": 195,
+    "centerY": 494.5
+  },
+  "wheel_end_verified_on_final_wxml": false,
+  "real_device_touch_verified": false,
+  "webgl_wall_close_verified": false,
+  "limit": "Owned DevTools window was closed after the start screenshot; CUA returned noWindowsAvailable. Previous wheel-only observation is not fresh proof for the final WXML.",
+  "fixture_persisted": false
+}

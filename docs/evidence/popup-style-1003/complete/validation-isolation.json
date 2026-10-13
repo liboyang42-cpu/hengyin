@@ -1,0 +1,86 @@
+{
+  "snapshot": "/private/var/folders/br/p3fbbvz53_jfhh6t5h0_ql3r0000gn/T/popup-owned-validation-ubt316lh",
+  "head": "f084fcc425d7b24ea8b939508cc594f8ab543f0e",
+  "owned_files": {
+    "chengyinhub-xcx/components/cy/agreement-sheet/index.wxss": "7b39b8f42a42e33f420574ff1c0946018c6c2c68daa05aa2114ddd72b6a58a95",
+    "chengyinhub-xcx/components/cy/date-field/index.wxml": "c93628955c25303c63cc34391d4cb548395f8282bc6244bfedcb20f98276771d",
+    "chengyinhub-xcx/components/cy/profile/index.wxss": "004398fd57117c19dcf01982afb5f7587ad5e04ac1fb15e0cbe006d6835fd28b",
+    "chengyinhub-xcx/pages/activity/baoming/baoming.wxml": "0f043f7d6e4d8cae6b59c93ad738ddf2064c60059e480b22cf919d36bf1348cf",
+    "chengyinhub-xcx/pages/activity/baoming/baoming.wxss": "bff69c3cc8fcf5fcb2d4f5e3654ed6ff4ff6a464f7bbe327b4377fbfea406e4b",
+    "chengyinhub-xcx/pages/club/detail/index.json": "5360ea586a7f3b44a7a9da9f163f567a14519494cdce2e3d274764e9433cb7a1",
+    "chengyinhub-xcx/pages/club/detail/index.wxml": "193544d9abc1c041ef4c11fbb82792de2555dbfe90cb8bd97bceec6b3a9ecf4c",
+    "chengyinhub-xcx/pages/club/detail/index.wxss": "3ff814367e5de1c8506ce0aa2ca7d63d46d5b85e1411fcc3a1847cf93148ba7b",
+    "chengyinhub-xcx/pages/merchant/apply/index.js": "f7d112ad9dd44051285f1bba0b847d1a6ee84548046bd78d2f0ead3d54f2c3cd",
+    "chengyinhub-xcx/pages/merchant/apply/index.json": "d37e183774580b6576fdb5e380056b5ad1851bef4b7e205803ed24283d42699e",
+    "chengyinhub-xcx/pages/merchant/apply/index.wxml": "627c0de0298071fb4457597d952bf3fae764f4b68e80b1e1ff83392280081b62",
+    "chengyinhub-xcx/pages/merchant/apply/index.wxss": "a70dcfea75b9ea1b2325d55e17e5c4881fda3634d536dd65dfc2c7411e5accf6",
+    "chengyinhub-xcx/pages/merchant/index/index.wxss": "179c066f394927b5281c4af24b276f4841f283b275638fa35f72e6791f202c30",
+    "chengyinhub-xcx/pages/merchant/team/index.wxss": "fe59d2aadd17b4385f8f561664f5932ad6e995bfbc250d4df968916fe940ac43",
+    "chengyinhub-xcx/pages/publish/components/reward-selector/index.wxml": "39e9e2b3c158bc26371a67fad74dc1f7ddbb94c94b2ad19e14d212d74bfcf84f",
+    "chengyinhub-xcx/pages/publish/components/reward-selector/index.wxss": "ff1b3ffdc02f207a1905965878840b9f7e65ea6fe194dd4c292c30cf3fdba67d",
+    "chengyinhub-xcx/pages/publish/fabu/index.wxml": "3a56adb691de063f7efe06ff63f945203d045ceed7f17c128b8503202db6fdc5",
+    "chengyinhub-xcx/pages/publish/fabu/index.wxss": "944267988763eaeae353642d44d8fe745942b4a96839b421ebb672d6257efe32",
+    "chengyinhub-xcx/pages/shezhi/components/privacy-sheet/index.wxss": "8a3ba662878e77bb247a83c1a85d7dcaa38e5ce4de12b09a423b5f4eeab23058",
+    "chengyinhub-xcx/pages/topic/merchantapply/index.wxml": "9ba66763838229e7960fcabf6e5864531322040ca9b8b9f49345389bf77215ab",
+    "chengyinhub-xcx/pages/topic/merchantapply/index.wxss": "f6c0860e99144e603f4ecd04223e8705458755929ff368319965418675155b20",
+    "chengyinhub-xcx/scripts/uiaudit/action-ledger.json": "e2c69c6a9f53d54394808d3918e94ac6cb3ac6764a2eddb22bf3725a00efcade",
+    "chengyinhub-xcx/subpackageA/pages/myproject/index.wxss": "032ae87a181eaed223d98476b345722b1b4521787558b2605b005a622c752c94",
+    "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.wxml": "3e20ad1371ae7940497177ba5627c485c75829bad78f28e2b2b656e584980983",
+    "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.wxss": "2563a4be5bfb4e7f31cc4cdd260727f3ff29ae71899ab78f117c1ddf546aaa8c",
+    "chengyinhub-xcx/subpackageRoam/nearby/index.wxss": "65530292fd7277a1ab4f4a1a6cbe513548c58dbc37e0af270429f7b2bb56e4b8",
+    "chengyinhub-xcx/tests/lint/ui-integrity-baseline.js": "f71005b4cbaa5771eb0100c74151ffcf0040b0fbff821995c3640220a280f7dd",
+    "chengyinhub-xcx/tests/unit/action-ledger.test.js": "a806c91df6b80aea5d708b54f81aedbb2a4154f7b78e5c3b54ac8029910fc724",
+    "chengyinhub-xcx/tests/unit/merchant-apply-state-contract.test.js": "241a3ff5936de8b076c5991f6cdcf69f2971068986880396d5ca32ec41203ef8",
+    "chengyinhub-xcx/tests/unit/reward-selector-create-sheet.test.js": "8ccf60ca37dab7ab3492bc1cbac8929c15fe40383ecc8c2957a60bb55bbac3e4",
+    "chengyinhub-xcx/tests/unit/reward-selector-sheet-footer-contract.test.js": "6a31c3db4daa1a112a68e22e1803aefcc211e407e5bd046735f825425e869013"
+  },
+  "excluded_foreign_files": [
+    "chengyinhub-xcx/pages/gerenziliao/gerenziliao.wxml",
+    "chengyinhub-xcx/pages/gerenziliao/gerenziliao.wxss",
+    "chengyinhub-xcx/pages/publish/activity/index.wxml",
+    "chengyinhub-xcx/tests/unit/nav-polish-single-title-contract.test.js"
+  ],
+  "checks": {
+    "ui-gate": {
+      "exit_code": 0,
+      "log": "ui-gate-final.txt"
+    },
+    "action-ledger": {
+      "exit_code": 0,
+      "controls": 4373,
+      "evidence_results": 0,
+      "log": "action-ledger-final.txt"
+    },
+    "unit-tests": {
+      "exit_code": 0,
+      "files": [
+        "merchant-apply-state-contract",
+        "reward-selector-create-sheet",
+        "reward-selector-sheet-footer-contract",
+        "badge-wall-native-overlay-contract",
+        "badge-wall-sheet-matches-cy-sheet",
+        "club-post-reference-contract",
+        "date-field-contract",
+        "sheet-footer-sticky-contract",
+        "sheet-modal-exit-motion-contract",
+        "popup-navigation-height-runtime",
+        "sheet-neutral-ladder-contract",
+        "post-actions-sheet-contract",
+        "fabu-sheet-close-position-contract",
+        "scene-sheet-contract",
+        "using-components-registration",
+        "action-ledger"
+      ],
+      "git_context": "read-only real Git metadata with isolated owned source snapshot",
+      "totals": {
+        "tests": 162,
+        "pass": 162,
+        "fail": 0,
+        "skipped": 0
+      },
+      "log": "unit-tests.txt"
+    }
+  },
+  "git_metadata": "/Users/arlan/Downloads/chengyin/.git/worktrees/chengyin12",
+  "validated_product_commit": "24756968eeb06e96e7c6d9a9c2a1842b4b7c8ec7"
+}

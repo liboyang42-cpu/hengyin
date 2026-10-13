@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-05",
+  "project": "/Users/arlan/.codex/worktrees/popup-ship-1005/chengyin/chengyinhub-xcx",
+  "route": "pages/topic/merchantinfo/merchantinfo",
+  "previousVerifiedCommit": "8dc5b9645eefa2bbc24cdbe1fa4232f38f5c3a0e",
+  "reference": "同页 chapter-node-form 商家点位配置弹窗；形象网格参考商家 AI 店铺角色的四列布局。",
+  "changes": [
+    "字段标签使用商家正文 28rpx，输入文字使用 32rpx，沿用全局字号缩放。",
+    "输入框与台词框采用同一灰色表面和大圆角，无白色描边；输入框高度对齐商家点位表单。",
+    "照片与声音操作使用标准尺寸按钮；取消和保存固定在 cy-sheet footer。",
+    "12 个已有形象按四列排列，选中使用商家黑色边框；未增加形象或更改保存字段。"
+  ],
+  "checks": {
+    "relatedTests": {
+      "pass": 12,
+      "fail": 0
+    },
+    "uiIntegrity": "PASS",
+    "staticGate": "PASS",
+    "actionLedgerControls": 4396,
+    "nativeWxml": "PASS",
+    "nativeWxss": "PASS"
+  },
+  "screenshots": {
+    "before": "before.png",
+    "after": "after.png"
+  },
+  "nativeEvidenceLimit": "使用本地运行时展示数据验证排版，原生保存、照片上传和声音生成未向服务器执行；保存与输入校验通过现有组件单测验证。",
+  "nativeComputedStyle": {
+    "input": {
+      "width": 343,
+      "height": 52,
+      "background-color": "rgba(0, 0, 0, 0.07)",
+      "font-size": "16px",
+      "border-radius": "16px"
+    },
+    "label": {
+      "font-size": "14px"
+    }
+  },
+  "nativeInteraction": {
+    "nameInputReadback": "阿福测试",
+    "selectedPresetReadback": "p04",
+    "serverWrites": false
+  }
+}

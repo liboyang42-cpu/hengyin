@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.TopicEditionFundsMapper">
+
+    <resultMap id="TopicEditionFundsResult" type="TopicEditionFunds">
+        <id property="id" column="id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="snapshotKind" column="snapshot_kind"/>
+        <result property="version" column="snapshot_version"/>
+        <result property="current" column="is_current"/>
+        <result property="nCash" column="n_cash"/>
+        <result property="gCash" column="g_cash"/>
+        <result property="uIn" column="u_in"/>
+        <result property="gEarned" column="g_earned"/>
+        <result property="uOut" column="u_out"/>
+        <result property="uPending" column="u_pending"/>
+        <result property="rRefund" column="r_refund"/>
+        <result property="inputHash" column="input_hash"/>
+        <result property="idempotencyKey" column="idempotency_key"/>
+        <result property="computedBy" column="computed_by"/>
+        <result property="computedAt" column="computed_at"/>
+        <result property="supersededBy" column="superseded_by"/>
+        <result property="supersededAt" column="superseded_at"/>
+        <result property="supersedeReason" column="supersede_reason"/>
+    </resultMap>
+
+    <resultMap id="RawFactsResult" type="TopicEditionFundsRawFacts">
+        <result property="nCash" column="n_cash"/>
+        <result property="gCash" column="g_cash"/>
+        <result property="uOut" column="u_out"/>
+        <result property="uPending" column="u_pending"/>
+        <result property="rRefund" column="r_refund"/>
+        <result property="unknownCount" column="unknown_count"/>
+        <result property="invalidRefundCount" column="invalid_refund_count"/>
+    </resultMap>
+
+    <resultMap id="AttributionResult" type="TopicEditionFundsAttribution">
+        <id property="id" column="id"/>
+        <result property="fundsSnapshotId" column="funds_snapshot_id"/>
+        <result property="sourceClubId" column="source_club_id"/>
+        <result property="ticketCount" column="ticket_count"/>
+        <result property="netTicketCount" column="net_ticket_count"/>
+        <result property="earnedAmount" column="earned_amount"/>
+        <result property="unfrozenCount" column="unfrozen_count"/>
+    </resultMap>
+
+    <resultMap id="EditionCostResult" type="TopicEditionCost">
+        <id property="id" column="id"/><result property="topicId" column="topic_id"/>
+        <result property="version" column="cost_version"/><result property="current" column="is_current"/>
+        <result property="taxCost" column="tax_cost"/><result property="paymentCost" column="payment_cost"/>
+        <result property="materialCost" column="material_cost"/><result property="kitCost" column="kit_cost"/>
+        <result property="insuranceRiskCost" column="insurance_risk_cost"/>
+        <result property="acquisitionCost" column="acquisition_cost"/>
+        <result property="platformLaborCost" column="platform_labor_cost"/>
+        <result property="otherCost" column="other_cost"/>
+        <result property="platformOnsiteHours" column="platform_onsite_hours"/>
+        <result property="fixedCompensation" column="fixed_compensation"/>
+        <result property="bonuses" column="bonuses"/>
+        <result property="breakEvenFixedCost" column="break_even_fixed_cost"/>
+        <result property="variableCostPerTicket" column="variable_cost_per_ticket"/>
+        <result property="headcountRate" column="headcount_rate"/>
+        <result property="headcountCap" column="headcount_cap"/>
+        <result property="extraApproverUserId" column="extra_approver_user_id"/>
+        <result property="note" column="note"/><result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <resultMap id="EditionHoursResult" type="ClubEditionHours">
+        <id property="id" column="id"/><result property="topicId" column="topic_id"/>
+        <result property="clubId" column="club_id"/><result property="hourKind" column="hour_kind"/>
+        <result property="plannedHours" column="planned_hours"/>
+        <result property="reportedActualHours" column="reported_actual_hours"/>
+        <result property="confirmedActualHours" column="confirmed_actual_hours"/>
+        <result property="confirmStatus" column="confirm_status"/>
+        <result property="reportedBy" column="reported_by"/><result property="reportedAt" column="reported_at"/>
+        <result property="confirmedBy" column="confirmed_by"/><result property="confirmedAt" column="confirmed_at"/>
+        <result property="evidenceNote" column="evidence_note"/>
+    </resultMap>
+
+    <sql id="selectTopicEditionFundsVo">
+        select id,topic_id,snapshot_kind,snapshot_version,is_current,n_cash,g_cash,u_in,g_earned,
+               u_out,u_pending,r_refund,input_hash,idempotency_key,computed_by,computed_at,
+               superseded_by,superseded_at,supersede_reason
+        from topic_edition_funds
+    </sql>
+
+    <!-- product_type=2 与 purchase_kind=3 由 Java 命名常量传入，禁止在此混写裸字面量。 -->
+    <select id="selectProvisionalRawFacts" resultMap="RawFactsResult">
+        select count(case when r.purchase_kind = #{purchaseKind} then 1 end) as n_cash,
+               coalesce(sum(case when r.purchase_kind = #{purchaseKind}
+                                 then r.wechat_payment_amount else 0 end), 0) as g_cash,
+               coalesce(sum(case when r.purchase_kind = #{purchaseKind}
+                                      and (r.refund_deadline &gt; #{asOf}
+                                           or exists (select 1 from coop_complaint cc
+                                                      where cc.registration_id = r.id
+                                                        and cc.status &lt; 3 and cc.del_flag = 0))
+                                      and exists (select 1 from registration_entitlement e
+                                                  where e.registration_id = r.id and e.status = 0)
+                                 then greatest(r.wechat_payment_amount - coalesce(rr.refund_amount, 0), 0)
+                                 else 0 end), 0) as u_out,
+               coalesce(sum(case when r.purchase_kind = #{purchaseKind}
+                                      and (r.refund_deadline &gt; #{asOf}
+                                           or exists (select 1 from coop_complaint cc
+                                                      where cc.registration_id = r.id
+                                                        and cc.status &lt; 3 and cc.del_flag = 0))
+                                      and exists (select 1 from registration_entitlement e
+                                                  where e.registration_id = r.id and e.status = 0)
+                                 then greatest(r.wechat_payment_amount - coalesce(rr.refund_amount, 0), 0)
+                                 else 0 end), 0) as u_pending,
+               coalesce(sum(case when r.purchase_kind = #{purchaseKind}
+                                 then coalesce(rr.refund_amount, 0) else 0 end), 0) as r_refund,
+               coalesce(sum(case when r.purchase_kind is null or r.purchase_kind &lt;&gt; #{purchaseKind}
+                              or r.wechat_payment_amount is null or r.refund_deadline is null
+                              or coalesce(rr.unknown_refund_count, 0) &gt; 0
+                        then 1 else 0 end), 0) as unknown_count,
+               coalesce(sum(case when coalesce(rr.refund_amount, 0) &gt; coalesce(r.wechat_payment_amount, 0)
+                        then 1 else 0 end), 0) as invalid_refund_count
+        from cms_registration r
+        join cms_activity a on r.owner_type = 2 and a.id = r.owner_id
+        join cms_topic t on t.id = a.topic_id and t.product_type = #{productType}
+        left join (
+            select source_id,
+                   sum(case when payout_status in (1, 3, 4) then refund_amount else 0 end) as refund_amount,
+                   sum(case when payout_status in (1, 3, 4) and refund_amount is null then 1 else 0 end)
+                       as unknown_refund_count
+            from refund_application
+            where source_type = 'registration' and (del_flag is null or del_flag &lt;&gt; 2)
+            group by source_id
+        ) rr on rr.source_id = r.id
+        where a.topic_id = #{topicId}
+          and r.payment_status = 2
+    </select>
+
+    <!-- FINAL 的 E2 金额归因与六量读取同一组已支付 EXPLORE_PASS，退款口径也完全相同。 -->
+    <select id="selectFinalAttributionFacts" resultMap="AttributionResult">
+        select r.source_club_id,
+               count(*) as ticket_count,
+               <!-- ★净票数：与 earned_amount 共用同一个退款 join，同一事务同一口径。
+                    count(*) 是毛计数（要与 n_cash 对账，不能动），全额退款照样算 1 张；
+                    承接费按它计酬会「退光了还照付」。这一列才是「已赚票数」。 -->
+               sum(case when greatest(r.wechat_payment_amount - coalesce(rr.refund_amount, 0), 0) &gt; 0
+                        then 1 else 0 end) as net_ticket_count,
+               coalesce(sum(greatest(r.wechat_payment_amount - coalesce(rr.refund_amount, 0), 0)), 0)
+                   as earned_amount,
+               sum(case when r.source_frozen_at is null then 1 else 0 end) as unfrozen_count
+          from cms_registration r
+          join cms_activity a on r.owner_type = 2 and a.id = r.owner_id
+          join cms_topic t on t.id = a.topic_id and t.product_type = #{productType}
+          left join (
+              select source_id,
+                     sum(case when payout_status in (1, 3, 4) then refund_amount else 0 end) as refund_amount
+                from refund_application
+               where source_type = 'registration' and (del_flag is null or del_flag &lt;&gt; 2)
+               group by source_id
+          ) rr on rr.source_id = r.id
+         where a.topic_id = #{topicId}
+           and r.payment_status = 2
+           and r.purchase_kind = #{purchaseKind}
+         group by r.source_club_id
+         order by r.source_club_id is not null, r.source_club_id
+    </select>
+
+    <select id="selectByIdempotencyKey" resultMap="TopicEditionFundsResult">
+        select * from topic_edition_funds where idempotency_key = #{idempotencyKey} limit 1
+    </select>
+
+    <select id="selectCurrentForUpdate" resultMap="TopicEditionFundsResult">
+        select * from topic_edition_funds
+        where topic_id = #{topicId} and snapshot_kind = #{snapshotKind} and is_current = 1
+        for update
+    </select>
+
+    <select id="selectCurrent" resultMap="TopicEditionFundsResult">
+        <include refid="selectTopicEditionFundsVo"/>
+        where topic_id = #{topicId} and snapshot_kind = #{snapshotKind} and is_current = 1
+    </select>
+
+    <update id="classifyUnknownExplorePurchases">
+        update cms_registration r
+        join cms_activity a on r.owner_type = 2 and a.id = r.owner_id
+        join cms_topic t on t.id = a.topic_id
+        set r.purchase_kind = #{purchaseKind}, r.update_by = 'edition-funds-repair', r.update_time = now()
+        where t.id = #{topicId} and t.product_type = #{productType}
+          and r.payment_status = 2 and r.purchase_kind is null
+          and r.ticket_id is not null
+    </update>
+
+    <insert id="insertSnapshot" parameterType="TopicEditionFunds" useGeneratedKeys="true" keyProperty="id">
+        insert into topic_edition_funds
+        (topic_id, snapshot_kind, snapshot_version, is_current, n_cash,
+         g_cash, u_in, g_earned, u_out, u_pending, r_refund,
+         input_hash, idempotency_key, computed_by, computed_at)
+        values
+        (#{topicId}, #{snapshotKind}, #{version}, #{current}, #{nCash},
+         #{gCash}, #{uIn}, #{gEarned}, #{uOut}, #{uPending}, #{rRefund},
+         #{inputHash}, #{idempotencyKey}, #{computedBy}, #{computedAt})
+    </insert>
+
+    <insert id="insertFinalAttribution" parameterType="TopicEditionFundsAttribution"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into topic_edition_funds_attribution
+            (funds_snapshot_id, source_club_id, ticket_count, net_ticket_count, earned_amount)
+        values (#{fundsSnapshotId}, #{sourceClubId}, #{ticketCount}, #{netTicketCount}, #{earnedAmount})
+    </insert>
+
+    <!-- FINAL 落库后的不可变 readback 不再伪造 unfrozen_count=0；真实未冻结硬闸只在生产写入前。 -->
+    <select id="selectAttributionsBySnapshotId" resultMap="AttributionResult">
+        select id, funds_snapshot_id, source_club_id, ticket_count, net_ticket_count, earned_amount
+          from topic_edition_funds_attribution
+         where funds_snapshot_id = #{fundsSnapshotId}
+         order by source_key
+    </select>
+
+    <update id="supersedeCurrentProvisional">
+        update topic_edition_funds
+        set is_current = 0, superseded_by = #{operator}, superseded_at = now(), supersede_reason = #{reason}
+        where id = #{id} and snapshot_kind = 'PROVISIONAL' and is_current = 1
+    </update>
+
+    <select id="selectCurrentCost" resultMap="EditionCostResult">
+        select * from topic_edition_cost where topic_id=#{topicId} and is_current=1 limit 1
+    </select>
+    <select id="selectCurrentCostForUpdate" resultMap="EditionCostResult">
+        select * from topic_edition_cost where topic_id=#{topicId} and is_current=1 for update
+    </select>
+    <update id="supersedeCurrentCost">
+        update topic_edition_cost set is_current=0 where id=#{id} and is_current=1
+    </update>
+    <insert id="insertCost" parameterType="TopicEditionCost" useGeneratedKeys="true" keyProperty="id">
+        insert into topic_edition_cost
+        (topic_id,cost_version,is_current,tax_cost,payment_cost,material_cost,kit_cost,
+         insurance_risk_cost,acquisition_cost,platform_labor_cost,other_cost,platform_onsite_hours,
+         fixed_compensation,bonuses,break_even_fixed_cost,variable_cost_per_ticket,
+         headcount_rate,headcount_cap,extra_approver_user_id,note)
+        values (#{topicId},#{version},#{current},#{taxCost},#{paymentCost},#{materialCost},#{kitCost},
+         #{insuranceRiskCost},#{acquisitionCost},#{platformLaborCost},#{otherCost},#{platformOnsiteHours},
+         #{fixedCompensation},#{bonuses},#{breakEvenFixedCost},#{variableCostPerTicket},
+         <!-- rate 列是 NOT NULL：后台没填就冻 0.00（这一期只发保底 F），不是 NULL。 -->
+         coalesce(#{headcountRate},0.00),#{headcountCap},#{extraApproverUserId},#{note})
+    </insert>
+    <select id="selectHours" resultMap="EditionHoursResult">
+        select * from club_edition_hours where topic_id=#{topicId} order by club_id,hour_kind
+    </select>
+</mapper>

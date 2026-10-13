@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper">
+    
+    <resultMap type="UmsMemberBalanceDetail" id="UmsMemberBalanceDetailResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="currentBalance"    column="current_balance"    />
+        <result property="afterBalance"    column="after_balance"    />
+        <result property="changeBalance"    column="change_balance"    />
+        <result property="changeReason"    column="change_reason"    />
+        <result property="eventType"    column="event_type"    />
+        <result property="eventId"    column="event_id"    />
+        <result property="changeType"    column="change_type"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectUmsMemberBalanceDetailVo">
+        select id, member_id, current_balance, after_balance, change_balance, change_reason, event_type, event_id, change_type, del_flag, create_by, create_time, update_by, update_time from ums_member_balance_detail
+    </sql>
+
+    <select id="selectUmsMemberBalanceDetailList" parameterType="UmsMemberBalanceDetail" resultMap="UmsMemberBalanceDetailResult">
+        <include refid="selectUmsMemberBalanceDetailVo"/>
+        <where>  
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="currentBalance != null "> and current_balance = #{currentBalance}</if>
+            <if test="afterBalance != null "> and after_balance = #{afterBalance}</if>
+            <if test="changeBalance != null "> and change_balance = #{changeBalance}</if>
+            <if test="changeReason != null  and changeReason != ''"> and change_reason = #{changeReason}</if>
+            <if test="eventType != null "> and event_type = #{eventType}</if>
+            <if test="eventId != null "> and event_id = #{eventId}</if>
+            <if test="changeType != null "> and change_type = #{changeType}</if>
+        </where>
+        order by id desc
+    </select>
+    
+    <select id="selectUmsMemberBalanceDetailById" parameterType="Long" resultMap="UmsMemberBalanceDetailResult">
+        <include refid="selectUmsMemberBalanceDetailVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertUmsMemberBalanceDetail" parameterType="UmsMemberBalanceDetail" useGeneratedKeys="true" keyProperty="id">
+        insert into ums_member_balance_detail
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="currentBalance != null">current_balance,</if>
+            <if test="afterBalance != null">after_balance,</if>
+            <if test="changeBalance != null">change_balance,</if>
+            <if test="changeReason != null">change_reason,</if>
+            <if test="eventType != null">event_type,</if>
+            <if test="eventId != null">event_id,</if>
+            <if test="changeType != null">change_type,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="currentBalance != null">#{currentBalance},</if>
+            <if test="afterBalance != null">#{afterBalance},</if>
+            <if test="changeBalance != null">#{changeBalance},</if>
+            <if test="changeReason != null">#{changeReason},</if>
+            <if test="eventType != null">#{eventType},</if>
+            <if test="eventId != null">#{eventId},</if>
+            <if test="changeType != null">#{changeType},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateUmsMemberBalanceDetail" parameterType="UmsMemberBalanceDetail">
+        update ums_member_balance_detail
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="currentBalance != null">current_balance = #{currentBalance},</if>
+            <if test="afterBalance != null">after_balance = #{afterBalance},</if>
+            <if test="changeBalance != null">change_balance = #{changeBalance},</if>
+            <if test="changeReason != null">change_reason = #{changeReason},</if>
+            <if test="eventType != null">event_type = #{eventType},</if>
+            <if test="eventId != null">event_id = #{eventId},</if>
+            <if test="changeType != null">change_type = #{changeType},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteUmsMemberBalanceDetailById" parameterType="Long">
+        delete from ums_member_balance_detail where id = #{id}
+    </delete>
+
+    <delete id="deleteUmsMemberBalanceDetailByIds" parameterType="String">
+        delete from ums_member_balance_detail where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+
+    <select id="selectJoinNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT  count(1) as join_num
+        FROM ums_member_balance_detail
+        <where>
+            event_type IN (1, 2)
+            AND del_flag = 0
+            <if test="memberId != null">
+                AND member_id = #{memberId}
+            </if>
+        </where>
+    </select>
+
+    <select id="statisticsChangeBalance" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT
+        member_id,
+        YEAR(create_time) AS year,
+        MONTH(create_time) AS month,
+        sum(change_balance) as  change_balance,
+        SUM(CASE WHEN event_type = 1 THEN change_balance ELSE 0 END) AS type_1_balance,
+        SUM(CASE WHEN event_type = 2 THEN change_balance ELSE 0 END) AS type_2_balance
+        FROM ums_member_balance_detail
+        <where>
+            event_type IN (1, 2)
+            AND del_flag = 0
+            <if test="memberId != null">
+                AND member_id = #{memberId}
+            </if>
+            <if test="year != null">
+                AND YEAR(create_time) =  #{year}
+            </if>
+        </where>
+        GROUP BY  YEAR(create_time), MONTH(create_time)
+        ORDER BY     MONTH(create_time);
+    </select>
+
+
+
+    <!-- 获取用户本周收入总和 -->
+    <select id="selectWeekBalanceIncome" resultType="java.math.BigDecimal">
+        <![CDATA[
+        SELECT
+            COALESCE(SUM(change_balance), 0)
+        FROM
+            ums_member_balance_detail
+        WHERE
+            member_id = #{memberId}
+          AND change_type = 1
+          AND del_flag = 0
+          AND create_time >= DATE_SUB(CURDATE(), INTERVAL (DAYOFWEEK(CURDATE()) - 2) DAY)
+          AND create_time < DATE_ADD(DATE_SUB(CURDATE(), INTERVAL (DAYOFWEEK(CURDATE()) - 2) DAY), INTERVAL 7 DAY)
+        ]]>
+    </select>
+
+    <!-- 获取用户收入分解（按事件类型汇总） -->
+    <select id="selectIncomeBreakdown" parameterType="Long" resultType="java.util.Map">
+        SELECT
+            COALESCE(SUM(CASE WHEN event_type = 1 THEN change_balance ELSE 0 END), 0) AS topicRevenue,
+            COALESCE(SUM(CASE WHEN event_type = 2 THEN change_balance ELSE 0 END), 0) AS inviteRevenue,
+            COALESCE(SUM(CASE WHEN event_type = 5 THEN change_balance ELSE 0 END), 0) AS brandRevenue
+        FROM ums_member_balance_detail
+        WHERE member_id = #{memberId}
+          AND change_type = 1
+          AND del_flag = 0
+    </select>
+
+    <!-- 按事件类型获取累计收益 -->
+    <select id="selectIncomeByEventType" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(change_balance), 0)
+        FROM ums_member_balance_detail
+        WHERE member_id = #{memberId}
+          AND event_type = #{eventType}
+          AND change_type = 1
+          AND del_flag = 0
+    </select>
+
+    <!-- 按事件类型+事件ID获取累计收益 -->
+    <select id="selectIncomeByEventTypeAndEventId" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(change_balance), 0)
+        FROM ums_member_balance_detail
+        WHERE member_id = #{memberId}
+          AND event_type = #{eventType}
+          AND event_id = #{eventId}
+          AND change_type = 1
+          AND del_flag = 0
+    </select>
+
+</mapper>

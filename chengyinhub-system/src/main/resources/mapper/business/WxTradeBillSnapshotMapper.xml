@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.WxTradeBillSnapshotMapper">
+
+    <resultMap type="WxTradeBillSnapshot" id="WxTradeBillSnapshotResult">
+        <result property="id"             column="id"              />
+        <result property="billDate"       column="bill_date"       />
+        <result property="wxTradeNo"      column="wx_trade_no"     />
+        <result property="outTradeNo"     column="out_trade_no"    />
+        <result property="outRefundNo"    column="out_refund_no"   />
+        <result property="bizType"        column="biz_type"        />
+        <result property="amount"         column="amount"          />
+        <result property="tradeTime"      column="trade_time"      />
+        <result property="rawIngestedAt"  column="raw_ingested_at" />
+    </resultMap>
+
+    <insert id="insertSnapshot" parameterType="WxTradeBillSnapshot" useGeneratedKeys="true" keyProperty="id">
+        insert into wx_trade_bill_snapshot
+        (bill_date, wx_trade_no, out_trade_no, out_refund_no, biz_type, amount, trade_time)
+        values
+        (#{billDate}, #{wxTradeNo}, #{outTradeNo}, #{outRefundNo}, #{bizType}, #{amount}, #{tradeTime})
+    </insert>
+
+    <select id="countByBillDate" resultType="java.lang.Integer">
+        select count(*) from wx_trade_bill_snapshot where bill_date = #{billDate}
+    </select>
+
+    <!-- ★ 按方向汇总:本表金额是绝对值,退款/支付两类不混加,调用方按 bizType 分别取。 -->
+    <select id="sumAmountByOutTradeNoAndBizType" resultType="java.math.BigDecimal">
+        select sum(amount) from wx_trade_bill_snapshot
+        where out_trade_no = #{outTradeNo} and biz_type = #{bizType}
+    </select>
+
+    <select id="selectByOutTradeNo" resultMap="WxTradeBillSnapshotResult">
+        select id, bill_date, wx_trade_no, out_trade_no, out_refund_no, biz_type, amount, trade_time, raw_ingested_at
+        from wx_trade_bill_snapshot
+        where out_trade_no = #{outTradeNo}
+        order by trade_time asc
+    </select>
+
+</mapper>

@@ -1,0 +1,93 @@
+@import "/pages/play/style/play-surface.wxss";
+
+/* cy-playkit-branch · 分支剧情(逐值照抄原型 playkit.html 的 .qastory / .qaopt)
+ * 值来自在浏览器里对着原型读回来的 computed style。原型 375px 画布,1px = 2rpx。
+ */
+.br { color: var(--ink); }
+
+/* 分支的题干比问答更重:它是一段故事的开头,不是一道题 */
+.br__q {
+  font-size: var(--cy-play-question-size, var(--cy-type-display));     /* ds-ok 原型 .phone[data-skin=branch] .hdr .t 26px;内嵌档 = 原型 .card .ct 22px */
+  font-weight: var(--pk-q-weight, 900);
+  line-height: 1.32;
+}
+/* 正文保留换行:商家写的分段是叙事节奏的一部分 */
+.br__story {
+  /* 正文占住题面和选项之间那块空当并居中(原型正文落在 276~417,不是贴着题面)。
+     顶着题面排的话,一屏的下半截全是空的。 */
+  flex: 1;
+  display: flex;
+  align-items: center;
+  /* 内嵌档(故事流卡片)正文靠左,跟标题齐;整屏档照旧居中 */
+  justify-content: var(--pk-row-justify, center);
+  min-height: 0;
+  width: 100%;
+  font-size: var(--cy-type-section-title);
+  line-height: 1.85;
+  color: var(--ink);
+  white-space: pre-wrap;
+  text-align: left;
+}
+/* 反馈是一块实心的话,不是一行浮字 —— 与问答同一块 .qafb。
+   浮字会和正文混成一段,读的人分不清哪句是「你选了之后发生的事」。 */
+.br__fb {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 30rpx;                         /* ds-ok 原型 .qafb 15px */
+  border-radius: 28rpx;                   /* ds-ok 原型 14px */
+  background: var(--soft);
+  font-size: var(--cy-type-body);
+  line-height: 1.7;
+  color: var(--ink);
+  text-align: left;
+}
+.br__fb-h {
+  margin-bottom: 8rpx;                    /* ds-ok 原型 4px */
+  font-size: var(--cy-type-label);
+  font-weight: 800;
+  letter-spacing: 1rpx;                   /* ds-ok 原型 .04em */
+  color: var(--sub);
+}
+
+/* 选项:与问答同一套 —— 一整块反色分组卡,竖排、发丝分隔(2026-09-23 用户)。分支不判对错,选中那行反回深色 */
+.br__opts { width: 100%; border-radius: 24rpx; overflow: hidden; background: var(--ink); color: var(--bg); } /* ds-ok 原型 --r-card 12px */
+.br__opt {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  width: 100%;
+  min-height: 108rpx;                     /* ds-ok 原型 .opt2 56px */
+  padding: 24rpx 32rpx;
+  box-sizing: border-box;
+  text-align: left;
+  font-size: var(--cy-type-card-title);
+  font-weight: 500;
+  line-height: 1.4;
+  transition: background .18s ease, color .18s ease;
+}
+.br__opt + .br__opt { border-top: 1rpx solid rgba(127,127,127,.3); } /* ds-ok 分组列表发丝分隔 */
+.br__k {
+  flex: none;
+  width: 44rpx; height: 44rpx;
+  border-radius: 50%;
+  border: 2rpx solid currentColor;
+  display: flex; align-items: center; justify-content: center;
+  box-sizing: border-box;
+  font-family: var(--cy-font-numeric);
+  font-size: var(--cy-type-label);
+  font-weight: 600;
+  opacity: .6;
+}
+.br__opt.is-on .br__k { opacity: 1; }
+.br__t { flex: 1; min-width: 0; }
+.br__tail { display: none; }
+.br__opt.is-on { background: var(--bg); color: var(--ink); font-weight: 700; }
+.br__opt.is-off { opacity: .45; }
+.br__press { opacity: .88; }
+
+.br__end {
+  font-size: var(--cy-type-caption);
+  font-weight: 900;
+  letter-spacing: 6rpx;
+  opacity: .5;
+}

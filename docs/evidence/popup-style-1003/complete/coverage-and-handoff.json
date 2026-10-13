@@ -1,0 +1,210 @@
+{
+  "date": "2026-10-05",
+  "product_commit": "24756968eeb06e96e7c6d9a9c2a1842b4b7c8ec7",
+  "scope": "非游戏弹窗；商家站点操作属于经营域，游戏内部不在本轮范围",
+  "coverage": {
+    "custom_candidates": 99,
+    "excluded_game": 51,
+    "not_overlay": 2,
+    "nongame_popup_types": 46,
+    "native_representative_types_accumulated": 42,
+    "this_round_native_representative_types": 24,
+    "previous_round_native_representative_types": 18,
+    "blocked_native_types": 4,
+    "native_business_acceptance": false,
+    "all_page_routes_individually_opened": false
+  },
+  "changes": [
+    "经营日一至日同一行；开始和结束分别打开共用时间面板，子面板与父面板同级避免裁切。",
+    "选择奖励分类在上、列表在中、新建入口在底栏；选中统一圆点。",
+    "奖励创建的有效期与投放数各占整行；名称与说明按优惠券或体验卡显示。",
+    "参与人、商家角色、动态编辑和历史去除重复缩进；动态保存复用按钮与固定底栏并补组件注册。",
+    "章节、站点选择的长文字与箭头留出空间；黑色外壳去描边；附近及项目操作字号对齐。",
+    "可配合时间移除重复嵌套背景并固定完成按钮；主题模式选择使用黑圈白点。",
+    "勋章 cover-view 正文改为原生支持的纵向滚动，并去掉正文外层对触摸移动的拦截。"
+  ],
+  "product_files": {
+    "chengyinhub-xcx/components/cy/agreement-sheet/index.wxss": "7b39b8f42a42e33f420574ff1c0946018c6c2c68daa05aa2114ddd72b6a58a95",
+    "chengyinhub-xcx/components/cy/date-field/index.wxml": "c93628955c25303c63cc34391d4cb548395f8282bc6244bfedcb20f98276771d",
+    "chengyinhub-xcx/components/cy/profile/index.wxss": "004398fd57117c19dcf01982afb5f7587ad5e04ac1fb15e0cbe006d6835fd28b",
+    "chengyinhub-xcx/pages/activity/baoming/baoming.wxml": "0f043f7d6e4d8cae6b59c93ad738ddf2064c60059e480b22cf919d36bf1348cf",
+    "chengyinhub-xcx/pages/activity/baoming/baoming.wxss": "bff69c3cc8fcf5fcb2d4f5e3654ed6ff4ff6a464f7bbe327b4377fbfea406e4b",
+    "chengyinhub-xcx/pages/club/detail/index.json": "5360ea586a7f3b44a7a9da9f163f567a14519494cdce2e3d274764e9433cb7a1",
+    "chengyinhub-xcx/pages/club/detail/index.wxml": "193544d9abc1c041ef4c11fbb82792de2555dbfe90cb8bd97bceec6b3a9ecf4c",
+    "chengyinhub-xcx/pages/club/detail/index.wxss": "3ff814367e5de1c8506ce0aa2ca7d63d46d5b85e1411fcc3a1847cf93148ba7b",
+    "chengyinhub-xcx/pages/merchant/apply/index.js": "f7d112ad9dd44051285f1bba0b847d1a6ee84548046bd78d2f0ead3d54f2c3cd",
+    "chengyinhub-xcx/pages/merchant/apply/index.json": "d37e183774580b6576fdb5e380056b5ad1851bef4b7e205803ed24283d42699e",
+    "chengyinhub-xcx/pages/merchant/apply/index.wxml": "627c0de0298071fb4457597d952bf3fae764f4b68e80b1e1ff83392280081b62",
+    "chengyinhub-xcx/pages/merchant/apply/index.wxss": "a70dcfea75b9ea1b2325d55e17e5c4881fda3634d536dd65dfc2c7411e5accf6",
+    "chengyinhub-xcx/pages/merchant/index/index.wxss": "179c066f394927b5281c4af24b276f4841f283b275638fa35f72e6791f202c30",
+    "chengyinhub-xcx/pages/merchant/team/index.wxss": "fe59d2aadd17b4385f8f561664f5932ad6e995bfbc250d4df968916fe940ac43",
+    "chengyinhub-xcx/pages/publish/components/reward-selector/index.wxml": "39e9e2b3c158bc26371a67fad74dc1f7ddbb94c94b2ad19e14d212d74bfcf84f",
+    "chengyinhub-xcx/pages/publish/components/reward-selector/index.wxss": "ff1b3ffdc02f207a1905965878840b9f7e65ea6fe194dd4c292c30cf3fdba67d",
+    "chengyinhub-xcx/pages/publish/fabu/index.wxml": "3a56adb691de063f7efe06ff63f945203d045ceed7f17c128b8503202db6fdc5",
+    "chengyinhub-xcx/pages/publish/fabu/index.wxss": "944267988763eaeae353642d44d8fe745942b4a96839b421ebb672d6257efe32",
+    "chengyinhub-xcx/pages/shezhi/components/privacy-sheet/index.wxss": "8a3ba662878e77bb247a83c1a85d7dcaa38e5ce4de12b09a423b5f4eeab23058",
+    "chengyinhub-xcx/pages/topic/merchantapply/index.wxml": "9ba66763838229e7960fcabf6e5864531322040ca9b8b9f49345389bf77215ab",
+    "chengyinhub-xcx/pages/topic/merchantapply/index.wxss": "f6c0860e99144e603f4ecd04223e8705458755929ff368319965418675155b20",
+    "chengyinhub-xcx/subpackageA/pages/myproject/index.wxss": "032ae87a181eaed223d98476b345722b1b4521787558b2605b005a622c752c94",
+    "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.wxml": "3e20ad1371ae7940497177ba5627c485c75829bad78f28e2b2b656e584980983",
+    "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.wxss": "2563a4be5bfb4e7f31cc4cdd260727f3ff29ae71899ab78f117c1ddf546aaa8c",
+    "chengyinhub-xcx/subpackageRoam/nearby/index.wxss": "65530292fd7277a1ab4f4a1a6cbe513548c58dbc37e0af270429f7b2bb56e4b8"
+  },
+  "validation": {
+    "ui-gate": {
+      "exit_code": 0,
+      "log": "ui-gate-final.txt"
+    },
+    "action-ledger": {
+      "exit_code": 0,
+      "controls": 4373,
+      "evidence_results": 0,
+      "log": "action-ledger-final.txt"
+    },
+    "unit-tests": {
+      "exit_code": 0,
+      "files": [
+        "merchant-apply-state-contract",
+        "reward-selector-create-sheet",
+        "reward-selector-sheet-footer-contract",
+        "badge-wall-native-overlay-contract",
+        "badge-wall-sheet-matches-cy-sheet",
+        "club-post-reference-contract",
+        "date-field-contract",
+        "sheet-footer-sticky-contract",
+        "sheet-modal-exit-motion-contract",
+        "popup-navigation-height-runtime",
+        "sheet-neutral-ladder-contract",
+        "post-actions-sheet-contract",
+        "fabu-sheet-close-position-contract",
+        "scene-sheet-contract",
+        "using-components-registration",
+        "action-ledger"
+      ],
+      "git_context": "read-only real Git metadata with isolated owned source snapshot",
+      "totals": {
+        "tests": 162,
+        "pass": 162,
+        "fail": 0,
+        "skipped": 0
+      },
+      "log": "unit-tests.txt"
+    }
+  },
+  "native_compiler": {
+    "previous_direct_passes": 19,
+    "final_direct_passes": 3,
+    "latest_attempt_interrupted": {
+      "file": "pages/activity/baoming/baoming.wxml",
+      "reason": "CLI compile request timed out after 60 seconds; no source compile failure returned",
+      "status": "unverified"
+    },
+    "all_final_templates_individually_compiled": false,
+    "native_project_reopened": true,
+    "native_project_open_exit_code": 0,
+    "compiled_app_visual_evidence": true
+  },
+  "normal_entry_blocked": [
+    {
+      "id": 11,
+      "name": "售后回复",
+      "reason": "缺少可用 refundId，进入后返回售后列表；正文仍有额外左右16pt留白，未修改。"
+    },
+    {
+      "id": 14,
+      "name": "拒绝站点邀请",
+      "reason": "商家站点权限入口返回商家首页；正文仍有额外左右16pt留白，未修改。"
+    },
+    {
+      "id": 15,
+      "name": "暂停接待",
+      "reason": "商家站点权限入口返回商家首页；正文仍有额外左右16pt留白，未修改。"
+    },
+    {
+      "id": 16,
+      "name": "核验游戏提交",
+      "reason": "商家站点权限入口返回商家首页；正文仍有额外左右16pt留白，未修改。"
+    }
+  ],
+  "badge_limits": {
+    "native_start_layout_verified": true,
+    "final_wxml_wheel_end_verified": false,
+    "real_device_touch_verified": false,
+    "webgl_wall_close_verified": false,
+    "reason": "Owned DevTools window was closed after the start screenshot; CUA returned noWindowsAvailable. Previous wheel-only observation is not fresh proof for the final WXML."
+  },
+  "evidence_boundary": "页面与组件受控显示只核对样式及本地关闭/时间回填；没有发布奖励、修改店铺、提交报名、审批或售后等业务写操作；不等于正常业务流程、上传微信、发布或真机验收。",
+  "foreign_changes_excluded": [
+    "chengyinhub-xcx/pages/gerenziliao/gerenziliao.wxml",
+    "chengyinhub-xcx/pages/gerenziliao/gerenziliao.wxss",
+    "chengyinhub-xcx/pages/publish/activity/index.wxml",
+    "chengyinhub-xcx/tests/unit/nav-polish-single-title-contract.test.js"
+  ],
+  "screenshots_sha256": {
+    "nongame-complete-before/agreement.png": "7017b30cce17e2c0dd5bb2470dda9c4acf5ab3847a0c47afc6266ecce7c6e32d",
+    "nongame-complete-before/badge-long-start.png": "f310b53e1aa242ccb0f26afa3a7f18ea58e09a45fcd4a01b68fe15d1b301a09b",
+    "nongame-complete-before/footprint-share.png": "5ea8e97b3f63633f590a8be87fc75c580ee3bb1aa8f6045074f44d2960af75ad",
+    "nongame-complete-before/merchant-chapter.png": "7b2410bdfdcd2eaddbad7f1ee4c3dd310a74f182b3417bc17d8f084e1c3547d5",
+    "nongame-complete-before/merchant-hours.png": "393ea9afb52a567a95d0aefc85e1581ecfbe50625b6ad6a33f388806ac512e29",
+    "nongame-complete-before/merchant-role.png": "fc8a0fc7b1f144b3b123b934b8fdcadf548fcf9933ba0289058a8718ee7fec6a",
+    "nongame-complete-before/merchant-station.png": "60b38aac01ab25d8bb2350791063d93250ed6fc04fad9054d3cc3768328d6bb5",
+    "nongame-complete-before/merchant-time.png": "85040cb3e19d8437d61194edad4b2bf38adb7ac0a2885b4875d0d1475a5c130a",
+    "nongame-complete-before/mode-picker.png": "a5d868ef1b9d97d2edfe4baf8baaabc11d0d56db6549bfcaa5c484054e439cb5",
+    "nongame-complete-before/nearby-inspect.png": "f7a95a00d82efe1db09a20f50e193e2c9467c54ee2c26a94415709cc7a5731a1",
+    "nongame-complete-before/nearby-leader.png": "3bc991f163b35677b669d9bd2a81aceea300d7e0f7b3de29a753f5fed7e45398",
+    "nongame-complete-before/nearby-mine.png": "27e3a04da68a6b14d20419139b9392641b6da829c6cab36c29e4d406f37c2dd0",
+    "nongame-complete-before/nearby-team.png": "d9cfe3d80b00f843391f525a4897a61d46ad2ad96e03bf4721e4d7449694a0fb",
+    "nongame-complete-before/nearby-topic.png": "48991daa18a6a080bb9f81e5c54ed83ca7af0f3739090d08b36d53a4f1702d55",
+    "nongame-complete-before/next-route.png": "47e2ae4d0337c654e24e87af9a717a329a7f208c6b89efadebdbb905cfdff4b5",
+    "nongame-complete-before/node-detail.png": "ea8b21cf794718807c6f87d9cd5a00b555abe5cb01bc335a58cdd2cea266e235",
+    "nongame-complete-before/participants.png": "acb3168c651b826553f4938c4c5ef0a35e52581b684e8379744464414492ae47",
+    "nongame-complete-before/post-edit.png": "74432e90c7b1e8fff1cfa1944b3379cb574947fc2e3eb0909b6dfc2d8a65abce",
+    "nongame-complete-before/post-history.png": "187f6b1380fa3b5a5ea2db4fd1b596393d143d7e3d5b139fe7eb3c29a469cd74",
+    "nongame-complete-before/privacy.png": "07ee5ecbb7dad2baf0bb8ff67c978fa0b24151573b0305a4c6807e641a04648b",
+    "nongame-complete-before/profile-chapter.png": "4ed2be4ea4bec591ebf72111650e68d9226ec0c2adc0dc779bec88750ebebcbc",
+    "nongame-complete-before/profile-station.png": "75ed29418b4252ddff778f334e0bf3a56abbed75e0d014f22768d537455975c5",
+    "nongame-complete-before/project-actions.png": "db6855a4444bdcb3f7491c9d7583f2a0f72044a41f8c3587367db3786a2a4d80",
+    "nongame-complete-before/review-inspect.png": "b10741ee11cc0425570dd39d994c79ba2fe8038a3d8f34ac0e66582707538684",
+    "nongame-complete-before/reward-create.png": "d1f20b1d35220c11cfb4ce475f3aa84d82f7e4263c2bbc50520783f944ed82af",
+    "nongame-complete-before/rewards.png": "65e200edf32824d567c389fffe7f65def438ac370299a26eaf8ed56a03d9b8c6",
+    "nongame-complete-before/route-review.png": "ccad29cadf2ee0494595c134d6a2cabbdb0ac8d71d37262b0d04422d103ec188",
+    "nongame-complete-before/topic-detail.png": "9fe69633bb04c70d3fd7da77ce5fe022c256cca3db082272c64dd1b205cbab87",
+    "nongame-complete-after/agreement.png": "db0793c1bca01274d525683c3918b535018414d60e8dc0287e442a0634ce15bb",
+    "nongame-complete-after/badge-long-start.png": "da54a8998077977ac6b766d037c06268a8ab1abf818bd0bba07dfc31938c677e",
+    "nongame-complete-after/footprint-share.png": "26445ef915ec270da80eb293d1dcbc50773ecd3d6342f9b0d42a6cee12d1effb",
+    "nongame-complete-after/merchant-chapter.png": "d3a4ef6d36fdafed16bbad8c9ed99c4b97fbbc1cdc5542776c4f40686f641205",
+    "nongame-complete-after/merchant-hours-end.png": "c265055e3351abcadba753b71a961a3b151a0710cdb90f703c188d5d1df944f5",
+    "nongame-complete-after/merchant-hours-overnight.png": "5025e44860f45ff2b8f1770643df36b118968d56657f29fbaa97523daf54f6c8",
+    "nongame-complete-after/merchant-hours-start.png": "807a3bf9f5842d339e9882d082565114ca6f82c36ac151abf6745e9e207a5150",
+    "nongame-complete-after/merchant-hours.png": "61ad9e577f1c6f2cce88b0326ad10ce48a6ccab9ab631d22cadfcf6b6bfa7ca6",
+    "nongame-complete-after/merchant-role.png": "5303051ee2ab73d543753175ec6c60e239ed0bc9392fd13b612dc4c2e77cd980",
+    "nongame-complete-after/merchant-station.png": "362a69e3843b27815faec3f803d0bb4e49f99eb5fbbd99edb37ad893fe609684",
+    "nongame-complete-after/merchant-time.png": "603c29e3abc4a8281d2aa972cb2993853248dd1e58f127b2069c8a32d9b2e772",
+    "nongame-complete-after/mode-picker.png": "a26cfa83ef5ae4d42b66f525948e2d45c93d574273f443340b00ff105285de6a",
+    "nongame-complete-after/nearby-leader.png": "f1e5d058e489c32038ce66ea93fcf99f518e5f2822c4a897a5246ebb17256de1",
+    "nongame-complete-after/nearby-mine.png": "fac8c5c71cb31132965766c4d261c1dd3c087b4f2418a5292cdb33d745234db0",
+    "nongame-complete-after/nearby-team.png": "2934f1691a36a0dcfb90b0a5bc5000335c6c913dd344d5a2236ac859b27acaf4",
+    "nongame-complete-after/nearby-topic.png": "3f07151069708298b7207c5405b790da57e2a7cc20afbc09a9ba5252eb98e6a5",
+    "nongame-complete-after/next-route.png": "10d2cdc6d34343d1933b61d8dfb5356bf0ce4e592ff9ac1685ddc74c721eb93e",
+    "nongame-complete-after/node-detail.png": "8ab8fe279bac8b1b09a5a173ef3ce059ef891c7cadacead3724f4420c19daffb",
+    "nongame-complete-after/participants.png": "87f344e9056410062142ae1ea1c2fd3a75f0df65f057c5814bfa586e19464472",
+    "nongame-complete-after/post-edit.png": "e70e39df30570da2f4275f6395175e28347e143d6ba355b0f8817eba20a07270",
+    "nongame-complete-after/post-history.png": "1edc7b048cc5d37739b8fb198ed656fd9bdeac93e4b73cd843e7a2a20b094de6",
+    "nongame-complete-after/privacy.png": "6d06a2f5944c2d1d86aec0b50611abf94bead7001f83b79ef56eb043de867364",
+    "nongame-complete-after/profile-chapter.png": "5bfb7940673aff9ca273663b827afbf2e591acbd23502095d533b756664e0184",
+    "nongame-complete-after/profile-station.png": "6d27ed3c6b9a1581aea359d9489e4cd3773586129851024d85c538d304cb0488",
+    "nongame-complete-after/project-actions.png": "c121613397c720c518d51a28e34a7feea576b16cc4755307b28beb12fa8d3f72",
+    "nongame-complete-after/reward-create-filled.png": "8787d6726b32d08ed590bc81ea2167bcf9f0cda611d13f46bbb85b75fab3a70f",
+    "nongame-complete-after/reward-create.png": "0850d057a7ee452b0a77cbebff1519d926650486438371f04adcc30d8ca32b80",
+    "nongame-complete-after/rewards-selected.png": "2ed44d7f863cadd10156d27c679036a7c8627b3525f4f3cee960fa6c3a493e87",
+    "nongame-complete-after/rewards.png": "60f3c67555601dcd0c2aa4414cacac0b9b87db3ee5c59f2d0a0fae233544637f",
+    "nongame-complete-after/route-review.png": "fb5d4752783d7e8ae2a243df0a7804e38e40a6f77d5e4967b315108f57c6b7ba",
+    "nongame-complete-after/topic-detail.png": "5e59f27e6d0e0aa9ef5f9a5b159e5798cabb58082c0ba197b54ee8136a7b5ce6"
+  },
+  "normal_followup_order": [
+    "获得可进入的站点邀请与可用售后单后，从正常入口拍前图，再去掉 gn-sheet/ac-sheet 的重复内边距，逐一拍后图。",
+    "在稳定的开发工具窗口确认勋章长文末端可见和墙模式关闭；在真机验证触摸滚动与安全区。",
+    "补完最后一轮单模板编译；上传微信及真机业务验收单独进行。"
+  ],
+  "report_sha256": "132b13eba6226eff2ecffb322ea36d5a24e876fa0c15245051e91feca690e6c3"
+}

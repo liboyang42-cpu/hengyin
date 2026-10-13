@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CmsTopicChapterMapper">
+    
+    <resultMap type="CmsTopicChapter" id="CmsTopicChapterResult">
+        <result property="id"    column="id"    />
+        <result property="topicId"    column="topic_id"    />
+        <result property="name"    column="name"    />
+        <result property="description"    column="description"    />
+        <result property="blocksJson"    column="blocks"    />
+        <result property="atmospherePreset" column="atmosphere_preset" />
+        <result property="audioUrl" column="audio_url" />
+        <result property="imgArr"    column="img_arr"    />
+        <result property="totalTime"    column="total_time"    />
+        <result property="totalMileage"    column="total_mileage"    />
+        <result property="locationCount"    column="location_count"    />
+        <result property="templateCount"    column="template_count"    />
+        <result property="sortId"    column="sort_id"    />
+        <result property="category"    column="category"    />
+        <result property="categoryId"    column="category_id"    />
+        <result property="recruitEnabled"    column="recruit_enabled"    />
+        <result property="finishTime"        column="finish_time"        />
+        <result property="perkMinValue"    column="perk_min_value"    />
+        <result property="maxMerchant"    column="max_merchant"    />
+        <result property="required"    column="required"    />
+        <result property="termsMode"    column="terms_mode"    />
+        <result property="circleCandidateCode" column="circle_candidate_code" />
+        <result property="circleRole" column="circle_role" />
+        <result property="circlePolicy" column="circle_policy" />
+        <result property="circleEnabled" column="circle_enabled" />
+        <result property="maxPerHeadFee"    column="max_per_head_fee"    />
+        <result property="allowedValidationMethods" column="allowed_validation_methods" />
+        <result property="maxNodeXp"                column="max_node_xp"                />
+        <result property="needGroup"                column="need_group"                />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <!-- 显式列清单（非 select *）：新列不加在这里就查不出来，resultMap 配了也是空值 -->
+    <sql id="selectCmsTopicChapterVo">
+        select id, topic_id, name, description, blocks, atmosphere_preset, audio_url, img_arr, total_time, total_mileage, location_count, template_count,sort_id, category, category_id, recruit_enabled, finish_time, perk_min_value, max_merchant, required, terms_mode, circle_candidate_code, circle_role, circle_policy, circle_enabled, max_per_head_fee, allowed_validation_methods, max_node_xp, need_group, create_by, create_time, update_by, update_time from cms_topic_chapter
+    </sql>
+
+    <select id="selectCmsTopicChapterList" parameterType="CmsTopicChapter" resultMap="CmsTopicChapterResult">
+        <include refid="selectCmsTopicChapterVo"/>
+        <where>  
+            <if test="topicId != null "> and topic_id = #{topicId}</if>
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="description != null  and description != ''"> and description = #{description}</if>
+            <if test="imgArr != null  and imgArr != ''"> and img_arr = #{imgArr}</if>
+            <if test="totalTime != null "> and total_time = #{totalTime}</if>
+            <if test="totalMileage != null "> and total_mileage = #{totalMileage}</if>
+            <if test="locationCount != null "> and location_count = #{locationCount}</if>
+            <if test="templateCount != null "> and template_count = #{templateCount}</if>
+        </where>
+
+        order by sort_id asc
+    </select>
+    
+    <select id="selectCmsTopicChapterById" parameterType="Long" resultMap="CmsTopicChapterResult">
+        <include refid="selectCmsTopicChapterVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectByTopicForUpdate" parameterType="Long" resultMap="CmsTopicChapterResult">
+        <include refid="selectCmsTopicChapterVo"/>
+        where topic_id = #{topicId}
+        order by sort_id asc, id asc
+        for update
+    </select>
+
+    <insert id="insertCmsTopicChapter" parameterType="CmsTopicChapter" useGeneratedKeys="true" keyProperty="id">
+        insert into cms_topic_chapter
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="topicId != null">topic_id,</if>
+            <if test="name != null">name,</if>
+            <if test="description != null">description,</if>
+            <if test="blocksJson != null">blocks,</if>
+            <if test="atmospherePreset != null">atmosphere_preset,</if>
+            <if test="audioUrl != null">audio_url,</if>
+            <if test="imgArr != null">img_arr,</if>
+            <if test="totalTime != null">total_time,</if>
+            <if test="totalMileage != null">total_mileage,</if>
+            <if test="locationCount != null">location_count,</if>
+            <if test="templateCount != null">template_count,</if>
+            <if test="sortId != null">sort_id,</if>
+            <if test="category != null">category,</if>
+            <if test="categoryId != null">category_id,</if>
+            <if test="recruitEnabled != null">recruit_enabled,</if>
+            <if test="perkMinValue != null">perk_min_value,</if>
+            <if test="maxMerchant != null">max_merchant,</if>
+            <if test="required != null">required,</if>
+            <if test="termsMode != null">terms_mode,</if>
+            <if test="circleCandidateCode != null">circle_candidate_code,</if>
+            <if test="circleRole != null">circle_role,</if>
+            <if test="circlePolicy != null">circle_policy,</if>
+            <if test="circleEnabled != null">circle_enabled,</if>
+            <if test="maxPerHeadFee != null">max_per_head_fee,</if>
+            <if test="allowedValidationMethods != null">allowed_validation_methods,</if>
+            <if test="maxNodeXp != null">max_node_xp,</if>
+            <if test="needGroup != null">need_group,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="topicId != null">#{topicId},</if>
+            <if test="name != null">#{name},</if>
+            <if test="description != null">#{description},</if>
+            <if test="blocksJson != null">#{blocksJson},</if>
+            <if test="atmospherePreset != null">#{atmospherePreset},</if>
+            <if test="audioUrl != null">#{audioUrl},</if>
+            <if test="imgArr != null">#{imgArr},</if>
+            <if test="totalTime != null">#{totalTime},</if>
+            <if test="totalMileage != null">#{totalMileage},</if>
+            <if test="locationCount != null">#{locationCount},</if>
+            <if test="templateCount != null">#{templateCount},</if>
+            <if test="sortId != null">#{sortId},</if>
+            <if test="category != null">#{category},</if>
+            <if test="categoryId != null">#{categoryId},</if>
+            <if test="recruitEnabled != null">#{recruitEnabled},</if>
+            <if test="perkMinValue != null">#{perkMinValue},</if>
+            <if test="maxMerchant != null">#{maxMerchant},</if>
+            <if test="required != null">#{required},</if>
+            <if test="termsMode != null">#{termsMode},</if>
+            <if test="circleCandidateCode != null">#{circleCandidateCode},</if>
+            <if test="circleRole != null">#{circleRole},</if>
+            <if test="circlePolicy != null">#{circlePolicy},</if>
+            <if test="circleEnabled != null">#{circleEnabled},</if>
+            <if test="maxPerHeadFee != null">#{maxPerHeadFee},</if>
+            <if test="allowedValidationMethods != null">#{allowedValidationMethods},</if>
+            <if test="maxNodeXp != null">#{maxNodeXp},</if>
+            <if test="needGroup != null">#{needGroup},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCmsTopicChapter" parameterType="CmsTopicChapter">
+        update cms_topic_chapter
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="topicId != null">topic_id = #{topicId},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="blocksJson != null">blocks = #{blocksJson},</if>
+            <if test="atmospherePreset != null">atmosphere_preset = #{atmospherePreset},</if>
+            <if test="audioUrl != null">audio_url = #{audioUrl},</if>
+            <if test="imgArr != null">img_arr = #{imgArr},</if>
+            <if test="totalTime != null">total_time = #{totalTime},</if>
+            <if test="totalMileage != null">total_mileage = #{totalMileage},</if>
+            <if test="locationCount != null">location_count = #{locationCount},</if>
+            <if test="templateCount != null">template_count = #{templateCount},</if>
+            <if test="sortId != null">sort_id = #{sortId},</if>
+            <if test="category != null">category = #{category},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="recruitEnabled != null">recruit_enabled = #{recruitEnabled},</if>
+            <if test="finishTime != null">finish_time = #{finishTime},</if>
+            <if test="perkMinValue != null">perk_min_value = #{perkMinValue},</if>
+            <if test="maxMerchant != null">max_merchant = #{maxMerchant},</if>
+            <if test="required != null">required = #{required},</if>
+            <if test="termsMode != null">terms_mode = #{termsMode},</if>
+            <if test="circleCandidateCode != null">circle_candidate_code = #{circleCandidateCode},</if>
+            <if test="circleRole != null">circle_role = #{circleRole},</if>
+            <if test="circlePolicy != null">circle_policy = #{circlePolicy},</if>
+            <if test="circleEnabled != null">circle_enabled = #{circleEnabled},</if>
+            <if test="maxPerHeadFee != null">max_per_head_fee = #{maxPerHeadFee},</if>
+            <if test="allowedValidationMethods != null">allowed_validation_methods = #{allowedValidationMethods},</if>
+            <if test="maxNodeXp != null">max_node_xp = #{maxNodeXp},</if>
+            <if test="needGroup != null">need_group = #{needGroup},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCmsTopicChapterById" parameterType="Long">
+        delete from cms_topic_chapter where id = #{id}
+    </delete>
+
+    <delete id="deleteCmsTopicChapterByIds" parameterType="String">
+        delete from cms_topic_chapter where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- P0-15 容量校验的加锁锚点。order by id 与调用方的升序入参一起构成全局一致的加锁顺序(防 ABBA)。
+         只 select id:拿的是行锁,不需要回表取列。 -->
+    <select id="lockChaptersForCapacity" resultType="java.lang.Long">
+        select id from cms_topic_chapter
+        where id in
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        order by id asc
+        for update
+    </select>
+
+    <!-- [D21] 无条件覆盖四个供给条款列 —— 可空条款列的 **null 就是要写进去的值**。
+         ⚠️ 这里刻意**没有** <if test="xx != null">:通用的 updateCmsTopicChapter 有,
+         所以它传 null 时只跳过、不清空 ⇒「计酬档改引流档」会把 max_per_head_fee 留在库里,
+         哪天改回计酬档那个旧上限会静默生效。这条就是为了避开那个语义而单独存在的,别给它加 <if>。
+         max_merchant 是 NOT NULL；应用层要求调用方显式传 0 表示不限。 -->
+    <!--
+      [2026-09-11] 归属人开关商家承接。一条语句同时做两件事,少一件就是洞:
+        ① WHERE 里带 **owner 谓词** —— 归属只在 Java 侧判过一次,那是「先读后写」,
+           两次请求之间归属可能已经变了;而 updateCmsTopicChapter 是裸 where id = #{id},
+           拿它落这条写就等于没有库级闸(AGENTS.md 的已知坑:新增写接口 WHERE 必须带 owner)。
+        ② 已结束的章节写不进去 —— 结束是不可逆的,不能靠一条能来回拨的开关复活。
+      返回 0 = 没写成(不是自己的 / 已结束 / 章节不在),调用方据此回错,别当成功。
+    -->
+    <update id="setRecruitEnabledIfOwned">
+        update cms_topic_chapter c
+          join cms_topic t on t.id = c.topic_id
+           set c.recruit_enabled = #{enabled},
+               c.update_time = now()
+         where c.id = #{chapterId}
+           and t.member_id = #{memberId}
+           and c.finish_time is null
+    </update>
+
+    <!--
+      [2026-09-11] 归属人结束本章。除了 owner 谓词,还要 **finish_time is null** 这道 CAS ——
+      Java 侧那句 if (chapter.getFinishTime() != null) 是先读后写,两个并发请求都能通过,
+      第二次会把第一次记下的时刻覆盖掉。而结算是按那个时刻对账的,
+      覆盖之后「动作看上去成功了、对账基准悄悄变了」—— 最坏的一种静默错误。
+      写法与同仓 CmsRegistrationMerchantMapper#confirmWinnerIfPending 同构。
+      返回 0 = 没写成(不是自己的 / 已经结束过 / 章节不在)。
+    -->
+    <update id="finishChapterIfOwned">
+        update cms_topic_chapter c
+          join cms_topic t on t.id = c.topic_id
+           set c.finish_time = now(),
+               c.recruit_enabled = 0,
+               c.update_time = now()
+         where c.id = #{chapterId}
+           and t.member_id = #{memberId}
+           and c.finish_time is null
+    </update>
+
+    <update id="updateSupplyTerms">
+        update cms_topic_chapter
+           set terms_mode = #{termsMode},
+               perk_min_value = #{perkMinValue},
+               max_per_head_fee = #{maxPerHeadFee},
+               max_merchant = #{maxMerchant},
+               update_time = #{updateTime}
+         where id = #{chapterId}
+    </update>
+
+    <select id="selectRequiredByTopic" parameterType="Long" resultMap="CmsTopicChapterResult">
+        <include refid="selectCmsTopicChapterVo"/>
+        where topic_id = #{topicId} and required = 1
+        order by sort_id asc, id asc
+    </select>
+</mapper>

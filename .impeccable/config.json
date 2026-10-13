@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(.34, 1.28, .44, 1)",
+        "reason": "用户 spec 明确要求勋章详情打开使用 Spring Animation(300-500ms),温和过冲为有意设计",
+        "createdAt": "2026-07-12T02:39:59.422Z"
+      }
+    ]
+  }
+}

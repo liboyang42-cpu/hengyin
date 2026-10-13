@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.UmsMemberFollowMapper">
+    
+    <resultMap type="UmsMemberFollow" id="UmsMemberFollowResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="followMemberId"    column="follow_member_id"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectUmsMemberFollowVo">
+        select id, member_id, follow_member_id, create_by, create_time, update_by, update_time from ums_member_follow
+    </sql>
+
+    <select id="selectUmsMemberFollowList" parameterType="UmsMemberFollow" resultMap="UmsMemberFollowResult">
+        <include refid="selectUmsMemberFollowVo"/>
+        <where>  
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="followMemberId != null "> and follow_member_id = #{followMemberId}</if>
+        </where>
+    </select>
+    
+    <select id="selectUmsMemberFollowById" parameterType="Long" resultMap="UmsMemberFollowResult">
+        <include refid="selectUmsMemberFollowVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectUmsMemberFollowByIdForUpdate" parameterType="Long" resultMap="UmsMemberFollowResult">
+        <include refid="selectUmsMemberFollowVo"/>
+        where id = #{id}
+        for update
+    </select>
+
+    <!-- P3-4:建立新关系前只查 id 存在性;不在 ums_member 上加锁,避免与关注写路径锁序反转 -->
+    <select id="selectExistingMemberId" resultType="java.lang.Long">
+        select id from ums_member where id = #{memberId} limit 1
+    </select>
+
+    <insert id="insertUmsMemberFollow" parameterType="UmsMemberFollow" useGeneratedKeys="true" keyProperty="id">
+        insert into ums_member_follow
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="followMemberId != null">follow_member_id,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="followMemberId != null">#{followMemberId},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateUmsMemberFollow" parameterType="UmsMemberFollow">
+        update ums_member_follow
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="followMemberId != null">follow_member_id = #{followMemberId},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteUmsMemberFollowById" parameterType="Long">
+        delete from ums_member_follow where id = #{id}
+    </delete>
+
+    <delete id="deleteUmsMemberFollowByIds" parameterType="String">
+        delete from ums_member_follow where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="selectUmsMemberFollowNumByMemberId" resultType="Integer">
+        select count(1) from ums_member_follow where member_id = #{member_id}
+    </select>
+
+    <select id="selectUmsMemberFansNumByMemberId" resultType="Integer">
+        select count(1) from ums_member_follow where follow_member_id = #{member_id}
+    </select>
+
+    <select id="selectUmsMemberFollowsByMemberAndFollowMemberIds" resultMap="UmsMemberFollowResult">
+        <include refid="selectUmsMemberFollowVo"/>
+        where member_id = #{memberId} and follow_member_id in
+        <foreach item="fid" collection="followMemberIds" open="(" separator="," close=")">
+            #{fid}
+        </foreach>
+    </select>
+
+</mapper>

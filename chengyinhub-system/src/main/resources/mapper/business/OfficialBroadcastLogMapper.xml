@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.OfficialBroadcastLogMapper">
+
+    <!-- uk_bc_member_channel 冲突时 insert ignore(不重发) -->
+    <insert id="insertIgnore" parameterType="OfficialBroadcastLog" useGeneratedKeys="true" keyProperty="id">
+        insert ignore into official_broadcast_log
+            (broadcast_id, member_id, role, channel, reached, clicked, create_time)
+        values (#{broadcastId}, #{memberId}, #{role}, #{channel},
+                <choose><when test="reached != null">#{reached}</when><otherwise>0</otherwise></choose>,
+                0, now())
+    </insert>
+
+    <select id="countReached" resultType="int">
+        select count(1) from official_broadcast_log where broadcast_id = #{broadcastId} and reached = 1
+    </select>
+
+    <select id="countClicked" resultType="int">
+        select count(1) from official_broadcast_log where broadcast_id = #{broadcastId} and clicked = 1
+    </select>
+
+    <select id="countRecentByMember" resultType="int">
+        select count(1) from official_broadcast_log
+        where member_id = #{memberId} and channel = 'inapp' and reached = 1
+          and create_time &gt;= DATE_SUB(NOW(), INTERVAL #{minutes} MINUTE)
+    </select>
+
+    <update id="markClicked">
+        update official_broadcast_log set clicked = 1
+        where broadcast_id = #{broadcastId} and member_id = #{memberId} and channel = #{channel}
+    </update>
+
+    <update id="markReached">
+        update official_broadcast_log set reached = 1
+        where broadcast_id = #{broadcastId} and member_id = #{memberId} and channel = #{channel}
+    </update>
+
+</mapper>

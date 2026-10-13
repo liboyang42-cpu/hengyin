@@ -1,0 +1,188 @@
+{
+  "scope": "源码引用数，包含嵌套壳，不作为独立弹窗或业务验收数量",
+  "counts": {
+    "cy-sheet": 99,
+    "cy-scene-sheet": 50,
+    "cy-modal": 19,
+    "cy-modal-host": 126,
+    "cy-danger-confirm": 26,
+    "cy-popover": 2,
+    "cy-dropdown": 51,
+    "cy-toast": 129,
+    "cy-loading-mask": 125
+  },
+  "references": [
+    {
+      "file": "chengyinhub-xcx/components/cy/danger-confirm/index.wxml",
+      "tag": "cy-modal",
+      "references": 2
+    },
+    {
+      "file": "chengyinhub-xcx/components/cy/date-field/index.wxml",
+      "tag": "cy-dropdown",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/components/cy/modal-host/index.wxml",
+      "tag": "cy-modal",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/components/cy/profile/index.wxml",
+      "tag": "cy-modal",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/components/cy/scene-deep-link/index.wxml",
+      "tag": "cy-modal",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/pages/club/components/club-director-end-confirm/index.wxml",
+      "tag": "cy-modal",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/pages/club/components/cy/club-topic-end-confirm/index.wxml",
+      "tag": "cy-modal",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/pages/club/detail/index.wxml",
+      "tag": "cy-modal",
+      "references": 2
+    },
+    {
+      "file": "chengyinhub-xcx/pages/club/edit/index.wxml",
+      "tag": "cy-modal",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/pages/club/event-ops/index.wxml",
+      "tag": "cy-modal",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/pages/club/event-ops/index.wxml",
+      "tag": "cy-dropdown",
+      "references": 2
+    },
+    {
+      "file": "chengyinhub-xcx/pages/club/topic-detail/index.wxml",
+      "tag": "cy-dropdown",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/pages/coop/invite/index.wxml",
+      "tag": "cy-dropdown",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/pages/merchant/citynode/create/index.wxml",
+      "tag": "cy-modal",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/pages/merchant/components/cy/info-pop/index.wxml",
+      "tag": "cy-modal",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/pages/merchant/decor/components/hours/index.wxml",
+      "tag": "cy-dropdown",
+      "references": 3
+    },
+    {
+      "file": "chengyinhub-xcx/pages/merchant/decor/coop-setting/index.wxml",
+      "tag": "cy-dropdown",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/pages/merchant/decor/index.wxml",
+      "tag": "cy-dropdown",
+      "references": 4
+    },
+    {
+      "file": "chengyinhub-xcx/pages/merchant/decor/perks/index.wxml",
+      "tag": "cy-dropdown",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/pages/merchant/game-node/index.wxml",
+      "tag": "cy-dropdown",
+      "references": 2
+    },
+    {
+      "file": "chengyinhub-xcx/pages/merchant/index/index.wxml",
+      "tag": "cy-modal",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/pages/merchant/predict/index.wxml",
+      "tag": "cy-modal",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/pages/play/index.wxml",
+      "tag": "cy-modal",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/pages/publish/components/reward-selector/index.wxml",
+      "tag": "cy-dropdown",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/pages/publish/fabu/index.wxml",
+      "tag": "cy-dropdown",
+      "references": 3
+    },
+    {
+      "file": "chengyinhub-xcx/pages/publish/fabu/step3.wxml",
+      "tag": "cy-dropdown",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/pages/publish/fabu/topic-detail-sheet.wxml",
+      "tag": "cy-dropdown",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/pages/publish/temp/index.wxml",
+      "tag": "cy-dropdown",
+      "references": 24
+    },
+    {
+      "file": "chengyinhub-xcx/pages/roam/index.wxml",
+      "tag": "cy-modal",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/pages/shezhi/shezhi.wxml",
+      "tag": "cy-modal",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/pages/square/detail/index.wxml",
+      "tag": "cy-popover",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/pages/square/list/index.wxml",
+      "tag": "cy-popover",
+      "references": 1
+    },
+    {
+      "file": "chengyinhub-xcx/pages/topic/components/cy/chapter-node-form/index.wxml",
+      "tag": "cy-dropdown",
+      "references": 5
+    },
+    {
+      "file": "chengyinhub-xcx/pages/topic/index/index.wxml",
+      "tag": "cy-modal",
+      "references": 1
+    }
+  ],
+  "product_files_changed_total": 63,
+  "product_files_changed_revision": 9
+}

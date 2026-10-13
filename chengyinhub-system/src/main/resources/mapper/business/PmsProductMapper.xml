@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PmsProductMapper">
+    
+    <resultMap type="PmsProduct" id="PmsProductResult">
+        <result property="id"    column="id"    />
+        <result property="merchantId"    column="merchant_id"    />
+        <result property="productName"    column="product_name"    />
+        <result property="pic"    column="pic"    />
+        <result property="albumPics"    column="album_pics"    />
+        <result property="publishStatus"    column="publish_status"    />
+        <result property="sortId"    column="sort_id"    />
+        <result property="price"    column="price"    />
+        <result property="originalPrice"    column="original_price"    />
+        <result property="stock"    column="stock"    />
+        <result property="unit"    column="unit"    />
+        <result property="weight"    column="weight"    />
+        <result property="detailHtml"    column="detail_html"    />
+        <result property="productAttr"    column="product_attr"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectPmsProductVo">
+        select id,merchant_id, product_name, pic, album_pics, publish_status, sort_id, price, original_price, stock, unit, weight, detail_html, product_attr, del_flag, create_by, create_time, update_by, update_time from pms_product
+    </sql>
+
+    <select id="selectPmsProductList" parameterType="PmsProduct" resultMap="PmsProductResult">
+        <include refid="selectPmsProductVo"/>
+        <where>
+            <if test="merchantId != null  and merchantId != ''"> and merchant_id = #{merchantId}</if>
+            <if test="productName != null  and productName != ''"> and product_name like concat('%', #{productName}, '%')</if>
+            <if test="pic != null  and pic != ''"> and pic = #{pic}</if>
+            <if test="albumPics != null  and albumPics != ''"> and album_pics = #{albumPics}</if>
+            <if test="publishStatus != null "> and publish_status = #{publishStatus}</if>
+            <if test="sortId != null "> and sort_id = #{sortId}</if>
+            <if test="price != null "> and price = #{price}</if>
+            <if test="originalPrice != null "> and original_price = #{originalPrice}</if>
+            <if test="stock != null "> and stock = #{stock}</if>
+            <if test="unit != null  and unit != ''"> and unit = #{unit}</if>
+            <if test="weight != null "> and weight = #{weight}</if>
+            <if test="detailHtml != null  and detailHtml != ''"> and detail_html = #{detailHtml}</if>
+            <if test="productAttr != null  and productAttr != ''"> and product_attr = #{productAttr}</if>
+            <if test="delFlag != null ">
+                <choose>
+                    <when test="delFlag == 0"> and (del_flag = 0 or del_flag is null)</when>
+                    <otherwise> and del_flag = #{delFlag}</otherwise>
+                </choose>
+            </if>
+        </where>
+        <choose>
+            <when test="sortType != null and sortType == 1">order by create_time desc</when>
+            <when test="sortType != null and sortType == 2">order by create_time asc</when>
+            <when test="sortType != null and sortType == 3">order by price desc</when>
+            <when test="sortType != null and sortType == 4">order by price asc</when>
+            <otherwise>order by sort_id desc,id desc</otherwise>
+        </choose>
+    </select>
+    
+    <select id="selectPmsProductById" parameterType="Long" resultMap="PmsProductResult">
+        <include refid="selectPmsProductVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertPmsProduct" parameterType="PmsProduct" useGeneratedKeys="true" keyProperty="id">
+        insert into pms_product
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="merchantId != null  and merchantId != ''">merchant_id</if>
+            <if test="productName != null and productName != ''">product_name,</if>
+            <if test="pic != null">pic,</if>
+            <if test="albumPics != null">album_pics,</if>
+            <if test="publishStatus != null">publish_status,</if>
+            <if test="sortId != null">sort_id,</if>
+            <if test="price != null">price,</if>
+            <if test="originalPrice != null">original_price,</if>
+            <if test="stock != null">stock,</if>
+            <if test="unit != null">unit,</if>
+            <if test="weight != null">weight,</if>
+            <if test="detailHtml != null">detail_html,</if>
+            <if test="productAttr != null">product_attr,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="merchantId != null  and merchantId != ''">#{merchantId},</if>
+            <if test="productName != null and productName != ''">#{productName},</if>
+            <if test="pic != null">#{pic},</if>
+            <if test="albumPics != null">#{albumPics},</if>
+            <if test="publishStatus != null">#{publishStatus},</if>
+            <if test="sortId != null">#{sortId},</if>
+            <if test="price != null">#{price},</if>
+            <if test="originalPrice != null">#{originalPrice},</if>
+            <if test="stock != null">#{stock},</if>
+            <if test="unit != null">#{unit},</if>
+            <if test="weight != null">#{weight},</if>
+            <if test="detailHtml != null">#{detailHtml},</if>
+            <if test="productAttr != null">#{productAttr},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updatePmsProduct" parameterType="PmsProduct">
+        update pms_product
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="merchantId != null  and merchantId != ''">merchant_id = #{merchantId},</if>
+            <if test="productName != null and productName != ''">product_name = #{productName},</if>
+            <if test="pic != null">pic = #{pic},</if>
+            <if test="albumPics != null">album_pics = #{albumPics},</if>
+            <if test="publishStatus != null">publish_status = #{publishStatus},</if>
+            <if test="sortId != null">sort_id = #{sortId},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="originalPrice != null">original_price = #{originalPrice},</if>
+            <if test="stock != null">stock = #{stock},</if>
+            <if test="unit != null">unit = #{unit},</if>
+            <if test="weight != null">weight = #{weight},</if>
+            <if test="detailHtml != null">detail_html = #{detailHtml},</if>
+            <if test="productAttr != null">product_attr = #{productAttr},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="updatePmsProductPublishStatus">
+        update pms_product
+        set publish_status = #{publishStatus},
+            update_by = #{updateBy},
+            update_time = #{updateTime}
+        where id = #{id}
+          and (del_flag = 0 or del_flag is null)
+        <choose>
+            <when test="expectedPublishStatus != null">
+                and publish_status = #{expectedPublishStatus}
+            </when>
+            <otherwise>
+                and publish_status is null
+            </otherwise>
+        </choose>
+    </update>
+
+    <delete id="deletePmsProductById" parameterType="Long">
+        delete from pms_product where id = #{id}
+    </delete>
+
+    <delete id="deletePmsProductByIds" parameterType="String">
+        delete from pms_product where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

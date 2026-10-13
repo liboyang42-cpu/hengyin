@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CmsTopicNodeMapper">
+    
+    <resultMap type="CmsTopicNode" id="CmsTopicNodeResult">
+        <result property="id"    column="id"    />
+        <result property="topicId"    column="topic_id"    />
+        <result property="chapterId"    column="chapter_id"    />
+        <result property="merchantMemberId" column="merchant_member_id" />
+        <result property="nodeAuditStatus"  column="node_audit_status"  />
+        <result property="nodeAuditReason"  column="node_audit_reason"  />
+        <result property="nodeAuditMemberId" column="node_audit_member_id" />
+        <result property="nodeAuditTime"     column="node_audit_time"      />
+        <result property="name"    column="name"    />
+        <result property="description"    column="description"    />
+        <result property="address"    column="address"    />
+        <result property="longitude"    column="longitude"    />
+        <result property="latitude"    column="latitude"    />
+        <result property="imgUrl"    column="img_url"    />
+        <result property="nodeTime"    column="node_time"    />
+        <result property="templateId"    column="template_id"    />
+        <result property="checkinCode"    column="checkin_code"    />
+        <result property="businessTime"    column="business_time"    />
+        <result property="status"    column="status"    />
+        <result property="sortId"    column="sort_id"    />
+        <result property="xpValue"    column="xp_value"    />
+        <result property="hookText"    column="hook_text"    />
+        <result property="cardHookLong"    column="card_hook_long"    />
+        <result property="fragmentText"    column="fragment_text"    />
+        <result property="unlockAfterNodeId"    column="unlock_after_node_id"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectCmsTopicNodeVo">
+        select id, topic_id, chapter_id, name, description, address, longitude, latitude, img_url, node_time, template_id, merchant_member_id, node_audit_status, node_audit_reason, node_audit_member_id, node_audit_time, checkin_code, business_time, status,sort_id, xp_value, hook_text, card_hook_long, fragment_text, unlock_after_node_id, create_by, create_time, update_by, update_time from cms_topic_node
+    </sql>
+
+    <select id="selectCmsTopicNodeList" parameterType="CmsTopicNode" resultMap="CmsTopicNodeResult">
+        <include refid="selectCmsTopicNodeVo"/>
+        <where>  
+            <if test="topicId != null "> and topic_id = #{topicId}</if>
+            <if test="chapterId != null "> and chapter_id = #{chapterId}</if>
+            <if test="merchantMemberId != null "> and merchant_member_id = #{merchantMemberId}</if>
+            <if test="nodeAuditStatus != null "> and node_audit_status = #{nodeAuditStatus}</if>
+            <!-- ★ 商家节点可见性闸(单一收口,默认关闭)。
+                 全仓有十来处读节点,逐个加闸必然漏一个 —— 漏一个就等于商家提交的未审内容
+                 直接进了别人的付费主题。所以闸放在数据层:**没有显式声明管理上下文的查询
+                 一律只看得到已过审的商家节点**。
+                 · merchantMemberId 非空 = 商家看自己的(含待审/驳回)
+                 · nodeAuditStatus 非空 = 审核台按状态查
+                 · 两者都没有 = 玩家/公开侧 ⇒ 过滤
+                 ⚠️ 条件必须写成「主办方节点 或 已过审」:主办方节点的 merchant_member_id
+                    是 NULL,写成「node_audit_status = 1」会把存量节点全部隐藏,整条路线空掉。 -->
+            <if test="merchantMemberId == null and nodeAuditStatus == null">
+                and (merchant_member_id is null or node_audit_status = 1)
+                and not exists (
+                    select 1 from merchant_chapter_offer withdrawn
+                    where withdrawn.chapter_id = cms_topic_node.chapter_id
+                      and withdrawn.merchant_id = cms_topic_node.merchant_member_id
+                      and withdrawn.status = 0
+                      and withdrawn.withdraw_reason is not null
+                      and trim(withdrawn.withdraw_reason) != ''
+                )
+            </if>
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="description != null  and description != ''"> and description = #{description}</if>
+            <if test="address != null  and address != ''"> and address = #{address}</if>
+            <if test="longitude != null  and longitude != ''"> and longitude = #{longitude}</if>
+            <if test="latitude != null  and latitude != ''"> and latitude = #{latitude}</if>
+            <if test="imgUrl != null  and imgUrl != ''"> and img_url = #{imgUrl}</if>
+            <if test="nodeTime != null "> and node_time = #{nodeTime}</if>
+            <if test="templateId != null "> and template_id = #{templateId}</if>
+            <if test="checkinCode != null  and checkinCode != ''"> and checkin_code = #{checkinCode}</if>
+            <if test="businessTime != null  and businessTime != ''"> and business_time = #{businessTime}</if>
+            <if test="status != null "> and status = #{status}</if>
+        </where>
+        order by sort_id asc
+    </select>
+    
+    <select id="selectCmsTopicNodeById" parameterType="Long" resultMap="CmsTopicNodeResult">
+        <include refid="selectCmsTopicNodeVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectByTopicForUpdate" parameterType="Long" resultMap="CmsTopicNodeResult">
+        <include refid="selectCmsTopicNodeVo"/>
+        where topic_id = #{topicId}
+        order by chapter_id asc, sort_id asc, id asc
+        for update
+    </select>
+
+    <insert id="insertCmsTopicNode" parameterType="CmsTopicNode" useGeneratedKeys="true" keyProperty="id">
+        insert into cms_topic_node
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="topicId != null">topic_id,</if>
+            <if test="chapterId != null">chapter_id,</if>
+            <if test="merchantMemberId != null">merchant_member_id,</if>
+            <if test="nodeAuditStatus != null">node_audit_status,</if>
+            <if test="nodeAuditReason != null">node_audit_reason,</if>
+            <if test="nodeAuditMemberId != null">node_audit_member_id,</if>
+            <if test="nodeAuditTime != null">node_audit_time,</if>
+            <if test="name != null">name,</if>
+            <if test="description != null">description,</if>
+            <if test="address != null">address,</if>
+            <if test="longitude != null">longitude,</if>
+            <if test="latitude != null">latitude,</if>
+            <if test="imgUrl != null">img_url,</if>
+            <if test="nodeTime != null">node_time,</if>
+            <if test="templateId != null">template_id,</if>
+            <if test="checkinCode != null">checkin_code,</if>
+            <if test="businessTime != null">business_time,</if>
+            <if test="status != null">status,</if>
+            <if test="sortId != null">sort_id,</if>
+            <if test="xpValue != null">xp_value,</if>
+            <if test="hookText != null">hook_text,</if>
+            <if test="cardHookLong != null">card_hook_long,</if>
+            <if test="fragmentText != null">fragment_text,</if>
+            <if test="unlockAfterNodeId != null">unlock_after_node_id,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="topicId != null">#{topicId},</if>
+            <if test="chapterId != null">#{chapterId},</if>
+            <if test="merchantMemberId != null">#{merchantMemberId},</if>
+            <if test="nodeAuditStatus != null">#{nodeAuditStatus},</if>
+            <if test="nodeAuditReason != null">#{nodeAuditReason},</if>
+            <if test="nodeAuditMemberId != null">#{nodeAuditMemberId},</if>
+            <if test="nodeAuditTime != null">#{nodeAuditTime},</if>
+            <if test="name != null">#{name},</if>
+            <if test="description != null">#{description},</if>
+            <if test="address != null">#{address},</if>
+            <if test="longitude != null">#{longitude},</if>
+            <if test="latitude != null">#{latitude},</if>
+            <if test="imgUrl != null">#{imgUrl},</if>
+            <if test="nodeTime != null">#{nodeTime},</if>
+            <if test="templateId != null">#{templateId},</if>
+            <if test="checkinCode != null">#{checkinCode},</if>
+            <if test="businessTime != null">#{businessTime},</if>
+            <if test="status != null">#{status},</if>
+            <if test="sortId != null">#{sortId},</if>
+            <if test="xpValue != null">#{xpValue},</if>
+            <if test="hookText != null">#{hookText},</if>
+            <if test="cardHookLong != null">#{cardHookLong},</if>
+            <if test="fragmentText != null">#{fragmentText},</if>
+            <if test="unlockAfterNodeId != null">#{unlockAfterNodeId},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCmsTopicNode" parameterType="CmsTopicNode">
+        update cms_topic_node
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="topicId != null">topic_id = #{topicId},</if>
+            <if test="chapterId != null">chapter_id = #{chapterId},</if>
+            <if test="merchantMemberId != null">merchant_member_id = #{merchantMemberId},</if>
+            <if test="nodeAuditStatus != null">node_audit_status = #{nodeAuditStatus},</if>
+            <choose>
+                <when test="clearNodeAuditTrace">
+                    node_audit_reason = null,
+                    node_audit_member_id = null,
+                    node_audit_time = null,
+                </when>
+                <otherwise>
+                    <if test="nodeAuditReason != null">node_audit_reason = #{nodeAuditReason},</if>
+                    <if test="nodeAuditMemberId != null">node_audit_member_id = #{nodeAuditMemberId},</if>
+                    <if test="nodeAuditTime != null">node_audit_time = #{nodeAuditTime},</if>
+                </otherwise>
+            </choose>
+            <if test="name != null">name = #{name},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="longitude != null">longitude = #{longitude},</if>
+            <if test="latitude != null">latitude = #{latitude},</if>
+            <if test="imgUrl != null">img_url = #{imgUrl},</if>
+            <if test="nodeTime != null">node_time = #{nodeTime},</if>
+            <if test="templateId != null">template_id = #{templateId},</if>
+            <if test="checkinCode != null">checkin_code = #{checkinCode},</if>
+            <if test="businessTime != null">business_time = #{businessTime},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="sortId != null">sort_id = #{sortId},</if>
+            <if test="xpValue != null">xp_value = #{xpValue},</if>
+            <if test="hookText != null">hook_text = #{hookText},</if>
+            <if test="cardHookLong != null">card_hook_long = #{cardHookLong},</if>
+            <if test="fragmentText != null">fragment_text = #{fragmentText},</if>
+            <if test="unlockAfterNodeId != null">unlock_after_node_id = #{unlockAfterNodeId},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCmsTopicNodeById" parameterType="Long">
+        delete from cms_topic_node where id = #{id}
+    </delete>
+
+    <delete id="deleteCmsTopicNodeByIds" parameterType="String">
+        delete from cms_topic_node where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

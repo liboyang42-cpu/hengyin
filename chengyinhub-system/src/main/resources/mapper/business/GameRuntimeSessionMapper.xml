@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.GameRuntimeSessionMapper">
+
+    <resultMap id="GameRuntimeSessionResult" type="com.chengyinhub.business.domain.GameRuntimeSession">
+        <id property="id" column="id"/>
+        <result property="playInstanceId" column="play_instance_id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="nodeId" column="node_id"/>
+        <result property="templateId" column="template_id"/>
+        <result property="ownerType" column="owner_type"/>
+        <result property="ownerId" column="owner_id"/>
+        <result property="configSnapshotJson" column="config_snapshot_json"/>
+        <result property="stateJson" column="state_json"/>
+        <result property="status" column="status"/>
+        <result property="score" column="score"/>
+        <result property="completedUnits" column="completed_units"/>
+        <result property="version" column="version"/>
+        <result property="startedAt" column="started_at"/>
+        <result property="deadlineAt" column="deadline_at"/>
+        <result property="completedAt" column="completed_at"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="columns">
+        s.id, s.play_instance_id, s.activity_id, s.topic_id, s.node_id, s.template_id, s.owner_type, s.owner_id,
+        s.config_snapshot_json, s.state_json, s.status, s.score, s.completed_units, s.version,
+        s.started_at, s.deadline_at, s.completed_at, s.create_time, s.update_time
+    </sql>
+
+    <insert id="insert" parameterType="com.chengyinhub.business.domain.GameRuntimeSession"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into game_runtime_session
+        (play_instance_id, activity_id, topic_id, node_id, template_id, owner_type, owner_id,
+         config_snapshot_json, state_json, status, score, completed_units, version,
+         started_at, deadline_at, completed_at, create_time, update_time)
+        values
+        (#{playInstanceId}, #{activityId}, #{topicId}, #{nodeId}, #{templateId}, #{ownerType}, #{ownerId},
+         #{configSnapshotJson}, #{stateJson}, #{status}, #{score}, #{completedUnits}, #{version},
+         #{startedAt}, #{deadlineAt}, #{completedAt}, #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="selectByOwner" resultMap="GameRuntimeSessionResult">
+        select <include refid="columns"/> from game_runtime_session s
+        where s.activity_id=#{activityId} and s.topic_id=#{topicId} and s.node_id=#{nodeId}
+          and s.owner_type=#{ownerType} and s.owner_id=#{ownerId}
+          and s.play_instance_id=coalesce((select r.play_instance_id from topic_route_session r
+              where r.member_id=s.owner_id and s.owner_type=1 and r.topic_id=s.topic_id and r.activity_id=s.activity_id
+              order by r.id desc limit 1),'default')
+        limit 1
+    </select>
+
+    <select id="selectAccessibleById" resultMap="GameRuntimeSessionResult">
+        select <include refid="columns"/> from game_runtime_session s
+        where s.id=#{id} and (
+          (s.owner_type=1 and s.owner_id=#{memberId})
+          or (s.owner_type=2 and exists (
+              select 1 from play_team_member m
+              where m.team_id=s.owner_id and m.member_id=#{memberId} and m.status=1
+          ))
+        )
+        limit 1
+    </select>
+
+    <select id="selectStateJsonsByTopic" resultType="java.lang.String">
+        select s.state_json from game_runtime_session s
+        where s.topic_id=#{topicId} and s.activity_id=#{activityId}
+          and s.play_instance_id=coalesce((select r.play_instance_id from topic_route_session r
+              where r.member_id=s.owner_id and s.owner_type=1 and r.topic_id=s.topic_id and r.activity_id=s.activity_id
+              order by r.id desc limit 1),'default')
+          and (
+            (s.owner_type=1 and s.owner_id=#{memberId})
+            or (s.owner_type=2 and exists (
+                select 1 from play_team_member m
+                where m.team_id=s.owner_id and m.member_id=#{memberId} and m.status=1
+            ))
+          )
+        order by s.node_id, s.id
+    </select>
+
+    <select id="selectPlayerByOwner" resultMap="GameRuntimeSessionResult">
+        select <include refid="columns"/> from game_runtime_session s
+        where s.activity_id=#{activityId} and s.topic_id=#{topicId} and s.node_id=#{nodeId}
+          and s.owner_type=1 and s.owner_id=#{memberId}
+          and s.play_instance_id=coalesce((select r.play_instance_id from topic_route_session r
+              where r.member_id=s.owner_id and s.owner_type=1 and r.topic_id=s.topic_id and r.activity_id=s.activity_id
+              order by r.id desc limit 1),'default')
+        limit 1
+    </select>
+
+    <select id="selectPlayerSessionsByTopic" resultMap="GameRuntimeSessionResult">
+        select <include refid="columns"/> from game_runtime_session s
+        where s.activity_id=#{activityId} and s.topic_id=#{topicId}
+          and s.owner_type=1 and s.owner_id=#{memberId}
+        order by s.id
+    </select>
+
+    <select id="selectTeamByMember" resultMap="GameRuntimeSessionResult">
+        select <include refid="columns"/> from game_runtime_session s
+        join play_team_member m on m.team_id=s.owner_id and m.member_id=#{memberId} and m.status=1
+        where s.activity_id=#{activityId} and s.topic_id=#{topicId} and s.node_id=#{nodeId}
+          and s.owner_type=2
+        order by s.id desc
+        limit 1
+    </select>
+
+    <update id="updateStateCas" parameterType="com.chengyinhub.business.domain.GameRuntimeSession">
+        update game_runtime_session
+        set state_json=#{stateJson}, status=#{status}, score=#{score},
+            completed_units=#{completedUnits}, completed_at=#{completedAt},
+            version=version+1, update_time=#{updateTime}
+        where id=#{id} and version=#{version} and status=0
+    </update>
+
+    <update id="restartTerminalCas" parameterType="com.chengyinhub.business.domain.GameRuntimeSession">
+        update game_runtime_session
+        set state_json=#{stateJson},
+            status=0, score=0, completed_units=0, started_at=#{startedAt},
+            deadline_at=#{deadlineAt}, completed_at=null, version=version+1, update_time=#{updateTime}
+        where id=#{id} and version=#{version} and status in (2, 3)
+    </update>
+
+    <select id="selectLeaderboard" resultType="map">
+        select s.owner_type as ownerType, s.owner_id as ownerId,
+               case when s.owner_type=1 then coalesce(u.nickname, '玩家')
+                    else coalesce(t.title, '队伍') end as displayName,
+               s.score, s.completed_units as completedUnits,
+               timestampdiff(second, s.started_at, coalesce(s.completed_at, s.update_time)) as elapsedSeconds,
+               s.completed_at as completedAt
+        from game_runtime_session s
+        left join ums_member u on s.owner_type=1 and u.id=s.owner_id
+        left join play_team t on s.owner_type=2 and t.id=s.owner_id
+        where s.node_id=#{nodeId} and s.status=1
+        <choose>
+            <when test="activityId != null and activityId &gt; 0">and s.activity_id=#{activityId}</when>
+            <otherwise>and s.topic_id=#{topicId}</otherwise>
+        </choose>
+        <choose>
+            <when test="metric == 'ELAPSED_TIME'">
+                order by elapsedSeconds asc, s.completed_at asc, s.id asc
+            </when>
+            <when test="metric == 'COMPLETED_UNITS'">
+                order by s.completed_units desc, s.update_time asc, s.id asc
+            </when>
+            <otherwise>
+                order by s.score desc, elapsedSeconds asc, s.id asc
+            </otherwise>
+        </choose>
+        limit #{limit}
+    </select>
+</mapper>

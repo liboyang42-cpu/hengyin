@@ -1,0 +1,682 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.RoamMapper">
+
+    <select id="selectAdminRewardEvidence" resultType="java.util.HashMap">
+        select l.poi_id as poiId, p.name as poiName, l.member_id as memberId,
+               l.coupon_id as couponId, l.status as status, l.trigger_lat as triggerLat,
+               l.trigger_lng as triggerLng, l.create_time as createTime,
+               p.city_code as cityCode, p.merchant_id as merchantId
+        from roam_poi_reward_log l left join roam_poi p on p.id = l.poi_id
+        <where>
+          <if test="poiId != null"> and l.poi_id = #{poiId}</if>
+          <if test="memberId != null"> and l.member_id = #{memberId}</if>
+          <if test="status != null"> and l.status = #{status}</if>
+        </where>
+        order by l.create_time desc
+        limit 500
+    </select>
+
+    <resultMap type="RoamPoi" id="RoamPoiResult">
+        <result property="id" column="id" />
+        <result property="name" column="name" />
+        <result property="type" column="type" />
+        <result property="lat" column="lat" />
+        <result property="lng" column="lng" />
+        <result property="radiusM" column="radius_m" />
+        <result property="address" column="address" />
+        <result property="description" column="description" />
+        <result property="xp" column="xp" />
+        <result property="couponTemplateId" column="coupon_template_id" />
+        <result property="cityCode" column="city_code" />
+        <result property="status" column="status" />
+        <result property="auditStatus" column="audit_status" />
+        <result property="applicationType" column="application_type" />
+        <result property="applicantMerchantId" column="applicant_merchant_id" />
+        <result property="auditReason" column="audit_reason" />
+        <result property="createTime" column="create_time" />
+        <result property="merchantId" column="merchant_id" />
+        <result property="templateId" column="template_id" />
+        <result property="nodeLevel" column="node_level" />
+        <result property="tags" column="tags" />
+        <result property="coverImg" column="cover_img" />
+        <result property="sort" column="sort" />
+        <result property="npcAvatar" column="npc_avatar" />
+        <result property="found" column="found" />
+        <result property="pendingRedeem" column="pending_redeem" />
+    </resultMap>
+
+    <resultMap type="RoamSession" id="RoamSessionResult">
+        <result property="clientSessionKey" column="client_session_key" />
+        <result property="finishResultJson" column="finish_result_json" />
+        <result property="id" column="id" />
+        <result property="memberId" column="member_id" />
+        <result property="startedAt" column="started_at" />
+        <result property="finishedAt" column="finished_at" />
+        <result property="distanceM" column="distance_m" />
+        <result property="tilesRevealed" column="tiles_revealed" />
+        <result property="poisFound" column="pois_found" />
+        <result property="xpAwarded" column="xp_awarded" />
+        <result property="recallSentAt" column="recall_sent_at" />
+        <result property="recallAttempts" column="recall_attempts" />
+        <result property="recallLastAttemptAt" column="recall_last_attempt_at" />
+        <result property="status" column="status" />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <sql id="poiCols">id, name, type, lat, lng, radius_m, address, description, xp, coupon_template_id, city_code, status, audit_status, application_type, applicant_merchant_id, audit_reason, create_time, merchant_id, template_id, node_level, tags, cover_img, sort</sql>
+
+    <!--
+      门店 AI 形象(npc_profile scope_type=2)联查:地图上把商家点位画成该店的像素形象。
+      ⚠️ 用相关子查询而不是 LEFT JOIN —— 一个门店允许配多条分身(sort 定顺序),
+         直接 JOIN 会让同一个 POI 出多行,地图上就是同一个点位重复画。
+         口径与 NpcProfileMapper.selectEnabledByScope 逐字一致(enabled/audit/del_flag),
+         对不上就会出现「后台停用了、地图上还在」这种只有玩家看得见的漂移。
+      ⚠️ merchant_id 为空的 POI(非商家型地点)两列恒 null,前端据此不画形象。
+      走 npc_profile 的 idx_scope(scope_type, scope_id, sort),不额外建索引。
+    -->
+    <select id="selectPoisNear" resultMap="RoamPoiResult">
+        select <include refid="poiCols" />,
+               (select n.avatar from npc_profile n
+                 where n.scope_type = 2 and n.scope_id = p.merchant_id
+                   and n.enabled = 1 and n.audit_status = 1 and n.del_flag = '0'
+                 order by n.sort asc, n.id asc limit 1) as npc_avatar,
+               <!-- C-13 已发现按账号存服务端:换设备/清缓存后地图不再回到迷雾。
+                    两个真源都算「已发现」:① /poi/discover 写的地标记录(roam_poi_found);
+                    ② 据点玩法到店记录(roam_poi_reward_log,status 0=待核销/1=已完成,都表示到过店)。
+                    memberId=0(未登录/测试)时 exists 恒假,与改动前一致。 -->
+               (exists (select 1 from roam_poi_found f
+                         where f.poi_id = p.id and f.member_id = #{memberId})
+                or exists (select 1 from roam_poi_reward_log r
+                            where r.poi_id = p.id and r.member_id = #{memberId}
+                              and r.status in (0, 1))) as found,
+               <!-- CU-M-54:已打卡但券还没核销(status=0 且配了券)单独一档。found 把 status 0/1
+                    一起当「到过店」,客户端分不出「券到手」与「等商家扫码」—— 重进地图只能
+                    读成候选,同一站先亮后灭。这里是只读投影,不改表也不改写入路径。 -->
+               (exists (select 1 from roam_poi_reward_log r
+                         where r.poi_id = p.id and r.member_id = #{memberId}
+                           and r.status = 0 and r.coupon_id > 0)) as pending_redeem
+        from roam_poi p
+        where p.status = 1
+          and <include refid="cityNodeContentApproved" />
+          and p.lat between #{minLat} and #{maxLat}
+          and p.lng between #{minLng} and #{maxLng}
+    </select>
+
+    <select id="selectPoisByIds" resultMap="RoamPoiResult">
+        select <include refid="poiCols" /> from roam_poi
+        where status = 1 and id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <!-- 玩家侧按 id 查据点:与 selectPoisNear 同一审核口径(未过审的商家投放不可见/不可发现)。
+         管理员与官方活动链路仍用 selectPoisByIds —— 它们要能看到全量,不能共用这条。 -->
+    <select id="selectPlayerPoisByIds" resultMap="RoamPoiResult">
+        select <include refid="poiCols" /> from roam_poi p
+        where p.status = 1
+          and <include refid="cityNodeContentApproved" />
+          and p.id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <!-- R6:本会话服务端已校验到点的 POI(join roam_poi_found),finish 据此发 POI XP,不采信客户端 poiIds -->
+    <select id="selectFoundPoisBySession" resultMap="RoamPoiResult">
+        select p.* from roam_poi_found f
+        join roam_poi p on p.id = f.poi_id
+        where f.session_id = #{sessionId}
+    </select>
+
+    <!-- R6 反作弊:最近一次到点的时间与坐标,供瞬移速度校验 -->
+    <select id="selectLastPoiFoundLoc" resultType="java.util.HashMap">
+        select f.found_at as foundAt, p.lat as lat, p.lng as lng
+        from roam_poi_found f join roam_poi p on p.id = f.poi_id
+        where f.member_id = #{memberId}
+        order by f.found_at desc limit 1
+    </select>
+
+    <insert id="insertSession" parameterType="RoamSession" useGeneratedKeys="true" keyProperty="id">
+        insert into roam_session (member_id, started_at, status, create_time)
+        values (#{memberId}, #{startedAt}, #{status}, #{createTime})
+    </insert>
+
+    <select id="selectOwnedRecoverySession" resultMap="RoamSessionResult" useCache="false">
+        select * from roam_session where member_id = #{memberId}
+        <choose>
+            <when test="sessionId != null">and id = #{sessionId}</when>
+            <otherwise>and client_session_key = #{clientSessionKey}</otherwise>
+        </choose>
+    </select>
+    <insert id="insertKeyedSession">
+        insert into roam_session (member_id, client_session_key, started_at, status, create_time)
+        values (#{memberId}, #{clientSessionKey}, now(), 0, now())
+        on duplicate key update id = id
+    </insert>
+    <select id="selectOwnedSessionByKeyForUpdate" resultMap="RoamSessionResult" useCache="false" flushCache="true">
+        select * from roam_session
+        where member_id = #{memberId} and client_session_key = #{clientSessionKey} for update
+    </select>
+
+    <select id="selectSessionById" resultMap="RoamSessionResult">
+        select id, member_id, started_at, finished_at, distance_m, tiles_revealed, pois_found, xp_awarded,
+               recall_sent_at, recall_attempts, recall_last_attempt_at, status, create_time
+        from roam_session where id = #{id}
+    </select>
+
+    <select id="selectOwnedSessionForUpdate" resultMap="RoamSessionResult" useCache="false" flushCache="true">
+        select * from roam_session where id = #{id} and member_id = #{memberId} for update
+    </select>
+
+    <select id="selectRecallCandidates" resultMap="RoamSessionResult">
+        select id, member_id, started_at, finished_at, distance_m, tiles_revealed, pois_found, xp_awarded,
+               recall_sent_at, recall_attempts, recall_last_attempt_at, status, create_time
+        from roam_session
+        where status = 1 and recall_sent_at is null and recall_attempts &lt; 3
+          and finished_at between #{from} and #{to}
+          and (recall_last_attempt_at is null or recall_last_attempt_at &lt; #{retryBefore})
+        order by finished_at asc, id asc
+        limit #{limit}
+    </select>
+
+    <update id="claimRecallAttempt">
+        update roam_session
+        set recall_attempts = recall_attempts + 1, recall_last_attempt_at = #{attemptedAt}
+        where id = #{id} and status = 1 and recall_sent_at is null and recall_attempts &lt; 3
+          and (recall_last_attempt_at is null or recall_last_attempt_at &lt; date_sub(#{attemptedAt}, interval 6 hour))
+    </update>
+
+    <update id="markRecallSent">
+        update roam_session set recall_sent_at = #{sentAt}
+        where id = #{id} and recall_sent_at is null
+    </update>
+
+    <!--
+      在线心跳:把「最近一次上报的位置」写进这一场还没结算的会话。
+      where 带 member_id 与 status = 0 两条 —— 别人的会话、已结算的会话一律写不进去。
+      坐标已经在 Controller 里截过位(约 100m 网格),这里只负责落。
+    -->
+    <update id="updatePresence">
+        update roam_session
+        set last_lat = #{lat}, last_lng = #{lng}, last_report_at = #{reportAt},
+            explore_pct = #{explorePct}
+        where id = #{id} and member_id = #{memberId} and status = 0
+    </update>
+
+    <!--
+      附近此刻在走的人。三条硬筛,少一条就会泄露不该露的:
+        ① member_id &lt;&gt; me —— 自己不进列表
+        ② status = 0 且 last_report_at &gt;= #{freshAfter} —— 结算过的、久没上报的都算下线;
+           关掉定位就不再上报 ⇒ 会自己从别人地图上消失,不需要额外的开关
+        ③ 距离在 #{radiusM} 内 —— 用与 selectNearbyNodes 同一套 Haversine
+      一个人可能有多场未结算会话(异常退出留下的);按 last_report_at 取最新那场,
+      否则同一个人会在地图上出现好几次。
+    -->
+    <select id="selectNearbyRunners" resultType="com.chengyinhub.business.domain.vo.NearbyRunnerVO">
+        select t.memberId, t.nickname, t.avatar, t.lat, t.lng, t.explorePct, t.shops, t.elapsedSec
+        from (
+            select s.member_id as memberId, m.nickname as nickname, m.avatar as avatar,
+                   s.last_lat as lat, s.last_lng as lng, s.explore_pct as explorePct,
+                   (select count(distinct v.source_type, v.source_id)
+                      from roam_shop_visit v where v.session_id = s.id) as shops,
+                   timestampdiff(second, coalesce(s.started_at, s.create_time, #{now}), #{now}) as elapsedSec,
+                   row_number() over (partition by s.member_id order by s.last_report_at desc, s.id desc) as rn
+            from roam_session s join ums_member m on m.id = s.member_id
+            where s.member_id &lt;&gt; #{memberId}
+              and s.status = 0
+              and s.last_report_at is not null and s.last_report_at &gt;= #{freshAfter}
+              and s.last_lat is not null and s.last_lng is not null
+              and m.del_flag = 0
+              and (6371000 * acos(least(1,
+                    cos(radians(#{lat})) * cos(radians(s.last_lat))
+                    * cos(radians(s.last_lng) - radians(#{lng}))
+                    + sin(radians(#{lat})) * sin(radians(s.last_lat))
+                  ))) &lt;= #{radiusM}
+        ) t
+        where t.rn = 1
+        order by t.elapsedSec desc
+        limit #{limit}
+    </select>
+
+    <!--
+      「TA 点亮的店」那一排照片。封面按来源表分岔取:
+        source_type = 1 → roam_poi.cover_img
+        source_type = 2 → cms_registration_merchant.pic_url
+      店名用 roam_shop_visit.shop_name(落库时就是服务端从来源表读的真名)。
+      每人最多 #{perMember} 张,取最近去的。
+    -->
+    <select id="selectRunnerShops" resultType="com.chengyinhub.business.domain.vo.RunnerShopVO">
+        select t.memberId, t.shopName, t.shopImage from (
+            select v.member_id as memberId, v.shop_name as shopName,
+                   case v.source_type
+                     when 1 then (select p.cover_img from roam_poi p where p.id = v.source_id)
+                     when 2 then (select r.pic_url from cms_registration_merchant r where r.id = v.source_id)
+                   end as shopImage,
+                   row_number() over (partition by v.member_id order by v.visited_at desc, v.id desc) as rn
+            from roam_shop_visit v
+            where v.member_id in
+              <foreach collection="memberIds" item="mid" open="(" separator="," close=")">#{mid}</foreach>
+              <!-- 只取「他此刻这一场」的探店,不是历史全部 —— 半屏上那排是「TA 这一趟点亮的店」。
+                   取会话的顺序与 selectNearbyRunners 里那个 row_number 一字不差,不然两处会各指一场。 -->
+              and v.session_id = (select s.id from roam_session s
+                                   where s.member_id = v.member_id and s.status = 0
+                                   order by s.last_report_at desc, s.id desc limit 1)
+        ) t
+        where t.rn &lt;= #{perMember} and t.shopImage is not null and CHAR_LENGTH(t.shopImage) &gt; 0
+    </select>
+
+    <update id="saveFinishResult">
+        update roam_session set finish_result_json = #{resultJson}
+        where id = #{sessionId} and member_id = #{memberId} and status = 1
+          and finish_result_json is null
+    </update>
+    <update id="updateSessionFinish" parameterType="RoamSession">
+        update roam_session
+        set finished_at = #{finishedAt}, distance_m = #{distanceM}, tiles_revealed = #{tilesRevealed},
+            pois_found = #{poisFound}, xp_awarded = #{xpAwarded}, status = 1
+        where id = #{id} and status = 0
+    </update>
+
+    <insert id="batchInsertTile">
+        insert ignore into roam_fog_tile (member_id, session_id, geohash7, revealed_at) values
+        <foreach collection="tiles" item="t" separator=",">
+            (#{memberId}, #{sessionId}, #{t}, #{revealedAt})
+        </foreach>
+    </insert>
+
+    <select id="countTilesBySession" resultType="int">
+        select count(*) from roam_fog_tile where session_id = #{sessionId}
+    </select>
+
+    <select id="countPoisBySession" resultType="int">
+        select count(*) from roam_poi_found where session_id = #{sessionId}
+    </select>
+
+    <select id="countTilesTodayByMember" resultType="int">
+        select count(*) from roam_fog_tile where member_id = #{memberId} and date(revealed_at) = curdate()
+    </select>
+
+    <select id="countTilesEverByMember" resultType="int">
+        select count(*) from roam_fog_tile where member_id = #{memberId}
+    </select>
+
+    <select id="selectTilesByMember" resultType="java.lang.String">
+        select geohash7 from roam_fog_tile
+        where member_id = #{memberId}
+        order by revealed_at desc
+        limit #{limit}
+    </select>
+
+    <select id="selectTilePageByMember" resultType="java.util.HashMap">
+        select id, geohash7 from roam_fog_tile
+        where member_id = #{memberId} and id &gt; #{afterId}
+        order by id asc
+        limit #{limit}
+    </select>
+
+    <insert id="insertPoiFoundIgnore">
+        insert ignore into roam_poi_found (member_id, poi_id, session_id, found_at)
+        values (#{memberId}, #{poiId}, #{sessionId}, #{foundAt})
+    </insert>
+
+    <!-- ===== 会话内探店(任意真商家)===== -->
+    <insert id="insertShopVisitIgnore">
+        insert ignore into roam_shop_visit (member_id, session_id, source_type, source_id, shop_name, visited_at)
+        values (#{memberId}, #{sessionId}, #{sourceType}, #{sourceId}, #{shopName}, #{visitedAt})
+    </insert>
+
+    <!-- 按来源身份(source_type,source_id)distinct,不按 shop_name:
+         · 与前端 utils/roam-poi-group.js 一致 —— 前端每家实体店只报一次「代表条目」的 source,
+           同名连锁分店各自 source_id 不同 → 各计一家(按店名会把 3 家瑞幸塌成 1 家 → 弹卡没章)。
+         · uk(session_id,source_type,source_id) 保证同一来源每会话一行,故等价 count(*);写 distinct 表意图。 -->
+    <select id="countDistinctShopsBySession" resultType="int">
+        select count(distinct source_type, source_id) from roam_shop_visit where session_id = #{sessionId}
+    </select>
+
+    <!--
+      谁在这儿打过卡(商家卡上那一行头像)。两步收敛,顺序不能反:
+        ① 先按 (source_id, member_id) 去重 —— 同一个人在同一家店去过三次是一个人,不是三张脸
+        ② 再按 source_id 分组排队,取最近来的前 N 张
+      row_number() 是 MySQL 8 才有的,生产库 8.0.45,已确认可用。
+      没有头像的人直接不进结果(avatar 非空):画一个空头像框比少画一张更难看懂。
+      ⚠️ 下划线转驼峰未开启,列一律别名成 camelCase 以匹配 VO 字段。
+    -->
+    <select id="selectShopVisitorAvatars" resultType="com.chengyinhub.business.domain.vo.ShopVisitorAvatarVO">
+        select sourceId, avatar from (
+            select v.source_id as sourceId, m.avatar as avatar,
+                   row_number() over (partition by v.source_id order by v.visitedAt desc, v.maxId desc) as rn
+            from (
+                select source_id, member_id, max(visited_at) as visitedAt, max(id) as maxId
+                from roam_shop_visit
+                where source_type = #{sourceType}
+                  and source_id in
+                  <foreach collection="sourceIds" item="sid" open="(" separator="," close=")">#{sid}</foreach>
+                group by source_id, member_id
+            ) v join ums_member m on m.id = v.member_id
+            where m.del_flag = 0 and m.avatar is not null and m.avatar &lt;&gt; ''
+        ) t where t.rn &lt;= #{limit}
+    </select>
+
+    <!-- +N 的 N:去重到人的总数。不能拿头像条数替代 —— 头像被 limit 截过,拿它当总数会少报。 -->
+    <select id="selectShopVisitorCounts" resultType="com.chengyinhub.business.domain.vo.ShopVisitorCountVO">
+        select source_id as sourceId, count(distinct member_id) as total
+        from roam_shop_visit
+        where source_type = #{sourceType}
+          and source_id in
+          <foreach collection="sourceIds" item="sid" open="(" separator="," close=")">#{sid}</foreach>
+        group by source_id
+    </select>
+
+    <!-- ===== 商家节点(漫游 · roam_poi type=2 联合商家+模板)===== -->
+    <resultMap type="com.chengyinhub.business.domain.vo.CityNodeVO" id="CityNodeVOResult">
+        <result property="poiId" column="poi_id" />
+        <result property="name" column="name" />
+        <result property="description" column="description" />
+        <result property="lat" column="lat" />
+        <result property="lng" column="lng" />
+        <result property="radiusM" column="radius_m" />
+        <result property="nodeLevel" column="node_level" />
+        <result property="tags" column="tags" />
+        <result property="coverImg" column="cover_img" />
+        <result property="cityCode" column="city_code" />
+        <result property="status" column="status" />
+        <result property="distance" column="distance" />
+        <result property="merchantId" column="merchant_id" />
+        <result property="merchantName" column="merchant_name" />
+        <result property="merchantLogo" column="merchant_logo" />
+        <result property="merchantAddress" column="merchant_address" />
+        <result property="merchantPhone" column="merchant_phone" />
+        <result property="templateId" column="template_id" />
+        <result property="templateTitle" column="template_title" />
+        <result property="interactionType" column="interaction_type" />
+        <result property="validationMethod" column="validation_method" />
+        <result property="couponId" column="coupon_id" />
+        <result property="questionName" column="question_name" />
+        <result property="questionA" column="question_a" />
+        <result property="questionB" column="question_b" />
+        <result property="questionC" column="question_c" />
+        <result property="questionD" column="question_d" />
+    </resultMap>
+
+    <sql id="cityNodeSelect">
+        select p.id as poi_id, p.name as name, p.description as description, p.lat as lat, p.lng as lng,
+               p.radius_m as radius_m, p.node_level as node_level, p.tags as tags, p.cover_img as cover_img,
+               p.city_code as city_code, p.status as status,
+               p.merchant_id as merchant_id, m.name as merchant_name, m.logo as merchant_logo,
+               m.address as merchant_address, m.phone as merchant_phone,
+               p.template_id as template_id, t.title as template_title, t.interaction_type as interaction_type,
+               t.validation_method as validation_method, t.coupon_id as coupon_id,
+               <!-- vm=3 选项问答要让玩家看到题面和选项。⚠️ correct_answer 绝不出现在这里:
+                    这是玩家侧投影,选进来就等于把答案下发。判定在服务端读模板实体做。 -->
+               t.question_name as question_name,
+               t.question_a as question_a, t.question_b as question_b,
+               t.question_c as question_c, t.question_d as question_d
+        from roam_poi p
+        left join mms_merchant m on p.merchant_id = m.id
+        left join cms_member_template t on p.template_id = t.id
+    </sql>
+
+    <sql id="cityNodeContentApproved">
+        (p.application_type is null or p.application_type = 2
+         or (p.application_type = 1 and p.audit_status = 1))
+    </sql>
+
+    <select id="selectMerchantNodesNear" resultMap="CityNodeVOResult">
+        select p.id as poi_id, p.name as name, p.description as description, p.lat as lat, p.lng as lng,
+               p.radius_m as radius_m, p.node_level as node_level, p.tags as tags, p.cover_img as cover_img,
+               p.city_code as city_code, p.status as status,
+               p.merchant_id as merchant_id, m.name as merchant_name, m.logo as merchant_logo,
+               m.address as merchant_address, m.phone as merchant_phone,
+               p.template_id as template_id, t.title as template_title, t.interaction_type as interaction_type,
+               t.validation_method as validation_method, t.coupon_id as coupon_id,
+               t.question_name as question_name,
+               t.question_a as question_a, t.question_b as question_b,
+               t.question_c as question_c, t.question_d as question_d,
+               (6371000 * acos(least(1,
+                   cos(radians(#{originLat})) * cos(radians(p.lat))
+                   * cos(radians(p.lng) - radians(#{originLng}))
+                   + sin(radians(#{originLat})) * sin(radians(p.lat))
+               ))) as distance
+        from roam_poi p
+        left join mms_merchant m on p.merchant_id = m.id
+        left join cms_member_template t on p.template_id = t.id
+        where p.type = 2 and p.status = 1
+          and <include refid="cityNodeContentApproved" />
+          and p.lat between #{minLat} and #{maxLat}
+          and p.lng between #{minLng} and #{maxLng}
+          <if test="keyword != null and keyword != ''">
+            and (p.name like concat('%', #{keyword}, '%') or m.name like concat('%', #{keyword}, '%'))
+          </if>
+          <if test="categoryId != null">and m.category_id = #{categoryId}</if>
+          <if test="tag != null and tag != ''">and p.tags like concat('%', #{tag}, '%')</if>
+          <if test="cityRole != null and cityRole != ''">and m.city_role like concat('%', #{cityRole}, '%')</if>
+        order by distance asc, p.node_level desc, p.sort asc, p.id desc
+    </select>
+
+    <select id="selectMerchantNodeDetail" resultMap="CityNodeVOResult">
+        <include refid="cityNodeSelect" />
+        where p.id = #{id} and p.type = 2
+    </select>
+
+    <select id="selectPlayerMerchantNodeDetail" resultMap="CityNodeVOResult">
+        <include refid="cityNodeSelect" />
+        where p.id = #{id} and p.type = 2
+          and <include refid="cityNodeContentApproved" />
+          and (p.status = 1 or (p.status = 0 and #{memberId} > 0 and exists (
+              select 1 from roam_poi_reward_log r
+              where r.poi_id = p.id and r.member_id = #{memberId} and r.status in (0, 1)
+          )))
+    </select>
+
+    <select id="selectPendingCityNodeCouponId" resultType="java.lang.Long">
+        select coupon_id from roam_poi_reward_log
+        where poi_id = #{poiId} and member_id = #{memberId} and status = 0 and coupon_id > 0
+    </select>
+
+    <select id="selectFavoriteMerchantNodes" resultMap="CityNodeVOResult">
+        <include refid="cityNodeSelect" />
+        inner join member_collectible c on c.ref_id = p.id
+            and c.member_id = #{memberId} and c.coll_type = 3
+        where p.type = 2 and p.status = 1
+          and <include refid="cityNodeContentApproved" />
+        order by c.create_time desc, p.id desc
+    </select>
+
+    <select id="selectRewardedPoiIdsByMember" resultType="java.lang.Long">
+        <!-- C2:只认 status=1(无券已完成 / 有券已核销发放),避免"到店待核销"误显示为已领券 -->
+        select poi_id from roam_poi_reward_log
+        where member_id = #{memberId} and status = 1
+        <choose>
+            <when test="ids != null and ids.size() > 0">
+                and poi_id in <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+            </when>
+            <otherwise> and 1 = 0 </otherwise>
+        </choose>
+    </select>
+
+    <insert id="insertRewardLogIgnore">
+        <!-- C2:有券节点 status=0「待核销」(券由商家扫码核销发放,防伪造GPS白领券);无券节点 status=1「已完成」 -->
+        insert ignore into roam_poi_reward_log (poi_id, member_id, coupon_id, trigger_lat, trigger_lng, status, create_time)
+        values (#{poiId}, #{memberId}, #{couponId}, #{lat}, #{lng}, #{status}, #{createTime})
+    </insert>
+
+    <!-- C2 扫码核销:商家扫玩家据点码,待核销(status=0)→已核销(status=1);条件更新保证只成功一次(幂等) -->
+    <update id="redeemCityNodeReward">
+        update roam_poi_reward_log set status = 1
+        where poi_id = #{poiId} and member_id = #{memberId} and status = 0
+    </update>
+
+    <!-- ===== 商家自助据点：申请当前态与资产同在 roam_poi ===== -->
+    <insert id="insertPendingMerchantPoi" parameterType="RoamPoi" useGeneratedKeys="true" keyProperty="id">
+        insert into roam_poi (name, type, lat, lng, radius_m, address, description, coupon_template_id, city_code,
+                              status, audit_status, application_type, applicant_merchant_id, audit_reason,
+                              merchant_id, template_id, node_level, tags, cover_img, sort, create_time)
+        values (#{name}, 2, #{lat}, #{lng}, #{radiusM}, #{address}, #{description}, #{couponTemplateId}, #{cityCode},
+                0, 0, 1, #{applicantMerchantId}, null,
+                null, #{templateId}, #{nodeLevel}, #{tags}, #{coverImg}, #{sort}, #{createTime})
+    </insert>
+
+    <select id="countPendingPlacements" resultType="int">
+        select count(*) from roam_poi
+        where application_type = 1 and applicant_merchant_id = #{applicantMerchantId}
+          and audit_status in (0, 3) and merchant_id is null
+    </select>
+
+    <select id="selectMerchantPoiOwned" resultMap="RoamPoiResult">
+        select <include refid="poiCols" /> from roam_poi
+        where id = #{poiId} and merchant_id = #{merchantId} and type = 2
+    </select>
+
+    <select id="selectPoiForClaim" resultMap="RoamPoiResult">
+        select <include refid="poiCols" /> from roam_poi
+        where id = #{poiId} and status = 1 and merchant_id is null
+          and (audit_status is null or audit_status = 2)
+    </select>
+
+    <select id="selectClaimablePois" resultMap="RoamPoiResult">
+        select <include refid="poiCols" /> from roam_poi p
+        where p.status = 1 and p.merchant_id is null
+          and (p.audit_status is null or p.audit_status = 2)
+          <if test="keyword != null and keyword != ''">and p.name like concat('%', #{keyword}, '%')</if>
+        order by p.id desc limit #{limit}
+    </select>
+
+    <update id="submitClaimIfAvailable">
+        update roam_poi
+        set application_type = 2, applicant_merchant_id = #{applicantMerchantId},
+            audit_status = 0, audit_reason = null
+        where id = #{poiId} and status = 1 and merchant_id is null
+          and (audit_status is null or audit_status = 2)
+    </update>
+
+    <!-- 撤回待审认领:把申请字段整行清回「无申请」,POI 重新进入 selectClaimablePois 的候选集。
+         只认 audit_status=0(审核中/3 说明平台已接手,不在这条闸里抢)。 -->
+    <update id="cancelPendingClaim">
+        update roam_poi
+        set application_type = null, applicant_merchant_id = null,
+            audit_status = null, audit_reason = null
+        where id = #{poiId} and application_type = 2 and applicant_merchant_id = #{applicantMerchantId}
+          and audit_status = 0 and merchant_id is null
+    </update>
+
+    <select id="selectRoamApplicationById" resultMap="RoamPoiResult">
+        select <include refid="poiCols" /> from roam_poi
+        where id = #{id} and application_type in (1, 2) and audit_status is not null
+    </select>
+
+    <select id="selectRoamApplications" resultMap="RoamPoiAdminResult">
+        select p.id, p.name, p.type, p.lat, p.lng, p.radius_m, p.address, p.description, p.xp,
+               p.coupon_template_id, p.city_code, p.status, p.audit_status, p.application_type,
+               p.applicant_merchant_id, p.audit_reason, p.create_time, p.merchant_id,
+               p.template_id, p.node_level, p.tags, p.cover_img, p.sort,
+               applicant.name as merchant_name
+        from roam_poi p
+        left join mms_merchant applicant on applicant.id = p.applicant_merchant_id
+        where p.application_type in (1, 2) and p.audit_status is not null
+        <if test="applicantMerchantId != null">and p.applicant_merchant_id = #{applicantMerchantId}</if>
+        <if test="auditStatus != null">and p.audit_status = #{auditStatus}</if>
+        order by p.id desc
+    </select>
+
+    <update id="markRoamApplicationReviewing">
+        update roam_poi set audit_status = 3
+        where id = #{id} and application_type in (1, 2) and audit_status = 0
+          and applicant_merchant_id is not null and merchant_id is null
+    </update>
+
+    <update id="approveRoamApplication">
+        update roam_poi
+        set merchant_id = #{applicantMerchantId}, type = 2,
+            status = case when #{applicationType} = 1 then 1 else status end,
+            audit_status = 1, audit_reason = null
+        where id = #{id} and application_type = #{applicationType} and audit_status = 3
+          and applicant_merchant_id = #{applicantMerchantId} and merchant_id is null
+    </update>
+
+    <update id="rejectRoamApplicationIfPending">
+        update roam_poi set audit_status = 2, audit_reason = #{reason}
+        where id = #{id} and application_type in (1, 2) and audit_status = 0
+          and applicant_merchant_id is not null and merchant_id is null
+    </update>
+
+    <select id="lockMerchantForNodeReview" resultType="java.lang.Long">
+        select id from mms_merchant where member_id = #{memberId} for update
+    </select>
+
+    <update id="updateMerchantPoiOwned" parameterType="RoamPoi">
+        update roam_poi
+        <trim prefix="set" suffixOverrides=",">
+            <if test="name != null">name = #{name},</if>
+            <if test="lat != null">lat = #{lat},</if>
+            <if test="lng != null">lng = #{lng},</if>
+            <if test="radiusM != null">radius_m = #{radiusM},</if>
+            <if test="templateId != null">template_id = #{templateId},</if>
+            <if test="couponTemplateId != null">coupon_template_id = #{couponTemplateId},</if>
+            <if test="tags != null">tags = #{tags},</if>
+            <if test="coverImg != null">cover_img = #{coverImg},</if>
+            <if test="description != null">description = #{description},</if>
+        </trim>
+        where id = #{id} and merchant_id = #{merchantId} and type = 2
+    </update>
+
+    <select id="selectMyNodes" resultMap="CityNodeVOResult">
+        <include refid="cityNodeSelect" />
+        where p.type = 2 and p.merchant_id = #{merchantId}
+        order by p.status desc, p.id desc
+    </select>
+
+    <select id="selectActiveMerchantNode" resultMap="CityNodeVOResult">
+        <include refid="cityNodeSelect" />
+        where p.type = 2 and p.status = 1 and p.merchant_id = #{merchantId}
+          and <include refid="cityNodeContentApproved" />
+        order by p.id desc
+        limit 1
+    </select>
+
+    <update id="updateMerchantPoiTags">
+        update roam_poi set tags = #{tags}
+        where merchant_id = #{merchantId} and type = 2
+    </update>
+
+    <select id="countActiveNodesByMerchant" resultType="int">
+        select count(*) from roam_poi where type = 2 and merchant_id = #{merchantId} and status = 1
+    </select>
+
+    <update id="setNodeStatusOwned">
+        update roam_poi set status = #{status}
+        where id = #{poiId} and merchant_id = #{merchantId} and type = 2
+    </update>
+
+    <!-- ============ 后台 POI 治理(§4.4)============ -->
+
+    <resultMap type="RoamPoi" id="RoamPoiAdminResult" extends="RoamPoiResult">
+        <result property="merchantName" column="merchant_name" />
+    </resultMap>
+
+    <!-- ⚠️ 刻意不硬编码 status:治理要看全量(status=1 是 selectPoisNear 的玩家口径) -->
+    <select id="selectAdminPois" resultMap="RoamPoiAdminResult">
+        select p.id, p.name, p.type, p.lat, p.lng, p.radius_m, p.address, p.description, p.xp,
+               p.coupon_template_id, p.city_code, p.status, p.audit_status, p.application_type,
+               p.applicant_merchant_id, p.audit_reason, p.create_time, p.merchant_id,
+               p.template_id, p.node_level, p.tags, p.cover_img, p.sort,
+               mm.name as merchant_name
+          from roam_poi p
+          <!-- ⚠️ roam_poi.merchant_id 存的是 mms_merchant.id,不是 memberId(ApiVerifyController 同口径);
+               连 ums_member 会把昵称显示成 id 碰巧相同的任意会员 -->
+          left join mms_merchant mm on mm.id = p.merchant_id
+        <where>
+            <if test="status != null"> and p.status = #{status}</if>
+            <if test="cityCode != null and cityCode != ''"> and p.city_code = #{cityCode}</if>
+            <if test="merchantId != null"> and p.merchant_id = #{merchantId}</if>
+        </where>
+        order by p.create_time desc
+    </select>
+
+    <!-- 治理杆:无 owner 限制的上/下架(商家自助翻自己的走 setNodeStatusOwned,别混用) -->
+    <update id="updatePoiStatus">
+        update roam_poi set status = #{status}
+        where id = #{id}
+          and (#{status} = 0 or audit_status is null or audit_status = 1)
+    </update>
+
+</mapper>

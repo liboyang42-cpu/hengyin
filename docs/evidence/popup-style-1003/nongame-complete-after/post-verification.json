@@ -1,0 +1,43 @@
+[
+  {
+    "name": "post-edit",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 88,
+      "width": 390,
+      "height": 756,
+      "right": 390,
+      "bottom": 844,
+      "centerX": 195,
+      "centerY": 466
+    },
+    "title": {
+      "left": 16,
+      "top": 106.797,
+      "width": 309,
+      "height": 23,
+      "right": 325,
+      "bottom": 129.797,
+      "centerX": 170.5,
+      "centerY": 118.297
+    },
+    "titleFont": "18px",
+    "titleText": "编辑动态",
+    "content": {
+      "left": 16,
+      "top": 149,
+      "width": 358,
+      "height": 114,
+      "right": 374,
+      "bottom": 263,
+      "centerX": 195,
+      "centerY": 206
+    },
+    "contentFont": "14px",
+    "panelBorder": "0px",
+    "panelBorderColor": "rgb(255, 255, 255)",
+    "flag_after_close": false,
+    "closed": true
+  }
+]

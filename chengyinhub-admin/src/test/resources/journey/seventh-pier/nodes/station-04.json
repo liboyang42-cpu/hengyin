@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "requires": [
+    {"op": "NODE_COMPLETED", "nodeId": 5003}
+  ],
+  "effects": [
+    {"op": "SET", "var": "clue.tape_cut", "value": 1}
+  ],
+  "check": {
+    "enabled": true,
+    "checkId": "listen_tape",
+    "skill": "细听",
+    "tier": "medium",
+    "mods": [
+      {"when": {"op": "NODE_COMPLETED", "nodeId": 5003}, "value": 2, "label": "第一阶段复核回执"}
+    ],
+    "advantageIf": [{"var": "clue.oral_note", "op": "GTE", "value": 1}],
+    "successEffects": [{"op": "SET", "var": "clue.voice", "value": 1}],
+    "successText": "你在杂音底下听清了一句:「我们都叫这里第七码头。」原声已录入案件册。",
+    "failText": "剪辑点前后只剩底噪。你只能记下转写文字。"
+  },
+  "sort": {
+    "enabled": true,
+    "prompt": "把被剪掉的片段按时间排回原位",
+    "items": [
+      {"id": "jingle", "label": "开场提示音"},
+      {"id": "intro", "label": "公开导语"},
+      {"id": "farewell", "label": "私人告别"},
+      {"id": "ambient", "label": "底噪收尾"}
+    ],
+    "answerOrder": ["jingle", "intro", "farewell", "ambient"],
+    "maxAttempts": 2,
+    "xp": 15
+  }
+}

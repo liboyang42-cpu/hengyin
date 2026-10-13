@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.chengyinhub.business.mapper.ClubPostMapper">
+
+    <resultMap type="ClubPost" id="ClubPostResult">
+        <result property="id"    column="id"    />
+        <result property="clubId"    column="club_id"    />
+        <result property="authorMemberId"    column="author_member_id"    />
+        <result property="content"    column="content"    />
+        <result property="images"    column="images"    />
+        <result property="refType"    column="ref_type"    />
+        <result property="refId"    column="ref_id"    />
+        <result property="type"    column="type"    />
+        <result property="likeCount"    column="like_count"    />
+        <result property="commentCount"    column="comment_count"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="isPinned"    column="is_pinned"    />
+        <result property="pinnedAt"    column="pinned_at"    />
+        <result property="version"    column="version"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="nickname"    column="nickname"    />
+        <result property="avatar"    column="avatar"    />
+        <result property="clubName"    column="clubName"    />
+        <result property="clubLogo"    column="clubLogo"    />
+        <result property="edited"    column="edited"    />
+    </resultMap>
+
+    <select id="selectClubPostById" parameterType="Long" resultMap="ClubPostResult">
+        select cp.id, cp.club_id, cp.author_member_id, cp.content, cp.images, cp.ref_type, cp.ref_id, cp.type,
+               cp.like_count, cp.comment_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
+               cp.version, cp.create_time, cp.update_time,
+               exists(select 1 from club_post_revision r where r.post_id = cp.id) as edited
+        from club_post cp where cp.id = #{id}
+    </select>
+
+    <select id="selectClubPostByIdForUpdate" parameterType="Long" resultMap="ClubPostResult">
+        select id, club_id, author_member_id, content, images, ref_type, ref_id, type, like_count, comment_count,
+               del_flag, is_pinned, pinned_at, version, create_time, update_time
+        from club_post where id = #{id} for update
+    </select>
+
+    <select id="selectClubPostList" parameterType="ClubPost" resultMap="ClubPostResult">
+        select cp.id, cp.club_id, cp.author_member_id, cp.content, cp.images, cp.ref_type, cp.ref_id, cp.type,
+               cp.like_count, cp.comment_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
+               cp.version, cp.create_time, cp.update_time,
+               exists(select 1 from club_post_revision r where r.post_id = cp.id) as edited,
+               m.nickname as nickname, m.avatar as avatar
+        from club_post cp
+        join club c on c.id = cp.club_id and c.del_flag = 0
+        left join ums_member m on m.id = cp.author_member_id
+        <where>
+            cp.del_flag = 0
+            <if test="clubId != null "> and cp.club_id = #{clubId}</if>
+            <if test="type != null "> and cp.type = #{type}</if>
+        </where>
+        order by cp.is_pinned desc, cp.pinned_at desc, cp.id desc
+    </select>
+
+    <!-- 聚合动态流:按俱乐部集合取。clubIds 为空时调用方直接返回空列表,
+         不进这里 —— MyBatis 的 foreach 遇到空集合会生成 `in ()` 语法错。 -->
+    <select id="selectFeedByClubIds" resultMap="ClubPostResult">
+        select cp.id, cp.club_id, cp.author_member_id, cp.content, cp.images, cp.ref_type, cp.ref_id, cp.type,
+               cp.like_count, cp.comment_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
+               cp.version, cp.create_time, cp.update_time,
+               exists(select 1 from club_post_revision r where r.post_id = cp.id) as edited,
+               m.nickname as nickname, m.avatar as avatar,
+               c.name as clubName, c.logo as clubLogo
+        from club_post cp
+        left join ums_member m on m.id = cp.author_member_id
+        join club c on c.id = cp.club_id and c.del_flag = 0
+        where cp.del_flag = 0
+          and cp.club_id in
+          <foreach collection="clubIds" item="cid" open="(" separator="," close=")">#{cid}</foreach>
+        order by cp.id desc
+        limit #{limit}
+    </select>
+
+    <insert id="insertClubPost" parameterType="ClubPost" useGeneratedKeys="true" keyProperty="id">
+        insert into club_post (club_id, author_member_id, content, images, ref_type, ref_id, type,
+                               like_count, comment_count, del_flag, is_pinned, version, create_time)
+        values (#{clubId}, #{authorMemberId}, #{content}, #{images}, #{refType}, #{refId}, #{type},
+                0, 0, 0, 0, 0, #{createTime})
+    </insert>
+
+    <update id="updateClubPost" parameterType="ClubPost">
+        update club_post
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="content != null">content = #{content},</if>
+            <if test="images != null">images = #{images},</if>
+            <if test="likeCount != null">like_count = #{likeCount},</if>
+            <if test="commentCount != null">comment_count = #{commentCount},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            update_time = now(),
+            version = version + 1,
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="updateContentCas">
+        update club_post
+        set content = #{content}, images = #{images}, update_time = #{updateTime}, version = version + 1
+        where id = #{id} and del_flag = 0 and version = #{expectedVersion}
+    </update>
+
+    <update id="updatePinnedCas">
+        update club_post
+        set is_pinned = #{isPinned}, pinned_at = #{pinnedAt}, update_time = #{updateTime}, version = version + 1
+        where id = #{id} and del_flag = 0 and version = #{expectedVersion}
+    </update>
+
+    <update id="deleteClubPostById" parameterType="Long">
+        update club_post set del_flag = 2 where id = #{id}
+    </update>
+
+    <update id="incrementLikeCount">
+        update club_post set like_count = greatest(ifnull(like_count, 0) + #{delta}, 0) where id = #{id}
+    </update>
+
+    <update id="incrementCommentCount">
+        update club_post set comment_count = greatest(ifnull(comment_count, 0) + #{delta}, 0) where id = #{id}
+    </update>
+
+</mapper>

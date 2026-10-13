@@ -1,0 +1,414 @@
+package com.chengyinhub.business.service.impl;
+
+import com.chengyinhub.business.domain.CmsTopicNode;
+import com.chengyinhub.business.domain.NpcProfile;
+import com.chengyinhub.business.mapper.NpcProfileMapper;
+import com.chengyinhub.business.service.IChapterMerchantNodeService;
+import com.chengyinhub.business.service.IWxContentSecurityService;
+import com.chengyinhub.business.service.ai.AiServiceException;
+import com.chengyinhub.business.service.ai.VoiceCloneClient;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
+/**
+ * 节点 NPC 的业务合同(CR-927)。
+ *
+ * 守四件事:
+ *   ① 编辑权只走 {@link IChapterMerchantNodeService} 的两条闸 —— 读 detail/voiceStatus 用不判冻结的
+ *      requireOwnNode,写 save/enroll/reset 用 requireOwnLiveNode,本类不自己重复实现归属/承接闸;
+ *   ② 文本同步送检拦在落库前,头像(非预设)落库后异步送检,且 bizType 必须是 NODE_NPC 不是商家资料;
+ *   ③ 一节点一条:第二次保存是 update 同一条;下架过的行回到待审(audit_status=0 + enabled=0),
+ *      过审前玩家读不到 —— 不写回 enabled=1 这条路;
+ *   ④ 声音状态机:先落 PENDING 再打上游,失败清 voice_id —— 与门店分身同一套语义。
+ */
+class NodeNpcServiceTest {
+
+    private static final Long ME = 88L;
+    private static final Long NODE = 31L;
+    private static final String OPENID = "o_openid";
+
+    private IChapterMerchantNodeService nodeGate;
+    private NpcProfileMapper mapper;
+    private IWxContentSecurityService wxSec;
+    private VoiceCloneClient voice;
+    private NodeNpcService service;
+
+    @BeforeEach
+    void setUp() {
+        nodeGate = mock(IChapterMerchantNodeService.class);
+        mapper = mock(NpcProfileMapper.class);
+        wxSec = mock(IWxContentSecurityService.class);
+        voice = mock(VoiceCloneClient.class);
+        service = new NodeNpcService(nodeGate, mapper, wxSec, voice);
+
+        when(nodeGate.requireOwnLiveNode(ME, NODE)).thenReturn(node());
+        when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(null);
+    }
+
+    private static CmsTopicNode node() {
+        CmsTopicNode n = new CmsTopicNode();
+        n.setId(NODE);
+        n.setChapterId(9L);
+        n.setTopicId(100L);
+        n.setMerchantMemberId(ME);
+        return n;
+    }
+
+    private static NpcProfile draft(String name, String avatar, String greeting) {
+        NpcProfile p = new NpcProfile();
+        p.setName(name);
+        p.setAvatar(avatar);
+        p.setGreeting(greeting);
+        return p;
+    }
+
+    private static NpcProfile existing(long id, long scopeId, int enabled) {
+        NpcProfile p = new NpcProfile();
+        p.setId(id);
+        p.setScopeType(4);
+        p.setScopeId(scopeId);
+        p.setName("旧名");
+        p.setAvatar("px1:p01");
+        p.setGreeting("旧台词");
+        p.setPersona("");
+        p.setSort(0);
+        p.setAuditStatus(1);
+        p.setEnabled(enabled);
+        return p;
+    }
+
+    // ===== 读 =====
+
+    @Test
+    @Timeout(5)
+    void detail_gatesBeforeReading() {
+        NpcProfile row = existing(555L, NODE, 1);
+        when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(row);
+
+        assertEquals(555L, service.detailForMerchant(ME, NODE).getId());
+
+        // 读闸仍是实闸:归属/承接不通过必须抛 —— 拆掉的是冻结,不是门。
+        when(nodeGate.requireOwnNode(ME, NODE)).thenThrow(new IllegalStateException("点位不存在或无权操作"));
+        assertThrows(IllegalStateException.class, () -> service.detailForMerchant(ME, NODE));
+        assertThrows(IllegalStateException.class, () -> service.voiceStatus(ME, NODE));
+        verify(nodeGate, never()).requireOwnLiveNode(ME, NODE);
+    }
+
+    /**
+     * ★N1:冻结只挡商家写,不挡读。主题开跑后写闸(requireOwnLiveNode)会抛,
+     * 但详情回填与声音状态查询必须照常 —— 否则商家点「节点NPC」只有失败半屏,
+     * 生成中的声音再没人查,状态永远卡在「复刻中」。
+     */
+    @Test
+    @Timeout(5)
+    void detailAndVoiceStatus_readDespiteFrozenEditGate() {
+        when(nodeGate.requireOwnLiveNode(ME, NODE))
+                .thenThrow(new IllegalStateException("主题已开始,不能再改节点内容"));
+        NpcProfile row = existing(555L, NODE, 1);
+        when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(row);
+
+        assertEquals(555L, service.detailForMerchant(ME, NODE).getId(), "冻结不该拦详情回填");
+        assertEquals(555L, service.voiceStatus(ME, NODE).getId(), "冻结不该拦声音状态查询");
+        verify(nodeGate, never()).requireOwnLiveNode(ME, NODE);
+    }
+
+    // ===== 保存:参数与文本闸 =====
+
+    @Test
+    @Timeout(5)
+    void save_rejectsMissingNameAvatarAndOverlongFields() {
+        assertEquals("请填写角色名字",
+                assertThrows(IllegalStateException.class,
+                        () -> service.save(ME, NODE, draft("  ", "px1:p01", null), OPENID)).getMessage());
+
+        assertEquals("名字最多 32 个字",
+                assertThrows(IllegalStateException.class,
+                        () -> service.save(ME, NODE, draft("x".repeat(33), "px1:p01", null), OPENID)).getMessage());
+
+        assertEquals("请选择形象",
+                assertThrows(IllegalStateException.class,
+                        () -> service.save(ME, NODE, draft("阿福", " ", null), OPENID)).getMessage());
+
+        assertEquals("形象格式不支持",
+                assertThrows(IllegalStateException.class,
+                        () -> service.save(ME, NODE, draft("阿福", "javascript:alert(1)", null), OPENID)).getMessage());
+
+        assertEquals("台词最多 255 个字",
+                assertThrows(IllegalStateException.class,
+                        () -> service.save(ME, NODE, draft("阿福", "px1:p01", "x".repeat(256)), OPENID)).getMessage());
+
+        verifyNoInteractions(wxSec);
+        verify(mapper, never()).insertNodeNpc(any());
+    }
+
+    @Test
+    @Timeout(5)
+    void save_blocksWhenTextSecurityRejects() {
+        when(wxSec.checkText(anyString(), eq(OPENID))).thenReturn("内容涉嫌违规，请修改");
+
+        IllegalStateException e = assertThrows(IllegalStateException.class,
+                () -> service.save(ME, NODE, draft("阿福", "px1:p01", "台词"), OPENID));
+        assertEquals("内容涉嫌违规，请修改", e.getMessage());
+        verify(mapper, never()).insertNodeNpc(any());
+    }
+
+    // ===== 保存:落库形态与送检 =====
+
+    @Test
+    @Timeout(5)
+    void save_insertsScopedAuditedRowAndChecksUploadedAvatar() throws Exception {
+        doAnswer(inv -> {
+            inv.getArgument(0, NpcProfile.class).setId(555L);
+            return 1;
+        }).when(mapper).insertNodeNpc(any(NpcProfile.class));
+
+        NpcProfile saved = service.save(ME, NODE,
+                draft("  阿福  ", "https://oss.example.com/a.png", "  欢迎来店里  "), OPENID);
+
+        ArgumentCaptor<NpcProfile> cap = ArgumentCaptor.forClass(NpcProfile.class);
+        verify(mapper).insertNodeNpc(cap.capture());
+        NpcProfile inserted = cap.getValue();
+        assertEquals(Integer.valueOf(NodeNpcService.SCOPE_NODE), inserted.getScopeType(), "必须是 scope_type=4");
+        assertEquals(NODE, inserted.getScopeId(), "scope_id 必须是节点 id");
+        assertEquals("阿福", inserted.getName(), "名字两端空白要去掉");
+        assertEquals("欢迎来店里", inserted.getGreeting());
+        assertEquals(Integer.valueOf(1), inserted.getAuditStatus(), "先发后审:文本已过 msgSecCheck,落库即通过");
+        assertEquals(Integer.valueOf(1), inserted.getEnabled());
+        assertEquals("", inserted.getPersona(), "persona NOT NULL,店铺/节点 NPC 不用人设提示词");
+        assertEquals(555L, saved.getId(), "返回体要带自增主键,前端才能继续配声音");
+        verify(wxSec).submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_NODE_NPC, 555L,
+                "https://oss.example.com/a.png", OPENID);
+    }
+
+    @Test
+    @Timeout(5)
+    void save_presetAvatarSkipsMediaCheck() {
+        doAnswer(inv -> {
+            inv.getArgument(0, NpcProfile.class).setId(555L);
+            return 1;
+        }).when(mapper).insertNodeNpc(any(NpcProfile.class));
+
+        service.save(ME, NODE, draft("阿福", "px1:p04", null), OPENID);
+
+        verify(wxSec, never()).submitMediaCheckOne(anyInt(), anyLong(), anyString(), anyString());
+        verify(wxSec).checkText(anyString(), eq(OPENID));
+    }
+
+    /**
+     * ★N2:下架过的行重新保存 ≠ 重新上架 —— 必须回到待审(audit_status=0 + enabled=0),
+     * 玩家读闸两道都不过、过审前不可见;否则换一张预设头像(不送检)再存一次就把下架勾销了。
+     */
+    @Test
+    @Timeout(5)
+    void save_secondTimeAfterTakedownGoesBackToPendingAndStaysHidden() {
+        NpcProfile row = existing(555L, NODE, 0);   // 被内容安全回调下架过
+        when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(row);
+        when(mapper.updateNodeNpc(any(NpcProfile.class))).thenReturn(1);
+
+        NpcProfile saved = service.save(ME, NODE,
+                draft("阿福", "https://oss.example.com/b.png", "新台词"), OPENID);
+
+        ArgumentCaptor<NpcProfile> cap = ArgumentCaptor.forClass(NpcProfile.class);
+        verify(mapper).updateNodeNpc(cap.capture());
+        verify(mapper, never()).insertNodeNpc(any());
+        assertEquals(555L, cap.getValue().getId(), "改的必须是原来那条");
+        assertEquals(Integer.valueOf(0), cap.getValue().getEnabled(), "重新保存不得重新点亮");
+        assertEquals(Integer.valueOf(0), cap.getValue().getAuditStatus(), "必须回到待审");
+        assertEquals("新台词", cap.getValue().getGreeting());
+        assertEquals(555L, saved.getId());
+        assertEquals(Integer.valueOf(0), saved.getEnabled());
+        assertEquals(Integer.valueOf(0), saved.getAuditStatus());
+        verify(wxSec).submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_NODE_NPC, 555L,
+                "https://oss.example.com/b.png", OPENID);
+    }
+
+    /** 在架的行正常编辑维持先发后审:不写 audit_status/enabled(文本同步送检、图片异步送检)。 */
+    @Test
+    @Timeout(5)
+    void save_secondTimeOnLiveRowKeepsItVisible() {
+        NpcProfile row = existing(555L, NODE, 1);   // 在架:audit_status=1 且 enabled=1
+        when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(row);
+        when(mapper.updateNodeNpc(any(NpcProfile.class))).thenReturn(1);
+
+        NpcProfile saved = service.save(ME, NODE, draft("阿福", "px1:p04", "改一句台词"), OPENID);
+
+        ArgumentCaptor<NpcProfile> cap = ArgumentCaptor.forClass(NpcProfile.class);
+        verify(mapper).updateNodeNpc(cap.capture());
+        assertNull(cap.getValue().getEnabled(), "在架编辑不写 enabled,别把冻结/下架的口子开回来");
+        assertNull(cap.getValue().getAuditStatus(), "在架编辑不回待审");
+        assertEquals(Integer.valueOf(1), saved.getEnabled());
+        assertEquals(Integer.valueOf(1), saved.getAuditStatus());
+    }
+
+    @Test
+    @Timeout(5)
+    void save_rejectsRowWhoseScopeIdIsNotThisNode() {
+        when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(existing(555L, 9999L, 1));
+        assertEquals("无权修改该形象",
+                assertThrows(IllegalStateException.class,
+                        () -> service.save(ME, NODE, draft("阿福", "px1:p01", null), OPENID)).getMessage());
+        verify(mapper, never()).updateNodeNpc(any());
+    }
+
+    // ===== 声音 =====
+
+    @Test
+    @Timeout(5)
+    void voiceEnroll_requiresSavedNpcThenOpenService() {
+        assertEquals("请先保存节点 NPC,再给他配声音",
+                assertThrows(IllegalStateException.class,
+                        () -> service.voiceEnroll(ME, NODE, "/profile/a.mp3")).getMessage());
+
+        when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(existing(555L, NODE, 1));
+        when(voice.usable()).thenReturn(false);
+        assertEquals("语音服务未开通",
+                assertThrows(IllegalStateException.class,
+                        () -> service.voiceEnroll(ME, NODE, "/profile/a.mp3")).getMessage());
+        verify(voice, never()).enroll(anyString());
+    }
+
+    @Test
+    @Timeout(5)
+    void voiceEnroll_writesPendingBeforeUpstreamThenReady() {
+        when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(existing(555L, NODE, 1));
+        when(mapper.updateNodeNpcVoice(any(NpcProfile.class))).thenReturn(1);
+        when(voice.usable()).thenReturn(true);
+        when(voice.enroll("/profile/a.mp3")).thenReturn("cosyvoice-v2-abc");
+        when(voice.isReady("cosyvoice-v2-abc")).thenReturn(true);
+
+        service.voiceEnroll(ME, NODE, "/profile/a.mp3");
+
+        ArgumentCaptor<NpcProfile> cap = ArgumentCaptor.forClass(NpcProfile.class);
+        verify(mapper, org.mockito.Mockito.times(2)).updateNodeNpcVoice(cap.capture());
+        List<NpcProfile> writes = cap.getAllValues();
+        assertEquals(Integer.valueOf(NodeNpcService.VOICE_PENDING), writes.get(0).getVoiceStatus(),
+                "必须先落复刻中再打上游 —— 反过来的话上游成功而落库失败 = 花了钱没记住");
+        assertEquals("/profile/a.mp3", writes.get(0).getVoiceSample());
+        assertEquals("cosyvoice-v2-abc", writes.get(1).getVoiceId());
+        assertEquals(Integer.valueOf(NodeNpcService.VOICE_READY), writes.get(1).getVoiceStatus());
+        InOrder order = inOrder(mapper, voice);
+        order.verify(mapper).updateNodeNpcVoice(any(NpcProfile.class));
+        order.verify(voice).enroll("/profile/a.mp3");
+    }
+
+    @Test
+    @Timeout(5)
+    void voiceEnroll_upstreamFailureClearsVoiceId() {
+        when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(existing(555L, NODE, 1));
+        when(mapper.updateNodeNpcVoice(any(NpcProfile.class))).thenReturn(1);
+        when(voice.usable()).thenReturn(true);
+        when(voice.enroll(anyString())).thenThrow(new AiServiceException("录音太短"));
+
+        assertEquals("录音太短",
+                assertThrows(IllegalStateException.class,
+                        () -> service.voiceEnroll(ME, NODE, "/profile/a.mp3")).getMessage());
+
+        ArgumentCaptor<NpcProfile> cap = ArgumentCaptor.forClass(NpcProfile.class);
+        verify(mapper, org.mockito.Mockito.times(2)).updateNodeNpcVoice(cap.capture());
+        NpcProfile failed = cap.getAllValues().get(1);
+        assertEquals(Integer.valueOf(NodeNpcService.VOICE_FAILED), failed.getVoiceStatus());
+        assertNull(failed.getVoiceId(), "失败必须清 voice_id,别让半成品音色被拿去合成");
+    }
+
+    @Test
+    @Timeout(5)
+    void voiceEnroll_sameSampleWhilePendingIsIdempotent() {
+        NpcProfile row = existing(555L, NODE, 1);
+        row.setVoiceSample("/profile/a.mp3");
+        row.setVoiceStatus(NodeNpcService.VOICE_PENDING);
+        when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(row);
+
+        assertEquals(NodeNpcService.VOICE_PENDING, service.voiceEnroll(ME, NODE, "/profile/a.mp3").getVoiceStatus());
+        verify(voice, never()).enroll(anyString());
+    }
+
+    @Test
+    @Timeout(5)
+    void voiceStatus_refreshesPendingFromUpstream() {
+        NpcProfile row = existing(555L, NODE, 1);
+        row.setVoiceId("cosyvoice-v2-abc");
+        row.setVoiceStatus(NodeNpcService.VOICE_PENDING);
+        when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(row);
+        when(voice.usable()).thenReturn(true);
+        when(voice.isReady("cosyvoice-v2-abc")).thenReturn(true);
+        when(mapper.updateNodeNpcVoice(any(NpcProfile.class))).thenReturn(1);
+
+        assertEquals(Integer.valueOf(NodeNpcService.VOICE_READY), service.voiceStatus(ME, NODE).getVoiceStatus());
+
+        // 上游挂了保持原状,不因为查不到就判失败
+        when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(row);
+        row.setVoiceStatus(NodeNpcService.VOICE_PENDING);
+        when(voice.isReady("cosyvoice-v2-abc")).thenThrow(new AiServiceException("timeout"));
+        assertEquals(Integer.valueOf(NodeNpcService.VOICE_PENDING), service.voiceStatus(ME, NODE).getVoiceStatus());
+    }
+
+    @Test
+    @Timeout(5)
+    void voiceReset_clearsVoiceIdAndStatus() {
+        when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(existing(555L, NODE, 1));
+        when(mapper.updateNodeNpcVoice(any(NpcProfile.class))).thenReturn(1);
+
+        service.voiceReset(ME, NODE);
+
+        ArgumentCaptor<NpcProfile> cap = ArgumentCaptor.forClass(NpcProfile.class);
+        verify(mapper).updateNodeNpcVoice(cap.capture());
+        assertNull(cap.getValue().getVoiceId());
+        assertEquals(Integer.valueOf(NodeNpcService.VOICE_NONE), cap.getValue().getVoiceStatus());
+    }
+
+    /**
+     * ★「上游失败也要留下失败状态」依赖方法**不在事务里**:@Transactional(rollbackFor=Exception.class)
+     * + 抛异常 会把刚写的 VOICE_FAILED 一起回滚,商家永远看不到「可重试」,状态 3 不可达。
+     * 门店分身那条路没有事务,这里必须一致(见 NodeNpcService.voiceEnroll 注释)。
+     */
+    @Test
+    @Timeout(5)
+    void voiceEnrollMustNotRunInTransactionOrFailureEvidenceIsRolledBack() throws Exception {
+        java.lang.reflect.Method m = NodeNpcService.class.getMethod(
+                "voiceEnroll", Long.class, Long.class, String.class);
+        assertNull(m.getAnnotation(org.springframework.transaction.annotation.Transactional.class),
+                "voiceEnroll 不能加 @Transactional:失败状态要落库,不能随异常回滚");
+    }
+
+    /** ★并发双击的库侧唯一键报错要变成可行动的话,别让 1062 冒到全局处理器变成「系统繁忙」。 */
+    @Test
+    @Timeout(5)
+    void save_duplicateKeyFromConcurrentTapGivesActionableError() {
+        when(mapper.insertNodeNpc(any(NpcProfile.class)))
+                .thenThrow(new org.springframework.dao.DuplicateKeyException("uk_active_scope"));
+
+        IllegalStateException e = assertThrows(IllegalStateException.class,
+                () -> service.save(ME, NODE, draft("阿福", "px1:p01", null), OPENID));
+        assertEquals("保存冲突，请重试", e.getMessage());
+    }
+
+    @Test
+    @Timeout(5)
+    void voiceStatus_withNoNpcReturnsNull() {
+        assertNull(service.voiceStatus(ME, NODE));
+        assertNull(service.detailForMerchant(ME, NODE), "没配过时 detail 返回 null,前端据此显示空表单");
+    }
+}

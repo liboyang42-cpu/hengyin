@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantCrmCampaignMapper">
+    <resultMap id="Campaign" type="com.chengyinhub.business.domain.MerchantCrmCampaign">
+        <result property="id" column="id"/>
+        <result property="merchantRowId" column="merchant_id"/>
+        <result property="ownerMemberId" column="merchant_owner_member_id"/>
+        <result property="merchantNameSnapshot" column="merchant_name_snapshot"/>
+        <result property="segmentId" column="segment_id"/>
+        <result property="segmentFilterJson" column="segment_filter_json"/>
+        <result property="channel" column="channel"/>
+        <result property="couponId" column="coupon_id"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="actorMemberId" column="actor_member_id"/>
+        <result property="actorRoleCode" column="actor_role_code"/>
+        <result property="requestId" column="request_id"/>
+        <result property="status" column="status"/>
+        <result property="recipientCount" column="recipient_count"/>
+        <result property="deliveredCount" column="delivered_count"/>
+        <result property="noConsentCount" column="no_consent_count"/>
+        <result property="frequencySkippedCount" column="frequency_skipped_count"/>
+        <result property="failedCount" column="failed_count"/>
+        <result property="retryableCount" column="retryable_count"/>
+        <result property="startedAt" column="started_at"/>
+        <result property="finishedAt" column="finished_at"/>
+        <result property="processingToken" column="processing_token"/>
+        <result property="processingLeaseUntil" column="processing_lease_until"/>
+        <result property="version" column="version"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="DeliveryGuard" type="com.chengyinhub.business.domain.MerchantCrmDeliveryGuard">
+        <result property="id" column="id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="channel" column="channel"/>
+        <result property="deliveryDate" column="delivery_date"/>
+        <result property="campaignId" column="campaign_id"/>
+        <result property="recipientId" column="recipient_id"/>
+        <result property="status" column="status"/>
+        <result property="leaseToken" column="lease_token"/>
+        <result property="leaseUntil" column="lease_until"/>
+        <result property="version" column="version"/>
+        <result property="messageReceiptId" column="message_receipt_id"/>
+        <result property="couponHistoryId" column="coupon_history_id"/>
+        <result property="failureCode" column="failure_code"/>
+    </resultMap>
+
+    <resultMap id="Recipient" type="com.chengyinhub.business.domain.MerchantCrmCampaignRecipient">
+        <result property="id" column="id"/>
+        <result property="campaignId" column="campaign_id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="customerNameSnapshot" column="customer_name_snapshot"/>
+        <result property="channel" column="channel"/>
+        <result property="consentEventIdSnapshot" column="consent_event_id_snapshot"/>
+        <result property="status" column="status"/>
+        <result property="attemptCount" column="attempt_count"/>
+        <result property="failureCode" column="failure_code"/>
+        <result property="failureMessage" column="failure_message"/>
+        <result property="messageReceiptId" column="message_receipt_id"/>
+        <result property="couponHistoryId" column="coupon_history_id"/>
+        <result property="deliveredAt" column="delivered_at"/>
+        <result property="lastAttemptAt" column="last_attempt_at"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="CampaignColumns">
+        c.id, c.merchant_id, c.merchant_owner_member_id, c.merchant_name_snapshot, c.segment_id, c.segment_filter_json,
+        c.channel, c.coupon_id, c.title, c.content, c.actor_member_id, c.actor_role_code, c.request_id, c.status,
+        c.recipient_count, c.delivered_count, c.no_consent_count, c.frequency_skipped_count, c.failed_count,
+        c.started_at, c.finished_at, c.processing_token, c.processing_lease_until, c.version, c.create_time, c.update_time,
+        (select count(1) from merchant_crm_campaign_recipient retry
+          where retry.merchant_id = c.merchant_id and retry.campaign_id = c.id
+            <!-- 2026-09-23 裁决(CU-M-19):未同意/已退订不算可重试 —— 商家点重试不会让客户同意,
+                 算进来只会显示「重试可重试 N 人」再原样 SKIPPED,attempt_count 白涨。 -->
+            and retry.status in ('FAILED', 'SKIPPED_FREQUENCY', 'RETRYABLE_BUSY')
+            and coalesce(retry.failure_code, '') &lt;&gt; 'DELIVERY_OUTCOME_UNKNOWN'
+            and retry.attempt_count &lt; 20) as retryable_count
+    </sql>
+
+    <sql id="DeliveryGuardColumns">
+        id, merchant_id, member_id, channel, delivery_date, campaign_id, recipient_id, status,
+        lease_token, lease_until, version, message_receipt_id, coupon_history_id, failure_code
+    </sql>
+
+    <sql id="RecipientColumns">
+        id, campaign_id, merchant_id, member_id, customer_name_snapshot, channel,
+        consent_event_id_snapshot, status, attempt_count, failure_code, failure_message,
+        message_receipt_id, coupon_history_id, delivered_at, last_attempt_at, create_time, update_time
+    </sql>
+
+    <insert id="insertCampaign" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.MerchantCrmCampaign">
+        insert into merchant_crm_campaign
+          (merchant_id, merchant_owner_member_id, merchant_name_snapshot, segment_id, segment_filter_json,
+           channel, coupon_id, title, content, actor_member_id, actor_role_code, request_id, status,
+           recipient_count, delivered_count, no_consent_count, frequency_skipped_count, failed_count,
+           create_time, update_time)
+        values
+          (#{merchantRowId}, #{ownerMemberId}, #{merchantNameSnapshot}, #{segmentId}, #{segmentFilterJson},
+           #{channel}, #{couponId}, #{title}, #{content}, #{actorMemberId}, #{actorRoleCode}, #{requestId},
+           'READY', #{recipientCount}, 0, 0, 0, 0, now(), now())
+    </insert>
+
+    <insert id="insertRecipient" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.MerchantCrmCampaignRecipient">
+        insert into merchant_crm_campaign_recipient
+          (campaign_id, merchant_id, member_id, customer_name_snapshot, channel,
+           consent_event_id_snapshot, status, attempt_count, create_time, update_time)
+        values
+          (#{campaignId}, #{merchantId}, #{memberId}, #{customerNameSnapshot}, #{channel},
+           #{consentEventIdSnapshot}, 'PENDING', 0, now(), now())
+    </insert>
+
+    <insert id="insertDeliveryGuard" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.MerchantCrmDeliveryGuard">
+        insert ignore into merchant_crm_delivery_guard
+          (merchant_id, member_id, channel, delivery_date, campaign_id, recipient_id,
+           status, lease_token, lease_until, version, create_time, update_time)
+        values
+          (#{merchantId}, #{memberId}, #{channel}, current_date, #{campaignId}, #{recipientId},
+           'RESERVED', #{leaseToken}, date_add(now(3), interval #{leaseSeconds} second), 0, now(3), now(3))
+    </insert>
+
+    <select id="selectByRequestId" resultMap="Campaign">
+        select <include refid="CampaignColumns"/>
+        from merchant_crm_campaign c
+        where c.merchant_id = #{merchantId} and c.request_id = #{requestId}
+        limit 1
+    </select>
+
+    <select id="selectOwnedCampaign" resultMap="Campaign">
+        select <include refid="CampaignColumns"/>
+        from merchant_crm_campaign c
+        where c.merchant_id = #{merchantId} and c.id = #{campaignId}
+        limit 1
+    </select>
+
+    <select id="selectOwnedCampaigns" resultMap="Campaign">
+        select <include refid="CampaignColumns"/>
+        from merchant_crm_campaign c
+        where c.merchant_id = #{merchantId}
+        order by c.id desc
+        limit #{limit}
+    </select>
+
+    <select id="selectOwnedRecipients" resultMap="Recipient">
+        select <include refid="RecipientColumns"/>
+        from merchant_crm_campaign_recipient
+        where merchant_id = #{merchantId} and campaign_id = #{campaignId}
+        order by id asc
+        limit #{limit}
+    </select>
+
+    <select id="selectPendingRecipientIds" resultType="long">
+        select id from merchant_crm_campaign_recipient
+        where merchant_id = #{merchantId} and campaign_id = #{campaignId} and status = 'PENDING'
+        order by id asc
+        limit #{limit}
+    </select>
+
+    <select id="selectRecipientForUpdate" resultMap="Recipient">
+        select <include refid="RecipientColumns"/>
+        from merchant_crm_campaign_recipient
+        where merchant_id = #{merchantId} and campaign_id = #{campaignId} and id = #{recipientId}
+        for update
+    </select>
+
+    <select id="selectDeliveryGuardForUpdate" resultMap="DeliveryGuard">
+        select <include refid="DeliveryGuardColumns"/>
+        from merchant_crm_delivery_guard
+        where merchant_id = #{merchantId} and member_id = #{memberId}
+          and channel = #{channel} and delivery_date = current_date
+        for update
+    </select>
+
+    <select id="selectDeliveryGuardByRecipientForUpdate" resultMap="DeliveryGuard">
+        select <include refid="DeliveryGuardColumns"/>
+        from merchant_crm_delivery_guard
+        where merchant_id = #{merchantId} and campaign_id = #{campaignId} and recipient_id = #{recipientId}
+        for update
+    </select>
+
+    <select id="countDeliveredToday" resultType="int">
+        select count(1) from merchant_crm_campaign_recipient
+        where merchant_id = #{merchantId} and member_id = #{memberId} and channel = #{channel}
+          and status = 'DELIVERED' and campaign_id &lt;&gt; #{campaignId}
+          and delivered_at &gt;= current_date and delivered_at &lt; date_add(current_date, interval 1 day)
+    </select>
+
+    <update id="markCampaignProcessing">
+        update merchant_crm_campaign
+        set status = 'PROCESSING', started_at = coalesce(started_at, now()), finished_at = null,
+            processing_token = #{processingToken},
+            processing_lease_until = date_add(now(3), interval #{leaseSeconds} second),
+            version = version + 1, update_time = now()
+        where merchant_id = #{merchantId} and id = #{campaignId}
+          and status = #{expectedStatus}
+    </update>
+
+    <select id="selectStaleProcessingCampaigns" resultMap="Campaign">
+        select <include refid="CampaignColumns"/>
+        from merchant_crm_campaign c
+        where c.status = 'PROCESSING' and c.processing_lease_until &lt; now(3)
+        order by c.processing_lease_until asc, c.id asc
+        limit #{limit}
+    </select>
+
+    <update id="reclaimStaleCampaign">
+        update merchant_crm_campaign c
+        set c.processing_token = #{processingToken},
+            c.processing_lease_until = date_add(now(3), interval #{leaseSeconds} second),
+            c.version = c.version + 1, c.update_time = now()
+        where c.merchant_id = #{merchantId} and c.id = #{campaignId}
+          and c.merchant_owner_member_id = #{ownerMemberId}
+          and c.status = 'PROCESSING' and c.processing_lease_until &lt; now(3)
+          and c.version = #{expectedVersion}
+          and exists (
+            select 1 from mms_merchant m
+            where m.id = c.merchant_id and m.member_id = c.merchant_owner_member_id
+              and m.status = 1 and m.account_status = 1 and m.del_flag = 0
+          )
+    </update>
+
+    <update id="invalidateStaleCampaign">
+        update merchant_crm_campaign c
+        set c.status = 'NO_ELIGIBLE', c.finished_at = now(),
+            c.processing_token = null, c.processing_lease_until = null,
+            c.version = c.version + 1, c.update_time = now()
+        where c.merchant_id = #{merchantId} and c.id = #{campaignId}
+          and c.merchant_owner_member_id = #{ownerMemberId}
+          and c.status = 'PROCESSING' and c.processing_lease_until &lt; now(3)
+          and c.version = #{expectedVersion}
+          and not exists (
+            select 1 from mms_merchant m
+            where m.id = c.merchant_id and m.member_id = c.merchant_owner_member_id
+              and m.status = 1 and m.account_status = 1 and m.del_flag = 0
+          )
+    </update>
+
+    <update id="invalidateClaimedCampaign">
+        update merchant_crm_campaign c
+        set c.status = 'NO_ELIGIBLE', c.finished_at = now(),
+            c.processing_token = null, c.processing_lease_until = null,
+            c.version = c.version + 1, c.update_time = now()
+        where c.merchant_id = #{merchantId} and c.id = #{campaignId}
+          and c.merchant_owner_member_id = #{ownerMemberId}
+          and c.status = 'PROCESSING' and c.processing_token = #{processingToken}
+          and not exists (
+            select 1 from mms_merchant m
+            where m.id = c.merchant_id and m.member_id = c.merchant_owner_member_id
+              and m.status = 1 and m.account_status = 1 and m.del_flag = 0
+          )
+    </update>
+
+    <update id="renewCampaignLease">
+        update merchant_crm_campaign c
+        set c.processing_lease_until = date_add(now(3), interval #{leaseSeconds} second), c.update_time = now()
+        where c.merchant_id = #{merchantId} and c.id = #{campaignId}
+          and c.status = 'PROCESSING' and c.processing_token = #{processingToken}
+          and exists (
+            select 1 from mms_merchant m
+            where m.id = c.merchant_id and m.member_id = c.merchant_owner_member_id
+              and m.status = 1 and m.account_status = 1 and m.del_flag = 0
+          )
+    </update>
+
+    <update id="resetRetryableRecipients">
+        update merchant_crm_campaign_recipient
+        set status = 'PENDING', failure_code = null, failure_message = null, update_time = now()
+        where merchant_id = #{merchantId} and campaign_id = #{campaignId}
+          and status in ('FAILED', 'SKIPPED_FREQUENCY', 'RETRYABLE_BUSY')
+          and coalesce(failure_code, '') &lt;&gt; 'DELIVERY_OUTCOME_UNKNOWN'
+          and attempt_count &lt; 20
+    </update>
+
+    <update id="markRecipientSkipped">
+        update merchant_crm_campaign_recipient
+        set status = #{status}, attempt_count = attempt_count + 1,
+            failure_code = #{failureCode}, failure_message = #{failureMessage},
+            last_attempt_at = now(), update_time = now()
+        where merchant_id = #{merchantId} and campaign_id = #{campaignId}
+          and id = #{recipientId} and status = 'PENDING'
+    </update>
+
+    <update id="markRecipientDelivered">
+        update merchant_crm_campaign_recipient
+        set status = 'DELIVERED', attempt_count = attempt_count + 1,
+            failure_code = null, failure_message = null,
+            message_receipt_id = #{messageReceiptId}, coupon_history_id = #{couponHistoryId},
+            delivered_at = now(), last_attempt_at = now(), update_time = now()
+        where merchant_id = #{merchantId} and campaign_id = #{campaignId}
+          and id = #{recipientId} and status = 'PENDING'
+    </update>
+
+    <update id="markRecipientFailed">
+        update merchant_crm_campaign_recipient
+        set status = 'FAILED', attempt_count = attempt_count + 1,
+            failure_code = #{failureCode}, failure_message = #{failureMessage},
+            last_attempt_at = now(), update_time = now()
+        where merchant_id = #{merchantId} and campaign_id = #{campaignId}
+          and id = #{recipientId} and status = 'PENDING'
+    </update>
+
+    <update id="markRecipientRetryableBusy">
+        update merchant_crm_campaign_recipient
+        set status = 'RETRYABLE_BUSY', failure_code = 'DELIVERY_BUSY',
+            failure_message = #{failureMessage}, update_time = now()
+        where merchant_id = #{merchantId} and campaign_id = #{campaignId}
+          and id = #{recipientId} and status = 'PENDING'
+    </update>
+
+    <update id="reclaimReservedDeliveryGuard">
+        update merchant_crm_delivery_guard
+        set lease_token = #{leaseToken}, lease_until = date_add(now(3), interval #{leaseSeconds} second),
+            version = version + 1, update_time = now(3)
+        where id = #{guardId} and status = 'RESERVED'
+          and lease_until &lt; now(3) and version = #{expectedVersion}
+    </update>
+
+    <update id="markDeliveryGuardDispatching">
+        update merchant_crm_delivery_guard
+        set status = 'DISPATCHING', lease_until = date_add(now(3), interval #{leaseSeconds} second),
+            version = version + 1, update_time = now(3)
+        where id = #{guardId} and status = 'RESERVED' and lease_token = #{leaseToken}
+          and lease_until &gt;= now(3) and version = #{expectedVersion}
+    </update>
+
+    <update id="markDeliveryGuardDelivered">
+        update merchant_crm_delivery_guard
+        set status = 'DELIVERED', lease_token = null, lease_until = null,
+            message_receipt_id = #{messageReceiptId}, coupon_history_id = #{couponHistoryId},
+            failure_code = null, version = version + 1, update_time = now(3)
+        where id = #{guardId} and status = 'DISPATCHING' and lease_token = #{leaseToken}
+          and version = #{expectedVersion}
+    </update>
+
+    <update id="markDeliveryGuardOutcomeUnknown">
+        update merchant_crm_delivery_guard
+        set status = 'FAILED_UNCERTAIN', lease_token = null, lease_until = null,
+            failure_code = #{failureCode}, version = version + 1, update_time = now(3)
+        where id = #{guardId} and status = 'DISPATCHING' and lease_token = #{leaseToken}
+          and version = #{expectedVersion}
+    </update>
+
+    <update id="markStaleDeliveryGuardOutcomeUnknown">
+        update merchant_crm_delivery_guard
+        set status = 'FAILED_UNCERTAIN', lease_token = null, lease_until = null,
+            failure_code = #{failureCode}, version = version + 1, update_time = now(3)
+        where id = #{guardId} and status = 'DISPATCHING' and lease_until &lt; now(3)
+          and version = #{expectedVersion}
+    </update>
+
+    <update id="finalizeCampaign">
+        update merchant_crm_campaign c
+        set c.recipient_count = (select count(1) from merchant_crm_campaign_recipient r where r.merchant_id = #{merchantId} and r.campaign_id = #{campaignId}),
+            c.delivered_count = (select count(1) from merchant_crm_campaign_recipient r where r.merchant_id = #{merchantId} and r.campaign_id = #{campaignId} and r.status = 'DELIVERED'),
+            c.no_consent_count = (select count(1) from merchant_crm_campaign_recipient r where r.merchant_id = #{merchantId} and r.campaign_id = #{campaignId} and r.status = 'SKIPPED_NO_CONSENT'),
+            c.frequency_skipped_count = (select count(1) from merchant_crm_campaign_recipient r where r.merchant_id = #{merchantId} and r.campaign_id = #{campaignId} and r.status = 'SKIPPED_FREQUENCY'),
+            c.failed_count = (select count(1) from merchant_crm_campaign_recipient r where r.merchant_id = #{merchantId} and r.campaign_id = #{campaignId} and r.status = 'FAILED'),
+            c.status = case
+              when (select count(1) from merchant_crm_campaign_recipient r where r.merchant_id = #{merchantId} and r.campaign_id = #{campaignId}) = 0 then 'NO_ELIGIBLE'
+              when (select count(1) from merchant_crm_campaign_recipient r where r.merchant_id = #{merchantId} and r.campaign_id = #{campaignId} and r.status &lt;&gt; 'DELIVERED') = 0 then 'SUCCESS'
+              else 'PARTIAL_FAILED' end,
+            c.finished_at = now(), c.processing_token = null, c.processing_lease_until = null,
+            c.update_time = now()
+        where c.merchant_id = #{merchantId} and c.id = #{campaignId}
+          and c.status = 'PROCESSING' and c.processing_token = #{processingToken}
+    </update>
+</mapper>

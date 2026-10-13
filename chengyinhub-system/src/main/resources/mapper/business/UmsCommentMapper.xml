@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.UmsCommentMapper">
+    
+    <resultMap type="UmsComment" id="UmsCommentResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="ownerType"    column="owner_type"    />
+        <result property="ownerId"    column="owner_id"    />
+        <result property="rating"    column="rating"    />
+        <result property="contents"    column="contents"    />
+        <result property="replyId"    column="reply_id"    />
+        <result property="imgArr"    column="img_arr"    />
+        <result property="status"    column="status"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectUmsCommentVo">
+        select id, member_id, owner_type, owner_id, rating, contents, reply_id, img_arr, status, del_flag, create_by, create_time, update_by, update_time from ums_comment
+    </sql>
+
+    <select id="selectUmsCommentList" parameterType="UmsComment" resultMap="UmsCommentResult">
+        <include refid="selectUmsCommentVo"/>
+        <where>  
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="ownerType != null "> and owner_type = #{ownerType}</if>
+            <if test="ownerId != null "> and owner_id = #{ownerId}</if>
+            <if test="rating != null "> and rating = #{rating}</if>
+            <if test="contents != null  and contents != ''"> and contents = #{contents}</if>
+            <if test="replyId != null "> and reply_id = #{replyId}</if>
+            <if test="imgArr != null  and imgArr != ''"> and img_arr = #{imgArr}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="delFlag != null "> and del_flag = #{delFlag}</if>
+        </where>
+
+        order by id desc
+    </select>
+
+
+    <select id="selectRatingSummaryByOwners" resultType="map">
+        SELECT owner_id, ROUND(AVG(rating), 1) AS avg_rating, COUNT(*) AS rating_total
+        FROM ums_comment
+        WHERE del_flag = 0 AND status = 1 AND owner_type = #{ownerType}
+          AND owner_id IN
+        <foreach item="oid" collection="ownerIds" open="(" separator="," close=")">
+            #{oid}
+        </foreach>
+        GROUP BY owner_id
+    </select>
+
+    <select id="selectAvgRatingByCondition" parameterType="UmsComment" resultType="java.lang.Double">
+        SELECT ROUND(AVG(rating), 1) AS avg_rating
+        FROM ums_comment
+        <where>
+            del_flag = 0
+            AND status = 1
+            <if test="ownerType != null">and owner_type = #{ownerType}</if>
+            <if test="ownerId != null">and owner_id = #{ownerId}</if>
+            <if test="memberId != null">and member_id = #{memberId}</if>
+        </where>
+    </select>
+
+    <select id="selectUmsCommentById" parameterType="Long" resultMap="UmsCommentResult">
+        <include refid="selectUmsCommentVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectUmsCommentByIdForUpdate" resultMap="UmsCommentResult">
+        <include refid="selectUmsCommentVo"/>
+        where id = #{id} for update
+    </select>
+
+    <select id="reviewTargetExists" resultType="boolean">
+        select exists(
+            <choose>
+                <when test="ownerType == 1">select 1 from cms_topic where id = #{ownerId} and del_flag = 0</when>
+                <otherwise>select 1 from cms_activity where id = #{ownerId} and del_flag = 0</otherwise>
+            </choose>
+        )
+    </select>
+
+    <select id="hasPaidOrVerifiedRegistration" resultType="boolean">
+        select exists(
+            select 1
+            from cms_registration r
+            left join cms_activity a on r.owner_type = 2 and a.id = r.owner_id
+            where r.member_id = #{memberId}
+              and (r.payment_status = 2 or r.verification_status = 1)
+              and <choose>
+                  <when test="ownerType == 1">((r.owner_type = 1 and (r.owner_id = #{ownerId} or r.topic_id = #{ownerId}))
+                      or (r.owner_type = 2 and a.topic_id = #{ownerId}))</when>
+                  <otherwise>r.owner_type = 2 and r.owner_id = #{ownerId}</otherwise>
+              </choose>
+        )
+    </select>
+
+    <insert id="insertUmsComment" parameterType="UmsComment" useGeneratedKeys="true" keyProperty="id">
+        insert into ums_comment
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="ownerType != null">owner_type,</if>
+            <if test="ownerId != null">owner_id,</if>
+            <if test="rating != null">rating,</if>
+            <if test="contents != null">contents,</if>
+            <if test="replyId != null">reply_id,</if>
+            <if test="imgArr != null">img_arr,</if>
+            <if test="status != null">status,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="ownerType != null">#{ownerType},</if>
+            <if test="ownerId != null">#{ownerId},</if>
+            <if test="rating != null">#{rating},</if>
+            <if test="contents != null">#{contents},</if>
+            <if test="replyId != null">#{replyId},</if>
+            <if test="imgArr != null">#{imgArr},</if>
+            <if test="status != null">#{status},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateUmsComment" parameterType="UmsComment">
+        update ums_comment
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="ownerType != null">owner_type = #{ownerType},</if>
+            <if test="ownerId != null">owner_id = #{ownerId},</if>
+            <if test="rating != null">rating = #{rating},</if>
+            <if test="contents != null">contents = #{contents},</if>
+            <if test="replyId != null">reply_id = #{replyId},</if>
+            <if test="imgArr != null">img_arr = #{imgArr},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteUmsCommentById" parameterType="Long">
+        delete from ums_comment where id = #{id}
+    </delete>
+
+    <delete id="deleteUmsCommentByIds" parameterType="String">
+        delete from ums_comment where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <!-- FX-10(总控 9-18 口径):有效参与 = (已支付且报名仍有效 registration_status=2) 或 已核销(人真到过);
+         主题认本主题票 + 其下场次票。退款/取消置 registration_status=3,没核销过的就不再算参与。 -->
+    <select id="hasValidParticipation" resultType="boolean">
+        select exists(
+            select 1
+            from cms_registration r
+            left join cms_activity a on r.owner_type = 2 and a.id = r.owner_id
+            where r.member_id = #{memberId}
+              and ((r.payment_status = 2 and r.registration_status = 2) or r.verification_status = 1)
+              and <choose>
+                  <when test="ownerType == 1">((r.owner_type = 1 and r.owner_id = #{ownerId})
+                      or (r.owner_type = 2 and a.topic_id = #{ownerId}))</when>
+                  <otherwise>r.owner_type = 2 and r.owner_id = #{ownerId}</otherwise>
+              </choose>
+        )
+    </select>
+
+    <select id="selectReviewCommentIds" resultType="java.lang.Long">
+        select id from ums_comment
+        where member_id = #{memberId} and owner_type = #{ownerType} and owner_id = #{ownerId}
+        order by id
+    </select>
+
+</mapper>

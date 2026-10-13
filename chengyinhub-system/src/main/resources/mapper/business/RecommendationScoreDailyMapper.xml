@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.RecommendationScoreDailyMapper">
+
+    <insert id="insertRecommendationScoreDaily" parameterType="RecommendationScoreDaily" useGeneratedKeys="true" keyProperty="id">
+        insert into recommendation_score_daily
+        (stat_date, member_id, candidate_type, candidate_id, score, reason_codes, rank_position, create_time)
+        values
+        (#{statDate}, #{memberId}, #{candidateType}, #{candidateId}, #{score}, #{reasonCodes}, #{rankPosition}, #{createTime})
+    </insert>
+
+    <select id="selectAdminScoreList" parameterType="RecommendationScoreDaily" resultType="RecommendationScoreDaily">
+        select id, stat_date as statDate, member_id as memberId, candidate_type as candidateType,
+               candidate_id as candidateId, score, reason_codes as reasonCodes,
+               rank_position as rankPosition, create_time as createTime
+        from recommendation_score_daily
+        <where>
+            <if test="memberId != null"> and member_id = #{memberId}</if>
+            <if test="candidateType != null and candidateType != ''"> and candidate_type = #{candidateType}</if>
+            <if test="candidateId != null"> and candidate_id = #{candidateId}</if>
+        </where>
+        order by stat_date desc, rank_position asc, score desc
+    </select>
+
+    <select id="selectColdStartItems" resultType="RecommendationItemVO">
+        <choose>
+            <when test="candidateType == 'activity'">
+                select
+                    'activity' as candidateType,
+                    a.id as candidateId,
+                    a.name as title,
+                    a.img_url as imgUrl,
+                    0 as score,
+                    'cold_start' as reasonCodes,
+                    a.status,
+                    a.publish_status as publishStatus,
+                    a.del_flag as delFlag
+                from cms_activity a
+                where a.status = 1
+                  and a.publish_status = 1
+                  and (a.del_flag = 0 or a.del_flag is null)
+                order by a.create_time desc, a.id desc
+                limit #{limit}
+            </when>
+            <otherwise>
+                select
+                    'topic' as candidateType,
+                    t.id as candidateId,
+                    t.name as title,
+                    t.img_url as imgUrl,
+                    0 as score,
+                    'cold_start' as reasonCodes,
+                    t.status,
+                    t.user_status as publishStatus,
+                    t.del_flag as delFlag
+                from cms_topic t
+                where t.status = 1
+                  and t.user_status = 1
+                  and (t.del_flag = 0 or t.del_flag is null)
+                order by t.create_time desc, t.id desc
+                limit #{limit}
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectCandidateItems" resultType="RecommendationItemVO">
+        <choose>
+            <when test="candidateType == 'activity'">
+                select
+                    s.candidate_type as candidateType,
+                    s.candidate_id as candidateId,
+                    a.name as title,
+                    a.img_url as imgUrl,
+                    s.score,
+                    s.reason_codes as reasonCodes,
+                    a.status,
+                    a.publish_status as publishStatus,
+                    a.del_flag as delFlag
+                from recommendation_score_daily s
+                inner join cms_activity a on a.id = s.candidate_id
+                where s.member_id = #{memberId}
+                  and s.candidate_type = 'activity'
+                order by s.rank_position asc, s.score desc
+                limit #{limit}
+            </when>
+            <otherwise>
+                select
+                    s.candidate_type as candidateType,
+                    s.candidate_id as candidateId,
+                    t.name as title,
+                    t.img_url as imgUrl,
+                    s.score,
+                    s.reason_codes as reasonCodes,
+                    t.status,
+                    t.user_status as publishStatus,
+                    t.del_flag as delFlag
+                from recommendation_score_daily s
+                inner join cms_topic t on t.id = s.candidate_id
+                where s.member_id = #{memberId}
+                  and s.candidate_type = 'topic'
+                order by s.rank_position asc, s.score desc
+                limit #{limit}
+            </otherwise>
+        </choose>
+    </select>
+</mapper>

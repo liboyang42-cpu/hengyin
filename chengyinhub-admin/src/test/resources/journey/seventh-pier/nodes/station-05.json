@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "requires": [
+    {"op": "NODE_COMPLETED", "nodeId": 5004}
+  ],
+  "effects": [
+    {"op": "SET", "var": "clue.permits_checked", "value": 1}
+  ],
+  "check": {
+    "enabled": true,
+    "checkId": "empathize_arong",
+    "skill": "共情",
+    "tier": "medium",
+    "mods": [
+      {"when": {"var": "clue.permits_checked", "op": "GTE", "value": 1}, "value": 2, "label": "已逐条核对授权页"}
+    ],
+    "advantageIf": [{"var": "relation.arong", "op": "GTE", "value": 1}],
+    "disadvantageIf": [{"var": "counter.attitude", "op": "EQ", "value": -1}],
+    "successEffects": [
+      {"op": "SET", "var": "clue.photo_story", "value": 1},
+      {"op": "SET", "var": "relation.arong", "value": 1}
+    ],
+    "successText": "阿蓉讲了 P-02 里每一个人的名字,也讲了拍照那天没来的人。合照可以带着说明展出。",
+    "failText": "阿蓉只说:「合照可以挂,别的不用写。」展品只能没有说明。"
+  },
+  "pricePair": {
+    "enabled": true,
+    "title": "哪一张照片可以先展出?",
+    "items": [
+      {"id": "p02_private", "name": "私人告别现场", "imageUrl": "/journey/seventh-pier/permits/p02-private.png", "correct": false},
+      {"id": "p02_gathering", "name": "合照 P-02:同意展陈", "imageUrl": "/journey/seventh-pier/permits/p02-gathering.png", "correct": true},
+      {"id": "p02_unknown", "name": "未标注来源的底片", "imageUrl": "/journey/seventh-pier/permits/p02-unknown.png", "correct": false}
+    ],
+    "maxTries": 2,
+    "xp": 15
+  }
+}

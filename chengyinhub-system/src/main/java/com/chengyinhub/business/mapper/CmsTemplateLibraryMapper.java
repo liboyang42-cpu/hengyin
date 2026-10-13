@@ -1,0 +1,92 @@
+package com.chengyinhub.business.mapper;
+
+import java.util.List;
+import com.chengyinhub.business.domain.CmsTemplateLibrary;
+import com.chengyinhub.business.domain.vo.TemplateLibraryVO;
+import com.github.pagehelper.Page;
+import org.apache.ibatis.annotations.Param;
+
+/**
+ * 模板库Mapper接口
+ * 
+ * @author webxh
+ * @date 2025-09-02
+ */
+public interface CmsTemplateLibraryMapper 
+{
+    /**
+     * 查询模板库
+     * 
+     * @param id 模板库主键
+     * @return 模板库
+     */
+    public CmsTemplateLibrary selectCmsTemplateLibraryById(Long id);
+
+    List<CmsTemplateLibrary> selectByMemberTemplateForUpdate(Long memberTemplateId);
+
+    /**
+     * 查询模板库列表
+     * 
+     * @param cmsTemplateLibrary 模板库
+     * @return 模板库集合
+     */
+    public List<CmsTemplateLibrary> selectCmsTemplateLibraryList(CmsTemplateLibrary cmsTemplateLibrary);
+
+    /**
+     * 按分类查询分类下的模版
+     * @param categoryIds 分类数组
+     * @return   按分类分组查询分类下的模版
+     */
+    public List<TemplateLibraryVO> selectTemplatesByCategoryIds(@Param("categoryIds") List<Long> categoryIds);
+
+    /**
+     * 按分类查询分类下的模版  带分页
+     * @param categoryIds 分类数组
+     * @param page
+     * @return  按分类分组查询分类下的模版
+     */
+    public List<TemplateLibraryVO> selectTemplatesByCategoryIdsPage(
+            @Param("categoryIds") List<Long> categoryIds,
+            @Param("page") Page<TemplateLibraryVO> page);
+    /**
+     * 新增模板库
+     * 
+     * @param cmsTemplateLibrary 模板库
+     * @return 结果
+     */
+    public int insertCmsTemplateLibrary(CmsTemplateLibrary cmsTemplateLibrary);
+
+    /**
+     * 修改模板库
+     * 
+     * @param cmsTemplateLibrary 模板库
+     * @return 结果
+     */
+    public int updateCmsTemplateLibrary(CmsTemplateLibrary cmsTemplateLibrary);
+
+    int applyAuditDecision(@Param("row") CmsTemplateLibrary row, @Param("ownerId") Long ownerId);
+
+    /**
+     * 模板市场热度:被采用一次 use_num +1(单条原子 UPDATE,避免读改写竞态)
+     *
+     * @param id 模板库主键
+     * @return 结果
+     */
+    public int incrementUseNum(Long id);
+
+    /**
+     * 删除模板库
+     * 
+     * @param id 模板库主键
+     * @return 结果
+     */
+    public int deleteCmsTemplateLibraryById(Long id);
+
+    /**
+     * 批量删除模板库
+     * 
+     * @param ids 需要删除的数据主键集合
+     * @return 结果
+     */
+    public int deleteCmsTemplateLibraryByIds(Long[] ids);
+}

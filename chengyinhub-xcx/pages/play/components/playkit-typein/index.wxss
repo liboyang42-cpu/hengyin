@@ -1,0 +1,71 @@
+@import "/pages/play/style/play-surface.wxss";
+
+/* cy-playkit-typein · 限时打字(契约 §2.5)。皮面走 play-surface 暗版。*/
+.ti__attempt {
+  margin-top: var(--cy-space-2);
+  font-size: var(--cy-type-label);
+  color: var(--sub);
+}
+/* 目标文本是这一屏的主体:字号给大、用等宽数字族,逐字对齐好数 */
+.ti__target {
+  margin-top: var(--cy-space-5);
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--cy-space-3);
+  border-radius: var(--cy-radius-lg);
+  background: var(--soft);
+  color: var(--ink);
+  font-size: var(--cy-type-section-title);
+  font-weight: 700;
+  line-height: 1.5;
+  word-break: break-all;
+}
+.ti__hint {
+  margin-top: var(--cy-space-4);
+  font-size: var(--cy-type-body);
+  color: var(--sub);
+}
+.ti__input {
+  margin-top: var(--cy-space-4);
+  width: 100%;
+  height: 108rpx;
+  box-sizing: border-box;
+  padding: 0 var(--cy-space-3);
+  border-radius: var(--cy-radius-lg);
+  background: var(--soft);
+  color: var(--ink);
+  font-size: var(--cy-type-body);
+}
+.ti__input-ph { color: var(--cy-color-text-placeholder); }
+.ti__done {
+  margin-top: var(--cy-space-4);
+  font-size: var(--cy-type-section-title);
+  font-weight: 700;
+  color: var(--ok);
+}
+
+/* 终端固定暗面与白字，不随父主题翻转。 */
+.terminal { position:absolute; inset:0; display:flex; flex-direction:column; background:var(--cy-color-play-terminal-page); color:var(--cy-color-play-accent); font-family:Menlo,Consolas,monospace; }
+.terminal::after { content:""; position:absolute; inset:0; pointer-events:none; background:repeating-linear-gradient(0deg,var(--cy-color-play-terminal-scanline) 0 2rpx,transparent 2rpx 6rpx); }
+.terminal__screen { flex:1; min-height:0; padding:calc(var(--pk-top) + 24rpx) 44rpx 24rpx; overflow:auto; }
+.terminal__log { white-space:pre-wrap; font-size:var(--cy-type-label); line-height:1.8; color:var(--cy-color-play-terminal-log); }
+.terminal__prompt { margin-top:52rpx; font-size:var(--cy-type-body); }
+.terminal__input { margin-top:20rpx; font-size:var(--cy-type-page-title); letter-spacing:4rpx; min-height:88rpx; word-break:break-all; }
+.terminal__ghost { color:var(--cy-color-play-terminal-ghost); }
+.terminal__bad { color:var(--cy-color-play-terminal-error); }
+.terminal__cursor { display:inline-block; width:28rpx; height:60rpx; margin-left:4rpx; vertical-align:-10rpx; background:var(--cy-color-play-accent); animation:terminal-blink 1s steps(1) infinite; }
+
+@keyframes terminal-blink { 50% { opacity:0; } }
+.pk--reduced .terminal__cursor { animation:none; }
+.terminal__message { margin-top:20rpx; min-height:40rpx; font-size:var(--cy-type-label); line-height:1.5; color:var(--cy-color-play-terminal-message); }
+.terminal__keyboard { flex:none; padding:20rpx 8rpx calc(env(safe-area-inset-bottom) + 40rpx); border-top:1rpx solid var(--cy-color-play-field-line); background:var(--cy-color-play-terminal-keyboard); }
+.terminal__row { display:flex; justify-content:center; gap:10rpx; margin-top:14rpx; }
+.terminal__key { flex:0 0 62rpx; height:84rpx; border-radius:calc(var(--cy-radius-md) / 2); background:var(--cy-color-play-terminal-key); color:var(--cy-color-play-accent); display:flex; align-items:center; justify-content:center; font-size:var(--cy-type-button); box-shadow:inset 0 0 0 1rpx var(--cy-color-play-line),0 4rpx 0 var(--cy-color-play-terminal-key-shadow); }
+.terminal__fn { flex-basis:92rpx; font-size:var(--cy-type-label); }
+.terminal__space { flex-basis:300rpx; font-size:var(--cy-type-label); letter-spacing:4rpx; }
+.terminal__key--next { box-shadow:inset 0 0 0 3rpx var(--cy-color-play-accent),0 0 24rpx var(--cy-color-play-terminal-glow); }
+.terminal__key--hit { color:var(--cy-color-play-terminal-page); background:var(--cy-color-play-accent); transform:translateY(4rpx); }
+/* 原型 bootout:先变亮再竖向压扁成一条线,steps 做出老电视关机的顿挫;再横向收掉 */
+.ti--off { transform: scaleY(.004); filter: brightness(3); transition: transform .45s steps(6), filter .45s ease; }
+.ti--gone { transform: scaleX(0) scaleY(.004); opacity: 0; transition: transform .3s ease, opacity .3s ease; }
+.pk--reduced.ti--off, .pk--reduced.ti--gone { transition: none; }

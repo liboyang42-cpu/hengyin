@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MemberCashWithdrawMapper">
+
+    <resultMap type="MemberCashWithdraw" id="MemberCashWithdrawResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="openid"    column="openid"    />
+        <result property="amount"    column="amount"    />
+        <result property="outBatchNo"    column="out_batch_no"    />
+        <result property="outDetailNo"    column="out_detail_no"    />
+        <result property="transferBatchId"    column="transfer_batch_id"    />
+        <result property="wechatDetailId"    column="wechat_detail_id"    />
+        <result property="status"    column="status"    />
+        <result property="failReason"    column="fail_reason"    />
+        <result property="channelErrorCode"    column="channel_error_code"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="finishTime"    column="finish_time"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="wechatBatchStatus"    column="wechat_batch_status"    />
+        <result property="submitTime"    column="submit_time"    />
+        <result property="lastQueryTime"    column="last_query_time"    />
+        <result property="balanceDeductId"    column="balance_deduct_id"    />
+        <result property="balanceRefundId"    column="balance_refund_id"    />
+        <result property="manualOperator"    column="manual_operator"    />
+        <result property="manualVerifier"    column="manual_verifier"    />
+        <result property="manualNote"    column="manual_note"    />
+        <result property="traceId"    column="trace_id"    />
+        <result property="auditBy"    column="audit_by"    />
+        <result property="auditTime"    column="audit_time"    />
+        <result property="frozen"    column="frozen"    />
+        <result property="frozenReason"    column="frozen_reason"    />
+        <result property="frozenBy"    column="frozen_by"    />
+        <result property="frozenAt"    column="frozen_at"    />
+    </resultMap>
+
+    <sql id="cols">
+        id, member_id, openid, amount, out_batch_no, out_detail_no, transfer_batch_id, wechat_detail_id,
+        status, fail_reason, channel_error_code, create_time, finish_time, del_flag,
+        wechat_batch_status, submit_time, last_query_time, balance_deduct_id, balance_refund_id,
+        manual_operator, manual_verifier, manual_note, trace_id,
+        audit_by, audit_time, frozen, frozen_reason, frozen_by, frozen_at
+    </sql>
+
+    <insert id="insertMemberCashWithdraw" parameterType="MemberCashWithdraw" useGeneratedKeys="true" keyProperty="id">
+        insert into member_cash_withdraw
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="openid != null">openid,</if>
+            <if test="amount != null">amount,</if>
+            <if test="outBatchNo != null">out_batch_no,</if>
+            <if test="outDetailNo != null">out_detail_no,</if>
+            <if test="transferBatchId != null">transfer_batch_id,</if>
+            <if test="wechatDetailId != null">wechat_detail_id,</if>
+            <if test="status != null">status,</if>
+            <if test="failReason != null">fail_reason,</if>
+            <if test="channelErrorCode != null">channel_error_code,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="finishTime != null">finish_time,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="wechatBatchStatus != null">wechat_batch_status,</if>
+            <if test="submitTime != null">submit_time,</if>
+            <if test="lastQueryTime != null">last_query_time,</if>
+            <if test="balanceDeductId != null">balance_deduct_id,</if>
+            <if test="balanceRefundId != null">balance_refund_id,</if>
+            <if test="manualOperator != null">manual_operator,</if>
+            <if test="manualVerifier != null">manual_verifier,</if>
+            <if test="manualNote != null">manual_note,</if>
+            <if test="traceId != null">trace_id,</if>
+            <if test="auditBy != null">audit_by,</if>
+            <if test="auditTime != null">audit_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="openid != null">#{openid},</if>
+            <if test="amount != null">#{amount},</if>
+            <if test="outBatchNo != null">#{outBatchNo},</if>
+            <if test="outDetailNo != null">#{outDetailNo},</if>
+            <if test="transferBatchId != null">#{transferBatchId},</if>
+            <if test="wechatDetailId != null">#{wechatDetailId},</if>
+            <if test="status != null">#{status},</if>
+            <if test="failReason != null">#{failReason},</if>
+            <if test="channelErrorCode != null">#{channelErrorCode},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="finishTime != null">#{finishTime},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="wechatBatchStatus != null">#{wechatBatchStatus},</if>
+            <if test="submitTime != null">#{submitTime},</if>
+            <if test="lastQueryTime != null">#{lastQueryTime},</if>
+            <if test="balanceDeductId != null">#{balanceDeductId},</if>
+            <if test="balanceRefundId != null">#{balanceRefundId},</if>
+            <if test="manualOperator != null">#{manualOperator},</if>
+            <if test="manualVerifier != null">#{manualVerifier},</if>
+            <if test="manualNote != null">#{manualNote},</if>
+            <if test="traceId != null">#{traceId},</if>
+            <if test="auditBy != null">#{auditBy},</if>
+            <if test="auditTime != null">#{auditTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateMemberCashWithdraw" parameterType="MemberCashWithdraw">
+        update member_cash_withdraw
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="outBatchNo != null">out_batch_no = #{outBatchNo},</if>
+            <if test="outDetailNo != null">out_detail_no = #{outDetailNo},</if>
+            <if test="transferBatchId != null">transfer_batch_id = #{transferBatchId},</if>
+            <if test="wechatDetailId != null">wechat_detail_id = #{wechatDetailId},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="failReason != null">fail_reason = #{failReason},</if>
+            <if test="channelErrorCode != null">channel_error_code = #{channelErrorCode},</if>
+            <if test="finishTime != null">finish_time = #{finishTime},</if>
+            <if test="wechatBatchStatus != null">wechat_batch_status = #{wechatBatchStatus},</if>
+            <if test="submitTime != null">submit_time = #{submitTime},</if>
+            <if test="lastQueryTime != null">last_query_time = #{lastQueryTime},</if>
+            <if test="balanceDeductId != null">balance_deduct_id = #{balanceDeductId},</if>
+            <if test="balanceRefundId != null">balance_refund_id = #{balanceRefundId},</if>
+            <if test="manualOperator != null">manual_operator = #{manualOperator},</if>
+            <if test="manualVerifier != null">manual_verifier = #{manualVerifier},</if>
+            <if test="manualNote != null">manual_note = #{manualNote},</if>
+            <if test="traceId != null">trace_id = #{traceId},</if>
+            <if test="auditBy != null">audit_by = #{auditBy},</if>
+            <if test="auditTime != null">audit_time = #{auditTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <select id="selectById" resultMap="MemberCashWithdrawResult">
+        select <include refid="cols"/> from member_cash_withdraw where id = #{id}
+    </select>
+
+    <select id="selectByMember" resultMap="MemberCashWithdrawResult">
+        select <include refid="cols"/> from member_cash_withdraw
+        where del_flag = 0 and member_id = #{memberId}
+        order by create_time desc
+    </select>
+
+    <!-- D-02 在途提现计数:0处理中/3待人工/4待复核 均算在途。 -->
+    <select id="countPendingByMember" resultType="int">
+        select count(*) from member_cash_withdraw
+        where del_flag = 0 and member_id = #{memberId} and status in (0, 3, 4)
+    </select>
+
+    <!-- D-02 定时查询:扫处理中的单(status=0),最久未查优先(NULL 先)。
+         P块冻结:冻结中的单跳过,暂停自动化处理,等运营解冻或人工处置。 -->
+    <select id="selectPendingForQuery" resultMap="MemberCashWithdrawResult">
+        select <include refid="cols"/> from member_cash_withdraw
+        where del_flag = 0 and status = 0 and (frozen is null or frozen = 0)
+        order by last_query_time asc, create_time asc
+        limit #{limit}
+    </select>
+
+    <select id="selectByOutBatchNo" resultMap="MemberCashWithdrawResult">
+        select <include refid="cols"/> from member_cash_withdraw where out_batch_no = #{outBatchNo}
+    </select>
+
+    <!-- 对账:处理中积压(超时未终结,巡检可能异常) -->
+    <select id="countStuckProcessing" resultType="int">
+        select count(*) from member_cash_withdraw
+        where del_flag = 0 and status = 0 and coalesce(submit_time, create_time) &lt; #{before}
+    </select>
+
+    <!-- 对账:失败待人工/待复核积压 -->
+    <select id="countManualPending" resultType="int">
+        select count(*) from member_cash_withdraw where del_flag = 0 and status in (3, 4)
+    </select>
+
+    <!-- 对账:成功却无微信批次号(数据异常) -->
+    <select id="countSuccessWithoutBatch" resultType="int">
+        select count(*) from member_cash_withdraw
+        where del_flag = 0 and status = 1 and (transfer_batch_id is null or transfer_batch_id = '')
+    </select>
+
+    <!-- D-02 终态守卫:仅当仍处理中(status=0)才转终态,保证 SUCCESS/退款单次性
+         P块冻结:冻结中的单一律拦下。定时任务侧 selectPendingForQuery 本就滤掉冻结单,
+         但人工 requery 是 selectById→syncOne,不经那道过滤;没有本守卫时冻结单点「重查」
+         仍会 CAS 0→3 成功并触发 addBalance 回补,绕过冻结语义。 -->
+    <update id="updateStatusIfProcessing" parameterType="MemberCashWithdraw">
+        update member_cash_withdraw
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="status != null">status = #{status},</if>
+            <if test="failReason != null">fail_reason = #{failReason},</if>
+            <if test="channelErrorCode != null">channel_error_code = #{channelErrorCode},</if>
+            <if test="wechatDetailId != null">wechat_detail_id = #{wechatDetailId},</if>
+            <if test="finishTime != null">finish_time = #{finishTime},</if>
+            <if test="wechatBatchStatus != null">wechat_batch_status = #{wechatBatchStatus},</if>
+            <if test="lastQueryTime != null">last_query_time = #{lastQueryTime},</if>
+            <if test="balanceRefundId != null">balance_refund_id = #{balanceRefundId},</if>
+            <if test="manualNote != null">manual_note = #{manualNote},</if>
+        </trim>
+        where id = #{id} and status = 0 and (frozen is null or frozen = 0)
+    </update>
+
+    <!-- 后台列表:按状态/会员过滤 -->
+    <select id="selectForAdmin" resultMap="MemberCashWithdrawResult">
+        select <include refid="cols"/> from member_cash_withdraw
+        where del_flag = 0
+        <if test="status != null"> and status = #{status}</if>
+        <if test="memberId != null"> and member_id = #{memberId}</if>
+        order by create_time desc
+    </select>
+
+    <!-- 人工补单守卫:仅当失败待人工(status=3)才转,保证单次。
+         P块冻结:冻结中的单跳过人工补单第一步,与迁移文件注释的承诺对齐(此前代码未真正实现,S块对抗验证发现)。 -->
+    <update id="updateStatusIfManual" parameterType="MemberCashWithdraw">
+        update member_cash_withdraw
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="status != null">status = #{status},</if>
+            <if test="balanceRefundId != null">balance_refund_id = #{balanceRefundId},</if>
+            <if test="manualOperator != null">manual_operator = #{manualOperator},</if>
+            <if test="manualNote != null">manual_note = #{manualNote},</if>
+            <if test="finishTime != null">finish_time = #{finishTime},</if>
+        </trim>
+        where id = #{id} and status = 3 and (frozen is null or frozen = 0)
+    </update>
+
+    <!-- 第二人复核:待复核(4) -> 已退款(2);SQL 再兜一层同人绕过。
+         P块冻结:同上,冻结中的单第二步复核也拦下,避免第一步冻结前已登记、第二步在冻结期间被推进放款。 -->
+    <update id="updateStatusIfRefundReview" parameterType="MemberCashWithdraw">
+        update member_cash_withdraw
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="status != null">status = #{status},</if>
+            <if test="manualVerifier != null">manual_verifier = #{manualVerifier},</if>
+            <if test="manualNote != null">manual_note = #{manualNote},</if>
+            <if test="finishTime != null">finish_time = #{finishTime},</if>
+            <if test="auditBy != null">audit_by = #{auditBy},</if>
+            <if test="auditTime != null">audit_time = #{auditTime},</if>
+        </trim>
+        where id = #{id}
+          and status = 4
+          and (frozen is null or frozen = 0)
+          and manual_operator is not null
+          and manual_operator != #{manualVerifier}
+    </update>
+
+    <!-- P块冻结:仅未冻结的单可冻结(CAS,防重复操作把 frozen_by/frozen_at 覆盖成最后一次点击的人)。
+         不限定 status —— 运营发起冻结时该单可能正处理中也可能刚失败待人工,冻结只是暂停后续自动/风险处置。 -->
+    <update id="freezeWithdraw">
+        update member_cash_withdraw
+           set frozen = 1, frozen_reason = #{frozenReason}, frozen_by = #{frozenBy}, frozen_at = now()
+         where id = #{id} and del_flag = 0 and (frozen is null or frozen = 0)
+    </update>
+
+    <!-- P块解冻:仅冻结中的单可解冻(CAS)。解冻不清空 frozen_reason/frozen_by/frozen_at,留痕供事后追溯。 -->
+    <update id="unfreezeWithdraw">
+        update member_cash_withdraw
+           set frozen = 0
+         where id = #{id} and del_flag = 0 and frozen = 1
+    </update>
+
+</mapper>

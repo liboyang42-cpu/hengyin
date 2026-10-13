@@ -1,0 +1,30 @@
+{
+  "product_commit": "93d2cd05633e5b7710ce12cfd2bb1adb34a87436",
+  "base_commit": "cdcf9aff14c9c737b02225f09d89bb315f593819",
+  "unit_tests": {
+    "pass": 80,
+    "fail": 0,
+    "skip": 0
+  },
+  "native_template_compile": {
+    "files": [
+      "pages/publish/fabu/index.wxml",
+      "pages/publish/fabu/topic-detail-sheet.wxml"
+    ],
+    "passed_before_refresh": true
+  },
+  "ui_gate": {
+    "pass": false,
+    "base_defects": 38,
+    "current_defects": 38,
+    "new_defects_after_accounting_for_one_added_source_line": []
+  },
+  "backend_and_gameplay_changed": false,
+  "wechat_uploaded": false,
+  "native_footer_click_verified": true,
+  "native_entry_and_return_verified": true,
+  "native_driver_limits": [
+    "CLI selector cannot reach the nested footer button; verified it through native accessibility instead",
+    "Public automator launch timed out; no pass claimed for that driver"
+  ]
+}

@@ -1,0 +1,51 @@
+<!-- 限时打字。目标文本是明牌 —— 这玩法考的是手速不是猜谜。
+     限时条与超时判负由 cy-play-stage 出(它的截止时刻是钉死的,切后台也会到点)。 -->
+<cy-play-stage id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出"
+               limit-seconds="{{seconds}}" count-in
+               bind:back="onClose" bind:run="onRun" bind:verdict="onVerdict">
+  <view wx:if="{{terminalSkin}}" class="terminal {{off ? 'ti--' + off : ''}} {{reducedMotion ? 'pk--reduced' : ''}}">
+    <view class="terminal__screen">
+      <text class="terminal__log">{{title || 'SYSTEM BIOS v1.0'}}
+内存检测 ............ ok
+感官接口 ............ ok
+语言模块 ............ {{passed ? 'ok' : '等待输入'}}</text>
+      <view class="terminal__prompt">> 请输入：{{target}}</view>
+      <view class="terminal__input" aria-live="polite"><text class="{{mistyped ? 'terminal__bad' : ''}}" space="nbsp">{{typed}}</text><text class="terminal__cursor"></text><text class="terminal__ghost" space="nbsp">{{ghost}}</text></view>
+      <view class="terminal__message">{{passed ? '输入完成 · 正在启动' : phase === 'arming' ? '正在连接…' : submitting ? '正在确认…' : mistyped ? '输入有误，可退格修改' : attempts > 0 ? '重新输入' : '按下第一个字母开始计时'}}</view>
+    </view>
+    <view class="terminal__keyboard" aria-label="键盘">
+      <view class="terminal__row" wx:for="{{keyRows}}" wx:for-item="row" wx:for-index="rowIndex" wx:key="index">
+        <view wx:if="{{rowIndex === 2}}" class="terminal__key terminal__fn" aria-hidden="true">⇧</view>
+        <view class="terminal__key {{nextKey === key ? 'terminal__key--next' : ''}}" wx:for="{{row}}" wx:for-item="key" wx:key="*this" data-key="{{key}}" bindtap="onKey" hover-class="terminal__key--hit" aria-role="button" aria-label="{{key}}">{{key}}</view>
+        <view wx:if="{{rowIndex === 2}}" class="terminal__key terminal__fn" data-key="back" bindtap="onKey" hover-class="terminal__key--hit" aria-role="button" aria-label="退格">⌫</view>
+      </view>
+      <view class="terminal__row"><view class="terminal__key terminal__space {{nextKey === ' ' ? 'terminal__key--next' : ''}}" data-key=" " bindtap="onKey" hover-class="terminal__key--hit" aria-role="button" aria-label="空格">space</view></view>
+    </view>
+  </view>
+  <block wx:else>
+  <view class="ti g-col {{terminalSkin ? 'ti--terminal' : ''}} {{off ? 'ti--' + off : ''}} {{reducedMotion ? 'pk--reduced' : ''}} {{_motionReset ? 'pk--reset' : ''}}">
+    <view class="g-kicker">{{title || '打出这行字'}}</view>
+    <view class="ti__attempt" wx:if="{{attemptLabel}}">{{attemptLabel}}</view>
+
+    <view class="ti__target pk-in">{{target}}</view>
+
+    <block wx:if="{{phase === 'intro'}}">
+      <view class="ti__hint">{{seconds}} 秒内一字不差地打完它</view>
+    </block>
+    <block wx:else>
+      <input class="ti__input" value="{{typed}}" disabled="{{locked || phase !== 'run'}}"
+             placeholder="在这里打" placeholder-class="ti__input-ph"
+             confirm-type="done" bindinput="onInput" bindconfirm="onSubmit"
+             aria-label="照着上面那行打一遍" />
+    </block>
+
+    <view class="ti__done pk-in" wx:if="{{passed}}">一字不差</view>
+  </view>
+
+  <view class="g-btn" wx:if="{{phase === 'intro' && !locked}}" bindtap="onStart"
+        aria-role="button" aria-label="开始" hover-class="g-btn--press" hover-stay-time="80">开始</view>
+  <view class="g-btn {{canSubmit && !submitting ? '' : 'g-btn--disabled'}}" wx:else bindtap="onSubmit"
+        aria-role="button" aria-label="{{passed ? '已完成' : '打完提交'}}"
+        hover-class="g-btn--press" hover-stay-time="80">{{passed ? '已完成' : (phase === 'arming' ? '正在连接…' : submitting ? '提交中…' : '打完提交')}}</view>
+  </block>
+</cy-play-stage>

@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.RedemptionMapper">
+
+    <!-- ⚠️ 本表只有 create_time,没有 update_time / create_by / update_by(见迁移 DDL):
+         核销是不可变事件,「改」由另插一条撤销状态表达,故没有更新者这一维。
+         active_key 是生成列,只读映射 —— 可查不可写。 -->
+    <resultMap type="Redemption" id="RedemptionResult">
+        <result property="id"    column="id"    />
+        <result property="registrationId"    column="registration_id"    />
+        <result property="chapterId"    column="chapter_id"    />
+        <result property="topicId"    column="topic_id"    />
+        <result property="merchantId"    column="merchant_id"    />
+        <result property="offerId"    column="offer_id"    />
+        <result property="operatorId"    column="operator_id"    />
+        <result property="status"    column="status"    />
+        <result property="idempotencyKey"    column="idempotency_key"    />
+        <result property="reversedAt"    column="reversed_at"    />
+        <result property="reverseReason"    column="reverse_reason"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="activeKey"    column="active_key"    />
+    </resultMap>
+
+    <sql id="selectRedemptionVo">
+        select id, registration_id, chapter_id, topic_id, merchant_id, offer_id, operator_id, status, idempotency_key,
+               reversed_at, reverse_reason, create_time, active_key
+        from redemption
+    </sql>
+
+    <!-- ⚠️ 列清单里**没有 active_key**,且永远不能加:它是 GENERATED ALWAYS AS ... VIRTUAL 生成列,
+         赋值即 3105。MySQL 会自己从 status/registration_id/chapter_id 算出来。
+         撞 uk_redemption_active 报 1062 = 这票这章已有生效核销 —— 跨商家重复核销在库层被拦下。 -->
+    <insert id="insertRedemption" parameterType="Redemption" useGeneratedKeys="true" keyProperty="id">
+        insert into redemption
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="registrationId != null">registration_id,</if>
+            <if test="chapterId != null">chapter_id,</if>
+            <if test="topicId != null">topic_id,</if>
+            <if test="merchantId != null">merchant_id,</if>
+            <if test="offerId != null">offer_id,</if>
+            <if test="operatorId != null">operator_id,</if>
+            <if test="status != null">status,</if>
+            <if test="idempotencyKey != null">idempotency_key,</if>
+            <if test="reversedAt != null">reversed_at,</if>
+            <if test="reverseReason != null">reverse_reason,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="registrationId != null">#{registrationId},</if>
+            <if test="chapterId != null">#{chapterId},</if>
+            <if test="topicId != null">#{topicId},</if>
+            <if test="merchantId != null">#{merchantId},</if>
+            <if test="offerId != null">#{offerId},</if>
+            <if test="operatorId != null">#{operatorId},</if>
+            <if test="status != null">#{status},</if>
+            <if test="idempotencyKey != null">#{idempotencyKey},</if>
+            <if test="reversedAt != null">#{reversedAt},</if>
+            <if test="reverseReason != null">#{reverseReason},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <select id="selectById" parameterType="Long" resultMap="RedemptionResult">
+        <include refid="selectRedemptionVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectByMerchant" resultMap="RedemptionResult">
+        <include refid="selectRedemptionVo"/>
+        where merchant_id = #{merchantId}
+        order by create_time desc, id desc
+    </select>
+
+    <select id="selectByMerchantAndId" resultMap="RedemptionResult">
+        <include refid="selectRedemptionVo"/>
+        where merchant_id = #{merchantId}
+          and id = #{id}
+    </select>
+
+    <!-- 请求级幂等查。
+         为什么查生成列 active_idem_key 而不是 `idempotency_key = #{key} and status = 'ACTIVE'`:
+         前者直接命中唯一索引 uk_redemption_idem_active(等值查,至多 1 行);
+         后者要么走 idempotency_key 上并不存在的索引 → 全表扫,要么回表再过滤 status。
+         语义上两者等价(active_idem_key 的 CASE 就是那个 and),但只有前者有索引兜着。 -->
+    <select id="selectActiveByIdempotencyKey" resultMap="RedemptionResult">
+        <include refid="selectRedemptionVo"/>
+        where active_idem_key = #{key}
+    </select>
+
+    <!-- 已撤销的核销不算数,不返 -->
+    <select id="selectActiveByRegistration" parameterType="Long" resultMap="RedemptionResult">
+        <include refid="selectRedemptionVo"/>
+        where registration_id = #{registrationId} and status = 'ACTIVE'
+        order by create_time asc
+    </select>
+
+    <!-- 含已撤销(后台撤销入口读回用):按流水倒序,最近的事件在最上面 -->
+    <select id="selectByRegistration" parameterType="Long" resultMap="RedemptionResult">
+        <include refid="selectRedemptionVo"/>
+        where registration_id = #{registrationId}
+        order by create_time desc, id desc
+    </select>
+
+    <!-- 仅供展示/预判;防重复的真防线是 uk_redemption_active,不是这个 count -->
+    <select id="countActiveByRegistrationAndChapter" resultType="java.lang.Integer">
+        select count(*)
+        from redemption
+        where registration_id = #{registrationId}
+          and chapter_id = #{chapterId}
+          and status = 'ACTIVE'
+    </select>
+
+    <!-- 条件置位:带 status = 'ACTIVE' 保证重复撤销拿 0,
+         否则调用方会跟着重复调 releaseQuota 把配额回补出来 -->
+    <update id="reverse">
+        update redemption
+        set status = 'REVERSED', reversed_at = now(), reverse_reason = #{reason}
+        where id = #{id}
+          and status = 'ACTIVE'
+    </update>
+
+    <!-- ③ 通关判定:该票在必选章(c.required = 1)上有几个生效核销;可选章不计入。
+         distinct 是第二道保险 —— 唯一键理应保证每章至多一条 ACTIVE,
+         万一哪天被绕过,也不会把通关数算多提前放行。 -->
+    <select id="countActiveRequiredChaptersRedeemed" resultType="java.lang.Integer">
+        select count(distinct r.chapter_id)
+        from redemption r
+        join cms_topic_chapter c on c.id = r.chapter_id and c.required = 1
+        where r.registration_id = #{registrationId}
+          and r.topic_id = #{topicId}
+          and r.status = 'ACTIVE'
+    </select>
+
+    <select id="selectActiveCompletionCounts" resultType="java.util.Map">
+        select count(distinct r.chapter_id) as merchantRoles,
+               count(distinct c.need_group) as needGroups
+        from redemption r
+        join cms_topic_chapter c on c.id = r.chapter_id and c.topic_id = #{topicId}
+        where r.registration_id = #{registrationId}
+          and r.topic_id = #{topicId}
+          and r.status = 'ACTIVE'
+    </select>
+
+    <select id="selectCompletionCountsByTopic" resultType="java.util.Map">
+        select reg.member_id as memberId,
+               r.registration_id as registrationId,
+               count(distinct r.chapter_id) as merchantRoles,
+               count(distinct c.need_group) as needGroups
+        from cms_topic_chapter c
+        join redemption r force index (idx_redemption_chapter)
+          on r.chapter_id = c.id and r.status = 'ACTIVE'
+        join cms_registration reg on reg.id = r.registration_id
+        where c.topic_id = #{topicId}
+        group by reg.member_id, r.registration_id
+    </select>
+
+    <!-- P0-17 批量通关口径(俱乐部看板)。
+         ★ 从 chapter 侧驱动,不是 where topic_id = ? —— redemption **没有 topic_id 索引**
+         (只有 idx_redemption_reg / idx_redemption_merchant / idx_redemption_chapter),
+         按 topic_id 查会全表扫;chapter_id IN (...) 恰好命中 idx_redemption_chapter(chapter_id, status),
+         不需要新索引、不需要迁移。
+         ⚠️ chapterIds 空时会生成 `in ()` 语法错 ⇒ 调用方必须提前 return,别让空 list 进 foreach。
+         顺带返回 member_id:看板的 participants 要与 completed 取同一口径(核销侧),
+         否则 rate 会算出 >100% 或「通关N人/完成率0%」。 -->
+    <select id="selectRedeemedCountsByChapters" resultType="java.util.Map">
+        select reg.member_id as memberId,
+               r.registration_id as registrationId,
+               count(distinct r.chapter_id) as cnt
+        from redemption r
+        join cms_registration reg on reg.id = r.registration_id
+        where r.status = 'ACTIVE'
+          and r.chapter_id in
+        <foreach collection="chapterIds" item="c" open="(" separator="," close=")">#{c}</foreach>
+        group by reg.member_id, r.registration_id
+    </select>
+
+</mapper>

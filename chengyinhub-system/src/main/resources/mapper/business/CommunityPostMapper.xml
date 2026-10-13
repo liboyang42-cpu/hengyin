@@ -1,0 +1,1053 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CommunityPostMapper">
+    <select id="selectMemberWxOpenId" resultType="string">
+      SELECT wx_open_id FROM ums_member WHERE id=#{memberId}
+    </select>
+    <select id="selectMediaByOwnerRequest" resultType="map">
+      SELECT id,owner_member_id,upload_request_id,upload_receipt_hash,media_type,object_key,derived_object_key,mime_type,byte_size,
+             width,height,duration_ms,alt_text,upload_state,review_state
+      FROM community_post_media WHERE owner_member_id=#{ownerMemberId} AND upload_request_id=#{uploadRequestId}
+    </select>
+    <select id="selectMediaByReceiptHash" resultType="map">
+      SELECT id,owner_member_id,upload_request_id,upload_receipt_hash,media_type,object_key,derived_object_key,
+             mime_type,byte_size,width,height,duration_ms,alt_text,upload_state,review_state
+      FROM community_post_media WHERE upload_receipt_hash=#{uploadReceiptHash}
+    </select>
+    <insert id="insertMedia">
+      INSERT INTO community_post_media(owner_member_id,upload_request_id,upload_receipt_hash,post_id,media_type,object_key,
+        derived_object_key,mime_type,byte_size,width,height,duration_ms,sort_order,alt_text,content_hash,
+        upload_state,review_state,retention_state,committed_at,create_time,update_time)
+      VALUES(#{ownerMemberId},#{uploadRequestId},#{uploadReceiptHash},NULL,#{mediaType},#{objectKey},#{objectKey},#{mimeType},#{byteSize},
+        #{width},#{height},#{durationMs},0,#{altText},#{contentHash},'COMMITTED','PENDING','ACTIVE',#{now},#{now},#{now})
+    </insert>
+    <resultMap id="CommunityPostResult" type="CommunityPost">
+        <id property="id" column="id"/>
+        <result property="authorId" column="author_id"/>
+        <result property="communityId" column="community_id"/>
+        <result property="clientRequestId" column="client_request_id"/>
+        <result property="postType" column="post_type"/>
+        <result property="title" column="title"/>
+        <result property="body" column="body"/>
+        <result property="audience" column="audience"/>
+        <result property="commentPolicy" column="comment_policy"/>
+        <result property="replyApprovalEnabled" column="reply_approval_enabled"/>
+        <result property="slowModeSeconds" column="slow_mode_seconds"/>
+        <result property="lifecycle" column="lifecycle"/>
+        <result property="locationPrecision" column="location_precision"/>
+        <result property="cityCode" column="city_code"/>
+        <result property="poiName" column="poi_name"/>
+        <result property="recommendationEligible" column="recommendation_eligible"/>
+        <result property="searchEligible" column="search_eligible"/>
+        <result property="interactionEnabled" column="interaction_enabled"/>
+        <result property="disclosureType" column="disclosure_type"/>
+        <result property="safetyLabelsJson" column="safety_labels_json"/>
+        <result property="guidelineVersionId" column="guideline_version_id"/>
+        <result property="likeCount" column="like_count"/>
+        <result property="commentCount" column="comment_count"/>
+        <result property="bookmarkCount" column="bookmark_count"/>
+        <result property="shareCount" column="share_count"/>
+        <result property="publishedAt" column="published_at"/>
+        <result property="editedAt" column="edited_at"/>
+        <result property="deletedAt" column="deleted_at"/>
+        <result property="version" column="version"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="authorNickname" column="author_nickname"/>
+        <result property="authorAvatar" column="author_avatar"/>
+        <result property="viewerLiked" column="viewer_liked"/>
+        <result property="viewerBookmarked" column="viewer_bookmarked"/>
+        <result property="feedSource" column="feed_source"/>
+        <result property="reasonCode" column="reason_code"/>
+        <result property="trendingScore" column="trending_score"/>
+    </resultMap>
+
+    <sql id="publicColumns">
+        p.id,p.author_id,p.community_id,p.post_type,p.title,p.body,p.audience,p.comment_policy,
+        p.reply_approval_enabled,p.slow_mode_seconds,p.lifecycle,p.location_precision,p.city_code,
+        CASE WHEN p.author_id=#{viewerId} THEN p.poi_name ELSE NULL END poi_name,
+        p.recommendation_eligible,p.search_eligible,p.interaction_enabled,p.disclosure_type,p.safety_labels_json,
+        p.guideline_version_id,p.like_count,p.comment_count,p.bookmark_count,p.share_count,p.published_at,
+        p.edited_at,p.deleted_at,p.version,p.create_time,p.update_time,
+        m.nickname author_nickname,m.avatar author_avatar
+    </sql>
+    <sql id="ownerColumns">p.client_request_id,p.approximate_geohash</sql>
+    <sql id="personalColumns">
+        CASE WHEN EXISTS(SELECT 1 FROM community_post_member_action pa
+                         WHERE pa.post_id=p.id AND pa.member_id=#{viewerId} AND pa.action_type='LIKE') THEN 1 ELSE 0 END viewer_liked,
+        CASE WHEN EXISTS(SELECT 1 FROM community_post_member_action pa
+                         WHERE pa.post_id=p.id AND pa.member_id=#{viewerId} AND pa.action_type='BOOKMARK') THEN 1 ELSE 0 END viewer_bookmarked
+    </sql>
+    <sql id="visibilityPolicy">
+        AND (
+          p.author_id = #{viewerId}
+          OR (p.lifecycle='PUBLISHED' AND (
+            p.audience='PUBLIC'
+            OR (p.audience='FOLLOWERS' AND EXISTS(
+              SELECT 1 FROM ums_member_follow f WHERE f.member_id=#{viewerId} AND f.follow_member_id=p.author_id))
+            OR (p.audience='COMMUNITY' AND EXISTS(
+              SELECT 1 FROM club_member cm WHERE cm.member_id=#{viewerId} AND cm.club_id=p.community_id
+                AND cm.status=1 AND cm.del_flag=0))
+          ))
+        )
+        AND NOT EXISTS(SELECT 1 FROM im_block b
+                       WHERE (b.member_id=#{viewerId} AND b.blocked_member_id=p.author_id)
+                          OR (b.member_id=p.author_id AND b.blocked_member_id=#{viewerId}))
+        AND NOT EXISTS(SELECT 1 FROM community_member_mute mu
+                       WHERE mu.member_id=#{viewerId} AND mu.muted_member_id=p.author_id)
+        AND NOT EXISTS(SELECT 1 FROM community_post_member_action na
+                       WHERE na.post_id=p.id AND na.member_id=#{viewerId} AND na.action_type='NOT_INTERESTED')
+        AND NOT EXISTS(SELECT 1 FROM community_post_member_action sla
+                       JOIN community_post hidden_author_post ON hidden_author_post.id=sla.post_id
+                       WHERE sla.member_id=#{viewerId} AND sla.action_type='SEE_LESS_AUTHOR'
+                         AND hidden_author_post.author_id=p.author_id)
+        AND NOT EXISTS(SELECT 1 FROM community_post_member_action slt
+                       JOIN community_post_topic selected_topic ON selected_topic.post_id=slt.post_id
+                       JOIN community_post_topic candidate_topic ON candidate_topic.post_id=p.id
+                            AND candidate_topic.topic_code=selected_topic.topic_code
+                       WHERE slt.member_id=#{viewerId} AND slt.action_type='SEE_LESS_TOPIC')
+    </sql>
+
+    <select id="selectFeed" parameterType="com.chengyinhub.business.domain.community.CommunityPostFeedQuery" resultMap="CommunityPostResult">
+        SELECT <include refid="publicColumns"/>, <include refid="personalColumns"/>,
+        #{mode} feed_source,
+        CASE
+          WHEN #{mode}='FOLLOWING' THEN 'FOLLOWED_AUTHOR'
+          WHEN #{mode}='NEARBY' THEN 'SAME_CITY'
+          WHEN #{mode}='TOPIC' THEN 'FOLLOWED_TOPIC'
+          WHEN #{mode}='COMMUNITY' THEN 'JOINED_COMMUNITY'
+          WHEN #{mode}='FEATURED' THEN 'EDITOR_PICK'
+          WHEN #{mode}='TRENDING' THEN 'HEALTHY_TREND'
+          WHEN #{mode}='FOR_YOU' THEN 'RELEVANT_EXPLORATION'
+          ELSE 'CHRONOLOGICAL'
+        END reason_code,
+        (p.like_count + p.bookmark_count*2 + p.comment_count*2) trending_score
+        FROM community_post p
+        LEFT JOIN ums_member m ON m.id=p.author_id
+        WHERE p.lifecycle='PUBLISHED'
+        <include refid="visibilityPolicy"/>
+        <choose>
+          <when test="mode == 'TRENDING' and cursor != null and cursor &gt; 0 and cursorScore != null">
+            AND ((p.like_count + p.bookmark_count*2 + p.comment_count*2) &lt; #{cursorScore}
+              OR ((p.like_count + p.bookmark_count*2 + p.comment_count*2) = #{cursorScore} AND p.id &lt; #{cursor}))
+          </when>
+          <otherwise><if test="cursor != null and cursor &gt; 0">AND p.id &lt; #{cursor}</if></otherwise>
+        </choose>
+        <if test="authorId != null and authorId &gt; 0">AND p.author_id=#{authorId}</if>
+        <if test="keyword != null and keyword != ''">
+          AND p.search_eligible=1 AND EXISTS(
+            SELECT 1 FROM community_search_document sd
+            WHERE sd.document_type='POST' AND sd.document_id=p.id AND sd.visibility_state='VISIBLE'
+              AND sd.search_text LIKE CONCAT('%',#{keyword},'%'))
+        </if>
+        <choose>
+          <when test="mode == 'FOLLOWING'">
+            AND EXISTS(SELECT 1 FROM ums_member_follow f WHERE f.member_id=#{viewerId} AND f.follow_member_id=p.author_id)
+          </when>
+          <when test="mode == 'NEARBY'">AND p.city_code=#{cityCode}</when>
+          <when test="mode == 'TOPIC'">
+            AND EXISTS(SELECT 1 FROM community_post_topic pt WHERE pt.post_id=p.id AND pt.topic_code=#{topicCode})
+          </when>
+          <when test="mode == 'COMMUNITY'">AND p.community_id=#{communityId}</when>
+          <when test="mode == 'FEATURED'">
+            AND EXISTS(SELECT 1 FROM community_featured_entry fe WHERE fe.post_id=p.id
+              AND fe.collection_code=#{collectionCode} AND fe.starts_at&lt;=NOW()
+              AND (fe.ends_at IS NULL OR fe.ends_at&gt;NOW()))
+          </when>
+          <when test="mode == 'FOR_YOU' or mode == 'TRENDING'">AND p.recommendation_eligible=1</when>
+        </choose>
+        <choose>
+          <when test="mode == 'TRENDING'">
+            ORDER BY (p.like_count + p.bookmark_count*2 + p.comment_count*2) DESC,p.id DESC
+          </when>
+          <otherwise>ORDER BY p.id DESC</otherwise>
+        </choose>
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectAuthorDrafts" resultMap="CommunityPostResult">
+      <bind name="viewerId" value="authorId"/>
+      SELECT <include refid="publicColumns"/>,<include refid="ownerColumns"/>,
+             CASE WHEN EXISTS(SELECT 1 FROM community_post_member_action pa
+               WHERE pa.post_id=p.id AND pa.member_id=#{authorId} AND pa.action_type='LIKE') THEN 1 ELSE 0 END viewer_liked,
+             CASE WHEN EXISTS(SELECT 1 FROM community_post_member_action pa
+               WHERE pa.post_id=p.id AND pa.member_id=#{authorId} AND pa.action_type='BOOKMARK') THEN 1 ELSE 0 END viewer_bookmarked,
+             'DRAFTS' feed_source,'AUTHOR_WORKSPACE' reason_code
+      FROM community_post p LEFT JOIN ums_member m ON m.id=p.author_id
+      WHERE p.author_id=#{authorId} AND p.lifecycle IN ('DRAFT','CHECKING','LIMITED','HIDDEN','REMOVED')
+        AND (#{cursor} IS NULL OR p.id&lt;#{cursor}) ORDER BY p.id DESC LIMIT #{limit}
+    </select>
+
+    <select id="selectById" resultMap="CommunityPostResult">
+        SELECT <include refid="publicColumns"/>,
+        CASE WHEN p.author_id=#{viewerId} THEN p.client_request_id ELSE NULL END client_request_id,
+        CASE WHEN p.author_id=#{viewerId} THEN p.approximate_geohash ELSE NULL END approximate_geohash,
+        <include refid="personalColumns"/>, 'DETAIL' feed_source, 'DIRECT' reason_code
+        FROM community_post p LEFT JOIN ums_member m ON m.id=p.author_id
+        WHERE p.id=#{id}<include refid="visibilityPolicy"/>
+    </select>
+
+    <select id="selectByIdForUpdate" parameterType="long" resultMap="CommunityPostResult">
+        SELECT p.* FROM community_post p WHERE p.id=#{id} FOR UPDATE
+    </select>
+    <select id="selectByAuthorRequest" resultMap="CommunityPostResult">
+        SELECT p.* FROM community_post p WHERE p.author_id=#{authorId} AND p.client_request_id=#{clientRequestId}
+    </select>
+    <select id="countRecentPosts" resultType="int">
+      SELECT COUNT(*) FROM community_post WHERE author_id=#{authorId} AND create_time&gt;=#{since}
+    </select>
+    <select id="countActiveMemberEnforcement" resultType="int">
+      SELECT COUNT(*) FROM community_post_enforcement
+      WHERE target_member_id=#{memberId} AND status='ACTIVE' AND starts_at&lt;=#{now}
+        AND (ends_at IS NULL OR ends_at&gt;#{now})
+        AND enforcement_type IN
+        <foreach collection="types" item="type" open="(" separator="," close=")">#{type}</foreach>
+    </select>
+
+    <insert id="insertPost" parameterType="CommunityPost" useGeneratedKeys="true" keyProperty="id">
+      INSERT INTO community_post(author_id,community_id,client_request_id,post_type,title,body,audience,
+        comment_policy,reply_approval_enabled,slow_mode_seconds,lifecycle,location_precision,city_code,poi_name,
+        approximate_geohash,recommendation_eligible,search_eligible,interaction_enabled,disclosure_type,
+        safety_labels_json,guideline_version_id,like_count,comment_count,bookmark_count,share_count,version,
+        create_time,update_time)
+      VALUES(#{authorId},#{communityId},#{clientRequestId},#{postType},#{title},#{body},#{audience},
+        #{commentPolicy},#{replyApprovalEnabled},#{slowModeSeconds},#{lifecycle},#{locationPrecision},#{cityCode},
+        #{poiName},#{approximateGeohash},#{recommendationEligible},#{searchEligible},#{interactionEnabled},
+        #{disclosureType},#{safetyLabelsJson},#{guidelineVersionId},0,0,0,0,0,#{createTime},#{updateTime})
+    </insert>
+    <update id="updateContentCas">
+      UPDATE community_post SET community_id=#{post.communityId},post_type=#{post.postType},title=#{post.title},body=#{post.body},audience=#{post.audience},
+        comment_policy=#{post.commentPolicy},reply_approval_enabled=#{post.replyApprovalEnabled},
+        slow_mode_seconds=#{post.slowModeSeconds},location_precision=#{post.locationPrecision},city_code=#{post.cityCode},
+        poi_name=#{post.poiName},approximate_geohash=#{post.approximateGeohash},disclosure_type=#{post.disclosureType},
+        safety_labels_json=#{post.safetyLabelsJson},guideline_version_id=#{post.guidelineVersionId},
+        lifecycle=#{targetLifecycle},edited_at=#{now},update_time=#{now},version=version+1
+      WHERE id=#{post.id} AND author_id=#{post.authorId} AND version=#{expectedVersion}
+        AND lifecycle IN ('DRAFT','PUBLISHED','LIMITED','HIDDEN')
+    </update>
+    <update id="transitionCas">
+      UPDATE community_post SET lifecycle=#{targetLifecycle},published_at=COALESCE(#{publishedAt},published_at),
+        deleted_at=#{deletedAt},recommendation_eligible=COALESCE(#{recommendationEligible},recommendation_eligible),
+        search_eligible=COALESCE(#{searchEligible},search_eligible),
+        interaction_enabled=COALESCE(#{interactionEnabled},interaction_enabled),update_time=#{now},version=version+1
+      WHERE id=#{id} AND lifecycle=#{expectedLifecycle} AND version=#{expectedVersion}
+    </update>
+    <insert id="insertRevision">
+      INSERT INTO community_post_revision(post_id,editor_member_id,snapshot_version,immutable_snapshot_json,
+        edit_reason,review_state,create_time)
+      VALUES(#{postId},#{editorMemberId},#{snapshotVersion},#{snapshotJson},#{editReason},#{reviewState},#{now})
+    </insert>
+    <select id="selectRevisions" resultType="map">
+      SELECT id,post_id,snapshot_version,edit_reason,review_state,create_time
+      FROM community_post_revision WHERE post_id=#{postId}
+        AND EXISTS(SELECT 1 FROM community_post p WHERE p.id=#{postId} AND p.author_id=#{viewerId})
+      ORDER BY snapshot_version DESC
+    </select>
+    <update id="attachMedia">
+      UPDATE community_post_media SET post_id=#{postId},sort_order=#{sortOrder},upload_state='ATTACHED',update_time=#{now}
+      WHERE id=#{mediaId} AND owner_member_id=#{ownerMemberId} AND post_id IS NULL
+        AND upload_state='COMMITTED' AND review_state IN ('PENDING','PASS') AND retention_state='ACTIVE'
+    </update>
+    <update id="detachMedia">
+      UPDATE community_post_media SET post_id=NULL,sort_order=0,upload_state='COMMITTED',update_time=#{now}
+      WHERE post_id=#{postId} AND owner_member_id=#{ownerMemberId}
+    </update>
+    <update id="orphanMedia">
+      UPDATE community_post_media SET retention_state='ORPHANED',delete_after=#{deleteAfter},update_time=#{now}
+      WHERE post_id=#{postId} AND retention_state='ACTIVE'
+    </update>
+    <select id="selectMedia" resultType="map">
+      SELECT id,media_type,derived_object_key,mime_type,width,height,duration_ms,sort_order,alt_text,review_state
+      FROM community_post_media m WHERE post_id=#{postId} AND retention_state='ACTIVE'
+        AND (m.review_state='PASS' OR EXISTS(
+          SELECT 1 FROM community_post p WHERE p.id=#{postId} AND p.lifecycle!='PUBLISHED'))
+      ORDER BY sort_order,id
+    </select>
+    <select id="selectMediaForSafety" resultType="map">
+      SELECT id,media_type,object_key,derived_object_key,mime_type,byte_size,width,height,duration_ms,alt_text,review_state
+      FROM community_post_media WHERE post_id=#{postId} AND retention_state='ACTIVE' ORDER BY sort_order,id
+    </select>
+    <update id="updateMediaReviewState">
+      UPDATE community_post_media SET review_state=#{reviewState},update_time=#{now}
+      WHERE post_id=#{postId} AND retention_state='ACTIVE' AND review_state IN ('PENDING','HOLD')
+    </update>
+    <delete id="deleteTopics">DELETE FROM community_post_topic WHERE post_id=#{postId}</delete>
+    <insert id="insertTopic">INSERT INTO community_post_topic(post_id,topic_code,create_time) VALUES(#{postId},#{topicCode},#{now})</insert>
+    <delete id="deleteMentions">DELETE FROM community_post_mention WHERE post_id=#{postId}</delete>
+    <insert id="insertMention">INSERT INTO community_post_mention(post_id,mentioned_member_id,create_time) VALUES(#{postId},#{memberId},#{now})</insert>
+    <select id="selectMentionedMemberIds" resultType="long">
+      SELECT mentioned_member_id FROM community_post_mention WHERE post_id=#{postId} ORDER BY mentioned_member_id
+    </select>
+    <insert id="insertReference">
+      INSERT INTO community_post_reference(post_id,reference_type,reference_id,snapshot_json,privacy_snapshot,create_time)
+      VALUES(#{postId},#{referenceType},#{referenceId},#{snapshotJson},#{privacySnapshot},#{now})
+    </insert>
+    <select id="countReferenceTarget" resultType="int">
+      <choose>
+        <when test="referenceType == 'ACTIVITY'">
+          SELECT COUNT(*) FROM cms_activity WHERE id=#{referenceId} AND COALESCE(del_flag,0)=0
+        </when>
+        <when test="referenceType == 'TOPIC'">
+          SELECT COUNT(*) FROM cms_topic WHERE id=#{referenceId} AND COALESCE(del_flag,0)=0
+        </when>
+        <when test="referenceType == 'ROUTE'">
+          SELECT COUNT(*) FROM roam_session WHERE id=#{referenceId} AND member_id=#{memberId} AND status=1
+        </when>
+        <when test="referenceType == 'CLUB'">
+          SELECT COUNT(*) FROM club WHERE id=#{referenceId} AND COALESCE(del_flag,0)=0
+        </when>
+        <when test="referenceType == 'POI'">
+          SELECT COUNT(*) FROM roam_poi WHERE id=#{referenceId} AND COALESCE(status,1)=1
+        </when>
+        <otherwise>SELECT 0</otherwise>
+      </choose>
+    </select>
+    <select id="selectReferenceSnapshot" resultType="map">
+      <choose>
+        <when test="referenceType == 'ACTIVITY'">
+          SELECT a.id reference_id,'ACTIVITY' reference_type,a.name title,
+                 SUBSTRING_INDEX(COALESCE(NULLIF(a.img_url,''),a.img_arr),';',1) cover_url,
+                 a.address_name subtitle,a.start_date starts_at,a.end_date ends_at
+          FROM cms_activity a
+          WHERE a.id=#{referenceId} AND a.status=1 AND a.publish_status=1
+            AND COALESCE(a.del_flag,0)=0 AND a.cancel_time IS NULL
+            AND (a.member_id=#{memberId} OR EXISTS(
+              SELECT 1 FROM cms_registration r
+              WHERE r.owner_type=2 AND r.owner_id=a.id AND r.member_id=#{memberId}
+                AND COALESCE(r.del_flag,0)=0 AND r.payment_status=2 AND r.registration_status=2))
+        </when>
+        <when test="referenceType == 'TOPIC'">
+          SELECT t.id reference_id,'TOPIC' reference_type,t.name title,t.img_url cover_url,
+                 t.address_name subtitle,t.product_type
+          FROM cms_topic t
+          WHERE t.id=#{referenceId} AND t.status=1 AND t.user_status=1
+            AND COALESCE(t.del_flag,0)=0 AND COALESCE(t.is_template,0)=0
+        </when>
+        <when test="referenceType == 'ROUTE'">
+          SELECT r.id reference_id,'ROUTE' reference_type,'城市漫游记录' title,
+                 CONCAT(COALESCE(r.distance_m,0),' 米 · ',COALESCE(r.pois_found,0),' 个地点') subtitle,
+                 r.distance_m,r.tiles_revealed,r.pois_found,r.finished_at
+          FROM roam_session r
+          WHERE r.id=#{referenceId} AND r.member_id=#{memberId} AND r.status=1
+        </when>
+        <when test="referenceType == 'CLUB'">
+          SELECT c.id reference_id,'CLUB' reference_type,c.name title,c.logo cover_url,c.city subtitle
+          FROM club c WHERE c.id=#{referenceId} AND c.status=1 AND COALESCE(c.del_flag,0)=0
+        </when>
+        <when test="referenceType == 'POI'">
+          SELECT p.id reference_id,'POI' reference_type,p.name title,NULL cover_url,
+                 COALESCE(p.city_code,p.description) subtitle
+          FROM roam_poi p WHERE p.id=#{referenceId} AND p.status=1
+        </when>
+        <otherwise>SELECT NULL WHERE 1=0</otherwise>
+      </choose>
+    </select>
+    <select id="selectReferenceOptions" resultType="map">
+      <choose>
+        <when test="referenceType == 'ACTIVITY'">
+          SELECT DISTINCT a.id,a.name,COALESCE(a.address_name,'') subtitle
+          FROM cms_activity a LEFT JOIN cms_registration r
+            ON r.owner_type=2 AND r.owner_id=a.id AND r.member_id=#{memberId}
+              AND COALESCE(r.del_flag,0)=0 AND r.payment_status=2 AND r.registration_status=2
+          WHERE a.status=1 AND a.publish_status=1 AND COALESCE(a.del_flag,0)=0 AND a.cancel_time IS NULL
+            AND (a.member_id=#{memberId} OR r.id IS NOT NULL)
+          ORDER BY a.id DESC LIMIT #{limit}
+        </when>
+        <when test="referenceType == 'TOPIC'">
+          SELECT t.id,t.name,COALESCE(t.address_name,'') subtitle
+          FROM cms_topic t
+          WHERE t.status=1 AND t.user_status=1 AND COALESCE(t.del_flag,0)=0 AND COALESCE(t.is_template,0)=0
+          ORDER BY t.id DESC LIMIT #{limit}
+        </when>
+        <when test="referenceType == 'ROUTE'">
+          SELECT r.id,'城市漫游记录' name,
+                 CONCAT(COALESCE(r.distance_m,0),' 米 · ',COALESCE(r.pois_found,0),' 个地点') subtitle
+          FROM roam_session r WHERE r.member_id=#{memberId} AND r.status=1
+          ORDER BY r.id DESC LIMIT #{limit}
+        </when>
+        <when test="referenceType == 'POI'">
+          SELECT p.id,p.name,p.city_code,COALESCE(p.address,p.description,'') subtitle
+          FROM roam_poi p WHERE COALESCE(p.status,1)=1 AND p.city_code IS NOT NULL AND p.city_code&lt;&gt;''
+          ORDER BY p.id DESC LIMIT #{limit}
+        </when>
+        <when test="referenceType == 'MEMBER'">
+          SELECT m.id,m.nickname name,'' subtitle
+          FROM ums_member_follow f JOIN ums_member m ON m.id=f.follow_member_id
+          WHERE f.member_id=#{memberId}
+          ORDER BY m.id DESC LIMIT #{limit}
+        </when>
+        <otherwise>SELECT NULL id,NULL name,NULL subtitle WHERE 1=0</otherwise>
+      </choose>
+    </select>
+    <delete id="deleteReferences">DELETE FROM community_post_reference WHERE post_id=#{postId}</delete>
+    <select id="selectReferences" resultType="map">
+      SELECT id,reference_type,reference_id,snapshot_json,privacy_snapshot
+      FROM community_post_reference WHERE post_id=#{postId} AND invalidated_at IS NULL ORDER BY id
+    </select>
+    <insert id="insertMemberAction">
+      INSERT INTO community_post_member_action(post_id,member_id,action_type,request_id,source,create_time,update_time)
+      VALUES(#{postId},#{memberId},#{actionType},#{requestId},#{source},#{now},#{now})
+    </insert>
+    <select id="countMemberAction" resultType="int">
+      SELECT COUNT(*) FROM community_post_member_action
+      WHERE post_id=#{postId} AND member_id=#{memberId} AND action_type=#{actionType}
+    </select>
+    <delete id="deleteMemberAction">
+      DELETE FROM community_post_member_action WHERE post_id=#{postId} AND member_id=#{memberId} AND action_type=#{actionType}
+    </delete>
+    <select id="selectCommandReceipt" resultType="map">
+      SELECT id,member_id,request_id,command_type,aggregate_id,result_json,create_time
+      FROM community_post_command_receipt WHERE member_id=#{memberId} AND request_id=#{requestId}
+    </select>
+    <insert id="insertCommandReceipt">
+      INSERT IGNORE INTO community_post_command_receipt
+        (member_id,request_id,command_type,aggregate_id,result_json,create_time)
+      VALUES(#{memberId},#{requestId},#{commandType},#{aggregateId},#{resultJson},#{now})
+    </insert>
+    <update id="recomputeCounts">
+      UPDATE community_post p SET
+        like_count=(SELECT COUNT(*) FROM community_post_member_action a WHERE a.post_id=p.id AND a.action_type='LIKE'),
+        bookmark_count=(SELECT COUNT(*) FROM community_post_member_action a WHERE a.post_id=p.id AND a.action_type='BOOKMARK'),
+        comment_count=(SELECT COUNT(*) FROM community_post_comment c WHERE c.post_id=p.id
+          AND c.lifecycle='PUBLISHED' AND c.author_approval_state='VISIBLE')
+      WHERE p.id=#{postId}
+    </update>
+    <insert id="insertOutbox">
+      INSERT INTO community_post_outbox(event_id,aggregate_type,aggregate_id,event_type,payload_json,state,
+        attempt_count,next_attempt_at,create_time,update_time)
+      VALUES(#{eventId},'COMMUNITY_POST',#{aggregateId},#{eventType},#{payloadJson},'PENDING',0,#{now},#{now},#{now})
+    </insert>
+    <insert id="insertTypedOutbox">
+      INSERT INTO community_post_outbox(event_id,aggregate_type,aggregate_id,event_type,payload_json,state,
+        attempt_count,next_attempt_at,create_time,update_time)
+      VALUES(#{eventId},#{aggregateType},#{aggregateId},#{eventType},#{payloadJson},'PENDING',0,#{now},#{now},#{now})
+    </insert>
+    <select id="selectDueOutbox" resultType="map">
+      SELECT id,event_id,aggregate_type,aggregate_id,event_type,payload_json,attempt_count FROM community_post_outbox
+      WHERE state IN ('PENDING','RETRY') AND next_attempt_at&lt;=#{now}
+      ORDER BY id LIMIT #{limit}
+    </select>
+    <update id="claimOutbox">
+      UPDATE community_post_outbox SET state='PROCESSING',attempt_count=attempt_count+1,update_time=#{now}
+      WHERE id=#{id} AND state IN ('PENDING','RETRY') AND next_attempt_at&lt;=#{now}
+    </update>
+    <update id="completeOutbox">
+      UPDATE community_post_outbox SET state='DONE',processed_at=#{now},last_error_code=NULL,update_time=#{now}
+      WHERE id=#{id} AND state='PROCESSING'
+    </update>
+    <update id="retryOutbox">
+      UPDATE community_post_outbox SET state=CASE WHEN attempt_count&gt;=10 THEN 'DEAD' ELSE 'RETRY' END,
+        last_error_code=#{errorCode},next_attempt_at=#{nextAttemptAt},update_time=#{now}
+      WHERE id=#{id} AND state='PROCESSING'
+    </update>
+    <insert id="upsertSearchDocument">
+      INSERT INTO community_search_document(document_type,document_id,owner_member_id,title,search_text,city_code,
+        topic_codes_json,visibility_state,source_version,indexed_at)
+      SELECT 'POST',p.id,p.author_id,p.title,CONCAT(COALESCE(p.title,''),' ',p.body),p.city_code,
+             COALESCE((SELECT JSON_ARRAYAGG(t.topic_code) FROM community_post_topic t WHERE t.post_id=p.id),JSON_ARRAY()),
+             #{visibilityState},p.version,#{now}
+      FROM community_post p WHERE p.id=#{postId}
+      ON DUPLICATE KEY UPDATE owner_member_id=VALUES(owner_member_id),title=VALUES(title),search_text=VALUES(search_text),
+        city_code=VALUES(city_code),topic_codes_json=VALUES(topic_codes_json),visibility_state=VALUES(visibility_state),
+        source_version=VALUES(source_version),indexed_at=VALUES(indexed_at)
+    </insert>
+    <insert id="upsertMemberGovernanceProjection">
+      INSERT INTO community_member_governance_state(member_id,last_event_type,last_event_payload_json,last_event_at,version,create_time,update_time)
+      VALUES(#{memberId},#{eventType},#{payloadJson},#{now},1,#{now},#{now})
+      ON DUPLICATE KEY UPDATE last_event_type=VALUES(last_event_type),
+        last_event_payload_json=VALUES(last_event_payload_json),last_event_at=VALUES(last_event_at),
+        version=version+1,update_time=VALUES(update_time)
+    </insert>
+    <insert id="insertNotification">
+      INSERT INTO community_notification(recipient_member_id,event_id,post_id,comment_id,actor_member_id,notification_type,aggregate_key,actor_count,
+        payload_json,create_time,update_time)
+      SELECT #{recipientMemberId},#{eventId},#{postId},#{commentId},#{actorMemberId},#{notificationType},#{aggregateKey},1,#{payloadJson},#{now},#{now}
+      WHERE NOT EXISTS(
+        SELECT 1 FROM community_notification_preference np
+        WHERE np.member_id=#{recipientMemberId} AND (
+          (#{notificationType}='INTERACTION' AND np.interaction_enabled=0)
+          OR (#{notificationType}='COMMENT_MENTION' AND np.mention_enabled=0)
+          OR (#{notificationType}='SOCIAL' AND np.social_enabled=0)
+        )
+      )
+      ON DUPLICATE KEY UPDATE event_id=VALUES(event_id),actor_member_id=VALUES(actor_member_id),
+        payload_json=VALUES(payload_json),read_at=NULL,update_time=VALUES(update_time)
+    </insert>
+    <insert id="insertNotificationActor">
+      INSERT INTO community_notification_actor(recipient_member_id,notification_type,aggregate_key,
+        actor_member_id,last_event_id,create_time,update_time)
+      VALUES(#{recipientMemberId},#{notificationType},#{aggregateKey},#{actorMemberId},#{eventId},#{now},#{now})
+      ON DUPLICATE KEY UPDATE last_event_id=VALUES(last_event_id),update_time=VALUES(update_time)
+    </insert>
+    <update id="recomputeNotificationActorCount">
+      UPDATE community_notification n SET n.actor_count=(
+        SELECT COUNT(*) FROM community_notification_actor a
+        WHERE a.recipient_member_id=#{recipientMemberId} AND a.notification_type=#{notificationType}
+          AND a.aggregate_key=#{aggregateKey}
+      ),n.update_time=#{now}
+      WHERE n.recipient_member_id=#{recipientMemberId} AND n.notification_type=#{notificationType}
+        AND n.aggregate_key=#{aggregateKey}
+    </update>
+    <select id="countNotificationDeliverable" resultType="int">
+      SELECT COUNT(*) FROM community_post p
+      WHERE p.id=#{postId} AND p.lifecycle IN ('PUBLISHED','LIMITED')
+        AND NOT EXISTS(SELECT 1 FROM im_block b
+                       WHERE (b.member_id=#{recipientMemberId} AND b.blocked_member_id=#{actorMemberId})
+                          OR (b.member_id=#{actorMemberId} AND b.blocked_member_id=#{recipientMemberId}))
+        AND NOT EXISTS(SELECT 1 FROM community_member_mute m
+                       WHERE m.member_id=#{recipientMemberId} AND m.muted_member_id=#{actorMemberId})
+        AND (#{commentId} IS NULL OR EXISTS(
+          SELECT 1 FROM community_post_comment c WHERE c.id=#{commentId} AND c.post_id=p.id
+            AND c.lifecycle='PUBLISHED' AND c.author_approval_state='VISIBLE'))
+    </select>
+    <select id="countMemberNotificationDeliverable" resultType="int">
+      SELECT COUNT(*) FROM ums_member recipient
+      WHERE recipient.id=#{recipientMemberId}
+        AND EXISTS(SELECT 1 FROM ums_member actor WHERE actor.id=#{actorMemberId})
+        AND NOT EXISTS(SELECT 1 FROM im_block b
+                       WHERE (b.member_id=#{recipientMemberId} AND b.blocked_member_id=#{actorMemberId})
+                          OR (b.member_id=#{actorMemberId} AND b.blocked_member_id=#{recipientMemberId}))
+        AND NOT EXISTS(SELECT 1 FROM community_member_mute m
+                       WHERE m.member_id=#{recipientMemberId} AND m.muted_member_id=#{actorMemberId})
+    </select>
+    <insert id="insertErasureJob">
+      INSERT INTO community_erasure_job(subject_member_id,post_id,trigger_type,request_id,legal_hold,checklist_json,
+        state,attempt_count,next_attempt_at,create_time,update_time)
+      VALUES(#{subjectMemberId},#{postId},#{triggerType},#{requestId},0,#{checklistJson},'PENDING',0,#{now},#{now},#{now})
+    </insert>
+    <update id="prepareAccountPostsForErasure">
+      UPDATE community_post SET lifecycle='DELETED',title=NULL,body='',location_precision='NONE',city_code=NULL,
+        poi_name=NULL,approximate_geohash=NULL,disclosure_type='NONE',safety_labels_json=JSON_ARRAY(),
+        recommendation_eligible=0,search_eligible=0,interaction_enabled=0,
+        deleted_at=COALESCE(deleted_at,#{now}),update_time=#{now},version=version+1
+      WHERE author_id=#{memberId}
+    </update>
+    <update id="scrubAccountPostRevisions">
+      UPDATE community_post_revision r JOIN community_post p ON p.id=r.post_id
+      SET r.editor_member_id=0,r.immutable_snapshot_json=JSON_OBJECT('erased',TRUE),r.edit_reason=NULL
+      WHERE p.author_id=#{memberId} OR r.editor_member_id=#{memberId}
+    </update>
+    <update id="scrubAccountAppeals">
+      UPDATE community_post_appeal
+      SET reason='[erased]',evidence_asset_ids_json='[]',update_time=CURRENT_TIMESTAMP
+      WHERE appellant_member_id=#{memberId}
+         OR enforcement_id IN (
+           SELECT e.id FROM community_post_enforcement e
+           LEFT JOIN community_post p ON p.id=e.post_id
+           WHERE e.target_member_id=#{memberId} OR p.author_id=#{memberId}
+         )
+    </update>
+    <update id="scrubAccountGovernanceContent">
+      UPDATE community_post_enforcement
+      SET target_member_id=CASE WHEN target_member_id=#{memberId} THEN 0 ELSE target_member_id END,
+          evidence_snapshot_json='{"erased":true}',update_time=CURRENT_TIMESTAMP
+      WHERE target_member_id=#{memberId}
+         OR post_id IN (SELECT id FROM community_post WHERE author_id=#{memberId})
+         OR id IN (SELECT enforcement_id FROM community_post_appeal WHERE appellant_member_id=#{memberId})
+    </update>
+    <update id="anonymizeAccountAppeals">
+      UPDATE community_post_appeal
+      SET appellant_member_id=0,request_id=CONCAT('erased-appeal-',id),update_time=CURRENT_TIMESTAMP
+      WHERE appellant_member_id=#{memberId}
+    </update>
+    <update id="scrubAccountOutbox">
+      UPDATE community_post_outbox o
+      LEFT JOIN community_post p ON o.aggregate_type='COMMUNITY_POST' AND p.id=o.aggregate_id
+      SET o.payload_json=JSON_OBJECT('erased',TRUE),
+          o.state=CASE
+            WHEN (o.aggregate_type='COMMUNITY_MEMBER' AND o.aggregate_id=#{memberId})
+              OR (o.aggregate_type='COMMUNITY_NOTIFICATION' AND (
+                o.aggregate_id=#{memberId}
+                OR JSON_UNQUOTE(JSON_EXTRACT(o.payload_json,'$.actorId'))=CAST(#{memberId} AS CHAR)
+              )) THEN 'DONE'
+            ELSE o.state END,
+          o.processed_at=CASE
+            WHEN (o.aggregate_type='COMMUNITY_MEMBER' AND o.aggregate_id=#{memberId})
+              OR (o.aggregate_type='COMMUNITY_NOTIFICATION' AND (
+                o.aggregate_id=#{memberId}
+                OR JSON_UNQUOTE(JSON_EXTRACT(o.payload_json,'$.actorId'))=CAST(#{memberId} AS CHAR)
+              )) THEN CURRENT_TIMESTAMP
+            ELSE o.processed_at END,
+          o.last_error_code=NULL,o.update_time=CURRENT_TIMESTAMP,
+          o.aggregate_id=CASE
+            WHEN o.aggregate_type='COMMUNITY_MEMBER' AND o.aggregate_id=#{memberId} THEN 0
+            WHEN o.aggregate_type='COMMUNITY_NOTIFICATION' AND o.aggregate_id=#{memberId} THEN 0
+            ELSE o.aggregate_id END
+      WHERE (o.aggregate_type='COMMUNITY_POST' AND p.author_id=#{memberId})
+         OR (o.aggregate_type='COMMUNITY_MEMBER' AND o.aggregate_id=#{memberId})
+         OR (o.aggregate_type='COMMUNITY_NOTIFICATION' AND (
+              o.aggregate_id=#{memberId}
+              OR JSON_UNQUOTE(JSON_EXTRACT(o.payload_json,'$.actorId'))=CAST(#{memberId} AS CHAR)
+            ))
+    </update>
+    <update id="anonymizeAccountPostAuthors">
+      UPDATE community_post SET author_id=0,client_request_id=CONCAT('erased-post-',id),update_time=#{now}
+      WHERE author_id=#{memberId}
+    </update>
+    <update id="anonymizeAccountComments">
+      UPDATE community_post_comment SET author_id=0,client_request_id=CONCAT('erased-comment-',id),body='',
+        lifecycle='DELETED',author_approval_state='HIDDEN',deleted_at=COALESCE(deleted_at,#{now}),update_time=#{now},version=version+1
+      WHERE author_id=#{memberId}
+    </update>
+    <update id="clearAccountReplyTargets">
+      UPDATE community_post_comment SET replied_to_member_id=NULL,update_time=#{now},version=version+1
+      WHERE replied_to_member_id=#{memberId}
+    </update>
+    <delete id="deleteAccountPostActions">
+      DELETE FROM community_post_member_action WHERE member_id=#{memberId}
+    </delete>
+    <delete id="deleteAccountCommentActions">
+      DELETE FROM community_post_comment_action WHERE member_id=#{memberId}
+    </delete>
+    <delete id="deleteAccountMutes">
+      DELETE FROM community_member_mute WHERE member_id=#{memberId} OR muted_member_id=#{memberId}
+    </delete>
+    <delete id="deleteAccountNotifications">
+      DELETE n FROM community_notification n
+      WHERE n.recipient_member_id=#{memberId}
+         OR (n.notification_type!='SYSTEM_GOVERNANCE' AND NOT EXISTS(
+           SELECT 1 FROM community_notification_actor a
+           WHERE a.recipient_member_id=n.recipient_member_id AND a.notification_type=n.notification_type
+             AND a.aggregate_key=n.aggregate_key
+         ))
+    </delete>
+    <delete id="deleteAccountNotificationActors">
+      DELETE FROM community_notification_actor
+      WHERE recipient_member_id=#{memberId} OR actor_member_id=#{memberId}
+    </delete>
+    <update id="reconcileNotificationsAfterActorErasure">
+      UPDATE community_notification n
+      SET n.actor_member_id=(
+            SELECT a.actor_member_id FROM community_notification_actor a
+            WHERE a.recipient_member_id=n.recipient_member_id AND a.notification_type=n.notification_type
+              AND a.aggregate_key=n.aggregate_key ORDER BY a.update_time DESC LIMIT 1
+          ),
+          n.actor_count=(
+            SELECT COUNT(*) FROM community_notification_actor c
+            WHERE c.recipient_member_id=n.recipient_member_id AND c.notification_type=n.notification_type
+              AND c.aggregate_key=n.aggregate_key
+          ),
+          n.payload_json=JSON_SET(n.payload_json,'$.actorId',COALESCE((
+            SELECT p.actor_member_id FROM community_notification_actor p
+            WHERE p.recipient_member_id=n.recipient_member_id AND p.notification_type=n.notification_type
+              AND p.aggregate_key=n.aggregate_key ORDER BY p.update_time DESC LIMIT 1
+          ),0)),n.update_time=#{now}
+      WHERE n.notification_type!='SYSTEM_GOVERNANCE' AND n.actor_member_id=#{memberId}
+    </update>
+    <delete id="deleteAccountNotificationPreferences">
+      DELETE FROM community_notification_preference WHERE member_id=#{memberId}
+    </delete>
+    <delete id="deleteAccountGovernanceState">
+      DELETE FROM community_member_governance_state WHERE member_id=#{memberId}
+    </delete>
+    <delete id="deleteAccountCommandReceipts">
+      DELETE FROM community_post_command_receipt WHERE member_id=#{memberId}
+    </delete>
+    <delete id="deleteAccountGuidelineAcks">
+      DELETE FROM community_guideline_ack WHERE member_id=#{memberId}
+    </delete>
+    <delete id="deleteAccountMentions">
+      DELETE FROM community_post_mention WHERE mentioned_member_id=#{memberId}
+    </delete>
+    <update id="orphanAccountMedia">
+      UPDATE community_post_media m JOIN community_post p ON p.id=m.post_id
+      SET m.retention_state='ORPHANED',m.delete_after=#{deleteAfter},m.update_time=#{now}
+      WHERE p.author_id=#{memberId} AND m.retention_state='ACTIVE'
+    </update>
+    <insert id="enqueueAccountErasureJobs">
+      INSERT INTO community_erasure_job(subject_member_id,post_id,trigger_type,request_id,legal_hold,checklist_json,
+        state,attempt_count,next_attempt_at,create_time,update_time)
+      SELECT #{memberId},p.id,'ACCOUNT_DEREGISTER',CONCAT(#{requestPrefix},'-',p.id),0,
+        '{"search":true,"notifications":true,"mediaAfterDays":30}','PENDING',0,#{now},#{now},#{now}
+      FROM community_post p WHERE p.author_id=#{memberId}
+      ON DUPLICATE KEY UPDATE request_id=VALUES(request_id)
+    </insert>
+    <update id="withdrawPostLocation">
+      UPDATE community_post SET location_precision='NONE',city_code=NULL,poi_name=NULL,approximate_geohash=NULL,
+        update_time=#{now},version=version+1
+      WHERE id=#{postId} AND author_id=#{authorId} AND version=#{expectedVersion} AND lifecycle&lt;&gt;'DELETED'
+    </update>
+    <select id="selectDueErasureJobs" resultType="map">
+      SELECT id,subject_member_id,post_id,trigger_type,legal_hold,attempt_count FROM community_erasure_job
+      WHERE state IN ('PENDING','RETRY') AND next_attempt_at&lt;=#{now}
+      ORDER BY id LIMIT #{limit}
+    </select>
+    <update id="claimErasureJob">
+      UPDATE community_erasure_job SET state='PROCESSING',attempt_count=attempt_count+1,update_time=#{now}
+      WHERE id=#{id} AND state IN ('PENDING','RETRY') AND next_attempt_at&lt;=#{now}
+    </update>
+    <select id="selectNextMediaDeleteAfter" resultType="java.util.Date">
+      SELECT MIN(delete_after) FROM community_post_media
+      WHERE post_id=#{postId} AND retention_state='ORPHANED'
+    </select>
+    <select id="selectDueMediaForErasure" resultType="map">
+      SELECT id,object_key FROM community_post_media
+      WHERE post_id=#{postId} AND retention_state='ORPHANED' AND delete_after&lt;=#{now}
+      ORDER BY id
+    </select>
+    <select id="countLiveMediaObjectRefs" resultType="int">
+      SELECT COUNT(*) FROM community_post_media
+      WHERE object_key=#{objectKey} AND id&lt;&gt;#{excludeId} AND retention_state&lt;&gt;'DELETED'
+    </select>
+    <update id="eraseDueMedia">
+      UPDATE community_post_media
+      SET owner_member_id=0,upload_request_id=CONCAT('erased-media-',id),upload_receipt_hash=NULL,
+          object_key=CONCAT('deleted://',id),derived_object_key=NULL,alt_text=NULL,
+          mime_type='application/octet-stream',byte_size=0,
+          content_hash=SHA2(CONCAT('deleted:',id),256),retention_state='DELETED',update_time=#{now}
+      WHERE post_id=#{postId} AND retention_state='ORPHANED' AND delete_after&lt;=#{now}
+    </update>
+    <delete id="deletePostSearchDocument">
+      DELETE FROM community_search_document WHERE document_type='POST' AND document_id=#{postId}
+    </delete>
+    <delete id="deletePostNotifications">
+      DELETE FROM community_notification
+      WHERE JSON_UNQUOTE(JSON_EXTRACT(payload_json,'$.postId'))=CAST(#{postId} AS CHAR)
+    </delete>
+    <delete id="deletePostNotificationActors">
+      DELETE a FROM community_notification_actor a
+      JOIN community_notification n
+        ON n.recipient_member_id=a.recipient_member_id
+       AND n.notification_type=a.notification_type
+       AND n.aggregate_key=a.aggregate_key
+      WHERE JSON_UNQUOTE(JSON_EXTRACT(n.payload_json,'$.postId'))=CAST(#{postId} AS CHAR)
+    </delete>
+    <update id="completeErasureJob">
+      UPDATE community_erasure_job SET state='DONE',completed_at=#{now},last_error_code=NULL,update_time=#{now}
+      WHERE id=#{id} AND state='PROCESSING'
+    </update>
+    <update id="retryErasureJob">
+      UPDATE community_erasure_job SET state=#{state},last_error_code=#{errorCode},
+        next_attempt_at=#{nextAttemptAt},update_time=#{now}
+      WHERE id=#{id} AND state='PROCESSING'
+    </update>
+    <select id="selectActiveGuideline" resultType="map">
+      SELECT id,version_code,title,summary,content_json,effective_at
+      FROM community_guideline_version WHERE applies_to='PLAZA' AND status='ACTIVE' AND effective_at&lt;=NOW()
+      ORDER BY effective_at DESC,id DESC LIMIT 1
+    </select>
+    <select id="countGuidelineVersion" resultType="int">
+      SELECT COUNT(*) FROM community_guideline_version
+      WHERE id=#{guidelineVersionId} AND applies_to='PLAZA'
+    </select>
+    <select id="countGuidelineRule" resultType="int">
+      SELECT COUNT(*) FROM community_guideline_version
+      WHERE id=#{guidelineVersionId} AND applies_to='PLAZA'
+        AND JSON_SEARCH(content_json,'one',#{ruleCode},NULL,'$.rules[*].code') IS NOT NULL
+    </select>
+    <select id="countGuidelineAck" resultType="int">
+      SELECT COUNT(*) FROM community_guideline_ack WHERE member_id=#{memberId} AND guideline_version_id=#{guidelineVersionId}
+    </select>
+    <select id="selectGuidelineNoticeRecipients" resultType="long">
+      SELECT m.id FROM ums_member m
+      WHERE (EXISTS(SELECT 1 FROM community_post p WHERE p.author_id=m.id)
+             OR EXISTS(SELECT 1 FROM community_guideline_ack ga0 WHERE ga0.member_id=m.id))
+        AND NOT EXISTS(SELECT 1 FROM community_guideline_ack ga
+                       WHERE ga.member_id=m.id AND ga.guideline_version_id=#{guidelineVersionId})
+        AND NOT EXISTS(SELECT 1 FROM community_notification n
+                       WHERE n.recipient_member_id=m.id AND n.notification_type='SYSTEM_GOVERNANCE'
+                         AND n.aggregate_key=#{aggregateKey})
+        AND NOT EXISTS(SELECT 1 FROM community_post_outbox o
+                       WHERE o.aggregate_type='COMMUNITY_NOTIFICATION' AND o.aggregate_id=m.id
+                         AND o.state IN ('PENDING','PROCESSING','RETRY')
+                         AND JSON_UNQUOTE(JSON_EXTRACT(o.payload_json,'$.aggregateKey'))=#{aggregateKey})
+      ORDER BY m.id LIMIT #{limit}
+    </select>
+    <insert id="insertGuidelineAck">
+      INSERT INTO community_guideline_ack(member_id,guideline_version_id,scene,request_id,acknowledged_at)
+      VALUES(#{memberId},#{guidelineVersionId},#{scene},#{requestId},#{now})
+    </insert>
+    <insert id="insertMute">
+      INSERT INTO community_member_mute(member_id,muted_member_id,request_id,create_time)
+      VALUES(#{memberId},#{mutedMemberId},#{requestId},#{now})
+    </insert>
+    <select id="selectMuteByRequest" resultType="map">
+      SELECT member_id,muted_member_id,request_id FROM community_member_mute
+      WHERE member_id=#{memberId} AND request_id=#{requestId}
+    </select>
+    <delete id="deleteMute">DELETE FROM community_member_mute WHERE member_id=#{memberId} AND muted_member_id=#{mutedMemberId}</delete>
+    <select id="countFollow" resultType="int">
+      SELECT COUNT(*) FROM ums_member_follow WHERE member_id=#{memberId} AND follow_member_id=#{authorId}
+    </select>
+    <select id="countCommunityMember" resultType="int">
+      SELECT COUNT(*) FROM club_member
+      WHERE member_id=#{memberId} AND club_id=#{communityId} AND status=1 AND del_flag=0
+    </select>
+    <select id="countMention" resultType="int">
+      SELECT COUNT(*) FROM community_post_mention WHERE post_id=#{postId} AND mentioned_member_id=#{memberId}
+    </select>
+    <select id="selectLatestCommentTime" resultType="java.util.Date">
+      SELECT MAX(create_time) FROM community_post_comment
+      WHERE post_id=#{postId} AND author_id=#{authorId} AND lifecycle!='DELETED'
+    </select>
+    <insert id="insertComment">
+      INSERT INTO community_post_comment(post_id,author_id,root_id,parent_id,replied_to_member_id,client_request_id,
+        body,lifecycle,author_approval_state,like_count,version,published_at,create_time,update_time)
+      VALUES(#{postId},#{authorId},#{rootId},#{parentId},#{repliedToMemberId},#{clientRequestId},#{body},
+        #{lifecycle},#{approvalState},0,0,CASE WHEN #{lifecycle}='PUBLISHED' THEN #{now} ELSE NULL END,#{now},#{now})
+    </insert>
+    <select id="selectCommentByAuthorRequest" resultType="map">
+      SELECT id,post_id,author_id,root_id,parent_id,replied_to_member_id,client_request_id,body,lifecycle,
+             author_approval_state,version,create_time
+      FROM community_post_comment WHERE author_id=#{authorId} AND client_request_id=#{clientRequestId}
+    </select>
+    <select id="selectCommentForReply" resultType="map">
+      SELECT c.id,c.post_id,c.author_id,c.root_id,c.parent_id,c.lifecycle,c.author_approval_state
+      FROM community_post_comment c JOIN community_post p ON p.id=c.post_id
+      WHERE c.id=#{commentId} AND c.post_id=#{postId} AND c.lifecycle='PUBLISHED'
+        AND c.author_approval_state='VISIBLE'<include refid="visibilityPolicy"/>
+        AND NOT EXISTS(SELECT 1 FROM im_block cb
+                       WHERE (cb.member_id=#{viewerId} AND cb.blocked_member_id=c.author_id)
+                          OR (cb.member_id=c.author_id AND cb.blocked_member_id=#{viewerId}))
+        AND NOT EXISTS(SELECT 1 FROM community_member_mute cmu
+                       WHERE cmu.member_id=#{viewerId} AND cmu.muted_member_id=c.author_id)
+    </select>
+    <select id="selectCommentForAudit" resultType="map">
+      SELECT id,post_id,author_id,root_id,parent_id,replied_to_member_id,body,lifecycle,author_approval_state,version
+      FROM community_post_comment WHERE id=#{commentId}
+    </select>
+    <update id="updateCommentLifecycle">
+      UPDATE community_post_comment SET lifecycle=#{targetLifecycle},
+        published_at=CASE WHEN #{targetLifecycle}='PUBLISHED' THEN COALESCE(published_at,#{now}) ELSE published_at END,
+        update_time=#{now},version=version+1
+      WHERE id=#{commentId} AND lifecycle=#{expectedLifecycle} AND version=#{expectedVersion}
+    </update>
+    <update id="approveComment">
+      UPDATE community_post_comment c SET author_approval_state='VISIBLE',update_time=#{now},version=version+1
+      WHERE c.id=#{commentId} AND c.post_id=#{postId} AND c.lifecycle='PUBLISHED'
+        AND c.author_approval_state='PENDING' AND c.version=#{expectedVersion}
+        AND EXISTS(SELECT 1 FROM community_post p WHERE p.id=#{postId} AND p.author_id=#{postAuthorId})
+    </update>
+    <update id="deleteComment">
+      UPDATE community_post_comment c SET lifecycle='DELETED',deleted_at=#{now},update_time=#{now},version=version+1
+      WHERE c.id=#{commentId} AND c.post_id=#{postId} AND c.lifecycle!='DELETED' AND c.version=#{expectedVersion}
+        AND (c.author_id=#{operatorMemberId} OR EXISTS(
+          SELECT 1 FROM community_post p WHERE p.id=#{postId} AND p.author_id=#{operatorMemberId}))
+    </update>
+    <update id="incrementShareCount">
+      UPDATE community_post SET share_count=share_count+1,update_time=#{now} WHERE id=#{postId} AND lifecycle='PUBLISHED'
+    </update>
+    <insert id="insertCommentAction">
+      <bind name="viewerId" value="memberId"/>
+      INSERT INTO community_post_comment_action(comment_id,member_id,action_type,request_id,create_time)
+      SELECT c.id,#{memberId},'LIKE',#{requestId},#{now}
+      FROM community_post_comment c JOIN community_post p ON p.id=c.post_id
+      WHERE c.id=#{commentId} AND c.lifecycle='PUBLISHED' AND c.author_approval_state='VISIBLE'
+        AND p.interaction_enabled=1
+        <include refid="visibilityPolicy"/>
+        AND NOT EXISTS(SELECT 1 FROM im_block cb
+                       WHERE (cb.member_id=#{memberId} AND cb.blocked_member_id=c.author_id)
+                          OR (cb.member_id=c.author_id AND cb.blocked_member_id=#{memberId}))
+        AND NOT EXISTS(SELECT 1 FROM community_member_mute cmu
+                       WHERE cmu.member_id=#{memberId} AND cmu.muted_member_id=c.author_id)
+    </insert>
+    <select id="selectCommentActionByRequest" resultType="map">
+      SELECT comment_id,member_id,action_type FROM community_post_comment_action
+      WHERE member_id=#{memberId} AND request_id=#{requestId}
+    </select>
+    <delete id="deleteCommentAction">
+      DELETE FROM community_post_comment_action WHERE comment_id=#{commentId} AND member_id=#{memberId} AND action_type='LIKE'
+    </delete>
+    <update id="recomputeCommentLikes">
+      UPDATE community_post_comment c SET like_count=(
+        SELECT COUNT(*) FROM community_post_comment_action a WHERE a.comment_id=c.id AND a.action_type='LIKE'
+      ) WHERE c.id=#{commentId}
+    </update>
+    <select id="selectComments" resultType="map">
+      WITH root_page AS (
+        SELECT r.id
+        FROM community_post_comment r
+        WHERE r.post_id=#{postId} AND r.parent_id IS NULL
+          AND (r.lifecycle='PUBLISHED' OR (r.lifecycle='CHECKING' AND r.author_id=#{viewerId}))
+          AND (r.author_approval_state='VISIBLE' OR r.author_id=#{viewerId} OR EXISTS(
+            SELECT 1 FROM community_post p0 WHERE p0.id=#{postId} AND p0.author_id=#{viewerId}))
+          AND (#{cursor} IS NULL OR r.id&lt;#{cursor})
+          AND NOT EXISTS(SELECT 1 FROM im_block b0
+            WHERE (b0.member_id=#{viewerId} AND b0.blocked_member_id=r.author_id)
+               OR (b0.member_id=r.author_id AND b0.blocked_member_id=#{viewerId}))
+          AND NOT EXISTS(SELECT 1 FROM community_member_mute mu0
+            WHERE mu0.member_id=#{viewerId} AND mu0.muted_member_id=r.author_id)
+        ORDER BY r.id DESC LIMIT #{limit}
+      )
+      SELECT c.id,c.post_id,c.author_id,c.root_id,c.parent_id,c.replied_to_member_id,c.body,c.lifecycle,
+             c.author_approval_state,c.version,c.like_count,c.create_time,
+             m.nickname author_nickname,m.avatar author_avatar,
+             CASE WHEN EXISTS(SELECT 1 FROM community_post_comment_action ca
+               WHERE ca.comment_id=c.id AND ca.member_id=#{viewerId} AND ca.action_type='LIKE') THEN 1 ELSE 0 END viewer_liked
+      FROM root_page rp
+      JOIN community_post_comment c ON c.id=rp.id OR c.root_id=rp.id
+      LEFT JOIN ums_member m ON m.id=c.author_id
+      WHERE (c.lifecycle='PUBLISHED' OR (c.lifecycle='CHECKING' AND c.author_id=#{viewerId}))
+        AND (c.author_approval_state='VISIBLE' OR c.author_id=#{viewerId} OR EXISTS(
+          SELECT 1 FROM community_post p2 WHERE p2.id=#{postId} AND p2.author_id=#{viewerId}))
+        AND NOT EXISTS(SELECT 1 FROM im_block b WHERE (b.member_id=#{viewerId} AND b.blocked_member_id=c.author_id)
+          OR (b.member_id=c.author_id AND b.blocked_member_id=#{viewerId}))
+        AND NOT EXISTS(SELECT 1 FROM community_member_mute mu
+          WHERE mu.member_id=#{viewerId} AND mu.muted_member_id=c.author_id)
+      ORDER BY rp.id DESC,CASE WHEN c.id=rp.id THEN 0 ELSE 1 END,c.id ASC
+    </select>
+    <insert id="insertFeatured">
+      INSERT INTO community_featured_entry(post_id,collection_code,city_code,reason,operator_user_id,starts_at,ends_at,create_time)
+      VALUES(#{postId},#{collectionCode},#{cityCode},#{reason},#{operatorUserId},#{startsAt},#{endsAt},#{now})
+    </insert>
+    <insert id="insertEnforcement">
+      INSERT INTO community_post_enforcement(post_id,target_member_id,enforcement_type,rule_code,guideline_version_id,
+        reason_code,previous_lifecycle,evidence_snapshot_json,operator_user_id,starts_at,ends_at,status,request_id,version,create_time,update_time)
+      VALUES(#{postId},#{targetMemberId},#{enforcementType},#{ruleCode},#{guidelineVersionId},#{reasonCode},#{previousLifecycle},
+        #{evidenceJson},#{operatorUserId},#{startsAt},#{endsAt},'ACTIVE',#{requestId},0,#{now},#{now})
+    </insert>
+    <select id="selectEnforcement" resultType="map">SELECT * FROM community_post_enforcement WHERE id=#{id}</select>
+    <select id="selectEnforcementByRequest" resultType="map">
+      SELECT * FROM community_post_enforcement WHERE operator_user_id=#{operatorUserId} AND request_id=#{requestId}
+    </select>
+    <select id="selectEnforcements" resultType="map">
+      SELECT e.id,e.post_id,e.target_member_id,e.enforcement_type,e.rule_code,e.guideline_version_id,e.reason_code,
+             e.previous_lifecycle,e.evidence_snapshot_json,e.operator_user_id,e.starts_at,e.ends_at,e.status,e.version,
+             e.create_time,g.content_json guideline_content_json
+      FROM community_post_enforcement e JOIN community_guideline_version g ON g.id=e.guideline_version_id
+      WHERE e.post_id=#{postId} ORDER BY e.id DESC
+    </select>
+    <select id="selectMemberEnforcements" resultType="map">
+      SELECT e.id,e.post_id,e.target_member_id,e.enforcement_type,e.rule_code,e.guideline_version_id,
+             e.reason_code,e.previous_lifecycle,e.starts_at,e.ends_at,e.status,e.version,e.create_time,
+             a.id appeal_id,a.status appeal_status,a.decision_reason,a.reviewed_at
+      FROM community_post_enforcement e
+      LEFT JOIN community_post p ON p.id=e.post_id
+      LEFT JOIN community_post_appeal a ON a.enforcement_id=e.id AND a.appellant_member_id=#{memberId}
+      WHERE (e.target_member_id=#{memberId} OR (e.target_member_id IS NULL AND p.author_id=#{memberId}))
+        AND (#{cursor} IS NULL OR e.id&lt;#{cursor})
+      ORDER BY e.id DESC LIMIT #{limit}
+    </select>
+    <insert id="insertAppeal">
+      INSERT INTO community_post_appeal(enforcement_id,appellant_member_id,reason,evidence_asset_ids_json,request_id,
+        status,create_time,update_time)
+      VALUES(#{enforcementId},#{appellantMemberId},#{reason},#{evidenceJson},#{requestId},'SUBMITTED',#{now},#{now})
+    </insert>
+    <select id="selectAppeal" resultType="map">SELECT * FROM community_post_appeal WHERE id=#{id}</select>
+    <select id="selectAppeals" resultType="map">
+      SELECT a.id,a.enforcement_id,a.appellant_member_id,a.reason,a.evidence_asset_ids_json,a.status,
+             a.reviewer_user_id,a.reviewed_at,a.decision_reason,a.version,a.create_time,e.post_id,e.enforcement_type,
+             e.rule_code,e.reason_code,e.evidence_snapshot_json,e.guideline_version_id,
+             g.content_json guideline_content_json
+      FROM community_post_appeal a JOIN community_post_enforcement e ON e.id=a.enforcement_id
+      JOIN community_guideline_version g ON g.id=e.guideline_version_id
+      WHERE (#{status} IS NULL OR a.status=#{status}) AND (#{cursor} IS NULL OR a.id&lt;#{cursor})
+      ORDER BY a.id DESC LIMIT #{limit}
+    </select>
+    <update id="reviewAppealCas">
+      UPDATE community_post_appeal SET status=#{decision},decision_reason=#{reason},reviewer_user_id=#{reviewerUserId},
+        reviewed_at=#{now},update_time=#{now},version=version+1
+      WHERE id=#{id} AND status IN ('SUBMITTED','REVIEWING') AND version=#{expectedVersion}
+    </update>
+    <update id="reverseEnforcement">
+      UPDATE community_post_enforcement SET status='REVERSED',update_time=#{now},version=version+1
+      WHERE id=#{id} AND status='ACTIVE' AND version=#{expectedVersion}
+    </update>
+    <select id="selectActivePostEnforcementTypes" resultType="string">
+      SELECT enforcement_type FROM community_post_enforcement
+      WHERE post_id=#{postId} AND status='ACTIVE' AND starts_at&lt;=#{now}
+        AND (ends_at IS NULL OR ends_at&gt;#{now})
+    </select>
+    <select id="selectActiveEnforcementBaseline" resultType="string">
+      SELECT previous_lifecycle FROM community_post_enforcement
+      WHERE post_id=#{postId} AND enforcement_type IN ('HIDE_PENDING_REVIEW','REMOVE')
+        AND status='ACTIVE' AND starts_at&lt;=#{now} AND (ends_at IS NULL OR ends_at&gt;#{now})
+        AND previous_lifecycle IS NOT NULL
+      ORDER BY starts_at,id LIMIT 1
+    </select>
+    <select id="selectEnforcementRestoreLifecycle" resultType="string">
+      SELECT previous_lifecycle FROM community_post_enforcement
+      WHERE post_id=#{postId} AND enforcement_type IN ('HIDE_PENDING_REVIEW','REMOVE')
+        AND status IN ('EXPIRED','REVERSED') AND previous_lifecycle IS NOT NULL
+      ORDER BY update_time DESC,id DESC LIMIT 1
+    </select>
+    <select id="selectEnforcementBoundaryPostIds" resultType="long">
+      SELECT DISTINCT post_id FROM community_post_enforcement
+      WHERE post_id IS NOT NULL AND status='ACTIVE'
+        AND ((starts_at&lt;=#{now} AND update_time&lt;starts_at) OR (ends_at IS NOT NULL AND ends_at&lt;=#{now}))
+      ORDER BY post_id LIMIT #{limit}
+    </select>
+    <update id="activateDueEnforcements">
+      UPDATE community_post_enforcement SET update_time=#{now}
+      WHERE post_id=#{postId} AND status='ACTIVE' AND starts_at&lt;=#{now} AND update_time&lt;starts_at
+        AND (ends_at IS NULL OR ends_at&gt;#{now})
+    </update>
+    <update id="expireDueEnforcements">
+      UPDATE community_post_enforcement SET status='EXPIRED',update_time=#{now},version=version+1
+      WHERE post_id=#{postId} AND status='ACTIVE' AND ends_at IS NOT NULL AND ends_at&lt;=#{now}
+    </update>
+    <update id="reconcilePostEnforcementCas">
+      UPDATE community_post SET lifecycle=#{lifecycle},recommendation_eligible=#{recommendationEligible},
+        search_eligible=#{searchEligible},interaction_enabled=#{interactionEnabled},update_time=#{now},version=version+1
+      WHERE id=#{postId} AND version=#{expectedVersion} AND lifecycle!='DELETED'
+    </update>
+    <select id="selectNotifications" resultType="map">
+      <bind name="viewerId" value="memberId"/>
+      SELECT n.id,n.post_id,n.comment_id,
+        CASE WHEN n.notification_type='SYSTEM_GOVERNANCE' THEN n.actor_member_id ELSE (
+          SELECT na.actor_member_id FROM community_notification_actor na
+          WHERE na.recipient_member_id=n.recipient_member_id AND na.notification_type=n.notification_type
+            AND na.aggregate_key=n.aggregate_key
+            AND NOT EXISTS(SELECT 1 FROM im_block ab
+                           WHERE (ab.member_id=#{memberId} AND ab.blocked_member_id=na.actor_member_id)
+                              OR (ab.member_id=na.actor_member_id AND ab.blocked_member_id=#{memberId}))
+            AND NOT EXISTS(SELECT 1 FROM community_member_mute am
+                           WHERE am.member_id=#{memberId} AND am.muted_member_id=na.actor_member_id)
+          ORDER BY na.update_time DESC LIMIT 1
+        ) END actor_member_id,
+        n.notification_type,
+        CASE WHEN n.notification_type='SYSTEM_GOVERNANCE' THEN n.actor_count ELSE (
+          SELECT COUNT(*) FROM community_notification_actor nc
+          WHERE nc.recipient_member_id=n.recipient_member_id AND nc.notification_type=n.notification_type
+            AND nc.aggregate_key=n.aggregate_key
+            AND NOT EXISTS(SELECT 1 FROM im_block cb
+                           WHERE (cb.member_id=#{memberId} AND cb.blocked_member_id=nc.actor_member_id)
+                              OR (cb.member_id=nc.actor_member_id AND cb.blocked_member_id=#{memberId}))
+            AND NOT EXISTS(SELECT 1 FROM community_member_mute cm
+                           WHERE cm.member_id=#{memberId} AND cm.muted_member_id=nc.actor_member_id)
+        ) END actor_count,
+        n.payload_json,n.read_at,n.create_time
+      FROM community_notification n
+      WHERE n.recipient_member_id=#{memberId} AND (#{cursor} IS NULL OR n.id&lt;#{cursor})
+        AND (
+          n.notification_type='SYSTEM_GOVERNANCE'
+          OR (
+            (
+              (n.notification_type='SOCIAL' AND n.post_id IS NULL)
+              OR (
+                n.post_id IS NOT NULL
+                AND EXISTS(SELECT 1 FROM community_post p WHERE p.id=n.post_id<include refid="visibilityPolicy"/>)
+                AND (n.comment_id IS NULL OR EXISTS(
+                  SELECT 1 FROM community_post_comment nc WHERE nc.id=n.comment_id AND nc.post_id=n.post_id
+                    AND nc.lifecycle='PUBLISHED' AND nc.author_approval_state='VISIBLE'))
+              )
+            )
+            AND EXISTS(
+              SELECT 1 FROM community_notification_actor nv
+              WHERE nv.recipient_member_id=n.recipient_member_id AND nv.notification_type=n.notification_type
+                AND nv.aggregate_key=n.aggregate_key
+                AND NOT EXISTS(SELECT 1 FROM im_block nb
+                               WHERE (nb.member_id=#{memberId} AND nb.blocked_member_id=nv.actor_member_id)
+                                  OR (nb.member_id=nv.actor_member_id AND nb.blocked_member_id=#{memberId}))
+                AND NOT EXISTS(SELECT 1 FROM community_member_mute nmu
+                               WHERE nmu.member_id=#{memberId} AND nmu.muted_member_id=nv.actor_member_id)
+            )
+          )
+        )
+      ORDER BY n.id DESC LIMIT #{limit}
+    </select>
+    <select id="selectNotificationPreferences" resultType="map">
+      SELECT interaction_enabled,mention_enabled,social_enabled
+      FROM community_notification_preference WHERE member_id=#{memberId}
+    </select>
+    <insert id="upsertNotificationPreferences">
+      INSERT INTO community_notification_preference(member_id,interaction_enabled,mention_enabled,social_enabled,create_time,update_time)
+      VALUES(#{memberId},#{interactionEnabled},#{mentionEnabled},#{socialEnabled},#{now},#{now})
+      ON DUPLICATE KEY UPDATE interaction_enabled=VALUES(interaction_enabled),mention_enabled=VALUES(mention_enabled),
+        social_enabled=VALUES(social_enabled),update_time=VALUES(update_time)
+    </insert>
+    <update id="markNotificationRead">
+      UPDATE community_notification SET read_at=COALESCE(read_at,#{now}),update_time=#{now}
+      WHERE id=#{id} AND recipient_member_id=#{memberId}
+    </update>
+</mapper>

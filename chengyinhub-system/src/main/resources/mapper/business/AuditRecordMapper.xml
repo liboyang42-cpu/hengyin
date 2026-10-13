@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.AuditRecordMapper">
+
+    <resultMap type="AuditRecord" id="AuditRecordResult">
+        <result property="id" column="id" />
+        <result property="taskId" column="task_id" />
+        <result property="action" column="action" />
+        <result property="operatorId" column="operator_id" />
+        <result property="reasonCode" column="reason_code" />
+        <result property="reasonText" column="reason_text" />
+        <result property="snapshotJson" column="snapshot_json" />
+        <result property="revertedRecordId" column="reverted_record_id" />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <select id="selectAuditRecordList" parameterType="AuditRecord" resultMap="AuditRecordResult">
+        select id, task_id, action, operator_id, reason_code, reason_text, snapshot_json,
+               reverted_record_id, create_time
+        from audit_record
+        <where>
+            <if test="taskId != null"> and task_id = #{taskId}</if>
+            <if test="action != null and action != ''"> and action = #{action}</if>
+        </where>
+        order by id desc
+    </select>
+
+    <select id="selectReportsForUpdate" resultMap="AuditRecordResult">
+        select id, task_id, action, operator_id, snapshot_json from audit_record
+        where task_id = #{taskId} and action = 'REPORT' order by id for update
+    </select>
+
+    <insert id="insertAuditRecord" parameterType="AuditRecord" useGeneratedKeys="true" keyProperty="id">
+        insert into audit_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="taskId != null">task_id,</if>
+            <if test="action != null">action,</if>
+            <if test="operatorId != null">operator_id,</if>
+            <if test="reasonCode != null">reason_code,</if>
+            <if test="reasonText != null">reason_text,</if>
+            <if test="snapshotJson != null">snapshot_json,</if>
+            <if test="revertedRecordId != null">reverted_record_id,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="taskId != null">#{taskId},</if>
+            <if test="action != null">#{action},</if>
+            <if test="operatorId != null">#{operatorId},</if>
+            <if test="reasonCode != null">#{reasonCode},</if>
+            <if test="reasonText != null">#{reasonText},</if>
+            <if test="snapshotJson != null">#{snapshotJson},</if>
+            <if test="revertedRecordId != null">#{revertedRecordId},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+</mapper>

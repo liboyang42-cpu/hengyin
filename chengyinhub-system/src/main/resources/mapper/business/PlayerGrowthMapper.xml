@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PlayerGrowthMapper">
+
+    <resultMap type="PlayerGrowth" id="PlayerGrowthResult">
+        <result property="id"              column="id"                />
+        <result property="memberId"        column="member_id"         />
+        <result property="level"           column="level"             />
+        <result property="totalCheckins"   column="total_checkins"    />
+        <result property="totalMileage"    column="total_mileage"     />
+        <result property="streakDays"      column="streak_days"       />
+        <result property="lastCheckinDate" column="last_checkin_date"  />
+        <result property="updateTime"      column="update_time"       />
+        <result property="createTime"      column="create_time"       />
+    </resultMap>
+
+    <select id="selectByMember" parameterType="Long" resultMap="PlayerGrowthResult">
+        select id, member_id, level, total_checkins, total_mileage, streak_days, last_checkin_date, update_time, create_time
+        from player_growth where member_id = #{memberId} limit 1
+    </select>
+
+    <select id="selectLevelsByMemberIds" resultMap="PlayerGrowthResult">
+        select member_id, level
+        from player_growth
+        where member_id in
+        <foreach collection="memberIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <insert id="insertPlayerGrowth" parameterType="PlayerGrowth" useGeneratedKeys="true" keyProperty="id">
+        insert into player_growth
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="level != null">level,</if>
+            <if test="totalCheckins != null">total_checkins,</if>
+            <if test="totalMileage != null">total_mileage,</if>
+            <if test="streakDays != null">streak_days,</if>
+            <if test="lastCheckinDate != null">last_checkin_date,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="level != null">#{level},</if>
+            <if test="totalCheckins != null">#{totalCheckins},</if>
+            <if test="totalMileage != null">#{totalMileage},</if>
+            <if test="streakDays != null">#{streakDays},</if>
+            <if test="lastCheckinDate != null">#{lastCheckinDate},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updatePlayerGrowth" parameterType="PlayerGrowth">
+        update player_growth
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="level != null">level = #{level},</if>
+            <if test="totalCheckins != null">total_checkins = #{totalCheckins},</if>
+            <if test="totalMileage != null">total_mileage = #{totalMileage},</if>
+            <if test="streakDays != null">streak_days = #{streakDays},</if>
+            <if test="lastCheckinDate != null">last_checkin_date = #{lastCheckinDate},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where member_id = #{memberId}
+    </update>
+
+</mapper>

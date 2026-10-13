@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantCrmMarketingConsentMapper">
+    <resultMap id="Consent" type="com.chengyinhub.business.domain.MerchantCrmMarketingConsent">
+        <result property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="merchantOwnerMemberId" column="merchant_id"/>
+        <result property="merchantRowId" column="merchant_row_id"/>
+        <result property="channel" column="channel"/>
+        <result property="eventType" column="event_type"/>
+        <result property="requestId" column="request_id"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <resultMap id="EligibleMerchant" type="com.chengyinhub.business.domain.vo.MerchantCrmConsentMerchantVO">
+        <result property="merchantRowId" column="merchant_row_id"/>
+        <result property="merchantOwnerMemberId" column="merchant_owner_member_id"/>
+        <result property="merchantName" column="merchant_name"/>
+        <result property="inAppOptedIn" column="in_app_opted_in"/>
+        <result property="couponOptedIn" column="coupon_opted_in"/>
+    </resultMap>
+
+    <sql id="EligibleMerchantScope">
+        m.del_flag = 0 and m.status = 1 and m.account_status = 1
+        and not exists (
+          select 1 from mms_merchant sibling
+          where sibling.member_id = m.member_id and sibling.id &lt;&gt; m.id
+            and sibling.del_flag = 0 and sibling.status = 1 and sibling.account_status = 1
+        )
+        and exists (
+          select 1
+          from cms_registration r
+          where r.member_id = #{memberId} and r.payment_status in (2, 4)
+            and (
+              (r.owner_type = 1 and exists (
+                select 1 from cms_topic t
+                where t.id = r.owner_id and t.del_flag = 0
+                  and (t.product_type is null or t.product_type &lt;&gt; 2)
+                  and (t.member_id = m.member_id or exists (
+                    select 1 from cms_registration_merchant rm
+                    where rm.topic_id = t.id and rm.member_id = m.member_id
+                      and rm.audit_status = 1 and rm.del_flag = 0
+                  ))
+              ))
+              or (r.owner_type = 2 and exists (
+                select 1 from cms_activity a
+                left join cms_topic at on at.id = a.topic_id
+                where a.id = r.owner_id and a.member_id = m.member_id and a.del_flag = 0
+                  and (at.id is null or at.product_type is null or at.product_type &lt;&gt; 2)
+              ))
+            )
+        )
+    </sql>
+
+    <sql id="EligibleProjection">
+        m.id as merchant_row_id, m.member_id as merchant_owner_member_id,
+        coalesce(nullif(m.name, ''), '商家') as merchant_name,
+        exists (
+          select 1 from merchant_crm_marketing_consent c
+          where c.member_id = #{memberId} and c.merchant_row_id = m.id
+            and c.channel = 'IN_APP' and c.event_type = 'OPT_IN'
+            and c.id = (select max(latest.id) from merchant_crm_marketing_consent latest
+                        where latest.member_id = c.member_id and latest.merchant_row_id = c.merchant_row_id
+                          and latest.channel = c.channel)
+        ) as in_app_opted_in,
+        exists (
+          select 1 from merchant_crm_marketing_consent c
+          where c.member_id = #{memberId} and c.merchant_row_id = m.id
+            and c.channel = 'COUPON' and c.event_type = 'OPT_IN'
+            and c.id = (select max(latest.id) from merchant_crm_marketing_consent latest
+                        where latest.member_id = c.member_id and latest.merchant_row_id = c.merchant_row_id
+                          and latest.channel = c.channel)
+        ) as coupon_opted_in
+    </sql>
+
+    <select id="selectEligibleMerchants" resultMap="EligibleMerchant">
+        select <include refid="EligibleProjection"/>
+        from mms_merchant m
+        where <include refid="EligibleMerchantScope"/>
+        order by m.id desc
+    </select>
+
+    <select id="selectEligibleMerchant" resultMap="EligibleMerchant">
+        select <include refid="EligibleProjection"/>
+        from mms_merchant m
+        where m.id = #{merchantRowId} and <include refid="EligibleMerchantScope"/>
+        limit 1
+    </select>
+
+    <select id="selectByRequestId" resultMap="Consent">
+        select id, member_id, merchant_id, merchant_row_id, channel, event_type, request_id, create_time
+        from merchant_crm_marketing_consent
+        where member_id = #{memberId} and merchant_row_id = #{merchantRowId} and request_id = #{requestId}
+        limit 1
+    </select>
+
+    <select id="selectLatestOptIn" resultMap="Consent">
+        select id, member_id, merchant_id, merchant_row_id, channel, event_type, request_id, create_time
+        from merchant_crm_marketing_consent c
+        where c.member_id = #{memberId} and c.merchant_id = #{ownerMemberId}
+          and c.merchant_row_id = #{merchantRowId}
+          and c.channel = #{channel} and c.event_type = 'OPT_IN'
+          and c.id = (select max(latest.id) from merchant_crm_marketing_consent latest
+                      where latest.member_id = c.member_id and latest.merchant_row_id = c.merchant_row_id
+                        and latest.channel = c.channel)
+        limit 1
+    </select>
+
+    <insert id="insertConsent" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.MerchantCrmMarketingConsent">
+        insert into merchant_crm_marketing_consent
+          (member_id, merchant_id, merchant_row_id, channel, event_type, request_id, create_time)
+        values
+          (#{memberId}, #{merchantOwnerMemberId}, #{merchantRowId}, #{channel}, #{eventType}, #{requestId}, now())
+    </insert>
+</mapper>

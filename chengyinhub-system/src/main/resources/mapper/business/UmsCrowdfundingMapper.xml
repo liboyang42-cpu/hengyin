@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.UmsCrowdfundingMapper">
+    
+    <resultMap type="UmsCrowdfunding" id="UmsCrowdfundingResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="activeId"    column="active_id"    />
+        <result property="giftId"    column="gift_id"    />
+        <result property="point"    column="point"    />
+        <result property="contents"    column="contents"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectUmsCrowdfundingVo">
+        select id, member_id, active_id, gift_id, point, contents, del_flag, create_by, create_time, update_by, update_time from ums_crowdfunding
+    </sql>
+
+    <select id="selectUmsCrowdfundingList" parameterType="UmsCrowdfunding" resultMap="UmsCrowdfundingResult">
+        <include refid="selectUmsCrowdfundingVo"/>
+        <where>  
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="activeId != null "> and active_id = #{activeId}</if>
+            <if test="giftId != null "> and gift_id = #{giftId}</if>
+            <if test="point != null "> and point = #{point}</if>
+            <if test="contents != null  and contents != ''"> and contents = #{contents}</if>
+        </where>
+    </select>
+    
+    <select id="selectUmsCrowdfundingById" parameterType="Long" resultMap="UmsCrowdfundingResult">
+        <include refid="selectUmsCrowdfundingVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertUmsCrowdfunding" parameterType="UmsCrowdfunding" useGeneratedKeys="true" keyProperty="id">
+        insert into ums_crowdfunding
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="activeId != null">active_id,</if>
+            <if test="giftId != null">gift_id,</if>
+            <if test="point != null">point,</if>
+            <if test="contents != null">contents,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="activeId != null">#{activeId},</if>
+            <if test="giftId != null">#{giftId},</if>
+            <if test="point != null">#{point},</if>
+            <if test="contents != null">#{contents},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateUmsCrowdfunding" parameterType="UmsCrowdfunding">
+        update ums_crowdfunding
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="activeId != null">active_id = #{activeId},</if>
+            <if test="giftId != null">gift_id = #{giftId},</if>
+            <if test="point != null">point = #{point},</if>
+            <if test="contents != null">contents = #{contents},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteUmsCrowdfundingById" parameterType="Long">
+        delete from ums_crowdfunding where id = #{id}
+    </delete>
+
+    <delete id="deleteUmsCrowdfundingByIds" parameterType="String">
+        delete from ums_crowdfunding where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

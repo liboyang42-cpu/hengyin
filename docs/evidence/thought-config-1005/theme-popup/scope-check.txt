@@ -1,0 +1,5 @@
+
+> lint:scope
+> node --expose-internals scripts/js-scope-lint.js
+
+JS-SCOPE PASS: 553 个生产 JS，未解析标识符 0，不存在导出 0

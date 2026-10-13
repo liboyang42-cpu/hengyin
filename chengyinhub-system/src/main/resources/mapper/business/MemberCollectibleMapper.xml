@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MemberCollectibleMapper">
+
+    <resultMap type="MemberCollectible" id="MemberCollectibleResult">
+        <result property="id"          column="id"           />
+        <result property="memberId"    column="member_id"    />
+        <result property="collType"    column="coll_type"    />
+        <result property="topicId"     column="topic_id"     />
+        <result property="refId"       column="ref_id"       />
+        <result property="content"     column="content"      />
+        <result property="createTime"  column="create_time"  />
+    </resultMap>
+
+    <sql id="selectMemberCollectibleVo">
+        select id, member_id, coll_type, topic_id, ref_id, content, create_time from member_collectible
+    </sql>
+
+    <select id="selectListByMember" resultMap="MemberCollectibleResult">
+        <include refid="selectMemberCollectibleVo"/>
+        where member_id = #{memberId}
+        <if test="collType != null"> and coll_type = #{collType}</if>
+        order by create_time desc
+    </select>
+
+    <select id="countOne" resultType="int">
+        select count(1) from member_collectible
+        where member_id = #{memberId} and coll_type = #{collType} and ref_id = #{refId}
+    </select>
+
+    <insert id="insertMemberCollectible" parameterType="MemberCollectible" useGeneratedKeys="true" keyProperty="id">
+        insert into member_collectible
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="collType != null">coll_type,</if>
+            <if test="topicId != null">topic_id,</if>
+            <if test="refId != null">ref_id,</if>
+            <if test="content != null">content,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="collType != null">#{collType},</if>
+            <if test="topicId != null">#{topicId},</if>
+            <if test="refId != null">#{refId},</if>
+            <if test="content != null">#{content},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <delete id="deleteOne">
+        delete from member_collectible
+        where member_id = #{memberId} and coll_type = #{collType} and ref_id = #{refId}
+    </delete>
+
+</mapper>

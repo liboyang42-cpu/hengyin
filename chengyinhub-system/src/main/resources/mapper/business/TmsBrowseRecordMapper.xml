@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.TmsBrowseRecordMapper">
+    
+    <resultMap type="TmsBrowseRecord" id="TmsBrowseRecordResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="browseType"    column="browse_type"    />
+        <result property="targetId"    column="target_id"    />
+        <result property="targetTitle"    column="target_title"    />
+        <result property="browseTime"    column="browse_time"    />
+        <result property="browseDuration"    column="browse_duration"    />
+        <result property="ipAddress"    column="ip_address"    />
+        <result property="userAgent"    column="user_agent"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectTmsBrowseRecordVo">
+        select id, member_id, browse_type, target_id, target_title, browse_time, browse_duration, ip_address, user_agent, create_time, create_by, update_by, update_time from tms_browse_record
+    </sql>
+
+    <select id="selectTmsBrowseRecordList" parameterType="TmsBrowseRecord" resultMap="TmsBrowseRecordResult">
+        <include refid="selectTmsBrowseRecordVo"/>
+        <where>  
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="browseType != null "> and browse_type = #{browseType}</if>
+            <if test="targetId != null "> and target_id = #{targetId}</if>
+            <if test="targetTitle != null  and targetTitle != ''"> and target_title = #{targetTitle}</if>
+            <if test="browseTime != null "> and browse_time = #{browseTime}</if>
+            <if test="browseDuration != null "> and browse_duration = #{browseDuration}</if>
+            <if test="ipAddress != null  and ipAddress != ''"> and ip_address = #{ipAddress}</if>
+            <if test="userAgent != null  and userAgent != ''"> and user_agent = #{userAgent}</if>
+        </where>
+    </select>
+    
+    <select id="selectTmsBrowseRecordById" parameterType="Long" resultMap="TmsBrowseRecordResult">
+        <include refid="selectTmsBrowseRecordVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertTmsBrowseRecord" parameterType="TmsBrowseRecord" useGeneratedKeys="true" keyProperty="id">
+        insert into tms_browse_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="browseType != null">browse_type,</if>
+            <if test="targetId != null">target_id,</if>
+            <if test="targetTitle != null">target_title,</if>
+            <if test="browseTime != null">browse_time,</if>
+            <if test="browseDuration != null">browse_duration,</if>
+            <if test="ipAddress != null">ip_address,</if>
+            <if test="userAgent != null">user_agent,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="browseType != null">#{browseType},</if>
+            <if test="targetId != null">#{targetId},</if>
+            <if test="targetTitle != null">#{targetTitle},</if>
+            <if test="browseTime != null">#{browseTime},</if>
+            <if test="browseDuration != null">#{browseDuration},</if>
+            <if test="ipAddress != null">#{ipAddress},</if>
+            <if test="userAgent != null">#{userAgent},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateTmsBrowseRecord" parameterType="TmsBrowseRecord">
+        update tms_browse_record
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="browseType != null">browse_type = #{browseType},</if>
+            <if test="targetId != null">target_id = #{targetId},</if>
+            <if test="targetTitle != null">target_title = #{targetTitle},</if>
+            <if test="browseTime != null">browse_time = #{browseTime},</if>
+            <if test="browseDuration != null">browse_duration = #{browseDuration},</if>
+            <if test="ipAddress != null">ip_address = #{ipAddress},</if>
+            <if test="userAgent != null">user_agent = #{userAgent},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteTmsBrowseRecordById" parameterType="Long">
+        delete from tms_browse_record where id = #{id}
+    </delete>
+
+    <delete id="deleteTmsBrowseRecordByIds" parameterType="String">
+        delete from tms_browse_record where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 按browse_type和targetId统计浏览次数（支持时间范围） -->
+    <select id="countBrowseByTypeAndTarget" parameterType="map" resultType="map">
+        SELECT
+        browse_type,
+        target_id,
+        COUNT(*) AS browse_count  -- 总浏览次数
+        FROM
+        tms_browse_record
+        <where>
+            <!-- 必传参数：browse_type和target_id（至少一个，根据业务调整） -->
+            <if test="browseType != null">
+                AND browse_type = #{browseType}
+            </if>
+            <if test="targetId != null">
+                AND target_id = #{targetId}
+            </if>
+            <!-- 时间范围条件（可选）：开始时间 -->
+            <if test="startTime != null">
+                AND browse_time >= #{startTime}
+            </if>
+            <!-- 时间范围条件（可选）：结束时间 -->
+            <if test="endTime != null">
+                AND browse_time &lt;= #{endTime}  <!-- 注意XML中<需要转义为&lt; -->
+            </if>
+        </where>
+        <!-- 按类型和目标ID分组（如果需要分别统计每个target_id的次数） -->
+        <if test="browseType != null or targetId != null">
+            GROUP BY browse_type, target_id
+        </if>
+    </select>
+
+    <select id="countBrowseByTypeAndTargets" resultType="map">
+        SELECT target_id, COUNT(*) AS browse_count
+        FROM tms_browse_record
+        WHERE browse_type = #{browseType}
+          AND target_id IN
+        <foreach item="tid" collection="targetIds" open="(" separator="," close=")">
+            #{tid}
+        </foreach>
+        GROUP BY target_id
+    </select>
+
+    <!-- 留存清理:删早于 cutoff 的记录,单批 LIMIT(避免长事务/锁表) -->
+    <delete id="deleteBrowseRecordsBefore">
+        delete from tms_browse_record
+        <!-- 锚点用 browse_time:唯一写入点(ApiActivityController)为服务端 new Date(),NOT NULL 且已有 idx_browse_time 索引;
+             裸列走索引、非空不漏行(优于可空无索引的 create_time)。 -->
+        where browse_time &lt; #{cutoff}
+        limit #{limit}
+    </delete>
+</mapper>

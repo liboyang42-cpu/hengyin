@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.chengyinhub.business.mapper.UmsMemberMapper">
+
+    <resultMap type="UmsMember" id="UmsMemberResult">
+        <result property="id"    column="id"    />
+        <result property="userType"    column="user_type"    />
+        <result property="role"    column="role"    />
+        <result property="phone"    column="phone"    />
+        <result property="password"    column="password"    />
+        <result property="levelId"    column="level_id"    />
+        <result property="name"    column="name"    />
+        <result property="wechat"    column="wechat"    />
+        <result property="status"    column="status"    />
+        <result property="inviteUserId"    column="invite_user_id"    />
+        <result property="loginIp"    column="login_ip"    />
+        <result property="loginTime"    column="login_time"    />
+        <result property="nickname"    column="nickname"    />
+        <result property="avatar"    column="avatar"    />
+        <result property="sex"    column="sex"    />
+        <result property="wxOpenId"    column="wx_open_id"    />
+        <result property="appOpenId"    column="app_open_id"    />
+        <result property="unionId"    column="union_id"    />
+        <result property="appleId"    column="apple_id"    />
+        <result property="areaId"    column="area_id"    />
+        <result property="birthday"    column="birthday"    />
+        <result property="mark"    column="mark"    />
+        <result property="tagIds"    column="tag_ids"    />
+
+        <result property="casePics"    column="case_pics"    />
+        <result property="caseIntroducton"    column="case_introducton"    />
+
+        <result property="website"    column="website"    />
+        <result property="workAddress"    column="work_address"    />
+        <result property="introduction"    column="introduction"    />
+        <result property="balance"    column="balance"    />
+
+        <result property="point"    column="point"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectUmsMemberVo">
+        select id, user_type, role, phone, password, level_id, name,wechat, status, invite_user_id, login_ip, login_time, nickname, avatar, sex, wx_open_id, app_open_id, union_id, apple_id, area_id, birthday, mark, tag_ids,case_pics, case_introducton,website, work_address, introduction, balance, point, del_flag, create_by, create_time, update_by, update_time from ums_member
+    </sql>
+
+    <select id="selectUmsMemberList" parameterType="UmsMember" resultMap="UmsMemberResult">
+        <include refid="selectUmsMemberVo"/>
+        <where>
+            <if test="delFlag != null "> and del_flag = #{delFlag}</if>
+            <if test="userType != null "> and user_type = #{userType}</if>
+            <if test="phone != null  and phone != ''"> and phone = #{phone}</if>
+            <if test="password != null  and password != ''"> and password = #{password}</if>
+            <if test="levelId != null "> and level_id = #{levelId}</if>
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="inviteUserId != null  and inviteUserId != ''"> and invite_user_id = #{inviteUserId}</if>
+            <if test="loginIp != null  and loginIp != ''"> and login_ip = #{loginIp}</if>
+            <if test="loginTime != null "> and login_time = #{loginTime}</if>
+            <if test="nickname != null  and nickname != ''"> and nickname like concat('%', #{nickname}, '%')</if>
+            <if test="avatar != null  and avatar != ''"> and avatar = #{avatar}</if>
+            <if test="sex != null "> and sex = #{sex}</if>
+            <if test="wxOpenId != null  and wxOpenId != ''"> and wx_open_id = #{wxOpenId}</if>
+            <if test="appOpenId != null  and appOpenId != ''"> and app_open_id = #{appOpenId}</if>
+            <if test="unionId != null  and unionId != ''"> and union_id = #{unionId}</if>
+            <if test="appleId != null  and appleId != ''"> and apple_id = #{appleId}</if>
+            <if test="areaId != null "> and area_id = #{areaId}</if>
+            <if test="birthday != null "> and birthday = #{birthday}</if>
+            <if test="mark != null  and mark != ''"> and mark = #{mark}</if>
+            <if test="tagIds != null  and tagIds != ''"> and tag_ids = #{tagIds}</if>
+            <if test="point != null "> and point = #{point}</if>
+            <if test="startTime != null  and startTime != '' ">
+                and create_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null  and endTime != '' ">
+                and create_time &lt;= #{endTime}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectUmsMemberById" parameterType="Long" resultMap="UmsMemberResult">
+        <include refid="selectUmsMemberVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="countActiveNickname" resultType="int">
+        select count(1) from ums_member
+        where nickname_key = lower(trim(#{nickname}))
+        <if test="excludeMemberId != null">
+            and id != #{excludeMemberId}
+        </if>
+    </select>
+
+    <select id="lockMemberById" parameterType="Long" resultType="java.lang.Long">
+        select id from ums_member where id = #{id} for update
+    </select>
+
+    <select id="selectBalanceForUpdate" parameterType="Long" resultType="java.math.BigDecimal"
+            useCache="false" flushCache="true">
+        select coalesce(balance, 0) from ums_member where id = #{id} for update
+    </select>
+
+    <select id="lockActiveMemberById" parameterType="Long" resultType="java.lang.Long"
+            useCache="false" flushCache="true">
+        select id from ums_member
+        where id = #{id} and status = 1 and del_flag = 0
+        for update
+    </select>
+
+    <insert id="insertUmsMember" parameterType="UmsMember" useGeneratedKeys="true" keyProperty="id">
+        insert into ums_member
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userType != null">user_type,</if>
+            <if test="role != null">role,</if>
+            <if test="phone != null">phone,</if>
+            <if test="password != null">password,</if>
+            <if test="levelId != null">level_id,</if>
+            <if test="name != null">name,</if>
+            <if test="wechat != null">wechat,</if>
+
+            <if test="status != null">status,</if>
+            <if test="inviteUserId != null">invite_user_id,</if>
+            <if test="loginIp != null">login_ip,</if>
+            <if test="loginTime != null">login_time,</if>
+            <if test="nickname != null">nickname,</if>
+            <if test="avatar != null">avatar,</if>
+            <if test="sex != null">sex,</if>
+            <if test="wxOpenId != null">wx_open_id,</if>
+            <if test="appOpenId != null">app_open_id,</if>
+            <if test="unionId != null">union_id,</if>
+            <if test="appleId != null">apple_id,</if>
+            <if test="areaId != null">area_id,</if>
+            <if test="birthday != null">birthday,</if>
+            <if test="mark != null">mark,</if>
+            <if test="tagIds != null">tag_ids,</if>
+            <if test="casePics != null">case_pics,</if>
+            <if test="caseIntroducton != null">case_introducton,</if>
+            <if test="website != null">website,</if>
+            <if test="workAddress != null">work_address,</if>
+            <if test="introduction != null">introduction,</if>
+            <if test="balance != null">balance,</if>
+            <if test="point != null">point,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userType != null">#{userType},</if>
+            <if test="role != null">#{role},</if>
+            <if test="phone != null">#{phone},</if>
+            <if test="password != null">#{password},</if>
+            <if test="levelId != null">#{levelId},</if>
+            <if test="name != null">#{name},</if>
+            <if test="wechat != null">#{wechat},</if>
+
+            <if test="status != null">#{status},</if>
+            <if test="inviteUserId != null">#{inviteUserId},</if>
+            <if test="loginIp != null">#{loginIp},</if>
+            <if test="loginTime != null">#{loginTime},</if>
+            <if test="nickname != null">#{nickname},</if>
+            <if test="avatar != null">#{avatar},</if>
+            <if test="sex != null">#{sex},</if>
+            <if test="wxOpenId != null">#{wxOpenId},</if>
+            <if test="appOpenId != null">#{appOpenId},</if>
+            <if test="unionId != null">#{unionId},</if>
+            <if test="appleId != null">#{appleId},</if>
+            <if test="areaId != null">#{areaId},</if>
+            <if test="birthday != null">#{birthday},</if>
+            <if test="mark != null">#{mark},</if>
+            <if test="tagIds != null">#{tagIds},</if>
+            <if test="casePics != null">#{casePics},</if>
+            <if test="caseIntroducton != null">#{caseIntroducton},</if>
+            <if test="website != null">#{website},</if>
+            <if test="workAddress != null">#{workAddress},</if>
+            <if test="introduction != null">#{introduction},</if>
+            <if test="balance != null">#{balance},</if>
+            <if test="point != null">#{point},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateUmsMember" parameterType="UmsMember">
+        update ums_member
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userType != null">user_type = #{userType},</if>
+            <if test="role != null">role = #{role},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="password != null">password = #{password},</if>
+            <if test="levelId != null">level_id = #{levelId},</if>
+            <if test="name != null">name = #{name},</if>
+
+            <if test="wechat != null">wechat = #{wechat},</if>
+
+            <if test="status != null">status = #{status},</if>
+            <if test="inviteUserId != null">invite_user_id = #{inviteUserId},</if>
+            <if test="loginIp != null">login_ip = #{loginIp},</if>
+            <if test="loginTime != null">login_time = #{loginTime},</if>
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="sex != null">sex = #{sex},</if>
+            <if test="wxOpenId != null">wx_open_id = #{wxOpenId},</if>
+            <if test="appOpenId != null">app_open_id = #{appOpenId},</if>
+            <if test="unionId != null">union_id = #{unionId},</if>
+            <if test="appleId != null">apple_id = #{appleId},</if>
+            <if test="areaId != null">area_id = #{areaId},</if>
+            <if test="birthday != null">birthday = #{birthday},</if>
+            <if test="mark != null">mark = #{mark},</if>
+            <if test="tagIds != null">tag_ids = #{tagIds},</if>
+            <if test="casePics != null">case_pics = #{casePics},</if>
+            <if test="caseIntroducton != null">case_introducton = #{caseIntroducton},</if>
+            <if test="website != null">website = #{website},</if>
+            <if test="workAddress != null">work_address = #{workAddress},</if>
+            <if test="introduction != null">introduction = #{introduction},</if>
+            <if test="balance != null">balance = #{balance},</if>
+            <if test="point != null">point = #{point},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="bindWxOpenIdIfBlank">
+        update ums_member
+        set wx_open_id = #{wxOpenId}
+        where id = #{id}
+          and (wx_open_id is null or trim(wx_open_id) = '')
+    </update>
+
+    <update id="upgradePasswordIfMatches">
+        update ums_member
+        set password = #{upgradedPassword}
+        where id = #{id}
+          and password = #{observedPassword}
+    </update>
+
+    <delete id="deleteUmsMemberById" parameterType="Long">
+        delete from ums_member where id = #{id}
+    </delete>
+
+    <delete id="deleteUmsMemberByIds" parameterType="String">
+        delete from ums_member where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 扣除用户积分 -->
+    <update id="deductPoints">
+        UPDATE ums_member
+        SET point = point - #{point}
+        WHERE id = #{id}
+          AND point >= #{point}
+    </update>
+
+    <!-- 增加用户积分 -->
+    <update id="addPoints">
+        UPDATE ums_member
+        SET point = point + #{point}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 扣除用户余额 -->
+    <update id="deductBalance">
+        UPDATE ums_member
+        SET balance = balance - #{balance}
+        WHERE id = #{id}
+          AND balance >= #{balance}
+    </update>
+
+    <!--
+        提现专用:扣款的同时给冻结额留底,护栏与扣款同一条 UPDATE ⇒ 原子。
+        ⚠️ 别改回 `balance >= #{amount}` —— 那样冻结额只是个摆设,并发下会被提走(见 mapper javadoc)。
+    -->
+    <update id="deductWithdrawableBalance">
+        UPDATE ums_member
+        SET balance = balance - #{amount}
+        WHERE id = #{id}
+          AND balance - #{frozen} >= #{amount}
+    </update>
+
+    <!-- 增加用户余额 -->
+    <update id="addBalance">
+        UPDATE ums_member
+        SET balance = balance + #{balance}
+        WHERE id = #{id}
+    </update>
+
+    <resultMap type="com.chengyinhub.business.domain.vo.HomeDataVO" id="HomeDataVOResult">
+        <result property="userNum"    column="userNum"    />
+        <result property="merchantNum"    column="merchantNum"    />
+        <result property="merchantAuditNum"    column="merchantAuditNum"    />
+        <result property="creativeSquareNum"    column="creativeSquareNum"    />
+        <result property="topicNum"    column="topicNum"    />
+        <result property="activityNum"    column="activityNum"    />
+        <result property="memberTemplateNum"    column="memberTemplateNum"    />
+    </resultMap>
+
+    <select id="selectHomeDataList" parameterType="com.chengyinhub.business.domain.vo.HomeDataVO" resultMap="HomeDataVOResult">
+        SELECT
+            #用户总数
+            (SELECT COUNT(*) FROM ums_member where del_flag=0) AS userNum,
+            #商家总数
+            (SELECT COUNT(*) FROM mms_merchant WHERE del_flag=0) AS merchantNum,
+            #商家待审核数
+            (SELECT COUNT(*) FROM mms_merchant WHERE del_flag=0 AND `status`=0) AS merchantAuditNum,
+            #待审核帖文数
+            (SELECT COUNT(*) FROM ums_creative_square WHERE del_flag=0 AND check_status=0) AS creativeSquareNum,
+            #主题数量
+            (SELECT COUNT(*) FROM cms_topic WHERE del_flag=0 and check_status=0) AS topicNum,
+            #活动数量
+            (SELECT COUNT(*) FROM cms_activity WHERE del_flag=0 and check_status=0) AS activityNum,
+            #用户模板数量
+            (SELECT COUNT(*) FROM cms_member_template WHERE del_flag=0 and check_status=0) AS memberTemplateNum
+            <!-- totalSalesAmount 已移除:它是平台全量已支付营收(SUM(total_amount) WHERE payment_status=2),
+                 但首页从来没渲染过它 —— index.vue 只读 merchantAuditNum / creativeSquareNum /
+                 topicNum / activityNum / memberTemplateNum 五个。
+                 payment_status 有索引,可 total_amount 不在索引里,所以它是「索引范围扫 + 逐行回表」,
+                 成本随历史已支付订单数线性增长,而这条查询每次有人打开后台首页都会跑一遍。
+                 更要紧的是它把营收发给了所有后台角色 —— 包括 auditor,而 auditor 是
+                 role_permission_contract 里明确挡在全部资金/PII 权限之外的那个角色。
+                 结论与 X09 的假开关、X03 的 nodeTypes 同一条:没人消费的数据不该加权限门,该删掉。
+                 日后真要在首页显示营收,连同权限判据一起重新设计,别把这条加回来。 -->
+    </select>
+
+    <!-- 获取用户积分排名信息 -->
+    <select id="selectUserRankInfo" resultType="java.util.HashMap">
+        <![CDATA[
+        SELECT
+            user_rank,
+            total_users,
+            CASE
+                WHEN user_rank_percentage <= 0.2 THEN 'TOP20%'
+                WHEN user_rank_percentage <= 0.4 THEN 'TOP40%'
+                WHEN user_rank_percentage <= 0.6 THEN 'TOP60%'
+                WHEN user_rank_percentage <= 0.8 THEN 'TOP80%'
+                ELSE 'TOP100%'
+                END as rank_percentage
+        FROM (
+                 SELECT
+                     @user_rank := @user_rank + 1 as user_rank,
+                @total_users := total_users,
+                (@user_rank / total_users) as user_rank_percentage,
+                m.id
+                 FROM
+                     ums_member m,
+                     (SELECT @user_rank := 0, @total_users := (SELECT COUNT(*) FROM ums_member WHERE del_flag = 0)) r,
+                     (SELECT COUNT(*) as total_users FROM ums_member WHERE del_flag = 0) t
+                 WHERE
+                     m.del_flag = 0
+                 ORDER BY
+                     m.point DESC, m.create_time ASC
+             ) ranked
+        WHERE
+            ranked.id = #{memberId}
+        ]]>
+    </select>
+
+
+
+    <!-- 获取用户积分排名信息 -->
+    <select id="selectUserBalanceRankInfo" resultType="java.util.HashMap">
+        <![CDATA[
+        SELECT
+            user_rank,
+            total_users,
+            CASE
+                WHEN user_rank_percentage <= 0.2 THEN 'TOP20%'
+                WHEN user_rank_percentage <= 0.4 THEN 'TOP40%'
+                WHEN user_rank_percentage <= 0.6 THEN 'TOP60%'
+                WHEN user_rank_percentage <= 0.8 THEN 'TOP80%'
+                ELSE 'TOP100%'
+                END as rank_percentage
+        FROM (
+                 SELECT
+                     @user_rank := @user_rank + 1 as user_rank,
+                @total_users := total_users,
+                (@user_rank / total_users) as user_rank_percentage,
+                m.id
+                 FROM
+                     ums_member m,
+                     (SELECT @user_rank := 0, @total_users := (SELECT COUNT(*) FROM ums_member WHERE del_flag = 0)) r,
+                     (SELECT COUNT(*) as total_users FROM ums_member WHERE del_flag = 0) t
+                 WHERE
+                     m.del_flag = 0
+                 ORDER BY
+                     m.balance DESC, m.create_time ASC
+             ) ranked
+        WHERE
+            ranked.id = #{memberId}
+        ]]>
+    </select>
+
+    <!-- 获取总用户数 -->
+    <select id="selectTotalUserCount" resultType="java.lang.Integer">
+        SELECT
+            COUNT(*)
+        FROM
+            ums_member
+        WHERE
+            del_flag = 0
+    </select>
+    <update id="clearProfileMedia">
+        update ums_member set avatar = null, case_pics = null where id = #{id}
+    </update>
+
+</mapper>

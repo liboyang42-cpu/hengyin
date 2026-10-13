@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CmsBetaGameMapper">
+    
+    <resultMap type="CmsBetaGame" id="CmsBetaGameResult">
+        <result property="id"    column="id"    />
+        <result property="name"    column="name"    />
+        <result property="description"    column="description"    />
+        <result property="imgUrl"    column="img_url"    />
+        <result property="imgArr"    column="img_arr"    />
+        <result property="typeName"    column="type_name"    />
+        <result property="tags"    column="tags"    />
+        <result property="status"    column="status"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="startDate"    column="start_date"    />
+        <result property="endDate"    column="end_date"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectCmsBetaGameVo">
+        select id, name, description, img_url, img_arr, type_name, tags, status, del_flag, start_date, end_date, create_by, create_time, update_by, update_time from cms_beta_game
+    </sql>
+
+    <select id="selectCmsBetaGameList" parameterType="CmsBetaGame" resultMap="CmsBetaGameResult">
+        <include refid="selectCmsBetaGameVo"/>
+        <where>  
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="description != null  and description != ''"> and description = #{description}</if>
+            <if test="imgUrl != null  and imgUrl != ''"> and img_url = #{imgUrl}</if>
+            <if test="imgArr != null  and imgArr != ''"> and img_arr = #{imgArr}</if>
+            <if test="typeName != null  and typeName != ''"> and type_name like concat('%', #{typeName}, '%')</if>
+            <if test="tags != null  and tags != ''"> and tags = #{tags}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="startDate != null "> and start_date = #{startDate}</if>
+            <if test="endDate != null "> and end_date = #{endDate}</if>
+            <if test="delFlag != null "> and del_flag = #{delFlag}</if>
+        </where>
+    </select>
+    
+    <select id="selectCmsBetaGameById" parameterType="Long" resultMap="CmsBetaGameResult">
+        <include refid="selectCmsBetaGameVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertCmsBetaGame" parameterType="CmsBetaGame" useGeneratedKeys="true" keyProperty="id">
+        insert into cms_beta_game
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">name,</if>
+            <if test="description != null">description,</if>
+            <if test="imgUrl != null">img_url,</if>
+            <if test="imgArr != null">img_arr,</if>
+            <if test="typeName != null">type_name,</if>
+            <if test="tags != null">tags,</if>
+            <if test="status != null">status,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="startDate != null">start_date,</if>
+            <if test="endDate != null">end_date,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null">#{name},</if>
+            <if test="description != null">#{description},</if>
+            <if test="imgUrl != null">#{imgUrl},</if>
+            <if test="imgArr != null">#{imgArr},</if>
+            <if test="typeName != null">#{typeName},</if>
+            <if test="tags != null">#{tags},</if>
+            <if test="status != null">#{status},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="startDate != null">#{startDate},</if>
+            <if test="endDate != null">#{endDate},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCmsBetaGame" parameterType="CmsBetaGame">
+        update cms_beta_game
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null">name = #{name},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="imgUrl != null">img_url = #{imgUrl},</if>
+            <if test="imgArr != null">img_arr = #{imgArr},</if>
+            <if test="typeName != null">type_name = #{typeName},</if>
+            <if test="tags != null">tags = #{tags},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="startDate != null">start_date = #{startDate},</if>
+            <if test="endDate != null">end_date = #{endDate},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCmsBetaGameById" parameterType="Long">
+        delete from cms_beta_game where id = #{id}
+    </delete>
+
+    <delete id="deleteCmsBetaGameByIds" parameterType="String">
+        delete from cms_beta_game where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="updateCmsBetaGameDelStatusByIds" parameterType="String">
+        update cms_beta_game set del_flag = 2 where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

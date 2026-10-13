@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>城瘾小程序 · 端到端审查(第二轮)执行报告</title>
+<style>
+  :root{--ink:#14161a;--muted:#6b7280;--line:#e3e6ea;--bg:#fbfbfc;--p0:#b3261e;--p1:#b26a00;--p2:#4a5568;--ok:#14663a}
+  *{box-sizing:border-box}
+  body{margin:0;padding:40px 24px 80px;background:var(--bg);color:var(--ink);
+       font:15px/1.75 -apple-system,"PingFang SC","Helvetica Neue",sans-serif}
+  .wrap{max-width:1040px;margin:0 auto}
+  h1{font-size:26px;margin:0 0 6px;letter-spacing:-.2px}
+  h2{font-size:19px;margin:38px 0 12px;padding-bottom:7px;border-bottom:1px solid var(--line)}
+  h3{font-size:16px;margin:24px 0 8px}
+  .sub{color:var(--muted);margin:0 0 26px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:14px 0}
+  code{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12.5px;background:#eef0f3;padding:1px 5px;border-radius:4px}
+  pre{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12.5px;background:#f5f6f8;border:1px solid var(--line);
+      border-radius:8px;padding:11px 13px;overflow:auto;margin:10px 0}
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:13.5px}
+  th,td{padding:9px 11px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#f3f5f7;font-weight:600;color:#3c4149}
+  tr:last-child td{border-bottom:0}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:20px;color:#fff;white-space:nowrap}
+  .p0{background:var(--p0)} .p1{background:var(--p1)} .p2{background:var(--p2)} .ok{background:var(--ok)}
+  ul{margin:8px 0 8px 20px;padding:0} li{margin:5px 0}
+  .ev{color:#3c4149;font-size:12.5px;font-family:ui-monospace,Menlo,monospace}
+  .warn{border-left:3px solid var(--p1);background:#fffaf0}
+  .bad{border-left:3px solid var(--p0);background:#fff5f5}
+  .good{border-left:3px solid var(--ok);background:#f4fbf7}
+  footer{margin-top:44px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>城瘾小程序 · 端到端审查(第二轮)执行报告</h1>
+<p class="sub">分支 <code>fix/audit-wiring-202609</code> @ <code>ebf42e7a9</code> · 报告时间 2026-09-19 · 边界:<b>本轮只审不改</b></p>
+
+<div class="card good">
+  <b>一句话结论:</b>本轮没有改动任何业务代码(工作区那 27 个 <code>M</code> 是并行 UI 会话的),因此<b>没有「改前/改后」对比图</b>;
+  但阶段2 的商家端走查<b>新产并归档了 28 张只读截图</b>(<code>shots/</code>)。
+  产出是 <b>32 条带文件:行号 的编号发现</b>(1 条 P0 / 11 条 P1 / 19 条 P2 / 1 条待核),总清单在
+  <code>findings.md</code> —— <b>请按号批复「1做 2核对 3删」</b>。阶段0 基线产物已重跑并落盘(<code>00-baseline.md</code> + <code>logs/</code>)。
+</div>
+
+<h2>一、我具体做了什么</h2>
+
+<h3>1. 复核上一轮结论,并把每条断言拉回磁盘</h3>
+<ul>
+  <li>逐文件读:playkit 分发器与 6 个挑战组件、<code>utils/playkit-view.js</code>、后端 <code>AdvancedGameRuntimeServiceImpl.java</code>、<code>utils/checkout/checkout-workflow.js</code>、<code>utils/ticket-source.js</code>、<code>utils/verification-scan.js</code>、发布四页(fabu/temp/simple/activity)、报名与主题页建单口、提现页、券码轮询页、IM 两页。</li>
+  <li>跑只读命令:<code>node scripts/ui-validity-gates.js</code>、<code>state-visibility-gate</code>、<code>setdata-dead-field-lint</code>、<code>sticky-bottom-bar-gate</code>,并 grep 了 <code>ci/xcx-check.sh</code> 与 <code>package.json</code> 的门禁清单。</li>
+  <li>写了两段一次性核查脚本(Python,只在 shell 里跑,不落仓):场景 id ↔ 注册表 ↔ <code>app.json</code> 双向对账。</li>
+</ul>
+
+<h3>2. 新建的文件(全部在 docs 下,是本轮唯一的写入)</h3>
+<pre>docs/audit-e2e-202609/
+├── findings.md                  ← <b>编号总清单 1–32,给你按号批复的那张表</b>
+├── 00-baseline.md               阶段0 基线复跑(重建并落盘)
+├── 01-cross-cutting.md          横切:票源归因 / 身份 / 请求层
+├── 01-unknown-state.md          写请求 unknown 态六处分流〔重建件〕
+├── 02-merchant-walk.md          商家端 28 路由只读走查(逐页状态 + 4 条新发现)
+├── 03-player-trunk.md           玩家主干:报名 → 支付 → 票券
+├── 04-play-mode2-and-kits.md    玩法双模 + 玩法组件矩阵
+├── 04-playkit-event-contract.md 事件契约四条 + 23 条全量分诊
+├── 04-roam-and-codes.md         漫游 × 核销码 × IM
+├── 05-publish-chain.md          内容 / 发布链路
+├── 06-gate-blindspots.md        门禁执法地图 + 盲区
+├── event-contract.js            探针:组件 triggerEvent ↔ 宿主监听(可复跑)
+├── walk-merchant.js             商家端只读走查器:reLaunch → 读逻辑层 → 截图
+├── run-baseline.sh / run-automators.sh
+├── logs/                        18 份门禁/冒烟/走查原始输出(含 483KB 单测全量)
+└── shots/                       28 张走查截图</pre>
+
+<h3>3. 派的只读审查代理(2 个)与换掉的打法</h3>
+<ul>
+  <li><b>发布链路 + 门禁补扫</b>:已回,结论逐条复核后采信 6 条、降级 2 条、<b>否决 3 条</b>(见第五节)。</li>
+  <li><b>商家端剩余子域</b>:<b>这个代理撞了 150 轮上限,25M token 回来 0 条结论</b>。阶段2 改成确定性打法:<code>walk-merchant.js</code> 把 28 条注册路由逐条 <code>reLaunch</code> → 读逻辑层 <code>page.data()</code> → 截图,回来再逐条回磁盘读代码定性。产出即 <code>02-merchant-walk.md</code> 与 #29–#32。<b>开放式代理不适合这种广度×证据活的</b> —— 记进项目记忆。</li>
+</ul>
+
+<h2>二、编号发现(待你按「1做 2核对 3删」批复)</h2>
+
+<table>
+<thead><tr><th style="width:34px">#</th><th style="width:52px">级</th><th style="width:104px">域</th><th>发现 · 证据</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><span class="tag p0">P0</span></td><td>玩法</td><td><b>三个挑战玩法永远开不了秒表</b>。「变色就点 / 弹球 / 安静挑战」组件都 <code>triggerEvent('start')</code>,但分发器 <code>playkit/index.wxml:75-87</code> 三家都没接 <code>bind:start</code>(countdown/stopwatch 在 <code>:90/:95</code> 有)→ <code>START_CHALLENGE</code> 永不发出 → 后端 <code>serverElapsedMs</code> 必抛「…还没开始」(<code>AdvancedGameRuntimeServiceImpl.java:1382-1384</code>,调用 <code>:1395/:1429/:1452</code>)。玩家能玩完、永远不能成绩成立。</td></tr>
+<tr><td>2</td><td><span class="tag p1">P1</span></td><td>横切·钱</td><td><b>俱乐部分享落主题页,建单丢票源归因</b>。<code>club/detail/index.js:2634</code> 分享带 <code>sourceClubId</code>,主题页建单口 <code>topic/index/index.js:875-882</code> 不合并 <code>attributionPayload</code>(全仓只有 <code>baoming.js:1199</code> 合并)→ 这一单归平台,<b>俱乐部票源奖励静默为 0</b>。</td></tr>
+<tr><td>3</td><td><span class="tag p1">P1</span></td><td>横切·钱</td><td><b>三处「付了钱但结果不明」点了没反应</b>。<code>unknown</code> 是 checkout 终态(<code>checkout-workflow.js</code> 无复位接口),三宿主只撤 loading 不给理由:<code>components/cy/scene-member-order-detail/index.js:521-524</code>、<code>components/cy/scene-member-order-history/index.js:351-354</code>、<code>pages/topic/index/index.js:1076-1079</code>。对照正确先例 <code>baoming.js:1563-1575</code>、<code>coop/list/index.js:609-612</code>、<code>game-node/index.js:693-698</code>。</td></tr>
+<tr><td>4</td><td><span class="tag p1">P1</span></td><td>玩家·报名</td><td><b>库存为空的票种显示「余票待确认」,点下去说「已售罄」并硬拦</b>。<code>scene-play-activity-detail/index.js:53-56</code> 把 <code>remaining===null</code> 算成 <code>_available=false</code>,<code>:281-284</code> 据此拦截;字段确实可空:<code>sql/base_schema_20260818.sql:3700</code>。</td></tr>
+<tr><td>5</td><td><span class="tag p1">P1</span></td><td>发布</td><td><b>temp「据点玩法形态必选」拦不住发布</b>。错误写了(<code>temp/index.js:1918-1920</code>)、红字也渲染(<code>index.wxml:137</code>),但 <code>validateForm</code> 放行清单 <code>:1982</code> 少 <code>interactionType</code>(同文件预览兜底 <code>:1990</code> 里有)→ 不选也能发,商家以为配好了,玩家侧据点空洞。</td></tr>
+<tr><td>6</td><td><span class="tag p1">P1</span></td><td>发布</td><td><b>simple 置灰主 CTA 没有 disabledtap,唯一自解释文案永远出不来</b>。<code>simple/index.wxml:83</code> 只 <code>bindtap</code>;<code>cy-btn/index.js:35-40</code> 禁用态吞 tap。全页 <code>disabledtap</code> 命中 0,那句「请逐个在地图中确认地点后再继续」在 <code>index.js:230</code> 里等不到执行。</td></tr>
+<tr><td>7</td><td><span class="tag p1">P1</span></td><td>俱乐部</td><td><b>角色分配弹层的「选择成员」是假的 → 会写给错的人</b>。组件抛 <code>selectmember</code>(<code>club-director-role-sheet/index.js:26</code>,行是可点的 <code>index.wxml:4</code>),宿主 <code>club/topic-detail/index.wxml:267-268</code> 只接了另外四个;全仓 <code>selectmember</code> 监听 0。确认时提交的是最初点进来的 <code>roleDraft.memberId</code>(<code>director.js confirmRoleAssignment</code>)。</td></tr>
+<tr><td>8</td><td><span class="tag p1">P1</span></td><td>玩法</td><td><b>「沉默点单」的「放弃」按钮按下去什么都不发生</b>(<code>F-PB-1</code>,详见 04-play-mode2-and-kits.md)。</td></tr>
+<tr><td>9</td><td><span class="tag p1">P1</span></td><td>玩法</td><td><b>探店日无坐标站点:按钮写「去这家」,点下去把这一站演成已通关</b>(前置条件)。对称缺失:<code>checkin()</code> 有 mode2 分支(<code>play/index.js:3676-3678</code>),<code>arrive()</code> 没有(<code>:3643-3660</code> 成功即 <code>onComplete</code>)。</td></tr>
+<tr><td>10</td><td><span class="tag p1">P1</span></td><td>玩法</td><td><b>跨日任务(slowTask)在任何创作入口都配不出来</b> —— 玩家侧有实现、分发器有分支,配置侧缺门。</td></tr>
+<tr><td>11</td><td><span class="tag p1">P1</span></td><td>门禁</td><td><b>本分支现在开 PR 必挂 CI,且是本分支自己造成的</b>。<code>ui-validity-gates</code> 实跑 <code>EXIT=1</code>(U4/U5),CI 确实跑它(<code>ci/xcx-check.sh:245-246</code>)。根因:<code>02f9105f1</code> 删掉了 <code>temp/index.js</code> 对 <code>nodeName/themeName</code> 的读者,master 上原在 <code>:839/:842</code>,使基线里的 <code>::A2</code> 条目跳成 <code>A1</code> —— 基线文件没动,代码变了。</td></tr>
+<tr><td>12</td><td><span class="tag p1">P1</span></td><td>门禁</td><td><b>四条 automator 冒烟全在 CI 之外,红的那个没人看见</b>。<code>grep automator ci/xcx-check.sh</code> 零命中;<code>test:automator:stamp-camera-crop</code> 当前红。</td></tr>
+<tr><td>13</td><td><span class="tag p2">P2</span></td><td>玩家</td><td>截止校验只在详情组件(<code>scene-play-activity-detail/index.js:285-288</code>),深链直入 baoming 要填完整张表才被后端拒。</td></tr>
+<tr><td>14</td><td><span class="tag p2">P2</span></td><td>发布</td><td>simple 整块旧「快速发布」链路是孤儿(<code>onPublish/onSaveDraft/onClubChange</code> 零绑定),且其反馈函数 <code>tip()</code> 写的 <code>data.toast</code> 在 wxml 从不渲染 —— 若重新接线必须先换通道。</td></tr>
+<tr><td>15</td><td><span class="tag p2">P2</span></td><td>发布</td><td>simple 发布成功无去详情路:<code>topicUrl</code> 算出后未使用(<code>simple/index.js:632-637</code>),落点本身符合 2026-09-06 裁决,只报赘码。</td></tr>
+<tr><td>16</td><td><span class="tag p2">P2</span></td><td>埋点</td><td>主题发布成功埋点 <code>bizId</code> 恒 null:<code>fabu/index.js:5708</code> 取 <code>resData.id</code>,而后端返回标量(<code>ApiTopicController.java:464</code>)。</td></tr>
+<tr><td>17</td><td><span class="tag p2">P2</span></td><td>发布</td><td>活动草稿续写恒回第 0 步(<code>myproject/index.js:290</code> → <code>activity/index.js:72</code>,全页仅用户点击改 step)。</td></tr>
+<tr><td>18</td><td><span class="tag p2">P2</span></td><td>发布</td><td>AI 安全预检只在 fabu(<code>fabu/index.js:5383</code>),其余三条提交口无 advisory;<b>但服务端每条都有 <code>checkText</code></b>(<code>ApiTemplateController:329/380</code> 等),故从 P1 降为 P2。</td></tr>
+<tr><td>19</td><td><span class="tag p2">P2</span></td><td>发布</td><td><code>topicadd</code> 生产零引用但仍被 7 处测试/脚本持有(上轮遗留的删除期裁决)。</td></tr>
+<tr><td>20</td><td><span class="tag p2">P2</span></td><td>核销码</td><td>据点码在商家首页扫码口被拒且不指路:<code>verification-scan.js:20</code> → <code>merchant/index/index.js:856-860</code> 只 toast。护栏本身是对的(<code>verification-scan.test.js:42-48</code>),缺的是「请从据点页核销」。</td></tr>
+<tr><td>21</td><td><span class="tag p2">P2</span></td><td>漫游</td><td><code>hangoutId</code> 死参数:<code>roam/index.js:629</code> 传,<code>subpackageRoam/nearby/index.js:104</code> 的 <code>onLoad()</code> 连形参都没有。</td></tr>
+<tr><td>22</td><td><span class="tag p2">P2</span></td><td>核销码</td><td>出码倒计时兜底 TTL 两端分叉:300s(<code>citynode-code:51</code>)对 60s(<code>game-node:569</code>),服务端真值只有一档 <code>DYN_TTL_MS=300_000</code>。今天不发作(字段恒在)。</td></tr>
+<tr><td>23</td><td><span class="tag p2">P2</span></td><td>玩法</td><td>排行榜拉取失败被说成「还没有排名数据」并抛未处理 rejection(<code>F-PB-4</code>)。</td></tr>
+<tr><td>24</td><td><span class="tag p2">P2</span></td><td>玩法</td><td>音乐角「听完」那次提交是双死代码,注释与真源互相打脸(<code>F-PB-5</code>)。</td></tr>
+<tr><td>25</td><td><span class="tag p2">P2</span></td><td>玩法</td><td>关高级面板不收 playKit 弹层,两层 sheet 可叠(<code>F-PB-6</code>,潜在)。</td></tr>
+<tr><td>26</td><td><span class="tag p2">P2</span></td><td>组件</td><td><code>cy-upload</code> 的失败重试两宿主都没接(activity <code>:101-109</code>、club/apply <code>:154</code> 均无 <code>errorIndexes</code>/<code>bind:retry</code>)→ 组件承诺的 §3.13「禁静默丢图」在两处空挂。</td></tr>
+<tr><td>27</td><td><span class="tag p2">P2</span></td><td>组件</td><td><code>cy-calendar</code> 的 <code>maxRange/overrange</code> 全仓无使用者,且设计是「越界即静默吞掉,由调用方提示」→ 潜在哑巴。</td></tr>
+<tr><td>28</td><td><span class="tag p2">P2</span></td><td>门禁</td><td><code>sticky-bottom-bar-gate</code> 是唯一真孤儿(无 npm、无 CI、无 require)且当前红 5 条 —— 挂线前先裁决 <code>.fx-bg/.fx-hero/cy-proto-cam</code> 是不是误判。</td></tr>
+<tr><td>29</td><td><span class="tag p2">P2</span></td><td>商家·客户</td><td>客户导出下载失败时<b>同屏既说「已就绪」又说「失败」</b>:<code>merchant/customer/index.js:1167-1168</code> 写 <code>exportState:'SUCCESS'</code> 又写 <code>exportError</code>,<code>index.wxml:90/93/96</code> 两套文案同渲染。证据 <code>shots/merchant-customer-index.png</code>。</td></tr>
+<tr><td>30</td><td><span class="tag p2">P2</span></td><td>商家·装修</td><td><code>decor/story</code> 283 行<b>未注册进 app.json、生产目录逐目录扫零引用</b>(装修子页只 5 个,<code>app.json:131-135</code>),但 <b>11 个文件 25 行</b>在守它:7 个单测(含 <code>access-gate-contract:122</code> 要求权限门、<code>editor-state-contract</code> 真 <code>loadPage</code>)+ 截图脚本 + 接线台账 + U4 基线。玩家进不去的页占了 7 个单测的断言面;若删要 11 处一起清并重建台账。</td></tr>
+<tr><td>31</td><td><span class="tag p2">待核</span></td><td>商家端</td><td><code>reviews / relation / citynode</code> 三页 <code>reLaunch</code> 后落在工作台(截图留证 <code>shots/UNVERIFIED-*.png</code>)。<b>代码里找不到自动跳转</b>:唯一的 reLaunch 在用户主动 <code>onNavBack</code> 里,三页入口也都在;复跑二次确认时 DevTools 被并行会话占走 → <b>请人工在模拟器点一次,正常则删这条</b>。</td></tr>
+<tr><td>32</td><td><span class="tag p2">P2</span></td><td>商家·台账</td><td><code>merchant-ledger-settlement-smoke.js:17-24</code> 用 <code>page.setData</code> 灌假数据再断言,所以它是<b>绿的</b>;同一页本轮冷进真实态是 <code>error:true</code>(<code>shots/merchant-ledger-index.png</code>)。它测的是渲染不是连通。</td></tr>
+<tr><td>—</td><td><span class="tag p2">不编号</span></td><td>组件契约</td><td>事件契约探针 23 条里,除 #1/#7/#26/#27 外的 17 条判无害(7 条组件内部已自消化、8 条渲染条件进不去的死能力、2 条无害中继),逐条取证见 <code>04-playkit-event-contract.md</code>。<b>那 8 条死能力是事件契约门禁能否挂线的前置裁决。</b></td></tr>
+</tbody>
+</table>
+
+<h2>三、UI 与截图说明</h2>
+<div class="card">
+  <p style="margin-top:0"><b>本轮 0 处 UI 改动</b> —— 边界写死「只审不改」,32 条发现全落在 JS / 事件绑定 / 门禁 / 注册表层,没动过一张 wxml 的视觉结构或 wxss。因此<b>没有「改前 / 改后」对比图可放</b>。</p>
+  <p>但<b>截图是有的**:阶段2 商家端 28 条注册路由逐页走查,每页一张逻辑层真截图,已归档在 <code>shots/</code>(2.0MB)。它们证明的是「这页打开后处于什么态」,不是「我把它改成了什么样」—— 两者别混。</p>
+  <table>
+  <thead><tr><th style="width:250px">截图(<code>shots/</code>)</th><th>这张图在证明什么</th></tr></thead>
+  <tbody>
+    <tr><td><code>merchant-ledger-index.png</code><br><img src="shots/merchant-ledger-index.png" width="230" alt="商家台账冷进错误态"></td><td>冷进账目页即 <code>error:true</code>,但错误态文案与「重新加载」出口都在 —— 支撑 #32(冒烟绿 ≠ 页面通)。</td></tr>
+    <tr><td><code>merchant-marketing-index.png</code><br><img src="shots/merchant-marketing-index.png" width="230" alt="商家营销页资格未通过"></td><td>顶部横幅「经营身份校验未通过,请返回工作台重试」,数字全用「—」占位而<b>不是假 0</b> —— 这是全站少见的诚实降级写法,不该被当成 bug 修掉。</td></tr>
+    <tr><td><code>UNVERIFIED-bounced-to-workbench-merchant-reviews-index.png</code><br><img src="shots/UNVERIFIED-bounced-to-workbench-merchant-reviews-index.png" width="230" alt="reviews 页落在工作台"></td><td>#31 的证据:<code>reLaunch</code> 到 reviews 却画出工作台。文件名前缀 <b>UNVERIFIED 是故意的</b> —— 代码里找不到自动跳转,这条没升格成缺陷,等人手点一次再定。</td></tr>
+    <tr><td><code>merchant-customer-index.png</code></td><td>客户页部分失败的诚实空态(统计到了、名单没到,它照实说并给重试);#29 的自相矛盾态要触发失败下载才现形,本轮写闸拦住,只有代码证据。</td></tr>
+  </tbody>
+  </table>
+  <p>仓库里的 <code>docs/screenshots/</code> 属于<b>更早的 UI 整改批</b>(与本审查无关),没当本轮证据贴进来 —— 那样会让「本轮改了界面」这个假象成立。</p>
+</div>
+
+<h2>四、证据缺口:上一段丢了什么,这一轮怎么补的</h2>
+<div class="card warn">
+  <b>已补。</b>阶段0 产物(基线文档、各门禁原始输出、事件契约探针、走查器与截图)曾整批不在磁盘上,本轮全部重跑并落盘:
+  <ul>
+    <li><code>00-baseline.md</code> + <code>logs/</code> 18 份原始输出:<b>8 条 CI 门禁里 7 绿 1 红</b>,红的是 <code>ui-validity-gates</code>(U4/U5)。基线不再是口头结论,且那条红的根因已定位到具体 commit(<code>02f9105f1</code> 删读者 → 基线里 <code>::A2</code> 跳成 <code>A1</code>)= #11。</li>
+    <li>事件契约探针重建为 <code>event-contract.js</code>(可复跑),23 条逐条分诊。<b>首版 24 条里有 1 条是尺子自己的假阳性</b>(<code>bindtap</code> 不带冒号也等价),修完降到 23 —— 这条教训写在 <code>04-playkit-event-contract.md</code> 开头,挂线前必须带上。</li>
+    <li>商家端从「代理跑飞」换成确定性走查器 + 回磁盘定性,28 条路由全覆盖(<code>02-merchant-walk.md</code>)。</li>
+  </ul>
+  <p><b>仍未验的</b>(不算结论):#31 的回弹、<code>ai-insight</code>「商家资格已失效」与工作台「营业中」的矛盾、<code>merchant/predict</code> 冷进报「网络连接失败」而非缺参 —— 三条都要人工在模拟器点一次;商家<b>写流程</b>整块被 develop 版写闸拦死,静态侧只能到「请求体编码对、危险动作有确认」。详见 findings.md 第十节。</p>
+  <p>另:工作区那 27 个 <code>M</code> 状态的 UI 文件是<b>并行会话的改动</b>,不是本轮产生 —— <code>git status</code> 里本轮新增只有 <code>?? chengyinhub-xcx/docs/audit-e2e-202609/</code>。</p>
+</div>
+
+<h2>五、被推翻 / 降级的判断(防止修复批照抄)</h2>
+<table>
+<thead><tr><th>断言(来源)</th><th>复核结果</th></tr></thead>
+<tbody>
+<tr><td>「20 个门禁脚本没挂 npm script,等于没执法」</td><td><b>判据错</b>。17 个由 <code>ci/xcx-check.sh</code> 直接调;真孤儿只有 1 个。<code>state-visibility-gate</code> 还经 <code>ui-validity-gates.js:13</code> 收编为 U6。已写进记忆:判挂线看 CI,不看 package.json。</td></tr>
+<tr><td>「<code>fabu/index.js:5713 const tid = resData</code> 会拼出 <code>topicId=[object Object]</code> 让项目主页空白」</td><td><b>反了</b>。后端返回标量 topicId(<code>ApiTopicController.java:464</code>),<code>:5713</code> 正确;错的是紧邻 <code>:5708</code> 的埋点取值。降级为 P2 埋点。</td></tr>
+<tr><td>「提现页 catch 静默、错误位没人填」</td><td><b>否</b>。<code>tixian.js:278/286/299</code> 每条失败都写 <code>submitError</code>,<code>tixian.wxml:74</code> 的 <code>cy-inline-error</code> 带「重试」接住;余额取不到另有 <code>balanceErr</code> 双位。这是全仓最规范的链路之一。</td></tr>
+<tr><td>「coupon-qr 每次 onShow 无脑起轮询」</td><td><b>否</b>。有 <code>couponHistoryId</code> 前置守卫,<code>onHide/onUnload</code> 清定时器,<code>useStatus==1</code> 自停。</td></tr>
+<tr><td>「searchmap 入参兜底 maxPrice=1000 会悄悄屏蔽高价活动」</td><td><b>否</b>。1000 是本页滑杆上限(初值/重置/夹取三处一致),页面明写「价格区间:¥0 - ¥1000」,不是静默。</td></tr>
+<tr><td>「<code>qr-citynode</code> 未注册会走到『场景配置缺失』」</td><td><b>否</b>。<code>scene-registry.js:50</code> 有登记;双向全量扫描(生产码里的场景 id ↔ 注册表 ↔ app.json)两个方向都 0 缺号。</td></tr>
+<tr><td>「<code>myinvite.js:133-147</code> 邀请参数丢」「<code>tests/unit/scene-param-lost.test.js</code> 红」「<code>withdrawal-preflight.js:26</code> 缺 header 会 415」</td><td><b>三条全否</b>:文件只有 26 行 / 测试文件不存在 / 四处调用都显式带 JSON header。</td></tr>
+<tr><td>「商家『口碑』页没有入口」(<b>我自己</b>)</td><td><b>判错并已撤回</b>:第一条 grep 用了 <code>grep -v 'pages/merchant/reviews/'</code>,而导航 URL 本身含这段字符串,把两条真入口(<code>marketing/index.js:524</code>、<code>cy/profile/index.js:1657</code>)一起过滤掉了。锚定 <code>^</code> 重跑即见。</td></tr>
+<tr><td>「<code>decor/story</code> 全仓只剩一行负控在引用」(<b>我自己,首版 #30</b>)</td><td><b>盘查漏了,已改成实数</b>:重跑「生产目录 / 测试工具」分向计数后是 <b>11 个文件 25 行</b>(7 个单测 + 4 处工具资产),生产侧确实零入口。结论方向不变、量级差一个数量级 —— <b>判失效类结论必须分两向扫,不能拿一条 grep 的尾巴当全貌。</b></td></tr>
+<tr><td>「事件契约探针首版报 24 条」(我自己造的尺子)</td><td><b>其中 1 条是尺子的假阳性</b>:WXML 里 <code>bindtap</code> 与 <code>bind:tap</code> 等价,只认带冒号就把 <code>club/detail/index.wxml:330</code> 的 <code>catchtap</code> 判成没接。修尺子后 <b>23 条</b>才是真值。另一处隐患同批修掉:<code>{{x &gt; 0}}</code> 里的 <code>&gt;</code> 会把属性串截断,漏读后面的 <code>bind:</code>。</td></tr>
+</tbody>
+</table>
+
+<h2>六、真机遗留清单(本轮按边界不验)</h2>
+<ul>
+  <li>五种码的真实相机核销(团码 / 活动票 / 主题票 / 券 / 据点码)与重复核销反馈。</li>
+  <li>微信支付真付,含 <code>unknown</code> 后的服务端回读。</li>
+  <li><code>getPhoneNumber</code> 授权与 80058。</li>
+  <li>小程序码 <code>scene</code> 入场的实机落地。</li>
+  <li>商家写流程:develop 工具版有生产写拦截闸,模拟器发不出写请求,须体验版 / 测试服 <code>ext.json</code>。</li>
+</ul>
+
+<h2>七、下一步</h2>
+<ol>
+  <li><b>等你对 <code>findings.md</code> 的 1–32 号批复</b>(「1做 2核对 3删」口径);修复批另开,本会话不动业务代码。</li>
+  <li>建议优先看 <b>1 号(P0)</b> 与 <b>11 号</b> —— 后者不处理,这个分支的 PR 会一直红。</li>
+  <li><b>31 号需要你或我在模拟器里手点一次</b>才能定生死;连同 <code>ai-insight</code>/<code>predict</code> 两条一起验(写闸放开或换体验版)。</li>
+  <li>门禁侧两个待裁决包:事件契约 8 条死能力(#26/#27 同口径)与 <code>sticky-bottom-bar-gate</code> 5 条透底(<code>.fx-bg/.fx-hero</code> 像背景层)—— <b>裁完才谈挂线</b>,否则一挂就常驻红。</li>
+</ol>
+
+<footer>
+证据文件:<code>chengyinhub-xcx/docs/audit-e2e-202609/</code>(10 篇分域 .md + <code>findings.md</code> 总清单 + 2 支探针/走查脚本 + <code>logs/</code> 18 份原始输出 + <code>shots/</code> 28 张走查截图)<br>
+本报告:<code>chengyinhub-xcx/docs/audit-e2e-202609/report.html</code> · 只读审查,未触碰业务代码与生产库
+</footer>
+</div>
+</body>
+</html>

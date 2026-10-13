@@ -1,0 +1,59 @@
+-- P1-5 付费台账合同:四账映射 schema 级冻结文档(任务书 1.5 节)。
+-- ⚠️ 本文件是只读参考文档,不是可执行 migration——不建表、不建视图、不改任何列。
+--    对账 Service/Mapper 本体和"应红"负控留给 P1-6 的 N(feature/p1-four-ledger-reconcile)。
+-- 依据:2026-07-25 对下列各表 --describe 生产回读核实列名,以下映射按当前真实结构编写,不是猜测。
+--
+-- ============================================================================
+-- 四账映射表(对应任务书 1.5 节)
+-- ============================================================================
+--
+-- | 账           | 数据源                                                  | 守恒式(草案)                                              |
+-- |--------------|---------------------------------------------------------|-------------------------------------------------------------|
+-- | 微信交易     | 微信支付/退款/转账查询接口返回(★无独立落库留痕表,        | 基准账,其余三账向它对齐;N 块开工前须先拍板:                |
+-- |              | 靠回调/实时查询直接消费,详见跨模块共性发现)              | 是否先补一张流水落地表,还是靠实时拉取API做离线对账          |
+-- | 报名/订单    | cms_registration(payment_status/payable_amount/         | sum(payable_amount WHERE payment_status=2已支付)             |
+-- |              | wechat_payment_amount/point_payment_amount)              | == sum(微信交易成功金额) + sum(积分抵扣,非微信部分不进此账)  |
+-- | 内部资金流水 | ums_member_balance_detail(change_balance/after_balance/ | sum(change_type=1收入 的 change_balance)                     |
+-- |              | event_type) + member_cash_withdraw(提现出金流水)         | - sum(change_type=2支出 的 change_balance) == 当前余额快照   |
+-- | 商家结算     | ★已裂成三套并行台账(见下方"真源优先级判断"),            | sum(应结) - sum(已提现) == 当前可提现余额                    |
+-- |              | 不是单一表                                               | (提现出金见 member_cash_withdraw)                            |
+--
+-- ============================================================================
+-- "商家结算"真源优先级判断(用户 2026-07-25 拍板,任务书未直接给出,此处落地记录)
+-- ============================================================================
+-- 商家结算目前并行存在三套台账,字段/语义均不同,不能直接 UNION 对账:
+--
+--   1) merchant_payable / merchant_payable_batch —— ★优先真源
+--      merchant_payable:  redemption_id / topic_id / chapter_id / merchant_member_id /
+--                         per_head_fee_snapshot / amount(绝对值) / entry_type(ACCRUAL计提/REVERSAL冲正) /
+--                         idempotency_key / create_time(兼作批次归属,批次=(merchant_member_id, 月))
+--      merchant_payable_batch: merchant_member_id / period_ym / amount_total(可能为负,冲正多于计提时,
+--                         不夹0——见文件头注释) / status(PENDING待结/CONFIRMED对账确认/PAID已打款) /
+--                         invoice_status(NONE/ISSUED/RED,与 status 是两条独立轴)
+--      理由:是库里最规范的范式(VARCHAR+CHECK 约束,append-only 冲正不改原行,费率快照防倒挂),
+--      2026-07-25 只读预检(P1-6只读预检文档 M 节)已明确指出这一点。
+--
+--   2) settlement_detail(系统2纯账本)—— 辅助数据源
+--      batch_id / merchant_id / source_type / source_id / receiver_type / receiver_id /
+--      gross_amount / commission_amount / settlement_amount / status(见 SettlementDetailState 枚举:
+--      0待处理/1已结算/2作废) / idempotency_key
+--      系统2 打款能力已被拆除(SettlementPayoutDecommissionedTest 守着),现在只是纯账本,
+--      不代表真实出金,对账时只能作为辅助交叉校验,不能当作"商家实际能提现多少"的真源。
+--
+--   3) coop_settlement(合作方结算)—— 辅助数据源
+--      topic_id / coop_order_id / merchant_id / share_mode(0引流/1分成/2固定) / amount /
+--      status(0待打款/1已打款/2作废) / payable_time / verified_reg_ids(T9审计快照)
+--      服务合作方分润这一条业务线,口径与 merchant_payable 不完全重叠(引流/分成/固定三种计价模式),
+--      同样只作辅助,不作真源。
+--
+--   N 块四账对账开工前须基于此优先级判断决定:三套台账是否需要先做一次"归一化视图"再对账,
+--   还是分别对每套台账各自跑一次对账、再人工判断差异归因。本文件不预先决定这一点。
+--
+-- ============================================================================
+-- 已知无独立落库表的一环
+-- ============================================================================
+-- 微信交易流水目前没有任何独立留痕表——WechatPayServiceImpl 的下单/退款/转账查询全部
+-- 走实时接口调用,查询结果不落库(仅业务表如 cms_registration/refund_application/
+-- member_cash_withdraw 记录"业务侧看到的结果")。N 块若要做"四账互相核对差异可重放",
+-- 需要先决定是否新增一张微信交易流水落地表(建议按 P1-6只读预检文档 N 节的架构决策处理),
+-- P1-5 范围到此为止,不新建该表。

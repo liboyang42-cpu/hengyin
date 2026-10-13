@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.SettlementClaimMapper">
+    <resultMap id="SettlementClaimResult" type="SettlementClaim">
+        <result property="id" column="id"/>
+        <result property="commercialContextType" column="commercial_context_type"/>
+        <result property="commercialContextId" column="commercial_context_id"/>
+        <result property="fulfillmentType" column="fulfillment_type"/>
+        <result property="fulfillmentId" column="fulfillment_id"/>
+        <result property="beneficiaryRole" column="beneficiary_role"/>
+        <result property="beneficiaryId" column="beneficiary_id"/>
+        <result property="serviceUnit" column="service_unit"/>
+        <result property="settlementRoute" column="settlement_route"/>
+        <result property="sourceContractType" column="source_contract_type"/>
+        <result property="sourceContractId" column="source_contract_id"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <insert id="insertClaim" parameterType="SettlementClaim" useGeneratedKeys="true" keyProperty="id">
+        insert into settlement_claim
+            (commercial_context_type, commercial_context_id, fulfillment_type, fulfillment_id,
+             beneficiary_role, beneficiary_id, service_unit, settlement_route,
+             source_contract_type, source_contract_id, status, create_time)
+        values
+            (#{commercialContextType}, #{commercialContextId}, #{fulfillmentType}, #{fulfillmentId},
+             #{beneficiaryRole}, #{beneficiaryId}, #{serviceUnit}, #{settlementRoute},
+             #{sourceContractType}, #{sourceContractId}, #{status}, #{createTime})
+    </insert>
+
+    <select id="selectByEconomicKeyForUpdate" resultMap="SettlementClaimResult">
+        select id, commercial_context_type, commercial_context_id, fulfillment_type, fulfillment_id,
+               beneficiary_role, beneficiary_id, service_unit, settlement_route,
+               source_contract_type, source_contract_id, status, create_time
+        from settlement_claim
+        where commercial_context_type = #{commercialContextType}
+          and commercial_context_id = #{commercialContextId}
+          and fulfillment_type = #{fulfillmentType}
+          and fulfillment_id = #{fulfillmentId}
+          and beneficiary_role = #{beneficiaryRole}
+          and beneficiary_id = #{beneficiaryId}
+          and service_unit = #{serviceUnit}
+        for update
+    </select>
+</mapper>

@@ -1,0 +1,21 @@
+✔ LINEAR 保持按 sortId 选择第一未完成节点 (0.577875ms)
+✔ BRANCH_GRAPH 只认服务端当前节点，不能被更小 sortId 覆盖 (0.512459ms)
+✔ BRANCH_GRAPH 缺失或非法节点状态时 fail closed，不回退本地排序 (0.071375ms)
+✔ 节点完成回执已确认但新 routeState 尚未读回时，不把旧 currentNode 再推荐一次 (0.532667ms)
+✔ 手记和进行中路线按 decisionLog 的真实选择排序且不泄露未选支线 (0.340459ms)
+✔ 完成动作超时重试复用 routeActionId，并且上下文无法携带客户端目标 (0.365125ms)
+✔ 版本冲突识别同时兼容 HTTP envelope 与 AjaxResult code/message (0.202125ms)
+✔ 念头进度要带到页面上 —— 归一化是白名单,漏登记就等于服务端没下发 (0.073875ms)
+✔ 畸形念头项直接丢掉,不让它把菜单渲染成空白行 (0.067375ms)
+✔ 没有念头时给空数组,页面不用到处判 null (0.08525ms)
+✔ 发布故事流、节点弹层和叙事返回动作均为 44px 且语义明确 (6.464875ms)
+✔ 负控：故事块删除退回 48rpx 会判红 (3.242083ms)
+✔ 负控：章节音频移除键名称丢失会判红 (3.473708ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 55.76525

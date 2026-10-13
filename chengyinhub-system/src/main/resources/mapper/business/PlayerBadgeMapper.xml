@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PlayerBadgeMapper">
+
+    <resultMap type="PlayerBadge" id="PlayerBadgeResult">
+        <result property="id"          column="id"           />
+        <result property="memberId"    column="member_id"    />
+        <result property="badgeCode"   column="badge_code"   />
+        <result property="badgeName"   column="badge_name"   />
+        <result property="iconUrl"     column="icon_url"     />
+        <result property="sourceType"  column="source_type"  />
+        <result property="sourceId"    column="source_id"    />
+        <result property="obtainTime"  column="obtain_time"  />
+        <result property="delFlag"     column="del_flag"     />
+        <result property="createTime"  column="create_time"  />
+    </resultMap>
+
+    <sql id="selectPlayerBadgeVo">
+        select id, member_id, badge_code, badge_name, icon_url, source_type, source_id, obtain_time, del_flag, create_time from player_badge
+    </sql>
+
+    <select id="selectListByMember" parameterType="Long" resultMap="PlayerBadgeResult">
+        <include refid="selectPlayerBadgeVo"/>
+        where member_id = #{memberId} and del_flag = 0
+        order by obtain_time desc
+    </select>
+
+    <select id="selectOne" resultMap="PlayerBadgeResult">
+        <include refid="selectPlayerBadgeVo"/>
+        where member_id = #{memberId} and badge_code = #{badgeCode} and source_id = #{sourceId} and del_flag = 0
+        limit 1
+    </select>
+
+    <select id="countByMemberAndCode" resultType="int">
+        select count(1) from player_badge
+        where member_id = #{memberId} and badge_code = #{badgeCode} and del_flag = 0
+    </select>
+
+    <insert id="insertPlayerBadge" parameterType="PlayerBadge" useGeneratedKeys="true" keyProperty="id">
+        insert into player_badge
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="badgeCode != null">badge_code,</if>
+            <if test="badgeName != null">badge_name,</if>
+            <if test="iconUrl != null">icon_url,</if>
+            <if test="sourceType != null">source_type,</if>
+            <if test="sourceId != null">source_id,</if>
+            <if test="obtainTime != null">obtain_time,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="badgeCode != null">#{badgeCode},</if>
+            <if test="badgeName != null">#{badgeName},</if>
+            <if test="iconUrl != null">#{iconUrl},</if>
+            <if test="sourceType != null">#{sourceType},</if>
+            <if test="sourceId != null">#{sourceId},</if>
+            <if test="obtainTime != null">#{obtainTime},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+</mapper>

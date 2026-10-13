@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CmsRegistrationScanMapper">
+    
+    <resultMap type="CmsRegistrationScan" id="CmsRegistrationScanResult">
+        <result property="id"    column="id"    />
+        <result property="registrationType"    column="registration_type"    />
+        <result property="registrationId"    column="registration_id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="validationMethod"    column="validation_method"    />
+        <result property="questionAnswer"    column="question_answer"    />
+        <result property="feedbackText"    column="feedback_text"    />
+        <result property="status"    column="status"    />
+
+
+        <result property="name"    column="name"    />
+        <result property="address"    column="address"    />
+        <result property="latitude"    column="latitude"    />
+        <result property="longitude"    column="longitude"    />
+
+        <result property="templateId"    column="template_id"    />
+
+
+
+
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+
+
+
+
+    <sql id="selectCmsRegistrationScanVo">
+        select id,registration_type, registration_id, member_id, validation_method, question_answer, feedback_text,name, address, latitude, longitude , status,template_id, create_by, create_time, update_by, update_time from cms_registration_scan
+    </sql>
+
+    <select id="selectCmsRegistrationScanList" parameterType="CmsRegistrationScan" resultMap="CmsRegistrationScanResult">
+        <include refid="selectCmsRegistrationScanVo"/>
+        <where>
+            <if test="registrationType != null "> and registration_type = #{registrationType}</if>
+            <if test="registrationId != null "> and registration_id = #{registrationId}</if>
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="validationMethod != null "> and validation_method = #{validationMethod}</if>
+            <if test="questionAnswer != null  and questionAnswer != ''"> and question_answer = #{questionAnswer}</if>
+            <if test="feedbackText != null  and feedbackText != ''"> and feedback_text = #{feedbackText}</if>
+            <if test="status != null "> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectCmsRegistrationScanById" parameterType="String" resultMap="CmsRegistrationScanResult">
+        <include refid="selectCmsRegistrationScanVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertMissingScansForTopic">
+        insert into cms_registration_scan
+            (registration_type, registration_id, member_id, validation_method, name, address,
+             latitude, longitude, status, template_id, create_time)
+        select 0, #{registrationId}, template.member_id, template.validation_method, node.name, node.address,
+               node.latitude, node.longitude, 0, node.template_id, #{createTime}
+        from cms_topic_node node
+        inner join cms_member_template template
+          on template.id = node.template_id
+         and ifnull(template.del_flag, 0) = 0
+        where node.topic_id = #{topicId}
+          and node.template_id is not null
+          and node.template_id &gt; 0
+          and not exists (
+              select 1
+              from cms_registration_scan existing
+              where existing.registration_id = #{registrationId}
+                and existing.member_id = template.member_id
+                and existing.template_id = node.template_id
+          )
+    </insert>
+
+    <insert id="insertCmsRegistrationScan" parameterType="CmsRegistrationScan" useGeneratedKeys="true" keyProperty="id">
+        insert into cms_registration_scan
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="registrationType != null">registration_type,</if>
+            <if test="registrationId != null">registration_id,</if>
+            <if test="memberId != null">member_id,</if>
+            <if test="validationMethod != null">validation_method,</if>
+            <if test="questionAnswer != null">question_answer,</if>
+            <if test="feedbackText != null">feedback_text,</if>
+
+            <if test="name != null">name,</if>
+            <if test="address != null">address,</if>
+            <if test="latitude != null">latitude,</if>
+            <if test="longitude != null">longitude,</if>
+
+            <if test="templateId != null">template_id,</if>
+
+
+            <if test="status != null">status,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="registrationType != null">#{registrationType},</if>
+            <if test="registrationId != null">#{registrationId},</if>
+            <if test="memberId != null">#{memberId},</if>
+            <if test="validationMethod != null">#{validationMethod},</if>
+            <if test="questionAnswer != null">#{questionAnswer},</if>
+            <if test="feedbackText != null">#{feedbackText},</if>
+
+            <if test="name != null">#{name},</if>
+            <if test="address != null">#{address},</if>
+            <if test="latitude != null">#{latitude},</if>
+            <if test="longitude != null">#{longitude},</if>
+            <if test="templateId != null">#{templateId},</if>
+
+
+            <if test="status != null">#{status},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCmsRegistrationScan" parameterType="CmsRegistrationScan">
+        update cms_registration_scan
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="registrationId != null">registration_id = #{registrationId},</if>
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="validationMethod != null">validation_method = #{validationMethod},</if>
+            <if test="questionAnswer != null">question_answer = #{questionAnswer},</if>
+            <if test="feedbackText != null">feedback_text = #{feedbackText},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCmsRegistrationScanById" parameterType="String">
+        delete from cms_registration_scan where id = #{id}
+    </delete>
+
+    <delete id="deleteCmsRegistrationScanByIds" parameterType="String">
+        delete from cms_registration_scan where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

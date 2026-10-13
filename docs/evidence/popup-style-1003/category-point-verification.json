@@ -1,0 +1,17 @@
+{
+  "code_commit": "766b49de18ba84db4ee1f6578b094bd9a924436e",
+  "file": "chengyinhub-xcx/components/cy/category-sheet/index.wxss",
+  "change": "一行两个的分类选择中心点从6pt增至8pt，外圈20pt不变",
+  "before": "category-point-before/category-dark.png",
+  "after": [
+    "category-point-after/category-dark.png",
+    "category-point-after/category-light.png"
+  ],
+  "checks": {
+    "existing_related_tests": 17,
+    "failed": 0,
+    "native_wxss_compile": true,
+    "native_dark_light_reviewed": true
+  },
+  "business_boundary": "仅本地预选第一项并关闭，未点保存。"
+}

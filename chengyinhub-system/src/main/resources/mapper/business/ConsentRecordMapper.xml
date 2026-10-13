@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ConsentRecordMapper">
+    <resultMap id="ConsentRecordResult" type="ConsentRecord">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="docType" column="doc_type"/>
+        <result property="docVersion" column="doc_version"/>
+        <result property="scene" column="scene"/>
+        <result property="scopeType" column="scope_type"/>
+        <result property="scopeId" column="scope_id"/>
+        <result property="eventType" column="event_type"/>
+        <result property="occurredAt" column="occurred_at"/>
+        <result property="requestId" column="request_id"/>
+        <result property="ipAddress" column="ip_address"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <insert id="insertConsentRecord" parameterType="ConsentRecord" useGeneratedKeys="true" keyProperty="id">
+        insert into consent_record (member_id, doc_type, doc_version, scene, scope_type, scope_id,
+                                    event_type, occurred_at, request_id, ip_address, create_time)
+        values (#{memberId}, #{docType}, #{docVersion}, #{scene}, #{scopeType}, #{scopeId},
+                #{eventType}, #{occurredAt}, #{requestId}, #{ipAddress}, #{createTime})
+    </insert>
+
+    <select id="selectLatest" resultMap="ConsentRecordResult">
+        select id, member_id, doc_type, doc_version, scene, scope_type, scope_id,
+               event_type, occurred_at, request_id, ip_address, create_time
+        from consent_record
+        where member_id = #{memberId} and doc_type = #{docType} and scene = #{scene}
+          and scope_type is null and scope_id is null
+        order by occurred_at desc, id desc
+        limit 1
+    </select>
+
+    <select id="selectLatestScoped" resultMap="ConsentRecordResult">
+        select id, member_id, doc_type, doc_version, scene, scope_type, scope_id,
+               event_type, occurred_at, request_id, ip_address, create_time
+        from consent_record
+        where member_id = #{memberId} and doc_type = #{docType} and scene = #{scene}
+          and scope_type = #{scopeType} and scope_id = #{scopeId}
+        order by occurred_at desc, id desc
+        limit 1
+    </select>
+</mapper>

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "checkEnabled": true,
+  "hp": {"enabled": true, "max": 10, "init": 10},
+  "luck": {"enabled": true, "max": 3, "init": 3},
+  "tiers": {
+    "easy": {"dc": 10, "damage": 1},
+    "medium": {"dc": 13, "damage": 2},
+    "hard": {"dc": 16, "damage": 3}
+  },
+  "recovery": {
+    "stationEndIfHurt": 2,
+    "stageRestHpFloor": 6,
+    "stageRestLuckFloor": 1,
+    "exhaustRestHp": 5,
+    "exhaustTag": "tag.injured"
+  },
+  "fumbleExtraDamage": 1,
+  "modCap": 6
+}

@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.chengyinhub.business.mapper.ClubMemberMapper">
+
+    <resultMap type="ClubMember" id="ClubMemberResult">
+        <result property="id"    column="id"    />
+        <result property="clubId"    column="club_id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="role"    column="role"    />
+        <result property="status"    column="status"    />
+        <result property="joinMessage"    column="join_message"    />
+        <result property="joinTime"    column="join_time"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="nickname"    column="nickname"    />
+        <result property="avatar"    column="avatar"    />
+        <result property="levelId"    column="level_id"    />
+    </resultMap>
+
+    <select id="selectClubMemberById" parameterType="Long" resultMap="ClubMemberResult">
+        select id, club_id, member_id, role, status, join_time, del_flag from club_member where id = #{id}
+    </select>
+
+    <select id="selectByClubAndMember" resultMap="ClubMemberResult">
+        select cm.id, cm.club_id, cm.member_id, cm.role, cm.status, cm.join_time, cm.del_flag
+        from club_member cm
+        join club c on c.id = cm.club_id and c.del_flag = 0
+        where cm.club_id = #{clubId} and cm.member_id = #{memberId}
+          and cm.status = 1 and cm.del_flag = 0
+        limit 1
+    </select>
+
+    <select id="selectByClubAndMemberForUpdate" resultMap="ClubMemberResult">
+        select cm.id, cm.club_id, cm.member_id, cm.role, cm.status, cm.join_time, cm.del_flag
+        from club_member cm
+        where cm.club_id = #{clubId} and cm.member_id = #{memberId}
+          and cm.status = 1 and cm.del_flag = 0
+        limit 1 for update
+    </select>
+
+    <select id="selectAnyByClubAndMember" resultMap="ClubMemberResult">
+        select id, club_id, member_id, role, status, join_time, del_flag
+        from club_member
+        where club_id = #{clubId} and member_id = #{memberId} and del_flag = 0
+        limit 1
+    </select>
+
+    <select id="selectClubMemberList" parameterType="ClubMember" resultMap="ClubMemberResult">
+        select cm.id, cm.club_id, cm.member_id, cm.role, cm.status, cm.join_time, cm.del_flag,
+               m.nickname as nickname, m.avatar as avatar,
+               coalesce(pg.level, 1) as level_id
+        from club_member cm
+        join club c on c.id = cm.club_id and c.del_flag = 0
+        left join ums_member m on m.id = cm.member_id
+        left join player_growth pg on pg.member_id = cm.member_id
+        <where>
+            cm.del_flag = 0
+            <if test="clubId != null "> and cm.club_id = #{clubId}</if>
+            <if test="memberId != null "> and cm.member_id = #{memberId}</if>
+            <if test="status != null "> and cm.status = #{status}</if>
+        </where>
+        order by cm.join_time desc
+    </select>
+
+    <select id="selectClubIdsByMember" parameterType="Long" resultType="java.lang.Long">
+        select cm.club_id
+        from club_member cm
+        join club c on c.id = cm.club_id and c.del_flag = 0
+        where cm.member_id = #{memberId} and cm.status = 1 and cm.del_flag = 0
+    </select>
+
+    <select id="countByClub" parameterType="Long" resultType="int">
+        select count(1) from club_member
+        where club_id = #{clubId} and status = 1 and del_flag = 0
+    </select>
+
+    <!--
+      D22:该俱乐部现有管理员数。口径 role=1 AND status=1(正常态)AND del_flag=0。
+      **不含主理人** —— 他是 club.member_id、本就不在 club_member 里(set-member-role 明确拒绝给创建者
+      设角色),所以只数 role=1 天然不含他。用户口径「主理人可以添加 2 个管理员」= 主理人之外额外 2 个。
+    -->
+    <select id="countAdminsByClub" parameterType="Long" resultType="int">
+        select count(1) from club_member
+        where club_id = #{clubId} and role = 1 and status = 1 and del_flag = 0
+    </select>
+
+    <insert id="insertClubMember" parameterType="ClubMember" useGeneratedKeys="true" keyProperty="id">
+        insert into club_member (club_id, member_id, role, status, join_message, join_time, del_flag)
+        values (#{clubId}, #{memberId}, #{role}, #{status}, #{joinMessage}, #{joinTime}, 0)
+    </insert>
+
+    <update id="updateClubMember" parameterType="ClubMember">
+        update club_member
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="role != null">role = #{role},</if>
+            <if test="status != null">status = #{status},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <!-- 重新申请时只覆盖留言这一列。塞进 updateMembershipState 要改它全部调用点,
+         而那几处(审批通过/拒绝/移除)都跟留言无关。 -->
+    <update id="updateJoinMessage">
+        update club_member set join_message = #{joinMessage} where id = #{id}
+    </update>
+
+    <update id="updateMembershipState">
+        update club_member
+        <set>
+            status = #{status},
+            role = #{role},
+            <if test="joinTime != null">join_time = #{joinTime},</if>
+        </set>
+        where id = #{id} and del_flag = 0
+    </update>
+
+    <select id="selectPendingByClub" resultMap="ClubMemberResult">
+        select cm.id, cm.club_id, cm.member_id, cm.role, cm.status, cm.join_message, cm.join_time, cm.del_flag,
+               m.nickname as nickname, m.avatar as avatar,
+               coalesce(pg.level, 1) as level_id
+        from club_member cm
+        join club c on c.id = cm.club_id and c.del_flag = 0
+        left join ums_member m on m.id = cm.member_id
+        left join player_growth pg on pg.member_id = cm.member_id
+        where cm.club_id = #{clubId} and cm.status = 0 and cm.del_flag = 0
+        order by cm.join_time asc, cm.id asc
+    </select>
+
+    <select id="countPendingByClub" resultType="int">
+        select count(1) from club_member
+        where club_id = #{clubId} and status = 0 and del_flag = 0
+    </select>
+
+    <delete id="deleteByClubAndMember">
+        delete from club_member where club_id = #{clubId} and member_id = #{memberId}
+    </delete>
+
+    <!--
+      本团贡献榜的【原始度量】。只出原始数,不排序、不截断 —— 综合分加权与排序在
+      ClubMemberServiceImpl 做(权重是 Java 常量,SQL 里排不了),故这里也不能 limit:
+      先 limit 再按综合分排 = 截错人。
+
+      口径(2026-07-16 拍板):
+        · 完成信号 = player_badge 的旧 TOPIC_CLEAR 或当前 TOPIC_FINISH_主题ID(source_type=2)。
+          按玩家/主题去重,兼容两种徽章并存;真通关,不是核销到场。
+        · 本团范围 = cms_topic.club_id ——「本团发起的团」。
+        · 里程 = 团级规划里程(cms_topic.total_mileage,发布时按路线节点算出),
+          同团所有人相同,不是个人实测轨迹(现无此数据)。
+        · 用时 = 个人实测:player_node_progress 每人每团的 MAX-MIN 打卡时刻,再对已通关的团求和。
+        · 发起团数只算「至少有 1 人真通关」的团 —— 否则团长建 100 个草稿团就白拿 100×W_HOST 分。
+          刻意不拿 lifecycle 过滤:存量主题 lifecycle 恒为 0(migration_topic_lifecycle_recruit.sql
+          只铺列不改发布逻辑),用它过滤会把存量团全判成草稿、发起分整片归零。
+
+      ⚠️ 不要改用 cms_registration 关联主题:主报名路径(CmsRegistrationServiceImpl:300+)只写
+         owner_type/owner_id,【不写 topic_id】—— 只有自玩票(:503)两个都写。真要用报名表,
+         关联必须是 owner_type=1 AND owner_id=主题ID(与 CmsRegistrationMapper.xml:334/343/352/370
+         现有四处核销口径同源),照着 topic_id join 会漏掉几乎所有报名。
+
+      PII:报名表含 real_name/phone/email,本查询【完全不碰】cms_registration;
+      展示字段只从 ums_member 取昵称/头像,与改造前一致。
+    -->
+    <select id="selectClubContribution" resultType="java.util.Map">
+        select mem.memberId                   as memberId,
+               m.nickname                     as nickname,
+               m.avatar                       as avatar,
+               ifnull(cleared.clearCount, 0)  as clearCount,
+               ifnull(cleared.mileage, 0)     as mileage,
+               ifnull(dur.durationMin, 0)     as durationMin,
+               ifnull(hosted.hostedCount, 0)  as hostedCount
+        from (
+            select cm.member_id as memberId
+            from club_member cm
+            join club active_club on active_club.id = cm.club_id and active_club.del_flag = 0
+            where cm.club_id = #{clubId} and cm.status = 1 and cm.del_flag = 0
+            union
+            select c.member_id as memberId
+            from club c
+            where c.id = #{clubId} and c.del_flag = 0
+        ) mem
+        join ums_member m on m.id = mem.memberId
+        left join (
+            select pb.member_id            as memberId,
+                   count(distinct t.id)    as clearCount,
+                   sum(ifnull(t.total_mileage, 0)) as mileage
+            from (
+                select distinct member_id, source_id
+                from player_badge
+                where (badge_code = 'TOPIC_CLEAR'
+                       or (source_type = 2 and badge_code = concat('TOPIC_FINISH_', source_id)))
+                  and del_flag = 0
+                  <if test="sinceInclusive != null"> and obtain_time &gt;= #{sinceInclusive}</if>
+            ) pb
+            join cms_topic t on t.id = pb.source_id
+            where t.club_id = #{clubId}
+              and t.del_flag = 0
+            group by pb.member_id
+        ) cleared on cleared.memberId = mem.memberId
+        left join (
+            select d.member_id as memberId, sum(d.durationMin) as durationMin
+            from (
+                <!--
+                  ★ 必须按 activity_id 分段,不能只按 (member, topic) 取 MAX-MIN。
+                  player_node_progress 的进度是【按活动隔离】的(migration_play_progress_points.sql:13
+                  的列注释 + 唯一键 uk_member_activity_node),而同一个团可以挂多个活动
+                  (cms_activity.topic_id)。同一人把同一个团在三月玩一次、六月又玩一次,
+                  按 (member, topic) 取 MAX-MIN 会算成「六月最后一刻 - 三月第一刻」= 三个月,
+                  用时直接爆表、配速榜彻底失真。分段后 = 20min + 40min = 60min。
+                  (真库实测过:不分段得 132520,分段得 60 —— ClubLeaderboardContributionMyBatisIT
+                   .duration_segmentedPerActivity_notSpanningMonths)
+                -->
+                select p.member_id as member_id,
+                       timestampdiff(MINUTE, min(p.checkin_time), max(p.checkin_time)) as durationMin
+                from player_node_progress p
+                join cms_topic t2 on t2.id = p.topic_id
+                where t2.club_id = #{clubId}
+                  and t2.del_flag = 0
+                  and p.del_flag = 0
+                  <if test="sinceInclusive != null"> and p.checkin_time &gt;= #{sinceInclusive}</if>
+                  and exists (
+                      select 1 from player_badge pb2
+                      where pb2.member_id = p.member_id
+                        and pb2.source_id = p.topic_id
+                        and (pb2.badge_code = 'TOPIC_CLEAR'
+                             or (pb2.source_type = 2 and pb2.badge_code = concat('TOPIC_FINISH_', pb2.source_id)))
+                        and pb2.del_flag = 0
+                        <!-- 通关时间与进度使用同一周窗。 -->
+                        <if test="sinceInclusive != null"> and pb2.obtain_time &gt;= #{sinceInclusive}</if>
+                  )
+                group by p.member_id, p.topic_id, p.activity_id
+            ) d
+            group by d.member_id
+        ) dur on dur.memberId = mem.memberId
+        left join (
+            select t3.member_id as memberId, count(distinct t3.id) as hostedCount
+            from cms_topic t3
+            where t3.club_id = #{clubId}
+              and t3.del_flag = 0
+              and exists (
+                  select 1 from player_badge pb3
+                  where pb3.source_id = t3.id
+                    and (pb3.badge_code = 'TOPIC_CLEAR'
+                         or (pb3.source_type = 2 and pb3.badge_code = concat('TOPIC_FINISH_', pb3.source_id)))
+                    and pb3.del_flag = 0
+                    <if test="sinceInclusive != null"> and pb3.obtain_time &gt;= #{sinceInclusive}</if>
+              )
+            group by t3.member_id
+        ) hosted on hosted.memberId = mem.memberId
+    </select>
+
+</mapper>

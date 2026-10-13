@@ -1,0 +1,362 @@
+== unit test glob/哨兵文件盘点 ==
+xcx unit manifest: 1006 files, 7 sentinels
+== JS 语法检查(node --check) ==
+== JSON 可解析检查 ==
+== JS 作用域/解构导出门禁(运行时 ReferenceError 前置阻断) ==
+JS-SCOPE SELFTEST PASS: 未解析标识符与不存在导出均完成红→绿负控
+JS-SCOPE PASS: 551 个生产 JS，未解析标识符 0，不存在导出 0
+== app.json 主包页面约束检查 ==
+== 微信官方隐私接口声明与授权链源码检查 ==
+[wechat-contract] privacy source scan: PASS
+[wechat-contract] used location APIs: chooseLocation, choosePoi, getLocation, onLocationChange, startLocationUpdate, startLocationUpdateBackground
+[wechat-contract] package size: WAIT-EXTERNAL (run CLI preview/upload with --info-output)
+== 模板污染检查 ==
+== DS 硬编码防回潮门(比对 GitHub master 以来的 wxss 新增行) ==
+[selftest] ✓ 注入硬编码色 → 必须红且点名(exit 1)
+[selftest] ✓ 改用 token → 必须绿(exit 0)
+[selftest] ✓ 行级 /* ds-ok */ 逃生口仍在(exit 0)
+[selftest] ✓ 注释里的 PR 号 #486 不是色值 → 必须绿(exit 0)
+[selftest] ✓ 跨行块注释里的 #486 → 必须绿(逐行剥注释认不出中间行)(exit 0)
+[selftest] ✓ 注释里提到旧名 token → 必须绿(exit 0)
+[selftest] ✓ 真违规 + 同行尾注释 → 仍必须红(exit 1)
+[selftest] ✓ 注释在前、代码里真违规 → 仍必须红(exit 1)
+[selftest] ✓ 跨行注释后跟真违规 → 仍必须红(exit 1)
+[selftest] ✓ JS 里 marker bgColor 写死色值 → 必须红且点名(exit 1)
+[selftest] ✓ JS 里富文本注入 style="color:#007AFF" → 必须红(exit 1)
+[selftest] ✓ 改读 token 实值镜像并注明 → 仍红(值就是写死的)(exit 1)
+[selftest] ✓ 三元里的色值也要抓(属性名与色值隔着 8 个字符)(exit 1)
+[selftest] ✓ 同一行里有 URL 也要照样抓(别被 https:// 里的 // 截断)(exit 1)
+[selftest] ✓ background / border 形状同样要抓(exit 1)
+[selftest] ✓ 整行注释里的色值 → 必须绿(exit 0)
+[selftest] ✓ 行尾 /* ds-ok */ 逃生口在 js 上同样有效(exit 0)
+[selftest] ✓ JS 里的 # 不是色值(选择器/PR 号/注释)→ 必须绿(exit 0)
+[selftest] ✓ 颜色属性但读的是变量 → 必须绿(exit 0)
+[selftest] ✓ 门禁自证通过(能判红也能判绿;wxss + js 两侧)
+== 未定义 token 门禁(var(--cy-x) 取不到值时整条声明静默作废) ==
+✓ 全绿:引用的都定义过
+✓ 负控:引用未定义 token 必须红
+✓ 负控:calc 里的未定义 token 也要红
+✓ 不误报:带兜底的 var 是合法写法
+✓ 不误报:注释里的 var 只是文档
+✓ 不误报:定义在别的文件里也算
+selftest 通过:2 个负控真判红,4 个「不该红」的场景没被误报
+未定义 token 门禁通过:349 个 wxss,var(--cy-*) 全部有定义
+== WXSS 选择器门禁(拦通配符 * —— 整包编译阻断,wcsc 上不了 ubuntu 故静态扫) ==
+WXSS 选择器门禁:自证通过(能判红也能判绿)
+WXSS 选择器门禁:通过(扫 349 份 .wxss,无通配符选择器)
+== 组件 WXSS 选择器门禁(禁止 tag/ID/attribute selector) ==
+组件 WXSS 选择器门禁:自证通过(能判红也能判绿)
+组件 WXSS 选择器门禁:通过
+== button reset 特异度门禁(全局 button 复位不许高过单类,否则页面/组件里的背景被静默吃掉) ==
+selftest: 注入 (0,1,1) reset -> 34 处判红 ; 当前仓库 -> 0 处判红
+selftest PASS(能判红也能判绿)
+<button> 共 65 处 · 有声明被 reset 压掉的 0 处 · 其中值与 reset 不同(肉眼可见) 0 处
+
+【A】background 被吃掉且值不是透明/none —— 真实视觉缺陷
+
+【B】background 被吃掉但值本就是透明/none —— 今天不可见,是同一根因的哑弹
+
+【C】background 之外、同样被 reset 压掉的属性 —— 修 reset 后这些会「突然生效」,是回归风险面
+== WXML 条件链门禁(wx:elif / wx:else 必须紧随同层条件分支) ==
+WXML 条件链门禁:自证通过(能判红也能判绿)
+WXML 条件链门禁:通过
+== 页面根主题门禁(玩家 dark / 商家 merchant / 共享页显式双主题) ==
+主题与孤立单位门禁:自证通过(能判红也能判绿，排除项锁死为 3 个设计域 + 1 个无实体重定向壳)
+页面根主题门禁:通过
+== WXML 孤立单位门禁(单位前插值必须有 || 兜底) ==
+WXML 孤立单位门禁:通过
+== cy-sheet 属性契约门禁(全站调用点传的属性,cy-sheet 必须真的声明过) ==
+cy-sheet 属性契约门禁:自证通过(能判红也能判绿、认得 kebab-case/data-*/behavior 混入属性(含工厂式 behavior),且能定位到行号)
+扫描到 105 处 <cy-sheet> 调用
+cy-sheet 属性契约门禁:通过
+== 全组件属性契约门禁(全部 98 个 cy 组件:调用点传的属性必须真的声明过) ==
+全组件属性契约门禁:自证通过(未声明属性判红、去掉后复绿、cy-sheet 的 behavior 混入属性零误报;覆盖 99 个组件)
+扫描 99 个 cy 组件 / 3446 个调用实例
+全组件属性契约门禁:通过
+== 组件/资源路径门禁(usingComponents 要能解析;跨包组件须合法异步占位;主包不许引分包资源;分包之间不许互引资源) ==
+组件/资源路径门禁:自证通过(能判绿也能判红:搬家指错、缺失/无效异步占位、主包引分包资源、分包互引资源都判红;合法同 tag 异步组件、主包引主包、分包引主包、分包引自己、注释里的路径判绿)
+组件/资源路径门禁:自证通过(能判绿也能判红:搬家指错、缺失/无效异步占位、主包引分包资源、分包互引资源都判红;合法同 tag 异步组件、主包引主包、分包引主包、分包引自己、注释里的路径判绿)
+组件/资源路径门禁:通过(1993 条 usingComponents 路径解析到位;合法异步组件 17 条;主包引分包资源 0 条新增;分包互引资源 0 条)
+== cy-page-title 双重缩进门禁(容器已有横向 padding 时必须传 flush) ==
+[selftest] ✓ 真双重缩进(容器有 padding + 没传 flush)⇒ 必须红
+[selftest] ✓ 传了 flush ⇒ 绿
+[selftest] ✓ 容器没有横向 padding ⇒ 绿(不该红的别红)
+[selftest] ✓ 注释里提到组件名、真标签已传 flush ⇒ 绿(注释不算数)
+[selftest] ✓ 整个标签被注释掉、真标签已传 flush ⇒ 绿
+[selftest] ✓ 被注释掉的祖先 view 不算祖先 ⇒ 绿
+[selftest] ✓ 注释挡在前面,后面真的漏传 flush ⇒ 仍要红(别把误报修成漏报)
+[selftest] ✓ cy-page-title 双重缩进门禁自证通过(能判红也能判绿、注释不算数)
+
+共 0 页(已排除跨页同名类污染)
+== 死链按钮门禁(wxml 的 bind*/catch* 绑定必须在同目录 js 里真有对应方法) ==
+U2 死链按钮门禁:自证通过(9 项,含能判红能判绿、behaviors 混入、注释、两条 \b 陷阱负控)
+U2 死链绑定:扫描 328 个 wxml,核对 4379 处纯标识符事件绑定,存量基线 0 条
+跳过 2 处(动态/表达式绑定或找不到同伴 js,逐条列出,不静默):
+  pages/club/detail/index.wxml:312 catchtap="{{item.memberId ? 'goMemberProfile' : 'expandMembers'}}" 不是纯标识符(动态/表达式绑定),静态门禁跳过,不代表已核实
+  pages/play/index.wxml:1166 bindtap="{{item.locked ? 'noop' : 'openStory'}}" 不是纯标识符(动态/表达式绑定),静态门禁跳过,不代表已核实
+U2 死链按钮门禁:通过(存量 0 条已在基线内,未新增)
+== 孤儿 handler 门禁(js 里 on*/go*/tap*/handle* 方法必须真有人调:wxml 绑定或 js 调用) ==
+U3 孤儿 handler 门禁:自证通过(10 项,含能判红能判绿、生命周期排除、两条 \b 陷阱负控)
+U3 孤儿 handler:扫描 326 个页面/组件 js,核对 1730 个 handler 形状方法,存量基线 74 条
+豁免 6 个(其他 js 里存在 .方法名( 调用,可能是父组件 selectComponent 直调,逐条列出不静默):
+  pages/coop/withdraw/index.js:16 goBack <- pages/activity/baoming/baoming.js, pages/club/topic-detail/index.js, pages/merchant/profile/index.js 等
+  pages/merchant/decor/index.js:940 goBack <- pages/activity/baoming/baoming.js, pages/club/topic-detail/index.js, pages/merchant/profile/index.js 等
+  pages/roam/index.js:4047 onPlayHudToggle <- pages/play/index.js
+  subpackageB/pages/im/chat/index.js:700 onBack <- pages/address/address.js, pages/club/apply/index.js, pages/merchant/apply/index.js 等
+  subpackageMember/components/cy/scene-member-order-detail/index.js:447 goBack <- pages/activity/baoming/baoming.js, pages/club/topic-detail/index.js, pages/merchant/profile/index.js 等
+  subpackageMember/components/scene-member-participation-detail/index.js:154 goBack <- pages/activity/baoming/baoming.js, pages/club/topic-detail/index.js, pages/merchant/profile/index.js 等
+提示:基线里 18 条已经不存在了(修好了),跑 --update-baseline 收窄基线
+U3 孤儿 handler 门禁:通过(存量 56 条已在基线内,未新增)
+== 死数据字段门禁(setData 的顶层字段必须真被 wxml 渲染,只进无障碍属性不算) ==
+U4 死数据字段门禁:自证通过(21 项,五类判据各有红绿负控 + 两条 \b 陷阱)
+U4 死数据字段:扫描 326 个页面/组件 js,核对 3628 个 setData 顶层字段,存量基线 323 条
+  A1 91 个 —— 完全死:wxml 零引用,js 也不读 this.data
+  A2 218 个 —— 只当内部状态:wxml 零引用,js 自己读 this.data(不该走 setData)
+  B1 4 个 —— 只进无障碍属性:读屏器听得到,眼睛看不见
+静态判不了 257 处 setData(变量/展开/计算属性名),不静默,跑 --list 看明细
+疑似被 wx:for 局部变量遮蔽 2 个,不判违规(宁可漏报),跑 --list 看明细
+提示:基线里 10 条已经不存在了(修好了),跑 --update-baseline 收窄基线
+U4 死数据字段门禁:通过(存量 313 条已在基线内,未新增)
+== 无障碍:可点击元素必须有可读名称(读屏器念得出来) ==
+  ✓ 无名图标按钮必须被抓到(期望 1 实得 1)
+  ✓ 带 aria-label 的图标按钮放行(期望 0 实得 0)
+  ✓ 子树有文字的放行(读屏器念得出来)(期望 0 实得 0)
+  ✓ 子树只有插值也算有名(期望 0 实得 0)
+  ✓ 自闭合 image 点击区无名必须抓到(期望 1 实得 1)
+  ✓ aria-label 是空串不算有名(★假保证)(期望 1 实得 1)
+  ✓ 嵌套同名标签不能提前闭合导致漏判(期望 1 实得 1)
+  ✓ 嵌套同名标签:内层有文字则外层有名(期望 0 实得 0)
+  ✓ noop 不算交互(期望 0 实得 0)
+  ✓ 注释里的点击区不算(期望 0 实得 0)
+  ✓ 自定义组件的 title 属性算可读名(cy-cell 会把它渲染成文字)(期望 0 实得 0)
+  ✓ ★负控:title 是空串仍算无名(期望 1 实得 1)
+  ✓ ★负控:cy-icon 的 name 不算文案(收了会放过真缺陷)(期望 1 实得 1)
+  ✓ ★负控:open-type 原生按钮没有 bindtap 也必须被抓到(期望 1 实得 1)
+  ✓ 带 aria-label 的 open-type 原生按钮放行(期望 0 实得 0)
+  ✓ ★负控:navigator 原生跳转没有 bindtap 也必须被抓到(期望 1 实得 1)
+[a11y-name] 自证通过(16 项,含空 aria-label / 空 title / icon-name / 原生控件假保证陷阱)
+  ✓ 无名图标按钮必须被抓到(期望 1 实得 1)
+  ✓ 带 aria-label 的图标按钮放行(期望 0 实得 0)
+  ✓ 子树有文字的放行(读屏器念得出来)(期望 0 实得 0)
+  ✓ 子树只有插值也算有名(期望 0 实得 0)
+  ✓ 自闭合 image 点击区无名必须抓到(期望 1 实得 1)
+  ✓ aria-label 是空串不算有名(★假保证)(期望 1 实得 1)
+  ✓ 嵌套同名标签不能提前闭合导致漏判(期望 1 实得 1)
+  ✓ 嵌套同名标签:内层有文字则外层有名(期望 0 实得 0)
+  ✓ noop 不算交互(期望 0 实得 0)
+  ✓ 注释里的点击区不算(期望 0 实得 0)
+  ✓ 自定义组件的 title 属性算可读名(cy-cell 会把它渲染成文字)(期望 0 实得 0)
+  ✓ ★负控:title 是空串仍算无名(期望 1 实得 1)
+  ✓ ★负控:cy-icon 的 name 不算文案(收了会放过真缺陷)(期望 1 实得 1)
+  ✓ ★负控:open-type 原生按钮没有 bindtap 也必须被抓到(期望 1 实得 1)
+  ✓ 带 aria-label 的 open-type 原生按钮放行(期望 0 实得 0)
+  ✓ ★负控:navigator 原生跳转没有 bindtap 也必须被抓到(期望 1 实得 1)
+[a11y-name] 自证通过(16 项,含空 aria-label / 空 title / icon-name / 原生控件假保证陷阱)
+[a11y-name] 无名点击区 0 处(基线 0)
+[a11y-name] ✓ 无新增(棘轮只许变小)
+== 无障碍:可点击元素的命中区不得小于 44px(X12) ==
+  ✓ 24rpx 的删除按钮必须被抓到(期望 1 实得 1)
+  ✓ 88rpx 正好达标,放行(期望 0 实得 0)
+  ✓ 一维达标一维不达标仍算不达标(期望 1 实得 1)
+  ✓ ★负控:写了 padding 就不下结论(content-box 会撑大,算了就是猜)(期望 0 实得 0)
+  ✓ ★负控:padding:0 不算撑大,仍要抓(.ph-follow 就是这么写的)(期望 1 实得 1)
+  ✓ ★负控:只写了一个维度不下结论(期望 0 实得 0)
+  ✓ ★负控:百分比/calc 判不了,不下结论(期望 0 实得 0)
+  ✓ min-height 明确写了下限就不下结论(期望 0 实得 0)
+  ✓ 后代选择器:祖先 class 在本页出现过,要判(期望 1 实得 1)
+  ✓ ★负控:后代选择器的祖先 class 本页没有 ⇒ 这条规则命不中,不判(期望 0 实得 0)
+  ✓ 带标签限定的后代选择器(实测 pages/gerenziliao 就是这么写的)(期望 1 实得 1)
+  ✓ ★负控:祖先不是 class 选择器(裸标签)⇒ 判不了,不判(期望 0 实得 0)
+  ✓ ★负控:子组合器 > 不收(期望 0 实得 0)
+  ✓ ★负控:没绑 tap 的小元素不算(期望 0 实得 0)
+  ✓ ★负控:noop 不算交互(期望 0 实得 0)
+  ✓ ★负控:注释里的不算(期望 0 实得 0)
+  ✓ ★负控:ds-ok 带理由才放行(期望 0 实得 0)
+  ✓ ★负控:ds-ok 为空串不放行(期望 1 实得 1)
+  ✓ 原生 button 没有 bindtap 也要判(期望 1 实得 1)
+  ✓ px 单位同样判(44px 达标)(期望 0 实得 0)
+  ✓ px 单位不达标要抓(期望 1 实得 1)
+  ✓ 一个元素多个小 class 只报一次(期望 1 实得 1)
+  ✓ 伪类选择器上的声明也算(.a:active)(期望 1 实得 1)
+  ✓ ★负控:样式在别的页面里,不该算到本元素头上(期望 0 实得 0)
+  ✓ 透明 ::after 把热区撑到 88rpx 就算达标(cy-info-pop 的写法)(期望 0 实得 0)
+  ✓ 负向内缩式 ::after 同样算达标(cy-btn 的写法)(期望 0 实得 0)
+  ✓ ★负控:::after 只有 60rpx,没撑够 88 仍要抓(期望 1 实得 1)
+  ✓ ★负控:::after 没有 position:absolute 就不是热区层,不算数(期望 1 实得 1)
+  ✓ ★负控:热区在别的 class 上,不该算到本元素头上(期望 1 实得 1)
+[a11y-tap] 自证通过(29 项,含 padding/单维/百分比/后代选择器/空 ds-ok 假保证陷阱)
+  ✓ 24rpx 的删除按钮必须被抓到(期望 1 实得 1)
+  ✓ 88rpx 正好达标,放行(期望 0 实得 0)
+  ✓ 一维达标一维不达标仍算不达标(期望 1 实得 1)
+  ✓ ★负控:写了 padding 就不下结论(content-box 会撑大,算了就是猜)(期望 0 实得 0)
+  ✓ ★负控:padding:0 不算撑大,仍要抓(.ph-follow 就是这么写的)(期望 1 实得 1)
+  ✓ ★负控:只写了一个维度不下结论(期望 0 实得 0)
+  ✓ ★负控:百分比/calc 判不了,不下结论(期望 0 实得 0)
+  ✓ min-height 明确写了下限就不下结论(期望 0 实得 0)
+  ✓ 后代选择器:祖先 class 在本页出现过,要判(期望 1 实得 1)
+  ✓ ★负控:后代选择器的祖先 class 本页没有 ⇒ 这条规则命不中,不判(期望 0 实得 0)
+  ✓ 带标签限定的后代选择器(实测 pages/gerenziliao 就是这么写的)(期望 1 实得 1)
+  ✓ ★负控:祖先不是 class 选择器(裸标签)⇒ 判不了,不判(期望 0 实得 0)
+  ✓ ★负控:子组合器 > 不收(期望 0 实得 0)
+  ✓ ★负控:没绑 tap 的小元素不算(期望 0 实得 0)
+  ✓ ★负控:noop 不算交互(期望 0 实得 0)
+  ✓ ★负控:注释里的不算(期望 0 实得 0)
+  ✓ ★负控:ds-ok 带理由才放行(期望 0 实得 0)
+  ✓ ★负控:ds-ok 为空串不放行(期望 1 实得 1)
+  ✓ 原生 button 没有 bindtap 也要判(期望 1 实得 1)
+  ✓ px 单位同样判(44px 达标)(期望 0 实得 0)
+  ✓ px 单位不达标要抓(期望 1 实得 1)
+  ✓ 一个元素多个小 class 只报一次(期望 1 实得 1)
+  ✓ 伪类选择器上的声明也算(.a:active)(期望 1 实得 1)
+  ✓ ★负控:样式在别的页面里,不该算到本元素头上(期望 0 实得 0)
+  ✓ 透明 ::after 把热区撑到 88rpx 就算达标(cy-info-pop 的写法)(期望 0 实得 0)
+  ✓ 负向内缩式 ::after 同样算达标(cy-btn 的写法)(期望 0 实得 0)
+  ✓ ★负控:::after 只有 60rpx,没撑够 88 仍要抓(期望 1 实得 1)
+  ✓ ★负控:::after 没有 position:absolute 就不是热区层,不算数(期望 1 实得 1)
+  ✓ ★负控:热区在别的 class 上,不该算到本元素头上(期望 1 实得 1)
+[a11y-tap] 自证通过(29 项,含 padding/单维/百分比/后代选择器/空 ds-ok 假保证陷阱)
+[a11y-tap] 过小命中区 0 处(基线 0,阈值 44px)
+[a11y-tap] ✓ 无新增(棘轮只许变小)
+== 下拉刷新必须真能触发(抓「声称有、实际死」) ==
+  ✓ 整屏 scroll-view 且未接 refresher ⇒ 判 A(死的下拉刷新)(期望 A 实得 A)
+  ✓ 整屏 scroll-view 但已接 refresher ⇒ 放行(期望 放行 实得 放行)
+  ✓ ★局部横滑 scroll-view 不该误报(期望 放行 实得 放行)
+  ✓ ★纵向但不满屏的 scroll-view 不该误报(期望 放行 实得 放行)
+  ✓ 开了却没 handler ⇒ 判 B(期望 B 实得 B)
+  ✓ 有 handler 但不收圈 ⇒ 判 C(期望 C 实得 C)
+  ✓ 完整正确 ⇒ 放行(期望 放行 实得 放行)
+[pulldown] 自证通过(7 项,含横滑/非满屏两条误报陷阱)
+  ✓ 整屏 scroll-view 且未接 refresher ⇒ 判 A(死的下拉刷新)(期望 A 实得 A)
+  ✓ 整屏 scroll-view 但已接 refresher ⇒ 放行(期望 放行 实得 放行)
+  ✓ ★局部横滑 scroll-view 不该误报(期望 放行 实得 放行)
+  ✓ ★纵向但不满屏的 scroll-view 不该误报(期望 放行 实得 放行)
+  ✓ 开了却没 handler ⇒ 判 B(期望 B 实得 B)
+  ✓ 有 handler 但不收圈 ⇒ 判 C(期望 C 实得 C)
+  ✓ 完整正确 ⇒ 放行(期望 放行 实得 放行)
+[pulldown] 自证通过(7 项,含横滑/非满屏两条误报陷阱)
+[pulldown] 失效的下拉刷新 0 处(基线 0)
+[pulldown] ✓ 无新增
+== 固定底栏必须自带背景(内容不许从底栏底下透出来) ==
+✓ 全绿:有背景
+✓ 负控:sticky 无背景必须红
+✓ 负控:fixed 无背景必须红
+✓ 不误报:bottom 不是 0
+✓ 不误报:不是固定定位
+✓ 不误报:background-color 也算数
+selftest 通过:2 个负控真能判红,4 个「不该红」的场景没被误报
+底栏不透明门禁通过:349 个 wxss,无缺背景的固定底栏(豁免 9 条)
+== 截图矩阵体检(双向:矩阵→页面 与 页面→矩阵,外加 blocked 棘轮) ==
+== 截图覆盖率门禁(app.json 每条路由都要有非 blocked 的矩阵行,或带替代验证的显式豁免) ==
+coverage-gate 自证通过(7 项,两个方向各有负控)
+路由 130 条:已覆盖 126 / 显式豁免 4 / 仅 blocked 0 / **未覆盖 0**
+显式豁免 4 条(每条都带 reason + altVerification):
+  subpackageP3/pages/stamp-camera/index/index
+  pages/publish/topicadd/topicadd
+  pages/club/workbench/index
+  pages/coop/withdraw/records/index
+覆盖率门禁:通过
+== 全量可点击控件动作台账(控件/handler/动作类型/对端回读不可漂移) ==
+ACTION-LEDGER SELFTEST PASS
+ACTION-LEDGER PASS: 4396 controls, 0 evidence results
+== UI 走查辅助脚本自证(路由清单 / 重拍分档 / 批次判决) ==
+route-matrix 自证通过(12 项)
+impact-map 自证通过(6 项)
+verify-batch 自证通过(10 项,四条判据各有红用例)
+route-matrix PASS: 130 routes / 26 scenes
+== UI-GATE-0 自证(U1-U5 逐条变异红→撤销→绿) ==
+[SELFTEST][U1] RED caught; restored GREEN — 不存在的 /api Mapping 会阻断，拼接后缀与路由段数不会 fail-open
+[SELFTEST][U2] RED caught; restored GREEN — 真实 lintRepo 扫描路径能判红并恢复绿
+[SELFTEST][U3] RED caught; restored GREEN — 零绑定 handler-like 方法会阻断
+[SELFTEST][U4] RED caught; restored GREEN — WXML 零消费会阻断，this.data bracket 真实消费不会被注释掩码误报
+[SELFTEST][U5] RED caught; restored GREEN — resolve(null)、纯副作用、helper 仅关闭 loading/写空 message/参数错位及 success-only toast 都会红；fail 内可见 toast/错误态与显式逐项登记会绿
+[SELFTEST][ROAM-NAMING] RED caught; restored GREEN — retryReco/reco 死链必须删除，goal/onGoalTap 必须 WXML 可见且真实绑定，四个 key 禁止 baseline 逃逸
+[SELFTEST][WARN-AS-ERROR] RED caught; restored GREEN — --warn-as-error 下占位/开发者口径/裸网络/半角逗号/超长提示文案会进入失败判定
+[SELFTEST][BASELINE-RATCHET] RED caught; restored GREEN — 未命中、增长、等量换 key 或缺 digest 真红；显式删除并调小棘轮后恢复绿
+UI-GATE-0 selftest:PASS (U1-U5 五条均完成变异红→撤销→绿)
+== UI-GATE-0 全仓扫描(U1-U5) ==
+UI-GATE-0 扫描:551 JS / 328 WXML / 698 backend Mapping
+U1 PASS:静态路径 748,动态路径 37,变量路径 10,逐项理由 10
+  [U1 DYNAMIC] chengyinhub-xcx/pages/activity/official-inbox/index.js:97 -> /api/official/v2/organizer-invites/:dynamic/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/pages/activity/official-inbox/index.js:98 -> /api/official/v2/parties/:dynamic/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/aftercare/detail/index.js:97 -> /api/merchant/aftercare/detail
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/aftercare/detail/index.js:273 -> /api/merchant/aftercare/respond
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/aftercare/index.js:109 -> /api/merchant/aftercare/list
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/customer/detail/index.js:95 -> /api/merchant/crm/customers/:dynamic/detail
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/customer/detail/index.js:164 -> /api/merchant/crm/customers/:dynamic/notes
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/customer/detail/index.js:216 -> /api/merchant/crm/customers/:dynamic/notes/hide
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/customer/detail/index.js:248 -> /api/merchant/crm/customers/:dynamic/tags
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/customer/detail/index.js:286 -> /api/merchant/crm/customers/:dynamic/tags/remove
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/customer/index.js:606 -> /api/merchant/crm/customers/:dynamic/contact
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/customer/index.js:809 -> /api/merchant/crm/exports/:dynamic/status
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/ledger/index.js:294 -> /api/merchant/aftercare/list
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/reviews/index.js:201 -> /api/merchant/reviews/manage
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/reviews/index.js:210 -> /api/merchant/reviews/public
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/circle/index.js:153 -> /api/circle-theme/session/:dynamic/card
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/circle/index.js:160 -> /api/circle-theme/instance/:dynamic/offers
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/circle/index.js:187 -> /api/circle-theme/session/:dynamic/card
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/circle/index.js:208 -> /api/circle-theme/session/:dynamic/card
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/circle/index.js:485 -> /api/circle-theme/session/:dynamic/card
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/index.js:4661 -> /api/play/preference/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/index.js:4705 -> /api/play/preference/:dynamic/submit
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/index.js:4740 -> /api/play/tag/:dynamic/confirm
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/index.js:4766 -> /api/play/tag/:dynamic/correct
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/index.js:6127 -> /api/play/os/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/index.js:6154 -> /api/play/tag/:dynamic/revoke
+  [U1 DYNAMIC] chengyinhub-xcx/pages/roam/index.js:1639 -> /api/official/events/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/pages/roam/index.js:1728 -> /api/official/events/:dynamic/arrivals
+  [U1 DYNAMIC] chengyinhub-xcx/pages/roam/index.js:4481 -> /api/official/events/:dynamic/complete
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageA/pages/myproject/index.js:581 -> /api/template/:dynamic/market-submit
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageA/utils/withdrawal-preflight.js:70 -> /api/fund/preflight/:dynamic/reject
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageA/utils/withdrawal-preflight.js:84 -> /api/fund/preflight/:dynamic/confirm
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageB/pages/im/chat/index.js:632 -> /api/official/broadcast/:dynamic/click
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js:115 -> /api/city/nodes/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js:213 -> /api/city/nodes/:dynamic/favorite
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js:385 -> /api/city/nodes/:dynamic/complete
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageMember/mytemplate/mytemplate.js:117 -> /api/template/:dynamic/market-submit
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/app.js:329 options — consent adapter 的 options 只由 utils/compliance/consent-client.js 构造，该模块把唯一 endpoint 固定为 /api/compliance/consents；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/components/cy/scene-route-content/index.js:238 config.url — config 只由本文件 sceneRequest(sceneId) 的有限映射生成，所有请求 URL 均为映射内 /api 字面量，未知 sceneId 返回 null、缺必需 id 也在请求前终止；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/components/cy/scene-route-content/index.js:551 request.url — request 只取自本方法内 requests[sceneId] 的七个非提现固定写接口对象，未知 sceneId 显示提交错误并返回；提现分支在此前已转交 withdrawal-preflight，不会走到本调用；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/pages/activity/official-inbox/index.js:103 url — url 由 organizerInvite 与受控 action 组合成两组官方邀约路由，前两行字面量及动态后缀均由 U1 扫描；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/pages/index/index.js:1109 getListData(req.url) — retry 只回放 _listReq 中由 getListData 首次字面量调用冻结的 topic/list 或 activity/list，外部输入不能写该缓存；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/pages/search2/result/index.js:122 request.url — request 数组只由 utils/discover-search.buildRequests 构造，其按搜索类型枚举后端字面量且当前 U1 全仓扫描覆盖；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/subpackageA/pages/myproject/index.js:492 url — 上下架 URL 只由 bizType 在 activity/update_publish_status 与 topic/update_user_status 两个字面量间选择，未知 bizType 仍落固定 topic 路由；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:535 Object.assign({}, options, {
+          autoErrorToast: false,
+          success: function (res — _submitVerification 的 options 只来自本文件三处调用：verification-scan 的有限核销路由，以及 chapter/station 两个显式 /api 字面量；非法扫码在调用前返回，不存在外部 URL 直传；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:831 req(url) — url 只由 isSelf 在 /api/user/info 与 /api/user/public-info 两个同方法字面量之间二选一，req 不接收其它来源；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js:174 _submitVerification({
+            url: scan.url,
+            data: scan.data,
+            method: 'P) — 会员快捷核销只消费 verification-scan.js 的有限核销路由，非法扫码在 sendRequest 前显示 toast 并返回；owner=小程序，复核=2026-09-15
+U2 PASS:绑定 4379,显式 skip 2,白名单 0(复用 wxml-handler-lint)
+U3 PASS:零绑定债务 62/62 已登记,生命周期规则 14
+U4 PASS:零消费债务 130/130 已登记,动态 setData 59/59 已登记
+U5 PASS:需逐项理由 28,同请求内静态证明显式处理 229,逐项理由 28
+Legacy PASS:error 0,warn 0
+UI-GATE-0:PASS
+== UI 有效性门禁(U1/U3/U4/U5;U2 复用上面的死链按钮门禁) ==
+基线外新增文件(无 diff 基线,按全量扫描):components/cy/new-probe/index.wxml
+U1 自证通过:伪造不存在的 /api 路径会红，真实 @*Mapping 与路径参数会绿
+U3 自证通过:伪造孤儿 retryReco 会红，绑定到 WXML 后复绿
+U4 自证通过:伪造 WXML 零消费的 reco 会红，渲染消费后复绿
+U5 自证通过:新增未白名单 silentError 会红，精确计数 + 具体原因后复绿
+U6 自证通过:空白错误分支与裸错误文案会红，统一错误组件承接后复绿
+U3/U4/U6 基线读取自证通过:新增文件按全量扫描(不跳过)，基线对象读不出来必须抛错(不静默降级)
+扫描根自证通过:app.json 注册分包全部进入生产 JS 清单
+基线外新增文件(无 diff 基线,按全量扫描):chengyinhub-xcx/components/cy/chapter-gate/index.wxml
+基线外新增文件(无 diff 基线,按全量扫描):chengyinhub-xcx/components/cy/coop-invite-sheet/index.wxml
+基线外新增文件(无 diff 基线,按全量扫描):chengyinhub-xcx/components/cy/profile-loading/index.wxml
+U1:通过（529 个前端字面量 /api 调用，1329 个后端映射）
+U3:通过（相对 3876c8426842ba717d2f7243b8c08ee0aef7010d 无新增孤儿 handler）
+U4:通过（相对 3876c8426842ba717d2f7243b8c08ee0aef7010d 无新增死 setData 字段）
+U5:通过（90 文件 / 257 个调用均精确白名单并说明原因）
+U6:通过（相对 3876c8426842ba717d2f7243b8c08ee0aef7010d 无新增裸错误文案或空白状态分支）
+扫描范围:551 个生产 JS，app.json 23 个注册分包全部覆盖
+== 探店日/漫游红线门禁(R1-R7 漫游免费层 + H11 三栈零回归) ==
+R 族自证通过：7 条漫游红线各注入一次真违规变红，合法足迹回看/地理排序保持绿
+R7 自证通过：门禁前瞻指引正则与 RoamRouteStoryPolicy.java 逐字一致
+H11 自证通过：4 条禁项规则 + 4 个 migration 作废列注入变红；perk_min_value/min_people/team_status/裸 N_BE/注释留痕均不误报
+漫游红线 R 族(7 条):通过（59 个文件：漫游页/漫游分包/scene-roam 组件/ApiRoamController/RoamMapper/ApiPlayProgressController/OfficialEventV2ServiceImpl）
+口径真源 R7:通过（对 chengyinhub-system/src/main/java/com/chengyinhub/business/service/RoamRouteStoryPolicy.java）
+H11 零回归:通过（相对 3876c8426842ba717d2f7243b8c08ee0aef7010d 的 297453 行新增/修改，覆盖后台 UI + 小程序 + 后端 Java/XML/SQL）
+小程序静态门:通过

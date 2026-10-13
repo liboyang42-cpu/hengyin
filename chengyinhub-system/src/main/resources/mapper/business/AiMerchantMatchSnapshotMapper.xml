@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.AiMerchantMatchSnapshotMapper">
+
+    <resultMap type="AiMerchantMatchSnapshot" id="SnapshotResult">
+        <result property="id"              column="id"               />
+        <result property="memberId"        column="member_id"        />
+        <result property="traceId"         column="trace_id"         />
+        <result property="idea"            column="idea"             />
+        <result property="conditionsJson"  column="conditions_json"  />
+        <result property="candidatesJson"  column="candidates_json"  />
+        <result property="choiceJson"      column="choice_json"      />
+        <result property="delFlag"         column="del_flag"         />
+        <result property="createTime"      column="create_time"      />
+    </resultMap>
+
+    <select id="selectSnapshotByTraceId" parameterType="String" resultMap="SnapshotResult">
+        select id, member_id, trace_id, idea, conditions_json, candidates_json, choice_json,
+               del_flag, create_time
+        from ai_merchant_match_snapshot
+        where trace_id = #{traceId} and del_flag = 0
+        order by id desc
+        limit 1
+    </select>
+
+    <insert id="insertAiMerchantMatchSnapshot" parameterType="AiMerchantMatchSnapshot">
+        insert into ai_merchant_match_snapshot
+            (member_id, trace_id, idea, conditions_json, candidates_json, choice_json,
+             del_flag, create_time)
+        values (#{memberId}, #{traceId}, #{idea}, #{conditionsJson}, #{candidatesJson},
+                #{choiceJson}, COALESCE(#{delFlag}, 0), sysdate())
+    </insert>
+
+</mapper>

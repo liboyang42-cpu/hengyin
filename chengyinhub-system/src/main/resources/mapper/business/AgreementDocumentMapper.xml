@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.AgreementDocumentMapper">
+    <resultMap id="AgreementDocumentResult" type="AgreementDocument">
+        <id property="id" column="id"/>
+        <result property="docType" column="doc_type"/>
+        <result property="version" column="version"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="status" column="status"/>
+        <result property="publishTime" column="publish_time"/>
+    </resultMap>
+
+    <sql id="selectAgreementDocument">
+        select id, doc_type, version, title, content, status, publish_time
+        from agreement_doc
+    </sql>
+
+    <select id="selectActiveByType" resultMap="AgreementDocumentResult">
+        <include refid="selectAgreementDocument"/>
+        where doc_type = #{docType} and status = 1
+        order by publish_time desc, id desc
+        limit 1
+    </select>
+
+    <select id="selectActiveDocuments" resultMap="AgreementDocumentResult">
+        <include refid="selectAgreementDocument"/>
+        where status = 1
+        order by doc_type asc, publish_time desc, id desc
+    </select>
+</mapper>

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.AccountDeregistrationMapper">
+    <resultMap id="AccountDeregistrationResult" type="AccountDeregistration">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="status" column="status"/>
+        <result property="applyTime" column="apply_time"/>
+        <result property="executeAfter" column="execute_after"/>
+        <result property="cancelTime" column="cancel_time"/>
+        <result property="completeTime" column="complete_time"/>
+        <result property="failureReason" column="failure_reason"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <select id="selectLatestByMemberId" resultMap="AccountDeregistrationResult">
+        select id, member_id, status, apply_time, execute_after, cancel_time, complete_time, failure_reason, create_time, update_time
+        from account_deregistration
+        where member_id = #{memberId}
+        order by apply_time desc, id desc
+        limit 1
+    </select>
+
+    <insert id="insert" parameterType="AccountDeregistration" useGeneratedKeys="true" keyProperty="id">
+        insert into account_deregistration (member_id, status, apply_time, execute_after, create_time)
+        values (#{memberId}, #{status}, #{applyTime}, #{executeAfter}, #{createTime})
+    </insert>
+
+    <update id="cancelPending">
+        update account_deregistration
+        set status = 'CANCELLED', cancel_time = #{cancelTime}, update_time = #{cancelTime}
+        where member_id = #{memberId} and status = 'PENDING'
+    </update>
+
+    <update id="markMemberPending">
+        update ums_member
+        set deregister_status = 'PENDING', deregister_apply_time = #{applyTime}, deregister_execute_after = #{executeAfter}, update_time = #{applyTime}
+        where id = #{memberId} and del_flag = 0
+    </update>
+
+    <update id="markMemberNormal">
+        update ums_member
+        set deregister_status = 'NORMAL', deregister_apply_time = null, deregister_execute_after = null, update_time = now()
+        where id = #{memberId} and del_flag = 0
+    </update>
+
+    <select id="selectDue" resultMap="AccountDeregistrationResult">
+        select id, member_id, status, apply_time, execute_after, cancel_time, complete_time, failure_reason, create_time, update_time
+        from account_deregistration
+        where status = 'PENDING' and execute_after &lt;= #{now}
+        order by execute_after asc, id asc
+        limit 100
+    </select>
+
+    <update id="anonymizeMember">
+        update ums_member
+        set phone = null, password = null, name = null, wechat = null, nickname = '已注销用户', avatar = null,
+            wx_open_id = null, union_id = null, apple_id = null, mark = null, case_pics = null,
+            case_introducton = null, website = null, work_address = null, introduction = null,
+            deregister_status = 'COMPLETED', del_flag = 2, update_time = now()
+        where id = #{memberId}
+    </update>
+
+    <update id="anonymizeRegistrations">
+        update cms_registration
+        set real_name = '已注销用户', phone = null, phone_hash = null, email = null, address = null, address_id = null, update_time = now()
+        where member_id = #{memberId}
+    </update>
+
+    <update id="anonymizeOrders">
+        update oms_order
+        set receiver_name = '已注销用户', receiver_phone = null, receiver_phone_hash = null, receiver_phone_code = null,
+            receiver_province = null, receiver_detail_address = null, update_time = now()
+        where member_id = #{memberId}
+    </update>
+
+    <!-- 清提现(通道B)敏感 PII:姓名/银行/卡号/手机号 明文+密文+掩码全清,保留金额/流水做对账 -->
+    <update id="anonymizeMemberWithdrawal">
+        update ums_member_withdrawal
+        set realname = null, bank_name = null, bank_account = null, mobilephone = null,
+            realname_enc = null, bank_name_enc = null, bank_account_enc = null, mobilephone_enc = null,
+            realname_mask = null, bank_name_mask = null, bank_account_mask = null, mobilephone_mask = null
+        where member_id = #{memberId}
+    </update>
+
+    <!-- 清快速提现(通道A)openid -->
+    <update id="anonymizeCashWithdraw">
+        update member_cash_withdraw set openid = null where member_id = #{memberId}
+    </update>
+
+    <!-- 清商家 lead 目录玩家 PII(电话/名称/地址) -->
+    <update id="anonymizeMerchantLead">
+        update merchant_lead set phone = null, name = '已注销商家', address = null where member_id = #{memberId}
+    </update>
+
+    <!-- 清发布者实名登记:姓名/身份证号密文与盲索引整行删掉。
+         这一张表没有别的表引用它,也不参与任何对账,删干净就是最正确的处置。 -->
+    <delete id="deleteMemberIdentity">
+        delete from ums_member_identity where member_id = #{memberId}
+    </delete>
+
+    <update id="markFailed">
+        update account_deregistration
+        set status = 'FAILED', failure_reason = #{reason}, update_time = #{time}
+        where id = #{id} and status = 'PENDING'
+    </update>
+
+    <update id="complete">
+        update account_deregistration
+        set status = 'COMPLETED', complete_time = #{completeTime}, update_time = #{completeTime}
+        where id = #{id} and status = 'PENDING'
+    </update>
+</mapper>

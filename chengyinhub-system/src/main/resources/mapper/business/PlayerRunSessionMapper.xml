@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PlayerRunSessionMapper">
+
+    <insert id="upsertPaused">
+        insert into player_run_session (member_id, activity_id, topic_id, run_state, elapsed_seconds, saved_at, create_time, update_time)
+        values (#{memberId}, #{activityId}, #{topicId}, 'PAUSED', #{elapsedSeconds}, #{savedAt}, now(), now())
+        on duplicate key update run_state = values(run_state), elapsed_seconds = values(elapsed_seconds),
+                                saved_at = values(saved_at), update_time = values(update_time)
+    </insert>
+
+    <sql id="scopeWhere">
+        where member_id = #{memberId} and activity_id = #{activityId}
+        <if test="activityId == 0"> and topic_id = #{topicId}</if>
+    </sql>
+
+    <select id="selectScope" resultType="java.util.LinkedHashMap">
+        select activity_id as activityId, topic_id as topicId, run_state as runState,
+               elapsed_seconds as elapsedSeconds, saved_at as savedAt
+        from player_run_session <include refid="scopeWhere"/>
+        limit 1
+    </select>
+
+    <update id="markEnded">
+        update player_run_session set run_state = 'ENDED', elapsed_seconds = 0, saved_at = #{savedAt}, update_time = now()
+        <include refid="scopeWhere"/>
+    </update>
+
+    <select id="selectContinuableByMember" resultType="java.util.LinkedHashMap">
+        select r.activity_id as activityId, r.topic_id as topicId, r.run_state as runState,
+               r.elapsed_seconds as elapsedSeconds, r.saved_at as savedAt,
+               coalesce(a.name, t.name) as title,
+               coalesce(nullif(a.img_url, ''), t.img_url) as cover
+        from player_run_session r
+        join cms_topic t on t.id = r.topic_id and t.del_flag = 0
+        left join cms_activity a on r.activity_id &gt; 0 and a.id = r.activity_id
+        where r.member_id = #{memberId} and r.run_state = 'PAUSED'
+          and (
+            (r.activity_id &gt; 0 and a.id is not null and a.del_flag = 0 and a.cancel_time is null
+              and (a.end_date is null or a.end_date &gt;= curdate())
+              and exists (select 1 from cms_registration g
+                          where g.member_id = r.member_id and g.owner_type = 2 and g.owner_id = r.activity_id
+                            and g.registration_status = 2))
+            or
+            (r.activity_id = 0
+              and exists (select 1 from cms_registration g
+                          where g.member_id = r.member_id and g.owner_type = 1 and g.owner_id = r.topic_id
+                            and g.registration_status = 2 and (g.expires_at is null or g.expires_at &gt; now())))
+          )
+        order by r.update_time desc, r.id desc
+        limit #{limit}
+    </select>
+</mapper>

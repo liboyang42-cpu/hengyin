@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ViewCreativeSquareMapper">
+    
+    <resultMap type="ViewCreativeSquare" id="ViewCreativeSquareResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="contents"    column="contents"    />
+        <result property="pics"    column="pics"    />
+        <result property="fileUrl"    column="file_url"    />
+        <result property="address"    column="address"    />
+        <result property="longitude"    column="longitude"    />
+        <result property="latitude"    column="latitude"    />
+        <result property="dataId"    column="data_id"    />
+        <result property="dataType"    column="data_type"    />
+        <result property="likeNum"    column="like_num"    />
+        <result property="nolikeNum"    column="nolike_num"    />
+        <result property="status"    column="status"    />
+        <result property="isCrowdfunding"    column="is_crowdfunding"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="memberNickname"    column="member_nickname"    />
+        <result property="memberAvatar"    column="member_avatar"    />
+        <result property="memberUserType"    column="member_user_type"    />
+        <result property="memberLevelId"    column="member_level_id"    />
+        <result property="commentCount"    column="comment_count"    />
+        <result property="noLikeCount"    column="no_like_count"    />
+        <result property="likeCount"    column="like_count"    />
+    </resultMap>
+
+    <sql id="selectViewCreativeSquareVo">
+        select id, member_id, contents, pics, file_url, address, longitude, latitude, data_id, data_type, like_num, nolike_num, status, is_crowdfunding, del_flag, create_by, create_time, update_by, update_time, member_nickname, member_avatar, member_user_type, member_level_id, comment_count, no_like_count, like_count from view_creative_square vcs
+    </sql>
+
+    <select id="selectViewCreativeSquareList" parameterType="ViewCreativeSquare" resultMap="ViewCreativeSquareResult">
+        <include refid="selectViewCreativeSquareVo"/>
+        <where>  
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="contents != null  and contents != ''"> and contents like concat('%', #{contents}, '%')</if>
+            <if test="pics != null  and pics != ''"> and pics = #{pics}</if>
+            <if test="fileUrl != null  and fileUrl != ''"> and file_url = #{fileUrl}</if>
+            <if test="address != null  and address != ''"> and address = #{address}</if>
+            <if test="longitude != null  and longitude != ''"> and longitude = #{longitude}</if>
+            <if test="latitude != null  and latitude != ''"> and latitude = #{latitude}</if>
+            <if test="dataId != null "> and data_id = #{dataId}</if>
+            <if test="dataType != null "> and data_type = #{dataType}</if>
+            <if test="likeNum != null "> and like_num = #{likeNum}</if>
+            <if test="nolikeNum != null "> and nolike_num = #{nolikeNum}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <!-- 已登录调用者:放行本人 status=0/2 待审/驳回行(仅本人可见),他人仍仅 PASS。与 memberId 过滤叠加时,看他人页 member_id≠self 恒使第二析取项为假,不泄露。del_flag=0 安全带:即使视图未滤删除也不露本人已删待审帖 -->
+            <if test="selfPendingMemberId != null "> and (status = 1 or (member_id = #{selfPendingMemberId} and status in (0, 2) and del_flag = 0))</if>
+            <if test="followingMemberId != null ">
+                and exists (
+                    select 1 from ums_member_follow umf
+                    where umf.member_id = #{followingMemberId}
+                      and umf.follow_member_id = vcs.member_id
+                )
+            </if>
+            <if test="viewerMemberId != null ">
+                and not exists (
+                    select 1 from im_block ib
+                    where (ib.member_id = #{viewerMemberId} and ib.blocked_member_id = vcs.member_id)
+                       or (ib.member_id = vcs.member_id and ib.blocked_member_id = #{viewerMemberId})
+                )
+            </if>
+            <if test="favoriteOnly != null and favoriteOnly">
+                and exists (
+                    select 1 from community_post_member_action bookmark
+                    where bookmark.post_id = vcs.id
+                      and bookmark.member_id = #{viewerMemberId}
+                      and bookmark.action_type = 'BOOKMARK'
+                )
+            </if>
+            <if test="isCrowdfunding != null "> and is_crowdfunding = #{isCrowdfunding}</if>
+            <if test="memberNickname != null  and memberNickname != ''"> and member_nickname like concat('%', #{memberNickname}, '%')</if>
+            <if test="memberAvatar != null  and memberAvatar != ''"> and member_avatar = #{memberAvatar}</if>
+            <if test="memberUserType != null "> and member_user_type = #{memberUserType}</if>
+            <if test="memberLevelId != null "> and member_level_id = #{memberLevelId}</if>
+            <if test="commentCount != null "> and comment_count = #{commentCount}</if>
+            <if test="noLikeCount != null "> and no_like_count = #{noLikeCount}</if>
+            <if test="likeCount != null "> and like_count = #{likeCount}</if>
+            <!-- [6-09] 主题同步帖(data_type=2)兜底过滤:主题被删除/下架/驳回/内容安全下架时,
+                 帖子不在公开列表出现。写侧已在每个主题可见性入口同步 status,这里是读取端兜底
+                 (存量行 + 漏掉的入口),恢复公开后自动重新出现。 -->
+            and (data_type is null or data_type != 2 or exists (
+                select 1 from cms_topic t
+                where t.id = vcs.data_id
+                  and t.del_flag = 0 and t.status = 1 and t.user_status = 1
+            ))
+        </where>
+
+        order by id desc
+    </select>
+    
+    <select id="selectViewCreativeSquareById" parameterType="Long" resultMap="ViewCreativeSquareResult">
+        <include refid="selectViewCreativeSquareVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectCreativeSquareBatchByIds" resultType="com.chengyinhub.business.domain.UmsCreativeSquare">
+        select id, route_preview_img as routePreviewImg
+        from ums_creative_square
+        <choose>
+            <when test="ids != null and ids.size() > 0">
+                where id in <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+            </when>
+            <otherwise> where 1 = 0 </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectCreativeSquareLikesByMemberAndDataIds" resultType="com.chengyinhub.business.domain.UmsCreativeSquareLike">
+        select id, member_id as memberId, data_id as dataId, like_type as likeType,
+               create_by as createBy, create_time as createTime, update_by as updateBy, update_time as updateTime
+        from ums_creative_square_like
+        where member_id = #{memberId}
+        <choose>
+            <when test="dataIds != null and dataIds.size() > 0">
+                and data_id in <foreach collection="dataIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+            </when>
+            <otherwise> and 1 = 0 </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectCommunityBookmarkedPostIds" resultType="long">
+        select post_id
+        from community_post_member_action
+        where member_id = #{memberId}
+          and action_type = 'BOOKMARK'
+        <choose>
+            <when test="postIds != null and postIds.size() > 0">
+                and post_id in <foreach collection="postIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+            </when>
+            <otherwise> and 1 = 0 </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectMemberFollowsByMemberAndFollowIds" resultType="com.chengyinhub.business.domain.UmsMemberFollow">
+        select id, member_id as memberId, follow_member_id as followMemberId,
+               create_by as createBy, create_time as createTime, update_by as updateBy, update_time as updateTime
+        from ums_member_follow
+        where member_id = #{memberId}
+        <choose>
+            <when test="followMemberIds != null and followMemberIds.size() > 0">
+                and follow_member_id in <foreach collection="followMemberIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+            </when>
+            <otherwise> and 1 = 0 </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectSportActivitySummaries" resultType="java.util.HashMap">
+        select a.id as activityId, a.topic_id as topicId, a.name as sportName,
+               a.img_url as sportCover, t.product_type as productType,
+               t.complete_rule_json as completeRuleJson,
+               t.published_route_graph_json as publishedRouteGraphJson
+        from cms_activity a
+        left join cms_topic t on t.id = a.topic_id
+        <choose>
+            <when test="activityIds != null and activityIds.size() > 0">
+                where a.id in <foreach collection="activityIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+            </when>
+            <otherwise> where 1 = 0 </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectSportTopicSummaries" resultType="java.util.HashMap">
+        select id as topicId, name as sportName, img_url as sportCover, product_type as productType,
+               complete_rule_json as completeRuleJson,
+               published_route_graph_json as publishedRouteGraphJson,
+               is_template as isTemplate
+        from cms_topic
+        <choose>
+            <when test="topicIds != null and topicIds.size() > 0">
+                where id in <foreach collection="topicIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+            </when>
+            <otherwise> where 1 = 0 </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectNodeCountsByTopicIds" resultType="java.util.HashMap">
+        select topic_id as topicId, count(*) as cnt
+        from cms_topic_node
+        where status = 1
+        <choose>
+            <when test="topicIds != null and topicIds.size() > 0">
+                and topic_id in <foreach collection="topicIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+            </when>
+            <otherwise> and 1 = 0 </otherwise>
+        </choose>
+        group by topic_id
+    </select>
+
+    <select id="selectProgressCountsByMemberActivities" resultType="java.util.HashMap">
+        select member_id as memberId, activity_id as activityId, count(*) as cnt
+        from player_node_progress
+        where del_flag = 0
+        <choose>
+            <when test="pairs != null and pairs.size() > 0">
+                and (member_id, activity_id) in
+                <foreach collection="pairs" item="p" open="(" separator="," close=")">
+                    (#{p.memberId}, #{p.activityId})
+                </foreach>
+            </when>
+            <otherwise> and 1 = 0 </otherwise>
+        </choose>
+        group by member_id, activity_id
+    </select>
+
+    <select id="selectProgressCountsByMemberTopics" resultType="java.util.HashMap">
+        select member_id as memberId, topic_id as topicId, count(*) as cnt
+        from player_node_progress
+        where del_flag = 0
+        <choose>
+            <when test="pairs != null and pairs.size() > 0">
+                and (member_id, topic_id) in
+                <foreach collection="pairs" item="p" open="(" separator="," close=")">
+                    (#{p.memberId}, #{p.topicId})
+                </foreach>
+            </when>
+            <otherwise> and 1 = 0 </otherwise>
+        </choose>
+        group by member_id, topic_id
+    </select>
+
+    <!-- 节点名次奖牌:某 node 全平台头三个完成的人各拿金/银/铜,持牌事实物化在 node_medal_claim。
+         用 sum(case when ...) 而不是 sum(medal_rank = 1):后者整组无匹配时返回 NULL 而非 0。 -->
+    <select id="selectMedalCountsByMemberActivities" resultType="java.util.HashMap">
+        select member_id as memberId, activity_id as activityId,
+               sum(case when medal_rank = 1 then 1 else 0 end) as gold,
+               sum(case when medal_rank = 2 then 1 else 0 end) as silver,
+               sum(case when medal_rank = 3 then 1 else 0 end) as bronze
+        from node_medal_claim
+        <choose>
+            <when test="pairs != null and pairs.size() > 0">
+                where (member_id, activity_id) in
+                <foreach collection="pairs" item="p" open="(" separator="," close=")">
+                    (#{p.memberId}, #{p.activityId})
+                </foreach>
+            </when>
+            <otherwise> where 1 = 0 </otherwise>
+        </choose>
+        group by member_id, activity_id
+    </select>
+
+    <!-- 主题口径 = 【自玩局】,所以必须带 activity_id = 0 的会话边界。
+         node_medal_claim 给每条 claim 都写了 topic_id(活动局夺的牌 activity_id > 0、topic_id 同样有值),
+         少了这一句,一张免费自玩成绩帖会把作者在【收费活动会话】里夺的牌一起挂上去 —— 展示的不再是
+         「这一次漫游拿到的牌」。
+         activity_id = 0 不是这里新发明的,是仓库既有的自玩会话约定,两处真源:
+           · PlayerNodeProgressMapper.selectActivityLeaderboard: `p.topic_id = ? and p.activity_id = 0`
+           · ApiPlayProgressController.advanceProgress 的通关判定 doneProbe:恒按 activity_id 收窄,
+             actId == 0(自玩)时再按 topic_id 收窄。
+         ⚠️ 已知偏差(不在本轮修):同卡上的 done 走 selectProgressCountsByMemberTopics,那条【没有】
+            activity_id = 0,所以自玩帖的 done 仍会把活动局的进度算进来(可能 done > total)。
+            那是读侧五个通关判定点之一的既有分叉,与奖牌无关,别为了「和它对齐」把这句删掉。 -->
+    <select id="selectMedalCountsByMemberTopics" resultType="java.util.HashMap">
+        select member_id as memberId, topic_id as topicId,
+               sum(case when medal_rank = 1 then 1 else 0 end) as gold,
+               sum(case when medal_rank = 2 then 1 else 0 end) as silver,
+               sum(case when medal_rank = 3 then 1 else 0 end) as bronze
+        from node_medal_claim
+        where activity_id = 0
+        <choose>
+            <when test="pairs != null and pairs.size() > 0">
+                and (member_id, topic_id) in
+                <foreach collection="pairs" item="p" open="(" separator="," close=")">
+                    (#{p.memberId}, #{p.topicId})
+                </foreach>
+            </when>
+            <otherwise> and 1 = 0 </otherwise>
+        </choose>
+        group by member_id, topic_id
+    </select>
+
+    <select id="selectExplorePassesByMemberActivities" resultType="java.util.HashMap">
+        select id as registrationId, member_id as memberId, owner_id as activityId, topic_id as topicId
+        from cms_registration
+        where owner_type = 2 and registration_status = 2 and purchase_kind = 3
+        <choose>
+            <when test="pairs != null and pairs.size() > 0">
+                and (member_id, owner_id) in
+                <foreach collection="pairs" item="p" open="(" separator="," close=")">
+                    (#{p.memberId}, #{p.activityId})
+                </foreach>
+            </when>
+            <otherwise> and 1 = 0 </otherwise>
+        </choose>
+        order by id asc
+    </select>
+
+    <select id="selectRequiredChapterCountsByTopicIds" resultType="java.util.HashMap">
+        select topic_id as topicId, count(*) as requiredCount
+        from cms_topic_chapter
+        where required = 1
+        <choose>
+            <when test="topicIds != null and topicIds.size() > 0">
+                and topic_id in <foreach collection="topicIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+            </when>
+            <otherwise> and 1 = 0 </otherwise>
+        </choose>
+        group by topic_id
+    </select>
+
+    <select id="selectRedeemedRequiredChapterCountsByRegistrations" resultType="java.util.HashMap">
+        select r.registration_id as registrationId, r.topic_id as topicId, count(distinct r.chapter_id) as redeemedCount
+        from redemption r
+        join cms_topic_chapter c on c.id = r.chapter_id and c.required = 1
+        where r.status = 'ACTIVE'
+        <choose>
+            <when test="registrationIds != null and registrationIds.size() > 0">
+                and r.registration_id in <foreach collection="registrationIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+            </when>
+            <otherwise> and 1 = 0 </otherwise>
+        </choose>
+        group by r.registration_id, r.topic_id
+    </select>
+
+    <insert id="insertViewCreativeSquare" parameterType="ViewCreativeSquare">
+        insert into view_creative_square
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="memberId != null">member_id,</if>
+            <if test="contents != null">contents,</if>
+            <if test="pics != null">pics,</if>
+            <if test="fileUrl != null">file_url,</if>
+            <if test="address != null">address,</if>
+            <if test="longitude != null">longitude,</if>
+            <if test="latitude != null">latitude,</if>
+            <if test="dataId != null">data_id,</if>
+            <if test="dataType != null">data_type,</if>
+            <if test="likeNum != null">like_num,</if>
+            <if test="nolikeNum != null">nolike_num,</if>
+            <if test="status != null">status,</if>
+            <if test="isCrowdfunding != null">is_crowdfunding,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="memberNickname != null">member_nickname,</if>
+            <if test="memberAvatar != null">member_avatar,</if>
+            <if test="memberUserType != null">member_user_type,</if>
+            <if test="memberLevelId != null">member_level_id,</if>
+            <if test="commentCount != null">comment_count,</if>
+            <if test="noLikeCount != null">no_like_count,</if>
+            <if test="likeCount != null">like_count,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="memberId != null">#{memberId},</if>
+            <if test="contents != null">#{contents},</if>
+            <if test="pics != null">#{pics},</if>
+            <if test="fileUrl != null">#{fileUrl},</if>
+            <if test="address != null">#{address},</if>
+            <if test="longitude != null">#{longitude},</if>
+            <if test="latitude != null">#{latitude},</if>
+            <if test="dataId != null">#{dataId},</if>
+            <if test="dataType != null">#{dataType},</if>
+            <if test="likeNum != null">#{likeNum},</if>
+            <if test="nolikeNum != null">#{nolikeNum},</if>
+            <if test="status != null">#{status},</if>
+            <if test="isCrowdfunding != null">#{isCrowdfunding},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="memberNickname != null">#{memberNickname},</if>
+            <if test="memberAvatar != null">#{memberAvatar},</if>
+            <if test="memberUserType != null">#{memberUserType},</if>
+            <if test="memberLevelId != null">#{memberLevelId},</if>
+            <if test="commentCount != null">#{commentCount},</if>
+            <if test="noLikeCount != null">#{noLikeCount},</if>
+            <if test="likeCount != null">#{likeCount},</if>
+         </trim>
+    </insert>
+
+    <update id="updateViewCreativeSquare" parameterType="ViewCreativeSquare">
+        update view_creative_square
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="contents != null">contents = #{contents},</if>
+            <if test="pics != null">pics = #{pics},</if>
+            <if test="fileUrl != null">file_url = #{fileUrl},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="longitude != null">longitude = #{longitude},</if>
+            <if test="latitude != null">latitude = #{latitude},</if>
+            <if test="dataId != null">data_id = #{dataId},</if>
+            <if test="dataType != null">data_type = #{dataType},</if>
+            <if test="likeNum != null">like_num = #{likeNum},</if>
+            <if test="nolikeNum != null">nolike_num = #{nolikeNum},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="isCrowdfunding != null">is_crowdfunding = #{isCrowdfunding},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="memberNickname != null">member_nickname = #{memberNickname},</if>
+            <if test="memberAvatar != null">member_avatar = #{memberAvatar},</if>
+            <if test="memberUserType != null">member_user_type = #{memberUserType},</if>
+            <if test="memberLevelId != null">member_level_id = #{memberLevelId},</if>
+            <if test="commentCount != null">comment_count = #{commentCount},</if>
+            <if test="noLikeCount != null">no_like_count = #{noLikeCount},</if>
+            <if test="likeCount != null">like_count = #{likeCount},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteViewCreativeSquareById" parameterType="Long">
+        delete from view_creative_square where id = #{id}
+    </delete>
+
+    <delete id="deleteViewCreativeSquareByIds" parameterType="String">
+        delete from view_creative_square where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ClubRoleAssignmentMapper">
+    <resultMap id="ClubRoleAssignmentResult" type="com.chengyinhub.business.domain.ClubRoleAssignment">
+        <id property="id" column="id"/>
+        <result property="clubId" column="club_id"/>
+        <result property="targetMemberId" column="target_member_id"/>
+        <result property="roleCode" column="role_code"/>
+        <result property="scopeType" column="scope_type"/>
+        <result property="scopeId" column="scope_id"/>
+        <result property="status" column="status"/>
+        <result property="expiresAt" column="expires_at"/>
+        <result property="assignedByMemberId" column="assigned_by_member_id"/>
+        <result property="assignedAt" column="assigned_at"/>
+        <result property="revokedByMemberId" column="revoked_by_member_id"/>
+        <result property="revokedAt" column="revoked_at"/>
+        <result property="revokeReason" column="revoke_reason"/>
+        <result property="version" column="version"/>
+        <result property="scopeTopicId" column="scope_topic_id"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="assignmentColumns">
+        id, club_id, target_member_id, role_code, scope_type, scope_id, status,
+        expires_at, assigned_by_member_id, assigned_at, revoked_by_member_id,
+        revoked_at, revoke_reason, version, create_by, create_time, update_by, update_time
+    </sql>
+
+    <select id="selectActiveForAccess" resultMap="ClubRoleAssignmentResult">
+        select <include refid="assignmentColumns"/>
+        from club_role_assignment
+        where club_id = #{clubId}
+          and target_member_id = #{memberId}
+          and status = 'ACTIVE'
+          and (expires_at is null or expires_at &gt; #{now})
+          and (
+            (scope_type = 'CLUB' and scope_id = club_id)
+            or (#{activityId} is not null and scope_type = 'EVENT' and scope_id = #{activityId})
+          )
+        order by case when scope_type = 'CLUB' then 0 else 1 end, id asc
+    </select>
+
+    <select id="selectActiveEventAccesses" resultMap="ClubRoleAssignmentResult">
+        select cra.id, cra.club_id, cra.target_member_id,
+               cra.role_code, cra.scope_type, cra.scope_id,
+               cra.status, cra.expires_at, cra.assigned_by_member_id,
+               cra.assigned_at, cra.revoked_by_member_id,
+               cra.revoked_at, cra.revoke_reason, cra.version,
+               cra.create_by, cra.create_time, cra.update_by, cra.update_time,
+               ca.topic_id as scope_topic_id
+        from club_role_assignment cra
+        inner join cms_activity ca
+          on ca.id = cra.scope_id
+         and ca.club_id = cra.club_id
+         and ca.del_flag = 0
+        where cra.club_id = #{clubId}
+          and cra.target_member_id = #{memberId}
+          and cra.scope_type = 'EVENT'
+          and cra.role_code in ('EVENT_LEAD', 'EVENT_CHECKIN')
+          and cra.status = 'ACTIVE'
+          and (cra.expires_at is null or cra.expires_at &gt; #{now})
+        order by cra.scope_id asc, cra.id asc
+    </select>
+
+    <select id="selectActiveByClubAndScope" resultMap="ClubRoleAssignmentResult">
+        select <include refid="assignmentColumns"/>
+        from club_role_assignment
+        where club_id = #{clubId}
+          and status = 'ACTIVE'
+          and (expires_at is null or expires_at &gt; #{now})
+        <if test="activityId != null">
+          and scope_type = 'EVENT' and scope_id = #{activityId}
+        </if>
+        order by scope_type asc, scope_id asc, id asc
+    </select>
+
+    <select id="selectByIdForUpdate" parameterType="Long" resultMap="ClubRoleAssignmentResult">
+        select <include refid="assignmentColumns"/>
+        from club_role_assignment
+        where id = #{id}
+        for update
+    </select>
+
+    <select id="selectActiveByUniqueScope" resultMap="ClubRoleAssignmentResult">
+        select <include refid="assignmentColumns"/>
+        from club_role_assignment
+        where club_id = #{clubId} and target_member_id = #{targetMemberId}
+          and scope_type = #{scopeType} and scope_id = #{scopeId}
+          and status = 'ACTIVE' and (expires_at is null or expires_at &gt; #{now})
+        limit 1
+    </select>
+
+    <select id="selectActiveEventLeadsForUpdate" resultMap="ClubRoleAssignmentResult">
+        select <include refid="assignmentColumns"/>
+        from club_role_assignment
+        where club_id = #{clubId} and role_code = 'EVENT_LEAD'
+          and scope_type = 'EVENT' and scope_id = #{activityId} and status = 'ACTIVE'
+        order by id asc
+        for update
+    </select>
+
+    <insert id="insertClubRoleAssignment" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.ClubRoleAssignment">
+        insert into club_role_assignment
+          (club_id, target_member_id, role_code, scope_type, scope_id, status,
+           expires_at, assigned_by_member_id, assigned_at, version,
+           create_by, create_time, update_by, update_time)
+        values
+          (#{clubId}, #{targetMemberId}, #{roleCode}, #{scopeType}, #{scopeId}, #{status},
+           #{expiresAt}, #{assignedByMemberId}, #{assignedAt}, #{version},
+           #{createBy}, #{createTime}, #{updateBy}, #{updateTime})
+    </insert>
+
+    <update id="expireActiveByScope">
+        update club_role_assignment
+        set status = 'EXPIRED', version = version + 1,
+            update_by = #{updateBy}, update_time = #{now}
+        where club_id = #{clubId} and target_member_id = #{targetMemberId}
+          and scope_type = #{scopeType} and scope_id = #{scopeId}
+          and status = 'ACTIVE' and expires_at is not null and expires_at &lt;= #{now}
+    </update>
+
+    <update id="revokeCas">
+        update club_role_assignment
+        set status = 'REVOKED', revoked_by_member_id = #{revokedByMemberId},
+            revoked_at = now(), revoke_reason = #{revokeReason}, version = version + 1,
+            update_by = #{updateBy}, update_time = now()
+        where id = #{id} and club_id = #{clubId}
+          and status = 'ACTIVE' and version = #{expectedVersion}
+    </update>
+
+    <update id="revokeAllActiveByMember">
+        update club_role_assignment
+        set status = 'REVOKED', revoked_by_member_id = #{revokedByMemberId},
+            revoked_at = #{now}, revoke_reason = #{revokeReason}, version = version + 1,
+            update_by = #{updateBy}, update_time = #{now}
+        where club_id = #{clubId} and target_member_id = #{targetMemberId}
+          and status = 'ACTIVE'
+    </update>
+</mapper>

@@ -1,0 +1,281 @@
+package com.chengyinhub.business.service;
+
+import com.chengyinhub.business.domain.CmsActivity;
+import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.mapper.CmsActivityMapper;
+import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
+import com.chengyinhub.business.mapper.CmsTopicChapterMapper;
+import com.chengyinhub.business.mapper.CmsTopicMapper;
+import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
+import com.chengyinhub.business.service.impl.CmsTopicServiceImpl;
+import com.chengyinhub.business.service.support.TopicStateKeyRefService;
+import com.chengyinhub.business.service.support.SettlementDebtLedger;
+import com.chengyinhub.common.exception.ServiceException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atMostOnce;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+/** 发布即生成活动；草稿保持私有，后审回调幂等。 */
+class TopicPendingReviewSelfHostShellTest {
+
+    private static final Long TOPIC = 970001L;
+    private static final Long OWNER = 42L;
+
+    private CmsTopicServiceImpl svc;
+    private CmsTopicMapper topicMapper;
+    private CmsActivityMapper activityMapper;
+
+    @BeforeEach
+    void setUp() {
+        svc = new CmsTopicServiceImpl();
+        // publishDraft 途径的协作者很多且与本测试无关:全量置 mock,再对断言目标取回引用。
+        for (Field f : CmsTopicServiceImpl.class.getDeclaredFields()) {
+            if (Modifier.isStatic(f.getModifiers()) || f.getType().isPrimitive()) continue;
+            f.setAccessible(true);
+            try {
+                if (f.get(svc) == null) {
+                    ReflectionTestUtils.setField(svc, f.getName(), Mockito.mock(f.getType()));
+                }
+            } catch (Exception ignore) {
+            }
+        }
+        topicMapper = (CmsTopicMapper) ReflectionTestUtils.getField(svc, "cmsTopicMapper");
+        activityMapper = (CmsActivityMapper) ReflectionTestUtils.getField(svc, "cmsActivityMapper");
+        when(topicMapper.selectCmsTopicByIdForUpdate(anyLong()))
+                .thenAnswer(inv -> topicMapper.selectCmsTopicById(inv.getArgument(0)));
+        // R19-DRAFT2/状态键闸随旅程分支合入后,publishDraft 会走引用收集 —— 自动 mock 的
+        // TopicStateKeyRefService 返回 null 会直接 NPE,这里换成真实实现(三个 mapper 空集合即可)。
+        ReflectionTestUtils.setField(svc, "topicStateKeyRefService",
+                new TopicStateKeyRefService(
+                        (CmsTopicNodeMapper) ReflectionTestUtils.getField(svc, "cmsTopicNodeMapper"),
+                        (CmsMemberTemplateMapper) ReflectionTestUtils.getField(svc, "cmsMemberTemplateMapper"),
+                        (CmsTopicChapterMapper) ReflectionTestUtils.getField(svc, "cmsTopicChapterMapper")));
+        when(topicMapper.clearDraftIfDraft(TOPIC)).thenReturn(1);
+        when(topicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
+        when(topicMapper.publishRouteSnapshot(eq(TOPIC), any(), any(Date.class))).thenReturn(1);
+        when(activityMapper.selectCmsActivityList(any(CmsActivity.class)))
+                .thenReturn(Collections.<CmsActivity>emptyList());
+        com.chengyinhub.business.service.support.TopicBundleReviewService bundles =
+                (com.chengyinhub.business.service.support.TopicBundleReviewService)
+                        ReflectionTestUtils.getField(svc, "topicBundleReviewService");
+        when(bundles.freezeForSubmission(TOPIC, OWNER)).thenReturn(
+                new com.chengyinhub.business.service.support.TopicBundleReviewService.Submission(
+                        "{\"schemaVersion\":2}", Collections.emptyList()));
+        IAuditTaskService audits = (IAuditTaskService) ReflectionTestUtils.getField(svc, "auditTaskService");
+        when(audits.submitOrRefreshTopicBundle(eq(TOPIC), eq(OWNER), any(String.class))).thenReturn(99L);
+        com.chengyinhub.business.domain.AuditTask task = new com.chengyinhub.business.domain.AuditTask();
+        task.setId(99L);
+        task.setStatus(com.chengyinhub.business.domain.AuditTask.STATUS_PENDING);
+        when(audits.selectAuditTaskById(99L)).thenReturn(task);
+    }
+
+    private CmsTopic topic(Integer status, String publishMode) {
+        CmsTopic topic = new CmsTopic();
+        topic.setId(TOPIC);
+        topic.setName("夜跑城市定向");
+        topic.setPublishMode(publishMode);
+        topic.setMemberId(OWNER);
+        topic.setCreateBy("publisher");
+        topic.setStatus(status);
+        topic.setUserStatus(status != null && status == 1 ? 1 : 0);
+        return topic;
+    }
+
+    /** 专业版上架与后台待审是独立事实。 */
+    @Test
+    void proDraftPublish_whilePendingReview_createsPublicShell() {
+        CmsTopic pending = topic(0, "pro");
+        // 发布前读取草稿，写入后重读已上架状态。
+        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(pending, pending, topic(1, "pro"));
+
+        assertTrue(svc.publishDraft(TOPIC));
+
+        ArgumentCaptor<CmsTopic> topicCap = ArgumentCaptor.forClass(CmsTopic.class);
+        verify(topicMapper).updateCmsTopic(topicCap.capture());
+        assertEquals(Integer.valueOf(1), topicCap.getValue().getStatus(), "pro 发布即上架");
+        assertEquals(Integer.valueOf(0), topicCap.getValue().getCheckStatus());
+
+        ArgumentCaptor<CmsActivity> activityCap = ArgumentCaptor.forClass(CmsActivity.class);
+        verify(activityMapper, atMostOnce()).insertCmsActivity(activityCap.capture());
+        assertEquals(1, activityCap.getAllValues().size(), "先上后审必须同步生成可玩的活动");
+    }
+
+    /** 正面对照:简易版免审直发(status=1)照旧建公开壳,审核通过后的售卖面不能断。 */
+    @Test
+    void simpleDraftPublish_stillCreatesPublicShell() {
+        CmsTopic draft = topic(0, "simple");
+        CmsTopic published = topic(1, "simple");
+        // 第一次读 = 草稿;第二次读(ensure 重读)= 发布后已上架(status=1)
+        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(draft, published);
+
+        assertTrue(svc.publishDraft(TOPIC));
+
+        ArgumentCaptor<CmsTopic> topicCap = ArgumentCaptor.forClass(CmsTopic.class);
+        verify(topicMapper).updateCmsTopic(topicCap.capture());
+        assertEquals(Integer.valueOf(1), topicCap.getValue().getStatus(), "简易版发布 = 直接上架");
+
+        CmsActivity shell = capturedShell();
+        assertEquals(Long.valueOf(1L), shell.getStatus(), "壳必须上架");
+        assertEquals(Long.valueOf(1L), shell.getPublishStatus(), "壳必须已发布");
+        assertEquals(Integer.valueOf(0), shell.getDelFlag());
+        assertEquals(TOPIC, shell.getTopicId());
+        assertEquals(OWNER, shell.getMemberId(), "自办壳承接方 = 发布者本人");
+    }
+
+    /** 审核通过回调:补建壳一次;重复回调(幂等)不再建第二个壳。 */
+    @Test
+    void approvedTopic_ensureShell_isIdempotent() {
+        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic(1, "pro"));
+        CmsActivity existing = new CmsActivity();
+        existing.setId(500L);
+        existing.setTopicId(TOPIC);
+        existing.setMemberId(OWNER);
+        // 第一次探针空(缺壳)→ 建;第二次探针命中已建壳 → 不建
+        when(activityMapper.selectCmsActivityList(any(CmsActivity.class)))
+                .thenReturn(Collections.<CmsActivity>emptyList())
+                .thenReturn(Arrays.asList(existing));
+
+        svc.ensureSelfHostActivityShell(TOPIC);
+        svc.ensureSelfHostActivityShell(TOPIC);
+
+        verify(activityMapper, times(1)).insertCmsActivity(any(CmsActivity.class));
+    }
+
+    /** 待审(status=0):无论调用几次补建口,都不许出壳。 */
+    @Test
+    void pendingTopic_ensureShell_neverBuilds() {
+        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic(0, "pro"));
+
+        svc.ensureSelfHostActivityShell(TOPIC);
+
+        verify(activityMapper, never()).insertCmsActivity(any(CmsActivity.class));
+    }
+
+    /** 驳回(status=2):同样不许出壳。 */
+    @Test
+    void rejectedTopic_ensureShell_neverBuilds() {
+        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic(2, "pro"));
+
+        svc.ensureSelfHostActivityShell(TOPIC);
+
+        verify(activityMapper, never()).insertCmsActivity(any(CmsActivity.class));
+    }
+
+    /** 负控:进商家池的主题不由发布者自办,过审也不建自办壳(壳由中标流程生成)。 */
+    @Test
+    void merchantPoolTopic_ensureShell_neverBuilds() {
+        CmsTopic pool = topic(1, "pro");
+        pool.setMerchantStatus(1);
+        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(pool);
+
+        svc.ensureSelfHostActivityShell(TOPIC);
+
+        verify(activityMapper, never()).insertCmsActivity(any(CmsActivity.class));
+    }
+
+    /** 负控:已有壳(含商家壳)一律不重复建。 */
+    @Test
+    void existingShell_ensureShell_neverBuilds() {
+        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic(1, "pro"));
+        CmsActivity existing = new CmsActivity();
+        existing.setId(500L);
+        when(activityMapper.selectCmsActivityList(any(CmsActivity.class)))
+                .thenReturn(Arrays.asList(existing));
+
+        svc.ensureSelfHostActivityShell(TOPIC);
+
+        verify(activityMapper, never()).insertCmsActivity(any(CmsActivity.class));
+    }
+
+    // ——— release-0917 同步 master(#1078)× rule-funds 欠款逾期闸,总控裁定 C ———
+    // #1078 把 pro 主题的自办活动壳挪到审核通过回调;欠款逾期闸原本在 generateSelfHostActivity 开头。
+    // 裁定:提交口(建题 / publishDraft)就拦;审核回调不抛(否则回滚 review() 审核结论),这次不建壳,欠款补足后刷新补建。
+
+    private SettlementDebtLedger ledger() {
+        return (SettlementDebtLedger) ReflectionTestUtils.getField(svc, "settlementDebtLedger");
+    }
+
+    /** 提交口:欠款逾期的主理人发布草稿,在提交时就被拦,主题状态不动。 */
+    @Test
+    void proDraftPublish_withOverdueDebt_isRejectedAtSubmission() {
+        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic(0, "pro"));
+        doThrow(new ServiceException("SETTLEMENT_DEBT_OVERDUE:你有逾期未补足的欠款,暂不能发布新活动,请联系平台客服处理"))
+                .when(ledger()).requireNoOverdueDebt(OWNER);
+
+        ServiceException e = assertThrows(ServiceException.class, () -> svc.publishDraft(TOPIC));
+
+        assertTrue(e.getMessage().startsWith("SETTLEMENT_DEBT_OVERDUE"), e.getMessage());
+        verify(topicMapper, never()).updateCmsTopic(any(CmsTopic.class));
+        verify(activityMapper, never()).insertCmsActivity(any(CmsActivity.class));
+    }
+
+    /**
+     * 审核期间才变逾期:审核通过回调不抛(不把 review() 的审核结论回滚)、这次不建壳、也不走会抛的闸。
+     * 负控:去掉 ensureSelfHostActivityShell(Long) 里的 hasOverdueDebt 判断 → 建壳路径会被调用(见下一条用 requireNoOverdueDebt 抛出复现)。
+     */
+    @Test
+    void approvedTopic_becameOverdueDuringReview_doesNotThrowAndBuildsNoShell() {
+        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic(1, "pro"));
+        when(ledger().hasOverdueDebt(OWNER)).thenReturn(true);
+        doThrow(new ServiceException("SETTLEMENT_DEBT_OVERDUE:你有逾期未补足的欠款,暂不能发布新活动,请联系平台客服处理"))
+                .when(ledger()).requireNoOverdueDebt(OWNER);
+
+        assertDoesNotThrow(() -> svc.ensureSelfHostActivityShell(TOPIC),
+                "审核通过回调在 review() 事务里,抛出会把审核结论一起回滚");
+
+        verify(activityMapper, never()).insertCmsActivity(any(CmsActivity.class));
+    }
+
+    /** 欠款补足后:下次编辑触发的 refreshSelfHostActivity 补建自办活动壳。 */
+    @Test
+    void debtClearedAfterApproval_refreshBuildsTheMissingShell() {
+        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic(1, "pro"));
+        when(ledger().hasOverdueDebt(OWNER)).thenReturn(true, false);
+
+        svc.ensureSelfHostActivityShell(TOPIC);
+        verify(activityMapper, never()).insertCmsActivity(any(CmsActivity.class));
+
+        ReflectionTestUtils.invokeMethod(svc, "refreshSelfHostActivity", TOPIC, OWNER, "publisher");
+
+        CmsActivity shell = capturedShell();
+        assertEquals(TOPIC, shell.getTopicId());
+        assertEquals(OWNER, shell.getMemberId());
+    }
+
+    private CmsActivity capturedShell() {
+        ArgumentCaptor<CmsActivity> cap = ArgumentCaptor.forClass(CmsActivity.class);
+        verify(activityMapper).insertCmsActivity(cap.capture());
+        return cap.getValue();
+    }
+
+    private static String describePublicShell(ArgumentCaptor<CmsActivity> cap) {
+        if (cap.getAllValues().isEmpty()) {
+            return "(无壳)";
+        }
+        CmsActivity a = cap.getValue();
+        return "status=" + a.getStatus() + ", publishStatus=" + a.getPublishStatus()
+                + ", delFlag=" + a.getDelFlag() + ", topicId=" + a.getTopicId();
+    }
+}

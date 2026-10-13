@@ -1,0 +1,1255 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CmsTopicMapper">
+    
+    <resultMap type="CmsTopic" id="CmsTopicResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="clubId"    column="club_id"    />
+        <result property="topicType"    column="topic_type"    />
+        <result property="productType"    column="product_type"    />
+        <result property="circleThemeCode" column="circle_theme_code" />
+        <result property="sourceTemplateTopicId" column="source_template_topic_id" />
+        <result property="roamReferralEnabled" column="roam_referral_enabled" />
+        <result property="completeRuleJson" column="complete_rule_json" />
+        <result property="routeMode" column="route_mode" />
+        <result property="routeGraphJson" column="route_graph_json" />
+        <result property="configVersion" column="config_version" />
+        <result property="publishedRouteGraphJson" column="published_route_graph_json" />
+        <result property="publishedConfigVersion" column="published_config_version" />
+        <result property="gameModuleConfigJson" column="game_module_config_json" />
+        <result property="journeyRulesJson" column="journey_rules_json" />
+        <result property="journeyStoryJson" column="journey_story_json" />
+        <result property="themeRuntimeConfigJson" column="theme_runtime_config_json" />
+        <result property="publishedThemeRuntimeConfigJson" column="published_theme_runtime_config_json" />
+        <result property="feePlatformRate"    column="fee_platform_rate"    />
+        <result property="feeGuaranteeBaseRate"    column="fee_guarantee_base_rate"    />
+        <result property="feeGuaranteeStepRate"    column="fee_guarantee_step_rate"    />
+        <result property="feeGuaranteeMaxMerchant"    column="fee_guarantee_max_merchant"    />
+        <result property="topicId"    column="topic_id"    />
+        <result property="name"    column="name"    />
+        <result property="subtitle"    column="subtitle"    />
+        <result property="description"    column="description"    />
+        <result property="addressName"    column="address_name"    />
+        <result property="totalTime"    column="total_time"    />
+        <result property="totalMileage"    column="total_mileage"    />
+        <result property="locationCount"    column="location_count"    />
+        <result property="templateCount"    column="template_count"    />
+        <result property="startDate"    column="start_date"    />
+        <result property="endDate"    column="end_date"    />
+        <result property="imgUrl"    column="img_url"    />
+        <result property="imgArr"    column="img_arr"    />
+        <result property="categoryIds"    column="category_ids"    />
+        <result property="status"    column="status"    />
+        <result property="reason"    column="reason"    />
+        <result property="userStatus"    column="user_status"    />
+        <result property="merchantStatus"    column="merchant_status"    />
+        <result property="openClubPool"    column="open_club_pool"    />
+        <result property="publishMode"    column="publish_mode"    />
+        <result property="betaFlag"    column="beta_flag"    />
+        <result property="audioUrl"    column="audio_url"    />
+        <result property="selfPlay"    column="self_play"    />
+        <result property="selfPlayPrice"    column="self_play_price"    />
+        <result property="selfPlayQuota"    column="self_play_quota"    />
+        <result property="teamMode"    column="team_mode"    />
+        <result property="teamMaxMembers"    column="team_max_members"    />
+        <result property="xpBudget"    column="xp_budget"    />
+        <result property="finishMedalName"    column="finish_medal_name"    />
+        <result property="finishMedalImg"    column="finish_medal_img"    />
+        <result property="completeRewardCouponId"    column="complete_reward_coupon_id"    />
+        <result property="recruitDeadline"    column="recruit_deadline"    />
+        <result property="recruitExtendCount"    column="recruit_extend_count"    />
+        <result property="clubCoopOpen"          column="club_coop_open"          />
+        <result property="clubPinned"            column="club_pinned"             />
+        <result property="clubMemberOnly"        column="club_member_only"        />
+        <result property="lifecycle"    column="lifecycle"    />
+        <result property="saleEndAt"    column="sale_end_at"    />
+        <result property="sellingStartedAt"    column="selling_started_at"    />
+        <result property="sourceTopicId"    column="source_topic_id"    />
+        <result property="audioDuration"    column="audio_duration"    />
+        <result property="merchantSignUpStartDate"    column="merchant_sign_up_start_date"    />
+        <result property="merchantSignUpEndDate"    column="merchant_sign_up_end_date"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="isSync"    column="is_sync"    />
+        <result property="isRecommend"    column="is_recommend"    />
+        <result property="checkStatus"    column="check_status"    />
+        <result property="isSettlement"    column="is_settlement"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <select id="selectPublicNodeCountsByTopicIds" resultMap="CmsTopicResult">
+        select topic_id as id, count(*) as location_count,
+               sum(case when template_id &gt; 0 then 1 else 0 end) as template_count
+          from cms_topic_node
+         where status = 1 and (merchant_member_id is null or node_audit_status = 1)
+                and not exists (
+                    select 1 from merchant_chapter_offer withdrawn
+                    where withdrawn.chapter_id = cms_topic_node.chapter_id
+                      and withdrawn.merchant_id = cms_topic_node.merchant_member_id
+                      and withdrawn.status = 0
+                      and withdrawn.withdraw_reason is not null
+                      and trim(withdrawn.withdraw_reason) != ''
+                )
+           and topic_id in
+           <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+         group by topic_id
+    </select>
+
+    <sql id="selectCmsTopicVo">
+        select id, member_id, club_id, topic_type, product_type, circle_theme_code, source_template_topic_id, complete_rule_json, route_mode, route_graph_json, config_version, published_route_graph_json, published_config_version, game_module_config_json, journey_rules_json, journey_story_json, theme_runtime_config_json, published_theme_runtime_config_json, fee_platform_rate, fee_guarantee_base_rate, fee_guarantee_step_rate, fee_guarantee_max_merchant, topic_id, name,subtitle, description,address_name, total_time, total_mileage, location_count, template_count, start_date, end_date, img_url, img_arr, category_ids, status, reason, user_status, merchant_status, open_club_pool, merchant_sign_up_start_date, merchant_sign_up_end_date, del_flag, is_sync,is_recommend,check_status,is_settlement, publish_mode, beta_flag, audio_url, audio_duration, self_play, self_play_price, self_play_quota, team_mode, team_max_members, xp_budget, finish_medal_name, finish_medal_img, complete_reward_coupon_id, recruit_deadline, recruit_extend_count, club_coop_open, club_pinned, club_member_only, lifecycle, sale_end_at, selling_started_at, source_topic_id, create_by, create_time, update_by, update_time from cms_topic
+    </sql>
+
+    <!-- 主题列表与 360 工作台共用的运营事实。公开池只表示可否公开申请，不能用于推断承接或供给。 -->
+    <sql id="topicPendingClubApplication">
+        exists (
+            select 1 from coop_club_apply club_apply
+            where club_apply.topic_id = cms_topic.id
+              and club_apply.del_flag = 0
+              and club_apply.status = 0
+        )
+    </sql>
+
+    <sql id="topicPendingClubInvite">
+        exists (
+            select 1 from coop_invite club_invite
+            where club_invite.topic_id = cms_topic.id
+              and club_invite.del_flag = 0
+              and club_invite.to_type = 'club'
+              and club_invite.status = 0
+        )
+    </sql>
+
+    <!-- 已接受俱乐部邀约的保证金，和 360 工作台保证金汇总使用同一事实范围。 -->
+    <sql id="topicClubDepositStatus">
+        exists (
+            select 1 from coop_invite club_invite
+            where club_invite.topic_id = cms_topic.id
+              and club_invite.del_flag = 0
+              and club_invite.to_type = 'club'
+              and club_invite.status = 1
+              and club_invite.deposit_status = #{depositStatus}
+        )
+    </sql>
+
+    <!-- “进行中异常”当前只指未结客诉；没有统一异常模型时不得把其他状态猜成异常。 -->
+    <sql id="topicOpenComplaintExists">
+        exists (
+            select 1 from coop_complaint complaint
+            where complaint.topic_id = cms_topic.id
+              and complaint.del_flag = 0
+              and complaint.status &lt; 3
+        )
+    </sql>
+
+    <sql id="topicSignedClubCooperation">
+        exists (
+            select 1 from coop_order club_cooperation
+            where club_cooperation.topic_id = cms_topic.id
+              and club_cooperation.del_flag = 0
+              and club_cooperation.to_type = 'club'
+              and club_cooperation.status = 0
+        )
+    </sql>
+
+    <sql id="topicHasLeadSession">
+        exists (
+            select 1
+            from cms_activity lead_activity
+            inner join club lead_club on lead_club.id = lead_activity.club_id and lead_club.del_flag = 0
+            inner join club_lead_state lead_state on lead_state.activity_id = lead_activity.id
+                and lead_state.status in (1, 2)
+            where lead_activity.topic_id = cms_topic.id
+              and lead_activity.del_flag = 0
+              and exists (
+                  select 1 from coop_order lead_cooperation
+                  where lead_cooperation.topic_id = lead_activity.topic_id
+                    and lead_cooperation.to_type = 'club'
+                    and lead_cooperation.to_id = lead_activity.club_id
+                    and lead_cooperation.status = 0
+                    and lead_cooperation.del_flag = 0
+              )
+        )
+    </sql>
+
+    <sql id="topicRequiredChapterExists">
+        exists (
+            select 1 from cms_topic_chapter required_chapter
+            where required_chapter.topic_id = cms_topic.id
+              and required_chapter.required = 1
+        )
+    </sql>
+
+    <sql id="topicRequiredSupplyGapExists">
+        exists (
+            select 1 from cms_topic_chapter required_chapter
+            where required_chapter.topic_id = cms_topic.id
+              and required_chapter.required = 1
+              and (
+                  select count(*) from merchant_chapter_offer live_offer
+                  where live_offer.topic_id = required_chapter.topic_id
+                    and live_offer.chapter_id = required_chapter.id
+                    and live_offer.status = 1
+                    and (live_offer.valid_end is null or live_offer.valid_end &gt; now())
+              ) &lt; greatest(coalesce(nullif(required_chapter.max_merchant, 0), 1), 1)
+        )
+    </sql>
+
+    <sql id="topicAnySuppliedChapterExists">
+        exists (
+            select 1 from cms_topic_chapter supplied_chapter
+            where supplied_chapter.topic_id = cms_topic.id
+              and exists (
+                  select 1 from merchant_chapter_offer live_offer
+                  where live_offer.topic_id = supplied_chapter.topic_id
+                    and live_offer.chapter_id = supplied_chapter.id
+                    and live_offer.status = 1
+                    and (live_offer.valid_end is null or live_offer.valid_end &gt; now())
+              )
+        )
+    </sql>
+
+    <sql id="topicMerchantCandidateExists">
+        exists (
+            select 1 from cms_registration_merchant candidate
+            where candidate.topic_id = cms_topic.id
+              and candidate.del_flag = 0
+              and candidate.status in (0, 1)
+        )
+    </sql>
+
+    <!-- 只有显式 guided 的线性票才要求俱乐部带队；legacy null subtype 保守视为 guided。 -->
+    <sql id="topicGuidedTicketExists">
+        exists (
+            select 1 from oms_ticket guided_ticket
+            where guided_ticket.owner_type = 1
+              and guided_ticket.owner_id = cms_topic.id
+              and guided_ticket.del_flag = 0
+              and guided_ticket.mode = 1
+              and (guided_ticket.sub_type is null or lower(guided_ticket.sub_type) != 'self')
+        )
+    </sql>
+
+    <!-- 自玩通行证是主题级票，真源不在 oms_ticket。 -->
+    <sql id="topicHasConfiguredTicket">
+        (
+            exists (
+                select 1 from oms_ticket ticket
+                where ticket.owner_type = 1
+                  and ticket.owner_id = cms_topic.id
+                  and ticket.del_flag = 0
+            )
+            or (coalesce(cms_topic.self_play, 0) = 1
+                and cms_topic.self_play_price is not null
+                and cms_topic.self_play_price &gt; 0)
+        )
+    </sql>
+
+    <sql id="topicSelfPlayPassConfigurationInvalid">
+        coalesce(cms_topic.self_play, 0) = 1
+        and (cms_topic.self_play_price is null or cms_topic.self_play_price &lt;= 0)
+    </sql>
+
+    <sql id="topicRunReadinessCore">
+        exists (
+            select 1 from cms_topic_chapter chapter
+            where chapter.topic_id = cms_topic.id
+        )
+        and not exists (
+            select 1 from cms_topic_chapter chapter
+            where chapter.topic_id = cms_topic.id
+              and not exists (
+                  select 1 from cms_topic_node node where node.chapter_id = chapter.id
+              )
+        )
+        and <include refid="topicHasConfiguredTicket"/>
+        and not <include refid="topicSelfPlayPassConfigurationInvalid"/>
+        and not <include refid="topicRequiredSupplyGapExists"/>
+        and not <include refid="topicPendingClubInvite"/>
+        and (not <include refid="topicGuidedTicketExists"/>
+             or <include refid="topicSignedClubCooperation"/>)
+    </sql>
+
+
+
+    <select id="selectCmsTopicList" parameterType="CmsTopic" resultMap="CmsTopicResult">
+        <include refid="selectCmsTopicVo"/>
+        <where>  
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="clubId != null "> and club_id = #{clubId}</if>
+            <if test="topicType != null "> and topic_type = #{topicType}</if>
+            <if test="productType != null "> and product_type = #{productType}</if>
+            <if test="topicId != null "> and topic_id = #{topicId}</if>
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="subtitle != null  and subtitle != ''"> and subtitle like concat('%', #{subtitle}, '%')</if>
+            <if test="description != null  and description != ''"> and description = #{description}</if>
+            <if test="addressName != null  and addressName != ''"> and address_name = #{addressName}</if>
+            <if test="totalTime != null "> and total_time = #{totalTime}</if>
+            <if test="totalMileage != null "> and total_mileage = #{totalMileage}</if>
+            <if test="locationCount != null "> and location_count = #{locationCount}</if>
+            <if test="templateCount != null "> and template_count = #{templateCount}</if>
+            <if test="startDate != null "> and start_date = #{startDate}</if>
+            <if test="endDate != null "> and end_date = #{endDate}</if>
+            <if test="imgUrl != null  and imgUrl != ''"> and img_url = #{imgUrl}</if>
+            <if test="imgArr != null  and imgArr != ''"> and img_arr = #{imgArr}</if>
+<!--            <if test="categoryIds != null  and categoryIds != ''"> and category_ids = #{categoryIds}</if>-->
+            <if test="categoryIds != null ">  AND FIND_IN_SET(#{categoryIds}, category_ids) > 0</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="selfPlay != null "> and self_play = #{selfPlay}</if>
+            <if test="reason != null  and reason != ''"> and reason = #{reason}</if>
+            <if test="userStatus != null "> and user_status = #{userStatus}</if>
+            <if test="merchantStatus != null "> and merchant_status = #{merchantStatus}</if>
+            <if test="openClubPool != null"> and open_club_pool = #{openClubPool}</if>
+            <if test="merchantSignUpStartDate != null "> and merchant_sign_up_start_date = #{merchantSignUpStartDate}</if>
+            <if test="merchantSignUpEndDate != null "> and merchant_sign_up_end_date = #{merchantSignUpEndDate}</if>
+            <if test="isSync != null "> and is_sync = #{isSync}</if>
+            <if test="delFlag != null "> and del_flag = #{delFlag}</if>
+            <if test="activeClubOnly != null and activeClubOnly">
+                and (club_id is null or club_id = 0 or exists (
+                    select 1 from club active_club
+                    where active_club.id = cms_topic.club_id and active_club.del_flag = 0
+                ))
+            </if>
+            <!--
+              商家可承接池的两道闸。merchant_status 只说「这个主题开了商家池」,
+              开了之后还能不能被商家看见,由主题级与俱乐部级两个开关决定:
+                · club_coop_open      稿 J4「本主题出现在商家可承接列表里」
+                · club.merchant_undertake_open 稿 M「开放商家承接」,整个俱乐部的总闸
+              两个都按 coalesce(...,1) 处理 —— 旧行读到 null 时保持加这两列之前的行为(可见),
+              否则迁移一落库,存量主题会当场从商家池里集体消失。
+            -->
+            <if test="merchantPoolOnly != null and merchantPoolOnly">
+                and coalesce(cms_topic.club_coop_open, 1) = 1
+                and (club_id is null or club_id = 0 or exists (
+                    select 1 from club coop_club
+                    where coop_club.id = cms_topic.club_id and coop_club.del_flag = 0
+                      and coalesce(coop_club.merchant_undertake_open, 1) = 1
+                ))
+            </if>
+            <if test="checkStatus != null"> and check_status = #{checkStatus}</if>
+            <if test="isSettlement != null"> and is_settlement = #{isSettlement}</if>
+            <if test="isRecommend != null"> and is_recommend = #{isRecommend}</if>
+            <if test="lifecycle != null"> and lifecycle = #{lifecycle}</if>
+
+            <!-- 运营筛选：均按工作台可解释的事实过滤，避免用公开池替代供给/承接。 -->
+            <if test="depositStatus != null">
+                and <include refid="topicClubDepositStatus"/>
+            </if>
+            <if test="cityKeyword != null and cityKeyword != ''">
+                and address_name like concat('%', #{cityKeyword}, '%')
+            </if>
+            <if test="operationStartDate != null">
+                and start_date is not null and end_date is not null
+                and end_date &gt;= #{operationStartDate}
+            </if>
+            <if test="operationEndDate != null">
+                and start_date is not null and end_date is not null
+                and start_date &lt;= #{operationEndDate}
+            </if>
+            <if test="merchantSupplyGapOnly != null and merchantSupplyGapOnly">
+                and <include refid="topicRequiredSupplyGapExists"/>
+            </if>
+            <if test="pendingClubApplicationOnly != null and pendingClubApplicationOnly">
+                and <include refid="topicPendingClubApplication"/>
+            </if>
+            <if test="inProgressAnomalyOnly != null and inProgressAnomalyOnly">
+                and cms_topic.lifecycle = 4
+                and <include refid="topicOpenComplaintExists"/>
+            </if>
+
+            <!-- 官方/广场必须按生效 CONTENT 槽分流；未知 scope 为空集，不能悄悄回落全量主题。 -->
+            <choose>
+                <when test="contentScope == 'OFFICIAL'">
+                    and exists (
+                        select 1 from product_role content_role
+                        where content_role.topic_id = cms_topic.id
+                          and content_role.slot = 'CONTENT'
+                          and content_role.status = 1
+                          and content_role.entity_type = 'PLATFORM'
+                    )
+                </when>
+                <when test="contentScope == 'PLAZA'">
+                    and exists (
+                        select 1 from product_role content_role
+                        where content_role.topic_id = cms_topic.id
+                          and content_role.slot = 'CONTENT'
+                          and content_role.status = 1
+                          and content_role.entity_type in ('CLUB', 'MEMBER')
+                          <if test="contentPublisherType == 'CLUB'">
+                              and content_role.entity_type = 'CLUB'
+                          </if>
+                          <if test="contentPublisherType == 'MEMBER'">
+                              and content_role.entity_type = 'MEMBER'
+                          </if>
+                    )
+                    <!-- 子队列只接受 CLUB / MEMBER；未知值必须为空集，不能退化为广场全量。 -->
+                    <if test="contentPublisherType != null and contentPublisherType != ''
+                              and contentPublisherType != 'CLUB' and contentPublisherType != 'MEMBER'">
+                        and 1 = 0
+                    </if>
+                </when>
+                <!-- 顶部跨来源检索只合并两个正规来源；无槽与异常槽仍只在历史待归属队列处置。 -->
+                <when test="contentScope == 'CROSS_SOURCE'">
+                    and exists (
+                        select 1 from product_role content_role
+                        where content_role.topic_id = cms_topic.id
+                          and content_role.slot = 'CONTENT'
+                          and content_role.status = 1
+                          and content_role.entity_type in ('PLATFORM', 'CLUB', 'MEMBER')
+                    )
+                </when>
+                <when test="contentScope == 'HISTORICAL'">
+                    and not exists (
+                        select 1 from product_role content_role
+                        where content_role.topic_id = cms_topic.id
+                          and content_role.slot = 'CONTENT'
+                          and content_role.status = 1
+                    )
+                </when>
+                <when test="contentScope != null and contentScope != ''">
+                    and 1 = 0
+                </when>
+            </choose>
+
+            <if test="clubFulfillmentState != null and clubFulfillmentState != ''">
+                <choose>
+                    <when test="clubFulfillmentState == 'LEADING'">
+                        and <include refid="topicHasLeadSession"/>
+                    </when>
+                    <when test="clubFulfillmentState == 'SIGNED'">
+                        and not <include refid="topicHasLeadSession"/>
+                        and <include refid="topicSignedClubCooperation"/>
+                    </when>
+                    <when test="clubFulfillmentState == 'INVITED'">
+                        and not <include refid="topicHasLeadSession"/>
+                        and not <include refid="topicSignedClubCooperation"/>
+                        and <include refid="topicPendingClubInvite"/>
+                    </when>
+                    <when test="clubFulfillmentState == 'APPLYING'">
+                        and not <include refid="topicHasLeadSession"/>
+                        and not <include refid="topicSignedClubCooperation"/>
+                        and not <include refid="topicPendingClubInvite"/>
+                        and <include refid="topicPendingClubApplication"/>
+                    </when>
+                    <when test="clubFulfillmentState == 'NOT_REQUIRED'">
+                        and not <include refid="topicHasLeadSession"/>
+                        and not <include refid="topicSignedClubCooperation"/>
+                        and not <include refid="topicPendingClubInvite"/>
+                        and not <include refid="topicPendingClubApplication"/>
+                        and not <include refid="topicGuidedTicketExists"/>
+                    </when>
+                    <when test="clubFulfillmentState == 'UNCONFIRMED'">
+                        and not <include refid="topicHasLeadSession"/>
+                        and not <include refid="topicSignedClubCooperation"/>
+                        and not <include refid="topicPendingClubInvite"/>
+                        and not <include refid="topicPendingClubApplication"/>
+                        and <include refid="topicGuidedTicketExists"/>
+                    </when>
+                    <otherwise>and 1 = 0</otherwise>
+                </choose>
+            </if>
+
+            <if test="merchantSupplyState != null and merchantSupplyState != ''">
+                <choose>
+                    <when test="merchantSupplyState == 'NOT_REQUIRED'">
+                        and not <include refid="topicRequiredChapterExists"/>
+                    </when>
+                    <when test="merchantSupplyState == 'READY'">
+                        and <include refid="topicRequiredChapterExists"/>
+                        and not <include refid="topicRequiredSupplyGapExists"/>
+                    </when>
+                    <when test="merchantSupplyState == 'PARTIALLY_READY'">
+                        and <include refid="topicRequiredSupplyGapExists"/>
+                        and <include refid="topicAnySuppliedChapterExists"/>
+                    </when>
+                    <when test="merchantSupplyState == 'PENDING_ALLOCATION'">
+                        and <include refid="topicRequiredSupplyGapExists"/>
+                        and not <include refid="topicAnySuppliedChapterExists"/>
+                        and <include refid="topicMerchantCandidateExists"/>
+                    </when>
+                    <when test="merchantSupplyState == 'RECRUITING'">
+                        and <include refid="topicRequiredSupplyGapExists"/>
+                        and not <include refid="topicAnySuppliedChapterExists"/>
+                        and not <include refid="topicMerchantCandidateExists"/>
+                        and cms_topic.merchant_status = 1
+                    </when>
+                    <when test="merchantSupplyState == 'GAP'">
+                        and <include refid="topicRequiredSupplyGapExists"/>
+                        and not <include refid="topicAnySuppliedChapterExists"/>
+                        and not <include refid="topicMerchantCandidateExists"/>
+                        and coalesce(cms_topic.merchant_status, 0) != 1
+                    </when>
+                    <otherwise>and 1 = 0</otherwise>
+                </choose>
+            </if>
+
+            <if test="runReadiness != null and runReadiness != ''">
+                <choose>
+                    <when test="runReadiness == 'READY'">
+                        and cms_topic.lifecycle in (3, 4)
+                        and <include refid="topicRunReadinessCore"/>
+                    </when>
+                    <when test="runReadiness == 'AT_RISK'">
+                        and cms_topic.lifecycle in (0, 1, 2, 7)
+                        and <include refid="topicRunReadinessCore"/>
+                    </when>
+                    <when test="runReadiness == 'BLOCKED'">
+                        and not (
+                            (cms_topic.lifecycle in (3, 4)
+                                and <include refid="topicRunReadinessCore"/>)
+                            or (cms_topic.lifecycle in (0, 1, 2, 7)
+                                and <include refid="topicRunReadinessCore"/>)
+                        )
+                    </when>
+                    <otherwise>and 1 = 0</otherwise>
+                </choose>
+            </if>
+
+            <if test="isLike == 1 "> and id in (select data_id from cms_topic_like where member_id=#{isLikeMemberId}) </if>
+            <if test="isNew == 1 "> and end_date > now() </if>
+        </where>
+
+        order by id desc
+    </select>
+
+    <select id="selectUpcomingTopicCounts" resultType="java.util.HashMap">
+        select club_id as clubId, count(*) as topicCount
+          from cms_topic
+         where del_flag = 0
+           and status = 1
+           and user_status = 1
+           and club_id in
+           <foreach collection="clubIds" item="clubId" open="(" separator="," close=")">
+               #{clubId}
+           </foreach>
+           and (end_date is null or end_date &gt;= #{now})
+         group by club_id
+    </select>
+
+    <!-- 五个圈层模板原型可进货架；复制出的城市实例必须同时满足30天复核与3—4家有效商户。 -->
+    <!-- ★2026-09-10 club_member_only 真正落地。
+         这一列此前写得进去、没有任何查询读它,而主题设置页白纸黑字写着
+         「开启后非成员看不到这条主题」—— 隐私承诺是假的,开关只是个装饰。
+         ⚠️ 闸必须放在共用 SQL 上,不能只放在 /api/club/topics 那个控制器里:
+            同一条俱乐部主题还会从「推荐主题」「底部主题页签」「收藏」「主题详情」
+            四个口出去,只堵俱乐部 tab 等于没堵。
+         viewerMemberId 为空(未登录)=看不到,fail-closed。
+         已付款的人保留可见:主题事后被设成只对成员可见,不该让他打不开自己买过的东西。
+         ⚠️「买过」的判据抄 CmsRegistrationMapper.hasActiveTopicStoryAccess(主题剧情访问权那条):
+            主理人开团产出的是**场次**(cms_activity),报名落 owner_type=2 —— 只认 owner_type=1
+            等于这条豁免对「开过团的俱乐部主题」整个失效。已退款/已取消也不算买过,
+            所以 payment_status / registration_status 两条一个都不能少(cms_registration 无软删列,
+            删除是物理 DELETE,没有第三条可判)。
+            那边额外的 purchase_kind 2/3 分支管的是剧情权限的时效与 entitlement,
+            与「别把买过的人关在门外」无关,故不抄。 -->
+    <sql id="clubMemberOnlyGate">
+        (
+            coalesce(cms_topic.club_member_only, 0) = 0
+            or cms_topic.club_id is null or cms_topic.club_id = 0
+            or (#{viewerMemberId} is not null and #{viewerMemberId} &gt; 0 and (
+                cms_topic.member_id = #{viewerMemberId}
+                or exists (select 1 from club_member viewer_cm
+                    where viewer_cm.club_id = cms_topic.club_id and viewer_cm.member_id = #{viewerMemberId}
+                      and viewer_cm.status = 1 and viewer_cm.del_flag = 0)
+                or exists (select 1 from club viewer_club
+                    where viewer_club.id = cms_topic.club_id and viewer_club.member_id = #{viewerMemberId}
+                      and viewer_club.del_flag = 0)
+                or exists (select 1 from cms_registration viewer_reg
+                    left join cms_activity viewer_act
+                      on viewer_reg.owner_type = 2 and viewer_act.id = viewer_reg.owner_id
+                    where viewer_reg.member_id = #{viewerMemberId}
+                      and viewer_reg.payment_status = 2
+                      and viewer_reg.registration_status = 2
+                      and ((viewer_reg.owner_type = 1
+                            and (viewer_reg.owner_id = cms_topic.id or viewer_reg.topic_id = cms_topic.id))
+                        or (viewer_reg.owner_type = 2 and viewer_act.topic_id = cms_topic.id)))
+            ))
+        )
+    </sql>
+
+    <sql id="primaryCirclePublicGate">
+        (
+            cms_topic.circle_theme_code is null
+            or cms_topic.circle_theme_code not in ('FITNESS','MIDLIFE','DATE','FRIENDS','SHANGHAI')
+            or cms_topic.is_template = 1
+            or (
+                cms_topic.circle_reviewed_at &gt;= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                and (
+                    select count(distinct circle_offer.merchant_id)
+                    from merchant_chapter_offer circle_offer
+                    join merchant_circle_supply_profile circle_profile
+                      on circle_profile.offer_id = circle_offer.id and circle_profile.is_current = 1
+                    join cms_topic_chapter circle_chapter
+                      on circle_chapter.id = circle_offer.chapter_id and circle_chapter.circle_enabled = 1
+                    where circle_offer.topic_id = cms_topic.id
+                      and circle_offer.status = 1
+                      and (circle_offer.valid_end is null or circle_offer.valid_end &gt; NOW())
+                      and circle_profile.checked_at &gt;= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                ) between 3 and 4
+            )
+        )
+    </sql>
+
+    <!-- 公开查询不复用调用方可写的 status/userStatus/delFlag 条件；三道 Gate 写死在 SQL。 -->
+    <!-- 漫游·附近的局 只读叠加:已发布主题(城市定向 / 自由探索)按第一个有坐标的节点落点;口径与 selectPublicCmsTopicList 一致 -->
+    <select id="selectNearbyTopics" resultType="java.util.HashMap">
+        select * from (
+            select t.id as id, t.name as name, t.img_url as picUrl, t.product_type as productType,
+                   (select count(1) from cms_registration r
+                     left join cms_activity ticket_activity on r.owner_type = 2 and r.owner_id = ticket_activity.id and ticket_activity.del_flag = 0
+                     where r.member_id = #{viewerId} and r.payment_status = 2 and r.registration_status = 2
+                       and ((r.owner_type = 1 and r.owner_id = t.id)
+                         or (r.owner_type = 2 and ticket_activity.topic_id = t.id))) as viewerHasTicket,
+                   t.address_name as addressName, t.start_date as startDate, t.end_date as endDate,
+                   m.role as ownerRole, m.nickname as ownerNickname,
+                   n.lat as latitude, n.lng as longitude,
+                   (6371000 * acos(least(1,
+                       cos(radians(#{lat})) * cos(radians(n.lat))
+                       * cos(radians(n.lng) - radians(#{lng}))
+                       + sin(radians(#{lat})) * sin(radians(n.lat))))) as distance
+            from cms_topic t
+            join (
+                select x.topic_id, cast(x.latitude as decimal(12,7)) as lat, cast(x.longitude as decimal(12,7)) as lng
+                from cms_topic_node x
+                where x.latitude is not null and x.latitude &lt;&gt; '' and x.longitude is not null and x.longitude &lt;&gt; ''
+                  and x.id = (select y.id from cms_topic_node y
+                              where y.topic_id = x.topic_id and y.latitude is not null and y.latitude &lt;&gt; ''
+                                and y.longitude is not null and y.longitude &lt;&gt; ''
+                              order by y.sort_id asc, y.id asc limit 1)
+            ) n on n.topic_id = t.id
+            left join ums_member m on m.id = t.member_id
+            where t.status = 1 and t.user_status = 1 and t.del_flag = 0 and t.is_template = 0
+              and (t.club_id is null or t.club_id = 0 or exists (
+                  select 1 from club active_club where active_club.id = t.club_id and active_club.del_flag = 0))
+              and n.lat between #{minLat} and #{maxLat}
+              and n.lng between #{minLng} and #{maxLng}
+        ) q
+        where distance &lt;= #{radius}
+        order by distance asc
+        limit #{limit}
+    </select>
+
+    <!--
+      地图附近的公开队伍(P 方案 5 条规则):公开申请 ∧ 招募中 ∧ 未满员 ∧ 场次已上架且未开始 ∧ 无未结 TEAM 审核单
+      ∧ 主题对 viewer 公开可见(圈子闸 + 俱乐部私密闸,两道闸与公开主题列表共用本文件片段;放在本 namespace 是为了不让其它只加载 PlayTeamMapper.xml 的消费方被跨文件 include 拖垮)∧ 与队长无拉黑。
+      坐标降级:票上集合点 → 场次坐标 → 主题首个有坐标节点;都取不到不出点。只选白名单列,不选 invite_code。
+    -->
+    <select id="selectNearbyPublicTeams" resultType="com.chengyinhub.business.domain.vo.PlayTeamNearbyVO">
+        select q.*,
+               (6371000 * acos(least(1,
+                   cos(radians(#{lat})) * cos(radians(q.latitude))
+                   * cos(radians(q.longitude) - radians(#{lng}))
+                   + sin(radians(#{lat})) * sin(radians(q.latitude))))) as distance
+        from (
+            select t.id as teamId, t.title as title, t.owner_id as activityId,
+                   a.name as activityName, a.start_date as startDate, a.end_date as endDate,
+                   cms_topic.id as topicId, cms_topic.name as topicName, cms_topic.product_type as productType,
+                   case when gather.id is not null then gather.meeting_point else a.address_name end as addressName,
+                   case when gather.id is not null then cast(gather.gather_lat as decimal(12,7))
+                        when a.latitude is not null and a.latitude &lt;&gt; '' and a.longitude is not null and a.longitude &lt;&gt; ''
+                            then cast(a.latitude as decimal(12,7))
+                        else node.lat end as latitude,
+                   case when gather.id is not null then cast(gather.gather_lng as decimal(12,7))
+                        when a.latitude is not null and a.latitude &lt;&gt; '' and a.longitude is not null and a.longitude &lt;&gt; ''
+                            then cast(a.longitude as decimal(12,7))
+                        else node.lng end as longitude,
+                   case when gather.id is not null then 'GATHER'
+                        when a.latitude is not null and a.latitude &lt;&gt; '' and a.longitude is not null and a.longitude &lt;&gt; ''
+                            then 'ACTIVITY'
+                        when node.lat is not null then 'TOPIC_NODE' end as coordSource,
+                   leader.nickname as leaderName, leader.avatar as leaderAvatar,
+                   t.joined_count as joinedCount, t.max_members as maxMembers,
+                   (select group_concat(mu.avatar order by mm.role desc, mm.create_time asc, mm.id asc separator '\n')
+                      from play_team_member mm join ums_member mu on mu.id = mm.member_id
+                     where mm.team_id = t.id and mm.status = 1 and mu.avatar is not null and mu.avatar &lt;&gt; '') as memberAvatarsJoined,
+                   case when t.leader_member_id = #{viewerMemberId} then 'LEADER'
+                        when viewer_row.status = 1 then 'JOINED'
+                        when viewer_row.status = 0 and viewer_row.apply_expire_time &gt; #{now} then 'PENDING'
+                        when viewer_row.status in (3, 4) then 'REJECTED'
+                        else 'NONE' end as viewerStatus,
+                   exists (select 1 from cms_registration viewer_ticket
+                            where viewer_ticket.member_id = #{viewerMemberId}
+                              and viewer_ticket.owner_type = 2 and viewer_ticket.owner_id = a.id
+                              and viewer_ticket.payment_status = 2 and viewer_ticket.registration_status = 2) as viewerHasTicket,
+                   case when t.leader_member_id = #{viewerMemberId} then
+                        (select count(1) from play_team_member pending
+                          where pending.team_id = t.id and pending.status = 0 and pending.apply_expire_time &gt; #{now})
+                   end as pendingCount
+            from play_team t
+            join cms_activity a on t.owner_type = 2 and a.id = t.owner_id
+            join cms_topic on cms_topic.id = a.topic_id
+            left join oms_ticket gather on gather.id = (
+                select min(g.id) from oms_ticket g
+                where g.owner_type = 2 and g.owner_id = a.id and g.del_flag = 0
+                  and g.gather_lat is not null and g.gather_lng is not null)
+            left join (
+                select x.topic_id, cast(x.latitude as decimal(12,7)) as lat, cast(x.longitude as decimal(12,7)) as lng
+                from cms_topic_node x
+                where x.latitude is not null and x.latitude &lt;&gt; '' and x.longitude is not null and x.longitude &lt;&gt; ''
+                  and x.id = (select y.id from cms_topic_node y
+                              where y.topic_id = x.topic_id and y.latitude is not null and y.latitude &lt;&gt; ''
+                                and y.longitude is not null and y.longitude &lt;&gt; ''
+                              order by y.sort_id asc, y.id asc limit 1)
+            ) node on node.topic_id = cms_topic.id
+            left join ums_member leader on leader.id = t.leader_member_id
+            left join play_team_member viewer_row on viewer_row.team_id = t.id and viewer_row.member_id = #{viewerMemberId}
+            where t.join_mode = 2 and t.status = 0 and t.joined_count &lt; t.max_members
+              and a.status = 1 and a.publish_status = 1 and a.del_flag = 0 and a.cancel_time is null
+              and a.start_date &gt; #{now}
+              and cms_topic.status = 1 and cms_topic.user_status = 1 and cms_topic.del_flag = 0 and cms_topic.is_template = 0
+              and (cms_topic.club_id is null or cms_topic.club_id = 0 or exists (
+                  select 1 from club active_club where active_club.id = cms_topic.club_id and active_club.del_flag = 0))
+              and <include refid="primaryCirclePublicGate"/>
+              and <include refid="clubMemberOnlyGate"/>
+              and not exists (select 1 from audit_task review
+                              where review.biz_type = 'TEAM' and review.biz_id = t.id and review.status in (0, 3))
+              and not exists (select 1 from im_block block
+                              where (block.member_id = #{viewerMemberId} and block.blocked_member_id = t.leader_member_id)
+                                 or (block.member_id = t.leader_member_id and block.blocked_member_id = #{viewerMemberId}))
+        ) q
+        where q.latitude between #{minLat} and #{maxLat}
+          and q.longitude between #{minLng} and #{maxLng}
+        having distance &lt;= #{radius}
+        order by distance asc, q.teamId asc
+        limit #{limit}
+    </select>
+
+    <select id="selectPublicCmsTopicList" parameterType="CmsTopic" resultMap="CmsTopicResult">
+        <include refid="selectCmsTopicVo"/>
+        <where>
+            status = 1 and user_status = 1 and del_flag = 0
+            <!-- 模板是创作者侧素材,有自己的货架(/api/template/*)。玩家侧四个消费方
+                 (推荐主题 / 底部主题页签 / 收藏 / 俱乐部团)都不该出模板 ⇒ 写死,不做可选开关。 -->
+            and is_template = 0
+            and <include refid="primaryCirclePublicGate"/>
+            and (club_id is null or club_id = 0 or exists (
+                select 1 from club active_club
+                where active_club.id = cms_topic.club_id and active_club.del_flag = 0
+            ))
+            <if test="clubId != null">
+                and (
+                    club_id = #{clubId}
+                    or exists (
+                        select 1 from coop_order executing_club_order
+                        where executing_club_order.topic_id = cms_topic.id
+                          and executing_club_order.to_type = 'club'
+                          and executing_club_order.to_id = #{clubId}
+                          and executing_club_order.status = 0
+                          and executing_club_order.del_flag = 0
+                          and not exists (
+                              select 1 from coop_invite legacy_invite
+                              where legacy_invite.id = executing_club_order.invite_id
+                                and legacy_invite.invite_type = 2
+                          )
+                    )
+                )
+            </if>
+            <if test="name != null and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="categoryIds != null"> and FIND_IN_SET(#{categoryIds}, category_ids) &gt; 0</if>
+            <if test="cityKeyword != null and cityKeyword != ''"> and address_name like concat('%', #{cityKeyword}, '%')</if>
+            <if test="productType != null"> and product_type = #{productType}</if>
+            <if test="selfPlay != null"> and self_play = #{selfPlay}</if>
+            <if test="isRecommend != null"> and is_recommend = #{isRecommend}</if>
+            <if test="isLike == 1"> and id in (select data_id from cms_topic_like where member_id=#{isLikeMemberId})</if>
+            and <include refid="clubMemberOnlyGate"/>
+        </where>
+        <!-- club_pinned 只在俱乐部自己的列表里有意义:不限定 clubId 时按它排,
+             等于让某个俱乐部的置顶浮到全站推荐流最前面。 -->
+        order by <if test="clubId != null">coalesce(club_pinned, 0) desc, </if>id desc
+    </select>
+    
+    <select id="selectCmsTopicById" parameterType="Long" resultMap="CmsTopicResult">
+        <include refid="selectCmsTopicVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectRoamReferralEnabledById" parameterType="Long" resultType="Integer">
+        select roam_referral_enabled from cms_topic where id = #{id}
+    </select>
+
+    <select id="selectCmsTopicLifecycleById" parameterType="Long" resultMap="CmsTopicResult">
+        select id, lifecycle, del_flag from cms_topic where id = #{id}
+    </select>
+
+    <!-- ⚠️ 没挂 clubMemberOnlyGate:入参只有 id,拿不到「看的人是谁」。
+         目前生产无调用方(只有 IT 在用)。要拿它做玩家侧读取,先把 viewerMemberId 传进来。 -->
+    <select id="selectPublicCmsTopicById" parameterType="Long" resultMap="CmsTopicResult">
+        <include refid="selectCmsTopicVo"/>
+        where id = #{id} and del_flag = 0 and status = 1 and user_status = 1
+          and <include refid="primaryCirclePublicGate"/>
+          and (club_id is null or club_id = 0 or exists (
+              select 1 from club active_club
+              where active_club.id = cms_topic.club_id and active_club.del_flag = 0
+          ))
+    </select>
+
+    <select id="selectCmsTopicDetailById" resultMap="CmsTopicResult">
+        <include refid="selectCmsTopicVo"/>
+        where id = #{id} and del_flag = 0
+          and (club_id is null or club_id = 0 or exists (
+              select 1 from club active_club
+              where active_club.id = cms_topic.club_id and active_club.del_flag = 0
+          ))
+          and ((status = 1 and user_status = 1 and <include refid="primaryCirclePublicGate"/>)
+            or (#{viewerMemberId} is not null and #{viewerMemberId} &gt; 0 and member_id = #{viewerMemberId}))
+          and <include refid="clubMemberOnlyGate"/>
+    </select>
+
+    <select id="selectMerchantVisibleCmsTopicById" parameterType="Long" resultMap="CmsTopicResult">
+        <include refid="selectCmsTopicVo"/>
+        where id = #{id} and del_flag = 0 and status = 1 and merchant_status = 1
+          and (club_id is null or club_id = 0 or exists (
+              select 1 from club active_club
+              where active_club.id = cms_topic.club_id and active_club.del_flag = 0
+          ))
+    </select>
+
+    <select id="selectMerchantManagedCmsTopicById" resultMap="CmsTopicResult">
+        <include refid="selectCmsTopicVo"/>
+        where id = #{id} and del_flag = 0
+          and (club_id is null or club_id = 0 or exists (
+              select 1 from club active_club
+              where active_club.id = cms_topic.club_id and active_club.del_flag = 0
+          ))
+          and exists (
+              select 1
+                from merchant_chapter_application application
+                join merchant_chapter_offer offer
+                  on offer.chapter_id = application.chapter_id
+                 and offer.merchant_id = application.merchant_id
+                 and offer.status = 1
+                 and (offer.valid_end is null or offer.valid_end &gt; now())
+               where application.topic_id = cms_topic.id
+                 and application.merchant_id = #{merchantId}
+                 and application.status = 1
+                 and application.del_flag = 0
+          )
+    </select>
+
+    <select id="selectCmsTopicByIdForUpdate" parameterType="Long" resultMap="CmsTopicResult">
+        <include refid="selectCmsTopicVo"/>
+        where id = #{id} for update
+    </select>
+
+    <insert id="insertCmsTopic" parameterType="CmsTopic" useGeneratedKeys="true" keyProperty="id">
+        insert into cms_topic
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="clubId != null">club_id,</if>
+            <if test="topicType != null">topic_type,</if>
+            <if test="productType != null">product_type,</if>
+            <if test="circleThemeCode != null">circle_theme_code,</if>
+            <if test="sourceTemplateTopicId != null">source_template_topic_id,</if>
+            <if test="roamReferralEnabled != null">roam_referral_enabled,</if>
+            <if test="completeRuleJson != null">complete_rule_json,</if>
+            <if test="routeMode != null">route_mode,</if>
+            <if test="routeGraphJson != null">route_graph_json,</if>
+            <if test="configVersion != null">config_version,</if>
+            <if test="publishedConfigVersion != null">published_config_version,</if>
+            <if test="gameModuleConfigJson != null and gameModuleConfigJson.trim() != ''">game_module_config_json,</if>
+            <if test="journeyRulesJson != null">journey_rules_json,</if>
+            <if test="journeyStoryJson != null">journey_story_json,</if>
+            <if test="themeRuntimeConfigJson != null">theme_runtime_config_json,</if>
+            <if test="publishedThemeRuntimeConfigJson != null">published_theme_runtime_config_json,</if>
+            <if test="topicId != null">topic_id,</if>
+            <if test="name != null">name,</if>
+            <if test="subtitle != null">subtitle,</if>
+            <if test="description != null">description,</if>
+            <if test="addressName != null">address_name,</if>
+            <if test="totalTime != null">total_time,</if>
+            <if test="totalMileage != null">total_mileage,</if>
+            <if test="locationCount != null">location_count,</if>
+            <if test="templateCount != null">template_count,</if>
+            <if test="startDate != null">start_date,</if>
+            <if test="endDate != null">end_date,</if>
+            <if test="imgUrl != null">img_url,</if>
+            <if test="imgArr != null">img_arr,</if>
+            <if test="categoryIds != null">category_ids,</if>
+            <if test="status != null">status,</if>
+            <if test="reason != null">reason,</if>
+            <if test="userStatus != null">user_status,</if>
+            <if test="merchantStatus != null">merchant_status,</if>
+            <if test="openClubPool != null">open_club_pool,</if>
+            <if test="merchantSignUpStartDate != null">merchant_sign_up_start_date,</if>
+            <if test="merchantSignUpEndDate != null">merchant_sign_up_end_date,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="isSync != null">is_sync,</if>
+            <if test="checkStatus != null">check_status,</if>
+            <if test="isSettlement != null">is_settlement,</if>
+            <if test="publishMode != null">publish_mode,</if>
+            <if test="audioUrl != null">audio_url,</if>
+            <if test="selfPlay != null">self_play,</if>
+            <if test="selfPlayPrice != null">self_play_price,</if>
+            <if test="selfPlayQuota != null">self_play_quota,</if>
+            <if test="teamMode != null">team_mode,</if>
+            <if test="teamMaxMembers != null">team_max_members,</if>
+            <if test="xpBudget != null">xp_budget,</if>
+            <if test="finishMedalName != null">finish_medal_name,</if>
+            <if test="finishMedalImg != null">finish_medal_img,</if>
+            <if test="completeRewardCouponId != null">complete_reward_coupon_id,</if>
+            <if test="saleEndAt != null">sale_end_at,</if>
+            <if test="sellingStartedAt != null">selling_started_at,</if>
+            <if test="sourceTopicId != null">source_topic_id,</if>
+            <if test="recruitDeadline != null">recruit_deadline,</if>
+            <if test="lifecycle != null">lifecycle,</if>
+            <if test="audioDuration != null">audio_duration,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="clubId != null">#{clubId},</if>
+            <if test="topicType != null">#{topicType},</if>
+            <if test="productType != null">#{productType},</if>
+            <if test="circleThemeCode != null">#{circleThemeCode},</if>
+            <if test="sourceTemplateTopicId != null">#{sourceTemplateTopicId},</if>
+            <if test="roamReferralEnabled != null">#{roamReferralEnabled},</if>
+            <if test="completeRuleJson != null">#{completeRuleJson},</if>
+            <if test="routeMode != null">#{routeMode},</if>
+            <if test="routeGraphJson != null">#{routeGraphJson},</if>
+            <if test="configVersion != null">#{configVersion},</if>
+            <if test="publishedConfigVersion != null">#{publishedConfigVersion},</if>
+            <if test="gameModuleConfigJson != null and gameModuleConfigJson.trim() != ''">#{gameModuleConfigJson},</if>
+            <if test="journeyRulesJson != null">#{journeyRulesJson},</if>
+            <if test="journeyStoryJson != null">#{journeyStoryJson},</if>
+            <if test="themeRuntimeConfigJson != null">#{themeRuntimeConfigJson},</if>
+            <if test="publishedThemeRuntimeConfigJson != null">#{publishedThemeRuntimeConfigJson},</if>
+            <if test="topicId != null">#{topicId},</if>
+            <if test="name != null">#{name},</if>
+            <if test="subtitle != null">#{subtitle},</if>
+            <if test="description != null">#{description},</if>
+            <if test="addressName != null">#{addressName},</if>
+            <if test="totalTime != null">#{totalTime},</if>
+            <if test="totalMileage != null">#{totalMileage},</if>
+            <if test="locationCount != null">#{locationCount},</if>
+            <if test="templateCount != null">#{templateCount},</if>
+            <if test="startDate != null">#{startDate},</if>
+            <if test="endDate != null">#{endDate},</if>
+            <if test="imgUrl != null">#{imgUrl},</if>
+            <if test="imgArr != null">#{imgArr},</if>
+            <if test="categoryIds != null">#{categoryIds},</if>
+            <if test="status != null">#{status},</if>
+            <if test="reason != null">#{reason},</if>
+            <if test="userStatus != null">#{userStatus},</if>
+            <if test="merchantStatus != null">#{merchantStatus},</if>
+            <if test="openClubPool != null">#{openClubPool},</if>
+            <if test="merchantSignUpStartDate != null">#{merchantSignUpStartDate},</if>
+            <if test="merchantSignUpEndDate != null">#{merchantSignUpEndDate},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="isSync != null">#{isSync},</if>
+            <if test="checkStatus != null">#{checkStatus},</if>
+            <if test="isSettlement != null">#{isSettlement},</if>
+            <if test="publishMode != null">#{publishMode},</if>
+            <if test="audioUrl != null">#{audioUrl},</if>
+            <if test="selfPlay != null">#{selfPlay},</if>
+            <if test="selfPlayPrice != null">#{selfPlayPrice},</if>
+            <if test="selfPlayQuota != null">#{selfPlayQuota},</if>
+            <if test="teamMode != null">#{teamMode},</if>
+            <if test="teamMaxMembers != null">#{teamMaxMembers},</if>
+            <if test="xpBudget != null">#{xpBudget},</if>
+            <if test="finishMedalName != null">#{finishMedalName},</if>
+            <if test="finishMedalImg != null">#{finishMedalImg},</if>
+            <if test="completeRewardCouponId != null">#{completeRewardCouponId},</if>
+            <if test="saleEndAt != null">#{saleEndAt},</if>
+            <if test="sellingStartedAt != null">#{sellingStartedAt},</if>
+            <if test="sourceTopicId != null">#{sourceTopicId},</if>
+            <if test="recruitDeadline != null">#{recruitDeadline},</if>
+            <if test="lifecycle != null">#{lifecycle},</if>
+            <if test="audioDuration != null">#{audioDuration},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCmsTopic" parameterType="CmsTopic">
+        update cms_topic
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="clubId != null">club_id = #{clubId},</if>
+            <if test="topicType != null">topic_type = #{topicType},</if>
+            <if test="productType != null">product_type = #{productType},</if>
+            <if test="circleThemeCode != null">circle_theme_code = #{circleThemeCode},</if>
+            <if test="sourceTemplateTopicId != null">source_template_topic_id = #{sourceTemplateTopicId},</if>
+            <if test="roamReferralEnabled != null">roam_referral_enabled = #{roamReferralEnabled},</if>
+            <if test="completeRuleJson != null">complete_rule_json = #{completeRuleJson},</if>
+            <if test="routeMode != null">route_mode = #{routeMode},</if>
+            <if test="routeGraphJson != null">route_graph_json = #{routeGraphJson},</if>
+            <if test="configVersion != null">config_version = #{configVersion},</if>
+            <choose>
+                <when test="gameModuleConfigJson != null and gameModuleConfigJson.trim() == ''">
+                    game_module_config_json = null,
+                </when>
+                <otherwise>
+                    <if test="gameModuleConfigJson != null">game_module_config_json = #{gameModuleConfigJson},</if>
+                </otherwise>
+            </choose>
+            <if test="journeyRulesJson != null">journey_rules_json = #{journeyRulesJson},</if>
+            <if test="journeyStoryJson != null">journey_story_json = #{journeyStoryJson},</if>
+            <if test="themeRuntimeConfigJson != null">theme_runtime_config_json = #{themeRuntimeConfigJson},</if>
+            <if test="feePlatformRate != null">fee_platform_rate = #{feePlatformRate},</if>
+            <if test="feeGuaranteeBaseRate != null">fee_guarantee_base_rate = #{feeGuaranteeBaseRate},</if>
+            <if test="feeGuaranteeStepRate != null">fee_guarantee_step_rate = #{feeGuaranteeStepRate},</if>
+            <if test="feeGuaranteeMaxMerchant != null">fee_guarantee_max_merchant = #{feeGuaranteeMaxMerchant},</if>
+            <if test="topicId != null">topic_id = #{topicId},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="subtitle != null">subtitle = #{subtitle},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="addressName != null">address_name = #{addressName},</if>
+            <if test="totalTime != null">total_time = #{totalTime},</if>
+            <if test="totalMileage != null">total_mileage = #{totalMileage},</if>
+            <if test="locationCount != null">location_count = #{locationCount},</if>
+            <if test="templateCount != null">template_count = #{templateCount},</if>
+            <if test="startDate != null">start_date = #{startDate},</if>
+            <if test="endDate != null">end_date = #{endDate},</if>
+            <if test="imgUrl != null">img_url = #{imgUrl},</if>
+            <if test="imgArr != null">img_arr = #{imgArr},</if>
+            <if test="categoryIds != null">category_ids = #{categoryIds},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="reason != null">reason = #{reason},</if>
+            <if test="userStatus != null">user_status = #{userStatus},</if>
+            <if test="merchantStatus != null">merchant_status = #{merchantStatus},</if>
+            <if test="openClubPool != null">open_club_pool = #{openClubPool},</if>
+            <if test="merchantSignUpStartDate != null">merchant_sign_up_start_date = #{merchantSignUpStartDate},</if>
+            <if test="merchantSignUpEndDate != null">merchant_sign_up_end_date = #{merchantSignUpEndDate},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="isSync != null">is_sync = #{isSync},</if>
+            <if test="isRecommend != null">is_recommend = #{isRecommend},</if>
+            <if test="checkStatus != null">check_status = #{checkStatus},</if>
+            <if test="isSettlement != null">is_settlement = #{isSettlement},</if>
+            <if test="publishMode != null">publish_mode = #{publishMode},</if>
+            <if test="betaFlag != null">beta_flag = #{betaFlag},</if>
+            <if test="audioUrl != null">audio_url = #{audioUrl},</if>
+            <if test="selfPlay != null">self_play = #{selfPlay},</if>
+            <if test="selfPlayPrice != null">self_play_price = #{selfPlayPrice},</if>
+            <if test="selfPlayQuota != null">self_play_quota = #{selfPlayQuota},</if>
+            <if test="teamMode != null">team_mode = #{teamMode},</if>
+            <if test="teamMaxMembers != null">team_max_members = #{teamMaxMembers},</if>
+            <if test="xpBudget != null">xp_budget = #{xpBudget},</if>
+            <if test="finishMedalName != null">finish_medal_name = #{finishMedalName},</if>
+            <if test="finishMedalImg != null">finish_medal_img = #{finishMedalImg},</if>
+            <if test="completeRewardCouponId != null">complete_reward_coupon_id = #{completeRewardCouponId},</if>
+            <if test="saleEndAt != null">sale_end_at = #{saleEndAt},</if>
+            <if test="sellingStartedAt != null">selling_started_at = #{sellingStartedAt},</if>
+            <if test="sourceTopicId != null">source_topic_id = #{sourceTopicId},</if>
+            <if test="recruitDeadline != null">recruit_deadline = #{recruitDeadline},</if>
+            <if test="recruitExtendCount != null">recruit_extend_count = #{recruitExtendCount},</if>
+            <if test="lifecycle != null">lifecycle = #{lifecycle},</if>
+            <if test="audioDuration != null">audio_duration = #{audioDuration},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="updateRouteDefinition">
+        update cms_topic
+        set route_mode=#{routeMode}, route_graph_json=#{routeGraphJson}, config_version=#{targetVersion},
+            update_time=#{updateTime}
+        where id=#{id} and config_version=#{expectedVersion} and del_flag=0
+    </update>
+
+    <update id="publishRouteSnapshot">
+        update cms_topic
+        set published_route_graph_json=#{publishedRouteGraphJson},
+            published_config_version=published_config_version + 1,
+            published_theme_runtime_config_json=theme_runtime_config_json,
+            update_time=#{updateTime}
+        where id=#{id} and is_draft=0 and del_flag=0
+    </update>
+
+    <update id="clearCircleReviewedAt">
+        update cms_topic
+           set circle_reviewed_at = null, update_time = #{updateTime}
+         where id = #{id} and circle_theme_code is not null and is_template = 0 and del_flag = 0
+    </update>
+
+    <!-- 上下架 CAS:只有当前值等于 expected 才翻转,禁止陈旧请求覆盖新状态(与 transitionLifecycle 同形)。
+         ⚠️ user_status 这一列可空(DDL 无 NOT NULL,存量/人工 SQL 可能留下 NULL),
+         直接 `user_status = #{expected}` 会让 NULL 行永远不匹配 ⇒ 上下架按钮静默失效。
+         COALESCE 把 NULL 当 0(未上架),与 Java 侧 normalize 同口径。 -->
+    <update id="casUserStatus">
+        update cms_topic
+        set user_status = #{target}, update_time = #{updateTime}
+        where id = #{id} and coalesce(user_status, 0) = #{expected} and del_flag = 0
+        <if test="target == 1">
+            and status = 1 and is_draft = 0
+        </if>
+    </update>
+
+    <update id="transitionLifecycle">
+        update cms_topic
+        set lifecycle = #{target}, update_time = #{updateTime}
+        where id = #{id} and lifecycle = #{expected} and del_flag = 0
+    </update>
+
+    <update id="finalizeForSale">
+        update cms_topic
+        set lifecycle = 3,
+            selling_started_at = #{sellingStartedAt},
+            update_time = #{updateTime}
+        where id = #{id}
+          and lifecycle = 2
+          and selling_started_at is null
+          and del_flag = 0
+    </update>
+
+    <delete id="deleteCmsTopicById" parameterType="Long">
+        delete from cms_topic where id = #{id}
+    </delete>
+
+    <delete id="deleteCmsTopicByIds" parameterType="String">
+        delete from cms_topic where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="selectCmsTopicNumByMemberId" resultType="Integer">
+        select count(1) from cms_topic where member_id = #{member_id} and del_flag=0
+    </select>
+
+    <!-- 在架公开主题数(user_status=1 且非 selfPlay),用于上架额度校验;草稿/待审(user_status=0)不计,下架即释放 -->
+    <select id="selectOnlineThemeNumByMemberId" resultType="Integer">
+        select count(1) from cms_topic
+        where member_id = #{memberId} and del_flag = 0 and user_status = 1
+          and (self_play is null or self_play = 0)
+        <if test="excludeId != null and excludeId > 0"> and id != #{excludeId} </if>
+    </select>
+
+    <sql id="publicTopicTemplateEligibility">
+        del_flag = 0 and is_template = 1 and status = 1 and user_status = 1
+          and exists (
+              select 1
+                from cms_topic_template_meta tm
+               where tm.topic_id = cms_topic.id
+                 and tm.del_flag = 0
+                 and tm.template_status = 'VERIFIED'
+          )
+    </sql>
+
+    <!-- T7 公共模板库:只有已审核、在架、已验证模板可见。 -->
+    <select id="selectTopicTemplateList" resultMap="CmsTopicResult">
+        <include refid="selectCmsTopicVo"/>
+        where <include refid="publicTopicTemplateEligibility"/>
+        order by id desc
+    </select>
+
+    <!-- 匿名 /info：eligibility 与详情实体必须来自这一条 fail-closed 查询。 -->
+    <select id="selectPublicTopicTemplateById" parameterType="Long" resultMap="CmsTopicResult">
+        <include refid="selectCmsTopicVo"/>
+        where id = #{id} and <include refid="publicTopicTemplateEligibility"/>
+    </select>
+
+    <!-- T7 /info /use 门禁与公共货架同口径：必须已审核、是模板且成熟度 VERIFIED。 -->
+    <select id="selectTopicIsTemplate" resultType="Integer">
+        select is_template
+          from cms_topic
+         where id = #{id} and <include refid="publicTopicTemplateEligibility"/>
+    </select>
+
+    <!-- T7 另存为模板/取消:仅作者本人可标记 -->
+    <update id="updateTopicIsTemplate">
+        update cms_topic set is_template = #{flag}
+        where id = #{id} and member_id = #{memberId} and del_flag = 0
+    </update>
+
+    <!-- B1 草稿:隔离置位 is_draft(依赖 migration_topic_draft) -->
+    <update id="updateTopicDraftState">
+        update cms_topic set is_draft = #{flag} where id = #{id} and del_flag = 0
+    </update>
+
+    <!-- B2 我的草稿主题 id 集合(供 /api/project/my 标记 draft 态) -->
+    <select id="selectDraftTopicIds" resultType="Long">
+        select id from cms_topic where member_id = #{memberId} and del_flag = 0 and is_draft = 1
+    </select>
+
+    <!-- B3 读某主题是否草稿(publish-draft 门禁,防 rejected/online 借道) -->
+    <select id="selectTopicIsDraft" resultType="Integer">
+        select is_draft from cms_topic where id = #{id} and del_flag = 0
+    </select>
+
+    <!-- B3 竞态安全清草稿:仅当前确为草稿(is_draft=1)才清,返回受影响行数 -->
+    <update id="clearDraftIfDraft">
+        update cms_topic set is_draft = 0 where id = #{id} and del_flag = 0 and is_draft = 1
+    </update>
+
+    <!-- Beta 转正式:仅当前确在 Beta 期(beta_flag=1)才清,返回受影响行数(0=不在Beta或已被转) -->
+    <update id="graduateBetaIfBeta">
+        update cms_topic set beta_flag = 0 where id = #{id} and del_flag = 0 and beta_flag = 1
+    </update>
+
+    <!-- 查询需要结算的主题；product_type=2 来自 ProductType.FREE_EXPLORE -->
+    <!-- 2026-09-16 用户硬规则同上:合作结算按此刻销售额冻结发起人保底/毛利并 T+7 入余额,
+         票有效期晚于主题结束时,冻结后玩家仍可退。截止口径与 RefundPolicy 同源:
+         下单快照优先,否则自由定向(mode=2)=票 end_time,其余=票 start_time。 -->
+    <select id="selectTopicsForSettlement" resultMap="CmsTopicResult">
+        <![CDATA[
+        SELECT * FROM cms_topic
+        WHERE del_flag = 0
+          AND status = 1
+          AND is_settlement = 0
+          AND end_date <= DATE_SUB(NOW(), INTERVAL 12 HOUR)
+          AND (product_type IS NULL OR product_type <> 2)
+          AND NOT EXISTS (
+              SELECT 1 FROM cms_registration r
+              LEFT JOIN oms_ticket t ON t.id = r.ticket_id
+              WHERE r.owner_type = 1 AND r.owner_id = cms_topic.id
+                AND r.payment_status = 2 AND r.registration_status = 2
+                AND (r.verification_status IS NULL OR r.verification_status <> 1)
+                AND COALESCE(r.refund_deadline, CASE WHEN t.mode = 2 THEN t.end_time ELSE t.start_time END) > NOW()
+          )
+        ]]>
+    </select>
+
+    <!-- 双死线②:招募中(lifecycle=1)且招募截止已过 -->
+    <select id="selectRecruitExpiredTopics" resultMap="CmsTopicResult">
+        <include refid="selectCmsTopicVo"/>
+        <where>
+            del_flag = 0
+            and lifecycle = 1
+            and recruit_deadline is not null
+            and recruit_deadline &lt;= #{now}
+        </where>
+    </select>
+    <select id="selectTopicsForSaleLifecycleAdvance" resultMap="CmsTopicResult">
+        <include refid="selectCmsTopicVo"/>
+        <where>
+            del_flag = 0
+            and lifecycle in (3, 4)
+        </where>
+    </select>
+    <!-- A3-7(P0)CAS 原子领取待结算主题(照抄活动线 claimActivityForSettlement) -->
+    <update id="claimTopicForSettlement">
+        UPDATE cms_topic
+        SET is_settlement = 1, update_by = 'system', update_time = NOW()
+        WHERE id = #{id} AND is_settlement = 0
+    </update>
+
+    <!-- 俱乐部对自己主题的三个展示/招商开关(Figma J4)。
+         单开一条定向 UPDATE 而不是走通用 updateCmsTopic:那条 update 是主题编辑页在用的,
+         把俱乐部这三个开关混进去,任何一次主题编辑都可能顺手覆盖掉它们。 -->
+    <update id="updateClubDisplaySettings">
+        update cms_topic
+        set club_coop_open = #{clubCoopOpen},
+            club_pinned = #{clubPinned},
+            club_member_only = #{clubMemberOnly}
+        where id = #{topicId} and club_id = #{clubId}
+    </update>
+
+    <!-- R9-ACTIONS 开场通话窄读。单开一条查询而不是把 journey_story_json 加进
+         selectCmsTopicVo:该列由 R9-STORY 落地,加进公共列表会让「列还没落库」波及全部主题查询。 -->
+    <select id="selectJourneyStoryJsonById" parameterType="Long" resultType="String">
+        select journey_story_json from cms_topic where id = #{id}
+    </select>
+
+</mapper>

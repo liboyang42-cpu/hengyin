@@ -1,0 +1,67 @@
+@import './token-variables.scss';
+
+/* Primitive tokens */
+:root {
+  --cy-ref-violet-700: #{$cy-ref-violet-700};
+  --cy-ref-ink-900: #{$cy-ref-ink-900};
+  --cy-ref-slate-700: #{$cy-ref-slate-700};
+  --cy-ref-slate-600: #{$cy-ref-slate-600};
+  --cy-ref-orange-700: #{$cy-ref-orange-700};
+  --cy-ref-green-700: #{$cy-ref-green-700};
+  --cy-ref-red-700: #{$cy-ref-red-700};
+  --cy-ref-blue-700: #{$cy-ref-blue-700};
+
+  /* Semantic tokens */
+  --cy-color-brand: #{$cy-color-brand};
+  --cy-color-brand-strong: #{$cy-color-brand-strong};
+  --cy-color-brand-soft: #{$cy-color-brand-soft};
+  --cy-color-action-primary: #{$cy-color-action-primary};
+  --cy-color-bg-page: #{$cy-color-bg-page};
+  --cy-color-bg-surface: #{$cy-color-bg-surface};
+  --cy-color-bg-subtle: #{$cy-color-bg-subtle};
+  --cy-color-text-primary: #{$cy-color-text-primary};
+  --cy-color-text-inverse: #{$cy-color-text-inverse};
+  --cy-color-text-secondary: #{$cy-color-text-secondary};
+  --cy-color-text-tertiary: #{$cy-color-text-tertiary};
+  --cy-color-border-subtle: #{$cy-color-border-subtle};
+  --cy-color-border-strong: #{$cy-color-border-strong};
+  --cy-color-status-success: #{$cy-color-status-success};
+  --cy-color-status-success-soft: #{$cy-color-status-success-soft};
+  --cy-color-status-warning: #{$cy-color-status-warning};
+  --cy-color-status-warning-soft: #{$cy-color-status-warning-soft};
+  --cy-color-status-danger: #{$cy-color-status-danger};
+  --cy-color-status-danger-soft: #{$cy-color-status-danger-soft};
+  --cy-color-status-info: #{$cy-color-status-info};
+  --cy-color-status-info-soft: #{$cy-color-status-info-soft};
+  --cy-color-primary: var(--cy-color-brand);
+  --cy-color-focus: #{$cy-color-focus};
+
+  /* Component tokens */
+  --cy-sidebar-width: #{$cy-sidebar-width};
+  --cy-control-height: #{$cy-control-height};
+  --cy-table-row-height: #{$cy-table-row-height};
+  --cy-task-row-height: #{$cy-task-row-height};
+  --cy-radius-control: #{$cy-radius-control};
+  --cy-radius-card: #{$cy-radius-card};
+  --cy-radius-dialog: #{$cy-radius-dialog};
+  --cy-shadow-card: #{$cy-shadow-card};
+  --cy-shadow-float: #{$cy-shadow-float};
+  --cy-space-1: #{$cy-space-1};
+  --cy-space-2: #{$cy-space-2};
+  --cy-space-3: #{$cy-space-3};
+  --cy-space-4: #{$cy-space-4};
+  --cy-space-5: #{$cy-space-5};
+  --cy-space-6: #{$cy-space-6};
+  --cy-space-7: #{$cy-space-7};
+  --cy-space-0-5: #{$cy-space-0-5};
+  --cy-space-1-5: #{$cy-space-1-5};
+  --cy-space-2-5: #{$cy-space-2-5};
+  --cy-space-3-5: #{$cy-space-3-5};
+  --cy-space-4-5: #{$cy-space-4-5};
+  --cy-legacy-3: #{$cy-legacy-3};
+  --cy-legacy-5: #{$cy-legacy-5};
+  --cy-legacy-15: #{$cy-legacy-15};
+  --cy-space-page: var(--cy-space-6);
+  --cy-space-section: var(--cy-space-6);
+  --cy-space-stack: var(--cy-space-4);
+}

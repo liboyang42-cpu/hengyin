@@ -1,0 +1,195 @@
+name: Deploy admin UI to ECS
+
+# 后台前端(chengyinhub-ui)的部署链路,和 jar 那条(deploy.yml)平行、互不打扰:
+# 改前端不重启后端 —— jar 一个字节没变还重启一次生产,是白给的停机。
+# 反过来改后端也不会来动静态文件。
+
+on:
+  workflow_run:
+    workflows: [GitHub CI]
+    types: [completed]
+    # 不加 branches,每个 PR 的 CI 跑完都会凭空造一个 Deploy run:它会被下面 prepare 的
+    # if 挡掉,但 run 已经建出来了,占 concurrency 组、互相挤成 cancelled,看着像生产事故。
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Commit SHA、tag 或分支;仅用于受控的人工恢复验证
+        required: true
+        default: master
+        type: string
+      force_deploy:
+        description: 忽略文件分类,强制部署该 ref
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  # ★ 独立于 production-deploy。前后端共用一个组,连续合并时会互相挤掉,
+  #   而被挤掉的那个 run 里的改动就再也没人部署了(零告警)。
+  group: production-deploy-ui
+  cancel-in-progress: false
+
+env:
+  # 2026-07-26:后台前端迁到 houtai 子域,www 让给官网(www 仍保留 /prod-api/ 反代给小程序)
+  BASE_URL: https://houtai.chengyinhub.com
+
+jobs:
+  prepare:
+    if: >-
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'master') ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: [self-hosted, macOS, ARM64, chengyin]
+    outputs:
+      sha: ${{ steps.classify.outputs.sha }}
+      should_deploy: ${{ steps.classify.outputs.should_deploy }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || inputs.ref }}
+          # ★ 必须全history:下面的 diff 基线是「生产此刻在跑的 commit」,那可能是很久以前
+          #   的一个点。浅克隆拿不到它,git diff 会直接报 bad object。
+          fetch-depth: 0
+
+      - id: classify
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          FORCE_DEPLOY: ${{ inputs.force_deploy }}
+        run: |
+          set -euo pipefail
+          sha=$(git rev-parse HEAD)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$FORCE_DEPLOY" = "true" ]; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # ★ 基线取「生产自报它在跑哪个 commit」,不是 $sha^。
+          #   $sha^ 只看单个 commit 自己的 diff:连续合并时 concurrency 组里排不下的 run 会
+          #   被挤成 cancelled,它携带的改动就永久没人部署 —— 而 workflow 一片绿。
+          #   基线换成生产实况后,这个洞就自动闭合:哪怕中间的 run 全被挤掉,下一次部署的
+          #   diff 仍然是从「生产实际在跑的那一版」算起,漏掉的改动会被后面这次一并带上。
+          live=$(curl -fsS --max-time 20 -H 'Cache-Control: no-cache' \
+                   "$BASE_URL/version.json?cb=$sha" 2>/dev/null \
+                 | sed -n 's/.*"commit":"\([0-9a-f]*\)".*/\1/p' || true)
+
+          if [ -z "$live" ] || ! git cat-file -e "${live}^{commit}" 2>/dev/null; then
+            # 线上还没有 version.json(本 PR 合并前的手动部署年代就是这样),
+            # 或它自报的 commit 不在本仓历史里 —— 无从算增量,保守部署一次。
+            echo "线上基线不可用(live=${live:-无}),本次无条件部署"
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "线上基线:$live"
+          git diff --name-only "$live" "$sha"
+
+          # 判据与 drift-audit.yml 的对账共用同一份真源,不在这里内联正则(理由见该文件抬头)。
+          # 这里曾经是一行 `grep -Eq '^chengyinhub-ui/'`,而对账那边压根不认识它 ——
+          # 于是本链路连红 4 次,对账却一路报绿。
+          source ci/classify-runtime.sh
+
+          if ui_changed_between "$live" "$sha"; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  deploy:
+    needs: prepare
+    if: needs.prepare.outputs.should_deploy == 'true'
+    runs-on: [self-hosted, macOS, ARM64, chengyin]
+    environment: production
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          # self-hosted Mac 会持久保留 ~/.npm。这里再开 Actions cache 会每次下载约 1.14GB，
+          # 且 macOS bsdtar 恢复失败后仍 warning 继续，既没命中又白耗数分钟。
+
+      - name: Build UI (same script the CI gate runs)
+        env:
+          DEPLOY_SHA: ${{ needs.prepare.outputs.sha }}
+        run: bash ci/ui-build.sh "$DEPLOY_SHA"
+
+      - name: Pack dist
+        run: |
+          set -euo pipefail
+          # ★ COPYFILE_DISABLE=1:runner 是 macOS,bsdtar 默认把 AppleDouble 元数据
+          #   (._foo)一起打进包。生产 web 根现在满地的 ._. / ._index.html / ._static
+          #   就是这么来的 —— 手动在 Mac 上打包传上去的。
+          COPYFILE_DISABLE=1 tar czf /tmp/chengyinhub-ui-dist.tar.gz \
+            -C chengyinhub-ui/dist .
+          # ★ 同 #191:先把清单收进变量再用 here-string 匹配。旧写法 tar|grep -q 在
+          #   pipefail 下,grep 命中即闭管 → tar 收 SIGPIPE(141)→ pipefail 把整条判成
+          #   非零 → if 误判「无 AppleDouble」→ 污染文件静默过关(该红不红)。
+          contents=$(tar tzf /tmp/chengyinhub-ui-dist.tar.gz)
+          if grep -q '/\._' <<< "$contents"; then
+            echo "::error::包里混进了 AppleDouble(._*)文件,COPYFILE_DISABLE 没生效"
+            exit 1
+          fi
+
+      - name: Deploy to ECS
+        id: deploy
+        env:
+          DEPLOY_SHA: ${{ needs.prepare.outputs.sha }}
+          ECS_SSH_HOST: ${{ secrets.ECS_SSH_HOST }}
+          ECS_SSH_USER: ${{ secrets.ECS_SSH_USER }}
+          ECS_SSH_PRIVATE_KEY: ${{ secrets.ECS_SSH_PRIVATE_KEY }}
+          ECS_SSH_KNOWN_HOSTS: ${{ secrets.ECS_SSH_KNOWN_HOSTS }}
+          ECS_SSH_TRANSPORT: session-manager
+        run: |
+          set -euo pipefail
+          umask 077
+          key_file=$(mktemp)
+          known_hosts=$(mktemp)
+          cleanup() { rm -f "$key_file" "$known_hosts"; }
+          trap cleanup EXIT
+
+          printf '%s\n' "$ECS_SSH_PRIVATE_KEY" > "$key_file"
+          printf '%s\n' "$ECS_SSH_KNOWN_HOSTS" > "$known_hosts"
+          chmod 600 "$key_file" "$known_hosts"
+
+          target="$ECS_SSH_USER@$ECS_SSH_HOST"
+          # ★ 身份必须钉死成「只有这一把部署密钥」,理由见 deploy.yml 同处注释(PR #86 实证):
+          #   自托管 runner 以桌面用户身份运行,会读到 ~/.ssh/config 的 `Host * /
+          #   IdentityFile ~/.ssh/id_ed25519`,ssh 于是顺手提供用户个人密钥 —— 而部署密钥
+          #   其实从没装到服务器上,历次「绿」全是那把个人密钥撑的,屏保一锁就红。
+          #   本链路是新写的,一开始就不留这个隐形依赖:要么用部署密钥成功,要么失败。
+          source ci/deploy-lib.sh
+          ssh_pin_identity "$key_file" "$known_hosts"
+
+          scp "${ssh_opts[@]}" /tmp/chengyinhub-ui-dist.tar.gz \
+            "$target:/tmp/chengyinhub-ui-dist.tar.gz"
+          ssh "${ssh_opts[@]}" "$target" \
+            'bash -s -- /tmp/chengyinhub-ui-dist.tar.gz '"$DEPLOY_SHA" \
+            < ci/deploy-ui.sh
+          ssh "${ssh_opts[@]}" "$target" 'rm -f /tmp/chengyinhub-ui-dist.tar.gz'
+
+      - name: Verify what production actually serves
+        env:
+          DEPLOY_SHA: ${{ needs.prepare.outputs.sha }}
+        run: bash ci/verify-ui-deployed.sh "$BASE_URL" "$DEPLOY_SHA"
+
+      # 核对没过 = 静态文件已经铺上去了、但线上不是我们要的样子,此刻生产可能正白屏。
+      # 这里不自动回滚(回滚本身也会失败,再套一层自动化只是把故障挪个地方),
+      # 但要让人一眼看到怎么回退 —— 备份路径在上面 Deploy 那步的日志里。
+      # 只在「确实铺过了」时才提示:build 阶段就红的话根本没动生产,提回滚是误导。
+      - name: Point to rollback if production check failed
+        if: failure() && steps.deploy.outcome == 'success'
+        run: |
+          echo "::error::线上核对未通过,生产已换成本次产物且可能不可用。"
+          echo "回滚:在 Deploy 步骤日志里找 '备份:/www/wwwroot/ui-backups/webroot-*.tar.gz',然后"
+          echo "  ssh root@<ECS> 'tar xzf <该备份> -C /www/wwwroot/houtai.chengyinhub.com'"

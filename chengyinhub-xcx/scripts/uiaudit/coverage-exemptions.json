@@ -1,0 +1,26 @@
+{
+  "note": "截图覆盖率的**显式豁免**。只放「这一页根本没有可截的界面」或「模拟器结构性拍不了」的路由。⚠️ 豁免不是逃生口:每条必须写清 reason 与 altVerification(替代验证手段),两者缺一即门禁红 —— 否则这个文件就会变成新的「未判定」无限逃生口。",
+  "generatedAt": "2026-08-19",
+  "exemptions": [
+    {
+      "pagePath": "pages/publish/topicadd/topicadd",
+      "reason": "页面已退役:PR #685 把它降级成纯重定向壳,wxml 只剩一行注释,没有任何可截的界面。原矩阵行 B47/E22 的 DOM 断言 .topicadd-page 这个 class 也随之不存在 —— 硬补拍等于连断言一起造假。",
+      "altVerification": "tests/unit/topicadd-shell-redirect-contract.test.js(锁住「转跳到哪」),职责已并入 pages/publish/fabu 第一屏的名称输入框与模式切换器,那两处由 E17 拍到。"
+    },
+    {
+      "pagePath": "pages/coop/withdraw/records/index",
+      "reason": "历史深链兼容壳:onLoad 第一句就 wx.redirectTo 到 /subpackageMember/tixianjilu/tixianjilu,自身 wxml 只有一个无 class 的空 view。截它只能截到转跳前的一帧空白,那不是任何人会看到的界面。",
+      "altVerification": "行为断言:reLaunch 本路由后回读 getCurrentPages(),末项 route 必须是 subpackageMember/tixianjilu/tixianjilu(见 scripts/uiaudit/behavior-assertions.md §D)。目标页本身由 D 域矩阵行拍到。"
+    },
+    {
+      "pagePath": "subpackageP3/pages/stamp-camera/index/index",
+      "reason": "结构性拍不了:整页是相机取景器,模拟器给不出相机流,automator 也无法授予相机权限。拍出来只会是权限拒绝态或黑帧,而黑帧正是本仓最会反向制造假 bug 的那类图。",
+      "altVerification": "tests/unit/stamp-camera-layout.test.js + tests/unit/stamp-crop.test.js 锁布局与裁切;取景与拍照归真机手验(真机清单里单列)。"
+    },
+    {
+      "pagePath": "pages/club/workbench/index",
+      "reason": "纯重定向壳:onLoad 第一句就 wx.redirectTo 到 /pages/club/detail/index?id=…&tab=manage(无 id 时带 owner=1),自身 wxml 不渲染任何内容 —— 矩阵行 F05 的 DOM 断言 .cw-shell 这个 class 根本不存在。截它只能截到转跳前的一帧空白,那不是任何人会看到的界面;不标 blocked 还会让续跑循环把它当「没拍到」无限空转(2026-08-18 实测空转 17 轮)。与已豁免的 pages/coop/withdraw/records 同类。",
+      "altVerification": "行为断言:reLaunch 本路由后回读 getCurrentPages(),末项 route 必须是 pages/club/detail/index 且 options={id,tab:'manage'}(见 scripts/uiaudit/behavior-assertions.md §F,2026-08-18 实跑 PASS);转跳目标另由 tests/unit/club-workbench-contract.test.js 静态锁住。目标页本身由 C44/C45 拍到。"
+    }
+  ]
+}

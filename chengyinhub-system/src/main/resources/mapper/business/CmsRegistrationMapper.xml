@@ -1,0 +1,1076 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CmsRegistrationMapper">
+    
+    <resultMap type="CmsRegistration" id="CmsRegistrationResult">
+        <result property="id"    column="id"    />
+        <result property="registrationNo"    column="registration_no"    />
+        <result property="ownerType"    column="owner_type"    />
+        <result property="ownerId"    column="owner_id"    />
+        <result property="activityTitle"    column="activity_title"    />
+        <result property="ticketId"    column="ticket_id"    />
+        <result property="ticketName"    column="ticket_name"    />
+        <result property="ticketPrice"    column="ticket_price"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="realName"    column="real_name"    typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler" />
+        <result property="phone"    column="phone"    typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler" />
+        <result property="email"    column="email"    typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler" />
+        <result property="address"    column="address"    typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler" />
+        <result property="addressId"    column="address_id"    />
+        <result property="participateDate"    column="participate_date"    />
+        <result property="parentOrderNo"    column="parent_order_no"    />
+        <result property="requestId"    column="request_id"    />
+        <result property="requestFingerprint" column="request_fingerprint" />
+        <result property="orderNum"    column="order_num"    />
+        <result property="originalAmount"    column="original_amount"    />
+        <result property="discountAmount"    column="discount_amount"    />
+        <result property="totalAmount"    column="total_amount"    />
+        <result property="pointUsed"    column="point_used"    />
+        <result property="pointDeductAmount"    column="point_deduct_amount"    />
+        <result property="pointDeductRate"    column="point_deduct_rate"    />
+        <result property="maxPointDeduct"    column="max_point_deduct"    />
+        <result property="payableAmount"    column="payable_amount"    />
+        <result property="paymentStatus"    column="payment_status"    />
+        <result property="paymentType"    column="payment_type"    />
+        <result property="paymentTime"    column="payment_time"    />
+        <result property="transactionId"    column="transaction_id"    />
+        <result property="pointPaymentAmount"    column="point_payment_amount"    />
+        <result property="wechatPaymentAmount"    column="wechat_payment_amount"    />
+        <result property="feePlatformRate"    column="fee_platform_rate"    />
+        <result property="registrationStatus"    column="registration_status"    />
+        <result property="payExpireTime"    column="pay_expire_time"    />
+        <result property="topicId"    column="topic_id"    />
+        <result property="purchaseKind"    column="purchase_kind"    />
+        <result property="refundPolicyCode"    column="refund_policy_code"    />
+        <result property="refundPolicyVersion"    column="refund_policy_version"    />
+        <result property="refundDeadline"    column="refund_deadline"    />
+        <result property="expiresAt"    column="expires_at"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="verificationCode"    column="verification_code"    />
+        <result property="qrcodeUrl"    column="qrcode_url"    />
+        <result property="verificationStatus"    column="verification_status"    />
+        <result property="verificationTime"    column="verification_time"    />
+        <result property="firstSuccessfulScanAt" column="first_successful_scan_at" />
+        <result property="verifierId"    column="verifier_id"    />
+        <result property="pointsReturned"    column="points_returned"    />
+
+    </resultMap>
+
+    <sql id="selectCmsRegistrationVo">
+        select id, registration_no, parent_order_no, request_id, request_fingerprint, owner_type, owner_id, activity_title, ticket_id, ticket_name, ticket_price, member_id, real_name, phone, email, address, address_id, participate_date, order_num, original_amount, discount_amount, total_amount, point_used, point_deduct_amount, point_deduct_rate, max_point_deduct, payable_amount, payment_status, payment_type, payment_time, transaction_id, point_payment_amount, wechat_payment_amount, fee_platform_rate, registration_status, pay_expire_time, topic_id, purchase_kind, refund_policy_code, refund_policy_version, refund_deadline, expires_at, create_by, create_time, update_by, update_time, verification_code, qrcode_url, verification_status, verification_time, first_successful_scan_at, verifier_id,points_returned from cms_registration
+    </sql>
+
+    <select id="selectPaidByTicket" parameterType="Long" resultMap="CmsRegistrationResult">
+        <include refid="selectCmsRegistrationVo"/>
+        where ticket_id = #{ticketId} and payment_status = 2
+    </select>
+
+    <!-- 已售锁(裁决 15)的判据:待支付/支付中/已支付都算「有人下单」,票面不能再被改。 -->
+    <select id="selectOpenSaleTicketIdsByActivity" resultType="java.lang.Long">
+        select distinct ticket_id
+        from cms_registration
+        where owner_type = 2 and owner_id = #{activityId}
+          and payment_status in (0, 1, 2)
+          and ticket_id is not null
+    </select>
+
+    <sql id="CmsRegistrationFilter">
+        <where>
+            <if test="registrationNo != null  and registrationNo != ''"> and registration_no = #{registrationNo}</if>
+            <if test="ownerType != null "> and owner_type = #{ownerType}</if>
+            <if test="ownerId != null "> and owner_id = #{ownerId}</if>
+            <if test="activityTitle != null  and activityTitle != ''"> and activity_title = #{activityTitle}</if>
+            <if test="ticketId != null "> and ticket_id = #{ticketId}</if>
+            <if test="ticketName != null  and ticketName != ''"> and ticket_name like concat('%', #{ticketName}, '%')</if>
+            <if test="ticketPrice != null "> and ticket_price = #{ticketPrice}</if>
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <!-- PII 加密后:姓名/邮箱/地址密文非确定性,无法模糊/精确匹配 → 搜索能力下线(合规§6.3);手机号走盲索引精确匹配。
+                 dual-read:回填收敛前存量行 phone_hash 为 NULL、phone 仍是明文,故 OR 上明文等值(裸参不加密)兜底,
+                 让部署当晚仍能按手机搜到历史报名;回填后 phone 变密文,明文分支自然不再命中,无副作用。 -->
+            <if test="phone != null  and phone != ''"> and (phone_hash = #{phone, typeHandler=com.chengyinhub.business.security.PiiBlindIndexTypeHandler} or phone = #{phone})</if>
+            <if test="addressId != null "> and address_id = #{addressId}</if>
+            <if test="participateDate != null and participateDate != ''"> and participate_date = #{participateDate}</if>
+            <if test="parentOrderNo != null and parentOrderNo != ''"> and parent_order_no = #{parentOrderNo}</if>
+            <if test="requestId != null and requestId != ''"> and request_id = #{requestId}</if>
+            <if test="orderNum != null "> and order_num = #{orderNum}</if>
+            <if test="originalAmount != null "> and original_amount = #{originalAmount}</if>
+            <if test="discountAmount != null "> and discount_amount = #{discountAmount}</if>
+            <if test="totalAmount != null "> and total_amount = #{totalAmount}</if>
+            <if test="pointUsed != null "> and point_used = #{pointUsed}</if>
+            <if test="pointDeductAmount != null "> and point_deduct_amount = #{pointDeductAmount}</if>
+            <if test="pointDeductRate != null "> and point_deduct_rate = #{pointDeductRate}</if>
+            <if test="maxPointDeduct != null "> and max_point_deduct = #{maxPointDeduct}</if>
+            <if test="payableAmount != null "> and payable_amount = #{payableAmount}</if>
+            <if test="paymentStatus != null "> and payment_status = #{paymentStatus}</if>
+            <if test="paymentType != null "> and payment_type = #{paymentType}</if>
+            <if test="paymentTime != null "> and payment_time = #{paymentTime}</if>
+            <if test="transactionId != null  and transactionId != ''"> and transaction_id = #{transactionId}</if>
+            <if test="pointPaymentAmount != null "> and point_payment_amount = #{pointPaymentAmount}</if>
+            <if test="wechatPaymentAmount != null "> and wechat_payment_amount = #{wechatPaymentAmount}</if>
+            <if test="registrationStatus != null "> and registration_status = #{registrationStatus}</if>
+            <if test="payExpireTime != null "> and pay_expire_time = #{payExpireTime}</if>
+            <if test="verificationCode != null  and verificationCode != ''"> and verification_code = #{verificationCode}</if>
+            <if test="qrcodeUrl != null  and qrcodeUrl != ''"> and qrcode_url = #{qrcodeUrl}</if>
+            <if test="verificationStatus != null "> and verification_status = #{verificationStatus}</if>
+            <if test="verificationTime != null "> and verification_time = #{verificationTime}</if>
+            <if test="verifierId != null "> and verifier_id = #{verifierId}</if>
+            <if test="pointsReturned != null "> and points_returned = #{pointsReturned}</if>
+
+            <if test="isOnline != null and isOnline == 1">
+            <!-- 方式1：根据 ownerType 区分查询 -->
+            <choose>
+                <when test="ownerType == 1">
+                    and owner_id in (SELECT id FROM cms_topic WHERE end_date > NOW())
+                </when>
+                <when test="ownerType == 2">
+                    and owner_id in (SELECT id FROM cms_activity WHERE end_date > NOW())
+                </when>
+                <!-- 如果 ownerType 还有其他值，可以添加更多 when -->
+            </choose>
+            </if>
+        </where>
+    </sql>
+
+    <select id="countCmsRegistrationList" parameterType="CmsRegistration" resultType="int">
+        select count(*) from cms_registration
+        <include refid="CmsRegistrationFilter"/>
+    </select>
+
+    <select id="selectCmsRegistrationList" parameterType="CmsRegistration" resultMap="CmsRegistrationResult">
+        <include refid="selectCmsRegistrationVo"/>
+        <include refid="CmsRegistrationFilter"/>
+        order by id desc
+    </select>
+    
+    <select id="selectCmsRegistrationById" parameterType="Long" resultMap="CmsRegistrationResult">
+        <include refid="selectCmsRegistrationVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectPaidCountsByTopicTicketIncludingActivityShell" resultType="java.util.HashMap">
+        select topic_ticket.id as ticketId, count(registration.id) as paidCount
+        from oms_ticket topic_ticket
+        left join cms_activity activity on activity.topic_id = #{topicId} and activity.del_flag = 0
+        left join oms_ticket activity_ticket
+          on activity_ticket.owner_type = 2 and activity_ticket.owner_id = activity.id
+         and activity_ticket.del_flag &lt;&gt; 2
+         and activity_ticket.name = topic_ticket.name
+         and activity_ticket.price = topic_ticket.price
+         and activity_ticket.start_time &lt;=&gt; topic_ticket.start_time
+         and activity_ticket.end_time &lt;=&gt; topic_ticket.end_time
+        left join cms_registration registration
+          on registration.owner_type = 2 and registration.owner_id = activity.id
+         and registration.ticket_id = activity_ticket.id
+         and registration.payment_status = 2 and registration.registration_status = 2
+        where topic_ticket.owner_type = 1 and topic_ticket.owner_id = #{topicId}
+          and topic_ticket.del_flag &lt;&gt; 2
+        group by topic_ticket.id
+    </select>
+
+    <select id="selectCmsRegistrationByIdForUpdate" parameterType="Long" resultMap="CmsRegistrationResult">
+        <include refid="selectCmsRegistrationVo"/>
+        where id = #{id}
+        for update
+    </select>
+
+    <update id="markFirstSuccessfulScan">
+        update cms_registration
+        set first_successful_scan_at = #{scanTime}
+        where id = #{id} and member_id = #{memberId}
+          and owner_type = #{ownerType} and owner_id = #{ownerId}
+          and payment_status = 2 and registration_status = 2
+          and (owner_type &lt;&gt; 1 or expires_at is null or expires_at &gt; #{scanTime})
+          and first_successful_scan_at is null
+    </update>
+
+    <select id="lockExploreTopicForUpdate" resultType="long">
+        select id from cms_topic where id = #{topicId} and del_flag &lt;&gt; 2 for update
+    </select>
+
+    <!-- ownerType=2 的不同 activity shell 必须统一回溯到源 topic；主题行是并发串行点。 -->
+    <select id="selectLiveExploreTicketIdsForUpdate" resultType="long">
+        select r.id
+        from cms_registration r
+        left join cms_activity a on r.owner_type = 2 and r.owner_id = a.id
+        where r.member_id = #{memberId}
+          and (r.ticket_id is not null or r.purchase_kind = 2
+               or (r.ticket_id is null and r.expires_at is not null))
+          and ((r.owner_type = 1 and r.owner_id = #{topicId})
+               or (r.owner_type = 2 and a.topic_id = #{topicId}))
+          and (
+            (r.registration_status = 2
+             and (r.purchase_kind &lt;&gt; 2 or r.purchase_kind is null
+                  or r.expires_at is null or r.expires_at &gt; now()))
+            or (r.registration_status = 1 and r.payment_status in (0, 1)
+                and (r.pay_expire_time is null or r.pay_expire_time &gt; now()))
+          )
+        order by r.id
+        for update
+    </select>
+
+    <!--
+      主题剧情访问权：已退款/已取消报名不算有效票；② 自玩通行证还须未过期；
+      ③ 自由探索票必须能回读到至少一条未失效 entitlement，防止仅凭报名半态放出完整剧情。
+      owner_type=2 的购票落在活动壳，通过 cms_activity 回溯源主题。
+    -->
+    <select id="hasActiveTopicStoryAccess" resultType="boolean">
+        select exists(
+            select 1
+            from cms_registration r
+            left join cms_activity a on r.owner_type = 2 and a.id = r.owner_id
+            where r.member_id = #{memberId}
+              and r.payment_status = 2
+              and r.registration_status = 2
+              and ((r.owner_type = 1 and (r.owner_id = #{topicId} or r.topic_id = #{topicId}))
+                   or (r.owner_type = 2 and a.topic_id = #{topicId}))
+              and (r.purchase_kind is null or r.purchase_kind &lt;&gt; 2
+                   or r.expires_at is null or r.expires_at &gt; now())
+              and (r.purchase_kind is null or r.purchase_kind &lt;&gt; 3
+                   or exists(
+                       select 1
+                       from registration_entitlement e
+                       where e.registration_id = r.id
+                         and e.topic_id = #{topicId}
+                         and e.status in (0, 1)
+                   ))
+        )
+    </select>
+
+    <!-- order by id:首单 = createMultiTicketRegistrations 循环 i==0 最先 insert = 最小 id。
+         无 ORDER BY 时返回序依赖存储引擎、不可依赖;整单退要凭序识别首单,必须确定性。
+         (与 payableAmount>0 判据互为交叉校验) -->
+    <select id="selectByParentOrderNo" parameterType="String" resultMap="CmsRegistrationResult">
+        <include refid="selectCmsRegistrationVo"/>
+        where parent_order_no = #{parentOrderNo}
+        order by id
+    </select>
+
+    <select id="selectByParentOrderNoForUpdate" resultMap="CmsRegistrationResult">
+        <include refid="selectCmsRegistrationVo"/>
+        where parent_order_no = #{parentOrderNo}
+        order by id
+        for update
+    </select>
+
+    <select id="selectCountGroupByDate" resultType="java.util.Map">
+        SELECT
+            participate_date AS participateDate,
+            SUM(IFNULL(order_num, 1)) AS totalCount
+        FROM cms_registration
+        WHERE owner_type = #{ownerType}
+          AND owner_id = #{ownerId}
+          AND registration_status = 2
+          AND participate_date IS NOT NULL
+          AND participate_date != ''
+        GROUP BY participate_date
+        ORDER BY participate_date
+    </select>
+
+    <select id="countActiveSelfPlayPasses" resultType="int">
+        SELECT COUNT(1)
+        FROM cms_registration
+        WHERE owner_type = 1
+          AND owner_id = #{topicId}
+          AND (purchase_kind = 2
+               OR (purchase_kind IS NULL AND ticket_id IS NULL AND expires_at IS NOT NULL))
+          AND registration_status IN (1, 2)
+    </select>
+
+    <!--
+      会员级幂等判据:同一会员在同一主题上还"在世"的自玩通行证。
+      已支付(2)看 expires_at 有没有过 90 天有效期;待支付(1)看付款窗口 pay_expire_time 有没有过。
+      过期/取消的历史单不进结果 —— 它们不该挡住重新购买。已支付排前面,调用方据此区分拒绝与复用。
+    -->
+    <select id="selectLiveSelfPlayPasses" resultMap="CmsRegistrationResult">
+        <include refid="selectCmsRegistrationVo"/>
+        where owner_type = 1
+          and owner_id = #{topicId}
+          and member_id = #{memberId}
+          and (purchase_kind = 2
+               or (purchase_kind is null and ticket_id is null and expires_at is not null))
+          and (
+            (registration_status = 2 and (expires_at is null or expires_at &gt; now()))
+            or (registration_status = 1 and payment_status in (0, 1)
+                and (pay_expire_time is null or pay_expire_time &gt; now()))
+          )
+        order by registration_status desc, id desc
+    </select>
+
+    <insert id="insertCmsRegistration" parameterType="CmsRegistration" useGeneratedKeys="true" keyProperty="id">
+        insert into cms_registration
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="registrationNo != null and registrationNo != ''">registration_no,</if>
+            <if test="ownerType != null">owner_type,</if>
+            <if test="ownerId != null">owner_id,</if>
+            <if test="activityTitle != null">activity_title,</if>
+            <if test="ticketId != null">ticket_id,</if>
+            <if test="ticketName != null">ticket_name,</if>
+            <if test="ticketPrice != null">ticket_price,</if>
+            <if test="memberId != null">member_id,</if>
+            <if test="realName != null">real_name,</if>
+            <if test="phone != null">phone,</if>
+            <if test="phone != null">phone_hash,</if>
+            <if test="email != null">email,</if>
+            <if test="address != null">address,</if>
+            <if test="addressId != null">address_id,</if>
+            <if test="participateDate != null">participate_date,</if>
+            <if test="parentOrderNo != null">parent_order_no,</if>
+            <if test="requestId != null">request_id,</if>
+            <if test="requestFingerprint != null">request_fingerprint,</if>
+            <if test="orderNum != null">order_num,</if>
+            <if test="originalAmount != null">original_amount,</if>
+            <if test="discountAmount != null">discount_amount,</if>
+            <if test="totalAmount != null">total_amount,</if>
+            <if test="pointUsed != null">point_used,</if>
+            <if test="pointDeductAmount != null">point_deduct_amount,</if>
+            <if test="pointDeductRate != null">point_deduct_rate,</if>
+            <if test="maxPointDeduct != null">max_point_deduct,</if>
+            <if test="payableAmount != null">payable_amount,</if>
+            <if test="paymentStatus != null">payment_status,</if>
+            <if test="paymentType != null">payment_type,</if>
+            <if test="paymentTime != null">payment_time,</if>
+            <if test="transactionId != null">transaction_id,</if>
+            <if test="pointPaymentAmount != null">point_payment_amount,</if>
+            <if test="wechatPaymentAmount != null">wechat_payment_amount,</if>
+            <if test="feePlatformRate != null">fee_platform_rate,</if>
+            <if test="registrationStatus != null">registration_status,</if>
+            <if test="payExpireTime != null">pay_expire_time,</if>
+            <if test="topicId != null">topic_id,</if>
+            <if test="purchaseKind != null">purchase_kind,</if>
+            <if test="sourceClubId != null">source_club_id,</if>
+            <if test="sourceChannelCode != null">source_channel_code,</if>
+            <if test="refundPolicyCode != null">refund_policy_code,</if>
+            <if test="refundPolicyVersion != null">refund_policy_version,</if>
+            <if test="refundDeadline != null">refund_deadline,</if>
+            <if test="expiresAt != null">expires_at,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="verificationCode != null">verification_code,</if>
+            <if test="qrcodeUrl != null">qrcode_url,</if>
+            <if test="verificationStatus != null">verification_status,</if>
+            <if test="verificationTime != null">verification_time,</if>
+            <if test="verifierId != null">verifier_id,</if>
+            <if test="pointsReturned != null ">points_returned,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="registrationNo != null and registrationNo != ''">#{registrationNo},</if>
+            <if test="ownerType != null">#{ownerType},</if>
+            <if test="ownerId != null">#{ownerId},</if>
+            <if test="activityTitle != null">#{activityTitle},</if>
+            <if test="ticketId != null">#{ticketId},</if>
+            <if test="ticketName != null">#{ticketName},</if>
+            <if test="ticketPrice != null">#{ticketPrice},</if>
+            <if test="memberId != null">#{memberId},</if>
+            <if test="realName != null">#{realName,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},</if>
+            <if test="phone != null">#{phone,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},</if>
+            <if test="phone != null">#{phone,typeHandler=com.chengyinhub.business.security.PiiBlindIndexTypeHandler},</if>
+            <if test="email != null">#{email,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},</if>
+            <if test="address != null">#{address,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},</if>
+            <if test="addressId != null">#{addressId},</if>
+            <if test="participateDate != null">#{participateDate},</if>
+            <if test="parentOrderNo != null">#{parentOrderNo},</if>
+            <if test="requestId != null">#{requestId},</if>
+            <if test="requestFingerprint != null">#{requestFingerprint},</if>
+            <if test="orderNum != null">#{orderNum},</if>
+            <if test="originalAmount != null">#{originalAmount},</if>
+            <if test="discountAmount != null">#{discountAmount},</if>
+            <if test="totalAmount != null">#{totalAmount},</if>
+            <if test="pointUsed != null">#{pointUsed},</if>
+            <if test="pointDeductAmount != null">#{pointDeductAmount},</if>
+            <if test="pointDeductRate != null">#{pointDeductRate},</if>
+            <if test="maxPointDeduct != null">#{maxPointDeduct},</if>
+            <if test="payableAmount != null">#{payableAmount},</if>
+            <if test="paymentStatus != null">#{paymentStatus},</if>
+            <if test="paymentType != null">#{paymentType},</if>
+            <if test="paymentTime != null">#{paymentTime},</if>
+            <if test="transactionId != null">#{transactionId},</if>
+            <if test="pointPaymentAmount != null">#{pointPaymentAmount},</if>
+            <if test="wechatPaymentAmount != null">#{wechatPaymentAmount},</if>
+            <if test="feePlatformRate != null">#{feePlatformRate},</if>
+            <if test="registrationStatus != null">#{registrationStatus},</if>
+            <if test="payExpireTime != null">#{payExpireTime},</if>
+            <if test="topicId != null">#{topicId},</if>
+            <if test="purchaseKind != null">#{purchaseKind},</if>
+            <if test="sourceClubId != null">#{sourceClubId},</if>
+            <if test="sourceChannelCode != null">#{sourceChannelCode},</if>
+            <if test="refundPolicyCode != null">#{refundPolicyCode},</if>
+            <if test="refundPolicyVersion != null">#{refundPolicyVersion},</if>
+            <if test="refundDeadline != null">#{refundDeadline},</if>
+            <if test="expiresAt != null">#{expiresAt},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="verificationCode != null">#{verificationCode},</if>
+            <if test="qrcodeUrl != null">#{qrcodeUrl},</if>
+            <if test="verificationStatus != null">#{verificationStatus},</if>
+            <if test="verificationTime != null">#{verificationTime},</if>
+            <if test="verifierId != null">#{verifierId},</if>
+            <if test="pointsReturned != null ">#{pointsReturned},</if>
+         </trim>
+    </insert>
+
+    <update id="bindRequestFingerprint">
+        update cms_registration
+        set request_fingerprint = #{requestFingerprint}, update_time = now()
+        where id = #{id}
+          and request_id = #{requestId}
+          and request_fingerprint is null
+    </update>
+
+    <update id="updateCmsRegistration" parameterType="CmsRegistration">
+        update cms_registration
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="registrationNo != null and registrationNo != ''">registration_no = #{registrationNo},</if>
+            <if test="ownerType != null">owner_type = #{ownerType},</if>
+            <if test="ownerId != null">owner_id = #{ownerId},</if>
+            <if test="activityTitle != null">activity_title = #{activityTitle},</if>
+            <if test="ticketId != null">ticket_id = #{ticketId},</if>
+            <if test="ticketName != null">ticket_name = #{ticketName},</if>
+            <if test="ticketPrice != null">ticket_price = #{ticketPrice},</if>
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="realName != null">real_name = #{realName,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},</if>
+            <if test="phone != null">phone = #{phone,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},</if>
+            <if test="phone != null">phone_hash = #{phone,typeHandler=com.chengyinhub.business.security.PiiBlindIndexTypeHandler},</if>
+            <if test="email != null">email = #{email,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},</if>
+            <if test="address != null">address = #{address,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},</if>
+            <if test="addressId != null">address_id = #{addressId},</if>
+            <if test="participateDate != null">participate_date = #{participateDate},</if>
+            <if test="parentOrderNo != null">parent_order_no = #{parentOrderNo},</if>
+            <if test="requestId != null">request_id = #{requestId},</if>
+            <if test="requestFingerprint != null">request_fingerprint = #{requestFingerprint},</if>
+            <if test="orderNum != null">order_num = #{orderNum},</if>
+            <if test="originalAmount != null">original_amount = #{originalAmount},</if>
+            <if test="discountAmount != null">discount_amount = #{discountAmount},</if>
+            <if test="totalAmount != null">total_amount = #{totalAmount},</if>
+            <if test="pointUsed != null">point_used = #{pointUsed},</if>
+            <if test="pointDeductAmount != null">point_deduct_amount = #{pointDeductAmount},</if>
+            <if test="pointDeductRate != null">point_deduct_rate = #{pointDeductRate},</if>
+            <if test="maxPointDeduct != null">max_point_deduct = #{maxPointDeduct},</if>
+            <if test="payableAmount != null">payable_amount = #{payableAmount},</if>
+            <if test="paymentStatus != null">payment_status = #{paymentStatus},</if>
+            <if test="paymentType != null">payment_type = #{paymentType},</if>
+            <if test="paymentTime != null">payment_time = #{paymentTime},</if>
+            <if test="transactionId != null">transaction_id = #{transactionId},</if>
+            <if test="pointPaymentAmount != null">point_payment_amount = #{pointPaymentAmount},</if>
+            <if test="wechatPaymentAmount != null">wechat_payment_amount = #{wechatPaymentAmount},</if>
+            <if test="feePlatformRate != null">fee_platform_rate = #{feePlatformRate},</if>
+            <if test="registrationStatus != null">registration_status = #{registrationStatus},</if>
+            <if test="payExpireTime != null">pay_expire_time = #{payExpireTime},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="verificationCode != null">verification_code = #{verificationCode},</if>
+            <if test="qrcodeUrl != null">qrcode_url = #{qrcodeUrl},</if>
+            <if test="verificationStatus != null">verification_status = #{verificationStatus},</if>
+            <if test="verificationTime != null">verification_time = #{verificationTime},</if>
+            <if test="verifierId != null">verifier_id = #{verifierId},</if>
+            <if test="pointsReturned != null ">points_returned=#{pointsReturned},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCmsRegistrationById" parameterType="Long">
+        delete from cms_registration where id = #{id}
+    </delete>
+
+    <delete id="deleteCmsRegistrationByIds" parameterType="String">
+        delete from cms_registration where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="selectByRegistrationNo" parameterType="String" resultMap="CmsRegistrationResult">
+        <include refid="selectCmsRegistrationVo"/>
+        where registration_no = #{registrationNo}
+    </select>
+
+
+    <select id="selectByverificationCode" parameterType="String" resultMap="CmsRegistrationResult">
+        <include refid="selectCmsRegistrationVo"/>
+        where verification_code = #{verificationCode}
+    </select>
+
+    <!-- 支付成功 CAS：只有取得 1 行处理权的请求才能继续结算、发奖和生成核销事实。 -->
+    <update id="claimPaymentSuccess">
+        update cms_registration
+        set payment_status = 2,
+            registration_status = 2,
+            payment_time = #{paymentTime},
+            transaction_id = case
+                when #{transactionId} is null or #{transactionId} = '' then transaction_id
+                else #{transactionId}
+            end,
+            update_by = 'system',
+            update_time = #{paymentTime}
+        where id = #{id}
+          and payment_status in (0, 1)
+          and registration_status = 1
+          and (#{transactionId} is null or #{transactionId} = ''
+               or transaction_id is null or transaction_id = #{transactionId})
+    </update>
+
+    <!--
+      单票来源只在支付成功后冻结。俱乐部标记必须同时满足：
+      1) 支付时刻仍在本期主题/票种售票窗内；
+      2) 活动、主题与开售冻结条款里的执行俱乐部不存在冲突，且至少一侧明确等于该标记。
+      其余情况均冻结为平台归因(source_club_id=NULL)，不得从任一缺失事实猜 club。
+
+      ⚠️ 这道闸【不是】信任边界，别把它当成「已经校验过来源」：它比的是 r.source_club_id 这一列，
+      而买家能自己填的正是与执行俱乐部相等的那个值 —— 相等条件本身可伪造。真正的信任边界在写入侧
+      (CmsRegistrationServiceImpl.serverVerifiedTicketSourceClubId)：建单入口恒不写该列，
+      客户端自报只留 source_channel_code 审计码。本闸保留的职责是【纵深防御】——
+      对任何非客户端来源写入的归因值(未来的服务端引流凭据/受审计的后台更正)，
+      仍要求它落在售票窗内且与执行俱乐部不冲突，否则一律收敛回平台。
+    -->
+    <update id="freezeTicketSourceOnPayment">
+        update cms_registration r
+        join cms_activity a on r.owner_type = 2 and a.id = r.owner_id
+        join cms_topic t on t.id = a.topic_id
+        left join club_edition_compensation_terms cet on cet.topic_id = t.id
+        left join oms_ticket ot on ot.id = r.ticket_id
+            and ot.owner_type = r.owner_type and ot.owner_id = r.owner_id
+        set r.source_club_id = case
+                when r.source_club_id is not null
+                 and ot.id is not null
+                 and t.selling_started_at is not null
+                 and t.sale_end_at is not null
+                 and #{paymentTime} &gt;= t.selling_started_at
+                 and #{paymentTime} &lt; t.sale_end_at
+                 and (ot.signup_deadline is null or #{paymentTime} &lt; ot.signup_deadline)
+                 and (a.club_id is null or a.club_id = r.source_club_id)
+                 and (t.club_id is null or t.club_id = r.source_club_id)
+                 and (cet.executing_club_id is null or cet.executing_club_id = r.source_club_id)
+                 and (a.club_id = r.source_club_id or t.club_id = r.source_club_id
+                      or cet.executing_club_id = r.source_club_id)
+                then r.source_club_id
+                else null
+            end,
+            r.source_frozen_at = #{paymentTime}
+        where r.id = #{id}
+          and r.purchase_kind = 3
+          and r.payment_status = 2
+          and r.registration_status = 2
+          and r.source_frozen_at is null
+    </update>
+
+    <select id="selectTicketSourceFactById" parameterType="Long" resultType="CmsRegistration">
+        select id,
+               source_club_id as sourceClubId,
+               source_frozen_at as sourceFrozenAt,
+               source_channel_code as sourceChannelCode
+        from cms_registration
+        where id = #{id}
+        for update
+    </select>
+
+    <update id="repairHistoricalPaidHalfState">
+        update cms_registration
+        set registration_status = 2,
+            transaction_id = #{transactionId},
+            payment_time = coalesce(payment_time, #{paymentTime}),
+            update_by = 'funds-half-state-repair',
+            update_time = #{paymentTime}
+        where id = #{id}
+          and payment_status = 2
+          and registration_status = 1
+          and wechat_payment_amount = #{wechatPaymentAmount}
+          and (transaction_id is null or transaction_id = #{transactionId})
+    </update>
+
+    <update id="claimRegistrationRefunded">
+        update cms_registration
+        set payment_status = 4,
+            registration_status = 3,
+            update_by = #{updateBy},
+            update_time = #{updateTime}
+        where id = #{id}
+          and payment_status = 2
+          and registration_status = 2
+          <!-- 1-43:「已核销不可退」在事务外预读,并发核销可能已先置位,这里必须当前读再判一次。
+               ③ 探索票首章即置位且可经运营人工退(RefundPolicy.verifiedVerdict),故放行 purchase_kind=3。 -->
+          and (verification_status is null or verification_status &lt;&gt; 1 or purchase_kind = 3)
+    </update>
+
+    <!-- 微信已告知「转入退款」:钱已经出去,本地只能如实记账,不再看核销态(否则 FAIL 重投永远落不了库)。 -->
+    <update id="claimRegistrationRefundedByGateway">
+        update cms_registration
+        set payment_status = 4,
+            registration_status = 3,
+            update_by = #{updateBy},
+            update_time = #{updateTime}
+        where id = #{id}
+          and payment_status = 2
+          and registration_status = 2
+    </update>
+
+    <update id="claimPointsReturn">
+        update cms_registration
+        set points_returned = 1,
+            update_by = #{updateBy},
+            update_time = #{updateTime}
+        where id = #{id}
+          and payment_status in (3, 4)
+          and point_used &gt; 0
+          and (points_returned is null or points_returned = 0)
+    </update>
+
+    <!-- 微信预下单前的 durable PAYING CAS。外部调用只能发生在本事务提交之后。 -->
+    <update id="claimPaymentProcessing">
+        update cms_registration
+        set payment_status = 1,
+            update_by = 'payment-preorder',
+            update_time = #{updateTime}
+        where id = #{id}
+          and member_id = #{memberId}
+          and payment_status = 0
+          and registration_status = 1
+    </update>
+
+    <!-- 失败态不得使用入参中的 stale 完整对象覆盖；只从未支付/PAYING 原子推进。 -->
+    <update id="claimPaymentFailure">
+        update cms_registration
+        set payment_status = 3,
+            update_by = 'system',
+            update_time = #{updateTime}
+        where id = #{id}
+          and payment_status in (0, 1)
+          and registration_status = 1
+    </update>
+
+    <update id="releasePaymentProcessing">
+        update cms_registration
+        set payment_status = 0,
+            update_by = 'payment-preorder-definite-failure',
+            update_time = #{updateTime}
+        where id = #{id}
+          and payment_status = 1
+          and registration_status = 1
+    </update>
+
+
+    <!-- 查询主题总销售额 -->
+    <select id="selectTotalSalesByTopicId" parameterType="Long" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(payable_amount), 0)
+        FROM cms_registration r
+        WHERE r.owner_type = 1 AND r.owner_id = #{topicId}
+          AND r.payment_status = 2
+          AND r.registration_status = 2
+    </select>
+
+    <select id="selectTotalSalesEvidenceByTopicIdIncludingActivityShell" parameterType="Long" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(payable_amount), 0)
+        FROM cms_registration r
+        WHERE ((r.owner_type = 1 AND r.owner_id = #{topicId})
+            OR (r.owner_type = 2 AND EXISTS (
+                SELECT 1 FROM cms_activity a
+                WHERE a.id = r.owner_id AND a.topic_id = #{topicId} AND a.del_flag = 0
+            )))
+          AND r.payment_status = 2
+          AND r.registration_status = 2
+    </select>
+
+    <select id="selectVerifiedSalesByTopicId" parameterType="Long" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(payable_amount), 0)
+        FROM cms_registration r
+        WHERE r.owner_type = 1 AND r.owner_id = #{topicId}
+          AND r.payment_status = 2
+          AND r.verification_status = 1
+    </select>
+
+    <select id="selectVerifiedSalesEvidenceByTopicIdIncludingActivityShell" parameterType="Long" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(payable_amount), 0)
+        FROM cms_registration r
+        WHERE ((r.owner_type = 1 AND r.owner_id = #{topicId})
+            OR (r.owner_type = 2 AND EXISTS (
+                SELECT 1 FROM cms_activity a
+                WHERE a.id = r.owner_id AND a.topic_id = #{topicId} AND a.del_flag = 0
+            )))
+          AND r.payment_status = 2
+          AND r.verification_status = 1
+    </select>
+
+    <select id="selectVerifiedHeadsByTopicId" parameterType="Long" resultType="int">
+        SELECT COUNT(DISTINCT member_id)
+        FROM cms_registration r
+        WHERE r.owner_type = 1 AND r.owner_id = #{topicId}
+          AND r.payment_status = 2
+          AND r.verification_status = 1
+    </select>
+
+    <select id="selectVerifiedHeadsEvidenceByTopicIdIncludingActivityShell" parameterType="Long" resultType="int">
+        SELECT COUNT(DISTINCT member_id)
+        FROM cms_registration r
+        WHERE ((r.owner_type = 1 AND r.owner_id = #{topicId})
+            OR (r.owner_type = 2 AND EXISTS (
+                SELECT 1 FROM cms_activity a
+                WHERE a.id = r.owner_id AND a.topic_id = #{topicId} AND a.del_flag = 0
+            )))
+          AND r.payment_status = 2
+          AND r.verification_status = 1
+    </select>
+
+    <!--
+      缺陷⑨:某主题下【被指定商家亲自核销】的人头 / 销售额。
+      cms_registration.verification_status 是报名级布尔(任一中标商家扫一次码即置 1),分不出谁接待了谁;
+      商家粒度只在 cms_registration_scan 上:registration_type=1 的那批由核销扫码产生,member_id 就是扫码商家
+      (registration_type=0 那批是报名时批量生成的、member_id 存的是发布者,必须排除)。
+      scan 行自身的 status 建时写 0(未验证),故不作条件——「存在 type=1 的 scan 行」即代表该商家核销过。
+      用 EXISTS 而非 join:同一 (商家, 报名) 至多一行,但 EXISTS 天然免疫重复行导致的金额翻倍。
+      payment_status=2 / verification_status=1 与 selectVerified*ByTopicId 保持同口径,已退款单不计。
+    -->
+    <select id="selectVerifiedHeadsByTopicAndMerchant" resultType="int">
+        SELECT COUNT(DISTINCT r.member_id)
+        FROM cms_registration r
+        WHERE r.owner_type = 1 AND r.owner_id = #{topicId}
+          AND r.payment_status = 2
+          AND r.verification_status = 1
+          AND EXISTS (
+              SELECT 1 FROM cms_registration_scan s
+              WHERE s.registration_id = r.id
+                AND s.member_id = #{merchantId}
+                AND s.registration_type = 1
+          )
+    </select>
+
+    <select id="selectVerifiedHeadsEvidenceByTopicAndMerchantIncludingActivityShell" resultType="int">
+        SELECT COUNT(DISTINCT r.member_id)
+        FROM cms_registration r
+        WHERE ((r.owner_type = 1 AND r.owner_id = #{topicId})
+            OR (r.owner_type = 2 AND EXISTS (
+                SELECT 1 FROM cms_activity a
+                WHERE a.id = r.owner_id AND a.topic_id = #{topicId} AND a.del_flag = 0
+            )))
+          AND r.payment_status = 2
+          AND r.verification_status = 1
+          AND EXISTS (
+              SELECT 1 FROM cms_registration_scan s
+              WHERE s.registration_id = r.id
+                AND s.member_id = #{merchantId}
+                AND s.registration_type = 1
+          )
+    </select>
+
+    <select id="selectVerifiedSalesByTopicAndMerchant" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(r.payable_amount), 0)
+        FROM cms_registration r
+        WHERE r.owner_type = 1 AND r.owner_id = #{topicId}
+          AND r.payment_status = 2
+          AND r.verification_status = 1
+          AND EXISTS (
+              SELECT 1 FROM cms_registration_scan s
+              WHERE s.registration_id = r.id
+                AND s.member_id = #{merchantId}
+                AND s.registration_type = 1
+          )
+    </select>
+
+    <select id="selectVerifiedSalesEvidenceByTopicAndMerchantIncludingActivityShell" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(r.payable_amount), 0)
+        FROM cms_registration r
+        WHERE ((r.owner_type = 1 AND r.owner_id = #{topicId})
+            OR (r.owner_type = 2 AND EXISTS (
+                SELECT 1 FROM cms_activity a
+                WHERE a.id = r.owner_id AND a.topic_id = #{topicId} AND a.del_flag = 0
+            )))
+          AND r.payment_status = 2
+          AND r.verification_status = 1
+          AND EXISTS (
+              SELECT 1 FROM cms_registration_scan s
+              WHERE s.registration_id = r.id
+                AND s.member_id = #{merchantId}
+                AND s.registration_type = 1
+          )
+    </select>
+
+    <!-- T9:结算审计快照——某主题被计入结算的已核销报名 id(与 verified_sales/heads 同口径) -->
+    <select id="selectVerifiedRegistrationIdsByTopicId" parameterType="Long" resultType="java.lang.Long">
+        SELECT r.id
+        FROM cms_registration r
+        WHERE r.owner_type = 1 AND r.owner_id = #{topicId}
+          AND r.payment_status = 2
+          AND r.verification_status = 1
+        ORDER BY r.id
+    </select>
+
+    <select id="selectVerifiedRegistrationIdsEvidenceByTopicIdIncludingActivityShell" parameterType="Long" resultType="java.lang.Long">
+        SELECT r.id
+        FROM cms_registration r
+        WHERE ((r.owner_type = 1 AND r.owner_id = #{topicId})
+            OR (r.owner_type = 2 AND EXISTS (
+                SELECT 1 FROM cms_activity a
+                WHERE a.id = r.owner_id AND a.topic_id = #{topicId} AND a.del_flag = 0
+            )))
+          AND r.payment_status = 2
+          AND r.verification_status = 1
+        ORDER BY r.id
+    </select>
+
+
+    <select id="selectTotalSalesByActivityId" parameterType="Long" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(payable_amount), 0)
+        FROM cms_registration
+        WHERE owner_id = #{activityId}
+          AND owner_type = 2
+          AND payment_status = 2
+          AND registration_status = 2
+    </select>
+
+    <!-- P0-10 弃单关单:过期未支付订单 id(限批,防单轮过大) -->
+    <!-- P1-PT-7:多票从单(payable=0 停 0 态)的父单里还有 PAYING 主单时不关 —— 钱付没付只有主单查单说了算,
+         先关从单会让主单查到 SUCCESS 时从单补记冲突、整单回滚。这类父单由 settlePayingOne 整单关。 -->
+    <select id="selectExpiredUnpaidIds" resultType="java.lang.Long">
+        select r.id from cms_registration r
+        where r.payment_status = 0 and r.registration_status = 1
+          and r.pay_expire_time is not null and r.pay_expire_time &lt;= #{now}
+          and not exists (
+              select 1 from cms_registration p
+              where r.parent_order_no is not null and r.parent_order_no != ''
+                and p.parent_order_no = r.parent_order_no
+                and p.payment_status = 1 and p.registration_status = 1)
+        limit 200
+    </select>
+
+    <!-- §5-3 PAYING 超时对账:预下单已发起(payment_status=1)且过了支付窗口仍未落终态的单 id。
+         这类单既不能被用户再支付(preparePaymentRetry 拒过期),也不会被 selectExpiredUnpaidIds 扫到
+         (只扫 payment_status=0)—— 只能主动查微信真实态后补记或关单。限批,按 id 游标分页(afterId),
+         查不动的卡单不会占住前 200 条把后面的单饿死。 -->
+    <select id="selectExpiredPayingIds" resultType="java.lang.Long">
+        select id from cms_registration
+        where payment_status = 1 and registration_status = 1
+          and pay_expire_time is not null and pay_expire_time &lt;= #{now}
+          and id &gt; #{afterId}
+        order by id asc
+        limit 200
+    </select>
+
+    <!-- 核销码补偿:已支付但回调期核销码生成失败的单(钱已扣、码为空)。
+         只扫近7天不回填历史旧单;payment_time 10分钟宽限=避开在途回调(否则任务与回调并发双生成,
+         用户已展示的码被后写覆盖→到店核销失败);order by id 最老先补防饿死;限批防单轮过大 -->
+    <select id="selectPaidMissingQrcodeIds" resultType="java.lang.Long">
+        select id from cms_registration
+        where payment_status = 2
+          and (qrcode_url is null or qrcode_url = '')
+          and create_time &gt;= date_sub(now(), interval 7 day)
+          and (payment_time is null or payment_time &lt;= date_sub(now(), interval 10 minute))
+        order by id asc
+        limit 100
+    </select>
+
+    <!-- P0-10 弃单关单:条件关单,仍处待支付才关(支付回调竞态下 0 行=已支付/已取消)。
+         finalStatus 由调用方按真实原因传入(3=已取消/主办取消,4=已过期/真超时)。 -->
+    <update id="closeExpired">
+        update cms_registration
+        set registration_status = #{finalStatus}, payment_status = 3,
+            update_by = #{updateBy}, update_time = now()
+        where id = #{id} and payment_status = 0 and registration_status = 1
+    </update>
+
+    <!-- §5-3 PAYING 超时对账:条件关单,仍处支付中才关。
+         ⚠️ 调用前必须已向微信确认「未支付」(或微信侧已关单),否则可能关掉刚扣款成功的单;
+         支付回调竞态下 0 行=已支付/已变化,直接跳过。
+         finalStatus 由调用方按真实原因传入(3=已取消/主办取消,4=已过期/真超时)。 -->
+    <update id="closeExpiredPaying">
+        update cms_registration
+        set registration_status = #{finalStatus}, payment_status = 3,
+            update_by = #{updateBy}, update_time = now()
+        where id = #{id} and payment_status = 1 and registration_status = 1
+    </update>
+
+    <!-- RUN-01 拍板纪要#5:场次票(仅 owner_type=2 活动单)到期自动核销收口、不退款。
+         主题单(①②③)刻意不在范围内:主题结算唯一写入时刻在核销(见 verifyAndSettleInternal javadoc),
+         不带台账的自动置位会把商家的钱永久锁死;③ 名册/权益口径另等拍板。
+         锚点=cms_activity.end_date + 安全缓冲(缺锚点 fail-closed 不扫,与 RefundPolicy 缺锚点转人工同一口径);
+         退款在途(待审核/已审核未回单)的单 payment_status 仍停在 2,必须在闸外排除,
+         否则会把"正在退钱"的票钉成已核销。del_flag 口径同 TopicEditionFundsMapper。
+         限批 200/轮、按 id 升序最老先收(7 天缓冲下不存在饿死竞争,无需游标)。 -->
+    <select id="selectExpiredUnverifiedIds" resultType="java.lang.Long">
+        select r.id from cms_registration r
+        where r.owner_type = 2
+          and r.payment_status = 2 and r.registration_status = 2
+          and (r.verification_status is null or r.verification_status &lt;&gt; 1)
+          and exists (
+              select 1 from cms_activity a
+              where a.id = r.owner_id
+                and a.cancel_time is null
+                and (a.del_flag is null or a.del_flag &lt;&gt; 2)
+                and a.end_date is not null
+                and a.end_date &lt;= date_sub(#{now}, interval #{bufferDays} day))
+          and not exists (
+              select 1 from refund_application ra
+              where ra.source_type = 'registration' and ra.source_id = r.id
+                and ra.status in (0, 1)
+                and (ra.del_flag is null or ra.del_flag &lt;&gt; 2))
+        order by r.id asc
+        limit 200
+    </select>
+
+    <!-- RUN-01 到期自动核销:条件置位(0 行=状态已变/退款在途/锚点被改期,调用方跳过)。
+         ⚠️ 判据全部下推进本语句的当前读,不许调用方先 select 再判 —— 扫描与置位之间商家可能刚真扫了码、
+         用户可能刚提交退款申请、主办方可能刚把场次改期,快照读会拿旧事实覆盖新状态(clearVerification
+         注释里用真库实测钉过的同一个 RR 陷阱)。
+         只写 verification_status/verification_time,不写 verifier_id(没有扫码人,伪造核销人=污染审计),
+         不碰台账/积分/勋章/结算 —— 自动收口 ≠ 一次商家核销。 -->
+    <update id="autoVerifyExpiredSession">
+        update cms_registration
+        set verification_status = 1, verification_time = now(),
+            update_by = #{updateBy}, update_time = now()
+        where id = #{id}
+          and owner_type = 2
+          and payment_status = 2 and registration_status = 2
+          and (verification_status is null or verification_status &lt;&gt; 1)
+          and exists (
+              select 1 from cms_activity a
+              where a.id = cms_registration.owner_id
+                and a.cancel_time is null
+                and (a.del_flag is null or a.del_flag &lt;&gt; 2)
+                and a.end_date is not null
+                and a.end_date &lt;= date_sub(now(), interval #{bufferDays} day))
+          and not exists (
+              select 1 from refund_application ra
+              where ra.source_type = 'registration' and ra.source_id = cms_registration.id
+                and ra.status in (0, 1)
+                and (ra.del_flag is null or ra.del_flag &lt;&gt; 2))
+          and not exists (
+              select 1
+              from activity_cancel_manual_refund_case c
+              where c.parent_order_no = cms_registration.parent_order_no
+                and c.payer_member_id = cms_registration.member_id
+                and c.status &lt;&gt; 'NO_REFUND'
+                and ((cms_registration.owner_type = 2
+                      and c.activity_id = cms_registration.owner_id and c.topic_id is null)
+                  or (cms_registration.owner_type = 1
+                      and c.topic_id = cms_registration.owner_id and c.activity_id is null))
+                and (json_contains(c.verified_registration_ids_json, cast(cms_registration.id as char))
+                  or json_contains(c.unverified_registration_ids_json, cast(cms_registration.id as char)))
+          )
+    </update>
+
+    <update id="cancelUnpaidIfActive">
+        update cms_registration
+        set registration_status = 3,
+            payment_status = 3,
+            points_returned = 1,
+            update_by = #{updateBy},
+            update_time = now()
+        where id = #{id}
+          and member_id = #{memberId}
+          and registration_status = 1
+          and payment_status in (0, 3)
+    </update>
+
+    <update id="verifyIfNotVerified">
+        update cms_registration
+        set verification_status = 1, verifier_id = #{verifierId}, verification_time = now()
+        where id = #{id} and (verification_status is null or verification_status &lt;&gt; 1)
+          <!-- 1-43:支付状态在事务外预读,并发退款可能已先领走退款权(payment_status=4),这里必须当前读再判一次 -->
+          and payment_status = 2
+          and registration_status = 2
+          <!-- CYV-P1-003:部分核销订单进入人工退款后,工单覆盖的剩余票必须在同一条原子 UPDATE 中冻结。
+               NO_REFUND 是现有状态机唯一的不退款终态;其余状态都仍可能退款,继续核销会让评估金额漂移。 -->
+          and not exists (
+              select 1
+              from activity_cancel_manual_refund_case c
+              where c.parent_order_no = cms_registration.parent_order_no
+                and c.payer_member_id = cms_registration.member_id
+                and c.status &lt;&gt; 'NO_REFUND'
+                and ((cms_registration.owner_type = 2
+                      and c.activity_id = cms_registration.owner_id and c.topic_id is null)
+                  or (cms_registration.owner_type = 1
+                      and c.topic_id = cms_registration.owner_id and c.activity_id is null))
+                and (json_contains(c.verified_registration_ids_json, cast(cms_registration.id as char))
+                  or json_contains(c.unverified_registration_ids_json, cast(cms_registration.id as char)))
+          )
+    </update>
+
+    <!-- 章节核销会先扣权益，不能等 verifyIfNotVerified 才发现退款冻结。
+         单条 JOIN + FOR UPDATE 与人工退款建单共用 registration 行锁，并让工单判定也走当前读。
+         不可改成相关子查询：MySQL RR 下子查询会继续读锁等待前的旧快照。 -->
+    <select id="hasActiveManualRefundCaseForUpdate" resultType="boolean">
+        select c.id is not null
+        from cms_registration r
+        left join activity_cancel_manual_refund_case c
+          on (c.parent_order_no = r.parent_order_no
+            or (c.case_type = 'PARTIAL_CHAPTERS' and c.payer_registration_id = r.id))
+         and c.payer_member_id = r.member_id
+         and c.status &lt;&gt; 'NO_REFUND'
+         and ((r.owner_type = 2 and c.activity_id = r.owner_id and c.topic_id is null)
+           or (r.owner_type = 1 and c.topic_id = r.owner_id and c.activity_id is null))
+         and (json_contains(c.verified_registration_ids_json, cast(r.id as char))
+           or json_contains(c.unverified_registration_ids_json, cast(r.id as char)))
+        where r.id = #{id}
+        order by c.id
+        limit 1
+        for update
+    </select>
+
+    <!-- 撤销核销后清回未核销态(verifyIfNotVerified 的反向)。
+         ③ 首次核销就置位,若撤销不清位,这张票会为一笔**已经不存在**的核销永久停在「已核销」:
+         退款被 RefundPolicy 锁死、注销时被当成已消费而隐形。置位与清位必须成对。
+
+         ★★ 「已无 ACTIVE 核销」这个判据**必须下推进本语句**,绝不能让调用方先 select 再判:
+         select 是普通读(RR 快照),两个运营并发各撤一笔时,**双方快照里都看得见对方那笔仍 ACTIVE**
+         ⇒ 双双跳过清位 ⇒ 零笔 ACTIVE 却永远停在「已核销」—— 正是本闸要修的 bug 在并发下原样复活。
+         这就是 chapterCapacityForUpdate 注释里用真库实测写死的同一个 RR 陷阱(行锁挡不住快照读)。
+         UPDATE 的 WHERE 走当前读 ⇒ NOT EXISTS 在这里是准的。同 consumeQuota 的「条件 update」范式。
+
+         ⚠️ 撤第 1 章但第 2/3 章仍 ACTIVE 时,NOT EXISTS 为假 ⇒ 不清位(票确实还在被用),这是对的。
+         ⚠️ verifier_id/verification_time 一并清:留着会指向一个不存在的核销人,查账时误导。 -->
+    <update id="clearVerification">
+        update cms_registration r
+        set r.verification_status = 0, r.verifier_id = null, r.verification_time = null
+        where r.id = #{id}
+          and r.verification_status = 1
+          and not exists (
+              select 1 from redemption d
+              where d.registration_id = r.id and d.status = 'ACTIVE'
+          )
+    </update>
+
+    <!-- PII 加密历史回填:未迁移=phone_hash 为空且有手机号 -->
+    <select id="selectLegacyPiiIds" resultType="java.lang.Long">
+        select id from cms_registration
+        where phone_hash is null and phone is not null and phone != ''
+        limit #{limit}
+    </select>
+
+    <update id="backfillRegistrationPii">
+        update cms_registration
+        set real_name = #{realName,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+            phone = #{phone,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+            phone_hash = #{phone,typeHandler=com.chengyinhub.business.security.PiiBlindIndexTypeHandler},
+            email = #{email,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+            address = #{address,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler}
+        where id = #{id} and phone_hash is null
+    </update>
+
+    <select id="selectPureContentExploreCompletion" resultType="java.util.HashMap">
+        select r.member_id as memberId,
+          max(case when not exists (
+            select 1 from cms_topic_chapter c
+            where c.topic_id = #{topicId} and c.required = 1
+              and (not exists (select 1 from cms_topic_node n where n.chapter_id = c.id
+                      and n.topic_id = #{topicId} and n.status = 1 and n.template_id &gt; 0)
+                or exists (select 1 from cms_topic_node n where n.chapter_id = c.id
+                      and n.topic_id = #{topicId} and n.status = 1 and n.template_id &gt; 0
+                      and not exists (select 1 from player_node_progress p where p.member_id = r.member_id
+                          and p.activity_id = r.owner_id and p.topic_id = #{topicId}
+                          and p.node_id = n.id and p.status = 1 and p.del_flag = 0)))
+          ) then 1 else 0 end) as completed
+        from cms_registration r join cms_activity a on r.owner_type = 2 and r.owner_id = a.id
+        where a.topic_id = #{topicId} and r.payment_status = 2 and r.registration_status = 2
+          and r.purchase_kind = 3
+          and exists (select 1 from player_node_progress p where p.member_id = r.member_id
+              and p.activity_id = r.owner_id and p.topic_id = #{topicId} and p.status = 1 and p.del_flag = 0)
+        group by r.member_id
+    </select>
+</mapper>

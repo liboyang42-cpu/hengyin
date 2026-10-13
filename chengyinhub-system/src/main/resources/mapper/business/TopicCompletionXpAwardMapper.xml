@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.TopicCompletionXpAwardMapper">
+    <insert id="insert">
+        insert into topic_completion_xp_award
+        (member_id, topic_id, xp_amount, granted_at, create_time)
+        values (#{memberId}, #{topicId}, #{xpAmount}, #{grantedAt}, now())
+    </insert>
+
+    <select id="selectOne" resultType="com.chengyinhub.business.domain.vo.TopicCompletionAwardVO">
+        select xp_amount as earnedXp, granted_at as earnedXpAt
+        from topic_completion_xp_award
+        where member_id = #{memberId} and topic_id = #{topicId}
+        limit 1
+    </select>
+    <!-- 第二轮拍板第 4 条:后台撤销核销勾选「同时冲回积分和经验」用。 -->
+    <select id="selectXpForUpdate" resultType="java.lang.Integer">
+        select xp_amount from topic_completion_xp_award
+        where member_id = #{memberId} and topic_id = #{topicId}
+        limit 1
+        for update
+    </select>
+
+    <!-- 冲回后删掉发放事实(数额进审计):勋章不收回 ⇒ 再通关不会再发 XP,留着这行会被下次撤销再冲一次。 -->
+    <delete id="deleteAward">
+        delete from topic_completion_xp_award where member_id = #{memberId} and topic_id = #{topicId}
+    </delete>
+
+</mapper>

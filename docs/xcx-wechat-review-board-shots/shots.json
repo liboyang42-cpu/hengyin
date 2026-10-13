@@ -1,0 +1,50 @@
+[
+  {
+    "ok": true,
+    "id": "shell-topicadd"
+  },
+  {
+    "ok": true,
+    "id": "shell-workbench"
+  },
+  {
+    "ok": true,
+    "id": "shell-circle-missing"
+  },
+  {
+    "ok": true,
+    "id": "shell-merchant-profile"
+  },
+  {
+    "ok": true,
+    "id": "shell-withdraw-records"
+  },
+  {
+    "ok": true,
+    "id": "orphan-simple"
+  },
+  {
+    "ok": true,
+    "id": "orphan-talent-search"
+  },
+  {
+    "ok": true,
+    "id": "stub-decor"
+  },
+  {
+    "ok": true,
+    "id": "stub-settlement"
+  },
+  {
+    "ok": true,
+    "id": "stub-roles"
+  },
+  {
+    "ok": true,
+    "id": "stub-square"
+  },
+  {
+    "ok": true,
+    "id": "settings"
+  }
+]

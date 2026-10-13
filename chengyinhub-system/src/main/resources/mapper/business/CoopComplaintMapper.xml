@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CoopComplaintMapper">
+
+    <resultMap id="BaseResult" type="com.chengyinhub.business.domain.CoopComplaint">
+        <id property="id" column="id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="registrationId" column="registration_id"/>
+        <result property="reporterMemberId" column="reporter_member_id"/>
+        <result property="respondentType" column="respondent_type"/>
+        <result property="respondentMemberId" column="respondent_member_id"/>
+        <result property="status" column="status"/>
+        <result property="advanceAmount" column="advance_amount"/>
+        <result property="faultRatio" column="fault_ratio"/>
+        <result property="deductAmount" column="deduct_amount"/>
+        <result property="reason" column="reason"/>
+        <result property="handleNote" column="handle_note"/>
+        <result property="handlerId" column="handler_id"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="delFlag" column="del_flag"/>
+    </resultMap>
+
+    <insert id="insertCoopComplaint" parameterType="com.chengyinhub.business.domain.CoopComplaint" useGeneratedKeys="true" keyProperty="id">
+        insert into coop_complaint
+            (topic_id, registration_id, reporter_member_id, respondent_type, respondent_member_id,
+             status, advance_amount, fault_ratio, deduct_amount, reason, handle_note, handler_id,
+             create_time, update_time, del_flag)
+        values
+            (#{topicId}, #{registrationId}, #{reporterMemberId}, #{respondentType}, #{respondentMemberId},
+             #{status}, #{advanceAmount}, #{faultRatio}, #{deductAmount}, #{reason}, #{handleNote}, #{handlerId},
+             #{createTime}, #{updateTime}, #{delFlag})
+    </insert>
+
+    <select id="selectCoopComplaintById" resultMap="BaseResult">
+        select * from coop_complaint where id = #{id}
+    </select>
+
+    <update id="updateCoopComplaint" parameterType="com.chengyinhub.business.domain.CoopComplaint">
+        update coop_complaint
+        <set>
+            <if test="respondentType != null">respondent_type = #{respondentType},</if>
+            <if test="respondentMemberId != null">respondent_member_id = #{respondentMemberId},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="advanceAmount != null">advance_amount = #{advanceAmount},</if>
+            <if test="faultRatio != null">fault_ratio = #{faultRatio},</if>
+            <if test="deductAmount != null">deduct_amount = #{deductAmount},</if>
+            <if test="handleNote != null">handle_note = #{handleNote},</if>
+            <if test="handlerId != null">handler_id = #{handlerId},</if>
+            update_time = #{updateTime}
+        </set>
+        where id = #{id}
+    </update>
+
+    <!-- 旧状态写进 where：赢家 rows=1，输家 rows=0。资金状态迁移不许再用无条件的通用 UPDATE。 -->
+    <update id="claimAcceptedForAdvance">
+        update coop_complaint
+        set status = 1, advance_amount = #{amount}, handler_id = #{handlerId}, update_time = #{updateTime}
+        where id = #{id} and status = 0 and del_flag = 0
+    </update>
+
+    <update id="claimOpenForClose">
+        update coop_complaint set status = 3, update_time = #{updateTime}
+        where id = #{id} and status = #{expectedStatus} and status &lt; 3 and del_flag = 0
+    </update>
+
+    <select id="countOpenByTopicId" resultType="int">
+        select count(*) from coop_complaint where del_flag = 0 and topic_id = #{topicId} and status &lt; 3
+    </select>
+
+    <select id="selectCoopComplaintList" parameterType="com.chengyinhub.business.domain.CoopComplaint" resultMap="BaseResult">
+        select * from coop_complaint
+        <where>
+            del_flag = 0
+            <if test="topicId != null"> and topic_id = #{topicId}</if>
+            <if test="status != null"> and status = #{status}</if>
+            <if test="respondentMemberId != null"> and respondent_member_id = #{respondentMemberId}</if>
+        </where>
+        order by id desc
+    </select>
+
+</mapper>

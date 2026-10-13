@@ -1,0 +1,5 @@
+{
+  "schemaVersion": 1,
+  "note": "只保存汇总完成的动态执行结果。inventory 由 build-action-ledger.js 生成；tap 与非 tap event-contract 分开执行，证据由不可变分支片段原子汇总，必须绑定源码 SHA、递归 WXML/JS/WXSS/JSON digest、受控账号、runner/driver 真源、时间、逐分支事实回读与内容哈希附件。",
+  "results": {}
+}

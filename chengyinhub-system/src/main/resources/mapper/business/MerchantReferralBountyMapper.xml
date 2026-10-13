@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantReferralBountyMapper">
+
+  <resultMap id="BaseResultMap" type="com.chengyinhub.business.domain.MerchantReferralBounty">
+    <id     column="id"                      property="id"/>
+    <result column="merchant_member_id"      property="merchantMemberId"/>
+    <result column="inviter_member_id"       property="inviterMemberId"/>
+    <result column="merchant_registered_at"  property="merchantRegisteredAt"/>
+    <result column="window_expires_at"       property="windowExpiresAt"/>
+    <result column="status"                  property="status"/>
+    <result column="activated_at"            property="activatedAt"/>
+    <result column="verified_heads_snapshot" property="verifiedHeadsSnapshot"/>
+    <result column="bounty_amount"           property="bountyAmount"/>
+    <result column="paid_at"                 property="paidAt"/>
+    <result column="frozen_until"            property="frozenUntil"/>
+    <result column="clawed_back_at"          property="clawedBackAt"/>
+    <result column="clawback_reason"         property="clawbackReason"/>
+    <result column="del_flag"                property="delFlag"/>
+    <result column="create_time"             property="createTime"/>
+    <result column="update_time"             property="updateTime"/>
+  </resultMap>
+
+  <select id="selectByMerchantMemberId" resultMap="BaseResultMap">
+    SELECT * FROM merchant_referral_bounty
+    WHERE merchant_member_id = #{merchantMemberId} AND del_flag = '0'
+  </select>
+
+  <insert id="insertBounty" parameterType="com.chengyinhub.business.domain.MerchantReferralBounty"
+          useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO merchant_referral_bounty
+      (merchant_member_id, inviter_member_id, merchant_registered_at, window_expires_at,
+       status, del_flag, create_time, update_time)
+    VALUES
+      (#{merchantMemberId}, #{inviterMemberId}, #{merchantRegisteredAt}, #{windowExpiresAt},
+       #{status}, '0', NOW(), NOW())
+  </insert>
+
+  <!--
+    CAS 置已发放:仅 status=0 可置 1。并发时只有一方 affected=1 ⇒ 只发一次钱。
+    与「先读后写」的区别:读到 status=0 再写,两个线程会都读到 0、都发钱。
+  -->
+  <update id="markPaidIfPending">
+    UPDATE merchant_referral_bounty
+       SET status = 1,
+           activated_at = #{activatedAt},
+           verified_heads_snapshot = #{snapshot},
+           bounty_amount = #{amount},
+           paid_at = #{paidAt},
+           frozen_until = #{frozenUntil},
+           update_time = NOW()
+     WHERE id = #{id} AND status = 0
+  </update>
+
+  <!-- CAS 置失效:仅 status=0 可置 3。超窗未达标用,别让记录永远挂在待激活。 -->
+  <update id="markExpiredIfPending">
+    UPDATE merchant_referral_bounty
+       SET status = 3, update_time = NOW()
+     WHERE id = #{id} AND status = 0
+  </update>
+
+  <!-- CAS 追回:仅 status=1 可置 2。没发过的追不了,已追过的不重复追。 -->
+  <update id="markClawedBackIfPaid">
+    UPDATE merchant_referral_bounty
+       SET status = 2,
+           clawed_back_at = #{clawedBackAt},
+           clawback_reason = #{reason},
+           update_time = NOW()
+     WHERE id = #{id} AND status = 1
+  </update>
+
+  <!--
+    封顶 20 家:只数**已发放**(status=1)。
+    ⚠️ 刻意不含 status=2(已追回):追回意味着那家没算数,名额该还给拓展人。
+    ⚠️ 也不含 status=0(待激活):数「已推荐」会让人拉 20 个僵尸就占满自己额度。
+  -->
+  <select id="countPaidByInviter" resultType="int">
+    SELECT COUNT(*) FROM merchant_referral_bounty
+    WHERE inviter_member_id = #{inviterMemberId} AND status = 1 AND del_flag = '0'
+  </select>
+
+  <!--
+    ★ 仍在冻结期内的赏金总额(提现可用余额 = balance - 本值)。
+    COALESCE 兜 null:没有任何冻结记录时 SUM 返 null,让它回 0,免得调用方 NPE。
+    走 idx_frozen (status, frozen_until)。
+  -->
+  <select id="sumFrozenByInviter" resultType="java.math.BigDecimal">
+    SELECT COALESCE(SUM(bounty_amount), 0)
+    FROM merchant_referral_bounty
+    WHERE inviter_member_id = #{inviterMemberId}
+      AND status = 1
+      AND frozen_until &gt; #{now}
+      AND del_flag = '0'
+  </select>
+
+  <!--
+    ★ 该商家自己扫码核销的**去重人头数**,限定**核销时间**在 [windowStart, windowEnd)。
+
+    ★★ 时间窗卡的是 scan.create_time(核销发生的时刻),**不是** r.create_time(报名创建的时刻)。
+       自审(/code-review high)抓到初版卡错了列:拍板口径是「商家注册起 30 天内**核销**人头 ≥3」,
+       30 天限定的是核销这个动作,而初版限定的是报名何时创建。差别是真实的:
+       玩家先报名、商家后来才被调配到这个主题(select() 中标)再去核销 —— 这条很常见,
+       而这些报名的 create_time 早于商家注册时间 ⇒ 初版会把它们**排除**,让激活比拍板的更难达成
+       (少发钱,不是多发钱,但一样是不按拍板的规则执行)。
+
+    与既有 CmsRegistrationMapper.selectVerifiedHeadsByTopicAndMerchant 的差别(为什么不能复用):
+      那个 WHERE 里有 `r.owner_id = #{topicId} AND r.owner_type = 1` —— **绑死单个主题**,
+      答的是「该商家在这个主题里核销几个人头」。赏金要的是**跨主题总数**。
+
+    口径(与 clawback 的 countStillValidAmong 必须逐字一致,否则会出现「算得进却追不回」;
+    countStillValidAmong 刻意不带时间窗 —— 快照已经框定了是哪几条,再限时间是多余且会引入不一致):
+      · payment_status = 2        已支付
+      · registration_status <> 3  未退款 —— 退款会把它置 3(见 RefundServiceImpl 的 [资损修复] 注释:
+                                  「退款须同时回落 registration_status=3,否则核销闸放行已退款单→二次分账」)
+      · scan.member_id = 该商家 且 registration_type = 1   ← 真正的「商家扫码核销」
+      · scan.create_time ∈ [windowStart, windowEnd)        ← 30 天窗口卡在这
+      · COUNT(DISTINCT r.member_id)  去重人头(同一玩家多次报名只算一个人头)
+  -->
+  <select id="countVerifiedHeadsByMerchantInWindow" resultType="int">
+    SELECT COUNT(DISTINCT r.member_id)
+    FROM cms_registration r
+    WHERE r.payment_status = 2
+      AND r.registration_status &lt;&gt; 3
+      AND EXISTS (
+        SELECT 1 FROM cms_registration_scan s
+        WHERE s.registration_id = r.id
+          AND s.member_id = #{merchantMemberId}
+          AND s.registration_type = 1
+          AND s.create_time &gt;= #{windowStart}
+          AND s.create_time &lt; #{windowEnd}
+      )
+  </select>
+
+  <!--
+    ★ 反套利闸:窗口内该商家核销的这些报名,**合计实付**是多少。
+
+    为什么必须有:激活闸只看 payment_status=2,而**实付 0 元的报名照样是 2**
+    (生产实证 2026-07-17:reg#47 与 reg#71 实付均 0.00、payment_status=2;72 张票里最低票价 0.00、
+    7 张 ≤¥1)。没有金额下限,建个 0 元票主题 + 3 个小号自扫自核 = **零成本套走赏金**。
+
+    ★★ 只认 payable_amount,**绝不能**学 RefundServiceImpl.firstNonNull 回落到 total_amount:
+       reg#71 正是 payable=0.00 而 total=39.90 —— 回落会把这笔 0 元报名算成 ¥39.90,
+       那恰好就是本闸要堵的漏洞本身。NULL 一律当 0(宁可少发,不可被刷)。
+  -->
+  <select id="sumVerifiedPaidByMerchantInWindow" resultType="java.math.BigDecimal">
+    SELECT COALESCE(SUM(COALESCE(r.payable_amount, 0)), 0)
+    FROM cms_registration r
+    WHERE r.payment_status = 2
+      AND r.registration_status &lt;&gt; 3
+      AND EXISTS (
+        SELECT 1 FROM cms_registration_scan s
+        WHERE s.registration_id = r.id
+          AND s.member_id = #{merchantMemberId}
+          AND s.registration_type = 1
+          AND s.create_time &gt;= #{windowStart}
+          AND s.create_time &lt; #{windowEnd}
+      )
+  </select>
+
+  <!--
+    构成激活的报名 id:与上面**逐字同口径**,存快照用。
+
+    ★ GROUP BY r.member_id + MIN(r.id) = **每个人头只取最早那一条**,不是「最早的 3 条报名」。
+      自审抓到的:原来是裸 `ORDER BY r.id LIMIT 3`,与上面 COUNT(DISTINCT r.member_id) 的口径不一致
+      —— 玩家 A 报名两次(id 1、2)、B 报名一次(id 3)、C 报名一次(id 4)时,
+      人头数 = 3(A/B/C)判定激活,快照却 = [1,2,3] = 只代表 A、B **两个**人头。
+      于是 clawback 的 countStillValidAmong(数行数)会错判:reg#1 退款 ⇒ 数出 2 &lt; 3 ⇒ **误追回**,
+      而实际人头仍是 3(A 还有 reg#2)。
+      改成一人头一行后,countStillValidAmong 的行数 == 人头数,三处口径才真正对齐。
+  -->
+  <select id="selectVerifiedRegistrationIdsByMerchantInWindow" resultType="java.lang.Long">
+    SELECT MIN(r.id)
+    FROM cms_registration r
+    WHERE r.payment_status = 2
+      AND r.registration_status &lt;&gt; 3
+      AND EXISTS (
+        SELECT 1 FROM cms_registration_scan s
+        WHERE s.registration_id = r.id
+          AND s.member_id = #{merchantMemberId}
+          AND s.registration_type = 1
+          AND s.create_time &gt;= #{windowStart}
+          AND s.create_time &lt; #{windowEnd}
+      )
+    GROUP BY r.member_id
+    ORDER BY MIN(r.id) ASC
+    LIMIT #{limit}
+  </select>
+
+  <!--
+    快照里这些报名,现在还有几条仍是「有效核销」。clawback 判定用。
+
+    ★ 数出来的行数 == 仍然有效的**人头数** —— 前提是快照里一个人头只有一行
+      (见 selectVerifiedRegistrationIdsByMerchantInWindow 的 GROUP BY)。这两处必须一起看:
+      快照若含同一玩家的多条,这里的 COUNT(*) 就不再是人头数,clawback 会误追。
+
+    ⚠️ 口径必须与 countVerifiedHeadsByMerchantInWindow 一致,**除了刻意不限时间窗** ——
+       快照已经框定了是哪几条,再限时间窗是多余且会引入「算得进却追不回」的不一致。
+  -->
+  <select id="countStillValidAmong" resultType="int">
+    SELECT COUNT(*)
+    FROM cms_registration r
+    WHERE r.id IN
+      <foreach collection="registrationIds" item="rid" open="(" separator="," close=")">
+        #{rid}
+      </foreach>
+      AND r.payment_status = 2
+      AND r.registration_status &lt;&gt; 3
+      AND EXISTS (
+        SELECT 1 FROM cms_registration_scan s
+        WHERE s.registration_id = r.id
+          AND s.member_id = #{merchantMemberId}
+          AND s.registration_type = 1
+      )
+  </select>
+
+</mapper>

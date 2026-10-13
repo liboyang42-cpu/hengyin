@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CmsTopicTemplateMetaMapper">
+
+    <resultMap type="com.chengyinhub.business.domain.CmsTopicTemplateMeta" id="TopicTemplateMetaResult">
+        <result property="id"                     column="id"                        />
+        <result property="topicId"                column="topic_id"                  />
+        <result property="templateStatus"         column="template_status"           />
+        <result property="version"                column="version"                   />
+        <result property="applicableRoles"        column="applicable_roles"          />
+        <result property="audienceWho"            column="audience_who"              />
+        <result property="audienceMoment"         column="audience_moment"           />
+        <result property="audienceNeed"           column="audience_need"             />
+        <result property="playerPromise"          column="player_promise"            />
+        <result property="coreLoop"               column="core_loop"                 />
+        <result property="mainSkeletonTemplateId" column="main_skeleton_template_id"  />
+        <result property="evidenceLevel"          column="evidence_level"            />
+        <result property="riskTags"               column="risk_tags"                 />
+        <result property="riskQualifications"     column="risk_qualifications"       />
+        <result property="riskCancellation"       column="risk_cancellation"         />
+        <result property="riskLiability"          column="risk_liability"            />
+        <result property="riskSafetyNotice"       column="risk_safety_notice"        />
+        <result property="previewBefore"          column="preview_before"            />
+        <result property="previewDuring"          column="preview_during"            />
+        <result property="previewAfter"           column="preview_after"             />
+        <result property="author"                 column="author"                    />
+        <result property="isOfficial"             column="is_official"               />
+        <result property="updateTime"             column="update_time"               />
+    </resultMap>
+
+    <resultMap type="com.chengyinhub.business.domain.CmsTopicChapterTemplateMeta" id="ChapterTemplateMetaResult">
+        <result property="id"                   column="id"                      />
+        <result property="chapterId"            column="chapter_id"              />
+        <result property="topicId"              column="topic_id"                />
+        <result property="roleNeed"             column="role_need"               />
+        <result property="exclusivityMode"      column="exclusivity_mode"        />
+        <result property="exclusivityScope"     column="exclusivity_scope"       />
+        <result property="exclusivityPeriod"    column="exclusivity_period"      />
+        <result property="exclusivityReason"    column="exclusivity_reason"      />
+        <result property="effortPrepHours"      column="effort_prep_hours"       />
+        <result property="effortStaffMinutes"   column="effort_staff_minutes"    />
+        <result property="effortVenue"          column="effort_venue"            />
+        <result property="effortMaterials"      column="effort_materials"        />
+        <result property="batchSize"            column="batch_size"              />
+        <result property="batchIntervalMinutes" column="batch_interval_minutes"  />
+        <result property="effortMaxConcurrent"  column="effort_max_concurrent"   />
+        <result property="effortAvailableSlots" column="effort_available_slots"  />
+        <result property="effortNeedsBooking"   column="effort_needs_booking"    />
+        <result property="effortCancelCost"     column="effort_cancel_cost"      />
+        <result property="effortQualifications" column="effort_qualifications"   />
+    </resultMap>
+
+    <sql id="selectTopicTemplateMetaVo">
+        select id, topic_id, template_status, version, applicable_roles,
+               audience_who, audience_moment, audience_need, player_promise, core_loop,
+               main_skeleton_template_id, evidence_level,
+               risk_tags, risk_qualifications, risk_cancellation, risk_liability, risk_safety_notice,
+               preview_before, preview_during, preview_after, author, is_official, update_time
+          from cms_topic_template_meta
+    </sql>
+
+    <sql id="selectChapterTemplateMetaVo">
+        select id, chapter_id, topic_id, role_need,
+               exclusivity_mode, exclusivity_scope, exclusivity_period, exclusivity_reason,
+               effort_prep_hours, effort_staff_minutes, effort_venue, effort_materials,
+               batch_size, batch_interval_minutes, effort_max_concurrent,
+               effort_available_slots, effort_needs_booking,
+               effort_cancel_cost, effort_qualifications
+          from cms_topic_chapter_template_meta
+    </sql>
+
+    <!-- del_flag 必带:软删的元数据不该继续出现在货架上。 -->
+    <select id="selectByTopicId" resultMap="TopicTemplateMetaResult">
+        <include refid="selectTopicTemplateMetaVo"/>
+        where topic_id = #{topicId} and del_flag = 0
+    </select>
+
+    <select id="selectByTopicIds" resultMap="TopicTemplateMetaResult">
+        <include refid="selectTopicTemplateMetaVo"/>
+        where del_flag = 0
+          and topic_id in
+          <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">
+              #{topicId}
+          </foreach>
+    </select>
+
+    <select id="selectChapterMetaByTopicId" resultMap="ChapterTemplateMetaResult">
+        <include refid="selectChapterTemplateMetaVo"/>
+        where topic_id = #{topicId} and del_flag = 0
+    </select>
+
+    <select id="selectChapterMetaByChapterId" resultMap="ChapterTemplateMetaResult">
+        <include refid="selectChapterTemplateMetaVo"/>
+        where chapter_id = #{chapterId} and del_flag = 0
+    </select>
+
+    <!-- 一条 INSERT ... ON DUPLICATE KEY UPDATE 覆盖三数：
+         uk_chapter_meta_chapter 保证一章一行，并发写允许最后提交者胜但不产生半套值。
+         del_flag = 0 是显式复活语义：若同章元数据行曾软删，会保留其余展示字段并恢复整行。 -->
+    <insert id="upsertChapterServiceCapacity">
+        insert into cms_topic_chapter_template_meta
+            (chapter_id, topic_id, batch_size, batch_interval_minutes,
+             effort_max_concurrent, del_flag)
+        values
+            (#{chapterId}, #{topicId}, #{batchSize}, #{batchIntervalMinutes},
+             #{effortMaxConcurrent}, 0)
+        on duplicate key update
+            topic_id = values(topic_id),
+            batch_size = values(batch_size),
+            batch_interval_minutes = values(batch_interval_minutes),
+            effort_max_concurrent = values(effort_max_concurrent),
+            del_flag = 0,
+            update_time = current_timestamp
+    </insert>
+
+    <!-- F05 开售快照 merchantWorkPackage 读的六项事实;与服务容量写口同一唯一键、互不覆盖对方列。 -->
+    <insert id="upsertChapterWorkPackage" parameterType="com.chengyinhub.business.domain.CmsTopicChapterTemplateMeta">
+        insert into cms_topic_chapter_template_meta
+            (chapter_id, topic_id, role_need, effort_staff_minutes, effort_venue,
+             effort_materials, effort_available_slots, effort_qualifications, del_flag)
+        values
+            (#{chapterId}, #{topicId}, #{roleNeed}, #{effortStaffMinutes}, #{effortVenue},
+             #{effortMaterials}, #{effortAvailableSlots}, #{effortQualifications}, 0)
+        on duplicate key update
+            topic_id = values(topic_id),
+            role_need = values(role_need),
+            effort_staff_minutes = values(effort_staff_minutes),
+            effort_venue = values(effort_venue),
+            effort_materials = values(effort_materials),
+            effort_available_slots = values(effort_available_slots),
+            effort_qualifications = values(effort_qualifications),
+            del_flag = 0,
+            update_time = current_timestamp
+    </insert>
+</mapper>

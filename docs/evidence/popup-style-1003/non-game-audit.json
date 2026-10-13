@@ -1,0 +1,2292 @@
+{
+  "scope": "Non-game popups only; creator configuration and merchant operations remain in scope. Gameplay and in-game previews excluded.",
+  "basis": "91 original class-name candidates plus 8 targeted markup/fixed-position discoveries. Candidate count is not the number of independent popup defects.",
+  "candidate_counts": {
+    "native_style_reviewed": 42,
+    "blocked_native_entry": 4,
+    "not_overlay": 2,
+    "excluded_game": 51
+  },
+  "entries": [
+    {
+      "candidate_id": 1,
+      "file": "components/cy/agreement-sheet/index.wxml",
+      "line": 7,
+      "classes": [
+        "agr-sheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/agreement.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 2,
+      "file": "components/cy/profile/index.wxml",
+      "line": 609,
+      "classes": [
+        "chpick"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/profile-chapter.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 3,
+      "file": "components/cy/profile/index.wxml",
+      "line": 622,
+      "classes": [
+        "chpick"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/profile-station.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 4,
+      "file": "pages/activity/baoming/baoming.wxml",
+      "line": 194,
+      "classes": [
+        "popup-content"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/participants.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 5,
+      "file": "pages/club/detail/index.wxml",
+      "line": 910,
+      "classes": [
+        "post-edit-sheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/post-edit.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 6,
+      "file": "pages/club/detail/index.wxml",
+      "line": 919,
+      "classes": [
+        "post-history-sheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/post-history.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 7,
+      "file": "pages/gerenziliao/gerenziliao.wxml",
+      "line": 114,
+      "classes": [
+        "pop-model"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "签名正文、共用标题/关闭/完成",
+      "evidence": {
+        "before": "nongame-before/signature.png",
+        "after": "nongame-after/signature.png",
+        "boundary": "原生模拟器显示及受控状态检查，不等于全部正常入口业务验收"
+      },
+      "initial_classification": "fixed_native_verified",
+      "evidence_round": "previous_rounds",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 8,
+      "file": "pages/gerenziliao/gerenziliao.wxml",
+      "line": 130,
+      "classes": [
+        "pop-model"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "响应式两列照片、共用标题/关闭/完成",
+      "evidence": {
+        "before": "nongame-before/works.png",
+        "after": "nongame-after/works.png",
+        "boundary": "原生模拟器显示及受控状态检查，不等于全部正常入口业务验收",
+        "long_content": [
+          "nongame-after/works-2.png",
+          "nongame-after/works-9.png"
+        ]
+      },
+      "initial_classification": "fixed_native_verified",
+      "evidence_round": "previous_rounds",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 9,
+      "file": "pages/gerenziliao/gerenziliao.wxml",
+      "line": 153,
+      "classes": [
+        "pop-model"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "二维码与上传框单项居中，图片完整显示",
+      "evidence": {
+        "before": "nongame-before/contact.png",
+        "after": "nongame-after/contact.png",
+        "boundary": "原生模拟器显示及受控状态检查，不等于全部正常入口业务验收",
+        "latest_before": "nongame-round2-before/contact.png",
+        "latest_after": "nongame-round2-after/contact.png"
+      },
+      "initial_classification": "fixed_native_verified",
+      "evidence_round": "previous_rounds",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 10,
+      "file": "pages/gerenziliao/gerenziliao.wxml",
+      "line": 176,
+      "classes": [
+        "pop-model"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "共用短面板，Figma 三态输入",
+      "evidence": {
+        "before": "nongame-before/nickname.png",
+        "after": "nongame-after/nickname.png",
+        "boundary": "原生模拟器显示及受控状态检查，不等于全部正常入口业务验收"
+      },
+      "initial_classification": "fixed_native_verified",
+      "evidence_round": "previous_rounds",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 11,
+      "file": "pages/merchant/aftercare/detail/index.wxml",
+      "line": 131,
+      "classes": [
+        "ac-sheet"
+      ],
+      "classification": "blocked_native_entry",
+      "reason": "缺少可用 refundId，进入后返回售后列表；正文仍有额外左右16pt留白，未修改。",
+      "evidence": "source review; native normal entry unavailable",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 12,
+      "file": "pages/merchant/apply/index.wxml",
+      "line": 309,
+      "classes": [
+        "hp-sheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/merchant-hours.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 13,
+      "file": "pages/merchant/citynode/index.wxml",
+      "line": 105,
+      "classes": [
+        "cn-node--sheet"
+      ],
+      "classification": "not_overlay",
+      "reason": "Merchant node card row, not a popup.",
+      "evidence": "source review",
+      "initial_classification": "not_overlay"
+    },
+    {
+      "candidate_id": 14,
+      "file": "pages/merchant/game-node/index.wxml",
+      "line": 178,
+      "classes": [
+        "gn-sheet"
+      ],
+      "classification": "blocked_native_entry",
+      "reason": "商家站点权限入口返回商家首页；正文仍有额外左右16pt留白，未修改。",
+      "evidence": "source review; native normal entry unavailable",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 15,
+      "file": "pages/merchant/game-node/index.wxml",
+      "line": 189,
+      "classes": [
+        "gn-sheet"
+      ],
+      "classification": "blocked_native_entry",
+      "reason": "商家站点权限入口返回商家首页；正文仍有额外左右16pt留白，未修改。",
+      "evidence": "source review; native normal entry unavailable",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 16,
+      "file": "pages/merchant/game-node/index.wxml",
+      "line": 223,
+      "classes": [
+        "gn-sheet"
+      ],
+      "classification": "blocked_native_entry",
+      "reason": "商家站点权限入口返回商家首页；正文仍有额外左右16pt留白，未修改。",
+      "evidence": "source review; native normal entry unavailable",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 17,
+      "file": "pages/merchant/index/index.wxml",
+      "line": 303,
+      "classes": [
+        "chpick"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/merchant-chapter.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 18,
+      "file": "pages/merchant/index/index.wxml",
+      "line": 317,
+      "classes": [
+        "chpick"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/merchant-station.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 19,
+      "file": "pages/merchant/team/index.wxml",
+      "line": 120,
+      "classes": [
+        "tm-role-sheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/merchant-role.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 20,
+      "file": "pages/play/index.wxml",
+      "line": 71,
+      "classes": [
+        "chfull"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 21,
+      "file": "pages/play/index.wxml",
+      "line": 142,
+      "classes": [
+        "chpick"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 22,
+      "file": "pages/play/index.wxml",
+      "line": 721,
+      "classes": [
+        "leadgather"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 23,
+      "file": "pages/play/index.wxml",
+      "line": 767,
+      "classes": [
+        "sheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 24,
+      "file": "pages/play/index.wxml",
+      "line": 858,
+      "classes": [
+        "gp2--sheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 25,
+      "file": "pages/play/index.wxml",
+      "line": 1011,
+      "classes": [
+        "sheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 26,
+      "file": "pages/play/index.wxml",
+      "line": 1032,
+      "classes": [
+        "finsheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 27,
+      "file": "pages/play/index.wxml",
+      "line": 1159,
+      "classes": [
+        "ending"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 28,
+      "file": "pages/play/index.wxml",
+      "line": 1218,
+      "classes": [
+        "voucher"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 29,
+      "file": "pages/play/index.wxml",
+      "line": 1273,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 30,
+      "file": "pages/play/index.wxml",
+      "line": 1282,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 31,
+      "file": "pages/play/index.wxml",
+      "line": 1291,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 32,
+      "file": "pages/play/index.wxml",
+      "line": 1300,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 33,
+      "file": "pages/play/index.wxml",
+      "line": 1309,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 34,
+      "file": "pages/play/index.wxml",
+      "line": 1318,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 35,
+      "file": "pages/play/index.wxml",
+      "line": 1327,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 36,
+      "file": "pages/play/index.wxml",
+      "line": 1336,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 37,
+      "file": "pages/play/index.wxml",
+      "line": 1345,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 38,
+      "file": "pages/play/index.wxml",
+      "line": 1354,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 39,
+      "file": "pages/play/index.wxml",
+      "line": 1364,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 40,
+      "file": "pages/play/index.wxml",
+      "line": 1373,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 41,
+      "file": "pages/play/index.wxml",
+      "line": 1413,
+      "classes": [
+        "rolecard"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 42,
+      "file": "pages/play/index.wxml",
+      "line": 1434,
+      "classes": [
+        "sheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 43,
+      "file": "pages/play/index.wxml",
+      "line": 1594,
+      "classes": [
+        "sheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 44,
+      "file": "pages/play/merchant/index.wxml",
+      "line": 65,
+      "classes": [
+        "mp-sheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 45,
+      "file": "pages/play/merchant/index.wxml",
+      "line": 88,
+      "classes": [
+        "mp-sheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 46,
+      "file": "pages/publish/activity/index.wxml",
+      "line": 201,
+      "classes": [
+        "pop-model"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "共用标题/关闭，完成操作移到底栏",
+      "evidence": {
+        "before": "nongame-before/template.png",
+        "after": "nongame-after/template.png",
+        "boundary": "原生模拟器显示及受控状态检查，不等于全部正常入口业务验收"
+      },
+      "initial_classification": "fixed_native_verified",
+      "evidence_round": "previous_rounds",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 47,
+      "file": "pages/publish/components/reward-selector/index.wxml",
+      "line": 13,
+      "classes": [
+        "reward-sheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/rewards.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 48,
+      "file": "pages/publish/fabu/index.wxml",
+      "line": 60,
+      "classes": [
+        "slopes-sheet"
+      ],
+      "classification": "not_overlay",
+      "reason": "创作者内容页的常驻容器，不是弹窗。",
+      "evidence": "source review; nongame-round3-after/creator-content.png",
+      "initial_classification": "not_overlay"
+    },
+    {
+      "candidate_id": 49,
+      "file": "pages/publish/fabu/index.wxml",
+      "line": 681,
+      "classes": [
+        "multi-select-modal"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮补齐字阶、圆角、安全区或选择标记；取得原生代表截图。",
+      "evidence": {
+        "before": "nongame-round3-before/category.png",
+        "after": "nongame-round3-after/category.png",
+        "boundary": "原生显示与局部交互核对，不等于正常入口业务或真机验收"
+      },
+      "initial_classification": "fixed_native_verified",
+      "evidence_round": "previous_rounds",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 50,
+      "file": "pages/publish/fabu/index.wxml",
+      "line": 713,
+      "classes": [
+        "node-sheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/node-detail.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 51,
+      "file": "pages/publish/fabu/index.wxml",
+      "line": 890,
+      "classes": [
+        "route-mapping-sheet",
+        "node-sheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/next-route.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 52,
+      "file": "pages/publish/fabu/index.wxml",
+      "line": 925,
+      "classes": [
+        "pop-model"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮补齐字阶、圆角、安全区或选择标记；取得原生代表截图。",
+      "evidence": {
+        "before": "nongame-round3-before/chapter-settings.png",
+        "after": "nongame-round3-after/chapter-settings.png",
+        "boundary": "原生显示与局部交互核对，不等于正常入口业务或真机验收"
+      },
+      "initial_classification": "fixed_native_verified",
+      "evidence_round": "previous_rounds",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 53,
+      "file": "pages/publish/fabu/index.wxml",
+      "line": 1093,
+      "classes": [
+        "pop-model"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 54,
+      "file": "pages/publish/fabu/index.wxml",
+      "line": 1366,
+      "classes": [
+        "node-sheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/mode-picker.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 55,
+      "file": "pages/publish/fabu/topic-detail-sheet.wxml",
+      "line": 9,
+      "classes": [
+        "node-sheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/topic-detail.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 56,
+      "file": "pages/publish/temp/index.wxml",
+      "line": 1612,
+      "classes": [
+        "cg-sheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "共用标题/关闭、正文与最小点击区",
+      "evidence": {
+        "before": "nongame-before/add-module.png",
+        "after": "nongame-after/add-module.png",
+        "boundary": "原生模拟器显示及受控状态检查，不等于全部正常入口业务验收"
+      },
+      "initial_classification": "fixed_native_verified",
+      "evidence_round": "previous_rounds",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 57,
+      "file": "pages/publish/temp/index.wxml",
+      "line": 1633,
+      "classes": [
+        "cg-sheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮补齐字阶、圆角、安全区或选择标记；取得原生代表截图。",
+      "evidence": {
+        "before": "nongame-round3-before/game-catalog.png",
+        "after": "nongame-round3-after/game-catalog.png",
+        "boundary": "原生显示与局部交互核对，不等于正常入口业务或真机验收"
+      },
+      "initial_classification": "fixed_native_verified",
+      "evidence_round": "previous_rounds",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 58,
+      "file": "pages/publish/temp/index.wxml",
+      "line": 1674,
+      "classes": [
+        "cg-sheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "共用标题/关闭、行高与文字换行",
+      "evidence": {
+        "before": "nongame-before/picker.png",
+        "after": "nongame-after/picker.png",
+        "boundary": "原生模拟器显示及受控状态检查，不等于全部正常入口业务验收"
+      },
+      "initial_classification": "fixed_native_verified",
+      "evidence_round": "previous_rounds",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 59,
+      "file": "pages/roam/index.wxml",
+      "line": 55,
+      "classes": [
+        "psheet",
+        "entry-sheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 60,
+      "file": "pages/roam/index.wxml",
+      "line": 547,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 61,
+      "file": "pages/roam/index.wxml",
+      "line": 580,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 62,
+      "file": "pages/roam/index.wxml",
+      "line": 609,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 63,
+      "file": "pages/roam/index.wxml",
+      "line": 632,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 64,
+      "file": "pages/roam/index.wxml",
+      "line": 692,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 65,
+      "file": "pages/roam/index.wxml",
+      "line": 706,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 66,
+      "file": "pages/roam/index.wxml",
+      "line": 746,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 67,
+      "file": "pages/roam/index.wxml",
+      "line": 776,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 68,
+      "file": "pages/roam/index.wxml",
+      "line": 809,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 69,
+      "file": "pages/roam/index.wxml",
+      "line": 819,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 70,
+      "file": "pages/roam/index.wxml",
+      "line": 830,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 71,
+      "file": "pages/roam/index.wxml",
+      "line": 840,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 72,
+      "file": "pages/roam/index.wxml",
+      "line": 850,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 73,
+      "file": "pages/roam/index.wxml",
+      "line": 860,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 74,
+      "file": "pages/roam/index.wxml",
+      "line": 870,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 75,
+      "file": "pages/roam/index.wxml",
+      "line": 880,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 76,
+      "file": "pages/roam/index.wxml",
+      "line": 890,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 77,
+      "file": "pages/roam/index.wxml",
+      "line": 903,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 78,
+      "file": "pages/roam/index.wxml",
+      "line": 986,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 79,
+      "file": "pages/roam/index.wxml",
+      "line": 1035,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 80,
+      "file": "pages/shezhi/components/privacy-sheet/index.wxml",
+      "line": 3,
+      "classes": [
+        "pv-sheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/privacy.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 81,
+      "file": "pages/square/components/activity-picker/index.wxml",
+      "line": 2,
+      "classes": [
+        "ap-sheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "共用标题/关闭、弹窗内滚动",
+      "evidence": {
+        "before": "nongame-before/activity.png",
+        "after": "nongame-after/activity.png",
+        "boundary": "原生模拟器显示及受控状态检查，不等于全部正常入口业务验收"
+      },
+      "initial_classification": "fixed_native_verified",
+      "evidence_round": "previous_rounds",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 82,
+      "file": "pages/templatedetail/templatedetail.wxml",
+      "line": 285,
+      "classes": [
+        "pop-model"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 83,
+      "file": "pages/topic/merchantapply/index.wxml",
+      "line": 216,
+      "classes": [
+        "pop-model"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/merchant-time.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 84,
+      "file": "subpackageA/pages/myproject/index.wxml",
+      "line": 154,
+      "classes": [
+        "mp-ops-sheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/project-actions.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 85,
+      "file": "subpackageP3/pages/badge-wall/index/index.wxml",
+      "line": 85,
+      "classes": [
+        "bw-sheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮补齐字阶、圆角、安全区或选择标记；取得原生代表截图。",
+      "evidence": "nongame-complete-after/badge-long-start.png",
+      "initial_classification": "fixed_native_verified",
+      "evidence_round": "previous_rounds",
+      "business_acceptance": false,
+      "pending_native_checks": [
+        "final WXML scroll to end",
+        "WebGL wall close",
+        "real device touch"
+      ]
+    },
+    {
+      "candidate_id": 86,
+      "file": "subpackagePrefab/index.wxml",
+      "line": 270,
+      "classes": [
+        "ending"
+      ],
+      "classification": "excluded_game",
+      "reason": "Gameplay, exploration runtime, or a game preview panel; excluded by user scope.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": 87,
+      "file": "subpackageRoam/nearby/index.wxml",
+      "line": 38,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/nearby-team.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 88,
+      "file": "subpackageRoam/nearby/index.wxml",
+      "line": 61,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/nearby-leader.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 89,
+      "file": "subpackageRoam/nearby/index.wxml",
+      "line": 88,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/nearby-mine.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 90,
+      "file": "subpackageRoam/nearby/index.wxml",
+      "line": 112,
+      "classes": [
+        "psheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/nearby-topic.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": 91,
+      "file": "subpackageRoam/session/index.wxml",
+      "line": 22,
+      "classes": [
+        "ss-share-sheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/footprint-share.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": "extra-story-editor__sheet",
+      "file": "pages/publish/fabu/index.wxml",
+      "classes": [
+        "story-editor__sheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮补齐字阶、圆角、安全区或选择标记；取得原生代表截图。",
+      "evidence": {
+        "before": "nongame-round3-before/story-editor.png",
+        "after": "nongame-round3-after/story-editor.png",
+        "boundary": "原生显示与局部交互核对，不等于正常入口业务或真机验收"
+      },
+      "initial_classification": "fixed_native_verified",
+      "evidence_round": "previous_rounds",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": "extra-story-varsheet",
+      "file": "pages/publish/fabu/index.wxml",
+      "classes": [
+        "story-varsheet"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮补齐字阶、圆角、安全区或选择标记；取得原生代表截图。",
+      "evidence": {
+        "before": "nongame-round3-before/story-vars.png",
+        "after": "nongame-round3-after/story-vars.png",
+        "boundary": "原生显示与局部交互核对，不等于正常入口业务或真机验收"
+      },
+      "initial_classification": "fixed_native_verified",
+      "evidence_round": "previous_rounds",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": "extra-activity-time-picker",
+      "file": "pages/publish/activity/index.wxml",
+      "classes": [
+        "activity-time-picker"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "开始/结束平铺，移除灰外框与黑内卡",
+      "evidence": {
+        "before": "nongame-before/activity-time.png",
+        "after": "nongame-after/activity-time.png",
+        "boundary": "原生模拟器显示及受控状态检查，不等于全部正常入口业务验收",
+        "latest_before": "nongame-round2-before/activity-time.png",
+        "latest_after": "nongame-round2-after/activity-time.png"
+      },
+      "initial_classification": "fixed_native_verified",
+      "evidence_round": "previous_rounds",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": "extra-dw",
+      "file": "pages/topic/components/project-drawer/index.wxml",
+      "classes": [
+        "dw"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "导航下全高及客户半屏，移除底部黑缝并修复内容裁切",
+      "evidence": {
+        "before": "nongame-before/project-drawer.png",
+        "after": "nongame-after/project-drawer.png",
+        "boundary": "原生模拟器显示及受控状态检查，不等于全部正常入口业务验收",
+        "customer_variant": "nongame-after/customer.png",
+        "long_content": "nongame-after/project-drawer-content.png"
+      },
+      "initial_classification": "fixed_native_verified",
+      "evidence_round": "previous_rounds",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": "extra-pop-topic",
+      "file": "pages/topic/merchantinfo/merchantinfo.wxml",
+      "classes": [
+        "pop-topic"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "共用报名面板，长标题和摘要自适应换行",
+      "evidence": {
+        "before": "nongame-before/join-target.png",
+        "after": "nongame-after/join-target.png",
+        "boundary": "原生模拟器显示及受控状态检查，不等于全部正常入口业务验收",
+        "latest_before": "nongame-round2-before/join-target-content.png",
+        "latest_after": "nongame-round2-after/join-target-content.png"
+      },
+      "initial_classification": "fixed_native_verified",
+      "evidence_round": "previous_rounds",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": "extra-pop-topic2",
+      "file": "pages/topic/merchantinfo/merchantinfo.wxml",
+      "classes": [
+        "pop-topic2"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "导航下全高，中性分段介绍，去彩色渐变和光晕",
+      "evidence": {
+        "before": "nongame-before/mode-info.png",
+        "after": "nongame-after/mode-info.png",
+        "boundary": "原生模拟器显示及受控状态检查，不等于全部正常入口业务验收",
+        "latest_before": "nongame-round2-before/mode-info.png",
+        "latest_after": "nongame-round2-after/mode-info.png"
+      },
+      "initial_classification": "fixed_native_verified",
+      "evidence_round": "previous_rounds",
+      "business_acceptance": false
+    },
+    {
+      "candidate_id": "extra-bigqr",
+      "file": "components/cy/scene-qr-ticket/index.wxml",
+      "classes": [
+        "bigqr"
+      ],
+      "classification": "excluded_game",
+      "reason": "QR ticket scene is registered to the gameplay route; excluded from this follow-up.",
+      "evidence": "source review",
+      "initial_classification": "excluded_game"
+    },
+    {
+      "candidate_id": "extra-pop-vote",
+      "file": "pages/topic/index/index.wxml",
+      "classes": [
+        "pop-vote"
+      ],
+      "classification": "native_style_reviewed",
+      "reason": "本轮代表性画面、字体、内边距与本地关闭已核对；受控显示，不作为正常业务验收。",
+      "evidence": "nongame-complete-after/route-review.png",
+      "initial_classification": "shared_content",
+      "business_acceptance": false
+    }
+  ],
+  "limits": [
+    "46个非游戏候选是源码分类，不是全部正常入口业务验收。",
+    "当前51个汇总截图状态；本轮新增6个选项/俱乐部代表状态及选择、关闭回读，其余沿用此前未变内容的证据。不是全部正常入口验收。",
+    "共用选项列表、俱乐部类型与倾向现已取得原生受控显示和选择关闭回读；缺真实业务编号，未做正常入口业务验收。勋章长内容末端滚动和WebGL墙模式关闭仍未完成回读。",
+    "未保存资料、发布活动、支付、核销、分享或上传微信，未完成真机验收。早期创作者截图没有关闭本地草稿自动保存，不声明草稿零写入。",
+    "相关检查在干净验证副本完成，排除了其他发布页标题改动。"
+  ],
+  "checks": {
+    "status": "PASS",
+    "full_unit": {
+      "prior_revision": "8551930a8b92f2129f104e9702e7dbff4a196814",
+      "pass": 7675,
+      "fail": 0,
+      "skipped": 2
+    },
+    "ui_gate": "PASS",
+    "js_scope": "PASS, 544 production JS",
+    "action_ledger": "PASS, 4372 controls; source inventory only",
+    "native_compile_success": 37,
+    "after_screenshot_states": 40,
+    "figma_fields": {
+      "空白": {
+        "native_screenshot": "nongame-after/nickname-empty.png",
+        "flat_region": [
+          300,
+          1030,
+          490,
+          1070
+        ],
+        "observed_background": "#1C1C1E",
+        "pixel_count": 7600,
+        "target_background": "#1C1C1E",
+        "target_text": "#868686",
+        "figma_node": "44:81"
+      },
+      "已填写": {
+        "native_screenshot": "nongame-after/nickname.png",
+        "flat_region": [
+          300,
+          1030,
+          490,
+          1070
+        ],
+        "observed_background": "#3B3B3D",
+        "pixel_count": 7600,
+        "target_background": "#3B3B3D",
+        "target_text": "#F2F2F4",
+        "figma_node": "44:87"
+      },
+      "禁用": {
+        "native_screenshot": "nongame-after/nickname-disabled.png",
+        "flat_region": [
+          300,
+          1030,
+          490,
+          1070
+        ],
+        "observed_background": "#141416",
+        "pixel_count": 7600,
+        "target_background": "#141416",
+        "target_text": "rgba(255,255,255,.40)",
+        "figma_node": "44:117"
+      }
+    },
+    "known_style_fix_pending": 0,
+    "code_commit": "438e1fdbad7ecacfe319c95d6e8737365edb50e7",
+    "related_current": {
+      "tests": 153,
+      "pass": 153,
+      "fail": 0,
+      "skipped": 0,
+      "duration_ms": 524.546208
+    },
+    "native_compile_current": 13,
+    "all_46_normal_entry_acceptance": false,
+    "latest_icon_alignment": {
+      "code_commit": "575d156ba4b7c44ffd1003eefe43db983459577c",
+      "related_tests": 64,
+      "failed": 0,
+      "isolated_ui_gate": "PASS",
+      "native_compile_success": 2,
+      "current_screenshot_states": 45,
+      "glyph_geometry_samples": 11,
+      "picker_entries": 3
+    },
+    "latest_selection_styles": {
+      "code_commit": "46d9599a83999e68f0b27b8ad666a368f4af3d27",
+      "related_tests": 62,
+      "failed": 0,
+      "native_compile_success": 5,
+      "isolated_ui_gate": "PASS",
+      "representative_states": 6
+    }
+  },
+  "candidate_line_reference": "Candidate IDs and baseline line numbers are retained for traceability; current source inventory is under after/.",
+  "requested_game_exception": {
+    "scope": "仅用户明确指定的完成面板文字与入口精简，其他游戏内部弹窗仍排除",
+    "removed": [
+      "我的探索顺序",
+      "动态商家名称列表（含河边书店、街角咖啡店）",
+      "同行者榜 · 分享足迹 · 保存足迹卡整行"
+    ],
+    "implementation": "删除模板节点和相应样式，不靠临时隐藏，后续数据不会重新生成这些节点",
+    "native_states": [
+      "finish-after/finish.png",
+      "finish-after/finish-mode1.png",
+      "finish-after/finish-reloaded.png"
+    ],
+    "business_limit": "仅临时完成显示；地图无真实路线点，没有执行游戏完成、核销或分享写入"
+  },
+  "discard_copy": {
+    "title": "放弃本轮修改",
+    "options": [
+      "继续编辑",
+      "确认放弃"
+    ],
+    "body": "已删除",
+    "dialogs": 6,
+    "files": [
+      "components/cy/profile/index.wxml",
+      "pages/merchant/index/index.wxml",
+      "pages/shezhi/shezhi.wxml",
+      "pages/club/detail/index.wxml",
+      "pages/club/edit/index.wxml"
+    ],
+    "native_representative": "nongame-after/discard-simple.png",
+    "confirmation_executed": false
+  },
+  "followup_round2": {
+    "trigger": "用户要求二维码居中、活动时间去灰黑嵌套，并继续检查其他非游戏弹窗",
+    "baseline_commit": "c40082052e",
+    "product_files": 4,
+    "changes": [
+      "联系二维码独立单列居中，图片 aspectFit 保留完整内容",
+      "活动时间两个端点平铺，用细线与文字强调当前步骤",
+      "路线模式介绍去彩色渐变、光晕和标签底色",
+      "承接弹窗长标题和摘要使用自适应宽度并换行"
+    ],
+    "native_states": 7,
+    "source_reviewed_special_containers": 7
+  },
+  "followup_round3": {
+    "code_commit": "438e1fdbad7ecacfe319c95d6e8737365edb50e7",
+    "special_containers_resolved": 6,
+    "persistent_page_reclassified": 1,
+    "category_names_read_back": 8,
+    "unverified": [
+      "共用选项列表及俱乐部类型本轮只有源码与编译验证",
+      "勋章长内容末端滚动及WebGL墙模式关闭未完成回读"
+    ]
+  },
+  "followup_category_point": {
+    "code_commit": "766b49de18ba84db4ee1f6578b094bd9a924436e",
+    "file": "chengyinhub-xcx/components/cy/category-sheet/index.wxss",
+    "change": "一行两个的分类选择中心点从6pt增至8pt，外圈20pt不变",
+    "before": "category-point-before/category-dark.png",
+    "after": [
+      "category-point-after/category-dark.png",
+      "category-point-after/category-light.png"
+    ],
+    "checks": {
+      "existing_related_tests": 17,
+      "failed": 0,
+      "native_wxss_compile": true,
+      "native_dark_light_reviewed": true
+    },
+    "business_boundary": "仅本地预选第一项并关闭，未点保存。"
+  },
+  "followup_icon_alignment": {
+    "code_commit": "575d156ba4b7c44ffd1003eefe43db983459577c",
+    "product_commits": [
+      "8c70830a0900dbd93351175ce308d64016919987",
+      "575d156ba4b7c44ffd1003eefe43db983459577c"
+    ],
+    "scope": "非游戏弹窗图标与通用人数/时长/场所选择器；不含游戏内部",
+    "product_files": [
+      "chengyinhub-xcx/pages/publish/temp/index.wxml",
+      "chengyinhub-xcx/pages/publish/temp/index.wxss"
+    ],
+    "changes": [
+      "添加模块加号移除文字行高，改为居中图标容器",
+      "通用picker三个入口补齐实心圆和中心点，未选中为空心圆，单行选项中心点沿用6pt",
+      "补齐单选语义及长标签的缩放空间"
+    ],
+    "glyph_geometry": {
+      "representatives": 11,
+      "tolerance_px": 2,
+      "module_plus_before_delta_y": 3.2421875,
+      "module_plus_after_delta_y": 0,
+      "records": [
+        {
+          "name": "module-plus",
+          "owner": {
+            "left": 343,
+            "top": 663.5,
+            "width": 16,
+            "height": 16,
+            "centerX": 351.0,
+            "centerY": 671.5
+          },
+          "iconHost": {
+            "left": 343,
+            "top": 663.5,
+            "width": 16,
+            "height": 16,
+            "centerX": 351.0,
+            "centerY": 671.5
+          },
+          "deltaX": 0.0,
+          "deltaY": 0.0
+        },
+        {
+          "name": "module-left-icon",
+          "owner": {
+            "left": 31,
+            "top": 649,
+            "width": 45,
+            "height": 45,
+            "centerX": 53.5,
+            "centerY": 671.5
+          },
+          "iconHost": {
+            "left": 43.5,
+            "top": 661.5,
+            "width": 20,
+            "height": 20,
+            "centerX": 53.5,
+            "centerY": 671.5
+          },
+          "deltaX": 0.0,
+          "deltaY": 0.0
+        },
+        {
+          "name": "module-close",
+          "owner": {
+            "left": 345,
+            "top": 555.8046875,
+            "width": 45,
+            "height": 45,
+            "centerX": 367.5,
+            "centerY": 578.3046875
+          },
+          "iconHost": {
+            "left": 356.5,
+            "top": 567.3046875,
+            "width": 22,
+            "height": 22,
+            "centerX": 367.5,
+            "centerY": 578.3046875
+          },
+          "deltaX": 0.0,
+          "deltaY": 0.0
+        },
+        {
+          "name": "catalog-icon",
+          "owner": {
+            "left": 22,
+            "top": 276.984375,
+            "width": 37,
+            "height": 37,
+            "centerX": 40.5,
+            "centerY": 295.484375
+          },
+          "iconHost": {
+            "left": 32,
+            "top": 286.984375,
+            "width": 17,
+            "height": 17,
+            "centerX": 40.5,
+            "centerY": 295.484375
+          },
+          "deltaX": 0.0,
+          "deltaY": 0.0
+        },
+        {
+          "selector": ".cmp-act",
+          "owner": {
+            "left": 350,
+            "top": 107.797,
+            "width": 24,
+            "height": 24,
+            "right": 374,
+            "bottom": 131.797,
+            "centerX": 362,
+            "centerY": 119.797
+          },
+          "glyph": {
+            "left": 350,
+            "top": 107.797,
+            "width": 24,
+            "height": 24,
+            "right": 374,
+            "bottom": 131.797,
+            "centerX": 362,
+            "centerY": 119.797
+          },
+          "deltaX": 0,
+          "deltaY": 0,
+          "name": "compose-draft"
+        },
+        {
+          "selector": ".cmp-tool",
+          "owner": {
+            "left": 65,
+            "top": 253.992,
+            "width": 22,
+            "height": 22,
+            "right": 87,
+            "bottom": 275.992,
+            "centerX": 76,
+            "centerY": 264.992
+          },
+          "glyph": {
+            "left": 65,
+            "top": 253.992,
+            "width": 22,
+            "height": 22,
+            "right": 87,
+            "bottom": 275.992,
+            "centerX": 76,
+            "centerY": 264.992
+          },
+          "deltaX": 0,
+          "deltaY": 0,
+          "name": "compose-image"
+        },
+        {
+          "selector": ".cmp-tool",
+          "owner": {
+            "left": 107,
+            "top": 253.992,
+            "width": 22,
+            "height": 22,
+            "right": 129,
+            "bottom": 275.992,
+            "centerX": 118,
+            "centerY": 264.992
+          },
+          "glyph": {
+            "left": 107,
+            "top": 253.992,
+            "width": 22,
+            "height": 22,
+            "right": 129,
+            "bottom": 275.992,
+            "centerX": 118,
+            "centerY": 264.992
+          },
+          "deltaX": 0,
+          "deltaY": 0,
+          "name": "compose-location"
+        },
+        {
+          "selector": ".cmp-tool",
+          "owner": {
+            "left": 149,
+            "top": 253.992,
+            "width": 22,
+            "height": 22,
+            "right": 171,
+            "bottom": 275.992,
+            "centerX": 160,
+            "centerY": 264.992
+          },
+          "glyph": {
+            "left": 149,
+            "top": 253.992,
+            "width": 22,
+            "height": 22,
+            "right": 171,
+            "bottom": 275.992,
+            "centerX": 160,
+            "centerY": 264.992
+          },
+          "deltaX": 0,
+          "deltaY": 0,
+          "name": "compose-activity"
+        },
+        {
+          "owner": {
+            "left": 358,
+            "top": 194,
+            "width": 20,
+            "height": 20,
+            "right": 378,
+            "bottom": 214,
+            "centerX": 368,
+            "centerY": 204
+          },
+          "glyph": {
+            "left": 358,
+            "top": 194.398,
+            "width": 20,
+            "height": 20,
+            "right": 378,
+            "bottom": 214.398,
+            "centerX": 368,
+            "centerY": 204.398
+          },
+          "deltaX": 0,
+          "deltaY": 0.39799999999999613,
+          "name": "draft-delete"
+        },
+        {
+          "name": "merchant-copy",
+          "owner": {
+            "left": 175.5,
+            "top": 675.2109375,
+            "width": 16,
+            "height": 23,
+            "centerX": 183.5,
+            "centerY": 686.7109375
+          },
+          "iconHost": {
+            "left": 177.5,
+            "top": 682.0546875,
+            "width": 12,
+            "height": 12,
+            "centerX": 183.5,
+            "centerY": 688.0546875
+          },
+          "deltaX": 0.0,
+          "deltaY": 1.34375
+        },
+        {
+          "name": "popover-follow",
+          "deltaX": null,
+          "deltaY": 0.20299999999997453,
+          "raw": {
+            "frame": {
+              "left": 265.68,
+              "top": 272.234,
+              "width": 110,
+              "height": 45,
+              "right": 375.68,
+              "bottom": 317.234,
+              "centerX": 320.68,
+              "centerY": 294.734
+            },
+            "glyph": {
+              "left": 277.68,
+              "top": 285.734,
+              "width": 18,
+              "height": 18,
+              "right": 295.68,
+              "bottom": 303.734,
+              "centerX": 286.68,
+              "centerY": 294.734
+            },
+            "label": {
+              "left": 303.68,
+              "top": 283.531,
+              "width": 58,
+              "height": 22,
+              "right": 361.68,
+              "bottom": 305.531,
+              "centerX": 332.68,
+              "centerY": 294.531
+            },
+            "iconTextDeltaY": 0.20299999999997453,
+            "iconFrameDeltaY": 0
+          }
+        }
+      ],
+      "boundary": "图标盒与容器/文字的几何抽样，不等于所有图标的光学重心或所有正常入口验收"
+    },
+    "picker_entries": [
+      {
+        "key": "players",
+        "options": 3,
+        "tapAndClosed": true,
+        "valueReadback": true,
+        "reopenedSelectionReadback": true,
+        "fixtureRestored": true
+      },
+      {
+        "key": "duration",
+        "options": 6,
+        "tapAndClosed": true,
+        "valueReadback": true,
+        "reopenedSelectionReadback": true,
+        "fixtureRestored": true
+      },
+      {
+        "key": "usageLocation",
+        "options": 7,
+        "tapAndClosed": true,
+        "valueReadback": true,
+        "reopenedSelectionReadback": true,
+        "fixtureRestored": true
+      }
+    ],
+    "native_geometry_methods": [
+      "复用 scripts/_verify_icon_geometry.js 的 elementRect 和 launchFixed",
+      "wechatide automation_element_action offset/size；受控原生状态"
+    ],
+    "native_screenshots": [
+      "nongame-round3-icons-after/add-module.png",
+      "nongame-round3-icons-after/game-catalog.png",
+      "nongame-round3-icons-after/picker-players.png",
+      "nongame-round3-icons-after/picker-duration.png",
+      "nongame-round3-icons-after/picker-usageLocation.png"
+    ],
+    "unchanged_layout_samples": [
+      "nongame-round3-icons-before/post-compose.png",
+      "nongame-round3-icons-before/merchant-copy.png"
+    ],
+    "native_boundary": "截图来自自有 popup-style-1003 工作区；部分为显示夹具。3个picker使用实际选项，临时修改本地表单并回读，未保存/发布。草稿图标等待800ms后几何回读，未将动画中的早期读数计为通过。胶囊和草稿本次有几何证据，没有新增稳定截图。",
+    "validation": {
+      "tests": 64,
+      "pass": 64,
+      "fail": 0,
+      "skip": 0,
+      "native_compile_success": 2,
+      "isolated_ui_gate": "PASS",
+      "isolation": {
+        "base": "8c70830a0900dbd93351175ce308d64016919987",
+        "owned_files": [
+          "chengyinhub-xcx/pages/publish/temp/index.wxss",
+          "chengyinhub-xcx/pages/publish/temp/index.wxml"
+        ],
+        "ui_gate_exit_code": 0,
+        "bytes_match": true,
+        "snapshot_removed": true
+      },
+      "workspace_ui_gate": "曾因未包含在本次提交的并行标题修改触发U4 stepHeading零消费；完整干净快照通过"
+    },
+    "source_sha256": {
+      "chengyinhub-xcx/pages/publish/temp/index.wxss": "36460d8a399c4291d3b839f388e7a5e5877417260a88a5af119004f87d8514a1",
+      "chengyinhub-xcx/pages/publish/temp/index.wxml": "7e66463c365241217c9cfd22d6dce37959722d6406b76e4abf3511aa174bdcf8"
+    },
+    "not_wechat_upload_or_device_acceptance": true,
+    "geometry_capture_note": "模块及未改动控件的几何读数来自本轮8c70830a09及未改动的70424820e4状态；最终提交新增的3种picker已单独截图和切换回读。"
+  },
+  "followup_round4": {
+    "code_commit": "46d9599a83999e68f0b27b8ad666a368f4af3d27",
+    "baseline_commit": "b0a5ba68a5daa330f6313f86c5614b421607eca7",
+    "scope": "非游戏选项弹窗及俱乐部定位选择；不含游戏内部",
+    "product_files": [
+      "chengyinhub-xcx/components/cy/scene-club-edit/index.wxml",
+      "chengyinhub-xcx/components/cy/scene-club-edit/index.wxss",
+      "chengyinhub-xcx/components/cy/option-sheet/index.wxml",
+      "chengyinhub-xcx/components/cy/option-sheet/index.wxss",
+      "chengyinhub-xcx/pages/club/detail/index.wxss"
+    ],
+    "product_sha256": {
+      "chengyinhub-xcx/components/cy/scene-club-edit/index.wxml": "6236b96f0d6b80340350f02fa9781bd7e222e9805e97cc47ee1340bcf491f6f6",
+      "chengyinhub-xcx/components/cy/scene-club-edit/index.wxss": "fbcafb07dc877f86d2346b60be56f690be20e99bc61d10e428261827fd1e7fb6",
+      "chengyinhub-xcx/components/cy/option-sheet/index.wxml": "d6de24abe642985f85b3f3a3ff54aa7450537e65036c27ced6b6f931de5c12a0",
+      "chengyinhub-xcx/components/cy/option-sheet/index.wxss": "1854ba48f0381a2e33d9ad7dd790b393dbe310629763740279e68f5fb048879e",
+      "chengyinhub-xcx/pages/club/detail/index.wxss": "80e7caf5b902770f243c64efaf823dd41aa32d1b12a7004e5111ae76b340e579"
+    },
+    "changes": [
+      "俱乐部类型与活动倾向移除重复16px内边距，标题、内容、按钮共用左右16px留白",
+      "俱乐部类型正文字号16px改14px，应用按钮复用cy-btn及固定footer，字号14px改16px",
+      "圆点选择的长标签增加8px横向间隔与上下留白，勾选模式和即时菜单不进入新增规则",
+      "俱乐部黑色编辑外壳移除描边，仅作用于club-edit宿主"
+    ],
+    "native_states": [
+      "nongame-round4-after/club-prefs-nested.png",
+      "nongame-round4-after/club-prefs.png",
+      "nongame-round4-after/club-type-nested.png",
+      "nongame-round4-after/club-type.png",
+      "nongame-round4-after/option-long.png",
+      "nongame-round4-after/option-sheet.png"
+    ],
+    "native_screenshot_sha256": {
+      "nongame-round4-after/club-prefs-nested.png": "88a3d1b24c42d131d16d9328bd0134b29dba890797848440c023f5c06d50cdb8",
+      "nongame-round4-after/club-prefs.png": "077c9251f2a431aa4141444ed24100b9fc48d0c44668fa2b58cb39b88af6a41a",
+      "nongame-round4-after/club-type-nested.png": "619b55c3be1c80ca2cfc95e8375cbc9118aafb81ee2c43c5b56f4f4c4e955033",
+      "nongame-round4-after/club-type.png": "cba43cd8604ba985351495e33bd08d37454bd6a9f17fa5d5b04a2e146db2b068",
+      "nongame-round4-after/option-long.png": "5b295310c84b4e5f4267ec7ce891bb73184b9fab2416117787a49ea83133193d",
+      "nongame-round4-after/option-sheet.png": "8936943a0eaab69a34fb5ba50edfaa9f8d33d91162c11dcf79a6037743f3b5b3"
+    },
+    "geometry_before": {
+      ".pk": {
+        "left": 16,
+        "top": 388,
+        "width": 358,
+        "height": 406,
+        "right": 374,
+        "bottom": 794,
+        "centerX": 195,
+        "centerY": 591
+      },
+      ".pk-opts": {
+        "left": 32,
+        "top": 388,
+        "width": 326,
+        "height": 329,
+        "right": 358,
+        "bottom": 717,
+        "centerX": 195,
+        "centerY": 552.5
+      },
+      ".pk-opt": {
+        "left": 32,
+        "top": 388,
+        "width": 326,
+        "height": 55,
+        "right": 358,
+        "bottom": 443,
+        "centerX": 195,
+        "centerY": 415.5
+      },
+      ".pk-opt-name": {
+        "left": 32,
+        "top": 391.906,
+        "width": 298,
+        "height": 26,
+        "right": 330,
+        "bottom": 417.906,
+        "centerX": 181,
+        "centerY": 404.906
+      },
+      ".pk-opt-tick": {
+        "left": 338,
+        "top": 405,
+        "width": 20,
+        "height": 20,
+        "right": 358,
+        "bottom": 425,
+        "centerX": 348,
+        "centerY": 415
+      },
+      ".pk-apply": {
+        "left": 32,
+        "top": 733,
+        "width": 326,
+        "height": 45,
+        "right": 358,
+        "bottom": 778,
+        "centerX": 195,
+        "centerY": 755.5
+      },
+      ".sh__panel": {
+        "left": 0,
+        "top": 307,
+        "width": 390,
+        "height": 537,
+        "right": 390,
+        "bottom": 844,
+        "centerX": 195,
+        "centerY": 575.5
+      },
+      ".sh__title": {
+        "left": 16,
+        "top": 335,
+        "width": 358,
+        "height": 45,
+        "right": 374,
+        "bottom": 380,
+        "centerX": 195,
+        "centerY": 357.5
+      },
+      ".sh__body": {
+        "left": 16,
+        "top": 384,
+        "width": 358,
+        "height": 414,
+        "right": 374,
+        "bottom": 798,
+        "centerX": 195,
+        "centerY": 591
+      },
+      "labelSize": "16px",
+      "buttonSize": "14px"
+    },
+    "geometry_after": {
+      ".pk": {
+        "left": 16,
+        "top": 388,
+        "width": 358,
+        "height": 353,
+        "right": 374,
+        "bottom": 741,
+        "centerX": 195,
+        "centerY": 564.5
+      },
+      ".pk-opts": {
+        "left": 16,
+        "top": 388,
+        "width": 358,
+        "height": 353,
+        "right": 374,
+        "bottom": 741,
+        "centerX": 195,
+        "centerY": 564.5
+      },
+      ".pk-opt": {
+        "left": 16,
+        "top": 388,
+        "width": 358,
+        "height": 59,
+        "right": 374,
+        "bottom": 447,
+        "centerX": 195,
+        "centerY": 417.5
+      },
+      ".pk-opt-name": {
+        "left": 16,
+        "top": 395.5,
+        "width": 330,
+        "height": 22,
+        "right": 346,
+        "bottom": 417.5,
+        "centerX": 181,
+        "centerY": 406.5
+      },
+      ".pk-opt-tick": {
+        "left": 354,
+        "top": 407,
+        "width": 20,
+        "height": 20,
+        "right": 374,
+        "bottom": 427,
+        "centerX": 364,
+        "centerY": 417
+      },
+      ".sh__panel": {
+        "left": 0,
+        "top": 307,
+        "width": 390,
+        "height": 537,
+        "right": 390,
+        "bottom": 844,
+        "centerX": 195,
+        "centerY": 575.5
+      },
+      ".sh__title": {
+        "left": 16,
+        "top": 335,
+        "width": 358,
+        "height": 45,
+        "right": 374,
+        "bottom": 380,
+        "centerX": 195,
+        "centerY": 357.5
+      },
+      ".sh__body": {
+        "left": 16,
+        "top": 384,
+        "width": 358,
+        "height": 361,
+        "right": 374,
+        "bottom": 745,
+        "centerX": 195,
+        "centerY": 564.5
+      },
+      "labelSize": "14px",
+      ".apply": {
+        "left": 16,
+        "top": 753,
+        "width": 358,
+        "height": 45,
+        "right": 374,
+        "bottom": 798,
+        "centerX": 195,
+        "centerY": 775.5
+      },
+      "buttonSize": "16px"
+    },
+    "long_label_before": {
+      "row": {
+        "left": 16,
+        "top": 509,
+        "width": 358,
+        "height": 58,
+        "right": 374,
+        "bottom": 567,
+        "centerX": 195,
+        "centerY": 538
+      },
+      "label": {
+        "left": 16,
+        "top": 515.102,
+        "width": 338,
+        "height": 45,
+        "right": 354,
+        "bottom": 560.102,
+        "centerX": 185,
+        "centerY": 537.602
+      },
+      "dot": {
+        "left": 354,
+        "top": 527.5,
+        "width": 20,
+        "height": 20,
+        "right": 374,
+        "bottom": 547.5,
+        "centerX": 364,
+        "centerY": 537.5
+      },
+      "gap": 0,
+      "labelSize": "14px",
+      "lineHeight": "22.4px"
+    },
+    "long_label_after": {
+      "row": {
+        "left": 16,
+        "top": 505.203,
+        "width": 358,
+        "height": 62,
+        "right": 374,
+        "bottom": 567.203,
+        "centerX": 195,
+        "centerY": 536.203
+      },
+      "label": {
+        "left": 16,
+        "top": 513.203,
+        "width": 330,
+        "height": 45,
+        "right": 346,
+        "bottom": 558.203,
+        "centerX": 181,
+        "centerY": 535.703
+      },
+      "dot": {
+        "left": 354,
+        "top": 525.602,
+        "width": 20,
+        "height": 20,
+        "right": 374,
+        "bottom": 545.602,
+        "centerX": 364,
+        "centerY": 535.602
+      },
+      "gap": 8,
+      "labelSize": "14px",
+      "lineHeight": "22.4px"
+    },
+    "club_selection": {
+      "typeDraft": true,
+      "typeCancel": true,
+      "typeApplyAndClose": true,
+      "typeReopen": true,
+      "prefsLimit": true,
+      "prefsApplyAndClose": true,
+      "prefsReopen": true,
+      "prefsCancel": true,
+      "storedProfileWrite": false,
+      "loadState": "missing-param"
+    },
+    "nested_host": {
+      "route": "pages/club/detail/index",
+      "controlled_scene": true,
+      "load_state": "missing-param",
+      "normal_business_entry": false,
+      "panel": {
+        "left": 0,
+        "top": 307,
+        "width": 390,
+        "height": 537,
+        "right": 390,
+        "bottom": 844,
+        "centerX": 195,
+        "centerY": 575.5
+      },
+      "title": {
+        "left": 16,
+        "top": 335,
+        "width": 358,
+        "height": 45,
+        "right": 374,
+        "bottom": 380,
+        "centerX": 195,
+        "centerY": 357.5
+      },
+      "button": {
+        "left": 16,
+        "top": 753,
+        "width": 358,
+        "height": 45,
+        "right": 374,
+        "bottom": 798,
+        "centerX": 195,
+        "centerY": 775.5
+      },
+      "type_close": true,
+      "prefs_close": true
+    },
+    "option_selection": {
+      "two_row_taps_read_back": true,
+      "close_read_back": true,
+      "confirm_business_action_executed": false
+    },
+    "tests": {
+      "passed": 62,
+      "failed": 0,
+      "skipped": 0,
+      "existing_test_files": 12,
+      "log": "round4-tests.txt"
+    },
+    "native_compile_success": 5,
+    "ui_gate": {
+      "status": "PASS",
+      "complete_isolated_snapshot": true,
+      "source_bytes_match": true,
+      "temporary_snapshot_removed": true,
+      "excluded_foreign_files": [
+        "chengyinhub-xcx/pages/publish/activity/index.wxml",
+        "chengyinhub-xcx/tests/unit/nav-polish-single-title-contract.test.js"
+      ]
+    },
+    "limits": [
+      "原生受控显示：合作评价、俱乐部深链和管理页嵌套宿主均缺业务编号；未绕过权限、保存资料或提交评价。",
+      "验证选择、取消、应用、重新打开和最多3项限制；未验证真实俱乐部正常业务入口或真机。",
+      "长选项使用临时显示文字，结束恢复；旧勋章长内容末端滚动和WebGL墙模式关闭回读仍未完成。"
+    ]
+  },
+  "initial_candidate_counts": {
+    "shared_content": 28,
+    "fixed_native_verified": 18,
+    "not_overlay": 2,
+    "excluded_game": 51
+  },
+  "followup_complete": {
+    "code_commit": "24756968eeb06e96e7c6d9a9c2a1842b4b7c8ec7",
+    "coverage": {
+      "custom_candidates": 99,
+      "excluded_game": 51,
+      "not_overlay": 2,
+      "nongame_popup_types": 46,
+      "native_representative_types_accumulated": 42,
+      "this_round_native_representative_types": 24,
+      "previous_round_native_representative_types": 18,
+      "blocked_native_types": 4,
+      "native_business_acceptance": false,
+      "all_page_routes_individually_opened": false
+    },
+    "handoff": "complete/coverage-and-handoff.json",
+    "source_inventory": "complete/source-inventory.json",
+    "remaining_ids": [
+      11,
+      14,
+      15,
+      16
+    ],
+    "badge_pending": {
+      "native_start_layout_verified": true,
+      "final_wxml_wheel_end_verified": false,
+      "real_device_touch_verified": false,
+      "webgl_wall_close_verified": false,
+      "reason": "Owned DevTools window was closed after the start screenshot; CUA returned noWindowsAvailable. Previous wheel-only observation is not fresh proof for the final WXML."
+    }
+  }
+}

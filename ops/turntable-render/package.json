@@ -1,0 +1,11 @@
+{
+  "name": "chengyin-turntable-render",
+  "private": true,
+  "description": "GLB → 24 帧转台 WebP,ECS 上由 objectCardGenTask 调用(施工文档第三版 §4.4)",
+  "main": "render.js",
+  "engines": { "node": ">=22.12.0" },
+  "dependencies": {
+    "puppeteer-core": "25.11.0",
+    "three": "0.160.0"
+  }
+}

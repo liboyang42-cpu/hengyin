@@ -1,0 +1,1603 @@
+{
+  "schemaVersion": 1,
+  "capacity": 6,
+  "hpName": "保暖值",
+  "luckName": "幸运值",
+  "replayEnabled": true,
+  "rescueLimit": 1,
+  "actionLimit": 8,
+  "actionSources": [
+    "NODE"
+  ],
+  "rotation": "ROUND_ROBIN",
+  "currentScene": "s1",
+  "items": [
+    {
+      "id": "food",
+      "kind": "ITEM",
+      "name": "口粮",
+      "stat": "HP",
+      "delta": 2
+    },
+    {
+      "id": "fuel",
+      "kind": "ITEM",
+      "name": "燃料",
+      "stat": "HP",
+      "delta": 4
+    },
+    {
+      "id": "coat",
+      "kind": "ITEM",
+      "name": "保暖外套",
+      "stat": "HP",
+      "delta": 1,
+      "wear": true,
+      "mode": "HELD"
+    },
+    {
+      "id": "components",
+      "kind": "MEDAL",
+      "name": "修理凭证"
+    },
+    {
+      "id": "medical",
+      "kind": "ITEM",
+      "name": "医疗补给",
+      "stat": "HP",
+      "delta": 2
+    },
+    {
+      "id": "instructions",
+      "kind": "MEDAL",
+      "name": "启动指令"
+    },
+    {
+      "id": "engineer",
+      "kind": "MEDAL",
+      "name": "周工程师同行记录"
+    },
+    {
+      "id": "resident",
+      "kind": "MEDAL",
+      "name": "林老师同行记录"
+    },
+    {
+      "id": "record",
+      "kind": "MEDAL",
+      "name": "运输记录"
+    },
+    {
+      "id": "last_light",
+      "kind": "MEDAL",
+      "name": "最后的灯光"
+    }
+  ],
+  "card": {
+    "fields": [
+      "scene",
+      "ending",
+      "hp",
+      "actions",
+      "medals",
+      "items",
+      "story",
+      "rescue"
+    ],
+    "showUnlocks": true
+  },
+  "endings": [
+    {
+      "id": "together",
+      "title": "一起熬过寒夜",
+      "summary": "供暖站重新亮起。周工程师与林老师都和你一起走到了这里。",
+      "priority": 30,
+      "success": true,
+      "reasons": [
+        "COMPLETED"
+      ],
+      "when": [
+        {
+          "op": "ITEM_HELD",
+          "itemId": "fuel",
+          "quantity": 2
+        },
+        {
+          "op": "ITEM_ACQUIRED",
+          "itemId": "instructions",
+          "quantity": 1
+        },
+        {
+          "op": "GTE",
+          "var": "clue.repair",
+          "value": 1
+        },
+        {
+          "op": "ITEM_ACQUIRED",
+          "itemId": "engineer",
+          "quantity": 1
+        },
+        {
+          "op": "ITEM_ACQUIRED",
+          "itemId": "resident",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "id": "lights",
+      "title": "灯光重新亮起",
+      "summary": "燃料、修理能力与启动指令齐备，你恢复了街区供暖。",
+      "priority": 20,
+      "success": true,
+      "reasons": [
+        "COMPLETED"
+      ],
+      "when": [
+        {
+          "op": "ITEM_HELD",
+          "itemId": "fuel",
+          "quantity": 2
+        },
+        {
+          "op": "ITEM_ACQUIRED",
+          "itemId": "instructions",
+          "quantity": 1
+        },
+        {
+          "op": "GTE",
+          "var": "clue.repair",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "last_can",
+      "title": "最后一罐燃料",
+      "summary": "你抵达供暖站，保留下来的燃料为应急庇护提供了希望。",
+      "priority": 10,
+      "success": false,
+      "reasons": [
+        "COMPLETED"
+      ],
+      "when": [
+        {
+          "op": "ITEM_HELD",
+          "itemId": "fuel",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "id": "rescue",
+      "title": "风雪中的救援",
+      "summary": "你留下了本局的发现和决定，救援队接过了最后一段路。",
+      "fallback": true,
+      "success": false
+    }
+  ],
+  "scenes": [
+    {
+      "id": "s1",
+      "name": "第一夜",
+      "grants": [
+        {
+          "id": "supply_food",
+          "source": "CHOICE",
+          "itemId": "food",
+          "quantity": 2,
+          "nodeId": 1,
+          "step": "choose",
+          "option": "food"
+        },
+        {
+          "id": "supply_coat",
+          "source": "CHOICE",
+          "itemId": "coat",
+          "quantity": 1,
+          "nodeId": 1,
+          "step": "choose",
+          "option": "coat"
+        },
+        {
+          "id": "depot_supply",
+          "source": "NODE",
+          "itemId": "fuel",
+          "quantity": 1,
+          "nodeId": 2
+        },
+        {
+          "id": "record_found",
+          "source": "NODE",
+          "itemId": "record",
+          "quantity": 1,
+          "nodeId": 3
+        },
+        {
+          "id": "workshop_fuel",
+          "source": "CHOICE",
+          "itemId": "fuel",
+          "quantity": 1,
+          "nodeId": 4,
+          "step": "choose",
+          "option": "fuel"
+        },
+        {
+          "id": "workshop_repair",
+          "source": "CHOICE",
+          "itemId": "components",
+          "quantity": 1,
+          "nodeId": 4,
+          "step": "choose",
+          "option": "repair"
+        },
+        {
+          "id": "shelter_supply",
+          "source": "CHOICE",
+          "itemId": "fuel",
+          "quantity": 1,
+          "nodeId": 5,
+          "step": "choose",
+          "option": "take"
+        },
+        {
+          "id": "radio_instructions",
+          "source": "NODE",
+          "itemId": "instructions",
+          "quantity": 1,
+          "nodeId": 6
+        },
+        {
+          "id": "engineer_food",
+          "source": "CHOICE",
+          "nodeId": 3,
+          "step": "help_engineer",
+          "option": "food",
+          "itemId": "engineer",
+          "quantity": 1,
+          "when": [
+            {
+              "op": "ITEM_HELD",
+              "itemId": "food",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "id": "engineer_medical",
+          "source": "CHOICE",
+          "nodeId": 3,
+          "step": "help_engineer",
+          "option": "medical",
+          "itemId": "engineer",
+          "quantity": 1,
+          "when": [
+            {
+              "op": "ITEM_HELD",
+              "itemId": "medical",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "id": "resident_food",
+          "source": "CHOICE",
+          "nodeId": 6,
+          "step": "help_resident",
+          "option": "food",
+          "itemId": "resident",
+          "quantity": 1,
+          "when": [
+            {
+              "op": "ITEM_HELD",
+              "itemId": "food",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "id": "resident_coat",
+          "source": "CHOICE",
+          "nodeId": 6,
+          "step": "help_resident",
+          "option": "coat",
+          "itemId": "resident",
+          "quantity": 1,
+          "when": [
+            {
+              "op": "ITEM_HELD",
+              "itemId": "coat",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "id": "finish_collection",
+          "source": "ENDING",
+          "itemId": "last_light",
+          "quantity": 1
+        }
+      ],
+      "events": [
+        {
+          "id": "opening",
+          "content": "极寒的第十二天，你楼里的供暖停了。广播室保存着启动指令，最后的供暖站仍有重新启动的可能。你的背包里有一份口粮。",
+          "grants": [
+            {
+              "itemId": "food",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "id": "repair_components",
+          "content": "修理凭证已经登记，可以独立处理水泵故障。",
+          "when": [
+            {
+              "op": "ITEM_ACQUIRED",
+              "itemId": "components",
+              "quantity": 1
+            }
+          ],
+          "effects": [
+            {
+              "var": "clue.repair",
+              "op": "SET",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "repair_engineer",
+          "content": "周工程师已经同行，他能协助完成水泵修理。",
+          "when": [
+            {
+              "op": "ITEM_ACQUIRED",
+              "itemId": "engineer",
+              "quantity": 1
+            }
+          ],
+          "effects": [
+            {
+              "var": "clue.repair",
+              "op": "SET",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "midway",
+          "content": "第四站的回执传来：补给车已抵达。援助包会直接登记为本局待领取物资，请检查背包空位。",
+          "when": [
+            {
+              "op": "GTE",
+              "var": "sys.actions",
+              "value": 4
+            }
+          ],
+          "grants": [
+            {
+              "itemId": "food",
+              "quantity": 2
+            }
+          ]
+        }
+      ],
+      "nodeConfigs": {
+        "1": {
+          "schemaVersion": 1,
+          "branch": {
+            "enabled": true,
+            "startStepId": "choose",
+            "steps": [
+              {
+                "id": "choose",
+                "title": "补给店",
+                "body": "货架还留有一批口粮。你可以拿口粮，或穿上自动生效的保暖外套。",
+                "options": [
+                  {
+                    "id": "food",
+                    "label": "拿口粮",
+                    "nextStepId": "done"
+                  },
+                  {
+                    "id": "coat",
+                    "label": "拿外套",
+                    "nextStepId": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "title": "这一站的决定已记录",
+                "body": "完成本节点后按固定路线前往下一站。",
+                "terminal": true,
+                "outcomeCode": "COMPLETED",
+                "outcomeLabel": "完成本站",
+                "options": []
+              }
+            ]
+          }
+        },
+        "2": {
+          "schemaVersion": 1,
+          "branch": {
+            "enabled": true,
+            "startStepId": "choose",
+            "steps": [
+              {
+                "id": "choose",
+                "title": "运输点",
+                "body": "这里还有一罐可领取的燃料。运输记录保留为本局收藏。",
+                "options": [
+                  {
+                    "id": "continue",
+                    "label": "登记运输物资",
+                    "nextStepId": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "title": "这一站的决定已记录",
+                "body": "完成本节点后按固定路线前往下一站。",
+                "terminal": true,
+                "outcomeCode": "COMPLETED",
+                "outcomeLabel": "完成本站",
+                "options": []
+              }
+            ]
+          }
+        },
+        "3": {
+          "schemaVersion": 1,
+          "branch": {
+            "enabled": true,
+            "startStepId": "choose",
+            "steps": [
+              {
+                "id": "choose",
+                "title": "援助站",
+                "body": "这处援助站已被撤空。查看信息后继续前行。",
+                "options": [
+                  {
+                    "id": "continue",
+                    "label": "查看援助记录",
+                    "nextStepId": "help_engineer"
+                  }
+                ]
+              },
+              {
+                "id": "help_engineer",
+                "title": "周工程师",
+                "body": "周工程师还在等待同行的邀请。只有本局仍持有所选补给，才会登记为同行成功。此版不增加交付物品的操作。",
+                "options": [
+                  {
+                    "id": "food",
+                    "label": "凭口粮邀请同行",
+                    "nextStepId": "done"
+                  },
+                  {
+                    "id": "medical",
+                    "label": "凭医疗补给邀请同行",
+                    "nextStepId": "done"
+                  },
+                  {
+                    "id": "leave",
+                    "label": "留下联系记录，继续前行",
+                    "nextStepId": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "title": "这一站的决定已记录",
+                "body": "完成本节点后按固定路线前往下一站。",
+                "terminal": true,
+                "outcomeCode": "COMPLETED",
+                "outcomeLabel": "完成本站",
+                "options": []
+              }
+            ]
+          }
+        },
+        "4": {
+          "schemaVersion": 1,
+          "branch": {
+            "enabled": true,
+            "startStepId": "choose",
+            "steps": [
+              {
+                "id": "choose",
+                "title": "维修点",
+                "body": "工作台上还有修理凭证和一罐燃料，可以选择其一。",
+                "options": [
+                  {
+                    "id": "fuel",
+                    "label": "保留燃料",
+                    "nextStepId": "done"
+                  },
+                  {
+                    "id": "repair",
+                    "label": "取得修理凭证",
+                    "nextStepId": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "title": "这一站的决定已记录",
+                "body": "完成本节点后按固定路线前往下一站。",
+                "terminal": true,
+                "outcomeCode": "COMPLETED",
+                "outcomeLabel": "完成本站",
+                "options": []
+              }
+            ]
+          }
+        },
+        "5": {
+          "schemaVersion": 1,
+          "branch": {
+            "enabled": true,
+            "startStepId": "choose",
+            "steps": [
+              {
+                "id": "choose",
+                "title": "避风点",
+                "body": "你可以领取最后一罐燃料，或者保留空位。物品使用仍在本局背包中结算。",
+                "options": [
+                  {
+                    "id": "take",
+                    "label": "领取补给",
+                    "nextStepId": "done"
+                  },
+                  {
+                    "id": "leave",
+                    "label": "保留背包空位",
+                    "nextStepId": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "title": "这一站的决定已记录",
+                "body": "完成本节点后按固定路线前往下一站。",
+                "terminal": true,
+                "outcomeCode": "COMPLETED",
+                "outcomeLabel": "完成本站",
+                "options": []
+              }
+            ]
+          }
+        },
+        "6": {
+          "schemaVersion": 1,
+          "branch": {
+            "enabled": true,
+            "startStepId": "choose",
+            "steps": [
+              {
+                "id": "choose",
+                "title": "广播室",
+                "body": "启动顺序存放在这里。完成本站后获得启动指令，再前往供暖站。",
+                "options": [
+                  {
+                    "id": "continue",
+                    "label": "确认并记录启动指令",
+                    "nextStepId": "help_resident"
+                  }
+                ]
+              },
+              {
+                "id": "help_resident",
+                "title": "林老师",
+                "body": "林老师还在等待同行的邀请。只有本局仍持有所选补给，才会登记为同行成功。此版不增加交付物品的操作。",
+                "options": [
+                  {
+                    "id": "food",
+                    "label": "凭口粮邀请同行",
+                    "nextStepId": "done"
+                  },
+                  {
+                    "id": "coat",
+                    "label": "凭保暖外套邀请同行",
+                    "nextStepId": "done"
+                  },
+                  {
+                    "id": "leave",
+                    "label": "留下联系记录，继续前行",
+                    "nextStepId": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "title": "这一站的决定已记录",
+                "body": "完成本节点后按固定路线前往下一站。",
+                "terminal": true,
+                "outcomeCode": "COMPLETED",
+                "outcomeLabel": "完成本站",
+                "options": []
+              }
+            ]
+          }
+        },
+        "7": {
+          "schemaVersion": 1,
+          "branch": {
+            "enabled": true,
+            "startStepId": "choose",
+            "steps": [
+              {
+                "id": "choose",
+                "title": "供暖站",
+                "body": "这是最后一站。系统会核对本局当前燃料、修理凭证或工程师同行事实，以及启动指令。",
+                "options": [
+                  {
+                    "id": "finish",
+                    "label": "完成最后一站，查看本局结果",
+                    "nextStepId": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "title": "这一站的决定已记录",
+                "body": "完成本节点后按固定路线前往下一站。",
+                "terminal": true,
+                "outcomeCode": "COMPLETED",
+                "outcomeLabel": "完成本站",
+                "options": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "s2",
+      "name": "被搜空的街区",
+      "grants": [
+        {
+          "id": "supply_food",
+          "source": "CHOICE",
+          "itemId": "food",
+          "quantity": 1,
+          "nodeId": 1,
+          "step": "choose",
+          "option": "food"
+        },
+        {
+          "id": "supply_coat",
+          "source": "CHOICE",
+          "itemId": "coat",
+          "quantity": 1,
+          "nodeId": 1,
+          "step": "choose",
+          "option": "coat"
+        },
+        {
+          "id": "depot_supply",
+          "source": "NODE",
+          "itemId": "fuel",
+          "quantity": 1,
+          "nodeId": 2
+        },
+        {
+          "id": "medical_stock",
+          "source": "NODE",
+          "itemId": "medical",
+          "quantity": 1,
+          "nodeId": 3
+        },
+        {
+          "id": "record_found",
+          "source": "NODE",
+          "itemId": "record",
+          "quantity": 1,
+          "nodeId": 3
+        },
+        {
+          "id": "workshop_fuel",
+          "source": "CHOICE",
+          "itemId": "fuel",
+          "quantity": 1,
+          "nodeId": 4,
+          "step": "choose",
+          "option": "fuel"
+        },
+        {
+          "id": "workshop_repair",
+          "source": "CHOICE",
+          "itemId": "components",
+          "quantity": 1,
+          "nodeId": 4,
+          "step": "choose",
+          "option": "repair"
+        },
+        {
+          "id": "shelter_supply",
+          "source": "CHOICE",
+          "itemId": "food",
+          "quantity": 1,
+          "nodeId": 5,
+          "step": "choose",
+          "option": "take"
+        },
+        {
+          "id": "radio_instructions",
+          "source": "NODE",
+          "itemId": "instructions",
+          "quantity": 1,
+          "nodeId": 6
+        },
+        {
+          "id": "engineer_food",
+          "source": "CHOICE",
+          "nodeId": 4,
+          "step": "help_engineer",
+          "option": "food",
+          "itemId": "engineer",
+          "quantity": 1,
+          "when": [
+            {
+              "op": "ITEM_HELD",
+              "itemId": "food",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "id": "engineer_medical",
+          "source": "CHOICE",
+          "nodeId": 4,
+          "step": "help_engineer",
+          "option": "medical",
+          "itemId": "engineer",
+          "quantity": 1,
+          "when": [
+            {
+              "op": "ITEM_HELD",
+              "itemId": "medical",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "id": "resident_food",
+          "source": "CHOICE",
+          "nodeId": 6,
+          "step": "help_resident",
+          "option": "food",
+          "itemId": "resident",
+          "quantity": 1,
+          "when": [
+            {
+              "op": "ITEM_HELD",
+              "itemId": "food",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "id": "resident_coat",
+          "source": "CHOICE",
+          "nodeId": 6,
+          "step": "help_resident",
+          "option": "coat",
+          "itemId": "resident",
+          "quantity": 1,
+          "when": [
+            {
+              "op": "ITEM_HELD",
+              "itemId": "coat",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "id": "finish_collection",
+          "source": "ENDING",
+          "itemId": "last_light",
+          "quantity": 1
+        }
+      ],
+      "events": [
+        {
+          "id": "opening",
+          "content": "极寒的第十二天，你楼里的供暖停了。广播室保存着启动指令，最后的供暖站仍有重新启动的可能。你的背包里有一份口粮。",
+          "grants": [
+            {
+              "itemId": "food",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "id": "repair_components",
+          "content": "修理凭证已经登记，可以独立处理水泵故障。",
+          "when": [
+            {
+              "op": "ITEM_ACQUIRED",
+              "itemId": "components",
+              "quantity": 1
+            }
+          ],
+          "effects": [
+            {
+              "var": "clue.repair",
+              "op": "SET",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "repair_engineer",
+          "content": "周工程师已经同行，他能协助完成水泵修理。",
+          "when": [
+            {
+              "op": "ITEM_ACQUIRED",
+              "itemId": "engineer",
+              "quantity": 1
+            }
+          ],
+          "effects": [
+            {
+              "var": "clue.repair",
+              "op": "SET",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "midway",
+          "content": "第四站的回执传来：寒潮正在加剧。维修点已经没有额外库存，请留意手里的燃料与口粮。",
+          "when": [
+            {
+              "op": "GTE",
+              "var": "sys.actions",
+              "value": 4
+            }
+          ]
+        }
+      ],
+      "nodeConfigs": {
+        "1": {
+          "schemaVersion": 1,
+          "branch": {
+            "enabled": true,
+            "startStepId": "choose",
+            "steps": [
+              {
+                "id": "choose",
+                "title": "补给店",
+                "body": "货架只剩一点食物。你可以拿口粮，或穿上自动生效的保暖外套。",
+                "options": [
+                  {
+                    "id": "food",
+                    "label": "拿口粮",
+                    "nextStepId": "done"
+                  },
+                  {
+                    "id": "coat",
+                    "label": "拿外套",
+                    "nextStepId": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "title": "这一站的决定已记录",
+                "body": "完成本节点后按固定路线前往下一站。",
+                "terminal": true,
+                "outcomeCode": "COMPLETED",
+                "outcomeLabel": "完成本站",
+                "options": []
+              }
+            ]
+          }
+        },
+        "2": {
+          "schemaVersion": 1,
+          "branch": {
+            "enabled": true,
+            "startStepId": "choose",
+            "steps": [
+              {
+                "id": "choose",
+                "title": "运输点",
+                "body": "这里还有一罐可领取的燃料。运输记录保留为本局收藏。",
+                "options": [
+                  {
+                    "id": "continue",
+                    "label": "登记运输物资",
+                    "nextStepId": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "title": "这一站的决定已记录",
+                "body": "完成本节点后按固定路线前往下一站。",
+                "terminal": true,
+                "outcomeCode": "COMPLETED",
+                "outcomeLabel": "完成本站",
+                "options": []
+              }
+            ]
+          }
+        },
+        "3": {
+          "schemaVersion": 1,
+          "branch": {
+            "enabled": true,
+            "startStepId": "choose",
+            "steps": [
+              {
+                "id": "choose",
+                "title": "援助站",
+                "body": "这处援助站还保存着医疗补给。查看信息后继续前行。",
+                "options": [
+                  {
+                    "id": "continue",
+                    "label": "查看援助记录",
+                    "nextStepId": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "title": "这一站的决定已记录",
+                "body": "完成本节点后按固定路线前往下一站。",
+                "terminal": true,
+                "outcomeCode": "COMPLETED",
+                "outcomeLabel": "完成本站",
+                "options": []
+              }
+            ]
+          }
+        },
+        "4": {
+          "schemaVersion": 1,
+          "branch": {
+            "enabled": true,
+            "startStepId": "choose",
+            "steps": [
+              {
+                "id": "choose",
+                "title": "维修点",
+                "body": "工作台上还有修理凭证和一罐燃料，可以选择其一。",
+                "options": [
+                  {
+                    "id": "fuel",
+                    "label": "保留燃料",
+                    "nextStepId": "help_engineer"
+                  },
+                  {
+                    "id": "repair",
+                    "label": "取得修理凭证",
+                    "nextStepId": "help_engineer"
+                  }
+                ]
+              },
+              {
+                "id": "help_engineer",
+                "title": "周工程师",
+                "body": "周工程师还在等待同行的邀请。只有本局仍持有所选补给，才会登记为同行成功。此版不增加交付物品的操作。",
+                "options": [
+                  {
+                    "id": "food",
+                    "label": "凭口粮邀请同行",
+                    "nextStepId": "done"
+                  },
+                  {
+                    "id": "medical",
+                    "label": "凭医疗补给邀请同行",
+                    "nextStepId": "done"
+                  },
+                  {
+                    "id": "leave",
+                    "label": "留下联系记录，继续前行",
+                    "nextStepId": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "title": "这一站的决定已记录",
+                "body": "完成本节点后按固定路线前往下一站。",
+                "terminal": true,
+                "outcomeCode": "COMPLETED",
+                "outcomeLabel": "完成本站",
+                "options": []
+              }
+            ]
+          }
+        },
+        "5": {
+          "schemaVersion": 1,
+          "branch": {
+            "enabled": true,
+            "startStepId": "choose",
+            "steps": [
+              {
+                "id": "choose",
+                "title": "避风点",
+                "body": "你可以领取口粮，或者保留空位。物品使用仍在本局背包中结算。",
+                "options": [
+                  {
+                    "id": "take",
+                    "label": "领取补给",
+                    "nextStepId": "done"
+                  },
+                  {
+                    "id": "leave",
+                    "label": "保留背包空位",
+                    "nextStepId": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "title": "这一站的决定已记录",
+                "body": "完成本节点后按固定路线前往下一站。",
+                "terminal": true,
+                "outcomeCode": "COMPLETED",
+                "outcomeLabel": "完成本站",
+                "options": []
+              }
+            ]
+          }
+        },
+        "6": {
+          "schemaVersion": 1,
+          "branch": {
+            "enabled": true,
+            "startStepId": "choose",
+            "steps": [
+              {
+                "id": "choose",
+                "title": "广播室",
+                "body": "启动顺序存放在这里。完成本站后获得启动指令，再前往供暖站。",
+                "options": [
+                  {
+                    "id": "continue",
+                    "label": "确认并记录启动指令",
+                    "nextStepId": "help_resident"
+                  }
+                ]
+              },
+              {
+                "id": "help_resident",
+                "title": "林老师",
+                "body": "林老师还在等待同行的邀请。只有本局仍持有所选补给，才会登记为同行成功。此版不增加交付物品的操作。",
+                "options": [
+                  {
+                    "id": "food",
+                    "label": "凭口粮邀请同行",
+                    "nextStepId": "done"
+                  },
+                  {
+                    "id": "coat",
+                    "label": "凭保暖外套邀请同行",
+                    "nextStepId": "done"
+                  },
+                  {
+                    "id": "leave",
+                    "label": "留下联系记录，继续前行",
+                    "nextStepId": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "title": "这一站的决定已记录",
+                "body": "完成本节点后按固定路线前往下一站。",
+                "terminal": true,
+                "outcomeCode": "COMPLETED",
+                "outcomeLabel": "完成本站",
+                "options": []
+              }
+            ]
+          }
+        },
+        "7": {
+          "schemaVersion": 1,
+          "branch": {
+            "enabled": true,
+            "startStepId": "choose",
+            "steps": [
+              {
+                "id": "choose",
+                "title": "供暖站",
+                "body": "这是最后一站。系统会核对本局当前燃料、修理凭证或工程师同行事实，以及启动指令。",
+                "options": [
+                  {
+                    "id": "finish",
+                    "label": "完成最后一站，查看本局结果",
+                    "nextStepId": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "title": "这一站的决定已记录",
+                "body": "完成本节点后按固定路线前往下一站。",
+                "terminal": true,
+                "outcomeCode": "COMPLETED",
+                "outcomeLabel": "完成本站",
+                "options": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "s3",
+      "name": "白茫预警",
+      "grants": [
+        {
+          "id": "supply_food",
+          "source": "CHOICE",
+          "itemId": "food",
+          "quantity": 2,
+          "nodeId": 1,
+          "step": "choose",
+          "option": "food"
+        },
+        {
+          "id": "supply_coat",
+          "source": "CHOICE",
+          "itemId": "coat",
+          "quantity": 1,
+          "nodeId": 1,
+          "step": "choose",
+          "option": "coat"
+        },
+        {
+          "id": "depot_supply",
+          "source": "NODE",
+          "itemId": "components",
+          "quantity": 1,
+          "nodeId": 2
+        },
+        {
+          "id": "medical_stock",
+          "source": "NODE",
+          "itemId": "medical",
+          "quantity": 1,
+          "nodeId": 3
+        },
+        {
+          "id": "record_found",
+          "source": "NODE",
+          "itemId": "record",
+          "quantity": 1,
+          "nodeId": 6
+        },
+        {
+          "id": "workshop_fuel",
+          "source": "CHOICE",
+          "itemId": "fuel",
+          "quantity": 1,
+          "nodeId": 4,
+          "step": "choose",
+          "option": "fuel"
+        },
+        {
+          "id": "shelter_supply",
+          "source": "CHOICE",
+          "itemId": "fuel",
+          "quantity": 1,
+          "nodeId": 5,
+          "step": "choose",
+          "option": "take"
+        },
+        {
+          "id": "radio_instructions",
+          "source": "NODE",
+          "itemId": "instructions",
+          "quantity": 1,
+          "nodeId": 6
+        },
+        {
+          "id": "engineer_food",
+          "source": "CHOICE",
+          "nodeId": 2,
+          "step": "help_engineer",
+          "option": "food",
+          "itemId": "engineer",
+          "quantity": 1,
+          "when": [
+            {
+              "op": "ITEM_HELD",
+              "itemId": "food",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "id": "engineer_medical",
+          "source": "CHOICE",
+          "nodeId": 2,
+          "step": "help_engineer",
+          "option": "medical",
+          "itemId": "engineer",
+          "quantity": 1,
+          "when": [
+            {
+              "op": "ITEM_HELD",
+              "itemId": "medical",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "id": "resident_food",
+          "source": "CHOICE",
+          "nodeId": 5,
+          "step": "help_resident",
+          "option": "food",
+          "itemId": "resident",
+          "quantity": 1,
+          "when": [
+            {
+              "op": "ITEM_HELD",
+              "itemId": "food",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "id": "resident_coat",
+          "source": "CHOICE",
+          "nodeId": 5,
+          "step": "help_resident",
+          "option": "coat",
+          "itemId": "resident",
+          "quantity": 1,
+          "when": [
+            {
+              "op": "ITEM_HELD",
+              "itemId": "coat",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "id": "finish_collection",
+          "source": "ENDING",
+          "itemId": "last_light",
+          "quantity": 1
+        }
+      ],
+      "events": [
+        {
+          "id": "opening",
+          "content": "极寒的第十二天，你楼里的供暖停了。广播室保存着启动指令，最后的供暖站仍有重新启动的可能。你的背包里有一份口粮。",
+          "grants": [
+            {
+              "itemId": "food",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "id": "repair_components",
+          "content": "修理凭证已经登记，可以独立处理水泵故障。",
+          "when": [
+            {
+              "op": "ITEM_ACQUIRED",
+              "itemId": "components",
+              "quantity": 1
+            }
+          ],
+          "effects": [
+            {
+              "var": "clue.repair",
+              "op": "SET",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "repair_engineer",
+          "content": "周工程师已经同行，他能协助完成水泵修理。",
+          "when": [
+            {
+              "op": "ITEM_ACQUIRED",
+              "itemId": "engineer",
+              "quantity": 1
+            }
+          ],
+          "effects": [
+            {
+              "var": "clue.repair",
+              "op": "SET",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "midway",
+          "content": "第四站的回执传来：林老师准备动身。避风点仍是你邀请她同行的固定站点。",
+          "when": [
+            {
+              "op": "GTE",
+              "var": "sys.actions",
+              "value": 4
+            }
+          ]
+        }
+      ],
+      "nodeConfigs": {
+        "1": {
+          "schemaVersion": 1,
+          "branch": {
+            "enabled": true,
+            "startStepId": "choose",
+            "steps": [
+              {
+                "id": "choose",
+                "title": "补给店",
+                "body": "货架还留有一批口粮。你可以拿口粮，或穿上自动生效的保暖外套。",
+                "options": [
+                  {
+                    "id": "food",
+                    "label": "拿口粮",
+                    "nextStepId": "done"
+                  },
+                  {
+                    "id": "coat",
+                    "label": "拿外套",
+                    "nextStepId": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "title": "这一站的决定已记录",
+                "body": "完成本节点后按固定路线前往下一站。",
+                "terminal": true,
+                "outcomeCode": "COMPLETED",
+                "outcomeLabel": "完成本站",
+                "options": []
+              }
+            ]
+          }
+        },
+        "2": {
+          "schemaVersion": 1,
+          "branch": {
+            "enabled": true,
+            "startStepId": "choose",
+            "steps": [
+              {
+                "id": "choose",
+                "title": "运输点",
+                "body": "这里只留下可用修理凭证。运输记录保留为本局收藏。",
+                "options": [
+                  {
+                    "id": "continue",
+                    "label": "登记运输物资",
+                    "nextStepId": "help_engineer"
+                  }
+                ]
+              },
+              {
+                "id": "help_engineer",
+                "title": "周工程师",
+                "body": "周工程师还在等待同行的邀请。只有本局仍持有所选补给，才会登记为同行成功。此版不增加交付物品的操作。",
+                "options": [
+                  {
+                    "id": "food",
+                    "label": "凭口粮邀请同行",
+                    "nextStepId": "done"
+                  },
+                  {
+                    "id": "medical",
+                    "label": "凭医疗补给邀请同行",
+                    "nextStepId": "done"
+                  },
+                  {
+                    "id": "leave",
+                    "label": "留下联系记录，继续前行",
+                    "nextStepId": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "title": "这一站的决定已记录",
+                "body": "完成本节点后按固定路线前往下一站。",
+                "terminal": true,
+                "outcomeCode": "COMPLETED",
+                "outcomeLabel": "完成本站",
+                "options": []
+              }
+            ]
+          }
+        },
+        "3": {
+          "schemaVersion": 1,
+          "branch": {
+            "enabled": true,
+            "startStepId": "choose",
+            "steps": [
+              {
+                "id": "choose",
+                "title": "援助站",
+                "body": "这处援助站还保存着医疗补给。查看信息后继续前行。",
+                "options": [
+                  {
+                    "id": "continue",
+                    "label": "查看援助记录",
+                    "nextStepId": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "title": "这一站的决定已记录",
+                "body": "完成本节点后按固定路线前往下一站。",
+                "terminal": true,
+                "outcomeCode": "COMPLETED",
+                "outcomeLabel": "完成本站",
+                "options": []
+              }
+            ]
+          }
+        },
+        "4": {
+          "schemaVersion": 1,
+          "branch": {
+            "enabled": true,
+            "startStepId": "choose",
+            "steps": [
+              {
+                "id": "choose",
+                "title": "维修点",
+                "body": "工作台上只剩一罐燃料。",
+                "options": [
+                  {
+                    "id": "fuel",
+                    "label": "保留燃料",
+                    "nextStepId": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "title": "这一站的决定已记录",
+                "body": "完成本节点后按固定路线前往下一站。",
+                "terminal": true,
+                "outcomeCode": "COMPLETED",
+                "outcomeLabel": "完成本站",
+                "options": []
+              }
+            ]
+          }
+        },
+        "5": {
+          "schemaVersion": 1,
+          "branch": {
+            "enabled": true,
+            "startStepId": "choose",
+            "steps": [
+              {
+                "id": "choose",
+                "title": "避风点",
+                "body": "你可以领取最后一罐燃料，或者保留空位。物品使用仍在本局背包中结算。",
+                "options": [
+                  {
+                    "id": "take",
+                    "label": "领取补给",
+                    "nextStepId": "help_resident"
+                  },
+                  {
+                    "id": "leave",
+                    "label": "保留背包空位",
+                    "nextStepId": "help_resident"
+                  }
+                ]
+              },
+              {
+                "id": "help_resident",
+                "title": "林老师",
+                "body": "林老师还在等待同行的邀请。只有本局仍持有所选补给，才会登记为同行成功。此版不增加交付物品的操作。",
+                "options": [
+                  {
+                    "id": "food",
+                    "label": "凭口粮邀请同行",
+                    "nextStepId": "done"
+                  },
+                  {
+                    "id": "coat",
+                    "label": "凭保暖外套邀请同行",
+                    "nextStepId": "done"
+                  },
+                  {
+                    "id": "leave",
+                    "label": "留下联系记录，继续前行",
+                    "nextStepId": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "title": "这一站的决定已记录",
+                "body": "完成本节点后按固定路线前往下一站。",
+                "terminal": true,
+                "outcomeCode": "COMPLETED",
+                "outcomeLabel": "完成本站",
+                "options": []
+              }
+            ]
+          }
+        },
+        "6": {
+          "schemaVersion": 1,
+          "branch": {
+            "enabled": true,
+            "startStepId": "choose",
+            "steps": [
+              {
+                "id": "choose",
+                "title": "广播室",
+                "body": "启动顺序存放在这里。完成本站后获得启动指令，再前往供暖站。",
+                "options": [
+                  {
+                    "id": "continue",
+                    "label": "确认并记录启动指令",
+                    "nextStepId": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "title": "这一站的决定已记录",
+                "body": "完成本节点后按固定路线前往下一站。",
+                "terminal": true,
+                "outcomeCode": "COMPLETED",
+                "outcomeLabel": "完成本站",
+                "options": []
+              }
+            ]
+          }
+        },
+        "7": {
+          "schemaVersion": 1,
+          "branch": {
+            "enabled": true,
+            "startStepId": "choose",
+            "steps": [
+              {
+                "id": "choose",
+                "title": "供暖站",
+                "body": "这是最后一站。系统会核对本局当前燃料、修理凭证或工程师同行事实，以及启动指令。",
+                "options": [
+                  {
+                    "id": "finish",
+                    "label": "完成最后一站，查看本局结果",
+                    "nextStepId": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "title": "这一站的决定已记录",
+                "body": "完成本节点后按固定路线前往下一站。",
+                "terminal": true,
+                "outcomeCode": "COMPLETED",
+                "outcomeLabel": "完成本站",
+                "options": []
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

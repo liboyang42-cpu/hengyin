@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.chengyinhub.business.mapper.ImConversationMemberMapper">
+
+    <resultMap type="ImConversationMember" id="ImConversationMemberResult">
+        <result property="id"            column="id"               />
+        <result property="conversationId" column="conversation_id" />
+        <result property="memberId"      column="member_id"        />
+        <result property="role"          column="role"             />
+        <result property="unreadCount"   column="unread_count"     />
+        <result property="lastReadMsgId" column="last_read_msg_id" />
+        <result property="muted"         column="muted"            />
+        <result property="deleted"       column="deleted"          />
+        <result property="createTime"    column="create_time"      />
+    </resultMap>
+
+    <insert id="insertImConversationMember" parameterType="ImConversationMember" useGeneratedKeys="true" keyProperty="id">
+        insert into im_conversation_member (conversation_id, member_id, role, unread_count, last_read_msg_id, muted, deleted, create_time)
+        values (#{conversationId}, #{memberId}, #{role}, 0, 0, 0, 0, sysdate())
+    </insert>
+
+    <select id="selectByConvAndMember" resultMap="ImConversationMemberResult">
+        select id, conversation_id, member_id, role, unread_count, last_read_msg_id, muted, deleted, create_time
+        from im_conversation_member
+        where conversation_id = #{conversationId} and member_id = #{memberId} limit 1
+    </select>
+
+    <select id="selectMyConversations" resultMap="ImConversationMemberResult">
+        select m.id, m.conversation_id, m.member_id, m.role, m.unread_count, m.last_read_msg_id, m.muted, m.deleted, m.create_time
+        from im_conversation_member m
+        join im_conversation c on c.id = m.conversation_id
+        where m.member_id = #{memberId} and m.deleted = 0 and c.status = 0
+        order by c.last_msg_at desc
+    </select>
+
+    <select id="selectByConversation" resultMap="ImConversationMemberResult">
+        select id, conversation_id, member_id, role, unread_count, last_read_msg_id, muted, deleted, create_time
+        from im_conversation_member
+        where conversation_id = #{conversationId}
+    </select>
+
+    <select id="selectByConversationForUpdate" resultMap="ImConversationMemberResult">
+        select id, conversation_id, member_id, role, unread_count, last_read_msg_id, muted, deleted, create_time
+        from im_conversation_member
+        where conversation_id = #{conversationId} for update
+    </select>
+
+    <update id="addUnread">
+        update im_conversation_member m
+        join im_conversation c on c.id = m.conversation_id and c.status = 0
+        set m.unread_count = m.unread_count + #{delta}, m.deleted = 0
+        where m.conversation_id = #{conversationId} and m.member_id = #{memberId}
+    </update>
+
+    <update id="markRead">
+        update im_conversation_member
+        set unread_count = 0, last_read_msg_id = #{lastReadMsgId}
+        where conversation_id = #{conversationId} and member_id = #{memberId}
+    </update>
+
+    <select id="sumUnread" resultType="java.lang.Integer">
+        select coalesce(sum(m.unread_count), 0)
+        from im_conversation_member m
+        join im_conversation c on c.id = m.conversation_id and c.status = 0
+        where m.member_id = #{memberId} and m.deleted = 0 and m.muted = 0
+    </select>
+
+    <update id="markDeleted">
+        update im_conversation_member set deleted = 1
+        where conversation_id = #{conversationId} and member_id = #{memberId}
+    </update>
+
+    <update id="markAllDeleted">
+        update im_conversation_member set deleted = 1, unread_count = 0
+        where conversation_id = #{conversationId}
+    </update>
+
+    <update id="updateMuted">
+        update im_conversation_member set muted = #{muted}
+        where conversation_id = #{conversationId} and member_id = #{memberId}
+    </update>
+
+</mapper>

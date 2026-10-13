@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.BizFunnelDailyMapper">
+
+    <resultMap type="BizFunnelDaily" id="BizFunnelDailyResult">
+        <result property="id" column="id" />
+        <result property="statDate" column="stat_date" />
+        <result property="funnelName" column="funnel_name" />
+        <result property="stepName" column="step_name" />
+        <result property="stepOrder" column="step_order" />
+        <result property="bizType" column="biz_type" />
+        <result property="cityCode" column="city_code" />
+        <result property="memberCount" column="member_count" />
+        <result property="eventCount" column="event_count" />
+        <result property="conversionRate" column="conversion_rate" />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <select id="selectBizFunnelDailyList" parameterType="BizFunnelDaily" resultMap="BizFunnelDailyResult">
+        select id, stat_date, funnel_code as funnel_name, step_code as step_name,
+               case step_code
+                   when 'community_post_impression' then 1
+                   when 'community_post_open' then 2
+                   when 'community_post_qualified_view' then 3
+                   when 'content_view' then 1
+                   when 'search_submit' then 1
+                   when 'content_like' then case when funnel_code = 'community_post_engagement' then 4 else 2 end
+                   when 'content_favorite' then case when funnel_code = 'community_post_engagement' then 5 else 3 end
+                   when 'content_share' then case when funnel_code = 'community_post_engagement' then 6 else 4 end
+                   when 'signup_submit' then 5
+                   when 'payment_success' then 6
+                   when 'template_reuse' then 7
+                   when 'topic_publish_success' then 8
+                   when 'activity_publish_success' then 9
+                   when 'coupon_verify' then 10
+                   when 'withdrawal_submit' then 11
+                   else 99
+               end as step_order,
+               source as biz_type, city_code, user_count as member_count,
+               event_count, conversion_rate, create_time
+        from biz_funnel_daily
+        <where>
+            <if test="funnelName != null and funnelName != ''"> and funnel_code = #{funnelName}</if>
+            <if test="bizType != null and bizType != ''"> and source = #{bizType}</if>
+            <if test="cityCode != null and cityCode != ''"> and city_code = #{cityCode}</if>
+            <if test="params.beginStatDate != null and params.beginStatDate != ''"> and stat_date &gt;= #{params.beginStatDate}</if>
+            <if test="params.endStatDate != null and params.endStatDate != ''"> and stat_date &lt;= #{params.endStatDate}</if>
+        </where>
+        order by stat_date desc, funnel_code asc, step_order asc
+    </select>
+
+    <delete id="deleteByStatDate" parameterType="String">
+        delete from biz_funnel_daily where stat_date = #{statDate}
+    </delete>
+
+    <insert id="insertFromEventLog" parameterType="String">
+        insert into biz_funnel_daily
+        (stat_date, funnel_code, step_code, source, city_code,
+         user_count, event_count, conversion_rate, create_time, update_time)
+        with normalized as (
+        select
+            date(event.occurred_at) as stat_date,
+            case
+                when event.event_name in ('community_post_impression', 'community_post_open', 'community_post_qualified_view')
+                    or (event.biz_type = 'community_post' and event.event_name in ('content_like', 'content_favorite', 'content_share'))
+                    then 'community_post_engagement'
+                when event.event_name in ('content_view', 'content_like', 'content_favorite', 'content_share') then 'content_engagement'
+                when event.event_name in ('signup_start', 'signup_submit', 'payment_success') then 'activity_conversion'
+                when event.event_name in ('template_reuse', 'topic_publish_success', 'activity_publish_success') then 'creator_conversion'
+                else 'general'
+            end as funnel_code,
+            event.event_name as step_code,
+            event.biz_type as source,
+            event.city_code,
+            event.member_id,
+            event.occurred_at,
+            case
+                when event.event_name in ('community_post_impression','content_view','signup_start','template_reuse') then 1
+                else 0
+            end as is_funnel_start
+        from biz_event_log event
+        left join community_post cp
+          on event.biz_type = 'community_post' and cp.id = event.biz_id
+        where event.occurred_at &gt;= cast(#{statDate} as date)
+          and event.occurred_at &lt; date_add(cast(#{statDate} as date), interval 1 day)
+          and (event.event_name &lt;&gt; 'community_post_qualified_view'
+               or (event.member_id is not null
+                   and cp.id is not null
+                   and cp.author_id &lt;&gt; event.member_id))
+        ), funnel_starts as (
+          select stat_date, funnel_code, source, city_code, member_id,
+                 min(occurred_at) as first_started_at
+          from normalized
+          where is_funnel_start = 1 and member_id is not null
+          group by stat_date, funnel_code, source, city_code, member_id
+        ), aggregated as (
+          select event.stat_date, event.funnel_code, event.step_code,
+                 event.source, event.city_code,
+                 count(distinct case
+                   when event.is_funnel_start = 1 or starter.member_id is not null
+                   then event.member_id end) as user_count,
+                 count(1) as event_count,
+                 event.is_funnel_start
+          from normalized event
+          left join funnel_starts starter
+            on starter.stat_date = event.stat_date
+           and starter.funnel_code = event.funnel_code
+           and starter.source &lt;=> event.source
+           and starter.city_code &lt;=> event.city_code
+           and starter.member_id = event.member_id
+           and starter.first_started_at &lt;= event.occurred_at
+          group by event.stat_date, event.funnel_code, event.step_code,
+                   event.source, event.city_code, event.is_funnel_start
+        ), scored as (
+          select aggregated.*,
+                 max(case when is_funnel_start = 1 then user_count end)
+                   over (partition by stat_date, funnel_code, source, city_code) as start_user_count
+          from aggregated
+        )
+        select stat_date, funnel_code, step_code, source, city_code,
+               user_count, event_count,
+               case when start_user_count &gt; 0
+                    then round(user_count / start_user_count, 4)
+                    else 0 end as conversion_rate,
+               now() as create_time, now() as update_time
+        from scored
+    </insert>
+
+    <!-- 阶段 1 试点总分母：先跨整个查询窗口按 user-post 去重，再计算用户与覆盖面。 -->
+    <select id="selectCommunityQualifiedPilotMetric" resultType="map">
+        with qualified_user_posts as (
+          select event.member_id, event.biz_id, post.author_id as current_author_id,
+                 min(event.occurred_at) as first_qualified_at,
+                 max(event.occurred_at) as last_qualified_at
+          from biz_event_log event
+          left join community_post post on post.id = event.biz_id
+          where event.event_name = 'community_post_qualified_view'
+            and event.biz_type = 'community_post'
+            and event.member_id is not null
+            and event.occurred_at &gt;= cast(#{startDate} as date)
+            and event.occurred_at &lt; date_add(cast(#{endDate} as date), interval 1 day)
+          group by event.member_id, event.biz_id, post.author_id
+        )
+        select count(distinct member_id) as qualified_user_count,
+               count(1) as qualified_user_post_count,
+               count(distinct biz_id) as qualified_post_count,
+               count(distinct nullif(current_author_id, 0)) as current_qualified_author_count,
+               min(first_qualified_at) as first_qualified_at,
+               max(last_qualified_at) as last_qualified_at
+        from qualified_user_posts
+    </select>
+</mapper>

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantCrmBroadcastMapper">
+
+    <resultMap id="Broadcast" type="com.chengyinhub.business.domain.MerchantCrmBroadcast">
+        <result property="id" column="id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="merchantOwnerMemberId" column="merchant_owner_member_id"/>
+        <result property="merchantNameSnapshot" column="merchant_name_snapshot"/>
+        <result property="actorMemberId" column="actor_member_id"/>
+        <result property="actorRoleCode" column="actor_role_code"/>
+        <result property="requestId" column="request_id"/>
+        <result property="broadcastDate" column="broadcast_date"/>
+        <result property="dailySlot" column="daily_slot"/>
+        <result property="filterJson" column="filter_json"/>
+        <result property="content" column="content"/>
+        <result property="status" column="status"/>
+        <result property="audienceCount" column="audience_count"/>
+        <result property="consentedCount" column="consented_count"/>
+        <result property="noConsentCount" column="no_consent_count"/>
+        <result property="frequencySkippedCount" column="frequency_skipped_count"/>
+        <result property="deliveredCount" column="delivered_count"/>
+        <result property="failedCount" column="failed_count"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="Recipient" type="com.chengyinhub.business.domain.MerchantCrmBroadcastRecipient">
+        <result property="id" column="id"/>
+        <result property="broadcastId" column="broadcast_id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="customerNameSnapshot" column="customer_name_snapshot"/>
+        <result property="consentEventIdSnapshot" column="consent_event_id_snapshot"/>
+        <result property="status" column="status"/>
+        <result property="failureCode" column="failure_code"/>
+        <result property="failureMessage" column="failure_message"/>
+        <result property="messageReceiptId" column="message_receipt_id"/>
+        <result property="attemptCount" column="attempt_count"/>
+        <result property="deliveredAt" column="delivered_at"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="BroadcastColumns">
+        id, merchant_id, merchant_owner_member_id, merchant_name_snapshot, actor_member_id, actor_role_code,
+        request_id, broadcast_date, daily_slot, filter_json, content, status,
+        audience_count, consented_count, no_consent_count, frequency_skipped_count,
+        delivered_count, failed_count, create_time, update_time
+    </sql>
+
+    <select id="selectByRequestId" resultMap="Broadcast">
+        select <include refid="BroadcastColumns"/>
+        from merchant_crm_broadcast
+        where merchant_id = #{merchantId} and request_id = #{requestId}
+        limit 1
+    </select>
+
+    <insert id="insertBroadcast" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.MerchantCrmBroadcast">
+        insert into merchant_crm_broadcast
+          (merchant_id, merchant_owner_member_id, merchant_name_snapshot, actor_member_id, actor_role_code,
+           request_id, broadcast_date, daily_slot, filter_json, content, status,
+           audience_count, consented_count, no_consent_count, frequency_skipped_count, delivered_count,
+           failed_count, create_time, update_time)
+        values
+          (#{merchantId}, #{merchantOwnerMemberId}, #{merchantNameSnapshot}, #{actorMemberId}, #{actorRoleCode},
+           #{requestId}, current_date, #{dailySlot}, #{filterJson}, #{content}, 'SENDING',
+           0, 0, 0, 0, 0, 0, now(), now())
+    </insert>
+
+    <select id="countTodayByMerchant" resultType="int">
+        select count(1) from merchant_crm_broadcast
+        where merchant_id = #{merchantId} and broadcast_date = current_date
+    </select>
+
+    <select id="countGuardToday" resultType="int">
+        select count(1) from merchant_crm_delivery_guard
+        where merchant_id = #{merchantId} and member_id = #{memberId}
+          and channel = #{channel} and delivery_date = current_date
+    </select>
+
+    <insert id="insertRecipient" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.MerchantCrmBroadcastRecipient">
+        insert into merchant_crm_broadcast_recipient
+          (broadcast_id, merchant_id, member_id, customer_name_snapshot, consent_event_id_snapshot,
+           status, attempt_count, create_time, update_time)
+        values
+          (#{broadcastId}, #{merchantId}, #{memberId}, #{customerNameSnapshot}, #{consentEventIdSnapshot},
+           'PENDING', 0, now(), now())
+    </insert>
+
+    <select id="selectRecipients" resultMap="Recipient">
+        select id, broadcast_id, merchant_id, member_id, customer_name_snapshot, consent_event_id_snapshot,
+               status, failure_code, failure_message, message_receipt_id, attempt_count, delivered_at,
+               create_time, update_time
+        from merchant_crm_broadcast_recipient
+        where merchant_id = #{merchantId} and broadcast_id = #{broadcastId}
+        order by id asc
+        limit #{limit}
+    </select>
+
+    <update id="markRecipientDelivered">
+        update merchant_crm_broadcast_recipient
+        set status = 'DELIVERED', message_receipt_id = #{messageReceiptId},
+            attempt_count = attempt_count + 1, delivered_at = now(), update_time = now()
+        where id = #{recipientId} and merchant_id = #{merchantId} and broadcast_id = #{broadcastId}
+          and status = 'PENDING'
+    </update>
+
+    <update id="markRecipientSkipped">
+        update merchant_crm_broadcast_recipient
+        set status = #{status}, failure_code = #{failureCode}, failure_message = #{failureMessage},
+            attempt_count = attempt_count + 1, update_time = now()
+        where id = #{recipientId} and merchant_id = #{merchantId} and broadcast_id = #{broadcastId}
+          and status = 'PENDING'
+    </update>
+
+    <update id="finalizeBroadcast">
+        update merchant_crm_broadcast
+        set status = #{status}, audience_count = #{audienceCount}, consented_count = #{consentedCount},
+            no_consent_count = #{noConsentCount}, frequency_skipped_count = #{frequencySkippedCount},
+            delivered_count = #{deliveredCount}, failed_count = #{failedCount}, update_time = now()
+        where id = #{id} and merchant_id = #{merchantId} and status = 'SENDING'
+    </update>
+</mapper>

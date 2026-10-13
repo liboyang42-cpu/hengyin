@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CreatorMetricDailyMapper">
+
+    <select id="selectLatestMetric" resultType="CreatorMetricDaily">
+        select id, stat_date as statDate, creator_id as creatorId, content_count as contentCount,
+               view_count as viewCount, like_count as likeCount, favorite_count as favoriteCount,
+               signup_count as signupCount, create_time as createTime, update_time as updateTime
+        from creator_metric_daily
+        where creator_id = #{creatorId}
+        order by stat_date desc, id desc
+        limit 1
+    </select>
+</mapper>

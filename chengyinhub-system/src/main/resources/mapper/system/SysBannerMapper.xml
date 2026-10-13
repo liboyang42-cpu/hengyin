@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.system.mapper.SysBannerMapper">
+    
+    <resultMap type="SysBanner" id="SysBannerResult">
+        <result property="id"    column="id"    />
+        <result property="showType"    column="show_type"    />
+        <result property="linkType"    column="link_type"    />
+        <result property="dataId"    column="data_id"    />
+        <result property="picUrl"    column="pic_url"    />
+        <result property="contents"    column="contents"    />
+        <result property="sortId"    column="sort_id"    />
+        <result property="status"    column="status"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectSysBannerVo">
+        select id, show_type, link_type, data_id, pic_url, contents, sort_id, status, create_by, create_time, update_by, update_time from sys_banner
+    </sql>
+
+    <select id="selectSysBannerList" parameterType="SysBanner" resultMap="SysBannerResult">
+        <include refid="selectSysBannerVo"/>
+        <where>  
+            <if test="showType != null "> and show_type = #{showType}</if>
+            <if test="linkType != null "> and link_type = #{linkType}</if>
+            <if test="dataId != null  and dataId != ''"> and data_id = #{dataId}</if>
+            <if test="picUrl != null  and picUrl != ''"> and pic_url = #{picUrl}</if>
+            <if test="contents != null  and contents != ''"> and contents = #{contents}</if>
+            <if test="sortId != null "> and sort_id = #{sortId}</if>
+            <if test="status != null "> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectSysBannerById" parameterType="Integer" resultMap="SysBannerResult">
+        <include refid="selectSysBannerVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertSysBanner" parameterType="SysBanner" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_banner
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="showType != null">show_type,</if>
+            <if test="linkType != null">link_type,</if>
+            <if test="dataId != null">data_id,</if>
+            <if test="picUrl != null">pic_url,</if>
+            <if test="contents != null">contents,</if>
+            <if test="sortId != null">sort_id,</if>
+            <if test="status != null">status,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="showType != null">#{showType},</if>
+            <if test="linkType != null">#{linkType},</if>
+            <if test="dataId != null">#{dataId},</if>
+            <if test="picUrl != null">#{picUrl},</if>
+            <if test="contents != null">#{contents},</if>
+            <if test="sortId != null">#{sortId},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateSysBanner" parameterType="SysBanner">
+        update sys_banner
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="showType != null">show_type = #{showType},</if>
+            <if test="linkType != null">link_type = #{linkType},</if>
+            <if test="dataId != null">data_id = #{dataId},</if>
+            <if test="picUrl != null">pic_url = #{picUrl},</if>
+            <if test="contents != null">contents = #{contents},</if>
+            <if test="sortId != null">sort_id = #{sortId},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteSysBannerById" parameterType="Integer">
+        delete from sys_banner where id = #{id}
+    </delete>
+
+    <delete id="deleteSysBannerByIds" parameterType="String">
+        delete from sys_banner where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

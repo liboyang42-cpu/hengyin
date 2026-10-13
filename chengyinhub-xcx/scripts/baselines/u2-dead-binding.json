@@ -1,0 +1,6 @@
+{
+  "note": "U2 死链绑定存量。只能变小不能变大;修完一条就重跑 --update-baseline。",
+  "generatedBy": "wxml-handler-lint.js --update-baseline",
+  "count": 0,
+  "entries": []
+}

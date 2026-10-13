@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CmsSettingMapper">
+    
+    <resultMap type="CmsSetting" id="CmsSettingResult">
+        <result property="id"    column="id"    />
+        <result property="activityPlatformCommission"    column="activity_platform_commission"    />
+        <result property="activityMerchantCommission"    column="activity_merchant_commission"    />
+        <result property="activityDesignerCommission"    column="activity_designer_commission"    />
+        <result property="platformMemberId"    column="platform_member_id"    />
+        <result property="topicPlatformCommission"    column="topic_platform_commission"    />
+        <result property="topicMerchantCommission"    column="topic_merchant_commission"    />
+        <result property="topicPublisherCommission"    column="topic_publisher_commission"    />
+        <result property="topicInviteCommission"    column="topic_invite_commission"    />
+        <result property="user1TopicNum"    column="user1_topic_num"    />
+        <result property="user2TopicNum"    column="user2_topic_num"    />
+        <result property="user3TopicNum"    column="user3_topic_num"    />
+        <result property="merchantTopicNum"    column="merchant_topic_num"    />
+        <result property="merchantTemplateNum"    column="merchant_template_num"    />
+        <result property="merchantCouponNum"    column="merchant_coupon_num"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectCmsSettingVo">
+        select id, activity_platform_commission, activity_merchant_commission, activity_designer_commission, platform_member_id, topic_platform_commission, topic_merchant_commission, topic_publisher_commission,topic_invite_commission, user1_topic_num, user2_topic_num, user3_topic_num, merchant_topic_num, merchant_template_num, merchant_coupon_num, create_by, create_time, update_by, update_time from cms_setting
+    </sql>
+
+    <select id="selectCmsSettingList" parameterType="CmsSetting" resultMap="CmsSettingResult">
+        <include refid="selectCmsSettingVo"/>
+        <where>  
+            <if test="activityPlatformCommission != null "> and activity_platform_commission = #{activityPlatformCommission}</if>
+            <if test="activityMerchantCommission != null "> and activity_merchant_commission = #{activityMerchantCommission}</if>
+            <if test="topicPlatformCommission != null "> and topic_platform_commission = #{topicPlatformCommission}</if>
+            <if test="topicMerchantCommission != null "> and topic_merchant_commission = #{topicMerchantCommission}</if>
+            <if test="topicPublisherCommission != null "> and topic_publisher_commission = #{topicPublisherCommission}</if>
+            <if test="user1TopicNum != null "> and user1_topic_num = #{user1TopicNum}</if>
+            <if test="user2TopicNum != null "> and user2_topic_num = #{user2TopicNum}</if>
+            <if test="user3TopicNum != null "> and user3_topic_num = #{user3TopicNum}</if>
+            <if test="merchantTopicNum != null "> and merchant_topic_num = #{merchantTopicNum}</if>
+            <if test="merchantTemplateNum != null "> and merchant_template_num = #{merchantTemplateNum}</if>
+            <if test="merchantCouponNum != null "> and merchant_coupon_num = #{merchantCouponNum}</if>
+        </where>
+    </select>
+    
+    <select id="selectCmsSettingById" parameterType="Long" resultMap="CmsSettingResult">
+        <include refid="selectCmsSettingVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertCmsSetting" parameterType="CmsSetting">
+        insert into cms_setting
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="activityPlatformCommission != null">activity_platform_commission,</if>
+            <if test="activityMerchantCommission != null">activity_merchant_commission,</if>
+            <if test="activityDesignerCommission != null">activity_designer_commission,</if>
+            <if test="platformMemberId != null">platform_member_id,</if>
+            <if test="topicPlatformCommission != null">topic_platform_commission,</if>
+            <if test="topicMerchantCommission != null">topic_merchant_commission,</if>
+            <if test="topicPublisherCommission != null">topic_publisher_commission,</if>
+            <if test="user1TopicNum != null">user1_topic_num,</if>
+            <if test="user2TopicNum != null">user2_topic_num,</if>
+            <if test="user3TopicNum != null">user3_topic_num,</if>
+            <if test="merchantTopicNum != null">merchant_topic_num,</if>
+            <if test="merchantTemplateNum != null">merchant_template_num,</if>
+            <if test="merchantCouponNum != null">merchant_coupon_num,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="activityPlatformCommission != null">#{activityPlatformCommission},</if>
+            <if test="activityMerchantCommission != null">#{activityMerchantCommission},</if>
+            <if test="activityDesignerCommission != null">#{activityDesignerCommission},</if>
+            <if test="platformMemberId != null">#{platformMemberId},</if>
+            <if test="topicPlatformCommission != null">#{topicPlatformCommission},</if>
+            <if test="topicMerchantCommission != null">#{topicMerchantCommission},</if>
+            <if test="topicPublisherCommission != null">#{topicPublisherCommission},</if>
+            <if test="user1TopicNum != null">#{user1TopicNum},</if>
+            <if test="user2TopicNum != null">#{user2TopicNum},</if>
+            <if test="user3TopicNum != null">#{user3TopicNum},</if>
+            <if test="merchantTopicNum != null">#{merchantTopicNum},</if>
+            <if test="merchantTemplateNum != null">#{merchantTemplateNum},</if>
+            <if test="merchantCouponNum != null">#{merchantCouponNum},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCmsSetting" parameterType="CmsSetting">
+        update cms_setting
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="activityPlatformCommission != null">activity_platform_commission = #{activityPlatformCommission},</if>
+            <if test="activityMerchantCommission != null">activity_merchant_commission = #{activityMerchantCommission},</if>
+            <if test="activityDesignerCommission != null">activity_designer_commission = #{activityDesignerCommission},</if>
+            <if test="platformMemberId != null">platform_member_id = #{platformMemberId},</if>
+            <if test="topicPlatformCommission != null">topic_platform_commission = #{topicPlatformCommission},</if>
+            <if test="topicMerchantCommission != null">topic_merchant_commission = #{topicMerchantCommission},</if>
+            <if test="topicPublisherCommission != null">topic_publisher_commission = #{topicPublisherCommission},</if>
+            <if test="topicInviteCommission != null">topic_invite_commission = #{topicInviteCommission},</if>
+            <if test="user1TopicNum != null">user1_topic_num = #{user1TopicNum},</if>
+            <if test="user2TopicNum != null">user2_topic_num = #{user2TopicNum},</if>
+            <if test="user3TopicNum != null">user3_topic_num = #{user3TopicNum},</if>
+            <if test="merchantTopicNum != null">merchant_topic_num = #{merchantTopicNum},</if>
+            <if test="merchantTemplateNum != null">merchant_template_num = #{merchantTemplateNum},</if>
+            <if test="merchantCouponNum != null">merchant_coupon_num = #{merchantCouponNum},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCmsSettingById" parameterType="Long">
+        delete from cms_setting where id = #{id}
+    </delete>
+
+    <delete id="deleteCmsSettingByIds" parameterType="String">
+        delete from cms_setting where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

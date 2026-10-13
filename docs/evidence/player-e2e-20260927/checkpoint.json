@@ -1,0 +1,20 @@
+{
+  "status": "report_complete_play_scope_deferred_by_user",
+  "baseline": "bba26c4c8ab2612f91880e5ac7598c96a52b0cf8",
+  "project": "/Users/arlan/Downloads/chengyin/chengyinhub-xcx",
+  "account": 100096,
+  "primaryRole": "player",
+  "identityCaveat": "merchant owner access and club-leader capabilities remain",
+  "registrationId": 77,
+  "activityId": 24,
+  "ticketId": 93,
+  "deferredByUser": [
+    "城市定向",
+    "自由探索",
+    "游玩字段读取",
+    "完赛"
+  ],
+  "driver": "disconnected; wx.request restored",
+  "lastRoute": "subpackageP3/pages/growthcenter/index/index",
+  "screenshots": 162
+}

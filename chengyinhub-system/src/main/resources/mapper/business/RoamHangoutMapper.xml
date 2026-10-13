@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.RoamHangoutMapper">
+
+    <resultMap type="RoamHangout" id="RoamHangoutResult">
+        <result property="id" column="id" />
+        <result property="memberId" column="member_id" />
+        <result property="title" column="title" />
+        <result property="description" column="description" />
+        <result property="coverUrl" column="cover_url" />
+        <result property="latitude" column="latitude" />
+        <result property="longitude" column="longitude" />
+        <result property="addressName" column="address_name" />
+        <result property="startAt" column="start_at" />
+        <result property="status" column="status" />
+        <result property="conversationId" column="conversation_id" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+        <result property="delFlag" column="del_flag" />
+        <result property="distance" column="distance" />
+        <result property="memberCount" column="member_count" />
+        <result property="isMember" column="is_member" />
+        <result property="ownerAvatar" column="owner_avatar" />
+        <result property="ownerNickname" column="owner_nickname" />
+        <result property="ownerRole" column="owner_role" />
+    </resultMap>
+
+    <sql id="cols">
+        h.id, h.member_id, h.title, h.description, h.cover_url, h.latitude, h.longitude, h.address_name,
+        h.start_at, h.status, h.conversation_id, h.create_time, h.update_time, h.del_flag
+    </sql>
+
+    <!-- 人数 / isMember 走群成员表相关子查询:成员真源只有一份,列表不再 N+1 -->
+    <sql id="viewerCols">
+        m.avatar as owner_avatar, m.nickname as owner_nickname, m.role as owner_role,
+        (select count(1) from im_conversation_member cm
+          where cm.conversation_id = h.conversation_id and cm.deleted = 0) as member_count,
+        (select count(1) from im_conversation_member cm2
+          where cm2.conversation_id = h.conversation_id and cm2.member_id = #{viewerId} and cm2.deleted = 0) as is_member
+    </sql>
+
+    <sql id="distanceCol">
+        (6371000 * acos(least(1,
+            cos(radians(#{lat})) * cos(radians(h.latitude)) * cos(radians(h.longitude) - radians(#{lng}))
+            + sin(radians(#{lat})) * sin(radians(h.latitude))))) as distance
+    </sql>
+
+    <!-- 包围盒 + 进行中 + 排除我拉黑的局主 -->
+    <sql id="nearbyWhere">
+        where h.status = 0 and h.del_flag = 0
+          and h.latitude between #{minLat} and #{maxLat}
+          and h.longitude between #{minLng} and #{maxLng}
+          and not exists (select 1 from im_block b
+                           where b.member_id = #{viewerId} and b.blocked_member_id = h.member_id)
+    </sql>
+
+    <insert id="insert" parameterType="RoamHangout" useGeneratedKeys="true" keyProperty="id">
+        insert into roam_hangout (member_id, title, description, cover_url, latitude, longitude, address_name,
+                                  start_at, status, create_time)
+        values (#{memberId}, #{title}, #{description}, #{coverUrl}, #{latitude}, #{longitude}, #{addressName},
+                #{startAt}, 0, now())
+    </insert>
+
+    <select id="selectById" resultMap="RoamHangoutResult">
+        select <include refid="cols" />, <include refid="viewerCols" />
+        from roam_hangout h left join ums_member m on m.id = h.member_id
+        where h.id = #{id} and h.del_flag = 0
+    </select>
+
+    <!-- 群访问校验每条消息都走一次:只要状态,不带成员计数子查询 -->
+    <select id="selectStatusById" resultType="java.lang.Integer">
+        select h.status from roam_hangout h where h.id = #{id} and h.del_flag = 0
+    </select>
+
+    <select id="selectByIdForUpdate" resultMap="RoamHangoutResult">
+        select <include refid="cols" /> from roam_hangout h
+        where h.id = #{id} and h.del_flag = 0 for update
+    </select>
+
+    <select id="selectNearby" resultMap="RoamHangoutResult">
+        select <include refid="cols" />, <include refid="viewerCols" />, <include refid="distanceCol" />
+        from roam_hangout h left join ums_member m on m.id = h.member_id
+        <include refid="nearbyWhere" />
+        having distance &lt;= #{radius}
+        order by distance asc
+        limit #{limit}
+    </select>
+
+    <select id="countNearby" resultType="java.lang.Integer">
+        select count(1) from (
+            select h.id, <include refid="distanceCol" />
+            from roam_hangout h
+            <include refid="nearbyWhere" />
+            having distance &lt;= #{radius}
+        ) t
+    </select>
+
+    <!-- 只读叠加:口径与 selectPublicCmsActivityList 一致(上架 + 已发布 + 未删 + 未取消);坐标是 varchar 先剔空再 cast -->
+    <select id="selectNearbyActivities" resultType="java.util.HashMap">
+        select a.id as id, a.topic_id as topicId, t.product_type as productType,
+               a.name as name, a.img_url as picUrl,
+               a.start_date as startDate, a.end_date as endDate,
+               (select count(1) from cms_registration r
+                 where r.member_id = #{viewerId} and r.owner_type = 2 and r.owner_id = a.id
+                   and r.payment_status = 2 and r.registration_status = 2) as viewerHasTicket,
+               cast(a.latitude as decimal(12,7)) as latitude, cast(a.longitude as decimal(12,7)) as longitude,
+               a.address_name as addressName,
+               (6371000 * acos(least(1,
+                   cos(radians(#{lat})) * cos(radians(cast(a.latitude as decimal(12,7))))
+                   * cos(radians(cast(a.longitude as decimal(12,7))) - radians(#{lng}))
+                   + sin(radians(#{lat})) * sin(radians(cast(a.latitude as decimal(12,7))))))) as distance
+        from cms_activity a
+        left join cms_topic t on t.id = a.topic_id and t.del_flag = 0
+        where a.status = 1 and a.publish_status = 1 and a.del_flag = 0 and a.cancel_time is null
+          and a.latitude is not null and a.latitude &lt;&gt; ''
+          and a.longitude is not null and a.longitude &lt;&gt; ''
+          and cast(a.latitude as decimal(12,7)) between #{minLat} and #{maxLat}
+          and cast(a.longitude as decimal(12,7)) between #{minLng} and #{maxLng}
+        having distance &lt;= #{radius}
+        order by distance asc
+        limit #{limit}
+    </select>
+
+    <select id="selectOpenByMember" resultMap="RoamHangoutResult">
+        select <include refid="cols" /> from roam_hangout h
+        where h.member_id = #{memberId} and h.status = 0 and h.del_flag = 0
+    </select>
+
+    <select id="countActiveByMember" resultType="java.lang.Integer">
+        select count(1) from roam_hangout where member_id = #{memberId} and status = 0 and del_flag = 0
+    </select>
+
+    <select id="selectMemberBriefs" resultType="java.util.HashMap">
+        select u.id as memberId, u.nickname as nickname, u.avatar as avatar
+        from im_conversation_member cm join ums_member u on u.id = cm.member_id
+        where cm.conversation_id = #{conversationId} and cm.deleted = 0
+        order by (cm.member_id = #{ownerId}) desc, cm.id asc
+        limit #{limit}
+    </select>
+
+    <select id="countActiveMembers" resultType="java.lang.Integer">
+        select count(1) from im_conversation_member where conversation_id = #{conversationId} and deleted = 0
+    </select>
+
+    <update id="updateStatus">
+        update roam_hangout set status = #{status}, update_time = now() where id = #{id}
+    </update>
+
+    <update id="updateConversationId">
+        update roam_hangout set conversation_id = #{conversationId} where id = #{id}
+    </update>
+
+    <select id="selectExpired" resultMap="RoamHangoutResult">
+        select <include refid="cols" />
+        from roam_hangout h left join im_conversation c on c.id = h.conversation_id
+        where h.status = 0 and h.del_flag = 0
+          and ((h.start_at is not null and h.start_at &lt; date_sub(#{now}, interval 24 hour))
+            or (h.start_at is null and coalesce(c.last_msg_at, h.create_time) &lt; date_sub(#{now}, interval 14 day)))
+        limit 500
+    </select>
+
+</mapper>

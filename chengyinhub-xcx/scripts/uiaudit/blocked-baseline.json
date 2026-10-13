@@ -1,0 +1,41 @@
+{
+  "note": "blocked 棘轮基线。blocked 条数只许减不许增 —— 不加这条,blocked 就是下一个「未判定」无限逃生口。新增 blocked 必须显式改本文件并说明理由(这就是它的外锚:进 diff、要人评审)。 2026-09-19 批复1-a=2:pricing/partner 页复活,C37(需真实 POST→读回)随页回账。",
+  "generatedAt": "2026-08-24",
+  "count": 24,
+  "blockedIds": [
+    "A29",
+    "A33",
+    "A43",
+    "A44",
+    "A55",
+    "B02",
+    "B17",
+    "B24",
+    "B47",
+    "B65",
+    "B65a",
+    "B69",
+    "C11",
+    "C37",
+    "C55",
+    "D06",
+    "D16",
+    "D19b",
+    "D26",
+    "D37",
+    "E06",
+    "E22",
+    "E28",
+    "F05"
+  ],
+  "additions": {
+    "D26": "2026-08-19 新增。理由:页面里没有 submitted 这个状态(complaint/index.js 的 data 无该键,成功走 toast+离开本页),fixture 已把它 dropped ⇒ 与 D25 逐字节同图,重拍无解。altVerification:tests/unit/complaint-submit-success-contract.test.js。",
+    "F05": "2026-08-19 新增。理由:pages/club/workbench 是纯重定向壳(onLoad 首句 redirectTo),自身无可截界面,与已豁免的 E06 同类;不标 blocked 会让续跑循环无限空转(实测 17 轮)。altVerification:getCurrentPages() 回读断言 + tests/unit/club-workbench-contract.test.js。",
+    "A33": "2026-08-19 新增。理由:「我的」页对 club 没有任何差异分支(主 CTA 只按 isMerchantView 分叉),club 与 player 渲染逐字节相同 —— 用新的「同一屏」判据实测 A32≈A33。altVerification:身份分叉由 profile-merchant-about-contract + identity-policy 单测锁;俱乐部专属界面在 C44/C45/C61。",
+    "B17": "2026-08-19 新增。理由:起飞过场 UI 已收编走,.start-flight 在 play/index.wxml 里只剩注释,矩阵注的「等 3.4s」也没有可注入的 data 键 ⇒ 永远拍成 B12。altVerification:出现时机由 play/index.js:29 常量与 --cy-motion-flight-cycle 对齐,属动画不属截图。",
+    "C11": "2026-08-21 复核。理由:该商家主页是已退役功能保留的兼容壳，产品真源只有缺参出口，没有可构造的商家内容态；C10 已用真实缺参路由验证明确说明与返回首页 CTA，C11 与其同屏因此继续 blocked。altVerification:C10 当前截图 + tests/unit/screenshot-manifest-gates.test.js 锁定 route/state/selector/兼容壳说明。",
+    "D16": "2026-08-24 新增。理由:完成态必须使用当前账号真实 couponHistoryId、后端签名二维码并由真机扫码回读；仓内 166 张 raster 均不可解码，d_qrcode.png 与 figma-invite-qr.png 只是装饰图，不能伪造为可核销码。altVerification:tests/unit/qr-scene-page-parity-contract.test.js 锁定 ready/error/loading 分支与组件契约；真实端到端留待设备证据。",
+    "E28": "2026-08-24 新增。理由:与 D18 是同一路由、同一组件、同一 error 分支；以组件内部强锚重拍仍逐像素相同，继续采集只会重复扩大证据分母。altVerification:D18 保留为唯一动态错误态截图，B11 另覆盖据点码错误态。",
+    "B65a": "2026-09-09 新增。理由:投一张换一张的第一步是取景框,模拟器没有相机 —— 与同因的 B65(集邮相机)一模一样,setData 注不出一帧真实取景画面,注了就是假图。⚠️ 只有这一步 blocked:同页的写签(B65b)与换票(B65c)不依赖相机,已按 setData 直驱进矩阵,所以这次新增 blocked 换来的是两行真拍,不是整页逃生。altVerification:tests/unit/city-stamp-contract.test.js 钉住取景框四钮的位置与 topSafe 让位。"
+  }
+}

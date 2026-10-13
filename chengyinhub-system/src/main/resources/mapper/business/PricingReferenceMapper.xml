@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PricingReferenceMapper">
+    <!-- 现表没有独立 city_code；沿用 cms_topic 列表既有的 address_name 城市口径，
+         仅在地址含“市”时生成参考，无法可靠识别则返回空样本，绝不拿全城外数据冒充同城。 -->
+    <select id="selectCityReference" resultType="map">
+        select round(avg(sample.price), 2) as referencePrice, count(1) as sampleSize,
+               sample.cityLabel as cityLabel
+        from (
+          <choose>
+            <when test="subType == 'self'">
+              select candidate.self_play_price as price,
+                     substring(candidate.address_name, 1, locate('市', candidate.address_name)) as cityLabel
+                from cms_topic base
+                join cms_topic candidate
+                  on candidate.id != base.id
+                 and candidate.product_type = base.product_type
+                 and candidate.lifecycle = 3
+                 and candidate.self_play_price is not null
+                 and candidate.self_play_price &gt; 0
+                 and locate('市', base.address_name) &gt; 0
+                 and locate('市', candidate.address_name) &gt; 0
+                 and substring(candidate.address_name, 1, locate('市', candidate.address_name))
+                     = substring(base.address_name, 1, locate('市', base.address_name))
+               where base.id = #{topicId}
+            </when>
+            <otherwise>
+              select ticket.price as price,
+                     substring(candidate.address_name, 1, locate('市', candidate.address_name)) as cityLabel
+                from cms_topic base
+                join cms_topic candidate
+                  on candidate.id != base.id
+                 and candidate.product_type = base.product_type
+                 and candidate.lifecycle = 3
+                 and locate('市', base.address_name) &gt; 0
+                 and locate('市', candidate.address_name) &gt; 0
+                 and substring(candidate.address_name, 1, locate('市', candidate.address_name))
+                     = substring(base.address_name, 1, locate('市', base.address_name))
+                join oms_ticket ticket
+                  on ticket.owner_type = 1 and ticket.owner_id = candidate.id
+                 and ticket.sub_type = 'guided' and ticket.price &gt; 0
+               where base.id = #{topicId}
+            </otherwise>
+          </choose>
+        ) sample
+        group by sample.cityLabel
+    </select>
+</mapper>

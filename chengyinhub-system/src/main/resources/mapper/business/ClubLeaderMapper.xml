@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.chengyinhub.business.mapper.ClubLeaderMapper">
+
+    <resultMap type="ClubLeader" id="ClubLeaderResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="leaderName"    column="leader_name"    />
+        <result property="phone"    column="phone"    />
+        <result property="identity"    column="identity"    />
+        <result property="coFounders"    column="co_founders"    />
+        <result property="hasExperience"    column="has_experience"    />
+        <result property="experience"    column="experience"    />
+        <result property="maxEventSize"    column="max_event_size"    />
+        <result property="avgEventSize"    column="avg_event_size"    />
+        <result property="canDesignRoute"    column="can_design_route"    />
+        <result property="canDesignTask"    column="can_design_task"    />
+        <result property="canNpc"    column="can_npc"    />
+        <result property="canMerchantCoop"    column="can_merchant_coop"    />
+        <result property="hasGuideCert"    column="has_guide_cert"    />
+        <result property="certImages"    column="cert_images"    />
+        <result property="level"    column="level"    />
+        <result property="tags"    column="tags"    />
+        <result property="auditBy"    column="audit_by"    />
+        <result property="auditTime"    column="audit_time"    />
+        <result property="status"    column="status"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+        <result property="delFlag"    column="del_flag"    />
+    </resultMap>
+
+    <sql id="selectClubLeaderVo">
+        select id, member_id, leader_name, phone, identity, co_founders, has_experience, experience,
+               max_event_size, avg_event_size, can_design_route, can_design_task, can_npc, can_merchant_coop,
+               has_guide_cert, cert_images, level, tags, audit_by, audit_time, status,
+               create_by, create_time, update_by, update_time, remark, del_flag
+        from club_leader
+    </sql>
+
+    <select id="selectClubLeaderList" parameterType="ClubLeader" resultMap="ClubLeaderResult">
+        <include refid="selectClubLeaderVo"/>
+        <where>
+            del_flag = 0
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="level != null "> and level = #{level}</if>
+            <if test="leaderName != null and leaderName != ''"> and leader_name like concat('%', #{leaderName}, '%')</if>
+        </where>
+        order by create_time desc
+    </select>
+
+    <select id="selectClubLeaderById" parameterType="Long" resultMap="ClubLeaderResult">
+        <include refid="selectClubLeaderVo"/>
+        where id = #{id} and del_flag = 0
+    </select>
+
+    <select id="selectClubLeaderByMemberId" parameterType="Long" resultMap="ClubLeaderResult">
+        <include refid="selectClubLeaderVo"/>
+        where member_id = #{memberId} and del_flag = 0 limit 1
+    </select>
+
+    <insert id="insertClubLeader" parameterType="ClubLeader" useGeneratedKeys="true" keyProperty="id">
+        insert into club_leader
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="leaderName != null">leader_name,</if>
+            <if test="phone != null">phone,</if>
+            <if test="identity != null">identity,</if>
+            <if test="coFounders != null">co_founders,</if>
+            <if test="hasExperience != null">has_experience,</if>
+            <if test="experience != null">experience,</if>
+            <if test="maxEventSize != null">max_event_size,</if>
+            <if test="avgEventSize != null">avg_event_size,</if>
+            <if test="canDesignRoute != null">can_design_route,</if>
+            <if test="canDesignTask != null">can_design_task,</if>
+            <if test="canNpc != null">can_npc,</if>
+            <if test="canMerchantCoop != null">can_merchant_coop,</if>
+            <if test="hasGuideCert != null">has_guide_cert,</if>
+            <if test="certImages != null">cert_images,</if>
+            <if test="level != null">level,</if>
+            <if test="tags != null">tags,</if>
+            <if test="auditBy != null">audit_by,</if>
+            <if test="auditTime != null">audit_time,</if>
+            <if test="status != null">status,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="remark != null">remark,</if>
+            <if test="delFlag != null">del_flag,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="leaderName != null">#{leaderName},</if>
+            <if test="phone != null">#{phone},</if>
+            <if test="identity != null">#{identity},</if>
+            <if test="coFounders != null">#{coFounders},</if>
+            <if test="hasExperience != null">#{hasExperience},</if>
+            <if test="experience != null">#{experience},</if>
+            <if test="maxEventSize != null">#{maxEventSize},</if>
+            <if test="avgEventSize != null">#{avgEventSize},</if>
+            <if test="canDesignRoute != null">#{canDesignRoute},</if>
+            <if test="canDesignTask != null">#{canDesignTask},</if>
+            <if test="canNpc != null">#{canNpc},</if>
+            <if test="canMerchantCoop != null">#{canMerchantCoop},</if>
+            <if test="hasGuideCert != null">#{hasGuideCert},</if>
+            <if test="certImages != null">#{certImages},</if>
+            <if test="level != null">#{level},</if>
+            <if test="tags != null">#{tags},</if>
+            <if test="auditBy != null">#{auditBy},</if>
+            <if test="auditTime != null">#{auditTime},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+        </trim>
+    </insert>
+
+    <update id="updateClubLeader" parameterType="ClubLeader">
+        update club_leader
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="leaderName != null">leader_name = #{leaderName},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="identity != null">identity = #{identity},</if>
+            <if test="coFounders != null">co_founders = #{coFounders},</if>
+            <if test="hasExperience != null">has_experience = #{hasExperience},</if>
+            <if test="experience != null">experience = #{experience},</if>
+            <if test="maxEventSize != null">max_event_size = #{maxEventSize},</if>
+            <if test="avgEventSize != null">avg_event_size = #{avgEventSize},</if>
+            <if test="canDesignRoute != null">can_design_route = #{canDesignRoute},</if>
+            <if test="canDesignTask != null">can_design_task = #{canDesignTask},</if>
+            <if test="canNpc != null">can_npc = #{canNpc},</if>
+            <if test="canMerchantCoop != null">can_merchant_coop = #{canMerchantCoop},</if>
+            <if test="hasGuideCert != null">has_guide_cert = #{hasGuideCert},</if>
+            <if test="certImages != null">cert_images = #{certImages},</if>
+            <if test="level != null">level = #{level},</if>
+            <if test="tags != null">tags = #{tags},</if>
+            <if test="auditBy != null">audit_by = #{auditBy},</if>
+            <if test="auditTime != null">audit_time = #{auditTime},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="deleteClubLeaderById" parameterType="Long">
+        update club_leader set del_flag = 2 where id = #{id}
+    </update>
+
+    <update id="deleteClubLeaderByIds" parameterType="String">
+        update club_leader set del_flag = 2 where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+</mapper>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.BusinessAuditEventMapper">
+    <resultMap id="BusinessAuditEventResult" type="com.chengyinhub.business.domain.BusinessAuditEvent">
+        <id property="id" column="id"/>
+        <result property="domainType" column="domain_type"/>
+        <result property="domainId" column="domain_id"/>
+        <result property="ownerMemberId" column="owner_member_id"/>
+        <result property="actorType" column="actor_type"/>
+        <result property="actorMemberId" column="actor_member_id"/>
+        <result property="actorRoleCode" column="actor_role_code"/>
+        <result property="action" column="action"/>
+        <result property="targetType" column="target_type"/>
+        <result property="targetId" column="target_id"/>
+        <result property="relationId" column="relation_id"/>
+        <result property="beforeJson" column="before_json"/>
+        <result property="afterJson" column="after_json"/>
+        <result property="reason" column="reason"/>
+        <result property="requestId" column="request_id"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="selectByDomainActionRequestForUpdate" resultMap="BusinessAuditEventResult">
+        select id, domain_type, domain_id, owner_member_id, actor_type, actor_member_id, actor_role_code,
+               action, target_type, target_id, relation_id, before_json, after_json,
+               reason, request_id, create_time
+        from business_audit_event
+        where domain_type = #{domainType}
+          and domain_id = #{domainId}
+          and action = #{action}
+          and request_id = #{requestId}
+        for update
+    </select>
+
+    <insert id="insertBusinessAuditEvent" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.BusinessAuditEvent">
+        insert into business_audit_event
+          (domain_type, domain_id, owner_member_id, actor_type, actor_member_id, actor_role_code,
+           action, target_type, target_id, relation_id, before_json, after_json,
+           reason, request_id, create_time)
+        values
+          (#{domainType}, #{domainId}, #{ownerMemberId}, COALESCE(#{actorType}, 'UNKNOWN'), #{actorMemberId}, #{actorRoleCode},
+           #{action}, #{targetType}, #{targetId}, #{relationId}, #{beforeJson}, #{afterJson},
+           #{reason},
+           COALESCE(NULLIF(#{requestId}, ''), SHA2(CONCAT_WS(':',
+             #{domainType}, #{domainId}, #{action}, #{targetType},
+             COALESCE(#{targetId}, 0), COALESCE(#{relationId}, 0)), 256)),
+           #{createTime})
+    </insert>
+
+    <!-- F15 操作员日频控:数「今天」的审计行(每次成功揭示恰好一条)。
+         ★ for update 不是装饰:这是频控的原子闸。普通 select 在 RR 下读的是事务快照,
+         两个并发请求会双双读到 49、双双放行,把日限捅到 51+;加锁读是 current read,
+         读的是最新已提交行,并按 idx_business_audit_actor(actor_member_id, create_time)
+         对同一操作员的行加锁 —— 第二个请求会等第一个提交后再数,才能看到它新写的那一行。
+         2026-09-15 在 MySQL 8.0.45 上实测:无锁版第二个请求读回 49、有锁版读回 50。 -->
+    <select id="countActorActionToday" resultType="long">
+        select count(1) from business_audit_event
+        where actor_member_id = #{actorMemberId}
+          and action = #{action}
+          and create_time &gt;= curdate()
+        for update
+    </select>
+
+    <select id="selectByTarget" resultMap="BusinessAuditEventResult">
+        select id, domain_type, domain_id, owner_member_id, actor_type, actor_member_id, actor_role_code,
+               action, target_type, target_id, relation_id, before_json, after_json,
+               reason, request_id, create_time
+        from business_audit_event
+        where target_type = #{targetType}
+          and target_id = #{targetId}
+        order by create_time desc, id desc
+    </select>
+
+    <select id="selectAuditLogPage" resultMap="BusinessAuditEventResult"
+            parameterType="com.chengyinhub.business.domain.dto.BusinessAuditLogQueryDTO">
+        select id, domain_type, domain_id, owner_member_id, actor_type, actor_member_id, actor_role_code,
+               action, target_type, target_id, relation_id, before_json, after_json,
+               reason, request_id, create_time
+        from business_audit_event
+        <where>
+            <if test="domainType != null and domainType != ''">and domain_type = #{domainType}</if>
+            <if test="domainId != null">and domain_id = #{domainId}</if>
+            <if test="actorId != null">and actor_member_id = #{actorId}</if>
+            <if test="actorType != null and actorType != ''">and actor_type = #{actorType}</if>
+            <if test="action != null and action != ''">and action = #{action}</if>
+            <if test="targetType != null and targetType != ''">and target_type = #{targetType}</if>
+            <if test="targetId != null">and target_id = #{targetId}</if>
+            <if test="fromTime != null">and create_time &gt;= #{fromTime}</if>
+            <if test="toTime != null">and create_time &lt;= #{toTime}</if>
+            <if test="cursor != null">and id &lt; #{cursor}</if>
+        </where>
+        order by id desc
+        limit #{fetchLimit}
+    </select>
+</mapper>

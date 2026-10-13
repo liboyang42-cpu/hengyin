@@ -1,0 +1,23 @@
+[
+  {
+    "name": "merchant-copy",
+    "owner": {
+      "left": 175.5,
+      "top": 675.2109375,
+      "width": 16,
+      "height": 23,
+      "centerX": 183.5,
+      "centerY": 686.7109375
+    },
+    "iconHost": {
+      "left": 177.5,
+      "top": 682.0546875,
+      "width": 12,
+      "height": 12,
+      "centerX": 183.5,
+      "centerY": 688.0546875
+    },
+    "deltaX": 0.0,
+    "deltaY": 1.34375
+  }
+]

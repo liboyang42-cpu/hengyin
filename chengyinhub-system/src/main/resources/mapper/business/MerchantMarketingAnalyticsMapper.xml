@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantMarketingAnalyticsMapper">
+    <resultMap id="AnalyticsFact" type="com.chengyinhub.business.domain.dto.MerchantMarketingAnalyticsFact">
+        <result property="currentBrowse" column="current_browse"/>
+        <result property="previousBrowse" column="previous_browse"/>
+        <result property="currentSignup" column="current_signup"/>
+        <result property="previousSignup" column="previous_signup"/>
+        <result property="currentPayment" column="current_payment"/>
+        <result property="previousPayment" column="previous_payment"/>
+        <result property="currentVerify" column="current_verify"/>
+        <result property="previousVerify" column="previous_verify"/>
+        <result property="currentRefundApply" column="current_refund_apply"/>
+        <result property="previousRefundApply" column="previous_refund_apply"/>
+        <result property="currentTopicTouchpoint" column="current_topic_touchpoint"/>
+        <result property="currentActivityTouchpoint" column="current_activity_touchpoint"/>
+        <result property="currentUnattributedTouchpoint" column="current_unattributed_touchpoint"/>
+    </resultMap>
+
+    <!-- 报名/支付都按报名所属内容收口到商家。主题包含商家自有与审核中标；活动只认商家自有。 -->
+    <sql id="ownedRegistrationScope">
+        and (
+          (r.owner_type = 1 and (
+            exists (select 1 from cms_topic t
+                     where t.id = r.owner_id and t.member_id = #{ownerMemberId} and t.del_flag = 0)
+            or exists (select 1 from cms_registration_merchant crm
+                       where crm.topic_id = r.owner_id and crm.member_id = #{ownerMemberId}
+                         and crm.audit_status = 1 and crm.del_flag = 0)
+          ))
+          or (r.owner_type = 2 and exists (
+            select 1 from cms_activity a
+             where a.id = r.owner_id and a.member_id = #{ownerMemberId} and a.del_flag = 0
+          ))
+        )
+    </sql>
+
+    <select id="selectAnalytics" resultMap="AnalyticsFact">
+        select
+          coalesce(sum(case when event_code = 'BROWSE'
+                             and event_time &gt;= #{currentStart} and event_time &lt; #{endExclusive}
+                            then 1 else 0 end), 0) as current_browse,
+          coalesce(sum(case when event_code = 'BROWSE'
+                             and event_time &gt;= #{previousStart} and event_time &lt; #{currentStart}
+                            then 1 else 0 end), 0) as previous_browse,
+          coalesce(sum(case when event_code = 'SIGNUP'
+                             and event_time &gt;= #{currentStart} and event_time &lt; #{endExclusive}
+                            then 1 else 0 end), 0) as current_signup,
+          coalesce(sum(case when event_code = 'SIGNUP'
+                             and event_time &gt;= #{previousStart} and event_time &lt; #{currentStart}
+                            then 1 else 0 end), 0) as previous_signup,
+          coalesce(sum(case when event_code = 'PAYMENT'
+                             and event_time &gt;= #{currentStart} and event_time &lt; #{endExclusive}
+                            then 1 else 0 end), 0) as current_payment,
+          coalesce(sum(case when event_code = 'PAYMENT'
+                             and event_time &gt;= #{previousStart} and event_time &lt; #{currentStart}
+                            then 1 else 0 end), 0) as previous_payment,
+          coalesce(sum(case when event_code = 'VERIFY'
+                             and event_time &gt;= #{currentStart} and event_time &lt; #{endExclusive}
+                            then 1 else 0 end), 0) as current_verify,
+          coalesce(sum(case when event_code = 'VERIFY'
+                             and event_time &gt;= #{previousStart} and event_time &lt; #{currentStart}
+                            then 1 else 0 end), 0) as previous_verify,
+          coalesce(sum(case when event_code = 'REFUND_APPLY'
+                             and event_time &gt;= #{currentStart} and event_time &lt; #{endExclusive}
+                            then 1 else 0 end), 0) as current_refund_apply,
+          coalesce(sum(case when event_code = 'REFUND_APPLY'
+                             and event_time &gt;= #{previousStart} and event_time &lt; #{currentStart}
+                            then 1 else 0 end), 0) as previous_refund_apply,
+          coalesce(sum(case when event_code = 'SIGNUP' and touchpoint_code = 'IN_APP_TOPIC'
+                             and event_time &gt;= #{currentStart} and event_time &lt; #{endExclusive}
+                            then 1 else 0 end), 0) as current_topic_touchpoint,
+          coalesce(sum(case when event_code = 'SIGNUP' and touchpoint_code = 'IN_APP_ACTIVITY'
+                             and event_time &gt;= #{currentStart} and event_time &lt; #{endExclusive}
+                            then 1 else 0 end), 0) as current_activity_touchpoint,
+          coalesce(sum(case when event_code = 'SIGNUP' and touchpoint_code = 'UNATTRIBUTED'
+                             and event_time &gt;= #{currentStart} and event_time &lt; #{endExclusive}
+                            then 1 else 0 end), 0) as current_unattributed_touchpoint
+        from (
+          select 'BROWSE' as event_code, b.browse_time as event_time, null as touchpoint_code
+            from tms_browse_record b
+           where b.browse_time &gt;= #{previousStart} and b.browse_time &lt; #{endExclusive}
+             and (
+               (b.browse_type = 1 and (
+                 exists (select 1 from cms_topic t
+                          where t.id = b.target_id and t.member_id = #{ownerMemberId} and t.del_flag = 0)
+                 or exists (select 1 from cms_registration_merchant crm
+                            where crm.topic_id = b.target_id and crm.member_id = #{ownerMemberId}
+                              and crm.audit_status = 1 and crm.del_flag = 0)
+                 or exists (select 1 from cms_topic_node n
+                            where n.topic_id = b.target_id and n.merchant_member_id = #{ownerMemberId})
+               ))
+               or (b.browse_type = 2 and exists (
+                 select 1 from cms_activity a
+                  where a.id = b.target_id and a.member_id = #{ownerMemberId} and a.del_flag = 0
+               ))
+             )
+          union all
+          select 'SIGNUP' as event_code, r.create_time as event_time,
+                 case when r.owner_type = 1 then 'IN_APP_TOPIC'
+                      when r.owner_type = 2 then 'IN_APP_ACTIVITY'
+                      else 'UNATTRIBUTED' end as touchpoint_code
+            from cms_registration r
+           where r.create_time &gt;= #{previousStart} and r.create_time &lt; #{endExclusive}
+           <include refid="ownedRegistrationScope"/>
+          union all
+          select 'PAYMENT' as event_code, r.payment_time as event_time, null as touchpoint_code
+            from cms_registration r
+           where r.payment_time is not null
+             and r.payment_time &gt;= #{previousStart} and r.payment_time &lt; #{endExclusive}
+           <include refid="ownedRegistrationScope"/>
+          union all
+          select 'VERIFY' as event_code, rd.create_time as event_time, null as touchpoint_code
+            from redemption rd
+           where rd.merchant_id = #{ownerMemberId} and rd.status = 'ACTIVE'
+             and rd.create_time &gt;= #{previousStart} and rd.create_time &lt; #{endExclusive}
+          union all
+          select 'REFUND_APPLY' as event_code, f.create_time as event_time, null as touchpoint_code
+            from refund_application f
+           where f.merchant_id = #{ownerMemberId} and f.del_flag = 0
+             and f.create_time &gt;= #{previousStart} and f.create_time &lt; #{endExclusive}
+        ) events
+    </select>
+</mapper>

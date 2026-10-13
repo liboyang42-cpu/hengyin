@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ThemeStateKeyMapper">
+
+    <resultMap type="ThemeStateKey" id="ThemeStateKeyResult">
+        <result property="id"           column="id"            />
+        <result property="topicId"      column="topic_id"      />
+        <result property="stateKey"     column="state_key"     />
+        <result property="keyType"      column="key_type"      />
+        <result property="scope"        column="scope"         />
+        <result property="label"        column="label"         />
+        <result property="initialValue" column="initial_value" />
+        <result property="createTime"   column="create_time"   />
+        <result property="updateTime"   column="update_time"   />
+    </resultMap>
+
+    <sql id="selectThemeStateKeyVo">
+        select id, topic_id, state_key, key_type, scope, label, initial_value, create_time, update_time
+        from theme_state_key
+    </sql>
+
+    <select id="selectByTopicId" resultMap="ThemeStateKeyResult">
+        <include refid="selectThemeStateKeyVo"/>
+        where topic_id = #{topicId}
+        order by id
+    </select>
+
+    <insert id="upsertThemeStateKey" parameterType="ThemeStateKey" useGeneratedKeys="true" keyProperty="id">
+        insert into theme_state_key
+            (topic_id, state_key, key_type, scope, label, initial_value, create_time, update_time)
+        values
+            (#{topicId}, #{stateKey}, #{keyType}, #{scope}, #{label}, #{initialValue}, #{createTime}, #{updateTime})
+        on duplicate key update
+            label = values(label),
+            initial_value = values(initial_value),
+            update_time = values(update_time)
+    </insert>
+
+    <delete id="deleteByTopicIdAndStateKey">
+        delete from theme_state_key
+        where topic_id = #{topicId} and state_key = #{stateKey}
+    </delete>
+
+</mapper>

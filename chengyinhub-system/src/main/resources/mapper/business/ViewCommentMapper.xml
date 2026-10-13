@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ViewCommentMapper">
+    
+    <resultMap type="ViewComment" id="ViewCommentResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="ownerType"    column="owner_type"    />
+        <result property="ownerId"    column="owner_id"    />
+        <result property="rating"    column="rating"    />
+        <result property="contents"    column="contents"    />
+        <result property="replyId"    column="reply_id"    />
+        <result property="imgArr"    column="img_arr"    />
+        <result property="status"    column="status"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="memberNickname"    column="member_nickname"    />
+        <result property="memberAvatar"    column="member_avatar"    />
+        <result property="memberUserType"    column="member_user_type"    />
+        <result property="memberLevelId"    column="member_level_id"    />
+        <result property="likeCount"    column="like_count"    />
+    </resultMap>
+
+    <sql id="selectViewCommentVo">
+        select id, member_id, owner_type, owner_id, rating, contents, reply_id, img_arr, status, del_flag, create_by, create_time, update_by, update_time, member_nickname, member_avatar, member_user_type, member_level_id, like_count from view_comment
+    </sql>
+
+    <select id="selectViewCommentList" parameterType="ViewComment" resultMap="ViewCommentResult">
+        <include refid="selectViewCommentVo"/>
+        <where>  
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="ownerType != null "> and owner_type = #{ownerType}</if>
+            <if test="ownerId != null "> and owner_id = #{ownerId}</if>
+            <if test="rating != null "> and rating = #{rating}</if>
+            <if test="contents != null  and contents != ''"> and contents = #{contents}</if>
+            <if test="replyId != null "> and reply_id = #{replyId}</if>
+            <if test="imgArr != null  and imgArr != ''"> and img_arr = #{imgArr}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="memberNickname != null  and memberNickname != ''"> and member_nickname like concat('%', #{memberNickname}, '%')</if>
+            <if test="memberAvatar != null  and memberAvatar != ''"> and member_avatar = #{memberAvatar}</if>
+            <if test="memberUserType != null "> and member_user_type = #{memberUserType}</if>
+            <if test="memberLevelId != null "> and member_level_id = #{memberLevelId}</if>
+            <if test="likeCount != null "> and like_count = #{likeCount}</if>
+        </where>
+
+        order by id desc
+    </select>
+    
+    <select id="selectViewCommentById" parameterType="Long" resultMap="ViewCommentResult">
+        <include refid="selectViewCommentVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertViewComment" parameterType="ViewComment">
+        insert into view_comment
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="memberId != null">member_id,</if>
+            <if test="ownerType != null">owner_type,</if>
+            <if test="ownerId != null">owner_id,</if>
+            <if test="rating != null">rating,</if>
+            <if test="contents != null">contents,</if>
+            <if test="replyId != null">reply_id,</if>
+            <if test="imgArr != null">img_arr,</if>
+            <if test="status != null">status,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="memberNickname != null">member_nickname,</if>
+            <if test="memberAvatar != null">member_avatar,</if>
+            <if test="memberUserType != null">member_user_type,</if>
+            <if test="memberLevelId != null">member_level_id,</if>
+            <if test="likeCount != null">like_count,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="memberId != null">#{memberId},</if>
+            <if test="ownerType != null">#{ownerType},</if>
+            <if test="ownerId != null">#{ownerId},</if>
+            <if test="rating != null">#{rating},</if>
+            <if test="contents != null">#{contents},</if>
+            <if test="replyId != null">#{replyId},</if>
+            <if test="imgArr != null">#{imgArr},</if>
+            <if test="status != null">#{status},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="memberNickname != null">#{memberNickname},</if>
+            <if test="memberAvatar != null">#{memberAvatar},</if>
+            <if test="memberUserType != null">#{memberUserType},</if>
+            <if test="memberLevelId != null">#{memberLevelId},</if>
+            <if test="likeCount != null">#{likeCount},</if>
+         </trim>
+    </insert>
+
+    <update id="updateViewComment" parameterType="ViewComment">
+        update view_comment
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="ownerType != null">owner_type = #{ownerType},</if>
+            <if test="ownerId != null">owner_id = #{ownerId},</if>
+            <if test="rating != null">rating = #{rating},</if>
+            <if test="contents != null">contents = #{contents},</if>
+            <if test="replyId != null">reply_id = #{replyId},</if>
+            <if test="imgArr != null">img_arr = #{imgArr},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="memberNickname != null">member_nickname = #{memberNickname},</if>
+            <if test="memberAvatar != null">member_avatar = #{memberAvatar},</if>
+            <if test="memberUserType != null">member_user_type = #{memberUserType},</if>
+            <if test="memberLevelId != null">member_level_id = #{memberLevelId},</if>
+            <if test="likeCount != null">like_count = #{likeCount},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteViewCommentById" parameterType="Long">
+        delete from view_comment where id = #{id}
+    </delete>
+
+    <delete id="deleteViewCommentByIds" parameterType="String">
+        delete from view_comment where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

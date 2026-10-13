@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantOperatorInviteMapper">
+    <resultMap id="MerchantOperatorInviteResult" type="com.chengyinhub.business.domain.MerchantOperatorInvite">
+        <id property="id" column="id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="roleCode" column="role_code"/>
+        <result property="tokenHash" column="token_hash"/>
+        <result property="status" column="status"/>
+        <result property="invitedByMemberId" column="invited_by_member_id"/>
+        <result property="invitedAt" column="invited_at"/>
+        <result property="expiresAt" column="expires_at"/>
+        <result property="acceptedByMemberId" column="accepted_by_member_id"/>
+        <result property="acceptedAt" column="accepted_at"/>
+        <result property="revokedByMemberId" column="revoked_by_member_id"/>
+        <result property="revokedAt" column="revoked_at"/>
+        <result property="revokeReason" column="revoke_reason"/>
+        <result property="requestId" column="request_id"/>
+        <result property="version" column="version"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="inviteColumns">
+        id, merchant_id, role_code, token_hash, status, invited_by_member_id, invited_at,
+        expires_at, accepted_by_member_id, accepted_at, revoked_by_member_id, revoked_at,
+        revoke_reason, request_id, version, create_time, update_time
+    </sql>
+
+    <!-- 仅用于在锁前发现稳定的 merchant_id；业务必须随后按 merchant -> invite 顺序重读。 -->
+    <select id="selectByTokenHash" resultMap="MerchantOperatorInviteResult">
+        select <include refid="inviteColumns"/>
+        from merchant_operator_invite where token_hash = #{tokenHash}
+    </select>
+
+    <select id="selectByTokenHashForUpdate" resultMap="MerchantOperatorInviteResult">
+        select <include refid="inviteColumns"/>
+        from merchant_operator_invite where token_hash = #{tokenHash} for update
+    </select>
+
+    <!-- 接受回执重放的无锁定位读；业务随后锁 merchant 并用 FOR UPDATE 精确复核。 -->
+    <select id="selectAcceptedByConsumedToken" resultMap="MerchantOperatorInviteResult">
+        select <include refid="inviteColumns"/>
+        from merchant_operator_invite
+        where accepted_by_member_id = #{acceptedByMemberId}
+          and status = 'ACCEPTED'
+          and token_hash = lower(sha2(concat(#{originalTokenHash}, ':consumed:', id), 256))
+        limit 1
+    </select>
+
+    <select id="selectAcceptedByConsumedTokenForUpdate" resultMap="MerchantOperatorInviteResult">
+        select <include refid="inviteColumns"/>
+        from merchant_operator_invite
+        where accepted_by_member_id = #{acceptedByMemberId}
+          and status = 'ACCEPTED'
+          and token_hash = lower(sha2(concat(#{originalTokenHash}, ':consumed:', id), 256))
+        limit 1 for update
+    </select>
+
+    <select id="selectByIdForUpdate" resultMap="MerchantOperatorInviteResult">
+        select <include refid="inviteColumns"/>
+        from merchant_operator_invite where id = #{id} for update
+    </select>
+
+    <select id="selectByRequestId" resultMap="MerchantOperatorInviteResult">
+        select <include refid="inviteColumns"/>
+        from merchant_operator_invite
+        where merchant_id = #{merchantId} and request_id = #{requestId}
+        limit 1
+    </select>
+
+    <select id="selectByRequestIdForUpdate" resultMap="MerchantOperatorInviteResult">
+        select <include refid="inviteColumns"/>
+        from merchant_operator_invite
+        where merchant_id = #{merchantId} and request_id = #{requestId}
+        for update
+    </select>
+
+    <select id="selectTeamInvites" resultMap="MerchantOperatorInviteResult">
+        select <include refid="inviteColumns"/>
+        from merchant_operator_invite
+        where merchant_id = #{merchantId}
+        order by id desc
+    </select>
+
+    <insert id="insertMerchantOperatorInvite" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.MerchantOperatorInvite">
+        insert into merchant_operator_invite
+          (merchant_id, role_code, token_hash, status, invited_by_member_id, invited_at,
+           expires_at, request_id, version, create_time, update_time)
+        values
+          (#{merchantId}, #{roleCode}, #{tokenHash}, #{status}, #{invitedByMemberId}, #{invitedAt},
+           #{expiresAt}, #{requestId}, #{version}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="acceptCas">
+        update merchant_operator_invite
+        set status = 'ACCEPTED', accepted_by_member_id = #{acceptedByMemberId},
+            accepted_at = now(), token_hash = lower(sha2(concat(token_hash, ':consumed:', id), 256)),
+            version = version + 1, update_time = now()
+        where id = #{id} and status = 'PENDING' and version = #{expectedVersion}
+          and expires_at &gt; now()
+    </update>
+
+    <update id="revokeCas">
+        update merchant_operator_invite
+        set status = 'REVOKED', revoked_by_member_id = #{revokedByMemberId},
+            revoked_at = now(), revoke_reason = #{revokeReason},
+            token_hash = lower(sha2(concat(token_hash, ':revoked:', id), 256)),
+            version = version + 1, update_time = now()
+        where id = #{id} and merchant_id = #{merchantId}
+          and status = 'PENDING' and version = #{expectedVersion}
+    </update>
+
+    <update id="expireCas">
+        update merchant_operator_invite
+        set status = 'EXPIRED', token_hash = lower(sha2(concat(token_hash, ':expired:', id), 256)),
+            version = version + 1, update_time = now()
+        where id = #{id} and status = 'PENDING' and version = #{expectedVersion}
+          and expires_at &lt;= now()
+    </update>
+
+    <update id="revokeAllPendingByMerchantId">
+        update merchant_operator_invite
+        set status = 'REVOKED', revoked_by_member_id = null,
+            revoked_at = now(), revoke_reason = #{revokeReason},
+            token_hash = lower(sha2(concat(token_hash, ':owner-changed:', id), 256)),
+            version = version + 1, update_time = now()
+        where merchant_id = #{merchantId} and status = 'PENDING'
+    </update>
+</mapper>

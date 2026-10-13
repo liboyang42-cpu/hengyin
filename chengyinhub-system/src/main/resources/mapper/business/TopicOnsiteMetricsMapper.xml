@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.TopicOnsiteMetricsMapper">
+    <resultMap id="ticketFact" type="com.chengyinhub.business.domain.dto.TopicOnsiteTicketFact">
+        <result property="registrationId" column="registration_id"/><result property="memberId" column="member_id"/>
+        <result property="paymentStatus" column="payment_status"/><result property="registrationStatus" column="registration_status"/>
+        <result property="ticketStart" column="ticket_start"/><result property="lastSessionEnd" column="last_session_end"/>
+        <result property="refundRequestedAt" column="refund_requested_at"/>
+        <result property="refundTime" column="refund_time"/><result property="arrived" column="arrived"/>
+        <result property="redeemedCount" column="redeemed_count"/><result property="requiredCount" column="required_count"/>
+        <result property="lastRedemptionAt" column="last_redemption_at"/>
+        <result property="joinedWithinSevenDays" column="joined_within_seven_days"/>
+    </resultMap>
+    <resultMap id="waitFact" type="com.chengyinhub.business.domain.dto.TopicWaitFact">
+        <result property="registrationId" column="registration_id"/><result property="chapterId" column="chapter_id"/>
+        <result property="queueJoinedAt" column="queue_joined_at"/><result property="serviceStartedAt" column="service_started_at"/>
+    </resultMap>
+    <resultMap id="repeatFact" type="com.chengyinhub.business.domain.dto.TopicRepeatPaymentFact">
+        <result property="memberId" column="member_id"/><result property="paymentTime" column="payment_time"/>
+    </resultMap>
+    <resultMap id="loadFact" type="com.chengyinhub.business.domain.dto.TopicChapterLoadFact">
+        <result property="chapterId" column="chapter_id"/><result property="inStoreLoad" column="in_store_load"/>
+    </resultMap>
+    <sql id="topicTickets">
+        (select t0.id
+           from oms_ticket t0
+           join cms_activity a0 on a0.id = t0.owner_id and t0.owner_type = 2
+          where a0.topic_id = #{topicId} and t0.del_flag = 0
+          order by t0.start_time, t0.id)
+    </sql>
+
+    <!-- 每张已购探店票一行。退款发生时刻与票种开始时刻都原样带回，N_service 在 Java 统一裁决。 -->
+    <select id="selectTicketFacts" resultMap="ticketFact">
+        select r.id registration_id,
+               r.member_id,
+               r.payment_status,
+               r.registration_status,
+               t.start_time ticket_start,
+               t.end_time last_session_end,
+               (select min(ra0.create_time)
+                  from refund_application ra0
+                 where ra0.source_type = 'registration' and ra0.source_id = r.id
+                   and ra0.del_flag = 0) refund_requested_at,
+               (select min(ra.create_time)
+                  from refund_application ra
+                 where ra.source_type = 'registration' and ra.source_id = r.id
+                   and ra.payout_status in (1, 3, 4) and ra.del_flag = 0) refund_time,
+               case when exists (
+                    select 1 from player_node_progress p
+                    where p.member_id = r.member_id and p.activity_id = r.owner_id
+                      and p.topic_id = #{topicId} and p.checkin_time is not null and p.del_flag = 0
+               ) then 1 else 0 end arrived,
+               (select count(distinct rd.chapter_id) from redemption rd
+                 where rd.registration_id = r.id and rd.topic_id = #{topicId}
+                   and rd.status = 'ACTIVE') redeemed_count,
+               (select count(1) from cms_topic_chapter c
+                 where c.topic_id = #{topicId} and coalesce(c.required, 1) = 1) required_count,
+               (select max(rd2.create_time) from redemption rd2
+                 where rd2.registration_id = r.id and rd2.topic_id = #{topicId}
+                   and rd2.status = 'ACTIVE') last_redemption_at,
+               case when exists (
+                    select 1 from cms_topic tp join club cl on cl.id = tp.club_id
+                    where tp.id = #{topicId} and (
+                      exists (select 1 from ums_member_follow f
+                               where f.member_id = r.member_id and f.follow_member_id = cl.member_id
+                                 and f.create_time between
+                                     (select min(t3.start_time) from oms_ticket t3 join cms_activity a3 on a3.id=t3.owner_id and t3.owner_type=2 where a3.topic_id=#{topicId} and t3.del_flag=0)
+                                     and timestampadd(day, 7, (select min(t4.start_time) from oms_ticket t4 join cms_activity a4 on a4.id=t4.owner_id and t4.owner_type=2 where a4.topic_id=#{topicId} and t4.del_flag=0)))
+                      or exists (select 1 from club_member cm
+                                  where cm.club_id = cl.id and cm.member_id = r.member_id
+                                    and cm.status = 1 and cm.del_flag = 0
+                                    and cm.join_time between
+                                        (select min(t5.start_time) from oms_ticket t5 join cms_activity a5 on a5.id=t5.owner_id and t5.owner_type=2 where a5.topic_id=#{topicId} and t5.del_flag=0)
+                                        and timestampadd(day, 7, (select min(t6.start_time) from oms_ticket t6 join cms_activity a6 on a6.id=t6.owner_id and t6.owner_type=2 where a6.topic_id=#{topicId} and t6.del_flag=0)))
+                    )
+               ) then 1 else 0 end joined_within_seven_days
+          from cms_registration r
+          join cms_activity a on a.id = r.owner_id and r.owner_type = 2
+          join oms_ticket t on t.id = r.ticket_id
+          join <include refid="topicTickets"/> topic_ticket on topic_ticket.id = t.id
+         where a.topic_id = #{topicId}
+           and r.purchase_kind = 3
+           and t.del_flag = 0
+    </select>
+
+    <!-- queue_joined_at 只认 player_node_progress.checkin_time；service_started_at 只认 redemption.create_time。 -->
+    <select id="selectWaitFacts" resultMap="waitFact">
+        select e.registration_id,
+               e.chapter_id,
+               min(p.checkin_time) queue_joined_at,
+               min(rd.create_time) service_started_at
+          from registration_entitlement e
+          join cms_registration r on r.id = e.registration_id
+          join cms_activity a on a.id = r.owner_id and r.owner_type = 2 and a.topic_id = #{topicId}
+          join <include refid="topicTickets"/> topic_ticket on topic_ticket.id = r.ticket_id
+          left join cms_topic_node n on n.chapter_id = e.chapter_id and n.topic_id = #{topicId}
+          left join player_node_progress p on p.member_id = r.member_id and p.activity_id = r.owner_id
+                 and p.topic_id = #{topicId} and p.node_id = n.id and p.del_flag = 0
+          left join redemption rd on rd.registration_id = r.id and rd.chapter_id = e.chapter_id
+                 and rd.topic_id = #{topicId} and rd.status = 'ACTIVE'
+         where e.topic_id = #{topicId}
+           and (p.checkin_time is not null or rd.id is not null)
+         group by e.registration_id, e.chapter_id
+    </select>
+
+    <!-- 候选复购付款事实；Java 以每张到店票的完成/末场时间为锚裁 90 天窗。 -->
+    <select id="selectRepeatPayments" resultMap="repeatFact">
+        select distinct later.member_id, later.payment_time
+          from cms_registration later
+         where later.payment_status = 2 and later.registration_status = 2
+           and later.payment_time is not null
+           and exists (
+               select 1 from cms_registration original
+               join cms_activity oa on oa.id = original.owner_id and original.owner_type = 2
+               where oa.topic_id = #{topicId} and original.purchase_kind = 3
+                 and original.member_id = later.member_id
+           )
+           and not exists (
+               select 1 from cms_activity current_topic
+               where later.owner_type = 2 and current_topic.id = later.owner_id
+                 and current_topic.topic_id = #{topicId}
+           )
+    </select>
+
+    <!-- 店内负载只数“已支付且本章未核销、已有到店时间”的票；绝不读取 quota_total/quota_used。 -->
+    <select id="selectInStoreLoads" resultMap="loadFact">
+        select e.chapter_id, count(distinct e.registration_id) in_store_load
+          from registration_entitlement e
+          join cms_registration r on r.id = e.registration_id
+             and r.payment_status = 2 and r.registration_status = 2
+          join cms_activity a on a.id = r.owner_id and r.owner_type = 2 and a.topic_id = #{topicId}
+          join <include refid="topicTickets"/> topic_ticket on topic_ticket.id = r.ticket_id
+          join cms_topic_node n on n.chapter_id = e.chapter_id and n.topic_id = #{topicId}
+          join player_node_progress p on p.member_id = r.member_id and p.activity_id = r.owner_id
+             and p.topic_id = #{topicId} and p.node_id = n.id and p.checkin_time is not null and p.del_flag = 0
+         where e.topic_id = #{topicId} and e.status = 0
+         group by e.chapter_id
+    </select>
+
+    <!-- 有效服务投诉用户：只数绑定本期已支付活动壳报名的非删除工单，按玩家去重。 -->
+    <select id="countEffectiveComplaintUsers" resultType="int">
+        select count(distinct complaint.reporter_member_id)
+          from coop_complaint complaint
+          join cms_registration registration on registration.id = complaint.registration_id
+             and registration.owner_type = 2 and registration.payment_status = 2
+             and registration.registration_status = 2
+          join cms_activity activity on activity.id = registration.owner_id
+             and activity.topic_id = #{topicId}
+         where complaint.topic_id = #{topicId} and complaint.del_flag = 0
+           and complaint.status = 3 and complaint.fault_ratio &gt; 0
+    </select>
+</mapper>

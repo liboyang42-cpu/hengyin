@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.OmsOrderMapper">
+    
+    <resultMap type="OmsOrder" id="OmsOrderResult">
+        <result property="id"    column="id"    />
+        <result property="orderType"    column="order_type"    />
+        <result property="orderSn"    column="order_sn"    />
+        <result property="payId"    column="pay_id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="mmsMerchantId"    column="mms_merchant_id"    />
+        <result property="productQuantity"    column="product_quantity"    />
+        <result property="productTotalAmount"    column="product_total_amount"    />
+        <result property="deliveryFee"    column="delivery_fee"    />
+        <result property="payAmount"    column="pay_amount"    />
+        <result property="taxFee"    column="tax_fee"    />
+        <result property="orderTotalAmount"    column="order_total_amount"    />
+        <result property="pointsAmount"    column="points_amount"    />
+        <result property="payType"    column="pay_type"    />
+        <result property="status"    column="status"    />
+        <result property="aftersaleStatus"    column="aftersale_status"    />
+        <result property="deliveryCompany"    column="delivery_company"    />
+        <result property="deliverySn"    column="delivery_sn"    />
+        <result property="autoConfirmDay"    column="auto_confirm_day"    />
+        <result property="receiverName"    column="receiver_name"    typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler" />
+        <result property="receiverPhone"    column="receiver_phone"    typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler" />
+        <result property="receiverPhoneCode"    column="receiver_phone_code"    />
+        <result property="receiverProvince"    column="receiver_province"    />
+        <result property="receiverDetailAddress"    column="receiver_detail_address"    typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler" />
+        <result property="orderNote"    column="order_note"    />
+        <result property="merchantNote"    column="merchant_note"    />
+        <result property="confirmStatus"    column="confirm_status"    />
+        <result property="paymentTime"    column="payment_time"    />
+        <result property="deliveryTime"    column="delivery_time"    />
+        <result property="receiveTime"    column="receive_time"    />
+        <result property="memberCouponId"    column="member_coupon_id"    />
+        <result property="couponAmount"    column="coupon_amount"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="bizType" column="biz_type"/>
+        <result property="entitlementMaxUsage" column="entitlement_max_usage"/>
+        <result property="entitlementDays" column="entitlement_days"/>
+        <result property="paymentTransactionId" column="payment_transaction_id"/>
+        <result property="commerceRequestId" column="commerce_request_id"/>
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectOmsOrderVo">
+        select id, order_type, order_sn, pay_id, member_id, mms_merchant_id, product_quantity, product_total_amount, delivery_fee, pay_amount, tax_fee, order_total_amount, points_amount, pay_type, status, aftersale_status, delivery_company, delivery_sn, auto_confirm_day, receiver_name, receiver_phone, receiver_phone_code, receiver_province, receiver_detail_address, order_note, merchant_note, confirm_status, payment_time, delivery_time, receive_time, member_coupon_id, coupon_amount, del_flag, biz_type, entitlement_max_usage, entitlement_days, payment_transaction_id, commerce_request_id, create_by, create_time, update_by, update_time from oms_order
+    </sql>
+
+    <sql id="merchantLedgerWhere">
+        where mms_merchant_id = #{merchantId}
+          and (del_flag is null or del_flag != 2)
+          <if test="status != null">and status = #{status}</if>
+          <if test="aftersaleOnly != null and aftersaleOnly">and aftersale_status &gt; 1</if>
+          <if test="beginTime != null">and create_time &gt;= #{beginTime}</if>
+          <if test="endTime != null">and create_time &lt; #{endTime}</if>
+    </sql>
+
+    <select id="selectOmsOrderList" parameterType="OmsOrder" resultMap="OmsOrderResult">
+        <include refid="selectOmsOrderVo"/>
+        <where>  
+            <if test="orderType != null "> and order_type = #{orderType}</if>
+            <if test="orderSn != null  and orderSn != ''"> and order_sn = #{orderSn}</if>
+            <if test="payId != null "> and pay_id = #{payId}</if>
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="mmsMerchantId != null "> and mms_merchant_id = #{mmsMerchantId}</if>
+            <if test="productQuantity != null "> and product_quantity = #{productQuantity}</if>
+            <if test="productTotalAmount != null "> and product_total_amount = #{productTotalAmount}</if>
+            <if test="deliveryFee != null "> and delivery_fee = #{deliveryFee}</if>
+            <if test="payAmount != null "> and pay_amount = #{payAmount}</if>
+            <if test="taxFee != null "> and tax_fee = #{taxFee}</if>
+            <if test="orderTotalAmount != null "> and order_total_amount = #{orderTotalAmount}</if>
+            <if test="pointsAmount != null "> and points_amount = #{pointsAmount}</if>
+            <if test="payType != null "> and pay_type = #{payType}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="aftersaleStatus != null "> and aftersale_status = #{aftersaleStatus}</if>
+            <if test="deliveryCompany != null  and deliveryCompany != ''"> and delivery_company = #{deliveryCompany}</if>
+            <if test="deliverySn != null  and deliverySn != ''"> and delivery_sn = #{deliverySn}</if>
+            <if test="autoConfirmDay != null "> and auto_confirm_day = #{autoConfirmDay}</if>
+            <!-- PII 加密后:收货人姓名/详细地址密文不可检索(合规§6.3);手机号走盲索引精确匹配。
+                 dual-read:回填收敛前存量行 receiver_phone_hash 为 NULL、receiver_phone 仍明文,故 OR 上明文等值(裸参不加密)兜底,
+                 让部署当晚仍能按手机搜到历史订单;回填后自然不再命中明文分支,无副作用。 -->
+            <if test="receiverPhone != null  and receiverPhone != ''"> and (receiver_phone_hash = #{receiverPhone, typeHandler=com.chengyinhub.business.security.PiiBlindIndexTypeHandler} or receiver_phone = #{receiverPhone})</if>
+            <if test="receiverPhoneCode != null  and receiverPhoneCode != ''"> and receiver_phone_code = #{receiverPhoneCode}</if>
+            <if test="receiverProvince != null  and receiverProvince != ''"> and receiver_province = #{receiverProvince}</if>
+            <if test="orderNote != null  and orderNote != ''"> and order_note = #{orderNote}</if>
+            <if test="merchantNote != null  and merchantNote != ''"> and merchant_note = #{merchantNote}</if>
+            <if test="confirmStatus != null "> and confirm_status = #{confirmStatus}</if>
+            <if test="paymentTime != null "> and payment_time = #{paymentTime}</if>
+            <if test="deliveryTime != null "> and delivery_time = #{deliveryTime}</if>
+            <if test="receiveTime != null "> and receive_time = #{receiveTime}</if>
+            <if test="memberCouponId != null "> and member_coupon_id = #{memberCouponId}</if>
+            <if test="couponAmount != null "> and coupon_amount = #{couponAmount}</if>
+        </where>
+    </select>
+
+    <select id="selectMerchantLedgerOrders" resultMap="OmsOrderResult">
+        <include refid="selectOmsOrderVo"/>
+        <include refid="merchantLedgerWhere"/>
+        order by create_time desc, id desc
+    </select>
+
+    <select id="selectMerchantLedgerSummary" resultType="map">
+        select count(1) as orderCount,
+               coalesce(sum(coalesce(nullif(pay_amount, 0), order_total_amount, 0)), 0) as orderAmount,
+               sum(case when aftersale_status &gt; 1 then 1 else 0 end) as aftersaleCount
+        from oms_order
+        <include refid="merchantLedgerWhere"/>
+    </select>
+    
+    <select id="selectOmsOrderById" parameterType="Long" resultMap="OmsOrderResult">
+        <include refid="selectOmsOrderVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectOmsOrderByOrderSn" parameterType="String" resultMap="OmsOrderResult">
+        <include refid="selectOmsOrderVo"/>
+        where order_sn = #{orderSn}
+        limit 1
+    </select>
+
+    <select id="selectCommerceOrderByRequest" resultMap="OmsOrderResult">
+        <include refid="selectOmsOrderVo"/>
+        where member_id = #{memberId}
+          and mms_merchant_id = #{merchantId}
+          and biz_type = #{bizType}
+          and commerce_request_id = #{requestId}
+        limit 1
+    </select>
+
+    <insert id="insertOmsOrder" parameterType="OmsOrder" useGeneratedKeys="true" keyProperty="id">
+        insert into oms_order
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="orderType != null">order_type,</if>
+            <if test="orderSn != null and orderSn != ''">order_sn,</if>
+            <if test="payId != null">pay_id,</if>
+            <if test="memberId != null">member_id,</if>
+            <if test="mmsMerchantId != null">mms_merchant_id,</if>
+            <if test="productQuantity != null">product_quantity,</if>
+            <if test="productTotalAmount != null">product_total_amount,</if>
+            <if test="deliveryFee != null">delivery_fee,</if>
+            <if test="payAmount != null">pay_amount,</if>
+            <if test="taxFee != null">tax_fee,</if>
+            <if test="orderTotalAmount != null">order_total_amount,</if>
+            <if test="pointsAmount != null">points_amount,</if>
+            <if test="payType != null">pay_type,</if>
+            <if test="status != null">status,</if>
+            <if test="aftersaleStatus != null">aftersale_status,</if>
+            <if test="deliveryCompany != null">delivery_company,</if>
+            <if test="deliverySn != null">delivery_sn,</if>
+            <if test="autoConfirmDay != null">auto_confirm_day,</if>
+            <if test="receiverName != null and receiverName != ''">receiver_name,</if>
+            <if test="receiverPhone != null and receiverPhone != ''">receiver_phone,</if>
+            <if test="receiverPhone != null and receiverPhone != ''">receiver_phone_hash,</if>
+            <if test="receiverPhoneCode != null">receiver_phone_code,</if>
+            <if test="receiverProvince != null">receiver_province,</if>
+            <if test="receiverDetailAddress != null">receiver_detail_address,</if>
+            <if test="orderNote != null">order_note,</if>
+            <if test="merchantNote != null">merchant_note,</if>
+            <if test="confirmStatus != null">confirm_status,</if>
+            <if test="paymentTime != null">payment_time,</if>
+            <if test="deliveryTime != null">delivery_time,</if>
+            <if test="receiveTime != null">receive_time,</if>
+            <if test="memberCouponId != null">member_coupon_id,</if>
+            <if test="couponAmount != null">coupon_amount,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="bizType != null">biz_type,</if>
+            <if test="entitlementMaxUsage != null">entitlement_max_usage,</if>
+            <if test="entitlementDays != null">entitlement_days,</if>
+            <if test="paymentTransactionId != null">payment_transaction_id,</if>
+            <if test="commerceRequestId != null and commerceRequestId != ''">commerce_request_id,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="orderType != null">#{orderType},</if>
+            <if test="orderSn != null and orderSn != ''">#{orderSn},</if>
+            <if test="payId != null">#{payId},</if>
+            <if test="memberId != null">#{memberId},</if>
+            <if test="mmsMerchantId != null">#{mmsMerchantId},</if>
+            <if test="productQuantity != null">#{productQuantity},</if>
+            <if test="productTotalAmount != null">#{productTotalAmount},</if>
+            <if test="deliveryFee != null">#{deliveryFee},</if>
+            <if test="payAmount != null">#{payAmount},</if>
+            <if test="taxFee != null">#{taxFee},</if>
+            <if test="orderTotalAmount != null">#{orderTotalAmount},</if>
+            <if test="pointsAmount != null">#{pointsAmount},</if>
+            <if test="payType != null">#{payType},</if>
+            <if test="status != null">#{status},</if>
+            <if test="aftersaleStatus != null">#{aftersaleStatus},</if>
+            <if test="deliveryCompany != null">#{deliveryCompany},</if>
+            <if test="deliverySn != null">#{deliverySn},</if>
+            <if test="autoConfirmDay != null">#{autoConfirmDay},</if>
+            <if test="receiverName != null and receiverName != ''">#{receiverName,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},</if>
+            <if test="receiverPhone != null and receiverPhone != ''">#{receiverPhone,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},</if>
+            <if test="receiverPhone != null and receiverPhone != ''">#{receiverPhone,typeHandler=com.chengyinhub.business.security.PiiBlindIndexTypeHandler},</if>
+            <if test="receiverPhoneCode != null">#{receiverPhoneCode},</if>
+            <if test="receiverProvince != null">#{receiverProvince},</if>
+            <if test="receiverDetailAddress != null">#{receiverDetailAddress,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},</if>
+            <if test="orderNote != null">#{orderNote},</if>
+            <if test="merchantNote != null">#{merchantNote},</if>
+            <if test="confirmStatus != null">#{confirmStatus},</if>
+            <if test="paymentTime != null">#{paymentTime},</if>
+            <if test="deliveryTime != null">#{deliveryTime},</if>
+            <if test="receiveTime != null">#{receiveTime},</if>
+            <if test="memberCouponId != null">#{memberCouponId},</if>
+            <if test="couponAmount != null">#{couponAmount},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="bizType != null">#{bizType},</if>
+            <if test="entitlementMaxUsage != null">#{entitlementMaxUsage},</if>
+            <if test="entitlementDays != null">#{entitlementDays},</if>
+            <if test="paymentTransactionId != null">#{paymentTransactionId},</if>
+            <if test="commerceRequestId != null and commerceRequestId != ''">#{commerceRequestId},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateOmsOrder" parameterType="OmsOrder">
+        update oms_order
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="orderType != null">order_type = #{orderType},</if>
+            <if test="orderSn != null and orderSn != ''">order_sn = #{orderSn},</if>
+            <if test="payId != null">pay_id = #{payId},</if>
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="mmsMerchantId != null">mms_merchant_id = #{mmsMerchantId},</if>
+            <if test="productQuantity != null">product_quantity = #{productQuantity},</if>
+            <if test="productTotalAmount != null">product_total_amount = #{productTotalAmount},</if>
+            <if test="deliveryFee != null">delivery_fee = #{deliveryFee},</if>
+            <if test="payAmount != null">pay_amount = #{payAmount},</if>
+            <if test="taxFee != null">tax_fee = #{taxFee},</if>
+            <if test="orderTotalAmount != null">order_total_amount = #{orderTotalAmount},</if>
+            <if test="pointsAmount != null">points_amount = #{pointsAmount},</if>
+            <if test="payType != null">pay_type = #{payType},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="aftersaleStatus != null">aftersale_status = #{aftersaleStatus},</if>
+            <if test="deliveryCompany != null">delivery_company = #{deliveryCompany},</if>
+            <if test="deliverySn != null">delivery_sn = #{deliverySn},</if>
+            <if test="autoConfirmDay != null">auto_confirm_day = #{autoConfirmDay},</if>
+            <if test="receiverName != null and receiverName != ''">receiver_name = #{receiverName,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},</if>
+            <if test="receiverPhone != null and receiverPhone != ''">receiver_phone = #{receiverPhone,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},</if>
+            <if test="receiverPhone != null and receiverPhone != ''">receiver_phone_hash = #{receiverPhone,typeHandler=com.chengyinhub.business.security.PiiBlindIndexTypeHandler},</if>
+            <if test="receiverPhoneCode != null">receiver_phone_code = #{receiverPhoneCode},</if>
+            <if test="receiverProvince != null">receiver_province = #{receiverProvince},</if>
+            <if test="receiverDetailAddress != null">receiver_detail_address = #{receiverDetailAddress,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},</if>
+            <if test="orderNote != null">order_note = #{orderNote},</if>
+            <if test="merchantNote != null">merchant_note = #{merchantNote},</if>
+            <if test="confirmStatus != null">confirm_status = #{confirmStatus},</if>
+            <if test="paymentTime != null">payment_time = #{paymentTime},</if>
+            <if test="deliveryTime != null">delivery_time = #{deliveryTime},</if>
+            <if test="receiveTime != null">receive_time = #{receiveTime},</if>
+            <if test="memberCouponId != null">member_coupon_id = #{memberCouponId},</if>
+            <if test="couponAmount != null">coupon_amount = #{couponAmount},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="bizType != null">biz_type = #{bizType},</if>
+            <if test="entitlementMaxUsage != null">entitlement_max_usage = #{entitlementMaxUsage},</if>
+            <if test="entitlementDays != null">entitlement_days = #{entitlementDays},</if>
+            <if test="paymentTransactionId != null">payment_transaction_id = #{paymentTransactionId},</if>
+            <if test="commerceRequestId != null and commerceRequestId != ''">commerce_request_id = #{commerceRequestId},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="markCommerceOrderPaid">
+        update oms_order
+        set status = 1, pay_type = 1, payment_transaction_id = #{transactionId},
+            payment_time = now(), update_time = now()
+        where id = #{id} and status = 0 and biz_type is not null
+    </update>
+
+    <delete id="deleteOmsOrderById" parameterType="Long">
+        delete from oms_order where id = #{id}
+    </delete>
+
+    <delete id="deleteOmsOrderByIds" parameterType="String">
+        delete from oms_order where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- PII 加密历史回填:未迁移=receiver_phone_hash 为空且有收货手机 -->
+    <select id="selectLegacyReceiverPiiIds" resultType="java.lang.Long">
+        select id from oms_order
+        where receiver_phone_hash is null and receiver_phone is not null and receiver_phone != ''
+        limit #{limit}
+    </select>
+
+    <update id="backfillOrderReceiverPii">
+        update oms_order
+        set receiver_name = #{receiverName,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+            receiver_phone = #{receiverPhone,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+            receiver_phone_hash = #{receiverPhone,typeHandler=com.chengyinhub.business.security.PiiBlindIndexTypeHandler},
+            receiver_detail_address = #{receiverDetailAddress,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler}
+        where id = #{id} and receiver_phone_hash is null
+    </update>
+</mapper>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CmsPresetRouteNodeMapper">
+
+    <resultMap type="CmsPresetRouteNode" id="CmsPresetRouteNodeResult">
+        <result property="id"    column="id"    />
+        <result property="routeId"    column="route_id"    />
+        <result property="name"    column="name"    />
+        <result property="address"    column="address"    />
+        <result property="longitude"    column="longitude"    />
+        <result property="latitude"    column="latitude"    />
+        <result property="imgUrl"    column="img_url"    />
+        <result property="nodeTime"    column="node_time"    />
+        <result property="sort"    column="sort"    />
+        <result property="playTemplateId"    column="play_template_id"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectCmsPresetRouteNodeVo">
+        select id, route_id, name, address, longitude, latitude, img_url, node_time, sort, play_template_id, del_flag, create_by, create_time, update_by, update_time, remark from preset_route_node
+    </sql>
+
+    <select id="selectCmsPresetRouteNodeList" parameterType="CmsPresetRouteNode" resultMap="CmsPresetRouteNodeResult">
+        <include refid="selectCmsPresetRouteNodeVo"/>
+        <where>
+            del_flag = 0
+            <if test="routeId != null "> and route_id = #{routeId}</if>
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+        </where>
+        order by sort asc, id asc
+    </select>
+
+    <select id="selectByRouteId" parameterType="Long" resultMap="CmsPresetRouteNodeResult">
+        <include refid="selectCmsPresetRouteNodeVo"/>
+        where del_flag = 0 and route_id = #{routeId}
+        order by sort asc, id asc
+    </select>
+
+    <select id="selectCmsPresetRouteNodeById" parameterType="Long" resultMap="CmsPresetRouteNodeResult">
+        <include refid="selectCmsPresetRouteNodeVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertCmsPresetRouteNode" parameterType="CmsPresetRouteNode" useGeneratedKeys="true" keyProperty="id">
+        insert into preset_route_node
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="routeId != null">route_id,</if>
+            <if test="name != null">name,</if>
+            <if test="address != null">address,</if>
+            <if test="longitude != null">longitude,</if>
+            <if test="latitude != null">latitude,</if>
+            <if test="imgUrl != null">img_url,</if>
+            <if test="nodeTime != null">node_time,</if>
+            <if test="sort != null">sort,</if>
+            <if test="playTemplateId != null">play_template_id,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="remark != null">remark,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="routeId != null">#{routeId},</if>
+            <if test="name != null">#{name},</if>
+            <if test="address != null">#{address},</if>
+            <if test="longitude != null">#{longitude},</if>
+            <if test="latitude != null">#{latitude},</if>
+            <if test="imgUrl != null">#{imgUrl},</if>
+            <if test="nodeTime != null">#{nodeTime},</if>
+            <if test="sort != null">#{sort},</if>
+            <if test="playTemplateId != null">#{playTemplateId},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="remark != null">#{remark},</if>
+        </trim>
+    </insert>
+
+    <update id="updateCmsPresetRouteNode" parameterType="CmsPresetRouteNode">
+        update preset_route_node
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="routeId != null">route_id = #{routeId},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="longitude != null">longitude = #{longitude},</if>
+            <if test="latitude != null">latitude = #{latitude},</if>
+            <if test="imgUrl != null">img_url = #{imgUrl},</if>
+            <if test="nodeTime != null">node_time = #{nodeTime},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="playTemplateId != null">play_template_id = #{playTemplateId},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="deleteCmsPresetRouteNodeById" parameterType="Long">
+        update preset_route_node set del_flag = 2 where id = #{id}
+    </update>
+
+    <update id="deleteCmsPresetRouteNodeByIds" parameterType="String">
+        update preset_route_node set del_flag = 2 where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <update id="deleteByRouteId" parameterType="Long">
+        update preset_route_node set del_flag = 2 where route_id = #{routeId}
+    </update>
+</mapper>

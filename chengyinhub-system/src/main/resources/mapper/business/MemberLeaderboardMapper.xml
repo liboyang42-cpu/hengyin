@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MemberLeaderboardMapper">
+
+    <!-- ===== 列表:前 N 名 ===== -->
+
+    <!-- 积分总榜 -->
+    <select id="selectPointTotalTop" resultType="com.chengyinhub.business.domain.vo.LeaderboardItemVO">
+        select m.id as memberId, m.nickname as nickname, m.avatar as avatar,
+               ifnull(m.point, 0) as score
+        from ums_member m
+        where m.del_flag = 0
+        order by ifnull(m.point, 0) desc, m.create_time asc, m.id asc
+        limit #{limit}
+    </select>
+
+    <!-- 积分周榜:本周收入积分(change_type=1)汇总 -->
+    <select id="selectPointWeekTop" resultType="com.chengyinhub.business.domain.vo.LeaderboardItemVO">
+        select m.id as memberId, m.nickname as nickname, m.avatar as avatar,
+               d.score as score
+        from (
+            select member_id, sum(change_points) as score
+            from ums_member_points_detail
+            where change_type = 1 and del_flag = 0 and create_time &gt;= #{weekStart}
+            group by member_id
+        ) d
+        join ums_member m on m.id = d.member_id and m.del_flag = 0
+        order by d.score desc, m.create_time asc, m.id asc
+        limit #{limit}
+    </select>
+
+    <!-- 成长总榜 -->
+    <select id="selectExpTotalTop" resultType="com.chengyinhub.business.domain.vo.LeaderboardItemVO">
+        select m.id as memberId, m.nickname as nickname, m.avatar as avatar,
+               ifnull(g.exp_value, 0) as score
+        from member_growth g
+        join ums_member m on m.id = g.member_id and m.del_flag = 0
+        order by g.exp_value desc, g.member_id asc
+        limit #{limit}
+    </select>
+
+    <!-- 成长周榜:本周经验汇总 -->
+    <select id="selectExpWeekTop" resultType="com.chengyinhub.business.domain.vo.LeaderboardItemVO">
+        select m.id as memberId, m.nickname as nickname, m.avatar as avatar,
+               p.score as score
+        from (
+            select member_id, sum(reward_exp) as score
+            from growth_mission_progress
+            where progress_date &gt;= #{weekStart}
+            group by member_id
+        ) p
+        join ums_member m on m.id = p.member_id and m.del_flag = 0
+        order by p.score desc, m.create_time asc, m.id asc
+        limit #{limit}
+    </select>
+
+    <!-- ===== 我的名次:{userRank, totalUsers, score} ===== -->
+
+    <!-- 积分总榜:我的名次(同分并列,计严格高于我的人数 + 1) -->
+    <select id="selectPointTotalMyRank" resultType="java.util.HashMap">
+        <![CDATA[
+        select
+            (select count(*) from ums_member x
+              where x.del_flag = 0
+                and (ifnull(x.point, 0) > base.s
+                     or (ifnull(x.point, 0) = base.s
+                         and (x.create_time < base.created
+                              or (x.create_time = base.created and x.id < base.memberId))))) + 1 as userRank,
+            (select count(*) from ums_member where del_flag = 0) as totalUsers,
+            base.s as score
+        from (
+            select id as memberId, ifnull(point, 0) as s, create_time as created
+              from ums_member where id = #{memberId} and del_flag = 0
+        ) base
+        ]]>
+    </select>
+
+    <!-- 积分周榜:我的名次 -->
+    <select id="selectPointWeekMyRank" resultType="java.util.HashMap">
+        <![CDATA[
+        select
+            (select count(*) from (
+                select member_id, sum(change_points) as s
+                from ums_member_points_detail
+                where change_type = 1 and del_flag = 0 and create_time >= #{weekStart}
+                group by member_id
+            ) t join ums_member ranked on ranked.id = t.member_id and ranked.del_flag = 0
+              where t.s > base.s
+                 or (t.s = base.s
+                     and (ranked.create_time < base.created
+                          or (ranked.create_time = base.created and ranked.id < base.memberId)))) + 1 as userRank,
+            (select count(*) from (
+                select member_id
+                from ums_member_points_detail
+                where change_type = 1 and del_flag = 0 and create_time >= #{weekStart}
+                group by member_id
+            ) c join ums_member counted on counted.id = c.member_id and counted.del_flag = 0) as totalUsers,
+            base.s as score
+        from (
+            select d.member_id as memberId, d.s, m.create_time as created
+              from (
+                    select member_id, sum(change_points) as s
+                      from ums_member_points_detail
+                     where change_type = 1 and del_flag = 0 and create_time >= #{weekStart}
+                     group by member_id
+              ) d
+              join ums_member m on m.id = d.member_id and m.del_flag = 0
+             where d.member_id = #{memberId}
+        ) base
+        ]]>
+    </select>
+
+    <!-- 成长总榜:我的名次 -->
+    <select id="selectExpTotalMyRank" resultType="java.util.HashMap">
+        <![CDATA[
+        select
+            (select count(*) from member_growth x
+              join ums_member active_member on active_member.id = x.member_id and active_member.del_flag = 0
+              where x.exp_value > base.s
+                 or (x.exp_value = base.s and x.member_id < base.memberId)) + 1 as userRank,
+            (select count(*) from member_growth counted_growth
+              join ums_member counted on counted.id = counted_growth.member_id and counted.del_flag = 0) as totalUsers,
+            base.s as score
+        from (
+            select member_id as memberId, exp_value as s
+              from member_growth where member_id = #{memberId}
+        ) base
+        ]]>
+    </select>
+
+    <!-- 成长周榜:我的名次 -->
+    <select id="selectExpWeekMyRank" resultType="java.util.HashMap">
+        <![CDATA[
+        select
+            (select count(*) from (
+                select member_id, sum(reward_exp) as s
+                from growth_mission_progress
+                where progress_date >= #{weekStart}
+                group by member_id
+            ) t join ums_member ranked on ranked.id = t.member_id and ranked.del_flag = 0
+              where t.s > base.s
+                 or (t.s = base.s
+                     and (ranked.create_time < base.created
+                          or (ranked.create_time = base.created and ranked.id < base.memberId)))) + 1 as userRank,
+            (select count(*) from (
+                select member_id
+                from growth_mission_progress
+                where progress_date >= #{weekStart}
+                group by member_id
+            ) c join ums_member counted on counted.id = c.member_id and counted.del_flag = 0) as totalUsers,
+            base.s as score
+        from (
+            select p.member_id as memberId, p.s, m.create_time as created
+              from (
+                    select member_id, sum(reward_exp) as s
+                      from growth_mission_progress
+                     where progress_date >= #{weekStart}
+                     group by member_id
+              ) p
+              join ums_member m on m.id = p.member_id and m.del_flag = 0
+             where p.member_id = #{memberId}
+        ) base
+        ]]>
+    </select>
+</mapper>

@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"PingFang SC","Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;background:#dbe2ec}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes popIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes slideIn{from{transform:translateX(24px);opacity:0}to{transform:translateX(0);opacity:1}}
+.scroll::-webkit-scrollbar{width:0;height:0}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px;background:#dbe2ec">
+<div style="width:390px;height:844px;background:radial-gradient(circle at 14% 6%,rgba(120,170,255,.12) 0,rgba(120,170,255,0) 52%),radial-gradient(circle at 90% 4%,rgba(255,170,120,.11) 0,rgba(255,170,120,0) 48%),radial-gradient(circle at 82% 48%,rgba(95,215,175,.09) 0,rgba(95,215,175,0) 54%),radial-gradient(circle at 6% 78%,rgba(180,140,255,.11) 0,rgba(180,140,255,0) 54%),radial-gradient(circle at 96% 92%,rgba(120,180,255,.11) 0,rgba(120,180,255,0) 52%),linear-gradient(165deg,#f2f5fc,#f7f3fb);border-radius:44px;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(23,70,162,.22),0 2px 8px rgba(0,0,0,.08);border:1px solid rgba(255,255,255,.6)">
+
+  <!-- status bar -->
+  <div style="height:46px;flex:none;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 6px;background:rgba(255,255,255,.5);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);font-size:14px;font-weight:600;color:#1a2233;z-index:5">
+    <div>9:41</div>
+    <div style="display:flex;align-items:center;gap:5px">
+      <div style="width:17px;height:11px;border-radius:2px;background:#1a2233"></div>
+      <div style="width:15px;height:11px;border-radius:2px;background:#1a2233"></div>
+      <div style="display:flex;align-items:center;gap:1px"><div style="width:22px;height:11px;border:1.5px solid #1a2233;border-radius:3px;padding:1.5px"><div style="width:75%;height:100%;background:#1a2233;border-radius:1px"></div></div></div>
+    </div>
+  </div>
+
+  <!-- nav bar -->
+  <div style="height:48px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(255,255,255,.5);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);position:relative;z-index:5;border-bottom:1px solid rgba(255,255,255,.5)">
+    <div onClick="{{ navBack }}" style="width:64px;font-size:24px;color:#1a2233;cursor:pointer;line-height:1">‹</div>
+    <div style="position:absolute;left:0;right:0;text-align:center;font-size:17px;font-weight:600;color:#1a2233;pointer-events:none">{{ navTitle }}</div>
+    <div style="width:64px;display:flex;justify-content:flex-end"><div style="display:flex;align-items:center;width:74px;height:30px;border-radius:16px;border:1px solid #ededed;background:#f7f8fa"><div style="flex:1;text-align:center;font-size:15px;letter-spacing:1px;color:#1a2233">···</div><div style="width:1px;height:16px;background:#e3e5ea"></div><div style="flex:1;display:flex;justify-content:center"><div style="width:14px;height:14px;border:1.6px solid #1a2233;border-radius:50%"></div></div></div></div>
+  </div>
+
+  <!-- ===================== EDIT MODE ===================== -->
+  <sc-if value="{{ isEdit }}" hint-placeholder-val="{{ true }}">
+  <div class="scroll" style="flex:1;overflow-y:auto;background:transparent;padding:0 0 110px">
+
+    <!-- title -->
+    <div style="padding:14px 16px 0">
+
+      <input value="{{ titleVal }}" onChange="{{ titleSet }}" placeholder="给你的游戏起个名字" maxLength="20" style="{{ titleInputStyle }}">
+      <sc-if value="{{ titleErrShow }}" hint-placeholder-val="{{ false }}">
+        <div style="font-size:12.5px;color:#f5455c;margin-top:6px;padding-left:4px">{{ titleErr }}</div>
+      </sc-if>
+    </div>
+
+    <!-- basic info -->
+    <div style="margin:14px 16px 0;background:rgba(255,255,255,.58);backdrop-filter:blur(26px) saturate(185%);-webkit-backdrop-filter:blur(26px) saturate(185%);border-radius:26px;border:1px solid rgba(255,255,255,.55);padding:6px 16px 14px;box-shadow:0 12px 36px rgba(31,70,140,.13),inset 0 1px 0 rgba(255,255,255,.6)">
+      <div style="display:flex;align-items:center;gap:8px;padding:14px 0 10px"><div style="width:4px;height:15px;border-radius:2px;background:#2f6df0"></div><div style="font-size:16px;font-weight:700;color:#1a2233">基本信息</div></div>
+
+      <!-- desc -->
+      <div style="padding:10px 0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:14px;font-weight:600;color:#1a2233">游戏描述</div><div style="font-size:12px;color:#aab2c0">{{ descCount }}</div></div>
+        <textarea value="{{ descVal }}" onChange="{{ descSet }}" maxLength="30" placeholder="一句话介绍这个游戏的看点" style="width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.65);background:rgba(255,255,255,.55);border-radius:12px;padding:11px 13px;font-size:14.5px;color:#1a2233;outline:none;resize:none;height:64px;font-family:inherit"></textarea>
+      </div>
+
+      <!-- players (required, dropdown) -->
+      <div style="padding:10px 0;border-top:1px solid #f2f4f8;display:flex;gap:14px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:600;color:#1a2233;margin-bottom:8px">玩家人数 <span style="color:#ff7a45">*</span></div>
+          <div onClick="{{ openPlayers }}" style="{{ playersFieldStyle }}"><span>{{ playersText }}</span><span style="color:#c2cad6;font-size:13px">▾</span></div>
+          <sc-if value="{{ playersErrShow }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#f5455c;margin-top:6px;padding-left:4px">{{ playersErr }}</div></sc-if>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:600;color:#1a2233;margin-bottom:8px">游戏时长 <span style="color:#ff7a45">*</span></div>
+          <div onClick="{{ openDuration }}" style="{{ durationFieldStyle }}"><span>{{ durationText }}</span><span style="color:#c2cad6;font-size:13px">▾</span></div>
+          <sc-if value="{{ durationErrShow }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#f5455c;margin-top:6px;padding-left:4px">{{ durationErr }}</div></sc-if>
+        </div>
+      </div>
+
+      <!-- difficulty (optional, segmented) -->
+      <div style="padding:10px 0;border-top:1px solid #f2f4f8">
+        <div style="font-size:14px;font-weight:600;color:#1a2233;margin-bottom:8px">游戏难度</div>
+        <div style="display:flex;gap:8px">
+          <sc-for list="{{ diffOptions }}" as="d" hint-placeholder-count="3"><div onClick="{{ d.onSelect }}" style="{{ d.style }}">{{ d.label }}</div></sc-for>
+        </div>
+      </div>
+
+      <!-- materials + venue (one row) -->
+      <div style="padding:10px 0;border-top:1px solid #f2f4f8;display:flex;gap:14px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:600;color:#1a2233;margin-bottom:8px">所需材料</div>
+          <input value="{{ materialsVal }}" onChange="{{ materialsSet }}" placeholder="如：手机即可" style="width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.65);background:rgba(255,255,255,.55);border-radius:12px;padding:11px 13px;font-size:14.5px;color:#1a2233;outline:none">
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:600;color:#1a2233;margin-bottom:8px">适用场所</div>
+          <div onClick="{{ openVenue }}" style="{{ venueFieldStyle }}"><span>{{ venueText }}</span><span style="color:#c2cad6;font-size:13px">▾</span></div>
+        </div>
+      </div>
+
+      <!-- cover (integrated) -->
+      <div style="padding:10px 0;border-top:1px solid #f2f4f8">
+        <div style="font-size:14px;font-weight:600;color:#1a2233;margin-bottom:8px">游戏封面</div>
+        <sc-if value="{{ coverAdded }}" hint-placeholder-val="{{ false }}">
+          <div style="position:relative;width:100%;height:150px;border-radius:12px;overflow:hidden;background-color:#dde6f3;background-image:repeating-linear-gradient(135deg,#d4dded 0 14px,#dde6f3 14px 28px)">
+            <div style="position:absolute;left:12px;bottom:10px;font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#5a6b86;background:rgba(255,255,255,.82);padding:4px 8px;border-radius:8px">封面图 · 建议 16:9</div>
+            <div onClick="{{ coverRemove }}" style="position:absolute;top:9px;right:9px;width:26px;height:26px;border-radius:50%;background:rgba(15,25,45,.55);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer">×</div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ coverEmpty }}" hint-placeholder-val="{{ true }}">
+          <div onClick="{{ coverAdd }}" style="width:100%;height:104px;border-radius:12px;border:1.5px dashed #d6deea;background:rgba(255,255,255,.45);display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer">
+            <div style="width:40px;height:40px;border-radius:11px;background:#e7eefb;display:flex;align-items:center;justify-content:center;font-size:19px">🖼️</div>
+            <div><div style="font-size:14px;font-weight:600;color:#465064">上传游戏封面</div><div style="font-size:12px;color:#9aa4b2;margin-top:2px">点击上传，建议比例 16:9</div></div>
+          </div>
+        </sc-if>
+      </div>
+
+      <!-- categories (tag multi-select) -->
+      <div style="padding:10px 0 4px;border-top:1px solid #f2f4f8">
+        <div style="font-size:14px;font-weight:600;color:#1a2233;margin-bottom:10px">游戏类别 <span style="color:#ff7a45">*</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{ categoryChips }}" as="c" hint-placeholder-count="2">
+            <div style="display:flex;align-items:center;gap:6px;background:#eef3ff;border:1px solid #d8e3fb;color:#2f6df0;font-size:13px;font-weight:600;padding:7px 10px 7px 12px;border-radius:11px">{{ c.name }}<span onClick="{{ c.onRemove }}" style="cursor:pointer;color:#86a4e8;font-size:15px;line-height:1">×</span></div>
+          </sc-for>
+          <div onClick="{{ openCat }}" style="display:flex;align-items:center;gap:4px;border:1.5px dashed #c2cede;color:#6b7587;font-size:13px;font-weight:600;padding:7px 12px;border-radius:11px;cursor:pointer">+ 添加类别</div>
+        </div>
+        <sc-if value="{{ catErrShow }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#f5455c;margin-top:8px;padding-left:4px">{{ catErr }}</div></sc-if>
+      </div>
+    </div>
+
+    <!-- rules -->
+    <div style="margin:14px 16px 0;background:rgba(255,255,255,.58);backdrop-filter:blur(26px) saturate(185%);-webkit-backdrop-filter:blur(26px) saturate(185%);border-radius:26px;border:1px solid rgba(255,255,255,.55);padding:6px 16px 16px;box-shadow:0 12px 36px rgba(31,70,140,.13),inset 0 1px 0 rgba(255,255,255,.6)">
+      <div style="display:flex;align-items:center;gap:8px;padding:14px 0 10px"><div style="width:4px;height:15px;border-radius:2px;background:#2f6df0"></div><div style="font-size:16px;font-weight:700;color:#1a2233">游戏规则</div></div>
+      <textarea value="{{ rulesVal }}" onChange="{{ rulesSet }}" placeholder="向玩家说明这一关怎么玩、注意事项等" style="width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.65);background:rgba(255,255,255,.55);border-radius:12px;padding:12px 13px;font-size:14.5px;color:#1a2233;outline:none;resize:none;height:84px;font-family:inherit"></textarea>
+    </div>
+
+    <!-- ===== GAME MODULES (core) ===== -->
+    <div style="margin:18px 16px 0">
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:4px">
+        
+        <div style="flex:1">
+          <div style="font-size:17px;font-weight:800;color:#1a2233">游戏模块</div>
+          <div style="font-size:12.5px;color:#8b94a4;margin-top:2px">玩法的核心 · 决定玩家如何完成关卡、获得什么奖励</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- completion error banner -->
+    <sc-if value="{{ completionErrShow }}" hint-placeholder-val="{{ false }}">
+      <div style="margin:10px 16px 0;background:#fff4f5;border:1px solid #ffd4da;border-radius:12px;padding:10px 14px;font-size:12.5px;color:#f5455c;display:flex;align-items:center;gap:8px">⚠️ {{ completionErr }}</div>
+    </sc-if>
+
+    <!-- COMPLETION MODULE -->
+    <sc-if value="{{ hasCompletion }}" hint-placeholder-val="{{ false }}">
+    <div style="margin:12px 16px 0;background:rgba(255,255,255,.58);backdrop-filter:blur(26px) saturate(185%);-webkit-backdrop-filter:blur(26px) saturate(185%);border-radius:26px;box-shadow:0 4px 18px rgba(47,109,240,.10);border:1.5px solid #e3ecff;overflow:hidden">
+      <div style="background:linear-gradient(135deg,rgba(234,241,255,.55),rgba(243,247,255,.3));padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e9eefb">
+        <div style="width:34px;height:34px;border-radius:10px;background:#2f6df0;display:flex;align-items:center;justify-content:center;font-size:17px">🎯</div>
+        <div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="font-size:15.5px;font-weight:700;color:#1a2233">完成方式</span><span style="font-size:10px;font-weight:700;color:#fff;background:#ff7a45;padding:2px 6px;border-radius:6px">核心</span></div><div style="font-size:11.5px;color:#8b94a4;margin-top:2px">玩家用什么方式通过这一关</div></div>
+        <div onClick="{{ removeCompletion }}" style="width:26px;height:26px;border-radius:50%;background:#f1f3f7;color:#9aa4b2;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer">×</div>
+      </div>
+      <div style="padding:14px 16px 16px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ methodOptions }}" as="opt" hint-placeholder-count="6">
+            <div onClick="{{ opt.onSelect }}" style="{{ opt.tileStyle }}">
+              <div style="{{ opt.iconStyle }}">{{ opt.icon }}</div>
+              <div style="flex:1"><div style="font-size:14.5px;font-weight:600;color:#1a2233">{{ opt.label }}</div><div style="font-size:11.5px;color:#9aa4b2;margin-top:1px">{{ opt.sub }}</div></div>
+              <div style="{{ opt.radioStyle }}"></div>
+            </div>
+          </sc-for>
+        </div>
+
+        <!-- method config panels -->
+        <sc-if value="{{ m_text }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:14px;background:rgba(255,255,255,.45);border-radius:14px;padding:14px;animation:fadeIn .2s">
+            <div style="font-size:13px;font-weight:600;color:#465064;margin-bottom:7px">问题</div>
+            <input value="{{ q_text_question }}" onChange="{{ set_text_q }}" placeholder="例如：这座桥建于哪一年？" style="width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.7);background:rgba(255,255,255,.62);border-radius:11px;padding:11px 13px;font-size:14px;outline:none;margin-bottom:12px">
+            <div style="font-size:13px;font-weight:600;color:#465064;margin-bottom:7px">正确答案</div>
+            <input value="{{ q_text_answer }}" onChange="{{ set_text_a }}" placeholder="可填多个，用、分隔" style="width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.7);background:rgba(255,255,255,.62);border-radius:11px;padding:11px 13px;font-size:14px;outline:none">
+            <div style="font-size:11.5px;color:#9aa4b2;margin-top:7px">答案匹配任一即判定通过，忽略大小写与空格</div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ m_choice }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:14px;background:rgba(255,255,255,.45);border-radius:14px;padding:14px;animation:fadeIn .2s">
+            <div style="font-size:13px;font-weight:600;color:#465064;margin-bottom:7px">问题</div>
+            <input value="{{ q_choice_question }}" onChange="{{ set_choice_q }}" placeholder="例如：石碑上的图案象征什么？" style="width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.7);background:rgba(255,255,255,.62);border-radius:11px;padding:11px 13px;font-size:14px;outline:none;margin-bottom:12px">
+            <div style="font-size:13px;font-weight:600;color:#465064;margin-bottom:8px">选项 · 点圆圈设为正确答案</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <sc-for list="{{ choiceOptions }}" as="o" hint-placeholder-count="2">
+                <div style="display:flex;align-items:center;gap:9px">
+                  <div onClick="{{ o.onPick }}" style="{{ o.radioStyle }}">{{ o.tick }}</div>
+                  <input value="{{ o.val }}" onChange="{{ o.onChange }}" placeholder="{{ o.placeholder }}" style="flex:1;box-sizing:border-box;border:1px solid rgba(255,255,255,.7);background:rgba(255,255,255,.62);border-radius:11px;padding:10px 12px;font-size:14px;outline:none">
+                </div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ canAddChoice }}" hint-placeholder-val="{{ true }}"><div onClick="{{ addChoice }}" style="margin-top:10px;font-size:13px;font-weight:600;color:#2f6df0;cursor:pointer">+ 添加选项</div></sc-if>
+          </div>
+        </sc-if>
+        <sc-if value="{{ m_photo }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:14px;background:rgba(255,255,255,.45);border-radius:14px;padding:14px;animation:fadeIn .2s">
+            <div style="font-size:13px;font-weight:600;color:#465064;margin-bottom:7px">拍照要求</div>
+            <textarea value="{{ q_photo_desc }}" onChange="{{ set_photo_d }}" placeholder="告诉玩家要拍什么，例如：与这棵古树合影" style="width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.7);background:rgba(255,255,255,.62);border-radius:11px;padding:11px 13px;font-size:14px;outline:none;resize:none;height:60px;font-family:inherit"></textarea>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px"><div style="font-size:13px;font-weight:600;color:#465064">需人工审核照片</div><div onClick="{{ togglePhotoReview }}" style="{{ swPhotoReviewTrack }}"><div style="width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25)"></div></div></div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ m_scan }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:14px;background:rgba(255,255,255,.45);border-radius:14px;padding:14px;animation:fadeIn .2s">
+            <div style="font-size:13px;font-weight:600;color:#465064;margin-bottom:7px">二维码内容 / 标识</div>
+            <input value="{{ q_scan_content }}" onChange="{{ set_scan_c }}" placeholder="现场二维码扫描后应包含的文本" style="width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.7);background:rgba(255,255,255,.62);border-radius:11px;padding:11px 13px;font-size:14px;outline:none">
+            <div style="font-size:11.5px;color:#9aa4b2;margin-top:7px">请在现场张贴对应二维码，玩家扫描一致即通过</div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ m_gps }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:14px;background:rgba(255,255,255,.45);border-radius:14px;padding:14px;animation:fadeIn .2s">
+            <div style="font-size:13px;font-weight:600;color:#465064;margin-bottom:7px">到达判定范围</div>
+            <div style="display:flex;align-items:center;gap:10px"><input value="{{ q_gps_radius }}" onChange="{{ set_gps_r }}" inputmode="numeric" style="width:90px;box-sizing:border-box;border:1px solid rgba(255,255,255,.7);background:rgba(255,255,255,.62);border-radius:11px;padding:11px 13px;font-size:14px;outline:none;text-align:center"><span style="font-size:14px;color:#465064">米以内自动判定到达</span></div>
+            <div style="font-size:11.5px;color:#9aa4b2;margin-top:9px;display:flex;gap:6px"><span>📌</span><span>地点坐标在「地点绑定」环节设置，此处只填范围</span></div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ m_none }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:14px;background:#f1f7f3;border-radius:14px;padding:14px;animation:fadeIn .2s;display:flex;gap:9px;align-items:flex-start"><span style="font-size:15px">✅</span><div style="font-size:13px;color:#3f7a5c;line-height:1.5">玩家到达后点击「完成」即可通过，适合纯打卡或剧情过场点位。</div></div>
+        </sc-if>
+        <sc-if value="{{ methodSupportsHint }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:14px;border-top:1px dashed #e9edf3;padding-top:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px">💡</span><div><div style="font-size:13.5px;font-weight:600;color:#1a2233">提示（选填）</div><div style="font-size:11px;color:#9aa4b2;margin-top:1px">玩家卡住时逐级解锁，最后给出兜底答案</div></div></div>
+              <div onClick="{{ toggleHint }}" style="{{ swHintTrack }}"><div style="width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25)"></div></div>
+            </div>
+            <sc-if value="{{ hintEnabled }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px;animation:fadeIn .2s">
+                <input value="{{ hint1 }}" onChange="{{ set_hint1 }}" placeholder="一级提示，如：留意脚下的石板" style="width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.7);background:rgba(255,255,255,.62);border-radius:11px;padding:11px 13px;font-size:14px;outline:none">
+                <input value="{{ hint2 }}" onChange="{{ set_hint2 }}" placeholder="二级提示（可选），更明确的引导" style="width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.7);background:rgba(255,255,255,.62);border-radius:11px;padding:11px 13px;font-size:14px;outline:none">
+                <input value="{{ hint_fallback }}" onChange="{{ set_fallback }}" placeholder="兜底答案，实在卡住时直接给出" style="width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.7);background:rgba(255,255,255,.62);border-radius:11px;padding:11px 13px;font-size:14px;outline:none">
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- REWARD MODULE -->
+    <sc-if value="{{ hasReward }}" hint-placeholder-val="{{ false }}">
+    <div style="margin:12px 16px 0;background:rgba(255,255,255,.58);backdrop-filter:blur(26px) saturate(185%);-webkit-backdrop-filter:blur(26px) saturate(185%);border-radius:26px;box-shadow:0 4px 16px rgba(255,122,69,.08);border:1.5px solid #ffe6da;overflow:hidden">
+      <div style="background:linear-gradient(135deg,rgba(255,241,234,.55),rgba(255,247,243,.3));padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #ffe9df">
+        <div style="width:34px;height:34px;border-radius:10px;background:#ff7a45;display:flex;align-items:center;justify-content:center;font-size:17px">🎁</div>
+        <div style="flex:1"><div style="font-size:15.5px;font-weight:700;color:#1a2233">完成奖励</div><div style="font-size:11.5px;color:#8b94a4;margin-top:2px">通关后玩家得到什么 · 可多选组合</div></div>
+        <div onClick="{{ removeReward }}" style="width:26px;height:26px;border-radius:50%;background:#f1f3f7;color:#9aa4b2;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer">×</div>
+      </div>
+      <div style="padding:6px 16px 14px">
+        <!-- coupon -->
+        <div style="padding:12px 0;border-bottom:1px solid #f2f4f8">
+          <div style="display:flex;align-items:center;gap:11px"><div style="width:36px;height:36px;border-radius:10px;background:#fff2e9;display:flex;align-items:center;justify-content:center;font-size:18px">🎟️</div><div style="flex:1"><div style="font-size:14.5px;font-weight:600;color:#1a2233">优惠券</div><div style="font-size:11.5px;color:#9aa4b2">发放商家券，核销引流</div></div><div onClick="{{ toggleCoupon }}" style="{{ swCouponTrack }}"><div style="width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25)"></div></div></div>
+          <sc-if value="{{ rwCoupon }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:12px;background:rgba(255,255,255,.45);border-radius:12px;padding:13px;animation:fadeIn .2s">
+              <input value="{{ coupon_name }}" onChange="{{ set_coupon_name }}" placeholder="优惠券名称，如 ¥20 餐饮券" style="width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.7);background:rgba(255,255,255,.62);border-radius:10px;padding:10px 12px;font-size:14px;outline:none;margin-bottom:9px">
+              <div style="display:flex;gap:9px">
+                <input value="{{ coupon_qty }}" onChange="{{ set_coupon_qty }}" inputmode="numeric" placeholder="发放数量" style="flex:1;box-sizing:border-box;border:1px solid rgba(255,255,255,.7);background:rgba(255,255,255,.62);border-radius:10px;padding:10px 12px;font-size:14px;outline:none">
+                <div onClick="{{ openExpiry }}" style="{{ couponExpiryStyle }}"><span>{{ couponExpiryText }}</span><span style="color:#c2cad6;font-size:12px">▾</span></div>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+        <!-- text feedback -->
+        <div style="padding:12px 0;border-bottom:1px solid #f2f4f8">
+          <div style="display:flex;align-items:center;gap:11px"><div style="width:36px;height:36px;border-radius:10px;background:#e9f1ff;display:flex;align-items:center;justify-content:center;font-size:18px">💬</div><div style="flex:1"><div style="font-size:14.5px;font-weight:600;color:#1a2233">文字反馈</div><div style="font-size:11.5px;color:#9aa4b2">通关后展示的一段话</div></div><div onClick="{{ toggleText }}" style="{{ swTextTrack }}"><div style="width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25)"></div></div></div>
+          <sc-if value="{{ rwText }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:12px;animation:fadeIn .2s"><textarea value="{{ reward_text }}" onChange="{{ set_reward_text }}" placeholder="例如：恭喜你解开了老城的第一个秘密！" style="width:100%;box-sizing:border-box;border:1.5px solid #e6eaf0;background:rgba(255,255,255,.45);border-radius:12px;padding:11px 13px;font-size:14px;outline:none;resize:none;height:60px;font-family:inherit"></textarea></div>
+          </sc-if>
+        </div>
+        <!-- medal -->
+        <div style="padding:12px 0 4px">
+          <div style="display:flex;align-items:center;gap:11px"><div style="width:36px;height:36px;border-radius:10px;background:#fdf3df;display:flex;align-items:center;justify-content:center;font-size:18px">🏅</div><div style="flex:1"><div style="font-size:14.5px;font-weight:600;color:#1a2233">勋章</div><div style="font-size:11.5px;color:#9aa4b2">收集成就，激励集章</div></div><div onClick="{{ toggleMedal }}" style="{{ swMedalTrack }}"><div style="width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25)"></div></div></div>
+          <sc-if value="{{ rwMedal }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:12px;background:rgba(255,255,255,.45);border-radius:12px;padding:13px;display:flex;gap:11px;align-items:center;animation:fadeIn .2s">
+              <div onClick="{{ toggleMedalImg }}" style="width:54px;height:54px;border-radius:12px;flex:none;cursor:pointer;display:flex;align-items:center;justify-content:center;{{ medalImgStyle }}">{{ medalImgGlyph }}</div>
+              <input value="{{ medal_name }}" onChange="{{ set_medal_name }}" placeholder="勋章名称，如 老城探秘者" style="flex:1;box-sizing:border-box;border:1px solid rgba(255,255,255,.7);background:rgba(255,255,255,.62);border-radius:10px;padding:10px 12px;font-size:14px;outline:none">
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- STORY MODULE -->
+    <sc-if value="{{ hasStory }}" hint-placeholder-val="{{ false }}">
+    <div style="margin:12px 16px 0;background:rgba(255,255,255,.58);backdrop-filter:blur(26px) saturate(185%);-webkit-backdrop-filter:blur(26px) saturate(185%);border-radius:26px;box-shadow:0 12px 36px rgba(31,70,140,.13),inset 0 1px 0 rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.5);overflow:hidden">
+      <div style="padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f2f4f8">
+        <div style="width:34px;height:34px;border-radius:10px;background:#efeafe;display:flex;align-items:center;justify-content:center;font-size:17px">📖</div>
+        <div style="flex:1"><div style="font-size:15.5px;font-weight:700;color:#1a2233">剧情故事</div><div style="font-size:11.5px;color:#8b94a4;margin-top:2px">玩家到达时的时间流叙事 · 逐节展开</div></div>
+        <div onClick="{{ removeStory }}" style="width:26px;height:26px;border-radius:50%;background:#f1f3f7;color:#9aa4b2;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer">×</div>
+      </div>
+      <div style="padding:14px 16px 16px">
+        <sc-for list="{{ storyBeats }}" as="b" hint-placeholder-count="1">
+          <div style="background:#faf9fe;border:1px solid #efeafe;border-radius:14px;padding:13px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
+              <div style="display:flex;align-items:center;gap:7px"><div style="width:18px;height:18px;border-radius:50%;background:#efeafe;color:#7a6fb0;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ b.index }}</div><span style="font-size:13px;font-weight:600;color:#7a6fb0">时间节点</span></div>
+              <sc-if value="{{ b.canRemove }}" hint-placeholder-val="{{ false }}"><div onClick="{{ b.onRemove }}" style="font-size:12px;color:#b3b9c4;cursor:pointer">删除</div></sc-if>
+            </div>
+            <textarea value="{{ b.text }}" onChange="{{ b.setText }}" placeholder="这一刻发生了什么？写下玩家此时读到的片段…" style="width:100%;box-sizing:border-box;border:1.5px solid #e9e4f5;background:#fff;border-radius:11px;padding:11px 13px;font-size:14.5px;color:#1a2233;outline:none;resize:none;height:76px;font-family:inherit;margin-bottom:9px"></textarea>
+            <div style="display:flex;gap:9px;align-items:stretch">
+              <input value="{{ b.tag }}" onChange="{{ b.setTag }}" placeholder="时刻标签（选填，如「此刻」）" style="flex:1;min-width:0;box-sizing:border-box;border:1.5px solid #e9e4f5;background:#fff;border-radius:11px;padding:10px 12px;font-size:13.5px;outline:none">
+              <sc-if value="{{ b.hasImg }}" hint-placeholder-val="{{ false }}">
+                <div style="position:relative;width:44px;height:44px;flex:none;border-radius:11px;overflow:hidden;background-color:#ece8fa;background-image:repeating-linear-gradient(135deg,#e3ddf6 0 8px,#ece8fa 8px 16px)"><div onClick="{{ b.toggleImg }}" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(15,25,45,.26);color:#fff;font-size:14px;cursor:pointer">×</div></div>
+              </sc-if>
+              <sc-if value="{{ b.imgEmpty }}" hint-placeholder-val="{{ true }}">
+                <div onClick="{{ b.toggleImg }}" style="width:44px;height:44px;flex:none;border-radius:11px;border:1.5px dashed #cfc6ec;background:#f8f6fe;display:flex;align-items:center;justify-content:center;color:#7a6fb0;font-size:18px;cursor:pointer">＋</div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+        <div onClick="{{ addBeat }}" style="display:flex;align-items:center;justify-content:center;gap:6px;border:1.5px dashed #cfc6ec;border-radius:12px;padding:12px;color:#7a6fb0;font-size:14px;font-weight:600;cursor:pointer">＋ 添加时间节点 · 延长时间线</div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- AUDIO MODULE -->
+    <sc-if value="{{ hasAudio }}" hint-placeholder-val="{{ false }}">
+    <div style="margin:12px 16px 0;background:rgba(255,255,255,.58);backdrop-filter:blur(26px) saturate(185%);-webkit-backdrop-filter:blur(26px) saturate(185%);border-radius:26px;box-shadow:0 12px 36px rgba(31,70,140,.13),inset 0 1px 0 rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.5);overflow:hidden">
+      <div style="padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f2f4f8">
+        <div style="width:34px;height:34px;border-radius:10px;background:#e3f6f1;display:flex;align-items:center;justify-content:center;font-size:17px">🎧</div>
+        <div style="flex:1"><div style="font-size:15.5px;font-weight:700;color:#1a2233">语音讲解</div><div style="font-size:11.5px;color:#8b94a4;margin-top:2px">为这个点位配一段音频导览</div></div>
+        <div onClick="{{ removeAudio }}" style="width:26px;height:26px;border-radius:50%;background:#f1f3f7;color:#9aa4b2;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer">×</div>
+      </div>
+      <div style="padding:14px 16px 16px">
+        <sc-if value="{{ audioAdded }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.45);border-radius:12px;padding:12px 14px"><div style="width:38px;height:38px;border-radius:50%;background:#16a36a;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px">▶</div><div style="flex:1"><div style="font-size:14px;font-weight:600;color:#1a2233">导览音频.mp3</div><div style="height:5px;border-radius:3px;background:#dfe5ee;margin-top:8px;overflow:hidden"><div style="width:34%;height:100%;background:#16a36a;border-radius:3px"></div></div></div><div onClick="{{ toggleAudio }}" style="font-size:12.5px;color:#9aa4b2;cursor:pointer">删除</div></div>
+        </sc-if>
+        <sc-if value="{{ audioEmpty }}" hint-placeholder-val="{{ true }}">
+          <div onClick="{{ toggleAudio }}" style="width:100%;height:64px;border-radius:12px;border:1.5px dashed #b7e0d3;background:#f3fbf8;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;color:#1f9d6e;font-size:14px;font-weight:600">🎤 上传音频文件</div>
+        </sc-if>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- add module button / empty hint -->
+    <sc-if value="{{ noModules }}" hint-placeholder-val="{{ true }}">
+      <div style="margin:12px 16px 0;background:#fff;border:1.5px dashed #d4dbe6;border-radius:20px;padding:26px 18px;text-align:center">
+        <div style="font-size:30px;margin-bottom:8px">🧩</div>
+        <div style="font-size:14.5px;font-weight:600;color:#465064">还没有添加玩法模块</div>
+        <div style="font-size:12.5px;color:#9aa4b2;margin-top:4px;margin-bottom:14px">先从「完成方式」开始，搭出这一关怎么玩</div>
+        <div onClick="{{ openAdd }}" style="display:inline-flex;align-items:center;gap:6px;background:#2f6df0;color:#fff;font-size:14px;font-weight:600;padding:11px 20px;border-radius:13px;cursor:pointer">＋ 添加模块</div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ canAddMore }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ openAdd }}" style="margin:12px 16px 0;background:#fff;border:1.5px dashed #c2cede;border-radius:16px;padding:14px;display:flex;align-items:center;justify-content:center;gap:7px;color:#2f6df0;font-size:14.5px;font-weight:700;cursor:pointer">＋ 添加模块</div>
+    </sc-if>
+
+  </div>
+
+  <!-- bottom bar edit -->
+  <div style="flex:none;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:rgba(255,255,255,.6);backdrop-filter:blur(30px) saturate(190%);-webkit-backdrop-filter:blur(30px) saturate(190%);border-top:1px solid rgba(255,255,255,.55);box-shadow:0 -8px 30px rgba(31,70,140,.08);z-index:6">
+    <div onClick="{{ gotoPreview }}" style="height:50px;border-radius:15px;background:linear-gradient(135deg,#2f6df0,#3f7dff);display:flex;align-items:center;justify-content:center;gap:7px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(47,109,240,.3)">查看预览</div>
+  </div>
+  </sc-if>
+
+  <!-- ===================== PREVIEW MODE ===================== -->
+  <sc-if value="{{ isPreview }}" hint-placeholder-val="{{ false }}">
+  <div class="scroll" ref="{{ streamScrollRef }}" style="flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; background: linear-gradient(180deg, #000000, #162959); padding: 0 0 110px; position: relative">
+    <!-- pager -->
+    <div style="position: sticky; top: 0; z-index: 3; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px; backdrop-filter: blur(8px); background-color: #000000b3">
+      <div onClick="{{ prevStep }}" style="{{ prevBtnStyle }}">‹</div>
+      <div style="display:flex;gap:6px">
+        <sc-for list="{{ stepDots }}" as="dot" hint-placeholder-count="4"><div style="{{ dot.style }}"></div></sc-for>
+      </div>
+      <div onClick="{{ nextStep }}" style="{{ nextBtnStyle }}">›</div>
+    </div>
+
+    <div style="padding:8px 18px 0">
+      <div style="font-size:12px;color:#8fa6d8;text-align:center;margin-bottom:14px">玩家视角 · {{ stepLabel }}（{{ stepNo }}/{{ stepTotal }}）</div>
+
+      <!-- ARRIVAL -->
+      <sc-if value="{{ stepArrival }}" hint-placeholder-val="{{ true }}">
+        <div style="animation:slideIn .25s">
+          <div style="width:100%;height:188px;border-radius:20px;overflow:hidden;position:relative;background-color:#33405f;background-image:repeating-linear-gradient(135deg,#2c3954 0 14px,#33405f 14px 28px);box-shadow:0 8px 30px rgba(0,0,0,.3)">
+            <div style="position:absolute;left:0;right:0;bottom:0;padding:16px;background:linear-gradient(transparent,rgba(10,18,38,.85))"><div style="display:inline-flex;align-items:center;gap:5px;background:rgba(47,109,240,.9);color:#fff;font-size:11px;font-weight:600;padding:4px 9px;border-radius:8px;margin-bottom:8px">📍 你已抵达</div><div style="font-size:22px;font-weight:800;color:#fff">{{ pvTitle }}</div></div>
+          </div>
+          <div style="margin-top:16px;background:rgba(255,255,255,.58);backdrop-filter:blur(26px) saturate(185%);-webkit-backdrop-filter:blur(26px) saturate(185%);border-radius:26px;border:1px solid rgba(255,255,255,.55);padding:18px">
+            <div style="font-size:14.5px;color:#465064;line-height:1.6">{{ pvDesc }}</div>
+            <div style="display:flex;gap:14px;margin-top:14px;padding-top:14px;border-top:1px solid #f0f2f6"><div><div style="font-size:11px;color:#9aa4b2">人数</div><div style="font-size:13.5px;font-weight:600;color:#1a2233;margin-top:2px">{{ pvPlayers }}</div></div><div><div style="font-size:11px;color:#9aa4b2">时长</div><div style="font-size:13.5px;font-weight:600;color:#1a2233;margin-top:2px">{{ pvDuration }}</div></div><div><div style="font-size:11px;color:#9aa4b2">难度</div><div style="font-size:13.5px;font-weight:600;color:#1a2233;margin-top:2px">{{ pvDifficulty }}</div></div></div>
+          </div>
+          <div onClick="{{ nextStep }}" style="margin-top:16px;height:50px;border-radius:15px;background:#2f6df0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;cursor:pointer">开始挑战</div>
+        </div>
+      </sc-if>
+
+      <!-- STORY (Tesseract time-stream) -->
+      <sc-if value="{{ stepStory }}" hint-placeholder-val="{{ false }}">
+        <div style="animation:fadeIn .4s">
+          <div style="text-align:center;font-size:11px;letter-spacing:4px;color:#56689c;padding:4px 0 20px">向 下 滑 动 · 进 入 时 间 深 处</div>
+          <sc-for list="{{ pvBeats }}" as="b" hint-placeholder-count="3">
+            <div data-beat style="padding:32px 6px;will-change:transform,opacity,filter">
+              <div style="font-size:11px;letter-spacing:2px;color:#6b86c2;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:10px"><span style="width:18px;height:1px;background:#3a4a73"></span>{{ b.label }}</div>
+              <sc-if value="{{ b.hasImg }}" hint-placeholder-val="{{ false }}"><div style="width:100%;height:170px;border-radius:14px;margin-bottom:18px;background-color:#222c47;background-image:repeating-linear-gradient(135deg,#1d2740 0 12px,#222c47 12px 24px)"></div></sc-if>
+              <div style="font-size:19px;line-height:1.95;color:#e8eefb;font-weight:400;text-wrap:pretty">{{ b.text }}</div>
+            </div>
+          </sc-for>
+          <div onClick="{{ nextStep }}" style="margin:16px 6px 48px;height:50px;border-radius:15px;background:rgba(47,109,240,.92);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;cursor:pointer">继续</div>
+        </div>
+      </sc-if>
+
+      <!-- CHALLENGE -->
+      <sc-if value="{{ stepChallenge }}" hint-placeholder-val="{{ false }}">
+        <div style="animation:slideIn .25s">
+          <div style="background:rgba(255,255,255,.58);backdrop-filter:blur(26px) saturate(185%);-webkit-backdrop-filter:blur(26px) saturate(185%);border-radius:26px;border:1px solid rgba(255,255,255,.55);padding:20px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><div style="width:30px;height:30px;border-radius:9px;background:#eaf1ff;display:flex;align-items:center;justify-content:center;font-size:15px">{{ pvMethodIcon }}</div><div style="font-size:13px;font-weight:700;color:#2f6df0">{{ pvMethodLabel }}</div></div>
+            <div style="font-size:17px;font-weight:700;color:#1a2233;line-height:1.5">{{ pvChallengeTitle }}</div>
+            <div style="margin-top:16px">
+              <sc-if value="{{ pvIsText }}" hint-placeholder-val="{{ true }}"><input value="{{ pvAnswer }}" onChange="{{ setPvAnswer }}" placeholder="输入你的答案" style="{{ pvAnswerStyle }}"></sc-if>
+              <sc-if value="{{ pvIsChoice }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:10px">
+                  <sc-for list="{{ pvChoiceOptions }}" as="o" hint-placeholder-count="2"><div onClick="{{ o.onSelect }}" style="{{ o.style }}"><span style="font-weight:700;color:#2f6df0;margin-right:8px">{{ o.letter }}</span>{{ o.text }}</div></sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{ pvIsPhoto }}" hint-placeholder-val="{{ false }}"><div style="height:120px;border-radius:14px;border:1.5px dashed #cdd5e0;background:rgba(255,255,255,.45);display:flex;align-items:center;justify-content:center;gap:8px;color:#9aa4b2;font-size:14px;font-weight:600">📷 点击拍照上传</div></sc-if>
+              <sc-if value="{{ pvIsScan }}" hint-placeholder-val="{{ false }}"><div style="height:120px;border-radius:14px;background:rgba(255,255,255,.45);display:flex;align-items:center;justify-content:center;gap:8px;color:#465064;font-size:15px;font-weight:600">⬛ 打开扫一扫</div></sc-if>
+              <sc-if value="{{ pvIsGps }}" hint-placeholder-val="{{ false }}"><div style="height:120px;border-radius:14px;background:linear-gradient(135deg,rgba(234,241,255,.55),rgba(243,247,255,.3));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#2f6df0;font-size:14px;font-weight:600"><div style="font-size:26px">📍</div>进入 {{ pvGpsRadius }} 米范围自动通过</div></sc-if>
+              <sc-if value="{{ pvIsNone }}" hint-placeholder-val="{{ false }}"><div style="color:#9aa4b2;font-size:14px">本点位无需验证，点击下方按钮即可完成</div></sc-if>
+            </div>
+            <sc-if value="{{ pvWrong }}" hint-placeholder-val="{{ false }}"><div style="margin-top:12px;background:#fff4f5;border:1px solid #ffd4da;border-radius:10px;padding:10px 13px;font-size:13px;color:#f5455c;display:flex;align-items:center;gap:6px;animation:popIn .2s">✕ {{ pvWrongMsg }}</div></sc-if>
+          </div>
+          <sc-if value="{{ pvHasHint }}" hint-placeholder-val="{{ false }}"><div onClick="{{ pvUseHint }}" style="margin-top:12px;text-align:center;font-size:13.5px;color:#ffd089;cursor:pointer">💡 需要提示？</div></sc-if>
+          <sc-if value="{{ pvHintShown }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;background:rgba(253,243,223,.16);border:1px solid rgba(255,208,137,.4);border-radius:12px;padding:12px 14px;font-size:13.5px;color:#ffe1b0;animation:fadeIn .2s">💡 {{ pvHintText }}</div></sc-if>
+          <div onClick="{{ submitChallenge }}" style="margin-top:16px;height:50px;border-radius:15px;background:#16a36a;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;cursor:pointer">{{ pvSubmitLabel }}</div>
+        </div>
+      </sc-if>
+
+      <!-- COMPLETE -->
+      <sc-if value="{{ stepComplete }}" hint-placeholder-val="{{ false }}">
+        <div style="text-align:center;padding-top:30px;animation:slideIn .25s">
+          <div style="width:96px;height:96px;border-radius:50%;background:#16a36a;display:flex;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 10px 30px rgba(22,163,106,.45);animation:popIn .3s"><span style="color:#fff;font-size:48px">✓</span></div>
+          <div style="font-size:24px;font-weight:800;color:#fff;margin-top:22px">挑战完成！</div>
+          <div style="font-size:14px;color:#9fb3dd;margin-top:8px">你解开了这个点位的秘密</div>
+          <div onClick="{{ nextStep }}" style="margin-top:28px;display:inline-flex;align-items:center;gap:6px;background:#ff7a45;color:#fff;font-size:16px;font-weight:700;padding:14px 34px;border-radius:15px;cursor:pointer">{{ pvCompleteCta }}</div>
+        </div>
+      </sc-if>
+
+      <!-- REWARD -->
+      <sc-if value="{{ stepReward }}" hint-placeholder-val="{{ false }}">
+        <div style="animation:slideIn .25s">
+          <div style="text-align:center;font-size:20px;font-weight:800;color:#fff;margin:6px 0 18px">🎉 获得奖励</div>
+          <sc-if value="{{ pvRwCoupon }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;background:#fff;border-radius:16px;overflow:hidden;margin-bottom:12px;box-shadow:0 6px 20px rgba(0,0,0,.25)"><div style="width:90px;background:linear-gradient(135deg,#ff7a45,#ff9a6a);display:flex;align-items:center;justify-content:center;font-size:30px">🎟️</div><div style="flex:1;padding:14px 16px"><div style="font-size:16px;font-weight:800;color:#1a2233">{{ pvCouponName }}</div><div style="font-size:12px;color:#9aa4b2;margin-top:4px">有效期 {{ pvCouponExpiry }} · 到店核销</div></div></div>
+          </sc-if>
+          <sc-if value="{{ pvRwMedal }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#fff;border-radius:16px;padding:20px;text-align:center;margin-bottom:12px;box-shadow:0 6px 20px rgba(0,0,0,.25)"><div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#ffd86b,#ffb74d);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto;box-shadow:0 4px 14px rgba(255,183,77,.4)">🏅</div><div style="font-size:16px;font-weight:800;color:#1a2233;margin-top:12px">{{ pvMedalName }}</div><div style="font-size:12px;color:#9aa4b2;margin-top:3px">已收入你的成就墙</div></div>
+          </sc-if>
+          <sc-if value="{{ pvRwText }}" hint-placeholder-val="{{ false }}">
+            <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:18px;text-align:center"><div style="font-size:15px;color:#e8eefb;line-height:1.6">{{ pvRewardText }}</div></div>
+          </sc-if>
+          <sc-if value="{{ pvNoReward }}" hint-placeholder-val="{{ false }}">
+            <div style="background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.25);border-radius:16px;padding:22px;text-align:center;color:#9fb3dd;font-size:13.5px">未配置奖励模块</div>
+          </sc-if>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <!-- bottom bar preview -->
+  <div style="flex:none;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:rgba(255,255,255,.6);backdrop-filter:blur(30px) saturate(190%);-webkit-backdrop-filter:blur(30px) saturate(190%);border-top:1px solid rgba(255,255,255,.55);display:flex;gap:10px;z-index:6">
+    <div onClick="{{ saveDraft }}" style="flex:1;height:50px;border-radius:15px;background:#f1f3f7;display:flex;align-items:center;justify-content:center;color:#465064;font-size:15.5px;font-weight:600;cursor:pointer">保存草稿</div>
+    <div onClick="{{ publish }}" style="flex:1.4;height:50px;border-radius:15px;background:linear-gradient(135deg,#16a36a,#1bb878);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(22,163,106,.3)">发布游戏</div>
+  </div>
+  </sc-if>
+
+  <!-- ===================== ADD MODULE SHEET ===================== -->
+  <sc-if value="{{ showAdd }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeAdd }}" style="position:absolute;inset:0;background:rgba(15,25,45,.26);z-index:20;animation:fadeIn .2s"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;z-index:21;background:rgba(255,255,255,.72);backdrop-filter:blur(40px) saturate(200%);-webkit-backdrop-filter:blur(40px) saturate(200%);border-radius:34px 34px 0 0;border-top:1px solid rgba(255,255,255,.6);padding:18px 16px calc(18px + env(safe-area-inset-bottom));animation:sheetUp .28s cubic-bezier(.16,1,.3,1);max-height:78%;overflow-y:auto">
+      <div style="width:38px;height:4px;border-radius:2px;background:#e3e6ec;margin:0 auto 14px"></div>
+      <div style="font-size:18px;font-weight:800;color:#1a2233;margin-bottom:3px">添加模块</div>
+      <div style="font-size:12.5px;color:#9aa4b2;margin-bottom:14px">每种模块最多添加一个</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ availableModules }}" as="m" hint-placeholder-count="3">
+          <div onClick="{{ m.onAdd }}" style="{{ m.cardStyle }}">
+            <div style="{{ m.iconStyle }}">{{ m.icon }}</div>
+            <div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="font-size:15px;font-weight:700;color:#1a2233">{{ m.label }}</span><span style="{{ m.tagStyle }}">{{ m.tag }}</span></div><div style="font-size:12px;color:#8b94a4;margin-top:3px">{{ m.desc }}</div></div>
+            <div style="font-size:22px;color:#c2cad6;font-weight:300">＋</div>
+          </div>
+        </sc-for>
+      </div>
+      <sc-if value="{{ allModulesAdded }}" hint-placeholder-val="{{ false }}"><div style="text-align:center;color:#9aa4b2;font-size:13.5px;padding:24px 0">全部模块已添加 🎉</div></sc-if>
+    </div>
+  </sc-if>
+
+  <!-- ===================== CATEGORY SHEET ===================== -->
+  <sc-if value="{{ showCat }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeCat }}" style="position:absolute;inset:0;background:rgba(15,25,45,.26);z-index:20;animation:fadeIn .2s"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;z-index:21;background:rgba(255,255,255,.72);backdrop-filter:blur(40px) saturate(200%);-webkit-backdrop-filter:blur(40px) saturate(200%);border-radius:34px 34px 0 0;border-top:1px solid rgba(255,255,255,.6);padding:18px 16px calc(18px + env(safe-area-inset-bottom));animation:sheetUp .28s cubic-bezier(.16,1,.3,1)">
+      <div style="width:38px;height:4px;border-radius:2px;background:#e3e6ec;margin:0 auto 14px"></div>
+      <div style="font-size:18px;font-weight:800;color:#1a2233;margin-bottom:14px">选择游戏类别</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <sc-for list="{{ catOptions }}" as="c" hint-placeholder-count="8"><div onClick="{{ c.onToggle }}" style="{{ c.style }}">{{ c.name }}</div></sc-for>
+      </div>
+      <div onClick="{{ closeCat }}" style="margin-top:20px;height:48px;border-radius:14px;background:#2f6df0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15.5px;font-weight:700;cursor:pointer">完成</div>
+    </div>
+  </sc-if>
+
+  <!-- ===================== GENERIC PICKER SHEET ===================== -->
+  <sc-if value="{{ pickerOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closePicker }}" style="position:absolute;inset:0;background:rgba(15,25,45,.26);z-index:20;animation:fadeIn .2s"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;z-index:21;background:rgba(255,255,255,.72);backdrop-filter:blur(40px) saturate(200%);-webkit-backdrop-filter:blur(40px) saturate(200%);border-radius:34px 34px 0 0;border-top:1px solid rgba(255,255,255,.6);padding:18px 0 calc(10px + env(safe-area-inset-bottom));animation:sheetUp .28s cubic-bezier(.16,1,.3,1)">
+      <div style="width:38px;height:4px;border-radius:2px;background:#e3e6ec;margin:0 auto 12px"></div>
+      <div style="font-size:16px;font-weight:700;color:#1a2233;text-align:center;margin-bottom:8px">{{ pickerTitle }}</div>
+      <div>
+        <sc-for list="{{ pickerOptions }}" as="o" hint-placeholder-count="4"><div onClick="{{ o.onPick }}" style="{{ o.style }}">{{ o.label }}<sc-if value="{{ o.active }}" hint-placeholder-val="{{ false }}"><span style="color:#2f6df0;font-weight:700">✓</span></sc-if></div></sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- toast -->
+  <sc-if value="{{ toastShow }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);z-index:40;background:rgba(20,30,50,.9);color:#fff;font-size:14px;font-weight:600;padding:13px 22px;border-radius:14px;animation:popIn .2s;white-space:nowrap">{{ toast }}</div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844}}">
+class Component extends DCLogic {
+  state = {
+    mode: 'edit', previewStep: 0,
+    showAdd: false, showCat: false, picker: null, toast: '', showErrors: false,
+    cover: false, title: '', desc: '',
+    players: '', duration: '', difficulty: '', venue: '', materials: '',
+    categories: [], rules: '',
+    mCompletion: false, mReward: false, mStory: false, mHint: false, mAudio: false,
+    method: '',
+    q_text_question: '', q_text_answer: '',
+    q_choice_question: '', q_choice_options: ['', ''], q_choice_correct: 0,
+    q_photo_desc: '', photoReview: false,
+    q_scan_content: '', q_gps_radius: '50',
+    rwCoupon: false, rwText: false, rwMedal: false,
+    coupon_name: '', coupon_qty: '', coupon_expiry: '', reward_text: '', medal_name: '', medalImg: false,
+    story_beats: [{ id: 1, text: '', tag: '', img: false }],
+    hint1: '', hint2: '', hint_fallback: '', hintEnabled: false,
+    audio: false,
+    pvHintShown: false, pvAnswer: '', pvSelected: null, pvWrong: false,
+  };
+
+  toastMsg(m) { this.setState({ toast: m }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: '' }), 1800); }
+
+  componentDidUpdate() { if (this._scrollEl) requestAnimationFrame(() => this._updateParallax()); }
+
+  _updateParallax() {
+    const el = this._scrollEl; if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const focus = rect.top + rect.height * 0.40;
+    el.querySelectorAll('[data-beat]').forEach((b) => {
+      const br = b.getBoundingClientRect();
+      const bc = br.top + br.height / 2;
+      const dist = Math.min(Math.abs(bc - focus) / rect.height, 1.4);
+      const opacity = Math.max(0.3, 1 - dist * 0.95);
+      const scale = Math.max(0.93, 1 - dist * 0.06);
+      const blur = Math.min(dist * 4.5, 6);
+      b.style.opacity = opacity.toFixed(3);
+      b.style.transform = `scale(${scale.toFixed(3)})`;
+      b.style.filter = blur > 0.4 ? `blur(${blur.toFixed(1)}px)` : 'none';
+    });
+  }
+
+  _softSnap() {
+    const el = this._scrollEl; if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const focus = rect.top + rect.height * 0.40;
+    let nd = 1e9, found = false;
+    el.querySelectorAll('[data-beat]').forEach((b) => {
+      const br = b.getBoundingClientRect();
+      const d = (br.top + br.height / 2) - focus;
+      if (Math.abs(d) < Math.abs(nd)) { nd = d; found = true; }
+    });
+    if (found && Math.abs(nd) > 6 && Math.abs(nd) < rect.height * 0.9) {
+      el.scrollBy({ top: nd * 0.4, behavior: 'smooth' });
+    }
+  }
+
+  renderVals() {
+    const S = this.state;
+    const set = (k) => (e) => this.setState({ [k]: e.target.value });
+    const setV = (k, v) => () => this.setState({ [k]: v });
+    const tog = (k) => () => this.setState((s) => ({ [k]: !s[k] }));
+
+    // ---- switches
+    const sw = (on) => `width:44px;height:26px;border-radius:13px;padding:3px;box-sizing:border-box;display:flex;align-items:center;cursor:pointer;transition:all .2s;background:${on ? '#2f6df0' : '#d7dde6'};justify-content:${on ? 'flex-end' : 'flex-start'}`;
+    const swOrange = (on) => `width:44px;height:26px;border-radius:13px;padding:3px;box-sizing:border-box;display:flex;align-items:center;cursor:pointer;transition:all .2s;background:${on ? '#ff7a45' : '#d7dde6'};justify-content:${on ? 'flex-end' : 'flex-start'}`;
+
+    // ---- errors
+    const e = {};
+    if (S.showErrors) {
+      if (!S.title.trim()) e.title = '请填写游戏标题';
+      if (!S.players) e.players = '请选择玩家人数';
+      if (!S.duration) e.duration = '请选择游戏时长';
+      if (S.categories.length === 0) e.category = '请至少选择一个类别';
+      if (!S.mCompletion || !S.method) e.completion = '请添加「完成方式」并选择一种玩法，这是游戏的核心';
+    }
+
+    // ---- field styles
+    const fieldBase = 'width:100%;box-sizing:border-box;border-radius:12px;padding:12px 14px;font-size:14.5px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;border:1px solid rgba(255,255,255,.65);background:rgba(255,255,255,.55);';
+    const pickerFieldStyle = (val, err) => fieldBase + `color:${val ? '#1a2233' : '#aab2c0'};` + (err ? 'border-color:#f5455c;background:#fff6f7;' : '');
+    const titleInputStyle = `width:100%;box-sizing:border-box;border:none;border-bottom:2px solid ${e.title ? '#f5455c' : '#eceff4'};background:transparent;padding:14px 4px 10px;font-size:22px;font-weight:700;color:#1a2233;outline:none;margin-top:14px`;
+
+    // ---- difficulty
+    const diffs = ['简单', '中等', '困难'];
+    const diffOptions = diffs.map((d) => {
+      const a = S.difficulty === d;
+      return { label: d, onSelect: setV('difficulty', a ? '' : d), style: `flex:1;text-align:center;padding:10px 0;border-radius:11px;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;border:1.5px solid ${a ? '#2f6df0' : '#e9edf3'};background:${a ? '#eef3ff' : '#f7f9fc'};color:${a ? '#2f6df0' : '#6b7587'}` };
+    });
+
+    // ---- categories
+    const categoryChips = S.categories.map((c) => ({ name: c, onRemove: (ev) => { ev.stopPropagation && ev.stopPropagation(); this.setState((s) => ({ categories: s.categories.filter((x) => x !== c) })); } }));
+    const presets = ['城市探索', '解谜推理', '文旅打卡', '亲子互动', '团队建设', '历史人文', '美食寻味', '夜游探险'];
+    const catOptions = presets.map((c) => {
+      const a = S.categories.includes(c);
+      return { name: c, onToggle: () => this.setState((s) => ({ categories: s.categories.includes(c) ? s.categories.filter((x) => x !== c) : [...s.categories, c] })), style: `padding:9px 16px;border-radius:13px;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;border:1.5px solid ${a ? '#2f6df0' : '#e9edf3'};background:${a ? '#2f6df0' : '#f7f9fc'};color:${a ? '#fff' : '#465064'}` };
+    });
+
+    // ---- completion methods
+    const methods = [
+      { key: 'text', icon: '✏️', label: '文字问答', sub: '回答一个开放问题', bg: '#eaf1ff' },
+      { key: 'choice', icon: '🔘', label: '选项问答', sub: '从选项中选出正确答案', bg: '#eafaf2' },
+      { key: 'photo', icon: '📷', label: '拍照打卡', sub: '上传现场照片', bg: '#fff1ea' },
+      { key: 'scan', icon: '⬛', label: '扫码打卡', sub: '扫描现场二维码', bg: '#f0ecfb' },
+      { key: 'gps', icon: '📍', label: 'GPS 到达', sub: '走进坐标范围即通过', bg: '#fdf3df' },
+      { key: 'none', icon: '✓', label: '无需验证', sub: '点击即完成', bg: '#eef1f6' },
+    ];
+    const methodOptions = methods.map((m) => {
+      const sel = S.method === m.key;
+      return {
+        key: m.key, icon: m.icon, label: m.label, sub: m.sub,
+        onSelect: setV('method', m.key),
+        tileStyle: `display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:14px;cursor:pointer;transition:all .15s;border:1.5px solid ${sel ? '#2f6df0' : '#eef0f4'};background:${sel ? '#f4f8ff' : '#fff'}`,
+        iconStyle: `width:38px;height:38px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;font-size:18px;background:${m.bg}`,
+        radioStyle: `width:20px;height:20px;border-radius:50%;flex:none;box-sizing:border-box;transition:all .15s;border:${sel ? '6px solid #2f6df0' : '2px solid #cdd5e0'};background:#fff`,
+      };
+    });
+
+    const methodSupportsHint = ['text', 'choice', 'gps'].includes(S.method);
+
+    // ---- choice options
+    const letters = 'ABCD';
+    const choiceOptions = S.q_choice_options.map((v, i) => {
+      const correct = S.q_choice_correct === i;
+      return {
+        val: v, placeholder: `选项 ${letters[i]}`,
+        onChange: (ev) => { const arr = S.q_choice_options.slice(); arr[i] = ev.target.value; this.setState({ q_choice_options: arr }); },
+        onPick: setV('q_choice_correct', i),
+        tick: correct ? '✓' : letters[i],
+        radioStyle: `width:30px;height:30px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;${correct ? 'background:#16a36a;color:#fff' : 'background:#eef0f4;color:#9aa4b2'}`,
+      };
+    });
+
+    // ---- modules availability
+    const added = { completion: S.mCompletion, reward: S.mReward, story: S.mStory, hint: S.mHint, audio: S.mAudio };
+    const modDefs = [
+      { key: 'completion', flag: 'mCompletion', icon: '🎯', label: '完成方式', tag: '核心', tagColor: '#ff7a45', desc: '玩家用什么方式通过这一关', bg: '#2f6df0' },
+      { key: 'reward', flag: 'mReward', icon: '🎁', label: '完成奖励', tag: '推荐', tagColor: '#2f6df0', desc: '优惠券 / 文字反馈 / 勋章', bg: '#ff7a45' },
+      { key: 'story', flag: 'mStory', icon: '📖', label: '剧情故事', tag: '', tagColor: '', desc: '到达时的叙事文案与配图', bg: '#7a6fb0' },
+      { key: 'audio', flag: 'mAudio', icon: '🎧', label: '语音讲解', tag: '', tagColor: '', desc: '上传一段音频导览', bg: '#1f9d6e' },
+    ];
+    const availableModules = modDefs.filter((m) => !added[m.key]).map((m) => ({
+      icon: m.icon, label: m.label, desc: m.desc, tag: m.tag,
+      onAdd: () => this.setState({ [m.flag]: true, showAdd: false }),
+      cardStyle: 'display:flex;align-items:center;gap:13px;padding:14px;border-radius:16px;background:rgba(255,255,255,.45);border:1px solid rgba(255,255,255,.5);cursor:pointer',
+      iconStyle: `width:44px;height:44px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center;font-size:21px;background:${m.bg}1a`,
+      tagStyle: m.tag ? `font-size:10px;font-weight:700;color:#fff;background:${m.tagColor};padding:2px 7px;border-radius:6px` : 'display:none',
+    }));
+    const allModulesAdded = availableModules.length === 0;
+    const noModules = !S.mCompletion && !S.mReward && !S.mStory && !S.mHint && !S.mAudio;
+    const canAddMore = !noModules && !allModulesAdded;
+
+    // ---- picker
+    const openPicker = (key, title, opts) => () => this.setState({ picker: { key, title, opts } });
+    const pickerOpen = !!S.picker;
+    const pickerOptions = pickerOpen ? S.picker.opts.map((o) => {
+      const a = S[S.picker.key] === o;
+      return { label: o, active: a, onPick: () => this.setState({ [this.state.picker.key]: o, picker: null }), style: `padding:15px 22px;font-size:15.5px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;color:${a ? '#2f6df0' : '#2a3346'};font-weight:${a ? '600' : '400'};border-bottom:1px solid #f2f4f8` };
+    }) : [];
+
+    // ---- preview steps
+    const steps = ['arrival'];
+    if (S.mStory) steps.push('story');
+    steps.push('challenge');
+    steps.push('complete');
+    if (S.mReward) steps.push('reward');
+    const idx = Math.min(S.previewStep, steps.length - 1);
+    const cur = steps[idx];
+    const stepLabels = { arrival: '到达点位', story: '剧情解锁', challenge: '解谜挑战', complete: '挑战完成', reward: '获得奖励' };
+    const stepDots = steps.map((s, i) => ({ style: `width:${i === idx ? '20px' : '7px'};height:7px;border-radius:4px;transition:all .2s;background:${i === idx ? '#fff' : 'rgba(255,255,255,.35)'}` }));
+    const resetPv = { pvHintShown: false, pvAnswer: '', pvSelected: null, pvWrong: false };
+    const nextStep = () => this.setState((s) => ({ previewStep: Math.min(s.previewStep + 1, steps.length - 1), ...resetPv }));
+    const prevStep = () => this.setState((s) => ({ previewStep: Math.max(s.previewStep - 1, 0), ...resetPv }));
+    const atFirst = idx === 0, atLast = idx === steps.length - 1;
+    const submitChallenge = () => {
+      const m = S.method;
+      if (m === 'text') {
+        const ans = (S.q_text_answer || '').split(/[、,，;；\s]+/).map((x) => x.trim().toLowerCase()).filter(Boolean);
+        const got = (S.pvAnswer || '').trim().toLowerCase();
+        if (!got || (ans.length && !ans.includes(got))) { this.setState({ pvWrong: true }); return; }
+      } else if (m === 'choice') {
+        if (S.pvSelected === null || S.pvSelected !== S.q_choice_correct) { this.setState({ pvWrong: true }); return; }
+      }
+      this.setState((s) => ({ previewStep: Math.min(s.previewStep + 1, steps.length - 1), ...resetPv }));
+    };
+
+    // challenge preview
+    let pvMethodIcon = '✓', pvMethodLabel = '无需验证';
+    const md = methods.find((m) => m.key === S.method);
+    if (md) { pvMethodIcon = md.icon; pvMethodLabel = md.label; }
+    const titleMap = { text: S.q_text_question || '请回答下面的问题', choice: S.q_choice_question || '请选择正确答案', photo: S.q_photo_desc || '拍下你在现场的照片', scan: '扫描现场的二维码', gps: '走到目标位置', none: '点击下方按钮完成打卡' };
+    const pvChallengeTitle = titleMap[S.method] || '完成本关挑战';
+    const pvOpts = (S.q_choice_options.filter((x) => x.trim().length).length ? S.q_choice_options : ['', '']);
+    const pvChoiceOptions = pvOpts.map((o, i) => ({ letter: letters[i], text: o || `选项 ${letters[i]}`, onSelect: () => this.setState({ pvSelected: i, pvWrong: false }), style: `border:1.5px solid ${S.pvSelected === i ? '#2f6df0' : '#e6eaf0'};background:${S.pvSelected === i ? '#f4f8ff' : '#fff'};border-radius:12px;padding:13px 15px;font-size:15px;color:#2a3346;cursor:pointer;transition:all .15s` }));
+    const subLabel = { text: '提交答案', choice: '提交答案', photo: '上传并完成', scan: '完成扫码', gps: '我已到达此处', none: '完成打卡' };
+    const pvSubmitLabel = subLabel[S.method] || '完成';
+
+    // ---- story time-stream (Tesseract-style)
+    const updateBeat = (id, patch) => this.setState((s) => ({ story_beats: s.story_beats.map((b) => (b.id === id ? { ...b, ...patch } : b)) }));
+    const storyBeats = S.story_beats.map((b, i) => ({
+      index: i + 1, text: b.text, setText: (ev) => updateBeat(b.id, { text: ev.target.value }),
+      tag: b.tag, setTag: (ev) => updateBeat(b.id, { tag: ev.target.value }),
+      hasImg: b.img, imgEmpty: !b.img, toggleImg: () => updateBeat(b.id, { img: !b.img }),
+      canRemove: S.story_beats.length > 1, onRemove: () => this.setState((s) => ({ story_beats: s.story_beats.filter((x) => x.id !== b.id) })),
+    }));
+    const filledBeats = S.story_beats.filter((b) => (b.text && b.text.trim()) || b.img);
+    const demoBeats = [
+      { text: '你站在老街的入口，青石板还留着清晨的湿意，砖墙在低声诉说着百年前的故事。', tag: '此刻', img: false },
+      { text: '转过窄巷，一扇斑驳的木门虚掩着——门后，是没有人再提起过的旧事。', tag: '再往前一点', img: true },
+      { text: '风穿过屋檐，铜铃轻响。你忽然觉得，自己正一步步走进某个人的记忆深处。', tag: '更深的地方', img: false },
+    ];
+    const srcBeats = filledBeats.length ? filledBeats : demoBeats;
+    const pvBeats = srcBeats.map((b, i) => ({ label: (b.tag && b.tag.trim()) ? b.tag : `时刻 ${i + 1}`, text: b.text || '……', hasImg: !!b.img }));
+
+    // reward preview
+    const pvNoReward = !(S.rwCoupon || S.rwText || S.rwMedal) || !S.mReward;
+
+    return {
+      isEdit: S.mode === 'edit', isPreview: S.mode === 'preview',
+      navTitle: S.mode === 'preview' ? '玩家视角预览' : '创建游戏',
+      navBack: () => { if (S.mode === 'preview') this.setState({ mode: 'edit' }); else this.toastMsg('已退出（演示）'); },
+
+      // cover + title
+      coverAdded: S.cover, coverEmpty: !S.cover, coverAdd: setV('cover', true), coverRemove: setV('cover', false),
+      titleVal: S.title, titleSet: set('title'), titleInputStyle, titleErr: e.title || '', titleErrShow: !!e.title,
+
+      // desc
+      descVal: S.desc, descSet: set('desc'), descCount: `${S.desc.length}/30`,
+
+      // pickers
+      openPlayers: openPicker('players', '选择玩家人数', ['单人', '2-4 人', '5-10 人', '10 人以上', '人数不限']),
+      playersText: S.players || '请选择', playersFieldStyle: pickerFieldStyle(S.players, e.players), playersErr: e.players || '', playersErrShow: !!e.players,
+      openDuration: openPicker('duration', '选择游戏时长', ['15 分钟以内', '15-30 分钟', '30-60 分钟', '1-2 小时', '2 小时以上']),
+      durationText: S.duration || '请选择', durationFieldStyle: pickerFieldStyle(S.duration, e.duration), durationErr: e.duration || '', durationErrShow: !!e.duration,
+      diffOptions,
+      openVenue: openPicker('venue', '选择适用场所', ['景区', '公园绿地', '商圈街区', '古镇老街', '博物馆', '校园', '室内场馆']),
+      venueText: S.venue || '请选择', venueFieldStyle: pickerFieldStyle(S.venue, false),
+      materialsVal: S.materials, materialsSet: set('materials'),
+
+      // categories
+      categoryChips, openCat: setV('showCat', true), catErr: e.category || '', catErrShow: !!e.category,
+      showCat: S.showCat, closeCat: setV('showCat', false), catOptions,
+
+      // rules
+      rulesVal: S.rules, rulesSet: set('rules'),
+
+      // modules flags
+      hasCompletion: S.mCompletion, hasReward: S.mReward, hasStory: S.mStory, hasHint: S.mHint, hasAudio: S.mAudio,
+      noModules, canAddMore, completionErr: e.completion || '', completionErrShow: !!e.completion,
+      removeCompletion: setV('mCompletion', false), removeReward: setV('mReward', false), removeStory: setV('mStory', false), removeHint: setV('mHint', false), removeAudio: setV('mAudio', false),
+
+      // completion
+      methodOptions,
+      m_text: S.method === 'text', m_choice: S.method === 'choice', m_photo: S.method === 'photo', m_scan: S.method === 'scan', m_gps: S.method === 'gps', m_none: S.method === 'none',
+      q_text_question: S.q_text_question, set_text_q: set('q_text_question'), q_text_answer: S.q_text_answer, set_text_a: set('q_text_answer'),
+      q_choice_question: S.q_choice_question, set_choice_q: set('q_choice_question'), choiceOptions, canAddChoice: S.q_choice_options.length < 4, addChoice: () => this.setState((s) => ({ q_choice_options: [...s.q_choice_options, ''] })),
+      q_photo_desc: S.q_photo_desc, set_photo_d: set('q_photo_desc'), togglePhotoReview: tog('photoReview'), swPhotoReviewTrack: sw(S.photoReview),
+      q_scan_content: S.q_scan_content, set_scan_c: set('q_scan_content'),
+      q_gps_radius: S.q_gps_radius, set_gps_r: set('q_gps_radius'),
+
+      // reward
+      rwCoupon: S.rwCoupon, rwText: S.rwText, rwMedal: S.rwMedal,
+      toggleCoupon: tog('rwCoupon'), toggleText: tog('rwText'), toggleMedal: tog('rwMedal'),
+      swCouponTrack: swOrange(S.rwCoupon), swTextTrack: sw(S.rwText), swMedalTrack: swOrange(S.rwMedal),
+      coupon_name: S.coupon_name, set_coupon_name: set('coupon_name'), coupon_qty: S.coupon_qty, set_coupon_qty: set('coupon_qty'),
+      openExpiry: openPicker('coupon_expiry', '优惠券有效期', ['领取后 7 天', '领取后 30 天', '领取后 90 天', '长期有效']),
+      couponExpiryText: S.coupon_expiry || '有效期', couponExpiryStyle: pickerFieldStyle(S.coupon_expiry, false) + 'flex:1;padding:10px 12px;',
+      reward_text: S.reward_text, set_reward_text: set('reward_text'),
+      medal_name: S.medal_name, set_medal_name: set('medal_name'),
+      toggleMedalImg: tog('medalImg'), medalImgStyle: S.medalImg ? 'background:linear-gradient(135deg,#ffd86b,#ffb74d);font-size:26px' : 'background:#eef0f4;border:1.5px dashed #cdd5e0;font-size:20px;color:#9aa4b2', medalImgGlyph: S.medalImg ? '🏅' : '＋',
+
+      // story
+      storyBeats, addBeat: () => this.setState((s) => ({ story_beats: [...s.story_beats, { id: Date.now() + Math.random(), text: '', tag: '', img: false }] })),
+
+      // hint
+      hint1: S.hint1, set_hint1: set('hint1'), hint2: S.hint2, set_hint2: set('hint2'), hint_fallback: S.hint_fallback, set_fallback: set('hint_fallback'),
+
+      // audio
+      audioAdded: S.audio, audioEmpty: !S.audio, toggleAudio: tog('audio'),
+
+      // sheets
+      showAdd: S.showAdd, openAdd: setV('showAdd', true), closeAdd: setV('showAdd', false), availableModules, allModulesAdded,
+      pickerOpen, pickerTitle: S.picker ? S.picker.title : '', pickerOptions, closePicker: setV('picker', null),
+
+      // bottom + preview nav
+      gotoPreview: () => {
+        const errs = (!S.title.trim()) || (!S.players) || (!S.duration) || (S.categories.length === 0) || (!S.mCompletion || !S.method);
+        if (errs) { this.setState({ showErrors: true }); this.toastMsg('请完善标记的必填项'); return; }
+        this.setState({ mode: 'preview', previewStep: 0, pvHintShown: false, pvAnswer: '', pvSelected: null, pvWrong: false });
+      },
+      saveDraft: () => this.toastMsg('已保存草稿'),
+      publish: () => this.toastMsg('🎉 发布成功！'),
+
+      // preview
+      stepArrival: cur === 'arrival', stepStory: cur === 'story', stepChallenge: cur === 'challenge', stepComplete: cur === 'complete', stepReward: cur === 'reward',
+      stepDots, stepLabel: stepLabels[cur], stepNo: idx + 1, stepTotal: steps.length,
+      nextStep, prevStep,
+      prevBtnStyle: `width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;transition:all .15s;background:rgba(255,255,255,.12);color:${atFirst ? 'rgba(255,255,255,.3)' : '#fff'};pointer-events:${atFirst ? 'none' : 'auto'}`,
+      nextBtnStyle: `width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;transition:all .15s;background:rgba(255,255,255,.12);color:${atLast ? 'rgba(255,255,255,.3)' : '#fff'};pointer-events:${atLast ? 'none' : 'auto'}`,
+      pvTitle: S.title || '未命名游戏', pvDesc: S.desc || '走进这个地方，开启一段探索。', pvPlayers: S.players || '不限', pvDuration: S.duration || '不限', pvDifficulty: S.difficulty || '中等',
+      pvBeats, streamScrollRef: (el) => { if (this._scrollEl === el) return; if (this._scrollEl && this._onScroll) this._scrollEl.removeEventListener('scroll', this._onScroll); this._scrollEl = el || null; if (!el) return; this._onScroll = () => { if (this._raf) cancelAnimationFrame(this._raf); this._raf = requestAnimationFrame(() => this._updateParallax()); clearTimeout(this._snapT); this._snapT = setTimeout(() => this._softSnap(), 160); }; el.addEventListener('scroll', this._onScroll, { passive: true }); requestAnimationFrame(() => this._updateParallax()); },
+      pvMethodIcon, pvMethodLabel, pvChallengeTitle, pvSubmitLabel, submitChallenge,
+      pvIsText: S.method === 'text', pvIsChoice: S.method === 'choice', pvIsPhoto: S.method === 'photo', pvIsScan: S.method === 'scan', pvIsGps: S.method === 'gps', pvIsNone: S.method === 'none' || !S.method,
+      pvAnswer: S.pvAnswer, setPvAnswer: (ev) => this.setState({ pvAnswer: ev.target.value, pvWrong: false }), pvAnswerStyle: `width:100%;box-sizing:border-box;border:1.5px solid ${S.pvWrong ? '#f5455c' : '#e6eaf0'};background:rgba(255,255,255,.45);border-radius:12px;padding:13px 14px;font-size:15px;outline:none`,
+      pvChoiceOptions, pvGpsRadius: S.q_gps_radius || '50', pvWrong: S.pvWrong, pvWrongMsg: '回答不正确，再试一次',
+      methodSupportsHint, hintEnabled: S.hintEnabled, toggleHint: tog('hintEnabled'), swHintTrack: sw(S.hintEnabled),
+      pvHasHint: methodSupportsHint && S.hintEnabled && !!(S.hint1 || S.hint_fallback), pvUseHint: setV('pvHintShown', true), pvHintShown: S.pvHintShown, pvHintText: S.hint1 || S.hint_fallback || '再仔细观察周围的细节',
+      pvCompleteCta: S.mReward ? '领取奖励' : '完成',
+      pvRwCoupon: S.mReward && S.rwCoupon, pvRwMedal: S.mReward && S.rwMedal, pvRwText: S.mReward && S.rwText, pvNoReward,
+      pvCouponName: S.coupon_name || '¥20 餐饮代金券', pvCouponExpiry: S.coupon_expiry || '领取后 30 天',
+      pvMedalName: S.medal_name || '老城探秘者', pvRewardText: S.reward_text || '恭喜你解开了第一个秘密！',
+
+      // toast
+      toast: S.toast, toastShow: !!S.toast,
+    };
+  }
+}
+</script>
+</body>
+</html>

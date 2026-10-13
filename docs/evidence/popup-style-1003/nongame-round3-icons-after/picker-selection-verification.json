@@ -1,0 +1,26 @@
+[
+  {
+    "key": "players",
+    "options": 3,
+    "tapAndClosed": true,
+    "valueReadback": true,
+    "reopenedSelectionReadback": true,
+    "fixtureRestored": true
+  },
+  {
+    "key": "duration",
+    "options": 6,
+    "tapAndClosed": true,
+    "valueReadback": true,
+    "reopenedSelectionReadback": true,
+    "fixtureRestored": true
+  },
+  {
+    "key": "usageLocation",
+    "options": 7,
+    "tapAndClosed": true,
+    "valueReadback": true,
+    "reopenedSelectionReadback": true,
+    "fixtureRestored": true
+  }
+]

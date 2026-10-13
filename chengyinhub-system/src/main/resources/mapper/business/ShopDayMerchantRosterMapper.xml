@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ShopDayMerchantRosterMapper">
+    <resultMap id="rosterFact" type="com.chengyinhub.business.domain.dto.ShopDayMerchantRosterFact">
+        <result property="registrationId" column="registration_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="ticketNo" column="ticket_no"/>
+        <result property="ticketStart" column="ticket_start"/>
+        <result property="ticketEnd" column="ticket_end"/>
+        <result property="realName" column="real_name" typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler"/>
+        <result property="nickname" column="nickname"/>
+        <result property="avatar" column="avatar"/>
+        <result property="phone" column="phone" typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler"/>
+        <result property="entitlementStatus" column="entitlement_status"/>
+        <result property="checkinAt" column="checkin_at"/>
+        <result property="serviceStartedAt" column="service_started_at"/>
+    </resultMap>
+
+    <select id="countLiveMerchantScope" resultType="int">
+        select count(distinct o.id)
+          from merchant_chapter_offer o
+          join cms_topic t on t.id = o.topic_id and t.product_type = 2 and t.del_flag = 0
+          join mms_merchant mm on mm.member_id = o.merchant_id and mm.status = 1
+             and (mm.account_status is null or mm.account_status != 2)
+             and (mm.del_flag is null or mm.del_flag != 2)
+         where o.topic_id = #{topicId} and o.merchant_id = #{merchantMemberId}
+           and o.status = 1 and (o.valid_end is null or o.valid_end &gt; now())
+    </select>
+
+    <!-- 写/读双 scope：offer、node/progress、redemption 均同时绑定 topic + chapter + merchant。 -->
+    <select id="selectRoster" resultMap="rosterFact">
+        select r.id registration_id, r.member_id, r.registration_no ticket_no,
+               t.start_time ticket_start, t.end_time ticket_end,
+               r.real_name, m.nickname, m.avatar, r.phone,
+               case when min(rd.create_time) is null then 'ARRIVED' else 'REDEEMED' end entitlement_status,
+               min(p.checkin_time) checkin_at, min(rd.create_time) service_started_at
+          from merchant_chapter_offer o
+          join mms_merchant mm on mm.member_id = o.merchant_id and mm.status = 1
+             and (mm.account_status is null or mm.account_status != 2)
+             and (mm.del_flag is null or mm.del_flag != 2)
+          join registration_entitlement e on e.topic_id = o.topic_id and e.chapter_id = o.chapter_id
+             and e.status in (0, 1)
+          join cms_registration r on r.id = e.registration_id and r.owner_type = 2
+             and r.purchase_kind = 3 and r.payment_status = 2 and r.registration_status = 2
+          join cms_activity a on a.id = r.owner_id and a.topic_id = o.topic_id
+          join oms_ticket t on t.id = r.ticket_id and t.owner_type = 2 and t.owner_id = a.id and t.del_flag = 0
+          left join ums_member m on m.id = r.member_id and m.del_flag = 0
+          left join cms_topic_node n on n.topic_id = o.topic_id and n.chapter_id = o.chapter_id
+             and n.merchant_member_id = o.merchant_id
+          left join player_node_progress p on p.member_id = r.member_id and p.activity_id = r.owner_id
+             and p.topic_id = o.topic_id and p.node_id = n.id and p.checkin_time is not null and p.del_flag = 0
+          left join redemption rd on rd.registration_id = r.id and rd.topic_id = o.topic_id
+             and rd.chapter_id = o.chapter_id and rd.merchant_id = o.merchant_id and rd.status = 'ACTIVE'
+         where o.topic_id = #{topicId} and o.merchant_id = #{merchantMemberId}
+           and o.status = 1 and (o.valid_end is null or o.valid_end &gt; now())
+           and (p.id is not null or rd.id is not null)
+         group by r.id, r.member_id, r.registration_no, t.start_time, t.end_time,
+                  r.real_name, m.nickname, m.avatar, r.phone
+         order by coalesce(min(rd.create_time), min(p.checkin_time)) desc, r.id desc
+    </select>
+</mapper>

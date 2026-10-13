@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantCrmExportTaskMapper">
+    <resultMap id="Task" type="com.chengyinhub.business.domain.MerchantCrmExportTask">
+        <result property="id" column="id"/>
+        <result property="ownerMemberId" column="merchant_owner_member_id"/>
+        <result property="merchantRowId" column="merchant_id"/>
+        <result property="requesterMemberId" column="requester_member_id"/>
+        <result property="requesterRoleCode" column="requester_role_code"/>
+        <result property="filterJson" column="filter_json"/>
+        <result property="includePaidAmount" column="include_paid_amount"/>
+        <result property="status" column="status"/>
+        <result property="version" column="version"/>
+        <result property="rowLimit" column="row_limit"/>
+        <result property="rowCount" column="row_count"/>
+        <result property="storageKey" column="storage_key"/>
+        <result property="tokenHash" column="token_hash"/>
+        <result property="requestId" column="request_id"/>
+        <result property="errorMessage" column="error_message"/>
+        <result property="expiresAt" column="expires_at"/>
+        <result property="startedAt" column="started_at"/>
+        <result property="finishedAt" column="finished_at"/>
+        <result property="downloadedAt" column="downloaded_at"/>
+        <result property="downloadCount" column="download_count"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="TaskColumns">
+        id, merchant_id, merchant_owner_member_id, requester_member_id, requester_role_code,
+        filter_json, include_paid_amount, status, version, row_limit, row_count,
+        storage_key, token_hash, request_id, error_message, expires_at, started_at,
+        finished_at, downloaded_at, download_count, create_time, update_time
+    </sql>
+
+    <select id="selectByRequestId" resultMap="Task">
+        select <include refid="TaskColumns"/> from merchant_crm_export_task
+        where merchant_id = #{merchantId} and request_id = #{requestId}
+        limit 1
+    </select>
+
+    <select id="selectOwnedTask" resultMap="Task">
+        select <include refid="TaskColumns"/> from merchant_crm_export_task t
+        where t.merchant_id = #{merchantId}
+          and t.merchant_owner_member_id = #{ownerMemberId}
+          and t.id = #{taskId}
+          and exists (
+            select 1 from mms_merchant m
+            where m.id = t.merchant_id and m.member_id = t.merchant_owner_member_id
+              and m.status = 1 and m.account_status = 1 and m.del_flag = 0
+          )
+        limit 1
+    </select>
+
+    <select id="selectTaskInternal" resultMap="Task">
+        select <include refid="TaskColumns"/> from merchant_crm_export_task t
+        where t.id = #{taskId}
+          and exists (
+            select 1 from mms_merchant m
+            where m.id = t.merchant_id and m.member_id = t.merchant_owner_member_id
+              and m.status = 1 and m.account_status = 1 and m.del_flag = 0
+          )
+        limit 1
+    </select>
+
+    <select id="selectMerchantTaskInternal" resultMap="Task">
+        select <include refid="TaskColumns"/> from merchant_crm_export_task
+        where merchant_id = #{merchantId} and id = #{taskId}
+        limit 1
+    </select>
+
+    <insert id="insertTask" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.MerchantCrmExportTask">
+        insert into merchant_crm_export_task
+          (merchant_id, merchant_owner_member_id, requester_member_id, requester_role_code,
+           filter_json, include_paid_amount, status, version, row_limit, row_count,
+           storage_key, token_hash, request_id, error_message, expires_at,
+           download_count, create_time, update_time)
+        values
+          (#{merchantRowId}, #{ownerMemberId}, #{requesterMemberId}, #{requesterRoleCode},
+           #{filterJson}, #{includePaidAmount}, 'PENDING', 0, #{rowLimit}, 0,
+           null, #{tokenHash}, #{requestId}, null, #{expiresAt},
+           0, now(), now())
+    </insert>
+
+    <select id="selectNextRunnableTask" resultMap="Task">
+        select <include refid="TaskColumns"/> from merchant_crm_export_task
+        where expires_at &gt; #{now}
+          and (status = 'PENDING'
+            or (status = 'RUNNING' and (started_at is null or started_at &lt;= #{staleBefore})))
+        order by create_time asc, id asc
+        limit 1
+    </select>
+
+    <update id="claimRunnableTask">
+        update merchant_crm_export_task
+        set status = 'RUNNING', started_at = #{startedAt}, storage_key = #{storageKey},
+            error_message = null, version = version + 1, update_time = now()
+        where id = #{taskId} and version = #{expectedVersion}
+          and expires_at &gt; #{startedAt}
+          and (status = 'PENDING'
+            or (status = 'RUNNING' and (started_at is null or started_at &lt;= #{staleBefore})))
+          and exists (
+            select 1 from mms_merchant m
+            where m.id = merchant_crm_export_task.merchant_id
+              and m.member_id = merchant_crm_export_task.merchant_owner_member_id
+              and m.status = 1 and m.account_status = 1 and m.del_flag = 0
+          )
+    </update>
+
+    <update id="finishSuccess">
+        update merchant_crm_export_task
+        set status = 'SUCCESS', row_count = #{rowCount}, storage_key = #{storageKey},
+            finished_at = #{finishedAt}, version = version + 1, update_time = now()
+        where id = #{taskId} and status = 'RUNNING' and version = #{expectedVersion}
+          and exists (
+            select 1 from mms_merchant m
+            where m.id = merchant_crm_export_task.merchant_id
+              and m.member_id = merchant_crm_export_task.merchant_owner_member_id
+              and m.status = 1 and m.account_status = 1 and m.del_flag = 0
+          )
+    </update>
+
+    <update id="finishFailed">
+        update merchant_crm_export_task
+        set status = 'FAILED', error_message = #{errorMessage}, finished_at = #{finishedAt},
+            version = version + 1, update_time = now()
+        where id = #{taskId} and status = 'RUNNING' and version = #{expectedVersion}
+    </update>
+
+    <update id="invalidateOwnerMismatch">
+        update merchant_crm_export_task t
+        set t.status = 'FAILED', t.error_message = '门店归属已变化，导出任务失效',
+            t.storage_key = null, t.token_hash = '', t.finished_at = #{finishedAt},
+            t.version = t.version + 1, t.update_time = now()
+        where t.id = #{taskId} and t.version = #{expectedVersion}
+          and t.status in ('PENDING', 'RUNNING', 'SUCCESS')
+          and not exists (
+            select 1 from mms_merchant m
+            where m.id = t.merchant_id and m.member_id = t.merchant_owner_member_id
+              and m.status = 1 and m.account_status = 1 and m.del_flag = 0
+          )
+    </update>
+
+    <select id="selectExpirableTasks" resultMap="Task">
+        select <include refid="TaskColumns"/> from merchant_crm_export_task
+        where expires_at &lt;= #{now} and status in ('PENDING', 'RUNNING', 'SUCCESS', 'FAILED')
+        order by expires_at asc, id asc
+        limit #{limit}
+    </select>
+
+    <select id="countByStorageKey" resultType="int">
+        select count(*) from merchant_crm_export_task where storage_key = #{storageKey}
+    </select>
+
+    <update id="markExpired">
+        update merchant_crm_export_task
+        set status = 'EXPIRED', storage_key = null, token_hash = '',
+            version = version + 1, update_time = now()
+        where id = #{taskId} and expires_at &lt;= #{now}
+          and status in ('PENDING', 'RUNNING', 'SUCCESS', 'FAILED')
+    </update>
+
+    <update id="markDownloaded">
+        update merchant_crm_export_task
+        set downloaded_at = #{downloadedAt}, download_count = download_count + 1, update_time = now()
+        where merchant_id = #{merchantId} and merchant_owner_member_id = #{ownerMemberId}
+          and id = #{taskId} and status = 'SUCCESS'
+          and expires_at &gt; #{downloadedAt}
+          and exists (
+            select 1 from mms_merchant m
+            where m.id = merchant_crm_export_task.merchant_id
+              and m.member_id = merchant_crm_export_task.merchant_owner_member_id
+              and m.status = 1 and m.account_status = 1 and m.del_flag = 0
+          )
+    </update>
+</mapper>

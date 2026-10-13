@@ -1,0 +1,2943 @@
+[
+  {
+    "at": "2026-09-28T06:26:47.443Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/info",
+    "method": "POST",
+    "ids": {
+      "member_id": 100096
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2087,
+    "resultIds": {
+      "id": 100096,
+      "levelId": 1
+    }
+  },
+  {
+    "at": "2026-09-28T06:26:47.446Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/my-joined",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2048,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:26:47.448Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/run-session/list",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1915,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:26:47.452Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/topic/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 5
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2074,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:26:47.455Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/activity/list",
+    "method": "POST",
+    "ids": {
+      "status": 2,
+      "pageSize": 4
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1895,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:26:47.461Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/activity/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 4
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2079,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:26:47.537Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/info",
+    "method": "POST",
+    "ids": {
+      "member_id": 100096
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2035,
+    "resultIds": {
+      "id": 100096,
+      "levelId": 1
+    }
+  },
+  {
+    "at": "2026-09-28T06:26:47.539Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/my-joined",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1957,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:26:47.540Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/run-session/list",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2363,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:26:47.546Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/topic/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 20
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2012,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:26:47.550Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/activity/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 20,
+      "status": 1
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2366,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:26:50.725Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/activity/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 4
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 445,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:26:50.728Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/map/reverse-geocode",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 440,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:26:59.019Z",
+    "route": "pages/topic/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/topic/info-to-user",
+    "method": "POST",
+    "ids": {
+      "id": 990062
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 6011,
+    "resultIds": {
+      "id": 990062,
+      "memberId": 100092,
+      "status": 1
+    }
+  },
+  {
+    "at": "2026-09-28T06:26:59.022Z",
+    "route": "pages/topic/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/info",
+    "method": "POST",
+    "ids": {
+      "member_id": 100096
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3548,
+    "resultIds": {
+      "id": 100096,
+      "levelId": 1
+    }
+  },
+  {
+    "at": "2026-09-28T06:27:35.009Z",
+    "route": "pages/topic/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/activity/info",
+    "method": "POST",
+    "ids": {
+      "id": 25
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2993,
+    "resultIds": {
+      "clubId": 990004
+    }
+  },
+  {
+    "at": "2026-09-28T06:27:55.771Z",
+    "route": "pages/topic/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/activity/info",
+    "method": "POST",
+    "ids": {
+      "id": 24
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1922,
+    "resultIds": {
+      "id": 24,
+      "memberId": 100092,
+      "status": 1,
+      "topicId": 990062
+    }
+  },
+  {
+    "at": "2026-09-28T06:28:26.944Z",
+    "route": "pages/activity/baoming/baoming",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/info",
+    "method": "POST",
+    "ids": {
+      "member_id": 100096
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1883,
+    "resultIds": {
+      "id": 100096,
+      "levelId": 1
+    }
+  },
+  {
+    "at": "2026-09-28T06:28:26.957Z",
+    "route": "pages/activity/baoming/baoming",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/activity/info",
+    "method": "POST",
+    "ids": {
+      "id": "24"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1881,
+    "resultIds": {
+      "id": 24,
+      "memberId": 100092,
+      "status": 1,
+      "topicId": 990062
+    }
+  },
+  {
+    "at": "2026-09-28T06:28:26.966Z",
+    "route": "pages/activity/baoming/baoming",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/address/list",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1845,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:28:28.914Z",
+    "route": "pages/activity/baoming/baoming",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/quote",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:28:28.922Z",
+    "route": "pages/activity/baoming/baoming",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/club/event-ops/waitlist/status",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 485,
+    "resultIds": {
+      "activityId": 24,
+      "ticketId": 93,
+      "memberId": 100096
+    }
+  },
+  {
+    "at": "2026-09-28T06:29:40.692Z",
+    "route": "pages/activity/baoming/baoming",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/quote",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1978,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:30:32.052Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/club/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:30:32.059Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/im/unread-total",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:30:40.175Z",
+    "route": "subpackageMember/order/order",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 10,
+      "status": "0"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2049,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:30:46.897Z",
+    "route": "subpackageMember/signup/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 10
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3736,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:30:46.900Z",
+    "route": "subpackageMember/signup/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 10
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3668,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:30:46.901Z",
+    "route": "subpackageMember/signup/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/team/my",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3677,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:30:54.684Z",
+    "route": "subpackageMember/coupon-wallet/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/coupon/myrecvlist",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:31:02.142Z",
+    "route": "subpackageP3/pages/growthcenter/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/growth/center",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:31:02.143Z",
+    "route": "subpackageP3/pages/growthcenter/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/growth",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:31:02.143Z",
+    "route": "subpackageP3/pages/growthcenter/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/my-completed",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:31:02.144Z",
+    "route": "subpackageP3/pages/growthcenter/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/growth/leaderboard",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2697,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:31:09.000Z",
+    "route": "subpackageP3/pages/growthcenter/leaderboard/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/growth/leaderboard",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3789,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:31:16.422Z",
+    "route": "subpackageP3/pages/stamp-album/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/roam/stamp/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 50
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 438,
+    "resultIds": {
+      "pageSize": 50
+    }
+  },
+  {
+    "at": "2026-09-28T06:31:23.668Z",
+    "route": "subpackageP3/pages/badge-wall/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/medal/wall",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:31:23.669Z",
+    "route": "subpackageP3/pages/badge-wall/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/badge/wall-v2",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:31:37.039Z",
+    "route": "subpackageMember/signup/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 10
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1894,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:31:37.047Z",
+    "route": "subpackageMember/signup/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 10
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1876,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:31:37.048Z",
+    "route": "subpackageMember/signup/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/team/my",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1870,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:31:53.661Z",
+    "route": "pages/play/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/nodes",
+    "method": "GET",
+    "ids": {
+      "activityId": "24"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2452,
+    "resultIds": {
+      "topicId": 990062
+    }
+  },
+  {
+    "at": "2026-09-28T06:31:56.209Z",
+    "route": "pages/play/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/run-session",
+    "method": "GET",
+    "ids": {
+      "activityId": "24"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3024,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:31:56.212Z",
+    "route": "pages/play/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/club/lead/team-progress",
+    "method": "GET",
+    "ids": {
+      "activityId": "24"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3026,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:31:56.223Z",
+    "route": "pages/play/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/game/session/view",
+    "method": "GET",
+    "ids": {
+      "activityId": 24
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 500,
+    "ms": 3034,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:32:37.989Z",
+    "route": "pages/play/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/run-session/clear",
+    "method": "POST",
+    "ids": {
+      "activityId": "24"
+    },
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:37:31.560Z",
+    "route": "pages/play/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/encounter",
+    "method": "GET",
+    "ids": {
+      "topicId": 990062,
+      "nodeId": 224
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 500,
+    "ms": 1892,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:38:08.100Z",
+    "route": "pages/play/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/analytics/events/batch",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:38:09.066Z",
+    "route": "pages/play/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/run-session/save",
+    "method": "POST",
+    "ids": {
+      "activityId": "24"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1676,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:38:22.365Z",
+    "route": "pages/template/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/template/homeData",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:38:22.366Z",
+    "route": "pages/template/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/publish/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:38:22.368Z",
+    "route": "pages/template/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/template/topic-template/list",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2337,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:38:22.370Z",
+    "route": "pages/template/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/run-session/save",
+    "method": "POST",
+    "ids": {
+      "activityId": "24"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2350,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:38:29.720Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/club/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1973,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:38:29.735Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/im/unread-total",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1949,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:38:36.925Z",
+    "route": "subpackageMember/coupon-wallet/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/coupon/myrecvlist",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1674,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:38:43.921Z",
+    "route": "subpackageP3/pages/growthcenter/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/growth/center",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2734,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:38:43.924Z",
+    "route": "subpackageP3/pages/growthcenter/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/growth",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2719,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:38:43.925Z",
+    "route": "subpackageP3/pages/growthcenter/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/my-completed",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2728,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:38:43.929Z",
+    "route": "subpackageP3/pages/growthcenter/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/growth/leaderboard",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2717,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:38:51.083Z",
+    "route": "subpackageP3/pages/badge-wall/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/medal/wall",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 445,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:38:51.086Z",
+    "route": "subpackageP3/pages/badge-wall/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/badge/wall-v2",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 442,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:39:05.810Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/common/banner",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:39:05.812Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/info",
+    "method": "POST",
+    "ids": {
+      "member_id": 100096
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2500,
+    "resultIds": {
+      "id": 100096,
+      "levelId": 1
+    }
+  },
+  {
+    "at": "2026-09-28T06:39:05.814Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/role/info",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2275,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:39:05.816Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/growth",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2288,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:39:05.818Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/growth/center",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2285,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:39:05.820Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/my-completed",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2283,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:39:05.822Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/medal/wall",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2261,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:39:05.823Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/merchant/access/me",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:39:05.824Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/join_info",
+    "method": "POST",
+    "ids": {
+      "member_id": 100096
+    },
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:39:05.825Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/recommendation/list",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2246,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:39:05.828Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/points/statistics",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:39:05.828Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 8,
+      "status": "0"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2475,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:39:05.830Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/topic/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 8
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2275,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:39:05.831Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/publish/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:39:08.095Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/club/my",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 485,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:39:15.608Z",
+    "route": "subpackageMember/mycanyu/mycanyu",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/my-joined",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 4952,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:39:22.822Z",
+    "route": "pages/mylike/mylike",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/topic/like_list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 10
+    },
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:39:26.282Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/info",
+    "method": "POST",
+    "ids": {
+      "member_id": 100096
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 4100,
+    "resultIds": {
+      "id": 100096,
+      "levelId": 1
+    }
+  },
+  {
+    "at": "2026-09-28T06:39:26.284Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/my-joined",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3618,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:39:26.286Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/run-session/list",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3623,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:39:26.289Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/topic/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 5
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 4066,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:39:26.292Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/activity/list",
+    "method": "POST",
+    "ids": {
+      "status": 2,
+      "pageSize": 4
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 4026,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:39:26.296Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/activity/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 4
+    },
+    "blocked": false,
+    "error": "request:fail abort",
+    "ms": 2914
+  },
+  {
+    "at": "2026-09-28T06:39:26.381Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/info",
+    "method": "POST",
+    "ids": {
+      "member_id": 100096
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3968,
+    "resultIds": {
+      "id": 100096,
+      "levelId": 1
+    }
+  },
+  {
+    "at": "2026-09-28T06:39:26.382Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/my-joined",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3530,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:39:26.384Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/run-session/list",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 4121,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:39:26.432Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/topic/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 20
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3935,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:39:26.438Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/activity/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 20,
+      "status": 1
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3898,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:39:29.202Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/activity/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 4
+    },
+    "blocked": false,
+    "error": "request:fail abort",
+    "ms": 1303
+  },
+  {
+    "at": "2026-09-28T06:39:29.205Z",
+    "route": "pages/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/map/reverse-geocode",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1457,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:39:30.493Z",
+    "route": "subpackageB/pages/im/list/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/im/conversations",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:39:30.502Z",
+    "route": "subpackageB/pages/im/list/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/merchant/access/me",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:39:37.766Z",
+    "route": "pages/shezhi/shezhi",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/info",
+    "method": "POST",
+    "ids": {
+      "member_id": 100096
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1719,
+    "resultIds": {
+      "id": 100096,
+      "levelId": 1
+    }
+  },
+  {
+    "at": "2026-09-28T06:39:44.815Z",
+    "route": "pages/deregister/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/deregister/status",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1892,
+    "resultIds": {
+      "status": "NORMAL"
+    }
+  },
+  {
+    "at": "2026-09-28T06:39:46.719Z",
+    "route": "pages/deregister/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/deregister/precheck",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:40:09.393Z",
+    "route": "pages/template/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/template/homeData",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1849,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:40:09.395Z",
+    "route": "pages/template/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/publish/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1952,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:40:09.400Z",
+    "route": "pages/template/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/template/topic-template/list",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1831,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:40:17.014Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/common/banner",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3776,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:40:17.019Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/info",
+    "method": "POST",
+    "ids": {
+      "member_id": 100096
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3772,
+    "resultIds": {
+      "id": 100096,
+      "levelId": 1
+    }
+  },
+  {
+    "at": "2026-09-28T06:40:17.021Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/role/info",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3420,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:40:17.023Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/growth",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3395,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:40:17.024Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/growth/center",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3402,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:40:17.026Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/my-completed",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3412,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:40:17.028Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/medal/wall",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3402,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:40:17.031Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/merchant/access/me",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3762,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:40:17.032Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/join_info",
+    "method": "POST",
+    "ids": {
+      "member_id": 100096
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3756,
+    "resultIds": {
+      "id": 76,
+      "ownerId": 24,
+      "ticketId": 93,
+      "memberId": 100096,
+      "requestId": "req_1790571603011_xbkezlrk"
+    }
+  },
+  {
+    "at": "2026-09-28T06:40:17.034Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/recommendation/list",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3764,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:40:17.036Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/points/statistics",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3834,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:40:17.037Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 8,
+      "status": "0"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 4152,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:40:17.038Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/topic/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 8
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 4147,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:40:17.038Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/publish/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 4150,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:40:20.447Z",
+    "route": "pages/member/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/club/my",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 735,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:40:24.301Z",
+    "route": "pages/mylike/mylike",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/topic/like_list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 10
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2571,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:40:31.334Z",
+    "route": "subpackageB/pages/im/list/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/im/conversations",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 454,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:40:31.345Z",
+    "route": "subpackageB/pages/im/list/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/merchant/access/me",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 450,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:40:38.519Z",
+    "route": "pages/deregister/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/deregister/status",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1907,
+    "resultIds": {
+      "status": "NORMAL"
+    }
+  },
+  {
+    "at": "2026-09-28T06:40:40.439Z",
+    "route": "pages/deregister/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/deregister/precheck",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 430,
+    "resultIds": {
+      "status": "BLOCKED"
+    }
+  },
+  {
+    "at": "2026-09-28T06:41:06.792Z",
+    "route": "pages/roam/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 10
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1661,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:41:06.801Z",
+    "route": "pages/roam/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/analytics/events/batch",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:41:06.802Z",
+    "route": "pages/roam/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/roam/badge/shop-streak",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1647,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:41:26.550Z",
+    "route": "subpackageRoam/nearby/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/team/my",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1742,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:41:26.555Z",
+    "route": "subpackageRoam/nearby/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/team/my-applications",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:41:28.628Z",
+    "route": "subpackageRoam/nearby/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/team/nearby",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 462,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:41:28.631Z",
+    "route": "subpackageRoam/nearby/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/roam/hangout/nearby",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 451,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:42:43.547Z",
+    "route": "pages/shezhi/shezhi",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/info",
+    "method": "POST",
+    "ids": {
+      "member_id": 100096
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2092,
+    "resultIds": {
+      "id": 100096,
+      "levelId": 1
+    }
+  },
+  {
+    "at": "2026-09-28T06:43:09.630Z",
+    "route": "pages/shezhi/shezhi",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/merchant/crm/marketing-consents",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1812,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:43:14.352Z",
+    "route": "pages/shezhi/shezhi",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/deregister/status",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2721,
+    "resultIds": {
+      "status": "NORMAL"
+    }
+  },
+  {
+    "at": "2026-09-28T06:43:17.081Z",
+    "route": "pages/shezhi/shezhi",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/deregister/precheck",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 490,
+    "resultIds": {
+      "status": "BLOCKED"
+    }
+  },
+  {
+    "at": "2026-09-28T06:43:59.624Z",
+    "route": "pages/search2/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/category/list",
+    "method": "POST",
+    "ids": {
+      "type": 1
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 4445,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:45:17.690Z",
+    "route": "pages/activity/baoming/baoming",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/info",
+    "method": "POST",
+    "ids": {
+      "member_id": 100096
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1798,
+    "resultIds": {
+      "id": 100096,
+      "levelId": 1
+    }
+  },
+  {
+    "at": "2026-09-28T06:45:17.697Z",
+    "route": "pages/activity/baoming/baoming",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/activity/info",
+    "method": "POST",
+    "ids": {
+      "id": "24"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2469,
+    "resultIds": {
+      "id": 24,
+      "memberId": 100092,
+      "status": 1,
+      "topicId": 990062
+    }
+  },
+  {
+    "at": "2026-09-28T06:45:17.700Z",
+    "route": "pages/activity/baoming/baoming",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/address/list",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1769,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:45:20.221Z",
+    "route": "pages/activity/baoming/baoming",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/quote",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 480,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:45:20.229Z",
+    "route": "pages/activity/baoming/baoming",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/club/event-ops/waitlist/status",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 466,
+    "resultIds": {
+      "activityId": 24,
+      "ticketId": 93,
+      "memberId": 100096
+    }
+  },
+  {
+    "at": "2026-09-28T06:47:01.136Z",
+    "route": "pages/activity/baoming/baoming",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/compliance/consents",
+    "method": "POST",
+    "ids": {
+      "docType": "activity_host_data_sharing",
+      "scene": "activity_signup",
+      "eventType": "AGREE",
+      "requestId": "consent-1790578021135-fx98rpgz"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 7324,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:47:08.493Z",
+    "route": "pages/activity/baoming/baoming",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/create",
+    "method": "POST",
+    "ids": {
+      "ownerId": "24",
+      "ownerType": 2,
+      "ticketId": 93,
+      "requestId": "req_1790578028491_aowevkft"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1760,
+    "resultIds": {
+      "registrationId": 77
+    }
+  },
+  {
+    "at": "2026-09-28T06:47:10.271Z",
+    "route": "pages/activity/baoming/baoming",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/analytics/events/batch",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:47:10.279Z",
+    "route": "pages/activity/baoming/baoming",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/merchant/crm/marketing-consents",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 440,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:47:14.480Z",
+    "route": "subpackageMember/orderinfo/orderinfo",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/info",
+    "method": "POST",
+    "ids": {
+      "id": "77"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3970,
+    "resultIds": {
+      "id": 77,
+      "ownerId": 24,
+      "ticketId": 93,
+      "memberId": 100096,
+      "requestId": "req_1790578028491_aowevkft"
+    }
+  },
+  {
+    "at": "2026-09-28T06:47:18.476Z",
+    "route": "subpackageMember/orderinfo/orderinfo",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/merchant/crm/marketing-consents",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 695,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:49:17.311Z",
+    "route": "subpackageMember/order/order",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 10,
+      "status": "0"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1853,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:49:48.358Z",
+    "route": "subpackageMember/signup/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 10
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 4108,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:49:48.363Z",
+    "route": "subpackageMember/signup/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 10
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 4072,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:49:48.365Z",
+    "route": "subpackageMember/signup/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/team/my",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 4063,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:50:16.919Z",
+    "route": "pages/play/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/nodes",
+    "method": "GET",
+    "ids": {
+      "activityId": "24"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2614,
+    "resultIds": {
+      "topicId": 990062
+    }
+  },
+  {
+    "at": "2026-09-28T06:50:19.651Z",
+    "route": "pages/play/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/run-session",
+    "method": "GET",
+    "ids": {
+      "activityId": "24"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 438,
+    "resultIds": {
+      "activityId": 24,
+      "topicId": 990062
+    }
+  },
+  {
+    "at": "2026-09-28T06:50:19.655Z",
+    "route": "pages/play/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/club/lead/team-progress",
+    "method": "GET",
+    "ids": {
+      "activityId": "24"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 442,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:50:19.664Z",
+    "route": "pages/play/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/game/session/view",
+    "method": "GET",
+    "ids": {
+      "activityId": 24
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 500,
+    "ms": 448,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:50:48.506Z",
+    "route": "pages/topic/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/topic/info-to-user",
+    "method": "POST",
+    "ids": {
+      "id": 990062
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2781,
+    "resultIds": {
+      "id": 990062,
+      "memberId": 100092,
+      "status": 1
+    }
+  },
+  {
+    "at": "2026-09-28T06:50:48.513Z",
+    "route": "pages/topic/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/info",
+    "method": "POST",
+    "ids": {
+      "member_id": 100096
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2556,
+    "resultIds": {
+      "id": 100096,
+      "levelId": 1
+    }
+  },
+  {
+    "at": "2026-09-28T06:50:48.522Z",
+    "route": "pages/topic/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/run-session/save",
+    "method": "POST",
+    "ids": {
+      "activityId": "24"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2552,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:51:51.232Z",
+    "route": "pages/square/list/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/creativesquare/list",
+    "method": "POST",
+    "ids": {
+      "user_id": 0,
+      "pageSize": 10
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2812,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:51:51.235Z",
+    "route": "pages/square/list/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/official/events",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2797,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:52:31.374Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/club/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1823,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:52:31.390Z",
+    "route": "pages/talent/list/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/im/unread-total",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1798,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:52:46.228Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2073,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 100131
+    }
+  },
+  {
+    "at": "2026-09-28T06:52:46.235Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/club/topics",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:52:46.237Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/club/post/list",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2055,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:52:46.239Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/club/leaderboard",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 500,
+    "ms": 2023,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:53:45.255Z",
+    "route": "pages/search2/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/category/list",
+    "method": "POST",
+    "ids": {
+      "type": 1
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2115,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:54:02.423Z",
+    "route": "pages/search2/result/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/topic/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 12
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 4610,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:54:02.425Z",
+    "route": "pages/search2/result/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/activity/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 12
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 4460,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:54:02.428Z",
+    "route": "pages/search2/result/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/club/list",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 4451,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:54:02.431Z",
+    "route": "pages/search2/result/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/merchant/list",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 4456,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:54:32.900Z",
+    "route": "pages/activity/detail/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/activity/info",
+    "method": "POST",
+    "ids": {
+      "id": "24"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2769,
+    "resultIds": {
+      "id": 24,
+      "memberId": 100092,
+      "status": 1,
+      "topicId": 990062
+    }
+  },
+  {
+    "at": "2026-09-28T06:54:38.756Z",
+    "route": "subpackageMember/orderinfo/orderinfo",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/info",
+    "method": "POST",
+    "ids": {
+      "id": "77"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3541,
+    "resultIds": {
+      "id": 77,
+      "ownerId": 24,
+      "ticketId": 93,
+      "memberId": 100096,
+      "requestId": "req_1790578028491_aowevkft"
+    }
+  },
+  {
+    "at": "2026-09-28T06:54:42.317Z",
+    "route": "subpackageMember/orderinfo/orderinfo",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/merchant/crm/marketing-consents",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 905,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:55:15.301Z",
+    "route": "pages/roam/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 10
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1740,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:55:15.318Z",
+    "route": "pages/roam/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/analytics/events/batch",
+    "method": "POST",
+    "ids": {},
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:55:15.320Z",
+    "route": "pages/roam/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/roam/badge/shop-streak",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1725,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:56:10.616Z",
+    "route": "pages/roam/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/map/nearby",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2097,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:56:10.626Z",
+    "route": "pages/roam/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/roam/tiles/page",
+    "method": "GET",
+    "ids": {
+      "afterId": "0"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2101,
+    "resultIds": {
+      "nextAfterId": 55
+    }
+  },
+  {
+    "at": "2026-09-28T06:56:10.647Z",
+    "route": "pages/roam/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/compliance/consents",
+    "method": "POST",
+    "ids": {
+      "docType": "privacy_policy",
+      "scene": "roam_location",
+      "eventType": "AGREE",
+      "requestId": "consent-1790578570647-5lq23w8v"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2083,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:56:12.724Z",
+    "route": "pages/roam/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/roam/pois",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 461,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T06:56:20.970Z",
+    "route": "pages/roam/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/roam/reveal",
+    "method": "POST",
+    "ids": {
+      "sessionId": "0"
+    },
+    "blocked": true,
+    "reason": "audit-scope-guard"
+  },
+  {
+    "at": "2026-09-28T06:57:53.827Z",
+    "route": "subpackageP3/pages/stamp-album/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/roam/stamp/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 50
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3253,
+    "resultIds": {
+      "pageSize": 50
+    }
+  },
+  {
+    "at": "2026-09-28T07:01:34.784Z",
+    "route": "pages/mylike/mylike",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/topic/like_list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 10
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2774,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:01:57.334Z",
+    "route": "pages/topic/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/topic/info-to-user",
+    "method": "POST",
+    "ids": {
+      "id": 8
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1737,
+    "resultIds": {
+      "id": 8,
+      "memberId": 100000,
+      "status": 1
+    }
+  },
+  {
+    "at": "2026-09-28T07:01:57.337Z",
+    "route": "pages/topic/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/info",
+    "method": "POST",
+    "ids": {
+      "member_id": 100096
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1719,
+    "resultIds": {
+      "id": 100096,
+      "levelId": 1
+    }
+  },
+  {
+    "at": "2026-09-28T07:02:08.441Z",
+    "route": "pages/activity/list/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/official/events",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2149,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:02:08.445Z",
+    "route": "pages/activity/list/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/official/my-events",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2152,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:02:08.447Z",
+    "route": "pages/activity/list/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/official/can-publish",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2140,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:02:31.289Z",
+    "route": "subpackageP3/pages/badge-wall/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/medal/wall",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1662,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:02:31.291Z",
+    "route": "subpackageP3/pages/badge-wall/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/badge/wall-v2",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1664,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:02:55.161Z",
+    "route": "subpackageRoam/nearby/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/team/my",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2081,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:02:55.164Z",
+    "route": "subpackageRoam/nearby/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/team/my-applications",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2082,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:02:57.267Z",
+    "route": "subpackageRoam/nearby/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/team/nearby",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1246,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:02:57.270Z",
+    "route": "subpackageRoam/nearby/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/roam/hangout/nearby",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1231,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:03:03.810Z",
+    "route": "subpackageRoam/nearby/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/team/my",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 4929,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:03:03.818Z",
+    "route": "subpackageRoam/nearby/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/team/my-applications",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 4919,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:03:18.865Z",
+    "route": "subpackageMember/mycanyu/mycanyu",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/my-joined",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1732,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:03:30.279Z",
+    "route": "subpackageMember/signup/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 10
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 5346,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:03:30.293Z",
+    "route": "subpackageMember/signup/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/registration/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 10
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 5305,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:03:30.295Z",
+    "route": "subpackageMember/signup/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/team/my",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 5314,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:03:43.325Z",
+    "route": "subpackageP3/pages/growthcenter/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/growth/center",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1652,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:03:43.329Z",
+    "route": "subpackageP3/pages/growthcenter/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/growth",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1627,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:03:43.330Z",
+    "route": "subpackageP3/pages/growthcenter/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/my-completed",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1648,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:03:43.332Z",
+    "route": "subpackageP3/pages/growthcenter/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/growth/leaderboard",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1635,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:04:07.323Z",
+    "route": "subpackageP3/pages/growthcenter/leaderboard/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/growth/leaderboard",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 4422,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:04:14.738Z",
+    "route": "pages/template/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/template/homeData",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1748,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:04:14.740Z",
+    "route": "pages/template/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/publish/home",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1741,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:04:14.744Z",
+    "route": "pages/template/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/template/topic-template/list",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1723,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:04:45.625Z",
+    "route": "pages/template/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/template/topic-template/list",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1723,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:04:53.288Z",
+    "route": "pages/template/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/template/topic-template/list",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1893,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:04:54.175Z",
+    "route": "pages/template/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/template/list",
+    "method": "POST",
+    "ids": {
+      "pageSize": 200
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1010,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:05:19.747Z",
+    "route": "pages/templatedetail/templatedetail",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/template/info",
+    "method": "POST",
+    "ids": {
+      "id": "2"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2704,
+    "resultIds": {
+      "id": 2,
+      "memberId": 100000,
+      "memberTemplateId": 2,
+      "categoryId": 13,
+      "couponId": 0,
+      "status": 1
+    }
+  },
+  {
+    "at": "2026-09-28T07:05:28.652Z",
+    "route": "subpackageB/pages/im/list/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/im/conversations",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2325,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:05:28.660Z",
+    "route": "subpackageB/pages/im/list/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/merchant/access/me",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2326,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:05:43.958Z",
+    "route": "pages/shezhi/shezhi",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/info",
+    "method": "POST",
+    "ids": {
+      "member_id": 100096
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2090,
+    "resultIds": {
+      "id": 100096,
+      "levelId": 1
+    }
+  },
+  {
+    "at": "2026-09-28T07:06:05.480Z",
+    "route": "pages/shezhi/shezhi",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/info",
+    "method": "POST",
+    "ids": {
+      "member_id": 100096
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 1690,
+    "resultIds": {
+      "id": 100096,
+      "levelId": 1
+    }
+  },
+  {
+    "at": "2026-09-28T07:06:18.008Z",
+    "route": "pages/shezhi/shezhi",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/merchant/crm/marketing-consents",
+    "method": "GET",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2271,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:06:41.285Z",
+    "route": "pages/gerenziliao/gerenziliao",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/user/info",
+    "method": "POST",
+    "ids": {
+      "member_id": 100096
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 4251,
+    "resultIds": {
+      "id": 100096,
+      "levelId": 1
+    }
+  },
+  {
+    "at": "2026-09-28T07:08:10.450Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/club/detail",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2160,
+    "resultIds": {
+      "id": 990004,
+      "memberId": 100131
+    }
+  },
+  {
+    "at": "2026-09-28T07:08:10.454Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/club/topics",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2170,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:08:10.456Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/club/post/list",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2153,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:08:10.457Z",
+    "route": "pages/club/detail/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/club/leaderboard",
+    "method": "POST",
+    "ids": {
+      "id": 990004
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 500,
+    "ms": 2145,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:08:42.575Z",
+    "route": "subpackageP3/pages/growthcenter/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/growth/center",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2924,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:08:42.577Z",
+    "route": "subpackageP3/pages/growthcenter/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/growth",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2914,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:08:42.579Z",
+    "route": "subpackageP3/pages/growthcenter/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/play/my-completed",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2921,
+    "resultIds": {}
+  },
+  {
+    "at": "2026-09-28T07:08:42.581Z",
+    "route": "subpackageP3/pages/growthcenter/index/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/growth/leaderboard",
+    "method": "POST",
+    "ids": {},
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2914,
+    "resultIds": {}
+  }
+]

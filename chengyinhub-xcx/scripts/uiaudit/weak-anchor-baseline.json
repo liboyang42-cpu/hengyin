@@ -1,0 +1,45 @@
+{
+  "note": "正向断言恒真(“弱锚点”)棘轮。条数**只许减不许增**;新增必须显式改本文件并写 reason —— 不加这条,弱锚点就是下一个「未判定」无限逃生口。判据见 tests/unit/selector-anchor-strength-contract.test.js:恒真 = 该 selector 命中的元素**全部**无条件渲染。",
+  "generatedAt": "2026-08-24",
+  "count": 7,
+  "weakIds": [
+    "A10",
+    "A12",
+    "B15",
+    "B46",
+    "B57",
+    "C52",
+    "D15"
+  ],
+  "reasons": {
+    "B46": "pages/publish/templateadd/templateadd.wxml 全文 10 行、**零 wx:if / wx:for**,整页是一个恒渲染的输入壳,页面树里没有任何随状态出现/消失的节点可锚。替代验证:该页职责已并入 fabu 第一屏,由 E17 覆盖。",
+    "D15": "subpackageMember/couponInfo/couponInfo.wxml **零 wx:if**,是一张恒渲染的静态表单;可选项在 cy-sheet 内(prop 控制)。替代验证:表单填写与提交由 E29 的行为链覆盖。"
+  },
+  "outOfScope": {
+    "note": "batch1(impact-map skip 档)之外的行,本轮未改锚 —— 它们所在的页正被候选分支 tandianri-r9-ticket-sync-opus5-0817 重写,现在改锚点会和它撞车。合并后随「必须重拍 25 页」那一轮一起改。**这不是豁免,是排期。**",
+    "ids": [
+      "A10",
+      "A12",
+      "B15",
+      "B57",
+      "C52"
+    ]
+  },
+  "deadAnchors": [
+    "B12 -> .start-flight",
+    "B13 -> .start-flight",
+    "B17 -> .start-flight",
+    "B48 -> .pd-ai-topic__plan",
+    "B50 -> .slopes-footer--dual",
+    "C33 -> .card-cont",
+    "C33 -> .input-group",
+    "C34 -> .card-cont",
+    "C34 -> .input-group",
+    "D02 -> .orderbox",
+    "D03 -> .orderbox",
+    "D04 -> .orderbox",
+    "D19 -> .txcon_top_je_qian"
+  ],
+  "deadAnchorsNote": "本轮新加的死锚点门禁一次性照出来的存量:这些 class 在全仓 wxml/wxss/js 里都不存在,断言永远匹配不到 ⇒ 那一行**永远红**(和永远绿一样没信息)。C58 的 .coop-settlement-list、D38 的 .deregister-footer 已修掉,剩下这些不在本轮范围内(多数属候选分支正在重写的页),只许减不许增。",
+  "mergeNote": "2026-08-19 并入 master(737f0c2ea,含 #739/#742/#741)后**重算**:棘轮从 27 收到 23,零回潮。摘掉的 4 行:A32/A34 被 #741 那边独立改成了强锚点(.pc-stats 等);A33/D26 被 #741 标进 blocked-baseline ⇒ 不再计入分母。死锚点 15 条不增不减。⚠️ 这次重算不是走形式:#741 动过 shot-matrix.js(新增 6 条 blocked)与 selectors.json 三行,不重算的话 baseline 会留着已修好的行、棘轮就松了 —— 门禁的第二条用例正是为此写的,合并后第一次跑就红,是它抓出来的。"
+}

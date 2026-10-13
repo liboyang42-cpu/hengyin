@@ -1,0 +1,16 @@
+{
+  "code_commit": "438e1fdbad7ecacfe319c95d6e8737365edb50e7",
+  "source": "当前分类接口只读返回；原生组件数据与截图逐项一致",
+  "mapping": {
+    "运动健身": "category-fitness",
+    "科技数码": "category-digital",
+    "美食烹饪": "category-food",
+    "娱乐达人": "play-filled",
+    "衣物洗护": "category-clothing",
+    "家政维修": "category-repair",
+    "出行服务": "category-travel",
+    "生活美学": "category-aesthetic"
+  },
+  "screenshot": "nongame-round3-after/category-icons.png",
+  "selection": "预选第一项，仅本地显示，未保存"
+}

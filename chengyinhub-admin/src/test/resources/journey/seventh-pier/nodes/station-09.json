@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "requires": [
+    {"op": "NODE_COMPLETED", "nodeId": 5008}
+  ],
+  "check": {
+    "enabled": true,
+    "checkId": "state_decision",
+    "skill": "陈述",
+    "tier": "medium",
+    "mods": [
+      {"when": {"var": "clue.voice", "op": "GTE", "value": 1}, "value": 2, "label": "原声:居民叫它第七码头"},
+      {"when": {"var": "clue.photo_story", "op": "GTE", "value": 1}, "value": 2, "label": "合照背后的名字"}
+    ],
+    "advantageIf": [
+      {"var": "relation.qiao", "op": "GTE", "value": 1},
+      {"var": "relation.arong", "op": "GTE", "value": 1},
+      {"var": "relation.xuwen", "op": "GTE", "value": 1}
+    ],
+    "disadvantageIf": [{"op": "HAS_TAG", "value": "tag.injured"}],
+    "successEffects": [{"op": "SET", "var": "clue.trusted", "value": 1}],
+    "successText": "五个人都听完了。没有人打断你。",
+    "failText": "他们接受了你的处置,但老周在记录上多写了一句「有保留」。"
+  },
+  "branch": {
+    "enabled": true,
+    "startStepId": "ask_linzhou",
+    "steps": [
+      {
+        "id": "ask_linzhou",
+        "title": "写进公开记录前",
+        "body": "林舟把盒子推到桌子中间:「你们带来的东西,决定这句话能说得多有分量。」",
+        "options": [
+          {"id": "to_correct", "label": "更正说明,暂存原件", "nextStepId": "correct",
+           "effects": [{"op": "SET", "var": "counter.disposition", "value": 1}]},
+          {"id": "to_exhibit", "label": "展示获准材料", "nextStepId": "exhibit",
+           "effects": [{"op": "SET", "var": "counter.disposition", "value": 2}]},
+          {"id": "to_custody", "label": "完整原件受限保管", "nextStepId": "custody",
+           "effects": [{"op": "SET", "var": "counter.disposition", "value": 3}]}
+        ]
+      },
+      {"id": "correct", "title": "更正说明,暂存原件", "body": "「从未存在」的断言被更正;原件暂不展出。", "terminal": true, "outcomeCode": "correct", "outcomeLabel": "更正说明,暂存原件", "options": []},
+      {"id": "exhibit", "title": "展示获准材料", "body": "获准的合照与公共演奏被展出,私人告别没有展出。", "terminal": true, "outcomeCode": "exhibit", "outcomeLabel": "展示获准材料", "options": []},
+      {"id": "custody", "title": "完整原件受限保管", "body": "完整原件交老周受限保管,目录与限制公开。", "terminal": true, "outcomeCode": "custody", "outcomeLabel": "完整原件受限保管", "options": []}
+    ]
+  }
+}

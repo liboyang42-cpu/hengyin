@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantAftercareTimeoutMapper">
+    <resultMap id="StaleRefundResult" type="com.chengyinhub.business.domain.RefundApplication">
+        <id property="id" column="id"/>
+        <result property="refundNo" column="refund_no"/>
+        <result property="sourceType" column="source_type"/>
+        <result property="sourceId" column="source_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="refundAmount" column="refund_amount"/>
+        <result property="status" column="status"/>
+        <result property="reason" column="reason"/>
+        <result property="payoutStatus" column="payout_status"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="createTime" column="create_time"/>
+        <result property="platformTakeoverAt" column="platform_takeover_at"/>
+    </resultMap>
+
+    <!-- 扫描只是取候选;真正「转过没有」的判据在 markPlatformTakeover 的条件更新上。
+         口径与商家售后「待回应」桶一致:无 AGREE/REJECT 即视为商家未回应(EVIDENCE 不算拍板)。 -->
+    <select id="selectStaleMerchantResponse" resultMap="StaleRefundResult">
+        select r.id, r.refund_no, r.source_type, r.source_id, r.member_id, r.merchant_id,
+               r.refund_amount, r.status, r.reason, r.payout_status, r.del_flag,
+               r.create_time, r.platform_takeover_at
+        from refund_application r
+        where r.status = 0
+          and r.del_flag = 0
+          and r.merchant_id is not null and r.merchant_id &gt; 0
+          and r.platform_takeover_at is null
+          and r.create_time is not null and r.create_time &lt;= #{cutoff}
+          and not exists (
+            select 1 from merchant_aftercare_response resp
+            where resp.refund_application_id = r.id
+              and resp.decision in ('AGREE', 'REJECT')
+          )
+        order by r.id asc
+        limit 200
+    </select>
+
+    <!-- 幂等转平台:仅首次(platform_takeover_at 为空)且仍为平台待审时生效;
+         并发/重复扫描的 loser 拿到 0 行,不得再发通知。 -->
+    <update id="markPlatformTakeover">
+        update refund_application
+        set platform_takeover_at = #{takeoverAt}, update_time = #{takeoverAt}
+        where id = #{refundId}
+          and status = 0
+          and del_flag = 0
+          and platform_takeover_at is null
+    </update>
+</mapper>

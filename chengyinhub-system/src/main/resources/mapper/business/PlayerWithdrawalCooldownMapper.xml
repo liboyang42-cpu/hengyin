@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PlayerWithdrawalCooldownMapper">
+
+    <resultMap id="CooldownResult" type="PlayerWithdrawalCooldown">
+        <id property="id" column="id"/>
+        <result property="balanceDetailId" column="balance_detail_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="complaintId" column="complaint_id"/>
+        <result property="amount" column="amount"/>
+        <result property="policyKey" column="policy_key"/>
+        <result property="cooldownHours" column="cooldown_hours"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="cooldownUntil" column="cooldown_until"/>
+    </resultMap>
+
+    <!-- ★起点与到期都用数据库时钟 CURRENT_TIMESTAMP(3)，与下面的边界比较同一个时钟。
+         ⚠️ 别改回 d.create_time：那一列是 UmsMemberBalanceDetailMapper 拿 Java 的
+         DateUtils.getNowDate() 显式写进去的（通用插入面带 <if test="createTime != null">），
+         读回来仍是 JVM 时刻 —— 起点用应用机时钟、到期比较用库机时钟就成了跨时钟比较，
+         两台机器的漂移 Δ 会把 48h 窗口整体平移，冻结款可提前提走。
+         本 insert 与写明细在同一事务、相差毫秒级，用库时钟既满足契约又不放大爆炸半径
+         （不动 ums_member_balance_detail 的通用插入面）。
+         insert…select 的 where 仍然从对面校验这条明细确实是该 member 的 event_type=9 正向补偿；
+         唯一键 uk_player_cooldown_detail 保证同一条明细只能产生一个冷静期。 -->
+    <insert id="insertForPositiveComplaintDetail">
+        insert into player_withdrawal_cooldown
+        (balance_detail_id, member_id, complaint_id, amount, policy_key, cooldown_hours,
+         created_at, cooldown_until)
+        select #{balanceDetailId}, #{memberId}, #{complaintId}, #{amount}, #{policyKey}, #{cooldownHours},
+               CURRENT_TIMESTAMP(3), DATE_ADD(CURRENT_TIMESTAMP(3), INTERVAL #{cooldownHours} HOUR)
+        from ums_member_balance_detail d
+        where d.id = #{balanceDetailId} and d.member_id = #{memberId}
+          and d.event_type = 9 and d.event_id = #{complaintId} and d.change_type = 1
+    </insert>
+
+    <!-- cooldown_until &gt; now ⇒ 47:59 仍冻结、48:00 整放行。空集 coalesce 成 0，
+         但「查询挂了」不会走到这里 —— 异常直接抛给提现，绝不降级为 0。 -->
+    <select id="sumUnexpiredFrozenByMemberAtDbNow" resultType="java.math.BigDecimal">
+        select coalesce(sum(amount), 0) from player_withdrawal_cooldown
+        where member_id = #{memberId} and cooldown_until &gt; CURRENT_TIMESTAMP(3)
+    </select>
+
+    <select id="selectByMember" resultMap="CooldownResult">
+        select * from player_withdrawal_cooldown where member_id = #{memberId} order by id
+    </select>
+
+    <!-- 冷静期时长改写的审计行。★前值/后值/理由/操作人四样一起落库，一样都不能少：
+         本仓 LogAspect 不写请求体，sys_oper_log 里只有 title/method/url/操作人/耗时，
+         「从 48 改成 1、理由是什么」正好一个都留不下。改写时刻取库时钟，Java 不传时间。 -->
+    <insert id="insertConfigChangeAudit">
+        insert into player_withdrawal_cooldown_config_audit
+        (config_key, before_hours, after_hours, reason, changed_by, changed_at)
+        values ('withdrawal.player-complaint-cooldown-hours', #{beforeHours}, #{afterHours},
+                #{reason}, #{changedBy}, CURRENT_TIMESTAMP(3))
+    </insert>
+</mapper>

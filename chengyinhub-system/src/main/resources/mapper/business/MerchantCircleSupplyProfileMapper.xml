@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantCircleSupplyProfileMapper">
+
+    <resultMap id="CircleSupplyResult" type="com.chengyinhub.business.domain.MerchantCircleSupplyProfile">
+        <id property="id" column="id"/>
+        <result property="offerId" column="offer_id"/>
+        <result property="versionNo" column="version_no"/>
+        <result property="current" column="is_current"/>
+        <result property="supplyName" column="supply_name"/>
+        <result property="supplyKind" column="supply_kind"/>
+        <result property="regularPrice" column="regular_price"/>
+        <result property="actionType" column="action_type"/>
+        <result property="actionValue" column="action_value"/>
+        <result property="availableHours" column="available_hours"/>
+        <result property="minPeople" column="min_people"/>
+        <result property="maxPeople" column="max_people"/>
+        <result property="durationMinutes" column="duration_minutes"/>
+        <result property="splitBookingAllowed" column="split_booking_allowed"/>
+        <result property="optionalBenefit" column="optional_benefit"/>
+        <result property="benefitRules" column="benefit_rules"/>
+        <result property="checkedAt" column="checked_at"/>
+        <result property="merchantRules" column="merchant_rules"/>
+        <result property="workdayEveningCovered" column="workday_evening_covered"/>
+        <result property="singlePersonAllowed" column="single_person_allowed"/>
+        <result property="declaredAgeRange" column="declared_age_range"/>
+        <result property="guardianMode" column="guardian_mode"/>
+        <result property="guardianPresentThroughout" column="guardian_present_throughout"/>
+        <result property="merchantChildcareRequired" column="merchant_childcare_required"/>
+        <result property="adultChildCapacity" column="adult_child_capacity"/>
+        <result property="priceUnit" column="price_unit"/>
+        <result property="restrictions" column="restrictions"/>
+        <result property="toolsAnimalsMaterials" column="tools_animals_materials"/>
+        <result property="incidentProcess" column="incident_process"/>
+        <result property="cancellationRule" column="cancellation_rule"/>
+        <result property="personalPhotoAllowed" column="personal_photo_allowed"/>
+        <result property="photoAllowedArea" column="photo_allowed_area"/>
+        <result property="tripodPolicy" column="tripod_policy"/>
+        <result property="lightingPolicy" column="lighting_policy"/>
+        <result property="photoDurationLimit" column="photo_duration_limit"/>
+        <result property="nightHours" column="night_hours"/>
+        <result property="lastEntry" column="last_entry"/>
+        <result property="alcoholInvolved" column="alcohol_involved"/>
+        <result property="legalDrinkingAge" column="legal_drinking_age"/>
+        <result property="legalDrinkingAgeRule" column="legal_drinking_age_rule"/>
+        <result property="alcoholWarning" column="alcohol_warning"/>
+        <result property="eventEndAt" column="event_end_at"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="chapterId" column="chapter_id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="candidateCode" column="circle_candidate_code"/>
+        <result property="candidateName" column="candidate_name"/>
+        <result property="circleRole" column="circle_role"/>
+    </resultMap>
+
+    <sql id="profileColumns">
+        id, offer_id, version_no, is_current, supply_name, supply_kind, regular_price, action_type, action_value,
+        available_hours, min_people, max_people, duration_minutes, split_booking_allowed,
+        optional_benefit, benefit_rules, checked_at, merchant_rules,
+        workday_evening_covered, single_person_allowed,
+        declared_age_range, guardian_mode, guardian_present_throughout, merchant_childcare_required,
+        adult_child_capacity, price_unit, restrictions,
+        tools_animals_materials, incident_process, cancellation_rule,
+        personal_photo_allowed, photo_allowed_area, tripod_policy, lighting_policy,
+        photo_duration_limit, night_hours, last_entry, alcohol_involved, legal_drinking_age,
+        legal_drinking_age_rule, alcohol_warning, event_end_at, create_time, update_time
+    </sql>
+
+    <insert id="insert" parameterType="com.chengyinhub.business.domain.MerchantCircleSupplyProfile"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO merchant_circle_supply_profile (
+            offer_id, version_no, is_current, supply_name, supply_kind, regular_price, action_type, action_value,
+            available_hours, min_people, max_people, duration_minutes, split_booking_allowed,
+            optional_benefit, benefit_rules, checked_at, merchant_rules,
+            workday_evening_covered, single_person_allowed,
+            declared_age_range, guardian_mode, guardian_present_throughout, merchant_childcare_required,
+            adult_child_capacity, price_unit, restrictions,
+            tools_animals_materials, incident_process, cancellation_rule,
+            personal_photo_allowed, photo_allowed_area, tripod_policy, lighting_policy,
+            photo_duration_limit, night_hours, last_entry, alcohol_involved, legal_drinking_age,
+            legal_drinking_age_rule, alcohol_warning, event_end_at
+        ) VALUES (
+            #{offerId}, #{versionNo}, #{current}, #{supplyName}, #{supplyKind}, #{regularPrice}, #{actionType}, #{actionValue},
+            #{availableHours}, #{minPeople}, #{maxPeople}, #{durationMinutes}, #{splitBookingAllowed},
+            #{optionalBenefit}, #{benefitRules}, #{checkedAt}, #{merchantRules},
+            #{workdayEveningCovered}, #{singlePersonAllowed},
+            #{declaredAgeRange}, #{guardianMode}, #{guardianPresentThroughout}, #{merchantChildcareRequired},
+            #{adultChildCapacity}, #{priceUnit}, #{restrictions},
+            #{toolsAnimalsMaterials}, #{incidentProcess}, #{cancellationRule},
+            #{personalPhotoAllowed}, #{photoAllowedArea}, #{tripodPolicy}, #{lightingPolicy},
+            #{photoDurationLimit}, #{nightHours}, #{lastEntry}, #{alcoholInvolved}, #{legalDrinkingAge},
+            #{legalDrinkingAgeRule}, #{alcoholWarning}, #{eventEndAt}
+        )
+    </insert>
+
+    <update id="retireCurrentSnapshot">
+        UPDATE merchant_circle_supply_profile SET is_current = 0, update_time = NOW()
+        WHERE offer_id = #{offerId} AND is_current = 1
+    </update>
+
+    <select id="selectByOfferId" resultMap="CircleSupplyResult">
+        SELECT <include refid="profileColumns"/>
+        FROM merchant_circle_supply_profile
+        WHERE offer_id = #{offerId} AND is_current = 1
+        LIMIT 1
+    </select>
+
+    <sql id="effectiveCircleSupplyFrom">
+        FROM merchant_circle_supply_profile p
+        JOIN merchant_chapter_offer o ON o.id = p.offer_id
+        JOIN cms_topic_chapter ch ON ch.id = o.chapter_id
+        JOIN cms_topic t ON t.id = o.topic_id
+        WHERE o.topic_id = #{topicId}
+          AND p.is_current = 1
+          AND o.status = 1
+          AND (o.valid_end IS NULL OR o.valid_end &gt; NOW())
+          AND ch.circle_enabled = 1
+          AND t.circle_theme_code IS NOT NULL
+          AND t.is_template = 0
+          AND t.status = 1 AND t.user_status = 1 AND t.del_flag = 0
+          AND (
+              t.circle_theme_code NOT IN ('FITNESS','MIDLIFE','DATE','FRIENDS','SHANGHAI')
+              OR p.checked_at &gt;= DATE_SUB(NOW(), INTERVAL 30 DAY)
+          )
+          AND (
+              t.circle_theme_code &lt;&gt; 'NIGHT'
+              OR (
+                  p.checked_at &gt;= DATE_SUB(NOW(), INTERVAL 7 DAY)
+                  AND (p.supply_kind &lt;&gt; 'EVENT' OR p.event_end_at &gt; NOW())
+              )
+          )
+    </sql>
+
+    <select id="selectEffectiveByTopicId" resultMap="CircleSupplyResult">
+        SELECT p.*, o.topic_id, o.chapter_id, o.merchant_id,
+               ch.circle_candidate_code, ch.name AS candidate_name, ch.circle_role
+        <include refid="effectiveCircleSupplyFrom"/>
+        ORDER BY ch.sort_id, o.id
+    </select>
+
+    <select id="selectEffectiveForPublishByTopicId" resultMap="CircleSupplyResult">
+        SELECT p.*, o.topic_id, o.chapter_id, o.merchant_id,
+               ch.circle_candidate_code, ch.name AS candidate_name, ch.circle_role
+        FROM merchant_circle_supply_profile p
+        JOIN merchant_chapter_offer o ON o.id = p.offer_id
+        JOIN cms_topic_chapter ch ON ch.id = o.chapter_id
+        JOIN cms_topic t ON t.id = o.topic_id
+        WHERE o.topic_id = #{topicId}
+          AND p.is_current = 1
+          AND o.status = 1
+          AND (o.valid_end IS NULL OR o.valid_end &gt; NOW())
+          AND ch.circle_enabled = 1
+          AND t.circle_theme_code IS NOT NULL
+          AND t.is_template = 0
+          AND t.del_flag = 0
+          AND (
+              t.circle_theme_code NOT IN ('FITNESS','MIDLIFE','DATE','FRIENDS','SHANGHAI')
+              OR p.checked_at &gt;= DATE_SUB(NOW(), INTERVAL 30 DAY)
+          )
+          AND (
+              t.circle_theme_code &lt;&gt; 'NIGHT'
+              OR (
+                  p.checked_at &gt;= DATE_SUB(NOW(), INTERVAL 7 DAY)
+                  AND (p.supply_kind &lt;&gt; 'EVENT' OR p.event_end_at &gt; NOW())
+              )
+          )
+        ORDER BY ch.sort_id, o.id
+    </select>
+
+    <select id="countEffectiveMerchantsByTopicId" resultType="int">
+        SELECT COUNT(DISTINCT o.merchant_id)
+        <include refid="effectiveCircleSupplyFrom"/>
+    </select>
+
+    <select id="countEffectiveOfferForTopic" resultType="int">
+        SELECT COUNT(*)
+        <include refid="effectiveCircleSupplyFrom"/>
+        AND o.id = #{offerId}
+    </select>
+</mapper>

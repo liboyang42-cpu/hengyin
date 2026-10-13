@@ -1,0 +1,4 @@
+pages/merchant/reviews/index
+pages/merchant/relation/index
+pages/merchant/citynode/index
+pages/merchant/team/index

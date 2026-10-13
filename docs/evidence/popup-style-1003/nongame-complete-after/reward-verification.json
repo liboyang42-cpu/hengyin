@@ -1,0 +1,55 @@
+{
+  "controlled_display": true,
+  "none": {
+    "left": 354,
+    "top": 636.508,
+    "width": 20,
+    "height": 20,
+    "right": 374,
+    "bottom": 656.508,
+    "centerX": 364,
+    "centerY": 646.508
+  },
+  "item": {
+    "left": 354,
+    "top": 696,
+    "width": 20,
+    "height": 20,
+    "right": 374,
+    "bottom": 716,
+    "centerX": 364,
+    "centerY": 706
+  },
+  "selectedCircle": "rgb(0, 0, 0)",
+  "date": {
+    "left": 16,
+    "top": 284.797,
+    "width": 358,
+    "height": 45,
+    "right": 374,
+    "bottom": 329.797,
+    "centerX": 195,
+    "centerY": 307.297
+  },
+  "range": {
+    "left": 31,
+    "top": 297.695,
+    "width": 180,
+    "height": 19,
+    "right": 211,
+    "bottom": 316.695,
+    "centerX": 121,
+    "centerY": 307.195
+  },
+  "count": {
+    "left": 16,
+    "top": 380.195,
+    "width": 358,
+    "height": 45,
+    "right": 374,
+    "bottom": 425.195,
+    "centerX": 195,
+    "centerY": 402.695
+  },
+  "closed": true
+}

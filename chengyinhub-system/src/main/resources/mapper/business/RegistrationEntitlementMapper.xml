@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.RegistrationEntitlementMapper">
+
+    <!-- ⚠️ 本表只有 create_time / update_time,没有 create_by / update_by(见迁移 DDL),
+         故 BaseEntity 的那两个字段不映射也不写入 —— 写了会 1054。 -->
+    <resultMap type="RegistrationEntitlement" id="RegistrationEntitlementResult">
+        <result property="id"    column="id"    />
+        <result property="chapterName" column="chapter_name"/>
+        <result property="registrationId"    column="registration_id"    />
+        <result property="chapterId"    column="chapter_id"    />
+        <result property="topicId"    column="topic_id"    />
+        <result property="status"    column="status"    />
+        <result property="invalidReason"    column="invalid_reason"    />
+        <result property="redeemedAt"    column="redeemed_at"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectRegistrationEntitlementVo">
+        select id, registration_id, chapter_id, topic_id, status, invalid_reason, redeemed_at, create_time, update_time
+        from registration_entitlement
+    </sql>
+
+    <insert id="insertRegistrationEntitlement" parameterType="RegistrationEntitlement" useGeneratedKeys="true" keyProperty="id">
+        insert into registration_entitlement
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="registrationId != null">registration_id,</if>
+            <if test="chapterId != null">chapter_id,</if>
+            <if test="topicId != null">topic_id,</if>
+            <if test="status != null">status,</if>
+            <if test="redeemedAt != null">redeemed_at,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="registrationId != null">#{registrationId},</if>
+            <if test="chapterId != null">#{chapterId},</if>
+            <if test="topicId != null">#{topicId},</if>
+            <if test="status != null">#{status},</if>
+            <if test="redeemedAt != null">#{redeemedAt},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <!-- 含已核销/已失效:玩家侧「我的权益」要看得见全貌,不能只给未核销的 -->
+    <select id="selectByRegistration" parameterType="Long" resultMap="RegistrationEntitlementResult">
+        <include refid="selectRegistrationEntitlementVo"/>
+        where registration_id = #{registrationId}
+        order by chapter_id asc
+    </select>
+
+    <select id="selectByRegistrationForUpdate" resultMap="RegistrationEntitlementResult">
+        select e.*, c.name as chapter_name
+        from registration_entitlement e
+        join cms_topic_chapter c on c.id = e.chapter_id and c.topic_id = e.topic_id
+        where e.registration_id = #{registrationId}
+        order by e.chapter_id
+        for update
+    </select>
+
+    <!-- uk_entitlement(registration_id, chapter_id) 保证至多一行 -->
+    <select id="selectOne" resultMap="RegistrationEntitlementResult">
+        <include refid="selectRegistrationEntitlementVo"/>
+        where registration_id = #{registrationId} and chapter_id = #{chapterId}
+    </select>
+
+    <!-- 已售未核销条数 = 该章节被预占的容量。票一卖出平台就已欠这份权益,
+         判断还能不能再卖必须减掉它;只数已核销会把这些份数重复卖出去。 -->
+    <select id="countUnredeemedByChapter" parameterType="Long" resultType="java.lang.Integer">
+        select count(*)
+        from registration_entitlement
+        where chapter_id = #{chapterId} and status = 0
+    </select>
+
+    <!-- 条件置位:带 status = 0 保证并发/重放下只有第一次拿到 1,后来者拿 0 被挡在发权益之前 -->
+    <update id="markRedeemed">
+        update registration_entitlement
+        set status = 1, redeemed_at = now(), update_time = now()
+        where registration_id = #{registrationId}
+          and chapter_id = #{chapterId}
+          and status = 0
+    </update>
+
+    <!-- 退款/取消释放容量;只动 status = 0 的:已核销的权益玩家已拿到手,
+         改成失效会让容量凭空多出来一份 -->
+    <update id="invalidateByRegistration">
+        update registration_entitlement
+        set status = 2, invalid_reason = #{reason}, update_time = now()
+        where registration_id = #{registrationId}
+          and status = 0
+    </update>
+
+
+    <!-- 撤销核销 → 权益退回应得态。
+         两道守卫,防的是**两个不同**的洞,缺一即资损:
+
+         ① status = 1:并发下若玩家已退款(该行 status=2),改回 0 会让一张已退款的票又占住容量。
+
+         ② join cms_registration + payment_status = 2:★ 这道是补的,①**挡不住**它 ——
+            invalidateByRegistration 只动 status=0 的行,所以「已核销(1)之后又退款」的那一行
+            **退款时根本没被碰过,仍是 1**,从 entitlement 自己身上与「已核销未退款」完全无法区分。
+            真实序列:玩家核销 ch1(0→1)→ 退款(ch1 保持 1,其余 0→2)→ 运营撤销该核销
+            → 只有①时 status=1 正好命中 → 置回 0 ⇒ 一张已退款的票重新占住容量,
+            且 releaseOnRefund 不会再被调 ⇒ **永久占坑**,零告警。
+
+         为什么是 `= 2`(已支付)而不是 `<> 4`(非已退款):fail-closed 方向。
+         `<> 4` 只堵已知的那一个状态,将来多一个终态就漏回去,失败方向是**超卖=资损**;
+         `= 2` 是白名单,失败方向是**少卖**(容量少算,可见可查)。宁可少卖不可超卖。
+
+         为什么在 SQL 里 join 而不是 Java 层先查 registration 再更新:
+         后者读判之间无锁 = TOCTOU —— 查到 payment_status=2、退款并发提交、再 update 就放回去了。
+         判据和写必须在同一条语句里。
+
+         ⚠️ 已知代价(接受,并记在这):本语句的加锁序是 entitlement → cms_registration,
+         而退款路是 cms_registration(markRefunded)→ entitlement(releaseOnRefund),**方向相反**
+         ⇒ 同一 registration 上「撤销核销」与「退款」真并发时理论上可 ABBA 死锁。
+         接受的理由:撤销核销是运营低频操作,且死锁是**响亮的**(MySQL 杀一方 → 500 → 重试),
+         而 TOCTOU 是**静默的资损**。宁可要响亮的那个。
+         ⚠️ EXPLAIN 已在生产 MySQL 8.0.45 上验过语法(2026-07-16),单测只解析 MyBatis XML,
+         证明不了 MySQL 认不认这个多表 UPDATE。 -->
+    <update id="restoreToPending">
+        update registration_entitlement e
+        join cms_registration r on r.id = e.registration_id
+        set e.status = 0, e.redeemed_at = null, e.update_time = now()
+        where e.registration_id = #{registrationId}
+          and e.chapter_id = #{chapterId}
+          and e.status = 1
+          and r.payment_status = 2
+    </update>
+
+    <!-- 购票容量校验专用:当前读,理由同 MerchantChapterOfferMapper.sumRemainingQuotaByChapterForUpdate -->
+    <select id="countUnredeemedByChapterForUpdate" parameterType="Long" resultType="java.lang.Integer">
+        select count(*) from registration_entitlement
+        where chapter_id = #{chapterId} and status = 0
+        for share
+    </select>
+</mapper>

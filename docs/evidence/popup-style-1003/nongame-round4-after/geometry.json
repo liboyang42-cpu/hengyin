@@ -1,0 +1,94 @@
+{
+  ".pk": {
+    "left": 16,
+    "top": 388,
+    "width": 358,
+    "height": 353,
+    "right": 374,
+    "bottom": 741,
+    "centerX": 195,
+    "centerY": 564.5
+  },
+  ".pk-opts": {
+    "left": 16,
+    "top": 388,
+    "width": 358,
+    "height": 353,
+    "right": 374,
+    "bottom": 741,
+    "centerX": 195,
+    "centerY": 564.5
+  },
+  ".pk-opt": {
+    "left": 16,
+    "top": 388,
+    "width": 358,
+    "height": 59,
+    "right": 374,
+    "bottom": 447,
+    "centerX": 195,
+    "centerY": 417.5
+  },
+  ".pk-opt-name": {
+    "left": 16,
+    "top": 395.5,
+    "width": 330,
+    "height": 22,
+    "right": 346,
+    "bottom": 417.5,
+    "centerX": 181,
+    "centerY": 406.5
+  },
+  ".pk-opt-tick": {
+    "left": 354,
+    "top": 407,
+    "width": 20,
+    "height": 20,
+    "right": 374,
+    "bottom": 427,
+    "centerX": 364,
+    "centerY": 417
+  },
+  ".sh__panel": {
+    "left": 0,
+    "top": 307,
+    "width": 390,
+    "height": 537,
+    "right": 390,
+    "bottom": 844,
+    "centerX": 195,
+    "centerY": 575.5
+  },
+  ".sh__title": {
+    "left": 16,
+    "top": 335,
+    "width": 358,
+    "height": 45,
+    "right": 374,
+    "bottom": 380,
+    "centerX": 195,
+    "centerY": 357.5
+  },
+  ".sh__body": {
+    "left": 16,
+    "top": 384,
+    "width": 358,
+    "height": 361,
+    "right": 374,
+    "bottom": 745,
+    "centerX": 195,
+    "centerY": 564.5
+  },
+  "labelSize": "14px",
+  ".apply": {
+    "left": 16,
+    "top": 753,
+    "width": 358,
+    "height": 45,
+    "right": 374,
+    "bottom": 798,
+    "centerX": 195,
+    "centerY": 775.5
+  },
+  "buttonSize": "16px"
+}

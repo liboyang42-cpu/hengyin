@@ -1,0 +1,19 @@
+<view wx:if="{{loading || club}}" class="photo-card cc" hover-class="{{loading ? '' : 'photo-card--pressed'}}" hover-stay-time="80" aria-role="{{interactive ? 'button' : ''}}" aria-label="查看俱乐部：{{club.name}}" aria-disabled="{{loading}}" catchtap="onTap">
+  <view wx:if="{{loading}}" class="photo-card__skeleton"><view class="photo-card__skeleton-logo"></view><view class="photo-card__space"></view><view class="photo-card__skeleton-line"></view><view class="photo-card__skeleton-line short"></view></view>
+  <block wx:else>
+    <image class="photo-card__cover" src="{{club.coverUrl && !_coverFailed ? club.coverUrl : '/images/cards/default-cover.png'}}" mode="aspectFill" binderror="onCoverError" />
+    <view class="photo-card__gradient cc__gradient" aria-hidden="true"></view>
+    <view class="photo-card__top">
+      <view class="photo-card__logo"><image class="{{club.logoUrl && !_logoFailed ? 'photo-card__logo-image' : 'photo-card__brand'}}" src="{{club.logoUrl && !_logoFailed ? club.logoUrl : '/images/cards/citylink.svg'}}" mode="aspectFit" binderror="onLogoError" /></view>
+      <text wx:if="{{_joined}}" class="cc__tag">已加入</text>
+      <view class="photo-card__fill"></view>
+      <view wx:if="{{club.city}}" class="cc__city"><image class="photo-card__icon" src="/images/cards/pin.svg" /><text>{{club.city}}</text></view>
+    </view>
+    <view class="photo-card__space"></view>
+    <view class="photo-card__body">
+      <text class="photo-card__name">{{club.name}}</text>
+      <view wx:if="{{_data}}" class="photo-card__detail cc__data"><image class="cc__members" src="/images/cards/members.svg" /><text>{{_data}}</text></view>
+      <view class="photo-card__bottom cc__bottom"><view class="cc__tags"><text wx:for="{{_tags}}" wx:key="*this" class="cc__tag">{{item}}</text></view><image class="photo-card__arrow" src="/images/cards/chevron.svg" aria-hidden="true" /></view>
+    </view>
+  </block>
+</view>

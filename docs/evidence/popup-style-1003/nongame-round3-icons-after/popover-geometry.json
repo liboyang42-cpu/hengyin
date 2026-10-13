@@ -1,0 +1,34 @@
+{
+  "frame": {
+    "left": 265.68,
+    "top": 272.234,
+    "width": 110,
+    "height": 45,
+    "right": 375.68,
+    "bottom": 317.234,
+    "centerX": 320.68,
+    "centerY": 294.734
+  },
+  "glyph": {
+    "left": 277.68,
+    "top": 285.734,
+    "width": 18,
+    "height": 18,
+    "right": 295.68,
+    "bottom": 303.734,
+    "centerX": 286.68,
+    "centerY": 294.734
+  },
+  "label": {
+    "left": 303.68,
+    "top": 283.531,
+    "width": 58,
+    "height": 22,
+    "right": 361.68,
+    "bottom": 305.531,
+    "centerX": 332.68,
+    "centerY": 294.531
+  },
+  "iconTextDeltaY": 0.20299999999997453,
+  "iconFrameDeltaY": 0
+}

@@ -1,0 +1,97 @@
+[
+  {
+    "file": "components/cy/agreement-sheet/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true
+  },
+  {
+    "file": "components/cy/profile/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true
+  },
+  {
+    "file": "pages/activity/baoming/baoming.wxml",
+    "tool": "compile_wxml",
+    "ok": true
+  },
+  {
+    "file": "pages/activity/baoming/baoming.wxss",
+    "tool": "compile_wxss",
+    "ok": true
+  },
+  {
+    "file": "pages/club/detail/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true
+  },
+  {
+    "file": "pages/club/detail/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true
+  },
+  {
+    "file": "pages/merchant/apply/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true
+  },
+  {
+    "file": "pages/merchant/apply/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true
+  },
+  {
+    "file": "pages/merchant/index/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true
+  },
+  {
+    "file": "pages/merchant/team/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true
+  },
+  {
+    "file": "pages/publish/components/reward-selector/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true
+  },
+  {
+    "file": "pages/publish/components/reward-selector/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true
+  },
+  {
+    "file": "pages/publish/fabu/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true
+  },
+  {
+    "file": "pages/shezhi/components/privacy-sheet/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true
+  },
+  {
+    "file": "pages/topic/merchantapply/index.wxml",
+    "tool": "compile_wxml",
+    "ok": true
+  },
+  {
+    "file": "pages/topic/merchantapply/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true
+  },
+  {
+    "file": "subpackageA/pages/myproject/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true
+  },
+  {
+    "file": "subpackageP3/pages/badge-wall/index/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true
+  },
+  {
+    "file": "subpackageRoam/nearby/index.wxss",
+    "tool": "compile_wxss",
+    "ok": true
+  }
+]

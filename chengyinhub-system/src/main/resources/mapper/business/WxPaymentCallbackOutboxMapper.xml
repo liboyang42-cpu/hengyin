@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.WxPaymentCallbackOutboxMapper">
+
+    <resultMap id="OutboxResult" type="com.chengyinhub.business.domain.WxPaymentCallbackOutbox">
+        <id property="id" column="id"/>
+        <result property="bizType" column="biz_type"/>
+        <result property="bizId" column="biz_id"/>
+        <result property="idempotencyKey" column="idempotency_key"/>
+        <result property="moneyAffecting" column="money_affecting"/>
+        <result property="state" column="state"/>
+        <result property="ownerToken" column="owner_token_hex"/>
+        <result property="fenceToken" column="fence_token"/>
+        <result property="leaseUntil" column="lease_until"/>
+        <result property="attemptCount" column="attempt_count"/>
+        <result property="maxAttempts" column="max_attempts"/>
+        <result property="nextAttemptAt" column="next_attempt_at"/>
+        <result property="lastErrorCode" column="last_error_code"/>
+    </resultMap>
+
+    <sql id="columns">
+        id, biz_type, biz_id, idempotency_key, money_affecting, state,
+        HEX(owner_token) owner_token_hex, fence_token, lease_until, attempt_count,
+        max_attempts, next_attempt_at, last_error_code
+    </sql>
+
+    <!-- idempotency_key 唯一键是出站幂等真源:同一 out_trade_no/out_refund_no 只登记一行。 -->
+    <!-- next_attempt_at 留空(=NULL 即到期),新登记的出站请求立即可派发。 -->
+    <insert id="insertIgnore" parameterType="com.chengyinhub.business.domain.WxPaymentCallbackOutbox">
+        insert ignore into wx_payment_callback_outbox
+            (biz_type, biz_id, idempotency_key, money_affecting, state,
+             fence_token, attempt_count, max_attempts, create_time, update_time)
+        values
+            (#{bizType}, #{bizId}, #{idempotencyKey}, #{moneyAffecting},
+             #{state}, 0, 0, #{maxAttempts}, NOW(3), NOW(3))
+    </insert>
+
+    <!-- ★任务书1.6 铁律:money_affecting=1 的动作(如二次转账)绝不自动派发,只走人工。 -->
+    <select id="selectClaimableForUpdate" resultMap="OutboxResult">
+        select <include refid="columns"/> from wx_payment_callback_outbox
+        where state in (0, 3)
+          and money_affecting = 0
+          and (next_attempt_at is null or next_attempt_at &lt;= NOW(3))
+        order by next_attempt_at asc, id asc
+        limit #{limit}
+        for update
+    </select>
+
+    <update id="claimById">
+        update wx_payment_callback_outbox
+        set state = 1,
+            owner_token = UNHEX(#{ownerToken}),
+            fence_token = fence_token + 1,
+            attempt_count = attempt_count + 1,
+            lease_until = DATE_ADD(NOW(3), INTERVAL 120 SECOND),
+            next_attempt_at = null,
+            update_time = NOW(3)
+        where id = #{id}
+          and state in (0, 3)
+          and money_affecting = 0
+    </update>
+
+    <update id="complete">
+        update wx_payment_callback_outbox
+        set state = 2, lease_until = null, next_attempt_at = null, last_error_code = null,
+            update_time = NOW(3)
+        where id = #{id} and state = 1
+          and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken}
+    </update>
+
+    <!-- 间隔递增由 attempt_count 决定(60s/120s/180s);达到 max_attempts 转 4 人工,不再自动重试。 -->
+    <update id="retryOrEscalate">
+        update wx_payment_callback_outbox
+        set state = case when attempt_count &gt;= max_attempts then 4 else 3 end,
+            next_attempt_at = case when attempt_count &gt;= max_attempts then null
+                                   else DATE_ADD(NOW(3), INTERVAL (60 * attempt_count) SECOND) end,
+            last_error_code = #{errorCode},
+            lease_until = null,
+            update_time = NOW(3)
+        where id = #{id} and state = 1
+          and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken}
+          and money_affecting = 0
+    </update>
+
+    <update id="escalateToManual">
+        update wx_payment_callback_outbox
+        set state = 4, next_attempt_at = null, last_error_code = #{errorCode},
+            lease_until = null, update_time = NOW(3)
+        where id = #{id} and state = 1
+          and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken}
+    </update>
+</mapper>

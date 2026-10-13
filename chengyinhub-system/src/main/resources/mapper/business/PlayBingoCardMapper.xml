@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PlayBingoCardMapper">
+
+    <resultMap type="com.chengyinhub.business.domain.PlayBingoCard" id="CardResult">
+        <result property="id"         column="id"          />
+        <result property="memberId"   column="member_id"   />
+        <result property="topicId"    column="topic_id"    />
+        <result property="cellsJson"  column="cells_json"  />
+        <result property="filledMask" column="filled_mask" />
+        <result property="rewardMask" column="reward_mask" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <select id="selectCard" resultMap="CardResult">
+        select * from play_bingo_card where member_id = #{memberId} and topic_id = #{topicId}
+    </select>
+
+    <insert id="insertCard" parameterType="com.chengyinhub.business.domain.PlayBingoCard"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into play_bingo_card (member_id, topic_id, cells_json, filled_mask, reward_mask, create_time)
+        values (#{memberId}, #{topicId}, #{cellsJson}, #{filledMask}, #{rewardMask}, #{createTime})
+    </insert>
+
+    <!-- 位或在库里做:并发下两个事件填不同格子,读改写会丢一个,这样不会 -->
+    <update id="fillCell">
+        update play_bingo_card
+           set filled_mask = filled_mask | #{bit},
+               update_time = #{updateTime}
+         where member_id = #{memberId} and topic_id = #{topicId}
+           and (filled_mask &amp; #{bit}) = 0
+    </update>
+
+    <!-- 条件更新:该档已记过就命中 0 行,奖不会重复发 -->
+    <update id="markRewarded">
+        update play_bingo_card
+           set reward_mask = reward_mask | #{tierBits},
+               update_time = #{updateTime}
+         where member_id = #{memberId} and topic_id = #{topicId}
+           and (reward_mask &amp; #{tierBits}) &lt;&gt; #{tierBits}
+    </update>
+</mapper>

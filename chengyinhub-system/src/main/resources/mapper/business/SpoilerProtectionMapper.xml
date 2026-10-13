@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.SpoilerProtectionMapper">
+    <resultMap id="RevealResult" type="com.chengyinhub.business.domain.MemberSpoilerReveal">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="contentType" column="content_type"/>
+        <result property="contentId" column="content_id"/>
+        <result property="requestId" column="request_id"/>
+        <result property="revealedAt" column="revealed_at"/>
+    </resultMap>
+
+    <select id="selectRevealAll" resultType="boolean">
+        select reveal_all from member_spoiler_preference where member_id = #{memberId}
+    </select>
+
+    <insert id="upsertPreference">
+        insert into member_spoiler_preference (member_id, reveal_all, update_time)
+        values (#{memberId}, #{revealAll}, now())
+        on duplicate key update reveal_all = values(reveal_all), update_time = now()
+    </insert>
+
+    <select id="selectRevealedContentIds" resultType="long">
+        select content_id from member_spoiler_reveal
+        where member_id = #{memberId} and content_type = #{contentType}
+    </select>
+
+    <select id="selectRevealByRequestId" resultMap="RevealResult">
+        select id, member_id, content_type, content_id, request_id, revealed_at
+        from member_spoiler_reveal
+        where member_id = #{memberId} and request_id = #{requestId}
+        limit 1
+    </select>
+
+    <insert id="insertReveal" parameterType="com.chengyinhub.business.domain.MemberSpoilerReveal"
+            useGeneratedKeys="true" keyProperty="id">
+        insert ignore into member_spoiler_reveal
+          (member_id, content_type, content_id, request_id, revealed_at)
+        values (#{memberId}, #{contentType}, #{contentId}, #{requestId}, #{revealedAt})
+    </insert>
+</mapper>

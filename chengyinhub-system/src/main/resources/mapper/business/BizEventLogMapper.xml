@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.BizEventLogMapper">
+
+    <resultMap type="BizEventLog" id="BizEventLogResult">
+        <result property="id" column="id" />
+        <result property="eventName" column="event_name" />
+        <result property="memberId" column="member_id" />
+        <result property="anonymousId" column="anonymous_id" />
+        <result property="sessionId" column="session_id" />
+        <result property="source" column="source" />
+        <result property="pagePath" column="page_path" />
+        <result property="bizType" column="biz_type" />
+        <result property="bizId" column="biz_id" />
+        <result property="cityCode" column="city_code" />
+        <result property="propertiesJson" column="properties_json" />
+        <result property="idempotencyKey" column="idempotency_key" />
+        <result property="actorScope" column="actor_scope" />
+        <result property="occurredAt" column="occurred_at" />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <sql id="selectBizEventLogVo">
+        select id, event_name, member_id, anonymous_id, session_id, source, page_path,
+               biz_type, biz_id, city_code, properties_json, idempotency_key, actor_scope,
+               occurred_at, create_time
+        from biz_event_log
+    </sql>
+
+    <select id="selectBizEventLogList" parameterType="BizEventLog" resultMap="BizEventLogResult">
+        <include refid="selectBizEventLogVo"/>
+        <where>
+            <if test="eventName != null and eventName != ''"> and event_name = #{eventName}</if>
+            <if test="memberId != null"> and member_id = #{memberId}</if>
+            <if test="bizType != null and bizType != ''"> and biz_type = #{bizType}</if>
+            <if test="bizId != null"> and biz_id = #{bizId}</if>
+        </where>
+        order by id desc
+    </select>
+
+    <insert id="insertBizEventLog" parameterType="BizEventLog" useGeneratedKeys="true" keyProperty="id">
+        insert ignore into biz_event_log
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="eventName != null">event_name,</if>
+            <if test="memberId != null">member_id,</if>
+            <if test="anonymousId != null">anonymous_id,</if>
+            <if test="sessionId != null">session_id,</if>
+            <if test="source != null">source,</if>
+            <if test="pagePath != null">page_path,</if>
+            <if test="bizType != null">biz_type,</if>
+            <if test="bizId != null">biz_id,</if>
+            <if test="cityCode != null">city_code,</if>
+            <if test="propertiesJson != null">properties_json,</if>
+            <if test="idempotencyKey != null">idempotency_key,</if>
+            <if test="actorScope != null">actor_scope,</if>
+            <if test="occurredAt != null">occurred_at,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="eventName != null">#{eventName},</if>
+            <if test="memberId != null">#{memberId},</if>
+            <if test="anonymousId != null">#{anonymousId},</if>
+            <if test="sessionId != null">#{sessionId},</if>
+            <if test="source != null">#{source},</if>
+            <if test="pagePath != null">#{pagePath},</if>
+            <if test="bizType != null">#{bizType},</if>
+            <if test="bizId != null">#{bizId},</if>
+            <if test="cityCode != null">#{cityCode},</if>
+            <if test="propertiesJson != null">#{propertiesJson},</if>
+            <if test="idempotencyKey != null">#{idempotencyKey},</if>
+            <if test="actorScope != null">#{actorScope},</if>
+            <if test="occurredAt != null">#{occurredAt},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <!-- 留存清理:删早于 cutoff 的行为事件日志,单批 LIMIT(避免长事务/锁表) -->
+    <delete id="deleteBizEventLogsBefore">
+        delete from biz_event_log
+        <!-- 锚点用服务端 create_time(occurred_at 是客户端上报、可被时钟偏移提前误删,故不能用);
+             裸列走索引:见 migration_retention_create_time_index.sql 的 idx_biz_event_create_time。 -->
+        where create_time &lt; #{cutoff}
+        limit #{limit}
+    </delete>
+</mapper>

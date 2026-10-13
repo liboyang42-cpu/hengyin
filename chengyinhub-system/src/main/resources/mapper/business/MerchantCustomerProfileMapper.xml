@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantCustomerProfileMapper">
+
+    <resultMap id="MerchantCustomerProfileResult" type="com.chengyinhub.business.domain.MerchantCustomerProfile">
+        <result property="id" column="id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="memberNickname" column="member_nickname"/>
+        <result property="memberPhone" column="member_phone"/>
+        <result property="registrationCount" column="registration_count"/>
+        <result property="orderCount" column="order_count"/>
+        <result property="orderAmount" column="order_amount"/>
+        <result property="couponReceiveCount" column="coupon_receive_count"/>
+        <result property="couponVerifyCount" column="coupon_verify_count"/>
+        <result property="lastInteractionTime" column="last_interaction_time"/>
+        <result property="customerStage" column="customer_stage"/>
+        <result property="cityCode" column="city_code"/>
+        <result property="tagsJson" column="tags_json"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="MerchantCrmSummaryResult" type="com.chengyinhub.business.domain.vo.MerchantCrmSummaryVO">
+        <result property="merchantId" column="merchant_id"/>
+        <result property="customerCount" column="customer_count"/>
+        <result property="activeCustomerCount" column="active_customer_count"/>
+        <result property="couponCustomerCount" column="coupon_customer_count"/>
+        <result property="orderAmount" column="order_amount"/>
+    </resultMap>
+
+    <select id="selectCustomerList" parameterType="com.chengyinhub.business.domain.MerchantCustomerProfile" resultMap="MerchantCustomerProfileResult">
+        select id, merchant_id, member_id, member_nickname, member_phone, registration_count,
+               order_count, order_amount, coupon_receive_count, coupon_verify_count,
+               last_interaction_time, customer_stage, city_code, tags_json, del_flag,
+               create_time, update_time
+        from merchant_customer_profile
+        <where>
+            merchant_scope_version = 2
+            and del_flag = 0
+            <if test="merchantId != null">and merchant_id = #{merchantId}</if>
+            <if test="memberId != null">and member_id = #{memberId}</if>
+            <if test="memberNickname != null and memberNickname != ''">
+                and member_nickname like concat('%', #{memberNickname}, '%')
+            </if>
+            <if test="customerStage != null and customerStage != ''">and customer_stage = #{customerStage}</if>
+        </where>
+        order by last_interaction_time desc, id desc
+    </select>
+
+    <select id="selectSummaryByMerchantId" resultMap="MerchantCrmSummaryResult">
+        select merchant_id,
+               count(1) as customer_count,
+               sum(case when registration_count > 0 or order_count > 0 or coupon_receive_count > 0 then 1 else 0 end) as active_customer_count,
+               sum(case when coupon_receive_count > 0 then 1 else 0 end) as coupon_customer_count,
+               coalesce(sum(order_amount), 0) as order_amount
+        from merchant_customer_profile
+        where merchant_id = #{merchantId}
+          and merchant_scope_version = 2
+          and del_flag = 0
+        group by merchant_id
+    </select>
+
+</mapper>

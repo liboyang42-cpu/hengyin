@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.UmsCreativeSquareMapper">
+    
+    <resultMap type="UmsCreativeSquare" id="UmsCreativeSquareResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="contents"    column="contents"    />
+        <result property="pics"    column="pics"    />
+        <result property="fileUrl"    column="file_url"    />
+        <result property="address"    column="address"    />
+        <result property="longitude"    column="longitude"    />
+        <result property="latitude"    column="latitude"    />
+        <result property="dataId"    column="data_id"    />
+        <result property="dataType"    column="data_type"    />
+        <result property="likeNum"    column="like_num"    />
+        <result property="nolikeNum"    column="nolike_num"    />
+        <result property="status"    column="status"    />
+        <result property="isCrowdfunding"    column="is_crowdfunding"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="checkStatus"    column="check_status"    />
+        <result property="routePreviewImg"    column="route_preview_img"    />
+        <result property="requestId"    column="request_id"    />
+        <result property="requestSignature"    column="request_signature"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectUmsCreativeSquareVo">
+        select id, member_id, contents, pics, file_url, address, longitude, latitude, data_id, data_type, like_num, nolike_num, status, is_crowdfunding, del_flag,check_status, route_preview_img, request_id, request_signature, create_by, create_time, update_by, update_time from ums_creative_square
+    </sql>
+
+    <select id="selectUmsCreativeSquareList" parameterType="UmsCreativeSquare" resultMap="UmsCreativeSquareResult">
+        <include refid="selectUmsCreativeSquareVo"/>
+        <where>
+            <if test="delFlag != null "> and del_flag = #{delFlag}</if>
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="contents != null  and contents != ''"> and contents = #{contents}</if>
+            <if test="pics != null  and pics != ''"> and pics = #{pics}</if>
+            <if test="fileUrl != null  and fileUrl != ''"> and file_url = #{fileUrl}</if>
+            <if test="address != null  and address != ''"> and address = #{address}</if>
+            <if test="longitude != null  and longitude != ''"> and longitude = #{longitude}</if>
+            <if test="latitude != null  and latitude != ''"> and latitude = #{latitude}</if>
+            <if test="dataId != null "> and data_id = #{dataId}</if>
+            <if test="dataType != null "> and data_type = #{dataType}</if>
+            <if test="likeNum != null "> and like_num = #{likeNum}</if>
+            <if test="nolikeNum != null "> and nolike_num = #{nolikeNum}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="isCrowdfunding != null "> and is_crowdfunding = #{isCrowdfunding}</if>
+            <if test="checkStatus != null"> and check_status = #{checkStatus}</if>
+
+        </where>
+
+        order by id desc
+    </select>
+    
+    <select id="selectUmsCreativeSquareById" parameterType="Long" resultMap="UmsCreativeSquareResult">
+        <include refid="selectUmsCreativeSquareVo"/>
+        where id = #{id}
+    </select>
+
+    <!-- R10-03 发布意图键回读:丢回包重试命中既有帖子,不再 insert 第二条 -->
+    <select id="selectUmsCreativeSquareByMemberAndRequestId" resultMap="UmsCreativeSquareResult">
+        <include refid="selectUmsCreativeSquareVo"/>
+        where member_id = #{memberId}
+          and request_id = #{requestId}
+        limit 1
+    </select>
+
+    <select id="selectUmsCreativeSquareByIdForUpdate" resultMap="UmsCreativeSquareResult">
+        select id, member_id, status, del_flag from ums_creative_square where id = #{id} for update
+    </select>
+
+    <insert id="insertUmsCreativeSquare" parameterType="UmsCreativeSquare" useGeneratedKeys="true" keyProperty="id">
+        insert into ums_creative_square
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="contents != null">contents,</if>
+            <if test="pics != null">pics,</if>
+            <if test="fileUrl != null">file_url,</if>
+            <if test="address != null">address,</if>
+            <if test="longitude != null">longitude,</if>
+            <if test="latitude != null">latitude,</if>
+            <if test="dataId != null">data_id,</if>
+            <if test="dataType != null">data_type,</if>
+            <if test="likeNum != null">like_num,</if>
+            <if test="nolikeNum != null">nolike_num,</if>
+            <if test="status != null">status,</if>
+            <if test="isCrowdfunding != null">is_crowdfunding,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="checkStatus != null">check_status,</if>
+            <if test="routePreviewImg != null">route_preview_img,</if>
+            <if test="requestId != null">request_id,</if>
+            <if test="requestSignature != null">request_signature,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="contents != null">#{contents},</if>
+            <if test="pics != null">#{pics},</if>
+            <if test="fileUrl != null">#{fileUrl},</if>
+            <if test="address != null">#{address},</if>
+            <if test="longitude != null">#{longitude},</if>
+            <if test="latitude != null">#{latitude},</if>
+            <if test="dataId != null">#{dataId},</if>
+            <if test="dataType != null">#{dataType},</if>
+            <if test="likeNum != null">#{likeNum},</if>
+            <if test="nolikeNum != null">#{nolikeNum},</if>
+            <if test="status != null">#{status},</if>
+            <if test="isCrowdfunding != null">#{isCrowdfunding},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="checkStatus != null">#{checkStatus},</if>
+            <if test="routePreviewImg != null">#{routePreviewImg},</if>
+            <if test="requestId != null">#{requestId},</if>
+            <if test="requestSignature != null">#{requestSignature},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateUmsCreativeSquare" parameterType="UmsCreativeSquare">
+        update ums_creative_square
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="contents != null">contents = #{contents},</if>
+            <if test="pics != null">pics = #{pics},</if>
+            <if test="fileUrl != null">file_url = #{fileUrl},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="longitude != null">longitude = #{longitude},</if>
+            <if test="latitude != null">latitude = #{latitude},</if>
+            <if test="dataId != null">data_id = #{dataId},</if>
+            <if test="dataType != null">data_type = #{dataType},</if>
+            <if test="likeNum != null">like_num = #{likeNum},</if>
+            <if test="nolikeNum != null">nolike_num = #{nolikeNum},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="isCrowdfunding != null">is_crowdfunding = #{isCrowdfunding},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="checkStatus != null">check_status = #{checkStatus},</if>
+            <if test="routePreviewImg != null">route_preview_img = #{routePreviewImg},</if>
+            <if test="requestId != null">request_id = #{requestId},</if>
+            <if test="requestSignature != null">request_signature = #{requestSignature},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteUmsCreativeSquareById" parameterType="Long">
+        delete from ums_creative_square where id = #{id}
+    </delete>
+
+    <delete id="deleteUmsCreativeSquareByIds" parameterType="String">
+        delete from ums_creative_square where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- [6-09] 主题可见性联动:同步帖(data_type=2)随主题一起不公开。
+         只动仍在公开(status=1)、未删(del_flag=0)的同步帖;作者自己删掉的一律不动。
+         ⚠️ 写 status=3(随主题隐藏),不写 2:status=2 还是内容安全自动下架、文本 BLOCK、后台手动隐藏
+         共用的「平台下架」,它们都不写 check_status。共用 2 的话,主题一恢复就把违规帖一起放回(RV-p6 #2)。
+         读侧公开面一律按 status=1 过滤,3 天然不公开。 -->
+    <update id="hideTopicSyncPosts">
+        update ums_creative_square
+        set status = 3, update_time = now()
+        where data_type = 2 and data_id = #{topicId} and del_flag = 0 and status = 1
+    </update>
+
+    <!-- [6-09] 主题恢复公开:只把自己联动隐藏的那批(status=3)放回。平台下架(2)、审核驳回
+         (check_status=2)、待审(0)都不动 —— 主题隐藏期间被内容安全改成 2 的也一样留在 2。 -->
+    <update id="restoreTopicSyncPosts">
+        update ums_creative_square
+        set status = 1, update_time = now()
+        where data_type = 2 and data_id = #{topicId} and del_flag = 0 and status = 3
+          and (check_status is null or check_status &lt;&gt; 2)
+    </update>
+</mapper>

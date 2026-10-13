@@ -1,0 +1,25 @@
+最终代码全量回归
+ℹ tests 7667
+ℹ pass 7665
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 2
+ℹ duration_ms 280404.069625
+
+跳过项
+﹣ ④ gerenziliao 底栏占位必须等于 .bmbottom 的真实高度(R5 已迁走,见注释) (0.02275ms) # SKIP
+﹣ 设计文档写的是现行裁决:普通二级页裸 chevron + 地图退出例外 (0.090416ms) # vault 不在本机(/Users/arlan/Documents/城瘾/文档整理_20260711/04-未开始/小程序UI总执行表_规整加ADA整合_20260729.md),文档契约跳过
+
+界面与作用域检查
+U1 PASS:静态路径 730,动态路径 35,变量路径 10,逐项理由 10
+U2 PASS:绑定 4370,显式 skip 2,白名单 0(复用 wxml-handler-lint)
+U3 PASS:零绑定债务 62/62 已登记,生命周期规则 14
+U4 PASS:零消费债务 133/133 已登记,动态 setData 53/53 已登记
+U5 PASS:需逐项理由 28,同请求内静态证明显式处理 226,逐项理由 28
+Legacy PASS:error 0,warn 0
+UI-GATE-0:PASS
+JS-SCOPE PASS: 544 个生产 JS，未解析标识符 0，不存在导出 0
+
+动作清单
+ACTION-LEDGER WRITE PASS:4382 controls
+清单数量不作为业务验收通过数。

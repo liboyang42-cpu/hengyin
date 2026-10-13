@@ -1,0 +1,30 @@
+# 迁移落库落差的棘轮基线 —— 只许缩短,不许变长。
+#
+# 每行一个「已知尚未落库(或断言仍为假)」的迁移文件名。ci/audit_migrations_applied.py
+# --check-baseline 据此判红:
+#   · 出现基线之外的落差            ⇒ 红。有人又合了带迁移的 PR 却没落库。
+#   · 基线里的某条已经落库了        ⇒ 也红,要求把它从本文件删掉。
+#     ★ 这一条同样重要:只挡新增、不要求删旧,基线就会永远停在最初那个长度,
+#       棘轮不再收紧 —— 那时它看着还在,实际已经不拧了。
+#
+# 为什么一开始就有 16 条:2026-08-27 首次对账时生产就是这个状态(其中
+# event_cancel_manual_refund_case 整张表都不存在)。直接当空基线用会立刻常红,
+# 而「红成噪音之后就没人看了」正是 ci/classify-runtime.sh 注释里点名要避开的。
+# 所以先把现状钉住、只挡新增,再逐条清。
+#
+# 清掉一条的正确姿势:先落库,再删这里的行 —— 顺序反了门禁会红,那是对的。
+migration_20260817_tandianri_batch3_funds_ticket_source_payable.sql
+migration_20260817_tandianri_node_checkin_code_unique.sql
+migration_20260817_tandianri_r6_funds_final_closure.sql
+migration_20260819_purge_prelaunch_dirty_content.sql
+migration_20260820_close_stale_registration_scan_15.sql
+migration_20260820_member_100096_to_player.sql
+migration_20260823_topic_route_published_snapshot.sql
+migration_20260825_club_headcount_component.sql
+migration_20260825_named_mechanic_advanced_config.sql
+migration_20260825_ticket_source_retire.sql
+migration_club_post_announcement_20260823.sql
+migration_club_role_governance_20260823.sql
+migration_club_role_membership_resume_fence_20260826.sql
+migration_club_role_z_null_safety_repair_20260826.sql
+migration_merchant_npc_menu_20260824.sql

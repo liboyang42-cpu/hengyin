@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PmsGiftChangeAuditMapper">
+
+    <insert id="insertPmsGiftChangeAudit" parameterType="PmsGiftChangeAudit" useGeneratedKeys="true" keyProperty="id">
+        insert into pms_gift_change_audit
+        (gift_id, action, old_point, new_point, old_status, new_status, reason, operator_username, create_time)
+        values
+        (#{giftId}, #{action}, #{oldPoint}, #{newPoint}, #{oldStatus}, #{newStatus}, #{reason}, #{operatorUsername}, #{createTime})
+    </insert>
+</mapper>

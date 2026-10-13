@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ViewRegistrationMapper">
+    
+    <resultMap type="ViewRegistration" id="ViewRegistrationResult">
+        <result property="id"    column="id"    />
+        <result property="registrationNo"    column="registration_no"    />
+        <result property="ownerType"    column="owner_type"    />
+        <result property="ownerId"    column="owner_id"    />
+        <result property="activityTitle"    column="activity_title"    />
+        <result property="ticketId"    column="ticket_id"    />
+        <result property="ticketName"    column="ticket_name"    />
+        <result property="ticketPrice"    column="ticket_price"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="realName"    column="real_name"    typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler" />
+        <result property="phone"    column="phone"    typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler" />
+        <result property="email"    column="email"    typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler" />
+        <result property="address"    column="address"    typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler" />
+        <result property="addressId"    column="address_id"    />
+        <result property="orderNum"    column="order_num"    />
+        <result property="originalAmount"    column="original_amount"    />
+        <result property="discountAmount"    column="discount_amount"    />
+        <result property="totalAmount"    column="total_amount"    />
+        <result property="pointUsed"    column="point_used"    />
+        <result property="pointDeductAmount"    column="point_deduct_amount"    />
+        <result property="pointDeductRate"    column="point_deduct_rate"    />
+        <result property="maxPointDeduct"    column="max_point_deduct"    />
+        <result property="payableAmount"    column="payable_amount"    />
+        <result property="paymentStatus"    column="payment_status"    />
+        <result property="paymentType"    column="payment_type"    />
+        <result property="paymentTime"    column="payment_time"    />
+        <result property="transactionId"    column="transaction_id"    />
+        <result property="pointPaymentAmount"    column="point_payment_amount"    />
+        <result property="wechatPaymentAmount"    column="wechat_payment_amount"    />
+        <result property="registrationStatus"    column="registration_status"    />
+        <result property="payExpireTime"    column="pay_expire_time"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="verificationCode"    column="verification_code"    />
+        <result property="qrcodeUrl"    column="qrcode_url"    />
+        <result property="verificationStatus"    column="verification_status"    />
+        <result property="verificationTime"    column="verification_time"    />
+        <result property="verifierId"    column="verifier_id"    />
+        <result property="pointsReturned"    column="points_returned"    />
+        <result property="avatar"    column="avatar"    />
+        <result property="nickname"    column="nickname"    />
+    </resultMap>
+
+    <sql id="selectViewRegistrationVo">
+        select id, registration_no, owner_type, owner_id, activity_title, ticket_id, ticket_name, ticket_price, member_id, real_name, phone, email, address, address_id, order_num, original_amount, discount_amount, total_amount, point_used, point_deduct_amount, point_deduct_rate, max_point_deduct, payable_amount, payment_status, payment_type, payment_time, transaction_id, point_payment_amount, wechat_payment_amount, registration_status, pay_expire_time, create_by, create_time, update_by, update_time, verification_code, qrcode_url, verification_status, verification_time, verifier_id, points_returned, avatar, nickname from view_registration
+    </sql>
+
+    <resultMap type="ViewRegistration" id="RegistrationSummaryResult" autoMapping="false">
+        <result property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="avatar" column="avatar"/>
+        <result property="nickname" column="nickname"/>
+        <result property="paymentStatus" column="payment_status"/>
+        <result property="verificationStatus" column="verification_status"/>
+    </resultMap>
+
+    <sql id="ViewRegistrationFilter">
+        <where>  
+            <if test="registrationNo != null  and registrationNo != ''"> and registration_no = #{registrationNo}</if>
+            <if test="ownerType != null "> and owner_type = #{ownerType}</if>
+            <if test="ownerId != null "> and owner_id = #{ownerId}</if>
+            <if test="activityTitle != null  and activityTitle != ''"> and activity_title = #{activityTitle}</if>
+            <if test="ticketId != null "> and ticket_id = #{ticketId}</if>
+            <if test="ticketName != null  and ticketName != ''"> and ticket_name like concat('%', #{ticketName}, '%')</if>
+            <if test="ticketPrice != null "> and ticket_price = #{ticketPrice}</if>
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <!-- PII 加密后姓名/手机/邮箱/地址密文不可检索(合规§6.3):此视图检索能力下线,
+                 按手机号查请走基表报名列表(CmsRegistration,phone_hash 盲索引)。 -->
+
+            <if test="addressId != null "> and address_id = #{addressId}</if>
+            <if test="orderNum != null "> and order_num = #{orderNum}</if>
+            <if test="originalAmount != null "> and original_amount = #{originalAmount}</if>
+            <if test="discountAmount != null "> and discount_amount = #{discountAmount}</if>
+            <if test="totalAmount != null "> and total_amount = #{totalAmount}</if>
+            <if test="pointUsed != null "> and point_used = #{pointUsed}</if>
+            <if test="pointDeductAmount != null "> and point_deduct_amount = #{pointDeductAmount}</if>
+            <if test="pointDeductRate != null "> and point_deduct_rate = #{pointDeductRate}</if>
+            <if test="maxPointDeduct != null "> and max_point_deduct = #{maxPointDeduct}</if>
+            <if test="payableAmount != null "> and payable_amount = #{payableAmount}</if>
+            <if test="paymentStatus != null "> and payment_status = #{paymentStatus}</if>
+            <if test="paymentType != null "> and payment_type = #{paymentType}</if>
+            <if test="paymentTime != null "> and payment_time = #{paymentTime}</if>
+            <if test="transactionId != null  and transactionId != ''"> and transaction_id = #{transactionId}</if>
+            <if test="pointPaymentAmount != null "> and point_payment_amount = #{pointPaymentAmount}</if>
+            <if test="wechatPaymentAmount != null "> and wechat_payment_amount = #{wechatPaymentAmount}</if>
+            <if test="registrationStatus != null "> and registration_status = #{registrationStatus}</if>
+            <if test="payExpireTime != null "> and pay_expire_time = #{payExpireTime}</if>
+            <if test="verificationCode != null  and verificationCode != ''"> and verification_code = #{verificationCode}</if>
+            <if test="qrcodeUrl != null  and qrcodeUrl != ''"> and qrcode_url = #{qrcodeUrl}</if>
+            <if test="verificationStatus != null "> and verification_status = #{verificationStatus}</if>
+            <if test="verificationTime != null "> and verification_time = #{verificationTime}</if>
+            <if test="verifierId != null "> and verifier_id = #{verifierId}</if>
+            <if test="pointsReturned != null "> and points_returned = #{pointsReturned}</if>
+            <if test="avatar != null  and avatar != ''"> and avatar = #{avatar}</if>
+            <if test="nickname != null  and nickname != ''"> and nickname like concat('%', #{nickname}, '%')</if>
+        </where>
+    </sql>
+
+    <select id="selectViewRegistrationList" parameterType="ViewRegistration" resultMap="ViewRegistrationResult">
+        <include refid="selectViewRegistrationVo"/>
+        <include refid="ViewRegistrationFilter"/>
+    </select>
+
+    <select id="selectRegistrationSummaries" parameterType="ViewRegistration" resultMap="RegistrationSummaryResult">
+        select id, member_id, avatar, nickname, payment_status, verification_status from view_registration
+        <include refid="ViewRegistrationFilter"/>
+    </select>
+    
+    <select id="selectViewRegistrationById" parameterType="Long" resultMap="ViewRegistrationResult">
+        <include refid="selectViewRegistrationVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertViewRegistration" parameterType="ViewRegistration">
+        insert into view_registration
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="registrationNo != null and registrationNo != ''">registration_no,</if>
+            <if test="ownerType != null">owner_type,</if>
+            <if test="ownerId != null">owner_id,</if>
+            <if test="activityTitle != null">activity_title,</if>
+            <if test="ticketId != null">ticket_id,</if>
+            <if test="ticketName != null">ticket_name,</if>
+            <if test="ticketPrice != null">ticket_price,</if>
+            <if test="memberId != null">member_id,</if>
+            <if test="realName != null">real_name,</if>
+            <if test="phone != null">phone,</if>
+            <if test="email != null">email,</if>
+            <if test="address != null">address,</if>
+            <if test="addressId != null">address_id,</if>
+            <if test="orderNum != null">order_num,</if>
+            <if test="originalAmount != null">original_amount,</if>
+            <if test="discountAmount != null">discount_amount,</if>
+            <if test="totalAmount != null">total_amount,</if>
+            <if test="pointUsed != null">point_used,</if>
+            <if test="pointDeductAmount != null">point_deduct_amount,</if>
+            <if test="pointDeductRate != null">point_deduct_rate,</if>
+            <if test="maxPointDeduct != null">max_point_deduct,</if>
+            <if test="payableAmount != null">payable_amount,</if>
+            <if test="paymentStatus != null">payment_status,</if>
+            <if test="paymentType != null">payment_type,</if>
+            <if test="paymentTime != null">payment_time,</if>
+            <if test="transactionId != null">transaction_id,</if>
+            <if test="pointPaymentAmount != null">point_payment_amount,</if>
+            <if test="wechatPaymentAmount != null">wechat_payment_amount,</if>
+            <if test="registrationStatus != null">registration_status,</if>
+            <if test="payExpireTime != null">pay_expire_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="verificationCode != null">verification_code,</if>
+            <if test="qrcodeUrl != null">qrcode_url,</if>
+            <if test="verificationStatus != null">verification_status,</if>
+            <if test="verificationTime != null">verification_time,</if>
+            <if test="verifierId != null">verifier_id,</if>
+            <if test="pointsReturned != null">points_returned,</if>
+            <if test="avatar != null">avatar,</if>
+            <if test="nickname != null">nickname,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="registrationNo != null and registrationNo != ''">#{registrationNo},</if>
+            <if test="ownerType != null">#{ownerType},</if>
+            <if test="ownerId != null">#{ownerId},</if>
+            <if test="activityTitle != null">#{activityTitle},</if>
+            <if test="ticketId != null">#{ticketId},</if>
+            <if test="ticketName != null">#{ticketName},</if>
+            <if test="ticketPrice != null">#{ticketPrice},</if>
+            <if test="memberId != null">#{memberId},</if>
+            <if test="realName != null">#{realName},</if>
+            <if test="phone != null">#{phone},</if>
+            <if test="email != null">#{email},</if>
+            <if test="address != null">#{address},</if>
+            <if test="addressId != null">#{addressId},</if>
+            <if test="orderNum != null">#{orderNum},</if>
+            <if test="originalAmount != null">#{originalAmount},</if>
+            <if test="discountAmount != null">#{discountAmount},</if>
+            <if test="totalAmount != null">#{totalAmount},</if>
+            <if test="pointUsed != null">#{pointUsed},</if>
+            <if test="pointDeductAmount != null">#{pointDeductAmount},</if>
+            <if test="pointDeductRate != null">#{pointDeductRate},</if>
+            <if test="maxPointDeduct != null">#{maxPointDeduct},</if>
+            <if test="payableAmount != null">#{payableAmount},</if>
+            <if test="paymentStatus != null">#{paymentStatus},</if>
+            <if test="paymentType != null">#{paymentType},</if>
+            <if test="paymentTime != null">#{paymentTime},</if>
+            <if test="transactionId != null">#{transactionId},</if>
+            <if test="pointPaymentAmount != null">#{pointPaymentAmount},</if>
+            <if test="wechatPaymentAmount != null">#{wechatPaymentAmount},</if>
+            <if test="registrationStatus != null">#{registrationStatus},</if>
+            <if test="payExpireTime != null">#{payExpireTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="verificationCode != null">#{verificationCode},</if>
+            <if test="qrcodeUrl != null">#{qrcodeUrl},</if>
+            <if test="verificationStatus != null">#{verificationStatus},</if>
+            <if test="verificationTime != null">#{verificationTime},</if>
+            <if test="verifierId != null">#{verifierId},</if>
+            <if test="pointsReturned != null">#{pointsReturned},</if>
+            <if test="avatar != null">#{avatar},</if>
+            <if test="nickname != null">#{nickname},</if>
+         </trim>
+    </insert>
+
+    <update id="updateViewRegistration" parameterType="ViewRegistration">
+        update view_registration
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="registrationNo != null and registrationNo != ''">registration_no = #{registrationNo},</if>
+            <if test="ownerType != null">owner_type = #{ownerType},</if>
+            <if test="ownerId != null">owner_id = #{ownerId},</if>
+            <if test="activityTitle != null">activity_title = #{activityTitle},</if>
+            <if test="ticketId != null">ticket_id = #{ticketId},</if>
+            <if test="ticketName != null">ticket_name = #{ticketName},</if>
+            <if test="ticketPrice != null">ticket_price = #{ticketPrice},</if>
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="realName != null">real_name = #{realName},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="addressId != null">address_id = #{addressId},</if>
+            <if test="orderNum != null">order_num = #{orderNum},</if>
+            <if test="originalAmount != null">original_amount = #{originalAmount},</if>
+            <if test="discountAmount != null">discount_amount = #{discountAmount},</if>
+            <if test="totalAmount != null">total_amount = #{totalAmount},</if>
+            <if test="pointUsed != null">point_used = #{pointUsed},</if>
+            <if test="pointDeductAmount != null">point_deduct_amount = #{pointDeductAmount},</if>
+            <if test="pointDeductRate != null">point_deduct_rate = #{pointDeductRate},</if>
+            <if test="maxPointDeduct != null">max_point_deduct = #{maxPointDeduct},</if>
+            <if test="payableAmount != null">payable_amount = #{payableAmount},</if>
+            <if test="paymentStatus != null">payment_status = #{paymentStatus},</if>
+            <if test="paymentType != null">payment_type = #{paymentType},</if>
+            <if test="paymentTime != null">payment_time = #{paymentTime},</if>
+            <if test="transactionId != null">transaction_id = #{transactionId},</if>
+            <if test="pointPaymentAmount != null">point_payment_amount = #{pointPaymentAmount},</if>
+            <if test="wechatPaymentAmount != null">wechat_payment_amount = #{wechatPaymentAmount},</if>
+            <if test="registrationStatus != null">registration_status = #{registrationStatus},</if>
+            <if test="payExpireTime != null">pay_expire_time = #{payExpireTime},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="verificationCode != null">verification_code = #{verificationCode},</if>
+            <if test="qrcodeUrl != null">qrcode_url = #{qrcodeUrl},</if>
+            <if test="verificationStatus != null">verification_status = #{verificationStatus},</if>
+            <if test="verificationTime != null">verification_time = #{verificationTime},</if>
+            <if test="verifierId != null">verifier_id = #{verifierId},</if>
+            <if test="pointsReturned != null">points_returned = #{pointsReturned},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="nickname != null">nickname = #{nickname},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteViewRegistrationById" parameterType="Long">
+        delete from view_registration where id = #{id}
+    </delete>
+
+    <delete id="deleteViewRegistrationByIds" parameterType="String">
+        delete from view_registration where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,17 @@
+-- R10 放开商家常驻据点配额,提升「点亮城市」地图供给
+--
+-- 背景:merchant 角色 max_city_nodes=1(见 bak_user_permission_20260709.sql),
+--       每商家全网仅 1 个常驻据点,城市地图 POI 供给天花板过低(商业化前的地图冷启动瓶颈)。
+-- 值决策:3 为保守默认。若已有会员等级体系,建议按等级差异化(如 普通3 / 高级10 / 旗舰50),
+--         用 membership_level 区分后替换下方 UPDATE;此处先给全体 merchant 统一放开到 3。
+--
+-- 执行前只读预检(务必先跑,确认当前值):
+--   SELECT role, max_city_nodes FROM user_permission WHERE role = 'merchant';
+--
+-- 执行(仅放开、不下调,幂等):
+UPDATE user_permission SET max_city_nodes = 3 WHERE role = 'merchant' AND max_city_nodes < 3;
+--
+-- 回滚:
+--   UPDATE user_permission SET max_city_nodes = 1 WHERE role = 'merchant';
+--
+-- 注:执行请走 chengyin-db-migrate skill(生产库,只读预检 → 确认 → 执行)。

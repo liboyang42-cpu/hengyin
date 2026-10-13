@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.OfficialEventMapper">
+
+    <resultMap type="OfficialEvent" id="OfficialEventResult">
+        <result property="id"                  column="id"                   />
+        <result property="title"               column="title"                />
+        <result property="subtitle"            column="subtitle"             />
+        <result property="category"            column="category"             />
+        <result property="coverImg"            column="cover_img"            />
+        <result property="story"               column="story"                />
+        <result property="city"                column="city"                 />
+        <result property="signupStart"         column="signup_start"         />
+        <result property="activityStart"       column="activity_start"       />
+        <result property="activityEnd"         column="activity_end"         />
+        <result property="settleTime"          column="settle_time"          />
+        <result property="signupLimit"         column="signup_limit"         />
+        <result property="contentJson"         column="content_json"         />
+        <result property="collectiveEnabled"   column="collective_enabled"   />
+        <result property="collectiveMetric"    column="collective_metric"    />
+        <result property="collectiveThreshold" column="collective_threshold" />
+        <result property="leaderboardEnabled"  column="leaderboard_enabled"  />
+        <result property="rewardJson"          column="reward_json"          />
+        <result property="merchantIds"         column="merchant_ids"         />
+        <result property="brandLogo"           column="brand_logo"           />
+        <result property="bannerEnabled"       column="banner_enabled"       />
+        <result property="sort"                column="sort"                 />
+        <result property="status"              column="status"               />
+        <result property="senderAccount"       column="sender_account"       />
+        <result property="creatorIdentitySource" column="creator_identity_source" />
+        <result property="contractVersion"     column="contract_version"     />
+        <result property="fulfillmentPolicy"   column="fulfillment_policy"   />
+        <result property="controlState"        column="control_state"        />
+        <result property="pausedFromStatus"    column="paused_from_status"   />
+        <result property="pausedAt"            column="paused_at"            />
+        <result property="pausedBy"            column="paused_by"            />
+        <result property="pausedReason"        column="paused_reason"        />
+        <result property="pauseImpactScope"    column="pause_impact_scope"  />
+        <result property="pauseAlternativePlan" column="pause_alternative_plan" />
+        <result property="pauseNotificationPlan" column="pause_notification_plan" />
+        <result property="pauseNotificationStatus" column="pause_notification_status" />
+        <result property="resumeNote"          column="resume_note"          />
+        <result property="createBy"            column="create_by"            />
+        <result property="createTime"          column="create_time"          />
+        <result property="updateTime"          column="update_time"          />
+    </resultMap>
+
+    <sql id="selectOfficialEventVo">
+        select id, title, subtitle, category, cover_img, story, city, signup_start, activity_start,
+               activity_end, settle_time, signup_limit, content_json, collective_enabled, collective_metric,
+               collective_threshold, leaderboard_enabled, reward_json, merchant_ids, brand_logo,
+               banner_enabled, sort, status, sender_account, creator_identity_source, contract_version, fulfillment_policy, control_state,
+               paused_from_status, paused_at, paused_by, paused_reason, pause_impact_scope, pause_alternative_plan,
+               pause_notification_plan, pause_notification_status, resume_note, create_by, create_time, update_time
+        from official_event
+    </sql>
+
+    <select id="selectOfficialEventById" resultMap="OfficialEventResult">
+        <include refid="selectOfficialEventVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectOfficialEventByIdForUpdate" resultMap="OfficialEventResult">
+        <include refid="selectOfficialEventVo"/>
+        where id = #{id}
+        for update
+    </select>
+
+    <select id="selectPublicList" resultMap="OfficialEventResult">
+        <include refid="selectOfficialEventVo"/>
+        where status &gt;= 1 and status &lt;&gt; 9
+        <if test="city != null and city != ''">
+            and (city is null or city like concat('%', #{city}, '%'))
+        </if>
+        order by sort desc, id desc
+    </select>
+
+    <select id="selectActiveForFlow" resultMap="OfficialEventResult">
+        <include refid="selectOfficialEventVo"/>
+        where status in (1, 2, 3, 4)
+    </select>
+
+    <select id="selectBySender" resultMap="OfficialEventResult">
+        <include refid="selectOfficialEventVo"/>
+        where sender_account = #{senderAccount} and creator_identity_source = 'UMS_MEMBER'
+        order by id desc
+    </select>
+
+    <select id="selectOfficialEventList" parameterType="OfficialEvent" resultMap="OfficialEventResult">
+        <include refid="selectOfficialEventVo"/>
+        <where>
+            <if test="status != null"> and status = #{status}</if>
+            <if test="city != null and city != ''"> and city like concat('%', #{city}, '%')</if>
+            <if test="category != null and category != ''"> and category = #{category}</if>
+            <if test="title != null and title != ''"> and title like concat('%', #{title}, '%')</if>
+        </where>
+        order by id desc
+    </select>
+
+    <insert id="insertOfficialEvent" parameterType="OfficialEvent" useGeneratedKeys="true" keyProperty="id">
+        insert into official_event
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="title != null">title,</if>
+            <if test="subtitle != null">subtitle,</if>
+            <if test="category != null">category,</if>
+            <if test="coverImg != null">cover_img,</if>
+            <if test="story != null">story,</if>
+            <if test="city != null">city,</if>
+            <if test="signupStart != null">signup_start,</if>
+            <if test="activityStart != null">activity_start,</if>
+            <if test="activityEnd != null">activity_end,</if>
+            <if test="settleTime != null">settle_time,</if>
+            <if test="signupLimit != null">signup_limit,</if>
+            <if test="contentJson != null">content_json,</if>
+            <if test="collectiveEnabled != null">collective_enabled,</if>
+            <if test="collectiveMetric != null">collective_metric,</if>
+            <if test="collectiveThreshold != null">collective_threshold,</if>
+            <if test="leaderboardEnabled != null">leaderboard_enabled,</if>
+            <if test="rewardJson != null">reward_json,</if>
+            <if test="merchantIds != null">merchant_ids,</if>
+            <if test="brandLogo != null">brand_logo,</if>
+            <if test="bannerEnabled != null">banner_enabled,</if>
+            <if test="sort != null">sort,</if>
+            <if test="status != null">status,</if>
+            <if test="senderAccount != null">sender_account,</if>
+            <if test="creatorIdentitySource != null">creator_identity_source,</if>
+            <if test="contractVersion != null">contract_version,</if>
+            <if test="fulfillmentPolicy != null">fulfillment_policy,</if>
+            <if test="controlState != null">control_state,</if>
+            <if test="pausedFromStatus != null">paused_from_status,</if>
+            <if test="pausedAt != null">paused_at,</if>
+            <if test="pausedBy != null">paused_by,</if>
+            <if test="pausedReason != null">paused_reason,</if>
+            <if test="pauseImpactScope != null">pause_impact_scope,</if>
+            <if test="pauseAlternativePlan != null">pause_alternative_plan,</if>
+            <if test="pauseNotificationPlan != null">pause_notification_plan,</if>
+            <if test="pauseNotificationStatus != null">pause_notification_status,</if>
+            <if test="resumeNote != null">resume_note,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="title != null">#{title},</if>
+            <if test="subtitle != null">#{subtitle},</if>
+            <if test="category != null">#{category},</if>
+            <if test="coverImg != null">#{coverImg},</if>
+            <if test="story != null">#{story},</if>
+            <if test="city != null">#{city},</if>
+            <if test="signupStart != null">#{signupStart},</if>
+            <if test="activityStart != null">#{activityStart},</if>
+            <if test="activityEnd != null">#{activityEnd},</if>
+            <if test="settleTime != null">#{settleTime},</if>
+            <if test="signupLimit != null">#{signupLimit},</if>
+            <if test="contentJson != null">#{contentJson},</if>
+            <if test="collectiveEnabled != null">#{collectiveEnabled},</if>
+            <if test="collectiveMetric != null">#{collectiveMetric},</if>
+            <if test="collectiveThreshold != null">#{collectiveThreshold},</if>
+            <if test="leaderboardEnabled != null">#{leaderboardEnabled},</if>
+            <if test="rewardJson != null">#{rewardJson},</if>
+            <if test="merchantIds != null">#{merchantIds},</if>
+            <if test="brandLogo != null">#{brandLogo},</if>
+            <if test="bannerEnabled != null">#{bannerEnabled},</if>
+            <if test="sort != null">#{sort},</if>
+            <if test="status != null">#{status},</if>
+            <if test="senderAccount != null">#{senderAccount},</if>
+            <if test="creatorIdentitySource != null">#{creatorIdentitySource},</if>
+            <if test="contractVersion != null">#{contractVersion},</if>
+            <if test="fulfillmentPolicy != null">#{fulfillmentPolicy},</if>
+            <if test="controlState != null">#{controlState},</if>
+            <if test="pausedFromStatus != null">#{pausedFromStatus},</if>
+            <if test="pausedAt != null">#{pausedAt},</if>
+            <if test="pausedBy != null">#{pausedBy},</if>
+            <if test="pausedReason != null">#{pausedReason},</if>
+            <if test="pauseImpactScope != null">#{pauseImpactScope},</if>
+            <if test="pauseAlternativePlan != null">#{pauseAlternativePlan},</if>
+            <if test="pauseNotificationPlan != null">#{pauseNotificationPlan},</if>
+            <if test="pauseNotificationStatus != null">#{pauseNotificationStatus},</if>
+            <if test="resumeNote != null">#{resumeNote},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateOfficialEvent" parameterType="OfficialEvent">
+        update official_event
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="title != null">title = #{title},</if>
+            <if test="subtitle != null">subtitle = #{subtitle},</if>
+            <if test="category != null">category = #{category},</if>
+            <if test="coverImg != null">cover_img = #{coverImg},</if>
+            <if test="story != null">story = #{story},</if>
+            <if test="city != null">city = #{city},</if>
+            <if test="signupStart != null">signup_start = #{signupStart},</if>
+            <if test="activityStart != null">activity_start = #{activityStart},</if>
+            <if test="activityEnd != null">activity_end = #{activityEnd},</if>
+            <if test="settleTime != null">settle_time = #{settleTime},</if>
+            <if test="signupLimit != null">signup_limit = #{signupLimit},</if>
+            <if test="contentJson != null">content_json = #{contentJson},</if>
+            <if test="collectiveEnabled != null">collective_enabled = #{collectiveEnabled},</if>
+            <if test="collectiveMetric != null">collective_metric = #{collectiveMetric},</if>
+            <if test="collectiveThreshold != null">collective_threshold = #{collectiveThreshold},</if>
+            <if test="leaderboardEnabled != null">leaderboard_enabled = #{leaderboardEnabled},</if>
+            <if test="rewardJson != null">reward_json = #{rewardJson},</if>
+            <if test="merchantIds != null">merchant_ids = #{merchantIds},</if>
+            <if test="brandLogo != null">brand_logo = #{brandLogo},</if>
+            <if test="bannerEnabled != null">banner_enabled = #{bannerEnabled},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="senderAccount != null">sender_account = #{senderAccount},</if>
+            <if test="creatorIdentitySource != null">creator_identity_source = #{creatorIdentitySource},</if>
+            <if test="contractVersion != null">contract_version = #{contractVersion},</if>
+            <if test="fulfillmentPolicy != null">fulfillment_policy = #{fulfillmentPolicy},</if>
+            <if test="controlState != null">control_state = #{controlState},</if>
+            <if test="pausedFromStatus != null">paused_from_status = #{pausedFromStatus},</if>
+            <if test="pausedAt != null">paused_at = #{pausedAt},</if>
+            <if test="pausedBy != null">paused_by = #{pausedBy},</if>
+            <if test="pausedReason != null">paused_reason = #{pausedReason},</if>
+            <if test="pauseImpactScope != null">pause_impact_scope = #{pauseImpactScope},</if>
+            <if test="pauseAlternativePlan != null">pause_alternative_plan = #{pauseAlternativePlan},</if>
+            <if test="pauseNotificationPlan != null">pause_notification_plan = #{pauseNotificationPlan},</if>
+            <if test="pauseNotificationStatus != null">pause_notification_status = #{pauseNotificationStatus},</if>
+            <if test="resumeNote != null">resume_note = #{resumeNote},</if>
+            update_time = now(),
+        </trim>
+        where id = #{id}
+    </update>
+
+</mapper>

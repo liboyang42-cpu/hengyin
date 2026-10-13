@@ -1,0 +1,582 @@
+package com.chengyinhub.business.service.ai.impl;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import com.chengyinhub.business.domain.AiGenerationLog;
+import com.chengyinhub.business.domain.UmsMember;
+import com.chengyinhub.business.mapper.AiGenerationLogMapper;
+import com.chengyinhub.business.service.IUmsMemberService;
+import com.chengyinhub.business.service.IWxContentSecurityService;
+import com.chengyinhub.business.service.ai.AiGatewayResult;
+import com.chengyinhub.business.service.ai.AiSceneRouter;
+import com.chengyinhub.business.service.ai.AiServiceException;
+import com.chengyinhub.business.service.ai.LlmClient;
+import com.chengyinhub.common.config.AiModelConfig;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+/**
+ * AI 调用网关实现测试:频控/入参安全/模型调用/出参安全/审计日志。
+ */
+class AiGatewayServiceImplTest {
+
+    private AiGatewayServiceImpl service;
+    private RedisTemplate<Object, Object> redisTemplate;
+    private ValueOperations<Object, Object> valueOperations;
+    private IWxContentSecurityService wxContentSecurityService;
+    private IUmsMemberService umsMemberService;
+    private AiGenerationLogMapper aiGenerationLogMapper;
+    private AiModelConfig aiModelConfig;
+    private LlmClient mockLlm;
+
+    private static final Long MEMBER_ID = 1001L;
+
+    @SuppressWarnings("unchecked")
+    @BeforeEach
+    void setUp() {
+        redisTemplate = mock(RedisTemplate.class);
+        valueOperations = mock(ValueOperations.class);
+        wxContentSecurityService = mock(IWxContentSecurityService.class);
+        umsMemberService = mock(IUmsMemberService.class);
+        aiGenerationLogMapper = mock(AiGenerationLogMapper.class);
+        aiModelConfig = new AiModelConfig();
+        // @Value not processed outside Spring → set fields manually
+        ReflectionTestUtils.setField(aiModelConfig, "dailyLimit", 20);
+        ReflectionTestUtils.setField(aiModelConfig, "npcDailyLimit", 100);
+        ReflectionTestUtils.setField(aiModelConfig, "provider", "mock");
+        mockLlm = mock(LlmClient.class);
+
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(mockLlm.name()).thenReturn("mock");
+        when(mockLlm.chat(anyString(), anyString())).thenReturn("{\"result\":\"ok\"}");
+
+        // 默认: 内容安全放行
+        when(wxContentSecurityService.checkText(anyString(), anyString())).thenReturn(null);
+
+        // 默认: member 存在,有 openid
+        UmsMember member = new UmsMember();
+        member.setId(MEMBER_ID);
+        when(umsMemberService.selectUmsMemberById(MEMBER_ID)).thenReturn(member);
+
+        // 默认: 日志写入成功
+        when(aiGenerationLogMapper.insertAiGenerationLog(any())).thenReturn(1);
+
+        // 默认: 频控未超(used=1, 首次)
+        when(valueOperations.increment(anyString())).thenReturn(1L);
+
+        List<LlmClient> clients = Collections.singletonList(mockLlm);
+
+        service = new AiGatewayServiceImpl();
+        ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
+        ReflectionTestUtils.setField(service, "wxContentSecurityService", wxContentSecurityService);
+        ReflectionTestUtils.setField(service, "umsMemberService", umsMemberService);
+        ReflectionTestUtils.setField(service, "aiGenerationLogMapper", aiGenerationLogMapper);
+        ReflectionTestUtils.setField(service, "aiModelConfig", aiModelConfig);
+        ReflectionTestUtils.setField(service, "llmClients", clients);
+    }
+
+    // ---- normal flow ----
+
+    @Test
+    void generateNormalFlowReturnsResult() {
+        when(valueOperations.increment(anyString())).thenReturn(1L);
+
+        AiGatewayResult result = service.generate(MEMBER_ID, "club", "merchant_plan",
+                "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}");
+
+        assertNotNull(result);
+        assertEquals("mock", result.getModel());
+        assertNotNull(result.getText());
+        assertNotNull(result.getTraceId());
+        assertEquals(0, result.getSafetyFlag());
+        assertTrue(result.isSafetyOk());
+
+        // verify all steps ran
+        verify(mockLlm).chat(anyString(), anyString());
+        verify(wxContentSecurityService, times(2)).checkText(anyString(), anyString()); // input + output safety
+        verify(aiGenerationLogMapper).insertAiGenerationLog(any());
+    }
+
+    @Test
+    void playerThemeDraftSkipsGenericQuotaUntilDraftIsValidated() {
+        AiGatewayResult result = service.generate(MEMBER_ID, "player", "theme_draft",
+                "[BIZ:theme_draft]\n", "{\"idea\":\"night walk\"}");
+
+        assertNotNull(result);
+        verify(valueOperations, never()).increment(anyString());
+    }
+
+    // ---- input safety block ----
+
+    @Test
+    void generateInputSafetyBlockThrowsException() {
+        when(wxContentSecurityService.checkText(anyString(), anyString())).thenReturn("包含违规内容");
+
+        AiServiceException ex = assertThrows(AiServiceException.class, () -> {
+            service.generate(MEMBER_ID, "club", "merchant_plan",
+                    "[BIZ:merchant_plan]\n", "bad content");
+        });
+
+        assertEquals("包含违规内容", ex.getMessage());
+
+        // audit log is written even on failure
+        verify(aiGenerationLogMapper).insertAiGenerationLog(any());
+        // model not called
+        verify(mockLlm, never()).chat(anyString(), anyString());
+    }
+
+    // ---- output safety block ----
+
+    @Test
+    void generateOutputSafetyBlockThrowsException() {
+        // input safety passes
+        when(wxContentSecurityService.checkText(anyString(), anyString()))
+                .thenReturn(null)   // first call: input
+                .thenReturn("生成内容违规");  // second call: output
+
+        AiServiceException ex = assertThrows(AiServiceException.class, () -> {
+            service.generate(MEMBER_ID, "club", "merchant_plan",
+                    "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}");
+        });
+
+        assertEquals("生成内容未通过安全检测,请调整后重试", ex.getMessage());
+
+        // model was called
+        verify(mockLlm).chat(anyString(), anyString());
+        // audit log written with SAFETY_OUTPUT_BLOCKED
+        verify(aiGenerationLogMapper).insertAiGenerationLog(any());
+    }
+
+    // ---- rate limit ----
+
+    @Test
+    void generateRateLimitExceededThrowsException() {
+        when(valueOperations.increment(anyString())).thenReturn(25L); // dailyLimit is 20
+
+        AiServiceException ex = assertThrows(AiServiceException.class, () -> {
+            service.generate(MEMBER_ID, "club", "merchant_plan",
+                    "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}");
+        });
+
+        assertTrue(ex.getMessage().contains("AI次数已用完"));
+        // model not called
+        verify(mockLlm, never()).chat(anyString(), anyString());
+    }
+
+    // ---- audit log always written ----
+
+    @Test
+    void generateModelErrorStillWritesAuditLog() {
+        when(mockLlm.chat(anyString(), anyString())).thenThrow(new RuntimeException("model down"));
+
+        assertThrows(AiServiceException.class, () -> {
+            service.generate(MEMBER_ID, "club", "merchant_plan",
+                    "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}");
+        });
+
+        // audit log must be written even on model error
+        verify(aiGenerationLogMapper).insertAiGenerationLog(any());
+    }
+
+    @Test
+    void missingApiKeyReturnsDiagnosableConfigurationFailure() {
+        when(mockLlm.chat(anyString(), anyString()))
+                .thenThrow(new IllegalStateException("AI 模型 deepseek 未配置 apiKey"));
+
+        AiServiceException error = assertThrows(AiServiceException.class, () ->
+            service.generate(MEMBER_ID, "club", "merchant_plan",
+                "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}"));
+
+        assertEquals(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, error.getReason(),
+            "配置缺失必须由上游可用性闸指认，不能被普通模型繁忙兜底吞掉");
+        assertTrue(error.getMessage().contains("配置缺失"));
+        assertTrue(error.getMessage().contains("traceId="), "外部报错必须带可查日志的追踪号");
+    }
+
+    // ---- 频控回滚:我们的锅不该扣用户额度 ----
+    //
+    // 病理:generate() 先 increment 再调模型,模型炸时 catch 只 saveLog + throw「AI 繁忙」,
+    // 从不 decrement ⇒ 用户什么都没拿到,每日额度照扣一次。每天 20 次的池子,
+    // AI 抖 3 次就白掉 15%,而用户完全无从知晓、也无处申诉(日志里只有 ERROR)。
+    //
+    // 本次退的:模型调用抛异常、选不到可用模型 —— 都是我们的锅,用户零所得。
+    // 本次不退的,理由各不相同(**别一视同仁**,详见 refundQuota 的 javadoc):
+    //   · 已超限 —— 确定不退;
+    //   · 出参安全拦截 —— 产品策略未拍板;
+    // ⚠️ 全篇不写行号:指语义,别指坐标 —— 坐标随任何编辑静默失准。
+    //
+    //   · 入参安全拦截 —— **边界未决,不是「刻意设计」**:checkText fail-close,
+    //     「审核服务繁忙」(我们的锅)与「内容违规」(用户的锅)走同一个非空 String 通道,
+    //     本层区分不了。修它要改内容安全接口(合规路径)→ 另开单。
+    //
+
+    @Test
+    void modelError_refundsQuota_notUserFault() {
+        when(mockLlm.chat(anyString(), anyString())).thenThrow(new RuntimeException("model down"));
+
+        assertThrows(AiServiceException.class, () -> service.generate(
+                MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
+
+        // 模型炸了是我们的锅,用户没拿到任何东西 → 必须把刚才 increment 的那一次退回来
+        verify(valueOperations, times(1)).decrement(anyString());
+    }
+
+    @Test
+    void noModelAvailable_refundsQuota_configErrorIsOurFault() {
+        // 无可用 client:selectClient/resolveClient 抛「无可用的 AI 模型」——纯配置错
+        ReflectionTestUtils.setField(service, "llmClients", Collections.<LlmClient>emptyList());
+        ReflectionTestUtils.setField(service, "llmClientsByBeanName", null);
+
+        assertThrows(AiServiceException.class, () -> service.generate(
+                MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
+
+        verify(valueOperations, times(1)).decrement(anyString());
+    }
+
+    /**
+     * 入参内容安全拦截:维持「不退」——但这是<b>现状锁定,不是「设计如此」</b>。
+     *
+     * <p>⚠️ checkText 是 fail-close,且用同一个非空 String 通道表达
+     * 「审核服务繁忙」(我们的锅)与「内容含违规」(用户的锅),本层区分不了 ⇒
+     * 微信审核一抖,用户白扣额度还被标 SAFETY_INPUT_BLOCKED。修它要改内容安全接口
+     * (合规路径),另开单。本用例只锁住「本次没顺手改这里的行为」,
+     * <b>将来那单落地时它应该被改掉,不是被绕开</b>。
+     */
+    @Test
+    void inputBlocked_doesNotRefund_currentBehaviorLocked_boundaryUnresolved() {
+        when(wxContentSecurityService.checkText(anyString(), anyString())).thenReturn("含违规内容");
+
+        assertThrows(AiServiceException.class, () -> service.generate(
+                MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
+
+        verify(valueOperations, never()).decrement(anyString());
+    }
+
+    @Test
+    void normalFlow_doesNotRefund() {
+        service.generate(MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}");
+        verify(valueOperations, never()).decrement(anyString());
+    }
+
+    @Test
+    void rateLimitExceeded_doesNotRefund_alreadyOverAnyway() {
+        when(valueOperations.increment(anyString())).thenReturn(25L); // dailyLimit=20
+
+        assertThrows(AiServiceException.class, () -> service.generate(
+                MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
+
+        // 已经超了,退不退都拦;退反而会让「攻击者狂刷」看起来像没刷过。不退。
+        verify(valueOperations, never()).decrement(anyString());
+    }
+
+    /**
+     * ★ DECR 扑空(key 不存在)会建出一个 -1 且**无 TTL** 的 key。
+     *
+     * <p>本机 Redis 实测:{@code DEL k; DECR k} → 值 -1、{@code TTL k} = -1(永不过期)。
+     * <p>两种扑空,后果不同(详见 {@code refundQuota} 的注释):
+     * <ul>
+     *   <li><b>正常 TTL 到期</b> ⇒ 只可能发生在次日零点后,而那之后再没请求会算出这个日期 key
+     *       ⇒ -1 key 没人读得到 = <b>纯内存泄漏,不是白送额度</b>;</li>
+     *   <li><b>日期内 key 丢失</b>(淘汰/重启/人工 DEL)⇒ 当天后续请求会读到 -1
+     *       ⇒ 计数从 -1 起 = <b>真白送一次</b>。上面那个 DEL 实验模拟的正是这一种。</li>
+     * </ul>
+     * 两种都该删 key。本用例用 mock 让 decrement 返回 -1,覆盖的是「扑空后必须 delete」这条不变式。
+     */
+    @Test
+    void refund_onExpiredKey_deletesInsteadOfLeavingImmortalNegativeKey() {
+        when(mockLlm.chat(anyString(), anyString())).thenThrow(new RuntimeException("model down"));
+        // 模拟:increment 时 key 还在(返回 1),decrement 时 key 已过期 → DECR 建 key 得 -1
+        when(valueOperations.decrement(anyString())).thenReturn(-1L);
+
+        assertThrows(AiServiceException.class, () -> service.generate(
+                MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
+
+        verify(redisTemplate, times(1)).delete(anyString());
+    }
+
+    /** 正常退款(余额 >= 0)不该删 key —— 删了会把当天已用次数清零 = 白送整池额度。 */
+    @Test
+    void refund_normal_doesNotDeleteKey() {
+        when(mockLlm.chat(anyString(), anyString())).thenThrow(new RuntimeException("model down"));
+        when(valueOperations.decrement(anyString())).thenReturn(3L);
+
+        assertThrows(AiServiceException.class, () -> service.generate(
+                MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
+
+        verify(redisTemplate, never()).delete(anyString());
+    }
+
+    /** 退款要退到和扣的同一个 key —— 退错池子等于没退,还会把别人的额度还错。 */
+    @Test
+    void refund_usesSameKeyAsIncrement() {
+        when(mockLlm.chat(anyString(), anyString())).thenThrow(new RuntimeException("model down"));
+        ArgumentCaptor<Object> inc = ArgumentCaptor.forClass(Object.class);
+        ArgumentCaptor<Object> dec = ArgumentCaptor.forClass(Object.class);
+
+        assertThrows(AiServiceException.class, () -> service.generate(
+                MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
+
+        verify(valueOperations).increment((Object) inc.capture());
+        verify(valueOperations).decrement((Object) dec.capture());
+        assertEquals(inc.getValue(), dec.getValue(), "退的 key 必须与扣的 key 逐字相同");
+    }
+
+    // ---- trace ID ----
+
+    @Test
+    void generateReturnsUniqueTraceId() {
+        AiGatewayResult r1 = service.generate(MEMBER_ID, "club", "merchant_plan",
+                "[BIZ:merchant_plan]\n", "{\"idea\":\"a\"}");
+        AiGatewayResult r2 = service.generate(MEMBER_ID, "club", "theme_draft",
+                "[BIZ:theme_draft]\n", "{\"idea\":\"b\"}");
+
+        assertNotNull(r1.getTraceId());
+        assertNotNull(r2.getTraceId());
+        // trace IDs should be different
+        assertTrue(!r1.getTraceId().equals(r2.getTraceId()));
+    }
+
+    // ---- TTL set on first increment ----
+
+    // ---- traceId 链路一致性:落库的 trace_id 必须 == 返给前端的 traceId ----
+    // ⚠️ 上面 generateReturnsUniqueTraceId 只看「两次调用不重复」,断链时照样绿(假绿)。
+    //    真正抓 bug 的是 captor:必须比对**落库那一行**与**返回值**。
+
+    @Test
+    void normalFlowLogsSameTraceIdAsReturned() {
+        AiGatewayResult result = service.generate(MEMBER_ID, "club", "merchant_plan",
+                "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}");
+
+        ArgumentCaptor<AiGenerationLog> captor = ArgumentCaptor.forClass(AiGenerationLog.class);
+        verify(aiGenerationLogMapper).insertAiGenerationLog(captor.capture());
+        AiGenerationLog logged = captor.getValue();
+
+        assertNotNull(logged.getTraceId());
+        // 断链时这里红:落库是另起的 UUID
+        assertEquals(result.getTraceId(), logged.getTraceId());
+        // token_in/token_out 必须真被 set(它们要落库,见 migration_ai_log_token_trace_20260716.sql)
+        assertNotNull(logged.getTokenIn());
+        assertNotNull(logged.getTokenOut());
+        assertTrue(logged.getTokenIn() > 0);
+        assertTrue(logged.getTokenOut() > 0);
+        assertEquals(logged.getTokenIn() + logged.getTokenOut(), logged.getTokenEst().intValue());
+    }
+
+    @Test
+    void inputBlockedLogsTraceIdGeneratedBeforeRateLimit() {
+        // input-blocked 分支在 traceId 原先的生成点**之前**执行 → 提到方法开头才有值
+        when(wxContentSecurityService.checkText(anyString(), anyString())).thenReturn("包含违规内容");
+
+        assertThrows(AiServiceException.class, () -> service.generate(MEMBER_ID, "club", "merchant_plan",
+                "[BIZ:merchant_plan]\n", "bad content"));
+
+        ArgumentCaptor<AiGenerationLog> captor = ArgumentCaptor.forClass(AiGenerationLog.class);
+        verify(aiGenerationLogMapper).insertAiGenerationLog(captor.capture());
+        AiGenerationLog logged = captor.getValue();
+
+        assertNotNull(logged.getTraceId());
+        assertTrue(logged.getTraceId().length() > 0);
+        assertEquals(AiGenerationLog.SAFETY_INPUT_BLOCKED, logged.getSafetyFlag().intValue());
+    }
+
+    @Test
+    void outputBlockedLogsNonNullTraceIdAndTokens() {
+        when(wxContentSecurityService.checkText(anyString(), anyString()))
+                .thenReturn(null)              // input
+                .thenReturn("生成内容违规");     // output
+
+        assertThrows(AiServiceException.class, () -> service.generate(MEMBER_ID, "club", "merchant_plan",
+                "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}"));
+
+        ArgumentCaptor<AiGenerationLog> captor = ArgumentCaptor.forClass(AiGenerationLog.class);
+        verify(aiGenerationLogMapper).insertAiGenerationLog(captor.capture());
+        AiGenerationLog logged = captor.getValue();
+
+        // 拿不到 result(抛异常),只能断言落库侧非空 + token 已 set
+        assertNotNull(logged.getTraceId());
+        assertTrue(logged.getTraceId().length() > 0);
+        assertNotNull(logged.getTokenIn());
+        assertNotNull(logged.getTokenOut());
+        assertTrue(logged.getTokenIn() > 0);
+        assertTrue(logged.getTokenOut() > 0);
+        assertEquals(AiGenerationLog.SAFETY_OUTPUT_BLOCKED, logged.getSafetyFlag().intValue());
+    }
+
+    @Test
+    void cacheOnlyLogsSameTraceIdAsReturned() {
+        // cache-only 分支只有注入 sceneRouter 且 isCacheOnly=true 才可达
+        // (默认 setUp 不注入 → selectClient 走 resolveClient(provider="mock") → 拿到 mockLlm)
+        AiSceneRouter sceneRouter = mock(AiSceneRouter.class);
+        when(sceneRouter.resolve(anyString())).thenReturn("cache");
+        when(sceneRouter.isCacheOnly(anyString())).thenReturn(true);
+        ReflectionTestUtils.setField(service, "sceneRouter", sceneRouter);
+
+        AiGatewayResult result = service.generate(MEMBER_ID, "club", "npc_event",
+                "[BIZ:npc_event]\n", "{\"idea\":\"test\"}");
+
+        assertEquals("cache", result.getModel());
+
+        ArgumentCaptor<AiGenerationLog> captor = ArgumentCaptor.forClass(AiGenerationLog.class);
+        verify(aiGenerationLogMapper).insertAiGenerationLog(captor.capture());
+
+        // 断链时这里红:saveLog 一个 UUID、返回值另一个 UUID(原 :108/:109 两处各起一个)
+        assertEquals(result.getTraceId(), captor.getValue().getTraceId());
+        // 模型没被调
+        verify(mockLlm, never()).chat(anyString(), anyString());
+    }
+
+    // ---- 频控分池: npc_chat 独立额度, 创作类共用原池 ----
+    // ⚠️ 用真计数器(HashMap<key,count>)而不是 thenReturn 固定值:
+    //    固定值的 stub 无论 key 是什么都返回同一个数 ⇒ 分池断掉时照样绿(假绿)。
+    //    只有「按 key 各自计数」才能真的证明两个池互不相干。
+
+    /** 让 increment(key) 按 key 真计数,返回该 key 的当前值。 */
+    private java.util.Map<String, Long> installRealCounter() {
+        java.util.Map<String, Long> counters = new java.util.HashMap<>();
+        when(valueOperations.increment(anyString())).thenAnswer(inv -> {
+            String key = inv.getArgument(0);
+            long v = counters.getOrDefault(key, 0L) + 1;
+            counters.put(key, v);
+            return v;
+        });
+        return counters;
+    }
+
+    @Test
+    void npcChatAndCreationUseDifferentRateKeys() {
+        java.util.Map<String, Long> counters = installRealCounter();
+
+        service.generate(MEMBER_ID, "player", "npc_chat", "s", "u");
+        service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u");
+
+        // 两把 key,各记 1 次 —— 同一把 key 记 2 次就是没分池
+        assertEquals(2, counters.size(), "npc_chat 与 merchant_plan 必须落在两把不同的 rate key 上");
+        for (String key : counters.keySet()) {
+            assertEquals(1L, counters.get(key).longValue());
+        }
+        assertTrue(counters.keySet().stream().anyMatch(k -> k.startsWith("ai:gen:limit:npc:" + MEMBER_ID + ":")),
+                "npc 池 key 应为 ai:gen:limit:npc:{memberId}:{yyyyMMdd},实际=" + counters.keySet());
+        assertTrue(counters.keySet().stream().anyMatch(k -> k.startsWith("ai:gen:limit:gen:" + MEMBER_ID + ":")),
+                "创作池 key 应为 ai:gen:limit:gen:{memberId}:{yyyyMMdd},实际=" + counters.keySet());
+    }
+
+    @Test
+    void creationBizTypesShareOneRateKey() {
+        // 分组的意义:创作类 7 个 bizType **共用一池**。
+        // 若按 bizType 各自一池,单用户实际额度会被悄悄放大 7 倍。
+        java.util.Map<String, Long> counters = installRealCounter();
+
+        service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u");
+        service.generate(MEMBER_ID, "club", "theme_draft", "s", "u");
+        service.generate(MEMBER_ID, "club", "node_generate", "s", "u");
+
+        assertEquals(1, counters.size(), "创作类 bizType 必须共用同一把 rate key");
+        assertEquals(3L, counters.values().iterator().next().longValue());
+    }
+
+    @Test
+    void npcUsageDoesNotConsumeCreationQuota() {
+        ReflectionTestUtils.setField(aiModelConfig, "npcDailyLimit", 100);
+        ReflectionTestUtils.setField(aiModelConfig, "dailyLimit", 20);
+        installRealCounter();
+
+        // NPC 用掉 30 次(远超创作类的 20/天上限)
+        for (int i = 0; i < 30; i++) {
+            service.generate(MEMBER_ID, "player", "npc_chat", "s", "u");
+        }
+
+        // 创作额度必须分毫未损:第 1 次创作仍应成功
+        AiGatewayResult r = service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u");
+        assertNotNull(r);
+        assertEquals(0, r.getSafetyFlag());
+    }
+
+    @Test
+    void creationExhaustedDoesNotBlockNpc() {
+        ReflectionTestUtils.setField(aiModelConfig, "npcDailyLimit", 100);
+        ReflectionTestUtils.setField(aiModelConfig, "dailyLimit", 20);
+        installRealCounter();
+
+        // 创作类用满 20 次
+        for (int i = 0; i < 20; i++) {
+            service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u");
+        }
+        // 第 21 次创作必须被拦
+        assertThrows(AiServiceException.class,
+                () -> service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u"));
+
+        // 但 NPC 完全不受影响
+        AiGatewayResult r = service.generate(MEMBER_ID, "player", "npc_chat", "s", "u");
+        assertNotNull(r);
+        assertEquals(0, r.getSafetyFlag());
+    }
+
+    @Test
+    void npcRateLimitUsesNpcDailyLimitAndKeepsFrontendMessagePrefix() {
+        ReflectionTestUtils.setField(aiModelConfig, "npcDailyLimit", 100);
+        ReflectionTestUtils.setField(aiModelConfig, "dailyLimit", 20);
+        // 第 101 次 NPC 调用 → 超 npcDailyLimit(100)
+        when(valueOperations.increment(anyString())).thenReturn(101L);
+
+        AiServiceException ex = assertThrows(AiServiceException.class,
+                () -> service.generate(MEMBER_ID, "player", "npc_chat", "s", "u"));
+
+        // 额度数字必须是 npcDailyLimit(100),不是 dailyLimit(20)
+        assertTrue(ex.getMessage().contains("100/天"), "NPC 超限文案应带 npcDailyLimit=100,实际=" + ex.getMessage());
+        // ⚠️ 前端用 indexOf('今日AI次数已用完') 做包含匹配识别频控,前缀改了会静默失效
+        assertTrue(ex.getMessage().startsWith("今日AI次数已用完"), "频控文案前缀被改会让前端识别静默失效");
+    }
+
+    @Test
+    void npcUnderLimitPasses() {
+        ReflectionTestUtils.setField(aiModelConfig, "npcDailyLimit", 100);
+        // 第 21 次 NPC 调用:超了创作类的 20,但没超 NPC 的 100 → 必须放行
+        when(valueOperations.increment(anyString())).thenReturn(21L);
+
+        AiGatewayResult r = service.generate(MEMBER_ID, "player", "npc_chat", "s", "u");
+        assertNotNull(r);
+        assertEquals(0, r.getSafetyFlag());
+    }
+
+    @Test
+    void generateSetsExpireOnFirstRequest() {
+        when(valueOperations.increment(anyString())).thenReturn(1L);
+
+        service.generate(MEMBER_ID, "club", "merchant_plan",
+                "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}");
+
+        verify(redisTemplate).expire(anyString(), eq(86400L), eq(TimeUnit.SECONDS));
+    }
+
+    @Test
+    void generateDoesNotSetExpireOnSubsequentRequests() {
+        when(valueOperations.increment(anyString())).thenReturn(5L);
+
+        service.generate(MEMBER_ID, "club", "merchant_plan",
+                "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}");
+
+        verify(redisTemplate, never()).expire(anyString(), anyLong(), any(TimeUnit.class));
+    }
+}

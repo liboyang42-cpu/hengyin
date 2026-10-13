@@ -1,0 +1,454 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "城瘾小程序发布前 60 天媒体预热方案",
+    "description": "面向城瘾首发团队的渠道、内容、节奏、预算、KPI 与发布闸门策略。",
+    "generatedAt": "2026-08-17T02:14:24-07:00",
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# 城瘾小程序发布前 60 天媒体预热方案"
+      },
+      {
+        "id": "executive-summary",
+        "type": "markdown",
+        "body": "## Executive Summary\n\n- **采用“三主两辅”，不要全平台铺开。** 主阵地是微信生态、小红书、抖音；B 站用于沉淀少量高质量幕后内容，微博只承担事件放大与媒体合作。地图/POI 是本地搜索卫生，不算内容主阵地。\n- **60 天的目标不是制造一次大曝光，而是建立可验证的首发漏斗。** 先验证哪种城市故事能让人停留，再验证真实路线与店铺节点，随后用内测纪录和玩家证言转化候补名单，最后才做倒计时与付费放大。\n- **内容主角必须是“城市里真能玩的一局”，不是 App 功能页。** 建议 60% 内容服务玩家出门动机，25% 服务主理人和商家供给，15% 用于研发过程、规则、安全和履约信任。\n- **首发硬目标与容量绑定。** 到 T-7，合格候补人数达到首发两周可承载席位的 3–5 倍；确认可用的商家节点达到路线最低需求的 1.3 倍；未通过真机全链路、路线实走和退款/安全说明的内容，不进入大额投放。"
+      },
+      {
+        "id": "decision-frame",
+        "type": "markdown",
+        "body": "## 先统一传播对象：不是“探店 App”，而是可履约的城市游戏\n\n城瘾现阶段应统一表述为：**把兴趣、故事、商铺和路线编译成一场可购买、可参与、可验证、可复用的城市游戏。** 它先提供一个值得出门、规则清楚的共同体验，再让玩家自然认识同好。\n\n本方案按“单城首发、1–2 个试点城区、3–5 条可玩路线、精干团队”设计。若实际首发城市、席位、预算或路线数量不同，应优先替换容量与供给假设，渠道顺序不必随之重做。产品市场背景见[城瘾商业计划证据底稿](docs/research/chengyin-commercial-plan-market-20260817.md)。"
+      },
+      {
+        "id": "evidence-platforms",
+        "type": "markdown",
+        "body": "## 为什么是微信、小红书、抖音三条主线\n\n**微信最适合承接“看见—报名—支付—复访”。** 腾讯当前把朋友圈、公众号、微信支付、小程序、搜一搜与视频号列为同一生态能力；截至 2026 年第一季度，微信及 WeChat 合并月活超过 14 亿，2024 年小程序交易额为 8 万亿元。这些是生态规模，不是城瘾可获得的流量，但说明首发继续以微信小程序为交易和复访底座是合理的。\n\n**小红书适合本地灵感与搜索心智。** 其官方商业平台把产品种草、客资收集、应用推广，以及“在 App/小程序内行动”列为正式营销目标；同时规则严格限制未授权站外导流。因此小红书应做“搜得到、愿收藏、想去玩”的内容资产，并使用平台认可的专业号、应用推广或客资能力承接，而不是在笔记、评论和简介里暗示加微信。\n\n**抖音适合把一场城市游戏拍成即时欲望。** 官方产品已覆盖短视频推商品、推门店、直播推商品与本地获客，但抖音视频挂载的小程序能力面向字节小程序，不等于能直接挂微信小程序。首发阶段应先做抖音原生账号、POI、品牌搜索和合规线索承接；除非团队另建字节小程序，否则不要把“抖音直达微信小程序”写进转化假设。\n\n全国性证据只支持“视频值得成为主媒介”，不支持任何平台必然成功。CNNIC 披露，2024 年短视频用户规模为 10.4 亿，网络视听研究还显示短视频、直播已成为消费触发器；实际效果仍必须由城瘾自己的来源码、候补名单和到场数据验证。"
+      },
+      {
+        "id": "allocation-intro",
+        "type": "markdown",
+        "body": "## 渠道资源先投闭环，再投声量\n\n下图是**团队工时与可控传播预算的建议占比**，不是平台流量份额或市场统计。微信承担承接与复访，小红书承担搜索型种草，抖音承担视觉触发；B 站和微博只有在核心素材已经稳定复用时才加码。"
+      },
+      {
+        "id": "channel-allocation-chart-block",
+        "type": "chart",
+        "chartId": "channel-allocation-chart"
+      },
+      {
+        "id": "allocation-implication",
+        "type": "markdown",
+        "body": "### 含义\n\n“三主”不是三套完全独立的内容生产线。每周应以 1 次实地拍摄为母素材，先做一条完整叙事，再分别重剪：微信强调可信与报名，小红书强调收藏价值与城市关键词，抖音强调前两秒冲突和现场感。B 站只接收值得讲 4–8 分钟的完整幕后，微博只在联名、内测日、首发日或媒体报道时出现。"
+      },
+      {
+        "id": "platform-matrix-heading",
+        "type": "markdown",
+        "body": "## 每个平台具体怎么发\n\n平台角色、频次和 CTA 必须分开设计。尤其是跨平台转化：只有使用平台授权产品或明确允许的链接能力，才把外部转化写成可执行路径。"
+      },
+      {
+        "id": "platform-matrix-block",
+        "type": "table",
+        "tableId": "platform-matrix-table"
+      },
+      {
+        "id": "content-system",
+        "type": "markdown",
+        "body": "## 内容不是介绍功能，而是连续证明“这局值得出门”\n\n### 四个固定栏目\n\n1. **城市谜面（30%）**：冷门地标、街区传说、路线选择题、店铺隐藏细节。目的不是把答案讲完，而是让用户想亲自验证。\n2. **真实开局（30%）**：路线实走、计时、失败点、删改理由、玩家完成任务的瞬间。它是最强信任内容。\n3. **城市 NPC（25%）**：商家、主理人、店员、玩家的角色化故事；说明店铺为什么是剧情节点，而不是付费露出。\n4. **建造日志（15%）**：产品改动、规则、安全、退款、定位、路线测试。只讲影响真实体验的决策，不做版本号流水账。\n\n### 每周一个母素材包\n\n- 1 条 45–60 秒竖屏主片；\n- 2 条 15–30 秒不同开头的短切；\n- 1 篇 6–9 张的小红书图文；\n- 1 篇公众号深度稿或 FAQ；\n- 5–8 张可复用照片与 3 个评论区问题；\n- 每两周 1 条 4–8 分钟 B 站幕后片，只有素材足够时才做。\n\n同一素材跨平台发布时，必须重写封面、标题、第一句话和 CTA；不要直接带其他平台水印搬运。"
+      },
+      {
+        "id": "sample-hooks",
+        "type": "markdown",
+        "body": "## 12 个可以直接拍的选题\n\n### 面向玩家\n\n- “这条老街不是攻略，是一局 90 分钟城市任务。”\n- “如果这家店是 NPC，它会给你什么任务？”\n- “我们把第 7 个点位删了：地图上很近，走起来完全不对。”\n- “不社交也能玩：先完成任务，再决定要不要认识队友。”\n- “同一条街，白天与夜晚是两套剧情。”\n- “内测玩家最容易失败的三道题，答案都藏在现场。”\n\n### 面向主理人/俱乐部\n\n- “一个兴趣社群，怎样变成规则清楚、能报名、能履约的一场城市游戏？”\n- “我们如何把一次活动拆成可复用的路线、任务和票种。”\n- “主理人最不该自己扛的五件事：报名、核销、提醒、退款、复盘。”\n\n### 面向商家\n\n- “门店不是终点，它是剧情里必须被玩家发现的一个节点。”\n- “不靠发券，店铺怎样成为一条城市路线中的角色？”\n- “我们怎么判断一个店铺节点会带来体验，而不是打断体验？”"
+      },
+      {
+        "id": "timeline-heading",
+        "type": "markdown",
+        "body": "## 60 天按四个阶段推进：定义、证明、招募、收口\n\n每一阶段都要留下可复盘证据。前 30 天允许内容“不够漂亮但足够真实”；后 30 天只有路线、店铺、内测与产品体验已经被证明，才进入转化和放大。"
+      },
+      {
+        "id": "timeline-table-block",
+        "type": "table",
+        "tableId": "timeline-table"
+      },
+      {
+        "id": "weekly-cadence-heading",
+        "type": "markdown",
+        "body": "## 一个精干团队的标准周\n\n固定节奏的价值是让拍摄、剪辑、审核、发布和复盘成为流水线，而不是每天临时想选题。所有发布都预留至少半天合规与事实核对。"
+      },
+      {
+        "id": "weekly-cadence-table-block",
+        "type": "table",
+        "tableId": "weekly-cadence-table"
+      },
+      {
+        "id": "kpi-heading",
+        "type": "markdown",
+        "body": "## KPI 只看能改变决策的信号\n\n首发前不应把播放量、粉丝量当作北极星指标。真正的问题是：是否已有足够多本城用户愿意在可用日期出门；是否有足够路线和商家节点承接；是否能从某一条内容追溯到候补、内测、到场与完成。\n\n**合格候补**至少包含城市、兴趣类型、可参与日期和已同意的联系方式/订阅方式；只点过“想玩”不计入。硬目标采用容量公式：T-7 合格候补人数 ÷ 首发两周可承载席位 = 3–5 倍。这个范围是首发运营缓冲假设，不是行业基准。"
+      },
+      {
+        "id": "kpi-table-block",
+        "type": "table",
+        "tableId": "kpi-table"
+      },
+      {
+        "id": "budget",
+        "type": "markdown",
+        "body": "## 预算：先买证据，再买规模\n\n以下是规划包络，不是平台报价。\n\n- **验证版：3–5 万元。** 30% 实拍与剪辑，35% 本地 KOC/内测组织，20% 优胜内容加热，10% 线下测试物料，5% 工具与机动。适合单城、创始团队亲自拍。\n- **标准版：8–12 万元。** 25% 内容制作，35% 本地创作者合作，25% 平台原生投放，10% 内测场次与线下物料，5% 监测/机动。适合需要稳定周更和 8–12 位本地 KOC 的首发。\n- **不建议一开始进入 15 万元以上。** 只有当至少 12–15 条自然内容中出现 3 条可复现的优胜主题、来源码能回收到合格候补、真机链路和路线容量已经通过闸门后，才扩大投放。\n\n付费预算分三段释放：T-45 至 T-31 用约 20% 测素材；T-30 至 T-15 用约 35% 放大优胜内容与招募内测；T-14 至上线最多释放余下 45%，但必须以产品闸门和候补覆盖率为条件。"
+      },
+      {
+        "id": "creator-plan",
+        "type": "markdown",
+        "body": "## 达人/KOC：要本城有效，不要粉丝数好看\n\n第一轮优先招募 8–12 位能真实到场的本地 KOC，覆盖城市探索、摄影、历史、美食、户外、桌游/推理、社群主理人等兴趣。筛选顺序是：本地受众占比与评论质量 → 是否愿意完整实走 → 叙事能力 → 报价 → 粉丝量。\n\n合作交付至少写清：到场体验、内容数量、发布时间、商业合作标识、素材二次使用范围与期限、不得承诺的功能、错误信息更正机制。先用小样本找出“哪类人讲城瘾最可信”，再决定是否引入中腰部账号。"
+      },
+      {
+        "id": "conversion-tracking",
+        "type": "markdown",
+        "body": "## 转化与归因：每个平台一条合规路径\n\n- **微信生态：** 视频号/公众号/社群使用独立 scene 或渠道码进入候补/内测页；群内只发一条清晰 CTA，不刷屏。\n- **小红书：** 自然内容以品牌词、城市词、收藏和平台内互动为主；需要转化时使用官方允许的专业号、应用推广、客资或其他授权链路。禁止在笔记、评论、简介里用谐音、暗号或二维码绕过站外导流规则。\n- **抖音：** 使用官方账号、POI、品牌搜索、本地生活或合规线索工具；微信小程序不能被当作抖音小程序直接挂载。\n- **B 站/微博：** 只在账号与落地页规则允许时放官方链接；否则以统一品牌词和首发城市词承接搜索。\n\n所有内容记录 `platform / account / campaign / creative / publish_date / creator / city`，候补、内测、到场、完成各阶段都保留来源字段。没有来源回读的数据，只能算曝光回执，不能算预热成功。"
+      },
+      {
+        "id": "release-gates",
+        "type": "markdown",
+        "body": "## 五个发布闸门：任何一个没过，都不做大额转化投放\n\n1. **产品闸门：** 玩家、主理人/俱乐部、商家三条关键路径在当前发布候选版真机录屏通过；不出现技术错误、半初始化数据或无法解释的空态。\n2. **内容闸门：** 至少 2 条首发路线已完整实走两遍，时间、距离、营业时间、天气备选、无障碍/安全提示与退出机制可解释。\n3. **供给闸门：** 所需商家节点与主理人已确认营业、接待、核销和异常联系人，备用节点覆盖最低需求的 30%。\n4. **交易与服务闸门：** 票价、退款、改期、迟到、未成团、天气与客服口径一致；营销内容没有承诺尚未交付的能力。\n5. **数据闸门：** 渠道码能从内容回读到候补/报名；隐私告知清楚，只收实现招募所必需的信息。\n\n2026 年 6 月的旧产品审查曾给出“不可上线、不可商业化投放”的结论；它是风险清单，不是 8 月现状。T-14 必须基于当前 HEAD、真实数据和真机重新验证，既不能沿用旧红灯，也不能凭代码存在就自行宣称通过。"
+      },
+      {
+        "id": "compliance",
+        "type": "markdown",
+        "body": "## 合规底线\n\n- 商业合作、付费探店或投放内容必须让用户能够识别其广告属性；不得伪装成新闻或“路人偶遇”。\n- 不使用“第一、最好、国家级、必火、100% 好玩”等绝对化和无法证明的表述；引用数据写明出处与口径。\n- 抽奖、赠品、免费体验写清数量、条件、时间、领取方式与限制，不用虚假按钮或“点赞评论必得”诱导互动。\n- 拍摄店员、玩家和路人前取得适用授权；未成年人、定位轨迹、联系方式和支付信息按最小必要原则处理。\n- 户外、夜游、高温、雨天、运动强度或危险场景给出真实安全提醒，不鼓励模仿高风险动作。"
+      },
+      {
+        "id": "first-seven-days",
+        "type": "markdown",
+        "body": "## 接下来 7 天就做这些\n\n1. 冻结一句话定位、统一品牌搜索词和首发城市词。\n2. 建立微信、小红书、抖音三个主账号的统一头像、简介、城市与认证资料；同时核对各平台资质。\n3. 选 2 条真实路线，各完成一次“无剧本实走”，记录卡点和删改。\n4. 拍出第一套母素材：城市谜面、路线失败点、一个商家 NPC、一次内部试玩。\n5. 建候补页和来源字段，先不用承诺上线日期；以首发容量公式定义目标。\n6. 发布 6–8 条测试内容，不投或只做极小额加热；48 小时后按收藏、分享、有效评论、品牌搜索与合格候补复盘。\n7. 周末开第一次 10–20 人内测，收集“愿不愿带朋友再来”与任务完成证据，决定下一周内容主线。"
+      },
+      {
+        "id": "further-questions",
+        "type": "markdown",
+        "body": "## 上线前还要回答的四个问题\n\n- 首发城市与首发两周的真实席位是多少？它决定候补目标与投放上限。\n- 3–5 条路线里哪两条最适合被拍成“第一眼就懂”的英雄内容？\n- 是否已有可投放的企业主体、平台资质、隐私政策、客服与退款承接？\n- 团队每周能稳定完成几次实拍、多少条剪辑、多少次评论/私信响应？若少于建议产能，应先砍 B 站和微博，而不是降低三主渠道质量。"
+      },
+      {
+        "id": "caveats",
+        "type": "markdown",
+        "body": "## Caveats and Assumptions\n\n本报告基于 2026 年 8 月 17 日可获取的官方平台资料、法律规则、仓库内商业计划与较早的产品审查。平台能力和审核规则会更新，实际投放前必须在账户后台重新确认。报告没有城瘾历史内容表现、首发城市受众、媒体报价、路线容量和真实转化基线，因此预算与目标采用可调整的规划包络；所有百分比和数量均需在前两周测试后校准。"
+      }
+    ],
+    "charts": [
+      {
+        "id": "channel-allocation-chart",
+        "title": "60 天预热资源建议分配",
+        "subtitle": "团队工时与可控传播预算占比，合计 100%",
+        "type": "bar",
+        "dataset": "channel_allocation",
+        "sourceId": "strategy-channel",
+        "encodings": {
+          "x": {
+            "field": "channel",
+            "type": "nominal",
+            "label": "平台"
+          },
+          "y": {
+            "field": "share",
+            "type": "quantitative",
+            "label": "资源占比",
+            "format": "percent"
+          },
+          "tooltip": [
+            {
+              "field": "primary_job",
+              "type": "text",
+              "label": "主要任务"
+            },
+            {
+              "field": "weekly_cadence",
+              "type": "text",
+              "label": "建议频次"
+            }
+          ]
+        },
+        "valueFormat": "percent",
+        "layout": "full"
+      }
+    ],
+    "tables": [
+      {
+        "id": "platform-matrix-table",
+        "title": "平台执行矩阵",
+        "subtitle": "单城首发、精干团队；频次为建议起点",
+        "dataset": "platform_matrix",
+        "sourceId": "strategy-platform",
+        "defaultSort": {
+          "field": "priority",
+          "direction": "asc"
+        },
+        "density": "spacious",
+        "layout": "full",
+        "columns": [
+          {"field": "priority", "label": "优先级", "type": "number"},
+          {"field": "platform", "label": "平台", "type": "text"},
+          {"field": "job", "label": "主要任务", "type": "text"},
+          {"field": "formats", "label": "内容形式", "type": "text"},
+          {"field": "cadence", "label": "建议频次", "type": "text"},
+          {"field": "cta", "label": "合规 CTA", "type": "text"},
+          {"field": "do_not", "label": "不要做", "type": "text"}
+        ]
+      },
+      {
+        "id": "timeline-table",
+        "title": "T-60 至上线日执行日历",
+        "subtitle": "按周推进；T 表示正式上线日",
+        "dataset": "timeline",
+        "sourceId": "strategy-timeline",
+        "defaultSort": {
+          "field": "order",
+          "direction": "asc"
+        },
+        "density": "spacious",
+        "layout": "full",
+        "columns": [
+          {"field": "order", "label": "序", "type": "number"},
+          {"field": "window", "label": "时间", "type": "text"},
+          {"field": "goal", "label": "阶段目标", "type": "text"},
+          {"field": "hero_content", "label": "英雄内容", "type": "text"},
+          {"field": "cta", "label": "CTA", "type": "text"},
+          {"field": "proof", "label": "退出证据", "type": "text"}
+        ]
+      },
+      {
+        "id": "weekly-cadence-table",
+        "title": "标准周发布节奏",
+        "subtitle": "以一次实拍产生多平台适配内容",
+        "dataset": "weekly_cadence",
+        "sourceId": "strategy-weekly",
+        "defaultSort": {
+          "field": "order",
+          "direction": "asc"
+        },
+        "density": "spacious",
+        "layout": "full",
+        "columns": [
+          {"field": "order", "label": "序", "type": "number"},
+          {"field": "day", "label": "时间", "type": "text"},
+          {"field": "production", "label": "制作动作", "type": "text"},
+          {"field": "publish", "label": "发布动作", "type": "text"},
+          {"field": "owner", "label": "负责人", "type": "text"},
+          {"field": "check", "label": "当天检查", "type": "text"}
+        ]
+      },
+      {
+        "id": "kpi-table",
+        "title": "预热 KPI 与决策阈值",
+        "subtitle": "目标为首发规划值，不是行业基准",
+        "dataset": "kpi_framework",
+        "sourceId": "strategy-kpi",
+        "defaultSort": {
+          "field": "priority",
+          "direction": "asc"
+        },
+        "density": "spacious",
+        "layout": "full",
+        "columns": [
+          {"field": "priority", "label": "层级", "type": "number"},
+          {"field": "metric", "label": "指标", "type": "text"},
+          {"field": "definition", "label": "定义", "type": "text"},
+          {"field": "target", "label": "建议阈值", "type": "text"},
+          {"field": "decision", "label": "触发决策", "type": "text"},
+          {"field": "guardrail", "label": "防作弊/风险", "type": "text"}
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "id": "strategy-channel",
+        "label": "城瘾渠道资源分配模型",
+        "path": "docs/research/chengyin-60day-media-preheat-artifact-20260817.json",
+        "query": {
+          "engine": "SQLite",
+          "language": "sql",
+          "executed_at": "2026-08-17T02:14:24-07:00",
+          "description": "复现五个平台的 60 天建议资源占比；占比为规划值而非平台市场数据。",
+          "sql": "WITH data(channel, share, primary_job, weekly_cadence) AS (VALUES ('微信生态',0.35,'承接、报名、支付、复访','视频号 3；公众号 1；社群 2'),('小红书',0.30,'城市搜索、收藏、种草','图文/短视频 4'),('抖音',0.25,'即时触发、POI、本地放大','短视频 3–4'),('B 站',0.07,'长内容、幕后、主理人信任','每两周 1'),('微博/PR',0.03,'事件、联名、媒体放大','节点发布')) SELECT * FROM data;",
+          "filters": ["单城首发", "精干团队", "合计 100%"],
+          "metric_definitions": ["资源占比 = 各渠道建议投入工时与可控传播预算 / 总工时与总可控传播预算。"]
+        }
+      },
+      {
+        "id": "strategy-platform",
+        "label": "城瘾平台执行矩阵",
+        "path": "docs/research/chengyin-60day-media-preheat-artifact-20260817.json",
+        "query": {
+          "engine": "SQLite",
+          "language": "sql",
+          "executed_at": "2026-08-17T02:14:24-07:00",
+          "description": "复现平台优先级、角色、频次、合规 CTA 与禁止动作。",
+          "sql": "WITH data(priority,platform,job,formats,cadence,cta,do_not) AS (VALUES (1,'微信生态','承接与复访','视频号现场片；公众号深度稿/FAQ；社群内测通知；小程序候补/报名','视频号 3/周；公众号 1/周；社群 2 次/周','独立 scene/渠道码进入候补或内测页','只发朋友圈海报；群内反复刷屏；上线闸门未过就收大额预售'),(1,'小红书','城市关键词搜索与收藏','6–9 张图文；30–60 秒短视频；路线选择题；内测日记','4 篇/周','品牌词/城市词；专业号与官方应用推广/客资能力','谐音加微；评论区留二维码；虚假探店；标题与正文不符'),(1,'抖音','把现场体验转成即时欲望','15–35 秒冲突短片；任务反转；POI 现场；直播/内测切片','3–4 条/周','官方账号、POI、品牌搜索、本地生活或合规线索工具','把微信小程序当抖音小程序挂；带其他平台水印；强导流'),(2,'B 站','长解释与主理人信任','4–8 分钟路线制作幕后；城市故事；内测复盘','每两周 1 条','品牌搜索词或规则允许的官方链接','为凑数拆短视频；用同一竖屏素材硬拉成长片'),(3,'微博/PR','事件与合作方放大','联名官宣；内测日；首发倒计时；媒体报道','有节点才发','统一话题与官方发布页','每日低质搬运；把热搜当首发 KPI'),(0,'地图/POI 卫生','降低线下找店与路线摩擦','统一名称、地址、营业时间、电话、图片与活动信息','T-30、T-14、T-3 核对','导航到真实门店/集合点','把地图维护误当成内容增长；使用未经商家确认的信息')) SELECT * FROM data;",
+          "filters": ["单城首发", "频次为建议起点"],
+          "metric_definitions": ["优先级 0 表示履约基础设施，1 表示主渠道，2–3 表示辅助渠道。"]
+        }
+      },
+      {
+        "id": "strategy-timeline",
+        "label": "城瘾 T-60 至上线日执行日历",
+        "path": "docs/research/chengyin-60day-media-preheat-artifact-20260817.json",
+        "query": {
+          "engine": "SQLite",
+          "language": "sql",
+          "executed_at": "2026-08-17T02:14:24-07:00",
+          "description": "复现九个发布前时间窗口的目标、内容、CTA 和退出证据。",
+          "sql": "WITH data(order_no,window,goal,hero_content,cta,proof) AS (VALUES (1,'T-60～T-54','冻结定位与测量','一句话解释城瘾；城市谜面 1；为什么不是普通探店','关注品牌词；选择首发城市','三主账号与候补页就绪；来源字段可回读'),(2,'T-53～T-47','测试三种内容钩子','城市传说、路线冲突、店铺 NPC 各一组','收藏/投票：最想玩的主题','6–8 条测试内容；确定前 2 个钩子'),(3,'T-46～T-40','证明路线真实可玩','第一条路线实走；删点位；计时与失败','申请成为首批路线测试者','路线实走两遍；问题清单与修订版'),(4,'T-39～T-33','让供给侧角色被看见','商家 NPC；主理人怎样做一局；多店节点故事','商家/主理人合作线索','最低节点需求 1.0 倍已确认'),(5,'T-32～T-26','公开招募小规模内测','内测规则、适合谁、不适合谁、安全/退款说明','合格候补/内测报名','首批 10–20 人名单与客服口径'),(6,'T-25～T-19','产出第一批体验证据','玩家完成任务；真实卡点；愿不愿带朋友再来','第二轮内测候补','到场、完成、退出原因可回读'),(7,'T-18～T-12','把优胜主题交给 KOC 放大','8–12 位本地 KOC 分批实走；同主题不同视角','城市限定候补','至少 3 条可复现优胜内容；无规则违规'),(8,'T-11～T-5','收口首发心智与供给','最终路线、NPC、首发权益、完整玩法说明','预约/报名/订阅上线通知','候补覆盖 3–5 倍；节点覆盖 1.3 倍；真机闸门通过'),(9,'T-4～T-1','倒计时但不制造虚假稀缺','每天一个真实任务/人物/安全提示；上线当天操作指引','确认日期、地点、规则与客服','发布清单、异常预案、来源监测就绪')) SELECT order_no AS 'order', window, goal, hero_content, cta, proof FROM data;",
+          "filters": ["T 为正式上线日", "所有放大动作受产品与供给闸门约束"],
+          "metric_definitions": ["退出证据 = 进入下一阶段前必须能够从对面读回的事实。"]
+        }
+      },
+      {
+        "id": "strategy-weekly",
+        "label": "城瘾标准周内容流水线",
+        "path": "docs/research/chengyin-60day-media-preheat-artifact-20260817.json",
+        "query": {
+          "engine": "SQLite",
+          "language": "sql",
+          "executed_at": "2026-08-17T02:14:24-07:00",
+          "description": "复现一个精干团队的周生产、发布、责任与检查节奏。",
+          "sql": "WITH data(order_no,day,production,publish,owner,check_item) AS (VALUES (1,'周一','复盘上周数据；定一个英雄故事','小红书图文 + 公众号深度稿/FAQ','内容负责人','标题与品牌词；事实与链接'),(2,'周二','剪 15–35 秒冲突版','抖音 + 视频号，不同开头与 CTA','剪辑/运营','无跨平台水印；字幕与安全提示'),(3,'周三','采访一个商家 NPC 或主理人','小红书人物图文/视频；社群问答','BD + 内容','商业关系与授权清楚'),(4,'周四','二剪与评论问题整理','抖音/视频号第二视角；平台内投票','运营','只回复可确认事实；记录高频问题'),(5,'周五','发布内测日志或失败复盘','三主平台同步主题、分别改写','产品 + 内容','不承诺未完成能力；CTA 可追踪'),(6,'周末','实走/内测/现场拍摄；获取授权','轻量现场动态；不直播未验证流程','现场负责人','路线、安全、天气、商家接待与异常记录')) SELECT order_no AS 'order', day, production, publish, owner, check_item AS 'check' FROM data;",
+          "filters": ["一次实拍拆多平台", "至少半天事实与合规核对"],
+          "metric_definitions": ["标准周是产能基线；团队不足时优先删 B 站与微博，不降低三主渠道真实性。"]
+        }
+      },
+      {
+        "id": "strategy-kpi",
+        "label": "城瘾预热 KPI 与决策阈值",
+        "path": "docs/research/chengyin-60day-media-preheat-artifact-20260817.json",
+        "query": {
+          "engine": "SQLite",
+          "language": "sql",
+          "executed_at": "2026-08-17T02:14:24-07:00",
+          "description": "复现首发结果、驱动指标与合规守门指标；阈值为容量驱动规划值。",
+          "sql": "WITH data(priority,metric,definition,target,decision,guardrail) AS (VALUES (1,'合格候补覆盖倍数','合格候补人数 / 首发两周可承载席位','T-7 达 3–5 倍','低于 2 倍：停止扩量，修内容与承接；超过 5 倍：按容量分批邀请','候补必须有城市、兴趣、可参与日期和有效订阅/联系方式'),(1,'可用商家节点覆盖倍数','已确认营业、接待和核销的节点 / 路线最低所需节点','T-14 ≥ 1.3 倍','不足：减少路线或补备用节点','不把口头意向计为可用节点'),(1,'真机首发路径通过率','玩家、主理人、商家关键路径中完整通过的路径 / 计划路径','T-14 与 T-3 均为 100%','任一路径失败：停止大额转化投放','用当前候选版、真实数据和真机录屏，不用代码存在代替'),(2,'候补页有效转化率','合格候补 / 各渠道唯一落地访问','前两周建立基线；后续优胜内容高于账号中位数','高点击低转化：修承接；低点击高转化：修分发','按平台、素材、城市拆分；不混合重复访问'),(2,'内容高意向信号率','收藏 + 分享 + 有效问题/私信 / 有效曝光','按平台分别建立中位数；只放大前 20%–30% 内容','找到可复现主题后才加预算','不跨平台比较绝对率；剔除诱导互动'),(2,'内测到场与完成','到场人数 / 确认人数；完成人数 / 到场人数','连续两场稳定后才扩大','爽约高：修提醒/人群；中途退出高：修路线/任务','记录天气、时长、路线版本与退出原因'),(3,'每个合格候补成本','可归因的付费支出 / 付费来源合格候补','不预设行业值；与自然/创作者批次比较','连续两个批次恶化且质量不升则暂停','不使用单纯关注或点击作分母'),(3,'合规与体验守门','平台违规、投诉、错误承诺、隐私/安全事件','严重事件 0；一般问题当天闭环','严重事件立即停投和下架修正','保留审核稿、授权、来源和更正记录')) SELECT * FROM data;",
+          "filters": ["目标为首发规划值，不是行业基准", "按平台和城市分开看"],
+          "metric_definitions": ["候补覆盖倍数 = 合格候补人数 / 首发两周可承载席位。", "商家节点覆盖倍数 = 已确认可用节点 / 路线最低所需节点。", "高意向信号率的分母必须使用平台可比的有效曝光口径。"]
+        }
+      },
+      {
+        "id": "product-plan",
+        "label": "城瘾完整商业计划：市场研究与证据底稿",
+        "path": "docs/research/chengyin-commercial-plan-market-20260817.md"
+      },
+      {
+        "id": "product-review",
+        "label": "城瘾小程序发布级产品设计审查报告",
+        "path": "docs/design/小程序发布级产品设计审查报告_2026-06-28.md"
+      },
+      {
+        "id": "tencent-weixin",
+        "label": "腾讯：微信与 WeChat",
+        "href": "https://www.tencent.com/zh-cn/products/weixin-wechat/"
+      },
+      {
+        "id": "tencent-miniprogram",
+        "label": "腾讯：微信小程序",
+        "href": "https://www.tencent.com/zh-cn/products/weixin-mini-programs/"
+      },
+      {
+        "id": "cnnic-video",
+        "label": "CNNIC：中国网络视听发展研究报告（2025）发布摘要",
+        "href": "https://www3.cnnic.cn/n4/2025/0328/c326-11272.html"
+      },
+      {
+        "id": "xiaohongshu-business",
+        "label": "小红书聚光帮助中心",
+        "href": "https://ad.xiaohongshu.com/next_help/home"
+      },
+      {
+        "id": "xiaohongshu-rules",
+        "label": "小红书聚光内容审核规则",
+        "href": "https://ad.xiaohongshu.com/next_help/docs/8dc5bd9c45c9a90cb9912f3400d43f92"
+      },
+      {
+        "id": "douyin-local",
+        "label": "巨量引擎本地生活营销产品",
+        "href": "https://www.oceanengine.com/products/"
+      },
+      {
+        "id": "douyin-open",
+        "label": "抖音开放平台：内容发布与小程序挂载",
+        "href": "https://open.douyin.com/platform/resource/docs/ability/content-management/douyin-share-solution"
+      },
+      {
+        "id": "bilibili-ir",
+        "label": "哔哩哔哩 2025 年第一季度业绩资料",
+        "href": "https://ir.bilibili.com/media/apkmmmog/bilibili-inc-announces-first-quarter-2025-financial-results.pdf"
+      },
+      {
+        "id": "ad-law",
+        "label": "市场监管总局：互联网广告可识别性执法指南",
+        "href": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/ggjgs/art/2024/art_89824524f2804c5594e95408fbdf8602.html"
+      },
+      {
+        "id": "pipl",
+        "label": "中华人民共和国个人信息保护法",
+        "href": "https://www.samr.gov.cn/wljys/gzzd/art/2023/art_3ef1e889c1e644d4b65b5f5c7f432386.html"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-17T02:14:24-07:00",
+    "status": "ready",
+    "datasets": {
+      "channel_allocation": [
+        {"channel": "微信生态", "share": 0.35, "primary_job": "承接、报名、支付、复访", "weekly_cadence": "视频号 3；公众号 1；社群 2"},
+        {"channel": "小红书", "share": 0.30, "primary_job": "城市搜索、收藏、种草", "weekly_cadence": "图文/短视频 4"},
+        {"channel": "抖音", "share": 0.25, "primary_job": "即时触发、POI、本地放大", "weekly_cadence": "短视频 3–4"},
+        {"channel": "B 站", "share": 0.07, "primary_job": "长内容、幕后、主理人信任", "weekly_cadence": "每两周 1"},
+        {"channel": "微博/PR", "share": 0.03, "primary_job": "事件、联名、媒体放大", "weekly_cadence": "节点发布"}
+      ],
+      "platform_matrix": [
+        {"priority": 1, "platform": "微信生态", "job": "承接与复访", "formats": "视频号现场片；公众号深度稿/FAQ；社群内测通知；小程序候补/报名", "cadence": "视频号 3/周；公众号 1/周；社群 2 次/周", "cta": "独立 scene/渠道码进入候补或内测页", "do_not": "只发朋友圈海报；群内反复刷屏；上线闸门未过就收大额预售"},
+        {"priority": 1, "platform": "小红书", "job": "城市关键词搜索与收藏", "formats": "6–9 张图文；30–60 秒短视频；路线选择题；内测日记", "cadence": "4 篇/周", "cta": "品牌词/城市词；专业号与官方应用推广/客资能力", "do_not": "谐音加微；评论区留二维码；虚假探店；标题与正文不符"},
+        {"priority": 1, "platform": "抖音", "job": "把现场体验转成即时欲望", "formats": "15–35 秒冲突短片；任务反转；POI 现场；直播/内测切片", "cadence": "3–4 条/周", "cta": "官方账号、POI、品牌搜索、本地生活或合规线索工具", "do_not": "把微信小程序当抖音小程序挂；带其他平台水印；强导流"},
+        {"priority": 2, "platform": "B 站", "job": "长解释与主理人信任", "formats": "4–8 分钟路线制作幕后；城市故事；内测复盘", "cadence": "每两周 1 条", "cta": "品牌搜索词或规则允许的官方链接", "do_not": "为凑数拆短视频；用同一竖屏素材硬拉成长片"},
+        {"priority": 3, "platform": "微博/PR", "job": "事件与合作方放大", "formats": "联名官宣；内测日；首发倒计时；媒体报道", "cadence": "有节点才发", "cta": "统一话题与官方发布页", "do_not": "每日低质搬运；把热搜当首发 KPI"},
+        {"priority": 0, "platform": "地图/POI 卫生", "job": "降低线下找店与路线摩擦", "formats": "统一名称、地址、营业时间、电话、图片与活动信息", "cadence": "T-30、T-14、T-3 核对", "cta": "导航到真实门店/集合点", "do_not": "把地图维护误当成内容增长；使用未经商家确认的信息"}
+      ],
+      "timeline": [
+        {"order": 1, "window": "T-60～T-54", "goal": "冻结定位与测量", "hero_content": "一句话解释城瘾；城市谜面 1；为什么不是普通探店", "cta": "关注品牌词；选择首发城市", "proof": "三主账号与候补页就绪；来源字段可回读"},
+        {"order": 2, "window": "T-53～T-47", "goal": "测试三种内容钩子", "hero_content": "城市传说、路线冲突、店铺 NPC 各一组", "cta": "收藏/投票：最想玩的主题", "proof": "6–8 条测试内容；确定前 2 个钩子"},
+        {"order": 3, "window": "T-46～T-40", "goal": "证明路线真实可玩", "hero_content": "第一条路线实走；删点位；计时与失败", "cta": "申请成为首批路线测试者", "proof": "路线实走两遍；问题清单与修订版"},
+        {"order": 4, "window": "T-39～T-33", "goal": "让供给侧角色被看见", "hero_content": "商家 NPC；主理人怎样做一局；多店节点故事", "cta": "商家/主理人合作线索", "proof": "最低节点需求 1.0 倍已确认"},
+        {"order": 5, "window": "T-32～T-26", "goal": "公开招募小规模内测", "hero_content": "内测规则、适合谁、不适合谁、安全/退款说明", "cta": "合格候补/内测报名", "proof": "首批 10–20 人名单与客服口径"},
+        {"order": 6, "window": "T-25～T-19", "goal": "产出第一批体验证据", "hero_content": "玩家完成任务；真实卡点；愿不愿带朋友再来", "cta": "第二轮内测候补", "proof": "到场、完成、退出原因可回读"},
+        {"order": 7, "window": "T-18～T-12", "goal": "把优胜主题交给 KOC 放大", "hero_content": "8–12 位本地 KOC 分批实走；同主题不同视角", "cta": "城市限定候补", "proof": "至少 3 条可复现优胜内容；无规则违规"},
+        {"order": 8, "window": "T-11～T-5", "goal": "收口首发心智与供给", "hero_content": "最终路线、NPC、首发权益、完整玩法说明", "cta": "预约/报名/订阅上线通知", "proof": "候补覆盖 3–5 倍；节点覆盖 1.3 倍；真机闸门通过"},
+        {"order": 9, "window": "T-4～T-1", "goal": "倒计时但不制造虚假稀缺", "hero_content": "每天一个真实任务/人物/安全提示；上线当天操作指引", "cta": "确认日期、地点、规则与客服", "proof": "发布清单、异常预案、来源监测就绪"}
+      ],
+      "weekly_cadence": [
+        {"order": 1, "day": "周一", "production": "复盘上周数据；定一个英雄故事", "publish": "小红书图文 + 公众号深度稿/FAQ", "owner": "内容负责人", "check": "标题与品牌词；事实与链接"},
+        {"order": 2, "day": "周二", "production": "剪 15–35 秒冲突版", "publish": "抖音 + 视频号，不同开头与 CTA", "owner": "剪辑/运营", "check": "无跨平台水印；字幕与安全提示"},
+        {"order": 3, "day": "周三", "production": "采访一个商家 NPC 或主理人", "publish": "小红书人物图文/视频；社群问答", "owner": "BD + 内容", "check": "商业关系与授权清楚"},
+        {"order": 4, "day": "周四", "production": "二剪与评论问题整理", "publish": "抖音/视频号第二视角；平台内投票", "owner": "运营", "check": "只回复可确认事实；记录高频问题"},
+        {"order": 5, "day": "周五", "production": "发布内测日志或失败复盘", "publish": "三主平台同步主题、分别改写", "owner": "产品 + 内容", "check": "不承诺未完成能力；CTA 可追踪"},
+        {"order": 6, "day": "周末", "production": "实走/内测/现场拍摄；获取授权", "publish": "轻量现场动态；不直播未验证流程", "owner": "现场负责人", "check": "路线、安全、天气、商家接待与异常记录"}
+      ],
+      "kpi_framework": [
+        {"priority": 1, "metric": "合格候补覆盖倍数", "definition": "合格候补人数 / 首发两周可承载席位", "target": "T-7 达 3–5 倍", "decision": "低于 2 倍：停止扩量，修内容与承接；超过 5 倍：按容量分批邀请", "guardrail": "候补必须有城市、兴趣、可参与日期和有效订阅/联系方式"},
+        {"priority": 1, "metric": "可用商家节点覆盖倍数", "definition": "已确认营业、接待和核销的节点 / 路线最低所需节点", "target": "T-14 ≥ 1.3 倍", "decision": "不足：减少路线或补备用节点", "guardrail": "不把口头意向计为可用节点"},
+        {"priority": 1, "metric": "真机首发路径通过率", "definition": "玩家、主理人、商家关键路径中完整通过的路径 / 计划路径", "target": "T-14 与 T-3 均为 100%", "decision": "任一路径失败：停止大额转化投放", "guardrail": "用当前候选版、真实数据和真机录屏，不用代码存在代替"},
+        {"priority": 2, "metric": "候补页有效转化率", "definition": "合格候补 / 各渠道唯一落地访问", "target": "前两周建立基线；后续优胜内容高于账号中位数", "decision": "高点击低转化：修承接；低点击高转化：修分发", "guardrail": "按平台、素材、城市拆分；不混合重复访问"},
+        {"priority": 2, "metric": "内容高意向信号率", "definition": "收藏 + 分享 + 有效问题/私信 / 有效曝光", "target": "按平台分别建立中位数；只放大前 20%–30% 内容", "decision": "找到可复现主题后才加预算", "guardrail": "不跨平台比较绝对率；剔除诱导互动"},
+        {"priority": 2, "metric": "内测到场与完成", "definition": "到场人数 / 确认人数；完成人数 / 到场人数", "target": "连续两场稳定后才扩大", "decision": "爽约高：修提醒/人群；中途退出高：修路线/任务", "guardrail": "记录天气、时长、路线版本与退出原因"},
+        {"priority": 3, "metric": "每个合格候补成本", "definition": "可归因的付费支出 / 付费来源合格候补", "target": "不预设行业值；与自然/创作者批次比较", "decision": "连续两个批次恶化且质量不升则暂停", "guardrail": "不使用单纯关注或点击作分母"},
+        {"priority": 3, "metric": "合规与体验守门", "definition": "平台违规、投诉、错误承诺、隐私/安全事件", "target": "严重事件 0；一般问题当天闭环", "decision": "严重事件立即停投和下架修正", "guardrail": "保留审核稿、授权、来源和更正记录"}
+      ]
+    }
+  },
+  "sources": [
+    {"id": "tencent-weixin", "label": "腾讯：微信与 WeChat", "href": "https://www.tencent.com/zh-cn/products/weixin-wechat/"},
+    {"id": "cnnic-video", "label": "CNNIC：中国网络视听发展研究报告（2025）发布摘要", "href": "https://www3.cnnic.cn/n4/2025/0328/c326-11272.html"},
+    {"id": "xiaohongshu-business", "label": "小红书聚光帮助中心", "href": "https://ad.xiaohongshu.com/next_help/home"},
+    {"id": "xiaohongshu-rules", "label": "小红书聚光内容审核规则", "href": "https://ad.xiaohongshu.com/next_help/docs/8dc5bd9c45c9a90cb9912f3400d43f92"},
+    {"id": "douyin-local", "label": "巨量引擎本地生活营销产品", "href": "https://www.oceanengine.com/products/"},
+    {"id": "douyin-open", "label": "抖音开放平台：内容发布与小程序挂载", "href": "https://open.douyin.com/platform/resource/docs/ability/content-management/douyin-share-solution"},
+    {"id": "ad-law", "label": "市场监管总局：互联网广告可识别性执法指南", "href": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/ggjgs/art/2024/art_89824524f2804c5594e95408fbdf8602.html"},
+    {"id": "pipl", "label": "中华人民共和国个人信息保护法", "href": "https://www.samr.gov.cn/wljys/gzzd/art/2023/art_3ef1e889c1e644d4b65b5f5c7f432386.html"}
+  ]
+}

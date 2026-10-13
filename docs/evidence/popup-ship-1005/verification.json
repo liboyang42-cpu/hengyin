@@ -1,0 +1,119 @@
+{
+  "date": "2026-10-05",
+  "branch": "feature/popup-ship-1005",
+  "base": "aa6441ab8ff8b9800ab0eb64d862a2cb7b1eba3d",
+  "basePullRequest": 1210,
+  "sourceBranches": {
+    "popup-style": "ed58c5e0c70d1c80589f16aa576e76eed70ef024",
+    "thought-config": "03420a382a691601f92d13b12069a071f4e44368"
+  },
+  "scope": "已确认的非游戏弹窗样式、选择器、字体、图标、主题伏笔弹窗与已授权的相关修复",
+  "excludedDirtyFiles": [
+    "pages/gerenziliao/gerenziliao.wxml",
+    "pages/gerenziliao/gerenziliao.wxss",
+    "pages/publish/activity/index.wxml",
+    "tests/unit/nav-polish-single-title-contract.test.js"
+  ],
+  "movedComponentPaths": [
+    "subpackageMember/components/cy/profile",
+    "subpackageMember/components/cy/scene-roam-poi-detail"
+  ],
+  "baselineMaintenance": {
+    "dynamicSetDataCount": 59,
+    "silentRequestCount": 28,
+    "unchangedCallsOnly": true,
+    "lineMappings": {
+      "chengyinhub-xcx/pages/play/index.js:1430": "chengyinhub-xcx/pages/play/index.js:1440",
+      "chengyinhub-xcx/pages/merchant/apply/index.js:339": "chengyinhub-xcx/pages/merchant/apply/index.js:328",
+      "chengyinhub-xcx/pages/publish/fabu/index.js:685": "chengyinhub-xcx/pages/publish/fabu/index.js:692",
+      "chengyinhub-xcx/pages/publish/fabu/index.js:856": "chengyinhub-xcx/pages/publish/fabu/index.js:848",
+      "chengyinhub-xcx/pages/publish/fabu/index.js:2427": "chengyinhub-xcx/pages/publish/fabu/index.js:2419",
+      "chengyinhub-xcx/pages/publish/fabu/index.js:3392": "chengyinhub-xcx/pages/publish/fabu/index.js:3370",
+      "chengyinhub-xcx/pages/publish/fabu/index.js:3770": "chengyinhub-xcx/pages/publish/fabu/index.js:3719",
+      "chengyinhub-xcx/pages/publish/fabu/index.js:4746": "chengyinhub-xcx/pages/publish/fabu/index.js:4695",
+      "chengyinhub-xcx/pages/publish/fabu/index.js:5003": "chengyinhub-xcx/pages/publish/fabu/index.js:4952",
+      "chengyinhub-xcx/pages/publish/fabu/index.js:5673": "chengyinhub-xcx/pages/publish/fabu/index.js:5622",
+      "chengyinhub-xcx/pages/publish/fabu/index.js:5665": "chengyinhub-xcx/pages/publish/fabu/index.js:5614",
+      "chengyinhub-xcx/pages/publish/fabu/index.js:5726": "chengyinhub-xcx/pages/publish/fabu/index.js:5675",
+      "chengyinhub-xcx/pages/publish/fabu/index.js:7120": "chengyinhub-xcx/pages/publish/fabu/index.js:7030",
+      "chengyinhub-xcx/pages/publish/temp/index.js:1285": "chengyinhub-xcx/pages/publish/temp/index.js:1289",
+      "chengyinhub-xcx/pages/publish/temp/index.js:1286": "chengyinhub-xcx/pages/publish/temp/index.js:1290",
+      "chengyinhub-xcx/pages/publish/temp/index.js:1341": "chengyinhub-xcx/pages/publish/temp/index.js:1345",
+      "chengyinhub-xcx/pages/publish/temp/index.js:2447": "chengyinhub-xcx/pages/publish/temp/index.js:2451",
+      "chengyinhub-xcx/pages/publish/temp/index.js:3131": "chengyinhub-xcx/pages/publish/temp/index.js:3135",
+      "chengyinhub-xcx/pages/publish/temp/index.js:3254": "chengyinhub-xcx/pages/publish/temp/index.js:3258",
+      "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.js:195": "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.js:197",
+      "chengyinhub-xcx/pages/publish/fabu/index.js:6028": "chengyinhub-xcx/pages/publish/fabu/index.js:5977",
+      "chengyinhub-xcx/pages/play/index.js:6332": "chengyinhub-xcx/pages/play/index.js:6351"
+    }
+  },
+  "nativeCompile": {
+    "fabuWxml": {
+      "success": true,
+      "codeLength": 38910
+    },
+    "fabuWxss": {
+      "success": true,
+      "totalCodeLength": 155346
+    }
+  },
+  "runtimeNote": "本轮整合树的新开发者工具窗口被当前商家角色重定向到工作台，未把新窗口当作弹窗交互验收；此前主题弹窗原生截图与交互见 thought-config-1005/theme-popup，通用弹窗见 popup-style-1003。",
+  "releaseState": "本次仅提交、推送和 PR/CI；未合并、部署或上传微信版本。",
+  "checks": {
+    "uiIntegrity": "PASS",
+    "staticGate": "PASS",
+    "relatedThoughtTests": {
+      "pass": 60,
+      "fail": 0
+    },
+    "unitBeforeCommit": {
+      "tests": 8136,
+      "pass": 8132,
+      "fail": 2,
+      "skipped": 2,
+      "notes": "一处奖励字段文案断言已对齐并通过重跑；一处动态证据测试要求 HEAD 与当前源码相同，将在提交后重跑。"
+    },
+    "nativeRuntime": "此前实际模拟器交互和截图见 theme-popup；本次整合树仅原生编译已确认。",
+    "repairedRerun": {
+      "pass": 2,
+      "fail": 0,
+      "tests": [
+        "inventory 与可持久化动态证据分离，freshness 不会抹掉执行结果",
+        "内嵌创建表单保留有效期和投放数，完整日期使用整行"
+      ]
+    },
+    "unitAfterRepairs": {
+      "tests": 8136,
+      "pass": 8134,
+      "fail": 0,
+      "skipped": 2,
+      "method": "全量运行加失败项修复后重跑；远端 CI 将在最终提交上完整重跑。"
+    },
+    "evidenceChecksumFindings": {
+      "sha256FileDigests": 27,
+      "publicFigmaDocumentIdentifier": 1,
+      "exactCommitFileRuleLineFingerprints": 28
+    }
+  },
+  "sourceCommit": "85d3a3197fb71dfec5232af05abff26cb0e09c9b",
+  "ciTriggerRepair": {
+    "manualRun": 37328249301,
+    "manualHead": "26d18239eec329087ddea159f71f5acb42ec1bd7",
+    "historicalCommitsScanned": 3690,
+    "historicalFindings": 48,
+    "findingsInNewCommits": 0,
+    "repair": "为 feature/mini-unify-1003 目标分支接通标准 pull_request CI，使弹窗叠加 PR 走原有增量扫描与全部检查。密钥扫描规则、任务条件、权限和部署触发均保持原样。",
+    "checks": [
+      "CI cost routing contract PASS",
+      "funds CI workflow negative controls 36 PASS"
+    ]
+  },
+  "inheritedMigrationDeclaration": {
+    "parentPullRequest": 1210,
+    "inheritedMigrationCount": 6,
+    "popupDeltaAddsSql": false,
+    "reason": "迁移安全门以 master 为基线，必须明确声明尚未合并父 PR 的迁移依赖。",
+    "localGateWithUpdatedPrBody": "PASS",
+    "execution": "未执行迁移；后续发布需单独授权预检、按父 PR 依赖落库并回读，再部署 jar。"
+  }
+}

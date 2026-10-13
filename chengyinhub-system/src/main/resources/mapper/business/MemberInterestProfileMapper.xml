@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MemberInterestProfileMapper">
+
+    <select id="selectMemberInterestProfileByMemberId" parameterType="Long" resultType="MemberInterestProfile">
+        select member_id as memberId,
+               city_code as cityCode,
+               category_weights_json as categoryWeightsJson,
+               creator_weights_json as creatorWeightsJson,
+               last_event_at as lastEventAt,
+               create_time as createTime,
+               update_time as updateTime
+        from member_interest_profile
+        where member_id = #{memberId}
+    </select>
+
+    <insert id="upsertMemberInterestProfile" parameterType="MemberInterestProfile">
+        insert into member_interest_profile
+        (member_id, city_code, category_weights_json, creator_weights_json, last_event_at, create_time, update_time)
+        values
+        (#{memberId}, #{cityCode}, #{categoryWeightsJson}, #{creatorWeightsJson}, #{lastEventAt}, #{createTime}, #{updateTime})
+        on duplicate key update
+            city_code = values(city_code),
+            category_weights_json = values(category_weights_json),
+            creator_weights_json = values(creator_weights_json),
+            last_event_at = values(last_event_at),
+            update_time = values(update_time)
+    </insert>
+
+    <insert id="incrementMemberCategoryWeight">
+        insert into member_interest_profile
+        (member_id, city_code, category_weights_json, creator_weights_json, last_event_at, create_time, update_time)
+        values
+        (#{memberId}, #{cityCode}, json_set(json_object(), #{categoryPath}, #{weight}), json_object(),
+         #{lastEventAt}, #{createTime}, #{updateTime})
+        on duplicate key update
+            city_code = coalesce(values(city_code), city_code),
+            category_weights_json = json_set(
+                case when json_valid(category_weights_json) then category_weights_json else json_object() end,
+                #{categoryPath},
+                coalesce(cast(json_unquote(json_extract(
+                    case when json_valid(category_weights_json) then category_weights_json else json_object() end,
+                    #{categoryPath}
+                )) as signed), 0) + #{weight}
+            ),
+            last_event_at = greatest(coalesce(last_event_at, values(last_event_at)), values(last_event_at)),
+            update_time = values(update_time)
+    </insert>
+</mapper>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ApiAiMapper">
+
+    <!--
+      候选商家查询:M1 组题时按坐标+半径筛出附近已审核可接待的商家报名节点 Top-N。
+      Haversine 距离块与 ApiMapMapper 同款;LEFT JOIN mms_merchant(商家档案)+ sms_coupon(券)补齐信息。
+      下划线转驼峰未开启,列一律手写 camelCase 别名以匹配 MerchantCandidateVO 字段。
+      JOIN 键:cms_registration_merchant.member_id ↔ mms_merchant.member_id(非 id)。
+      cms_registration_merchant.del_flag 为字符串 '0',其余为数字 0。
+    -->
+    <select id="selectNearbyMerchantCandidates"
+            resultType="com.chengyinhub.business.domain.vo.MerchantCandidateVO">
+        select
+            r.id            as candidateId,
+            r.member_id     as merchantId,
+            r.topic_id      as topicId,
+            r.node_id       as nodeId,
+            r.address_name  as addressName,
+            r.address       as address,
+            r.longitude     as longitude,
+            r.latitude      as latitude,
+            r.pic_url       as picUrl,
+            r.start_date    as startDate,
+            r.end_date      as endDate,
+            r.limit_num     as limitNum,
+            r.coupon_id     as couponId,
+            r.mode          as mode,
+            m.name          as merchantName,
+            m.category_id   as categoryId,
+            m.business_time as businessTime,
+            m.capacity      as capacity,
+            m.suit_activity_types as suitActivityTypes,
+            m.coop_open     as coopOpen,
+            c.name          as couponName,
+            c.amount        as couponAmount,
+            (ifnull(c.publish_count, 0) - ifnull(c.receive_count, 0)) as couponStock,
+            ifnull(cr.rating, 0) as rating,
+            (6371000 * acos(least(1,
+                cos(radians(#{lat})) * cos(radians(cast(r.latitude as decimal(12,7))))
+                * cos(radians(cast(r.longitude as decimal(12,7))) - radians(#{lng}))
+                + sin(radians(#{lat})) * sin(radians(cast(r.latitude as decimal(12,7))))
+            ))) as distance
+        from cms_registration_merchant r
+        left join mms_merchant m on m.member_id = r.member_id and m.del_flag = 0
+        left join sms_coupon  c on c.id = r.coupon_id and c.del_flag = 0
+        left join (
+            select to_id, round(avg(rating), 2) as rating
+            from coop_review
+            where del_flag = 0
+            group by to_id
+        ) cr on cr.to_id = r.member_id
+        where r.del_flag = '0'
+            and r.longitude is not null and r.longitude &lt;&gt; ''
+            and r.latitude  is not null and r.latitude  &lt;&gt; ''
+            and r.status = 1
+            and r.audit_status = 1
+            and m.id is not null and m.status = 1 and m.account_status = 1
+            and (c.id is null or (c.status = 1
+                and (ifnull(c.publish_count, 0) - ifnull(c.receive_count, 0)) &gt; 0))
+        having distance &lt;= #{radius}
+        order by distance asc
+        limit #{limit}
+    </select>
+
+</mapper>

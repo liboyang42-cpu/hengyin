@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantChapterOfferMapper">
+
+    <resultMap type="MerchantChapterOffer" id="MerchantChapterOfferResult">
+        <result property="id"    column="id"    />
+        <result property="topicId"    column="topic_id"    />
+        <result property="chapterId"    column="chapter_id"    />
+        <result property="merchantId"    column="merchant_id"    />
+        <result property="perkId"    column="perk_id"    />
+        <result property="termsMode"    column="terms_mode"    />
+        <result property="payerClubId" column="payer_club_id" />
+        <result property="perHeadFee"    column="per_head_fee"    />
+        <result property="quotaTotal"    column="quota_total"    />
+        <result property="quotaUsed"    column="quota_used"    />
+        <result property="validEnd"    column="valid_end"    />
+        <result property="allowedValidationMethods" column="allowed_validation_methods" />
+        <result property="maxNodeXp"                column="max_node_xp"                />
+        <result property="status"    column="status"    />
+        <result property="withdrawReason" column="withdraw_reason" />
+        <result property="withdrawRequired" column="withdraw_required" />
+        <result property="replacementOfOfferId" column="replacement_of_offer_id" />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectMerchantChapterOfferVo">
+        select id, topic_id, chapter_id, merchant_id, perk_id, terms_mode, payer_club_id, per_head_fee,
+               quota_total, quota_used, valid_end, allowed_validation_methods, max_node_xp, status, withdraw_reason, withdraw_required, replacement_of_offer_id,
+               create_by, create_time, update_by, update_time
+        from merchant_chapter_offer
+    </sql>
+
+    <insert id="insertMerchantChapterOffer" parameterType="MerchantChapterOffer" useGeneratedKeys="true" keyProperty="id">
+        insert into merchant_chapter_offer
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="topicId != null">topic_id,</if>
+            <if test="chapterId != null">chapter_id,</if>
+            <if test="merchantId != null">merchant_id,</if>
+            <if test="perkId != null">perk_id,</if>
+            <if test="termsMode != null">terms_mode,</if>
+            <if test="payerClubId != null">payer_club_id,</if>
+            <if test="perHeadFee != null">per_head_fee,</if>
+            <if test="quotaTotal != null">quota_total,</if>
+            <if test="quotaUsed != null">quota_used,</if>
+            <if test="validEnd != null">valid_end,</if>
+            <if test="allowedValidationMethods != null">allowed_validation_methods,</if>
+            <if test="maxNodeXp != null">max_node_xp,</if>
+            <if test="status != null">status,</if>
+            <if test="replacementOfOfferId != null">replacement_of_offer_id,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="topicId != null">#{topicId},</if>
+            <if test="chapterId != null">#{chapterId},</if>
+            <if test="merchantId != null">#{merchantId},</if>
+            <if test="perkId != null">#{perkId},</if>
+            <if test="termsMode != null">#{termsMode},</if>
+            <if test="payerClubId != null">#{payerClubId},</if>
+            <if test="perHeadFee != null">#{perHeadFee},</if>
+            <if test="quotaTotal != null">#{quotaTotal},</if>
+            <if test="quotaUsed != null">#{quotaUsed},</if>
+            <if test="validEnd != null">#{validEnd},</if>
+            <if test="allowedValidationMethods != null">#{allowedValidationMethods},</if>
+            <if test="maxNodeXp != null">#{maxNodeXp},</if>
+            <if test="status != null">#{status},</if>
+            <if test="replacementOfOfferId != null">#{replacementOfOfferId},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <select id="selectById" parameterType="Long" resultMap="MerchantChapterOfferResult">
+        <include refid="selectMerchantChapterOfferVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectByIdForUpdate" resultMap="MerchantChapterOfferResult">
+        <include refid="selectMerchantChapterOfferVo"/>
+        where id = #{id}
+        for update
+    </select>
+
+    <select id="selectByTopicIncludingInactiveForUpdate" resultMap="MerchantChapterOfferResult">
+        <include refid="selectMerchantChapterOfferVo"/>
+        where topic_id = #{topicId}
+        order by id asc
+        for update nowait
+    </select>
+
+    <select id="selectReplacementForUpdate" resultMap="MerchantChapterOfferResult">
+        <include refid="selectMerchantChapterOfferVo"/>
+        where replacement_of_offer_id = #{originalOfferId}
+        for update
+    </select>
+
+    <update id="approveReplacement">
+        update merchant_chapter_offer set status = 1, update_time = now()
+         where id = #{id} and merchant_id = #{merchantId} and status = 0
+           and replacement_of_offer_id is not null and nullif(trim(withdraw_reason), '') is null
+           and (valid_end is null or valid_end &gt; now())
+    </update>
+
+    <update id="withdrawOwned">
+        update merchant_chapter_offer
+           set status = 0, withdraw_reason = #{reason}, withdraw_required = #{required},
+               update_by = #{merchantId}, update_time = now()
+         where id = #{id} and merchant_id = #{merchantId} and status = 1
+    </update>
+
+    <!-- 「生效」是两条轴,缺一即超卖:status=1 且 valid_end 未过期。
+         valid_end 到期**不会**自动翻 status(没有任何任务在做这件事),裸写 status=1 会把
+         过期供给算进供给池 —— 实测差 10 份 = 超卖 10 张票。判据与 DDL 注释同源。 -->
+    <sql id="liveOffer">
+        status = 1 and (valid_end is null or valid_end &gt; now())
+    </sql>
+
+    <select id="selectByChapter" parameterType="Long" resultMap="MerchantChapterOfferResult">
+        <include refid="selectMerchantChapterOfferVo"/>
+        where chapter_id = #{chapterId} and <include refid="liveOffer"/>
+        order by id asc
+    </select>
+
+    <!--
+      批量版:列表页一次取回多章的生效供给。
+      ⚠️ 复用同一个 liveOffer 片段,不重写条件 —— 漏掉 valid_end 会把过期供给算成占用,
+      直接导致「还有名额」被算成「已满」。
+    -->
+    <select id="selectLiveByChapterIds" resultMap="MerchantChapterOfferResult">
+        <include refid="selectMerchantChapterOfferVo"/>
+        where <include refid="liveOffer"/>
+          and chapter_id in
+          <foreach collection="chapterIds" item="chapterId" open="(" separator="," close=")">
+              #{chapterId}
+          </foreach>
+        order by id asc
+    </select>
+
+    <select id="countAllByChapter" parameterType="Long" resultType="int">
+        select count(1) from merchant_chapter_offer where chapter_id = #{chapterId}
+    </select>
+
+    <select id="selectByTopic" parameterType="Long" resultMap="MerchantChapterOfferResult">
+        <include refid="selectMerchantChapterOfferVo"/>
+        where topic_id = #{topicId} and <include refid="liveOffer"/>
+        order by chapter_id asc, id asc
+    </select>
+
+    <!-- 防超发的唯一防线:够扣才扣的条件 update,行锁保证并发核销只有一方拿到 1。
+         绝不可换成「先 select 判断再 update」——读判之间无锁,两个并发请求会双双通过判断各自 +1。 -->
+    <update id="consumeQuota" parameterType="Long">
+        update merchant_chapter_offer
+        set quota_used = quota_used + 1, update_time = now()
+        where id = #{id}
+          and status = 1
+          and (valid_end is null or valid_end &gt; now())
+          and quota_used &lt; quota_total
+    </update>
+
+    <!-- 撤销核销回补配额;quota_used &gt; 0 防重复撤销把已用份数扣成负数 -->
+    <update id="releaseQuota" parameterType="Long">
+        update merchant_chapter_offer
+        set quota_used = quota_used - 1, update_time = now()
+        where id = #{id}
+          and quota_used &gt; 0
+    </update>
+
+    <!-- 商家退出标失效而非删行:redemption.offer_id 引用它,删了历史流水就断链 -->
+    <update id="deactivate" parameterType="Long">
+        update merchant_chapter_offer
+        set status = 0, update_time = now()
+        where id = #{id}
+    </update>
+
+    <!-- 章节剩余可核销份数合计;COALESCE 保证无生效 offer 时返 0 而非 null(调用方免判空) -->
+    <select id="sumRemainingQuotaByChapter" parameterType="Long" resultType="java.lang.Integer">
+        select COALESCE(SUM(quota_total - quota_used), 0)
+        from merchant_chapter_offer
+        where chapter_id = #{chapterId} and <include refid="liveOffer"/>
+    </select>
+
+
+    <!-- 购票容量校验专用:当前读。RR 下普通读吃 read view(事务内第一次普通读就建好了),
+         行锁能等到对手提交、却读不到对手刚提交的写 ⇒ 超卖。FOR SHARE 不吃快照,读最新已提交。
+         ⚠️ 只读展示路径别用它,会让浏览每次上 S 锁。 -->
+    <select id="sumRemainingQuotaByChapterForUpdate" parameterType="Long" resultType="java.lang.Integer">
+        select COALESCE(SUM(quota_total - quota_used), 0)
+        from merchant_chapter_offer
+        where chapter_id = #{chapterId} and <include refid="liveOffer"/>
+        for share
+    </select>
+
+    <!--
+      [P0-50] 计酬成本上界 = Σ over 必选章 max(该章 REVSHARE 的 per_head_fee)。
+      每章取 max 再求和,不是全部求和:一张票每章只核销一次,玩家一章只去一家 ⇒ 该章最多付一份。
+      取 max 不取 avg:玩家去哪家平台控制不了,只有最贵那家才是上界。
+      只数 required=1:可选章可以不去,不构成「全通关必付」的成本。
+      ⚠️ 生效两条轴缺一不可 —— valid_end 到期不会自动翻 status。
+    -->
+    <select id="sumMaxPerHeadFeeByRequiredChapters" resultType="java.math.BigDecimal">
+        select sum(mx) from (
+            select max(o.per_head_fee) as mx
+              from merchant_chapter_offer o
+              join cms_topic_chapter c on c.id = o.chapter_id
+             where c.topic_id = #{topicId}
+               and c.required = 1
+               and o.terms_mode = 'REVSHARE'
+               and o.payer_club_id is null
+               and o.status = 1
+               and (o.valid_end is null or o.valid_end &gt; now())
+             group by o.chapter_id
+        ) t
+    </select>
+
+    <!-- ③ 锁价闸:逐个必选章检查至少有一家当前生效的商家供给。
+         不能用 offer 总数 >= chapter 总数代替:同一章多家会掩盖另一章完全空缺。 -->
+    <select id="countRequiredChaptersWithoutLiveOffer" resultType="int">
+        select count(*)
+          from cms_topic_chapter c
+         where c.topic_id = #{topicId}
+           and c.required = 1
+           and not exists (
+               select 1
+                 from merchant_chapter_offer o
+                where o.topic_id = c.topic_id
+                  and o.chapter_id = c.id
+                  and o.status = 1
+                  and (o.valid_end is null or o.valid_end &gt; now())
+           )
+    </select>
+
+    <!-- ============ 后台三档审核台(§4.2)============ -->
+
+    <!-- 队列展示:基础列 + 连表展示字段(非本表列,只读) -->
+    <resultMap type="MerchantChapterOffer" id="MerchantChapterOfferQueueResult" extends="MerchantChapterOfferResult">
+        <result property="topicName"    column="topic_name"    />
+        <result property="topicLifecycle"    column="topic_lifecycle"    />
+        <result property="chapterName"    column="chapter_name"    />
+        <result property="chapterTermsMode"    column="chapter_terms_mode"    />
+        <result property="chapterMaxPerHeadFee"    column="chapter_max_per_head_fee"    />
+        <result property="chapterPerkMinValue"    column="chapter_perk_min_value"    />
+        <result property="chapterMaxMerchant"    column="chapter_max_merchant"    />
+        <result property="merchantName"    column="merchant_name"    />
+        <result property="perkName"    column="perk_name"    />
+        <result property="perkRetailValue"    column="perk_retail_value"    />
+        <result property="mmsName"    column="mms_name"    />
+        <result property="mmsStatus"    column="mms_status"    />
+        <result property="businessLicense"    column="business_license"    />
+        <result property="mmsPhone"    column="mms_phone"    />
+        <result property="mmsAddress"    column="mms_address"    />
+        <result property="mmsCapacity"    column="mms_capacity"    />
+        <result property="merchantPerkUsed"    column="merchant_perk_used"    />
+        <result property="merchantPerkTotal"    column="merchant_perk_total"    />
+        <result property="merchantRevshareCount"    column="merchant_revshare_count"    />
+    </resultMap>
+
+    <!-- 审核台队列。含失效行(status 入参筛):停用历史是调证的一部分,别只查生效 -->
+    <select id="selectAdminQueue" resultMap="MerchantChapterOfferQueueResult">
+        select o.id, o.topic_id, o.chapter_id, o.merchant_id, o.perk_id, o.terms_mode, o.payer_club_id, o.per_head_fee,
+               o.quota_total, o.quota_used, o.valid_end, o.status, o.withdraw_reason, o.withdraw_required, o.replacement_of_offer_id, o.create_by, o.create_time, o.update_by, o.update_time,
+               t.name as topic_name, t.lifecycle as topic_lifecycle,
+               c.name as chapter_name, c.terms_mode as chapter_terms_mode,
+               c.max_per_head_fee as chapter_max_per_head_fee, c.perk_min_value as chapter_perk_min_value,
+               c.max_merchant as chapter_max_merchant,
+               m.nickname as merchant_name,
+               p.name as perk_name, p.retail_value as perk_retail_value,
+               mm.name as mms_name, mm.status as mms_status, mm.business_license as business_license,
+               mm.phone as mms_phone, mm.address as mms_address, mm.capacity as mms_capacity,
+               (select COALESCE(sum(o2.quota_used), 0) from merchant_chapter_offer o2
+                 where o2.merchant_id = o.merchant_id and o2.terms_mode = 'PERK'
+                   and (o2.status = 1 or o2.quota_used > 0)) as merchant_perk_used,
+               (select COALESCE(sum(o2.quota_total), 0) from merchant_chapter_offer o2
+                 where o2.merchant_id = o.merchant_id and o2.terms_mode = 'PERK'
+                   and (o2.status = 1 or o2.quota_used > 0)) as merchant_perk_total,
+               (select COALESCE(sum(case mp.entry_type when 'ACCRUAL' then 1 when 'REVERSAL' then -1 else 0 end), 0)
+                  from merchant_payable mp where mp.merchant_member_id = o.merchant_id) as merchant_revshare_count
+          from merchant_chapter_offer o
+          left join cms_topic t on t.id = o.topic_id
+          left join cms_topic_chapter c on c.id = o.chapter_id
+          left join ums_member m on m.id = o.merchant_id
+          left join coop_perk p on p.id = o.perk_id
+          left join mms_merchant mm on mm.id = (select max(m3.id) from mms_merchant m3
+                 where m3.member_id = o.merchant_id and m3.del_flag = 0)
+        <where>
+            <if test="topicId != null"> and o.topic_id = #{topicId}</if>
+            <if test="status != null"> and o.status = #{status}</if>
+        </where>
+        order by o.topic_id desc, c.sort_id asc, o.chapter_id asc, o.create_time desc
+    </select>
+
+    <!-- 定档定参全列覆写:刻意无 <if> —— 换档必须能把 perk_id / per_head_fee / valid_end 写回 NULL;
+         形状(哪档配哪些列)由应用层 assertTermsShape 与 DDL ck_offer_terms 双层兜住。
+         ⚠️ WHERE 守卫与 consumeQuota 同范式:consumeQuota 不拿章节锁,应用层「读-判-写」挡不住它 ——
+         status=1 挡「窗口内被停用」,quota_used<=quota_total 挡「窗口内核销把 used 顶过新上限」
+         (非 PERK 档 quota_total=0 ⇒ 该守卫同时兜住「有核销历史改非权益档」)。0 行由调用方拒。 -->
+    <update id="updateTerms" parameterType="MerchantChapterOffer">
+        update merchant_chapter_offer
+           set terms_mode = #{termsMode},
+               perk_id = #{perkId},
+               per_head_fee = #{perHeadFee},
+               payer_club_id = #{payerClubId},
+               quota_total = #{quotaTotal},
+               valid_end = #{validEnd},
+               update_by = #{updateBy},
+               update_time = now()
+         where id = #{id}
+           and status = 1
+           and quota_used &lt;= #{quotaTotal}
+    </update>
+
+    <select id="countAllByChapterAndMerchant" resultType="int">
+        select count(*) from merchant_chapter_offer where chapter_id = #{chapterId} and merchant_id = #{merchantId}
+    </select>
+</mapper>

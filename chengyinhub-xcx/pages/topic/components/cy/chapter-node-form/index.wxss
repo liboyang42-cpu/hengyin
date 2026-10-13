@@ -1,0 +1,108 @@
+.cnf-shell {
+  --cy-sheet-heading-size: var(--cy-type-sheet-title);
+}
+
+.cnf-subtitle {
+  color: var(--cy-color-text-secondary);
+  font-size: var(--cy-type-body);
+  line-height: 1.5;
+  margin-bottom: var(--cy-space-4);
+}
+
+.cnf-field {
+  margin-bottom: var(--cy-space-4);
+}
+
+.cnf-row { display: flex; gap: var(--cy-space-2); }
+.cnf-half { flex: 1; min-width: 0; }
+.cnf-note { color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); line-height: 1.5; margin-bottom: var(--cy-space-4); }
+
+.cnf-offer {
+  border-bottom: var(--cy-comp-sheet-border-width) solid var(--cy-color-border-subtle);
+  border-top: var(--cy-comp-sheet-border-width) solid var(--cy-color-border-subtle);
+  margin-bottom: var(--cy-space-4);
+  padding-top: var(--cy-space-4);
+}
+
+.cnf-section-title {
+  color: var(--cy-color-text-primary);
+  font-size: var(--cy-type-card-title);
+  font-weight: 700;
+  margin-bottom: var(--cy-space-3);
+}
+
+.cnf-perk-empty {
+  align-items: flex-start;
+  color: var(--cy-color-text-secondary);
+  display: flex;
+  flex-direction: column;
+  font-size: var(--cy-type-caption);
+  gap: var(--cy-space-2);
+}
+
+.cnf-label {
+  display: flex;
+  align-items: center;
+  color: var(--cy-color-text-primary);
+  font-size: var(--cy-type-body);
+  font-weight: 600;
+  line-height: 1.5;
+  margin-bottom: var(--cy-space-2);
+}
+
+.cnf-required,
+.cnf-optional {
+  color: var(--cy-color-text-tertiary);
+  font-size: var(--cy-type-caption);
+  font-weight: 500;
+  flex-shrink: 0;
+  margin-left: var(--cy-space-1);
+}
+
+.cnf-input,
+.cnf-picker {
+  align-items: center;
+  background: var(--cy-color-bg-surface-subtle);
+  border: var(--cy-comp-sheet-border-width) solid var(--cy-color-border-subtle);
+  border-radius: var(--cy-radius-lg);
+  box-sizing: border-box;
+  color: var(--cy-color-input-text);
+  display: flex;
+  font-size: var(--cy-type-card-title);
+  min-height: calc(var(--cy-btn-h) + var(--cy-space-2));
+  padding: 0 var(--cy-space-4);
+  width: 100%;
+}
+
+.cnf-address {
+  display: block;
+  line-height: 1.5;
+  padding-top: var(--cy-space-3);
+  padding-bottom: var(--cy-space-3);
+}
+
+.cnf-picker {
+  justify-content: space-between;
+}
+
+.cnf-picker--selected {
+  background: var(--cy-color-input-filled-bg);
+}
+
+.cnf-placeholder,
+.cnf-arrow {
+  color: var(--cy-color-text-placeholder);
+}
+
+.cnf-arrow {
+  font-size: var(--cy-type-card-title);
+  margin-left: var(--cy-space-2);
+}
+
+.cnf-actions {
+  padding-top: var(--cy-space-2);
+}
+
+.cnf-map-button { margin-top: var(--cy-space-2); }
+
+.cnf-required { color: var(--cy-color-status-danger); }

@@ -1,0 +1,47 @@
+{
+  "schema_version": "p3-1d-perf-manifest/v1",
+  "baseline": "P3-0 frozen baseline; D13 scripts only; no capacity claim",
+  "safety": {
+    "default_mode": "dry-run",
+    "base_url_env": "PERF_BASE_URL",
+    "production_targets_blocked": [
+      "chengyinhub.com",
+      "www.chengyinhub.com",
+      "api.chengyinhub.com",
+      "47.103.124.64",
+      "47.100.84.122"
+    ],
+    "write_load_requires": [
+      "non-production target",
+      "PERF_ALLOW_WRITE_LOAD=I_UNDERSTAND_THIS_IS_NOT_PRODUCTION",
+      "PERF_PAYMENT_MODE=stub"
+    ],
+    "dependency_error_rate_policy": "alert-only"
+  },
+  "thresholds": {
+    "read": {
+      "p95_ms": 300,
+      "p99_ms": 800
+    },
+    "write_transaction": {
+      "p95_ms": 800,
+      "p99_ms": 2000
+    },
+    "payment_callback": {
+      "p95_ms": 2000,
+      "p99_ms": 5000
+    },
+    "upload": {
+      "p95_ms": 1500,
+      "p99_ms": 3000
+    },
+    "business_error_rate": {
+      "max_ratio": 0.005
+    },
+    "dependency_error_rate_alert": {
+      "warn_ratio_per_5m": 0.01,
+      "alert_only": true,
+      "window": "5m"
+    }
+  }
+}

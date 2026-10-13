@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.NpcChatLogMapper">
+
+  <insert id="insertNpcChatLog" parameterType="com.chengyinhub.business.domain.NpcChatLog">
+    INSERT INTO npc_chat_log (
+      user_id, profile_id, activity_id,
+      user_msg, npc_reply, safety_flag,
+      model, latency_ms, token_in, token_out, create_time
+    ) VALUES (
+      #{userId}, #{profileId}, #{activityId},
+      #{userMsg}, #{npcReply}, #{safetyFlag},
+      #{model}, #{latencyMs}, #{tokenIn}, #{tokenOut}, NOW()
+    )
+  </insert>
+
+  <delete id="deleteNpcChatLogsBefore">
+    delete from npc_chat_log
+    <!-- 锚点用 create_time:唯一写入点(insertNpcChatLog)硬填服务端 NOW(),永不为 NULL;
+         裸列走索引见 migration_npc_chat_retention_index.sql 的 idx_npc_chat_create_time。
+         user_msg/npc_reply 存聊天原文,按《隐私政策》保留期到期删除。 -->
+    where create_time &lt; #{cutoff}
+    limit #{limit}
+  </delete>
+
+  <!-- mapUnderscoreToCamelCase 全局是关的(mybatis-config.xml 注释态),select 必须显式 resultMap,
+       否则 user_id→userId 等映射静默失败、导出字段全 null。 -->
+  <resultMap id="NpcChatLogResult" type="com.chengyinhub.business.domain.NpcChatLog">
+    <id     property="id"         column="id"/>
+    <result property="userId"     column="user_id"/>
+    <result property="profileId"  column="profile_id"/>
+    <result property="activityId" column="activity_id"/>
+    <result property="userMsg"    column="user_msg"/>
+    <result property="npcReply"   column="npc_reply"/>
+    <result property="safetyFlag" column="safety_flag"/>
+    <result property="model"      column="model"/>
+    <result property="latencyMs"  column="latency_ms"/>
+    <result property="tokenIn"    column="token_in"/>
+    <result property="tokenOut"   column="token_out"/>
+    <result property="createTime" column="create_time"/>
+  </resultMap>
+
+  <select id="selectNpcChatLogsByUserId" resultMap="NpcChatLogResult">
+    <!-- 用户数据导出(《漫游AI方案》§7.4):归属过滤唯一依据 user_id(登录态注入),
+         走 idx_user_activity 最左前缀。 -->
+    SELECT id, user_id, profile_id, activity_id, user_msg, npc_reply,
+           safety_flag, model, latency_ms, token_in, token_out, create_time
+    FROM npc_chat_log
+    WHERE user_id = #{userId}
+    ORDER BY create_time ASC, id ASC
+  </select>
+
+  <delete id="deleteNpcChatLogsByUserId">
+    <!-- 用户主动删除(《漫游AI方案》§7.4,立即硬删),区别于 deleteNpcChatLogsBefore 的到期清理。
+         归属过滤唯一依据 user_id(登录态注入)。 -->
+    DELETE FROM npc_chat_log WHERE user_id = #{userId}
+  </delete>
+
+</mapper>

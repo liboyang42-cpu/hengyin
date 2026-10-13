@@ -1,0 +1,1824 @@
+{
+  "note": "截图矩阵真源。由 build-route-matrix.js 从 app.json 生成,不要手改 —— 手改就会漏新增页。",
+  "generatedFrom": "app.json + scene-* 组件扫描",
+  "previousBatch": null,
+  "counts": {
+    "routes": 130,
+    "scenes": 26,
+    "added": 0,
+    "removed": 0
+  },
+  "routes": [
+    {
+      "pagePath": "pages/index/index",
+      "pkg": "main",
+      "tabBar": true,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id",
+        "scene"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/template/index",
+      "pkg": "main",
+      "tabBar": true,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "mode"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/talent/list/index",
+      "pkg": "main",
+      "tabBar": true,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/member/index/index",
+      "pkg": "main",
+      "tabBar": true,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/roam/index",
+      "pkg": "main",
+      "tabBar": true,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "eventId",
+        "scene"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/privacy/index",
+      "pkg": "main",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/agreement/index",
+      "pkg": "main",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": true,
+      "dataKeys": [
+        "type"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/deregister/index",
+      "pkg": "main",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/team/detail/index",
+      "pkg": "main",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "teamId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/team/join/index",
+      "pkg": "main",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "code",
+        "teamId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/play/index",
+      "pkg": "pages/play",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "activityId",
+        "topicId",
+        "registrationId",
+        "regId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/play/merchant/index",
+      "pkg": "pages/play",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "nodeId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/play/circle/index",
+      "pkg": "pages/play",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "topicId",
+        "registrationId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/activity/detail/index",
+      "pkg": "pages/activity",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": false,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/activity/baoming/baoming",
+      "pkg": "pages/activity",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/activity/list/index",
+      "pkg": "pages/activity",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/activity/official-detail/index",
+      "pkg": "pages/activity",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/activity/official-inbox/index",
+      "pkg": "pages/activity",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/activity/official-mine/index",
+      "pkg": "pages/activity",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageA/pages/myproject/index",
+      "pkg": "subpackageA",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "type"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageA/pages/infomation/infomation",
+      "pkg": "subpackageA",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageA/pages/infomationdetail/infomationdetail",
+      "pkg": "subpackageA",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageA/pages/assetcenter/income-detail/income-detail",
+      "pkg": "subpackageA",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageA/pages/assetcenter/earnings/index",
+      "pkg": "subpackageA",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "scene",
+        "topicId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageP3/pages/growthcenter/index/index",
+      "pkg": "subpackageP3",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageP3/pages/growthcenter/leaderboard/index",
+      "pkg": "subpackageP3",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageP3/pages/stamp-camera/index/index",
+      "pkg": "subpackageP3",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageP3/pages/stamp-album/index/index",
+      "pkg": "subpackageP3",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageP3/pages/badge-wall/index/index",
+      "pkg": "subpackageP3",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageP3/pages/badge-3d/index",
+      "pkg": "subpackageP3",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageP3/pages/object-cards/index/index",
+      "pkg": "subpackageP3",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageB/pages/im/list/index",
+      "pkg": "subpackageB",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageB/pages/im/chat/index",
+      "pkg": "subpackageB",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "type",
+        "conversationId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/publish/fabu/index",
+      "pkg": "pages/publish",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "draftUuid",
+        "mode",
+        "clubId",
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/publish/simple/index",
+      "pkg": "pages/publish",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "mode"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/publish/temp/index",
+      "pkg": "pages/publish",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id",
+        "mode"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/publish/activity/index",
+      "pkg": "pages/publish",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/publish/topicadd/topicadd",
+      "pkg": "pages/publish",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/publish/templateadd/templateadd",
+      "pkg": "pages/publish",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/publish/template-intro/index",
+      "pkg": "pages/publish",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/club/apply/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/club/create/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/club/customer-detail/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "memberId",
+        "clubId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/club/customers/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "clubId",
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/club/detail/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id",
+        "postId",
+        "topicId",
+        "chapterId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/club/edit/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": false,
+      "needsData": true,
+      "dataKeys": [
+        "id",
+        "clubId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/club/enroll/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "topicId",
+        "clubId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/club/checkin-detail/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "clubId",
+        "registrationId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/club/event-ops/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "clubId",
+        "id",
+        "activityId",
+        "topicId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/club/governance/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "clubId",
+        "mode",
+        "memberId",
+        "targetId",
+        "targetMemberId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/club/group-code/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "activityId",
+        "topicId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/club/join-requests/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "clubId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/club/notify/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "clubId",
+        "id",
+        "activityId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/club/roles/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "clubId",
+        "activityId",
+        "memberId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/club/settlement/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "clubId",
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/club/topic-detail/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "topicId",
+        "clubId",
+        "activityId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/club/topic-story/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/club/workbench/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": false,
+      "needsData": true,
+      "dataKeys": [
+        "id",
+        "clubId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/topic/index/index",
+      "pkg": "pages/topic",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/topic/merchantinfo/merchantinfo",
+      "pkg": "pages/topic",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "topicId",
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/topic/merchantapply/index",
+      "pkg": "pages/topic",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id",
+        "topicId",
+        "nodeId",
+        "templateId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/topic/pricing/index",
+      "pkg": "pages/topic",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "topicId",
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/topic/pricing/partner/index",
+      "pkg": "pages/topic",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "toId",
+        "topicId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/index/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "scene",
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/apply/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/ledger/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/ledger/order-detail/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "recordId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/ledger/batch-detail/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "batchId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/aftercare/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/predict/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/aftercare/detail/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "refundId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/profile/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/marketing/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/reviews/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/marketing/ai-insight/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/relation/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "chapterId",
+        "topicId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/citynode/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/citynode/create/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/decor/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/decor/ai-npc/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/decor/coop-setting/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/decor/gallery/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/decor/perks/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/coop-center/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "topicId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/customer/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/game-node/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "activityId",
+        "nodeId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/customer/detail/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "customerMemberId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/team/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/coop/list/index",
+      "pkg": "pages/coop",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "topicId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/coop/invite-detail/index",
+      "pkg": "pages/coop",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "inviteId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/coop/invite/index",
+      "pkg": "pages/coop",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "topicId",
+        "type",
+        "toId",
+        "originApplyId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/coop/nearby/index",
+      "pkg": "pages/coop",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "chapterId",
+        "topicId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/coop/finance/index",
+      "pkg": "pages/coop",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/coop/settlement-detail/index",
+      "pkg": "pages/coop",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id",
+        "topicId",
+        "clubId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/coop/withdraw/index",
+      "pkg": "pages/coop",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/coop/withdraw/records/index",
+      "pkg": "pages/coop",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/square/list/index",
+      "pkg": "pages/square",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/square/detail/index",
+      "pkg": "pages/square",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/search2/index",
+      "pkg": "pages/search2",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/search2/result/index",
+      "pkg": "pages/search2",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "categoryId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/searchmap/index",
+      "pkg": "pages/searchmap",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/templatedetail/templatedetail",
+      "pkg": "pages/templatedetail",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/address/address",
+      "pkg": "pages/address",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/addressinfo/addressinfo",
+      "pkg": "pages/addressinfo",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/shezhi/shezhi",
+      "pkg": "pages/shezhi",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "scene",
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/shezhi/about/index",
+      "pkg": "pages/shezhi",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/gerenziliao/gerenziliao",
+      "pkg": "pages/gerenziliao",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/userinfo/userinfo",
+      "pkg": "pages/userinfo",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": true,
+      "dataKeys": [
+        "userId",
+        "id",
+        "topicId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/mylike/mylike",
+      "pkg": "pages/mylike",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/crop/index",
+      "pkg": "pages/crop",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/complaint/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/coupon-wallet/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/coupon-qr/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/coupon/coupon",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/couponInfo/couponInfo",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/mycanyu/mycanyu",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/mycanyuinfo/mycanyuinfo",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": false,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/myinvite/myinvite",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/mytemplate/mytemplate",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/order/order",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": true,
+      "dataKeys": [
+        "detailId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/orderinfo/orderinfo",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/signup/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "focusId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/tixian/tixian",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/tixianjilu/tixianjilu",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageRoam/citynode-code/index",
+      "pkg": "subpackageRoam",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "poiId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageRoam/history/index",
+      "pkg": "subpackageRoam",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageRoam/poi-detail/index",
+      "pkg": "subpackageRoam",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": true,
+      "dataKeys": [
+        "poiId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageRoam/session/index",
+      "pkg": "subpackageRoam",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageRoam/nearby/index",
+      "pkg": "subpackageRoam",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "teamId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageRoam/citystamp/index",
+      "pkg": "subpackageRoam",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    }
+  ],
+  "scenes": [
+    {
+      "component": "scene-asset-earnings",
+      "dir": "components/cy/scene-asset-earnings",
+      "twin": {
+        "route": "subpackageA/pages/assetcenter/earnings/index",
+        "score": 13
+      }
+    },
+    {
+      "component": "scene-asset-income-detail",
+      "dir": "components/cy/scene-asset-income-detail",
+      "twin": {
+        "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
+        "score": 17
+      }
+    },
+    {
+      "component": "scene-club-edit",
+      "dir": "components/cy/scene-club-edit",
+      "twin": {
+        "route": "pages/club/edit/index",
+        "score": 8
+      }
+    },
+    {
+      "component": "scene-game-coupon-wallet",
+      "dir": "components/cy/scene-game-coupon-wallet",
+      "twin": {
+        "route": "subpackageMember/coupon-wallet/index",
+        "score": 12
+      }
+    },
+    {
+      "component": "scene-how-to-play-detail",
+      "dir": "subpackageA/components/scene-how-to-play-detail",
+      "twin": {
+        "route": "pages/club/customer-detail/index",
+        "score": 8
+      }
+    },
+    {
+      "component": "scene-member-invite-history",
+      "dir": "components/cy/scene-member-invite-history",
+      "twin": {
+        "route": "subpackageMember/myinvite/myinvite",
+        "score": 12
+      }
+    },
+    {
+      "component": "scene-member-order-detail",
+      "dir": "subpackageMember/components/cy/scene-member-order-detail",
+      "twin": {
+        "route": "pages/merchant/ledger/order-detail/index",
+        "score": 11
+      }
+    },
+    {
+      "component": "scene-member-order-history",
+      "dir": "subpackageMember/components/cy/scene-member-order-history",
+      "twin": {
+        "route": "subpackageMember/order/order",
+        "score": 11
+      }
+    },
+    {
+      "component": "scene-member-participation-detail",
+      "dir": "subpackageMember/components/scene-member-participation-detail",
+      "twin": null
+    },
+    {
+      "component": "scene-member-withdraw-history",
+      "dir": "components/cy/scene-member-withdraw-history",
+      "twin": {
+        "route": "pages/coop/withdraw/index",
+        "score": 8
+      }
+    },
+    {
+      "component": "scene-merchant-profit",
+      "dir": "components/cy/scene-merchant-profit",
+      "twin": {
+        "route": "pages/play/merchant/index",
+        "score": 8
+      }
+    },
+    {
+      "component": "scene-play-activity-detail",
+      "dir": "subpackageMember/components/cy/scene-play-activity-detail",
+      "twin": {
+        "route": "pages/activity/detail/index",
+        "score": 14
+      }
+    },
+    {
+      "component": "scene-qr-citynode",
+      "dir": "components/cy/scene-qr-citynode",
+      "twin": {
+        "route": "pages/merchant/citynode/index",
+        "score": 8
+      }
+    },
+    {
+      "component": "scene-qr-coupon",
+      "dir": "subpackageMember/components/cy/scene-qr-coupon",
+      "twin": {
+        "route": "subpackageMember/coupon-qr/index",
+        "score": 8
+      }
+    },
+    {
+      "component": "scene-qr-group-code",
+      "dir": "components/cy/scene-qr-group-code",
+      "twin": {
+        "route": "pages/club/group-code/index",
+        "score": 9
+      }
+    },
+    {
+      "component": "scene-qr-ticket",
+      "dir": "components/cy/scene-qr-ticket",
+      "twin": null
+    },
+    {
+      "component": "scene-roam-discover",
+      "dir": "components/cy/scene-roam-discover",
+      "twin": null
+    },
+    {
+      "component": "scene-roam-history",
+      "dir": "components/cy/scene-roam-history",
+      "twin": {
+        "route": "subpackageRoam/history/index",
+        "score": 11
+      }
+    },
+    {
+      "component": "scene-roam-poi-detail",
+      "dir": "subpackageMember/components/cy/scene-roam-poi-detail",
+      "twin": {
+        "route": "subpackageRoam/poi-detail/index",
+        "score": 13
+      }
+    },
+    {
+      "component": "scene-roam-session",
+      "dir": "components/cy/scene-roam-session",
+      "twin": {
+        "route": "subpackageRoam/session/index",
+        "score": 11
+      }
+    },
+    {
+      "component": "scene-roam-stamp-album",
+      "dir": "components/cy/scene-roam-stamp-album",
+      "twin": {
+        "route": "subpackageP3/pages/stamp-album/index/index",
+        "score": 10
+      }
+    },
+    {
+      "component": "scene-roam-task-list",
+      "dir": "components/cy/scene-roam-task-list",
+      "twin": null
+    },
+    {
+      "component": "scene-route-content",
+      "dir": "components/cy/scene-route-content",
+      "twin": null
+    },
+    {
+      "component": "scene-settings-deregister",
+      "dir": "components/cy/scene-settings-deregister",
+      "twin": {
+        "route": "pages/deregister/index",
+        "score": 10
+      }
+    },
+    {
+      "component": "scene-share-invite",
+      "dir": "components/cy/scene-share-invite",
+      "twin": null
+    },
+    {
+      "component": "scene-topic-customers",
+      "dir": "components/cy/scene-topic-customers",
+      "twin": {
+        "route": "pages/club/customers/index",
+        "score": 9
+      }
+    }
+  ],
+  "added": [],
+  "removed": []
+}

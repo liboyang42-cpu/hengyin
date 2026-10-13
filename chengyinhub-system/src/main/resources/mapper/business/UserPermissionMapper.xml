@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.chengyinhub.business.mapper.UserPermissionMapper">
+
+    <resultMap type="UserPermission" id="UserPermissionResult">
+        <result property="id"    column="id"    />
+        <result property="role"    column="role"    />
+        <result property="maxThemes"    column="max_themes"    />
+        <result property="maxNodesPerTheme"    column="max_nodes_per_theme"    />
+        <result property="maxCityNodes"    column="max_city_nodes"    />
+        <result property="maxEvents"    column="max_events"    />
+        <result property="maxCoupons"    column="max_coupons"    />
+        <result property="canCreateTheme"    column="can_create_theme"    />
+        <result property="canCreateEvent"    column="can_create_event"    />
+        <result property="canPublishCoupon"    column="can_publish_coupon"    />
+        <result property="canRedeemCoupon"    column="can_redeem_coupon"    />
+        <result property="nodeTypes"    column="node_types"    />
+        <result property="canBranch"    column="can_branch"    />
+        <result property="canGameMechanic"    column="can_game_mechanic"    />
+        <result property="canOpenAsNode"    column="can_open_as_node"    />
+        <result property="canDesignMedal"    column="can_design_medal"    />
+        <result property="canCreateGroup"    column="can_create_group"    />
+        <result property="dataScope"    column="data_scope"    />
+        <result property="withdrawable"    column="withdrawable"    />
+        <result property="membershipLevel"    column="membership_level"    />
+    </resultMap>
+
+    <sql id="permCols">
+        id, role, max_themes, max_nodes_per_theme, max_city_nodes, max_events, max_coupons,
+        can_create_theme, can_create_event, can_publish_coupon, can_redeem_coupon,
+        node_types, can_branch, can_game_mechanic, can_open_as_node, can_design_medal,
+        can_create_group, data_scope, withdrawable, membership_level
+    </sql>
+
+    <select id="selectByRole" parameterType="String" resultMap="UserPermissionResult">
+        select <include refid="permCols" />
+        from user_permission
+        where role = #{role} and membership_level is null
+        limit 1
+    </select>
+
+    <select id="selectAll" resultMap="UserPermissionResult">
+        select <include refid="permCols" />
+        from user_permission where membership_level is null order by field(role,'player','club','merchant')
+    </select>
+
+    <update id="updateUserPermission" parameterType="UserPermission">
+        update user_permission
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="maxThemes != null">max_themes = #{maxThemes},</if>
+            <if test="maxNodesPerTheme != null">max_nodes_per_theme = #{maxNodesPerTheme},</if>
+            <if test="maxCityNodes != null">max_city_nodes = #{maxCityNodes},</if>
+            <if test="maxEvents != null">max_events = #{maxEvents},</if>
+            <if test="maxCoupons != null">max_coupons = #{maxCoupons},</if>
+            <if test="canCreateTheme != null">can_create_theme = #{canCreateTheme},</if>
+            <if test="canCreateEvent != null">can_create_event = #{canCreateEvent},</if>
+            <if test="canPublishCoupon != null">can_publish_coupon = #{canPublishCoupon},</if>
+            <if test="canRedeemCoupon != null">can_redeem_coupon = #{canRedeemCoupon},</if>
+            <if test="nodeTypes != null">node_types = #{nodeTypes},</if>
+            <if test="canBranch != null">can_branch = #{canBranch},</if>
+            <if test="canGameMechanic != null">can_game_mechanic = #{canGameMechanic},</if>
+            <if test="canOpenAsNode != null">can_open_as_node = #{canOpenAsNode},</if>
+            <if test="canDesignMedal != null">can_design_medal = #{canDesignMedal},</if>
+            <if test="canCreateGroup != null">can_create_group = #{canCreateGroup},</if>
+            <if test="dataScope != null">data_scope = #{dataScope},</if>
+            <if test="withdrawable != null">withdrawable = #{withdrawable},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+</mapper>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CoopPerkTemplateMapper">
+
+    <resultMap type="CoopPerkTemplate" id="CoopPerkTemplateResult">
+        <result property="id"    column="id"    />
+        <result property="merchantId"    column="merchant_id"    />
+        <result property="perkType"    column="perk_type"    />
+        <result property="name"    column="name"    />
+        <result property="unitCost"    column="unit_cost"    />
+        <result property="retailValue"    column="retail_value"    />
+        <result property="quota"    column="quota"    />
+        <result property="redeemRule"    column="redeem_rule"    />
+        <result property="validEnd"    column="valid_end"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="delFlag"    column="del_flag"    />
+    </resultMap>
+
+    <!-- 显式列清单（非 select *）：新列不加在这里就查不出来，resultMap 配了也是空值 -->
+    <sql id="cols">id, merchant_id, perk_type, name, unit_cost, retail_value, quota, redeem_rule, valid_end, create_time, del_flag</sql>
+
+    <insert id="insertCoopPerkTemplate" parameterType="CoopPerkTemplate" useGeneratedKeys="true" keyProperty="id">
+        insert into coop_perk_template
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="merchantId != null">merchant_id,</if>
+            <if test="perkType != null">perk_type,</if>
+            <if test="name != null">name,</if>
+            <if test="unitCost != null">unit_cost,</if>
+            <if test="retailValue != null">retail_value,</if>
+            <if test="quota != null">quota,</if>
+            <if test="redeemRule != null">redeem_rule,</if>
+            <if test="validEnd != null">valid_end,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="delFlag != null">del_flag,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="merchantId != null">#{merchantId},</if>
+            <if test="perkType != null">#{perkType},</if>
+            <if test="name != null">#{name},</if>
+            <if test="unitCost != null">#{unitCost},</if>
+            <if test="retailValue != null">#{retailValue},</if>
+            <if test="quota != null">#{quota},</if>
+            <if test="redeemRule != null">#{redeemRule},</if>
+            <if test="validEnd != null">#{validEnd},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+        </trim>
+    </insert>
+
+    <select id="selectByMerchant" resultMap="CoopPerkTemplateResult">
+        select <include refid="cols"/> from coop_perk_template
+        where merchant_id = #{merchantId} and del_flag = 0
+        order by create_time desc
+    </select>
+
+    <select id="selectById" resultMap="CoopPerkTemplateResult">
+        select <include refid="cols"/> from coop_perk_template where id = #{id} and del_flag = 0
+    </select>
+
+    <update id="softDelete">
+        update coop_perk_template set del_flag = 2
+        where id = #{id} and merchant_id = #{merchantId}
+    </update>
+
+</mapper>

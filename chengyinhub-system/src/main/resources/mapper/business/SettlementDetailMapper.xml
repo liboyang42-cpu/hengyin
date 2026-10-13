@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.SettlementDetailMapper">
+
+    <resultMap id="SettlementDetailResult" type="com.chengyinhub.business.domain.SettlementDetail">
+        <result property="id" column="id"/>
+        <result property="claimId" column="claim_id"/>
+        <result property="entryKind" column="entry_kind"/>
+        <result property="eventKey" column="event_key"/>
+        <result property="batchId" column="batch_id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="sourceType" column="source_type"/>
+        <result property="sourceId" column="source_id"/>
+        <result property="receiverType" column="receiver_type"/>
+        <result property="receiverId" column="receiver_id"/>
+        <result property="grossAmount" column="gross_amount"/>
+        <result property="commissionAmount" column="commission_amount"/>
+        <result property="settlementAmount" column="settlement_amount"/>
+        <result property="status" column="status"/>
+        <result property="failReason" column="fail_reason"/>
+        <result property="idempotencyKey" column="idempotency_key"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <select id="selectDetailList" parameterType="com.chengyinhub.business.domain.SettlementDetail" resultMap="SettlementDetailResult">
+        select id, claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
+               gross_amount, commission_amount, settlement_amount, status, fail_reason,
+               idempotency_key, create_time, update_time
+        from settlement_detail
+        <where>
+            <if test="batchId != null">and batch_id = #{batchId}</if>
+            <if test="merchantId != null">and merchant_id = #{merchantId}</if>
+            <if test="status != null">and status = #{status}</if>
+            <if test="sourceType != null and sourceType != ''">and source_type = #{sourceType}</if>
+        </where>
+        order by id desc
+    </select>
+
+    <insert id="batchInsert">
+        insert into settlement_detail
+        (claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
+         gross_amount, commission_amount, settlement_amount, status, fail_reason,
+         idempotency_key, create_time)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.claimId}, #{item.entryKind}, #{item.eventKey}, #{item.batchId}, #{item.merchantId}, #{item.sourceType}, #{item.sourceId},
+             #{item.receiverType}, #{item.receiverId}, #{item.grossAmount},
+             #{item.commissionAmount}, #{item.settlementAmount}, #{item.status},
+             #{item.failReason}, #{item.idempotencyKey}, now())
+        </foreach>
+    </insert>
+
+    <select id="selectSettledDetail" resultMap="SettlementDetailResult">
+        select id, claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
+               gross_amount, commission_amount, settlement_amount, status, fail_reason,
+               idempotency_key, create_time, update_time
+        from settlement_detail
+        where source_type = #{sourceType}
+          and source_id = #{sourceId}
+          and status = 1
+        order by id desc
+        limit 1
+    </select>
+
+    <!--
+      多方分账退款:返回某来源全部可判定明细(merchant/platform/creator)。
+      status=0 必须纳入:系统1历史活路径已真实打款,但从未把支付时明细翻成 status=1;
+      是否真扣余额由 RefundServiceImpl 再问父级真实打款态,status=0 且未打款只作废。
+    -->
+    <select id="selectSettledDetails" resultMap="SettlementDetailResult">
+        select id, claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
+               gross_amount, commission_amount, settlement_amount, status, fail_reason,
+               idempotency_key, create_time, update_time
+        from settlement_detail
+        where source_type = #{sourceType}
+          and source_id = #{sourceId}
+          and status in (0, 1)
+        order by id asc
+    </select>
+
+    <select id="existsAdjustment" resultType="int">
+        select count(1)
+        from settlement_detail
+        where source_type = #{sourceType}
+          and source_id = #{sourceId}
+    </select>
+
+    <insert id="insertAdjustment" parameterType="com.chengyinhub.business.domain.SettlementDetail" useGeneratedKeys="true" keyProperty="id">
+        insert ignore into settlement_detail
+        (claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
+         gross_amount, commission_amount, settlement_amount, status, fail_reason,
+         idempotency_key, create_time)
+        values
+        (#{claimId}, #{entryKind}, #{eventKey}, #{batchId}, #{merchantId}, #{sourceType}, #{sourceId}, #{receiverType}, #{receiverId},
+         #{grossAmount}, #{commissionAmount}, #{settlementAmount}, #{status}, #{failReason},
+         #{idempotencyKey}, now())
+    </insert>
+
+    <select id="selectByIdempotencyKeyForUpdate" resultMap="SettlementDetailResult">
+        select id, claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
+               gross_amount, commission_amount, settlement_amount, status, fail_reason,
+               idempotency_key, create_time, update_time
+        from settlement_detail
+        where idempotency_key = #{idempotencyKey}
+        for update
+    </select>
+
+    <!-- FX-13(9-15 拍板):主题级票(owner_type=1)只能在主题 end_date + 7 天之后归批;end_date 为空视为未结束。
+         口径与 CmsTopicServiceImpl.settleCoopTopic 的 payable_time(end_date+7 天)一致。
+         selectPendingByMerchant 与 bindBatch 共用本片段,保证读快照和真绑定同一口径。 -->
+    <sql id="topicTicketNotYetSettleable">
+        and not exists (
+            select 1 from cms_registration r
+            join cms_topic t on t.id = r.owner_id
+            where settlement_detail.source_type = 'registration'
+              and r.id = settlement_detail.source_id
+              and r.owner_type = 1
+              and (t.end_date is null or t.end_date &gt; date_sub(now(), interval 7 day))
+        )
+    </sql>
+
+    <select id="selectPendingByMerchant" resultMap="SettlementDetailResult">
+        select id, claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
+               gross_amount, commission_amount, settlement_amount, status, fail_reason,
+               idempotency_key, create_time, update_time
+        from settlement_detail
+        where merchant_id = #{merchantId}
+          and batch_id = 0
+          and status = 0
+          <include refid="topicTicketNotYetSettleable"/>
+        order by id asc
+    </select>
+
+    <update id="bindBatch">
+        update settlement_detail
+        set batch_id = #{batchId}, update_time = now()
+        where merchant_id = #{merchantId}
+          and batch_id = 0
+          and status = 0
+          <include refid="topicTicketNotYetSettleable"/>
+    </update>
+
+    <update id="markBatchSettled">
+        update settlement_detail
+        set status = 1, update_time = now()
+        where batch_id = #{batchId}
+          and status = 0
+    </update>
+
+    <!-- 系统1活动结算真打款后,只同步本次销售额口径覆盖的报名账本。 -->
+    <update id="markActivityRegistrationDetailsSettled">
+        update settlement_detail
+        set status = 1, update_time = now()
+        where source_type = 'registration'
+          and status = 0
+          and source_id in (
+              select id
+              from cms_registration
+              where owner_id = #{activityId}
+                and owner_type = 2
+                and payment_status = 2
+                and registration_status = 2
+          )
+          and not exists (
+              select 1 from cms_activity_settlement_hold h
+              where h.registration_id = settlement_detail.source_id and h.status = 0
+          )
+    </update>
+
+    <update id="markRegistrationDetailsSettled">
+        update settlement_detail
+        set status = 1, update_time = now()
+        where source_type = 'registration'
+          and status = 0
+          and source_id = #{registrationId}
+    </update>
+
+    <update id="voidPendingBySource">
+        update settlement_detail
+        set status = 2, fail_reason = '退款作废', update_time = now()
+        where source_type = #{sourceType}
+          and source_id = #{sourceId}
+          and batch_id = 0
+          and status = 0
+    </update>
+
+    <!-- 撤销券核销:删除该领取记录仍待结算的分成明细(见 Mapper 接口 javadoc:
+         无条件唯一键 uk_source_receiver 决定「重核销」必须能重新插入)。 -->
+    <delete id="deletePendingCouponVerification">
+        delete from settlement_detail
+        where source_type = 'coupon'
+          and source_id = #{sourceId}
+          and batch_id = 0
+          and status = 0
+    </delete>
+
+    <resultMap id="ReconciliationResult" type="com.chengyinhub.business.domain.vo.SettlementSummaryVO">
+        <result property="merchantId" column="merchant_id"/>
+        <result property="settledAmount" column="settled_amount"/>
+        <result property="reversalAmount" column="reversal_amount"/>
+        <result property="netAmount" column="net_amount"/>
+    </resultMap>
+
+    <select id="selectReconciliation" resultMap="ReconciliationResult">
+        select #{merchantId} as merchant_id,
+               coalesce(sum(case when status = 1 and source_type != 'refund' then settlement_amount else 0 end), 0) as settled_amount,
+               coalesce(-sum(case when source_type = 'refund' then settlement_amount else 0 end), 0) as reversal_amount,
+               coalesce(sum(case when status = 1 and source_type != 'refund' then settlement_amount else 0 end), 0)
+                 - coalesce(-sum(case when source_type = 'refund' then settlement_amount else 0 end), 0) as net_amount
+        from settlement_detail
+        where merchant_id = #{merchantId}
+    </select>
+</mapper>

@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ClubEditionCompensationMapper">
+
+    <resultMap id="TermsResult" type="ClubEditionCompensationTerms">
+        <id property="id" column="id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="executingClubId" column="executing_club_id"/>
+        <result property="fixedCompensation" column="fixed_compensation"/>
+        <result property="extraHourRate" column="extra_hour_rate"/>
+        <result property="qualityDimensionAmount" column="quality_dimension_amount"/>
+        <result property="qualityDimensions" column="quality_dimensions"/>
+        <result property="evidenceDueAt" column="evidence_due_at"/>
+        <result property="fulfillmentEndAt" column="fulfillment_end_at"/>
+        <result property="extraApproverUserId" column="extra_approver_user_id"/>
+        <!-- HEADCOUNT：每已赚票单价与本期封顶（2026-08-25 承接费换轨）。cap 为 NULL = 不封顶。 -->
+        <result property="headcountRate" column="headcount_rate"/>
+        <result property="headcountCap" column="headcount_cap"/>
+        <result property="configHash" column="config_hash"/>
+        <result property="frozenAt" column="frozen_at"/>
+    </resultMap>
+
+    <resultMap id="HoursResult" type="ClubEditionHours">
+        <id property="id" column="id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="clubId" column="club_id"/>
+        <result property="hourKind" column="hour_kind"/>
+        <result property="plannedHours" column="planned_hours"/>
+        <result property="reportedActualHours" column="reported_actual_hours"/>
+        <result property="confirmedActualHours" column="confirmed_actual_hours"/>
+        <result property="confirmStatus" column="confirm_status"/>
+        <result property="reportedBy" column="reported_by"/>
+        <result property="reportedAt" column="reported_at"/>
+        <result property="confirmedBy" column="confirmed_by"/>
+        <result property="confirmedAt" column="confirmed_at"/>
+        <result property="evidenceNote" column="evidence_note"/>
+    </resultMap>
+
+    <resultMap id="ApprovalResult" type="ClubExtraHoursApproval">
+        <id property="id" column="id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="clubId" column="club_id"/>
+        <result property="category" column="category"/>
+        <result property="approvedHours" column="approved_hours"/>
+        <result property="approvedBy" column="approved_by"/>
+        <result property="approvedAt" column="approved_at"/>
+        <result property="workStartedAt" column="work_started_at"/>
+        <result property="idempotencyKey" column="idempotency_key"/>
+        <result property="correctionOf" column="correction_of"/>
+        <result property="note" column="note"/>
+    </resultMap>
+
+    <resultMap id="QualityResult" type="ClubQualityDecision">
+        <id property="id" column="id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="clubId" column="club_id"/>
+        <result property="dimension" column="dimension"/>
+        <result property="decisionStatus" column="decision_status"/>
+        <result property="amount" column="amount"/>
+        <result property="evidenceHash" column="evidence_hash"/>
+        <result property="excludedByFault" column="excluded_by_fault"/>
+        <result property="faultParty" column="fault_party"/>
+        <result property="reason" column="reason"/>
+        <result property="dueAt" column="due_at"/>
+        <result property="confirmedBy" column="confirmed_by"/>
+        <result property="confirmedAt" column="confirmed_at"/>
+        <result property="version" column="decision_version"/>
+        <result property="current" column="is_current"/>
+        <result property="correctionOf" column="correction_of"/>
+    </resultMap>
+
+    <insert id="insertTerms" parameterType="ClubEditionCompensationTerms" useGeneratedKeys="true" keyProperty="id">
+        insert into club_edition_compensation_terms
+        (topic_id, executing_club_id, fixed_compensation, extra_hour_rate, quality_dimension_amount,
+         quality_dimensions, evidence_due_at, fulfillment_end_at, extra_approver_user_id,
+         headcount_rate, headcount_cap, config_hash, frozen_at)
+        values (#{topicId}, #{executingClubId}, #{fixedCompensation}, #{extraHourRate},
+         #{qualityDimensionAmount}, #{qualityDimensions}, #{evidenceDueAt}, #{fulfillmentEndAt},
+         #{extraApproverUserId}, #{headcountRate}, #{headcountCap}, #{configHash}, #{frozenAt})
+    </insert>
+
+    <select id="selectTerms" resultMap="TermsResult">
+        select * from club_edition_compensation_terms where topic_id = #{topicId}
+    </select>
+
+    <!-- ★俱乐部自报的候选期次读模型：真源是<b>开售冻结条款里的执行俱乐部</b>，不是 cms_topic.club_id。
+         探店日 ③ 由平台建期（CmsTopicServiceImpl 把 PLATFORM 主题的 club_id 写成 NULL），
+         执行俱乐部只存在于 coop_order 阵容与本表的 executing_club_id 里，承接流程从不回写那一列 ——
+         按 cms_topic.club_id 过滤，俱乐部一个探店日期次都选不出来，E1 自报链路整条不通。
+         用它还有一个天然好处：「有冻结条款的期」与「能自报的期」是同一个集合，
+         选出来的每一期 requireExecutingClub 都必然过得了。
+         左连 cms_topic 只为拿给人看的字段：名字与封面（CU-C-38「带票分享」的卡片图要的是主题
+         长图，客户端这一屏手上只有期次行，没有主题详情那次请求）。
+         主题行缺失也不该让期次从列表里消失，所以是 left join。 -->
+    <select id="selectEditionsForExecutingClub" resultType="java.util.LinkedHashMap">
+        select t.topic_id      as topicId,
+               t.executing_club_id as executingClubId,
+               c.name          as topicName,
+               c.img_url       as topicCover,
+               c.start_date    as startDate,
+               t.evidence_due_at   as evidenceDueAt,
+               t.fulfillment_end_at as fulfillmentEndAt,
+               t.frozen_at     as frozenAt
+        from club_edition_compensation_terms t
+        left join cms_topic c on c.id = t.topic_id
+        where t.executing_club_id = #{clubId}
+        order by t.topic_id desc
+    </select>
+
+    <!-- 只在 terms 缺失的错误路径上查一次，用来区分「历史豁免」与「配置没落」。 -->
+    <select id="countLegacyExemption" resultType="int">
+        select count(*) from club_edition_legacy_exemption where topic_id = #{topicId}
+    </select>
+
+    <select id="selectCurrentFixedCompensation" resultType="java.math.BigDecimal">
+        select fixed_compensation from topic_edition_cost where topic_id = #{topicId} and is_current = 1
+    </select>
+
+    <!-- HEADCOUNT 的两个配置项，与 F 同源：当期成本版本，开售当场冻进 terms。
+         整行返回而不是分两个标量查：rate 与 cap 必须来自【同一个成本版本】，
+         分两次查会在成本改版的窗口里冻出「rate 来自新版、cap 来自旧版」的组合。
+         ⚠️ 别把这句读大了：F（selectCurrentFixedCompensation）与审批人
+         （selectCurrentExtraApprover）仍各查一次，F 与 rate 之间那个跨版本窗口
+         本来就在，本次没关它，也不该假装关了。 -->
+    <select id="selectCurrentHeadcountConfig" resultType="java.util.LinkedHashMap">
+        select headcount_rate as headcountRate, headcount_cap as headcountCap
+          from topic_edition_cost where topic_id = #{topicId} and is_current = 1
+    </select>
+
+    <!-- 显式登记的项目负责人（EXTRA 事前审批人）。≤0 与 NULL 一样当没登记：调用方拒售，不猜人。 -->
+    <select id="selectCurrentExtraApprover" resultType="java.lang.Long">
+        select extra_approver_user_id from topic_edition_cost
+        where topic_id = #{topicId} and is_current = 1 and extra_approver_user_id &gt; 0
+    </select>
+
+    <!-- 票源奖励只读 FINAL 六量真源；禁止退回 PROVISIONAL 或从票表重算第二套 g_earned。 -->
+    <select id="selectCurrentFinalGEarned" resultType="java.math.BigDecimal">
+        select g_earned from topic_edition_funds
+        where topic_id = #{topicId} and snapshot_kind = 'FINAL' and is_current = 1
+    </select>
+
+    <!-- 只读 FINAL 同事务固化的金额归因；不投影伪造的 unfrozenCount，报名表在 FINAL 后变化也不能改写应付口径。 -->
+    <select id="selectCurrentFinalAttributions" resultType="TopicEditionFundsAttribution">
+        select a.id, a.funds_snapshot_id as fundsSnapshotId, a.source_club_id as sourceClubId,
+               a.ticket_count as ticketCount, a.net_ticket_count as netTicketCount,
+               a.earned_amount as earnedAmount
+          from topic_edition_funds f
+          join topic_edition_funds_attribution a on a.funds_snapshot_id = f.id
+         where f.topic_id = #{topicId} and f.snapshot_kind = 'FINAL' and f.is_current = 1
+         order by a.source_key
+    </select>
+
+    <!-- 唯一残存的 upsert，且只碰 planned_hours：自报/确认/审计列一律不在 update 子句里。
+         ★「开售后不许改计划」的<b>原子守卫</b>就在这条语句里：`where not exists (terms)` 与写入是
+         同一条语句、同一个可见性快照。service 侧那句 selectTerms 只是给人话的快速失败 ——
+         「先读后写」两步之间 freezeTermsForSale 可以提交，而 REPEATABLE READ 下本事务的快照
+         看不见它，Java 判断恒为 null ⇒ 冻结后仍能把 planned 改小 ⇒ 直接抬高 EXTRA 应付
+         （actualExtra = confirmed − planned）。
+         ⚠️ ODKU 用 #{plannedHours} 而不是 values(planned_hours)：INSERT…SELECT 形态下
+         values() 返回 NULL，会把计划工时写成空。 -->
+    <insert id="upsertPlannedHours">
+        insert into club_edition_hours (topic_id, club_id, hour_kind, planned_hours, confirm_status)
+        select #{topicId}, #{clubId}, #{hourKind}, #{plannedHours}, 'UNREPORTED'
+        from dual
+        where not exists (select 1 from club_edition_compensation_terms where topic_id = #{topicId})
+        on duplicate key update planned_hours = #{plannedHours}, update_time = CURRENT_TIMESTAMP(3)
+    </insert>
+
+    <update id="reportActualHoursCas">
+        update club_edition_hours
+        set reported_actual_hours = #{reportedActualHours}, reported_by = #{reportedBy},
+            reported_at = CURRENT_TIMESTAMP(3), confirm_status = 'REPORTED',
+            update_time = CURRENT_TIMESTAMP(3)
+        where topic_id = #{topicId} and club_id = #{clubId} and hour_kind = #{hourKind}
+          and confirm_status in ('UNREPORTED', 'REPORTED', 'REJECTED')
+    </update>
+
+    <!-- 旧状态必须是 REPORTED：请求体传 confirm_status='CONFIRMED' 在这里没有任何入口。 -->
+    <update id="confirmActualHoursCas">
+        update club_edition_hours
+        set confirmed_actual_hours = #{confirmedActualHours}, confirmed_by = #{confirmedBy},
+            confirmed_at = CURRENT_TIMESTAMP(3), confirm_status = 'CONFIRMED',
+            update_time = CURRENT_TIMESTAMP(3)
+        where topic_id = #{topicId} and club_id = #{clubId} and hour_kind = #{hourKind}
+          and confirm_status = 'REPORTED'
+    </update>
+
+    <select id="selectHoursForClub" resultMap="HoursResult">
+        select * from club_edition_hours where topic_id = #{topicId} and club_id = #{clubId}
+        order by hour_kind
+    </select>
+
+    <!-- 更正路径的锁定读。快照读会让「读到 CONFIRMED=40 → 写审计 → 退回」三步之间被另一次
+         并发更正插进来：审计说「当初是 40」，而它推翻的其实是新那条。 -->
+    <select id="selectHoursForUpdate" resultMap="HoursResult">
+        select * from club_edition_hours
+        where topic_id = #{topicId} and club_id = #{clubId} and hour_kind = #{hourKind}
+        for update
+    </select>
+
+    <!-- append-only。reopened_at 由库时钟写死，参数里没有这一列 ⇒「事后补一条更正、把时间写早」
+         这条路在 SQL 层就不存在（同 insertExtraApproval 的 approved_at）。 -->
+    <insert id="insertHoursCorrection" parameterType="ClubEditionHoursCorrection"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into club_edition_hours_correction
+        (topic_id, club_id, hour_kind, previous_confirmed_hours, previous_confirmed_by,
+         previous_confirmed_at, reopened_by, reason, reopened_at)
+        values (#{topicId}, #{clubId}, #{hourKind}, #{previousConfirmedHours}, #{previousConfirmedBy},
+         #{previousConfirmedAt}, #{reopenedBy}, #{reason}, CURRENT_TIMESTAMP(3))
+    </insert>
+
+    <!-- ★带理由的退回：CONFIRMED → REPORTED 并**清空** confirmed_*。
+         留着 confirmed_actual_hours 就是第二个真值（状态说待确认、金额列还挂着被推翻的数）。
+         where 的 confirmed_at = #{previousConfirmedAt} 是乐观锁：把本次退回钉在审计行快照的
+         那一条确认事实上；退错一条即 0 行。
+         ⚠️ 绝不放宽 confirmActualHoursCas 的旧状态条件 —— 写已确认工时的路径必须只有一条。 -->
+    <update id="reopenConfirmedHoursCas">
+        update club_edition_hours
+        set confirmed_actual_hours = null, confirmed_by = null, confirmed_at = null,
+            confirm_status = 'REPORTED', update_time = CURRENT_TIMESTAMP(3)
+        where topic_id = #{topicId} and club_id = #{clubId} and hour_kind = #{hourKind}
+          and confirm_status = 'CONFIRMED' and confirmed_at = #{previousConfirmedAt}
+    </update>
+
+    <!-- approved_at 由数据库写死为 CURRENT_TIMESTAMP(3)；参数里根本没有这一列，
+         「事后补一条预审批并把时间写早」这条路在 SQL 层就不存在。
+         ★另一半也堵上：根审批（correction_of 为空）必须满足 work_started_at > CURRENT_TIMESTAMP(3)。
+         写 approved_at 的是同一条语句的同一个库时钟 ⇒ 「approved_at 早于 work_started_at」由数据库
+         自己保证，读侧的事前性判据再也不能靠「把 workStartedAt 填成未来时刻」洗白。
+         更正行继承原件的 work_started_at（那时点必然已过去），所以只对根行设这道闸。 -->
+    <insert id="insertExtraApproval" parameterType="ClubExtraHoursApproval" useGeneratedKeys="true" keyProperty="id">
+        insert into club_extra_hours_approval
+        (topic_id, club_id, category, approved_hours, approved_by, approved_at,
+         work_started_at, idempotency_key, correction_of, note)
+        select #{topicId}, #{clubId}, #{category}, #{approvedHours}, #{approvedBy}, CURRENT_TIMESTAMP(3),
+         #{workStartedAt}, #{idempotencyKey}, #{correctionOf}, #{note}
+        from dual
+        where #{correctionOf} is not null or #{workStartedAt} &gt; CURRENT_TIMESTAMP(3)
+    </insert>
+
+    <select id="selectExtraApprovals" resultMap="ApprovalResult">
+        select * from club_extra_hours_approval
+        where topic_id = #{topicId} and club_id = #{clubId} order by id
+    </select>
+
+    <select id="selectExtraApprovalById" resultMap="ApprovalResult">
+        select * from club_extra_hours_approval where id = #{id}
+    </select>
+
+    <!-- 一条审批只能被更正一次：两条兄弟更正都存活 = 批准额度按条累加 = 超额付款。
+         这条计数给 Java 一层人话，真正的并发防线是 uk_club_extra_correction_of 唯一键。 -->
+    <select id="countCorrectionsOf" resultType="int">
+        select count(*) from club_extra_hours_approval where correction_of = #{correctionOf}
+    </select>
+
+    <insert id="insertQualityDecision" parameterType="ClubQualityDecision" useGeneratedKeys="true" keyProperty="id">
+        insert into club_quality_decision
+        (topic_id, club_id, dimension, decision_status, amount, evidence_hash, excluded_by_fault,
+         fault_party, reason, due_at, confirmed_by, confirmed_at, decision_version, is_current, correction_of)
+        values (#{topicId}, #{clubId}, #{dimension}, #{decisionStatus}, #{amount}, #{evidenceHash},
+         #{excludedByFault}, #{faultParty}, #{reason}, #{dueAt}, #{confirmedBy}, #{confirmedAt}, #{version},
+         #{current}, #{correctionOf})
+    </insert>
+
+    <update id="supersedeCurrentQuality">
+        update club_quality_decision set is_current = 0
+        where topic_id = #{topicId} and club_id = #{clubId} and dimension = #{dimension} and is_current = 1
+    </update>
+
+    <!-- 一次确认：只有 current 且仍 PENDING 的那一行会被改到，并发第二次拿到 rows=0。
+         ⚠️ 2026-09-10 用户裁决：探店日不再交质量证据，原来那道
+         `(#{amount} = 0 or evidence_hash is not null)` 一并摘掉。
+         摘它不是放松：唯一的证据写入点删掉之后 evidence_hash 恒为 null，那道条件会让
+         任何 amount>0 的确认 rows=0，等于把 Q 焊死在 0。
+         ★★这里也不比 due_at。截止约束的是交付时刻，不是平台的审批时刻 —— 套在确认上
+         等于俱乐部按时交了、平台晚判一分钟这一维就归 0，而锁定裁决明写
+         「商家/平台过错不得让俱乐部少拿」。
+         是否判 200 现在完全由本 CAS 之前那次人工确认承重。 -->
+    <update id="confirmQualityCas">
+        update club_quality_decision
+        set decision_status = 'CONFIRMED', amount = #{amount}, reason = #{reason},
+            confirmed_by = #{confirmedBy}, confirmed_at = #{confirmedAt}
+        where topic_id = #{topicId} and club_id = #{clubId} and dimension = #{dimension}
+          and is_current = 1 and decision_status = 'PENDING'
+    </update>
+
+    <select id="selectCurrentQualityDecisions" resultMap="QualityResult">
+        select * from club_quality_decision
+        where topic_id = #{topicId} and club_id = #{clubId} and is_current = 1 order by dimension
+    </select>
+</mapper>

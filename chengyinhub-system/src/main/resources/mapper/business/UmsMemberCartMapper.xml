@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.UmsMemberCartMapper">
+    
+    <resultMap type="UmsMemberCart" id="UmsMemberCartResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="merchantId"    column="merchant_id"    />
+        <result property="cartType"    column="cart_type"    />
+        <result property="productId"    column="product_id"    />
+        <result property="skuId"    column="sku_id"    />
+        <result property="spData"    column="sp_data"    />
+        <result property="quantity"    column="quantity"    />
+        <result property="status"    column="status"    />
+        <result property="isBuy"    column="is_buy"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectUmsMemberCartVo">
+        select id, member_id, merchant_id, cart_type, product_id, sku_id, sp_data, quantity, status, is_buy, create_by, create_time, update_by, update_time from ums_member_cart
+    </sql>
+
+    <select id="selectUmsMemberCartList" parameterType="UmsMemberCart" resultMap="UmsMemberCartResult">
+        <include refid="selectUmsMemberCartVo"/>
+        <where>  
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="merchantId != null "> and merchant_id = #{merchantId}</if>
+            <if test="cartType != null "> and cart_type = #{cartType}</if>
+            <if test="productId != null "> and product_id = #{productId}</if>
+            <if test="skuId != null "> and sku_id = #{skuId}</if>
+            <if test="spData != null  and spData != ''"> and sp_data = #{spData}</if>
+            <if test="quantity != null "> and quantity = #{quantity}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="isBuy != null "> and is_buy = #{isBuy}</if>
+        </where>
+    </select>
+    
+    <select id="selectUmsMemberCartById" parameterType="Long" resultMap="UmsMemberCartResult">
+        <include refid="selectUmsMemberCartVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectUmsMemberCartByIdsAndMemberId" parameterType="map" resultMap="UmsMemberCartResult">
+        <include refid="selectUmsMemberCartVo"/>
+        where member_id = #{memberId}
+          and id in
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="lockUmsMemberCartByIdAndMemberId" parameterType="map" resultType="java.lang.Long">
+        select id from ums_member_cart
+        where id = #{id}
+          and member_id = #{memberId}
+        for update
+    </select>
+
+    <insert id="insertUmsMemberCart" parameterType="UmsMemberCart" useGeneratedKeys="true" keyProperty="id">
+        insert into ums_member_cart
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="merchantId != null">merchant_id,</if>
+            <if test="cartType != null">cart_type,</if>
+            <if test="productId != null">product_id,</if>
+            <if test="skuId != null">sku_id,</if>
+            <if test="spData != null">sp_data,</if>
+            <if test="quantity != null">quantity,</if>
+            <if test="status != null">status,</if>
+            <if test="isBuy != null">is_buy,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="merchantId != null">#{merchantId},</if>
+            <if test="cartType != null">#{cartType},</if>
+            <if test="productId != null">#{productId},</if>
+            <if test="skuId != null">#{skuId},</if>
+            <if test="spData != null">#{spData},</if>
+            <if test="quantity != null">#{quantity},</if>
+            <if test="status != null">#{status},</if>
+            <if test="isBuy != null">#{isBuy},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateUmsMemberCart" parameterType="UmsMemberCart">
+        update ums_member_cart
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="merchantId != null">merchant_id = #{merchantId},</if>
+            <if test="cartType != null">cart_type = #{cartType},</if>
+            <if test="productId != null">product_id = #{productId},</if>
+            <if test="skuId != null">sku_id = #{skuId},</if>
+            <if test="spData != null">sp_data = #{spData},</if>
+            <if test="quantity != null">quantity = #{quantity},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="isBuy != null">is_buy = #{isBuy},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="updateUmsMemberCartByIdAndMemberId" parameterType="UmsMemberCart">
+        update ums_member_cart
+        set sku_id = #{skuId},
+            quantity = #{quantity},
+            update_time = #{updateTime}
+        where id = #{id}
+          and member_id = #{memberId}
+    </update>
+
+    <delete id="deleteUmsMemberCartById" parameterType="Long">
+        delete from ums_member_cart where id = #{id}
+    </delete>
+
+    <delete id="deleteUmsMemberCartByIds" parameterType="String">
+        delete from ums_member_cart where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteUmsMemberCartByIdsAndMemberId" parameterType="map">
+        delete from ums_member_cart
+        where member_id = #{memberId}
+          and id in
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteUmsMemberCartByIdAndMemberId" parameterType="map">
+        delete from ums_member_cart
+        where id = #{id}
+          and member_id = #{memberId}
+    </delete>
+</mapper>

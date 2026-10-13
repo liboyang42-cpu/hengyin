@@ -1,0 +1,57 @@
+package com.chengyinhub.business.domain.dto;
+
+import java.math.BigDecimal;
+import java.util.Date;
+
+/** EligibleRegistrationSet 的单条冻结事实投影。 */
+public class CoopSettlementCandidate {
+    private Long registrationId;
+    private Long ownerType;
+    private Long ownerId;
+    private Integer registrationStatus;
+    private Integer paymentStatus;
+    private Integer verificationStatus;
+    private String purchaseKind;
+    private BigDecimal eligibleSalesSnapshot;
+    private boolean scopeCovered;
+    private boolean organizerScopeCovered;
+    private boolean merchantScanPresent;
+    private Date merchantScanTime;
+    private boolean groupEvidenceMatchesOrder;
+    private Date groupVerifyTime;
+    private Date groupMemberVerifyTime;
+    private Date verificationTime;
+
+    public Long getRegistrationId() { return registrationId; }
+    public void setRegistrationId(Long value) { this.registrationId = value; }
+    public Long getOwnerType() { return ownerType; }
+    public void setOwnerType(Long value) { this.ownerType = value; }
+    public Long getOwnerId() { return ownerId; }
+    public void setOwnerId(Long value) { this.ownerId = value; }
+    public Integer getRegistrationStatus() { return registrationStatus; }
+    public void setRegistrationStatus(Integer value) { this.registrationStatus = value; }
+    public Integer getPaymentStatus() { return paymentStatus; }
+    public void setPaymentStatus(Integer value) { this.paymentStatus = value; }
+    public Integer getVerificationStatus() { return verificationStatus; }
+    public void setVerificationStatus(Integer value) { this.verificationStatus = value; }
+    public String getPurchaseKind() { return purchaseKind; }
+    public void setPurchaseKind(String value) { this.purchaseKind = value; }
+    public BigDecimal getEligibleSalesSnapshot() { return eligibleSalesSnapshot; }
+    public void setEligibleSalesSnapshot(BigDecimal value) { this.eligibleSalesSnapshot = value; }
+    public boolean isScopeCovered() { return scopeCovered; }
+    public void setScopeCovered(boolean value) { this.scopeCovered = value; }
+    public boolean isOrganizerScopeCovered() { return organizerScopeCovered; }
+    public void setOrganizerScopeCovered(boolean value) { this.organizerScopeCovered = value; }
+    public boolean isMerchantScanPresent() { return merchantScanPresent; }
+    public void setMerchantScanPresent(boolean value) { this.merchantScanPresent = value; }
+    public Date getMerchantScanTime() { return merchantScanTime; }
+    public void setMerchantScanTime(Date value) { this.merchantScanTime = value; }
+    public boolean isGroupEvidenceMatchesOrder() { return groupEvidenceMatchesOrder; }
+    public void setGroupEvidenceMatchesOrder(boolean value) { this.groupEvidenceMatchesOrder = value; }
+    public Date getGroupVerifyTime() { return groupVerifyTime; }
+    public void setGroupVerifyTime(Date value) { this.groupVerifyTime = value; }
+    public Date getGroupMemberVerifyTime() { return groupMemberVerifyTime; }
+    public void setGroupMemberVerifyTime(Date value) { this.groupMemberVerifyTime = value; }
+    public Date getVerificationTime() { return verificationTime; }
+    public void setVerificationTime(Date value) { this.verificationTime = value; }
+}

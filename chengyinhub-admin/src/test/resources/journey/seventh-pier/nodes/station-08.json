@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "requires": [
+    {"op": "NODE_COMPLETED", "nodeId": 5007}
+  ],
+  "match": {
+    "enabled": true,
+    "prompt": "把三份材料,连到它真正能回答的问题上",
+    "left": [
+      {"id": "oral", "label": "口述记录与底片"},
+      {"id": "registry", "label": "官方编号簿"},
+      {"id": "permit", "label": "使用授权页"}
+    ],
+    "right": [
+      {"id": "q_exists", "label": "它存在吗?"},
+      {"id": "q_number", "label": "有编号吗?"},
+      {"id": "q_open", "label": "能公开吗?"}
+    ],
+    "pairs": [
+      ["oral", "q_exists"],
+      ["registry", "q_number"],
+      ["permit", "q_open"]
+    ],
+    "xp": 20
+  }
+}

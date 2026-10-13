@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CircleExploreMapper">
+    <resultMap id="SessionResult" type="com.chengyinhub.business.domain.CircleExploreSession">
+        <id property="id" column="id"/><result property="topicId" column="topic_id"/>
+        <result property="ownerMemberId" column="owner_member_id"/><result property="inviteCode" column="invite_code"/>
+        <result property="status" column="status"/><result property="createTime" column="create_time"/>
+        <result property="completedAt" column="completed_at"/>
+    </resultMap>
+    <resultMap id="RecordResult" type="com.chengyinhub.business.domain.CircleExploreRecord">
+        <id property="id" column="id"/><result property="sessionId" column="session_id"/>
+        <result property="memberId" column="member_id"/><result property="offerId" column="offer_id"/>
+        <result property="supplyProfileId" column="supply_profile_id"/>
+        <result property="note" column="note"/><result property="recordedAt" column="recorded_at"/>
+        <result property="merchantId" column="merchant_id"/><result property="supplyName" column="supply_name"/>
+        <result property="candidateCode" column="circle_candidate_code"/><result property="candidateName" column="candidate_name"/>
+    </resultMap>
+    <resultMap id="AnswerResult" type="com.chengyinhub.business.domain.CircleExploreAnswer">
+        <id property="id" column="id"/><result property="sessionId" column="session_id"/>
+        <result property="memberId" column="member_id"/><result property="answerStage" column="answer_stage"/>
+        <result property="answerValue" column="answer_value"/><result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <insert id="insertSession" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO circle_explore_session (topic_id, owner_member_id, invite_code, status)
+        VALUES (#{topicId}, #{ownerMemberId}, #{inviteCode}, 'ACTIVE')
+    </insert>
+    <insert id="insertMember">
+        INSERT IGNORE INTO circle_explore_session_member (session_id, member_id)
+        VALUES (#{sessionId}, #{memberId})
+    </insert>
+    <select id="selectSessionById" resultMap="SessionResult">
+        SELECT id, topic_id, owner_member_id, invite_code, status, create_time, completed_at
+        FROM circle_explore_session WHERE id = #{id}
+    </select>
+    <select id="selectActiveSessionByInvite" resultMap="SessionResult">
+        SELECT id, topic_id, owner_member_id, invite_code, status, create_time, completed_at
+        FROM circle_explore_session WHERE invite_code = #{inviteCode} AND status = 'ACTIVE' LIMIT 1 FOR UPDATE
+    </select>
+    <select id="countMember" resultType="int">
+        SELECT COUNT(*) FROM circle_explore_session_member
+        WHERE session_id = #{sessionId} AND member_id = #{memberId}
+    </select>
+    <select id="countSessionMembers" resultType="int">
+        SELECT COUNT(*) FROM circle_explore_session_member WHERE session_id = #{sessionId}
+    </select>
+    <insert id="insertRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO circle_explore_record (session_id, member_id, offer_id, supply_profile_id, note)
+        VALUES (#{sessionId}, #{memberId}, #{offerId}, #{supplyProfileId}, #{note})
+    </insert>
+    <insert id="upsertAnswer" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO circle_explore_answer (session_id, member_id, answer_stage, answer_value)
+        VALUES (#{sessionId}, #{memberId}, #{answerStage}, #{answerValue})
+        ON DUPLICATE KEY UPDATE member_id = VALUES(member_id), answer_value = VALUES(answer_value), update_time = NOW()
+    </insert>
+    <select id="countDistinctRecordedMerchants" resultType="int">
+        SELECT COUNT(DISTINCT o.merchant_id)
+        FROM circle_explore_record r
+        JOIN merchant_chapter_offer o ON o.id = r.offer_id
+        WHERE r.session_id = #{sessionId}
+    </select>
+    <select id="countAnswersByStage" resultType="int">
+        SELECT COUNT(*) FROM circle_explore_answer
+        WHERE session_id = #{sessionId} AND answer_stage = #{stage}
+    </select>
+    <select id="selectRecords" resultMap="RecordResult">
+        SELECT r.*, o.merchant_id, p.supply_name, ch.circle_candidate_code, ch.name AS candidate_name
+        FROM circle_explore_record r
+        JOIN merchant_chapter_offer o ON o.id = r.offer_id
+        JOIN merchant_circle_supply_profile p ON p.id = r.supply_profile_id
+        JOIN cms_topic_chapter ch ON ch.id = o.chapter_id
+        WHERE r.session_id = #{sessionId}
+        ORDER BY r.recorded_at, r.id
+    </select>
+    <select id="selectAnswers" resultMap="AnswerResult">
+        SELECT id, session_id, member_id, answer_stage, answer_value, create_time, update_time
+        FROM circle_explore_answer WHERE session_id = #{sessionId}
+        ORDER BY create_time, id
+    </select>
+    <update id="completeSession">
+        UPDATE circle_explore_session SET status = 'COMPLETED', completed_at = NOW()
+        WHERE id = #{sessionId} AND status = 'ACTIVE'
+    </update>
+</mapper>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CmsInfomationMapper">
+    
+    <resultMap type="CmsInfomation" id="CmsInfomationResult">
+        <result property="id"    column="id"    />
+        <result property="title"    column="title"    />
+        <result property="subtitle"    column="subtitle"    />
+        <result property="sortId"    column="sort_id"    />
+        <result property="contents"    column="contents"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectCmsInfomationVo">
+        select id, title, subtitle, sort_id, contents, create_by, create_time, update_by, update_time from cms_infomation
+    </sql>
+
+    <select id="selectCmsInfomationList" parameterType="CmsInfomation" resultMap="CmsInfomationResult">
+        <include refid="selectCmsInfomationVo"/>
+        <where>  
+            <if test="title != null  and title != ''"> and title = #{title}</if>
+            <if test="subtitle != null  and subtitle != ''"> and subtitle = #{subtitle}</if>
+            <if test="sortId != null "> and sort_id = #{sortId}</if>
+            <if test="contents != null  and contents != ''"> and contents = #{contents}</if>
+        </where>
+        order by sort_id desc
+    </select>
+    
+    <select id="selectCmsInfomationById" parameterType="Long" resultMap="CmsInfomationResult">
+        <include refid="selectCmsInfomationVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertCmsInfomation" parameterType="CmsInfomation">
+        insert into cms_infomation
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="title != null">title,</if>
+            <if test="subtitle != null">subtitle,</if>
+            <if test="sortId != null">sort_id,</if>
+            <if test="contents != null">contents,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="title != null">#{title},</if>
+            <if test="subtitle != null">#{subtitle},</if>
+            <if test="sortId != null">#{sortId},</if>
+            <if test="contents != null">#{contents},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCmsInfomation" parameterType="CmsInfomation">
+        update cms_infomation
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="title != null">title = #{title},</if>
+            <if test="subtitle != null">subtitle = #{subtitle},</if>
+            <if test="sortId != null">sort_id = #{sortId},</if>
+            <if test="contents != null">contents = #{contents},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCmsInfomationById" parameterType="Long">
+        delete from cms_infomation where id = #{id}
+    </delete>
+
+    <delete id="deleteCmsInfomationByIds" parameterType="String">
+        delete from cms_infomation where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

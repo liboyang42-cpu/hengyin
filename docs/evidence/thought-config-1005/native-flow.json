@@ -1,0 +1,38 @@
+{
+  "controlled_display": true,
+  "project": "/Users/arlan/.codex/worktrees/thought-config-1005/chengyin/chengyinhub-xcx",
+  "business_saved": false,
+  "published": false,
+  "steps": [
+    {
+      "step": "入口添加直接进入配置",
+      "draft_count": 1,
+      "stored_count": 0
+    },
+    {
+      "step": "关闭不写入",
+      "passed": true
+    },
+    {
+      "step": "取消后重新添加是空白配置",
+      "passed": true
+    },
+    {
+      "step": "未填名称不能完成",
+      "passed": true,
+      "error": "伏笔要有名字,且不超过 20 字"
+    },
+    {
+      "step": "配置完成处理函数回填一个伏笔",
+      "passed": true,
+      "saved_count": 1
+    },
+    {
+      "step": "已有伏笔重开编辑且无法重复添加",
+      "passed": true
+    }
+  ],
+  "interaction_method": "入口通过原生元素点击；输入与配置完成通过原生页面处理函数；底栏真实点击仍待单独核对",
+  "native_footer_click_verified_separately": true,
+  "temporary_fixture_restored": true
+}

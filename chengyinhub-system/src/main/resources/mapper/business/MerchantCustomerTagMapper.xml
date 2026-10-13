@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantCustomerTagMapper">
+
+    <resultMap id="MerchantCustomerTagResult" type="com.chengyinhub.business.domain.MerchantCustomerTag">
+        <result property="id" column="id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="merchantScopeVersion" column="merchant_scope_version"/>
+        <result property="tagCode" column="tag_code"/>
+        <result property="tagName" column="tag_name"/>
+        <result property="tagColor" column="tag_color"/>
+        <result property="sort" column="sort"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <select id="selectTagList" parameterType="com.chengyinhub.business.domain.MerchantCustomerTag" resultMap="MerchantCustomerTagResult">
+        select id, merchant_id, merchant_scope_version, tag_code, tag_name, tag_color, sort, del_flag, create_time, update_time
+        from merchant_customer_tag
+        <where>
+            del_flag = 0
+            <if test="merchantId != null">and merchant_id = #{merchantId}</if>
+            <if test="merchantScopeVersion != null">and merchant_scope_version = #{merchantScopeVersion}</if>
+            <if test="tagCode != null and tagCode != ''">and tag_code = #{tagCode}</if>
+        </where>
+        order by sort asc, id asc
+    </select>
+
+    <insert id="insertMerchantCustomerTag" parameterType="com.chengyinhub.business.domain.MerchantCustomerTag" useGeneratedKeys="true" keyProperty="id">
+        insert into merchant_customer_tag
+          (merchant_id, merchant_scope_version, tag_code, tag_name, tag_color, sort, del_flag, create_time)
+        values (#{merchantId}, #{merchantScopeVersion}, #{tagCode}, #{tagName}, #{tagColor}, #{sort}, 0, now())
+    </insert>
+
+    <update id="updateMerchantCustomerTag" parameterType="com.chengyinhub.business.domain.MerchantCustomerTag">
+        update merchant_customer_tag
+        <trim prefix="set" suffixOverrides=",">
+            <if test="tagName != null">tag_name = #{tagName},</if>
+            <if test="tagColor != null">tag_color = #{tagColor},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            update_time = now()
+        </trim>
+        where id = #{id}
+    </update>
+</mapper>

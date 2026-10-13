@@ -1,0 +1,353 @@
+# 项目相关配置
+ruoyi:
+  # 名称
+  name: RuoYi
+  # 版本
+  version: 3.9.0
+  # 版权年份
+  copyrightYear: 2025
+  # 文件路径 示例（ Windows配置D:/ruoyi/uploadPath，Linux配置 /home/ruoyi/uploadPath）
+  # profile: D:/ruoyi/uploadPath
+  profile: /www/wwwroot/uploadPath
+  # 获取ip地址开关
+  addressEnabled: false
+  # 验证码类型 math 数字计算 char 字符验证
+  captchaType: math
+
+# 开发环境配置
+server:
+  # 服务器的HTTP端口，默认为8080
+  port: 8080
+  servlet:
+    # 应用的访问路径
+    context-path: /
+  tomcat:
+    # 内嵌 Tomcat 默认不注册 ThreadPool MBean(Spring Boot 为省内存关掉的),
+    # 而 TomcatMetricsProbe 正是查这个 MBean 取 busy/current 线程数 —— 不开就每次采样
+    # 必抛 IllegalStateException("tomcat thread pool mbean missing")。
+    # 2026-08-01 实证:该探针自上线起就没成功过一次,每轮吐 3 条 ERROR + 堆栈,
+    # 是 3.1GB 日志的主要来源之一,同时把告警通道刷成噪音。
+    mbeanregistry:
+      enabled: true
+    # tomcat的URI编码
+    uri-encoding: UTF-8
+    # 连接数满后的排队数，默认为100
+    accept-count: 1000
+    threads:
+      # tomcat最大线程数，默认为200
+      max: 800
+      # Tomcat启动初始化的线程数，默认值10
+      min-spare: 100
+
+security:
+  cors:
+    allowed-origins: ${CHENGYIN_CORS_ALLOWED_ORIGINS:https://www.chengyinhub.com,https://houtai.chengyinhub.com}
+
+# 日志配置
+logging:
+  level:
+    com.chengyinhub: ${CHENGYIN_LOG_LEVEL:info}
+    org.springframework: warn
+
+# 用户配置
+user:
+  password:
+    # 密码最大错误次数
+    maxRetryCount: 5
+    # 密码锁定时间（默认10分钟）
+    lockTime: 10
+
+# Spring配置
+spring:
+  # 资源信息
+  messages:
+    # 国际化资源文件路径
+    basename: i18n/messages
+  profiles:
+    active: druid
+  # 文件上传
+  servlet:
+    multipart:
+      # 单个文件大小
+      max-file-size: 10MB
+      # 设置总上传的文件大小
+      max-request-size: 20MB
+  # 服务模块
+  devtools:
+    restart:
+      # 热部署开关
+      enabled: true
+  # redis 配置
+  redis:
+    # 地址
+    host: localhost
+    # 端口，默认为6379
+    port: 6379
+    # 数据库索引
+    database: 0
+    # 密码
+    password:
+    # 连接超时时间
+    timeout: 10s
+    lettuce:
+      pool:
+        # 连接池中的最小空闲连接
+        min-idle: 0
+        # 连接池中的最大空闲连接
+        max-idle: 8
+        # 连接池的最大数据库连接数
+        max-active: 8
+        # #连接池最大阻塞等待时间（使用负值表示没有限制）
+        max-wait: -1ms
+
+# token配置
+token:
+  # 令牌自定义标识
+  header: Authorization
+  # 令牌密钥 [P0-安全] 改为环境变量注入,不再入库;未设 CHENGYIN_JWT_SECRET 启动即报错(fail-fast)
+  secret: ${CHENGYIN_JWT_SECRET}
+  # 令牌有效期（默认30分钟）   现在已经改成1天了
+  expireTime: 21600
+  app:
+    # 小程序会话空闲有效期：24 小时
+    idleTime: 1440
+    # 小程序会话绝对有效期：7 天
+    absoluteTime: 10080
+
+# 优惠券出示码 HMAC-SHA256 密钥 [F5] 只占位,不入库。优先 CHENGYIN_COUPON_QR_SECRET;
+# 未单独配置时回落 token.secret(同样无默认、缺失即启动失败)。空白值由 SmsCouponServiceImpl 启动校验拒绝。
+coupon:
+  qr-secret: ${CHENGYIN_COUPON_QR_SECRET:${token.secret}}
+
+# 提现敏感资料 AES-256-GCM 密钥。仅从环境变量注入；未配置即启动失败，禁止明文降级。
+withdrawal:
+  pii:
+    key: ${CHENGYIN_WITHDRAWAL_PII_KEY}
+    backfill-limit: ${CHENGYIN_WITHDRAWAL_PII_BACKFILL_LIMIT:0}
+
+# 报名/收货 PII 加密(PiiCryptoService 读 chengyin.pii.*),必须与 withdrawal 用同一把钥匙,
+# 故用 property 引用而非另配一把 —— 两把钥匙会让加密与解密对不上,数据永久打不开。
+# 缺本段则 chengyin.pii.key 取 @Value 默认空值,加密静默不启用且报名写入被 fail-closed 拒。
+chengyin:
+  pii:
+    key: ${withdrawal.pii.key}
+  # 退款人工回执 URL 白名单(逗号分隔 host,精确匹配,只对 HTTPS 绝对地址生效)。
+  # 站内路径(/profile/** 等单斜杠路径)始终允许,无需配置;其余 host 一律拒 ——
+  # 回执会被另一名财务在人工打款队列里直接点开,白名单是钓鱼/协议注入的唯一闸。
+  # 若回执改存对象存储/CDN,必须把该域名补进这里(或 CHENGYIN_REFUND_RECEIPT_ALLOWED_HOSTS),否则登记会被拒。
+  refund:
+    payout-receipt:
+      allowed-hosts: ${CHENGYIN_REFUND_RECEIPT_ALLOWED_HOSTS:www.chengyinhub.com}
+
+# MyBatis配置
+mybatis:
+  # 搜索指定包别名
+  typeAliasesPackage: com.chengyinhub.**.domain
+  # 配置mapper的扫描，找到所有的mapper.xml映射文件
+  mapperLocations: classpath*:mapper/**/*Mapper.xml
+  # 加载全局的配置文件
+  configLocation: classpath:mybatis/mybatis-config.xml
+
+# PageHelper分页插件
+pagehelper:
+  helperDialect: mysql
+  supportMethodsArguments: true
+  params: count=countSql
+
+# Swagger配置
+#swagger:
+#  # 是否开启swagger
+#  # http://localhost:8080/swagger-ui/index.html
+#  # http://localhost:8080/dev-api/swagger-ui/index.html
+#  enabled: true
+#  # 请求前缀
+#  pathMapping: /dev-api
+
+# SpringDoc OpenAPI 配置
+springdoc:
+  swagger-ui:
+    enabled: ${CHENGYIN_SPRINGDOC_ENABLED:false}
+    #path: /dev-api/swagger-ui.html
+    path: /swagger-ui.html  # 改回根路径
+    tags-sorter: alpha
+    operations-sorter: alpha
+    # 添加这行确保显示所有分组
+    display-request-duration: true
+  api-docs:
+    enabled: ${CHENGYIN_SPRINGDOC_ENABLED:false}
+    #path: /dev-api/v3/api-docs
+    path: /v3/api-docs      # 改回根路径
+    groups:
+      enabled: true
+
+  # 分组配置 - 简化版本
+  group-configs:
+    # 小程序接口分组
+    - group: 'mini-program'
+      display-name: '小程序接口'
+      paths-to-match: ['/api/**']
+      packages-to-scan: ['com.chengyinhub.web.controller.api']
+    # 管理后台接口分组
+    - group: 'admin-backend'
+      display-name: '管理后台接口'
+      paths-to-match: ['/business/**', '/common/**', '/monitor/**', '/system/**']
+      packages-to-scan:
+        - 'com.chengyinhub.web.controller.business'
+        - 'com.chengyinhub.web.controller.common'
+        - 'com.chengyinhub.web.controller.monitor'
+        - 'com.chengyinhub.web.controller.system'
+
+# 防止XSS攻击
+xss:
+  # 过滤开关
+  enabled: true
+  # 排除链接（多个用逗号分隔）
+  excludes: /system/notice
+  # 匹配链接
+  urlPatterns: /system/*,/monitor/*,/tool/*,/api/*
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
+
+#微信支付配置
+wx:
+  pay:
+    enabled: true
+    private-key-path: /www/wwwroot/cert/1721249597_20260822/apiclient_key.pem
+    public-key-path: /www/wwwroot/cert/pub_key.pem
+    public-key-id: PUB_KEY_ID_0117212495972025070400211668001605
+    merchant-id: 1721249597
+    merchant-serial-number: 543885FCEFAEC5A282045E304B459179C41251B8
+    api-v3-key: ${CHENGYIN_WXPAY_APIV3_KEY}   # [P0-安全] 环境变量注入
+    appid: wxdf8fd71ea3c614b4
+    notify-url: https://www.chengyinhub.com/prod-api/api/registration/callback
+
+  # 新增：微信小程序内容检查配置
+  sec-check:
+    enabled: true  # 是否启用内容检查
+  mini:  # 将 mini 移到 wx 下面
+    appid: wxdf8fd71ea3c614b4
+    secret: ${CHENGYIN_WXMINI_SECRET}   # [P0-安全] 环境变量注入
+  # 微信订阅消息模板ID:在 微信公众平台 → 功能 → 订阅消息 添加模板后,把模板ID填到下面对应项。
+  # 留空 = 该类消息跳过不发(no-op,不影响业务)。小程序端还需 wx.requestSubscribeMessage 取得用户授权才会真正下发。
+  subscribe:
+    # tplTeamFormed 已随成团下线(2026-07-15)移除 —— notifyTeamFormed 无调用方,模板不再下发。
+    tplRefund: "hrxJ8GaoNVNNjLBMOn2ZntnNzjxpBZvNqTcAoKjr1Xg"          # 退款到账提醒
+    tplSignupSuccess: "NfXW_QNj6Poy4GQj51heJ-LGJiljtJBkAqFlsnWdPuA"   # 报名成功提醒
+    tplBeforeStart: "noH01EDe1vqpAFvWSwXMhyqSw1a4YHbP92CG7ehti54"     # 出发前提醒
+    # 合作/定价四类(F3-2;字段已与公共模板库对齐,见 WxSubscribeMsgServiceImpl)
+    tplCoopInvited: "aC5iPgiluAkGT1LkQHT7-qVk_MmxnO9H-updKXyG6KM"      # 合作被邀约 → 受邀方
+    tplCoopStatus:  "Mc6LPLxOGodPlVbeUeyp09pc7wQoOL354MmUwedKr2c"      # 邀约状态变更(接受/拒绝)→ 发起方
+    tplRecruit:     "pVihLGRWi3uA4wGvA-Hv-NsuOGvtj1Ts3kV1GmU56Dw"      # 新活动招募 → 发布者
+    tplCoopSettle:  "Z10x9KV0jciDbFGTS6javEjqz0abOi-ik6x_0e_pt-o"      # 订单结算到账 → 商家
+    tplClubInterest: ""                                                 # 俱乐部承接意向 → 模板主题创建者(模板待公众平台创建,填入后生效;空=静默不发)
+    tplRoamRecall: ""                                                    # 漫游完成 24–72h 召回(模板待公众平台创建;禁止借用其它业务模板)
+    page: pages/index/index  # 订阅消息点击跳转页
+
+feature:
+  roamRecall:
+    enabled: ${CHENGYIN_ROAM_RECALL_ENABLED:false}  # 模板+前端授权 ID 配齐后再开启
+
+# 腾讯位置服务：主题路线规划与服务端逆地理编码
+# 申请：https://lbs.qq.com → 创建应用 → 开通 WebServiceAPI
+tencent:
+  map:
+    enabled: ${CHENGYIN_TENCENT_MAP_ENABLED:false}
+    key: ${CHENGYIN_TENCENT_MAP_KEY:}
+    mode: walking       # 出行方式：walking(步行) / driving / bicycling / transit
+
+# 合规留痕文档版本映射(配置化):发布新版法律文件时改这里即可,无需改代码。
+# 版本号真源见发布候选包「17_法律文件总目录与发布说明」;05/06 为 v2.0,其余为 v2.1。
+compliance:
+  doc-versions:
+    privacy_policy: v2.1
+    user_service_agreement: v2.2
+    community_content_rules: v2.0
+    refund_rules: v2.1
+    merchant_host_rules: v2.1
+    account_cancellation_notice: v2.1
+    activity_host_data_sharing: v2.1   # 报名向主办方提供信息的单独同意
+    merchant_onsite_data_sharing: v1.0 # 探店日按单店授权姓名/手机号
+    bank_account_collection: v1.0      # 提现向城瘾提供持卡人姓名/银行账号/预留手机号
+
+# E4 商业化先做能力，不开放自助收银台。价格/分成/次数/有效期均由 settlement_rule 配置。
+merchant:
+  commerce:
+    self-checkout-enabled: ${CHENGYIN_MERCHANT_SELF_CHECKOUT_ENABLED:false}
+  verification-risk:
+    high-rate-threshold: ${CHENGYIN_VERIFY_HIGH_RATE_THRESHOLD:0.90}
+    one-minute-threshold: ${CHENGYIN_VERIFY_ONE_MINUTE_THRESHOLD:8}
+    minimum-sample: ${CHENGYIN_VERIFY_MINIMUM_SAMPLE:5}
+
+# AI 创作助手配置(2026-06-28):多 Provider 架构,dailyLimit/timeoutMs 上提为公共配置
+# key 只放后端,经环境变量注入,切勿下发到小程序前端
+ai:
+  model:
+    provider: deepseek  # 已切真模型上线;创作场景经 AiSceneRouter 路由到本 deepseek 客户端
+    apiKey: ${CHENGYIN_AI_API_KEY:${CHENGYIN_DEEPSEEK_API_KEY:}}   # 生产必须注入(两个 env 名任一均可);未设则调用返回"AI 繁忙"
+    baseUrl: https://api.deepseek.com                              # DeepSeek OpenAI 兼容端点(代码追加 /chat/completions)
+    model: deepseek-chat                                           # 稳定别名,始终指向最新 chat 模型;如需更省可换 flash 档
+    enabled: true       # 上线开关;真调用前提=上面 apiKey 已在生产环境变量注入
+    dailyLimit: 20      # 单用户每日「创作类」AI 调用上限(gen 池:merchant_plan/theme_draft/node_generate/... 共用一个池)
+    npcDailyLimit: 100  # 单用户每日「NPC 聊天」上限(npc 池,独立于 gen 池);NPC 是多轮来回,频次量级与创作类不同
+    photoDailyLimit: 30 # 单用户每日「拍照审核」上限(photo 池,独立于 gen 池);一局至多 3 个拍照节点 × 每节点 ≤10 次提交 = 30,够一轮极端局 + 余量。共用 gen 池会让拍几张照吃掉创作额度,额度耗尽后审核静默降级(玩家只看到 degraded 标记),真审核悄悄停掉 —— 故独立分池
+    timeoutMs: 8000     # 模型调用硬超时(毫秒)
+  # 拍照审核视觉模型(预制人生 photoCheck):判断照片有没有拍到作者要求的东西
+  # 默认 DeepSeek(2026-08-21 已上线视觉),复用现成的 CHENGYIN_DEEPSEEK_API_KEY,不新增供应商
+  # 换阿里云百炼(qwen-vl-max)或别家只改这一段,不改代码;key 未注入 = 拿不到结论,按 fallback 降级,绝不硬拦
+  vision:
+    enabled: true
+    apiKey: ${CHENGYIN_DEEPSEEK_API_KEY:}
+    baseUrl: https://api.deepseek.com                         # OpenAI 兼容端点(代码追加 /chat/completions)
+    model: deepseek-flash
+    timeoutMs: 8000     # 视觉调用硬超时(毫秒)
+  # 商品分割抠图(拍物成卡):把物品从背景里抠成透明 PNG 贴纸,再转存我们自己的 OSS
+  # 用只授视觉智能权限的 RAM 子账号,两把 key 只从环境变量注入(施工文档 §6),不进代码不进日志不进小程序包
+  # 默认关:关着 = 不出贴纸,卡照样铸(抠图是加分项,不是判过的必要条件)
+  imageseg:
+    enabled: ${CHENGYIN_IMAGESEG_ENABLED:false}
+    accessKeyId: ${CHENGYIN_ALIYUN_VIAPI_AK_ID:}
+    accessKeySecret: ${CHENGYIN_ALIYUN_VIAPI_AK_SECRET:}
+    timeoutMs: 4000     # 单次调用硬超时(毫秒);当场出卡的预算就是 4 秒,不能更宽
+  # 抠图结果转存:阿里云回来的临时地址(只活 30 分钟)下载、校验后转进我们自己的桶
+  # 没有开关也没有 key:这一步只在上面抠出结果之后发生,上面关着这里就不会被调用
+  cutout:
+    timeoutMs: 4000     # 单次下载硬超时;4 秒总预算在铸卡外层卡死,这里只保证一次挂起的下载不拖到底
+  defaultProvider: mock
+  dailyLimit: 20
+  timeoutMs: 8000
+  providers:
+    deepseek:
+      enabled: false
+      apiKey: ${CHENGYIN_DEEPSEEK_API_KEY:}
+      baseUrl: https://api.deepseek.com
+      model: deepseek-v4-flash
+    minimax:
+      enabled: false
+      apiKey: ${CHENGYIN_MINIMAX_API_KEY:}
+      baseUrl: https://api.minimaxi.com/v1   # 国内主体(.minimaxi.com);国际版为 api.minimax.io。key 与 host 必须同区匹配
+      model: MiniMax-M2.7
+    mock:
+      enabled: true
+
+# 藏品卡(拍物成卡)
+object-card:
+  naming:
+    # AI 认物:卡名用模型认出来的日常叫法,顺带给卡面一个分类(清单见 ObjectNamer)
+    # 默认关:关着 = 卡名沿用商家模板名、分类留空,与没接这个功能时一模一样
+    # 模型复用上面 ai.vision 那一套配置,但单独一次调用,不参与拍照审核的判定
+    enabled: ${CHENGYIN_OBJECT_NAMING_ENABLED:false}
+
+# 告警投递(C3/资损可观测)
+# 生产通过环境变量覆盖:ALARM_WEBHOOK、ALARM_FAILURE_WEBHOOK
+alarm:
+  webhook: ${ALARM_WEBHOOK:}
+  failure-webhook: ${ALARM_FAILURE_WEBHOOK:}
+  connect-timeout-ms: ${ALARM_CONNECT_TIMEOUT_MS:3000}
+  read-timeout-ms: ${ALARM_READ_TIMEOUT_MS:5000}

@@ -1,0 +1,72 @@
+-- ============================================================================
+-- 迁移:cms_topic_chapter 增加「计酬档人头费上限」max_per_head_fee
+-- 日期:2026-07-17
+-- 关联:W4 enroll 鉴权闸(P0-5)第二半 · P0-50 必亏闸的补丁
+-- 分类:③ 数据库迁移 —— **合并前必须先落库**,否则 jar 部署后 enroll 报 Unknown column
+-- ============================================================================
+--
+-- 【为什么加这列】
+--   计酬档(REVSHARE)是**平台按核销真金白银付**,而 offer.per_head_fee 由商家在 enroll
+--   **自报**,此前无上限、无审批。P0-50 必亏闸挂在 confirmPrice(主题定价时),
+--   对定价之后新增/改价的 offer **不复查** ⇒ 中标商家可自挂天价人头费,平台照付且零告警。
+--   本列 = 章节级成本上界,enroll 时校验 offer.per_head_fee <= chapter.max_per_head_fee。
+--
+--   ⚠️ 上限挂**章节**不挂主题:与 terms_mode 同源(章节才是档位口径真源),且定价按章算成本。
+--
+-- 【语义】
+--   NULL = **未配置上限 ⇒ 拒绝计酬档入驻(fail-closed)**,不是「不设上限」。
+--   ⚠️ 与同表 perk_min_value「NULL = 本章不设门槛」**刻意相反**:
+--   那是质量门槛(商家承诺自己的东西),这是平台成本上界(留空 = 敞口无限)。
+--   ⇒ 本迁移**不回填任何值**:回填即等于替运营拍了个上限。运营须逐章显式配置。
+--
+-- 【风险】
+--   ① 生产库 MySQL 8:**禁用 ADD COLUMN IF NOT EXISTS**(MariaDB 专属,MySQL 8 报 1064)
+--      ⇒ 执行前必须跑第一步预检确认列不存在。
+--   ② 本文件不含 DELIMITER / 存储过程 —— 分句器可安全处理。
+--   ③ 落库后、jar 部署前的窗口:老 jar 不认识这列,SELECT * 不受影响(mapper 显式列名)
+--      ⇒ 该窗口安全,可先落库再合并(这也是③必须先于①的原因)。
+--
+-- 【回滚】
+--   ALTER TABLE cms_topic_chapter DROP COLUMN max_per_head_fee;
+--   ⚠️ 回滚前确认没有 jar 还在读这列(否则 enroll 报 Unknown column)。
+--
+-- ⚠️⚠️ 生产库。禁止直接执行。必须走 chengyin-db-migrate:先只读预检 → 用户确认 → 才执行。
+-- ⚠️ 「预检期望 0」是**写文件这一刻的快照**,不是执行时的事实 —— 落库前必须当场重跑预检。
+--
+-- ======================= 第一步:只读预检 =======================
+--
+--   -- P1:列是否已存在(期望 0 行;非 0 = 已落库,**跳过本迁移**,别再跑 ALTER)
+--   SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, COLUMN_DEFAULT
+--     FROM information_schema.COLUMNS
+--    WHERE TABLE_SCHEMA = DATABASE()
+--      AND TABLE_NAME   = 'cms_topic_chapter'
+--      AND COLUMN_NAME  = 'max_per_head_fee';
+--
+--   -- P2:表存在且看清 ROW_FORMAT(决定 ADD COLUMN 是不是 INSTANT;期望 1 行)
+--   SELECT TABLE_NAME, ROW_FORMAT, TABLE_ROWS
+--     FROM information_schema.TABLES
+--    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cms_topic_chapter';
+--
+--   -- P3:现存计酬档章节数(它们在本列回填前**无法被入驻**,须运营逐章配上限)
+--   --     ⚠️ 这个数就是上线后要通知运营去配的工作量,别落库完就走。
+--   SELECT COUNT(*) AS revshare_chapters
+--     FROM cms_topic_chapter WHERE terms_mode = 'REVSHARE';
+--
+-- ======================= 第二步:执行 =======================
+
+ALTER TABLE `cms_topic_chapter`
+  ADD COLUMN `max_per_head_fee` DECIMAL(10,2) NULL
+  COMMENT '计酬档人头费上限(元/人次);NULL=未配置,fail-closed 拒绝计酬档入驻'
+  AFTER `terms_mode`;
+
+-- ======================= 第三步:落库后自检 =======================
+--
+--   -- V1:列已存在且可空、无默认值(期望 1 行,IS_NULLABLE=YES,COLUMN_DEFAULT=NULL)
+--   SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, COLUMN_DEFAULT
+--     FROM information_schema.COLUMNS
+--    WHERE TABLE_SCHEMA = DATABASE()
+--      AND TABLE_NAME   = 'cms_topic_chapter'
+--      AND COLUMN_NAME  = 'max_per_head_fee';
+--
+--   -- V2:确认**没有**被意外回填(期望 0 —— 本迁移刻意不回填)
+--   SELECT COUNT(*) AS filled FROM cms_topic_chapter WHERE max_per_head_fee IS NOT NULL;

@@ -1,0 +1,94 @@
+{
+  ".pk": {
+    "left": 16,
+    "top": 388,
+    "width": 358,
+    "height": 406,
+    "right": 374,
+    "bottom": 794,
+    "centerX": 195,
+    "centerY": 591
+  },
+  ".pk-opts": {
+    "left": 32,
+    "top": 388,
+    "width": 326,
+    "height": 329,
+    "right": 358,
+    "bottom": 717,
+    "centerX": 195,
+    "centerY": 552.5
+  },
+  ".pk-opt": {
+    "left": 32,
+    "top": 388,
+    "width": 326,
+    "height": 55,
+    "right": 358,
+    "bottom": 443,
+    "centerX": 195,
+    "centerY": 415.5
+  },
+  ".pk-opt-name": {
+    "left": 32,
+    "top": 391.906,
+    "width": 298,
+    "height": 26,
+    "right": 330,
+    "bottom": 417.906,
+    "centerX": 181,
+    "centerY": 404.906
+  },
+  ".pk-opt-tick": {
+    "left": 338,
+    "top": 405,
+    "width": 20,
+    "height": 20,
+    "right": 358,
+    "bottom": 425,
+    "centerX": 348,
+    "centerY": 415
+  },
+  ".pk-apply": {
+    "left": 32,
+    "top": 733,
+    "width": 326,
+    "height": 45,
+    "right": 358,
+    "bottom": 778,
+    "centerX": 195,
+    "centerY": 755.5
+  },
+  ".sh__panel": {
+    "left": 0,
+    "top": 307,
+    "width": 390,
+    "height": 537,
+    "right": 390,
+    "bottom": 844,
+    "centerX": 195,
+    "centerY": 575.5
+  },
+  ".sh__title": {
+    "left": 16,
+    "top": 335,
+    "width": 358,
+    "height": 45,
+    "right": 374,
+    "bottom": 380,
+    "centerX": 195,
+    "centerY": 357.5
+  },
+  ".sh__body": {
+    "left": 16,
+    "top": 384,
+    "width": 358,
+    "height": 414,
+    "right": 374,
+    "bottom": 798,
+    "centerX": 195,
+    "centerY": 591
+  },
+  "labelSize": "16px",
+  "buttonSize": "14px"
+}

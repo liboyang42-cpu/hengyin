@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "source": "LOCAL_FIXTURE_ONLY",
+  "bootstrap": {
+    "status": "FRESH_EMPTY"
+  },
+  "rows": []
+}

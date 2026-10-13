@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.SmsCouponMapper">
+    
+    <resultMap type="SmsCoupon" id="SmsCouponResult">
+        <result property="id"    column="id"    />
+        <result property="name"    column="name"    />
+        <result property="couponType"    column="coupon_type"    />
+        <result property="platform"    column="platform"    />
+        <result property="amount"    column="amount"    />
+        <result property="minPoint"    column="min_point"    />
+        <result property="startTime"    column="start_time"    />
+        <result property="endTime"    column="end_time"    />
+        <result property="useType"    column="use_type"    />
+        <result property="publishCount"    column="publish_count"    />
+        <result property="useCount"    column="use_count"    />
+        <result property="receiveCount"    column="receive_count"    />
+        <result property="enableTime"    column="enable_time"    />
+        <result property="code"    column="code"    />
+        <result property="scopeType"    column="scope_type"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="merchantId"    column="merchant_id"    />
+        <result property="status"    column="status"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="description"    column="description"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectSmsCouponVo">
+        select id, name, coupon_type, platform, amount, min_point, start_time, end_time, use_type, publish_count, use_count, receive_count, enable_time, code, scope_type, member_id,merchant_id, status, del_flag, description, create_by, create_time, update_by, update_time from sms_coupon
+    </sql>
+
+    <sql id="crmOwnedActiveCoupon">
+        member_id = #{ownerMemberId} and merchant_id = #{merchantRowId}
+        and scope_type = 1 and status = 1 and del_flag = 0
+        and (enable_time is null or enable_time &lt;= now())
+        and (start_time is null or start_time &lt;= now())
+        and (end_time is null or end_time &gt; now())
+        and (publish_count is null or publish_count &lt;= 0 or ifnull(receive_count, 0) &lt; publish_count)
+    </sql>
+
+    <select id="selectOwnedActiveCoupons" resultMap="SmsCouponResult">
+        <include refid="selectSmsCouponVo"/>
+        where <include refid="crmOwnedActiveCoupon"/>
+        order by end_time asc, id desc
+        limit #{limit}
+    </select>
+
+    <select id="selectOwnedActiveCoupon" resultMap="SmsCouponResult">
+        <include refid="selectSmsCouponVo"/>
+        where id = #{couponId} and <include refid="crmOwnedActiveCoupon"/>
+        limit 1
+    </select>
+
+    <select id="selectSmsCouponList" parameterType="SmsCoupon" resultMap="SmsCouponResult">
+        <include refid="selectSmsCouponVo"/>
+        <where>  
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="couponType != null "> and coupon_type = #{couponType}</if>
+            <if test="platform != null "> and platform = #{platform}</if>
+            <if test="amount != null "> and amount = #{amount}</if>
+            <if test="minPoint != null "> and min_point = #{minPoint}</if>
+            <if test="startTime != null "> and start_time = #{startTime}</if>
+            <if test="endTime != null "> and end_time = #{endTime}</if>
+            <if test="useType != null "> and use_type = #{useType}</if>
+            <if test="publishCount != null "> and publish_count = #{publishCount}</if>
+            <if test="useCount != null "> and use_count = #{useCount}</if>
+            <if test="receiveCount != null "> and receive_count = #{receiveCount}</if>
+            <if test="enableTime != null "> and enable_time = #{enableTime}</if>
+            <if test="code != null  and code != ''"> and code = #{code}</if>
+            <if test="scopeType != null "> and scope_type = #{scopeType}</if>
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+            <if test="merchantId != null "> and merchant_id = #{merchantId}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <!-- 调用方(ApiCouponController 商家券列表、营销页券卡)一直在设 delFlag=0,
+                 这里不认这个条件就等于把已删除的券也列回去(CU-M-126:卡片和列表两处
+                 删除口径不同)。只在显式传值时生效,RuoYi 后台的列表行为不变。 -->
+            <if test="delFlag != null "> and del_flag = #{delFlag}</if>
+            <if test="description != null  and description != ''"> and description = #{description}</if>
+        </where>
+    </select>
+    
+    <select id="selectSmsCouponById" parameterType="Long" resultMap="SmsCouponResult">
+        <include refid="selectSmsCouponVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertSmsCoupon" parameterType="SmsCoupon" useGeneratedKeys="true" keyProperty="id">
+        insert into sms_coupon
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">name,</if>
+            <if test="couponType != null">coupon_type,</if>
+            <if test="platform != null">platform,</if>
+            <if test="amount != null">amount,</if>
+            <if test="minPoint != null">min_point,</if>
+            <if test="startTime != null">start_time,</if>
+            <if test="endTime != null">end_time,</if>
+            <if test="useType != null">use_type,</if>
+            <if test="publishCount != null">publish_count,</if>
+            <if test="useCount != null">use_count,</if>
+            <if test="receiveCount != null">receive_count,</if>
+            <if test="enableTime != null">enable_time,</if>
+            <if test="code != null">code,</if>
+            <if test="scopeType != null">scope_type,</if>
+            <if test="memberId != null">member_id,</if>
+            <if test="merchantId != null">merchant_id,</if>
+            <if test="status != null">status,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="description != null">description,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null">#{name},</if>
+            <if test="couponType != null">#{couponType},</if>
+            <if test="platform != null">#{platform},</if>
+            <if test="amount != null">#{amount},</if>
+            <if test="minPoint != null">#{minPoint},</if>
+            <if test="startTime != null">#{startTime},</if>
+            <if test="endTime != null">#{endTime},</if>
+            <if test="useType != null">#{useType},</if>
+            <if test="publishCount != null">#{publishCount},</if>
+            <if test="useCount != null">#{useCount},</if>
+            <if test="receiveCount != null">#{receiveCount},</if>
+            <if test="enableTime != null">#{enableTime},</if>
+            <if test="code != null">#{code},</if>
+            <if test="scopeType != null">#{scopeType},</if>
+            <if test="memberId != null">#{memberId},</if>
+            <if test="merchantId != null">#{merchantId},</if>
+            <if test="status != null">#{status},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="description != null">#{description},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateSmsCoupon" parameterType="SmsCoupon">
+        update sms_coupon
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null">name = #{name},</if>
+            <if test="couponType != null">coupon_type = #{couponType},</if>
+            <if test="platform != null">platform = #{platform},</if>
+            <if test="amount != null">amount = #{amount},</if>
+            <if test="minPoint != null">min_point = #{minPoint},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="endTime != null">end_time = #{endTime},</if>
+            <if test="useType != null">use_type = #{useType},</if>
+            <if test="publishCount != null">publish_count = #{publishCount},</if>
+            <if test="useCount != null">use_count = #{useCount},</if>
+            <if test="receiveCount != null">receive_count = #{receiveCount},</if>
+            <if test="enableTime != null">enable_time = #{enableTime},</if>
+            <if test="code != null">code = #{code},</if>
+            <if test="scopeType != null">scope_type = #{scopeType},</if>
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="merchantId != null">merchant_id = #{merchantId},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteSmsCouponById" parameterType="Long">
+        delete from sms_coupon where id = #{id}
+    </delete>
+
+    <delete id="deleteSmsCouponByIds" parameterType="String">
+        delete from sms_coupon where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <!-- 批量更新过期优惠券状态：将用户下已过期且状态为1（进行中）的优惠券改为2（已结束） -->
+    <update id="updateExpiredCouponsByMemberId" parameterType="java.lang.Long">
+        update sms_coupon
+        set
+            status = 2,  -- 状态改为“已结束”
+            update_time = now()  -- 更新时间设为当前时间
+        where
+            member_id = #{memberId}  -- 指定用户ID
+          and status = 1  -- 仅处理“进行中”的优惠券
+          and del_flag = 0  -- 排除已删除的优惠券
+          and end_time &lt; now()  -- 注意：这里使用了转义字符&lt;代替
+    </update>
+
+    <!-- 按会员统计“同时存在”的优惠券数（status=1 进行中，未删除） -->
+    <select id="selectSmsCouponNumByMemberId" resultType="Integer">
+        select count(1) from sms_coupon where member_id = #{memberId} and del_flag = 0 and status = 1
+    </select>
+
+    <!-- 领取计数 +1（原子）：修正 receive_count 长期为 0 不可信 -->
+    <update id="incrementReceiveCount">
+        update sms_coupon set receive_count = ifnull(receive_count, 0) + 1, update_time = now() where id = #{id}
+    </update>
+
+    <!-- C1 限量占坑：仅当 receive_count < publish_count 才 +1，受影响行数 0 表示已抢光（并发安全，防超发） -->
+    <update id="tryIncrementReceiveCount">
+        update sms_coupon set receive_count = ifnull(receive_count, 0) + 1, update_time = now()
+        where id = #{id} and publish_count is not null and publish_count &gt; 0 and ifnull(receive_count, 0) &lt; publish_count
+    </update>
+
+    <!-- 核销计数 +1（原子） -->
+    <update id="incrementUseCount">
+        update sms_coupon set use_count = ifnull(use_count, 0) + 1, update_time = now() where id = #{id}
+    </update>
+
+    <!-- 撤销核销计数 -1（原子）:>0 守卫;正常恒 1 行,拿 0 行说明计数与流水已失配,由调用方响亮抛错 -->
+    <update id="decrementUseCount">
+        update sms_coupon set use_count = ifnull(use_count, 0) - 1, update_time = now()
+        where id = #{id} and ifnull(use_count, 0) &gt; 0
+    </update>
+
+    <!-- 钱包读侧批量取券状态:只选 id/status 两列,与 sms_coupon_history 逐行合并 -->
+    <select id="selectCouponStatusByIds" resultMap="SmsCouponResult">
+        select id, status from sms_coupon where id in
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <!-- 商家停发(0 未开始 / 1 进行中 → 4):已结束(2)/已手动失效(3)/已停发(4)不可再停 -->
+    <update id="stopIssuingCoupon">
+        update sms_coupon set status = 4, update_time = now()
+        where id = #{id} and member_id = #{ownerMemberId} and del_flag = 0 and status in (0, 1)
+    </update>
+</mapper>

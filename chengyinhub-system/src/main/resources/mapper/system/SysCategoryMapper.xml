@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.system.mapper.SysCategoryMapper">
+    
+    <resultMap type="SysCategory" id="SysCategoryResult">
+        <result property="id"    column="id"    />
+        <result property="type"    column="type"    />
+        <result property="parentId"    column="parent_id"    />
+        <result property="categoryName"    column="category_name"    />
+        <result property="level"    column="level"    />
+        <result property="sortId"    column="sort_id"    />
+        <result property="icon"    column="icon"    />
+        <result property="status"    column="status"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectSysCategoryVo">
+        select id, type, parent_id, category_name, level, sort_id, icon, status, del_flag, create_by, create_time, update_by, update_time from sys_category
+    </sql>
+
+    <select id="selectSysCategoryList" parameterType="SysCategory" resultMap="SysCategoryResult">
+        <include refid="selectSysCategoryVo"/>
+        <where>  
+            <if test="type != null "> and type = #{type}</if>
+            <if test="parentId != null "> and parent_id = #{parentId}</if>
+            <if test="categoryName != null  and categoryName != ''"> and category_name like concat('%', #{categoryName}, '%')</if>
+            <if test="level != null "> and level = #{level}</if>
+            <if test="sortId != null "> and sort_id = #{sortId}</if>
+            <if test="icon != null  and icon != ''"> and icon = #{icon}</if>
+            <if test="status != null "> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectSysCategoryById" parameterType="Long" resultMap="SysCategoryResult">
+        <include refid="selectSysCategoryVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertSysCategory" parameterType="SysCategory" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_category
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="type != null">type,</if>
+            <if test="parentId != null">parent_id,</if>
+            <if test="categoryName != null">category_name,</if>
+            <if test="level != null">level,</if>
+            <if test="sortId != null">sort_id,</if>
+            <if test="icon != null">icon,</if>
+            <if test="status != null">status,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="type != null">#{type},</if>
+            <if test="parentId != null">#{parentId},</if>
+            <if test="categoryName != null">#{categoryName},</if>
+            <if test="level != null">#{level},</if>
+            <if test="sortId != null">#{sortId},</if>
+            <if test="icon != null">#{icon},</if>
+            <if test="status != null">#{status},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateSysCategory" parameterType="SysCategory">
+        update sys_category
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="type != null">type = #{type},</if>
+            <if test="parentId != null">parent_id = #{parentId},</if>
+            <if test="categoryName != null">category_name = #{categoryName},</if>
+            <if test="level != null">level = #{level},</if>
+            <if test="sortId != null">sort_id = #{sortId},</if>
+            <if test="icon != null">icon = #{icon},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteSysCategoryById" parameterType="Long">
+        delete from sys_category where id = #{id}
+    </delete>
+
+    <delete id="deleteSysCategoryByIds" parameterType="String">
+        delete from sys_category where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="selectSysCategoryListByIds" parameterType="String" resultMap="SysCategoryResult">
+        <include refid="selectSysCategoryVo"/>
+        <where>
+            id in
+            <foreach item="id" collection="array" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </where>
+    </select>
+</mapper>

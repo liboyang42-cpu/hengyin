@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.RewardDropRuleMapper">
+
+    <resultMap type="RewardDropRule" id="RewardDropRuleResult">
+        <result property="id" column="id" />
+        <result property="scope" column="scope" />
+        <result property="topicId" column="topic_id" />
+        <result property="sceneKey" column="scene_key" />
+        <result property="dropType" column="drop_type" />
+        <result property="weight" column="weight" />
+        <result property="paramJson" column="param_json" />
+        <result property="status" column="status" />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <select id="selectApplicableRules" resultMap="RewardDropRuleResult">
+        select id, scope, topic_id, scene_key, drop_type, weight, param_json, status, create_time
+        from reward_drop_rule
+        where status = 1
+          and (weight is not null and weight > 0)
+          and ( scope = 0
+                <if test="sceneKey == 'topic_node' and topicId != null"> or (scope = 1 and topic_id = #{topicId}) </if>
+                <if test="sceneKey != null"> or (scope = 2 and scene_key = #{sceneKey}) </if>
+              )
+    </select>
+
+</mapper>

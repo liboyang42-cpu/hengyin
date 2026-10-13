@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ClubPayableMapper">
+
+    <resultMap id="FinalizationResult" type="TopicEditionFinalization">
+        <id property="id" column="id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="clubId" column="club_id"/>
+        <result property="finalStatus" column="final_status"/>
+        <result property="fixedCompensation" column="fixed_compensation"/>
+        <result property="qualityAmount" column="quality_amount"/>
+        <result property="extraAmount" column="extra_amount"/>
+        <result property="headcountAmount" column="headcount_amount"/>
+        <result property="payeeProfileId" column="payee_profile_id"/>
+        <result property="payeeProfileVersion" column="payee_profile_version"/>
+        <result property="payeeFactsHash" column="payee_facts_hash"/>
+        <result property="idempotencyKey" column="idempotency_key"/>
+        <result property="finalizedBy" column="finalized_by"/>
+        <result property="finalizedAt" column="finalized_at"/>
+    </resultMap>
+
+    <resultMap id="PayableResult" type="ClubPayable">
+        <id property="id" column="id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="clubId" column="club_id"/>
+        <result property="component" column="component"/>
+        <result property="entryType" column="entry_type"/>
+        <result property="amount" column="amount"/>
+        <result property="batchId" column="batch_id"/>
+        <result property="idempotencyKey" column="idempotency_key"/>
+        <result property="reversalOf" column="reversal_of"/>
+        <result property="reason" column="reason"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <resultMap id="BatchResult" type="ClubPayableBatch">
+        <id property="id" column="id"/>
+        <result property="batchNo" column="batch_no"/>
+        <result property="clubId" column="club_id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="batchStatus" column="batch_status"/>
+        <result property="invoiceStatus" column="invoice_status"/>
+        <result property="invoiceNo" column="invoice_no"/>
+        <result property="redInvoiceNo" column="red_invoice_no"/>
+        <result property="confirmedBy" column="confirmed_by"/>
+        <result property="confirmedAt" column="confirmed_at"/>
+        <result property="paidBy" column="paid_by"/>
+        <result property="paidAt" column="paid_at"/>
+        <result property="paymentReference" column="payment_reference"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="insertFinalization" parameterType="TopicEditionFinalization"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into topic_edition_finalization
+        (topic_id, club_id, final_status, fixed_compensation, quality_amount, extra_amount,
+         headcount_amount, payee_profile_id, payee_profile_version, payee_facts_hash, idempotency_key, finalized_by)
+        values (#{topicId}, #{clubId}, #{finalStatus}, #{fixedCompensation}, #{qualityAmount},
+         #{extraAmount}, #{headcountAmount}, #{payeeProfileId}, #{payeeProfileVersion},
+         #{payeeFactsHash}, #{idempotencyKey}, #{finalizedBy})
+    </insert>
+
+    <select id="selectFinalization" resultMap="FinalizationResult">
+        select * from topic_edition_finalization where topic_id = #{topicId}
+    </select>
+
+    <select id="selectFinalizationForUpdate" resultMap="FinalizationResult">
+        select * from topic_edition_finalization where topic_id = #{topicId} for update
+    </select>
+
+    <!-- 台账只有 insert，没有任何改金额的 update：撤销靠反向新行。
+         reason 落列而不是指望 @Log：本仓 LogAspect 不写请求参数，日志里查不到红冲理由。 -->
+    <insert id="insertPayable" parameterType="ClubPayable" useGeneratedKeys="true" keyProperty="id">
+        insert into club_payable
+        (topic_id, club_id, component, entry_type, amount, batch_id, idempotency_key, reversal_of,
+         reason, created_by)
+        values (#{topicId}, #{clubId}, #{component}, #{entryType}, #{amount}, #{batchId},
+         #{idempotencyKey}, #{reversalOf}, #{reason}, #{createdBy})
+    </insert>
+
+    <select id="selectPayableById" resultMap="PayableResult">
+        select * from club_payable where id = #{id}
+    </select>
+
+    <!-- ★红冲路径的锁定读。快照读会让「读到 batch_id 为空 → 插反向行」两步之间被并发 createBatch
+         整条插进去：那一行的正额进了付款单，抵消它的反向行落在批次之外 ⇒ 多付，且零告警。
+         行锁把 attachUnbatchedPayables 阻塞到本事务提交，它的命中数就对不上自己算的 pending 数。 -->
+    <select id="selectPayableByIdForUpdate" resultMap="PayableResult">
+        select * from club_payable where id = #{id} for update
+    </select>
+
+    <select id="selectPayables" resultMap="PayableResult">
+        select * from club_payable where topic_id = #{topicId} and club_id = #{clubId} order by id
+    </select>
+
+    <select id="selectPayablesByComponent" resultMap="PayableResult">
+        select * from club_payable
+        where topic_id = #{topicId} and club_id = #{clubId} and component = #{component}
+        order by id
+    </select>
+
+    <!-- ★重计提路径的锁定读，与 selectPayableByIdForUpdate 同一把尺子。
+         快照读会让「读到这批行 batch_id 都为空 → 插差额行」两步之间被并发 createBatch 整批插进去：
+         正额进了付款单，抵消它的负向差额行落在批次之外 ⇒ 多付，且零告警。
+         行锁把 attachUnbatchedPayables 阻塞到本事务提交，它的命中数就对不上自己算的 pending 数
+         ⇒ 已有的 CLUB_PAYABLE_BATCH_CONTENT_CHANGED 接住（与红冲完全同一条兜底路径）。 -->
+    <select id="selectPayablesByComponentForUpdate" resultMap="PayableResult">
+        select * from club_payable
+        where topic_id = #{topicId} and club_id = #{clubId} and component = #{component}
+        order by id for update
+    </select>
+
+    <!-- ★topic_id 是条件的一部分：E4「一期一批次一张发票」。丢了它，两期的钱会被扫进同一张付款单。 -->
+    <select id="selectUnbatchedPayables" resultMap="PayableResult">
+        select * from club_payable
+        where topic_id = #{topicId} and club_id = #{clubId} and batch_id is null
+        order by id
+    </select>
+
+    <!-- 只读操作面：本期全部应付原始行 / 批次。两条都按 topic_id 收窄，service 侧再逐行回读核对。 -->
+    <select id="selectPayablesByTopic" resultMap="PayableResult">
+        select * from club_payable where topic_id = #{topicId} order by id
+    </select>
+
+    <select id="selectBatchesByTopic" resultMap="BatchResult">
+        select * from club_payable_batch where topic_id = #{topicId} order by id
+    </select>
+
+    <insert id="insertBatch" parameterType="ClubPayableBatch" useGeneratedKeys="true" keyProperty="id">
+        insert into club_payable_batch
+        (batch_no, club_id, topic_id, total_amount, batch_status, invoice_status)
+        values (#{batchNo}, #{clubId}, #{topicId}, #{totalAmount}, #{batchStatus}, #{invoiceStatus})
+    </insert>
+
+    <select id="selectBatch" resultMap="BatchResult">
+        select * from club_payable_batch where id = #{id}
+    </select>
+
+    <!-- batch_id is null 是条件的一部分：并发建批次时，后到的那个挂到 0 行，
+         与它自己算出的总额对不上 ⇒ service 判 CONTENT_CHANGED 回滚。
+         topic_id 同样是条件的一部分，理由同 selectUnbatchedPayables。 -->
+    <update id="attachUnbatchedPayables">
+        update club_payable set batch_id = #{batchId}
+        where topic_id = #{topicId} and club_id = #{clubId} and batch_id is null
+    </update>
+
+    <update id="confirmBatchCas">
+        update club_payable_batch
+        set batch_status = 'CONFIRMED', confirmed_by = #{confirmedBy}, confirmed_at = #{confirmedAt}
+        where id = #{id} and batch_status = 'PENDING'
+    </update>
+
+    <!-- 发票轴与付款轴互不引用：这两条 CAS 的 where 里没有任何 batch_status 条件，
+         「已打款但未开票」和「已开票但没打款」都表达得出来（照抄 merchant_payable_batch）。 -->
+    <update id="markBatchInvoiceIssued">
+        update club_payable_batch
+        set invoice_status = 'ISSUED', invoice_no = #{invoiceNo}
+        where id = #{id} and invoice_status = 'NONE'
+    </update>
+
+    <update id="markBatchInvoiceRed">
+        update club_payable_batch
+        set invoice_status = 'RED', red_invoice_no = #{redInvoiceNo}
+        where id = #{id} and invoice_status = 'ISSUED'
+    </update>
+
+    <!-- ★confirmed_by &lt;&gt; #{paidBy} 写进 where：确认人自己来登记付款，这条 UPDATE 命中 0 行。 -->
+    <update id="markBatchPaidCas">
+        update club_payable_batch
+        set batch_status = 'PAID', paid_by = #{paidBy}, paid_at = #{paidAt},
+            payment_reference = #{paymentReference}
+        where id = #{id} and batch_status = 'CONFIRMED'
+          and confirmed_by is not null and confirmed_by &lt;&gt; #{paidBy}
+    </update>
+
+    <!-- 部署诊断（只读）：真能按下该动作的非超管账号。
+         排除超管(user_id=1，持 *:*:* 两头都点得到)、停用角色/用户与软删行 ——
+         把他们算进来「可分离」就恒真，那是不会红的读数。 -->
+    <select id="selectPermHolderUserIds" resultType="java.lang.Long">
+        select distinct ur.user_id
+        from sys_menu m
+             join sys_role_menu rm on rm.menu_id = m.menu_id
+             join sys_user_role ur on ur.role_id = rm.role_id
+             join sys_role r on r.role_id = ur.role_id
+             join sys_user u on u.user_id = ur.user_id
+        where m.perms = #{perms}
+          and m.status = '0'
+          and r.status = '0' and r.del_flag = '0'
+          and u.status = '0' and u.del_flag = '0'
+          and ur.user_id &lt;&gt; 1
+    </select>
+</mapper>

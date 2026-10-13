@@ -1,0 +1,59 @@
+{
+  "assets": {
+    "home-banner-club.gif": {
+      "bytes": 824757,
+      "height": 228,
+      "sha256": "42db4b7e1f40a3240e4e9c5fbc826246070bb36721fca578bbb3699079114312",
+      "width": 320
+    },
+    "home-banner-club.jpg": {
+      "bytes": 14227,
+      "height": 286,
+      "sha256": "5f80160d8236cef778ee0bab68d3106d63c19975ec013a007d0887328f4eba35",
+      "width": 400
+    },
+    "home-banner-friends.gif": {
+      "bytes": 376650,
+      "height": 228,
+      "sha256": "3bb552589764dbf1e706878e1fa6583c0cbbbaa566be83f33bf2890aef63e5f2",
+      "width": 320
+    },
+    "home-banner-friends.jpg": {
+      "bytes": 12996,
+      "height": 286,
+      "sha256": "d87a76c4eccff3fd6ef7b9cd0a665d95d25bf8fc2948cdf710134bfb50b1b70b",
+      "width": 400
+    },
+    "home-banner-merchant.gif": {
+      "bytes": 292612,
+      "height": 228,
+      "sha256": "ce8ae51fe4ff32faf06c9768de2698d4c29843a09143a1d406260c86058d0afe",
+      "width": 320
+    },
+    "home-banner-merchant.jpg": {
+      "bytes": 12760,
+      "height": 286,
+      "sha256": "7b67ec362dfb762979d88b308e906ce614c858aef0112cc8d46eddcf5d3c2350",
+      "width": 400
+    },
+    "memoji/curly.png": {
+      "bytes": 180240,
+      "sha256": "d8280cfd20bf995b3094a69ad417baf1d447128323be211a4360e21b7cb94f95"
+    },
+    "memoji/lead.png": {
+      "bytes": 148752,
+      "sha256": "e87a8e8dfcfbd881dc33fdcbac1aa74ac2f716064e9e15d189e18c23467b6e35"
+    },
+    "memoji/swim.png": {
+      "bytes": 115104,
+      "sha256": "6d566e98c3fa957f35324e4b6d706bc80c80138aae345f76a5f95b5cc7a46832"
+    }
+  },
+  "note": "首页行动 Banner 产物清单。改动生成脚本或素材后必须重跑生成器,否则契约门禁会因 sha256 不符而红。",
+  "producers": {
+    "_banner_io.py": "e99cdb4bc2fb5829dbbab0aa62a268032a7c17c4a4ee17a443b9d469b1c863be",
+    "extract_memoji.py": "1a3f15528832b61dfed7524612179f25481c39cb638d2cfdcc4bf284b2ade164",
+    "from_video.py": "9837d27dfd28bf268d94f767e4e0e986b1ec267874547ef5a0d4ab3fdf10aeb2",
+    "generate.py": "2a00dac730b33a7e3967a935f509701d6f3f0d5c92dee6abf45872d2a459be6e"
+  }
+}

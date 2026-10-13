@@ -1,0 +1,26 @@
+<view class="direct-ledger">
+  <view class="direct-head">
+    <text class="direct-title">{{kind === 'club' ? '商家计酬' : '俱乐部计酬'}}</text>
+    <text class="direct-count" wx:if="{{ledger}}">{{ledger.activeCount || 0}} 人次</text>
+  </view>
+  <text class="direct-sub">俱乐部直接付款</text>
+  <cy-skeleton wx:if="{{state === 'loading'}}" type="amount" count="{{1}}" />
+  <cy-inline-error wx:elif="{{state === 'error'}}" title="计酬账目暂未取回" action="重试" bind:action="load" />
+  <block wx:else>
+    <view class="direct-stats">
+      <view class="direct-stat" wx:for="{{ledger.stats}}" wx:key="key">
+        <text class="direct-stat-label">{{item.label}}</text>
+        <text class="direct-stat-value">{{item.value}}</text>
+      </view>
+    </view>
+    <view class="direct-row" wx:for="{{ledger.rows}}" wx:key="id">
+      <view class="direct-row-main">
+        <text class="direct-row-title">核销 #{{item.redemptionId}}</text>
+        <text class="direct-meta">{{item.timeText}} · {{item.statusText}}</text>
+        <text class="direct-meta" wx:if="{{item.voucher}}">凭证 {{item.voucher}}</text>
+      </view>
+      <text class="direct-amount {{item.status === 'VOID' ? 'direct-amount--void' : ''}}">{{item.amountText}}</text>
+    </view>
+    <text class="direct-empty" wx:if="{{!ledger.rows.length}}">还没有计酬核销记录</text>
+  </block>
+</view>

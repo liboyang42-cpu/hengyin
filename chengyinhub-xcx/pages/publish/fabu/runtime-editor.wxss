@@ -1,0 +1,39 @@
+.rt-editor{min-height:65vh;color:var(--cy-comp-sheet-role-text)}
+.rt-title{display:flex;align-items:center;justify-content:center;gap:20rpx;margin:26rpx 0 40rpx;font-size:var(--cy-type-sheet-title);font-weight:700}
+.rt-two{display:flex;gap:24rpx;align-items:flex-start}
+.rt-two>.rt-field,.rt-two>.rt-policy{flex:1;min-width:0}
+.rt-editor .node-card{padding:28rpx;margin-bottom:24rpx}
+.rt-add{margin-bottom:24rpx;justify-content:center;min-height:88rpx}
+.rt-add>.node-pill{flex:1;justify-content:center;min-height:88rpx}
+.rt-card-head{display:flex;justify-content:space-between;align-items:center;font-size:var(--cy-type-body);font-weight:600;margin-bottom:24rpx}
+.rt-delete{font-size:var(--cy-type-label);color:var(--cy-comp-sheet-role-muted);min-height:60rpx;display:flex;align-items:center}
+.rt-field{margin:0 0 24rpx;min-width:0}
+.rt-field>text{display:block;font-size:var(--cy-type-label);font-weight:500;margin-bottom:14rpx}
+.rt-field input,.rt-field textarea,.rt-select{box-sizing:border-box;width:100%;min-height:88rpx;padding:22rpx 24rpx;border:0;border-radius:var(--cy-radius-md);background:var(--cy-comp-sheet-role-card);font-size:var(--cy-type-body);color:var(--cy-comp-sheet-role-text)}
+.rt-field textarea{height:180rpx}
+.rt-select{display:flex;justify-content:space-between;align-items:center;gap:8rpx}
+.rt-photo-name{display:flex;gap:24rpx;align-items:center;margin-bottom:24rpx}
+.rt-photo-name>.rt-field{flex:1;margin:0}
+.rt-image{width:128rpx;height:128rpx;flex:none;border-radius:var(--cy-radius-md);background:var(--cy-comp-sheet-role-card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12rpx;overflow:hidden;font-size:var(--cy-type-caption);color:var(--cy-comp-sheet-role-muted)}
+.rt-image image{width:100%;height:100%}
+.rt-policy{display:flex;align-items:center;justify-content:space-between;padding-top:54rpx;font-size:var(--cy-type-label);gap:8rpx}
+.rt-quantity{max-width:172rpx}
+.rt-bingo{display:grid;grid-template-columns:repeat(3,1fr);gap:16rpx}
+.rt-bingo-cell{min-height:160rpx;border-radius:var(--cy-radius-md);background:var(--cy-comp-sheet-role-surface);display:flex;align-items:center;justify-content:center;font-size:var(--cy-type-card-title);padding:12rpx;text-align:center}
+.pop-chapter-settings.runtime-parent--stacked{transform:translateY(-22rpx) scale(.96);pointer-events:none;filter:brightness(.76)}
+.pop-chapter-settings .chapter-atmosphere__item{border:0;box-shadow:none}
+.pop-chapter-settings .chapter-atmosphere__item.is-on{border:0;box-shadow:none}
+.pop-chapter-settings .chapter-atmosphere__item:not(.atmosphere-swatch--default){color:var(--cy-color-text-on-light)}
+.chapter-atmosphere__check{align-self:flex-end}
+.pop-chapter-settings .chapter-atmosphere__item.atmosphere-swatch--default{background:linear-gradient(135deg,#646d7d,#303744,#191e28)} /* ds-ok: 章节配色预览的渐变停止点 */
+.pop-chapter-settings .chapter-atmosphere__item.atmosphere-swatch--blue{background:linear-gradient(135deg,#d6f4ff,#a8cefa,#bdb9f4)} /* ds-ok: 章节配色预览的渐变停止点 */
+.pop-chapter-settings .chapter-atmosphere__item.atmosphere-swatch--red{background:linear-gradient(135deg,#ffe0cf,#f7b1b6,#e6aad0)} /* ds-ok: 章节配色预览的渐变停止点 */
+.pop-chapter-settings .chapter-atmosphere__item.atmosphere-swatch--yellow{background:linear-gradient(135deg,#fff4ca,#f6db9c,#f4bfaa)} /* ds-ok: 章节配色预览的渐变停止点 */
+.pop-chapter-settings .chapter-atmosphere__item.atmosphere-swatch--white{background:linear-gradient(135deg,#fff,#ecf2fc,#e9e4f6)} /* ds-ok: 章节配色预览的渐变停止点 */
+.rt-grid-glyph{width:32rpx;height:32rpx;display:grid;grid-template-columns:repeat(3,1fr);gap:3rpx}
+.rt-grid-glyph>view{border:2rpx solid currentColor;border-radius:2rpx} /* ds-ok: 图标轮廓的小圆角 */
+.rt-bag-glyph{width:26rpx;height:30rpx;border:3rpx solid currentColor;border-radius:7rpx;position:relative} /* ds-ok: 图标轮廓的小圆角 */
+.rt-bag-glyph:before{content:"";position:absolute;width:10rpx;height:7rpx;left:5rpx;top:-10rpx;border:3rpx solid currentColor;border-bottom:0;border-radius:6rpx 6rpx 0 0} /* ds-ok: 图标轮廓的小圆角 */
+.rt-bag-glyph:after{content:"";position:absolute;left:4rpx;right:4rpx;bottom:4rpx;height:9rpx;border:2rpx solid currentColor;border-radius:3rpx} /* ds-ok: 图标轮廓的小圆角 */
+
+.rt-disabled{opacity:.4}

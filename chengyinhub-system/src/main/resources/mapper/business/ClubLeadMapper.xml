@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ClubLeadMapper">
+
+    <resultMap type="ClubLeadState" id="ClubLeadStateResult">
+        <result property="id" column="id" />
+        <result property="activityId" column="activity_id" />
+        <result property="leaderMemberId" column="leader_member_id" />
+        <result property="currentChapterId" column="current_chapter_id" />
+        <result property="broadcastText" column="broadcast_text" />
+        <result property="broadcastAt" column="broadcast_at" />
+        <result property="status" column="status" />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <resultMap type="ClubLeadCheckin" id="ClubLeadCheckinResult">
+        <result property="id" column="id" />
+        <result property="activityId" column="activity_id" />
+        <result property="memberId" column="member_id" />
+        <result property="arrivedAt" column="arrived_at" />
+    </resultMap>
+
+    <select id="selectByActivity" resultMap="ClubLeadStateResult">
+        select id, activity_id, leader_member_id, current_chapter_id, broadcast_text, broadcast_at, status, create_time
+        from club_lead_state where activity_id = #{activityId}
+    </select>
+
+    <insert id="insertClubLeadState" parameterType="ClubLeadState" useGeneratedKeys="true" keyProperty="id">
+        insert into club_lead_state
+        (activity_id, leader_member_id, current_chapter_id, status, create_time)
+        values
+        (#{activityId}, #{leaderMemberId}, #{currentChapterId}, #{status}, #{createTime})
+    </insert>
+
+    <update id="updateClubLeadState" parameterType="ClubLeadState">
+        update club_lead_state
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="leaderMemberId != null">leader_member_id = #{leaderMemberId},</if>
+            <if test="currentChapterId != null">current_chapter_id = #{currentChapterId},</if>
+            <if test="broadcastText != null">broadcast_text = #{broadcastText},</if>
+            <if test="broadcastAt != null">broadcast_at = #{broadcastAt},</if>
+            <if test="status != null">status = #{status},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <insert id="insertCheckin" parameterType="ClubLeadCheckin" useGeneratedKeys="true" keyProperty="id">
+        insert into club_lead_checkin (activity_id, member_id, arrived_at)
+        values (#{activityId}, #{memberId}, #{arrivedAt})
+    </insert>
+
+    <select id="selectCheckins" resultMap="ClubLeadCheckinResult">
+        select id, activity_id, member_id, arrived_at
+        from club_lead_checkin where activity_id = #{activityId}
+        order by arrived_at asc
+    </select>
+
+    <select id="selectStatesByTopic" resultMap="ClubLeadStateResult">
+        select cls.id, cls.activity_id, cls.leader_member_id, cls.current_chapter_id,
+               cls.broadcast_text, cls.broadcast_at, cls.status, cls.create_time
+        from club_lead_state cls
+        inner join cms_activity ca on ca.id = cls.activity_id
+        where ca.topic_id = #{topicId}
+        order by cls.create_time desc
+    </select>
+
+    <!-- ============ 后台带队场次(§4.6,纯只读调证 · 2026-07-21 拍板不做写入面)============ -->
+
+    <select id="selectRunList" resultType="java.util.HashMap">
+        select cls.id as stateId, cls.activity_id as activityId, cls.status as runStatus,
+               cls.leader_member_id as leaderMemberId, lm.nickname as leaderName,
+               cls.current_chapter_id as currentChapterId, cls.broadcast_text as broadcastText,
+               cls.broadcast_at as broadcastAt, cls.create_time as createTime,
+               ca.name as activityName, ca.address_name as addressName, ca.address as address,
+               ca.start_date as startDate,
+               ca.club_id as clubId, cb.name as clubName,
+               ca.topic_id as topicId, t.name as topicName,
+               (select count(*) from cms_registration r where r.owner_type = 2 and r.owner_id = ca.id
+                   and r.payment_status = 2) as regCount,
+               (select count(*) from club_lead_checkin ck where ck.activity_id = ca.id) as checkinCount
+          from club_lead_state cls
+          join cms_activity ca on ca.id = cls.activity_id
+          left join cms_topic t on t.id = ca.topic_id
+          left join club cb on cb.id = ca.club_id
+          left join ums_member lm on lm.id = cls.leader_member_id
+        <where>
+            <if test="topicId != null"> and ca.topic_id = #{topicId}</if>
+            <if test="clubId != null"> and ca.club_id = #{clubId}</if>
+            <if test="status != null"> and cls.status = #{status}</if>
+        </where>
+        order by cls.create_time desc
+    </select>
+
+    <!-- 名册:报名(owner_type=2=活动票,owner_id 是共享ID空间必须带 type 配对)× 到场打卡。
+         ⚠️ 别拿 verification_status 数人头(布尔,任一商家扫一次即置1,资损⑨的病根)——数人头去 scan 流水 -->
+    <select id="selectManifest" resultType="java.util.HashMap">
+        select r.id as registrationId, r.member_id as memberId, m.nickname as nickname,
+               r.payment_status as paymentStatus, r.registration_status as registrationStatus,
+               r.verification_status as verificationStatus, r.verification_time as verificationTime,
+               r.order_num as orderNum, r.create_time as createTime,
+               ck.arrived_at as arrivedAt
+          from cms_registration r
+          left join ums_member m on m.id = r.member_id
+          left join club_lead_checkin ck on ck.activity_id = r.owner_id and ck.member_id = r.member_id
+         where r.owner_type = 2 and r.owner_id = #{activityId}
+         order by r.create_time asc
+    </select>
+
+    <!-- 流程经过的商家:生效两轴(status + valid_end)与容量口径同源,裸 status=1 会把过期供给当在场 -->
+    <select id="selectTopicMerchants" resultType="java.util.HashMap">
+        select o.chapter_id as chapterId, c.name as chapterName, c.sort_id as chapterSort,
+               o.terms_mode as termsMode, o.merchant_id as merchantId, m.nickname as merchantName
+          from merchant_chapter_offer o
+          left join cms_topic_chapter c on c.id = o.chapter_id
+          left join ums_member m on m.id = o.merchant_id
+         where o.topic_id = #{topicId}
+           and o.status = 1
+           and (o.valid_end is null or o.valid_end &gt; now())
+          order by c.sort_id asc, o.chapter_id asc
+    </select>
+
+    <select id="selectLeadSessionsByTopic"
+            resultType="com.chengyinhub.business.domain.dto.TopicWorkspaceDTO$ClubFulfillment$Session">
+        select ca.id as activityId,
+               ca.club_id as clubId,
+               ca.name as activityName,
+               ca.start_date as assemblyTime,
+               coalesce(nullif(ca.address_name, ''), ca.address) as assemblyLocation,
+               coalesce(nullif(leader.nickname, ''), nullif(leader.name, ''), concat('成员#', coalesce(cls.leader_member_id, club.member_id))) as leaderDisplayName,
+               cls.current_chapter_id as currentChapterId,
+               cls.status as status,
+               cls.broadcast_text as broadcastText,
+               cls.broadcast_at as broadcastAt
+        from cms_activity ca
+        inner join club on club.id = ca.club_id and club.del_flag = 0
+        left join club_lead_state cls on cls.activity_id = ca.id
+        left join ums_member leader on leader.id = coalesce(cls.leader_member_id, club.member_id) and leader.del_flag = 0
+        where ca.topic_id = #{topicId}
+          and ca.del_flag = 0
+          and exists (
+              select 1
+              from coop_order co
+              where co.topic_id = ca.topic_id
+                and co.to_type = 'club'
+                and co.to_id = ca.club_id
+                and co.status = 0
+                and co.del_flag = 0
+          )
+        order by ca.start_date asc, ca.id asc
+    </select>
+
+    <select id="selectLeadAttendanceByTopic"
+            resultType="com.chengyinhub.business.domain.dto.TopicWorkspaceDTO$ClubFulfillment$AttendanceMarker">
+        select checkin.activity_id as activityId
+        from club_lead_checkin checkin
+        inner join club_lead_state cls on cls.activity_id = checkin.activity_id
+        inner join cms_activity ca on ca.id = checkin.activity_id
+        inner join club on club.id = ca.club_id and club.del_flag = 0
+         where ca.topic_id = #{topicId}
+           and ca.del_flag = 0
+           and exists (
+              select 1
+              from coop_order co
+              where co.topic_id = ca.topic_id
+                and co.to_type = 'club'
+                and co.to_id = ca.club_id
+                and co.status = 0
+                and co.del_flag = 0
+          )
+         order by checkin.activity_id asc
+    </select>
+
+    <select id="selectFulfillmentSessionsByClub"
+            resultType="com.chengyinhub.business.domain.dto.ClubFulfillmentWorkspaceDTO$Session">
+        select ca.id as activityId,
+               ca.topic_id as topicId,
+               topic.name as topicName,
+               ca.name as activityName,
+               ca.start_date as assemblyTime,
+               coalesce(nullif(ca.address_name, ''), ca.address) as assemblyLocation,
+               cls.leader_member_id as leaderMemberId,
+               coalesce(nullif(leader.nickname, ''), nullif(leader.name, ''), concat('成员#', cls.leader_member_id)) as leaderDisplayName,
+               cls.current_chapter_id as currentChapterId,
+               cls.status as status
+        from cms_activity ca
+        inner join club on club.id = ca.club_id and club.del_flag = 0
+        inner join cms_topic topic on topic.id = ca.topic_id and topic.del_flag = 0
+        left join club_lead_state cls on cls.activity_id = ca.id
+        left join ums_member leader on leader.id = cls.leader_member_id and leader.del_flag = 0
+        where ca.club_id = #{clubId}
+          and ca.del_flag = 0
+          and exists (
+              select 1
+              from coop_order co
+              where co.topic_id = ca.topic_id
+                and co.to_type = 'club'
+                and co.to_id = ca.club_id
+                and co.status = 0
+                and co.del_flag = 0
+          )
+        order by ca.start_date asc, ca.id asc
+    </select>
+
+    <select id="selectFulfillmentAttendanceByClub"
+            resultType="com.chengyinhub.business.domain.dto.ClubFulfillmentWorkspaceDTO$Attendance">
+        select checkin.activity_id as activityId,
+               checkin.member_id as memberId,
+               coalesce(nullif(member.nickname, ''), nullif(member.name, ''), concat('成员#', checkin.member_id)) as memberDisplayName,
+               checkin.arrived_at as arrivedAt
+        from club_lead_checkin checkin
+        inner join cms_activity ca on ca.id = checkin.activity_id and ca.del_flag = 0
+        inner join club on club.id = ca.club_id and club.del_flag = 0
+        left join ums_member member on member.id = checkin.member_id and member.del_flag = 0
+        where ca.club_id = #{clubId}
+          and exists (
+              select 1
+              from coop_order co
+              where co.topic_id = ca.topic_id
+                and co.to_type = 'club'
+                and co.to_id = ca.club_id
+                and co.status = 0
+                and co.del_flag = 0
+          )
+        order by checkin.activity_id asc, checkin.arrived_at asc
+    </select>
+
+</mapper>

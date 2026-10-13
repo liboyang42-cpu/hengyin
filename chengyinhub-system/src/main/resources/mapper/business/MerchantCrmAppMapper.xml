@@ -1,0 +1,622 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantCrmAppMapper">
+    <resultMap id="CustomerSummary" type="com.chengyinhub.business.domain.MerchantCrmCustomerSummary">
+        <result property="customerMemberId" column="customer_member_id"/>
+        <result property="displayName" column="display_name"/>
+        <result property="avatar" column="avatar"/>
+        <result property="arrivedCount" column="arrived_count"/>
+        <result property="pendingCount" column="pending_count"/>
+        <result property="refundedCount" column="refunded_count"/>
+        <result property="paidAmount" column="paid_amount"/>
+        <result property="lastInteractionTime" column="last_interaction_time"/>
+    </resultMap>
+
+    <resultMap id="Interaction" type="com.chengyinhub.business.domain.MerchantCrmInteraction">
+        <result property="registrationId" column="registration_id"/>
+        <result property="type" column="interaction_type"/>
+        <result property="projectTitle" column="project_title"/>
+        <result property="occurredAt" column="occurred_at"/>
+    </resultMap>
+
+    <resultMap id="CustomerRow" type="com.chengyinhub.business.domain.vo.MerchantCrmCustomerRowVO">
+        <result property="memberId" column="member_id"/>
+        <result property="name" column="customer_name"/>
+        <result property="avatar" column="avatar"/>
+        <result property="phone" column="phone" typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler"/>
+        <result property="merchantResponsibleForContact" column="merchant_responsible_contact"/>
+        <result property="arrivedCount" column="arrived_count"/>
+        <result property="pendingCount" column="pending_count"/>
+        <result property="refundedCount" column="refunded_count"/>
+        <result property="paidAmount" column="paid_amount"/>
+        <result property="lastTime" column="last_time"/>
+        <result property="latestNote" column="latest_note"/>
+        <result property="tier" column="tier"/>
+        <result property="sourceType" column="source_type"/>
+        <result property="teamName" column="team_name"/>
+        <result property="roleCode" column="role_code"/>
+    </resultMap>
+
+    <resultMap id="CampaignCandidate" type="com.chengyinhub.business.domain.MerchantCrmCampaignCandidate">
+        <result property="memberId" column="member_id"/>
+        <result property="name" column="customer_name"/>
+    </resultMap>
+
+    <!-- 定向广播候选:只多带队伍/角色两列用于服务端按 scope/groups 收窄,其余口径与触达名单同源。 -->
+    <resultMap id="BroadcastCandidate" type="com.chengyinhub.business.domain.MerchantCrmBroadcastCandidate">
+        <result property="memberId" column="member_id"/>
+        <result property="name" column="customer_name"/>
+        <result property="teamName" column="team_name"/>
+        <result property="roleCode" column="role_code"/>
+    </resultMap>
+
+    <resultMap id="SegmentCounts" type="com.chengyinhub.business.domain.vo.MerchantCrmSegmentCountsVO">
+        <result property="all" column="all_count"/>
+        <result property="pending" column="pending_count"/>
+        <result property="repeat" column="repeat_count"/>
+        <result property="new" column="new_count"/>
+        <result property="noted" column="noted_count"/>
+        <result property="monthlyNew" column="monthly_new_count"/>
+        <result property="dormant" column="dormant_count"/>
+        <result property="abnormal" column="abnormal_count"/>
+    </resultMap>
+
+    <resultMap id="CrmTag" type="com.chengyinhub.business.domain.vo.MerchantCrmTagVO">
+        <result property="id" column="id"/>
+        <result property="tagName" column="tag_name"/>
+        <result property="tagColor" column="tag_color"/>
+    </resultMap>
+
+    <resultMap id="CrmNote" type="com.chengyinhub.business.domain.MerchantCrmNote">
+        <result property="id" column="id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="customerMemberId" column="member_id"/>
+        <result property="actorMemberId" column="actor_member_id"/>
+        <result property="requestId" column="request_id"/>
+        <result property="correctsNoteId" column="corrects_note_id"/>
+        <result property="content" column="content"/>
+        <result property="hidden" column="hidden"/>
+        <result property="deletedBy" column="deleted_by"/>
+        <result property="deletedAt" column="deleted_at"/>
+        <result property="hiddenRequestId" column="hidden_request_id"/>
+        <result property="version" column="version"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <resultMap id="TimelineItem" type="com.chengyinhub.business.domain.vo.MerchantCrmTimelineItemVO">
+        <result property="key" column="timeline_key"/>
+        <result property="type" column="timeline_type"/>
+        <result property="title" column="timeline_title"/>
+        <result property="description" column="timeline_description"/>
+        <result property="occurredAt" column="occurred_at"/>
+    </resultMap>
+
+    <resultMap id="TagAssignment" type="com.chengyinhub.business.domain.MerchantCrmTagAssignment">
+        <result property="id" column="id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="customerMemberId" column="member_id"/>
+        <result property="tagId" column="tag_id"/>
+        <result property="action" column="action"/>
+        <result property="actorMemberId" column="actor_member_id"/>
+        <result property="requestId" column="request_id"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <!-- 与现有客户名册同源：商家自办/中标主题 + 商家自办活动；探店日不并入通用 CRM。 -->
+    <sql id="OwnedRegistrationScope">
+        r.payment_status in (2, 4)
+        and (
+          (r.owner_type = 1 and exists (
+            select 1 from cms_topic t
+            where t.id = r.owner_id and t.del_flag = 0
+              and (t.product_type is null or t.product_type &lt;&gt; 2)
+              and (t.member_id = #{ownerMemberId} or exists (
+                select 1 from cms_registration_merchant rm
+                where rm.topic_id = t.id and rm.member_id = #{ownerMemberId}
+                  and rm.audit_status = 1 and rm.del_flag = 0
+              ))
+          ))
+          or
+          (r.owner_type = 2 and exists (
+            select 1 from cms_activity a
+            left join cms_topic activity_topic on activity_topic.id = a.topic_id
+            where a.id = r.owner_id and a.member_id = #{ownerMemberId}
+              and a.del_flag = 0
+              and (activity_topic.id is null or activity_topic.product_type is null or activity_topic.product_type &lt;&gt; 2)
+          ))
+        )
+    </sql>
+
+    <sql id="OwnedRegistration">
+        r.member_id = #{customerMemberId}
+        and <include refid="OwnedRegistrationScope"/>
+    </sql>
+
+    <sql id="OwnedCustomerFilters">
+        <if test="query.keyword != null and query.keyword != ''">
+            and coalesce(nullif(u.nickname, ''), '') like concat('%', #{query.keyword}, '%')
+        </if>
+        <if test="query.sourceType != null">
+            and r.owner_type = #{query.sourceType}
+        </if>
+        <if test="query.sourceStartTime != null">
+            and r.create_time &gt;= #{query.sourceStartTime}
+        </if>
+        <if test="query.sourceEndExclusive != null">
+            and r.create_time &lt; #{query.sourceEndExclusive}
+        </if>
+        <if test="query.tagId != null">
+            and exists (
+              select 1 from merchant_customer_tag_assignment a
+              where a.merchant_id = #{query.merchantId} and a.merchant_scope_version = 2
+                and a.member_id = r.member_id
+                and a.tag_id = #{query.tagId} and a.action = 'ASSIGN'
+                and a.id = (
+                  select max(latest.id) from merchant_customer_tag_assignment latest
+                  where latest.merchant_id = a.merchant_id and latest.merchant_scope_version = 2
+                    and latest.member_id = a.member_id
+                    and latest.tag_id = a.tag_id
+                )
+            )
+        </if>
+    </sql>
+
+    <!--
+      客户仍属于经营名册，但联系方式只来自商家自己负责联系的报名：
+      自办活动直接成立；主题存在 club_id 挂靠或已接受俱乐部邀约时均由俱乐部负责。
+    -->
+    <sql id="MerchantResponsibleRegistration">
+        (
+          r.owner_type = 2
+          or (
+            r.owner_type = 1
+            and exists (
+              select 1 from cms_topic contact_topic
+              where contact_topic.id = r.owner_id and contact_topic.del_flag = 0
+                and coalesce(contact_topic.club_id, 0) = 0
+                and not exists (
+                  select 1 from coop_invite contact_club_invite
+                  where contact_club_invite.topic_id = contact_topic.id
+                    and contact_club_invite.to_type = 'club'
+                    and contact_club_invite.status = 1
+                    and contact_club_invite.del_flag = 0
+                )
+            )
+          )
+        )
+    </sql>
+
+    <sql id="OwnedResponsiblePhoneExpression">
+        coalesce(
+          nullif(max(case when <include refid="MerchantResponsibleRegistration"/> then r.phone end), ''),
+          nullif(max(case when <include refid="MerchantResponsibleRegistration"/> then u.phone end), '')
+        )
+    </sql>
+
+    <!--
+      队伍 / 角色:定向广播要按这两档给客户分组(小程序 buildCastGroups)。
+      ★ 范围安全:子查询用行级的 r.owner_type / r.owner_id 锚定,而 r 已经被
+        OwnedRegistrationScope 限死在本商家自己的主题/活动上 —— 所以取不到这个客户
+        在别的商家、别的局里的队伍与角色。
+      ★ 口径:客户在本商家范围内参加过多个队伍/多个角色时,max() 取其中一个,
+        **不保证是最近一次**。分组是给商家挑人发通知用的,取其一可用;
+        要精确到「最近一局」得改成窗口函数,那是另一件事。
+      ★ 用相关子查询而不是 left join:join 会把一条报名单放大成多行,
+        上面那些 sum(arrived_count) / sum(paid_amount) 会跟着翻倍。
+      ★ 抽成独立片段:客户列表(聚合列)与广播候选名单(只取分组列)必须同一口径,
+        复制一份 SQL 就是第二个真源,迟早漂移。
+    -->
+    <sql id="OwnedCustomerTeamNameExpression">
+        (select pt.title from play_team_member ptm
+           join play_team pt on pt.id = ptm.team_id
+          where ptm.member_id = r.member_id and ptm.status = 1
+            and pt.owner_type = r.owner_type and pt.owner_id = r.owner_id
+          order by ptm.id desc limit 1)
+    </sql>
+
+    <sql id="OwnedCustomerRoleCodeExpression">
+        (select par.role_code from player_activity_role par
+          where par.member_id = r.member_id
+            and r.owner_type = 2 and par.activity_id = r.owner_id
+          order by par.id desc limit 1)
+    </sql>
+
+    <sql id="OwnedCustomerAggregateColumns">
+        r.member_id as member_id,
+        coalesce(nullif(max(u.nickname), ''), '未留姓名') as customer_name,
+        max(u.avatar) as avatar,
+        <include refid="OwnedResponsiblePhoneExpression"/> as phone,
+        max(case when <include refid="MerchantResponsibleRegistration"/> then 1 else 0 end)
+          as merchant_responsible_contact,
+        sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) as arrived_count,
+        sum(case when r.payment_status = 2 and (r.verification_status is null or r.verification_status &lt;&gt; 1) then 1 else 0 end) as pending_count,
+        sum(case when r.payment_status = 4 then 1 else 0 end) as refunded_count,
+        coalesce(sum(case when r.payment_status = 2 then coalesce(r.payable_amount, r.total_amount, 0) else 0 end), 0) as paid_amount,
+        max(coalesce(r.verification_time, r.create_time)) as last_time,
+        case when min(r.owner_type) = max(r.owner_type) and min(r.owner_type) = 1 then 'TOPIC'
+             when min(r.owner_type) = max(r.owner_type) and min(r.owner_type) = 2 then 'ACTIVITY'
+             else 'MIXED' end as source_type,
+        max(<include refid="OwnedCustomerTeamNameExpression"/>) as team_name,
+        max(<include refid="OwnedCustomerRoleCodeExpression"/>) as role_code
+    </sql>
+
+    <sql id="OwnedCustomerAggregateFrom">
+        from cms_registration r
+        join ums_member u on u.id = r.member_id and u.del_flag = 0
+        where <include refid="OwnedRegistrationScope"/>
+        <include refid="OwnedCustomerFilters"/>
+        group by r.member_id
+    </sql>
+
+    <sql id="OwnedCustomerSegmentHaving">
+        <if test="query.segment == 'pending'">
+            having sum(case when r.payment_status = 2 and (r.verification_status is null or r.verification_status &lt;&gt; 1) then 1 else 0 end) &gt; 0
+        </if>
+        <if test="query.segment == 'abnormal'">
+            having sum(case when r.payment_status = 4 then 1 else 0 end) &gt; 0
+        </if>
+        <if test="query.segment == 'dormant'">
+            having max(coalesce(r.verification_time, r.create_time)) &lt; timestampadd(day, -60, current_timestamp)
+        </if>
+        <if test="query.segment == 'repeat'">
+            having sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) &gt;= 2
+        </if>
+        <if test="query.segment == 'new'">
+            having sum(case when r.payment_status = 2 and (r.verification_status is null or r.verification_status &lt;&gt; 1) then 1 else 0 end) = 0
+               and sum(case when r.payment_status = 4 then 1 else 0 end) = 0
+               and max(coalesce(r.verification_time, r.create_time)) &gt;= timestampadd(day, -60, current_timestamp)
+               and sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) &lt; 2
+        </if>
+        <if test="query.segment == 'noted'">
+            having exists (
+              select 1 from merchant_customer_note note
+              where note.merchant_id = #{query.merchantId} and note.merchant_scope_version = 2
+                and note.member_id = r.member_id and note.hidden = 0
+            )
+        </if>
+    </sql>
+
+    <select id="selectOwnedCustomerPage" resultMap="CustomerRow">
+        select <include refid="OwnedCustomerAggregateColumns"/>,
+               (select note.content from merchant_customer_note note
+                where note.merchant_id = #{query.merchantId} and note.merchant_scope_version = 2
+                  and note.member_id = r.member_id and note.hidden = 0
+                order by note.create_time desc, note.id desc limit 1) as latest_note,
+               case
+                 when sum(case when r.payment_status = 2 and (r.verification_status is null or r.verification_status &lt;&gt; 1) then 1 else 0 end) &gt; 0 then 'pending'
+                 when sum(case when r.payment_status = 4 then 1 else 0 end) &gt; 0 then 'abnormal'
+                 when max(coalesce(r.verification_time, r.create_time)) &lt; timestampadd(day, -60, current_timestamp) then 'dormant'
+                 when sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) &gt;= 2 then 'repeat'
+                 else 'new'
+               end as tier
+        <include refid="OwnedCustomerAggregateFrom"/>
+        <include refid="OwnedCustomerSegmentHaving"/>
+        order by last_time desc, member_id desc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <!--
+      F15 联系号码读取(单客)。归属范围与「是否由本商家负责联系」完全复用列表的两条 SQL 片段,
+      不另立一套口径;只收窄到一位客户,因此不需要队伍/角色/备注那些聚合列。
+      号码解密仍走 resultMap CustomerRow 的 PiiCryptoTypeHandler;脱敏由服务层决定(此接口返回明文)。
+    -->
+    <select id="selectOwnedCustomerContact" resultMap="CustomerRow">
+        select r.member_id as member_id,
+               coalesce(nullif(max(u.nickname), ''), '未留姓名') as customer_name,
+               <include refid="OwnedResponsiblePhoneExpression"/> as phone,
+               max(case when <include refid="MerchantResponsibleRegistration"/> then 1 else 0 end)
+                 as merchant_responsible_contact
+        from cms_registration r
+        join ums_member u on u.id = r.member_id and u.del_flag = 0
+        where <include refid="OwnedRegistration"/>
+        group by r.member_id
+    </select>
+
+    <!-- 触达名单只冻结 memberId + 显示名；绝不读取 phone/amount，作用域与客户列表完全同源。 -->
+    <select id="selectOwnedCampaignRecipientCandidates" resultMap="CampaignCandidate">
+        select r.member_id as member_id,
+               coalesce(nullif(max(u.nickname), ''), '未留姓名') as customer_name
+        <include refid="OwnedCustomerAggregateFrom"/>
+        <include refid="OwnedCustomerSegmentHaving"/>
+        order by max(coalesce(r.verification_time, r.create_time)) desc, r.member_id desc
+        limit #{limit}
+    </select>
+
+    <select id="selectOwnedCustomerCount" resultType="long">
+        select count(1) from (
+          select r.member_id
+          <include refid="OwnedCustomerAggregateFrom"/>
+          <include refid="OwnedCustomerSegmentHaving"/>
+        ) owned_customers
+    </select>
+
+    <!-- 定向广播候选名单:与触达名单同一个 From/筛选/Segment Having,多带队伍/角色供服务端收窄。 -->
+    <select id="selectOwnedBroadcastCandidates" resultMap="BroadcastCandidate">
+        select r.member_id as member_id,
+               coalesce(nullif(max(u.nickname), ''), '未留姓名') as customer_name,
+               max(<include refid="OwnedCustomerTeamNameExpression"/>) as team_name,
+               max(<include refid="OwnedCustomerRoleCodeExpression"/>) as role_code
+        <include refid="OwnedCustomerAggregateFrom"/>
+        <include refid="OwnedCustomerSegmentHaving"/>
+        order by max(coalesce(r.verification_time, r.create_time)) desc, r.member_id desc
+        limit #{limit}
+    </select>
+
+    <select id="selectOwnedSegmentCounts" resultMap="SegmentCounts">
+        select count(1) as all_count,
+               coalesce(sum(case when tier = 'pending' then 1 else 0 end), 0) as pending_count,
+               coalesce(sum(case when tier = 'repeat' then 1 else 0 end), 0) as repeat_count,
+               coalesce(sum(case when tier = 'new' then 1 else 0 end), 0) as new_count,
+               coalesce(sum(case when has_note = 1 then 1 else 0 end), 0) as noted_count,
+               coalesce(sum(case when first_order_time &gt;= timestampadd(day, 1 - dayofmonth(current_date), current_date) then 1 else 0 end), 0) as monthly_new_count,
+               coalesce(sum(case when tier = 'dormant' then 1 else 0 end), 0) as dormant_count,
+               coalesce(sum(case when tier = 'abnormal' then 1 else 0 end), 0) as abnormal_count
+        from (
+          select r.member_id,
+                 min(r.create_time) as first_order_time,
+                 case when exists (
+                   select 1 from merchant_customer_note note
+                   where note.merchant_id = #{query.merchantId} and note.merchant_scope_version = 2
+                     and note.member_id = r.member_id and note.hidden = 0
+                 ) then 1 else 0 end as has_note,
+                 case
+                   when sum(case when r.payment_status = 2 and (r.verification_status is null or r.verification_status &lt;&gt; 1) then 1 else 0 end) &gt; 0 then 'pending'
+                   when sum(case when r.payment_status = 4 then 1 else 0 end) &gt; 0 then 'abnormal'
+                   when max(coalesce(r.verification_time, r.create_time)) &lt; timestampadd(day, -60, current_timestamp) then 'dormant'
+                   when sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) &gt;= 2 then 'repeat'
+                   else 'new'
+                 end as tier
+          <include refid="OwnedCustomerAggregateFrom"/>
+        ) customer_segments
+    </select>
+
+    <sql id="OwnedProfileSelect">
+        select #{merchantId} as merchant_id,
+               2 as merchant_scope_version,
+               r.member_id,
+               coalesce(nullif(max(u.nickname), ''), '未留姓名') as member_nickname,
+               case
+                 when <include refid="OwnedResponsiblePhoneExpression"/> is null then null
+                 when char_length(<include refid="OwnedResponsiblePhoneExpression"/>) = 11
+                   then concat(left(<include refid="OwnedResponsiblePhoneExpression"/>, 3),
+                               '****', right(<include refid="OwnedResponsiblePhoneExpression"/>, 4))
+                 else concat(left(<include refid="OwnedResponsiblePhoneExpression"/>, 1), '****')
+               end as member_phone,
+               count(1) as registration_count,
+               sum(case when r.payment_status = 2 then 1 else 0 end) as order_count,
+               coalesce(sum(case when r.payment_status = 2 then coalesce(r.payable_amount, r.total_amount, 0) else 0 end), 0) as order_amount,
+               0 as coupon_receive_count,
+               0 as coupon_verify_count,
+               max(coalesce(r.verification_time, r.create_time)) as last_interaction_time,
+               case when sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) &gt;= 2
+                    then 'vip' else 'active' end as customer_stage,
+               0 as del_flag,
+               now() as create_time,
+               now() as update_time
+        from cms_registration r
+        join ums_member u on u.id = r.member_id and u.del_flag = 0
+        where <include refid="OwnedRegistrationScope"/>
+        <if test="customerMemberId != null">and r.member_id = #{customerMemberId}</if>
+        group by r.member_id
+    </sql>
+
+    <insert id="upsertOwnedCustomerProfile">
+        insert into merchant_customer_profile
+          (merchant_id, merchant_scope_version, member_id, member_nickname, member_phone, registration_count, order_count,
+           order_amount, coupon_receive_count, coupon_verify_count, last_interaction_time,
+           customer_stage, del_flag, create_time, update_time)
+        <include refid="OwnedProfileSelect"/>
+        on duplicate key update
+          member_nickname = values(member_nickname), member_phone = values(member_phone),
+          registration_count = values(registration_count), order_count = values(order_count),
+          order_amount = values(order_amount), coupon_receive_count = values(coupon_receive_count),
+          coupon_verify_count = values(coupon_verify_count), last_interaction_time = values(last_interaction_time),
+          customer_stage = values(customer_stage), merchant_scope_version = 2, del_flag = 0, update_time = now()
+    </insert>
+
+    <insert id="upsertOwnedCustomerProfiles">
+        <bind name="customerMemberId" value="null"/>
+        insert into merchant_customer_profile
+          (merchant_id, merchant_scope_version, member_id, member_nickname, member_phone, registration_count, order_count,
+           order_amount, coupon_receive_count, coupon_verify_count, last_interaction_time,
+           customer_stage, del_flag, create_time, update_time)
+        <include refid="OwnedProfileSelect"/>
+        on duplicate key update
+          member_nickname = values(member_nickname), member_phone = values(member_phone),
+          registration_count = values(registration_count), order_count = values(order_count),
+          order_amount = values(order_amount), coupon_receive_count = values(coupon_receive_count),
+          coupon_verify_count = values(coupon_verify_count), last_interaction_time = values(last_interaction_time),
+          customer_stage = values(customer_stage), merchant_scope_version = 2, del_flag = 0, update_time = now()
+    </insert>
+
+    <select id="selectCustomerProfileForUpdate" resultType="long">
+        select member_id from merchant_customer_profile
+        where merchant_id = #{merchantId} and merchant_scope_version = 2
+          and member_id = #{customerMemberId} and del_flag = 0
+        for update
+    </select>
+
+    <update id="markStaleCustomerProfiles">
+        update merchant_customer_profile profile
+        set del_flag = 2, update_time = now()
+        where profile.merchant_id = #{merchantId} and profile.merchant_scope_version = 2
+          and profile.del_flag = 0
+          and not exists (
+            select 1 from cms_registration r
+            where r.member_id = profile.member_id and <include refid="OwnedRegistrationScope"/>
+          )
+    </update>
+
+    <select id="countOwnedRegistrationCustomers" resultType="long">
+        select count(distinct r.member_id) from cms_registration r
+        where <include refid="OwnedRegistrationScope"/>
+    </select>
+
+    <select id="countActiveCustomerProfiles" resultType="long">
+        select count(1) from merchant_customer_profile
+        where merchant_id = #{merchantId} and merchant_scope_version = 2 and del_flag = 0
+    </select>
+
+    <select id="selectOwnedCustomerSummary" resultMap="CustomerSummary">
+        select r.member_id as customer_member_id,
+               coalesce(nullif(max(u.nickname), ''), '未留姓名') as display_name,
+               max(u.avatar) as avatar,
+               sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) as arrived_count,
+               sum(case when r.payment_status = 2 and (r.verification_status is null or r.verification_status &lt;&gt; 1) then 1 else 0 end) as pending_count,
+               sum(case when r.payment_status = 4 then 1 else 0 end) as refunded_count,
+               coalesce(sum(case when r.payment_status = 2 then coalesce(r.payable_amount, r.total_amount, 0) else 0 end), 0) as paid_amount,
+               max(coalesce(r.verification_time, r.create_time)) as last_interaction_time
+        from cms_registration r
+        join ums_member u on u.id = r.member_id and u.del_flag = 0
+        where <include refid="OwnedRegistration"/>
+        group by r.member_id
+    </select>
+
+    <select id="selectOwnedInteractions" resultMap="Interaction">
+        select r.id as registration_id,
+               case when r.payment_status = 4 then 'REFUNDED'
+                    when r.verification_status = 1 then 'ARRIVED'
+                    else 'REGISTERED' end as interaction_type,
+               r.activity_title as project_title,
+               case when r.verification_status = 1 and r.verification_time is not null
+                    then r.verification_time else r.create_time end as occurred_at
+        from cms_registration r
+        where <include refid="OwnedRegistration"/>
+        order by occurred_at desc, registration_id desc
+        limit #{limit}
+    </select>
+
+    <!-- 单客触达历史只读逐人回执，不回显手机号、分群条件或失败堆栈。 -->
+    <select id="selectCustomerCampaignTimeline" resultMap="TimelineItem">
+        select concat('campaign-', recipient.id) as timeline_key,
+               'CAMPAIGN' as timeline_type,
+               coalesce(nullif(campaign.title, ''),
+                 case when recipient.channel = 'COUPON' then '优惠券触达' else '站内通知' end) as timeline_title,
+               concat(
+                 case when recipient.channel = 'COUPON' then '优惠券' else '站内通知' end,
+                 ' · ',
+                 case recipient.status
+                   when 'DELIVERED' then '已送达'
+                   when 'PENDING' then '等待发送'
+                   when 'SKIPPED_NO_CONSENT' then '未获授权'
+                   when 'SKIPPED_FREQUENCY' then '频控跳过'
+                   when 'RETRYABLE_BUSY' then '等待重试'
+                   when 'FAILED' then '发送失败'
+                   else '状态待确认'
+                 end) as timeline_description,
+               coalesce(recipient.delivered_at, recipient.last_attempt_at,
+                        recipient.create_time) as occurred_at
+        from merchant_crm_campaign_recipient recipient
+        inner join merchant_crm_campaign campaign
+          on campaign.id = recipient.campaign_id and campaign.merchant_id = recipient.merchant_id
+        where recipient.merchant_id = #{merchantId}
+          and recipient.member_id = #{customerMemberId}
+        order by occurred_at desc, recipient.id desc
+        limit #{limit}
+    </select>
+
+    <select id="selectCustomerTags" resultMap="CrmTag">
+        select t.id, t.tag_name, t.tag_color
+        from merchant_customer_tag_assignment a
+        join merchant_customer_tag t on t.id = a.tag_id and t.merchant_id = a.merchant_id
+          and t.merchant_scope_version = 2 and t.del_flag = 0
+        where a.merchant_id = #{merchantId} and a.merchant_scope_version = 2
+          and a.member_id = #{customerMemberId}
+          and a.action = 'ASSIGN'
+          and a.id = (
+            select max(latest.id) from merchant_customer_tag_assignment latest
+            where latest.merchant_id = a.merchant_id and latest.merchant_scope_version = 2
+              and latest.member_id = a.member_id
+              and latest.tag_id = a.tag_id
+          )
+        order by a.create_time asc, a.id asc
+    </select>
+
+    <select id="countCustomerTags" resultType="int">
+        select count(1) from merchant_customer_tag_assignment a
+        where a.merchant_id = #{merchantId} and a.merchant_scope_version = 2
+          and a.member_id = #{customerMemberId}
+          and a.action = 'ASSIGN'
+          and a.id = (
+            select max(latest.id) from merchant_customer_tag_assignment latest
+            where latest.merchant_id = a.merchant_id and latest.merchant_scope_version = 2
+              and latest.member_id = a.member_id
+              and latest.tag_id = a.tag_id
+          )
+    </select>
+
+    <select id="countCustomerTag" resultType="int">
+        select count(1) from merchant_customer_tag_assignment a
+        where a.merchant_id = #{merchantId} and a.merchant_scope_version = 2
+          and a.member_id = #{customerMemberId}
+          and a.tag_id = #{tagId} and a.action = 'ASSIGN'
+          and a.id = (
+            select max(latest.id) from merchant_customer_tag_assignment latest
+            where latest.merchant_id = a.merchant_id and latest.merchant_scope_version = 2
+              and latest.member_id = a.member_id
+              and latest.tag_id = a.tag_id
+          )
+    </select>
+
+    <select id="selectTagAssignmentByRequestId" resultMap="TagAssignment">
+        select id, merchant_id, member_id, tag_id, action, actor_member_id, request_id, create_time
+        from merchant_customer_tag_assignment
+        where merchant_id = #{merchantId} and merchant_scope_version = 2
+          and request_id = #{requestId}
+        limit 1
+    </select>
+
+    <insert id="insertTagAssignment" parameterType="com.chengyinhub.business.domain.MerchantCrmTagAssignment"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into merchant_customer_tag_assignment
+          (merchant_id, merchant_scope_version, member_id, tag_id, action, actor_member_id, request_id, create_time)
+        values (#{merchantId}, 2, #{customerMemberId}, #{tagId}, #{action}, #{actorMemberId}, #{requestId}, now())
+    </insert>
+
+    <select id="selectCustomerNotes" resultMap="CrmNote">
+        select id, merchant_id, member_id, actor_member_id, request_id, corrects_note_id,
+               content, hidden, deleted_by, deleted_at, hidden_request_id, version, create_time
+        from merchant_customer_note
+        where merchant_id = #{merchantId} and merchant_scope_version = 2
+          and member_id = #{customerMemberId}
+          and hidden = 0
+        order by create_time desc, id desc
+        limit #{limit}
+    </select>
+
+    <select id="selectNoteByRequestId" resultMap="CrmNote">
+        select id, merchant_id, member_id, actor_member_id, request_id, corrects_note_id,
+               content, hidden, deleted_by, deleted_at, hidden_request_id, version, create_time
+        from merchant_customer_note
+        where merchant_id = #{merchantId} and merchant_scope_version = 2
+          and request_id = #{requestId}
+        limit 1
+    </select>
+
+    <select id="selectNoteById" resultMap="CrmNote">
+        select id, merchant_id, member_id, actor_member_id, request_id, corrects_note_id,
+               content, hidden, deleted_by, deleted_at, hidden_request_id, version, create_time
+        from merchant_customer_note
+        where merchant_id = #{merchantId} and merchant_scope_version = 2
+          and member_id = #{customerMemberId} and id = #{noteId}
+        limit 1
+    </select>
+
+    <insert id="insertNote" parameterType="com.chengyinhub.business.domain.MerchantCrmNote"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into merchant_customer_note
+          (merchant_id, merchant_scope_version, member_id, actor_member_id, request_id, corrects_note_id, content,
+           hidden, version, create_time)
+        values (#{merchantId}, 2, #{customerMemberId}, #{actorMemberId}, #{requestId},
+                #{correctsNoteId}, #{content}, 0, 0, now())
+    </insert>
+
+    <update id="hideNoteCas">
+        update merchant_customer_note
+        set hidden = 1, deleted_by = #{actorMemberId}, deleted_at = now(),
+            hidden_request_id = #{requestId}, version = version + 1
+        where merchant_id = #{merchantId} and merchant_scope_version = 2
+          and member_id = #{customerMemberId}
+          and id = #{noteId} and hidden = 0 and version = #{expectedVersion}
+    </update>
+</mapper>

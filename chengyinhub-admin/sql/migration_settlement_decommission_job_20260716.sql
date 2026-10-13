@@ -1,0 +1,64 @@
+-- 结算打款收口:注销 T+N 自动结算定时任务(autoSettlementTask)
+--
+-- 背景:
+--   sys_job invoke_target='autoSettlementTask.run()'。其 bean AutoSettlementTask 已在同 PR 删除。
+--   城瘾曾有两套并行结算,对同一笔 gross 各切一次:
+--     系统1 = CmsActivityServiceImpl.settleActivity / CmsTopicServiceImpl.settleTopic,
+--             以 is_settlement 原子领取,给商户/设计者/平台三方加余额 —— 唯一真实打款方。
+--             触发条件:del_flag=0 AND status=1 AND end_date <= NOW()-12h(即活动结束 12 小时后)。
+--     系统2 = SettlementEntryServiceImpl 在报名支付时按 settlement_rule 拆出 merchant/platform/creator
+--             明细,autoSettlementTask 于 T+1(settlement.auto.delayDays,默认 1,从「报名付款」起算)
+--             自动 generateBatch + confirmBatch 打款到余额。
+--   两者覆盖面完全重合,且互不感知 —— 系统1 的销售额口径 selectTotalSalesByActivityId 只读
+--   cms_registration,对 settlement_detail 零引用。而「T+1」早于「活动结束+12h」是常态
+--   (例:会期 7 天的活动,D0 付款 → D1 系统2 就打款,D7 系统1 再按总销售额打一次)
+--   ⇒ 同一笔 gross 重复打款。靠 is_settlement 做单向闸挡不住这个顺序,故根治为拆除系统2 的
+--   打款能力;settlement_detail 退化为纯账本(自动入账 + 退款冲销),打款由系统1 独占。
+--
+-- ⚠️ 方向:这是「注销」,不是「漏注册」。
+--    日后 audit_sys_job.py 报 autoSettlementTask 未注册属预期结果,切勿反射性补一条注册 SQL ——
+--    补回去等于把「自动重复打款」路径接回生产。判据即本文件 + 同 PR 的 bean 删除
+--    (参照 2026-07-15 autoRefundTask 的同型场景)。
+--
+-- 幂等:按 invoke_target 删,重复执行无副作用(第二次删 0 行)。
+-- 可逆:重新 insert 注册行即可恢复该行,但 bean 已删,恢复注册没有意义,除非同时回滚代码。
+-- 风险:低。2026-07-16 对生产库(47.103.124.64/chengyinhubdb)只读实测,三条独立证据:
+--   1) audit_sys_job.py:#101 autoSettlementTask.run(),cron='0 30 2 * * ?',status='1' 暂停中,
+--      remark='默认暂停' ⇒ 注册后从未启用。同次对账落差:未注册 0 / 悬空 0 / 重复 0。
+--   2) settlement_batch = 0 行、settlement_detail = 0 行 ⇒ 系统2 连批次都没生成过,无在途数据。
+--   3) ★最硬的判据 —— ums_member_balance_detail 中 change_reason='结算打款'(payout 的专属特征)
+--      = 0 条 ⇒ 系统2 的 payout 从未执行过一次,生产从未发生过重复打款。
+--      ⚠️ 别用 event_type=5 当判据:它被 CmsTopicServiceImpl:787/:1073(商家邀请分润/商家分润)
+--      复用了,库里那唯一 1 条 event_type=5 是「商家邀请分润 - 主题: 杭州西湖群山轻徒步」,与本任务无关。
+--
+-- ╔═══ 2026-07-17 追注 · 本文件已跑过,SQL 一字未动,只补这段注记 ═══════════════════╗
+-- ║ ⚠️ 上面 3) 这两条【当时都是对的】,但它们只是【证据】,不是【判据】——
+-- ║    P0-1 的交接卡把它们原样搬去当判据,差点造成一次反向资损。写在这里,免得下一个人再搬。
+-- ║
+-- ║ ① change_reason='结算打款' 是【系统2 自己的】打款标记 —— 本 PR(#78)拆的正是
+-- ║   SettlementServiceImpl 里 addBalance + flow.setChangeReason(结算打款) 这一对。
+-- ║   它=0 条,恰恰证明「系统2 没通过电」⇒ 用作本文件的证据【完全正确】。
+-- ║   但系统1(settleActivity/settleTopic)有史以来【没写过它一次】
+-- ║   ⇒ 拿它去判「系统1 打没打过款」是张冠李戴,恒 0 行 → 永不扣 → 反向漏付。
+-- ║   ⇒ 判系统1 是否打过款,要问【父级打款态】:活动 cms_activity.is_settlement ·
+-- ║     coop 主题 coop_settlement.status(按收款方)· 存量主题 cms_topic.is_settlement
+-- ║     且收款方==发布者。见 RefundServiceImpl.resolveSystem1PaidCheck(PR #110)。
+-- ║
+-- ║ ② 「别用 event_type=5」这条【已于 2026-07-17 失效】,但当时成立:
+-- ║   #102(4c069e10)拆掉商家分润假账路径、把拓展人赏金挪到
+-- ║   MerchantReferralBountyService.EVENT_TYPE_REFERRAL_BOUNTY=91
+-- ║   ⇒ event_type=5 如今只剩 CmsTopicServiceImpl 的 coop 商家打款一个 writer,已不再有歧义。
+-- ║   (行号也漂了:当年的 :787/:1073 ≈ 今天的 :773/:1093,那两行本身已随 #102 删除。)
+-- ║
+-- ║ ⇒ 教训:迁移文件的 risk 段记录的是【写它那天】的生产事实。日后引用前必须对着当前
+-- ║   master 重查,别照抄。同理 memory: feedback-rebase-may-invalidate-your-premise。
+-- ║
+-- ║ ⚠️ 本文件【无需重跑】。它已落库,且 DELETE 按 invoke_target 幂等(第二次删 0 行)。
+-- ║    本次改动是纯注释,不含任何可执行语句变更。
+-- ╚═════════════════════════════════════════════════════════════════════════════╝
+--   对照:同表中系统1 的流水(change_reason 形如 '活动分润 - XXX'/'活动平台分润 - XXX'/'主题分润')
+--   共 20+ 条 ⇒ 系统1 才是一直在真打款的那套,本次收口方向正确。
+-- ⚠️ 顺序:本 SQL 必须先于 jar 部署落库。删 bean 而不删这行注册 = #101 变悬空,
+--    下次对账会报落差,且 RuoYi 里若被误点「启动」会抛 bean not found。
+
+DELETE FROM sys_job WHERE invoke_target = 'autoSettlementTask.run()';

@@ -1,0 +1,167 @@
+@import '/style/merchant-light.wxss';
+
+/* 项目长面板与客户半屏共用标题、关闭、字号与安全区。 */
+/* 2026-09-27：按内容撑高的浮动底部卡片，安全区留在卡片内。 */
+/* 面板下方压暗:面板不铺到屏幕底,露出来的页面要压暗 + 虚化。
+   ⚠️ 安卓部分机型不支持 backdrop-filter,所以底色本身就给足不透明度。 */
+.dw-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: var(--cy-z-sheet);
+  background: rgba(0, 0, 0, 0.45);  /* ds-ok: 遮罩不透明度按稿 */
+  backdrop-filter: blur(10rpx);     /* ds-ok: 背景虚化按稿 */
+}
+.dw {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: var(--cy-drawer-top, 136rpx);
+  bottom: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  box-sizing: border-box;
+  z-index: calc(var(--cy-z-sheet) + 1);
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0;
+  background: var(--cy-bg-page);
+  overflow: hidden;
+  box-sizing: border-box;
+  box-shadow: 0 -8rpx 40rpx rgba(0, 0, 0, 0.18);  /* ds-ok: 面板浮起,按稿 */
+}
+
+.dw--compact {
+  left: var(--cy-space-2);
+  right: var(--cy-space-2);
+  top: auto;
+  bottom: var(--cy-space-2);
+  max-height: var(--cy-comp-sheet-max-h, 70vh);
+  border-radius: var(--cy-comp-sheet-radius);
+}
+.dw--compact .dw-scroll {
+  flex: 0 1 auto;
+  max-height: calc(70vh - 240rpx);
+}
+
+.dw--customer {
+  top: auto;
+  bottom: 0;
+  height: min(70vh, var(--cy-drawer-max-height, 70vh));
+  max-height: min(70vh, var(--cy-drawer-max-height, 70vh));
+  overflow: hidden;
+}
+
+.dw--customer .dw-head {
+  padding: 96rpx 40rpx 0; /* ds-ok: 标题 x=20, y=374 */
+}
+
+.dw--customer .dw-title {
+  font-size: 46rpx; /* ds-ok: Figma 标题 23px */
+  line-height: 54rpx;
+}
+
+.dw--customer .dw-close {
+  width: var(--cy-btn-h);
+  height: var(--cy-btn-h);
+  /* 圆底退役后热区盒不变:负 margin 把 44px 盒位校正回 Figma 稿面位置。 */
+  margin: -17rpx -27rpx;
+}
+
+.dw--customer .dw-scroll {
+  flex: 0 1 auto;
+  max-height: calc(70vh - 240rpx);
+  padding: 10rpx 40rpx 0; /* ds-ok: Figma 内容 x=20 */
+}
+.dw-head {
+  flex: none;
+  display: flex;
+  /* 有副标题时标题块变两行,叉号要跟标题那一行对齐,不能跟着整块居中 */
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--cy-space-2) 0 var(--cy-space-1) var(--cy-page-x);
+}
+.dw-head-text { flex: 1; min-width: 0; }
+/* 稿 468:*:标题下一行灰小字 */
+.dw-sub {
+  display: block;
+  margin-top: var(--cy-space-1);
+  font-size: var(--cy-font-caption);
+  color: var(--cy-text-secondary);
+}
+.dw-title {
+  display: flex;
+  align-items: center;
+  min-height: var(--cy-btn-h);
+  font-size: var(--cy-comp-sheet-title-size);
+  line-height: var(--cy-comp-sheet-title-leading);
+  font-weight: 700;
+  color: var(--cy-text-title);
+}
+/* CU-C-126 一并删掉 .dw-head--action / .dw-title--center / .dw-act / .dw-act--done:
+   action 头档没有宿主在用,留着就是「右上角那颗写着完成、点了却只关面板」的复活入口。 */
+/* 右上角 ✕ 口径(2026-09-19 收编):纯字形无圆底,与 cy-sheet / cy-scene-sheet 同档 ——
+   原「灰圆底嵌小叉」的稿面作废。热区仍是 --cy-btn-h(44px ≥88rpx)方框:
+   方框是热区,字形是视觉,两件事。 */
+.dw-close {
+  flex: none;
+  width: var(--cy-btn-h);
+  height: var(--cy-btn-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cy-text-secondary);
+}
+
+.dw-scroll {
+  flex: 1;
+  min-height: 0;
+}
+.dw-scroll-content {
+  /* 头部与内容之间要有呼吸,否则进度条顶到标题下沿被压掉半行 */
+  padding: var(--cy-space-2) var(--cy-page-x) 0;
+  box-sizing: border-box;
+}
+.dw-scroll-pad { height: calc(var(--cy-space-3) + env(safe-area-inset-bottom)); }
+
+/* 黑按钮固定在面板底部,不随内容滚 */
+.dw-cta {
+  position: relative;
+  flex: none;
+  display: flex;
+  gap: var(--cy-space-2);
+  padding: var(--cy-space-3) var(--cy-page-x) calc(var(--cy-space-3) + env(safe-area-inset-bottom));
+}
+.dw-btn {
+  position: relative;
+  flex: 1;
+  min-height: var(--cy-btn-h);
+  min-width: 0;
+  padding: var(--cy-space-2);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--cy-radius-md);
+  background: #000;  /* ds-ok: 抽屉主动作是纯黑,按稿 */
+  font-size: var(--cy-type-button);
+  line-height: var(--cy-leading-normal);
+  text-align: center;
+  word-break: break-word;
+  font-weight: 600;
+  color: var(--cy-btn-solid-fg);
+}
+.dw-btn--ghost {
+  background: var(--cy-bg-card);
+  color: var(--cy-text-title);
+}
+
+/* isolated 组件内全局 .cy-pressed 进不来,必须本地定义一份。
+   只减淡不位移:位移要配 .cy-motion-reduced 兜底,而那个类挂在组件外的祖先上,
+   isolated 下同样够不着 —— 与其留个撤不掉的位移,不如按仓库既有组件按压类的做法只减淡。 */
+.cy-pressed { opacity: .88; }
+
+.dw--compact .dw-head { align-items: center; }
+.dw--compact .dw-head-text { padding-left: var(--cy-space-4); }
+.dw--compact .dw-title { font-size: var(--cy-type-sheet-title); }

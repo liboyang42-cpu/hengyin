@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MmsMerchantMapper">
+
+    <resultMap type="MmsMerchant" id="MmsMerchantResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="name"    column="name"    />
+        <result property="wechat"    column="wechat"    />
+        <result property="categoryId"    column="category_id"    />
+        <result property="logo"    column="logo"    />
+        <result property="description"    column="description"    />
+        <result property="derivatives"    column="derivatives"    />
+        <result property="derivativeBenefits" column="derivative_benefits"/>
+        <result property="website"    column="website"    />
+        <result property="preference"    column="preference"    />
+        <result property="phone"    column="phone"    />
+        <result property="address"    column="address"    />
+        <result property="businessTime"    column="business_time"    />
+        <result property="businessLicense"    column="business_license"    />
+        <result property="status"    column="status"    />
+        <result property="reson"    column="reson"    />
+        <result property="disableReason"    column="disable_reason"    />
+        <result property="accountStatus"    column="account_status"    />
+        <result property="businessStatus"   column="business_status"   />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="capacity"    column="capacity"    />
+        <result property="availableTime"    column="available_time"    />
+        <result property="suitActivityTypes"    column="suit_activity_types"    />
+        <result property="chargeType"    column="charge_type"    />
+        <result property="demand"    column="demand"    />
+        <result property="coopOpen"    column="coop_open"    />
+        <result property="coverImage"    column="cover_image"    />
+        <result property="slogan"    column="slogan"    />
+        <result property="cityRole"    column="city_role"    />
+        <result property="storyTitle"    column="story_title"    />
+        <result property="gallery"    column="gallery"    />
+        <result property="tags"    column="tags"    />
+        <result property="featuredType"    column="featured_type"    />
+        <result property="featuredId"    column="featured_id"    />
+        <result property="serviceTag"    column="service_tag"    />
+        <result property="serviceText"    column="service_text"    />
+        <result property="locationLat"    column="location_lat"    />
+        <result property="locationLng"    column="location_lng"    />
+        <result property="locationVerified"    column="location_verified"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectMmsMerchantVo">
+        select id, member_id, name, wechat, category_id, logo, description, derivatives, derivative_benefits, website, preference, phone, address, business_time, business_license, status, reson, disable_reason, account_status, business_status, del_flag, capacity, available_time, suit_activity_types, charge_type, demand, coop_open, cover_image, slogan, city_role, story_title, gallery, tags, featured_type, featured_id, service_tag, service_text, location_lat, location_lng, location_verified, create_by, create_time, update_by, update_time from mms_merchant
+    </sql>
+
+    <!-- 商家列表筛选条件:普通列表与距离排序列表共用,保证两条路径筛选口径完全一致 -->
+    <sql id="merchantListCriteria">
+        <if test="memberId != null "> and member_id = #{memberId}</if>
+        <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+        <if test="wechat != null  and wechat != ''"> and wechat = #{wechat}</if>
+        <!-- CU-M-62:保持整值相等。分诊曾建议改 FIND_IN_SET(以为本列存多值 CSV)——实测不成立:
+             本列经 MmsMerchant.categoryId(Integer) 映射,库里真写逗号串会在 resultMap 处直接报错
+             (Cannot determine value type from string '21,4001'),根本到不了筛选这一步;
+             ApiMerchantController.publicCategories 里的 split(",") 是 Integer 时代的遗留写法,
+             对 Integer 恒为单段。FIND_IN_SET 对单值行为等价,只徒增一次隐式转换 + 用不上索引。 -->
+        <if test="categoryId != null "> and category_id = #{categoryId}</if>
+        <if test="tags != null  and tags != ''"> and tags like concat('%', #{tags}, '%')</if>
+        <if test="cityRole != null  and cityRole != ''"> and city_role like concat('%', #{cityRole}, '%')</if>
+        <if test="logo != null  and logo != ''"> and logo = #{logo}</if>
+        <if test="description != null  and description != ''"> and description = #{description}</if>
+        <if test="derivatives != null  and derivatives != ''"> and derivatives = #{derivatives}</if>
+        <if test="website != null  and website != ''"> and website = #{website}</if>
+        <if test="preference != null  and preference != ''"> and preference = #{preference}</if>
+        <if test="phone != null  and phone != ''"> and phone = #{phone}</if>
+        <if test="address != null  and address != ''"> and address = #{address}</if>
+        <if test="businessTime != null  and businessTime != ''"> and business_time = #{businessTime}</if>
+        <if test="status != null "> and status = #{status}</if>
+        <if test="reson != null  and reson != ''"> and reson = #{reson}</if>
+        <if test="accountStatus != null "> and account_status = #{accountStatus}</if>
+        <if test="coopOpen != null "> and coop_open = #{coopOpen}</if>
+        <if test="delFlag != null "> and del_flag = #{delFlag}</if>
+    </sql>
+
+    <select id="selectMmsMerchantList" parameterType="MmsMerchant" resultMap="MmsMerchantResult">
+        <include refid="selectMmsMerchantVo"/>
+        <where>
+            <include refid="merchantListCriteria"/>
+        </where>
+    </select>
+
+    <!-- 距离排序结果:复用商家列映射,追加 distance(米) -->
+    <resultMap id="MerchantSearchResult" type="com.chengyinhub.business.domain.dto.MerchantSearchQuery" extends="MmsMerchantResult">
+        <result property="distance"    column="distance"    />
+    </resultMap>
+
+    <!--
+      商家搜索/发现(E5)按距离升序:与 selectMmsMerchantList 同筛选(共用 merchantListCriteria)。
+      距离用 Haversine 直线距离(米),口径同 MerchantLeadMapper.selectNearbyLeads;
+      LEAST(1, ...) 防浮点误差致 ACOS 入参 > 1 报错。
+      无坐标商家(location_lat/location_lng 为 null)distance 计算结果为 null,
+      order by 先按 distance is null 升序(有坐标在前),再按 distance 升序 —— 无坐标一律排最后,不占前排。
+    -->
+    <select id="selectMerchantListByDistance" parameterType="com.chengyinhub.business.domain.dto.MerchantSearchQuery" resultMap="MerchantSearchResult">
+        select id, member_id, name, wechat, category_id, logo, description, derivatives, derivative_benefits, website, preference,
+               phone, address, business_time, business_license, status, reson, disable_reason, account_status, business_status,
+               del_flag, capacity, available_time, suit_activity_types, charge_type, demand, coop_open,
+               cover_image, slogan, city_role, story_title, gallery, tags, featured_type, featured_id,
+               service_tag, service_text,
+               location_lat, location_lng, location_verified, create_by, create_time, update_by, update_time,
+               (6371000 * acos(least(1,
+                   cos(radians(#{originLat})) * cos(radians(location_lat))
+                   * cos(radians(location_lng) - radians(#{originLng}))
+                   + sin(radians(#{originLat})) * sin(radians(location_lat))
+               ))) as distance
+        from mms_merchant
+        <where>
+            <include refid="merchantListCriteria"/>
+        </where>
+        order by (distance is null) asc, distance asc, id desc
+    </select>
+
+    <select id="selectMmsMerchantById" parameterType="Long" resultMap="MmsMerchantResult">
+        <include refid="selectMmsMerchantVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectMmsMerchantByMemberId" parameterType="Long" resultMap="MmsMerchantResult">
+        <include refid="selectMmsMerchantVo"/>
+        where member_id = #{id}
+    </select>
+
+    <select id="selectMmsMerchantByMemberIdForUpdate" parameterType="Long" resultMap="MmsMerchantResult">
+        <include refid="selectMmsMerchantVo"/>
+        where member_id = #{id}
+        for update
+    </select>
+
+    <select id="countMmsMerchantRowsByMemberIdForUpdate" parameterType="Long" resultType="int">
+        select count(*)
+        from mms_merchant
+        where member_id = #{id}
+        for update
+    </select>
+
+    <select id="selectMmsMerchantByIdForUpdate" parameterType="Long" resultMap="MmsMerchantResult">
+        <include refid="selectMmsMerchantVo"/>
+        where id = #{id}
+        for update
+    </select>
+
+    <select id="selectMerchantNamesByMemberIds" resultMap="MmsMerchantResult">
+        select id, member_id, name
+        from mms_merchant
+        where del_flag = 0 and member_id in
+        <foreach collection="memberIds" item="memberId" open="(" separator="," close=")">
+            #{memberId}
+        </foreach>
+    </select>
+
+    <insert id="insertMmsMerchant" parameterType="MmsMerchant" useGeneratedKeys="true" keyProperty="id">
+        insert into mms_merchant
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="name != null">name,</if>
+            <if test="wechat != null">wechat,</if>
+            <if test="categoryId != null">category_id,</if>
+            <if test="logo != null">logo,</if>
+            <if test="description != null">description,</if>
+            <if test="derivatives != null">derivatives,</if>
+            <if test="derivativeBenefits != null">derivative_benefits,</if>
+            <if test="website != null">website,</if>
+            <if test="preference != null">preference,</if>
+            <if test="phone != null">phone,</if>
+            <if test="address != null">address,</if>
+            <if test="businessTime != null">business_time,</if>
+            <if test="businessLicense != null">business_license,</if>
+            <if test="status != null">status,</if>
+            <if test="reson != null">reson,</if>
+            <if test="disableReason != null">disable_reason,</if>
+            <if test="accountStatus != null">account_status,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="capacity != null">capacity,</if>
+            <if test="availableTime != null">available_time,</if>
+            <if test="suitActivityTypes != null">suit_activity_types,</if>
+            <if test="chargeType != null">charge_type,</if>
+            <if test="demand != null">demand,</if>
+            <if test="coopOpen != null">coop_open,</if>
+            <if test="coverImage != null">cover_image,</if>
+            <if test="slogan != null">slogan,</if>
+            <if test="cityRole != null">city_role,</if>
+            <if test="storyTitle != null">story_title,</if>
+            <if test="gallery != null">gallery,</if>
+            <if test="tags != null">tags,</if>
+            <if test="featuredType != null">featured_type,</if>
+            <if test="featuredId != null">featured_id,</if>
+            <if test="serviceTag != null">service_tag,</if>
+            <if test="serviceText != null">service_text,</if>
+            <if test="locationLat != null">location_lat,</if>
+            <if test="locationLng != null">location_lng,</if>
+            <if test="locationVerified != null">location_verified,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="name != null">#{name},</if>
+            <if test="wechat != null">#{wechat},</if>
+            <if test="categoryId != null">#{categoryId},</if>
+            <if test="logo != null">#{logo},</if>
+            <if test="description != null">#{description},</if>
+            <if test="derivatives != null">#{derivatives},</if>
+            <if test="derivativeBenefits != null">#{derivativeBenefits},</if>
+            <if test="website != null">#{website},</if>
+            <if test="preference != null">#{preference},</if>
+            <if test="phone != null">#{phone},</if>
+            <if test="address != null">#{address},</if>
+            <if test="businessTime != null">#{businessTime},</if>
+            <if test="businessLicense != null">#{businessLicense},</if>
+            <if test="status != null">#{status},</if>
+            <if test="reson != null">#{reson},</if>
+            <if test="disableReason != null">#{disableReason},</if>
+            <if test="accountStatus != null">#{accountStatus},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="capacity != null">#{capacity},</if>
+            <if test="availableTime != null">#{availableTime},</if>
+            <if test="suitActivityTypes != null">#{suitActivityTypes},</if>
+            <if test="chargeType != null">#{chargeType},</if>
+            <if test="demand != null">#{demand},</if>
+            <if test="coopOpen != null">#{coopOpen},</if>
+            <if test="coverImage != null">#{coverImage},</if>
+            <if test="slogan != null">#{slogan},</if>
+            <if test="cityRole != null">#{cityRole},</if>
+            <if test="storyTitle != null">#{storyTitle},</if>
+            <if test="gallery != null">#{gallery},</if>
+            <if test="tags != null">#{tags},</if>
+            <if test="featuredType != null">#{featuredType},</if>
+            <if test="featuredId != null">#{featuredId},</if>
+            <if test="serviceTag != null">#{serviceTag},</if>
+            <if test="serviceText != null">#{serviceText},</if>
+            <if test="locationLat != null">#{locationLat},</if>
+            <if test="locationLng != null">#{locationLng},</if>
+            <if test="locationVerified != null">#{locationVerified},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateMmsMerchant" parameterType="MmsMerchant">
+        update mms_merchant
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="wechat != null">wechat = #{wechat},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="logo != null">logo = #{logo},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="derivatives != null">derivatives = #{derivatives},</if>
+            <if test="derivativeBenefits != null">derivative_benefits = #{derivativeBenefits},</if>
+            <if test="website != null">website = #{website},</if>
+            <if test="preference != null">preference = #{preference},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="businessTime != null">business_time = #{businessTime},</if>
+            <if test="businessLicense != null">business_license = #{businessLicense},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="reson != null">reson = #{reson},</if>
+            <!-- 平台停用原因走 updatePlatformAccountStatus;本动态更新只作通用字段透传(如编辑资料回写),不与 reson 混淆 -->
+            <if test="disableReason != null">disable_reason = #{disableReason},</if>
+            <if test="accountStatus != null">account_status = #{accountStatus},</if>
+            <if test="businessStatus != null">business_status = #{businessStatus},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="capacity != null">capacity = #{capacity},</if>
+            <if test="availableTime != null">available_time = #{availableTime},</if>
+            <if test="suitActivityTypes != null">suit_activity_types = #{suitActivityTypes},</if>
+            <if test="chargeType != null">charge_type = #{chargeType},</if>
+            <if test="demand != null">demand = #{demand},</if>
+            <if test="coopOpen != null">coop_open = #{coopOpen},</if>
+            <if test="coverImage != null">cover_image = #{coverImage},</if>
+            <if test="slogan != null">slogan = #{slogan},</if>
+            <if test="cityRole != null">city_role = #{cityRole},</if>
+            <if test="storyTitle != null">story_title = #{storyTitle},</if>
+            <if test="gallery != null">gallery = #{gallery},</if>
+            <if test="tags != null">tags = #{tags},</if>
+            <if test="featuredType != null">featured_type = #{featuredType},</if>
+            <if test="featuredId != null">featured_id = #{featuredId},</if>
+            <if test="serviceTag != null">service_tag = #{serviceTag},</if>
+            <if test="serviceText != null">service_text = #{serviceText},</if>
+            <if test="locationLat != null">location_lat = #{locationLat},</if>
+            <if test="locationLng != null">location_lng = #{locationLng},</if>
+            <if test="locationVerified != null">location_verified = #{locationVerified},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <!-- 承接设置显式清空接待人数(M-13):共用 update 里 null=不改,清空只能走这条,由 Service 在 COOP_MANAGE 下调用 -->
+    <update id="clearMerchantCapacity">
+        update mms_merchant set capacity = null, update_by = #{updateBy}, update_time = #{updateTime}
+        where id = #{id} and del_flag = 0
+    </update>
+
+    <!--
+      招牌主推显式清除(CU-M-78):接口层把 type=0/id=null 定义为「解除主推」,但共用 update 的
+      featured_id 一律 <if test="featuredId != null"> ⇒ 没有任何 SQL 能把 featured_id 写回 NULL,
+      清除意图在持久层被静默丢弃(公开页已隐藏,库里还留着旧活动 id)。带 featuredType=0 且
+      featuredId=null 时由 Service 调用,固定 SET 两列。
+    -->
+    <update id="clearMerchantFeatured">
+        update mms_merchant set featured_type = 0, featured_id = null, update_by = #{updateBy}, update_time = #{updateTime}
+        where id = #{id} and del_flag = 0
+    </update>
+
+    <!--
+      平台停用/启用商家账号:只写 account_status + disable_reason 两列白名单(固定 SET,不带动态 if),
+      避免通用 update 的字段透传把审核驳回原因 reson 或其它资料顺带写坏。
+      停用必带原因、启用清空原因,由 Service 校验;WHERE 复核未删除。
+    -->
+    <update id="updatePlatformAccountStatus">
+        update mms_merchant
+        set account_status = #{accountStatus},
+            disable_reason = #{disableReason},
+            update_by = #{updateBy},
+            update_time = #{updateTime}
+        where id = #{id}
+          and del_flag = 0
+    </update>
+
+    <!-- Owner 自助重提入驻资料：字段白名单 + 归属/状态原子条件，不接受 owner/账号状态写入。 -->
+    <update id="updateOwnerRegistrationProfile">
+        update mms_merchant
+        <set>
+            <if test="merchant.name != null">name = #{merchant.name},</if>
+            <if test="merchant.wechat != null">wechat = #{merchant.wechat},</if>
+            <if test="merchant.categoryId != null">category_id = #{merchant.categoryId},</if>
+            <if test="merchant.description != null">description = #{merchant.description},</if>
+            <if test="merchant.derivatives != null">derivatives = #{merchant.derivatives},</if>
+            <if test="merchant.derivativeBenefits != null">derivative_benefits = #{merchant.derivativeBenefits},</if>
+            <if test="merchant.preference != null">preference = #{merchant.preference},</if>
+            <if test="merchant.phone != null">phone = #{merchant.phone},</if>
+            <if test="merchant.address != null">address = #{merchant.address},</if>
+            <if test="merchant.businessTime != null">business_time = #{merchant.businessTime},</if>
+            <if test="merchant.businessLicense != null">business_license = #{merchant.businessLicense},</if>
+            <if test="merchant.locationLat != null">location_lat = #{merchant.locationLat},</if>
+            <if test="merchant.locationLng != null">location_lng = #{merchant.locationLng},</if>
+            <if test="merchant.locationVerified != null">location_verified = #{merchant.locationVerified},</if>
+            status = 0,
+            reson = '',
+            update_by = #{merchant.updateBy},
+            update_time = #{merchant.updateTime}
+        </set>
+        where id = #{merchant.id}
+          and member_id = #{expectedOwnerMemberId}
+          and del_flag = 0
+          and account_status is not null and account_status &lt;&gt; 2
+          and status in (0, 2)
+    </update>
+
+    <delete id="deleteMmsMerchantById" parameterType="Long">
+        delete from mms_merchant where id = #{id}
+    </delete>
+
+    <delete id="deleteMmsMerchantByIds" parameterType="String">
+        delete from mms_merchant where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <update id="clearProfileMedia">
+        update mms_merchant set logo = null, cover_image = null, gallery = null where id = #{id}
+    </update>
+
+    <update id="claimOwnerCas">
+        update mms_merchant
+        set member_id = #{claimantMemberId}, update_by = #{auditorId}, update_time = now()
+        where id = #{merchantId}
+          and member_id is null
+          and status = 1
+          and account_status = 1
+          and del_flag = 0
+    </update>
+
+</mapper>

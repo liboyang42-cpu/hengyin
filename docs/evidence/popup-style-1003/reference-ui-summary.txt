@@ -1,0 +1,9 @@
+            url: scan.url,
+            data: scan.data,
+            method: 'P) — 会员快捷核销只消费 verification-scan.js 的有限核销路由，非法扫码在 sendRequest 前显示 toast 并返回；owner=小程序，复核=2026-09-15
+U2 PASS:绑定 4370,显式 skip 2,白名单 0(复用 wxml-handler-lint)
+U3 PASS:零绑定债务 62/62 已登记,生命周期规则 14
+U4 PASS:零消费债务 133/133 已登记,动态 setData 53/53 已登记
+U5 PASS:需逐项理由 28,同请求内静态证明显式处理 226,逐项理由 28
+Legacy PASS:error 0,warn 0
+UI-GATE-0:PASS

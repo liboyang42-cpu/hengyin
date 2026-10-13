@@ -1,0 +1,525 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CommunityTrustMapper">
+    <resultMap id="ReportResult" type="com.chengyinhub.business.domain.CommunityReportCase">
+        <id property="id" column="id"/>
+        <result property="reporterMemberId" column="reporter_member_id"/>
+        <result property="targetType" column="target_type"/>
+        <result property="targetId" column="target_id"/>
+        <result property="reasonCode" column="reason_code"/>
+        <result property="policyVersion" column="policy_version"/>
+        <result property="reasonLabelSnapshot" column="reason_label_snapshot"/>
+        <result property="prioritySnapshot" column="priority_snapshot"/>
+        <result property="firstResponseMinutesSnapshot" column="first_response_minutes_snapshot"/>
+        <result property="description" column="description"/>
+        <result property="evidenceAssetIdsJson" column="evidence_asset_ids_json"/>
+        <result property="anonymityPolicy" column="anonymity_policy"/>
+        <result property="stage" column="stage"/>
+        <result property="estimatedResolveAt" column="estimated_resolve_at"/>
+        <result property="decisionSummary" column="decision_summary"/>
+        <result property="requestId" column="request_id"/>
+        <result property="payloadHash" column="payload_hash"/>
+        <result property="version" column="version"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="TimelineResult" type="com.chengyinhub.business.domain.CommunityReportTimeline">
+        <id property="id" column="id"/>
+        <result property="reportId" column="report_id"/>
+        <result property="eventKey" column="event_key"/>
+        <result property="payloadHash" column="payload_hash"/>
+        <result property="actorType" column="actor_type"/>
+        <result property="eventType" column="event_type"/>
+        <result property="fromStage" column="from_stage"/>
+        <result property="toStage" column="to_stage"/>
+        <result property="publicNote" column="public_note"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <resultMap id="AppealResult" type="com.chengyinhub.business.domain.CommunityReportAppeal">
+        <id property="id" column="id"/>
+        <result property="reportId" column="report_id"/>
+        <result property="appellantMemberId" column="appellant_member_id"/>
+        <result property="reason" column="reason"/>
+        <result property="requestId" column="request_id"/>
+        <result property="payloadHash" column="payload_hash"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <resultMap id="SubjectReportResult" type="com.chengyinhub.business.domain.vo.CommunityReportSubjectVO">
+        <id property="id" column="id"/>
+        <result property="targetType" column="target_type"/>
+        <result property="targetId" column="target_id"/>
+        <result property="reasonCode" column="reason_code"/>
+        <result property="policyVersion" column="policy_version"/>
+        <result property="anonymityPolicy" column="anonymity_policy"/>
+        <result property="stage" column="stage"/>
+        <result property="estimatedResolveAt" column="estimated_resolve_at"/>
+        <result property="decisionSummary" column="decision_summary"/>
+        <result property="version" column="version"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <sql id="reportColumns">
+        id, reporter_member_id, target_type, target_id, reason_code, policy_version,
+        reason_label_snapshot, priority_snapshot, first_response_minutes_snapshot, description,
+        evidence_asset_ids_json, anonymity_policy, stage, estimated_resolve_at,
+        decision_summary, request_id, payload_hash, version, create_time, update_time
+    </sql>
+
+    <select id="selectReportByRequestForUpdate" resultMap="ReportResult">
+        select <include refid="reportColumns"/>
+        from community_report_case
+        where reporter_member_id = #{reporterMemberId} and request_id = #{requestId}
+        limit 1 for update
+    </select>
+
+    <select id="selectReportForUpdate" parameterType="Long" resultMap="ReportResult">
+        select <include refid="reportColumns"/>
+        from community_report_case where id = #{id} for update
+    </select>
+
+    <select id="selectReportForOwner" resultMap="ReportResult">
+        select <include refid="reportColumns"/>
+        from community_report_case
+        where id = #{id} and reporter_member_id = #{reporterMemberId}
+    </select>
+
+    <select id="selectReportForOwnerForUpdate" resultMap="ReportResult">
+        select <include refid="reportColumns"/>
+        from community_report_case
+        where id = #{id} and reporter_member_id = #{reporterMemberId}
+        for update
+    </select>
+
+    <select id="selectReportsForOwner" resultMap="ReportResult">
+        select <include refid="reportColumns"/>
+        from community_report_case
+        where reporter_member_id = #{reporterMemberId}
+        <if test="stage != null and stage != ''">and stage = #{stage}</if>
+        order by create_time desc, id desc
+    </select>
+
+    <select id="selectPlatformReports"
+            resultType="com.chengyinhub.business.domain.vo.CommunityReportPlatformVO">
+        select r.id, r.target_type as targetType, r.target_id as targetId,
+               r.reason_code as reasonCode, r.anonymity_policy as anonymityPolicy, r.stage,
+               r.policy_version as policyVersion,
+               r.reason_label_snapshot as reasonLabel,
+               r.priority_snapshot as priority,
+               r.first_response_minutes_snapshot as firstResponseMinutes,
+               r.estimated_resolve_at as estimatedResolveAt,
+               r.decision_summary as decisionSummary, r.version, r.create_time as createTime,
+               first_response.firstResponseAt
+        from community_report_case r
+        left join (
+            select t.report_id as reportId, min(t.create_time) as firstResponseAt
+            from community_report_timeline t
+            where t.actor_type = 'PLATFORM' and t.event_type = 'STAGE_CHANGED'
+            group by t.report_id
+        ) first_response on first_response.reportId = r.id
+        <where>
+            <if test="stage != null and stage != ''">r.stage = #{stage}</if>
+            <if test="targetType != null and targetType != ''">and r.target_type = #{targetType}</if>
+        </where>
+        order by r.create_time asc, r.id asc
+    </select>
+
+    <!-- 数据层匿名边界：被举报方查询不选择 reporter_member_id/description/evidence/request/payload。 -->
+    <select id="selectSubjectReport" resultMap="SubjectReportResult">
+        select id, target_type, target_id, reason_code, policy_version, anonymity_policy, stage,
+               estimated_resolve_at, decision_summary, version, create_time
+        from community_report_case
+        where id = #{id} and target_type = 'MEMBER' and target_id = #{subjectMemberId}
+    </select>
+
+    <select id="selectSubjectReportForUpdate" resultMap="SubjectReportResult">
+        select id, target_type, target_id, reason_code, policy_version, anonymity_policy, stage,
+               estimated_resolve_at, decision_summary, version, create_time
+        from community_report_case
+        where id = #{id} and target_type = 'MEMBER' and target_id = #{subjectMemberId}
+        for update
+    </select>
+
+    <!-- 对外时间线不选择 internal_note，也不返回平台操作员身份。 -->
+    <select id="selectPublicTimeline" parameterType="Long"
+            resultType="com.chengyinhub.business.domain.vo.CommunityReportTimelineVO">
+        select event_type as eventType, from_stage as fromStage, to_stage as toStage,
+               public_note as publicNote, create_time as createTime
+        from community_report_timeline
+        where report_id = #{reportId}
+        order by create_time asc, id asc
+    </select>
+
+    <select id="selectTimelineByEventKeyForUpdate" resultMap="TimelineResult">
+        select id, report_id, event_key, payload_hash, actor_type, event_type, from_stage, to_stage,
+               public_note, create_time
+        from community_report_timeline
+        where report_id = #{reportId} and event_key = #{eventKey}
+        limit 1 for update
+    </select>
+
+    <insert id="insertReport" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.CommunityReportCase">
+        insert into community_report_case
+          (reporter_member_id, target_type, target_id, reason_code, policy_version,
+           reason_label_snapshot, priority_snapshot, first_response_minutes_snapshot, description,
+           evidence_asset_ids_json, anonymity_policy, stage, estimated_resolve_at,
+           decision_summary, request_id, payload_hash, version, create_time, update_time)
+        values
+          (#{reporterMemberId}, #{targetType}, #{targetId}, #{reasonCode}, #{policyVersion},
+           #{reasonLabelSnapshot}, #{prioritySnapshot}, #{firstResponseMinutesSnapshot}, #{description},
+           #{evidenceAssetIdsJson}, #{anonymityPolicy}, #{stage}, #{estimatedResolveAt},
+           #{decisionSummary}, #{requestId}, #{payloadHash}, #{version}, #{createTime}, #{updateTime})
+    </insert>
+
+    <insert id="insertReportTimeline" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.CommunityReportTimeline">
+        insert into community_report_timeline
+          (report_id, event_key, payload_hash, actor_type, event_type, from_stage, to_stage,
+           public_note, internal_note, create_time)
+        values
+          (#{reportId}, #{eventKey}, #{payloadHash}, #{actorType}, #{eventType}, #{fromStage}, #{toStage},
+           #{publicNote}, #{internalNote}, #{createTime})
+    </insert>
+
+    <insert id="insertReportAppeal" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.CommunityReportAppeal">
+        insert into community_report_appeal
+          (report_id, appellant_member_id, reason, request_id, payload_hash, create_time)
+        values
+          (#{reportId}, #{appellantMemberId}, #{reason}, #{requestId}, #{payloadHash}, #{createTime})
+    </insert>
+
+    <select id="selectAppealByRequestForUpdate" resultMap="AppealResult">
+        select id, report_id, appellant_member_id, reason, request_id, payload_hash, create_time
+        from community_report_appeal
+        where appellant_member_id = #{appellantMemberId} and request_id = #{requestId}
+        limit 1 for update
+    </select>
+
+    <update id="appealReportCas">
+        update community_report_case
+        set stage = #{nextStage}, version = version + 1, update_time = now()
+        where id = #{id} and stage = #{expectedStage} and version = #{expectedVersion}
+    </update>
+
+    <update id="transitionReportCas">
+        update community_report_case
+        set stage = #{nextStage}, decision_summary = #{decisionSummary},
+            estimated_resolve_at = #{estimatedResolveAt}, version = version + 1,
+            update_time = now()
+        where id = #{id} and stage = #{expectedStage} and version = #{expectedVersion}
+    </update>
+
+    <resultMap id="ContributionResult" type="com.chengyinhub.business.domain.MerchantContribution">
+        <id property="id" column="id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="contributorMemberId" column="contributor_member_id"/>
+        <result property="contributionType" column="contribution_type"/>
+        <result property="fieldChangesJson" column="field_changes_json"/>
+        <result property="baseValuesJson" column="base_values_json"/>
+        <result property="issueType" column="issue_type"/>
+        <result property="description" column="description"/>
+        <result property="evidenceAssetIdsJson" column="evidence_asset_ids_json"/>
+        <result property="idempotencyKey" column="idempotency_key"/>
+        <result property="scopeKey" column="scope_key"/>
+        <result property="payloadHash" column="payload_hash"/>
+        <result property="reviewStatus" column="review_status"/>
+        <result property="reviewReason" column="review_reason"/>
+        <result property="canSupplement" column="can_supplement"/>
+        <result property="reviewedByUserId" column="reviewed_by_user_id"/>
+        <result property="reviewedAt" column="reviewed_at"/>
+        <result property="mergedAt" column="merged_at"/>
+        <result property="version" column="version"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="ContributionReviewResult" type="com.chengyinhub.business.domain.MerchantContributionReview">
+        <id property="id" column="id"/>
+        <result property="contributionId" column="contribution_id"/>
+        <result property="reviewerUserId" column="reviewer_user_id"/>
+        <result property="action" column="action"/>
+        <result property="reason" column="reason"/>
+        <result property="rewardPoints" column="reward_points"/>
+        <result property="requestId" column="request_id"/>
+        <result property="payloadHash" column="payload_hash"/>
+        <result property="expectedVersion" column="expected_version"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <resultMap id="RewardResult" type="com.chengyinhub.business.domain.ContributionRewardLedger">
+        <id property="id" column="id"/>
+        <result property="contributionId" column="contribution_id"/>
+        <result property="contributorMemberId" column="contributor_member_id"/>
+        <result property="businessKey" column="business_key"/>
+        <result property="status" column="status"/>
+        <result property="points" column="points"/>
+        <result property="externalLedgerNo" column="external_ledger_no"/>
+        <result property="creditedAt" column="credited_at"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="contributionColumns">
+        id, merchant_id, contributor_member_id, contribution_type, field_changes_json, base_values_json,
+        issue_type, description, evidence_asset_ids_json, idempotency_key, scope_key,
+        payload_hash, review_status, review_reason, can_supplement, reviewed_by_user_id,
+        reviewed_at, merged_at, version, create_time, update_time
+    </sql>
+
+    <select id="selectContributionByRequestForUpdate" resultMap="ContributionResult">
+        select <include refid="contributionColumns"/>
+        from merchant_contribution
+        where contributor_member_id = #{contributorMemberId}
+          and idempotency_key = #{idempotencyKey}
+        limit 1 for update
+    </select>
+
+    <select id="selectContributionByScopeForUpdate" resultMap="ContributionResult">
+        select <include refid="contributionColumns"/>
+        from merchant_contribution
+        where contributor_member_id = #{contributorMemberId}
+          and merchant_id = #{merchantId} and scope_key = #{scopeKey}
+        limit 1 for update
+    </select>
+
+    <select id="selectContributionForUpdate" parameterType="Long" resultMap="ContributionResult">
+        select <include refid="contributionColumns"/>
+        from merchant_contribution where id = #{id} for update
+    </select>
+
+    <select id="selectContributionForOwner" resultMap="ContributionResult">
+        select <include refid="contributionColumns"/>
+        from merchant_contribution
+        where id = #{id} and contributor_member_id = #{contributorMemberId}
+    </select>
+
+    <select id="selectContributionForOwnerForUpdate" resultMap="ContributionResult">
+        select <include refid="contributionColumns"/>
+        from merchant_contribution
+        where id = #{id} and contributor_member_id = #{contributorMemberId}
+        for update
+    </select>
+
+    <select id="selectContributionsForOwner" parameterType="Long" resultMap="ContributionResult">
+        select <include refid="contributionColumns"/>
+        from merchant_contribution
+        where contributor_member_id = #{contributorMemberId}
+        order by create_time desc, id desc
+    </select>
+
+    <select id="selectPlatformContributions" resultMap="ContributionResult">
+        select <include refid="contributionColumns"/>
+        from merchant_contribution
+        <where>
+            <if test="status != null and status != ''">review_status = #{status}</if>
+            <if test="merchantId != null">and merchant_id = #{merchantId}</if>
+        </where>
+        order by create_time asc, id asc
+    </select>
+
+    <insert id="insertContribution" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.MerchantContribution">
+        insert into merchant_contribution
+          (merchant_id, contributor_member_id, contribution_type, field_changes_json, base_values_json,
+           issue_type, description, evidence_asset_ids_json, idempotency_key, scope_key,
+           payload_hash, review_status, can_supplement, version, create_time, update_time)
+        values
+          (#{merchantId}, #{contributorMemberId}, #{contributionType}, #{fieldChangesJson}, #{baseValuesJson},
+           #{issueType}, #{description}, #{evidenceAssetIdsJson}, #{idempotencyKey}, #{scopeKey},
+           #{payloadHash}, #{reviewStatus}, #{canSupplement}, #{version}, #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="selectContributionSupplementByRequestForUpdate"
+            resultType="com.chengyinhub.business.domain.MerchantContributionSupplement">
+        select id, contribution_id as contributionId, contributor_member_id as contributorMemberId,
+               description, evidence_asset_ids_json as evidenceAssetIdsJson, request_id as requestId,
+               payload_hash as payloadHash, expected_version as expectedVersion, create_time as createTime
+        from merchant_contribution_supplement
+        where contributor_member_id = #{contributorMemberId} and request_id = #{requestId}
+        limit 1 for update
+    </select>
+
+    <update id="supplementContributionCas">
+        update merchant_contribution
+        set description = #{description}, evidence_asset_ids_json = #{evidenceAssetIdsJson},
+            review_status = 'PENDING', review_reason = null, can_supplement = false,
+            reviewed_by_user_id = null, reviewed_at = null,
+            version = version + 1, update_time = #{updateTime}
+        where id = #{id} and review_status = #{expectedStatus} and version = #{expectedVersion}
+    </update>
+
+    <insert id="insertContributionSupplement" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.MerchantContributionSupplement">
+        insert into merchant_contribution_supplement
+          (contribution_id, contributor_member_id, description, evidence_asset_ids_json,
+           request_id, payload_hash, expected_version, create_time)
+        values
+          (#{contributionId}, #{contributorMemberId}, #{description}, #{evidenceAssetIdsJson},
+           #{requestId}, #{payloadHash}, #{expectedVersion}, #{createTime})
+    </insert>
+
+    <update id="reviewContributionCas">
+        update merchant_contribution
+        set review_status = #{nextStatus}, review_reason = #{reviewReason},
+            can_supplement = #{canSupplement}, reviewed_by_user_id = #{reviewerUserId},
+            reviewed_at = now(), version = version + 1, update_time = now()
+        where id = #{id} and review_status = #{expectedStatus} and version = #{expectedVersion}
+    </update>
+
+    <update id="mergeContributionCas">
+        update merchant_contribution
+        set review_status = 'MERGED', merged_at = now(), version = version + 1, update_time = now()
+        where id = #{id} and review_status = 'APPROVED' and version = #{expectedVersion}
+    </update>
+
+    <insert id="insertContributionReview" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.MerchantContributionReview">
+        insert into merchant_contribution_review
+          (contribution_id, reviewer_user_id, action, reason, reward_points,
+           request_id, payload_hash, expected_version, create_time)
+        values
+          (#{contributionId}, #{reviewerUserId}, #{action}, #{reason}, #{rewardPoints},
+           #{requestId}, #{payloadHash}, #{expectedVersion}, #{createTime})
+    </insert>
+
+    <select id="selectContributionReviewByRequestForUpdate" resultMap="ContributionReviewResult">
+        select id, contribution_id, reviewer_user_id, action, reason, reward_points,
+               request_id, payload_hash, expected_version, create_time
+        from merchant_contribution_review
+        where reviewer_user_id = #{reviewerUserId} and request_id = #{requestId}
+        limit 1 for update
+    </select>
+
+    <insert id="insertRewardLedger" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.ContributionRewardLedger">
+        insert into merchant_contribution_reward_ledger
+          (contribution_id, contributor_member_id, business_key, status, points,
+           external_ledger_no, credited_at, create_time, update_time)
+        values
+          (#{contributionId}, #{contributorMemberId}, #{businessKey}, #{status}, #{points},
+           #{externalLedgerNo}, #{creditedAt}, #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="selectRewardLedgerByContribution" parameterType="Long" resultMap="RewardResult">
+        select id, contribution_id, contributor_member_id, business_key, status, points,
+               external_ledger_no, credited_at, create_time, update_time
+        from merchant_contribution_reward_ledger where contribution_id = #{contributionId}
+    </select>
+
+    <select id="selectMerchantIdForUpdate" parameterType="Long" resultType="Long">
+        select id from mms_merchant where id = #{merchantId} and del_flag = 0 for update
+    </select>
+
+    <resultMap id="SafetyRatingResult" type="com.chengyinhub.business.domain.MerchantSafetyRating">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="overallLevel" column="overall_level"/>
+        <result property="reason" column="reason"/>
+        <result property="idempotencyKey" column="idempotency_key"/>
+        <result property="payloadHash" column="payload_hash"/>
+        <result property="ratingPeriod" column="rating_period"/>
+        <result property="eligibilityType" column="eligibility_type"/>
+        <result property="eligibilitySourceId" column="eligibility_source_id"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <resultMap id="SafetyAggregateResult" type="com.chengyinhub.business.domain.MerchantSafetyAggregate">
+        <result property="sampleCount" column="sample_count"/>
+        <result property="averageScore" column="average_score"/>
+        <result property="latestAt" column="latest_at"/>
+    </resultMap>
+
+    <resultMap id="SafetyDimensionAggregateResult"
+               type="com.chengyinhub.business.domain.MerchantSafetyDimensionAggregate">
+        <result property="dimensionCode" column="dimension_code"/>
+        <result property="sampleCount" column="sample_count"/>
+        <result property="averageScore" column="average_score"/>
+    </resultMap>
+
+    <sql id="safetyColumns">
+        id, member_id, merchant_id, overall_level, reason, idempotency_key,
+        payload_hash, rating_period, eligibility_type, eligibility_source_id, create_time
+    </sql>
+
+    <select id="selectSafetyRatingByRequestForUpdate" resultMap="SafetyRatingResult">
+        select <include refid="safetyColumns"/>
+        from merchant_safety_rating
+        where member_id = #{memberId} and idempotency_key = #{idempotencyKey}
+        limit 1 for update
+    </select>
+
+    <select id="selectSafetyRatingByPeriodForUpdate" resultMap="SafetyRatingResult">
+        select <include refid="safetyColumns"/>
+        from merchant_safety_rating
+        where member_id = #{memberId} and merchant_id = #{merchantId}
+          and rating_period = #{ratingPeriod}
+        limit 1 for update
+    </select>
+
+    <insert id="insertSafetyRating" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.MerchantSafetyRating">
+        insert into merchant_safety_rating
+          (member_id, merchant_id, overall_level, reason, idempotency_key,
+           payload_hash, rating_period, eligibility_type, eligibility_source_id, create_time)
+        values
+          (#{memberId}, #{merchantId}, #{overallLevel}, #{reason}, #{idempotencyKey},
+           #{payloadHash}, #{ratingPeriod}, #{eligibilityType}, #{eligibilitySourceId}, #{createTime})
+    </insert>
+
+    <insert id="insertSafetyRatingDimension" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.chengyinhub.business.domain.MerchantSafetyRatingDimension">
+        insert into merchant_safety_rating_dimension (rating_id, dimension_code, level)
+        values (#{ratingId}, #{dimensionCode}, #{level})
+    </insert>
+
+    <select id="selectVerifiedVisitForSafety" resultType="Long">
+        select rd.id
+        from cms_registration r
+        join redemption rd on rd.registration_id = r.id and rd.status = 'ACTIVE'
+        join mms_merchant mm on mm.id = #{merchantId} and mm.member_id = rd.merchant_id
+          and mm.status = 1 and mm.account_status = 1 and mm.del_flag = 0
+        where r.member_id = #{memberId}
+        order by rd.create_time desc, rd.id desc
+        limit 1
+    </select>
+
+    <select id="selectActiveSafetyPolicy"
+            resultType="com.chengyinhub.business.domain.MerchantSafetyPolicy">
+        select minimum_sample_count as minimumSampleCount, window_days as windowDays,
+               neutral_minimum_score as neutralMinimumScore, safe_minimum_score as safeMinimumScore
+        from merchant_safety_policy where status = 1 order by id desc limit 1
+    </select>
+
+    <select id="selectSafetyAggregate" resultMap="SafetyAggregateResult">
+        select count(*) as sample_count,
+               avg(case r.overall_level when 'SAFE' then 3 when 'NEUTRAL' then 2 else 1 end) as average_score,
+               max(r.create_time) as latest_at
+        from merchant_safety_rating r
+        join (
+          select member_id, max(id) as latest_id
+          from merchant_safety_rating
+          where merchant_id = #{merchantId} and create_time &gt;= #{cutoff}
+          group by member_id
+        ) latest on latest.latest_id = r.id
+    </select>
+
+    <select id="selectSafetyDimensionAggregates" resultMap="SafetyDimensionAggregateResult">
+        select d.dimension_code, count(distinct r.member_id) as sample_count,
+               avg(case d.level when 'SAFE' then 3 when 'NEUTRAL' then 2 else 1 end) as average_score
+        from merchant_safety_rating_dimension d
+        inner join merchant_safety_rating r on r.id = d.rating_id
+        inner join (
+          select member_id, max(id) as latest_id
+          from merchant_safety_rating
+          where merchant_id = #{merchantId} and create_time &gt;= #{cutoff}
+          group by member_id
+        ) latest on latest.latest_id = r.id
+        group by d.dimension_code
+        order by d.dimension_code
+    </select>
+</mapper>

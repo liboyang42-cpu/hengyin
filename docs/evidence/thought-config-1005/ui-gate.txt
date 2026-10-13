@@ -1,0 +1,100 @@
+UI-GATE-0 扫描:553 JS / 329 WXML / 700 backend Mapping
+U1 PASS:静态路径 747,动态路径 38,变量路径 10,逐项理由 10
+  [U1 DYNAMIC] chengyinhub-xcx/components/cy/club-direct-ledger/index.js:31 -> /api/club-direct-merchant/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/pages/activity/official-inbox/index.js:97 -> /api/official/v2/organizer-invites/:dynamic/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/pages/activity/official-inbox/index.js:98 -> /api/official/v2/parties/:dynamic/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/aftercare/detail/index.js:97 -> /api/merchant/aftercare/detail
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/aftercare/detail/index.js:273 -> /api/merchant/aftercare/respond
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/aftercare/index.js:109 -> /api/merchant/aftercare/list
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/customer/detail/index.js:95 -> /api/merchant/crm/customers/:dynamic/detail
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/customer/detail/index.js:164 -> /api/merchant/crm/customers/:dynamic/notes
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/customer/detail/index.js:216 -> /api/merchant/crm/customers/:dynamic/notes/hide
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/customer/detail/index.js:248 -> /api/merchant/crm/customers/:dynamic/tags
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/customer/detail/index.js:286 -> /api/merchant/crm/customers/:dynamic/tags/remove
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/customer/index.js:606 -> /api/merchant/crm/customers/:dynamic/contact
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/customer/index.js:809 -> /api/merchant/crm/exports/:dynamic/status
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/ledger/index.js:294 -> /api/merchant/aftercare/list
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/reviews/index.js:201 -> /api/merchant/reviews/manage
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/reviews/index.js:210 -> /api/merchant/reviews/public
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/circle/index.js:153 -> /api/circle-theme/session/:dynamic/card
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/circle/index.js:160 -> /api/circle-theme/instance/:dynamic/offers
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/circle/index.js:187 -> /api/circle-theme/session/:dynamic/card
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/circle/index.js:208 -> /api/circle-theme/session/:dynamic/card
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/circle/index.js:485 -> /api/circle-theme/session/:dynamic/card
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/index.js:4677 -> /api/play/preference/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/index.js:4721 -> /api/play/preference/:dynamic/submit
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/index.js:4756 -> /api/play/tag/:dynamic/confirm
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/index.js:4782 -> /api/play/tag/:dynamic/correct
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/index.js:6154 -> /api/play/os/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/index.js:6181 -> /api/play/tag/:dynamic/revoke
+  [U1 DYNAMIC] chengyinhub-xcx/pages/roam/index.js:1639 -> /api/official/events/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/pages/roam/index.js:1728 -> /api/official/events/:dynamic/arrivals
+  [U1 DYNAMIC] chengyinhub-xcx/pages/roam/index.js:4481 -> /api/official/events/:dynamic/complete
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageA/pages/myproject/index.js:497 -> /api/template/:dynamic/market-submit
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageA/utils/withdrawal-preflight.js:70 -> /api/fund/preflight/:dynamic/reject
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageA/utils/withdrawal-preflight.js:84 -> /api/fund/preflight/:dynamic/confirm
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageB/pages/im/chat/index.js:632 -> /api/official/broadcast/:dynamic/click
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js:115 -> /api/city/nodes/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js:213 -> /api/city/nodes/:dynamic/favorite
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js:385 -> /api/city/nodes/:dynamic/complete
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageMember/mytemplate/mytemplate.js:117 -> /api/template/:dynamic/market-submit
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/app.js:329 options — consent adapter 的 options 只由 utils/compliance/consent-client.js 构造，该模块把唯一 endpoint 固定为 /api/compliance/consents；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/components/cy/scene-route-content/index.js:238 config.url — config 只由本文件 sceneRequest(sceneId) 的有限映射生成，所有请求 URL 均为映射内 /api 字面量，未知 sceneId 返回 null、缺必需 id 也在请求前终止；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/components/cy/scene-route-content/index.js:551 request.url — request 只取自本方法内 requests[sceneId] 的七个非提现固定写接口对象，未知 sceneId 显示提交错误并返回；提现分支在此前已转交 withdrawal-preflight，不会走到本调用；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/pages/activity/official-inbox/index.js:103 url — url 由 organizerInvite 与受控 action 组合成两组官方邀约路由，前两行字面量及动态后缀均由 U1 扫描；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/pages/index/index.js:1109 getListData(req.url) — retry 只回放 _listReq 中由 getListData 首次字面量调用冻结的 topic/list 或 activity/list，外部输入不能写该缓存；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/pages/search2/result/index.js:122 request.url — request 数组只由 utils/discover-search.buildRequests 构造，其按搜索类型枚举后端字面量且当前 U1 全仓扫描覆盖；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/subpackageA/pages/myproject/index.js:408 url — 上下架 URL 只由 bizType 在 activity/update_publish_status 与 topic/update_user_status 两个字面量间选择，未知 bizType 仍落固定 topic 路由；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:535 Object.assign({}, options, {
+          autoErrorToast: false,
+          success: function (res — _submitVerification 的 options 只来自本文件三处调用：verification-scan 的有限核销路由，以及 chapter/station 两个显式 /api 字面量；非法扫码在调用前返回，不存在外部 URL 直传；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:831 req(url) — url 只由 isSelf 在 /api/user/info 与 /api/user/public-info 两个同方法字面量之间二选一，req 不接收其它来源；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js:174 _submitVerification({
+            url: scan.url,
+            data: scan.data,
+            method: 'P) — 会员快捷核销只消费 verification-scan.js 的有限核销路由，非法扫码在 sendRequest 前显示 toast 并返回；owner=小程序，复核=2026-09-15
+U2 PASS:绑定 4388,显式 skip 2,白名单 0(复用 wxml-handler-lint)
+U3 PASS:零绑定债务 62/62 已登记,生命周期规则 14
+U4 FAIL:零消费债务 131/130 已登记,动态 setData 60/44 已登记
+U5 FAIL:需逐项理由 29,同请求内静态证明显式处理 229,逐项理由 26
+Legacy PASS:error 0,warn 1
+  [WARN] chengyinhub-xcx/pages/publish/fabu/index.js:3559 提示文案 26 字,超过 16 字上限,长说明请落到页内错误态
+UI-GATE-0:FAIL (38 violations)
+  [U4] chengyinhub-xcx/pages/play/index.js:1460 动态 setData 未登记,无法核对顶层字段消费
+  [U4] chengyinhub-xcx/pages/publish/activity/index.js:441 setData 顶层字段 stepHeading 在同页 WXML 零消费
+  [U4] chengyinhub-xcx/pages/publish/fabu/index.js:686 动态 setData 未登记,无法核对顶层字段消费
+  [U4] chengyinhub-xcx/pages/publish/fabu/index.js:858 动态 setData 未登记,无法核对顶层字段消费
+  [U4] chengyinhub-xcx/pages/publish/fabu/index.js:2432 动态 setData 未登记,无法核对顶层字段消费
+  [U4] chengyinhub-xcx/pages/publish/fabu/index.js:2645 动态 setData 未登记,无法核对顶层字段消费
+  [U4] chengyinhub-xcx/pages/publish/fabu/index.js:3411 动态 setData 未登记,无法核对顶层字段消费
+  [U4] chengyinhub-xcx/pages/publish/fabu/index.js:3812 动态 setData 未登记,无法核对顶层字段消费
+  [U4] chengyinhub-xcx/pages/publish/fabu/index.js:4788 动态 setData 未登记,无法核对顶层字段消费
+  [U4] chengyinhub-xcx/pages/publish/fabu/index.js:5046 动态 setData 未登记,无法核对顶层字段消费
+  [U4] chengyinhub-xcx/pages/publish/fabu/index.js:5708 动态 setData 未登记,无法核对顶层字段消费
+  [U4] chengyinhub-xcx/pages/publish/fabu/index.js:5716 动态 setData 未登记,无法核对顶层字段消费
+  [U4] chengyinhub-xcx/pages/publish/fabu/index.js:5769 动态 setData 未登记,无法核对顶层字段消费
+  [U4] chengyinhub-xcx/pages/publish/fabu/index.js:6071 动态 setData 字段未登记,无法核对 WXML 消费
+  [U4] chengyinhub-xcx/pages/publish/fabu/index.js:7166 动态 setData 未登记,无法核对顶层字段消费
+  [U4] chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js:1989 动态 setData 未登记,无法核对顶层字段消费
+  [U4] chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js:2019 动态 setData 未登记,无法核对顶层字段消费
+  [U5] chengyinhub-xcx/components/cy/club-direct-ledger/index.js:30 silentError:true 调用点未登记允许静默的理由
+  [U5] chengyinhub-xcx/pages/play/index.js:6378 silentError:true 调用点未登记允许静默的理由
+  [U5] chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js:2775 silentError:true 调用点未登记允许静默的理由
+  [LEGACY] chengyinhub-xcx/pages/publish/fabu/index.js:3559 提示文案 26 字,超过 16 字上限,长说明请落到页内错误态
+  [BASELINE] chengyinhub-xcx/pages/play/index.js:1434 U4-DYNAMIC 基线已未命中，必须删除过期项
+  [BASELINE] chengyinhub-xcx/pages/publish/fabu/index.js:684 U4-DYNAMIC 基线已未命中，必须删除过期项
+  [BASELINE] chengyinhub-xcx/pages/publish/fabu/index.js:855 U4-DYNAMIC 基线已未命中，必须删除过期项
+  [BASELINE] chengyinhub-xcx/pages/publish/fabu/index.js:2429 U4-DYNAMIC 基线已未命中，必须删除过期项
+  [BASELINE] chengyinhub-xcx/pages/publish/fabu/index.js:3394 U4-DYNAMIC 基线已未命中，必须删除过期项
+  [BASELINE] chengyinhub-xcx/pages/publish/fabu/index.js:3772 U4-DYNAMIC 基线已未命中，必须删除过期项
+  [BASELINE] chengyinhub-xcx/pages/publish/fabu/index.js:4748 U4-DYNAMIC 基线已未命中，必须删除过期项
+  [BASELINE] chengyinhub-xcx/pages/publish/fabu/index.js:5005 U4-DYNAMIC 基线已未命中，必须删除过期项
+  [BASELINE] chengyinhub-xcx/pages/publish/fabu/index.js:5675 U4-DYNAMIC 基线已未命中，必须删除过期项
+  [BASELINE] chengyinhub-xcx/pages/publish/fabu/index.js:5667 U4-DYNAMIC 基线已未命中，必须删除过期项
+  [BASELINE] chengyinhub-xcx/pages/publish/fabu/index.js:5728 U4-DYNAMIC 基线已未命中，必须删除过期项
+  [BASELINE] chengyinhub-xcx/pages/publish/fabu/index.js:7122 U4-DYNAMIC 基线已未命中，必须删除过期项
+  [BASELINE] chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js:1987 U4-DYNAMIC 基线已未命中，必须删除过期项
+  [BASELINE] chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js:2017 U4-DYNAMIC 基线已未命中，必须删除过期项
+  [BASELINE] chengyinhub-xcx/pages/publish/fabu/index.js:6030 U4-DYNAMIC 基线已未命中，必须删除过期项
+  [BASELINE] chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js:2773 U5 基线已未命中，必须删除过期项
+  [BASELINE] chengyinhub-xcx/pages/play/index.js:6332 U5 基线已未命中，必须删除过期项

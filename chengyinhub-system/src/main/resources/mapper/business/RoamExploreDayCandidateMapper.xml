@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.RoamExploreDayCandidateMapper">
+
+    <resultMap id="RoamExploreDayCandidateResult" type="RoamExploreDayCandidate">
+        <result property="activityId" column="activity_id" />
+        <result property="topicId" column="topic_id" />
+        <result property="topicMemberId" column="topic_member_id" />
+        <result property="merchantMemberId" column="merchant_member_id" />
+        <result property="merchantStatus" column="merchant_status" />
+        <result property="merchantDelFlag" column="merchant_del_flag" />
+        <result property="productType" column="product_type" />
+        <result property="topicLifecycle" column="topic_lifecycle" />
+        <result property="topicDelFlag" column="topic_del_flag" />
+        <result property="sellingStartedAt" column="selling_started_at" />
+        <result property="saleEndAt" column="sale_end_at" />
+        <result property="roamReferralEnabled" column="roam_referral_enabled" />
+        <result property="projectReviewStatus" column="project_review_status" />
+        <result property="projectReviewSnapshotJson" column="project_review_snapshot_json" />
+        <result property="saleReviewStatus" column="sale_review_status" />
+        <result property="activityStatus" column="activity_status" />
+        <result property="activityPublishStatus" column="activity_publish_status" />
+        <result property="activityCancelTime" column="activity_cancel_time" />
+        <result property="activityDelFlag" column="activity_del_flag" />
+        <result property="ticketId" column="ticket_id" />
+        <result property="ticketOwnerType" column="ticket_owner_type" />
+        <result property="ticketOwnerId" column="ticket_owner_id" />
+        <result property="ticketDelFlag" column="ticket_del_flag" />
+        <result property="remainingInventory" column="remaining_inventory" />
+        <result property="ticketSignupDeadline" column="signup_deadline" />
+        <result property="gatherLat" column="gather_lat" />
+        <result property="gatherLng" column="gather_lng" />
+        <result property="title" column="title" />
+        <result property="subtitle" column="subtitle" />
+        <result property="coverImg" column="cover_img" />
+        <result property="meetingPoint" column="meeting_point" />
+    </resultMap>
+
+    <!-- 只做窄候选读取；最终资格与 1500m 直线距离由 service 再次 fail-closed。 -->
+    <select id="selectPotentialCandidates" resultMap="RoamExploreDayCandidateResult">
+        select activity.id as activity_id,
+               topic.id as topic_id,
+               topic.member_id as topic_member_id,
+               merchant.member_id as merchant_member_id,
+               merchant.status as merchant_status,
+               merchant.del_flag as merchant_del_flag,
+               topic.product_type,
+               topic.lifecycle as topic_lifecycle,
+               topic.del_flag as topic_del_flag,
+               topic.selling_started_at,
+               topic.sale_end_at,
+               topic.roam_referral_enabled,
+               (select project_review.status
+                  from audit_task project_review
+                 where project_review.biz_type = 'TOPIC_PROJECT_REVIEW'
+                   and project_review.biz_id = topic.id
+                 order by project_review.submitted_at desc, project_review.id desc
+                 limit 1) as project_review_status,
+               (select project_review.snapshot_json
+                  from audit_task project_review
+                 where project_review.biz_type = 'TOPIC_PROJECT_REVIEW'
+                   and project_review.biz_id = topic.id
+                 order by project_review.submitted_at desc, project_review.id desc
+                 limit 1) as project_review_snapshot_json,
+               (select sale_review.status
+                  from audit_task sale_review
+                 where sale_review.biz_type = 'TOPIC_SALE_REVIEW'
+                   and sale_review.biz_id = topic.id
+                 order by sale_review.submitted_at desc, sale_review.id desc
+                 limit 1) as sale_review_status,
+               activity.status as activity_status,
+               activity.publish_status as activity_publish_status,
+               activity.cancel_time as activity_cancel_time,
+               activity.del_flag as activity_del_flag,
+               ticket.id as ticket_id,
+               ticket.owner_type as ticket_owner_type,
+               ticket.owner_id as ticket_owner_id,
+               ticket.del_flag as ticket_del_flag,
+               ticket.remaining_inventory,
+               ticket.signup_deadline,
+               ticket.gather_lat,
+               ticket.gather_lng,
+               activity.name as title,
+               topic.subtitle,
+               activity.img_url as cover_img,
+               ticket.meeting_point
+          from cms_topic topic
+          join cms_activity activity on activity.topic_id = topic.id
+          join oms_ticket ticket on ticket.owner_type = 2 and ticket.owner_id = activity.id
+          left join mms_merchant merchant on merchant.member_id = topic.member_id
+         where ticket.gather_lat between #{minLat} and #{maxLat}
+           and ticket.gather_lng between #{minLng} and #{maxLng}
+    </select>
+</mapper>

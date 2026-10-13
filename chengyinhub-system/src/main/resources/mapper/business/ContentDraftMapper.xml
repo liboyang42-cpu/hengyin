@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ContentDraftMapper">
+    <resultMap id="ContentDraftResult" type="ContentDraft">
+        <result property="id" column="id"/>
+        <result property="ownerMemberId" column="owner_member_id"/>
+        <result property="businessType" column="business_type"/>
+        <result property="clientDraftKey" column="client_draft_key"/>
+        <result property="subjectId" column="subject_id"/>
+        <result property="payloadJson" column="payload_json"/>
+        <result property="payloadHash" column="payload_hash"/>
+        <result property="status" column="status"/>
+        <result property="version" column="version"/>
+        <result property="updatedByDevice" column="updated_by_device"/>
+        <result property="publishedResourceId" column="published_resource_id"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="columns">id, owner_member_id, business_type, client_draft_key, subject_id,
+        payload_json, payload_hash, status, version, updated_by_device, published_resource_id,
+        create_time, update_time</sql>
+
+    <insert id="insertDraft" parameterType="ContentDraft" useGeneratedKeys="true" keyProperty="id">
+        insert into content_draft
+        (owner_member_id, business_type, client_draft_key, subject_id, payload_json, payload_hash,
+         status, version, updated_by_device, create_time, update_time)
+        values
+        (#{ownerMemberId}, #{businessType}, #{clientDraftKey}, #{subjectId}, #{payloadJson}, #{payloadHash},
+         'DRAFT', 1, #{updatedByDevice}, now(3), now(3))
+    </insert>
+
+    <select id="selectOwnedById" resultMap="ContentDraftResult">
+        select <include refid="columns"/> from content_draft
+        where id = #{id} and owner_member_id = #{ownerMemberId}
+    </select>
+
+    <select id="selectByBusinessKey" resultMap="ContentDraftResult">
+        select <include refid="columns"/> from content_draft
+        where owner_member_id = #{ownerMemberId}
+          and business_type = #{businessType}
+          and client_draft_key = #{clientDraftKey}
+    </select>
+
+    <select id="selectActiveList" resultMap="ContentDraftResult">
+        select <include refid="columns"/> from content_draft
+        where owner_member_id = #{ownerMemberId} and status = 'DRAFT'
+        <if test="businessType != null and businessType != ''">and business_type = #{businessType}</if>
+        order by update_time desc, id desc
+    </select>
+
+    <update id="updateDraftCas">
+        update content_draft
+        set subject_id = #{draft.subjectId}, payload_json = #{draft.payloadJson},
+            payload_hash = #{draft.payloadHash}, updated_by_device = #{draft.updatedByDevice},
+            version = version + 1, update_time = now(3)
+        where id = #{draft.id} and owner_member_id = #{draft.ownerMemberId}
+          and status = 'DRAFT' and version = #{expectedVersion}
+    </update>
+
+    <update id="deleteDraftCas">
+        update content_draft
+        set status = 'DELETED', version = version + 1, update_time = now(3)
+        where id = #{id} and owner_member_id = #{ownerMemberId}
+          and status = 'DRAFT' and version = #{expectedVersion}
+    </update>
+
+    <update id="publishDraftCas">
+        update content_draft
+        set status = 'PUBLISHED', published_resource_id = #{publishedResourceId},
+            version = version + 1, update_time = now(3)
+        where id = #{id} and owner_member_id = #{ownerMemberId}
+          and status = 'DRAFT' and version = #{expectedVersion}
+    </update>
+
+    <select id="countOwnedResource" resultType="int">
+        select case
+          when #{businessType} = 'ACTIVITY' then (
+            select count(*) from cms_activity
+            where id = #{resourceId} and member_id = #{ownerMemberId} and del_flag = 0
+          )
+          when #{businessType} = 'TOPIC' then (
+            select count(*) from cms_topic
+            where id = #{resourceId} and member_id = #{ownerMemberId} and del_flag = 0
+              and coalesce(is_draft, 0) = 0
+          )
+          else 0 end
+    </select>
+</mapper>

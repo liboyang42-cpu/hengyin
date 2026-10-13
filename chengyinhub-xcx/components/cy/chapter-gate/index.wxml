@@ -1,0 +1,11 @@
+<view class="gate {{entered ? 'is-in' : ''}} {{leaving ? 'is-out' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="continueStory" hover-class="gate--pressed" hover-stay-time="80" aria-role="button" aria-label="{{title}}，轻点继续">
+  <canvas type="2d" id="chapterNumber" class="gate__canvas" aria-hidden="true"></canvas>
+  <text wx:if="{{!canvasReady}}" class="gate__number">{{number < 10 ? '0' + number : number}}</text>
+  <view class="gate__copy">
+    <view class="gate__meta" wx:if="{{number !== 0 || title !== '序章'}}">{{number === 0 ? '序章' : ('第 ' + number + ' 章 / 共 ' + (total || 1) + ' 章')}}</view>
+    <view class="gate__title">{{title}}</view>
+    <view class="gate__sub" wx:if="{{subtitle}}">{{subtitle}}</view>
+    <view class="gate__bars" wx:if="{{number > 0}}"><view wx:for="{{bars}}" wx:key="*this" class="gate__bar {{item < number ? 'is-past' : item === number ? 'is-current' : ''}}"></view></view>
+  </view>
+  <view class="gate__skip">轻点继续</view>
+</view>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ThemeBroadcastMapper">
+    <insert id="enqueue">
+        insert into theme_broadcast_delivery(session_id,member_id,event_id,content,status,attempts,create_time)
+        values(#{sessionId},#{memberId},#{eventId},#{content},'PENDING',0,now())
+        on duplicate key update id=id
+    </insert>
+    <select id="lockDeliveries" resultType="map">
+        select id,event_id as eventId,content from theme_broadcast_delivery
+        where session_id=#{sessionId} and member_id=#{memberId} and status in ('PENDING','FAILED') and attempts&lt;5
+        order by id limit 20 for update
+    </select>
+    <update id="reached">
+        update theme_broadcast_delivery set status='REACHED',message_id=#{messageId},attempts=attempts+1,update_time=now()
+        where id=#{id} and member_id=#{memberId} and status in ('PENDING','FAILED')
+    </update>
+    <update id="failed">
+        update theme_broadcast_delivery set status='FAILED',attempts=attempts+1,update_time=now()
+        where id=#{id} and member_id=#{memberId} and status in ('PENDING','FAILED')
+    </update>
+    <select id="receipts" resultType="map">
+        select event_id as eventId,status,message_id as messageId,attempts from theme_broadcast_delivery
+        where session_id=#{sessionId} and member_id=#{memberId} order by id
+    </select>
+</mapper>

@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PlayTeamMapper">
+
+    <resultMap id="PlayTeamResult" type="com.chengyinhub.business.domain.PlayTeam">
+        <id property="id" column="id"/>
+        <result property="ownerType" column="owner_type"/>
+        <result property="ownerId" column="owner_id"/>
+        <result property="leaderMemberId" column="leader_member_id"/>
+        <result property="inviteCode" column="invite_code"/>
+        <result property="title" column="title"/>
+        <result property="joinMode" column="join_mode"/>
+        <result property="maxMembers" column="max_members"/>
+        <result property="joinedCount" column="joined_count"/>
+        <result property="status" column="status"/>
+        <result property="expireTime" column="expire_time"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="PlayTeamMemberResult" type="com.chengyinhub.business.domain.PlayTeamMember">
+        <id property="id" column="id"/>
+        <result property="teamId" column="team_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="role" column="role"/>
+        <result property="status" column="status"/>
+        <result property="applyMessage" column="apply_message"/>
+        <result property="applyExpireTime" column="apply_expire_time"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="memberName" column="member_name"/>
+        <result property="memberAvatar" column="member_avatar"/>
+    </resultMap>
+
+    <sql id="teamColumns">
+        id, owner_type, owner_id, leader_member_id, invite_code, title, join_mode, max_members,
+        joined_count, status, expire_time, create_time, update_time
+    </sql>
+
+    <select id="selectPlayTeamById" resultMap="PlayTeamResult">
+        select <include refid="teamColumns"/> from play_team where id = #{id}
+    </select>
+
+    <select id="selectPlayTeamByIdForUpdate" resultMap="PlayTeamResult">
+        select <include refid="teamColumns"/> from play_team where id = #{id} for update
+    </select>
+
+    <select id="selectPlayTeamByInviteCode" resultMap="PlayTeamResult">
+        select <include refid="teamColumns"/> from play_team where invite_code = #{inviteCode} limit 1
+    </select>
+
+    <insert id="insertPlayTeam" parameterType="com.chengyinhub.business.domain.PlayTeam" useGeneratedKeys="true" keyProperty="id">
+        insert into play_team
+            (owner_type, owner_id, leader_member_id, invite_code, title, join_mode, max_members,
+             joined_count, status, expire_time, create_time, update_time)
+        values
+            (#{ownerType}, #{ownerId}, #{leaderMemberId}, #{inviteCode}, #{title}, #{joinMode}, #{maxMembers},
+             #{joinedCount}, #{status}, #{expireTime}, now(), now())
+    </insert>
+
+    <!-- 队长切换组队方式(P 方案):1=邀请制退出公开地图 2=公开申请制。WHERE 带队长,纵深防护。 -->
+    <update id="updateJoinMode">
+        update play_team set join_mode = #{joinMode}, update_time = now()
+        where id = #{teamId} and leader_member_id = #{leaderMemberId}
+    </update>
+
+    <insert id="insertPlayTeamMember" parameterType="com.chengyinhub.business.domain.PlayTeamMember" useGeneratedKeys="true" keyProperty="id">
+        insert into play_team_member
+            (team_id, member_id, role, status, apply_message, apply_expire_time, create_time, update_time)
+        values
+            (#{teamId}, #{memberId}, #{role}, #{status}, #{applyMessage}, #{applyExpireTime}, now(), now())
+    </insert>
+
+    <update id="reactivateMember">
+        update play_team_member
+        set status = 1, role = 0, apply_message = null, apply_expire_time = null, update_time = now()
+        where team_id = #{teamId} and member_id = #{memberId} and status in (0, 2, 5, 6)
+    </update>
+
+    <!-- 公开申请:同一人同一队只有一行(uk_team_member)。任何状态都读出来,由服务端判能否再申请。 -->
+    <select id="selectMemberRow" resultMap="PlayTeamMemberResult">
+        select id, team_id, member_id, role, status, apply_message, apply_expire_time, create_time, update_time
+        from play_team_member
+        where team_id = #{teamId} and member_id = #{memberId}
+        limit 1
+    </select>
+
+    <update id="reapplyMember">
+        update play_team_member
+        set status = 0, role = 0, apply_message = #{applyMessage}, apply_expire_time = #{applyExpireTime},
+            update_time = now()
+        where team_id = #{teamId} and member_id = #{memberId} and status = #{fromStatus}
+    </update>
+
+    <!-- 读时判定:过期的待审申请不能被同意,不依赖定时任务是否已跑。 -->
+    <update id="approvePending">
+        update play_team_member
+        set status = 1, apply_expire_time = null, update_time = now()
+        where team_id = #{teamId} and member_id = #{memberId} and status = 0
+          and apply_expire_time &gt; #{now}
+    </update>
+
+    <!-- 拒绝同样读时判定:已过期的申请不能被转成「已拒绝」,否则申请人被永久挡在这支队外。 -->
+    <update id="rejectPending">
+        update play_team_member
+        set status = 4, update_time = now()
+        where team_id = #{teamId} and member_id = #{memberId} and status = 0
+          and apply_expire_time &gt; #{now}
+    </update>
+
+    <update id="expirePendingApplications">
+        update play_team_member set status = 6, update_time = now()
+        where team_id = #{teamId} and status = 0
+    </update>
+
+    <update id="expireStaleApplications">
+        update play_team_member set status = 6, update_time = now()
+        where status = 0 and apply_expire_time &lt;= #{now}
+    </update>
+
+    <!-- 举报成立:改回邀请制退出公开地图;不解散、不动已加入成员。 -->
+    <update id="hideFromPublic">
+        update play_team set join_mode = 1, update_time = now() where id = #{teamId} and join_mode = 2
+    </update>
+
+    <!-- 未结审核单(0 待审 / 3 升级)= 审核中:不出现在附近队伍、不接受新申请。 -->
+    <select id="countOpenReports" resultType="int">
+        select count(1) from audit_task where biz_type = 'TEAM' and biz_id = #{teamId} and status in (0, 3)
+    </select>
+
+    <select id="selectPendingApplications" resultMap="PlayTeamMemberResult">
+        select m.id, m.team_id, m.member_id, m.role, m.status, m.apply_message, m.apply_expire_time,
+               m.create_time, m.update_time,
+               u.nickname as member_name, u.avatar as member_avatar
+        from play_team_member m
+        left join ums_member u on u.id = m.member_id
+        where m.team_id = #{teamId} and m.status = 0 and m.apply_expire_time &gt; #{now}
+        order by m.update_time asc, m.id asc
+    </select>
+
+    <!-- 「我的队伍」里申请中 / 队长未同意两类;已加入的走 selectMyTeams。不带 invite_code。 -->
+    <select id="selectMyApplications" resultType="java.util.LinkedHashMap">
+        select t.id as teamId, t.title as title, t.owner_id as activityId, a.name as activityName,
+               a.start_date as startDate, leader.nickname as leaderName,
+               t.joined_count as joinedCount, t.max_members as maxMembers, t.status as teamStatus,
+               case when m.status = 0 then 'PENDING' else 'REJECTED' end as applyStatus,
+               m.apply_expire_time as applyExpireTime, m.update_time as appliedAt
+        from play_team_member m
+        join play_team t on t.id = m.team_id
+        left join cms_activity a on t.owner_type = 2 and a.id = t.owner_id
+        left join ums_member leader on leader.id = t.leader_member_id
+        where m.member_id = #{memberId}
+          and t.status in (0, 1)
+          and ((m.status = 0 and m.apply_expire_time &gt; #{now}) or m.status = 4)
+        order by m.update_time desc, m.id desc
+    </select>
+
+    <select id="selectActiveMember" resultMap="PlayTeamMemberResult">
+        select m.id, m.team_id, m.member_id, m.role, m.status, m.apply_message, m.apply_expire_time,
+               m.create_time, m.update_time,
+               u.nickname as member_name, u.avatar as member_avatar
+        from play_team_member m
+        left join ums_member u on u.id = m.member_id
+        where m.team_id = #{teamId} and m.member_id = #{memberId} and m.status = 1
+        limit 1
+    </select>
+
+    <select id="selectEarliestOtherActiveMember" resultMap="PlayTeamMemberResult">
+        select m.id, m.team_id, m.member_id, m.role, m.status, m.apply_message, m.apply_expire_time,
+               m.create_time, m.update_time,
+               u.nickname as member_name, u.avatar as member_avatar
+        from play_team_member m
+        left join ums_member u on u.id = m.member_id
+        where m.team_id = #{teamId} and m.member_id &lt;&gt; #{memberId} and m.status = 1
+        order by m.create_time asc, m.id asc
+        limit 1
+    </select>
+
+    <select id="selectActiveMembers" resultMap="PlayTeamMemberResult">
+        select m.id, m.team_id, m.member_id, m.role, m.status, m.apply_message, m.apply_expire_time,
+               m.create_time, m.update_time,
+               u.nickname as member_name, u.avatar as member_avatar
+        from play_team_member m
+        left join ums_member u on u.id = m.member_id
+        where m.team_id = #{teamId} and m.status = 1
+        order by m.role desc, m.create_time asc, m.id asc
+    </select>
+
+    <select id="countActiveMembers" resultType="int">
+        select count(1) from play_team_member where team_id = #{teamId} and status = 1
+    </select>
+
+    <!-- MySQL 单表 UPDATE 按赋值顺序求值；status 读取的是已经加一的 joined_count。 -->
+    <update id="reserveSlot">
+        update play_team
+        set joined_count = joined_count + 1,
+            status = if(joined_count >= max_members, 1, status),
+            update_time = now()
+        where id = #{teamId} and joined_count &lt; max_members and status = 0
+    </update>
+
+    <update id="releaseSlot">
+        update play_team
+        set joined_count = joined_count - 1,
+            status = if(status = 1, 0, status),
+            update_time = now()
+        where id = #{teamId} and joined_count > 0 and status in (0, 1)
+    </update>
+
+    <update id="markMemberStatus">
+        update play_team_member
+        set status = #{toStatus}, update_time = now()
+        where team_id = #{teamId} and member_id = #{memberId} and status = #{fromStatus}
+    </update>
+
+    <update id="transferLeadership">
+        update play_team
+        set leader_member_id = #{newLeaderId}, update_time = now()
+        where id = #{teamId} and leader_member_id = #{oldLeaderId} and status in (0, 1)
+    </update>
+
+    <update id="updateMemberRole">
+        update play_team_member
+        set role = #{toRole}, update_time = now()
+        where team_id = #{teamId} and member_id = #{memberId} and status = 1 and role = #{fromRole}
+    </update>
+
+    <update id="disbandTeam">
+        update play_team set status = 4, joined_count = 0, update_time = now()
+        where id = #{teamId} and leader_member_id = #{leaderMemberId} and status in (0, 1)
+    </update>
+
+    <update id="markActiveMembersExited">
+        update play_team_member set status = 2, update_time = now()
+        where team_id = #{teamId} and status = 1
+    </update>
+
+    <select id="hasPaidRegistration" resultType="int">
+        select count(1)
+        from cms_registration r
+        left join cms_activity a on r.owner_type = 2 and r.owner_id = a.id and a.del_flag = 0
+        where r.member_id = #{memberId}
+          and r.payment_status = 2
+          and r.registration_status = 2
+          and (
+            (#{ownerType} = 2 and r.owner_type = 2 and r.owner_id = #{ownerId})
+            or
+            (#{ownerType} = 1 and (
+                (r.owner_type = 1 and r.owner_id = #{ownerId})
+                or (r.owner_type = 2 and a.topic_id = #{ownerId})
+            ))
+          )
+    </select>
+
+    <select id="selectMyTeams" resultMap="PlayTeamResult">
+        select t.id, t.owner_type, t.owner_id, t.leader_member_id, t.invite_code, t.title, t.join_mode,
+               t.max_members, t.joined_count, t.status, t.expire_time, t.create_time, t.update_time
+        from play_team t
+        join play_team_member m on m.team_id = t.id and m.member_id = #{memberId} and m.status = 1
+        order by t.status asc, t.create_time desc
+    </select>
+
+    <select id="selectExpiredTeamIds" resultType="long">
+        select t.id
+        from play_team t
+        left join cms_activity activity on t.owner_type = 2 and activity.id = t.owner_id
+        left join cms_topic topic on topic.id = activity.topic_id
+        left join game_session game on t.owner_type = 2 and game.activity_id = t.owner_id
+        where t.status in (0, 1)
+          and t.expire_time is not null
+          and t.expire_time &lt;= #{now}
+          and (
+            (game.id is null and topic.game_module_config_json is null)
+            or activity.end_date &lt;= #{now}
+          )
+        order by t.expire_time asc, t.id asc
+        limit #{limit}
+    </select>
+
+    <update id="endExpiredTeam">
+        update play_team t
+        left join cms_activity activity on t.owner_type = 2 and activity.id = t.owner_id
+        left join cms_topic topic on topic.id = activity.topic_id
+        left join game_session game on t.owner_type = 2 and game.activity_id = t.owner_id
+        set t.status = 3, t.update_time = now()
+        where t.id = #{teamId}
+          and t.status in (0, 1)
+          and t.expire_time &lt;= #{now}
+          and (
+            (game.id is null and topic.game_module_config_json is null)
+            or activity.end_date &lt;= #{now}
+          )
+    </update>
+</mapper>

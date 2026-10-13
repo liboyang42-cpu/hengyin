@@ -1,0 +1,111 @@
+{
+  "player_unit": {
+    "sha256": "f9c09580d1718eaa17d333bded38a7fa34e7aedfe8400deec575c7376a7cb5f1",
+    "counts": {
+      "tests": 7664,
+      "pass": 7662,
+      "fail": 0,
+      "skipped": 2
+    },
+    "local_raw_log": "/private/tmp/chengyin-submit-player-submit-tests.log",
+    "static_gate_pass": null
+  },
+  "player_gate": {
+    "sha256": "0ace0046b7bd493a13e12989d20dae5d80924c5c738447143168765b2b47da7e",
+    "counts": {},
+    "local_raw_log": "/private/tmp/chengyin-submit-player-submit-gates.log",
+    "static_gate_pass": true
+  },
+  "free_cancel": {
+    "sha256": "e6e96015ea778d91d415a1d7345e304036b1c8bed3763dbc7f9f6402ef53afe5",
+    "counts": {
+      "tests": 81,
+      "pass": 81,
+      "fail": 0,
+      "skipped": 0
+    },
+    "local_raw_log": "/private/tmp/chengyin-submit-free-cancel-tests.log",
+    "static_gate_pass": null
+  },
+  "tooling_unit": {
+    "sha256": "03cb57f9e82627acb6edc954273728f4eea840bcf7b0e1382af7522cb90b3bcb",
+    "counts": {
+      "tests": 7663,
+      "pass": 7661,
+      "fail": 0,
+      "skipped": 2
+    },
+    "local_raw_log": "/private/tmp/chengyin-submit-tooling-full-tests.log",
+    "static_gate_pass": null
+  },
+  "tooling_gate": {
+    "sha256": "c0beabe690e365c49c7f42120867fccfbe44b3449326df1e0d7c81d78921a4db",
+    "counts": {},
+    "local_raw_log": "/private/tmp/chengyin-submit-tooling-gates.log",
+    "static_gate_pass": true
+  },
+  "chapter_java": {
+    "sha256": "696a8d1cf12ba5defc33b72c832e7d0eee5af6173995168b175ec049fed5cbb1",
+    "counts": {},
+    "local_raw_log": "/private/tmp/chengyin-submit-chapter-tests.log",
+    "static_gate_pass": null
+  },
+  "source_commit": "d5c3454f451dbd3aee90f75931ada7c1ed3057b7",
+  "base": "3876c8426842ba717d2f7243b8c08ee0aef7010d",
+  "chapter_java_summary": {
+    "classes": 86,
+    "tests": 1116,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "native_compile": [
+    {
+      "compiler": "wcc",
+      "changed_files": 7,
+      "inputs": 9,
+      "exit_code": 0,
+      "diagnostics": ""
+    },
+    {
+      "compiler": "wcsc",
+      "file": "components/cy/scene-play-activity-detail/index.wxss",
+      "exit_code": 0,
+      "diagnostics": ""
+    },
+    {
+      "compiler": "wcsc",
+      "file": "components/cy/sheet/index.wxss",
+      "exit_code": 0,
+      "diagnostics": ""
+    },
+    {
+      "compiler": "wcsc",
+      "file": "pages/gerenziliao/gerenziliao.wxss",
+      "exit_code": 0,
+      "diagnostics": ""
+    },
+    {
+      "compiler": "wcsc",
+      "file": "pages/topic/index/index.wxss",
+      "exit_code": 0,
+      "diagnostics": ""
+    },
+    {
+      "compiler": "wcsc",
+      "file": "subpackageB/pages/im/list/index.wxss",
+      "exit_code": 0,
+      "diagnostics": ""
+    }
+  ],
+  "latest_order_template_compile": {
+    "exit_code": 0
+  },
+  "privacy": {
+    "excluded_contact_images": 7,
+    "excluded_barcode_images": 1,
+    "offline_scanned_images": 297,
+    "payloads_logged": false
+  },
+  "runtime_evidence": "Historical 2026-09-27/28 simulator evidence only; no new shared DevTools/device/production runs."
+}

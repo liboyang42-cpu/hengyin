@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.FundActionPreflightMapper">
+    <resultMap id="FundActionPreflightResult" type="com.chengyinhub.business.domain.FundActionPreflight">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="actionType" column="action_type"/>
+        <result property="requestId" column="request_id"/>
+        <result property="requestFingerprint" column="request_fingerprint"/>
+        <result property="counterpartyKeyHash" column="counterparty_key_hash"/>
+        <result property="challengeNonce" column="challenge_nonce"/>
+        <result property="challengeTokenHash" column="challenge_token_hash"/>
+        <result property="state" column="state"/>
+        <result property="amount" column="amount"/>
+        <result property="currency" column="currency"/>
+        <result property="displayName" column="display_name"/>
+        <result property="displayAccountMask" column="display_account_mask"/>
+        <result property="displayPhoneMask" column="display_phone_mask"/>
+        <result property="contextInitiatedAt" column="context_initiated_at"/>
+        <result property="contextWhere" column="context_where"/>
+        <result property="contextDevice" column="context_device"/>
+        <result property="riskLevel" column="risk_level"/>
+        <result property="riskReasonCodes" column="risk_reason_codes"/>
+        <result property="expiresAt" column="expires_at"/>
+        <result property="confirmedAt" column="confirmed_at"/>
+        <result property="rejectedAt" column="rejected_at"/>
+        <result property="consumedAt" column="consumed_at"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="columns">id,member_id,action_type,request_id,request_fingerprint,counterparty_key_hash,
+        challenge_nonce,challenge_token_hash,state,amount,currency,display_name,display_account_mask,
+        display_phone_mask,context_initiated_at,context_where,context_device,risk_level,risk_reason_codes,
+        expires_at,confirmed_at,rejected_at,consumed_at,
+        create_time,update_time</sql>
+
+    <insert id="insert" parameterType="com.chengyinhub.business.domain.FundActionPreflight"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into fund_action_preflight(member_id,action_type,request_id,request_fingerprint,
+            counterparty_key_hash,challenge_nonce,challenge_token_hash,state,amount,currency,display_name,
+            display_account_mask,display_phone_mask,context_initiated_at,context_where,context_device,
+            risk_level,risk_reason_codes,expires_at,create_time,update_time)
+        values(#{memberId},#{actionType},#{requestId},#{requestFingerprint},#{counterpartyKeyHash},
+            #{challengeNonce},#{challengeTokenHash},#{state},#{amount},#{currency},#{displayName},
+            #{displayAccountMask},#{displayPhoneMask},#{contextInitiatedAt},#{contextWhere},#{contextDevice},
+            #{riskLevel},#{riskReasonCodes},#{expiresAt},
+            #{createTime},#{updateTime})
+    </insert>
+
+    <select id="selectById" resultMap="FundActionPreflightResult">
+        select <include refid="columns"/> from fund_action_preflight where id=#{id}
+    </select>
+    <select id="selectByIntent" resultMap="FundActionPreflightResult">
+        select <include refid="columns"/> from fund_action_preflight
+        where member_id=#{memberId} and action_type=#{actionType} and request_id=#{requestId}
+    </select>
+    <select id="countConsumedByCounterparty" resultType="int">
+        select count(*) from fund_action_preflight
+        where member_id=#{memberId} and action_type=#{actionType}
+          and counterparty_key_hash=#{counterpartyKeyHash} and state=3
+    </select>
+
+    <update id="rearmExpired">
+        update fund_action_preflight
+        set state=0,challenge_nonce=#{challengeNonce},challenge_token_hash=#{challengeTokenHash},
+            expires_at=#{expiresAt},confirmed_at=null,update_time=#{now}
+        where id=#{id} and member_id=#{memberId} and state=#{expectedState} and expires_at&lt;=#{now}
+    </update>
+    <update id="confirmIfPending">
+        update fund_action_preflight set state=1,confirmed_at=#{now},update_time=#{now}
+        where id=#{id} and member_id=#{memberId} and action_type=#{actionType} and request_id=#{requestId}
+          and request_fingerprint=#{requestFingerprint} and challenge_token_hash=#{challengeTokenHash}
+          and state=0 and risk_level&lt;&gt;'BLOCKED' and expires_at&gt;#{now}
+    </update>
+    <update id="rejectIfPending">
+        update fund_action_preflight set state=2,rejected_at=#{now},update_time=#{now}
+        where id=#{id} and member_id=#{memberId} and challenge_token_hash=#{challengeTokenHash}
+          and state=0 and expires_at&gt;#{now}
+    </update>
+    <update id="consumeIfConfirmed">
+        update fund_action_preflight set state=3,consumed_at=#{now},update_time=#{now}
+        where id=#{id} and member_id=#{memberId} and action_type=#{actionType} and request_id=#{requestId}
+          and request_fingerprint=#{requestFingerprint} and state=1 and expires_at&gt;#{now}
+    </update>
+</mapper>

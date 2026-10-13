@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.NpcProfileMapper">
+
+  <resultMap id="BaseResultMap" type="com.chengyinhub.business.domain.NpcProfile">
+    <id column="id" property="id"/>
+    <result column="scope_type" property="scopeType"/>
+    <result column="scope_id" property="scopeId"/>
+    <result column="name" property="name"/>
+    <result column="avatar" property="avatar"/>
+    <result column="persona" property="persona"/>
+    <result column="greeting" property="greeting"/>
+    <result column="knowledge" property="knowledge"/>
+    <result column="sort" property="sort"/>
+    <result column="audit_status" property="auditStatus"/>
+    <result column="audit_reason" property="auditReason"/>
+    <result column="enabled" property="enabled"/>
+    <result column="del_flag" property="delFlag"/>
+    <result column="create_time" property="createTime"/>
+    <result column="update_time" property="updateTime"/>
+    <result column="voice_id" property="voiceId"/>
+    <result column="voice_status" property="voiceStatus"/>
+    <result column="voice_sample" property="voiceSample"/>
+    <result column="merchant_name" property="merchantName"/>
+  </resultMap>
+
+  <select id="selectEnabledByScope" resultMap="BaseResultMap">
+    SELECT * FROM npc_profile
+    WHERE scope_type = #{param1} AND scope_id = #{param2}
+      AND enabled = 1 AND del_flag = '0' AND audit_status = 1
+    ORDER BY sort ASC, id ASC
+  </select>
+
+  <!--
+    取生效的全局 NPC。active_slot = 1 是「ACTIVE」的真判据:
+    migration_npc_governance_v1.sql 的 uk_active_scope(scope_type,scope_id,active_slot)
+    用「NULL 不参与唯一」保证同 scope 至多一条 active_slot=1。
+    ⚠️ 不读 active_slot 的话,那条唯一约束就只管写入、管不了「取哪条」——
+       LIMIT 1 会在多条 enabled+audit_status=1 里挑一条不确定的,约束沦为装饰。
+    ⚠️ 本查询有 4 个消费者:NpcProfileService.resolveGlobal / NpcEventService 的 name 兜底 /
+       NpcChatService / ApiPlayProgressController.companionLine。改它 = 四条一起吃。
+  -->
+  <select id="selectGlobalNpc" resultMap="BaseResultMap">
+    SELECT * FROM npc_profile
+    WHERE scope_type = 3 AND enabled = 1 AND del_flag = '0' AND audit_status = 1
+      AND active_slot = 1
+    LIMIT 1
+  </select>
+
+  <!--
+    ===== 门店分身(scope_type=2)后台维护 =====
+    四条语句都写死 scope_type = 2。后台这条通道碰不到剧本角色(1)与全局 NPC(3):
+    传进来的 id 若指向别的 scope,select/update/delete 一律 0 行,不是「悄悄改了别人的行」。
+    ⚠️ insert 不含 active_slot —— uk_active_scope(scope_type,scope_id,active_slot) 靠 NULL
+       不参与唯一来放行「一个门店多条分身」;给 scope 2 打 active_slot=1 会在第二条撞 1062。
+  -->
+  <select id="selectMerchantNpcList" resultMap="BaseResultMap">
+    SELECT n.*, m.name AS merchant_name
+    FROM npc_profile n
+    LEFT JOIN mms_merchant m ON m.id = n.scope_id
+    WHERE n.scope_type = 2 AND n.del_flag = '0'
+    <if test="scopeId != null">AND n.scope_id = #{scopeId}</if>
+    <if test="name != null and name != ''">AND n.name LIKE CONCAT('%', #{name}, '%')</if>
+    ORDER BY n.scope_id ASC, n.sort ASC, n.id ASC
+  </select>
+
+  <select id="selectMerchantNpcById" resultMap="BaseResultMap">
+    SELECT n.*, m.name AS merchant_name
+    FROM npc_profile n
+    LEFT JOIN mms_merchant m ON m.id = n.scope_id
+    WHERE n.id = #{id} AND n.scope_type = 2 AND n.del_flag = '0'
+  </select>
+
+  <insert id="insertMerchantNpc" parameterType="com.chengyinhub.business.domain.NpcProfile"
+          useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO npc_profile
+      (scope_type, scope_id, name, avatar, persona, greeting, knowledge, sort,
+       audit_status, enabled, del_flag, create_time, update_time)
+    VALUES
+      (2, #{scopeId}, #{name}, #{avatar}, #{persona}, #{greeting}, #{knowledge}, #{sort},
+       #{auditStatus}, #{enabled}, '0', NOW(), NOW())
+  </insert>
+
+  <update id="updateMerchantNpc" parameterType="com.chengyinhub.business.domain.NpcProfile">
+    UPDATE npc_profile
+    <set>
+      <if test="name != null">name = #{name},</if>
+      <if test="avatar != null">avatar = #{avatar},</if>
+      <if test="persona != null">persona = #{persona},</if>
+      <if test="greeting != null">greeting = #{greeting},</if>
+      <if test="knowledge != null">knowledge = #{knowledge},</if>
+      <if test="sort != null">sort = #{sort},</if>
+      <if test="enabled != null">enabled = #{enabled},</if>
+      update_time = NOW()
+    </set>
+    WHERE id = #{id} AND scope_type = 2 AND del_flag = '0'
+  </update>
+
+  <!--
+    只写声音,不碰形象。分开的理由:保存形象与配声音是两条独立的用户动作,
+    合成一个 update 的话,任一方传了 null 都会把另一方的值当作「没改」或「要清空」,
+    取决于 <if> 怎么写 —— 而这两种误判都不报错。
+  -->
+  <update id="updateMerchantNpcVoice" parameterType="com.chengyinhub.business.domain.NpcProfile">
+    UPDATE npc_profile
+    <set>
+      voice_id = #{voiceId},
+      <if test="voiceStatus != null">voice_status = #{voiceStatus},</if>
+      <if test="voiceSample != null">voice_sample = #{voiceSample},</if>
+      audit_status = 0,
+      update_time = NOW()
+    </set>
+    WHERE id = #{id} AND scope_id = #{scopeId} AND scope_type = 2 AND del_flag = '0'
+  </update>
+
+  <update id="deleteMerchantNpcById">
+    UPDATE npc_profile SET del_flag = '2', update_time = NOW()
+    WHERE id = #{id} AND scope_type = 2 AND del_flag = '0'
+  </update>
+
+  <update id="updateMerchantSelfNpc" parameterType="com.chengyinhub.business.domain.NpcProfile">
+    UPDATE npc_profile
+    <set>
+      <if test="name != null">name = #{name},</if>
+      <if test="avatar != null">avatar = #{avatar},</if>
+      <if test="persona != null">persona = #{persona},</if>
+      <if test="greeting != null">greeting = #{greeting},</if>
+      <if test="knowledge != null">knowledge = #{knowledge},</if>
+      audit_status = 0,
+      update_time = NOW()
+    </set>
+    WHERE id = #{id} AND scope_id = #{scopeId} AND scope_type = 2 AND del_flag = '0'
+  </update>
+
+  <update id="auditMerchantNpc" parameterType="com.chengyinhub.business.domain.NpcProfile">
+    UPDATE npc_profile
+    SET audit_status = #{auditStatus}, audit_reason = #{auditReason}, update_time = NOW()
+    WHERE id = #{id} AND scope_type = 2 AND del_flag = '0' AND audit_status = 0
+  </update>
+
+  <!--
+    ===== 主题节点 NPC(scope_type=4,挂 cms_topic_node.id,一节点一条)=====
+    五条语句都写死 scope_type = 4,碰不到剧本角色(1)/门店分身(2)/全局(3)——
+    与门店分身那组同一个理由:传进来的 id 指向别的 scope 必须 0 行,不能悄悄改到别人的行。
+    ⚠️ insert 恒写 active_slot = 1:吃 uk_active_scope(scope_type,scope_id,active_slot)
+       做「一节点一 NPC」的库侧保证。写成 NULL 就退化成「先查后插」——
+       并发双击会插出两条,而玩家读 LIMIT 1 挑哪条是掷骰子(NULL 不参与唯一)。
+    ⚠️ 商家回填/回调定位走 selectNodeNpcByNodeId,不过 audit_status/enabled 闸 ——
+       违规下架(enabled=0)后如果查不到,商家再保存会插第二条并撞唯一键,
+       表现成「明明只改一句话却报冲突」。
+  -->
+  <select id="selectNodeNpcByNodeId" resultMap="BaseResultMap">
+    SELECT * FROM npc_profile
+    WHERE scope_type = 4 AND scope_id = #{nodeId} AND del_flag = '0'
+    ORDER BY id ASC LIMIT 1
+  </select>
+
+  <select id="selectNodeNpcById" resultMap="BaseResultMap">
+    SELECT * FROM npc_profile
+    WHERE id = #{id} AND scope_type = 4 AND del_flag = '0'
+  </select>
+
+  <!--
+    R14-VOICE:voice 三列按需写入(复制节点 NPC 时已就绪的音色随副本落库,见 copyNodeNpc);
+    商家保存不传这三列,<if> 跳过,voice_status 吃库默认 0(=NONE),行为与 R13 前一致。
+    ⚠️ 不能无条件写 voice_status:该列 NOT NULL,DEFAULT 0,不传会写成 NULL 直接报错。
+  -->
+  <insert id="insertNodeNpc" parameterType="com.chengyinhub.business.domain.NpcProfile"
+          useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO npc_profile
+      (scope_type, scope_id, name, avatar, persona, greeting, sort,
+       audit_status, enabled, del_flag, active_slot,
+       <if test="voiceId != null">voice_id,</if>
+       <if test="voiceStatus != null">voice_status,</if>
+       <if test="voiceSample != null">voice_sample,</if>
+       create_time, update_time)
+    VALUES
+      (4, #{scopeId}, #{name}, #{avatar}, #{persona}, #{greeting}, #{sort},
+       #{auditStatus}, #{enabled}, '0', 1,
+       <if test="voiceId != null">#{voiceId},</if>
+       <if test="voiceStatus != null">#{voiceStatus},</if>
+       <if test="voiceSample != null">#{voiceSample},</if>
+       NOW(), NOW())
+  </insert>
+
+  <update id="updateNodeNpc" parameterType="com.chengyinhub.business.domain.NpcProfile">
+    UPDATE npc_profile
+    <set>
+      <if test="name != null">name = #{name},</if>
+      <if test="avatar != null">avatar = #{avatar},</if>
+      <if test="greeting != null">greeting = #{greeting},</if>
+      <if test="sort != null">sort = #{sort},</if>
+      <if test="enabled != null">enabled = #{enabled},</if>
+      <!-- N2:下架过的行重新保存要写回 audit_status=0(待审)。在架编辑不传该字段,<if> 跳过。 -->
+      <if test="auditStatus != null">audit_status = #{auditStatus},</if>
+      update_time = NOW()
+    </set>
+    WHERE id = #{id} AND scope_type = 4 AND del_flag = '0'
+  </update>
+
+  <update id="updateNodeNpcVoice" parameterType="com.chengyinhub.business.domain.NpcProfile">
+    UPDATE npc_profile
+    <set>
+      voice_id = #{voiceId},
+      <if test="voiceStatus != null">voice_status = #{voiceStatus},</if>
+      <if test="voiceSample != null">voice_sample = #{voiceSample},</if>
+      update_time = NOW()
+    </set>
+    WHERE id = #{id} AND scope_type = 4 AND del_flag = '0'
+  </update>
+
+  <!--
+    内容安全回调判违规:清头像 + 停用(一次 UPDATE 完成,少一条「清了头像忘了停用」的半状态)。
+    名字/台词保留 —— 商家可以改内容重新提交,但**重新保存不会自动恢复展示**(N2):
+    重新保存走 updateNodeNpc 写回 audit_status=0/enabled=0(待审),过审前玩家读不到。
+  -->
+  <update id="hideNodeNpcById">
+    UPDATE npc_profile SET avatar = NULL, enabled = 0, update_time = NOW()
+    WHERE id = #{id} AND scope_type = 4 AND del_flag = '0'
+  </update>
+
+</mapper>

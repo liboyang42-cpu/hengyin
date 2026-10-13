@@ -1,0 +1,10 @@
+@import "../../../style/photo-card.wxss";
+.mc__gradient { background: linear-gradient(180deg, rgba(0,0,0,.32) 0%, rgba(0,0,0,.16) 28%, rgba(0,0,0,.72) 57%, rgba(0,0,0,.96) 100%); } /* ds-ok 仅图片装饰遮罩：保留商家卡四段透明度与节点位置，内容色另读 photo-card token。 */
+.mc__tags { display: flex; flex: 1; justify-content: flex-end; flex-wrap: wrap; gap: 12rpx; min-width: 0; }
+.mc__tag { box-sizing: border-box; padding: 4rpx 14rpx; border: 2rpx solid var(--cy-color-photo-card-tag-border); border-radius: var(--cy-radius-md); background: var(--cy-color-photo-card-tag-overlay); font-size: var(--cy-type-micro); line-height: 28rpx; }
+.mc__hours { gap: 10rpx; }
+.mc__service { min-height: var(--cy-btn-h); display: flex; align-items: center; gap: 12rpx; min-width: 0; max-width: calc(100% - 36rpx); box-sizing: border-box; padding: 10rpx 20rpx; border-radius: var(--cy-radius-lg); background: var(--cy-color-photo-card-service-glass); color: var(--cy-color-photo-card-service-fg); font-size: var(--cy-type-label); line-height: 36rpx; }
+.mc__service-text { min-width: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.mc__reward-icon { width: 32rpx; height: 32rpx; flex: 0 0 32rpx; }
+.mc__suit { font-size: var(--cy-type-caption); line-height: 30rpx; color: var(--cy-comp-photo-card-muted); }
+.mc--disabled { opacity: .5; }

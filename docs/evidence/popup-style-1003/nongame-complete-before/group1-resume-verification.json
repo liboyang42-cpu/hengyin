@@ -1,0 +1,208 @@
+[
+  {
+    "name": "profile-chapter",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 639.102,
+      "width": 390,
+      "height": 205,
+      "right": 390,
+      "bottom": 844.102,
+      "centerX": 195,
+      "centerY": 741.602
+    },
+    "title": {
+      "left": 16.5,
+      "top": 658.398,
+      "width": 304,
+      "height": 23,
+      "right": 320.5,
+      "bottom": 681.398,
+      "centerX": 168.5,
+      "centerY": 669.898
+    },
+    "titleFont": "18px",
+    "titleText": "选择要核销的章节",
+    "content": {
+      "left": 20.5,
+      "top": 740.602,
+      "width": 325,
+      "height": 22,
+      "right": 345.5,
+      "bottom": 762.602,
+      "centerX": 183,
+      "centerY": 751.602
+    },
+    "contentFont": "14px",
+    "panelBorder": "0.5px",
+    "panelBorderColor": "rgb(236, 236, 236)",
+    "closed": false
+  },
+  {
+    "name": "profile-station",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 639.102,
+      "width": 390,
+      "height": 205,
+      "right": 390,
+      "bottom": 844.102,
+      "centerX": 195,
+      "centerY": 741.602
+    },
+    "title": {
+      "left": 16.5,
+      "top": 658.398,
+      "width": 304,
+      "height": 23,
+      "right": 320.5,
+      "bottom": 681.398,
+      "centerX": 168.5,
+      "centerY": 669.898
+    },
+    "titleFont": "18px",
+    "titleText": "选择要核销的据点",
+    "content": {
+      "left": 20.5,
+      "top": 740.602,
+      "width": 325,
+      "height": 22,
+      "right": 345.5,
+      "bottom": 762.602,
+      "centerX": 183,
+      "centerY": 751.602
+    },
+    "contentFont": "14px",
+    "panelBorder": "0.5px",
+    "panelBorderColor": "rgb(236, 236, 236)",
+    "closed": false
+  },
+  {
+    "name": "participants",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 499.805,
+      "width": 390,
+      "height": 344,
+      "right": 390,
+      "bottom": 843.805,
+      "centerX": 195,
+      "centerY": 671.805
+    },
+    "title": {
+      "left": 16,
+      "top": 511.805,
+      "width": 358,
+      "height": 45,
+      "right": 374,
+      "bottom": 556.805,
+      "centerX": 195,
+      "centerY": 534.305
+    },
+    "titleFont": "18px",
+    "titleText": "选择参与人信息",
+    "content": {
+      "left": 16,
+      "top": 564.805,
+      "width": 358,
+      "height": 57,
+      "right": 374,
+      "bottom": 621.805,
+      "centerX": 195,
+      "centerY": 593.305
+    },
+    "contentFont": "12px",
+    "panelBorder": "0px",
+    "panelBorderColor": "rgb(255, 255, 255)",
+    "flag_after_close": false,
+    "closed": true
+  },
+  {
+    "name": "post-edit",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 88,
+      "width": 390,
+      "height": 756,
+      "right": 390,
+      "bottom": 844,
+      "centerX": 195,
+      "centerY": 466
+    },
+    "title": {
+      "left": 16,
+      "top": 106.797,
+      "width": 309,
+      "height": 23,
+      "right": 325,
+      "bottom": 129.797,
+      "centerX": 170.5,
+      "centerY": 118.297
+    },
+    "titleFont": "18px",
+    "titleText": "编辑动态",
+    "content": {
+      "left": 32,
+      "top": 149,
+      "width": 326,
+      "height": 114,
+      "right": 358,
+      "bottom": 263,
+      "centerX": 195,
+      "centerY": 206
+    },
+    "contentFont": "14px",
+    "panelBorder": "0px",
+    "panelBorderColor": "rgb(255, 255, 255)",
+    "flag_after_close": false,
+    "closed": true
+  },
+  {
+    "name": "post-history",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 88,
+      "width": 390,
+      "height": 756,
+      "right": 390,
+      "bottom": 844,
+      "centerX": 195,
+      "centerY": 466
+    },
+    "title": {
+      "left": 16,
+      "top": 106.797,
+      "width": 309,
+      "height": 23,
+      "right": 325,
+      "bottom": 129.797,
+      "centerX": 170.5,
+      "centerY": 118.297
+    },
+    "titleFont": "18px",
+    "titleText": "编辑历史",
+    "content": {
+      "left": 32,
+      "top": 182.594,
+      "width": 326,
+      "height": 22,
+      "right": 358,
+      "bottom": 204.594,
+      "centerX": 195,
+      "centerY": 193.594
+    },
+    "contentFont": "14px",
+    "panelBorder": "0px",
+    "panelBorderColor": "rgb(255, 255, 255)",
+    "flag_after_close": false,
+    "closed": true
+  },
+  {
+    "error": "no active cy-sheet"
+  }
+]

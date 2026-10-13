@@ -1,0 +1,4 @@
+:host { display: block; }
+.profile-loading { min-height: 100vh; background: var(--cy-color-bg-page); color: var(--cy-color-text-primary); }
+.profile-loading__body { padding: var(--cy-space-4) var(--cy-page-x); }
+.profile-loading__hint { display: block; margin-top: var(--cy-space-4); font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); }

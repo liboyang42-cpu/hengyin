@@ -1,0 +1,16 @@
+<cy-sheet show="{{themeBackpackOpen}}" title="背包" handle="{{false}}" bind:close="closeThemeBackpack" style="--cy-comp-sheet-max-h:calc(100vh - {{chrome.sheetTop}}px);--cy-comp-sheet-role-glass:#000;--cy-comp-sheet-role-text:#fff;--cy-comp-sheet-role-text-secondary:#aaa;--cy-comp-sheet-role-muted:#777;--cy-comp-sheet-role-divider:#252525;--cy-comp-sheet-role-surface:#141414;--cy-comp-sheet-blur:0px">
+ <view class="tb-sheet">
+   <view class="tb-slots"><view wx:for="{{themeBag.slots}}" wx:key="index" class="tb-slot {{item.filled ? 'is-filled' : ''}}"></view></view>
+  <view class="tb-switcher"><cy-tabs tabs="{{themeBagTabs}}" active="{{themeBackpackTab}}" variant="fill" wide="{{true}}" hairline="{{false}}" bind:change="changeThemeBackpackTab" /></view>
+  <cy-inline-error wx:if="{{themeBagError}}" title="{{themeBagError}}" action="重试" bind:action="retryThemeBagAction" />
+  <block wx:if="{{themeBackpackTab === 'items'}}">
+
+   <view class="tb-empty" wx:if="{{!themeBag.items.length && !themeBag.pendingRows.length}}">还没有物品</view>
+   <view class="tb-grid">
+   <view class="tb-item" wx:for="{{themeBag.items}}" wx:key="id"><image class="tb-image" src="{{item.image}}" mode="aspectFill" /><view class="tb-copy"><text class="tb-name">{{item.name}}<text wx:if="{{item.quantity > 1}}"> × {{item.quantity}}</text></text><text class="tb-purpose">{{item.stat === 'HP' ? '生命值' : '幸运值'}} {{item.delta > 0 ? '+' : ''}}{{item.delta}}{{item.mode === 'REDUCE' ? ' · 持有减耗' : item.mode === 'HELD' ? ' · 持有期间' : item.wear ? ' · 已生效' : ''}}</text><view class="tb-actions"><view wx:if="{{!item.wear}}" data-operation="USE" data-id="{{item.id}}" bindtap="onThemeBagAction" class="tb-button {{themeBagBusy ? 'is-busy' : ''}}" aria-role="button" aria-label="使用{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">使用</view><view wx:if="{{themeBag.allowDiscard}}" data-operation="DISCARD" data-id="{{item.id}}" bindtap="onThemeBagAction" class="tb-button tb-button--muted {{themeBagBusy ? 'is-busy' : ''}}" aria-role="button" aria-label="丢弃{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">丢弃</view></view></view></view>
+   </view>
+   <view class="tb-pending" wx:for="{{themeBag.pendingRows}}" wx:key="id"><text>{{item.name || '待领取'}} × {{item.quantity}}</text><view class="tb-button" data-operation="RECEIVE" data-id="{{item.id}}" bindtap="onThemeBagAction" hover-class="cy-pressed" hover-stay-time="80">领取</view></view>
+  </block>
+  <block wx:else><view class="tb-empty" wx:if="{{!themeBag.clues.length}}">还没有线索</view><view class="tb-clue" wx:for="{{themeBag.clues}}" wx:key="id"><text class="tb-name">{{item.name}}</text><image wx:if="{{item.image}}" src="{{item.image}}" mode="widthFix" /><text wx:if="{{item.content}}" class="tb-clue-copy">{{item.content}}</text><view wx:if="{{item.kind === 'ITEM' && themeBag.allowDiscard}}" class="tb-button tb-button--muted" data-operation="DISCARD" data-id="{{item.id}}" bindtap="onThemeBagAction" hover-class="cy-pressed" hover-stay-time="80">丢弃</view></view></block>
+ </view>
+</cy-sheet>

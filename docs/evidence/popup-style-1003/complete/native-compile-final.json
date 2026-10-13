@@ -1,0 +1,33 @@
+{
+  "project": "/Users/arlan/.codex/worktrees/popup-style-1003/chengyin/chengyinhub-xcx",
+  "checks": [
+    {
+      "file": "components/cy/agreement-sheet/index.wxss",
+      "sha256": "7b39b8f42a42e33f420574ff1c0946018c6c2c68daa05aa2114ddd72b6a58a95",
+      "exit_code": 0,
+      "seconds": 7.09,
+      "success": true
+    },
+    {
+      "file": "components/cy/date-field/index.wxml",
+      "sha256": "c93628955c25303c63cc34391d4cb548395f8282bc6244bfedcb20f98276771d",
+      "exit_code": 0,
+      "seconds": 4.7,
+      "success": true
+    },
+    {
+      "file": "components/cy/profile/index.wxss",
+      "sha256": "004398fd57117c19dcf01982afb5f7587ad5e04ac1fb15e0cbe006d6835fd28b",
+      "exit_code": 0,
+      "seconds": 7.32,
+      "success": true
+    }
+  ],
+  "compiler_only_runtime_not_refreshed": true,
+  "previous_attempt": "native-compile-window-closed.json",
+  "interruption": {
+    "file": "pages/activity/baoming/baoming.wxml",
+    "reason": "CLI compile request timed out after 60 seconds; no source compile failure returned",
+    "status": "unverified"
+  }
+}

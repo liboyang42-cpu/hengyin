@@ -1,0 +1,61 @@
+{
+  "product_commit": "cac8b06a81acb24f59552defedcec8c919fcf314",
+  "branch": "feature/thought-config-1005",
+  "worktree": "/Users/arlan/.codex/worktrees/thought-config-1005/chengyin",
+  "scope": "伏笔配置面板与共用初始状态字段填充，不改游戏内部",
+  "palette": {
+    "panel": "#F8F9FA",
+    "card": "#FFFFFF",
+    "field": "#EFEFEF"
+  },
+  "palette_reference": "同页初始状态面板的 role-page；白卡内 Field 使用灰色填充",
+  "screenshots": [
+    "colors-before.png",
+    "colors-after-empty.png",
+    "colors-after-filled.png",
+    "colors-after-initial.png"
+  ],
+  "native_pixel_checks": {
+    "empty": {
+      "panel": "#F8F9FA",
+      "card": "#FFFFFF",
+      "field": "#EFEFEF"
+    },
+    "filled": {
+      "panel": "#F8F9FA",
+      "card": "#FFFFFF",
+      "field": "#EFEFEF"
+    }
+  },
+  "source_sha256": {
+    "chengyinhub-xcx/pages/publish/fabu/index.wxml": "217ad952b6a0de1feb8803636343aa8cfcf3df0d260eac8655a808831282bc49",
+    "chengyinhub-xcx/pages/publish/fabu/index.wxss": "9a1ed603c090ed6df79fc0b2231827663d266def0b4a98df203fee7e18a11ed7"
+  },
+  "unit_tests": {
+    "pass": 105,
+    "fail": 0,
+    "skip": 0
+  },
+  "native_compile": {
+    "wxml": true,
+    "wxss": true
+  },
+  "temporary_name_entered_through_native_input": true,
+  "stored_rules_remained_empty_after_close": true,
+  "published": false,
+  "wechat_uploaded": false,
+  "theme_basis": "沿用创建域现有浅色主题；未选择全局深色主题",
+  "partial_ui_validity_gate": {
+    "passed": false,
+    "issues": [
+      "U1 club-direct-merchant API mapping",
+      "U4 activity stepHeading unused",
+      "U5 club-direct-ledger missing allowlist",
+      "U5 coop/list call-count drift",
+      "U5 coop/nearby call-count drift"
+    ],
+    "relevant_js_gate_and_backend_files_unchanged_from_base": true,
+    "full_ui_gate_previous_result": "此前功能修复的完整门禁记录仍有38项基线遗留；本次未声称完整门禁通过"
+  },
+  "native_driver_note": "刷新后一次导航请求超时；核对当前页面及实际截图仍是本任务工作树的伏笔面板，未将超时计为通过"
+}

@@ -1,0 +1,494 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.chengyinhub.business.mapper.ClubMapper">
+
+    <resultMap type="Club" id="ClubResult">
+        <result property="id"    column="id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="name"    column="name"    />
+        <result property="logo"    column="logo"    />
+        <result property="cover"    column="cover"    />
+        <result property="description"    column="description"    />
+        <result property="clubTypes"    column="club_types"    />
+        <result property="activityPrefs"    column="activity_prefs"    />
+        <result property="experience"    column="experience"    />
+        <result property="joinReason"    column="join_reason"    />
+        <result property="caseImages"    column="case_images"    />
+        <result property="clubType"    column="club_type"    />
+        <result property="city"    column="city"    />
+        <result property="keywords"    column="keywords"    />
+        <result property="style"    column="style"    />
+        <result property="maxEventSize"    column="max_event_size"    />
+        <result property="avgEventSize"    column="avg_event_size"    />
+        <result property="canDesignRoute"    column="can_design_route"    />
+        <result property="canDesignTask"    column="can_design_task"    />
+        <result property="canNpc"    column="can_npc"    />
+        <result property="canMerchantCoop"    column="can_merchant_coop"    />
+        <result property="hasGuideCert"    column="has_guide_cert"    />
+        <result property="certImages"    column="cert_images"    />
+        <result property="level"    column="level"    />
+        <result property="tags"    column="tags"    />
+        <result property="auditBy"    column="audit_by"    />
+        <result property="auditTime"    column="audit_time"    />
+        <result property="categoryId"    column="category_id"    />
+        <result property="address"    column="address"    />
+        <result property="leaderName"    column="leader_name"    />
+        <result property="phone"    column="phone"    />
+        <result property="status"    column="status"    />
+        <result property="rejectReason"    column="reject_reason"    />
+        <result property="memberCount"    column="member_count"    />
+        <result property="prioritySignupEnabled" column="priority_signup_enabled" />
+        <result property="memberDiscountPrice" column="member_discount_price" />
+        <result property="memberReservedQuota" column="member_reserved_quota" />
+        <result property="publicVisible" column="public_visible" />
+        <result property="memberPostAllowed" column="member_post_allowed" />
+        <result property="merchantUndertakeOpen" column="merchant_undertake_open" />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="leaderLevel" column="leader_level" />
+        <result property="leaderTags" column="leader_tags" />
+    </resultMap>
+
+    <sql id="selectClubVo">
+        select id, member_id, name, logo, cover, description, club_type, club_types, activity_prefs, experience, join_reason, case_images, city, keywords, style, max_event_size, avg_event_size, can_design_route, can_design_task, can_npc, can_merchant_coop, has_guide_cert, cert_images, category_id, address, leader_name, phone, status, level, tags, reject_reason, audit_by, audit_time, member_count, priority_signup_enabled, member_discount_price, member_reserved_quota, public_visible, member_post_allowed, merchant_undertake_open, create_by, create_time, update_by, update_time, remark, del_flag from club
+    </sql>
+
+    <select id="selectClubList" parameterType="Club" resultMap="ClubResult">
+        select c.*, cl.level as leader_level, cl.tags as leader_tags
+        from club c
+        left join club_leader cl on cl.member_id = c.member_id and cl.del_flag = 0
+        <where>
+            c.del_flag = 0
+            <if test="name != null and name != ''"> and c.name like concat('%', #{name}, '%')</if>
+            <if test="memberId != null "> and c.member_id = #{memberId}</if>
+            <if test="categoryId != null "> and c.category_id = #{categoryId}</if>
+            <if test="status != null "> and c.status = #{status}</if>
+        </where>
+        order by c.create_time desc
+    </select>
+
+    <select id="selectClubById" parameterType="Long" resultMap="ClubResult">
+        <include refid="selectClubVo"/>
+        where id = #{id} and del_flag = 0
+    </select>
+
+    <!--
+      行锁读。用途:把「管理员至多 2」这类【跨行计数】约束串行化 —— 锁的是计数的**分组键**(club 行),
+      不是被计数的 club_member 行:两个不同 memberId 并发提管理员时,锁 club_member 行各锁各的、拦不住。
+      与 selectCmsTopicByIdForUpdate 同范式。⚠️ 调用方必须在事务里,否则锁随语句立即释放 = 没锁。
+    -->
+    <select id="selectClubByIdForUpdate" parameterType="Long" resultMap="ClubResult">
+        <include refid="selectClubVo"/>
+        where id = #{id} and del_flag = 0 for update
+    </select>
+
+    <select id="selectClubByMemberId" parameterType="Long" resultMap="ClubResult">
+        <include refid="selectClubVo"/>
+        where member_id = #{memberId} and del_flag = 0 limit 1
+    </select>
+
+    <select id="selectClubsByMemberId" parameterType="Long" resultMap="ClubResult">
+        <include refid="selectClubVo"/>
+        where member_id = #{memberId} and del_flag = 0 order by create_time desc
+    </select>
+
+    <select id="selectOwnedClubIdsForUpdate" parameterType="Long" resultType="java.lang.Long">
+        select id from club
+        where member_id = #{memberId} and del_flag = 0
+        order by id for update
+    </select>
+
+    <select id="selectActiveOwnedClubIdsForUpdate" parameterType="Long" resultType="java.lang.Long">
+        select id from club
+        where member_id = #{memberId} and status = 1 and del_flag = 0
+        order by id for update
+    </select>
+
+    <select id="selectClubsByIds" resultMap="ClubResult">
+        <include refid="selectClubVo"/>
+        where del_flag = 0
+          and id in
+        <foreach collection="clubIds" item="clubId" open="(" separator="," close=")">
+            #{clubId}
+        </foreach>
+    </select>
+
+    <insert id="insertClub" parameterType="Club" useGeneratedKeys="true" keyProperty="id">
+        insert into club
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">member_id,</if>
+            <if test="name != null">name,</if>
+            <if test="logo != null">logo,</if>
+            <if test="cover != null">cover,</if>
+            <if test="description != null">description,</if>
+            <if test="clubTypes != null">club_types,</if>
+            <if test="activityPrefs != null">activity_prefs,</if>
+            <if test="experience != null">experience,</if>
+            <if test="joinReason != null">join_reason,</if>
+            <if test="caseImages != null">case_images,</if>
+            <if test="clubType != null">club_type,</if>
+            <if test="city != null">city,</if>
+            <if test="keywords != null">keywords,</if>
+            <if test="style != null">style,</if>
+            <if test="maxEventSize != null">max_event_size,</if>
+            <if test="avgEventSize != null">avg_event_size,</if>
+            <if test="canDesignRoute != null">can_design_route,</if>
+            <if test="canDesignTask != null">can_design_task,</if>
+            <if test="canNpc != null">can_npc,</if>
+            <if test="canMerchantCoop != null">can_merchant_coop,</if>
+            <if test="hasGuideCert != null">has_guide_cert,</if>
+            <if test="certImages != null">cert_images,</if>
+            <if test="level != null">level,</if>
+            <if test="tags != null">tags,</if>
+            <if test="auditBy != null">audit_by,</if>
+            <if test="auditTime != null">audit_time,</if>
+            <if test="categoryId != null">category_id,</if>
+            <if test="address != null">address,</if>
+            <if test="leaderName != null">leader_name,</if>
+            <if test="phone != null">phone,</if>
+            <if test="status != null">status,</if>
+            <if test="rejectReason != null">reject_reason,</if>
+            <if test="memberCount != null">member_count,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="remark != null">remark,</if>
+            <if test="delFlag != null">del_flag,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="memberId != null">#{memberId},</if>
+            <if test="name != null">#{name},</if>
+            <if test="logo != null">#{logo},</if>
+            <if test="cover != null">#{cover},</if>
+            <if test="description != null">#{description},</if>
+            <if test="clubTypes != null">#{clubTypes},</if>
+            <if test="activityPrefs != null">#{activityPrefs},</if>
+            <if test="experience != null">#{experience},</if>
+            <if test="joinReason != null">#{joinReason},</if>
+            <if test="caseImages != null">#{caseImages},</if>
+            <if test="clubType != null">#{clubType},</if>
+            <if test="city != null">#{city},</if>
+            <if test="keywords != null">#{keywords},</if>
+            <if test="style != null">#{style},</if>
+            <if test="maxEventSize != null">#{maxEventSize},</if>
+            <if test="avgEventSize != null">#{avgEventSize},</if>
+            <if test="canDesignRoute != null">#{canDesignRoute},</if>
+            <if test="canDesignTask != null">#{canDesignTask},</if>
+            <if test="canNpc != null">#{canNpc},</if>
+            <if test="canMerchantCoop != null">#{canMerchantCoop},</if>
+            <if test="hasGuideCert != null">#{hasGuideCert},</if>
+            <if test="certImages != null">#{certImages},</if>
+            <if test="level != null">#{level},</if>
+            <if test="tags != null">#{tags},</if>
+            <if test="auditBy != null">#{auditBy},</if>
+            <if test="auditTime != null">#{auditTime},</if>
+            <if test="categoryId != null">#{categoryId},</if>
+            <if test="address != null">#{address},</if>
+            <if test="leaderName != null">#{leaderName},</if>
+            <if test="phone != null">#{phone},</if>
+            <if test="status != null">#{status},</if>
+            <if test="rejectReason != null">#{rejectReason},</if>
+            <if test="memberCount != null">#{memberCount},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+        </trim>
+    </insert>
+
+    <update id="updateClub" parameterType="Club">
+        update club
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null">name = #{name},</if>
+            <if test="logo != null">logo = #{logo},</if>
+            <if test="cover != null">cover = #{cover},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="clubTypes != null">club_types = #{clubTypes},</if>
+            <if test="activityPrefs != null">activity_prefs = #{activityPrefs},</if>
+            <if test="experience != null">experience = #{experience},</if>
+            <if test="joinReason != null">join_reason = #{joinReason},</if>
+            <if test="caseImages != null">case_images = #{caseImages},</if>
+            <if test="clubType != null">club_type = #{clubType},</if>
+            <if test="city != null">city = #{city},</if>
+            <if test="keywords != null">keywords = #{keywords},</if>
+            <if test="style != null">style = #{style},</if>
+            <if test="maxEventSize != null">max_event_size = #{maxEventSize},</if>
+            <if test="avgEventSize != null">avg_event_size = #{avgEventSize},</if>
+            <if test="canDesignRoute != null">can_design_route = #{canDesignRoute},</if>
+            <if test="canDesignTask != null">can_design_task = #{canDesignTask},</if>
+            <if test="canNpc != null">can_npc = #{canNpc},</if>
+            <if test="canMerchantCoop != null">can_merchant_coop = #{canMerchantCoop},</if>
+            <if test="hasGuideCert != null">has_guide_cert = #{hasGuideCert},</if>
+            <if test="certImages != null">cert_images = #{certImages},</if>
+            <if test="level != null">level = #{level},</if>
+            <if test="tags != null">tags = #{tags},</if>
+            <if test="auditBy != null">audit_by = #{auditBy},</if>
+            <if test="auditTime != null">audit_time = #{auditTime},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="leaderName != null">leader_name = #{leaderName},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="rejectReason != null">reject_reason = #{rejectReason},</if>
+            <if test="memberCount != null">member_count = #{memberCount},</if>
+            <if test="operationConfigUpdated != null and operationConfigUpdated">
+                priority_signup_enabled = #{prioritySignupEnabled},
+                member_discount_price = #{memberDiscountPrice},
+                member_reserved_quota = #{memberReservedQuota},
+            </if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <!-- 稿 M「开放设置」的单个开关。不塞进 updateClub 的大动态更新:那条是整份资料表单
+         用的,单点一个开关走它要凑齐一堆无关字段。 -->
+    <update id="updatePublicVisible">
+        update club set public_visible = #{enabled}, update_time = now()
+        where id = #{clubId} and del_flag = 0
+    </update>
+
+    <update id="updateMemberPostAllowed">
+        update club set member_post_allowed = #{enabled}, update_time = now()
+        where id = #{clubId} and del_flag = 0
+    </update>
+
+    <update id="updateMerchantUndertakeOpen">
+        update club set merchant_undertake_open = #{enabled}, update_time = now()
+        where id = #{clubId} and del_flag = 0
+    </update>
+
+    <update id="updateMemberCount">
+        update club set member_count = member_count + #{delta} where id = #{clubId}
+    </update>
+
+    <update id="deleteClubById" parameterType="Long">
+        update club set del_flag = 2 where id = #{id}
+    </update>
+
+    <update id="deleteClubByIds" parameterType="String">
+        update club set del_flag = 2 where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <update id="clearProfileMedia">
+        update club set logo = null, cover = null, case_images = null where id = #{id}
+    </update>
+
+    <!-- 兼容 join_policy 尚未落库：探针本身不引用业务列，缺列时也不会 500。 -->
+    <select id="countJoinPolicyColumn" resultType="int">
+        select count(1)
+        from information_schema.columns
+        where table_schema = database()
+          and table_name = 'club'
+          and column_name = 'join_policy'
+    </select>
+
+    <select id="selectJoinPolicy" resultType="java.lang.Integer">
+        select join_policy from club where id = #{clubId} and del_flag = 0
+    </select>
+
+    <update id="updateJoinPolicy">
+        update club set join_policy = #{joinPolicy}, update_time = now()
+        where id = #{clubId} and del_flag = 0
+    </update>
+
+    <!-- 未结算主题只认在营主题的 is_settlement 真值；重复开场不下钻活动层，也不追加 end_date 条件。 -->
+    <select id="countUnsettledRevenueByClub" resultType="int">
+        select count(1)
+        from cms_topic t
+        where t.club_id = #{clubId}
+          and t.del_flag = 0
+          and t.status = 1
+          and ifnull(t.is_settlement, 0) = 0
+    </select>
+
+    <!--
+      status=0 是待打款真值：本团主题的全部正额结算行 + 直接待打给本团的 LEAD_FEE。
+      只看结算行自身 status/del_flag；父 topic/order 软删不能吞掉资金事实。amount NULL 无法证明无义务，fail-closed 返回。
+    -->
+    <select id="selectUnpaidSettlementsByClub" resultType="com.chengyinhub.business.domain.ClubPendingSettlement">
+        select distinct s.id,
+               coalesce(s.topic_id, o.topic_id) as topicId,
+               s.amount,
+               case
+                   when s.line_type = 'LEAD_FEE'
+                        and o.to_type = 'club' and o.to_id = #{clubId} then 'incoming'
+                   when s.payee_type = 'initiator'
+                        and exists (select 1 from cms_topic direction_topic
+                                    where direction_topic.id = s.topic_id and direction_topic.club_id = #{clubId})
+                        then 'incoming'
+                   when s.payee_type in ('platform', 'club', 'merchant')
+                        and exists (select 1 from cms_topic direction_topic
+                                    where direction_topic.id = s.topic_id and direction_topic.club_id = #{clubId})
+                        then 'outgoing'
+                   else 'unknown'
+               end as direction
+        from coop_settlement s
+        left join coop_order o on o.id = s.coop_order_id
+        where s.del_flag = 0
+          and s.status = 0
+          and (s.amount is null or s.amount &gt; 0)
+          and (
+              exists (
+                  select 1 from cms_topic t
+                  where t.id = s.topic_id and t.club_id = #{clubId}
+              )
+              or (
+                  s.line_type = 'LEAD_FEE'
+                  and o.to_type = 'club'
+                  and o.to_id = #{clubId}
+              )
+          )
+        order by s.id
+    </select>
+
+    <!--
+      生效合作单 status=0；父主题未结算时阻塞。父主题 NULL/缺失无法证明已结算，按进行中阻塞。
+      已结算主题放行；status=2 虽有领域注释但当前无写路径，禁止把未通电状态当真值。
+    -->
+    <select id="countActiveCooperationsByClub" resultType="int">
+        select count(1)
+        from coop_order o
+        where o.status = 0
+          and o.del_flag = 0
+          and (
+              (o.to_type = 'club' and o.to_id = #{clubId})
+              or exists (
+                  select 1 from cms_topic t
+                  where t.id = o.topic_id and t.club_id = #{clubId}
+              )
+          )
+          and (
+              o.topic_id is null
+              or not exists (select 1 from cms_topic parent where parent.id = o.topic_id)
+              or exists (
+                  select 1 from cms_topic parent
+                  where parent.id = o.topic_id and ifnull(parent.is_settlement, 0) = 0
+              )
+          )
+    </select>
+
+    <select id="countActiveCooperationsWithMissingTopicByClub" resultType="int">
+        select count(1)
+        from coop_order o
+        where o.to_type = 'club'
+          and o.to_id = #{clubId}
+          and o.status = 0
+          and o.del_flag = 0
+          and (
+              o.topic_id is null
+              or not exists (select 1 from cms_topic parent where parent.id = o.topic_id)
+          )
+    </select>
+
+    <!-- 保证金 1支付中/2冻结待退/5应缴未缴及无渠道确认凭据的历史4都不是终态；父邀约/主题软删不能抹掉资金事实。 -->
+    <select id="selectPendingDepositsByClub" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.ClubPendingDeposit">
+        select distinct i.id, i.topic_id as topicId,
+               i.deposit_status as depositStatus, i.deposit_amount as amount,
+               case
+                   when i.del_flag = 0 and (
+                        (i.deposit_status = 4 and i.invite_type in (0,1))
+                        or (i.deposit_status = 2 and (
+                            i.status = 3
+                            or exists (
+                                select 1 from cms_topic refund_topic
+                                where refund_topic.id = i.topic_id
+                                  and refund_topic.is_settlement = 1
+                            )
+                        ))) then 1
+                   else 0
+               end as retryable
+        from coop_invite i
+        where (i.deposit_status in (1, 2, 5)
+             or (i.deposit_status = 4 and not (
+                 coalesce(i.deposit_refund_state,'') = 'SUCCESS'
+                 and i.deposit_refund_confirmed_at is not null
+                 and trim(coalesce(i.deposit_out_trade_no,'')) != ''
+                 and coalesce(i.deposit_refund_no,'') = concat('R',coalesce(i.deposit_out_trade_no,''))
+             )))
+          and (
+              (i.to_type = 'club' and i.to_id = #{clubId})
+              or exists (
+                  select 1 from cms_topic t
+                  where t.id = i.topic_id and t.club_id = #{clubId}
+              )
+          )
+        order by i.id
+    </select>
+
+    <!-- 未来场次也属于“未结束”：此时解散同样会让已购票玩家失去组织方。 -->
+    <select id="countOngoingSessionsByClub" resultType="int">
+        select count(1)
+        from cms_activity a
+        where a.del_flag = 0
+          and a.status = 1
+          and a.publish_status = 1
+          and a.cancel_time is null
+          and (a.end_date is null or a.end_date &gt; now())
+          and (
+              a.club_id = #{clubId}
+              or exists (
+                  select 1 from cms_topic t
+                  where t.id = a.topic_id and t.club_id = #{clubId}
+              )
+          )
+    </select>
+
+    <!--
+      只把三类显式安全终态排除：取消/退款、超时关闭、已支付且已核销。
+      其余组合（含 null/未知值、支付成功但报名状态未翻转）一律阻塞，避免脏半态漏闸。
+    -->
+    <select id="countIncompleteRegistrationsByClub" resultType="int">
+        select count(1)
+        from cms_registration r
+        where (
+            (r.owner_type = 1 and exists (
+                select 1 from cms_topic t
+                where t.id = r.owner_id and t.club_id = #{clubId}
+            ))
+            or
+            (r.owner_type = 2 and exists (
+                select 1 from cms_activity a
+                where a.id = r.owner_id
+                  and (
+                      a.club_id = #{clubId}
+                      or exists (
+                          select 1 from cms_topic t2
+                          where t2.id = a.topic_id and t2.club_id = #{clubId}
+                      )
+                  )
+            ))
+        )
+        and case
+            when r.registration_status = 3 and r.payment_status in (3, 4) then 0
+            when r.registration_status = 4 and r.payment_status = 3 then 0
+            when r.registration_status = 2 and r.payment_status = 2
+                 and ifnull(r.verification_status, 0) = 1
+                 and (
+                     (r.purchase_kind is not null and r.purchase_kind != 3)
+                     or not exists (
+                         select 1 from registration_entitlement entitlement
+                         where entitlement.registration_id = r.id and entitlement.status = 0
+                     )
+                 ) then 0
+            else 1
+        end = 1
+    </select>
+
+    <update id="dissolveClubById">
+        update club set del_flag = 2, update_time = now()
+        where id = #{clubId} and del_flag = 0
+    </update>
+
+</mapper>

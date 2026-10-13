@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantChapterApplicationMapper">
+
+    <resultMap type="MerchantChapterApplication" id="MerchantChapterApplicationResult">
+        <result property="id" column="id" />
+        <result property="topicId" column="topic_id" />
+        <result property="chapterId" column="chapter_id" />
+        <result property="merchantId" column="merchant_id" />
+        <result property="source"    column="source"    />
+        <result property="replacementOfOfferId" column="replacement_of_offer_id" />
+        <result property="status" column="status" />
+        <result property="message" column="message" />
+        <result property="auditRemark" column="audit_remark" />
+        <result property="auditMemberId" column="audit_member_id" />
+        <result property="handleTime" column="handle_time" />
+        <result property="delFlag" column="del_flag" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <resultMap type="MerchantChapterApplication" id="MerchantChapterApplicationListResult"
+               extends="MerchantChapterApplicationResult">
+        <result property="topicName" column="topic_name" />
+        <result property="topicImgUrl" column="topic_img_url" />
+        <result property="startDate" column="start_date" />
+        <result property="endDate" column="end_date" />
+        <result property="chapterName" column="chapter_name" />
+        <result property="merchantName" column="merchant_name" />
+        <result property="offerActive" column="offer_active" />
+        <result property="offerState" column="offer_state" />
+        <result property="offerWithdrawReason" column="offer_withdraw_reason" />
+        <result property="offerId" column="offer_id" />
+        <result property="circleThemeCode" column="circle_theme_code" />
+        <result property="circleSupplyCheckedAt" column="circle_supply_checked_at" />
+    </resultMap>
+
+    <sql id="selectMerchantChapterApplicationVo">
+        select id, topic_id, chapter_id, merchant_id, status, source, replacement_of_offer_id, message, audit_remark, audit_member_id,
+               handle_time, del_flag, create_by, create_time, update_by, update_time
+          from merchant_chapter_application
+    </sql>
+
+    <select id="selectMerchantChapterApplicationById" parameterType="Long"
+            resultMap="MerchantChapterApplicationResult">
+        <include refid="selectMerchantChapterApplicationVo" />
+        where id = #{id} and del_flag = 0
+    </select>
+
+    <select id="selectByIdIncludingDeleted" parameterType="Long"
+            resultMap="MerchantChapterApplicationResult">
+        <include refid="selectMerchantChapterApplicationVo" />
+        where id = #{id}
+    </select>
+
+    <select id="selectByIdIncludingDeletedForUpdate" parameterType="Long"
+            resultMap="MerchantChapterApplicationResult">
+        <include refid="selectMerchantChapterApplicationVo" />
+        where id = #{id}
+        for update
+    </select>
+
+    <select id="selectByChapterAndMerchant" resultMap="MerchantChapterApplicationResult">
+        <include refid="selectMerchantChapterApplicationVo" />
+        where chapter_id = #{chapterId} and merchant_id = #{merchantId} and del_flag = 0
+        limit 1
+    </select>
+
+    <select id="selectByChapterAndMerchantForUpdate" resultMap="MerchantChapterApplicationResult">
+        <include refid="selectMerchantChapterApplicationVo" />
+        where chapter_id = #{chapterId} and merchant_id = #{merchantId} and del_flag = 0
+        limit 1 for update
+    </select>
+
+    <select id="selectAnyByChapterAndMerchant" resultMap="MerchantChapterApplicationResult">
+        <include refid="selectMerchantChapterApplicationVo" />
+        where chapter_id = #{chapterId} and merchant_id = #{merchantId}
+        limit 1
+    </select>
+
+    <select id="selectByTopicId" resultMap="MerchantChapterApplicationListResult">
+        select a.id, a.topic_id, a.chapter_id, a.merchant_id, a.status, a.source, a.replacement_of_offer_id, a.message, a.audit_remark,
+               a.audit_member_id, a.handle_time, a.del_flag, a.create_by, a.create_time, a.update_by, a.update_time,
+               t.name as topic_name, t.img_url as topic_img_url, t.start_date, t.end_date,
+               t.circle_theme_code, c.name as chapter_name, m.name as merchant_name,
+               o.id as offer_id, o.withdraw_reason as offer_withdraw_reason, p.checked_at as circle_supply_checked_at,
+               case when o.id is not null and o.status = 1
+                          and (o.valid_end is null or o.valid_end &gt; now())
+                    then 1 else 0 end as offer_active,
+               case when o.id is null then 'NONE'
+                    when o.status = 1 and (o.valid_end is null or o.valid_end &gt; now()) then 'ACTIVE'
+                    when o.status = 0 and nullif(trim(o.withdraw_reason), '') is not null then 'WITHDRAWN'
+                    when o.status = 0 then 'INACTIVE'
+                    else 'EXPIRED' end as offer_state
+          from merchant_chapter_application a
+          left join cms_topic t on t.id = a.topic_id
+          left join cms_topic_chapter c on c.id = a.chapter_id
+          left join mms_merchant m on m.member_id = a.merchant_id and m.del_flag = 0
+          left join merchant_chapter_offer o on o.chapter_id = a.chapter_id and o.merchant_id = a.merchant_id
+          left join merchant_circle_supply_profile p on p.offer_id = o.id and p.is_current = 1
+         where a.topic_id = #{topicId}
+           and (a.del_flag = 0 or (a.del_flag = 2 and o.status = 0
+                and nullif(trim(o.withdraw_reason), '') is not null))
+         order by a.create_time desc
+    </select>
+
+    <select id="selectByMerchantId" resultMap="MerchantChapterApplicationListResult">
+        select a.id, a.topic_id, a.chapter_id, a.merchant_id, a.status, a.source, a.replacement_of_offer_id, a.message, a.audit_remark,
+               a.audit_member_id, a.handle_time, a.del_flag, a.create_by, a.create_time, a.update_by, a.update_time,
+               t.name as topic_name, t.img_url as topic_img_url, t.start_date, t.end_date,
+               t.circle_theme_code, c.name as chapter_name, m.name as merchant_name,
+               o.id as offer_id, o.withdraw_reason as offer_withdraw_reason, p.checked_at as circle_supply_checked_at,
+               case when o.id is not null and o.status = 1
+                          and (o.valid_end is null or o.valid_end &gt; now())
+                    then 1 else 0 end as offer_active,
+               case when o.id is null then 'NONE'
+                    when o.status = 1 and (o.valid_end is null or o.valid_end &gt; now()) then 'ACTIVE'
+                    when o.status = 0 and nullif(trim(o.withdraw_reason), '') is not null then 'WITHDRAWN'
+                    when o.status = 0 then 'INACTIVE'
+                    else 'EXPIRED' end as offer_state
+          from merchant_chapter_application a
+          left join cms_topic t on t.id = a.topic_id
+          left join cms_topic_chapter c on c.id = a.chapter_id
+          left join mms_merchant m on m.member_id = a.merchant_id and m.del_flag = 0
+          left join merchant_chapter_offer o on o.chapter_id = a.chapter_id and o.merchant_id = a.merchant_id
+          left join merchant_circle_supply_profile p on p.offer_id = o.id and p.is_current = 1
+         where a.merchant_id = #{merchantId}
+           and (a.del_flag = 0 or (a.del_flag = 2 and o.status = 0
+                and nullif(trim(o.withdraw_reason), '') is not null))
+         order by a.create_time desc
+    </select>
+
+    <select id="selectByPublisherId" resultMap="MerchantChapterApplicationListResult">
+        select a.id, a.topic_id, a.chapter_id, a.merchant_id, a.status, a.source, a.replacement_of_offer_id, a.message, a.audit_remark,
+               a.audit_member_id, a.handle_time, a.del_flag, a.create_by, a.create_time, a.update_by, a.update_time,
+               t.name as topic_name, t.img_url as topic_img_url, t.start_date, t.end_date,
+               t.circle_theme_code, c.name as chapter_name, m.name as merchant_name,
+               o.id as offer_id, o.withdraw_reason as offer_withdraw_reason, p.checked_at as circle_supply_checked_at,
+               case when o.id is not null and o.status = 1
+                          and (o.valid_end is null or o.valid_end &gt; now())
+                    then 1 else 0 end as offer_active,
+               case when o.id is null then 'NONE'
+                    when o.status = 1 and (o.valid_end is null or o.valid_end &gt; now()) then 'ACTIVE'
+                    when o.status = 0 and nullif(trim(o.withdraw_reason), '') is not null then 'WITHDRAWN'
+                    when o.status = 0 then 'INACTIVE'
+                    else 'EXPIRED' end as offer_state
+          from merchant_chapter_application a
+          left join cms_topic t on t.id = a.topic_id
+          left join cms_topic_chapter c on c.id = a.chapter_id
+          left join mms_merchant m on m.member_id = a.merchant_id and m.del_flag = 0
+          left join merchant_chapter_offer o on o.chapter_id = a.chapter_id and o.merchant_id = a.merchant_id
+          left join merchant_circle_supply_profile p on p.offer_id = o.id and p.is_current = 1
+         where t.member_id = #{publisherMemberId} and t.del_flag = 0
+           and (a.del_flag = 0 or (a.del_flag = 2 and o.status = 0
+                and nullif(trim(o.withdraw_reason), '') is not null))
+         order by a.create_time desc
+    </select>
+
+    <select id="selectByChapterAndStatus" resultMap="MerchantChapterApplicationResult">
+        <include refid="selectMerchantChapterApplicationVo" />
+        where chapter_id = #{chapterId} and status = #{status} and del_flag = 0
+        order by id asc
+    </select>
+
+    <!--
+      批量版:列表页一次取回多章的申请。条件与 selectByChapterAndStatus 逐字一致
+      (status + del_flag = 0),两者分叉会让列表页与详情页的名额对不上。
+      chapterIds 为空时不查(调用方负责短路),这里不写兜底 —— 空 in() 是语法错误,
+      静默返回全表比报错更危险。
+    -->
+    <select id="selectByChapterIdsAndStatus" resultMap="MerchantChapterApplicationResult">
+        <include refid="selectMerchantChapterApplicationVo" />
+        where status = #{status} and del_flag = 0
+          and chapter_id in
+          <foreach collection="chapterIds" item="chapterId" open="(" separator="," close=")">
+              #{chapterId}
+          </foreach>
+        order by id asc
+    </select>
+
+    <select id="countCurrentByChapter" resultType="int">
+        select count(1) from merchant_chapter_application
+        where chapter_id = #{chapterId} and del_flag = 0
+    </select>
+
+    <insert id="insertMerchantChapterApplication" parameterType="MerchantChapterApplication"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into merchant_chapter_application
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="topicId != null">topic_id,</if>
+            <if test="chapterId != null">chapter_id,</if>
+            <if test="merchantId != null">merchant_id,</if>
+            <if test="status != null">status,</if>
+            <if test="source != null">source,</if>
+            <if test="replacementOfOfferId != null">replacement_of_offer_id,</if>
+            <if test="message != null">message,</if>
+            <if test="auditRemark != null">audit_remark,</if>
+            <if test="auditMemberId != null">audit_member_id,</if>
+            <if test="handleTime != null">handle_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="delFlag != null">del_flag,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="topicId != null">#{topicId},</if>
+            <if test="chapterId != null">#{chapterId},</if>
+            <if test="merchantId != null">#{merchantId},</if>
+            <if test="status != null">#{status},</if>
+            <if test="source != null">#{source},</if>
+            <if test="replacementOfOfferId != null">#{replacementOfOfferId},</if>
+            <if test="message != null">#{message},</if>
+            <if test="auditRemark != null">#{auditRemark},</if>
+            <if test="auditMemberId != null">#{auditMemberId},</if>
+            <if test="handleTime != null">#{handleTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+        </trim>
+    </insert>
+
+    <update id="reapply">
+        update merchant_chapter_application
+           set status = 0,
+               replacement_of_offer_id = null,
+               message = #{message},
+               audit_remark = null,
+               audit_member_id = null,
+               handle_time = null,
+               create_by = #{createBy},
+               create_time = now(),
+               update_time = now()
+         where id = #{id} and status = 2 and del_flag = 0
+    </update>
+
+    <update id="restoreWithdrawn">
+        update merchant_chapter_application
+           set del_flag = 0,
+               message = #{message},
+               audit_remark = null,
+               audit_member_id = null,
+               handle_time = null,
+               create_by = #{createBy},
+               create_time = now(),
+               update_time = now()
+         where id = #{id} and status = 0 and del_flag = 2
+    </update>
+
+    <update id="reinviteWithdrawn">
+        update merchant_chapter_application
+           set del_flag = 0, status = 1, source = 1,
+               replacement_of_offer_id = #{replacementOfOfferId},
+               message = #{message}, audit_remark = null,
+               audit_member_id = #{auditMemberId}, handle_time = #{handleTime},
+               create_by = #{createBy}, create_time = #{createTime}, update_time = now()
+         where id = #{id} and topic_id = #{topicId} and chapter_id = #{chapterId}
+           and merchant_id = #{merchantId} and status = 0 and del_flag = 2
+    </update>
+
+    <update id="withdrawPending">
+        update merchant_chapter_application
+           set del_flag = 2,
+               update_by = #{merchantId},
+               update_time = now()
+         where id = #{id}
+           and merchant_id = #{merchantId}
+           and status = 0
+           and del_flag = 0
+    </update>
+
+    <update id="retireApprovedForSupplyExit">
+        update merchant_chapter_application
+           set del_flag = 2, update_by = #{merchantId}, update_time = now()
+         where topic_id = #{topicId} and chapter_id = #{chapterId}
+           and merchant_id = #{merchantId} and status = 1 and del_flag = 0
+    </update>
+
+    <!-- W2 招募窗口关闭:本期还挂着的待审申请。where 与下面 rejectPendingByTopic 逐字同口径。 -->
+    <select id="countPendingByTopic" resultType="int">
+        select count(*) from merchant_chapter_application
+         where topic_id = #{topicId} and status = 0 and del_flag = 0
+    </select>
+
+    <!-- W2 招募窗口关闭:本期待审申请 → 2已拒绝。只按 topic_id 圈,绝不跨期;
+         status = 0 写在 where 里 ⇒ 重放第二次命中 0 行(幂等)。
+         audit_member_id 不写:没有人审过它。 -->
+    <update id="rejectPendingByTopic">
+        update merchant_chapter_application
+           set status = 2,
+               audit_remark = #{auditRemark},
+               handle_time = #{handleTime},
+               update_time = now()
+         where topic_id = #{topicId} and status = 0 and del_flag = 0
+    </update>
+
+    <update id="updateAudit">
+        update merchant_chapter_application
+           set status = #{status},
+               audit_remark = #{auditRemark},
+               audit_member_id = #{auditMemberId},
+               handle_time = #{handleTime},
+               update_time = now()
+         where id = #{id} and status = 0 and del_flag = 0
+    </update>
+</mapper>

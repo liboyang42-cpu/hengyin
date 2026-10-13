@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ProductRoleMapper">
+
+    <resultMap type="ProductRole" id="ProductRoleResult">
+        <result property="id"           column="id"            />
+        <result property="topicId"      column="topic_id"      />
+        <result property="slot"         column="slot"          />
+        <result property="entityType"   column="entity_type"   />
+        <result property="entityId"     column="entity_id"     />
+        <result property="revenueShare" column="revenue_share" />
+        <result property="status"       column="status"        />
+        <result property="declaredBy"   column="declared_by"   />
+        <result property="createdAt"    column="created_at"    />
+    </resultMap>
+
+    <!-- ⚠️ 不 select singleton_key:它是生成列,是库的内部约束手段,不是业务字段 -->
+    <sql id="selectProductRoleVo">
+        select id, topic_id, slot, entity_type, entity_id, revenue_share, status, declared_by, created_at from product_role
+    </sql>
+
+    <insert id="insertProductRole" parameterType="ProductRole" useGeneratedKeys="true" keyProperty="id">
+        insert into product_role (topic_id, slot, entity_type, entity_id, revenue_share, status, declared_by)
+        select #{topicId}, #{slot}, #{entityType}, #{entityId}, #{revenueShare},
+               <choose><when test="status != null">#{status}</when><otherwise>1</otherwise></choose>,
+               #{declaredBy}
+          from cms_topic topic_guard
+         where topic_guard.id = #{topicId}
+           and topic_guard.del_flag != 2
+           and (#{slot} != 'ORGANIZER' or topic_guard.lifecycle in (0, 1, 2, 7))
+    </insert>
+
+    <select id="selectTopicForOrganizerUpdate" resultType="CmsTopic">
+        select id, product_type as productType, lifecycle, del_flag as delFlag
+          from cms_topic
+         where id = #{topicId} and del_flag != 2
+         for update
+    </select>
+
+    <!-- 只取生效行。失效行留着是为了留痕,不该被业务读到 -->
+    <select id="selectActiveByTopicAndSlot" resultMap="ProductRoleResult">
+        <include refid="selectProductRoleVo"/>
+        where topic_id = #{topicId} and slot = #{slot} and status = 1
+    </select>
+
+    <!-- 主题列表批量投影内容主体：只读生效 CONTENT 槽，避免 N+1。 -->
+    <select id="selectActiveContentByTopicIds" resultMap="ProductRoleResult">
+        <include refid="selectProductRoleVo"/>
+        where slot = 'CONTENT' and status = 1
+        and topic_id in
+        <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">
+            #{topicId}
+        </foreach>
+    </select>
+
+    <!--
+      app 端「来源」栏的批量最小投影。三条设计约束，改这段前先读完：
+
+      1. ⚠️ 关联必须同时带 entity_type 和 entity_id。product_role.entity_id 是**共享 ID 空间**
+         （CLUB 存 clubId、MEMBER 存 memberId、PLATFORM 为 NULL），只按 id 关联必然把
+         俱乐部 7 号读成会员 7 号。下面两个 left join 的第一个条件就是 entity_type，不许删。
+      2. 不会行数翻倍。product_role 对一个 topic 天然多行（SUPPLY/DISTRIBUTION 可多行，
+         且 CONTENT 改判时旧行标 status=0 留痕不删）；只有 slot='CONTENT' AND status=1 这一组合
+         被库里的生成列唯一键 uk_product_role_singleton 约束成至多 1 行。两个 left join 都按主键
+         关联，各至多 1 行。⇒ 每个 topic 至多 1 行输出。
+      3. 不 select entity_id。对外只暴露「类型 + 公开名」。
+    -->
+    <select id="selectActiveContentPublisherByTopicIds"
+            resultType="com.chengyinhub.business.domain.dto.TopicContentPublisherDTO">
+        select content_role.topic_id      as topicId,
+               content_role.entity_type   as entityType,
+               content_club.name          as clubName,
+               content_member.nickname    as memberNickname
+          from product_role content_role
+          left join club content_club
+            on content_role.entity_type = 'CLUB'
+           and content_club.id = content_role.entity_id
+           and content_club.del_flag = 0
+          left join ums_member content_member
+            on content_role.entity_type = 'MEMBER'
+           and content_member.id = content_role.entity_id
+           and content_member.del_flag = 0
+         where content_role.slot = 'CONTENT'
+           and content_role.status = 1
+           and content_role.topic_id in
+           <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">
+               #{topicId}
+           </foreach>
+    </select>
+
+    <update id="deactivateByTopicAndSlot">
+        update product_role set status = 0
+        where topic_id = #{topicId} and slot = #{slot} and status = 1
+          and (#{slot} != 'ORGANIZER' or exists (
+              select 1 from cms_topic topic_guard
+               where topic_guard.id = #{topicId}
+                 and topic_guard.del_flag != 2
+                 and topic_guard.lifecycle in (0, 1, 2, 7)
+          ))
+    </update>
+</mapper>

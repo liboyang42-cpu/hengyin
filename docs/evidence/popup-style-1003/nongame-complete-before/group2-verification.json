@@ -1,0 +1,217 @@
+[
+  {
+    "name": "rewards",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 477.016,
+      "width": 390,
+      "height": 367,
+      "right": 390,
+      "bottom": 844.016,
+      "centerX": 195,
+      "centerY": 660.516
+    },
+    "title": {
+      "left": 16,
+      "top": 505.016,
+      "width": 358,
+      "height": 45,
+      "right": 374,
+      "bottom": 550.016,
+      "centerX": 195,
+      "centerY": 527.516
+    },
+    "titleFont": "18px",
+    "titleText": "选择奖励",
+    "content": {
+      "left": 16,
+      "top": 566.016,
+      "width": 56,
+      "height": 22,
+      "right": 72,
+      "bottom": 588.016,
+      "centerX": 44,
+      "centerY": 577.016
+    },
+    "contentFont": "14px",
+    "panelBorder": "0px",
+    "panelBorderColor": "rgb(0, 0, 0)",
+    "flag_after_close": false,
+    "closed": true
+  },
+  {
+    "name": "reward-create",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 88,
+      "width": 390,
+      "height": 756,
+      "right": 390,
+      "bottom": 844,
+      "centerX": 195,
+      "centerY": 466
+    },
+    "title": {
+      "left": 16,
+      "top": 106.797,
+      "width": 309,
+      "height": 23,
+      "right": 325,
+      "bottom": 129.797,
+      "centerX": 170.5,
+      "centerY": 118.297
+    },
+    "titleFont": "18px",
+    "titleText": "创建优惠券",
+    "content": {
+      "left": 16,
+      "top": 159,
+      "width": 358,
+      "height": 22,
+      "right": 374,
+      "bottom": 181,
+      "centerX": 195,
+      "centerY": 170
+    },
+    "contentFont": "14px",
+    "panelBorder": "0px",
+    "panelBorderColor": "rgb(0, 0, 0)",
+    "flag_after_close": false,
+    "closed": true
+  },
+  {
+    "name": "creator sheets",
+    "error": "missing .sh__panel"
+  },
+  {
+    "name": "merchant-time",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 88,
+      "width": 390,
+      "height": 756,
+      "right": 390,
+      "bottom": 844,
+      "centerX": 195,
+      "centerY": 466
+    },
+    "title": {
+      "left": 65,
+      "top": 106.797,
+      "width": 309,
+      "height": 23,
+      "right": 374,
+      "bottom": 129.797,
+      "centerX": 219.5,
+      "centerY": 118.297
+    },
+    "titleFont": "18px",
+    "titleText": "商家报名",
+    "content": {
+      "left": 38,
+      "top": 370.602,
+      "width": 125,
+      "height": 22,
+      "right": 163,
+      "bottom": 392.602,
+      "centerX": 100.5,
+      "centerY": 381.602
+    },
+    "contentFont": "14px",
+    "panelBorder": "0px",
+    "panelBorderColor": "rgb(0, 0, 0)"
+  },
+  {
+    "name": "project-actions",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 361.063,
+      "width": 390,
+      "height": 483,
+      "right": 390,
+      "bottom": 844.063,
+      "centerX": 195,
+      "centerY": 602.563
+    },
+    "title": {
+      "left": 16,
+      "top": 373.063,
+      "width": 358,
+      "height": 45,
+      "right": 374,
+      "bottom": 418.063,
+      "centerX": 195,
+      "centerY": 395.563
+    },
+    "titleFont": "18px",
+    "titleText": "活动选项",
+    "content": {
+      "left": 16,
+      "top": 438.063,
+      "width": 358,
+      "height": 26,
+      "right": 374,
+      "bottom": 464.063,
+      "centerX": 195,
+      "centerY": 451.063
+    },
+    "contentFont": "16px",
+    "panelBorder": "0px",
+    "panelBorderColor": "rgb(0, 0, 0)",
+    "flag_after_close": false,
+    "closed": true
+  },
+  {
+    "name": "nearby",
+    "error": "missing .psheet"
+  },
+  {
+    "name": "footprint-share",
+    "controlled_display": true,
+    "panel": {
+      "left": 0,
+      "top": 253.203,
+      "width": 390,
+      "height": 591,
+      "right": 390,
+      "bottom": 844.203,
+      "centerX": 195,
+      "centerY": 548.703
+    },
+    "title": {
+      "left": 16,
+      "top": 265.203,
+      "width": 358,
+      "height": 45,
+      "right": 374,
+      "bottom": 310.203,
+      "centerX": 195,
+      "centerY": 287.703
+    },
+    "titleFont": "18px",
+    "titleText": "分享足迹卡",
+    "content": {
+      "left": 70.5,
+      "top": 761.477,
+      "width": 80,
+      "height": 21,
+      "right": 150.5,
+      "bottom": 782.477,
+      "centerX": 110.5,
+      "centerY": 771.977
+    },
+    "contentFont": "16px",
+    "panelBorder": "0px",
+    "panelBorderColor": "rgb(255, 255, 255)",
+    "flag_after_close": false,
+    "closed": true
+  },
+  {
+    "name": "route-review",
+    "error": "no active cy-sheet"
+  }
+]

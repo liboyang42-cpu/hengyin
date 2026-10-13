@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.chengyinhub.business.mapper.ImBlockMapper">
+
+    <resultMap type="ImBlock" id="ImBlockResult">
+        <result property="id"              column="id"                />
+        <result property="memberId"        column="member_id"         />
+        <result property="blockedMemberId" column="blocked_member_id" />
+        <result property="createTime"      column="create_time"       />
+    </resultMap>
+
+    <insert id="insertImBlock" parameterType="ImBlock">
+        insert into im_block (member_id, blocked_member_id, create_time)
+        values (#{memberId}, #{blockedMemberId}, sysdate())
+        on duplicate key update create_time = sysdate()
+    </insert>
+
+    <delete id="deleteImBlock">
+        delete from im_block where member_id = #{memberId} and blocked_member_id = #{blockedMemberId}
+    </delete>
+
+    <select id="selectOne" resultMap="ImBlockResult">
+        select id, member_id, blocked_member_id, create_time from im_block
+        where member_id = #{memberId} and blocked_member_id = #{blockedMemberId} limit 1
+    </select>
+
+    <select id="existsBetween" resultType="java.lang.Integer">
+        select count(1) from im_block
+        where (member_id = #{a} and blocked_member_id = #{b})
+           or (member_id = #{b} and blocked_member_id = #{a})
+    </select>
+
+</mapper>

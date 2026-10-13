@@ -1,0 +1,912 @@
+{
+  "note": "重拍分档。must=必须重拍,should=建议重拍,skip=可跳过。由 impact-map.js 生成,别手改。",
+  "base": "efe929f17",
+  "refs": [
+    "HEAD"
+  ],
+  "must": [
+    {
+      "pagePath": "pages/merchant/aftercare/index",
+      "reason": "页面自身改动",
+      "ownHit": [
+        "pages/merchant/aftercare/index.js",
+        "pages/merchant/aftercare/index.wxml",
+        "pages/merchant/aftercare/index.wxss",
+        "pages/merchant/aftercare/index.json"
+      ],
+      "depHit": []
+    },
+    {
+      "pagePath": "pages/merchant/aftercare/detail/index",
+      "reason": "页面自身改动",
+      "ownHit": [
+        "pages/merchant/aftercare/detail/index.js",
+        "pages/merchant/aftercare/detail/index.wxml",
+        "pages/merchant/aftercare/detail/index.wxss",
+        "pages/merchant/aftercare/detail/index.json"
+      ],
+      "depHit": []
+    }
+  ],
+  "should": [
+    {
+      "pagePath": "pages/index/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/template/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/talent/list/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/member/index/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/roam/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/privacy/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/agreement/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/deregister/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/team/detail/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/team/join/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/play/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/play/merchant/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/play/circle/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/activity/detail/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/activity/baoming/baoming",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/activity/list/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/activity/official-detail/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/activity/official-inbox/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/activity/official-mine/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageA/pages/myproject/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageA/pages/infomation/infomation",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageA/pages/infomationdetail/infomationdetail",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageA/pages/assetcenter/income-detail/income-detail",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageA/pages/assetcenter/earnings/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageP3/pages/growthcenter/index/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageP3/pages/growthcenter/leaderboard/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageP3/pages/stamp-camera/index/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageP3/pages/stamp-album/index/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageP3/pages/badge-wall/index/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageP3/pages/badge-3d/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageB/pages/im/list/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageB/pages/im/chat/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/publish/fabu/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/publish/simple/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/publish/temp/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/publish/activity/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/publish/templateadd/templateadd",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/publish/template-intro/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/club/apply/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/club/create/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/club/customer-detail/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/club/customers/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/club/detail/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/club/edit/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/club/enroll/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/club/event-ops/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/club/governance/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/club/group-code/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/club/join-requests/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/club/notify/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/club/roles/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/club/settlement/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/club/topic-detail/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/club/topic-story/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/club/workbench/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/topic/index/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/topic/merchantinfo/merchantinfo",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/topic/merchantapply/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/topic/pricing/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/index/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/apply/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/ledger/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/ledger/order-detail/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/ledger/batch-detail/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/predict/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/profile/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/marketing/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/reviews/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/marketing/ai-insight/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/relation/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/citynode/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/citynode/create/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/decor/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/decor/ai-npc/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/decor/coop-setting/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/decor/gallery/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/decor/perks/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/coop-center/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/customer/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/game-node/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/customer/detail/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/merchant/team/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/coop/list/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/coop/invite-detail/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/coop/invite/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/coop/nearby/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/coop/finance/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/coop/settlement-detail/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/coop/withdraw/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/coop/withdraw/records/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/square/list/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/square/detail/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/search2/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/search2/result/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/searchmap/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/templatedetail/templatedetail",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/address/address",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/addressinfo/addressinfo",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/shezhi/shezhi",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/shezhi/about/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/gerenziliao/gerenziliao",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/userinfo/userinfo",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/mylike/mylike",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "pages/crop/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageMember/complaint/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageMember/coupon-wallet/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageMember/coupon-qr/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageMember/coupon/coupon",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageMember/couponInfo/couponInfo",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageMember/mycanyu/mycanyu",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageMember/mycanyuinfo/mycanyuinfo",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageMember/myinvite/myinvite",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageMember/mytemplate/mytemplate",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageMember/order/order",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageMember/orderinfo/orderinfo",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageMember/signup/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageMember/tixian/tixian",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageMember/tixianjilu/tixianjilu",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageRoam/citynode-code/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageRoam/history/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageRoam/poi-detail/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageRoam/session/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    },
+    {
+      "pagePath": "subpackageRoam/nearby/index",
+      "reason": "引用了被改的共享脚本",
+      "scriptHit": [
+        "utils/danger-actions"
+      ]
+    }
+  ],
+  "skip": [
+    {
+      "pagePath": "pages/publish/topicadd/topicadd"
+    },
+    {
+      "pagePath": "pages/club/checkin-detail/index"
+    },
+    {
+      "pagePath": "subpackageRoam/citystamp/index"
+    }
+  ],
+  "globalStyleHits": [],
+  "appEntryHits": [],
+  "sharedScriptHits": [
+    "utils/danger-actions"
+  ],
+  "changedCount": 27,
+  "routeCount": 128
+}

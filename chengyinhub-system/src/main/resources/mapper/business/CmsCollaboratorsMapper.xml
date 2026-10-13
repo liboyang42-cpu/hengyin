@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CmsCollaboratorsMapper">
+    
+    <resultMap type="CmsCollaborators" id="CmsCollaboratorsResult">
+        <result property="id"    column="id"    />
+        <result property="dataType"    column="data_type"    />
+        <result property="dataId"    column="data_id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectCmsCollaboratorsVo">
+        select id, data_type, data_id, member_id, create_by, create_time, update_by, update_time from cms_collaborators
+    </sql>
+
+    <select id="selectCmsCollaboratorsList" parameterType="CmsCollaborators" resultMap="CmsCollaboratorsResult">
+        <include refid="selectCmsCollaboratorsVo"/>
+        <where>  
+            <if test="dataType != null "> and data_type = #{dataType}</if>
+            <if test="dataId != null "> and data_id = #{dataId}</if>
+            <if test="memberId != null "> and member_id = #{memberId}</if>
+        </where>
+    </select>
+    
+    <select id="selectCmsCollaboratorsById" parameterType="Long" resultMap="CmsCollaboratorsResult">
+        <include refid="selectCmsCollaboratorsVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertCmsCollaborators" parameterType="CmsCollaborators" useGeneratedKeys="true" keyProperty="id">
+        insert into cms_collaborators
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="dataType != null">data_type,</if>
+            <if test="dataId != null">data_id,</if>
+            <if test="memberId != null">member_id,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="dataType != null">#{dataType},</if>
+            <if test="dataId != null">#{dataId},</if>
+            <if test="memberId != null">#{memberId},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCmsCollaborators" parameterType="CmsCollaborators">
+        update cms_collaborators
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="dataType != null">data_type = #{dataType},</if>
+            <if test="dataId != null">data_id = #{dataId},</if>
+            <if test="memberId != null">member_id = #{memberId},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCmsCollaboratorsById" parameterType="Long">
+        delete from cms_collaborators where id = #{id}
+    </delete>
+
+    <delete id="deleteCmsCollaboratorsByIds" parameterType="String">
+        delete from cms_collaborators where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

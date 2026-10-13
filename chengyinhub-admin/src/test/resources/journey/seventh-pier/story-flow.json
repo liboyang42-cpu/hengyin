@@ -1,0 +1,1401 @@
+[
+  {
+    "name": "第1章",
+    "nodes": [
+      {
+        "name": "第七码头·第1站"
+      },
+      {
+        "name": "第七码头·第2站"
+      },
+      {
+        "name": "第七码头·第3站"
+      }
+    ],
+    "blocks": [
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "question",
+        "content": "林舟昨晚到过留白咖啡吗?",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "body",
+        "content": "乔岚猜他去过——那里有一张写着他名字的订单。你的任务是核实,不是替她证明。",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "carry",
+        "content": "乔岚的委托:核实订单,别把猜测当记录",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "route",
+        "field": "walk",
+        "content": "约 6 分钟",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "route",
+        "field": "todo",
+        "content": "找到柜台旁带城瘾游戏标识的展示台",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "opener",
+        "content": "找林舟?咖啡可以凉,名字不能乱往单子上写。你找的是哪一张?",
+        "nodeIndex": 0,
+        "npcId": 102
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "aside",
+        "content": "乔岚(通讯):先别替任何人下结论。也包括我。",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "q",
+        "content": "你昨晚见过他吗?",
+        "nodeIndex": 0,
+        "qid": "night"
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "a",
+        "content": "没见到他本人。我见到的是来拿东西的人。",
+        "nodeIndex": 0,
+        "qid": "night"
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "q",
+        "content": "他平时是什么样的人?",
+        "nodeIndex": 0,
+        "qid": "who"
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "a",
+        "content": "会给纸袋编号,忘了给自己点吃的。",
+        "nodeIndex": 0,
+        "qid": "who"
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "q",
+        "content": "除了订单,还有什么想说的?",
+        "nodeIndex": 0,
+        "qid": "more"
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "a",
+        "content": "有一张旧照片,我一直不敢替别人讲完。等你们查清楚再说。",
+        "nodeIndex": 0,
+        "qid": "more"
+      },
+      {
+        "type": "text",
+        "beat": "unlock",
+        "field": "hook",
+        "content": "许闻拿走了复制索引——而他写的展签上说:「第七码头,从未存在。」",
+        "nodeIndex": 0
+      },
+      {
+        "type": "node",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "title",
+        "content": "名字没错,但我们问错了人。",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "line",
+        "content": "「预约的人和来拿东西的人,本来就不是同一个。谢谢你没急着替他下结论。」",
+        "nodeIndex": 0,
+        "npcId": 102
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "lineIfFail",
+        "content": "「预约人写的是林舟,来拿的是许闻。剩下的,你们自己去问。」",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "许闻代领了复制索引(交接 071)",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "预约不等于到场:签收栏是空白",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "open",
+        "content": "林舟在哪里?原件又在哪里?",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "deliver",
+        "field": "reward",
+        "content": "调查纪念章 × 1",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "deliver",
+        "field": "line",
+        "content": "你们分清了预约和到场。这个,现在可以交给你们。",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "question",
+        "content": "许闻拿走的复制索引,里面写了什么?",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "body",
+        "content": "交接 071 由许闻代领。去书店核对他整理的展览稿,看展签的说法有没有走得比证据更远。",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "carry",
+        "content": "签收联 071:许闻代领复制索引",
+        "nodeIndex": 1,
+        "when": {
+          "var": "clue.receipt_071",
+          "op": "GTE",
+          "value": 1
+        }
+      },
+      {
+        "type": "text",
+        "beat": "route",
+        "field": "walk",
+        "content": "约 6 分钟",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "route",
+        "field": "todo",
+        "content": "找到门边的资料展示架",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "opener",
+        "content": "「我确实去拿过。复制件都在展示架上,按交接号归档。原件不在我这儿。」他指向门边的展签:第七码头,从未存在。",
+        "nodeIndex": 1,
+        "npcId": 103
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "q",
+        "content": "这张展签是谁写的?",
+        "nodeIndex": 1,
+        "qid": "label"
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "a",
+        "content": "我整理的。编号部分,乔岚核对过。",
+        "nodeIndex": 1,
+        "qid": "label"
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "q",
+        "content": "原件在哪?",
+        "nodeIndex": 1,
+        "qid": "orig"
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "a",
+        "content": "不在我这儿。我只经手复制件。",
+        "nodeIndex": 1,
+        "qid": "orig"
+      },
+      {
+        "type": "text",
+        "beat": "unlock",
+        "field": "hook",
+        "content": "乔岚说她核对过编号——样张边栏上的,正是 QL。",
+        "nodeIndex": 1
+      },
+      {
+        "type": "node",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "title",
+        "content": "他不再解释,但记录还在。",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "line",
+        "content": "「你说得对,缩短了范围,意思就变了。样张给你,边栏上有上次的核对标记。」",
+        "nodeIndex": 1,
+        "npcId": 103
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "lineIfFail",
+        "content": "「先别替我安排动机。公开样张在展示夹里,你自己看。」",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "札记只检索了官方编号,展签却写成「从未存在」",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "样张边栏有核对标记:QL",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "口述补注原件:居民称其为第七码头",
+        "nodeIndex": 1,
+        "when": {
+          "var": "clue.oral_note",
+          "op": "GTE",
+          "value": 1
+        }
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "open",
+        "content": "QL 是谁?",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "deliver",
+        "field": "reward",
+        "content": "检索札记复刻书签",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "deliver",
+        "field": "line",
+        "content": "许闻把书签夹进一本旧目录:「这是复刻件,别当原件。」",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "question",
+        "content": "展签的错,是谁的?",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "body",
+        "content": "你带着两份互相矛盾的材料,以及样张上的 QL 标记。去会客厅,把问题问回给委托人。",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "carry",
+        "content": "签收联 071",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "carry",
+        "content": "检索札记",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "carry",
+        "content": "QL 核对样张",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "route",
+        "field": "walk",
+        "content": "约 5 分钟",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "route",
+        "field": "todo",
+        "content": "找到会客厅中央的复核桌",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "opener",
+        "content": "「桌子借你。别把别人的一句话,和你自己猜的一句话,装进同一个袋子。」乔岚的通讯接进了会客厅的屏幕。",
+        "nodeIndex": 2,
+        "npcId": 104
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "q",
+        "content": "这里有校对人员登记吗?",
+        "nodeIndex": 2,
+        "qid": "roster"
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "a",
+        "content": "墙上那张缩写表,公开的。",
+        "nodeIndex": 2,
+        "qid": "roster"
+      },
+      {
+        "type": "text",
+        "beat": "unlock",
+        "field": "hook",
+        "content": "原始索引里,有一分钟没有进入公开稿。",
+        "nodeIndex": 2
+      },
+      {
+        "type": "node",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "title",
+        "content": "这一次,记录没有替人撒谎。",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "line",
+        "content": "「我只对了编号,没查口述补注。你找出的问题成立。但我不知道林舟为什么不回——别因为我错了一件事,就把另一件也算成我做的。」",
+        "nodeIndex": 2,
+        "npcId": 101
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "lineIfFail",
+        "content": "「是我核的编号。别的,我现在不想谈。」",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "QL = 乔岚,只核对了编号",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "展签登记有限更正:未见正式编号,仍需核对口述资料",
+        "nodeIndex": 2,
+        "when": {
+          "var": "counter.stage1_result",
+          "op": "GTE",
+          "value": 1
+        }
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "展签暂缓使用,留下复核待办",
+        "nodeIndex": 2,
+        "when": {
+          "var": "counter.stage1_result",
+          "op": "LTE",
+          "value": 0
+        }
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "open",
+        "content": "原件去向与林舟停止回执的原因,仍未查明。",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "deliver",
+        "field": "reward",
+        "content": "夜航会客厅复核回执",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "deliver",
+        "field": "line",
+        "content": "老周在回执上盖了章:「第一阶段,结了。」",
+        "nodeIndex": 2
+      }
+    ]
+  },
+  {
+    "name": "第2章",
+    "nodes": [
+      {
+        "name": "第七码头·第4站"
+      },
+      {
+        "name": "第七码头·第5站"
+      },
+      {
+        "name": "第七码头·第6站"
+      }
+    ],
+    "blocks": [
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "question",
+        "content": "谁删掉了那一分钟?",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "body",
+        "content": "回到书店。原始索引保留了用途说明,公开稿剪掉了其中一分钟——先找出剪掉的是什么。",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "carry",
+        "content": "第一阶段复核回执",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "carry",
+        "content": "检索札记与展签的矛盾",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "route",
+        "field": "walk",
+        "content": "约 6 分钟",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "route",
+        "field": "todo",
+        "content": "回到书店的资料展示架",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "opener",
+        "content": "「两盘带子都在桌上。这次,我们一起对。」",
+        "nodeIndex": 0,
+        "npcId": 103
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "q",
+        "content": "为什么公开稿要剪?",
+        "nodeIndex": 0,
+        "qid": "why"
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "a",
+        "content": "展览时长只有三分钟。我以为剪掉的只是杂音。",
+        "nodeIndex": 0,
+        "qid": "why"
+      },
+      {
+        "type": "text",
+        "beat": "unlock",
+        "field": "hook",
+        "content": "剪掉的是「私人告别」——谁有权决定它能不能被听见?",
+        "nodeIndex": 0
+      },
+      {
+        "type": "node",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "title",
+        "content": "删掉的不是杂音,是范围。",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "line",
+        "content": "「我可以删去不公开的声音,但不该删去解释。」",
+        "nodeIndex": 0,
+        "npcId": 103
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "lineIfFail",
+        "content": "「……剪辑确实没标缺段。这点我认。」",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "被剪的 02:00—03:00 是「私人告别,不予公开」",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "私人限制不等于不存在",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "原声:居民称这里为第七码头",
+        "nodeIndex": 0,
+        "when": {
+          "var": "clue.voice",
+          "op": "GTE",
+          "value": 1
+        }
+      },
+      {
+        "type": "text",
+        "beat": "deliver",
+        "field": "reward",
+        "content": "复访印记 · 回声 I",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "deliver",
+        "field": "line",
+        "content": "许闻在印记卡背面写:「版本 A / 版本 B,已并排归档。」",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "revisit",
+        "field": "change",
+        "content": "门边展签已登记更正",
+        "nodeIndex": 0,
+        "when": {
+          "var": "counter.stage1_result",
+          "op": "GTE",
+          "value": 1
+        }
+      },
+      {
+        "type": "text",
+        "beat": "revisit",
+        "field": "change",
+        "content": "门边展签已撤下,留有复核待办",
+        "nodeIndex": 0,
+        "when": {
+          "var": "counter.stage1_result",
+          "op": "LTE",
+          "value": 0
+        }
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "question",
+        "content": "找到的声音,能不能用?",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "body",
+        "content": "回到咖啡馆。阿蓉保管着原始授权页。找到一段声音,不等于得到使用它的许可。",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "carry",
+        "content": "两版录音差异",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "route",
+        "field": "walk",
+        "content": "约 7 分钟",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "route",
+        "field": "todo",
+        "content": "回到柜台旁的游戏展示台",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "opener",
+        "content": "「这次,先看授权页。别为了找人,把旁人的私事也带走。」",
+        "nodeIndex": 1,
+        "npcId": 102
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "q",
+        "content": "上次说的那张旧照片……",
+        "nodeIndex": 1,
+        "qid": "photo"
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "a",
+        "content": "照片 P-02。里面的人同意展出,照片外的人,不一定。",
+        "nodeIndex": 1,
+        "qid": "photo"
+      },
+      {
+        "type": "text",
+        "beat": "unlock",
+        "field": "hook",
+        "content": "老周手里,有一张没人来取的寄存条。",
+        "nodeIndex": 1
+      },
+      {
+        "type": "node",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "title",
+        "content": "保护一个人,不是把他擦掉。",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "line",
+        "content": "「照片外的人,就让他们留在照片外。但照片里的人,你可以把名字写上。」",
+        "nodeIndex": 1,
+        "npcId": 102
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "lineIfFail",
+        "content": "「授权页写得很清楚。照着做就行。」",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "P-02 合照、公共演奏:同意展陈",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "私人告别:不予公开,仅指定保管人查阅",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "合照背后的名字:阿蓉亲口讲述",
+        "nodeIndex": 1,
+        "when": {
+          "var": "clue.photo_story",
+          "op": "GTE",
+          "value": 1
+        }
+      },
+      {
+        "type": "text",
+        "beat": "deliver",
+        "field": "reward",
+        "content": "复访印记 · 回声 II",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "deliver",
+        "field": "line",
+        "content": "阿蓉把印记卡压在咖啡杯下:「这回算你们查明白了。」",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "revisit",
+        "field": "change",
+        "content": "展示台上多了一份「授权页 · 仅供查阅」",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "question",
+        "content": "林舟还会回话吗?",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "body",
+        "content": "回到会客厅。老周不会替任何人拿走全部材料——先说清你知道什么,再请他转交回联。",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "carry",
+        "content": "版本差异",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "carry",
+        "content": "授权页摘录",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "route",
+        "field": "walk",
+        "content": "约 5 分钟",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "route",
+        "field": "todo",
+        "content": "回到会客厅的复核桌",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "opener",
+        "content": "「你不是替谁来拿走全部材料的吧?把删掉的内容和使用限制,先讲明白。」",
+        "nodeIndex": 2,
+        "npcId": 104
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "q",
+        "content": "林舟联系过你吗?",
+        "nodeIndex": 2,
+        "qid": "lin"
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "a",
+        "content": "联系过。他说,只有讲清楚限制的人,才转交他的回话。",
+        "nodeIndex": 2,
+        "qid": "lin"
+      },
+      {
+        "type": "text",
+        "beat": "unlock",
+        "field": "hook",
+        "content": "LZ-07 · 封签 204——盒子就在这间屋子里。",
+        "nodeIndex": 2
+      },
+      {
+        "type": "node",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "title",
+        "content": "他回应了。",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "line",
+        "content": "老周:「他没事。他看到核对标记,怕内容被乱用,自己停了回执。盒子在我这儿。他说对不起,但没让我说更多。」",
+        "nodeIndex": 2,
+        "npcId": 104
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "lineIfFail",
+        "content": "老周:「他没事。他说对不起,但没让我说更多。」",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "林舟主动暂停交付,本人平安",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "寄存条:LZ-07 / 封签 204 / 老周保管",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "open",
+        "content": "寄存的盒子,真是那只第七号档案盒吗?",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "deliver",
+        "field": "reward",
+        "content": "复访印记 · 回声 III",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "deliver",
+        "field": "line",
+        "content": "老周把寄存条的存根撕给你:「凭这个来取。」",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "revisit",
+        "field": "change",
+        "content": "复核桌上压着乔岚签名的回执",
+        "nodeIndex": 2,
+        "when": {
+          "var": "clue.qiao_receipt",
+          "op": "GTE",
+          "value": 1
+        }
+      },
+      {
+        "type": "text",
+        "beat": "revisit",
+        "field": "change",
+        "content": "复核桌上只有一张未签名的记录",
+        "nodeIndex": 2,
+        "when": {
+          "var": "clue.qiao_receipt",
+          "op": "LTE",
+          "value": 0
+        }
+      }
+    ]
+  },
+  {
+    "name": "第3章",
+    "nodes": [
+      {
+        "name": "第七码头·第7站"
+      },
+      {
+        "name": "第七码头·第8站"
+      },
+      {
+        "name": "第七码头·第9站"
+      }
+    ],
+    "blocks": [
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "question",
+        "content": "这只盒子,真的是你在找的那只吗?",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "body",
+        "content": "桌上摆着两只贴着 LZ-07 的盒子。只有一只是原件寄存盒。",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "carry",
+        "content": "寄存条:LZ-07 / 封签 204 / 右下缺角",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "route",
+        "field": "walk",
+        "content": "约 1 分钟 · 同一场地",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "route",
+        "field": "todo",
+        "content": "走到会客厅里侧的交接桌",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "opener",
+        "content": "「两只盒子,一只是展览用的复制盒。我不告诉你哪只——你得自己对。」",
+        "nodeIndex": 0,
+        "npcId": 104
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "q",
+        "content": "为什么会有复制盒?",
+        "nodeIndex": 0,
+        "qid": "copy"
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "a",
+        "content": "展览要摆样子。原件不能摆出去。",
+        "nodeIndex": 0,
+        "qid": "copy"
+      },
+      {
+        "type": "text",
+        "beat": "unlock",
+        "field": "hook",
+        "content": "三个问题:它存在吗?有编号吗?能公开吗?",
+        "nodeIndex": 0
+      },
+      {
+        "type": "node",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "title",
+        "content": "盒子,交到了你手里。",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "line",
+        "content": "「手很稳。里面的东西,一样都没被改过。」",
+        "nodeIndex": 0,
+        "npcId": 104
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "lineIfFail",
+        "content": "「封签破了,我记一笔。里面的东西没事。」",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "第七号档案盒:母带、底片、采集日志、使用授权页",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "代价:封签破损,已登记",
+        "nodeIndex": 0,
+        "when": {
+          "op": "HAS_TAG",
+          "value": "tag.seal_broken"
+        }
+      },
+      {
+        "type": "text",
+        "beat": "deliver",
+        "field": "reward",
+        "content": "留名印记 I",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "deliver",
+        "field": "line",
+        "content": "老周在交接簿上签下你的调查员编号 007。",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "revisit",
+        "field": "change",
+        "content": "交接桌上并排放着两只 LZ-07 盒子",
+        "nodeIndex": 0
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "question",
+        "content": "怎么说,才不会让一份资料替另一份作答?",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "body",
+        "content": "乔岚到了现场。把三份材料,连到它真正能回答的问题上。",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "carry",
+        "content": "口述记录与底片",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "carry",
+        "content": "官方编号簿",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "carry",
+        "content": "使用授权页",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "route",
+        "field": "walk",
+        "content": "同一场地",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "route",
+        "field": "todo",
+        "content": "在复核桌边等乔岚",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "opener",
+        "content": "「这次我不先替你写答案。你来连,我来记。」",
+        "nodeIndex": 1,
+        "npcId": 101
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "q",
+        "content": "你还在怪自己吗?",
+        "nodeIndex": 1,
+        "qid": "sorry"
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "a",
+        "content": "怪。所以这次,每一句都要有来源。",
+        "nodeIndex": 1,
+        "qid": "sorry"
+      },
+      {
+        "type": "text",
+        "beat": "unlock",
+        "field": "hook",
+        "content": "林舟本人来了。最后一步:你决定留下怎样的记录。",
+        "nodeIndex": 1
+      },
+      {
+        "type": "node",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "title",
+        "content": "存在、编号、许可,分开说明。",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "line",
+        "content": "「民间渡口有口述和影像;正式编号簿没有收录;私人录音限制公开。现在,决定公开到哪里。」",
+        "nodeIndex": 1,
+        "npcId": 101
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "存在:口述记录与底片",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "编号:官方编号簿未收录",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "许可:使用授权页",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "deliver",
+        "field": "reward",
+        "content": "留名印记 II",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "deliver",
+        "field": "line",
+        "content": "乔岚把三张标题卡交给老周存档。",
+        "nodeIndex": 1
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "question",
+        "content": "找到之后,怎么办?",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "body",
+        "content": "林舟到了会客厅。三种处置都能结案,没有唯一的好结局——但你带来的东西,决定这句话能说得多有分量。",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "carry",
+        "content": "第七号档案盒",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "brief",
+        "field": "carry",
+        "content": "完整说法",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "route",
+        "field": "walk",
+        "content": "同一场地",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "route",
+        "field": "todo",
+        "content": "回到复核桌",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "opener",
+        "content": "「这次,我把理由说明白。盒子里的东西,你们决定怎么留。」",
+        "nodeIndex": 2,
+        "npcId": 105
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "q",
+        "content": "你希望它们被看见吗?",
+        "nodeIndex": 2,
+        "qid": "want"
+      },
+      {
+        "type": "text",
+        "beat": "enter",
+        "field": "a",
+        "content": "希望。但要先取得许可。",
+        "nodeIndex": 2,
+        "qid": "want"
+      },
+      {
+        "type": "text",
+        "beat": "unlock",
+        "field": "hook",
+        "content": "整季调查完成。",
+        "nodeIndex": 2
+      },
+      {
+        "type": "node",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "title",
+        "content": "第七码头,留下了名字。",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "line",
+        "content": "「不回消息是我的决定,不是你们的谜题。以后暂停交付,我会把理由说清楚。」",
+        "nodeIndex": 2,
+        "npcId": 105
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "处置:更正说明,暂存原件",
+        "nodeIndex": 2,
+        "when": {
+          "var": "counter.disposition",
+          "op": "EQ",
+          "value": 1
+        }
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "处置:展示获准材料",
+        "nodeIndex": 2,
+        "when": {
+          "var": "counter.disposition",
+          "op": "EQ",
+          "value": 2
+        }
+      },
+      {
+        "type": "text",
+        "beat": "outcome",
+        "field": "fact",
+        "content": "处置:完整原件受限保管",
+        "nodeIndex": 2,
+        "when": {
+          "var": "counter.disposition",
+          "op": "EQ",
+          "value": 3
+        }
+      },
+      {
+        "type": "text",
+        "beat": "deliver",
+        "field": "reward",
+        "content": "第七码头档案封",
+        "nodeIndex": 2
+      },
+      {
+        "type": "text",
+        "beat": "deliver",
+        "field": "line",
+        "content": "老周把档案封交到你手里:「整季,结了。」",
+        "nodeIndex": 2
+      }
+    ]
+  }
+]

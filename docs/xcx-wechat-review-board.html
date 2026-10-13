@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>城瘾小程序 · 审核前缺口看板</title>
+<style>
+  :root {
+    --bg: #0b0b0d;
+    --card: #16161a;
+    --line: #2a2a32;
+    --text: #f4f1ea;
+    --muted: #9a958c;
+    --do: #7cffb2;
+    --ask: #ffd56a;
+    --page: #8ab4ff;
+    --size: #ff8a7a;
+    --ok: #9aa3b2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    padding: 28px 24px 8px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 28px; font-weight: 650; margin: 0 0 8px; letter-spacing: -0.03em; }
+  .lede { color: var(--muted); max-width: 42em; }
+  .rule {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border: 1px solid #5a3a12;
+    background: #1c1408;
+    border-radius: 10px;
+    color: #ffd56a;
+  }
+  nav.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 16px 24px 8px;
+    max-width: 1100px;
+    margin: 0 auto;
+    position: sticky;
+    top: 0;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px);
+    z-index: 2;
+  }
+  nav.filters button {
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--text);
+    border-radius: 999px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+  nav.filters button.on { outline: 2px solid currentColor; }
+  nav.filters .do { color: var(--do); }
+  nav.filters .ask { color: var(--ask); }
+  nav.filters .page { color: var(--page); }
+  nav.filters .size { color: var(--size); }
+  main { max-width: 1100px; margin: 0 auto; padding: 8px 24px 80px; }
+  section { margin: 28px 0; }
+  h2 { font-size: 18px; margin: 0 0 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { border-bottom: 1px solid var(--line); padding: 10px 8px; text-align: left; vertical-align: top; }
+  th { color: var(--muted); font-weight: 550; }
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid currentColor;
+    white-space: nowrap;
+  }
+  .tag.do { color: var(--do); }
+  .tag.ask { color: var(--ask); }
+  .tag.page { color: var(--page); }
+  .tag.size { color: var(--size); }
+  .tag.ok { color: var(--ok); }
+  .shots {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  figure {
+    margin: 0;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  figure img { width: 100%; display: block; background: #111; }
+  figcaption { padding: 10px 12px 12px; font-size: 12.5px; color: var(--muted); }
+  figcaption strong { display: block; color: var(--text); margin-bottom: 4px; }
+  .bar {
+    height: 10px;
+    background: #222;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 6px 0 2px;
+  }
+  .bar > i { display: block; height: 100%; background: var(--size); }
+  .bar.ok > i { background: var(--do); }
+  .bar.warn > i { background: var(--ask); }
+  .note { color: var(--muted); font-size: 13px; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  tr.hidden { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>审核前缺口看板</h1>
+  <p class="lede">口径：微信审核员点得到的按钮必须真能用。不能再留「即将开放 / 暂未接入 / 还没做好」。每条只有两条路：<b>做完</b>或<b>从界面拿掉</b>。原生 App 登录支付不在本表。</p>
+  <p class="rule">提审红线：占位入口、空壳路由、点了只 toast 的图标，都会被当成「功能不可用」。历史深链壳如果审核员扫到旧码，也必须跳到真页，不能白屏。</p>
+</header>
+
+<nav class="filters">
+  <button class="on" data-f="all">全部</button>
+  <button class="do" data-f="do">直接能做</button>
+  <button class="ask" data-f="ask">要你拍板删不删</button>
+  <button class="page" data-f="page">才需要新页面</button>
+  <button class="size" data-f="size">包体</button>
+</nav>
+
+<main>
+<section>
+  <h2>包体（源码字节，压缩后才是微信真值）</h2>
+  <p class="note">你给的限：主包 ≤ 2MB，单个分包 ≤ 2MB，合计 ≤ 20MB。仓库门禁里合计写成了 30MB，提审按你这条 20MB 来。下面是<strong>未压缩源码</strong>。主包源码已经 3415KB，过 2MB；编译压缩后通常会掉一截，但余量薄，发版必须用开发者工具「代码质量 / 包体积」回读，不能拿源码当真。</p>
+  <p>主包源码 3415KB / 2048KB 上限</p>
+  <div class="bar warn" title="源码已超 2MB"><i style="width:100%"></i></div>
+  <table>
+    <tr><th>包</th><th>源码</th><th>动作</th></tr>
+    <tr data-k="size"><td>主包</td><td>3415KB</td><td>先把只被一个分包用的组件下沉（post-compose 27KB、time-range 14KB 等）。<code>echarts.js</code> 不在主包。</td></tr>
+    <tr data-k="size"><td>subpackageA</td><td>1125KB</td><td>里面有 <code>echarts.js</code> 994KB，全仓没有 <code>&lt;ec-canvas&gt;</code>。删它，这个分包立刻瘦一截，且不伤主链。</td></tr>
+    <tr data-k="size"><td>play / publish / merchant / club</td><td>939 / 908 / 918 / 834KB</td><td>源码都没到 2MB。壳页、死组件删了会再瘦。</td></tr>
+    <tr data-k="size"><td>全部分包源码合计</td><td>约 6.8MB + 主包 3.4MB</td><td>源码合计远低于 20MB。卡点是<strong>主包 2MB</strong>，不是总包。</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>才需要新页面（极少）</h2>
+  <p class="note">大多数缺口是改现页或删入口。只有你决定「这个能力要上」才新开路由。</p>
+  <table>
+    <tr><th>项</th><th>为什么像新页</th><th>其实也可以</th><th>牵连</th></tr>
+    <tr data-k="page">
+      <td><span class="tag page">新页或删行</span> 装修「用户照片 · 探索记录」</td>
+      <td>现页只有占位行，没有相册/足迹产品面。</td>
+      <td>审核前最快：删这一行。要做才新开相册页 + 接口。</td>
+      <td>公开商家主页、漫游足迹。没有后端相册接口就不要做。</td>
+    </tr>
+    <tr data-k="page">
+      <td><span class="tag page">新页或永远不上</span> IP 世界 / 积分商城 / 创作者申请</td>
+      <td>后端有，小程序页已退役或从未做。</td>
+      <td>提审不要出现入口。创作者申请页进过仓后又删了。</td>
+      <td>原生 App 也不该从这里抄。会费明确不做。</td>
+    </tr>
+  </table>
+</section>
+
+<section>
+  <h2>直接能做（现页改，不必新路由）</h2>
+  <table>
+    <tr><th>项</th><th>做什么</th><th>牵连</th></tr>
+    <tr data-k="do">
+      <td><span class="tag do">做</span> 导演台已结束 → 结算</td>
+      <td>「查看结算报告」现在 toast 即将开放。改成跳已有 <code>club/settlement</code>，带 clubId。缺场次 id 改文案「还没有场次」，不要说即将开放。</td>
+      <td>结算页本身已通。快速提现仍关，按钮文案用「提现到银行卡」。牵连 clubId / activityId 透传。</td>
+    </tr>
+    <tr data-k="do">
+      <td><span class="tag do">做</span> 已发布活动改内容</td>
+      <td>没有 <code>/api/activity/update</code>。复用 <code>pages/publish/activity</code> 回填 + 后端 update（归属+再审）。或发布后编辑按钮直接拿掉，只留上下架。</td>
+      <td>后台 PUT 已能改。App 删除有资金闸，后台删除还没有（#1064 未进这棵树）。</td>
+    </tr>
+    <tr data-k="do">
+      <td><span class="tag do">做</span> 设置/资料再绑手机</td>
+      <td>把首页 <code>getPhoneNumber</code> 按钮拷到资料或设置。#1066 只修「操作失败」文案，没加入口。</td>
+      <td>微信 getPhoneNumber 付费、真机、错误码 80058。报名页读本地 phone。</td>
+    </tr>
+    <tr data-k="do">
+      <td><span class="tag do">做或删图标</span> 广场完整发帖附件</td>
+      <td>弹窗里图/地点/活动三枚是 toast 桩。行内快贴已经能传图。审核前：要么接选图（要预览区），要么删掉三枚图标。</td>
+      <td>#1057 社区帖后端不合也不治这个。到期日写到 2026-12-01，提审等不了。</td>
+    </tr>
+    <tr data-k="do">
+      <td><span class="tag do">做</span> 搜索筛选空转</td>
+      <td>结果页把日期/价格带进 query 并真正过滤，或删掉无效筛选项。</td>
+      <td>只动 search2 两页。</td>
+    </tr>
+    <tr data-k="do">
+      <td><span class="tag do">做</span> IM 清空聊天</td>
+      <td>走服务端删，或拿掉「清空」按钮。现在 setData 空数组，轮询会拉回来。</td>
+      <td>IM 本身是完整产品，不要关整条。</td>
+    </tr>
+    <tr data-k="do">
+      <td><span class="tag do">做</span> 漫游 GO 读选中主题</td>
+      <td><code>goStart</code> 读 <code>introCards[introCardIdx]</code>。</td>
+      <td>只动 roam/index.js。</td>
+    </tr>
+    <tr data-k="do">
+      <td><span class="tag do">做</span> 圈层邀请码</td>
+      <td>play 页读 <code>inviteCode</code>，复用 circle 里那套加入逻辑。</td>
+      <td>circle 已转发参数。不修则旧分享链加人失败。</td>
+    </tr>
+    <tr data-k="do">
+      <td><span class="tag do">做</span> 附近的局断网</td>
+      <td>fail 走错误面，不要 <code>loaded:true</code> 看起来像没局。</td>
+      <td>只动 nearby。</td>
+    </tr>
+    <tr data-k="do">
+      <td><span class="tag do">删死代码</span> echarts 994KB</td>
+      <td>从 subpackageA 摘掉 echarts + ec-canvas。零实例。</td>
+      <td>包体。无产品牵连。</td>
+    </tr>
+  </table>
+</section>
+
+<section>
+  <h2>要你拍板：删入口，还是做成真功能</h2>
+  <p class="note">这些现在都露在界面上。留着过不了「功能可用」。没有未合并成品能直接合进来救命。</p>
+  <table>
+    <tr><th>项</th><th>现状</th><th>建议默认</th><th>牵连</th></tr>
+    <tr data-k="ask">
+      <td><span class="tag ask">拍板</span> 声音与触感</td>
+      <td>设置里一整页「暂未接入」（见下图）。</td>
+      <td>删设置这一行。做声音要接 wx 音频/振动，工作量不小。</td>
+      <td>设置列表、scene 半屏。无后端。</td>
+    </tr>
+    <tr data-k="ask">
+      <td><span class="tag ask">拍板</span> 门店 NPC 对话</td>
+      <td>玩法页能点开，接口默认关。用户会聊到被拒。</td>
+      <td>提审前藏入口，或开 flag 并保证有人设。#1026–1029 商家自助配 NPC 还没合。</td>
+      <td>合规（漫游自由聊写死关，别跟门店混）。STT 语音另闸。</td>
+    </tr>
+    <tr data-k="ask">
+      <td><span class="tag ask">拍板</span> 通关附近路线 / drops</td>
+      <td>flag 默认关。掉落卡（徽章/券）是活的，别和 drops flag 混。</td>
+      <td>保持关且界面不出现「推荐附近」入口。</td>
+      <td>finishNearbyRoute 只 play 通关。</td>
+    </tr>
+    <tr data-k="ask">
+      <td><span class="tag ask">拍板</span> 角色「可见客户手机号」</td>
+      <td>写死「否」。</td>
+      <td>删这一行。等客户系统字段再加。</td>
+      <td>角色分配 API 是通的。</td>
+    </tr>
+    <tr data-k="ask">
+      <td><span class="tag ask">拍板</span> 成长榜「暂未开放」</td>
+      <td>接口存在，404 被写成产品态。</td>
+      <td>改成「加载失败可重试」，或确认生产真有 leaderboard。</td>
+      <td>成长中心。</td>
+    </tr>
+    <tr data-k="ask">
+      <td><span class="tag ask">拍板</span> AI 简易发布 <code>publish/simple</code></td>
+      <td>真页，站内几乎没入口（见下图）。</td>
+      <td>要么从发布 sheet 挂上并测通，要么摘路由。留着审核员深链能进。</td>
+      <td>AI 配额、身份闸。</td>
+    </tr>
+    <tr data-k="ask">
+      <td><span class="tag ask">拍板</span> 旧搜索 <code>talent/search</code></td>
+      <td>已被 search2 取代，仍注册，能搜出用户列表。</td>
+      <td>删路由。两套搜索 = 审核员看到残页。</td>
+      <td>旧分享链会 404，可接受。</td>
+    </tr>
+    <tr data-k="ask">
+      <td><span class="tag ask">拍板</span> 壳页 topicadd / workbench / circle / merchant/profile / withdraw/records</td>
+      <td>会跳走。circle 无参会停在错误态（见下图）。</td>
+      <td>保留到 2026-10 的 topicadd 按注释到期删。其余深链壳可留，但错误态文案不要像半成品。circle 死代码可清。</td>
+      <td>微信收藏/旧分享。删路由前确认没有线上码。</td>
+    </tr>
+    <tr data-k="ask">
+      <td><span class="tag ask">拍板</span> 未挂上的俱乐部弹窗组件</td>
+      <td>merchants/settings/groupcode/onboarding、publish-sheet 零引用。</td>
+      <td>删组件减主包，或接到 topic-detail。详情页已经自己写了商家/成员/团码。</td>
+      <td>主包体积。登记表注释过时。</td>
+    </tr>
+    <tr data-k="ask">
+      <td><span class="tag ask">不做</span> 会费 / 微信零钱快速提现 / 漫游 NPC 自由聊</td>
+      <td>关或写死关。界面不应出现入口。</td>
+      <td>会费已删页。快速提现不要做入口。自由聊合规硬关。</td>
+      <td>银行卡提现是通的，别一起关。</td>
+    </tr>
+  </table>
+</section>
+
+<section>
+  <h2>模拟器实拍（微信开发者工具，2026-09-12）</h2>
+  <p class="note">未登录模拟器。壳页验证的是「跳到哪 / 缺参长什么样」，不是生产数据。</p>
+  <div class="shots">
+    <figure>
+      <img src="xcx-wechat-review-board-shots/shell-topicadd.png" alt="topicadd 跳到 fabu">
+      <figcaption><strong>topicadd 壳</strong>打开后已经在专业发布「未命名主题」。壳本身没有界面。</figcaption>
+    </figure>
+    <figure>
+      <img src="xcx-wechat-review-board-shots/shell-circle-missing.png" alt="circle 缺参">
+      <figcaption><strong>play/circle 无 topicId</strong>停在「探索链接不完整」。有 id 会 redirect 到 play。</figcaption>
+    </figure>
+    <figure>
+      <img src="xcx-wechat-review-board-shots/shell-merchant-profile.png" alt="商家主页壳">
+      <figcaption><strong>merchant/profile 壳</strong>无参：「链接参数无效」。有商家 id 才转到新主页。</figcaption>
+    </figure>
+    <figure>
+      <img src="xcx-wechat-review-board-shots/shell-workbench.png" alt="工作台跳走">
+      <figcaption><strong>俱乐部工作台壳</strong>无 id 落到俱乐部 tab（模拟器列表失败）。有 clubId 应进详情管理 tab。</figcaption>
+    </figure>
+    <figure>
+      <img src="xcx-wechat-review-board-shots/shell-withdraw-records.png" alt="提现记录">
+      <figcaption><strong>旧提现记录路由</strong>已跳到会员「提现记录」真页。壳可以到期删。</figcaption>
+    </figure>
+    <figure>
+      <img src="xcx-wechat-review-board-shots/settings.png" alt="声音与触感暂未接入">
+      <figcaption><strong>声音与触感</strong>审核员从设置点进去就是整页「暂未接入」。提审前必须删入口或做完。</figcaption>
+    </figure>
+    <figure>
+      <img src="xcx-wechat-review-board-shots/stub-square.png" alt="新建帖文附件图标">
+      <figcaption><strong>广场新建帖文</strong>图/地点/旗三枚点了 toast「还没做好」。删图标或接真选图。</figcaption>
+    </figure>
+    <figure>
+      <img src="xcx-wechat-review-board-shots/orphan-simple.png" alt="AI 简易发布">
+      <figcaption><strong>publish/simple</strong>是完整 AI 发布页，不是壳。要你决定挂不挂入口。</figcaption>
+    </figure>
+    <figure>
+      <img src="xcx-wechat-review-board-shots/orphan-talent-search.png" alt="旧搜索">
+      <figcaption><strong>talent/search</strong>旧搜索还活着。现网入口是 search2。建议删。</figcaption>
+    </figure>
+    <figure>
+      <img src="xcx-wechat-review-board-shots/stub-decor.png" alt="店铺装修上部">
+      <figcaption><strong>店铺装修上部</strong>是真编辑器。「用户照片即将开放」在页底，点上面「成为城市节点」会进真页。</figcaption>
+    </figure>
+    <figure>
+      <img src="xcx-wechat-review-board-shots/stub-settlement.png" alt="结算缺 clubId">
+      <figcaption><strong>俱乐部分润</strong>无 clubId 会明确报缺参。从导演台跳过来必须带 id。不是接口没做。</figcaption>
+    </figure>
+    <figure>
+      <img src="xcx-wechat-review-board-shots/stub-roles.png" alt="角色缺 clubId">
+      <figcaption><strong>角色与权限</strong>同样要 clubId。写死「可见手机号=否」在有 id 的表单里。</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <h2>建议提审前最小集</h2>
+  <ol>
+    <li>所有「即将开放 / 暂未接入 / 还没做好」：做完或删入口（声音触感、装修占位行、发帖三图标、导演台缺 id 文案）。</li>
+    <li>删 echarts；确认主包编译后 ≤ 2MB。</li>
+    <li>搜索筛选、IM 清空、漫游 GO、邀请码：断链，审核员不一定点到，但都是真 bug。</li>
+    <li>门店 NPC、会费、快速提现、IP 世界：界面上不许出现关着的入口。</li>
+    <li>壳页可留 redirect，circle/profile 缺参错误态可以留（这是可用状态，不是占位）。</li>
+  </ol>
+</section>
+</main>
+<script>
+  const buttons = document.querySelectorAll('nav.filters button');
+  const rows = document.querySelectorAll('tr[data-k]');
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      buttons.forEach((b) => b.classList.remove('on'));
+      btn.classList.add('on');
+      const f = btn.dataset.f;
+      rows.forEach((tr) => {
+        tr.classList.toggle('hidden', f !== 'all' && tr.dataset.k !== f);
+      });
+    });
+  });
+</script>
+</body>
+</html>

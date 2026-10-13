@@ -1,0 +1,17 @@
+[
+  {
+    "source": "/Users/arlan/.codex/worktrees/popup-style-1003/chengyin/docs/evidence/popup-style-1003/index.html",
+    "destination": "/Users/arlan/Documents/城瘾/文档整理_20260711/04-未开始/小程序弹窗样式统一_修复与验证_20261003.html",
+    "sha256": "132b13eba6226eff2ecffb322ea36d5a24e876fa0c15245051e91feca690e6c3"
+  },
+  {
+    "source": "/Users/arlan/.codex/worktrees/popup-style-1003/chengyin/docs/evidence/popup-style-1003/non-game-audit.json",
+    "destination": "/Users/arlan/Documents/城瘾/文档整理_20260711/04-未开始/小程序弹窗_非游戏剩余核对_20261003.json",
+    "sha256": "180e17473476e6a8901f4f957d321ab8cb3b549fe947a3b608630f74a46fe1da"
+  },
+  {
+    "source": "/Users/arlan/.codex/worktrees/popup-style-1003/chengyin/docs/evidence/popup-style-1003/complete/coverage-and-handoff.json",
+    "destination": "/Users/arlan/Documents/城瘾/文档整理_20260711/04-未开始/小程序弹窗_继续核对与待办_20261005.json",
+    "sha256": "63d88c59c26a7ceb8e1c2fb5c0df2bb6ee0d171436cb174f98235a8f8a92ac43"
+  }
+]

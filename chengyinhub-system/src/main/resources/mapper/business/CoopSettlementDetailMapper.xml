@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CoopSettlementDetailMapper">
+    <resultMap id="DetailResult" type="CoopSettlementDetail">
+        <result property="id" column="id"/>
+        <result property="settlementId" column="settlement_id"/>
+        <result property="claimId" column="claim_id"/>
+        <result property="registrationId" column="registration_id"/>
+        <result property="originAmount" column="origin_amount"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <insert id="insertIgnoreDetail" parameterType="CoopSettlementDetail" useGeneratedKeys="true" keyProperty="id">
+        insert ignore into coop_settlement_detail
+            (settlement_id, claim_id, registration_id, origin_amount, create_time)
+        values
+            (#{settlementId}, #{claimId}, #{registrationId}, #{originAmount}, #{createTime})
+    </insert>
+
+    <select id="selectByClaimIdForUpdate" resultMap="DetailResult">
+        select id, settlement_id, claim_id, registration_id, origin_amount, create_time
+        from coop_settlement_detail where claim_id = #{claimId} for update
+    </select>
+
+    <!-- 聚合头只能从原子明细派生，禁止把 Java 预估值直接当真源写头。 -->
+    <update id="refreshOriginAggregate">
+        update coop_settlement head
+        set head.amount = (select coalesce(sum(detail.origin_amount), 0)
+                           from coop_settlement_detail detail where detail.settlement_id = head.id),
+            head.verified_heads = (select count(distinct detail.registration_id)
+                                   from coop_settlement_detail detail where detail.settlement_id = head.id)
+        where head.id = #{settlementId}
+    </update>
+</mapper>

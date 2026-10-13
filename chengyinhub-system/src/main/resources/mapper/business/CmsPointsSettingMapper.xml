@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CmsPointsSettingMapper">
+    
+    <resultMap type="CmsPointsSetting" id="CmsPointsSettingResult">
+        <result property="id"    column="id"    />
+        <result property="title"    column="title"    />
+        <result property="value"    column="value"    />
+        <result property="description"    column="description"    />
+        <result property="icon"    column="icon"    />
+        <result property="type"    column="type"    />
+        <result property="eventType"    column="event_type"    />
+        <result property="ruleVersion" column="rule_version" />
+        <result property="status"    column="status"    />
+        <result property="sortOrder"    column="sort_order"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <!-- 通用 Vo 一个 H8 新列都不带：rule_version 只由 ORDER 1/2 迁移建，而合并即部署 jar、
+         迁移落库是人工步骤。通用列表/详情/导出被小程序积分页与后台规则页共用，
+         无条件带上它 = 顺序一反就全站 ERROR 1054。契约 ci/test_mapper_h8_column_isolation.py 锁住。 -->
+    <sql id="selectCmsPointsSettingVo">
+        select id, title, value, description,icon, type, event_type, status, sort_order, del_flag, create_by, create_time, update_by, update_time from cms_points_setting
+    </sql>
+
+    <!-- H8 专用读路径：只服务 PointsAwardServiceImpl.awardPublisherSettlement，
+         必须【完整】带上 rule_version —— 缺列时在这里响亮 1054 才是对的，
+         绝不能把快照字段静默降级成 null(那会让 requirePublisherSettlementRule 拿 null 版本号发奖)。 -->
+    <select id="selectPublisherSettlementRules" resultMap="CmsPointsSettingResult">
+        select id, title, value, description, icon, type, event_type, rule_version, status,
+               sort_order, del_flag, create_by, create_time, update_by, update_time
+        from cms_points_setting
+        where type = 1 and event_type = #{eventType} and status = 1 and del_flag = 0
+    </select>
+
+    <select id="selectCmsPointsSettingList" parameterType="CmsPointsSetting" resultMap="CmsPointsSettingResult">
+        <include refid="selectCmsPointsSettingVo"/>
+        <where>  
+            <if test="title != null  and title != ''"> and title = #{title}</if>
+            <if test="value != null "> and value = #{value}</if>
+            <if test="description != null  and description != ''"> and description = #{description}</if>
+            <if test="type != null "> and type = #{type}</if>
+            <if test="eventType != null "> and event_type = #{eventType}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="sortOrder != null "> and sort_order = #{sortOrder}</if>
+            <if test="delFlag != null "> and del_flag = #{delFlag}</if>
+        </where>
+    </select>
+    
+    <select id="selectCmsPointsSettingById" parameterType="Long" resultMap="CmsPointsSettingResult">
+        <include refid="selectCmsPointsSettingVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertCmsPointsSetting" parameterType="CmsPointsSetting">
+        insert into cms_points_setting
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="title != null and title != ''">title,</if>
+            <if test="value != null">value,</if>
+            <if test="description != null">description,</if>
+            <if test="type != null">type,</if>
+            <if test="eventType != null">event_type,</if>
+            <if test="status != null">status,</if>
+            <if test="sortOrder != null">sort_order,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="title != null and title != ''">#{title},</if>
+            <if test="value != null">#{value},</if>
+            <if test="description != null">#{description},</if>
+            <if test="type != null">#{type},</if>
+            <if test="eventType != null">#{eventType},</if>
+            <if test="status != null">#{status},</if>
+            <if test="sortOrder != null">#{sortOrder},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <!-- 通用 CRUD 不写 rule_version：eventType=15 那条 H8 规则由
+         CmsPointsSettingServiceImpl.assertPointRule 硬拒(payload 与按 id 回读的既存行双查),
+         通用入口【永远】改不到它 ⇒ 这里递增 rule_version 对 H8 没有任何保护作用,
+         却让「迁移没跑 + 后台改任一条积分规则」= ERROR 1054。
+         H8 规则的版本由资金迁移专用入口维护(见 ORDER 1/2 的种子行与列注释)。 -->
+    <update id="updateCmsPointsSetting" parameterType="CmsPointsSetting">
+        update cms_points_setting
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="title != null and title != ''">title = #{title},</if>
+            <if test="value != null">value = #{value},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="eventType != null">event_type = #{eventType},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCmsPointsSettingById" parameterType="Long">
+        delete from cms_points_setting where id = #{id}
+    </delete>
+
+    <delete id="deleteCmsPointsSettingByIds" parameterType="String">
+        delete from cms_points_setting where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

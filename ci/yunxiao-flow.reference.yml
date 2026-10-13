@@ -1,0 +1,91 @@
+# 城瘾 云效 Flow 流水线（已填入真实值,可直接贴进云效 YAML 流水线编辑器）
+# serviceConnection=rmrqya5tgqoa76er  runsOn=public/cn-hangzhou  machineGroup=wvq1UgabqVJyPbPV
+# 注意:① check 阶段在“触发设置”勾“合并请求”做合并前把关
+#       ② deploy 若不想随合并自动跑,在 UI 给它前面加“人工卡点”
+#       ③ 启用 deploy 前关掉宝塔 Java 项目的守护(否则和脚本重启抢 8080)
+name: chengyin-ci-cd
+
+# ⚠️ 实际运行以云效控制台 Flow 5122099 为准:源已切到 GitHub(GitHub-first CD,merge GitHub master 直接触发)。
+# 下面 type: codeup / codeup endpoint 是旧样板、未同步——勿据此判断 Flow 从哪拉。
+sources:
+  chengyin_repo:
+    type: codeup
+    name: chengyin
+    endpoint: git@codeup.aliyun.com:6a1cf1a96bb471afdf23d855/chengyin.git
+    branch: master
+    triggerEvents:
+      - push
+    certificate:
+      type: serviceConnection
+      serviceConnection: rmrqya5tgqoa76er
+
+stages:
+
+  check:
+    name: 检查门
+    jobs:
+      backend:
+        name: 后端编译+测试
+        runsOn: public/cn-hangzhou
+        steps:
+          run_backend:
+            step: Command
+            name: mvn clean test
+            with:
+              run: |
+                bash ci/backend-test.sh
+      xcx:
+        name: 小程序静态门
+        runsOn: public/cn-hangzhou
+        steps:
+          run_xcx:
+            step: Command
+            name: xcx 语法/JSON
+            with:
+              run: |
+                bash ci/xcx-check.sh
+
+  build:
+    name: 构建
+    jobs:
+      package:
+        name: 打后端 jar
+        runsOn: public/cn-hangzhou
+        steps:
+          run_pkg:
+            step: Command
+            name: mvn package
+            with:
+              run: |
+                mvn -B clean package -Dmaven.test.skip=true
+          upload:
+            step: ArtifactUpload
+            name: 上传 jar 制品
+            with:
+              uploadType: flowPublic
+              artifact: chengyin-admin-jar
+              filePath:
+                - chengyinhub-admin/target/chengyinhub-admin.jar
+
+  deploy:
+    name: 部署到生产
+    jobs:
+      deploy_bt:
+        component: VMDeploy
+        with:
+          artifact: $[stages.build.package.upload.artifacts.chengyin-admin-jar]
+          machineGroup: wvq1UgabqVJyPbPV
+          artifactDownloadPath: /www/wwwroot/bin/chengyinhub-admin.jar.new
+          executeUser: root
+          run: |
+            set -euo pipefail
+            JAR=/www/wwwroot/bin/chengyinhub-admin.jar
+            JAVA=/www/server/java/jdk-21.0.2/bin/java
+            PORT=8080; LOG=/www/wwwroot/bin/chengyinhub-admin.log
+            [ -f "$JAR" ] && cp -f "$JAR" "$JAR.bak.$(date +%Y%m%d%H%M%S)"
+            mv -f "$JAR.new" "$JAR"
+            OLD=$(pgrep -f '[-]jar .*chengyinhub-admin\.jar' || true)
+            [ -n "$OLD" ] && { kill $OLD || true; sleep 8; kill -9 $OLD 2>/dev/null || true; }
+            su -s /bin/bash www -c "nohup $JAVA -jar -Xmx1024M -Xms256M $JAR --server.port=$PORT > $LOG 2>&1 &"
+            for _ in $(seq 1 30); do curl -s -o /dev/null -m 3 http://127.0.0.1:$PORT/ && { echo OK; exit 0; }; sleep 2; done
+            echo "health check failed, see $LOG"; exit 1

@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.TopicOperationalSummaryMapper">
+
+    <!--
+      列表页一批主题的运营投影。每个关系表先按 topic_id 聚合再左连，避免列表行乘法；
+      供应生效口径与 MerchantChapterOfferMapper.liveOffer 同源：status=1 且 valid_end 未过期。
+    -->
+    <select id="selectByTopicIds"
+            resultType="com.chengyinhub.business.domain.dto.TopicOperationalListSummaryDTO">
+        select t.id as topic_id,
+               case
+                   when content_role.entity_type = 'PLATFORM' then '官方'
+                   when content_role.entity_type = 'CLUB' then coalesce(nullif(content_club.name, ''), '俱乐部信息待确认')
+                   when content_role.entity_type = 'MEMBER' then coalesce(nullif(content_member.nickname, ''), '会员信息待确认')
+                   when content_role.id is null then null
+                   else '主体待确认'
+               end as content_publisher_name,
+               case when content_role.entity_type = 'CLUB' then nullif(content_club.leader_name, '') else null end
+                   as content_publisher_leader_name,
+               coalesce(club_apply.pending_club_application_count, 0) as pending_club_application_count,
+               coalesce(club_invite.pending_club_invite_count, 0) as pending_club_invite_count,
+               coalesce(cooperation.signed_club_cooperation_count, 0) as signed_club_cooperation_count,
+               coalesce(lead_session.active_lead_session_count, 0) as active_lead_session_count,
+               coalesce(candidate.candidate_count, 0) as candidate_count,
+               coalesce(candidate.pending_candidate_count, 0) as pending_candidate_count,
+               coalesce(candidate.approved_candidate_count, 0) as approved_candidate_count,
+               coalesce(candidate.awarded_candidate_count, 0) as awarded_candidate_count,
+               coalesce(cooperation.merchant_cooperation_count, 0) as merchant_cooperation_count,
+               coalesce(active_offer.active_offer_count, 0) as active_offer_count,
+               coalesce(chapter_supply.chapter_count, 0) as chapter_count,
+               coalesce(chapter_supply.chapter_without_node_count, 0) as chapter_without_node_count,
+               coalesce(chapter_supply.required_chapter_count, 0) as required_chapter_count,
+               coalesce(chapter_supply.supplied_required_chapter_count, 0) as supplied_required_chapter_count,
+               coalesce(chapter_supply.missing_required_chapter_count, 0) as missing_required_chapter_count,
+               coalesce(ticket.ticket_count, 0) as ticket_count,
+               coalesce(ticket.guided_ticket_count, 0) as guided_ticket_count,
+               ticket.min_ticket_price as min_ticket_price,
+               coalesce(ticket.total_ticket_inventory, 0) as total_ticket_inventory,
+               coalesce(ticket.remaining_ticket_inventory, 0) as remaining_ticket_inventory,
+               coalesce(registration.paid_registration_count, 0) as paid_registration_count,
+               coalesce(registration.verified_head_count, 0) as verified_head_count,
+               coalesce(registration.total_sales, 0) as total_sales,
+               coalesce(registration.verified_sales, 0) as verified_sales,
+               coalesce(registration.self_play_pass_occupied_count, 0) as self_play_pass_occupied_count,
+               coalesce(settlement.pending_settlement_count, 0) as pending_settlement_count,
+               coalesce(complaint.open_complaint_count, 0) as open_complaint_count
+          from cms_topic t
+          left join product_role content_role
+            on content_role.topic_id = t.id
+           and content_role.slot = 'CONTENT'
+           and content_role.status = 1
+          left join club content_club
+            on content_role.entity_type = 'CLUB'
+           and content_club.id = content_role.entity_id
+           and content_club.del_flag = 0
+          left join ums_member content_member
+            on content_role.entity_type = 'MEMBER'
+           and content_member.id = content_role.entity_id
+           and content_member.del_flag = 0
+          left join (
+              select topic_id, count(*) as pending_club_application_count
+                from coop_club_apply
+               where del_flag = 0 and status = 0
+                 and topic_id in
+                 <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+               group by topic_id
+          ) club_apply on club_apply.topic_id = t.id
+          left join (
+              select topic_id, count(*) as pending_club_invite_count
+                from coop_invite
+               where del_flag = 0 and status = 0 and to_type = 'club'
+                 and topic_id in
+                 <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+               group by topic_id
+          ) club_invite on club_invite.topic_id = t.id
+          left join (
+              select topic_id,
+                     sum(case when to_type = 'club' then 1 else 0 end) as signed_club_cooperation_count,
+                     sum(case when to_type = 'merchant' then 1 else 0 end) as merchant_cooperation_count
+                from coop_order
+               where del_flag = 0 and status = 0
+                 and topic_id in
+                 <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+               group by topic_id
+          ) cooperation on cooperation.topic_id = t.id
+          left join (
+              select ca.topic_id, count(distinct ca.id) as active_lead_session_count
+                from cms_activity ca
+                inner join club lead_club on lead_club.id = ca.club_id and lead_club.del_flag = 0
+                inner join club_lead_state cls on cls.activity_id = ca.id and cls.status in (1, 2)
+               where ca.del_flag = 0
+                 and ca.topic_id in
+                 <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+                 and exists (
+                     select 1
+                       from coop_order lead_cooperation
+                      where lead_cooperation.topic_id = ca.topic_id
+                        and lead_cooperation.to_type = 'club'
+                        and lead_cooperation.to_id = ca.club_id
+                        and lead_cooperation.status = 0
+                        and lead_cooperation.del_flag = 0
+                 )
+               group by ca.topic_id
+          ) lead_session on lead_session.topic_id = t.id
+          left join (
+              select topic_id,
+                     count(*) as candidate_count,
+                     sum(case when status = 0 then 1 else 0 end) as pending_candidate_count,
+                     sum(case when status = 1 then 1 else 0 end) as approved_candidate_count,
+                     sum(case when audit_status = 1 then 1 else 0 end) as awarded_candidate_count
+                from cms_registration_merchant
+               where del_flag = 0
+                 and topic_id in
+                 <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+               group by topic_id
+          ) candidate on candidate.topic_id = t.id
+          left join (
+              select chapter.topic_id,
+                     count(*) as chapter_count,
+                     sum(case when not exists (
+                         select 1 from cms_topic_node node where node.chapter_id = chapter.id
+                     ) then 1 else 0 end) as chapter_without_node_count,
+                     sum(case when chapter.required = 1 then 1 else 0 end) as required_chapter_count,
+                     sum(case when chapter.required = 1 and (
+                         select count(*)
+                           from merchant_chapter_offer offer
+                          where offer.topic_id = chapter.topic_id
+                            and offer.chapter_id = chapter.id
+                            and offer.status = 1
+                            and (offer.valid_end is null or offer.valid_end &gt; now())
+                     ) &gt;= greatest(coalesce(nullif(chapter.max_merchant, 0), 1), 1)
+                     then 1 else 0 end) as supplied_required_chapter_count,
+                     sum(case when chapter.required = 1 and (
+                         select count(*)
+                           from merchant_chapter_offer offer
+                          where offer.topic_id = chapter.topic_id
+                            and offer.chapter_id = chapter.id
+                            and offer.status = 1
+                            and (offer.valid_end is null or offer.valid_end &gt; now())
+                     ) &lt; greatest(coalesce(nullif(chapter.max_merchant, 0), 1), 1)
+                     then 1 else 0 end) as missing_required_chapter_count
+                from cms_topic_chapter chapter
+               where chapter.topic_id in
+               <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+               group by chapter.topic_id
+          ) chapter_supply on chapter_supply.topic_id = t.id
+          left join (
+              select topic_id, count(*) as active_offer_count
+                from merchant_chapter_offer
+               where status = 1
+                 and (valid_end is null or valid_end &gt; now())
+                 and topic_id in
+                 <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+               group by topic_id
+          ) active_offer on active_offer.topic_id = t.id
+          left join (
+              select owner_id as topic_id,
+                     count(*) as ticket_count,
+                     sum(case when mode = 1 and (sub_type is null or lower(sub_type) != 'self')
+                         then 1 else 0 end) as guided_ticket_count,
+                     min(price) as min_ticket_price,
+                     sum(coalesce(total_inventory, 0)) as total_ticket_inventory,
+                     sum(coalesce(remaining_inventory, 0)) as remaining_ticket_inventory
+                from oms_ticket
+               where owner_type = 1 and del_flag = 0
+                 and owner_id in
+                 <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+               group by owner_id
+          ) ticket on ticket.topic_id = t.id
+          left join (
+              select owner_id as topic_id,
+                     sum(case when payment_status = 2 and registration_status = 2 then 1 else 0 end)
+                         as paid_registration_count,
+                     count(distinct case when payment_status = 2 and verification_status = 1 then member_id end)
+                         as verified_head_count,
+                     sum(case when payment_status = 2 and registration_status = 2 then payable_amount else 0 end)
+                         as total_sales,
+                     sum(case when payment_status = 2 and verification_status = 1 then payable_amount else 0 end)
+                         as verified_sales,
+                     sum(case when registration_status in (1, 2)
+                              and (purchase_kind = 2
+                                   or (purchase_kind is null and ticket_id is null and expires_at is not null))
+                              then 1 else 0 end) as self_play_pass_occupied_count
+                from cms_registration
+               where owner_type = 1
+                 and owner_id in
+                 <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+               group by owner_id
+          ) registration on registration.topic_id = t.id
+          left join (
+              select topic_id, count(*) as pending_settlement_count
+                from coop_settlement
+               where del_flag = 0 and status = 0
+                 and topic_id in
+                 <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+               group by topic_id
+          ) settlement on settlement.topic_id = t.id
+          left join (
+              select topic_id, count(*) as open_complaint_count
+                from coop_complaint
+               where del_flag = 0 and status &lt; 3
+                 and topic_id in
+                 <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+               group by topic_id
+          ) complaint on complaint.topic_id = t.id
+         where t.id in
+         <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+    </select>
+</mapper>

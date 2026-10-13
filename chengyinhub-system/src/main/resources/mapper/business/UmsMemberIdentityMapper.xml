@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.UmsMemberIdentityMapper">
+
+    <!-- real_name / id_card 落库是 AES-GCM 密文,读出来由 typeHandler 还原成明文。
+         没有配置 chengyin.pii.key 时 typeHandler 直接抛错拒写,不会降级存明文。 -->
+    <resultMap id="UmsMemberIdentityResult" type="com.chengyinhub.business.domain.UmsMemberIdentity">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="realName" column="real_name"
+                typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler"/>
+        <result property="idCard" column="id_card"
+                typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler"/>
+        <result property="idCardHash" column="id_card_hash"/>
+        <result property="source" column="source"/>
+        <result property="consentTime" column="consent_time"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <insert id="insertIdentity" parameterType="com.chengyinhub.business.domain.UmsMemberIdentity"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into ums_member_identity (member_id, real_name, id_card, id_card_hash, source,
+                                         consent_time, create_time)
+        values (#{memberId},
+                #{realName,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+                #{idCard,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+                #{idCard,typeHandler=com.chengyinhub.business.security.PiiBlindIndexTypeHandler},
+                #{source}, #{consentTime}, #{consentTime})
+    </insert>
+
+    <select id="selectByMemberId" parameterType="java.lang.Long" resultMap="UmsMemberIdentityResult">
+        select id, member_id, real_name, id_card, id_card_hash, source, consent_time, create_time, update_time
+        from ums_member_identity
+        where member_id = #{memberId}
+        limit 1
+    </select>
+
+    <select id="existsByMemberId" parameterType="java.lang.Long" resultType="boolean">
+        select exists(select 1 from ums_member_identity where member_id = #{memberId})
+    </select>
+
+    <delete id="deleteByMemberId" parameterType="java.lang.Long">
+        delete from ums_member_identity where member_id = #{memberId}
+    </delete>
+</mapper>

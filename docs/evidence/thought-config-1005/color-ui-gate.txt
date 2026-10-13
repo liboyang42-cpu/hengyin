@@ -1,0 +1,10 @@
+基线外新增文件(无 diff 基线,按全量扫描):chengyinhub-xcx/components/cy/chapter-gate/index.wxml
+基线外新增文件(无 diff 基线,按全量扫描):chengyinhub-xcx/components/cy/club-direct-ledger/index.wxml
+基线外新增文件(无 diff 基线,按全量扫描):chengyinhub-xcx/components/cy/coop-invite-sheet/index.wxml
+基线外新增文件(无 diff 基线,按全量扫描):chengyinhub-xcx/components/cy/profile-loading/index.wxml
+U1:未通过（529 个前端字面量 /api 调用，1333 个后端映射）
+U3:通过（相对 3876c8426842ba717d2f7243b8c08ee0aef7010d 无新增孤儿 handler）
+U4:未通过（相对 3876c8426842ba717d2f7243b8c08ee0aef7010d 新增 1 个死 setData 字段）
+U5:未通过（91 文件 / 258 个调用有 3 项白名单问题）
+U6:通过（相对 3876c8426842ba717d2f7243b8c08ee0aef7010d 无新增裸错误文案或空白状态分支）
+扫描范围:553 个生产 JS，app.json 23 个注册分包全部覆盖

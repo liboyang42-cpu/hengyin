@@ -1,0 +1,47 @@
+{
+  "status": "DRAFT_REQUIRES_CITY_AND_MEDIA",
+  "sourceNodeAliases": {
+    "1": "补给店",
+    "2": "运输点",
+    "3": "援助站",
+    "4": "维修点",
+    "5": "避风点",
+    "6": "广播室",
+    "7": "供暖站"
+  },
+  "requiredStateKeys": [
+    {
+      "stateKey": "clue.repair",
+      "keyType": "clue",
+      "label": "具备修理能力"
+    }
+  ],
+  "journeyRules": {
+    "schemaVersion": 1,
+    "checkEnabled": true,
+    "hp": {
+      "enabled": true,
+      "max": 10,
+      "init": 8
+    },
+    "luck": {
+      "enabled": true,
+      "max": 5,
+      "init": 3
+    },
+    "recovery": {
+      "stageRestHpFloor": 0,
+      "stageRestLuckFloor": 0,
+      "stationEndIfHurt": 0,
+      "exhaustRestHp": 4
+    }
+  },
+  "requiredBindings": [
+    "七个实际节点 ID 或创建时 NodeDTO.id=1..7 的临时映射",
+    "真实城市地点与到达方式",
+    "至少一个可用分支玩法模板绑定到对应节点",
+    "目录图片与结果卡封面",
+    "已有家与生命值下降接入点",
+    "人物档案 ID 与现有 journeyStory 后记"
+  ]
+}

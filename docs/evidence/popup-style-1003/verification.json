@@ -1,0 +1,1805 @@
+{
+  "date": "2026-10-04",
+  "branch": "feature/popup-style-1003",
+  "code_commit": "46d9599a83999e68f0b27b8ad666a368f4af3d27",
+  "product_files_changed": 5,
+  "scope": {
+    "cy_sheet_references": 101,
+    "cy_scene_sheet_references": 50,
+    "proto_sheet_containers": 37,
+    "scene_registry": 52,
+    "routes_using_shared_shells": 130,
+    "route_count": 131,
+    "custom_source_candidates": 91,
+    "cy-sheet": 101,
+    "cy-scene-sheet": 50,
+    "cy-modal": 19,
+    "cy-modal-host": 126,
+    "cy-danger-confirm": 26,
+    "cy-popover": 2,
+    "cy-dropdown": 51,
+    "cy-toast": 129,
+    "cy-loading-mask": 125,
+    "non_game_audit_candidates": 99,
+    "current_native_states": 51
+  },
+  "rules": {
+    "short": "短提示、短操作和支付结果：左右及底部外距16rpx（375宽下约8px），内侧左右采用页面标准16px；安全区只计一次",
+    "half": "普通底部面板左右与底部贴边，最高 70vh",
+    "tall": "长表单、长列表与复杂任务撑满微信胶囊下方，顶部按胶囊底 +5px 计算",
+    "type": "基准标题18、正文14、说明12、按钮16、内容主标题22；未完成全站系统字号传递验收。",
+    "capsule": "贴触发点6pt；屏幕外边8pt；按实际宽高翻边和收边，避开微信胶囊和底部安全区；长菜单限制高度并可滚动",
+    "center": "标题/正文/按钮使用共用字阶；按钮最小44pt，长文案自然增高，加载保留文字占位；关闭规则沿用原契约"
+  },
+  "simulator": "微信开发者工具 RC 2.02.2607271；本轮截图624×1352，历史截图保留原尺寸。",
+  "evidence_boundary": "本轮6个原生受控显示状态及选择/取消/应用/关闭回读，汇总51个状态。合作评价和俱乐部截图没有真实业务编号，不是正常入口、业务保存或真机验收；其他未变内容沿用此前证据。",
+  "business_writes": "分类接口只读，选中仅为本地显示，未点保存。其他截图采用本地显示夹具；早期创作者截图未关闭本地草稿自动保存，因此不声明本地草稿零写入，后续已关闭该实例自动保存。未上传微信或发布活动。",
+  "tests": {
+    "status": "PASS",
+    "verified_code_commit": "46d9599a83999e68f0b27b8ad666a368f4af3d27",
+    "scope": "5个产品文件；12个现有相关测试文件",
+    "passed": 62,
+    "failed": 0,
+    "skipped": 0,
+    "native_compile": {
+      "this_revision_success": 5
+    },
+    "lint_ui": "PASS in complete isolated snapshot; unrelated workspace title changes excluded",
+    "full_suite_rerun": false,
+    "previous_full_run": {
+      "status": "PASS",
+      "command": "npm run test:unit",
+      "full_run_code_commit": "8551930a8b92f2129f104e9702e7dbff4a196814",
+      "run_start_head": "369acd7a2d63b85f6ac568280835966717d10b5f",
+      "test_content_verification": "验证副本包含最终测试修订；测试完成后逐字节核对与最终提交一致。",
+      "product_code_commit": "369acd7a2d63b85f6ac568280835966717d10b5f",
+      "exit_code": 0,
+      "total": 7677,
+      "passed": 7675,
+      "failed": 0,
+      "skipped": 2,
+      "duration_ms": 297487.235125,
+      "lint_ui": "UI-GATE-0 PASS",
+      "lint_scope": "PASS, 544 production JS",
+      "action_inventory": "PASS, 4372 controls; source inventory only",
+      "native_compile": {
+        "success": 24,
+        "details": "native-compile.json"
+      }
+    }
+  },
+  "screenshots": [
+    "category-point-after/category-dark.png",
+    "category-point-after/category-light.png",
+    "finish-after/finish-mode1.png",
+    "finish-after/finish-reloaded.png",
+    "finish-after/finish.png",
+    "nongame-after/activity-time-end.png",
+    "nongame-after/activity-time.png",
+    "nongame-after/activity.png",
+    "nongame-after/contact-filled.png",
+    "nongame-after/contact.png",
+    "nongame-after/customer-content.png",
+    "nongame-after/customer.png",
+    "nongame-after/discard-simple.png",
+    "nongame-after/join-target-content.png",
+    "nongame-after/join-target-long-title.png",
+    "nongame-after/join-target.png",
+    "nongame-after/mode-info.png",
+    "nongame-after/nickname-disabled.png",
+    "nongame-after/nickname-empty.png",
+    "nongame-after/nickname.png",
+    "nongame-after/project-drawer-content.png",
+    "nongame-after/project-drawer.png",
+    "nongame-after/signature.png",
+    "nongame-after/template.png",
+    "nongame-after/works-2.png",
+    "nongame-after/works-9.png",
+    "nongame-after/works.png",
+    "nongame-round3-after/badge-detail-list.png",
+    "nongame-round3-after/badge-detail.png",
+    "nongame-round3-after/badge-long.png",
+    "nongame-round3-after/category-multiple.png",
+    "nongame-round3-after/category-switched.png",
+    "nongame-round3-after/category.png",
+    "nongame-round3-after/chapter-settings.png",
+    "nongame-round3-after/creator-content.png",
+    "nongame-round3-after/story-editor.png",
+    "nongame-round3-after/story-vars-empty.png",
+    "nongame-round3-after/story-vars.png",
+    "nongame-round3-icons-after/add-module.png",
+    "nongame-round3-icons-after/game-catalog.png",
+    "nongame-round3-icons-after/picker-duration.png",
+    "nongame-round3-icons-after/picker-players.png",
+    "nongame-round3-icons-after/picker-usageLocation.png",
+    "nongame-round3-icons-before/merchant-copy.png",
+    "nongame-round3-icons-before/post-compose.png"
+  ],
+  "screenshots_sha256": {
+    "category-point-after/category-dark.png": "ad282c0380ab9ca6077d534b80b86fea687395f67002e9fefc8e2b887d849933",
+    "category-point-after/category-light.png": "92cef71613034e341f29fde5d71f958632df86a8367d7d8466b19ec4f7493fa9",
+    "finish-after/finish-mode1.png": "8b6b9590dadd82cb5a6c17fd071910bbc2a8230aa31cfcc5a3bb64f4649c0ec6",
+    "finish-after/finish-reloaded.png": "4b6d18c0071ee56f391f39009913542571f35a7e5a4999fac2b1208e3e99cf16",
+    "finish-after/finish.png": "bf886ccf90009c3ab1f1883313986fb75ea9e37b2ce94fdcb47244eef7c8f89d",
+    "nongame-after/activity-time-end.png": "3bed8abed4f59b9839e96fdf3f875c49bc966e6c46c33894a1e2a61cb3ff1694",
+    "nongame-after/activity-time.png": "093cd1d8d3df1308abc34a1e6599b6f50952d2b47eb403870dbace5c0016611f",
+    "nongame-after/activity.png": "0f166666a6b562084d3a8ed0390f27b58e3816795bf144ea2ef78514a7960602",
+    "nongame-after/contact-filled.png": "0c8cc15227a4393037bb1defee60f6512d7189e5e2784af4cdf064a45b556f64",
+    "nongame-after/contact.png": "c11af4f809d83cc7661de9190f400b89b338d34cc43fa9fdc5a4581087b66646",
+    "nongame-after/customer-content.png": "38825747e5ad7980843fb0ced8bedb38e382112bd5be03ff164175647b4398ca",
+    "nongame-after/customer.png": "c73b3a9a4cc14707bb3593ae168b608b7129aa55115d0a2ea0351e9c1fbeb61a",
+    "nongame-after/discard-simple.png": "cd1c94d3683261fbe8d0ac0791bcb0b91f1a4a09dd391d6754b770d664d1e632",
+    "nongame-after/join-target-content.png": "1513b202489655072bcb1f7abd195c92a592a5f7af1d1d8456fb108eec9bcd9a",
+    "nongame-after/join-target-long-title.png": "ca7017f2346b47865c5a6998a45f1b3451f1ba251d1e010b9886e8d70d7cc683",
+    "nongame-after/join-target.png": "bf81786ed7bdb709e83cc8091fb62f1ce0794642c40ef10126e7ace88e817c53",
+    "nongame-after/mode-info.png": "daa36f4367d904ef062754adfc63ee06496785c24c96f997876dadc4942483c2",
+    "nongame-after/nickname-disabled.png": "807f910becfd95be952f5031503ab7b51b5527b442b1c4aa6fd1bf9d13249752",
+    "nongame-after/nickname-empty.png": "f724f39b8048627753cb3b8d29dfe9c7996fb4e6f4b806a15da35e1f046d88dd",
+    "nongame-after/nickname.png": "64e5ddcde3a687cc7b0568d23fbfb0d973c627e776b4272e82b51fdc317c4bb2",
+    "nongame-after/project-drawer-content.png": "512c6e7b53da3e9b566f5437f773e94407ca23321bc6eb895858e1faf8fc60a9",
+    "nongame-after/project-drawer.png": "02fea2d15d83254d6259eef8e8e306d47a4b020ead6fe566bdf600c01de68f70",
+    "nongame-after/signature.png": "5a3156df99bff367fbd10df4d028ac95be03e267cbe627a32678fffc4e891dbf",
+    "nongame-after/template.png": "6aeebcf7f1dbbf6fce089c6cc5ed3c8256ae1dd7fd99c0c41b1eac079d32f551",
+    "nongame-after/works-2.png": "da04c1396de90a4f65939da7686535567d7f5daa459e9f9baf4e9219191e78d5",
+    "nongame-after/works-9.png": "003c6a81c09e9da1b653dcfcbe167f2663959073ab4c4964e438dce2e58ed358",
+    "nongame-after/works.png": "60e5361d206cd244b7b3b229e43006683f3614407a2577199c61e0b1b6542625",
+    "nongame-round3-after/badge-detail-list.png": "7aab29cc4569ad37dac2829b4094d9c67d137959624a274aa6d1535915338973",
+    "nongame-round3-after/badge-detail.png": "88553c8abf2645365f5f495ac871c169a9d2fe8c9b548fc4359415f3b27b8bc5",
+    "nongame-round3-after/badge-long.png": "8047ce5d0c64b2064ca50eb7f3509b7bd5d0464abc9449275059c8746d23f5ae",
+    "nongame-round3-after/category-multiple.png": "17de62dc250cab78b2c73e04a1a07b8b94b149c1c4584b66cce8994d5c76b730",
+    "nongame-round3-after/category-switched.png": "cb777dcb783ec4c8a900ddff381fa62c72c0a8ec3f972dec09b7cc3823ae719d",
+    "nongame-round3-after/category.png": "fb0d745861650301b273a87435699c555296418e50eba4a577aec748481e59b6",
+    "nongame-round3-after/chapter-settings.png": "9cd736b398c3ed5dfe468bffd185aae20113ae5cb12f6ade4a2436ffc2177036",
+    "nongame-round3-after/creator-content.png": "f418f925e37025e5a92d82e954ee2801780584220e871b8b2adc6e21604636cf",
+    "nongame-round3-after/story-editor.png": "ca3d82e997cc001ee23f294fe97f288712ccfa996d467a813d011f7af77f2a63",
+    "nongame-round3-after/story-vars-empty.png": "9e4d9753420c37169eb730678ee35c101b91953158dab401e2706f0b3a5461e2",
+    "nongame-round3-after/story-vars.png": "493c8f79c3f5785fe0f3656a3729c6f8d6a8ef17b59b3a42a6f194b67264a35f",
+    "nongame-round3-icons-after/add-module.png": "2294e0360dccc32c89e1caa32e77701c534cd01206421da9f0138caaa93c33d7",
+    "nongame-round3-icons-after/game-catalog.png": "59000cef741af65c2c19435d94607f99cec13b660efca3783a235793ebdf1de3",
+    "nongame-round3-icons-after/picker-duration.png": "8445b859550e698719e4b0d4a1ba9ae612f42d4fe3d6f323e8fe8a37ebe70947",
+    "nongame-round3-icons-after/picker-players.png": "438a7ff2e7cedaa5768b156f12eda1d5c51f8c092c52f126923f56fefd5432a1",
+    "nongame-round3-icons-after/picker-usageLocation.png": "b34387ff302dee1355aa72daa2ea7f53ce9b170d1a862985405823d27cc67173",
+    "nongame-round3-icons-before/merchant-copy.png": "2b28ed5e26bd89a0e50a7bf782cca51f6273e1fd01420987a9a927457beabd0e",
+    "nongame-round3-icons-before/post-compose.png": "180a2ec556b493dd3e8f342d246eff854dbaba8980c12d30065af5419686a348"
+  },
+  "previous_code_commit": "575d156ba4b7c44ffd1003eefe43db983459577c",
+  "revision": {
+    "trigger": "继续核对弹窗样式",
+    "baseline_commit": "b0a5ba68a5daa330f6313f86c5614b421607eca7",
+    "product_files": 5,
+    "changes": [
+      "俱乐部类型与活动倾向移除重复16px内边距，标题、内容、按钮共用左右16px留白",
+      "俱乐部类型正文字号16px改14px，应用按钮复用cy-btn及固定footer，字号14px改16px",
+      "圆点选择的长标签增加8px横向间隔与上下留白，勾选模式和即时菜单不进入新增规则",
+      "俱乐部黑色编辑外壳移除描边，仅作用于club-edit宿主"
+    ],
+    "native_states": 6,
+    "native_limits": [
+      "原生受控显示：合作评价、俱乐部深链和管理页嵌套宿主均缺业务编号；未绕过权限、保存资料或提交评价。",
+      "验证选择、取消、应用、重新打开和最多3项限制；未验证真实俱乐部正常业务入口或真机。",
+      "长选项使用临时显示文字，结束恢复；旧勋章长内容末端滚动和WebGL墙模式关闭回读仍未完成。"
+    ]
+  },
+  "current_screenshots": [
+    "category-point-after/category-dark.png",
+    "category-point-after/category-light.png",
+    "finish-after/finish-mode1.png",
+    "finish-after/finish-reloaded.png",
+    "finish-after/finish.png",
+    "nongame-after/activity-time-end.png",
+    "nongame-after/activity-time.png",
+    "nongame-after/activity.png",
+    "nongame-after/contact-filled.png",
+    "nongame-after/contact.png",
+    "nongame-after/customer-content.png",
+    "nongame-after/customer.png",
+    "nongame-after/discard-simple.png",
+    "nongame-after/join-target-content.png",
+    "nongame-after/join-target-long-title.png",
+    "nongame-after/join-target.png",
+    "nongame-after/mode-info.png",
+    "nongame-after/nickname-disabled.png",
+    "nongame-after/nickname-empty.png",
+    "nongame-after/nickname.png",
+    "nongame-after/project-drawer-content.png",
+    "nongame-after/project-drawer.png",
+    "nongame-after/signature.png",
+    "nongame-after/template.png",
+    "nongame-after/works-2.png",
+    "nongame-after/works-9.png",
+    "nongame-after/works.png",
+    "nongame-round3-after/badge-detail-list.png",
+    "nongame-round3-after/badge-detail.png",
+    "nongame-round3-after/badge-long.png",
+    "nongame-round3-after/category-multiple.png",
+    "nongame-round3-after/category-switched.png",
+    "nongame-round3-after/category.png",
+    "nongame-round3-after/chapter-settings.png",
+    "nongame-round3-after/creator-content.png",
+    "nongame-round3-after/story-editor.png",
+    "nongame-round3-after/story-vars-empty.png",
+    "nongame-round3-after/story-vars.png",
+    "nongame-round3-icons-after/add-module.png",
+    "nongame-round3-icons-after/game-catalog.png",
+    "nongame-round3-icons-after/picker-duration.png",
+    "nongame-round3-icons-after/picker-players.png",
+    "nongame-round3-icons-after/picker-usageLocation.png",
+    "nongame-round3-icons-before/merchant-copy.png",
+    "nongame-round3-icons-before/post-compose.png",
+    "nongame-round4-after/club-prefs-nested.png",
+    "nongame-round4-after/club-prefs.png",
+    "nongame-round4-after/club-type-nested.png",
+    "nongame-round4-after/club-type.png",
+    "nongame-round4-after/option-long.png",
+    "nongame-round4-after/option-sheet.png"
+  ],
+  "current_screenshot_sha256": {
+    "category-point-after/category-dark.png": "ad282c0380ab9ca6077d534b80b86fea687395f67002e9fefc8e2b887d849933",
+    "category-point-after/category-light.png": "92cef71613034e341f29fde5d71f958632df86a8367d7d8466b19ec4f7493fa9",
+    "finish-after/finish-mode1.png": "8b6b9590dadd82cb5a6c17fd071910bbc2a8230aa31cfcc5a3bb64f4649c0ec6",
+    "finish-after/finish-reloaded.png": "4b6d18c0071ee56f391f39009913542571f35a7e5a4999fac2b1208e3e99cf16",
+    "finish-after/finish.png": "bf886ccf90009c3ab1f1883313986fb75ea9e37b2ce94fdcb47244eef7c8f89d",
+    "nongame-after/activity-time-end.png": "3bed8abed4f59b9839e96fdf3f875c49bc966e6c46c33894a1e2a61cb3ff1694",
+    "nongame-after/activity-time.png": "093cd1d8d3df1308abc34a1e6599b6f50952d2b47eb403870dbace5c0016611f",
+    "nongame-after/activity.png": "0f166666a6b562084d3a8ed0390f27b58e3816795bf144ea2ef78514a7960602",
+    "nongame-after/contact-filled.png": "0c8cc15227a4393037bb1defee60f6512d7189e5e2784af4cdf064a45b556f64",
+    "nongame-after/contact.png": "c11af4f809d83cc7661de9190f400b89b338d34cc43fa9fdc5a4581087b66646",
+    "nongame-after/customer-content.png": "38825747e5ad7980843fb0ced8bedb38e382112bd5be03ff164175647b4398ca",
+    "nongame-after/customer.png": "c73b3a9a4cc14707bb3593ae168b608b7129aa55115d0a2ea0351e9c1fbeb61a",
+    "nongame-after/discard-simple.png": "cd1c94d3683261fbe8d0ac0791bcb0b91f1a4a09dd391d6754b770d664d1e632",
+    "nongame-after/join-target-content.png": "1513b202489655072bcb1f7abd195c92a592a5f7af1d1d8456fb108eec9bcd9a",
+    "nongame-after/join-target-long-title.png": "ca7017f2346b47865c5a6998a45f1b3451f1ba251d1e010b9886e8d70d7cc683",
+    "nongame-after/join-target.png": "bf81786ed7bdb709e83cc8091fb62f1ce0794642c40ef10126e7ace88e817c53",
+    "nongame-after/mode-info.png": "daa36f4367d904ef062754adfc63ee06496785c24c96f997876dadc4942483c2",
+    "nongame-after/nickname-disabled.png": "807f910becfd95be952f5031503ab7b51b5527b442b1c4aa6fd1bf9d13249752",
+    "nongame-after/nickname-empty.png": "f724f39b8048627753cb3b8d29dfe9c7996fb4e6f4b806a15da35e1f046d88dd",
+    "nongame-after/nickname.png": "64e5ddcde3a687cc7b0568d23fbfb0d973c627e776b4272e82b51fdc317c4bb2",
+    "nongame-after/project-drawer-content.png": "512c6e7b53da3e9b566f5437f773e94407ca23321bc6eb895858e1faf8fc60a9",
+    "nongame-after/project-drawer.png": "02fea2d15d83254d6259eef8e8e306d47a4b020ead6fe566bdf600c01de68f70",
+    "nongame-after/signature.png": "5a3156df99bff367fbd10df4d028ac95be03e267cbe627a32678fffc4e891dbf",
+    "nongame-after/template.png": "6aeebcf7f1dbbf6fce089c6cc5ed3c8256ae1dd7fd99c0c41b1eac079d32f551",
+    "nongame-after/works-2.png": "da04c1396de90a4f65939da7686535567d7f5daa459e9f9baf4e9219191e78d5",
+    "nongame-after/works-9.png": "003c6a81c09e9da1b653dcfcbe167f2663959073ab4c4964e438dce2e58ed358",
+    "nongame-after/works.png": "60e5361d206cd244b7b3b229e43006683f3614407a2577199c61e0b1b6542625",
+    "nongame-round3-after/badge-detail-list.png": "7aab29cc4569ad37dac2829b4094d9c67d137959624a274aa6d1535915338973",
+    "nongame-round3-after/badge-detail.png": "88553c8abf2645365f5f495ac871c169a9d2fe8c9b548fc4359415f3b27b8bc5",
+    "nongame-round3-after/badge-long.png": "8047ce5d0c64b2064ca50eb7f3509b7bd5d0464abc9449275059c8746d23f5ae",
+    "nongame-round3-after/category-multiple.png": "17de62dc250cab78b2c73e04a1a07b8b94b149c1c4584b66cce8994d5c76b730",
+    "nongame-round3-after/category-switched.png": "cb777dcb783ec4c8a900ddff381fa62c72c0a8ec3f972dec09b7cc3823ae719d",
+    "nongame-round3-after/category.png": "fb0d745861650301b273a87435699c555296418e50eba4a577aec748481e59b6",
+    "nongame-round3-after/chapter-settings.png": "9cd736b398c3ed5dfe468bffd185aae20113ae5cb12f6ade4a2436ffc2177036",
+    "nongame-round3-after/creator-content.png": "f418f925e37025e5a92d82e954ee2801780584220e871b8b2adc6e21604636cf",
+    "nongame-round3-after/story-editor.png": "ca3d82e997cc001ee23f294fe97f288712ccfa996d467a813d011f7af77f2a63",
+    "nongame-round3-after/story-vars-empty.png": "9e4d9753420c37169eb730678ee35c101b91953158dab401e2706f0b3a5461e2",
+    "nongame-round3-after/story-vars.png": "493c8f79c3f5785fe0f3656a3729c6f8d6a8ef17b59b3a42a6f194b67264a35f",
+    "nongame-round3-icons-after/add-module.png": "2294e0360dccc32c89e1caa32e77701c534cd01206421da9f0138caaa93c33d7",
+    "nongame-round3-icons-after/game-catalog.png": "59000cef741af65c2c19435d94607f99cec13b660efca3783a235793ebdf1de3",
+    "nongame-round3-icons-after/picker-duration.png": "8445b859550e698719e4b0d4a1ba9ae612f42d4fe3d6f323e8fe8a37ebe70947",
+    "nongame-round3-icons-after/picker-players.png": "438a7ff2e7cedaa5768b156f12eda1d5c51f8c092c52f126923f56fefd5432a1",
+    "nongame-round3-icons-after/picker-usageLocation.png": "b34387ff302dee1355aa72daa2ea7f53ce9b170d1a862985405823d27cc67173",
+    "nongame-round3-icons-before/merchant-copy.png": "2b28ed5e26bd89a0e50a7bf782cca51f6273e1fd01420987a9a927457beabd0e",
+    "nongame-round3-icons-before/post-compose.png": "180a2ec556b493dd3e8f342d246eff854dbaba8980c12d30065af5419686a348",
+    "nongame-round4-after/club-prefs-nested.png": "88a3d1b24c42d131d16d9328bd0134b29dba890797848440c023f5c06d50cdb8",
+    "nongame-round4-after/club-prefs.png": "077c9251f2a431aa4141444ed24100b9fc48d0c44668fa2b58cb39b88af6a41a",
+    "nongame-round4-after/club-type-nested.png": "619b55c3be1c80ca2cfc95e8375cbc9118aafb81ee2c43c5b56f4f4c4e955033",
+    "nongame-round4-after/club-type.png": "cba43cd8604ba985351495e33bd08d37454bd6a9f17fa5d5b04a2e146db2b068",
+    "nongame-round4-after/option-long.png": "5b295310c84b4e5f4267ec7ce891bb73184b9fab2416117787a49ea83133193d",
+    "nongame-round4-after/option-sheet.png": "8936943a0eaab69a34fb5ba50edfaa9f8d33d91162c11dcf79a6037743f3b5b3"
+  },
+  "revision_history": [
+    {
+      "trigger": "用户反馈上一版间距偏大，要求复核原紧凑样式并覆盖胶囊与居中弹窗",
+      "product_files": 9,
+      "baseline_commit": "7986c9796a",
+      "internal_spacing": "商家短面板移除重复上下内距；场景内容移除叠加横向内距；居中框取消独占关闭空白行；统一菜单正文字号",
+      "source_only": "51处下拉菜单消费共用字号修改，尚未逐个入口截图；轻提示、加载框与仪式身份卡经过源码类型核对，本次未改其用途或视觉主张。",
+      "runtime_method_boundary": "短提示来自原页面方法，输入与关闭分支已核对；胶囊调用原页面方法，用已显示帖文的头像位置构造锚点；居中确认通过原组件临时显示状态验证，无确认写入。"
+    },
+    {
+      "trigger": "用户指定小程序支付成功弹窗，随后提供IMG_0407.PNG作为边距参照，并要求不再找旧版本",
+      "product_files": 3,
+      "baseline_commit": "7766012bee",
+      "changes": "共用短面板外距4px改8px，内容左右12px改16px，顶部内距4px改8px；安全区计一次；支付结果恢复inset",
+      "source_reference": {
+        "file": "/Users/arlan/Downloads/IMG_0407.PNG",
+        "sha256": "d7a1da26b2876bd6564455b070d84dcbb598a26e8d05a55a8e3835e76d16ad3b",
+        "measurement": "照片中卡片与内屏的留边比例约2%，按375宽选择既有8px档；参照只用于留边比例"
+      }
+    },
+    {
+      "code_commit": "f20221b02cecec459bf944bae8ace3407b7a8052",
+      "tests": {
+        "status": "PASS",
+        "command": "npm run test:unit",
+        "exit_code": 0,
+        "total": 7675,
+        "passed": 7673,
+        "failed": 0,
+        "skipped": 2,
+        "latest_commit": "f20221b02cecec459bf944bae8ace3407b7a8052",
+        "full_run_code_commit": "f20221b02cecec459bf944bae8ace3407b7a8052",
+        "target_tests_passed": 99,
+        "popover_behavior_tests": 8,
+        "lint_ui": "UI-GATE-0 PASS",
+        "lint_scope": "PASS,544 production JS",
+        "action_inventory": "PASS,4382 controls; inventory is not business acceptance",
+        "previous_full_run": {
+          "total": 7667,
+          "passed": 7665,
+          "skipped": 2,
+          "full_run_code_commit": "ad1d400524efb55e6533b4971bff3b7ab7f0f0f1"
+        },
+        "duration_ms": 281468.132791
+      },
+      "scope": {
+        "cy_sheet_references": 101,
+        "cy_scene_sheet_references": 50,
+        "proto_sheet_containers": 37,
+        "scene_registry": 52,
+        "routes_using_shared_shells": 130,
+        "route_count": 131,
+        "custom_source_candidates": 91,
+        "cy-sheet": 101,
+        "cy-scene-sheet": 50,
+        "cy-modal": 19,
+        "cy-modal-host": 126,
+        "cy-danger-confirm": 26,
+        "cy-popover": 2,
+        "cy-dropdown": 51,
+        "cy-toast": 129,
+        "cy-loading-mask": 125,
+        "non_game_audit_candidates": 99
+      },
+      "revision": {
+        "trigger": "用户确认8px窄边距，授权继续优化其他类型",
+        "product_files": 6,
+        "baseline_commit": "b8917f8c19",
+        "changes": [
+          "胶囊菜单实测宽高定位，边缘8pt、避开胶囊和底部安全区，长文案可换行与滚动，异步测量关闭保护",
+          "居中按钮使用44pt最小高度与自然增高；加载时隐藏文字但保留占位，按钮高度稳定",
+          "下拉菜单补齐portal明暗主题1.6行距，文本行增加上下内距与换行",
+          "完成弹窗8处字号接入共用字阶，集章与说明使用故事主题文字色；地图不再误用错误徽标样式"
+        ],
+        "source_only": "共用短浮层15处inset调用、胶囊2处引用、居中19处直接引用与126处宿主、下拉51处引用。引用数不是逐入口验收数。"
+      },
+      "evidence_boundary": "本轮优化胶囊、居中、下拉和完成弹窗。普通胶囊、长菜单右下角、居中常规/长文案/放大文字/加载、商家下拉、短面板、半屏和导航下全高面板有模拟器截图。长文案/放大文字为临时布局夹具，所有夹具源码已恢复；完成面板使用显示夹具，地图无真实路线点，不代表完成业务或地图瓦片验收。尚未上传微信与真机验收。"
+    },
+    {
+      "code_commit": "8551930a8b92f2129f104e9702e7dbff4a196814",
+      "tests": {
+        "status": "PASS",
+        "command": "npm run test:unit",
+        "full_run_code_commit": "8551930a8b92f2129f104e9702e7dbff4a196814",
+        "run_start_head": "369acd7a2d63b85f6ac568280835966717d10b5f",
+        "test_content_verification": "验证副本包含最终测试修订；测试完成后逐字节核对与最终提交一致。",
+        "product_code_commit": "369acd7a2d63b85f6ac568280835966717d10b5f",
+        "exit_code": 0,
+        "total": 7677,
+        "passed": 7675,
+        "failed": 0,
+        "skipped": 2,
+        "duration_ms": 297487.235125,
+        "lint_ui": "UI-GATE-0 PASS",
+        "lint_scope": "PASS, 544 production JS",
+        "action_inventory": "PASS, 4372 controls; source inventory only",
+        "native_compile": {
+          "success": 24,
+          "details": "native-compile.json"
+        }
+      },
+      "revision": {
+        "trigger": "继续修复非游戏待办；精简放弃和完成面板；落实三个 Figma Field 状态",
+        "baseline_commit": "64eb7f0fb13f380bf5f4c1e3c2f3ddadfee50aa2",
+        "product_commits": [
+          "053b19aea9fb36c93839e9b68b7abc7eae9dbd1d",
+          "369acd7a2d63b85f6ac568280835966717d10b5f"
+        ],
+        "product_files": 28,
+        "non_game_candidate_repairs": 12,
+        "normal_native_variants": 13,
+        "current_native_states": 24
+      },
+      "current_screenshot_sha256": {
+        "finish-after/finish-mode1.png": "8b6b9590dadd82cb5a6c17fd071910bbc2a8230aa31cfcc5a3bb64f4649c0ec6",
+        "finish-after/finish-reloaded.png": "4b6d18c0071ee56f391f39009913542571f35a7e5a4999fac2b1208e3e99cf16",
+        "finish-after/finish.png": "bf886ccf90009c3ab1f1883313986fb75ea9e37b2ce94fdcb47244eef7c8f89d",
+        "nongame-after/activity-time.png": "44b649af2d82e4ac2120e4fbe6e3459adadc06b1b0e093836041e50d334cb77a",
+        "nongame-after/activity.png": "0f166666a6b562084d3a8ed0390f27b58e3816795bf144ea2ef78514a7960602",
+        "nongame-after/add-module.png": "d80bacca76e8b529e5d9f22e6b6860c99384a2b5bd3b0ec7a700c2e1b1fcef14",
+        "nongame-after/contact.png": "8d2087cde815884319024d4169ba6b68acd92e9f7781bb42fb8cf1230ebbdd35",
+        "nongame-after/customer-content.png": "38825747e5ad7980843fb0ced8bedb38e382112bd5be03ff164175647b4398ca",
+        "nongame-after/customer.png": "c73b3a9a4cc14707bb3593ae168b608b7129aa55115d0a2ea0351e9c1fbeb61a",
+        "nongame-after/discard-simple.png": "cd1c94d3683261fbe8d0ac0791bcb0b91f1a4a09dd391d6754b770d664d1e632",
+        "nongame-after/join-target-content.png": "98b3b661cc3b2022503910066a812f983fc97b6920d06b9f36ab60391efd70d4",
+        "nongame-after/join-target.png": "bf81786ed7bdb709e83cc8091fb62f1ce0794642c40ef10126e7ace88e817c53",
+        "nongame-after/mode-info.png": "b533af2d51c83099ab23baa9675bfeb0452fa903d46b517472dea517088cf6ce",
+        "nongame-after/nickname-disabled.png": "807f910becfd95be952f5031503ab7b51b5527b442b1c4aa6fd1bf9d13249752",
+        "nongame-after/nickname-empty.png": "f724f39b8048627753cb3b8d29dfe9c7996fb4e6f4b806a15da35e1f046d88dd",
+        "nongame-after/nickname.png": "64e5ddcde3a687cc7b0568d23fbfb0d973c627e776b4272e82b51fdc317c4bb2",
+        "nongame-after/picker.png": "d724653c550766f1420a86d17658e30a6d3b349e6246c0554d616234bfec2681",
+        "nongame-after/project-drawer-content.png": "512c6e7b53da3e9b566f5437f773e94407ca23321bc6eb895858e1faf8fc60a9",
+        "nongame-after/project-drawer.png": "02fea2d15d83254d6259eef8e8e306d47a4b020ead6fe566bdf600c01de68f70",
+        "nongame-after/signature.png": "5a3156df99bff367fbd10df4d028ac95be03e267cbe627a32678fffc4e891dbf",
+        "nongame-after/template.png": "6aeebcf7f1dbbf6fce089c6cc5ed3c8256ae1dd7fd99c0c41b1eac079d32f551",
+        "nongame-after/works-2.png": "da04c1396de90a4f65939da7686535567d7f5daa459e9f9baf4e9219191e78d5",
+        "nongame-after/works-9.png": "003c6a81c09e9da1b653dcfcbe167f2663959073ab4c4964e438dce2e58ed358",
+        "nongame-after/works.png": "60e5361d206cd244b7b3b229e43006683f3614407a2577199c61e0b1b6542625"
+      }
+    },
+    {
+      "code_commit": "cd5f6a9767bb9edc5a564c8894d1ef6cbe36b7c3",
+      "revision": {
+        "trigger": "用户要求二维码居中、活动时间去灰黑嵌套，并继续检查其他非游戏弹窗",
+        "baseline_commit": "c40082052e",
+        "product_files": 4,
+        "changes": [
+          "联系二维码独立单列居中，图片 aspectFit 保留完整内容",
+          "活动时间两个端点平铺，用细线与文字强调当前步骤",
+          "路线模式介绍去彩色渐变、光晕和标签底色",
+          "承接弹窗长标题和摘要使用自适应宽度并换行"
+        ],
+        "native_states": 7,
+        "source_reviewed_special_containers": 7
+      }
+    },
+    {
+      "code_commit": "766b49de18ba84db4ee1f6578b094bd9a924436e",
+      "tests": {
+        "status": "PASS",
+        "scope": "本次仅分类中心点尺寸；2个现有相关测试文件",
+        "verified_code_commit": "766b49de18ba84db4ee1f6578b094bd9a924436e",
+        "passed": 17,
+        "failed": 0,
+        "skipped": 0,
+        "native_compile": {
+          "this_revision_success": 1
+        },
+        "full_suite_rerun": false,
+        "previous_full_run": {
+          "status": "PASS",
+          "command": "npm run test:unit",
+          "full_run_code_commit": "8551930a8b92f2129f104e9702e7dbff4a196814",
+          "run_start_head": "369acd7a2d63b85f6ac568280835966717d10b5f",
+          "test_content_verification": "验证副本包含最终测试修订；测试完成后逐字节核对与最终提交一致。",
+          "product_code_commit": "369acd7a2d63b85f6ac568280835966717d10b5f",
+          "exit_code": 0,
+          "total": 7677,
+          "passed": 7675,
+          "failed": 0,
+          "skipped": 2,
+          "duration_ms": 297487.235125,
+          "lint_ui": "UI-GATE-0 PASS",
+          "lint_scope": "PASS, 544 production JS",
+          "action_inventory": "PASS, 4372 controls; source inventory only",
+          "native_compile": {
+            "success": 24,
+            "details": "native-compile.json"
+          }
+        }
+      },
+      "followup_category_point": {
+        "code_commit": "766b49de18ba84db4ee1f6578b094bd9a924436e",
+        "file": "chengyinhub-xcx/components/cy/category-sheet/index.wxss",
+        "change": "一行两个的分类选择中心点从6pt增至8pt，外圈20pt不变",
+        "before": "category-point-before/category-dark.png",
+        "after": [
+          "category-point-after/category-dark.png",
+          "category-point-after/category-light.png"
+        ],
+        "checks": {
+          "existing_related_tests": 17,
+          "failed": 0,
+          "native_wxss_compile": true,
+          "native_dark_light_reviewed": true
+        },
+        "business_boundary": "仅本地预选第一项并关闭，未点保存。"
+      },
+      "revision": {
+        "trigger": "继续非游戏弹窗；实心选择圆点；分类图标准确对应",
+        "baseline_commit": "1d11aa2008",
+        "changes": [
+          "主题类别与共用分类选中使用实心圆和中心点",
+          "八个分类使用对应语义图标，所有消费方共用映射",
+          "补齐章节设置、故事流、变量、创建配置目录与勋章详情的外观"
+        ],
+        "native_states": 15,
+        "source_reviewed_special_containers": 0,
+        "native_limits": [
+          "共用选项列表及俱乐部类型本轮只有源码与编译验证",
+          "勋章长内容末端滚动及WebGL墙模式关闭未完成回读"
+        ]
+      }
+    },
+    {
+      "code_commit": "575d156ba4b7c44ffd1003eefe43db983459577c",
+      "revision": {
+        "trigger": "其他非游戏弹窗图标优化及遗漏选择样式",
+        "baseline_commit": "70424820e4",
+        "product_files": 2,
+        "changes": [
+          "添加模块加号移除文字行高，改为居中图标容器",
+          "通用picker三个入口补齐实心圆和中心点，未选中为空心圆，单行选项中心点沿用6pt",
+          "补齐单选语义及长标签的缩放空间"
+        ],
+        "native_states": 5,
+        "glyph_geometry_samples": 11,
+        "picker_entry_readbacks": 3,
+        "native_limits": [
+          "代表几何抽样与受控显示，未逐个正常业务入口或真机验收",
+          "共用选项列表/俱乐部类型原待办及勋章末端/WebGL回读仍保留原限制"
+        ]
+      },
+      "tests": {
+        "status": "PASS",
+        "verified_code_commit": "575d156ba4b7c44ffd1003eefe43db983459577c",
+        "scope": "本轮2个产品文件；9个现有相关测试文件",
+        "passed": 64,
+        "failed": 0,
+        "skipped": 0,
+        "lint_ui": "PASS in complete isolated snapshot; unrelated workspace title changes excluded",
+        "native_compile": {
+          "this_revision_success": 2
+        },
+        "full_suite_rerun": false,
+        "previous_full_run": {
+          "status": "PASS",
+          "command": "npm run test:unit",
+          "full_run_code_commit": "8551930a8b92f2129f104e9702e7dbff4a196814",
+          "run_start_head": "369acd7a2d63b85f6ac568280835966717d10b5f",
+          "test_content_verification": "验证副本包含最终测试修订；测试完成后逐字节核对与最终提交一致。",
+          "product_code_commit": "369acd7a2d63b85f6ac568280835966717d10b5f",
+          "exit_code": 0,
+          "total": 7677,
+          "passed": 7675,
+          "failed": 0,
+          "skipped": 2,
+          "duration_ms": 297487.235125,
+          "lint_ui": "UI-GATE-0 PASS",
+          "lint_scope": "PASS, 544 production JS",
+          "action_inventory": "PASS, 4372 controls; source inventory only",
+          "native_compile": {
+            "success": 24,
+            "details": "native-compile.json"
+          }
+        }
+      }
+    }
+  ],
+  "previous_screenshots": [
+    {
+      "file": "reference-after/short-merchant.png",
+      "name": "短输入：4px改为8px留边",
+      "entry": "品牌介绍→一句话介绍→原输入方法",
+      "verified": "原页面临时输入，核对标题、关闭、输入与保存按钮；没有保存，最后已放弃本地修改"
+    },
+    {
+      "file": "reference-after/payment-success.png",
+      "before": "reference-before/01-payment.png",
+      "name": "支付结果：恢复浮起留边",
+      "entry": "报名页原cy-result-sheet，临时显示状态",
+      "verified": "成功态外距8px、完整圆角；不是实际支付回执"
+    },
+    {
+      "file": "reference-after/short-discard.png",
+      "name": "短确认：同一外边距",
+      "entry": "关闭未保存的短输入弹窗",
+      "verified": "沿用短浮层，继续编辑与放弃修改均可见",
+      "before": "compact-after/01-short.png"
+    },
+    {
+      "file": "reference-after/payment-loading.png",
+      "name": "正在支付：同一留边",
+      "entry": "临时显示状态，duration=0",
+      "verified": "仅核对布局，没有拉起微信支付"
+    },
+    {
+      "file": "reference-after/payment-fail.png",
+      "name": "支付未完成：同一留边",
+      "entry": "临时显示状态，duration=0",
+      "verified": "仅核对布局，没有创建订单或扣款"
+    }
+  ],
+  "fixtures_restored": {
+    "files": [
+      "pages/merchant/index/index.wxml",
+      "pages/merchant/decor/perks/index.js",
+      "pages/merchant/decor/perks/index.wxml"
+    ],
+    "verification": "字节与产品提交相同；所有受控字号、文字与桥接打开方法已撤销",
+    "scope": "此前源码展示桥接已恢复；本轮运行时显示夹具和本地草稿未统一验证恢复。",
+    "round3_runtime_restore_verified": false,
+    "round4_runtime_restore_verified": true,
+    "round4_scope": "选项显示文字恢复；俱乐部选择值清空、dirty恢复false、嵌套scene关闭。未保存俱乐部或提交合作评价。"
+  },
+  "product_files": [
+    "chengyinhub-xcx/components/cy/scene-club-edit/index.wxml",
+    "chengyinhub-xcx/components/cy/scene-club-edit/index.wxss",
+    "chengyinhub-xcx/components/cy/option-sheet/index.wxml",
+    "chengyinhub-xcx/components/cy/option-sheet/index.wxss",
+    "chengyinhub-xcx/pages/club/detail/index.wxss"
+  ],
+  "figma": {
+    "file_key": "0kqS1aPs7etjkxjMZy6Bwc",
+    "nodes": [
+      "44:87",
+      "44:81",
+      "44:117"
+    ],
+    "control_height_pt": 44,
+    "radius_pt": 12,
+    "horizontal_padding_pt": 12,
+    "body_pt": 14,
+    "label_pt": 12,
+    "helper_pt": 11,
+    "normal_border": "none",
+    "native_pixels": {
+      "空白": {
+        "native_screenshot": "nongame-after/nickname-empty.png",
+        "flat_region": [
+          300,
+          1030,
+          490,
+          1070
+        ],
+        "observed_background": "#1C1C1E",
+        "pixel_count": 7600,
+        "target_background": "#1C1C1E",
+        "target_text": "#868686",
+        "figma_node": "44:81"
+      },
+      "已填写": {
+        "native_screenshot": "nongame-after/nickname.png",
+        "flat_region": [
+          300,
+          1030,
+          490,
+          1070
+        ],
+        "observed_background": "#3B3B3D",
+        "pixel_count": 7600,
+        "target_background": "#3B3B3D",
+        "target_text": "#F2F2F4",
+        "figma_node": "44:87"
+      },
+      "禁用": {
+        "native_screenshot": "nongame-after/nickname-disabled.png",
+        "flat_region": [
+          300,
+          1030,
+          490,
+          1070
+        ],
+        "observed_background": "#141416",
+        "pixel_count": 7600,
+        "target_background": "#141416",
+        "target_text": "rgba(255,255,255,.40)",
+        "figma_node": "44:117"
+      }
+    },
+    "implementation": "复用 cy-field；昵称面板已有标题，不重复增加标签和帮助文案；标签/帮助接口保留；没有更改既有昵称长度规则。",
+    "assets": "三个 Field 都是文本、背景及布局，没有新增外部静态素材。"
+  },
+  "validation_isolation": {
+    "clean_tree": "/Users/arlan/.codex/worktrees/popup-final-validation/chengyin",
+    "excluded_foreign_changes": [
+      "chengyinhub-xcx/pages/publish/activity/index.wxml 顶部标题改动",
+      "chengyinhub-xcx/tests/unit/nav-polish-single-title-contract.test.js 配套预期"
+    ],
+    "committed_product_bytes_match": true,
+    "clean_tree_revision": "438e1fdbad7ecacfe319c95d6e8737365edb50e7",
+    "latest_change": "本轮62项相关检查在当前工作区完成；全局UI门禁使用完整HEAD快照加本轮5个文件，排除并行标题改动。内容逐字节一致，临时快照已清理。"
+  },
+  "historical_screenshots": [
+    {
+      "file": "after/02-short.png",
+      "name": "短提示 · 留边",
+      "entry": "品牌介绍 → 一句话介绍 → 输入 → 关闭",
+      "verified": "左右、底部留边；完整圆角；继续编辑保留本地输入"
+    },
+    {
+      "file": "after/01-half.png",
+      "name": "普通半屏 · 深色",
+      "entry": "隐私说明",
+      "verified": "左右、底部贴边；统一标题与按钮基准字号"
+    },
+    {
+      "file": "after/04-merchant-half.png",
+      "name": "普通半屏 · 浅色",
+      "entry": "商家工作台 → 更多",
+      "verified": "左右、底部贴边；菜单层级清晰"
+    },
+    {
+      "file": "after/03-full.png",
+      "name": "长文本 · 导航下方全高",
+      "entry": "品牌介绍 → 品牌故事；调用原页面打开方法",
+      "verified": "顶边在微信胶囊下方；共用标题；关闭回原页面"
+    },
+    {
+      "file": "after/05-dark-date.png",
+      "name": "日期滚轮 · 深色",
+      "entry": "搜索页原日期选择方法",
+      "verified": "滚轮有确定高度，未塌陷；标题、关闭、完成均可见"
+    },
+    {
+      "file": "after/06-full-scene.png",
+      "name": "长表单 · 固定底部操作",
+      "entry": "商家工作台原场景打开方法：店铺资料",
+      "verified": "顶边避开胶囊；正文可滚动；底部按钮固定；输入文字完整居中"
+    },
+    {
+      "file": "after/07-center-alert.png",
+      "name": "居中确认 · 前景",
+      "entry": "长场景上临时显示原确认组件（只验证布局）",
+      "verified": "确认框显示在长表单上方；标题、正文、按钮使用共用文字层级"
+    }
+  ],
+  "followup_round2": {
+    "native_before": [
+      "nongame-round2-before/contact.png",
+      "nongame-round2-before/contact-filled.png",
+      "nongame-round2-before/activity-time.png",
+      "nongame-round2-before/activity-time-end.png",
+      "nongame-round2-before/mode-info.png",
+      "nongame-round2-before/join-target-content.png"
+    ],
+    "native_after": [
+      "nongame-round2-after/contact.png",
+      "nongame-round2-after/contact-filled.png",
+      "nongame-round2-after/activity-time.png",
+      "nongame-round2-after/activity-time-end.png",
+      "nongame-round2-after/mode-info.png",
+      "nongame-round2-after/join-target-content.png",
+      "nongame-round2-after/join-target-long-title.png"
+    ],
+    "last_full_unit_commit": "8551930a8b92f2129f104e9702e7dbff4a196814",
+    "full_unit_result": "7675 pass,2 skipped,0 fail (prior revision)",
+    "related_current_result": {
+      "tests": 96,
+      "pass": 96,
+      "fail": 0,
+      "skipped": 0,
+      "duration_ms": 106.161666
+    }
+  },
+  "followup_round3": {
+    "code_commit": "438e1fdbad7ecacfe319c95d6e8737365edb50e7",
+    "native_states": 15,
+    "native_after": [
+      "nongame-round3-after/add-module.png",
+      "nongame-round3-after/badge-detail-list.png",
+      "nongame-round3-after/badge-detail.png",
+      "nongame-round3-after/badge-long.png",
+      "nongame-round3-after/category-icons.png",
+      "nongame-round3-after/category-multiple.png",
+      "nongame-round3-after/category-switched.png",
+      "nongame-round3-after/category.png",
+      "nongame-round3-after/chapter-settings.png",
+      "nongame-round3-after/creator-content.png",
+      "nongame-round3-after/game-catalog.png",
+      "nongame-round3-after/picker.png",
+      "nongame-round3-after/story-editor.png",
+      "nongame-round3-after/story-vars-empty.png",
+      "nongame-round3-after/story-vars.png"
+    ],
+    "related_current": {
+      "tests": 153,
+      "pass": 153,
+      "fail": 0,
+      "skipped": 0,
+      "duration_ms": 524.546208
+    },
+    "unverified": [
+      "共用选项列表及俱乐部类型本轮只有源码与编译验证",
+      "勋章长内容末端滚动及WebGL墙模式关闭未完成回读"
+    ]
+  },
+  "browser_report_verification": {
+    "status": "blocked",
+    "reason": "Browser URL policy rejected reading the local preview URL; no alternate browser route attempted",
+    "native_images_reviewed": true
+  },
+  "previous_tests": {
+    "status": "PASS",
+    "verified_code_commit": "575d156ba4b7c44ffd1003eefe43db983459577c",
+    "scope": "本轮2个产品文件；9个现有相关测试文件",
+    "passed": 64,
+    "failed": 0,
+    "skipped": 0,
+    "lint_ui": "PASS in complete isolated snapshot; unrelated workspace title changes excluded",
+    "native_compile": {
+      "this_revision_success": 2
+    },
+    "full_suite_rerun": false,
+    "previous_full_run": {
+      "status": "PASS",
+      "command": "npm run test:unit",
+      "full_run_code_commit": "8551930a8b92f2129f104e9702e7dbff4a196814",
+      "run_start_head": "369acd7a2d63b85f6ac568280835966717d10b5f",
+      "test_content_verification": "验证副本包含最终测试修订；测试完成后逐字节核对与最终提交一致。",
+      "product_code_commit": "369acd7a2d63b85f6ac568280835966717d10b5f",
+      "exit_code": 0,
+      "total": 7677,
+      "passed": 7675,
+      "failed": 0,
+      "skipped": 2,
+      "duration_ms": 297487.235125,
+      "lint_ui": "UI-GATE-0 PASS",
+      "lint_scope": "PASS, 544 production JS",
+      "action_inventory": "PASS, 4372 controls; source inventory only",
+      "native_compile": {
+        "success": 24,
+        "details": "native-compile.json"
+      }
+    }
+  },
+  "followup_category_point": {
+    "code_commit": "766b49de18ba84db4ee1f6578b094bd9a924436e",
+    "file": "chengyinhub-xcx/components/cy/category-sheet/index.wxss",
+    "change": "一行两个的分类选择中心点从6pt增至8pt，外圈20pt不变",
+    "before": "category-point-before/category-dark.png",
+    "after": [
+      "category-point-after/category-dark.png",
+      "category-point-after/category-light.png"
+    ],
+    "checks": {
+      "existing_related_tests": 17,
+      "failed": 0,
+      "native_wxss_compile": true,
+      "native_dark_light_reviewed": true
+    },
+    "business_boundary": "仅本地预选第一项并关闭，未点保存。"
+  },
+  "followup_icon_alignment": {
+    "code_commit": "575d156ba4b7c44ffd1003eefe43db983459577c",
+    "product_commits": [
+      "8c70830a0900dbd93351175ce308d64016919987",
+      "575d156ba4b7c44ffd1003eefe43db983459577c"
+    ],
+    "scope": "非游戏弹窗图标与通用人数/时长/场所选择器；不含游戏内部",
+    "product_files": [
+      "chengyinhub-xcx/pages/publish/temp/index.wxml",
+      "chengyinhub-xcx/pages/publish/temp/index.wxss"
+    ],
+    "changes": [
+      "添加模块加号移除文字行高，改为居中图标容器",
+      "通用picker三个入口补齐实心圆和中心点，未选中为空心圆，单行选项中心点沿用6pt",
+      "补齐单选语义及长标签的缩放空间"
+    ],
+    "glyph_geometry": {
+      "representatives": 11,
+      "tolerance_px": 2,
+      "module_plus_before_delta_y": 3.2421875,
+      "module_plus_after_delta_y": 0,
+      "records": [
+        {
+          "name": "module-plus",
+          "owner": {
+            "left": 343,
+            "top": 663.5,
+            "width": 16,
+            "height": 16,
+            "centerX": 351.0,
+            "centerY": 671.5
+          },
+          "iconHost": {
+            "left": 343,
+            "top": 663.5,
+            "width": 16,
+            "height": 16,
+            "centerX": 351.0,
+            "centerY": 671.5
+          },
+          "deltaX": 0.0,
+          "deltaY": 0.0
+        },
+        {
+          "name": "module-left-icon",
+          "owner": {
+            "left": 31,
+            "top": 649,
+            "width": 45,
+            "height": 45,
+            "centerX": 53.5,
+            "centerY": 671.5
+          },
+          "iconHost": {
+            "left": 43.5,
+            "top": 661.5,
+            "width": 20,
+            "height": 20,
+            "centerX": 53.5,
+            "centerY": 671.5
+          },
+          "deltaX": 0.0,
+          "deltaY": 0.0
+        },
+        {
+          "name": "module-close",
+          "owner": {
+            "left": 345,
+            "top": 555.8046875,
+            "width": 45,
+            "height": 45,
+            "centerX": 367.5,
+            "centerY": 578.3046875
+          },
+          "iconHost": {
+            "left": 356.5,
+            "top": 567.3046875,
+            "width": 22,
+            "height": 22,
+            "centerX": 367.5,
+            "centerY": 578.3046875
+          },
+          "deltaX": 0.0,
+          "deltaY": 0.0
+        },
+        {
+          "name": "catalog-icon",
+          "owner": {
+            "left": 22,
+            "top": 276.984375,
+            "width": 37,
+            "height": 37,
+            "centerX": 40.5,
+            "centerY": 295.484375
+          },
+          "iconHost": {
+            "left": 32,
+            "top": 286.984375,
+            "width": 17,
+            "height": 17,
+            "centerX": 40.5,
+            "centerY": 295.484375
+          },
+          "deltaX": 0.0,
+          "deltaY": 0.0
+        },
+        {
+          "selector": ".cmp-act",
+          "owner": {
+            "left": 350,
+            "top": 107.797,
+            "width": 24,
+            "height": 24,
+            "right": 374,
+            "bottom": 131.797,
+            "centerX": 362,
+            "centerY": 119.797
+          },
+          "glyph": {
+            "left": 350,
+            "top": 107.797,
+            "width": 24,
+            "height": 24,
+            "right": 374,
+            "bottom": 131.797,
+            "centerX": 362,
+            "centerY": 119.797
+          },
+          "deltaX": 0,
+          "deltaY": 0,
+          "name": "compose-draft"
+        },
+        {
+          "selector": ".cmp-tool",
+          "owner": {
+            "left": 65,
+            "top": 253.992,
+            "width": 22,
+            "height": 22,
+            "right": 87,
+            "bottom": 275.992,
+            "centerX": 76,
+            "centerY": 264.992
+          },
+          "glyph": {
+            "left": 65,
+            "top": 253.992,
+            "width": 22,
+            "height": 22,
+            "right": 87,
+            "bottom": 275.992,
+            "centerX": 76,
+            "centerY": 264.992
+          },
+          "deltaX": 0,
+          "deltaY": 0,
+          "name": "compose-image"
+        },
+        {
+          "selector": ".cmp-tool",
+          "owner": {
+            "left": 107,
+            "top": 253.992,
+            "width": 22,
+            "height": 22,
+            "right": 129,
+            "bottom": 275.992,
+            "centerX": 118,
+            "centerY": 264.992
+          },
+          "glyph": {
+            "left": 107,
+            "top": 253.992,
+            "width": 22,
+            "height": 22,
+            "right": 129,
+            "bottom": 275.992,
+            "centerX": 118,
+            "centerY": 264.992
+          },
+          "deltaX": 0,
+          "deltaY": 0,
+          "name": "compose-location"
+        },
+        {
+          "selector": ".cmp-tool",
+          "owner": {
+            "left": 149,
+            "top": 253.992,
+            "width": 22,
+            "height": 22,
+            "right": 171,
+            "bottom": 275.992,
+            "centerX": 160,
+            "centerY": 264.992
+          },
+          "glyph": {
+            "left": 149,
+            "top": 253.992,
+            "width": 22,
+            "height": 22,
+            "right": 171,
+            "bottom": 275.992,
+            "centerX": 160,
+            "centerY": 264.992
+          },
+          "deltaX": 0,
+          "deltaY": 0,
+          "name": "compose-activity"
+        },
+        {
+          "owner": {
+            "left": 358,
+            "top": 194,
+            "width": 20,
+            "height": 20,
+            "right": 378,
+            "bottom": 214,
+            "centerX": 368,
+            "centerY": 204
+          },
+          "glyph": {
+            "left": 358,
+            "top": 194.398,
+            "width": 20,
+            "height": 20,
+            "right": 378,
+            "bottom": 214.398,
+            "centerX": 368,
+            "centerY": 204.398
+          },
+          "deltaX": 0,
+          "deltaY": 0.39799999999999613,
+          "name": "draft-delete"
+        },
+        {
+          "name": "merchant-copy",
+          "owner": {
+            "left": 175.5,
+            "top": 675.2109375,
+            "width": 16,
+            "height": 23,
+            "centerX": 183.5,
+            "centerY": 686.7109375
+          },
+          "iconHost": {
+            "left": 177.5,
+            "top": 682.0546875,
+            "width": 12,
+            "height": 12,
+            "centerX": 183.5,
+            "centerY": 688.0546875
+          },
+          "deltaX": 0.0,
+          "deltaY": 1.34375
+        },
+        {
+          "name": "popover-follow",
+          "deltaX": null,
+          "deltaY": 0.20299999999997453,
+          "raw": {
+            "frame": {
+              "left": 265.68,
+              "top": 272.234,
+              "width": 110,
+              "height": 45,
+              "right": 375.68,
+              "bottom": 317.234,
+              "centerX": 320.68,
+              "centerY": 294.734
+            },
+            "glyph": {
+              "left": 277.68,
+              "top": 285.734,
+              "width": 18,
+              "height": 18,
+              "right": 295.68,
+              "bottom": 303.734,
+              "centerX": 286.68,
+              "centerY": 294.734
+            },
+            "label": {
+              "left": 303.68,
+              "top": 283.531,
+              "width": 58,
+              "height": 22,
+              "right": 361.68,
+              "bottom": 305.531,
+              "centerX": 332.68,
+              "centerY": 294.531
+            },
+            "iconTextDeltaY": 0.20299999999997453,
+            "iconFrameDeltaY": 0
+          }
+        }
+      ],
+      "boundary": "图标盒与容器/文字的几何抽样，不等于所有图标的光学重心或所有正常入口验收"
+    },
+    "picker_entries": [
+      {
+        "key": "players",
+        "options": 3,
+        "tapAndClosed": true,
+        "valueReadback": true,
+        "reopenedSelectionReadback": true,
+        "fixtureRestored": true
+      },
+      {
+        "key": "duration",
+        "options": 6,
+        "tapAndClosed": true,
+        "valueReadback": true,
+        "reopenedSelectionReadback": true,
+        "fixtureRestored": true
+      },
+      {
+        "key": "usageLocation",
+        "options": 7,
+        "tapAndClosed": true,
+        "valueReadback": true,
+        "reopenedSelectionReadback": true,
+        "fixtureRestored": true
+      }
+    ],
+    "native_geometry_methods": [
+      "复用 scripts/_verify_icon_geometry.js 的 elementRect 和 launchFixed",
+      "wechatide automation_element_action offset/size；受控原生状态"
+    ],
+    "native_screenshots": [
+      "nongame-round3-icons-after/add-module.png",
+      "nongame-round3-icons-after/game-catalog.png",
+      "nongame-round3-icons-after/picker-players.png",
+      "nongame-round3-icons-after/picker-duration.png",
+      "nongame-round3-icons-after/picker-usageLocation.png"
+    ],
+    "unchanged_layout_samples": [
+      "nongame-round3-icons-before/post-compose.png",
+      "nongame-round3-icons-before/merchant-copy.png"
+    ],
+    "native_boundary": "截图来自自有 popup-style-1003 工作区；部分为显示夹具。3个picker使用实际选项，临时修改本地表单并回读，未保存/发布。草稿图标等待800ms后几何回读，未将动画中的早期读数计为通过。胶囊和草稿本次有几何证据，没有新增稳定截图。",
+    "validation": {
+      "tests": 64,
+      "pass": 64,
+      "fail": 0,
+      "skip": 0,
+      "native_compile_success": 2,
+      "isolated_ui_gate": "PASS",
+      "isolation": {
+        "base": "8c70830a0900dbd93351175ce308d64016919987",
+        "owned_files": [
+          "chengyinhub-xcx/pages/publish/temp/index.wxss",
+          "chengyinhub-xcx/pages/publish/temp/index.wxml"
+        ],
+        "ui_gate_exit_code": 0,
+        "bytes_match": true,
+        "snapshot_removed": true
+      },
+      "workspace_ui_gate": "曾因未包含在本次提交的并行标题修改触发U4 stepHeading零消费；完整干净快照通过"
+    },
+    "source_sha256": {
+      "chengyinhub-xcx/pages/publish/temp/index.wxss": "36460d8a399c4291d3b839f388e7a5e5877417260a88a5af119004f87d8514a1",
+      "chengyinhub-xcx/pages/publish/temp/index.wxml": "7e66463c365241217c9cfd22d6dce37959722d6406b76e4abf3511aa174bdcf8"
+    },
+    "not_wechat_upload_or_device_acceptance": true,
+    "geometry_capture_note": "模块及未改动控件的几何读数来自本轮8c70830a09及未改动的70424820e4状态；最终提交新增的3种picker已单独截图和切换回读。"
+  },
+  "followup_round4": {
+    "code_commit": "46d9599a83999e68f0b27b8ad666a368f4af3d27",
+    "baseline_commit": "b0a5ba68a5daa330f6313f86c5614b421607eca7",
+    "scope": "非游戏选项弹窗及俱乐部定位选择；不含游戏内部",
+    "product_files": [
+      "chengyinhub-xcx/components/cy/scene-club-edit/index.wxml",
+      "chengyinhub-xcx/components/cy/scene-club-edit/index.wxss",
+      "chengyinhub-xcx/components/cy/option-sheet/index.wxml",
+      "chengyinhub-xcx/components/cy/option-sheet/index.wxss",
+      "chengyinhub-xcx/pages/club/detail/index.wxss"
+    ],
+    "product_sha256": {
+      "chengyinhub-xcx/components/cy/scene-club-edit/index.wxml": "6236b96f0d6b80340350f02fa9781bd7e222e9805e97cc47ee1340bcf491f6f6",
+      "chengyinhub-xcx/components/cy/scene-club-edit/index.wxss": "fbcafb07dc877f86d2346b60be56f690be20e99bc61d10e428261827fd1e7fb6",
+      "chengyinhub-xcx/components/cy/option-sheet/index.wxml": "d6de24abe642985f85b3f3a3ff54aa7450537e65036c27ced6b6f931de5c12a0",
+      "chengyinhub-xcx/components/cy/option-sheet/index.wxss": "1854ba48f0381a2e33d9ad7dd790b393dbe310629763740279e68f5fb048879e",
+      "chengyinhub-xcx/pages/club/detail/index.wxss": "80e7caf5b902770f243c64efaf823dd41aa32d1b12a7004e5111ae76b340e579"
+    },
+    "changes": [
+      "俱乐部类型与活动倾向移除重复16px内边距，标题、内容、按钮共用左右16px留白",
+      "俱乐部类型正文字号16px改14px，应用按钮复用cy-btn及固定footer，字号14px改16px",
+      "圆点选择的长标签增加8px横向间隔与上下留白，勾选模式和即时菜单不进入新增规则",
+      "俱乐部黑色编辑外壳移除描边，仅作用于club-edit宿主"
+    ],
+    "native_states": [
+      "nongame-round4-after/club-prefs-nested.png",
+      "nongame-round4-after/club-prefs.png",
+      "nongame-round4-after/club-type-nested.png",
+      "nongame-round4-after/club-type.png",
+      "nongame-round4-after/option-long.png",
+      "nongame-round4-after/option-sheet.png"
+    ],
+    "native_screenshot_sha256": {
+      "nongame-round4-after/club-prefs-nested.png": "88a3d1b24c42d131d16d9328bd0134b29dba890797848440c023f5c06d50cdb8",
+      "nongame-round4-after/club-prefs.png": "077c9251f2a431aa4141444ed24100b9fc48d0c44668fa2b58cb39b88af6a41a",
+      "nongame-round4-after/club-type-nested.png": "619b55c3be1c80ca2cfc95e8375cbc9118aafb81ee2c43c5b56f4f4c4e955033",
+      "nongame-round4-after/club-type.png": "cba43cd8604ba985351495e33bd08d37454bd6a9f17fa5d5b04a2e146db2b068",
+      "nongame-round4-after/option-long.png": "5b295310c84b4e5f4267ec7ce891bb73184b9fab2416117787a49ea83133193d",
+      "nongame-round4-after/option-sheet.png": "8936943a0eaab69a34fb5ba50edfaa9f8d33d91162c11dcf79a6037743f3b5b3"
+    },
+    "geometry_before": {
+      ".pk": {
+        "left": 16,
+        "top": 388,
+        "width": 358,
+        "height": 406,
+        "right": 374,
+        "bottom": 794,
+        "centerX": 195,
+        "centerY": 591
+      },
+      ".pk-opts": {
+        "left": 32,
+        "top": 388,
+        "width": 326,
+        "height": 329,
+        "right": 358,
+        "bottom": 717,
+        "centerX": 195,
+        "centerY": 552.5
+      },
+      ".pk-opt": {
+        "left": 32,
+        "top": 388,
+        "width": 326,
+        "height": 55,
+        "right": 358,
+        "bottom": 443,
+        "centerX": 195,
+        "centerY": 415.5
+      },
+      ".pk-opt-name": {
+        "left": 32,
+        "top": 391.906,
+        "width": 298,
+        "height": 26,
+        "right": 330,
+        "bottom": 417.906,
+        "centerX": 181,
+        "centerY": 404.906
+      },
+      ".pk-opt-tick": {
+        "left": 338,
+        "top": 405,
+        "width": 20,
+        "height": 20,
+        "right": 358,
+        "bottom": 425,
+        "centerX": 348,
+        "centerY": 415
+      },
+      ".pk-apply": {
+        "left": 32,
+        "top": 733,
+        "width": 326,
+        "height": 45,
+        "right": 358,
+        "bottom": 778,
+        "centerX": 195,
+        "centerY": 755.5
+      },
+      ".sh__panel": {
+        "left": 0,
+        "top": 307,
+        "width": 390,
+        "height": 537,
+        "right": 390,
+        "bottom": 844,
+        "centerX": 195,
+        "centerY": 575.5
+      },
+      ".sh__title": {
+        "left": 16,
+        "top": 335,
+        "width": 358,
+        "height": 45,
+        "right": 374,
+        "bottom": 380,
+        "centerX": 195,
+        "centerY": 357.5
+      },
+      ".sh__body": {
+        "left": 16,
+        "top": 384,
+        "width": 358,
+        "height": 414,
+        "right": 374,
+        "bottom": 798,
+        "centerX": 195,
+        "centerY": 591
+      },
+      "labelSize": "16px",
+      "buttonSize": "14px"
+    },
+    "geometry_after": {
+      ".pk": {
+        "left": 16,
+        "top": 388,
+        "width": 358,
+        "height": 353,
+        "right": 374,
+        "bottom": 741,
+        "centerX": 195,
+        "centerY": 564.5
+      },
+      ".pk-opts": {
+        "left": 16,
+        "top": 388,
+        "width": 358,
+        "height": 353,
+        "right": 374,
+        "bottom": 741,
+        "centerX": 195,
+        "centerY": 564.5
+      },
+      ".pk-opt": {
+        "left": 16,
+        "top": 388,
+        "width": 358,
+        "height": 59,
+        "right": 374,
+        "bottom": 447,
+        "centerX": 195,
+        "centerY": 417.5
+      },
+      ".pk-opt-name": {
+        "left": 16,
+        "top": 395.5,
+        "width": 330,
+        "height": 22,
+        "right": 346,
+        "bottom": 417.5,
+        "centerX": 181,
+        "centerY": 406.5
+      },
+      ".pk-opt-tick": {
+        "left": 354,
+        "top": 407,
+        "width": 20,
+        "height": 20,
+        "right": 374,
+        "bottom": 427,
+        "centerX": 364,
+        "centerY": 417
+      },
+      ".sh__panel": {
+        "left": 0,
+        "top": 307,
+        "width": 390,
+        "height": 537,
+        "right": 390,
+        "bottom": 844,
+        "centerX": 195,
+        "centerY": 575.5
+      },
+      ".sh__title": {
+        "left": 16,
+        "top": 335,
+        "width": 358,
+        "height": 45,
+        "right": 374,
+        "bottom": 380,
+        "centerX": 195,
+        "centerY": 357.5
+      },
+      ".sh__body": {
+        "left": 16,
+        "top": 384,
+        "width": 358,
+        "height": 361,
+        "right": 374,
+        "bottom": 745,
+        "centerX": 195,
+        "centerY": 564.5
+      },
+      "labelSize": "14px",
+      ".apply": {
+        "left": 16,
+        "top": 753,
+        "width": 358,
+        "height": 45,
+        "right": 374,
+        "bottom": 798,
+        "centerX": 195,
+        "centerY": 775.5
+      },
+      "buttonSize": "16px"
+    },
+    "long_label_before": {
+      "row": {
+        "left": 16,
+        "top": 509,
+        "width": 358,
+        "height": 58,
+        "right": 374,
+        "bottom": 567,
+        "centerX": 195,
+        "centerY": 538
+      },
+      "label": {
+        "left": 16,
+        "top": 515.102,
+        "width": 338,
+        "height": 45,
+        "right": 354,
+        "bottom": 560.102,
+        "centerX": 185,
+        "centerY": 537.602
+      },
+      "dot": {
+        "left": 354,
+        "top": 527.5,
+        "width": 20,
+        "height": 20,
+        "right": 374,
+        "bottom": 547.5,
+        "centerX": 364,
+        "centerY": 537.5
+      },
+      "gap": 0,
+      "labelSize": "14px",
+      "lineHeight": "22.4px"
+    },
+    "long_label_after": {
+      "row": {
+        "left": 16,
+        "top": 505.203,
+        "width": 358,
+        "height": 62,
+        "right": 374,
+        "bottom": 567.203,
+        "centerX": 195,
+        "centerY": 536.203
+      },
+      "label": {
+        "left": 16,
+        "top": 513.203,
+        "width": 330,
+        "height": 45,
+        "right": 346,
+        "bottom": 558.203,
+        "centerX": 181,
+        "centerY": 535.703
+      },
+      "dot": {
+        "left": 354,
+        "top": 525.602,
+        "width": 20,
+        "height": 20,
+        "right": 374,
+        "bottom": 545.602,
+        "centerX": 364,
+        "centerY": 535.602
+      },
+      "gap": 8,
+      "labelSize": "14px",
+      "lineHeight": "22.4px"
+    },
+    "club_selection": {
+      "typeDraft": true,
+      "typeCancel": true,
+      "typeApplyAndClose": true,
+      "typeReopen": true,
+      "prefsLimit": true,
+      "prefsApplyAndClose": true,
+      "prefsReopen": true,
+      "prefsCancel": true,
+      "storedProfileWrite": false,
+      "loadState": "missing-param"
+    },
+    "nested_host": {
+      "route": "pages/club/detail/index",
+      "controlled_scene": true,
+      "load_state": "missing-param",
+      "normal_business_entry": false,
+      "panel": {
+        "left": 0,
+        "top": 307,
+        "width": 390,
+        "height": 537,
+        "right": 390,
+        "bottom": 844,
+        "centerX": 195,
+        "centerY": 575.5
+      },
+      "title": {
+        "left": 16,
+        "top": 335,
+        "width": 358,
+        "height": 45,
+        "right": 374,
+        "bottom": 380,
+        "centerX": 195,
+        "centerY": 357.5
+      },
+      "button": {
+        "left": 16,
+        "top": 753,
+        "width": 358,
+        "height": 45,
+        "right": 374,
+        "bottom": 798,
+        "centerX": 195,
+        "centerY": 775.5
+      },
+      "type_close": true,
+      "prefs_close": true
+    },
+    "option_selection": {
+      "two_row_taps_read_back": true,
+      "close_read_back": true,
+      "confirm_business_action_executed": false
+    },
+    "tests": {
+      "passed": 62,
+      "failed": 0,
+      "skipped": 0,
+      "existing_test_files": 12,
+      "log": "round4-tests.txt"
+    },
+    "native_compile_success": 5,
+    "ui_gate": {
+      "status": "PASS",
+      "complete_isolated_snapshot": true,
+      "source_bytes_match": true,
+      "temporary_snapshot_removed": true,
+      "excluded_foreign_files": [
+        "chengyinhub-xcx/pages/publish/activity/index.wxml",
+        "chengyinhub-xcx/tests/unit/nav-polish-single-title-contract.test.js"
+      ]
+    },
+    "limits": [
+      "原生受控显示：合作评价、俱乐部深链和管理页嵌套宿主均缺业务编号；未绕过权限、保存资料或提交评价。",
+      "验证选择、取消、应用、重新打开和最多3项限制；未验证真实俱乐部正常业务入口或真机。",
+      "长选项使用临时显示文字，结束恢复；旧勋章长内容末端滚动和WebGL墙模式关闭回读仍未完成。"
+    ]
+  },
+  "followup_complete": {
+    "date": "2026-10-05",
+    "product_commit": "24756968eeb06e96e7c6d9a9c2a1842b4b7c8ec7",
+    "scope": "非游戏弹窗；商家站点操作属于经营域，游戏内部不在本轮范围",
+    "coverage": {
+      "custom_candidates": 99,
+      "excluded_game": 51,
+      "not_overlay": 2,
+      "nongame_popup_types": 46,
+      "native_representative_types_accumulated": 42,
+      "this_round_native_representative_types": 24,
+      "previous_round_native_representative_types": 18,
+      "blocked_native_types": 4,
+      "native_business_acceptance": false,
+      "all_page_routes_individually_opened": false
+    },
+    "changes": [
+      "经营日一至日同一行；开始和结束分别打开共用时间面板，子面板与父面板同级避免裁切。",
+      "选择奖励分类在上、列表在中、新建入口在底栏；选中统一圆点。",
+      "奖励创建的有效期与投放数各占整行；名称与说明按优惠券或体验卡显示。",
+      "参与人、商家角色、动态编辑和历史去除重复缩进；动态保存复用按钮与固定底栏并补组件注册。",
+      "章节、站点选择的长文字与箭头留出空间；黑色外壳去描边；附近及项目操作字号对齐。",
+      "可配合时间移除重复嵌套背景并固定完成按钮；主题模式选择使用黑圈白点。",
+      "勋章 cover-view 正文改为原生支持的纵向滚动，并去掉正文外层对触摸移动的拦截。"
+    ],
+    "product_files": {
+      "chengyinhub-xcx/components/cy/agreement-sheet/index.wxss": "7b39b8f42a42e33f420574ff1c0946018c6c2c68daa05aa2114ddd72b6a58a95",
+      "chengyinhub-xcx/components/cy/date-field/index.wxml": "c93628955c25303c63cc34391d4cb548395f8282bc6244bfedcb20f98276771d",
+      "chengyinhub-xcx/components/cy/profile/index.wxss": "004398fd57117c19dcf01982afb5f7587ad5e04ac1fb15e0cbe006d6835fd28b",
+      "chengyinhub-xcx/pages/activity/baoming/baoming.wxml": "0f043f7d6e4d8cae6b59c93ad738ddf2064c60059e480b22cf919d36bf1348cf",
+      "chengyinhub-xcx/pages/activity/baoming/baoming.wxss": "bff69c3cc8fcf5fcb2d4f5e3654ed6ff4ff6a464f7bbe327b4377fbfea406e4b",
+      "chengyinhub-xcx/pages/club/detail/index.json": "5360ea586a7f3b44a7a9da9f163f567a14519494cdce2e3d274764e9433cb7a1",
+      "chengyinhub-xcx/pages/club/detail/index.wxml": "193544d9abc1c041ef4c11fbb82792de2555dbfe90cb8bd97bceec6b3a9ecf4c",
+      "chengyinhub-xcx/pages/club/detail/index.wxss": "3ff814367e5de1c8506ce0aa2ca7d63d46d5b85e1411fcc3a1847cf93148ba7b",
+      "chengyinhub-xcx/pages/merchant/apply/index.js": "f7d112ad9dd44051285f1bba0b847d1a6ee84548046bd78d2f0ead3d54f2c3cd",
+      "chengyinhub-xcx/pages/merchant/apply/index.json": "d37e183774580b6576fdb5e380056b5ad1851bef4b7e205803ed24283d42699e",
+      "chengyinhub-xcx/pages/merchant/apply/index.wxml": "627c0de0298071fb4457597d952bf3fae764f4b68e80b1e1ff83392280081b62",
+      "chengyinhub-xcx/pages/merchant/apply/index.wxss": "a70dcfea75b9ea1b2325d55e17e5c4881fda3634d536dd65dfc2c7411e5accf6",
+      "chengyinhub-xcx/pages/merchant/index/index.wxss": "179c066f394927b5281c4af24b276f4841f283b275638fa35f72e6791f202c30",
+      "chengyinhub-xcx/pages/merchant/team/index.wxss": "fe59d2aadd17b4385f8f561664f5932ad6e995bfbc250d4df968916fe940ac43",
+      "chengyinhub-xcx/pages/publish/components/reward-selector/index.wxml": "39e9e2b3c158bc26371a67fad74dc1f7ddbb94c94b2ad19e14d212d74bfcf84f",
+      "chengyinhub-xcx/pages/publish/components/reward-selector/index.wxss": "ff1b3ffdc02f207a1905965878840b9f7e65ea6fe194dd4c292c30cf3fdba67d",
+      "chengyinhub-xcx/pages/publish/fabu/index.wxml": "3a56adb691de063f7efe06ff63f945203d045ceed7f17c128b8503202db6fdc5",
+      "chengyinhub-xcx/pages/publish/fabu/index.wxss": "944267988763eaeae353642d44d8fe745942b4a96839b421ebb672d6257efe32",
+      "chengyinhub-xcx/pages/shezhi/components/privacy-sheet/index.wxss": "8a3ba662878e77bb247a83c1a85d7dcaa38e5ce4de12b09a423b5f4eeab23058",
+      "chengyinhub-xcx/pages/topic/merchantapply/index.wxml": "9ba66763838229e7960fcabf6e5864531322040ca9b8b9f49345389bf77215ab",
+      "chengyinhub-xcx/pages/topic/merchantapply/index.wxss": "f6c0860e99144e603f4ecd04223e8705458755929ff368319965418675155b20",
+      "chengyinhub-xcx/subpackageA/pages/myproject/index.wxss": "032ae87a181eaed223d98476b345722b1b4521787558b2605b005a622c752c94",
+      "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.wxml": "3e20ad1371ae7940497177ba5627c485c75829bad78f28e2b2b656e584980983",
+      "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.wxss": "2563a4be5bfb4e7f31cc4cdd260727f3ff29ae71899ab78f117c1ddf546aaa8c",
+      "chengyinhub-xcx/subpackageRoam/nearby/index.wxss": "65530292fd7277a1ab4f4a1a6cbe513548c58dbc37e0af270429f7b2bb56e4b8"
+    },
+    "validation": {
+      "ui-gate": {
+        "exit_code": 0,
+        "log": "ui-gate-final.txt"
+      },
+      "action-ledger": {
+        "exit_code": 0,
+        "controls": 4373,
+        "evidence_results": 0,
+        "log": "action-ledger-final.txt"
+      },
+      "unit-tests": {
+        "exit_code": 0,
+        "files": [
+          "merchant-apply-state-contract",
+          "reward-selector-create-sheet",
+          "reward-selector-sheet-footer-contract",
+          "badge-wall-native-overlay-contract",
+          "badge-wall-sheet-matches-cy-sheet",
+          "club-post-reference-contract",
+          "date-field-contract",
+          "sheet-footer-sticky-contract",
+          "sheet-modal-exit-motion-contract",
+          "popup-navigation-height-runtime",
+          "sheet-neutral-ladder-contract",
+          "post-actions-sheet-contract",
+          "fabu-sheet-close-position-contract",
+          "scene-sheet-contract",
+          "using-components-registration",
+          "action-ledger"
+        ],
+        "git_context": "read-only real Git metadata with isolated owned source snapshot",
+        "totals": {
+          "tests": 162,
+          "pass": 162,
+          "fail": 0,
+          "skipped": 0
+        },
+        "log": "unit-tests.txt"
+      }
+    },
+    "native_compiler": {
+      "previous_direct_passes": 19,
+      "final_direct_passes": 3,
+      "latest_attempt_interrupted": {
+        "file": "pages/activity/baoming/baoming.wxml",
+        "reason": "CLI compile request timed out after 60 seconds; no source compile failure returned",
+        "status": "unverified"
+      },
+      "all_final_templates_individually_compiled": false,
+      "native_project_reopened": true,
+      "native_project_open_exit_code": 0,
+      "compiled_app_visual_evidence": true
+    },
+    "normal_entry_blocked": [
+      {
+        "id": 11,
+        "name": "售后回复",
+        "reason": "缺少可用 refundId，进入后返回售后列表；正文仍有额外左右16pt留白，未修改。"
+      },
+      {
+        "id": 14,
+        "name": "拒绝站点邀请",
+        "reason": "商家站点权限入口返回商家首页；正文仍有额外左右16pt留白，未修改。"
+      },
+      {
+        "id": 15,
+        "name": "暂停接待",
+        "reason": "商家站点权限入口返回商家首页；正文仍有额外左右16pt留白，未修改。"
+      },
+      {
+        "id": 16,
+        "name": "核验游戏提交",
+        "reason": "商家站点权限入口返回商家首页；正文仍有额外左右16pt留白，未修改。"
+      }
+    ],
+    "badge_limits": {
+      "native_start_layout_verified": true,
+      "final_wxml_wheel_end_verified": false,
+      "real_device_touch_verified": false,
+      "webgl_wall_close_verified": false,
+      "reason": "Owned DevTools window was closed after the start screenshot; CUA returned noWindowsAvailable. Previous wheel-only observation is not fresh proof for the final WXML."
+    },
+    "evidence_boundary": "页面与组件受控显示只核对样式及本地关闭/时间回填；没有发布奖励、修改店铺、提交报名、审批或售后等业务写操作；不等于正常业务流程、上传微信、发布或真机验收。",
+    "foreign_changes_excluded": [
+      "chengyinhub-xcx/pages/gerenziliao/gerenziliao.wxml",
+      "chengyinhub-xcx/pages/gerenziliao/gerenziliao.wxss",
+      "chengyinhub-xcx/pages/publish/activity/index.wxml",
+      "chengyinhub-xcx/tests/unit/nav-polish-single-title-contract.test.js"
+    ],
+    "screenshots_sha256": {
+      "nongame-complete-before/agreement.png": "7017b30cce17e2c0dd5bb2470dda9c4acf5ab3847a0c47afc6266ecce7c6e32d",
+      "nongame-complete-before/badge-long-start.png": "f310b53e1aa242ccb0f26afa3a7f18ea58e09a45fcd4a01b68fe15d1b301a09b",
+      "nongame-complete-before/footprint-share.png": "5ea8e97b3f63633f590a8be87fc75c580ee3bb1aa8f6045074f44d2960af75ad",
+      "nongame-complete-before/merchant-chapter.png": "7b2410bdfdcd2eaddbad7f1ee4c3dd310a74f182b3417bc17d8f084e1c3547d5",
+      "nongame-complete-before/merchant-hours.png": "393ea9afb52a567a95d0aefc85e1581ecfbe50625b6ad6a33f388806ac512e29",
+      "nongame-complete-before/merchant-role.png": "fc8a0fc7b1f144b3b123b934b8fdcadf548fcf9933ba0289058a8718ee7fec6a",
+      "nongame-complete-before/merchant-station.png": "60b38aac01ab25d8bb2350791063d93250ed6fc04fad9054d3cc3768328d6bb5",
+      "nongame-complete-before/merchant-time.png": "85040cb3e19d8437d61194edad4b2bf38adb7ac0a2885b4875d0d1475a5c130a",
+      "nongame-complete-before/mode-picker.png": "a5d868ef1b9d97d2edfe4baf8baaabc11d0d56db6549bfcaa5c484054e439cb5",
+      "nongame-complete-before/nearby-inspect.png": "f7a95a00d82efe1db09a20f50e193e2c9467c54ee2c26a94415709cc7a5731a1",
+      "nongame-complete-before/nearby-leader.png": "3bc991f163b35677b669d9bd2a81aceea300d7e0f7b3de29a753f5fed7e45398",
+      "nongame-complete-before/nearby-mine.png": "27e3a04da68a6b14d20419139b9392641b6da829c6cab36c29e4d406f37c2dd0",
+      "nongame-complete-before/nearby-team.png": "d9cfe3d80b00f843391f525a4897a61d46ad2ad96e03bf4721e4d7449694a0fb",
+      "nongame-complete-before/nearby-topic.png": "48991daa18a6a080bb9f81e5c54ed83ca7af0f3739090d08b36d53a4f1702d55",
+      "nongame-complete-before/next-route.png": "47e2ae4d0337c654e24e87af9a717a329a7f208c6b89efadebdbb905cfdff4b5",
+      "nongame-complete-before/node-detail.png": "ea8b21cf794718807c6f87d9cd5a00b555abe5cb01bc335a58cdd2cea266e235",
+      "nongame-complete-before/participants.png": "acb3168c651b826553f4938c4c5ef0a35e52581b684e8379744464414492ae47",
+      "nongame-complete-before/post-edit.png": "74432e90c7b1e8fff1cfa1944b3379cb574947fc2e3eb0909b6dfc2d8a65abce",
+      "nongame-complete-before/post-history.png": "187f6b1380fa3b5a5ea2db4fd1b596393d143d7e3d5b139fe7eb3c29a469cd74",
+      "nongame-complete-before/privacy.png": "07ee5ecbb7dad2baf0bb8ff67c978fa0b24151573b0305a4c6807e641a04648b",
+      "nongame-complete-before/profile-chapter.png": "4ed2be4ea4bec591ebf72111650e68d9226ec0c2adc0dc779bec88750ebebcbc",
+      "nongame-complete-before/profile-station.png": "75ed29418b4252ddff778f334e0bf3a56abbed75e0d014f22768d537455975c5",
+      "nongame-complete-before/project-actions.png": "db6855a4444bdcb3f7491c9d7583f2a0f72044a41f8c3587367db3786a2a4d80",
+      "nongame-complete-before/review-inspect.png": "b10741ee11cc0425570dd39d994c79ba2fe8038a3d8f34ac0e66582707538684",
+      "nongame-complete-before/reward-create.png": "d1f20b1d35220c11cfb4ce475f3aa84d82f7e4263c2bbc50520783f944ed82af",
+      "nongame-complete-before/rewards.png": "65e200edf32824d567c389fffe7f65def438ac370299a26eaf8ed56a03d9b8c6",
+      "nongame-complete-before/route-review.png": "ccad29cadf2ee0494595c134d6a2cabbdb0ac8d71d37262b0d04422d103ec188",
+      "nongame-complete-before/topic-detail.png": "9fe69633bb04c70d3fd7da77ce5fe022c256cca3db082272c64dd1b205cbab87",
+      "nongame-complete-after/agreement.png": "db0793c1bca01274d525683c3918b535018414d60e8dc0287e442a0634ce15bb",
+      "nongame-complete-after/badge-long-start.png": "da54a8998077977ac6b766d037c06268a8ab1abf818bd0bba07dfc31938c677e",
+      "nongame-complete-after/footprint-share.png": "26445ef915ec270da80eb293d1dcbc50773ecd3d6342f9b0d42a6cee12d1effb",
+      "nongame-complete-after/merchant-chapter.png": "d3a4ef6d36fdafed16bbad8c9ed99c4b97fbbc1cdc5542776c4f40686f641205",
+      "nongame-complete-after/merchant-hours-end.png": "c265055e3351abcadba753b71a961a3b151a0710cdb90f703c188d5d1df944f5",
+      "nongame-complete-after/merchant-hours-overnight.png": "5025e44860f45ff2b8f1770643df36b118968d56657f29fbaa97523daf54f6c8",
+      "nongame-complete-after/merchant-hours-start.png": "807a3bf9f5842d339e9882d082565114ca6f82c36ac151abf6745e9e207a5150",
+      "nongame-complete-after/merchant-hours.png": "61ad9e577f1c6f2cce88b0326ad10ce48a6ccab9ab631d22cadfcf6b6bfa7ca6",
+      "nongame-complete-after/merchant-role.png": "5303051ee2ab73d543753175ec6c60e239ed0bc9392fd13b612dc4c2e77cd980",
+      "nongame-complete-after/merchant-station.png": "362a69e3843b27815faec3f803d0bb4e49f99eb5fbbd99edb37ad893fe609684",
+      "nongame-complete-after/merchant-time.png": "603c29e3abc4a8281d2aa972cb2993853248dd1e58f127b2069c8a32d9b2e772",
+      "nongame-complete-after/mode-picker.png": "a26cfa83ef5ae4d42b66f525948e2d45c93d574273f443340b00ff105285de6a",
+      "nongame-complete-after/nearby-leader.png": "f1e5d058e489c32038ce66ea93fcf99f518e5f2822c4a897a5246ebb17256de1",
+      "nongame-complete-after/nearby-mine.png": "fac8c5c71cb31132965766c4d261c1dd3c087b4f2418a5292cdb33d745234db0",
+      "nongame-complete-after/nearby-team.png": "2934f1691a36a0dcfb90b0a5bc5000335c6c913dd344d5a2236ac859b27acaf4",
+      "nongame-complete-after/nearby-topic.png": "3f07151069708298b7207c5405b790da57e2a7cc20afbc09a9ba5252eb98e6a5",
+      "nongame-complete-after/next-route.png": "10d2cdc6d34343d1933b61d8dfb5356bf0ce4e592ff9ac1685ddc74c721eb93e",
+      "nongame-complete-after/node-detail.png": "8ab8fe279bac8b1b09a5a173ef3ce059ef891c7cadacead3724f4420c19daffb",
+      "nongame-complete-after/participants.png": "87f344e9056410062142ae1ea1c2fd3a75f0df65f057c5814bfa586e19464472",
+      "nongame-complete-after/post-edit.png": "e70e39df30570da2f4275f6395175e28347e143d6ba355b0f8817eba20a07270",
+      "nongame-complete-after/post-history.png": "1edc7b048cc5d37739b8fb198ed656fd9bdeac93e4b73cd843e7a2a20b094de6",
+      "nongame-complete-after/privacy.png": "6d06a2f5944c2d1d86aec0b50611abf94bead7001f83b79ef56eb043de867364",
+      "nongame-complete-after/profile-chapter.png": "5bfb7940673aff9ca273663b827afbf2e591acbd23502095d533b756664e0184",
+      "nongame-complete-after/profile-station.png": "6d27ed3c6b9a1581aea359d9489e4cd3773586129851024d85c538d304cb0488",
+      "nongame-complete-after/project-actions.png": "c121613397c720c518d51a28e34a7feea576b16cc4755307b28beb12fa8d3f72",
+      "nongame-complete-after/reward-create-filled.png": "8787d6726b32d08ed590bc81ea2167bcf9f0cda611d13f46bbb85b75fab3a70f",
+      "nongame-complete-after/reward-create.png": "0850d057a7ee452b0a77cbebff1519d926650486438371f04adcc30d8ca32b80",
+      "nongame-complete-after/rewards-selected.png": "2ed44d7f863cadd10156d27c679036a7c8627b3525f4f3cee960fa6c3a493e87",
+      "nongame-complete-after/rewards.png": "60f3c67555601dcd0c2aa4414cacac0b9b87db3ee5c59f2d0a0fae233544637f",
+      "nongame-complete-after/route-review.png": "fb5d4752783d7e8ae2a243df0a7804e38e40a6f77d5e4967b315108f57c6b7ba",
+      "nongame-complete-after/topic-detail.png": "5e59f27e6d0e0aa9ef5f9a5b159e5798cabb58082c0ba197b54ee8136a7b5ce6"
+    },
+    "normal_followup_order": [
+      "获得可进入的站点邀请与可用售后单后，从正常入口拍前图，再去掉 gn-sheet/ac-sheet 的重复内边距，逐一拍后图。",
+      "在稳定的开发工具窗口确认勋章长文末端可见和墙模式关闭；在真机验证触摸滚动与安全区。",
+      "补完最后一轮单模板编译；上传微信及真机业务验收单独进行。"
+    ],
+    "report_sha256": "132b13eba6226eff2ecffb322ea36d5a24e876fa0c15245051e91feca690e6c3"
+  }
+}

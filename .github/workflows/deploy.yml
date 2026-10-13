@@ -1,0 +1,118 @@
+name: Deploy verified master to ECS
+
+on:
+  workflow_run:
+    workflows: [GitHub CI]
+    types: [completed]
+    # 不加这条,每个 PR 的 CI 完成都会创建一个 Deploy run。它们会被下面 prepare 的 if
+    # 挡掉(head_branch != master),但 run 已经建出来了:占 concurrency 组、互相挤成
+    # cancelled,看起来像生产事故。2026-07-16 实证:一次 master push 冒出三个同 SHA run
+    # (success/cancelled/skipped),其中两个是 PR CI 的噪音,害人误判"部署被取消"。
+    # ⚠️ 这里的 headSha 恒等于默认分支 tip,跟触发它的 CI 是哪个分支无关 —— 所以光看
+    # run 的 SHA 分不出真假,必须从源头挡。
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Commit SHA、tag 或分支；仅用于受控的人工恢复验证
+        required: true
+        default: master
+        type: string
+      force_deploy:
+        description: 忽略文件分类，强制部署该 ref
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    # workflow_run 只有「master push 触发的 GitHub CI 成功」才有资格部署；
+    # workflow_dispatch 仅供仓库管理员在迁移/恢复时显式使用。
+    if: >-
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'master') ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: [self-hosted, macOS, ARM64, chengyin]
+    outputs:
+      sha: ${{ steps.classify.outputs.sha }}
+      should_deploy: ${{ steps.classify.outputs.should_deploy }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || inputs.ref }}
+          # 0 而不是 2:base 是「生产实际在跑的 commit」,可能落后很多个;
+          # 浅克隆会让 git diff / cat-file 找不到它,分类直接失准。
+          fetch-depth: 0
+
+      - id: classify
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          FORCE_DEPLOY: ${{ inputs.force_deploy }}
+          ECS_SSH_HOST: ${{ secrets.ECS_SSH_HOST }}
+          ECS_SSH_USER: ${{ secrets.ECS_SSH_USER }}
+          ECS_SSH_PRIVATE_KEY: ${{ secrets.ECS_SSH_PRIVATE_KEY }}
+          ECS_SSH_KNOWN_HOSTS: ${{ secrets.ECS_SSH_KNOWN_HOSTS }}
+          ECS_SSH_TRANSPORT: session-manager
+        run: |
+          # 逻辑在 ci/deploy-classify.sh —— 与云效 Flow 共用同一份判据。
+          # 双跑对拍期间各持一份必定漂移,见 ci/deploy-lib.sh 顶部说明。
+          #
+          # ⚠️ 必须显式 set -o pipefail:GitHub 默认 shell 是 `bash -e`,不带 pipefail,
+          #    脚本失败会被 tee 的 exit 0 吞掉 —— 分类失败当成「不用部署」是静默漏部署。
+          set -euo pipefail
+          bash ci/deploy-classify.sh | tee -a "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: prepare
+    if: needs.prepare.outputs.should_deploy == 'true'
+    runs-on: [self-hosted, macOS, ARM64, chengyin]
+    environment: production
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+          # self-hosted runner 保留 ~/.m2；额外走 Actions cache 会在 Azure Blob TLS
+          # 断连时卡住整个生产部署，宁可复用本机 Maven 缓存。
+
+      - name: Build deployable jar
+        run: mvn -B clean package -Dmaven.test.skip=true
+
+      - name: Verify the built jar declares the commit we intend to deploy
+        env:
+          DEPLOY_SHA: ${{ needs.prepare.outputs.sha }}
+        # 逻辑在 ci/verify-built-jar.sh —— 与云效 Flow 共用。
+        run: |
+          bash ci/verify-built-jar.sh "$DEPLOY_SHA"
+
+      - name: Deploy exact verified SHA and read it back
+        env:
+          ECS_SSH_HOST: ${{ secrets.ECS_SSH_HOST }}
+          ECS_SSH_USER: ${{ secrets.ECS_SSH_USER }}
+          ECS_SSH_PRIVATE_KEY: ${{ secrets.ECS_SSH_PRIVATE_KEY }}
+          ECS_SSH_KNOWN_HOSTS: ${{ secrets.ECS_SSH_KNOWN_HOSTS }}
+          # Session Manager 实测 4 MiB 超过 47 秒且 107 MB jar 在 383 秒被远端断开；
+          # 后续重连连 SSH banner 都无法在 20 秒内恢复。后端 jar 显式走 direct，
+          # 身份、agent 与 known_hosts 仍由 deploy-lib.sh 钉死；不做静默 fallback。
+          ECS_SSH_TRANSPORT: direct
+          DEPLOY_SHA: ${{ needs.prepare.outputs.sha }}
+        # 逻辑在 ci/deploy-push.sh —— 与云效 Flow 共用。
+        # ⚠️ 必须保持 `run: |` 块标量形式:ci/test_preflight_h8_schema.sh 用它当锚点
+        #   推导 step 边界与键层缩进,借此断言这一步没挂 continue-on-error / 没覆写 shell。
+        #   改成单行 run: 会让那几条 step 级负控静默变成空跑。
+        run: |
+          bash ci/deploy-push.sh "$DEPLOY_SHA"

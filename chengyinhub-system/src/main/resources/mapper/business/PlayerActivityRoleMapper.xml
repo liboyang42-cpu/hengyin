@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PlayerActivityRoleMapper">
+
+    <resultMap type="com.chengyinhub.business.domain.PlayerActivityRole" id="PlayerActivityRoleResult">
+        <result property="id"         column="id"          />
+        <result property="activityId" column="activity_id" />
+        <result property="memberId"   column="member_id"   />
+        <result property="roleCode"   column="role_code"   />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <select id="selectByActivityAndMember" resultMap="PlayerActivityRoleResult">
+        select id, activity_id, member_id, role_code, create_time
+          from player_activity_role
+         where activity_id = #{activityId} and member_id = #{memberId}
+         limit 1
+    </select>
+
+    <select id="countByActivity" resultType="int">
+        select count(*) from player_activity_role where activity_id = #{activityId}
+    </select>
+
+    <insert id="insertPlayerActivityRole" parameterType="com.chengyinhub.business.domain.PlayerActivityRole"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into player_activity_role (activity_id, member_id, role_code, create_time)
+        values (#{activityId}, #{memberId}, #{roleCode}, #{createTime})
+    </insert>
+
+</mapper>

@@ -1,0 +1,158 @@
+@import "/pages/play/style/play-surface.wxss";
+
+/* cy-playkit-profile · 出生登记(契约 §2.1)
+ * 皮肤与台面语言都来自 play-surface(stage 传下来的 --ink/--sub/--soft 与 .g-col/.g-btn),
+ * 这里只画表单自己那几块。⚠️ 本仓没有全局 border-box,凡带 padding 的宽度都显式声明。 */
+.pf {
+  /* .g-col 是绝对定位整屏列;内容可能超过一屏,所以这一屏自己可滚 */
+  overflow-y: auto;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 200rpx); /* 提交按钮高 112rpx、底距 60rpx，末题再留 28rpx 间距。 */
+}
+/* 建档高度随题目与答案增长，内嵌按钮跟随内容，不能钉在全屏台面底部。 */
+.pf-shell--inline {
+  --pk-stage-pos: relative;
+  --pk-stage-height: auto;
+  --pk-stage-body-pos: relative;
+  --pk-back-display: none;
+}
+.pf.pf--inline {
+  position: relative;
+  overflow: visible;
+  padding: var(--cy-space-4);
+}
+.g-btn.pf__submit--inline {
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  margin: var(--cy-space-4);
+}
+.pf__lead {
+  margin-top: var(--cy-space-2);
+  font-size: var(--cy-type-body);
+  line-height: 1.7;
+  color: var(--sub);
+}
+.pf__summary {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: var(--cy-space-4);
+  padding: var(--cy-space-3) var(--cy-space-4);
+  background: var(--cy-color-play-profile-paper);
+  color: var(--cy-color-play-profile-ink);
+  border-radius: var(--cy-radius-lg);
+}
+.pf__form-title { text-align:center; font-size:var(--cy-type-caption); letter-spacing:6rpx; color:var(--cy-color-play-profile-muted); }
+.pf__row {
+  display: flex;
+  align-items: baseline;
+  gap: 20rpx;
+  padding: 14rpx 0;
+  font-size: var(--cy-type-body);
+  text-align: left;
+  border-bottom: 1rpx dashed var(--cy-color-play-profile-line);
+}
+.pf__row-label { color: var(--cy-color-play-profile-muted); flex: none; width:128rpx; font-size:var(--cy-type-label); }
+.pf__row-answer { flex: 1; min-height:1.2em; text-align:left; font-family:serif; word-break:break-all; color:var(--cy-color-play-profile-muted); }
+.pf__row-answer.is-filled { color: var(--cy-color-play-profile-ink); font-weight: 700; }
+.pf__progress {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--cy-space-3);
+  min-height: 88rpx; /* ds-ok 手机返回上一题的可点击高度 */
+  font-size: var(--cy-type-label);
+  color: var(--sub);
+}
+.pf__previous { padding: var(--cy-space-3) 0; color: var(--ink); }
+.pf__count { margin-top: var(--cy-space-2); color: var(--sub); font-size: var(--cy-type-caption); text-align: right; }
+
+/* 头像位:一枚圆窗,选完把图填进去 */
+.pf__ava {
+  flex: none;
+  margin-top: var(--cy-space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--cy-space-1-5);
+}
+.pf__ava--press { opacity: .88; }
+.pf__ava-img,
+.pf__ava-ph {
+  width: 176rpx;
+  height: 176rpx;
+  border-radius: 50%;
+}
+.pf__ava-ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background: var(--soft);
+  color: var(--sub);
+}
+.pf__ava-t {
+  font-size: var(--cy-type-label);
+  color: var(--sub);
+}
+
+.pf__qs {
+  width: 100%;
+  margin-top: var(--cy-space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cy-space-4);
+}
+.pf__q { width: 100%; text-align: left; }
+.pf__label {
+  display: flex;
+  align-items: center;
+  gap: var(--cy-space-1-5);
+  font-size: var(--cy-type-body);
+  font-weight: 700;
+  color: var(--ink);
+}
+.pf__req {
+  font-size: var(--cy-type-caption);
+  font-weight: 500;
+  color: var(--cy-color-status-danger);
+}
+.pf__input {
+  margin-top: var(--cy-space-2);
+  width: 100%;
+  height: 100rpx;
+  box-sizing: border-box;
+  padding: 0 var(--cy-space-3);
+  border-radius: var(--cy-radius-lg);
+  background: var(--soft);
+  color: var(--ink);
+  font-size: var(--cy-type-body);
+}
+.pf__input-ph { color: var(--cy-color-text-placeholder); }
+/* 登记表用横向选项，触点与圆角沿用共用变量。 */
+.pf__opts { display:flex; flex-wrap:wrap; gap:16rpx; margin-top:16rpx; }
+.pf__opt { display:flex; align-items:center; box-sizing:border-box; min-height:var(--cy-btn-h); min-width:var(--cy-btn-h); padding:16rpx 24rpx; border-radius:var(--cy-radius-md); background:var(--soft); color:var(--ink); font-size:var(--cy-type-body); box-shadow:inset 0 0 0 1rpx var(--cy-color-play-field-line); }
+.pf__opt--press { opacity:.8; }
+.pf__opt.is-on { background:var(--ink); color:var(--bg); font-weight:700; }
+/* 原型 register 的红章:斜 8°,从放大模糊落下来(transition,不加 keyframes) */
+.pf__seal {
+  align-self: flex-end;
+  margin-top: var(--cy-space-4);
+  padding: 12rpx 24rpx;
+  border: 4rpx solid var(--cy-color-play-profile-seal);
+  border-radius: calc(var(--cy-radius-sm) / 2);
+  color: var(--cy-color-play-profile-seal);
+  font-size: var(--cy-type-label);
+  font-weight: 800;
+  letter-spacing: 4rpx;
+  opacity: 0;
+  transform: rotate(-8deg) scale(1.3);
+  filter: blur(4px);
+  transition: opacity .5s ease, transform .5s cubic-bezier(.2,.9,.3,1.3), filter .5s ease;
+}
+.pf__seal.is-on { opacity: 1; transform: rotate(-8deg); filter: none; }
+/* 原型 ink:答案从左往右显出来 */
+.pf__row-answer.is-filled { clip-path: inset(0 100% 0 0); transition: clip-path .8s steps(12); }
+.pf--inked .pf__row-answer.is-filled { clip-path: inset(0 0 0 0); }
+.pk--reduced .pf__row-answer.is-filled, .pk--reduced .pf__seal { transition: none; }

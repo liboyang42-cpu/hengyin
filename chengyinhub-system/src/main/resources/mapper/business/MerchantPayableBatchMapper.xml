@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantPayableBatchMapper">
+
+    <resultMap type="MerchantPayableBatch" id="MerchantPayableBatchResult">
+        <result property="id"    column="id"    />
+        <result property="merchantMemberId"    column="merchant_member_id"    />
+        <result property="periodYm"    column="period_ym"    />
+        <result property="amountTotal"    column="amount_total"    />
+        <result property="status"    column="status"    />
+        <result property="invoiceStatus"    column="invoice_status"    />
+        <result property="invoiceNo"    column="invoice_no"    />
+        <result property="redInvoiceNo"    column="red_invoice_no"    />
+        <result property="confirmedAt"    column="confirmed_at"    />
+        <result property="confirmedBy"    column="confirmed_by"    />
+        <result property="paidAt"    column="paid_at"    />
+        <result property="paidBy"    column="paid_by"    />
+        <result property="payVoucherNo"    column="pay_voucher_no"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="frozen"    column="frozen"    />
+        <result property="frozenReason"    column="frozen_reason"    />
+        <result property="frozenBy"    column="frozen_by"    />
+        <result property="frozenAt"    column="frozen_at"    />
+    </resultMap>
+
+    <sql id="selectMerchantPayableBatchVo">
+        select id, merchant_member_id, period_ym, amount_total, status, invoice_status, invoice_no,
+               red_invoice_no, confirmed_at, confirmed_by, paid_at, paid_by, pay_voucher_no, create_time,
+               frozen, frozen_reason, frozen_by, frozen_at
+        from merchant_payable_batch
+    </sql>
+
+    <!-- 撞 uk_batch_merchant_period 报 1062 = 该商家该月已生成过批次 ⇒ 同一个月不会被结出两张单。
+         幂等由库兜底,不靠应用层先查后插(那是读-判-写竞态)。 -->
+    <insert id="insertBatch" parameterType="MerchantPayableBatch" useGeneratedKeys="true" keyProperty="id">
+        insert into merchant_payable_batch
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="merchantMemberId != null">merchant_member_id,</if>
+            <if test="periodYm != null">period_ym,</if>
+            <if test="amountTotal != null">amount_total,</if>
+            <if test="status != null">status,</if>
+            <if test="invoiceStatus != null">invoice_status,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="merchantMemberId != null">#{merchantMemberId},</if>
+            <if test="periodYm != null">#{periodYm},</if>
+            <if test="amountTotal != null">#{amountTotal},</if>
+            <if test="status != null">#{status},</if>
+            <if test="invoiceStatus != null">#{invoiceStatus},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <select id="selectById" resultMap="MerchantPayableBatchResult">
+        <include refid="selectMerchantPayableBatchVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectByMerchantAndPeriod" resultMap="MerchantPayableBatchResult">
+        <include refid="selectMerchantPayableBatchVo"/>
+        where merchant_member_id = #{merchantMemberId} and period_ym = #{periodYm}
+    </select>
+
+    <select id="selectByMerchant" resultMap="MerchantPayableBatchResult">
+        <include refid="selectMerchantPayableBatchVo"/>
+        where merchant_member_id = #{merchantMemberId}
+        order by period_ym desc, id desc
+    </select>
+
+    <select id="selectByMerchantAndId" resultMap="MerchantPayableBatchResult">
+        <include refid="selectMerchantPayableBatchVo"/>
+        where merchant_member_id = #{merchantMemberId}
+          and id = #{id}
+    </select>
+
+    <!-- 按被冲那笔的 create_time 用 SQL date_format 定位所属月的批次,与成员分桶
+         (MerchantPayableMapper 里的 date_format(create_time,'%Y-%m'))同源,
+         规避 Java periodOf 的 JVM 时区与 MySQL 会话时区在月边界不一致。 -->
+    <select id="selectByMerchantAndAccrualTime" resultMap="MerchantPayableBatchResult">
+        <include refid="selectMerchantPayableBatchVo"/>
+        where merchant_member_id = #{merchantMemberId}
+          and period_ym = date_format(#{createTime}, '%Y-%m')
+    </select>
+
+    <select id="selectByPeriod" resultMap="MerchantPayableBatchResult">
+        <include refid="selectMerchantPayableBatchVo"/>
+        where period_ym = #{periodYm}
+        order by merchant_member_id asc
+    </select>
+
+    <!-- ★ 三条 update 全部是**条件置位(CAS)**,不是无条件改。
+         返回 0 不是「没事发生」,是「你以为的前置状态不成立」—— 调用方必须当错误处理。
+         无条件 update 会让已打款被打回已确认、把打款留痕冲掉。
+         P块冻结:confirm/markPaid 均加 frozen 闸 —— 冻结中的批次不能推进对账/打款,直到运营解冻。 -->
+    <update id="confirm">
+        update merchant_payable_batch
+           set status = 'CONFIRMED', confirmed_at = now(), confirmed_by = #{confirmedBy}
+         where id = #{id} and status = 'PENDING' and (frozen is null or frozen = 0)
+    </update>
+
+    <!-- 带 status='CONFIRMED' 条件:这是「先对账再打款」的唯一强制点。
+         放宽成 status in ('PENDING','CONFIRMED') 就等于没有对账这一环。 -->
+    <update id="markPaid">
+        update merchant_payable_batch
+           set status = 'PAID', paid_at = now(), paid_by = #{paidBy}, pay_voucher_no = #{payVoucherNo}
+         where id = #{id} and status = 'CONFIRMED' and (frozen is null or frozen = 0)
+    </update>
+
+    <update id="markInvoiceIssued">
+        update merchant_payable_batch
+           set invoice_status = 'ISSUED', invoice_no = #{invoiceNo}
+         where id = #{id} and invoice_status = 'NONE'
+    </update>
+
+    <update id="markInvoiceRed">
+        update merchant_payable_batch
+           set invoice_status = 'RED', red_invoice_no = #{redInvoiceNo}
+         where id = #{id} and invoice_status = 'ISSUED'
+    </update>
+
+    <!-- M块违规倒扣:period_ym 最小的未打款批次。uk_batch_merchant_period 保证同商家同月只有
+         一个批次,按 period_ym 升序取第一条即「下一个将要打款的批次」,无歧义。
+         P块冻结合并后追加:跳过冻结中的批次,冻结的批次不该被系统自动选为倒扣目标。 -->
+    <select id="selectNextUnpaidBatch" resultMap="MerchantPayableBatchResult">
+        <include refid="selectMerchantPayableBatchVo"/>
+        where merchant_member_id = #{merchantMemberId}
+          and status in ('PENDING', 'CONFIRMED')
+          and (frozen is null or frozen = 0)
+        order by period_ym asc
+        limit 1
+    </select>
+
+    <!-- M块违规倒扣:CAS 扣减 amount_total,不夹 0——允许扣成负数,由对账脚本兜底发现。
+         status 条件是执行时的二次校验:若发起复核之间该批次已被打款/流转,这里返回 0,
+         调用方须拒绝执行并提示运营改走人工处理,不能把倒扣悄悄丢了。
+         P块冻结合并后追加:与 confirm/markPaid 同一条纪律,冻结中的批次不能被扣减,
+         避免倒扣执行期间批次状态被冻结改变(TOCTOU)。 -->
+    <update id="deductForClawback">
+        update merchant_payable_batch
+           set amount_total = amount_total - #{amount}
+         where id = #{id} and status in ('PENDING', 'CONFIRMED') and (frozen is null or frozen = 0)
+    </update>
+
+    <!-- P块冻结:仅未冻结的批次可冻结(CAS)。不限定 status —— 待结/已确认都可能需要暂停打款排查。 -->
+    <update id="freeze">
+        update merchant_payable_batch
+           set frozen = 1, frozen_reason = #{frozenReason}, frozen_by = #{frozenBy}, frozen_at = now()
+         where id = #{id} and (frozen is null or frozen = 0)
+    </update>
+
+    <!-- P块解冻:仅冻结中的批次可解冻(CAS)。不清空 frozen_reason/frozen_by/frozen_at,留痕供事后追溯。 -->
+    <update id="unfreeze">
+        update merchant_payable_batch
+           set frozen = 0
+         where id = #{id} and frozen = 1
+    </update>
+</mapper>

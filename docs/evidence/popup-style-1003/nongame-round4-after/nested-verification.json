@@ -1,0 +1,38 @@
+{
+  "route": "pages/club/detail/index",
+  "controlled_scene": true,
+  "load_state": "missing-param",
+  "normal_business_entry": false,
+  "panel": {
+    "left": 0,
+    "top": 307,
+    "width": 390,
+    "height": 537,
+    "right": 390,
+    "bottom": 844,
+    "centerX": 195,
+    "centerY": 575.5
+  },
+  "title": {
+    "left": 16,
+    "top": 335,
+    "width": 358,
+    "height": 45,
+    "right": 374,
+    "bottom": 380,
+    "centerX": 195,
+    "centerY": 357.5
+  },
+  "button": {
+    "left": 16,
+    "top": 753,
+    "width": 358,
+    "height": 45,
+    "right": 374,
+    "bottom": 798,
+    "centerX": 195,
+    "centerY": 775.5
+  },
+  "type_close": true,
+  "prefs_close": true
+}

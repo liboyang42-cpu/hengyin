@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.OfficialAudienceMapper">
+
+    <!-- 玩家:role='player';城市取 work_address 模糊(玩家无标准城市字段) -->
+    <select id="selectPlayerIds" resultType="java.lang.Long">
+        select id from ums_member
+        where role = 'player' and del_flag = 0
+        <if test="city != null and city != ''">
+            and work_address like concat('%', #{city}, '%')
+        </if>
+    </select>
+
+    <!-- 俱乐部:club.city 标准字段 -->
+    <select id="selectClubMemberIds" resultType="java.lang.Long">
+        select member_id from club
+        where del_flag = 0
+        <if test="city != null and city != ''">
+            and city like concat('%', #{city}, '%')
+        </if>
+    </select>
+
+    <!-- 商家:address / city_role 模糊 -->
+    <select id="selectMerchantMemberIds" resultType="java.lang.Long">
+        select member_id from mms_merchant
+        where del_flag = 0
+        <if test="city != null and city != ''">
+            and (address like concat('%', #{city}, '%') or city_role like concat('%', #{city}, '%'))
+        </if>
+    </select>
+
+</mapper>

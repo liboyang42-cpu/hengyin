@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.RoamShareSnapshotMapper">
+
+    <insert id="upsertSnapshot">
+        insert into roam_share_snapshot (share_token, member_id, client_ts, snapshot_json, create_time, update_time)
+        values (#{shareToken}, #{memberId}, #{clientTs}, #{snapshotJson}, now(), now())
+        on duplicate key update snapshot_json = values(snapshot_json), update_time = values(update_time)
+    </insert>
+
+    <select id="selectTokenByMemberTs" resultType="java.lang.String">
+        select share_token from roam_share_snapshot where member_id = #{memberId} and client_ts = #{clientTs}
+    </select>
+
+    <select id="countByMember" resultType="int">
+        select count(*) from roam_share_snapshot where member_id = #{memberId}
+    </select>
+
+    <delete id="deleteOldestByMember">
+        delete from roam_share_snapshot where member_id = #{memberId} order by update_time asc, id asc limit #{limit}
+    </delete>
+
+    <select id="selectSnapshotJsonByToken" resultType="java.lang.String">
+        select snapshot_json from roam_share_snapshot where share_token = #{shareToken}
+    </select>
+
+    <delete id="deleteByMember">
+        delete from roam_share_snapshot where member_id = #{memberId}
+    </delete>
+</mapper>

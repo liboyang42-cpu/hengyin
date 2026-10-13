@@ -1,0 +1,65 @@
+[
+  {
+    "at": "2026-09-28T07:39:30.612Z",
+    "route": "pages/activity/detail/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/activity/info",
+    "method": "POST",
+    "ids": {
+      "id": "24"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 3668,
+    "resultIds": {
+      "id": 24,
+      "memberId": 100092,
+      "status": 1,
+      "topicId": 990062
+    },
+    "accountId": 100096,
+    "effect": "当前源码在成功详情读取时新增浏览记录；服务端未返回记录ID，未核实线上落库条数"
+  },
+  {
+    "at": "2026-09-28T07:46:07.686Z",
+    "route": "pages/activity/detail/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/activity/info",
+    "method": "POST",
+    "ids": {
+      "id": "24"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 2980,
+    "resultIds": {
+      "id": 24,
+      "memberId": 100092,
+      "status": 1,
+      "topicId": 990062
+    },
+    "accountId": 100096,
+    "effect": "当前源码在成功详情读取时新增浏览记录；服务端未返回记录ID，未核实线上落库条数"
+  },
+  {
+    "at": "2026-09-28T07:48:40.991Z",
+    "route": "pages/activity/detail/index",
+    "endpoint": "https://www.chengyinhub.com/prod-api/api/activity/info",
+    "method": "POST",
+    "ids": {
+      "id": "24"
+    },
+    "blocked": false,
+    "status": 200,
+    "code": 200,
+    "ms": 4671,
+    "resultIds": {
+      "id": 24,
+      "memberId": 100092,
+      "status": 1,
+      "topicId": 990062
+    },
+    "accountId": 100096,
+    "effect": "当前源码在成功详情读取时新增浏览记录；服务端未返回记录ID，未核实线上落库条数"
+  }
+]

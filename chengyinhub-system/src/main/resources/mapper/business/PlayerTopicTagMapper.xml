@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PlayerTopicTagMapper">
+
+    <resultMap id="PlayerTopicTagResult" type="PlayerTopicTag">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="tagCode" column="tag_code"/>
+        <result property="tagValue" column="tag_value"/>
+        <result property="sourceNodeId" column="source_node_id"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="columns">id, member_id, topic_id, tag_code, tag_value, source_node_id, status, create_time, update_time</sql>
+
+    <insert id="upsertPending" parameterType="PlayerTopicTag" useGeneratedKeys="true" keyProperty="id">
+        insert into player_topic_tag
+        (member_id, topic_id, tag_code, tag_value, source_node_id, status, create_time, update_time)
+        values (#{memberId}, #{topicId}, #{tagCode}, #{tagValue}, #{sourceNodeId}, 0, #{createTime}, #{updateTime})
+        on duplicate key update
+          id = last_insert_id(id),
+          tag_value = if(status = 0, values(tag_value), tag_value),
+          source_node_id = if(status = 0, values(source_node_id), source_node_id),
+          update_time = if(status = 0, values(update_time), update_time)
+    </insert>
+
+    <select id="selectOwnedById" resultMap="PlayerTopicTagResult">
+        select <include refid="columns"/> from player_topic_tag where id=#{id} and member_id=#{memberId}
+    </select>
+
+    <update id="updatePendingValueOwned">
+        update player_topic_tag set tag_value=#{tagValue}, update_time=now()
+         where id=#{id} and member_id=#{memberId} and status=0
+    </update>
+
+    <update id="confirmOwned">
+        update player_topic_tag set status=1, update_time=now()
+         where id=#{id} and member_id=#{memberId} and status=0
+    </update>
+
+    <update id="revokeOwned">
+        update player_topic_tag set status=2, update_time=now()
+         where id=#{id} and member_id=#{memberId} and status in (0,1)
+    </update>
+
+    <select id="selectPendingByNode" resultMap="PlayerTopicTagResult">
+        select <include refid="columns"/> from player_topic_tag
+         where member_id=#{memberId} and topic_id=#{topicId} and source_node_id=#{sourceNodeId} and status=0
+         order by id
+    </select>
+
+    <select id="selectConfirmedByCodes" resultMap="PlayerTopicTagResult">
+        select <include refid="columns"/> from player_topic_tag
+         where member_id=#{memberId} and topic_id=#{topicId} and status=1 and tag_code in
+        <foreach collection="codes" item="code" open="(" separator="," close=")">#{code}</foreach>
+         order by id
+    </select>
+
+    <select id="selectConfirmedByTopic" resultMap="PlayerTopicTagResult">
+        select <include refid="columns"/> from player_topic_tag
+         where member_id=#{memberId} and topic_id=#{topicId} and status=1 order by id
+    </select>
+</mapper>

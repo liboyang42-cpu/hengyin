@@ -1,0 +1,163 @@
+[
+  {
+    "at": "2026-09-28T06:07:00.034Z",
+    "kind": "driver-error",
+    "message": "Unexpected identifier 'o'"
+  },
+  {
+    "at": "2026-09-28T06:07:21.646Z",
+    "kind": "driver-error",
+    "message": "Unexpected token '{'"
+  },
+  {
+    "at": "2026-09-28T06:08:15.625Z",
+    "kind": "console",
+    "type": "warn",
+    "args": "[\"[Component] property \\\"activities\\\" of \\\"pages/topic/components/cy/session-picker/index\\\" received type-uncompatible value: expected <Array> but got non-array value. Used empty array instead.\"]"
+  },
+  {
+    "at": "2026-09-28T06:08:15.627Z",
+    "kind": "console",
+    "type": "warn",
+    "args": "[\"[Component] property \\\"activities\\\" of \\\"pages/topic/components/cy/session-picker/index\\\" received type-uncompatible value: expected <Array> but got non-array value. Used empty array instead.\"]"
+  },
+  {
+    "at": "2026-09-28T06:08:37.555Z",
+    "kind": "console",
+    "type": "warn",
+    "args": "[\"[Component] property \\\"activities\\\" of \\\"pages/topic/components/cy/session-picker/index\\\" received type-uncompatible value: expected <Array> but got non-array value. Used empty array instead.\"]"
+  },
+  {
+    "at": "2026-09-28T06:08:37.556Z",
+    "kind": "console",
+    "type": "warn",
+    "args": "[\"[Component] property \\\"activities\\\" of \\\"pages/topic/components/cy/session-picker/index\\\" received type-uncompatible value: expected <Array> but got non-array value. Used empty array instead.\"]"
+  },
+  {
+    "at": "2026-09-28T06:08:39.212Z",
+    "kind": "console",
+    "type": "warn",
+    "args": "[\"at ei.formatDate (weapp:///pages/topic/index/index.js:1637:16)\",\"new Date(\\\"2026-09-27 00:00:00\\\") 在部分 iOS 下无法正常使用，iOS 只支持 \\\"yyyy/MM/dd\\\"、\\\"yyyy/MM/dd HH:mm:ss\\\"、\\\"yyyy-MM-dd\\\"、\\\"yyyy-MM-ddTHH:mm:ss\\\"、\\\"yyyy-MM-ddTHH:mm:ss+HH:mm\\\" 的格式，点击\",null,\"下次编译后生效\"]"
+  },
+  {
+    "at": "2026-09-28T06:08:39.214Z",
+    "kind": "console",
+    "type": "warn",
+    "args": "[\"at ei.formatDate (weapp:///pages/topic/index/index.js:1637:16)\",\"new Date(\\\"2026-09-27 00:00:00\\\") 在部分 iOS 下无法正常使用，iOS 只支持 \\\"yyyy/MM/dd\\\"、\\\"yyyy/MM/dd HH:mm:ss\\\"、\\\"yyyy-MM-dd\\\"、\\\"yyyy-MM-ddTHH:mm:ss\\\"、\\\"yyyy-MM-ddTHH:mm:ss+HH:mm\\\" 的格式，点击\",null,\"下次编译后生效\"]"
+  },
+  {
+    "at": "2026-09-28T06:08:39.214Z",
+    "kind": "console",
+    "type": "warn",
+    "args": "[\"at ei.formatDate (weapp:///pages/topic/index/index.js:1637:16)\",\"new Date(\\\"2026-10-04 23:59:59\\\") 在部分 iOS 下无法正常使用，iOS 只支持 \\\"yyyy/MM/dd\\\"、\\\"yyyy/MM/dd HH:mm:ss\\\"、\\\"yyyy-MM-dd\\\"、\\\"yyyy-MM-ddTHH:mm:ss\\\"、\\\"yyyy-MM-ddTHH:mm:ss+HH:mm\\\" 的格式，点击\",null,\"下次编译后生效\"]"
+  },
+  {
+    "at": "2026-09-28T06:08:39.215Z",
+    "kind": "console",
+    "type": "warn",
+    "args": "[\"at ei.formatDate (weapp:///pages/topic/index/index.js:1637:16)\",\"new Date(\\\"2026-10-04 23:59:59\\\") 在部分 iOS 下无法正常使用，iOS 只支持 \\\"yyyy/MM/dd\\\"、\\\"yyyy/MM/dd HH:mm:ss\\\"、\\\"yyyy-MM-dd\\\"、\\\"yyyy-MM-ddTHH:mm:ss\\\"、\\\"yyyy-MM-ddTHH:mm:ss+HH:mm\\\" 的格式，点击\",null,\"下次编译后生效\"]"
+  },
+  {
+    "at": "2026-09-28T06:10:19.583Z",
+    "kind": "console",
+    "type": "error",
+    "args": "[\"routeDone with a webviewId 14 is not found\"]"
+  },
+  {
+    "at": "2026-09-28T06:10:19.583Z",
+    "kind": "console",
+    "type": "error",
+    "args": "[\"routeDone with a webviewId 14 is not found\"]"
+  },
+  {
+    "at": "2026-09-28T06:10:39.847Z",
+    "kind": "console",
+    "type": "error",
+    "args": "[\"页面【pages/square/components/cy/post-actions/index]错误:\\n\",{}]"
+  },
+  {
+    "at": "2026-09-28T06:10:39.848Z",
+    "kind": "console",
+    "type": "error",
+    "args": "[\"页面【pages/square/components/cy/post-actions/index]错误:\\n\",{}]"
+  },
+  {
+    "at": "2026-09-28T06:10:39.849Z",
+    "kind": "console",
+    "type": "error",
+    "args": "[\"Component is not found in path \\\"pages/square/components/cy/post-actions/index\\\" (using by \\\"pages/square/list/index\\\").\"]"
+  },
+  {
+    "at": "2026-09-28T06:10:39.849Z",
+    "kind": "console",
+    "type": "error",
+    "args": "[\"Component is not found in path \\\"pages/square/components/cy/post-actions/index\\\" (using by \\\"pages/square/list/index\\\").\"]"
+  },
+  {
+    "at": "2026-09-28T06:10:39.849Z",
+    "kind": "console",
+    "type": "warn",
+    "args": "[\"[Component] property \\\"editPost\\\" of \\\"pages/square/components/cy/post-compose/index\\\" received type-uncompatible value: expected <Object> but got non-object value. Used null instead.\"]"
+  },
+  {
+    "at": "2026-09-28T06:10:39.850Z",
+    "kind": "console",
+    "type": "warn",
+    "args": "[\"[Component] property \\\"editPost\\\" of \\\"pages/square/components/cy/post-compose/index\\\" received type-uncompatible value: expected <Object> but got non-object value. Used null instead.\"]"
+  },
+  {
+    "at": "2026-09-28T06:10:39.890Z",
+    "kind": "exception",
+    "message": "{\"message\":\"module 'pages/utils/danger-actions.js' is not defined, require args is '../../../../utils/danger-actions.js'\",\"stack\":\"Error: module 'pages/utils/danger-actions.js' is not defined, require args is '../../../../utils/danger-actions.js'\\n    at q (http://127.0.0.1:31457/__dev__/WASubContext.js?t=wechat&v=3.8.12:1:493605)\\n    at n (http://127.0.0.1:31457/__dev__/WASubContext.js?t=wechat&v=3.8.12:1:492727)\\n    at weapp:///pages/square/components/cy/post-actions/index.js:28:16\\n    at http://127.0.0.1:31457/__dev__/WASubContext.js?t=wechat&v=3.8.12:1:493975\\n    at _.runWith (http://127.0.0.1:31457/__dev__/WASubContext.js?t=wechat&v=3.8.12:1:483556)\\n    at q (http://127.0.0.1:31457/__dev__/WASubContext.js?t=wechat&v=3.8.12:1:493953)\\n    at <anonymous>:8:5\\n    at evaluateRes (ide:///extensions/appservice/index.js:1:104716)\\n    at ide:///extensions/appservice/index.js:1:11931\\n    at ide:///extensions/appservice/index.js:1:13781\"}"
+  },
+  {
+    "at": "2026-09-28T06:11:23.899Z",
+    "kind": "driver-error",
+    "message": "timeout waiting for automator response"
+  },
+  {
+    "at": "2026-09-28T06:12:06.969Z",
+    "kind": "driver-error",
+    "message": "Cannot read properties of undefined (reading 'net')"
+  },
+  {
+    "at": "2026-09-28T06:27:02.374Z",
+    "kind": "driver-error",
+    "message": "Missing .jt"
+  },
+  {
+    "at": "2026-09-28T06:44:53.273Z",
+    "kind": "driver-error",
+    "message": "Cannot read properties of null (reading 'tap')"
+  },
+  {
+    "at": "2026-09-28T06:48:51.231Z",
+    "kind": "driver-error",
+    "message": "Cannot read properties of null (reading 'tap')"
+  },
+  {
+    "at": "2026-09-28T06:49:18.749Z",
+    "kind": "driver-error",
+    "message": "Cannot read properties of undefined (reading 'map')"
+  },
+  {
+    "at": "2026-09-28T06:50:57.387Z",
+    "kind": "driver-error",
+    "message": "Missing .xjt"
+  },
+  {
+    "at": "2026-09-28T06:51:51.400Z",
+    "kind": "exception",
+    "message": "{\"message\":\"module 'pages/utils/danger-actions.js' is not defined, require args is '../../../../utils/danger-actions.js'\",\"stack\":\"Error: module 'pages/utils/danger-actions.js' is not defined, require args is '../../../../utils/danger-actions.js'\\n    at q (http://127.0.0.1:31457/__dev__/WASubContext.js?t=wechat&v=3.8.12:1:493605)\\n    at n (http://127.0.0.1:31457/__dev__/WASubContext.js?t=wechat&v=3.8.12:1:492727)\\n    at weapp:///pages/square/components/cy/post-actions/index.js:28:16\\n    at http://127.0.0.1:31457/__dev__/WASubContext.js?t=wechat&v=3.8.12:1:493975\\n    at _.runWith (http://127.0.0.1:31457/__dev__/WASubContext.js?t=wechat&v=3.8.12:1:483556)\\n    at q (http://127.0.0.1:31457/__dev__/WASubContext.js?t=wechat&v=3.8.12:1:493953)\\n    at <anonymous>:8:5\\n    at evaluateRes (ide:///extensions/appservice/index.js:1:104716)\\n    at ide:///extensions/appservice/index.js:1:11931\\n    at ide:///extensions/appservice/index.js:1:13781\"}"
+  },
+  {
+    "at": "2026-09-28T07:06:29.453Z",
+    "kind": "driver-error",
+    "message": "Cannot read properties of null (reading 'style')"
+  },
+  {
+    "at": "2026-09-28T07:07:24.483Z",
+    "kind": "driver-error",
+    "message": "Cannot read properties of null (reading 'tap')"
+  }
+]

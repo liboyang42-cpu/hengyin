@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantPayableMapper">
+
+    <!-- ⚠️ 本表只有 create_time,没有 update_time / create_by / update_by(见迁移 DDL):
+         台账行是不可变事件,「改」由另插一条 REVERSAL 行表达,故没有更新者这一维。
+         ⚠️ create_time 兼作**批次归属依据**(批次 = 商家 + 本列所在自然月),不是普通的审计时间戳。 -->
+    <resultMap type="MerchantPayable" id="MerchantPayableResult">
+        <result property="id"    column="id"    />
+        <result property="claimId"    column="claim_id"    />
+        <result property="eventKey"    column="event_key"    />
+        <result property="redemptionId"    column="redemption_id"    />
+        <result property="topicId"    column="topic_id"    />
+        <result property="chapterId"    column="chapter_id"    />
+        <result property="merchantMemberId"    column="merchant_member_id"    />
+        <result property="perHeadFeeSnapshot"    column="per_head_fee_snapshot"    />
+        <result property="amount"    column="amount"    />
+        <result property="entryType"    column="entry_type"    />
+        <result property="idempotencyKey"    column="idempotency_key"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectMerchantPayableVo">
+        select id, claim_id, event_key, redemption_id, topic_id, chapter_id, merchant_member_id, per_head_fee_snapshot,
+               amount, entry_type, idempotency_key, create_time
+        from merchant_payable
+    </sql>
+
+    <!-- ⚠️ 本文件**只有 insert 和 select,没有 update / delete** —— append-only 是这张表的全部意义。
+         冲正 = 再 insert 一条 entry_type='REVERSAL';状态流转在 merchant_payable_batch。
+         撞 uk_payable_idem 报 1062 = 这笔核销已入过账,幂等由库兜底。 -->
+    <insert id="insertPayable" parameterType="MerchantPayable" useGeneratedKeys="true" keyProperty="id">
+        insert into merchant_payable
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="claimId != null">claim_id,</if>
+            <if test="eventKey != null">event_key,</if>
+            <if test="redemptionId != null">redemption_id,</if>
+            <if test="topicId != null">topic_id,</if>
+            <if test="chapterId != null">chapter_id,</if>
+            <if test="merchantMemberId != null">merchant_member_id,</if>
+            <if test="perHeadFeeSnapshot != null">per_head_fee_snapshot,</if>
+            <if test="amount != null">amount,</if>
+            <if test="entryType != null">entry_type,</if>
+            <if test="idempotencyKey != null">idempotency_key,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="claimId != null">#{claimId},</if>
+            <if test="eventKey != null">#{eventKey},</if>
+            <if test="redemptionId != null">#{redemptionId},</if>
+            <if test="topicId != null">#{topicId},</if>
+            <if test="chapterId != null">#{chapterId},</if>
+            <if test="merchantMemberId != null">#{merchantMemberId},</if>
+            <if test="perHeadFeeSnapshot != null">#{perHeadFeeSnapshot},</if>
+            <if test="amount != null">#{amount},</if>
+            <if test="entryType != null">#{entryType},</if>
+            <if test="idempotencyKey != null">#{idempotencyKey},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <select id="selectByIdempotencyKey" resultMap="MerchantPayableResult">
+        <include refid="selectMerchantPayableVo"/>
+        where idempotency_key = #{key}
+    </select>
+
+    <select id="selectByRedemption" resultMap="MerchantPayableResult">
+        <include refid="selectMerchantPayableVo"/>
+        where redemption_id = #{redemptionId}
+        order by id asc
+    </select>
+
+    <select id="selectByMerchant" resultMap="MerchantPayableResult">
+        <include refid="selectMerchantPayableVo"/>
+        where merchant_member_id = #{merchantMemberId}
+        order by create_time desc, id desc
+    </select>
+
+    <!-- ★ 净额:amount 是绝对值,方向由 entry_type 承载。
+         写成 SUM(amount) 会把冲正算成又欠一笔 = 翻倍多付。这不是风格问题,是账对不对的问题。
+         ⚠️ 该月一行都没有时返 NULL(不是 0)—— 调用方必须自己兜,别让 NULL 流进 BigDecimal 运算。
+         走 idx_payable_merchant_time(merchant_member_id, create_time)。 -->
+    <select id="sumNetByMerchantAndPeriod" resultType="java.math.BigDecimal">
+        select sum(case entry_type when 'ACCRUAL' then amount else -amount end)
+        from merchant_payable
+        where merchant_member_id = #{merchantMemberId}
+          and date_format(create_time, '%Y-%m') = #{periodYm}
+    </select>
+
+    <!-- ⚠️ date_format 包住 create_time ⇒ **走不了索引,这条是全表扫**。
+         现在可接受:③ 一张票都没卖过,且这是每月跑一次的批次生成,不在任何热路径上。
+         真到了量上来那天,改法是把谓词换成 sargable 的范围
+         (create_time >= 月初 and create_time < 次月初,边界在 Java 侧算好传进来),
+         别加函数索引 —— 范围谓词能直接复用已有的 idx_payable_merchant_time。 -->
+    <select id="selectMerchantIdsByPeriod" resultType="java.lang.Long">
+        select distinct merchant_member_id
+        from merchant_payable
+        where date_format(create_time, '%Y-%m') = #{periodYm}
+        order by merchant_member_id asc
+    </select>
+</mapper>

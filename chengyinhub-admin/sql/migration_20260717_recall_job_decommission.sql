@@ -1,0 +1,52 @@
+-- 注销「完成活动召回(24-72h)」定时任务(activityRecallTask)—— 2026-07-17 拍板拆除。
+--
+-- 【为什么拆】
+--   该任务 2026-07-15 以【暂停态 status='1'】注册,等两个前提:
+--     ① wx.subscribe.tplRecall 模板 —— 需在微信公众平台申请,至今未申请、未配置;
+--     ② 前端 wx.requestSubscribeMessage 取得用户授权 —— 未做。
+--   两件都没做 ⇒ 即便启用,notifyRecall 也直接 return,一条发不出去。
+--   短期不打算做 ⇒ 拆掉,不在生产库里留一个没人跑、也没人记得的僵尸 job。
+--   代码在 git 历史里(本次一并删除 ActivityRecallTask.java),将来要做直接捡回来。
+--
+-- 【配套的代码改动】(同 PR,合并即部署)
+--   删 ActivityRecallTask.java / ActivityRecallTaskTest.java / migration_20260715_recall_job.sql
+--   删随之成为孤儿的:IWxSubscribeMsgService.notifyRecall + 实现 + tplRecall 字段
+--                    + CmsRegistrationMapper.selectRecallCandidates + 其 XML
+--
+-- 【顺序】
+--   本注销 SQL 与 jar 部署【无先后要求】:
+--     · 先跑 SQL 后部署 jar → 中间窗口 job 已注销,bean 还在 → 没人调它,无害。
+--     · 先部署 jar 后跑 SQL → 中间窗口 bean 没了,job 还在且【status='1' 暂停】→ quartz 不会触发它,
+--       也无害。(若它当初是启用态,这个方向就会 ClassNotFound 报错 —— 但它从注册那天起就是暂停态。)
+--   ⇒ 两个方向都安全。仍建议先跑 SQL,养成「拆除先断调度、再删代码」的顺手习惯。
+--
+-- 【幂等】
+--   DELETE 天然幂等:重复执行 0 行受影响。
+--
+-- 【可逆】
+--   git revert 本 PR 拿回代码,再重跑被删的 migration_20260715_recall_job.sql 重新注册。
+--
+-- 【预期影响行数】
+--   0 或 1 行。
+--   ⚠️ 0 行是【正常且很可能】的结果,不是失败:旁证表明这个 job 大概率从未落库 ——
+--      原注册 SQL 的 remark 里含半角分号,而修好分句器的 #64 是 2026-07-16 才合的,
+--      在那之前若用 skill 落库,老分句器会把那条 INSERT 从「召回;需先配」处劈开 → 1064 报错。
+--      但那是【推理不是观测】,所以本文件照发:已落库则真删掉,没落库则 no-op。两种都对。
+--   ⚠️ >1 行 = 历史上被重复注册过(原文件是裸 INSERT 无幂等前置)。此时先停下报告,别当没事。
+--
+-- ⚠️⚠️ 生产库 MySQL 8。走 chengyin-db-migrate:先只读预检 → 用户确认 → 才执行。
+
+-- ======================= 第一步:只读预检 =======================
+-- 看清楚有几行、status 是什么(确认它确实是暂停态,而非不知何时被人启用了):
+--   SELECT job_id, job_name, status, cron_expression, remark
+--     FROM sys_job WHERE invoke_target = 'activityRecallTask.run()';
+--
+--   · 0 行 → 从未落库,第二步是 no-op,照跑即可。
+--   · 1 行且 status='1' → 预期情况,照跑。
+--   · 1 行且 status='0' → ⚠️【意外】:它被启用过。先停下报告 —— 说明它可能真的在跑,
+--                          得先弄清有没有给用户发过消息,再决定删不删。
+--   · >1 行 → ⚠️ 重复注册(裸 INSERT 的后果)。先停下报告。
+
+-- ======================= 第二步:执行 =======================
+
+DELETE FROM sys_job WHERE invoke_target = 'activityRecallTask.run()';

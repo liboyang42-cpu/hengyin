@@ -1,0 +1,193 @@
+name: Funds MySQL IT
+
+# 资金真实 MySQL 集成测试门禁。GitHub-hosted ubuntu-latest 跑(本机 runner 只留给部署)。
+#
+# 为什么单独一个 workflow:这几套必须连真 MySQL 才有意义。它们用
+# @EnabledIfEnvironmentVariable 门控,普通 CI 会静默跳过并仍"绿"——等于没验证。
+# 本 workflow 把它们钉成"要么真跑要么变红":缺 MySQL 前提 = fail-closed(见 ci/funds-mysql-it-gate.sh),
+# 跑完由 ci/funds_it_gate.py 回读 skipped=0 / 无错无失败 / 用例数达标(回执≠观测)。
+#
+# ★ 触发:push:master 按资金路径;PR 阶段【不】在 on.pull_request 上设 paths。
+#   required check 必须对每个 PR 都产生终态,否则改 UI 的 PR 会永远等一条没触发的 context。
+#   省额度:job 内按路径跳过 checkout/java/真库 IT,无关 PR 仍拿同名绿勾。
+#   ★ 两个 context 都已进 master branch protection 必需清单,改 job 名称会让 PR 永久 BLOCKED:
+#     - Funds MySQL IT (50/9/30, skipped=0, fail-closed)
+#     - Funds IT gate self-test (skipped=0 negative controls)
+#
+# 命中资金路径时，GitHub-hosted runner 自行启动并回读 Oracle MySQL 8.0.45 scratch；
+# 不依赖机器 3306 上可能变化的 Homebrew 数据库，也不依赖仓库 MySQL secrets。
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - 'chengyinhub-admin/src/main/**'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/**MybatisIntegrationTest.java'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/*MySqlIT.java'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MysqlIntegrationTestConfig.java'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ExploreAlliance*RealDbIT.java'
+      # 2026-09-16:单改 business/it 下任一真库 IT 或 service/impl 的 *MybatisIT 此前不触发本 job
+      # (零告警),WxPayment/WxContent/ActivityCancelFreeOrder 三套单改文件都不复验。
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/**'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/*MybatisIT.java'
+      # 2026-09-16 晚:暗测试 23 套入闸,其中 business/mapper/ 与 web/controller/api/ 两处
+      # 原 glob 覆盖不到(RegistrationReadContract / RoamSessionWrite)。两处 filter 同步。
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/**'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/**'
+      - 'chengyinhub-system/src/main/**'
+      - 'chengyinhub-admin/sql/migration_*funds*.sql'
+      - 'chengyinhub-admin/sql/migration_20260814_tandianri_product_type_backfill.sql'
+      - 'chengyinhub-admin/sql/migration_p1_funds_spec_contracts_20260724.sql'
+      - 'ci/funds-mysql-it-gate.sh'
+      - 'ci/funds_it_gate.py'
+      - 'ci/test_funds_it_gate.py'
+      - '.github/workflows/funds-mysql-it.yml'
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: funds-mysql-it-${{ github.event_name == 'push' && github.run_id || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  funds_it_gate_selftest:
+    name: Funds IT gate self-test (skipped=0 negative controls)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      funds: ${{ github.event_name != 'pull_request' && 'true' || steps.filter.outputs.funds }}
+    steps:
+      # 本地算 diff 需要仓库在手(走 API 时本 job 原本不需要 checkout)。
+      # fetch-depth:0 拿全提交图;filter=blob:none 不拉历史文件内容 —— 只算 merge-base 用不着。
+      - uses: actions/checkout@v4
+        if: github.event_name == 'pull_request'
+        with:
+          fetch-depth: 0
+          filter: blob:none
+      - uses: dorny/paths-filter@v3
+        id: filter
+        if: github.event_name == 'pull_request'
+        with:
+          # 同 ci.yml:变更清单改用本地 git,绕开 GitHub diff API 对大 PR 的硬上限。
+          # 见 ci.yml 同处注释的病历;`base` 在 PR 事件下会被忽略,唯一开关是 token 置空。
+          token: ''
+          filters: |
+            funds:
+              - 'chengyinhub-admin/src/main/**'
+              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/**MybatisIntegrationTest.java'
+              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/*MySqlIT.java'
+              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MysqlIntegrationTestConfig.java'
+              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ExploreAlliance*RealDbIT.java'
+              # 与 on.push.paths 同一套 pattern,两处必须同步(自测钉住各出现 2 次)。
+              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/**'
+              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/*MybatisIT.java'
+              # 2026-09-16 晚:暗测试 23 套入闸,其中 business/mapper/ 与 web/controller/api/ 两处
+              # 原 glob 覆盖不到(RegistrationReadContract / RoamSessionWrite)。两处 filter 同步。
+              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/**'
+              - 'chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/**'
+              - 'chengyinhub-system/src/main/**'
+              - 'chengyinhub-admin/sql/migration_*funds*.sql'
+              - 'chengyinhub-admin/sql/migration_20260814_tandianri_product_type_backfill.sql'
+              - 'chengyinhub-admin/sql/migration_p1_funds_spec_contracts_20260724.sql'
+              - 'ci/funds-mysql-it-gate.sh'
+              - 'ci/funds_it_gate.py'
+              - 'ci/test_funds_it_gate.py'
+              - '.github/workflows/funds-mysql-it.yml'
+      - uses: actions/checkout@v4
+        if: github.event_name != 'pull_request' || steps.filter.outputs.funds == 'true'
+      - name: Run funds IT gate negative controls
+        if: github.event_name != 'pull_request' || steps.filter.outputs.funds == 'true'
+        run: python3 -m unittest ci/test_funds_it_gate.py
+      - name: Check funds IT workflow structural contract
+        if: github.event_name != 'pull_request' || steps.filter.outputs.funds == 'true'
+        run: python3 ci/funds_it_gate.py workflow .github/workflows/funds-mysql-it.yml ci/funds-mysql-it-gate.sh
+      - name: Skip selftest on unrelated PRs
+        if: github.event_name == 'pull_request' && steps.filter.outputs.funds != 'true'
+        run: echo "本 PR 未改资金路径，跳过自测。required check 仍给终态。"
+
+  funds_mysql_it:
+    name: Funds MySQL IT (50/9/30, skipped=0, fail-closed)
+    needs: funds_it_gate_selftest
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Require funds gate self-test success
+        env:
+          SELFTEST_RESULT: ${{ needs.funds_it_gate_selftest.result }}
+        run: |
+          if [ "$SELFTEST_RESULT" != success ]; then
+            echo "::error::Funds IT gate self-test = $SELFTEST_RESULT；主 required context 必须失败，不能 skipped 假绿。"
+            exit 1
+          fi
+      - name: Decide whether this PR needs real MySQL IT
+        id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          FUNDS: ${{ needs.funds_it_gate_selftest.outputs.funds }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" = "pull_request" ] && [ "$FUNDS" = "false" ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "本 PR 未改资金相关路径，跳过真库 IT。required check 仍给终态。"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.scope.outputs.run == 'true'
+      - uses: actions/setup-java@v4
+        if: steps.scope.outputs.run == 'true'
+        with:
+          distribution: temurin
+          java-version: '11'
+      - name: Start Oracle MySQL 8.0.45 scratch
+        id: mysql
+        if: steps.scope.outputs.run == 'true'
+        run: |
+          set -euo pipefail
+          container="cy-funds-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          echo "container=$container" >> "$GITHUB_OUTPUT"
+          docker rm -f -v "$container" >/dev/null 2>&1 || true
+          docker run -d --name "$container" \
+            -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
+            -p 127.0.0.1::3306 \
+            --health-cmd='mysqladmin ping -h 127.0.0.1 -uroot --silent' \
+            --health-interval=2s --health-timeout=2s --health-retries=30 \
+            mysql:8.0.45
+          port="$(docker port "$container" 3306/tcp | awk -F: 'END {print $NF}')"
+          test -n "$port"
+          for _ in {1..60}; do
+            if [ "$(docker inspect --format '{{.State.Health.Status}}' "$container")" = healthy ]; then
+              identity="$(docker exec "$container" mysql -Nuroot -e \
+                'SELECT CONCAT(VERSION(), "|", @@version_comment)')"
+              test "$identity" = '8.0.45|MySQL Community Server - GPL'
+              echo "port=$port" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs "$container"
+          exit 1
+      - name: Run funds MySQL integration gate (fail-closed on missing MySQL)
+        if: steps.scope.outputs.run == 'true'
+        run: bash ci/funds-mysql-it-gate.sh
+        env:
+          CHENGYIN_TEST_MYSQL_HOST: 127.0.0.1
+          CHENGYIN_TEST_MYSQL_PORT: ${{ steps.mysql.outputs.port }}
+          CHENGYIN_TEST_MYSQL_USER: root
+          CHENGYIN_TEST_MYSQL_PASSWORD: ''
+          CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX: _gh${{ github.run_id }}
+      - name: Stop Oracle MySQL scratch
+        if: always() && steps.mysql.outputs.container != ''
+        env:
+          MYSQL_CONTAINER: ${{ steps.mysql.outputs.container }}
+        run: |
+          docker rm -f -v "$MYSQL_CONTAINER" >/dev/null 2>&1 || true
+          ! docker ps -a --format '{{.Names}}' | grep -Fxq "$MYSQL_CONTAINER"

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.SmsHotSearchMapper">
+    
+    <resultMap type="SmsHotSearch" id="SmsHotSearchResult">
+        <result property="id"    column="id"    />
+        <result property="keyword"    column="keyword"    />
+        <result property="searchCount"    column="search_count"    />
+        <result property="status"    column="status"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectSmsHotSearchVo">
+        select id, keyword, search_count, status, create_by, create_time, update_by, update_time from sms_hot_search
+    </sql>
+
+    <select id="selectSmsHotSearchList" parameterType="SmsHotSearch" resultMap="SmsHotSearchResult">
+        <include refid="selectSmsHotSearchVo"/>
+        <where>  
+            <if test="keyword != null  and keyword != ''"> and keyword = #{keyword}</if>
+            <if test="searchCount != null "> and search_count = #{searchCount}</if>
+            <if test="status != null "> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectSmsHotSearchById" parameterType="Long" resultMap="SmsHotSearchResult">
+        <include refid="selectSmsHotSearchVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertSmsHotSearch" parameterType="SmsHotSearch" useGeneratedKeys="true" keyProperty="id">
+        insert into sms_hot_search
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="keyword != null and keyword != ''">keyword,</if>
+            <if test="searchCount != null">search_count,</if>
+            <if test="status != null">status,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="keyword != null and keyword != ''">#{keyword},</if>
+            <if test="searchCount != null">#{searchCount},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateSmsHotSearch" parameterType="SmsHotSearch">
+        update sms_hot_search
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="keyword != null and keyword != ''">keyword = #{keyword},</if>
+            <if test="searchCount != null">search_count = #{searchCount},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteSmsHotSearchById" parameterType="Long">
+        delete from sms_hot_search where id = #{id}
+    </delete>
+
+    <delete id="deleteSmsHotSearchByIds" parameterType="String">
+        delete from sms_hot_search where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

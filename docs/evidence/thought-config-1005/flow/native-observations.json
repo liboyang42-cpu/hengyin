@@ -1,0 +1,339 @@
+{
+  "save": {
+    "step": "theme-detail-add-complete",
+    "route": "pages/publish/fabu/index",
+    "show": false,
+    "detailOpen": true,
+    "thoughts": [
+      {
+        "key": "tmuv4urdo",
+        "name": "伏笔",
+        "need": 3000,
+        "desc": "你想起了那扇亮着灯的窗。"
+      }
+    ],
+    "rules": "{\"schemaVersion\":1,\"stateEnabled\":false,\"hp\":{\"enabled\":false,\"init\":10,\"max\":10},\"luck\":{\"enabled\":false,\"init\":3,\"max\":3},\"thoughts\":[{\"key\":\"tmuv4urdo\",\"name\":\"伏笔\",\"need\":3000,\"desc\":\"你想起了那扇亮着灯的窗。\"}],\"recovery\":{\"stationEndIfHurt\":2,\"stageRestHpFloor\":6,\"stageRestLuckFloor\":1,\"exhaustRestHp\":5}}"
+  },
+  "newChapter": {
+    "route": "pages/publish/fabu/index",
+    "chapters": [
+      {
+        "name": "第1章",
+        "description": "",
+        "imgArr": "",
+        "nodes": [],
+        "calculatedDistance": 0,
+        "category": "",
+        "categoryId": null,
+        "recruitEnabled": 0,
+        "termsMode": "PERK",
+        "perkMinValue": null,
+        "maxPerHeadFee": null,
+        "maxMerchant": 0,
+        "atmospherePreset": "DEFAULT",
+        "audioUrl": "",
+        "audioDuration": 0,
+        "audioFileName": "",
+        "allowedValidationMethods": "",
+        "maxNodeXp": null,
+        "opening": false,
+        "required": 1,
+        "_localId": "lid1",
+        "schemaVersion": 1,
+        "blocks": []
+      }
+    ],
+    "storyEditor": {
+      "show": true,
+      "chapterIndex": 0,
+      "insertMenuAt": -1,
+      "focusBlockKey": "",
+      "selectedBlockKey": ""
+    },
+    "popChapter": false
+  },
+  "insertMenu": "文字\n图片\n音频\n地点\n玩法",
+  "story": {
+    "chapters": [
+      {
+        "name": "第1章",
+        "blocks": [
+          {
+            "key": "lid2",
+            "type": "text",
+            "content": "你走过街角，望见窗里的灯。"
+          }
+        ]
+      }
+    ],
+    "thoughts": [
+      {
+        "key": "tmuv4urdo",
+        "name": "伏笔",
+        "need": 3000,
+        "desc": "你想起了那扇亮着灯的窗。"
+      }
+    ]
+  },
+  "firstChapter": {
+    "popChapter": false,
+    "storyEditor": {
+      "show": false,
+      "chapterIndex": -1,
+      "insertMenuAt": -1,
+      "focusBlockKey": "",
+      "selectedBlockKey": ""
+    },
+    "chapters": [
+      {
+        "name": "街角",
+        "ending": null,
+        "blocks": [
+          {
+            "key": "lid2",
+            "type": "text",
+            "content": "你走过街角，望见窗里的灯。"
+          }
+        ]
+      }
+    ]
+  },
+  "endingPicked": {
+    "chapterIndex": 1,
+    "ending": {
+      "fallback": false,
+      "kind": "thought",
+      "thoughtKey": "tmuv4urdo",
+      "thoughtName": "伏笔",
+      "tag": "",
+      "tagLabel": "",
+      "nodeId": null,
+      "nodeName": ""
+    },
+    "thoughts": [
+      {
+        "key": "tmuv4urdo",
+        "name": "伏笔",
+        "need": 3000,
+        "desc": "你想起了那扇亮着灯的窗。"
+      }
+    ]
+  },
+  "endingSaved": {
+    "popChapter": false,
+    "storyOpen": false,
+    "chapters": [
+      {
+        "key": "lid1",
+        "name": "街角",
+        "ending": null,
+        "blocks": [
+          {
+            "key": "lid2",
+            "type": "text",
+            "content": "你走过街角，望见窗里的灯。"
+          }
+        ]
+      },
+      {
+        "key": "lid1",
+        "name": "窗后的光",
+        "ending": {
+          "fallback": false,
+          "kind": "thought",
+          "thoughtKey": "tmuv4urdo",
+          "thoughtName": "伏笔",
+          "tag": "",
+          "tagLabel": "",
+          "nodeId": null,
+          "nodeName": ""
+        },
+        "blocks": [
+          {
+            "key": "lid3",
+            "type": "text",
+            "content": "你终于明白，那扇窗一直亮着。"
+          }
+        ]
+      }
+    ]
+  },
+  "newChapterInherited": {
+    "storyIndex": 2,
+    "chapters": [
+      {
+        "key": "lid1",
+        "name": "街角",
+        "ending": null
+      },
+      {
+        "key": "lid1",
+        "name": "窗后的光",
+        "ending": {
+          "fallback": false,
+          "kind": "thought",
+          "thoughtKey": "tmuv4urdo",
+          "thoughtName": "伏笔",
+          "tag": "",
+          "tagLabel": "",
+          "nodeId": null,
+          "nodeName": ""
+        }
+      },
+      {
+        "key": "lid1",
+        "name": "第3章",
+        "ending": {
+          "fallback": false,
+          "kind": "thought",
+          "thoughtKey": "tmuv4urdo",
+          "thoughtName": "伏笔",
+          "tag": "",
+          "tagLabel": "",
+          "nodeId": null,
+          "nodeName": ""
+        }
+      }
+    ]
+  },
+  "beforeReload": {
+    "route": "pages/publish/fabu/index",
+    "draftUuid": "muv1wb1v-kryk37",
+    "storyOpen": false,
+    "thoughts": [
+      {
+        "key": "tmuv4urdo",
+        "name": "伏笔",
+        "need": 3000,
+        "desc": "你想起了那扇亮着灯的窗。"
+      }
+    ],
+    "chapters": [
+      {
+        "key": "lid1",
+        "name": "街角",
+        "ending": null,
+        "blocks": [
+          {
+            "key": "lid2",
+            "type": "text",
+            "content": "你走过街角，望见窗里的灯。"
+          }
+        ]
+      },
+      {
+        "key": "lid1",
+        "name": "窗后的光",
+        "ending": {
+          "fallback": false,
+          "kind": "thought",
+          "thoughtKey": "tmuv4urdo",
+          "thoughtName": "伏笔",
+          "tag": "",
+          "tagLabel": "",
+          "nodeId": null,
+          "nodeName": ""
+        },
+        "blocks": [
+          {
+            "key": "lid3",
+            "type": "text",
+            "content": "你终于明白，那扇窗一直亮着。"
+          }
+        ]
+      },
+      {
+        "key": "lid1",
+        "name": "第3章",
+        "ending": {
+          "fallback": false,
+          "kind": "thought",
+          "thoughtKey": "tmuv4urdo",
+          "thoughtName": "伏笔",
+          "tag": "",
+          "tagLabel": "",
+          "nodeId": null,
+          "nodeName": ""
+        },
+        "blocks": []
+      }
+    ]
+  },
+  "reloaded": {
+    "route": "pages/publish/fabu/index",
+    "draftUuid": "muv1wb1v-kryk37",
+    "fromStoredDraft": true,
+    "thoughts": [
+      {
+        "key": "tmuv4urdo",
+        "name": "伏笔",
+        "need": 3000,
+        "desc": "你想起了那扇亮着灯的窗。"
+      }
+    ],
+    "chapters": [
+      {
+        "key": "lid1",
+        "name": "街角",
+        "ending": null,
+        "blocks": [
+          {
+            "key": "lid2",
+            "type": "text",
+            "content": "你走过街角，望见窗里的灯。"
+          }
+        ]
+      },
+      {
+        "key": "lid1",
+        "name": "窗后的光",
+        "ending": {
+          "fallback": false,
+          "kind": "thought",
+          "thoughtKey": "tmuv4urdo",
+          "thoughtName": "伏笔",
+          "tag": "",
+          "tagLabel": "",
+          "nodeId": null,
+          "nodeName": ""
+        },
+        "blocks": [
+          {
+            "key": "lid3",
+            "type": "text",
+            "content": "你终于明白，那扇窗一直亮着。"
+          }
+        ]
+      },
+      {
+        "key": "lid1",
+        "name": "第3章",
+        "ending": {
+          "fallback": false,
+          "kind": "thought",
+          "thoughtKey": "tmuv4urdo",
+          "thoughtName": "伏笔",
+          "tag": "",
+          "tagLabel": "",
+          "nodeId": null,
+          "nodeName": ""
+        },
+        "blocks": []
+      }
+    ]
+  },
+  "restored": {
+    "sameForm": true,
+    "chapterCount": 0,
+    "rulesEmpty": true
+  },
+  "restoredFresh": {
+    "route": "pages/publish/fabu/index",
+    "chapterCount": 0,
+    "rulesEmpty": true,
+    "thoughtCount": 0,
+    "editorOpen": false,
+    "fromStoredDraft": true
+  },
+  "controls": "入口/添加章节/添加正文/下一步/完成使用原生元素 tap；正文用原生 input。cy-field、cy-switch、cy-dropdown 使用组件 input/change 事件作为临时补充，未当作物理控件操作已验。"
+}

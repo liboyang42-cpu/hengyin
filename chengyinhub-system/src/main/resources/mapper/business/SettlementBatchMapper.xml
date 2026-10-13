@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.SettlementBatchMapper">
+
+    <resultMap id="SettlementBatchResult" type="com.chengyinhub.business.domain.SettlementBatch">
+        <result property="id" column="id"/>
+        <result property="batchNo" column="batch_no"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="periodStart" column="period_start"/>
+        <result property="periodEnd" column="period_end"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="detailCount" column="detail_count"/>
+        <result property="successCount" column="success_count"/>
+        <result property="failedCount" column="failed_count"/>
+        <result property="status" column="status"/>
+        <result property="idempotencyKey" column="idempotency_key"/>
+        <result property="reviewerId" column="reviewer_id"/>
+        <result property="reviewedAt" column="reviewed_at"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="SettlementSummaryResult" type="com.chengyinhub.business.domain.vo.SettlementSummaryVO">
+        <result property="merchantId" column="merchant_id"/>
+        <result property="batchCount" column="batch_count"/>
+        <result property="detailCount" column="detail_count"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="pendingAmount" column="pending_amount"/>
+    </resultMap>
+
+    <select id="selectBatchList" parameterType="com.chengyinhub.business.domain.SettlementBatch" resultMap="SettlementBatchResult">
+        select id, batch_no, merchant_id, period_start, period_end, total_amount, detail_count,
+               success_count, failed_count, status, idempotency_key, reviewer_id, reviewed_at,
+               create_time, update_time
+        from settlement_batch
+        <where>
+            <if test="merchantId != null">and merchant_id = #{merchantId}</if>
+            <if test="status != null">and status = #{status}</if>
+            <if test="batchNo != null and batchNo != ''">and batch_no = #{batchNo}</if>
+        </where>
+        order by id desc
+    </select>
+
+    <select id="selectByIdempotencyKey" resultMap="SettlementBatchResult">
+        select id, batch_no, merchant_id, period_start, period_end, total_amount, detail_count,
+               success_count, failed_count, status, idempotency_key, reviewer_id, reviewed_at,
+               create_time, update_time
+        from settlement_batch
+        where idempotency_key = #{idempotencyKey}
+        limit 1
+    </select>
+
+    <insert id="insertSettlementBatch" parameterType="com.chengyinhub.business.domain.SettlementBatch" useGeneratedKeys="true" keyProperty="id">
+        insert into settlement_batch
+        (batch_no, merchant_id, period_start, period_end, total_amount, detail_count,
+         success_count, failed_count, status, idempotency_key, create_time)
+        values
+        (#{batchNo}, #{merchantId}, #{periodStart}, #{periodEnd}, #{totalAmount}, #{detailCount},
+         #{successCount}, #{failedCount}, #{status}, #{idempotencyKey}, now())
+    </insert>
+
+    <select id="selectById" resultMap="SettlementBatchResult">
+        select id, batch_no, merchant_id, period_start, period_end, total_amount, detail_count,
+               success_count, failed_count, status, idempotency_key, reviewer_id, reviewed_at,
+               create_time, update_time
+        from settlement_batch
+        where id = #{id}
+        limit 1
+    </select>
+
+    <update id="updateBatchStatusIfPending">
+        update settlement_batch
+        set status = #{status},
+            reviewer_id = #{reviewerId},
+            reviewed_at = #{reviewedAt},
+            update_time = now()
+        where id = #{id}
+          and status = 0
+    </update>
+
+    <select id="selectSummaryByMerchantId" resultMap="SettlementSummaryResult">
+        select merchant_id,
+               count(1) as batch_count,
+               coalesce(sum(detail_count), 0) as detail_count,
+               coalesce(sum(total_amount), 0) as total_amount,
+               coalesce(sum(case when status = 0 then total_amount else 0 end), 0) as pending_amount
+        from settlement_batch
+        where merchant_id = #{merchantId}
+        group by merchant_id
+    </select>
+
+    <update id="updateBatchTotals">
+        update settlement_batch
+        set total_amount = #{totalAmount},
+            detail_count = #{detailCount},
+            update_time = now()
+        where id = #{id}
+    </update>
+
+    <select id="countBatches" resultType="java.lang.Long">
+        select count(1) from settlement_batch
+    </select>
+
+    <select id="selectAmountMismatchBatches" resultType="com.chengyinhub.business.domain.vo.SettlementBatchReconciliationVO">
+        select b.id as batchId,
+               b.merchant_id as merchantId,
+               coalesce(b.total_amount, 0) as batchTotalAmount,
+               coalesce(sum(d.settlement_amount), 0) as detailTotalAmount,
+               coalesce(b.total_amount, 0) - coalesce(sum(d.settlement_amount), 0) as differenceAmount
+        from settlement_batch b
+        left join settlement_detail d on d.batch_id = b.id
+        group by b.id, b.merchant_id, b.total_amount
+        having coalesce(b.total_amount, 0) != coalesce(sum(d.settlement_amount), 0)
+        order by b.id desc
+    </select>
+</mapper>

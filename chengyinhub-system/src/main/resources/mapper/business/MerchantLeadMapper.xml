@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantLeadMapper">
+
+    <!--
+      附近商家目录:longitude/latitude 为 VARCHAR,先剔除空值再 CAST 计算 Haversine 直线距离(米)。
+      LEAST(1, ...) 防浮点误差导致 ACOS 入参 > 1 报错。having 过滤半径,order by 距离升序。
+    -->
+    <select id="selectNearbyLeads" resultType="com.chengyinhub.business.domain.vo.NearbyMerchantVO">
+        select
+            id, member_id as memberId, name, phone, address, longitude, latitude,
+            category, tags, source, contact_open as contactOpen, coop_open as coopOpen,
+            (6371000 * acos(least(1,
+                cos(radians(#{lat})) * cos(radians(cast(latitude as decimal(12,7))))
+                * cos(radians(cast(longitude as decimal(12,7))) - radians(#{lng}))
+                + sin(radians(#{lat})) * sin(radians(cast(latitude as decimal(12,7))))
+            ))) as distance
+        from merchant_lead
+        where del_flag = 0 and status = 1
+          and latitude is not null and latitude != ''
+          and longitude is not null and longitude != ''
+        having distance &lt;= #{radius}
+        order by distance asc
+        limit #{limit}
+    </select>
+
+    <insert id="insertMerchantLead" parameterType="com.chengyinhub.business.domain.MerchantLead" useGeneratedKeys="true" keyProperty="id">
+        insert into merchant_lead
+            (member_id, name, phone, address, longitude, latitude, category, tags, source,
+             contact_open, coop_open, status, del_flag, create_time, update_time)
+        values
+            (#{memberId}, #{name}, #{phone}, #{address}, #{longitude}, #{latitude}, #{category}, #{tags}, #{source},
+             #{contactOpen}, #{coopOpen}, #{status}, #{delFlag}, #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="selectMerchantLeadById" resultType="com.chengyinhub.business.domain.MerchantLead">
+        select id, member_id as memberId, name, phone, address, longitude, latitude, category, tags, source,
+               contact_open as contactOpen, coop_open as coopOpen, status, del_flag as delFlag,
+               create_time as createTime, update_time as updateTime
+        from merchant_lead where id = #{id}
+    </select>
+
+    <select id="selectMerchantLeadList" parameterType="com.chengyinhub.business.domain.MerchantLead" resultType="com.chengyinhub.business.domain.MerchantLead">
+        select id, member_id as memberId, name, phone, address, longitude, latitude, category, tags, source,
+               contact_open as contactOpen, coop_open as coopOpen, status, del_flag as delFlag,
+               create_time as createTime, update_time as updateTime
+        from merchant_lead
+        <where>
+            del_flag = 0
+            <if test="name != null and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="phone != null and phone != ''"> and phone like concat('%', #{phone}, '%')</if>
+            <if test="category != null and category != ''"> and category = #{category}</if>
+            <if test="source != null and source != ''"> and source = #{source}</if>
+            <if test="status != null"> and status = #{status}</if>
+            <if test="memberId != null"> and member_id = #{memberId}</if>
+        </where>
+        order by id desc
+    </select>
+
+    <update id="updateMerchantLead" parameterType="com.chengyinhub.business.domain.MerchantLead">
+        update merchant_lead
+        <set>
+            <if test="memberId != null"> member_id = #{memberId},</if>
+            <if test="name != null and name != ''"> name = #{name},</if>
+            <if test="phone != null"> phone = #{phone},</if>
+            <if test="address != null"> address = #{address},</if>
+            <if test="longitude != null"> longitude = #{longitude},</if>
+            <if test="latitude != null"> latitude = #{latitude},</if>
+            <if test="category != null"> category = #{category},</if>
+            <if test="tags != null"> tags = #{tags},</if>
+            <if test="source != null"> source = #{source},</if>
+            <if test="contactOpen != null"> contact_open = #{contactOpen},</if>
+            <if test="coopOpen != null"> coop_open = #{coopOpen},</if>
+            <if test="status != null"> status = #{status},</if>
+            update_time = #{updateTime}
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteMerchantLeadByIds">
+        update merchant_lead set del_flag = 2 where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+</mapper>
