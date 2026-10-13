@@ -11,3 +11,5 @@ C2真实IT已编写AiQuotaRecoveryMySqlRedisIT（随机专用schema，CREATE成�
 重点未验：提供方已启动但无持久权威结果的UNCERTAIN；失证原nonce不能裸DECR；原成员/原SID结束后档案记录与XP/原账前后不变；免费报名不被付款要求阻断；原请求回包丢失后恢复与迟到lease；真实Wechat运动密文日期/同键重放；配置冻结、秘密媒体出口及草稿版本语义独立回读。逐原ID/剩余代码和新增能力后置见items-C.json、mixed-items-C.json；免费范围单列free-qualification-scope.md。
 
 依赖：A已提交的接口先导e1c8984与f109fae已原样cherry-pick，不编辑A接口；grantCouponBySource/findOriginalDrop默认明确throw未接入，实际发券依赖A正式实现与测试migration。B负责NPC旧静态契约测试修正/退出登录cache epoch；C不越界改B测试或auth/app。
+
+最终业务源码固定在 `ad7a4a7` 后，已重跑漫游390/390、七文件73/73、迁移ledger41/41；源码SHA256回核全部一致。结果结构化见 results.json。全树扫描仅4个交接基线测试夹具命中，变更内容零命中，无新增白名单。后续提交仅保存本段验证证据，不改变已测业务源码。
