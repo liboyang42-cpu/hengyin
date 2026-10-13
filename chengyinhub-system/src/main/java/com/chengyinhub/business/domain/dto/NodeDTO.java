@@ -13,6 +13,10 @@ public class NodeDTO implements Serializable {
     private Long id;
     /** 首次创建主题时供 routeGraphJson 引用的稳定客户端键；不落 cms_topic_node。 */
     private String clientNodeKey;
+    /** 仅新草稿从公开路线派生时使用，绝不当作私有 templateId。 */
+    private Long sourceLibraryTemplateId;
+    public Long getSourceLibraryTemplateId() { return sourceLibraryTemplateId; }
+    public void setSourceLibraryTemplateId(Long id) { sourceLibraryTemplateId = id; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

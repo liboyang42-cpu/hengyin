@@ -816,6 +816,7 @@ public class ApiTopicController extends BaseController {
         data.put("collaboratorIds", collaboratorIds);
         // 前端据此决定「结构/票价能不能编」:WHITELIST 档只许改文案与图
         data.put("editScope", editWindowScope.name());
+        data.put("isDraft", Integer.valueOf(1).equals(cmsTopicService.selectTopicIsDraft(topicId)));
         return success(data);
     }
 

@@ -8,7 +8,7 @@ import java.util.*;
 /** 通用主题配置。目录、触发和场景只含受控数据，不接受脚本或系统属性写入。 */
 public final class ThemeRuntimeConfig {
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final Set<String> ROOT = set("schemaVersion", "capacity", "hpName", "luckName", "items", "grants", "events", "scenes", "rotation", "currentScene", "replayEnabled", "endings", "card", "rotationAnchor", "actionLimit", "actionSources", "rescueLimit", "allowDiscard", "chapters");
+    private static final Set<String> ROOT = set("schemaVersion", "capacity", "hpName", "luckName", "items", "grants", "events", "scenes", "rotation", "currentScene", "replayEnabled", "endings", "card", "rotationAnchor", "actionLimit", "actionSources", "rescueLimit", "allowDiscard", "chapters", "configSource");
     public static ObjectNode parse(String raw) { return parse(raw,false); }
     public static ObjectNode parseDraft(String raw) { return parse(raw,true); }
     private static ObjectNode parse(String raw,boolean draft) {
@@ -18,6 +18,7 @@ public final class ThemeRuntimeConfig {
             if (!node.isObject() || raw.length() > 200000) fail("主题配置格式或长度不正确");
             ObjectNode config = (ObjectNode) node;
             fields(config, ROOT); integer(config, "schemaVersion", 1, 1);
+            ConfigDraftSource.validate(config.path("configSource"));
             if(config.path("items").size()>0)integer(config,"capacity",1,999);
             else if(config.has("capacity"))integer(config,"capacity",0,999);else config.put("capacity",0);
             if(config.has("actionLimit"))integer(config,"actionLimit",1,99999);
@@ -180,7 +181,7 @@ public final class ThemeRuntimeConfig {
             if(n.has("var") && n.path("var").asText().matches("sys\\.(passed|outcome|mistakes|damage)\\.[0-9]+")) {String key=n.path("var").asText();if(!nodeIds.contains(Long.valueOf(key.substring(key.lastIndexOf('.')+1))))fail("条件引用外来节点");}
             if(n.has("relationKey") && !stateKeys.contains(n.path("relationKey").asText()))fail("人物关系状态未注册");
             if (n.has("var") && !n.path("var").asText().startsWith("sys.") && !stateKeys.contains(n.path("var").asText())) fail("剧情状态未注册");
-            n.elements().forEachRemaining(child -> walkReferences(child, nodeIds, stateKeys));
+            n.fields().forEachRemaining(row -> { if (!"configSource".equals(row.getKey())) walkReferences(row.getValue(), nodeIds, stateKeys); });
         } else if (n.isArray()) n.forEach(child -> walkReferences(child, nodeIds, stateKeys));
     }
     public static String remapAll(String raw, Map<Long,Long> nodes, Map<Long,Long> chapters, Map<Long,Long> npcs) {
@@ -205,7 +206,7 @@ public final class ThemeRuntimeConfig {
             if(n.has("nodeConfigs")) {
                 ObjectNode renamed=JSON.createObjectNode();n.get("nodeConfigs").fields().forEachRemaining(row->{Long target=map.get(Long.valueOf(row.getKey()));if(target==null)fail("复制时场景节点没有对应目标");renamed.set(String.valueOf(target),row.getValue());});((ObjectNode)n).set("nodeConfigs",renamed);
             }
-            n.elements().forEachRemaining(child -> remap(child, map));
+            n.fields().forEachRemaining(row -> { if (!"configSource".equals(row.getKey())) remap(row.getValue(), map); });
         } else if (n.isArray()) n.forEach(child -> remap(child, map));
     }
     public static void assertItemReferences(JsonNode content,ObjectNode config) {

@@ -195,6 +195,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     @Autowired
     private com.chengyinhub.business.mapper.NpcProfileMapper npcProfileMapper;
 
+    @Autowired
+    private com.chengyinhub.business.service.ITemplatePublishService configTemplatePublishService;
+
     /** R2-B10 主题数值规则校验器。无状态,直接 new,与 AdvancedGameConfigValidator 的用法一致。 */
     private final com.chengyinhub.business.service.support.JourneyRulesValidator journeyRulesValidator =
             new com.chengyinhub.business.service.support.JourneyRulesValidator();
@@ -3876,6 +3879,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // R19-DRAFT2:完整度校验按草稿/发布分流,先在这里定型,后面所有闸都用同一个判据
         // (客户端自称不算,与 R18-DRAFT 的活动壳/送审两道副作用闸同源)。
         boolean saveDraft = dto.getSaveDraft() != null && dto.getSaveDraft() == 1;
+        copyConfigRouteTemplates(dto, memberId, username, saveDraft, chapterFlowV2);
         boolean aiSimple = "ai_simple".equalsIgnoreCase(dto.getPublishMode());
         if (aiSimple) {
             // 简单 AI 的「至少一个已确认地点 + 坐标合法」属完整度:草稿允许地点还没确认,
@@ -4143,6 +4147,39 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         return updateTopicByOwnerInternal(dto, memberId, username, true);
     }
 
+    /** 只在初次保存新稿时派生私有玩法，后续重开不再读取公共库。 */
+    private void copyConfigRouteTemplates(TopicCreateDTO dto, Long memberId, String username, boolean saveDraft, boolean chapterFlowV2) {
+        com.fasterxml.jackson.databind.node.ObjectNode runtime = com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseDraft(dto.getThemeRuntimeConfig());
+        com.fasterxml.jackson.databind.JsonNode source = runtime == null ? null : runtime.get("configSource");
+        if (source != null && !saveDraft) throw new IllegalArgumentException("选用配置请先保存为新草稿");
+        if (source != null && source.has("templateCopies")) throw new IllegalArgumentException("新草稿不能沿用既有玩法副本");
+        Map<Long, Long> copied = new LinkedHashMap<>();
+        Set<Long> selected = new HashSet<>();
+        if (source != null) for (com.fasterxml.jackson.databind.JsonNode row : source.path("route").path("nodes"))
+            if (row.path("playTemplateId").asLong() > 0) selected.add(row.path("playTemplateId").asLong());
+        for (ChapterDTO chapter : nullToEmpty(dto.getChapters())) {
+            for (NodeDTO node : nullToEmpty(chapter.getNodes())) {
+                Long libraryId = node.getSourceLibraryTemplateId();
+                if (libraryId == null) continue;
+                if (!chapterFlowV2) throw new IllegalArgumentException("路线玩法副本请使用 v2 草稿保存接口");
+                if (!saveDraft || !selected.contains(libraryId) || (node.getTemplateId() != null && node.getTemplateId() > 0))
+                    throw new IllegalArgumentException("路线玩法来源与新草稿不匹配");
+                Long id = copied.get(libraryId);
+                if (id == null) {
+                    id = configTemplatePublishService.copyPublicTemplateToDraft(libraryId, memberId, username);
+                    copied.put(libraryId, id);
+                }
+                node.setTemplateId(id);
+                node.setSourceLibraryTemplateId(null);
+            }
+        }
+        if (!copied.isEmpty()) {
+            com.fasterxml.jackson.databind.node.ObjectNode copies = ((com.fasterxml.jackson.databind.node.ObjectNode) source).putObject("templateCopies");
+            copied.forEach((key, value) -> copies.put(String.valueOf(key), value));
+            dto.setThemeRuntimeConfig(runtime.toString());
+        }
+    }
+
     private TopicBundleSubmitResultVO updateTopicByOwnerInternal(
             com.chengyinhub.business.domain.dto.TopicUpdateDTO dto,
             Long memberId, String username, boolean chapterFlowV2) {
@@ -4167,6 +4204,12 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 throw new RuntimeException("主题不存在或无权编辑");
             }
         }
+        com.chengyinhub.business.service.support.ConfigDraftSource.assertSourceUnchanged(
+                exist.getThemeRuntimeConfigJson(), dto.getThemeRuntimeConfig());
+        for (ChapterDTO chapter : nullToEmpty(dto.getChapters()))
+            for (NodeDTO node : nullToEmpty(chapter.getNodes()))
+                if (node.getSourceLibraryTemplateId() != null) throw new IllegalArgumentException("既有草稿不能重新采用公共玩法");
+
         // R19-DRAFT2:名称非空是草稿也保留的最小身份。字段缺席(null)=不改原值(mapper 的动态
         // update 会跳过该列),但显式送一个空串 = 要把名字清掉 —— 那条不许(项目列表里会认不出来)。
         if (dto.getName() != null && dto.getName().trim().isEmpty()) {

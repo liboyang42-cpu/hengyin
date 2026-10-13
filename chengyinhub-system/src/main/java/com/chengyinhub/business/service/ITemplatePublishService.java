@@ -10,6 +10,8 @@ import com.chengyinhub.business.domain.vo.TemplateHomeVO;
 import java.util.List;
 
 public interface ITemplatePublishService {
+    /** 公开玩法的独立本人草稿；不沿用公共库 ID，也不提交审核。 */
+    Long copyPublicTemplateToDraft(Long libraryId, Long memberId, String username);
     Long saveMerchantNodeTemplate(CmsMemberTemplate input, Long memberId, String username);
     /**
      * 发布模板（事务方法）
