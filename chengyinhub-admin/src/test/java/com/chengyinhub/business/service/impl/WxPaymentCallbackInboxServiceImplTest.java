@@ -51,6 +51,9 @@ class WxPaymentCallbackInboxServiceImplTest
         WxPaymentCallbackInboxServiceImpl service = new WxPaymentCallbackInboxServiceImpl();
         ReflectionTestUtils.setField(service, "mapper", mapper);
 
+        WxPaymentCallbackInbox original = new WxPaymentCallbackInbox();
+        original.setBizType(WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT); original.setBizId(7L); original.setEventType("SUCCESS");
+        when(mapper.selectByNotifyHash(anyString())).thenReturn(original);
         assertTrue(service.register("wx-notify-1", WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT, 7L, "SUCCESS"));
         assertFalse(service.register("wx-notify-1", WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT, 7L, "SUCCESS"));
 

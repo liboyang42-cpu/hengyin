@@ -53,6 +53,9 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
     private IWechatPayService wechatPayService;
 
     @Autowired
+    private CashWithdrawFailureRecoveryService failureRecoveryService;
+
+    @Autowired
     private com.chengyinhub.common.config.WxPayConfig wxPayConfig;
 
     @Autowired
@@ -123,20 +126,13 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         w.setAuditBy(memberId);   // 自助提现=本人操作
         w.setAuditTime(now);
         try {
-            mapper.insertMemberCashWithdraw(w);
+            failureRecoveryService.prepare(w);
         } catch (DuplicateKeyException e) {
             throw new IllegalStateException("有提现正在处理中,请等到账后再试");
         }
         Long id = w.getId();
-        String outBatchNo = "CW" + id;   // 确定性幂等键
+        String outBatchNo = "CW" + id;
         String outDetailNo = "CD" + id;
-
-        // 2. ★发起转账前先持久化 out_batch_no(崩溃后可按 CW+id 从微信侧恢复,不留无法对账的空批次单)
-        MemberCashWithdraw idc = new MemberCashWithdraw();
-        idc.setId(id);
-        idc.setOutBatchNo(outBatchNo);
-        idc.setOutDetailNo(outDetailNo);
-        mapper.updateMemberCashWithdraw(idc);
 
         // 3. 原子扣余额,并给冻结赏金留底(护栏与扣款同一条 UPDATE ⇒ 并发也提不走冻结额)。
         boolean deducted;
@@ -196,15 +192,14 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         // 5b. 确定性未受理(微信拒绝/参数非法/服务未就绪),钱未出 → 原路退回余额一次(退款也失败则待人工,不丢钱)
         String err = res.get("error");
         Date failedAt = DateUtils.getNowDate();
-        if (!claimFailedRefund(id, failedAt, err, null, null)) {
-            throw new IllegalStateException("提现失败:" + (err == null ? "请稍后重试" : err));
-        }
         try {
-            umsMemberService.addBalance(memberId, amount);
-            markFailed(id, outBatchNo, outDetailNo, err, failedAt, MemberCashWithdraw.STATUS_FAILED_REFUNDED);
+            failureRecoveryService.recover(id, memberId, amount, failedAt, safe(err), null, null);
         } catch (Exception e) {
-            markFailed(id, outBatchNo, outDetailNo, "转账失败且退款未成功,待人工:" + safe(err), failedAt, MemberCashWithdraw.STATUS_FAILED_MANUAL);
-            alarmService.alarm("提现待人工", "发起失败且退款异常 id=" + id + " member=" + memberId + " amount=" + amount + " trace=" + traceId);
+            // 回补事务失败后仅CAS原处理中单转人工；不能覆盖并发赢家或猜已提交余额。
+            if (claimFailedRefund(id, failedAt, "转账失败且回补未确认:" + safe(err), null, null)) {
+                alarmService.alarm("提现待人工", "发起失败且回补事务异常 id=" + id + " member=" + memberId + " amount=" + amount + " trace=" + traceId);
+            }
+            logger.error("提现明确失败回补事务异常 id={}", id, e);
         }
         throw new IllegalStateException("提现失败:" + (err == null ? "请稍后重试" : err));
     }
@@ -252,29 +247,17 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         }
 
         if ("FAIL".equals(result)) {
-            // ★先 CAS 抢占 status 0->3(暂置待人工),赢家独占退款;输者直接返回,绝不重复退款
-            if (!claimFailedRefund(id, now, "微信转账失败",
-                    emptyToNull(q.get("failReasonCode")), emptyToNull(q.get("detailId")))) {
-                return; // 已被其它线程/节点处理,不重复退款
-            }
-            // 赢家:退款恰一次
             try {
-                umsMemberService.addBalance(w.getMemberId(), w.getAmount());
-                // 退款成功 → 3->2(已独占该行,按 id 无条件更新)
-                MemberCashWithdraw ok = new MemberCashWithdraw();
-                ok.setId(id);
-                ok.setStatus(MemberCashWithdraw.STATUS_FAILED_REFUNDED);
-                ok.setFinishTime(now);
-                mapper.updateMemberCashWithdraw(ok);
-                logger.warn("提现失败已退款 id={} member={} amount={}", id, w.getMemberId(), w.getAmount());
+                if (failureRecoveryService.recover(id, w.getMemberId(), w.getAmount(), now, "微信转账失败",
+                        emptyToNull(q.get("failReasonCode")), emptyToNull(q.get("detailId")))) {
+                    logger.warn("提现失败已退款 id={} member={} amount={}", id, w.getMemberId(), w.getAmount());
+                }
             } catch (Exception e) {
-                // 退款失败 → 保持待人工 + 告警
-                MemberCashWithdraw m = new MemberCashWithdraw();
-                m.setId(id);
-                m.setManualNote("渠道失败且自动退款失败,待人工:" + safe(e.getMessage()));
-                mapper.updateMemberCashWithdraw(m);
-                logger.error("提现失败退款异常 id={} member={} amount={}", id, w.getMemberId(), w.getAmount(), e);
-                alarmService.alarm("提现待人工", "渠道失败且退款失败 id=" + id + " member=" + w.getMemberId() + " amount=" + w.getAmount());
+                if (claimFailedRefund(id, now, "渠道失败且回补事务异常:" + safe(e.getMessage()),
+                        emptyToNull(q.get("failReasonCode")), emptyToNull(q.get("detailId")))) {
+                    alarmService.alarm("提现待人工", "渠道失败且回补事务异常 id=" + id + " member=" + w.getMemberId() + " amount=" + w.getAmount());
+                }
+                logger.error("提现失败回补事务异常 id={} member={} amount={}", id, w.getMemberId(), w.getAmount(), e);
             }
             return;
         }

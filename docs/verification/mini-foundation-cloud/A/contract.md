@@ -6,9 +6,17 @@
 - A2：新增纯策略 `ExploreTicketUsePolicy.rejection(Integer purchaseKind, Date endDate, Date now)`：仅 purchaseKind=3 使用日期闸，now >= end 拒绝，缺 end 暂禁；不改非探索票规则。
 - A2：`ICmsRegistrationService.requireCurrentUsableRegistration(CmsRegistration snapshot)` 事务内回读原 ID；对探索票先 activity 当前行锁，再 registration 当前行锁。原 memberId/ownerType/ownerId 与现态必须一致；当前已付、成功及日期才可新使用。非探索票仍保留原日期规则。核销调用必须在外层事务中调用，不把 Controller 快照当当前授权。
 - A2：静态出码先当前资格再返旧 URL；动态出码、扫码解析、直接/按章核销统一闸；自动扫描和最终条件更新均排除 purchase_kind=3，不把过期未用改成核销。
-- C 接口合同：C 拥有玩法/NPC Controller，接纯策略或 PlayTeamMapper 现有资格真源；历史读不加新禁令。A 提供 hasPaidRegistration/hasCurrentNpcRegistration 的当前资格 SQL，保留方法签名；不得以 pay_expire_time 代替 expires_at。
+- C 接口合同：C 拥有玩法/NPC Controller，接纯策略或 PlayTeamMapper 现有资格真源；历史读不加新禁令。hasPaidRegistration 保留原支付/归属语义供历史读取；C 新使用入口接 CurrentPlayRegistration 当前锁闸。A 仅补 hasCurrentNpcRegistration 活动取消资格，保留方法签名；不得以 pay_expire_time 代替 expires_at。
 - 跨包：A 负责奖励券来源 Service/Mapper、报名通知意图；C 漫游触发、B 投递层由各包接调用。维护子合同在 maintenance-contract.md；新增域文件和测试按 A 业务归属。
 
 计划修改主执行文件：OrderCloseTask；CmsRegistrationMapper.java/xml；ICmsRegistrationService；CmsRegistrationServiceImpl；ApiVerifyController；ApiRegistrationController；PlayTeamMapper.xml；新 ExploreTicketUsePolicy 及其用例、订单扫描/当前读资格用例。本包报告仅写本目录；不改共同交接资料、C/B 文件、CI、依赖、鉴权或生产配置。
 
 验证边界：VPS TCP grant 与凭据均未配置，HTTP 探测不可用。云端只做静态/Node；Java/MySQL/Redis 必须交给授权 VPS 或既有 GitHub CI。真实渠道/身份/设备及数据库竞争回读不得以静态结果代替。
+
+## 已协调的未列业务文件单一所有者
+
+协调者已将 OfficialEventServiceImpl / OfficialEventMapper 的原 V1 报名容量修补归 A；不改 READ_ONLY_SHARED 的 Controller。signup 先锁原活动，再原报名计数及唯一插入，保原名额与已报名重入。
+
+协调者已将 ClubEventOpsMapper.java/xml 的候补维护片段归 A；其他 club SQL 不改。维护四域使用原waitlist ID扫描，MAX固定、每页100/每域每轮500、各域独立跨轮cursor、单项失败finally前进；原队内晋级与锁序series→club→ticket→entry保留。扫描域顺序为过期OFFERED、已付CLAIMED、终态CLAIMED、可晋级WAITING。
+
+支付回调使用原渠道 transactionId/out_trade_no + tradeState 作inbox键，重复注册必须匹配bizType/bizId/eventType。同业务事实与inbox DONE同事务，真实callback外层不持未提交inbox锁；取消活动中的已确认支付补记必须保其原外层回滚语义，另用明确MANDATORY内部方法（调用处见最终证据），不得通过挂起外层事务拆原账。

@@ -4,12 +4,16 @@
     <insert id="ensureIntent">
         insert into coupon_source_grant (source_type, source_id, member_id, coupon_id, created_at)
         values (#{sourceType}, #{sourceId}, #{memberId}, #{couponId}, now())
-        on duplicate key update source_id = source_id
     </insert>
     <select id="selectForUpdate" resultType="com.chengyinhub.business.domain.CouponSourceGrant">
         select member_id as memberId, coupon_id as couponId, history_id as historyId
         from coupon_source_grant where source_type = #{sourceType} and source_id = #{sourceId}
         for update
+    </select>
+    <select id="selectCouponForUpdate" resultType="com.chengyinhub.business.domain.SmsCoupon">
+        select id, status, publish_count as publishCount, receive_count as receiveCount,
+               start_time as startTime, end_time as endTime
+        from sms_coupon where id = #{id} for update
     </select>
     <update id="markDelivered">
         update coupon_source_grant set history_id = #{historyId}, delivered_at = now()

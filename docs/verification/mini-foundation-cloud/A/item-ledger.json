@@ -1,0 +1,1527 @@
+{
+  "originalItemsSha": "0f0c32f1edc955f6117108daecbb492652212931",
+  "executionItems": [
+    {
+      "id": "F0494",
+      "workUnit": "A2",
+      "title": "票夹活动签到入口",
+      "status": "底层资格修补，入口UI后置",
+      "implementedOrPreserved": "静态URL返回前资格，订单详情对无效探索票不投影旧码；查看详情无核销副作用",
+      "remainingCodeAndUnverified": "票夹真实签到入口文案/UI后置，真实身份购票核验回读未验",
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0033",
+      "workUnit": "A1",
+      "title": "占票超时释放",
+      "status": "代码修补，未验原资源回读",
+      "implementedOrPreserved": "unpaid固定本轮MAX/now、每页200/轮500及finally游标；保PAYING渠道未知不关、原CAS释放",
+      "remainingCodeAndUnverified": "真实MySQL支付/取消/关单竞争和库存/积分/权益独立回读；任务启用与真实渠道待验",
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0035",
+      "workUnit": "A4",
+      "title": "多票种共享容量",
+      "status": "既有范围已核，普通跨票种共池未实现",
+      "implementedOrPreserved": "保原票种库存CAS及自玩topic行锁quota；本次不改容量政策",
+      "remainingCodeAndUnverified": "普通跨票种共享容量源/适用规则未冻结，不能以自玩quota冒充总容量；原容量并发DB待验",
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0043",
+      "workUnit": "A4",
+      "title": "同用户购票限额",
+      "status": "既有限购已核，普通统一上限后置",
+      "implementedOrPreserved": "探索qty=1及ExploreAccountTicketGate、自玩原ID+fingerprint复用保留；首次自玩创建marker防通知重造",
+      "remainingCodeAndUnverified": "普通多票/代买跨票种统一额度未确定，不擅设；双端原键/取消重购真实DB待验",
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0049",
+      "workUnit": "A3",
+      "title": "候补维护故障隔离",
+      "status": "代码修补，未验维护公平",
+      "implementedOrPreserved": "候补四域固定waitlist MAX、独立跨轮cursor，保原series→club→ticket→entry锁序/晋级名额CAS",
+      "remainingCodeAndUnverified": "真实MySQL超500毒前缀/重启/重复worker及唯一释放待验；跨重启持久公平未实现",
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0053",
+      "workUnit": "A4",
+      "title": "优惠券领取/核销幂等",
+      "status": "原漫游券来源修补，legacy UNKNOWN保留",
+      "implementedOrPreserved": "新reward_drop原log+PENDING意图同tx；grantCouponBySource原member/coupon/id校验，history+receipt同tx及原historyId回放",
+      "remainingCodeAndUnverified": "旧drop无history关联不盲补；C触发待合成，真实故障/两worker/原券数回读未验；其他通用host完整矩阵未覆盖",
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0055",
+      "workUnit": "A4",
+      "title": "支付回调重复处理",
+      "status": "报名实际回调fence修补，其他业务CAS已核",
+      "implementedOrPreserved": "真实报名callback接register→process owner/fence→当前原单→业务/DONE同tx；同key异业务身份拒；原内部取消补记另MANDATORY合同",
+      "remainingCodeAndUnverified": "Wechat签名provider/实际外部通知以及CLM/merchant/DEP各consumer完整故障矩阵未验，其他域原CAS不改",
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0056",
+      "workUnit": "A4",
+      "title": "支付回调乱序",
+      "status": "既有状态机保留，持久资金冲突处置未完成",
+      "implementedOrPreserved": "乱序/迟到SUCCESS不得标STALE假ACK；冻结金额/current注册重读；原CAS失败回FAIL重投；UNKNOWN不释放",
+      "remainingCodeAndUnverified": "迟到已关SUCCESS持久冲突队列/人工责任consumer仍缺；真实渠道乱序/响应丢失未验",
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0061",
+      "workUnit": "A3",
+      "title": "已支付未出票补偿",
+      "status": "部分代码修补，统一交付状态未实现",
+      "implementedOrPreserved": "已付缺码固定MAX/100页/500轮及游标；当前资格和二维码URL/受影响1行证据才成功",
+      "remainingCodeAndUnverified": "超7天交付/权益-码-账-外部通知统一状态与人工待办仍缺；B通知实现未合并，原渠道真实交付未验",
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0066",
+      "workUnit": "A3",
+      "title": "退款对账",
+      "status": "代码修补，未验资金/渠道原单",
+      "implementedOrPreserved": "退款任务固定MAX/200页/1000轮游标，单项继续，原RF号查询和UNKNOWN规则保留",
+      "remainingCodeAndUnverified": "持续失败最老年龄读回和告警收据仍缺；真实渠道结果/重复调度/原资金回读待验",
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0072",
+      "workUnit": "A5",
+      "title": "多方分账规则快照",
+      "status": "原资金快照已核，覆盖矩阵未完成",
+      "implementedOrPreserved": "保支付feePlatformRate、原结算规则快照、权益计酬原redemption/source及应付ledger",
+      "remainingCodeAndUnverified": "各资金来源/收款人/规则版本完整快照覆盖及券追溯改价政策仍缺；真实结算回读未验",
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0073",
+      "workUnit": "A5",
+      "title": "待结算与可提现分离",
+      "status": "原账确定写入故障修补，两账统一差异投影未完成",
+      "implementedOrPreserved": "Settlement批次insert/id、绑定原条目数及金额update回读guard；Cash原账prepare与FAIL回补同tx，UNKNOWN保留",
+      "remainingCodeAndUnverified": "两套账可提现统一差异投影/差异待办仍缺；真实MySQL守恒/重复worker/人工并发未验",
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0076",
+      "workUnit": "A5",
+      "title": "对公付款凭证核对",
+      "status": "原对公凭证双人流程已核，独立银行核对后置",
+      "implementedOrPreserved": "保原MerchantPayable与确认凭证和冲正，不新增外部银行流程",
+      "remainingCodeAndUnverified": "独立银行交易身份/收款人/金额受控核对consumer未实现，凭证字符串或双人点击不算银行证明",
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0085",
+      "workUnit": "A5",
+      "title": "合作退出补偿",
+      "status": "原合作退出已核，新增补偿政策后置",
+      "implementedOrPreserved": "保原供给/合作退出阻断与已售原账，不改赔偿及分账",
+      "remainingCodeAndUnverified": "完整退出阶段/替换/受影响票/运行中补偿和拒绝后处理人矩阵未确定，不擅自补偿",
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0153",
+      "workUnit": "A4",
+      "title": "订阅/权益到期",
+      "status": "已有订阅现态修补，资源到期新政策后置",
+      "implementedOrPreserved": "active订阅start<=now且end>now；续订UPSERT认可affected2；NPC已确定当前资格和探索date跨包合同",
+      "remainingCodeAndUnverified": "premium模板扣额/全部权益消费者及到期既有资源处置未全证实；不猜新处置；真实MySQL边界待验",
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "F0309",
+      "workUnit": "A2",
+      "title": "扫码任务",
+      "status": "探索订单底层到期修补，任务码可信边界未完成",
+      "implementedOrPreserved": "动态/静态出码、activity扫码两入口、直接按章核销及现态旧对象检查；autoVerify双层排除探索票；C接玩法新使用合同",
+      "remainingCodeAndUnverified": "普通故事节点静态任务码不是可信到店证明，离线签名/高价值现场政策后置；C/真机及DB到期竞争未验",
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0136",
+      "workUnit": "A5",
+      "title": "操作审计",
+      "status": "原审计触发已核，完整覆盖未完成",
+      "implementedOrPreserved": "保原核销/券/资金业务审计和scope，新原来源收据不是用户操作审计替代",
+      "remainingCodeAndUnverified": "活跃高危操作/失败UNKNOWN/敏感读取覆盖矩阵、自由reason隐私仍需B合同和真实身份核查",
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "F0459",
+      "workUnit": "A3",
+      "title": "官方活动报名",
+      "status": "代码修补，真实MySQL用例已写未跑",
+      "implementedOrPreserved": "V1 signup原活动锁→当前本人报名和人数FOR UPDATE→唯一insert；V2原方法不变，免费原V1无付款入口",
+      "remainingCodeAndUnverified": "真实MySQL旧RR快照/两个worker最后席与免费重入用例未跑；线上V1启用未核",
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0131",
+      "workUnit": "A1",
+      "title": "补偿任务可恢复",
+      "status": "部分代码修补，持久进度未实现",
+      "implementedOrPreserved": "订单/退款/补码/候补固定MAX和跨轮内存cursor，单项失败继续",
+      "remainingCodeAndUnverified": "重启持久进度/最老失败年龄投影/告警实际接收仍缺；DB故障及重复worker待验",
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0041",
+      "workUnit": "A4",
+      "title": "高峰购票准入",
+      "status": "后续底层增强，未实现",
+      "implementedOrPreserved": "保既有登录、原requestId+fingerprint、报价/库存资格及弱网恢复",
+      "remainingCodeAndUnverified": "新排队签名/准入令牌/峰值策略无既有消费者，不自行新增政策或UI；原链压测未验",
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0042",
+      "workUnit": "A4",
+      "title": "购票防机器人",
+      "status": "后续底层增强，未实现",
+      "implementedOrPreserved": "保既有鉴权/原请求/真实库存，不新增设备风控",
+      "remainingCodeAndUnverified": "分层机器人挑战与误伤恢复政策未确定，保持原ID，不当App删除",
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "fullAcceptance": false
+    }
+  ],
+  "retainedMixedItems": [
+    {
+      "id": "F0028",
+      "title": "选择优惠券",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "F0431",
+      "title": "合作结算提醒",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "F0509",
+      "title": "购物车结账",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0535",
+      "title": "平台支付事实核对",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "F0572",
+      "title": "平台优惠券模板管理",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "F0575",
+      "title": "平台兑换记录",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "M0070",
+      "title": "核验离线边界",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "X028",
+      "title": "现场主持：暂停/恢复/中止/取消本局",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "X034",
+      "title": "俱乐部团核销码（领队出码、商家扫码记录接待）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "X035",
+      "title": "提现前资金确认（预检挑战、内容绑定、一次消费）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "X036",
+      "title": "发布者实名登记（收费发布/入驻前；加密存储；改绑人工）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "X038",
+      "title": "资金三段展示（待结算/争议/可提现，算不出不当0）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "X040",
+      "title": "俱乐部端直营商家应收查看",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0003",
+      "title": "按日期筛选",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0004",
+      "title": "价格区间筛选",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0005",
+      "title": "排序切换",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0008",
+      "title": "热门搜索词",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0013",
+      "title": "首页推荐卡",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0122",
+      "title": "调整集合时间",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0129",
+      "title": "向指定成员广播",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0180",
+      "title": "修改优惠权益",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0219",
+      "title": "合作评价",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0225",
+      "title": "上传 NPC 头像",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0226",
+      "title": "录制 NPC 声音",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0263",
+      "title": "插入故事图片段",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0264",
+      "title": "插入故事音频段",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0301",
+      "title": "D20 能力检定",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0308",
+      "title": "上传拍照任务",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0329",
+      "title": "任务暂停后恢复",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0334",
+      "title": "反应速度游戏",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0335",
+      "title": "倾斜弹球游戏",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0336",
+      "title": "精准停表",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0337",
+      "title": "安静保持挑战",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0338",
+      "title": "喊声挑战",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0339",
+      "title": "指南针挑战",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0351",
+      "title": "玩家退出体验",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0357",
+      "title": "完成后推荐下一路线",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0380",
+      "title": "漫游护照",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0381",
+      "title": "漫游历史",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0384",
+      "title": "撤销/调整漫游分享可见性",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0386",
+      "title": "清理本地漫游缓存",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0403",
+      "title": "漫游任务列表",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0412",
+      "title": "发送路线卡片",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0457",
+      "title": "测试玩法当前版本",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0460",
+      "title": "官方活动任务",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0469",
+      "title": "主题评价/投票",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "F0487",
+      "title": "玩法教程列表",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0488",
+      "title": "玩法教程详情",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0522",
+      "title": "预制故事入口",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0523",
+      "title": "人生/生存类故事档案",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0524",
+      "title": "App 玩法指南",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0528",
+      "title": "通过/拒绝内容",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0529",
+      "title": "升级内容审核",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0550",
+      "title": "平台业务转化分析",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0551",
+      "title": "平台推荐内容配置",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "M0012",
+      "title": "推荐地域与交通可达性",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "M0018",
+      "title": "推荐负反馈",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "M0019",
+      "title": "兴趣信号撤回",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "M0020",
+      "title": "推荐解释",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "M0025",
+      "title": "业务漏斗贯通",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "M0103",
+      "title": "传感器校准",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "M0104",
+      "title": "传感器证据边界",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "M0105",
+      "title": "设备能力降级",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "M0106",
+      "title": "前后台时间规则",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "M0112",
+      "title": "私密地点遮挡",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "M0117",
+      "title": "分享快照边界",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "N001",
+      "title": "可排除的兴趣记录",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "N002",
+      "title": "解释并调整推荐",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "N003",
+      "title": "本地新作者曝光试验",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "N011",
+      "title": "创作者运行检查器",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "N015",
+      "title": "敏感位置分享编辑器",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "X003",
+      "title": "任务固定费用与任选费用（先预留、成功才扣）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "X005",
+      "title": "效果对象范围（本人/本队/参与者/全场，须已到达）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "X007",
+      "title": "固定奖励与任选奖励（配包选项）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "X008",
+      "title": "线索获得范围与线索正文/图片按来源和归属授权回读",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "X009",
+      "title": "终局投票与方案表决（选项/投入物资/所需线索/无方案收场）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "X012",
+      "title": "HP 归零与恢复（个人/共享；等待/挑战/步数）及共享结果卡",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "X019",
+      "title": "相册证据完成（认证上传、重试/重选）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "X022",
+      "title": "R5 检定三段（掷骰/重掷/提交）服务端结算与权限回读",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "X023",
+      "title": "输入挑战服务端截止（typeIn）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "X024",
+      "title": "已结算尝试重入只恢复权威视图与结果回复去重",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "X030",
+      "title": "到达核验（队长凭证/纸账/撤销）与备用站迁移",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "X031",
+      "title": "工作人员指导完成与确认队伍退出",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "X033",
+      "title": "门口游戏码冷启动（扫小程序码进入：未报名去购买、已报名进游玩）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "F0018",
+      "title": "收藏活动/主题",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0039",
+      "title": "从票进入活动群",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "F0053",
+      "title": "活动组队码",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0064",
+      "title": "俱乐部活动日历",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0083",
+      "title": "设置报名提前量",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "F0098",
+      "title": "关联活动/通关记录",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0104",
+      "title": "点赞/取消点赞",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0119",
+      "title": "查看帖子编辑历史",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0148",
+      "title": "筛选门店评价",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0206",
+      "title": "切换合作分成方式",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0227",
+      "title": "测试 NPC 对话",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0228",
+      "title": "玩家发送 NPC 文本",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0229",
+      "title": "玩家语音 NPC 对话",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0231",
+      "title": "NPC 回复失败重试",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0233",
+      "title": "AI 生成主题草案",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0258",
+      "title": "创建与移除活动合作者",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0458",
+      "title": "查看模板反馈/支持情况",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0463",
+      "title": "记录圈层权益使用",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0466",
+      "title": "主题路线总览",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0476",
+      "title": "商家 AI 经营建议",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0498",
+      "title": "俱乐部编辑退出恢复",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0513",
+      "title": "官方人员发送通知",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0514",
+      "title": "官方活动多身份渠道",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0520",
+      "title": "商家增值权益及额度",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0554",
+      "title": "平台角色额度配置",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0559",
+      "title": "平台世界/城市内容管理",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0560",
+      "title": "平台预设路线配置",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0561",
+      "title": "平台主题风格配置",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0568",
+      "title": "平台商家任务派单",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0578",
+      "title": "后台字典/类别配置",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0579",
+      "title": "后台横幅/公告配置",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "M0154",
+      "title": "读屏与标签",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "M0155",
+      "title": "大字与触达",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "M0156",
+      "title": "减少动效与静态替代",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "X006",
+      "title": "模板资源槽与站点资源对应",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "X010",
+      "title": "独立模板投票声明与采用时范围校验",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "X014",
+      "title": "归零挑战资格（客观题备选、传感器挑战须备选、挑战不带结算工具）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "X020",
+      "title": "本站反馈分段（选择推进、继续门控、空段禁用）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "X021",
+      "title": "选项问答单次确认、反馈图文（≤3张）与只读重入",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "X026",
+      "title": "发布后编辑窗口与下架重发",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "X027",
+      "title": "模板复合段（多段题目）编辑与预览",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "X032",
+      "title": "共享局控制台、回执查询与复盘导出",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "X039",
+      "title": "执行俱乐部期次带票分享",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "X042",
+      "title": "剧情心声收集与开场/章末阶段同步（玩家端）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0382",
+      "title": "漫游回放",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0395",
+      "title": "成长等级与经验",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0399",
+      "title": "3D 徽章查看",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0401",
+      "title": "物件卡牌收藏",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0422",
+      "title": "填写提现金额",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "F0423",
+      "title": "全部余额提现",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "F0424",
+      "title": "编辑提现收款资料",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "F0425",
+      "title": "确认提现授权",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "F0521",
+      "title": "帖文治理入口",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "N004",
+      "title": "城市体验礼物码",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "N005",
+      "title": "跨路线主题合集",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "N006",
+      "title": "地点纪念物好友交换",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "N007",
+      "title": "自动行程回忆视频",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "N008",
+      "title": "连续探索保护",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "N009",
+      "title": "社区新成员入门问答",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "N010",
+      "title": "主办方活动系列订阅",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": true,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "A关联候选需按实际业务源/consumer核单一owner；本次既有订单/券/账子链以A1-A5的21项对应修补为证，不将整项完成"
+    },
+    {
+      "id": "N012",
+      "title": "主持桌面大屏",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "N013",
+      "title": "离线只读体验包",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "N014",
+      "title": "活动高峰等候室",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "N016",
+      "title": "官方地方主题活动季",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "X037",
+      "title": "邀请人归因绑定",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0157",
+      "title": "切换所管理门店",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0303",
+      "title": "配置成功档位",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0304",
+      "title": "公开/秘密检定呈现",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0392",
+      "title": "今日城市签",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0393",
+      "title": "给后来者留言",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0402",
+      "title": "卡牌堆聚拢/展开",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0413",
+      "title": "发送业务结果卡",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0434",
+      "title": "修改个人介绍/城市",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0435",
+      "title": "上传个人作品集",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0436",
+      "title": "添加联系二维码",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0502",
+      "title": "据点详情与交互恢复",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    },
+    {
+      "id": "F0504",
+      "title": "商品详情和图片",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "aRelatedCandidate": false,
+      "reviewStatus": "保留待核，不能按UI整项排除",
+      "note": "原索引保留，不自动归App或完成"
+    }
+  ],
+  "note": "原255索引未修改。已写代码/未实现/后置新政策/未验均分开；任何已有UI项不自动全排除。"
+}

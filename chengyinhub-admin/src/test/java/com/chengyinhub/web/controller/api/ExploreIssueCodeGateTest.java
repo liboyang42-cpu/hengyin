@@ -77,6 +77,28 @@ class ExploreIssueCodeGateTest {
         when(activitySvc.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
     }
 
+    @Test
+    void exploreAtEndCannotIssueNewCodeAndMissingEndCanRecover() {
+        givenRegistration(0);
+        CmsRegistration current = regSvc.selectCmsRegistrationById(REG);
+        current.setPurchaseKind(3);
+        CmsActivity activity = activitySvc.selectCmsActivityById(ACTIVITY);
+        activity.setEndDate(null);
+        assertEquals(500, controller.issueDynCode(REG).get("code"));
+        activity.setEndDate(new java.util.Date(1));
+        assertEquals(500, controller.issueDynCode(REG).get("code"));
+        activity.setEndDate(new java.util.Date(System.currentTimeMillis() + 86400000L));
+        assertEquals(200, controller.issueDynCode(REG).get("code"));
+    }
+
+    @Test
+    void oldSuccessfulStatusWithoutPaidCurrentStateCannotIssue() {
+        givenRegistration(0);
+        regSvc.selectCmsRegistrationById(REG).setPaymentStatus(4);
+        assertEquals(500, controller.issueDynCode(REG).get("code"));
+        org.mockito.Mockito.verify(perkSvc, org.mockito.Mockito.never()).isTicketFullyConsumed(0, REG);
+    }
+
     /**
      * ★ 核心:③ 已核销 1 章(verification_status 已置位)但还欠着章节 ⇒ **必须继续出码**。
      * 不修 issueDynCode 就会在这里红 —— 而生产上的表现是「玩家核销完第一家就再也扫不了码」,零告警。

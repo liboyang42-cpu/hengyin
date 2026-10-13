@@ -96,6 +96,12 @@ public interface ClubEventOpsMapper {
     ClubWaitlistEntry selectWaitlistByRegistration(@Param("registrationId") Long registrationId);
     ClubWaitlistEntry selectWaitlistByRegistrationForUpdate(@Param("registrationId") Long registrationId);
     int convertClaimedByRegistration(@Param("registrationId") Long registrationId);
+    /** 维护页按原waitlist行身份推进，固定MAX排除扫描期新插入。kind 0过期/1已付/2终态/3晋级。 */
+    Long selectWaitlistMaintenanceMaxId();
+    java.util.List<java.util.Map<String, Object>> selectWaitlistMaintenancePage(
+            @Param("kind") int kind, @Param("now") java.util.Date now,
+            @Param("afterId") long afterId, @Param("maxId") long maxId, @Param("limit") int limit);
+
     java.util.List<Long> selectExpiredOfferedIds(@Param("now") java.util.Date now,
                                                   @Param("limit") int limit);
     int expireOfferedCas(@Param("id") Long id, @Param("expectedVersion") Integer expectedVersion,

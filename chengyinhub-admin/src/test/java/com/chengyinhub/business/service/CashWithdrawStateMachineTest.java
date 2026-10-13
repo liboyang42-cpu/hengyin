@@ -76,6 +76,11 @@ class CashWithdrawStateMachineTest {
         ReflectionTestUtils.setField(svc, "mapper", mapper);
         ReflectionTestUtils.setField(svc, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(svc, "wechatPayService", wechatPayService);
+        com.chengyinhub.business.service.impl.CashWithdrawFailureRecoveryService recovery =
+                new com.chengyinhub.business.service.impl.CashWithdrawFailureRecoveryService();
+        ReflectionTestUtils.setField(recovery, "mapper", mapper);
+        ReflectionTestUtils.setField(recovery, "umsMemberService", umsMemberService);
+        ReflectionTestUtils.setField(svc, "failureRecoveryService", recovery);
         { com.chengyinhub.common.config.WxPayConfig __cfg = org.mockito.Mockito.mock(com.chengyinhub.common.config.WxPayConfig.class);
           org.mockito.Mockito.when(__cfg.getAppid()).thenReturn("wx-mp-appid");
           org.mockito.Mockito.when(__cfg.getAppAppid()).thenReturn("wx-app-appid");
@@ -88,8 +93,12 @@ class CashWithdrawStateMachineTest {
         ReflectionTestUtils.setField(svc, "frozenAmountResolver",
                 new com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver(merchantReferralBountyService, cooldownStub));
         when(merchantReferralBountyService.frozenAmount(any())).thenReturn(BigDecimal.ZERO);
+        when(mapper.selectById(1L)).thenAnswer(i -> pendingRecord());
+        when(mapper.updateMemberCashWithdraw(any())).thenReturn(1);
         when(mapper.insertMemberCashWithdraw(any())).thenAnswer(inv -> {
-            ((MemberCashWithdraw) inv.getArgument(0)).setId(1L);
+            MemberCashWithdraw created = inv.getArgument(0);
+            created.setId(1L);
+            when(mapper.selectById(1L)).thenReturn(created);
             return 1;
         });
     }
@@ -284,9 +293,9 @@ class CashWithdrawStateMachineTest {
         svc.syncPendingWithdrawals(50);
 
         verify(alarmService, times(1)).alarm(anyString(), anyString());
-        // 抢占已置3(待人工),退款失败保持3
+        // 第一次回补事务失败回滚后，第二次CAS只转人工；unit mock不模拟真实rollback。
         ArgumentCaptor<MemberCashWithdraw> claim = ArgumentCaptor.forClass(MemberCashWithdraw.class);
-        verify(mapper).updateStatusIfProcessing(claim.capture());
+        verify(mapper, times(2)).updateStatusIfProcessing(claim.capture());
         assertEquals(MemberCashWithdraw.STATUS_FAILED_MANUAL, claim.getValue().getStatus());
     }
 

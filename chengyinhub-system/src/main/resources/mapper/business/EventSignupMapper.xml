@@ -32,6 +32,14 @@
         where event_id = #{eventId} and member_id = #{memberId} limit 1
     </select>
 
+    <select id="selectByEventAndMemberForUpdate" resultMap="EventSignupResult">
+        <include refid="selectEventSignupVo"/>
+        where event_id = #{eventId} and member_id = #{memberId} limit 1 for update
+    </select>
+    <select id="countByEventForUpdate" resultType="int">
+        select count(1) from event_signup where event_id = #{eventId} for update
+    </select>
+
     <select id="countByEvent" resultType="int">
         select count(1) from event_signup where event_id = #{eventId}
     </select>

@@ -197,10 +197,12 @@ class SelfPlayPassIdempotencyTest {
         member.setDelFlag(0);
         member.setPoint(0L);
         when(fixture.memberMapper.selectUmsMemberById(MEMBER_ID)).thenReturn(member);
-        when(fixture.registrationMapper.insertCmsRegistration(any(CmsRegistration.class))).thenReturn(1);
+        when(fixture.registrationMapper.insertCmsRegistration(any(CmsRegistration.class))).thenAnswer(i -> { ((CmsRegistration)i.getArgument(0)).setId(9007L); return 1; });
 
         fixture.service = new CmsRegistrationServiceImpl();
         ReflectionTestUtils.setField(fixture.service, "cmsRegistrationMapper", fixture.registrationMapper);
+        ReflectionTestUtils.setField(fixture.service, "registrationSignupNotificationService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.RegistrationSignupNotificationService.class));
         ReflectionTestUtils.setField(fixture.service, "cmsTopicMapper", fixture.topicMapper);
         ReflectionTestUtils.setField(fixture.service, "umsMemberMapper", fixture.memberMapper);
         ReflectionTestUtils.setField(fixture.service, "productRoleService", fixture.productRoleService);

@@ -106,6 +106,7 @@ class ScanContextSharedGateTest {
         CmsActivity act = new CmsActivity();
         act.setId(ACTIVITY);
         act.setTopicId(TOPIC);
+        act.setEndDate(new java.util.Date(System.currentTimeMillis() + 86400000L));
         act.setMemberId(999L);
         when(activitySvc.selectCmsActivityById(ACTIVITY)).thenReturn(act);
     }
@@ -128,6 +129,17 @@ class ScanContextSharedGateTest {
         verify(regSvc, never()).redeemExploreChapterAndRecord(
                 any(), anyLong(), anyLong(), anyLong(), anyLong(), any());
         verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+    }
+
+    @Test
+    void bothExistingScanEntriesRejectExpiredAndMissingEndBeforeConsumption() {
+        when(regSvc.selectByverificationCode(CODE)).thenReturn(explorePassReg());
+        givenActivity();
+        CmsActivity activity = activitySvc.selectCmsActivityById(ACTIVITY);
+        activity.setEndDate(new java.util.Date(1));
+        assertBothEntriesRejectWith("活动已结束，探索票不可继续使用");
+        activity.setEndDate(null);
+        assertBothEntriesRejectWith("活动结束时间未完善，暂不可使用");
     }
 
     /** 闸①前置:码解析不出 ⇒ 两个入口都拒。 */

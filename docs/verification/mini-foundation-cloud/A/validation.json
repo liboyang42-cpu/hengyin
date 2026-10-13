@@ -1,0 +1,28 @@
+{
+  "node": {
+    "executed": true,
+    "tests": 47,
+    "pass": 47,
+    "fail": 0,
+    "command": "node --test chengyinhub-xcx/tests/unit/{registration-payment-verifier,baoming-page-reliability,baoming-load-state,club-waitlist-checkout,baoming-submit-inline-error}.test.js"
+  },
+  "java": {
+    "compiled": false,
+    "junitExecuted": false
+  },
+  "database": {
+    "mysqlExecuted": false,
+    "redisExecuted": false
+  },
+  "xmlSyntax": true,
+  "jsSyntax": true,
+  "diffCheck": true,
+  "publicScan": {
+    "diffLeaks": 0,
+    "baselineFullTreeLeaks": 4,
+    "note": "既有夹具4条由root记录；无新allowlist。"
+  },
+  "vps": "TCP授权未应用；HTTP80非SSH22证据",
+  "ci": "未执行，handoff base无自动匹配且dispatch通路未具备",
+  "production": "未迁移、未合并、未部署、未上传微信"
+}

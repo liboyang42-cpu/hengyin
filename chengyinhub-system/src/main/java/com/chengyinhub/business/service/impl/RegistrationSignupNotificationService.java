@@ -24,13 +24,15 @@ public class RegistrationSignupNotificationService {
                 || !memberId.equals(registration.getMemberId())) {
             throw new IllegalArgumentException("报名通知原身份不匹配");
         }
+        String eventKey = "registration-signup:" + registration.getId();
+        if (notificationIntentService.findIntentId(eventKey) != null) return;
         Long topicId = null;
         if (Long.valueOf(2L).equals(registration.getOwnerType())) {
             CmsActivity activity = activityService.selectCmsActivityById(registration.getOwnerId());
             topicId = activity == null ? null : activity.getTopicId();
         }
         Long intentId = notificationIntentService.enqueue(memberId, ImMessage.MSG_CARD, "报名成功",
-                RegistrationCheckoutServiceImpl.signupNoticeExtra(topicId), "registration-signup:" + registration.getId());
+                RegistrationCheckoutServiceImpl.signupNoticeExtra(topicId), eventKey);
         if (intentId == null) throw new IllegalStateException("报名通知意图写入失败");
     }
 }

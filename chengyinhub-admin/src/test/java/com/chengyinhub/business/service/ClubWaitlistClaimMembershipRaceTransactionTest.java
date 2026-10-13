@@ -188,6 +188,8 @@ class ClubWaitlistClaimMembershipRaceTransactionTest {
                 });
 
         CmsRegistrationServiceImpl target = new CmsRegistrationServiceImpl();
+        ReflectionTestUtils.setField(target, "registrationSignupNotificationService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.RegistrationSignupNotificationService.class));
         ReflectionTestUtils.setField(target, "cmsActivityMapper", activities);
         ReflectionTestUtils.setField(target, "clubMapper", dataBackedClubMapper());
         ReflectionTestUtils.setField(target, "clubMemberMapper", dataBackedMemberMapper());

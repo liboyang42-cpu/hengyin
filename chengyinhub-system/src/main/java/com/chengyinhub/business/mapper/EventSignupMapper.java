@@ -17,6 +17,10 @@ public interface EventSignupMapper
 
     EventSignup selectByEventAndMember(@Param("eventId") Long eventId, @Param("memberId") Long memberId);
 
+    /** V1容量写入事务的当前读；普通指标/历史读取保持原方法。 */
+    EventSignup selectByEventAndMemberForUpdate(@Param("eventId") Long eventId, @Param("memberId") Long memberId);
+    int countByEventForUpdate(@Param("eventId") Long eventId);
+
     /** 报名总人数(集体指标 signup_count)。 */
     int countByEvent(@Param("eventId") Long eventId);
 
