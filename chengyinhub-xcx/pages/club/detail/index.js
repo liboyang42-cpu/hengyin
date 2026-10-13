@@ -890,7 +890,7 @@ Page({
       return app.sendRequest(Object.assign({}, {
         url: url, data: scan.data, method: 'POST', header: jsonHeader(),
         autoErrorToast: false,
-        success(res) { done({ status: 'success', response: res }); },
+        success(res) { done({ status: (!res || [202, '202'].includes(res.code)) ? 'unknown' : 'success', response: res }); },
         fail() { done({ status: 'unknown' }); },
         successStatusAbnormal(res) {
           done({ status: 'unknown' });

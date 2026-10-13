@@ -200,3 +200,18 @@ test('据点码在首页扫码口:不发任何核销请求，但弹窗指路且�
   modals[0].success({ confirm: true, cancel: false });
   assert.deepEqual(jumps, ['/pages/merchant/citynode/index']);
 });
+
+
+test('服务端202与空核验回包保留同一业务键，不开放重放', () => {
+  for (const response of [null, { code: 202 }, { code: '202' }]) {
+    requests = [];
+    const page = makePage(); global.wx.showModal = () => {};
+    page._submitVerification('original', '核验中', { url: '/api/registration/scan_qr_code' }, () => {});
+    requests[0].success(response);
+    assert.equal(page._verificationWorkflow.isBusy('original'), true);
+    const before = requests.length;
+    assert.equal(page._submitVerification('original', '核验中', {}, () => {}), false);
+    assert.equal(requests.length, before);
+    page.onUnload();
+  }
+});

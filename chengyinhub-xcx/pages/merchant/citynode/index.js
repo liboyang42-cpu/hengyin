@@ -482,7 +482,7 @@ Page({
         that._cityRedeemWorkflow.run(key, done => app.sendRequest({
           url: '/api/verify/citynode/redeem', method: 'POST', data: { code: code }, silentError: true,
           success(res) {
-            if (!res || ([200, '200'].includes(res.code) && (!res.data || typeof res.data.couponGranted !== 'boolean'))) {
+            if (!res || [202, '202'].includes(res.code) || ([200, '200'].includes(res.code) && (!res.data || typeof res.data.couponGranted !== 'boolean'))) {
               done({ status: 'unknown' });
               return;
             }

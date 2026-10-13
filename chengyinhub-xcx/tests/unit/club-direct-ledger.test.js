@@ -85,7 +85,7 @@ test('权限异常与畸形成功都显示取回失败，不以零元掩盖', ()
 test('台账只呈现真实结算申请引用，缺号不造平台批次或资金到账', () => {
   const linked = ledgerView({ code: 200, data: [{ ...base, claimId: 9 }] }, scope).rows[0];
   assert.equal(linked.claimNo, '9'); assert.match(linked.disputeTitle, /核销#32 结算单#9/);
-  for (const claimId of [null, undefined, 0, 'not-a-number']) {
+  for (const claimId of [null, undefined, true, false, [], 0, '1e3', 'not-a-number']) {
     const row = ledgerView({ code: 200, data: [{ ...base, claimId }] }, scope).rows[0];
     assert.equal(row.claimNo, ''); assert.doesNotMatch(row.disputeTitle, /结算单#/);
   }

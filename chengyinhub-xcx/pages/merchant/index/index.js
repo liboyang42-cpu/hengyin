@@ -1039,7 +1039,7 @@ Page({
     const submitted = this._verificationWorkflow.run(key, function (done) {
       return app.sendRequest(Object.assign({}, options, {
         autoErrorToast: false,
-        success(res) { done({ status: 'success', response: res }); },
+        success(res) { done({ status: (!res || [202, '202'].includes(res.code)) ? 'unknown' : 'success', response: res }); },
         fail() { done({ status: 'unknown' }); },
         successStatusAbnormal(res) {
           done({ status: 'unknown' });
