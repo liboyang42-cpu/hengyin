@@ -1378,7 +1378,15 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 text(payload, "encryptedData"), text(payload, "iv"),
                 weChatMiniSessionService.miniAppId());
 
+        Date now=clock.now();
+        if(run.getTimestamp()>now.getTime()/1000L || run.getTimestamp()>Long.MAX_VALUE/1000L
+                || !dayKey(new Date(run.getTimestamp()*1000L)).equals(dayKey(now))) {
+            throw new IllegalArgumentException("微信运动数据不是今天的记录，请重新同步");
+        }
         ObjectNode node = state.with("steps");
+        if(run.getTimestamp()<node.path("syncedAt").asLong(0L)) {
+            throw new IllegalArgumentException("微信运动记录早于已同步记录，请重新同步");
+        }
         node.put("todaySteps", run.getTodaySteps());
         node.put("syncedAt", run.getTimestamp());
         int goal = cfg.path("goal").asInt(0);

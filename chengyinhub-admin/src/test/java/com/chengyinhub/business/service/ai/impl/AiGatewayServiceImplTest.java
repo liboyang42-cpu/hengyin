@@ -51,6 +51,38 @@ class AiGatewayServiceImplTest {
     private AiModelConfig aiModelConfig;
     private LlmClient mockLlm;
 
+    private Long reserveResult = 1L;
+    private boolean countByKey;
+    private final java.util.Map<String, Long> counters = new java.util.HashMap<>();
+    private final java.util.List<java.util.List<Object>> reserved = new java.util.ArrayList<>();
+    private final java.util.List<java.util.List<Object>> refunded = new java.util.ArrayList<>();
+    private final java.util.List<Integer> reserveTtls = new java.util.ArrayList<>();
+
+    @SuppressWarnings("unchecked")
+    private void installReservationStub() {
+        when(redisTemplate.execute(org.mockito.ArgumentMatchers.any(org.springframework.data.redis.core.script.RedisScript.class),
+                org.mockito.ArgumentMatchers.anyList(), org.mockito.ArgumentMatchers.anyInt(),
+                org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt())).thenAnswer(inv -> {
+            java.util.List<Object> keys = inv.getArgument(1);
+            reserved.add(new java.util.ArrayList<>(keys));
+            Object ttl = inv.getArgument(2);
+            assertTrue(ttl instanceof Integer, "production serializer requires Integer TTL");
+            reserveTtls.add((Integer) ttl);
+            String key = String.valueOf(keys.get(0));
+            if (countByKey) {
+                long value = counters.getOrDefault(key, 0L) + 1;
+                counters.put(key, value);
+                return value;
+            }
+            return reserveResult;
+        });
+        when(redisTemplate.execute(org.mockito.ArgumentMatchers.any(org.springframework.data.redis.core.script.RedisScript.class),
+                org.mockito.ArgumentMatchers.anyList())).thenAnswer(inv -> {
+            refunded.add(new java.util.ArrayList<>((java.util.List<Object>) inv.getArgument(1)));
+            return 1L;
+        });
+    }
+
     private static final Long MEMBER_ID = 1001L;
 
     @SuppressWarnings("unchecked")
@@ -83,8 +115,9 @@ class AiGatewayServiceImplTest {
         // 默认: 日志写入成功
         when(aiGenerationLogMapper.insertAiGenerationLog(any())).thenReturn(1);
 
-        // 默认: 频控未超(used=1, 首次)
-        when(valueOperations.increment(anyString())).thenReturn(1L);
+        installReservationStub();
+        // 默认预占回执：这里只验证调用合同，Lua由真实Redis IT覆盖。
+        reserveResult = 1L;
 
         List<LlmClient> clients = Collections.singletonList(mockLlm);
 
@@ -101,7 +134,7 @@ class AiGatewayServiceImplTest {
 
     @Test
     void generateNormalFlowReturnsResult() {
-        when(valueOperations.increment(anyString())).thenReturn(1L);
+        reserveResult = 1L;
 
         AiGatewayResult result = service.generate(MEMBER_ID, "club", "merchant_plan",
                 "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}");
@@ -125,7 +158,7 @@ class AiGatewayServiceImplTest {
                 "[BIZ:theme_draft]\n", "{\"idea\":\"night walk\"}");
 
         assertNotNull(result);
-        verify(valueOperations, never()).increment(anyString());
+        assertEquals(0, reserved.size());
     }
 
     // ---- input safety block ----
@@ -173,7 +206,7 @@ class AiGatewayServiceImplTest {
 
     @Test
     void generateRateLimitExceededThrowsException() {
-        when(valueOperations.increment(anyString())).thenReturn(25L); // dailyLimit is 20
+        reserveResult = 25L; // dailyLimit is 20
 
         AiServiceException ex = assertThrows(AiServiceException.class, () -> {
             service.generate(MEMBER_ID, "club", "merchant_plan",
@@ -215,22 +248,8 @@ class AiGatewayServiceImplTest {
         assertTrue(error.getMessage().contains("traceId="), "外部报错必须带可查日志的追踪号");
     }
 
-    // ---- 频控回滚:我们的锅不该扣用户额度 ----
-    //
-    // 病理:generate() 先 increment 再调模型,模型炸时 catch 只 saveLog + throw「AI 繁忙」,
-    // 从不 decrement ⇒ 用户什么都没拿到,每日额度照扣一次。每天 20 次的池子,
-    // AI 抖 3 次就白掉 15%,而用户完全无从知晓、也无处申诉(日志里只有 ERROR)。
-    //
-    // 本次退的:模型调用抛异常、选不到可用模型 —— 都是我们的锅,用户零所得。
-    // 本次不退的,理由各不相同(**别一视同仁**,详见 refundQuota 的 javadoc):
-    //   · 已超限 —— 确定不退;
-    //   · 出参安全拦截 —— 产品策略未拍板;
-    // ⚠️ 全篇不写行号:指语义,别指坐标 —— 坐标随任何编辑静默失准。
-    //
-    //   · 入参安全拦截 —— **边界未决,不是「刻意设计」**:checkText fail-close,
-    //     「审核服务繁忙」(我们的锅)与「内容违规」(用户的锅)走同一个非空 String 通道,
-    //     本层区分不了。修它要改内容安全接口(合规路径)→ 另开单。
-    //
+    // 输入审核服务故障与模型失败退本次预占；明确违规不退。
+    // REVIEW_REQUIRED 与输出审核沿原规则，原子补偿另由真实 Redis IT 验证。
 
     @Test
     void modelError_refundsQuota_notUserFault() {
@@ -240,7 +259,7 @@ class AiGatewayServiceImplTest {
                 MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
 
         // 模型炸了是我们的锅,用户没拿到任何东西 → 必须把刚才 increment 的那一次退回来
-        verify(valueOperations, times(1)).decrement(anyString());
+        assertEquals(1, refunded.size());
     }
 
     @Test
@@ -252,75 +271,51 @@ class AiGatewayServiceImplTest {
         assertThrows(AiServiceException.class, () -> service.generate(
                 MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
 
-        verify(valueOperations, times(1)).decrement(anyString());
+        assertEquals(1, refunded.size());
     }
 
-    /**
-     * 入参内容安全拦截:维持「不退」——但这是<b>现状锁定,不是「设计如此」</b>。
-     *
-     * <p>⚠️ checkText 是 fail-close,且用同一个非空 String 通道表达
-     * 「审核服务繁忙」(我们的锅)与「内容含违规」(用户的锅),本层区分不了 ⇒
-     * 微信审核一抖,用户白扣额度还被标 SAFETY_INPUT_BLOCKED。修它要改内容安全接口
-     * (合规路径),另开单。本用例只锁住「本次没顺手改这里的行为」,
-     * <b>将来那单落地时它应该被改掉,不是被绕开</b>。
-     */
     @Test
-    void inputBlocked_doesNotRefund_currentBehaviorLocked_boundaryUnresolved() {
+    void unknownInputRejectionKeepsExistingNonRefundPolicy() {
         when(wxContentSecurityService.checkText(anyString(), anyString())).thenReturn("含违规内容");
 
         assertThrows(AiServiceException.class, () -> service.generate(
                 MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
 
-        verify(valueOperations, never()).decrement(anyString());
+        assertEquals(0, refunded.size());
     }
 
     @Test
     void normalFlow_doesNotRefund() {
         service.generate(MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}");
-        verify(valueOperations, never()).decrement(anyString());
+        assertEquals(0, refunded.size());
     }
 
     @Test
     void rateLimitExceeded_doesNotRefund_alreadyOverAnyway() {
-        when(valueOperations.increment(anyString())).thenReturn(25L); // dailyLimit=20
+        reserveResult = 25L; // dailyLimit=20
 
         assertThrows(AiServiceException.class, () -> service.generate(
                 MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
 
         // 已经超了,退不退都拦;退反而会让「攻击者狂刷」看起来像没刷过。不退。
-        verify(valueOperations, never()).decrement(anyString());
+        assertEquals(0, refunded.size());
     }
 
-    /**
-     * ★ DECR 扑空(key 不存在)会建出一个 -1 且**无 TTL** 的 key。
-     *
-     * <p>本机 Redis 实测:{@code DEL k; DECR k} → 值 -1、{@code TTL k} = -1(永不过期)。
-     * <p>两种扑空,后果不同(详见 {@code refundQuota} 的注释):
-     * <ul>
-     *   <li><b>正常 TTL 到期</b> ⇒ 只可能发生在次日零点后,而那之后再没请求会算出这个日期 key
-     *       ⇒ -1 key 没人读得到 = <b>纯内存泄漏,不是白送额度</b>;</li>
-     *   <li><b>日期内 key 丢失</b>(淘汰/重启/人工 DEL)⇒ 当天后续请求会读到 -1
-     *       ⇒ 计数从 -1 起 = <b>真白送一次</b>。上面那个 DEL 实验模拟的正是这一种。</li>
-     * </ul>
-     * 两种都该删 key。本用例用 mock 让 decrement 返回 -1,覆盖的是「扑空后必须 delete」这条不变式。
-     */
     @Test
-    void refund_onExpiredKey_deletesInsteadOfLeavingImmortalNegativeKey() {
+    void refundRequestsAtomicCompensationWithoutStandaloneDelete() {
         when(mockLlm.chat(anyString(), anyString())).thenThrow(new RuntimeException("model down"));
-        // 模拟:increment 时 key 还在(返回 1),decrement 时 key 已过期 → DECR 建 key 得 -1
-        when(valueOperations.decrement(anyString())).thenReturn(-1L);
-
-        assertThrows(AiServiceException.class, () -> service.generate(
-                MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
-
-        verify(redisTemplate, times(1)).delete(anyString());
+        assertThrows(AiServiceException.class, () -> service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u"));
+        assertEquals(1, refunded.size());
+        assertEquals(reserved.get(0), refunded.get(0));
+        verify(redisTemplate, never()).delete(anyString());
+        verify(valueOperations, never()).decrement(anyString());
     }
 
     /** 正常退款(余额 >= 0)不该删 key —— 删了会把当天已用次数清零 = 白送整池额度。 */
     @Test
     void refund_normal_doesNotDeleteKey() {
         when(mockLlm.chat(anyString(), anyString())).thenThrow(new RuntimeException("model down"));
-        when(valueOperations.decrement(anyString())).thenReturn(3L);
+
 
         assertThrows(AiServiceException.class, () -> service.generate(
                 MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
@@ -330,17 +325,11 @@ class AiGatewayServiceImplTest {
 
     /** 退款要退到和扣的同一个 key —— 退错池子等于没退,还会把别人的额度还错。 */
     @Test
-    void refund_usesSameKeyAsIncrement() {
+    void refundUsesSameOriginalDayGenerationAndNonceKeys() {
         when(mockLlm.chat(anyString(), anyString())).thenThrow(new RuntimeException("model down"));
-        ArgumentCaptor<Object> inc = ArgumentCaptor.forClass(Object.class);
-        ArgumentCaptor<Object> dec = ArgumentCaptor.forClass(Object.class);
-
-        assertThrows(AiServiceException.class, () -> service.generate(
-                MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
-
-        verify(valueOperations).increment((Object) inc.capture());
-        verify(valueOperations).decrement((Object) dec.capture());
-        assertEquals(inc.getValue(), dec.getValue(), "退的 key 必须与扣的 key 逐字相同");
+        assertThrows(AiServiceException.class, () -> service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u"));
+        assertEquals(1, reserved.size());
+        assertEquals(reserved, refunded);
     }
 
     // ---- trace ID ----
@@ -447,26 +436,15 @@ class AiGatewayServiceImplTest {
         verify(mockLlm, never()).chat(anyString(), anyString());
     }
 
-    // ---- 频控分池: npc_chat 独立额度, 创作类共用原池 ----
-    // ⚠️ 用真计数器(HashMap<key,count>)而不是 thenReturn 固定值:
-    //    固定值的 stub 无论 key 是什么都返回同一个数 ⇒ 分池断掉时照样绿(假绿)。
-    //    只有「按 key 各自计数」才能真的证明两个池互不相干。
-
-    /** 让 increment(key) 按 key 真计数,返回该 key 的当前值。 */
-    private java.util.Map<String, Long> installRealCounter() {
-        java.util.Map<String, Long> counters = new java.util.HashMap<>();
-        when(valueOperations.increment(anyString())).thenAnswer(inv -> {
-            String key = inv.getArgument(0);
-            long v = counters.getOrDefault(key, 0L) + 1;
-            counters.put(key, v);
-            return v;
-        });
+    // 按 key 维护 mock 计数，仅验证调用分池；不是 Redis 脚本或并发验收。
+    private java.util.Map<String, Long> installPerKeyCounterStub() {
+        countByKey = true;
         return counters;
     }
 
     @Test
     void npcChatAndCreationUseDifferentRateKeys() {
-        java.util.Map<String, Long> counters = installRealCounter();
+        java.util.Map<String, Long> counters = installPerKeyCounterStub();
 
         service.generate(MEMBER_ID, "player", "npc_chat", "s", "u");
         service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u");
@@ -486,7 +464,7 @@ class AiGatewayServiceImplTest {
     void creationBizTypesShareOneRateKey() {
         // 分组的意义:创作类 7 个 bizType **共用一池**。
         // 若按 bizType 各自一池,单用户实际额度会被悄悄放大 7 倍。
-        java.util.Map<String, Long> counters = installRealCounter();
+        java.util.Map<String, Long> counters = installPerKeyCounterStub();
 
         service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u");
         service.generate(MEMBER_ID, "club", "theme_draft", "s", "u");
@@ -500,7 +478,7 @@ class AiGatewayServiceImplTest {
     void npcUsageDoesNotConsumeCreationQuota() {
         ReflectionTestUtils.setField(aiModelConfig, "npcDailyLimit", 100);
         ReflectionTestUtils.setField(aiModelConfig, "dailyLimit", 20);
-        installRealCounter();
+        installPerKeyCounterStub();
 
         // NPC 用掉 30 次(远超创作类的 20/天上限)
         for (int i = 0; i < 30; i++) {
@@ -517,7 +495,7 @@ class AiGatewayServiceImplTest {
     void creationExhaustedDoesNotBlockNpc() {
         ReflectionTestUtils.setField(aiModelConfig, "npcDailyLimit", 100);
         ReflectionTestUtils.setField(aiModelConfig, "dailyLimit", 20);
-        installRealCounter();
+        installPerKeyCounterStub();
 
         // 创作类用满 20 次
         for (int i = 0; i < 20; i++) {
@@ -538,7 +516,7 @@ class AiGatewayServiceImplTest {
         ReflectionTestUtils.setField(aiModelConfig, "npcDailyLimit", 100);
         ReflectionTestUtils.setField(aiModelConfig, "dailyLimit", 20);
         // 第 101 次 NPC 调用 → 超 npcDailyLimit(100)
-        when(valueOperations.increment(anyString())).thenReturn(101L);
+        reserveResult = 101L;
 
         AiServiceException ex = assertThrows(AiServiceException.class,
                 () -> service.generate(MEMBER_ID, "player", "npc_chat", "s", "u"));
@@ -553,7 +531,7 @@ class AiGatewayServiceImplTest {
     void npcUnderLimitPasses() {
         ReflectionTestUtils.setField(aiModelConfig, "npcDailyLimit", 100);
         // 第 21 次 NPC 调用:超了创作类的 20,但没超 NPC 的 100 → 必须放行
-        when(valueOperations.increment(anyString())).thenReturn(21L);
+        reserveResult = 21L;
 
         AiGatewayResult r = service.generate(MEMBER_ID, "player", "npc_chat", "s", "u");
         assertNotNull(r);
@@ -561,22 +539,62 @@ class AiGatewayServiceImplTest {
     }
 
     @Test
-    void generateSetsExpireOnFirstRequest() {
-        when(valueOperations.increment(anyString())).thenReturn(1L);
+    void generatePassesOriginalTtlAsIntegerToAtomicReservation() {
+        reserveResult = 1L;
 
         service.generate(MEMBER_ID, "club", "merchant_plan",
                 "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}");
 
-        verify(redisTemplate).expire(anyString(), eq(86400L), eq(TimeUnit.SECONDS));
+        assertEquals(Integer.valueOf(86400), reserveTtls.get(0));
+        verify(redisTemplate, never()).expire(anyString(), anyLong(), any(TimeUnit.class));
     }
 
     @Test
-    void generateDoesNotSetExpireOnSubsequentRequests() {
-        when(valueOperations.increment(anyString())).thenReturn(5L);
+    void generateDoesNotRenewTtlOutsideAtomicReservation() {
+        reserveResult = 5L;
 
         service.generate(MEMBER_ID, "club", "merchant_plan",
                 "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}");
 
         verify(redisTemplate, never()).expire(anyString(), anyLong(), any(TimeUnit.class));
+    }
+
+    @Test
+    void detectionServiceFailureRefundsWithoutCallingProvider() {
+        when(wxContentSecurityService.checkText(anyString(), anyString())).thenReturn(IWxContentSecurityService.MSG_BUSY);
+        AiServiceException error = assertThrows(AiServiceException.class,
+                () -> service.generate(MEMBER_ID, "club", "theme_draft", "s", "u"));
+        assertEquals(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, error.getReason());
+        assertEquals(reserved, refunded);
+        verify(mockLlm, never()).chat(anyString(), anyString());
+    }
+
+    @Test
+    void explicitRiskyInputKeepsQuotaAndTypedBlockedReason() {
+        when(wxContentSecurityService.checkText(anyString(), anyString())).thenReturn("内容包含违规信息，请修改后重试");
+        AiServiceException error = assertThrows(AiServiceException.class,
+                () -> service.generate(MEMBER_ID, "club", "theme_draft", "s", "u"));
+        assertEquals(AiServiceException.Reason.INPUT_BLOCKED, error.getReason());
+        assertEquals(0, refunded.size());
+        verify(mockLlm, never()).chat(anyString(), anyString());
+    }
+
+    @Test
+    void reviewRequiredRetainsUnknownAndDoesNotRefundOrdinaryPool() {
+        when(wxContentSecurityService.checkText(anyString(), anyString())).thenReturn(IWxContentSecurityService.REVIEW_REQUIRED);
+        AiServiceException error = assertThrows(AiServiceException.class,
+                () -> service.generate(MEMBER_ID, "club", "theme_draft", "s", "u"));
+        assertEquals(AiServiceException.Reason.UNKNOWN, error.getReason());
+        assertEquals(0, refunded.size());
+    }
+
+    @Test
+    void unknownReservationReplyCancelsOnlyItsOwnNonceBeforeProvider() {
+        reserveResult = null;
+        assertThrows(IllegalStateException.class,
+                () -> service.generate(MEMBER_ID, "club", "theme_draft", "s", "u"));
+        assertEquals(1, reserved.size());
+        assertEquals(reserved, refunded);
+        verify(mockLlm, never()).chat(anyString(), anyString());
     }
 }

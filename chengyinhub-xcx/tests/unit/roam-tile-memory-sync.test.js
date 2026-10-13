@@ -73,3 +73,13 @@ test('分页请求期间仅在页面内存新点亮、尚未延迟落盘的格�
   })
   assert.deepEqual(memory.state(), result)
 })
+
+test('C3清缓存代次改变后分页回包不能重新写旧快照或下一页', async () => {
+  const memory = fakeMemory({ tiles: { oldTile: 1 }, serverCursor: 10 })
+  let epoch = 0, resolve; memory.cacheEpoch = () => epoch
+  const pending = syncRoamTileMemory({ memory, fetchPage: () => new Promise(r => { resolve = r }) })
+  epoch += 1; memory.writeTiles({}, 0)
+  resolve({ tiles: ['lateTile'], nextAfterId: 11, hasMore: true })
+  await assert.rejects(pending, /缓存已清理/)
+  assert.deepEqual(memory.state(), { tiles: {}, serverCursor: 0 })
+})

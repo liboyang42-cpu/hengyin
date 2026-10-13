@@ -51,9 +51,10 @@ public interface AiGatewayService
      *
      * @param memberId 会员
      * @param bizType  场景,决定落在哪个额度池(如 photo_check)
+     * @return 绑定本会员、本额度池和原日的预占凭证，退款必须传回同一凭证
      * @throws AiServiceException 超限时抛出(调用方据此降级,而不是阻断玩家)
      */
-    void consumeQuota(Long memberId, String bizType);
+    String consumeQuota(Long memberId, String bizType);
 
     /**
      * 退还 {@link #consumeQuota} 扣掉的那一次。只在「用户没拿到任何结论」时调用
@@ -62,6 +63,11 @@ public interface AiGatewayService
      *
      * @param memberId 会员
      * @param bizType  与 consumeQuota 逐字相同的场景(退错池子 = 没退)
+     * @param reservation 本次 consumeQuota 返回的原预占凭证
      */
-    void refundQuota(Long memberId, String bizType);
+    void refundQuota(Long memberId, String bizType, String reservation);
+    /** 外部视觉消费者调用前持久阶段；失败不得继续启动提供方。 */
+    void stageQuota(Long memberId,String bizType,String reservation,String stage);
+    /** 保持该消费者已有不退款结论，仅保存固定内部原因码。 */
+    void retainQuota(Long memberId,String bizType,String reservation,String reason);
 }

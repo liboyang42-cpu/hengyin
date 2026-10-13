@@ -105,7 +105,12 @@ public final class WeRunDecryptor {
         }
         // stepInfoList 是最近 30 天的升序序列,今天是最后一条
         JsonNode today = list.get(list.size() - 1);
-        int steps = today.path("step").asInt(-1);
+        JsonNode step=today.path("step"),stamp=today.path("timestamp");
+        if(!step.isIntegralNumber() || !step.canConvertToInt() || !stamp.isIntegralNumber()
+                || !stamp.canConvertToLong() || stamp.asLong()<=0) {
+            throw new IllegalArgumentException("微信运动步数或时间不合法");
+        }
+        int steps = step.asInt(-1);
         if (steps < 0) {
             throw new IllegalArgumentException("微信运动步数不合法");
         }
@@ -125,6 +130,9 @@ public final class WeRunDecryptor {
         int pad = decrypted[decrypted.length - 1];
         if (pad < 1 || pad > BLOCK_SIZE || pad > decrypted.length) {
             throw new IllegalArgumentException("微信运动数据补位不合法");
+        }
+        for(int index=decrypted.length-pad;index<decrypted.length;index++) {
+            if((decrypted[index] & 0xff)!=pad) throw new IllegalArgumentException("微信运动数据补位不合法");
         }
         return new String(decrypted, 0, decrypted.length - pad, StandardCharsets.UTF_8);
     }

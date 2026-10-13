@@ -136,4 +136,23 @@ class WeRunDecryptorTest {
         assertThrows(IllegalArgumentException.class,
                 () -> WeRunDecryptor.decrypt(key(), cipherText, iv(), APP_ID));
     }
+    @Test
+    void nonIntegralStepsAndTimestampAreRejected() throws Exception {
+        for(String record:new String[]{"{\"timestamp\":1756200000,\"step\":1.5}",
+                "{\"timestamp\":\"1756200000\",\"step\":1}",
+                "{\"timestamp\":0,\"step\":1}","{\"timestamp\":1756200000,\"step\":2147483648}"}) {
+            String ciphertext=encrypt(payload(APP_ID,"["+record+"]"));
+            assertThrows(IllegalArgumentException.class,()->WeRunDecryptor.decrypt(key(),ciphertext,iv(),APP_ID));
+        }
+    }
+
+    @Test
+    void malformedPaddingBytesAreRejectedEvenWithValidLastByte() throws Exception {
+        java.lang.reflect.Method strip=WeRunDecryptor.class.getDeclaredMethod("stripPkcs7",byte[].class);
+        strip.setAccessible(true);
+        java.lang.reflect.InvocationTargetException error=assertThrows(java.lang.reflect.InvocationTargetException.class,
+                ()->strip.invoke(null,(Object)new byte[]{123,0,3,3}));
+        assertTrue(error.getCause() instanceof IllegalArgumentException);
+    }
+
 }

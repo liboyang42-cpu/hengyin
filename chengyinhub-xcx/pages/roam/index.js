@@ -1,4 +1,4 @@
-const { exactSessionId, validRecovery, newSessionKey } = require('../../utils/roam-recovery.js');
+const { exactSessionId, validRecovery, newSessionKey, archiveRecords } = require('../../utils/roam-recovery.js');
 const pixelAvatar = require('../../utils/pixel-avatar.js');
 // 城瘾 · 完全自由漫游模式(City Fog Explore)
 // 真实腾讯地图 + 地图外屏幕雾;行动揭开城市
@@ -34,6 +34,7 @@ const {
   readSharePrivacy,
 } = require('../../utils/roam-route-privacy.js');
 const { readNonNegative } = require('../../utils/roam-history-metrics.js');
+const { acceptRoamLocation } = require('../../utils/roam-track-filter.js');
 const { simplifyTrack, limitTrack } = require('../../utils/roam-track-simplify.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const { fromHttpStatusAbnormal } = require('../../utils/transport/failure-envelope.js');
@@ -42,8 +43,15 @@ const { bindPlayerRoamMemory } = require('../../utils/roam-player-memory.js');
 const { syncRoamTileMemory } = require('../../utils/roam-tile-memory-sync.js');
 const MOCK_IMG = '/images/index-figma/nearby-card.jpg';
 
+const { onRoamCacheInvalidated } = require('../../utils/roam-cache-epoch.js');
 function roamMemory(page) {
-  return bindPlayerRoamMemory(page, getApp(), wx);
+  const memory = bindPlayerRoamMemory(page, getApp(), wx);
+  if (page._roamCacheOwner !== memory.playerId) {
+    if (page._roamCacheUnsubscribe) page._roamCacheUnsubscribe();
+    page._roamCacheOwner = memory.playerId;
+    page._roamCacheUnsubscribe = onRoamCacheInvalidated(memory.playerId, () => page._discardRoamLocal());
+  }
+  return memory;
 }
 
 // P2 接真:标准 geohash 编码(7 字符 ≈153m 格),与后端 roam_fog_tile.geohash7 对齐,可互通
@@ -878,6 +886,8 @@ Page({
 
   onUnload() {
     if (this._sessionClock) this._saveRoamRecovery();
+    if (this._roamCacheUnsubscribe) this._roamCacheUnsubscribe();
+    this._roamCacheUnsubscribe = null;
     this._cancelShareWork();
     this._stopReal(); this._stopClock();
     this._clearRollTimers();   // 读数滚动的计时器,离页必须掐掉
@@ -1206,7 +1216,7 @@ Page({
     const current = this._roamReadScope();
     const memory = roamMemory(this);
     return syncRoamTileMemory({
-      memory,
+      memory, isCurrent: current,
       pageSize: 1000,
       fetchPage: (afterId, limit) => req('/api/roam/tiles/page', 'GET', {
         afterId: String(afterId), limit: String(limit),
@@ -1393,6 +1403,7 @@ Page({
     if (!this._localTiles) this._localTiles = {};
     if (!this._localTiles[key]) {
       this._localTiles[key] = 1;
+      this._tilesRevision = (this._tilesRevision || 0) + 1;
       this._tilesDirty = (this._tilesDirty || 0) + 1;
       this._scheduleTilePersist();
     }
@@ -1401,6 +1412,9 @@ Page({
     if (this._npc) {
       this._npc.dispatch({ type: 'UNIQUE_TILE_COUNT_CHANGED', count: this._sessionTileCount });
     }
+    this._roamRecoveryAbandoned = false;
+    this._pendingCollectedAt = this._pendingCollectedAt || {};
+    this._pendingCollectedAt[key] = Date.now();
     this._pendingTiles.push(key);
     this._ensureRoamRecovery();
     if (this._pendingTiles.length >= 50) { this._flushReveal(); return; }
@@ -1416,10 +1430,33 @@ Page({
   _persistTiles() {
     if (this._tilePersistTimer) { clearTimeout(this._tilePersistTimer); this._tilePersistTimer = null; }
     if (!this._tilesDirty) return;
-    this._tilesDirty = 0;
+    const revision = this._tilesRevision || 0;
+    const generation = this._roamWriteGeneration;
     try {
-      roamMemory(this).writeTiles(this._localTiles || {}, this._tileServerCursor || 0);
-    } catch (e) { /* noop */ }
+      const ok = roamMemory(this).writeTiles({ ...(this._localTiles || {}) }, this._tileServerCursor || 0);
+      if (ok && revision === (this._tilesRevision || 0) && generation === this._roamWriteGeneration) this._tilesDirty = 0;
+      return ok;
+    } catch (e) { return false; }
+  },
+
+  _discardRoamLocal() {
+    this._roamWriteGeneration = (this._roamWriteGeneration || 0) + 1;
+    this._recoveryKeyPromise = this._recoveryPromise = this._revealPromise = this._finishPromise = null;
+    if (this._revealTimer) clearTimeout(this._revealTimer);
+    if (this._tilePersistTimer) clearTimeout(this._tilePersistTimer);
+    this._revealTimer = this._tilePersistTimer = null;
+    this._pendingTiles = []; this._pendingCollectedAt = {};
+    if (!exactSessionId(this._roamSid)) this._clientSessionKey = '';
+    this._pois = (this._pois || []).filter(p => p.state !== 'done');
+    this._localTiles = {}; this._tileServerCursor = 0; this._tilesDirty = 0;
+    this._tilesRevision = (this._tilesRevision || 0) + 1;
+    this._sessionTiles = {}; this._sessionTileCount = 0;
+    this._track = []; this._reveals = []; this._historyReveals = []; this._footprintSessions = [];
+    this._sessionPhotos = []; this._foundRoamPois = {}; this._recoveryArchiveTs = 0;
+    this._roamRecoveryAbandoned = true;
+    this._recoveryNeedsLookup = this._revealBootstrapUnknown = this._recoveryReadFailed = false;
+    this._finishRequested = false; this._revealInFlight = false;
+    this.setData({ recoveryError: '', recoveryAvailable: false, recoveryCanContinue: false, revealWriteUnknown: false });
   },
 
   _resetRoamRecoverySession() {
@@ -1438,7 +1475,8 @@ Page({
     this._roamPoiFinishBlocked = this._revealInFlight = false;
     if (this._revealTimer) { clearTimeout(this._revealTimer); this._revealTimer = null; }
     this._clientSessionKey = ''; this._roamSid = 0;
-    this._pendingTiles = []; this._sessionTiles = {}; this._sessionTileCount = 0;
+    this._pendingTiles = []; this._pendingCollectedAt = {}; this._roamRecoveryAbandoned = false;
+    this._sessionTiles = {}; this._sessionTileCount = 0;
     this._track = []; this._sessionPhotos = []; this._foundRoamPois = {}; this._pois = [];
     this._stats = { time: '00:00', shops: 0, explorePct: 0, distance: '0.0' };
     this._elapsedSeconds = 0;
@@ -1480,9 +1518,11 @@ Page({
   },
 
   _saveRoamRecovery() {
+    if (this._roamRecoveryAbandoned) return true;
     if (!this._recoveryOwnerCurrent()) return this._recoveryFailure('登录账号已变化，请回到漫游页核对');
     const record = {
       clientSessionKey: this._clientSessionKey || '', sessionId: exactSessionId(this._roamSid),
+      collectedAt: { ...(this._pendingCollectedAt || {}) },
       pendingTiles: (this._pendingTiles || []).slice(), allTiles: Object.keys(this._sessionTiles || {}),
       finishRequested: !!this._finishRequested, distanceM: this._finishRequested ? this._lastDistanceM : (this._dist || 0),
       archiveTs: this._recoveryArchiveTs || 0, finish: this.data.finish || {}, stats: this._stats, track: this._track || [],
@@ -1522,6 +1562,7 @@ Page({
     this._clientSessionKey = r.clientSessionKey || '';
     this._roamSid = exactSessionId(r.sessionId) || 0;
     this._pendingTiles = r.pendingTiles.slice();
+    this._pendingCollectedAt = r.collectedAt || {};
     this._sessionTiles = Object.fromEntries((r.allTiles || []).map(t => [t, 1]));
     this._sessionTileCount = Object.keys(this._sessionTiles).length;
     this._finishRequested = r.finishRequested;
@@ -1558,7 +1599,7 @@ Page({
         return this._recoveryFailure('漫游状态暂时无法核对，请稍后重试；待确认记录仍保留');
       if (fact.state !== 'NOT_FOUND') {
         const sid = exactSessionId(fact.sessionId);
-        if (!sid || (this._clientSessionKey && fact.clientSessionKey !== this._clientSessionKey))
+        if (!sid || (exactSessionId(this._roamSid) && sid !== exactSessionId(this._roamSid)) || (this._clientSessionKey && fact.clientSessionKey !== this._clientSessionKey))
           return this._recoveryFailure('漫游关联响应不完整，请重新核对');
         this._roamSid = sid;
       } else if (!this._clientSessionKey || exactSessionId(this._roamSid)) {
@@ -1570,11 +1611,12 @@ Page({
       }
       this.setData({ recoveryCanContinue: false });
       if (fact.state === 'FINISHED') {
+        this._stopReal(); this._stopClock();
+        this._finishRequested = true;
         const result = fact.result;
         if (!result || typeof result.totalXp !== 'number' || !Number.isFinite(result.totalXp))
           return this._recoveryFailure('结算事实暂时无法读取，请重新核对');
-        if (this._pendingTiles.length) return this._recoveryFailure('会话已结束，仍有待确认格子，请保留记录并联系支持核对');
-        return this._applyRoamFinishResult(result, fact.resultComplete === true);
+        return this._archiveFinishedRecords().then(ok => ok && this._applyRoamFinishResult(result, fact.resultComplete === true));
       }
       this._recoveryNeedsLookup = false; this._revealBootstrapUnknown = false;
       this.setData({ revealWriteUnknown: false, recoveryError: '', roamSessionReady: !!this._roamSid, 'finish.settleErr': '' });
@@ -1584,6 +1626,26 @@ Page({
     this._recoveryPromise = pending;
     pending.then(() => { if (this._recoveryPromise === pending) this._recoveryPromise = null; });
     return pending;
+  },
+
+  async _archiveFinishedRecords() {
+    const current = this._roamReadScope();
+    while (this._pendingTiles.length) {
+      const batch = this._pendingTiles.slice(0, 200);
+      let records;
+      try { records = archiveRecords(batch, this._pendingCollectedAt); }
+      catch (error) { return this._recoveryFailure(error.message); }
+      const res = await req('/api/roam/session/records', 'POST', { sessionId: exactSessionId(this._roamSid),
+        ...(this._clientSessionKey ? { clientSessionKey: this._clientSessionKey } : {}), records: JSON.stringify(records) });
+      if (!current() || !this._recoveryOwnerCurrent()) return false;
+      if (!apiOk(res) || !res.data || String(res.data.sessionId) !== exactSessionId(this._roamSid)
+          || res.data.evidenceType !== 'CLIENT_REPORTED' || res.data.acceptedRecords !== new Set(batch).size)
+        return this._recoveryFailure('原行程补传暂未确认，待核记录仍保留');
+      const old = this._pendingTiles;
+      this._pendingTiles = old.slice(batch.length);
+      if (!this._saveRoamRecovery()) { this._pendingTiles = old; return false; }
+    }
+    return true;
   },
 
   _flushReveal() {
@@ -1616,8 +1678,9 @@ Page({
           this.setData({ roamSessionReady: true });
           if (this._npc) this._npc.setSessionId(this._roamSid);   // 埋点 bizId 只放 Long
         }
-        this._pendingTiles = this._pendingTiles.slice(batch.length);
-        if (!this._saveRoamRecovery()) return false; // 成功才出队,失败下轮重试
+        const beforeAck = this._pendingTiles;
+        this._pendingTiles = beforeAck.slice(batch.length);
+        if (!this._saveRoamRecovery()) { this._pendingTiles = beforeAck; return false; } // 成功才出队,失败下轮重试
         if (this._pendingTiles.length >= 50 && !this._finishPromise) this._flushReveal();
         return true;
       } else if ((httpFail(res) || netFail(res)) && !requestSessionId) {
@@ -3568,10 +3631,17 @@ Page({
     if (act === 'event') { this.setData({ 'eventOverlay.show': true }, () => this._syncSparkCircles()); }
   },
   _startReal(consentAlreadyRecorded) {
+    if (this._realOn || this._realStartPending) return;
     const that = this;
+    const generation = (this._realGeneration || 0) + 1;
+    this._realGeneration = generation; this._realStartPending = true;
+    const owner = String(getApp().getUserID() || '');
+    const current = () => generation === that._realGeneration && owner === String(getApp().getUserID() || '');
     const onOk = () => {
+      if (!current()) return;
+      that._realStartPending = false; that._realAnchor = null;
       that._realOn = true;
-      wx.onLocationChange(that._onRealLoc = (loc) => that._realTick(loc));
+      wx.onLocationChange(that._onRealLoc = (loc) => { if (current()) that._realTick(loc); });
       that.setData({ locErr: false });
       that._syncGoal();
       wx.setKeepScreenOn && wx.setKeepScreenOn({ keepScreenOn: true });
@@ -3580,17 +3650,22 @@ Page({
     // 漫游只在玩家主动开启后的前台使用定位，绝不升级为后台持续采集。
     // 后台定位:漫游是边走边点亮,玩家锁屏塞兜是常态;前台版一锁屏就断,轨迹丢段。
     // 拿不到后台权限自动降级前台(功能仍可用,只是锁屏会断)。停的时机只有 _stopReal。
-    const startLocation = () => bgTracker.acquire('roam', {
+    const startLocation = () => {
+      if (!current()) return;
+      bgTracker.acquire('roam', {
       success: onOk,
       fail() {
+        if (!current()) return;
+        that._realStartPending = false;
         that.setData({ locErr: true });
         that._syncGoal();
         cyToast('未授权定位，无法开启实时漫游');
       },
-    });
+      });
+    };
     const recordAndStart = () => getApp().recordConsent({ docType: 'privacy_policy', scene: 'roam_location', eventType: 'AGREE' })
       .then(startLocation)
-      .catch(() => cyToast('同意记录失败，请检查网络后重试'));
+      .catch(() => { if (current()) { that._realStartPending = false; cyToast('同意记录失败，请检查网络后重试'); } });
     if (consentAlreadyRecorded) { startLocation(); return; }
     cyModal.show({
       title: '开启实时定位',
@@ -3598,12 +3673,15 @@ Page({
       confirmText: '同意并开启',
       cancelText: '暂不开启',
       success(result) {
-        if (!result.confirm) return;
+        if (!current()) return;
+        if (!result.confirm) { that._realStartPending = false; return; }
         recordAndStart();
       },
     });
   },
   _stopReal() {
+    this._realGeneration = (this._realGeneration || 0) + 1;
+    this._realStartPending = false; this._realAnchor = null;
     bgTracker.release('roam');
     const onLocationChange = this._onRealLoc;
     this._realOn = false;
@@ -3614,15 +3692,14 @@ Page({
     wx.setKeepScreenOn && wx.setKeepScreenOn({ keepScreenOn: false });
   },
   _realTick(loc) {
-    if (this._blocked()) return;
-    const p = { lat: loc.latitude, lng: loc.longitude };
-    if (loc.accuracy != null && loc.accuracy > 80) return;
-    const prev = this._player;
-    const d = prev ? distM(prev, p) : 999;
-    if (prev && d < 3) return;
-    if (prev && d > 120) { this._player = p; return; }
-    this._player = p;
-    if (prev) { this._dist = (this._dist || 0) + d; this._track.push({ ...p }); }
+    if (!this._realOn || this._blocked()) return;
+    const accepted = acceptRoamLocation(loc, this._realAnchor, Date.now());
+    if (!accepted) return;
+    const prev = this._realAnchor;
+    const p = accepted.point;
+    this._realAnchor = p; this._player = p;
+    this._dist = (this._dist || 0) + accepted.distance;
+    this._track.push({ lat: p.lat, lng: p.lng });
     const last = this._reveals[this._reveals.length - 1];
     if (!last || distM(last, p) > 15) this._addReveal(p);
     this._applyMovePatch(p, prev);

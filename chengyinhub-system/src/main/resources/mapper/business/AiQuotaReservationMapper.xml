@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.AiQuotaReservationMapper">
+  <resultMap id="Record" type="com.chengyinhub.business.domain.AiQuotaReservationRecord">
+    <result property="id" column="id"/>
+    <result property="memberId" column="member_id"/>
+    <result property="bizType" column="biz_type"/>
+    <result property="pool" column="pool"/>
+    <result property="originalDay" column="original_day"/>
+    <result property="counterKey" column="counter_key"/>
+    <result property="nonce" column="nonce"/>
+    <result property="receiptKey" column="receipt_key"/>
+    <result property="generation" column="generation"/>
+    <result property="usedAfterReserve" column="used_after_reserve"/>
+    <result property="state" column="state"/>
+    <result property="stage" column="stage"/>
+    <result property="decisionReason" column="decision_reason"/>
+    <result property="requestLeaseToken" column="request_lease_token"/>
+    <result property="requestLeaseUntil" column="request_lease_until"/>
+    <result property="ownerToken" column="owner_token"/>
+    <result property="fenceVersion" column="fence_version"/>
+    <result property="claimUntil" column="claim_until"/>
+    <result property="nextAttemptAt" column="next_attempt_at"/>
+    <result property="attemptCount" column="attempt_count"/>
+    <result property="lastErrorCode" column="last_error_code"/>
+  </resultMap>
+  <insert id="insertPrepared" useGeneratedKeys="true" keyProperty="id">
+    insert into ai_quota_reservation (member_id,biz_type,pool,original_day,counter_key,nonce,receipt_key,
+      state,stage,request_lease_token,request_lease_until,fence_version,attempt_count,next_attempt_at,created_at,updated_at)
+    values (#{memberId},#{bizType},#{pool},#{originalDay},#{counterKey},#{nonce},#{receiptKey},
+      'PREPARED','PRE_RESERVE',#{requestLeaseToken},date_add(now(3),interval 120 second),0,0,now(3),now(3),now(3))
+  </insert>
+  <select id="selectByReceipt" resultMap="Record">select * from ai_quota_reservation where receipt_key=#{receipt}</select>
+  <select id="selectById" resultMap="Record">select * from ai_quota_reservation where id=#{id}</select>
+  <update id="recordReserved">
+    update ai_quota_reservation set generation=#{generation},used_after_reserve=#{used},state='RESERVED',
+      request_lease_until=date_add(now(3),interval 120 second),updated_at=now(3)
+    where receipt_key=#{receipt} and state='PREPARED' and owner_token is null and request_lease_until &gt; now(3)
+  </update>
+  <update id="advanceStage">
+    update ai_quota_reservation set stage=#{stage},request_lease_until=date_add(now(3),interval 120 second),updated_at=now(3)
+    where receipt_key=#{receipt} and state='RESERVED' and owner_token is null and request_lease_until &gt; now(3)
+  </update>
+  <update id="recordOutcome">
+    update ai_quota_reservation set state=#{state},stage='RESULT_CLASSIFIED',decision_reason=#{reason},
+      next_attempt_at=now(3),updated_at=now(3),completed_at=case when #{state}='RETAINED' then now(3) else null end
+    where receipt_key=#{receipt} and state in ('PREPARED','RESERVED') and owner_token is null
+      and request_lease_until &gt; now(3)
+  </update>
+  <select id="selectDue" resultMap="Record">
+    select * from ai_quota_reservation
+    where state in ('PREPARED','RESERVED','REFUND_DUE') and next_attempt_at &lt;= now(3)
+      and (owner_token is null or claim_until &lt;= now(3))
+      and (state='REFUND_DUE' or request_lease_until &lt;= now(3))
+    order by next_attempt_at,id limit #{limit}
+  </select>
+  <update id="claim">
+    update ai_quota_reservation set owner_token=#{owner},fence_version=fence_version+1,
+      claim_until=date_add(now(3),interval 60 second),attempt_count=attempt_count+1,updated_at=now(3)
+    where id=#{id} and fence_version=#{fence} and state in ('PREPARED','RESERVED','REFUND_DUE')
+      and (owner_token is null or claim_until &lt;= now(3))
+      and (state='REFUND_DUE' or request_lease_until &lt;= now(3))
+      and next_attempt_at &lt;= now(3)
+  </update>
+  <update id="complete">
+    update ai_quota_reservation set state=#{state},last_error_code=#{error},owner_token=null,claim_until=null,
+      completed_at=now(3),updated_at=now(3)
+    where id=#{id} and owner_token=#{owner} and fence_version=#{fence} and claim_until &gt; now(3)
+  </update>
+  <update id="retry">
+    update ai_quota_reservation set last_error_code=#{error},owner_token=null,claim_until=null,
+      next_attempt_at=date_add(now(3),interval 60 second),updated_at=now(3)
+    where id=#{id} and owner_token=#{owner} and fence_version=#{fence} and claim_until &gt; now(3)
+  </update>
+</mapper>

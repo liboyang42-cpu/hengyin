@@ -55,13 +55,21 @@ class RoamSessionWriteMybatisIntegrationTest {
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(source);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
-        factory.setMapperLocations(new ClassPathResource("mapper/business/RoamMapper.xml"));
+        factory.setMapperLocations(new ClassPathResource("mapper/business/RoamMapper.xml"),
+                new ClassPathResource("mapper/business/RoamSessionRecordMapper.xml"),
+                new ClassPathResource("mapper/business/MemberGrowthMapper.xml"));
         sql = new SqlSessionTemplate(factory.getObject());
+        db.execute("CREATE TABLE ums_member(id BIGINT PRIMARY KEY) ENGINE=InnoDB");
+        db.update("INSERT INTO ums_member(id) VALUES(77),(88)");
         db.execute("CREATE TABLE roam_session(id BIGINT PRIMARY KEY AUTO_INCREMENT, member_id BIGINT, started_at DATETIME,"
                 + "finished_at DATETIME, distance_m INT, tiles_revealed INT, pois_found INT, xp_awarded INT, status INT,"
                 + "recall_sent_at DATETIME, recall_attempts INT, recall_last_attempt_at DATETIME, create_time DATETIME) ENGINE=InnoDB");
         db.execute(new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
                 "sql/migration_roam_session_recovery_20260913.sql")), java.nio.charset.StandardCharsets.UTF_8));
+        db.execute(new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
+                "sql/migration_20261013_roam_session_record_archive.sql")), java.nio.charset.StandardCharsets.UTF_8));
+        db.execute("CREATE TABLE member_growth(id BIGINT PRIMARY KEY AUTO_INCREMENT, member_id BIGINT UNIQUE, level_no INT,"
+                + "exp_value INT, last_active_time DATETIME, create_time DATETIME, update_time DATETIME) ENGINE=InnoDB");
         db.execute("CREATE TABLE roam_fog_tile(id BIGINT PRIMARY KEY AUTO_INCREMENT, member_id BIGINT, session_id BIGINT,"
                 + "geohash7 VARCHAR(12), revealed_at DATETIME, UNIQUE KEY(member_id,geohash7)) ENGINE=InnoDB");
         db.execute("CREATE TABLE roam_poi_found(id BIGINT PRIMARY KEY AUTO_INCREMENT, member_id BIGINT, poi_id BIGINT,"
@@ -79,6 +87,8 @@ class RoamSessionWriteMybatisIntegrationTest {
     @AfterAll void cleanup() { if (database != null && admin != null) admin.execute("DROP DATABASE " + database); }
 
     @BeforeEach void setup() {
+        db.update("DELETE FROM roam_session_record_archive");
+        db.update("DELETE FROM member_growth");
         db.update("DELETE FROM roam_fog_tile");
         db.update("DELETE FROM roam_poi_found");
         db.update("DELETE FROM roam_shop_visit");
@@ -106,6 +116,7 @@ class RoamSessionWriteMybatisIntegrationTest {
                 new com.chengyinhub.business.service.support.RoamRecoveryService(mapper));
         com.chengyinhub.business.service.impl.RoamSessionWriteService writer = new com.chengyinhub.business.service.impl.RoamSessionWriteService();
         ReflectionTestUtils.setField(writer, "roamMapper", mapper);
+        ReflectionTestUtils.setField(writer, "recordMapper", sql.getMapper(com.chengyinhub.business.mapper.RoamSessionRecordMapper.class));
         ProxyFactory writerProxy = new ProxyFactory(writer);
         writerProxy.addAdvice(new TransactionInterceptor(transactions, new AnnotationTransactionAttributeSource()));
         ReflectionTestUtils.setField(target, "roamSessionWriteService", writerProxy.getProxy());
@@ -130,6 +141,50 @@ class RoamSessionWriteMybatisIntegrationTest {
                 com.chengyinhub.business.service.IRewardDropService.SCENE_ROAM_MERCHANT_POI, 20L)).thenReturn(drop);
         success(assertDoesNotThrow(() -> owner.discoverPoi("9", 1L, 31D, 121D)));
         assertEquals(1, db.queryForObject("SELECT count(*) FROM roam_poi_found WHERE session_id=9", Integer.class));
+    }
+
+    @Test void finishedArchiveIsIdempotentAndPreservesIndependentSettlementReadback() throws Exception {
+        success(owner.reveal("9", "wtw3sjq"));
+        success(owner.finish("9", "", 120));
+        db.update("UPDATE roam_session SET started_at=FROM_UNIXTIME(1), finished_at=FROM_UNIXTIME(3) WHERE id=9");
+        java.util.Map<String, Object> before = db.queryForMap("SELECT * FROM roam_session WHERE id=9");
+        String records = "[{\"tile\":\"wtw3sjr\",\"collectedAt\":2000}]";
+        ExecutorService workers = Executors.newFixedThreadPool(2);
+        try {
+            Future<AjaxResult> first = workers.submit(() -> owner.archiveRecords("9", null, records));
+            Future<AjaxResult> second = workers.submit(() -> owner.archiveRecords("9", null, records));
+            success(first.get(10, TimeUnit.SECONDS)); success(second.get(10, TimeUnit.SECONDS));
+        } finally { workers.shutdownNow(); }
+        assertEquals(before, db.queryForMap("SELECT * FROM roam_session WHERE id=9"));
+        assertEquals(1, db.queryForObject("SELECT count(*) FROM roam_session_record_archive WHERE session_id=9 AND member_id=77", Integer.class));
+        assertEquals(1, db.queryForObject("SELECT count(*) FROM roam_fog_tile WHERE member_id=77", Integer.class));
+        assertEquals("CLIENT_REPORTED", db.queryForObject("SELECT evidence_type FROM roam_session_record_archive", String.class));
+        verify(growth, times(1)).addExp(77L, 1, "城市漫游");
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class, () -> stranger.archiveRecords("9", null, records));
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class, () -> owner.archiveRecords("999", null, records));
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class, () -> owner.archiveRecords("9", null,
+                "[{\"tile\":\"wtw3sjt\",\"collectedAt\":2000},{\"tile\":\"wtw3sjv\",\"collectedAt\":3001}]"));
+        assertEquals(1, db.queryForObject("SELECT count(*) FROM roam_session_record_archive", Integer.class));
+    }
+
+    @Test void badgeFailureRollsBackRealGrowthAndOriginalFinishThenRetryAwardsOnce() throws Exception {
+        com.chengyinhub.business.service.impl.GrowthServiceImpl realGrowth = new com.chengyinhub.business.service.impl.GrowthServiceImpl();
+        ReflectionTestUtils.setField(realGrowth, "memberGrowthMapper", sql.getMapper(com.chengyinhub.business.mapper.MemberGrowthMapper.class));
+        doAnswer(call -> realGrowth.addExp(call.getArgument(0), call.getArgument(1), call.getArgument(2)))
+                .when(growth).addExp(anyLong(), anyInt(), anyString());
+        success(owner.reveal("9", "wtw3sjq"));
+        doReturn(100).when(mapper).countTilesEverByMember(77L);
+        PlayerBadgeMapper badgeWriter = mock(PlayerBadgeMapper.class);
+        doThrow(new IllegalStateException("injected badge failure")).when(badgeWriter).insertPlayerBadge(any());
+        ReflectionTestUtils.setField(org.springframework.test.util.AopTestUtils.getTargetObject(owner), "playerBadgeMapper", badgeWriter);
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class, () -> owner.finish("9", "", 120));
+        assertEquals(0, db.queryForObject("SELECT status FROM roam_session WHERE id=9", Integer.class));
+        assertEquals(0, db.queryForObject("SELECT count(*) FROM member_growth WHERE member_id=77", Integer.class));
+        doReturn(1).when(badgeWriter).insertPlayerBadge(any());
+        success(owner.finish("9", "", 120));
+        rejected(owner.finish("9", "", 120));
+        assertEquals(1, db.queryForObject("SELECT exp_value FROM member_growth WHERE member_id=77", Integer.class));
+        assertEquals(1, db.queryForObject("SELECT status FROM roam_session WHERE id=9", Integer.class));
     }
 
     enum Action { TILE, POI, SHOP }

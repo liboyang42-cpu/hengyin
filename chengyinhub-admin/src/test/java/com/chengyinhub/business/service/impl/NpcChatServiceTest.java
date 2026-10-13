@@ -317,7 +317,7 @@ class NpcChatServiceTest {
         verify(scheduledExecutorService).scheduleAtFixedRate(heartbeat.capture(), eq(5000L), eq(5000L),
                 eq(TimeUnit.MILLISECONDS));
         heartbeat.getValue().run();
-        verify(npcChatRequestMapper).renewLease(eq(USER_ONE), eq(requestId("lease-heartbeat")), anyString(),
+        verify(npcChatRequestMapper, times(2)).renewLease(eq(USER_ONE), eq(requestId("lease-heartbeat")), anyString(),
                 any(Date.class));
         verify(leaseHeartbeat).cancel(false);
     }
@@ -369,4 +369,53 @@ class NpcChatServiceTest {
     private String requestId(String label) {
         return String.format("00000000-0000-4000-8000-%012d", Math.abs((long) label.hashCode()));
     }
+
+    @Test
+    void typedInputBlockIsNonRetryableAndNeverSynthesizesAudio() {
+        when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString()))
+                .thenThrow(new AiServiceException(AiServiceException.Reason.INPUT_BLOCKED, "blocked"));
+        NpcChatResp response = service.chat(req("blocked-1", "hi"), USER_ONE);
+        assertEquals("REJECTED", response.getOutcomeStatus());
+        assertEquals("INPUT_BLOCK", response.getErrorCode());
+        assertEquals(false, response.isRetryable());
+        ArgumentCaptor<NpcChatRequest> terminal = ArgumentCaptor.forClass(NpcChatRequest.class);
+        verify(npcChatRequestMapper).finishIfLeaseOwned(terminal.capture());
+        assertEquals("BLOCKED", terminal.getValue().getSafetyDecision());
+        org.mockito.Mockito.verifyNoInteractions(voiceCloneClient);
+    }
+
+    @Test
+    void unknownReviewDecisionKeepsOriginalRetryableFailure() {
+        when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString()))
+                .thenThrow(new AiServiceException(AiServiceException.Reason.UNKNOWN, "review"));
+        NpcChatResp response = service.chat(req("review-1", "hi"), USER_ONE);
+        assertEquals("FAILED", response.getOutcomeStatus());
+        assertEquals("AI_UNAVAILABLE", response.getErrorCode());
+        assertTrue(response.isRetryable());
+        ArgumentCaptor<NpcChatRequest> terminal = ArgumentCaptor.forClass(NpcChatRequest.class);
+        verify(npcChatRequestMapper).finishIfLeaseOwned(terminal.capture());
+        assertEquals("NOT_RUN", terminal.getValue().getSafetyDecision());
+        org.mockito.Mockito.verifyNoInteractions(voiceCloneClient);
+    }
+    @Test
+    void leaseLostBeforeProviderDoesNotStartGateway() {
+        when(npcChatRequestMapper.renewLease(anyLong(),anyString(),anyString(),any(Date.class))).thenReturn(0);
+        NpcChatResp result=service.chat(req("lost-before-provider","hi"),USER_ONE);
+        assertEquals("REQUEST_STATE_UNAVAILABLE",result.getErrorCode());
+        verify(aiGatewayService,never()).generate(anyLong(),anyString(),anyString(),anyString(),anyString());
+        verify(npcChatRequestMapper,never()).finishIfLeaseOwned(any(NpcChatRequest.class));
+        verify(leaseHeartbeat).cancel(false);
+    }
+
+    @Test
+    void oldWorkerCannotReturnOrSynthesizeItsUnsavedResult() {
+        when(aiGatewayService.generate(anyLong(),anyString(),anyString(),anyString(),anyString()))
+                .thenReturn(new AiGatewayResult("trace","旧答案","real",0));
+        when(npcChatRequestMapper.finishIfLeaseOwned(any(NpcChatRequest.class))).thenReturn(0);
+        NpcChatResp result=service.chat(req("lost-after-provider","hi"),USER_ONE);
+        assertEquals("REQUEST_STATE_UNAVAILABLE",result.getErrorCode());
+        assertTrue(!"旧答案".equals(result.getSafeText()));
+        verifyNoInteractions(voiceCloneClient);
+    }
+
 }
