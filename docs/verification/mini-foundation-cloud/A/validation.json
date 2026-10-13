@@ -1,0 +1,44 @@
+{
+  "node": {
+    "executed": true,
+    "tests": 47,
+    "pass": 47,
+    "fail": 0,
+    "command": "node --test chengyinhub-xcx/tests/unit/{registration-payment-verifier,baoming-page-reliability,baoming-load-state,club-waitlist-checkout,baoming-submit-inline-error}.test.js"
+  },
+  "java": {
+    "compiled": false,
+    "junitExecuted": false
+  },
+  "database": {
+    "mysqlExecuted": false,
+    "redisExecuted": false
+  },
+  "xmlSyntax": true,
+  "jsSyntax": true,
+  "diffCheck": true,
+  "publicScan": {
+    "diffLeaks": 0,
+    "baselineFullTreeLeaks": 4,
+    "note": "既有夹具4条由root记录；无新allowlist。"
+  },
+  "vps": "TCP授权未应用；HTTP80非SSH22证据",
+  "ci": "未执行，handoff base无自动匹配且dispatch通路未具备",
+  "production": "未迁移、未合并、未部署、未上传微信",
+  "sourceCommit": "8de836cc6fd49e759b802b8b02ca8671e5c68c0b",
+  "migrationSafety": {
+    "executed": true,
+    "passed": true,
+    "tokenizerTests": 125,
+    "ledgerTests": 41,
+    "newSqlSplitter": true,
+    "taskRegistration": true,
+    "blocker": "共享ci/migration-dependencies.json缺新coupon_source_grant明确dependency条目，待单一owner协调；不得将门禁退出1称绿",
+    "blockerResolvedBy": "协调者单一owner先导4db987a原样挑入173b869，仅必要声明元数据；未改workflow/gate",
+    "originalFailurePreserved": "migration-safety-results.txt",
+    "finalOutput": "migration-safety-final-results.txt",
+    "prDeclarationExecuted": true,
+    "prDeclarationResult": "确切PR8正文包含影响分类③，单独pr-declare退出0；输出pr-migration-declaration-results.txt"
+  },
+  "metadataCommit": "173b869"
+}

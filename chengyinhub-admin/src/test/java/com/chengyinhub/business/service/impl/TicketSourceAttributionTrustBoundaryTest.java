@@ -172,6 +172,8 @@ class TicketSourceAttributionTrustBoundaryTest {
             ReflectionTestUtils.setField(service, "umsMemberMapper", memberMapper);
             ReflectionTestUtils.setField(service, "omsTicketMapper", ticketMapper);
             ReflectionTestUtils.setField(service, "cmsRegistrationMapper", registrationMapper);
+        ReflectionTestUtils.setField(service, "registrationSignupNotificationService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.RegistrationSignupNotificationService.class));
             ReflectionTestUtils.setField(service, "umsMemberPointsDetailMapper",
                     mock(UmsMemberPointsDetailMapper.class));
             ReflectionTestUtils.setField(service, "perkLedgerService", mock(IPerkLedgerService.class));

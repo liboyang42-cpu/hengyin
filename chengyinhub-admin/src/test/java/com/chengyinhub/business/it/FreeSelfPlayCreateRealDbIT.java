@@ -35,6 +35,8 @@ import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterAll;
+import com.chengyinhub.business.service.MysqlIntegrationTestConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.mybatis.spring.SqlSessionTemplate;
@@ -89,7 +91,9 @@ import static org.mockito.Mockito.when;
 class FreeSelfPlayCreateRealDbIT {
 
     private static final String TEST_PII_KEY = Base64.getEncoder().encodeToString(new byte[32]);
-    private static final String DB_NAME = "chengyin_run41_selfplay_it";
+    private static final String DB_NAME = "chengyin_a_selfplay_" + java.util.UUID.randomUUID().toString().replace("-", "");
+    private static final MysqlIntegrationTestConfig MYSQL = MysqlIntegrationTestConfig.fromEnvironment("a_selfplay");
+    private static boolean createdDatabase;
 
     /** 生产事实（990059 / 100092），不随 fixture 漂移。 */
     private static final long TOPIC_ID = 990059L;
@@ -101,15 +105,18 @@ class FreeSelfPlayCreateRealDbIT {
     @BeforeAll
     static void createSchemaAndWireProductionShape() throws Exception {
         new PiiCryptoService(TEST_PII_KEY, "run41-it-hmac").register();
-        DataSource admin = dataSource("jdbc:mysql://127.0.0.1:3306/mysql"
-                + "?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=LOCAL");
-        try (Connection c = admin.getConnection(); Statement s = c.createStatement()) {
-            // 一类一库、每次从零建 —— 沿用 MybatisItDatabase 的口径,不接受环境残留。
-            s.execute("DROP DATABASE IF EXISTS " + DB_NAME);
-            s.execute("CREATE DATABASE " + DB_NAME + " CHARACTER SET utf8mb4");
+        for (String key : new String[]{"CHENGYIN_TEST_MYSQL_HOST", "CHENGYIN_TEST_MYSQL_PORT", "CHENGYIN_TEST_MYSQL_USER"}) {
+            if (System.getenv(key) == null || System.getenv(key).trim().isEmpty()) throw new IllegalStateException("missing test target: " + key);
         }
-        DataSource ds = dataSource("jdbc:mysql://127.0.0.1:3306/" + DB_NAME
-                + "?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=LOCAL");
+        if (!MYSQL.adminUrl().startsWith("jdbc:mysql://127.0.0.1:") && !MYSQL.adminUrl().startsWith("jdbc:mysql://localhost:")) {
+            throw new IllegalStateException("scratch localhost only");
+        }
+        DataSource admin = dataSource(MYSQL.adminUrl());
+        try (Connection c = admin.getConnection(); Statement s = c.createStatement()) {
+            s.execute("CREATE DATABASE " + DB_NAME + " CHARACTER SET utf8mb4");
+            createdDatabase = true;
+        }
+        DataSource ds = dataSource(MYSQL.databaseUrl().replace("/" + MYSQL.databaseName() + "?", "/" + DB_NAME + "?"));
         try (Connection db = ds.getConnection()) {
             ScriptUtils.executeSqlScript(db, new org.springframework.core.io.ClassPathResource(
                     "it-schema/run41-prod-ddl.sql"));
@@ -134,6 +141,8 @@ class FreeSelfPlayCreateRealDbIT {
         // ── 建单事务本体：与生产 Spring 装配同构（真 mapper、真门禁、真策略）──
         CmsRegistrationServiceImpl target = new CmsRegistrationServiceImpl();
         ReflectionTestUtils.setField(target, "cmsRegistrationMapper", registrationMapper);
+        ReflectionTestUtils.setField(target, "registrationSignupNotificationService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.RegistrationSignupNotificationService.class));
         ReflectionTestUtils.setField(target, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(target, "omsTicketMapper", template.getMapper(OmsTicketMapper.class));
         ReflectionTestUtils.setField(target, "umsMemberMapper", template.getMapper(UmsMemberMapper.class));
@@ -234,12 +243,21 @@ class FreeSelfPlayCreateRealDbIT {
         return template.getMapper(CmsRegistrationMapper.class).selectCmsRegistrationList(query);
     }
 
+    @AfterAll
+    static void dropOnlyCreatedScratchSchema() throws Exception {
+        if (!createdDatabase) return;
+        try (Connection c = dataSource(MYSQL.adminUrl()).getConnection(); Statement s = c.createStatement()) {
+            s.execute("DROP DATABASE " + DB_NAME);
+            createdDatabase = false;
+        }
+    }
+
     private static DataSource dataSource(String url) {
         DriverManagerDataSource ds = new DriverManagerDataSource();
         ds.setDriverClassName("com.mysql.cj.jdbc.Driver");
         ds.setUrl(url);
-        ds.setUsername("root");
-        ds.setPassword("");
+        ds.setUsername(MYSQL.user());
+        ds.setPassword(MYSQL.password());
         return ds;
     }
 

@@ -1,0 +1,135 @@
+{
+  "scope": "A maintenance contributor precise item ledger; parent must reconcile own implementations",
+  "runtimePassed": false,
+  "javaRun": "not_run",
+  "databaseRun": "not_run",
+  "startupDependency": "B ISystemNotificationIntentService implementation + B notification migration required; A interface alone provides compilation only, no no-op bean fallback",
+  "items": [
+    {
+      "id": "M0049",
+      "title": "候补维护故障隔离",
+      "status": "parent-owned",
+      "doneScope": "本子包不编辑候补源；parent处理原扫描公平",
+      "remainingCodeOrVerification": "最老积压/活性/库存真实回读未验",
+      "itemComplete": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0061",
+      "title": "已付未出票补偿",
+      "status": "partial-code",
+      "doneScope": "paid无码修复MAX+游标+跨轮限额；Signup持久意图由首次建单触发、B后投递",
+      "remainingCodeOrVerification": "二维码/权益/结算/通知统一交付状态及超过原7天补码窗口的人工待办尚缺；不是完整出票恢复",
+      "itemComplete": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0066",
+      "title": "退款对账",
+      "status": "partial-code",
+      "doneScope": "RefundReconcileTask固定MAX/id页/跨轮公平/单项异常隔离，保RF原号/租约/原分类",
+      "remainingCodeOrVerification": "持续失败最老年龄及告警真实投递未闭合；所有来源渠道回读未跑",
+      "itemComplete": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0053",
+      "title": "券领取核销幂等",
+      "status": "partial-code",
+      "doneScope": "真实reward_drop原log+type3原模板/成员内容校验；新原来源意图/领取库存/history/回执同tx；回放同history",
+      "remainingCodeOrVerification": "legacy无history关联不盲补；其他原发券宿主未统一source入口；核销原CAS/审计仅核源码，MySQL并发未跑",
+      "itemComplete": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0153",
+      "title": "订阅权益到期",
+      "status": "partial-code",
+      "doneScope": "MerchantSubscriptionMapper统一start<=now/end>now；MerchantCommerce有效投影使用同查询，续订接受MySQLrows2",
+      "remainingCodeOrVerification": "cityNode审批普通count的RR旧快照已向C提交当前读合同；premium仅找到capability投影，无真实新增扣额消费；到期已有资源处置不猜政策；时间/额度MySQL未跑",
+      "itemComplete": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0072",
+      "title": "多方分账规则快照",
+      "status": "partial-audit",
+      "doneScope": "核recordPaidRegistration使用原FeePlatformRate；MerchantPayable.reverse使用原计提perHeadFee/amount；批次插入/绑定数/总额回写补确定漏写guard",
+      "remainingCodeOrVerification": "收款人/来源/规则版本全资金路径覆盖矩阵仍缺；券current amount/rule冻结时点需真实现合同不能擅改",
+      "itemComplete": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0073",
+      "title": "待结算可提现分离",
+      "status": "partial-code",
+      "doneScope": "确认系统2纯账本不入余额，系统1资金推进保留；Settlement金额回填guard；Cash原账prepare及明确FAIL回补同tx原状态，原冻结可提现扣款保留",
+      "remainingCodeOrVerification": "系统1/系统2/可提现统一差异投影及差异待办未实现；全资金入账入口独立守恒回读未跑",
+      "itemComplete": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0076",
+      "title": "对公凭证核对",
+      "status": "audited-not-complete",
+      "doneScope": "核MerchantPayableBatch现CAS确认/付款/凭证号仍人工声明，不称真实银行到账",
+      "remainingCodeOrVerification": "原银行独立交易匹配消费者未见，不能编造；现凭证归属/重复双人完整矩阵未跑；新银行连接/核验交互后置",
+      "itemComplete": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0085",
+      "title": "合作退出补偿",
+      "status": "audited-not-complete",
+      "doneScope": "本子包不新增运行中替换/退款/补偿额度；Coop原账合同保留，parent核原邀请/保证金",
+      "remainingCodeOrVerification": "退出阶段/供给/已售订单/运行中补偿及拒绝后处理人完整矩阵尚缺；不能以当前拒绝代码称闭合",
+      "itemComplete": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0136",
+      "title": "操作审计",
+      "status": "partial-audit",
+      "doneScope": "核coupon CAS+审计同tx，rollback保原审计阻断；Cash终态原auditBy/time同回补事务；Signup源身份eventKey持久关联",
+      "remainingCodeOrVerification": "支付/退出/审核/核销成功拒绝UNKNOWN覆盖矩阵及敏感读取审计仍缺；共用reason/requestId投影由B负责；真实身份审计回读未跑",
+      "itemComplete": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0035",
+      "title": "多票种共享容量",
+      "status": "parent-owned-partial",
+      "doneScope": "本子包不改票种容量，parent修原总容量/库存并发；保持已有quota/票库存/offer预留",
+      "remainingCodeOrVerification": "普通活动新增共池政策未确认，不擅造上限；既有资源真实竞争/释放未跑",
+      "itemComplete": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0043",
+      "title": "同用户购票限额",
+      "status": "parent-owned-partial",
+      "doneScope": "探索一期一票/selfplay同原单及调用由parent；本子包接首次selfplay通知不重造已存在pending事件",
+      "remainingCodeOrVerification": "普通多票/代买统一新限额未知不猜；原限额并发/当前读未跑",
+      "itemComplete": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0055",
+      "title": "支付重复处理",
+      "status": "parent-owned",
+      "doneScope": "parent负责inbox处理权/原事务状态入口，本子包未声明完成",
+      "remainingCodeOrVerification": "新同事件重复/原业务副作用真实回读未跑",
+      "itemComplete": false,
+      "fullAcceptance": false
+    },
+    {
+      "id": "M0056",
+      "title": "支付乱序",
+      "status": "parent-owned",
+      "doneScope": "parent负责现态inbox/CAS乱序，子包不新增迟到款资金政策",
+      "remainingCodeOrVerification": "迟到冲突持久处理结果与渠道真态矩阵需parent最终列明，未跑",
+      "itemComplete": false,
+      "fullAcceptance": false
+    }
+  ]
+}

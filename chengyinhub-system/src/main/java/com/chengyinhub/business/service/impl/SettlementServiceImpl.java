@@ -43,6 +43,9 @@ public class SettlementServiceImpl implements ISettlementService {
         validateGenerateRequest(request);
         SettlementBatch existing = settlementBatchMapper.selectByIdempotencyKey(request.getIdempotencyKey());
         if (existing != null) {
+            if (!request.getMerchantId().equals(existing.getMerchantId())) {
+                throw new IllegalArgumentException("结算幂等键已属于其他商家");
+            }
             return existing.getId();
         }
 
@@ -62,7 +65,9 @@ public class SettlementServiceImpl implements ISettlementService {
         batch.setSuccessCount(0L);
         batch.setFailedCount(0L);
         batch.setStatus(SettlementBatchState.PENDING.getCode());
-        settlementBatchMapper.insertSettlementBatch(batch);
+        if (settlementBatchMapper.insertSettlementBatch(batch) != 1 || batch.getId() == null) {
+            throw new IllegalStateException("结算批次占位写入失败");
+        }
 
         int bound = settlementDetailMapper.bindBatch(batch.getId(), request.getMerchantId());
         if (bound <= 0) {
@@ -72,11 +77,16 @@ public class SettlementServiceImpl implements ISettlementService {
         SettlementDetail boundQuery = new SettlementDetail();
         boundQuery.setBatchId(batch.getId());
         List<SettlementDetail> boundDetails = settlementDetailMapper.selectDetailList(boundQuery);
+        if (boundDetails == null || boundDetails.size() != bound) {
+            throw new IllegalStateException("结算批次绑定条数与回读不一致");
+        }
         BigDecimal totalAmount = BigDecimal.ZERO;
         for (SettlementDetail detail : boundDetails) {
             totalAmount = totalAmount.add(defaultZero(detail.getSettlementAmount()));
         }
-        settlementBatchMapper.updateBatchTotals(batch.getId(), totalAmount, (long) boundDetails.size());
+        if (settlementBatchMapper.updateBatchTotals(batch.getId(), totalAmount, (long) boundDetails.size()) != 1) {
+            throw new IllegalStateException("结算批次金额回填失败");
+        }
         return batch.getId();
     }
 
