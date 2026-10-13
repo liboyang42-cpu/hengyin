@@ -18,7 +18,7 @@ test('cy-btn 根节点必须接入 __onTap，disabled/loading 守卫不能成为
 function loadComponent(data) {
   let definition
   const source = fs.readFileSync(path.join(ROOT, 'components/cy/btn/index.js'), 'utf8')
-  vm.runInNewContext(source, { Component(value) { definition = value } }, { filename: 'components/cy/btn/index.js' })
+  vm.runInNewContext(source, { require(name) { assert.match(name, /behaviors\/reduced-motion\.js$/); return {} }, Component(value) { definition = value } }, { filename: 'components/cy/btn/index.js' })
   const events = []
   const component = {
     data: { _v: 'primary', loading: false, ...(data || {}) },

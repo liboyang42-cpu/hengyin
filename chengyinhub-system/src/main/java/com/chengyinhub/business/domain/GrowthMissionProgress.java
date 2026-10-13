@@ -35,4 +35,9 @@ public class GrowthMissionProgress extends BaseEntity {
     public void setCompleteCount(Integer completeCount) { this.completeCount = completeCount; }
     public Integer getRewardExp() { return rewardExp; }
     public void setRewardExp(Integer rewardExp) { this.rewardExp = rewardExp; }
+
+    /** F0395:这条经验记录的来源。只有挂在报名核销事实上的才是已核验;其余为自报完成。 */
+    public String getEvidenceSource() {
+        return "registration".equals(bizType) && bizId != null && bizId > 0 ? "verified_store" : "self_reported";
+    }
 }

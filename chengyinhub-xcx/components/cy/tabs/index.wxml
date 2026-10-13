@@ -14,7 +14,7 @@
     aria-label="{{item.label}}"
    hover-class="cy-tabs__item--press" hover-stay-time="80"><view class="cy-tabs__label">{{item.label}}</view><view wx:if="{{item.badge}}" class="cy-tabs__badge"><cy-badge type="count" count="{{item.badge}}" /></view></view>
 </view>
-<scroll-view wx:elif="{{variant === 'chip'}}" class="cy-tabs cy-tabs--chip {{wide ? 'cy-tabs--wide' : ''}} {{size ? 'cy-tabs--' + size : ''}} {{sticky ? 'cy-tabs--sticky' : ''}} {{plain ? 'cy-tabs--plain' : ''}} {{hairline ? '' : 'cy-tabs--noline'}}" scroll-x enhanced show-scrollbar="{{false}}">
+<scroll-view wx:elif="{{variant === 'chip'}}" class="cy-tabs cy-tabs--chip {{wide ? 'cy-tabs--wide' : ''}} {{size ? 'cy-tabs--' + size : ''}} {{sticky ? 'cy-tabs--sticky' : ''}} {{plain ? 'cy-tabs--plain' : ''}} {{hairline ? '' : 'cy-tabs--noline'}}" scroll-x enhanced show-scrollbar="{{false}}" aria-role="tablist">
   <view
     wx:for="{{tabs}}"
     wx:key="key"
@@ -23,12 +23,13 @@
     hover-class="cy-tabs__item--press"
     hover-stay-time="80"
     bindtap="onTab"
+    aria-role="tab" aria-selected="{{item.key === active}}" aria-label="{{item.label}}"
    hover-class="cy-tabs__item--press" hover-stay-time="80"><view class="cy-tabs__label">{{item.label}}</view><view wx:if="{{item.badge}}" class="cy-tabs__badge"><cy-badge type="count" count="{{item.badge}}" /></view></view>
 </scroll-view>
 <!-- fill:item 等宽铺满,但 item 带 min-width ⇒ tab 多到装不下时整条横向可滑,而不是把每个挤成两个字。
      结构比 wx:else 分支多一层 __track:scroll-view 自身不能当 flex 容器(它要负责滚动),
      等宽分配必须落在里面这层;__track 的 min-width:100% 保证 tab 少时仍然铺满整行(零回归)。 -->
-<scroll-view wx:elif="{{variant === 'fill'}}" class="cy-tabs cy-tabs--fill {{wide ? 'cy-tabs--wide' : ''}} {{size ? 'cy-tabs--' + size : ''}} {{sticky ? 'cy-tabs--sticky' : ''}} {{plain ? 'cy-tabs--plain' : ''}} {{hairline ? '' : 'cy-tabs--noline'}}" scroll-x enhanced show-scrollbar="{{false}}">
+<scroll-view wx:elif="{{variant === 'fill'}}" class="cy-tabs cy-tabs--fill {{wide ? 'cy-tabs--wide' : ''}} {{size ? 'cy-tabs--' + size : ''}} {{sticky ? 'cy-tabs--sticky' : ''}} {{plain ? 'cy-tabs--plain' : ''}} {{hairline ? '' : 'cy-tabs--noline'}}" scroll-x enhanced show-scrollbar="{{false}}" aria-role="tablist">
   <view class="cy-tabs__track">
     <view
       wx:for="{{tabs}}"
@@ -38,10 +39,11 @@
       hover-class="cy-tabs__item--press"
     hover-stay-time="80"
     bindtap="onTab"
+    aria-role="tab" aria-selected="{{item.key === active}}" aria-label="{{item.label}}"
     ><view class="cy-tabs__label">{{item.label}}</view><view wx:if="{{item.badge}}" class="cy-tabs__badge"><cy-badge type="count" count="{{item.badge}}" /></view></view>
   </view>
 </scroll-view>
-<view wx:else class="cy-tabs {{variant ? 'cy-tabs--' + variant : ''}} {{wide ? 'cy-tabs--wide' : ''}} {{size ? 'cy-tabs--' + size : ''}} {{sticky ? 'cy-tabs--sticky' : ''}} {{plain ? 'cy-tabs--plain' : ''}} {{hairline ? '' : 'cy-tabs--noline'}}">
+<view wx:else class="cy-tabs {{variant ? 'cy-tabs--' + variant : ''}} {{wide ? 'cy-tabs--wide' : ''}} {{size ? 'cy-tabs--' + size : ''}} {{sticky ? 'cy-tabs--sticky' : ''}} {{plain ? 'cy-tabs--plain' : ''}} {{hairline ? '' : 'cy-tabs--noline'}}" aria-role="tablist">
   <view
     wx:for="{{tabs}}"
     wx:key="key"
@@ -50,5 +52,6 @@
     hover-class="cy-tabs__item--press"
     hover-stay-time="80"
     bindtap="onTab"
+    aria-role="tab" aria-selected="{{item.key === active}}" aria-label="{{item.label}}"
    hover-class="cy-tabs__item--press" hover-stay-time="80"><view class="cy-tabs__label">{{item.label}}</view><view wx:if="{{item.badge}}" class="cy-tabs__badge"><cy-badge type="count" count="{{item.badge}}" /></view></view>
 </view>

@@ -47,6 +47,14 @@ class ShareSnapshotRunSessionMybatisIntegrationTest {
                 config.databaseUrl().replace("/" + config.databaseName() + "?", "/" + database + "?"), config.user(), config.password());
         db = new JdbcTemplate(source);
         db.execute(migration("migration_20260917_roam_share_snapshot.sql"));
+        // 2026-10-12 快照版本列:会话变量做幂等守卫,同一连接逐句执行;只按引号外的分号切句。
+        try (java.sql.Connection connection = source.getConnection();
+             java.sql.Statement statement = connection.createStatement()) {
+            for (String sql : migration("migration_20261012_roam_share_snapshot_version.sql")
+                    .replaceAll("(?m)^--.*$", "").split(";(?=(?:[^']*'[^']*')*[^']*$)")) {
+                if (!sql.trim().isEmpty()) statement.execute(sql);
+            }
+        }
         db.execute(migration("migration_20260917_player_run_session.sql"));
         db.execute("CREATE TABLE cms_topic(id BIGINT PRIMARY KEY, name VARCHAR(100), img_url VARCHAR(255), del_flag INT)");
         db.execute("CREATE TABLE cms_activity(id BIGINT PRIMARY KEY, topic_id BIGINT, name VARCHAR(100), img_url VARCHAR(255),"

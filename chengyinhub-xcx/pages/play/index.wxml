@@ -1,3 +1,4 @@
+<page-meta page-style="{{pageStyle}}" />
 <view class="play {{reducedMotion ? 'play--reduced-motion' : ''}} {{story.show ? 'play--scaled' : ''}}" style="--cy-psheet-max-h: calc(100vh - {{chrome.sheetTop}}px)">
   <cy-toast id="cy-toast" />
   <include src="theme-backpack.wxml" />
@@ -268,12 +269,17 @@
     <scroll-view class="chfull__scroll st-scroll" scroll-y enhanced bounces show-scrollbar="{{false}}"
                  bindscroll="onChapterScroll" scroll-into-view="{{chapterGameAnchor}}" scroll-with-animation>
       <view class="chfull__pad"></view>
+      <cy-inline-error wx:if="{{thoughtSyncNotice}}" title="{{thoughtSyncNotice}}" action="重试同步" bind:action="retryThoughtSync" />
       <!-- ⚠️ 外层 .chfull__para 每项一个,不能按类型拆成不同类名:measureChapter 用
            selectAll('.chfull__para') 按下标对齐 chapterParas,少一个就整屏焦点错位。 -->
       <view wx:for="{{chapterParas}}" wx:key="i" id="{{item.nodeId ? 'chapter-game-' + item.nodeId : 'chapter-block-' + item.i}}" class="chfull__para st-line {{item.kind !== 'text' ? 'chfull__para--wide' : ''}} {{item.in ? 'is-in' : ''}} {{item.dir === 'down' ? 'from-top' : ''}} {{item.odd ? 'odd' + item.odd : ''}} {{oddFlick === item.i ? 'is-flick' : ''}}"
             style="--d:{{item.d}}s">
         <image wx:if="{{item.kind === 'cover'}}" class="chfull__cover" src="{{item.url}}" mode="aspectFit" />
-        <image wx:elif="{{item.kind === 'image'}}" class="chfull__img" src="{{item.url}}" mode="widthFix" lazy-load="true" />
+        <view wx:elif="{{item.kind === 'image'}}">
+          <image wx:if="{{!item.mediaFailed}}" class="chfull__img" src="{{item.url}}" mode="widthFix" lazy-load="true" aria-label="{{item.altText || '故事图片，未提供文字替代'}}" data-i="{{item.i}}" binderror="onStoryImageError" />
+          <text class="chfull__media-text">{{item.altText || '这张图片尚未提供文字替代'}}</text>
+          <cy-inline-error wx:if="{{item.mediaFailed}}" title="图片暂时无法显示" sub="{{item.url ? '文字仍可阅读，可重试加载图片' : '图片暂不可用，请继续阅读文字'}}" action="{{item.url ? '重试' : ''}}" data-i="{{item.i}}" bind:action="retryStoryImage" />
+        </view>
         <!-- 相册(块类型 dream;2026-09-24 用户):故事流里一条圆角照片带,一直匀速往前滚,下面带镜面倒影;点一下打开白底全屏(下方 .album)。
              连续滚动用 swiper 线性缓动 + 时长等于间隔做,不加 keyframes(门禁只减不增)。
              ⚠️ 整块必须仍是一个 .chfull__para —— measureChapter 用 selectAll('.chfull__para') 按下标对齐 chapterParas。 -->
@@ -292,9 +298,13 @@
           </swiper>
           <text class="chfull__album-k">{{item.title || '相册'}} · {{item.images.length}} 张 · 点开看</text>
         </view>
-        <view wx:elif="{{item.kind === 'audio'}}" class="chfull__audio" data-i="{{item.i}}" bindtap="toggleChapterAudio"
-              aria-role="button" aria-label="{{audioNodeId === item.audioKey && audioPlaying ? '暂停本段音频' : '播放本段音频'}}" hover-class="cy-pressed" hover-stay-time="80">
-          <text class="chfull__audio-label">{{audioNodeId === item.audioKey && audioPlaying ? '暂停' : '播放这段音频'}}</text>
+        <view wx:elif="{{item.kind === 'audio'}}">
+          <view wx:if="{{item.url}}" class="chfull__audio" data-i="{{item.i}}" bindtap="toggleChapterAudio"
+                aria-role="button" aria-label="{{audioNodeId === item.audioKey && audioPlaying ? '暂停本段音频' : '播放或重试本段音频'}}" hover-class="cy-pressed" hover-stay-time="80">
+            <text class="chfull__audio-label">{{audioNodeId === item.audioKey ? (audioError ? '播放失败，点此重播' : (audioLoading ? '正在加载…' : (audioPlaying ? '暂停' : '继续播放'))) : '播放这段音频'}}</text>
+          </view>
+          <text class="chfull__media-text">{{item.altText || '这段音频尚未提供文字替代'}}</text>
+          <text class="chfull__media-text">{{item.url ? '切到后台会暂停，返回后点此继续；重新进入从本段开头播放。' : '音频暂不可用，请继续阅读文字。'}}</text>
         </view>
         <!-- 内嵌玩法(契约 §1.5):一块一个 .chfull__para(整块玩法都在这一层里,
              ⚠️ 里面再多元素也不进 measureChapter 的 selectAll 选择器,但外层少一个就整屏错位)。
@@ -756,6 +766,7 @@
     </view>
     <scroll-view class="st-scroll" scroll-y enhanced show-scrollbar="{{false}}" bindscroll="onStoryScroll">
       <view class="fx-story__pad"></view>
+      <cy-inline-error wx:if="{{thoughtSyncNotice}}" title="{{thoughtSyncNotice}}" action="重试同步" bind:action="retryThoughtSync" />
       <block wx:for="{{chapStory.lines}}" wx:key="id">
         <image wx:if="{{item.img}}" class="st-line st-line--img {{item.in ? 'is-in' : ''}} {{item.dir === 'down' ? 'from-top' : ''}}"
                style="--d:{{item.d}}s" src="{{img.first(item.img)}}" mode="aspectFill" />

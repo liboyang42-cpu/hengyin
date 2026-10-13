@@ -22,13 +22,49 @@ public class RoamShareSnapshotService {
 
     @Transactional
     public String publish(Long memberId, Long clientTs, String snapshotJson) {
+        Result r = publish(memberId, clientTs, snapshotJson, null);
+        return r == null ? null : r.token;
+    }
+
+    /**
+     * M0117:expectedVersion 为空 = 旧客户端语义(同足迹覆盖并 +1 版本);
+     * 非空 = 版本条件更新,当前版本不一致返回 conflict,不覆盖已发布快照。
+     * 行已被撤回(不存在)时带 expectedVersion 也算冲突:撤回后的旧编辑不能把链接复活。
+     */
+    @Transactional
+    public Result publish(Long memberId, Long clientTs, String snapshotJson, Integer expectedVersion) {
         if (memberMapper.lockMemberById(memberId) == null) return null;
+        if (expectedVersion != null) {
+            if (snapshotMapper.updateSnapshotIfVersion(memberId, clientTs, snapshotJson, expectedVersion) != 1) {
+                return Result.conflict(snapshotMapper.selectVersionByMemberTs(memberId, clientTs));
+            }
+            return new Result(snapshotMapper.selectTokenByMemberTs(memberId, clientTs),
+                    snapshotMapper.selectVersionByMemberTs(memberId, clientTs), false);
+        }
         if (snapshotMapper.selectTokenByMemberTs(memberId, clientTs) == null) {
             int overflow = snapshotMapper.countByMember(memberId) - MAX_SNAPSHOTS_PER_MEMBER + 1;
             if (overflow > 0) snapshotMapper.deleteOldestByMember(memberId, overflow);
         }
         snapshotMapper.upsertSnapshot(UUID.randomUUID().toString().replace("-", ""),
                 memberId, clientTs, snapshotJson);
-        return snapshotMapper.selectTokenByMemberTs(memberId, clientTs);
+        return new Result(snapshotMapper.selectTokenByMemberTs(memberId, clientTs),
+                snapshotMapper.selectVersionByMemberTs(memberId, clientTs), false);
+    }
+
+    /** 发布结果:token 为空且非冲突 = 不可用。 */
+    public static final class Result {
+        public final String token;
+        public final Integer version;
+        public final boolean conflict;
+
+        Result(String token, Integer version, boolean conflict) {
+            this.token = token;
+            this.version = version;
+            this.conflict = conflict;
+        }
+
+        static Result conflict(Integer currentVersion) {
+            return new Result(null, currentVersion, true);
+        }
     }
 }

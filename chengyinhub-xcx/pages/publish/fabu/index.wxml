@@ -458,7 +458,8 @@
           <view class="story-media-block story-media-block--image"
                 wx:elif="{{block.type === 'image'}}"
                 bindlongpress="selectStoryBlock" data-blockkey="{{block.key}}">
-            <image class="story-media-block__img" src="{{block.url}}" mode="widthFix" lazy-load="true" />
+            <image class="story-media-block__img" src="{{block.url}}" mode="widthFix" lazy-load="true" aria-label="{{block.altText || '故事图片，尚未填写文字替代'}}" />
+            <textarea class="pd-card-textarea" value="{{block.altText}}" data-blockkey="{{block.key}}" bindblur="onStoryMediaAltText" maxlength="2000" placeholder="图片文字替代：描述这张图里的剧情" aria-label="图片文字替代，最多2000字" />
             <view class="story-block-x" wx:if="{{storyEditor.selectedBlockKey === block.key}}" data-blockkey="{{block.key}}" catchtap="removeStoryMedia" aria-role="button" aria-label="删除图片块" hover-class="cy-pressed" hover-stay-time="80"><view class="story-block-x__glyph"><cy-icon name="close" size="36" /></view></view>
           </view>
 
@@ -488,6 +489,7 @@
                 <text class="story-media-block__audio-dur" wx:if="{{block._duration}}">{{block._duration}}″</text>
               </view>
             </view>
+            <textarea class="pd-card-textarea" value="{{block.altText}}" data-blockkey="{{block.key}}" bindblur="onStoryMediaAltText" maxlength="2000" placeholder="音频转写：听不到时也能读懂剧情" aria-label="音频文字替代，最多2000字" />
             <view class="story-block-x" wx:if="{{storyEditor.selectedBlockKey === block.key}}" data-blockkey="{{block.key}}" catchtap="removeStoryMedia" aria-role="button" aria-label="删除音频块" hover-class="cy-pressed" hover-stay-time="80"><view class="story-block-x__glyph"><cy-icon name="close" size="36" /></view></view>
           </view>
 

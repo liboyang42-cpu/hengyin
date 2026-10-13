@@ -11,10 +11,13 @@
  * 下次发布前先补做;补不成就不发布新快照 —— 否则补做的 revoke 会把刚发出去的新链接一起删掉,
  * 而旧的、按旧设置裁剪的链接反倒一直能看。
  */
-const { clipSavedTrackForSharing, readSharePrivacy, VISIBILITY } = require('./roam-route-privacy.js')
+const {
+  clipSavedTrackForSharing, maskTrackForSharing, maskPoisForSharing, redactionDeclaration, readSharePrivacy, VISIBILITY,
+} = require('./roam-route-privacy.js')
 const { limitTrack } = require('./roam-track-simplify.js')
 
 const REVOKE_PENDING_PREFIX = 'roam_share_revoke_pending:'
+const TOKEN_REVOKES_PREFIX = 'roam_share_revoke_tokens:'
 const TOKEN_RE = /^[a-f0-9]{32}$/
 
 function send(app, options) {
@@ -36,9 +39,9 @@ function numberOrNull(value) {
 
 /** 分享卡上看得到的东西,原样组成快照。session = 页面归一后的 s(含 routeName/time)。 */
 function buildSharePayload(session, privacy) {
-  const clipped = limitTrack(clipSavedTrackForSharing((session && session.track) || [], privacy))
+  const clipped = maskTrackForSharing(limitTrack(clipSavedTrackForSharing((session && session.track) || [], privacy)), privacy)
   const track = clipped.map((point) => ({ lat: Number(point.lat), lng: Number(point.lng) }))
-  const pois = ((session && session.pois) || [])
+  const pois = maskPoisForSharing((session && session.pois) || [], privacy)
     .filter((poi) => poi && typeof poi === 'object')
     .slice(0, 50)
     .map((poi) => {
@@ -60,6 +63,7 @@ function buildSharePayload(session, privacy) {
     shopMedalName: String((session && session.shopMedalName) || ''),
     track,
     pois,
+    redaction: redactionDeclaration(privacy),
   }
 }
 
@@ -72,39 +76,96 @@ function readRevokePending(app, storage) {
   try { return storage.getStorageSync(revokePendingKey(app)) === 1 } catch (_) { return true }
 }
 
-function writeRevokePending(app, storage, pending) {
+function writeRevokePending(app, storage, pending, key = revokePendingKey(app)) {
   try {
-    if (pending) storage.setStorageSync(revokePendingKey(app), 1)
-    else storage.removeStorageSync(revokePendingKey(app))
+    if (pending) storage.setStorageSync(key, 1)
+    else storage.removeStorageSync(key)
   } catch (_) {}
 }
 
 /** 作废本人全部分享快照。返回 Promise<boolean>;false 时待办标记留着,下次发布前补做。 */
 function revokeShareSnapshots(app, storage) {
-  writeRevokePending(app, storage, true)
+  const key = revokePendingKey(app)
+  writeRevokePending(app, storage, true, key)
   return send(app, { url: '/api/roam/share/revoke', method: 'POST', data: {} }).then((res) => {
     if (!isOk(res)) return false
-    writeRevokePending(app, storage, false)
+    writeRevokePending(app, storage, false, key)
     return true
   })
 }
 
-/** Promise<{ token, reason }>:reason = '' | 'private' | 'revoke-pending' | 'failed'。 */
-function publishShareSnapshot(app, storage, session) {
+/**
+ * F0384:逐条撤回本人这一枚令牌。Promise<{ ok, reason }>:reason = '' | 'not-owned' | 'failed'。
+ * not-owned = 服务端明确拒绝(他人令牌/已撤回);failed = 网络未知,可重试。
+ * 只让云端链接失效;已存相册/已发出的图片无法召回。
+ */
+function tokenRevokeKey(app) {
+  return TOKEN_REVOKES_PREFIX + String((app && app.getUserID && app.getUserID()) || '')
+}
+
+function pendingTokenRevokes(storage, key) {
+  const value = storage.getStorageSync(key)
+  if (!value) return []
+  if (!Array.isArray(value) || !value.every(token => TOKEN_RE.test(token))) throw Error('撤回记录无法读取')
+  return value
+}
+
+function revokeShareSnapshot(app, token, storage) {
+  if (!TOKEN_RE.test(String(token || ''))) return Promise.resolve({ ok: false, reason: 'not-owned' })
+  const key = tokenRevokeKey(app)
+  if (storage) {
+    try {
+      storage.setStorageSync(key, Array.from(new Set(pendingTokenRevokes(storage, key).concat(token))))
+    } catch (_) { return Promise.resolve({ ok: false, reason: 'storage' }) }
+  }
+  return send(app, { url: '/api/roam/share/revoke', method: 'POST', data: { token } }).then((res) => {
+    if (isOk(res)) return { ok: true, reason: '' }
+    if (res && res.unknown) return { ok: false, reason: 'failed' }
+    // 上次删成功但回包丢失：必须匿名确认链接已失效，不能凭删除0行宣称成功。
+    return readShareSnapshot(app, token).then(read => read.state === 'gone'
+      ? { ok: true, reason: '' } : { ok: false, reason: 'not-owned' })
+  }).then(result => {
+    if (result.ok && storage) {
+      try {
+        storage.setStorageSync(key, pendingTokenRevokes(storage, key).filter(item => item !== token))
+      } catch (_) { return { ok: true, reason: 'cleanup-pending' } }
+    }
+    return result
+  })
+}
+
+/**
+ * Promise<{ token, version, reason }>:reason = '' | 'private' | 'revoke-pending' | 'failed' | 'conflict'。
+ * options.expectedVersion:同页再次发布时带上一版版本号,服务端版本不一致返回 conflict,不覆盖。
+ */
+function publishShareSnapshot(app, storage, session, options) {
+  const owner = revokePendingKey(app)
   const privacy = readSharePrivacy(storage)
   if (privacy.visibility === VISIBILITY.PRIVATE) return Promise.resolve({ token: '', reason: 'private' })
   const clientTs = Number(session && session.ts)
   if (!Number.isSafeInteger(clientTs) || clientTs <= 0) return Promise.resolve({ token: '', reason: 'failed' })
-  const ready = readRevokePending(app, storage) ? revokeShareSnapshots(app, storage) : Promise.resolve(true)
+  let tokens
+  try { tokens = pendingTokenRevokes(storage, tokenRevokeKey(app)) }
+  catch (_) { return Promise.resolve({ token: '', reason: 'revoke-pending' }) }
+  const ready = tokens.reduce((pending, token) => pending.then(ok => {
+    if (!ok || owner !== revokePendingKey(app)) return false
+    return revokeShareSnapshot(app, token, storage).then(result => result.ok && !result.reason)
+  }), Promise.resolve(true)).then(ok => ok && (readRevokePending(app, storage)
+    ? revokeShareSnapshots(app, storage) : true))
   return ready.then((revoked) => {
+    if (owner !== revokePendingKey(app)) return { token: '', reason: 'failed' }
     if (!revoked) return { token: '', reason: 'revoke-pending' }
-    return send(app, {
-      url: '/api/roam/share/snapshot',
-      method: 'POST',
-      data: { clientTs, snapshot: JSON.stringify(buildSharePayload(session, privacy)) },
-    }).then((res) => {
+    const expectedVersion = Number(options && options.expectedVersion)
+    const data = { clientTs, snapshot: JSON.stringify(buildSharePayload(session, privacy)) }
+    if (Number.isSafeInteger(expectedVersion) && expectedVersion > 0) data.expectedVersion = expectedVersion
+    return send(app, { url: '/api/roam/share/snapshot', method: 'POST', data }).then((res) => {
+      if (owner !== revokePendingKey(app)) return { token: '', reason: 'failed' }
+      if (!isOk(res) && res && res.data && res.data.conflict === true) {
+        return { token: '', version: Number(res.data.version) || 0, reason: 'conflict' }
+      }
       const token = isOk(res) && res.data && res.data.token
-      return TOKEN_RE.test(token || '') ? { token, reason: '' } : { token: '', reason: 'failed' }
+      const version = isOk(res) && res.data ? Number(res.data.version) || 0 : 0
+      return TOKEN_RE.test(token || '') ? { token, version, reason: '' } : { token: '', version: 0, reason: 'failed' }
     })
   })
 }
@@ -118,7 +179,8 @@ function readShareSnapshot(app, token) {
     app.sendRequest({
       url: '/api/roam/share/snapshot', method: 'GET', data: { token }, hideLoading: true, silentError: true,
       success: (res) => resolve(isOk(res) && res.data && typeof res.data === 'object' && !Array.isArray(res.data)
-        ? { state: 'ready', session: res.data } : { state: 'gone', session: null }),
+        ? { state: 'ready', session: res.data }
+        : { state: res && res.msg === '这条足迹已不再公开' ? 'gone' : 'error', session: null }),
       successStatusAbnormal: () => resolve({ state: 'error', session: null }),
       fail: () => resolve({ state: 'error', session: null }),
     })
@@ -129,6 +191,7 @@ module.exports = {
   revokePendingKey,
   buildSharePayload,
   publishShareSnapshot,
+  revokeShareSnapshot,
   revokeShareSnapshots,
   readShareSnapshot,
 }

@@ -1,3 +1,4 @@
+@import "../../../style/reduced-motion.wxss";
 /* cy-sheet · 底部弹起面板(action-sheet / 选择器 / 菜单容器)
  * 遮罩 + 底部圆角卡 + 上滑动画 + 安全区;内容走 slot。色随主题。 */
 :host { display: block; --cy-btn-font-size: var(--cy-type-button); }

@@ -22,6 +22,8 @@ page { background: var(--cy-color-bg-page); }
 .session-status { padding: var(--cy-space-8) 0; color: var(--cy-color-text-secondary); font-size: var(--cy-type-body); text-align: center; }
 .ss-share-link { display: flex; align-items: center; justify-content: center; gap: var(--cy-space-2); margin-top: var(--cy-space-2); color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); }
 .ss-share-link__retry { min-height: 88rpx; line-height: 88rpx; padding: 0 var(--cy-space-2); color: var(--cy-color-text-primary); font-weight: 600; }
+.ss-share-note { display: block; margin-top: var(--cy-space-1); color: var(--cy-color-text-tertiary); font-size: var(--cy-type-label); text-align: center; }
+.ss-shared-note { padding: var(--cy-space-2) var(--cy-space-3); color: var(--cy-color-text-tertiary); font-size: var(--cy-type-label); text-align: center; }
 .ss-share-actions { display: flex; gap: var(--cy-space-2); margin-top: var(--cy-space-3); }
 .ss-share-action { flex: 1; min-width: 0; }
 .ss-share-action--native { min-height: var(--cy-btn-h); margin: 0; padding: 0 var(--cy-space-2); display: flex; align-items: center; justify-content: center; gap: var(--cy-space-1); border: 1rpx solid var(--cy-color-border-subtle); border-radius: var(--cy-comp-btn-radius); background: var(--cy-color-action-secondary-bg); color: var(--cy-color-text-primary); font-size: var(--cy-type-button); font-weight: 600; line-height: var(--cy-btn-h); }

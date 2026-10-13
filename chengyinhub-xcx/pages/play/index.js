@@ -5,6 +5,7 @@ const cyModal = require('../../utils/modal.js');
 const cyLoading = require('../../utils/loading.js');
 const cyToast = require('../../utils/toast.js');
 const motion = require('../../utils/motion.js');
+const { readPageStyle } = require('../../utils/font-scale.js');
 const app = getApp();
 const bgTracker = require('../../utils/location/bg-tracker.js');
 const analytics = require('../../utils/analytics.js');
@@ -483,6 +484,7 @@ Page({
     ending: { show: false, opener: '', fragments: [] }, endingError: false,
     // 音频播放
     audioPlaying: false, audioLoading: false, audioError: '', audioNodeId: null,
+    thoughtSyncNotice: '', pageStyle: '',
     // FE-19 入场码(玩家出动态码,商家/俱乐部扫核销);regId 由票夹带入,无则不显 fab
     regId: ''
   },
@@ -578,6 +580,7 @@ Page({
     });
   },
   onShow() {
+    this.setData({ pageStyle: readPageStyle() });
     this._themeHidden = false; this._startThemePoll();
     if (this.data.chapterFull && !this.data.chapterGate.show) this.measureChapter();
     else if (this.data.chapStory.show) this._startStoryDust();
@@ -593,8 +596,8 @@ Page({
   },
   _withThoughtSync(write) {
     if (this.data.isPreview || this.data.isMock
-        || (!this._thoughtSyncPending && !(this._routeState && this._routeState.thoughtCount > 0) && !(this.data.themeBag || {}).stepEggs)) return write();
-    const pendingClaim = this._thoughtSyncPending || Promise.resolve(true);
+        || (!this._pendingThoughtKeys().length && !this._thoughtSyncPending && !(this._routeState && this._routeState.thoughtCount > 0) && !(this.data.themeBag || {}).stepEggs)) return write();
+    const pendingClaim = this._thoughtSyncPending || this.retryThoughtSync();
     return pendingClaim.then(ok => ok && this._syncThoughts([])).then(ok => {
       if (ok) return write();
       cyToast('步数未同步，请重试');
@@ -2912,8 +2915,36 @@ Page({
       });
     });
   },
+  _pendingThoughtKeys() {
+    if (this.data.isPreview || this.data.isMock) return [];
+    const scope = JSON.stringify(this._runSessionScope());
+    if (this._thoughtScope !== scope) {
+      this._thoughtScope = scope;
+      this._thoughtClaimed = {};
+      this._thoughtOutbox = [];
+    }
+    const saved = storyResume.read(this._runSessionScope()).pendingThoughts;
+    return Array.from(new Set((this._thoughtOutbox || []).concat(Array.isArray(saved) ? saved : [])
+      .filter(key => typeof key === 'string' && key.length > 0)));
+  },
+  _persistThoughtKeys(keys) {
+    if (this.data.isPreview || this.data.isMock) return;
+    this._pendingThoughtKeys();
+    this._thoughtOutbox = keys;
+    const saved = storyResume.patch(this._runSessionScope(), { pendingThoughts: keys });
+    this.setData({ thoughtSyncNotice: keys.length
+      ? (saved ? '心声待同步，联网后重进会继续同步。' : '心声待同步，暂未保留到本机，请勿退出并重试。') : '' });
+  },
+  retryThoughtSync() {
+    if (this.data.isPreview || this.data.isMock) return Promise.resolve(true);
+    const keys = this._pendingThoughtKeys();
+    if (!keys.length) return Promise.resolve(true);
+    if (this._thoughtSyncPending) return this._thoughtSyncPending;
+    return this._syncThoughts(keys);
+  },
   _claimThoughts(keys) {
     if (this.data.isPreview || this.data.isMock) return;
+    this._pendingThoughtKeys();
     this._thoughtClaimed = this._thoughtClaimed || {};
     const fresh = keys.filter((k) => !this._thoughtClaimed[k]);
     if (!fresh.length) return;
@@ -2922,18 +2953,31 @@ Page({
   },
   _syncThoughts(claim) {
     if (this.data.isPreview || this.data.isMock) return Promise.resolve(true);
-    const releaseClaims = () => claim.forEach((k) => { if (this._thoughtClaimed) delete this._thoughtClaimed[k]; });
+    const scope = JSON.stringify(this._runSessionScope());
+    claim = Array.from(new Set(this._pendingThoughtKeys().concat(claim)));
+    if (claim.length) this._persistThoughtKeys(claim);
+    const releaseClaims = () => {
+      if (scope !== JSON.stringify(this._runSessionScope())) return;
+      claim.forEach((k) => { if (this._thoughtClaimed) delete this._thoughtClaimed[k]; });
+    };
     const sync = () => this._weRunCipher().then((cipher) => {
+      if (scope !== JSON.stringify(this._runSessionScope()) || this.data.isPreview || this.data.isMock) return false;
       if (cipher === false) { releaseClaims(); return false; }
       if (!claim.length && !cipher) return true;       // 未授权运动:继续正常游玩,使用未应验结局
       return req('/api/play/journey/thought/sync', 'POST', Object.assign({ topicId: this.data.topicId },
         this._sessionParams(), { claim }, cipher || {}), { 'content-type': 'application/json' }).then((res) => {
+        if (scope !== JSON.stringify(this._runSessionScope()) || this.data.isPreview || this.data.isMock) return false;
         if ((res.code == 200 || res.code == '200') && res.data) {
+          const acknowledged = new Set((Array.isArray(res.data.thoughts) ? res.data.thoughts : [])
+            .filter(row => row && typeof row.key === 'string').map(row => row.key));
+          const remaining = this._pendingThoughtKeys().filter(key => !acknowledged.has(key));
+          this._persistThoughtKeys(remaining);
+          if (remaining.length) releaseClaims();
           this._applyRouteState(res.data, () => {
             if (this.data.chapterFull) this.openChapterFull();
             if (this.data.chapStory.show) this._refreshChapStoryThoughts();
           });
-          return true;
+          return remaining.length === 0;
         }
         // 失败:放开这几个的认领标记,下次读到再认领;不弹错 —— 伏笔晚一点出现不影响游玩
         releaseClaims();
@@ -3074,8 +3118,8 @@ Page({
           push(b.who ? String(b.who) + '：' + String(b.content || '') : b.content, condOf(b));
           curOdd = previousOdd;
         }
-        else if ((b.type === 'image' || b.type === 'audio') && b.url) {
-          items.push({ kind: b.type, text: '', url: String(b.url), mood: curMood, odd: curOdd });
+        else if (b.type === 'image' || b.type === 'audio') {
+          items.push({ kind: b.type, text: '', url: String(b.url || ''), altText: String(b.altText || ''), mediaFailed: !b.url, mood: curMood, odd: curOdd });
         } else if (b.type === 'dream') {
           /* 梦块(契约 §3.2):一组图 + 每张一句,一张张「穿过去」。
              ⚠️ 整块仍是**一个** .chfull__para —— measureChapter 用 selectAll('.chfull__para')
@@ -3274,6 +3318,18 @@ Page({
    *  三者共用同一个 InnerAudioContext —— 章节旁白 / 音频块 / 节点语音导览同时出声是灾难,
    *  共用播放器天然保证「后播的把前面那段顶掉」。
    *  key 分三套且互不相等:整章旁白 = 'chapter',块 = 'ch<i>',节点侧 = 数字 nodeId。 */
+  onStoryImageError(e) {
+    const i = Number(e.currentTarget.dataset.i);
+    const item = (this.data.chapterParas || [])[i];
+    if (!item || item.kind !== 'image') return;
+    this.setData({ ['chapterParas[' + i + '].mediaFailed']: true });
+  },
+  retryStoryImage(e) {
+    const i = Number(e.currentTarget.dataset.i);
+    const item = (this.data.chapterParas || [])[i];
+    if (!item || item.kind !== 'image' || !item.url) return;
+    this.setData({ ['chapterParas[' + i + '].mediaFailed']: false });
+  },
   toggleChapterAudio(e) {
     const i = Number(e.currentTarget.dataset.i);
     const item = (this.data.chapterParas || [])[i];
@@ -3286,8 +3342,8 @@ Page({
     if (same && !this.data.audioError) { audio.play(); return; }
     audio.stop();
     audio.src = item.url;
+    this.setData({ audioNodeId: key, audioError: '', audioLoading: true });
     audio.play();
-    this.setData({ audioNodeId: key });
   },
   /** 正文布局落定后量真实段落;滚动仍共用故事流的去抖与显形路径。 */
   measureChapter() {
@@ -3511,6 +3567,7 @@ Page({
         } else if (!first && that.data.chapterFull) that.openChapterFull();
         // R9-21:服务端态允许继续时,把上次暂停的会话恢复成 paused(不重开、不丢用时)
         that._restoreRunSession(d, routeState, nodes);
+        that.retryThoughtSync();
         that.loadTeamProgress();   // P1 带领场探测(club 场次才 exists,内部自管轮询)
         that._loadPlayerGameModule();
       });
@@ -5313,6 +5370,10 @@ Page({
 
   toggleReducedMotion() {
     const reducedMotion = writeReducedMotion(null, !this.data.reducedMotion);
+    if (reducedMotion === null) {
+      cyToast('设置未保存，请重试');
+      return;
+    }
     this.setData({ reducedMotion });
     cyToast(reducedMotion ? '已减少动态效果' : '已恢复动态效果');
   },
@@ -6587,7 +6648,7 @@ Page({
       that.setData({ audioPlaying: true, audioLoading: false, audioError: '' });
     });
     audio.onPause(() => {
-      that.setData({ audioPlaying: false });
+      that.setData({ audioPlaying: false, audioLoading: false });
     });
     audio.onStop(() => {
       that.setData({ audioPlaying: false, audioLoading: false });
@@ -6596,7 +6657,7 @@ Page({
       that.setData({ audioPlaying: false, audioLoading: false });
     });
     audio.onError((err) => {
-      const msg = (err && err.errMsg) ? err.errMsg : '音频加载失败';
+      const msg = '这段音频暂时无法播放，可重试或阅读文字';
       that.setData({ audioPlaying: false, audioLoading: false, audioError: msg });
       cyToast(msg);
     });

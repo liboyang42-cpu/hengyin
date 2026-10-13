@@ -76,6 +76,11 @@
       <textarea class="pd-card-textarea" placeholder="写下这个主题的故事…" placeholder-class="slopes-story-placeholder" value="{{formData.description}}" bindinput="onIntroductionChange" maxlength="1000" show-confirm-bar="{{false}}" fixed="{{true}}" />
     </view>
 
+    <view class="node-card">
+      <text class="node-card__title">玩法支持情况</text>
+      <text class="node-card__value">支持情况暂未确认。用户反馈处理暂未开放，此处不展示反馈工单。</text>
+    </view>
+
     <!-- 伏笔(2026-09-24 用户:「伏笔应该是在主题详情里配置」):面板照旧,只是入口从创作页挪到这里 -->
     <view class="node-card" bindtap="openThoughts" aria-role="button" aria-label="{{thoughtOptions.length ? '编辑伏笔' : '添加伏笔'}}" hover-class="cy-pressed" hover-stay-time="80">
       <view class="node-card__row">

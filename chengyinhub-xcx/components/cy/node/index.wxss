@@ -1,3 +1,4 @@
+@import "../../../style/reduced-motion.wxss";
 /* cy-node · 节点母题(城市星图 RPG):未激活/进行中/已完成/选中
    颜色硬编码锁定蓝(单一强调色),不依赖 var 以避免解析问题 */
 .node { position: relative; display: inline-block; line-height: 0; }

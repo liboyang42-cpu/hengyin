@@ -34,6 +34,8 @@ function loadPrivacyPage(source = fs.readFileSync(PAGE, 'utf8')) {
   // 页面顶层 require utils/toast.js:真模块在只带本沙箱 wx 的上下文里求值,其它 require 一律意外
   const requireStub = (p) => {
     if (vm.isUiModule(p)) return vm.loadUiModule(p, vm.createContext({ wx }))
+    // F0385:隐私页展示当前采集状态 + 共用撤回编排(纯逻辑模块,运行时才读 wx)
+    if (/^\.\.\/\.\.\/utils\/location\/(bg-tracker|roam-consent)\.js$/.test(p)) return require(path.join(ROOT, 'pages/privacy', p))
     throw new Error('unexpected require: ' + p)
   }
   const fn = new Function('Page', 'getApp', 'wx', 'console', 'require', source)

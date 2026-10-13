@@ -3,6 +3,7 @@
   "styleIsolation": "isolated",
   "usingComponents": {
     "cy-scene-sheet": "/components/cy/scene-sheet/index",
-    "cy-btn": "/components/cy/btn/index"
+    "cy-btn": "/components/cy/btn/index",
+    "cy-inline-error": "/components/cy/inline-error/index"
   }
 }

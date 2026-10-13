@@ -1,3 +1,4 @@
+@import "../../../style/reduced-motion.wxss";
 :host { display: block; }
 
 .cdd { position: relative; }

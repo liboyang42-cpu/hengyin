@@ -1,3 +1,4 @@
+@import "../../../style/reduced-motion.wxss";
 :host {
   position: fixed;
   inset: 0;
