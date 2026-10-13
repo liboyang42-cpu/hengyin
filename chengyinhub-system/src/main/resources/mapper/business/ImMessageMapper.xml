@@ -48,6 +48,12 @@
         order by id desc limit 1
     </select>
 
+    <select id="selectLatestVisibleIdForUpdate" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select id from im_message
+        where conversation_id = #{conversationId} and status != 2
+        order by id desc limit 1 for update
+    </select>
+
     <select id="selectPage" resultMap="ImMessageResult">
         <include refid="selectImMessageVo"/>
         where conversation_id = #{conversationId} and status != 2

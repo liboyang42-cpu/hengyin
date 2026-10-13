@@ -29,7 +29,7 @@ const {
   expandHandlerBody,
   discoverExternalHelperNames,
   serverApiContracts,
-  buildLedger,
+  buildLedger: rebuildLedger,
   sourceDigestFor,
   sourceDigestAtCommit,
   sourceFilesFor,
@@ -43,6 +43,25 @@ const {
   evidenceMaxAgeMs,
   deviceBranchReadbackDigests,
 } = require('../../scripts/uiaudit/build-action-ledger.js')
+
+// 本文件的分类断言不修改产品源码；共享一次重建成本，每次领取独立副本。
+// 库存漂移正负控仍调用真实 inventoryMatchesCurrent，不经过本夹具缓存。
+let rebuiltLedgerFixture
+const buildLedger = () => {
+  if (!rebuiltLedgerFixture) rebuiltLedgerFixture = rebuildLedger()
+  return structuredClone(rebuiltLedgerFixture)
+}
+
+test('重建台账夹具每次返回独立副本，单项修改不污染后续断言', () => {
+  const first = buildLedger()
+  const second = buildLedger()
+  const handler = second.controls[0].control.handler
+  assert.notStrictEqual(first, second)
+  assert.notStrictEqual(first.controls[0].control, second.controls[0].control)
+  first.controls[0].control.handler = 'fixture-only-mutation'
+  assert.equal(second.controls[0].control.handler, handler)
+  assert.equal(buildLedger().controls[0].control.handler, handler)
+})
 
 test('分类只看代码:注释与字符串里的 wx.* 不算能力(A)', () => {
   // 2026-09-22 实证:两行中文注释(里面并无 wx.*)把 play 页 4 个控件从 read 翻成 external。
@@ -1478,21 +1497,34 @@ test('inventory 与可持久化动态证据分离，freshness 不会抹掉执行
   assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /证据已过期/)
   sample.results[id].sourceDigest = validDigest
 
-  const rootSha = execFileSync('git', ['rev-list', '--max-parents=0', 'HEAD'], { encoding: 'utf8' }).trim().split('\n')[0]
-  const missingAtRoot = ledger.controls.find((control) => sourceDigestAtCommit(control, rootSha) === null)
-  assert.ok(missingAtRoot, '负控需要一个根提交尚不存在的 WXML/JS 控件')
-  const forgedHistorical = {
-    schemaVersion: 1,
-    results: {
-      [missingAtRoot.id]: {
-        ...sample.results[id],
-        sourceSha: rootSha,
-        sourceDigest: sourceDigestFor(missingAtRoot),
-        branches: missingAtRoot.requiredBranches.slice(),
+  // 公开仓库从完整快照起根，不能假定旧根提交缺少某个现有控件。
+  // 构造当前存在但 HEAD 不含的真文件，仍让 Git 读取和证据校验自行拒绝。
+  const fixtureDir = fs.mkdtempSync(path.join(__dirname, '../../.action-ledger-history-'))
+  try {
+    const fixtureWxml = path.join(fixtureDir, 'index.wxml')
+    fs.writeFileSync(fixtureWxml, '<view>historical-source-negative-control</view>\n')
+    const missingAtHead = {
+      ...control,
+      entry: { ...control.entry, wxml: path.relative(path.join(__dirname, '../..'), fixtureWxml) },
+    }
+    assert.equal(sourceDigestAtCommit(missingAtHead, headSha), null,
+      '负控真文件必须不在当前 HEAD 中')
+    const forgedHistorical = {
+      schemaVersion: 1,
+      results: {
+        [id]: {
+          ...sample.results[id],
+          sourceSha: headSha,
+          sourceDigest: sourceDigestFor(missingAtHead),
+          branches: missingAtHead.requiredBranches.slice(),
+        },
       },
-    },
+    }
+    assert.match(validateEvidenceOverlay({ ...ledger, controls: [missingAtHead] }, forgedHistorical).join('\n'),
+      /不包含当前 WXML\/JS/)
+  } finally {
+    fs.rmSync(fixtureDir, { recursive: true, force: true })
   }
-  assert.match(validateEvidenceOverlay(ledger, forgedHistorical).join('\n'), /不包含当前 WXML\/JS/)
 
   sample.results[id].artifacts = []
   assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /artifacts/)
