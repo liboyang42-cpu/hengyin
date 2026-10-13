@@ -347,9 +347,8 @@ Page({
         }
         that._conversationRequestEpoch = (that._conversationRequestEpoch || 0) + 1;
         const currentIndex = that.data.list.findIndex(function (c) { return c.conversationId === id; });
-        const patch = { loading: false, refreshing: false };
-        if (currentIndex >= 0) patch['list[' + currentIndex + '].muted'] = next;
-        that.setData(patch);
+        that.setData({ loading: false, refreshing: false });
+        if (currentIndex >= 0) that.setData({ ['list[' + currentIndex + '].muted']: next });
         that.refreshView();
         toast(next ? '已开启免打扰' : '已关闭免打扰');
       },
