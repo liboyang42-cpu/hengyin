@@ -11,6 +11,12 @@
 
 ## 平台简介
 
+本仓库是城瘾的公开开发仓库 [hengyin](https://github.com/liboyang42-cpu/hengyin)，基于下述 RuoYi 项目。当前后端源码使用 Java 21、Spring Boot 4.1.1 和 Bouncy Castle jdk18on 1.86，版本以 [pom.xml](pom.xml) 为准；源码与 CI 状态不代表生产部署状态。
+
+[主 CI](.github/workflows/ci.yml) 与 [资金集成测试](.github/workflows/funds-mysql-it.yml) 使用 GitHub 标准托管 `ubuntu-latest`。专用测试 VPS 承担后端开发测试和预览服务，不运行 Actions runner；Mac 用于编辑器、浏览器、微信开发者工具及轻量前端检查。
+
+私有仓库保留现有源码、remote 和历史。公开仓库只接收经审阅与敏感扫描的源码补丁，私有日志、备份、凭据和生产配置不随补丁迁入。详细协作约束见 [AGENTS.md](AGENTS.md)。
+
 若依是一套全部开源的快速开发平台，毫无保留给个人及企业免费使用。
 
 * 前端采用Vue、Element UI。
