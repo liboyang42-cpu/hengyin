@@ -73,6 +73,20 @@ Component({
       this._handleInteractionFailure('choice', { errMsg: 'showActionSheet:fail cancel' }, 'start')
     },
 
+    _completionKey() {
+      const owner = positiveId(app.getUserID())
+      const poiId = positiveId(this.data.poiId)
+      return owner && poiId ? 'citynode-completion-pending:' + owner + ':' + poiId : ''
+    },
+    _saveCompletionPending(pending) {
+      const key = this._completionKey()
+      if (!key) return false
+      try {
+        if (pending) wx.setStorageSync(key, true)
+        else wx.removeStorageSync(key)
+        return true
+      } catch (_) { return false }
+    },
     _load() {
       this._closed = false
       this._interactionToken = (this._interactionToken || 0) + 1
@@ -109,6 +123,13 @@ Component({
         return
       }
       resetState('loading')
+      try {
+        if (wx.getStorageSync(this._completionKey()) === true) this._uncertainPoi = poiId
+      } catch (_) {
+        this.setData({ state: 'error', errorText: '本次打卡恢复记录暂不可读，请稍后查询。' })
+        return
+      }
+      const owner = app.getUserID()
       app.sendRequest({
         hideLoading: true,
         silentError: true,
@@ -116,7 +137,7 @@ Component({
         method: 'GET',
         // SecurityConfig 未匿名放行 city/nodes，使用 request-client 默认认证。
         success: (nodeRes) => {
-          if (token !== this._loadToken) return
+          if (token !== this._loadToken || owner !== app.getUserID()) return
           const rawNode = nodeRes && (nodeRes.code === '200' || nodeRes.code === 200) && isRecord(nodeRes.data) ? nodeRes.data : null
           const nodeId = rawNode && positiveId(rawNode.poiId == null ? rawNode.id : rawNode.poiId)
           if (!nodeId || nodeId !== positiveId(poiId) || (rawNode.id != null && positiveId(rawNode.id) !== nodeId)) {
@@ -130,6 +151,10 @@ Component({
             canInteract: rawNode.status === 1 && VALIDATION_METHODS.includes(method),
           }
           this.setData({ node, state: 'ready', hasLocation: !!this._coordinates(node, null) })
+          if (this._uncertainPoi === poiId) {
+            if (rawNode.completed === true || rawNode.needRedeem === true) { this._saveCompletionPending(false); this._uncertainPoi = null }
+            else this._showCompletionUnknown()
+          }
           if (node.merchantId) this._loadMerchant(node.merchantId, token)
         },
         fail: () => { if (token === this._loadToken) this.setData({ state: 'error', errorText: '网络异常，这次没有读到据点信息。' }) },
@@ -290,6 +315,7 @@ Component({
     },
     recoverInteraction() {
       if (this._closed) return
+      if (this._uncertainPoi === this.data.poiId) { this._load(); return }
       const token = this._interactionToken
       const state = this.data.interactionState
       const retry = this._interactionRetry
@@ -310,6 +336,7 @@ Component({
     },
     startInteract() {
       const node = this.data.node
+      if (this._uncertainPoi === this.data.poiId) { this._showCompletionUnknown(); return }
       if (this._closed || !node || node.completed || this.data.completing) return
       const token = (this._interactionToken || 0) + 1
       this._interactionToken = token
@@ -368,19 +395,29 @@ Component({
       }
       this.completeNode('')
     },
+    _showCompletionUnknown() {
+      this._setInteractionRecovery('unknown', '打卡结果待确认', '请先查询本次打卡结果，暂不要重新提交或领取奖励。', 'read', '查询原结果')
+    },
     completeNode(answer, photoUrl, code) {
+      if (this._uncertainPoi === this.data.poiId) { this._showCompletionUnknown(); return }
       if (this._closed || this.data.completing || !this.data.poiId || !this.data.node) return
       if (this.data.node.status !== 1) return this.startInteract()
       const token = (this._completionToken || 0) + 1
       this._completionToken = token
       const poiId = this.data.poiId
+      const owner = app.getUserID()
       this._pendingCompletion = { answer: answer || '', photoUrl: photoUrl || '', code: code || '', poiId }
       this._clearInteractionRecovery()
       this.setData({ completing: true })
       wx.getLocation({
         type: 'gcj02',
         success: (location) => {
-          if (token !== this._completionToken || poiId !== this.data.poiId) return
+          if (token !== this._completionToken || poiId !== this.data.poiId || owner !== app.getUserID()) return
+          if (!this._saveCompletionPending(true)) {
+            this.setData({ completing: false })
+            this._setInteractionRecovery('retry', '打卡尚未提交', '无法保存本次恢复记录，请稍后重试。', 'complete')
+            return
+          }
           app.sendRequest({
           url: '/api/city/nodes/' + poiId + '/complete',
           method: 'POST',
@@ -388,19 +425,26 @@ Component({
           silentError: true,
           data: { lat: location.latitude, lng: location.longitude, answer: answer || '', photoUrl: photoUrl || '', code: code || '' },
           success: (res) => {
-            if (token !== this._completionToken || poiId !== this.data.poiId) return
+            if (token !== this._completionToken || poiId !== this.data.poiId || owner !== app.getUserID()) return
             this.setData({ completing: false })
             if (!(res && (res.code === '200' || res.code === 200))) {
               /* CU-M-52:业务拒绝(口令答错、离据点太远…)与传输失败不是同一种失败。
                  原来两者共用 retry='complete' ⇒ 「重试」直接重放 _pendingCompletion 里的旧答案,
                  用户没有重新输入的入口,再点必得同一句「答案不正确」。
                  业务拒绝给回输入:清掉旧答案,重试接 startInteract(重开输入框/选项面板);
-                 只有 :fail(网络)与定位失败仍按原答案续跑 —— 「原输入已保留」说的是那两个。 */
+                 传输失败先回读原结果；未发起提交的定位失败才允许续跑原输入。 */
+              this._saveCompletionPending(false)
               this._pendingCompletion = null
               this._setInteractionRecovery('retry', '打卡没有完成', (res && res.msg) || '服务暂时无法核验，请重试。', 'start', '重新作答')
               return
             }
-            const result = res.data || {}
+            if (!isRecord(res.data) || typeof res.data.needRedeem !== 'boolean') {
+              this._uncertainPoi = poiId
+              this._showCompletionUnknown()
+              return
+            }
+            const result = res.data
+            this._saveCompletionPending(false)
             this._pendingCompletion = null
             this._clearInteractionRecovery()
             this.setData({ 'node.completed': result.needRedeem !== true, 'node.needRedeem': result.needRedeem === true })
@@ -411,19 +455,21 @@ Component({
             else toast(result.alreadyClaimed ? '你已完成过' : '打卡成功', { icon: result.alreadyClaimed ? 'none' : 'success' })
           },
           fail: () => {
-            if (token !== this._completionToken || poiId !== this.data.poiId) return
+            if (token !== this._completionToken || poiId !== this.data.poiId || owner !== app.getUserID()) return
             this.setData({ completing: false })
-            this._setInteractionRecovery('retry', '打卡没有完成', '网络异常，原输入已保留，请重试。', 'complete')
+            this._uncertainPoi = poiId
+            this._showCompletionUnknown()
           },
           successStatusAbnormal: () => {
-            if (token !== this._completionToken || poiId !== this.data.poiId) return
+            if (token !== this._completionToken || poiId !== this.data.poiId || owner !== app.getUserID()) return
             this.setData({ completing: false })
-            this._setInteractionRecovery('retry', '打卡没有完成', '服务暂时无法核验，请重试。', 'complete')
+            this._uncertainPoi = poiId
+            this._showCompletionUnknown()
           },
         })
         },
         fail: (error) => {
-          if (token !== this._completionToken || poiId !== this.data.poiId) return
+          if (token !== this._completionToken || poiId !== this.data.poiId || owner !== app.getUserID()) return
           this.setData({ completing: false })
           if (this._isPermissionDenied(error)) {
             this._setInteractionRecovery('location-permission', '需要定位权限', '在设置里允许定位，返回后会继续本次打卡。', 'complete')

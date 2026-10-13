@@ -1,5 +1,6 @@
 <template>
   <div class="app-container">
+    <el-alert title="字典配置使用范围" description="字典选项只影响已接入该字典的入口，固定业务规则不受此处控制；逐项使用入口、缓存版本与刷新时间尚未提供，保存不代表全站已更新。" type="info" :closable="false" show-icon />
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="字典名称" prop="dictType">
         <el-select v-model="queryParams.dictType">
@@ -90,7 +91,8 @@
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="dataList" @selection-change="handleSelectionChange">
+    <cy-resource-state v-if="loadError" kind="error" title="字典配置暂时无法读取" description="请重新读取；若仍失败，请核对查看权限。" retry-text="重新读取" :retrying="loading" @retry="retryList" />
+    <el-table v-else v-loading="loading" :data="dataList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="字典编码" align="center" prop="dictCode" />
       <el-table-column label="字典标签" align="center" prop="dictLabel">
@@ -133,7 +135,7 @@
     </el-table>
 
     <pagination
-      v-show="total>0"
+      v-show="!loadError && total>0"
       :total="total"
       :page.sync="queryParams.pageNum"
       :limit.sync="queryParams.pageSize"
@@ -190,16 +192,20 @@
 </template>
 
 <script>
+import CyResourceState from '@/components/CyResourceState'
 import { listData, getData, delData, addData, updateData } from "@/api/system/dict/data"
 import { optionselect as getDictOptionselect, getType } from "@/api/system/dict/type"
 
 export default {
+  components: { CyResourceState },
   name: "Data",
   dicts: ['sys_normal_disable'],
   data() {
     return {
       // 遮罩层
       loading: true,
+      loadError: false,
+      requestToken: 0,
       // 选中数组
       ids: [],
       // 非单个禁用
@@ -279,11 +285,19 @@ export default {
   methods: {
     /** 查询字典类型详细 */
     getType(dictId) {
-      getType(dictId).then(response => {
+      this.loading = true
+      return getType(dictId).then(response => {
+        if (!response.data || !response.data.dictType) throw new Error('字典类型不完整')
         this.queryParams.dictType = response.data.dictType
         this.defaultDictType = response.data.dictType
-        this.getList()
+        return this.getList()
+      }).catch(() => {
+        this.loadError = true
+        this.loading = false
       })
+    },
+    retryList() {
+      return this.queryParams.dictType ? this.getList() : this.getType(this.$route.params.dictId)
     },
     /** 查询字典类型列表 */
     getTypeList() {
@@ -293,11 +307,21 @@ export default {
     },
     /** 查询字典数据列表 */
     getList() {
+      const requestToken = ++this.requestToken
       this.loading = true
-      listData(this.queryParams).then(response => {
+      this.loadError = false
+      return listData(this.queryParams).then(response => {
+        if (requestToken !== this.requestToken) return
+        if (!Array.isArray(response.rows)) throw new Error('列表数据不完整')
         this.dataList = response.rows
         this.total = response.total
-        this.loading = false
+      }).catch(() => {
+        if (requestToken !== this.requestToken) return
+        this.dataList = []
+        this.total = 0
+        this.loadError = true
+      }).finally(() => {
+        if (requestToken === this.requestToken) this.loading = false
       })
     },
     // 取消按钮

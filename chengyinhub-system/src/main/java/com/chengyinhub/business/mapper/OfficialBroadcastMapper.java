@@ -14,6 +14,8 @@ public interface OfficialBroadcastMapper
 {
     int insertOfficialBroadcast(OfficialBroadcast officialBroadcast);
 
+    OfficialBroadcast selectByRequest(@Param("requestScope") String requestScope, @Param("requestId") String requestId);
+
     int updateOfficialBroadcast(OfficialBroadcast officialBroadcast);
 
     OfficialBroadcast selectOfficialBroadcastById(Long id);

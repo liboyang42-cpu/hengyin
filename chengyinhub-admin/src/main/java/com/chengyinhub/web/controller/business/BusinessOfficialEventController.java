@@ -231,6 +231,7 @@ public class BusinessOfficialEventController extends BaseController {
     @PostMapping("/broadcast")
     public AjaxResult broadcast(@RequestBody OfficialBroadcast bc) {
         if (bc == null) return error("通知不能为空");
+        bc.setRequestScope("ADMIN:" + getUserId());
         OfficialBroadcast saved;
         if (bc.getEventId() != null) {
             OfficialEvent event = officialEventService.adminGet(bc.getEventId());
@@ -239,13 +240,20 @@ public class BusinessOfficialEventController extends BaseController {
                 Long officialMemberId = resolveV2OfficialMember();
                 if (officialMemberId == null) return error(V2_OPERATOR_UNAUTHORIZED);
                 saved = officialEventV2Service.publishBroadcastForOperator(bc, officialMemberId);
-                return AjaxResult.success("通知已发送,触达 " + (saved.getReachedCount() == null ? 0 : saved.getReachedCount()) + " 人",
+                return AjaxResult.success("通知已提交，请查询原批次结果",
                         saved.getId());
             }
         }
         saved = officialBroadcastService.publish(bc, null);
-        return AjaxResult.success("通知已发送,触达 " + (saved.getReachedCount() == null ? 0 : saved.getReachedCount()) + " 人",
+        return AjaxResult.success("通知已提交，请查询原批次结果",
                 saved.getId());
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:officialevent:notify')")
+    @GetMapping("/broadcast/by-request/{requestId}")
+    public AjaxResult broadcastByRequest(@PathVariable String requestId) {
+        OfficialBroadcast saved = officialBroadcastService.findByRequest("ADMIN:" + getUserId(), requestId, resolveV2OfficialMember());
+        return success(saved == null ? null : saved.getId());
     }
 
     @PreAuthorize("@ss.hasPermi('business:officialevent:list')")

@@ -3,6 +3,8 @@
 <mapper namespace="com.chengyinhub.business.mapper.OfficialBroadcastMapper">
 
     <resultMap type="OfficialBroadcast" id="OfficialBroadcastResult">
+        <result property="requestId" column="request_id" />
+        <result property="requestScope" column="request_scope" />
         <result property="id"            column="id"             />
         <result property="eventId"       column="event_id"       />
         <result property="title"         column="title"          />
@@ -19,7 +21,7 @@
     </resultMap>
 
     <sql id="selectOfficialBroadcastVo">
-        select id, event_id, title, audience, copy_mode, content_json, channels, city,
+        select id, request_id, request_scope, event_id, title, audience, copy_mode, content_json, channels, city,
                scheduled_time, status, reached_count, sender_account, create_time
         from official_broadcast
     </sql>
@@ -27,6 +29,11 @@
     <select id="selectOfficialBroadcastById" resultMap="OfficialBroadcastResult">
         <include refid="selectOfficialBroadcastVo"/>
         where id = #{id}
+    </select>
+
+    <select id="selectByRequest" resultMap="OfficialBroadcastResult">
+        <include refid="selectOfficialBroadcastVo"/>
+        where request_scope = #{requestScope} and request_id = #{requestId}
     </select>
 
     <select id="selectBySender" resultMap="OfficialBroadcastResult">
@@ -49,6 +56,7 @@
     <insert id="insertOfficialBroadcast" parameterType="OfficialBroadcast" useGeneratedKeys="true" keyProperty="id">
         insert into official_broadcast
         <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="requestId != null">request_id,request_scope,</if>
             <if test="eventId != null">event_id,</if>
             <if test="title != null">title,</if>
             <if test="audience != null">audience,</if>
@@ -62,6 +70,7 @@
             <if test="createTime != null">create_time,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="requestId != null">#{requestId},#{requestScope},</if>
             <if test="eventId != null">#{eventId},</if>
             <if test="title != null">#{title},</if>
             <if test="audience != null">#{audience},</if>

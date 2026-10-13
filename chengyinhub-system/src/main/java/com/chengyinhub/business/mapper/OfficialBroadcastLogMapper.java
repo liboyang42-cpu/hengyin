@@ -16,6 +16,8 @@ public interface OfficialBroadcastLogMapper
 
     int countReached(@Param("broadcastId") Long broadcastId);
 
+    java.util.List<java.util.Map<String, Object>> selectChannelStats(@Param("broadcastId") Long broadcastId);
+
     int countClicked(@Param("broadcastId") Long broadcastId);
 
     /** 频控:该 member 近 minutes 分钟已收到的官方站内通知条数。 */

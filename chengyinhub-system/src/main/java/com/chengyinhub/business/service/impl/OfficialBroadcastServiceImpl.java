@@ -71,9 +71,21 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
         if (requireV2EventScope(bc.getEventId(), actorMemberId)) {
             bc.setSenderAccount(actorMemberId);
         }
+        if (bc.getRequestId() != null) {
+            requireRequestKey(bc.getRequestScope(), bc.getRequestId());
+            OfficialBroadcast existing = findByRequest(bc.getRequestScope(), bc.getRequestId(), actorMemberId);
+            if (existing != null) return requireSameRequest(existing, bc);
+        }
         bc.setCreateTime(new Date());
         bc.setStatus(OfficialBroadcast.ST_PENDING);
-        broadcastMapper.insertOfficialBroadcast(bc);
+        try {
+            broadcastMapper.insertOfficialBroadcast(bc);
+        } catch (org.springframework.dao.DuplicateKeyException duplicate) {
+            if (bc.getRequestId() == null) throw duplicate;
+            OfficialBroadcast existing = findByRequest(bc.getRequestScope(), bc.getRequestId(), actorMemberId);
+            if (existing == null) throw duplicate;
+            return requireSameRequest(existing, bc);
+        }
 
         boolean immediate = bc.getScheduledTime() == null
                 || bc.getScheduledTime().getTime() <= System.currentTimeMillis();
@@ -81,6 +93,35 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
             dispatch(bc);
         }
         return bc;
+    }
+
+    @Override
+    public OfficialBroadcast findByRequest(String requestScope, String requestId, Long actorMemberId) {
+        requireRequestKey(requestScope, requestId);
+        OfficialBroadcast existing = broadcastMapper.selectByRequest(requestScope, requestId);
+        if (existing != null) requireReadableV2EventScope(existing.getEventId(), actorMemberId);
+        return existing;
+    }
+
+    private void requireRequestKey(String scope, String requestId) {
+        if (scope == null || !scope.matches("(ADMIN|MEMBER):[1-9][0-9]*")
+                || requestId == null || !requestId.matches("[A-Za-z0-9_-]{1,64}")) {
+            throw new ServiceException("通知请求号无效");
+        }
+    }
+
+    private OfficialBroadcast requireSameRequest(OfficialBroadcast existing, OfficialBroadcast request) {
+        if (!java.util.Objects.equals(existing.getEventId(), request.getEventId())
+                || !java.util.Objects.equals(existing.getTitle(), request.getTitle())
+                || !java.util.Objects.equals(existing.getAudience(), request.getAudience())
+                || !java.util.Objects.equals(existing.getCopyMode(), request.getCopyMode())
+                || !java.util.Objects.equals(existing.getContentJson(), request.getContentJson())
+                || !java.util.Objects.equals(existing.getChannels(), request.getChannels())
+                || !java.util.Objects.equals(existing.getCity(), request.getCity())
+                || !java.util.Objects.equals(existing.getScheduledTime(), request.getScheduledTime())) {
+            throw new ServiceException("通知请求号已用于其他内容，请查询原批次");
+        }
+        return existing;
     }
 
     int dispatch(OfficialBroadcast bc) {
@@ -130,8 +171,9 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
             // 订阅消息(强触达,best-effort;未授权/未配模板跳过)
             if (subscribe && insertLog(bc.getId(), memberId, role, "subscribe")) {
                 try {
-                    notifyService.notifyOfficialBroadcast(memberId, title, sub);
-                    logMapper.markReached(bc.getId(), memberId, "subscribe");
+                    if (notifyService.notifyOfficialBroadcast(memberId, title, sub)) {
+                        logMapper.markReached(bc.getId(), memberId, "subscribe");
+                    }
                 } catch (Exception ex) {
                     log.warn("[官方通知] 订阅消息失败(未置达) member={}", memberId, ex);
                 }
@@ -175,10 +217,14 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
 
     @Override
     public java.util.Map<String, Object> reachStats(Long broadcastId, Long actorMemberId) {
-        getById(broadcastId, actorMemberId);
+        OfficialBroadcast broadcast = getById(broadcastId, actorMemberId);
+        if (broadcast == null) throw new ServiceException("通知不存在");
         java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
         m.put("reached", logMapper.countReached(broadcastId));
         m.put("clicked", logMapper.countClicked(broadcastId));
+        m.put("channelStats", logMapper.selectChannelStats(broadcastId));
+        m.put("status", broadcast.getStatus());
+        m.put("createTime", broadcast.getCreateTime());
         return m;
     }
 

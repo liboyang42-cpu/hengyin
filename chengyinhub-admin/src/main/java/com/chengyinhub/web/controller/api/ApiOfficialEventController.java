@@ -332,6 +332,7 @@ public class ApiOfficialEventController extends BaseController {
         Long memberId = uid();
         if (!canPublish(memberId)) return error("无官方发布权限");
         if (bc == null) return error("通知不能为空");
+        bc.setRequestScope("MEMBER:" + memberId);
         OfficialEvent event = null;
         if (bc.getEventId() != null) {
             event = officialEventService.adminGet(bc.getEventId());

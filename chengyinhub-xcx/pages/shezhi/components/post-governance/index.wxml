@@ -1,0 +1,16 @@
+<view class="governance">
+  <text class="note">目前仅支持文字申诉，附件暂不可用。提交申诉不会自动解除处置；以下均为本人原案的当前记录。</text>
+  <cy-cell title="重新查询原案" bind:tap="load" />
+  <text wx:if="{{unknownId}}" class="note" aria-role="status">原案 #{{unknownId}} 的提交结果待确认，请勿重复提交。</text>
+  <text wx:if="{{errorText}}" class="note" aria-role="alert">{{errorText}}</text>
+  <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="2" />
+  <cy-empty wx:elif="{{state === 'ready' && !rows.length}}" title="暂无本人处置记录" />
+  <view wx:for="{{rows}}" wx:key="id" class="case">
+    <text class="title">处置 #{{item.id}} · {{item.status}}</text>
+    <text class="note">理由：{{item.reason}}</text>
+    <text class="note">{{item.appealStatus}}{{item.appealId ? ' · 申诉 #' + item.appealId : ''}}</text>
+    <text wx:if="{{item.decision}}" class="note">处理说明：{{item.decision}}</text>
+    <cy-btn wx:if="{{!item.appealId}}" variant="secondary" disabled="{{!!busyId || !!unknownId}}" loading="{{busyId === item.id}}" data-id="{{item.id}}" bind:tap="appeal">填写文字申诉</cy-btn>
+  </view>
+  <cy-cell wx:if="{{cursor && state === 'ready'}}" title="查看更早处置" data-more="{{true}}" bind:tap="load" />
+</view>

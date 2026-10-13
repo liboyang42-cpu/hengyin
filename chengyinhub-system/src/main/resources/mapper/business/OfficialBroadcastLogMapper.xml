@@ -19,6 +19,15 @@
         select count(1) from official_broadcast_log where broadcast_id = #{broadcastId} and clicked = 1
     </select>
 
+    <select id="selectChannelStats" resultType="map">
+        select role, channel, count(1) attempted,
+               sum(case when reached = 1 then 1 else 0 end) recorded_success,
+               sum(case when reached = 1 then 0 else 1 end) unconfirmed,
+               sum(case when clicked = 1 then 1 else 0 end) clicked
+        from official_broadcast_log where broadcast_id = #{broadcastId}
+        group by role, channel order by role, channel
+    </select>
+
     <select id="countRecentByMember" resultType="int">
         select count(1) from official_broadcast_log
         where member_id = #{memberId} and channel = 'inapp' and reached = 1

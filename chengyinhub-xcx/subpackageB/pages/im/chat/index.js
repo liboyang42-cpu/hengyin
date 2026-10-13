@@ -619,7 +619,15 @@ Page({
   onCardTap(e) {
     const ds = e.currentTarget.dataset;
     const message = this.data.msgs.find(item => String(item.id) === String(ds.msg));
-    if (message && Number(message.senderId) === 0 && Number(message.msgType) === 3
+    if (ds.current && message && (message.senderId === 0 || message.senderId === '0')
+        && Number(message.msgType) === 3 && message.card
+        && typeof message.card.action === 'string'
+        && /^\/(pages|subpackage[A-Za-z0-9]*)\/[A-Za-z0-9_/-]+(?:\?[^\s]*)?$/.test(message.card.action)) {
+      wx.navigateTo({ url: message.card.action });
+      return;
+    }
+    if (ds.current) return;
+    if (message && (message.senderId === 0 || message.senderId === '0') && Number(message.msgType) === 3
         && message.card && message.card.result) {
       const result = message.card.result;
       this.setData({ reviewResult: { taskId: result.taskId, bizId: result.bizId,

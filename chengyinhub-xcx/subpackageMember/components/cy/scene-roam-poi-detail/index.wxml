@@ -23,7 +23,8 @@
     <text class="poi-node__badge">漫游 · 到店互动</text>
     <text class="poi-node__title">{{node.templateTitle || node.name || '据点任务待确认'}}</text>
     <text wx:if="{{node.status === 0}}" class="poi-node__meta">据点已下线，保留历史记录{{node.needRedeem ? '，已打卡待核销的券仍可出码领取' : ''}}</text>
-    <text class="poi-node__meta">{{node.vmLabel}}{{node.couponId ? ' · 完成领券' : ''}}</text>
+    <text class="poi-node__meta">{{node.vmLabel}}{{node.couponId ? ' · 打卡后需到店核销领券' : ''}}</text>
+    <text class="poi-node__meta">定位来自当前设备，仅用于距离提示；上传照片不代表内容已核验，领券结果以到店核销为准。</text>
     <view wx:if="{{interactionState !== 'idle'}}" class="poi-recovery"><cy-error title="{{interactionTitle}}" sub="{{interactionText}}" retry="{{interactionActionText}}" bind:retry="recoverInteraction" /></view>
     <view wx:if="{{favoriteError}}" class="poi-recovery"><cy-error title="收藏状态没有更新" sub="{{favoriteError}}" retry="重试" bind:retry="toggleFavorite" /></view>
     <view class="poi-node__actions">

@@ -7,7 +7,7 @@
     />
 
     <p class="role-quota-config__boundary">
-      当前接口只返回角色级配置，不包含当前使用量；本页不会推算或伪造占用统计。
+      当前只提供角色级配置，不包含当前使用量与配置版本；本页不会推算占用统计。额度由主题上架、活动创建和优惠券发布各自校验，菜单授权不替代具体内容的操作权限。
     </p>
 
     <cy-resource-state
@@ -81,6 +81,7 @@
       append-to-body
       :close-on-click-modal="false"
     >
+      <el-alert title="上限可填 0 到 99；清空表示保持原值，不会改为不限。保存后须重新读取确认。" type="info" :closable="false" show-icon />
       <el-form ref="quotaForm" :model="editForm" :rules="quotaRules" label-width="108px">
         <el-form-item label="影响角色">
           <span>{{ roleLabel(editForm.role) }}</span>
