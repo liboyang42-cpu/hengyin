@@ -12,7 +12,8 @@
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index",
     "cy-merchant-card": "/components/cy/merchant-card/index",
-    "cy-club-card": "/components/cy/club-card/index"
+    "cy-club-card": "/components/cy/club-card/index",
+    "cy-btn": "/components/cy/btn/index"
   },
   "navigationBarTitleText": "搜索结果",
   "navigationStyle": "custom",

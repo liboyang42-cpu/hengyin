@@ -74,7 +74,7 @@ test('negative control: 热区退回 63.992rpx 时必须判红', () => {
 test('cy-modal remains the only confirmation container and exposes button semantics', () => {
   const wxml = read('components/cy/modal/index.wxml')
   assert.match(wxml, /bindtap="onCancel"[^>]*aria-role="button"[^>]*aria-label="\{\{cancelText\}\}"/)
-  assert.match(wxml, /bindtap="onConfirm"[^>]*aria-role="button"[^>]*aria-label="\{\{confirmText\}\}"/)
+  assert.match(wxml, /bindtap="onConfirm"[^>]*aria-role="button"[^>]*aria-label="\{\{loading \? '处理中' : confirmText\}\}"/)
 })
 
 test('roam pilot is wired to the scene stack and requires a real trigger', () => {

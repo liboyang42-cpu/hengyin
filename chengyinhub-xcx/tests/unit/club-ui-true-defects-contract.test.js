@@ -107,13 +107,16 @@ function loadEditScene(source = read(EDIT_SCENE_JS)) {
   const app = {
     sendRequest(request) { requests.push(request) },
     getAuthorization() { return 'boundary-token' },
+    getUserID() { return 9 },
     chooseImage() {},
   }
   vm.runInNewContext(source, {
     getApp: () => app,
+    require(name) { if (name.endsWith('/club-edit-draft.js')) return require('../../utils/club-edit-draft.js'); throw Error(name); },
     Component(config) { definition = config },
     setTimeout() { return 0 },
     wx: {
+      getStorageSync() { return '' }, setStorageSync() {}, removeStorageSync() {},
       showModal(options) { modalCalls.push(options) },
       showToast() {},
     },
@@ -307,7 +310,7 @@ function assertSaveFailurePreserves(outcome) {
   const harness = loadEditScene()
   Object.assign(harness.component.data, {
     loadState: 'ready',
-    clubId: `club-${outcome}-${process.pid}`,
+    clubId: '9',
     name: `name-${outcome}-${process.pid}`,
     clubType: `type-${outcome}-${process.pid}`,
     activityPrefs: [`pref-${outcome}-${process.pid}`],
@@ -324,8 +327,16 @@ function assertSaveFailurePreserves(outcome) {
   })
   const before = formSnapshot(harness.component)
   const beforeLoadState = harness.component.data.loadState
+  const drafts = require('../../utils/club-edit-draft.js')
+  const current = Object.assign({}, harness.component.data)
+  harness.component._draftKey = drafts.key(9, 9)
+  harness.component._draftBase = drafts.base(current)
   harness.component.save()
-  const request = harness.requests[0]
+  const preflight = harness.requests[0]
+  assert.equal(preflight.url, '/api/club/detail')
+  preflight.success({ code: 200, data: current })
+  const request = harness.requests[1]
+  assert.equal(request.url, '/api/club/update-mine')
   if (outcome === 'business') request.success({ code: '500', msg: `save-${process.pid}` })
   else request.fail({ errMsg: `save-${process.pid}` })
 

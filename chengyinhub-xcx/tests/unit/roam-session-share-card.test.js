@@ -91,7 +91,7 @@ beforeEach(() => {
     getWindowInfo: () => ({ statusBarHeight: 20, windowWidth: 390 }),
     getSystemInfoSync: () => ({ statusBarHeight: 20 }),
     getMenuButtonBoundingClientRect: () => ({ left: 280, right: 368, bottom: 88 }),
-    getStorageSync: () => [{
+    getStorageSync: (key) => String(key || '').startsWith('roam_share_revoke_') ? '' : [{
       ts: 1717243200000,
       zone: '这片街区',
       distance: '3.2',

@@ -43,7 +43,7 @@ test('创建优惠券 sheet：footer 只剩主 CTA，✕/遮罩仍走 dirty 保�
 test('评价路线 sheet：传 title 才有右上 ✕，正文不再重复居中那条标题', () => {
   const wxml = read('pages/topic/index/index.wxml');
   const vote = wxml.slice(wxml.indexOf('<cy-sheet show="{{ voteShow }}"'), wxml.indexOf('</cy-sheet>', wxml.indexOf('<cy-sheet show="{{ voteShow }}"')));
-  assert.match(vote, /<cy-sheet[^>]*title="评价路线"/, '评价路线必须传 title,否则右上 ✕ 不渲染');
+  assert.match(vote, /<cy-sheet[^>]*title="分享路线意见"/, '评价路线必须传 title,否则右上 ✕ 不渲染');
   assert.match(vote, /bind:close="voteClose"/, '✕ 关闭必须接回页面的 voteClose');
   assert.doesNotMatch(vote, /class="pop-tit[^"]*">\s*评价路线/, '正文里不该再有第二条居中「评价路线」');
 });
@@ -53,14 +53,14 @@ test('负控:CU-C-132 把评价路线的 title 摘掉必须判红', () => {
   const wxml = read(file);
   const opening = wxml.match(/<cy-sheet\b[^>]*\bshow="\{\{\s*voteShow\s*\}\}"[^>]*>/);
   assert.ok(opening, '评价路线 sheet 开标签必须存在');
-  const withoutTitle = opening[0].replace(/\s+title="评价路线"/, '');
+  const withoutTitle = opening[0].replace(/\s+title="分享路线意见"/, '');
   assert.notEqual(withoutTitle, opening[0], '原评价路线 sheet 必须有 title');
   const mutated = wxml.replace(opening[0], withoutTitle);
   assert.notEqual(mutated, wxml, '负控变异注入失败:评价路线开标签要先同步');
   const vote = mutated.slice(mutated.indexOf('<cy-sheet show="{{ voteShow }}"'), mutated.indexOf('</cy-sheet>', mutated.indexOf('<cy-sheet show="{{ voteShow }}"')));
   assert.match(vote, /bind:close="voteClose"/, '负控只摘 title，必须保留原关闭链');
   assert.throws(
-    () => assert.match(vote, /<cy-sheet[^>]*title="评价路线"/),
+    () => assert.match(vote, /<cy-sheet[^>]*title="分享路线意见"/),
     /title/,
     '摘掉 title 后契约必须判红(✕ 会随 title 一起消失)',
   );

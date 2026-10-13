@@ -42,7 +42,7 @@ function loadSearchResultPage() {
 function resolveSearchBatch(batch, failures) {
   batch.forEach((request, index) => {
     if (failures && failures.has(index)) request.fail({ errMsg: 'request:fail timeout' });
-    else request.success({ code: 200, data: { rows: [{ id: index + 1, name: '结果-' + index }] } });
+    else request.success({ code: 200, data: { total: 1, rows: [{ id: index + 1, name: '结果-' + index }] } });
   });
 }
 
@@ -159,7 +159,7 @@ test('搜索部分分类失败且其余分类为空时必须显示未完成错�
 
   requests.forEach((request, index) => {
     if (index === 0) request.fail({ errMsg: 'request:fail timeout' });
-    else request.success({ code: 200, data: { rows: [] } });
+    else request.success({ code: 200, data: { total: 0, rows: [] } });
   });
 
   assert.deepEqual(page.data.visibleResults, []);
@@ -189,8 +189,8 @@ test('搜索新关键词用 epoch 拒绝旧请求迟到回写', () => {
   page.setData({ keyword: '新词' });
   page.runSearch();
   const freshBatch = requests.slice(4, 8);
-  freshBatch.forEach((request, index) => request.success({ code: 200, data: { rows: [{ id: index + 20, name: '新结果-' + index }] } }));
-  oldBatch.forEach((request, index) => request.success({ code: 200, data: { rows: [{ id: index + 40, name: '旧结果-' + index }] } }));
+  freshBatch.forEach((request, index) => request.success({ code: 200, data: { total: 1, rows: [{ id: index + 20, name: '新结果-' + index }] } }));
+  oldBatch.forEach((request, index) => request.success({ code: 200, data: { total: 1, rows: [{ id: index + 40, name: '旧结果-' + index }] } }));
 
   assert.deepEqual(page.data.visibleResults.map(item => item.title), ['新结果-0', '新结果-1', '新结果-2', '新结果-3']);
 });

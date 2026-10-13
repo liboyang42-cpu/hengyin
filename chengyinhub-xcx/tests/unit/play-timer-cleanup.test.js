@@ -7,6 +7,7 @@ let pageConfig;
 global.getApp = () => ({
   globalData: { user_id: 9, features: {} },
   isDevEnv: () => false,
+  getUserID: () => 9,
   sendRequest() {}
 });
 global.wx = {
@@ -25,6 +26,7 @@ function loadPlayPage() {
 
 test('游玩页卸载会清除所有会在销毁后写 UI 的命名 timeout', () => {
   const page = loadPlayPage();
+  page.setData = () => { throw Error('卸载时不得写 UI'); };
   const cleared = [];
   const originalClearTimeout = global.clearTimeout;
   global.clearTimeout = (id) => { cleared.push(id); };
@@ -49,6 +51,7 @@ test('游玩页卸载会清除所有会在销毁后写 UI 的命名 timeout', ()
 
 test('游玩页卸载会停掉章节旁白音频与故事流两个 timer(故事流没关就离页时)', () => {
   const page = loadPlayPage();
+  page.setData = () => { throw Error('卸载时不得写 UI'); };
   const originalClearTimeout = global.clearTimeout;
   global.clearTimeout = () => {};
   try {

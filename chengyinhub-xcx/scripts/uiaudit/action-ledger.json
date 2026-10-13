@@ -16555,6 +16555,24 @@
           "route": "pages/index/index",
           "segments": [
             {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/index/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/index/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -30415,6 +30433,60 @@
           "route": "pages/mylike/mylike",
           "segments": [
             {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 2
+            }
+          ]
+        },
+        {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 4
+            }
+          ]
+        },
+        {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 5
+            }
+          ]
+        },
+        {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
               "selector": "cy-error.cy-fill-state",
               "index": 0
             },
@@ -38977,6 +39049,24 @@
               "selector": "cy-result-sheet",
               "index": 0
             },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/search2/result/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/search2/result/index",
+          "segments": [
             {
               "selector": "cy-btn",
               "index": 1
@@ -321477,6 +321567,24 @@
           ]
         },
         {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/play/circle/index",
           "segments": [
             {
@@ -352606,6 +352714,24 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -383743,6 +383869,24 @@
           ]
         },
         {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/play/circle/index",
           "segments": [
             {
@@ -414876,6 +415020,24 @@
           ]
         },
         {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/play/circle/index",
           "segments": [
             {
@@ -446005,6 +446167,24 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -477143,6 +477323,24 @@
           ]
         },
         {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/play/circle/index",
           "segments": [
             {
@@ -508273,6 +508471,24 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -539411,6 +539627,24 @@
           ]
         },
         {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/play/circle/index",
           "segments": [
             {
@@ -570541,6 +570775,24 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -877558,7 +877810,7 @@
         "event": "bind:close",
         "handler": "closePostGovernance",
         "line": 106,
-        "selectorHint": "cy-sheet[bind:close]",
+        "selectorHint": ".{{isMerchantView",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,

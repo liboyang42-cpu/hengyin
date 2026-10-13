@@ -20,7 +20,8 @@ function assertSharedSlabContract(js, wxml, wxss) {
     '纯装饰选中块不得进入无障碍树')
   assert.match(wxml, /variant === 'chip'\s*&&\s*sharedSlab[^>]*aria-role="tablist"/,
     '共享筛选容器必须向读屏声明 tablist')
-  assert.match(wxml, /aria-role="tab"[\s\S]{0,120}?aria-selected="\{\{item\.key === active\}\}"/,
+  const sharedItems = wxml.slice(0, wxml.indexOf('<scroll-view'))
+  assert.match(sharedItems, /aria-role="tab"[\s\S]{0,120}?aria-selected="\{\{item\.key === active\}\}"/,
     '每个共享筛选项必须向读屏声明当前选中态')
   assert.match(wxss, /\.cy-tabs--shared-slab \.cy-tabs__slab\s*\{[^}]*transition:\s*transform var\(--cy-motion-standard\)[^;]*,\s*opacity var\(--cy-motion-standard\)/s,
     '选中块只用 transform/opacity，并统一读取 220ms standard token')

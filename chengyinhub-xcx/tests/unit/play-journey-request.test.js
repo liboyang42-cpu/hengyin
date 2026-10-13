@@ -2,8 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 let page;
 const requests = [];
-global.getApp = () => ({ globalData: {}, sendRequest: options => {
-  requests.push(options); options.success({ code: 200, data: {} });
+global.getApp = () => ({ globalData: {}, getUserID: () => 9, sendRequest: options => {
+  requests.push(options); options.success({ code: 200, data: { thoughts: (options.data.claim || []).map(key => ({ key })) } });
 } });
 global.wx = { getStorageSync: () => null,
   getSystemInfoSync: () => ({ windowWidth: 375, statusBarHeight: 20 }),
@@ -16,6 +16,7 @@ test('剧情认领与开章完成使用 JSON，保留局信息及版本', async 
     _routeState: { version: 3, opening: { ready: true, chapterId: 8 } },
     _sessionParams: () => ({ activityId: 24 }), _weRunCipher: () => Promise.resolve(null),
     _applyRouteState() {}, closeChapterFull() {}, loadData() {},
+    setData(patch) { Object.assign(this.data, patch); },
   });
   await p._syncThoughts(['first']);
   await p.continueChapterStory();

@@ -735,7 +735,7 @@ Page({
   },
 
   onUnload() {
-    this._cancelNpcRecording();
+    this._cancelNpcRecording(false);
     this._themeHidden = true; this._stopThemePoll();
     this._themeEpoch = (this._themeEpoch || 0) + 1;
     if (this._gateTimer) clearTimeout(this._gateTimer);
@@ -1807,7 +1807,7 @@ Page({
     try { this._rec && this._rec.stop(); } catch (e) { this.setData({ 'shopNpc.recording': false }); }
   },
 
-  _cancelNpcRecording() {
+  _cancelNpcRecording(updateView = true) {
     this._npcVoiceReleased = true;
     this._npcDiscardRecording = true;
     if (this._rec) {
@@ -1816,7 +1816,7 @@ Page({
       if (this.data.shopNpc.recording) this._rec.stop();
       this._rec = null;
     }
-    this.setData({ 'shopNpc.recording': false });
+    if (updateView) this.setData({ 'shopNpc.recording': false });
   },
 
   _sendVoice(filePath, fileSize) {
