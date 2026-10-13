@@ -9,7 +9,7 @@ const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const { getScene } = require('../../../utils/scene-registry.js');
 // 城瘾 · 俱乐部详情页(方案B:俱乐部=经典定向带团组织)
 // 俱乐部信息 + TA 办的经典定向团(/api/club/topics)+ 成员;团卡片点进主题报名页复用现有报名/扫码。
-const { toTimestamp, chinaParts } = require('../../../utils/datetime');
+const { toTimestamp, chinaParts, chinaDateKey } = require('../../../utils/datetime');
 const app = getApp();
 function aiDraftStorageKey() {
   const memberId = app.getUserID && app.getUserID();
@@ -24,7 +24,7 @@ const ticketSource = require('../../../utils/ticket-source.js');
 // CU-C-38:主题分享卡的标题/封面口径与主题详情页共用一份实现
 const { buildTopicShare, resolveTopicCover } = require('../../../utils/topic-share.js');
 const { isRecord, bizFailureMessage } = require('../../../utils/response-shape.js');
-const { buildMonthCalendar, shiftMonth } = require('../utils/club-event-calendar.js');
+const { buildMonthCalendar, shiftMonth, fetchMonthActivities } = require('../utils/club-event-calendar.js');
 // 帖文卡的 variant 判定与广场共用一份,别在这儿复制
 const { isCompletedShare, hasFeedPlayCover } = require('../../../utils/feed-play-card.js');
 // CU-C-60:扫码核销复用全站唯一的路由表(utils/verification-scan)与写闸(防重提/结果未知),
@@ -196,12 +196,6 @@ function shapeEventAccesses(raw) {
     byTopic[String(topicId)] = true;
   }
   return { rows, byActivity, byTopic };
-}
-function localDateText(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return y + '-' + m + '-' + d;
 }
 
 function isSuccess(res) { return !!res && (res.code === '200' || res.code === 200); }
@@ -468,9 +462,11 @@ Page({
     ],
     eventWeekdays: ['一', '二', '三', '四', '五', '六', '日'],
     eventView: 'list',
-    eventCalendarMonth: localDateText(new Date()).slice(0, 7),
+    eventCalendarMonth: chinaDateKey(new Date()).slice(0, 7),
     eventCalendarTitle: '',
     eventCalendarUpdatedAt: '',
+    eventCalendarState: 'idle',
+    eventCalendarScope: '',
     eventCalendarCells: [],
     eventCalendarHasEvents: false,
     shareEditions: [],
@@ -691,6 +687,7 @@ Page({
     if (!this._hasShown) { this._hasShown = true; return; }
     if (this.data.clubId && this.data.club
         && (this.canGovern() || this.data.canUseManageTab)) this.loadAll();
+    else if (this.data.clubId && this.data.eventView === 'calendar') this.loadEventCalendar();
     // CU-C-18:从「我发出的」撤回申请后返回,合作池那张卡要跟着变回「可再申请」,不能停在「已申请」。
     if (this.data.coopPoolState === 'ready') this.loadCoopPool(true);
   },
@@ -733,7 +730,7 @@ Page({
   onPullDownRefresh() { this.loadAll(function () { wx.stopPullDownRefresh(); }); },
 
   // 页面销毁:作废在途 AI 生成的回调,避免 setData after unload(sendRequest 不可中断)
-  onUnload() { this._topicsLoadEpoch = (this._topicsLoadEpoch || 0) + 1; this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1; this._clubAiToken = (this._clubAiToken || 0) + 1; this.clearGroupCodeTimer(); },
+  onUnload() { this._calendarLoadEpoch = (this._calendarLoadEpoch || 0) + 1; this._topicsLoadEpoch = (this._topicsLoadEpoch || 0) + 1; this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1; this._clubAiToken = (this._clubAiToken || 0) + 1; this.clearGroupCodeTimer(); },
 
   onRetry() {
     this.setData({ detailLoaded: false, notFound: false, club: null });
@@ -778,6 +775,7 @@ Page({
     };
     this.loadDetail(tick);
     this.loadTopics(tick);
+    if (this.data.eventView === 'calendar') this.loadEventCalendar();
     this.loadPosts();
     this.loadLeaderboard();
   },
@@ -1943,11 +1941,9 @@ Page({
         manageTopics: that.scopedManageTopics(list),
         topicsLoaded: true,
         topicState: 'ready',
-        eventCalendarUpdatedAt: '',
         upcomingTopics: split.upcomingTopics,
         endedTopics: split.endedTopics,
       });
-      that.refreshEventCalendar();
       that.applySentInviteFilter();
       cb && cb();
       return;
@@ -1981,11 +1977,9 @@ Page({
           manageTopics: that.scopedManageTopics(list),
           topicsLoaded: true,
           topicState: 'ready',
-          eventCalendarUpdatedAt: new Date().toLocaleString(),
           upcomingTopics: split.upcomingTopics,
           endedTopics: split.endedTopics,
         });
-        that.refreshEventCalendar();
         that.applySentInviteFilter();
       },
       fail() {
@@ -2021,8 +2015,7 @@ Page({
     if (view !== 'list' && view !== 'calendar') return;
     this.setData({ eventView: view });
     if (view === 'calendar') {
-      this.refreshEventCalendar();
-      this.loadTopics();
+      this.loadEventCalendar();
     }
   },
 
@@ -2030,20 +2023,37 @@ Page({
     const delta = Number(e.currentTarget && e.currentTarget.dataset.delta);
     if (!Number.isInteger(delta) || !delta) return;
     this.setData({ eventCalendarMonth: shiftMonth(this.data.eventCalendarMonth, delta) });
-    this.refreshEventCalendar();
-    this.loadTopics();
+    this.loadEventCalendar();
   },
 
-  refreshEventCalendar() {
-    const calendar = buildMonthCalendar(this.data.eventCalendarMonth, this._topics);
-    const hasEvents = calendar.cells.some(function (cell) {
-      return cell.inMonth && cell.events.length > 0;
-    });
-    this.setData({
-      eventCalendarTitle: calendar.title,
-      eventCalendarCells: calendar.cells,
-      eventCalendarHasEvents: hasEvents,
-    });
+  async loadEventCalendar() {
+    const epoch = (this._calendarLoadEpoch || 0) + 1;
+    this._calendarLoadEpoch = epoch;
+    const clubId = Number(this.data.clubId);
+    const month = this.data.eventCalendarMonth;
+    const viewer = app.getUserID && app.getUserID();
+    const current = () => epoch === this._calendarLoadEpoch && clubId === Number(this.data.clubId)
+      && month === this.data.eventCalendarMonth && viewer === (app.getUserID && app.getUserID());
+    const calendar = buildMonthCalendar(month, []);
+    this.setData({ eventCalendarState: 'loading', eventCalendarTitle: calendar.title,
+      eventCalendarCells: calendar.cells, eventCalendarHasEvents: false, eventCalendarUpdatedAt: '', eventCalendarScope: '' });
+    try {
+      // Demo topics cannot stand in for actual activity/session facts.
+      if (isDemoClubId(clubId)) throw new Error('演示俱乐部没有真实场次');
+      const result = await fetchMonthActivities(app.sendRequest.bind(app), { clubId, month }, current);
+      if (!current()) return;
+      const complete = buildMonthCalendar(month, result.rows);
+      this.setData({ eventCalendarState: 'ready', eventCalendarCells: complete.cells,
+        eventCalendarHasEvents: result.rows.length > 0, eventCalendarUpdatedAt: result.readAt,
+        eventCalendarScope: result.visibilityScope });
+    } catch (error) {
+      if (current()) this.setData({ eventCalendarState: 'error' });
+    }
+  },
+
+  goCalendarActivity(e) {
+    const id = positiveId(e.currentTarget && e.currentTarget.dataset.id);
+    if (id) wx.navigateTo({ url: getScene('play-activity-detail').route + '?id=' + id });
   },
 
   loadMembers() {
