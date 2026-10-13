@@ -126,6 +126,23 @@ def verify_seed_negative_controls(connection):
     return len(SEED_NEGATIVE_CONTROLS)
 
 
+def source_provenance_files(commit):
+    # Public snapshots retain verified SQL hashes, never the credential-bearing Git history.
+    raw = (REPO / "scripts/e2e/source_provenance_20260818.json").read_bytes()
+    if hashlib.sha256(raw).hexdigest() != "de66c97ad1e18603e6b63448634d68ffc5253440cb4bd94039dbcac3a7ee7192":
+        raise RuntimeError("schema source provenance 字节漂移")
+    metadata = json.loads(raw)
+    if metadata.get("schemaVersion") != 1 or metadata.get("sourceCommit") != commit:
+        raise RuntimeError("schema source provenance commit 不匹配")
+    files = metadata["files"]
+    if any(not re.fullmatch(r"[0-9a-f]{64}", item.get("sha256", "")) for item in files):
+        raise RuntimeError("schema source provenance fingerprint 无效")
+    result = {item["path"]: item["sha256"] for item in files}
+    if len(result) != len(files):
+        raise RuntimeError("schema source provenance 路径重复")
+    return result
+
+
 def source_migration_fingerprints(commit):
     if not re.fullmatch(r"[0-9a-f]{40}", commit or ""):
         raise RuntimeError("schema replay policy source commit 格式无效")
@@ -133,7 +150,9 @@ def source_migration_fingerprints(commit):
         ["git", "archive", "--format=tar", commit, "--", "chengyinhub-admin/sql"],
         cwd=REPO, capture_output=True)
     if archived.returncode != 0:
-        raise RuntimeError("schema replay policy source commit 不可读:%s" % commit)
+        return {path: digest for path, digest in source_provenance_files(commit).items()
+                if path.startswith("chengyinhub-admin/sql/") and
+                (MIGRATION_PATH.fullmatch(path) or path in EXPLICIT_MANAGED_SQL)}
     fingerprints = {}
     with tarfile.open(fileobj=io.BytesIO(archived.stdout), mode="r:") as archive:
         for member in archive.getmembers():
@@ -153,7 +172,10 @@ def source_file_fingerprint(commit, path):
     shown = subprocess.run(
         ["git", "show", "%s:%s" % (commit, path)], cwd=REPO, capture_output=True)
     if shown.returncode != 0:
-        raise RuntimeError("schema replay policy source file 不可读:%s" % path)
+        digest = source_provenance_files(commit).get(path)
+        if digest is None:
+            raise RuntimeError("schema replay policy source file 不可读:%s" % path)
+        return digest
     return hashlib.sha256(shown.stdout).hexdigest()
 
 

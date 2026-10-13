@@ -11,6 +11,9 @@ on:
   push:
     branches: [master]
 
+env:
+  CHENGYIN_REPO: ${{ github.workspace }}
+
 permissions:
   contents: read
 

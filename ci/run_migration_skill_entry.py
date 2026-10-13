@@ -8,7 +8,8 @@ import sys
 
 
 FALLBACK_REPO = pathlib.Path("/Users/arlan/Downloads/chengyin")
-EXPECTED_REMOTES = ("https://github.com/liboyang42-cpu/chengyin.git",
+EXPECTED_REMOTES = ("https://github.com/liboyang42-cpu/hengyin.git",
+                    "https://github.com/liboyang42-cpu/chengyin.git",
                     "https://codeup.aliyun.com/6a1cf1a96bb471afdf23d855/chengyin.git")  # 同一仓库两个托管地址;判据没放宽,身份契约七条钉住
 _RUNNER_MODULE = None
 

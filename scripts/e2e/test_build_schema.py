@@ -20,9 +20,11 @@ class BuildSchemaMigrationSelectionTest(unittest.TestCase):
         self.assertEqual(1, len(changed))
         item = changed[0]
         self.assertTrue(item["reason"])
-        original = subprocess.check_output(
+        shown = subprocess.run(
             ["git", "show", metadata["sourceCommit"] + ":" + item["path"]],
-            cwd=build_schema.REPO)
+            cwd=build_schema.REPO, capture_output=True)
+        original = (shown.stdout if shown.returncode == 0 else
+                    (build_schema.REPO / "scripts/e2e/fixtures/baseline_menu_2050.sql.txt").read_bytes())
         current = (build_schema.REPO / item["path"]).read_bytes()
         self.assertEqual(item["sourceSha256"], hashlib.sha256(original).hexdigest())
         self.assertEqual(item["currentSourceSha256"], hashlib.sha256(current).hexdigest())
@@ -31,6 +33,14 @@ class BuildSchemaMigrationSelectionTest(unittest.TestCase):
                      build_schema.statement_assertion(statement))
                     for statement in build_schema.split_statements(source.decode("utf-8"))]
         self.assertEqual(executable_contract(original), executable_contract(current))
+
+    def test_public_provenance_rejects_unknown_commit_and_byte_drift(self):
+        metadata = json.loads(build_schema.BASELINE_MANIFEST.read_text())
+        with self.assertRaisesRegex(RuntimeError, "commit"):
+            build_schema.source_provenance_files("0" * 40)
+        with mock.patch.object(pathlib.Path, "read_bytes", return_value=b"tampered"):
+            with self.assertRaisesRegex(RuntimeError, "漂移"):
+                build_schema.source_provenance_files(metadata["sourceCommit"])
 
     def test_scratch_schema_sql_rewrites_dump_definer(self):
         dumped_view = (

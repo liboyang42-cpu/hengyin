@@ -227,6 +227,12 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
             self.assertTrue(entry.is_chengyin_repo(root),
                             "CI 形态(origin + 不带 .git)必须被认成城瘾仓库")
 
+        # Fresh public snapshot has a distinct approved repository identity.
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = repo_with_remote(
+                temp_dir, "origin", "https://github.com/liboyang42-cpu/hengyin.git")
+            self.assertTrue(entry.is_chengyin_repo(root))
+
         # ② 本地形态:远端叫 github、SSH 写法带 .git
         with tempfile.TemporaryDirectory() as temp_dir:
             root = repo_with_remote(
