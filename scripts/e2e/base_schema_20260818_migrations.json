@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "737f0c2eab1dab2afaa51944d8654a7f803671c3",
+  "sourceCommit": "a20fb9b602008ffbdac8bb95f792289626b008f1",
   "migrationCount": 249,
   "reconciledCount": 1,
   "baseSchema": {
@@ -615,10 +615,9 @@
     },
     {
       "path": "chengyinhub-admin/sql/migration_menu_2050_coupon_to_supply_20260726.sql",
-      "sourceSha256": "a1035261ba9b97918fa70fba2cb44e1e7fd6c9712062c50ebc433857f8617619",
+      "sourceSha256": "2a70d867d4405ac075125609d76f860270e628acab952416123543c20b6b0316",
       "sha256": "a1035261ba9b97918fa70fba2cb44e1e7fd6c9712062c50ebc433857f8617619",
-      "currentSourceSha256": "2a70d867d4405ac075125609d76f860270e628acab952416123543c20b6b0316",
-      "reason": "3dab295463仅更新注释中的执行入口为ci/run_migration.py；SQL及runner断言不变，sourceSha256保留快照来源，currentSourceSha256校验当前文件。"
+      "reason": "sourceSha256 绑定公开仓库 a20fb9b602008ffbdac8bb95f792289626b008f1 的已审阅源码；原 sha256 字段与 SQL 可执行语句及断言合同保持，既有注释修正不改变迁移执行语义。"
     },
     {
       "path": "chengyinhub-admin/sql/migration_merchant_business_status_20260707.sql",

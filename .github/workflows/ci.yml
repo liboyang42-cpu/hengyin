@@ -360,8 +360,21 @@ jobs:
           java-version: '21'
           cache: maven
       - name: Build and test backend
-        run: bash ci/backend-test.sh
+        run: |
+          python3 -m unittest ci/test_wechat_registration_ci_contract.py
+          test "$(docker exec "$IT_NAME" mysql -uroot -proot -Nse "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name='${CHENGYIN_TEST_MYSQL_DATABASE_BASE}_wechat_identity${CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX}'")" = 0
+          docker exec "$IT_NAME" mysql -uroot -proot -e "CREATE DATABASE ${CHENGYIN_TEST_MYSQL_DATABASE_BASE}_wechat_identity${CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX} CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci"
+          bash ci/backend-test.sh
         env:
+          # 注册竞态 IT 只接受本 run 独占的预建空库；随本次 MySQL 容器一并清理。
+          CHENGYIN_WECHAT_IDENTITY_MYSQL_IT: "true"
+          CHENGYIN_TEST_MYSQL_HOST: 127.0.0.1
+          CHENGYIN_TEST_MYSQL_PORT: ${{ env.IT_PORT }}
+          CHENGYIN_TEST_MYSQL_USER: root
+          CHENGYIN_TEST_MYSQL_PASSWORD: root
+          CHENGYIN_TEST_MYSQL_DATABASE_BASE: chengyin_ci
+          CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX: _${{ github.run_id }}_${{ github.run_attempt }}
+          IT_NAME: chengyin-mybatis-it-${{ github.run_id }}-${{ github.run_attempt }}
           # 2026-08-19 一类一库:MyBatis 真库 IT 各自建自己的 schema(见 MybatisItDatabase),
           # 建库要的权限 ituser 没有(service 只把 chengyin_mybatis_it 授给它)⇒ 走 root。
           # 本机 root 是空口令、这个 service 是 root/root,所以密码在这里显式给,不写进代码默认值。

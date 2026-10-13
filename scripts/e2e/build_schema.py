@@ -24,8 +24,10 @@ from ci.migration_ledger import build_manifest, EXPLICIT_MANAGED_SQL, MIGRATION_
 
 BASELINE = REPO / "sql/base_schema_20260818.sql"
 BASELINE_SEED = REPO / "sql/base_seed_20260818.sql"
-BASELINE_MANIFEST = REPO / "scripts/e2e/base_schema_20260818_migrations.json"
-SCHEMA_REPLAY_POLICY = REPO / "scripts/e2e/schema_replay_policy_20260921.json"
+BASELINE_MANIFEST_PATH = "scripts/e2e/base_schema_20260818_migrations.json"
+SCHEMA_REPLAY_POLICY_PATH = "scripts/e2e/schema_replay_policy_20260921.json"
+BASELINE_MANIFEST = REPO / BASELINE_MANIFEST_PATH
+SCHEMA_REPLAY_POLICY = REPO / SCHEMA_REPLAY_POLICY_PATH
 ALLOWED_HOSTS = {"127.0.0.1", "localhost", "::1"}
 SCRATCH_SCHEMA = re.compile(r"cy_e2e_[A-Za-z0-9_]+\Z")
 SEED_NEGATIVE_CONTROLS = (
@@ -145,7 +147,7 @@ def source_migration_fingerprints(commit):
     return fingerprints
 
 
-def source_file_fingerprint(commit, path):
+def source_file_bytes(commit, path):
     if (not re.fullmatch(r"[0-9a-f]{40}", commit or "") or
             pathlib.PurePosixPath(path).is_absolute() or
             ".." in pathlib.PurePosixPath(path).parts):
@@ -154,7 +156,11 @@ def source_file_fingerprint(commit, path):
         ["git", "show", "%s:%s" % (commit, path)], cwd=REPO, capture_output=True)
     if shown.returncode != 0:
         raise RuntimeError("schema replay policy source file 不可读:%s" % path)
-    return hashlib.sha256(shown.stdout).hexdigest()
+    return shown.stdout
+
+
+def source_file_fingerprint(commit, path):
+    return hashlib.sha256(source_file_bytes(commit, path)).hexdigest()
 
 
 def migrations_after_baseline(migrations):
@@ -215,10 +221,20 @@ def migrations_after_baseline(migrations):
     baseline_missing = policy.get("baselineMissingMigrations", {})
     data_only = policy.get("dataOnlyMigrations", {})
     baseline_seed = policy.get("baselineSeed", {})
-    if (policy.get("schemaVersion") != 1 or
+    version = policy.get("schemaVersion")
+    additional_records = policy.get("sourceAdditionalMigrations", []) if version == 2 else []
+    if not isinstance(additional_records, list):
+        raise RuntimeError("schema replay policy additional source 必须是记录数组")
+    additional = {}
+    for item in additional_records:
+        if (not isinstance(item, dict) or set(item) != {"path", "sourceSha256"} or
+                not isinstance(item["path"], str) or not item["path"] or item["path"] in additional):
+            raise RuntimeError("schema replay policy additional source 记录无效或路径重复")
+        additional[item["path"]] = item["sourceSha256"]
+    if (version not in (1, 2) or
             policy.get("sourceCommit") != metadata.get("sourceCommit") or
             policy.get("baselineManifestMigrationCount") != len(recorded) or
-            policy.get("sourceMigrationCount") != len(recorded) + len(baseline_missing) or
+            policy.get("sourceMigrationCount") != len(recorded) + len(baseline_missing) + len(additional) or
             not policy.get("baselineMissingReason") or
             not policy.get("dataOnlyReason") or
             baseline_seed.get("path") != BASELINE_SEED.relative_to(REPO).as_posix() or
@@ -234,8 +250,33 @@ def migrations_after_baseline(migrations):
         if source_file_fingerprint(policy["sourceCommit"], path) != expected:
             raise RuntimeError("schema replay policy seed source 指纹不一致:%s" % path)
 
+    if version == 2:
+        # The public source snapshot proves provenance, not that newer DDL is in
+        # the old baseline. Bind replay classifications to that snapshot as well.
+        try:
+            source_metadata = json.loads(source_file_bytes(
+                policy["sourceCommit"], BASELINE_MANIFEST_PATH))
+            source_policy = json.loads(source_file_bytes(
+                policy["sourceCommit"], SCHEMA_REPLAY_POLICY_PATH))
+        except (ValueError, TypeError) as e:
+            raise RuntimeError("schema replay policy source classification 无效:%s" % e)
+        source_recorded = {
+            item["path"]: item.get("currentSourceSha256", item["sourceSha256"])
+            for item in source_metadata["migrations"]}
+        current_recorded = {item["path"]: item["sourceSha256"] for item in recorded}
+        if (current_recorded != source_recorded or
+                reconciled != source_metadata.get("reconciledMigrations", []) or
+                baseline != source_metadata.get("baseSchema") or
+                baseline_missing != source_policy.get("baselineMissingMigrations") or
+                data_only != source_policy.get("dataOnlyMigrations") or
+                baseline_seed != source_policy.get("baselineSeed")):
+            raise RuntimeError("schema replay policy source classification 指纹不一致")
+        if set(additional) & (set(current_recorded) | set(baseline_missing)):
+            raise RuntimeError("schema replay policy additional source 分类重叠")
+
     expected_source = {item["path"]: item["sourceSha256"] for item in recorded}
     expected_source.update(baseline_missing)
+    expected_source.update(additional)
     if source_migration_fingerprints(policy["sourceCommit"]) != expected_source:
         raise RuntimeError("schema replay policy 与 source commit migration 集合或指纹不一致")
 
@@ -243,7 +284,8 @@ def migrations_after_baseline(migrations):
                (set(baseline_missing) & set(data_only)))
     if overlap:
         raise RuntimeError("schema replay policy 分类重叠:%s" % sorted(overlap))
-    for label, entries in (("baseline missing", baseline_missing), ("data-only", data_only)):
+    for label, entries in (("baseline missing", baseline_missing), ("data-only", data_only),
+                           ("additional source", additional)):
         for path, expected in entries.items():
             target = REPO / path
             if path not in current:

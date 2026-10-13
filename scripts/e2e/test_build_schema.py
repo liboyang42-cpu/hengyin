@@ -10,27 +10,163 @@ from types import SimpleNamespace
 from unittest import mock
 
 from scripts.e2e import build_schema
+from ci import migration_ledger
 
 
 class BuildSchemaMigrationSelectionTest(unittest.TestCase):
+    def test_startup_fixture_is_classified_but_never_replayed(self):
+        path = "ci/upgrade-startup/schema.sql"
+        manifest = build_schema.build_manifest(
+            build_schema.REPO, target_commit="a" * 40,
+            dependency_path=build_schema.REPO / "ci/migration-dependencies.json")
+        auxiliary = {item["path"]: item["classification"]
+                     for item in manifest["inventory"]["auxiliarySql"]}
+        self.assertEqual("TEST_FIXTURE", auxiliary[path])
+        self.assertNotIn(path, {item["path"] for item in manifest["migrations"]})
+        self.assertNotIn(path, {item["path"] for item in
+                               build_schema.migrations_after_baseline(manifest["migrations"])})
+
+    def test_startup_fixture_classification_does_not_allow_unknown_sql(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            (root / "chengyinhub-admin/sql").mkdir(parents=True)
+            fixture = root / "ci/upgrade-startup/schema.sql"
+            fixture.parent.mkdir(parents=True)
+            fixture.write_bytes((build_schema.REPO / fixture.relative_to(root)).read_bytes())
+            self.assertEqual([], migration_ledger.audit_inventory(root)["problems"])
+            unknown = fixture.with_name("unreviewed.sql")
+            unknown.write_text("CREATE TABLE unreviewed(id BIGINT);", encoding="utf-8")
+            problems = migration_ledger.audit_inventory(root)["problems"]
+            self.assertEqual([("UNMANAGED_SQL_LOCATION", "ci/upgrade-startup/unreviewed.sql")],
+                             [(item["code"], item["path"]) for item in problems])
+            unknown.unlink()
+            classifications = dict(migration_ledger.EXPLICIT_AUXILIARY_SQL)
+            del classifications["ci/upgrade-startup/schema.sql"]
+            with mock.patch.object(migration_ledger, "EXPLICIT_AUXILIARY_SQL", classifications):
+                problems = migration_ledger.audit_inventory(root)["problems"]
+            self.assertEqual([("UNMANAGED_SQL_LOCATION", "ci/upgrade-startup/schema.sql")],
+                             [(item["code"], item["path"]) for item in problems])
+
     def test_current_migration_fingerprint_keeps_source_and_executable_contract(self):
         metadata = json.loads(build_schema.BASELINE_MANIFEST.read_text(encoding="utf-8"))
-        changed = [item for item in metadata["migrations"]
-                   if "currentSourceSha256" in item]
-        self.assertEqual(1, len(changed))
-        item = changed[0]
+        source = build_schema.source_migration_fingerprints(metadata["sourceCommit"])
+        for recorded in metadata["migrations"]:
+            self.assertEqual(recorded["sourceSha256"], source[recorded["path"]])
+        reviewed = [item for item in metadata["migrations"] if item.get("reason")]
+        self.assertEqual(1, len(reviewed))
+        item = reviewed[0]
         self.assertTrue(item["reason"])
         original = subprocess.check_output(
             ["git", "show", metadata["sourceCommit"] + ":" + item["path"]],
             cwd=build_schema.REPO)
         current = (build_schema.REPO / item["path"]).read_bytes()
         self.assertEqual(item["sourceSha256"], hashlib.sha256(original).hexdigest())
-        self.assertEqual(item["currentSourceSha256"], hashlib.sha256(current).hexdigest())
+        self.assertEqual(item["sourceSha256"], hashlib.sha256(current).hexdigest())
         def executable_contract(source):
             return [(build_schema.executable_statement(statement),
                      build_schema.statement_assertion(statement))
                     for statement in build_schema.split_statements(source.decode("utf-8"))]
         self.assertEqual(executable_contract(original), executable_contract(current))
+
+    def test_public_source_inventory_cannot_hide_or_reclassify_newer_migrations(self):
+        metadata = json.loads(build_schema.BASELINE_MANIFEST.read_text(encoding="utf-8"))
+        policy = json.loads(build_schema.SCHEMA_REPLAY_POLICY.read_text(encoding="utf-8"))
+        manifest = build_schema.build_manifest(
+            build_schema.REPO, target_commit="a" * 40,
+            dependency_path=build_schema.REPO / "ci/migration-dependencies.json")
+        self.assertEqual(2, policy["schemaVersion"])
+        self.assertEqual(434, policy["sourceMigrationCount"])
+        self.assertEqual(172, len(policy["sourceAdditionalMigrations"]))
+        excluded = set(policy["dataOnlyMigrations"]) | {
+            item["path"] for item in metadata["reconciledMigrations"]}
+        replay = {item["path"] for item in policy["sourceAdditionalMigrations"]} - excluded
+        self.assertEqual(146, len(replay))
+        selected = {item["path"] for item in
+                    build_schema.migrations_after_baseline(manifest["migrations"])}
+        self.assertTrue(replay <= selected)
+        path = sorted(replay)[0]
+        for mutation in ("missing-source", "source-drift", "incorrectly-in-baseline",
+                         "duplicate-path", "missing-path", "missing-source-sha"):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as tmp:
+                altered_policy = json.loads(json.dumps(policy))
+                altered_metadata = json.loads(json.dumps(metadata))
+                records = altered_policy["sourceAdditionalMigrations"]
+                index = next(index for index, item in enumerate(records) if item["path"] == path)
+                if mutation == "missing-source":
+                    records.pop(index)
+                    altered_policy["sourceMigrationCount"] -= 1
+                elif mutation == "source-drift":
+                    records[index]["sourceSha256"] = "0" * 64
+                elif mutation == "incorrectly-in-baseline":
+                    altered_metadata["migrations"].append(records.pop(index))
+                    altered_metadata["migrationCount"] += 1
+                    altered_policy["baselineManifestMigrationCount"] += 1
+                elif mutation == "duplicate-path":
+                    records.append(dict(records[index]))
+                elif mutation == "missing-path":
+                    del records[index]["path"]
+                else:
+                    del records[index]["sourceSha256"]
+                policy_file = pathlib.Path(tmp) / "policy.json"
+                metadata_file = pathlib.Path(tmp) / "manifest.json"
+                policy_file.write_text(json.dumps(altered_policy), encoding="utf-8")
+                metadata_file.write_text(json.dumps(altered_metadata), encoding="utf-8")
+                if mutation in ("duplicate-path", "missing-path", "missing-source-sha"):
+                    expected = "additional source 记录无效或路径重复"
+                elif mutation == "incorrectly-in-baseline":
+                    expected = "source classification 指纹不一致"
+                else:
+                    expected = "source commit migration 集合或指纹不一致"
+                with mock.patch.object(build_schema, "SCHEMA_REPLAY_POLICY", policy_file), \
+                        mock.patch.object(build_schema, "BASELINE_MANIFEST", metadata_file):
+                    with self.assertRaisesRegex(RuntimeError, expected):
+                        build_schema.migrations_after_baseline(manifest["migrations"])
+
+    def test_version_one_policy_still_reads_real_git_source(self):
+        # A small independent v1 repository proves backward compatibility without
+        # assuming that private historical objects exist in the public checkout.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            path = "chengyinhub-admin/sql/migration_example.sql"
+            source = root / path
+            source.parent.mkdir(parents=True)
+            source.write_text("CREATE TABLE example(id BIGINT PRIMARY KEY);", encoding="utf-8")
+            baseline = root / "baseline.sql"
+            baseline.write_bytes(source.read_bytes())
+            seed = root / "seed.sql"
+            seed.write_text("SELECT 1;", encoding="utf-8")
+            def git(*args):
+                return subprocess.check_output(["git", *args], cwd=root, stderr=subprocess.PIPE)
+            git("init", "--quiet")
+            git("add", "--all")
+            git("-c", "user.name=Schema fixture", "-c", "user.email=fixture@example.invalid",
+                "-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "Version one fixture")
+            commit = git("rev-parse", "HEAD").decode().strip()
+            digest = hashlib.sha256(source.read_bytes()).hexdigest()
+            metadata = {
+                "schemaVersion": 1, "sourceCommit": commit,
+                "migrationCount": 1, "reconciledCount": 0, "reconciledMigrations": [],
+                "baseSchema": {"path": "baseline.sql", "sha256": digest},
+                "migrations": [{"path": path, "sourceSha256": digest}],
+            }
+            policy = {
+                "schemaVersion": 1, "sourceCommit": commit,
+                "sourceMigrationCount": 1, "baselineManifestMigrationCount": 1,
+                "baselineMissingMigrations": {}, "baselineMissingReason": "none missing",
+                "dataOnlyMigrations": {}, "dataOnlyReason": "none data-only",
+                "baselineSeed": {"path": "seed.sql", "sha256": hashlib.sha256(seed.read_bytes()).hexdigest(),
+                                 "reason": "synthetic v1 seed", "sourceFiles": {}},
+            }
+            metadata_file = root / "manifest.json"
+            policy_file = root / "policy.json"
+            metadata_file.write_text(json.dumps(metadata), encoding="utf-8")
+            policy_file.write_text(json.dumps(policy), encoding="utf-8")
+            with mock.patch.object(build_schema, "REPO", root), \
+                    mock.patch.object(build_schema, "BASELINE", baseline), \
+                    mock.patch.object(build_schema, "BASELINE_SEED", seed), \
+                    mock.patch.object(build_schema, "BASELINE_MANIFEST", metadata_file), \
+                    mock.patch.object(build_schema, "SCHEMA_REPLAY_POLICY", policy_file):
+                self.assertEqual([], build_schema.migrations_after_baseline([{"path": path}]))
 
     def test_scratch_schema_sql_rewrites_dump_definer(self):
         dumped_view = (
@@ -217,7 +353,7 @@ class BuildSchemaMigrationSelectionTest(unittest.TestCase):
             tampered = pathlib.Path(tmp) / "policy.json"
             tampered.write_text(json.dumps(policy), encoding="utf-8")
             with mock.patch.object(build_schema, "SCHEMA_REPLAY_POLICY", tampered):
-                with self.assertRaisesRegex(RuntimeError, "source commit migration"):
+                with self.assertRaisesRegex(RuntimeError, "source classification 指纹不一致"):
                     build_schema.migrations_after_baseline(manifest["migrations"])
 
     def test_schema_mode_reports_data_assertion_without_hiding_schema_assertion(self):
