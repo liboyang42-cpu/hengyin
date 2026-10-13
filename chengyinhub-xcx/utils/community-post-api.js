@@ -10,7 +10,6 @@ function createClient(app, wxApi) {
       task.cancel = () => reject({ code: 499, msg: '操作已取消' });
       task.current = dispatch({
         hideLoading: true, silentError: true,
-        header: { 'content-type': 'application/json' },
         success: res => {
           if (currentOwner() !== task.owner) return reject({ code: 409, msg: '登录身份已变化，请重试' });
           if (Number(res && res.code) === 200) resolve(res.data);
@@ -63,6 +62,7 @@ function createClient(app, wxApi) {
       const data = options.data || {};
       return await call(task, callbacks => app.sendRequest({
         url: '/api/v1/community/reports', method: 'POST',
+        header: { 'content-type': 'application/json' },
         data: { targetType: options.url === '/api/comment/report' ? 'COMMENT' : 'CONTENT',
           targetId: data.id, reasonCode: taxonomy.reasons[index].code,
           policyVersion: taxonomy.policyVersion, requestId: data.request_id || requestId() },

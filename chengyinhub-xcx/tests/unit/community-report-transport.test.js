@@ -45,8 +45,8 @@ for (const [url, targetType, id] of [['/api/creativesquare/report', 'CONTENT', 5
     const post = h.calls[1]; assert.equal(post.url, '/api/v1/community/reports'); assert.equal(post.method, 'POST');
     for (const call of h.calls) {
       assert.equal(call.hideLoading, true); assert.equal(call.silentError, true);
-      assert.deepEqual(call.header, { 'content-type': 'application/json' });
     }
+    assert.deepEqual(post.header, { 'content-type': 'application/json' });
     assert.deepEqual(post.data, { targetType, targetId: id, reasonCode: 'SERVER_REASON', policyVersion: 'server-policy', requestId: 'caller-request' });
     post.success({ code: 200, data: { id: 71 } }); await tick();
     assert.equal(h.results[0].code, 200); assert.equal(h.completions.length, 1);
