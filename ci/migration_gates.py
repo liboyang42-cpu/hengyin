@@ -721,14 +721,26 @@ def check_schema_manifest_order_source(source):
             problems.append("schema runner must preserve ledger selection: " + target)
         else:
             indices.append(matches[0])
-    loops = [i for i, node in enumerate(main.body) if isinstance(node, ast.For)
-             and isinstance(node.target, ast.Name) and node.target.id == "m"
-             and isinstance(node.iter, ast.Name) and node.iter.id == "ordered"
-             and node.body and isinstance(node.body[0], ast.Expr)
-             and ast.dump(node.body[0].value) == ast.dump(ast.parse(
-                 'run_file(cur, REPO / m["path"], m["migrationId"], results, keep_going=a.keep_going, schema_only=True, observations=observations)',
-                 mode="eval").body)]
-    if len(loops) != 1 or len(indices) != 4 or indices != sorted(indices) or (loops and indices[-1] >= loops[0]):
+    expected_loop = ast.parse(
+        'for m in ordered:\n'
+        '    ok = run_file(cur, REPO / m["path"], m["migrationId"], results, '
+        'keep_going=a.keep_going, schema_only=True, observations=observations)\n'
+        '    if not ok and not a.keep_going:\n'
+        '        break\n').body[0]
+    expected_close = ast.parse('c.close()').body[0]
+    loops = []
+    for i, node in enumerate(main.body):
+        if (isinstance(node, ast.Try) and not node.handlers and not node.orelse
+                and len(node.finalbody) == 1
+                and ast.dump(node.finalbody[0]) == ast.dump(expected_close)):
+            loops.extend(i for statement in node.body
+                         if ast.dump(statement) == ast.dump(expected_loop))
+    # Nested or duplicate loops cannot borrow a valid direct try-body loop's proof.
+    ledger_loops = [node for node in ast.walk(main) if isinstance(node, ast.For)
+                    and any(isinstance(reference, ast.Name) and reference.id == "ordered"
+                            for reference in ast.walk(node.iter))]
+    if (len(loops) != 1 or len(ledger_loops) != 1 or len(indices) != 4
+            or indices != sorted(indices) or (loops and indices[-1] >= loops[0])):
         problems.append("schema runner must execute the ledger selection in its original order")
     flow = {"manifest", "all_migrations", "selected", "ordered"}
     for node in ast.walk(main):

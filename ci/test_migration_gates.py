@@ -1185,7 +1185,27 @@ class SharedLedgerExecutionOrder(unittest.TestCase):
             source.replace("for m in ordered:", "for m in reversed(ordered):"),
             source.replace("for m in ordered:", "ordered.reverse()\n    for m in ordered:"),
             source.replace("REPO / m[\"path\"], m[\"migrationId\"]", "REPO / \"other.sql\", m[\"migrationId\"]"),
+            source.replace("if not ok and not a.keep_going:", "if False:"),
+            source.replace("if not ok and not a.keep_going:", "if not ok and a.keep_going:"),
+            source.replace("keep_going=a.keep_going, schema_only=True", "keep_going=True, schema_only=True"),
+            source.replace("            ok = run_file(cur, REPO / m", "            run_file(cur, REPO / m"),
+            source.replace("        c.close()", "        c.commit()"),
+            source.replace('    all_migrations = manifest["migrations"]\n'
+                           '    selected = migrations_after_baseline(all_migrations)',
+                           '    selected = migrations_after_baseline(all_migrations)\n'
+                           '    all_migrations = manifest["migrations"]'),
         ]
+        loop = ('        for m in ordered:\n'
+                '            ok = run_file(cur, REPO / m["path"], m["migrationId"], results,\n'
+                '                          keep_going=a.keep_going, schema_only=True, observations=observations)\n'
+                '            if not ok and not a.keep_going:\n'
+                '                break\n')
+        self.assertIn(loop, source)
+        nested = '        if a.keep_going:\n' + ''.join('    ' + line for line in loop.splitlines(True))
+        mutations.extend([source.replace(loop, nested), source.replace(loop, loop + loop),
+                          source.replace(loop, loop + loop.replace("for m in ordered:",
+                                                                  "for m in reversed(ordered):")),
+                          source.replace(loop, loop.replace("break", "continue"))])
         for mutated in mutations:
             with self.subTest(mutation=mutations.index(mutated)):
                 self.assertNotEqual(source, mutated)
