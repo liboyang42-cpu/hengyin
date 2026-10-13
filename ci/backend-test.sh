@@ -33,6 +33,7 @@ MYBATIS_ITS=(
   PublicTopicStationCountMySqlIT
   CommunityActivityReferenceMySqlIT
   CommunityMediaEditMySqlIT
+  AppMediaAssetMySqlIT
   # 2026-08-19:类间隔离契约本身也点名跑 —— 它有三条负控(共用必撞 / 真查 information_schema /
   # ★A 的遗留数据不许喂饱 B 的 fail-closed 前置)。不点名 = 没人看着隔离,那这批又会慢慢滑回共用。
   MybatisItSchemaIsolationIT

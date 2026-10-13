@@ -29,8 +29,10 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.io.InputStream;
 import java.sql.*;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -65,11 +67,12 @@ class ClubGatherArrivalMySqlIT {
     }
 
     @BeforeEach void seed() throws Exception {
+        long now = System.currentTimeMillis();
         try (Connection connection = ds.getConnection(); Statement statement = connection.createStatement()) {
             for (String table : Arrays.asList("club_lead_checkin", "club_lead_state", "cms_registration", "cms_activity")) statement.executeUpdate("DELETE FROM " + table);
-            statement.executeUpdate("INSERT INTO cms_activity(id,member_id,club_id,del_flag,start_date,end_date,latitude,longitude) VALUES(100,9,5,0,DATE_ADD(NOW(),INTERVAL 30 MINUTE),DATE_ADD(NOW(),INTERVAL 2 HOUR),'31.23','121.47')");
+            executeTimes(connection, "INSERT INTO cms_activity(id,member_id,club_id,del_flag,start_date,end_date,latitude,longitude) VALUES(100,9,5,0,?,?,'31.23','121.47')", now + TimeUnit.MINUTES.toMillis(30), now + TimeUnit.HOURS.toMillis(2));
             statement.executeUpdate("INSERT INTO club_lead_state(activity_id,leader_member_id,status,create_time) VALUES(100,9,2,NOW())");
-            statement.executeUpdate("INSERT INTO cms_registration(id,registration_no,owner_type,owner_id,member_id,ticket_id,ticket_price,original_amount,total_amount,payable_amount,payment_status,registration_status,pay_expire_time) VALUES(1,'gather-real',2,100,7,1,0,0,0,0,2,2,DATE_ADD(NOW(),INTERVAL 1 HOUR))");
+            executeTimes(connection, "INSERT INTO cms_registration(id,registration_no,owner_type,owner_id,member_id,ticket_id,ticket_price,original_amount,total_amount,payable_amount,payment_status,registration_status,pay_expire_time) VALUES(1,'gather-real',2,100,7,1,0,0,0,0,2,2,?)", now + TimeUnit.HOURS.toMillis(1));
         }
         CmsActivityServiceImpl activities = new CmsActivityServiceImpl();
         ReflectionTestUtils.setField(activities, "cmsActivityMapper", sql.getMapper(CmsActivityMapper.class));
@@ -122,9 +125,9 @@ class ClubGatherArrivalMySqlIT {
     }
 
     @Test void actualInvalidTimePointPositionAndUnpaidScopeLeaveNoAttendance() throws Exception {
-        execute("UPDATE cms_activity SET start_date=DATE_ADD(NOW(),INTERVAL 90 MINUTE)");
+        execute("UPDATE cms_activity SET start_date=?", System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(90));
         assertNotEquals(200, controller.arrive("100", 31.23D, 121.47D).get("code")); assertEquals(0, checkins());
-        execute("UPDATE cms_activity SET start_date=DATE_ADD(NOW(),INTERVAL 30 MINUTE),latitude=NULL");
+        execute("UPDATE cms_activity SET start_date=?,latitude=NULL", System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(30));
         assertNotEquals(200, controller.arrive("100", 31.23D, 121.47D).get("code")); assertEquals(0, checkins());
         execute("UPDATE cms_activity SET latitude='31.23'");
         assertNotEquals(200, controller.arrive("100", Double.NaN, 121.47D).get("code")); assertEquals(0, checkins());
@@ -162,7 +165,15 @@ class ClubGatherArrivalMySqlIT {
         try (Connection connection = ds.getConnection(); Statement statement = connection.createStatement(); ResultSet row = statement.executeQuery("SELECT cancel_time FROM cms_activity WHERE id=100")) { assertTrue(row.next()); return row.getTimestamp(1) != null; }
     }
 
-    private void execute(String query) throws Exception { try (Connection connection = ds.getConnection(); Statement statement = connection.createStatement()) { statement.executeUpdate(query); } }
+    private void execute(String query, long... times) throws Exception { try (Connection connection = ds.getConnection()) { executeTimes(connection, query, times); } }
+    private void executeTimes(Connection connection, String query, long... times) throws Exception {
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            // DATETIME values must use the same zone as MybatisItDatabase's JDBC reader.
+            Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT+08:00"));
+            for (int i = 0; i < times.length; i++) statement.setTimestamp(i + 1, new Timestamp(times[i]), calendar);
+            statement.executeUpdate();
+        }
+    }
     private static void await(CountDownLatch latch) {
         try { if (!latch.await(10, TimeUnit.SECONDS)) throw new IllegalStateException("fixture barrier timed out"); }
         catch (InterruptedException stopped) { Thread.currentThread().interrupt(); throw new IllegalStateException(stopped); }
