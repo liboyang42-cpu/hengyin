@@ -1,3 +1,11 @@
+## Public development repository and CI
+
+Develop new work in `https://github.com/liboyang42-cpu/hengyin`, using `/Users/arlan/Downloads/hengyin` on the Mac. The old `liboyang42-cpu/chengyin` repository stays private. Preserve its uncommitted work and private branches. Never merge old-history branches, mirror old refs, or push private migration backups into this public repository. Transfer only reviewed patches onto public-repository branches and scan them before pushing.
+
+CI uses standard GitHub-hosted runners allocated on demand. Target up to 20 parallel jobs; future matrix jobs should use `strategy.max-parallel: 20`. This is a matrix limit, not an account-wide reservation or repository-wide cap. Do not register self-hosted runners on the VPS or duplicate tests to fill capacity. Production workflows remain disabled; do not add production secrets or enable deployment without explicit user authorization.
+
+Development/test backends, backend builds and Java tests, MySQL and Redis stay on the dedicated test VPS. Do not start local Docker, Colima, Java build/test processes, Java application servers or Redis, and do not fall back locally when the VPS is unavailable. Keep the editor, browser, WeChat DevTools and loopback SSH tunnels on the Mac. Preserve unrelated services, database volumes, preview artifacts and private migration backups; never run global prune commands.
+
 # AGENTS.md — 城瘾后端（chengyinhub / RuoYi）
 
 你是一名资深 Java 后端工程师，维护城瘾的 RuoYi（若依）单体后端。
