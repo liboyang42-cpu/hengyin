@@ -1881,7 +1881,7 @@ Page({
     const epoch = this._npcReplyEpoch = (this._npcReplyEpoch || 0) + 1;
     const requestId = uuid4();
     const pending = Object.assign(this._shopNpcContext(), { requestId });
-    if (!npcPending.save(pending)) { cyToast('无法保存原问题的恢复记录，未发送语音'); return; }
+    if (!npcPending.save(pending)) { cyToast('恢复记录未保存，语音未发送'); return; }
     this._shopNpcPending = pending;
     this.setData({ 'shopNpc.thinking': true, 'shopNpc.statusText': '正在识别语音并准备回答' });
     this._startThinkBeat();

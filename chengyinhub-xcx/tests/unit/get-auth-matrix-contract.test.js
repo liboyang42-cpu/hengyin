@@ -22,10 +22,14 @@ const PLAY_PROGRESS_CONTROLLER = path.resolve(
   '../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java'
 );
 
-// 当前源码50个GET调用点的显式权限清单（直接29 + req包装21）。
+// 当前源码55个GET调用点的显式权限清单（直接32 + req包装23）。
 // optional = 后端允许匿名，但登录时会按 uid 返回个人态，所以仍使用默认认证；
 // required = 后端 anyRequest().authenticated()，绝不能 auth:false。
 const MATRIX = [
+  // W2 原请求回查按当前会员与原对象读取；日历沿已有活动创建者/有效成员范围。
+  ['components/cy/npc-chat/index.js', "url: '/api/ai/npc/request-status'", 'required', 'member', 'self-member-history'],
+  ['pages/play/index.js', "req('/api/ai/npc/request-status'", 'required', 'paid-member', 'current-session'],
+  ['pages/club/utils/club-event-calendar.js', "url: '/api/club/calendar'", 'required', 'activity-owner/club-member', 'activity-perspective-access'],
   // 本人处置列表：后端从已认证主体派生 owner，不接受他人 memberId。
   ['pages/shezhi/components/post-governance/index.js', "url: '/api/v1/community/me/enforcements'", 'required', 'member', 'self-member-history'],
   // 俱乐部直付应收只读：商家岗位 FINANCE_READ 派生店主，俱乐部按当前主理人归属校验。
@@ -222,8 +226,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-09-24 CU-C-68:merchantinfo 新增第二处 /api/game/session/merchant/entries GET
   //   (抽屉资格预探,权限档与上一处相同:required/merchant)⇒ 30 → 31。
   // 客户页退役触达：移除券候选、任务列表、任务详情三处 GET，31 → 28。
-  assert.equal(directCount, 30, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
-  assert.equal(wrapperCount, 22, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
+  assert.equal(directCount, 32, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  assert.equal(wrapperCount, 23, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(MATRIX.length, directCount + wrapperCount);
 
   MATRIX.forEach(([file, marker, mode, role, scope]) => {
