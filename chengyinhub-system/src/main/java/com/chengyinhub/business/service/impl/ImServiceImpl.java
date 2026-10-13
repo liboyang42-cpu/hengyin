@@ -1259,6 +1259,15 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    public Long findIntentId(String eventKey) {
+        if (eventKey == null || !eventKey.matches("[A-Za-z0-9:_-]{1,96}"))
+            throw new ServiceException("通知原事件身份无效", 400);
+        Map<String, Object> intent = notificationIntentMapper.selectByKeyForUpdate(eventKey);
+        return intent == null ? null : ((Number) intent.get("id")).longValue();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public Long enqueue(Long recipient, Integer msgType, String content, String extraJson, String eventKey) {
         return enqueueSystemNotification(recipient, msgType, content, extraJson, eventKey);
     }

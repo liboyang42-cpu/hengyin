@@ -58,6 +58,26 @@ class BusinessAuditLogQueryServiceTest {
     }
 
     @Test
+    void sensitiveIdentityBankLocationAndFreeformContactsAreProjectedWithoutMutation() {
+        BusinessAuditEvent event = new BusinessAuditEvent(); event.setId(9L);
+        String original = "{\"items\":[{\"unionId\":\"union-ref\",\"bankAccount\":\"bank-ref\",\"idcard\":\"id-ref\",\"address\":\"place\",\"lat\":31,\"location\":{\"lng\":121},\"status\":2}]}";
+        event.setBeforeJson(original); event.setReason("联系方式 13812345678 someone@example.org");
+        when(mapper.selectAuditLogPage(any(BusinessAuditLogQueryDTO.class))).thenReturn(Arrays.asList(event));
+        BusinessAuditEvent safe = service.query(new BusinessAuditLogQueryDTO(), true).getItems().get(0);
+        assertEquals("{\"items\":[{\"unionId\":\"***\",\"bankAccount\":\"***\",\"idcard\":\"***\",\"address\":\"***\",\"lat\":\"***\",\"location\":\"***\",\"status\":2}]}", safe.getBeforeJson());
+        assertEquals("联系方式 *** ***", safe.getReason());
+        assertEquals(original, event.getBeforeJson());
+        assertEquals("联系方式 13812345678 someone@example.org", event.getReason());
+    }
+
+    @Test
+    void malformedAuditJsonNeverReturnsRawSensitiveText() {
+        BusinessAuditEvent event = new BusinessAuditEvent(); event.setBeforeJson("{broken-unionId-secret");
+        when(mapper.selectAuditLogPage(any(BusinessAuditLogQueryDTO.class))).thenReturn(Arrays.asList(event));
+        assertEquals(null, service.query(new BusinessAuditLogQueryDTO(), true).getItems().get(0).getBeforeJson());
+    }
+
+    @Test
     void adminProjectionRedactsSensitiveBeforeAfterFields() {
         BusinessAuditLogQueryDTO query = new BusinessAuditLogQueryDTO();
         BusinessAuditEvent event = new BusinessAuditEvent();

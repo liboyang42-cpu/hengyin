@@ -1,0 +1,2712 @@
+{
+  "base": "e67e72a",
+  "originalCount": 255,
+  "count": 255,
+  "scope": "B现有底层子范围；所有255原项去向保留，非B无完成声明",
+  "items": [
+    {
+      "originalId": "F0028",
+      "title": "选择优惠券",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0028",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "修正功能名称为积分抵扣；若新增票价券，需资格、占用、支付失败释放和退款政策整套设计。"
+    },
+    {
+      "originalId": "F0431",
+      "title": "合作结算提醒",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0431",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：当前只证明微信coopSettle订阅授权；授权并不形成按每笔合作结算的已发送/失败/未知回执结果，具体发送与授权另列。 后续：保存/查询当前订阅与业务真实发送回执分别验证，取消授权后的显示和失败恢复实机核验。"
+    },
+    {
+      "originalId": "F0494",
+      "title": "票夹活动签到入口",
+      "originalWorkUnit": "A2",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0494",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：该票夹行只读取本人报名并跳原单，不执行签到；真实签到凭证和核销是独立命令。 后续：修正入口描述，票夹动作指向真实签到凭证并回读履约；不能点开详情即视为签到。"
+    },
+    {
+      "originalId": "F0509",
+      "title": "购物车结账",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0509",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "补原兑换请求/原订单回读，区分实物待履约和具体数字权益交付；弱网重提不再扣积分/造新单。"
+    },
+    {
+      "originalId": "F0510",
+      "title": "商城订单支付恢复",
+      "originalWorkUnit": "App客户端后置",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0510",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "按原目标缺requestId+内容hash+全子订单映射/原批次恢复；本轮App暂停，不实施。"
+    },
+    {
+      "originalId": "F0511",
+      "title": "兑换商品权益",
+      "originalWorkUnit": "App客户端后置",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0511",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "缺交付类型、订单行幂等发放/失败补偿与部分履约回读；App暂停不改。"
+    },
+    {
+      "originalId": "F0535",
+      "title": "平台支付事实核对",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0535",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "可查看保存状态但不能声称已独立核对付款；如需支付核对须关联原渠道事务和回查回执，区分历史现金/当前积分，明确未知和已确认。"
+    },
+    {
+      "originalId": "F0572",
+      "title": "平台优惠券模板管理",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0572",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "补模板更新的字段白名单、合法边界和已领规则快照；停发4/平台失效3与退款纠错分开，真实部署与并发库存另验。"
+    },
+    {
+      "originalId": "F0575",
+      "title": "平台兑换记录",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0575",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "修正能力映射，券轨迹、积分订单与礼品消耗分别列来源/持有人/履约状态，避免同名兑换合并资金口径。"
+    },
+    {
+      "originalId": "M0033",
+      "title": "占票超时释放",
+      "originalWorkUnit": "A1",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0033",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "就本项目标未确认新增代码缺口；实际调度启用、数据库与渠道配置须核对，不能凭任务类/seed认定在跑。"
+    },
+    {
+      "originalId": "M0035",
+      "title": "多票种共享容量",
+      "originalWorkUnit": "A4",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0035",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "目标是普通活动跨票种共池联扣；所查报名建单/库存路径未发现该共池或原共池占位释放身份。需先冻结适用活动及容量规则，不能用自玩额度替代。"
+    },
+    {
+      "originalId": "M0043",
+      "title": "同用户购票限额",
+      "originalWorkUnit": "A4",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0043",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "普通多票/代买跨票种统一用户上限未见同一消费闸；有效占位、取消重购政策仍需产品对象矩阵，不能擅定统一上限。"
+    },
+    {
+      "originalId": "M0049",
+      "title": "候补维护故障隔离",
+      "originalWorkUnit": "A3",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0049",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "单项隔离已接；稳定推进越过持续失败前缀及最老积压/活性读回仍缺，不能把同批继续当跨批公平。"
+    },
+    {
+      "originalId": "M0053",
+      "title": "优惠券领取/核销幂等",
+      "originalWorkUnit": "A4",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0053",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "通用发券缺host+原业务ID+reward项+内容hash的幂等入参/原券回读；特定通关发券有自己的去重不能外推所有发券。"
+    },
+    {
+      "originalId": "M0055",
+      "title": "支付回调重复处理",
+      "originalWorkUnit": "A4",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0055",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "将实际入口接inbox处理权/终态/重试消费者仍未完成；现业务CAS保留，不能以register去重当整链fence。"
+    },
+    {
+      "originalId": "M0056",
+      "title": "支付回调乱序",
+      "originalWorkUnit": "A4",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0056",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "缺各真实业务事件乱序矩阵及迟到SUCCESS的持久冲突处置消费者；不能把返回FAIL等同有人处理。"
+    },
+    {
+      "originalId": "M0061",
+      "title": "已支付未出票补偿",
+      "originalWorkUnit": "A3",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0061",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "未见二维码/权益/账/通知各交付状态统一消费者及超窗人工待办；持续补码失败可能占住限批前列。"
+    },
+    {
+      "originalId": "M0066",
+      "title": "退款对账",
+      "originalWorkUnit": "A3",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0066",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "稳定扫描/持续失败年龄与告警实际投递未闭合；原退款号/渠道终态的所有来源仍需列明，不能复用旧结果宣告达成。"
+    },
+    {
+      "originalId": "M0070",
+      "title": "核验离线边界",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0070",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：在线扫码合同已有，所查链没有受控离线核销/稳定待同步凭证消费者；断网只保原请求待核，不给成功章或重复发奖。"
+    },
+    {
+      "originalId": "M0072",
+      "title": "多方分账规则快照",
+      "originalWorkUnit": "A5",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0072",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "缺各资金链收款人/来源/规则版本快照覆盖表；券当前规则是否允许追溯改价须冻结政策并补真实快照，不宣布全分账冻结。"
+    },
+    {
+      "originalId": "M0073",
+      "title": "待结算与可提现分离",
+      "originalWorkUnit": "A5",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0073",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "基础资金分离存在；缺两套账与可提现统一差异投影、差异待办及全部入账入口核对。"
+    },
+    {
+      "originalId": "M0076",
+      "title": "对公付款凭证核对",
+      "originalWorkUnit": "A5",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0076",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "目标独立银行/受控交易核对记录未见：没有实际收款人/金额/交易身份匹配消费者；不能把凭证号/双人点击当银行核实。"
+    },
+    {
+      "originalId": "M0085",
+      "title": "合作退出补偿",
+      "originalWorkUnit": "A5",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0085",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "缺完整退出阶段/供给作废或替换/受影响已售订单/运行中补偿和拒绝后处理人矩阵。代码拒绝不等于补偿闭合。"
+    },
+    {
+      "originalId": "M0137",
+      "title": "弱网写操作恢复",
+      "originalWorkUnit": "B2",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0137",
+      "ownerDisposition": "B B2",
+      "thisRunStatus": "CURRENT_EXISTING_CHAIN_IMPLEMENTED_OR_REVIEWED; JAVA_DATABASE_AND_DEVICE_NOT_VERIFIED",
+      "thisRunScope": "原消息文本/图片/位置/路线宿主提交前保存原请求身份，未知先回读；重进只恢复原收据，不造新对象。其他域写宿主随A/C归属，非整个弱网原项完成。",
+      "evidenceReport": "verification.md",
+      "remainingOriginalGap": "缺逐宿主覆盖清单与所有宿主的持久意图/内容指纹/原结果恢复；不能把报名和游戏的实现外推付款、兑换、领奖、退出全站。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "gruelbox/transaction-outbox\nhttps://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/transactionoutbox-core/src/main/java/com/gruelbox/transactionoutbox/TransactionOutbox.java#L349\ngruelbox/transaction-outbox\nhttps://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/transactionoutbox-core/src/main/java/com/gruelbox/transactionoutbox/TransactionOutboxImpl.java#L323",
+        "rules": "任务稳定uniqueRequestId和保留期限；尚缺：重复调度会拒绝，不等于返回原业务结果；未自带同键参数hash比较\n同事务持久事件、处理锁、成功保留和失败尝试；尚缺：需要城瘾消费者/业务键/当前权限；不自带供应商恰好一次或当前微信送达回执",
+        "compatibility": "所读版本Java17；仅抽取规则，不能直接接Java8；许可：Apache-2.0；所读pom要求Java17；当前城瘾Java8不能直接引入该HEAD；许可：Apache-2.0\n许可证原文：https://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/LICENSE"
+      },
+      "referenceRulesIndex": "docs/handoffs/mini-foundation-20261013/reference-rules.json"
+    },
+    {
+      "originalId": "M0139",
+      "title": "重复点击与并发操作",
+      "originalWorkUnit": "B1",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0139",
+      "ownerDisposition": "B B1",
+      "thisRunStatus": "CURRENT_EXISTING_CHAIN_IMPLEMENTED_OR_REVIEWED; JAVA_DATABASE_AND_DEVICE_NOT_VERIFIED",
+      "thisRunScope": "消息读/增量/投影/删除的账号、会话、页和登录凭据代次；保当前后端锁序，重复请求回原message。",
+      "evidenceReport": "verification.md",
+      "remainingOriginalGap": "仍需逐宿主唯一键/同键内容/资源事务矩阵；商城settleCart当前无requestId只返回首单，不代表共用底层已覆盖。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "gruelbox/transaction-outbox\nhttps://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/transactionoutbox-core/src/main/java/com/gruelbox/transactionoutbox/TransactionOutbox.java#L349\ngruelbox/transaction-outbox\nhttps://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/transactionoutbox-core/src/main/java/com/gruelbox/transactionoutbox/TransactionOutboxImpl.java#L323",
+        "rules": "任务稳定uniqueRequestId和保留期限；尚缺：重复调度会拒绝，不等于返回原业务结果；未自带同键参数hash比较\n同事务持久事件、处理锁、成功保留和失败尝试；尚缺：需要城瘾消费者/业务键/当前权限；不自带供应商恰好一次或当前微信送达回执",
+        "compatibility": "所读版本Java17；仅抽取规则，不能直接接Java8；许可：Apache-2.0；所读pom要求Java17；当前城瘾Java8不能直接引入该HEAD；许可：Apache-2.0\n许可证原文：https://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/LICENSE"
+      },
+      "referenceRulesIndex": "docs/handoffs/mini-foundation-20261013/reference-rules.json"
+    },
+    {
+      "originalId": "M0153",
+      "title": "订阅/权益到期",
+      "originalWorkUnit": "A4",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0153",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "当前公开边界仍缺start<=now和end严格排除，premium实际模板扣额/新增闸未证实；到期既有资源处置不能猜规则。NPC独立已批准候选不等于本项全权益覆盖。"
+    },
+    {
+      "originalId": "X028",
+      "title": "现场主持：暂停/恢复/中止/取消本局",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X028",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：N25 安全中止优先（停止所有扣 HP/资源/配给、不记 END05）只有独立模型 rules_check，无本版 HTTP/数据库证据；取消本局后的退款/补偿口径未与票务原单联通核对。"
+    },
+    {
+      "originalId": "X029",
+      "title": "人工账与离线记录、恢复在线权威（高水位/epoch）",
+      "originalWorkUnit": "C6",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X029",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "本项目标的离线账签署、epoch/高水位、导入幂等及在线权威恢复在public当前未找到，旧私库实现/测试不能继承；需审核差分后再迁移。"
+    },
+    {
+      "originalId": "X034",
+      "title": "俱乐部团核销码（领队出码、商家扫码记录接待）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X034",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：误扫/扫错团无撤销接口；商家端没有\"已接待团\"列表回读；码在5分钟内可被转发重放（幂等所以不重复记，但谁扫都记为接待）；结算分账基数未与接待记录联合验收。"
+    },
+    {
+      "originalId": "X035",
+      "title": "提现前资金确认（预检挑战、内容绑定、一次消费）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X035",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "已有：真实提现到账未验，记入实跑列。"
+    },
+    {
+      "originalId": "X036",
+      "title": "发布者实名登记（收费发布/入驻前；加密存储；改绑人工）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X036",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：只做格式与校验位，未做权威二要素核验；改绑只能联系客服，没有自助申请与审核记录；票价全零免登记的判断前后端一致性靠单测。"
+    },
+    {
+      "originalId": "X038",
+      "title": "资金三段展示（待结算/争议/可提现，算不出不当0）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X038",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "已有：真实结算周期回读未验，记入实跑列。"
+    },
+    {
+      "originalId": "X040",
+      "title": "俱乐部端直营商家应收查看",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X040",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：小程序端台账与平台对公批次/结算的一致性未回读；争议与更正入口未见。"
+    },
+    {
+      "originalId": "F0003",
+      "title": "按日期筛选",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0003",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "将筛选合同传到服务端并统一游标/总数；先明示只筛已加载结果与未知字段，排序选项对应实际规则。"
+    },
+    {
+      "originalId": "F0004",
+      "title": "价格区间筛选",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0004",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "将筛选合同传到服务端并统一游标/总数；先明示只筛已加载结果与未知字段，排序选项对应实际规则。"
+    },
+    {
+      "originalId": "F0005",
+      "title": "排序切换",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0005",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "将筛选合同传到服务端并统一游标/总数；先明示只筛已加载结果与未知字段，排序选项对应实际规则。"
+    },
+    {
+      "originalId": "F0008",
+      "title": "热门搜索词",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0008",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "命名推荐搜索，若做热榜再定义时间窗、去重、作弊过滤及内容可见性。"
+    },
+    {
+      "originalId": "F0013",
+      "title": "首页推荐卡",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0013",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "existing_curated_consumer_identified_candidate_contract_pending",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "先区分精选与为你推荐，再接入已查推荐候选生成、城市与可参加条件。"
+    },
+    {
+      "originalId": "F0122",
+      "title": "调整集合时间",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0122",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "条件更新与已售检查放同一原子边界，并回读新时间；更新未知/0行不报成功，明确真实通知状态。"
+    },
+    {
+      "originalId": "F0129",
+      "title": "向指定成员广播",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0129",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "修正此项描述；若新增点对点广播需身份范围、投递回执和内容权限。"
+    },
+    {
+      "originalId": "F0180",
+      "title": "修改优惠权益",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0180",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "修正现有能力为创建；若开放修改，定义已领券成交快照、变更版本和停发边界。"
+    },
+    {
+      "originalId": "F0219",
+      "title": "合作评价",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0219",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "若呈现为履约评价，应明确体验阶段并绑定实际完成事实；唯一键部署与并发重复的错误回读需实跑，不能把已接受自动展示为已履约。"
+    },
+    {
+      "originalId": "F0225",
+      "title": "上传 NPC 头像",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0225",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "头像审核回调的MERCHANT_PROFILE当前校商家logo/cover/gallery而非门店NPC avatar，字段/对象消费者不匹配；补NPC头像独立当前版本审核与失败恢复，不能保存成功称头像已审核可见。"
+    },
+    {
+      "originalId": "F0226",
+      "title": "录制 NPC 声音",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0226",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "当前样本无上传归属回执消费；写PENDING仅id/scope过滤无当前state/version CAS，并发可双调用，外部成功但结果落库丢失缺确定vendor请求恢复。补原任务/租约/样本身份，不把声称授权当已核身份证明。"
+    },
+    {
+      "originalId": "F0263",
+      "title": "插入故事图片段",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0263",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：现有叙事结构、图片引用与正文规则冻结；本项证据不形成所有图片长期可达、内容审核及完整替代文本的统一消费者。 后续：逐段媒体可达与审核、读屏、音频后台/中断实机验收；内心独白不自动等于持久NPC记忆。"
+    },
+    {
+      "originalId": "F0264",
+      "title": "插入故事音频段",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0264",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：音频引用/本页播放已有，不能外推音频转写、跨端续播与所有后台中断的统一恢复合同。 后续：逐段媒体可达与审核、读屏、音频后台/中断实机验收；内心独白不自动等于持久NPC记忆。"
+    },
+    {
+      "originalId": "F0301",
+      "title": "D20 能力检定",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0301",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：D20掷骰判定已消费，但此diceRoll modifier为作者静态配置，不能说已自动连接玩家能力属性；技能修正/条件和可重掷应走实际check规则，不能混称所有D20能力检定。"
+    },
+    {
+      "originalId": "F0308",
+      "title": "上传拍照任务",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0308",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：R5有照片证据归属与真实视觉判定，旧版fallback可放行但不证明照片真达标；两条判定不能混用。 后续：真图/弱网/内容安全与视觉供应商实跑；不把旧版兜底当照片真实达标，图片访问和持久结果受控。"
+    },
+    {
+      "originalId": "F0309",
+      "title": "扫码任务",
+      "originalWorkUnit": "A2",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0309",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：实际是冻结节点静态码匹配，不具动态核销码的时效/一次消费与可信到场证明。 后续：静态任务码转发和客户端坐标可信边界需明确；有金钱奖励的现场资格必须另核。"
+    },
+    {
+      "originalId": "F0329",
+      "title": "任务暂停后恢复",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0329",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "明确离开后继续计时；如允许暂停需服务端暂停累计时长和恢复期限合同。"
+    },
+    {
+      "originalId": "F0334",
+      "title": "反应速度游戏",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0334",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "按奖励价值限制自报成绩；有金额或强到场资格时接可信证据或授权现场见证，真机校准/中断/替代路线验收。"
+    },
+    {
+      "originalId": "F0335",
+      "title": "倾斜弹球游戏",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0335",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "按奖励价值限制自报成绩；有金额或强到场资格时接可信证据或授权现场见证，真机校准/中断/替代路线验收。"
+    },
+    {
+      "originalId": "F0336",
+      "title": "精准停表",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0336",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "按奖励价值限制自报成绩；有金额或强到场资格时接可信证据或授权现场见证，真机校准/中断/替代路线验收。"
+    },
+    {
+      "originalId": "F0337",
+      "title": "安静保持挑战",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0337",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "按奖励价值限制自报成绩；有金额或强到场资格时接可信证据或授权现场见证，真机校准/中断/替代路线验收。"
+    },
+    {
+      "originalId": "F0338",
+      "title": "喊声挑战",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0338",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "按奖励价值限制自报成绩；有金额或强到场资格时接可信证据或授权现场见证，真机校准/中断/替代路线验收。"
+    },
+    {
+      "originalId": "F0339",
+      "title": "指南针挑战",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0339",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "按奖励价值限制自报成绩；有金额或强到场资格时接可信证据或授权现场见证，真机校准/中断/替代路线验收。"
+    },
+    {
+      "originalId": "F0351",
+      "title": "玩家退出体验",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0351",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：团队退出有版本/资源收口，离开页面和个人局/旧玩法不等价；不能推广为所有模式统一退出、停钟或退款。 后续：个人局/团队局退出边界及预留释放逐模式实跑；不把游玩退出自动映射退款。"
+    },
+    {
+      "originalId": "F0357",
+      "title": "完成后推荐下一路线",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0357",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "existing_finish_consumer_node_regression_contract_pending",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "先过滤当下可参加、时长体力与已玩项目，不足补齐；明确附近推荐来源和不保证可购。"
+    },
+    {
+      "originalId": "F0380",
+      "title": "漫游护照",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0380",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：护照聚合本人本机记录，不存在此链的跨设备历史同步/权威成就认证。 后续：换设备本地缺记录、历史版本、轨迹隐私和失效记录实机核验；需要跨端先建立明确同步合同。"
+    },
+    {
+      "originalId": "F0381",
+      "title": "漫游历史",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0381",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：本机历史可恢复，未接云端上传/版本冲突/跨设备全量下载链。 后续：补上传/下载、版本冲突与照片可访问期限；本地历史不承诺换机保留。"
+    },
+    {
+      "originalId": "F0384",
+      "title": "撤销/调整漫游分享可见性",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0384",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "若要逐条撤回/改可见性，补token归属/版本和读侧资格；已导出的图片无法靠删token召回。"
+    },
+    {
+      "originalId": "F0385",
+      "title": "撤回漫游位置同意",
+      "originalWorkUnit": "C3",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0385",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "连接授权真源、定位持有者清理和所有重新启动闸门，再测跨页/锁屏/重进。"
+    },
+    {
+      "originalId": "F0386",
+      "title": "清理本地漫游缓存",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0386",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "clearLocal明确也清recovery；未结算/未知首写时应先回原服务器事实再清关联键，避免本机恢复线索丢失。"
+    },
+    {
+      "originalId": "F0403",
+      "title": "漫游任务列表",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0403",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：面板消费官方活动与本人参加事实，不是通用个人GPS任务清单；新任务类型需真实完成来源。 后续：名称区分官方活动任务与路线节点任务，后续任务来源先接可信完成事件。"
+    },
+    {
+      "originalId": "F0412",
+      "title": "发送路线卡片",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0412",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "送出时未统一校delFlag/status/受众，摘要可能保留已下线对象名；卡片成功不授游玩权益。补统一公开引用资格，失效卡当前读回和原消息摘要策略需明确。"
+    },
+    {
+      "originalId": "F0457",
+      "title": "测试玩法当前版本",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0457",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：测试是本地当前配置预览，未写真实玩家资源/结果，不能替代服务端同发布版本运行验证。 后续：逐玩法对照预览与服务端支持矩阵、配置版本及正式结果；加入明确预览标记。"
+    },
+    {
+      "originalId": "F0460",
+      "title": "官方活动任务",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0460",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "优先淘汰或约束旧版客户端自报完成；每种集体指标只汇总有效证据，奖励重试不重复计贡献。"
+    },
+    {
+      "originalId": "F0469",
+      "title": "主题评价/投票",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0469",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "展示须区分普通意见与已体验评价；当前发布资格不要求真实完成，不能把有首评奖励规则误写为所有评价都验过参与或履约。"
+    },
+    {
+      "originalId": "F0487",
+      "title": "玩法教程列表",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0487",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "明确改进点：玩法指南包含本地玩法说明与真实路由，并读common玩法说明列表/详情；失败、空与重试分开。服务端教程列表无显式发布/有效状态筛选，详情按ID直接读取，教程不执行玩家任务规则。；若草稿/停用教程不可公开，补服务器可见性；文档需关联玩法版本并清晰跳到正确场景。"
+    },
+    {
+      "originalId": "F0488",
+      "title": "玩法教程详情",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0488",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "明确改进点：玩法指南包含本地玩法说明与真实路由，并读common玩法说明列表/详情；失败、空与重试分开。服务端教程列表无显式发布/有效状态筛选，详情按ID直接读取，教程不执行玩家任务规则。；若草稿/停用教程不可公开，补服务器可见性；文档需关联玩法版本并清晰跳到正确场景。"
+    },
+    {
+      "originalId": "F0522",
+      "title": "预制故事入口",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0522",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "先隔离会员存档和保存失败，再区分本地故事完成与正式任务/奖励；坏档重置须说明并提供恢复。"
+    },
+    {
+      "originalId": "F0523",
+      "title": "人生/生存类故事档案",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0523",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "先隔离会员存档和保存失败，再区分本地故事完成与正式任务/奖励；坏档重置须说明并提供恢复。"
+    },
+    {
+      "originalId": "F0524",
+      "title": "App 玩法指南",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0524",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "明确改进点：玩法指南包含本地玩法说明与真实路由，并读common玩法说明列表/详情；失败、空与重试分开。服务端教程列表无显式发布/有效状态筛选，详情按ID直接读取，教程不执行玩家任务规则。；若草稿/停用教程不可公开，补服务器可见性；文档需关联玩法版本并清晰跳到正确场景。"
+    },
+    {
+      "originalId": "F0528",
+      "title": "通过/拒绝内容",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0528",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "逐bizType核对象实际结果回读；为best-effort失败补可重放待办与告警，升级仅增加处理层级，不宣称裁决完成。"
+    },
+    {
+      "originalId": "F0529",
+      "title": "升级内容审核",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0529",
+      "ownerDisposition": "B mixed-B",
+      "thisRunStatus": "CURRENT_EXISTING_CHAIN_IMPLEMENTED_OR_REVIEWED; JAVA_DATABASE_AND_DEVICE_NOT_VERIFIED",
+      "thisRunScope": "核现用举报/审核/原处罚/文字申诉链；新审核能力/附件/操作UI后置，底层链保留。",
+      "evidenceReport": "verification.md",
+      "remainingOriginalGap": "逐bizType核对象实际结果回读；为best-effort失败补可重放待办与告警，升级仅增加处理层级，不宣称裁决完成。",
+      "reference": {
+        "status": "有对应规则源码；需移植验证",
+        "links": "discourse/discourse\nhttps://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/app/models/reviewable_flagged_post.rb#L50\ndiscourse/discourse\nhttps://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/app/models/reviewable.rb#L418",
+        "rules": "按审核身份和被举报对象构造可用处置；尚缺：不自动构成城瘾多原因合案、附件独立证据或误报/处罚政策\n审核动作验证、状态推进及记录；尚缺：城瘾实际bizType处置/独立申诉/迟到回调必须落到真实对象",
+        "compatibility": "Ruby/Rails；举报处理规则对照；许可：GPL-2.0；Ruby/Rails；审核状态与权限规则对照；许可：GPL-2.0\n许可证原文：https://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/LICENSE.txt"
+      },
+      "referenceRulesIndex": "docs/handoffs/mini-foundation-20261013/reference-rules.json"
+    },
+    {
+      "originalId": "F0550",
+      "title": "平台业务转化分析",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0550",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "按用户/订单/会话定义分母、去重和支付事实，并核数据生成作业/新鲜度；拒绝以曝光次数混充人数。"
+    },
+    {
+      "originalId": "F0551",
+      "title": "平台推荐内容配置",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0551",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "修正为推荐评分查询；评分日期/版本、生成功能与实验回滚需独立能力，页面有数据不能当内容运营配置已完成。"
+    },
+    {
+      "originalId": "M0001",
+      "title": "跨场景兴趣共享",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0001",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "新增画像消费者/统一兴趣引擎后置。"
+    },
+    {
+      "originalId": "M0002",
+      "title": "长期兴趣与本次意图区分",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0002",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "新增会话意图/预算输入后置。"
+    },
+    {
+      "originalId": "M0003",
+      "title": "内容语义标签",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0003",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "新增语义标签后置；既有题材过滤可独立验。"
+    },
+    {
+      "originalId": "M0004",
+      "title": "推荐候选召回",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0004",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "先核此现存 API 是否被产品使用并修既有可见性合同；不新接小程序推荐入口。"
+    },
+    {
+      "originalId": "M0005",
+      "title": "多种内容联合推荐",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0005",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "联合推荐属于新增能力/页面编排，后置。"
+    },
+    {
+      "originalId": "M0006",
+      "title": "新帖冷启动",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0006",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "新帖试投能力后置；现存 feed 资格可继续核。"
+    },
+    {
+      "originalId": "M0007",
+      "title": "新主题冷启动",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0007",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "先审现有回退资格；新主题曝光承诺后置。"
+    },
+    {
+      "originalId": "M0008",
+      "title": "新商家冷启动",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0008",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "新商家试投后置。"
+    },
+    {
+      "originalId": "M0009",
+      "title": "新用户冷启动",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0009",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "新输入/问答交互后置；现有无位置降级独立保留。"
+    },
+    {
+      "originalId": "M0010",
+      "title": "推荐多样性",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0010",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "新多样性策略后置。"
+    },
+    {
+      "originalId": "M0011",
+      "title": "推荐时效",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0011",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "若保此 API，先修现有过期候选；引入完整刷新策略需另核数据生产者。"
+    },
+    {
+      "originalId": "M0012",
+      "title": "推荐地域与交通可达性",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0012",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "断点：同城基础存在，推荐链缺当前位置/时间预算→可达候选过滤，不能同城就称可到访。"
+    },
+    {
+      "originalId": "M0013",
+      "title": "推荐探索与利用",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0013",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "新探索策略后置。"
+    },
+    {
+      "originalId": "M0014",
+      "title": "推荐特征更新",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0014",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "source_repair_node_protocol_verified_java_db_pending",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "先补已有事件可信度边界；新特征版本、评分作业与退款修正政策后置。"
+    },
+    {
+      "originalId": "M0015",
+      "title": "推荐训练和在线数据一致性",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0015",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "新增训练一致性与版本系统后置。"
+    },
+    {
+      "originalId": "M0016",
+      "title": "推荐降级",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0016",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "actual_square_recovery_node_verified_recommendation_pending",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "先修现有回退资格；数据库异常策略需合同，不把异常当空。"
+    },
+    {
+      "originalId": "M0017",
+      "title": "推荐分页去重",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0017",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "actual_square_source_repair_node_verified_db_device_pending",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "现有帖子游标可回归；新推荐分页协议后置。"
+    },
+    {
+      "originalId": "M0018",
+      "title": "推荐负反馈",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0018",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "断点：帖文负反馈已消费，跨主题/活动/漫游兴趣未消费负向信号；解除屏蔽和删除被引用帖后的题材范围需明确。"
+    },
+    {
+      "originalId": "M0019",
+      "title": "兴趣信号撤回",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0019",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "定义撤回当前收藏与长期兴趣排除的区别；如产品承诺可撤回兴趣，需重算/负向消费者，不能误说取消已减推荐权重。"
+    },
+    {
+      "originalId": "M0020",
+      "title": "推荐解释",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0020",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "断点：原因数据已有，但展示/解释词典/调整后反馈与新排序尚未形成；原因需对应真实规则，不能给最新排序贴个人兴趣解释。"
+    },
+    {
+      "originalId": "M0021",
+      "title": "创作者曝光机会",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0021",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "新创作者分发策略后置。"
+    },
+    {
+      "originalId": "M0023",
+      "title": "有效曝光定义",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0023",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "不新增采集交互/规则；保留将来资格采集合同，当前仅核既有事件队列。"
+    },
+    {
+      "originalId": "M0024",
+      "title": "行为事件去重",
+      "originalWorkUnit": "C5",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0024",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "source_repair_node_verified_java_db_pending",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "最小补原队列快照确认、accepted 合法回执、存储失败保留、账号晚回包隔离与同步异常；服务端同键异内容另列窄合同。"
+    },
+    {
+      "originalId": "M0025",
+      "title": "业务漏斗贯通",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0025",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：实际已有用户分母和步骤时间约束，但不按原订单/会话串全过程，跨日转换不归入同一旅程；客户端支付名非到账证明，真实作业新鲜度另验。"
+    },
+    {
+      "originalId": "M0026",
+      "title": "作弊互动过滤",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0026",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "partial_financial_fact_repair_java_db_pending",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "先区分客户端交互与权威成交权重来源；设备指纹、挑战或封禁策略属于新增能力，不实施。"
+    },
+    {
+      "originalId": "M0027",
+      "title": "推荐实验分组",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0027",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "新实验平台后置。"
+    },
+    {
+      "originalId": "M0028",
+      "title": "推荐质量护栏",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0028",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "新增护栏策略后置，不能用内容下架替代。"
+    },
+    {
+      "originalId": "M0029",
+      "title": "推荐变化回滚",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0029",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "新推荐版本回滚后置。"
+    },
+    {
+      "originalId": "M0090",
+      "title": "条件叙事与隐藏信息",
+      "originalWorkUnit": "C6",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0090",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "缺旧玩法/完整状态与变化明细、媒体URL、各NPC上下文的统一已得事实投影矩阵；不能由属性列表过滤推所有秘密安全。"
+    },
+    {
+      "originalId": "M0091",
+      "title": "不可达结局检测",
+      "originalWorkUnit": "C6",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0091",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "尚未见联合资源消耗、条件互斥和动态状态的可达解搜索/失败路径预演；图合法不能证明可通关。"
+    },
+    {
+      "originalId": "M0103",
+      "title": "传感器校准",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0103",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：有本机噪声校准，未证明跨设备绝对分贝/用户发声真伪；heldMs是客户端申报，R5可信传感器缺证时另拒。需设备校准和授权替代玩法，不能把麦克风动画当可信履约。"
+    },
+    {
+      "originalId": "M0104",
+      "title": "传感器证据边界",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0104",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "先接通可信证明或另有授权的替代核验；禁止以客户端成功界面绕过服务端拒绝。"
+    },
+    {
+      "originalId": "M0105",
+      "title": "设备能力降级",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0105",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：3D渲染失败静态回退已接，但不覆盖所有传感器权限/证据失败替代；R5缺可信证明仍拒绝结算。 后续：按机型测试不支持渲染、资源失败、低动态及权限拒绝；互动降级不得绕过服务端证据规则。"
+    },
+    {
+      "originalId": "M0106",
+      "title": "前后台时间规则",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0106",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：页面防白赚时长存在，但不同玩法/模式暂停规则不一致，隐藏页面不自动暂停服务端deadline；必须显示本玩法明确中断/重开/继续规则，不统一称退出冻结。"
+    },
+    {
+      "originalId": "M0107",
+      "title": "定位漂移处理",
+      "originalWorkUnit": "C7",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0107",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "缺明确定位质量状态/坐标体系/客户端估计标签；这不是硬件位置证明，也没有服务端完整轨迹验真。"
+    },
+    {
+      "originalId": "M0108",
+      "title": "到店验证半径",
+      "originalWorkUnit": "C7",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0108",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "当前空间条件仍是自报坐标，不能称真实到店；高价值权益必须逐个核准可信凭证，当前roam掉落券未见商家核验前置，价值/适用政策待确认。"
+    },
+    {
+      "originalId": "M0109",
+      "title": "异常轨迹过滤",
+      "originalWorkUnit": "C7",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0109",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "所查拒绝分支仅返回错误，未见异常尝试原因/关联POI时间的持久审计与申诉原尝试链；不补造轨迹。"
+    },
+    {
+      "originalId": "M0111",
+      "title": "轨迹记录省电",
+      "originalWorkUnit": "C7",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0111",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "目标低电量/距离/精度自适应采样档与耗电反馈在所查tracker/roam未见；生命周期管理是基础，不能称省电策略实现。"
+    },
+    {
+      "originalId": "M0112",
+      "title": "私密地点遮挡",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0112",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：已有裁剪与量化，没有逐敏感地点/手动区域编辑消费者；服务端不验证用户剪裁偏好，客户端裁剪可关闭，量化不保证住宅不可推断。逐令牌编辑/撤回还缺，只有本人全撤。"
+    },
+    {
+      "originalId": "M0113",
+      "title": "个人迷雾持久化",
+      "originalWorkUnit": "C3",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0113",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "确定代码缺口：实时失败保持dirty/可重试及保存成功回读；分页readTiles失败/账号隔离还需严格同一合同。旧私库已修说明未进public。"
+    },
+    {
+      "originalId": "M0114",
+      "title": "本地未同步轨迹",
+      "originalWorkUnit": "C3",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0114",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "目标中终结后未确认点可续传尚未完成：当前明确阻断并保留；清缓存/主动删除规则未确认，不能自作主张补。可选字段严格结构校验与原SID回读完整性需当前复核。"
+    },
+    {
+      "originalId": "M0116",
+      "title": "漫游结算一致性",
+      "originalWorkUnit": "C7",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0116",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "在既有奖励链补原session/里程碑唯一补发意图和消费者；先核现有奖励outbox可否复用，避免另建奖励政策。"
+    },
+    {
+      "originalId": "M0117",
+      "title": "分享快照边界",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0117",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：分享内容仍用户自报纪念产物，不是服务端履约凭证；同token可更新快照，并非不可变快照版本。没有逐token受众修改/撤销或自然TTL，当前全撤/配额删除失效。"
+    },
+    {
+      "originalId": "M0120",
+      "title": "举报汇聚",
+      "originalWorkUnit": "B5",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0120",
+      "ownerDisposition": "B B5",
+      "thisRunStatus": "CURRENT_EXISTING_CHAIN_IMPLEMENTED_OR_REVIEWED; JAVA_DATABASE_AND_DEVICE_NOT_VERIFIED",
+      "thisRunScope": "核既有举报安全入口/原收据，维持单对象现有聚案及决定；多人自动汇聚新能力/处罚政策后置，不添加。",
+      "evidenceReport": "verification.md",
+      "remainingOriginalGap": "先保留现举报安全链；多人聚案属于增强能力后置，不自动处罚。",
+      "reference": {
+        "status": "有对应规则源码；需移植验证",
+        "links": "discourse/discourse\nhttps://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/app/models/reviewable_flagged_post.rb#L50\ndiscourse/discourse\nhttps://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/app/models/reviewable.rb#L418",
+        "rules": "按审核身份和被举报对象构造可用处置；尚缺：不自动构成城瘾多原因合案、附件独立证据或误报/处罚政策\n审核动作验证、状态推进及记录；尚缺：城瘾实际bizType处置/独立申诉/迟到回调必须落到真实对象",
+        "compatibility": "Ruby/Rails；举报处理规则对照；许可：GPL-2.0；Ruby/Rails；审核状态与权限规则对照；许可：GPL-2.0\n许可证原文：https://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/LICENSE.txt"
+      },
+      "referenceRulesIndex": "docs/handoffs/mini-foundation-20261013/reference-rules.json"
+    },
+    {
+      "originalId": "M0121",
+      "title": "审核证据最小权限",
+      "originalWorkUnit": "B5",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0121",
+      "ownerDisposition": "B B5",
+      "thisRunStatus": "CURRENT_EXISTING_CHAIN_IMPLEMENTED_OR_REVIEWED; JAVA_DATABASE_AND_DEVICE_NOT_VERIFIED",
+      "thisRunScope": "既有normalizeEvidence拒未接附件；成员Report与公开Timeline不含reporter/description/evidence/internal/operator，安全拒绝保持；新受控附件后置。",
+      "evidenceReport": "verification.md",
+      "remainingOriginalGap": "本轮维持安全拒绝；受控附件是新增能力后置，先核小程序现用举报入口。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "discourse/discourse\nhttps://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/app/controllers/uploads_controller.rb#L220\ndiscourse/discourse\nhttps://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/app/models/reviewable.rb#L418",
+        "rules": "受控媒体请求先检查权限后发送；尚缺：城瘾归属回执、当前媒体版本、头像/二维码送审和脱敏/留置不自动提供\n审核动作验证、状态推进及记录；尚缺：城瘾实际bizType处置/独立申诉/迟到回调必须落到真实对象",
+        "compatibility": "Ruby/Rails；安全资源读取原语；许可：GPL-2.0；Ruby/Rails；审核状态与权限规则对照；许可：GPL-2.0\n许可证原文：https://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/LICENSE.txt"
+      },
+      "referenceRulesIndex": "docs/handoffs/mini-foundation-20261013/reference-rules.json"
+    },
+    {
+      "originalId": "M0122",
+      "title": "审核及处罚申诉",
+      "originalWorkUnit": "B5",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0122",
+      "ownerDisposition": "B B5",
+      "thisRunStatus": "CURRENT_EXISTING_CHAIN_IMPLEMENTED_OR_REVIEWED; JAVA_DATABASE_AND_DEVICE_NOT_VERIFIED",
+      "thisRunScope": "既有文字申诉沿原enforcement、member和CAS恢复；证据附件继续拒绝；新增申诉UI/未定政策后置。",
+      "evidenceReport": "verification.md",
+      "remainingOriginalGap": "先核现用文字申诉的裁决与恢复原状态；未证实bug不重写；附件后置。",
+      "reference": {
+        "status": "本轮未找到直接匹配；规则需自定",
+        "links": "本轮没有直接匹配源码链接；见现有城瘾源码锚点",
+        "rules": "这是本轮定向候选核查结论，不是宣称GitHub全站没有相关项目。\n本项完整领域规则未在本轮候选源码中找到；直接按已核城瘾断点制定/补齐，不以通用库冒充本项实现。",
+        "compatibility": "无可直接移植候选；复用本项当前城瘾能力/按待定规则实现。"
+      },
+      "referenceRulesIndex": "docs/handoffs/mini-foundation-20261013/reference-rules.json"
+    },
+    {
+      "originalId": "M0124",
+      "title": "删除内容与证据留存",
+      "originalWorkUnit": "B5",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0124",
+      "ownerDisposition": "B B5",
+      "thisRunStatus": "CURRENT_EXISTING_CHAIN_IMPLEMENTED_OR_REVIEWED; JAVA_DATABASE_AND_DEVICE_NOT_VERIFIED",
+      "thisRunScope": "核CommunityPost软删除/媒体orphan和原enforcement evidenceSnapshot保留；保原清理/留存政策，未做生产回读。",
+      "evidenceReport": "verification.md",
+      "remainingOriginalGap": "优先验证已有清理消费者、失败补偿和原保留时间，不增加新留存政策。",
+      "reference": {
+        "status": "优先修城瘾现代码；无需外部实现",
+        "links": "discourse/discourse\nhttps://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/app/controllers/uploads_controller.rb#L220\nkagkarlsson/db-scheduler\nhttps://github.com/kagkarlsson/db-scheduler/blob/466ff4b458b971470b16cfaf4fb840b60d0266fa/db-scheduler/src/main/java/com/github/kagkarlsson/scheduler/Scheduler.java#L370",
+        "rules": "最短路线：修改本项已列城瘾源码/入口与规则；外部候选仅作对照。\n受控媒体请求先检查权限后发送；尚缺：城瘾归属回执、当前媒体版本、头像/二维码送审和脱敏/留置不自动提供\n持久任务/心跳/死执行检测与恢复原语；尚缺：运行环境配置、积压年龄/告警、外部请求取消和城瘾业务幂等另接",
+        "compatibility": "Ruby/Rails；安全资源读取原语；许可：GPL-2.0；所读pom要求Java17；现Java8不直接引入；许可：Apache-2.0\n许可证原文：https://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/LICENSE.txt\nhttps://github.com/kagkarlsson/db-scheduler/blob/466ff4b458b971470b16cfaf4fb840b60d0266fa/LICENSE"
+      },
+      "referenceRulesIndex": "docs/handoffs/mini-foundation-20261013/reference-rules.json"
+    },
+    {
+      "originalId": "M0125",
+      "title": "消息发送去重",
+      "originalWorkUnit": "B2",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0125",
+      "ownerDisposition": "B B2",
+      "thisRunStatus": "CURRENT_EXISTING_CHAIN_IMPLEMENTED_OR_REVIEWED; JAVA_DATABASE_AND_DEVICE_NOT_VERIFIED",
+      "thisRunScope": "原clientMessageId回读API及当前本人/会话/成员闸；重试先查原结果，同key沿原payload；新增持久本地记录只含ID，不存聊天原文或坐标。",
+      "evidenceReport": "verification.md",
+      "remainingOriginalGap": "只补已有私信发送的原ID/内容持久保存及精确本人查回，保留旧null路径的证据边界。",
+      "reference": {
+        "status": "有对应规则源码；需移植验证",
+        "links": "matrix-org/matrix-js-sdk\nhttps://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/src/sync.ts#L150\nmatrix-org/matrix-js-sdk\nhttps://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/src/client.ts#L2752",
+        "rules": "同步水位、受限时间线及重连处理；尚缺：不能只拷SDK；城瘾服务端需增量游标/缺段分页与当前成员范围\n显式发送事务ID、原事件发送与结果；尚缺：不能把自动生成新ID当重试；城瘾历史null客户端/持久原ID要补",
+        "compatibility": "TypeScript/Matrix协议；现小程序/App API需适配；许可：Apache-2.0；TypeScript；代码模式可读，非现Java/Flutter的直接模块；许可：Apache-2.0\n许可证原文：https://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/LICENSE"
+      },
+      "referenceRulesIndex": "docs/handoffs/mini-foundation-20261013/reference-rules.json"
+    },
+    {
+      "originalId": "M0126",
+      "title": "消息增量同步",
+      "originalWorkUnit": "B2",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0126",
+      "ownerDisposition": "B B2",
+      "thisRunStatus": "CURRENT_EXISTING_CHAIN_IMPLEMENTED_OR_REVIEWED; JAVA_DATABASE_AND_DEVICE_NOT_VERIFIED",
+      "thisRunScope": "after_id升序连续取后页，与历史cursor_id兼容；独立增量水位不被乐观已发消息maxID跳过，readTo只确认已补段水位。",
+      "evidenceReport": "verification.md",
+      "remainingOriginalGap": "为既有私信补固定水位增量协议和原游标恢复；不扩建群聊。",
+      "reference": {
+        "status": "有对应规则源码；需移植验证",
+        "links": "matrix-org/matrix-js-sdk\nhttps://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/src/sync.ts#L150\nmatrix-org/matrix-js-sdk\nhttps://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/src/client.ts#L2752",
+        "rules": "同步水位、受限时间线及重连处理；尚缺：不能只拷SDK；城瘾服务端需增量游标/缺段分页与当前成员范围\n显式发送事务ID、原事件发送与结果；尚缺：不能把自动生成新ID当重试；城瘾历史null客户端/持久原ID要补",
+        "compatibility": "TypeScript/Matrix协议；现小程序/App API需适配；许可：Apache-2.0；TypeScript；代码模式可读，非现Java/Flutter的直接模块；许可：Apache-2.0\n许可证原文：https://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/LICENSE"
+      },
+      "referenceRulesIndex": "docs/handoffs/mini-foundation-20261013/reference-rules.json"
+    },
+    {
+      "originalId": "M0127",
+      "title": "未读计数一致",
+      "originalWorkUnit": "B1",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0127",
+      "ownerDisposition": "B B1",
+      "thisRunStatus": "CURRENT_EXISTING_CHAIN_IMPLEMENTED_OR_REVIEWED; JAVA_DATABASE_AND_DEVICE_NOT_VERIFIED",
+      "thisRunScope": "显式read_to单调夹取当前消息；COUNT当前读保留较新未读；列表主动标全部已读继续旧签名，聊天传实际读水位。",
+      "evidenceReport": "verification.md",
+      "remainingOriginalGap": "在既有私信/系统通知链传入实际消费水位并校验，保留当前锁与退出/关闭条件；不做小程序群聊。",
+      "reference": {
+        "status": "有对应规则源码；需移植验证",
+        "links": "element-hq/synapse\nhttps://github.com/element-hq/synapse/blob/c0805eabb1bda3b1ffc370fec35a73d524674d60/synapse/storage/databases/main/receipts.py#L910",
+        "rules": "比较event_stream_ordering，旧/相同已读不覆盖更新记录；尚缺：客户端实际看到消息以及城瘾未读重算/并发新增仍需落实",
+        "compatibility": "Python/Matrix；AGPL源码规则对照，非直接替换IM；许可：AGPL-3.0\n许可证原文：https://github.com/element-hq/synapse/blob/c0805eabb1bda3b1ffc370fec35a73d524674d60/LICENSE-AGPL-3.0\nhttps://github.com/element-hq/synapse/blob/c0805eabb1bda3b1ffc370fec35a73d524674d60/LICENSE-COMMERCIAL"
+      },
+      "referenceRulesIndex": "docs/handoffs/mini-foundation-20261013/reference-rules.json"
+    },
+    {
+      "originalId": "M0133",
+      "title": "多端事件口径一致",
+      "originalWorkUnit": "C5/C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0133",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "wechat_queue_source_repair_node_verified_app_pending",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "本轮只核小程序账号切换/成功定义；不迁 App、不新建跨端埋点平台。"
+    },
+    {
+      "originalId": "M0134",
+      "title": "敏感数据最小化",
+      "originalWorkUnit": "B3",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0134",
+      "ownerDisposition": "B B3",
+      "thisRunStatus": "CURRENT_EXISTING_CHAIN_IMPLEMENTED_OR_REVIEWED; JAVA_DATABASE_AND_DEVICE_NOT_VERIFIED",
+      "thisRunScope": "失效/私密路线历史卡及摘要隐藏名保ID；客户端当前投影缓存重核；递归审计身份/银行卡/证件/位置投影。跨域敏感子链并非全部完成。",
+      "evidenceReport": "verification.md",
+      "remainingOriginalGap": "通用属性仍是黑名单而非每用途typed字段白名单；缺保留期限/清除消费者的完整证据。认证memberId仍可关联，不能称匿名。",
+      "reference": {
+        "status": "优先修城瘾现代码；无需外部实现",
+        "links": "本轮没有直接匹配源码链接；见现有城瘾源码锚点",
+        "rules": "最短路线：修改本项已列城瘾源码/入口与规则；外部候选仅作对照。\n本项完整领域规则未在本轮候选源码中找到；直接按已核城瘾断点制定/补齐，不以通用库冒充本项实现。",
+        "compatibility": "无可直接移植候选；复用本项当前城瘾能力/按待定规则实现。"
+      },
+      "referenceRulesIndex": "docs/handoffs/mini-foundation-20261013/reference-rules.json"
+    },
+    {
+      "originalId": "M0135",
+      "title": "运营指标分母",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0135",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "sources_reviewed_daily_failure_isolation_java_db_pending",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "现有分母回归可做；新增 journey/报表 UI 不在本轮。"
+    },
+    {
+      "originalId": "M0136",
+      "title": "操作审计",
+      "originalWorkUnit": "A5",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0136",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "缺活跃高危操作覆盖矩阵、失败/未知和敏感读取审计；自由reason不能仅靠JSON键黑名单保证敏感数据不出。"
+    },
+    {
+      "originalId": "M0146",
+      "title": "AI 请求防重复计费",
+      "originalWorkUnit": "C1",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0146",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "给既有请求冻结意图指纹、回放前按当前范围核资格；保持原请求恢复，不新增NPC功能。"
+    },
+    {
+      "originalId": "M0149",
+      "title": "AI 内容安全后展示",
+      "originalWorkUnit": "C1",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0149",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "覆盖真正发送输入的审核边界，落实已批准故障退次数/违规不退；不另问规则。"
+    },
+    {
+      "originalId": "M0150",
+      "title": "AI 超时与保底",
+      "originalWorkUnit": "C1",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0150",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "先按既有provider能力区分未调用/明确失败/未知；未知抑制盲重试，原请求可查。"
+    },
+    {
+      "originalId": "M0152",
+      "title": "额度消耗与恢复",
+      "originalWorkUnit": "C1/C2",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0152",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "最小原请求/原日期的防重恢复与错误分类，按已定服务故障退/违规不退实施。"
+    },
+    {
+      "originalId": "N001",
+      "title": "可排除的兴趣记录",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#N001",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：帖文负反馈已消费，跨主题/活动/漫游兴趣未消费负向信号；解除屏蔽和删除被引用帖后的题材范围需明确。"
+    },
+    {
+      "originalId": "N002",
+      "title": "解释并调整推荐",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#N002",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "断点：原因数据已有，但展示/解释词典/调整后反馈与新排序尚未形成；原因需对应真实规则，不能给最新排序贴个人兴趣解释。"
+    },
+    {
+      "originalId": "N003",
+      "title": "本地新作者曝光试验",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#N003",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "先做可回退的小规模城市试验：合格曝光、不同作者数、阅读质量与参加结果分别记录；不借用未经证实的小红书固定流量池。"
+    },
+    {
+      "originalId": "N011",
+      "title": "创作者运行检查器",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#N011",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：已有结构与条件语法检查，不证明所有数值/消耗/互斥组合都有可达结局，也无完整可审阅运行模拟器；先加入规则样例和失败路径预演，不把图合法当可玩保证。"
+    },
+    {
+      "originalId": "N015",
+      "title": "敏感位置分享编辑器",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#N015",
+      "ownerDisposition": "B mixed-B",
+      "thisRunStatus": "CURRENT_EXISTING_CHAIN_IMPLEMENTED_OR_REVIEWED; JAVA_DATABASE_AND_DEVICE_NOT_VERIFIED",
+      "thisRunScope": "审计位置字段投影和埋点既有坐标过滤已核/加强；原漫游定位和敏感分享编辑器归C或后置新UI，不据整条名称排除。",
+      "evidenceReport": "verification.md",
+      "remainingOriginalGap": "断点：已有裁剪与量化，没有逐敏感地点/手动区域编辑消费者；服务端不验证用户剪裁偏好，客户端裁剪可关闭，量化不保证住宅不可推断。逐令牌编辑/撤回还缺，只有本人全撤。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "Turfjs/turf\nhttps://github.com/Turfjs/turf/blob/0c20329dfc2b63555ddd5d5388c4858669df6037/packages/turf-boolean-point-in-polygon/index.ts#L39\ndiscourse/discourse\nhttps://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/app/controllers/uploads_controller.rb#L220",
+        "rules": "点在多边形内的判断原语；尚缺：不是完整住宅不可反推保护、线段裁剪或服务端字段白名单/分享撤销\n受控媒体请求先检查权限后发送；尚缺：城瘾归属回执、当前媒体版本、头像/二维码送审和脱敏/留置不自动提供",
+        "compatibility": "TypeScript/GeoJSON；坐标体系/边界需统一；许可：MIT；Ruby/Rails；安全资源读取原语；许可：GPL-2.0\n许可证原文：https://github.com/Turfjs/turf/blob/0c20329dfc2b63555ddd5d5388c4858669df6037/LICENSE\nhttps://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/LICENSE.txt"
+      },
+      "referenceRulesIndex": "docs/handoffs/mini-foundation-20261013/reference-rules.json"
+    },
+    {
+      "originalId": "X001",
+      "title": "通用玩法支持矩阵与发布门禁",
+      "originalWorkUnit": "C6",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X001",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "现有玩法发布/运行逐对核；新增C类桥接后置，不迁私库整引擎。"
+    },
+    {
+      "originalId": "X002",
+      "title": "局类型与归属（个人/独立队伍/队伍共用现场/共享世界）",
+      "originalWorkUnit": "C6",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X002",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "先核既有队伍/局读写隔离和掉线恢复；扩展局类型/物资新规则后置。"
+    },
+    {
+      "originalId": "X003",
+      "title": "任务固定费用与任选费用（先预留、成功才扣）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X003",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：N01 反复聊天与完整预留状态无专门断言；A4-02 救援 R2 付法仅配置未实测扣除；玩家端预留中/已扣/已释放三态显示未在真机核对。"
+    },
+    {
+      "originalId": "X004",
+      "title": "成功次数与同场共用范围（limitsScope）",
+      "originalWorkUnit": "C6",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X004",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "先追现玩法配置→校验→成功计数→回滚；若原能力未迁是新增迁移包后置，禁止猜次数政策。"
+    },
+    {
+      "originalId": "X005",
+      "title": "效果对象范围（本人/本队/参与者/全场，须已到达）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X005",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：N11 再次供暖、HP 封顶、不强制受益者欠债未完整断言；作者端\"效果作用于\"选择器与玩家端受益提示未在手机复核。"
+    },
+    {
+      "originalId": "X007",
+      "title": "固定奖励与任选奖励（配包选项）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X007",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "已有：手机端任选奖励选择与满包交互未真机验，记入实跑列。"
+    },
+    {
+      "originalId": "X008",
+      "title": "线索获得范围与线索正文/图片按来源和归属授权回读",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X008",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：A1-02 未断言未授权队伍取得 EV01 时的拒绝；N22 私有 EV08 与态度变化/私人同意缺断言；线索图片URL是否可被转发直取未核。"
+    },
+    {
+      "originalId": "X009",
+      "title": "终局投票与方案表决（选项/投入物资/所需线索/无方案收场）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X009",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：N20 已锁后改案释放/新签完整断言缺；N19 锁定物资仍占负重与吃粮/丢弃拒绝未逐项断言；A7-02 免费复核两次与纠错路径无本版HTTP证据；N26 队伍退出后票数规则无。"
+    },
+    {
+      "originalId": "X011",
+      "title": "收场判定：最终章、冻结局沿用冻结收场、共享世界唯一结局",
+      "originalWorkUnit": "C6",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X011",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "先核现END冻结版本、重复动作和中止区分；共享世界新能力后置。"
+    },
+    {
+      "originalId": "X012",
+      "title": "HP 归零与恢复（个人/共享；等待/挑战/步数）及共享结果卡",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X012",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：恢复面板只有单测与 HTTP（1a5bb52047 真实归零回读），未在真机走完等待/挑战/步数三路；共享归零时多人同时恢复的并发未断言。"
+    },
+    {
+      "originalId": "X013",
+      "title": "微信运动加密步数同步（服务端解密、appid 水印、同键重试）",
+      "originalWorkUnit": "C6",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X013",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "校当前既有计步挑战日期与重放边界；微信步数驱动HP恢复属于缺失扩展后置。"
+    },
+    {
+      "originalId": "X015",
+      "title": "幕末配给与缺粮封底（不欠负 HP、重进不重复）",
+      "originalWorkUnit": "C6",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X015",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "当前章末扣费封底可补回归；粮食配给作为缺失能力后置，不搬寒冬专用规则。"
+    },
+    {
+      "originalId": "X016",
+      "title": "行动额度与 HP 成本（付 HP 至 0 仍成功、上限后拒绝、战术休整次数）",
+      "originalWorkUnit": "C6",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X016",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "先核现行动计数、预算与HP封底，补现有规则回归；战术休整新增分支后置。"
+    },
+    {
+      "originalId": "X017",
+      "title": "全场一次设施竞争（并发仅一队结算、后到者免费改选）",
+      "originalWorkUnit": "C6",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X017",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "先确认是否有其他现用设施实现；若无则新增合作玩法后置，本轮不造改选交互。"
+    },
+    {
+      "originalId": "X018",
+      "title": "章节运行约束（互斥组、任选N、额外节点、机动额度）",
+      "originalWorkUnit": "C6",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X018",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "核当前已配置规则真源和发布回读；缺失约束作为新能力后置，不依据私库G01结论重写。"
+    },
+    {
+      "originalId": "X019",
+      "title": "相册证据完成（认证上传、重试/重选）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X019",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：测试后端无 OSS 凭据（交接§2待用户决定），真机上传未验；弱网中断后是否找回同一次上传、重复提交只结算一次未断言。"
+    },
+    {
+      "originalId": "X022",
+      "title": "R5 检定三段（掷骰/重掷/提交）服务端结算与权限回读",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X022",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "已有：真机未验，记入实跑列；公开/秘密检定呈现仍见 F0304（还缺）。"
+    },
+    {
+      "originalId": "X023",
+      "title": "输入挑战服务端截止（typeIn）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X023",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "已有：真机计时与前后台切换未验，记入实跑列。"
+    },
+    {
+      "originalId": "X024",
+      "title": "已结算尝试重入只恢复权威视图与结果回复去重",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X024",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "已有：真机杀进程重入未验，记入实跑列。"
+    },
+    {
+      "originalId": "X025",
+      "title": "主题服务端草稿与发布前配置章节规则（G01）",
+      "originalWorkUnit": "C4",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X025",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点（G01，寒冬实测）：章节规则编辑器只列已保存站点，新主题发布前不可配互斥组/任选/额外节点/章末配给，发布后 TopicEditWindow 只允许白名单文案编辑——手机上无法创作完整寒冬规则。服务端草稿保存也无版本号，两台设备可互相覆盖。"
+    },
+    {
+      "originalId": "X030",
+      "title": "到达核验（队长凭证/纸账/撤销）与备用站迁移",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X030",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：N24 GPS/相机权限拒绝、码损坏、无信号同等人工凭证、换点保留任务ID与不罚 HP——到达正常链有 HTTP，异常与迁点回归未找到断言。"
+    },
+    {
+      "originalId": "X031",
+      "title": "工作人员指导完成与确认队伍退出",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X031",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：N28 玩家提示后中文同义口述或引导成功有相同奖励并记 assisted——只有工作人员路径记 assisted，玩家提示路径未见；N26 队伍退出后不征用未承诺库存、公共证据保留、不虚构投票无证据。"
+    },
+    {
+      "originalId": "X033",
+      "title": "门口游戏码冷启动（扫小程序码进入：未报名去购买、已报名进游玩）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X033",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "已有：真机微信扫码冷启动未验，记入实跑列。"
+    },
+    {
+      "originalId": "F0018",
+      "title": "收藏活动/主题",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0018",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "未知结果先回读原关系；切换接口重复执行会翻转，不可直接套安全自动重试。"
+    },
+    {
+      "originalId": "F0039",
+      "title": "从票进入活动群",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0039",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "改正研究项定义；若要活动临时群，需场次成员资格、有效期和退票后的撤权。"
+    },
+    {
+      "originalId": "F0053",
+      "title": "活动组队码",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0053",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "与玩家team inviteCode分别命名、分别验证；实体二维码无法生成时必须保持失败。"
+    },
+    {
+      "originalId": "F0064",
+      "title": "俱乐部活动日历",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0064",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "完整月历需有该月全量场次和新鲜度合同；当前目录外的场次不会因切月自动获取，不能以空日历推断该月无活动。"
+    },
+    {
+      "originalId": "F0083",
+      "title": "设置报名提前量",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0083",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "修正名称为默认领队；若需要报名提前量，补开放时间、时区与报名服务消费闸。"
+    },
+    {
+      "originalId": "F0098",
+      "title": "关联活动/通关记录",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0098",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "后端验证引用对象、参与归属和当前可见性，删除/私密后安全投影；路线入口仍重新检查资格。"
+    },
+    {
+      "originalId": "F0104",
+      "title": "点赞/取消点赞",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0104",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "改为显式like=1/0与唯一关系；确认私密团可见性消费，不以对象存在替代当前访问资格。"
+    },
+    {
+      "originalId": "F0119",
+      "title": "查看帖子编辑历史",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0119",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "历史读取按当前对象可见性/角色投影，避免私密团或被改掉敏感正文历史被直链读出。"
+    },
+    {
+      "originalId": "F0148",
+      "title": "筛选门店评价",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0148",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "筛选应作用于完整查询或明确显示仅筛已加载；当前分页会漏掉尚未加载的匹配评价，管理未审内容不得混入公开统计。"
+    },
+    {
+      "originalId": "F0206",
+      "title": "切换合作分成方式",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0206",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "按实际发起身份筛可选模式，提交前展示冻结条款与资源来源；不将被拒模式列为已有可用。"
+    },
+    {
+      "originalId": "F0227",
+      "title": "测试 NPC 对话",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0227",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：测试接口独立开关且共用聊天请求恢复；NPC同user/requestId缺内容指纹，换问题复用ID仍回旧结果。 后续：测试应明确不替代玩家通行证资格验证；当前门店身份和额度实跑。"
+    },
+    {
+      "originalId": "F0228",
+      "title": "玩家发送 NPC 文本",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0228",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：门店文字NPC有通行证/节点资格，全局漫游自由追问另硬关闭；请求内容指纹未形成，不能推广全NPC可用与等价回放。 后续：验证实际配置、资格与模型通道；按结果成功/安全拒绝/处理中显示。"
+    },
+    {
+      "originalId": "F0229",
+      "title": "玩家语音 NPC 对话",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0229",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：真实ASR/文字资格已接，音频合成/回放与文字终态不是同一恢复结果；供应商开关与通道范围单列，不能转写失败补造发言。 后续：ASR供应商配置与真机麦克风实跑；没有转写成功不能补造用户发言。"
+    },
+    {
+      "originalId": "F0231",
+      "title": "NPC 回复失败重试",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0231",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "将明确重新生成和恢复原请求分开；未知结果保留原ID查询/重放，不能把新ID重答标成安全重试。"
+    },
+    {
+      "originalId": "F0233",
+      "title": "AI 生成主题草案",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0233",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：生成草案/额度预留已有，网络未知缺原生成请求ID回放；草案不是发布事实，模型地名未自动成为真实已确认节点。 后续：未知生成结果缺原请求重放时先查trace/额度，避免重新调用；真实模型、限流/费用和地名可信度需验收。"
+    },
+    {
+      "originalId": "F0258",
+      "title": "创建与移除活动合作者",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0258",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "先修复创建时所选署名ID写入并回读正确名单；协作编辑另需邀请接受、权限范围和撤权合同。"
+    },
+    {
+      "originalId": "F0458",
+      "title": "查看模板反馈/支持情况",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0458",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "明确改进点：当前查到的是模板/玩法支持矩阵：服务端提供可完成证明、工具组合和挑战限制，作者页校验矩阵结构并按主题上下文筛选。未确认独立的用户反馈收集、处理和关闭工单链。；名称区分支持情况与用户反馈；反馈若需要补作者权限、问题关联、处理状态和通知。"
+    },
+    {
+      "originalId": "F0459",
+      "title": "官方活动报名",
+      "originalWorkUnit": "A3",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0459",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "确认存量V1使用后最小统一锁行容量检查；不改名额/收费规则。"
+    },
+    {
+      "originalId": "F0463",
+      "title": "记录圈层权益使用",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0463",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "明确改进点：圈层权益使用入口实际是探索记录：验证会话成员、当前商家供给、出发条件与夜间资格，每人供给记录唯一，记录后计算完成；不消费报名票权益，也不是商家确认的兑换核销。；功能名区分自助体验记录与真实兑换；如承诺权益消费，接可核对的核销账本。"
+    },
+    {
+      "originalId": "F0466",
+      "title": "主题路线总览",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0466",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：有路网geometry则画路网，否则节点直线；没有实时步行可达、开放时段/安全路径规划消费者。 后续：明确道路路线与节点连线，补步行时间、闭店节点和可达性实跑。"
+    },
+    {
+      "originalId": "F0476",
+      "title": "商家 AI 经营建议",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0476",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "标出事实窗口/生成时间/样本量和档案版本；档案变更后失效缓存，建议不得替代财务决定。"
+    },
+    {
+      "originalId": "F0498",
+      "title": "俱乐部编辑退出恢复",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0498",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "需要恢复时补按会员/俱乐部的草稿、服务端版本冲突和成功清理；避免保存过期内容。"
+    },
+    {
+      "originalId": "F0513",
+      "title": "官方人员发送通知",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0513",
+      "ownerDisposition": "B mixed-B",
+      "thisRunStatus": "CURRENT_EXISTING_CHAIN_IMPLEMENTED_OR_REVIEWED; JAVA_DATABASE_AND_DEVICE_NOT_VERIFIED",
+      "thisRunScope": "现有站内系统/客服发送保留；原报名intent新增固定原事件、接收人、内容及投递收据；不新增通知渠道/外部UNKNOWN盲重发。",
+      "evidenceReport": "verification.md",
+      "remainingOriginalGap": "区分目标、提交、实际发送、到达、点击；补渠道真实回执与失败占位重试，避免订阅触达虚高。",
+      "reference": {
+        "status": "有对应规则源码；需移植验证",
+        "links": "gruelbox/transaction-outbox\nhttps://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/transactionoutbox-core/src/main/java/com/gruelbox/transactionoutbox/TransactionOutboxImpl.java#L323",
+        "rules": "同事务持久事件、处理锁、成功保留和失败尝试；尚缺：需要城瘾消费者/业务键/当前权限；不自带供应商恰好一次或当前微信送达回执",
+        "compatibility": "所读pom要求Java17；当前城瘾Java8不能直接引入该HEAD；许可：Apache-2.0\n许可证原文：https://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/LICENSE"
+      },
+      "referenceRulesIndex": "docs/handoffs/mini-foundation-20261013/reference-rules.json"
+    },
+    {
+      "originalId": "F0514",
+      "title": "官方活动多身份渠道",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0514",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "区分目标、提交、实际发送、到达、点击；补渠道真实回执与失败占位重试，避免订阅触达虚高。"
+    },
+    {
+      "originalId": "F0520",
+      "title": "商家增值权益及额度",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0520",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：当前环境是否启自助未回读，iOS页面没有这条自助购买链；人工开通和其他渠道另证。显示额度不代表已付款/已授予，未来起效过滤与到期资源处理另有改进。"
+    },
+    {
+      "originalId": "F0554",
+      "title": "平台角色额度配置",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0554",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "给配置写边界、版本/生效说明及消费者一致检查，非法额度须拒绝而非让创建规则解释成无上限；不凭菜单勾选赋业务对象权限。"
+    },
+    {
+      "originalId": "F0559",
+      "title": "平台世界/城市内容管理",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0559",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：世界/城市目录保存和公开读取已接；任务引用/发布版本冻结与跨活动季结算消费者不在该目录CRUD中。 后续：城市内容目录已有；任务引用、状态字段和已发布更新约束需补，不能把目录配置当可执行城市季、赛季奖励或历史规则冻结。"
+    },
+    {
+      "originalId": "F0560",
+      "title": "平台预设路线配置",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0560",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：后台和公开预设API已接，但当前简易发布走AI草案，小程序预设选择→复制草稿链未接。 后续：后台和公开API已有，不能记成当前编辑器已可选预设。重新接入须明确草稿复制、来源快照与发布冻结；预设停用不会自动改已售局。真实客户端选择链尚未接通。"
+    },
+    {
+      "originalId": "F0561",
+      "title": "平台主题风格配置",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0561",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：主题风格配置与公开API已有，当前小程序未接该预设选择和草稿消费；不能凭配置存在认为编辑器已采用。 后续：后台和公开API已有，不能记成当前编辑器已可选预设。重新接入须明确草稿复制、来源快照与发布冻结；预设停用不会自动改已售局。真实客户端选择链尚未接通。"
+    },
+    {
+      "originalId": "F0568",
+      "title": "平台商家任务派单",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0568",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "应修正能力映射为商家线索管理；如需真实任务派单，须绑定站点、接单人、资格、接收/拒绝和执行回执，当前CRUD没有这条合同。"
+    },
+    {
+      "originalId": "F0578",
+      "title": "后台字典/类别配置",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0578",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：字典/类别管理与选项读已有，但不自动驱动业务硬编码；每个业务规则仅以已列实际消费者为准。 后续：逐配置标消费方与生效/缓存刷新时间，避免后台可改但业务硬编码。"
+    },
+    {
+      "originalId": "F0579",
+      "title": "后台横幅/公告配置",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0579",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：管理横幅/公告保存与showType读取已有，玩家官方通知/订阅发送是另一链，不能把保存当送达。 后续：配置受众、排期/有效期及公开筛选，保存后从对应客户端回读；角色消息仍走官方通知事实。"
+    },
+    {
+      "originalId": "M0130",
+      "title": "业务写入与通知一致性",
+      "originalWorkUnit": "C5",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0130",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "main_b_a_notification_contract_dependency",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "优先为已有报名通知制定原业务事件持久意图/收据最小合同；其他域逐项确认后再迁，不复制旧私库整包。"
+    },
+    {
+      "originalId": "M0131",
+      "title": "补偿任务可恢复",
+      "originalWorkUnit": "A1",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0131",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "公开当前未有历史报告所述稳定窗口游标；毒项前缀/最老未解决年龄、实际消费者调度和告警送达仍缺。"
+    },
+    {
+      "originalId": "M0132",
+      "title": "重复通知抑制",
+      "originalWorkUnit": "C5",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0132",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "main_b_a_notification_contract_dependency",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "优先为已有报名通知制定原业务事件持久意图/收据最小合同；其他域逐项确认后再迁，不复制旧私库整包。"
+    },
+    {
+      "originalId": "M0141",
+      "title": "NPC 人设和事实边界",
+      "originalWorkUnit": "C8",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0141",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "本轮防越权与安全输出；逐事实引用/工具核验为新增增强后置。"
+    },
+    {
+      "originalId": "M0142",
+      "title": "NPC 记忆范围",
+      "originalWorkUnit": "C8",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0142",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "保持当前最小聚合范围；跨会话长期记忆和删除管理属于新能力后置。"
+    },
+    {
+      "originalId": "M0143",
+      "title": "NPC 已知剧情限制",
+      "originalWorkUnit": "C8",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0143",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "先确认所有build调用；若未用不接入，维护当前事实范围；活动剧情NPC扩展后置。"
+    },
+    {
+      "originalId": "M0144",
+      "title": "NPC 上下文恢复",
+      "originalWorkUnit": "C8",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0144",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "本轮只修现有原答案恢复与请求防重；新增长期上下文恢复后置。"
+    },
+    {
+      "originalId": "M0145",
+      "title": "语音识别与回复状态",
+      "originalWorkUnit": "C8",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0145",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "先明确现文字成功/语音失败的返回和不重复对话；新增音频任务恢复系统后置。"
+    },
+    {
+      "originalId": "M0147",
+      "title": "AI 并发租约",
+      "originalWorkUnit": "C1",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0147",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "补既有租约到期条件与调用前失权阻断，未知上游不盲重调；远端取消新能力后置。"
+    },
+    {
+      "originalId": "M0148",
+      "title": "AI 配额与预算",
+      "originalWorkUnit": "C1",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0148",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "日次数恢复缺陷归M0152当前修补；新增金额预算/供应商账单平台后置。"
+    },
+    {
+      "originalId": "M0154",
+      "title": "读屏与标签",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0154",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：局部标签已有，未形成全页面焦点、动态宣布、图/音替代和不同设备读屏验收；含只有图像/声音的信息仍需具体文本替代，不能标签数量当无障碍通过。"
+    },
+    {
+      "originalId": "M0155",
+      "title": "大字与触达",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0155",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：仅部分页面消费系统字阶变量，不能外推全部组件大字不截断/触达尺寸/读屏顺序。 后续：按核心付款/签到/任务页逐屏测大字、读屏、最小触达和替代信息；优先保证可完成任务。"
+    },
+    {
+      "originalId": "M0156",
+      "title": "减少动效与静态替代",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0156",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：局部消费者已接，不保证所有玩法/后台自动动画遵守；存储失败后重启可能丢偏好，需明确保存结果。静态替代与系统偏好/读屏组合设备验收。"
+    },
+    {
+      "originalId": "X006",
+      "title": "模板资源槽与站点资源对应",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X006",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "已有：开发者工具处理函数驱动的回读证据；手机触屏创作未做，记入实跑列。"
+    },
+    {
+      "originalId": "X010",
+      "title": "独立模板投票声明与采用时范围校验",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X010",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "已有：手机作者端未实跑。"
+    },
+    {
+      "originalId": "X014",
+      "title": "归零挑战资格（客观题备选、传感器挑战须备选、挑战不带结算工具）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X014",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "已有：单测与发布闸覆盖；手机作者端未实跑。"
+    },
+    {
+      "originalId": "X020",
+      "title": "本站反馈分段（选择推进、继续门控、空段禁用）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X020",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "已有：开发者工具/真机布局未验，记入实跑列。"
+    },
+    {
+      "originalId": "X021",
+      "title": "选项问答单次确认、反馈图文（≤3张）与只读重入",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X021",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "已有：真机图片上传受 OSS 凭据影响，记入实跑列。"
+    },
+    {
+      "originalId": "X026",
+      "title": "发布后编辑窗口与下架重发",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X026",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：规则错误发现于发布后时没有可走的修正路径（下架也不能改）；作者端只看到拒绝文案，没有\"复制为新草稿\"之类的出口。"
+    },
+    {
+      "originalId": "X027",
+      "title": "模板复合段（多段题目）编辑与预览",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X027",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "已有：手机触屏未验，记入实跑列。"
+    },
+    {
+      "originalId": "X032",
+      "title": "共享局控制台、回执查询与复盘导出",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X032",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：导出内容的隐私范围（是否含他队私有线索/成员信息）未核；导出与复盘未在真机/后台核对。"
+    },
+    {
+      "originalId": "X039",
+      "title": "执行俱乐部期次带票分享",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X039",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：期次列表为空时的原因（未承接/条款未开售）未区分展示；分享出的带票链接归因到执行俱乐部的结算口径未与 M0072 分账快照联合验收。"
+    },
+    {
+      "originalId": "X041",
+      "title": "灰度功能开关下发与端点必经闸",
+      "originalWorkUnit": "C5",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X041",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "existing_flags_consumers_reviewed_device_backend_pending",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "只逐既有开关查前后端同义、失败默认和真实入口；不启用原禁用聊天，不新增灰度。"
+    },
+    {
+      "originalId": "X042",
+      "title": "剧情心声收集与开场/章末阶段同步（玩家端）",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X042",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：心声领取在弱网下的待同步状态与重进补发未断言；预览模式与正式模式心声分开存储的边界未核。"
+    },
+    {
+      "originalId": "F0382",
+      "title": "漫游回放",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0382",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：回放消费本地保存轨迹，不是云端原始轨迹或当前公开分享；换机无本地记录无法由此恢复。 后续：换设备本地缺记录、历史版本、轨迹隐私和失效记录实机核验；需要跨端先建立明确同步合同。"
+    },
+    {
+      "originalId": "F0395",
+      "title": "成长等级与经验",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0395",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：到店任务真实核销触发，其他普通任务仍接受客户端完成；不能当所有成长任务均已证明实际履约。 后续：逐任务列出可信触发事件，避免客户端点击被当作所有任务真实完成。"
+    },
+    {
+      "originalId": "F0399",
+      "title": "3D 徽章查看",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0399",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：3D有资源就绪和3秒静态降级，范围仅此渲染器；读屏替代和所有机型性能结果不由这段代码证明。 后续：按机型测试不支持渲染、资源失败、低动态及权限拒绝；互动降级不得绕过服务端证据规则。"
+    },
+    {
+      "originalId": "F0401",
+      "title": "物件卡牌收藏",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0401",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "先定义物件与徽章关系、获得/重复/排序/聚拢结果；体验扩展排在履约和漫游记录后。"
+    },
+    {
+      "originalId": "F0422",
+      "title": "填写提现金额",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0422",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：小程序openWithdrawSheet当前转客服，金额表单无正常入口；后端申请存在不等于这个客户端链已可用。 后续：修正表内平台/渠道适用范围；当前人工联系、其他活跃提现端与真实付款分别验收，是否恢复该表单需产品决定。"
+    },
+    {
+      "originalId": "F0423",
+      "title": "全部余额提现",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0423",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：当前小程序提现表单无正常入口，全部余额方法仍存而未走活跃提交链。 后续：修正表内平台/渠道适用范围；当前人工联系、其他活跃提现端与真实付款分别验收，是否恢复该表单需产品决定。"
+    },
+    {
+      "originalId": "F0424",
+      "title": "编辑提现收款资料",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0424",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：当前小程序转客服，旧收款资料表单未接正常入口；银行卡服务另有身份/同意/资金规则。 后续：修正表内平台/渠道适用范围；当前人工联系、其他活跃提现端与真实付款分别验收，是否恢复该表单需产品决定。"
+    },
+    {
+      "originalId": "F0425",
+      "title": "确认提现授权",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0425",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：旧表单确认授权方法存在，正常入口已退；不能凭方法声明证明当前小程序银行卡提现已闭合。 后续：修正表内平台/渠道适用范围；当前人工联系、其他活跃提现端与真实付款分别验收，是否恢复该表单需产品决定。"
+    },
+    {
+      "originalId": "F0521",
+      "title": "帖文治理入口",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0521",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：文字处置申诉已有，证据附件归属/脱敏链明确拒绝，未接完整附件申诉。 后续：标明文字申诉范围；附件需归属/脱敏闭环再开放，处分撤销与通知已读实跑。"
+    },
+    {
+      "originalId": "N004",
+      "title": "城市体验礼物码",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#N004",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "后置试验：受赠人领取前后退款、过期、重复领取与持有人转移须先定规则。"
+    },
+    {
+      "originalId": "N005",
+      "title": "跨路线主题合集",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#N005",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "先做不含捆绑收费的公开策展合集，逐路线仍校验下架/资格，随后评估合购规则。"
+    },
+    {
+      "originalId": "N006",
+      "title": "地点纪念物好友交换",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#N006",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：匿名纪念物交换已有，好友定向赠送/接受/拒绝/撤回和对称资产转移链缺；先复用纪念物来源与审核，新增好友合同不与现匿名机制混名。"
+    },
+    {
+      "originalId": "N007",
+      "title": "自动行程回忆视频",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#N007",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "先确认真实GPS/照片时间和隐私裁剪，再小规模生成短回忆；无轨迹时不能虚构路线。"
+    },
+    {
+      "originalId": "N008",
+      "title": "连续探索保护",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#N008",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "先解决漏事件/补发，再试免费保护；不把付费保护放到核心履约前。"
+    },
+    {
+      "originalId": "N009",
+      "title": "社区新成员入门问答",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#N009",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "先用少量非敏感问题选择内容偏好；问答不得自行授予运营/财务权限，允许跳过和更改。"
+    },
+    {
+      "originalId": "N010",
+      "title": "主办方活动系列订阅",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#N010",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：主办方关注和通知存在，缺逐系列ID订阅、下一期开播触发及系列退订消费者。 后续：优先复用现有通知投递/回执，增加明确系列ID和退订，不新增泛通知流。"
+    },
+    {
+      "originalId": "N012",
+      "title": "主持桌面大屏",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#N012",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：运营命令基础已接，专用大屏仍缺；需显示当前版本/连接状态、保密投影、多人实时进度与命令未知恢复，不能把后台名单截图或移动页放大当完整主持屏。"
+    },
+    {
+      "originalId": "N013",
+      "title": "离线只读体验包",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#N013",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：运营纸账锚点已有，缺玩家只读离线包的可见范围、资源下载、版本/到期与联网复核合同。 后续：先限定公开内容离线阅读；答案/他人记录/核销与付费资格不纳入通用包，包要版本、过期和重新联网校验。"
+    },
+    {
+      "originalId": "N014",
+      "title": "活动高峰等候室",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#N014",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "先用实际峰值测吞吐/失败和公平性；只有供需高峰需要时增加签名排队资格、准入限额及风控，排队不保证有票。"
+    },
+    {
+      "originalId": "N016",
+      "title": "官方地方主题活动季",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#N016",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：地方活动可运营组合，但缺季ID、跨活动进度/徽章/总奖励聚合账。 后续：先运营组合验证地方参与与完成，再决定跨活动季账本；每场奖励仍遵守自身资格和证据。"
+    },
+    {
+      "originalId": "X037",
+      "title": "邀请人归因绑定",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#X037",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "断点：没有时效窗口——任何尚未绑定的老用户都可在任意时间被绑定；未检测互邀/环；has_inviter 只存本机，换机后会重复请求（服务端条件写保护了结果）；邀请积分/奖励口径依赖该字段，需核对奖励发放条件。"
+    },
+    {
+      "originalId": "F0157",
+      "title": "切换所管理门店",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0157",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "纠正入口描述；若支持多店需显式merchantId选择、每次权限/归属校验与隔离缓存。"
+    },
+    {
+      "originalId": "F0303",
+      "title": "配置成功档位",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0303",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "改为检定难度档位；若需要失败/部分成功/成功/大成功需结果区间与效果的明确合同。"
+    },
+    {
+      "originalId": "F0304",
+      "title": "公开/秘密检定呈现",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0304",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "若需要暗骰，先定义谁可看结果/阈值及后果，再以服务端投影遮蔽，不能仅前端不显示。"
+    },
+    {
+      "originalId": "F0392",
+      "title": "今日城市签",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0392",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "改清功能名及每日规则；留言作为图片caption审核，明确可见范围与举报；不与玩法每日诗签混用。"
+    },
+    {
+      "originalId": "F0393",
+      "title": "给后来者留言",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0393",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "改清功能名及每日规则；留言作为图片caption审核，明确可见范围与举报；不与玩法每日诗签混用。"
+    },
+    {
+      "originalId": "F0402",
+      "title": "卡牌堆聚拢/展开",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0402",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "先定义物件与徽章关系、获得/重复/排序/聚拢结果；体验扩展排在履约和漫游记录后。"
+    },
+    {
+      "originalId": "F0413",
+      "title": "发送业务结果卡",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0413",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：系统身份可生成业务卡，用户不能伪造官方结果；历史卡显示不自动随原订单/合作状态刷新，实际跳原对象才能证当前结果。 后续：逐卡列出订单/合作/售后原始ID与状态回读；历史卡不能当当前业务事实。"
+    },
+    {
+      "originalId": "F0434",
+      "title": "修改个人介绍/城市",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0434",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：当前个人资料表单不传城市/地址字段，文字介绍能保存；城市由首页等独立链处理，不是此表单完整城市设置。 后续：区分文本地址与结构化城市；资料页/首页/App更新后推荐城市统一回读。"
+    },
+    {
+      "originalId": "F0435",
+      "title": "上传个人作品集",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0435",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：作品图更新和审核有消费者，但同资料中的微信二维码未纳这次送检组合。 后续：二维码可见范围和媒体审核补齐；公开二维码不等同站内受控联系权限。"
+    },
+    {
+      "originalId": "F0436",
+      "title": "添加联系二维码",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0436",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "具体断点：二维码字段能保存/公开，但此更新链未纳二维码媒体审核，且不具站内联系权限收回规则。 后续：二维码可见范围和媒体审核补齐；公开二维码不等同站内受控联系权限。"
+    },
+    {
+      "originalId": "F0502",
+      "title": "据点详情与交互恢复",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0502",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "补拍照内容核验与受控存证，说明客户端定位的可信边界；结果未知回原打卡/领券事实，真机与重复核销实跑。"
+    },
+    {
+      "originalId": "F0504",
+      "title": "商品详情和图片",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0504",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "服务器统一详情可见性及安全字段，图片/HTML显示校验；直接已知ID读取下架商品实跑。"
+    },
+    {
+      "originalId": "F0515",
+      "title": "官方集体目标指标",
+      "originalWorkUnit": "C9",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#F0515",
+      "ownerDisposition": "B analytics/feed scope; see analytics-items-status.json",
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "evidenceReport": "analytics-verification.md",
+      "remainingOriginalGap": "核活动版本和存量V1真实使用；仅修仍在用的旧完成事实绕过，不自创指标算法。"
+    },
+    {
+      "originalId": "M0041",
+      "title": "高峰购票准入",
+      "originalWorkUnit": "A4",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0041",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "当前仅保幂等与真实库存；新排队/挑战/设备风控需数据及策略，不本轮实现。"
+    },
+    {
+      "originalId": "M0042",
+      "title": "购票防机器人",
+      "originalWorkUnit": "A4",
+      "wholeOriginalItemComplete": false,
+      "originalReferenceIndex": "docs/handoffs/mini-foundation-20261013/items.json#M0042",
+      "ownerDisposition": "Outside B file ownership; original A/C/shared/postponed mapping retained",
+      "thisRunStatus": "NOT_CLAIMED_BY_B",
+      "remainingOriginalGap": "当前仅保幂等与真实库存；新排队/挑战/设备风控需数据及策略，不本轮实现。"
+    }
+  ]
+}

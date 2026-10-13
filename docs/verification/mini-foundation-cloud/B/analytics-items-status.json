@@ -1,0 +1,899 @@
+{
+  "base": "e67e72a",
+  "scope": "B analytics/C5+C9实际消费者及混合推荐原项；原项未整条自动完成",
+  "count": 37,
+  "items": [
+    {
+      "originalId": "F0013",
+      "title": "首页推荐卡",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "inOriginalArchitecture90": false,
+      "thisRunStatus": "existing_curated_consumer_identified_candidate_contract_pending",
+      "thisRunScope": "现存topic/list is_recommend精选列表；统一候选/城市/可参加合同待核",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "先区分精选与为你推荐，再接入已查推荐候选生成、城市与可参加条件。",
+      "originalDependencies": "活动/主题当前资格、真实日期/票价字段、城市、统一分页和推荐结果。",
+      "originalAcceptance": "精选不显示虚假兴趣理由；过期/取消/无资格内容不出现可报名承诺，线上版本和点击原对象一致。",
+      "reference": {
+        "status": "优先修城瘾现代码；无需外部实现",
+        "links": "fullcalendar/fullcalendar\nhttps://github.com/fullcalendar/fullcalendar/blob/786d1b27673deef84bc550f936f61b4d4a03a7a0/packages/preact/src/event-sources/json-feed-event-source.ts#L59\ngorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/recommend.go#L107",
+        "rules": "最短路线：修改本项已列城瘾源码/入口与规则；外部候选仅作对照。\n获取视图起止范围及timeZone参数，加载成功/失败分别回调；尚缺：服务器仍需真正取当月全场次；不提供城瘾报名开放闸门/系列成员资格\n候选反馈排除、去重及不足时fallback拼接；尚缺：不是城瘾当前资格/固定评分版本游标/本次意图/作者公平份额；需领域规则",
+        "compatibility": "TypeScript/Preact标准包MIT；不直接替Flutter/小程序UI，premium不纳本次；许可：MIT；Go推荐服务；参考原语，不新开整套生产推荐部署；许可：Apache-2.0\n许可证原文：https://github.com/fullcalendar/fullcalendar/blob/786d1b27673deef84bc550f936f61b4d4a03a7a0/LICENSE.md\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [
+        "analytics-evidence/node-green.txt"
+      ],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "F0357",
+      "title": "完成后推荐下一路线",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "inOriginalArchitecture90": false,
+      "thisRunStatus": "existing_finish_consumer_node_regression_contract_pending",
+      "thisRunScope": "实际activity/list来源与feature闸/原ID排除/晚回包回归；可参加/体力/已玩/不足补齐合同待核",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "先过滤当下可参加、时长体力与已玩项目，不足补齐；明确附近推荐来源和不保证可购。",
+      "originalDependencies": "活动/主题当前资格、真实日期/票价字段、城市、统一分页和推荐结果。",
+      "originalAcceptance": "刚结束后候选闭店/售罄/已玩/距离未知；不给可购保证，用户可进入当前详情再确认资格。",
+      "reference": {
+        "status": "优先修城瘾现代码；无需外部实现",
+        "links": "fullcalendar/fullcalendar\nhttps://github.com/fullcalendar/fullcalendar/blob/786d1b27673deef84bc550f936f61b4d4a03a7a0/packages/preact/src/event-sources/json-feed-event-source.ts#L59\ngorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/recommend.go#L107",
+        "rules": "最短路线：修改本项已列城瘾源码/入口与规则；外部候选仅作对照。\n获取视图起止范围及timeZone参数，加载成功/失败分别回调；尚缺：服务器仍需真正取当月全场次；不提供城瘾报名开放闸门/系列成员资格\n候选反馈排除、去重及不足时fallback拼接；尚缺：不是城瘾当前资格/固定评分版本游标/本次意图/作者公平份额；需领域规则",
+        "compatibility": "TypeScript/Preact标准包MIT；不直接替Flutter/小程序UI，premium不纳本次；许可：MIT；Go推荐服务；参考原语，不新开整套生产推荐部署；许可：Apache-2.0\n许可证原文：https://github.com/fullcalendar/fullcalendar/blob/786d1b27673deef84bc550f936f61b4d4a03a7a0/LICENSE.md\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [
+        "analytics-evidence/node-green.txt"
+      ],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "F0551",
+      "title": "平台推荐内容配置",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "inOriginalArchitecture90": false,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "修正为推荐评分查询；评分日期/版本、生成功能与实验回滚需独立能力，页面有数据不能当内容运营配置已完成。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "修正为推荐评分查询；评分日期/版本、生成功能与实验回滚需独立能力，页面有数据不能当内容运营配置已完成。",
+      "originalDependencies": "复用类别兴趣画像、真实公开候选、recommendation_score_daily及当前城市；先建透明小规模生产消费者。",
+      "originalAcceptance": "页面能定位某线上推荐的评分来源；未生产/过期有明确标记，查看记录不被报告成运营规则已生效。",
+      "reference": {
+        "status": "优先修城瘾现代码；无需外部实现",
+        "links": "gorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/worker/pipeline.go#L124",
+        "rules": "最短路线：修改本项已列城瘾源码/入口与规则；外部候选仅作对照。\n画像/候选到推荐生成worker及缓存生产；尚缺：城瘾类别画像的字段映射、版本run/TTL及现有SQL消费者需要接入",
+        "compatibility": "Go；生成链规则对照，不直接接Java进程；许可：Apache-2.0\n许可证原文：https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0001",
+      "title": "跨场景兴趣共享",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "新增画像消费者/统一兴趣引擎后置。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "新增画像消费者/统一兴趣引擎后置。",
+      "originalDependencies": "复用类别兴趣画像、真实公开候选、recommendation_score_daily及当前城市；先建透明小规模生产消费者。",
+      "originalAcceptance": "同会员合法收藏/游玩分别改变画像及新评分，线上读到该版本；停掉生产作业会降级/告警，不只画像数字增加。",
+      "reference": {
+        "status": "有对应规则源码；需移植验证",
+        "links": "gorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/worker/pipeline.go#L124\ngorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/recommend.go#L107",
+        "rules": "画像/候选到推荐生成worker及缓存生产；尚缺：城瘾类别画像的字段映射、版本run/TTL及现有SQL消费者需要接入\n候选反馈排除、去重及不足时fallback拼接；尚缺：不是城瘾当前资格/固定评分版本游标/本次意图/作者公平份额；需领域规则",
+        "compatibility": "Go；生成链规则对照，不直接接Java进程；许可：Apache-2.0；Go推荐服务；参考原语，不新开整套生产推荐部署；许可：Apache-2.0\n许可证原文：https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0002",
+      "title": "长期兴趣与本次意图区分",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "新增会话意图/预算输入后置。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "新增会话意图/预算输入后置。",
+      "originalDependencies": "版本化评分、不同类型合格供给、当前显式意图和稳定候选身份；无需一开始上大模型。",
+      "originalAcceptance": "本次找短路线改变当前候选，结束后长期偏好保留；跨端/过期意图按明定规则，不偷偷沿用上次城市。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "gorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/recommend.go#L107\ngorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/worker/pipeline.go#L124",
+        "rules": "候选反馈排除、去重及不足时fallback拼接；尚缺：不是城瘾当前资格/固定评分版本游标/本次意图/作者公平份额；需领域规则\n画像/候选到推荐生成worker及缓存生产；尚缺：城瘾类别画像的字段映射、版本run/TTL及现有SQL消费者需要接入",
+        "compatibility": "Go推荐服务；参考原语，不新开整套生产推荐部署；许可：Apache-2.0；Go；生成链规则对照，不直接接Java进程；许可：Apache-2.0\n许可证原文：https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0003",
+      "title": "内容语义标签",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "新增语义标签后置；既有题材过滤可独立验。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "新增语义标签后置；既有题材过滤可独立验。",
+      "originalDependencies": "复用类别兴趣画像、真实公开候选、recommendation_score_daily及当前城市；先建透明小规模生产消费者。",
+      "originalAcceptance": "改题材发布新标签版本，新评分消费相应标签；空/错误标签可纠正，私密内容不因标签进入公开召回。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "gorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/worker/pipeline.go#L124",
+        "rules": "画像/候选到推荐生成worker及缓存生产；尚缺：城瘾类别画像的字段映射、版本run/TTL及现有SQL消费者需要接入",
+        "compatibility": "Go；生成链规则对照，不直接接Java进程；许可：Apache-2.0\n许可证原文：https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0004",
+      "title": "推荐候选召回",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "先核此现存 API 是否被产品使用并修既有可见性合同；不新接小程序推荐入口。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "先核此现存 API 是否被产品使用并修既有可见性合同；不新接小程序推荐入口。",
+      "originalDependencies": "复用类别兴趣画像、真实公开候选、recommendation_score_daily及当前城市；先建透明小规模生产消费者。",
+      "originalAcceptance": "前N候选全下架时从后续合格项补齐；不够则明确少于N，不能漏权限，作业输出能回查来源。",
+      "reference": {
+        "status": "有对应规则源码；需移植验证",
+        "links": "gorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/worker/pipeline.go#L124\ngorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/recommend.go#L107",
+        "rules": "画像/候选到推荐生成worker及缓存生产；尚缺：城瘾类别画像的字段映射、版本run/TTL及现有SQL消费者需要接入\n候选反馈排除、去重及不足时fallback拼接；尚缺：不是城瘾当前资格/固定评分版本游标/本次意图/作者公平份额；需领域规则",
+        "compatibility": "Go；生成链规则对照，不直接接Java进程；许可：Apache-2.0；Go推荐服务；参考原语，不新开整套生产推荐部署；许可：Apache-2.0\n许可证原文：https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0005",
+      "title": "多种内容联合推荐",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "联合推荐属于新增能力/页面编排，后置。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "联合推荐属于新增能力/页面编排，后置。",
+      "originalDependencies": "版本化评分、不同类型合格供给、当前显式意图和稳定候选身份；无需一开始上大模型。",
+      "originalAcceptance": "同屏混类型但每项可实际进入对应链；一类型无候选按规则补，不用活动分直接比较无标定帖文分。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "gorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/recommend.go#L107\ngorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/worker/pipeline.go#L124",
+        "rules": "候选反馈排除、去重及不足时fallback拼接；尚缺：不是城瘾当前资格/固定评分版本游标/本次意图/作者公平份额；需领域规则\n画像/候选到推荐生成worker及缓存生产；尚缺：城瘾类别画像的字段映射、版本run/TTL及现有SQL消费者需要接入",
+        "compatibility": "Go推荐服务；参考原语，不新开整套生产推荐部署；许可：Apache-2.0；Go；生成链规则对照，不直接接Java进程；许可：Apache-2.0\n许可证原文：https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0006",
+      "title": "新帖冷启动",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "新帖试投能力后置；现存 feed 资格可继续核。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "新帖试投能力后置；现存 feed 资格可继续核。",
+      "originalDependencies": "合格公开候选、可解释标签与评分生产、可信曝光/反馈；试投有受众/预算与退出记录。",
+      "originalAcceptance": "公开新帖有可追试投记录；拒审/刷量内容退出，同作者不能垄断，零反馈不自动称质量差。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "gorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/non_personalized.go#L45\ngorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/recommend.go#L107",
+        "rules": "非个性化推荐/回退配置的代码入口；尚缺：当前文件只是该推荐器范围；不保证新作者曝光、多类型可比或探索预算\n候选反馈排除、去重及不足时fallback拼接；尚缺：不是城瘾当前资格/固定评分版本游标/本次意图/作者公平份额；需领域规则",
+        "compatibility": "Go；只可借冷启动/回退组件，非已验证公平机制；许可：Apache-2.0；Go推荐服务；参考原语，不新开整套生产推荐部署；许可：Apache-2.0\n许可证原文：https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0007",
+      "title": "新主题冷启动",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "先审现有回退资格；新主题曝光承诺后置。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "先审现有回退资格；新主题曝光承诺后置。",
+      "originalDependencies": "合格公开候选、可解释标签与评分生产、可信曝光/反馈；试投有受众/预算与退出记录。",
+      "originalAcceptance": "新主题无历史但合格可入池；未完成发布/不可参加不能入，曝光与报名结果分别回读。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "gorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/non_personalized.go#L45\ngorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/recommend.go#L107",
+        "rules": "非个性化推荐/回退配置的代码入口；尚缺：当前文件只是该推荐器范围；不保证新作者曝光、多类型可比或探索预算\n候选反馈排除、去重及不足时fallback拼接；尚缺：不是城瘾当前资格/固定评分版本游标/本次意图/作者公平份额；需领域规则",
+        "compatibility": "Go；只可借冷启动/回退组件，非已验证公平机制；许可：Apache-2.0；Go推荐服务；参考原语，不新开整套生产推荐部署；许可：Apache-2.0\n许可证原文：https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0008",
+      "title": "新商家冷启动",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "新商家试投后置。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "新商家试投后置。",
+      "originalDependencies": "合格公开候选、可解释标签与评分生产、可信曝光/反馈；试投有受众/预算与退出记录。",
+      "originalAcceptance": "新店资格变更立刻退出候选，合格低历史店可试投；闭店/无供给不展示可履约承诺，效果可追原店。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "gorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/non_personalized.go#L45\ngorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/recommend.go#L107",
+        "rules": "非个性化推荐/回退配置的代码入口；尚缺：当前文件只是该推荐器范围；不保证新作者曝光、多类型可比或探索预算\n候选反馈排除、去重及不足时fallback拼接；尚缺：不是城瘾当前资格/固定评分版本游标/本次意图/作者公平份额；需领域规则",
+        "compatibility": "Go；只可借冷启动/回退组件，非已验证公平机制；许可：Apache-2.0；Go推荐服务；参考原语，不新开整套生产推荐部署；许可：Apache-2.0\n许可证原文：https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0009",
+      "title": "新用户冷启动",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "新输入/问答交互后置；现有无位置降级独立保留。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "新输入/问答交互后置；现有无位置降级独立保留。",
+      "originalDependencies": "合格公开候选、可解释标签与评分生产、可信曝光/反馈；试投有受众/预算与退出记录。",
+      "originalAcceptance": "拒位置/跳问答仍可发现合格内容；手选城市即时生效，少量兴趣输入不授任何商业权限。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "gorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/non_personalized.go#L45\ngorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/recommend.go#L107",
+        "rules": "非个性化推荐/回退配置的代码入口；尚缺：当前文件只是该推荐器范围；不保证新作者曝光、多类型可比或探索预算\n候选反馈排除、去重及不足时fallback拼接；尚缺：不是城瘾当前资格/固定评分版本游标/本次意图/作者公平份额；需领域规则",
+        "compatibility": "Go；只可借冷启动/回退组件，非已验证公平机制；许可：Apache-2.0；Go推荐服务；参考原语，不新开整套生产推荐部署；许可：Apache-2.0\n许可证原文：https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0010",
+      "title": "推荐多样性",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "新多样性策略后置。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "新多样性策略后置。",
+      "originalDependencies": "版本化评分、不同类型合格供给、当前显式意图和稳定候选身份；无需一开始上大模型。",
+      "originalAcceptance": "极端候选同作者/题材占满，重排符合明定上限；不足时明示放宽规则，去重不漏资格。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "gorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/recommend.go#L107\ngorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/worker/pipeline.go#L124",
+        "rules": "候选反馈排除、去重及不足时fallback拼接；尚缺：不是城瘾当前资格/固定评分版本游标/本次意图/作者公平份额；需领域规则\n画像/候选到推荐生成worker及缓存生产；尚缺：城瘾类别画像的字段映射、版本run/TTL及现有SQL消费者需要接入",
+        "compatibility": "Go推荐服务；参考原语，不新开整套生产推荐部署；许可：Apache-2.0；Go；生成链规则对照，不直接接Java进程；许可：Apache-2.0\n许可证原文：https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0011",
+      "title": "推荐时效",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "若保此 API，先修现有过期候选；引入完整刷新策略需另核数据生产者。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "若保此 API，先修现有过期候选；引入完整刷新策略需另核数据生产者。",
+      "originalDependencies": "复用类别兴趣画像、真实公开候选、recommendation_score_daily及当前城市；先建透明小规模生产消费者。",
+      "originalAcceptance": "昨日/未来/重复快照、取消活动及已截止候选；只用合格版本，不显示可报名假承诺，过期触发明确降级。",
+      "reference": {
+        "status": "优先修城瘾现代码；无需外部实现",
+        "links": "gorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/recommend.go#L107",
+        "rules": "最短路线：修改本项已列城瘾源码/入口与规则；外部候选仅作对照。\n候选反馈排除、去重及不足时fallback拼接；尚缺：不是城瘾当前资格/固定评分版本游标/本次意图/作者公平份额；需领域规则",
+        "compatibility": "Go推荐服务；参考原语，不新开整套生产推荐部署；许可：Apache-2.0\n许可证原文：https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0012",
+      "title": "推荐地域与交通可达性",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "inOriginalArchitecture90": false,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "断点：同城基础存在，推荐链缺当前位置/时间预算→可达候选过滤，不能同城就称可到访。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "断点：同城基础存在，推荐链缺当前位置/时间预算→可达候选过滤，不能同城就称可到访。",
+      "originalDependencies": "活动/主题当前资格、真实日期/票价字段、城市、统一分页和推荐结果。",
+      "originalAcceptance": "同城闭店/路线需时超过预算/未授权位置；正确过滤或明示未知，隐私拒绝时仍可手选城市。",
+      "reference": {
+        "status": "优先修城瘾现代码；无需外部实现",
+        "links": "fullcalendar/fullcalendar\nhttps://github.com/fullcalendar/fullcalendar/blob/786d1b27673deef84bc550f936f61b4d4a03a7a0/packages/preact/src/event-sources/json-feed-event-source.ts#L59\ngorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/recommend.go#L107",
+        "rules": "最短路线：修改本项已列城瘾源码/入口与规则；外部候选仅作对照。\n获取视图起止范围及timeZone参数，加载成功/失败分别回调；尚缺：服务器仍需真正取当月全场次；不提供城瘾报名开放闸门/系列成员资格\n候选反馈排除、去重及不足时fallback拼接；尚缺：不是城瘾当前资格/固定评分版本游标/本次意图/作者公平份额；需领域规则",
+        "compatibility": "TypeScript/Preact标准包MIT；不直接替Flutter/小程序UI，premium不纳本次；许可：MIT；Go推荐服务；参考原语，不新开整套生产推荐部署；许可：Apache-2.0\n许可证原文：https://github.com/fullcalendar/fullcalendar/blob/786d1b27673deef84bc550f936f61b4d4a03a7a0/LICENSE.md\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0013",
+      "title": "推荐探索与利用",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "新探索策略后置。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "新探索策略后置。",
+      "originalDependencies": "稳定会员身份、版本化策略/评分、合格曝光事件、可归因漏斗；护栏无需强造第三方平台集成。",
+      "originalAcceptance": "探索占比按已定配额，非法供给不探索；护栏恶化停止探索，常规推荐仍可用且无无源效果结论。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "Unleash/unleash-java-sdk\nhttps://github.com/Unleash/unleash-java-sdk/blob/20ff5c098a82e7f88482b05e9a88635706b45c91/src/main/java/io/getunleash/DefaultUnleash.java#L107\nPostHog/posthog\nhttps://github.com/PostHog/posthog/blob/34a467e9862fd10cc7dc9ee8806bf53fdd54b660/products/product_analytics/backend/hogql_queries/funnels/funnel.py#L81",
+        "rules": "按上下文评估开关、fallback与变体接口；尚缺：当前SDK委托featureRepository/引擎；本轮没核底层分桶，不证明稳定分组算法/护栏回滚全链\n漏斗查询按事件分组与转换窗口构造聚合调用；尚缺：本轮未读取底层aggregate_funnel UDF；城瘾原单/真实付款与作业仍需接，不宣称整算法已核",
+        "compatibility": "Java SDK/含引擎依赖；需另核JDK/部署适配，未引入；许可：Apache-2.0；Python/HogQL/ClickHouse；所选路径按根MIT范围，非Java/MySQL即插即用；许可：所选products查询文件：根LICENSE的MIT范围；ee另有许可\n许可证原文：https://github.com/Unleash/unleash-java-sdk/blob/20ff5c098a82e7f88482b05e9a88635706b45c91/LICENSE\nhttps://github.com/PostHog/posthog/blob/34a467e9862fd10cc7dc9ee8806bf53fdd54b660/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0014",
+      "title": "推荐特征更新",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "source_repair_node_protocol_verified_java_db_pending",
+      "thisRunScope": "原报名成交事实读取、归一身份、不重复画像；其他特征版本/退款修正仍待核",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "先补已有事件可信度边界；新特征版本、评分作业与退款修正政策后置。",
+      "originalDependencies": "复用真实付款/报名/结算服务端事实、现行为入库和App阅读阈值；双端需统一事件合同。",
+      "originalAcceptance": "客户端伪成交不进成交特征；迟到/重放事件只增一次，撤销或退款按明定规则产生修正而非删原账。",
+      "reference": {
+        "status": "优先修城瘾现代码；无需外部实现",
+        "links": "matrix-org/matrix-js-sdk\nhttps://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/src/client.ts#L2752",
+        "rules": "最短路线：修改本项已列城瘾源码/入口与规则；外部候选仅作对照。\n显式发送事务ID、原事件发送与结果；尚缺：不能把自动生成新ID当重试；城瘾历史null客户端/持久原ID要补",
+        "compatibility": "TypeScript；代码模式可读，非现Java/Flutter的直接模块；许可：Apache-2.0\n许可证原文：https://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [
+        "analytics-evidence/node-green.txt"
+      ],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0015",
+      "title": "推荐训练和在线数据一致性",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "新增训练一致性与版本系统后置。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "新增训练一致性与版本系统后置。",
+      "originalDependencies": "复用类别兴趣画像、真实公开候选、recommendation_score_daily及当前城市；先建透明小规模生产消费者。",
+      "originalAcceptance": "生产中途失败不切半成品，旧版本/重复日期可识别；同样输入与规则可重建线上结果，缺作业明确降级。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "gorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/worker/pipeline.go#L124",
+        "rules": "画像/候选到推荐生成worker及缓存生产；尚缺：城瘾类别画像的字段映射、版本run/TTL及现有SQL消费者需要接入",
+        "compatibility": "Go；生成链规则对照，不直接接Java进程；许可：Apache-2.0\n许可证原文：https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0016",
+      "title": "推荐降级",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "actual_square_recovery_node_verified_recommendation_pending",
+      "thisRunScope": "实际广场失败保留原列表/后批继续；专用候选空/数据库降级合同仍待核",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "先修现有回退资格；数据库异常策略需合同，不把异常当空。",
+      "originalDependencies": "候选资格、固定已完成评分版本、稳定内容ID及公开最新回退。",
+      "originalAcceptance": "数据库查询失败、真空候选、评分过期分别触发正确回退；不漏权限，用户能继续发现，运营能查故障。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "gorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/recommend.go#L107",
+        "rules": "候选反馈排除、去重及不足时fallback拼接；尚缺：不是城瘾当前资格/固定评分版本游标/本次意图/作者公平份额；需领域规则",
+        "compatibility": "Go推荐服务；参考原语，不新开整套生产推荐部署；许可：Apache-2.0\n许可证原文：https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [
+        "analytics-evidence/node-green.txt"
+      ],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0017",
+      "title": "推荐分页去重",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "actual_square_source_repair_node_verified_db_device_pending",
+      "thisRunScope": "实际creativesquare offset ID去重、页码推进、迟到/换账号恢复；专用推荐分页协议未新增",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "现有帖子游标可回归；新推荐分页协议后置。",
+      "originalDependencies": "候选资格、固定已完成评分版本、稳定内容ID及公开最新回退。",
+      "originalAcceptance": "翻页间评分更新/内容下线/相同内容多路召回；无重复漏页，旧游标过期明确重启，资格后数量按合同补齐。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "gorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/recommend.go#L107",
+        "rules": "候选反馈排除、去重及不足时fallback拼接；尚缺：不是城瘾当前资格/固定评分版本游标/本次意图/作者公平份额；需领域规则",
+        "compatibility": "Go推荐服务；参考原语，不新开整套生产推荐部署；许可：Apache-2.0\n许可证原文：https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [
+        "analytics-evidence/node-green.txt"
+      ],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0018",
+      "title": "推荐负反馈",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "inOriginalArchitecture90": false,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "断点：帖文负反馈已消费，跨主题/活动/漫游兴趣未消费负向信号；解除屏蔽和删除被引用帖后的题材范围需明确。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "断点：帖文负反馈已消费，跨主题/活动/漫游兴趣未消费负向信号；解除屏蔽和删除被引用帖后的题材范围需明确。",
+      "originalDependencies": "复用帖文负反馈过滤、关系记录及新评分消费者；排除偏好和取消收藏独立。",
+      "originalAcceptance": "排除一个主题/作者/类别后新版本不再推荐对应范围；解除只恢复允许候选，原内容删除不扩大错误屏蔽。",
+      "reference": {
+        "status": "有对应规则源码；需移植验证",
+        "links": "gorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/recommend.go#L70",
+        "rules": "负反馈优先入excludeSet；正反馈影响coldstart；尚缺：作者/题材/时间范围、撤销重算和解释词典由城瘾补；排除不等于删业务账",
+        "compatibility": "Go；可读负反馈实际消费者；许可：Apache-2.0\n许可证原文：https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0020",
+      "title": "推荐解释",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "inOriginalArchitecture90": false,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "断点：原因数据已有，但展示/解释词典/调整后反馈与新排序尚未形成；原因需对应真实规则，不能给最新排序贴个人兴趣解释。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "断点：原因数据已有，但展示/解释词典/调整后反馈与新排序尚未形成；原因需对应真实规则，不能给最新排序贴个人兴趣解释。",
+      "originalDependencies": "复用帖文负反馈过滤、关系记录及新评分消费者；排除偏好和取消收藏独立。",
+      "originalAcceptance": "最新回退只说最新/同城，不能显示你喜欢；修改偏好后新版本理由可核对，未知码安全通用显示。",
+      "reference": {
+        "status": "优先修城瘾现代码；无需外部实现",
+        "links": "gorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/recommend.go#L107",
+        "rules": "最短路线：修改本项已列城瘾源码/入口与规则；外部候选仅作对照。\n候选反馈排除、去重及不足时fallback拼接；尚缺：不是城瘾当前资格/固定评分版本游标/本次意图/作者公平份额；需领域规则",
+        "compatibility": "Go推荐服务；参考原语，不新开整套生产推荐部署；许可：Apache-2.0\n许可证原文：https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0021",
+      "title": "创作者曝光机会",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "新创作者分发策略后置。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "新创作者分发策略后置。",
+      "originalDependencies": "稳定会员身份、版本化策略/评分、合格曝光事件、可归因漏斗；护栏无需强造第三方平台集成。",
+      "originalAcceptance": "新人/旧作者同城对照，曝光来源可追且不因刷量扩大；机会增加不被写成转化已改善。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "Unleash/unleash-java-sdk\nhttps://github.com/Unleash/unleash-java-sdk/blob/20ff5c098a82e7f88482b05e9a88635706b45c91/src/main/java/io/getunleash/DefaultUnleash.java#L107\nPostHog/posthog\nhttps://github.com/PostHog/posthog/blob/34a467e9862fd10cc7dc9ee8806bf53fdd54b660/products/product_analytics/backend/hogql_queries/funnels/funnel.py#L81",
+        "rules": "按上下文评估开关、fallback与变体接口；尚缺：当前SDK委托featureRepository/引擎；本轮没核底层分桶，不证明稳定分组算法/护栏回滚全链\n漏斗查询按事件分组与转换窗口构造聚合调用；尚缺：本轮未读取底层aggregate_funnel UDF；城瘾原单/真实付款与作业仍需接，不宣称整算法已核",
+        "compatibility": "Java SDK/含引擎依赖；需另核JDK/部署适配，未引入；许可：Apache-2.0；Python/HogQL/ClickHouse；所选路径按根MIT范围，非Java/MySQL即插即用；许可：所选products查询文件：根LICENSE的MIT范围；ee另有许可\n许可证原文：https://github.com/Unleash/unleash-java-sdk/blob/20ff5c098a82e7f88482b05e9a88635706b45c91/LICENSE\nhttps://github.com/PostHog/posthog/blob/34a467e9862fd10cc7dc9ee8806bf53fdd54b660/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0023",
+      "title": "有效曝光定义",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "不新增采集交互/规则；保留将来资格采集合同，当前仅核既有事件队列。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "不新增采集交互/规则；保留将来资格采集合同，当前仅核既有事件队列。",
+      "originalDependencies": "复用真实付款/报名/结算服务端事实、现行为入库和App阅读阈值；双端需统一事件合同。",
+      "originalAcceptance": "10秒或70%边界、后台等待、作者自看/切账号；只合格事件入指标，同用户帖日重放一次，不作现场证明。",
+      "reference": {
+        "status": "优先修城瘾现代码；无需外部实现",
+        "links": "matrix-org/matrix-js-sdk\nhttps://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/src/client.ts#L2752",
+        "rules": "最短路线：修改本项已列城瘾源码/入口与规则；外部候选仅作对照。\n显式发送事务ID、原事件发送与结果；尚缺：不能把自动生成新ID当重试；城瘾历史null客户端/持久原ID要补",
+        "compatibility": "TypeScript；代码模式可读，非现Java/Flutter的直接模块；许可：Apache-2.0\n许可证原文：https://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0024",
+      "title": "行为事件去重",
+      "originalWorkUnit": "C5",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "source_repair_node_verified_java_db_pending",
+      "thisRunScope": "原队列回执/原对象/落盘/账号/同步异常与原批后页隔离；Java/事务/独立DB未验",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "最小补原队列快照确认、accepted 合法回执、存储失败保留、账号晚回包隔离与同步异常；服务端同键异内容另列窄合同。",
+      "originalDependencies": "复用真实付款/报名/结算服务端事实、现行为入库和App阅读阈值；双端需统一事件合同。",
+      "originalAcceptance": "离线缓存重发、两端同事实及同ID异内容；行为最多一次，假payment_success不产生钱/权益事实。",
+      "reference": {
+        "status": "优先修城瘾现代码；无需外部实现",
+        "links": "matrix-org/matrix-js-sdk\nhttps://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/src/client.ts#L2752",
+        "rules": "最短路线：修改本项已列城瘾源码/入口与规则；外部候选仅作对照。\n显式发送事务ID、原事件发送与结果；尚缺：不能把自动生成新ID当重试；城瘾历史null客户端/持久原ID要补",
+        "compatibility": "TypeScript；代码模式可读，非现Java/Flutter的直接模块；许可：Apache-2.0\n许可证原文：https://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [
+        "analytics-evidence/node-green.txt"
+      ],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0026",
+      "title": "作弊互动过滤",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "partial_financial_fact_repair_java_db_pending",
+      "thisRunScope": "原报名/member/业务对象/payment_time可信度；其他互动作弊/设备挑战等待核",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "先区分客户端交互与权威成交权重来源；设备指纹、挑战或封禁策略属于新增能力，不实施。",
+      "originalDependencies": "复用真实付款/报名/结算服务端事实、现行为入库和App阅读阈值；双端需统一事件合同。",
+      "originalAcceptance": "脚本重复互动、协同频率异常和正常密集浏览；异常权重被隔离可复核，合法用户不凭单一字段被永久惩罚。",
+      "reference": {
+        "status": "优先修城瘾现代码；无需外部实现",
+        "links": "matrix-org/matrix-js-sdk\nhttps://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/src/client.ts#L2752",
+        "rules": "最短路线：修改本项已列城瘾源码/入口与规则；外部候选仅作对照。\n显式发送事务ID、原事件发送与结果；尚缺：不能把自动生成新ID当重试；城瘾历史null客户端/持久原ID要补",
+        "compatibility": "TypeScript；代码模式可读，非现Java/Flutter的直接模块；许可：Apache-2.0\n许可证原文：https://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [
+        "analytics-evidence/node-green.txt"
+      ],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0027",
+      "title": "推荐实验分组",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "新实验平台后置。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "新实验平台后置。",
+      "originalDependencies": "稳定会员身份、版本化策略/评分、合格曝光事件、可归因漏斗；护栏无需强造第三方平台集成。",
+      "originalAcceptance": "同会员重启/换端仍同组；实验换ID才按规则新分组，跨组暴露可检测并从分析处理。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "Unleash/unleash-java-sdk\nhttps://github.com/Unleash/unleash-java-sdk/blob/20ff5c098a82e7f88482b05e9a88635706b45c91/src/main/java/io/getunleash/DefaultUnleash.java#L107\nPostHog/posthog\nhttps://github.com/PostHog/posthog/blob/34a467e9862fd10cc7dc9ee8806bf53fdd54b660/products/product_analytics/backend/hogql_queries/funnels/funnel.py#L81",
+        "rules": "按上下文评估开关、fallback与变体接口；尚缺：当前SDK委托featureRepository/引擎；本轮没核底层分桶，不证明稳定分组算法/护栏回滚全链\n漏斗查询按事件分组与转换窗口构造聚合调用；尚缺：本轮未读取底层aggregate_funnel UDF；城瘾原单/真实付款与作业仍需接，不宣称整算法已核",
+        "compatibility": "Java SDK/含引擎依赖；需另核JDK/部署适配，未引入；许可：Apache-2.0；Python/HogQL/ClickHouse；所选路径按根MIT范围，非Java/MySQL即插即用；许可：所选products查询文件：根LICENSE的MIT范围；ee另有许可\n许可证原文：https://github.com/Unleash/unleash-java-sdk/blob/20ff5c098a82e7f88482b05e9a88635706b45c91/LICENSE\nhttps://github.com/PostHog/posthog/blob/34a467e9862fd10cc7dc9ee8806bf53fdd54b660/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0028",
+      "title": "推荐质量护栏",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "新增护栏策略后置，不能用内容下架替代。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "新增护栏策略后置，不能用内容下架替代。",
+      "originalDependencies": "稳定会员身份、版本化策略/评分、合格曝光事件、可归因漏斗；护栏无需强造第三方平台集成。",
+      "originalAcceptance": "样例主点击改善但负反馈/取消恶化，触发预设停止；旧指标延迟/作业失败显示不可决策而非健康。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "Unleash/unleash-java-sdk\nhttps://github.com/Unleash/unleash-java-sdk/blob/20ff5c098a82e7f88482b05e9a88635706b45c91/src/main/java/io/getunleash/DefaultUnleash.java#L107\nPostHog/posthog\nhttps://github.com/PostHog/posthog/blob/34a467e9862fd10cc7dc9ee8806bf53fdd54b660/products/product_analytics/backend/hogql_queries/funnels/funnel.py#L81",
+        "rules": "按上下文评估开关、fallback与变体接口；尚缺：当前SDK委托featureRepository/引擎；本轮没核底层分桶，不证明稳定分组算法/护栏回滚全链\n漏斗查询按事件分组与转换窗口构造聚合调用；尚缺：本轮未读取底层aggregate_funnel UDF；城瘾原单/真实付款与作业仍需接，不宣称整算法已核",
+        "compatibility": "Java SDK/含引擎依赖；需另核JDK/部署适配，未引入；许可：Apache-2.0；Python/HogQL/ClickHouse；所选路径按根MIT范围，非Java/MySQL即插即用；许可：所选products查询文件：根LICENSE的MIT范围；ee另有许可\n许可证原文：https://github.com/Unleash/unleash-java-sdk/blob/20ff5c098a82e7f88482b05e9a88635706b45c91/LICENSE\nhttps://github.com/PostHog/posthog/blob/34a467e9862fd10cc7dc9ee8806bf53fdd54b660/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0029",
+      "title": "推荐变化回滚",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "新推荐版本回滚后置。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "新推荐版本回滚后置。",
+      "originalDependencies": "稳定会员身份、版本化策略/评分、合格曝光事件、可归因漏斗；护栏无需强造第三方平台集成。",
+      "originalAcceptance": "推不良版本后停实验，线上请求真正读旧合法版本；旧游标按合同续用/重启，历史事件仍带原暴露版本。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "Unleash/unleash-java-sdk\nhttps://github.com/Unleash/unleash-java-sdk/blob/20ff5c098a82e7f88482b05e9a88635706b45c91/src/main/java/io/getunleash/DefaultUnleash.java#L107\nPostHog/posthog\nhttps://github.com/PostHog/posthog/blob/34a467e9862fd10cc7dc9ee8806bf53fdd54b660/products/product_analytics/backend/hogql_queries/funnels/funnel.py#L81",
+        "rules": "按上下文评估开关、fallback与变体接口；尚缺：当前SDK委托featureRepository/引擎；本轮没核底层分桶，不证明稳定分组算法/护栏回滚全链\n漏斗查询按事件分组与转换窗口构造聚合调用；尚缺：本轮未读取底层aggregate_funnel UDF；城瘾原单/真实付款与作业仍需接，不宣称整算法已核",
+        "compatibility": "Java SDK/含引擎依赖；需另核JDK/部署适配，未引入；许可：Apache-2.0；Python/HogQL/ClickHouse；所选路径按根MIT范围，非Java/MySQL即插即用；许可：所选products查询文件：根LICENSE的MIT范围；ee另有许可\n许可证原文：https://github.com/Unleash/unleash-java-sdk/blob/20ff5c098a82e7f88482b05e9a88635706b45c91/LICENSE\nhttps://github.com/PostHog/posthog/blob/34a467e9862fd10cc7dc9ee8806bf53fdd54b660/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0133",
+      "title": "多端事件口径一致",
+      "originalWorkUnit": "C5/C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "wechat_queue_source_repair_node_verified_app_pending",
+      "thisRunScope": "小程序合法成功定义与账号/代次隔离；App/统一跨端平台未实施",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "本轮只核小程序账号切换/成功定义；不迁 App、不新建跨端埋点平台。",
+      "originalDependencies": "复用真实付款/报名/结算服务端事实、现行为入库和App阅读阈值；双端需统一事件合同。",
+      "originalAcceptance": "两端完成同一流程对照事件清单，成功/拒绝/未知语义一致；切账号不串用户，跨端重复事实可归同原单。",
+      "reference": {
+        "status": "优先修城瘾现代码；无需外部实现",
+        "links": "matrix-org/matrix-js-sdk\nhttps://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/src/client.ts#L2752",
+        "rules": "最短路线：修改本项已列城瘾源码/入口与规则；外部候选仅作对照。\n显式发送事务ID、原事件发送与结果；尚缺：不能把自动生成新ID当重试；城瘾历史null客户端/持久原ID要补",
+        "compatibility": "TypeScript；代码模式可读，非现Java/Flutter的直接模块；许可：Apache-2.0\n许可证原文：https://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [
+        "analytics-evidence/node-green.txt"
+      ],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0135",
+      "title": "运营指标分母",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "sources_reviewed_daily_failure_isolation_java_db_pending",
+      "thisRunScope": "原分母/经营权威源核对，聚合单日故障继续后日；指标回读未验",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "现有分母回归可做；新增 journey/报表 UI 不在本轮。",
+      "originalDependencies": "复用现用户分母/开始时间规则、真实订单/漫游session、数据生成作业及事件版本。",
+      "originalAcceptance": "用3人5单含重复曝光/退款样例手算；分子分母可逐ID重建，作业过期报陈旧而非新数据0。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "PostHog/posthog\nhttps://github.com/PostHog/posthog/blob/34a467e9862fd10cc7dc9ee8806bf53fdd54b660/products/product_analytics/backend/hogql_queries/funnels/funnel.py#L81",
+        "rules": "漏斗查询按事件分组与转换窗口构造聚合调用；尚缺：本轮未读取底层aggregate_funnel UDF；城瘾原单/真实付款与作业仍需接，不宣称整算法已核",
+        "compatibility": "Python/HogQL/ClickHouse；所选路径按根MIT范围，非Java/MySQL即插即用；许可：所选products查询文件：根LICENSE的MIT范围；ee另有许可\n许可证原文：https://github.com/PostHog/posthog/blob/34a467e9862fd10cc7dc9ee8806bf53fdd54b660/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [
+        "analytics-evidence/node-green.txt"
+      ],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "N002",
+      "title": "解释并调整推荐",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "inOriginalArchitecture90": false,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "断点：原因数据已有，但展示/解释词典/调整后反馈与新排序尚未形成；原因需对应真实规则，不能给最新排序贴个人兴趣解释。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "断点：原因数据已有，但展示/解释词典/调整后反馈与新排序尚未形成；原因需对应真实规则，不能给最新排序贴个人兴趣解释。",
+      "originalDependencies": "复用帖文负反馈过滤、关系记录及新评分消费者；排除偏好和取消收藏独立。",
+      "originalAcceptance": "看理由能定位真实规则；调整后提交失败不报已生效，成功新版本体现改变，恢复/撤销不会改业务权益。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "gorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/recommend.go#L70\ngorse-io/gorse\nhttps://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/recommend.go#L107",
+        "rules": "负反馈优先入excludeSet；正反馈影响coldstart；尚缺：作者/题材/时间范围、撤销重算和解释词典由城瘾补；排除不等于删业务账\n候选反馈排除、去重及不足时fallback拼接；尚缺：不是城瘾当前资格/固定评分版本游标/本次意图/作者公平份额；需领域规则",
+        "compatibility": "Go；可读负反馈实际消费者；许可：Apache-2.0；Go推荐服务；参考原语，不新开整套生产推荐部署；许可：Apache-2.0\n许可证原文：https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "N003",
+      "title": "本地新作者曝光试验",
+      "originalWorkUnit": "待核已有底层子链；非整条排除",
+      "inOriginalArchitecture90": false,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "先做可回退的小规模城市试验：合格曝光、不同作者数、阅读质量与参加结果分别记录；不借用未经证实的小红书固定流量池。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "先做可回退的小规模城市试验：合格曝光、不同作者数、阅读质量与参加结果分别记录；不借用未经证实的小红书固定流量池。",
+      "originalDependencies": "稳定会员身份、版本化策略/评分、合格曝光事件、可归因漏斗；护栏无需强造第三方平台集成。",
+      "originalAcceptance": "试验期间正确记录多作者合格曝光及后续质量；样本不足明确不下结论，停止后策略真正回退。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "Unleash/unleash-java-sdk\nhttps://github.com/Unleash/unleash-java-sdk/blob/20ff5c098a82e7f88482b05e9a88635706b45c91/src/main/java/io/getunleash/DefaultUnleash.java#L107\nPostHog/posthog\nhttps://github.com/PostHog/posthog/blob/34a467e9862fd10cc7dc9ee8806bf53fdd54b660/products/product_analytics/backend/hogql_queries/funnels/funnel.py#L81",
+        "rules": "按上下文评估开关、fallback与变体接口；尚缺：当前SDK委托featureRepository/引擎；本轮没核底层分桶，不证明稳定分组算法/护栏回滚全链\n漏斗查询按事件分组与转换窗口构造聚合调用；尚缺：本轮未读取底层aggregate_funnel UDF；城瘾原单/真实付款与作业仍需接，不宣称整算法已核",
+        "compatibility": "Java SDK/含引擎依赖；需另核JDK/部署适配，未引入；许可：Apache-2.0；Python/HogQL/ClickHouse；所选路径按根MIT范围，非Java/MySQL即插即用；许可：所选products查询文件：根LICENSE的MIT范围；ee另有许可\n许可证原文：https://github.com/Unleash/unleash-java-sdk/blob/20ff5c098a82e7f88482b05e9a88635706b45c91/LICENSE\nhttps://github.com/PostHog/posthog/blob/34a467e9862fd10cc7dc9ee8806bf53fdd54b660/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0130",
+      "title": "业务写入与通知一致性",
+      "originalWorkUnit": "C5",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "main_b_a_notification_contract_dependency",
+      "thisRunScope": "报名通知由主B与A持久意图/收据子任务负责，本子任务不修改消息或报名文件",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "优先为已有报名通知制定原业务事件持久意图/收据最小合同；其他域逐项确认后再迁，不复制旧私库整包。",
+      "originalDependencies": "复用CRM持久投递/当前同意/认领/日限；逐新增业务域接业务事件意图和渠道查询。",
+      "originalAcceptance": "业务提交后通知写失败、worker崩溃/渠道成功本库失败；不丢意图，不回滚假定已发，原渠道回查能收口。",
+      "reference": {
+        "status": "有对应规则源码；需移植验证",
+        "links": "gruelbox/transaction-outbox\nhttps://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/transactionoutbox-core/src/main/java/com/gruelbox/transactionoutbox/TransactionOutboxImpl.java#L323",
+        "rules": "同事务持久事件、处理锁、成功保留和失败尝试；尚缺：需要城瘾消费者/业务键/当前权限；不自带供应商恰好一次或当前微信送达回执",
+        "compatibility": "所读pom要求Java17；当前城瘾Java8不能直接引入该HEAD；许可：Apache-2.0\n许可证原文：https://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [
+        "analytics-evidence/node-green.txt"
+      ],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "M0132",
+      "title": "重复通知抑制",
+      "originalWorkUnit": "C5",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "main_b_a_notification_contract_dependency",
+      "thisRunScope": "同原通知收据只投递一次由主B/A负责；真实送达待验",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "优先为已有报名通知制定原业务事件持久意图/收据最小合同；其他域逐项确认后再迁，不复制旧私库整包。",
+      "originalDependencies": "复用CRM持久投递/当前同意/认领/日限；逐新增业务域接业务事件意图和渠道查询。",
+      "originalAcceptance": "同结算多次触发、两worker、接收人撤同意；不重复已确认投递，未知待查，撤回后新投递阻断。",
+      "reference": {
+        "status": "有对应规则源码；需移植验证",
+        "links": "gruelbox/transaction-outbox\nhttps://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/transactionoutbox-core/src/main/java/com/gruelbox/transactionoutbox/TransactionOutboxImpl.java#L323",
+        "rules": "同事务持久事件、处理锁、成功保留和失败尝试；尚缺：需要城瘾消费者/业务键/当前权限；不自带供应商恰好一次或当前微信送达回执",
+        "compatibility": "所读pom要求Java17；当前城瘾Java8不能直接引入该HEAD；许可：Apache-2.0\n许可证原文：https://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [
+        "analytics-evidence/node-green.txt"
+      ],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "X041",
+      "title": "灰度功能开关下发与端点必经闸",
+      "originalWorkUnit": "C5",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "existing_flags_consumers_reviewed_device_backend_pending",
+      "thisRunScope": "既有旗标boolean/默认关与完赛展示严格true已核/Node；端点全链主B/业务所有者待验",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "只逐既有开关查前后端同义、失败默认和真实入口；不启用原禁用聊天，不新增灰度。",
+      "originalDependencies": "复用 sys_config 与 NpcFeatureFlags。",
+      "originalAcceptance": "rollout=10% 时同一用户多次请求结果一致；关闭立即生效；合规开关无法被灰度打开；变更可回滚并有记录。",
+      "reference": [
+        "有对应规则源码；需移植验证",
+        [
+          {
+            "repo": "npm unleash-client@6.12.2（tgz sha256 f47d7810…）",
+            "url": "npm unleash-client@6.12.2（tgz sha256 f47d7810…） lib/strategy/flexible-rollout-strategy.js#L28",
+            "part": "flexibleRollout：stickiness=userId/sessionId，murmur3(groupId:id)%100+1 ≤ rollout 才开",
+            "missing": "只做分桶，不含合规硬关、审计与回滚记录",
+            "stack": "JavaScript发布包；算法可在 Java 侧重写",
+            "license": "Apache-2.0"
+          },
+          {
+            "repo": "Unleash/unleash-java-sdk",
+            "url": "https://github.com/Unleash/unleash-java-sdk/blob/20ff5c098a82e7f88482b05e9a88635706b45c91/src/main/java/io/getunleash/DefaultUnleash.java#L107",
+            "part": "按上下文评估开关、fallback 与变体",
+            "missing": "所读 HEAD 依赖引擎/JDK 需另核，未引入",
+            "stack": "Java SDK",
+            "license": "Apache-2.0"
+          }
+        ]
+      ],
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [
+        "analytics-evidence/node-green.txt"
+      ],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    },
+    {
+      "originalId": "F0515",
+      "title": "官方集体目标指标",
+      "originalWorkUnit": "C9",
+      "inOriginalArchitecture90": true,
+      "thisRunStatus": "preserved_underlying_contract_pending_ui_or_policy_deferred",
+      "thisRunScope": "核活动版本和存量V1真实使用；仅修仍在用的旧完成事实绕过，不自创指标算法。",
+      "wholeOriginalItemComplete": false,
+      "remainingOriginalGap": "核活动版本和存量V1真实使用；仅修仍在用的旧完成事实绕过，不自创指标算法。",
+      "originalDependencies": "复用新版官方任务/真实核销、参与事实、任务唯一完成及奖励账；收敛旧自报路径。",
+      "originalAcceptance": "同一完成事件重复与同人不同合法任务；次数/人数分别正确，无效/退回事件不计进度，奖励重试不重复贡献。",
+      "reference": {
+        "status": "有配套组件；业务闭环需自补",
+        "links": "boardgameio/boardgame.io\nhttps://github.com/boardgameio/boardgame.io/blob/5e9a2c94bde803fae8b081958c406c4d0a7be8ae/src/core/flow.ts#L320\ngruelbox/transaction-outbox\nhttps://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/transactionoutbox-core/src/main/java/com/gruelbox/transactionoutbox/TransactionOutbox.java#L349",
+        "rules": "回合/阶段及游戏运行状态推进；尚缺：不是城瘾真实任务证据、停表/退出退款或资源预留合同\n任务稳定uniqueRequestId和保留期限；尚缺：重复调度会拒绝，不等于返回原业务结果；未自带同键参数hash比较",
+        "compatibility": "TypeScript；游戏状态机组件；许可：MIT；所读版本Java17；仅抽取规则，不能直接接Java8；许可：Apache-2.0\n许可证原文：https://github.com/boardgameio/boardgame.io/blob/5e9a2c94bde803fae8b081958c406c4d0a7be8ae/LICENSE\nhttps://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/LICENSE"
+      },
+      "evidenceReport": "analytics-verification.md",
+      "nodeEvidence": [],
+      "javaDatabaseEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "runtimeOrDeviceEvidence": "NOT_RUN_IN_THIS_SUBTASK",
+      "permissionAndPolicy": "原政策/算法权重保留；新UI/新政策后置；底层原项保留且不自动归App"
+    }
+  ],
+  "evidence": "analytics-verification.md",
+  "integrationDependency": "A baoming两个producer使用原registrationId/eventKey；B已接别名，独立分支待集成同源码验证"
+}

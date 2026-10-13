@@ -1,0 +1,21 @@
+✖ release 前重建 inventory，漏掉新增/修改控件必须变红 (80053.305572ms)
+✖ negative control: 共享发送出口不设闸 ⇒ 卡片照旧发出去 (1.881617ms)
+✖ CU-M-125 行为:只读闸不许顺手把普通私信也关掉 (1.260646ms)
+✖ negative control CU-M-125: 去掉按会话类型的只读判定 / 发送闸不看只读,各自照样发出失败请求 (2.69031ms)
+✖ negative control: 去掉 fail 分支 ⇒ 网络失败停在 loading,永远不承认异常 (0.408338ms)
+✖ 设置管理入口与旧 workbench 壳显式传递 manage 意图 (2.853591ms)
+✖ 会话列表和消息数组包含空元素时进入错误态而不崩溃 (5.867951ms)
+✖ 聊天消息载荷内 list 非数组时进入错误态 (1.077092ms)
+ℹ tests 8231
+ℹ pass 8221
+ℹ fail 8
+ℹ skipped 2
+✖ failing tests:
+✖ release 前重建 inventory，漏掉新增/修改控件必须变红 (80053.305572ms)
+✖ negative control: 共享发送出口不设闸 ⇒ 卡片照旧发出去 (1.881617ms)
+✖ CU-M-125 行为:只读闸不许顺手把普通私信也关掉 (1.260646ms)
+✖ negative control CU-M-125: 去掉按会话类型的只读判定 / 发送闸不看只读,各自照样发出失败请求 (2.69031ms)
+✖ negative control: 去掉 fail 分支 ⇒ 网络失败停在 loading,永远不承认异常 (0.408338ms)
+✖ 设置管理入口与旧 workbench 壳显式传递 manage 意图 (2.853591ms)
+✖ 会话列表和消息数组包含空元素时进入错误态而不崩溃 (5.867951ms)
+✖ 聊天消息载荷内 list 非数组时进入错误态 (1.077092ms)

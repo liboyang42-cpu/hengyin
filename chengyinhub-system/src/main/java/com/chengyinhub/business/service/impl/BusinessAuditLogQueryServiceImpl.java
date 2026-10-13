@@ -94,6 +94,7 @@ public class BusinessAuditLogQueryServiceImpl implements IBusinessAuditLogQueryS
             while (fields.hasNext()) {
                 Map.Entry<String, JsonNode> field = fields.next();
                 if (isSensitive(field.getKey())) object.put(field.getKey(), "***");
+                else if (field.getValue().isTextual()) object.put(field.getKey(), redactText(field.getValue().asText()));
                 else redactNode(field.getValue());
             }
         } else if (node.isArray()) {
@@ -109,14 +110,14 @@ public class BusinessAuditLogQueryServiceImpl implements IBusinessAuditLogQueryS
     }
 
     private boolean isSensitive(String key) {
-        String normalized = key == null ? "" : key.toLowerCase(Locale.ROOT);
+        String normalized = key == null ? "" : key.toLowerCase(Locale.ROOT).replace("_", "").replace("-", "");
         return normalized.contains("token") || normalized.contains("password")
                 || normalized.contains("phone") || normalized.contains("mobile")
                 || normalized.contains("openid") || normalized.contains("secret")
                 || normalized.contains("credential") || normalized.contains("authorization")
                 || normalized.contains("unionid") || normalized.contains("idcard")
                 || normalized.contains("identity") || normalized.contains("realname")
-                || normalized.contains("bank") || normalized.contains("cardnumber")
+                || normalized.contains("bank") || normalized.contains("cardnumber") || normalized.contains("cardno")
                 || normalized.contains("address") || normalized.contains("email")
                 || normalized.contains("latitude") || normalized.contains("longitude")
                 || normalized.contains("location") || normalized.contains("nickname")

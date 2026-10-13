@@ -155,9 +155,11 @@ Page({
   _viewGuard() {
     const owner = this.data.myId, conversation = this.data.conversationId;
     const epoch = this._viewEpoch || 0;
+    const credential = app.globalData && app.globalData.authorization;
     return () => !this._disposed && !this._deleted && epoch === (this._viewEpoch || 0)
       && owner === this.data.myId && conversation === this.data.conversationId
-      && (!app.getUserID || app.getUserID() == owner);
+      && (!app.getUserID || app.getUserID() == owner)
+      && credential === (app.globalData && app.globalData.authorization);
   },
 
   loadMessages(toBottom) {
@@ -408,6 +410,12 @@ Page({
       if (index >= 0) { if (!prepend) list[index] = message; }
       else list.push(message);
     });
+    list.sort((a, b) => {
+      const left = Number(a.id), right = Number(b.id);
+      const leftServer = Number.isSafeInteger(left) && left > 0;
+      const rightServer = Number.isSafeInteger(right) && right > 0;
+      return leftServer && rightServer ? left - right : leftServer ? -1 : rightServer ? 1 : 0;
+    });
     this.setData({ msgs: list, sending: list.some(m => m.sending) });
   },
 
@@ -562,7 +570,8 @@ Page({
   markRead() {
     if (!this._viewGuard()()) return;
     app.sendRequest({ url: '/api/im/read', method: 'POST', hideLoading: true,
-      data: { conversation_id: this.data.conversationId, read_to: this.maxLocalId() } });
+      data: { conversation_id: this.data.conversationId,
+        read_to: this._syncAfter === undefined ? this.maxLocalId() : Math.min(this.maxLocalId(), this._syncAfter) } });
   },
 
   onMore() {
@@ -788,10 +797,10 @@ Page({
         if (fresh.length) {
           that._mergeMessages(fresh);
           that.scrollBottom();
-          that.markRead();
         }
         const next = Number(res.data.nextAfter);
         if (Number.isSafeInteger(next) && next >= mx) that._syncAfter = next;
+        if (fresh.length) that.markRead();
         if (res.data.hasMore && next > mx) that.pollNew(next);
       },
       fail() { if (current()) that._polling = false; },

@@ -80,6 +80,7 @@
         select count(*) from im_message
         where conversation_id = #{conversationId} and status != 2 and id &gt; #{readTo}
             and sender_id != #{memberId}
+        for update
     </select>
 
     <update id="updateStatus">
