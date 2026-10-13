@@ -46,7 +46,7 @@
     },
     {
       "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImFoundationBMybatisIntegrationTest.java",
-      "sha256": "57cb87a29b68f2b2b1a22ae554439f06b2cd71b671eed1f9fc949fc4969d8fe9",
+      "sha256": "9fe0aa5493b7328705f5b6235232e590f141a30afb337a3f073fbe63d0482738",
       "baseSha256": null,
       "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
     },

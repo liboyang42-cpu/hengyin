@@ -1,0 +1,12 @@
+{
+  "testedSourceCommit": "59b299986950e57ebf27660403e65c002456c16d",
+  "command": "node --test 'tests/unit/**/*.test.js'",
+  "cwd": "chengyinhub-xcx",
+  "exitCode": 0,
+  "tests": 8233,
+  "pass": 8231,
+  "fail": 0,
+  "skip": 2,
+  "sourceFrozen": true,
+  "followupSourceChange": "Only ImFoundationBMybatisIntegrationTest scratch schemaCreated cleanup flag; Node/production sources unchanged; Java/MySQL still not run."
+}

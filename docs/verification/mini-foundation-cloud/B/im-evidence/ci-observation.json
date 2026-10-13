@@ -1,0 +1,15 @@
+{
+  "tool": "github_fetch_commit_workflow_runs",
+  "filter": "pull-request-triggered runs only; first page",
+  "observations": [
+    {
+      "commit": "754510e71d5340cd95b6a29acc60c42c8df1bd4a",
+      "workflow_runs": []
+    },
+    {
+      "commit": "59b299986950e57ebf27660403e65c002456c16d",
+      "workflow_runs": []
+    }
+  ],
+  "conclusion": "No PR-triggered run observed for these commits. Not proof that all workflow types are absent, and not a passing CI result."
+}
