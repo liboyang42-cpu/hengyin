@@ -95,7 +95,7 @@ function loadClubDetail(src) {
       }
       if (/utils\/scene-registry\.js$/.test(id)) return { getScene: () => ({}) };
       if (/utils\/mockData\.js$/.test(id)) return { DEMO_NEARBY_CLUB_ID: -1 };
-      if (/utils\/datetime$/.test(id)) return { toTimestamp: (v) => Date.parse(String(v).replace(' ', 'T')) || 0 };
+      if (/utils\/datetime$/.test(id)) return { chinaDateKey: require('../../utils/datetime.js').chinaDateKey, toTimestamp: (v) => Date.parse(String(v).replace(' ', 'T')) || 0 };
       if (/utils\/group-code-session\.js$/.test(id)) {
         return { buildGroupCodeIssuePayload: () => ({}), listGroupCodeActivities: () => [] };
       }

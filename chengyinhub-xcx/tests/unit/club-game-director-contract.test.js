@@ -90,7 +90,7 @@ function loadClubDetail(activityList) {
         '../../../utils/coop-invite-view.js': require('../../utils/coop-invite-view.js'),
         '../../../utils/motion-preference.js': { readReducedMotion: () => false },
         '../../../utils/scene-registry.js': { getScene: () => ({}) },
-        '../../../utils/datetime': { toTimestamp: () => 0 },
+        '../../../utils/datetime': { chinaDateKey: require('../../utils/datetime.js').chinaDateKey, toTimestamp: () => 0 },
         '../../../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
         '../utils/aiPlanToDraft.js': { aiPlanToDraft: () => ({}) },
         '../../../utils/group-code-session.js': require('../../utils/group-code-session.js'),
