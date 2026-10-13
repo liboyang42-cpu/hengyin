@@ -56,7 +56,7 @@ HEALTH_TOKEN_FILE="${5:?缺少受保护健康接口授权文件路径}"
 fmt_time() { date -d "@$1" 2>/dev/null || echo "epoch $1"; }
 
 echo "== 1/4 磁盘上的 jar 是本次构建产物 =="
-got_digest="$(sha256sum "$JAR" | awk '{print $1}')"
+got_digest="$(sha256sum "$JAR" | awk '{print $1}')" || { echo '❌ jar 指纹读取失败'; return 1; }
 if [ "$got_digest" != "$WANT_DIGEST" ]; then
   echo "❌ 指纹不符:生产=$got_digest 期望=$WANT_DIGEST"
   exit 1
@@ -64,10 +64,14 @@ fi
 echo "   ✅ $got_digest"
 
 echo "== 2/4 恰好一个进程在跑它 =="
-wanted_jar=$(readlink -f -- "$JAR")
+wanted_jar=$(readlink -f -- "$JAR") || { echo '❌ jar 路径解析失败'; return 1; }
 [[ -f "$wanted_jar" ]] || { echo '❌ jar 路径不可用'; return 1; }
 pids="$(exact_jar_pids "$wanted_jar")" || { echo '❌ Linux 进程目录不可读'; return 1; }
-count="$(printf '%s' "$pids" | grep -c . || true)"
+if count="$(printf '%s' "$pids" | grep -c .)"; then
+  :
+else
+  [[ "$?" == 1 ]] || { echo '❌ PID 数量读取失败'; return 1; }
+fi
 if [ "$count" -ne 1 ]; then
   echo "❌ 期望恰好 1 个进程,实际 $count:${pids:-无}"
   echo "   0 个 = 没有真实 Java 进程使用本次 jar 的确切路径"
@@ -79,10 +83,12 @@ start_ticks=$(jar_start_ticks "/proc/$pid") || { echo '❌ PID 启动标识不�
 echo "   ✅ PID $pid"
 
 echo "== 3/4 该进程是本次部署之后才起来的 =="
-etimes="$(ps -o etimes= -p "$pid" | tr -d ' ')"
+etimes="$(ps -o etimes= -p "$pid" | tr -d ' ')" || { echo '❌ PID 启动时间读取失败'; return 1; }
 [[ "$etimes" =~ ^[0-9]+$ ]] || { echo '❌ PID 已退出或启动时间不可读'; return 1; }
 [[ "$DEPLOY_START" =~ ^[0-9]+$ ]] || { echo '❌ 部署起点不合法'; return 1; }
-started="$(( $(date +%s) - etimes ))"
+now="$(date +%s)" || { echo '❌ 当前时间读取失败'; return 1; }
+[[ "$now" =~ ^[0-9]+$ ]] || { echo '❌ 当前时间不合法'; return 1; }
+started="$(( now - etimes ))"
 if [ "$started" -lt "$DEPLOY_START" ]; then
   echo "❌ PID $pid 启动于 $(fmt_time "$started"),早于本次部署起点 $(fmt_time "$DEPLOY_START")"
   echo "   → 新 jar 从未接管,生产跑的仍是旧进程。deploy-restart.sh 的 curl 检查看不出这个。"
@@ -91,11 +97,13 @@ fi
 echo "   ✅ 启动于 $(fmt_time "$started"),晚于部署起点 $(fmt_time "$DEPLOY_START")"
 
 echo "== 4/4 受保护健康接口确认应用、数据库和 Redis 就绪 =="
-python3 "$HEALTH_CHECKER" "$HEALTH_TOKEN_FILE"
+python3 "$HEALTH_CHECKER" "$HEALTH_TOKEN_FILE" || { echo '❌ 受保护健康检查失败'; return 1; }
 # Health may take several seconds; a reused PID or a second instance must not inherit the result.
-[[ "$(jar_start_ticks "/proc/$pid" 2>/dev/null || true)" == "$start_ticks" ]] \
+current_start_ticks=$(jar_start_ticks "/proc/$pid" 2>/dev/null) \
+  && [[ "$current_start_ticks" == "$start_ticks" ]] \
   && jar_process_matches "/proc/$pid" "$wanted_jar" \
-  && [[ "$(exact_jar_pids "$wanted_jar" 2>/dev/null || true)" == "$pid" ]] \
+  && current_pids=$(exact_jar_pids "$wanted_jar" 2>/dev/null) \
+  && [[ "$current_pids" == "$pid" ]] \
   || { echo '❌ 健康检查后进程身份发生变化'; return 1; }
 
 echo "✅ 已核实:生产跑的就是本次构建的 jar(PID $pid,指纹 $got_digest)"
