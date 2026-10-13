@@ -164,6 +164,8 @@ class ImServiceImplTest {
     private ImServiceImpl service() {
         conversationMapper = mock(ImConversationMapper.class);
         memberMapper = mock(ImConversationMemberMapper.class);
+        org.mockito.Mockito.doAnswer(call -> memberMapper.selectByConvAndMember(call.getArgument(0), call.getArgument(1)))
+                .when(memberMapper).selectByConvAndMemberForUpdate(anyLong(), anyLong());
         messageMapper = mock(ImMessageMapper.class);
         blockMapper = mock(ImBlockMapper.class);
         umsMemberService = mock(IUmsMemberService.class);

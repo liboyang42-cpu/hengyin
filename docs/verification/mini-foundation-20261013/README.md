@@ -36,8 +36,19 @@ New text and voice requests require a current paid selfplay pass. The voice path
 - [x] Post-transcription negative control: 1 behavior failure when its second check is removed.
 - [x] 29 controller/mapper unit tests passed; separate real MySQL query test passed, zero skipped.
 - [x] Only this test's random schema was cleaned; existing schema set unchanged.
-- [ ] Staged-source VPS compilation for this source commit.
+- [x] Staged-source VPS compilation passed for NPC source commit `9c5d903`.
 - [ ] GitHub CI for the new NPC source commit. The running 7046676 CI covers the previous four packages.
 - [ ] Real authenticated HTTP, real ASR/model, WeChat/device, merge and deployment.
 
 Across the five packages, 129 distinct backend tests passed in separate invocations, plus 28 Node tests. Counts do not imply one combined run or full product acceptance.
+
+## Legacy IM and exploration NPC follow-up
+
+Legacy read locks the current conversation/member and preserves higher read positions. Closed/deleted membership is rejected; fanout does not revive deleted members. Public incremental read-to and client rendering remain separate.
+
+- [x] 2 legacy behavior negatives, 59 units and 5 real MySQL tests passed.
+- [x] The original MySQL fixture failure is preserved. Only its closure/leave assertion changed; all 5 reran.
+- [x] Exploration NPC SQL denies end equality, past or missing date; a future end restores access. Other kinds and selfplay rules remain. Its 1 expanded SQL case replaces the earlier count.
+- [ ] Current source GitHub CI, real club authority, authenticated HTTP, WeChat/device, merge and deployment.
+
+193 distinct backend cases passed across source-specific invocations, plus 28 Node cases. The 7046676 CI was cancelled after 9 other jobs passed; it does not certify these newer changes. No full-item acceptance is inferred.

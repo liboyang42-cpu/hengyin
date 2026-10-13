@@ -1,6 +1,6 @@
 {
   "publicBase": "fafde98723211ccbc12b78a534a0cb2c1685e361",
-  "scope": "PAYING page progress, IM list response races, submitted draft ordering, consent event idempotency, NPC current selfplay pass and post-ASR recheck",
+  "scope": "PAYING page progress, IM list response races, submitted draft ordering, consent event idempotency, NPC current selfplay pass and post-ASR recheck, legacy IM current locks and exploration NPC end-date cutoff",
   "sourceFiles": [
     {
       "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java",
@@ -60,7 +60,7 @@
     },
     {
       "path": "chengyinhub-system/src/main/resources/mapper/business/PlayTeamMapper.xml",
-      "sha256": "15cdb533d49c1282644450d75b98ef5286252a7c1c5a29135042ebf1dc76f9b3"
+      "sha256": "0bb1ed8db91137e23f2f1fb0754b2717c3a2d767b4a0eda14711606db31bca55"
     },
     {
       "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAiNpcVoiceChatFormatTest.java",
@@ -72,7 +72,43 @@
     },
     {
       "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/NpcCurrentRegistrationMySqlIT.java",
-      "sha256": "961481929cd732c352ea1cc760b90231fa8a28073f385840bb19f50b92f0de25"
+      "sha256": "345bb59b5337cf2d19deb3006f25639d5cb3da0170306ab8624c6f8eaf0d568e"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+      "sha256": "e730a926b3f793e8f7f7fc42a81bcb7213bdd464f477c3a51c3864b43635e758"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ImConversationMemberMapper.java",
+      "sha256": "744b21a1ac4d9879bb08c69c08eee53d1ca09163af159d1366009d367f3a98be"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ImConversationMemberMapper.xml",
+      "sha256": "a9fc8c5fdb3c5b4c74778d64d9d7b4d0d174cdaddebfb2a52bc8bdb969ce872b"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ImConversationMapper.xml",
+      "sha256": "bbaf8812abbd3212032f172c59ca01310bdd74aa52e5cfc683013c6ee07625eb"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ImMessageMapper.java",
+      "sha256": "843601cbc290e33aeceb3b97b54211f7fd9f2dc4d8e156fa96be5ec026674232"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ImMessageMapper.xml",
+      "sha256": "0557ec2949b3de1e993705a7cbd8a0b4e24aeda3b88a7399c570a1ea3d48f4a9"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImServiceImplTest.java",
+      "sha256": "87269e2edf10de08b16cbfe86804be4edc27b1bcd5f9ca2a6e8cb86b4f8aa1cf"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImLegacyReadLockTest.java",
+      "sha256": "7a6a9fc26c04a9544f8db590cca189bb86911a794d1287a1f41fa1e768b4d080"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImLegacyReadLockMySqlIT.java",
+      "sha256": "6ed2ead12fc6117b893ac74e65b17c173cb8fba3eed6dd9c95e33c7c0366421b"
     }
   ],
   "backendTests": {
@@ -197,7 +233,7 @@
     "conclusion": "cancelled",
     "passedJobs": 9,
     "cancelledJobs": 1,
-    "currentHead": "7046676: in progress, excludes NPC candidate"
+    "currentHead": "7046676 cancelled, 9 jobs passed; latest source needs a new CI run"
   },
   "npcTests": {
     "unitTests": 29,
@@ -264,5 +300,66 @@
     },
     "context": "Stubbed ASR/model controller tests plus independent real MySQL query; no real provider, payment or authenticated HTTP proof."
   },
-  "totalDistinctBackendTests": 129
+  "totalDistinctBackendTests": 193,
+  "imLegacyTests": {
+    "unitSuites": [
+      {
+        "name": "com.chengyinhub.business.service.impl.ImLegacyReadLockTest",
+        "tests": "6",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "failureMessages": [],
+        "errorMessages": []
+      },
+      {
+        "name": "com.chengyinhub.business.service.impl.ImServiceImplTest",
+        "tests": "45",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "failureMessages": [],
+        "errorMessages": []
+      },
+      {
+        "name": "com.chengyinhub.web.controller.api.ApiImReadAuthorizationTest",
+        "tests": "3",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "failureMessages": [],
+        "errorMessages": []
+      },
+      {
+        "name": "com.chengyinhub.business.service.impl.ImAdminAccessTest",
+        "tests": "5",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "failureMessages": [],
+        "errorMessages": []
+      }
+    ],
+    "mysqlSuites": [
+      {
+        "name": "com.chengyinhub.business.service.impl.ImLegacyReadLockMySqlIT",
+        "tests": "5",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "failureMessages": [],
+        "errorMessages": []
+      }
+    ],
+    "unitTests": 59,
+    "mysqlTests": 5,
+    "context": "Initial real MySQL run: 4 passed, 1 fixture assertion failed because close legitimately clears unread while leave preserves it. Changed only IT to independently capture committed removal state; all 5 passed on rerun. Club authority remains a fixture."
+  },
+  "npcExploreSql": {
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "context": "Expanded existing NPC SQL test, not another distinct case. Exact NOW equality uses only the fixture connection session clock; old SQL fails and new SQL passes."
+  }
 }

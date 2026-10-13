@@ -50,11 +50,11 @@ class NpcCurrentRegistrationMySqlIT {
                 try (SqlSession session = factory.openSession(true)) {
                     Connection db = session.getConnection();
                     assertEquals(schema, db.getCatalog());
-                    execute(db, "CREATE TABLE cms_activity (id BIGINT PRIMARY KEY, topic_id BIGINT, del_flag INT)");
+                    execute(db, "CREATE TABLE cms_activity (id BIGINT PRIMARY KEY, topic_id BIGINT, del_flag INT, end_date DATETIME(6))");
                     execute(db, "CREATE TABLE cms_registration (id BIGINT AUTO_INCREMENT PRIMARY KEY, "
                             + "member_id BIGINT, owner_type INT, owner_id BIGINT, payment_status INT, "
-                            + "registration_status INT, expires_at DATETIME(6), pay_expire_time DATETIME(6))");
-                    execute(db, "INSERT INTO cms_activity VALUES (51,31,0),(52,31,1)");
+                            + "registration_status INT, purchase_kind INT, expires_at DATETIME(6), pay_expire_time DATETIME(6))");
+                    execute(db, "INSERT INTO cms_activity (id,topic_id,del_flag) VALUES (51,31,0),(52,31,1)");
                     execute(db, "INSERT INTO cms_registration "
                             + "(member_id,owner_type,owner_id,payment_status,registration_status,expires_at,pay_expire_time) VALUES "
                             + "(1,1,31,2,2,NOW(6)-INTERVAL 1 DAY,NOW(6)+INTERVAL 1 DAY),"
@@ -92,6 +92,42 @@ class NpcCurrentRegistrationMySqlIT {
                         assertEquals(0, result.getInt(1));
                     }
                     assertEquals(0, mapper.hasCurrentNpcRegistration(10L, 31L), "Same SqlSession must recheck after ASR crosses expiry");
+
+                    // Fixed database-session time proves the equality boundary without a scheduling race.
+                    execute(db, "SET timestamp = 2000000000");
+                    try {
+                        execute(db, "INSERT INTO cms_activity (id,topic_id,del_flag,end_date) VALUES "
+                                + "(61,31,0,NOW()+INTERVAL 1 DAY),(62,31,0,NOW()),"
+                                + "(63,31,0,NOW()-INTERVAL 1 DAY),(64,31,0,NULL)");
+                        execute(db, "INSERT INTO cms_registration "
+                                + "(member_id,owner_type,owner_id,payment_status,registration_status,purchase_kind,expires_at) VALUES "
+                                + "(21,2,61,2,2,3,NOW()-INTERVAL 1 DAY),(22,2,62,2,2,3,NULL),"
+                                + "(23,2,63,2,2,3,NULL),(24,2,64,2,2,3,NULL),"
+                                + "(25,2,64,2,2,1,NULL),(26,2,63,2,2,NULL,NULL),"
+                                + "(27,2,63,2,2,2,NULL),(28,1,31,2,2,3,NOW()+INTERVAL 1 DAY)");
+                        try (Statement statement = db.createStatement(); ResultSet result = statement.executeQuery(
+                                "SELECT end_date = NOW() FROM cms_activity WHERE id=62")) {
+                            assertTrue(result.next());
+                            assertTrue(result.getBoolean(1), "The equality case must actually equal database NOW");
+                        }
+                        assertEquals(1, mapper.hasCurrentNpcRegistration(21L, 31L), "Explore uses activity end, not order expires_at");
+                        assertEquals(0, mapper.hasCurrentNpcRegistration(22L, 31L), "Exactly at activity end is closed");
+                        assertEquals(0, mapper.hasCurrentNpcRegistration(23L, 31L), "Past activity end is closed");
+                        assertEquals(0, mapper.hasCurrentNpcRegistration(24L, 31L), "Missing activity end is not eligible");
+                        assertEquals(1, mapper.hasCurrentNpcRegistration(25L, 31L), "Ordinary activity ticket keeps its old NULL rule");
+                        assertEquals(1, mapper.hasCurrentNpcRegistration(26L, 31L), "Legacy NULL kind keeps its old activity rule");
+                        assertEquals(1, mapper.hasCurrentNpcRegistration(27L, 31L), "Other activity kinds keep their old rule");
+                        assertEquals(1, mapper.hasCurrentNpcRegistration(28L, 31L), "Owner-one still uses its original pass rule");
+                        assertEquals(1, mapper.hasPaidRegistration(22L, 2, 62L), "Shared paid/history predicate stays unchanged");
+                        execute(db, "UPDATE cms_activity SET end_date=NOW()+INTERVAL 1 DAY WHERE id=64");
+                        assertEquals(1, mapper.hasCurrentNpcRegistration(24L, 31L), "Completing the date restores eligibility in the same SqlSession");
+                        execute(db, "UPDATE cms_activity SET end_date=NOW() WHERE id=61");
+                        assertEquals(0, mapper.hasCurrentNpcRegistration(21L, 31L), "Same-session uncached read sees newly ended activity");
+                        execute(db, "UPDATE cms_activity SET end_date=NOW()+INTERVAL 1 DAY WHERE id=61");
+                        assertEquals(1, mapper.hasCurrentNpcRegistration(21L, 31L), "A future end restores eligibility without replacing the order");
+                    } finally {
+                        execute(db, "SET timestamp = 0");
+                    }
                 }
             } finally {
                 if (created) execute(admin, "DROP DATABASE `" + schema + "`");
