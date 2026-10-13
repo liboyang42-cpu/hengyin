@@ -69,4 +69,49 @@ function shiftMonth(monthKey, delta) {
   return target.getFullYear() + '-' + pad2(target.getMonth() + 1);
 }
 
-module.exports = { buildMonthCalendar, shiftMonth };
+async function fetchMonthActivities(sendRequest, query, current) {
+  parseMonthKey(query.month);
+  const rows = [];
+  let afterId = 0;
+  let throughId;
+  let visibilityScope;
+  for (;;) {
+    if (!current()) throw new Error('月份已切换');
+    const data = { clubId: query.clubId, month: query.month };
+    if (throughId !== undefined) { data.afterId = afterId; data.throughId = throughId; }
+    const response = await new Promise((resolve, reject) => sendRequest({
+      hideLoading: true, url: '/api/club/calendar', method: 'GET', data,
+      success(response) { resolve(response); },
+      fail(error) { reject(error); },
+    }));
+    if (!current()) throw new Error('月份已切换');
+    const page = response && response.data;
+    if (!response || Number(response.code) !== 200 || !page
+        || page.clubId !== query.clubId || page.month !== query.month || page.timeZone !== 'Asia/Shanghai'
+        || !['CLUB_MEMBER', 'ACTIVITY_OWNER', 'ANONYMOUS'].includes(page.visibilityScope)
+        || (visibilityScope !== undefined && page.visibilityScope !== visibilityScope)
+        || !Array.isArray(page.rows) || page.rows.length > 100 || typeof page.hasMore !== 'boolean'
+        || !Number.isSafeInteger(page.throughId) || page.throughId < 0
+        || !Number.isSafeInteger(page.nextAfterId) || page.nextAfterId < afterId
+        || page.nextAfterId > page.throughId || typeof page.readAt !== 'string' || !page.readAt
+        || (throughId !== undefined && page.throughId !== throughId)) {
+      throw new Error('月份分页结果未确认');
+    }
+    let last = afterId;
+    page.rows.forEach(event => {
+      if (!event || !Number.isSafeInteger(event.id) || event.id <= last || event.id > page.throughId
+          || validEventDate(event).slice(0, 7) !== query.month) throw new Error('场次分页或日期不一致');
+      last = event.id;
+    });
+    if (page.nextAfterId !== last || (!page.hasMore && last !== page.throughId) || (page.hasMore && (page.rows.length !== 100 || last >= page.throughId))) {
+      throw new Error('月份分页未完成');
+    }
+    rows.push(...page.rows);
+    if (!page.hasMore) return { rows, readAt: page.readAt, visibilityScope: page.visibilityScope };
+    afterId = last;
+    throughId = page.throughId;
+    visibilityScope = page.visibilityScope;
+  }
+}
+
+module.exports = { buildMonthCalendar, shiftMonth, fetchMonthActivities };

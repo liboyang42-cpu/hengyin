@@ -46,5 +46,5 @@ test('俱乐部活动 tab 原位提供列表与月历切换，月历事件仍进
   assert.match(view, /eventViewTabs[\s\S]*bind:change="onEventViewChange"/)
   assert.match(view, /eventView === 'calendar'/)
   assert.match(view, /eventCalendarCells/)
-  assert.match(view, /bindtap="goTopic"[\s\S]*data-id="\{\{event\.id\}\}"/)
+  assert.match(view, /bindtap="goCalendarActivity"[\s\S]*data-id="\{\{event\.id\}\}"/)
 })

@@ -253,24 +253,25 @@
           <view class="event-calendar-title">{{eventCalendarTitle}}</view>
           <view class="event-calendar-shift" data-delta="1" catchtap="onShiftEventMonth" aria-role="button" aria-label="下一个月" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="arrow-right" size="28" /></view>
         </view>
-        <view class="overview-empty">仅按已加载主题的日期展示，完整月份场次尚未确认；日期沿用活动公布时间。</view>
+        <view class="overview-empty">按场次开始日期展示（北京时间）；仅包含当前可见且已发布的场次。</view>
+        <view class="overview-empty" wx:if="{{eventCalendarState === 'ready' && eventCalendarScope !== 'CLUB_MEMBER'}}">{{eventCalendarScope === 'ANONYMOUS' ? '登录并加入俱乐部后，可查看成员可见场次。' : '当前仅查询本人发布的场次，加入俱乐部后可查看成员可见场次。'}}这里的空结果不代表俱乐部本月没有场次。</view>
         <view class="overview-empty" wx:if="{{eventCalendarUpdatedAt}}">最近读取：{{eventCalendarUpdatedAt}}</view>
-        <cy-skeleton wx:if="{{topicState === 'loading'}}" type="list" count="{{2}}" />
+        <cy-skeleton wx:if="{{eventCalendarState === 'loading'}}" type="list" count="{{2}}" />
         <view class="event-calendar-week">
           <text wx:for="{{eventWeekdays}}" wx:key="*this">{{item}}</text>
         </view>
-        <view class="event-calendar-grid" wx:if="{{topicState === 'ready'}}">
+        <view class="event-calendar-grid" wx:if="{{eventCalendarState === 'ready'}}">
           <view class="event-calendar-day {{day.inMonth ? '' : 'is-outside'}} {{day.events.length ? 'has-event' : ''}}"
             wx:for="{{eventCalendarCells}}" wx:for-item="day" wx:key="key">
             <text class="event-calendar-number">{{day.day}}</text>
             <view class="event-calendar-item" wx:for="{{day.events}}" wx:for-item="event" wx:key="id"
-              bindtap="goTopic" data-id="{{event.id}}" aria-role="button" aria-label="打开活动 {{event.name || '未命名活动'}}" hover-class="cy-pressed" hover-stay-time="80">
+              bindtap="goCalendarActivity" data-id="{{event.id}}" aria-role="button" aria-label="打开活动 {{event.name || '未命名活动'}}" hover-class="cy-pressed" hover-stay-time="80">
               {{event.name || '活动'}}
             </view>
           </view>
         </view>
-        <view wx:if="{{topicState === 'error'}}" class="overview-empty">活动日期加载失败，请切回列表重试</view>
-        <cy-empty wx:elif="{{topicsLoaded && !eventCalendarHasEvents}}" size="sm" title="已加载主题中无本月记录" sub="不能据此确认本月没有活动场次" />
+        <cy-error wx:if="{{eventCalendarState === 'error'}}" title="月份场次加载失败" retry="重新读取" bind:retry="loadEventCalendar" />
+        <cy-empty wx:elif="{{eventCalendarState === 'ready' && !eventCalendarHasEvents}}" size="sm" title="本月暂无可见场次" sub="仅统计有明确开始日期的已发布场次" />
       </view>
     </view>
 

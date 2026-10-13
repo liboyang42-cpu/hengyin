@@ -4,12 +4,12 @@ const fs = require('node:fs');
 const path = require('node:path');
 const read = file => fs.readFileSync(path.join(__dirname, '../..', file), 'utf8');
 
-test('F0064 切月刷新但不把主题目录当完整场次，无缓存不宣称空月', () => {
+test('F0064 切月读取实际完整月份，加载及错误不宣称空月', () => {
   const js = read('pages/club/detail/index.js');
-  const handler = js.slice(js.indexOf('  onShiftEventMonth(e)'), js.indexOf('  refreshEventCalendar()'));
-  assert.match(handler, /this.loadTopics\(\)/);
+  const handler = js.slice(js.indexOf('  onShiftEventMonth(e)'), js.indexOf('  async loadEventCalendar()'));
+  assert.match(handler, /this.loadEventCalendar\(\)/);
   const wxml = read('pages/club/detail/index.wxml');
-  assert.match(wxml, /完整月份场次尚未确认/);
+  assert.match(wxml, /eventCalendarState === 'ready' && !eventCalendarHasEvents/);
   assert.match(wxml, /最近读取：/);
   assert.doesNotMatch(wxml, /title="本月暂无活动"/);
 });

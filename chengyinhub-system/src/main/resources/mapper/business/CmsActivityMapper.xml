@@ -56,6 +56,24 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         ))
     </sql>
 
+    <sql id="publicActivityVisibility">
+            status = 1 and publish_status = 1 and del_flag = 0 and cancel_time is null
+            and <include refid="com.chengyinhub.business.mapper.CmsActivityMapper.livePublicParentTopic"/>
+            and (club_id is null or club_id = 0 or exists (
+                select 1 from club active_club
+                where active_club.id = cms_activity.club_id and active_club.del_flag = 0
+            ))
+            and not exists (
+                select 1
+                from cms_topic parent_topic
+                left join club parent_club
+                  on parent_club.id = parent_topic.club_id and parent_club.del_flag = 0
+                where parent_topic.id = cms_activity.topic_id
+                  and parent_topic.club_id is not null and parent_topic.club_id != 0
+                  and parent_club.id is null
+            )
+    </sql>
+
     <select id="selectCmsActivityList" parameterType="CmsActivity" resultMap="CmsActivityResult">
         select id, member_id, name, description, img_url, img_arr, category_ids, address_name, longitude, latitude,
         <if test="latitude != null  and latitude != ''  and latitude != null and longitude != ''">
@@ -157,21 +175,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         (select t.product_type from cms_topic t where t.id = cms_activity.topic_id) as product_type
         from cms_activity
         <where>
-            status = 1 and publish_status = 1 and del_flag = 0 and cancel_time is null
-            and <include refid="livePublicParentTopic"/>
-            and (club_id is null or club_id = 0 or exists (
-                select 1 from club active_club
-                where active_club.id = cms_activity.club_id and active_club.del_flag = 0
-            ))
-            and not exists (
-                select 1
-                from cms_topic parent_topic
-                left join club parent_club
-                  on parent_club.id = parent_topic.club_id and parent_club.del_flag = 0
-                where parent_topic.id = cms_activity.topic_id
-                  and parent_topic.club_id is not null and parent_topic.club_id != 0
-                  and parent_club.id is null
-            )
+            <include refid="publicActivityVisibility"/>
             <if test="name != null and name != ''"> and name like concat('%', #{name}, '%')</if>
             <if test="categoryIds != null"> and FIND_IN_SET(#{categoryIds}, category_ids) &gt; 0</if>
             <if test="addressName != null and addressName != ''"> and address_name like concat('%', #{addressName}, '%')</if>
