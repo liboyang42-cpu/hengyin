@@ -158,7 +158,15 @@ Component({
     },
     restoreDraft() {
       if (!this.data.draftAvailable || !this._savedDraft || this._draftKey !== drafts.key(app.getUserID(), this.data.clubId)) return;
-      this.setData(Object.assign({}, drafts.form(this._savedDraft.form), { draftAvailable: false, draftNotice: '已恢复到表单，尚未提交。' }), () => {
+      const form = drafts.form(this._savedDraft.form);
+      this.setData({
+        name: form.name, clubType: form.clubType, activityPrefs: form.activityPrefs,
+        city: form.city, keywords: form.keywords, style: form.style,
+        description: form.description, logo: form.logo, cover: form.cover,
+        prioritySignupEnabled: form.prioritySignupEnabled,
+        memberReservedQuota: form.memberReservedQuota, joinPolicy: form.joinPolicy,
+        draftAvailable: false, draftNotice: '已恢复到表单，尚未提交。'
+      }, () => {
         this.validate(); this.syncDerived(); this.markDirty();
       });
     },
