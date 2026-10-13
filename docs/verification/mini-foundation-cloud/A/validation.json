@@ -24,5 +24,15 @@
   },
   "vps": "TCP授权未应用；HTTP80非SSH22证据",
   "ci": "未执行，handoff base无自动匹配且dispatch通路未具备",
-  "production": "未迁移、未合并、未部署、未上传微信"
+  "production": "未迁移、未合并、未部署、未上传微信",
+  "sourceCommit": "8de836cc6fd49e759b802b8b02ca8671e5c68c0b",
+  "migrationSafety": {
+    "executed": true,
+    "passed": false,
+    "tokenizerTests": 125,
+    "ledgerTests": 41,
+    "newSqlSplitter": true,
+    "taskRegistration": true,
+    "blocker": "共享ci/migration-dependencies.json缺新coupon_source_grant明确dependency条目，待单一owner协调；不得将门禁退出1称绿"
+  }
 }
