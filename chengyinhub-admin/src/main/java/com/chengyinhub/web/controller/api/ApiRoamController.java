@@ -396,7 +396,7 @@ public class ApiRoamController extends BaseController {
             playerBadgeMapper.insertPlayerBadge(b);
         } catch (Exception e) {
             logger.error("三店连亮发放失败 member={},需人工补发", memberId, e);
-            return null;
+            throw new ServiceException("三店连亮发放失败，请重试原行程结算");
         }
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("code", def.getBadgeCode());
@@ -474,6 +474,22 @@ public class ApiRoamController extends BaseController {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
         return success(roamRecoveryService.read(memberId, sessionId, clientSessionKey));
+    }
+
+    @PostMapping("/session/records")
+    public AjaxResult archiveRecords(String sessionId, String clientSessionKey, String records) {
+        Long memberId = uid();
+        if (memberId <= 0) return error("请先登录");
+        Long sid = Convert.toLong(sessionId);
+        if (sid == null || sid <= 0 || sessionId == null || !sessionId.matches("[1-9][0-9]{0,18}"))
+            return error("会话编号无效");
+        if (clientSessionKey != null && !clientSessionKey.matches("[a-f0-9]{32}")) return error("会话关联标识无效");
+        int accepted = roamSessionWriteService.archiveFinishedRecords(memberId, sid, clientSessionKey, records);
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("sessionId", String.valueOf(sid));
+        data.put("acceptedRecords", accepted);
+        data.put("evidenceType", "CLIENT_REPORTED");
+        return success(data);
     }
 
     @Operation(summary = "点亮迷雾格(批量,幂等)")
@@ -620,6 +636,7 @@ public class ApiRoamController extends BaseController {
     public AjaxResult finish(String sessionId, String poiIds, Integer distanceM) {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
+        roamMapper.lockSettlementOwner(memberId);
         Long sid = Convert.toLong(sessionId, 0L);
         RoamSession session = sid > 0 ? roamMapper.selectOwnedSessionForUpdate(sid, memberId) : null;
         if (session == null || !memberId.equals(session.getMemberId())) return error("会话不存在");
@@ -668,7 +685,10 @@ public class ApiRoamController extends BaseController {
                 b.setDelFlag(0);
                 b.setCreateTime(new Date());
                 try { playerBadgeMapper.insertPlayerBadge(b); medalName = b.getBadgeName(); }
-                catch (Exception e) { logger.error("漫游里程碑勋章发放失败 member={} tiles={},需人工补发", memberId, crossed, e); }
+                catch (Exception e) {
+                    logger.error("漫游里程碑勋章发放失败 member={} tiles={}", memberId, crossed, e);
+                    throw new ServiceException("漫游勋章发放失败，请重试原行程结算");
+                }
             }
         }
 
