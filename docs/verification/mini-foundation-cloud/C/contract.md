@@ -25,3 +25,9 @@
 ## 验证边界
 
 C-ai 9 个已有文件 base SHA256 和 candidate.patch SHA256 已核，git apply --check 通过，未当作测试绿。只在云端跑 Node/静态；专用 VPS 初始 TCP grants 为空；用户后续提供的 SSH credential 由 root 独立校验，仍等待 TCP 配置，不能据 HTTP refused 判定 SSH 故障，Java/MySQL/Redis 需明确待验，不启动预置云端 DB/Java、不改依赖/CI。GitHub 原 CI 的同提交结果单列。无生产 DDL/调度启用/部署/真机/提供方验收。
+
+## 新使用资格调用合同补充
+
+A 确认已付为 `paymentStatus=2`（1 是 PAYING），报名成功 `registrationStatus=2`；锁序为 activity→registration，与取消活动一致。C 的 ApiPlayProgress 新写入口、AdvancedGameRuntime start/act/completeGate、TopicRouteRuntime 新建/推进，仅原本依赖报名/通行证的链用既有 Activity/Registration Mapper 当前锁读验证 owner/member/原资格和原日期策略；普通/免费报名保持原registrationStatus=2，不统一强制payment=2，原pk3已购订单和原本hasPaid的链才验证已付；历史快照/ending/已完成事实读取保留。ApiPlayRunSession.save/read/clear 沿用本人暂停记录协议，不新增订单或付款闸。C 同域 ApiPlayRunSession/ApiAdvancedPlay/ApiAiNpc Controller 与 Play 域 Service 由 C 单一所有者；CmsRegistration/CmsTopic/PlayTeam Mapper 始终归 A。A 给出的两个接口先导提交已原样引用，默认明确 throw 未接入，真实原券交付仍依赖 A 正式实现。
+
+共享依赖例外：root唯一所有者的先导提交 `4db987a14b53cbda2d11587e89cda5a36150ee34` 只登记新migration元数据 `ci/migration-dependencies.json`，已原样cherry-pick。C不编辑该文件、CI gate或workflow；白名单将这条root作者固定依赖单列。

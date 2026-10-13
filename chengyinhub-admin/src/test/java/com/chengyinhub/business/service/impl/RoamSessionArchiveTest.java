@@ -38,6 +38,11 @@ class RoamSessionArchiveTest {
         verify(archives, times(2)).insertRecords(eq(77L), eq(9L), anyList(), any(Date.class));
         assertEquals(7, session.getXpAwarded()); assertEquals(120, session.getDistanceM()); assertEquals(1, session.getTilesRevealed());
     }
+    @Test void jdbcTimestampAndDateForSameMillisAreIdempotent() {
+        Map<String, Object> original = new HashMap<>(); original.put("tile", "wtw3sjq"); original.put("collectedAt", new java.sql.Timestamp(2000));
+        when(archives.selectOriginalRecords(anyLong(), anyLong(), anyList())).thenReturn(Collections.singletonList(original));
+        assertEquals(1, writer.archiveFinishedRecords(77L, 9L, null, record(2000)));
+    }
     @Test void originalRecordCollisionCannotRewriteTime() {
         Map<String, Object> original = new HashMap<>(); original.put("tile", "wtw3sjq"); original.put("collectedAt", new Date(2000));
         when(archives.selectOriginalRecords(anyLong(), anyLong(), anyList())).thenReturn(Collections.singletonList(original));

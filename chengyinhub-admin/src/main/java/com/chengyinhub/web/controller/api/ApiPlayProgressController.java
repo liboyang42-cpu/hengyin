@@ -223,6 +223,9 @@ public class ApiPlayProgressController extends BaseController
     @Autowired
     private com.chengyinhub.business.mapper.CmsRegistrationMapper cmsRegistrationMapper;
 
+    @Autowired
+    private com.chengyinhub.business.mapper.CmsActivityMapper currentPlayActivityMapper;
+
     /** [P0-17] ③ 通关口径:认核销不认打卡。 */
     @Autowired
     private com.chengyinhub.business.service.IPerkLedgerService perkLedgerService;
@@ -2643,9 +2646,16 @@ public class ApiPlayProgressController extends BaseController
             CmsActivity activity = cmsActivityService.selectCmsActivityById(actId);
             if (activity == null || activity.getTopicId() == null) { c.error = error("活动不存在"); return c; }
             if (!activity.getTopicId().equals(node.getTopicId())) { c.error = error("该节点不属于本次活动"); return c; }
-            CmsRegistration ticket = activityRegistration(memberId, actId, registrationId);
+            CmsRegistration ticket;
+            try { ticket=com.chengyinhub.business.service.support.CurrentPlayRegistration.require(
+                    currentPlayActivityMapper,cmsRegistrationMapper,memberId,2L,actId,registrationId,new Date()); }
+            catch(IllegalStateException denied) { c.error=error(denied.getMessage());return c; }
             if (ticket == null) { c.error = error("请先报名并完成支付"); return c; }
             c.registration = ticket;
+            activity=currentPlayActivityMapper.selectCmsActivityByIdForUpdate(actId);
+            if(activity==null || !node.getTopicId().equals(activity.getTopicId())) {
+                c.error=error("该节点不属于本次活动");return c;
+            }
             String timeErr = activityTimeError(activity);
             if (timeErr != null) { c.error = error(timeErr); return c; }
             c.actId = actId;
@@ -2658,7 +2668,10 @@ public class ApiPlayProgressController extends BaseController
         Long tId;
         try { tId = Long.valueOf(topicId); } catch (Exception e) { c.error = error("参数有误"); return c; }
         if (node.getTopicId() == null || !node.getTopicId().equals(tId)) { c.error = error("该节点不属于本主题"); return c; }
-        CmsRegistration pass = validSelfPlayPass(memberId, tId, registrationId);
+        CmsRegistration pass;
+        try { pass=com.chengyinhub.business.service.support.CurrentPlayRegistration.require(
+                currentPlayActivityMapper,cmsRegistrationMapper,memberId,1L,tId,registrationId,new Date()); }
+        catch(IllegalStateException denied) { c.error=new AjaxResult(402,denied.getMessage());return c; }
         if (pass == null) { c.error = new AjaxResult(402, "请先购买自玩通行证"); return c; }
         c.registration = pass;
         c.actId = 0L;

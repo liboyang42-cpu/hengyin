@@ -34,3 +34,7 @@ INSERT INTO sys_job
 SELECT 'AI原日配额恢复','DEFAULT','aiQuotaRecoveryTask.run()','0 */1 * * * ?','3','1','1','admin',NOW(),
  'C包原日原nonce补偿；默认暂停，开发测试数据库/Redis和崩溃场景回读后另行启用'
 WHERE NOT EXISTS (SELECT 1 FROM sys_job WHERE invoke_target='aiQuotaRecoveryTask.run()');
+
+-- 回读合同：开发测试独立连接核表字段/nonce唯一键及暂停job；未执行不称迁移通过。
+-- runner: assert=scalar-true
+SELECT EXISTS(SELECT 1 FROM sys_job WHERE invoke_target='aiQuotaRecoveryTask.run()' AND status='1');

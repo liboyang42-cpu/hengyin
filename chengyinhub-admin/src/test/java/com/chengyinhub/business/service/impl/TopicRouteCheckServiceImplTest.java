@@ -100,6 +100,9 @@ class TopicRouteCheckServiceImplTest {
         when(nodeMapper.selectCmsTopicNodeById(NODE2)).thenReturn(node2);
         template(check("easy", 2, "成了", "砸了", true));
         CmsRegistration registration = new CmsRegistration();
+        registration.setId(9000001L);registration.setMemberId(MEMBER);registration.setOwnerType(1L);registration.setOwnerId(TOPIC);
+        registration.setPaymentStatus(2);registration.setRegistrationStatus(2);registration.setPurchaseKind(2);
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(9000001L)).thenReturn(registration);
         when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class)))
                 .thenReturn(Collections.singletonList(registration));
         when(proofService.hasArrived(anyLong(), anyLong(), anyLong())).thenReturn(true);

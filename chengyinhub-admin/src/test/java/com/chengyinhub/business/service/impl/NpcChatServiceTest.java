@@ -418,4 +418,23 @@ class NpcChatServiceTest {
         verifyNoInteractions(voiceCloneClient);
     }
 
+    @Test void storedShopAnswerKeepsOriginalNodeAndDoesNotCallProvider() {
+        NpcChatRequest stored=new NpcChatRequest();stored.setUserId(USER_ONE);stored.setSessionId(-21L);
+        stored.setRequestId(requestId("stored-shop"));stored.setStatus(NpcChatRequest.STATUS_SUCCEEDED);
+        stored.setSafeText("原答案");stored.setSafetyDecision("PASS");
+        when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE,stored.getRequestId())).thenReturn(stored);
+        assertEquals("原答案",service.storedShopRequest(stored.getRequestId(),USER_ONE,21L).getSafeText());
+        assertEquals("INVALID_REQUEST",service.storedShopRequest(stored.getRequestId(),USER_ONE,22L).getErrorCode());
+        verifyNoInteractions(aiGatewayService,voiceCloneClient);
+    }
+    @Test void expiredLeaseReplayIsUnknownRatherThanClaimingNoProviderRan() {
+        NpcChatRequest stored=new NpcChatRequest();stored.setUserId(USER_ONE);stored.setSessionId(-21L);
+        stored.setRequestId(requestId("expired-shop"));stored.setStatus(NpcChatRequest.STATUS_PROCESSING);
+        stored.setLeaseUntil(new Date(0L));
+        when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE,stored.getRequestId())).thenReturn(stored);
+        NpcChatResp result=service.storedShopRequest(stored.getRequestId(),USER_ONE,21L);
+        assertEquals("UNKNOWN",result.getSafetyDecision());assertEquals("REQUEST_OUTCOME_UNKNOWN",result.getErrorCode());
+        assertTrue(!result.isRetryable());verifyNoInteractions(aiGatewayService);
+    }
+
 }

@@ -44,7 +44,8 @@ public class RoamSessionWriteService {
         }
         for (Map<String, Object> existing : recordMapper.selectOriginalRecords(memberId, sessionId, tiles)) {
             if (!(existing.get("collectedAt") instanceof Date)
-                    || !existing.get("collectedAt").equals(times.get(String.valueOf(existing.get("tile")))))
+                    || times.get(String.valueOf(existing.get("tile"))) == null
+                    || ((Date) existing.get("collectedAt")).getTime() != times.get(String.valueOf(existing.get("tile"))).getTime())
                 throw new ServiceException("原采集记录不一致");
         }
         recordMapper.insertRecords(memberId, sessionId, records, new Date());
