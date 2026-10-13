@@ -195,6 +195,12 @@
       "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
     },
     {
+      "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+      "sha256": "52fd245be27523626f9afa0230969c19a6fe9d13be8415e6cd792e94253fa4ed",
+      "baseSha256": "45c516a24bb3c54efffa0149269e0dd4b442926e0e80891504d6f00163e9aa9a",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
       "path": "chengyinhub-xcx/subpackageB/pages/im/chat/index.js",
       "sha256": "836b16804be6c294e2074a1694b3593f4ae5ffef130c06db4f57f3f35f38fc57",
       "baseSha256": "957e707226cd7883a70fa7f97e9ddbec73ac4303f250114f805d0f9b3c25e78f",

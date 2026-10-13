@@ -29,3 +29,7 @@ Node 有意义竞争/恢复/落盘失败测试可在云环境执行；Java/MySQL
 ## 原报名站内通知持久意图
 
 B单一拥有 ISystemNotificationIntentService.enqueue(Long,Integer,String,String,String)->Long，先导commit 1ce1f978893d23055862afff1ee6a5cacc1b778e 由A原样cherry-pick编译依赖。A首次建单事务固定 registration-signup:<primaryId> 和原内容；重放不读取live对象重新enqueue。B同key异内容拒绝，返回持久intentId不代表送达。worker固定最大ID逐页、逐条事务，锁 intent → conversation → member → original message；投递消息写原 clientMessageId=notification_<intentId> 与 DELIVERED 收据同事务。单条失败保持PENDING、后页继续；不处理外部微信渠道/UNKNOWN。新增测试migration未经生产DDL授权，未部署。A运行仍依赖B实现及migration。
+
+## 共享 inventory 单一归属
+
+协调者批准B单一拥有本次 scripts/uiaudit/action-ledger.json 机器生成刷新：4432 controlID集合完全相同，70既有控制（shezhi33/chat32/square5）只更新来源行号；其中3既有IM控制追加认证只读send-receipt targets。status/writeApis/分类/验收字段不变，无新控件，不改action-evidence或生成器。A/C不编辑同文件，最终合成时其他域差异由root在验证快照中单独生成。

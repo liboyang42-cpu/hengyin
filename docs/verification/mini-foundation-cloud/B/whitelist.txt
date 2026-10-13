@@ -30,6 +30,7 @@ chengyinhub-system/src/main/resources/mapper/business/ImMessageMapper.xml
 chengyinhub-system/src/main/resources/mapper/business/ImNotificationIntentMapper.xml
 chengyinhub-xcx/pages/shezhi/shezhi.js
 chengyinhub-xcx/pages/square/list/index.js
+chengyinhub-xcx/scripts/uiaudit/action-ledger.json
 chengyinhub-xcx/subpackageB/pages/im/chat/index.js
 chengyinhub-xcx/tests/unit/analytics.test.js
 chengyinhub-xcx/tests/unit/c06-state-and-exit-contract.test.js
