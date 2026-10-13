@@ -99,6 +99,21 @@
       </view>
     </cy-card>
 
+    <cy-card class="pd-entry-card" wx:if="{{editorPage === 1 && !editingTopicId && configSelectionEligible}}">
+      <view class="pd-entry-card__main">
+        <text class="pd-entry-card__title">新草稿选用配置</text>
+        <text class="pd-entry-card__sub">主动选用后独立保存，已有内容保留原版本</text>
+        <cy-btn variant="ghost" data-kind="route" bindtap="openConfigPicker" disabled="{{configDraftSaving || configDraftUnknown}}">选路线</cy-btn>
+        <cy-btn variant="ghost" data-kind="style" bindtap="openConfigPicker" disabled="{{configDraftSaving || configDraftUnknown}}">选风格</cy-btn>
+        <cy-btn variant="ghost" data-kind="world" bindtap="openConfigPicker" disabled="{{configDraftSaving || configDraftUnknown}}">选世界</cy-btn>
+      </view>
+    </cy-card>
+    <cy-card class="pd-entry-card" wx:if="{{editorPage === 1 && configSourceUsed}}">
+      <text class="pd-entry-card__sub">已选内容为独立副本，世界任务与奖励仅为来源信息</text>
+      <cy-btn variant="secondary" wx:if="{{!editingTopicId || isDraft || configDraftNeedsReadback}}" loading="{{configDraftSaving}}" disabled="{{configDraftSaving || configDraftUnknown}}" bindtap="saveConfigDraft">{{configDraftNeedsReadback ? '重新核对' : '保存草稿'}}</cy-btn>
+      <cy-inline-error wx:if="{{configDraftError}}" title="草稿尚未核对" sub="{{configDraftError}}" />
+    </cy-card>
+
     <!-- 模式 / 票务两张并排卡(Figma 4028:13649)。右卡与底部「票务」tab 指向同一个页面,
          不是两套实现 —— 用户 8-10 确认「是一个」。
          2026-09-05 用户裁决(推翻早前"去掉 eyebrow"那次):eyebrow 保留但换内容 ——
@@ -1265,8 +1280,8 @@
            拿服务端那版预览就是上一次保存的内容,与眼前的编辑器对不上。 -->
       <block wx:if="{{publishCheck.preview}}">
         <view class="pc-section-tit">玩家看到的样子</view>
-        <cy-card class="pc-preview">
-          <image wx:if="{{publishCheck.preview.cover}}" class="pc-preview__cover" src="{{publishCheck.preview.cover}}" mode="aspectFill" lazy-load="true" />
+        <cy-card class="pc-preview" style="{{publishCheck.preview.style}}">
+          <image wx:if="{{publishCheck.preview.cover}}" class="pc-preview__cover" src="{{publishCheck.preview.cover}}" binderror="onConfigPreviewCoverError" mode="aspectFill" lazy-load="true" />
           <view wx:else class="pc-preview__cover pc-preview__cover--empty"><cy-icon name="image" size="48" /></view>
           <text class="pc-preview__name">{{publishCheck.preview.name}}</text>
           <text class="pc-preview__sub" wx:if="{{publishCheck.preview.subtitle}}">{{publishCheck.preview.subtitle}}</text>
@@ -1554,12 +1569,34 @@
   </view>
 </cy-sheet>
 
+<cy-sheet show="{{configPicker.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeConfigPicker">
+  <view class="node-sheet">
+    <view class="node-sheet__top">
+      <view class="node-sheet__close" bindtap="closeConfigPicker" aria-role="button" aria-label="关闭配置选择" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="node-sheet__close-circle"><cy-icon name="close-sm" size="44" /></view>
+      </view>
+    </view>
+    <view class="node-sheet__titlebar">
+      <text class="node-sheet__eyebrow">新草稿</text>
+      <text class="node-sheet__name node-sheet__name--static">选用配置</text>
+    </view>
+    <text class="pd-entry-card__sub" wx:if="{{configPicker.kind === 'world'}}">只复制世界介绍和来源信息，任务与奖励不会自动执行。</text>
+    <cy-skeleton wx:if="{{configPicker.status === 'loading'}}" type="list" />
+    <cy-inline-error wx:if="{{configPicker.status === 'error'}}" title="配置未加载" sub="{{configPicker.error}}" />
+    <cy-btn wx:if="{{configPicker.status === 'error'}}" variant="secondary" bindtap="retryConfigPicker">重新读取</cy-btn>
+    <text class="pd-entry-card__sub" wx:if="{{configPicker.status === 'empty'}}">暂无公开配置，可继续自行创作</text>
+    <view class="node-card" wx:for="{{configPicker.rows}}" wx:key="id" wx:if="{{configPicker.status === 'ready'}}">
+      <cy-btn variant="secondary" block data-id="{{item.id}}" bindtap="selectDraftConfig">{{item.label}}</cy-btn>
+    </view>
+  </view>
+</cy-sheet>
+
   <!-- 2026-08-20 物理返回守卫:任一浮层开着时,返回键/侧滑先关最上层浮层(节点抽屉的
        玩法视图先退回详情),不再把整个编辑器弹出去。表达式覆盖本页全部浮层且无排斥项:
        浮层间切换时它保持为真,不会产生「误触发 afterleave 把底层关掉」的竞态;
        backGuardOff 用于容器被返回键消费后翻转重挂(page-container 每页只能有一个)。 -->
   <page-container
-    show="{{!backGuardOff && (chapterPreview.show || initialStateEditor.show || routeMappingShow || popChapterNodes || popChapter || publishCheck.show || storyEditor.show || modePickerShow || topicDetailShow)}}"
+    show="{{!backGuardOff && (configPicker.show || chapterPreview.show || initialStateEditor.show || routeMappingShow || popChapterNodes || popChapter || publishCheck.show || storyEditor.show || modePickerShow || topicDetailShow)}}"
     duration="{{0}}" overlay="{{false}}"
     custom-style="width:0;height:0;background:transparent;pointer-events:none"
     bind:afterleave="onNativeBackGuard" />

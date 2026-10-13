@@ -37,6 +37,12 @@ function sendUiStateRequest(app, endpoint, options) {
     case '/api/topic/v2/update': return sendKnown(app, '/api/topic/v2/update', options);
     case '/api/topic/update': return sendKnown(app, '/api/topic/update', options);
     case '/api/topic/create': return sendKnown(app, '/api/topic/create', options);
+    case '/api/topic/edit-detail': return sendKnown(app, '/api/topic/edit-detail', options);
+    case '/api/topic/publish-draft': return sendKnown(app, '/api/topic/publish-draft', options);
+    case '/api/preset/style/list': return sendKnown(app, '/api/preset/style/list', options);
+    case '/api/preset/route/list': return sendKnown(app, '/api/preset/route/list', options);
+    case '/api/preset/route/info': return sendKnown(app, '/api/preset/route/info', options);
+    case '/api/world/home': return sendKnown(app, '/api/world/home', options);
     case '/api/comment/list': return sendKnown(app, '/api/comment/list', options);
     case '/api/medal/wall': return sendKnown(app, '/api/medal/wall', options);
     case '/api/badge/wall-v2': return sendKnown(app, '/api/badge/wall-v2', options);
