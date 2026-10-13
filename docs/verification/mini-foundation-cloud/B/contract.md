@@ -33,3 +33,7 @@ B单一拥有 ISystemNotificationIntentService.enqueue(Long,Integer,String,Strin
 ## 共享 inventory 单一归属
 
 协调者批准B单一拥有本次 scripts/uiaudit/action-ledger.json 机器生成刷新：4432 controlID集合完全相同，70既有控制（shezhi33/chat32/square5）只更新来源行号；其中3既有IM控制追加认证只读send-receipt targets。status/writeApis/分类/验收字段不变，无新控件，不改action-evidence或生成器。A/C不编辑同文件，最终合成时其他域差异由root在验证快照中单独生成。
+
+## 共享迁移依赖声明
+
+协调者单一owner提交4db987a14b53cbda2d11587e89cda5a36150ee34，B原样cherry-pick为8d5882a，仅ci/migration-dependencies.json六条新DDL明确空依赖，保全部原依赖；B不得自行编辑共享声明，也未改变CI gate/workflow。文件blob与原提交完全相同。Node/生产源字节不变，测试源59b2999结果保留；元数据单独跑原migration-safety五门（125+41 Python用例）全部通过。

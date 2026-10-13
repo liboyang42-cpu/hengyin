@@ -36,3 +36,5 @@ ImFoundationBMybatisIntegrationTest写4个真实独立随机scratch库场景（�
 本地原ID记录可找回已提交消息；对杀进程后仍not-found的原发送，因不在普通wx存储落聊天原文/坐标，不能自动重建原payload，保持未知而不声称原消息已成功。若要跨进程完整payload恢复，需另核已授权安全存储实现，当前明确保留该恢复断点。新UI、群聊type4/旧搭子局、新通知渠道/经营/处罚/推荐政策均后置，原项未删除。
 
 最终Java IT清理只在CREATE本次UUID scratch库成功后设schemaCreated并允许DROP；CREATE失败不DROP同名已有库，清理后information_schema回读。此安全修补已编码但未实跑。
+
+共享依赖收尾：原样纳入协调者4db987a（本分支8d5882a），只加六条新migration空依赖且保所有原条目；source-manifest和白名单标单一root作者依赖。原migration-safety五门最终全绿：125门禁单测+41台账单测、B一条DDL分句、全task注册、实际PR影响分类③声明、只增未减依赖及批序。初次第4门缺模板锚点为真实失败，已修PR描述，保红/绿证据；没有改门或workflow。元数据另验，不重复整套Node，Java/数据库/真实DDL仍未验。

@@ -45,4 +45,5 @@ chengyinhub-xcx/tests/unit/play-free-explore-detail-contract.test.js
 chengyinhub-xcx/tests/unit/square-feed-pagination-b.test.js
 chengyinhub-xcx/utils/analytics.js
 chengyinhub-xcx/utils/im-send-recovery.js
+ci/migration-dependencies.json
 docs/verification/mini-foundation-cloud/B/
