@@ -88,4 +88,8 @@ root 已明确批准仅本 Task 使用临时 hook 副本，把原 Java 编译执
 
 原 hook SHA256 `74a873bf05614e1fcd4acdc6462b2bbd84bb069010ed35c57707832d64e5aa5d`；临时 hook SHA256 `5925ac57cb8556015b8e0eaf24d22fc13fa985cbf9215132c323cd42610d2f6c`。精确差分留 `/tmp/w2-creation-hook.diff`，只将 `docker run` 新容器替换为 `git archive`→`docker cp`→既定容器内锁住解包和完整 `mvn compile`，额外核对批准容器 ID。
 
-本 Task 没有 push/merge/deploy、付费模型、OSS 写入或生产访问。源码提交和正常 hook 完成证据在提交后补记。
+源码提交 `d97fc4aecf936fc08c90a4e831cf8cfb8d08cb67`，tree `edd689f7523e1884e736b2c880a2fb8a36078893`。正常 hook 对该 tree 的完整后端 compile、原 JS/JSON/保护/DS 门禁执行完成，提交退出 0，日志 `/tmp/w2-creation-commit.log`；没有取消或重发活跃请求。
+
+452 项 JS 验证结束后前端源码未改，最终 97 个变更前端文件 manifest SHA256 `9e6e9e4b44c7e27b5c81ea6ee09d8c8408d846ecfc75f7d44cd7af467d2b1bff`；后端测试对应关系为 c4a43e4 的 72 单元 + 7 IT，同生产源码，最终唯一测试常量变更已 11/11 复验，17 后端文件逐一远端哈希一致。后续本报告补记提交只改文档。
+
+root 已接管 shared-a11y 门禁接线，并已另派全新 App worker 处理两项真实差距。本 Task 没有 push/merge/deploy、付费模型、OSS 写入或生产访问；正常 UI 和外部业务编号验收仍按上表保留，不宣称 all done。
