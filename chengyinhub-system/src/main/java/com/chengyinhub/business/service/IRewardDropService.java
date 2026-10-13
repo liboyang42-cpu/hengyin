@@ -26,4 +26,6 @@ public interface IRewardDropService {
      */
     Map<String, Object> rollDrop(Long memberId, Long topicId, Long nodeId, Long activityId,
                                  String sceneKey, long nodeXp);
+    /** 只读取原券掉落，不重新掷骰或恢复XP；不受当前掉落开关影响原事实。 */
+    Map<String, Object> findOriginalDrop(Long memberId, Long topicId, Long nodeId, Long activityId, String sceneKey);
 }
