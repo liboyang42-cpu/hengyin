@@ -182,14 +182,26 @@ const AI_BLIND_ISSUE_TYPES = ['missing_cover'];
 const RESULT_SHEET_MS = 2000;
 
 const runtimeEditor = require('./theme-runtime.js');
+const configSelection = require('./config-selection.js');
+const configDraft = require('../../../utils/publish/config-draft.js');
+function sendUiStatePublishDraft(payload, callback) {
+  sendUiStateRequest(app, '/api/topic/publish-draft', {
+    method: 'POST', data: { id: payload._configDraftId, scope: payload.scope },
+    success: res => callback(res.code == 200 ? { ok: true, data: res.data } : { ok: false, msg: res.msg }),
+    fail: () => callback({ ok: false, networkError: true }),
+  });
+}
+
 Page({
   ...runtimeEditor.methods,
+  ...configSelection.methods,
   _routeGraph: topicRouteGraph.emptyGraph(),
   _routeMappingSourceNodeId: '',
   _routeMappingReturnToNodeEditor: false,
 
   data: {
     ...runtimeEditor.data,
+    ...configSelection.data,
     // 氛围块的选择器:cy-dropdown 吃 {value,label} 数组(全仓禁原生 picker),块上回显要 key→中文的映射。
     moodOptions: CHAPTER_ATMOSPHERES,
     storyWhenOptions: [], storyWhenLabelOf: {},
@@ -654,6 +666,8 @@ Page({
         formData: this.data.formData,
         pendingMaterials: this.data.pendingMaterials,
         editorMeta: {
+          configSelectionEligible: this.data.configSelectionEligible,
+          configDraftUnknown: this.data.configDraftUnknown || !!(this._configDraftWorkflow && ['saving', 'reading', 'readbackFailed'].includes(this._configDraftWorkflow.getState())),
           selectedCategoryIds: this.data.selectedCategoryIds || [],
           selectedCategoryNames: this.data.selectedCategoryNames || [],
           startDateTime: this.data.startDateTime,
@@ -682,6 +696,9 @@ Page({
     const patch = Object.assign({
       formData,
       pendingMaterials,
+      configSelectionEligible: meta.configSelectionEligible === true,
+      configDraftUnknown: !!meta.configDraftUnknown,
+      configDraftError: meta.configDraftUnknown ? '上次保存结果尚未核对，请从我的项目核对原草稿；当前内容已保留' : '',
     }, thoughtPatchOf(formData.journeyRules));
     if (Array.isArray(meta.selectedCategoryIds)) patch.selectedCategoryIds = meta.selectedCategoryIds;
     if (Array.isArray(meta.selectedCategoryNames)) {
@@ -696,6 +713,7 @@ Page({
     this.setData(patch, () => {
       this._ensureLocalIds();
       this._materializeCityStoryChapters();
+      this._refreshConfigSource();
       this.updateAllStatistics();
     });
   },
@@ -753,6 +771,8 @@ Page({
       currentBaseRevision: baseRevision,
     });
     const finish = () => { this._draftAutosaveReady = true; };
+    const unknownSave = !!(result.envelope && result.envelope.editorMeta && result.envelope.editorMeta.configDraftUnknown);
+    if (result.status === 'ready' && unknownSave) result.status = 'revision_conflict';
     if (result.status === 'ready') {
       this._applyDraftEnvelope(result.envelope);
       finish();
@@ -760,13 +780,16 @@ Page({
     }
     if (result.status === 'revision_conflict') {
       modal.show({
-        title: '另一端草稿已更新',
-        content: '其他设备上的草稿已更新，是否用本机草稿覆盖？',
+        title: unknownSave ? '原草稿需要核对' : '另一端草稿已更新',
+        content: unknownSave ? '保留本机版本供检查，或使用这次读取的已保存版本。' : '其他设备上的草稿已更新，是否用本机草稿覆盖？',
         confirmText: '使用本地草稿',
         cancelText: '使用已保存版本',
         success: (res) => {
           if (res.confirm) this._applyDraftEnvelope(result.envelope);
-          else proEditorDraft.removeDraft(wx, { topicId: this.data.editingTopicId }, { memberId });
+          else {
+            proEditorDraft.removeDraft(wx, { topicId: this.data.editingTopicId }, { memberId });
+            this.setData({ configDraftUnknown: false, configDraftNeedsReadback: false, configDraftError: '' });
+          }
           finish();
         },
       });
@@ -935,7 +958,9 @@ Page({
 
   // 物理返回守卫(见 wxml 尾部 page-container):按层级关最上层浮层,而不是退出编辑器
   onNativeBackGuard() {
-    if (this.data.chapterPreview && this.data.chapterPreview.show) {
+    if (this.data.configPicker.show) {
+      this.closeConfigPicker();
+    } else if (this.data.chapterPreview && this.data.chapterPreview.show) {
       this.closeChapterPreview();
     } else if (this.data.initialStateEditor && this.data.initialStateEditor.show) {
       this.closeInitialState();
@@ -960,7 +985,7 @@ Page({
       this.closeStoryEditor();
     }
     // 关掉一层后若还有受护浮层(浮层叠浮层),翻转一次让 page-container 重新挂上
-    const stillGuarded = (this.data.chapterPreview && this.data.chapterPreview.show) || (this.data.initialStateEditor && this.data.initialStateEditor.show) || this.data.routeMappingShow || this.data.popChapterNodes || this.data.popChapter
+    const stillGuarded = this.data.configPicker.show || (this.data.chapterPreview && this.data.chapterPreview.show) || (this.data.initialStateEditor && this.data.initialStateEditor.show) || this.data.routeMappingShow || this.data.popChapterNodes || this.data.popChapter
       || (this.data.publishCheck && this.data.publishCheck.show)
       || (this.data.storyEditor && this.data.storyEditor.show)
       || this.data.modePickerShow || this.data.topicDetailShow;
@@ -2216,6 +2241,7 @@ Page({
       restoredLocalDraft = this._bootstrapNewLocalDraft(options);
     }
     if (!editingTopicId && !restoredLocalDraft) {
+      this.setData({ configSelectionEligible: true });
       this.applyAiDraft(options);
     }
     const restoredMode = Number(this.data.formData.productType) === 2 ? 2 : 1;
@@ -2249,6 +2275,7 @@ Page({
     if (editingTopicId) {
       this.loadEditingTopic(editingTopicId);
     }
+    this._refreshConfigSource();
     // 实名状态开页查一次:已登记的人不该在发布确认里再看到那三格(值也永不下发,只有真/假)
     const identityStatusEpoch = (this._identityStatusEpoch || 0) + 1;
     this._identityStatusEpoch = identityStatusEpoch;
@@ -2319,7 +2346,7 @@ Page({
    *   merchantStatus → openMerchantPool、totalInventory → totalStock、radiusM → radius、
    *   chapter.cmsTopicNodeList → chapter.nodes。漏一个就是「编辑一次静默丢一批配置」。
    */
-  applyEditingTopic(detail) {
+  applyEditingTopic(detail, options) {
     if (!isEditingTopicPayload(detail)) return false;
     const topic = detail.topic || {};
     const productType = Number(topic.productType) === 2 ? 2 : 1;
@@ -2345,6 +2372,7 @@ Page({
     this._routeGraph = topicRoute.graph;
 
     this.setData({
+      isDraft: detail.isDraft === true,
       editScope: detail.editScope || 'FULL',
       editLoaded: true,
 
@@ -2405,7 +2433,9 @@ Page({
     this.updateAllStatistics();
     this.refreshRouteGraph();
     this._syncMerchantPoolEligibility();   // 回填之后复核:存量主题可能是无资格者开的池
-    this._finishEditingDraftBootstrap(detail);
+    if (options && options.savedReadback) this.setData({ baseRevision: topic.updateTime || topic.createTime || '' });
+    else this._finishEditingDraftBootstrap(detail);
+    this._refreshConfigSource();
     return true;
   },
 
@@ -2607,6 +2637,8 @@ Page({
   // 页面销毁:让在途发布回调失效,避免 setData / redirect after unload
   onUnload() {
     this.destroyPreviewAudio();
+    this._configSelectionEpoch = (this._configSelectionEpoch || 0) + 1;
+    if (this._configDraftWorkflow) this._configDraftWorkflow.destroy();
     if (this._pendingUndoTimer) clearTimeout(this._pendingUndoTimer);
     this._pendingUndoTimer = null;
     this._pendingUndoSnapshot = null;
@@ -5800,6 +5832,7 @@ Page({
     // 读它只会把一条死字段升级成「内部状态」,而算一次的成本本来就可以忽略。
     const stats = this.calculateTotalStats() || {};
     return {
+      style: configDraft.styleOf(fd.themeRuntimeConfig),
       cover: fd.imgUrl || '',
       name: fd.name || '未命名主题',
       subtitle: fd.subtitle || '',
@@ -6358,7 +6391,7 @@ Page({
     });
   },
 
-  _doSubmit() {
+  _doSubmit(options) {
     const productType = Number(this.data.formData.productType) === 2 ? 2 : 1;
     let chapters;
     try {
@@ -6382,7 +6415,7 @@ Page({
     }));
 
     // 准备API数据
-    const runtimeIssue = this._validateRuntimeConfig();
+    const runtimeIssue = options && options.draft ? '' : this._validateRuntimeConfig();
     if (runtimeIssue) { cyToast(runtimeIssue); return false; }
     let apiData = {
       name: this.data.formData.name,
@@ -6462,6 +6495,11 @@ Page({
       };
     }
 
+    if (options && options.draft) return apiData;
+    if (this.data.configSourceUsed && (!this.data.editingTopicId || this.data.isDraft)) {
+      this._saveConfigPayload(apiData, true);
+      return;
+    }
     // 调用API
     this.sendData(apiData);
   },
@@ -6473,6 +6511,10 @@ Page({
           // 编辑既有主题走 update(带 id),新建才走 create。
           // 在 request 里读而不是建 workflow 时读:workflow 是懒建且只建一次,建它那一刻回填可能还没到。
           const editingId = this.data.editingTopicId;
+          if (payload._configDraftId) {
+            sendUiStatePublishDraft(payload, cb);
+            return;
+          }
           const professionalStory = payload.publishMode === 'pro'
             && (Number(payload.productType) === 1 || (payload.chapters || []).some(chapter => chapter.opening
               || chapter.ending || (Array.isArray(chapter.blocks) && chapter.blocks.length > 0)));
