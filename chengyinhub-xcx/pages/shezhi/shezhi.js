@@ -1,3 +1,4 @@
+const sendRecovery = require('../../utils/im-send-recovery.js');
 const loading = require('../../utils/loading.js');
 const toast = require('../../utils/toast.js');
 const app = getApp();
@@ -287,6 +288,7 @@ Page({
       app.globalData.nickname = '';
       app.globalData.role = ''; // 退出时一并清角色,避免内存残留导致身份错乱
       roleGuard.clear(); // 清 roleGuard 模块级权限缓存(clearStorageSync 清不掉内存 _cache,reLaunch 不重启模块)
+      sendRecovery.invalidate(); // 使登出前的未知发送回包不能重建恢复记录。
       wx.clearStorageSync();
       wx.reLaunch({ url: '/pages/index/index' });
     };

@@ -13,6 +13,13 @@ import java.util.List;
 public interface BizEventLogMapper {
     int insertBizEventLog(BizEventLog bizEventLog);
 
+    /** Unique identity read after INSERT IGNORE; current read also observes a competing commit. */
+    BizEventLog selectIdempotentEventForUpdate(BizEventLog event);
+
+    /** Existing successful registration fact; no financial data is returned from analytics. */
+    BizEventLog selectRegistrationEventFact(@Param("memberId") Long memberId,
+            @Param("registrationId") Long registrationId, @Param("eventName") String eventName);
+
     List<BizEventLog> selectBizEventLogList(BizEventLog bizEventLog);
 
     /**

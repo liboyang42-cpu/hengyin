@@ -54,6 +54,12 @@
         order by id desc limit 1 for update
     </select>
 
+    <select id="selectLatestForProjection" resultMap="ImMessageResult" useCache="false">
+        <include refid="selectImMessageVo"/>
+        where conversation_id = #{conversationId}
+        order by id desc limit 1
+    </select>
+
     <select id="selectPage" resultMap="ImMessageResult">
         <include refid="selectImMessageVo"/>
         where conversation_id = #{conversationId} and status != 2
@@ -62,6 +68,18 @@
         </if>
         order by id desc
         limit #{size}
+    </select>
+
+    <select id="selectAfter" resultMap="ImMessageResult" useCache="false">
+        <include refid="selectImMessageVo"/>
+        where conversation_id = #{conversationId} and status != 2 and id &gt; #{afterId}
+        order by id asc limit #{size}
+    </select>
+
+    <select id="countUnreadAfter" resultType="java.lang.Integer" useCache="false">
+        select count(*) from im_message
+        where conversation_id = #{conversationId} and status != 2 and id &gt; #{readTo}
+            and sender_id != #{memberId}
     </select>
 
     <update id="updateStatus">

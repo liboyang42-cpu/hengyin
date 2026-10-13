@@ -16,7 +16,7 @@ function loadChat() {
   delete require.cache[mod]
   require(mod)
   const page = Object.assign({}, def)
-  page.data = JSON.parse(JSON.stringify(def.data))
+  page.data = { ...JSON.parse(JSON.stringify(def.data)), myId: 1 }
   page.setData = function (patch) { Object.assign(this.data, patch) }
   page.scrollBottom = () => {}
   page.markRead = () => {}

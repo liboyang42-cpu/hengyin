@@ -13,6 +13,9 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.time.Instant;
 import java.util.Date;
 
@@ -23,6 +26,172 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AnalyticsEventServiceImplTest {
+
+    @Test
+    void acknowledgedReplayUsesOriginalEventOnceAndDoesNotIncrementProfileAgain() {
+        ReplayFixture f = new ReplayFixture();
+        AnalyticsBatchDTO batch = f.batch("content_view", "same", 42L);
+        assertEquals(1, f.service.recordBatch(1001L, batch));
+        assertEquals(1, f.service.recordBatch(1001L, batch));
+        assertEquals(1, f.events.size());
+        org.mockito.Mockito.verify(f.recommendation, org.mockito.Mockito.times(1))
+                .updateProfileFromEvent(any(BizEventLog.class));
+    }
+
+    @Test
+    void conflictOnSameIdentityCannotProduceAcceptedReceipt() {
+        ReplayFixture f = new ReplayFixture();
+        AnalyticsBatchDTO batch = f.batch("content_view", "same", 42L);
+        f.service.recordBatch(1001L, batch);
+        batch.getEvents().get(0).setBizId(43L);
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> f.service.recordBatch(1001L, batch));
+        assertEquals(Long.valueOf(42L), f.events.values().iterator().next().getBizId());
+    }
+
+    @Test
+    void partialPriorCommitAcknowledgesBothRowsButOnlyCreatesMissingProfileEffect() {
+        ReplayFixture f = new ReplayFixture();
+        AnalyticsBatchDTO first = f.batch("content_view", "first", 42L);
+        AnalyticsBatchDTO second = f.batch("content_view", "second", 43L);
+        f.service.recordBatch(1001L, first);
+        AnalyticsBatchDTO all = new AnalyticsBatchDTO();
+        all.setEvents(Arrays.asList(first.getEvents().get(0), second.getEvents().get(0)));
+        assertEquals(2, f.service.recordBatch(1001L, all));
+        assertEquals(2, f.events.size());
+        org.mockito.Mockito.verify(f.recommendation, org.mockito.Mockito.times(2))
+                .updateProfileFromEvent(any(BizEventLog.class));
+    }
+
+    @Test
+    void qualifiedViewKeepsUserPostDayIdentityAcrossSessions() {
+        ReplayFixture f = new ReplayFixture();
+        AnalyticsBatchDTO batch = f.batch("community_post_qualified_view", "first", 42L);
+        f.service.recordBatch(1001L, batch);
+        batch.getEvents().get(0).setSessionId("another-session");
+        batch.getEvents().get(0).setIdempotencyKey("another-client-key");
+        assertEquals(1, f.service.recordBatch(1001L, batch));
+        assertEquals(1, f.events.size());
+        org.mockito.Mockito.verify(f.recommendation, org.mockito.Mockito.times(1))
+                .updateProfileFromEvent(any(BizEventLog.class));
+    }
+
+    @Test
+    void actorScopesKeepSameClientKeyIndependentBetweenAccounts() {
+        ReplayFixture f = new ReplayFixture();
+        AnalyticsBatchDTO batch = f.batch("content_view", "same", 42L);
+        assertEquals(1, f.service.recordBatch(1001L, batch));
+        assertEquals(1, f.service.recordBatch(2002L, batch));
+        assertEquals(2, f.events.size());
+    }
+
+    @Test
+    void ignoredInsertWithoutDurableRowCannotBeAcknowledged() {
+        ReplayFixture f = new ReplayFixture();
+        when(f.mapper.insertBizEventLog(any(BizEventLog.class))).thenReturn(0);
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> f.service.recordBatch(1001L, f.batch("content_view", "missing", 42L)));
+        org.mockito.Mockito.verifyNoInteractions(f.recommendation);
+    }
+
+    @Test
+    void reorderedJsonAndDatabaseSecondPrecisionDoNotTurnValidReplayIntoConflict() {
+        ReplayFixture f = new ReplayFixture();
+        AnalyticsBatchDTO batch = f.batch("content_view", "same", 42L);
+        batch.getEvents().get(0).setPropertiesJson("{\"b\":2,\"a\":1}");
+        f.service.recordBatch(1001L, batch);
+        BizEventLog persisted = f.events.values().iterator().next();
+        persisted.setOccurredAt(new Date(persisted.getOccurredAt().getTime() / 1000 * 1000));
+        batch.getEvents().get(0).setPropertiesJson("{\"a\":1,\"b\":2}");
+        assertEquals(1, f.service.recordBatch(1001L, batch));
+        batch.getEvents().get(0).setPropertiesJson("{\"a\":99,\"b\":2}");
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> f.service.recordBatch(1001L, batch));
+    }
+
+    @Test
+    void paymentRequiresOwnedCommittedFactAndCannotBeCountedAgainWithAnotherClientKey() {
+        ReplayFixture f = new ReplayFixture();
+        AnalyticsBatchDTO batch = f.batch("payment_success", "client-first", 42L);
+        AnalyticsEventDTO item = batch.getEvents().get(0);
+        item.setBizType("activity");
+        item.setPropertiesJson("{\"registrationId\":9,\"payableAmount\":99999}");
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> f.service.recordBatch(1001L, batch));
+        assertEquals(0, f.events.size());
+        org.mockito.Mockito.verifyNoInteractions(f.recommendation);
+
+        BizEventLog fact = new BizEventLog();
+        fact.setMemberId(1001L);
+        fact.setBizType("activity");
+        fact.setBizId(42L);
+        fact.setOccurredAt(new Date(123456000L));
+        when(f.mapper.selectRegistrationEventFact(1001L, 9L, "payment_success")).thenReturn(fact);
+        assertEquals(1, f.service.recordBatch(1001L, batch));
+        item.setIdempotencyKey("another-client-key");
+        item.setSessionId("another-session");
+        item.setPropertiesJson("{\"registrationId\":\"9\",\"payableAmount\":1}");
+        assertEquals(1, f.service.recordBatch(1001L, batch));
+        assertEquals(1, f.events.size());
+        BizEventLog stored = f.events.values().iterator().next();
+        assertEquals("registration-9", stored.getIdempotencyKey());
+        assertEquals(fact.getOccurredAt(), stored.getOccurredAt());
+        assertEquals("{\"registrationId\":9}", stored.getPropertiesJson());
+        org.mockito.Mockito.verify(f.recommendation, org.mockito.Mockito.times(1))
+                .updateProfileFromEvent(any(BizEventLog.class));
+    }
+
+    @Test
+    void registrationFactCannotBeAttributedToDifferentContentOrAccount() {
+        ReplayFixture f = new ReplayFixture();
+        AnalyticsBatchDTO batch = f.batch("signup_submit", "signup", 42L);
+        batch.getEvents().get(0).setBizType("activity");
+        batch.getEvents().get(0).setPropertiesJson("{\"registrationId\":9}");
+        BizEventLog fact = new BizEventLog();
+        fact.setBizType("activity"); fact.setBizId(43L); fact.setOccurredAt(new Date());
+        when(f.mapper.selectRegistrationEventFact(1001L, 9L, "signup_submit")).thenReturn(fact);
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> f.service.recordBatch(1001L, batch));
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> f.service.recordBatch(2002L, batch));
+        assertEquals(0, f.events.size());
+        org.mockito.Mockito.verifyNoInteractions(f.recommendation);
+    }
+
+    /** An identity-map fixture tests service behavior; it is not a MySQL concurrency claim. */
+    private static class ReplayFixture {
+        final Map<String, BizEventLog> events = new HashMap<>();
+        final BizEventLogMapper mapper = mock(BizEventLogMapper.class);
+        final IRecommendationService recommendation = mock(IRecommendationService.class);
+        final AnalyticsEventServiceImpl service = new AnalyticsEventServiceImpl();
+        ReplayFixture() {
+            ReflectionTestUtils.setField(service, "bizEventLogMapper", mapper);
+            ReflectionTestUtils.setField(service, "recommendationService", recommendation);
+            when(mapper.insertBizEventLog(any(BizEventLog.class))).thenAnswer(invocation -> {
+                BizEventLog event = invocation.getArgument(0);
+                String key = key(event);
+                if (events.containsKey(key)) return 0;
+                events.put(key, event);
+                return 1;
+            });
+            when(mapper.selectIdempotentEventForUpdate(any(BizEventLog.class)))
+                    .thenAnswer(invocation -> events.get(key(invocation.getArgument(0))));
+        }
+        String key(BizEventLog event) {
+            return event.getEventName() + ":" + event.getActorScope() + ":" + event.getIdempotencyKey();
+        }
+        AnalyticsBatchDTO batch(String eventName, String key, Long bizId) {
+            AnalyticsEventDTO item = new AnalyticsEventDTO();
+            item.setEventName(eventName);
+            item.setIdempotencyKey(key);
+            item.setBizId(bizId);
+            item.setBizType("topic");
+            item.setOccurredAt(Date.from(Instant.parse("2026-09-10T04:00:00.123Z")));
+            AnalyticsBatchDTO batch = new AnalyticsBatchDTO();
+            batch.setEvents(Collections.singletonList(item));
+            return batch;
+        }
+    }
 
     @Test
     void qualifiedViewRequiresVisiblePostAndExcludesItsAuthor() {

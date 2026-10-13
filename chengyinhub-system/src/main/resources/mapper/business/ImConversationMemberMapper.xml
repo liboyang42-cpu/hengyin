@@ -74,6 +74,13 @@
         where conversation_id = #{conversationId} and member_id = #{memberId}
     </update>
 
+    <update id="markReadTo">
+        update im_conversation_member
+        set unread_count = #{unread}, last_read_msg_id = #{readTo}
+        where conversation_id = #{conversationId} and member_id = #{memberId}
+            and deleted = 0 and coalesce(last_read_msg_id, 0) &lt;= #{readTo}
+    </update>
+
     <select id="sumUnread" resultType="java.lang.Integer">
         select coalesce(sum(m.unread_count), 0)
         from im_conversation_member m

@@ -64,7 +64,7 @@ function loadPage(relPath, { onRequest, tips }) {
 
 function makePage(cfg, data) {
   const page = Object.assign(Object.create(null), cfg)
-  page.data = Object.assign({}, cfg.data, data)
+  page.data = Object.assign({}, cfg.data, { myId: 1 }, data)
   page.setData = function (patch) {
     Object.keys(patch).forEach((k) => {
       if (k.indexOf('[') === -1 && k.indexOf('.') === -1) { page.data[k] = patch[k]; return }

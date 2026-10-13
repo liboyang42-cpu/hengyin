@@ -28,7 +28,7 @@ function loadPage(modulePath) {
   delete require.cache[require.resolve(modulePath)]
   require(modulePath)
   const page = Object.assign({}, definition, {
-    data: JSON.parse(JSON.stringify(definition.data)),
+    data: { ...JSON.parse(JSON.stringify(definition.data)), myId: 8 },
     setData(patch, done) {
       Object.assign(this.data, patch)
       if (done) done.call(this)
