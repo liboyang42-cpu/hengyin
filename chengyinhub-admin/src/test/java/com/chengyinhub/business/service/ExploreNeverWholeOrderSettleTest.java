@@ -86,6 +86,8 @@ class ExploreNeverWholeOrderSettleTest {
         r.setOwnerType(2L);
         r.setOwnerId(800L);
         r.setPaymentStatus(2);
+        r.setRegistrationStatus(2);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(r);
         r.setPurchaseKind(purchaseKind);
         return r;
     }

@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Objects;
 
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.enums.TopicLifecycleState;
@@ -21,6 +22,7 @@ import com.chengyinhub.business.service.support.CommercialTopicPolicy;
 import com.chengyinhub.business.service.support.SaleAvailabilityPolicy;
 import com.chengyinhub.business.service.support.TopicSaleCanonicalCodec;
 import com.chengyinhub.business.service.support.ExploreAccountTicketGate;
+import com.chengyinhub.business.service.support.ExploreTicketUsePolicy;
 import com.chengyinhub.business.util.RefundPolicy;
 import com.chengyinhub.common.constant.EntitlementInvalidReason;
 import com.chengyinhub.common.constant.HttpStatus;
@@ -36,6 +38,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.transaction.annotation.Propagation;
 import com.chengyinhub.business.service.ICmsRegistrationService;
 import com.chengyinhub.business.service.IRegistrationCreationTransaction;
 import com.chengyinhub.business.service.RegistrationOrderExpiredException;
@@ -136,6 +140,14 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
     @Autowired
     private QrcodeServiceImpl qrcodeService;
+
+    /** afterCommit 必须另起事务，不能复用已经提交的数据库连接。 */
+    @Autowired
+    @Lazy
+    private ICmsRegistrationService registrationSelf;
+
+    @Autowired
+    private RegistrationSignupNotificationService registrationSignupNotificationService;
 
     @Autowired
     private UmsMemberPointsDetailMapper umsMemberPointsDetailMapper;
@@ -1485,6 +1497,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                     request.getSourceClubId(), request.getSourceChannelCode(), waitlistClaim));
         }
         bindRequestFingerprint(created, normalizedRequestId, requestFingerprint);
+        if (!created.isEmpty()) registrationSignupNotificationService.recordIntent(memberId, created.get(0));
         return created;
     }
 
@@ -1968,12 +1981,14 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
      * @return
      */
     @Override
-    //@Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public String generateVerificationQrcode(Long registrationId) {
         CmsRegistration registration = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
         if (registration == null) {
             throw new RuntimeException("报名记录不存在");
         }
+
+        registration = requireCurrentUsableRegistration(registration);
 
         // 如果已经生成过二维码，直接返回
         if (registration.getQrcodeUrl() != null && !registration.getQrcodeUrl().isEmpty()) {
@@ -2415,7 +2430,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         Runnable effects = () -> {
             for (Long registrationId : registrationIds) {
                 try {
-                    generateVerificationQrcode(registrationId);
+                    registrationSelf.generateVerificationQrcode(registrationId);
                 } catch (Exception e) {
                     logger.error("[支付回调] 生成核销码失败(待补偿) registrationId={}", registrationId, e);
                 }
@@ -2513,6 +2528,17 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     }
 
     @Override
+    public Long getExpiredUnpaidScanUpperBound(Date now) {
+        return cmsRegistrationMapper.selectExpiredUnpaidMaxId(now);
+    }
+
+    @Override
+    public List<Long> listExpiredUnpaidIdsAfter(Date now, long afterId, long maxId, int limit) {
+        return cmsRegistrationMapper.selectExpiredUnpaidIdsAfter(now, afterId, maxId,
+                Math.max(1, Math.min(200, limit)));
+    }
+
+    @Override
     public List<Long> listExpiredPayingIds(long afterId) {
         return cmsRegistrationMapper.selectExpiredPayingIds(new Date(), afterId);
     }
@@ -2520,6 +2546,17 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Override
     public List<Long> listPaidMissingQrcodeIds() {
         return cmsRegistrationMapper.selectPaidMissingQrcodeIds();
+    }
+
+    @Override
+    public Long getPaidMissingQrcodeScanUpperBound() {
+        return cmsRegistrationMapper.selectPaidMissingQrcodeMaxId();
+    }
+
+    @Override
+    public List<Long> listPaidMissingQrcodeIdsAfter(long afterId, long maxId, int limit) {
+        return cmsRegistrationMapper.selectPaidMissingQrcodeIdsAfter(afterId, maxId,
+                Math.max(1, Math.min(100, limit)));
     }
 
     /**
@@ -2775,7 +2812,10 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             throw new IllegalStateException(
                     "探索票不能整单核销,请按章节核销(registrationId=" + registration.getId() + ")");
         }
-        assertActivityRedeemable(registration);
+        registration = requireCurrentUsableRegistration(registration);
+        if (Integer.valueOf(PurchaseKind.EXPLORE_PASS).equals(registration.getPurchaseKind())) {
+            throw new IllegalStateException("探索票不能整单核销,请按章节核销");
+        }
         if (cmsRegistrationMapper.verifyIfNotVerified(registration.getId(), verifierId) == 0) {
             if (cmsRegistrationMapper.hasActiveManualRefundCaseForUpdate(registration.getId())) {
                 throw new IllegalStateException("订单正在人工退款处理中，暂不可核销");
@@ -2804,16 +2844,35 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         return true;
     }
 
-    private void assertActivityRedeemable(CmsRegistration registration) {
-        if (!Long.valueOf(2L).equals(registration.getOwnerType())) return;
-        // 与取消共用 activity→registration 锁序，避免核销继续使用取消前的快照。
-        CmsActivity activity = cmsActivityMapper.selectCmsActivityByIdForUpdate(registration.getOwnerId());
-        if (activity == null || Integer.valueOf(2).equals(activity.getDelFlag())) {
-            throw new IllegalStateException("活动不存在");
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public CmsRegistration requireCurrentUsableRegistration(CmsRegistration snapshot) {
+        if (snapshot == null || snapshot.getId() == null) {
+            throw new IllegalStateException("报名记录不存在");
         }
-        if (activity.getCancelTime() != null) {
-            throw new IllegalStateException("活动已取消，无法核销");
+        CmsActivity activity = null;
+        if (Long.valueOf(2L).equals(snapshot.getOwnerType())) {
+            // 与活动取消相同 activity→registration 锁序；不持旧快照核销。
+            activity = cmsActivityMapper.selectCmsActivityByIdForUpdate(snapshot.getOwnerId());
+            if (activity == null || Integer.valueOf(2).equals(activity.getDelFlag())) {
+                throw new IllegalStateException("活动不存在");
+            }
+            if (activity.getCancelTime() != null) throw new IllegalStateException("活动已取消，无法使用");
         }
+        CmsRegistration current = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(snapshot.getId());
+        if (current == null || !Objects.equals(snapshot.getMemberId(), current.getMemberId())
+                || !Objects.equals(snapshot.getOwnerType(), current.getOwnerType())
+                || !Objects.equals(snapshot.getOwnerId(), current.getOwnerId())) {
+            throw new IllegalStateException("订单归属已变化，请重新获取订单");
+        }
+        if (!Integer.valueOf(2).equals(current.getPaymentStatus())
+                || !Integer.valueOf(2).equals(current.getRegistrationStatus())) {
+            throw new IllegalStateException("订单未完成支付或已退款，无法使用");
+        }
+        String rejection = ExploreTicketUsePolicy.rejection(current.getPurchaseKind(),
+                activity == null ? null : activity.getEndDate(), new Date());
+        if (rejection != null) throw new IllegalStateException(rejection);
+        return current;
     }
 
     /**
@@ -2896,7 +2955,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 || operatorMemberId == null || operatorMemberId <= 0) {
             throw new IllegalStateException("商家主体或核销操作人无效");
         }
-        assertActivityRedeemable(registration);
+        registration = requireCurrentUsableRegistration(registration);
+        CmsActivity currentActivity = cmsActivityMapper.selectCmsActivityByIdForUpdate(registration.getOwnerId());
+        if (!Integer.valueOf(PurchaseKind.EXPLORE_PASS).equals(registration.getPurchaseKind())
+                || currentActivity == null || !Objects.equals(topicId, currentActivity.getTopicId())) {
+            throw new IllegalStateException("探索票或路线归属已变化，请重新扫码");
+        }
         if (cmsRegistrationMapper.hasActiveManualRefundCaseForUpdate(registration.getId())) {
             throw new IllegalStateException("订单正在人工退款处理中，暂不可核销");
         }

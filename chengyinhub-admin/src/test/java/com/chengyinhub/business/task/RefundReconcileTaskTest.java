@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
@@ -49,7 +50,8 @@ class RefundReconcileTaskTest {
         processing.setPayoutStatus(RefundApplication.PAYOUT_PROCESSING);
         processing.setRefundNo("RF8");
 
-        when(mapper.selectStalePayoutProcessing(anyInt())).thenReturn(Arrays.asList(dispatchPending, processing));
+        when(mapper.selectStalePayoutScanUpperBound(anyInt())).thenReturn(100L);
+        when(mapper.selectStalePayoutProcessingAfter(anyInt(), eq(0L), anyLong(), eq(200))).thenReturn(Arrays.asList(dispatchPending, processing));
         when(mapper.countManualPayoutBacklog()).thenReturn(0);
 
         RefundReconcileTask task = new RefundReconcileTask();
@@ -71,7 +73,8 @@ class RefundReconcileTaskTest {
         RefundApplicationMapper mapper = mock(RefundApplicationMapper.class);
         AlarmService alarmService = mock(AlarmService.class);
 
-        when(mapper.selectStalePayoutProcessing(anyInt())).thenReturn(Collections.emptyList());
+        when(mapper.selectStalePayoutScanUpperBound(anyInt())).thenReturn(100L);
+        when(mapper.selectStalePayoutProcessingAfter(anyInt(), eq(0L), anyLong(), eq(200))).thenReturn(Collections.emptyList());
         when(mapper.countManualPayoutBacklog()).thenReturn(0);
         when(mapper.countStuckPayoutDispatch(anyInt())).thenReturn(3);
 
@@ -102,7 +105,8 @@ class RefundReconcileTaskTest {
         stuck.setStatus(1);
         stuck.setPayoutStatus(RefundApplication.PAYOUT_DISPATCH_PENDING);
 
-        when(mapper.selectStalePayoutProcessing(anyInt())).thenReturn(Collections.singletonList(stuck));
+        when(mapper.selectStalePayoutScanUpperBound(anyInt())).thenReturn(100L);
+        when(mapper.selectStalePayoutProcessingAfter(anyInt(), eq(0L), anyLong(), eq(200))).thenReturn(Collections.singletonList(stuck));
         when(mapper.countManualPayoutBacklog()).thenReturn(0);
         AtomicBoolean retried = new AtomicBoolean(false);
         doAnswer(invocation -> {
@@ -130,7 +134,8 @@ class RefundReconcileTaskTest {
         RefundApplicationMapper mapper = mock(RefundApplicationMapper.class);
         AlarmService alarmService = mock(AlarmService.class);
 
-        when(mapper.selectStalePayoutProcessing(anyInt())).thenReturn(Collections.emptyList());
+        when(mapper.selectStalePayoutScanUpperBound(anyInt())).thenReturn(100L);
+        when(mapper.selectStalePayoutProcessingAfter(anyInt(), eq(0L), anyLong(), eq(200))).thenReturn(Collections.emptyList());
         when(mapper.countManualPayoutBacklog()).thenReturn(0);
         when(mapper.countStuckPayoutDispatch(anyInt())).thenReturn(0);
 
@@ -152,7 +157,8 @@ class RefundReconcileTaskTest {
         RefundApplicationMapper mapper = mock(RefundApplicationMapper.class);
         AlarmService alarmService = mock(AlarmService.class);
 
-        when(mapper.selectStalePayoutProcessing(anyInt())).thenReturn(Collections.emptyList());
+        when(mapper.selectStalePayoutScanUpperBound(anyInt())).thenReturn(100L);
+        when(mapper.selectStalePayoutProcessingAfter(anyInt(), eq(0L), anyLong(), eq(200))).thenReturn(Collections.emptyList());
         when(mapper.countManualPayoutBacklog()).thenReturn(4);
         when(mapper.countStuckPayoutDispatch(anyInt())).thenReturn(0);
         doThrow(new IllegalStateException("backlog alarm failed"))
@@ -186,7 +192,8 @@ class RefundReconcileTaskTest {
         RefundApplicationMapper mapper = mock(RefundApplicationMapper.class);
         AlarmService alarmService = mock(AlarmService.class);
 
-        when(mapper.selectStalePayoutProcessing(anyInt())).thenReturn(Collections.emptyList());
+        when(mapper.selectStalePayoutScanUpperBound(anyInt())).thenReturn(100L);
+        when(mapper.selectStalePayoutProcessingAfter(anyInt(), eq(0L), anyLong(), eq(200))).thenReturn(Collections.emptyList());
         when(mapper.countManualPayoutBacklog()).thenReturn(0);
         when(mapper.countStuckPayoutDispatch(anyInt())).thenReturn(2);
         doThrow(new IllegalStateException("stuck alarm failed"))
@@ -221,7 +228,8 @@ class RefundReconcileTaskTest {
         IRefundPayoutService payout = mock(IRefundPayoutService.class);
         RefundApplication pending = new RefundApplication();
         pending.setId(7L); pending.setPayoutStatus(RefundApplication.PAYOUT_DISPATCH_PENDING);
-        when(mapper.selectStalePayoutProcessing(anyInt())).thenReturn(Collections.singletonList(pending));
+        when(mapper.selectStalePayoutScanUpperBound(anyInt())).thenReturn(100L);
+        when(mapper.selectStalePayoutProcessingAfter(anyInt(), eq(0L), anyLong(), eq(200))).thenReturn(Collections.singletonList(pending));
         doThrow(new IllegalStateException("deposit queue unavailable")).when(deposits).reconcileDepositRefunds();
         RefundReconcileTask task = new RefundReconcileTask();
         ReflectionTestUtils.setField(task,"coopInviteService",deposits);
@@ -231,6 +239,38 @@ class RefundReconcileTaskTest {
         ReflectionTestUtils.setField(task,"alarmService",mock(AlarmService.class));
         org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, task::reconcile);
         verify(deposits).reconcileDepositRefunds(); verify(payout).payoutAfterReview(7L);
+    }
+
+    @Test
+    void permanentlyFailingFirstPageDoesNotStarveLaterPagesOrNextRound() {
+        RefundApplicationMapper mapper = mock(RefundApplicationMapper.class);
+        IRefundPayoutService payout = mock(IRefundPayoutService.class);
+        when(mapper.selectStalePayoutScanUpperBound(anyInt())).thenReturn(1001L);
+        when(mapper.selectStalePayoutProcessingAfter(anyInt(), anyLong(), eq(1001L), eq(200)))
+                .thenAnswer(invocation -> {
+                    long after = (Long) invocation.getArgument(1);
+                    java.util.List<RefundApplication> page = new java.util.ArrayList<>();
+                    for (long id = after + 1; id <= Math.min(after + 200, 1001); id++) {
+                        RefundApplication r = new RefundApplication();
+                        r.setId(id); r.setPayoutStatus(RefundApplication.PAYOUT_DISPATCH_PENDING);
+                        page.add(r);
+                    }
+                    return page;
+                });
+        doThrow(new IllegalStateException("permanent failure")).when(payout).payoutAfterReview(1L);
+        RefundReconcileTask task = new RefundReconcileTask();
+        ReflectionTestUtils.setField(task, "coopInviteService", mock(com.chengyinhub.business.service.ICoopInviteService.class));
+        ReflectionTestUtils.setField(task, "refundApplicationMapper", mapper);
+        ReflectionTestUtils.setField(task, "refundPayoutService", payout);
+        ReflectionTestUtils.setField(task, "wechatPayService", mock(IWechatPayService.class));
+        ReflectionTestUtils.setField(task, "alarmService", mock(AlarmService.class));
+        task.reconcile();
+        verify(payout).payoutAfterReview(1000L);
+        verify(payout, never()).payoutAfterReview(1001L);
+        task.reconcile();
+        verify(payout).payoutAfterReview(1001L);
+        verify(payout, org.mockito.Mockito.times(1)).payoutAfterReview(1L);
+        verify(mapper, org.mockito.Mockito.times(2)).selectStalePayoutScanUpperBound(30);
     }
 
     private static ListAppender<ILoggingEvent> attachAppender() {
@@ -249,7 +289,8 @@ class RefundReconcileTaskTest {
         RefundApplicationMapper mapper = mock(RefundApplicationMapper.class);
         AlarmService alarmService = mock(AlarmService.class);
         when(mapper.countStuckPayoutDispatch(anyInt())).thenThrow(new IllegalStateException("count failed"));
-        when(mapper.selectStalePayoutProcessing(anyInt())).thenReturn(Collections.emptyList());
+        when(mapper.selectStalePayoutScanUpperBound(anyInt())).thenReturn(100L);
+        when(mapper.selectStalePayoutProcessingAfter(anyInt(), eq(0L), anyLong(), eq(200))).thenReturn(Collections.emptyList());
         when(mapper.countManualPayoutBacklog()).thenReturn(0);
         doThrow(new IllegalStateException("alarm failed"))
                 .when(alarmService).alarm(eq("退款派发卡滞计数失败"), anyString());

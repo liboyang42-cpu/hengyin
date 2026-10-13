@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CouponSourceGrantMapper">
+    <insert id="ensureIntent">
+        insert into coupon_source_grant (source_type, source_id, member_id, coupon_id, created_at)
+        values (#{sourceType}, #{sourceId}, #{memberId}, #{couponId}, now())
+        on duplicate key update source_id = source_id
+    </insert>
+    <select id="selectForUpdate" resultType="com.chengyinhub.business.domain.CouponSourceGrant">
+        select member_id as memberId, coupon_id as couponId, history_id as historyId
+        from coupon_source_grant where source_type = #{sourceType} and source_id = #{sourceId}
+        for update
+    </select>
+    <update id="markDelivered">
+        update coupon_source_grant set history_id = #{historyId}, delivered_at = now()
+        where source_type = #{sourceType} and source_id = #{sourceId} and history_id is null
+    </update>
+</mapper>

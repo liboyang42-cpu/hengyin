@@ -13,6 +13,18 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           and scene_key = #{sceneKey}
     </select>
 
+    <select id="selectById" resultType="com.chengyinhub.business.domain.RewardDropLog">
+        select id, member_id as memberId, topic_id as topicId, node_id as nodeId,
+               activity_id as activityId, scene_key as sceneKey, drop_type as dropType, param_json as paramJson
+        from reward_drop_log where id = #{id}
+    </select>
+    <select id="selectByUk" resultType="com.chengyinhub.business.domain.RewardDropLog">
+        select id, member_id as memberId, topic_id as topicId, node_id as nodeId,
+               activity_id as activityId, scene_key as sceneKey, drop_type as dropType, param_json as paramJson
+        from reward_drop_log where member_id = #{memberId} and topic_id = #{topicId}
+          and node_id = #{nodeId} and activity_id = #{activityId} and scene_key = #{sceneKey}
+    </select>
+
     <insert id="insertRewardDropLog" parameterType="RewardDropLog" useGeneratedKeys="true" keyProperty="id">
         insert into reward_drop_log
         (member_id, topic_id, node_id, activity_id, scene_key, drop_type, param_json, created_at)

@@ -26,23 +26,38 @@ public class VerificationQrcodeRepairTask {
     private ICmsRegistrationService cmsRegistrationService;
 
     /** 扫描已支付但核销码为空的报名单,逐单补生成核销码 */
-    public void repairMissing() {
-        List<Long> ids = cmsRegistrationService.listPaidMissingQrcodeIds();
+    private long scanCursor;
+
+    public synchronized void repairMissing() {
+        Long upperBound = cmsRegistrationService.getPaidMissingQrcodeScanUpperBound();
+        long afterId = scanCursor;
+        if (upperBound == null || afterId >= upperBound) {
+            scanCursor = 0L;
+            afterId = 0L;
+        }
+        int scanned = 0;
         int repaired = 0;
-        for (Long id : ids) {
-            try {
-                cmsRegistrationService.generateVerificationQrcode(id);
-                repaired++;
-            } catch (Exception e) {
-                log.error("核销码补偿失败 registrationId={}", id, e);
+        while (upperBound != null && afterId < upperBound && scanned < 500) {
+            List<Long> ids = cmsRegistrationService.listPaidMissingQrcodeIdsAfter(afterId, upperBound, 100);
+            if (ids == null || ids.isEmpty()) { scanCursor = 0L; break; }
+            for (Long id : ids) {
+                if (id == null || id <= afterId || id > upperBound) {
+                    throw new IllegalStateException("核销码维护游标未前进");
+                }
+                afterId = id;
+                scanCursor = afterId;
+                scanned++;
+                try {
+                    cmsRegistrationService.generateVerificationQrcode(id);
+                    repaired++;
+                } catch (Exception e) {
+                    log.error("核销码补偿失败 registrationId={}", id, e);
+                }
             }
         }
-        if (!ids.isEmpty()) {
-            log.info("核销码补偿完成:扫描 {} 单,补齐 {} 单", ids.size(), repaired);
-        }
-        if (ids.size() >= 100) {
-            // 满批=本轮没扫完,还有积压(mapper 限批 100/轮);持续满批说明上游在批量失败,需要人看
-            log.warn("核销码补偿满批({} 单),可能仍有积压,下一轮继续", ids.size());
+        if (upperBound != null && afterId >= upperBound) scanCursor = 0L;
+        if (scanned > 0) {
+            log.info("核销码补偿完成:扫描 {} 单,补齐 {} 单", scanned, repaired);
         }
     }
 }
