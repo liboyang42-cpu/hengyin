@@ -69,14 +69,14 @@ class ApiAiNpcPassExpiryTest {
         text(403);
         verify(registrations).hasCurrentNpcRegistration(1001L, 31L);
         verify(registrations, never()).hasPaidRegistration(anyLong(), anyInt(), anyLong());
-        verifyNoInteractions(chat);
+        verify(chat, never()).chatWithShop(anyString(),anyLong(),anyLong(),anyLong(),anyString(),anyString());
     }
 
     @Test
     void expiredPassBlocksVoiceBeforeTranscribing() throws Exception {
         voice(403);
         verify(speech, never()).transcribe(any(byte[].class), anyString());
-        verifyNoInteractions(chat);
+        verify(chat, never()).chatWithShop(anyString(),anyLong(),anyLong(),anyLong(),anyString(),anyString());
     }
 
     @Test
@@ -87,7 +87,7 @@ class ApiAiNpcPassExpiryTest {
         order.verify(registrations).hasCurrentNpcRegistration(1001L, 31L);
         order.verify(speech).transcribe(any(byte[].class), eq("aac"));
         order.verify(registrations).hasCurrentNpcRegistration(1001L, 31L);
-        verifyNoInteractions(chat);
+        verify(chat, never()).chatWithShop(anyString(),anyLong(),anyLong(),anyLong(),anyString(),anyString());
     }
 
     @Test
@@ -114,11 +114,34 @@ class ApiAiNpcPassExpiryTest {
     @Test
     void expiredPassDoesNotBlockHistoryExport() throws Exception {
         text(403);
-        clearInvocations(registrations);
+        clearInvocations(registrations,chat);
         mvc.perform(get("/api/ai/npc/chat/data/export"))
                 .andExpect(jsonPath("$.code").value(200));
         verify(history).exportForUser(1001L);
         verifyNoInteractions(registrations, chat);
+    }
+
+    @Test
+    void expiredPassKeepsOriginalTextAnswerRecoveryWithoutNewGeneration() throws Exception {
+        NpcChatResp stored=new NpcChatResp();stored.setSafeText("原答案");stored.setOutcomeStatus("SUCCEEDED");
+        when(chat.storedShopRequest("old-request",1001L,21L)).thenReturn(stored);
+        mvc.perform(post("/api/ai/npc/shop-chat").contentType("application/json")
+                .content("{\"nodeId\":21,\"requestId\":\"old-request\",\"message\":\"同原请求\"}"))
+                .andExpect(jsonPath("$.code").value(200)).andExpect(jsonPath("$.data.safeText").value("原答案"));
+        verifyNoInteractions(registrations,speech);
+        verify(chat,never()).chatWithShop(anyString(),anyLong(),anyLong(),anyLong(),anyString(),anyString());
+    }
+
+    @Test
+    void voiceOriginalAnswerRecoveryDoesNotRepeatAsrAfterExpiry() throws Exception {
+        NpcChatResp stored=new NpcChatResp();stored.setSafeText("原语音答案");stored.setOutcomeStatus("SUCCEEDED");
+        when(chat.storedShopRequest("old-voice",1001L,21L)).thenReturn(stored);
+        mvc.perform(multipart("/api/ai/npc/voice-chat")
+                .file(new MockMultipartFile("file","old.aac","audio/aac",new byte[]{1}))
+                .param("nodeId","21").param("requestId","old-voice"))
+                .andExpect(jsonPath("$.code").value(200)).andExpect(jsonPath("$.data.safeText").value("原语音答案"));
+        verifyNoInteractions(registrations,speech);
+        verify(chat,never()).chatWithShop(anyString(),anyLong(),anyLong(),anyLong(),anyString(),anyString());
     }
 
     private void text(int code) throws Exception {

@@ -67,6 +67,7 @@ class AdvancedGameRuntimeServiceImplTest {
         templateMapper = mock(CmsMemberTemplateMapper.class);
         activityMapper = mock(CmsActivityMapper.class);
         registrationMapper = mock(CmsRegistrationMapper.class);
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.install(activityMapper,registrationMapper);
         teamMapper = mock(PlayTeamMapper.class);
         attemptMapper = mock(PlayAttemptLogMapper.class);
         service = new AdvancedGameRuntimeServiceImpl();
@@ -611,6 +612,9 @@ class AdvancedGameRuntimeServiceImplTest {
         when(templateMapper.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(template(multiplayerConfig()));
         // 先让自玩通行证这一关过掉,否则测的就是通行证闸,不是队伍闸
         CmsRegistration paid = new CmsRegistration();
+        paid.setId(9000001L);paid.setMemberId(MEMBER_ID);paid.setOwnerType(1L);paid.setOwnerId(TOPIC_ID);
+        paid.setPaymentStatus(2);paid.setRegistrationStatus(2);paid.setPurchaseKind(2);
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(9000001L)).thenReturn(paid);
         paid.setExpiresAt(new Date(NOW + 86_400_000L));
         when(registrationMapper.selectCmsRegistrationList(any())).thenReturn(java.util.Arrays.asList(paid));
 

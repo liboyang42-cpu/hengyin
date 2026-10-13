@@ -274,6 +274,9 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (replay != null) return replay(replay, memberId, sessionId);
 
 
+        com.chengyinhub.business.service.support.CurrentPlayRegistration.require(activityMapper,registrationMapper,
+                memberId,session.getActivityId()!=null && session.getActivityId()>0 ? 2L : 1L,
+                session.getActivityId()!=null && session.getActivityId()>0 ? session.getActivityId() : session.getTopicId(),null,clock.now());
         requireActivityWindow(session.getActivityId(), session.getTopicId());
         if (gameSessionRuntimeService != null) gameSessionRuntimeService.assertRoutePlayable(session.getActivityId(), session.getNodeId());
         requireRouteNodeAccess(memberId, session.getActivityId(), session.getTopicId(), session.getNodeId());
@@ -588,7 +591,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
 
     @Override
     public List<Map<String, Object>> leaderboard(Long memberId, Long activityId, Long topicId, Long nodeId) {
-        GameInput input = requireInput(memberId, activityId, topicId, nodeId);
+        GameInput input = requireInput(memberId, activityId, topicId, nodeId,false);
         JsonNode config = readJson(input.configJson, "高级玩法配置不可用");
         JsonNode board = config.get("leaderboard");
         if (!enabled(board)) throw new IllegalStateException("该玩法未开启排行榜");
@@ -609,6 +612,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         CmsTopicNode node = nodeMapper.selectCmsTopicNodeById(nodeId);
         if (node == null || !topicId.equals(node.getTopicId())) return null;
         long actId = activityId == null ? 0L : activityId;
+        com.chengyinhub.business.service.support.CurrentPlayRegistration.require(activityMapper,registrationMapper,
+                memberId,actId>0 ? 2L : 1L,actId>0 ? actId : topicId,null,clock.now());
         requireActivityWindow(actId, topicId);
         if (gameSessionRuntimeService != null) gameSessionRuntimeService.assertRoutePlayable(actId, nodeId);
         requireRouteNodeAccess(memberId, actId, topicId, nodeId);
@@ -738,16 +743,23 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     }
 
     private GameInput requireInput(Long memberId, Long activityId, Long topicId, Long nodeId) {
+        return requireInput(memberId,activityId,topicId,nodeId,true);
+    }
+    private GameInput requireInput(Long memberId, Long activityId, Long topicId, Long nodeId,boolean newUse) {
         if (memberId == null || memberId <= 0 || topicId == null || topicId <= 0
                 || nodeId == null || nodeId <= 0) throw new IllegalArgumentException("参数有误");
         CmsTopicNode node = nodeMapper.selectCmsTopicNodeById(nodeId);
         if (node == null || !topicId.equals(node.getTopicId())) throw new IllegalArgumentException("节点不属于该主题");
         long actId = activityId == null ? 0L : activityId;
         if (actId > 0) {
+            if(teamMapper.hasPaidRegistration(memberId,2,actId)<=0) throw new IllegalStateException("请先报名并完成支付");
+            if(newUse) com.chengyinhub.business.service.support.CurrentPlayRegistration.require(
+                    activityMapper,registrationMapper,memberId,2L,actId,null,clock.now(),true);
             requireActivityWindow(actId, topicId);
-            if (teamMapper.hasPaidRegistration(memberId, 2, actId) <= 0) throw new IllegalStateException("请先报名并完成支付");
-        } else if (!hasValidSelfPlayPass(memberId, topicId)) {
-            throw new IllegalStateException("请先购买自玩通行证");
+        } else {
+            if(newUse) com.chengyinhub.business.service.support.CurrentPlayRegistration.require(
+                    activityMapper,registrationMapper,memberId,1L,topicId,null,clock.now());
+            else if(!hasValidSelfPlayPass(memberId,topicId)) throw new IllegalStateException("请先购买自玩通行证");
         }
         if (topicRouteRuntimeService != null) topicRouteRuntimeService.requireOpeningAccess(memberId, topicId, actId, nodeId);
         GameRuntimeSession existing = existingSession(memberId, actId, topicId, nodeId);
@@ -1378,7 +1390,15 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 text(payload, "encryptedData"), text(payload, "iv"),
                 weChatMiniSessionService.miniAppId());
 
+        Date now=clock.now();
+        if(run.getTimestamp()>now.getTime()/1000L || run.getTimestamp()>Long.MAX_VALUE/1000L
+                || !dayKey(new Date(run.getTimestamp()*1000L)).equals(dayKey(now))) {
+            throw new IllegalArgumentException("微信运动数据不是今天的记录，请重新同步");
+        }
         ObjectNode node = state.with("steps");
+        if(run.getTimestamp()<node.path("syncedAt").asLong(0L)) {
+            throw new IllegalArgumentException("微信运动记录早于已同步记录，请重新同步");
+        }
         node.put("todaySteps", run.getTodaySteps());
         node.put("syncedAt", run.getTimestamp());
         int goal = cfg.path("goal").asInt(0);
@@ -3685,7 +3705,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (activity.getStartDate() != null && now.before(activity.getStartDate())) {
             throw new IllegalStateException("活动未开始");
         }
-        if (activity.getEndDate() != null && now.after(activity.getEndDate())) {
+        if (activity.getEndDate() != null && !now.before(activity.getEndDate())) {
             throw new IllegalStateException("活动已结束");
         }
     }

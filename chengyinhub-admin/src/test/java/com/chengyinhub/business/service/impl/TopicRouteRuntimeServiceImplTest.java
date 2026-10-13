@@ -96,6 +96,8 @@ class TopicRouteRuntimeServiceImplTest {
         when(nodeMapper.selectCmsTopicNodeById(1L)).thenReturn(one);
         when(nodeMapper.selectCmsTopicNodeById(2L)).thenReturn(two);
         CmsRegistration pass = new CmsRegistration(); pass.setExpiresAt(null);
+        pass.setId(9000001L);pass.setMemberId(7L);pass.setOwnerType(1L);pass.setOwnerId(10L);pass.setRegistrationStatus(2);pass.setPaymentStatus(0);pass.setPurchaseKind(2);
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(9000001L)).thenReturn(pass);
         when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class)))
                 .thenReturn(Collections.singletonList(pass));
         stored = new TopicRouteSession[1];
@@ -1788,7 +1790,11 @@ class TopicRouteRuntimeServiceImplTest {
 
     private CmsRegistration registration(Long ticketId, Integer purchaseKind) {
         CmsRegistration registration = new CmsRegistration(); registration.setTicketId(ticketId);
-        registration.setPurchaseKind(purchaseKind); return registration;
+        registration.setPurchaseKind(purchaseKind); registration.setId(ticketId);
+        registration.setMemberId(7L);registration.setOwnerType(1L);registration.setOwnerId(10L);
+        registration.setPaymentStatus(0);registration.setRegistrationStatus(2);
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(ticketId)).thenReturn(registration);
+        return registration;
     }
 
     private CmsActivity playableActivity() {
