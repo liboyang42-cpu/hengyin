@@ -1,0 +1,70 @@
+{
+  "sourceCommit": "ad7a4a7",
+  "sourceManifest": "source-manifest.json",
+  "sourceHashesStillMatch": true,
+  "node": [
+    {
+      "selection": "roam-*.test.js",
+      "tests": 390,
+      "passed": 390,
+      "failed": 0,
+      "skipped": 0,
+      "evidence": "roam/node-tests.log"
+    },
+    {
+      "selection": [
+        "ai-plan-to-draft.test.js",
+        "pro-editor-draft.test.js",
+        "topic-route-graph.test.js",
+        "play-route-state.test.js",
+        "play-state-contract.test.js",
+        "npc-chat-component.test.js",
+        "npc-roam-gate.test.js"
+      ],
+      "tests": 73,
+      "passed": 73,
+      "failed": 0,
+      "skipped": 0,
+      "evidence": "node-draft-play-npc.log"
+    }
+  ],
+  "static": {
+    "java8SyntaxFiles": 58,
+    "xmlWellFormedFiles": 6,
+    "migrationSplit": 4,
+    "taskRegistration": "passed",
+    "migrationDependencies": "passed",
+    "migrationLedgerTests": 41
+  },
+  "javaCompilation": "NOT_RUN",
+  "junitExecution": "NOT_RUN",
+  "mysqlRedisBusinessReadback": "NOT_RUN",
+  "githubCI": "NOT_RUN",
+  "deviceProviderHTTP": "NOT_RUN",
+  "gitleaks": {
+    "changedContentsHits": 0,
+    "wholeTreeHits": 4,
+    "newCredentialHits": 0,
+    "existingFixtureHits": [
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantCrmExportAuditTransactionBoundaryTest.java",
+        "line": 57
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantOperatorServiceImplTest.java",
+        "line": 214
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantOperatorServiceImplTest.java",
+        "line": 234
+      },
+      {
+        "path": "chengyinhub-xcx/tests/unit/safe-user-message.test.js",
+        "line": 14
+      }
+    ],
+    "allowlistChanged": false
+  },
+  "deployment": "NOT_RUN",
+  "merge": "NOT_RUN"
+}
