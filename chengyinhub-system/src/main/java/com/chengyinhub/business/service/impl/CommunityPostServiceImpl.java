@@ -428,12 +428,12 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         String action = upper(request.getActionType());
         if (!ACTIONS.contains(action)) throw error("不支持的互动类型", 400);
         requireRequestId(request.getRequestId());
-        CommunityPost post = mapper.selectById(postId, memberId);
-        if (post == null) throw error("帖文不存在或不可见", 404);
         String commandType = "POST_ACTION_" + action;
         if (isCommandReplay(memberId, request.getRequestId(), commandType, postId)) {
             return feedbackResultOrDetail(memberId, postId, action);
         }
+        CommunityPost post = mapper.selectById(postId, memberId);
+        if (post == null) throw error("帖文不存在或不可见", 404);
         if (!Integer.valueOf(1).equals(post.getInteractionEnabled()) && ("LIKE".equals(action) || "BOOKMARK".equals(action))) {
             throw error("该帖文已关闭互动", 409);
         }

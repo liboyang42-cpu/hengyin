@@ -59,3 +59,39 @@ for(const invalidate of ['unload','owner','new-picker'])test('location callback 
  if(invalidate==='unload')h.page.onUnload();else if(invalidate==='owner')h.changeOwner();else h.page.choosePoiForNode();
  const before=h.patches.length;h.locations[0].onPick({name:'迟到地点',longitude:1,latitude:2});assert.equal(h.patches.length,before);assert.equal(h.page.data.address,'当前地点');assert.equal(h.page.data.postAudience,'PRIVATE');
 });
+
+async function finishInlineExact(h, lifecycle='CHECKING', beforeConfirmation) {
+ h.page.submitFormData();assert.equal(h.calls.length,0);assert.equal(h.modals[0].title,'精确地点仅自己可见');
+ if(beforeConfirmation)beforeConfirmation();h.modals[0].success({confirm:true});await tick();
+ assert.equal(h.page.data.postAudience,'PRIVATE');await h.respond({id:3,content_json:JSON.stringify({rules:[{title:'真实规范'}]})});
+ h.modals[1].success({confirm:true});await tick();await h.respond({acknowledged:true});
+ const create=h.calls.at(-1);assert.equal(create.url,'/api/v1/community/posts');assert.equal(create.data.audience,'PRIVATE');assert.equal(create.data.locationPrecision,'EXACT');
+ assert.match(create.data.approximateGeohash,/^[a-z0-9]{9}$/);assert.equal('latitude' in create.data,false);assert.equal('longitude' in create.data,false);
+ const draft={...bundle(),topicCodes:[],mentions:[],post:{...create.data,id:59,authorId:990005,version:0,lifecycle:'DRAFT'}};
+ await h.respond(draft);assert.equal(h.calls.at(-1).url,'/api/v1/community/posts/59/publish');
+ return async()=>h.respond({...draft,post:{...draft.post,version:1,lifecycle}});
+}
+for(const lifecycle of ['PUBLISHED','CHECKING'])test('inline first EXACT '+lifecycle+' resets unchanged form after own PUBLIC to PRIVATE confirmation',async()=>{
+ const h=harness('list');h.page.data.valCont='首次精确地点正文';h.page.data.latitude=31.23;h.page.data.longitude=121.47;h.page.data.address='本人选择地点';
+ const finish=await finishInlineExact(h,lifecycle);await finish();
+ assert.equal(h.page.data.valCont,'');assert.equal(h.page.data.latitude,'');assert.equal(h.page.data.longitude,'');assert.equal(h.page.data.address,'');
+ assert.equal(h.page.data.postAudience,'PUBLIC');assert.equal(h.page.data.resultSheet.meta,'');assert.equal(h.page.data.resultSheet.title,lifecycle==='CHECKING'?'已提交审核':'提交成功');
+ const count=h.calls.length;h.page.submitFormData();await tick();assert.equal(h.calls.length,count);assert.equal(h.tips.at(-1),'请输入内容');
+});
+for(const change of ['before-confirmation-text','while-publishing-text','while-publishing-clear-location','while-publishing-audience'])test('inline first EXACT preserves actual new input '+change,async()=>{
+ const h=harness('list');h.page.data.valCont='原正文';h.page.data.latitude=31.23;h.page.data.longitude=121.47;h.page.data.address='原地点';
+ const edit=()=>h.page.bindTextAreaBlur({detail:{value:'新正文'}});
+ const finish=await finishInlineExact(h,'CHECKING',change==='before-confirmation-text'?edit:null);
+ if(change==='while-publishing-text')edit();if(change==='while-publishing-clear-location')h.page.clearLocation();if(change==='while-publishing-audience')h.page.setData({postAudience:'PUBLIC'});
+ await finish();assert.equal(h.page.data.valCont,['while-publishing-clear-location','while-publishing-audience'].includes(change)?'原正文':'新正文');
+ assert.equal(h.page.data.postAudience,change==='while-publishing-audience'?'PUBLIC':'PRIVATE');assert.equal(h.page.data.resultSheet.meta,'后续输入已保留');
+ assert.equal(h.calls.find(c=>c.url==='/api/v1/community/posts').data.body,'原正文');
+ if(change==='while-publishing-clear-location'){assert.equal(h.page.data.address,'');assert.equal(h.page.data.latitude,'');assert.equal(h.page.data.longitude,'');}
+});
+for(const invalidate of ['owner','unload'])for(const stage of ['privacy-confirmation','publish-result'])test('inline first EXACT '+invalidate+' invalidates late '+stage,async()=>{
+ const h=harness('list');h.page.data.valCont='保留正文';h.page.data.latitude=31.23;h.page.data.longitude=121.47;
+ let finish;if(stage==='privacy-confirmation')h.page.submitFormData();else finish=await finishInlineExact(h);
+ if(invalidate==='owner')h.changeOwner();else h.page.onUnload();const count=h.calls.length,patches=h.patches.length;
+ if(finish)await finish();else{h.modals[0].success({confirm:true});await tick();}
+ assert.equal(h.calls.length,count);assert.equal(h.patches.length,patches);assert.equal(h.page.data.valCont,'保留正文');assert.equal(h.tips.length,0);
+});

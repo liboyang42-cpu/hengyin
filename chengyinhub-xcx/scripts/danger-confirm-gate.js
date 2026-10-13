@@ -24,6 +24,8 @@
 
 const fs = require('fs');
 const path = require('path');
+const { communityAliasesForSource, communityRequestContracts, extractTargets } = require('./uiaudit/build-action-ledger');
+const { ownHandlerEntries, maskNonCode, maskJavaScriptComments, maskWxmlComments, matchBrace } = require('./lib/xcx-scan');
 const { registeredSubpackageRoots } = require('./mini-program-source-inventory.js');
 
 const XCX_ROOT = path.resolve(__dirname, '..');
@@ -58,12 +60,44 @@ function walkJs(dir, out = []) {
   return out;
 }
 
+function handlerSources(src) {
+  src = maskJavaScriptComments(src);
+  return new Map(ownHandlerEntries(maskNonCode(src)).map(entry => [entry.name, src.slice(entry.start, entry.end)]));
+}
+
+function siteKey(site) {
+  return site.endpoint + '@' + site.file + (site.handler ? '#' + site.handler : '');
+}
+
+function typedDangerSites(src, file, helper) {
+  src = maskJavaScriptComments(src);
+  const aliases = communityAliasesForSource(src, path.join(XCX_ROOT, file));
+  const sites = [];
+  for (const [handler, body] of handlerSources(src)) {
+    const contracts = communityRequestContracts(body, aliases, helper).contracts;
+    for (const c of contracts) {
+      // Unliking/unbookmarking is reversible; resource DELETE still needs the existing danger guard.
+      if (c.method !== 'DELETE' || (['removePostAction', 'unlikeComment'].includes(c.adapterMethod) && /\/actions\//.test(c.url))) continue;
+      sites.push({ endpoint: c.url, file, handler, adapterMethod: c.adapterMethod, line: src.slice(0, src.indexOf(body)).split('\n').length });
+    }
+    // A direct canonical resource DELETE must not bypass the typed-client inventory.
+    for (const c of extractTargets(body).apiContracts) {
+      if (c.method === 'DELETE' && /^\/api\/v1\/community\/(posts|comments)\//.test(c.url) && !/\/actions(?:\/|$)/.test(c.url)) {
+        sites.push({ endpoint: c.url, file, handler, line: src.slice(0, src.indexOf(body)).split('\n').length });
+      }
+    }
+  }
+  return sites;
+}
+
 /** 扫出全部危险 endpoint 调用点。返回 [{ endpoint, file, line }]。 */
 function scanDangerSites(readFile) {
   const sites = [];
+  const helper = readFile('utils/community-post-api.js');
   for (const rel of new Set(SCAN_DIRS.flatMap((dir) => walkJs(dir)))) {
     const src = readFile(rel);
     if (src === null) continue;
+    sites.push(...typedDangerSites(src, rel, helper));
     let m;
     API_LITERAL.lastIndex = 0;
     while ((m = API_LITERAL.exec(src))) {
@@ -108,6 +142,40 @@ function openedWithKey(src, key) {
   return names.some((name) => new RegExp(`\\.open\\(\\s*${name}\\b|dangerKey:\\s*${name}\\b`).test(src));
 }
 
+/** Canonical DELETE is bound to its real handler and existing confirmation event chain. */
+function typedConfirmationConnected(entry, readFile) {
+  const src = readFile(entry.file);
+  const handlers = handlerSources(src || '');
+  const body = (handlers.get(entry.handler) || '');
+  if (!body) return false;
+  if (!entry.confirmFile) {
+    const guard = /success\s*:\s*(\w+)\s*=>\s*\{\s*if\s*\(\s*!\1\.confirm\b[^;]+return\s*;/.exec(body);
+    const calls = [...body.matchAll(/\.deleteComment\s*\(/g)];
+    if (!guard || calls.length !== 1) return false;
+    const callbackStart = body.indexOf('{', guard.index);
+    const callbackEnd = matchBrace(maskNonCode('({' + body + '})'), callbackStart + 2) - 2;
+    return openedWithKey(body.slice(body.lastIndexOf('modal.show(', guard.index), guard.index), entry.confirmKey)
+      && calls[0].index > guard.index + guard[0].length && calls[0].index < callbackEnd;
+  }
+  const pageWxml = maskWxmlComments(readFile(entry.file.replace(/\.js$/, '.wxml')) || '');
+  const pageConfig = JSON.parse(readFile(entry.file.replace(/\.js$/, '.json')) || '{}');
+  const component = pageConfig.usingComponents && pageConfig.usingComponents['cy-post-actions'];
+  if (!component) return false;
+  const resolved = component.startsWith('/') ? component.slice(1) : path.posix.normalize(path.posix.join(path.posix.dirname(entry.file), component));
+  if (resolved + '.js' !== entry.confirmFile) return false;
+  const dispatch = (handlers.get('onPostAction') || '');
+  const expectedDispatch = new RegExp("if\\s*\\(action\\s*===\\s*['\"]delete['\"]\\)\\s*\\{\\s*this\\." + entry.handler + "\\(\\)");
+  const componentSource = maskJavaScriptComments(readFile(entry.confirmFile) || '');
+  const componentHandlers = handlerSources(componentSource);
+  const constants = (componentSource.match(/(?:const|let|var)\s+\w+\s*=\s*['"][^'"]+['"];?/g) || []).join('\n');
+  const confirmWxml = maskWxmlComments(readFile(entry.confirmFile.replace(/\.js$/, '.wxml')) || '');
+  return /<cy-post-actions\b[^>]*bind:select="onPostAction"/.test(pageWxml)
+    && expectedDispatch.test(dispatch)
+    && openedWithKey(constants + '\n' + (componentHandlers.get('onDelete') || ''), entry.confirmKey)
+    && /<cy-danger-confirm\b[^>]*bind:confirm="onDeleteConfirmed"/.test(confirmWxml)
+    && /triggerEvent\(['"]select['"],\s*\{\s*action:\s*['"]delete['"]/.test(componentHandlers.get('onDeleteConfirmed') || '');
+}
+
 /** 从 utils/danger-actions.js 里取登记表。用 require,拿的是真值而不是正则猜。 */
 function loadActions(actionsPath) {
   delete require.cache[require.resolve(actionsPath)];
@@ -122,7 +190,7 @@ function run(opts) {
 
   const registryByKey = new Map();
   for (const entry of registry.sites) {
-    registryByKey.set(entry.endpoint + '@' + entry.file, entry);
+    registryByKey.set(siteKey(entry), entry);
   }
 
   const sites = scanDangerSites(readFile);
@@ -130,7 +198,7 @@ function run(opts) {
 
   // ---- D1 覆盖:每个扫到的调用点必须登记 ----
   for (const site of sites) {
-    const id = site.endpoint + '@' + site.file;
+    const id = siteKey(site);
     seen.add(id);
     if (!registryByKey.has(id)) {
       errors.push(
@@ -146,7 +214,7 @@ function run(opts) {
   //   动词扫描天然看不见它,所以不进 D1 覆盖;过期判定改成「登记文件里仍有这个 endpoint 字面」——
   //   调用点删了照样判红,D2/D3 与其它条目完全同一套。
   for (const entry of registry.sites) {
-    const id = entry.endpoint + '@' + entry.file;
+    const id = siteKey(entry);
     if (entry.trigger === 'payload') {
       const src = readFile(entry.file);
       if (src === null || !src.includes(entry.endpoint)) {
@@ -171,6 +239,10 @@ function run(opts) {
     if (!action) {
       errors.push(`D2 ${entry.endpoint}(${entry.file})的 confirmKey「${entry.confirmKey}」在 utils/danger-actions.js 里不存在。`);
       continue;
+    }
+
+    if (entry.handler && !typedConfirmationConnected(entry, readFile)) {
+      errors.push(`D2 typed DELETE 确认链断开:${entry.endpoint}(${entry.file}#${entry.handler})`);
     }
 
     // D2:文件里必须真的用这个 key 打开确认组件。
@@ -360,6 +432,53 @@ function selftest() {
       mutationSeen: !!victim && noEndpoint !== before,
       mutationDesc: victim ? `把 ${victim.file} 里的 ${victim.endpoint} 抹掉` : '登记表里没有 trigger=payload 条目',
     });
+  }
+
+  // Canonical resource deletes retain all three original obligations, scoped to actual handlers.
+  const typed = baseRegistry.sites.filter(entry => entry.handler);
+  cases.push({ name: 'D1 canonical 三条原删除义务保持', expectRed: false,
+    errors: typed.length === 3 && typed.every(entry => entry.irreversible && entry.confirmKey) ? [] : ['原三条删除义务缺失'] });
+  function typedMutation(name, file, mutate, expected) {
+    const before = realReadFile(file), after = mutate(before);
+    const errors = run({ readFile: rel => rel === file ? after : realReadFile(rel), registry: baseRegistry, actions: baseActions });
+    cases.push({ name, expectRed: true, errors, mutationSeen: after !== before && errors.some(expected), mutationDesc: file });
+  }
+  const detail = 'pages/square/detail/index.js';
+  typedMutation('D1 typed 调用删除后登记过期', detail,
+    src => src.replace('.deletePost({postId:id,', '.detail({postId:id,'), error => error.includes('D1') && error.includes('#') === false && error.includes('/posts/{param}'));
+  typedMutation('D1 注释中的 typed 调用不算执行', detail,
+    src => src.replace('this.communityClient().deletePost({postId:id,', 'this.communityClient().detail({postId:id, /* this.communityClient().deletePost({}) */'), error => error.includes('D1') && error.includes('/posts/{param}'));
+  typedMutation('D1 同文件其它 handler 新增裸 typed DELETE', detail,
+    src => src.replace('onShareAppMessage: function (res) {', 'onShareAppMessage: function (res) { this.communityClient().deletePost({});'), error => error.includes('D1 未登记') && error.includes('/posts/{param}'));
+  typedMutation('D1 新增直接 canonical DELETE 不借旧确认放行', detail,
+    src => src.replace('onShareAppMessage: function (res) {', "onShareAppMessage: function (res) { app.sendRequest({url:'/api/v1/community/posts/99',method:'DELETE'});"), error => error.includes('D1 未登记') && error.includes('/posts/99'));
+  typedMutation('D1 helper 实际 DELETE 路径漂移', 'utils/community-post-api.js',
+    src => src.replace("url: '/api/v1/community/posts/' + view.id(options.postId), method: 'DELETE'", "url: '/api/v1/community/retired-posts/' + view.id(options.postId), method: 'DELETE'"), error => error.includes('D1 未登记') && error.includes('retired-posts'));
+  typedMutation('D2 帖文确认事件与实际 handler 断开', detail,
+    src => src.replace("if (action === 'delete') { this.deleteSquarePost();", "if (action === 'delete') { this.openPostEdit();"), error => error.includes('D2 typed DELETE'));
+  typedMutation('D2 宿主确认事件解绑', detail.replace('.js', '.wxml'),
+    src => src.replace('bind:select="onPostAction"', 'bind:select="closePostActions"'), error => error.includes('D2 typed DELETE'));
+  typedMutation('D2 组件确认事件解绑', 'pages/square/components/cy/post-actions/index.wxml',
+    src => src.replace('bind:confirm="onDeleteConfirmed"', 'bind:confirm="onClose"'), error => error.includes('D2 typed DELETE'));
+  typedMutation('D2 评论忽略取消仍发 DELETE', detail,
+    src => src.replace('if(!result.confirm || !current()', 'if(!current()'), error => error.includes('D2 typed DELETE'));
+  typedMutation('D2 同一 handler 在确认前偷偷增加 DELETE', detail,
+    src => src.replace("modal.show({dangerKey:'club.comment.delete'", "this.communityClient().deleteComment({}); modal.show({dangerKey:'club.comment.delete'"), error => error.includes('D2 typed DELETE'));
+  typedMutation('D2 评论确认只出现在无关方法不放行', detail,
+    src => src.replace("dangerKey:'club.comment.delete'", "dangerKey:'wrong.key'") + "\nfunction unrelated(){ modal.show({dangerKey:'club.comment.delete'}); }", error => error.includes('D2 typed DELETE'));
+  {
+    const registry = JSON.parse(JSON.stringify(baseRegistry));
+    registry.sites = registry.sites.filter(entry => !(entry.handler === 'deleteComment'));
+    const errors = run({readFile: realReadFile, registry, actions: baseActions});
+    cases.push({name:'D1 typed 评论删除不能直接退登记',expectRed:true,errors,
+      mutationSeen:errors.some(error=>error.includes('D1 未登记') && error.includes('/comments/{param}')),mutationDesc:'仅移除评论删除登记'});
+  }
+  {
+    const actions = JSON.parse(JSON.stringify(baseActions));
+    actions['club.comment.delete'].consequences = [{text:'移除评论'}];
+    const errors = run({readFile:realReadFile,registry:baseRegistry,actions});
+    cases.push({name:'D3 typed 评论仍要求不可撤销文案',expectRed:true,errors,
+      mutationSeen:errors.some(error=>error.includes('D3 club.comment.delete')),mutationDesc:'删除该动作不可撤销文案'});
   }
 
   let failed = 0;

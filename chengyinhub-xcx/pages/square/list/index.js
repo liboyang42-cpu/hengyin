@@ -886,8 +886,9 @@ Page({
     const current = this.communityCurrent();
     this._submitting = true;
     this.setData({ submitting: true, submitError: '', submitErrorKind: 'data' });
+    let submittedAudience = this.data.postAudience;
     const snapshot = JSON.stringify([this.data.valCont, this.data.picList, this.data.fileList, this.data.address,
-      this.data.longitude, this.data.latitude, this.data.selectedActivity, this.data.switch1Checked, this.data.postAudience]);
+      this.data.longitude, this.data.latitude, this.data.selectedActivity, this.data.switch1Checked]);
     const form = { body: content, mediaPaths: this.data.picList.slice(), audience: this.data.postAudience, locationPrecision: 'NONE' };
     const activity = this.data.selectedActivity;
     if (activity) {
@@ -929,7 +930,7 @@ Page({
           if (res.code !== 200) { fail(res); return; }
           const post = res.data.post;
           const unchanged = res.recoveredPrevious!==true && snapshot === JSON.stringify([this.data.valCont, this.data.picList, this.data.fileList, this.data.address,
-            this.data.longitude, this.data.latitude, this.data.selectedActivity, this.data.switch1Checked, this.data.postAudience]);
+            this.data.longitude, this.data.latitude, this.data.selectedActivity, this.data.switch1Checked]) && submittedAudience === this.data.postAudience;
           if (unchanged) this.resetForm();
           this.setData({ resultSheet: { show:true,kind:'success',title:res.recoveredPrevious===true?'上次提交已确认':post.lifecycle === 'CHECKING' ? '已提交审核' : '提交成功',
             sub: post.lifecycle === 'CHECKING' ? '审核通过后按可见范围展示。' : post.audience === 'PRIVATE' ? '仅自己可见，未公开到广场。' : '帖文已发布。',
@@ -953,6 +954,7 @@ Page({
         confirmText:'仅自己可见',cancelText:'取消', success: result => {
           if (!current()) return;
           if (!result.confirm) { this._submitting = false; this.setData({submitting:false}); return; }
+          submittedAudience = 'PRIVATE';
           this.setData({postAudience:'PRIVATE'});
           Object.assign(form,{audience:'PRIVATE',locationPrecision:'EXACT',approximateGeohash:grid,cityCode:null}); send();
         }, fail: error => { if (!current()) return; fail(error); this._submitting=false;this.setData({submitting:false}); }

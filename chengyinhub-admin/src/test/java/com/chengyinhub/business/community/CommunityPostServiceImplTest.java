@@ -1144,6 +1144,104 @@ class CommunityPostServiceImplTest {
     }
 
     @Test
+    void feedbackReplayRemainsAcknowledgedAfterVisibilityChanges() {
+        for (String action : Arrays.asList("NOT_INTERESTED", "SEE_LESS_AUTHOR", "SEE_LESS_TOPIC")) {
+            CommunityPostRequests.Action request = postAction(action, "feedback-" + action);
+            CommunityPost post = draft(7L, 8L, 3);
+            post.setLifecycle("PUBLISHED");
+            AtomicReference<Map<String, Object>> receipt = new AtomicReference<>();
+            when(mapper.selectById(7L, 9L)).thenReturn(post, null);
+            when(mapper.selectCommandReceipt(9L, request.getRequestId()))
+                    .thenAnswer(invocation -> receipt.get());
+            when(mapper.insertMemberAction(eq(7L), eq(9L), eq(action), eq(request.getRequestId()), any(), any()))
+                    .thenReturn(1);
+            when(mapper.insertCommandReceipt(eq(9L), eq(request.getRequestId()), eq("POST_ACTION_" + action),
+                    eq(7L), anyString(), any())).thenAnswer(invocation -> {
+                receipt.set(Map.of("command_type", invocation.getArgument(2), "aggregate_id", invocation.getArgument(3)));
+                return 1;
+            });
+            Map<String, Object> expected = Map.of("postId", 7L, "action", action, "applied", true);
+            assertEquals(expected, service.act(9L, 7L, request));
+            verify(mapper).insertMemberAction(eq(7L), eq(9L), eq(action), eq(request.getRequestId()), any(), any());
+            verify(mapper).insertCommandReceipt(eq(9L), eq(request.getRequestId()), eq("POST_ACTION_" + action),
+                    eq(7L), anyString(), any());
+            clearInvocations(mapper);
+
+            assertEquals(expected, service.act(9L, 7L, request));
+
+            verify(mapper).selectCommandReceipt(9L, request.getRequestId());
+            org.mockito.Mockito.verifyNoMoreInteractions(mapper);
+            clearInvocations(mapper);
+        }
+    }
+
+    @Test
+    void feedbackReplayRejectsReceiptTypeOrAggregateMismatch() {
+        CommunityPostRequests.Action request = postAction("NOT_INTERESTED", "feedback-mismatched-receipt");
+        for (Map<String, Object> receipt : Arrays.<Map<String, Object>>asList(
+                Map.of("command_type", "POST_ACTION_SEE_LESS_AUTHOR", "aggregate_id", 7L),
+                Map.of("command_type", "POST_ACTION_NOT_INTERESTED", "aggregate_id", 8L))) {
+            when(mapper.selectCommandReceipt(9L, request.getRequestId())).thenReturn(receipt);
+
+            assertEquals(Integer.valueOf(409), assertThrows(ServiceException.class,
+                    () -> service.act(9L, 7L, request)).getCode());
+
+            verify(mapper).selectCommandReceipt(9L, request.getRequestId());
+            org.mockito.Mockito.verifyNoMoreInteractions(mapper);
+            clearInvocations(mapper);
+        }
+    }
+
+    @Test
+    void hiddenPostWithoutReceiptStillRejectsWithoutWrites() {
+        CommunityPostRequests.Action request = postAction("NOT_INTERESTED", "feedback-current-member-only");
+        when(mapper.selectCommandReceipt(9L, request.getRequestId())).thenReturn(
+                Map.of("command_type", "POST_ACTION_NOT_INTERESTED", "aggregate_id", 7L));
+        for (String action : Arrays.asList("NOT_INTERESTED", "SEE_LESS_AUTHOR", "SEE_LESS_TOPIC", "LIKE", "BOOKMARK")) {
+            request.setActionType(action);
+
+            assertEquals(Integer.valueOf(404), assertThrows(ServiceException.class,
+                    () -> service.act(10L, 7L, request)).getCode());
+
+            assertNoPostActionWrites();
+            clearInvocations(mapper);
+        }
+        assertEquals(Integer.valueOf(401), assertThrows(ServiceException.class,
+                () -> service.act(0L, 7L, request)).getCode());
+        assertNoPostActionWrites();
+    }
+
+    @Test
+    void positiveActionReplayStillRequiresCurrentVisibility() {
+        for (String action : Arrays.asList("LIKE", "BOOKMARK")) {
+            CommunityPostRequests.Action request = postAction(action, "positive-replay-" + action);
+            when(mapper.selectCommandReceipt(9L, request.getRequestId())).thenReturn(
+                    Map.of("command_type", "POST_ACTION_" + action, "aggregate_id", 7L));
+
+            assertEquals(Integer.valueOf(404), assertThrows(ServiceException.class,
+                    () -> service.act(9L, 7L, request)).getCode());
+
+            assertNoPostActionWrites();
+            clearInvocations(mapper);
+        }
+    }
+
+    private void assertNoPostActionWrites() {
+        verify(mapper, never()).insertMemberAction(anyLong(), anyLong(), anyString(), anyString(), any(), any());
+        verify(mapper, never()).insertCommandReceipt(anyLong(), anyString(), anyString(), anyLong(), anyString(), any());
+        verify(mapper, never()).recomputeCounts(anyLong());
+        verify(mapper, never()).insertOutbox(anyString(), anyLong(), anyString(), anyString(), any());
+        verify(mapper, never()).insertTypedOutbox(anyString(), anyString(), anyLong(), anyString(), anyString(), any());
+    }
+
+    private CommunityPostRequests.Action postAction(String action, String requestId) {
+        CommunityPostRequests.Action request = new CommunityPostRequests.Action();
+        request.setActionType(action);
+        request.setRequestId(requestId);
+        return request;
+    }
+
+    @Test
     void commentLikeAndUnlikeWritePostScopedOutboxEvents() {
         Map<String, Object> comment = new HashMap<>();
         comment.put("post_id", 7L);
