@@ -32,19 +32,27 @@ function mountShell(props) {
   return inst
 }
 
-test('① state-shell:加载失败类 kind 才进 auto-back,其它照旧(负控:不传 auto-back 不进)', () => {
-  for (const kind of ['error', 'data', 'network', 'offline', 'missing-param']) {
-    assert.equal(mountShell({ kind, autoBack: true }).data._autoBack, true, kind)
-    assert.equal(mountShell({ kind }).data._autoBack, false, kind + ' 未开 auto-back')
+test('① state-shell:读取失败留白且不自动离页；参数/权限错误保留可见契约', () => {
+  for (const kind of ['error', 'data', 'network', 'offline']) {
+    const shown = mountShell({ kind, autoBack: true });
+    assert.equal(shown.data._loadFailure, true, kind);
+    assert.equal(shown.data._autoBack, false, kind);
+    assert.equal(mountShell({ kind }).data._loadFailure, true, kind + ' 无auto-back同样留白');
   }
+  const missing = mountShell({ kind: 'missing-param', autoBack: true, customBack: true });
+  assert.equal(missing.data._loadFailure, false);
+  assert.equal(missing.data._autoBack, true);
+  missing.onBack(); assert.deepEqual(missing.events, ['back']);
   for (const kind of ['empty', 'loading', 'no-permission', 'not-started']) {
-    assert.equal(mountShell({ kind, autoBack: true }).data._autoBack, false, kind)
+    const visible = mountShell({ kind, autoBack: true });
+    assert.equal(visible.data._autoBack, false, kind);
+    assert.equal(visible.data._loadFailure, false, kind);
   }
-  const wxml = strip(read('components/cy/state-shell/index.wxml'))
-  assert.match(wxml, /<cy-error wx:if="\{\{_autoBack \|\| _renderer === 'error'\}\}" auto-back="\{\{_autoBack\}\}" custom-back="\{\{customBack\}\}"[^>]*title="\{\{_title\}\}"[^>]*sub="\{\{_sub\}\}"[^>]*bind:back="onBack"/)
-  assert.match(wxml, /<cy-empty wx:else/, 'network / offline / missing-param 开 auto-back 时不能再落到 cy-empty 整页')
-  const shell = mountShell({ kind: 'error', autoBack: true, customBack: true }); shell.onBack()
-  assert.deepEqual(shell.events, ['back'])
+  const wxml = strip(read('components/cy/state-shell/index.wxml'));
+  assert.match(wxml, /<cy-error wx:if="\{\{_loadFailure\}\}" load-failure="\{\{true\}\}"/);
+  assert.match(wxml, /<cy-error wx:elif="\{\{_autoBack \|\| _renderer === 'error'\}\}" auto-back="\{\{_autoBack\}\}"/);
+  assert.match(wxml, /bind:back="onBack"/);
+  assert.match(wxml, /<cy-empty wx:else/);
 })
 
 const SHELL_PAGES = [

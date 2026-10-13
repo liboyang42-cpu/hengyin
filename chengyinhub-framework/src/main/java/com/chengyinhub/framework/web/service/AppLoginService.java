@@ -31,7 +31,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -52,6 +52,8 @@ public class AppLoginService {
     private UmsMemberMapper umsMemberMapper;
     @Resource
     private IAppSessionRegistryService appSessionRegistryService;
+    @Resource
+    private RedisCache redisCache;
 
 
     /**
@@ -64,22 +66,28 @@ public class AppLoginService {
      */
     public String login(String username, String password,String openid) {
         if (StringUtils.isEmpty(username) || StringUtils.isEmpty(password) || StringUtils.isEmpty(openid)) {
-            throw new ServiceException(AUTHENTICATION_ERROR);
+            throw passwordFailure(username);
+        }
+        username = username.trim();
+        if (username.isEmpty()) throw passwordFailure(username);
+        Number failed = redisCache.getCacheObject("app_password_fail_" + username);
+        if (failed != null && failed.longValue() >= 5) {
+            throw new ServiceException("密码错误次数过多，请10分钟后重试");
         }
         UmsMember umsMember = new UmsMember();
         umsMember.setPhone(username);
         List<UmsMember> list = appUserSevice.selectUmsMemberList(umsMember);
         if (list.size() != 1) {
-            throw new ServiceException(AUTHENTICATION_ERROR);
+            throw passwordFailure(username);
         }
         Long memberId = list.get(0).getId();
         if (memberId == null) {
-            throw new ServiceException(AUTHENTICATION_ERROR);
+            throw passwordFailure(username);
         }
         long authenticationEpoch = appSessionRegistryService.currentOrCreateEpoch(memberId);
         list = appUserSevice.selectUmsMemberList(umsMember);
         if (list.size() != 1 || !memberId.equals(list.get(0).getId()) || isInactive(list.get(0))) {
-            throw new ServiceException(AUTHENTICATION_ERROR);
+            throw passwordFailure(username);
         }
         UmsMember member = list.get(0);
 
@@ -94,11 +102,11 @@ public class AppLoginService {
             needUpgrade = matched;
         }
         if (!matched) {
-            throw new ServiceException(AUTHENTICATION_ERROR);
+            throw passwordFailure(username);
         }
         String existingOpenId = member.getWxOpenId();
         if (StringUtils.isNotEmpty(existingOpenId) && !existingOpenId.equals(openid)) {
-            throw new ServiceException(AUTHENTICATION_ERROR);
+            throw passwordFailure(username);
         }
         if (needUpgrade) {
             String upgradedPassword = SecurityUtils.encryptPassword(password);
@@ -106,7 +114,7 @@ public class AppLoginService {
             try {
                 if (umsMemberMapper.upgradePasswordIfMatches(
                         memberId, stored, upgradedPassword) != 1) {
-                    throw new ServiceException(AUTHENTICATION_ERROR);
+                    throw passwordFailure(username);
                 }
                 appSessionRegistryService.revokeAll(memberId);
                 appSessionRegistryService.finishMemberMutationAfterTransaction(memberId, mutationId);
@@ -127,10 +135,11 @@ public class AppLoginService {
 
         if (StringUtils.isEmpty(member.getWxOpenId())) {
             if (umsMemberMapper.bindWxOpenIdIfBlank(memberId, openid) != 1) {
-                throw new ServiceException(AUTHENTICATION_ERROR);
+                throw passwordFailure(username);
             }
             member.setWxOpenId(openid);
         }
+        redisCache.deleteObject("app_password_fail_" + username);
         AppUser appUser = new AppUser();
         appUser.setUserId(memberId);
         appUser.setPassword(member.getPassword());
@@ -144,6 +153,14 @@ public class AppLoginService {
         recordLoginInfo(loginAppUser.getUserId());
         // 生成token
         return appTokenService.createAppToken(loginAppUser);
+    }
+
+    private ServiceException passwordFailure(String username) {
+        if (username != null && !username.trim().isEmpty() && username.length() <= 128) {
+            redisCache.incrementWithinWindow("app_password_fail_" + username.trim(), 10,
+                    java.util.concurrent.TimeUnit.MINUTES);
+        }
+        return new ServiceException(AUTHENTICATION_ERROR);
     }
 
     /**

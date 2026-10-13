@@ -1,0 +1,59 @@
+{
+  "completed": {
+    "topicId": 9,
+    "activityId": 0,
+    "sessionId": 72,
+    "playInstanceId": "default",
+    "version": 4,
+    "status": "COMPLETED",
+    "inventoryEnabled": true,
+    "runtimeScope": "PLAYER",
+    "hpName": "体温",
+    "actionName": "探索",
+    "replayAllowed": true,
+    "result": {
+      "reason": "COMPLETED",
+      "success": true,
+      "endedAt": 1791558000000,
+      "title": "回到暖屋",
+      "summary": "一起走过寒冬"
+    }
+  },
+  "replayed": {
+    "topicId": 9,
+    "activityId": 0,
+    "sessionId": 73,
+    "playInstanceId": "replay:72",
+    "version": 0,
+    "status": "ACTIVE",
+    "inventoryEnabled": true,
+    "runtimeScope": "PLAYER",
+    "hpName": "体温",
+    "replayAllowed": false
+  },
+  "card": {
+    "reason": "COMPLETED",
+    "success": true,
+    "endedAt": 1791558000000,
+    "title": "回到暖屋",
+    "summary": "一起走过寒冬",
+    "scene": "冬夜",
+    "hp": 3,
+    "hpName": "体温",
+    "actions": 6,
+    "items": [
+      {
+        "name": "热汤",
+        "image": "",
+        "quantity": 1
+      }
+    ],
+    "medals": [],
+    "epilogues": [
+      {
+        "name": "同行者",
+        "line": "我们到家了"
+      }
+    ]
+  }
+}

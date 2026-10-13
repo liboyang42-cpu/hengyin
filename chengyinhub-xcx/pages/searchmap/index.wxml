@@ -95,13 +95,13 @@
 <cy-sheet variant="full" show="{{bmShow}}" title="{{listState === 'ready' ? '全部 ' + list.length + ' 个结果' : '搜索结果'}}" bind:close="bmClose">
   <text class="smap-sync" wx:if="{{merchantNodesRefreshing && merchantNodes.length}}"
         aria-role="status" aria-live="polite">正在更新商家点位…</text>
-  <cy-error wx:if="{{listState === 'error'}}" title="活动没能加载出来" sub="{{errorMsg}}" bind:retry="onRetry" />
+  <cy-error load-failure wx:if="{{listState === 'error'}}" title="活动没能加载出来" sub="{{errorMsg}}" bind:retry="onRetry" />
   <cy-empty wx:elif="{{listState === 'empty'}}" title="这一带还没有活动" sub="换个关键词，或拖动地图看看别处" />
   <cy-skeleton wx:elif="{{listState === 'loading'}}" type="map-card" count="3" />
   <block wx:else>
     <text class="smap-sync" wx:if="{{listRefreshing && list.length}}"
           aria-role="status" aria-live="polite">正在更新地图结果…</text>
-    <cy-inline-error wx:if="{{pageError && list.length}}" kind="network"
+    <cy-inline-error load-failure wx:if="{{pageError && list.length}}" kind="network"
                      title="{{pageErrorIsRefresh ? '这次刷新没有成功' : '更多活动没加载出来'}}"
                      sub="{{pageErrorIsRefresh ? '屏幕上还是上一次的结果，点重试再拉一次' : '已加载的活动和地图点位仍可查看'}}"
                      action="{{pageErrorIsRefresh ? '重试刷新' : '重试这一页'}}" bind:action="retryListPage" />

@@ -98,6 +98,7 @@ Component({
     tickets: [],
     // M1-3 门卡:非俱乐部成员拿到的是 {gate:true, clubId, activityName, message},
     // 不是详情。当成正常详情渲染会得到「活动标题待确认 + 空票种」(B-03)。
+    cancelledHasOwnOrder: false,
     gateClubId: 0,
     gateMessage: '',
     selectedTicketId: '',
@@ -140,21 +141,44 @@ Component({
   },
   lifetimes: {
     attached() {
+      this._detached = false
       this.load(this.data.activityId)
     },
     detached() {
+      this._detached = true
       this._loadToken = (this._loadToken || 0) + 1
       this._cancelToken = (this._cancelToken || 0) + 1
       this._commentToken = (this._commentToken || 0) + 1
     },
   },
+  pageLifetimes: {
+    show() {
+      this._hidden = false
+      if (this.data.activityId && this._activityReadOwner !== this._activityReadIdentity()) this.load(this.data.activityId)
+    },
+    hide() { this._hidden = true },
+  },
   methods: {
+    _activityReadIdentity() { return [typeof app.getUserID === 'function' ? app.getUserID() : '', (app.globalData || {}).authorization || ''].join('|') },
+    _activityReadCurrent(token, res) {
+      if (this._detached || token !== this._loadToken) return false
+      if (this._activityReadOwner !== this._activityReadIdentity() || res && res.reason === 'sessionChanged') {
+        this._loadToken += 1
+        this._loadingId = ''; this._loadedId = ''
+        this.setData({ state: 'loading', info: {}, tickets: [], canConfirmSignup: false, cancelledHasOwnOrder: false })
+        if (!this._hidden) this.load(this.data.activityId)
+        return false
+      }
+      return true
+    },
     goTopic() {
       const id = Number(this.data.info.topicId)
       if (Number.isSafeInteger(id) && id > 0) wx.navigateTo({ url: '/pages/topic/index/index?id=' + id })
     },
     load(id) {
+      if (this._detached) return
       const requestedId = String(id || '')
+      const owner = this._activityReadIdentity()
       if (!requestedId) {
         this._loadToken = (this._loadToken || 0) + 1
         this._loadingId = ''
@@ -162,7 +186,8 @@ Component({
         this.setData({ state: 'missing', info: {}, tickets: [] })
         return
       }
-      if (this._loadingId === requestedId || this._loadedId === requestedId) return
+      if (owner === this._activityReadOwner && (this._loadingId === requestedId || this._loadedId === requestedId)) return
+      this._activityReadOwner = owner
       const token = (this._loadToken || 0) + 1
       this._loadToken = token
       this._cancelToken = (this._cancelToken || 0) + 1
@@ -171,6 +196,7 @@ Component({
       this._loadedId = ''
       this.setData({
         state: 'loading',
+        cancelledHasOwnOrder: false,
         errorMsg: '',
         info: {},
         tickets: [],
@@ -188,7 +214,7 @@ Component({
       app.sendRequest({
         url: '/api/activity/info', method: 'POST', data: { id: requestedId }, hideLoading: true, silentError: true,
         success: (res) => {
-          if (token !== this._loadToken) return
+          if (!this._activityReadCurrent(token, res)) return
           this._loadingId = ''
           if (!ok(res)) {
             this.failLoad(token, res && res.msg ? res.msg : '活动详情暂时打不开，请稍后重试。', res)
@@ -280,7 +306,13 @@ Component({
     },
 
     failLoad(token, errorMsg, res, status) {
-      if (token !== this._loadToken) return
+      if (!this._activityReadCurrent(token, res)) return
+      if (res && res.errorCode === 'ACTIVITY_CANCELLED') {
+        this._loadingId = ''
+        this.setData({ state: 'cancelled', info: {}, tickets: [], canConfirmSignup: false,
+          cancelledHasOwnOrder: res.canViewOwnOrders === true })
+        return
+      }
       if (status == 401 || status == 2 || (res && (res.code == 401 || res.code == 2))) {
         errorMsg = '登录已过期，请重新进入'
       }
@@ -357,6 +389,11 @@ Component({
         return
       }
       wx.navigateTo({ url: `/pages/activity/baoming/baoming?activityId=${this.data.activityId}&ticketId=${ticket.id}` })
+    },
+
+    onCancelledAction() {
+      if (this.data.cancelledHasOwnOrder) this.goPlay()
+      else this.close()
     },
 
     goPlay() {

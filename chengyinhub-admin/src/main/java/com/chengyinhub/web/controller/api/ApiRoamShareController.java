@@ -46,7 +46,7 @@ public class ApiRoamShareController extends BaseController {
 
     @Operation(summary = "发布足迹分享快照(同一条足迹复用令牌)")
     @PostMapping("/snapshot")
-    public AjaxResult publish(Long clientTs, String snapshot) {
+    public AjaxResult publish(Long clientTs, Long sessionId, String snapshot) {
         Long memberId = uid();
         if (memberId == null || memberId <= 0) return error("请先登录");
         if (clientTs == null || clientTs <= 0) return error("足迹记录无效");
@@ -56,10 +56,14 @@ public class ApiRoamShareController extends BaseController {
         } catch (RuntimeException e) {
             return error("足迹数据无效");
         }
-        String token = snapshotService.publish(memberId, clientTs, normalized);
+        String token;
+        try { token = snapshotService.publish(memberId, clientTs, sessionId, normalized); }
+        catch (IllegalStateException unavailable) { return error(unavailable.getMessage()); }
         if (token == null) return error("足迹分享暂时不可用，请重试");
         return success(Collections.singletonMap("token", token));
     }
+
+    public AjaxResult publish(Long clientTs, String snapshot) { return publish(clientTs, null, snapshot); }
 
     @Operation(summary = "作废本人全部足迹分享快照")
     @PostMapping("/revoke")

@@ -8,9 +8,6 @@
 
   <!-- 整页错误态:原来接口失败只弹一条 toast,页面留一屏空白让人以为「没有数据」 -->
   <view class="load-error" wx:if="{{ loadFailed }}" style="padding-top: {{ statusBarHeight + navBarHeight }}px;">
-    <view class="load-error-title">没能加载到这条承接记录</view>
-    <view class="load-error-tip">可能是网络问题,也可能这条记录已被撤销。</view>
-    <cy-btn variant="primary" bindtap="emit" data-act="retryLoad">重新加载</cy-btn>
   </view>
 
   <block wx:else>
@@ -85,7 +82,7 @@
     <view class="sec">
       <view class="sec-head"><text class="sec-title">我的点位</text></view>
       <cy-skeleton wx:if="{{!myChapterNodesLoaded && !myChapterNodesError}}" type="card" />
-      <cy-error wx:if="{{myChapterNodesError}}" title="我的点位没能加载出来" sub="{{myChapterNodesError}}"
+      <cy-error load-failure wx:if="{{myChapterNodesError}}" title="我的点位没能加载出来" sub="{{myChapterNodesError}}"
                 retry="重试" data-act="retryMyChapterNodes" bind:retry="emit" />
       <view class="card chapter-project-item" wx:for="{{myChapterNodes}}" wx:key="id" wx:for-item="chapterNode">
         <text class="fact-main">{{chapterNode.name}}</text>
@@ -398,7 +395,7 @@
   <project-drawer show="{{ chapterSheet.show }}" title="{{ info.topicName || '本章' }}"
                   bind:close="emitCloseChapter">
     <cy-skeleton wx:if="{{ chapterSheet.state === 'loading' }}" type="card" count="{{ 2 }}" />
-    <cy-error wx:elif="{{ chapterSheet.state === 'error' }}" title="本章内容没加载出来"
+    <cy-error load-failure wx:elif="{{ chapterSheet.state === 'error' }}" title="本章内容没加载出来"
               sub="{{ chapterSheet.error }}" bind:retry="emitOpenChapter" />
     <cy-empty wx:elif="{{ chapterSheet.state === 'empty' }}" kind="empty" size="lg"
               title="这条路线还没有章节" sub="主办方配好章节后,这里会显示本章剧情与各站玩法" />

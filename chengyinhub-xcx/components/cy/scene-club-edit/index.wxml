@@ -3,8 +3,8 @@
   <cy-skeleton wx:if="{{loadState === 'loading'}}" type="form-section" count="6" loading-label="正在读取俱乐部资料" />
   <cy-error wx:elif="{{loadState === 'missing-param'}}" title="没有指定俱乐部" sub="{{loadErrorText}}" retry="返回俱乐部" bind:retry="onBack" />
   <cy-error wx:elif="{{loadState === 'permission'}}" title="暂无编辑权限" sub="{{loadErrorText}}" retry="返回俱乐部" bind:retry="onBack" />
-  <cy-error wx:elif="{{loadState === 'business-error'}}" title="编辑资料没能打开" sub="{{loadErrorText}}" retry="重新加载" bind:retry="loadClub" />
-  <cy-error wx:elif="{{loadState === 'network-error'}}" title="网络连接失败" sub="{{loadErrorText}}" retry="重新加载" bind:retry="loadClub" />
+  <cy-error load-failure wx:elif="{{loadState === 'business-error'}}" title="编辑资料没能打开" sub="{{loadErrorText}}" retry="重新加载" bind:retry="loadClub" />
+  <cy-error load-failure wx:elif="{{loadState === 'network-error'}}" title="网络连接失败" sub="{{loadErrorText}}" retry="重新加载" bind:retry="loadClub" />
 
   <!-- ===== 表单 ===== -->
   <view class="body" wx:elif="{{loadState === 'ready'}}">

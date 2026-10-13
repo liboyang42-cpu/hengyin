@@ -90,6 +90,7 @@ test('活动运营页从后端读取系列与版本，并提供未来场次批�
 })
 
 test('系列更新遇到 409 会重新读取列表与详情，绝不沿用旧 version', () => {
+  const futureDate = require('../../utils/datetime.js').chinaDateKey(new Date(Date.now() + 24 * 60 * 60 * 1000))
   let config
   const requests = []
   const appMock = {
@@ -107,7 +108,7 @@ test('系列更新遇到 409 会重新读取列表与详情，绝不沿用旧 ve
             id: 61, clubId: 21, topicId: 31, recurrenceType: 'CUSTOM_DATES',
             defaultLeadMemberId: 51, defaultCapacity: null,
             waitlistEnabled: true, offerMinutes: 30, version: 4,
-            futureDates: ['2026-09-01'],
+            futureDates: [futureDate],
           },
         })
       }
@@ -132,7 +133,7 @@ test('系列更新遇到 409 会重新读取列表与详情，绝不沿用旧 ve
       editingSeriesId: 61,
       editingTopicId: 31,
       recurrenceType: 'CUSTOM_DATES',
-      customDates: ['2026-09-01'],
+      customDates: [futureDate],
       defaultLeadMemberId: 51,
       capacity: '',
       waitlistEnabled: true,
@@ -148,6 +149,7 @@ test('系列更新遇到 409 会重新读取列表与详情，绝不沿用旧 ve
   const update = JSON.parse(requests[0].data)
   assert.equal(update.seriesId, 61)
   assert.equal(update.expectedVersion, 3)
+  assert.deepEqual(update.customDates, [futureDate])
   assert.deepEqual(requests.slice(1).map(item => item.url), [
     '/api/club/event-ops/series/list',
     '/api/club/event-ops/series/detail',
@@ -427,9 +429,11 @@ test('通知人数与权限和预览使用同一场次，未指定场次不伪�
   const counts = requests.at(-1)
   assert.equal(counts.url, '/api/club/event-notification/audience-counts')
   assert.deepEqual(JSON.parse(counts.data), { clubId: 21, activityId: 31 })
-  counts.success({ code: 200, data: { counts: { REGISTERED: 1, WAITLIST: 0, NO_SHOW: 1 } } })
+  counts.success({ code: 200, data: { counts: { ALL_MEMBERS: 2, ADMINS: 1, INACTIVE: 0, REGISTERED: 1, WAITLIST: 0, NO_SHOW: 1 } } })
   assert.equal(scoped.data.audiences.find(x => x.value === 'REGISTERED').countText, '1 人')
   assert.equal(scoped.data.audiences.find(x => x.value === 'WAITLIST').countText, '0 人')
+  assert.equal(scoped.data.audiences.find(x => x.value === 'ADMINS').countText, '1 人')
+  assert.equal(scoped.data.audiences.find(x => x.value === 'INACTIVE').countText, '0 人')
   assert.equal(scoped.data.audiences.find(x => x.value === 'REGISTERED').hint, '')
   scoped.onTitleInput({ detail: { value: '集合提醒' } })
   scoped.onContentInput({ detail: { value: '请按原时间集合' } })
@@ -439,8 +443,10 @@ test('通知人数与权限和预览使用同一场次，未指定场次不伪�
   wide.onLoad({ clubId: '21' })
   requests.at(-1).success({ code: 200, data: { active: true, club: { id: 21 }, permissions: ['club:notify:send'] } })
   assert.equal(JSON.parse(requests.at(-1).data).activityId, null)
-  requests.at(-1).success({ code: 200, data: { counts: { ALL_MEMBERS: 2, REGISTERED: null } } })
+  requests.at(-1).success({ code: 200, data: { counts: { ALL_MEMBERS: 2, ADMINS: 0, INACTIVE: 1, REGISTERED: null, WAITLIST: null, NO_SHOW: null } } })
   assert.equal(wide.data.audiences.find(x => x.value === 'REGISTERED').countText, '')
+  assert.equal(wide.data.audiences.find(x => x.value === 'ADMINS').countText, '0 人')
+  assert.equal(wide.data.audiences.find(x => x.value === 'INACTIVE').countText, '1 人')
   assert.equal(wide.data.audiences.find(x => x.value === 'REGISTERED').disabled, true)
   assert.equal(wide.data.audiences.find(x => x.value === 'REGISTERED').hint, '从具体活动进入后才可选')
   const restricted = page()

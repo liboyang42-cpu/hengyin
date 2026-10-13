@@ -145,6 +145,7 @@
    * font-size,固定 rpx 行高会把第二行切掉。 */
   line-height: 1.571;
 }
+.post-card__text--expanded { display: block; overflow: visible; -webkit-line-clamp: unset; white-space: pre-wrap; }
 .post-card__link { color: var(--cy-info); }
 .post-card__expand {
   display: block;

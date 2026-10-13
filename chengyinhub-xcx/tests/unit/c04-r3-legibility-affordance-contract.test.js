@@ -145,7 +145,7 @@ test('R3-1 失败正文不得复述卡标题(重复才是字数超标的根因)'
   const { page } = loadOrderInfo()
   page.onLoad({})
   const wxml = read(`${ORDERINFO}.wxml`)
-  assert.match(wxml, /title="加载失败"/, '面板标题锚点失效')
+  assert.match(wxml, /title="订单暂不可查看"/, '面板标题锚点失效')
   assert.doesNotMatch(
     page.data.loadErrorText, /加载失败|无法加载订单详情/,
     '原因行复述面板标题「加载失败」,重复占掉了整行预算',

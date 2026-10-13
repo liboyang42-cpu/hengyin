@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.RoamPresenceRevokeIntentMapper">
+  <resultMap id="Intent" type="RoamPresenceRevokeIntent">
+    <id property="id" column="id"/>
+    <result property="memberId" column="member_id"/>
+    <result property="previousConsentId" column="previous_consent_id"/>
+    <result property="requestId" column="request_id"/>
+    <result property="eventType" column="event_type"/>
+    <result property="occurredAt" column="occurred_at"/>
+    <result property="ownerToken" column="owner_token"/>
+    <result property="state" column="state"/>
+    <result property="attemptCount" column="attempt_count"/>
+  </resultMap>
+  <select id="selectPreviousConsentIdForUpdate" resultType="Long" useCache="false" flushCache="true">
+    select previous_consent_id from roam_presence_revoke_intent where member_id=#{memberId} and event_type='AGREE'
+    order by id desc limit 1 for update
+  </select>
+  <insert id="insertIntent" useGeneratedKeys="true" keyProperty="id">
+    insert into roam_presence_revoke_intent(request_id,member_id,event_type,previous_consent_id,occurred_at,state)
+    values(#{requestId},#{memberId},#{eventType},#{previousConsentId},#{occurredAt},#{state})
+  </insert>
+  <select id="selectByRequestId" resultMap="Intent" useCache="false" flushCache="true">
+    select * from roam_presence_revoke_intent where request_id=#{requestId}
+  </select>
+  <select id="selectDue" resultType="String" useCache="false" flushCache="true">
+    select request_id from roam_presence_revoke_intent
+    where event_type='REVOKE' and ((state=0 and next_attempt_at &lt;= now(6)) or (state=1 and lease_until &lt;= now(6)))
+    order by id limit #{limit}
+  </select>
+  <update id="claim">
+    update roam_presence_revoke_intent set state=1,owner_token=#{ownerToken},
+      lease_until=date_add(now(6),interval 120 second),attempt_count=attempt_count+1
+    where request_id=#{requestId} and event_type='REVOKE' and attempt_count &lt; 3
+      and ((state=0 and next_attempt_at &lt;= now(6)) or (state=1 and lease_until &lt;= now(6)))
+  </update>
+  <update id="complete">
+    update roam_presence_revoke_intent set state=2,owner_token=null,lease_until=null
+    where request_id=#{requestId} and state=1 and owner_token=#{ownerToken}
+  </update>
+  <update id="fail">
+    update roam_presence_revoke_intent set state=case when attempt_count &gt;= 3 then 3 else 0 end,
+      next_attempt_at=date_add(now(6),interval (60*attempt_count) second),owner_token=null,lease_until=null
+    where request_id=#{requestId} and state=1 and owner_token=#{ownerToken}
+  </update>
+  <update id="escalateExpired">
+    update roam_presence_revoke_intent set state=3,owner_token=null,lease_until=null
+    where request_id=#{requestId} and state=1 and lease_until &lt;= now(6) and attempt_count &gt;= 3
+  </update>
+</mapper>

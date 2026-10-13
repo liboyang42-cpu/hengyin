@@ -61,7 +61,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <if test="latitude != null  and latitude != ''  and latitude != null and longitude != ''">
             ROUND(st_distance_sphere(point(#{longitude},#{latitude}),point(IFNULL(longitude,0), IFNULL(latitude,0)))) distance,
         </if>
-        address, status,publish_status, reason, del_flag,start_date,end_date,template_id,
+        address, status,publish_status, cancel_time, reason, del_flag,start_date,end_date,template_id,
         topic_id, club_id, create_by, create_time, update_by, update_time,
         (select t.product_type from cms_topic t where t.id = cms_activity.topic_id) as product_type
         from cms_activity
@@ -464,4 +464,49 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         SET is_settlement = 1, update_by = 'system', update_time = NOW()
         WHERE id = #{id} AND is_settlement = 0 AND del_flag = 0
     </update>
+    <select id="selectSignedUpRegistrationCounts" resultType="java.util.HashMap">
+        select owner_id as activityId, count(*) as signupCount
+        from cms_registration
+        where owner_type = 2 and registration_status = 2
+        <choose>
+            <when test="activityIds != null and activityIds.size() > 0">
+                and owner_id in
+                <foreach collection="activityIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+            </when>
+            <otherwise>and 1 = 0</otherwise>
+        </choose>
+        group by owner_id
+    </select>
+    <select id="selectTopicSignedUpRegistrationCounts" resultType="java.util.HashMap">
+        select t.id as topicId, count(r.id) as signupCount
+        from cms_topic t
+        join cms_registration r on r.payment_status = 2 and r.registration_status = 2
+          and ((r.owner_type = 1 and r.owner_id = t.id)
+               or (r.owner_type = 2 and exists (
+                   select 1 from cms_activity a where a.id = r.owner_id
+                     and a.topic_id = t.id and a.del_flag = 0
+                     and (t.club_id is null or a.club_id = t.club_id))))
+        where t.del_flag = 0
+        <choose>
+            <when test="topicIds != null and topicIds.size() > 0">
+                and t.id in
+                <foreach collection="topicIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+            </when>
+            <otherwise>and 1 = 0</otherwise>
+        </choose>
+        group by t.id
+    </select>
+    <select id="selectPendingVerificationCounts" resultType="java.util.HashMap">
+        select owner_id as activityId, count(*) as pendingVerifyCount
+        from cms_registration
+        where owner_type = 2 and payment_status = 2 and verification_status = 0
+        <choose>
+            <when test="activityIds != null and activityIds.size() > 0">
+                and owner_id in
+                <foreach collection="activityIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+            </when>
+            <otherwise>and 1 = 0</otherwise>
+        </choose>
+        group by owner_id
+    </select>
 </mapper>

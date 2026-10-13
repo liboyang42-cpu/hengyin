@@ -745,7 +745,7 @@ test('选玩法面板每次打开都重拉「我的故事玩法草稿」,选中�
   const req = requests.find((r) => r && r.url === '/api/template/my-list' && r.data && String(r.data.draft_status) === '0')
   assert.ok(req, '打开面板没有拉草稿')
   assert.equal(req.data.is_quote, undefined, '带了 is_quote 就只回已发布,草稿永远拉不到')
-  req.success({ code: 200, data: { rows: [{ id: 141, title: '新生儿登记', validationMethod: 0 }] } })
+  req.success({ code: 200, data: { rows: [{ id: 141, title: '新生儿登记', validationMethod: 0, advancedConfigJson: '{}' }] } })
   assert.deepEqual(page.data.storyDraftList.map((t) => t.id), [141])
 
   page.selectTemp({ currentTarget: { dataset: { item: page.data.storyDraftList[0] } } })
@@ -783,9 +783,10 @@ test('伏笔保存按钮属于伏笔面板，其他面板不重复挂载', () =>
   assert.ok(sheet.indexOf('data-field="need"') < sheet.indexOf('data-field="desc"'))
   assert.ok(sheet.indexOf('data-field="desc"') < sheet.indexOf('bindtap="saveThoughts"'))
   assert.equal((sheet.match(/<cy-field\b/g) || []).length, 2)
-  assert.doesNotMatch(sheet, /variant="full"|nav-title|data-field="name"|>内容<|toggleThoughtTag|slot="footer"|trash-2|removeThought/)
+  assert.doesNotMatch(sheet, /variant="full"|nav-title|data-field="name"|>内容<|toggleThoughtTag|slot="footer"|trash-2/)
   assert.doesNotMatch(sheet, /node-sheet__done|bindtap="addThought"/)
   assert.equal((wxml.match(/bindtap="saveThoughts"/g) || []).length, 1)
+  assert.match(sheet, /data-index="\{\{ti\}\}" bindtap="removeThought"/, '多条存量配置有明确删除出口')
 })
 
 test('添加直接进入单个伏笔配置，完成才回填，重开编辑不再追加', () => {
@@ -956,3 +957,29 @@ test('打开结局章的设置:只有键的老结局按清单回显名字,不写
   page.showEditChapter({ currentTarget: { dataset: { index: 0 } } })
   assert.equal(page.data.chapterForm.ending.thoughtName, '那扇窗')
 })
+
+
+test('legacy multiple thoughts can be reduced without silently removing story or ending references', () => {
+  const page = makePage();
+  const thoughts = [{ key: 'old_a', name: '伏笔', desc: '保留文字', need: 120 },
+    { key: 'old_b', name: '伏笔', desc: '删除文字', need: 240 }];
+  page.data.formData.journeyRules = JSON.stringify({ version: 1, thoughts });
+  page.data.formData.journeyStory = JSON.stringify({ ending: { thoughtKey: 'old_b' } });
+  page.openThoughts();
+  const event = { currentTarget: { dataset: { index: 1 } } };
+  page.removeThought(event);
+  assert.equal(page.data.thoughtsEditor.list.length, 2);
+  assert.match(page.data.thoughtsEditor.error, /仍引用/);
+  assert.equal(JSON.parse(page.data.formData.journeyStory).ending.thoughtKey, 'old_b');
+  page.data.formData.journeyStory = '';
+  page.data.formData.chapters = [{ storyBlocks: [{ kind: 'thought', thoughtKey: 'old_b' }] }];
+  page.removeThought(event);
+  assert.equal(page.data.thoughtsEditor.list.length, 2, '正文引用也必须先移除');
+  page.data.formData.chapters = [];
+  page.removeThought(event);
+  assert.equal(page.data.thoughtsEditor.list.length, 1);
+  page.saveThoughts();
+  const saved = JSON.parse(page.data.formData.journeyRules).thoughts;
+  assert.deepEqual(saved.map(row => row.key), ['old_a']);
+  assert.equal(saved[0].desc, '保留文字');
+});

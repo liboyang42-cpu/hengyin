@@ -11,6 +11,9 @@ public class NpcChatRequest {
     public static final String STATUS_REJECTED = "REJECTED";
     public static final String STATUS_FAILED = "FAILED";
 
+    private Long audioAssetId;
+    public Long getAudioAssetId() {return audioAssetId;}
+    public void setAudioAssetId(Long audioAssetId) {this.audioAssetId=audioAssetId;}
     private Long id;
     private Long userId;
     private String requestId;

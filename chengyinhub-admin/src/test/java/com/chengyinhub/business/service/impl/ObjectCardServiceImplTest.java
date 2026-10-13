@@ -25,10 +25,12 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * 铸卡本体(转台藏品卡施工文档 §4.2):来源闸 → 抠图 + 认物并行 → 一行 upsert。
@@ -84,10 +86,32 @@ class ObjectCardServiceImplTest {
             }
         };
         ReflectionTestUtils.setField(service, "cardMapper", cardMapper);
+        com.chengyinhub.business.service.support.AppMediaReferenceGuard media = mock(com.chengyinhub.business.service.support.AppMediaReferenceGuard.class);
+        when(media.requireAttachment(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.eq(true)))
+                .thenAnswer(call -> call.getArgument(1));
+        when(media.processingUrl(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.eq("IMAGE")))
+                .thenAnswer(call -> call.getArgument(0));
+        ReflectionTestUtils.setField(service, "mediaReferences", media);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "consentGuard", org.mockito.Mockito.mock(com.chengyinhub.business.service.ConsentGuard.class));
+        ReflectionTestUtils.setField(service, "wxContentSecurityService", mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
+        ReflectionTestUtils.setField(service, "umsMemberService", mock(com.chengyinhub.business.service.IUmsMemberService.class));
         ReflectionTestUtils.setField(service, "clock", (AdvancedGameClock) () -> NOW);
     }
 
     // ==================== 卡面内容 ====================
+
+    @Test
+    void separateConsentRefusalPreventsAnyProviderCallOrMediaWrite() {
+        com.chengyinhub.common.config.ComplianceProperties versions = new com.chengyinhub.common.config.ComplianceProperties();
+        versions.setDocVersions(java.util.Map.of("photo_model_processing", "v1.0", "voice_clone_processing", "v1.0"));
+        com.chengyinhub.business.service.ConsentGuard guard = new com.chengyinhub.business.service.ConsentGuard(
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.IConsentRecordService.class), versions);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "consentGuard", guard);
+        org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.mint(7L, "/profile/upload/photo.jpg", new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode(), "PLAY", "1"));
+        org.mockito.Mockito.verifyNoInteractions(cardMapper);
+        org.junit.jupiter.api.Assertions.assertTrue(segmentedUrls.isEmpty());
+    }
 
     @Test
     void 卡名卡样式一句话都按模板落库() {
@@ -417,6 +441,36 @@ class ObjectCardServiceImplTest {
         }
     }
 
+    @Test
+    void uncheckedTemplateAndRenameAreRejectedBeforePersistingCardText() {
+        com.chengyinhub.business.service.IWxContentSecurityService safety =
+                mock(com.chengyinhub.business.service.IWxContentSecurityService.class);
+        org.mockito.Mockito.when(safety.checkText(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+                .thenReturn(com.chengyinhub.business.service.IWxContentSecurityService.MSG_UNAVAILABLE);
+        ReflectionTestUtils.setField(service, "wxContentSecurityService", safety);
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> mint("{\"mode\":\"CARD\",\"cardTitle\":\"未经检查的旧模板\",\"shotNote\":\"旧文字\"}"));
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.rename(MEMBER_ID, 10L, "新名字"));
+        verify(cardMapper, never()).upsert(any());
+        verify(cardMapper, never()).renameOwned(anyLong(), anyLong(), any());
+    }
+
+    @Test
+    void unsafeOrUnavailableAiNamingFallsBackToReviewedTemplateWithoutLeakingModelText() {
+        stubCutoutAndNaming("不应展示的模型名", "其他", null, 0, 0);
+        com.chengyinhub.business.service.IWxContentSecurityService safety =
+                mock(com.chengyinhub.business.service.IWxContentSecurityService.class);
+        org.mockito.Mockito.when(safety.checkText(org.mockito.ArgumentMatchers.eq("不应展示的模型名"), org.mockito.ArgumentMatchers.any()))
+                .thenReturn(com.chengyinhub.business.service.IWxContentSecurityService.MSG_UNAVAILABLE);
+        ReflectionTestUtils.setField(service, "wxContentSecurityService", safety);
+        mint("{\"mode\":\"CARD\",\"cardTitle\":\"模板名\"}");
+        ArgumentCaptor<PlayerObjectCard> captor = ArgumentCaptor.forClass(PlayerObjectCard.class);
+        verify(cardMapper).upsert(captor.capture());
+        assertEquals("模板名", captor.getValue().getTitle());
+        assertNull(captor.getValue().getCategory());
+    }
+
     // ==================== 写库形状 ====================
 
     @Test
@@ -521,5 +575,13 @@ class ObjectCardServiceImplTest {
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
+    }
+    @Test void registeredMediaAdmissionFailurePreventsMintAndAllSupplierRequests() {
+        com.chengyinhub.business.service.support.AppMediaReferenceGuard media =
+                (com.chengyinhub.business.service.support.AppMediaReferenceGuard) ReflectionTestUtils.getField(service, "mediaReferences");
+        when(media.requireAttachment(MEMBER_ID, OSS_URL, true)).thenThrow(new com.chengyinhub.common.exception.ServiceException("媒体尚未审核通过",422));
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class, () -> mint("{\"mode\":\"CARD\"}"));
+        verify(media, never()).processingUrl(org.mockito.ArgumentMatchers.anyString(), anyLong(), org.mockito.ArgumentMatchers.anyString());
+        verify(cardMapper, never()).upsert(any());
     }
 }

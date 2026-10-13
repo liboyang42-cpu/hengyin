@@ -348,6 +348,7 @@ Page({
         if (that._unloaded) return;
         that._profileLoading = false;
         if (res && res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
+          that._loadedProfileName = res.data.name;
           // 处理个人项目图片字符串转数组
           let casePicsList = [];
           if (typeof res.data.casePics === 'string' && res.data.casePics.trim() !== '') {
@@ -419,7 +420,7 @@ Page({
     }
 
     const data = {
-      name: userInfo.name,
+      name: userInfo.name === this._loadedProfileName ? undefined : userInfo.name,
       avatar: userInfo.avatar,
       introduction: userInfo.introduction,
       website: userInfo.website,
@@ -441,6 +442,8 @@ Page({
       success: function (res) {
         if (that._unloaded) return;
         if (res.code == "200") {
+          app.setNickname(data.name);
+          app.setAvatar(data.avatar);
           that.setData({ saving: false, saveError: '', saveSucceeded: true });
           toast.success('资料已保存', { duration: 2000 });
           that._profileReturnTimer = setTimeout(() => {

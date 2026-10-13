@@ -26,6 +26,22 @@ class CommunityPostLifecyclePolicyTest {
     }
 
     @Test
+    void checkingOwnerCanEditAndOtherViewersRemainBlocked() {
+        CommunityPost post = post(CommunityPost.LIFECYCLE_CHECKING, 4);
+        CommunityPostLifecyclePolicy.Decision decision =
+                policy.decide(post, CommunityPostLifecyclePolicy.ACTION_EDIT, 4, true);
+        assertEquals(CommunityPost.LIFECYCLE_CHECKING, decision.getLifecycle());
+        assertEquals(5, decision.getVersion());
+        assertFalse(decision.isPubliclyVisible());
+        assertTrue(policy.canView(post, 7L, false, false, false, false));
+        assertFalse(policy.canView(post, 8L, true, true, false, false));
+        assertEquals(403, assertThrows(ServiceException.class,
+                () -> policy.decide(post, CommunityPostLifecyclePolicy.ACTION_EDIT, 4, false)).getCode());
+        assertEquals(409, assertThrows(ServiceException.class,
+                () -> policy.decide(post, CommunityPostLifecyclePolicy.ACTION_EDIT, 3, true)).getCode());
+    }
+
+    @Test
     void staleWriteCannotOverwriteNewerState() {
         CommunityPost post = post(CommunityPost.LIFECYCLE_PUBLISHED, 5);
 

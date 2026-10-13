@@ -265,7 +265,7 @@ test('动态二维码不锁会自然递减的 countdown，玩法缺参页按真�
   assert.equal(Object.hasOwn(shots.E27.data, 'countdown'), false)
   assert.equal(Object.hasOwn(FIXTURES.E27.data, 'countdown'), false)
   assert.deepEqual(SELECTORS.F01, {
-    selector: '.mp-empty__b',
+    selector: '.mp-empty',
     min: 1,
     viewNodeMin: 3,
   })

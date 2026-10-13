@@ -22,6 +22,11 @@
         limit 1
     </select>
 
+    <select id="selectByIdForUpdate" resultMap="AccountDeregistrationResult">
+        select id, member_id, status, apply_time, execute_after, cancel_time, complete_time, failure_reason, create_time, update_time
+        from account_deregistration where id = #{id} for update
+    </select>
+
     <insert id="insert" parameterType="AccountDeregistration" useGeneratedKeys="true" keyProperty="id">
         insert into account_deregistration (member_id, status, apply_time, execute_after, create_time)
         values (#{memberId}, #{status}, #{applyTime}, #{executeAfter}, #{createTime})
@@ -51,6 +56,12 @@
         where status = 'PENDING' and execute_after &lt;= #{now}
         order by execute_after asc, id asc
         limit 100
+    </select>
+
+    <select id="countUnsettledRefunds" resultType="int">
+        select count(1) from refund_application
+        where member_id = #{memberId} and del_flag = 0
+          and (status = 0 or (status = 1 and (payout_status is null or payout_status not in (1, 4))))
     </select>
 
     <update id="anonymizeMember">
@@ -98,6 +109,10 @@
          这一张表没有别的表引用它,也不参与任何对账,删干净就是最正确的处置。 -->
     <delete id="deleteMemberIdentity">
         delete from ums_member_identity where member_id = #{memberId}
+    </delete>
+
+    <delete id="deleteMemberAddresses">
+        delete from ums_member_address where member_id = #{memberId}
     </delete>
 
     <update id="markFailed">

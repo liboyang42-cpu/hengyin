@@ -25,6 +25,9 @@ public interface SysJobMapper
      */
     public List<SysJob> selectJobAll();
 
+    /** Current read under the definition session mutex, avoiding a pre-lock RR snapshot. */
+    public List<SysJob> selectJobAllForUpdate();
+
     /**
      * 通过调度ID查询调度任务信息
      * 

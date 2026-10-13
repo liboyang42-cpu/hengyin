@@ -6978,42 +6978,81 @@
  },
  "B70": {
   "data": {
-   "rankState": "ready",
-   "rankErrorKind": "data",
+   "loading": false,
    "errorMsg": "",
-   "boardState": "ready",
-   "rankLoaded": true,
-   "overviewError": "",
-   "overviewErrorKind": "data",
    "metric": "point",
    "period": "total",
    "unit": "积分",
+   "top3": [
+    {
+     "rank": 1,
+     "memberId": 101,
+     "name": "城市漫游者",
+     "initial": "城",
+     "scoreText": "1,280",
+     "avatarUrl": "",
+     "bg": "linear-gradient(135deg,#5B8DEF,#3B6FE0)",
+     "ringBg": "linear-gradient(135deg,#FFE9A8,#F5C542)"
+    },
+    {
+     "rank": 2,
+     "memberId": 102,
+     "name": "街巷观察员",
+     "initial": "街",
+     "scoreText": "1,160",
+     "avatarUrl": "",
+     "bg": "linear-gradient(135deg,#22C3A6,#17A98C)",
+     "ringBg": "linear-gradient(135deg,#FFE9A8,#E6C46A)"
+    },
+    {
+     "rank": 3,
+     "memberId": 103,
+     "name": "黄昏骑行者",
+     "initial": "黄",
+     "scoreText": "980",
+     "avatarUrl": "",
+     "bg": "linear-gradient(135deg,#9B7BFF,#6C5CE7)",
+     "ringBg": "linear-gradient(135deg,#F3C99A,#D8964B)"
+    }
+   ],
+   "rest": [
+    {
+     "rank": 4,
+     "memberId": 104,
+     "name": "河岸记录者",
+     "initial": "河",
+     "scoreText": "860",
+     "avatarUrl": "",
+     "bg": "linear-gradient(135deg,#9B88FF,#7A5CFF)"
+    },
+    {
+     "rank": 5,
+     "memberId": 105,
+     "name": "夜行地图册",
+     "initial": "夜",
+     "scoreText": "720",
+     "avatarUrl": "",
+     "bg": "linear-gradient(135deg,#42C7E8,#2F9BCF)"
+    }
+   ],
    "me": {
-    "rank": 1,
-    "name": "城市漫游者",
-    "initial": "城",
-    "scoreText": "1,280",
-    "avatarUrl": ""
+    "rank": 8,
+    "memberId": 108,
+    "name": "我",
+    "initial": "我",
+    "scoreText": "540",
+    "avatarUrl": "",
+    "bg": "linear-gradient(135deg,#F5C542,#F2A01E)"
    },
-   "overviewState": "ready",
-   "overviewLoaded": true,
-   "badgeLoadError": false,
-   "showBadges": true,
-   "showBadgeEmpty": false
+   "animKey": 1
   },
   "dropped": [
-   "overview",
-   "badges",
-   "badgeCountText"
+   "boardState"
   ],
   "switchKeys": [
-   "rankErrorKind",
+   "loading",
    "errorMsg",
-   "boardState",
-   "rankLoaded",
-   "rankState",
-   "overviewErrorKind",
-   "overviewError"
+   "rest"
   ]
  },
  "B71": {

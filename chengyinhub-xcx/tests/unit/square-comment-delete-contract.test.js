@@ -59,8 +59,9 @@ function loadPage(opts) {
   vm.runInNewContext(source, {
     console,
     getApp: () => app,
+    getCurrentPages: () => (opts && opts.pages) || [],
     Page: (config) => { definition = config; },
-    require: createRequire(absolutePath),
+    require: (id) => id.includes('community-post-api') ? require('../helpers/community-page-seam') : createRequire(absolutePath)(id),
     setTimeout() {}, clearTimeout() {}, setInterval() {}, clearInterval() {},
     wx: wxApi,
   }, { filename: absolutePath });
@@ -73,22 +74,23 @@ function loadPage(opts) {
       if (done) done.call(this);
     },
   });
-  return { page, requests, modalCalls };
+  return { page, requests, modalCalls, app };
 }
 
 function readyWithComments(h, over) {
   h.page.onLoad({ id: '77' });
   const info = h.requests.find((r) => r.url === '/api/creativesquare/info');
   assert.ok(info, '详情必须先请求 info');
-  info.success({ code: '200', data: Object.assign({ id: 77, memberId: 1, contents: '正文' }, over || {}) });
+  info.success({ code: '200', data: Object.assign({ id: 77, memberId: 1, contents: '正文', commentCount: 2 }, over || {}) });
+  if (info.complete) info.complete();
   const comments = h.requests.find((r) => r.url === '/api/comment/list');
   assert.ok(comments, '详情必须请求评论列表');
   comments.success({
     code: '200',
     data: {
       rows: [
-        { id: 501, memberId: 1, memberNickname: '我自己', contents: '我的评论', likeCount: 0 },
-        { id: 502, memberId: 2, memberNickname: '别人', contents: '别人的评论', likeCount: 0 },
+        { id: 501, memberId: 1, memberNickname: '我自己', contents: '我的评论', likeCount: 0, lifecycle: 'PUBLISHED', author_approval_state: 'VISIBLE' },
+        { id: 502, memberId: 2, memberNickname: '别人', contents: '别人的评论', likeCount: 0, lifecycle: 'PUBLISHED', author_approval_state: 'VISIBLE' },
       ],
       total: 2,
     },
@@ -153,4 +155,157 @@ test('负控:变异删除端点,发请求用例真红', () => {
   h.page.deleteComment({ currentTarget: { dataset: { index: 0 } } });
   h.modalCalls[0].success({ confirm: true });
   assert.equal(h.requests.some((r) => r.url === '/api/comment/delete'), false, '负控必须真的把端点改掉');
+});
+
+function confirmedDelete(h) {
+  h.page.deleteComment({ currentTarget: { dataset: { index: 0 } } });
+  h.modalCalls.at(-1).success({ confirm: true });
+  return h.requests.find((r) => r.url === '/api/comment/delete');
+}
+
+test('删除成功同步footer计数且重复回包不再减，并复用列表脏标', () => {
+  let dirtyCalls = 0;
+  const previous = { markSquareListDirty() { dirtyCalls++; } };
+  const h = loadPage({ pages: [previous, {}] });
+  readyWithComments(h);
+  const request = confirmedDelete(h);
+  request.success({ code: 200 });
+  assert.equal(h.page.data.info.commentCount, 1);
+  assert.equal(h.page.data.info.contents, '正文');
+  assert.equal(h.app.globalData.squareListDirty, true);
+  assert.equal(dirtyCalls, 1);
+  request.complete();
+  request.success({ code: 200 });
+  assert.equal(h.page.data.info.commentCount, 1);
+  assert.equal(h.page.data.list.length, 1);
+  assert.equal(dirtyCalls, 1);
+});
+
+test('删除计数夹零，不从页面当前加载行数推算总数', () => {
+  for (const [before, expected] of [[0, 0], [17, 16]]) {
+    const h = loadPage();
+    readyWithComments(h, { commentCount: before });
+    confirmedDelete(h).success({ code: 200 });
+    assert.equal(h.page.data.info.commentCount, expected);
+  }
+});
+
+test('删除拒绝、网络失败或用户取消保持计数和列表且不置脏', () => {
+  for (const outcome of ['refused', 'network', 'cancelled']) {
+    const h = loadPage();
+    readyWithComments(h);
+    h.page.deleteComment({ currentTarget: { dataset: { index: 0 } } });
+    if (outcome === 'cancelled') h.modalCalls[0].success({ confirm: false });
+    else {
+      h.modalCalls[0].success({ confirm: true });
+      const request = h.requests.find((r) => r.url === '/api/comment/delete');
+      if (outcome === 'refused') request.success({ code: 403, msg: 'forbidden' });
+      else request.fail({});
+      request.complete();
+    }
+    assert.equal(h.page.data.info.commentCount, 2);
+    assert.equal(h.page.data.list.length, 2);
+    assert.equal(h.app.globalData.squareListDirty, undefined);
+  }
+});
+
+
+test('本人待审核或非VISIBLE行删除不减公开计数，根删除只摘单ID', () => {
+  for (const [lifecycle, approval] of [['CHECKING', 'VISIBLE'], ['PUBLISHED', 'PENDING']]) {
+    const h = loadPage();
+    readyWithComments(h, { commentCount: 17 });
+    h.page.data.list[0].lifecycle = lifecycle;
+    h.page.data.list[0].author_approval_state = approval;
+    confirmedDelete(h).success({ code: 200 });
+    assert.equal(h.page.data.info.commentCount, 17);
+    assert.deepEqual(h.page.data.list.map(row => row.id), [502]);
+  }
+});
+
+test('缺计数状态不猜，成功权威详情刷新且保留评论草稿，重复回包不重拉', () => {
+  const h = loadPage();
+  readyWithComments(h, { commentCount: 17 });
+  delete h.page.data.list[0].author_approval_state;
+  h.page.data.commentContent = '尚未提交的草稿';
+  const request = confirmedDelete(h);
+  request.success({ code: 200 });
+  assert.equal(h.page.data.info.commentCount, 17);
+  const reads = h.requests.filter(r => r.url === '/api/creativesquare/info');
+  assert.equal(reads.length, 2);
+  reads[1].success({ code: 200, data: { id: 77, memberId: 1, contents: '正文', commentCount: 16 } });
+  assert.equal(h.page.data.info.commentCount, 16);
+  assert.equal(h.page.data.commentContent, '尚未提交的草稿');
+  request.success({ code: 200 });
+  assert.equal(h.requests.filter(r => r.url === '/api/creativesquare/info').length, 2);
+});
+
+test('缺状态权威刷新失败保留原计数及评论回复草稿，沿用详情错误处理', () => {
+  for (const outcome of ['network', 'refused']) {
+    const h = loadPage();
+    readyWithComments(h, { commentCount: 17 });
+    delete h.page.data.list[0].lifecycle;
+    h.page.data.commentContent = '评论草稿';
+    h.page.data.replyContent = '回复草稿';
+    h.page.data.replyId = 502;
+    confirmedDelete(h).success({ code: 200 });
+    const refresh = h.requests.filter(r => r.url === '/api/creativesquare/info')[1];
+    assert.ok(refresh);
+    if (outcome === 'network') refresh.fail({});
+    else refresh.success({ code: 403, msg: '无法读取详情' });
+    refresh.complete();
+    assert.equal(h.page.data.info.commentCount, 17);
+    assert.equal(h.page.data.commentContent, '评论草稿');
+    assert.equal(h.page.data.replyContent, '回复草稿');
+    assert.equal(h.page.data.replyId, 502);
+    assert.equal(h.page.data.detailState, 'error');
+    assert.ok(h.page.data.detailError);
+  }
+});
+
+test('详情通过真实上一页#profile组件桥置本地脏，保留广场全局标记', () => {
+  let marked = 0;
+  const previous = { selectComponent(selector) {
+    assert.equal(selector, '#profile');
+    return { markSquareListDirty() { marked++; } };
+  } };
+  const h = loadPage({ pages: [previous, {}] });
+  readyWithComments(h);
+  confirmedDelete(h).success({ code: 200 });
+  assert.equal(marked, 1);
+  assert.equal(h.app.globalData.squareListDirty, true);
+});
+
+test('详情点赞取消与收藏取消成功标记返回列表脏，失败及在途重复tap不标', () => {
+  for (const action of ['like', 'favorite']) {
+    for (const enabled of [0, 1]) {
+      let marked = 0;
+      const h = loadPage({ pages: [{ selectComponent: () => ({ markSquareListDirty() { marked++; } }) }, {}] });
+      readyWithComments(h);
+      h.page.data.info.isLiked = enabled ? 0 : 1;
+      h.page.data.info.isBookmarked = enabled ? 0 : 1;
+      h.page.burstLike = () => {};
+      const tap = () => action === 'like'
+        ? h.page.lickClick({ currentTarget: { dataset: { type: 1 } } }) : h.page.favoriteClick();
+      tap(); tap();
+      const url = '/api/creativesquare/' + (action === 'like' ? 'like' : 'bookmark');
+      const writes = h.requests.filter(r => r.url === url);
+      assert.equal(writes.length, 1);
+      assert.equal(marked, 0);
+      assert.equal(h.app.globalData.squareListDirty, undefined);
+      writes[0].success({ code: 200, data: { isLiked: enabled, isBookmarked: enabled, likeCount: enabled, version: 2 } });
+      assert.equal(marked, 1);
+      assert.equal(h.app.globalData.squareListDirty, true);
+    }
+    for (const outcome of ['refused', 'network']) {
+      const h = loadPage();
+      readyWithComments(h);
+      if (action === 'like') h.page.lickClick({ currentTarget: { dataset: { type: 1 } } });
+      else h.page.favoriteClick();
+      const url = '/api/creativesquare/' + (action === 'like' ? 'like' : 'bookmark');
+      const write = h.requests.find(r => r.url === url);
+      if (outcome === 'refused') write.success({ code: 403, msg: '拒绝' });
+      else write.fail({});
+      assert.equal(h.app.globalData.squareListDirty, undefined);
+    }
+  }
 });

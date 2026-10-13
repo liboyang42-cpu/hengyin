@@ -68,6 +68,10 @@ class TopicPurchaseGateTest {
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "umsMemberMapper", memberMapper);
         ReflectionTestUtils.setField(service, "omsTicketMapper", ticketMapper);
+        com.chengyinhub.business.service.IProductRoleService productRoles =
+                mock(com.chengyinhub.business.service.IProductRoleService.class);
+        when(productRoles.isPlatformOwned(TOPIC_ID)).thenReturn(true);
+        ReflectionTestUtils.setField(service, "productRoleService", productRoles);
         return service;
     }
 

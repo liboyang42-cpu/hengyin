@@ -16,42 +16,134 @@ from scripts.e2e.chain_merchant_club import (
     resolve_recruit_job,
 )
 from scripts.e2e.seed_fixtures import (
+    DEFAULT_ROLE_PERMISSIONS,
     DISCOVERABLE_MERCHANTS,
     RECRUIT_JOB_TARGET,
+    VISIBLE_TOPIC_NAME,
     assert_discoverable_merchants,
     assert_no_fake_fixture_images,
     clear_fake_fixture_images,
+    seed_club_leader_capabilities,
     seed_discoverable_merchants,
     seed_merchant_node_prerequisites,
     seed_recruit_deadline_job,
+    seed_system_role_accounts,
+    seed_visible_topic,
 )
 
 
 class ChainPlatformSaleGateTest(unittest.TestCase):
-    def test_node_prerequisites_fill_only_missing_approved_fixture_identity(self):
+    def test_role_prerequisites_follow_defined_defaults_and_preserve_revocations(self):
         with sqlite3.connect(":memory:") as db:
             db.create_function("NOW", 0, lambda: "2026-09-28 00:00:00")
             db.executescript("""
                 CREATE TABLE dual (n); INSERT INTO dual VALUES (1);
-                CREATE TABLE user_permission (role,max_themes,max_events,max_coupons,
+                CREATE TABLE user_permission (
+                    role,max_themes,max_nodes_per_theme,max_events,max_coupons,
                     can_create_theme,can_create_event,can_publish_coupon,can_redeem_coupon,
-                    can_open_as_node,max_city_nodes,membership_level);
-                CREATE TABLE member_capability (member_id,capability,status,granted_at,granted_by,create_time);
+                    node_types,can_branch,can_game_mechanic,can_open_as_node,
+                    can_design_medal,can_create_group,data_scope,withdrawable,max_city_nodes,
+                    membership_level
+                );
+                CREATE TABLE member_capability (
+                    member_id,capability,status,granted_at,granted_by,create_time
+                );
                 CREATE TABLE mms_merchant (id,member_id,status,account_status,del_flag);
+                CREATE TABLE club_leader (id,member_id,status,del_flag);
                 INSERT INTO mms_merchant VALUES (8001,9002,1,1,0),(8002,9005,0,1,0),
                     (8003,9006,1,2,0),(8004,9007,1,1,1),(8005,9003,1,1,0);
+                INSERT INTO club_leader VALUES (5001,9003,1,0),(5002,9008,1,0);
             """)
             execute = lambda sql, args=(): db.execute(sql.replace("%s", "?"), args)
             seed_merchant_node_prerequisites(execute)
-            self.assertEqual([("merchant", 1, 1)], db.execute(
-                "SELECT role,can_open_as_node,max_city_nodes FROM user_permission").fetchall())
-            self.assertEqual([(9002, "merchant", 1)], db.execute(
-                "SELECT member_id,capability,status FROM member_capability").fetchall())
-            db.execute("UPDATE user_permission SET max_city_nodes=0")
-            db.execute("UPDATE member_capability SET status=0")
+            seed_club_leader_capabilities(execute)
+
+            self.assertEqual(
+                [
+                    ("club", 1, 1, 0, "theme+city", 0),
+                    ("merchant", 0, 0, 1, "store", 3),
+                    ("player", 0, 0, 0, "self", 0),
+                ],
+                db.execute(
+                    "SELECT role,can_create_event,can_design_medal,can_open_as_node,"
+                    "data_scope,max_city_nodes FROM user_permission ORDER BY role"
+                ).fetchall(),
+            )
+            self.assertEqual(3, len(DEFAULT_ROLE_PERMISSIONS))
+            self.assertEqual(
+                [
+                    (9002, "merchant", 1),
+                    (9003, "club_leader", 1),
+                    (9003, "merchant", 1),
+                    (9008, "club_leader", 1),
+                ],
+                db.execute(
+                    "SELECT member_id,capability,status FROM member_capability "
+                    "ORDER BY member_id,capability"
+                ).fetchall(),
+            )
+
+            db.execute("UPDATE user_permission SET max_city_nodes=0 WHERE role='merchant'")
+            db.execute(
+                "UPDATE member_capability SET status=0 "
+                "WHERE member_id=9003 AND capability='merchant'"
+            )
             seed_merchant_node_prerequisites(execute)
-            self.assertEqual([(0,)], db.execute("SELECT max_city_nodes FROM user_permission").fetchall())
-            self.assertEqual([(0,)], db.execute("SELECT status FROM member_capability").fetchall())
+            self.assertEqual(
+                [(0,)],
+                db.execute(
+                    "SELECT max_city_nodes FROM user_permission WHERE role='merchant'"
+                ).fetchall(),
+            )
+            self.assertEqual(
+                [(0,)],
+                db.execute(
+                    "SELECT status FROM member_capability "
+                    "WHERE member_id=9003 AND capability='merchant'"
+                ).fetchall(),
+            )
+
+    def test_system_review_accounts_and_visible_topic_are_executable_idempotent_fixtures(self):
+        with sqlite3.connect(":memory:") as db:
+            db.create_function("NOW", 0, lambda: "2026-09-28 00:00:00")
+            db.executescript("""
+                CREATE TABLE dual (n); INSERT INTO dual VALUES (1);
+                CREATE TABLE sys_user (
+                    user_id PRIMARY KEY,dept_id,user_name UNIQUE,nick_name,user_type,password,
+                    status,del_flag,create_by,create_time
+                );
+                CREATE TABLE sys_user_role (user_id,role_id,UNIQUE(user_id,role_id));
+                CREATE TABLE cms_topic (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,member_id,topic_type,product_type,name,
+                    subtitle,description,status,user_status,merchant_status,lifecycle,del_flag,
+                    is_draft,is_template,club_id,self_play,self_play_price,create_by,create_time
+                );
+            """)
+            execute = lambda sql, args=(): db.execute(sql.replace("%s", "?"), args)
+            seed_system_role_accounts(execute)
+            seed_visible_topic(execute)
+            seed_system_role_accounts(execute)
+            seed_visible_topic(execute)
+
+            self.assertEqual(
+                [
+                    ("e2e_auditor", "0", "0", 101),
+                    ("e2e_support", "0", "0", 102),
+                ],
+                db.execute(
+                    "SELECT u.user_name,u.status,u.del_flag,ur.role_id "
+                    "FROM sys_user u JOIN sys_user_role ur ON ur.user_id=u.user_id "
+                    "ORDER BY ur.role_id"
+                ).fetchall(),
+            )
+            self.assertEqual(
+                [(9003, VISIBLE_TOPIC_NAME, 2, 1, 1, 0, 1, 0)],
+                db.execute(
+                    "SELECT member_id,name,product_type,status,user_status,del_flag,"
+                    "self_play,self_play_price FROM cms_topic"
+                ).fetchall(),
+            )
+
 
     def test_fixture_images_use_explicit_empty_fallback_not_fake_relative_urls(self):
         self.assertEqual({"imgUrl": ""}, fixture_topic_image_fields())
@@ -146,7 +238,6 @@ class ChainPlatformSaleGateTest(unittest.TestCase):
         for callback, rows in bad_cases:
             with self.subTest(callback=callback, rows=rows), self.assertRaises(RuntimeError):
                 assert_paid_callback(callback, rows, "E2E-TXN-74")
-
 
 if __name__ == "__main__":
     unittest.main()

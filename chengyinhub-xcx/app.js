@@ -1,4 +1,5 @@
 // app.js
+const { installAppUpdate } = require('./utils/app-update.js');
 const modal = require('./utils/modal.js');
 const { createNetworkStatus } = require('./utils/network-status.js');
 const cyToast = require('./utils/toast.js');
@@ -9,9 +10,12 @@ const { applyTheme } = require('./utils/theme.js');
 const { createSessionStore } = require('./utils/session/session-store.js');
 const { createSessionManager } = require('./utils/session/session-manager.js');
 const { createRequestClient } = require('./utils/transport/request-client.js');
+const { readClientVersion } = require('./utils/client-version.js');
 const { createUploadClient } = require('./utils/transport/upload-client.js');
 const { createPageBoundOperation } = require('./utils/page-bound-operation.js');
 const { createConsentClient } = require('./utils/compliance/consent-client.js');
+const { createUsageConsent } = require('./utils/compliance/usage-consent.js');
+const { requestSeparateConsent } = require('./utils/compliance/separate-consent.js');
 const { captureFromQuery } = require('./utils/ticket-source.js');
 const { captureDoorScene } = require('./utils/game-door-entry.js');
 const roleGuard = require('./utils/roleGuard.js');
@@ -31,6 +35,7 @@ App({
   // 假 ready 修复(Phase 1.2):isAppReady 仅表示"初始化完成"(app 照常起、可看公共内容),
   // 不代表已登录;需要登录态的页面/动作用 getAuthorization()/getUserID() 判定真实会话。
   onLaunch(e) {
+    installAppUpdate(wx);
     const runtimeConfig = config.resolveFromWx(wx);
     // 全局基调:暗色(全站默认深空黑;原生导航栏/状态栏同步深色)。个别浅色页根节点挂 class="theme-light"。
     applyTheme('dark');
@@ -80,7 +85,7 @@ App({
         nickname: '',
 
         // M10 灰度功能开关:启动拉取 /api/config/features 覆盖,默认全关(网络异常时容错保持关闭)
-        features: { drops: false, roamNpcEvent: false, roamNpcChat: false, roamDemoPois: false, finishNearbyRoute: false, clubMembership: false, shopNpcChat: false, merchantNpcChat: false },
+        features: { drops: false, roamNpcEvent: false, roamNpcChat: false, roamDemoPois: false, finishNearbyRoute: false, clubMembership: false, shopNpcChat: false, merchantNpcChat: false, communityPostRead: false, communityPostWrite: false },
 
         // 添加胶囊按钮信息
         menuButtonInfo: {
@@ -117,6 +122,12 @@ App({
   // 修改为异步函数
   appInitial: function (e) {
     let that = this;
+    if (!that.getUsageConsent().granted()) {
+      that.loadFeatureFlags();
+      // Public initialization completes without obtaining an openid or waiting for a choice.
+      setTimeout(() => { if (!that._usageDeclined) that.openPrivacyAuthorizationPage(); }, 0);
+      return Promise.resolve();
+    }
     return new Promise((resolve, reject) => {
       that.firstLogin(e).then(() => {
         that.loadFeatureFlags(); // M10 灰度开关(不阻断初始化)
@@ -152,18 +163,35 @@ App({
   // M10 拉取灰度功能开关入 globalData.features(失败保持默认全关,不阻断启动)
   loadFeatureFlags: function () {
     var that = this;
-    try {
-      that.sendRequest({
-        url: '/api/config/features',
-        method: 'POST',
-        hideLoading: true,
-        success: function (res) {
-          if (res && (res.code == '200' || res.code == 200) && res.data) {
-            that.globalData.features = Object.assign({}, that.globalData.features, res.data);
-          }
+    var owner = String(that.getUserID() || '');
+    var authorization = that.getAuthorization();
+    var epoch = that._featureFlagsEpoch = (that._featureFlagsEpoch || 0) + 1;
+    that._communityFeatureOwner = null;
+    that.globalData.features = Object.assign({}, that.globalData.features,
+      { communityPostRead: false, communityPostWrite: false });
+    return new Promise(function (resolve) {
+      var finish = function (res) {
+        var current = epoch === that._featureFlagsEpoch
+          && owner === String(that.getUserID() || '') && authorization === that.getAuthorization();
+        if (current && res && res.code == 200 && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
+          that.globalData.features = Object.assign({}, that.globalData.features, res.data,
+            { communityPostRead: res.data.communityPostRead === true, communityPostWrite: res.data.communityPostWrite === true });
+          that._communityFeatureOwner = owner;
+          that._communityFeatureAuthorization = authorization;
         }
-      });
-    } catch (e) {}
+        resolve(current ? that.globalData.features : {});
+      };
+      try {
+        that.sendRequest({ url: '/api/config/features', method: 'POST', hideLoading: true,
+          silentError: true, timeout: 6000, success: finish, fail: function () { finish(null); },
+          successStatusAbnormal: function () { finish(null); } });
+      } catch (error) { finish(null); }
+    });
+  },
+  canUseCommunity: function (write) {
+    return this._communityFeatureOwner === String(this.getUserID() || '')
+      && this._communityFeatureAuthorization === this.getAuthorization()
+      && (this.globalData.features || {})[write ? 'communityPostWrite' : 'communityPostRead'] === true;
   },
 
   // 首登(委托单航班登录管理器)。ensureSession:已有缓存会话(openid+authorization,来自 onLaunch restore)
@@ -171,7 +199,12 @@ App({
   // 保留:开发版 mock 兜底、各失败路径原文案 toast。始终 resolve(初始化与认证解耦,不阻断 appReady)。
   firstLogin: function (e) {
     var that = this;
+    var owner = String(this.getUserID() || '');
+    var authorization = this.getAuthorization();
     return this.getSessionManager().ensureSession().then(function (r) {
+      if (r && !r.ok && r.reason === 'wxLoginFail' && that._usageDeclined) return Object.assign({}, r, { reason: 'consentDeclined' });
+      if (r && !r.ok && (r.reason === 'sessionChanged'
+          || String(that.getUserID() || '') !== owner || that.getAuthorization() !== authorization)) return r;
       // 仅"真鉴权拒绝"(服务端换 token 成功但拒登=noData)才清会话;networkFail/wxLoginFail
       // 属瞬时失败,保留刚恢复的缓存会话,避免弱网把持有效 token 的用户登出本次。
       if (r && !r.ok && r.reason === 'noData') {
@@ -183,7 +216,14 @@ App({
           : safeUserMessage(r, '登录失败，请稍后重试');
         cyToast(msg);
       }
+      if (r && r.ok) {
+        that.loadFeatureFlags();
+        that.getUsageConsent().syncPending().catch(function () {
+          console.warn('Usage consent remains pending; retry after login');
+        });
+      }
       // 不 reject:登录失败不阻断初始化(契约 #18/#19)。
+      return r;
     });
   },
   // 开发版本地 mock 会话的 token。它对真后端无效(必被判 401),所以只能撑起
@@ -204,12 +244,23 @@ App({
   // N 个并发 401 只触发一次换 token)。完成后回调 ok=true/false,对调用方语义不变。
   reLogin: function (callback) {
     var that = this;
-    this.getSessionManager().refresh().then(function (r) {
+    var owner = String(this.getUserID() || '');
+    var authorization = this.getAuthorization();
+    return this.getSessionManager().refresh().then(function (r) {
       var ok = !!(r && r.ok);
-      if (!ok) {
+      var sessionChanged = (r && r.reason === 'sessionChanged')
+        || (!ok && (String(that.getUserID() || '') !== owner || that.getAuthorization() !== authorization))
+        || (ok && typeof r.isCurrentSession === 'function' && !r.isCurrentSession());
+      if (sessionChanged) {
+        ok = false;
+        r = { ok: false, authed: false, reason: 'sessionChanged' };
+      } else if (!ok) {
         that.getSession().clearSession();
+        r = Object.assign({}, r, { sessionCleared: true });
       }
+      if (ok) that.loadFeatureFlags();
       typeof callback == 'function' && callback(ok, r);
+      return r;
     });
   },
   // 等待app初始化的方法
@@ -234,10 +285,14 @@ App({
   // 详见 utils/session/session-store.js。下方七组 setter/getter 全部委托给它,
   // 方法名保留不变,页面调用方零感知。
   getSession: function () {
+    var that = this;
     if (!this._session) {
       this._session = createSessionStore({
         target: this.globalData,
         onClear: function (identity) {
+          that._featureFlagsEpoch = (that._featureFlagsEpoch || 0) + 1;
+          that._communityFeatureOwner = null;
+          that.globalData.features = Object.assign({}, that.globalData.features, { communityPostRead: false, communityPostWrite: false });
           roleGuard.clear();
           try {
             wx.removeStorageSync('selectedAddress');
@@ -255,8 +310,8 @@ App({
       this._sessionManager = createSessionManager({
         session: that.getSession(),
         wxLogin: function () {
-          return new Promise(function (resolve, reject) {
-            wx.login({ success: resolve, fail: reject });
+          return that.getUsageConsent().ensure().then(function () {
+            return new Promise(function (resolve, reject) { wx.login({ success: resolve, fail: reject }); });
           });
         },
         exchangeCode: function (code) {
@@ -291,7 +346,9 @@ App({
       this._requestClient = createRequestClient({
         wxRequest: function (opts) { return wx.request(opts); },
         getBaseUrl: function () { return that.globalData.siteBaseUrl; },
+        getClientVersion: function () { return readClientVersion(wx); },
         getAuthorization: function () { return that.getAuthorization(); },
+        getUserID: function () { return that.getUserID(); },
         reLogin: function (cb) { that.reLogin(cb); },
         showToast: function (msg) { cyToast(msg); },
         hideToast: function () { that.hideToast(); },
@@ -309,16 +366,20 @@ App({
       this._uploadClient = createUploadClient({
         wxUploadFile: function (opts) { return wx.uploadFile(opts); },
         getBaseUrl: function () { return that.globalData.siteBaseUrl; },
+        getClientVersion: function () { return readClientVersion(wx); },
+        getUserID: function () { return that.getUserID(); },
         getAuthorization: function () { return that.getAuthorization(); }
       });
     }
     return this._uploadClient;
   },
-  // 原生选择/裁剪可能比页面活得更久；统一监视发起页面，离页即 abort。
+  // 原生选择/裁剪可能比页面和账号活得更久；离页或换号即 abort。
   createPageBoundOperation: function () {
+    var that = this;
     var pages = getCurrentPages();
     return createPageBoundOperation({
       owner: pages[pages.length - 1] || null,
+      getUserID: function () { return that.getUserID(); },
       getPages: function () { return getCurrentPages(); }
     });
   },
@@ -326,11 +387,30 @@ App({
     if (!this._consentClient) {
       var that = this;
       this._consentClient = createConsentClient({
-        sendRequest: function (options) { that.sendRequest(options); }
+        sendRequest: function (options) { that.sendRequest(options); },
+        getUserID: function () { return that.getUserID(); },
+        getPending: function (key) { try { return wx.getStorageSync('cy_consent_retry:' + key); } catch (e) { return null; } },
+        setPending: function (key, value) { try { if (value) wx.setStorageSync('cy_consent_retry:' + key, value); else wx.removeStorageSync('cy_consent_retry:' + key); } catch (e) {} }
       });
     }
     return this._consentClient;
   },
+  getUsageConsent: function () {
+    if (!this._usageConsent) {
+      var that = this;
+      this._usageConsent = createUsageConsent({wx: wx,
+        openGate: function () { that._usageDeclined = false; that.openPrivacyAuthorizationPage(); },
+        resolveNative: function (result) { that.resolvePrivacyAuthorization(result); },
+        login: function () { return that.firstLogin(); }, getUserID: function () { return that.getUserID(); },
+        getAuthorization: function () { return that.getAuthorization(); },
+        record: function (input) { return that.recordConsent(input); }
+      });
+    }
+    return this._usageConsent;
+  },
+  agreeUsageConsent: function (event, serviceChecked) { return this.getUsageConsent().agree(event, serviceChecked); },
+  declineUsageConsent: function () { this._usageDeclined = true; this.getUsageConsent().refuse(); },
+  requestSeparateConsent: function (feature, isCurrent) { return requestSeparateConsent(this, wx, feature, isCurrent); },
   recordConsent: function (input) {
     return this.getConsentClient().record(input);
   },
@@ -369,10 +449,14 @@ App({
     resolvers.forEach(function (resolve) { resolve(result); });
   },
   hasPendingPrivacyAuthorization: function () {
-    return !!(this._privacyResolvers && this._privacyResolvers.length);
+    return !!(this._privacyResolvers && this._privacyResolvers.length) || !this.getUsageConsent().granted();
   },
   setAuthorization: function (authorization) { this.getSession().setAuthorization(authorization); },
-  setUserID: function (user_id) { this.getSession().setUserID(user_id); },
+  setUserID: function (user_id) {
+    var changed = String(user_id || '') !== String(this.getUserID() || '');
+    this.getSession().setUserID(user_id);
+    if (changed) this.loadFeatureFlags();
+  },
   setOpenID: function (open_id) { this.getSession().setOpenID(open_id); },
   setUserType: function (user_type) { this.getSession().setUserType(user_type); },
   setAvatar: function (avatar) { this.getSession().setAvatar(avatar); },
@@ -512,6 +596,7 @@ App({
     var doUpload = function (filePaths) {
       if (operation.isAborted()) return;
       if (typeof options.onUploadStart === 'function') options.onUploadStart(filePaths);
+      if (operation.isAborted()) return;
       operation.onAbort(function () { cyLoading.hide(); });
       cyLoading.show('提交中');
       operation.attach(that.getUploadClient().uploadAll(filePaths, {

@@ -75,6 +75,10 @@ class ClubGroupCodeRoleScopeTest {
         ReflectionTestUtils.setField(memberService, "clubAccessService", access);
 
         when(clubs.selectClubById(CLUB)).thenReturn(activeClub());
+        when(accounts.selectRolePermissionSubject(org.mockito.ArgumentMatchers.anyLong())).thenAnswer(call -> {
+            com.chengyinhub.business.domain.UmsMember m = new com.chengyinhub.business.domain.UmsMember();
+            m.setId(call.getArgument(0)); m.setRole("club"); m.setStatus(1L); m.setDelFlag(0); return m;
+        });
         when(accounts.lockActiveMemberById(any())).thenAnswer(call -> call.getArgument(0));
         when(members.selectByClubAndMember(CLUB, MEMBER)).thenReturn(activeLegacyAdmin());
         when(assignments.selectActiveForAccess(eq(CLUB), eq(MEMBER), eq(null), any(Date.class)))

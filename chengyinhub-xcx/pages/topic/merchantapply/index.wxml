@@ -29,17 +29,20 @@
     bind:back="onNavBack"
     bind:requestclose="onSheetRequestClose"
   >
-    <view class="ma-load" wx:if="{{loadState === 'loading'}}">
+    <view class="ma-load" wx:if="{{loadState === 'login'}}">
+      <cy-error fill size="lg" title="请先登录" sub="{{loadError}}" retry="重新登录" bind:retry="retryLoadRegistration" />
+    </view>
+    <view class="ma-load" wx:elif="{{loadState === 'loading'}}">
       <cy-skeleton type="form-section" count="{{3}}" />
     </view>
 
     <view class="ma-load" wx:elif="{{loadState === 'error'}}">
-      <cy-error fill size="lg" title="报名信息没有加载出来" sub="{{loadError}}"
+      <cy-error load-failure fill size="lg" title="报名信息没有加载出来" sub="{{loadError}}"
         retry="重试" bind:retry="retryLoadRegistration" auto-back />
     </view>
 
     <view class="ma-load" wx:elif="{{loadState === 'permission'}}">
-      <cy-error fill size="lg" title="这份报名现在不能修改" sub="{{loadError || '当前状态不能修改'}}"
+      <cy-error fill size="lg" title="{{registrationId ? '这份报名现在不能修改' : '当前账号没有商家报名权限'}}" sub="{{loadError || '当前状态不能修改'}}"
         retry="" bind:back="goMore" auto-back custom-back />
     </view>
 

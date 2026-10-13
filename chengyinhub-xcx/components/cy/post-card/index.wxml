@@ -34,12 +34,11 @@
       </view>
     </view>
 
-    <view class="post-card__audit" wx:if="{{post.status == 2}}">未通过审核 · 仅自己可见</view>
+    <view class="post-card__audit" wx:if="{{post.lifecycleLabel || (!post.lifecycle && post.status == 2)}}">{{post.lifecycleLabel || '未通过审核 · 仅自己可见'}}</view>
     <view class="post-card__body" wx:if="{{post.contents}}" catchtap="emitDetail" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">
-      <view class="post-card__text">{{post.contents}}<text wx:if="{{post.link}}" class="post-card__link">{{post.link}}</text></view>
-      <!-- 正文按稿夹到 2 行。没有展开态(那要改 js),这行只是「还有下文」的提示,点它跟点卡片一样进详情。
-           40 字 ≈ 主栏两行的容量,短于此不会被夹,不该出现「展开」。 -->
-      <text class="post-card__expand" wx:if="{{post.contents.length > 40}}">展开</text>
+      <view class="post-card__text {{textExpanded ? 'post-card__text--expanded' : ''}}">{{post.contents}}<text wx:if="{{post.link}}" class="post-card__link">{{post.link}}</text></view>
+      <text class="post-card__expand" wx:if="{{expandableText && post.contents.length > 40}}" catchtap="toggleText" aria-role="button" aria-label="{{textExpanded ? '收起正文' : '展开正文'}}" aria-expanded="{{textExpanded}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">{{textExpanded ? '收起' : '展开'}}</text>
+      <text class="post-card__expand" wx:elif="{{post.contents.length > 40}}">展开</text>
     </view>
 
     <!-- ★ Roam / Template 的正文块在组件里出,页面不判 variant(帖文卡 C 系列拍板)。

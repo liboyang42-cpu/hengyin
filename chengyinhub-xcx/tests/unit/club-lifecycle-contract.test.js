@@ -71,7 +71,7 @@ test('旧 role 数字不能绕过后端，但 detail 权威管理员与新权限
   assert.match(js, /this\.revokeClubAccess\('loading'(?:,\s*true)?\)/)
   assert.match(js, /that\.revokeClubAccess\('error'(?:,\s*true)?\)/)
   assert.match(js, /const canManageClub = has\('club:write'\)/)
-  assert.match(wxml, /clubAccessState === 'error'[\s\S]*内容治理入口已安全关闭/)
+  assert.doesNotMatch(wxml, /内容治理入口已安全关闭/, '权限读取失败留白，动作仍由canModerateContent=false关闭')
   assert.doesNotMatch(wxml, /myIsAdmin \|\| item\.authorMemberId/)
 })
 

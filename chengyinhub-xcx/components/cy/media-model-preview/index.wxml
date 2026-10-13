@@ -1,0 +1,9 @@
+<xr-scene bind:ready="handleReady">
+  <xr-assets bind:loaded="handleLoaded" bind:error="handleError">
+    <xr-asset-load type="gltf" asset-id="author-model" src="{{src}}" />
+  </xr-assets>
+  <xr-light type="ambient" color="1 1 1" intensity="1" />
+  <xr-light type="directional" rotation="40 0 0" color="1 1 1" intensity="2" />
+  <xr-node rotation="0 {{angle}} 0"><xr-gltf node-id="author-model-node" model="author-model" anim-autoplay /></xr-node>
+  <xr-camera position="0 0.75 3" clear-color="0.1 0.1 0.1 1" />
+</xr-scene>

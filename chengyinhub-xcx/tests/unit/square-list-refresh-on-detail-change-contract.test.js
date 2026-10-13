@@ -35,6 +35,7 @@ function loadList(opts) {
   let definition = null;
   const absolutePath = path.join(ROOT, LIST_REL);
   const app = {
+    canUseCommunity: () => true, // Current-account server-open fixture.
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
     getUserID: () => 1,
     getAvatar: () => '',
@@ -59,7 +60,7 @@ function loadList(opts) {
     console,
     getApp: () => app,
     Page: (config) => { definition = config; },
-    require: createRequire(absolutePath),
+    require: id => id.includes('community-post-api') ? require('../helpers/community-page-seam') : createRequire(absolutePath)(id),
     setTimeout() {}, clearTimeout() {}, setInterval() {}, clearInterval() {},
     wx: wxApi,
   }, { filename: absolutePath });
@@ -71,6 +72,8 @@ function loadList(opts) {
       if (done) done.call(this);
     },
   });
+  // This harness represents an already loaded, server-open cached list.
+  page.data.communityPostRead = true; page.data.communityPostWrite = true; page.data.listLoading = false;
   return { page, requests, app };
 }
 
@@ -107,6 +110,7 @@ function loadDetail(prev, opts) {
   let definition = null;
   const absolutePath = path.join(ROOT, DETAIL_REL);
   const app = {
+    canUseCommunity: () => true, // Current-account server-open fixture.
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
     getUserID: () => 1,
     getAvatar: () => '', getNickname: () => '',
@@ -127,7 +131,7 @@ function loadDetail(prev, opts) {
     // A-RPT-5:分享直开时栈里只有详情本页(opts.share),没有上一页实例。
     getCurrentPages: () => (opts && opts.share ? [page] : [prev, page]),
     Page: (config) => { definition = config; },
-    require: createRequire(absolutePath),
+    require: id => id.includes('community-post-api') ? require('../helpers/community-page-seam') : createRequire(absolutePath)(id),
     setTimeout() {}, clearTimeout() {}, setInterval() {}, clearInterval() {},
     wx: wxApi,
   }, { filename: DETAIL_REL });
@@ -155,7 +159,7 @@ test('详情:删除成功调用上一页 markSquareListDirty', () => {
 
 test('详情:编辑保存成功也置脏标(列表正文同样会过期)', () => {
   const source = read(DETAIL_REL);
-  const onComposePublished = source.slice(source.indexOf('onComposePublished()'), source.indexOf('markListDirty() {'));
+  const onComposePublished = source.slice(source.indexOf('onComposePublished('), source.indexOf('markListDirty() {'));
   assert.match(onComposePublished, /this\.markListDirty\(\)/, '编辑保存成功必须置脏标');
 });
 
@@ -227,7 +231,7 @@ test('A-RPT-5 负控:详情没上一页时去掉 app 级脏标,再进列表不�
 test('负控:去掉列表脏标分支,置脏标后仍不刷 ⇒ 用例真红', () => {
   const source = read(LIST_REL);
   const broken = source.replace(
-    '    const globalDirty = !!(app.globalData && app.globalData.squareListDirty);\n    if (this._squareListDirty || globalDirty) {\n      this._squareListDirty = false;\n      if (app.globalData) app.globalData.squareListDirty = false;\n      this.refreshList();\n    }\n',
+    '    const globalDirty = !!(app.globalData && app.globalData.squareListDirty);\n    const feedVersion = app.globalData && app.globalData.squareListDirtyVersion || 0;\n    if ((this._squareListDirty || globalDirty || feedVersion > (this._communityFeedVersion || 0)) && !this.data.isRefreshing) {\n      this._communityFeedVersion = feedVersion;\n      this._squareListDirty = false;\n      if (app.globalData) app.globalData.squareListDirty = false;\n      this.refreshList();\n    }\n',
     '',
   );
   assert.notEqual(broken, source, '负控锚点失效:脏标分支未命中');
@@ -236,4 +240,229 @@ test('负控:去掉列表脏标分支,置脏标后仍不刷 ⇒ 用例真红', (
   page.markSquareListDirty();
   page.onShow();
   assert.equal(feedRequests(requests).length, 0, '负控必须真的把脏标分支摘掉');
+});
+
+test('每个广场实例读取自己的社区版本，旧布尔脏标已消费也能刷新', () => {
+  const first = loadList(), second = loadList();
+  const shared = { squareListDirty: true, squareListDirtyVersion: 1 };
+  first.app.globalData = shared; second.app.globalData = shared;
+  first.page.onShow();
+  assert.equal(shared.squareListDirty, false);
+  second.page.onShow();
+  assert.equal(feedRequests(first.requests).length, 1);
+  assert.equal(feedRequests(second.requests).length, 1);
+  first.page.onShow(); second.page.onShow();
+  assert.equal(feedRequests(first.requests).length, 1);
+  assert.equal(feedRequests(second.requests).length, 1);
+  shared.squareListDirtyVersion = 2;
+  first.page.onShow(); second.page.onShow();
+  assert.equal(first.page._communityFeedVersion, 1, '在途不能消费尚未刷新的版本');
+  for (const h of [first, second]) feedRequests(h.requests)[0].complete();
+  first.page.onShow(); second.page.onShow();
+  assert.equal(feedRequests(first.requests).length, 2);
+  assert.equal(feedRequests(second.requests).length, 2);
+});
+
+const detailReads = h => h.requests.filter(r => r.url === '/api/creativesquare/info');
+const commentReads = h => h.requests.filter(r => r.url === '/api/comment/list');
+function cachedDetail() {
+  const h = loadDetail({});
+  Object.assign(h.page.data, { id: 56, detailState: 'ready', info: { id: 56, version: 1, contents: 'old' } });
+  return h;
+}
+function finishDetail(request, data) {
+  request.success({ code: 200, data });
+  request.complete();
+}
+function finishComments(request, rows, hasMore = false) {
+  request.success({ code: 200, data: { rows, hasMore } });
+  request.complete();
+}
+
+test('cached outer detail removes a comment deleted from another detail', () => {
+  const h = cachedDetail();
+  Object.assign(h.page.data, { list: [{ id: 901, contents: 'deleted' }], commentsState: 'ready' });
+  h.app.globalData.squareListDirtyVersion = 1;
+  h.page.onShow();
+  assert.equal(commentReads(h).length, 1);
+  finishDetail(detailReads(h)[0], { id: 56, version: 2, commentCount: 0 });
+  finishComments(commentReads(h)[0], []);
+  assert.equal(h.page.data.list.length, 0);
+  assert.equal(h.page.data.nodata, true);
+  h.page.onShow();
+  assert.equal(commentReads(h).length, 1);
+});
+
+test('comment read failure preserves old rows and retries independently of successful body read', () => {
+  for (const failure of ['network', 'business', 'invalid']) {
+    const h = cachedDetail();
+    h.page.data.list = [{ id: 901 }];
+    h.app.globalData.squareListDirtyVersion = 1;
+    h.page.onShow();
+    assert.equal(commentReads(h).length, 1, failure);
+    finishDetail(detailReads(h)[0], { id: 56, version: 2 });
+    const request = commentReads(h)[0];
+    if (failure === 'network') request.fail({});
+    else request.success(failure === 'business' ? { code: 409 } : { code: 200, data: { rows: ['invalid'] } });
+    request.complete();
+    assert.equal(h.page.data.list[0].id, 901, failure);
+    h.page.onShow();
+    assert.equal(detailReads(h).length, 1, failure);
+    assert.equal(commentReads(h).length, 2, failure);
+    finishComments(commentReads(h)[1], [{ id: 902 }]);
+    assert.equal(h.page.data.list[0].id, 902, failure);
+    h.page.onShow();
+    assert.equal(commentReads(h).length, 2, failure);
+  }
+});
+
+test('successful comment refresh is not repeated when the body refresh failed', () => {
+  const h = cachedDetail();
+  h.app.globalData.squareListDirtyVersion = 1;
+  h.page.onShow();
+  assert.equal(commentReads(h).length, 1);
+  detailReads(h)[0].fail(); detailReads(h)[0].complete();
+  finishComments(commentReads(h)[0], [{ id: 902 }]);
+  h.page.onShow();
+  assert.equal(detailReads(h).length, 2);
+  assert.equal(commentReads(h).length, 1);
+});
+
+test('repeated show does not abort the current revision comment refresh', () => {
+  const h = cachedDetail();
+  h.app.globalData.squareListDirtyVersion = 1;
+  h.page.onShow(); h.page.onShow();
+  assert.equal(commentReads(h).length, 1);
+  assert.equal(h.page._commentsRequestId, 1);
+});
+
+test('return after another mutation replaces an older comment read and rejects its late result', () => {
+  const h = cachedDetail();
+  h.app.globalData.squareListDirtyVersion = 1;
+  h.page.getList(1, true);
+  const old = commentReads(h)[0];
+  h.app.globalData.squareListDirtyVersion = 2;
+  h.page.onShow();
+  assert.equal(commentReads(h).length, 2);
+  finishComments(commentReads(h)[1], [{ id: 903 }]);
+  finishComments(old, [{ id: 901 }]);
+  assert.equal(h.page.data.list[0].id, 903);
+});
+
+test('changed revision replaces load-more instead of keeping deleted first-page comments', () => {
+  const h = cachedDetail();
+  h.page.getList(1);
+  finishComments(commentReads(h)[0], [{ id: 901 }], true);
+  h.app.globalData.squareListDirtyVersion = 1;
+  h.page.getList(2);
+  const more = commentReads(h)[1];
+  h.page.onShow();
+  assert.equal(commentReads(h).length, 3);
+  assert.equal(commentReads(h)[2].data.pageNum, 1);
+  finishComments(commentReads(h)[2], [{ id: 902 }]);
+  finishComments(more, [{ id: 903 }]);
+  assert.deepEqual(h.page.data.list.map(row => row.id), [902]);
+  assert.equal(h.page.data.page_no, 1);
+});
+
+test('new mutation during comment read remains pending until a subsequent return', () => {
+  const h = cachedDetail();
+  h.app.globalData.squareListDirtyVersion = 1;
+  h.page.onShow();
+  assert.equal(commentReads(h).length, 1);
+  h.app.globalData.squareListDirtyVersion = 2;
+  finishComments(commentReads(h)[0], [{ id: 902 }]);
+  h.page.onShow();
+  assert.equal(commentReads(h).length, 2);
+});
+
+test('page-two response never marks older first-page comments as current', () => {
+  const h = cachedDetail();
+  h.page.getList(1);
+  finishComments(commentReads(h)[0], [{ id: 901 }], true);
+  h.app.globalData.squareListDirtyVersion = 1;
+  h.page.getList(2);
+  finishComments(commentReads(h)[1], [{ id: 902 }]);
+  h.page.onShow();
+  assert.equal(commentReads(h).length, 3);
+  assert.equal(commentReads(h)[2].data.pageNum, 1);
+});
+
+test('unchanged closed or editing detail does not start automatic comment reads', () => {
+  for (const state of ['unchanged', 'missing', 'unloaded', 'compose']) {
+    const h = cachedDetail();
+    if (state !== 'unchanged') h.app.globalData.squareListDirtyVersion = 1;
+    if (state === 'missing') h.page.data.id = null;
+    if (state === 'unloaded') h.page._unloaded = true;
+    if (state === 'compose') h.page.data.composeShow = true;
+    h.page.onShow();
+    assert.equal(commentReads(h).length, 0, state);
+  }
+});
+
+test('cached outer detail reads the saved body once after another detail edits', () => {
+  const h = cachedDetail();
+  h.app.globalData.squareListDirtyVersion = 1;
+  h.page.onShow();
+  h.page.onShow();
+  assert.equal(detailReads(h).length, 1);
+  finishDetail(detailReads(h)[0], { id: 56, version: 2, contents: 'new' });
+  assert.equal(h.page.data.info.contents, 'new');
+  h.page.onShow();
+  assert.equal(detailReads(h).length, 1);
+});
+
+test('failed detail refresh retains the old body and retries on return', () => {
+  const h = cachedDetail();
+  h.app.globalData.squareListDirtyVersion = 1;
+  h.page.onShow();
+  const request = detailReads(h)[0];
+  request.fail();
+  request.complete();
+  assert.equal(h.page.data.info.contents, 'old');
+  h.page.onShow();
+  assert.equal(detailReads(h).length, 2);
+});
+
+test('business failure leaves the detail revision pending', () => {
+  const h = cachedDetail();
+  h.app.globalData.squareListDirtyVersion = 1;
+  h.page.onShow();
+  const request = detailReads(h)[0];
+  request.success({ code: 409, msg: 'conflict' });
+  request.complete();
+  h.page.onShow();
+  assert.equal(detailReads(h).length, 2);
+});
+
+test('a newer revision arriving during a request is refreshed on the next return', () => {
+  const h = cachedDetail();
+  h.app.globalData.squareListDirtyVersion = 1;
+  h.page.onShow();
+  h.app.globalData.squareListDirtyVersion = 2;
+  finishDetail(detailReads(h)[0], { id: 56, version: 2, contents: 'first' });
+  h.page.onShow();
+  assert.equal(detailReads(h).length, 2);
+  finishDetail(detailReads(h)[1], { id: 56, version: 3, contents: 'second' });
+  h.page.onShow();
+  assert.equal(detailReads(h).length, 2);
+});
+
+test('unchanged detail never fetches just because it is shown', () => {
+  const h = cachedDetail();
+  h.page.onShow();
+  h.page.onShow();
+  assert.equal(detailReads(h).length, 0);
+});
+
+test('missing id unloaded page and open composer do not trigger background reads', () => {
+  for (const state of ['missing', 'unloaded', 'compose']) {
+    const h = cachedDetail();
+    h.app.globalData.squareListDirtyVersion = 1;
+    if (state === 'missing') h.page.data.id = null;
+    if (state === 'unloaded') h.page._unloaded = true;
+    if (state === 'compose') h.page.data.composeShow = true;
+    h.page.onShow();
+    assert.equal(detailReads(h).length, 0, state);
+  }
 });

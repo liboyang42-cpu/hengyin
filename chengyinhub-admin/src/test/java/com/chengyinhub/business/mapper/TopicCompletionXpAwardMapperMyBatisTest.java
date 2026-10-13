@@ -42,7 +42,7 @@ class TopicCompletionXpAwardMapperMyBatisTest
              Statement statement = session.getConnection().createStatement()) {
             statement.execute("create table topic_completion_xp_award (id bigint auto_increment primary key, " +
                     "member_id bigint not null, topic_id bigint not null, xp_amount int not null, " +
-                    "granted_at timestamp not null, create_time timestamp not null, unique(member_id, topic_id))");
+                    "granted_at timestamp not null, create_time timestamp not null, earned_exp_id bigint, unique(member_id, topic_id))");
         }
     }
 
@@ -59,6 +59,9 @@ class TopicCompletionXpAwardMapperMyBatisTest
             TopicCompletionAwardVO fact = mapper.selectOne(9L, 77L);
             assertEquals(36, fact.getEarnedXp());
             assertEquals(grantedAt, fact.getEarnedXpAt());
+            assertEquals(1, mapper.linkEarnedExp(9L, 77L, 901L));
+            assertEquals(901L, mapper.selectEarnedExpId(9L, 77L));
+            assertEquals(0, mapper.linkEarnedExp(9L, 77L, 902L), "不能替换原笔获得明细");
             assertThrows(org.apache.ibatis.exceptions.PersistenceException.class,
                     () -> mapper.insert(9L, 77L, 36, grantedAt),
                     "同一玩家同一期不能落第二条 XP 发放事实");

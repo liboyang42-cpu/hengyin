@@ -150,6 +150,36 @@ public class MerchantCommerceService implements IMerchantCommerceService {
         return true;
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void reconcileOrder(String outTradeNo) {
+        OmsOrder order = orderMapper.selectOmsOrderByOrderSn(outTradeNo);
+        if (order == null || !Long.valueOf(0L).equals(order.getStatus())) return;
+        requireBizType(order.getBizType());
+        if (!supportsOutTradeNo(outTradeNo) || !bizMatchesPrefix(order.getBizType(), outTradeNo)) {
+            throw new IllegalStateException("商业化订单类型与单号不一致");
+        }
+        Map<String, String> observed = wechatPayService.queryOrderStatus(outTradeNo);
+        if (observed == null || !outTradeNo.equals(observed.get("out_trade_no"))) {
+            throw new IllegalStateException("商业化查单结果无法确认");
+        }
+        String state = observed.get("trade_state");
+        if ("SUCCESS".equals(state)) {
+            if (!"CNY".equals(observed.get("currency")) || observed.get("total") == null
+                    || !observed.get("total").matches("[0-9]{1,10}")) {
+                throw new IllegalStateException("商业化支付金额或币种无法确认");
+            }
+            if (!handlePaidOrder(outTradeNo, true, Integer.valueOf(observed.get("total")),
+                    observed.get("transaction_id"))) {
+                throw new IllegalStateException("商业化已支付订单补记失败");
+            }
+        } else if ("CLOSED".equals(state) || "REVOKED".equals(state)) {
+            orderMapper.markCommerceOrderClosed(order.getId());
+        } else if (!"NOTPAY".equals(state) && !"USERPAYING".equals(state) && !"PAYERROR".equals(state)) {
+            throw new IllegalStateException("商业化支付状态无法确认");
+        }
+    }
+
     public Entitlement entitlement(Long memberId, String role, String entitlementType, int currentUsage) {
         int base = 0;
         UserPermission permission = permissionService.getByRole(role);

@@ -1,0 +1,88 @@
+package com.chengyinhub.business.service.impl;
+
+import com.chengyinhub.common.core.redis.RedisCache;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+import org.slf4j.LoggerFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+class AlarmThrottleTest {
+    @Test void oneAtomicEventLeaseLimitsAttemptsAndExpiryAllowsRetry() {
+        RedisCache redis = mock(RedisCache.class);
+        when(redis.setIfAbsent(eq("alarm:attempt:monitor.audit.backlog"), eq("1"), eq(600), eq(TimeUnit.SECONDS)))
+                .thenReturn(true, false, true);
+        AtomicInteger calls = new AtomicInteger();
+        AlarmService alarm = service(redis, calls, 200, "https://alerts.example.test/stub");
+        for (int i = 0; i < 3; i++) alarm.alarmThrottled("monitor.audit.backlog", "backlog", "taskIds=[1]");
+        assertEquals(2, calls.get());
+        verify(redis, times(3)).setIfAbsent("alarm:attempt:monitor.audit.backlog", "1", 600, TimeUnit.SECONDS);
+    }
+
+    @Test void differentFixedEventKeysRemainIndependent() {
+        RedisCache redis = mock(RedisCache.class);
+        when(redis.setIfAbsent(anyString(), any(), eq(600), eq(TimeUnit.SECONDS))).thenReturn(true);
+        AtomicInteger calls = new AtomicInteger();
+        AlarmService alarm = service(redis, calls, 200, "https://alerts.example.test/stub");
+        alarm.alarmThrottled("monitor.withdraw.stuck", "stuck", "withdrawIds=[1]");
+        alarm.alarmThrottled("monitor.withdraw.manual", "manual", "withdrawIds=[2]");
+        assertEquals(2, calls.get());
+        verify(redis).setIfAbsent("alarm:attempt:monitor.withdraw.stuck", "1", 600, TimeUnit.SECONDS);
+        verify(redis).setIfAbsent("alarm:attempt:monitor.withdraw.manual", "1", 600, TimeUnit.SECONDS);
+    }
+
+    @Test void nullOrFailedRedisIsUnknownAndNeverSuppressesAnAttempt() {
+        RedisCache redis = mock(RedisCache.class);
+        when(redis.setIfAbsent(anyString(), any(), eq(600), eq(TimeUnit.SECONDS)))
+                .thenReturn(null).thenThrow(new IllegalStateException("synthetic private details"));
+        AtomicInteger calls = new AtomicInteger();
+        AlarmService alarm = service(redis, calls, 200, "https://alerts.example.test/stub");
+        Logger logger = (Logger) LoggerFactory.getLogger(AlarmService.class);
+        ListAppender<ILoggingEvent> logs = new ListAppender<>(); logs.start(); logger.addAppender(logs);
+        try {
+            alarm.alarmThrottled("monitor.metrics.sample", "sample", "source=app");
+            alarm.alarmThrottled("monitor.metrics.sample", "sample", "source=app");
+        } finally { logger.detachAppender(logs); logs.stop(); }
+        assertEquals(2, calls.get());
+        assertTrue(logs.list.stream().anyMatch(event -> event.getFormattedMessage().contains("IllegalStateException")));
+        assertFalse(logs.list.stream().anyMatch(event -> event.getFormattedMessage().contains("synthetic private details")));
+        assertTrue(logs.list.stream().allMatch(event -> event.getThrowableProxy() == null));
+    }
+
+    @Test void leaseDoesNotTurnMissingSinkOrRejectedHttpIntoDelivery() {
+        RedisCache redis = mock(RedisCache.class);
+        when(redis.setIfAbsent(anyString(), any(), eq(600), eq(TimeUnit.SECONDS))).thenReturn(true);
+        AtomicInteger calls = new AtomicInteger();
+        AlarmService missing = service(redis, calls, 200, "");
+        missing.alarmThrottled("monitor.audit.backlog", "backlog", "taskIds=[1]");
+        assertEquals(0, calls.get());
+        assertEquals(AlarmService.AlarmDelivery.SKIPPED_NOT_CONFIGURED, missing.deliver("backlog", "taskIds=[1]"));
+        AlarmService failed = service(redis, calls, 503, "https://alerts.example.test/stub");
+        failed.alarmThrottled("monitor.audit.backlog", "backlog", "taskIds=[1]");
+        assertEquals(1, calls.get());
+        assertEquals(AlarmService.AlarmDelivery.FAILED, failed.deliver("backlog", "taskIds=[1]"));
+    }
+
+    @Test void arbitraryPayloadCannotBecomeAnUnboundedOrSensitiveRedisKey() {
+        RedisCache redis = mock(RedisCache.class);
+        AtomicInteger calls = new AtomicInteger();
+        AlarmService alarm = service(redis, calls, 200, "https://alerts.example.test/stub");
+        assertThrows(IllegalArgumentException.class, () -> alarm.alarmThrottled("https://invalid.example/path", "title", "detail"));
+        verifyNoInteractions(redis);
+        assertEquals(0, calls.get());
+    }
+
+    private AlarmService service(RedisCache redis, AtomicInteger calls, int status, String sink) {
+        AlarmService alarm = new AlarmService((url, body) -> {
+            calls.incrementAndGet(); return new TransportResponse(status, "{\"errcode\":0}");
+        }, sink, "");
+        ReflectionTestUtils.setField(alarm, "redisCache", redis);
+        return alarm;
+    }
+}

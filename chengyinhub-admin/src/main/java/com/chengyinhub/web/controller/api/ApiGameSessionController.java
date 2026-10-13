@@ -1,10 +1,16 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.annotation.RateLimiter;
+import com.chengyinhub.common.annotation.Log;
+import com.chengyinhub.common.enums.BusinessType;
+import com.chengyinhub.common.enums.LimitType;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
 import com.chengyinhub.business.domain.dto.GameActorContext;
 import com.chengyinhub.business.domain.dto.GameSessionCommand;
+import com.chengyinhub.business.domain.dto.GameCommandReceiptView;
 import com.chengyinhub.business.service.GameSessionException;
 import com.chengyinhub.business.service.IGameSessionRuntimeService;
 import com.chengyinhub.common.core.controller.BaseController;
@@ -20,6 +26,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.LinkedHashMap;
@@ -76,6 +83,8 @@ public class ApiGameSessionController extends BaseController {
     }
 
     @Operation(summary = "提交带版本和幂等键的游戏命令")
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
+    @Log(title = "游戏场次操作", businessType = BusinessType.UPDATE, isSaveRequestData = false, isSaveResponseData = false)
     @PostMapping("/command")
     public AjaxResult command(@RequestBody GameSessionCommand command) {
         GameActorContext commandActor = null;
@@ -84,7 +93,10 @@ public class ApiGameSessionController extends BaseController {
             return success(runtimeService.command(commandActor, command));
         } catch (GameSessionException e) {
             try {
-                if (commandActor != null) runtimeService.recordFailure(commandActor, command, e);
+                if (commandActor != null) {
+                    GameCommandReceiptView receipt = runtimeService.recordFailure(commandActor, command, e);
+                    if (receipt != null) return success(receipt);
+                }
             } catch (RuntimeException auditError) {
                 log.warn("Game session failure receipt could not be recorded", auditError);
             }
@@ -96,14 +108,55 @@ public class ApiGameSessionController extends BaseController {
 
     @Operation(summary = "按活动和请求编号读取权威回执")
     @GetMapping("/receipt")
-    public AjaxResult receipt(String activityId, String requestId) {
+    public AjaxResult receipt(String activityId, String requestId, @RequestParam(required = false) String perspective) {
         try {
-            return success(runtimeService.receipt(actor(null), Convert.toLong(activityId, 0L), requestId));
+            return success(runtimeService.receipt(actor(perspective), Convert.toLong(activityId, 0L), requestId));
         } catch (GameSessionException e) {
             return gameError(e);
         } catch (RuntimeException e) {
             return internalError("receipt", e);
         }
+    }
+
+    public AjaxResult receipt(String activityId, String requestId) { return receipt(activityId, requestId, null); }
+
+    @Operation(summary = "共享运行预览，不提交状态")
+    @RateLimiter(time = 10, count = 60, limitType = LimitType.MEMBER)
+    @PostMapping("/shared/preview")
+    public AjaxResult sharedPreview(@RequestBody GameSessionCommand command) {
+        try {
+            if (command == null) throw new GameSessionException("GAME_BAD_REQUEST", "缺少预览请求");
+            return success(runtimeService.sharedPreview(actor("PLAYER"), command.getActivityId(), command.getAction(), command.getPayload()));
+        } catch (GameSessionException e) { return gameError(e); }
+        catch (RuntimeException e) { return internalError("sharedPreview", e); }
+    }
+
+    @Operation(summary = "本场授权运营人员查看共享控制台")
+    @GetMapping("/shared/control")
+    public AjaxResult sharedControl(String activityId) {
+        try { return success(runtimeService.sharedControlView(actor("CLUB"), Convert.toLong(activityId, 0L))); }
+        catch (GameSessionException e) { return gameError(e); }
+        catch (RuntimeException e) { return internalError("sharedControl", e); }
+    }
+
+    @Operation(summary = "本场授权运营人员导出高水位与人工账")
+    @GetMapping("/shared/export")
+    public AjaxResult sharedExport(String activityId) {
+        try { return success(runtimeService.exportSharedRun(actor("CLUB"), Convert.toLong(activityId, 0L))); }
+        catch (GameSessionException e) { return gameError(e); }
+        catch (RuntimeException e) { return internalError("sharedExport", e); }
+    }
+
+    @Operation(summary = "保存服务器高水位锚点供真正离线纸账接管")
+    @RateLimiter(time = 10, count = 10, limitType = LimitType.MEMBER)
+    @Log(title = "游戏场次操作", businessType = BusinessType.UPDATE, isSaveRequestData = false, isSaveResponseData = false)
+    @PostMapping("/shared/export/anchor")
+    public AjaxResult sharedExportAnchor(@RequestBody GameSessionCommand request) {
+        try {
+            if (request == null || request.getActivityId() == null) throw new GameSessionException("GAME_BAD_REQUEST", "缺少实际活动");
+            return success(runtimeService.anchorSharedRun(actor("CLUB"), request.getActivityId()));
+        } catch (GameSessionException e) { return gameError(e); }
+        catch (RuntimeException e) { return internalError("sharedExportAnchor", e); }
     }
 
     /**
@@ -132,8 +185,13 @@ public class ApiGameSessionController extends BaseController {
 
     private String perspectiveFor(String action) {
         String normalized = action == null ? "" : action.trim().toUpperCase();
+        if ("QUEST_GUIDE".equals(normalized) || "PLAN_FALLBACK".equals(normalized)) return "CLUB";
         if (normalized.startsWith("STATION_") || "VERIFY_SUBMISSION".equals(normalized)) return "MERCHANT";
-        if (normalized.startsWith("PLAYER_") || "CONFIRM_ROLE".equals(normalized)) return "PLAYER";
+        if (normalized.startsWith("TRADE_") || normalized.startsWith("FACILITY_") || normalized.startsWith("PLAN_")
+                || normalized.startsWith("VOTE_") || normalized.startsWith("CONSENSUS_") || normalized.startsWith("OPERATION_")
+                || "ACCEPT_SET".equals(normalized) || "ARRIVAL_ISSUE".equals(normalized) || "MANUAL_SIGN".equals(normalized)
+                || "RECOVER".equals(normalized) || "ZERO_HP_STEPS".equals(normalized) || "ZERO_HP_SYNC".equals(normalized) || "TEAM_EXIT".equals(normalized)) return "PLAYER";
+        if (normalized.startsWith("PLAYER_") || normalized.startsWith("QUEST_") || normalized.startsWith("ITEM_") || "CONFIRM_ROLE".equals(normalized)) return "PLAYER";
         return "CLUB";
     }
 

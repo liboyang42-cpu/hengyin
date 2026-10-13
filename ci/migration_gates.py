@@ -423,6 +423,43 @@ def find_registered_targets(root):
     return "\n".join(blobs)
 
 
+def _strip_java_comments(text):
+    # Migration ledger tools are packaged independently; keep their lexical dependency local.
+    return re.sub(_QUOTED_VALUE.pattern + r"|//[^\n]*|/\*[\s\S]*?\*/",
+                  lambda match: match.group(0) if match.group(0).startswith(('"', "'")) else " ", text)
+
+
+def find_leader_scheduled_beans(root, beans):
+    """Only the actual startup registration and matching typed callback replace sys_job."""
+    path = os.path.join(root, "chengyinhub-admin/src/main/java/com/chengyinhub/web/job/LeaderScheduledJobsConfig.java")
+    if not os.path.isfile(path):
+        return {}
+    with open(path, encoding="utf-8") as source:
+        text = _strip_java_comments(source.read())
+    if "import com.chengyinhub.quartz.service.MySqlSchedulerCoordinator;" not in text or not re.search(r"@Configuration\b", text):
+        return {}
+    receiver = re.search(r"private\s+final\s+MySqlSchedulerCoordinator\s+(\w+)\s*;", text)
+    lifecycle = re.search(r"@PostConstruct\s+public\s+void\s+register\s*\(\s*\)\s*\{([^{}]*)\}", text)
+    if receiver is None or lifecycle is None:
+        return {}
+    fields = dict((name, kind) for kind, name in re.findall(r"private\s+final\s+([\w.]+)\s+(\w+)\s*;", text))
+    calls = re.compile(r"\s*" + re.escape(receiver.group(1)) + r'\.register(?:Cron|FixedDelay)\(\s*"(\w+)\.(\w+)\(\)"[^;]*,\s*(\w+)::(\w+)\s*\);')
+    body = lifecycle.group(1)
+    if calls.sub("", body).strip():
+        return {}
+    registered = {}
+    for bean, method, callback, callback_method in calls.findall(body):
+        if bean not in beans:
+            continue
+        with open(os.path.join(root, beans[bean]), encoding="utf-8") as source:
+            target = _strip_java_comments(source.read())
+        kind = re.search(r"\bclass\s+(\w+)\b", target)
+        if method == callback_method and kind and fields.get(callback) == kind.group(1) \
+                and re.search(r"\bpublic\s+[\w.<>]+\s+" + re.escape(method) + r"\s*\(\s*\)", target):
+            registered[bean] = beans[bean]
+    return registered
+
+
 def find_unregistered_beans(root):
     """返回 [(bean, java 路径)] —— 有 bean 却搜不到注册 SQL 的。
 
@@ -430,11 +467,13 @@ def find_unregistered_beans(root):
     —— 所以只遍历现存 bean,不反查悬空注册(那是 audit_sys_job.py 的活)。
     """
     registered = find_registered_targets(root)
+    beans = find_task_beans(root)[0]
+    leader_scheduled = find_leader_scheduled_beans(root, beans)
     missing = []
-    for bean, java in sorted(find_task_beans(root)[0].items()):
+    for bean, java in sorted(beans.items()):
         # invoke_target 长这样:'refundReconcileTask.reconcile()'
         # 带前引号搜,免得 fooTask 被 barFooTask 的注册蹭中
-        if "'%s." % bean not in registered:
+        if bean not in leader_scheduled and "'%s." % bean not in registered:
             missing.append((bean, java))
     return missing
 
@@ -719,6 +758,8 @@ def _cmd_beans(root):
     _beans, exempt = find_task_beans(root)
     for bean, java in sorted(exempt.items()):
         print("  · 豁免(@Scheduled 自调度,不进 sys_job):%s  (%s)" % (bean, java))
+    for bean, java in sorted(find_leader_scheduled_beans(root, _beans).items()):
+        print("  · 已登记(MySqlSchedulerCoordinator 启动计划,不进 sys_job):%s  (%s)" % (bean, java))
     missing = find_unregistered_beans(root)
     if missing:
         print("::error::有 task bean 却没有配套的注册 SQL —— jar 部署了也永不调度,且零告警")
@@ -731,7 +772,7 @@ def _cmd_beans(root):
         print("          内含 INSERT INTO sys_job ... invoke_target = '<bean>.<方法>()'")
         print("          暂停态(status='1')注册必须在 remark 写明「触发时机+负责人+到期日」。")
         return 1
-    print("  OK: 全部 task bean 都有配套注册 SQL")
+    print("  OK: 全部 task bean 都有配套注册 SQL 或真实启动调度计划")
     return 0
 
 

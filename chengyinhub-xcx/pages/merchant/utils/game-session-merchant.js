@@ -225,6 +225,7 @@ function normalizeMerchantProjection(raw) {
     activityId,
     status,
     revision,
+    ...(raw.authorityEpoch != null ? { authorityEpoch: raw.authorityEpoch } : {}),
     playMode: raw.merchant.playMode === 'ROUTE' ? 'ROUTE' : 'STORY',
     currentChapterId: nullablePositiveId(raw.currentChapterId),
     availableActions,
@@ -384,6 +385,7 @@ function baseCommand(projection, station, requestId, action, allowed) {
     nodeId: station.nodeId,
     requestId: String(requestId),
     expectedRevision: projection.revision,
+    ...(projection.authorityEpoch != null ? { authorityEpoch: projection.authorityEpoch } : {}),
     action,
   }
 }
@@ -547,7 +549,8 @@ function sanitizeMerchantCommandForRetry(raw, projection) {
     if (reasonCode) payload.reasonCode = reasonCode
   }
 
-  return { activityId, nodeId, requestId, expectedRevision, action, payload }
+  return { activityId, nodeId, requestId, expectedRevision,
+    ...(raw.authorityEpoch != null ? { authorityEpoch: raw.authorityEpoch } : {}), action, payload }
 }
 
 module.exports = {

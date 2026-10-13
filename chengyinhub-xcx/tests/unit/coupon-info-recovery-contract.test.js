@@ -27,6 +27,8 @@ function setByPath(target, key, value) {
 }
 
 function loadPage(source = read(JS_PATH)) {
+  let owner = 1
+  const timers = []
   const requests = []
   const toasts = []
   const tips = []
@@ -35,6 +37,7 @@ function loadPage(source = read(JS_PATH)) {
   let definition
   const absolutePath = path.join(ROOT, JS_PATH)
   const app = {
+    getUserID: () => owner,
     getRequestErrorMessage: (res, fallback) => (res && (res.msg || res.errMsg)) || fallback,
     sendRequest: (options) => requests.push(options),
     tips: (message) => tips.push(message),
@@ -51,8 +54,9 @@ function loadPage(source = read(JS_PATH)) {
     // 有上一页:全页返回合同(#806)按 getCurrentPages().length 选 navigateBack 还是根栈落点
     getCurrentPages: () => [{}, {}],
     Page: (config) => { definition = config },
-    require: createRequire(absolutePath),
-    setTimeout() {},
+    require: name => name.includes('merchant-theme') ? { merchantPageShow() {}, merchantPageRestore() {} } : createRequire(absolutePath)(name),
+    setTimeout(callback) { timers.push(callback); return timers.length },
+    clearTimeout(id) { timers[id - 1] = null },
     wx,
   }, { filename: absolutePath })
 
@@ -64,7 +68,7 @@ function loadPage(source = read(JS_PATH)) {
     },
   })
 
-  return { page, requests, toasts, tips, modals, get backs() { return backs } }
+  return { page, requests, toasts, tips, modals, timers, setOwner: id => { owner = id }, get backs() { return backs } }
 }
 
 function fillValidForm(page) {
@@ -157,4 +161,56 @@ test('负控：摘掉持久错误写入后恢复契约必须变红', () => {
   const broken = source.replace(/\n\s*submitError:\s*message,/, '')
   assert.notEqual(broken, source, '负控锚点失效：未找到 submitError 写入')
   assert.throws(() => assertRecoveryContract(broken), assert.AssertionError)
+})
+
+for (const lifecycle of ['onHide', 'onUnload']) {
+  test(`successful publish followed by ${lifecycle} cannot navigate another page`, () => {
+    const h=loadPage(); fillValidForm(h.page); h.page.onSubmit()
+    h.requests[0].success({code:200,data:{id:1}}); h.page[lifecycle]()
+    h.timers.forEach(callback=>{if(callback)callback()})
+    assert.equal(h.backs,0)
+    assert.equal(h.page.data.formData.name,'新人礼券')
+  })
+  test(`publish response after ${lifecycle} cannot toast or schedule navigation`, () => {
+    const h=loadPage(); fillValidForm(h.page); h.page.onSubmit(); h.page[lifecycle]()
+    const before=JSON.stringify(h.page.data); h.requests[0].success({code:200,data:{id:1}})
+    h.requests[0].complete(); h.timers.forEach(callback=>{if(callback)callback()})
+    assert.equal(h.backs,0); assert.deepEqual(h.toasts,[])
+    if (lifecycle === 'onUnload') assert.equal(JSON.stringify(h.page.data),before)
+    else {
+      assert.equal(h.page.data.isSubmitting,false, 'hidden request must settle without navigation')
+      assert.equal(h.page.data.formData.name,'新人礼券')
+    }
+  })
+}
+test('publish response for a previous actor cannot mutate the current form', () => {
+  const h=loadPage(); fillValidForm(h.page); h.page.onSubmit(); h.setOwner(2)
+  const before=JSON.stringify(h.page.data); h.requests[0].success({code:200,data:{id:1}})
+  h.requests[0].complete(); h.timers.forEach(callback=>{if(callback)callback()})
+  assert.equal(JSON.stringify(h.page.data),before); assert.equal(h.backs,0); assert.deepEqual(h.toasts,[])
+})
+test('normal successful publish returns once and the timer checks current actor', () => {
+  const h=loadPage(); fillValidForm(h.page); h.page.onSubmit()
+  h.requests[0].success({code:200,data:{id:1}}); h.requests[0].complete()
+  assert.equal(h.page.data.isSubmitting,false)
+  h.timers.filter(Boolean)[0](); assert.equal(h.backs,1)
+  const changed=loadPage(); fillValidForm(changed.page); changed.page.onSubmit()
+  changed.requests[0].success({code:200,data:{id:1}}); changed.setOwner(2)
+  changed.timers.forEach(callback=>{if(callback)callback()}); assert.equal(changed.backs,0)
+})
+
+test('hide keeps a publish in flight locked, completion settles without resending on show', () => {
+  const h=loadPage(); fillValidForm(h.page); h.page.onSubmit(); h.page.onHide()
+  h.page.onSubmit(); assert.equal(h.requests.length,1); assert.equal(h.page.data.isSubmitting,true)
+  h.requests[0].success({code:200,data:{id:1}}); h.requests[0].complete()
+  assert.equal(h.page.data.isSubmitting,false); assert.deepEqual(h.toasts,[])
+  h.page.onShow(); assert.equal(h.requests.length,1); assert.equal(h.page.data.isSubmitting,false)
+  assert.equal(h.backs,0); assert.equal(h.timers.filter(Boolean).length,0)
+})
+
+test('publish accepts existing high string owner but empty owner cannot publish', () => {
+  const h=loadPage(); fillValidForm(h.page); h.setOwner('9223372036854775807'); h.page.onSubmit()
+  assert.equal(h.requests.length,1)
+  const empty=loadPage(); fillValidForm(empty.page); empty.setOwner(''); empty.page.onSubmit()
+  assert.equal(empty.requests.length,0)
 })

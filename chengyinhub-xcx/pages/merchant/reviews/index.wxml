@@ -14,7 +14,7 @@
   <cy-inline-error class="review-inline-error" wx:elif="{{pageState === 'no-permission'}}" kind="data"
                    title="没有口碑管理权限" sub="当前账号不能查看、回复或举报商家口碑。"
                    action="重新加载" bind:action="retry" />
-  <cy-inline-error class="review-inline-error" wx:elif="{{pageState === 'error'}}" kind="error"
+  <cy-inline-error load-failure class="review-inline-error" wx:elif="{{pageState === 'error'}}" kind="error"
                    title="评价加载失败" sub="{{errorMessage}}" action="重新加载" bind:action="retry" />
   <cy-empty wx:elif="{{pageState === 'empty'}}" fill size="lg"
             title="还没有真实到店评价"

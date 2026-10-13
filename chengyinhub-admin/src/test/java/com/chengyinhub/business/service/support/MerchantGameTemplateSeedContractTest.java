@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -78,6 +79,27 @@ class MerchantGameTemplateSeedContractTest {
                     "种子只允许引用自有静态目录,发现外部素材地址:" + hosts.group());
         }
         assertEquals(8, count(sql, "'seed_merchant_game_a8_20260823', NOW()"));
+        // 历史迁移不可改写；当前封面回读合同由新迁移承接。
+        assertCdnGuard(readCdnGuard());
+    }
+
+    @Test
+    void originalMigrationRemainsByteIdenticalToMaster() throws Exception {
+        byte[] digest = MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(MIGRATION));
+        StringBuilder hex = new StringBuilder();
+        for (byte value : digest) hex.append(String.format("%02x", value & 0xff));
+        // master 原制品字节指纹；不能以工作树文件重新生成期望值。
+        assertEquals("fc70b86b22e32d7ac52696954f73293a7b696aca9298c1b88cec5957a8fdb661", hex.toString(),
+                "A8 历史迁移须保持 master 原字节，修复只能写新迁移");
+    }
+
+    @Test
+    void independentCdnGuardRejectsWrongDirectoryOrOwnerInNegativeControls() throws Exception {
+        String valid = readCdnGuard();
+        assertCdnGuard(valid);
+        assertThrows(AssertionError.class, () -> assertCdnGuard(valid.replace(
+                "https://www.chengyinhub.com/prod-api/profile/merchant-game-covers/%.jpg", "/images/merchant-games/%.jpg")));
+        assertThrows(AssertionError.class, () -> assertCdnGuard(valid.replace("member_id = 100000", "member_id = 100001")));
     }
 
     @Test
@@ -135,6 +157,23 @@ class MerchantGameTemplateSeedContractTest {
 
     private String readMigration() throws Exception {
         return new String(Files.readAllBytes(MIGRATION), StandardCharsets.UTF_8);
+    }
+
+    private String readCdnGuard() throws Exception {
+        return new String(Files.readAllBytes(Paths.get("sql/migration_20261009_merchant_game_a8_cdn_guard.sql")),
+                StandardCharsets.UTF_8);
+    }
+
+    private void assertCdnGuard(String sql) {
+        assertTrue(sql.contains("-- runner: assert=scalar-true"), "封面回读必须由 runner 校验结果");
+        assertTrue(sql.contains("AND img_url LIKE 'https://www.chengyinhub.com/prod-api/profile/merchant-game-covers/%.jpg'"),
+                "独立回读守卫必须检查实际写入的远程封面目录");
+        assertFalse(sql.contains("img_url LIKE '/images/merchant-games/%.jpg'"));
+        assertTrue(sql.contains("AND story_img = img_url"), "故事封面与节点封面须一致");
+        assertTrue(sql.contains("member_id = 100000 AND del_flag = 0"), "只校验本批实际作者的有效模板");
+        assertTrue(sql.contains("create_by = 'seed_merchant_game_a8_20260823'"), "种子来源身份须保留");
+        assertTrue(sql.contains("COUNT(DISTINCT title)"), "八款须唯一且完整");
+        assertEquals(4, count(sql, ") = 8"), "来源、八款唯一性、总数与 CDN 回读均须严格等于八");
     }
 
     private void assertMedia(String sql, String slug, String filename) {

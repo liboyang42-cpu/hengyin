@@ -9,6 +9,8 @@ import java.util.List;
 public interface AccountDeregistrationMapper {
     AccountDeregistration selectLatestByMemberId(@Param("memberId") Long memberId);
 
+    AccountDeregistration selectByIdForUpdate(@Param("id") Long id);
+
     int insert(AccountDeregistration deregistration);
 
     int cancelPending(@Param("memberId") Long memberId, @Param("cancelTime") Date cancelTime);
@@ -20,6 +22,8 @@ public interface AccountDeregistrationMapper {
     int markMemberNormal(@Param("memberId") Long memberId);
 
     List<AccountDeregistration> selectDue(@Param("now") Date now);
+
+    int countUnsettledRefunds(@Param("memberId") Long memberId);
 
     int anonymizeMember(@Param("memberId") Long memberId);
 
@@ -38,6 +42,8 @@ public interface AccountDeregistrationMapper {
 
     /** 清除发布者实名登记(姓名+身份证号密文+盲索引)。人不在了,这行没有留存的道理。 */
     int deleteMemberIdentity(@Param("memberId") Long memberId);
+
+    int deleteMemberAddresses(@Param("memberId") Long memberId);
 
     /** 执行期阻断 → 置注销单失败(仅 PENDING 时) */
     int markFailed(@Param("id") Long id, @Param("reason") String reason, @Param("time") Date time);

@@ -58,6 +58,9 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
     @Autowired
     private AlarmService alarmService;
 
+    @Autowired
+    private org.springframework.transaction.PlatformTransactionManager transactionManager;
+
     /** [赏金冻结] 提现前要刨掉仍在 48h 冻结期内的拓展人赏金,口径与 UmsMemberWithdrawalServiceImpl 一致。 */
     @Autowired
     private WithdrawalFrozenAmountResolver frozenAmountResolver;
@@ -200,8 +203,7 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
             throw new IllegalStateException("提现失败:" + (err == null ? "请稍后重试" : err));
         }
         try {
-            umsMemberService.addBalance(memberId, amount);
-            markFailed(id, outBatchNo, outDetailNo, err, failedAt, MemberCashWithdraw.STATUS_FAILED_REFUNDED);
+            refundFailedClaim(w, failedAt);
         } catch (Exception e) {
             markFailed(id, outBatchNo, outDetailNo, "转账失败且退款未成功,待人工:" + safe(err), failedAt, MemberCashWithdraw.STATUS_FAILED_MANUAL);
             alarmService.alarm("提现待人工", "发起失败且退款异常 id=" + id + " member=" + memberId + " amount=" + amount + " trace=" + traceId);
@@ -259,14 +261,9 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
             }
             // 赢家:退款恰一次
             try {
-                umsMemberService.addBalance(w.getMemberId(), w.getAmount());
-                // 退款成功 → 3->2(已独占该行,按 id 无条件更新)
-                MemberCashWithdraw ok = new MemberCashWithdraw();
-                ok.setId(id);
-                ok.setStatus(MemberCashWithdraw.STATUS_FAILED_REFUNDED);
-                ok.setFinishTime(now);
-                mapper.updateMemberCashWithdraw(ok);
-                logger.warn("提现失败已退款 id={} member={} amount={}", id, w.getMemberId(), w.getAmount());
+                if (refundFailedClaim(w, now)) {
+                    logger.warn("提现失败已退款 id={} member={} amount={}", id, w.getMemberId(), w.getAmount());
+                }
             } catch (Exception e) {
                 // 退款失败 → 保持待人工 + 告警
                 MemberCashWithdraw m = new MemberCashWithdraw();
@@ -314,6 +311,20 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         claim.setChannelErrorCode(channelErrorCode);
         claim.setWechatDetailId(wechatDetailId);
         return mapper.updateStatusIfProcessing(claim) == 1;
+    }
+
+    /** 状态领取与余额回补同事务，失败回滚后才可转人工。 */
+    private boolean refundFailedClaim(MemberCashWithdraw withdrawal, Date now) {
+        return Boolean.TRUE.equals(new org.springframework.transaction.support.TransactionTemplate(transactionManager)
+                .execute(status -> {
+                    MemberCashWithdraw refunded = new MemberCashWithdraw();
+                    refunded.setId(withdrawal.getId());
+                    refunded.setStatus(MemberCashWithdraw.STATUS_FAILED_REFUNDED);
+                    refunded.setFinishTime(now);
+                    if (mapper.updateStatusIfManual(refunded) != 1) return false;
+                    umsMemberService.addBalance(withdrawal.getMemberId(), withdrawal.getAmount());
+                    return true;
+                }));
     }
 
     private boolean isStuck(MemberCashWithdraw w, Date now) {
@@ -465,17 +476,32 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         int manual = mapper.countManualPending();
         int successNoBatch = mapper.countSuccessWithoutBatch();
         if (stuck > 0) {
-            alarmService.alarm("提现处理中积压", "超过" + stuckHours + "h仍处理中的提现单=" + stuck + "(定时巡检可能未正常运行)");
+            String ids = reconciliationIds(mapper.sampleStuckProcessingIds(before));
+            logger.warn("Withdrawal monitor anomaly category=stuck count={} withdrawIds={}", stuck, ids);
+            alarmService.alarmThrottled("monitor.withdraw.stuck", "提现处理中积压", "超过" + stuckHours + "h仍处理中的提现单=" + stuck
+                    + " withdrawIds=" + ids);
         }
         if (manual > 0) {
-            alarmService.alarm("提现待人工积压", "失败待人工的提现单=" + manual + ",请财务处理");
+            String ids = reconciliationIds(mapper.sampleManualPendingIds());
+            logger.warn("Withdrawal monitor anomaly category=manual count={} withdrawIds={}", manual, ids);
+            alarmService.alarmThrottled("monitor.withdraw.manual", "提现待人工积压", "失败待人工的提现单=" + manual
+                    + " withdrawIds=" + ids);
         }
         if (successNoBatch > 0) {
-            alarmService.alarm("提现数据异常", "标记成功却无微信批次号的提现单=" + successNoBatch);
+            String ids = reconciliationIds(mapper.sampleSuccessWithoutBatchIds());
+            logger.warn("Withdrawal monitor anomaly category=missing_batch count={} withdrawIds={}", successNoBatch, ids);
+            alarmService.alarmThrottled("monitor.withdraw.missing_batch", "提现数据异常", "标记成功却无微信批次号的提现单=" + successNoBatch
+                    + " withdrawIds=" + ids);
         }
         String summary = "提现对账:处理中积压=" + stuck + " 待人工=" + manual + " 成功无批次号=" + successNoBatch;
         logger.info(summary);
         return summary;
+    }
+
+    private String reconciliationIds(java.util.List<Long> ids) {
+        return ids == null ? "UNKNOWN" : ids.stream().limit(20)
+                .map(id -> id == null ? "UNKNOWN" : id.toString())
+                .collect(java.util.stream.Collectors.joining(",", "[", "]"));
     }
 
     @Override

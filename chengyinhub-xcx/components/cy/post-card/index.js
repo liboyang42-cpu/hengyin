@@ -8,6 +8,7 @@ Component({
     showMore: { type: Boolean, value: false },
     showShare: { type: Boolean, value: false },
     showFavorite: { type: Boolean, value: false },
+    expandableText: { type: Boolean, value: false },
     interactiveActions: { type: Boolean, value: false },
     interactiveUser: { type: Boolean, value: false },
     interactiveClub: { type: Boolean, value: false },
@@ -18,7 +19,10 @@ Component({
     light: { type: Boolean, value: false },
     accessibilityLabel: { type: String, value: '查看帖文' },
   },
+  data: { textExpanded: false },
+  observers: { 'post.id': function () { this.setData({ textExpanded: false }); } },
   methods: {
+    toggleText() { this.setData({ textExpanded: !this.data.textExpanded }); },
     eventDetail() {
       const post = this.data.post || {};
       return { index: this.data.index, postId: post.id, memberId: post.memberId, clubId: post.clubId };

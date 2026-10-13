@@ -1,6 +1,7 @@
 const modal = require('../../utils/modal.js');
 const toast = require('../../utils/toast.js');
 const app = getApp();
+const community = require('../../utils/community-post-api.js').createClient(app, wx);
 const { isRecordList } = require('../../utils/response-shape.js');
 const policy = require('../../utils/identity/identity-policy.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
@@ -102,7 +103,7 @@ Page({
       const message = app.getRequestErrorMessage(res, fallback);
       that.setData({ refreshing: false, errorMsg: hasOldContent ? '' : message });
     };
-    app.sendRequest({
+    community.request({
       hideLoading: true,
       silentError: true,
       auth: true,
@@ -120,7 +121,7 @@ Page({
             return row;
           });
           const postList = pageConfig.pageNum === 1 ? rows : that.data.postList.concat(rows);
-          that.setData({ postList: postList, hasMorePosts: rows.length >= pageConfig.pageSize, errorMsg: '' });
+          that.setData({ postList: postList, hasMorePosts: res.data.hasMore === true, errorMsg: '' });
         } else finishLoadError(res, '收藏帖文加载失败');
       },
       fail: function (res) { finishLoadError(res, '收藏帖文加载失败'); },
@@ -231,7 +232,6 @@ Page({
    */
   topicUnlike: function(e) {
     const that = this;
-    const index = e.currentTarget.dataset.index;
     const id = e.currentTarget.dataset.id;
     const requestKey = String(id);
     // A-07:后端 /api/topic/like 是「查无即插」的 toggle(type=0 被忽略),
@@ -257,9 +257,8 @@ Page({
               if (res.code == "200") {
                 toast.success('取消点赞成功');
                 
-                // 从列表中移除
-                const ztList1 = [...that.data.ztList1];
-                ztList1.splice(index, 1);
+                // 回包顺序可能与点击顺序不同，按 ID 删除避免旧 index 误删其他收藏。
+                const ztList1 = that.data.ztList1.filter(topic => String(topic.id) !== requestKey);
                 that.setData({ ztList1 });
               } else {
                 toast(res.msg || '操作失败');
@@ -285,7 +284,7 @@ Page({
     this._postUnlikeRequests = this._postUnlikeRequests || Object.create(null);
     if (this._postUnlikeRequests[requestKey]) return;
     this._postUnlikeRequests[requestKey] = true;
-    app.sendRequest({
+    community.request({
       hideLoading: true,
       silentError: true,
       url: '/api/creativesquare/bookmark',

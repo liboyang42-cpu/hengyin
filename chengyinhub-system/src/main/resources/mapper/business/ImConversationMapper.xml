@@ -21,7 +21,11 @@
     </resultMap>
 
     <sql id="selectImConversationVo">
-        select id, type, biz_key, last_msg_type, last_msg_text, last_msg_at, status, create_by, create_time, update_by, update_time, remark from im_conversation
+        select id, type, biz_key, last_msg_type,
+            case when (select status from im_message
+                where conversation_id = im_conversation.id order by id desc limit 1) = 2
+                then '[消息已屏蔽]' else last_msg_text end as last_msg_text,
+            last_msg_at, status, create_by, create_time, update_by, update_time, remark from im_conversation
     </sql>
 
     <select id="selectImConversationById" parameterType="Long" resultMap="ImConversationResult">

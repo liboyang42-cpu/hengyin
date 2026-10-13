@@ -164,9 +164,9 @@ public class ApiMerchantNodeController extends BaseController {
     }
 
     /** 据点模板图片(imgUrl)异步内容安全送检(BIZ_TYPE_NODE_TEMPLATE,违规经回调告警人工下架) */
-    private void submitTemplateMedia(Long tplId, String imgUrl) {
+    private void submitTemplateMedia(Long tplId, String imgUrl, String openid) {
         if (tplId == null || imgUrl == null || imgUrl.trim().isEmpty()) return;
-        try { wxSec.submitMediaCheck(IWxContentSecurityService.BIZ_TYPE_NODE_TEMPLATE, tplId, imgUrl, ""); } catch (Exception ignore) {}
+        try { wxSec.submitMediaCheck(IWxContentSecurityService.BIZ_TYPE_NODE_TEMPLATE, tplId, imgUrl, openid); } catch (Exception ignore) {}
     }
 
     @Operation(summary = "提交/更新据点互动模板(免人工审 + msgSecCheck)")
@@ -224,7 +224,7 @@ public class ApiMerchantNodeController extends BaseController {
 
         try {
             Long tplId = templatePublishService.saveMerchantNodeTemplate(body, ownerMemberId, getAppUserName());
-            submitTemplateMedia(tplId, body.getImgUrl());
+            submitTemplateMedia(tplId, body.getImgUrl(), openid);
             return success(tplId);
         } catch (ServiceException | IllegalArgumentException e) {
             return error(e.getMessage());

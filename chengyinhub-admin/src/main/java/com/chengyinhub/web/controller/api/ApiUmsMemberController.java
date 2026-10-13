@@ -64,6 +64,15 @@ public class ApiUmsMemberController extends BaseController {
     private IWxContentSecurityService wxContentSecurityService;
 
     @Autowired
+    private com.chengyinhub.business.service.support.AppMediaReferenceGuard mediaReferences;
+
+    private String reviewedMedia(Long memberId, String reference, boolean multiple) {
+        if (reference == null || reference.trim().isEmpty()) return reference;
+        return multiple ? mediaReferences.requireAttachments(memberId, reference, true)
+                : mediaReferences.requireAttachment(memberId, reference, true);
+    }
+
+    @Autowired
     private IUmsMemberAddressService umsMemberAddressService;
 
     @Autowired
@@ -561,31 +570,14 @@ public class ApiUmsMemberController extends BaseController {
             umsMember.setAppleId(null);
             umsMember.setLoginIp(null);
             if (isMy) {
-                if (umsMember.getStatus() == 2) {
-                    return error("用户被禁用");
+                if (!Long.valueOf(1L).equals(umsMember.getStatus()) || !Integer.valueOf(0).equals(umsMember.getDelFlag())) {
+                    return error("用户不可用");
                 }
-                if (umsMember.getDelFlag() == 2) {
-                    return error("用户被删除");
+                // 资料只用于展示，不改变持久角色或兼容身份投影。
+                if ("merchant".equals(umsMember.getRole())) {
+                    umsMember.setMerchant(mmsMerchantService.selectMmsMerchantByMemberId(memberId));
                 }
-                if (umsMember.getUserType() == 2) {
-                    //商家会员
-                    MmsMerchant merchant = new MmsMerchant();
-                    merchant.setMemberId(memberId);
-                    merchant.setDelFlag(0);
-                    List<MmsMerchant> list = mmsMerchantService.selectMmsMerchantList(merchant);
-                    if (list.size() > 0) {
-                        merchant = list.get(0);
-                        umsMember.setMerchant(merchant);
-                        //账号状态：1启用  2禁用
-                        if (merchant.getAccountStatus() == 2) {
-                            umsMember.setUserType(1L); //商家如果禁用，把用户的类型改成普通用户
-                            umsMember.setRole("player"); //RBAC：禁用商家回退玩家
-                        }
-                    } else {
-                        umsMember.setUserType(1L); //商家如果不存在数据，把用户的类型改成普通用户
-                        umsMember.setRole("player"); //RBAC：无商家数据回退玩家
-                    }
-                }
+                umsMember.setUserType("merchant".equals(umsMember.getRole()) ? 2L : 1L);
             }
 
             int followNum = umsMemberFollowService.selectUmsMemberFollowNumByMemberId(memberId);
@@ -636,6 +628,7 @@ public class ApiUmsMemberController extends BaseController {
             // 本人分支只下发逐字段白名单投影(UmsMember 整实体含 password 兜底清空、
             // unionId/appOpenId/appleId/loginIp 等账号标识;见 SelfMemberVO 类注释)。
             SelfMemberVO selfVo = SelfMemberVO.from(umsMember);
+            selfVo.setFriendNum(umsMemberFollowService.selectMutualFollowCount(memberId));
             // RUN-13(拍板 2026-09-19 第4条)等级单一真源 = player_growth:本人视角的 levelId 也不再用
             // 旧 ums_member.level_id(前端资料页徽章图/Lv. 文案跟这个字段)。无行兜底 Lv.1 与 getGrowth 同口径。
             if (playerProgressionService != null) {
@@ -698,9 +691,9 @@ public class ApiUmsMemberController extends BaseController {
         umsMember.setId(member_id);
         umsMember.setName(request.getName());
         umsMember.setNickname(request.getName());
-        umsMember.setAvatar(request.getAvatar());
+        umsMember.setAvatar(reviewedMedia(member_id, request.getAvatar(), false));
         umsMember.setWechat(request.getWechat());
-        umsMember.setCasePics(request.getCasePics());
+        umsMember.setCasePics(reviewedMedia(member_id, request.getCasePics(), true));
         umsMember.setIntroduction(request.getIntroduction());
         umsMember.setCaseIntroducton(request.getCaseIntroducton());
         umsMember.setWebsite(request.getWebsite());

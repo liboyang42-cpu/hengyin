@@ -130,3 +130,30 @@ test('项目铃铛按真实主题/活动归属打开近期收入与核销，失�
   allow(legacy.requests[0]); assert.equal(legacy.requests.length, 1, '原全局消息只保留IM入口');
   legacy.page.goInbox(); assert.deepEqual(legacy.urls, ['/subpackageB/pages/im/list/index']);
 });
+
+
+test('actual merchant denial shows permission state while failed permission reads stay blank and issue no finance request', () => {
+  const nodeVm = require('node:vm');
+  const { createRequire } = require('node:module');
+  const file = path.join(root, 'pages/merchant/ledger/index.js');
+  const requests = []; let config;
+  nodeVm.runInNewContext(read('pages/merchant/ledger/index.js'), {
+    Page: value => { config = value; }, require: createRequire(file),
+    getApp: () => ({ globalData: {}, getUserID: () => 23, sendRequest: req => requests.push(req) }),
+    wx: { getStorageSync: () => '', getWindowInfo: () => ({ statusBarHeight: 20 }) },
+  });
+  const page = Object.assign({}, config, { data: JSON.parse(JSON.stringify(config.data)),
+    setData: patch => Object.assign(page.data, patch) });
+  page.onLoad({ view: 'redemptions' });
+  requests[0].success({ code: 200, data: { active: false, permissions: [] } });
+  assert.equal(page.data.accessDenied, true);
+  assert.equal(page.data.error, true);
+  assert.equal(requests.length, 1);
+  page.retry(); requests[1].success({ code: 500 });
+  assert.equal(page.data.accessDenied, false, 'failed read cannot claim absence of permission');
+  assert.equal(page.data.error, true);
+  assert.equal(requests.length, 2);
+  const wxml = read('pages/merchant/ledger/index.wxml');
+  assert.match(wxml, /cy-empty wx:if="\{\{accessDenied\}\}" kind="no-permission"/);
+  assert.match(wxml, /cy-error load-failure wx:elif="\{\{error && !hasLoaded\}\}"/);
+});

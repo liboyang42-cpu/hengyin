@@ -79,7 +79,7 @@ function assertGrowthContract(files) {
   assert.match(files.growthWxml, /class="gc-badge-list"/)
   assert.doesNotMatch(files.growthWxml, /discStyle|me\.bg/, '积分页不得再以内联彩色仪表着色')
   assert.doesNotMatch(files.growthJs, /ME_GRAD|BADGE_PALETTE|discStyle/, '积分页数据层不得生成彩色渐变仪表')
-  assert.match(files.growthWxss, /\.gc-score-card\s*\{[^}]*background:\s*var\(--cy-color-bg-surface\)/)
+  assert.match(files.growthWxss, /\.gc-score-rank\s*\{[^}]*background:\s*var\(--cy-color-bg-elevated\)/)
   assert.match(files.growthWxss, /\.gc-badge-disc\s*\{[^}]*background:\s*var\(--cy-color-bg-surface-subtle\)/)
   assert.match(files.growthWxss, /\.gc-score-value\s*\{[^}]*font-size:\s*var\(--cy-type-data-xl\)/)
 }

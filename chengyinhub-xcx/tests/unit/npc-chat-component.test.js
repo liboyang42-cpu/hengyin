@@ -155,3 +155,22 @@ test('HTTP 非 2xx 会收敛为失败，不会永远停在生成中', () => {
   assert.equal(chat.data.isThinking, false);
   assert.match(chat.data.messages.at(-1).text, /网络不太稳定/);
 });
+
+
+test('NPC explicit retry preserves original request identity, user bubble and next-message draft', () => {
+  const requests = [];
+  const chat = createChat({ sendRequest: request => { requests.push(request); return { abort() {} }; } });
+  inputAndSend(chat, '先问这件事');
+  const original = requests[0].data;
+  requests[0].fail({ errMsg: 'response lost' });
+  assert.equal(chat.data.retryAvailable, true);
+  chat.onInput({ detail: { value: '接下来想问的草稿' } });
+  chat.onRetrySend();
+  assert.deepEqual(requests[1].data, original);
+  assert.equal(chat.data.messages.filter(row => row.role === 'user').length, 1);
+  assert.equal(chat.data.input, '接下来想问的草稿');
+  chat.cancelPending();
+  requests[1].success(response(original.requestId, '迟到回答'));
+  assert.ok(!chat.data.messages.some(row => row.text === '迟到回答'));
+  assert.equal(chat.data.retryAvailable, false);
+});

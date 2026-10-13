@@ -8,7 +8,7 @@
       :updated-at="updatedAt"
     >
       <el-button icon="el-icon-refresh" :loading="loading" @click="getHomeData">刷新队列</el-button>
-      <el-button slot="primary" type="primary" @click="goAuditWorkbench">进入审核台</el-button>
+      <el-button v-if="hasPermission('business:audit:list')" slot="primary" type="primary" @click="goAuditWorkbench">进入审核台</el-button>
     </cy-page-header>
 
     <section class="workbench__quick" aria-labelledby="quick-actions-title">
@@ -171,6 +171,10 @@ export default {
   },
   methods: {
     getHomeData() {
+      if (!this.hasPermission('business:analytics:list')) {
+        this.error = '当前账号没有查看待审摘要的权限，请使用已有权限的业务入口。'
+        return Promise.resolve()
+      }
       this.loading = true
       this.error = ''
       return getHomeData()
@@ -206,6 +210,7 @@ export default {
       this.$router.push(action.route)
     },
     goAuditWorkbench() {
+      if (!this.hasPermission('business:audit:list')) return
       this.$router.push({ name: 'Audit' })
     }
   }

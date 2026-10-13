@@ -18,7 +18,7 @@
     <cy-skeleton type="detail" />
   </view>
   <view class="xb-state" style="padding-top:{{statusBarHeight + navBarHeight + 24}}px;" wx:if="{{ loadError && !loading }}">
-    <cy-error class="fill-slot" fill="{{true}}" size="lg" title="玩法没能打开" sub="{{loadErrorMsg}}" bind:retry="onRetry" auto-back />
+    <cy-error load-failure class="fill-slot" fill="{{true}}" size="lg" title="玩法没能打开" sub="{{loadErrorMsg}}" bind:retry="onRetry" auto-back />
   </view>
 
   <!-- ADA:成功态 hero 全出血,故 scroll 不再让顶(padding-top:0);nav 是 overlay pill,
@@ -88,6 +88,7 @@
         </view>
       </view>
 
+      <view class="xb-block" wx:if="{{isMyScope && info.reason}}"><text class="xb-body">审核反馈：{{info.reason}}</text></view>
       <view class="xb-stat-grid" wx:if="{{ detailStats.length }}">
         <view class="xb-stat-card" wx:for="{{ detailStats }}" wx:key="label">
           <view class="xb-stat-value">{{ item.value }}</view>
@@ -105,7 +106,7 @@
         <view class="xb-rule-card">
           <view class="xb-rule-mark">1</view>
           <view class="xb-rule-copy">
-            <view id="tpl-rule" class="xb-body xb-body--soft {{ ruleExpanded ? '' : 'xb-body--clamp' }}">{{ info.ruleInstructions }}</view>
+            <text id="tpl-rule" class="xb-body xb-body--soft {{ ruleExpanded ? '' : 'xb-body--clamp' }}">{{ info.ruleInstructions }}</text>
           </view>
         </view>
         <view class="xb-link-more" wx:if="{{ ruleNeedMore || ruleExpanded }}" bindtap="toggleRuleMore" hover-class="cy-pressed" hover-stay-time="80">

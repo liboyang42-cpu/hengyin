@@ -18,4 +18,9 @@ public interface TopicCompletionXpAwardMapper
     Integer selectXpForUpdate(@Param("memberId") Long memberId, @Param("topicId") Long topicId);
 
     int deleteAward(@Param("memberId") Long memberId, @Param("topicId") Long topicId);
+
+    int linkEarnedExp(@Param("memberId") Long memberId, @Param("topicId") Long topicId,
+                      @Param("earnedExpId") Long earnedExpId);
+
+    Long selectEarnedExpId(@Param("memberId") Long memberId, @Param("topicId") Long topicId);
 }

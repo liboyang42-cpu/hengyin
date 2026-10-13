@@ -466,3 +466,37 @@ test('submitAction 用同一 requestId 重放读到 FAILED 时是确定业务失
     receipt,
   })
 })
+
+test('命令冻结透传纪元与 expectedRevision；旧纪元拒绝后只显式读回，不自动重发', async () => {
+  const harness = requestHarness()
+  const client = createGameSessionClient({ sendRequest: harness.sendRequest })
+  const input = commandInput({ authorityEpoch: 4, revision: 99, expectedVersion: 88 })
+  const pending = client.submitAction('merchant', input)
+  assert.equal(harness.calls[0].data.authorityEpoch, 4)
+  assert.equal(harness.calls[0].data.expectedRevision, 4)
+  assert.equal(harness.calls[0].data.revision, undefined)
+  assert.equal(harness.calls[0].data.expectedVersion, undefined)
+  harness.calls[0].success({ code: 500, msg: '本局权威版本已更新，请刷新', data: { reasonCode: 'GAME_AUTHORITY_CONFLICT' } })
+  const result = await pending
+  assert.equal(result.status, 'business-error')
+  assert.equal(result.reasonCode, 'GAME_AUTHORITY_CONFLICT')
+  assert.equal(result.message, '本局权威版本已更新，请刷新')
+  const read = client.loadProjection('merchant', input.activityId)
+  harness.calls[1].success({ code: 200, data: { sessionId: 91, activityId: 71, perspective: 'MERCHANT', status: 'RUNNING', revision: 5, authorityEpoch: 5 } })
+  assert.equal((await read).data.authorityEpoch, 5)
+  assert.equal(harness.calls.filter(call => call.method === 'POST').length, 1)
+  assert.equal(input.authorityEpoch, 4, '读取新纪元不得修改原命令')
+})
+
+test('纪元可缺省兼容旧会话；有值时必须为 Java Integer 正整数，不猜不转换', async () => {
+  const harness = requestHarness()
+  const client = createGameSessionClient({ sendRequest: harness.sendRequest })
+  for (const authorityEpoch of [0, -1, 1.5, '4', 2147483648]) {
+    assert.equal((await client.submitAction('player', commandInput({ authorityEpoch }))).status, 'business-error')
+  }
+  assert.equal(harness.calls.length, 0)
+  const pending = client.submitAction('player', commandInput({ authorityEpoch: null }))
+  assert.equal(Object.hasOwn(harness.calls[0].data, 'authorityEpoch'), false)
+  harness.calls[0].fail()
+  assert.equal((await pending).status, 'unknown')
+})

@@ -22,7 +22,9 @@ global.getApp = () => ({
   tips: () => {},
   getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
   chooseImage: () => {},
-  getUserID: () => 0,
+  getUserID: () => 7,
+  getNickname: () => '测试作者',
+  getAvatar: () => '',
   getUserInfo: () => null,
   getToken: () => '',
 });
@@ -99,10 +101,12 @@ function openForEdit(topicPatch, loadOptions) {
 
 function submitBody(page) {
   sent = [];
+  assert.doesNotThrow(() => page._buildSubmitChapters(Number(page.data.formData.productType)), '提交夹具章节必须满足真实payload合同');
   page._doSubmit();
-  const path = Number(page.data.formData.productType) === 1 ? '/api/topic/v2/update' : '/api/topic/update';
+  // 两种回填夹具均包含正式节点，真实payload会生成chapter.blocks并走v2编辑端点。
+  const path = '/api/topic/v2/update';
   const req = sent.find((r) => r.url === path);
-  assert.ok(req, '提交必须打出 create/update 请求');
+  assert.ok(req, '提交必须打出 create/update 请求: ' + JSON.stringify({errors: page.data.errors, sent: sent.map(r => r.url)}));
   return JSON.parse(req.data);
 }
 

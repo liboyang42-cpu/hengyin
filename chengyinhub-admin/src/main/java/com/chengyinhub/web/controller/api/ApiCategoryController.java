@@ -43,7 +43,8 @@ public class ApiCategoryController extends BaseController {
     public AjaxResult categoryList(String type, String parentid, String keyword) {
         SysCategory category = new SysCategory();
 
-        category.setParentId(Convert.toLong(parentid, 0L));
+        Long parentId = Convert.toLong(parentid, 0L);
+        category.setParentId(parentId);
         category.setStatus(1);
         category.setDelFlag(0);
 
@@ -56,7 +57,7 @@ public class ApiCategoryController extends BaseController {
 
 
         List<SysCategory> sysCategoryList = sysCategoryService.selectSysCategoryList(category);
-        if (!parentid.equals("0")) {
+        if (parentId != 0L) {
             for (SysCategory entity : sysCategoryList) {
                 category = new SysCategory();
                 category.setParentId(entity.getId());

@@ -101,7 +101,7 @@ test('screen canvas 不可用时显式阻断并可重试，不在背后白画 po
   assert.strictEqual(page._fog, undefined, 'blocked 状态不应继续构建永远不可见的旧网格');
   assert.deepStrictEqual(page.data.fogPolys, [], 'blocked 状态不能把旧 map polygon 当作可用降级');
   assert.strictEqual(page.data.fogScreenGuard, true, 'screen 不可用时必须以全黑层遮住原生文字');
-  assert.strictEqual(page.data.fogScreenError, true, 'screen 不可用时必须给用户可重试状态');
+  assert.strictEqual(page.data.fogScreenError, undefined, '读取失败留白，fail-closed guard仍保留');
 });
 
 test('旧 overlay helper 中途失败仍回落到 poly,不清空雾', () => {
@@ -170,7 +170,7 @@ test('当前 screen image 解码失败时保持全黑，不回退到会浮字的
 
   assert.strictEqual(page._fogMode, 'screen', 'image 失败不能退回 map 内 poly');
   assert.strictEqual(page.data.fogScreenGuard, true, 'image 失败必须立刻全黑 fail-closed');
-  assert.strictEqual(page.data.fogScreenError, true, 'image 失败必须显示可重试状态');
+  assert.strictEqual(page.data.fogScreenError, undefined, '图层读取失败不显示错误提示');
 });
 
 test('全黑等待或失败态直接拦住原生 POI，不允许盲点到店', () => {
@@ -214,7 +214,8 @@ test('首张当前世代 image load 前不启动计时或持续定位', () => {
   page._fogLifecycleGen = 6;
   page._fogMode = 'screen';
   page._fogScreenG = {};
-  page._fogStartPending = { p: page._c, startTracking: true, generation: 6 };
+  page._fogStartPending = { p: page._c, startTracking: true, generation: 6,
+    locationRevision: require('../../utils/location/bg-tracker.js').revision('roam') };
   page._addReveal = () => {};
   let clocks = 0;
   let locations = 0;
@@ -232,6 +233,19 @@ test('首张当前世代 image load 前不启动计时或持续定位', () => {
   page._completeRoamAfterFogLoad(6);
   assert.strictEqual(clocks, 1, '重复 load 不得重复启动计时');
   assert.strictEqual(locations, 1, '重复 load 不得重复启动持续定位');
+});
+
+test('缺用途授权世代的旧fog pending不能开启持续定位', () => {
+  const page = loadRoamPage();
+  page._fogLifecycleGen = 6;
+  page._fogMode = 'screen';
+  page._fogStartPending = { p: page._c, startTracking: true, generation: 6 };
+  page._startClock = () => {};
+  let locations = 0;
+  page._startReal = () => { locations++; };
+  page.data.fogScreenReady = true;
+  page._completeRoamAfterFogLoad(6);
+  assert.strictEqual(locations, 0, '未知授权的旧pending只读地图，不能补授定位许可');
 });
 
 test('已探索点会在雾上擦出洞(降级路径的擦除真的生效)', async () => {

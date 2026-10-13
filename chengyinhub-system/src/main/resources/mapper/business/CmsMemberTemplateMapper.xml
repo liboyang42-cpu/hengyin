@@ -405,7 +405,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="difficulty != null">difficulty = #{difficulty},</if>
             <if test="isSync != null">is_sync = #{isSync},</if>
             <if test="ruleInstructions != null">rule_instructions = #{ruleInstructions},</if>
-            <if test="merchantGuide != null">merchant_guide = #{merchantGuide},</if>
+            <choose>
+                <when test="clearFields != null and clearFields.contains('merchantGuide')">merchant_guide = NULL,</when>
+                <otherwise><if test="merchantGuide != null">merchant_guide = #{merchantGuide},</if></otherwise>
+            </choose>
             <if test="validationMethod != null">validation_method = #{validationMethod},</if>
             <choose>
                 <when test="validationMethod != null and (validationMethod != 7 and validationMethod != 2
@@ -414,8 +417,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                     sensor_config = NULL,
                 </when>
                 <otherwise>
-                    <if test="sensorType != null">sensor_type = #{sensorType},</if>
-                    <if test="sensorConfig != null">sensor_config = #{sensorConfig},</if>
+                    <choose>
+                        <when test="clearFields != null and clearFields.contains('sensorType')">sensor_type = NULL,</when>
+                        <otherwise><if test="sensorType != null">sensor_type = #{sensorType},</if></otherwise>
+                    </choose>
+                    <choose>
+                        <when test="clearFields != null and clearFields.contains('sensorConfig')">sensor_config = NULL,</when>
+                        <otherwise><if test="sensorConfig != null">sensor_config = #{sensorConfig},</if></otherwise>
+                    </choose>
                 </otherwise>
             </choose>
             <if test="questionName != null">question_name = #{questionName},</if>
@@ -425,10 +434,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="medalImg != null">medal_img = #{medalImg},</if>
             <if test="medalName != null">medal_name = #{medalName},</if>
             <if test="medalStyle != null">medal_style = #{medalStyle},</if>
-            <if test="rewardRulesJson != null">reward_rules_json = #{rewardRulesJson},</if>
+            <choose>
+                <when test="clearFields != null and clearFields.contains('rewardRulesJson')">reward_rules_json = NULL,</when>
+                <otherwise><if test="rewardRulesJson != null">reward_rules_json = #{rewardRulesJson},</if></otherwise>
+            </choose>
             <if test="xpValue != null">xp_value = #{xpValue},</if>
             <if test="storyText != null">story_text = #{storyText},</if>
-            <if test="storyImg != null">story_img = #{storyImg},</if>
+            <choose>
+                <when test="clearFields != null and clearFields.contains('storyImg')">story_img = NULL,</when>
+                <otherwise><if test="storyImg != null">story_img = #{storyImg},</if></otherwise>
+            </choose>
             <if test="storyJson != null">story_json = #{storyJson},</if>
             <if test="hint1 != null">hint1 = #{hint1},</if>
             <if test="hint2 != null">hint2 = #{hint2},</if>

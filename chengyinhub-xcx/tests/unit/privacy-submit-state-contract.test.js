@@ -10,6 +10,13 @@ function loadPage(recordConsent) {
   const sandbox = { records: [], resolutions: [], toasts: [], backs: 0 }
   global.getApp = () => ({
     hasPendingPrivacyAuthorization: () => true,
+    declineUsageConsent() {},
+    agreeUsageConsent: (event, checked) => {
+      if (!checked) return Promise.reject(new Error('service checkbox missing'));
+      if (!sandbox.resolutions.length) sandbox.resolutions.push({ event: 'agree', buttonId: event.detail.buttonId });
+      const payload = { docType: 'privacy_policy', scene: 'app_launch', eventType: 'AGREE' };
+      sandbox.records.push(payload); return recordConsent(payload);
+    },
     recordConsent: (payload) => { sandbox.records.push(payload); return recordConsent(payload) },
     resolvePrivacyAuthorization: (payload) => sandbox.resolutions.push(payload),
   })
@@ -33,6 +40,7 @@ const settle = () => new Promise((resolve) => setImmediate(resolve))
 test('同意记录失败保留持久错误与重试上下文，不用易逝 toast', async () => {
   let shouldFail = true
   const { page, sandbox } = loadPage(() => shouldFail ? Promise.reject(new Error('offline')) : Promise.resolve())
+  page.data.serviceAgreed = true
   page.agreePrivacy({ detail: { buttonId: 'agree-button' } })
   await settle()
   assert.equal(page.data.submitting, false)

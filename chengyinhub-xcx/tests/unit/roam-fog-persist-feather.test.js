@@ -96,8 +96,8 @@ test('_loadLocalHistory 给 roam_tiles 格子标 110m 大半径(重开连片,不
   const { geohash7 } = require('../../utils/roam-geo.js');
   const h = geohash7(31.2301, 121.4702);
   const page = loadRoamPage({
-    'roam_memory_v1:9:tiles': { tiles: { [h]: 1 }, serverCursor: 8 },
-    'roam_memory_v1:9:reveals': [{ lat: 31.2308, lng: 121.4708 }],
+    'roam_memory_v1:9:tiles': { tiles: { [h]: 1 }, retentionAt: { [h]: Date.now() }, serverCursor: 8 },
+    'roam_memory_v1:9:reveals': [{ lat: 31.2308, lng: 121.4708, retentionAt: Date.now() }],
   });
   page._loadLocalHistory();
   const tilePt = page._historyReveals.find((p) => p.r);

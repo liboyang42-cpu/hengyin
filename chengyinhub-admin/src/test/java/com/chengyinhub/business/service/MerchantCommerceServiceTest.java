@@ -226,6 +226,43 @@ class MerchantCommerceServiceTest {
                 () -> service.orderStatus(12L, 34L, "TPLTM_owned"));
     }
 
+    @Test
+    void missedPaidCallbackIsRecoveredFromWechatAndUnknownResultIsNeverClosed() {
+        OmsOrder order = new OmsOrder();
+        order.setId(8L); order.setOrderSn("TPLTM_8"); order.setStatus(0L); order.setMemberId(12L);
+        order.setBizType(MerchantCommerceService.BIZ_PREMIUM_TEMPLATE);
+        order.setPayAmount(new BigDecimal("19.90")); order.setEntitlementDays(30); order.setEntitlementMaxUsage(3);
+        when(orderMapper.selectOmsOrderByOrderSn("TPLTM_8")).thenReturn(order);
+        java.util.Map<String, String> observed = new java.util.HashMap<>();
+        observed.put("trade_state", "SUCCESS"); observed.put("out_trade_no", "TPLTM_8");
+        observed.put("currency", "CNY"); observed.put("total", "1990"); observed.put("transaction_id", "wx-tx-8");
+        when(wechatPayService.queryOrderStatus("TPLTM_8")).thenReturn(observed);
+        when(orderMapper.markCommerceOrderPaid(8L, "wx-tx-8")).thenReturn(1);
+        when(subscriptionMapper.grantMerchantSubscription(any())).thenReturn(1);
+        service.reconcileOrder("TPLTM_8");
+        verify(subscriptionMapper).grantMerchantSubscription(any());
+        observed.put("trade_state", "UNKNOWN");
+        assertThrows(IllegalStateException.class, () -> service.reconcileOrder("TPLTM_8"));
+        verify(orderMapper, never()).markCommerceOrderClosed(any());
+        verify(wechatPayService, never()).closeOrder(any());
+    }
+
+    @Test
+    void queriedPaymentRejectsWrongCurrencyOrOutTradeNoBeforeGrant() {
+        OmsOrder order = new OmsOrder();
+        order.setOrderSn("CUSTOM_9"); order.setStatus(0L); order.setBizType(MerchantCommerceService.BIZ_CUSTOM_EVENT);
+        when(orderMapper.selectOmsOrderByOrderSn("CUSTOM_9")).thenReturn(order);
+        java.util.Map<String, String> observed = new java.util.HashMap<>();
+        observed.put("trade_state", "SUCCESS"); observed.put("out_trade_no", "CUSTOM_9");
+        observed.put("currency", "USD"); observed.put("total", "8800"); observed.put("transaction_id", "wx-tx");
+        when(wechatPayService.queryOrderStatus("CUSTOM_9")).thenReturn(observed);
+        assertThrows(IllegalStateException.class, () -> service.reconcileOrder("CUSTOM_9"));
+        observed.put("currency", "CNY"); observed.put("out_trade_no", "CUSTOM_other");
+        assertThrows(IllegalStateException.class, () -> service.reconcileOrder("CUSTOM_9"));
+        verify(orderMapper, never()).markCommerceOrderPaid(any(), any());
+        verify(subscriptionMapper, never()).grantMerchantSubscription(any());
+    }
+
     private MerchantCommerceService enabledService() {
         MerchantCommerceService enabled = new MerchantCommerceService(true);
         ReflectionTestUtils.setField(enabled, "subscriptionMapper", subscriptionMapper);

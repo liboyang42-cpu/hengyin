@@ -24,6 +24,30 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AdminFileUploadServiceTest
 {
     @Test
+    void actualImageRiskAndUnavailableBlockBeforeOssOrLocalWrites() throws Exception
+    {
+        AtomicInteger puts=new AtomicInteger();
+        AdminFileUploadService service=new AdminFileUploadService(file->{puts.incrementAndGet();return ossResult();});
+        AppUploadService checker=org.mockito.Mockito.mock(AppUploadService.class);
+        ReflectionTestUtils.setField(service,"imageSecurity",checker);
+        MockMultipartFile image=new MockMultipartFile("file","avatar.png","image/png",image("png"));
+        org.mockito.Mockito.doThrow(new UploadRejectedException("图片存在风险"))
+                .when(checker).verifyImageForPublication(org.mockito.ArgumentMatchers.any());
+        assertThrows(AdminFileUploadService.RejectedException.class,()->service.uploadOss(image));
+        java.nio.file.Path temp=java.nio.file.Files.createTempDirectory("media-review-negative-");
+        try {
+            assertThrows(AdminFileUploadService.RejectedException.class,()->service.uploadLocal(temp.toString(),image));
+            assertThrows(AdminFileUploadService.RejectedException.class,()->service.uploadLocals(temp.toString(),java.util.List.of(image)));
+            org.mockito.Mockito.doThrow(new UploadSecurityUnavailableException("检查不可用"))
+                    .when(checker).verifyImageForPublication(org.mockito.ArgumentMatchers.any());
+            assertThrows(AdminFileUploadService.SecurityUnavailableException.class,()->service.uploadOss(image));
+            assertThrows(AdminFileUploadService.SecurityUnavailableException.class,()->service.uploadLocal(temp.toString(),image));
+            try(java.util.stream.Stream<java.nio.file.Path> entries=java.nio.file.Files.list(temp)) {assertEquals(0L,entries.count());}
+            assertEquals(0,puts.get());
+        } finally {java.nio.file.Files.delete(temp);}
+    }
+
+    @Test
     void ossRejectDoesNotInvokePutObjectBoundary() throws Exception
     {
         AtomicInteger puts = new AtomicInteger();
@@ -220,7 +244,12 @@ class AdminFileUploadServiceTest
 
     private MockMvc controller(AdminFileUploadService service)
     {
-        CommonController controller = new CommonController();
+        CommonController controller = new CommonController() { @Override protected Long currentSystemUserId() {return 99L;} };
+        ReflectionTestUtils.setField(service,"imageSecurity",org.mockito.Mockito.mock(AppUploadService.class));
+        com.chengyinhub.business.service.impl.AppMediaAssetService registry=org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.AppMediaAssetService.class);
+        org.mockito.Mockito.when(registry.registerApprovedSystemImage(org.mockito.ArgumentMatchers.anyLong(),org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.anyString()))
+                .thenAnswer(call->call.getArgument(2));
+        ReflectionTestUtils.setField(controller,"appMediaAssetService",registry);
         ReflectionTestUtils.setField(controller, "adminFileUploadService", service);
         return MockMvcBuilders.standaloneSetup(controller).build();
     }

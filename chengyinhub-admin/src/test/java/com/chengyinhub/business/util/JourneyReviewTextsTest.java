@@ -39,6 +39,32 @@ import static org.mockito.Mockito.when;
 class JourneyReviewTextsTest {
 
     @Test
+    void chapterAndNodeUserFacingTextIsCollectedButCoordinatesAndMediaAreNotText() {
+        ChapterDTO chapter = new ChapterDTO();
+        chapter.setName("章节名"); chapter.setDescription("章节正文"); chapter.setCategory("咖啡");
+        chapter.setAudioUrl("https://cdn/private-audio.mp3");
+        com.chengyinhub.business.domain.dto.NodeDTO node = new com.chengyinhub.business.domain.dto.NodeDTO();
+        node.setName("站点名"); node.setDescription("站点正文"); node.setAddress("地点");
+        node.setBusinessTime("营业说明"); node.setHookText("钩子"); node.setCardHookLong("长钩子"); node.setFragmentText("碎片");
+        node.setLongitude("121"); node.setLatitude("31"); node.setImgUrl("https://cdn/photo.jpg");
+        chapter.setNodes(Arrays.asList(null, node));
+        List<JourneyReviewTexts.Entry> entries = JourneyReviewTexts.collectChapters(Arrays.asList(null, chapter));
+        assertEquals(Arrays.asList("章节名", "章节正文", "咖啡", "站点名", "站点正文", "地点", "营业说明", "钩子", "长钩子", "碎片"), texts(entries));
+        assertEquals("chapters[1].nodes[1].fragmentText", entries.get(9).getField());
+        assertTrue(JourneyReviewTexts.collectChapters(null).isEmpty());
+    }
+
+    @Test
+    void r5RepliesAndZeroMessageReachExistingAuditWithoutCollectingRuleIdentifiers() {
+        String config = "{\"outcomeRules\":{\"version\":1,\"pass\":{\"reply\":\"通过反馈\",\"costs\":[{\"statKey\":\"counter.secret\",\"amount\":3}]},\"fail\":{\"reply\":\"失败反馈\"}},\"qa\":{\"options\":[{\"after\":{\"reply\":\"选项反馈\"}}]},\"private\":{\"reply\":\"不采集\"}}";
+        assertEquals(Arrays.asList("通过反馈", "失败反馈", "选项反馈"), texts(JourneyReviewTexts.collectBlocks(config)));
+        List<JourneyReviewTexts.Entry> zero = JourneyReviewTexts.collectThemeRuntime(
+                "{\"gameplayRuntime\":{\"survival\":{\"zeroHpPolicy\":\"WAIT\",\"zeroMessage\":\"归零反馈\"}}}");
+        assertEquals(Collections.singletonList("归零反馈"), texts(zero));
+        assertEquals("themeRuntimeConfig.gameplayRuntime.survival.zeroMessage", zero.get(0).getField());
+    }
+
+    @Test
     void collectsEveryJourneyStoryTextField() {
         String json = "{\"schemaVersion\":1,"
                 + "\"call\":{\"npcId\":1,\"opener\":\"开场白\",\"brief\":\"委托简报\","
@@ -329,6 +355,35 @@ class JourneyReviewTextsTest {
         assertTrue(JourneyReviewTexts.collectBlocks(
                 "{\"compare\":{\"prompt\":\" \",\"left\":\"x\",\"right\":{\"items\":[1,{},{\"time\":\" \"}]}}}")
                 .isEmpty());
+    }
+
+    @Test
+    void notePresetsCollectTextAndObjectLabelsWithoutLooseningThePublishValidator() {
+        List<JourneyReviewTexts.Entry> entries = JourneyReviewTexts.collectBlocks(
+                "{\"note\":{\"presets\":[\"纯文本\",null,4,{\"text\":\"旧正文\",\"label\":\"旧标签\",\"code\":\"identifier\"}]}}");
+        assertEquals(Arrays.asList("纯文本", "旧正文", "旧标签"), texts(entries));
+        assertEquals("blockConfig.note.presets[]", entries.get(0).getField());
+        assertEquals("blockConfig.note.presets[].text", entries.get(1).getField());
+        assertEquals("blockConfig.note.presets[].label", entries.get(2).getField());
+    }
+
+    @Test
+    void collectsQaScanAlbumAndOtherPlayerVisibleText() {
+        String config = "{\"qa\":{\"title\":\"问题\",\"lead\":\"提示\",\"answerText\":\"答案\","
+                + "\"shotNote\":\"拍照说明\",\"options\":[{\"label\":\"选项\",\"fb\":\"反馈\"}]},"
+                + "\"scan\":{\"reply\":\"扫码回复\"},\"album\":{\"images\":[{\"line\":\"配文\"}]},"
+                + "\"photoCheck\":{\"title\":\"拍照\",\"requirement\":\"要求\",\"shotNote\":\"说明\",\"cardTitle\":\"卡名\"},"
+                + "\"note\":{\"title\":\"留言\",\"prompt\":\"写留言\",\"presets\":[\"预设留言\"]},"
+                + "\"typeIn\":{\"title\":\"打字\",\"target\":\"目标文字\"}}";
+        List<JourneyReviewTexts.Entry> entries = JourneyReviewTexts.collectBlocks(config);
+        assertFields(entries, "反馈", "blockConfig.qa.title", "blockConfig.qa.lead",
+                "blockConfig.qa.answerText", "blockConfig.qa.shotNote", "blockConfig.qa.options[].label",
+                "blockConfig.qa.options[].fb", "blockConfig.scan.reply", "blockConfig.album.images[].line",
+                "blockConfig.photoCheck.title", "blockConfig.photoCheck.requirement", "blockConfig.photoCheck.shotNote",
+                "blockConfig.photoCheck.cardTitle", "blockConfig.note.title", "blockConfig.note.prompt",
+                "blockConfig.note.presets[]", "blockConfig.typeIn.title", "blockConfig.typeIn.target");
+        assertEquals(17, entries.size());
+        assertTrue(JourneyReviewTexts.collectBlocks("{\"qa\":null,\"album\":{\"images\":[null,1]}}").isEmpty());
     }
 
     private static List<String> texts(List<JourneyReviewTexts.Entry> entries) {

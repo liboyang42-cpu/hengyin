@@ -15,6 +15,7 @@ function loadPage(relativePath) {
   const requests = [];
   let definition;
   global.getApp = () => ({
+    canUseCommunity: () => true, // Current-account server-open fixture.
     globalData: {},
     getImgUrl: name => '/images/' + name,
     getPageSize: () => 10,

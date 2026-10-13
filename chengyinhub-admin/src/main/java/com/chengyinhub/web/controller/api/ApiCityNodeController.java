@@ -160,11 +160,13 @@ public class ApiCityNodeController extends BaseController {
 
     @Operation(summary = "完成节点互动并领券(半径二次校验 + 按验证方式判定 + 每人每节点仅一次)")
     @PostMapping("/nodes/{id}/complete")
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AjaxResult complete(@PathVariable("id") Long id, Double lat, Double lng,
                                String answer, String photoUrl, String code) {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
         if (id == null || id <= 0) return error("参数不合规");
+        roamMapper.lockClaimOwner(memberId);
         CityNodeVO node = roamMapper.selectPlayerMerchantNodeDetail(id, 0L);
         if (node == null) return error("据点未开放或已下线");
         if (node.getStatus() == null || node.getStatus() != 1) return error("节点未上线");

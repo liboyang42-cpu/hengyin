@@ -70,8 +70,10 @@ class RoamTileMemoryPageTest
         int end = xml.indexOf("</select>", start);
         String select = xml.substring(start, end).replaceAll("\\s+", " ");
 
-        assertTrue(select.contains("where member_id = #{memberId} and id &gt; #{afterId}"));
-        assertTrue(select.contains("order by id asc"));
+        assertTrue(select.contains("where f.member_id = #{memberId} and f.id &gt; #{afterId}"));
+        assertTrue(select.contains("join roam_session s on s.id = f.session_id and s.member_id = f.member_id"));
+        assertTrue(select.contains("s.status = 0 or (s.status = 1 and s.finished_at &gt; date_sub(now(), interval 30 day))"));
+        assertTrue(select.contains("order by f.id asc"));
         assertTrue(select.contains("limit #{limit}"));
     }
 

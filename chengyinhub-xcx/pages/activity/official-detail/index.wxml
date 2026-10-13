@@ -102,7 +102,7 @@
         </view>
         <text wx:if="{{!e.signed}}" class="od-note">报名后发生的新到达或主题完成才会归入本场活动。</text>
         <text wx:if="{{e.paused}}" class="od-note od-note--danger">活动暂时暂停：{{e.pausedReason || '等待运营处理后恢复'}}</text>
-        <cy-inline-error wx:if="{{boundTopicError}}" kind="data" title="绑定主题名称没读到" sub="{{boundTopicError}}" />
+        <cy-inline-error load-failure wx:if="{{boundTopicError}}" kind="data" title="绑定主题名称没读到" sub="{{boundTopicError}}" />
         <view wx:if="{{e.missions.length}}" class="od-task-list">
           <view wx:for="{{e.missions}}" wx:key="missionCode" class="od-task {{item.complete ? 'is-complete' : ''}}"
                 bindtap="onMissionTap" data-code="{{item.missionCode}}" hover-class="cy-pressed" hover-stay-time="80"

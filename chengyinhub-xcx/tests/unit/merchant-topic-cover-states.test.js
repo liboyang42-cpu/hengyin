@@ -30,6 +30,7 @@ function merchantInfoPageFrom(source) {
       if (request === '../../../utils/datetime') {
         return require('../../utils/datetime');
       }
+      if (request === '../../../utils/session/login-reload.js') return require('../../utils/session/login-reload.js');
       if (request === '../../../utils/response-shape.js') {
         return require('../../utils/response-shape.js');
       }

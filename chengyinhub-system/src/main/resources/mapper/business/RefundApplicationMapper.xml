@@ -78,6 +78,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id}
     </select>
 
+    <select id="selectRegistrationHistoryForUpdate" resultMap="RefundApplicationResult" useCache="false" flushCache="true">
+        <include refid="selectRefundApplicationVo"/>
+        where source_type = 'registration' and source_id = #{registrationId} and del_flag = 0
+        order by id for update
+    </select>
+
     <insert id="insertRefundApplication" parameterType="com.chengyinhub.business.domain.RefundApplication" useGeneratedKeys="true" keyProperty="id">
         insert into refund_application
         (refund_no, source_type, source_id, owner_type, owner_id, member_id, merchant_id,

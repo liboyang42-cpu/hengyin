@@ -137,7 +137,7 @@ Component({
 
     validate() {
       var d = this.data;
-      this.setData({ canSave: !!(d.name && d.city) });
+      this.setData({ canSave: !!(String(d.name || '').trim() && String(d.city || '').trim()) });
     },
 
     // 管理员锁态卡第三行:三项经营配置的现值回显 —— 管理员改不了它们,

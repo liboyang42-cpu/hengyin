@@ -98,7 +98,7 @@
           type="text"
           :disabled="!canReview(scope.row)"
           @click="openReview(scope.row, 1)"
-          v-hasPermi="['business:audit:review']"
+          v-hasPermi="scope.row.bizType === 'MEDIA_ASSET' ? ['business:mediaReview:approve'] : ['business:audit:review']"
         >通过</el-button>
         <el-button
           size="mini"
@@ -106,7 +106,7 @@
           class="danger-action"
           :disabled="!canReview(scope.row)"
           @click="openReview(scope.row, 2)"
-          v-hasPermi="['business:audit:review']"
+          v-hasPermi="scope.row.bizType === 'MEDIA_ASSET' ? ['business:mediaReview:reject'] : ['business:audit:review']"
         >拒绝</el-button>
       </template>
     </cy-data-table>
@@ -123,8 +123,8 @@
             :facts="auditHeaderFacts"
           >
             <template slot="actions">
-              <el-button size="mini" type="primary" :disabled="!canReview(detailTask)" @click="openReview(detailTask, 1)" v-hasPermi="['business:audit:review']">通过</el-button>
-              <el-button size="mini" type="text" class="danger-action" :disabled="!canReview(detailTask)" @click="openReview(detailTask, 2)" v-hasPermi="['business:audit:review']">拒绝</el-button>
+              <el-button size="mini" type="primary" :disabled="!canReview(detailTask)" @click="openReview(detailTask, 1)" v-hasPermi="detailTask.bizType === 'MEDIA_ASSET' ? ['business:mediaReview:approve'] : ['business:audit:review']">通过</el-button>
+              <el-button size="mini" type="text" class="danger-action" :disabled="!canReview(detailTask)" @click="openReview(detailTask, 2)" v-hasPermi="detailTask.bizType === 'MEDIA_ASSET' ? ['business:mediaReview:reject'] : ['business:audit:review']">拒绝</el-button>
             </template>
           </cy-entity-header>
           <template v-if="detailTask.bizType === 'HANGOUT'">
@@ -136,6 +136,13 @@
             <el-alert title="队伍举报：拒绝=成立，队伍改回仅邀请并从地图撤下，不解散、不踢人；通过=不成立，队伍保持公开。请结合快照核实。" type="info" :closable="false" />
             <el-button size="mini" @click="investigateSameTarget">查看同队伍审核历史</el-button>
             <el-button size="mini" :disabled="Number(detailTask.status) !== 0" @click="openReview(detailTask, 3)" v-hasPermi="['business:audit:review']">缺证，升级审核</el-button>
+          </template>
+          <template v-if="detailTask.bizType === 'MEDIA_ASSET'">
+            <el-alert title="文件在审核通过前仅作者可见。请实际检查图片、音频或模型；无法检查时请拒绝并填写原因，作者可重新提审。" type="info" :closable="false" />
+            <el-image v-if="mediaType === 'IMAGE' && mediaPreviewUrl" :src="mediaPreviewUrl" fit="contain" style="max-width: 100%; max-height: 480px" :preview-src-list="[mediaPreviewUrl]" />
+            <audio v-else-if="mediaType === 'AUDIO' && mediaPreviewUrl" :src="mediaPreviewUrl" controls preload="none" />
+            <el-link v-else-if="mediaPreviewUrl" :href="mediaPreviewUrl" target="_blank" rel="noopener noreferrer">下载并检查模型文件</el-link>
+            <el-button size="mini" @click="openDetail(detailRow)">刷新五分钟预览</el-button>
           </template>
           <cy-evidence-panel title="内容快照" :items="auditEvidenceItems" empty-text="当前任务没有附带内容快照" />
           <cy-timeline title="处置轨迹" :items="auditTimelineItems" empty-text="尚无处置记录" />
@@ -186,7 +193,7 @@
 </template>
 
 <script>
-import { getAuditTaskDetail, listAuditTasks, reviewAuditTask, submitTopicProjectReview, submitTopicSaleReview } from '@/api/business/auditWorkbench'
+import { getAuditTaskDetail, listAuditTasks, reviewAuditTask, reviewMediaAsset, submitTopicProjectReview, submitTopicSaleReview } from '@/api/business/auditWorkbench'
 import CyDataTable from '@/components/CyDataTable'
 import CyEntityHeader from '@/components/CyEntityHeader'
 import CyEntityLink from '@/components/CyEntityLink'
@@ -242,6 +249,8 @@ export default {
       reportCount: 0,
       auditList: [],
       detailTask: null,
+      mediaPreviewUrl: '',
+      mediaType: '',
       detailRecords: [],
       tableColumns: [
         { key: 'subject', label: '审核对象', minWidth: 210 },
@@ -252,6 +261,7 @@ export default {
         { key: 'actions', label: '处理', width: 210, fixed: 'right', align: 'right', locked: true }
       ],
       bizTypeOptions: [
+        { label: '媒体文件审核', value: 'MEDIA_ASSET' },
         { label: '主题立项审核', value: 'TOPIC_PROJECT_REVIEW' },
         { label: '主题开售审核', value: 'TOPIC_SALE_REVIEW' },
         { label: '主题', value: 'TOPIC' },
@@ -268,6 +278,7 @@ export default {
       ],
       queryParams: { pageNum: 1, pageSize: 10, bizType: null, bizId: null, status: null },
       reviewForm: { taskId: null, status: null, reasonText: null },
+      reviewBizType: '',
       commercialSubmitForm: { topicId: null, phase: 'PROJECT', requestedTarget: 'RECRUITING' }
     }
   },
@@ -388,6 +399,7 @@ export default {
       this.detailError = ''
       this.detailRow = row
       this.detailTask = null
+      this.mediaPreviewUrl = ''; this.mediaType = ''
       this.detailRecords = []
       this.reportCount = 0
       return getAuditTaskDetail(row.id).then(response => {
@@ -396,6 +408,7 @@ export default {
           || !Number.isSafeInteger(response.reportCount) || response.reportCount < 0) {
           throw new Error('Invalid audit detail response')
         }
+        this.mediaPreviewUrl = response.mediaPreviewUrl || ''; this.mediaType = response.mediaType || ''
         this.detailTask = response.task
         this.detailRecords = response.records
         this.reportCount = response.reportCount
@@ -462,11 +475,13 @@ export default {
       try { return JSON.stringify(JSON.parse(value), null, 2) } catch (error) { return value }
     },
     openReview(row, status) {
+      this.reviewBizType = row.bizType
       this.reviewForm = { taskId: row.id, expectedVersion: row.version, status: status, reasonText: null }
       this.reviewOpen = true
     },
     submitReview() {
-      reviewAuditTask(this.reviewForm).then(() => {
+      const review = this.reviewBizType === 'MEDIA_ASSET' ? reviewMediaAsset : reviewAuditTask
+      return review(this.reviewForm).then(() => {
         this.$modal.msgSuccess('审核处理成功')
         this.reviewOpen = false
         this.detailOpen = false

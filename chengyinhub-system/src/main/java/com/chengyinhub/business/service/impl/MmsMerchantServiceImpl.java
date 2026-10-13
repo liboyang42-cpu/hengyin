@@ -67,6 +67,7 @@ public class MmsMerchantServiceImpl implements IMmsMerchantService
     @Autowired
     private ICapabilityService capabilityService;
 
+    @Autowired private com.chengyinhub.business.service.IRoleService roleService;
     @Autowired private IUmsMemberService umsMemberService;
     @Autowired private IUmsMemberPointsDetailService umsMemberPointsDetailService;
     @Autowired private ICmsPointsSettingService cmsPointsSettingService;
@@ -146,15 +147,7 @@ public class MmsMerchantServiceImpl implements IMmsMerchantService
         if (merchantOperatorMapper.selectActiveByMemberIdForUpdate(memberId) != null) {
             throw new ServiceException("请先退出商家经营团队，再切换店主身份", HttpStatus.CONFLICT);
         }
-        capabilityService.revoke(memberId, MemberCapability.CAP_CLUB_LEADER);
-        capabilityService.grant(memberId, MemberCapability.CAP_MERCHANT, null);
-        UmsMember identity = new UmsMember();
-        identity.setId(memberId);
-        identity.setRole("merchant");
-        identity.setUserType(2L);
-        if (umsMemberMapper.updateUmsMember(identity) != 1) {
-            throw new ServiceException("商家会员身份更新失败");
-        }
+        roleService.changeRole(memberId, com.chengyinhub.business.service.IRoleService.ROLE_MERCHANT, 0L);
     }
 
     /**

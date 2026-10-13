@@ -125,6 +125,7 @@ class RegistrationFundsMybatisIntegrationTest {
 
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.FirstReviewPointsClawbackService.class));
         registrationTarget = target;
+        ReflectionTestUtils.setField(target, "platformMemberId", 1L);
         org.springframework.test.util.ReflectionTestUtils.setField(target, "growthService",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.IGrowthService.class));
         ReflectionTestUtils.setField(target, "cmsRegistrationMapper", template.getMapper(CmsRegistrationMapper.class));
@@ -145,6 +146,7 @@ class RegistrationFundsMybatisIntegrationTest {
         // inbox 自身语义由 WxPaymentCallbackInboxServiceImplTest 覆盖,这里桩掉。
         ReflectionTestUtils.setField(target, "wxPaymentCallbackInboxService",
                 mock(IWxPaymentCallbackInboxService.class));
+        ReflectionTestUtils.setField(target, "alarmService", mock(AlarmService.class));
 
         CmsPointsSettingServiceImpl pointsSettingService = new CmsPointsSettingServiceImpl();
         ReflectionTestUtils.setField(pointsSettingService, "cmsPointsSettingMapper", template.getMapper(CmsPointsSettingMapper.class));
@@ -155,6 +157,18 @@ class RegistrationFundsMybatisIntegrationTest {
         ReflectionTestUtils.setField(target, "settlementEntryService", settlementEntryService);
 
         transactionManager = new DataSourceTransactionManager(dataSource);
+        java.util.concurrent.ScheduledExecutorService noticeExecutor =
+                mock(java.util.concurrent.ScheduledExecutorService.class);
+        when(noticeExecutor.schedule(org.mockito.ArgumentMatchers.any(Runnable.class),
+                org.mockito.ArgumentMatchers.eq(10L),
+                org.mockito.ArgumentMatchers.eq(java.util.concurrent.TimeUnit.MILLISECONDS)))
+                .thenAnswer(call -> {
+                    call.getArgument(0, Runnable.class).run();
+                    return mock(java.util.concurrent.ScheduledFuture.class);
+                });
+        ReflectionTestUtils.setField(target, "committedBusinessNotice",
+                new com.chengyinhub.business.service.support.CommittedBusinessNotice(
+                        mock(INotifyService.class), mock(AlarmService.class), transactionManager, noticeExecutor));
         TransactionInterceptor interceptor = new TransactionInterceptor(transactionManager, new AnnotationTransactionAttributeSource());
         ProxyFactory proxyFactory = new ProxyFactory(target);
         proxyFactory.setInterfaces(ICmsRegistrationService.class, IRegistrationCreationTransaction.class);

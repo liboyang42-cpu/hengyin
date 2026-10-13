@@ -37,6 +37,7 @@ Page({
     loading: true,
     error: false,
     hasLoaded: false,
+    accessDenied: false,
     merchantAccess: { canReadAftercare: false },
     redemptions: [],
     redemptionGroups: [],
@@ -124,6 +125,7 @@ Page({
       loading,
       error,
       hasLoaded: false,
+      accessDenied: false,
       projectEvents: [],
       redemptions: [],
       redemptionGroups: [],
@@ -139,6 +141,7 @@ Page({
   _denyMerchantAccess() {
     this._invalidateScopedRequests();
     this._clearScopedData(false, true);
+    this.setData({ accessDenied: true });
   },
 
   _isCurrentMemberScope(memberId) {
@@ -165,7 +168,7 @@ Page({
     const identityEpoch = this._identityEpoch;
     const isCurrent = () => identityEpoch === this._identityEpoch
       && this._isCurrentMemberScope(memberId);
-    this.setData({ loading: true, error: false });
+    this.setData({ loading: true, error: false, accessDenied: false });
     app.sendRequest({
       hideLoading: true,
       silentError: true,
@@ -173,6 +176,13 @@ Page({
       method: 'POST',
       success: (res) => {
         if (!isCurrent()) return;
+        const validAccess = res && (res.code === '200' || res.code === 200) && res.data
+          && typeof res.data === 'object' && !Array.isArray(res.data) && typeof res.data.active === 'boolean';
+        if (!validAccess) {
+          this._invalidateScopedRequests();
+          this._clearScopedData(false, true);
+          return;
+        }
         const access = (res && (res.code === '200' || res.code === 200))
           ? normalizeMerchantAccess(res.data) : { active: false };
         const allowed = access.active && (this.data.view === 'settlement'

@@ -163,3 +163,12 @@ test('单条数据时 banner 有值、两个列表全空:空态判定必须把 b
       '摘掉 !banner.id 后检查器仍然放行 —— 这条断言是摆设');
   }
 });
+
+test('开发版主题模板真实空结果和故障不注入演示主题', () => {
+  for(const response of [{code:200,data:[]},{code:500,msg:'真实故障'}]){
+    const h=mountTemplatePage();global.wx.getAccountInfoSync=()=>({miniProgram:{envVersion:'develop'}});
+    h.page.getTopicTemplates();lastRequest(h,TOPIC_URL).success(response);lastRequest(h,TOPIC_URL).complete();
+    assert.equal(h.page.data.topList.length,0);assert.equal(h.page.data.tailList.length,0);assert.ok(!h.page.data.banner.id);
+    if(response.code===200)assert.equal(h.page.data.listLoaded,true);else assert.equal(h.page.data.errorMsg,'真实故障');
+  }
+});

@@ -73,6 +73,12 @@ public class ClubPostServiceImpl implements IClubPostService
     }
 
     @Override
+    public ClubPost selectClubPostByIdForUpdate(Long id)
+    {
+        return clubPostMapper.selectClubPostByIdForUpdate(id);
+    }
+
+    @Override
     public List<ClubPost> selectClubPostList(ClubPost clubPost)
     {
         return clubPostMapper.selectClubPostList(clubPost);

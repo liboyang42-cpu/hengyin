@@ -241,17 +241,7 @@ public class ClubServiceImpl implements IClubService
 
     private void ensureLeaderIdentity(UmsMember account, Long memberId)
     {
-        capabilityService.grant(memberId, MemberCapability.CAP_CLUB_LEADER, 0L);
-        if (!IRoleService.ROLE_CLUB.equals(roleService.resolveRole(account)))
-        {
-            UmsMember patch = new UmsMember();
-            patch.setId(memberId);
-            patch.setRole(IRoleService.ROLE_CLUB);
-            if (umsMemberService.updateUmsMember(patch) != 1)
-            {
-                throw new ServiceException("主理人默认视角更新失败，请重试", HttpStatus.CONFLICT);
-            }
-        }
+        roleService.changeRole(memberId, IRoleService.ROLE_CLUB, 0L);
     }
 
     private void validateClubCreate(Club club, int maxOwnedClubs)

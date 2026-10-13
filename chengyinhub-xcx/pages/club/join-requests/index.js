@@ -139,7 +139,7 @@ Page({
     const name = (row && row.nickname) || '城瘾玩家'
     modal.show(approve ? {
       title: '通过「' + name + '」的入会申请',
-      content: '通过后，对方将成为正式成员并可进入群聊。',
+      content: '通过后，对方将成为正式成员，可查看成员名单并使用成员功能。',
       confirmText: '通过',
       cancelText: '取消',
       success(result) { if (result.confirm) that.review(memberId, approve) },

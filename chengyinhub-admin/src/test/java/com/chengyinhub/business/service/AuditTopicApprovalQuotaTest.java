@@ -74,6 +74,18 @@ class AuditTopicApprovalQuotaTest {
                 mock(com.chengyinhub.business.mapper.BusinessAuditEventMapper.class);
         ReflectionTestUtils.setField(svc, "businessAuditEventMapper", auditMapper);
         ReflectionTestUtils.setField(svc, "cmsTopicMapper", cmsTopicMapper);
+        com.chengyinhub.business.service.support.AppMediaPublicationGuard mediaGuard =
+                com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(100L);
+        com.chengyinhub.business.mapper.CmsTopicChapterMapper mediaChapters =
+                mock(com.chengyinhub.business.mapper.CmsTopicChapterMapper.class);
+        com.chengyinhub.business.mapper.CmsTopicNodeMapper mediaNodes =
+                mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class);
+        when(mediaChapters.selectCmsTopicChapterList(any())).thenReturn(java.util.Collections.emptyList());
+        when(mediaNodes.selectCmsTopicNodeList(any())).thenReturn(java.util.Collections.emptyList());
+        ReflectionTestUtils.setField(mediaGuard, "topics", cmsTopicMapper);
+        ReflectionTestUtils.setField(mediaGuard, "chapters", mediaChapters);
+        ReflectionTestUtils.setField(mediaGuard, "nodes", mediaNodes);
+        ReflectionTestUtils.setField(svc, "mediaPublicationGuard", mediaGuard);
         ReflectionTestUtils.setField(svc, "quotaService", quotaService);
         ReflectionTestUtils.setField(svc, "cmsTopicServiceProvider", cmsTopicServiceProvider);
         when(cmsTopicServiceProvider.getObject()).thenReturn(cmsTopicService);

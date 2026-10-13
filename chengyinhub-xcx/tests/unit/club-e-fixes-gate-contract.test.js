@@ -221,7 +221,7 @@ test('E-15f 场次工具加载失败不再谎报「没有可管理的具体场�
   page.openActivityTools({ currentTarget: { dataset: { id: 31 } } });
   // 业务失败(HTTP 200 + code 500)走的是 success 回调 —— 原来它和「真的没有场次」共用一句话
   requests.find((r) => r.url === '/api/topic/info-to-user').success({ code: 500, msg: '主题服务不可用' });
-  assert.ok(toasts.includes('场次加载失败，请稍后重试'), '业务失败要给失败文案,实得:' + JSON.stringify(toasts));
+  assert.deepEqual(toasts, [], '读取失败留白，不能弹场次空态或错误提示');
   assert.ok(!toasts.includes('这个项目还没有可管理的具体场次'), '失败不许说成「没有场次」');
 
   // 真·空场次仍给「没有场次」文案(别把两态又混回去)

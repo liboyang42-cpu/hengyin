@@ -165,7 +165,7 @@ test('appReady 拒绝必须给出可见错误，不能因页面时序分支静�
   ctx.failLogin(new Error('bootstrap failed'));
   await flush();
 
-  assert.deepStrictEqual(ctx.toasts, ['加载失败，请重试']);
+  assert.deepStrictEqual(ctx.toasts, [], '加载失败按新要求留白');
 });
 
 test('首页卸载后 appReady 迟到回调不得 setData、加载数据或触发定位', async () => {

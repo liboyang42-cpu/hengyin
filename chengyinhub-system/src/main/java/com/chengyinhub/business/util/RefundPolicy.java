@@ -177,6 +177,14 @@ public final class RefundPolicy {
                                    Integer ticketMode, Date ticketStartTime, Date ticketEndTime,
                                    Date activityStartTime, Integer purchaseKind,
                                    Date snapshotDeadline, Date now) {
+        return evaluate(ownerType, paymentStatus, verificationStatus, ticketMode, ticketStartTime,
+                ticketEndTime, activityStartTime, purchaseKind, snapshotDeadline, null, null, now);
+    }
+
+    public static Verdict evaluate(Long ownerType, Integer paymentStatus, Integer verificationStatus,
+                                   Integer ticketMode, Date ticketStartTime, Date ticketEndTime,
+                                   Date activityStartTime, Integer purchaseKind, Date snapshotDeadline,
+                                   java.math.BigDecimal payableAmount, Long pointUsed, Date now) {
         if (paymentStatus == null || paymentStatus != 2) {
             return new Verdict(false, "未支付订单无需退款", null);
         }
@@ -185,6 +193,19 @@ public final class RefundPolicy {
         Verdict verified = verifiedVerdict(purchaseKind, verificationStatus);
         if (verified != null) {
             return verified;
+        }
+        // 免费场次不占用现金或积分，可在开场前释放名额；时间仍以服务端场次为准。
+        if (Long.valueOf(2L).equals(ownerType) && payableAmount != null && payableAmount.signum() == 0
+                && Long.valueOf(0L).equals(pointUsed)) {
+            if (Integer.valueOf(1).equals(verificationStatus)) {
+                return new Verdict(false, "已核销报名不可取消", activityStartTime);
+            }
+            if (activityStartTime == null || now == null) {
+                return new Verdict(false, "集合时间缺失，需人工核实，请联系客服", null, true);
+            }
+            return now.before(activityStartTime)
+                    ? new Verdict(true, "可取消报名并释放名额", activityStartTime)
+                    : new Verdict(false, "场次已开始，不可取消报名", activityStartTime);
         }
         Date deadline = snapshotDeadline != null ? snapshotDeadline
                 : resolveDeadline(ownerType, ticketMode, ticketStartTime, ticketEndTime, activityStartTime);

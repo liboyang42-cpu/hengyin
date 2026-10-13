@@ -229,6 +229,18 @@ const DANGER_ACTIONS = {
     done: { title: '申请已撤回', text: '需要时可以重新提交。' },
   },
 
+  'merchant.chapterInvitation.revoke': {
+    irreversible: true,
+    title: '撤回这条章节邀请?',
+    consequences: [
+      { icon: 'close', text: '对方将不能再接受这条邀请' },
+      { icon: 'warning', text: '此操作不可撤销，需要时请重新发起邀请' },
+    ],
+    confirmText: '撤回邀请',
+    alt: null,
+    done: { title: '邀请已撤回', text: '' },
+  },
+
   /* 稿 468:1126「章节控制 → 结束本章」。2026-09-10 用户定:只有发起人能点。
      ⚠️ 三条后果都要能兑现,别写成吓唬人的话:
         · 已售票不受影响 —— 端点只写章节的结束时刻,一条报名/订单都不碰;
@@ -387,23 +399,23 @@ const DANGER_ACTIONS = {
     content: '',
     consequences: [
       { icon: 'close', text: '不再收到对方的任何消息' },
-      { icon: 'info', text: '对方不会收到拉黑提示;拉黑后暂不支持解除' },
+      { icon: 'info', text: '对方不会收到拉黑提示;可在此会话更多菜单解除拉黑' },
     ],
     confirmText: '拉黑',
     alt: null,
     done: { title: '已拉黑', text: '你不会再收到对方消息。' },
   },
   'im.conversation.delete': {
-    irreversible: true,
-    title: '删除这条会话?',
+    irreversible: false,
+    title: '隐藏这条会话?',
     content: '只删除你这边的会话入口,对方的消息记录不受影响。',
     consequences: [
       { icon: 'trash', text: '会话从你的列表消失' },
-      { icon: 'warning', text: '此操作不可撤销,删除后聊天记录不再显示' },
+      { icon: 'warning', text: '对方再发消息时，会话和历史消息会重新显示' },
     ],
-    confirmText: '删除会话',
+    confirmText: '隐藏会话',
     alt: null,
-    done: { title: '会话已删除', text: '' },
+    done: { title: '会话已隐藏', text: '' },
   },
   'account.logout': {
     irreversible: false,

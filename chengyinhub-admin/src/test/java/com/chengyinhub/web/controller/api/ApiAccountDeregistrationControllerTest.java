@@ -10,14 +10,16 @@ import com.chengyinhub.common.config.ComplianceProperties;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.framework.web.service.SmsVerificationService;
+import com.chengyinhub.framework.web.service.WechatReconfirmationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -91,6 +93,28 @@ class ApiAccountDeregistrationControllerTest {
         verify(fixture.deregistrationService, never()).apply(1001L);
     }
 
+    @Test void unboundPhoneRequiresFreshWechatOwnerConfirmation() {
+        Fixture f = new Fixture(consent("v2.0", "AGREE"));
+        f.member.setPhone(null); f.member.setWxOpenId("owner-seven");
+        when(f.wechat.verify(1001L, "owner-seven", "fresh", "198.51.100.20")).thenReturn(true);
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getRemoteAddr()).thenReturn("198.51.100.20");
+        assertEquals(HttpStatus.SUCCESS, f.controller.apply(null, "fresh", "request-1", request).get(AjaxResult.CODE_TAG));
+        verify(f.deregistrationService).apply(1001L);
+        verifyNoSms(f);
+    }
+    @Test void mismatchedWechatAndMissingCodeDoNotSubmitAndBoundPhoneCannotBypassSms() {
+        Fixture f = new Fixture(consent("v2.0", "AGREE"));
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getRemoteAddr()).thenReturn("198.51.100.20");
+        assertEquals(HttpStatus.ERROR, f.controller.apply(null, "fresh", "request-1", request).get(AjaxResult.CODE_TAG));
+        verify(f.wechat, never()).verify(anyLong(), any(), any(), any());
+        f.member.setPhone(null); f.member.setWxOpenId("owner-seven");
+        assertEquals(HttpStatus.ERROR, f.controller.apply(null, "wrong", "request-1", request).get(AjaxResult.CODE_TAG));
+        verify(f.deregistrationService, never()).apply(1001L);
+    }
+    private static void verifyNoSms(Fixture f) { verify(f.smsVerificationService, never()).verify(any(), any(), any()); }
+
     private static ConsentRecord consent(String version, String eventType) {
         ConsentRecord consent = new ConsentRecord();
         consent.setDocType("account_cancellation_notice");
@@ -105,12 +129,13 @@ class ApiAccountDeregistrationControllerTest {
                 mock(IAccountDeregistrationService.class);
         private final IConsentRecordService consentRecordService = mock(IConsentRecordService.class);
         private final SmsVerificationService smsVerificationService = mock(SmsVerificationService.class);
+        private final WechatReconfirmationService wechat = mock(WechatReconfirmationService.class);
+        private final UmsMember member = new UmsMember();
         private final TestApiAccountDeregistrationController controller =
                 new TestApiAccountDeregistrationController();
 
         private Fixture(ConsentRecord latestConsent) {
             IUmsMemberService memberService = mock(IUmsMemberService.class);
-            UmsMember member = new UmsMember();
             member.setPhone("13800138000");
             when(memberService.selectUmsMemberById(1001L)).thenReturn(member);
             when(smsVerificationService.verify(
@@ -123,6 +148,7 @@ class ApiAccountDeregistrationControllerTest {
             ReflectionTestUtils.setField(controller, "deregistrationService", deregistrationService);
             ReflectionTestUtils.setField(controller, "umsMemberService", memberService);
             ReflectionTestUtils.setField(controller, "smsVerificationService", smsVerificationService);
+            ReflectionTestUtils.setField(controller, "wechatReconfirmationService", wechat);
             ReflectionTestUtils.setField(controller, "consentRecordService", consentRecordService);
             ReflectionTestUtils.setField(controller, "complianceProperties", complianceProperties);
         }

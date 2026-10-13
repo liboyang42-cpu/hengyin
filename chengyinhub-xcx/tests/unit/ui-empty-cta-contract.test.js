@@ -45,7 +45,7 @@ function createPage(relativePath, appOverrides = {}, wxOverrides = {}) {
   global.Page = (pageDefinition) => { definition = pageDefinition }
   const modulePath = path.join(ROOT, relativePath)
   delete require.cache[require.resolve(modulePath)]
-  require(modulePath)
+  require('../helpers/community-page-seam.js').loadPage(modulePath)
 
   const page = Object.assign({}, definition)
   page.data = JSON.parse(JSON.stringify(definition.data))
@@ -74,7 +74,7 @@ function createComponent(relativePath, appOverrides = {}) {
   global.Component = (componentDefinition) => { definition = componentDefinition }
   const modulePath = path.join(ROOT, relativePath)
   delete require.cache[require.resolve(modulePath)]
-  require(modulePath)
+  require('../helpers/community-page-seam.js').loadPage(modulePath)
 
   const component = Object.assign({}, definition.methods)
   component.data = JSON.parse(JSON.stringify(definition.data || {}))

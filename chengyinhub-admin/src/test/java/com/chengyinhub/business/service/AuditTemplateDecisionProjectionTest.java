@@ -88,6 +88,8 @@ class AuditTemplateDecisionProjectionTest {
                 .thenReturn(Collections.singletonList(canonical));
         when(libraryMapper.selectByMemberTemplateForUpdate(91L)).thenReturn(Collections.singletonList(projection));
         when(libraryMapper.selectCmsTemplateLibraryById(191L)).thenReturn(projection);
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L));
+        when(templateMapper.selectCmsMemberTemplateById(91L)).thenReturn(canonical);
         when(templateMapper.applyAuditDecision(any(), anyLong())).thenReturn(1);
         when(libraryMapper.applyAuditDecision(any(), anyLong())).thenReturn(1);
     }

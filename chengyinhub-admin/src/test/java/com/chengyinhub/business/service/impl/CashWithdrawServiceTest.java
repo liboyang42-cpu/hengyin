@@ -52,6 +52,10 @@ class CashWithdrawServiceTest {
         when(wxPayConfig.getAppid()).thenReturn("wx-mp-appid");
         when(wxPayConfig.getAppAppid()).thenReturn("wx-app-appid");
         svc = new CashWithdrawServiceImpl();
+        org.springframework.transaction.PlatformTransactionManager transactions = mock(org.springframework.transaction.PlatformTransactionManager.class);
+        when(transactions.getTransaction(any())).thenReturn(mock(org.springframework.transaction.TransactionStatus.class));
+        ReflectionTestUtils.setField(svc, "transactionManager", transactions);
+        when(mapper.updateStatusIfManual(any())).thenReturn(1);
         ReflectionTestUtils.setField(svc, "mapper", mapper);
         ReflectionTestUtils.setField(svc, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(svc, "wechatPayService", wechatPayService);
@@ -118,8 +122,8 @@ class CashWithdrawServiceTest {
         // 关键:出金失败必须原路退回余额,不丢钱,并置失败已退款
         verify(umsMemberService).addBalance(900002L, new BigDecimal("30.00"));
         ArgumentCaptor<MemberCashWithdraw> cap = ArgumentCaptor.forClass(MemberCashWithdraw.class);
-        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateMemberCashWithdraw(cap.capture());
-        assertTrue(cap.getAllValues().stream().anyMatch(v -> Integer.valueOf(2).equals(v.getStatus())), "置失败已退款");
+        verify(mapper).updateStatusIfManual(cap.capture());
+        assertEquals(MemberCashWithdraw.STATUS_FAILED_REFUNDED, cap.getValue().getStatus());
     }
 
     /**

@@ -16,6 +16,8 @@ Component({
     title: { type: String, value: '' },
     target: { type: String, value: '' },
     seconds: { type: Number, value: 10 },
+    r5: { type: Boolean, value: false },
+    deadlineAt: { type: Number, value: 0 },
     caseSensitive: { type: Boolean, value: false },
     tries: { type: Number, value: 0 },        // 0 = 不限
     attempts: { type: Number, value: 0 },
@@ -118,6 +120,11 @@ Component({
     onStart() {
       if (this.data.locked || this.data.phase === 'arming') return;
       this.setData({ phase: 'arming' });
+      if (this.data.r5 && this.data.startConfirmed) {
+        const stage = this.selectComponent('#cy-play-stage');
+        if (stage) stage.begin({ immediate: this.data.terminalSkin }); else this.onRun();
+        return;
+      }
       this.triggerEvent('start');
     },
 
@@ -176,11 +183,14 @@ Component({
     },
 
     onVerdict(e) {
+      if (this.data.r5) return;
       if (!e.detail || !e.detail.timedOut || this.data.phase !== 'run' || this.data.submitting) return;
       // 超时也交给宿主结算本次尝试；作者预览与正式游玩共用同一反馈链。
       this.setData({ canSubmit: true });
       this.onSubmit();
     },
+
+    onDeadline() { if (this.data.r5) this.triggerEvent('refresh'); },
 
     onClose() { this.triggerEvent('close'); },
   },

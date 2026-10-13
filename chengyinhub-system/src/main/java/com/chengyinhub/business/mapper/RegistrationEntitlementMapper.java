@@ -9,6 +9,8 @@ import com.chengyinhub.business.domain.RegistrationEntitlement;
  */
 public interface RegistrationEntitlementMapper {
 
+    List<Long> selectAffectedPaidMembers(@Param("topicId") Long topicId, @Param("chapterId") Long chapterId);
+
     public int insertRegistrationEntitlement(RegistrationEntitlement e);
 
     /** 某票的全部章节权益(含已核销/已失效):玩家侧「我的权益」列表要看得见全貌 */

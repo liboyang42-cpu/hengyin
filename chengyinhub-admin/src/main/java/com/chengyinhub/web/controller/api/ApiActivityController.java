@@ -1075,8 +1075,7 @@ public class ApiActivityController extends BaseController {
             /* CU-M-106:活动状态的判定与「我的项目」列表共用 ActivityLifecycle —— cms_activity.status
                是审核码(0 待审 / 1 通过 / 2 未过),不是 official_event 那套 0..9 生命周期码。
                详情页过去拿它查生命周期表,审核通过(1)就被念成「即将开始」,而同一行在列表说「进行中」。 */
-            activityInfoVO.setState(ActivityLifecycle.state(cmsActivity.getStatus(), cmsActivity.getPublishStatus(),
-                    cmsActivity.getStartDate(), cmsActivity.getEndDate()));
+            activityInfoVO.setState(ActivityLifecycle.state(cmsActivity));
             activityInfoVO.setStateText(ActivityLifecycle.stateText(activityInfoVO.getState()));
             // 拍板 2026-09-16 #10:场次归属商家已打烊时,报名入口直接提示「商家暂停营业」。
             activityInfoVO.setMerchantClosed(
@@ -1253,6 +1252,24 @@ public class ApiActivityController extends BaseController {
 
             return success(activityInfoVO);
         } else {
+            if (member_id != null && member_id > 0) {
+                CmsActivity cancelled = cmsActivityService.selectCmsActivityById(activityId);
+                if (cancelled != null && cancelled.getCancelTime() != null
+                        && !Integer.valueOf(2).equals(cancelled.getDelFlag())) {
+                    ViewRegistration ownTicket = new ViewRegistration();
+                    ownTicket.setOwnerType(2L);
+                    ownTicket.setOwnerId(activityId);
+                    ownTicket.setMemberId(member_id);
+                    List<ViewRegistration> tickets = viewRegistrationService.selectRegistrationSummaries(ownTicket);
+                    if (OwnershipUtils.isOwner(cancelled.getMemberId(), member_id)
+                            || (tickets != null && !tickets.isEmpty())) {
+                        AjaxResult result = error("活动已取消，请在订单中查看退款或售后进度");
+                        result.put("errorCode", "ACTIVITY_CANCELLED");
+                        result.put("canViewOwnOrders", tickets != null && !tickets.isEmpty());
+                        return result;
+                    }
+                }
+            }
             return error("活动不存在");
         }
 

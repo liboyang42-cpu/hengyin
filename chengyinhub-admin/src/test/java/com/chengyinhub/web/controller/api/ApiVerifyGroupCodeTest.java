@@ -123,6 +123,10 @@ class ApiVerifyGroupCodeTest {
         ReflectionTestUtils.setField(clubAccessService, "clubRoleAssignmentMapper", clubRoleAssignmentMapper);
         ReflectionTestUtils.setField(clubAccessService, "cmsActivityMapper", cmsActivityMapper);
         ReflectionTestUtils.setField(clubAccessService, "umsMemberMapper", umsMemberMapper);
+        when(umsMemberMapper.selectRolePermissionSubject(org.mockito.ArgumentMatchers.anyLong())).thenAnswer(call -> {
+            com.chengyinhub.business.domain.UmsMember m = new com.chengyinhub.business.domain.UmsMember();
+            m.setId(call.getArgument(0)); m.setRole("club"); m.setStatus(1L); m.setDelFlag(0); return m;
+        });
         when(umsMemberMapper.lockActiveMemberById(anyLong()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
         GroupCodeServiceImpl groupCodeService = new GroupCodeServiceImpl(activityService, clubAccessService,

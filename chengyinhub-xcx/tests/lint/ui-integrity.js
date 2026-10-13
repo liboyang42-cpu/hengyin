@@ -29,6 +29,7 @@ const {
 } = require('../../scripts/lib/xcx-scan');
 const { lintRepo: lintWxmlHandlers } = require('../../scripts/wxml-handler-lint');
 const BASELINE = require('./ui-integrity-baseline');
+const { namespaceDeclarationOffsets, collectBackendMappings } = require('../../../ci/api-existence-gate');
 
 const XCX_ROOT = path.resolve(__dirname, '..', '..');
 const REPO_ROOT = path.resolve(XCX_ROOT, '..');
@@ -62,7 +63,8 @@ const NON_INCREASING_CEILING = Object.freeze({
   //   装饰读取(拉不到留类型兜底名,点开合作方页自有错误态),新增一条逐项登记。两条放宽各自成立。
   // 2026-09-21 漫游入口地图新增活动/队伍两路后台刷新。失败均落页面 entryLoadError 并提供重试，
   //   禁用通道 toast 避免拖图时与页内错误态重复反馈，27 → 29。
-  u5Silent: 29,
+  // 2026-10-12 主控批准新增本人投诉进展辅助读：仅500/网络留白，401/403/参数错误可见。
+  u5Silent: 30,
 });
 const EXCLUDED_DIRS = new Set([
   '.git', 'node_modules', 'miniprogram_npm', 'tests', 'scripts', 'coverage', 'dist',
@@ -391,14 +393,25 @@ function callArguments(source, masked, openParen) {
     .map(([start, end]) => source.slice(start, end).trim());
 }
 
-function scanU1(jsFiles, backendRoutes) {
+// Canonical requests are recognized only for a real local createClient binding.
+// This retains the same URL and error-feedback audits used by sendRequest.
+function requestTransportRegex(source, masked) {
+  const binding = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*require\(['"][^'"]*utils\/community-post-api\.js['"]\)\.createClient\s*\(/.exec(source);
+  const name = binding && /^(?:const|let|var)\b/.test(masked.slice(binding.index)) && binding[1];
+  const escaped = name && name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return name ? new RegExp('\\.\\s*sendRequest\\s*\\(|\\b' + escaped + '\\.\\s*request\\s*\\(', 'g') : /\.\s*sendRequest\s*\(/g;
+}
+
+function scanU1(jsFiles, backendRoutes, namespacePrefixes = collectBackendMappings(REPO_ROOT).namespacePrefixes) {
   const violations = [];
   const dynamicReports = [];
   const variableReports = [];
   let staticCount = 0;
   for (const file of jsFiles) {
     const source = fs.readFileSync(file, 'utf8');
+    const namespaceOffsets = namespaceDeclarationOffsets(source, namespacePrefixes);
     for (const parsed of collectApiLiterals(source)) {
+      if (namespaceOffsets.has(parsed.offset)) continue;
       const key = `${repoRel(file)}:${lineNumber(source, parsed.offset)}`;
       if (parsed.dynamic) dynamicReports.push({ key, route: parsed.route });
       else staticCount += 1;
@@ -408,7 +421,7 @@ function scanU1(jsFiles, backendRoutes) {
     }
     const masked = maskNonCode(source);
     const wrappers = new Map();
-    const requestRe = /\.\s*sendRequest\s*\(/g;
+    const requestRe = requestTransportRegex(source, masked);
     let request;
     while ((request = requestRe.exec(masked))) {
       const openParen = masked.indexOf('(', request.index);
@@ -767,6 +780,33 @@ function hasVisibleU5Feedback(file, source, candidate, seen = new Set()) {
   return false;
 }
 
+// Resolve only a local const, zero-argument expression arrow used as fail.
+// Look in the current open lexical block, never an unrelated function.
+function referencedFailBody(source, masked, requestStart, failSource) {
+  const reference = /^\s*fail\s*:\s*([A-Za-z_$][\w$]*)\s*$/.exec(failSource);
+  if (!reference) return failSource;
+  const blocks = [];
+  for (let i = 0; i < requestStart; i += 1) {
+    if (masked[i] === '{') blocks.push(i);
+    else if (masked[i] === '}') blocks.pop();
+  }
+  const start = (blocks[blocks.length - 1] ?? -1) + 1;
+  const name = reference[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const prefix = masked.slice(start, requestStart);
+  const declaration = new RegExp('\\bconst\\s+' + name + '\\s*=\\s*\\(\\s*\\)\\s*=>\\s*([^;{}\\n]+);', 'g');
+  const definitions = [...prefix.matchAll(declaration)];
+  if (definitions.length !== 1) return failSource;
+  const definition = definitions[0];
+  let depth = 0;
+  for (const token of prefix.slice(0, definition.index)) {
+    if (token === '{') depth += 1;
+    else if (token === '}') depth -= 1;
+  }
+  if (depth !== 0) return failSource;
+  const offset = start + definition.index + definition[0].indexOf(definition[1]);
+  return source.slice(offset, offset + definition[1].length);
+}
+
 function scanU5(jsFiles, allowlist = U5_SILENT_ALLOWLIST) {
   const violations = [];
   const callsites = [];
@@ -774,11 +814,12 @@ function scanU5(jsFiles, allowlist = U5_SILENT_ALLOWLIST) {
   for (const file of jsFiles) {
     const source = fs.readFileSync(file, 'utf8');
     const masked = maskNonCode(source);
+    const requestOffsets = [...masked.matchAll(requestTransportRegex(source, masked))].map(match => match.index);
     const re = /\bsilentError\s*:\s*true\b/g;
     let match;
     while ((match = re.exec(masked))) {
       const key = `${repoRel(file)}:${lineNumber(source, match.index)}`;
-      const requestStart = masked.lastIndexOf('.sendRequest', match.index);
+      const requestStart = requestOffsets.filter(offset => offset < match.index).pop() ?? -1;
       const objectStart = requestStart < 0 ? -1 : masked.indexOf('{', requestStart);
       const objectEnd = objectStart < 0 ? -1 : matchBrace(masked, objectStart);
       const sameRequest = objectStart >= 0 && objectStart < match.index && objectEnd > match.index
@@ -788,7 +829,7 @@ function scanU5(jsFiles, allowlist = U5_SILENT_ALLOWLIST) {
         ? objectProperties(sameRequest, sameRequestMasked, 0, sameRequest.length - 1)
         : { properties: [] };
       const failProperty = properties.find((property) => property.name === 'fail');
-      const failSource = failProperty ? failProperty.raw : '';
+      const failSource = referencedFailBody(source, masked, requestStart, failProperty ? failProperty.raw : '');
       const visibleFallback = hasVisibleU5Feedback(file, source, failSource);
       if (visibleFallback) {
         autoSafe.push({ key, detail: 'fail 回调内存在 toast/tips 或 WXML 已消费的错误/空态 setData' });

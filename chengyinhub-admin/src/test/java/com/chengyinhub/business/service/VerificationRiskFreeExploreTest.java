@@ -44,6 +44,8 @@ class VerificationRiskFreeExploreTest {
     private VerificationRiskService service(VerificationReviewMapper mapper) {
         VerificationRiskService s = new VerificationRiskService(new BigDecimal("0.90"), 8, 5);
         ReflectionTestUtils.setField(s, "reviewMapper", mapper);
+        ReflectionTestUtils.setField(s, "committedBusinessNotice", mock(com.chengyinhub.business.service.support.CommittedBusinessNotice.class));
+        ReflectionTestUtils.setField(s, "alarmService", mock(com.chengyinhub.business.service.impl.AlarmService.class));
         return s;
     }
 

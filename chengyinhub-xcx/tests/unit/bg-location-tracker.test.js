@@ -229,3 +229,85 @@ test('stopping 中 acquire 后又 release，旧 waiter 不能污染下一次同 
   assert.equal(staleReady, 0, '已释放会话的 waiter 必须被清除');
   assert.equal(freshReady, 1);
 });
+
+test('明确撤回清理用途和观察者状态，新授权必须实际重新启动', () => {
+  const s = stub(); const t = fresh(s.wx);
+  let revoked = 0; const off = t.observeRevocation('roam', () => { revoked++; });
+  t.acquire('roam', {});
+  t.revoke('roam');
+  assert.equal(revoked, 1);
+  assert.equal(t.revision('roam'), 1);
+  assert.equal(t.isRunning(), false);
+  assert.equal(s.calls.stop, 1);
+  t.acquire('roam', {});
+  assert.equal(s.calls.bg, 2, '不能保留旧owner而让新授权幂等短路');
+  off(); t.revoke('roam');
+  assert.equal(revoked, 1, '已离开页面的观察者不能再收到撤回');
+});
+
+test('漫游撤回不取消独立获准的游玩持有者和待启成功回调', () => {
+  const s = deferredStub(); const t = fresh(s.wx);
+  let playReady = 0; let roamReady = 0;
+  t.acquire('play:31', { success() { playReady++; } });
+  t.acquire('roam', { success() { roamReady++; } });
+  t.revoke('roam');
+  s.pending.bg[0].success();
+  assert.equal(roamReady, 0);
+  assert.equal(playReady, 1);
+  assert.equal(t.isRunning(), true);
+  assert.equal(s.calls.stop, 0, '仍有独立用途授权时不得全局停定位');
+  t.release('play:31');
+  assert.equal(s.calls.stop, 1);
+});
+
+test('撤回前迟到系统success不能冒充新授权ready，补停后必须真正重启', () => {
+  const s = deferredStub({ deferStop: true }); const t = fresh(s.wx);
+  let oldReady = 0; let newReady = 0;
+  t.acquire('roam', { success() { oldReady++; } });
+  t.revoke('roam');
+  t.acquire('roam', { success() { newReady++; } });
+  assert.equal(s.calls.bg, 1);
+  s.pending.stop[0].complete();
+  assert.equal(s.calls.bg, 2);
+  s.pending.bg[0].success();
+  assert.equal(newReady, 0, '旧授权success不能交给新的waiter');
+  assert.equal(s.calls.stop, 2);
+  s.pending.bg[1].success();
+  assert.equal(newReady, 0, '补停中的旧新start也不能提前交付ready');
+  s.pending.stop[1].complete();
+  assert.equal(s.calls.bg, 3);
+  s.pending.bg[2].success();
+  assert.equal(oldReady, 0);
+  assert.equal(newReady, 1);
+  assert.equal(t.isRunning(), true);
+});
+
+test('无系统持有者时撤回也作废正在说明或留痕中的用途授权', () => {
+  const s = stub(); const t = fresh(s.wx);
+  let notified = 0;
+  t.observeRevocation('roam', () => { notified++; });
+  const before = t.revision('roam');
+  t.revoke('roam');
+  assert.equal(t.revision('roam'), before + 1);
+  assert.equal(notified, 1);
+  assert.equal(t.isRunning(), false);
+});
+
+test('hasOwner只读真实用途持有状态，不触发SDK或授予新用途', () => {
+  const s = stub(); const tracker = fresh(s.wx);
+  assert.equal(tracker.hasOwner('roam'), false);
+  tracker.acquire('roam'); tracker.acquire('play:12');
+  assert.equal(tracker.hasOwner('roam'), true);
+  assert.equal(tracker.hasOwner('play:12'), true);
+  const before = { ...s.calls };
+  assert.equal(tracker.hasOwner('unknown'), false);
+  assert.equal(tracker.hasOwner('__proto__'), false);
+  assert.deepEqual(s.calls, before);
+  tracker.revoke('roam');
+  assert.equal(tracker.hasOwner('roam'), false);
+  assert.equal(tracker.hasOwner('play:12'), true);
+  assert.equal(tracker.isRunning(), true);
+  tracker.release('play:12');
+  assert.equal(tracker.hasOwner('play:12'), false);
+  assert.equal(tracker.isRunning(), false);
+});

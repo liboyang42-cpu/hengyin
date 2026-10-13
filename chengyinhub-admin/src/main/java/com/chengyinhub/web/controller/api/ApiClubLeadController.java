@@ -10,6 +10,8 @@ import com.chengyinhub.business.domain.CmsRegistrationScan;
 import com.chengyinhub.business.domain.PlayerNodeProgress;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.mapper.ClubLeadMapper;
+import com.chengyinhub.business.mapper.CmsActivityMapper;
+import com.chengyinhub.business.service.support.ClubGatherArrivalPolicy;
 import com.chengyinhub.business.mapper.ClubEventOpsMapper;
 import com.chengyinhub.business.mapper.ClubRoleAssignmentMapper;
 import com.chengyinhub.business.access.club.ClubRoleCode;
@@ -29,6 +31,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -60,6 +63,10 @@ public class ApiClubLeadController extends BaseController {
     @Autowired
     private ClubLeadMapper clubLeadMapper;
     @Autowired
+    private CmsActivityMapper cmsActivityMapper;
+    @Autowired
+    private ClubGatherArrivalPolicy clubGatherArrivalPolicy;
+    @Autowired
     private ClubEventOpsMapper clubEventOpsMapper;
     @Autowired
     private com.chengyinhub.business.service.IGameSessionRuntimeService gameSessionRuntimeService;
@@ -79,6 +86,8 @@ public class ApiClubLeadController extends BaseController {
     private IPlayerNodeProgressService playerNodeProgressService;
     @Autowired
     private IUmsMemberService umsMemberService;
+    @Autowired
+    private com.chengyinhub.business.service.IWxContentSecurityService wxContentSecurityService;
     @Autowired
     private ISettlementEntryService settlementEntryService;
     @Autowired
@@ -137,22 +146,30 @@ public class ApiClubLeadController extends BaseController {
 
     @Operation(summary = "成员集合签到(幂等)")
     @PostMapping("/arrive")
-    public AjaxResult arrive(String activityId) {
+    @Transactional(rollbackFor = Exception.class)
+    public AjaxResult arrive(String activityId, Double latitude, Double longitude) {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
         Long actId = Convert.toLong(activityId, 0L);
         if (actId <= 0) return error("参数有误");
+        CmsActivity activity = cmsActivityMapper.selectCmsActivityByIdForUpdate(actId);
+        String invalid = clubGatherArrivalPolicy.validate(activity, latitude, longitude, new Date());
+        if (invalid != null) return error(invalid);
         ClubLeadState st = ensureState(actId);
         if (st == null) return error("该场次不是带领场");
+        if (!Integer.valueOf(1).equals(st.getStatus()) && !Integer.valueOf(2).equals(st.getStatus())) return error("该场次已结束");
         if (!canAccessLeadActivity(actId, memberId, st)) {
             return error("仅本场已支付成员或领队可签到");
         }
+        Date arrivedAt = new Date();
+        invalid = clubGatherArrivalPolicy.validate(activity, latitude, longitude, arrivedAt);
+        if (invalid != null) return error(invalid);
         ClubLeadCheckin c = new ClubLeadCheckin();
         c.setActivityId(actId);
         c.setMemberId(memberId);
-        c.setArrivedAt(new Date());
+        c.setArrivedAt(arrivedAt);
         try {
-            clubLeadMapper.insertCheckin(c);
+            if (clubLeadMapper.insertCheckin(c) != 1) return error("签到未完成，请重试");
         } catch (DuplicateKeyException e) {
             // 已签到,幂等成功
         }
@@ -261,6 +278,9 @@ public class ApiClubLeadController extends BaseController {
         if (!memberId.equals(st.getLeaderMemberId())) return error("只有队长可以广播");
         if (text == null || text.trim().isEmpty()) return error("广播内容为空");
         String t = text.trim();
+        UmsMember actor = umsMemberService.selectUmsMemberById(memberId);
+        String risk = wxContentSecurityService.checkText(t, actor == null ? null : actor.getWxOpenId());
+        if (risk != null) return error(risk);
         ClubLeadState upd = new ClubLeadState();
         upd.setId(st.getId());
         upd.setBroadcastText(t.length() > 200 ? t.substring(0, 200) : t);

@@ -9,6 +9,7 @@ import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.service.IQuotaService;
 import com.chengyinhub.business.service.IWxContentSecurityService;
+import com.chengyinhub.business.service.support.ThemeRuntimeConfig;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import org.junit.jupiter.api.BeforeEach;
@@ -127,5 +128,47 @@ class ApiTopicChapterFlowV2ControllerTest
         assertEquals("PENDING", ((TopicBundleSubmitResultVO) result.get(AjaxResult.DATA_TAG)).getReviewState());
         assertEquals(java.util.Arrays.asList(91L, 92L),
                 ((TopicBundleSubmitResultVO) result.get(AjaxResult.DATA_TAG)).getBundledTemplateIds());
+    }
+
+    @Test
+    void clientBindingPassesPreflightAndReachesServerNodeMapping()
+    {
+        TopicUpdateDTO dto = clientBinding("new-node");
+        when(topicService.updateTopicByOwnerV2WithReview(any(), anyLong(), anyString())).thenAnswer(call -> {
+            TopicUpdateDTO request = call.getArgument(0);
+            String persisted = ThemeRuntimeConfig.remapForNodeSave(request.getThemeRuntimeConfig(),
+                    Collections.emptyMap(), Collections.emptyMap(), Collections.singletonMap("new-node", 101L));
+            assertTrue(ThemeRuntimeConfig.parseDraft(persisted).path("templateBindings").has("101"));
+            return new TopicBundleSubmitResultVO(77L, null, "DRAFT", Collections.emptyList());
+        });
+
+        assertEquals(HttpStatus.SUCCESS, controller.updateTopicV2(dto).get(AjaxResult.CODE_TAG));
+        verify(topicService).updateTopicByOwnerV2WithReview(dto, 19L, "tester");
+    }
+
+    @Test
+    void unknownClientBindingIsStillRejectedByServerNodeMapping()
+    {
+        TopicUpdateDTO dto = clientBinding("foreign-node");
+        when(topicService.updateTopicByOwnerV2WithReview(any(), anyLong(), anyString())).thenAnswer(call -> {
+            TopicUpdateDTO request = call.getArgument(0);
+            ThemeRuntimeConfig.remapForNodeSave(request.getThemeRuntimeConfig(),
+                    Collections.emptyMap(), Collections.emptyMap(), Collections.singletonMap("new-node", 101L));
+            throw new AssertionError("外来 client 标识不应通过映射");
+        });
+
+        AjaxResult response = controller.updateTopicV2(dto);
+        assertEquals(HttpStatus.ERROR, response.get(AjaxResult.CODE_TAG));
+        assertTrue(response.get(AjaxResult.MSG_TAG).toString().contains("client:foreign-node"));
+    }
+
+    private TopicUpdateDTO clientBinding(String key)
+    {
+        TopicUpdateDTO dto = new TopicUpdateDTO();
+        dto.setId(77L);
+        dto.setThemeRuntimeConfig("{\"schemaVersion\":1,\"capacity\":6,\"templateBindings\":{\"client:" + key
+                + "\":{\"templateId\":501,\"values\":{},\"items\":{},\"slotDigest\":\""
+                + String.join("", Collections.nCopies(64, "0")) + "\"}}}");
+        return dto;
     }
 }

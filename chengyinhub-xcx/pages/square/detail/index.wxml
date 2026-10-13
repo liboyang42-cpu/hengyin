@@ -10,7 +10,7 @@
     <cy-skeleton type="detail" count="1" />
   </view>
   <view class="detail-state" wx:elif="{{detailState === 'error'}}">
-    <cy-error class="fill-slot" fill="{{true}}" size="lg" title="动态没能加载出来" sub="{{detailError}}" bind:retry="onRetryDetail" auto-back />
+    <cy-error load-failure class="fill-slot" fill="{{true}}" size="lg" title="动态没能加载出来" sub="{{detailError}}" bind:retry="onRetryDetail" auto-back />
     <cy-btn variant="ghost" bindtap="goBack">返回上一页</cy-btn>
   </view>
   <view class="detail-state" wx:elif="{{detailState === 'missing-param'}}">
@@ -124,7 +124,7 @@
   <view class="list">
 
     <cy-skeleton wx:if="{{commentsState === 'loading' && !list.length}}" type="list" count="3" />
-    <cy-error wx:elif="{{commentsState === 'error' && commentLoadError && !list.length}}" title="评论没能加载" sub="网络可能不稳定，已发布的评论不会丢失" retry="重试" bind:retry="retryComments" />
+    <cy-error load-failure wx:elif="{{commentsState === 'error' && commentLoadError && !list.length}}" title="评论没能加载" sub="网络可能不稳定，已发布的评论不会丢失" retry="重试" bind:retry="retryComments" />
     <cy-empty wx:if="{{commentsState === 'ready' && nodata}}" kind="empty" title="还没有评论" sub="说说你对这条动态的想法吧" />
 
     <view class="dl" wx:for="{{ list }}" wx:key="index">
@@ -174,7 +174,7 @@
       </view>
     </view>
     <view class="comment-load-more-status" wx:if="{{commentLoadingMore}}" aria-live="polite">正在加载更多评论…</view>
-    <cy-inline-error wx:if="{{commentLoadMoreError}}" kind="network" title="更多评论没有加载出来" sub="{{commentLoadMoreError}}" action="重试" bind:action="retryCommentLoadMore" />
+    <cy-inline-error load-failure wx:if="{{commentLoadMoreError}}" kind="network" title="更多评论没有加载出来" sub="{{commentLoadMoreError}}" action="重试" bind:action="retryCommentLoadMore" />
   </view>
 
   <!--新加评论-->
@@ -244,3 +244,6 @@
      塞进帖文区会被上面的 overflow 裁掉。 -->
 <cy-popover show="{{avatarPopShow}}" anchor="{{avatarPopAnchor}}" items="{{avatarPopItems}}"
             bind:pick="onAvatarPopPick" bind:close="onAvatarPopClose" />
+
+<cy-option-sheet show="{{reportReasonShow}}" title="选择举报原因" items="{{reportReasonItems}}"
+  confirm-text="提交举报" bind:select="onReportReasonSelect" bind:cancel="onReportReasonCancel" />

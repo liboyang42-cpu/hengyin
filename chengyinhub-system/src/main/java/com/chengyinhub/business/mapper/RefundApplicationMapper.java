@@ -9,6 +9,8 @@ import java.util.List;
 public interface RefundApplicationMapper {
     List<RefundApplication> selectRefundApplicationList(RefundApplication query);
 
+    List<RefundApplication> selectRegistrationHistoryForUpdate(@Param("registrationId") Long registrationId);
+
     RefundApplication selectRefundApplicationById(@Param("id") Long id);
 
     int insertRefundApplication(RefundApplication refund);

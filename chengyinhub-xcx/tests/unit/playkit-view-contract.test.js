@@ -10,6 +10,22 @@ const { pickPlayKit, serverAction, secondsUntilOpen, KIT_PRIORITY, dailySignReve
 
 const at = (h, m, s) => new Date(2026, 7, 26, h, m, s || 0)
 
+test('失败和超时的新版玩法显示原分数和反馈，不能从队员身份推导重试权限', () => {
+  for (const status of ['FAILED', 'EXPIRED']) {
+    const kit = pickPlayKit({ sessionId: 1, version: 3, status, ownerType: 2, score: 7, completedUnits: 2,
+      playKit: { qa: { mode: 'PICK', title: '已判定问答', lastFeedback: '原反馈' } } }, at(12, 0))
+    assert.equal(kit.terminal, true)
+    assert.equal(kit.sessionStatus, status)
+    assert.equal(kit.sessionScore, 7)
+    assert.equal(kit.feedback, '原反馈')
+    assert.equal(kit.canRetry, false)
+    const permitted = pickPlayKit({ sessionId: 1, version: 3, status, ownerType: 2, canRetry: true,
+      playKit: { reaction: {} } }, at(12, 0))
+    assert.equal(permitted.canRetry, true)
+    assert.match(permitted.retryLabel, /队长/)
+  }
+})
+
 test('没有玩法段时给 null,不是空对象', () => {
   assert.equal(pickPlayKit(null, at(12, 0)), null)
   assert.equal(pickPlayKit({}, at(12, 0)), null)
@@ -342,7 +358,7 @@ function unfedOf(section, bound) {
 /* 有意留空的:kit 自己有回落,不是缺口。 */
 const INTENTIONAL_FALLBACK = {
   // 扫码屏标题:配置里没有这个字段,kit 用 `|| TITLE` 回落到默认文案
-  scan: ['title'],
+  blindtaste: ['eyebrow'],
   // 计步(walk 屏)的「同步中」是页面本地态,服务端会话视图里本来就没有
   walk: ['syncing'],
   // 抽卡:牌堆是盖着的,服务端只下发抽到了什么(drawn/drawCount)
@@ -403,7 +419,7 @@ test('负控:采集函数读的是真分发器,读空了就不许放行', () => 
 const SCREEN_OF = {
   qa: 'qa', branch: 'branch', estimate: 'estimate', pricePair: 'pricepair',
   sort: 'sort', match: 'match', classify: 'classify',
-  hiddenObject: 'hidden', predict: 'predict', random: 'random', scan: 'scan',
+  hiddenObject: 'hidden', predict: 'predict', random: 'random', blindTaste: 'blindtaste', dailySign: 'dailysign',
   steps: 'walk',
   reaction: 'reaction', ballShake: 'ballshake', quietHold: 'quiethold',
   compass: 'compass',   // 现场感契约 §3:整屏罗盘,自成一屏
@@ -544,3 +560,15 @@ test('我的念头按服务端对象的 text 展示，也兼容旧字符串', ()
   const legacy = pickPlayKit({ playKit: { note: { mine: '旧念头', done: true } } }, at(12, 0));
   assert.equal(legacy.mine, '旧念头');
 });
+
+
+test('零血失败结果显示明确挑战按钮，重试许可完全读取服务端', () => {
+  for (const canRetry of [true, false, undefined]) {
+    const kit = pickPlayKit({ sessionId: 42, nodeId: 9, version: 3, status: 'FAILED', ownerType: 2,
+      canRetry, challenge: { retry: true, instanceId: 'old' }, config: { outcomeRules: { version: 1 } },
+      playKit: { reaction: {} } }, at(12, 0))
+    assert.equal(kit.terminal, true)
+    assert.equal(kit.canRetry, canRetry === true)
+    assert.equal(kit.retryLabel, '队长再次挑战')
+  }
+})

@@ -2,15 +2,16 @@ const modal = require('../../utils/modal.js');
 const toast = require('../../utils/toast.js');
 const { toTimestamp } = require('../../utils/datetime');
 const app = getApp();
-const mockData = require('../../utils/mockData.js');
 const policy = require('../../utils/identity/identity-policy.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const { marketView } = require('../../utils/template-market.js');
+const { gameTemplateCover } = require('../../utils/template-display.js');
 
 Page({
   data: {
     isMerchant: false,
+    operationScope: '',
     list: [],
     searchKeyword: '',
     filterCategoryId: 0,
@@ -32,14 +33,6 @@ Page({
     wx.switchTab({ url: '/pages/template/index' });
   },
 
-  isDevEnv() {
-    try {
-      return wx.getAccountInfoSync().miniProgram.envVersion === 'develop';
-    } catch (e) {
-      return false;
-    }
-  },
-
   // 分类筛选
   onFilterCategory(e) {
     const categoryId = e.currentTarget.dataset.id;
@@ -49,12 +42,12 @@ Page({
     this.refreshList();
   },
 
-  // R4-C04:封面选源(imgUrl/imgUrls/storyImg + 本地图片兜底)未获 §5.5 授权,
-  // 按 github/master 原形恢复为「标题首字」文本兜底。
+  // 已授权补齐七款旧玩法的图标封面；其它缺图仍用标题首字，不借用内容图。
   decorateItem(item) {
     const title = String(item && (item.title || item.name) || '玩法').trim();
     return Object.assign({}, item, marketView(item), {
       drop: false,
+      imgUrl: gameTemplateCover(item),
       coverFailed: false,
       coverInitial: title.charAt(0) || '玩'
     });
@@ -85,13 +78,15 @@ Page({
     const index = e.currentTarget.dataset.index;
     const item = this.data.list[index];
     wx.navigateTo({
-      url: '/pages/templatedetail/templatedetail?id=' + item.id + '&scope=my',
+      url: '/pages/templatedetail/templatedetail?id=' + item.id + '&scope=my' +
+        (this.data.operationScope === 'MERCHANT' ? '&operationScope=MERCHANT' : ''),
     })
   },
   // 删除模板
   deleteItem(e) {
     const index = e.currentTarget.dataset.index;
     const item = this.data.list[index];
+    if (!item || !item.id || this._templateDeleteInFlight && this._templateDeleteInFlight[String(item.id)]) return;
     
     modal.show({
       dangerKey: 'template.delete', dangerParams: { name: item.title },   // 三段式文案在 utils/danger-actions.js
@@ -116,7 +111,8 @@ Page({
         hideLoading: true,
         url: view._canSubmitMarket ? `/api/template/${item.id}/market-submit` : '/api/template/updateLibraryStatus',
         method: 'POST',
-        data: view._canSubmitMarket ? {} : { template_id: item.id, publish_status: view._marketPublishTarget },
+        data: Object.assign(view._canSubmitMarket ? {} : { template_id: item.id, publish_status: view._marketPublishTarget },
+          this.data.operationScope ? { scope: this.data.operationScope } : {}),
         success: (res) => {
           release();
           if (res && res.code == '200') {
@@ -204,19 +200,15 @@ Page({
 
   // 获取模板列表
   getList: function (isLoadMore = false, requestedPage) {
-    if (this.data.loading || this.data.loadingMore) return;
+    if (this.data.loading || this.data.loadingMore || this._unloaded) return;
+    const epoch = (this._listEpoch || 0) + 1;
+    this._listEpoch = epoch;
+    const owner = typeof app.getUserID === 'function' ? String(app.getUserID() || '') : '';
+    const current = () => !this._unloaded && epoch === this._listEpoch
+      && owner === (typeof app.getUserID === 'function' ? String(app.getUserID() || '') : '');
     const pageNum = isLoadMore ? (requestedPage || this.data.page + 1) : 1;
     if (isLoadMore) this.setData({ loadingMore: true, loadMoreError: '' });
     else this.setData({ loading: true, errorMsg: '' });
-    const localRows = this.isDevEnv() ? mockData.getTemplates(this.data.searchKeyword).map(item => this.decorateItem(item)) : [];
-    if (!isLoadMore && localRows.length > 0) {
-      this.setData({
-        list: localRows,
-        total: localRows.length,
-        hasMore: false
-      });
-    }
-    
     const that = this;
     app.sendRequest({
       hideLoading: true,
@@ -227,20 +219,14 @@ Page({
         is_quote: '',
         keyword: this.data.searchKeyword,
         category_id: '',
+        scope: this.data.operationScope,
         pageNum: pageNum,
         pageSize: this.data.pageSize
       },
       success: function (res) {
+        if (!current()) return;
         if (res && res.code == "200" && res.data && isRecordList(res.data.rows)) {
           const data = res.data.rows;
-          if (data.length === 0 && that.isDevEnv()) {
-            that.setData({
-              list: localRows,
-              total: localRows.length,
-              hasMore: false
-            });
-            return;
-          }
           const numericTotal = Number(res.data.total);
           const totalKnown = Number.isFinite(numericTotal) && numericTotal >= 0;
           const total = totalKnown ? numericTotal : 0;
@@ -268,13 +254,15 @@ Page({
               errorMsg: '' });
           }
         } else {
-          that.handleListError(isLoadMore, app.getRequestErrorMessage(res, '玩法草稿加载失败'), localRows);
+          that.handleListError(isLoadMore, app.getRequestErrorMessage(res, '玩法草稿加载失败'));
         }
       },
       fail: function (res) {
-        that.handleListError(isLoadMore, app.getRequestErrorMessage(res, '玩法草稿加载失败'), localRows);
+        if (!current()) return;
+        that.handleListError(isLoadMore, app.getRequestErrorMessage(res, '玩法草稿加载失败'));
       },
       complete: function () {
+        if (!current()) return;
         if (isLoadMore) that.setData({ loadingMore: false });
         else that.setData({ loading: false });
         if (!isLoadMore && that._pullDownRefreshing) {
@@ -285,17 +273,9 @@ Page({
     });
   },
 
-  handleListError(isLoadMore, message, localRows) {
+  handleListError(isLoadMore, message) {
     if (isLoadMore) {
       this.setData({ loadMoreError: message });
-      return;
-    }
-    if (localRows.length > 0) {
-      this.setData({
-        list: localRows,
-        total: localRows.length,
-        hasMore: false,
-        errorMsg: '' });
       return;
     }
     if (this.data.list.length > 0) {
@@ -307,25 +287,38 @@ Page({
 
   // 删除模板API调用
   deleteTemplate: function (id, index) {
+    if (!id || this._unloaded) return;
+    const key = String(id);
+    this._templateDeleteInFlight = this._templateDeleteInFlight || {};
+    if (this._templateDeleteInFlight[key]) return;
+    this._templateDeleteInFlight[key] = true;
+    const owner = typeof app.getUserID === 'function' ? String(app.getUserID() || '') : '';
+    const current = () => !this._unloaded && owner === (typeof app.getUserID === 'function' ? String(app.getUserID() || '') : '');
+    const release = () => { delete this._templateDeleteInFlight[key]; };
     const that = this;
     app.sendRequest({
       url: '/api/template/delete',
       method: "POST",
-      data: { template_id : id },
+      data: Object.assign({ template_id : id }, this.data.operationScope ? { scope: this.data.operationScope } : {}),
       success: function (res) {
+        if (!current()) return;
         if (res.code == "200") {
           toast.success('删除成功');
           // 从列表中移除
-          const list = that.data.list;
-          list.splice(index, 1);
-          that.setData({ list });
+          const templateId = String(id);
+          const list = that.data.list.filter(item => String(item.id) !== templateId);
+          const removed = that.data.list.length - list.length;
+          that._listEpoch = (that._listEpoch || 0) + 1;
+          that.setData({ list, total: Math.max(0, (Number(that.data.total) || 0) - removed), loading: false, loadingMore: false });
+          that.refreshList();
         } else {
           toast(res.msg || '删除失败');
         }
       },
       fail: function (res) {
-        toast('网络错误，请重试');
-      }
+        if (current()) toast('网络错误，请重试');
+      },
+      complete: release
     });
   },
 
@@ -333,6 +326,7 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
+    this.data.operationScope = options && options.scope === 'MERCHANT' ? 'MERCHANT' : '';
     this.getList();
   },
 
@@ -340,7 +334,7 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
-    const isMerchant = policy.isMerchantView({ role: app.getUserRole(), userType: app.getUserType() });
+    const isMerchant = this.data.operationScope === 'MERCHANT' || policy.isMerchantView({ role: app.getUserRole(), userType: app.getUserType() });
     this.setData({ isMerchant: isMerchant });
     if (isMerchant) merchantTheme.merchantPageShow();
     else merchantTheme.merchantPageRestore();
@@ -349,7 +343,7 @@ Page({
   },
 
   onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() { merchantTheme.merchantPageRestore(); },
+  onUnload() { merchantTheme.merchantPageRestore(); this._unloaded = true; this._listEpoch = (this._listEpoch || 0) + 1; },
 
   /**
    * 页面相关事件处理函数--监听用户下拉动作

@@ -8,15 +8,15 @@ import org.apache.tomcat.websocket.server.WsSci;
 import org.apache.tomcat.websocket.server.WsServerContainer;
 import org.junit.jupiter.api.Test;
 
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.ServletContainerInitializer;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.websocket.OnMessage;
-import javax.websocket.server.ServerContainer;
-import javax.websocket.server.ServerEndpointConfig;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletContainerInitializer;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.websocket.OnMessage;
+import jakarta.websocket.server.ServerContainer;
+import jakarta.websocket.server.ServerEndpointConfig;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +35,7 @@ class TomcatDependencyCanaryTest {
 
     @Test
     void 嵌入式Tomcat必须解析为安全点版本() {
-        assertEquals("9.0.120.0", ServerInfo.getServerNumber());
+        assertEquals("11.0.26.0", ServerInfo.getServerNumber());
     }
 
     @Test
@@ -44,6 +44,7 @@ class TomcatDependencyCanaryTest {
         Tomcat tomcat = new Tomcat();
         tomcat.setBaseDir(baseDir.toString());
         tomcat.setPort(0);
+        tomcat.getConnector().setProperty("address", "127.0.0.1");
         Context context = tomcat.addContext("", baseDir.toString());
         Wrapper canary = Tomcat.addServlet(context, "canary", new CanaryServlet());
         canary.addMapping("/login");
@@ -214,7 +215,7 @@ class TomcatDependencyCanaryTest {
                 ((WsServerContainer) value).upgradeHttpToWebSocket(request, response,
                         ServerEndpointConfig.Builder.create(EchoEndpoint.class, "/ws-canary").build(),
                         Collections.<String, String>emptyMap());
-            } catch (javax.websocket.DeploymentException error) {
+            } catch (jakarta.websocket.DeploymentException error) {
                 throw new ServletException("Tomcat 无法升级 WebSocket canary", error);
             }
         }

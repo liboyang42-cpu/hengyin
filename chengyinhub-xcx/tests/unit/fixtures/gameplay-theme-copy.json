@@ -1,0 +1,2207 @@
+[
+  {
+    "name": "末日寒冬",
+    "runtime": {
+      "schemaVersion": 1,
+      "capacity": 14,
+      "hpName": "保温储备",
+      "actionName": "外勤次数",
+      "actionLimit": 8,
+      "items": [
+        {
+          "id": "ration",
+          "kind": "ITEM",
+          "name": "口粮",
+          "slotCost": 1,
+          "image": "https://www.chengyinhub.com/favicon.ico",
+          "stat": "HP",
+          "delta": 3
+        },
+        {
+          "id": "fuel",
+          "kind": "ITEM",
+          "name": "燃料",
+          "slotCost": 2,
+          "image": "https://www.chengyinhub.com/favicon.ico"
+        },
+        {
+          "id": "power",
+          "kind": "ITEM",
+          "name": "电源",
+          "slotCost": 1,
+          "image": "https://www.chengyinhub.com/favicon.ico"
+        },
+        {
+          "id": "parts",
+          "kind": "ITEM",
+          "name": "维修件",
+          "slotCost": 1,
+          "image": "https://www.chengyinhub.com/favicon.ico"
+        },
+        {
+          "id": "medical",
+          "kind": "ITEM",
+          "name": "医疗包",
+          "slotCost": 1,
+          "image": "https://www.chengyinhub.com/favicon.ico"
+        }
+      ],
+      "chapters": [
+        {
+          "index": 0,
+          "hpCost": 0,
+          "luckCost": 0,
+          "completion": {
+            "type": "ALL"
+          }
+        },
+        {
+          "index": 1,
+          "hpCost": 0,
+          "luckCost": 0,
+          "completion": {
+            "type": "ALL"
+          }
+        },
+        {
+          "index": 2,
+          "hpCost": 0,
+          "luckCost": 0,
+          "completion": {
+            "type": "ANY_N",
+            "quantity": 2,
+            "overflowSlot": "mobile"
+          }
+        },
+        {
+          "index": 3,
+          "hpCost": 0,
+          "luckCost": 0,
+          "completion": {
+            "type": "ALL"
+          }
+        },
+        {
+          "index": 4,
+          "hpCost": 0,
+          "luckCost": 0,
+          "completion": {
+            "type": "ALL"
+          }
+        },
+        {
+          "index": 5,
+          "hpCost": 0,
+          "luckCost": 0,
+          "completion": {
+            "type": "ALL"
+          }
+        },
+        {
+          "index": 6,
+          "hpCost": 0,
+          "luckCost": 0,
+          "completion": {
+            "type": "ALL"
+          }
+        }
+      ],
+      "endings": [
+        {
+          "id": "end01",
+          "title": "最后的撤离者",
+          "success": true,
+          "when": [
+            {
+              "var": "clue.end01",
+              "op": "EQ",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "end02",
+          "title": "地下方舟",
+          "success": true,
+          "when": [
+            {
+              "var": "clue.end02",
+              "op": "EQ",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "end03",
+          "title": "关闭太阳",
+          "success": true,
+          "when": [
+            {
+              "var": "clue.end03",
+              "op": "EQ",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "end04",
+          "title": "第二次日出",
+          "success": true,
+          "when": [
+            {
+              "var": "clue.end04",
+              "op": "EQ",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "fallback",
+          "title": "沉默的城市",
+          "fallback": true,
+          "success": false
+        }
+      ],
+      "gameplayRuntime": {
+        "runtimeScope": "TEAM",
+        "worldMode": "WORLD_SHARED",
+        "survival": {
+          "actionLimitPolicy": "BLOCK_OVERFLOW",
+          "chapterRecovery": false,
+          "recoveries": [
+            {
+              "recoveryKey": "rest",
+              "kind": "REST",
+              "limit": 2,
+              "hpDelta": 2
+            },
+            {
+              "recoveryKey": "rescue",
+              "kind": "RESCUE",
+              "limit": 1,
+              "hpFloor": 4
+            }
+          ]
+        },
+        "initialGrants": [
+          {
+            "itemId": "ration",
+            "quantity": 1
+          },
+          {
+            "itemId": "fuel",
+            "quantity": 1
+          },
+          {
+            "itemId": "power",
+            "quantity": 1
+          }
+        ],
+        "acts": [
+          {
+            "actKey": "a1",
+            "questKeys": [],
+            "completionRule": {
+              "type": "ALL"
+            },
+            "hostUnlock": true
+          },
+          {
+            "actKey": "a2",
+            "questKeys": [],
+            "completionRule": {
+              "type": "ALL"
+            },
+            "hostUnlock": true
+          },
+          {
+            "actKey": "a3",
+            "questKeys": [],
+            "completionRule": {
+              "type": "ANY_N",
+              "quantity": 2
+            },
+            "hostUnlock": false
+          },
+          {
+            "actKey": "a4",
+            "questKeys": [],
+            "completionRule": {
+              "type": "ALL"
+            },
+            "hostUnlock": false
+          },
+          {
+            "actKey": "a5",
+            "questKeys": [],
+            "completionRule": {
+              "type": "ALL"
+            },
+            "hostUnlock": true
+          },
+          {
+            "actKey": "a6",
+            "questKeys": [],
+            "completionRule": {
+              "type": "ALL"
+            },
+            "hostUnlock": false
+          },
+          {
+            "actKey": "a7",
+            "questKeys": [],
+            "completionRule": {
+              "type": "ALL"
+            },
+            "hostUnlock": false
+          }
+        ],
+        "quests": [],
+        "facilities": [
+          {
+            "facilityKey": "heating",
+            "actKey": "a5",
+            "scope": "WORLD",
+            "targetScope": "WORLD",
+            "settlementSlot": "public_recovery",
+            "limit": 1,
+            "hpDelta": 3,
+            "resourceCosts": [
+              {
+                "itemId": "fuel",
+                "quantity": 1
+              }
+            ]
+          },
+          {
+            "facilityKey": "verify",
+            "actKey": "a6",
+            "scope": "WORLD",
+            "targetScope": "OWNER",
+            "settlementSlot": "verification",
+            "limit": 1,
+            "resourceCosts": [
+              {
+                "itemId": "power",
+                "quantity": 1
+              }
+            ],
+            "worldEffects": [
+              {
+                "var": "clue.load_ok",
+                "op": "SET",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "currentScene": "reference",
+      "scenes": [
+        {
+          "id": "reference",
+          "name": "本局配置",
+          "nodeConfigs": {
+            "client:copy_13": {
+              "schemaVersion": 1,
+              "scan": {
+                "enabled": true,
+                "kind": "TEXT",
+                "reply": "核对记录并确认行动"
+              },
+              "interactionRules": {
+                "resourceSlots": [
+                  {
+                    "key": "fuel",
+                    "kind": "ITEM",
+                    "label": "fuel",
+                    "required": true
+                  },
+                  {
+                    "key": "power",
+                    "kind": "ITEM",
+                    "label": "power",
+                    "required": true
+                  },
+                  {
+                    "key": "parts",
+                    "kind": "ITEM",
+                    "label": "parts",
+                    "required": true
+                  },
+                  {
+                    "key": "medical",
+                    "kind": "ITEM",
+                    "label": "medical",
+                    "required": true
+                  }
+                ]
+              },
+              "interactionTools": {
+                "allowTrade": true,
+                "votePolicy": "MAJORITY_ACCEPTANCE",
+                "decidesEnding": true,
+                "plans": [
+                  {
+                    "endingKey": "end01",
+                    "title": "最后的撤离者",
+                    "materialCost": [
+                      {
+                        "itemId": "fuel",
+                        "quantity": 5
+                      },
+                      {
+                        "itemId": "power",
+                        "quantity": 2
+                      },
+                      {
+                        "itemId": "parts",
+                        "quantity": 2
+                      }
+                    ]
+                  },
+                  {
+                    "endingKey": "end02",
+                    "title": "地下方舟",
+                    "materialCost": [
+                      {
+                        "itemId": "fuel",
+                        "quantity": 4
+                      },
+                      {
+                        "itemId": "parts",
+                        "quantity": 4
+                      },
+                      {
+                        "itemId": "medical",
+                        "quantity": 2
+                      }
+                    ]
+                  },
+                  {
+                    "endingKey": "end03",
+                    "title": "关闭太阳",
+                    "materialCost": [
+                      {
+                        "itemId": "power",
+                        "quantity": 2
+                      },
+                      {
+                        "itemId": "parts",
+                        "quantity": 2
+                      }
+                    ]
+                  },
+                  {
+                    "endingKey": "end04",
+                    "title": "第二次日出",
+                    "materialCost": [
+                      {
+                        "itemId": "fuel",
+                        "quantity": 6
+                      },
+                      {
+                        "itemId": "power",
+                        "quantity": 3
+                      },
+                      {
+                        "itemId": "parts",
+                        "quantity": 6
+                      },
+                      {
+                        "itemId": "medical",
+                        "quantity": 2
+                      }
+                    ],
+                    "when": [
+                      {
+                        "var": "clue.ev01",
+                        "op": "EQ",
+                        "value": 1
+                      },
+                      {
+                        "var": "clue.ev02",
+                        "op": "EQ",
+                        "value": 1
+                      },
+                      {
+                        "var": "clue.ev03",
+                        "op": "EQ",
+                        "value": 1
+                      },
+                      {
+                        "var": "clue.ev04",
+                        "op": "EQ",
+                        "value": 1
+                      },
+                      {
+                        "var": "clue.ev05",
+                        "op": "EQ",
+                        "value": 1
+                      },
+                      {
+                        "var": "clue.load_ok",
+                        "op": "EQ",
+                        "value": 1
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "templateBindings": {
+        "client:copy_0": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_3": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_4": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_5": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_6": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_7": {
+          "templateId": 502,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {
+            "aid": "medical",
+            "food": "ration"
+          },
+          "slotDigest": "425db55f2e4f2fe250b57ec2d27c1ea2f0f9eda6cdee431dde65ec74e71d5af8"
+        },
+        "client:copy_8": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_10": {
+          "templateId": 507,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_11": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_12": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_13": {
+          "templateId": 503,
+          "values": {},
+          "items": {
+            "fuel": "fuel",
+            "power": "power",
+            "parts": "parts",
+            "medical": "medical"
+          },
+          "slotDigest": "7314d511cfb1c5cb3d88ef845b3a92fd0763e065030d157d15c857439a00f80d"
+        }
+      }
+    },
+    "journeyRules": {
+      "schemaVersion": 1,
+      "stateEnabled": true,
+      "checkEnabled": false,
+      "hp": {
+        "enabled": true,
+        "init": 8,
+        "max": 12
+      },
+      "luck": {
+        "enabled": false
+      },
+      "recovery": {
+        "stationEndIfHurt": 0,
+        "stageRestHpFloor": 0,
+        "stageRestLuckFloor": 0
+      },
+      "attributes": [
+        {
+          "key": "counter.cohesion",
+          "label": "协作值",
+          "min": 0,
+          "max": 10,
+          "initial": 4,
+          "visible": true
+        }
+      ],
+      "statLinks": [
+        {
+          "id": "cohesion_hp",
+          "sourceKey": "counter.cohesion",
+          "targetKey": "sys.hp",
+          "trigger": "PER_POINT",
+          "allowedReasons": [
+            "TASK_COST"
+          ],
+          "frequency": "EVENT",
+          "multiplier": 1
+        }
+      ]
+    },
+    "chapters": [
+      {
+        "name": "A1 观测",
+        "nodes": [
+          {
+            "name": "记录核验",
+            "templateId": 501,
+            "clientNodeKey": "copy_0"
+          },
+          {
+            "name": "恢复挑战",
+            "templateId": 504,
+            "clientNodeKey": "copy_1"
+          },
+          {
+            "name": "恢复问答",
+            "templateId": 505,
+            "clientNodeKey": "copy_2"
+          }
+        ]
+      },
+      {
+        "name": "A2 档案",
+        "nodes": [
+          {
+            "name": "时间核验",
+            "templateId": 501,
+            "clientNodeKey": "copy_3"
+          }
+        ]
+      },
+      {
+        "name": "A3 补给",
+        "nodes": [
+          {
+            "name": "配给站",
+            "templateId": 501,
+            "clientNodeKey": "copy_4"
+          },
+          {
+            "name": "维修站",
+            "templateId": 501,
+            "clientNodeKey": "copy_5"
+          },
+          {
+            "name": "后勤站",
+            "templateId": 501,
+            "clientNodeKey": "copy_6"
+          }
+        ]
+      },
+      {
+        "name": "A4 选择",
+        "nodes": [
+          {
+            "name": "救援",
+            "templateId": 502,
+            "clientNodeKey": "copy_7"
+          },
+          {
+            "name": "回收",
+            "templateId": 501,
+            "clientNodeKey": "copy_8"
+          },
+          {
+            "name": "固守",
+            "templateId": 506,
+            "clientNodeKey": "copy_9"
+          }
+        ]
+      },
+      {
+        "name": "A5 证据",
+        "nodes": [
+          {
+            "name": "责任重建",
+            "templateId": 507,
+            "clientNodeKey": "copy_10"
+          }
+        ]
+      },
+      {
+        "name": "A6 准备",
+        "nodes": [
+          {
+            "name": "整备",
+            "templateId": 501,
+            "clientNodeKey": "copy_11"
+          },
+          {
+            "name": "人工复核",
+            "templateId": 501,
+            "clientNodeKey": "copy_12"
+          }
+        ]
+      },
+      {
+        "name": "A7 执行",
+        "nodes": [
+          {
+            "name": "共同执行",
+            "templateId": 503,
+            "clientNodeKey": "copy_13"
+          }
+        ]
+      }
+    ],
+    "templates": [
+      {
+        "id": 501,
+        "title": "核验与结算",
+        "validationMethod": 4,
+        "questionAnswer": "",
+        "advancedConfigJson": "{\"schemaVersion\":1,\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"核对记录并确认行动\"},\"interactionRules\":{\"resourceSlots\":[{\"key\":\"energy\",\"kind\":\"VALUE\",\"label\":\"状态值\",\"required\":true}],\"statCosts\":[{\"statKey\":\"energy\",\"amount\":1}],\"limit\":1}}",
+        "status": 0
+      },
+      {
+        "id": 502,
+        "title": "公共救援",
+        "validationMethod": 4,
+        "questionAnswer": "",
+        "advancedConfigJson": "{\"schemaVersion\":1,\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"核对记录并确认行动\"},\"interactionRules\":{\"resourceSlots\":[{\"key\":\"energy\",\"kind\":\"VALUE\",\"label\":\"状态值\",\"required\":true},{\"key\":\"aid\",\"kind\":\"ITEM\",\"label\":\"aid\",\"required\":true},{\"key\":\"food\",\"kind\":\"ITEM\",\"label\":\"food\",\"required\":true}],\"costOptions\":[{\"resourceCosts\":[{\"itemId\":\"aid\",\"quantity\":1}],\"statCosts\":[{\"statKey\":\"energy\",\"amount\":2}]},{\"resourceCosts\":[{\"itemId\":\"food\",\"quantity\":2}],\"statCosts\":[{\"statKey\":\"energy\",\"amount\":2}]}],\"scope\":\"WORLD\",\"targetScope\":\"OWNER\",\"limit\":1,\"worldEffects\":[{\"var\":\"clue.rescue\",\"op\":\"SET\",\"value\":1}]}}",
+        "status": 0
+      },
+      {
+        "id": 503,
+        "title": "共同表决",
+        "validationMethod": 4,
+        "questionAnswer": "",
+        "advancedConfigJson": "{\"schemaVersion\":1,\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"核对记录并确认行动\"},\"interactionRules\":{\"resourceSlots\":[{\"key\":\"fuel\",\"kind\":\"ITEM\",\"label\":\"fuel\",\"required\":true},{\"key\":\"power\",\"kind\":\"ITEM\",\"label\":\"power\",\"required\":true},{\"key\":\"parts\",\"kind\":\"ITEM\",\"label\":\"parts\",\"required\":true},{\"key\":\"medical\",\"kind\":\"ITEM\",\"label\":\"medical\",\"required\":true}]},\"interactionTools\":{\"allowTrade\":true,\"votePolicy\":\"MAJORITY_ACCEPTANCE\",\"decidesEnding\":true,\"plans\":[{\"endingKey\":\"end01\",\"title\":\"撤离\",\"materialCost\":[{\"itemId\":\"fuel\",\"quantity\":5},{\"itemId\":\"power\",\"quantity\":2},{\"itemId\":\"parts\",\"quantity\":2}]},{\"endingKey\":\"end02\",\"title\":\"留守\",\"materialCost\":[{\"itemId\":\"fuel\",\"quantity\":4},{\"itemId\":\"parts\",\"quantity\":4},{\"itemId\":\"medical\",\"quantity\":2}]},{\"endingKey\":\"end03\",\"title\":\"停机\",\"materialCost\":[{\"itemId\":\"power\",\"quantity\":2},{\"itemId\":\"parts\",\"quantity\":2}]},{\"endingKey\":\"end04\",\"title\":\"旁路\",\"materialCost\":[{\"itemId\":\"fuel\",\"quantity\":6},{\"itemId\":\"power\",\"quantity\":3},{\"itemId\":\"parts\",\"quantity\":6},{\"itemId\":\"medical\",\"quantity\":2}],\"when\":[{\"var\":\"clue.ev01\",\"op\":\"EQ\",\"value\":1},{\"var\":\"clue.ev02\",\"op\":\"EQ\",\"value\":1},{\"var\":\"clue.ev03\",\"op\":\"EQ\",\"value\":1},{\"var\":\"clue.ev04\",\"op\":\"EQ\",\"value\":1},{\"var\":\"clue.ev05\",\"op\":\"EQ\",\"value\":1},{\"var\":\"clue.load_ok\",\"op\":\"EQ\",\"value\":1}]}]}}",
+        "status": 0
+      },
+      {
+        "id": 504,
+        "title": "恢复挑战",
+        "validationMethod": 4,
+        "questionAnswer": "",
+        "advancedConfigJson": "{\"schemaVersion\":1,\"ballShake\":{\"enabled\":true,\"kicker\":\"恢复挑战\",\"goal\":10,\"timed\":false,\"seconds\":12,\"xp\":0}}",
+        "status": 0
+      },
+      {
+        "id": 505,
+        "title": "恢复问答",
+        "validationMethod": 1,
+        "questionAnswer": "恢复",
+        "advancedConfigJson": "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"输入恢复口令\",\"answerText\":\"恢复\",\"maxTries\":0}}",
+        "status": 0
+      },
+      {
+        "id": 506,
+        "title": "确认行动",
+        "validationMethod": 4,
+        "questionAnswer": "",
+        "advancedConfigJson": "{\"schemaVersion\":1,\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"核对记录并确认行动\"}}",
+        "status": 0
+      },
+      {
+        "id": 507,
+        "title": "公共证据复核",
+        "validationMethod": 4,
+        "questionAnswer": "",
+        "advancedConfigJson": "{\"schemaVersion\":1,\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"核对记录并确认行动\"},\"interactionRules\":{\"resourceSlots\":[{\"key\":\"energy\",\"kind\":\"VALUE\",\"label\":\"状态值\",\"required\":true}],\"statCosts\":[{\"statKey\":\"energy\",\"amount\":1}],\"limit\":1,\"worldEffects\":[{\"var\":\"clue.ev01\",\"op\":\"SET\",\"value\":1},{\"var\":\"clue.ev02\",\"op\":\"SET\",\"value\":1},{\"var\":\"clue.ev03\",\"op\":\"SET\",\"value\":1},{\"var\":\"clue.ev04\",\"op\":\"SET\",\"value\":1},{\"var\":\"clue.ev05\",\"op\":\"SET\",\"value\":1}]}}",
+        "status": 0
+      }
+    ]
+  },
+  {
+    "name": "末日热浪",
+    "runtime": {
+      "schemaVersion": 1,
+      "capacity": 14,
+      "hpName": "水分储备",
+      "actionName": "外出次数",
+      "actionLimit": 8,
+      "items": [
+        {
+          "id": "ration",
+          "kind": "ITEM",
+          "name": "饮水",
+          "slotCost": 1,
+          "image": "https://www.chengyinhub.com/favicon.ico",
+          "stat": "HP",
+          "delta": 3
+        },
+        {
+          "id": "fuel",
+          "kind": "ITEM",
+          "name": "冰块",
+          "slotCost": 2,
+          "image": "https://www.chengyinhub.com/favicon.ico"
+        },
+        {
+          "id": "power",
+          "kind": "ITEM",
+          "name": "电源",
+          "slotCost": 1,
+          "image": "https://www.chengyinhub.com/favicon.ico"
+        },
+        {
+          "id": "parts",
+          "kind": "ITEM",
+          "name": "遮阳件",
+          "slotCost": 1,
+          "image": "https://www.chengyinhub.com/favicon.ico"
+        },
+        {
+          "id": "medical",
+          "kind": "ITEM",
+          "name": "医疗包",
+          "slotCost": 1,
+          "image": "https://www.chengyinhub.com/favicon.ico"
+        }
+      ],
+      "chapters": [
+        {
+          "index": 0,
+          "hpCost": 0,
+          "luckCost": 0,
+          "completion": {
+            "type": "ALL"
+          }
+        },
+        {
+          "index": 1,
+          "hpCost": 0,
+          "luckCost": 0,
+          "completion": {
+            "type": "ALL"
+          }
+        },
+        {
+          "index": 2,
+          "hpCost": 0,
+          "luckCost": 0,
+          "completion": {
+            "type": "ANY_N",
+            "quantity": 2,
+            "overflowSlot": "mobile"
+          }
+        },
+        {
+          "index": 3,
+          "hpCost": 0,
+          "luckCost": 0,
+          "completion": {
+            "type": "ALL"
+          }
+        },
+        {
+          "index": 4,
+          "hpCost": 0,
+          "luckCost": 0,
+          "completion": {
+            "type": "ALL"
+          }
+        },
+        {
+          "index": 5,
+          "hpCost": 0,
+          "luckCost": 0,
+          "completion": {
+            "type": "ALL"
+          }
+        },
+        {
+          "index": 6,
+          "hpCost": 0,
+          "luckCost": 0,
+          "completion": {
+            "type": "ALL"
+          }
+        }
+      ],
+      "endings": [
+        {
+          "id": "end01",
+          "title": "离开热区",
+          "success": true,
+          "when": [
+            {
+              "var": "clue.end01",
+              "op": "EQ",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "end02",
+          "title": "清凉方舟",
+          "success": true,
+          "when": [
+            {
+              "var": "clue.end02",
+              "op": "EQ",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "end03",
+          "title": "关闭热源",
+          "success": true,
+          "when": [
+            {
+              "var": "clue.end03",
+              "op": "EQ",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "end04",
+          "title": "凉风重来",
+          "success": true,
+          "when": [
+            {
+              "var": "clue.end04",
+              "op": "EQ",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "fallback",
+          "title": "沉默的热城",
+          "fallback": true,
+          "success": false
+        }
+      ],
+      "gameplayRuntime": {
+        "runtimeScope": "TEAM",
+        "worldMode": "WORLD_SHARED",
+        "survival": {
+          "actionLimitPolicy": "BLOCK_OVERFLOW",
+          "chapterRecovery": false,
+          "recoveries": [
+            {
+              "recoveryKey": "rest",
+              "kind": "REST",
+              "limit": 2,
+              "hpDelta": 2
+            },
+            {
+              "recoveryKey": "rescue",
+              "kind": "RESCUE",
+              "limit": 1,
+              "hpFloor": 4
+            }
+          ]
+        },
+        "initialGrants": [
+          {
+            "itemId": "ration",
+            "quantity": 1
+          },
+          {
+            "itemId": "fuel",
+            "quantity": 1
+          },
+          {
+            "itemId": "power",
+            "quantity": 1
+          }
+        ],
+        "acts": [
+          {
+            "actKey": "a1",
+            "questKeys": [],
+            "completionRule": {
+              "type": "ALL"
+            },
+            "hostUnlock": true
+          },
+          {
+            "actKey": "a2",
+            "questKeys": [],
+            "completionRule": {
+              "type": "ALL"
+            },
+            "hostUnlock": true
+          },
+          {
+            "actKey": "a3",
+            "questKeys": [],
+            "completionRule": {
+              "type": "ANY_N",
+              "quantity": 2
+            },
+            "hostUnlock": false
+          },
+          {
+            "actKey": "a4",
+            "questKeys": [],
+            "completionRule": {
+              "type": "ALL"
+            },
+            "hostUnlock": false
+          },
+          {
+            "actKey": "a5",
+            "questKeys": [],
+            "completionRule": {
+              "type": "ALL"
+            },
+            "hostUnlock": true
+          },
+          {
+            "actKey": "a6",
+            "questKeys": [],
+            "completionRule": {
+              "type": "ALL"
+            },
+            "hostUnlock": false
+          },
+          {
+            "actKey": "a7",
+            "questKeys": [],
+            "completionRule": {
+              "type": "ALL"
+            },
+            "hostUnlock": false
+          }
+        ],
+        "quests": [],
+        "facilities": [
+          {
+            "facilityKey": "heating",
+            "actKey": "a5",
+            "scope": "WORLD",
+            "targetScope": "WORLD",
+            "settlementSlot": "public_recovery",
+            "limit": 1,
+            "hpDelta": 3,
+            "resourceCosts": [
+              {
+                "itemId": "fuel",
+                "quantity": 1
+              }
+            ]
+          },
+          {
+            "facilityKey": "verify",
+            "actKey": "a6",
+            "scope": "WORLD",
+            "targetScope": "OWNER",
+            "settlementSlot": "verification",
+            "limit": 1,
+            "resourceCosts": [
+              {
+                "itemId": "power",
+                "quantity": 1
+              }
+            ],
+            "worldEffects": [
+              {
+                "var": "clue.load_ok",
+                "op": "SET",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "currentScene": "reference",
+      "scenes": [
+        {
+          "id": "reference",
+          "name": "本局配置",
+          "nodeConfigs": {
+            "client:copy_13": {
+              "schemaVersion": 1,
+              "scan": {
+                "enabled": true,
+                "kind": "TEXT",
+                "reply": "核对记录并确认行动"
+              },
+              "interactionRules": {
+                "resourceSlots": [
+                  {
+                    "key": "fuel",
+                    "kind": "ITEM",
+                    "label": "fuel",
+                    "required": true
+                  },
+                  {
+                    "key": "power",
+                    "kind": "ITEM",
+                    "label": "power",
+                    "required": true
+                  },
+                  {
+                    "key": "parts",
+                    "kind": "ITEM",
+                    "label": "parts",
+                    "required": true
+                  },
+                  {
+                    "key": "medical",
+                    "kind": "ITEM",
+                    "label": "medical",
+                    "required": true
+                  }
+                ]
+              },
+              "interactionTools": {
+                "allowTrade": true,
+                "votePolicy": "MAJORITY_ACCEPTANCE",
+                "decidesEnding": true,
+                "plans": [
+                  {
+                    "endingKey": "end01",
+                    "title": "离开热区",
+                    "materialCost": [
+                      {
+                        "itemId": "fuel",
+                        "quantity": 5
+                      },
+                      {
+                        "itemId": "power",
+                        "quantity": 2
+                      },
+                      {
+                        "itemId": "parts",
+                        "quantity": 2
+                      }
+                    ]
+                  },
+                  {
+                    "endingKey": "end02",
+                    "title": "清凉方舟",
+                    "materialCost": [
+                      {
+                        "itemId": "fuel",
+                        "quantity": 4
+                      },
+                      {
+                        "itemId": "parts",
+                        "quantity": 4
+                      },
+                      {
+                        "itemId": "medical",
+                        "quantity": 2
+                      }
+                    ]
+                  },
+                  {
+                    "endingKey": "end03",
+                    "title": "关闭热源",
+                    "materialCost": [
+                      {
+                        "itemId": "power",
+                        "quantity": 2
+                      },
+                      {
+                        "itemId": "parts",
+                        "quantity": 2
+                      }
+                    ]
+                  },
+                  {
+                    "endingKey": "end04",
+                    "title": "凉风重来",
+                    "materialCost": [
+                      {
+                        "itemId": "fuel",
+                        "quantity": 6
+                      },
+                      {
+                        "itemId": "power",
+                        "quantity": 3
+                      },
+                      {
+                        "itemId": "parts",
+                        "quantity": 6
+                      },
+                      {
+                        "itemId": "medical",
+                        "quantity": 2
+                      }
+                    ],
+                    "when": [
+                      {
+                        "var": "clue.ev01",
+                        "op": "EQ",
+                        "value": 1
+                      },
+                      {
+                        "var": "clue.ev02",
+                        "op": "EQ",
+                        "value": 1
+                      },
+                      {
+                        "var": "clue.ev03",
+                        "op": "EQ",
+                        "value": 1
+                      },
+                      {
+                        "var": "clue.ev04",
+                        "op": "EQ",
+                        "value": 1
+                      },
+                      {
+                        "var": "clue.ev05",
+                        "op": "EQ",
+                        "value": 1
+                      },
+                      {
+                        "var": "clue.load_ok",
+                        "op": "EQ",
+                        "value": 1
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "templateBindings": {
+        "client:copy_0": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_3": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_4": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_5": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_6": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_7": {
+          "templateId": 502,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {
+            "aid": "medical",
+            "food": "ration"
+          },
+          "slotDigest": "425db55f2e4f2fe250b57ec2d27c1ea2f0f9eda6cdee431dde65ec74e71d5af8"
+        },
+        "client:copy_8": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_10": {
+          "templateId": 507,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_11": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_12": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_13": {
+          "templateId": 503,
+          "values": {},
+          "items": {
+            "fuel": "fuel",
+            "power": "power",
+            "parts": "parts",
+            "medical": "medical"
+          },
+          "slotDigest": "7314d511cfb1c5cb3d88ef845b3a92fd0763e065030d157d15c857439a00f80d"
+        }
+      }
+    },
+    "journeyRules": {
+      "schemaVersion": 1,
+      "stateEnabled": true,
+      "checkEnabled": false,
+      "hp": {
+        "enabled": true,
+        "init": 8,
+        "max": 12
+      },
+      "luck": {
+        "enabled": false
+      },
+      "recovery": {
+        "stationEndIfHurt": 0,
+        "stageRestHpFloor": 0,
+        "stageRestLuckFloor": 0
+      },
+      "attributes": [
+        {
+          "key": "counter.cohesion",
+          "label": "协作值",
+          "min": 0,
+          "max": 10,
+          "initial": 4,
+          "visible": true
+        }
+      ],
+      "statLinks": [
+        {
+          "id": "cohesion_hp",
+          "sourceKey": "counter.cohesion",
+          "targetKey": "sys.hp",
+          "trigger": "PER_POINT",
+          "allowedReasons": [
+            "TASK_COST"
+          ],
+          "frequency": "EVENT",
+          "multiplier": 1
+        }
+      ]
+    },
+    "chapters": [
+      {
+        "name": "A1 观测",
+        "nodes": [
+          {
+            "name": "记录核验",
+            "templateId": 501,
+            "clientNodeKey": "copy_0"
+          },
+          {
+            "name": "恢复挑战",
+            "templateId": 504,
+            "clientNodeKey": "copy_1"
+          },
+          {
+            "name": "恢复问答",
+            "templateId": 505,
+            "clientNodeKey": "copy_2"
+          }
+        ]
+      },
+      {
+        "name": "A2 档案",
+        "nodes": [
+          {
+            "name": "时间核验",
+            "templateId": 501,
+            "clientNodeKey": "copy_3"
+          }
+        ]
+      },
+      {
+        "name": "A3 补给",
+        "nodes": [
+          {
+            "name": "配给站",
+            "templateId": 501,
+            "clientNodeKey": "copy_4"
+          },
+          {
+            "name": "维修站",
+            "templateId": 501,
+            "clientNodeKey": "copy_5"
+          },
+          {
+            "name": "后勤站",
+            "templateId": 501,
+            "clientNodeKey": "copy_6"
+          }
+        ]
+      },
+      {
+        "name": "A4 选择",
+        "nodes": [
+          {
+            "name": "救援",
+            "templateId": 502,
+            "clientNodeKey": "copy_7"
+          },
+          {
+            "name": "回收",
+            "templateId": 501,
+            "clientNodeKey": "copy_8"
+          },
+          {
+            "name": "固守",
+            "templateId": 506,
+            "clientNodeKey": "copy_9"
+          }
+        ]
+      },
+      {
+        "name": "A5 证据",
+        "nodes": [
+          {
+            "name": "责任重建",
+            "templateId": 507,
+            "clientNodeKey": "copy_10"
+          }
+        ]
+      },
+      {
+        "name": "A6 准备",
+        "nodes": [
+          {
+            "name": "整备",
+            "templateId": 501,
+            "clientNodeKey": "copy_11"
+          },
+          {
+            "name": "人工复核",
+            "templateId": 501,
+            "clientNodeKey": "copy_12"
+          }
+        ]
+      },
+      {
+        "name": "A7 执行",
+        "nodes": [
+          {
+            "name": "共同执行",
+            "templateId": 503,
+            "clientNodeKey": "copy_13"
+          }
+        ]
+      }
+    ],
+    "templates": [
+      {
+        "id": 501,
+        "title": "核验与结算",
+        "validationMethod": 4,
+        "questionAnswer": "",
+        "advancedConfigJson": "{\"schemaVersion\":1,\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"核对记录并确认行动\"},\"interactionRules\":{\"resourceSlots\":[{\"key\":\"energy\",\"kind\":\"VALUE\",\"label\":\"状态值\",\"required\":true}],\"statCosts\":[{\"statKey\":\"energy\",\"amount\":1}],\"limit\":1}}",
+        "status": 0
+      },
+      {
+        "id": 502,
+        "title": "公共救援",
+        "validationMethod": 4,
+        "questionAnswer": "",
+        "advancedConfigJson": "{\"schemaVersion\":1,\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"核对记录并确认行动\"},\"interactionRules\":{\"resourceSlots\":[{\"key\":\"energy\",\"kind\":\"VALUE\",\"label\":\"状态值\",\"required\":true},{\"key\":\"aid\",\"kind\":\"ITEM\",\"label\":\"aid\",\"required\":true},{\"key\":\"food\",\"kind\":\"ITEM\",\"label\":\"food\",\"required\":true}],\"costOptions\":[{\"resourceCosts\":[{\"itemId\":\"aid\",\"quantity\":1}],\"statCosts\":[{\"statKey\":\"energy\",\"amount\":2}]},{\"resourceCosts\":[{\"itemId\":\"food\",\"quantity\":2}],\"statCosts\":[{\"statKey\":\"energy\",\"amount\":2}]}],\"scope\":\"WORLD\",\"targetScope\":\"OWNER\",\"limit\":1,\"worldEffects\":[{\"var\":\"clue.rescue\",\"op\":\"SET\",\"value\":1}]}}",
+        "status": 0
+      },
+      {
+        "id": 503,
+        "title": "共同表决",
+        "validationMethod": 4,
+        "questionAnswer": "",
+        "advancedConfigJson": "{\"schemaVersion\":1,\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"核对记录并确认行动\"},\"interactionRules\":{\"resourceSlots\":[{\"key\":\"fuel\",\"kind\":\"ITEM\",\"label\":\"fuel\",\"required\":true},{\"key\":\"power\",\"kind\":\"ITEM\",\"label\":\"power\",\"required\":true},{\"key\":\"parts\",\"kind\":\"ITEM\",\"label\":\"parts\",\"required\":true},{\"key\":\"medical\",\"kind\":\"ITEM\",\"label\":\"medical\",\"required\":true}]},\"interactionTools\":{\"allowTrade\":true,\"votePolicy\":\"MAJORITY_ACCEPTANCE\",\"decidesEnding\":true,\"plans\":[{\"endingKey\":\"end01\",\"title\":\"撤离\",\"materialCost\":[{\"itemId\":\"fuel\",\"quantity\":5},{\"itemId\":\"power\",\"quantity\":2},{\"itemId\":\"parts\",\"quantity\":2}]},{\"endingKey\":\"end02\",\"title\":\"留守\",\"materialCost\":[{\"itemId\":\"fuel\",\"quantity\":4},{\"itemId\":\"parts\",\"quantity\":4},{\"itemId\":\"medical\",\"quantity\":2}]},{\"endingKey\":\"end03\",\"title\":\"停机\",\"materialCost\":[{\"itemId\":\"power\",\"quantity\":2},{\"itemId\":\"parts\",\"quantity\":2}]},{\"endingKey\":\"end04\",\"title\":\"旁路\",\"materialCost\":[{\"itemId\":\"fuel\",\"quantity\":6},{\"itemId\":\"power\",\"quantity\":3},{\"itemId\":\"parts\",\"quantity\":6},{\"itemId\":\"medical\",\"quantity\":2}],\"when\":[{\"var\":\"clue.ev01\",\"op\":\"EQ\",\"value\":1},{\"var\":\"clue.ev02\",\"op\":\"EQ\",\"value\":1},{\"var\":\"clue.ev03\",\"op\":\"EQ\",\"value\":1},{\"var\":\"clue.ev04\",\"op\":\"EQ\",\"value\":1},{\"var\":\"clue.ev05\",\"op\":\"EQ\",\"value\":1},{\"var\":\"clue.load_ok\",\"op\":\"EQ\",\"value\":1}]}]}}",
+        "status": 0
+      },
+      {
+        "id": 504,
+        "title": "恢复挑战",
+        "validationMethod": 4,
+        "questionAnswer": "",
+        "advancedConfigJson": "{\"schemaVersion\":1,\"ballShake\":{\"enabled\":true,\"kicker\":\"恢复挑战\",\"goal\":10,\"timed\":false,\"seconds\":12,\"xp\":0}}",
+        "status": 0
+      },
+      {
+        "id": 505,
+        "title": "恢复问答",
+        "validationMethod": 1,
+        "questionAnswer": "恢复",
+        "advancedConfigJson": "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"输入恢复口令\",\"answerText\":\"恢复\",\"maxTries\":0}}",
+        "status": 0
+      },
+      {
+        "id": 506,
+        "title": "确认行动",
+        "validationMethod": 4,
+        "questionAnswer": "",
+        "advancedConfigJson": "{\"schemaVersion\":1,\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"核对记录并确认行动\"}}",
+        "status": 0
+      },
+      {
+        "id": 507,
+        "title": "公共证据复核",
+        "validationMethod": 4,
+        "questionAnswer": "",
+        "advancedConfigJson": "{\"schemaVersion\":1,\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"核对记录并确认行动\"},\"interactionRules\":{\"resourceSlots\":[{\"key\":\"energy\",\"kind\":\"VALUE\",\"label\":\"状态值\",\"required\":true}],\"statCosts\":[{\"statKey\":\"energy\",\"amount\":1}],\"limit\":1,\"worldEffects\":[{\"var\":\"clue.ev01\",\"op\":\"SET\",\"value\":1},{\"var\":\"clue.ev02\",\"op\":\"SET\",\"value\":1},{\"var\":\"clue.ev03\",\"op\":\"SET\",\"value\":1},{\"var\":\"clue.ev04\",\"op\":\"SET\",\"value\":1},{\"var\":\"clue.ev05\",\"op\":\"SET\",\"value\":1}]}}",
+        "status": 0
+      }
+    ]
+  },
+  {
+    "name": "丧尸末日",
+    "runtime": {
+      "schemaVersion": 1,
+      "capacity": 14,
+      "hpName": "体力",
+      "actionName": "搜索次数",
+      "actionLimit": 6,
+      "items": [
+        {
+          "id": "ration",
+          "kind": "ITEM",
+          "name": "罐头",
+          "slotCost": 1,
+          "image": "https://www.chengyinhub.com/favicon.ico",
+          "stat": "HP",
+          "delta": 2
+        },
+        {
+          "id": "fuel",
+          "kind": "ITEM",
+          "name": "弹药",
+          "slotCost": 2,
+          "image": "https://www.chengyinhub.com/favicon.ico"
+        },
+        {
+          "id": "power",
+          "kind": "ITEM",
+          "name": "电池",
+          "slotCost": 1,
+          "image": "https://www.chengyinhub.com/favicon.ico"
+        },
+        {
+          "id": "parts",
+          "kind": "ITEM",
+          "name": "路障材料",
+          "slotCost": 1,
+          "image": "https://www.chengyinhub.com/favicon.ico"
+        },
+        {
+          "id": "medical",
+          "kind": "ITEM",
+          "name": "急救包",
+          "slotCost": 1,
+          "image": "https://www.chengyinhub.com/favicon.ico"
+        }
+      ],
+      "chapters": [
+        {
+          "index": 0,
+          "hpCost": 0,
+          "luckCost": 0,
+          "completion": {
+            "type": "ALL"
+          }
+        },
+        {
+          "index": 1,
+          "hpCost": 0,
+          "luckCost": 0,
+          "completion": {
+            "type": "ALL"
+          }
+        },
+        {
+          "index": 2,
+          "hpCost": 0,
+          "luckCost": 0,
+          "completion": {
+            "type": "ANY_N",
+            "quantity": 2,
+            "overflowSlot": "mobile"
+          }
+        },
+        {
+          "index": 3,
+          "hpCost": 0,
+          "luckCost": 0,
+          "completion": {
+            "type": "ALL"
+          }
+        },
+        {
+          "index": 4,
+          "hpCost": 0,
+          "luckCost": 0,
+          "completion": {
+            "type": "ALL"
+          }
+        },
+        {
+          "index": 5,
+          "hpCost": 0,
+          "luckCost": 0,
+          "completion": {
+            "type": "ALL"
+          }
+        },
+        {
+          "index": 6,
+          "hpCost": 0,
+          "luckCost": 0,
+          "completion": {
+            "type": "ALL"
+          }
+        }
+      ],
+      "endings": [
+        {
+          "id": "end01",
+          "title": "撤离据点",
+          "success": true,
+          "when": [
+            {
+              "var": "clue.end01",
+              "op": "EQ",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "end02",
+          "title": "地下堡垒",
+          "success": true,
+          "when": [
+            {
+              "var": "clue.end02",
+              "op": "EQ",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "end03",
+          "title": "关闭信标",
+          "success": true,
+          "when": [
+            {
+              "var": "clue.end03",
+              "op": "EQ",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "fallback",
+          "title": "沉默的据点",
+          "fallback": true,
+          "success": false
+        }
+      ],
+      "gameplayRuntime": {
+        "runtimeScope": "TEAM",
+        "worldMode": "WORLD_SHARED",
+        "survival": {
+          "actionLimitPolicy": "BLOCK_OVERFLOW",
+          "chapterRecovery": false,
+          "recoveries": [
+            {
+              "recoveryKey": "rest",
+              "kind": "REST",
+              "limit": 2,
+              "hpDelta": 2
+            },
+            {
+              "recoveryKey": "rescue",
+              "kind": "RESCUE",
+              "limit": 1,
+              "hpFloor": 4
+            }
+          ]
+        },
+        "initialGrants": [
+          {
+            "itemId": "ration",
+            "quantity": 1
+          },
+          {
+            "itemId": "fuel",
+            "quantity": 1
+          },
+          {
+            "itemId": "power",
+            "quantity": 1
+          }
+        ],
+        "acts": [
+          {
+            "actKey": "a1",
+            "questKeys": [],
+            "completionRule": {
+              "type": "ALL"
+            },
+            "hostUnlock": true
+          },
+          {
+            "actKey": "a2",
+            "questKeys": [],
+            "completionRule": {
+              "type": "ALL"
+            },
+            "hostUnlock": true
+          },
+          {
+            "actKey": "a3",
+            "questKeys": [],
+            "completionRule": {
+              "type": "ANY_N",
+              "quantity": 2
+            },
+            "hostUnlock": false
+          },
+          {
+            "actKey": "a4",
+            "questKeys": [],
+            "completionRule": {
+              "type": "ALL"
+            },
+            "hostUnlock": false
+          },
+          {
+            "actKey": "a5",
+            "questKeys": [],
+            "completionRule": {
+              "type": "ALL"
+            },
+            "hostUnlock": true
+          },
+          {
+            "actKey": "a6",
+            "questKeys": [],
+            "completionRule": {
+              "type": "ALL"
+            },
+            "hostUnlock": false
+          },
+          {
+            "actKey": "a7",
+            "questKeys": [],
+            "completionRule": {
+              "type": "ALL"
+            },
+            "hostUnlock": false
+          }
+        ],
+        "quests": [],
+        "facilities": [
+          {
+            "facilityKey": "heating",
+            "actKey": "a5",
+            "scope": "WORLD",
+            "targetScope": "WORLD",
+            "settlementSlot": "public_recovery",
+            "limit": 1,
+            "hpDelta": 2,
+            "resourceCosts": [
+              {
+                "itemId": "parts",
+                "quantity": 2
+              }
+            ]
+          },
+          {
+            "facilityKey": "verify",
+            "actKey": "a6",
+            "scope": "WORLD",
+            "targetScope": "OWNER",
+            "settlementSlot": "verification",
+            "limit": 1,
+            "resourceCosts": [
+              {
+                "itemId": "power",
+                "quantity": 1
+              }
+            ],
+            "worldEffects": [
+              {
+                "var": "clue.load_ok",
+                "op": "SET",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "currentScene": "reference",
+      "scenes": [
+        {
+          "id": "reference",
+          "name": "本局配置",
+          "nodeConfigs": {
+            "client:copy_13": {
+              "schemaVersion": 1,
+              "scan": {
+                "enabled": true,
+                "kind": "TEXT",
+                "reply": "核对记录并确认行动"
+              },
+              "interactionRules": {
+                "resourceSlots": [
+                  {
+                    "key": "fuel",
+                    "kind": "ITEM",
+                    "label": "fuel",
+                    "required": true
+                  },
+                  {
+                    "key": "power",
+                    "kind": "ITEM",
+                    "label": "power",
+                    "required": true
+                  },
+                  {
+                    "key": "parts",
+                    "kind": "ITEM",
+                    "label": "parts",
+                    "required": true
+                  },
+                  {
+                    "key": "medical",
+                    "kind": "ITEM",
+                    "label": "medical",
+                    "required": true
+                  }
+                ]
+              },
+              "interactionTools": {
+                "allowTrade": true,
+                "votePolicy": "MAJORITY_ACCEPTANCE",
+                "decidesEnding": true,
+                "plans": [
+                  {
+                    "endingKey": "end01",
+                    "title": "撤离据点",
+                    "materialCost": [
+                      {
+                        "itemId": "fuel",
+                        "quantity": 5
+                      },
+                      {
+                        "itemId": "power",
+                        "quantity": 2
+                      },
+                      {
+                        "itemId": "parts",
+                        "quantity": 2
+                      }
+                    ]
+                  },
+                  {
+                    "endingKey": "end02",
+                    "title": "地下堡垒",
+                    "materialCost": [
+                      {
+                        "itemId": "fuel",
+                        "quantity": 4
+                      },
+                      {
+                        "itemId": "parts",
+                        "quantity": 4
+                      },
+                      {
+                        "itemId": "medical",
+                        "quantity": 2
+                      }
+                    ]
+                  },
+                  {
+                    "endingKey": "end03",
+                    "title": "关闭信标",
+                    "materialCost": [
+                      {
+                        "itemId": "power",
+                        "quantity": 2
+                      },
+                      {
+                        "itemId": "parts",
+                        "quantity": 2
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "templateBindings": {
+        "client:copy_0": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_3": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_4": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_5": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_6": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_7": {
+          "templateId": 502,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {
+            "aid": "medical",
+            "food": "ration"
+          },
+          "slotDigest": "425db55f2e4f2fe250b57ec2d27c1ea2f0f9eda6cdee431dde65ec74e71d5af8"
+        },
+        "client:copy_8": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_10": {
+          "templateId": 507,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_11": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_12": {
+          "templateId": 501,
+          "values": {
+            "energy": "sys.hp"
+          },
+          "items": {},
+          "slotDigest": "9736a058ae55454ed125ed284a04df524a2290fd093d88fba9d0dcf008f69870"
+        },
+        "client:copy_13": {
+          "templateId": 503,
+          "values": {},
+          "items": {
+            "fuel": "fuel",
+            "power": "power",
+            "parts": "parts",
+            "medical": "medical"
+          },
+          "slotDigest": "7314d511cfb1c5cb3d88ef845b3a92fd0763e065030d157d15c857439a00f80d"
+        }
+      }
+    },
+    "journeyRules": {
+      "schemaVersion": 1,
+      "stateEnabled": true,
+      "checkEnabled": false,
+      "hp": {
+        "enabled": true,
+        "init": 10,
+        "max": 15
+      },
+      "luck": {
+        "enabled": false
+      },
+      "recovery": {
+        "stationEndIfHurt": 0,
+        "stageRestHpFloor": 0,
+        "stageRestLuckFloor": 0
+      },
+      "attributes": [
+        {
+          "key": "counter.cohesion",
+          "label": "协作值",
+          "min": 0,
+          "max": 10,
+          "initial": 4,
+          "visible": true
+        }
+      ],
+      "statLinks": [
+        {
+          "id": "cohesion_hp",
+          "sourceKey": "counter.cohesion",
+          "targetKey": "sys.hp",
+          "trigger": "PER_POINT",
+          "allowedReasons": [
+            "TASK_COST"
+          ],
+          "frequency": "EVENT",
+          "multiplier": 1
+        }
+      ]
+    },
+    "chapters": [
+      {
+        "name": "A1 观测",
+        "nodes": [
+          {
+            "name": "记录核验",
+            "templateId": 501,
+            "clientNodeKey": "copy_0"
+          },
+          {
+            "name": "恢复挑战",
+            "templateId": 504,
+            "clientNodeKey": "copy_1"
+          },
+          {
+            "name": "恢复问答",
+            "templateId": 505,
+            "clientNodeKey": "copy_2"
+          }
+        ]
+      },
+      {
+        "name": "A2 档案",
+        "nodes": [
+          {
+            "name": "时间核验",
+            "templateId": 501,
+            "clientNodeKey": "copy_3"
+          }
+        ]
+      },
+      {
+        "name": "A3 补给",
+        "nodes": [
+          {
+            "name": "配给站",
+            "templateId": 501,
+            "clientNodeKey": "copy_4"
+          },
+          {
+            "name": "维修站",
+            "templateId": 501,
+            "clientNodeKey": "copy_5"
+          },
+          {
+            "name": "后勤站",
+            "templateId": 501,
+            "clientNodeKey": "copy_6"
+          }
+        ]
+      },
+      {
+        "name": "A4 选择",
+        "nodes": [
+          {
+            "name": "救援",
+            "templateId": 502,
+            "clientNodeKey": "copy_7"
+          },
+          {
+            "name": "回收",
+            "templateId": 501,
+            "clientNodeKey": "copy_8"
+          },
+          {
+            "name": "固守",
+            "templateId": 506,
+            "clientNodeKey": "copy_9"
+          }
+        ]
+      },
+      {
+        "name": "A5 证据",
+        "nodes": [
+          {
+            "name": "责任重建",
+            "templateId": 507,
+            "clientNodeKey": "copy_10"
+          }
+        ]
+      },
+      {
+        "name": "A6 准备",
+        "nodes": [
+          {
+            "name": "整备",
+            "templateId": 501,
+            "clientNodeKey": "copy_11"
+          },
+          {
+            "name": "人工复核",
+            "templateId": 501,
+            "clientNodeKey": "copy_12"
+          }
+        ]
+      },
+      {
+        "name": "A7 执行",
+        "nodes": [
+          {
+            "name": "共同执行",
+            "templateId": 503,
+            "clientNodeKey": "copy_13"
+          }
+        ]
+      }
+    ],
+    "templates": [
+      {
+        "id": 501,
+        "title": "核验与结算",
+        "validationMethod": 4,
+        "questionAnswer": "",
+        "advancedConfigJson": "{\"schemaVersion\":1,\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"核对记录并确认行动\"},\"interactionRules\":{\"resourceSlots\":[{\"key\":\"energy\",\"kind\":\"VALUE\",\"label\":\"状态值\",\"required\":true}],\"statCosts\":[{\"statKey\":\"energy\",\"amount\":1}],\"limit\":1}}",
+        "status": 0
+      },
+      {
+        "id": 502,
+        "title": "公共救援",
+        "validationMethod": 4,
+        "questionAnswer": "",
+        "advancedConfigJson": "{\"schemaVersion\":1,\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"核对记录并确认行动\"},\"interactionRules\":{\"resourceSlots\":[{\"key\":\"energy\",\"kind\":\"VALUE\",\"label\":\"状态值\",\"required\":true},{\"key\":\"aid\",\"kind\":\"ITEM\",\"label\":\"aid\",\"required\":true},{\"key\":\"food\",\"kind\":\"ITEM\",\"label\":\"food\",\"required\":true}],\"costOptions\":[{\"resourceCosts\":[{\"itemId\":\"aid\",\"quantity\":1}],\"statCosts\":[{\"statKey\":\"energy\",\"amount\":2}]},{\"resourceCosts\":[{\"itemId\":\"food\",\"quantity\":2}],\"statCosts\":[{\"statKey\":\"energy\",\"amount\":2}]}],\"scope\":\"WORLD\",\"targetScope\":\"OWNER\",\"limit\":1,\"worldEffects\":[{\"var\":\"clue.rescue\",\"op\":\"SET\",\"value\":1}]}}",
+        "status": 0
+      },
+      {
+        "id": 503,
+        "title": "共同表决",
+        "validationMethod": 4,
+        "questionAnswer": "",
+        "advancedConfigJson": "{\"schemaVersion\":1,\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"核对记录并确认行动\"},\"interactionRules\":{\"resourceSlots\":[{\"key\":\"fuel\",\"kind\":\"ITEM\",\"label\":\"fuel\",\"required\":true},{\"key\":\"power\",\"kind\":\"ITEM\",\"label\":\"power\",\"required\":true},{\"key\":\"parts\",\"kind\":\"ITEM\",\"label\":\"parts\",\"required\":true},{\"key\":\"medical\",\"kind\":\"ITEM\",\"label\":\"medical\",\"required\":true}]},\"interactionTools\":{\"allowTrade\":true,\"votePolicy\":\"MAJORITY_ACCEPTANCE\",\"decidesEnding\":true,\"plans\":[{\"endingKey\":\"end01\",\"title\":\"撤离\",\"materialCost\":[{\"itemId\":\"fuel\",\"quantity\":5},{\"itemId\":\"power\",\"quantity\":2},{\"itemId\":\"parts\",\"quantity\":2}]},{\"endingKey\":\"end02\",\"title\":\"留守\",\"materialCost\":[{\"itemId\":\"fuel\",\"quantity\":4},{\"itemId\":\"parts\",\"quantity\":4},{\"itemId\":\"medical\",\"quantity\":2}]},{\"endingKey\":\"end03\",\"title\":\"停机\",\"materialCost\":[{\"itemId\":\"power\",\"quantity\":2},{\"itemId\":\"parts\",\"quantity\":2}]},{\"endingKey\":\"end04\",\"title\":\"旁路\",\"materialCost\":[{\"itemId\":\"fuel\",\"quantity\":6},{\"itemId\":\"power\",\"quantity\":3},{\"itemId\":\"parts\",\"quantity\":6},{\"itemId\":\"medical\",\"quantity\":2}],\"when\":[{\"var\":\"clue.ev01\",\"op\":\"EQ\",\"value\":1},{\"var\":\"clue.ev02\",\"op\":\"EQ\",\"value\":1},{\"var\":\"clue.ev03\",\"op\":\"EQ\",\"value\":1},{\"var\":\"clue.ev04\",\"op\":\"EQ\",\"value\":1},{\"var\":\"clue.ev05\",\"op\":\"EQ\",\"value\":1},{\"var\":\"clue.load_ok\",\"op\":\"EQ\",\"value\":1}]}]}}",
+        "status": 0
+      },
+      {
+        "id": 504,
+        "title": "恢复挑战",
+        "validationMethod": 4,
+        "questionAnswer": "",
+        "advancedConfigJson": "{\"schemaVersion\":1,\"ballShake\":{\"enabled\":true,\"kicker\":\"恢复挑战\",\"goal\":10,\"timed\":false,\"seconds\":12,\"xp\":0}}",
+        "status": 0
+      },
+      {
+        "id": 505,
+        "title": "恢复问答",
+        "validationMethod": 1,
+        "questionAnswer": "恢复",
+        "advancedConfigJson": "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"输入恢复口令\",\"answerText\":\"恢复\",\"maxTries\":0}}",
+        "status": 0
+      },
+      {
+        "id": 506,
+        "title": "确认行动",
+        "validationMethod": 4,
+        "questionAnswer": "",
+        "advancedConfigJson": "{\"schemaVersion\":1,\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"核对记录并确认行动\"}}",
+        "status": 0
+      },
+      {
+        "id": 507,
+        "title": "公共证据复核",
+        "validationMethod": 4,
+        "questionAnswer": "",
+        "advancedConfigJson": "{\"schemaVersion\":1,\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"核对记录并确认行动\"},\"interactionRules\":{\"resourceSlots\":[{\"key\":\"energy\",\"kind\":\"VALUE\",\"label\":\"状态值\",\"required\":true}],\"statCosts\":[{\"statKey\":\"energy\",\"amount\":1}],\"limit\":1,\"worldEffects\":[{\"var\":\"clue.ev01\",\"op\":\"SET\",\"value\":1},{\"var\":\"clue.ev02\",\"op\":\"SET\",\"value\":1},{\"var\":\"clue.ev03\",\"op\":\"SET\",\"value\":1},{\"var\":\"clue.ev04\",\"op\":\"SET\",\"value\":1},{\"var\":\"clue.ev05\",\"op\":\"SET\",\"value\":1}]}}",
+        "status": 0
+      }
+    ]
+  }
+]

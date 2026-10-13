@@ -2,15 +2,35 @@ const { toTimestamp, chinaDateKey, chinaParts } = require('../../../../utils/dat
 const { isRecordList, isBizOk } = require('../../../../utils/response-shape.js');
 const app = getApp();
 
+// 服务端可见顺序含微秒：不要转 JS Date 丢精度，也不要以客户端时钟推测审批时间。
+function messageOrder(message) {
+  const id = Number(message && message.id);
+  const stamp = message && message.visibleOrderAt;
+  return typeof stamp === 'string' && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}$/.test(stamp)
+    ? { stamp, id } : id;
+}
+function compareOrder(a, b) {
+  if (a && b && typeof a === 'object' && typeof b === 'object') {
+    return a.stamp < b.stamp ? -1 : a.stamp > b.stamp ? 1 : a.id - b.id;
+  }
+  return (typeof a === 'object' ? a.id : a) - (typeof b === 'object' ? b.id : b);
+}
+function compareMessages(a, b) {
+  const aId = Number(a.id), bId = Number(b.id);
+  if (!Number.isSafeInteger(aId) || aId <= 0) return !Number.isSafeInteger(bId) || bId <= 0 ? 0 : 1;
+  if (!Number.isSafeInteger(bId) || bId <= 0) return -1;
+  return compareOrder(messageOrder(a), messageOrder(b));
+}
+
 Page({
   _closedReturnPath: '/subpackageB/pages/im/list/index',
   data: {
     plusSheetShow: false,
     plusSheetItems: ['图片', '位置', '路线'],
     moreSheetShow: false,
-    // CU-C-120:系统通知(type=2)没有可交流的对象,举报/拉黑的目标也是空的 ⇒ 面板只留真能做的清空聊天。
+    // CU-C-120:系统通知(type=2)没有可交流的对象,举报/拉黑的目标也是空的 ⇒ 面板只留真能做的隐藏会话。
     // 初始值按可回复的私信给,onLoad 里再按会话类型收窄(见 _moreItemsFor)。
-    moreSheetItems: ['举报', '拉黑', '清空聊天'],
+    moreSheetItems: ['举报', '拉黑', '隐藏会话'],
     // 只读会话:能读不能写。判据只有「对方是不是一个可交流的人」,不是 loadState。
     readOnly: false,
     readOnlyTip: '系统通知，不能回复',
@@ -43,6 +63,7 @@ Page({
     loadMoreError: '',
     toView: '',
     disabled: false,
+    blockedByMe: false,
     disabledText: '',
     // 非 ready 时输入栏为什么点不动,按真实原因给一句话。做成静态映射(而不是每个 setData
     // 站点各写一次)是为了不漏:loadState 的落点很多,漏一处就又变成"没有原因的死输入栏"。
@@ -78,6 +99,17 @@ Page({
 
 
   onLoad(options) {
+    this._disposed = false;
+    this._hidden = false;
+    this._pendingClear = null;
+    this._pendingBlock = null;
+    this._reportInFlight = null;
+    this._pendingReportTip = null;
+    this._pendingClearReturn = null;
+    this._pollWatermark = null;
+    this._pollInFlight = false;
+    this._pendingReadConversationId = 0;
+    this._pendingReadMemberId = 0;
     const sb = (app.globalData && app.globalData.statusBarHeight) || 20;
     const nav = (app.globalData && app.globalData.navBarHeight) || 44;
     let safe = 0;
@@ -110,7 +142,7 @@ Page({
       avatar: decodeURIComponent(options.avatar || ''),
       type: type,
       readOnly: readOnly,
-      moreSheetItems: readOnly ? ['清空聊天'] : ['举报', '拉黑', '清空聊天'],
+      moreSheetItems: readOnly ? ['隐藏会话'] : ['举报', '拉黑', '隐藏会话'],
       myId: app.getUserID(),
       myAvatar: app.getAvatar(),
     });
@@ -138,6 +170,25 @@ Page({
   // (只挡 onPlus 的话,任何绕过动作面板的调用路径都能照旧把 conversation_id:0 发出去)
   _canSend() { return this.data.loadState === 'ready' && !this.data.disabled && !this.data.readOnly; },
 
+  _isReadContextCurrent(conversationId, memberId) {
+    return !this._disposed
+      && this.data.conversationId === conversationId
+      && this.data.myId === memberId
+      && (!app.getUserID || !memberId || app.getUserID() == memberId);
+  },
+
+  _markReadWhenVisible(conversationId, memberId) {
+    if (!this._isReadContextCurrent(conversationId, memberId)) return;
+    if (this._hidden) {
+      this._pendingReadConversationId = conversationId;
+      this._pendingReadMemberId = memberId;
+      return;
+    }
+    this._pendingReadConversationId = 0;
+    this._pendingReadMemberId = 0;
+    this.markRead();
+  },
+
   retryLoad() {
     this.setData({ loadState: 'loading', loadErrorText: '' });
     this.loadMessages(true);
@@ -153,36 +204,51 @@ Page({
 
   loadMessages(toBottom) {
     const that = this;
+    const conversationId = this.data.conversationId;
+    const memberId = this.data.myId;
+    const pollEpoch = (this._pollRequestEpoch || 0) + 1;
+    this._pollRequestEpoch = pollEpoch;
+    this._pollInFlight = true;
     const requestEpoch = (this._messageRequestEpoch || 0) + 1;
     this._messageRequestEpoch = requestEpoch;
+    const current = function () {
+      return requestEpoch === that._messageRequestEpoch
+        && pollEpoch === that._pollRequestEpoch
+        && that._isReadContextCurrent(conversationId, memberId);
+    };
     app.sendRequest({
       url: '/api/im/messages', method: 'POST', hideLoading: true, silentError: true,
-      data: { conversation_id: this.data.conversationId, cursor_id: 0, size: 30 },
+      data: { conversation_id: conversationId, cursor_id: 0, size: 30 },
       success(res) {
-        if (requestEpoch !== that._messageRequestEpoch) return;
+        if (!current()) return;
+        that._pollInFlight = false;
         if (res && res.code == 200 && res.data && typeof res.data === 'object' && !Array.isArray(res.data)
             && (res.data.list == null || isRecordList(res.data.list))) {
           const list = that.decorate(Array.isArray(res.data.list) ? res.data.list : []);
+          that._pollWatermark = list.reduce((max, message) => compareOrder(messageOrder(message), max) > 0 ? messageOrder(message) : max, 0);
           const pending = that.data.msgs.filter(m => m.sendPayload && !list.some(server =>
             server.clientMessageId === m.clientMessageId && server.senderId == m.senderId));
           const msgs = list.concat(pending);
           that.setData({ msgs, sending: msgs.some(m => m.sending), hasMore: !!res.data.hasMore, cursor: res.data.nextCursor || 0, loadState: 'ready', loadErrorText: '', loadMoreError: '' });
           // 拉黑只存服务端:重进会话按回包禁用输入框,不然能打字、一发就失败(3-22)
-          if (res.data.blocked === true) {
-            that.setData({ disabled: true, disabledText: res.data.blockedByMe === true ? '你已拉黑对方，无法发送消息' : '对方暂不可联系，无法发送消息' });
-          }
+          const blockedByMe = res.data.blockedByMe === true;
+          that.setData({ disabled: that.data.readOnly || res.data.blocked === true, blockedByMe,
+            disabledText: that.data.readOnly ? '系统通知不支持回复，有新动态会出现在这里' : res.data.blocked === true ? (blockedByMe ? '你已拉黑对方，无法发送消息' : '对方暂不可联系，无法发送消息') : '',
+            moreSheetItems: that.data.readOnly ? ['隐藏会话'] : ['举报', blockedByMe ? '解除拉黑' : '拉黑', '隐藏会话'] });
           if (toBottom) that.scrollBottom();
-          that.markRead();
+          that._markReadWhenVisible(conversationId, memberId);
           return;
         }
         that._setMessageLoadError(res);
       },
       fail(res) {
-        if (requestEpoch !== that._messageRequestEpoch) return;
+        if (!current()) return;
+        that._pollInFlight = false;
         that._setMessageLoadError(res);
       },
       successStatusAbnormal(res) {
-        if (requestEpoch !== that._messageRequestEpoch) return;
+        if (!current()) return;
+        that._pollInFlight = false;
         that._setMessageLoadError(res);
       },
     });
@@ -209,11 +275,20 @@ Page({
     if (!this.data.hasMore || this.data.loadingMore) return;
     const that = this;
     const cursor = this.data.cursor;
+    const conversationId = this.data.conversationId;
+    const memberId = this.data.myId;
+    const requestEpoch = (this._loadMoreRequestEpoch || 0) + 1;
+    this._loadMoreRequestEpoch = requestEpoch;
+    const current = function () {
+      return requestEpoch === that._loadMoreRequestEpoch
+        && that._isReadContextCurrent(conversationId, memberId);
+    };
     this.setData({ loadingMore: true, loadMoreError: '' });
     app.sendRequest({
       url: '/api/im/messages', method: 'POST', hideLoading: true, silentError: true,
-      data: { conversation_id: this.data.conversationId, cursor_id: cursor, size: 30 },
+      data: { conversation_id: conversationId, cursor_id: cursor, size: 30 },
       success(res) {
+        if (!current()) return;
         if (res && res.code == 200 && res.data && typeof res.data === 'object' && !Array.isArray(res.data)
             && (res.data.list == null || isRecordList(res.data.list))) {
           that._mergeMessages(Array.isArray(res.data.list) ? res.data.list : [], true);
@@ -222,8 +297,8 @@ Page({
           that._setLoadMoreError(res);
         }
       },
-      fail(res) { that._setLoadMoreError(res); },
-      successStatusAbnormal(res) { that._setLoadMoreError(res); },
+      fail(res) { if (current()) that._setLoadMoreError(res); },
+      successStatusAbnormal(res) { if (current()) that._setLoadMoreError(res); },
     });
   },
 
@@ -297,7 +372,13 @@ Page({
 
   scrollBottom() {
     const that = this;
-    setTimeout(function () { that.setData({ toView: 'bottom-anchor' }); }, 60);
+    const conversationId = this.data.conversationId;
+    const memberId = this.data.myId;
+    setTimeout(function () {
+      if (that._isReadContextCurrent(conversationId, memberId)) {
+        that.setData({ toView: 'bottom-anchor' });
+      }
+    }, 60);
   },
 
   onInput(e) { this.setData({ text: e.detail.value }); },
@@ -365,16 +446,16 @@ Page({
   },
 
   _mergeMessages(incoming, prepend) {
-    const decorated = this.decorate(incoming);
-    const list = prepend ? decorated : this.data.msgs.slice();
-    const additions = prepend ? this.data.msgs : decorated;
+    const list = prepend ? incoming.slice() : this.data.msgs.slice();
+    const additions = prepend ? this.data.msgs : incoming;
     additions.forEach(message => {
       const index = list.findIndex(m => m.id == message.id || (message.clientMessageId
         && m.clientMessageId === message.clientMessageId && m.senderId == message.senderId));
       if (index >= 0) { if (!prepend) list[index] = message; }
       else list.push(message);
     });
-    this.setData({ msgs: list, sending: list.some(m => m.sending) });
+    list.sort(compareMessages);
+    this.setData({ msgs: this.decorate(list), sending: list.some(m => m.sending) });
   },
 
   onResend(e) {
@@ -404,8 +485,13 @@ Page({
 
   onSendLocation() {
     const that = this;
+    const conversationId = this.data.conversationId;
+    const memberId = this.data.myId;
+    const current = () => that._canSend() && that._isReadContextCurrent(conversationId, memberId);
+    if (!current()) return;
     wx.chooseLocation({
       success(loc) {
+        if (!current()) return;
         that.sendCard({
           cardType: 'location',
           name: loc.name || loc.address,
@@ -415,6 +501,7 @@ Page({
         });
       },
       fail(e) {
+        if (!current()) return;
         // 用户取消不提示;权限被拒才引导
         if (e && String(e.errMsg || '').indexOf('auth deny') >= 0) {
           app.tips && app.tips('需要位置权限才能发送位置');
@@ -429,14 +516,22 @@ Page({
   },
 
   openRoutePicker() {
+    if (!this._canSend() || !this._isReadContextCurrent(this.data.conversationId, this.data.myId)) return;
     this.setData({ routePickerOpen: true, routeKeyword: '' });
     this.loadRoutes();
   },
-  closeRoutePicker() { this.setData({ routePickerOpen: false }); },
+  closeRoutePicker() {
+    clearTimeout(this._routeTimer);
+    this._routeSeq = (this._routeSeq || 0) + 1;
+    this.setData({ routePickerOpen: false, routeList: [], routeLoading: false, routeError: '' });
+  },
 
   onRouteSearch(e) {
+    if (!this.data.routePickerOpen || !this._canSend()
+        || !this._isReadContextCurrent(this.data.conversationId, this.data.myId)) return;
     const kw = (e.detail && e.detail.value) || '';
-    this.setData({ routeKeyword: kw });
+    this._routeSeq = (this._routeSeq || 0) + 1;
+    this.setData({ routeKeyword: kw, routeList: [], routeLoading: true, routeError: '' });
     // 防抖:停止输入 300ms 后才发请求,避免每敲一个字打一次
     if (this._routeTimer) clearTimeout(this._routeTimer);
     const that = this;
@@ -445,15 +540,20 @@ Page({
 
   loadRoutes() {
     const that = this;
+    const conversationId = this.data.conversationId;
+    const memberId = this.data.myId;
+    if (!this.data.routePickerOpen || !this._canSend() || !this._isReadContextCurrent(conversationId, memberId)) return;
     // 竞态守卫:只认最后一次请求的响应,防止先发的旧关键词后到、覆盖新结果
     const seq = (this._routeSeq || 0) + 1;
     this._routeSeq = seq;
+    const current = () => seq === that._routeSeq && that.data.routePickerOpen
+      && that._canSend() && that._isReadContextCurrent(conversationId, memberId);
     this.setData({ routeLoading: true, routeError: '', routeList: [] });
     app.sendRequest({
       url: '/api/topic/list', method: 'POST', hideLoading: true, silentError: true,
       data: { is_my: 0, keyword: this.data.routeKeyword },
       success(res) {
-        if (seq !== that._routeSeq) return;            // 过期响应,丢弃
+        if (!current()) return;
         if (res && res.code == 200 && res.data && typeof res.data === 'object' && !Array.isArray(res.data)
             && isRecordList(res.data.rows)) {
           that.setData({ routeList: res.data.rows, routeLoading: false, routeError: '' });
@@ -462,7 +562,7 @@ Page({
         that._setRouteError(res);
       },
       fail(res) {
-        if (seq !== that._routeSeq) return;            // 过期响应,丢弃
+        if (!current()) return;
         that._setRouteError(res);
       },
     });
@@ -479,7 +579,9 @@ Page({
 
   onRoutePick(e) {
     const id = e.currentTarget.dataset.id;
-    if (!id) return;
+    if (!id || !this.data.routePickerOpen || !this._canSend()
+        || !this._isReadContextCurrent(this.data.conversationId, this.data.myId)
+        || !this.data.routeList.some(route => route.id == id)) return;
     this.closeRoutePicker();
     // 只传 topicId —— 展示字段服务端不收、前端现拉(spec 决策 8)
     this.sendCard({ cardType: 'route', topicId: id });
@@ -487,11 +589,11 @@ Page({
 
   onPickImage() {
     const that = this;
-    if (!this._canSend()) return;
+    if (!this._canSend() || !this._isReadContextCurrent(this.data.conversationId, this.data.myId)) return;
     const owner = this.data.myId;
     const conversationId = this.data.conversationId;
     app.chooseImage(function (urls) {
-      if (!urls || !urls.length || that.data.myId !== owner || that.data.conversationId !== conversationId) return;
+      if (!urls || !urls.length || !that._isReadContextCurrent(conversationId, owner)) return;
       that._sendMessage({ msg_type: 2, content: urls[0] });
     });
   },
@@ -501,31 +603,45 @@ Page({
   },
 
   onMore() {
+    if (!this._isReadContextCurrent(this.data.conversationId, this.data.myId)) return;
     this.setData({ moreSheetShow: true });
   },
 
   onMoreSelect(e) {
+    if (!this._isReadContextCurrent(this.data.conversationId, this.data.myId)) return;
     const label = e.detail.label;
     this.setData({ moreSheetShow: false });
     if (label === '举报') this.doReport();
     else if (label === '拉黑') this.doBlock();
-    else if (label === '清空聊天') this.clearConversation();
+    else if (label === '解除拉黑') this.doBlock(true);
+    else if (label === '隐藏会话') this.clearConversation();
   },
 
   clearConversation() {
     const id = this.data.conversationId;
+    const memberId = this.data.myId;
+    if (!this._isReadContextCurrent(id, memberId)) return;
+    if (this._pendingClear && this._pendingClear.submitting
+        && this._isReadContextCurrent(this._pendingClear.conversationId, this._pendingClear.memberId)) return;
     if (!id) { app.tips && app.tips('无法清空该会话'); return; }
-    this._pendingClearId = id;
+    this._pendingBlock = null;
+    this._pendingClear = { conversationId: id, memberId };
     const dc = this.selectComponent && this.selectComponent('#dc');
     if (dc) dc.open('im.conversation.delete');
   },
 
   onDangerCancel(e) {
-    if (e.detail.key === 'im.conversation.delete') this._pendingClearId = null;
+    if (e.detail.key === 'im.conversation.delete') this._pendingClear = null;
+    if (e.detail.key === 'im.block') this._pendingBlock = null;
   },
 
   onMoreCancel() { this.setData({ moreSheetShow: false }); },
   doReport() {
+    const conversationId = this.data.conversationId;
+    const memberId = this.data.myId;
+    if (!this._isReadContextCurrent(conversationId, memberId)) return;
+    if (this._reportInFlight
+        && this._isReadContextCurrent(this._reportInFlight.conversationId, this._reportInFlight.memberId)) return;
     // 没有「选中某条」的交互 ⇒ 只举报对方发的最近一条,绝不报自己的消息(3-22)
     let last = null;
     for (let i = this.data.msgs.length - 1; i >= 0; i--) {
@@ -533,65 +649,146 @@ Page({
       if (m.id && String(m.id).indexOf('tmp_') !== 0 && m.senderId && m.senderId != this.data.myId) { last = m; break; }
     }
     if (!last) { app.tips && app.tips('暂无可举报的消息'); return; }
+    const pending = { conversationId, memberId };
+    this._reportInFlight = pending;
+    const finish = (res) => {
+      if (this._reportInFlight !== pending) return;
+      this._reportInFlight = null;
+      if (!this._isReadContextCurrent(conversationId, memberId)) return;
+      const text = isBizOk(res) ? '举报已提交' : ((res && res.msg) || '提交失败，请重试');
+      if (this._hidden) this._pendingReportTip = { conversationId, memberId, text };
+      else app.tips && app.tips(text);
+    };
     app.sendRequest({
-      url: '/api/im/report', method: 'POST', hideLoading: true,
+      url: '/api/im/report', method: 'POST', hideLoading: true, silentError: true,
       data: { message_id: last.id, reason: '用户举报' },
-      success(res) { app.tips && app.tips(res && res.code == 200 ? '举报已提交' : (res.msg || '提交失败')); },
+      success: finish,
+      fail() { finish({ msg: '提交失败，请重试' }); },
     });
   },
-  doBlock() {
-    // 单聊对方 id 需后端会话信息;此处用会话发起对象。简化:从最近一条对方消息取 senderId
-    let otherId = 0;
-    for (let i = this.data.msgs.length - 1; i >= 0; i--) { if (this.data.msgs[i].senderId && this.data.msgs[i].senderId != this.data.myId) { otherId = this.data.msgs[i].senderId; break; } }
-    if (!otherId) { app.tips && app.tips('无法拉黑该会话'); return; }
-    this._pendingBlockId = otherId;
+  doBlock(unblock) {
+    const conversationId = this.data.conversationId;
+    const memberId = this.data.myId;
+    if (!conversationId || !this._isReadContextCurrent(conversationId, memberId)) return;
+    if (this._pendingBlock
+        && this._isReadContextCurrent(this._pendingBlock.conversationId, this._pendingBlock.memberId)) return;
+    if (unblock === true && !this.data.blockedByMe) return;
+    const pending = { conversationId, memberId, submitting: true, unblock: unblock === true };
+    this._pendingClear = null;
+    this._pendingBlock = pending;
+    const finish = (res) => {
+      if (this._pendingBlock !== pending || !this._isReadContextCurrent(conversationId, memberId)) return;
+      const rows = isBizOk(res) && isRecordList(res.data) ? res.data : [];
+      const row = rows.find(item => String(item.conversationId) === String(conversationId));
+      const id = row && Number(row.type) === 1 && row.counterparty ? row.counterparty.id : null;
+      const targetId = typeof id === 'number' || (typeof id === 'string' && /^[1-9][0-9]*$/.test(id)) ? Number(id) : 0;
+      pending.submitting = false;
+      if (Number.isSafeInteger(targetId) && targetId > 0 && targetId !== Number(memberId)) pending.targetId = targetId;
+      else pending.error = (res && !isBizOk(res) && res.msg) || '无法拉黑该会话，请重试';
+      this._showBlockConfirmation(pending);
+    };
+    app.sendRequest({
+      url: '/api/im/conversations', method: 'POST', hideLoading: true, silentError: true,
+      success: finish,
+      fail() { finish({ msg: '会话对象读取失败，请重试' }); },
+    });
+  },
+
+  _showBlockConfirmation(pending) {
+    if (!pending || this._pendingBlock !== pending || pending.submitting || pending.opened || this._hidden
+        || !this._isReadContextCurrent(pending.conversationId, pending.memberId)) return;
     const dc = this.selectComponent && this.selectComponent('#dc');
-    if (dc) dc.open('im.block');
+    if (pending.error || !dc && !pending.unblock) {
+      this._pendingBlock = null;
+      app.tips && app.tips(pending.error || '无法打开确认，请重试');
+      return;
+    }
+    if (pending.unblock) {
+      this._submitUnblock(pending);
+      return;
+    }
+    pending.opened = true;
+    dc.open('im.block');
+  },
+
+  _submitUnblock(pending) {
+    if (!pending.targetId || pending.submitting || !this.data.blockedByMe) return;
+    pending.submitting = true;
+    const current = () => this._pendingBlock === pending
+      && this._isReadContextCurrent(pending.conversationId, pending.memberId);
+    const finish = (res) => {
+      if (!current()) return;
+      this._pendingBlock = null;
+      if (!isBizOk(res)) { app.tips && app.tips((res && res.msg) || '解除拉黑失败，请重试'); return; }
+      // 是否仍被对方拉黑由服务端回读，不以一次写成功擅自启用输入框。
+      this.loadMessages(false);
+    };
+    app.sendRequest({ url: '/api/im/unblock', method: 'POST', hideLoading: true, silentError: true,
+      data: { target_member_id: pending.targetId }, success: finish, successStatusAbnormal: finish,
+      fail() { finish({ msg: '解除拉黑失败，请重试' }); } });
   },
 
   onDangerConfirm(e) {
-    if (e.detail.key === 'im.conversation.delete') {
-      const id = this._pendingClearId;
-      if (!id || id !== this.data.conversationId) return;
-      this._pendingClearId = null;
-      const dc = this.selectComponent && this.selectComponent('#dc');
-      if (dc) dc.busyOn();
-      const failed = (message) => {
-        if (this.data.conversationId === id) this._pendingClearId = id;
-        if (dc) dc.failed(message);
-        else app.tips && app.tips(message);
-      };
+    const key = e.detail.key;
+    if (key !== 'im.conversation.delete' && key !== 'im.block') return;
+    const clear = key === 'im.conversation.delete';
+    const pending = clear ? this._pendingClear : this._pendingBlock;
+    if (!pending || pending.submitting || (!clear && (!pending.targetId || !pending.opened))
+        || !this._isReadContextCurrent(pending.conversationId, pending.memberId)) return;
+    const current = () => (clear ? this._pendingClear : this._pendingBlock) === pending
+      && this._isReadContextCurrent(pending.conversationId, pending.memberId);
+    pending.submitting = true;
+    const dc = this.selectComponent && this.selectComponent('#dc');
+    if (dc) dc.busyOn();
+    const failed = (message) => {
+      if (!current()) return;
+      pending.submitting = false;
+      if (dc) dc.failed(message);
+      else app.tips && app.tips(message);
+    };
+    if (clear) {
       app.sendRequest({
-        url: '/api/im/delete', method: 'POST', hideLoading: true,
-        data: { conversation_id: id },
-        success(res) {
+        url: '/api/im/delete', method: 'POST', hideLoading: true, silentError: true,
+        data: { conversation_id: pending.conversationId },
+        success: (res) => {
+          if (!current()) return;
           if (!isBizOk(res)) { failed((res && res.msg) || '清空失败'); return; }
+          this._pendingClear = null;
           if (dc) dc.done();
-          wx.navigateBack({
-            fail() { wx.redirectTo({ url: '/subpackageB/pages/im/list/index' }); },
-          });
+          this._returnAfterClear(pending.conversationId, pending.memberId);
         },
         fail() { failed('清空失败，请重试'); },
       });
       return;
     }
-    if (e.detail.key !== 'im.block') return;
-    const otherId = this._pendingBlockId;
-    if (!otherId) return;
-    const that = this;
-    const dc = this.selectComponent && this.selectComponent('#dc');
-    if (dc) dc.busyOn();
     app.sendRequest({
-      url: '/api/im/block', method: 'POST', hideLoading: true, data: { target_member_id: otherId },
+      url: '/api/im/block', method: 'POST', hideLoading: true, silentError: true, data: { target_member_id: pending.targetId },
       // ⚠️ success() 被调用不等于服务端拉黑成功(HTTP 200 + 业务 code!=200 也走这里)。
       // 不判 code 就禁用输入框并弹「已拉黑」,用户会以为对方发不进来了,实际没有。
-      success(res) {
-        if (!isBizOk(res)) { if (dc) dc.failed((res && res.msg) || '拉黑失败，请重试'); return; }
-        that.setData({ disabled: true, disabledText: '你已拉黑对方，无法发送消息' });
-        that._pendingBlockId = 0;
+      success: (res) => {
+        if (!current()) return;
+        if (!isBizOk(res)) { failed((res && res.msg) || '拉黑失败，请重试'); return; }
+        this.setData({ disabled: true, blockedByMe: true, disabledText: '你已拉黑对方，无法发送消息', moreSheetItems: ['举报', '解除拉黑', '隐藏会话'] });
+        this._pendingBlock = null;
         if (dc) dc.done();
       },
-      fail() { if (dc) dc.failed('拉黑失败，请重试'); },
+      fail() { failed('拉黑失败，请重试'); },
+    });
+  },
+
+  _returnAfterClear(conversationId, memberId) {
+    if (!this._isReadContextCurrent(conversationId, memberId)) return;
+    if (this._hidden) {
+      this._pendingClearReturn = { conversationId, memberId };
+      return;
+    }
+    wx.navigateBack({
+      fail: () => {
+        if (!this._hidden && !this._pendingClear && !this._pendingBlock
+            && this._isReadContextCurrent(conversationId, memberId)) {
+          wx.redirectTo({ url: '/subpackageB/pages/im/list/index' });
+        }
+      },
     });
   },
 
@@ -651,48 +848,127 @@ Page({
   },
 
   // ===== 准实时:页面可见时轮询新消息 =====
-  onShow() { this.startPoll(); },
-  onHide() { this.stopPoll(); },
-  onUnload() { this._disposed = true; this.stopPoll(); if (this._routeTimer) clearTimeout(this._routeTimer); },
+  onShow() {
+    this._hidden = false;
+    const cleared = this._pendingClearReturn;
+    const reported = this._pendingReportTip;
+    this._pendingClearReturn = null;
+    this._pendingReportTip = null;
+    if (cleared && this._isReadContextCurrent(cleared.conversationId, cleared.memberId)) {
+      this._returnAfterClear(cleared.conversationId, cleared.memberId);
+      return;
+    }
+    if (reported && this._isReadContextCurrent(reported.conversationId, reported.memberId)) {
+      app.tips && app.tips(reported.text);
+    }
+    this._showBlockConfirmation(this._pendingBlock);
+    const pendingConversationId = this._pendingReadConversationId;
+    const pendingMemberId = this._pendingReadMemberId;
+    this._pendingReadConversationId = 0;
+    this._pendingReadMemberId = 0;
+    if (pendingConversationId && this._isReadContextCurrent(pendingConversationId, pendingMemberId)) {
+      this.markRead();
+    }
+    this.startPoll();
+  },
+  onHide() {
+    this._hidden = true;
+    if (this.data.routePickerOpen) this.closeRoutePicker();
+    this._pollRequestEpoch = (this._pollRequestEpoch || 0) + 1;
+    this._pollInFlight = false;
+    this.stopPoll();
+  },
+  onUnload() {
+    this._disposed = true;
+    this._pendingBlock = null;
+    this._pendingClearReturn = null;
+    this._pendingReportTip = null;
+    this._hidden = true;
+    this._pollWatermark = null;
+    this._pollInFlight = false;
+    this._pendingReadConversationId = 0;
+    this._pendingReadMemberId = 0;
+    this._messageRequestEpoch = (this._messageRequestEpoch || 0) + 1;
+    this._loadMoreRequestEpoch = (this._loadMoreRequestEpoch || 0) + 1;
+    this._pollRequestEpoch = (this._pollRequestEpoch || 0) + 1;
+    this.stopPoll();
+    clearTimeout(this._routeTimer);
+  },
   startPoll() {
     const that = this;
     this.stopPoll();
     // 坏链接(没有 conversationId)不许每 8s 拿 conversation_id:0 打后端 ——
     // 「不打后端」这条如果只在 onLoad 成立,onShow 一来就又破了。
-    if (!this.data.conversationId) return;
+    if (!this.data.conversationId
+        || !this._isReadContextCurrent(this.data.conversationId, this.data.myId)) return;
     this._poll = setInterval(function () { that.pollNew(); }, 8000);
   },
   stopPoll() { if (this._poll) { clearInterval(this._poll); this._poll = null; } },
-  maxLocalId() {
-    let mx = 0;
-    this.data.msgs.forEach(function (m) {
-      const id = parseInt(m.id);
-      if (!isNaN(id) && id > mx) mx = id;
-    });
-    return mx;
-  },
   pollNew() {
-    const that = this;
-    const mx = this.maxLocalId();
+    const conversationId = this.data.conversationId;
+    const memberId = this.data.myId;
+    if (this._hidden || this._pollInFlight || !this._isReadContextCurrent(conversationId, memberId)) return;
+    if (this._pollWatermark == null) {
+      this.loadMessages(false);
+      return;
+    }
+    const requestEpoch = (this._pollRequestEpoch || 0) + 1;
+    this._pollRequestEpoch = requestEpoch;
+    this._pollInFlight = true;
+    this._pollNewPage({ conversationId, memberId, requestEpoch,
+      messageRequestEpoch: this._messageRequestEpoch,
+      watermark: this._pollWatermark, headId: this._pollWatermark }, 0, []);
+  },
+
+  _pollNewPage(context, cursorId, accumulated) {
+    const current = () => context.requestEpoch === this._pollRequestEpoch
+      && context.messageRequestEpoch === this._messageRequestEpoch
+      && !this._hidden && this._isReadContextCurrent(context.conversationId, context.memberId);
+    const fail = () => {
+      if (context.requestEpoch === this._pollRequestEpoch) this._pollInFlight = false;
+    };
     app.sendRequest({
       url: '/api/im/messages', method: 'POST', hideLoading: true,
-      data: { conversation_id: this.data.conversationId, cursor_id: 0, size: 15 },
-      success(res) {
+      data: { conversation_id: context.conversationId, cursor_id: cursorId, size: 15 },
+      success: (res) => {
+        if (!current()) { fail(); return; }
         if (!(res && res.code == 200 && res.data && typeof res.data === 'object' && !Array.isArray(res.data)
-              && isRecordList(res.data.list))) return;
-        // 轮询读到了就是恢复了:必须解掉 error,否则一次瞬时失败会把错误卡钉在实时消息上方、
-        // 输入栏一直禁用,只能靠用户手点「重试」才活过来。
-        if (that.data.loadState !== 'ready') that.setData({ loadState: 'ready' });
-        const fresh = (res.data.list || []).filter(function (m) {
-          const id = parseInt(m.id);
-          return !isNaN(id) && id > mx;
-        });
-        if (fresh.length) {
-          that._mergeMessages(fresh);
-          that.scrollBottom();
-          that.markRead();
+            && isRecordList(res.data.list))) { fail(); return; }
+        const list = res.data.list;
+        const ids = list.map(message => Number(message.id));
+        const visibleOrdering = list.some(message => message.visibleOrderAt != null);
+        const orders = list.map(messageOrder);
+        if (ids.some(id => !Number.isSafeInteger(id) || id <= 0)
+            || visibleOrdering && orders.some(order => typeof order !== 'object')
+            || !visibleOrdering && ids.some(id => cursorId && id >= cursorId)
+            || visibleOrdering && orders.some((order, index) => index > 0 && compareOrder(order, orders[index - 1]) <= 0)
+            || visibleOrdering && context.cursorOrder && orders.some(order => compareOrder(order, context.cursorOrder) >= 0)) { fail(); return; }
+        if (!cursorId) context.headId = orders.reduce((max, order) => compareOrder(order, max) > 0 ? order : max, context.watermark);
+        const fresh = list.filter(message => compareOrder(messageOrder(message), context.watermark) > 0);
+        const all = fresh.concat(accumulated);
+        if (res.data.hasMore && !orders.some(order => compareOrder(order, context.watermark) <= 0)) {
+          const nextCursor = Number(res.data.nextCursor);
+          if (!ids.length || !Number.isSafeInteger(nextCursor) || nextCursor <= 0
+              || nextCursor !== (visibleOrdering ? ids[0] : Math.min(...ids))
+              || !visibleOrdering && cursorId && nextCursor >= cursorId
+              || context.visitedCursors && context.visitedCursors.includes(nextCursor)) { fail(); return; }
+          context.visitedCursors = (context.visitedCursors || []).concat(nextCursor);
+          context.cursorOrder = visibleOrdering ? orders[0] : null;
+          this._pollNewPage(context, nextCursor, all);
+          return;
+        }
+        // Advance only after bridging to the last complete server read, never from a local send.
+        this._pollInFlight = false;
+        if (this.data.loadState !== 'ready') this.setData({ loadState: 'ready' });
+        if (all.length) this._mergeMessages(all);
+        this._pollWatermark = context.headId;
+        if (all.length) {
+          this.scrollBottom();
+          this._markReadWhenVisible(context.conversationId, context.memberId);
         }
       },
+      fail,
+      successStatusAbnormal: fail,
     });
   },
 

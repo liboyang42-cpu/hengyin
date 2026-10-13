@@ -68,6 +68,7 @@ class ClubCrmPrivacyTest {
         memberService = mock(IClubMemberService.class);
         accessService = mock(IClubAccessService.class);
         ReflectionTestUtils.setField(service, "clubCrmMapper", mapper);
+        ReflectionTestUtils.setField(service, "piiCryptoService", new com.chengyinhub.business.security.PiiCryptoService("", ""));
         ReflectionTestUtils.setField(service, "clubService", clubService);
         ReflectionTestUtils.setField(service, "clubMemberService", memberService);
         ReflectionTestUtils.setField(service, "clubAccessService", accessService);
@@ -288,4 +289,25 @@ class ClubCrmPrivacyTest {
         assertThrows(ServiceException.class, () -> service.topicCustomers(null, CLUB, TOPIC, "all"));
         assertThrows(ServiceException.class, () -> service.customerDetail(OWNER, null, CUSTOMER));
     }
+    @Test
+    void freeCancelledRegistrationUsesMaskedParticipantNameAndIsNotSold() {
+        ClubCustomerVO.RawTopicRow cancelled = rawTopicRow();
+        cancelled.setRegistrationStatus(3);
+        cancelled.setPayableAmount(java.math.BigDecimal.ZERO);
+        cancelled.setPointUsed(0L);
+        cancelled.setPaymentStatus(4);
+        cancelled.setParticipantName("陈小林");
+        cancelled.setDisplayName("城瘾用户");
+        when(mapper.selectTopicCustomers(CLUB, TOPIC)).thenReturn(java.util.Collections.singletonList(cancelled));
+        ClubCustomerVO.TopicPage result = service.topicCustomers(OWNER, CLUB, TOPIC, "all");
+        ClubCustomerVO.TopicRow row = result.getSessions().get(0).getRows().get(0);
+        assertEquals("CANCELLED", row.getStatusCode());
+        assertEquals("已取消", row.getStatusText());
+        assertEquals(0, result.getSoldCount().intValue());
+        assertEquals(com.chengyinhub.business.security.PiiCryptoService.maskName("陈小林"), row.getDisplayName());
+        assertFalse(row.getDisplayName().equals("陈小林"));
+        cancelled.setPointUsed(20L);
+        assertEquals("REFUNDED", service.topicCustomers(OWNER, CLUB, TOPIC, "all").getSessions().get(0).getRows().get(0).getStatusCode());
+    }
+
 }

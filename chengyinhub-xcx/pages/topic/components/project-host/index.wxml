@@ -7,9 +7,6 @@
   <cy-nav-bar overlay pill pillDark tint="light" wx:if="{{!navHidden}}" />
 
   <view class="load-error" wx:if="{{ loadFailed }}" style="padding-top: {{ statusBarHeight + navBarHeight }}px;">
-    <view class="load-error-title">没能加载到这个项目</view>
-    <view class="load-error-tip">可能是网络问题,也可能这条路线已被删除</view>
-    <cy-btn variant="primary" bindtap="emit" data-act="retryLoad">重新加载</cy-btn>
   </view>
 
   <block wx:else>
@@ -161,6 +158,9 @@
             <text class="dr-sub" wx:if="{{ item.auditRemark && !item.actionable }}">处理说明：{{ item.auditRemark }}</text>
             <text class="dr-sub" wx:if="{{ item.actionable }}">通过本申请时，该商家已提交的点位会一并过审</text>
           </view>
+          <view class="review-actions" wx:if="{{item.revocableInvite}}">
+            <view class="review-btn review-btn--ghost" catchtap="emit" data-act="revokeChapterInvitation" data-id="{{item.id}}" aria-role="button" aria-label="撤回章节邀请" hover-class="cy-pressed" hover-stay-time="80">撤回邀请</view>
+          </view>
           <view class="review-actions" wx:if="{{ item.actionable }}">
             <view class="review-btn review-btn--ghost" catchtap="emit" data-act="auditChapterApplication"
                   data-id="{{item.id}}" data-approved="{{false}}" hover-class="cy-pressed" hover-stay-time="80">婉拒</view>
@@ -260,7 +260,7 @@
                   bind:close="emitClosePlayer" bind:action="emitDrawerAction">
     <!-- CU-C-67:名单读失败与「一单没卖」是两个态 —— 失败时不摆三个 0(那读起来就是「没人买票」),
          就地给可重试的错态。零单空态仍在 playerSheet.emptyText 那一条里。 -->
-    <cy-inline-error wx:if="{{ playerSheet.errorText }}" kind="data" title="客户名单没加载出来"
+    <cy-inline-error load-failure wx:if="{{ playerSheet.errorText }}" kind="data" title="客户名单没加载出来"
       sub="{{ playerSheet.errorText }}" action="重新加载" data-act="retryPlayerSheet" bind:action="emit" />
     <block wx:else>
     <view class="dsum" wx:if="{{ playerSheet.shopDay }}">

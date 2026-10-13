@@ -21,6 +21,12 @@ public class JourneyRules {
     private boolean checkEnabled;
     private boolean stateEnabled;
     private com.fasterxml.jackson.databind.node.ArrayNode attributes = MAPPER.createArrayNode();
+    private com.fasterxml.jackson.databind.node.ArrayNode statLinks = MAPPER.createArrayNode();
+
+    public com.fasterxml.jackson.databind.node.ArrayNode getStatLinks() { return statLinks; }
+    public void setStatLinks(com.fasterxml.jackson.databind.node.ArrayNode statLinks) {
+        this.statLinks = statLinks == null ? MAPPER.createArrayNode() : statLinks;
+    }
 
     public boolean isStateEnabled() { return stateEnabled; }
     public void setStateEnabled(boolean stateEnabled) { this.stateEnabled = stateEnabled; }

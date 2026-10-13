@@ -13,10 +13,13 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -31,7 +34,7 @@ import static org.mockito.Mockito.when;
  * 或反过来把 {@code countOpenSaleRegistrations} 一起改成 registration_status
  * (那是「已售不可改」的锁判据,含待支付才拦得住) ⇒ 第 2 条红。
  *
- * <p>覆盖边界:本用例只钉服务层递给 mapper 的查询条件,不证明 mapper XML 真按这些条件生成 SQL。
+ * <p>覆盖服务查询口径、批量归属与实际 MyBatis 动态 SQL；不替代正常页面验收。
  */
 class CmsActivitySignupCountTest {
 
@@ -96,6 +99,73 @@ class CmsActivitySignupCountTest {
         assertDoesNotThrow(() -> service.countPaidRegistrations(ACTIVITY));
         assertDoesNotThrow(() -> service.countPendingRegistrations(ACTIVITY));
         assertDoesNotThrow(() -> service.countSignedUpRegistrations(ACTIVITY));
+    }
+
+    @Test
+    void batchCountsKeepActivityIdsAndAvoidPrivateRegistrationReads() {
+        com.chengyinhub.business.mapper.CmsActivityMapper activities =
+                mock(com.chengyinhub.business.mapper.CmsActivityMapper.class);
+        ReflectionTestUtils.setField(service, "cmsActivityMapper", activities);
+        java.util.Map<String, Object> row = new java.util.HashMap<>();
+        row.put("activityId", 33L);
+        row.put("signupCount", 2L);
+        List<Long> ids = java.util.Arrays.asList(33L, 34L);
+        when(activities.selectSignedUpRegistrationCounts(ids)).thenReturn(java.util.Collections.singletonList(row));
+        assertEquals(java.util.Collections.singletonMap(33L, 2), service.countSignedUpRegistrationsByActivityIds(ids));
+        verify(activities).selectSignedUpRegistrationCounts(ids);
+        row.put("pendingVerifyCount", 4L);
+        when(activities.selectPendingVerificationCounts(ids)).thenReturn(java.util.Collections.singletonList(row));
+        assertEquals(java.util.Collections.singletonMap(33L, 4), service.countPendingVerificationByActivityIds(ids));
+        verify(activities).selectPendingVerificationCounts(ids);
+        verifyNoInteractions(registrations);
+    }
+
+    @Test
+    void emptyBatchCannotReadAllRegistrations() {
+        com.chengyinhub.business.mapper.CmsActivityMapper activities =
+                mock(com.chengyinhub.business.mapper.CmsActivityMapper.class);
+        ReflectionTestUtils.setField(service, "cmsActivityMapper", activities);
+        assertTrue(service.countSignedUpRegistrationsByActivityIds(null).isEmpty());
+        assertTrue(service.countSignedUpRegistrationsByActivityIds(java.util.Collections.emptyList()).isEmpty());
+        assertTrue(service.countPendingVerificationByActivityIds(null).isEmpty());
+        assertTrue(service.countPendingVerificationByActivityIds(java.util.Collections.emptyList()).isEmpty());
+        verifyNoInteractions(activities, registrations);
+    }
+
+    @Test
+    void batchSqlKeepsConfirmedStatusAndFailsClosedForEmptyIds() throws Exception {
+        org.apache.ibatis.session.Configuration config = new org.apache.ibatis.session.Configuration();
+        config.getTypeAliasRegistry().registerAlias("CmsActivity", com.chengyinhub.business.domain.CmsActivity.class);
+        String resource = "mapper/business/CmsActivityMapper.xml";
+        try (java.io.InputStream in = org.apache.ibatis.io.Resources.getResourceAsStream(resource)) {
+            new org.apache.ibatis.builder.xml.XMLMapperBuilder(in, config, resource, config.getSqlFragments()).parse();
+        }
+        org.apache.ibatis.mapping.MappedStatement statement = config.getMappedStatement(
+                "com.chengyinhub.business.mapper.CmsActivityMapper.selectSignedUpRegistrationCounts");
+        java.util.Map<String, Object> params = new java.util.HashMap<>();
+        params.put("activityIds", java.util.Arrays.asList(33L, 34L));
+        org.apache.ibatis.mapping.BoundSql bound = statement.getBoundSql(params);
+        String sql = bound.getSql().replaceAll("\\s+", " ");
+        assertTrue(sql.contains("owner_type = 2 and registration_status = 2"));
+        assertTrue(sql.contains("owner_id in"));
+        assertTrue(sql.contains("group by owner_id"));
+        assertFalse(sql.contains("payment_status"));
+        assertFalse(sql.contains("phone"));
+        assertEquals(2, bound.getParameterMappings().size());
+        params.put("activityIds", java.util.Collections.emptyList());
+        assertTrue(statement.getBoundSql(params).getSql().contains("and 1 = 0"));
+        params.put("activityIds", null);
+        assertTrue(statement.getBoundSql(params).getSql().contains("and 1 = 0"));
+        statement = config.getMappedStatement(
+                "com.chengyinhub.business.mapper.CmsActivityMapper.selectPendingVerificationCounts");
+        assertTrue(statement.getBoundSql(params).getSql().contains("and 1 = 0"));
+        params.put("activityIds", java.util.Arrays.asList(33L, 34L));
+        sql = statement.getBoundSql(params).getSql().replaceAll("\\s+", " ");
+        assertTrue(sql.contains("owner_type = 2 and payment_status = 2 and verification_status = 0"));
+        assertFalse(sql.contains("registration_status"));
+        assertFalse(sql.contains("phone"));
+        params.put("activityIds", java.util.Collections.emptyList());
+        assertTrue(statement.getBoundSql(params).getSql().contains("and 1 = 0"));
     }
 
 }

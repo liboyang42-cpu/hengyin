@@ -1,17 +1,20 @@
 package com.chengyinhub.business.service.impl;
 
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.chengyinhub.common.utils.StringUtils;
+import com.chengyinhub.common.core.redis.RedisCache;
 
 /**
  * 监控告警(C3/资损可观测):关键失败(发奖丢奖、券超发、结算异常)除落 error 日志外,
@@ -54,6 +57,9 @@ public class AlarmService {
 
     private WebhookTransport transport;
 
+    @Autowired
+    private RedisCache redisCache;
+
     public AlarmService() {
         // transport 在 @PostConstruct 中根据注入的 timeout 配置创建
     }
@@ -88,6 +94,27 @@ public class AlarmService {
 
     public void alarm(String title, String detail) {
         deliver(title, detail);
+    }
+
+    /** Limit attempts per fixed monitoring event for ten minutes, never claim delivery from a Redis lease. */
+    public void alarmThrottled(String event, String title, String detail) {
+        if (event == null || !event.matches("[a-z][a-z0-9_.-]{0,79}")) {
+            throw new IllegalArgumentException("Invalid alarm event key");
+        }
+        try {
+            Boolean claimed = redisCache.setIfAbsent("alarm:attempt:" + event, "1", 600, TimeUnit.SECONDS);
+            if (Boolean.FALSE.equals(claimed)) {
+                log.debug("[ALARM] Attempt rate limited event={}", event);
+                return;
+            }
+            if (claimed == null) {
+                log.warn("[ALARM] Attempt lease unknown event={}; falling back to delivery", event);
+            }
+        } catch (Exception failure) {
+            log.warn("[ALARM] Attempt lease failed event={} type={}; falling back to delivery",
+                    event, failure.getClass().getSimpleName());
+        }
+        alarm(title, detail);
     }
 
     AlarmDelivery deliver(String title, String detail) {
@@ -152,15 +179,20 @@ public class AlarmService {
             return;
         }
         try {
-            String failurePayload = "{\"msgtype\":\"text\",\"text\":{\"content\":\"[城瘾告警投递失败] "
-                    + safe(title) + "\\n主 webhook 投递失败,请检查告警通道\"}}";
+            String failurePayload = "{\"msgtype\":\"text\",\"text\":{\"content\":"
+                    + JSON.toJSONString("[城瘾告警投递失败] " + (title == null ? "" : title)
+                    + "\n主 webhook 投递失败,请检查告警通道") + "}}";
             TransportResponse failureResponse = transport.post(failureWebhook, failurePayload);
             if (failureResponse == null) {
                 log.error("[ALARM] 失败事件投递到独立出口失败(transport 返回 null) failureHost={}",
                         failureHost);
                 return;
             }
-            if (failureResponse.is2xx()) {
+            String errcode = failureResponse.is2xx() ? rejectionCode(failureResponse.getBody()) : null;
+            if (errcode != null) {
+                log.error("[ALARM] 失败事件投递到独立出口被第三方拒绝 failureHost={} errcode={}",
+                        failureHost, errcode);
+            } else if (failureResponse.is2xx()) {
                 log.info("[ALARM] 失败事件已投递到独立出口 failureHost={}", failureHost);
             } else {
                 log.error("[ALARM] 失败事件投递到独立出口失败 failureHost={} status={}",
@@ -172,8 +204,8 @@ public class AlarmService {
     }
 
     private String buildPayload(String title, String detail) {
-        String content = "[城瘾告警] " + safe(title) + "\\n" + safe(detail);
-        return "{\"msgtype\":\"text\",\"text\":{\"content\":\"" + content + "\"}}";
+        String content = "[城瘾告警] " + (title == null ? "" : title) + "\n" + (detail == null ? "" : detail);
+        return "{\"msgtype\":\"text\",\"text\":{\"content\":" + JSON.toJSONString(content) + "}}";
     }
 
     /**
@@ -218,12 +250,6 @@ public class AlarmService {
         } catch (Exception invalid) {
             return null;
         }
-    }
-
-    /** 转义换行与引号,避免破坏 JSON */
-    private static String safe(String s) {
-        if (s == null) return "";
-        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
     }
 
 }

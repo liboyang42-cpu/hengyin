@@ -1,6 +1,6 @@
 package com.chengyinhub.framework.web.exception;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import com.chengyinhub.common.utils.UserSafeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingPathVariableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -32,9 +35,20 @@ import com.chengyinhub.common.utils.html.EscapeUtil;
 public class GlobalExceptionHandler
 {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private RuntimeFailureAlarmFilter runtimeFailureAlarm;
 
     /** 未预期的系统异常返回给用户的稳定文案(判据真源 = {@link UserSafeMessage},与自己 try/catch 的控制器共用)。 */
     private static final String GENERIC_SYSTEM_ERROR_MSG = UserSafeMessage.GENERIC;
+
+    /** Missing routes/resources are expected 404s, not application failures. */
+    @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
+    @ResponseStatus(org.springframework.http.HttpStatus.NOT_FOUND)
+    public AjaxResult handleNotFound(Exception exception, HttpServletRequest request)
+    {
+        log.debug("请求路径不存在 method={}", request.getMethod());
+        return AjaxResult.error(HttpStatus.NOT_FOUND, "请求路径不存在");
+    }
 
     /**
      * 生效的上传限额(与 application.yml 的 spring.servlet.multipart 同源,只读不写)。
@@ -164,6 +178,7 @@ public class GlobalExceptionHandler
     @ExceptionHandler(RuntimeException.class)
     public AjaxResult handleRuntimeException(RuntimeException e, HttpServletRequest request)
     {
+        if (runtimeFailureAlarm != null) runtimeFailureAlarm.systemFailure(e);
         String requestURI = request.getRequestURI();
         log.error("请求地址'{}',发生未知异常.", requestURI, e);
         return AjaxResult.error(userSafeMessage(e.getMessage()));
@@ -175,6 +190,7 @@ public class GlobalExceptionHandler
     @ExceptionHandler(Exception.class)
     public AjaxResult handleException(Exception e, HttpServletRequest request)
     {
+        if (runtimeFailureAlarm != null) runtimeFailureAlarm.systemFailure(e);
         String requestURI = request.getRequestURI();
         log.error("请求地址'{}',发生系统异常.", requestURI, e);
         return AjaxResult.error(userSafeMessage(e.getMessage()));

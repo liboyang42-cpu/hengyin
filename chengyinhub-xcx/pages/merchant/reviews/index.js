@@ -82,10 +82,13 @@ Page({
   },
 
   enterManage(authRetryUsed) {
+    if (this._hidden || this._unloaded) return;
+    const entryEpoch = this._reviewEntryEpoch = (this._reviewEntryEpoch || 0) + 1;
     this._authRetryUsed = authRetryUsed === true;
     this.setData({ pageState: 'loading', errorMessage: '' });
     const that = this;
     ensureSession(app).then(function (ok) {
+      if (that._hidden || that._unloaded || entryEpoch !== that._reviewEntryEpoch) return;
       if (!ok || !app.getUserID()) {
         that.setData({ pageState: 'error', errorMessage: '登录失败，请重试' });
         return;
@@ -96,13 +99,18 @@ Page({
 
   // 401:静默重登一次后自动重载;重登失败落页内错误态,不整屏「去登录」。
   recoverSession() {
+    if (this._hidden || this._unloaded) return;
     if (this._authRetryUsed) {
       this.setData({ pageState: 'error', errorMessage: '登录已失效，请重新登录' });
       return;
     }
     this._authRetryUsed = true;
     const that = this;
+    const entryEpoch = this._reviewEntryEpoch;
+    const owner = String(app.getUserID() || '');
     ensureSession(app).then(function (ok) {
+      if (that._hidden || that._unloaded || entryEpoch !== that._reviewEntryEpoch
+          || (app.getUserID() && owner !== String(app.getUserID()))) return;
       if (!ok) {
         that.setData({ pageState: 'error', errorMessage: '登录失败，请重试' });
         return;
@@ -111,9 +119,27 @@ Page({
     });
   },
 
-  onShow() { merchantTheme.merchantPageShow(); },
-  onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() { merchantTheme.merchantPageRestore(); },
+  onShow() {
+    this._hidden = false;
+    merchantTheme.merchantPageShow();
+    if (this._resumeReviewRead || (this._reviewOwner !== undefined && this._reviewOwner !== String(app.getUserID() || ''))) {
+      this._resumeReviewRead = false;
+      this.retry();
+    }
+  },
+  onHide() {
+    this._hidden = true;
+    this._resumeReviewRead = this.data.pageState === 'loading' || this.data.loadingMore;
+    this._reviewEntryEpoch = (this._reviewEntryEpoch || 0) + 1;
+    this._reviewReadEpoch = (this._reviewReadEpoch || 0) + 1;
+    merchantTheme.merchantPageRestore();
+  },
+  onUnload() {
+    this._unloaded = true;
+    this._reviewEntryEpoch = (this._reviewEntryEpoch || 0) + 1;
+    this._reviewReadEpoch = (this._reviewReadEpoch || 0) + 1;
+    merchantTheme.merchantPageRestore();
+  },
 
   onNavBack() {
     if (getCurrentPages().length > 1) wx.navigateBack();
@@ -134,8 +160,22 @@ Page({
   },
 
   loadReviews(append) {
+    if (this._hidden || this._unloaded) return;
     if (append && (this.data.loadingMore || !this.data.hasMore)) return;
     const mode = this.data.mode;
+    const owner = String(app.getUserID() || '');
+    if (this._reviewOwner !== undefined && this._reviewOwner !== owner) {
+      this.setData({ items: [], filteredItems: [], total: 0, averageRating: '0.0', ratingStars: [],
+        pendingReplyCount: 0, monthNewCount: 0, replyRatePct: 0, hasMore: false, loadingMore: false,
+        eligibility: { canCreate: false, reasonCode: 'UNAVAILABLE', registrationId: null },
+        replyReviewId: null, replyEditing: false, replyContent: '', replyError: '',
+        reportReviewId: null, reportReason: '', reportError: '', content: '', images: [], rating: 0, canSubmit: false });
+    }
+    this._reviewOwner = owner;
+    if (mode === 'manage' && !owner) { this.enterManage(false); return; }
+    const readEpoch = this._reviewReadEpoch = (this._reviewReadEpoch || 0) + 1;
+    const isCurrent = () => !this._hidden && !this._unloaded && readEpoch === this._reviewReadEpoch
+      && owner === String(app.getUserID() || '');
     const pageNum = append ? this._pageNum + 1 : 1;
     if (append) this.setData({ loadingMore: true });
     else this.setData({ pageState: 'loading', errorMessage: '' });
@@ -143,6 +183,7 @@ Page({
       hideLoading: true,
       method: 'POST',
       success: (res) => {
+        if (!isCurrent()) return;
         if (mode === 'manage' && isAuthenticationFailure(res)) {
           this.recoverSession();
           return;
@@ -184,6 +225,7 @@ Page({
         this.refreshCreateState();
       },
       fail: (res, status) => {
+        if (!isCurrent()) return;
         if (mode === 'manage' && isAuthenticationFailure(res, status)) {
           this.recoverSession();
           return;

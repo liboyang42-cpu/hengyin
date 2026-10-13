@@ -26,10 +26,20 @@ public class MerchantCrmCouponGrantAdapter {
     }
 
     public Long grant(Long ownerMemberId, Long merchantRowId, Long memberId, Long couponId) {
-        if (memberId == null || memberId <= 0) throw new ServiceException("领取会员无效", 400);
-        SmsCoupon coupon = requireOwnedActive(ownerMemberId, merchantRowId, couponId);
+        if (memberId == null || memberId <= 0) {
+            throw new GrantRejectedException("ASSET_INVALID", "领取会员无效", null);
+        }
+        SmsCoupon coupon;
+        try {
+            coupon = requireOwnedActive(ownerMemberId, merchantRowId, couponId);
+        } catch (ServiceException e) {
+            throw new GrantRejectedException(Integer.valueOf(404).equals(e.getCode())
+                    ? "COUPON_NOT_ISSUED" : "ASSET_INVALID", e.getMessage(), e);
+        }
         Long receipt = couponHistoryService.grantCouponWithReceipt(memberId, coupon);
-        if (receipt == null) throw new ServiceException("优惠券库存已用尽", 409);
+        if (receipt == null) {
+            throw new GrantRejectedException("COUPON_NOT_ISSUED", "优惠券未发出，可能已停发、失效或库存不足", null);
+        }
         return receipt;
     }
 
@@ -50,6 +60,20 @@ public class MerchantCrmCouponGrantAdapter {
             out.add(item);
         }
         return out;
+    }
+
+    public static final class GrantRejectedException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+        private final String failureCode;
+
+        public GrantRejectedException(String failureCode, String message, Throwable cause) {
+            super(message, cause);
+            this.failureCode = failureCode;
+        }
+
+        public String getFailureCode() {
+            return failureCode;
+        }
     }
 
     private void requireMerchantScope(Long ownerMemberId, Long merchantRowId) {

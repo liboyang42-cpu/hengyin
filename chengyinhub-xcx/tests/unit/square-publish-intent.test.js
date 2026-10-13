@@ -52,6 +52,7 @@ function mount(relativePath, kind, options = {}) {
   const wx = makeWx(options.onModal)
   const member = options.member || { value: 'member-A' }
   const app = Object.assign({
+    canUseCommunity: () => true, // Current-account server-open fixture.
     globalData: {},
     getUserID: () => member.value,
     getAvatar: () => '',
@@ -74,6 +75,7 @@ function mount(relativePath, kind, options = {}) {
     setTimeout(fn) { if (typeof fn === 'function') fn(); return 1 },
     clearTimeout() {},
     require(id) {
+      if (id.includes('community-post-api')) return require('../helpers/community-page-seam');
       if (!id.startsWith('.')) return require(id)
       return require(path.resolve(path.dirname(path.join(ROOT, relativePath)), id))
     },
@@ -193,7 +195,7 @@ test('广场列表:丢回包后重试复用同一意图键;成功后相同正文
   assert.equal(retry.data.request_id, firstKey, '重试必须复用同一意图键,不得再发一条')
   assert.equal(intentStoreFor(wx, 'member-A', 'square:list').key, firstKey, '持久化意图键必须仍是同一个')
 
-  retry.success({ code: '200', data: { id: 77 } })
+  retry.success({ code: '200', data: { id: 77, lifecycle: 'PUBLISHED' } })
   retry.complete()
   assert.equal(intentStoreFor(wx, 'member-A', 'square:list'), null, '成功后清除意图')
 
@@ -240,7 +242,8 @@ test('广场列表:切账号后不复用上一账号的意图键', () => {
 
 function mountCompose(options = {}) {
   const h = mount(POST_COMPOSE, 'component', options)
-  h.instance._memberId = h.member.value
+  h.definition.lifetimes.attached.call(h.instance)
+  h.definition.observers.show.call(h.instance, true)
   h.instance.setData({ content: '组件正文', picList: [], address: '', selectedActivity: null })
   return h
 }
@@ -258,7 +261,7 @@ test('发布组件:丢回包重试复用意图键,成功后清除', () => {
   const retry = last(h.requests, '/api/creativesquare/action')
   assert.equal(retry.data.request_id, firstKey, '组件重试必须复用意图键')
 
-  retry.success({ code: '200', data: { id: 9 } })
+  retry.success({ code: '200', data: { id: 9, lifecycle: 'PUBLISHED' } })
   retry.complete()
   assert.equal(intentStoreFor(h.wx, 'member-A', 'square:compose'), null, '成功后清除')
 
@@ -279,6 +282,7 @@ function mountRoam() {
 }
 
 function readyRoam(h) {
+  h.app.canUseCommunity = () => true; // Explicit current-account feature fixture, not a production fallback.
   h.instance._shareScope = () => () => true
   h.instance._shareCopy = () => '漫游分享文案'
   h.instance._activeShareSessionId = () => '44'
@@ -312,7 +316,7 @@ test('漫游分享:未知结果重试复用意图键,成功后再次主动分享
   await flush(); await flush(); await flush()
   const retry = last(h.requests, '/api/creativesquare/action')
   assert.equal(retry.data.request_id, firstKey, '同一未决分享重试必须复用键')
-  retry.success({ code: '200', data: { id: 45 } })
+  retry.success({ code: '200', data: { id: 45, lifecycle: 'PUBLISHED' } })
   await retryFlow
   assert.equal(intentStoreFor(h.wx, 'member-A', 'square:roam:44'), null, '成功后清除')
 
@@ -321,7 +325,7 @@ test('漫游分享:未知结果重试复用意图键,成功后再次主动分享
   await flush(); await flush(); await flush()
   const second = last(h.requests, '/api/creativesquare/action')
   assert.notEqual(second.data.request_id, firstKey, '主动再次分享是新帖')
-  second.success({ code: '200', data: { id: 46 } })
+  second.success({ code: '200', data: { id: 46, lifecycle: 'PUBLISHED' } })
   await secondFlow
 })
 

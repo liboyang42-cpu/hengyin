@@ -41,18 +41,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         limit #{limit}
     </select>
 
-    <!-- 成长周榜:本周经验汇总 -->
+    <sql id="expWeekScores">
+        select member_id, sum(exp_value - revoked_exp) as s
+        from member_exp_earned
+        where exp_value &gt; 0 and earned_at &gt;= #{weekStart} and earned_at &lt; #{weekEnd}
+        group by member_id
+    </sql>
+
+    <!-- 成长周榜按原实际获得周扣回，保留原发放事实。 -->
     <select id="selectExpWeekTop" resultType="com.chengyinhub.business.domain.vo.LeaderboardItemVO">
-        select m.id as memberId, m.nickname as nickname, m.avatar as avatar,
-               p.score as score
-        from (
-            select member_id, sum(reward_exp) as score
-            from growth_mission_progress
-            where progress_date &gt;= #{weekStart}
-            group by member_id
-        ) p
+        select m.id as memberId, m.nickname as nickname, m.avatar as avatar, p.s as score
+        from (<include refid="expWeekScores"/>) p
         join ums_member m on m.id = p.member_id and m.del_flag = 0
-        order by p.score desc, m.create_time asc, m.id asc
+        order by p.s desc, m.create_time asc, m.id asc
         limit #{limit}
     </select>
 
@@ -132,36 +133,21 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <!-- 成长周榜:我的名次 -->
     <select id="selectExpWeekMyRank" resultType="java.util.HashMap">
-        <![CDATA[
         select
-            (select count(*) from (
-                select member_id, sum(reward_exp) as s
-                from growth_mission_progress
-                where progress_date >= #{weekStart}
-                group by member_id
-            ) t join ums_member ranked on ranked.id = t.member_id and ranked.del_flag = 0
-              where t.s > base.s
+            (select count(*) from (<include refid="expWeekScores"/>) t
+              join ums_member ranked on ranked.id = t.member_id and ranked.del_flag = 0
+              where t.s &gt; base.s
                  or (t.s = base.s
-                     and (ranked.create_time < base.created
-                          or (ranked.create_time = base.created and ranked.id < base.memberId)))) + 1 as userRank,
-            (select count(*) from (
-                select member_id
-                from growth_mission_progress
-                where progress_date >= #{weekStart}
-                group by member_id
-            ) c join ums_member counted on counted.id = c.member_id and counted.del_flag = 0) as totalUsers,
+                     and (ranked.create_time &lt; base.created
+                          or (ranked.create_time = base.created and ranked.id &lt; base.memberId)))) + 1 as userRank,
+            (select count(*) from (<include refid="expWeekScores"/>) c
+              join ums_member counted on counted.id = c.member_id and counted.del_flag = 0) as totalUsers,
             base.s as score
         from (
             select p.member_id as memberId, p.s, m.create_time as created
-              from (
-                    select member_id, sum(reward_exp) as s
-                      from growth_mission_progress
-                     where progress_date >= #{weekStart}
-                     group by member_id
-              ) p
+              from (<include refid="expWeekScores"/>) p
               join ums_member m on m.id = p.member_id and m.del_flag = 0
              where p.member_id = #{memberId}
         ) base
-        ]]>
     </select>
 </mapper>

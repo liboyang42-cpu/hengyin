@@ -7,7 +7,7 @@
     <!-- 章节这一侧的四种取数结局分开说:拉取中 / 拉失败 / 没填品类 / 拉到了。
          合成一句「暂时没有开放的章节」会把「我还没读到」说成「主办方没开」。 -->
     <cy-skeleton wx:if="{{chaptersState === 'loading'}}" type="card" count="{{1}}" />
-    <cy-error wx:elif="{{chaptersState === 'error'}}" title="可承接章节暂时没能加载"
+    <cy-error load-failure wx:elif="{{chaptersState === 'error'}}" title="可承接章节暂时没能加载"
               sub="{{chaptersError}}" retry="重试" bind:retry="onRetryChapters" />
     <cy-empty wx:elif="{{chaptersState === 'category-missing'}}" kind="no-permission" size="lg"
               title="请先完善商家品类" sub="平台按品类为你匹配可承接章节"
@@ -33,7 +33,7 @@
     <view class="ctp-h">选择玩法模板</view>
     <cy-skeleton wx:if="{{templatesState === 'loading'}}" type="card" count="{{1}}" />
     <!-- 读不到 ≠ 一个都没有:分开说,否则商家会去重新建一个自己已经有的玩法 -->
-    <cy-error wx:elif="{{templatesState === 'error'}}" title="玩法模板没读出来"
+    <cy-error load-failure wx:elif="{{templatesState === 'error'}}" title="玩法模板没读出来"
               sub="{{templatesError}}" retry="重试" bind:retry="loadTemplates" />
     <cy-empty wx:elif="{{templatesState === 'empty'}}" kind="empty" size="lg"
               title="还没有可用的玩法" sub="先建一个玩法，回来就能选上"

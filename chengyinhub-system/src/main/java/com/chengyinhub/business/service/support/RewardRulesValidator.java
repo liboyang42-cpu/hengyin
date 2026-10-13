@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 public class RewardRulesValidator {
 
     /** 与前端结果合同 node-outcome-contract.js 的 CODE_PATTERN 同一套 */
-    private static final Pattern CODE = Pattern.compile("^[A-Z][A-Z0-9_]{0,63}$");
+    private static final Pattern CODE = Pattern.compile("^[A-Za-z0-9_-]{1,64}$");
     private static final int MAX_RULES = 8;
     private static final int MAX_XP = 1000;
     private static final int MAX_JSON_LENGTH = 4000;
@@ -62,7 +62,7 @@ public class RewardRulesValidator {
             }
             String code = rule.path("outcomeCode").asText("").trim();
             if (!CODE.matcher(code).matches()) {
-                throw new IllegalArgumentException("结果码只能用大写字母、数字和下划线");
+                throw new IllegalArgumentException("结果码只能用1至64位字母、数字、下划线和短横线");
             }
             // 同一个结果码配两份奖 = 发一份还是两份,谁也说不清
             if (!codes.add(code)) {

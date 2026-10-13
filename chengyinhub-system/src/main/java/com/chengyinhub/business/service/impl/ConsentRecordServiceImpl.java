@@ -31,6 +31,8 @@ public class ConsentRecordServiceImpl implements IConsentRecordService {
                 || !validScope(scopeType, scopeId)) {
             throw new IllegalArgumentException("同意记录参数不合法");
         }
+        if ("privacy_policy".equals(docType) && "roam_location".equals(scene))
+            throw new IllegalArgumentException("漫游定位授权必须校验当前状态");
         Date now = new Date();
         ConsentRecord record = new ConsentRecord();
         record.setMemberId(memberId);
@@ -52,7 +54,17 @@ public class ConsentRecordServiceImpl implements IConsentRecordService {
     }
 
     @Override
+    public ConsentRecord byRequestId(Long memberId, String requestId) {
+        if (memberId == null || memberId <= 0 || StringUtils.isEmpty(requestId)) return null;
+        return consentRecordMapper.selectByRequestId(memberId, requestId);
+    }
+
+    @Override
     public ConsentRecord latest(Long memberId, String docType, String scene) {
+        if ("privacy_policy".equals(docType) && "roam_location".equals(scene))
+            return consentRecordMapper.selectLatestRoamLocation(memberId);
+        if ("privacy_policy".equals(docType) && "roam_presence".equals(scene))
+            return consentRecordMapper.selectLatestRoamPresence(memberId);
         return consentRecordMapper.selectLatest(memberId, docType, scene);
     }
 

@@ -9,8 +9,8 @@ const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'u
 function assertSettingsTheme(script, wxml, wxss) {
   assert.match(script, /require\(['"]\.\.\/\.\.\/utils\/merchant-theme\.js['"]\)/, 'settings must use the shared merchant theme lifecycle')
   assert.match(script, /syncViewStateAndTheme\(\)[\s\S]*?merchantTheme\.merchantPageShow\(\)[\s\S]*?merchantTheme\.merchantPageRestore\(\)/, 'merchant and player views must select opposite native themes')
-  assert.match(script, /onHide\(\)\s*\{\s*merchantTheme\.merchantPageRestore\(\);\s*\}/, 'settings must restore player theme on hide')
-  assert.match(script, /onUnload\(\)\s*\{\s*merchantTheme\.merchantPageRestore\(\);\s*\}/, 'settings must restore player theme on unload')
+  assert.match(script, /onHide\(\)\s*\{[^}]*merchantTheme\.merchantPageRestore\(\);\s*\}/, 'settings must restore player theme on hide')
+  assert.match(script, /onUnload\(\)\s*\{[^}]*merchantTheme\.merchantPageRestore\(\);\s*\}/, 'settings must restore player theme on unload')
   assert.match(wxml, /class="sz-page \{\{isMerchantView \? 'theme-merchant' : 'theme-dark'\}\}"/, 'settings root must keep merchant/player themes distinct')
   assert.match(wxss, /min-height:\s*198rpx/, 'profile card must reserve avatar and edit-action height')
   assert.match(wxss, /padding-right:\s*120rpx/, 'profile text must clear the edit action')
@@ -109,4 +109,14 @@ test('negative control:talent/list 底部栏锁回深色必须判红', () => {
   }
   assert.notEqual(mutated.wxml, page.wxml, '负控必须真的把 talent/list 底部栏锁回深色')
   assert.throws(() => assertSharedPageTheme(mutated), assert.AssertionError)
+})
+
+test('negative control:设置hide/unload缺失主题恢复仍判红', () => {
+  const source = read('pages/shezhi/shezhi.js')
+  for (const hook of ['onHide', 'onUnload']) {
+    const block = new RegExp(hook + '\\(\\)\\s*\\{[^}]*\\}')
+    const changed = source.replace(block, text => text.replace('merchantTheme.merchantPageRestore();', ''))
+    assert.notEqual(changed, source)
+    assert.throws(() => assertSettingsTheme(changed, read('pages/shezhi/shezhi.wxml'), read('pages/shezhi/shezhi.wxss')), assert.AssertionError)
+  }
 })

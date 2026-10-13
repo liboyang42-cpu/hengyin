@@ -48,8 +48,10 @@ class RoamAiContentApiGateTest {
         flags = mock(NpcFeatureFlags.class);
         contentService = mock(RoamAiContentService.class);
         ReflectionTestUtils.setField(controller, "roamMapper", roamMapper);
+        ReflectionTestUtils.setField(controller,"locationConsent",mock(com.chengyinhub.business.service.impl.RoamLocationConsentService.class));
         com.chengyinhub.business.service.impl.RoamSessionWriteService writer = new com.chengyinhub.business.service.impl.RoamSessionWriteService();
         ReflectionTestUtils.setField(writer, "roamMapper", roamMapper);
+        ReflectionTestUtils.setField(writer,"locationConsent",mock(com.chengyinhub.business.service.impl.RoamLocationConsentService.class));
         ReflectionTestUtils.setField(controller, "roamSessionWriteService", writer);
         when(roamMapper.selectSessionById(9L)).thenReturn(openSession(9L));
         ReflectionTestUtils.setField(controller, "npcFeatureFlags", flags);

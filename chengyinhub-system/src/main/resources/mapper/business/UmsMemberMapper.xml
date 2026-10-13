@@ -113,11 +113,15 @@
         for update
     </select>
 
+    <select id="selectRolePermissionSubject" resultMap="UmsMemberResult">
+        SELECT id, role, status, del_flag FROM ums_member WHERE id = #{id}
+    </select>
+
     <insert id="insertUmsMember" parameterType="UmsMember" useGeneratedKeys="true" keyProperty="id">
         insert into ums_member
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="userType != null">user_type,</if>
-            <if test="role != null">role,</if>
+            user_type,
+            role,
             <if test="phone != null">phone,</if>
             <if test="password != null">password,</if>
             <if test="levelId != null">level_id,</if>
@@ -153,8 +157,8 @@
             <if test="updateTime != null">update_time,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="userType != null">#{userType},</if>
-            <if test="role != null">#{role},</if>
+            1,
+            'player',
             <if test="phone != null">#{phone},</if>
             <if test="password != null">#{password},</if>
             <if test="levelId != null">#{levelId},</if>
@@ -191,11 +195,14 @@
         </trim>
     </insert>
 
+    <update id="updateCanonicalRole">
+        UPDATE ums_member SET role = #{role}, user_type = #{userType}, update_time = NOW()
+        WHERE id = #{id} AND status = 1 AND del_flag = 0
+    </update>
+
     <update id="updateUmsMember" parameterType="UmsMember">
         update ums_member
         <trim prefix="SET" suffixOverrides=",">
-            <if test="userType != null">user_type = #{userType},</if>
-            <if test="role != null">role = #{role},</if>
             <if test="phone != null">phone = #{phone},</if>
             <if test="password != null">password = #{password},</if>
             <if test="levelId != null">level_id = #{levelId},</if>
@@ -353,7 +360,7 @@
         FROM (
                  SELECT
                      @user_rank := @user_rank + 1 as user_rank,
-                @total_users := total_users,
+                @total_users := total_users AS total_users,
                 (@user_rank / total_users) as user_rank_percentage,
                 m.id
                  FROM
@@ -388,7 +395,7 @@
         FROM (
                  SELECT
                      @user_rank := @user_rank + 1 as user_rank,
-                @total_users := total_users,
+                @total_users := total_users AS total_users,
                 (@user_rank / total_users) as user_rank_percentage,
                 m.id
                  FROM

@@ -1,0 +1,30 @@
+{
+  "zeroHp" : {
+    "episodeId" : "b6bc45c1-7c97-4861-925e-0bcd9165c77a",
+    "policy" : "STEPS",
+    "effectivePolicy" : "STEPS",
+    "phase" : "RECOVERING",
+    "zeroAt" : 1791654013356,
+    "progress" : 0,
+    "required" : 100,
+    "used" : 0,
+    "limit" : 2,
+    "restoreTo" : 4,
+    "message" : "",
+    "serverNow" : 1791654013356,
+    "thenPolicy" : "THEME_FAIL",
+    "recoveryMemberId" : 7,
+    "recoveryMemberName" : "本人",
+    "allowedActions" : [ "ZERO_HP_STEPS" ],
+    "disabledReason" : ""
+  },
+  "hp" : 0,
+  "hpEnabled" : true,
+  "hpMax" : 10,
+  "status" : "ACTIVE",
+  "runtimeScope" : "PLAYER",
+  "sessionId" : 3,
+  "version" : 3,
+  "sceneId" : "",
+  "sceneName" : ""
+}

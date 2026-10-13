@@ -7,21 +7,60 @@ import com.chengyinhub.business.service.impl.MerchantLeadServiceImpl;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 class MerchantLeadImportControllerTest {
+
+    @Test
+    void importData_rejectsDuplicateOoxmlEntriesBeforeWritingRows() throws Exception {
+        ByteArrayOutputStream original = new ByteArrayOutputStream();
+        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            org.apache.poi.ss.usermodel.Sheet sheet = workbook.createSheet("导入");
+            sheet.createRow(0).createCell(0).setCellValue("商家名称");
+            sheet.createRow(1).createCell(0).setCellValue("重复条目测试");
+            workbook.write(original);
+        }
+        ByteArrayOutputStream ambiguous = new ByteArrayOutputStream();
+        int duplicated = 0;
+        try (ZipInputStream input = new ZipInputStream(new ByteArrayInputStream(original.toByteArray()));
+             ZipArchiveOutputStream output = new ZipArchiveOutputStream(ambiguous)) {
+            ZipEntry entry;
+            while ((entry = input.getNextEntry()) != null) {
+                byte[] data = org.springframework.util.StreamUtils.copyToByteArray(input);
+                int copies = "xl/worksheets/sheet1.xml".equals(entry.getName()) ? 2 : 1;
+                for (int i = 0; i < copies; i++) {
+                    output.putArchiveEntry(new ZipArchiveEntry(entry.getName()));
+                    output.write(data);
+                    output.closeArchiveEntry();
+                }
+                if (copies == 2) duplicated++;
+            }
+        }
+        assertEquals(1, duplicated, "必须真实构造同名工作表ZIP条目");
+        MockMultipartFile file = new MockMultipartFile("file", "duplicate.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ambiguous.toByteArray());
+        assertThrows(Exception.class, () -> controller.importData(file));
+        verifyNoInteractions(mapper);
+    }
 
     private MerchantLeadController controller;
     private MerchantLeadMapper mapper;

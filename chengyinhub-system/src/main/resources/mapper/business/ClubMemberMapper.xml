@@ -12,6 +12,9 @@
         <result property="role"    column="role"    />
         <result property="status"    column="status"    />
         <result property="joinMessage"    column="join_message"    />
+        <result property="reviewReason" column="review_reason"/>
+        <result property="reviewerMemberId" column="reviewer_member_id"/>
+        <result property="reviewedAt" column="reviewed_at"/>
         <result property="joinTime"    column="join_time"    />
         <result property="delFlag"    column="del_flag"    />
         <result property="nickname"    column="nickname"    />
@@ -41,7 +44,7 @@
     </select>
 
     <select id="selectAnyByClubAndMember" resultMap="ClubMemberResult">
-        select id, club_id, member_id, role, status, join_time, del_flag
+        select id, club_id, member_id, role, status, join_time, del_flag, review_reason, reviewer_member_id, reviewed_at
         from club_member
         where club_id = #{clubId} and member_id = #{memberId} and del_flag = 0
         limit 1
@@ -249,4 +252,8 @@
         ) hosted on hosted.memberId = mem.memberId
     </select>
 
+    <update id="recordJoinReview">
+        update club_member set review_reason = #{reason}, reviewer_member_id = #{reviewerId}, reviewed_at = #{reviewedAt}
+        where club_id = #{clubId} and member_id = #{memberId} and status = #{status} and del_flag = 0
+    </update>
 </mapper>

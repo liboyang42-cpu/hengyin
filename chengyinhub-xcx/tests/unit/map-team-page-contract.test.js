@@ -57,6 +57,7 @@ let navigations
 // 申请留言弹层(stub 无 cy-modal-host 时 modal.js 回落 wx.showModal):默认确认并带一句留言。
 let modalAnswer = { confirm: true, content: '一起走完全程' }
 global.getApp = () => ({
+  getUserID: () => 7,
   globalData: {},
   getImgUrl: (u) => u || '',
   sendRequest: (opts) => { requests.push(opts) },

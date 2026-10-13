@@ -29,7 +29,8 @@ function loadPage(source = read(PAGE + '.js')) {
   const requests = []
   let config = null
   const app = {
-    globalData: { statusBarHeight: 20, navBarHeight: 44 },
+    globalData: { statusBarHeight: 20, navBarHeight: 44, authorization: "fixture-authenticated" },
+    getUserID: () => 7,
     sendRequest: (options) => requests.push(options),
     getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
     tips() {},
@@ -156,7 +157,10 @@ test('M-12:401、403、网络失败和 managed 不存在均保留错误，不回
     else first.success({ code: mode === 'managed' || mode === 'other' ? 500 : mode,
       msg: mode === 'other' ? '主题详情暂时无法读取' : '主题活动不存在' })
     assert.equal(topicReads(harness).length, 1, `${mode} 不得回退公开投影`)
-    assert.ok(harness.page.data.browseLoadError, `${mode} 必须显示真实错误，不能伪装成功`)
+    if (Number(mode) === 401 || Number(mode) === 403) {
+      assert.equal(harness.page.data.projectReadAuth, Number(mode) === 401 ? 'login' : 'denied', `${mode} 必须展示独立身份恢复/拒绝态`)
+      assert.equal(Object.keys(harness.page.data.info).length, 0, '身份拒绝不能保留旧主题投影')
+    } else assert.ok(harness.page.data.browseLoadError, `${mode} 必须显示真实错误，不能伪装成功`)
   }
 })
 

@@ -67,11 +67,15 @@ public class DataRetentionCleanupTask {
             Date npcChatRequestCutoff = new Date(now - (long) npcChatRequestHours * HOUR_MILLIS);
             int npcChatRequest = dataRetentionService.cleanNpcChatRequests(npcChatRequestCutoff, batchSize, maxBatches);
 
+            int roam = dataRetentionService.cleanRoamLocations(
+                    new Date(now - com.chengyinhub.business.support.RoamLocationRetention.THIRTY_DAYS_MILLIS), batchSize, maxBatches);
+            log.info("漫游详细位置清理完成 sessions/shares={} retentionDays=30", roam);
             log.info("留存清理任务完成:浏览记录删 {} 行(保留{}天)、行为事件删 {} 行(保留{}天)、NPC追问删 {} 行(保留{}天)、Chat幂等终态删 {} 行(保留{}小时)",
                     browse, browseDays, event, eventDays, npcChat, npcChatDays,
                     npcChatRequest, npcChatRequestHours);
         } catch (Exception e) {
             log.error("留存清理任务异常", e);
+            throw new IllegalStateException("Data retention cleanup failed", e);
         }
     }
 }

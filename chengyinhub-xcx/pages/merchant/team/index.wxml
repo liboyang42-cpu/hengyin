@@ -10,7 +10,7 @@
   </view>
   <!-- 未登录不再整屏拦:静默登录后自动加载;登录/身份确认失败只留这条内联错误。 -->
   <view class="tm-state" wx:elif="{{accessState === 'error'}}">
-    <cy-inline-error title="经营团队没能加载出来" sub="{{accessError}}" action="重新加载" bind:action="retryAccess" />
+    <cy-inline-error load-failure="{{!accessErrorIsDenied}}" title="{{accessErrorIsDenied ? '请确认登录或经营权限' : '经营团队没能加载出来'}}" sub="{{accessError}}" action="重新加载" bind:action="retryAccess" />
   </view>
 
   <view class="tm-state" wx:elif="{{accessState === 'invite'}}">
@@ -62,14 +62,14 @@
         </view>
         <view class="tm-add" bindtap="openInviteRoleSheet" aria-role="button" aria-label="邀请员工" hover-class="{{submitting ? 'none' : 'cy-pressed'}}" hover-stay-time="80"><cy-icon name="plus" size="24" /><text>邀请员工</text></view>
       </view>
-      <cy-inline-error wx:if="{{roleError}}" title="岗位列表暂未更新" sub="{{roleError}}"
+      <cy-inline-error load-failure wx:if="{{roleError}}" title="岗位列表暂未更新" sub="{{roleError}}"
                        action="重试" bind:action="loadRoles" />
 
       <view class="tm-state tm-state--section" wx:if="{{teamState === 'loading'}}">
         <view class="tm-skeleton-card"><cy-skeleton type="list" count="3" /></view>
       </view>
       <view class="tm-state tm-state--section" wx:elif="{{teamState === 'error'}}">
-        <cy-error title="团队名单加载失败" sub="{{teamError}}" bind:retry="retryTeam" />
+        <cy-error load-failure title="团队名单加载失败" sub="{{teamError}}" bind:retry="retryTeam" />
       </view>
       <block wx:else>
         <view class="tm-list" wx:if="{{operators.length}}">

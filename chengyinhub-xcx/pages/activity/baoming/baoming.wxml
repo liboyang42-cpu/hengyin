@@ -36,10 +36,10 @@
 </view>
 
 <cy-skeleton wx:if="{{pageState === 'ready' && participantState === 'loading' && addressList.length === 0}}" type="list" count="1" />
-<cy-inline-error wx:elif="{{pageState === 'ready' && participantState === 'error'}}"
+<cy-inline-error load-failure wx:elif="{{pageState === 'ready' && participantState === 'error'}}"
   title="参与人信息没能加载" sub="{{participantErrorMsg}}"
   action="重试" bind:action="retryAddressList" />
-<cy-inline-error wx:elif="{{pageState === 'ready' && participantState === 'staleError'}}"
+<cy-inline-error load-failure wx:elif="{{pageState === 'ready' && participantState === 'staleError'}}"
   title="参与人信息暂未更新" sub="已有名单仍可使用，{{participantErrorMsg}}"
   action="重试" bind:action="retryAddressList" />
 
@@ -66,7 +66,7 @@
 <!-- 详情加载失败:不摆出金额与付款入口,只给重试 -->
 <!-- auto-back 只认首屏:退候补成功后会 getActivityInfo() 重拉一次,
      那一次失败若也自动退页,用户刚做成的操作会被一个「正在退出」盖掉(审查C A1)。 -->
-<cy-error wx:if="{{pageState === 'error'}}" fill size="lg" title="活动信息没能加载出来" sub="{{loadErrorMsg}}" retry="重试" bind:retry="retryActivityInfo" auto-back="{{!everLoaded}}" />
+<cy-error load-failure wx:if="{{pageState === 'error'}}" fill size="lg" title="活动信息没能加载出来" sub="{{loadErrorMsg}}" retry="重试" bind:retry="retryActivityInfo" auto-back="{{!everLoaded}}" />
 
 <!-- 活动信息 -->
 <view wx:if="{{pageState === 'ready'}}" class="setbox">
@@ -92,7 +92,7 @@
                随 /api/activity/info 到了,只是本页从来没渲染过。它和下面那行活动 address
                (场馆地址)不是一回事:一个是这场集合在哪里。没填就不出这一行。 -->
           <view wx:if="{{selectedTicket.meetingPoint}}" class="setbox_lb_li_top_con_dz"><cy-icon class="d_location" name="poi-landmark" size="24" />集合点 · {{selectedTicket.meetingPoint}}</view>
-          <view class="setbox_lb_li_top_con_dz"><cy-icon class="d_location" name="poi-landmark" size="24" />{{activityInfo.address || '待确认集合地点'}}</view>
+          <view class="setbox_lb_li_top_con_dz"><cy-icon class="d_location" name="poi-landmark" size="24" />{{activityInfo.address || activityInfo.addressName || '待确认集合地点'}}</view>
         </view>
       </view>
     </view>
@@ -178,7 +178,7 @@
     <view class="waitlist-card__link" bindtap="goWaitlistOrder" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">查看报名订单</view>
   </block>
   <block wx:elif="{{waitlistState === 'ERROR'}}">
-    <cy-inline-error kind="data" title="候补状态读取失败" sub="{{waitlistError}}" />
+    <cy-inline-error load-failure kind="data" title="候补状态读取失败" sub="{{waitlistError}}" />
     <view class="waitlist-card__link" bindtap="retryWaitlistStatus" aria-role="button" hover-class="{{waitlistLoading ? 'none' : 'cy-pressed'}}" hover-stay-time="80">重试</view>
   </block>
   <block wx:else>
@@ -193,10 +193,10 @@
 <cy-sheet footer show="{{showAddressPopup}}" title="选择参与人信息" bind:close="hideAddressPopup">
   <view class="popup-content">
       <cy-skeleton wx:if="{{participantState === 'loading' && addressList.length === 0}}" type="list" count="2" />
-      <cy-inline-error wx:elif="{{participantState === 'error'}}"
+      <cy-inline-error load-failure wx:elif="{{participantState === 'error'}}"
         title="参与人信息没能加载" sub="{{participantErrorMsg}}"
         action="重试" bind:action="retryAddressList" />
-      <cy-inline-error wx:elif="{{participantState === 'staleError'}}"
+      <cy-inline-error load-failure wx:elif="{{participantState === 'staleError'}}"
         title="参与人信息暂未更新" sub="已有名单仍可使用，{{participantErrorMsg}}"
         action="重试" bind:action="retryAddressList" />
       <view wx:for="{{addressList}}" wx:key="id" 
@@ -237,7 +237,7 @@
     <icon wx:else class="bmbottom_box_gx" type="circle" size="20" color="var(--cy-color-text-tertiary)" />
     <view class="bmbottom_box_txt">同意将姓名、手机号提供给主办方，用于报名核验</view>
   </view>
-  <cy-btn variant="primary" style="width:686rpx;margin:0 auto;display:block" loading="{{isPaying || paymentReadinessChecking}}" bindtap="handlePayment" bind:disabledtap="handlePayment" disabled="{{!canPay}}">{{!selectedTicket ? '暂不可报名：暂无可用票' : ((ticketSoldOut && waitlistState !== 'OFFERED') || waitlistEligibility === 'ALREADY_REGISTERED' ? waitlistPaymentText : (signupClosed ? '报名已截止' : (isPaying ? '提交中...' : (paymentReadinessChecking ? '检查支付服务...' : (paymentReady === false && totalAmount > 0 ? '重新检查支付服务' : (selectedAddress ? (hostShareConsentReady ? (totalAmount > 0 ? (!quoteReady ? '确认价格并付款' : '付款') : '确认报名') : (totalAmount > 0 ? '保存同意并付款' : '保存同意并报名')) : '请选择参与人信息'))))))}}</cy-btn>
+  <cy-btn variant="primary" style="width:686rpx;margin:0 auto;display:block" loading="{{isPaying || paymentReadinessChecking}}" bindtap="handlePayment" bind:disabledtap="handlePayment" disabled="{{!canPay}}">{{!selectedTicket ? '暂不可报名：暂无可用票' : ((ticketSoldOut && waitlistState !== 'OFFERED') || waitlistEligibility === 'ALREADY_REGISTERED' ? waitlistPaymentText : (signupClosed ? '报名已截止' : (isPaying ? '提交中...' : (paymentReadinessChecking ? '检查支付服务...' : (paymentReady === false && totalAmount > 0 ? '重新检查支付服务' : (selectedAddress ? (hostShareConsentReady ? (totalAmount > 0 ? (!quoteReady ? '确认价格并付款' : '付款') : '确认报名') : (totalAmount > 0 ? '请先勾选信息共享同意' : '请先勾选信息共享同意')) : '请选择参与人信息'))))))}}</cy-btn>
 </view>
 
 <!-- 报名/支付结果面板。2026-09-06 用户裁决「买完直接跳」:面板不放按钮,

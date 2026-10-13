@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
@@ -85,6 +86,9 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
 
     @Autowired
     private AuditTaskMapper auditTaskMapper;
+
+    @Autowired
+    private com.chengyinhub.business.mapper.CommunityPostMapper communityPostMapper;
 
     @Autowired
     private com.chengyinhub.business.mapper.RoamHangoutMapper roamHangoutMapper;
@@ -134,6 +138,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     private CmsTemplateLibraryMapper libraryMapper;
     // 过审自动上架需过配额闸(锁+复查,单一实现在 QuotaService),防并发批准绕过 maxThemes
     @Autowired
+    @Lazy
     private IQuotaService quotaService;
     @Autowired
     private ITopicLifecycleService topicLifecycleService;
@@ -141,6 +146,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     private com.chengyinhub.business.service.ITopicSaleFinalizationService topicSaleFinalizationService;
     @Autowired
     private ObjectProvider<com.chengyinhub.business.service.ICoopInviteService> coopInviteServiceProvider;
+    @Autowired
+    private ObjectProvider<com.chengyinhub.business.service.ITopicCommercialReviewService> commercialReviewServiceProvider;
     /** 懒取以切断 CmsTopicServiceImpl → IAuditTaskService 的既有反向依赖。 */
     @Autowired
     private ObjectProvider<com.chengyinhub.business.service.ICmsTopicService> cmsTopicServiceProvider;
@@ -309,9 +316,22 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Long submitSafetyHold(String bizType, Long bizId, Long submitterId, String riskLevel, String snapshotJson) {
-        // 幂等:同 bizType+bizId 已有未结审核单(PENDING/ESCALATED)则复用,避免重复检测/重复举报刷单
-        return findOrCreateOpenTask(bizType, bizId, submitterId, "auto_gate", riskLevel, snapshotJson);
+        Long taskId = findOrCreateOpenTask(bizType, bizId, submitterId, "auto_gate", riskLevel, snapshotJson);
+        if (AuditTask.BIZ_COMMUNITY_POST.equals(bizType) && "EDIT_REVIEW".equals(riskLevel)) {
+            AuditTask task = auditTaskMapper.selectAuditTaskByIdForUpdate(taskId);
+            if (task == null || !bizType.equals(task.getBizType()) || !bizId.equals(task.getBizId())) {
+                throw new ServiceException("推文审核任务已变化，请重试", HttpStatus.CONFLICT);
+            }
+            if (!java.util.Objects.equals(snapshotJson, task.getSnapshotJson())
+                    && auditTaskMapper.refreshOpenAuditSnapshot(taskId, bizType, task.getSourceType(),
+                            snapshotJson, task.getSubmitterId() == null ? submitterId : task.getSubmitterId(),
+                            DateUtils.getNowDate()) != 1) {
+                throw new ServiceException("推文审核快照刷新失败，请重试", HttpStatus.CONFLICT);
+            }
+        }
+        return taskId;
     }
 
     @Override
@@ -483,9 +503,33 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if (task == null) {
             throw new IllegalArgumentException("审核任务不存在");
         }
+        if (AuditTask.BIZ_TOPIC.equals(task.getBizType()) || AuditTask.BIZ_TOPIC_PROJECT_REVIEW.equals(task.getBizType())
+                || AuditTask.BIZ_TOPIC_SALE_REVIEW.equals(task.getBizType())) {
+            auditTaskMapper.selectTopicPublicationTasksForUpdate(task.getBizId());
+        }
+        if(AuditTask.BIZ_MEDIA_ASSET.equals(task.getBizType())) {
+            appMediaAssetServiceProvider.getObject().lockForAudit(task);
+            AuditTask locked=auditTaskMapper.selectAuditTaskByIdForUpdate(taskId);
+            if(locked==null || !AuditTask.BIZ_MEDIA_ASSET.equals(locked.getBizType()) || !task.getBizId().equals(locked.getBizId()))
+                throw new ServiceException("媒体审核单已变化");
+            task=locked;
+        }
+        boolean communityReview = AuditTask.BIZ_COMMUNITY_POST.equals(task.getBizType());
+        if (communityReview) {
+            // 与作者编辑共用先推文、后审核任务的锁顺序。
+            if (communityPostMapper.selectByIdForUpdate(task.getBizId()) == null) {
+                throw new ServiceException("推文不存在", HttpStatus.CONFLICT);
+            }
+            AuditTask locked = auditTaskMapper.selectAuditTaskByIdForUpdate(taskId);
+            if (locked == null || !task.getBizType().equals(locked.getBizType())
+                    || !task.getBizId().equals(locked.getBizId())) {
+                throw new ServiceException("推文审核任务已变化，请刷新后重试", HttpStatus.CONFLICT);
+            }
+            task = locked;
+        }
         TemplateReviewLock templateLock = isTemplateTask(task) ? lockTemplateReview(task) : null;
         if (templateLock != null) task = templateLock.task;
-        boolean versionedReview = templateLock != null || isTopicBundle(task);
+        boolean versionedReview = templateLock != null || isTopicBundle(task) || communityReview || AuditTask.BIZ_MEDIA_ASSET.equals(task.getBizType());
         if (versionedReview && request.getExpectedVersion() == null) {
             throw new ServiceException("请刷新审核内容后重试", HttpStatus.CONFLICT);
         }
@@ -872,6 +916,11 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if (cmsTopicMapper.updateTopicDraftState(task.getBizId(), 0) != 1) {
             throw new ServiceException("立项审核通过后的草稿状态保存失败");
         }
+        if (target == com.chengyinhub.business.domain.enums.TopicLifecycleState.PRICING) {
+            CmsTopic topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(task.getBizId());
+            if (topic == null) throw new ServiceException("立项主题已不存在");
+            commercialReviewServiceProvider.getObject().submitSaleReviewIfReady(task.getBizId(), topic.getMemberId());
+        }
     }
 
     private static com.chengyinhub.business.domain.enums.TopicLifecycleState projectTarget(String snapshotJson) {
@@ -896,6 +945,12 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
      * 审核决定 → 内容软封/恢复分发。普通举报内容保持 best-effort；主题与模板是审核发布真源，
      * 状态或发布快照任一步失败都必须抛出，由 {@link #review} 的事务回滚审核决定。
      */
+    @org.springframework.beans.factory.annotation.Autowired
+    private org.springframework.beans.factory.ObjectProvider<AppMediaAssetService> appMediaAssetServiceProvider;
+
+    @Autowired
+    private com.chengyinhub.business.service.support.AppMediaPublicationGuard mediaPublicationGuard;
+
     private void applyModeration(AuditTask task, Integer decision, String reasonText) {
         String bizType = task.getBizType();
         Long bizId = task.getBizId();
@@ -903,6 +958,12 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         boolean down = AuditTask.STATUS_REJECTED.equals(decision); // 确认违规 → 下架
         boolean up = AuditTask.STATUS_APPROVED.equals(decision);   // 举报无效 → 恢复
         if (!down && !up) return;
+        if (AuditTask.BIZ_MEDIA_ASSET.equals(bizType)) {
+            if (!com.chengyinhub.common.utils.SecurityUtils.hasPermi(up ? "business:mediaReview:approve" : "business:mediaReview:reject"))
+                throw new ServiceException("无媒体审核权限");
+            appMediaAssetServiceProvider.getObject().applyAudit(task,up,reasonText);
+            return;
+        }
         try {
             if (AuditTask.BIZ_COMMUNITY_POST.equals(bizType)) {
                 communityPostServiceProvider.getObject().applyAuditDecision(bizId, up);
@@ -954,6 +1015,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             } else if (AuditTask.BIZ_IM.equals(bizType)) {
                 imMessageMapper.updateStatus(bizId, down ? ImMessage.STATUS_BLOCKED : ImMessage.STATUS_NORMAL);
             } else if (AuditTask.BIZ_TOPIC.equals(bizType)) {
+                if (up) mediaPublicationGuard.requireTopicPublication(bizId);
                 if (isTopicBundle(task)) {
                     topicBundleReviewService.applyDecision(bizId, task.getSubmitterId(), task.getSnapshotJson(), up);
                 }
@@ -1025,6 +1087,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 a.setPublishStatus(down ? 0L : 1L);
                 cmsActivityMapper.updateCmsActivity(a);
             } else if (AuditTask.BIZ_TEMPLATE.equals(bizType)) {
+                if (up) mediaPublicationGuard.requireTemplate(task.getSubmitterId(), templateMapper.selectCmsMemberTemplateById(bizId), true);
                 // 个人玩法审核只更新个人可用状态；模板广场由独立 BIZ_TEMPLATE_LIBRARY 任务裁决。
                 com.chengyinhub.business.domain.CmsMemberTemplate template =
                         new com.chengyinhub.business.domain.CmsMemberTemplate();
@@ -1037,6 +1100,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                     throw new ServiceException("模板审核真源更新失败");
                 }
             } else if (AuditTask.BIZ_TEMPLATE_LIBRARY.equals(bizType)) {
+                if (up) mediaPublicationGuard.requireTemplate(task.getSubmitterId(), libraryMapper.selectCmsTemplateLibraryById(bizId), true);
                 com.chengyinhub.business.domain.CmsTemplateLibrary projection =
                         new com.chengyinhub.business.domain.CmsTemplateLibrary();
                 projection.setId(bizId);

@@ -38,6 +38,9 @@ public class ClubMemberServiceImpl implements IClubMemberService
     private ClubMemberMapper clubMemberMapper;
 
     @Autowired
+    private com.chengyinhub.business.service.support.CommittedBusinessNotice businessNotice;
+
+    @Autowired
     private ClubMapper clubMapper;
 
     @Autowired
@@ -57,6 +60,9 @@ public class ClubMemberServiceImpl implements IClubMemberService
 
     @Autowired
     private CoopOrderMapper coopOrderMapper;
+
+    @Autowired
+    private com.chengyinhub.business.mapper.CmsTopicMapper cmsTopicMapper;
 
     @Autowired
     private IImService imService;
@@ -108,6 +114,9 @@ public class ClubMemberServiceImpl implements IClubMemberService
         if (topicId == null || memberId == null) {
             return false;
         }
+        com.chengyinhub.business.domain.CmsTopic topic = cmsTopicMapper.selectCmsTopicById(topicId);
+        if (topic == null || !Integer.valueOf(0).equals(topic.getDelFlag())) return false;
+        if (topic.getClubId() != null) return activeClubOwnedBy(topic.getClubId(), memberId);
         for (CoopOrder o : coopOrderMapper.selectEffectiveOrdersByTopicId(topicId)) {
             if ("club".equals(o.getToType()) && o.getToId() != null
                     && isClubOwner(o.getToId(), memberId)) {
@@ -122,12 +131,21 @@ public class ClubMemberServiceImpl implements IClubMemberService
         if (topicId == null || clubId == null || memberId == null) {
             return false;
         }
+        com.chengyinhub.business.domain.CmsTopic topic = cmsTopicMapper.selectCmsTopicById(topicId);
+        if (topic == null || !Integer.valueOf(0).equals(topic.getDelFlag())) return false;
+        if (topic.getClubId() != null) return clubId.equals(topic.getClubId()) && activeClubOwnedBy(clubId, memberId);
         for (CoopOrder o : coopOrderMapper.selectEffectiveOrdersByTopicId(topicId)) {
             if ("club".equals(o.getToType()) && clubId.equals(o.getToId())) {
                 return isClubOwner(clubId, memberId);
             }
         }
         return false;
+    }
+
+    private boolean activeClubOwnedBy(Long clubId, Long memberId) {
+        Club club = clubMapper.selectClubById(clubId);
+        return club != null && Long.valueOf(1L).equals(club.getStatus())
+                && Integer.valueOf(0).equals(club.getDelFlag()) && memberId.equals(club.getMemberId());
     }
 
     private boolean isClubOwner(Long clubId, Long memberId) {
@@ -398,8 +416,16 @@ public class ClubMemberServiceImpl implements IClubMemberService
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void reviewJoinRequest(Long clubId, Long memberId, Long ownerId, boolean approve)
+    public void reviewJoinRequest(Long clubId, Long memberId, Long ownerId, boolean approve) {
+        reviewJoinRequest(clubId, memberId, ownerId, approve, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void reviewJoinRequest(Long clubId, Long memberId, Long ownerId, boolean approve, String reason)
     {
+        String why = reason == null ? "" : reason.trim();
+        if (why.length() > 500) throw new IllegalArgumentException("审核理由不能超过500字");
         Club club = clubMapper.selectClubByIdForUpdate(clubId);
         if (club == null) {
             throw new IllegalArgumentException("俱乐部不存在");
@@ -419,6 +445,12 @@ public class ClubMemberServiceImpl implements IClubMemberService
         } else {
             clubMemberMapper.updateMembershipState(pending.getId(), 2, 0, null);
         }
+        if (clubMemberMapper.recordJoinReview(clubId, memberId, approve ? 1 : 2, why, ownerId, new Date()) != 1) {
+            throw new IllegalArgumentException("申请状态已变化，请刷新后重试");
+        }
+        businessNotice.sendAfterCommit(memberId, approve ? "入会申请已通过" : "入会申请未通过",
+                "俱乐部「" + club.getName() + "」已处理你的申请。" + (why.isEmpty() ? "可在俱乐部详情查看结果。" : why),
+                "club-join-review", pending.getId());
     }
 
     @Override

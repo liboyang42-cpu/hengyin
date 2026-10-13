@@ -47,6 +47,8 @@ class CoopFinanceTest {
         cmsRegistrationMapper = mock(CmsRegistrationMapper.class);
         pricingService = mock(IPricingService.class);
         svc = new CoopInviteServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(svc, "commercialReviewService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.ITopicCommercialReviewService.class));
         ReflectionTestUtils.setField(svc, "coopOrderMapper", coopOrderMapper);
         ReflectionTestUtils.setField(svc, "coopSettlementMapper", coopSettlementMapper);
         ReflectionTestUtils.setField(svc, "cmsTopicMapper", cmsTopicMapper);

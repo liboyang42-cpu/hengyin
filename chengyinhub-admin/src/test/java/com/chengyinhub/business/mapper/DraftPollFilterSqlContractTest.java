@@ -1,7 +1,13 @@
 package com.chengyinhub.business.mapper;
 
 import org.junit.jupiter.api.Test;
+import com.chengyinhub.business.domain.CmsActivity;
+import com.chengyinhub.business.domain.CmsTopic;
+import org.apache.ibatis.builder.xml.XMLMapperBuilder;
+import org.apache.ibatis.mapping.BoundSql;
+import org.apache.ibatis.session.Configuration;
 
+import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,6 +19,7 @@ import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class DraftPollFilterSqlContractTest {
     @Test
@@ -45,14 +52,41 @@ class DraftPollFilterSqlContractTest {
 
     @Test
     void activityScheduleFiltersUseActivityDatesAndTopicHasNoDefaultEndDateGate() throws Exception {
-        String activity = normalized(read("../chengyinhub-system/src/main/resources/mapper/business/CmsActivityMapper.xml"));
-        String topic = normalized(read("../chengyinhub-system/src/main/resources/mapper/business/CmsTopicMapper.xml"));
-        String publicActivities = section(activity, "<select id=\"selectpubliccmsactivitylist\"", "</select>");
-        String publicTopics = section(topic, "<select id=\"selectpubliccmstopiclist\"", "</select>");
+        String activity = read("../chengyinhub-system/src/main/resources/mapper/business/CmsActivityMapper.xml");
+        String topic = read("../chengyinhub-system/src/main/resources/mapper/business/CmsTopicMapper.xml");
+        assertActivityScheduleUsesOwnDates(normalized(activity));
+        assertPublicLocationBoundSql(activity, topic);
+    }
 
-        assertActivityScheduleUsesOwnDates(activity);
-        assertNoTopicExpiryGate(publicTopics);
-        assertPublicLocationContractIsConsumed(publicActivities, publicTopics);
+    @Test
+    void removingCityFilterFromSharedTopicWhereFailsTheContract() throws Exception {
+        String activity = read("../chengyinhub-system/src/main/resources/mapper/business/CmsActivityMapper.xml");
+        String topic = read("../chengyinhub-system/src/main/resources/mapper/business/CmsTopicMapper.xml");
+        String mutated = topic.replaceAll("(?s)<if test=\"cityKeyword != null and cityKeyword != ''\">.*?</if>", "");
+        assertFalse(mutated.equals(topic), "负控必须确实摘掉城市筛选");
+        assertThrows(AssertionError.class, () -> assertPublicLocationBoundSql(activity, mutated));
+    }
+
+    @Test
+    void replacingExplicitRadiusWithFixedRadiusFailsTheContract() throws Exception {
+        String activity = read("../chengyinhub-system/src/main/resources/mapper/business/CmsActivityMapper.xml");
+        String topic = read("../chengyinhub-system/src/main/resources/mapper/business/CmsTopicMapper.xml");
+        assertTrue(activity.contains("#{distanceMeters}"));
+        assertThrows(AssertionError.class, () -> assertPublicLocationBoundSql(
+                activity.replace("#{distanceMeters}", "100000"), topic));
+    }
+
+    @Test
+    void reintroducingTopicExpiryOrRemovingNearestSortFailsTheContract() throws Exception {
+        String activity = read("../chengyinhub-system/src/main/resources/mapper/business/CmsActivityMapper.xml");
+        String topic = read("../chengyinhub-system/src/main/resources/mapper/business/CmsTopicMapper.xml");
+        String expired = topic.replace("<include refid=\"publicTopicListWhere\"/>",
+                "<include refid=\"publicTopicListWhere\"/> and end_date &gt; now()");
+        assertFalse(expired.equals(topic));
+        assertThrows(AssertionError.class, () -> assertPublicLocationBoundSql(activity, expired));
+        String unsorted = activity.replace("distance,</if>", "</if>");
+        assertFalse(unsorted.equals(activity));
+        assertThrows(AssertionError.class, () -> assertPublicLocationBoundSql(unsorted, topic));
     }
 
     @Test
@@ -124,7 +158,7 @@ class DraftPollFilterSqlContractTest {
     }
 
     private void assertNoTopicExpiryGate(String publicTopics) {
-        boolean hasTopicExpiryGate = Pattern.compile("\\bend_date\\s*&gt;\\s*now\\(\\)")
+        boolean hasTopicExpiryGate = Pattern.compile("\\bend_date\\s*(?:&gt;|>)\\s*now\\(\\)")
                 .matcher(publicTopics).find();
         assertFalse(hasTopicExpiryGate, "主题是常青内容，公开筛选不得再次引入会恒空的 end_date 闸");
     }
@@ -140,16 +174,50 @@ class DraftPollFilterSqlContractTest {
                 && !hasBooleanTautology(statement), message);
     }
 
-    private void assertPublicLocationContractIsConsumed(String activities, String topics) {
-        boolean activityCity = Pattern.compile("address_name\\s+like\\s+concat\\('%',\\s*#\\{addressname},\\s*'%'")
-                .matcher(activities).find();
-        boolean topicCity = Pattern.compile("address_name\\s+like\\s+concat\\('%',\\s*#\\{citykeyword},\\s*'%'")
-                .matcher(topics).find();
-        boolean explicitRadius = activities.contains("#{distancemeters}")
-                && !Pattern.compile("&lt;\\s*100000").matcher(activities).find();
-        boolean nearestOnlySorts = activities.contains("sorttype == 1") && activities.contains("distance,");
-        assertTrue(activityCity && topicCity, "城市筛选必须进入活动/主题公开主查询，不能被静默忽略");
-        assertTrue(explicitRadius && nearestOnlySorts, "距离筛选和 NEAREST 排序必须解耦且消费显式半径");
+    private void assertPublicLocationBoundSql(String activityXml, String topicXml) {
+        CmsActivity activity = new CmsActivity();
+        activity.setAddressName("上海");
+        activity.setLatitude("31.2");
+        activity.setLongitude("121.5");
+        activity.setDistanceMeters(500);
+        activity.setSortType(1);
+        BoundSql activities = boundSql("CmsActivity", activityXml, "selectPublicCmsActivityList", activity);
+        CmsTopic topic = new CmsTopic();
+        topic.setCityKeyword("上海");
+        BoundSql topics = boundSql("CmsTopic", topicXml, "selectPublicCmsTopicList", topic);
+        BoundSql count = boundSql("CmsTopic", topicXml, "selectPublicCmsTopicList_COUNT", topic);
+        assertCityMapping(activities, "addressName");
+        assertCityMapping(topics, "cityKeyword");
+        assertCityMapping(count, "cityKeyword");
+        assertNoTopicExpiryGate(normalized(topics.getSql()));
+        assertNoTopicExpiryGate(normalized(count.getSql()));
+        assertTrue(hasParameter(activities, "distanceMeters"), "显式半径必须进入主查询参数");
+        assertFalse(Pattern.compile("<\\s*100000").matcher(activities.getSql()).find(), "不得恢复硬编码半径");
+        assertTrue(normalized(activities.getSql()).contains("order by distance,"), "NEAREST必须实际按distance排序");
+        activity.setDistanceMeters(null);
+        BoundSql nearestOnly = boundSql("CmsActivity", activityXml, "selectPublicCmsActivityList", activity);
+        assertFalse(hasParameter(nearestOnly, "distanceMeters"), "单独NEAREST不能暗加半径过滤");
+        assertTrue(normalized(nearestOnly.getSql()).contains("order by distance,"));
+    }
+
+    private BoundSql boundSql(String type, String xml, String statement, Object parameter) {
+        Configuration configuration = new Configuration();
+        configuration.getTypeAliasRegistry().registerAlias("CmsActivity", CmsActivity.class);
+        configuration.getTypeAliasRegistry().registerAlias("CmsTopic", CmsTopic.class);
+        new XMLMapperBuilder(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)), configuration,
+                type + "Mapper.xml", configuration.getSqlFragments()).parse();
+        return configuration.getMappedStatement("com.chengyinhub.business.mapper." + type + "Mapper." + statement)
+                .getBoundSql(parameter);
+    }
+
+    private boolean hasParameter(BoundSql sql, String property) {
+        return sql.getParameterMappings().stream().anyMatch(mapping -> property.equals(mapping.getProperty()));
+    }
+
+    private void assertCityMapping(BoundSql sql, String property) {
+        assertTrue(hasParameter(sql, property)
+                && Pattern.compile("address_name\\s+like\\s+concat\\('%',\\s*\\?,\\s*'%'")
+                .matcher(normalized(sql.getSql())).find(), "城市筛选必须进入真实公开主查询及参数映射");
     }
 
     private boolean hasBooleanTautology(String statement) {

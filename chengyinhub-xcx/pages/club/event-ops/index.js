@@ -29,13 +29,14 @@ function positiveId(value) {
 function shanghaiToday() { return chinaDateKey(new Date()) }
 // CU-C-35:日期=今天且集合时刻已过 —— 「今天」这一档由后端拒绝,用户看到的日期又没错,
 // 前后端都没人拦在提交之前。这里用同一个上海钟提前判出来,文案直说时刻。
-// 只可能是今天这一档:物化器保证所有日期 >= 今天,WEEKLY 的后续场次都是 +7 天。
+// 页面跨过上海午夜时，表单仍可能保留前一天的日期。
 function assemblyAlreadyPast(dates, startTime, now) {
   const clock = chinaParts(now)
   const parts = /^(\d{2}):(\d{2})$/.exec(String(startTime || ''))
   if (!clock || !parts) return false
   const today = clock.year + '-' + (clock.month < 10 ? '0' + clock.month : clock.month)
     + '-' + (clock.day < 10 ? '0' + clock.day : clock.day)
+  if ((dates || []).some(date => date && date < today)) return true
   if (!(dates || []).some(date => date === today)) return false
   return (Number(parts[1]) * 60 + Number(parts[2])) <= (clock.hours * 60 + clock.minutes)
 }

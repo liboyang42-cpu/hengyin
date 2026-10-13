@@ -28,7 +28,8 @@ global.wx = {
   getStorageSync: () => '',
   getSetting: (options) => { settingCalls.push(options) },
   authorize: (options) => { authorizeCalls.push(options) },
-  getLocation: (options) => { locationCalls.push(options) },
+  getFuzzyLocation: (options) => { locationCalls.push(options) },
+  getLocation: () => { assert.fail('首页不得采集精确位置') },
   showLoading: () => { loadingVisible = true },
   hideLoading: () => { loadingVisible = false },
   showToast() {},
@@ -38,6 +39,7 @@ global.wx = {
 global.Page = (config) => { pageConfig = config }
 
 beforeEach(() => {
+  wx.getFuzzyLocation = (options) => { locationCalls.push(options) }
   memberId = 'member-a'
   requests = []
   locationCalls = []
@@ -130,4 +132,38 @@ test('首页卸载后迟到的模糊定位授权失败不得再申请精确定�
 
   assert.equal(authorizeCalls.length, 1)
   assert.equal(locationCalls.length, 0)
+})
+
+test('精确权限不替代首页模糊位置权限', () => {
+  const page = makePage()
+  page.getFuzzyLocation()
+  settingCalls[0].success({ authSetting: { 'scope.userLocation': true } })
+  assert.equal(authorizeCalls.length, 1)
+  assert.equal(authorizeCalls[0].scope, 'scope.userFuzzyLocation')
+  assert.equal(locationCalls.length, 0)
+  authorizeCalls[0].success()
+  assert.equal(locationCalls.length, 1)
+  assert.equal(locationCalls[0].type, 'gcj02')
+  locationCalls[0].success({ latitude: 31.23, longitude: 121.47 })
+  assert.equal(loadingVisible, false)
+})
+
+test('模糊授权拒绝保持城市推荐，不能升级申请精确权限', () => {
+  const page = makePage()
+  let denied = 0
+  page.handleAuthFail = () => { denied += 1 }
+  page.requestFuzzyLocationPermission()
+  authorizeCalls[0].fail({ errMsg: 'authorize:fail auth deny' })
+  assert.equal(denied, 1)
+  assert.equal(authorizeCalls.length, 1)
+  assert.equal(locationCalls.length, 0)
+})
+
+test('旧基础库没有模糊位置 API 时不借用精确定位', () => {
+  const page = makePage()
+  delete wx.getFuzzyLocation
+  page.executeGetFuzzyLocation()
+  assert.equal(loadingVisible, false)
+  assert.equal(locationCalls.length, 0)
+  assert.equal(requests.length, 0)
 })

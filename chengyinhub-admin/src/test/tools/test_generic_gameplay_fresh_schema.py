@@ -1,0 +1,177 @@
+import importlib.util
+import hashlib
+import json
+import pathlib
+import sqlite3
+import subprocess
+import tempfile
+import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
+
+spec = importlib.util.spec_from_file_location('fresh_schema', pathlib.Path(__file__).with_name('generic-gameplay-fresh-schema.py'))
+tool = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(tool)
+
+
+class FreshSchemaTest(unittest.TestCase):
+    def plan(self, sql, **kwargs):
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            path = root / 'fixture.sql'
+            path.write_text(sql)
+            with patch.object(tool, 'ROOT', root):
+                return tool.plan_file(path, **kwargs)
+
+    def test_runner_assert_skipped_but_ddl_is_preserved(self):
+        plan = self.plan("-- runner: requires=transaction\nCREATE TABLE fixture(id INT);\n-- runner: assert=scalar-true\nSELECT COUNT(*)>0 FROM fixture;\nALTER TABLE fixture ADD name VARCHAR(10);", migration=True)
+        self.assertEqual(2, len(plan['apply']))
+        self.assertEqual(1, len(plan['skipped']))
+        self.assertTrue(plan['transaction'])
+        self.assertIn('ALTER TABLE', plan['apply'][1])
+
+    def test_specific_production_cleanup_and_temporary_guards_are_skipped(self):
+        plan = self.plan('CREATE TEMPORARY TABLE guard(id INT); DELETE FROM cms_member WHERE id=100096; INSERT INTO guard VALUES(1);', migration=True)
+        self.assertEqual([], plan['apply'])
+        self.assertEqual(3, len(plan['skipped']))
+
+    def test_mixed_cleanup_keeps_persistent_ddl_without_production_dml(self):
+        plan = self.plan('DELETE FROM cms_topic WHERE id=100096; ALTER TABLE cms_topic ADD archive_flag INT;', migration=True)
+        self.assertEqual(['ALTER TABLE cms_topic ADD archive_flag INT'], plan['apply'])
+        self.assertEqual(1, len(plan['skipped']))
+
+    def test_prepared_ddl_and_executable_comment_ddl_are_preserved(self):
+        plan = self.plan("SET @ddl='ALTER TABLE fixture ADD column1 INT'; PREPARE stmt FROM @ddl; EXECUTE stmt; DEALLOCATE PREPARE stmt;", migration=True)
+        self.assertEqual(4, len(plan['apply']))
+        self.assertEqual([], plan['skipped'])
+        plan = self.plan('/*!50001 CREATE TABLE fixture(id INT) */;', migration=True)
+        self.assertEqual(1, len(plan['apply']))
+
+    def test_base_seed_is_not_classified_as_production_cleanup(self):
+        plan = self.plan("INSERT INTO sys_config VALUES('value;still one');")
+        self.assertEqual(1, len(plan['apply']))
+
+    def test_baseline_assertion_is_applied_not_skipped(self):
+        plan = self.plan('-- runner: assert=scalar-true\nSELECT 1;')
+        self.assertEqual(['SELECT 1'], plan['apply'])
+        self.assertEqual(['scalar-true'], plan['assertions'])
+        self.assertEqual([], plan['skipped'])
+
+    def test_false_baseline_assertion_fails_execution(self):
+        args = SimpleNamespace(host='127.0.0.1', database='cy_e2e_fixture', port=3316, user='root')
+        for output in ['0', '1\n0', '']:
+            plan = {'files': [{'path': 'base_seed.sql', 'transaction': False,
+                              'apply': ['SELECT 0'], 'assertions': ['scalar-true']}]}
+            with patch.object(tool.shutil, 'which', return_value='/usr/bin/mysql'), patch.object(tool.subprocess, 'run') as run:
+                run.side_effect = [SimpleNamespace(stdout=value) for value in ['8.0.45', '', '', output]]
+                with self.assertRaisesRegex(ValueError, 'Baseline assertion failed'):
+                    tool.execute(args, plan)
+
+    def test_unknown_annotation_invalid_sql_and_misclassified_ddl_fail_closed(self):
+        for sql in ["-- runner: assert=unknown\nSELECT 1;", "SELECT 'unclosed;"]:
+            with self.assertRaises(ValueError): self.plan(sql)
+        with self.assertRaises(ValueError):
+            self.plan('CREATE TABLE fixture(id INT);', migration=True, data_only=True)
+
+    def test_remote_host_real_schema_and_external_sql_are_refused(self):
+        for host, database in [('example.invalid', 'cy_e2e_fixture'), ('127.0.0.1', 'chengyinhubdb')]:
+            with self.assertRaises(ValueError):
+                tool.mysql_command(SimpleNamespace(host=host, database=database, port=3316, user='root'))
+        for sql in ["SELECT LOAD_FILE('/etc/passwd');", 'USE unrelated;', 'CREATE DATABASE unrelated;']:
+            with self.assertRaises(ValueError): self.plan(sql)
+
+    def test_complete_repository_dry_run_keeps_new_runtime_ddl(self):
+        plan = tool.build_plan()
+        self.assertEqual('DRY_RUN', plan['mode'])
+        self.assertGreater(plan['appliedStatements'], 0)
+        self.assertGreater(plan['skippedStatements'], 0)
+        frozen = next(f for f in plan['files'] if f['path'].endswith('migration_theme_runtime_20261004.sql'))
+        self.assertTrue(any('CREATE TABLE' in sql for sql in frozen['apply']))
+        referral = next(f for f in plan['files'] if f['path'].endswith('migration_20260815_tandianri_roam_referral.sql'))
+        self.assertTrue(any('ADD COLUMN roam_referral_enabled' in sql for sql in referral['apply']))
+        self.assertNotIn(referral['path'], plan['baselineIncluded'])
+
+    def test_execution_refuses_existing_schema_and_wrong_mysql_before_create(self):
+        args = SimpleNamespace(host='127.0.0.1', database='cy_e2e_fixture', port=3316, user='root')
+        for outputs in [['9.7.1'], ['8.0.45', 'cy_e2e_fixture']]:
+            with patch.object(tool.shutil, 'which', return_value='/usr/bin/mysql'), patch.object(tool.subprocess, 'run') as run:
+                run.side_effect = [SimpleNamespace(stdout=output) for output in outputs]
+                with self.assertRaises(ValueError): tool.execute(args, {'files': []})
+                self.assertTrue(all('CREATE DATABASE' not in call.kwargs['input'] for call in run.call_args_list))
+
+    def test_execution_keeps_same_connection_for_transaction_and_routine_delimiters(self):
+        args = SimpleNamespace(host='127.0.0.1', database='cy_e2e_fixture', port=3316, user='root')
+        plan = {'files': [{'path':'fixture.sql','transaction':True,'apply':['CREATE TABLE fixture(id INT)']}]}
+        with patch.object(tool.shutil, 'which', return_value='/usr/bin/mysql'), patch.object(tool.subprocess, 'run') as run:
+            run.side_effect = [SimpleNamespace(stdout=output) for output in ['8.0.45', '', '', '']]
+            tool.execute(args, plan)
+            payload = run.call_args_list[-1].kwargs['input']
+            self.assertIn('COLLATE utf8mb4_general_ci', run.call_args_list[2].kwargs['input'])
+            self.assertIn('START TRANSACTION$$', payload)
+            self.assertIn('COMMIT$$', payload)
+            self.assertEqual('SUCCEEDED', plan['mode'])
+
+
+class MigrationGuardTest(unittest.TestCase):
+    def test_existing_a8_file_is_byte_identical_to_master(self):
+        path = 'chengyinhub-admin/sql/migration_seed_merchant_game_a8_20260823.sql'
+        self.assertEqual(subprocess.check_output(['git', 'show', 'master:' + path], cwd=tool.ROOT), (tool.ROOT / path).read_bytes())
+
+    def test_v51_forward_preasserts_before_update_and_is_empty_only_transactional(self):
+        from ci.run_migration import _REQUIRED_TRANSACTION_DECLARATION
+        sql = (tool.ROOT / 'chengyinhub-admin/sql/migration_20261012_legacy_game_v51_category_collation.sql').read_text()
+        self.assertTrue(_REQUIRED_TRANSACTION_DECLARATION.search(sql))
+        self.assertLess(sql.index('HAVING COUNT(c.id)<>1'), sql.index('UPDATE cms_template_library'))
+        self.assertLess(sql.index('MIN(l.create_by)'), sql.index('UPDATE cms_template_library'))
+        self.assertIn("COALESCE(TRIM(l.activity_categoryids),'')=''", sql)
+        self.assertIn("l.create_by='seed_merchant_game_v51_20260827'", sql)
+        self.assertEqual(2, sql.count('CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci'))
+
+    def test_historical_v51_original_bytes_are_frozen_and_planner_rejects_drift(self):
+        from scripts.e2e import build_schema
+        manifest = build_schema.build_manifest(tool.ROOT, target_commit='a' * 40,
+            dependency_path=tool.ROOT / 'ci/migration-dependencies.json')
+        historical = tool.ROOT / 'chengyinhub-admin/sql/migration_20261007_legacy_game_v51_categories.sql'
+        original = historical.read_bytes()
+        self.assertEqual('8a49f3ef24a3e654210e8bc974224292910096d220c401be26135b81c6405643',
+                         hashlib.sha256(original).hexdigest())
+        read_bytes = pathlib.Path.read_bytes
+        def read_with_drift(path):
+            return original + b'\n-- changed historical bytes\n' if path == historical else read_bytes(path)
+        with patch.object(pathlib.Path, 'read_bytes', read_with_drift):
+            with self.assertRaisesRegex(RuntimeError, 'data-only 指纹不一致'):
+                build_schema.migrations_after_baseline(manifest['migrations'])
+
+    def test_new_cdn_guard_absent_valid_replay_and_invalid_rows(self):
+        # The new migration is a portable, read-only SELECT. Run its actual SQL
+        # against in-memory fixtures; this does not claim MySQL integration.
+        sql = (tool.ROOT / 'chengyinhub-admin/sql/migration_20261009_merchant_game_a8_cdn_guard.sql').read_text()
+        statement = tool.executable_statement(tool.split_statements(sql)[0])
+        with sqlite3.connect(':memory:') as db:
+            db.execute('CREATE TABLE cms_template_library(member_id INT, del_flag INT, create_by TEXT, title TEXT, img_url TEXT, story_img TEXT)')
+            self.assertEqual(1, db.execute(statement).fetchone()[0])
+            titles = ['招牌菜限时盲猜','咖啡风味人格','隐藏菜单线索链','60秒健身知识反应赛','节奏盲猜夜','分支故事接力','污渍侦探','家居安全排雷']
+            for index, title in enumerate(titles):
+                url = 'https://www.chengyinhub.com/prod-api/profile/merchant-game-covers/%s.jpg' % index
+                db.execute('INSERT INTO cms_template_library VALUES(100000,0,?,?,?,?)', ('seed_merchant_game_a8_20260823',title,url,url))
+            before = list(db.execute('SELECT * FROM cms_template_library'))
+            for _ in range(2): self.assertEqual(1, db.execute(statement).fetchone()[0])
+            self.assertEqual(before, list(db.execute('SELECT * FROM cms_template_library')))
+            for mutation in ["UPDATE cms_template_library SET img_url='/images/merchant-games/old.jpg' WHERE rowid=1", "UPDATE cms_template_library SET create_by='different' WHERE rowid=1", 'DELETE FROM cms_template_library WHERE rowid=1', 'INSERT INTO cms_template_library SELECT * FROM cms_template_library WHERE rowid=1']:
+                db.execute('SAVEPOINT invalid')
+                db.execute(mutation)
+                self.assertEqual(0, db.execute(statement).fetchone()[0])
+                db.execute('ROLLBACK TO invalid')
+
+    def test_supersession_only_after_replacement_is_recorded(self):
+        from ci.audit_migrations_applied import read_supersessions, apply_assertion_supersessions
+        old = 'migration_seed_merchant_game_a8_20260823.sql'
+        new = 'migration_20261009_merchant_game_a8_cdn_guard.sql'
+        mapping = {old: read_supersessions()[old]}
+        self.assertEqual(new, mapping[old])
+        self.assertEqual([(old, 'false')], apply_assertion_supersessions([(old,'false')], [], mapping, {old,new})[0])
+        self.assertEqual([], apply_assertion_supersessions([(old,'false')], [new], mapping, {old,new})[0])
+
+
+if __name__ == '__main__':
+    unittest.main()

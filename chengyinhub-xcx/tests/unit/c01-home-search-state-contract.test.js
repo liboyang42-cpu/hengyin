@@ -101,10 +101,12 @@ const loadPage = (rel, options = {}) => {
     reLaunch: () => {},
   }, options.wx || {})
   const requireStub = (request) => {
+    if (request.endsWith('community-post-api.js')) return require('../helpers/community-page-seam.js')
     if (request === '../../../utils/datetime') return { toTimestamp: (value) => value }
     if (request === '../../../utils/analytics.js') return { track: () => {} }
     if (request === '../../../utils/feed-play-card.js') return require(path.join(ROOT, 'utils/feed-play-card.js'))
     if (request === '../../../utils/response-shape.js') return require(path.join(ROOT, 'utils/response-shape.js'))
+    if (request === '../../../utils/community-report-sheet.js') return require(path.join(ROOT, 'utils/community-report-sheet.js'))
     // 性能批4 分页路径追加助手:纯函数无副作用,用真模块不用桩(同上 response-shape 先例)
     if (request.endsWith('list-append.js')) return require(path.join(ROOT, 'utils/list-append.js'))
     if (request === '../utils/topic-template-remix.js') return { remixTopicTemplate: () => Promise.resolve(false) }

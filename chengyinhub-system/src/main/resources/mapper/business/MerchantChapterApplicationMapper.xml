@@ -251,7 +251,7 @@
 
     <update id="reinviteWithdrawn">
         update merchant_chapter_application
-           set del_flag = 0, status = 1, source = 1,
+           set del_flag = 0, status = #{status}, source = 1,
                replacement_of_offer_id = #{replacementOfOfferId},
                message = #{message}, audit_remark = null,
                audit_member_id = #{auditMemberId}, handle_time = #{handleTime},

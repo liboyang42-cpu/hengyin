@@ -26,13 +26,16 @@ Component({
     options: { type: Array, value: [] },
     // 终点由服务端说了算(currentStep.terminal),不由客户端猜
     ended: { type: Boolean, value: false },
+    writable: { type: Boolean, value: true },
+    stepId: { type: String, value: '' },
+    failureSeq: { type: Number, value: 0 },
     limitSeconds: { type: Number, value: 0 },
   },
   /* ⚠️ ended 是**属性**,内部要用的那份叫 isEnd —— observer 监听它、内部又写它
      会自己触发自己,死循环把运行时打挂,而且一条错都不报。 */
   data: { feedback: '', isEnd: false, picked: -1 },
   observers: {
-    'show, body, ended': function (show) {
+    'show, body, ended, writable, stepId, failureSeq': function (show) {
       if (!show) return;
       const ended = !!this.data.ended;
       this.setData({ feedback: '', isEnd: ended, picked: -1 });
@@ -50,7 +53,7 @@ Component({
   methods: {
 
     onPick(e) {
-      if (this.data.isEnd || this.data.picked >= 0) return;
+      if (this.data.isEnd || this.data.writable === false || this.data.picked >= 0) return;
       const i = Number(e.currentTarget.dataset.i);
       const opt = this.data.options[i] || {};
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });

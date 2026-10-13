@@ -1614,3 +1614,33 @@ test('route director carries server-ranked players and a reachable visibility co
     [[9, '第 1 名', '2 站'], [8, '第 2 名', '1 站']])
   assert.match(read(DIRECTOR_HOST_WXML), /aria-label="调整排行榜可见性"/)
 })
+
+test('导演宿主页经真实 adapter/client 透传纪元；冲突只提示与重读，不另起写请求', async () => {
+  const { createClubGameDirectorAdapter } = require(DIRECTOR_ADAPTER)
+  const { createGameSessionClient } = require('../../utils/game-session-client.js')
+  const calls = []
+  let reads = 0
+  const client = createGameSessionClient({ sendRequest(options) {
+    calls.push(options)
+    if (options.method === 'GET') {
+      reads += 1
+      options.success({ code: 200, data: { sessionId: 9001, activityId: 701, perspective: 'CLUB',
+        status: 'RUNNING', revision: reads + 8, authorityEpoch: reads + 3, availableActions: ['FINISH'], club: {} } })
+    } else options.success({ code: 500, msg: '本局权威版本已更新，请刷新', data: { reasonCode: 'GAME_AUTHORITY_CONFLICT' } })
+  } })
+  const adapter = createClubGameDirectorAdapter(client)
+  const harness = loadDirector(adapter)
+  harness.page.initDirector('701')
+  await settle()
+  harness.page.executeAction('FINISH', {})
+  await settle()
+  assert.equal(calls.find(call => call.method === 'POST').data.authorityEpoch, 4)
+  assert.equal(calls.find(call => call.method === 'POST').data.expectedRevision, 9)
+  assert.equal(calls.filter(call => call.method === 'POST').length, 1)
+  assert.equal(reads, 2)
+  assert.equal(harness.page.data.authorityEpoch, 5)
+  assert.equal(harness.page._pendingCommand, null)
+  assert.equal(harness.page.data.writeLocked, false)
+  assert.match(harness.toasts.at(-1).title, /权威版本/)
+  assert.equal(harness.page.retryUnknownWrite(), false)
+})

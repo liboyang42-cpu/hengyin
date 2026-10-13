@@ -1,3 +1,4 @@
+const community = require('../../utils/community-post-api.js').createClient(getApp(), wx);
 const { exactSessionId, validRecovery, newSessionKey } = require('../../utils/roam-recovery.js');
 const pixelAvatar = require('../../utils/pixel-avatar.js');
 // 城瘾 · 完全自由漫游模式(City Fog Explore)
@@ -36,6 +37,7 @@ const {
 const { readNonNegative } = require('../../utils/roam-history-metrics.js');
 const { simplifyTrack, limitTrack } = require('../../utils/roam-track-simplify.js');
 const { isRecordList } = require('../../utils/response-shape.js');
+const readSession = require('../../utils/session/login-reload.js');
 const { fromHttpStatusAbnormal } = require('../../utils/transport/failure-envelope.js');
 const { resolveMenuChrome } = require('../../utils/nav-safe-area.js');
 const { bindPlayerRoamMemory } = require('../../utils/roam-player-memory.js');
@@ -59,6 +61,7 @@ const { MAP_AVATAR_COLORS } = require('../../utils/play-visual-tokens.js');
 // 本地历史只用于下次打开地图时高亮一处已走过的边缘；不画路线、不上报坐标。
 const { buildFootprintHint } = require('../../utils/roam-footprint-hint.js');
 const { normalizeRunners } = require('../../utils/roam-runners.js');
+const presencePrivacy = require('../../utils/roam-presence-privacy.js');
 const { currentScene, exitDecision, popScene, pushScene } = require('../../utils/scene-stack.js');
 // 个性化地图(暗色底图)与 play 页共用一份配置,见 utils/map-style.js
 const { MAP_STYLE } = require('../../utils/map-style.js');
@@ -198,14 +201,22 @@ function fogLevel(d, R) {
 function req(url, method, data, opts) {
   const app = getApp();
   return new Promise((resolve) => {
-    app.sendRequest({
+    community.request({
       url, method, data, hideLoading: true,
       ...(opts || {}),
       success: (res) => resolve(res || {}),
       // request-client 对 HTTP 非 200 只调 successStatusAbnormal；必须结束 Promise，
       // 否则揭雾、结算等调用会永久保持进行中。
-      successStatusAbnormal: (res) => resolve(fromHttpStatusAbnormal(res)),
-      fail: () => resolve({ code: 'fail', netFail: true, msg: '网络异常，请重试' }),
+      successStatusAbnormal: (res, statusCode) => {
+        const code = readSession.failureStatus(res, statusCode);
+        resolve(code === 401 || code === 403 ? { code } : fromHttpStatusAbnormal(res));
+      },
+      fail: (res, statusCode) => {
+        if (res && res.reason === 'sessionChanged') { resolve(res); return; }
+        const code = readSession.failureStatus(res, statusCode);
+        if (code === 401 || code === 403) { resolve({ code }); return; }
+        resolve({ code: 'fail', netFail: true, msg: '网络异常，请重试' });
+      },
     });
   });
 }
@@ -271,7 +282,7 @@ function buildNpcPorts(page) {
 Page({
   data: {
     privacyGateShow: false,
-    screen: 'entry-map', entryMarkers: [], entryCards: [], entryActivity: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true }, entryLoadError: false,
+    screen: 'entry-map', entryMarkers: [], entryCards: [], entryActivity: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true }, entryLoadError: false, entryReadAccess: '',
     introError: '',
     // 个性化地图透传给本页三个 <free-map>(起始预览 / 主漫游图 / 结算图),三处必须同源,
     // 否则同一次漫游里会出现一亮一暗。值在 utils/map-style.js。
@@ -311,7 +322,6 @@ Page({
     fogScreenReady: false,
     fogScreenLayers: [],
     fogScreenGuard: false,
-    fogScreenError: false,
     paused: false,
     roamPanelExpanded: false,
     reducedMotion: false,
@@ -325,7 +335,6 @@ Page({
     mapLoad: 'pending',
     // 据点接口失败时为真；它只证明据点没加载出来，不能据此宣称整机或系统离线。
     // 本地进度(roam_tiles 迷雾格)独立保留。
-    poiOffline: false,
     // 商家图层(/api/map/nearby)失败时为真。与 poiOffline 同一层展示(离线横幅),
     // 但分开记:两个接口一好一坏时不能互相cover,也不能把「这一带没有店」当失败。
     merchantOffline: false,
@@ -341,6 +350,8 @@ Page({
        已授权的用户被告知自己没授权。真值在 onShow / 打开设置时问 wx.getSetting(见 _syncRoamPermission)。 */
     gpsOk: false,
     bgGpsOk: false,
+    presenceVisible: false,
+    presenceSubmitting: false,
     /* 工具抽屉那几行的副标题(现算,不写死)。 */
     more: { funText: '', runnerText: '', stampText: '' },
     /* 半屏进场用的开关(原型 .sheet 的 @keyframes up 在这儿是 transition)。 */
@@ -877,6 +888,10 @@ Page({
   },
 
   onUnload() {
+    this._unloaded = true;
+    this._roamStartGen = (this._roamStartGen || 0) + 1;
+    this._roamStartPending = false;
+    this._shootAfterStart = false;
     if (this._sessionClock) this._saveRoamRecovery();
     this._cancelShareWork();
     this._stopReal(); this._stopClock();
@@ -906,10 +921,13 @@ Page({
     this._roamWriteGeneration = (this._roamWriteGeneration || 0) + 1;
   },
   onHide() {
+    this._hidden = true;
+    this._roamStartGen = (this._roamStartGen || 0) + 1;
+    this._roamStartPending = false;
+    this._shootAfterStart = false;
     if (this._sessionClock) this._saveRoamRecovery();
     // P1-6:tab 页常驻不卸载,_clock 的 1s 心跳在兜里照跑(会话语义见下 —— GPS 采集期不能停表)。
     // 停表会改玩法语义,所以只短接 UI 推送:_syncStats 见 _hidden 即返回,onShow 补一次同步。
-    this._hidden = true;
     // P2-5:切到 discover/据点等页走 onHide 而非 onUnload,若此时被系统回收会丢最近增量;
     // 补一次 flush(与 onUnload 一致,幂等无副作用)
     this._flushReveal();
@@ -930,13 +948,15 @@ Page({
     }
   },
   onShow() {
+    this._syncRoamPermission();
     // P1-6:兜里短接的读数立即补一次,不等下一拍 1s
     this._hidden = false;
     if (this._clock) this._syncStats();
     this.setData({ fontScaleStyle: readPageStyle() });
-    // 回到本页(含从系统设置页返回)时刷新权限态:设置页那三行不能再显示与系统相反的值
-    this._syncRoamPermission();
+    this._syncPresencePrivacy();
+    // 系统定位权限与位置分享偏好分别回读。
     const app = getApp();
+    this._syncCommunityEntry();
     const playerId = typeof app.getUserID === 'function' ? String(app.getUserID() || '') : '';
     if (this._roamMemory && this._roamMemory.playerId !== playerId) {
       this._stopReal(); this._stopClock();
@@ -1334,19 +1354,19 @@ Page({
       if (!current()) return;
       if (netFail(res)) {
         // req 的 fail 哨兵 = 网络故障。此时"地图上这些点"既没被证实也没被证伪。
-        this.setData({ poiOffline: true, poiEmpty: false }, () => this._syncGoal());
+        this.setData({ poiEmpty: false }, () => this._syncGoal());
         return;
       }
       if (res.code != '200' && res.code != 200) {
-        this.setData({ poiOffline: true, poiEmpty: false }, () => this._syncGoal());
+        this.setData({ poiEmpty: false }, () => this._syncGoal());
         return;
       }
       if (!isRecordList(res.data)) {
-        this.setData({ poiOffline: true, poiEmpty: false }, () => this._syncGoal());
+        this.setData({ poiEmpty: false }, () => this._syncGoal());
         return;
       }
       const list = res.data;
-      this.setData({ poiOffline: false, poiEmpty: !list.length }, () => this._syncGoal());
+      this.setData({ poiEmpty: !list.length }, () => this._syncGoal());
       if (!list.length) return;
       const catMap = {
         1: { icon: 'poi-landmark', catLabel: '地标', color: BRAND, cat: 'landmark' },
@@ -1438,6 +1458,9 @@ Page({
     this._roamPoiFinishBlocked = this._revealInFlight = false;
     if (this._revealTimer) { clearTimeout(this._revealTimer); this._revealTimer = null; }
     this._clientSessionKey = ''; this._roamSid = 0;
+    this._presencePrivacyGeneration = (this._presencePrivacyGeneration || 0) + 1;
+    this._runners = [];
+    this.setData({ presenceVisible: false, runnerView: null, multiView: null });
     this._pendingTiles = []; this._sessionTiles = {}; this._sessionTileCount = 0;
     this._track = []; this._sessionPhotos = []; this._foundRoamPois = {}; this._pois = [];
     this._stats = { time: '00:00', shops: 0, explorePct: 0, distance: '0.0' };
@@ -1574,6 +1597,17 @@ Page({
         if (!result || typeof result.totalXp !== 'number' || !Number.isFinite(result.totalXp))
           return this._recoveryFailure('结算事实暂时无法读取，请重新核对');
         if (this._pendingTiles.length) return this._recoveryFailure('会话已结束，仍有待确认格子，请保留记录并联系支持核对');
+        if (fact.locationExpired === true) {
+          this._track = []; this._pendingTiles = []; this._sessionTiles = {}; this._foundRoamPois = {}; this._pois = [];
+          const memory = roamMemory(this);
+          const state = memory.readSessionState();
+          if (!state.ok) return this._recoveryFailure('足迹存档暂时无法读取，请重试核对');
+          const { stripGeometry } = require('../../utils/roam-location-retention.js');
+          const rows = state.sessions.map(row => row.ts === this._recoveryArchiveTs
+            ? { ...stripGeometry(row), finishedAt: fact.finishedAt, locationExpired: true } : row);
+          if (!memory.writeSessions(rows)) return this._recoveryFailure('过期足迹清理未保存，请重试核对');
+        }
+        this._finishedAt = fact.finishedAt || result.finishedAt || 0;
         return this._applyRoamFinishResult(result, fact.resultComplete === true);
       }
       this._recoveryNeedsLookup = false; this._revealBootstrapUnknown = false;
@@ -1844,6 +1878,7 @@ Page({
   _applyRoamFinishResult(result, complete) {
     if (typeof result.totalXp !== 'number' || !Number.isFinite(result.totalXp))
       return this._recoveryFailure('结算事实暂时无法读取，请重新核对');
+    this._finishedAt = result.finishedAt || this._finishedAt || 0;
     const shopMedal = result.shopMedal || null;
     this.setData({ screen: 'arrive', 'finish.xpAwarded': result.totalXp, 'finish.medal': result.medal || '',
       'finish.shopMedal': shopMedal, 'finish.routeStory': result.routeStory || '',
@@ -1858,6 +1893,7 @@ Page({
     const arr = memory.readSessions();
     const archived = arr.find(row => row.ts === this._recoveryArchiveTs);
     if (archived) {
+      archived.finishedAt = this._finishedAt || archived.finishedAt || 0;
       archived.sessionId = exactSessionId(this._roamSid);
       archived.xpAwarded = result.totalXp;
       archived.medal = result.medal || ''; archived.shopMedalName = shopMedal ? shopMedal.name : '';
@@ -2376,14 +2412,14 @@ Page({
      两条心跳,都挂在真实位移上,不另起定时器:
        · _reportPresence 把自己报上去 —— 30 s 一次
        · _fetchRunners 把别人拉下来 —— 45 s 一次
-     暂停 / 退出 / 结算都会让上报停下,服务端 5 分钟没收到就把你从别人地图上摘掉。
-     ⚠️ 这是**唯一**的关闭开关:不做一个能勾却不影响上报的假开关。 */
+     分享默认关闭，只有单独同意端点能开启；心跳永不修改分享偏好。
+     暂停后 5 分钟内下线，结束会话立即下线；设置中的关闭立即停止公开。 */
   _reportPresence(p) {
     if (!this._roamSid || !p) return;
     const now = Date.now();
     if (this._presenceAt && now - this._presenceAt < PRESENCE_MS) return;
     this._presenceAt = now;
-    req('/api/roam/presence', 'POST', {
+    return req('/api/roam/presence', 'POST', {
       sessionId: String(this._roamSid),
       lat: p.lat, lng: p.lng,
       explorePct: this._stats.explorePct || 0,
@@ -2391,12 +2427,14 @@ Page({
   },
 
   _fetchRunners(p) {
-    if (!p) return;
+    if (!p || !this.data.presenceVisible) return;
     const now = Date.now();
     if (this._runnersAt && now - this._runnersAt < RUNNERS_MS) return;
     this._runnersAt = now;
+    const sid = this._roamSid;
     req('/api/roam/nearby-runners', 'POST', { lat: p.lat, lng: p.lng, radius: 3000 },
       { silentError: true }).then((res) => {
+      if (!this.data.presenceVisible || String(this._roamSid) !== String(sid)) return;
       if (!res || res.code != '200') return;   // 拉不到就保持上一批,不清空 —— 闪掉再回来更难看
       const rows = normalizeRunners(res.data);
       // 一个人都没有也要落:上一批里走远的人得消失
@@ -2465,6 +2503,7 @@ Page({
 
   /** 点地图上的别人 → 半屏。数据取本地那一批,不再回一次接口(那批 45 s 才换一次)。 */
   openRunner(memberId) {
+    if (!this.data.presenceVisible) return;
     const row = (this._runners || []).find((r) => r.memberId === memberId);
     if (!row) return;
     this.setData({ runnerView: row });
@@ -2542,57 +2581,76 @@ Page({
       this.recoverRoam();
       return;
     }
+    if (!loginApp || typeof loginApp.recordConsent !== 'function') {
+      this.setData({ introError: '登录没有成功，请检查网络后重试。', locErr: false });
+      return;
+    }
     this._roamStartPending = true;
-    // 本次启动的世代号。onShow 会 +1 作废在途流程:否则它清掉门闩后,旧 chain(recordConsent 最长挂
-    // 10s)与新 chain 会双双走到 _openRoamMap,开出两个会话。stale 的回调一律弃权,只留最后一次。
     const gen = (this._roamStartGen = this._roamStartGen || 0);
-    const stale = () => gen !== this._roamStartGen;
-    const that = this;
-    // ⚠️ 必须裹 try:它一旦抛,门闩已经是 true 而下面的 getLocation 永远不会被调用
-    //    ⇒ 之后每次点 GO 都在第一行静默 return,页面没有任何反应,冷启动前不自愈。
-    try { this.markRoamIntroSeen(); } catch (e) { /* 只是「看过引导」的本地标记,丢了不该挡住出发 */ }
-    // ★ 不再自弹「开启定位并出发」确认框:wx.getLocation 首次调用本就会触发微信自己的系统授权
-    //   弹窗,那才是有效的明示同意;业务层再弹一层是重复问、且多一条能把门闩焊死的路径。
-    // ★ recordConsent 也从启动链上摘掉:它原本挂在 .then 里,后端慢/超时(注释自称最长 10s)
-    //   就会把「点 GO 到进图」整个拖住甚至走不到。改为拿到定位后再留痕,失败不影响玩。
-    wx.getLocation({
-      type: 'gcj02',
-      // 门闩兜底。★ 这里**不能**再带 `screen === 'intro'` 条件:success 里先清门闩、才
-      //   _openRoamMap 把 screen 改成 'map',等 complete 跑到时条件已永假 —— 那样它一件事也兜不住,
-      //   只是看着像有保险。真正要兜的是「success/fail 都没走成」(回调抛异常被微信吞)那种,
-      //   而那时 screen 仍是什么都可能。只留 stale 判断:作废的 chain 不该回头动新一轮的门闩。
-      complete() { if (!stale()) { that._roamStartPending = false; } },
-      success(r) {
-        if (stale()) return;
-        that._roamStartPending = false;
-        that.setData({ introError: '', locErr: false });
-        that._openRoamMap({ lat: r.latitude, lng: r.longitude }, true);
-        // 系统授权通过 = 用户明示同意,留痕但不阻塞已经开起来的漫游。
-        // ⚠️ 但绝不能裸吞:位置已经采了、地图已经开了,留痕却可能一条都没写进库。
-        //    真裸吞 = 后端零记录而前端零信号,正是本仓反复栽的静默失败型
-        //    (consent-client 的 10s 超时按 reject 走,所以失败是会到这里的,不是理论值)。
-        const reportConsentFailure = (reason) => {
-          console.warn('[roam] recordConsent 失败,本次漫游的同意留痕可能缺失');
-        };
-        try {
-          const consent = getApp().recordConsent({ docType: 'privacy_policy', scene: 'roam_location', eventType: 'AGREE' });
-          if (consent && typeof consent.catch === 'function') consent.catch(reportConsentFailure);
-        } catch (e) { reportConsentFailure(e && e.message); }
+    const locationRevision = bgTracker.revision('roam');
+    const identity = () => {
+      try {
+        const app = getApp();
+        return [typeof app.getUserID === 'function' ? String(app.getUserID() || '') : '',
+          (app.globalData || {}).authorization || ''].join('|');
+      } catch (e) { return null; }
+    };
+    const owner = identity();
+    this._observeLocationRevocation();
+    const stale = () => gen !== this._roamStartGen || locationRevision !== bgTracker.revision('roam')
+      || this._hidden || this._unloaded || owner !== identity();
+    const abandon = (message) => {
+      if (gen !== this._roamStartGen) return;
+      this._roamStartPending = false;
+      this._shootAfterStart = false;
+      if (message && !stale()) this.setData({ introError: message, locErr: false });
+    };
+    try { this.markRoamIntroSeen(); } catch (e) { /* 引导标记失败不阻断用户明确同意后的出发 */ }
+    const locate = () => {
+      if (stale()) { abandon(); return; }
+      wx.getLocation({
+        type: 'gcj02',
+        complete: () => { if (stale()) abandon(); else this._roamStartPending = false; },
+        success: (r) => {
+          if (stale()) { abandon(); return; }
+          this._roamStartPending = false;
+          this.setData({ introError: '', locErr: false });
+          this._openRoamMap({ lat: r.latitude, lng: r.longitude }, true);
+        },
+        fail: () => {
+          if (stale()) { abandon(); return; }
+          this._roamStartPending = false;
+          this._shootAfterStart = false;
+          this.setData({ introError: '未取得当前位置，请开启定位后重试。', locErr: true });
+        },
+      });
+    };
+    // Existing system permission does not replace a fresh explicit choice after a recorded revoke.
+    try { cyModal.show({
+      title: '开启实时定位',
+      content: '主动开启后用于实时定位、到点打卡和轨迹记录。锁屏或切到后台后仍会记录，结束漫游即停止。附近的人位置分享默认关闭，需要另行单独同意；你可随时在设置中撤回。',
+      confirmText: '同意并开启',
+      cancelText: '暂不开启',
+      success: (result) => {
+        if (stale()) { abandon(); return; }
+        if (!result.confirm) { abandon(); return; }
+        Promise.resolve().then(() => {
+          if (stale()) { abandon(); return; }
+          return loginApp.recordConsent({ docType: 'privacy_policy', scene: 'roam_location', eventType: 'AGREE' });
+        }).then(locate).catch(() => abandon('同意记录失败，请检查网络后重试'));
       },
-      fail() {
-        if (stale()) return;
-        that._roamStartPending = false;
-        that._shootAfterStart = false;   // 没开起来就别把「开完就拍」的意图留到下一次
-        that.setData({ introError: '未取得当前位置，请开启定位后重试。', locErr: true });
-      },
-    });
+      fail: () => abandon('定位同意未完成，请重试'),
+    }); } catch (e) { abandon('定位同意未完成，请重试'); }
   },
 
   _openRoamMap(startCenter, startTracking) {
     const p = startCenter || FALLBACK;
     this._disposeFogRenderer();
     const fogGeneration = this._fogLifecycleGen;
-    this._fogStartPending = { p, startTracking: !!startTracking, generation: fogGeneration };
+    const locationRevision = bgTracker.revision('roam');
+    const trackingCurrent = () => !startTracking || locationRevision === bgTracker.revision('roam');
+    this._fogStartPending = { p, startTracking: !!startTracking, generation: fogGeneration, locationRevision };
+    if (startTracking) this._observeLocationRevocation();
     this._initWorld(p);
     this._hold = 0;
     this._centerTimer = 0;
@@ -2610,7 +2668,6 @@ Page({
       fogScreenReady: false,
       fogScreenLayers: [],
       fogScreenGuard: true,
-      fogScreenError: false,
       currentAddress: startTracking ? '当前位置' : '尚未开启定位',
     }, () => { this._syncPlayHeader(); this._scheduleFootprintHint(); });
     if (this._roamOpeningTimer) clearTimeout(this._roamOpeningTimer);
@@ -2641,12 +2698,12 @@ Page({
     this._mapLoadWatch();
     this._fogOpenTimer = setTimeout(() => {
       this._fogOpenTimer = null;
-      if (fogGeneration !== this._fogLifecycleGen
+      if (!trackingCurrent() || fogGeneration !== this._fogLifecycleGen
         || (this.data.screen !== 'opening' && this.data.screen !== 'map' && this.data.screen !== 'arrive')) return;
       const mapComponent = this.selectComponent('#roamMap');
       this._mapCtx = mapComponent && mapComponent.getMapContext();
       this._setupFog(fogGeneration).then((ready) => {
-        if (!ready || fogGeneration !== this._fogLifecycleGen
+        if (!ready || !trackingCurrent() || fogGeneration !== this._fogLifecycleGen
           || (this.data.screen !== 'opening' && this.data.screen !== 'map' && this.data.screen !== 'arrive')) return;
         this._activateRoamAfterFog(p, startTracking, fogGeneration);
       });
@@ -2673,7 +2730,7 @@ Page({
     this._syncSparkCircles();
     this._syncMarkers();
     this._startClock();
-    if (pending.startTracking) this._startReal(true);
+    if (pending.startTracking && pending.locationRevision === bgTracker.revision('roam')) this._startReal(true);
   },
 
   /** 底图首帧看门狗:5s 内没等到 map updated → 显示重试提示,黑屏不再无解释。
@@ -2882,7 +2939,7 @@ Page({
           this._fogCv = null;
           this._fogG = null;
           this._fogOverlayAdded = false;
-          this.setData({ fogPolys: [], fogScreenReady: false, fogScreenLayers: [], fogScreenGuard: true, fogScreenError: false });
+          this.setData({ fogPolys: [], fogScreenReady: false, fogScreenLayers: [], fogScreenGuard: true });
           this._finishFogSetup(true, generation);
           return;
         } catch (e) {
@@ -2899,7 +2956,7 @@ Page({
         return;
       }
       this._fogMode = 'blocked';
-      this.setData({ fogPolys: [], fogScreenLayers: [], fogScreenReady: false, fogScreenGuard: true, fogScreenError: true });
+      this.setData({ fogPolys: [], fogScreenLayers: [], fogScreenReady: false, fogScreenGuard: true });
       this._finishFogSetup(false, generation);
     });
   },
@@ -2953,7 +3010,6 @@ Page({
       this.setData({
         fogScreenLayers: previous.concat([{ generation, version, src: path, loaded: false, frameStartedAt }]),
         fogScreenReady: previous.length > 0,
-        fogScreenError: false,
       }, () => {
         if (generation !== this._fogLifecycleGen) { this._deleteScreenFogFile(path); return; }
         const kept = new Set((this.data.fogScreenLayers || []).map((layer) => layer.src));
@@ -2961,7 +3017,7 @@ Page({
       });
     } catch (e) {
       this._fogScreenErr = 'publish:' + (e && e.message);
-      this.setData({ fogScreenGuard: true, fogScreenError: true });
+      this.setData({ fogScreenGuard: true });
     }
   },
 
@@ -2975,7 +3031,7 @@ Page({
     if (!found) return;
     if (version === this._fogScreenVersion) {
       this._fogScreenLoadMs = Math.max(0, Date.now() - Number(found.frameStartedAt || Date.now()));
-      this.setData({ fogScreenLayers: [found], fogScreenReady: true, fogScreenGuard: false, fogScreenError: false }, () => {
+      this.setData({ fogScreenLayers: [found], fogScreenReady: true, fogScreenGuard: false }, () => {
         oldLayers.forEach((layer) => { if (layer.src !== found.src) this._deleteScreenFogFile(layer.src); });
         this._completeRoamAfterFogLoad(generation);
       });
@@ -2997,7 +3053,7 @@ Page({
       return;
     }
     this._fogScreenErr = 'image:' + ((e && e.detail && e.detail.errMsg) || 'load-failed');
-    this.setData({ fogScreenGuard: true, fogScreenError: true }, () => {
+    this.setData({ fogScreenGuard: true }, () => {
       if (failed) this._deleteScreenFogFile(failed.src);
     });
   },
@@ -3005,7 +3061,7 @@ Page({
   retryScreenFog() {
     if (this.data.screen !== 'map' && this.data.screen !== 'arrive') return;
     if (this._fogScreenSetupResolve) return;
-    this.setData({ fogScreenGuard: true, fogScreenError: false });
+    this.setData({ fogScreenGuard: true });
     if (this._fogMode === 'screen' && this._fogScreenG) {
       this._renderScreenFog();
       return;
@@ -3548,12 +3604,12 @@ Page({
         poiName: d.visit && d.visit.poi && d.visit.poi.name,
         gpsEnabled: this._realOn,
         locationError: d.locErr,
-        offline: d.poiOffline,
+        offline: false, // 据点加载失败不展示离线提示,按常规目标显示
         poiEmpty: d.poiEmpty,
         nearbyCount: d.nearbyPois ? d.nearbyPois.length : 0,
       });
     }
-    if (d.poiOffline && goal && goal.stateKey === 'offline') goal = Object.assign({}, goal, { text: '据点没加载出来 · 足迹仍在本机记录 · 点击重试', readerLabel: '据点没加载出来。本地足迹仍保留，点击重试。' }); this.setData({ goal }, () => this._syncMarkers());
+    this.setData({ goal }, () => this._syncMarkers());
   },
 
   // 目标层点击 = 被关掉的卡/流程的重入口(原来关掉就再也回不去)
@@ -3567,44 +3623,77 @@ Page({
     if (act === 'discover') { this.goDiscover(); return; }
     if (act === 'event') { this.setData({ 'eventOverlay.show': true }, () => this._syncSparkCircles()); }
   },
+  _observeLocationRevocation() {
+    if (this._realRevokeOff) return;
+    this._realRevokeOff = bgTracker.observeRevocation('roam', () => {
+      this._roamStartGen = (this._roamStartGen || 0) + 1;
+      this._roamStartPending = false;
+      if (this._fogStartPending) this._fogStartPending.startTracking = false;
+      this._stopReal();
+      this._syncGoal();
+    });
+  },
   _startReal(consentAlreadyRecorded) {
+    if (this._realOn || this._realStarting) return;
     const that = this;
+    const epoch = this._realStartEpoch = (this._realStartEpoch || 0) + 1;
+    const locationRevision = bgTracker.revision('roam');
+    const live = () => epoch === that._realStartEpoch && locationRevision === bgTracker.revision('roam');
+    this._realStarting = true;
+    this._observeLocationRevocation();
+    const abandon = () => {
+      if (!live()) return;
+      that._realStarting = false;
+      if (that._realRevokeOff) { that._realRevokeOff(); that._realRevokeOff = null; }
+    };
     const onOk = () => {
+      if (!live()) return;
+      that._realStarting = false;
       that._realOn = true;
-      wx.onLocationChange(that._onRealLoc = (loc) => that._realTick(loc));
+      wx.onLocationChange(that._onRealLoc = (loc) => { if (live() && that._realOn) that._realTick(loc); });
       that.setData({ locErr: false });
       that._syncGoal();
       wx.setKeepScreenOn && wx.setKeepScreenOn({ keepScreenOn: true });
       cyToast('真实定位已开启');
     };
-    // 漫游只在玩家主动开启后的前台使用定位，绝不升级为后台持续采集。
+    // 主动开启后允许后台定位，结束行程即停止；用途必须先向玩家说明。
     // 后台定位:漫游是边走边点亮,玩家锁屏塞兜是常态;前台版一锁屏就断,轨迹丢段。
     // 拿不到后台权限自动降级前台(功能仍可用,只是锁屏会断)。停的时机只有 _stopReal。
-    const startLocation = () => bgTracker.acquire('roam', {
+    const startLocation = () => {
+      if (!live()) return;
+      bgTracker.acquire('roam', {
       success: onOk,
       fail() {
+        if (!live()) return;
+        abandon();
         that.setData({ locErr: true });
         that._syncGoal();
         cyToast('未授权定位，无法开启实时漫游');
       },
-    });
+      });
+    };
     const recordAndStart = () => getApp().recordConsent({ docType: 'privacy_policy', scene: 'roam_location', eventType: 'AGREE' })
       .then(startLocation)
-      .catch(() => cyToast('同意记录失败，请检查网络后重试'));
+      .catch(() => { if (live()) { abandon(); cyToast('同意记录失败，请检查网络后重试'); } });
     if (consentAlreadyRecorded) { startLocation(); return; }
     cyModal.show({
       title: '开启实时定位',
-      content: '仅在你主动开启漫游时，用于实时位置展示、到点打卡和轨迹记录。你可随时在设置中撤回。',
+      content: '主动开启后用于实时定位、到点打卡和轨迹记录。锁屏或切到后台后仍会记录，结束漫游即停止。附近的人位置分享默认关闭，需要另行单独同意；你可随时在设置中撤回。',
       confirmText: '同意并开启',
       cancelText: '暂不开启',
       success(result) {
-        if (!result.confirm) return;
+        if (!live()) return;
+        if (!result.confirm) { abandon(); return; }
         recordAndStart();
       },
+      fail: abandon,
     });
   },
   _stopReal() {
     bgTracker.release('roam');
+    this._realStartEpoch = (this._realStartEpoch || 0) + 1;
+    this._realStarting = false;
+    if (this._realRevokeOff) { this._realRevokeOff(); this._realRevokeOff = null; }
     const onLocationChange = this._onRealLoc;
     this._realOn = false;
     this._onRealLoc = null;
@@ -4579,7 +4668,24 @@ Page({
     this._openShareSheet();
   },
 
+  _syncCommunityEntry() {
+    const app = getApp();
+    const owner = String(app.getUserID && app.getUserID() || '');
+    const sync = () => {
+      if (this._hidden || owner !== String(app.getUserID && app.getUserID() || '')) return;
+      const open = typeof app.canUseCommunity === 'function' && app.canUseCommunity(true);
+      const visibility = this.data.share.visibility;
+      this.setData({ 'share.communityWrite': open,
+        'share.channels': channelsForVisibility(visibility).filter(channel => channel !== '广场' || open),
+        'share.can': Object.assign(channelFlags(visibility), { square: open && channelFlags(visibility).square }) });
+    };
+    const pending = typeof app.loadFeatureFlags === 'function' ? app.loadFeatureFlags() : null;
+    sync();
+    if (pending && typeof pending.then === 'function') pending.then(sync);
+  },
   _openShareSheet() {
+    const app = getApp();
+    const communityWrite = typeof app.canUseCommunity === 'function' && app.canUseCommunity(true);
     const privacy = readSharePrivacy(wx);
     this.setData({
       share: {
@@ -4587,8 +4693,9 @@ Page({
         idx: 0,
         squarePostUnknown: !!this._squarePostUnknown,
         visibility: privacy.visibility,
-        channels: channelsForVisibility(privacy.visibility),
-        can: channelFlags(privacy.visibility),
+        channels: channelsForVisibility(privacy.visibility).filter(channel => channel !== '广场' || communityWrite),
+        can: Object.assign(channelFlags(privacy.visibility), { square: communityWrite && channelFlags(privacy.visibility).square }),
+        communityWrite,
       },
     });
     this.openScene('roam-share');
@@ -4660,8 +4767,9 @@ Page({
     if (!visibility || visibility === this.data.share.visibility) return;
     this.setData({
       'share.visibility': visibility,
-      'share.channels': channelsForVisibility(visibility),
-      'share.can': channelFlags(visibility),
+      'share.channels': channelsForVisibility(visibility).filter(channel => channel !== '广场' || (typeof getApp().canUseCommunity === 'function' && getApp().canUseCommunity(true))),
+      'share.can': Object.assign(channelFlags(visibility), { square: typeof getApp().canUseCommunity === 'function' && getApp().canUseCommunity(true) && channelFlags(visibility).square }),
+      'share.communityWrite': typeof getApp().canUseCommunity === 'function' && getApp().canUseCommunity(true),
     });
   },
   closeShare() {
@@ -4738,7 +4846,11 @@ Page({
    * 否则 status=1 发布即可见、图片异步送检(违规回调再下架)。所以成功文案是「已发到广场」。
    */
   _shareToSquare() {
-    const current = this._shareScope();
+    const app = getApp();
+    const writeAllowed = () => typeof app.canUseCommunity === 'function' && app.canUseCommunity(true);
+    if (!writeAllowed()) { cyToast('当前账号未开放广场发布'); return Promise.resolve({ ok: false, channel: '广场', posted: false, saved: false, blocked: true }); }
+    const scope = this._shareScope();
+    const current = () => scope() && writeAllowed();
     const cancelled = () => ({ ok: false, channel: '广场', saved: false, posted: false, cancelled: true });
     const fail = (msg) => { cyToast(msg); return { ok: false, channel: '广场', saved: false, posted: false }; };
     if (!current()) return Promise.resolve(cancelled());
@@ -4801,7 +4913,7 @@ Page({
           state.settled = true;
           if (res && (res.code == '200' || res.code == 200)) {
             settleIntent('success');
-            cyToast('已发到广场');
+            cyToast(res.data && res.data.lifecycle === 'PUBLISHED' ? '已发到广场' : '已提交审核');
             return { ok: true, channel: '广场', saved: false, posted: true, postId: (res.data && res.data.id) || 0 };
           }
           if (res && res.intentDiscarded === true) {
@@ -4842,6 +4954,7 @@ Page({
       cancelledError.cancelled = true;
       operation.onAbort(() => reject(cancelledError));
       operation.attach(app.getUploadClient().uploadAll([path], {
+        bizType: 'COMMUNITY_POST', mapResult: community.captureUpload,
         // results 是按下标赋值的稀疏数组,只有 ok 时才保证 [0] 有值
         onDone: (r) => {
           if (operation.isAborted()) return;
@@ -5056,7 +5169,7 @@ Page({
       if (!state.ok) return this._recoveryFailure('足迹存档暂时无法读取，本次记录保留待重试');
       const s = state.sessions;
       const session = {
-        ts: this._recoveryArchiveTs, ...fin,
+        ts: this._recoveryArchiveTs, ...fin, finishedAt: this._finishedAt || 0,
         // R9-42:落盘用统一数值合同(number)。展示用的 fin.distance 是 "0.2" 字符串,
         // 直接存会让只读 number 的组件把它当成未知;这里归一成 number,老记录的字符串
         // 由读方(readNonNegative)兼容,0 与未知分开。
@@ -5191,7 +5304,8 @@ Page({
 
   backToSquare() {
     if (getCurrentPages().length > 1) wx.navigateBack();
-    else wx.redirectTo({ url: '/pages/square/list/index' });
+    else if (typeof getApp().canUseCommunity === 'function' && getApp().canUseCommunity(false)) wx.redirectTo({ url: '/pages/square/list/index' });
+    else wx.switchTab({ url: '/pages/index/index' });
   },
 
   // 发现商家:漫游里按调性(标签/城市角色)挑店(discover 列表页)
@@ -5227,7 +5341,51 @@ Page({
   openOfficialEvent(e) { wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + e.detail.id }); },
   openRoamCoupons() { this.openScene('game-coupon-wallet'); },
   openStampAlbum() { this.openScene('roam-stamp-album'); },
-  openRoamSettings() { this._syncRoamPermission(); this.openScene('roam-settings'); },
+  _clearNearbyRunners() {
+    this._runners = [];
+    this.setData({ runnerView: null, multiView: null });
+    this._syncMarkers();
+  },
+  _syncPresencePrivacy() {
+    const sid = this._roamSid;
+    const generation = this._presencePrivacyGeneration || 0;
+    if (!sid) { this.setData({ presenceVisible: false }); return Promise.resolve(false); }
+    return presencePrivacy.readSharing(getApp(), sid).then(visible => {
+      if (String(this._roamSid) !== String(sid) || generation !== (this._presencePrivacyGeneration || 0)) return false;
+      this.setData({ presenceVisible: visible });
+      if (!visible) this._clearNearbyRunners();
+      return visible;
+    }).catch(() => {
+      this.setData({ presenceVisible: false });
+      this._clearNearbyRunners();
+      return false;
+    });
+  },
+  togglePresenceSharing() {
+    if (this.data.presenceSubmitting) return;
+    const apply = visible => {
+      this._presencePrivacyGeneration = (this._presencePrivacyGeneration || 0) + 1;
+      const sid = this._roamSid;
+      this.setData({ presenceSubmitting: true });
+      presencePrivacy.setSharing(getApp(), sid, visible).then(saved => {
+        if (String(this._roamSid || '') !== String(sid || '')) return;
+        this.setData({ presenceVisible: saved });
+        this._presenceAt = 0; this._runnersAt = 0;
+        if (!saved) this._clearNearbyRunners();
+        else if (this._player) {
+          Promise.resolve(this._reportPresence(this._player)).then(() => this._fetchRunners(this._player));
+        }
+        cyToast(saved ? '已开启附近的人位置分享' : '已关闭附近的人位置分享');
+      }).catch(error => cyToast(error.message)).finally(() => this.setData({ presenceSubmitting: false }));
+    };
+    if (this.data.presenceVisible) { apply(false); return; }
+    cyModal.show({
+      title: '单独同意位置分享', content: presencePrivacy.DISCLOSURE,
+      confirmText: '同意并开启', cancelText: '暂不开启',
+      success: result => { if (result.confirm) apply(true); },
+    });
+  },
+  openRoamSettings() { this._syncRoamPermission(); this._syncPresencePrivacy(); this.openScene('roam-settings'); },
   /* 抽屉只在地图运行态出现,intro 不渲染 ⇒ 不能切护照 tab(置空 screen = 整页黑屏)。
      去勋章墙页面:navigateTo 保留本页,计时/定位照常,返回即回地图。 */
   openRoamPassport() {
@@ -5240,6 +5398,7 @@ Page({
      卡上列出每个人的地盘 %;点地图上某个人的头像才是 f-other 那张个人半屏。
      原来这一行直接开了「最近一个人」的半屏 —— 跳过了「这一片有谁」这一层。 */
   openNearestRunner() {
+    if (!this.data.presenceVisible) { this.openRoamSettings(); return; }
     if (!(this._runners || []).length) { cyToast('这会儿附近没人在走'); return; }
     this.closeScene();
     this.openMultiView();
@@ -5305,28 +5464,56 @@ Page({
     if (typeof this._syncGoal === 'function') this._syncGoal();
   },
 
+  _entryIdentity() { return [readSession.memberId(getApp()), (getApp().globalData || {}).authorization || ''].join('|'); },
+  _clearEntryRead() {
+    this._entryItems = []; this._entryTeams = [];
+    this.setData({ entryMarkers: [], entryCards: [], searchPlaces: [], entryActivity: null, entryTeam: null, entrySheet: '' });
+  },
+  loginForEntryRead() {
+    if (this.data.entryReadAccess === 'denied') return;
+    return readSession.retryLogin(this, getApp(), function () { this._loadEntryMap(this.data.center); });
+  },
   _loadEntryMap(center) {
     if (typeof getApp().sendRequest !== 'function') return;
     const c = center || FALLBACK;
-    const owner = String(getApp().getUserID() || '');
+    const owner = this._entryIdentity();
     const seq = (this._entrySeq = (this._entrySeq || 0) + 1);
+    if (this._entryReadOwner !== owner) this._clearEntryRead();
+    this._entryReadOwner = owner;
+    if (!readSession.memberId(getApp())) { this.setData({ entryReadAccess: 'login', entryLoadError: false }); return; }
     this._entryErrors = { activities: false, teams: false };
-    this.setData({ entryLoadError: false });
+    this.setData({ entryLoadError: false, entryReadAccess: '' });
     const settle = (layer, failed) => {
-      if (seq !== this._entrySeq || owner !== String(getApp().getUserID() || '')) return;
+      if (this._unloaded || seq !== this._entrySeq || owner !== this._entryIdentity()) return;
       this._entryErrors[layer] = !!failed;
       this.setData({ entryLoadError: entryMap.hasLayerError(this._entryErrors) });
       this._syncEntryMap();
     };
+    const auth = (res) => {
+      if (this._unloaded || seq !== this._entrySeq) return true;
+      if (owner !== this._entryIdentity() || res && res.reason === 'sessionChanged') {
+        this._entrySeq += 1;
+        this._clearEntryRead();
+        this.setData({ entryReadAccess: readSession.memberId(getApp()) ? '' : 'login', entryLoadError: false });
+        if (!this._hidden && readSession.memberId(getApp())) this._loadEntryMap(c);
+        return true;
+      }
+      const code = readSession.failureStatus(res);
+      if (code !== 401 && code !== 403) return false;
+      this._entrySeq += 1;
+      this._clearEntryRead();
+      this.setData({ entryReadAccess: code === 401 ? 'login' : 'denied', entryLoadError: false });
+      return true;
+    };
     req('/api/roam/entry/nearby', 'GET', { lat: c.lat, lng: c.lng, radius: 3000 }, { silentError: true }).then((res) => {
-      if (seq !== this._entrySeq || owner !== String(getApp().getUserID() || '')) return;
+      if (auth(res)) return;
       const data = apiOk(res) && res.data;
       const ok = data && isRecordList(data.items);
       if (ok) this._entryItems = data.items.filter((row) => row && row.kind !== 'hangout');
       settle('activities', !ok);
     });
     req('/api/team/nearby', 'GET', { lat: c.lat, lng: c.lng, radius: 3000 }, { silentError: true }).then((res) => {
-      if (seq !== this._entrySeq || owner !== String(getApp().getUserID() || '')) return;
+      if (auth(res)) return;
       const ok = apiOk(res) && Array.isArray(res.data);
       if (ok) this._entryTeams = res.data.filter(Boolean);
       settle('teams', !ok);
@@ -5349,7 +5536,6 @@ Page({
   openEntryLayers() { this._showEntrySheet('layers'); },
   closeEntrySheet() { this.setData({ entrySheet: '', entryActivity: null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false }); },
   backEntrySheetView() { this.setData({ entrySheetView: 'main', entryTeam: null }); },
-  retryEntryMap() { this._loadEntryMap(this.data.center); },
   toggleEntryLayer(e) {
     const key = e.currentTarget.dataset.key;
     if (key !== 'activities' && key !== 'teams' && key !== 'posts') return;

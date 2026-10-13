@@ -23,6 +23,33 @@ class ThemeRuntimeEngineTest {
     private JourneyRules rules() { JourneyRules r = new JourneyRules();r.setCheckEnabled(true);r.getLuck().setMax(5);return r; }
     private TopicRouteEngine.State state(ObjectNode c) {TopicRouteEngine.State s=new TopicRouteEngine.State();s.setStatus("ACTIVE");s.getVariables().put("sys.hp",6);s.getVariables().put("sys.luck",2);engine.initialize(c,s);return s;}
     private void node(ObjectNode c,TopicRouteEngine.State s,long node) {engine.signal(c,s,rules(),"NODE",node,"","",0,"node:"+node);}
+    @Test void terminalRewardCapacityFailureDoesNotFreezeOrLeavePartialEndingGrant() throws Exception {
+        ObjectNode c=config();c.withArray("grants").addObject().put("id","ending-food").put("source","ENDING").put("itemId","food").put("quantity",1);
+        TopicRouteEngine.State state=state(c);node(c,state,1);node(c,state,2);JsonNode before=json.valueToTree(state);
+        assertThrows(IllegalStateException.class,()->engine.terminal(c,state,rules(),"COMPLETED",100));assertEquals(before,json.valueToTree(state));
+        engine.discard(c,state,rules(),"food");engine.terminal(c,state,rules(),"COMPLETED",100);assertEquals("COMPLETED",state.getStatus());assertTrue(state.getThemeRuntime().path("pending").isEmpty());assertTrue(state.getThemeRuntime().path("sources").path("grant:ending-food").asBoolean());
+    }
+
+    @Test void completedClaimDiscardsOwnedAtomicallyWithoutItemOrEventEffects() throws Exception {
+        ObjectNode c=config();c.put("capacity",2);TopicRouteEngine.State state=state(c);node(c,state,1);node(c,state,2);state.setStatus("COMPLETED");state.getThemeRuntime().putObject("result").put("hp",6);
+        JsonNode before=json.valueToTree(state);assertThrows(IllegalStateException.class,()->engine.claimPending(c,state,"grant:dress",null));assertEquals(before,json.valueToTree(state));
+        assertThrows(IllegalStateException.class,()->engine.claimPending(c,state,"grant:dress",json.readTree("[{\"itemId\":\"food\",\"quantity\":3}]")));assertEquals(before,json.valueToTree(state));
+        ObjectNode receipt=engine.claimPending(c,state,"grant:dress",json.readTree("[{\"itemId\":\"food\",\"quantity\":1}]"));assertEquals("coat",receipt.path("itemId").asText());assertEquals(6,state.getVariables().get("sys.hp"));assertEquals(before.path("themeRuntime").path("result"),state.getThemeRuntime().path("result"));assertEquals(before.path("themeRuntime").path("events"),state.getThemeRuntime().path("events"));assertTrue(state.getThemeRuntime().path("pending").isEmpty());
+        assertThrows(IllegalStateException.class,()->engine.claimPending(c,state,"grant:dress",null));
+    }
+
+    @Test void configuredValueNamesReadBackAndMissingNamesAreBlank() throws Exception {
+        ObjectNode c=config(); c.put("hpName", "生命").put("luckName", "运气").put("actionName", "行动");
+        c=ThemeRuntimeConfig.parse(c.toString());
+        JsonNode view=engine.view(c,state(c));
+        assertEquals("生命", view.path("hpName").asText()); assertEquals("运气", view.path("luckName").asText()); assertEquals("行动", view.path("actionName").asText());
+        c.remove(Arrays.asList("hpName", "luckName", "actionName"));
+        view=engine.view(c,state(c));
+        assertEquals("", view.path("hpName").asText()); assertEquals("", view.path("luckName").asText()); assertEquals("", view.path("actionName").asText());
+        c.put("actionName", "abcdefghijklmnopqrstu");
+        ObjectNode invalid=c; assertThrows(IllegalArgumentException.class, () -> ThemeRuntimeConfig.parse(invalid.toString()));
+        c.put("actionName", 3); assertThrows(IllegalArgumentException.class, () -> ThemeRuntimeConfig.parse(invalid.toString()));
+    }
     @Test void actualInventoryAndOneSourceGrantAreNotConfigurationCards() throws Exception {
         ObjectNode c=config();TopicRouteEngine.State s=state(c);assertEquals(0,engine.view(c,s).path("contents").size());
         node(c,s,1);node(c,s,1);assertEquals(2,s.getThemeRuntime().path("inventory").path("food").asInt());assertEquals(1,s.getVariables().get("sys.actions"));

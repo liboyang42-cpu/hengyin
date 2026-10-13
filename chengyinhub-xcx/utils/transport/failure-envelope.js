@@ -8,4 +8,11 @@ function fromHttpStatusAbnormal(body) {
   };
 }
 
-module.exports = { fromHttpStatusAbnormal };
+// 写请求没有回执、408 或 5xx 时，只能回读结果，不能推断未提交。
+function isUnknownHttpStatus(statusCode) {
+  if (statusCode == null || statusCode === '') return true;
+  const code = Number(statusCode);
+  return !Number.isFinite(code) || code === 408 || code >= 500;
+}
+
+module.exports = { fromHttpStatusAbnormal, isUnknownHttpStatus };

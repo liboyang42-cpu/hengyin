@@ -8,6 +8,8 @@ import java.util.List;
 public interface IRefundService {
     List<RefundApplication> selectRefundList(RefundApplication query);
 
+    List<RefundApplication> selectRegistrationHistoryForUpdate(Long registrationId);
+
     int saveRefund(RefundApplication refund);
 
     /** 后台运营建单(RefundController.add):多票订单首单只能退同单还没退、也没核销的部分(FX-04)。 */

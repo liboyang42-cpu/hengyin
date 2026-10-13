@@ -1,11 +1,13 @@
 package com.chengyinhub.web.controller.common;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import javax.imageio.ImageIO;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.FastByteArrayOutputStream;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -75,18 +77,42 @@ public class CaptchaController
             image = captchaProducer.createImage(capStr);
         }
 
-        redisCache.setCacheObject(verifyKey, code, Constants.CAPTCHA_EXPIRATION, TimeUnit.MINUTES);
+        if (image == null)
+        {
+            return AjaxResult.error("验证码生成失败");
+        }
+        // JPEG 不支持透明通道，验证码滤镜生成的 ARGB 图片须先合成到白底。
+        if (image.getColorModel().hasAlpha())
+        {
+            BufferedImage rgb = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+            Graphics2D graphics = rgb.createGraphics();
+            try
+            {
+                graphics.setColor(Color.WHITE);
+                graphics.fillRect(0, 0, rgb.getWidth(), rgb.getHeight());
+                graphics.drawImage(image, 0, 0, null);
+            }
+            finally
+            {
+                graphics.dispose();
+            }
+            image = rgb;
+        }
         // 转换流信息写出
         FastByteArrayOutputStream os = new FastByteArrayOutputStream();
         try
         {
-            ImageIO.write(image, "jpg", os);
+            if (!ImageIO.write(image, "jpg", os))
+            {
+                return AjaxResult.error("验证码生成失败");
+            }
         }
         catch (IOException e)
         {
             return AjaxResult.error(e.getMessage());
         }
 
+        redisCache.setCacheObject(verifyKey, code, Constants.CAPTCHA_EXPIRATION, TimeUnit.MINUTES);
         ajax.put("uuid", uuid);
         ajax.put("img", Base64.encode(os.toByteArray()));
         return ajax;

@@ -1,5 +1,8 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.annotation.RateLimiter;
+import com.chengyinhub.common.enums.LimitType;
+
 import com.chengyinhub.business.service.IAdvancedGameRuntimeService;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -27,6 +30,7 @@ public class ApiAdvancedPlayController extends BaseController {
     private IAdvancedGameRuntimeService runtimeService;
 
     @Operation(summary = "启动或恢复高级玩法")
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/start")
     public AjaxResult start(@RequestBody Map<String, Object> body) {
         try {
@@ -39,6 +43,7 @@ public class ApiAdvancedPlayController extends BaseController {
     }
 
     @Operation(summary = "提交高级玩法动作")
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/action")
     @SuppressWarnings("unchecked")
     public AjaxResult action(@RequestBody Map<String, Object> body) {

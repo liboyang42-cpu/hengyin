@@ -150,6 +150,7 @@ Page({
   data: {
     id: 0,
     scope: 'library',
+    operationScope: '',
     info: {},
     gallery: [],
     coverUrl: '',
@@ -197,10 +198,12 @@ Page({
   },
 
   onLoad(options) {
+    this._disposed = false;
     var scope = options.scope === 'my' ? 'my' : 'library';
     var data = {
       id: options.id || 0,
       scope: scope,
+      operationScope: options.operationScope === 'MERCHANT' ? 'MERCHANT' : '',
       isMyScope: scope === 'my'
     };
     if (options.tab === 'capabilities') {
@@ -234,10 +237,31 @@ Page({
     this.setData({ isMerchant: isMerchant });
     if (isMerchant) merchantTheme.merchantPageShow();
     else merchantTheme.merchantPageRestore();
+    var context = this.detailContext();
+    var returnedFromEditor = this._editorContext === context;
+    this._editorContext = null;
+    if (!this._disposed && this._detailContext &&
+        (this._detailContext !== context || returnedFromEditor)) this.getData();
   },
 
   onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() { merchantTheme.merchantPageRestore(); },
+  onUnload() {
+    this._disposed = true;
+    this._editorContext = null;
+    merchantTheme.merchantPageRestore();
+  },
+
+  detailContext() {
+    return JSON.stringify([
+      typeof app.getUserID === 'function' ? app.getUserID() : '',
+      app.getUserRole(), app.getUserType(),
+      this.data.id, this.data.scope, this.data.operationScope
+    ]);
+  },
+
+  isDetailRequestCurrent(token, context) {
+    return !this._disposed && token === this._detailRequestToken && context === this.detailContext();
+  },
 
   patchNormalized(target, raw) {
     var normalized = templateDetailUtil.normalizeTemplateDetail(raw);
@@ -284,18 +308,23 @@ Page({
       difficultyLetter: meta.letter,
       difficultyLabel: meta.label,
       descExpanded: false,
-      ruleExpanded: false
+      descNeedMore: false,
+      ruleExpanded: false,
+      ruleNeedMore: false
     }, this.checkTextOverflow);
   },
 
   checkTextOverflow() {
     var that = this;
+    var token = that._detailRequestToken;
+    var context = that.detailContext();
     wx.nextTick(function () {
+      if (!that.isDetailRequestCurrent(token, context)) return;
       var query = wx.createSelectorQuery().in(that);
       query.select('#tpl-desc').boundingClientRect();
       query.select('#tpl-rule').boundingClientRect();
       query.exec(function (res) {
-        if (!res || !res.length) return;
+        if (!that.isDetailRequestCurrent(token, context) || !res || !res.length) return;
         var patch = {};
         if (res[0] && res[0].height > 110) patch.descNeedMore = true;
         if (res[1] && res[1].height > 110) patch.ruleNeedMore = true;
@@ -306,6 +335,16 @@ Page({
 
   getData() {
     var that = this;
+    if (that._disposed) return;
+    var token = (that._detailRequestToken || 0) + 1;
+    var context = that.detailContext();
+    that._detailRequestToken = token;
+    if (that._detailContext && that._detailContext !== context) {
+      that.applyDetailPayload({});
+      that.setData({ moreShow: false });
+      that.closePop();
+    }
+    that._detailContext = context;
     if (!that.data.id) {
       that.setData({ loading: false, loadError: true, loadErrorMsg: '玩法链接不完整，请从玩法列表重新进入。' });
       return;
@@ -315,9 +354,10 @@ Page({
       hideLoading: true,
       silentError: true,
       url: that.data.scope === 'my' ? '/api/template/myinfo' : '/api/template/info',
-      data: { id: that.data.id },
+      data: { id: that.data.id, scope: that.data.scope === 'my' ? that.data.operationScope : '' },
       method: 'POST',
       success: function (res) {
+        if (!that.isDetailRequestCurrent(token, context)) return;
         if (res && res.code == '200' && isRecord(res.data)) {
           that.applyDetailPayload(res.data);
         } else {
@@ -328,12 +368,14 @@ Page({
         }
       },
       fail: function (res) {
+        if (!that.isDetailRequestCurrent(token, context)) return;
         that.setData({
           loadError: true,
           loadErrorMsg: app.getRequestErrorMessage(res, '网络错误，玩法详情暂时没有加载出来。')
         });
       },
       complete: function () {
+        if (!that.isDetailRequestCurrent(token, context)) return;
         that.setData({ loading: false });
       }
     });
@@ -345,11 +387,12 @@ Page({
 
   goBack() {
     var isMyScope = this.data.isMyScope;
+    var operationScope = this.data.operationScope;
     wx.navigateBack({
       delta: 1,
       fail: function () {
         // T36:模板页是 tabBar 页,redirectTo 必失败,只能 switchTab
-        if (isMyScope) wx.redirectTo({ url: '/subpackageMember/mytemplate/mytemplate' });
+        if (isMyScope) wx.redirectTo({ url: '/subpackageMember/mytemplate/mytemplate' + (operationScope === 'MERCHANT' ? '?scope=MERCHANT' : '') });
         else wx.switchTab({ url: '/pages/template/index' });
       }
     });
@@ -480,9 +523,15 @@ Page({
     }
     // R9-04:scope=my 的 id 是个人草稿(cms_member_template),编辑页必须知道这一点
     // 才会走 /api/template/myinfo;丢掉它就会拿公共库接口查草稿 id,报「模版不存在」。
+    var context = that.detailContext();
+    var ownTemplate = that.data.scope === 'my';
     wx.navigateTo({
       url: '/pages/publish/temp/index?id=' + that.data.id +
-        (that.data.scope === 'my' ? '&scope=my' : '')
+        (that.data.scope === 'my' ? (that.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT&templateScope=my' : '&scope=my')
+          : (that.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : '')),
+      success: function () {
+        if (ownTemplate && !that._disposed && context === that.detailContext()) that._editorContext = context;
+      }
     });
   },
 

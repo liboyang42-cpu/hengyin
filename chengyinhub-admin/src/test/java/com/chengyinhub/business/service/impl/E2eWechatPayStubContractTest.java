@@ -1,0 +1,91 @@
+package com.chengyinhub.business.service.impl;
+
+import com.chengyinhub.business.service.*;
+import com.chengyinhub.common.config.WxPayConfig;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import javax.tools.ToolProvider;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+class E2eWechatPayStubContractTest {
+    @TempDir static Path scratch;
+    private static Class<?> stubClass;
+
+    @BeforeAll
+    static void compileActualFixture() throws Exception {
+        Path root = Paths.get("").toAbsolutePath();
+        while (root != null && !Files.exists(root.resolve("scripts/e2e/E2eWechatPayStub.java.stub"))) {
+            root = root.getParent();
+        }
+        assertNotNull(root, "repository fixture must be present");
+        Path source = scratch.resolve("E2eWechatPayStub.java");
+        Files.copy(root.resolve("scripts/e2e/E2eWechatPayStub.java.stub"), source);
+        assertNotNull(ToolProvider.getSystemJavaCompiler(), "run on the VPS JDK, not a JRE");
+        String classpath = System.getProperty("surefire.test.class.path", System.getProperty("java.class.path"));
+        assertEquals(0, ToolProvider.getSystemJavaCompiler().run(null, null, null,
+                "-classpath", classpath, "-d", scratch.toString(), source.toString()));
+        try (URLClassLoader loader = new URLClassLoader(new URL[] {scratch.toUri().toURL()},
+                E2eWechatPayStubContractTest.class.getClassLoader())) {
+            stubClass = loader.loadClass("com.chengyinhub.e2e.E2eWechatPayStub");
+        }
+    }
+
+    @Test
+    void dispatchesEachBusinessToItsRealServiceAndKeepsUnknownMembershipClosed() throws Exception {
+        IWechatPayService stub = (IWechatPayService) stubClass.getDeclaredConstructor().newInstance();
+        ICmsRegistrationService registration = mock(ICmsRegistrationService.class);
+        IClubMembershipService membership = mock(IClubMembershipService.class);
+        IMerchantCommerceService commerce = mock(IMerchantCommerceService.class);
+        ICoopInviteService invite = mock(ICoopInviteService.class);
+        ObjectProvider<IClubMembershipService> provider = mock(ObjectProvider.class);
+        when(provider.getIfAvailable()).thenReturn(membership);
+        WxPayConfig config = mock(WxPayConfig.class);
+        when(config.getMerchantId()).thenReturn("fixture-merchant");
+        ReflectionTestUtils.setField(stub, "registrationService", registration);
+        ReflectionTestUtils.setField(stub, "clubMembershipServiceProvider", provider);
+        ReflectionTestUtils.setField(stub, "merchantCommerceService", commerce);
+        ReflectionTestUtils.setField(stub, "coopInviteService", invite);
+        ReflectionTestUtils.setField(stub, "wxPayConfig", config);
+
+        when(membership.supportsOutTradeNo("CLM1")).thenReturn(true);
+        when(membership.handlePaidInvoice("CLM1", true, 100, "tx")).thenReturn(true);
+        assertTrue(stub.handlePayCallback(body("CLM1", "CNY", "fixture-merchant"), Collections.emptyMap()).contains("SUCCESS"));
+        verify(membership).handlePaidInvoice("CLM1", true, 100, "tx");
+        assertTrue(stub.handlePayCallback(body("CLM-unknown", "CNY", "fixture-merchant"), Collections.emptyMap()).contains("FAIL"));
+        verifyNoInteractions(registration);
+
+        when(commerce.supportsOutTradeNo("COMM1")).thenReturn(true);
+        when(commerce.handlePaidOrder("COMM1", true, 100, "tx")).thenReturn(true);
+        assertTrue(stub.handlePayCallback(body("COMM1", "CNY", "fixture-merchant"), Collections.emptyMap()).contains("SUCCESS"));
+        verify(commerce).handlePaidOrder("COMM1", true, 100, "tx");
+
+        assertTrue(stub.handlePayCallback(body("DEP1", "USD", "fixture-merchant"), Collections.emptyMap()).contains("FAIL"));
+        assertTrue(stub.handlePayCallback(body("DEP1", "CNY", "other-merchant"), Collections.emptyMap()).contains("FAIL"));
+        verifyNoInteractions(invite);
+        when(invite.markDepositPaid("DEP1", 100L, "tx")).thenReturn(true);
+        assertTrue(stub.handlePayCallback(body("DEP1", "CNY", "fixture-merchant"), Collections.emptyMap()).contains("SUCCESS"));
+        verify(invite).markDepositPaid("DEP1", 100L, "tx");
+
+        when(registration.handleWechatPayCallback(anyMap())).thenReturn("SUCCESS");
+        assertTrue(stub.handlePayCallback(body("REG1", "CNY", "fixture-merchant"), Collections.emptyMap()).contains("SUCCESS"));
+        verify(registration).handleWechatPayCallback(argThat(facts -> "REG1".equals(facts.get("out_trade_no"))));
+    }
+
+    private String body(String outTradeNo, String currency, String merchant) {
+        return "{\"out_trade_no\":\"" + outTradeNo + "\",\"transaction_id\":\"tx\",\"trade_state\":\"SUCCESS\","
+                + "\"total\":100,\"currency\":\"" + currency + "\",\"mchid\":\"" + merchant + "\"}";
+    }
+}

@@ -12,10 +12,12 @@ import com.chengyinhub.business.domain.ClubMember;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.CmsRegistrationMerchant;
+import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CoopOrder;
 import com.chengyinhub.business.mapper.ClubMapper;
 import com.chengyinhub.business.mapper.ClubMemberMapper;
 import com.chengyinhub.business.mapper.CoopOrderMapper;
+import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.service.impl.ClubMemberServiceImpl;
 import com.chengyinhub.business.service.ICmsActivityService;
 import com.chengyinhub.business.service.ICmsRegistrationMerchantService;
@@ -85,6 +87,7 @@ class ApiRegistrationVerifyGateTest {
     private CoopOrderMapper coopOrderMapper;
     private ClubMapper clubMapper;
     private ClubMemberMapper clubMemberMapper;
+    private CmsTopicMapper cmsTopicMapper;
     private IMerchantAccessService merchantAccessService;
     private ApiRegistrationController controller;
 
@@ -97,6 +100,7 @@ class ApiRegistrationVerifyGateTest {
         coopOrderMapper = mock(CoopOrderMapper.class);
         clubMapper = mock(ClubMapper.class);
         clubMemberMapper = mock(ClubMemberMapper.class);
+        cmsTopicMapper = mock(CmsTopicMapper.class);
         merchantAccessService = mock(IMerchantAccessService.class);
         growthSvc = mock(IGrowthService.class);
 
@@ -119,6 +123,12 @@ class ApiRegistrationVerifyGateTest {
         ReflectionTestUtils.setField(realClubMemberSvc, "coopOrderMapper", coopOrderMapper);
         ReflectionTestUtils.setField(realClubMemberSvc, "clubMapper", clubMapper);
         ReflectionTestUtils.setField(realClubMemberSvc, "clubMemberMapper", clubMemberMapper);
+        ReflectionTestUtils.setField(realClubMemberSvc, "cmsTopicMapper", cmsTopicMapper);
+        // 真实主理人判据先回读未删除主题；此套仍测试 club_id 为空的旧合作单路径。
+        CmsTopic existingTopic = new CmsTopic();
+        existingTopic.setId(TOPIC);
+        existingTopic.setDelFlag(0);
+        when(cmsTopicMapper.selectCmsTopicById(TOPIC)).thenReturn(existingTopic);
         IClubAccessService clubAccessService = mock(IClubAccessService.class);
         when(clubAccessService.resolve(anyLong(), anyLong(), eq(null))).thenAnswer(invocation -> {
             Long principal = invocation.getArgument(0);
@@ -562,6 +572,45 @@ class ApiRegistrationVerifyGateTest {
         assertEquals(MEMBER, verifier.getValue(), "台账记的核销人 = 主理人");
         assertEquals(GROUP_ACTIVITY, activityId.getValue(), "玩家核销必须绑定当前带队场次");
         verify(merchantAccessService, never()).require(anyLong(), any());
+    }
+
+    @Test
+    void organizerLeader_missingTopicCannotSettleOrAward() {
+        givenNoWinnerRow();
+        givenOrganizerClub();
+        when(clubMapper.selectClubById(CLUB)).thenReturn(clubOwnedBy(MEMBER));
+        givenGroupActivity(CLUB);
+        when(cmsTopicMapper.selectCmsTopicById(TOPIC)).thenReturn(null);
+
+        AjaxResult result = controller.scanQrCode("topic", CODE, GROUP_ACTIVITY);
+
+        assertEquals("仅俱乐部主理人可核销玩家票", result.get("msg"));
+        verify(cmsTopicMapper).selectCmsTopicById(TOPIC);
+        verify(regSvc, never()).verifyAndSettleForGroupActivity(any(), anyLong(), anyLong());
+        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), any(), any());
+        verify(regSvc, never()).verifyAndSettleForOwnStation(any(), anyLong(), anyLong(), any());
+        verifyNoInteractions(pointsSvc, growthSvc);
+    }
+
+    @Test
+    void organizerLeader_deletedTopicCannotSettleOrAward() {
+        givenNoWinnerRow();
+        givenOrganizerClub();
+        when(clubMapper.selectClubById(CLUB)).thenReturn(clubOwnedBy(MEMBER));
+        givenGroupActivity(CLUB);
+        CmsTopic deletedTopic = new CmsTopic();
+        deletedTopic.setId(TOPIC);
+        deletedTopic.setDelFlag(1);
+        when(cmsTopicMapper.selectCmsTopicById(TOPIC)).thenReturn(deletedTopic);
+
+        AjaxResult result = controller.scanQrCode("topic", CODE, GROUP_ACTIVITY);
+
+        assertEquals("仅俱乐部主理人可核销玩家票", result.get("msg"));
+        verify(cmsTopicMapper).selectCmsTopicById(TOPIC);
+        verify(regSvc, never()).verifyAndSettleForGroupActivity(any(), anyLong(), anyLong());
+        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), any(), any());
+        verify(regSvc, never()).verifyAndSettleForOwnStation(any(), anyLong(), anyLong(), any());
+        verifyNoInteractions(pointsSvc, growthSvc);
     }
 
     /**

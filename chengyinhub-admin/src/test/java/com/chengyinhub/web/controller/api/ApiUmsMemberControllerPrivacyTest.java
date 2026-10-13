@@ -52,7 +52,7 @@ class ApiUmsMemberControllerPrivacyTest {
     // 那不是本 PR 采用的做法，也没有该授权 —— 放宽这份键集必须像本条一样逐字写清扩的是什么、为什么。
     private static final Set<String> PUBLIC_KEYS = new TreeSet<>(Arrays.asList(
             "activityNum", "avatar", "caseIntroducton", "casePics", "fansNum",
-            "followNum", "id", "identityKind", "introduction", "isFollow", "joinUserNum",
+            "followNum", "friendNum", "id", "identityKind", "introduction", "isFollow", "joinUserNum",
             "levelId", "likeNum", "nickname", "sysCategoryList", "topicNum"
     ));
 

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.chengyinhub.business.domain.PlayerObjectCard;
 import com.chengyinhub.business.domain.vo.PlayerObjectCardVO;
 import com.chengyinhub.business.service.ObjectCardService;
+import com.chengyinhub.business.service.support.AppMediaReferenceGuard;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 
@@ -41,6 +42,9 @@ public class ApiObjectCardController extends BaseController {
     @Autowired
     private ObjectCardService objectCardService;
 
+    @Autowired
+    private AppMediaReferenceGuard mediaReferences;
+
     /** 包级可见(非 private):测试覆写它注入身份,好让越权面走真入口而不是只测纯函数。 */
     Long uid() {
         try { return getAppUserId(); } catch (Exception e) { return 0L; }
@@ -59,7 +63,7 @@ public class ApiObjectCardController extends BaseController {
         List<PlayerObjectCard> rows = objectCardService.list(memberId, only, safeOffset(pageNum, size), size);
         List<PlayerObjectCardVO> safeRows = new ArrayList<PlayerObjectCardVO>(rows == null ? 0 : rows.size());
         if (rows != null) {
-            for (PlayerObjectCard row : rows) safeRows.add(PlayerObjectCardVO.from(row));
+            for (PlayerObjectCard row : rows) safeRows.add(PlayerObjectCardVO.from(row, reference -> mediaReferences.visibleUrl(reference, memberId)));
         }
 
         Map<String, Object> data = new LinkedHashMap<String, Object>();
@@ -82,7 +86,7 @@ public class ApiObjectCardController extends BaseController {
 
         PlayerObjectCard renamed = objectCardService.rename(memberId, id, name);
         if (renamed == null) return error("这张卡不是你的,或已经不存在了");
-        return success(PlayerObjectCardVO.from(renamed));
+        return success(PlayerObjectCardVO.from(renamed, reference -> mediaReferences.visibleUrl(reference, memberId)));
     }
 
     /** 分页夹取:默认 20,上限 50 —— 册子可以很长,不能让客户端一次拉光。 */

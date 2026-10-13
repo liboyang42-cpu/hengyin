@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.AppMediaAssetMapper">
+ <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+  insert into app_media_asset(member_id,object_key,media_type,review_state,version,create_time,update_time)
+  values(#{memberId},#{objectKey},#{mediaType},'HOLD',0,now(),now())
+ </insert>
+ <insert id="insertApprovedImage" useGeneratedKeys="true" keyProperty="id">
+  insert into app_media_asset(member_id,object_key,media_type,review_state,version,create_time,update_time)
+  values(#{memberId},#{objectKey},'IMAGE','APPROVED',0,now(),now())
+ </insert>
+ <insert id="insertApprovedSystemImage" useGeneratedKeys="true" keyProperty="id">
+  insert into app_media_asset(member_id,object_key,media_type,review_state,version,owner_type,storage_type,public_url,create_time,update_time)
+  values(#{memberId},#{objectKey},'IMAGE','APPROVED',0,'SYSTEM',#{storageType},#{publicUrl},now(),now())
+ </insert>
+ <select id="selectOwnedRecent" resultType="java.util.HashMap" useCache="false">
+  select id,media_type as mediaType,review_state as reviewState,review_reason as reviewReason,
+   update_time as updatedAt from app_media_asset
+  where owner_type='APP' and member_id=#{memberId}
+  order by id desc limit 50
+ </select>
+ <select id="selectOwnedBefore" resultType="java.util.HashMap" useCache="false">
+  select id,media_type as mediaType,review_state as reviewState,review_reason as reviewReason,
+   update_time as updatedAt from app_media_asset
+  where owner_type='APP' and member_id=#{memberId} and id &lt; #{beforeId}
+  order by id desc limit 50
+ </select>
+ <select id="selectByObjectKey" resultType="java.util.HashMap" useCache="false">
+  select id,member_id as memberId,object_key as objectKey,media_type as mediaType,review_state as reviewState,
+   review_reason as reviewReason,version,audit_task_id as auditTaskId,owner_type as ownerType,storage_type as storageType,public_url as publicUrl from app_media_asset where object_key=#{objectKey}
+ </select>
+ <select id="select" resultType="java.util.HashMap" useCache="false">
+  select id,member_id as memberId,object_key as objectKey,media_type as mediaType,review_state as reviewState,
+   review_reason as reviewReason,version,audit_task_id as auditTaskId,owner_type as ownerType,storage_type as storageType,public_url as publicUrl from app_media_asset where id=#{id}
+ </select>
+ <select id="selectForUpdate" resultType="java.util.HashMap" useCache="false" flushCache="true">
+  select id,member_id as memberId,object_key as objectKey,media_type as mediaType,review_state as reviewState,
+   review_reason as reviewReason,version,audit_task_id as auditTaskId,owner_type as ownerType,storage_type as storageType,public_url as publicUrl from app_media_asset where id=#{id} for update
+ </select>
+ <update id="bindAuditTask">
+  update app_media_asset set audit_task_id=#{taskId},update_time=now()
+  where id=#{id} and version=#{version} and review_state='HOLD' and audit_task_id is null
+ </update>
+ <update id="decide">
+  update app_media_asset set review_state=#{state},review_reason=#{reason},update_time=now()
+  where id=#{id} and version=#{version} and review_state='HOLD' and audit_task_id=#{taskId}
+ </update>
+ <update id="retry">
+  update app_media_asset set review_state='HOLD',review_reason=null,version=version+1,audit_task_id=null,update_time=now()
+  where id=#{id} and member_id=#{memberId} and version=#{version} and review_state in ('REJECTED','UNAVAILABLE')
+ </update>
+</mapper>

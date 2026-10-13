@@ -6,13 +6,19 @@ SCRIPT="$ROOT/scripts/production-preflight.sh"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-if env -i PATH="$PATH" "$SCRIPT" >"$TMP/missing.log" 2>&1; then
+if env -i PATH="$PATH" bash "$SCRIPT" --env >"$TMP/missing.log" 2>&1; then
   echo "缺少生产配置时预检不应通过" >&2
   exit 1
 fi
 grep -q '缺少必填环境变量' "$TMP/missing.log"
 
 if env \
+  CHENGYIN_JWT_SECRET=test-jwt-secret \
+  CHENGYIN_WXPAY_APIV3_KEY=test-pay-key \
+  CHENGYIN_WXMINI_SECRET=test-mini-secret \
+  CHENGYIN_DRUID_PASSWORD=test-druid-secret \
+  COUPON_QR_SECRET=test-qr-secret \
+  ALARM_WEBHOOK=https://alarm.example.com/hook \
   CHENGYIN_DB_PASSWORD=test-db-password \
   CHENGYIN_WITHDRAWAL_PII_KEY=invalid \
   CHENGYIN_OSS_ENDPOINT=oss.example.com \
@@ -21,14 +27,20 @@ if env \
   CHENGYIN_OSS_BUCKET_NAME=test-bucket \
   CHENGYIN_TENCENT_MAP_ENABLED=true \
   CHENGYIN_TENCENT_MAP_KEY=test-map-key \
-  "$SCRIPT" >"$TMP/invalid-key.log" 2>&1; then
+  bash "$SCRIPT" --env >"$TMP/invalid-key.log" 2>&1; then
   echo "非法提现密钥时预检不应通过" >&2
   exit 1
 fi
 grep -q 'Base64 编码的 32 字节 AES-256 密钥' "$TMP/invalid-key.log"
 
-KEY="$(node -e 'process.stdout.write(Buffer.alloc(32).toString("base64"))')"
+KEY='AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='
 env \
+  CHENGYIN_JWT_SECRET=test-jwt-secret \
+  CHENGYIN_WXPAY_APIV3_KEY=test-pay-key \
+  CHENGYIN_WXMINI_SECRET=test-mini-secret \
+  CHENGYIN_DRUID_PASSWORD=test-druid-secret \
+  COUPON_QR_SECRET=test-qr-secret \
+  ALARM_WEBHOOK=https://alarm.example.com/hook \
   CHENGYIN_DB_PASSWORD=test-db-password \
   CHENGYIN_WITHDRAWAL_PII_KEY="$KEY" \
   CHENGYIN_OSS_ENDPOINT=oss.example.com \
@@ -37,5 +49,5 @@ env \
   CHENGYIN_OSS_BUCKET_NAME=test-bucket \
   CHENGYIN_TENCENT_MAP_ENABLED=true \
   CHENGYIN_TENCENT_MAP_KEY=test-map-key \
-  "$SCRIPT" >"$TMP/valid.log" 2>&1
+  bash "$SCRIPT" --env >"$TMP/valid.log" 2>&1
 grep -q '生产配置预检通过' "$TMP/valid.log"

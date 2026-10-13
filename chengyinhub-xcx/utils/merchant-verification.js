@@ -7,7 +7,12 @@ function isDuplicate(response) {
   return data.alreadyUsed === true || data.alreadyVerified === true;
 }
 
+function isReplayed(response) {
+  return isSuccess(response) && response.data && response.data.replayed === true;
+}
+
 function completionReceiptMessage(response, fallback) {
+  if (isReplayed(response)) return '该章节已核销，请勿重复提供权益';
   const message = (response && response.msg) || fallback;
   const earnedXp = Number(response && response.data && response.data.completionEarnedXp) || 0;
   return earnedXp > 0 ? (message + ' · 玩家通关 +' + earnedXp + ' 探索值已到账') : message;
@@ -16,6 +21,9 @@ function completionReceiptMessage(response, fallback) {
 function resolveVerificationResult(response, action) {
   const label = action || '核销';
   const message = (response && response.msg) || (label + '失败，请重试');
+  if (isReplayed(response)) {
+    return { state: 'duplicate', title: '已核销', message: completionReceiptMessage(response, message), show: true };
+  }
   if (isDuplicate(response)) {
     return {
       state: 'duplicate',

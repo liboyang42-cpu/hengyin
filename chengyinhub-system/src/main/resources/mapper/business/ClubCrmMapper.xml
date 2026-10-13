@@ -59,6 +59,10 @@
     </resultMap>
 
     <resultMap id="RawTopicRow" type="com.chengyinhub.business.domain.vo.ClubCustomerVO$RawTopicRow">
+        <result property="participantName" column="participant_name"/>
+        <result property="registrationStatus" column="registration_status"/>
+        <result property="pointUsed" column="point_used"/>
+        <result property="payableAmount" column="payable_amount"/>
         <result property="registrationId" column="registration_id"/>
         <result property="memberId" column="member_id"/>
         <result property="displayName" column="display_name"/>
@@ -177,6 +181,10 @@
     <select id="selectTopicCustomers" resultMap="RawTopicRow">
         select
             r.id as registration_id,
+            r.real_name as participant_name,
+            r.registration_status as registration_status,
+            r.point_used as point_used,
+            r.payable_amount as payable_amount,
             r.member_id as member_id,
             coalesce(nullif(u.nickname, ''), concat('成员#', r.member_id)) as display_name,
             u.avatar as avatar,
@@ -217,7 +225,7 @@
             t.member_id as ownerMemberId,
             (select count(*) from cms_topic_node n where n.topic_id = t.id and n.status = 1) as nodeCount,
             coalesce(sum(case when r.id is null then 0 else ifnull(r.order_num, 1) end), 0) as sessionHeadcount,
-            coalesce(sum(case when r.verification_status is null or r.verification_status &lt;&gt; 1 then 1 else 0 end), 0) as pendingVerifyCount,
+            coalesce(sum(case when r.id is null then 0 when r.verification_status is null or r.verification_status &lt;&gt; 1 then 1 else 0 end), 0) as pendingVerifyCount,
             coalesce(sum(case when r.verification_status = 1 and r.verifier_id = #{viewerId} then 1 else 0 end), 0) as verifiedByMeCount,
             <!-- 本场真状态(核销区可见性用):取消 > 游戏总局状态 > 按服务端时钟对排期。
                  带 activityId 就是那一场(须属本主题本俱乐部);不带时主题下恰好一场才算,多场说不清是哪场给 null。 -->
@@ -297,6 +305,9 @@
     </insert>
 
     <resultMap id="RawCheckinRow" type="com.chengyinhub.business.domain.vo.ClubCustomerVO$RawCheckinRow">
+        <result property="participantName" column="participant_name"/>
+        <result property="registrationStatus" column="registration_status"/>
+        <result property="pointUsed" column="point_used"/>
         <result property="registrationId"     column="registration_id"/>
         <result property="displayName"        column="display_name"/>
         <result property="avatar"             column="avatar"/>
@@ -323,6 +334,9 @@
     <select id="selectCheckinDetail" resultMap="RawCheckinRow">
         select
             r.id as registration_id,
+            r.real_name as participant_name,
+            r.registration_status as registration_status,
+            r.point_used as point_used,
             coalesce(nullif(u.nickname, ''), concat('成员#', r.member_id)) as display_name,
             u.avatar as avatar,
             u.phone as phone,

@@ -90,6 +90,9 @@ import com.chengyinhub.common.utils.OwnershipUtils;
 @RequestMapping("/api/merchant")
 public class ApiMerchantController extends BaseController {
     @Autowired
+    private com.chengyinhub.business.service.ConsentGuard consentGuard;
+
+    @Autowired
     private IUmsMemberService umsMemberService;
 
     @Autowired
@@ -110,6 +113,15 @@ public class ApiMerchantController extends BaseController {
 
     @Autowired
     private IWxContentSecurityService wxContentSecurityService;
+
+    @Autowired
+    private com.chengyinhub.business.service.support.AppMediaReferenceGuard mediaReferences;
+
+    private String reviewedMedia(Long memberId, String reference, boolean multiple) {
+        if (reference == null || reference.trim().isEmpty()) return reference;
+        return multiple ? mediaReferences.requireAttachments(memberId, reference, true)
+                : mediaReferences.requireAttachment(memberId, reference, true);
+    }
 
     @Autowired
     private IMmsMerchantService mmsMerchantService;
@@ -691,11 +703,11 @@ public class ApiMerchantController extends BaseController {
         // 白名单:只允许改展示层字段 + 行业类型(categoryId),按 memberId 定位自己的商家,防 IDOR
         MmsMerchant upd = new MmsMerchant();
         upd.setId(m.getId());
-        upd.setCoverImage(body.getCoverImage());
+        upd.setCoverImage(reviewedMedia(memberId, body.getCoverImage(), false));
         upd.setSlogan(body.getSlogan());
         upd.setCityRole(body.getCityRole());
         upd.setStoryTitle(body.getStoryTitle());
-        upd.setGallery(body.getGallery());
+        upd.setGallery(reviewedMedia(memberId, body.getGallery(), true));
         upd.setTags(body.getTags());
         upd.setFeaturedType(body.getFeaturedType());
         upd.setFeaturedId(body.getFeaturedId());
@@ -714,7 +726,7 @@ public class ApiMerchantController extends BaseController {
         if (rows != 1) {
             MmsMerchant current = rows == 0
                     ? mmsMerchantService.selectMmsMerchantById(m.getId()) : null;
-            if (!decorMatches(current, body)) {
+            if (!decorMatches(current, upd)) {
                 throw merchantWriteConflict();
             }
         }
@@ -860,6 +872,7 @@ public class ApiMerchantController extends BaseController {
         Long memberId;
         try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
         if (memberId == null || memberId < 1) return error("请先登录");
+        consentGuard.requireCurrentAgreement(memberId, "voice_clone_processing", "merchant_voice");
         if (body == null) return error("参数有误");
         if (!Boolean.TRUE.equals(body.getVoiceConsent())) return error("请先确认声音为本人所有或已获得授权");
         MerchantAccessContext access = merchantAccessService.require(
@@ -867,11 +880,13 @@ public class ApiMerchantController extends BaseController {
 
         String sample = trimOrNull(body.getVoiceSample());
         if (sample == null) return error("请先录一段话");
-        if (sample.length() > 255) return error("录音地址过长");
-        if (!sample.startsWith("/") && !sample.startsWith("https://") && !sample.startsWith("http://")) return error("录音地址不支持");
+        if (sample.length() > 4096) return error("录音地址过长");
+        if (!sample.matches("media-asset:[1-9][0-9]{0,18}") && !sample.startsWith("/") && !sample.startsWith("https://") && !sample.startsWith("http://")) return error("录音地址不支持");
 
         NpcProfile mine = ownNpcOrNull(access.getMerchantId());
         if (mine == null) return error("请先保存形象,再给它配声音");
+        sample = mediaReferences.requireAttachment(memberId, sample, true);
+        if (sample.length() > 255) return error("录音引用过长");
         if (sample.equals(mine.getVoiceSample()) && (Integer.valueOf(VOICE_PENDING).equals(mine.getVoiceStatus())
                 || Integer.valueOf(VOICE_READY).equals(mine.getVoiceStatus()))) {
             AjaxResult existing = AjaxResult.success();
@@ -886,23 +901,37 @@ public class ApiMerchantController extends BaseController {
             return error("语音服务未开通");
         }
 
+        String processingSample = mediaReferences.processingUrl(sample, memberId, "AUDIO");
+
         // 先落「复刻中」再打上游:反过来的话,上游成功但落库失败就成了花了钱没记住,
         // 而商家看到的是失败、会再点一次,又生成一个音色。
         NpcProfile pending = new NpcProfile();
         pending.setId(mine.getId());
         pending.setScopeId(access.getMerchantId());
+        pending.setVoiceVersion(mine.getVoiceVersion());
         pending.setVoiceId(null);
         pending.setVoiceStatus(VOICE_PENDING);
         pending.setVoiceSample(sample);
-        if (npcProfileMapper.updateMerchantNpcVoice(pending) != 1) return error("声音任务未保存，请重试");
+        if (npcProfileMapper.updateMerchantNpcVoice(pending) != 1) {
+            NpcProfile latest = ownNpcOrNull(access.getMerchantId());
+            if (latest != null && sample.equals(latest.getVoiceSample())
+                    && (Integer.valueOf(VOICE_PENDING).equals(latest.getVoiceStatus())
+                        || Integer.valueOf(VOICE_READY).equals(latest.getVoiceStatus()))) {
+                AjaxResult existing = AjaxResult.success();
+                existing.put("voiceStatus", latest.getVoiceStatus());
+                return existing;
+            }
+            return error("声音任务未保存，请重试");
+        }
 
         String voiceId;
         try {
-            voiceId = voiceCloneClient.enroll(sample);
+            voiceId = voiceCloneClient.enroll(processingSample);
         } catch (AiServiceException e) {
             NpcProfile failed = new NpcProfile();
             failed.setId(mine.getId());
             failed.setScopeId(access.getMerchantId());
+            failed.setVoiceVersion(mine.getVoiceVersion() + 1);
             failed.setVoiceId(null);
             failed.setVoiceStatus(VOICE_FAILED);
             npcProfileMapper.updateMerchantNpcVoice(failed);
@@ -918,6 +947,7 @@ public class ApiMerchantController extends BaseController {
         NpcProfile done = new NpcProfile();
         done.setId(mine.getId());
         done.setScopeId(access.getMerchantId());
+        done.setVoiceVersion(mine.getVoiceVersion() + 1);
         done.setVoiceId(voiceId);
         done.setVoiceStatus(ready ? VOICE_READY : VOICE_PENDING);
         if (npcProfileMapper.updateMerchantNpcVoice(done) != 1) return error("声音结果待确认，请稍后查询状态");
@@ -950,14 +980,17 @@ public class ApiMerchantController extends BaseController {
                     NpcProfile upd = new NpcProfile();
                     upd.setId(mine.getId());
                     upd.setScopeId(access.getMerchantId());
+                    upd.setVoiceVersion(mine.getVoiceVersion());
                     upd.setVoiceId(mine.getVoiceId());
                     upd.setVoiceStatus(VOICE_READY);
-                    if (npcProfileMapper.updateMerchantNpcVoice(upd) == 1) status = VOICE_READY;
+                    if (npcProfileMapper.updateMerchantNpcVoice(upd) == 1) mine.setVoiceStatus(VOICE_READY);
                 }
             } catch (AiServiceException ignore) {}
+            mine = ownNpcOrNull(access.getMerchantId());
+            status = mine == null || mine.getVoiceStatus() == null ? VOICE_NONE : mine.getVoiceStatus();
         }
         r.put("voiceStatus", status);
-        r.put("voiceSample", mine.getVoiceSample());
+        r.put("voiceSample", mine == null ? null : mine.getVoiceSample());
         return r;
     }
 
@@ -975,6 +1008,7 @@ public class ApiMerchantController extends BaseController {
         NpcProfile upd = new NpcProfile();
         upd.setId(mine.getId());
         upd.setScopeId(access.getMerchantId());
+        upd.setVoiceVersion(mine.getVoiceVersion());
         upd.setVoiceId(null);
         upd.setVoiceStatus(VOICE_NONE);
         return npcProfileMapper.updateMerchantNpcVoice(upd) == 1
@@ -1183,7 +1217,7 @@ public class ApiMerchantController extends BaseController {
         // 使用新对象而不是修改查询实体，避免 phone/license/status 等非编辑字段被意外带回更新。
         MmsMerchant update = new MmsMerchant();
         update.setId(mmsMerchant.getId());
-        if (request.getLogo() != null) update.setLogo(request.getLogo());
+        if (request.getLogo() != null) update.setLogo(reviewedMedia(member_id, request.getLogo(), false));
         if (request.getName() != null) update.setName(request.getName());
         if (request.getDescription() != null) update.setDescription(request.getDescription());
         if (request.getDerivatives() != null) update.setDerivatives(request.getDerivatives());

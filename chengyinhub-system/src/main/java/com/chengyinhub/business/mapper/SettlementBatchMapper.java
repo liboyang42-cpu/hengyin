@@ -28,6 +28,8 @@ public interface SettlementBatchMapper {
 
     /** 所有批次中，批次总额与绑定明细金额合计不一致的记录。 */
     List<com.chengyinhub.business.domain.vo.SettlementBatchReconciliationVO> selectAmountMismatchBatches();
+    Long countAmountMismatchBatches();
+    List<com.chengyinhub.business.domain.vo.SettlementBatchReconciliationVO> sampleAmountMismatchBatches();
 
     /** 按 bindBatch 实际绑定成功的明细回填 total_amount/detail_count，防止幽灵批次虚报金额。 */
     int updateBatchTotals(@Param("id") Long id,

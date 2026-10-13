@@ -24,6 +24,9 @@ public interface UmsMemberMapper
      */
     public UmsMember selectUmsMemberById(Long id);
 
+    /** 权限只读取角色与账号有效状态，不读取资料或兼容字段。 */
+    UmsMember selectRolePermissionSubject(Long id);
+
     /**
      * 对会员行加悲观行锁(SELECT ... FOR UPDATE),用于串行化该会员的配额敏感写操作(如主题上架)。
      * 必须在事务内调用,锁持有到事务结束。
@@ -71,6 +74,9 @@ public interface UmsMemberMapper
      * @return 结果
      */
     public int updateUmsMember(UmsMember umsMember);
+
+    /** 唯一角色写入口由 RoleService 调用；兼容 user_type 与 role 同语句。 */
+    int updateCanonicalRole(@Param("id") Long id, @Param("role") String role, @Param("userType") Long userType);
 
     /**
      * 仅当会员尚未绑定微信身份时原子绑定 OpenID。

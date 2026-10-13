@@ -80,6 +80,8 @@ class CoopInviteServiceImplTest {
         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(any())).thenAnswer(call ->
                 cmsTopicMapper.selectCmsTopicById(call.getArgument(0)));
         svc = new CoopInviteServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(svc, "commercialReviewService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.ITopicCommercialReviewService.class));
         ReflectionTestUtils.setField(svc, "depositRefundService", mock(com.chengyinhub.business.service.impl.CoopDepositRefundService.class));
         ReflectionTestUtils.setField(svc, "coopInviteMapper", coopInviteMapper);
         ReflectionTestUtils.setField(svc, "coopOrderMapper", coopOrderMapper);

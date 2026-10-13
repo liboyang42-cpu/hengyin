@@ -63,6 +63,8 @@ Page({
    */
   onLoad(options) {
     const that = this;
+    that._unloaded = false;
+    that._refreshOnShow = false;
     // 两条支线的原料。data 里没有它们,所以在这里立好,别让后面的 concat 撞上 undefined
     that._topic = { list: [], state: 'loading', err: '' };
     that._activity = { list: [], state: 'loading', err: '' };
@@ -79,8 +81,43 @@ Page({
     }
   },
 
+  onShow() {
+    // onLoad 已发首批请求；只有隐藏后返回才重读服务端票状态。
+    if (!this._refreshOnShow || this._unloaded) return;
+    this._refreshOnShow = false;
+    const current = (this.data.ticketList || [])[this.data.currentSwiperTicket];
+    if (current) this._focusId = String(current.id);
+    this._focusTries = 0;
+    this._topic = { list: [], state: 'loading', err: '' };
+    this._activity = { list: [], state: 'loading', err: '' };
+    this._myTeams = {};
+    this.data.page_no = 1;
+    this.setData({ hasMore: false, nodata: false,
+      currentSwiperTicket: 0, currentTeam: null });
+    this.getActivityList();
+    this.getTopicList();
+    this.loadMyTeams();
+  },
+
+  _invalidateWalletRequests() {
+    this._topicRequestSeq = (this._topicRequestSeq || 0) + 1;
+    this._activityRequestSeq = (this._activityRequestSeq || 0) + 1;
+    this._teamsRequestSeq = (this._teamsRequestSeq || 0) + 1;
+  },
+
+  onHide() {
+    this._refreshOnShow = true;
+    this._invalidateWalletRequests();
+  },
+
+  onUnload() {
+    this._unloaded = true;
+    this._invalidateWalletRequests();
+  },
+
   // 轮询等票夹列表就绪,匹配 focusId(=registrationId,与票卡 item.id 一致)→ 切到对应子tab与 swiper 卡
   _tryFocusTicket() {
+    if (this._unloaded || this._refreshOnShow) return;
     const fid = this._focusId;
     if (!fid) return;
     const list = this.data.ticketList || [];
@@ -178,10 +215,15 @@ Page({
     else if (ts === 'error' && as === 'error') state = 'error';
     else if (list.length > 0) state = 'ready';
     else if (ts === 'loading' || as === 'loading') state = 'loading';
+    else if (ts === 'error' || as === 'error') state = 'error';
     else state = 'empty';
-    const cur = list[this.data.currentSwiperTicket] || list[0] || {};
+    const previous = (this.data.ticketList || [])[this.data.currentSwiperTicket];
+    const previousIndex = previous ? list.findIndex(item => item.wKey === previous.wKey) : -1;
+    const currentIndex = previousIndex >= 0 ? previousIndex : 0;
+    const cur = list[currentIndex] || {};
     this.setData({
       ticketList: list,
+      currentSwiperTicket: currentIndex,
       walletState: state,
       walletErrorMsg: (this._topic || {}).err || (this._activity || {}).err || '',
       topicBg: cur.wImg || this.data.topicBg,
@@ -208,10 +250,12 @@ Page({
      silentError:队伍拉不到只是这一行不出,不该拿一个全局 toast 盖在票夹上说「出错了」。 */
   loadMyTeams() {
     const that = this;
+    const requestSeq = this._teamsRequestSeq = (this._teamsRequestSeq || 0) + 1;
     app.sendRequest({
       url: '/api/team/my', method: 'POST', hideLoading: true, silentError: true,
       data: {},
       success(res) {
+        if (that._unloaded || requestSeq !== that._teamsRequestSeq) return;
         const rows = res && res.code == '200' && Array.isArray(res.data) ? res.data : null;
         if (!rows) return;            // 读不到 ≠ 没有队伍,保持这一行不出,不写一个空态
         const index = {};
@@ -259,7 +303,7 @@ Page({
   // 主题swiper切换
   // 活动swiper切换
 
-  // 两路都落定且只挂了一路:不出失败半屏,票夹照常显示另一路 —— 这时报一次,别让缺的那半静默
+  // 两路落定后提示单路失败；有票继续显示，没票由 walletState 提供可重试错误态。
   _reportHalfFailure() {
     const t = this._topic || {}, a = this._activity || {};
     if (t.state === 'loading' || a.state === 'loading') return;
@@ -269,6 +313,7 @@ Page({
 
   getTopicList: function () {
     var that = this;
+    const requestSeq = that._topicRequestSeq = (that._topicRequestSeq || 0) + 1;
     that._topic = { list: (that._topic && that._topic.list) || [], state: 'loading', err: '' };
     that.rebuildTicketList();
     app.sendRequest({
@@ -282,6 +327,7 @@ Page({
         pageSize: app.getPageSize(),
       },
       success: function (res) {
+        if (that._unloaded || requestSeq !== that._topicRequestSeq) return;
         const payload = res && res.data;
         if (!(res && res.code == "200" && payload && Array.isArray(payload.rows))) {
           that._topic = { list: that._topic.list, state: 'error',
@@ -297,6 +343,7 @@ Page({
         // 背景图跟着当前那张票走,由 rebuildTicketList 统一写(它知道现在停在哪一张)
         that.rebuildTicketList();
         that.syncCurrentTeam();
+        if (that._focusId) that._tryFocusTicket();
         if (payload.rows.length < 1) {
           that.setData({
             nodata: true,
@@ -304,12 +351,14 @@ Page({
         }
       },
       fail: function (err) {
+        if (that._unloaded || requestSeq !== that._topicRequestSeq) return;
         // 原为空函数:请求失败被整个吞掉,列表停在 [] ⇒ 页面显示「还没有票!」= 错误伪装成空态
         that._topic = { list: that._topic.list, state: 'error',
           err: (err && err.errMsg) || '网络开了点小差' };
         that.rebuildTicketList();
       },
       complete: function () {
+        if (that._unloaded || requestSeq !== that._topicRequestSeq) return;
         that._reportHalfFailure();
         that.setData({
           nodata: that._topic.list.length < 1 ? true : false,
@@ -330,6 +379,7 @@ Page({
 
   getActivityList: function () {
     var that = this;
+    const requestSeq = that._activityRequestSeq = (that._activityRequestSeq || 0) + 1;
     that._activity = { list: (that._activity && that._activity.list) || [], state: 'loading', err: '' };
     that.rebuildTicketList();
     app.sendRequest({
@@ -343,6 +393,7 @@ Page({
         pageSize: app.getPageSize(),
       },
       success: function (res) {
+        if (that._unloaded || requestSeq !== that._activityRequestSeq) return;
         const payload = res && res.data;
         if (!(res && res.code == "200" && payload && Array.isArray(payload.rows))) {
           that._activity = { list: that._activity.list, state: 'error',
@@ -358,6 +409,7 @@ Page({
         });
         that.rebuildTicketList();
         that.syncCurrentTeam();
+        if (that._focusId) that._tryFocusTicket();
         if (payload.rows.length < 1) {
           that.setData({
             nodata: true,
@@ -365,12 +417,14 @@ Page({
         }
       },
       fail: function (err) {
+        if (that._unloaded || requestSeq !== that._activityRequestSeq) return;
         // 原为空函数:请求失败被整个吞掉,列表停在 [] ⇒ 页面显示「还没有票!」= 错误伪装成空态
         that._activity = { list: that._activity.list, state: 'error',
           err: (err && err.errMsg) || '网络开了点小差' };
         that.rebuildTicketList();
       },
       complete: function () {
+        if (that._unloaded || requestSeq !== that._activityRequestSeq) return;
         that._reportHalfFailure();
         that.setData({
           nodata: that._activity.list.length < 1 ? true : false,

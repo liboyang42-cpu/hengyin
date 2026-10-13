@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "capacity": 6,
+  "hpName": "体力",
+  "items": [
+    {
+      "id": "supply",
+      "kind": "ITEM",
+      "name": "补给包",
+      "image": "https://example.com/item.jpg",
+      "slotCost": 1
+    }
+  ],
+  "gameplayRuntime": {
+    "runtimeScope": "TEAM",
+    "worldMode": "WORLD_SHARED",
+    "survival": {
+      "zeroHpPolicy": "BLOCK_PAID",
+      "actionLimitPolicy": "BLOCK_OVERFLOW",
+      "consumeOnNoEffect": false,
+      "recoveries": [
+        {
+          "recoveryKey": "recovery_1",
+          "kind": "REST",
+          "limit": 2,
+          "hpDelta": 3,
+          "actKeys": [
+            "act_one"
+          ]
+        },
+        {
+          "recoveryKey": "recovery_2",
+          "kind": "RESCUE",
+          "limit": 1,
+          "hpFloor": 4
+        }
+      ],
+      "rations": [
+        {
+          "rationKey": "ration_1",
+          "actKey": "act_one",
+          "itemId": "supply",
+          "quantity": 2,
+          "fallbackHpCost": 1
+        }
+      ]
+    },
+    "acts": [
+      {
+        "actKey": "act_one",
+        "questKeys": [
+          "quest_one"
+        ],
+        "completionRule": {
+          "type": "ALL"
+        }
+      }
+    ],
+    "quests": [
+      {
+        "questKey": "quest_one",
+        "actKey": "act_one",
+        "nodeId": 101,
+        "locationKey": "gate",
+        "settlementSlot": "quest_one"
+      }
+    ],
+    "facilities": [
+      {
+        "facilityKey": "facility_1",
+        "settlementSlot": "facility_slot_1",
+        "actKey": "act_one",
+        "scope": "WORLD",
+        "targetScope": "PARTICIPANTS",
+        "limit": 3,
+        "hpDelta": 2,
+        "arrivalLocationKey": "gate",
+        "operationNodeId": 102,
+        "when": [
+          {
+            "op": "ITEM_HELD",
+            "itemId": "supply",
+            "quantity": 1
+          },
+          {
+            "op": "GTE",
+            "var": "sys.hp",
+            "value": 1
+          },
+          {
+            "op": "NODE_COMPLETED",
+            "nodeId": 101
+          }
+        ]
+      }
+    ]
+  },
+  "card": {
+    "cover": "https://example.com/card.jpg",
+    "fields": [
+      "hp",
+      "items",
+      "ending"
+    ],
+    "showUnlocks": true
+  },
+  "chapters": []
+}

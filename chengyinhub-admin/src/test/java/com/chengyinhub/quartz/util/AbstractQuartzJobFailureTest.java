@@ -16,6 +16,10 @@ import com.chengyinhub.common.utils.spring.SpringUtils;
 import com.chengyinhub.quartz.domain.SysJob;
 import com.chengyinhub.quartz.domain.SysJobLog;
 import com.chengyinhub.quartz.service.ISysJobLogService;
+import com.chengyinhub.quartz.service.MySqlSchedulerCoordinator;
+import com.chengyinhub.quartz.service.impl.SysJobServiceImpl;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,6 +35,8 @@ class AbstractQuartzJobFailureTest
 {
     private ISysJobLogService jobLogService;
     private JobExecutionContext context;
+    private MySqlSchedulerCoordinator coordinator;
+    private SysJobServiceImpl jobs;
     private ConfigurableListableBeanFactory originalBeanFactory;
 
     @BeforeEach
@@ -41,6 +47,14 @@ class AbstractQuartzJobFailureTest
         ConfigurableListableBeanFactory beanFactory = mock(ConfigurableListableBeanFactory.class);
         jobLogService = mock(ISysJobLogService.class);
         when(beanFactory.getBean(ISysJobLogService.class)).thenReturn(jobLogService);
+        coordinator = mock(MySqlSchedulerCoordinator.class);
+        jobs = mock(SysJobServiceImpl.class);
+        when(beanFactory.getBean(MySqlSchedulerCoordinator.class)).thenReturn(coordinator);
+        when(beanFactory.getBean(SysJobServiceImpl.class)).thenReturn(jobs);
+        when(jobs.isCurrentInvocation(any(), anyBoolean())).thenReturn(true);
+        when(coordinator.execute(anyString(), nullable(java.util.Date.class), any(Runnable.class))).thenAnswer(call -> {
+            call.getArgument(2, Runnable.class).run(); return true;
+        });
         ReflectionTestUtils.setField(SpringUtils.class, "beanFactory", beanFactory);
 
         context = mock(JobExecutionContext.class);
@@ -88,6 +102,19 @@ class AbstractQuartzJobFailureTest
 
         assertTrue(thrown.getCause() instanceof IllegalStateException);
         verify(jobLogService).addJobLog(any(SysJobLog.class));
+    }
+
+    @Test
+    void nonLeaderAndCommittedPauseDoNotWriteFakeSuccessLogs() {
+        when(coordinator.execute(anyString(), nullable(java.util.Date.class), any(Runnable.class))).thenReturn(false);
+        assertDoesNotThrow(() -> new StubJob(new IllegalStateException("must-not-run")).execute(context));
+        verifyNoInteractions(jobLogService);
+        when(coordinator.execute(anyString(), nullable(java.util.Date.class), any(Runnable.class))).thenAnswer(call -> {
+            call.getArgument(2, Runnable.class).run(); return true;
+        });
+        when(jobs.isCurrentInvocation(any(), anyBoolean())).thenReturn(false);
+        assertDoesNotThrow(() -> new StubJob(new IllegalStateException("must-not-run")).execute(context));
+        verifyNoInteractions(jobLogService);
     }
 
     private SysJob job()

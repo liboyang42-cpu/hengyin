@@ -49,7 +49,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <resultMap type="RoamSession" id="RoamSessionResult">
+        <result property="presenceVisible" column="presence_visible" />
+        <result property="lastLat" column="last_lat" />
+        <result property="lastLng" column="last_lng" />
+        <result property="lastReportAt" column="last_report_at" />
         <result property="clientSessionKey" column="client_session_key" />
+        <result property="locationClearedAt" column="location_cleared_at" />
         <result property="finishResultJson" column="finish_result_json" />
         <result property="id" column="id" />
         <result property="memberId" column="member_id" />
@@ -212,6 +217,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
       一个人可能有多场未结算会话(异常退出留下的);按 last_report_at 取最新那场,
       否则同一个人会在地图上出现好几次。
     -->
+    <select id="selectActivePresence" resultMap="RoamSessionResult" useCache="false">
+        select * from roam_session
+        where member_id = #{memberId} and status = 0 and presence_visible = 1
+          and last_report_at &gt;= #{freshAfter} and last_lat is not null and last_lng is not null
+        order by last_report_at desc, id desc limit 1
+    </select>
+
+    <update id="updatePresenceVisibility">
+        update roam_session set presence_visible = #{visible}
+        where member_id = #{memberId} and status = 0
+        <if test="id != null">and id = #{id}</if>
+    </update>
+
     <select id="selectNearbyRunners" resultType="com.chengyinhub.business.domain.vo.NearbyRunnerVO">
         select t.memberId, t.nickname, t.avatar, t.lat, t.lng, t.explorePct, t.shops, t.elapsedSec
         from (
@@ -223,7 +241,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                    row_number() over (partition by s.member_id order by s.last_report_at desc, s.id desc) as rn
             from roam_session s join ums_member m on m.id = s.member_id
             where s.member_id &lt;&gt; #{memberId}
-              and s.status = 0
+              and s.status = 0 and s.presence_visible = 1
               and s.last_report_at is not null and s.last_report_at &gt;= #{freshAfter}
               and s.last_lat is not null and s.last_lng is not null
               and m.del_flag = 0
@@ -259,7 +277,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
               <!-- 只取「他此刻这一场」的探店,不是历史全部 —— 半屏上那排是「TA 这一趟点亮的店」。
                    取会话的顺序与 selectNearbyRunners 里那个 row_number 一字不差,不然两处会各指一场。 -->
               and v.session_id = (select s.id from roam_session s
-                                   where s.member_id = v.member_id and s.status = 0
+                                   where s.member_id = v.member_id and s.status = 0 and s.presence_visible = 1
                                    order by s.last_report_at desc, s.id desc limit 1)
         ) t
         where t.rn &lt;= #{perMember} and t.shopImage is not null and CHAR_LENGTH(t.shopImage) &gt; 0
@@ -277,10 +295,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id} and status = 0
     </update>
 
-    <insert id="batchInsertTile">
-        insert ignore into roam_fog_tile (member_id, session_id, geohash7, revealed_at) values
-        <foreach collection="tiles" item="t" separator=",">
-            (#{memberId}, #{sessionId}, #{t}, #{revealedAt})
+    <insert id="insertTileClaims">
+        insert ignore into roam_fog_tile (member_id, session_id, geohash7, revealed_at, claim_fingerprint) values
+        <foreach collection="claims" item="t" separator=",">
+            (#{memberId}, #{sessionId}, #{t.tile}, #{revealedAt}, #{t.fingerprint})
         </foreach>
     </insert>
 
@@ -301,22 +319,23 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <select id="selectTilesByMember" resultType="java.lang.String">
-        select geohash7 from roam_fog_tile
-        where member_id = #{memberId}
-        order by revealed_at desc
+        select f.geohash7 from roam_fog_tile f join roam_session s on s.id = f.session_id and s.member_id = f.member_id
+        where f.member_id = #{memberId} and (s.status = 0 or (s.status = 1 and s.finished_at &gt; date_sub(now(), interval 30 day)))
+        order by f.revealed_at desc
         limit #{limit}
     </select>
 
     <select id="selectTilePageByMember" resultType="java.util.HashMap">
-        select id, geohash7 from roam_fog_tile
-        where member_id = #{memberId} and id &gt; #{afterId}
-        order by id asc
+        select f.id, f.geohash7, unix_timestamp(s.finished_at)*1000 as locationExpiresFrom from roam_fog_tile f join roam_session s on s.id = f.session_id and s.member_id = f.member_id
+        where f.member_id = #{memberId} and f.id &gt; #{afterId}
+          and (s.status = 0 or (s.status = 1 and s.finished_at &gt; date_sub(now(), interval 30 day)))
+        order by f.id asc
         limit #{limit}
     </select>
 
-    <insert id="insertPoiFoundIgnore">
-        insert ignore into roam_poi_found (member_id, poi_id, session_id, found_at)
-        values (#{memberId}, #{poiId}, #{sessionId}, #{foundAt})
+    <insert id="insertPoiClaim">
+        insert ignore into roam_poi_found (member_id, poi_id, session_id, found_at, claim_fingerprint)
+        values (#{memberId}, #{poiId}, #{sessionId}, #{foundAt}, #{fingerprint})
     </insert>
 
     <!-- ===== 会话内探店(任意真商家)===== -->
@@ -330,7 +349,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
            同名连锁分店各自 source_id 不同 → 各计一家(按店名会把 3 家瑞幸塌成 1 家 → 弹卡没章)。
          · uk(session_id,source_type,source_id) 保证同一来源每会话一行,故等价 count(*);写 distinct 表意图。 -->
     <select id="countDistinctShopsBySession" resultType="int">
-        select count(distinct source_type, source_id) from roam_shop_visit where session_id = #{sessionId}
+        select count(distinct coalesce(claim_fingerprint, concat(source_type, ':', source_id))) from roam_shop_visit where session_id = #{sessionId}
     </select>
 
     <!--
@@ -346,25 +365,40 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             select v.source_id as sourceId, m.avatar as avatar,
                    row_number() over (partition by v.source_id order by v.visitedAt desc, v.maxId desc) as rn
             from (
-                select source_id, member_id, max(visited_at) as visitedAt, max(id) as maxId
-                from roam_shop_visit
-                where source_type = #{sourceType}
-                  and source_id in
+                select f.source_id, f.member_id, max(f.visited_at) as visitedAt, max(f.id) as maxId
+                from roam_shop_visit f join roam_session s on s.id=f.session_id and s.member_id=f.member_id
+                where f.source_type = #{sourceType}
+                  and (s.status=0 or (s.status=1 and s.finished_at &gt; date_sub(now(),interval 30 day)))
+                  and f.source_id in
                   <foreach collection="sourceIds" item="sid" open="(" separator="," close=")">#{sid}</foreach>
-                group by source_id, member_id
+                group by f.source_id, f.member_id
             ) v join ums_member m on m.id = v.member_id
             where m.del_flag = 0 and m.avatar is not null and m.avatar &lt;&gt; ''
         ) t where t.rn &lt;= #{limit}
     </select>
 
     <!-- +N 的 N:去重到人的总数。不能拿头像条数替代 —— 头像被 limit 截过,拿它当总数会少报。 -->
-    <select id="selectShopVisitorCounts" resultType="com.chengyinhub.business.domain.vo.ShopVisitorCountVO">
-        select source_id as sourceId, count(distinct member_id) as total
-        from roam_shop_visit
-        where source_type = #{sourceType}
-          and source_id in
-          <foreach collection="sourceIds" item="sid" open="(" separator="," close=")">#{sid}</foreach>
-        group by source_id
+    <insert id="insertAnonymousShopVisitor">
+        insert ignore into roam_shop_visitor_claim(source_type,source_id,visitor_fingerprint)
+        values(#{sourceType},#{sourceId},#{fingerprint})
+    </insert>
+    <insert id="incrementAnonymousShopVisitorTotal">
+        insert into roam_shop_visitor_total(source_type,source_id,total) values(#{sourceType},#{sourceId},1)
+        on duplicate key update total=total+1
+    </insert>
+    <select id="selectAnonymousShopVisitorTotals" resultType="com.chengyinhub.business.domain.vo.ShopVisitorCountVO">
+        select source_id as sourceId,total from roam_shop_visitor_total where source_type=#{sourceType}
+        and source_id in <foreach collection="sourceIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+    <select id="selectRawShopVisitors" resultType="java.util.HashMap">
+        select distinct source_id as sourceId,member_id as memberId from roam_shop_visit
+        where source_type=#{sourceType} and member_id &gt; 0
+        and source_id in <foreach collection="sourceIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+    <select id="selectKnownAnonymousShopVisitors" resultType="java.lang.String">
+        select visitor_fingerprint from roam_shop_visitor_claim where source_type=#{sourceType}
+        and source_id in <foreach collection="sourceIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+        and visitor_fingerprint in <foreach collection="fingerprints" item="fp" open="(" separator="," close=")">#{fp}</foreach>
     </select>
 
     <!-- ===== 商家节点(漫游 · roam_poi type=2 联合商家+模板)===== -->
@@ -494,10 +528,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </choose>
     </select>
 
-    <insert id="insertRewardLogIgnore">
+    <insert id="insertRewardClaim">
         <!-- C2:有券节点 status=0「待核销」(券由商家扫码核销发放,防伪造GPS白领券);无券节点 status=1「已完成」 -->
-        insert ignore into roam_poi_reward_log (poi_id, member_id, coupon_id, trigger_lat, trigger_lng, status, create_time)
-        values (#{poiId}, #{memberId}, #{couponId}, #{lat}, #{lng}, #{status}, #{createTime})
+        insert ignore into roam_poi_reward_log (poi_id, member_id, coupon_id, trigger_lat, trigger_lng, status, create_time, claim_fingerprint)
+        values (#{poiId}, #{memberId}, #{couponId}, #{lat}, #{lng}, #{status}, #{createTime}, #{fingerprint})
     </insert>
 
     <!-- C2 扫码核销:商家扫玩家据点码,待核销(status=0)→已核销(status=1);条件更新保证只成功一次(幂等) -->
@@ -679,4 +713,77 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           and (#{status} = 0 or audit_status is null or audit_status = 1)
     </update>
 
+    <select id="selectLocationRetentionCandidates" resultMap="RoamSessionResult" useCache="false">
+        select id, member_id from roam_session where status = 1 and (finished_at is null or finished_at &lt;= #{cutoff})
+          and location_cleared_at is null order by finished_at, id limit #{limit}
+    </select>
+    <update id="clearEndedSessionLocation">
+        update roam_session set last_lat = null, last_lng = null, last_report_at = null, presence_visible = 0,
+          finish_result_json = #{resultJson}, location_cleared_at = now()
+        where id = #{id} and member_id = #{memberId} and status = 1 and (finished_at is null or finished_at &lt;= #{cutoff})
+          and location_cleared_at is null
+    </update>
+    <!-- Ordering mutex only: caller's original auth/scope and transaction remain authoritative. -->
+    <select id="lockClaimOwner" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select id from ums_member where id=#{memberId} for update
+    </select>
+    <!-- Map datetime auto-mapping uses LocalDateTime; retention compares JDBC Date instants. -->
+    <resultMap id="RoamCleanupFactResult" type="java.util.HashMap" autoMapping="true">
+        <result property="collectedAt" column="collectedAt" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <select id="selectCleanupTileForUpdate" resultMap="RoamCleanupFactResult" useCache="false" flushCache="true">
+        select id,member_id as memberId,session_id as sessionId,geohash7 as location,revealed_at as collectedAt
+        from roam_fog_tile where id=#{id} and member_id=#{memberId} and session_id &lt;=&gt; #{sessionId} and geohash7 is not null for update
+    </select>
+    <select id="selectCleanupPoiForUpdate" resultMap="RoamCleanupFactResult" useCache="false" flushCache="true">
+        select id,member_id as memberId,session_id as sessionId,poi_id as location,found_at as collectedAt
+        from roam_poi_found where id=#{id} and member_id=#{memberId} and session_id &lt;=&gt; #{sessionId} and poi_id is not null for update
+    </select>
+    <select id="selectCleanupShopForUpdate" resultMap="RoamCleanupFactResult" useCache="false" flushCache="true">
+        select id,member_id as memberId,session_id as sessionId,source_type as sourceType,source_id as sourceId,concat(source_type,':',source_id) as location,visited_at as collectedAt
+        from roam_shop_visit where id=#{id} and member_id=#{memberId} and session_id &lt;=&gt; #{sessionId} and source_id is not null for update
+    </select>
+    <select id="selectCleanupRewardForUpdate" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        select id,member_id,poi_id,claim_fingerprint from roam_poi_reward_log
+        where id=#{id} and member_id=#{memberId} and (create_time is null or create_time &lt;= #{cutoff})
+          and (trigger_lat is not null or trigger_lng is not null or (coalesce(coupon_id,0)=0 and poi_id is not null)) for update
+    </select>
+    <insert id="insertClaimKeyGuard">
+        insert ignore into roam_claim_key_guard(id,key_fingerprint,create_time) values(1,#{fingerprint},now())
+    </insert>
+    <select id="selectClaimKeyGuard" resultType="java.lang.String" useCache="false">
+        select key_fingerprint from roam_claim_key_guard where id=1
+    </select>
+    <select id="selectClaimKeyGuardForUpdate" resultType="java.lang.String" useCache="false" flushCache="true">
+        select key_fingerprint from roam_claim_key_guard where id=1 for update
+    </select>
+    <select id="selectSessionTileLocations" resultType="java.util.HashMap">
+        select id,geohash7 from roam_fog_tile where session_id=#{id} and member_id=#{memberId} and geohash7 is not null
+    </select>
+    <select id="selectSessionPoiLocations" resultType="java.util.HashMap">
+        select id,poi_id from roam_poi_found where session_id=#{id} and member_id=#{memberId} and poi_id is not null
+    </select>
+    <select id="selectSessionShopLocations" resultType="java.util.HashMap">
+        select id,source_type,source_id from roam_shop_visit where session_id=#{id} and member_id=#{memberId} and source_id is not null
+        order by source_type,source_id,id
+    </select>
+    <update id="clearSessionTileLocation">
+        update roam_fog_tile set claim_fingerprint=#{fingerprint},geohash7=null where id=#{id} and member_id=#{memberId} and geohash7 is not null
+    </update>
+    <update id="clearSessionPoiLocation">
+        update roam_poi_found set claim_fingerprint=#{fingerprint},poi_id=null where id=#{id} and member_id=#{memberId} and poi_id is not null
+    </update>
+    <update id="clearSessionShopLocation">
+        update roam_shop_visit set claim_fingerprint=#{fingerprint},source_id=null,shop_name='' where id=#{id} and member_id=#{memberId} and source_id is not null
+    </update>
+    <select id="selectExpiredRewardLocations" resultType="java.util.HashMap" useCache="false">
+        select id,member_id,poi_id,claim_fingerprint from roam_poi_reward_log where (create_time is null or create_time &lt;= #{cutoff})
+          and (trigger_lat is not null or trigger_lng is not null or (coalesce(coupon_id,0)=0 and poi_id is not null))
+        order by id limit #{limit}
+    </select>
+    <update id="clearRewardLocation">
+        update roam_poi_reward_log set trigger_lat=null,trigger_lng=null,claim_fingerprint=#{fingerprint},
+            poi_id=case when coalesce(coupon_id,0)=0 then null else poi_id end
+        where id=#{id} and member_id=#{memberId} and (poi_id is not null or trigger_lat is not null or trigger_lng is not null)
+    </update>
 </mapper>

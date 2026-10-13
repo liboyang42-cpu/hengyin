@@ -68,3 +68,38 @@ test('两端共用同一份格子 —— 各写各的 wxml 就是这次要修的
     assert.match(js, /buildTopicStatBar\(/, `${name}必须调共用函数,不许自己再算一套`)
   }
 })
+
+// 执行页面真实格式化函数；模拟部分 iOS 不接受 MySQL 空格日期。
+function topicFormatDate(DateImpl = Date) {
+  const source = fs.readFileSync(path.join(ROOT, 'pages/topic/index/index.js'), 'utf8')
+  const match = source.match(/formatDate\(dateString\)\s*\{([\s\S]*?)\n  \},/)
+  assert.ok(match, '必须执行实际页面日期函数')
+  return new Function('Date', 'chinaParts', 'dateString', match[1]).bind(null,
+    DateImpl, require('../../utils/datetime.js').chinaParts)
+}
+
+class IosDate extends Date {
+  constructor(value) {
+    super(typeof value === 'string' && /^\d{4}-\d{2}-\d{2} /.test(value) ? NaN : value)
+  }
+}
+
+test('主题日期：MySQL无时区串在iOS兼容解析下保持月日展示', () => {
+  for (const DateImpl of [Date, IosDate]) {
+    const format = topicFormatDate(DateImpl)
+    assert.equal(format('2026-10-15 14:00:00'), '10.15')
+    assert.equal(format('2026-10-15 18:00:00'), '10.15')
+  }
+})
+
+test('主题日期：ISO与Date保留本地展示，非法或空输入不造日期', () => {
+  const format = topicFormatDate(IosDate)
+  const iso = '2026-10-15T01:00:00+08:00'
+  const date = new Date(iso)
+  const expected = `${date.getMonth() + 1}.${date.getDate()}`
+  assert.equal(format(iso), expected)
+  assert.equal(format(date), expected)
+  for (const value of ['', null, undefined, 'invalid', '2026-02-30 14:00:00', new Date(NaN)]) {
+    assert.equal(format(value), '')
+  }
+})

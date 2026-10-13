@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
@@ -296,7 +296,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             CmsRegistration r, com.chengyinhub.business.domain.CmsActivity activity) {
         return RefundPolicy.evaluate(2L, r.getPaymentStatus(), r.getVerificationStatus(),
                 null, null, null, activity.getStartDate(), r.getPurchaseKind(),
-                r.getRefundDeadline(), new Date());
+                r.getRefundDeadline(), r.getPayableAmount(), r.getPointUsed(), new Date());
     }
 
     @Override
@@ -1221,7 +1221,8 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
      */
     private boolean refundWholeOrder(CmsRegistration anyMember, String ticketName, String reason, Long actorMemberId) {
         // 查询按 parent_order_no 过滤,anyMember 自己必在结果里 ⇒ 不会为空,无需兜底分支。
-        List<CmsRegistration> order = cmsRegistrationMapper.selectByParentOrderNo(anyMember.getParentOrderNo());
+        List<CmsRegistration> order = cmsRegistrationMapper.selectByParentOrderNoForUpdate(anyMember.getParentOrderNo(), Long.valueOf(2L).equals(anyMember.getOwnerType()) ? anyMember.getOwnerId() : null);
+        OrderRefundCash.assertOrderScope(order, anyMember);
         // FX-02(9-18 拍板 A,与场次取消同口径):仍已支付的票全核销 → 不退;部分核销 → 转人工工单
         // (整单退会把已用掉那张的钱一起退出去,拆票价又拆不出);都没核销 → 全额退。
         boolean hasVerified = false;
@@ -1499,7 +1500,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             dispatch.run();
             return;
         }
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
                 dispatch.run();

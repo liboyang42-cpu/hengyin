@@ -36,15 +36,16 @@ class ActivityCancelPlayerProjectionMyBatisIT {
             sql.execute("create table cms_registration (id bigint primary key, owner_type bigint,"
                     + "owner_id bigint, parent_order_no varchar(64), member_id bigint)");
             sql.execute("create table activity_cancel_manual_refund_case (activity_id bigint, topic_id bigint,"
-                    + "parent_order_no varchar(64), payer_member_id bigint, status varchar(48),"
+                    + "parent_order_no varchar(64), payer_registration_id bigint, payer_member_id bigint,"
+                    + "case_type varchar(32), status varchar(48),"
                     + "verified_registration_ids_json json, unverified_registration_ids_json json)");
             sql.execute("insert into cms_registration values (1,2,200,'P',99),(2,2,200,'P',99),"
                     + "(3,2,200,'P',99),(4,2,200,'P',100),(5,2,201,'P',99),(6,1,200,'P',99),"
                     + "(7,1,300,'T',99),(8,2,300,'T',99)");
             sql.execute("insert into activity_cancel_manual_refund_case values"
-                    + "(200,null,'P',99,'NO_REFUND','[1]','[2,4,5,6]'),"
+                    + "(200,null,'P',1,99,'MIXED_TICKETS','NO_REFUND','[1]','[2,4,5,6]'),"
                     // FX-05:主题工单挂 topic_id;玩家按主题票(owner_type=1)投影,同 id 的场次票不串。
-                    + "(null,300,'T',99,'PENDING_ASSESSMENT','[9]','[7,8]')");
+                    + "(null,300,'T',7,99,'MIXED_TICKETS','PENDING_ASSESSMENT','[9]','[7,8]')");
             ActivityCancelManualRefundCaseMapper mapper = session.getMapper(ActivityCancelManualRefundCaseMapper.class);
             assertEquals("NO_REFUND", mapper.selectPlayerCaseStatus(1L, 99L));
             assertEquals("NO_REFUND", mapper.selectPlayerCaseStatus(2L, 99L));

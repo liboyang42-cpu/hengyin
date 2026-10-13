@@ -181,7 +181,15 @@ test('merchant 审核通过做商户/主理人账户互斥检查', () => {
   const merchantService = read('../chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MmsMerchantServiceImpl.java')
   assert.match(mmsMerchantCtrl, /mmsMerchantService\.updateMmsMerchant/, '后台审核应走共享商家业务服务')
   assert.match(merchantService, /selectOwnedClubIdsForUpdate[\s\S]*!ownedClubs\.isEmpty\(\)[\s\S]*throw new ServiceException/, '启用前必须确认全部主理人移交')
-  assert.match(merchantService, /capabilityService\.revoke\(memberId, MemberCapability\.CAP_CLUB_LEADER\)[\s\S]*capabilityService\.grant\(memberId, MemberCapability\.CAP_MERCHANT/, '移交后先清主理人能力，再授商家能力')
+  assert.match(merchantService, /lockActiveMemberById\(memberId\)/, '启用前锁定有效会员')
+  assert.match(merchantService, /selectActiveByMemberIdForUpdate\(memberId\)[\s\S]*throw new ServiceException[\s\S]*roleService\.changeRole\(memberId, com\.chengyinhub\.business\.service\.IRoleService\.ROLE_MERCHANT, 0L\)/, '经营团队冲突必须在统一角色变更前拒绝')
+  const roleService = read('../chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoleServiceImpl.java')
+  assert.match(roleService, /@org\.springframework\.transaction\.annotation\.Transactional\(rollbackFor = Exception\.class\)[\s\S]*public void changeRole/, '角色和能力投影必须在同一事务')
+  assert.match(roleService, /updateCanonicalRole\(memberId, role,[\s\S]*!= 1\)[\s\S]*throw new[\s\S]*ServiceException/, '角色保存失败不得继续投影')
+  assert.match(roleService, /Arrays\.asList\(MemberCapability\.CAP_CLUB_LEADER, MemberCapability\.CAP_MERCHANT\)/, '统一角色服务覆盖两种互斥投影')
+  assert.match(roleService, /CAP_CLUB_LEADER\.equals\(cap\) \? ROLE_CLUB\.equals\(role\) : ROLE_MERCHANT\.equals\(role\)/, '商户角色只激活商户投影，主理人投影失活')
+  assert.match(roleService, /projected\.setStatus\(1\)[\s\S]*insertMemberCapability\(projected\) != 1[\s\S]*throw new[\s\S]*ServiceException/, '新增激活投影失败必须抛错')
+  assert.match(roleService, /updateStatus\(memberId, cap, active \? 1 : 0, actorId\) != 1[\s\S]*throw new[\s\S]*ServiceException/, '既有投影激活或失活失败必须抛错')
 })
 
 // ============================================================

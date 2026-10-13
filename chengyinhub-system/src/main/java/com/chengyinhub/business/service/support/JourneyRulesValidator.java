@@ -161,6 +161,14 @@ public class JourneyRulesValidator {
         }
         out.put("fumbleExtraDamage", fumbleExtraDamage);
         out.put("modCap", modCap);
+        if (root.has("statLinks")) {
+            try {
+                com.chengyinhub.business.domain.JourneyRules rules = objectMapper.treeToValue(out,
+                        com.chengyinhub.business.domain.JourneyRules.class);
+                out.set("statLinks", JourneyStatLinks.normalize(root.get("statLinks"), rules));
+            } catch (IllegalArgumentException invalid) { throw invalid; }
+            catch (Exception invalid) { throw new IllegalArgumentException("状态联动规则无法解析", invalid); }
+        }
         try {
             return objectMapper.writeValueAsString(out);
         } catch (Exception e) {

@@ -37,7 +37,7 @@
   </view>
 
   <cy-skeleton wx:if="{{tplLoading}}" type="card" count="3" />
-  <cy-error class="cy-fade-in" wx:elif="{{tplError}}" title="现成玩法没能加载出来" sub="{{tplError}}" retry="重新加载" bind:retry="loadTemplates" />
+  <cy-error load-failure class="cy-fade-in" wx:elif="{{tplError}}" title="现成玩法没能加载出来" sub="{{tplError}}" retry="重新加载" bind:retry="loadTemplates" />
   <cy-empty wx:elif="{{!templates.length}}" kind="empty" title="还没有上架的现成玩法"
             sub="玩法上线后会出现在这里。也可以先去发布广场看看别人做了什么。"
             cta="去发布广场" bind:cta="goTemplateSquare" />
@@ -66,7 +66,7 @@
     <text class="gl-sec-sub">规则与玩法细节</text>
   </view>
   <cy-skeleton wx:if="{{docsState === 'loading'}}" type="list" count="2" />
-  <cy-error class="cy-fade-in" wx:elif="{{docsState === 'error'}}" title="玩法文档没能加载出来" sub="{{docsError}}" retry="重试" bind:retry="getList" />
+  <cy-error load-failure class="cy-fade-in" wx:elif="{{docsState === 'error'}}" title="玩法文档没能加载出来" sub="{{docsError}}" retry="重试" bind:retry="getList" />
   <view class="gl-docs cy-fade-in" wx:elif="{{docsState === 'ready'}}">
     <block wx:for="{{list}}" wx:key="id">
       <cy-cell wx:if="{{item.usable}}" title="{{item.title}}" description="{{item.description}}" bindtap="goToDetail" data-id="{{item.id}}" />

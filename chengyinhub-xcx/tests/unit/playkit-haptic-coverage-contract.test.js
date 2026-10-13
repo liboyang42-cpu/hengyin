@@ -98,8 +98,16 @@ test('★负控:把 motion.haptic 换成裸 wx.vibrateShort,门禁必须判红',
   assert.match(broken, /wx\.vibrateShort/, '坏版本里确实绕过了 motion.haptic')
 })
 
-test('相册展示壳只报告翻页和关闭，不提交完成或触发奖励', () => {
+test('旧相册仍只展示和关闭；R5只发证据事件，不自己结算或触发奖励', () => {
   const src = read('playkit-album')
-  assert.doesNotMatch(src, /motion\.haptic|sendRequest|session|submit|settle|claim/)
-  assert.deepEqual([...src.matchAll(/triggerEvent\('([^']+)'/g)].map(m => m[1]), ['close'])
+  assert.doesNotMatch(src, /motion\.haptic|sendRequest|session|settle|claim/)
+  assert.deepEqual([...src.matchAll(/triggerEvent\('([^']+)'/g)].map(m => m[1]), ['close', 'submit', 'shoot'])
+  let config, selected = 0
+  new Function('Component', 'wx', src)(value => { config = value }, { chooseMedia() { selected++ } })
+  const events = []
+  const instance = Object.assign({}, config.methods, { data: { completionEnabled: false, done: false, uploaded: true },
+    triggerEvent(name) { events.push(name) } })
+  instance.onCta(); instance.choosePhoto()
+  assert.deepEqual(events, ['close'])
+  assert.equal(selected, 0)
 })

@@ -10,6 +10,22 @@ function isRecord(value) {
   return value && typeof value === 'object' && !Array.isArray(value);
 }
 
+function identityKey() {
+  const gd = app.globalData || {};
+  const member = typeof app.getUserID === 'function' ? app.getUserID() : gd.user_id;
+  const role = typeof app.getUserRole === 'function' ? app.getUserRole() : gd.role;
+  const type = typeof app.getUserType === 'function' ? app.getUserType() : gd.user_type;
+  return [member == null ? '' : member, role || '', type == null ? '' : type].join('|');
+}
+
+function isPermissionFailure(value, statusCode) {
+  const code = value && (value.code != null ? value.code : value.statusCode);
+  const message = String(value && (value.msg || value.message) || '');
+  return String(code) === '2' || String(code) === '401' || String(code) === '403'
+    || String(statusCode) === '2' || String(statusCode) === '401' || String(statusCode) === '403'
+    || message === '请先登录' || message === '仅主理人与联席主理人可查看分润';
+}
+
 function isPositiveInteger(value) {
   return Number.isInteger(value) && value > 0;
 }
@@ -96,6 +112,8 @@ Page({
   },
 
   onLoad(options) {
+    this._unloaded = false;
+    this._hidden = false;
     // CU-C-41(用户裁决 A):来源三档 —— ledger(商家台账 /api/coop/mybiz)、
     // finance(主办分润 /api/coop/finance)、club(俱乐部分润 /api/club/settlement/summary)。
     const raw = options && options.source;
@@ -119,9 +137,20 @@ Page({
     this.load();
   },
 
-  onShow() { merchantTheme.merchantPageShow(); },
-  onHide() { merchantTheme.merchantPageRestore(); },
+  onShow() {
+    merchantTheme.merchantPageShow();
+    const refresh = this._hidden || this._loadIdentity !== identityKey() || this._loadScope !== this._scopeKey();
+    this._hidden = false;
+    if (refresh) this.load();
+  },
+  onHide() {
+    this._hidden = true;
+    this._loadEpoch = (this._loadEpoch || 0) + 1;
+    this._loading = false;
+    merchantTheme.merchantPageRestore();
+  },
   onUnload() {
+    this._unloaded = true;
     this._loadEpoch = (this._loadEpoch || 0) + 1;
     this._loading = false;
     merchantTheme.merchantPageRestore();
@@ -137,14 +166,38 @@ Page({
 
   retryLoad() { this.load(); },
 
+  _scopeKey() {
+    return [this.data.source, this.data.recordId, this._recordKey || '', this._clubId || ''].join('|');
+  },
+
   settleLoad(epoch) {
     if (epoch !== this._loadEpoch) return false;
+    if (this._unloaded || this._hidden) return false;
+    const identity = identityKey();
+    if (this._loadIdentity !== identity || this._loadScope !== this._scopeKey()) {
+      const previousMember = String(this._loadIdentity || '').split('|')[0];
+      const currentMember = identity.split('|')[0];
+      this._loadEpoch = epoch + 1;
+      this._loading = false;
+      wx.stopPullDownRefresh();
+      this.setData({ detail: null, loadState: 'error', errorKind: 'data', errorText: '结算详情需要重新加载' });
+      // 匿名首登落地后重新按当前身份读取，不复用首登前的快照。
+      if ((!previousMember || previousMember === '0') && currentMember && currentMember !== '0') this.load();
+      return false;
+    }
     this._loading = false;
     wx.stopPullDownRefresh();
     return true;
   },
 
   load() {
+    if (this._unloaded || this._hidden) return;
+    const identity = identityKey();
+    const scope = this._scopeKey();
+    if (identity !== this._loadIdentity || scope !== this._loadScope) {
+      this._loading = false;
+      this.setData({ detail: null });
+    }
     if (!this.data.recordId) {
       this.setData({ loadState: 'missing-param', errorKind: 'data', errorText: '缺少结算记录标识' });
       wx.stopPullDownRefresh();
@@ -155,6 +208,8 @@ Page({
       return;
     }
     this._loading = true;
+    this._loadIdentity = identity;
+    this._loadScope = scope;
     const epoch = (this._loadEpoch || 0) + 1;
     this._loadEpoch = epoch;
     const source = this.data.source;
@@ -178,10 +233,13 @@ Page({
         if (!(res && (res.code == '200' || res.code == 200) && res.data)
             || !isSettlementList(rows, source)) {
           if (!this.settleLoad(epoch)) return;
+          const denied = isPermissionFailure(res);
           this.setData({
-            loadState: hasDetail ? 'stale-error' : 'error',
+            detail: denied ? null : this.data.detail,
+            loadState: hasDetail && !denied ? 'stale-error' : 'error',
             errorKind: 'data',
-            errorText: (res && res.msg) || '结算详情没加载出来',
+            errorText: String(res && res.code) === '200'
+              ? '结算详情没加载出来' : ((res && res.msg) || '结算详情没加载出来'),
           });
           return;
         }
@@ -205,11 +263,13 @@ Page({
           errorText: '',
         });
       },
-      fail: (error) => {
+      fail: (error, statusCode) => {
         const network = isTransportFailure(error);
         if (!this.settleLoad(epoch)) return;
+        const denied = isPermissionFailure(error, statusCode);
         this.setData({
-          loadState: hasDetail ? 'stale-error' : 'error',
+          detail: denied ? null : this.data.detail,
+          loadState: hasDetail && !denied ? 'stale-error' : 'error',
           errorKind: network ? 'network' : 'data',
           errorText: network
             ? '网络不稳定，请检查连接后重试'

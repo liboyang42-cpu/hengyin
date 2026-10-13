@@ -58,5 +58,6 @@ spring:
                     slow-sql-millis: 1000
                     merge-sql: true
                 wall:
+                    enabled: true
                     config:
-                        multi-statement-allow: true
+                        multi-statement-allow: false

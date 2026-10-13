@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -357,5 +358,24 @@ class PerkLedgerMapperSqlTest {
         assertLiveOfferPredicate(s, "sumMaxPerHeadFeeByRequiredChapters");
         assertTrue(s.contains("max(") && s.contains("group by"),
                 "必须每章取 max 再求和:一张票每章只核销一次,该章最多付一份。实际: " + s);
+    }
+    @Test
+    void replayReceiptUsesGeneratedActiveIdempotencyKeyAndCurrentForUpdateRead() throws Exception {
+        Configuration cfg = parse(RED, Redemption.class);
+        Map<String, Object> params = new HashMap<>();
+        params.put("key", "redeem:9:11:5");
+        String query = sql(cfg, NS_RED + "selectActiveByIdempotencyKeyForUpdate", params);
+        assertTrue(query.contains("where active_idem_key = ?"));
+        assertTrue(query.endsWith("for update"));
+        assertFalse(query.contains("where idempotency_key ="));
+    }
+
+    @Test
+    void parentBatchReceiptsAreCurrentActiveRowsInDeterministicOrder() throws Exception {
+        String actual = sql(parse(RED, Redemption.class), NS_RED + "selectActiveByRegistrationForUpdate", Collections.singletonMap("registrationId", 7L));
+        assertTrue(actual.contains("registration_id = ?"));
+        assertTrue(actual.contains("status = 'active'"));
+        assertTrue(actual.contains("order by id"));
+        assertTrue(actual.contains("for update"));
     }
 }

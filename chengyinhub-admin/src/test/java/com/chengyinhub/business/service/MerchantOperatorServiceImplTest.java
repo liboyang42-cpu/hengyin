@@ -441,8 +441,8 @@ class MerchantOperatorServiceImplTest {
         when(audits.selectByDomainActionRequestForUpdate(
                 "MERCHANT", MERCHANT, "MERCHANT_ROLE_CHANGED", "req-role-replay"))
                 .thenReturn(mutationReceipt("MERCHANT_ROLE_CHANGED", "MERCHANT_OPERATOR", 41L,
-                        "{\"roleCode\":\"MERCHANT_CHECKIN\",\"status\":\"ACTIVE\",\"version\":2}",
-                        "{\"roleCode\":\"MERCHANT_FINANCE\",\"status\":\"ACTIVE\",\"version\":3}",
+                        "{\"status\": \"ACTIVE\", \"version\": 2, \"roleCode\": \"MERCHANT_CHECKIN\"}",
+                        "{\"status\": \"ACTIVE\", \"version\": 3, \"roleCode\": \"MERCHANT_FINANCE\"}",
                         null, "req-role-replay"));
 
         com.chengyinhub.business.domain.vo.MerchantOperatorVO replay = service.updateRole(
@@ -466,8 +466,8 @@ class MerchantOperatorServiceImplTest {
         when(audits.selectByDomainActionRequestForUpdate(
                 "MERCHANT", MERCHANT, "MERCHANT_ROLE_CHANGED", "req-role-later"))
                 .thenReturn(mutationReceipt("MERCHANT_ROLE_CHANGED", "MERCHANT_OPERATOR", 41L,
-                        "{\"roleCode\":\"MERCHANT_CHECKIN\",\"status\":\"ACTIVE\",\"version\":2}",
-                        "{\"roleCode\":\"MERCHANT_FINANCE\",\"status\":\"ACTIVE\",\"version\":3}",
+                        "{\"status\": \"ACTIVE\", \"version\": 2, \"roleCode\": \"MERCHANT_CHECKIN\"}",
+                        "{\"status\": \"ACTIVE\", \"version\": 3, \"roleCode\": \"MERCHANT_FINANCE\"}",
                         null, "req-role-later"));
 
         com.chengyinhub.business.domain.vo.MerchantOperatorVO replay = service.updateRole(
@@ -489,8 +489,8 @@ class MerchantOperatorServiceImplTest {
         when(audits.selectByDomainActionRequestForUpdate(
                 "MERCHANT", MERCHANT, "MERCHANT_ROLE_CHANGED", "req-role-mismatch"))
                 .thenReturn(mutationReceipt("MERCHANT_ROLE_CHANGED", "MERCHANT_OPERATOR", 41L,
-                        "{\"roleCode\":\"MERCHANT_CHECKIN\",\"status\":\"ACTIVE\",\"version\":2}",
-                        "{\"roleCode\":\"MERCHANT_MARKETING\",\"status\":\"ACTIVE\",\"version\":3}",
+                        "{\"status\": \"ACTIVE\", \"version\": 2, \"roleCode\": \"MERCHANT_CHECKIN\"}",
+                        "{\"status\": \"ACTIVE\", \"version\": 3, \"roleCode\": \"MERCHANT_MARKETING\"}",
                         null, "req-role-mismatch"));
         when(operators.updateRoleCas(41L, MERCHANT, 2,
                 MerchantRoleCode.MERCHANT_FINANCE, String.valueOf(OWNER))).thenReturn(1);
@@ -515,8 +515,8 @@ class MerchantOperatorServiceImplTest {
         when(audits.selectByDomainActionRequestForUpdate(
                 "MERCHANT", MERCHANT, "MERCHANT_OPERATOR_REMOVED", "req-remove-replay"))
                 .thenReturn(mutationReceipt("MERCHANT_OPERATOR_REMOVED", "MERCHANT_OPERATOR", 41L,
-                        "{\"roleCode\":\"MERCHANT_CHECKIN\",\"status\":\"ACTIVE\",\"version\":3}",
-                        "{\"roleCode\":\"MERCHANT_CHECKIN\",\"status\":\"REVOKED\",\"version\":4}",
+                        "{\"status\": \"ACTIVE\", \"version\": 3, \"roleCode\": \"MERCHANT_CHECKIN\"}",
+                        "{\"status\": \"REVOKED\", \"version\": 4, \"roleCode\": \"MERCHANT_CHECKIN\"}",
                         "离职", "req-remove-replay"));
 
         com.chengyinhub.business.domain.vo.MerchantOperatorVO replay = service.remove(
@@ -538,8 +538,8 @@ class MerchantOperatorServiceImplTest {
         when(audits.selectByDomainActionRequestForUpdate(
                 "MERCHANT", MERCHANT, "MERCHANT_OPERATOR_REMOVED", "req-remove-mismatch"))
                 .thenReturn(mutationReceipt("MERCHANT_OPERATOR_REMOVED", "MERCHANT_OPERATOR", 41L,
-                        "{\"roleCode\":\"MERCHANT_CHECKIN\",\"status\":\"ACTIVE\",\"version\":3}",
-                        "{\"roleCode\":\"MERCHANT_CHECKIN\",\"status\":\"REVOKED\",\"version\":4}",
+                        "{\"status\": \"ACTIVE\", \"version\": 3, \"roleCode\": \"MERCHANT_CHECKIN\"}",
+                        "{\"status\": \"REVOKED\", \"version\": 4, \"roleCode\": \"MERCHANT_CHECKIN\"}",
                         "转岗", "req-remove-mismatch"));
         when(operators.revokeCas(41L, MERCHANT, 3, OWNER, "离职", String.valueOf(OWNER)))
                 .thenReturn(1);
@@ -565,8 +565,8 @@ class MerchantOperatorServiceImplTest {
                 "MERCHANT", MERCHANT, "MERCHANT_OPERATOR_INVITE_REVOKED", "req-revoke-replay"))
                 .thenReturn(mutationReceipt("MERCHANT_OPERATOR_INVITE_REVOKED",
                         "MERCHANT_OPERATOR_INVITE", 31L,
-                        "{\"roleCode\":\"MERCHANT_CHECKIN\",\"status\":\"PENDING\",\"version\":0}",
-                        "{\"roleCode\":\"MERCHANT_CHECKIN\",\"status\":\"REVOKED\",\"version\":1}",
+                        "{\"status\": \"PENDING\", \"version\": 0, \"roleCode\": \"MERCHANT_CHECKIN\"}",
+                        "{\"status\": \"REVOKED\", \"version\": 1, \"roleCode\": \"MERCHANT_CHECKIN\"}",
                         "撤销", "req-revoke-replay"));
 
         com.chengyinhub.business.domain.vo.MerchantOperatorInviteVO replay = service.revokeInvite(
@@ -588,8 +588,8 @@ class MerchantOperatorServiceImplTest {
                 "MERCHANT", MERCHANT, "MERCHANT_OPERATOR_INVITE_REVOKED", "req-revoke-mismatch"))
                 .thenReturn(mutationReceipt("MERCHANT_OPERATOR_INVITE_REVOKED",
                         "MERCHANT_OPERATOR_INVITE", 32L,
-                        "{\"roleCode\":\"MERCHANT_CHECKIN\",\"status\":\"PENDING\",\"version\":0}",
-                        "{\"roleCode\":\"MERCHANT_CHECKIN\",\"status\":\"REVOKED\",\"version\":1}",
+                        "{\"status\": \"PENDING\", \"version\": 0, \"roleCode\": \"MERCHANT_CHECKIN\"}",
+                        "{\"status\": \"REVOKED\", \"version\": 1, \"roleCode\": \"MERCHANT_CHECKIN\"}",
                         "撤销", "req-revoke-mismatch"));
         when(invites.revokeCas(31L, MERCHANT, 0, OWNER, "撤销")).thenReturn(1);
 

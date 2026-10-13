@@ -13,7 +13,7 @@ const TOKEN = 'abcdef01'.repeat(4)
 // 一条 2km 直线:第一个点就是「家门口」。
 const RAW_TRACK = Array.from({ length: 21 }, (_, i) => ({ lat: 31.2 + i * 0.001, lng: 121.4 }))
 const SESSION = {
-  ts: 1717243200000, routeName: '武康大楼等2处足迹回看', time: '25:00', distance: 3.2, explorePct: 68, shops: 4,
+  ts: 1717243200000, sessionId: '12', finishedAt: Date.now(), routeName: '武康大楼等2处足迹回看', time: '25:00', distance: 3.2, explorePct: 68, shops: 4,
   medal: '', shopMedalName: '', track: RAW_TRACK,
   pois: [{ name: '武康大楼', cat: 'landmark', catLabel: '地标', lat: 31.205, lng: 121.4, iconName: 'poi-landmark' }],
 }
@@ -62,6 +62,10 @@ test('拍板17 发布:成功拿令牌;可见范围仅自己不发布;接口失�
   assert.deepEqual(await snapshot.publishShareSnapshot(ok, memoryStorage(), SESSION), { token: TOKEN, reason: '' })
   assert.equal(ok.sent[0].url, '/api/roam/share/snapshot')
   assert.equal(ok.sent[0].data.clientTs, SESSION.ts)
+  assert.equal(ok.sent[0].data.sessionId, '12')
+  const missing = fakeApp(() => ({ code: 200, data: { token: TOKEN } }))
+  assert.equal((await snapshot.publishShareSnapshot(missing, memoryStorage(), { ...SESSION, sessionId: '' })).token, '')
+  assert.equal(missing.sent.length, 0)
   assert.equal(JSON.parse(ok.sent[0].data.snapshot).routeName, '武康大楼等2处足迹回看')
 
   const privateApp = fakeApp(() => ({ code: 200, data: { token: TOKEN } }))

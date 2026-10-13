@@ -17,6 +17,7 @@ function harness(relativePath, kind) {
   const toasts = [];
   let definition;
   const app = {
+    canUseCommunity: () => true, // Current-account server-open fixture.
     globalData: { statusBarHeight: 20, navBarHeight: 44, menuButtonInfo: { left: 300 } },
     sendRequest(options) { requests.push(options); },
     getRequestErrorMessage(_res, fallback) { return fallback; },

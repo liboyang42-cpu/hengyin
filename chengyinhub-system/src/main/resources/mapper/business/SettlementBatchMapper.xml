@@ -103,7 +103,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select count(1) from settlement_batch
     </select>
 
-    <select id="selectAmountMismatchBatches" resultType="com.chengyinhub.business.domain.vo.SettlementBatchReconciliationVO">
+    <sql id="amountMismatchRows">
         select b.id as batchId,
                b.merchant_id as merchantId,
                coalesce(b.total_amount, 0) as batchTotalAmount,
@@ -113,6 +113,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         left join settlement_detail d on d.batch_id = b.id
         group by b.id, b.merchant_id, b.total_amount
         having coalesce(b.total_amount, 0) != coalesce(sum(d.settlement_amount), 0)
-        order by b.id desc
+    </sql>
+    <select id="selectAmountMismatchBatches" resultType="com.chengyinhub.business.domain.vo.SettlementBatchReconciliationVO">
+        <include refid="amountMismatchRows"/> order by b.id desc
+    </select>
+    <select id="countAmountMismatchBatches" resultType="java.lang.Long">
+        select count(*) from (<include refid="amountMismatchRows"/>) mismatch_rows
+    </select>
+    <select id="sampleAmountMismatchBatches" resultType="com.chengyinhub.business.domain.vo.SettlementBatchReconciliationVO">
+        <include refid="amountMismatchRows"/> order by b.id asc limit 20
     </select>
 </mapper>

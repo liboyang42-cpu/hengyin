@@ -319,7 +319,7 @@ test('单次漫游详情保留合法零值，并把未知统计显示为待确�
   const relativePath = 'components/cy/scene-roam-session/index.js'
   const unknown = mount(relativePath, {}, {
     getStorageSync() {
-      return [{ ts: 100, distance: 'bad', shops: '3', explorePct: null, durSec: 'bad', pois: [] }]
+      return [{ ts: 100, finishedAt: Date.now(), distance: 'bad', shops: '3', explorePct: null, durSec: 'bad', pois: [] }]
     },
   })
   unknown.instance.data.ts = '100'
@@ -333,7 +333,7 @@ test('单次漫游详情保留合法零值，并把未知统计显示为待确�
 
   const zero = mount(relativePath, {}, {
     getStorageSync() {
-      return [{ ts: 200, distance: 0, shops: 0, explorePct: 0, durSec: 0, pois: [] }]
+      return [{ ts: 200, finishedAt: Date.now(), distance: 0, shops: 0, explorePct: 0, durSec: 0, pois: [] }]
     },
   })
   zero.instance.data.ts = '200'

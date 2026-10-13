@@ -1,6 +1,7 @@
 const toast = require('../../../utils/toast.js');
 const { chinaParts } = require('../../../utils/datetime.js');
 const app = getApp();
+const { failureStatus, recoverReadSession } = require('../../../utils/session/login-reload.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { isRecord, isRecordList, isBizOk } = require('../../../utils/response-shape.js');
 const {
@@ -223,6 +224,7 @@ Page({
     statusBarHeight: 20,
     navBarHeight: 44,
     accessState: 'loading',
+    accessErrorIsDenied: false,
     accessError: '',
     access: inactiveAccess(),
     teamState: 'idle',
@@ -257,23 +259,26 @@ Page({
   },
 
   onShow() {
+    this._hidden = false;
     merchantTheme.merchantPageShow();
     this.enterTeam(false);
   },
 
   // 入口:未登录先静默登录,成功自动继续;失败只留页内错误态(retryAccess 重试)。
   enterTeam(authRetryUsed) {
+    if (this._hidden || this._unloaded || this._inviteRequestIds === null) return;
+    const entryEpoch = this._teamEntryEpoch = (this._teamEntryEpoch || 0) + 1;
     this._authRetryUsed = authRetryUsed === true;
     if (app.getUserID()) {
       this.loadAccess();
       return;
     }
-    this.setData({ accessState: 'loading', accessError: '' });
+    this.setData({ accessState: 'loading', accessError: '', accessErrorIsDenied: false });
     const that = this;
     ensureSession(app).then(function (ok) {
-      if (that._inviteRequestIds === null) return; // 已卸载
+      if (that._hidden || that._unloaded || that._inviteRequestIds === null || entryEpoch !== that._teamEntryEpoch) return;
       if (!ok || !app.getUserID()) {
-        that.setData({ accessState: 'error', accessError: '登录失败，请重试' });
+        that.setData({ accessState: 'error', accessError: '登录失败，请重试', accessErrorIsDenied: true });
         return;
       }
       that.enterTeam(that._authRetryUsed);
@@ -282,25 +287,34 @@ Page({
 
   // 401:静默重登一次后自动重载;重登失败落页内错误态,不整屏「去登录」。
   recoverSession() {
+    if (this._hidden || this._unloaded || this._inviteRequestIds === null) return;
     if (this._authRetryUsed) {
-      this.setData({ accessState: 'error', accessError: '登录已失效，请重新登录' });
+      this.setData({ accessState: 'error', accessError: '登录已失效，请重新登录', accessErrorIsDenied: true });
       return;
     }
     this._authRetryUsed = true;
     const that = this;
+    const entryEpoch = this._teamEntryEpoch;
+    const owner = String(app.getUserID() || '');
     ensureSession(app).then(function (ok) {
-      if (that._inviteRequestIds === null) return; // 已卸载
+      if (that._hidden || that._unloaded || that._inviteRequestIds === null || entryEpoch !== that._teamEntryEpoch
+          || (app.getUserID() && owner !== String(app.getUserID()))) return;
       if (!ok || !app.getUserID()) {
-        that.setData({ accessState: 'error', accessError: '登录失败，请重试' });
+        that.setData({ accessState: 'error', accessError: '登录失败，请重试', accessErrorIsDenied: true });
         return;
       }
       that.loadAccess();
     });
   },
 
-  onHide() { merchantTheme.merchantPageRestore(); },
+  onHide() {
+    this._hidden = true;
+    this._teamEntryEpoch = (this._teamEntryEpoch || 0) + 1;
+    merchantTheme.merchantPageRestore();
+  },
 
   onUnload() {
+    this._unloaded = true;
     merchantTheme.merchantPageRestore();
     this._incomingInviteToken = '';
     this._createdInviteToken = '';
@@ -309,28 +323,48 @@ Page({
     this._loadVersion = (this._loadVersion || 0) + 1;
   },
 
+  _recoverReadSession(res, status, version) {
+    if (this._unloaded || this._inviteRequestIds === null || version !== this._loadVersion) return false;
+    return recoverReadSession(this, app, res, function (anonymous) {
+      this._loadVersion++; this._teamReadEpoch = (this._teamReadEpoch || 0) + 1;
+      this._teamAccessOwner = undefined; this._inviteRequestIds = Object.create(null);
+      this.setData({ access: inactiveAccess(), operators: [], pendingInvites: [], roles: [], createdInvite: null,
+        canShareCreatedInvite: false, roleSheet: { show: false, mode: '', operator: null },
+        teamState: 'idle', accessState: anonymous ? 'error' : 'loading', accessErrorIsDenied: anonymous,
+        accessError: anonymous ? '登录失败，请重试' : '' });
+    }, this.loadAccess, status);
+  },
+
   loadAccess() {
+    const currentOwner = String(app.getUserID() || '');
+    if (this._teamAccessOwner !== undefined && this._teamAccessOwner !== currentOwner) {
+      this.setData({ access: inactiveAccess(), operators: [], pendingInvites: [], roles: [], createdInvite: null,
+        canShareCreatedInvite: false, roleSheet: { show: false, mode: '', operator: null } });
+      this._inviteRequestIds = Object.create(null);
+    }
+    this._teamAccessOwner = currentOwner;
     if (!app.getUserID()) {
       // 会话还没落地:静默登录,失败由 enterTeam 落页内错误态。
       this.enterTeam(this._authRetryUsed === true);
       return;
     }
+    const owner = String(app.getUserID());
     const version = (this._loadVersion || 0) + 1;
     this._loadVersion = version;
-    this.setData({ accessState: 'loading', accessError: '' });
+    this.setData({ accessState: 'loading', accessError: '', accessErrorIsDenied: false });
     app.sendRequest({
       hideLoading: true,
       silentError: true,
       url: '/api/merchant/access/me',
       method: 'POST',
       success: (res) => {
-        if (version !== this._loadVersion) return;
+        if (version !== this._loadVersion || owner !== String(app.getUserID()) || this._inviteRequestIds === null) return;
         if (isAuthenticationFailure(res)) {
           this.recoverSession();
           return;
         }
         if (!(res && (res.code === 200 || res.code === '200') && isRecord(res.data))) {
-          this.setData({ accessState: 'error', accessError: isBizOk(res) ? '经营身份加载失败' : app.getRequestErrorMessage(res, '经营身份加载失败') });
+          this.setData({ accessState: 'error', accessErrorIsDenied: [400, 403, 422].includes(failureStatus(res)), accessError: isBizOk(res) ? '经营身份加载失败' : app.getRequestErrorMessage(res, '经营身份加载失败') });
           return;
         }
         const access = normalizeMerchantAccess(res.data);
@@ -352,12 +386,20 @@ Page({
         }
       },
       fail: (res, status) => {
-        if (version !== this._loadVersion) return;
+        if (this._recoverReadSession(res, status, version)) return;
+        if (version !== this._loadVersion || owner !== String(app.getUserID()) || this._inviteRequestIds === null) return;
         if (isAuthenticationFailure(res, status)) {
           this.recoverSession();
           return;
         }
-        this.setData({ accessState: 'error', accessError: '网络连接失败，请稍后重试' });
+        this.setData({ accessState: 'error', accessErrorIsDenied: [400, 403, 422].includes(failureStatus(res, status)), accessError: app.getRequestErrorMessage(res, '网络连接失败，请稍后重试') });
+      },
+      successStatusAbnormal: (res, status) => {
+        if (this._recoverReadSession(res, status, version)) return;
+        if (version !== this._loadVersion || owner !== String(app.getUserID()) || this._inviteRequestIds === null) return;
+        if (isAuthenticationFailure(res, status)) { this.recoverSession(); return; }
+        this.setData({ accessState: 'error', accessErrorIsDenied: [400, 403, 422].includes(failureStatus(res, status)),
+          accessError: app.getRequestErrorMessage(res, '经营身份加载失败') });
       },
     });
   },
@@ -372,8 +414,9 @@ Page({
     const requestToken = (this._rolesRequestToken || 0) + 1;
     this._rolesRequestToken = requestToken;
     const loadVersion = this._loadVersion || 0;
+    const owner = String(app.getUserID());
     const isLatest = () => requestToken === this._rolesRequestToken
-      && loadVersion === (this._loadVersion || 0);
+      && loadVersion === (this._loadVersion || 0) && owner === String(app.getUserID()) && this._inviteRequestIds !== null;
     this.setData({ roleError: '' });
     app.sendRequest({
       hideLoading: true,
@@ -397,7 +440,8 @@ Page({
         }
         this.setData({ roleError: app.getRequestErrorMessage(res, '岗位列表加载失败') });
       },
-      fail: () => {
+      fail: (res, status) => {
+        if (requestToken === this._rolesRequestToken && this._recoverReadSession(res, status, loadVersion)) return;
         if (isLatest()) this.setData({ roleError: '网络连接失败，岗位列表未更新' });
       },
     });
@@ -415,6 +459,13 @@ Page({
   },
 
   loadTeam() {
+    const owner = String(app.getUserID() || '');
+    if (!owner) { this.setData({ accessState: 'error', accessError: '请先登录', accessErrorIsDenied: true }); return; }
+    const token = (this._teamReadEpoch || 0) + 1;
+    this._teamReadEpoch = token;
+    const version = this._loadVersion;
+    const current = () => owner === String(app.getUserID()) && version === this._loadVersion
+      && token === this._teamReadEpoch && this._inviteRequestIds !== null;
     this.setData({ teamState: 'loading', teamError: '' });
     app.sendRequest({
       hideLoading: true,
@@ -422,6 +473,7 @@ Page({
       url: '/api/merchant/operators/list',
       method: 'POST',
       success: (res) => {
+        if (!current()) return;
         const data = res && res.data;
         if (!(res && (res.code === 200 || res.code === '200') && isRecord(data)
             && isRecordList(data.operators) && isRecordList(data.invites))) {
@@ -441,7 +493,7 @@ Page({
           pendingInvites: invites.filter(item => item.status === 'PENDING'),
         });
       },
-      fail: () => this.setData({ teamState: 'error', teamError: '网络连接失败，请稍后重试' }),
+      fail: (res, status) => { if (token === this._teamReadEpoch && !this._recoverReadSession(res, status, version) && current()) this.setData({ teamState: 'error', teamError: '网络连接失败，请稍后重试' }); },
     });
   },
 

@@ -12,6 +12,7 @@ const { toTimestamp, chinaParts } = require('../../../utils/datetime');
 // (executeAction 的「回执未知」落盘 / 对账 / 重试)原样搬进 ./director.js,
 // 由本页承载,渲染改用 cy-club-director-* 八个组件。见 director.js 顶部说明。
 const { DIRECTOR_DATA, DIRECTOR_METHODS } = require('./director.js');
+const planFallback = require('./plan-fallback.js');
 const { listGroupCodeActivities } = require('../../../utils/group-code-session.js');
 const { bizFailureMessage } = require('../../../utils/response-shape.js');
 const { safeUserMessage } = require('../../../utils/transport/safe-user-message.js');
@@ -171,6 +172,7 @@ Page({
     // 导演台自己的 44 个状态字段(见 director.js 的 DIRECTOR_DATA),
     // 用 Object.assign 并进来而不是逐个抄 —— 抄一遍就多一处会漂的真源。
     ...DIRECTOR_DATA,
+    ...planFallback.data,
     // 「结束活动」按稿是 T2 居中确认,旧页没有这个态,本页新增
     directorEndConfirmShow: false,
     // D5 队伍弹层 / D8 现场事件:旧 game-director 页没有这两个入口
@@ -301,6 +303,10 @@ Page({
   },
 
   fetchDetail() {
+    const seq = (this._detailSeq || 0) + 1;
+    this._detailSeq = seq;
+    const memberId = app.getUserID && app.getUserID();
+    const current = () => seq === this._detailSeq && memberId === (app.getUserID && app.getUserID());
     const that = this;
     app.sendRequest({
       hideLoading: true,
@@ -310,10 +316,11 @@ Page({
       data: { id: this._topicId },
       header: { 'Content-Type': 'application/x-www-form-urlencoded' },
       success(res) {
-        if (!isSuccess(res) || !res.data) { that.setData({ loaded: true, loadError: true }); return; }
+        if (!current()) return;
+        if (!isSuccess(res) || !res.data) { if (!that._lastRaw) that.setData({ loaded: true, loadError: true }); return; }
         that.applyDetail(res.data);
       },
-      fail() { that.setData({ loaded: true, loadError: true }); },
+      fail() { if (current() && !that._lastRaw) that.setData({ loaded: true, loadError: true }); },
     });
   },
 
@@ -616,10 +623,16 @@ Page({
 
   buildSessions(raw) {
     // E-06(2026-09-16):真源是 VO 里的 activityList(PublicActivitySummaryVO:id/name/startDate/endDate/addressName)。
-    const rows = Array.isArray(raw.activityList) ? raw.activityList : [];
+    const now = Date.now();
+    const rows = (Array.isArray(raw.activityList) ? raw.activityList : [])
+      .filter((s) => !s.cancelTime && toTimestamp(s.endDate || s.startDate) > now)
+      .sort((a, b) => toTimestamp(a.startDate) - toTimestamp(b.startDate));
     return rows.map((s, i) => ({
       id: s.id || ('s' + i),
-      whenText: this.formatRange(s.startDate, s.endDate),
+      whenText: (() => {
+        const parts = chinaParts(s.startDate);
+        return parts ? parts.month + '月' + parts.day + '日 ' + String(parts.hours).padStart(2, '0') + ':' + String(parts.minutes).padStart(2, '0') : '';
+      })(),
       whoText: s.name || '',
       etaText: s.addressName || '',
       // 场次类型后端没下发,留空;wxml 会整格不出,不冒充足球/到店。
@@ -841,7 +854,7 @@ Page({
     this.setData({ customerSheetVisible: true });
     this.loadCustomers();
   },
-  closeCustomers() { this.setData({ customerSheetVisible: false }); },
+  closeCustomers() { this._customerSeq = (this._customerSeq || 0) + 1; this.setData({ customerSheetVisible: false }); },
 
   onCustomerFilter(e) {
     const value = e.currentTarget.dataset.value || '';
@@ -851,6 +864,10 @@ Page({
   },
 
   loadCustomers() {
+    const seq = (this._customerSeq || 0) + 1;
+    this._customerSeq = seq;
+    const memberId = app.getUserID && app.getUserID();
+    const current = () => seq === this._customerSeq && memberId === (app.getUserID && app.getUserID());
     this.setData({ customerState: 'loading', customerErrorReason: '' });
     const that = this;
     app.sendRequest({
@@ -859,6 +876,7 @@ Page({
       data: jsonBody({ clubId: this._clubId, topicId: this._topicId, filter: this.data.customerFilter }),
       header: jsonHeader(),
       success(res) {
+        if (!current()) return;
         if (!isSuccess(res) || !res.data) { that.setData({ customerState: 'error', customerErrorReason: !isSuccess(res) && res && typeof res.msg === 'string' ? res.msg.trim() : '' }); return; }
         const d = res.data;
         that.setData({
@@ -873,7 +891,7 @@ Page({
           customerRows: flattenCustomerRows(d.sessions),
         });
       },
-      fail() { that.setData({ customerState: 'error' }); },
+      fail() { if (current()) that.setData({ customerState: 'error' }); },
     });
   },
 
@@ -1065,6 +1083,7 @@ Page({
   notReady(what) { toast(what + '：缺少俱乐部信息'); },
 
   ...DIRECTOR_METHODS,
+  ...planFallback.methods(),
 
   goBack() {
     const pages = getCurrentPages();

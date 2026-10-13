@@ -2,6 +2,7 @@
 // 数据:排行榜 = /api/growth/leaderboard(只取 me);足迹 = /api/growth/center + /api/play/{growth,my-completed}
 // 完整榜单(领奖台+全量名次)已拆到 subpackageP3/pages/growthcenter/leaderboard,本页只展示自己的排名。
 const app = getApp()
+const { recoverReadSession } = require('../../../../utils/session/login-reload.js')
 const { buildGrowthOverview } = require('../../../utils/growth-overview.js')
 const { chinaParts } = require('../../../../utils/datetime.js')
 
@@ -28,7 +29,7 @@ function unlockMoment(value) {
   return p.year + '年' + p.month + '月' + p.day + '日 ' + pad(p.hours) + ':' + pad(p.minutes)
 }
 
-function requestGrowthData(url) {
+function requestGrowthData(url, onFailure) {
   return new Promise((resolve) => {
     app.sendRequest({
       hideLoading: true,
@@ -37,8 +38,8 @@ function requestGrowthData(url) {
       method: 'POST',
       data: {},
       success: (res) => resolve(res || {}),
-      fail: (error) => resolve({ __requestFailed: true, __requestError: error || {} }),
-      successStatusAbnormal: (error) => resolve({ __requestFailed: true, __requestError: error || {} })
+      fail: (error, statusCode) => { const failure = Object.assign({}, error || {}, { statusCode: statusCode || error && (error.statusCode || error.code) }); if (onFailure) onFailure(failure); resolve({ __requestFailed: true, __requestError: failure }); },
+      successStatusAbnormal: (error, statusCode) => resolve({ __requestFailed: true, __requestError: Object.assign({}, error || {}, { statusCode: statusCode || error && (error.statusCode || error.code) }) })
     })
   })
 }
@@ -140,34 +141,50 @@ function rankHttpFailure(error) {
 }
 
 Page({
+  badgeLoadError: false,
+  overviewError: '',
+  overviewErrorKind: 'data',
+  boardState: 'error',
+  rankErrorKind: 'data',
+  errorMsg: '',
   data: {
-    errorMsg: '',
+    growthAuthRequired: false,
+    growthAccessDenied: false,
     rankState: 'loading', // loading | refreshing | ready | stale-error | error
-    rankErrorKind: 'data',
-    boardState: 'error',
     metric: 'point',
     period: 'total',
     unit: '积分',
     me: null,
+    profile: { name: '', avatarUrl: '' },
+    scoreText: '—',
     rankLoaded: false,
     badges: [],
     expandedBadge: '',   // 当前展开「获得时刻」的徽章码,空串=全部收起
     badgeCountText: '0',
-    badgeLoadError: false,
     showBadges: false,
     showBadgeEmpty: false,
     overviewState: 'loading', // loading | refreshing | ready | partial | stale-error | error
     overviewLoaded: false,
-    overviewErrorKind: 'data',
-    overviewError: '',
     celebrationEvent: '',
     badgeAnnouncement: '',
     overview: buildGrowthOverview({}),
+    overviewAvailable: { center: false, play: false, completed: false },
   },
 
   onLoad() {
+    this.setData({ profile: {
+      name: typeof app.getNickname === 'function' ? app.getNickname() || '' : '',
+      avatarUrl: typeof app.getAvatar === 'function' ? app.getAvatar() || '' : ''
+    } })
     this.loadOverview()
     this.loadMyRank()
+  },
+
+  onShow() {
+    this._hidden = false
+    if (this._readSessionChanged) { this._readSessionChanged = false; this.loadOverview(); this.loadMyRank(); return }
+    const owner = String(app.getUserID && app.getUserID() || '')
+    if (this._growthOwner !== undefined && owner !== this._growthOwner) { this.loadOverview(); this.loadMyRank(); }
   },
 
   onPullDownRefresh() {
@@ -180,15 +197,64 @@ Page({
     this.loadMyRank(done)
   },
 
+  onHide() { this._hidden = true },
+
   onUnload() {
+    this._unloaded = true
     this._rankEpoch = (this._rankEpoch || 0) + 1
     this._overviewEpoch = (this._overviewEpoch || 0) + 1
     this._rankLoading = false
     this._overviewLoading = false
   },
 
+  _recoverGrowthSession(res, statusCode, epoch, key) {
+    if (this._unloaded || epoch !== this['_' + key + 'Epoch']) return false
+    return recoverReadSession(this, app, res, function (anonymous) {
+      this._growthOwner = undefined; this._syncGrowthOwner()
+      this.setData({ rankState: 'error', overviewState: 'error', growthAuthRequired: anonymous, growthAccessDenied: false })
+    }, () => { this.loadOverview(); this.loadMyRank() }, statusCode)
+  },
+
+  _syncGrowthOwner() {
+    const owner = String(app.getUserID && app.getUserID() || '')
+    if (owner !== this._growthOwner) {
+      this._growthOwner = owner
+      this._rankEpoch = (this._rankEpoch || 0) + 1
+      this._overviewEpoch = (this._overviewEpoch || 0) + 1
+      this._rankLoading = false; this._overviewLoading = false; this._badgeCodes = null
+      this.setData({ me: null, rankLoaded: false, scoreText: '—', overviewLoaded: false, badges: [],
+        overview: buildGrowthOverview({}), overviewAvailable: {center:false,play:false,completed:false},
+        showBadges: false, showBadgeEmpty: false, expandedBadge: '', badgeAnnouncement: '', celebrationEvent: '',
+        growthAuthRequired: !owner || owner === '0', growthAccessDenied: false })
+    }
+    return owner && owner !== '0' ? owner : ''
+  },
+
+  _setGrowthAccessFailure(res, statusCode) {
+    const code = Number(statusCode || res && (res.code || res.statusCode))
+    if (code !== 401 && code !== 403) return false
+    this.setData({ growthAuthRequired: code === 401, growthAccessDenied: code === 403,
+      me: null, rankLoaded: false, scoreText: '—', overviewLoaded: false, badges: [], showBadges: false,
+      showBadgeEmpty: false, overviewAvailable: {center:false,play:false,completed:false}, badgeAnnouncement: '' })
+    return true
+  },
+
+  onLoginGrowth() {
+    if (!this.data.growthAuthRequired) { this.loadOverview(); this.loadMyRank(); return }
+    if (this._loginPending) return
+    this._loginPending = true
+    const login = app.getUserID && app.getUserID() && typeof app.reLogin === 'function' ? app.reLogin()
+      : typeof app.firstLogin === 'function' ? app.firstLogin() : null
+    Promise.resolve(login).then(result => {
+      this._loginPending = false
+      if (!this._unloaded && app.getUserID && app.getUserID() && !(result && result.ok === false)) { this.loadOverview(); this.loadMyRank(); }
+    }).catch(() => { this._loginPending = false })
+  },
+
   // ---- 我的排名摘要(不拉完整榜单,完整榜单在 leaderboard 子页) ----
   loadMyRank(done) {
+    const owner = this._syncGrowthOwner()
+    if (!owner || this._unloaded) { if (typeof done === 'function') done(); return }
     if (this._rankLoading) {
       if (typeof done === 'function') done()
       return
@@ -197,15 +263,17 @@ Page({
     const epoch = (this._rankEpoch || 0) + 1
     this._rankEpoch = epoch
     const hasRankSnapshot = this.data.rankLoaded === true
-    this.setData({
-      rankState: hasRankSnapshot ? 'refreshing' : 'loading',
+    Object.assign(this, {
       rankErrorKind: 'data',
       errorMsg: '',
       boardState: 'error'
     })
+    this.setData({
+      rankState: hasRankSnapshot ? 'refreshing' : 'loading'
+    })
     let settled = false
     const finish = () => {
-      if (settled || epoch !== this._rankEpoch) return
+      if (settled || epoch !== this._rankEpoch || this._unloaded || owner !== String(app.getUserID && app.getUserID() || '')) return
       settled = true
       this._rankLoading = false
       return true
@@ -220,61 +288,71 @@ Page({
       method: 'POST',
       data: { metric: this.data.metric, period: this.data.period, limit: 1 },
       success: (res) => {
-        if (epoch !== this._rankEpoch) return
+        if (epoch !== this._rankEpoch || this._unloaded || owner !== String(app.getUserID && app.getUserID() || '')) return
         if (isRankResponse(res, this.data.metric, this.data.period)) {
           if (!finish()) return
           this.buildMyRank(res.data)
-          this.setData({ rankLoaded: true, rankState: 'ready', errorMsg: '', boardState: 'error', rankErrorKind: 'data' })
+          Object.assign(this, { errorMsg: '', boardState: 'error', rankErrorKind: 'data' })
+          this.setData({ rankLoaded: true, rankState: 'ready', growthAuthRequired: false, growthAccessDenied: false })
         } else {
           if (!finish()) return
-          this.setData({
-            rankState: hasRankSnapshot ? 'stale-error' : 'error',
+          this._setGrowthAccessFailure(res)
+          Object.assign(this, {
             boardState: 'error',
             rankErrorKind: 'data',
             errorMsg: isSuccess(res)
               ? '排行榜数据不完整，请重试'
               : ((app.getRequestErrorMessage && app.getRequestErrorMessage(res, '排行榜没有加载出来')) || '排行榜没有加载出来')
           })
+          this.setData({
+            rankState: hasRankSnapshot ? 'stale-error' : 'error'
+          })
         }
         notifyDone()
       },
-      fail: (error) => {
-        if (!finish()) return
-        this.setData({
-          rankState: hasRankSnapshot ? 'stale-error' : 'error',
+      fail: (error, statusCode) => {
+        if (this._recoverGrowthSession(error, statusCode, epoch, 'rank') || !finish()) return
+        this._setGrowthAccessFailure(error, statusCode)
+        Object.assign(this, {
           boardState: 'error',
           rankErrorKind: isTransportFailure(error) ? 'network' : 'data',
           errorMsg: isTransportFailure(error)
             ? '网络不稳定，请检查连接后重试'
             : ((error && (error.msg || error.message)) || '排行榜没有加载出来')
         })
+        this.setData({
+          rankState: hasRankSnapshot ? 'stale-error' : 'error'
+        })
         notifyDone()
       },
-      successStatusAbnormal: (error) => {
-        if (!finish()) return
+      successStatusAbnormal: (error, statusCode) => {
+        if (this._recoverGrowthSession(error, statusCode, epoch, 'rank') || !finish()) return
+        this._setGrowthAccessFailure(error, statusCode)
         const failure = rankHttpFailure(error)
-        this.setData({
-          rankState: hasRankSnapshot ? 'stale-error' : 'error',
+        Object.assign(this, {
           boardState: failure.boardState,
           rankErrorKind: 'data',
           errorMsg: failure.message
+        })
+        this.setData({
+          rankState: hasRankSnapshot ? 'stale-error' : 'error'
         })
         notifyDone()
       },
       complete: () => {
         if (!finish()) return
-        this.setData({
-          rankState: hasRankSnapshot ? 'stale-error' : 'error',
+        Object.assign(this, {
           boardState: 'error',
           rankErrorKind: 'data',
           errorMsg: '排行榜加载没有完成，请重试'
+        })
+        this.setData({
+          rankState: hasRankSnapshot ? 'stale-error' : 'error'
         })
         notifyDone()
       }
     })
   },
-
-  retryRank() { this.loadMyRank() },
 
   buildMyRank(data) {
     const unit = this.data.metric === 'exp' ? 'EXP' : '积分'
@@ -289,7 +367,15 @@ Page({
         avatarUrl: data.me.avatar || ''
       }
     }
-    this.setData({ unit, me })
+    this.setData({
+      unit,
+      me,
+      scoreText: fmt(data.me.score),
+      profile: {
+        name: data.me.nickname || this.data.profile.name || '',
+        avatarUrl: data.me.avatar || this.data.profile.avatarUrl || ''
+      }
+    })
   },
 
   goLeaderboard() {
@@ -298,6 +384,8 @@ Page({
 
   // ---- 足迹概览 + 徽章(复用三条已上线读取接口；失败不把数据伪装为零) ----
   loadOverview(done) {
+    const owner = this._syncGrowthOwner()
+    if (!owner || this._unloaded) { if (typeof done === 'function') done(); return }
     if (this._overviewLoading) {
       if (typeof done === 'function') done()
       return
@@ -306,19 +394,22 @@ Page({
     const epoch = (this._overviewEpoch || 0) + 1
     this._overviewEpoch = epoch
     const hadOverview = this.data.overviewLoaded
+    Object.assign(this, {
+      overviewErrorKind: 'data',
+      overviewError: ''
+    })
     this.setData({
       overviewState: hadOverview ? 'refreshing' : 'loading',
-      overviewErrorKind: 'data',
-      overviewError: '',
       badgeAnnouncement: ''
     })
     Promise.all([
-      requestGrowthData('/api/growth/center'),
-      requestGrowthData('/api/play/growth'),
-      requestGrowthData('/api/play/my-completed')
+      requestGrowthData('/api/growth/center', res => this._recoverGrowthSession(res, undefined, epoch, 'overview')),
+      requestGrowthData('/api/play/growth', res => this._recoverGrowthSession(res, undefined, epoch, 'overview')),
+      requestGrowthData('/api/play/my-completed', res => this._recoverGrowthSession(res, undefined, epoch, 'overview'))
     ]).then(([center, play, completed]) => {
-      if (epoch !== this._overviewEpoch) return
+      if (epoch !== this._overviewEpoch || this._unloaded || owner !== String(app.getUserID && app.getUserID() || '')) return
       const responses = [center, play, completed]
+      if (responses.some(res => this._setGrowthAccessFailure(res.__requestFailed ? res.__requestError : res))) { if (typeof done === 'function') done(); return }
       const validSources = [isCenterResponse(center), isPlayResponse(play), isCompletedResponse(completed)]
       const successCount = validSources.filter(Boolean).length
       const allSuccess = successCount === responses.length
@@ -368,21 +459,27 @@ Page({
         badgeAnnouncement = '新徽章已点亮：' + newlyUnlocked.map((item) => item.name).join('、')
       }
       this._overviewLoading = false
-      this.setData({
-        overview,
-        overviewState: state,
-        overviewLoaded: hadOverview || successCount > 0,
+      Object.assign(this, {
         overviewErrorKind: networkFailure ? 'network' : 'data',
         overviewError: allSuccess ? '' : (hadOverview ? '足迹更新没有完成，现有数据仍可查看' : '部分成长数据暂时不可用'),
+        badgeLoadError: !hasBadgeSource
+      })
+      this.setData({
+        overview,
+        overviewAvailable: hadOverview && !allSuccess ? this.data.overviewAvailable : {
+          center: validSources[0], play: validSources[1], completed: validSources[2]
+        },
+        overviewState: state,
+        overviewLoaded: hadOverview || successCount > 0,
         badges: nextBadges,
         expandedBadge: nextExpandedBadge,
         badgeCountText: nextBadgeCountText,
-        badgeLoadError: !hasBadgeSource,
         showBadges: nextShowBadges,
         showBadgeEmpty: nextShowBadgeEmpty,
         celebrationEvent,
         badgeAnnouncement
       })
+      if (allSuccess) this.setData({ growthAuthRequired: false, growthAccessDenied: false })
       if (typeof done === 'function') done()
     })
   },

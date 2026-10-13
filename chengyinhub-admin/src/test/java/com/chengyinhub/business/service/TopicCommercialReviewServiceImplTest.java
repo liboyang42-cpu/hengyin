@@ -192,4 +192,25 @@ class TopicCommercialReviewServiceImplTest {
     private static TopicSaleCanonicalV1 completeCanonical() {
         return TopicSaleCanonicalTestFixture.canonical();
     }
+    @Test
+    void autoSaleWithoutCanonicalKeepsPricingAndReturnsAnExplicitNextStep() {
+        when(topicMapper.selectCmsTopicByIdForUpdate(9L)).thenReturn(topic(TopicLifecycleState.PRICING));
+        com.chengyinhub.business.domain.vo.TopicSaleReviewProgress result = service.submitSaleReviewIfReady(9L, 3L);
+        assertNull(result.getTaskId());
+        assertTrue(result.getNextStep().contains("保存完整开售参数"));
+        verify(auditTaskService, never()).submitCommercialReview(eq(AuditTask.BIZ_TOPIC_SALE_REVIEW), eq(9L), eq(3L), org.mockito.ArgumentMatchers.anyString());
+        verify(lifecycleService, never()).transition(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void autoSaleWaitsForNormalTransferButDoesNotSwallowInvalidTransferFacts() {
+        CmsTopic topic = topic(TopicLifecycleState.PRICING);
+        when(topicMapper.selectCmsTopicByIdForUpdate(9L)).thenReturn(topic);
+        when(transferGate.pendingTransferStep(topic)).thenReturn("请等待俱乐部接受主题合作邀请");
+        assertTrue(service.submitSaleReviewIfReady(9L, 3L).getNextStep().contains("等待俱乐部"));
+        when(transferGate.pendingTransferStep(topic)).thenThrow(new IllegalStateException("坏合同"));
+        assertThrows(IllegalStateException.class, () -> service.submitSaleReviewIfReady(9L, 3L));
+        verify(auditTaskService, never()).submitCommercialReview(eq(AuditTask.BIZ_TOPIC_SALE_REVIEW), eq(9L), eq(3L), org.mockito.ArgumentMatchers.anyString());
+    }
+
 }

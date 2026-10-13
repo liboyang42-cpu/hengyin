@@ -7,6 +7,7 @@ import java.util.Map;
 
 public interface VerificationReviewMapper {
     int insertIgnore(VerificationReview review);
+    Map<String, Object> selectPendingQueueStats();
     Map<String, Object> selectVerifierStats(@Param("verifierMemberId") Long verifierMemberId,
                                              @Param("registrationId") Long registrationId);
     List<VerificationReview> selectQueue(VerificationReview query);

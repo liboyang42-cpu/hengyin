@@ -9,6 +9,9 @@ import com.chengyinhub.business.mapper.CmsTopicChapterMapper;
 import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
 import com.chengyinhub.business.service.support.TopicStateKeyRefService;
 import com.chengyinhub.business.service.support.TopicStateKeyRefService.RefCollection;
+import com.chengyinhub.business.service.support.GameplayTemplateRules;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.chengyinhub.common.exception.ServiceException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -99,6 +102,49 @@ class TopicStateKeyRefServiceTest {
                 + "\"requires\":[{\"var\":\"clue.ledger_page\",\"op\":\"EQ\",\"value\":1}]}");
 
         assertTrue(service.referencesOf(topic(null), "counter.coins").isEmpty());
+    }
+
+    @Test
+    void declaredValueSlotCollectsItsBoundCounterNotItsLocalName() {
+        CmsTopic topic = slotTopic("counter.focus");
+        assertEquals(Collections.singletonList("节点「书房」"), service.referencesOf(topic, "counter.focus"));
+        assertTrue(service.referencesOf(topic, "energy").isEmpty());
+        assertEquals(Collections.singletonList("节点「书房」"), service.referencesOf(topic, "counter.literal"));
+    }
+
+    @Test
+    void hpBindingDoesNotRegisterTheSlotOrAReservedSystemKey() {
+        CmsTopic topic = slotTopic("sys.hp");
+        assertTrue(service.referencesOf(topic, "energy").isEmpty());
+        assertTrue(service.referencesOf(topic, "sys.hp").isEmpty());
+        assertEquals(Collections.singletonList("节点「书房」"), service.referencesOf(topic, "counter.literal"));
+    }
+
+    @Test
+    void missingOrStaleBindingCannotHideStateReferences() throws Exception {
+        CmsTopic topic = slotTopic("counter.focus");
+        ObjectNode config = (ObjectNode)new ObjectMapper().readTree(topic.getThemeRuntimeConfigJson());
+        ObjectNode binding = (ObjectNode)config.path("templateBindings").path(NODE_ID.toString());
+        binding.put("slotDigest", String.join("", Collections.nCopies(64, "0")));
+        topic.setThemeRuntimeConfigJson(config.toString());
+        assertThrows(ServiceException.class, () -> service.referencesOf(topic, "counter.focus"));
+        config.remove("templateBindings");topic.setThemeRuntimeConfigJson(config.toString());
+        assertThrows(ServiceException.class, () -> service.referencesOf(topic, "counter.focus"));
+    }
+
+    private CmsTopic slotTopic(String target) {
+        ObjectMapper json = new ObjectMapper();
+        ObjectNode advanced = json.createObjectNode().put("schemaVersion", 1);
+        advanced.putArray("effects").addObject().put("var", "energy").put("op", "FLOOR").put("value", 8);
+        advanced.withArray("effects").addObject().put("var", "counter.literal").put("op", "INC").put("value", 2);
+        advanced.putObject("interactionRules").putArray("resourceSlots").addObject()
+                .put("key", "energy").put("kind", "VALUE").put("label", "数值").put("required", true);
+        stubNodeAndTemplate(advanced.toString());
+        ObjectNode config = json.createObjectNode().put("schemaVersion", 1).put("capacity", 6);
+        ObjectNode binding = config.putObject("templateBindings").putObject(NODE_ID.toString()).put("templateId", TEMPLATE_ID)
+                .put("slotDigest", GameplayTemplateRules.slotDigest(advanced.path("interactionRules").path("resourceSlots")));
+        binding.putObject("values").put("energy", target);binding.putObject("items");
+        CmsTopic topic = topic(null);topic.setThemeRuntimeConfigJson(config.toString());return topic;
     }
 
     /** 同一个键被节点与主题数值规则同时引用时,两个位置都要列出来。 */

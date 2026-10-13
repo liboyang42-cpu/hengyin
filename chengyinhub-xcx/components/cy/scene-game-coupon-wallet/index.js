@@ -61,18 +61,17 @@ function decorate(item) {
 
 Component({
   data: { state: 'loading', tab: 0, tabs: ['全部', '待使用', '已使用', '已过期'], all: [], items: [], errorMsg: '' },
-  lifetimes: { attached() { this.load() } },
+  lifetimes: { attached() { this.load() }, detached() { this._loadSeq = (this._loadSeq || 0) + 1 } },
   pageLifetimes: {
     show() {
-      // 宿主重见:静默换号(页面存活期账号变了)必须清掉上一账号私有券并重载当前账号;
-      // 同 owner 保持现有列表(不闪不重载);首屏 attached 已在途时不重复发。
       const owner = currentOwnerId()
-      if (this._requestedOwner === owner && this._listOwner === owner) return
-      if (this._requestedOwner !== owner) this.load()
+      if (this._inFlightOwner === owner && this._inFlightSeq && !this._refreshOnShow) return
+      if (this._requestedOwner !== owner || this._refreshOnShow) {
+        this._refreshOnShow = false
+        this.load()
+      }
     },
-    hide() {
-      // 同 owner 隐藏保留列表;换号由 show 兜底。在途回包由 load 的 owner 守卫拦住。
-    },
+    hide() { this._refreshOnShow = true },
   },
   methods: {
     load() {
@@ -82,9 +81,15 @@ Component({
       this._requestedOwner = owner
       this.setData({ state: 'loading', errorMsg: '', all: [], items: [] })
       if (!owner) { this._listOwner = ''; this.setData({ state: 'error', errorMsg: '登录状态待确认，请登录后重试。' }); return }
+      this._inFlightOwner = owner
+      this._inFlightSeq = seq
+      const settle = () => {
+        if (this._inFlightSeq === seq) { this._inFlightSeq = 0; this._inFlightOwner = '' }
+      }
       app.sendRequest({
         url: '/api/coupon/myrecvlist', method: 'POST', data: { keyword: '' }, hideLoading: true, silentError: true,
         success: (res) => {
+          settle()
           if (!owner || seq !== this._loadSeq || owner !== currentOwnerId()) return
           if (!ok(res) || !isRecordList(res.data)) { this.setData({ state: 'error', errorMsg: '优惠券暂时没能打开，请稍后重试。' }); return }
           const all = res.data.map(decorate)
@@ -92,10 +97,13 @@ Component({
           this.setData({ all, state: all.length ? 'ready' : 'empty' }, () => this.filter())
         },
         successStatusAbnormal: () => {
+          settle()
           if (!owner || seq !== this._loadSeq || owner !== currentOwnerId()) return
           this.setData({ state: 'error', errorMsg: '服务暂时不可用，请稍后重试。' })
         },
+        complete: settle,
         fail: () => {
+          settle()
           if (!owner || seq !== this._loadSeq || owner !== currentOwnerId()) return
           this.setData({ state: 'error', errorMsg: '网络异常，请检查网络后重试。' })
         },

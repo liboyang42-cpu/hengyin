@@ -54,16 +54,18 @@ class ApiUmsMemberControllerSelfInfoTest {
     private static final Set<String> SELF_KEYS = new TreeSet<>(Arrays.asList(
             "id", "userType", "role", "phone", "name", "wechat", "levelId", "nickname", "avatar",
             "casePics", "caseIntroducton", "website", "introduction", "balance", "point", "createTime",
-            "followNum", "fansNum", "topicNum", "activityNum", "likeNum", "isFollow", "sysCategoryList"
+            "followNum", "fansNum", "friendNum", "topicNum", "activityNum", "likeNum", "isFollow", "sysCategoryList"
     ));
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private TestableApiUmsMemberController controller;
+    private IUmsMemberService umsMemberService;
+    private IMmsMerchantService mmsMerchantService;
 
     @BeforeEach
     void setUp() {
-        IUmsMemberService umsMemberService = mock(IUmsMemberService.class);
-        IMmsMerchantService mmsMerchantService = mock(IMmsMerchantService.class);
+        umsMemberService = mock(IUmsMemberService.class);
+        mmsMerchantService = mock(IMmsMerchantService.class);
         IUmsMemberFollowService followService = mock(IUmsMemberFollowService.class);
         ICmsTopicService topicService = mock(ICmsTopicService.class);
         ICmsActivityService activityService = mock(ICmsActivityService.class);
@@ -94,6 +96,7 @@ class ApiUmsMemberControllerSelfInfoTest {
         when(mmsMerchantService.selectMmsMerchantList(any())).thenReturn(Collections.singletonList(merchant()));
         when(followService.selectUmsMemberFollowNumByMemberId(ME)).thenReturn(4);
         when(followService.selectUmsMemberFansNumByMemberId(ME)).thenReturn(5);
+        when(followService.selectMutualFollowCount(ME)).thenReturn(3);
         when(followService.selectUmsMemberFollowList(any()))
                 .thenReturn(Collections.singletonList(new com.chengyinhub.business.domain.UmsMemberFollow()));
         when(topicService.selectCmsTopicNumByMemberId(ME)).thenReturn(2);
@@ -120,11 +123,12 @@ class ApiUmsMemberControllerSelfInfoTest {
         assertEquals("张三丰", data.get("name"));
         assertEquals("http://example.invalid/a.png", data.get("avatar"));
         assertEquals("player", data.get("role"));
-        assertEquals(2, ((Number) data.get("userType")).intValue(), "商家会员的 userType 仍要下发(客户端准入闸在读)");
+        assertEquals(1, ((Number) data.get("userType")).intValue(), "兼容身份必须投影持久角色 player，旧 userType 和商家资料不能升级权限");
         assertEquals(0, new BigDecimal(String.valueOf(data.get("balance"))).compareTo(new BigDecimal("86.50")));
         assertEquals(120, ((Number) data.get("point")).intValue());
         assertEquals(4, ((Number) data.get("followNum")).intValue());
         assertEquals(5, ((Number) data.get("fansNum")).intValue());
+        assertEquals(3, ((Number) data.get("friendNum")).intValue());
         assertEquals(2, ((Number) data.get("topicNum")).intValue());
         assertEquals(3, ((Number) data.get("activityNum")).intValue());
         assertEquals(6, ((Number) data.get("likeNum")).intValue());
@@ -133,6 +137,22 @@ class ApiUmsMemberControllerSelfInfoTest {
         // 不断言具体时刻 —— Jackson 时区取默认值,和运行机器有关,只钉格式合同。
         assertTrue(String.valueOf(data.get("createTime")).matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}"),
                 "注册时间格式必须是 yyyy-MM-dd HH:mm:ss,实际: " + data.get("createTime"));
+    }
+
+    @Test
+    void merchantRoleKeepsMerchantCompatibilityTypeEvenWithPlayerLegacyTypeAndNoProfile() throws Exception {
+        UmsMember member = memberWithEverySensitiveFieldFilled();
+        member.setRole("merchant");
+        member.setUserType(1L);
+        when(umsMemberService.selectUmsMemberById(ME)).thenReturn(member);
+        when(mmsMerchantService.selectMmsMerchantByMemberId(ME)).thenReturn(null);
+
+        AjaxResult result = controller.getUserInfo(null);
+        assertEquals(200, result.get(AjaxResult.CODE_TAG));
+        Map<String, Object> data = data(result);
+        assertEquals(SELF_KEYS, new TreeSet<>(data.keySet()));
+        assertEquals("merchant", data.get("role"));
+        assertEquals(2, ((Number) data.get("userType")).intValue());
     }
 
     @Test

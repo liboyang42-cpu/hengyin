@@ -2,6 +2,7 @@ package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.BusinessAuditEvent;
 import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CmsTopicChapter;
 import com.chengyinhub.business.domain.MerchantChapterOffer;
@@ -32,6 +33,7 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.Set;
 
 /**
@@ -68,6 +70,9 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
     /** 撤销核销时清 verification_status —— 与「首次核销就置位」成对,不清就为一笔不存在的核销永久锁死退款。 */
     @Autowired
     private CmsRegistrationMapper cmsRegistrationMapper;
+
+    @Autowired
+    private CmsActivityMapper cmsActivityMapper;
 
     /** 撤销核销时冲正平台应付 —— 与「核销即计提」成对,不冲就继续欠着一笔已不存在的核销的钱。 */
     @Autowired
@@ -317,6 +322,58 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
     }
 
     @Override
+    public Map<Long, Long> resolveScannableChapters(Long registrationId, Long topicId, Long merchantId) {
+        Map<Long, Long> candidates = new TreeMap<>();
+        if (registrationId == null || topicId == null || merchantId == null) return candidates;
+        for (Long chapterId : resolveRedeemableChapters(registrationId, topicId, merchantId)) {
+            candidates.put(chapterId, null);
+        }
+        Set<Long> redeemed = new LinkedHashSet<>();
+        List<RegistrationEntitlement> entitlements = entitlementMapper.selectByRegistration(registrationId);
+        if (entitlements != null) {
+            for (RegistrationEntitlement entitlement : entitlements) {
+                if (entitlement != null && registrationId.equals(entitlement.getRegistrationId())
+                        && topicId.equals(entitlement.getTopicId()) && Integer.valueOf(1).equals(entitlement.getStatus())
+                        && entitlement.getChapterId() != null) redeemed.add(entitlement.getChapterId());
+            }
+        }
+        List<Redemption> receipts = redemptionMapper.selectActiveByRegistration(registrationId);
+        if (receipts != null) {
+            for (Redemption receipt : receipts) {
+                if (receipt != null && receipt.getId() != null && "ACTIVE".equals(receipt.getStatus())
+                        && registrationId.equals(receipt.getRegistrationId()) && topicId.equals(receipt.getTopicId())
+                        && merchantId.equals(receipt.getMerchantId()) && redeemed.contains(receipt.getChapterId())) {
+                    candidates.put(receipt.getChapterId(), receipt.getId());
+                }
+            }
+        }
+        return candidates;
+    }
+
+    @Override
+    public Long findReplayableChapterRedemptionIdForUpdate(Long registrationId, Long topicId,
+                                                           Long chapterId, Long merchantId) {
+        if (registrationId == null || topicId == null || chapterId == null || merchantId == null) return null;
+        Redemption receipt = redemptionMapper.selectActiveByIdempotencyKeyForUpdate(
+                redeemKey(registrationId, chapterId, merchantId));
+        if (receipt == null) return null;
+        if (receipt.getId() == null || !"ACTIVE".equals(receipt.getStatus())
+                || !registrationId.equals(receipt.getRegistrationId()) || !topicId.equals(receipt.getTopicId())
+                || !chapterId.equals(receipt.getChapterId()) || !merchantId.equals(receipt.getMerchantId())) {
+            throw new IllegalStateException("核销回执与当前票、章节或商家不一致");
+        }
+        List<RegistrationEntitlement> entitlements = entitlementMapper.selectByRegistrationForUpdate(registrationId);
+        if (entitlements != null) {
+            for (RegistrationEntitlement entitlement : entitlements) {
+                if (entitlement != null && registrationId.equals(entitlement.getRegistrationId())
+                        && topicId.equals(entitlement.getTopicId()) && chapterId.equals(entitlement.getChapterId())
+                        && Integer.valueOf(1).equals(entitlement.getStatus())) return receipt.getId();
+            }
+        }
+        throw new IllegalStateException("核销权益状态不一致，请核对原核销记录");
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public Long redeemChapter(Long registrationId, Long chapterId, Long merchantId, Long operatorId) {
         // ⓪ 请求级幂等:同一(票,章,商家)之前已成功核销过 ⇒ 直接返回原 redemptionId。
@@ -418,6 +475,93 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
         if (r == null) {
             throw new RuntimeException("核销记录不存在");
         }
+        // 与扫码/活动取消共享 activity→registration→redemption 锁序。
+        // 这里只序列化既有撤销，不以当前退款/取消态否定原核销的冲回。
+        CmsRegistration located = cmsRegistrationMapper.selectCmsRegistrationById(r.getRegistrationId());
+        if (located == null || located.getOwnerType() == null || located.getOwnerId() == null) {
+            throw new IllegalStateException("核销关联报名或归属缺失，无法撤销");
+        }
+        if (Long.valueOf(2L).equals(located.getOwnerType())) {
+            if (cmsActivityMapper.selectCmsActivityByIdForUpdate(located.getOwnerId()) == null) {
+                throw new IllegalStateException("核销关联活动不存在，无法撤销");
+            }
+        }
+        CmsRegistration locked = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(r.getRegistrationId());
+        if (locked == null || !located.getOwnerType().equals(locked.getOwnerType())
+                || !located.getOwnerId().equals(locked.getOwnerId())) {
+            throw new IllegalStateException("核销关联报名归属已变更，请重新核对");
+        }
+        return reverseLockedRedemption(r, reason, operatorUserId, clawbackRewards);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public List<Long> reverseParentOrderRedemptions(String parentOrderNo, String reason,
+                                                   Long operatorUserId, boolean clawbackRewards) {
+        if (parentOrderNo == null || parentOrderNo.trim().isEmpty() || parentOrderNo.length() > 64
+                || reason == null || reason.trim().isEmpty() || reason.trim().length() > 255
+                || operatorUserId == null || operatorUserId <= 0L) {
+            throw new IllegalArgumentException("父订单、撤销原因或操作人无效");
+        }
+        String orderNo = parentOrderNo.trim();
+        List<CmsRegistration> located = cmsRegistrationMapper.selectByParentOrderNo(orderNo);
+        if (located == null || located.isEmpty()) throw new IllegalStateException("父订单不存在");
+        Map<Long, CmsRegistration> originals = new TreeMap<>();
+        Set<Long> activityIds = new java.util.TreeSet<>();
+        for (CmsRegistration row : located) {
+            if (row == null || row.getId() == null || row.getOwnerType() == null || row.getOwnerId() == null
+                    || row.getMemberId() == null || !orderNo.equals(row.getParentOrderNo())
+                    || originals.put(row.getId(), row) != null) {
+                throw new IllegalStateException("父订单关联报名或归属缺失");
+            }
+            if (Long.valueOf(2L).equals(row.getOwnerType())) activityIds.add(row.getOwnerId());
+        }
+        for (Long activityId : activityIds) {
+            if (cmsActivityMapper.selectCmsActivityByIdForUpdate(activityId) == null) {
+                throw new IllegalStateException("父订单关联活动不存在");
+            }
+        }
+        List<CmsRegistration> locked = cmsRegistrationMapper.selectByParentOrderNoForUpdate(orderNo, null);
+        if (locked == null || locked.size() != originals.size()) {
+            throw new IllegalStateException("父订单报名已变化，请刷新后重试");
+        }
+        Map<Long, CmsRegistration> registrations = new TreeMap<>();
+        for (CmsRegistration row : locked) {
+            CmsRegistration original = row == null ? null : originals.get(row.getId());
+            if (original == null || !orderNo.equals(row.getParentOrderNo())
+                    || !java.util.Objects.equals(original.getOwnerType(), row.getOwnerType())
+                    || !java.util.Objects.equals(original.getOwnerId(), row.getOwnerId())
+                    || !java.util.Objects.equals(original.getMemberId(), row.getMemberId())
+                    || registrations.put(row.getId(), row) != null) {
+                throw new IllegalStateException("父订单报名归属已变化，请刷新后重试");
+            }
+        }
+        List<Redemption> receipts = new ArrayList<>();
+        for (Long registrationId : registrations.keySet()) {
+            List<Redemption> active = redemptionMapper.selectActiveByRegistrationForUpdate(registrationId);
+            if (active == null) throw new IllegalStateException("父订单核销流水读取失败");
+            for (Redemption receipt : active) {
+                if (receipt == null || receipt.getId() == null || !"ACTIVE".equals(receipt.getStatus())
+                        || !registrationId.equals(receipt.getRegistrationId())) {
+                    throw new IllegalStateException("父订单核销流水归属或状态异常");
+                }
+                receipts.add(receipt);
+            }
+        }
+        if (receipts.isEmpty()) throw new IllegalStateException("父订单没有生效核销，无需重复撤销");
+        List<Long> reversedIds = new ArrayList<>();
+        for (Redemption receipt : receipts) {
+            if (!reverseLockedRedemption(receipt, reason.trim(), operatorUserId, clawbackRewards)) {
+                throw new IllegalStateException("核销状态已变化，父订单撤销已全部回滚");
+            }
+            reversedIds.add(receipt.getId());
+        }
+        return reversedIds;
+    }
+
+    private boolean reverseLockedRedemption(Redemption r, String reason, Long operatorUserId,
+                                             boolean clawbackRewards) {
+        Long redemptionId = r.getId();
         // 条件置位:0 行 = 已被撤销过。**必须在这里返回**,不能继续往下回补配额 ——
         // 重复撤销各回补一次会把 quota_used 扣成负数,凭空多出配额(库里 ck_offer_quota 会拦,
         // 但那是兜底不是设计;让它走到 CHECK 就已经是 500 了)。

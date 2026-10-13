@@ -303,6 +303,7 @@
     "chooseLocation",
     "choosePoi",
     "getLocation",
+    "getFuzzyLocation",
     "onLocationChange",
     "startLocationUpdate",
     "startLocationUpdateBackground"

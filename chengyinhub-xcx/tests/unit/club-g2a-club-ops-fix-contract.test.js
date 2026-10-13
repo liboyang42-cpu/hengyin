@@ -204,7 +204,7 @@ function clockNow(offsetMs) {
   return { date: datetime.chinaDateKey(new Date(Date.now() + offsetMs)), time: pad2(parts.hours) + ':' + pad2(parts.minutes) }
 }
 
-test('CU-C-35:日期=上海今天且时刻已过 ⇒ 判为已过;今天但时刻未到 / 非今天 ⇒ 放行', () => {
+test('CU-C-35:日期=上海今天且时刻已过 ⇒ 判为已过;今天但时刻未到 / 未来日期 ⇒ 放行', () => {
   const { assemblyAlreadyPast } = loadPure(EVENT_OPS_JS, ['assemblyAlreadyPast'])
   const now = Date.parse('2026-09-23T10:21:00+08:00')
   assert.equal(assemblyAlreadyPast(['2026-09-23', '2026-09-30'], '09:00', now), true,
@@ -212,6 +212,17 @@ test('CU-C-35:日期=上海今天且时刻已过 ⇒ 判为已过;今天但时�
   assert.equal(assemblyAlreadyPast(['2026-09-23'], '11:00', now), false)
   assert.equal(assemblyAlreadyPast(['2026-09-24'], '09:00', now), false, '明天 09:00 当然没过期')
   assert.equal(assemblyAlreadyPast(['2026-09-23'], '下班', now), false, '时刻形状不对交给形状校验,这里不猜')
+})
+
+test('CU-C-35:跨上海午夜的旧日期被拦下,今天和未来的未到时刻仍放行', () => {
+  const { assemblyAlreadyPast } = loadPure(EVENT_OPS_JS, ['assemblyAlreadyPast'])
+  const now = Date.parse('2026-10-12T00:03:00+08:00')
+  assert.equal(assemblyAlreadyPast(['2026-10-11'], '23:59', now), true)
+  assert.equal(assemblyAlreadyPast(['2026-10-11', '2026-10-12'], '23:59', now), true)
+  assert.equal(assemblyAlreadyPast(['2026-10-12'], '00:02', now), true)
+  assert.equal(assemblyAlreadyPast(['2026-10-12'], '00:03', now), true)
+  assert.equal(assemblyAlreadyPast(['2026-10-12'], '00:04', now), false)
+  assert.equal(assemblyAlreadyPast(['2026-10-13'], '00:01', now), false)
 })
 
 test('CU-C-35:提交时按上海当前时刻拦下,文案直说时刻(不是「早于今天」)', () => {

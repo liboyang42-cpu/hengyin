@@ -49,9 +49,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 /**
  * 微信支付服务实现 (适配新版SDK v3) - 修正版
@@ -65,9 +66,14 @@ public class WechatPayServiceImpl implements IWechatPayService {
     private ICmsRegistrationService registrationService;
 
     @Autowired
+    private AlarmService alarmService;
+
+    @Autowired
+    @Lazy
     private ICoopInviteService coopInviteService;
 
     @Autowired
+    @Lazy
     private com.chengyinhub.business.service.IMerchantCommerceService merchantCommerceService;
 
     /** ObjectProvider 打破 membership 下单依赖 IWechatPayService 形成的启动期依赖环。 */
@@ -659,6 +665,8 @@ public class WechatPayServiceImpl implements IWechatPayService {
      */
     @Override
     public String handlePayCallback(String requestBody, Map<String, String> headers) {
+        boolean verifiedNotification = false;
+        String safeReference = "UNKNOWN";
         try {
             // 构造请求参数
             RequestParam requestParam = new RequestParam.Builder()
@@ -671,6 +679,10 @@ public class WechatPayServiceImpl implements IWechatPayService {
 
             // 解析支付通知（含官方验签）
             Transaction transaction = notificationParser.parse(requestParam, Transaction.class);
+            verifiedNotification = true;
+            safeReference = transaction.getOutTradeNo() != null
+                    && transaction.getOutTradeNo().matches("[A-Za-z0-9_-]{1,64}")
+                    ? transaction.getOutTradeNo() : "UNKNOWN";
 
             // 构造结果映射
             Map<String, String> resultMap = new HashMap<>();
@@ -685,20 +697,24 @@ public class WechatPayServiceImpl implements IWechatPayService {
             // 专属业务订单必须先路由；未知 CLM 一律 FAIL，绝不能掉进活动报名回调。
             String result;
             String otn = transaction.getOutTradeNo();
+            String route = "registration";
             IClubMembershipService clubMembershipService = clubMembershipServiceProvider == null
                     ? null : clubMembershipServiceProvider.getIfAvailable();
             if (otn != null && otn.startsWith("CLM")) {
+                route = "club-membership";
                 boolean paid = "SUCCESS".equals(resultMap.get("trade_state"));
                 Integer paidAmountFen = transaction.getAmount() == null ? null : transaction.getAmount().getTotal();
                 result = clubMembershipService != null && clubMembershipService.supportsOutTradeNo(otn)
                         && clubMembershipService.handlePaidInvoice(otn, paid, paidAmountFen,
                         transaction.getTransactionId()) ? "SUCCESS" : "FAIL";
             } else if (merchantCommerceService.supportsOutTradeNo(otn)) {
+                route = "merchant-commerce";
                 boolean paid = "SUCCESS".equalsIgnoreCase(resultMap.get("trade_state"));
                 Integer paidAmountFen = transaction.getAmount() == null ? null : transaction.getAmount().getTotal();
                 result = merchantCommerceService.handlePaidOrder(otn, paid, paidAmountFen,
                         transaction.getTransactionId()) ? "SUCCESS" : "FAIL";
             } else if (otn != null && otn.startsWith("DEP")) {
+                route = "coop-deposit";
                 boolean paid = "SUCCESS".equalsIgnoreCase(resultMap.get("trade_state"));
                 Long depositCents = transaction.getAmount() == null || transaction.getAmount().getTotal() == null
                         ? null : transaction.getAmount().getTotal().longValue();
@@ -715,8 +731,13 @@ public class WechatPayServiceImpl implements IWechatPayService {
             // [P0-资损] 按业务处理结果回 ACK:处理失败必须回 FAIL 触发微信重试,否则掉单
             // (原实现无论 result 如何都回 SUCCESS,业务失败后微信不再通知 → 用户付了钱但订单未处理)
             if (!"SUCCESS".equalsIgnoreCase(result)) {
-                logger.error("微信支付回调业务处理失败,回 FAIL 触发微信重试: out_trade_no={}, result={}",
-                        transaction.getOutTradeNo(), result);
+                String reference = otn != null && otn.matches("[A-Za-z0-9_-]{1,64}") ? otn : "UNKNOWN";
+                logger.error("Verified payment callback failed route={} order={}; returning FAIL", route, reference);
+                // Registration lookup reports its own missing-order event; do not emit the same failure twice.
+                if (!"registration".equals(route)) {
+                    alarmService.alarmThrottled("payment.callback." + route, "支付回调业务订单处理失败",
+                            "route=" + route + " order=" + reference + " result=FAIL");
+                }
                 return "{\"code\": \"FAIL\",\"message\": \"业务处理失败,请重试\"}";
             }
 
@@ -727,6 +748,10 @@ public class WechatPayServiceImpl implements IWechatPayService {
             return "{\"code\": \"FAIL\",\"message\": \"签名验证失败: " + e.getMessage() + "\"}";
         } catch (Exception e) {
             logger.error("微信支付回调处理异常", e);
+            if (verifiedNotification) {
+                alarmService.alarmThrottled("payment.callback.business_exception", "支付回调业务处理异常",
+                        "order=" + safeReference + " type=" + e.getClass().getSimpleName() + " result=FAIL");
+            }
             return "{\"code\": \"FAIL\",\"message\": \"处理异常: " + e.getMessage() + "\"}";
         }
     }

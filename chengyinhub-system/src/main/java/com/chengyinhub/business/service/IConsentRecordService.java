@@ -9,6 +9,8 @@ public interface IConsentRecordService {
     int record(Long memberId, String docType, String docVersion, String scene,
                String scopeType, Long scopeId, String eventType, String requestId, String ipAddress);
 
+    ConsentRecord byRequestId(Long memberId, String requestId);
+
     ConsentRecord latest(Long memberId, String docType, String scene);
 
     ConsentRecord latest(Long memberId, String docType, String scene, String scopeType, Long scopeId);

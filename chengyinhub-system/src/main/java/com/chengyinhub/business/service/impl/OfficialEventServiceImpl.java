@@ -119,36 +119,11 @@ public class OfficialEventServiceImpl implements IOfficialEventService {
     }
 
     @Override
-    @Transactional
     public String completeTask(Long eventId, Long memberId) {
-        OfficialEvent e = eventMapper.selectOfficialEventById(eventId);
-        if (e == null) return "活动不存在";
-        // V2 的完成只能由服务端事实适配器写入 evidence。保留本入口仅为历史 V1 兼容，
-        // 不能让前端或旧 roam 结束回调绕过定位/主题完成验证直接加 progress。
-        if (e.getContractVersion() != null && e.getContractVersion() >= 2) {
-            return "新版活动请完成对应任务后自动验证";
-        }
-        EventSignup s = signupMapper.selectByEventAndMember(eventId, memberId);
-        if (s == null) return "请先报名";
-        int taskCount = taskCountOf(e);
-        int cur = s.getProgress() == null ? 0 : s.getProgress();
-        // progress 封顶到任务总数:杜绝反复调用无脑刷即时XP、以及单人把集体进度(light_count)顶爆。
-        // 注:此处仅做次数封顶,尚无"服务端完成凭证"(应绑真实到点核销/打卡),留待后续按产品口径接入。
-        if (taskCount > 0 && cur >= taskCount) {
-            return null; // 已全部完成,幂等返回
-        }
-        int p = cur + 1;
-        s.setProgress(p);
-        s.setStatus(taskCount > 0 && p >= taskCount ? EventSignup.ST_DONE : EventSignup.ST_DOING);
-        signupMapper.updateEventSignup(s);
-        // 即时奖励(每完成一个任务发 XP;失败不阻断进度记录,但要留痕便于排查)
-        JSONObject rw = parse(e.getRewardJson());
-        Integer instantXp = rw == null ? null : rw.getInteger("instantXp");
-        if (instantXp != null && instantXp > 0) {
-            try { growthService.addExp(memberId, instantXp, "官方活动即时奖 event=" + eventId); }
-            catch (Exception ex) { log.warn("[官方活动] 即时奖发放失败 event={} member={}", eventId, memberId, ex); }
-        }
-        return null;
+        OfficialEvent event = eventMapper.selectOfficialEventById(eventId);
+        if (event == null) return "活动不存在";
+        // 完成进度与奖励只能由服务端任务事实推进，历史 V1 没有可验证的完成凭证。
+        return "请完成对应任务后自动验证；旧版活动请联系主办方处理";
     }
 
     @Override

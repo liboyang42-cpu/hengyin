@@ -7,7 +7,7 @@
   <cy-skeleton wx:if="{{pageState === 'loading'}}" type="card" count="4" />
 
   <!-- E 加载失败(Figma 71:457) -->
-  <cy-error wx:elif="{{pageState === 'error'}}" fill size="lg" title="客户详情加载失败"
+  <cy-error load-failure wx:elif="{{pageState === 'error'}}" fill size="lg" title="客户详情加载失败"
             sub="{{errorMessage || '网络开小差了，稍后再试一次'}}" retry="重新加载" bind:retry="retry" auto-back />
 
   <!-- D 无客户权限(Figma 71:442) -->

@@ -41,6 +41,9 @@ Page({
     nearbyClubs: [],    // 城市俱乐部(展示用)
     clubsLoaded: false,
     clubsError: false,
+    clubsLoginRequired: false,
+    clubsPermissionDenied: false,
+    clubsLoginPending: false,
     clubsState: 'idle', // idle | loading | refreshing | ready | empty | error | stale-error
     clubsErrorText: '',
     isMerchantViewer: false,   // 商户视角:团体页只显示同城(附近)俱乐部,玩家不受影响
@@ -289,6 +292,19 @@ Page({
 
   // 俱乐部首页聚合(/api/club/home):我的 / 加入 / 附近 / 主理人态
   loadClubHome() {
+    const owner = typeof app.getUserID === 'function' ? String(app.getUserID() || '') : '';
+    if (owner !== this._clubHomeOwner) {
+      this._clubHomeRequestId = (this._clubHomeRequestId || 0) + 1;
+      this._clubHomeLoading = false;
+      this._clubHomeOwner = owner;
+      this._nearbyAll = [];
+      this.setData({ myClubs: [], joinedClubs: [], nearbyClubs: [], myClubId: null, myClubCount: 0, clubsLoaded: false, clubsState: 'idle' });
+    }
+    if (!owner) {
+      this.setData({ clubsLoginRequired: true, clubsPermissionDenied: false, clubsError: true,
+        clubsState: 'error', clubsErrorText: '登录后可查看你创建和加入的俱乐部' });
+      return;
+    }
     if (this._clubHomeLoading) return;
     var that = this;
     var hasSnapshot = ['ready', 'empty', 'stale-error'].indexOf(this.data.clubsState) >= 0
@@ -298,13 +314,24 @@ Page({
     this._clubHomeLoading = true;
     this.setData({
       clubsState: hasSnapshot ? 'refreshing' : 'loading',
+      clubsLoginRequired: false, clubsPermissionDenied: false,
       clubsError: false,
       clubsErrorText: '',
     });
-    function isCurrent() { return !that._unloaded && requestId === that._clubHomeRequestId; }
-    function fail(res, kind) {
+    function isCurrent() { return !that._unloaded && requestId === that._clubHomeRequestId && owner === String(app.getUserID() || ''); }
+    function fail(res, kind, statusCode) {
       if (!isCurrent()) return;
       that._clubHomeLoading = false;
+      const code = Number(statusCode || res && (res.code || res.statusCode));
+      const loginRequired = code === 401;
+      const denied = code === 403;
+      if (loginRequired || denied) {
+        that._nearbyAll = [];
+        that.setData({ myClubs: [], joinedClubs: [], nearbyClubs: [], myClubId: null, myClubCount: 0,
+          clubsLoginRequired: loginRequired, clubsPermissionDenied: denied, clubsLoaded: false,
+          clubsError: true, clubsState: 'error', clubsErrorText: loginRequired ? '登录后可查看我的俱乐部' : requestError(res, '当前账号无法查看俱乐部') });
+        return;
+      }
       that.setData({
         clubsLoaded: hasSnapshot,
         clubsError: true,
@@ -315,7 +342,6 @@ Page({
     app.sendRequest({
       // 下拉刷新的收圈绑在真实完成上;非下拉场景下 stopPullDownRefresh 是 no-op
       complete() { wx.stopPullDownRefresh(); },
-      hideLoading: true,
       hideLoading: true, silentError: true,
       url: '/api/club/home',
       method: 'POST',
@@ -347,14 +373,36 @@ Page({
         });
         that.applyNearbyFilter();
       },
-      fail: function (res) { fail(res, 'network'); }
+      successStatusAbnormal: function (res, statusCode) { fail(res, 'http', statusCode); },
+      fail: function (res, statusCode) { fail(res, 'network', statusCode); }
     });
   },
 
-  retryClubs() { this.loadClubHome(); },
+  retryClubs() {
+    if (this.data.clubsLoginRequired) this.onLoginClubs();
+    else this.loadClubHome();
+  },
+
+  onLoginClubs() {
+    if (this.data.clubsLoginPending) return;
+    const epoch = (this._clubsLoginEpoch || 0) + 1;
+    this._clubsLoginEpoch = epoch;
+    this.setData({ clubsLoginPending: true });
+    const login = app.getUserID() && typeof app.reLogin === 'function' ? app.reLogin()
+      : typeof app.firstLogin === 'function' ? app.firstLogin() : null;
+    Promise.resolve(login).then(result => {
+      if (this._unloaded || epoch !== this._clubsLoginEpoch) return;
+      this.setData({ clubsLoginPending: false });
+      if (app.getUserID() && !(result && result.ok === false)) this.loadClubHome();
+      else this.setData({ clubsErrorText: '登录没有成功，请检查网络后重试' });
+    }).catch(() => {
+      if (!this._unloaded && epoch === this._clubsLoginEpoch) this.setData({ clubsLoginPending: false, clubsErrorText: '登录没有成功，请检查网络后重试' });
+    });
+  },
 
   // 站内消息未读红点
   loadImUnread() {
+    if (typeof app.getUserID !== 'function' || !app.getUserID()) return;
     var that = this;
     app.sendRequest({
       url: '/api/im/unread-total', method: 'POST', hideLoading: true,

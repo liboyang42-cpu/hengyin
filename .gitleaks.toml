@@ -44,9 +44,19 @@ paths = [
   '''docs/evidence/popup-style-1003/verification\.json''',
 ]
 
-# 审计前态清单中的 64 位十六进制文件摘要，不豁免同文件内其他凭据。
+# Only these nine historical inventory entries; path and exact line must both match.
 [[rules.allowlists]]
 condition = "AND"
+paths = ['''(^|/)docs/evidence/popup-style-1003/before/source-inventory\.json$''']
 regexTarget = "line"
-paths = ['''docs/evidence/popup-style-1003/before/source-inventory\.json$''']
-regexes = ['''^\s*"(?:file_key|[^"]+\.(?:js|wxss))"\s*:\s*"[0-9a-f]{64}"\s*,?\s*$''']
+regexes = [
+  '''^\s*"pages/play/utils/play\-action\-key\.js": "ecbdd88fa18de8d63d57e620086338385c53be7a40178733777db2de2d1a0014",?\s*$''',
+  '''^\s*"style/tokens\.wxss": "2f6521a039056c52605699bba0a926184c60d1b30041b0cccf2209e09fbac9a9",?\s*$''',
+  '''^\s*"utils/access\-gate\.js": "1554ea1b334fdf39c10064e8b7a30d99f1ae2a4c0c6e971248e6ad05c56bae1f",?\s*$''',
+  '''^\s*"utils/compliance/consent\-client\.js": "80c6afc9cef322338885332e7ce9a15aa4cb62c58a4429bbdb83c379f2d6e250",?\s*$''',
+  '''^\s*"utils/game\-session\-client\.js": "ee120d19734e4d6d87003ce6831eff39e05fc75f80591a098e8258439c784d02",?\s*$''',
+  '''^\s*"utils/merchant\-access\-policy\.js": "b447b641105a6078625c81f891642db9405a6e3d72a3d67972a65610d135db59",?\s*$''',
+  '''^\s*"utils/play\-visual\-tokens\.js": "ee4f81a826bc03f12b4c70cce4b2ce39d2809740e4d120f280cc47b5f0499146",?\s*$''',
+  '''^\s*"utils/transport/request\-client\.js": "fc6edd47c1589af79a334d2206c37082fd3cfe70ffecf9c83a4b38092e040057",?\s*$''',
+  '''^\s*"utils/transport/upload\-client\.js": "942d548462b4f5db5ce9f365dac7b1b178ee3cc22cf44cc94c70a5481d8f0165",?\s*$''',
+]

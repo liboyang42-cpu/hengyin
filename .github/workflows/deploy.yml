@@ -1,16 +1,6 @@
 name: Deploy verified master to ECS
 
 on:
-  workflow_run:
-    workflows: [GitHub CI]
-    types: [completed]
-    # 不加这条,每个 PR 的 CI 完成都会创建一个 Deploy run。它们会被下面 prepare 的 if
-    # 挡掉(head_branch != master),但 run 已经建出来了:占 concurrency 组、互相挤成
-    # cancelled,看起来像生产事故。2026-07-16 实证:一次 master push 冒出三个同 SHA run
-    # (success/cancelled/skipped),其中两个是 PR CI 的噪音,害人误判"部署被取消"。
-    # ⚠️ 这里的 headSha 恒等于默认分支 tip,跟触发它的 CI 是哪个分支无关 —— 所以光看
-    # run 的 SHA 分不出真假,必须从源头挡。
-    branches: [master]
   workflow_dispatch:
     inputs:
       ref:
@@ -36,11 +26,7 @@ jobs:
     # workflow_run 只有「master push 触发的 GitHub CI 成功」才有资格部署；
     # workflow_dispatch 仅供仓库管理员在迁移/恢复时显式使用。
     if: >-
-      (github.event_name == 'workflow_run' &&
-       github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.event == 'push' &&
-       github.event.workflow_run.head_branch == 'master') ||
-      github.event_name == 'workflow_dispatch'
+      github.repository == 'liboyang42-cpu/chengyin' && ((github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'master') || github.event_name == 'workflow_dispatch')
     runs-on: [self-hosted, macOS, ARM64, chengyin]
     outputs:
       sha: ${{ steps.classify.outputs.sha }}
@@ -73,7 +59,8 @@ jobs:
 
   deploy:
     needs: prepare
-    if: needs.prepare.outputs.should_deploy == 'true'
+    if: >-
+      github.repository == 'liboyang42-cpu/chengyin' && (needs.prepare.outputs.should_deploy == 'true')
     runs-on: [self-hosted, macOS, ARM64, chengyin]
     environment: production
     timeout-minutes: 90
@@ -85,7 +72,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '11'
+          java-version: '21'
           # self-hosted runner 保留 ~/.m2；额外走 Actions cache 会在 Azure Blob TLS
           # 断连时卡住整个生产部署，宁可复用本机 Maven 缓存。
 

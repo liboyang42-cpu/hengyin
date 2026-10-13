@@ -115,7 +115,7 @@ class MerchantCrmCampaignClaimTransactionBoundaryTest {
     @Test
     void acceptedRetryCrashLeavesPendingForStaleRecoveryAndDeliveryRunsOutsideClaimTransaction() {
         insertCampaign(MerchantCrmCampaign.PARTIAL_FAILED);
-        insertFailedRecipient();
+        insertCouponNotIssuedRecipient();
         crashBeforeDelivery.set(true);
         MerchantCrmCampaignServiceImpl service = campaignService(claimTransactions());
 
@@ -340,6 +340,11 @@ class MerchantCrmCampaignClaimTransactionBoundaryTest {
     private void insertFailedRecipient() {
         jdbc.update("insert into recipient(id,campaign_id,merchant_id,status,failure_code,failure_message,attempt_count) "
                 + "values (81,8,77,'FAILED','CHANNEL_FAILED','timeout',1)");
+    }
+
+    private void insertCouponNotIssuedRecipient() {
+        jdbc.update("insert into recipient(id,campaign_id,merchant_id,status,failure_code,failure_message,attempt_count) "
+                + "values (81,8,77,'FAILED','COUPON_NOT_ISSUED','not issued',1)");
     }
 
     private MerchantCrmCampaign insertStaleProcessingCampaign() {

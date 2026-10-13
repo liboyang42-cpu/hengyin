@@ -9,6 +9,6 @@
 
   <cy-empty class="state-slot" wx:if="{{state === 'redirecting'}}" kind="loading" size="lg" fill
     title="正在打开提现记录" sub="即将前往银行卡提现记录" />
-  <cy-error class="state-slot cy-fade-in" wx:elif="{{state === 'error'}}" size="lg" fill
+  <cy-error load-failure class="state-slot cy-fade-in" wx:elif="{{state === 'error'}}" size="lg" fill
     title="页面打开失败" sub="{{message}}" retry="重试" bind:retry="retryRedirect" />
 </view>

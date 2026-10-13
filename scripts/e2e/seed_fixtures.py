@@ -22,6 +22,26 @@ DISCOVERABLE_MERCHANTS = (
      "上海市黄浦区面包", "社区烘焙补给站", "适合小团美食体验与路线补给。"),
 )
 
+# 当前业务定义来自 user_permission 现网备份，再叠加后续 P1 禁令/配额迁移：
+# player/merchant 不能创建活动；只有 club 可创建活动。不得为跑 E2E 放宽。
+DEFAULT_ROLE_PERMISSIONS = (
+    ("player", 2, 2, 0, 1, 1, 0, 1, 0, "checkin", 0, 0, 0, 0, 0, "self", 1, 0),
+    ("club", 5, None, 3, 3, 1, 1, 1, 0,
+     "checkin,scan,quiz,puzzle,collect,occupy,minigame", 1, 1, 0, 1, 1,
+     "theme+city", 1, 0),
+    ("merchant", 0, None, 0, 3, 0, 0, 1, 1, "checkin,scan", 0, 0, 1, 0, 1,
+     "store", 1, 3),
+)
+MERCHANT_CAPABILITY_SUBJECTS = (
+    (8001, 9002), (8002, 9005), (8003, 9006), (8004, 9007), (8005, 9003),
+)
+CLUB_LEADER_CAPABILITY_SUBJECTS = ((5001, 9003), (5002, 9008))
+SYSTEM_ROLE_ACCOUNTS = (
+    (4, "e2e_auditor", "E2E 审核", 101),
+    (5, "e2e_support", "E2E 客服", 102),
+)
+VISIBLE_TOPIC_NAME = "E2E 探店日一期"
+
 
 def assert_local_scratch(host, schema):
     if host not in ("127.0.0.1", "localhost", "::1") or not schema.startswith("cy_e2e_"):
@@ -38,6 +58,23 @@ def seed_recruit_deadline_job(execute):
         (RECRUIT_JOB_TARGET, RECRUIT_JOB_TARGET),
     )
 
+def seed_system_role_accounts(execute):
+    """为已定义的审核/客服 sys_role 建立独立可登录夹具，不借用 admin。"""
+    for user_id, username, nickname, role_id in SYSTEM_ROLE_ACCOUNTS:
+        execute(
+            "INSERT INTO sys_user(user_id,dept_id,user_name,nick_name,user_type,password,status,del_flag,"
+            "create_by,create_time) SELECT %s,100,%s,%s,'00',%s,'0','0','admin',NOW() FROM dual "
+            "WHERE NOT EXISTS (SELECT 1 FROM sys_user WHERE user_id=%s OR user_name=%s)",
+            (user_id, username, nickname, ADMIN_HASH, user_id, username),
+        )
+        execute(
+            "INSERT INTO sys_user_role(user_id,role_id) SELECT user_id,%s FROM sys_user "
+            "WHERE user_name=%s AND status='0' AND del_flag='0' "
+            "AND NOT EXISTS (SELECT 1 FROM sys_user_role "
+            "WHERE role_id=%s AND user_id=sys_user.user_id)",
+            (role_id, username, role_id),
+        )
+
 
 def seed_discoverable_merchants(execute):
     """幂等补齐俱乐部“找商家”入口实际渲染所需的承接档案。"""
@@ -52,16 +89,53 @@ def seed_discoverable_merchants(execute):
                       description, merchant_id))
 
 
+def seed_member_permission_defaults(execute):
+    """只补不存在的默认档位；值跟随既有业务基线，不覆盖环境内已有配置。"""
+    sql = (
+        "INSERT INTO user_permission (role,max_themes,max_nodes_per_theme,max_events,max_coupons,"
+        "can_create_theme,can_create_event,can_publish_coupon,can_redeem_coupon,node_types,"
+        "can_branch,can_game_mechanic,can_open_as_node,can_design_medal,can_create_group,"
+        "data_scope,withdrawable,max_city_nodes,membership_level) "
+        "SELECT %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,NULL FROM dual "
+        "WHERE NOT EXISTS (SELECT 1 FROM user_permission "
+        "WHERE role=%s AND membership_level IS NULL)"
+    )
+    for row in DEFAULT_ROLE_PERMISSIONS:
+        execute(sql, row + (row[0],))
+
+
+def seed_club_leader_capabilities(execute):
+    """实体主理人只在能力从未建立时获得对应能力；不复活已撤销记录。"""
+    for leader_id, member_id in CLUB_LEADER_CAPABILITY_SUBJECTS:
+        execute(
+            "INSERT INTO member_capability "
+            "(member_id,capability,status,granted_at,granted_by,create_time) "
+            "SELECT member_id,'club_leader',1,NOW(),0,NOW() FROM club_leader "
+            "WHERE id=%s AND member_id=%s AND status=1 AND del_flag=0 "
+            "AND NOT EXISTS (SELECT 1 FROM member_capability mc "
+            "WHERE mc.member_id=club_leader.member_id AND mc.capability='club_leader')",
+            (leader_id, member_id),
+        )
+
+
+def seed_visible_topic(execute):
+    """补一个可从正常列表进入的虚构免费主题；业务动作仍由真实接口创建。"""
+    execute(
+        "INSERT INTO cms_topic (member_id,topic_type,product_type,name,subtitle,description,status,"
+        "user_status,merchant_status,lifecycle,del_flag,is_draft,is_template,club_id,self_play,"
+        "self_play_price,create_by,create_time) "
+        "SELECT 9003,2,2,%s,'隔离验收样板','仅用于本机 cy_e2e_ 免费流程入口验收',"
+        "1,1,1,1,0,0,0,7001,1,0.00,'e2e-seed',NOW() FROM dual "
+        "WHERE NOT EXISTS (SELECT 1 FROM cms_topic WHERE member_id=9003 AND name=%s "
+        "AND status=1 AND user_status=1 AND del_flag=0)",
+        (VISIBLE_TOPIC_NAME, VISIBLE_TOPIC_NAME),
+    )
+
+
 def seed_merchant_node_prerequisites(execute):
     """结构快照不含权限数据；只补缺失夹具，不复活已撤销能力或覆盖配额。"""
-    execute(
-        "INSERT INTO user_permission (role,max_themes,max_events,max_coupons,"
-        "can_create_theme,can_create_event,can_publish_coupon,can_redeem_coupon,"
-        "can_open_as_node,max_city_nodes,membership_level) "
-        "SELECT 'merchant',0,0,3,0,0,1,1,1,1,NULL FROM dual WHERE NOT EXISTS "
-        "(SELECT 1 FROM user_permission WHERE role='merchant' AND membership_level IS NULL)"
-    )
-    for merchant_id, member_id, *_ in DISCOVERABLE_MERCHANTS:
+    seed_member_permission_defaults(execute)
+    for merchant_id, member_id in MERCHANT_CAPABILITY_SUBJECTS:
         execute(
             "INSERT INTO member_capability (member_id,capability,status,granted_at,granted_by,create_time) "
             "SELECT member_id,'merchant',1,NOW(),0,NOW() FROM mms_merchant "
@@ -134,7 +208,7 @@ def main():
        "'0','0','admin',NOW())", (ADMIN_HASH,))
     ex("INSERT INTO sys_user_role(user_id,role_id) VALUES(1,1)")
 
-    print("[seed] 对公付款双人账号(e2e_finance / e2e_operator,密码 admin123)")
+    print("[seed] 对公付款与平台审核/客服独立账号(密码 admin123)")
     ex("INSERT INTO sys_user(user_id,dept_id,user_name,nick_name,user_type,password,status,del_flag,"
        "create_by,create_time) VALUES(2,100,'e2e_finance','E2E 财务','00',%s,'0','0','admin',NOW())",
        (ADMIN_HASH,))
@@ -143,6 +217,7 @@ def main():
        (ADMIN_HASH,))
     ex("INSERT INTO sys_user_role(user_id,role_id) VALUES(2,103)")
     ex("INSERT INTO sys_user_role(user_id,role_id) VALUES(3,100)")
+    seed_system_role_accounts(ex)
     for name, perm, role_id in (("E2E 应付批次确认", "business:clubpayable:confirm", 103),
                                 ("E2E 应付付款登记", "business:clubpayable:paid", 100)):
         ex("INSERT INTO sys_menu(menu_name,parent_id,order_num,path,component,is_frame,is_cache,menu_type,"
@@ -197,6 +272,7 @@ def main():
        "VALUES(5001,9003,'俱乐部主理人','13900000003',1,0,NOW())")
     ex("INSERT INTO club_leader(id,member_id,leader_name,phone,status,del_flag,create_time) "
        "VALUES(5002,9008,'执行俱乐部主理人','13900000008',1,0,NOW())")
+    seed_club_leader_capabilities(ex)
     cur.execute("SHOW COLUMNS FROM club")
     club_cols = {r[0] for r in cur.fetchall()}
     owner_col = next((x for x in ("owner_member_id", "member_id", "leader_member_id", "creator_id")
@@ -212,6 +288,9 @@ def main():
     ex("INSERT INTO club_member(club_id,member_id,role,status,join_time,del_flag) "
        "SELECT 7002,9009,0,1,NOW(),0 WHERE NOT EXISTS "
        "(SELECT 1 FROM club_member WHERE club_id=7002 AND member_id=9009 AND del_flag=0)")
+    cur.execute("UPDATE club SET member_count=(SELECT COUNT(*) FROM club_member "
+                "WHERE club_id=club.id AND status=1 AND del_flag=0) WHERE id IN (7001,7002)")
+    seed_visible_topic(ex)
 
     print("[seed] 商家自己的玩法模板(图片验证 —— 探店日『看规则/传照片』那一步靠它)")
     # validation_method: 1=文字验证 2=图片验证 3=选项验证(CmsMemberTemplate.java:74)

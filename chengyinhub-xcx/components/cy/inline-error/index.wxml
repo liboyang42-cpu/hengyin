@@ -1,4 +1,4 @@
-<view class="inline-error inline-error--{{kind}}"
+<view wx:if="{{!loadFailure}}" class="inline-error inline-error--{{kind}}"
       aria-role="alert" aria-live="polite" aria-label="{{aria || _title}}{{!aria && _sub ? '，' + _sub : ''}}">
   <view class="inline-error__icon" aria-hidden="true">
     <cy-icon name="{{_glyph}}" size="36" />

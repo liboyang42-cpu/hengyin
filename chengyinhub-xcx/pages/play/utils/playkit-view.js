@@ -14,6 +14,7 @@
 
 const { stepsA11yLabel } = require('./playkit-steps.js');
 const { toCard } = require('../../../utils/object-card.js');
+const { isR5, feedbackBranch, albumKit } = require('./playkit-r5-segments.js');
 
 const KIT_PRIORITY = [
   /* 节点玩法模板那批排在最前:它们是这个节点的**主玩法**,没做完就不该先弹别的。
@@ -26,7 +27,7 @@ const KIT_PRIORITY = [
      后面的故事变量要靠它;其余三个里 photoCheck/note 要玩家当场动手,typeIn 是限时挑战。
      ⚠️ 契约 §2.3 已作废「新 2d6 check 段」:master 上的 R14 旅程检定走 JOURNEY_SEGMENTS 那条路,
      不在这里登记;等 Worker A 给出 R14 的下发路径再接玩家端。 */
-  'profile', 'photoCheck', 'note', 'typeIn',
+  'profile', 'photoCheck', 'album', 'note', 'typeIn',
   /* 决定类与挑战类九个(含 2026-09-22 现场感契约的罗盘指向与喊一嗓子)。⚠️ 名字不在这张表里 = 服务端下发了这一段,客户端也当它不存在:
      present 里没有它 → 拿不到 kit → 页面按「这个节点没有玩法」处理,不渲染、不报错。
      playkit-view-contract 里有一条按段名全表跑的断言,漏一个就红。 */
@@ -77,6 +78,7 @@ const TYPE_OF = {
   /* 《预制人生》四个新段。⚠️ 少一条 = type undefined,分发器整块不渲染。 */
   profile: 'profile',
   photoCheck: 'photocheck',
+  album: 'album',
   note: 'note',
   typeIn: 'typein',
   /* 九宫格:段不在商家节点配置里(主题级),由服务端在会话视图里现算进度下发。
@@ -198,6 +200,7 @@ function segmentComplete(name, seg) {
        降级(模型没给结论)也走 flagged(契约 §2.2),所以这一屏不会被卡成死路;
      · 打字:打对算完,限次用尽也算(tries=0 表示不限,永远不会用尽)。 */
   if (name === 'profile') return !!seg.done;
+  if (name === 'album') return !!seg.done;
   if (name === 'photoCheck') return !!seg.passed || !!seg.flagged;
   if (name === 'note') return !!seg.done;
   if (name === 'typeIn') {
@@ -439,9 +442,12 @@ function pickPlayKit(view, now) {
   const playKit = view && view.playKit;
   if (!playKit) return null;
 
-  const present = KIT_PRIORITY.filter((name) => !!playKit[name]);
+  const feedback = feedbackBranch(view);
+  const present = KIT_PRIORITY.filter((name) => !!playKit[name]
+    && (name !== 'branch' || !isR5(view) || !!feedback)
+    && (name !== 'album' || isR5(view)));
   if (!present.length) return null;
-  const name = present.find((item) => !segmentComplete(item, playKit[item])) || present[0];
+  const name = feedback ? 'branch' : present.find((item) => !segmentComplete(item, playKit[item])) || present[0];
   const seg = playKit[name];
 
   // sessionId / version 必须跟着走:提交动作要用它们做幂等键与 CAS
@@ -452,6 +458,16 @@ function pickPlayKit(view, now) {
     // 呈现方式逐字搬服务端(见 presentOf);故事流那层靠它决定铺不铺
     present: presentOf(view),
   };
+  if ((['FAILED', 'EXPIRED'].includes(view.status) || view.status === 'COMPLETED' && view.challenge && view.canRetry === true)
+      && (!isR5(view) || !!view.challenge)) {
+    base.terminal = true;
+    base.sessionStatus = view.status;
+    base.canRetry = view.canRetry === true;
+    base.retryLabel = view.challenge ? (view.ownerType === 2 ? '队长再次挑战' : '再次挑战')
+      : (view.ownerType === 2 ? '队长重新开始本次玩法' : '重新开始本次玩法');
+    if (Number.isFinite(view.score)) base.sessionScore = view.score;
+    if (Number.isSafeInteger(view.completedUnits) && view.completedUnits >= 0) base.completedUnits = view.completedUnits;
+  }
   /* 限时条:这五屏都把 limitSeconds 透传给 cy-play-stage 画条、跑表、到点判负。
      只给绑了它的那几屏 —— 别的屏拿到也没用,反而会让「谁在用限时」看不清。 */
   const limitSeconds = limitSecondsOf(view, now);
@@ -467,20 +483,27 @@ function pickPlayKit(view, now) {
         // 选项文案要给,**哪个是对的不给** —— 判定回来之后才知道
         options: (seg.options || []).map((o) => ({ id: o.id, t: o.label || '' })),
         // 多选标记:老单选配置服务端不给这个字段,缺省按单选渲染(单选行为一字不变)
-        multi: !!seg.multi,
+        multi: seg.judge !== false && !!seg.multi,
+        judge: seg.judge !== false,
+        failureSeq: 0,
+        lastOptionId: seg.lastOptionId || '',
+        lastOptionIds: seg.lastOptionIds || [],
+        // 每个所选选项最多 3 张已由服务端逐项校验;多选按选择顺序拼接,这里不再合计截断
+        feedbackImages: Array.isArray(seg.lastFeedbackImages) ? seg.lastFeedbackImages.slice() : [],
         shotLead: seg.lead || seg.title || '',
         // 提示词底下那行小字。商家没写就不出 —— 空着比硬凑一句好
         shotNote: seg.shotNote || '',
         /* 答错亮不亮答案:服务端只在「商家开了这个开关 + 次数用完」时才下发 answerId,
            所以「给了 = 可以亮」。别再单独发一个 reveal 布尔 —— 两个来源迟早会打架。 */
-        reveal: !!seg.answerId,
+        reveal: seg.judge !== false && (!!seg.answerId || (Array.isArray(seg.answerIds) && seg.answerIds.length > 0)),
         limitSeconds: limitSeconds,
         maxTries: seg.maxTries || 0,
         // attempts 是多选回执条的开关:>0 才说明这一屏刚判过,不是刚打开
         attempts: seg.attempts || 0,
         finished: !!seg.finished,
         passed: !!seg.passed,
-        answerId: seg.answerId || '',
+        answerId: seg.judge !== false ? (seg.answerId || '') : '',
+        answerIds: seg.judge !== false && Array.isArray(seg.answerIds) ? seg.answerIds.slice() : [],
         feedback: seg.lastFeedback || '',
       });
     }
@@ -514,15 +537,20 @@ function pickPlayKit(view, now) {
         answerId: seg.answerId || '',
       });
     }
+    if (name === 'album') return Object.assign(base, albumKit(seg));
     if (name === 'branch') {
-      const step = seg.currentStep || {};
+      const step = (feedback || seg).currentStep || {};
       return Object.assign(base, {
         title: step.title || '',
         body: step.body || '',
         // 选项带着**服务端给的 id** 走:走向只有服务端知道,客户端不自己判去哪一步
         options: (step.options || []).map((o) => ({ id: o.id, t: o.label || '' })),
-        limitSeconds: limitSeconds,
-        ended: !!step.terminal,
+        limitSeconds: feedback ? 0 : limitSeconds,
+        ended: !!step.terminal || !!(feedback && feedback.ended),
+        failureSeq: 0,
+        writable: feedback ? feedback.writable === true && !feedback.ended && !step.terminal : true,
+        feedback: !!feedback,
+        stepId: step.id || '',
       });
     }
     if (name === 'predict') {
@@ -600,7 +628,10 @@ function pickPlayKit(view, now) {
   if (name === 'profile') return Object.assign(base, buildProfile(seg));
   if (name === 'photoCheck') return Object.assign(base, buildPhotoCheck(seg, view.objectCard, view.placeName));
   if (name === 'note') return Object.assign(base, buildNote(seg));
-  if (name === 'typeIn') return Object.assign(base, buildTypeIn(seg));
+  if (name === 'typeIn') {
+    const r5 = !!view.config && view.config.outcomeRulesVersion === 1;
+    return Object.assign(base, buildTypeIn(seg), { r5, deadlineAt: r5 ? Number(view.deadlineAt) || 0 : 0 });
+  }
 
   /* ===== 节点玩法模板:决定类与挑战类 =====
      ⚠️ 这九段之前只有优先级表和 action 表,没有这里的分支,于是服务端下发了、
@@ -697,6 +728,8 @@ function pickPlayKit(view, now) {
   }
   if (name === 'ballShake') {
     return Object.assign(base, {
+      challenge: view.challenge || null,
+      challengeShared: view.ownerType === 2,
       kicker: seg.kicker || '',
       goal: seg.goal || 0,
       timed: !!seg.timed,

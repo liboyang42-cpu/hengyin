@@ -87,8 +87,8 @@ public class UmsMemberServiceImpl implements IUmsMemberService
 
             if (rankInfo != null && !rankInfo.isEmpty()) {
                 result.put("rankPercentage", rankInfo.get("rank_percentage"));
-                result.put("totalUsers", rankInfo.get("total_users"));
-                result.put("userRank", rankInfo.get("user_rank"));
+                result.put("totalUsers", ((Number) rankInfo.get("total_users")).intValue());
+                result.put("userRank", ((Number) rankInfo.get("user_rank")).intValue());
             } else {
                 // 如果用户不存在或已被删除
                 result.put("rankPercentage", "TOP0%");
@@ -153,8 +153,8 @@ public class UmsMemberServiceImpl implements IUmsMemberService
 
             if (rankInfo != null && !rankInfo.isEmpty()) {
                 result.put("rankPercentage", rankInfo.get("rank_percentage"));
-                result.put("totalUsers", rankInfo.get("total_users"));
-                result.put("userRank", rankInfo.get("user_rank"));
+                result.put("totalUsers", ((Number) rankInfo.get("total_users")).intValue());
+                result.put("userRank", ((Number) rankInfo.get("user_rank")).intValue());
             } else {
                 // 如果用户不存在或已被删除
                 result.put("rankPercentage", "TOP0%");
@@ -211,6 +211,8 @@ public class UmsMemberServiceImpl implements IUmsMemberService
     @Override
     public int insertUmsMember(UmsMember umsMember)
     {
+        umsMember.setRole(com.chengyinhub.business.service.IRoleService.ROLE_PLAYER);
+        umsMember.setUserType(1L);
         umsMember.setCreateTime(DateUtils.getNowDate());
         return umsMemberMapper.insertUmsMember(umsMember);
     }
@@ -227,6 +229,9 @@ public class UmsMemberServiceImpl implements IUmsMemberService
     {
         UmsMember current = umsMember.getId() == null ? null
                 : umsMemberMapper.selectUmsMemberById(umsMember.getId());
+        if (umsMember.getRole() != null && (current == null || !Objects.equals(current.getRole(), umsMember.getRole()))) {
+            throw new com.chengyinhub.common.exception.ServiceException("角色修改必须通过身份审核或移交流程", 403);
+        }
         boolean authenticationStateChanged = changesAuthenticationState(current, umsMember);
         String mutationId = null;
         if (authenticationStateChanged)

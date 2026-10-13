@@ -31,6 +31,7 @@ function loadPage(relativePath) {
   let definition
   const absolutePath = path.join(ROOT, relativePath)
   const app = {
+    canUseCommunity: () => true, // Current-account server-open fixture.
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
     getAvatar: () => '',
     getNickname: () => '',
@@ -61,7 +62,7 @@ function loadPage(relativePath) {
     console,
     getApp: () => app,
     Page: (config) => { definition = config },
-    require: createRequire(absolutePath),
+    require: (id) => id.includes('community-post-api') ? require('../helpers/community-page-seam') : createRequire(absolutePath)(id),
     setTimeout() {},
     clearTimeout() {},
     wx: wxApi,
@@ -167,7 +168,7 @@ test('广场发布成功关闭编辑层，并在刷新回读前保留原列表',
   })
 
   h.page.submitFormData()
-  h.requests[0].success({ code: '200' })
+  h.requests[0].success({ code: '200', data: { lifecycle: 'PUBLISHED' } })
 
   assert.equal(h.page.data.popOrig, false)
   assert.equal(h.page.data.popShow, false)
@@ -229,7 +230,7 @@ test('动态评论首载、空态和分页失败都有独立且可恢复的状�
 
   h.page.getList()
   assert.equal(h.page.data.commentsState, 'loading')
-  h.requests[0].success({ code: '200', data: { rows: [], total: 0 } })
+  h.requests[0].success({ code: '200', data: { rows: [], total: 0, hasMore: false } })
   h.requests[0].complete()
   assert.equal(h.page.data.commentsState, 'ready')
   assert.equal(h.page.data.nodata, true)

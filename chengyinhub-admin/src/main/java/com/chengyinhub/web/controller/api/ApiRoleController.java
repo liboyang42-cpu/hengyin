@@ -132,13 +132,10 @@ public class ApiRoleController extends BaseController {
         data.put("permission", permission);
         data.put("usage", usage);
 
-        // role 仅为默认视角；历史主理人档案保留，生效能力以 capability 和商家启停事实为准。
+        // 权限身份仅由持久角色决定；历史主理人和商家资料只用于业务展示。
         ClubLeader leader = clubLeaderService.selectClubLeaderByMemberId(memberId);
-        boolean isClubLeader = capabilityService.hasCapability(memberId, MemberCapability.CAP_CLUB_LEADER);
-        MmsMerchant merchant = mmsMerchantService.selectMmsMerchantByMemberId(memberId);
-        boolean isMerchant = merchant != null && Long.valueOf(1L).equals(merchant.getStatus())
-                && Long.valueOf(1L).equals(merchant.getAccountStatus())
-                && Integer.valueOf(0).equals(merchant.getDelFlag());
+        boolean isClubLeader = IRoleService.ROLE_CLUB.equals(role);
+        boolean isMerchant = IRoleService.ROLE_MERCHANT.equals(role);
         List<Club> owned = clubService.selectClubsByMemberId(memberId);
         List<Map<String, Object>> ownedClubs = new ArrayList<>();
         if (owned != null) {

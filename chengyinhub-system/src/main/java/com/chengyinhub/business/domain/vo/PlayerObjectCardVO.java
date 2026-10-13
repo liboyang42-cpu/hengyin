@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 import com.chengyinhub.business.domain.PlayerObjectCard;
 
@@ -55,6 +56,25 @@ public class PlayerObjectCardVO {
         target.createTime = source.getCreateTime();
         target.genStatus = source.getGenStatus() == null ? NONE : source.getGenStatus();
         target.frames = framesOf(source);
+        return target;
+    }
+
+    /** Resolve every renderable asset from its review record without changing the stored references. */
+    public static PlayerObjectCardVO from(PlayerObjectCard source, UnaryOperator<String> visibleMedia) {
+        PlayerObjectCardVO target = from(source);
+        target.sourceUrl = visibleMedia.apply(source.getSourceUrl());
+        target.cutoutUrl = visibleMedia.apply(source.getCutoutUrl());
+        if (target.cutoutUrl == null || target.cutoutUrl.isEmpty()) target.cutoutBox = null;
+        List<String> reviewedFrames = new ArrayList<>();
+        for (String frame : target.frames) {
+            String visible = visibleMedia.apply(frame);
+            if (visible != null && !visible.isEmpty()) reviewedFrames.add(visible);
+        }
+        // A partial turntable is not a complete generated card; fall back to the reviewed source only.
+        target.frames = reviewedFrames.size() == target.frames.size() ? reviewedFrames
+                : (target.sourceUrl == null || target.sourceUrl.isEmpty() ? Collections.emptyList()
+                : Collections.singletonList(target.sourceUrl));
+        if (READY.equals(target.genStatus) && reviewedFrames.size() != framesOf(source).size()) target.genStatus = NONE;
         return target;
     }
 

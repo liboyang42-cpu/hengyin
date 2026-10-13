@@ -11,6 +11,7 @@ import com.chengyinhub.business.domain.CmsTopicLike;
  */
 public interface ICmsTopicLikeService 
 {
+    int setLiked(Long memberId, Long topicId, boolean liked);
 
     /**
      * 查询用户点赞数

@@ -674,7 +674,7 @@ Page({
     });
     if (id) { this.setData({ clubId: id }); this.loadAll(); return; }
     // owner 入口(承接原 club/index 管理台):无 id → 解析我拥有的俱乐部
-    if (opt && opt.owner) { this.resolveOwnerEntry(); return; }
+    if (opt && opt.owner) { this._ownerEntry = true; this.resolveOwnerEntry(); return; }
     this.setData({ detailLoaded: true, notFound: true }); cyToast('缺少俱乐部');
   },
 
@@ -688,10 +688,20 @@ Page({
     const myNickname = (app.getNickname && app.getNickname()) || '';
     if (myNickname !== this.data.myNickname) this.setData({ myNickname });
     if (!this._hasShown) { this._hasShown = true; return; }
-    if (this.data.clubId && this.data.club
-        && (this.canGovern() || this.data.canUseManageTab)) this.loadAll();
+    if (this.data.clubId && this.data.club) {
+      if (this.canGovern() || this.data.canUseManageTab) this.loadAll();
+      else if (this.data.club.isJoined) this.refreshMemberRelationship();
+    }
     // CU-C-18:从「我发出的」撤回申请后返回,合作池那张卡要跟着变回「可再申请」,不能停在「已申请」。
     if (this.data.coopPoolState === 'ready') this.loadCoopPool(true);
+  },
+
+  // 普通成员从子页/后台回来时只重读详情里的本人关系，不重拉 owner 阶段模型。
+  // 先作废旧名单请求：关系尚未确认前不接收新名单；刷新失败则保留已经看过的快照，
+  // 既不冒充失权，也不会让迟到响应补进更新后的成员数据。
+  refreshMemberRelationship() {
+    this._memberRequestSeq = (this._memberRequestSeq || 0) + 1;
+    this.loadDetail(null, { preserveSnapshotOnFailure: true });
   },
 
   // 承接原 club/index:主理人入口无具体 id → 拉 /api/club/my 自解析(单团直落 / 多团选团 / 无团去创建)
@@ -729,20 +739,19 @@ Page({
   },
   closeOwnerPicker() { this.setData({ ownerPickerShow: false }); wx.navigateBack({ fail() { wx.switchTab({ url: '/pages/talent/list/index' }); } }); },
 
-  onPullDownRefresh() { this.loadAll(function () { wx.stopPullDownRefresh(); }); },
-
-  // 页面销毁:作废在途 AI 生成的回调,避免 setData after unload(sendRequest 不可中断)
-  onUnload() { this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1; this._clubAiToken = (this._clubAiToken || 0) + 1; this.clearGroupCodeTimer(); },
-
-  onRetry() {
-    this.setData({ detailLoaded: false, notFound: false, club: null });
-    // owner 入口还没解析出 clubId 时,loadAll 会直接 return —— 只重发详情请求等于永久骨架
-    // (E-05:点「重新加载」永远转圈)。这种情况必须重走 /api/club/my 解析。
-    if (!this.data.clubId) { this.resolveOwnerEntry(); return; }
-    this.loadAll();
+  onPullDownRefresh() {
+    if (!this.data.clubId && this._ownerEntry) { this.resolveOwnerEntry(); wx.stopPullDownRefresh(); return; }
+    this.loadAll(function () { wx.stopPullDownRefresh(); });
   },
 
-  goManage() { this.resolveOwnerEntry(); },
+  // 页面销毁:作废在途 AI 生成的回调,避免 setData after unload(sendRequest 不可中断)
+  onUnload() {
+    this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1;
+    this._clubAiToken = (this._clubAiToken || 0) + 1;
+    this._detailRequestSeq = (this._detailRequestSeq || 0) + 1;
+    this._memberRequestSeq = (this._memberRequestSeq || 0) + 1;
+    this.clearGroupCodeTimer();
+  },
 
   // 隐私授权闸:app.js 优先调这里(页内真弹窗),没有这个方法的页面才回退到 /pages/privacy 路由页 ——
   // 回退会把整页盖掉(CU-C-60 新增的 wx.scanCode 会触发系统隐私授权)。
@@ -982,7 +991,6 @@ Page({
         if (!isSuccess(res)) {
           // E-15f(2026-09-16):加载失败 ≠ 没有场次。原来两者共用同一句 toast,
           // 断网时主理人会读到「没有可管理的具体场次」—— 把一个假事实端给他。
-          cyToast('场次加载失败，请稍后重试');
           return;
         }
         if (!activities.length) {
@@ -1002,7 +1010,7 @@ Page({
           function (item) { that.chooseActivityTool(item.key, item.label); }
         );
       },
-      fail() { cyToast('场次加载失败，请稍后重试'); },
+      fail() {},
       complete() { that._activityToolsLoading = false; },
     });
   },
@@ -1522,6 +1530,7 @@ Page({
     const tabs = this.data.rankTabs || [];
     this.openChoiceSheet('排序方式', '', tabs.map((t) => ({ key: t.key, label: t.label })), function (picked) {
       if (!picked || picked.key === that._leaderboardSort) return;
+      that._leaderboardSort = picked.key;
       that.setData({
                 leaderboardSortLabel: picked.label,
         leaderboardLoaded: false,
@@ -1877,9 +1886,16 @@ Page({
     if (changed) this.setData({ posts: next });
   },
 
-  loadDetail(cb) {
+  loadDetail(cb, options) {
     const that = this;
-    if (isDemoClubId(this.data.clubId)) {
+    const opts = options || {};
+    const clubId = this.data.clubId;
+    const requestSeq = (this._detailRequestSeq || 0) + 1;
+    this._detailRequestSeq = requestSeq;
+    function isCurrent() {
+      return requestSeq === that._detailRequestSeq && String(clubId) === String(that.data.clubId);
+    }
+    if (isDemoClubId(clubId)) {
       const club = enrichClub(mockData.getDemoClubDetail());
       const legacyCanGovern = that.canGovern(club);
       const sameClub = that.data.club && String(that.data.club.id) === String(club.id);
@@ -1894,8 +1910,9 @@ Page({
       return;
     }
     app.sendRequest({
-      hideLoading: true, url: '/api/club/detail', method: 'POST', data: jsonBody({ id: this.data.clubId }), header: jsonHeader(),
+      hideLoading: true, url: '/api/club/detail', method: 'POST', data: jsonBody({ id: clubId }), header: jsonHeader(),
       success(res) {
+        if (!isCurrent()) return;
         const club = enrichClub((res.code == '200' && res.data) || null);
         const canSee = !!(club && (club.isOwner || club.isJoined));
         const legacyCanGovern = that.canGovern(club);
@@ -1905,7 +1922,21 @@ Page({
         const requestedTab = that._requestedTab === 'manage' && legacyCanGovern ? 'manage' : '';
         const initialTab = canKeepTab ? that.data.activeTab : (requestedTab || that.defaultTabForClub(club));
         if (requestedTab) that._requestedTab = '';
-        that.setData({ club: club, canSeeMembers: canSee, canUseManageTab: immediateCanUseManageTab, detailLoaded: true, notFound: !club, activeTab: initialTab, clubTabs: that.tabsForClub(club, immediateCanUseManageTab), tabInitialized: that.data.tabInitialized || !!club });
+        if (!canSee) that._memberRequestSeq = (that._memberRequestSeq || 0) + 1;
+        that.setData({
+          club: club,
+          canSeeMembers: canSee,
+          canUseManageTab: immediateCanUseManageTab,
+          detailLoaded: true,
+          notFound: !club,
+          activeTab: initialTab,
+          clubTabs: that.tabsForClub(club, immediateCanUseManageTab),
+          tabInitialized: that.data.tabInitialized || !!club,
+          members: canSee ? that.data.members : [],
+          membersState: canSee ? that.data.membersState : 'idle',
+          memberStrip: canSee ? that.data.memberStrip : [],
+          membersExpanded: canSee ? that.data.membersExpanded : false,
+        });
         that.applyClubOwnerBadge();  // CU-C-108:club 到了,把早到的帖子徽标补上
         if (canSee) {
           that.loadMembers();
@@ -1914,7 +1945,13 @@ Page({
           that.revokeClubAccess('idle');
         }
       },
-      fail() { that.setData({ detailLoaded: true, notFound: true }); cyToast('加载失败'); },
+      fail() {
+        if (!isCurrent()) return;
+        if (opts.preserveSnapshotOnFailure && that.data.club) {
+          return;
+        }
+        that.setData({ detailLoaded: true, notFound: true });
+      },
       complete() { cb && cb(); },
     });
   },
@@ -2035,17 +2072,27 @@ Page({
 
   loadMembers() {
     const that = this;
+    const clubId = this.data.clubId;
+    const requestSeq = (this._memberRequestSeq || 0) + 1;
+    this._memberRequestSeq = requestSeq;
+    function isCurrent() {
+      return requestSeq === that._memberRequestSeq && String(clubId) === String(that.data.clubId);
+    }
     this.setData({ members: [], membersState: 'loading', memberStrip: [] });
     app.sendRequest({
-      hideLoading: true, url: '/api/club/members', method: 'POST', data: jsonBody({ clubId: this.data.clubId }), header: jsonHeader(),
+      hideLoading: true, url: '/api/club/members', method: 'POST', data: jsonBody({ clubId: clubId }), header: jsonHeader(),
       success(res) {
+        if (!isCurrent()) return;
         if (res.code != '200' || !Array.isArray(res.data)) {
           that.setData({ members: [], membersState: 'business-error', memberStrip: [] });
           return;
         }
         that.setData({ members: res.data, membersState: 'ready', memberStrip: buildMemberStrip(res.data, that.data.club && that.data.club.memberCount) });
       },
-      fail() { that.setData({ members: [], membersState: 'network-error', memberStrip: [] }); },
+      fail() {
+        if (!isCurrent()) return;
+        that.setData({ members: [], membersState: 'network-error', memberStrip: [] });
+      },
     });
   },
 
@@ -2250,7 +2297,7 @@ Page({
           that.loadDetail();
           if (res.data && res.data.state === 'pending') {
             modal.show({
-              title: '申请已提交', content: '等待审核。通过后才能进入群聊和使用成员功能。',
+              title: '申请已提交', content: '等待审核。通过后才能查看成员名单和使用成员功能。',
               showCancel: false,
             });
             return;
@@ -2373,7 +2420,7 @@ Page({
           function (item) { that.reportActivity(item.key, item.label); }
         );
       },
-      fail() { cyToast('活动列表加载失败，请稍后重试'); },
+      fail() {},
       complete() { that._activityReportLoading = false; },
     });
   },

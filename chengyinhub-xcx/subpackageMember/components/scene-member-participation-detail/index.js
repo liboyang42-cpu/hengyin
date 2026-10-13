@@ -3,12 +3,14 @@ const cyLoading = require('../../../utils/loading.js');
 const cyToast = require('../../../utils/toast.js');
 const { toTimestamp, chinaDayStart } = require('../../../utils/datetime');
 const { resolveVerificationScan } = require('../../../utils/verification-scan');
+const { resolveVerificationResult } = require('../../../utils/merchant-verification.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { createWriteActionWorkflow } = require('../../../utils/write-action-workflow.js');
 const { offerVerificationReadback } = require('../../../utils/verification-readback.js');
 const { summarizeOrderState, canRequestOrderRefund } = require('../../../utils/order-status.js');
 const cancellationFeedback = require('../../../utils/cancellation-feedback.js');
+const { isUnknownHttpStatus } = require('../../../utils/transport/failure-envelope.js');
 
 function nonNegativeNumberOrNull(value) {
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return null;
@@ -183,6 +185,8 @@ Component({
                 cyToast('该码含多个章节，请到商家后台核销');
                 return;
               }
+              const verdict = resolveVerificationResult(r, scan.successTitle || '核销');
+              if (verdict.state === 'duplicate') { cyToast(verdict.title + '：' + verdict.message, { icon: 'none' }); return; }
               if (r.code == '200') {
                 cyToast.success(r.msg || scan.successTitle);
               } else {
@@ -452,8 +456,14 @@ Component({
             cyToast(res.msg || '取消失败', { duration: 2000 });
           }
         },
-        fail: function (res) {
+        fail: function (res, statusCode) {
           cyLoading.hide();
+          if (isUnknownHttpStatus(statusCode)) {
+            cyToast('取消结果暂未确认，正在刷新订单');
+            that.triggerEvent('refresh');
+            that.getData();
+            return;
+          }
           cyToast('网络错误，请重试', { duration: 2000 });
         }
       });

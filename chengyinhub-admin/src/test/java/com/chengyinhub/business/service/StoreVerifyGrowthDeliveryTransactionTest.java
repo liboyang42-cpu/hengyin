@@ -68,12 +68,15 @@ class StoreVerifyGrowthDeliveryTransactionTest {
                 config.databaseUrl().replace("/" + config.databaseName() + "?", "/" + database + "?"),
                 config.user(), config.password());
         db = new JdbcTemplate(source);
-        db.execute("CREATE TABLE cms_registration(id BIGINT PRIMARY KEY,parent_order_no VARCHAR(64),member_id BIGINT NOT NULL,owner_type BIGINT,"
-                + "owner_id BIGINT,payment_status INT,registration_status INT,verification_status INT,verifier_id BIGINT,verification_time DATETIME) ENGINE=InnoDB");
+        // 核销当前锁读走真实完整报名投影；由既有探店日DDL建结构，不能用缺字段短表伪造拒绝。
+        try (Connection connection = source.getConnection()) {
+            com.chengyinhub.business.it.ItSchema.apply(connection, "it-schema/explore-alliance-it-schema.sql");
+        }
+        executeMigration(source, "sql/migration_20260930_registration_first_successful_scan.sql");
         db.execute("CREATE TABLE activity_cancel_manual_refund_case(id BIGINT PRIMARY KEY AUTO_INCREMENT,"
-                + "activity_id BIGINT,topic_id BIGINT,parent_order_no VARCHAR(64),payer_member_id BIGINT,"
+                + "activity_id BIGINT,topic_id BIGINT,parent_order_no VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin,payer_member_id BIGINT,"
                 + "payer_registration_id BIGINT,case_type VARCHAR(32) NOT NULL DEFAULT 'MIXED_TICKETS',"
-                + "status VARCHAR(48),verified_registration_ids_json JSON,unverified_registration_ids_json JSON) ENGINE=InnoDB");
+                + "status VARCHAR(48),verified_registration_ids_json JSON,unverified_registration_ids_json JSON) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
         db.execute("CREATE TABLE growth_mission(id BIGINT PRIMARY KEY AUTO_INCREMENT,mission_code VARCHAR(80) NOT NULL UNIQUE,"
                 + "mission_name VARCHAR(120) NOT NULL,mission_desc VARCHAR(255),trigger_event VARCHAR(80) NOT NULL,"
                 + "exp_reward INT NOT NULL DEFAULT 0,daily_limit INT NOT NULL DEFAULT 1,status CHAR(1) NOT NULL,"
@@ -101,9 +104,17 @@ class StoreVerifyGrowthDeliveryTransactionTest {
         BusinessAuditEventMapper auditMapper = mock(BusinessAuditEventMapper.class);
         when(auditMapper.insertBusinessAuditEvent(any(BusinessAuditEvent.class))).thenReturn(1);
         perkLedgerService = mock(IPerkLedgerService.class);
+        when(perkLedgerService.findReplayableChapterRedemptionIdForUpdate(any(), any(), any(), any())).thenReturn(null);
 
         CmsRegistrationServiceImpl registrationTarget = new CmsRegistrationServiceImpl();
         ReflectionTestUtils.setField(registrationTarget, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
+        com.chengyinhub.business.mapper.CmsActivityMapper activities = mock(com.chengyinhub.business.mapper.CmsActivityMapper.class);
+        com.chengyinhub.business.domain.CmsActivity activity = new com.chengyinhub.business.domain.CmsActivity();
+        activity.setId(400L);
+        activity.setTopicId(300L);
+        activity.setDelFlag(0);
+        when(activities.selectCmsActivityByIdForUpdate(400L)).thenReturn(activity);
+        ReflectionTestUtils.setField(registrationTarget, "cmsActivityMapper", activities);
         ReflectionTestUtils.setField(registrationTarget, "cmsRegistrationScanMapper", scanMapper);
         ReflectionTestUtils.setField(registrationTarget, "settlementEntryService", mock(ISettlementEntryService.class));
         ReflectionTestUtils.setField(registrationTarget, "businessAuditEventMapper", auditMapper);
@@ -124,7 +135,7 @@ class StoreVerifyGrowthDeliveryTransactionTest {
         db.update("INSERT INTO growth_mission(mission_code,mission_name,trigger_event,exp_reward,status)"
                 + " VALUES('STORE_TX','到店核验','store_verify',7,'0')");
         db.update("INSERT INTO cms_registration(id,member_id,owner_type,owner_id,payment_status,"
-                + "registration_status,verification_status,verifier_id,verification_time) VALUES(501,9009,1,300,2,2,0,NULL,NULL)");
+                + "registration_status,verification_status,verifier_id,verification_time,registration_no,ticket_id,ticket_price,pay_expire_time,original_amount,payable_amount,total_amount) VALUES(501,9009,1,300,2,2,0,NULL,NULL,'GROWTH-501',1,0,NOW()+INTERVAL 1 DAY,0,0,0)");
     }
 
     @AfterAll
@@ -162,8 +173,14 @@ class StoreVerifyGrowthDeliveryTransactionTest {
         when(perkLedgerService.resolveRedeemableChapters(501L, 300L, 77L))
                 .thenReturn(Collections.<Long>emptyList());
 
-        assertThrows(IllegalStateException.class, () -> registrationService.redeemExploreChapterAndRecord(
-                registration(), 44L, 300L, 77L, 77L, 1));
+        db.update("UPDATE cms_registration SET owner_type=2,owner_id=400 WHERE id=501");
+        CmsRegistration explore = registration();
+        explore.setOwnerType(2L);
+        explore.setOwnerId(400L);
+        explore.setRegistrationStatus(2);
+        assertEquals("该章节不可由您核销", assertThrows(IllegalStateException.class,
+                () -> registrationService.redeemExploreChapterAndRecord(explore, 44L, 300L, 77L, 77L, 1)).getMessage());
+        org.mockito.Mockito.verify(perkLedgerService).resolveRedeemableChapters(501L, 300L, 77L);
 
         assertEquals(0, db.queryForObject("SELECT verification_status FROM cms_registration WHERE id=501", Integer.class));
         assertEquals(0, db.queryForObject("SELECT count(*) FROM store_verify_growth_delivery", Integer.class));

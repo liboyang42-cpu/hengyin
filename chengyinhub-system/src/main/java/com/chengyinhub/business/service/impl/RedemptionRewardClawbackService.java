@@ -143,6 +143,11 @@ public class RedemptionRewardClawbackService {
                 throw new IllegalStateException("成长经验发放行冲回标记失败 id=" + award.getId());
             }
             requested += Math.max(0, award.getRewardExp() == null ? 0 : award.getRewardExp());
+            int earnedExp = Math.max(0, award.getRewardExp() == null ? 0 : award.getRewardExp());
+            if (earnedExp > 0 && memberGrowthMapper.selectMissionEarnedExpId(memberId, award.getId()) != null
+                    && memberGrowthMapper.revokeMissionEarnedExp(memberId, award.getId(), earnedExp) != 1) {
+                throw new IllegalStateException("任务经验原笔冲回失败 progressId=" + award.getId());
+            }
         }
         int deducted = deductExp(memberId, requested);
         int remaining = deducted;
@@ -172,8 +177,16 @@ public class RedemptionRewardClawbackService {
         if (topicId == null) return null;
         Integer xp = topicCompletionXpAwardMapper.selectXpForUpdate(memberId, topicId);
         if (xp == null || xp <= 0) return null;
-        topicCompletionXpAwardMapper.deleteAward(memberId, topicId);
-        return amounts(null, xp, deductExp(memberId, xp), null);
+        Long earnedExpId = topicCompletionXpAwardMapper.selectEarnedExpId(memberId, topicId);
+        if (topicCompletionXpAwardMapper.deleteAward(memberId, topicId) != 1) {
+            throw new IllegalStateException("通关经验发放事实冲回失败");
+        }
+        int deducted = deductExp(memberId, xp);
+        // 历史直发没有可关联的获得明细，不猜测发放周或给其他奖励扣分。
+        if (earnedExpId != null && memberGrowthMapper.revokeEarnedExp(memberId, earnedExpId, xp) != 1) {
+            throw new IllegalStateException("通关经验原笔冲回失败");
+        }
+        return amounts(null, xp, deducted, earnedExpId);
     }
 
     /**

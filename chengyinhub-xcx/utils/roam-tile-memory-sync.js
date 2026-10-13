@@ -37,7 +37,7 @@ async function syncRoamTileMemory(options) {
     })
     if (page.hasMore === true && next <= cursor) throw new Error('迷雾记忆游标没有推进')
     cursor = Math.max(next, Number(latest && latest.serverCursor) || 0)
-    if (!memory.writeTiles(tiles, cursor)) throw new Error('迷雾记忆本地持久化失败')
+    if (!memory.writeTiles(tiles, cursor, page.tileRetentionAt)) throw new Error('迷雾记忆本地持久化失败')
     onPage(page.tiles.slice(), { tiles, serverCursor: cursor })
     if (page.hasMore !== true) return { tiles, serverCursor: cursor }
   }

@@ -29,11 +29,13 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -73,6 +75,10 @@ class CashWithdrawStateMachineTest {
         alarmService = mock(AlarmService.class);
         merchantReferralBountyService = mock(MerchantReferralBountyService.class);
         svc = new CashWithdrawServiceImpl();
+        org.springframework.transaction.PlatformTransactionManager transactions = mock(org.springframework.transaction.PlatformTransactionManager.class);
+        when(transactions.getTransaction(any())).thenReturn(mock(org.springframework.transaction.TransactionStatus.class));
+        ReflectionTestUtils.setField(svc, "transactionManager", transactions);
+        when(mapper.updateStatusIfManual(any())).thenReturn(1);
         ReflectionTestUtils.setField(svc, "mapper", mapper);
         ReflectionTestUtils.setField(svc, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(svc, "wechatPayService", wechatPayService);
@@ -237,7 +243,7 @@ class CashWithdrawStateMachineTest {
         verify(mapper).updateStatusIfProcessing(claim.capture());
         assertEquals(MemberCashWithdraw.STATUS_FAILED_MANUAL, claim.getValue().getStatus());
         ArgumentCaptor<MemberCashWithdraw> fin = ArgumentCaptor.forClass(MemberCashWithdraw.class);
-        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateMemberCashWithdraw(fin.capture());
+        verify(mapper).updateStatusIfManual(fin.capture());
         assertTrue(fin.getAllValues().stream()
                 .anyMatch(v -> Integer.valueOf(MemberCashWithdraw.STATUS_FAILED_REFUNDED).equals(v.getStatus())));
     }
@@ -451,7 +457,10 @@ class CashWithdrawStateMachineTest {
 
         svc.reconcile(12);
 
-        verify(alarmService, times(2)).alarm(anyString(), anyString());
+        verify(alarmService).alarmThrottled(eq("monitor.withdraw.stuck"), anyString(), contains("提现单=2"));
+        verify(alarmService).alarmThrottled(eq("monitor.withdraw.manual"), anyString(), contains("提现单=3"));
+        verify(alarmService, never()).alarmThrottled(eq("monitor.withdraw.missing_batch"), anyString(), anyString());
+        verifyNoMoreInteractions(alarmService);
     }
 
     // ⑰ 对账:全清零 → 不告警
@@ -464,6 +473,7 @@ class CashWithdrawStateMachineTest {
         svc.reconcile(12);
 
         verify(alarmService, never()).alarm(anyString(), anyString());
+        verify(alarmService, never()).alarmThrottled(anyString(), anyString(), anyString());
     }
 
     // ===== P块冻结:暂停自动化/人工处理,不动余额 =====

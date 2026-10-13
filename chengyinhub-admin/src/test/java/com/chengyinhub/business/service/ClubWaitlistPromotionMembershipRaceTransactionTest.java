@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service;
 
+import com.chengyinhub.business.domain.ClubEventCampaign;
+import com.chengyinhub.business.domain.ClubEventDelivery;
 import com.chengyinhub.business.domain.ClubEventSeries;
 import com.chengyinhub.business.domain.ClubWaitlistEntry;
 import com.chengyinhub.business.domain.OmsTicket;
@@ -30,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
@@ -53,6 +56,7 @@ class ClubWaitlistPromotionMembershipRaceTransactionTest {
     private DataSourceTransactionManager transactions;
     private IClubWaitlistService service;
     private boolean forceOfferCasFailure;
+    private boolean forceOutboxFailure;
 
     @BeforeEach
     void setUp() {
@@ -75,6 +79,11 @@ class ClubWaitlistPromotionMembershipRaceTransactionTest {
                 + "activity_id bigint not null, ticket_id bigint not null, member_id bigint not null, "
                 + "state varchar(16) not null, joined_at timestamp not null, offered_at timestamp null, "
                 + "offer_expires_at timestamp null, offer_token_hash varchar(64) null, version int not null)");
+        jdbc.execute("create table club_event_notification_campaign(id bigint primary key, "
+                + "club_id bigint not null, activity_id bigint not null, actor_member_id bigint not null)");
+        jdbc.execute("create table club_event_notification_delivery(id bigint primary key, "
+                + "campaign_id bigint not null, recipient_member_id bigint not null)");
+        jdbc.execute("create table club_event_notification_outbox(delivery_id bigint primary key)");
         jdbc.update("insert into club(id,member_id,status,del_flag) values (?,?,1,0)", CLUB, OWNER);
         jdbc.update("insert into club_member(id,club_id,member_id,status,del_flag) values (1,?,?,1,0)", CLUB, LEAVER);
         jdbc.update("insert into club_member(id,club_id,member_id,status,del_flag) values (2,?,?,1,0)", CLUB, NEXT);
@@ -123,6 +132,12 @@ class ClubWaitlistPromotionMembershipRaceTransactionTest {
                 "select remaining_inventory from oms_ticket where id=?", Long.class, TICKET));
         assertEquals(1, jdbc.queryForObject(
                 "select count(*) from club_event_waitlist where state='OFFERED'", Integer.class));
+        assertEquals(1, jdbc.queryForObject(
+                "select count(*) from club_event_notification_campaign", Integer.class));
+        assertEquals(Long.valueOf(NEXT), jdbc.queryForObject(
+                "select recipient_member_id from club_event_notification_delivery", Long.class));
+        assertEquals(1, jdbc.queryForObject(
+                "select count(*) from club_event_notification_outbox", Integer.class));
     }
 
     @Test
@@ -138,6 +153,31 @@ class ClubWaitlistPromotionMembershipRaceTransactionTest {
         assertEquals("WAITING", state(62L));
         assertEquals(0, jdbc.queryForObject(
                 "select count(*) from club_event_waitlist where state='OFFERED'", Integer.class));
+        assertEquals(0, jdbc.queryForObject(
+                "select count(*) from club_event_notification_campaign", Integer.class));
+        assertEquals(0, jdbc.queryForObject(
+                "select count(*) from club_event_notification_delivery", Integer.class));
+        assertEquals(0, jdbc.queryForObject(
+                "select count(*) from club_event_notification_outbox", Integer.class));
+    }
+
+    @Test
+    void notificationOutboxFailureRollsBackOfferInventoryAndNotificationReceipts() {
+        jdbc.update("delete from club_event_waitlist where id=61");
+        forceOutboxFailure = true;
+
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.promoteNext(ACTIVITY, TICKET, NOW));
+
+        assertEquals(1L, jdbc.queryForObject(
+                "select remaining_inventory from oms_ticket where id=?", Long.class, TICKET));
+        assertEquals("WAITING", state(62L));
+        assertEquals(0, jdbc.queryForObject(
+                "select count(*) from club_event_notification_campaign", Integer.class));
+        assertEquals(0, jdbc.queryForObject(
+                "select count(*) from club_event_notification_delivery", Integer.class));
+        assertEquals(0, jdbc.queryForObject(
+                "select count(*) from club_event_notification_outbox", Integer.class));
     }
 
     private IClubWaitlistService proxiedService(ClubEventOpsMapper mapper, OmsTicketMapper tickets) {
@@ -190,6 +230,25 @@ class ClubWaitlistPromotionMembershipRaceTransactionTest {
                             call.getArgument(2), call.getArgument(3), call.getArgument(4),
                             call.getArgument(0), call.getArgument(1));
                 });
+        when(mapper.insertCampaign(any(ClubEventCampaign.class))).thenAnswer(call -> {
+            ClubEventCampaign row = call.getArgument(0, ClubEventCampaign.class);
+            row.setId(901L);
+            return jdbc.update("insert into club_event_notification_campaign"
+                            + "(id,club_id,activity_id,actor_member_id) values (?,?,?,?)",
+                    row.getId(), row.getClubId(), row.getActivityId(), row.getActorMemberId());
+        });
+        when(mapper.insertDelivery(any(ClubEventDelivery.class))).thenAnswer(call -> {
+            ClubEventDelivery row = call.getArgument(0, ClubEventDelivery.class);
+            row.setId(1001L);
+            return jdbc.update("insert into club_event_notification_delivery"
+                            + "(id,campaign_id,recipient_member_id) values (?,?,?)",
+                    row.getId(), row.getCampaignId(), row.getRecipientMemberId());
+        });
+        when(mapper.insertOutbox(anyLong(), any(Date.class))).thenAnswer(call -> {
+            if (forceOutboxFailure) return 0;
+            return jdbc.update("insert into club_event_notification_outbox(delivery_id) values (?)",
+                    call.getArgument(0, Long.class));
+        });
         return mapper;
     }
 

@@ -61,6 +61,7 @@ class ClubWaitlistQuoteWiringTest {
 
         CmsActivity activity = new CmsActivity();
         activity.setId(ACTIVITY);
+        activity.setMemberId(MEMBER);
         activity.setStatus(1L);
         activity.setPublishStatus(1L);
         activity.setDelFlag(0);
@@ -87,6 +88,7 @@ class ClubWaitlistQuoteWiringTest {
 
         CmsRegistrationServiceImpl service = new CmsRegistrationServiceImpl();
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activityMapper);
+        ReflectionTestUtils.setField(service, "platformMemberId", MEMBER);
         ReflectionTestUtils.setField(service, "umsMemberMapper", memberMapper);
         ReflectionTestUtils.setField(service, "omsTicketMapper", ticketMapper);
         ReflectionTestUtils.setField(service, "clubWaitlistOrderBridge", bridge);

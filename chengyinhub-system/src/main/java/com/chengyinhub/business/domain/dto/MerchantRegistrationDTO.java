@@ -3,7 +3,7 @@ package com.chengyinhub.business.domain.dto;
 import com.chengyinhub.common.annotation.Excel;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 import java.io.Serializable;
 
 public class MerchantRegistrationDTO implements Serializable {

@@ -26,6 +26,7 @@ function mountPage(relativePath) {
   const guards = { enabled: 0, disabled: 0 }
   const app = {
     globalData: { navBarHeight: 44 },
+    getUserID: () => 7,
     getRequestErrorMessage(res, fallback) {
       return (res && res.msg) || fallback
     },

@@ -20,14 +20,8 @@
   </cy-nav-bar>
   <view class="club-nav-spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>
   <!-- 不存在/加载失败 -->
-  <view wx:if="{{notFound}}" class="empty error-state" aria-role="alert" aria-live="polite">
-    <view class="empty-tit">俱乐部暂时无法打开</view>
-    <view class="empty-sub">可能是网络波动、俱乐部已下架，或创建后的数据还在同步。你可以重试，或回管理台查看自己的俱乐部。</view>
-    <view class="error-actions">
-      <view class="error-primary" bindtap="onRetry" aria-role="button" aria-label="重新加载俱乐部" hover-class="cy-pressed" hover-stay-time="80">重新加载</view>
-      <view class="error-secondary" bindtap="goManage" aria-role="button" aria-label="返回俱乐部管理" hover-class="cy-pressed" hover-stay-time="80">回管理台</view>
-    </view>
-  </view>
+  <!-- 加载失败/不存在保持空白 -->
+  <view wx:if="{{notFound}}" aria-hidden="true"></view>
 
   <cy-skeleton wx:elif="{{!detailLoaded}}" type="detail" loading-label="正在加载俱乐部详情" />
 
@@ -75,6 +69,7 @@
           <view wx:if="{{club.myJoinStatus === 0}}" class="join-btn join-btn--pending">等待审核</view>
           <view wx:else class="join-btn cy-btn cy-btn--primary" bindtap="onJoin" hover-class="cy-pressed" hover-stay-time="80">{{club.joinPolicy == 1 && club.myJoinStatus === 2 ? '重新申请加入' : '加入俱乐部'}}</view>
         </view>
+        <text wx:if="{{!club.isJoined && !club.isOwner && club.myJoinStatus === 2 && club.myJoinReviewReason}}" class="join-review-reason">申请未通过：{{club.myJoinReviewReason}}</text>
         <!-- 2026-09-09 按稿删「进入群聊」:稿 N1b 47:2 / N3 20:137 的头部到 meta 行就结束。
              群聊本身没删,IM 页在会话列表、名片、合作列表三处仍有入口。 -->
         <!-- 商家看俱乐部主页 → 发起俱乐部合作(§17.2,coop/invite 类型1) -->
@@ -143,7 +138,7 @@
 
       <block wx:if="{{posts.length}}">
         <view id="club-post-{{item.id}}" class="club-post-anchor" wx:for="{{posts}}" wx:key="id">
-          <cy-post-card post="{{item}}" index="{{index}}" interactive-actions interactive-user interactive-media show-share
+          <cy-post-card expandable-text post="{{item}}" index="{{index}}" interactive-actions interactive-user interactive-media show-share
             accessibility-label="查看{{item.memberNickname || '城瘾玩家'}}的动态"
             bind:detail="onPostDetail" bind:user="onPostUser" bind:preview="onPreviewImage"
             bind:like="onLikePost" bind:comment="onToggleComments" bind:playdetail="onPostReference" bind:play="onPostReferencePlay">
@@ -176,7 +171,7 @@
         </view>
       </block>
       <!-- E-09:失败不能渲染成「还没有帖子」——错误态给重试,空态只在成功且真的为空时出 -->
-      <cy-error wx:elif="{{postsError}}" size="sm" title="帖子没能加载出来" sub="{{postsError}}" retry="重试" bind:retry="loadPosts" />
+      <cy-error load-failure wx:elif="{{postsError}}" size="sm" title="帖子没能加载出来" sub="{{postsError}}" retry="重试" bind:retry="loadPosts" />
       <cy-empty wx:elif="{{postsLoaded}}" title="还没有帖子" sub="{{canSeeMembers ? '发布第一条帖子吧' : '加入俱乐部后可发布'}}" />
     </view>
 
@@ -245,7 +240,7 @@
             data="{{item: item, canManage: club.isOwner || club.viewerIsAdmin || canCheckInEvents, canReport: canSeeMembers && item.memberId != myMemberId}}" />
         </block>
       </block>
-      <cy-error wx:elif="{{topicState === 'error'}}" title="活动列表加载失败" retry="重新加载" bind:retry="loadTopics" />
+      <cy-error load-failure wx:elif="{{topicState === 'error'}}" title="活动列表加载失败" retry="重新加载" bind:retry="loadTopics" />
       </block>
       <view wx:elif="{{eventView === 'calendar'}}" class="event-calendar">
         <view class="event-calendar-head">
@@ -266,7 +261,7 @@
             </view>
           </view>
         </view>
-        <view wx:if="{{topicState === 'error'}}" class="overview-empty">活动日期加载失败，请切回列表重试</view>
+        <view wx:if="{{topicState === 'error'}}" aria-hidden="true"></view>
         <cy-empty wx:elif="{{topicsLoaded && !eventCalendarHasEvents}}" size="sm" title="本月暂无活动" sub="左右切换查看其他月份" />
       </view>
     </view>
@@ -277,7 +272,7 @@
          N3(主理人/管理员) MembersHead 多一个「邀请成员 ›」;N5(普通会员)只有标题+分隔线;
          N6(未加入)成员条与榜单整块换成 Locked 卡 —— 三态靠角色分,不是逐像素抄同一版。 -->
     <view class="feed feed--plain ov" wx:elif="{{activeTab === 'overview'}}">
-      <view class="ov-intro">{{club.description || '暂无简介'}}</view>
+      <text class="ov-intro">{{club.description || '暂无简介'}}</text>
 
       <!-- Facts 三宫格(23:4):主理人 / 等级 / 所在城市 —— 原来是三个上下堆叠的 label+text 区块 -->
       <view class="ov-facts">
@@ -329,12 +324,10 @@
       <!-- 成员管理列表:Figma 没画,但逐人举报 / 角色 / 团码入口都挂在这里,保留。 -->
       <view class="overview-section" id="club-member-list" wx:if="{{membersExpanded || club.isOwner || canManageActivities || canOperateEvents || canCheckInEvents || canManageRoles || hasEventScope}}">
         <view wx:if="{{club.viewerIdentityUnavailable}}" class="admin-tools-notice">成员身份暂时无法确认，管理员工具暂不可用。</view>
-        <view wx:if="{{clubAccessState === 'error'}}" class="admin-tools-notice">角色权限暂时无法确认，内容治理入口已安全关闭。</view>
         <block wx:if="{{canSeeMembers}}">
-          <view wx:if="{{club.viewerIsAdmin && (membersState === 'business-error' || membersState === 'network-error')}}" class="admin-tools-notice">管理员工具暂不可用：成员身份加载失败，重新加载后恢复内容治理与团码入口。</view>
           <cy-skeleton wx:if="{{membersState === 'loading'}}" type="list" count="2" />
-          <cy-error class="cy-fade-in" wx:elif="{{membersState === 'business-error'}}" title="成员列表加载失败" sub="俱乐部成员数据暂时不可用" retry="重新加载" bind:retry="loadMembers" />
-          <cy-error wx:elif="{{membersState === 'network-error'}}" title="网络连接失败" sub="检查网络后重新加载成员列表" retry="重新加载" bind:retry="loadMembers" />
+          <cy-error load-failure class="cy-fade-in" wx:elif="{{membersState === 'business-error'}}" title="成员列表加载失败" sub="俱乐部成员数据暂时不可用" retry="重新加载" bind:retry="loadMembers" />
+          <cy-error load-failure wx:elif="{{membersState === 'network-error'}}" title="网络连接失败" sub="检查网络后重新加载成员列表" retry="重新加载" bind:retry="loadMembers" />
           <block wx:elif="{{membersState === 'ready'}}">
             <view class="member" wx:for="{{members}}" wx:key="id">
               <cy-avatar class="member-avatar" size="72" src="{{item.avatar || '/images/d_profile.png'}}" name="{{item.nickname || '城瘾玩家'}}" clickable="{{true}}" catchtap="goMemberProfile" data-member-id="{{item.memberId}}" aria-role="button" aria-label="打开成员主页" hover-class="cy-pressed" hover-stay-time="80" />
@@ -380,7 +373,7 @@
         <!-- .overview-empty 本身没有横向外边距(它平时长在有 padding 的 .overview-section 里),
              榜单这一处是 feed 直系子节点,不补页边就会贴到屏幕左沿。 -->
         <!-- E-09:失败 ≠「还没有人通关」 -->
-        <cy-error class="ov-lb-empty" wx:elif="{{leaderboardError}}" size="sm" title="榜单没能加载出来" sub="{{leaderboardError}}" retry="重试" bind:retry="loadLeaderboard" />
+        <cy-error load-failure class="ov-lb-empty" wx:elif="{{leaderboardError}}" size="sm" title="榜单没能加载出来" sub="{{leaderboardError}}" retry="重试" bind:retry="loadLeaderboard" />
         <cy-empty class="ov-lb-empty" wx:elif="{{leaderboardLoaded}}" title="{{leaderboardEmptyTitle}}" sub="办场活动让成员动起来" />
         <view class="ov-lb-note" wx:if="{{leaderboard.length}}">榜单每周一 0 点重置。</view>
       </block>
@@ -468,7 +461,7 @@
       <view class="overview-section club-stats-section" wx:if="{{club.isOwner}}">
         <view class="overview-section-tit">成员与活动概况</view>
         <cy-skeleton wx:if="{{clubStatsState === 'loading'}}" type="list" count="2" />
-        <cy-error wx:elif="{{clubStatsState === 'error'}}" title="数据看板加载失败" sub="{{clubStatsError}}" retry="重新加载" bind:retry="loadClubStats" />
+        <cy-error load-failure wx:elif="{{clubStatsState === 'error'}}" title="数据看板加载失败" sub="{{clubStatsError}}" retry="重新加载" bind:retry="loadClubStats" />
         <block wx:elif="{{clubStatsState === 'ready'}}">
           <view class="club-stats-grid">
             <view class="club-stat"><text class="club-stat-value">{{clubStats.topicCount}}</text><text class="club-stat-label">项目</text></view>
@@ -492,7 +485,7 @@
       <view class="overview-section">
         <view class="manage-group">
         <cy-skeleton wx:if="{{topicState === 'loading'}}" type="list" count="2" />
-        <cy-error class="cy-fade-in" wx:elif="{{topicState === 'error'}}" title="项目列表加载失败" retry="重新加载" bind:retry="loadTopics" />
+        <cy-error load-failure class="cy-fade-in" wx:elif="{{topicState === 'error'}}" title="项目列表加载失败" retry="重新加载" bind:retry="loadTopics" />
         <view wx:elif="{{manageTopics.length}}" class="manage-project-list">
           <view class="manage-project" wx:for="{{manageTopics}}" wx:key="id" data-id="{{item.id}}" bindtap="goManageTopic" hover-class="cy-pressed" hover-stay-time="80">
             <image class="manage-project-cover" src="{{item.imgUrl || '/images/route_free_cover.png'}}" mode="aspectFill" lazy-load="true" />
@@ -529,7 +522,7 @@
         </view>
         <view class="manage-fold-panel" wx:if="{{openManageSection === 'editions'}}">
         <cy-skeleton wx:if="{{shareEditionState === 'loading'}}" type="list" count="1" />
-        <cy-error class="cy-fade-in" wx:elif="{{shareEditionState === 'error'}}" title="期次加载失败" retry="重新加载" bind:retry="loadShareEditions" />
+        <cy-error load-failure class="cy-fade-in" wx:elif="{{shareEditionState === 'error'}}" title="期次加载失败" retry="重新加载" bind:retry="loadShareEditions" />
         <view wx:elif="{{shareEditions.length}}" class="manage-project-list">
           <view class="manage-project" wx:for="{{shareEditions}}" wx:key="topicId">
             <view class="manage-project-main">
@@ -580,7 +573,7 @@
              CU-C-42:这里原来用 sm 紧凑档 —— 标题被压成 22rpx/字重500/低对比灰字,
              作为「筛完之后没有结果」的可见结局太轻,跟上面的搜索框不在一个量级。
              回到默认档(标题 28rpx/600/正文色)。 -->
-        <cy-error wx:if="{{merchantsError}}" size="sm" title="商家列表没能加载出来" sub="{{merchantsError}}" retry="重试" bind:retry="loadMerchants" />
+        <cy-error load-failure wx:if="{{merchantsError}}" size="sm" title="商家列表没能加载出来" sub="{{merchantsError}}" retry="重试" bind:retry="loadMerchants" />
         <cy-empty wx:elif="{{merchantsLoaded && !merchants.length}}" title="{{merchantKeyword ? '没有匹配的商家，换个关键词试试' : '还没有开放对接的商家'}}" />
         </view>
       </view>
@@ -601,7 +594,7 @@
           <cy-skeleton wx:if="{{coopPoolState === 'loading'}}" type="list" count="2" />
           <cy-empty wx:elif="{{coopPoolState === 'permission'}}" size="sm" kind="no-permission"
                     title="暂不能看可对接的活动" sub="{{coopPoolError}}" />
-          <cy-error wx:elif="{{coopPoolState === 'error'}}" title="合作池没加载出来" sub="{{coopPoolError}}"
+          <cy-error load-failure wx:elif="{{coopPoolState === 'error'}}" title="合作池没加载出来" sub="{{coopPoolError}}"
                     retry="重试" bind:retry="retryCoopPool" />
           <block wx:elif="{{coopPoolState === 'ready'}}">
             <cy-empty wx:if="{{!coopPool.length}}" size="sm" title="暂无开放承接的主题"
@@ -644,7 +637,7 @@
         </view>
         <view class="manage-fold-panel" wx:if="{{openManageSection === 'received'}}">
         <cy-skeleton wx:if="{{messageState === 'loading'}}" type="list" count="2" />
-        <cy-error class="cy-fade-in" wx:elif="{{messageState === 'error'}}" title="合作消息加载失败" retry="重新加载" bind:retry="reloadMessages" />
+        <cy-error load-failure class="cy-fade-in" wx:elif="{{messageState === 'error'}}" title="合作消息加载失败" retry="重新加载" bind:retry="reloadMessages" />
         <view wx:elif="{{messages.length}}" class="manage-message-list">
           <!-- CU-C-53:收到的邀约原来是纯静态摘要,待确认的那几条没有去处理的地方,
                只能绕到「可对接商家 → 我的合作」 —— 整行接到同一个收件箱。
@@ -673,7 +666,7 @@
         </view>
         <view class="manage-fold-panel" wx:if="{{openManageSection === 'sent'}}">
         <cy-skeleton wx:if="{{inviteFeedbackState === 'loading'}}" type="list" count="2" />
-        <cy-error class="cy-fade-in" wx:elif="{{inviteFeedbackState === 'error'}}" title="邀约反馈加载失败" retry="重新加载" bind:retry="reloadInviteFeedback" />
+        <cy-error load-failure class="cy-fade-in" wx:elif="{{inviteFeedbackState === 'error'}}" title="邀约反馈加载失败" retry="重新加载" bind:retry="reloadInviteFeedback" />
         <view wx:elif="{{sentInvites.length}}" class="manage-invite-list">
           <view class="manage-invite" wx:for="{{sentInvites}}" wx:key="id" bindtap="goCooperation" hover-class="cy-pressed" hover-stay-time="80">
             <view class="manage-invite-main">
@@ -699,7 +692,7 @@
   <cy-sheet show="{{postRefPickerShow}}" title="带上一次游玩记录" handle closable maskClosable bind:close="closePostRefPicker">
     <view class="post-ref-pick">
       <cy-skeleton wx:if="{{postRefState === 'loading'}}" type="list" count="3" />
-      <cy-error wx:elif="{{postRefState === 'error'}}" title="游玩记录没有加载出来" sub="{{postRefErrorText}}" retry="重新加载" bind:retry="loadPostRefOptions" />
+      <cy-error load-failure wx:elif="{{postRefState === 'error'}}" title="游玩记录没有加载出来" sub="{{postRefErrorText}}" retry="重新加载" bind:retry="loadPostRefOptions" />
       <block wx:elif="{{postRefState === 'ready'}}">
         <view class="post-ref-opt" wx:for="{{postRefOptions}}" wx:key="key"
               data-index="{{index}}" catchtap="onPickPostRef"
@@ -793,8 +786,8 @@
       <view class="cset-panel" wx:if="{{settingsPanel === 'members'}}">
         <button wx:if="{{club.isOwner || club.viewerIsAdmin}}" class="cset-panel-act" open-type="share" aria-label="邀请成员" hover-class="cy-pressed" hover-stay-time="80"><text>邀请成员</text><cy-icon name="arrow-right" size="24" /></button>
         <cy-skeleton wx:if="{{membersState === 'loading'}}" type="list" count="2" />
-        <cy-error class="cy-fade-in" wx:elif="{{membersState === 'business-error'}}" title="成员列表加载失败" sub="俱乐部成员数据暂时不可用" retry="重新加载" bind:retry="loadMembers" />
-        <cy-error wx:elif="{{membersState === 'network-error'}}" title="网络连接失败" sub="检查网络后重新加载成员列表" retry="重新加载" bind:retry="loadMembers" />
+        <cy-error load-failure class="cy-fade-in" wx:elif="{{membersState === 'business-error'}}" title="成员列表加载失败" sub="俱乐部成员数据暂时不可用" retry="重新加载" bind:retry="loadMembers" />
+        <cy-error load-failure wx:elif="{{membersState === 'network-error'}}" title="网络连接失败" sub="检查网络后重新加载成员列表" retry="重新加载" bind:retry="loadMembers" />
         <block wx:elif="{{membersState === 'ready'}}">
           <view class="member member--managed" wx:for="{{members}}" wx:key="id">
             <cy-avatar class="member-avatar" size="72" src="{{item.avatar || '/images/d_profile.png'}}" name="{{item.nickname || '城瘾玩家'}}" clickable="{{true}}" catchtap="goMemberProfile" data-member-id="{{item.memberId}}" aria-role="button" aria-label="打开成员主页" hover-class="cy-pressed" hover-stay-time="80" />

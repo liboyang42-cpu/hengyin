@@ -189,6 +189,7 @@ Page({
       data: { couponHistoryId },
       success(res) {
         if (stale()) return;
+        if (res && res.code == 503) { that.onQrServiceDisabled(res.msg); return; }
         if (res && res.code == 410) { that.onCredentialUnavailable(res.msg); return; }
         if (res && (res.code == 200 || res.code == '200') && res.data) {
           const d = res.data;
@@ -235,6 +236,7 @@ Page({
       // HTTP 非 200(如部署窗口 502):request-client 既不走 success 也不走 fail,必须接这里
       successStatusAbnormal(res) {
         if (stale()) return;
+        if (res && res.code == 503) { that.onQrServiceDisabled(res.msg); return; }
         if (res && res.code == 410) { that.onCredentialUnavailable(res.msg); return; }
         that.onRefreshFail((res && res.msg) || '出码失败');
       },
@@ -274,11 +276,17 @@ Page({
 
   // 刷新失败分级:同 owner 且屏上的码仍在后端 TTL 内(expiresIn 60s 留 30s 余量)就保持 ready 只提示;
   // 归属可疑 / 无有效码 → 一律下屏切 error,并写入退避让倒计时节拍受控重取。
+  onQrServiceDisabled(msg) {
+    this.clearTimers();
+    this._clearRenderedCredential();
+    this._retryAt = 0;
+    this.setData({ countdown: 0, qrState: 'error', errMsg: msg || '优惠券出示码暂不可用，请联系管理员', pollError: '' });
+  },
+
   onRefreshFail(msg) {
     // P3-3:用精确签发时刻+TTL 判定,而不是倒计时近似 —— 倒计时走到 0/1 时后端 token 可能仍有约 30s。
     if (this._codeBelongsToCurrentOwner() && !this.data.notStarted
         && this.data.qrcodeUrl && this.data.qrState === 'ready' && this._credentialWithinTtl()) {
-      cyToast('刷新失败，当前码仍可用');
     } else {
       this._clearRenderedCredential();
       this._retryAt = Date.now() + RETRY_DELAY_MS;
@@ -352,7 +360,8 @@ Page({
         data: { couponHistoryId: that.data.couponHistoryId },
         success(res) {
           if (!stillCurrent()) return;
-          if (res && res.code == 410) { that.onCredentialUnavailable(res.msg); return; }
+          if (res && res.code == 503) { that.onQrServiceDisabled(res.msg); return; }
+        if (res && res.code == 410) { that.onCredentialUnavailable(res.msg); return; }
           if (res && (res.code == 200 || res.code == '200') && res.data) {
             const st = credential.couponStatus(res.data.useStatus);
             if (st === null) { that.onPollFail('核销状态暂不可用，请稍后重试'); return; }
@@ -371,7 +380,8 @@ Page({
         },
         successStatusAbnormal(res) {
           if (!stillCurrent()) return;
-          if (res && res.code == 410) { that.onCredentialUnavailable(res.msg); return; }
+          if (res && res.code == 503) { that.onQrServiceDisabled(res.msg); return; }
+        if (res && res.code == 410) { that.onCredentialUnavailable(res.msg); return; }
           if (that.data.useStatus == 0 && that.data.qrState !== 'error') {
             that.onPollFail(that.friendlyQrError(res && res.msg, '核销状态暂不可用，请稍后重试'));
           }

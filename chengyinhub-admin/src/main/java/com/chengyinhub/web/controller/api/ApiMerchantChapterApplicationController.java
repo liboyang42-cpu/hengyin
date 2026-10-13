@@ -113,10 +113,43 @@ public class ApiMerchantChapterApplicationController extends BaseController {
             MerchantChapterApplication invited =
                     merchantChapterApplicationService.invite(chapterId, publisherMemberId, merchantMemberId,
                             toText(body == null ? null : body.get("message")), replacementOfOfferId);
-            return AjaxResult.success("已邀请，商家可直接填写供给与点位", invited);
+            return AjaxResult.success("邀请已发出，等待商家接受后占用名额", invited);
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
+            return error(e.getMessage());
+        }
+    }
+
+    @PostMapping("/invite/respond")
+    public AjaxResult respondInvite(@RequestBody(required = false) Map<String, Object> body) {
+        Long memberId = currentMemberId();
+        Long applicationId = toLong(body == null ? null : body.get("applicationId"));
+        Boolean accepted = toBoolean(body == null ? null : body.get("accepted"));
+        if (memberId == null) return error("请先登录");
+        if (applicationId == null || accepted == null) return error("请选择邀请及处理方式");
+        try {
+            Long owner = merchantOwnerMemberId(memberId);
+            return success(merchantChapterApplicationService.respondInvite(applicationId, owner, accepted));
+        } catch (ServiceException e) {
+            return new AjaxResult(e.getCode(), e.getMessage());
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            return error(e.getMessage());
+        }
+    }
+
+    @PostMapping("/invite/revoke")
+    public AjaxResult revokeInvite(@RequestBody(required = false) Map<String, Object> body) {
+        Long memberId = currentMemberId();
+        Long applicationId = toLong(body == null ? null : body.get("applicationId"));
+        if (memberId == null) return error("请先登录");
+        if (applicationId == null) return error("请选择邀请");
+        try {
+            Long owner = publisherMemberId(memberId, body);
+            return success(merchantChapterApplicationService.revokeInvite(applicationId, owner));
+        } catch (ServiceException e) {
+            return new AjaxResult(e.getCode(), e.getMessage());
+        } catch (IllegalStateException | IllegalArgumentException e) {
             return error(e.getMessage());
         }
     }

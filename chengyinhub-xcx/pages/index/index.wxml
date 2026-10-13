@@ -64,7 +64,7 @@
           <cy-skeleton type="feed-card" count="1" />
         </view>
         <view class="v3-sec-state" wx:elif="{{listErr.recommendedTopicList && !recoHero}}">
-          <cy-error title="推荐主题没能加载出来" sub="网络请求失败，重试会重新拉取一次"
+          <cy-error load-failure title="推荐主题没能加载出来" sub="网络请求失败，重试会重新拉取一次"
                     retry="重试" data-list="recommendedTopicList" bind:retry="retryList" />
         </view>
         <view class="v3-sec-state" wx:elif="{{!listLoading.recommendedTopicList && !recoHero}}">
@@ -72,9 +72,6 @@
         </view>
         <text class="v3-sec-sync" wx:if="{{listLoading.recommendedTopicList && recoHero}}"
               aria-role="status" aria-live="polite">正在更新推荐主题…</text>
-        <text class="v3-sec-sync" wx:if="{{listErr.recommendedTopicList && recoHero}}"
-              data-list="recommendedTopicList" bindtap="retryList" aria-role="button"
-              aria-label="推荐主题刷新失败，点此重试" hover-class="cy-pressed" hover-stay-time="80">已显示上次内容，本次刷新失败 · 重试</text>
         <swiper class="v3-reco-swiper" wx:if="{{recoCards.length}}" current="{{recoCurrent}}"
                 circular="{{recoCards.length > 1}}" previous-margin="40rpx" next-margin="60rpx"
                 duration="{{reducedMotion ? 0 : 280}}" easing-function="easeOutCubic"
@@ -133,7 +130,7 @@
           <cy-skeleton type="feed-card" count="2" />
         </view>
         <view class="v3-sec-state" wx:elif="{{listErr.nearbyActivityList && !nearbyActivityList.length}}">
-          <cy-error title="附近活动没能加载出来" sub="网络请求失败，重试会重新拉取一次"
+          <cy-error load-failure title="附近活动没能加载出来" sub="网络请求失败，重试会重新拉取一次"
                     retry="重试" data-list="nearbyActivityList" bind:retry="retryList" />
         </view>
         <view class="v3-sec-state" wx:elif="{{!listLoading.nearbyActivityList && !nearbyActivityList.length}}">
@@ -173,7 +170,7 @@
           <cy-skeleton type="feed-card" count="2" />
         </view>
         <view class="v3-sec-state" wx:elif="{{listErr.upcomingActivityList && !upcomingActivityList.length}}">
-          <cy-error title="即将上线没能加载出来" sub="网络请求失败，重试会重新拉取一次"
+          <cy-error load-failure title="即将上线没能加载出来" sub="网络请求失败，重试会重新拉取一次"
                     retry="重试" data-list="upcomingActivityList" bind:retry="retryList" />
         </view>
         <text class="v3-sec-sync" wx:if="{{listLoading.upcomingActivityList && upcomingActivityList.length}}"
@@ -242,7 +239,7 @@
               </view>
             </view>
           </view>
-          <cy-inline-error wx:if="{{bottomTopicFailedPage}}" class="feed-load-more-error" kind="network"
+          <cy-inline-error load-failure wx:if="{{bottomTopicFailedPage}}" class="feed-load-more-error" kind="network"
             title="{{bottomTopicFailedPage > 1 ? '更多主题没有加载出来' : '主题列表没有加载出来'}}"
             sub="{{bottomTopicFailedPage > 1 ? '已加载的主题仍可查看' : '下拉刷新或点重试再拉一次'}}"
             action="重试" bind:action="retryBottomTopic" />
@@ -285,7 +282,7 @@
               </view>
             </view>
           </view>
-          <cy-inline-error wx:if="{{bottomActivityFailedPage}}" class="feed-load-more-error" kind="network"
+          <cy-inline-error load-failure wx:if="{{bottomActivityFailedPage}}" class="feed-load-more-error" kind="network"
             title="{{bottomActivityFailedPage > 1 ? '更多活动没有加载出来' : '活动列表没有加载出来'}}"
             sub="{{bottomActivityFailedPage > 1 ? '已加载的活动仍可查看' : '下拉刷新或点重试再拉一次'}}"
             action="重试" bind:action="retryBottomActivity" />

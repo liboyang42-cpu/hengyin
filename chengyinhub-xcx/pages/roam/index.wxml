@@ -36,7 +36,12 @@
                   primary="去设置" bind:primary="openRoamLocationSetting" />
   <view class="entry-peek">
     <view class="entry-peek__head"><text>附近活动</text></view>
-    <view class="entry-peek__state" wx:if="{{entryLoadError}}" bindtap="retryEntryMap" aria-role="button" aria-label="附近内容加载失败，点击重试" hover-class="cy-pressed" hover-stay-time="80"><text>附近内容加载失败</text><text>点击重试</text></view>
+    <cy-state-shell wx:if="{{entryReadAccess}}" kind="no-permission"
+                    title="{{entryReadAccess === 'login' ? '登录后查看附近活动与队伍' : '当前账号无法查看'}}"
+                    sub="{{entryReadAccess === 'login' ? '登录后继续浏览地图' : '请返回后重新进入'}}"
+                    primary="{{entryReadAccess === 'login' ? '去登录' : ''}}" bind:primary="loginForEntryRead" />
+    <block wx:else>
+    <view wx:if="{{entryLoadError}}" aria-hidden="true"></view>
     <scroll-view wx:elif="{{entryCards.length}}" class="entry-peek__cards" scroll-x enhanced show-scrollbar="{{false}}">
       <view class="entry-card" wx:for="{{entryCards}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}"
             bindtap="onEntryCardTap" aria-role="button" aria-label="打开活动 {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
@@ -47,6 +52,7 @@
       </view>
     </scroll-view>
     <view wx:else class="entry-peek__state"><text>附近暂无活动</text><text>移动地图看看其他区域</text></view>
+    </block>
   </view>
 </view>
 
@@ -70,7 +76,7 @@
         <view wx:else class="entry-activity__cover entry-activity__cover--empty"><cy-icon name="image" size="48" /></view>
         <view class="entry-activity__copy"><text class="entry-activity__title">{{entryActivity.title}}</text><text class="entry-activity__meta">{{entryActivity.meta || entryActivity.address || '查看活动详情'}}</text></view>
       </view>
-      <view wx:if="{{!entryActivity.registered}}" class="entry-sheet__primary" bindtap="openEntryActivityDetail" aria-role="button" aria-label="去报名" hover-class="cy-pressed" hover-stay-time="80">去报名</view>
+      <view wx:if="{{!entryActivity.registered || entryActivity.ended}}" class="entry-sheet__primary" bindtap="openEntryActivityDetail" aria-role="button" aria-label="{{entryActivity.ended ? '查看详情' : '去报名'}}" hover-class="cy-pressed" hover-stay-time="80">{{entryActivity.ended ? '查看详情' : '去报名'}}</view>
       <view class="entry-attendees" wx:if="{{entryActivity.participantCount}}"><view class="entry-team__avatars" wx:if="{{entryActivity.participantFaces.length}}"><image wx:for="{{entryActivity.participantFaces}}" wx:key="*this" src="{{item}}" mode="aspectFill" /></view><text>{{entryActivity.participantCount}} 人参加</text></view>
       <view class="entry-sheet__section" wx:if="{{entryActivity.teams.length}}">
         <view class="entry-sheet__section-head"><text class="entry-sheet__section-title">一起参加 · {{entryActivity.teams.length}} 队正在招募</text></view>
@@ -79,7 +85,7 @@
           <view class="entry-team__copy"><text>{{item.title}}</text><text>{{item.members}} · 队长审核</text></view><view class="entry-team__action {{entryActivity.registered?'':'is-disabled'}}">{{entryActivity.registered?'申请加入':'报名后申请'}}</view>
         </view>
       </view>
-      <view wx:if="{{entryActivity.registered}}" class="entry-sheet__create-team" bindtap="openEntryActivityDetail" aria-role="button" aria-label="发起组队" hover-class="cy-pressed" hover-stay-time="80">发起组队</view>
+      <view wx:if="{{entryActivity.registered && !entryActivity.ended}}" class="entry-sheet__create-team" bindtap="openEntryActivityDetail" aria-role="button" aria-label="发起组队" hover-class="cy-pressed" hover-stay-time="80">发起组队</view>
       <view class="entry-sheet__section">
         <view class="entry-sheet__section-head"><text class="entry-sheet__section-title">现场动态{{entryActivity.dynamicImages.length ? ' · ' + entryActivity.dynamicImages.length : ''}}</text></view>
         <view class="entry-posts" wx:if="{{entryActivity.dynamicImages.length}}"><image wx:for="{{entryActivity.dynamicImages}}" wx:key="*this" src="{{item}}" mode="aspectFill" /></view>
@@ -299,7 +305,6 @@
   </view>
 </view>
 
-<view class="maptip" wx:if="{{fogScreenError}}" bindtap="retryScreenFog" hover-class="cy-pressed" hover-stay-time="80">迷雾加载失败 · 点击重试</view>
 
 <!-- 读数芯片已并入底部 .pcard(与 play 页同构);暂停/结束在底栏三键。 -->
 
@@ -432,10 +437,6 @@
     <cy-icon name="warning" size="24" />
     <text>{{recoveryError ? recoveryError + ' · 点击核对' : '点亮同步结果待核对 · 点击核对'}}</text>
   </view>
-</view>
-<view class="maptip maptip--offline" wx:if="{{(poiOffline || merchantOffline) && !revealWriteUnknown && mapLoad!='slow'}}" bindtap="onPoiRetry" hover-class="cy-pressed" hover-stay-time="80">
-  <cy-icon name="warning" size="24" />
-  <text>据点没加载出来 · 足迹仍在本机记录 · 点击重试</text>
 </view>
 
 </view>
@@ -713,6 +714,13 @@
     <view class="dic pic pic--gear"></view>
     <view class="dcopy"><text class="dt">减少动态效果</text><text class="ds">关掉地图漂移和呼吸</text></view>
     <view class="dsw {{reducedMotion ? 'is-on' : ''}}" catchtap="toggleReducedMotion" aria-role="switch" aria-checked="{{reducedMotion}}" aria-label="减少动态效果" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
+  </view>
+  <view class="drow">
+    <view class="dic pic pic--info"></view>
+    <view class="dcopy"><text class="dt">附近的人位置分享</text><text class="ds">默认关闭 · 街区模糊位置</text></view>
+    <view class="dsw {{presenceVisible ? 'is-on' : ''}}" catchtap="togglePresenceSharing"
+      aria-role="switch" aria-checked="{{presenceVisible}}" aria-disabled="{{presenceSubmitting}}"
+      aria-label="附近的人位置分享，{{presenceVisible ? '已开启' : '已关闭'}}" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
   </view>
   <!-- 下面三行都跟着系统定位权限走:它们不是本机偏好,给个能勾却不影响任何事的假开关是骗人 -->
   <view class="drow" bindtap="openRoamLocationSetting" aria-role="button" aria-label="位置权限，{{gpsOk ? '已允许' : '未允许'}}" hover-class="cy-pressed" hover-stay-time="80">
@@ -1055,7 +1063,7 @@
     <text class="sh-vis__hint">本次漫游记录始终保留在「我的漫游历史」，不受这里影响。</text>
   </view>
   <view class="sh-channels">
-    <view class="sh-ch {{share.can.square ? '' : 'is-off'}}" bindtap="shareTo" data-ch="广场" hover-class="cy-pressed" hover-stay-time="80"><view class="sh-ci"><cy-icon name="tab-feed" size="36" /></view><text>{{share.squarePostUnknown?'广场 · 待核对':'广场'}}</text></view>
+    <view wx:if="{{share.communityWrite}}" class="sh-ch {{share.can.square ? '' : 'is-off'}}" bindtap="shareTo" data-ch="广场" hover-class="cy-pressed" hover-stay-time="80"><view class="sh-ci"><cy-icon name="tab-feed" size="36" /></view><text>{{share.squarePostUnknown?'广场 · 待核对':'广场'}}</text></view>
     <view class="sh-ch {{share.can.moments ? '' : 'is-off'}}" bindtap="shareTo" data-ch="朋友圈" hover-class="cy-pressed" hover-stay-time="80"><view class="sh-ci"><cy-icon name="share" size="36" /></view><text>朋友圈</text></view>
     <view class="sh-ch {{share.can.xhs ? '' : 'is-off'}}" bindtap="shareTo" data-ch="小红书" hover-class="cy-pressed" hover-stay-time="80"><view class="sh-ci"><cy-icon name="image" size="36" /></view><text>小红书</text></view>
     <view class="sh-ch {{share.can.save ? '' : 'is-off'}}" bindtap="shareTo" data-ch="保存" hover-class="cy-pressed" hover-stay-time="80"><view class="sh-ci"><cy-icon name="check" size="36" /></view><text>保存</text></view>

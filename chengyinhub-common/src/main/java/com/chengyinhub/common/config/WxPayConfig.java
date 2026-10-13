@@ -173,7 +173,7 @@ public class WxPayConfig {
         logger.info("merchantId: {}", merchantId);
         logger.info("merchantSerialNumber: {}", merchantSerialNumber);
         logger.info("privateKeyPath: {}", privateKeyPath);
-        logger.info("apiV3Key: {}", apiV3Key != null ? "***" + apiV3Key.substring(Math.max(0, apiV3Key.length() - 4)) : "null");
+        logger.info("apiV3KeyConfigured: {}", apiV3Key != null && !apiV3Key.trim().isEmpty());
         logger.info("appid: {}", appid);
         logger.info("notifyUrl: {}", notifyUrl);
         logger.info("publicKeyPath: {}", publicKeyPath);
@@ -182,7 +182,7 @@ public class WxPayConfig {
         logger.info("=== 微信小程序内容检查配置详情 ===");
         logger.info("secCheckEnabled: {}", secCheckEnabled);
         logger.info("miniAppId: {}", miniAppId);
-        logger.info("miniSecret: {}", miniSecret != null ? "***" + miniSecret.substring(Math.max(0, miniSecret.length() - 4)) : "null");
+        logger.info("miniSecretConfigured: {}", miniSecret != null && !miniSecret.trim().isEmpty());
         logger.info("=== 配置详情结束 ===");
 
         // 文件检查

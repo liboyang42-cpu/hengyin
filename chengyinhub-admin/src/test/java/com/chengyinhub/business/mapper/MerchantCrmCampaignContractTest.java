@@ -70,6 +70,11 @@ class MerchantCrmCampaignContractTest {
         String consent = normalized(read("../chengyinhub-system/src/main/resources/mapper/business/MerchantCrmMarketingConsentMapper.xml"));
         String app = normalized(read("../chengyinhub-system/src/main/resources/mapper/business/MerchantCrmAppMapper.xml"));
 
+        String replay = section(campaign, "<select id=\"selectbyrequestidforshare\"", "</select>");
+        assertTrue(replay.contains("lock in share mode")
+                        && replay.contains("c.merchant_id = #{merchantid}")
+                        && replay.contains("c.request_id = #{requestid}"),
+                "并发创建后的回执须按门店和请求标识当前读，不能再次读取旧快照");
         assertTrue(campaign.contains("merchant_id = #{merchantid}"),
                 "campaign 资源必须按具体 merchant row 隔离，不能按 owner member 复用");
         assertTrue(campaign.contains("for update"), "逐人投递必须锁定 recipient 以保证幂等");
@@ -78,6 +83,13 @@ class MerchantCrmCampaignContractTest {
                 "外部副作用前必须先竞争共享日 guard");
         assertTrue(campaign.contains("lease_token = #{leasetoken}"));
         assertTrue(campaign.contains("version = #{expectedversion}"), "guard 状态切换必须用版本 CAS");
+        String release = section(campaign, "<update id=\"releasedeliveryguardforretry\">", "</update>");
+        assertTrue(release.contains("set status = 'reserved'")
+                        && release.contains("status = 'dispatching'")
+                        && release.contains("lease_token = #{leasetoken}")
+                        && release.contains("version = #{expectedversion}")
+                        && release.contains("lease_until = date_sub(now(3), interval 1 second)"),
+                "明确未发的 guard 只能按原投递租约 CAS 退回可重领 RESERVED");
         assertTrue(campaign.contains("processing_token = #{processingtoken}"),
                 "campaign PROCESSING 必须用 token fence");
         assertTrue(campaign.contains("processing_lease_until &lt; now(3)"),

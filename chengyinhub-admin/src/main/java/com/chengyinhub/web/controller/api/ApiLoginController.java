@@ -57,8 +57,8 @@ import com.chengyinhub.framework.web.service.SmsVerificationService;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.domain.UmsMember;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * 登录接口
@@ -106,9 +106,15 @@ public class ApiLoginController extends BaseController {
 
     @Autowired
     private SmsVerificationService smsVerificationService;
+    @Autowired
+    private org.springframework.core.env.Environment environment;
+    @Value("${chengyin.test.wechat-api-base-url:https://api.weixin.qq.com}")
+    private String wechatApiBaseUrl = "https://api.weixin.qq.com";
 
 
     @Operation(summary = "登录")
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 10,
+            limitType = com.chengyinhub.common.enums.LimitType.IP)
     @PostMapping("/login")
     @Parameters({
             @Parameter(name = "username", description = "用户名"),
@@ -275,6 +281,21 @@ public class ApiLoginController extends BaseController {
         }
     }
 
+    String wechatSessionBaseUrl() {
+        if (environment == null || environment.matchesProfiles("prod", "production")
+                || !environment.matchesProfiles("test", "dev", "local", "preview")) {
+            return "https://api.weixin.qq.com";
+        }
+        String configured = wechatApiBaseUrl == null ? "" : wechatApiBaseUrl.trim();
+        java.net.URI uri = java.net.URI.create(configured);
+        if (!("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()))
+                || uri.getHost() == null || uri.getUserInfo() != null || uri.getRawQuery() != null
+                || uri.getRawFragment() != null || !(uri.getPath().isEmpty() || "/".equals(uri.getPath()))) {
+            throw new IllegalArgumentException("非生产微信API基址配置不合法");
+        }
+        return configured.endsWith("/") ? configured.substring(0, configured.length() - 1) : configured;
+    }
+
     /**
      * 根据微信code获取个人微信openid
      *
@@ -285,7 +306,7 @@ public class ApiLoginController extends BaseController {
         String appid = Convert.toStr(configService.selectConfigByKey("app.wechat.appid"));
         String appsecret = Convert.toStr(configService.selectConfigByKey("app.wechat.appsecret"));
 
-        String url = "https://api.weixin.qq.com/sns/jscode2session?appid=" + appid + "&grant_type=authorization_code&js_code=" + code + "&secret=" + appsecret;
+        String url = wechatSessionBaseUrl() + "/sns/jscode2session?appid=" + appid + "&grant_type=authorization_code&js_code=" + code + "&secret=" + appsecret;
         String result = sendHttpGet(url);
 
         Map mp = JSON.parseObject(result);

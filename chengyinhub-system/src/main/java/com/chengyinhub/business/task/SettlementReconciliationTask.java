@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 结算批次与明细金额一致性巡检。
@@ -15,6 +17,7 @@ import java.util.List;
  */
 @Component("settlementReconciliationTask")
 public class SettlementReconciliationTask {
+    private static final Logger log = LoggerFactory.getLogger(SettlementReconciliationTask.class);
 
     @Autowired
     private SettlementBatchMapper settlementBatchMapper;
@@ -25,22 +28,33 @@ public class SettlementReconciliationTask {
     public void run() {
         Long batchCount = settlementBatchMapper.countBatches();
         if (batchCount == null || batchCount == 0L) {
-            alarmService.alarm("结算批次未接线", "settlement_batch=0，四账巡检不能证明无差异");
-            throw new IllegalStateException("settlement_batch=0，结算巡检失败");
+            alarmService.alarmThrottled("monitor.settlement.unavailable", "结算批次未接线",
+                    "settlement_batch=" + (batchCount == null ? "UNKNOWN" : "0") + "，四账巡检不能证明无差异");
+            throw new IllegalStateException("Settlement batch count unavailable or empty");
         }
-        List<SettlementBatchReconciliationVO> mismatches = settlementBatchMapper.selectAmountMismatchBatches();
-        if (mismatches == null || mismatches.isEmpty()) {
+        Long mismatchCount = settlementBatchMapper.countAmountMismatchBatches();
+        if (mismatchCount != null && mismatchCount == 0L) {
             return;
         }
-        for (SettlementBatchReconciliationVO mismatch : mismatches) {
-            alarmService.alarm("结算批次金额不一致", detail(mismatch));
+        List<SettlementBatchReconciliationVO> mismatches = settlementBatchMapper.sampleAmountMismatchBatches();
+        StringBuilder sample = new StringBuilder();
+        if (mismatches == null || mismatches.isEmpty()) {
+            sample.append("UNKNOWN");
+        } else {
+            for (SettlementBatchReconciliationVO mismatch : mismatches.stream().limit(20).toList()) {
+                if (!sample.isEmpty()) sample.append("; ");
+                sample.append(mismatch == null ? "UNKNOWN" : detail(mismatch));
+            }
         }
-        throw new IllegalStateException("发现结算批次金额不一致，count=" + mismatches.size());
+        log.warn("Settlement monitor anomaly count={} samples=[{}]", mismatchCount == null ? "UNKNOWN" : mismatchCount, sample);
+        alarmService.alarmThrottled("monitor.settlement.mismatch", "结算批次金额不一致",
+                "count=" + (mismatchCount == null ? "UNKNOWN" : mismatchCount) + " samples=[" + sample + "]");
+        throw new IllegalStateException("Settlement mismatch count=" + (mismatchCount == null ? "UNKNOWN" : mismatchCount));
     }
 
     private String detail(SettlementBatchReconciliationVO mismatch) {
-        return "batchId=" + mismatch.getBatchId()
-                + " merchantId=" + mismatch.getMerchantId()
+        return "batchId=" + (mismatch.getBatchId() == null ? "UNKNOWN" : mismatch.getBatchId())
+                + " merchantId=" + (mismatch.getMerchantId() == null ? "UNKNOWN" : mismatch.getMerchantId())
                 + " batchAmount=" + amount(mismatch.getBatchTotalAmount())
                 + " detailAmount=" + amount(mismatch.getDetailTotalAmount())
                 + " difference=" + amount(mismatch.getDifferenceAmount());

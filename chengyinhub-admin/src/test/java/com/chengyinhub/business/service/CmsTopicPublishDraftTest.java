@@ -50,7 +50,9 @@ class CmsTopicPublishDraftTest {
     private ThemeStateKeyMapper themeStateKeyMapper;
     private CmsActivityMapper cmsActivityMapper;
     private TopicBundleReviewService topicBundleReviewService;
+    private ITopicCommercialReviewService topicCommercialReviewService;
     private CmsTopicServiceImpl svc;
+    private com.chengyinhub.business.mapper.AppMediaAssetMapper mediaAssetMapper;
 
     @BeforeEach
     void setUp() {
@@ -63,11 +65,25 @@ class CmsTopicPublishDraftTest {
         themeStateKeyMapper = mock(ThemeStateKeyMapper.class);
         cmsActivityMapper = mock(CmsActivityMapper.class);
         topicBundleReviewService = mock(TopicBundleReviewService.class);
+        topicCommercialReviewService = mock(ITopicCommercialReviewService.class);
         svc = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(svc, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(svc, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(svc, "quotaService", mock(IQuotaService.class));
         ReflectionTestUtils.setField(svc, "cmsTopicMapper", cmsTopicMapper);
+        when(((com.chengyinhub.business.service.support.TopicSupplyReviewService) ReflectionTestUtils.getField(svc, "supplyReviewService")).lockTopic(anyLong()))
+                .thenAnswer(call -> { CmsTopic locked = cmsTopicMapper.selectCmsTopicByIdForUpdate(call.getArgument(0));
+                    if (locked == null) throw new IllegalStateException("主题不存在"); return locked; });
         ReflectionTestUtils.setField(svc, "auditTaskService", auditTaskService);
         ReflectionTestUtils.setField(svc, "topicBundleReviewService", topicBundleReviewService);
+        ReflectionTestUtils.setField(svc, "topicCommercialReviewService", topicCommercialReviewService);
+        com.chengyinhub.business.mapper.MerchantChapterOfferMapper offerMapper =
+                mock(com.chengyinhub.business.mapper.MerchantChapterOfferMapper.class);
+        when(offerMapper.selectByTopicIncludingInactiveForUpdate(anyLong()))
+                .thenReturn(Collections.emptyList());
+        ReflectionTestUtils.setField(svc, "merchantChapterOfferMapper", offerMapper);
         when(topicBundleReviewService.freezeForSubmission(anyLong(), anyLong())).thenReturn(
                 new TopicBundleReviewService.Submission("{\"schemaVersion\":2}", Collections.singletonList(101L)));
         when(auditTaskService.submitOrRefreshTopicBundle(anyLong(), anyLong(), anyString())).thenReturn(901L);
@@ -78,6 +94,21 @@ class CmsTopicPublishDraftTest {
         // F4 起专业版提交审核也验状态键,故三板斧齐备(无引用的老主题走不到注册表查询)。
         ReflectionTestUtils.setField(svc, "cmsTopicNodeMapper", cmsTopicNodeMapper);
         ReflectionTestUtils.setField(svc, "cmsMemberTemplateMapper", cmsMemberTemplateMapper);
+        // Real publication/reference guards, with only the reviewed asset persistence mocked.
+        com.chengyinhub.business.service.support.AppMediaReferenceGuard references =
+                new com.chengyinhub.business.service.support.AppMediaReferenceGuard();
+        mediaAssetMapper = mock(com.chengyinhub.business.mapper.AppMediaAssetMapper.class);
+        ReflectionTestUtils.setField(references, "mapper", mediaAssetMapper);
+        com.chengyinhub.business.service.support.AppMediaPublicationGuard mediaGuard =
+                new com.chengyinhub.business.service.support.AppMediaPublicationGuard();
+        ReflectionTestUtils.setField(mediaGuard, "references", references);
+        ReflectionTestUtils.setField(mediaGuard, "topics", cmsTopicMapper);
+        ReflectionTestUtils.setField(mediaGuard, "chapters", mock(com.chengyinhub.business.mapper.CmsTopicChapterMapper.class));
+        ReflectionTestUtils.setField(mediaGuard, "nodes", cmsTopicNodeMapper);
+        ReflectionTestUtils.setField(mediaGuard, "templates", cmsMemberTemplateMapper);
+        ReflectionTestUtils.setField(svc, "mediaPublicationGuard", mediaGuard);
+        when(mediaAssetMapper.select(901L)).thenReturn(java.util.Map.of(
+                "id", 901L, "ownerType", "APP", "memberId", 7L, "reviewState", "APPROVED"));
         ReflectionTestUtils.setField(svc, "themeStateKeyService", new ThemeStateKeyService(themeStateKeyMapper));
         // R8 起引用收集在 TopicStateKeyRefService(节点块 + 数值规则),发布闸与试检查共用。
         ReflectionTestUtils.setField(svc, "topicStateKeyRefService",
@@ -93,15 +124,19 @@ class CmsTopicPublishDraftTest {
                 mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
         when(cmsTopicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
         when(cmsTopicMapper.publishRouteSnapshot(anyLong(), nullable(String.class), any(java.util.Date.class))).thenReturn(1);
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
     }
 
     @Test
     void notDraft_returnsFalse_noStatusMutation() {
         // 非草稿(rejected/online):WHERE is_draft=1 命中 0 行
         when(cmsTopicMapper.clearDraftIfDraft(9L)).thenReturn(0);
+        CmsTopic nonDraft = new CmsTopic(); nonDraft.setId(9L); nonDraft.setMemberId(7L);
+        when(cmsTopicMapper.selectCmsTopicById(9L)).thenReturn(nonDraft);
+        when(((com.chengyinhub.business.service.support.TopicSupplyReviewService) ReflectionTestUtils.getField(svc, "supplyReviewService")).lockTopic(9L)).thenReturn(nonDraft);
         assertFalse(svc.publishDraft(9L), "非草稿不应发布(审核绕过防护)");
         verify(cmsTopicMapper, never()).updateCmsTopic(any());
-        verify(cmsTopicMapper, never()).selectCmsTopicById(any());
+        verify(topicBundleReviewService, never()).freezeForSubmission(anyLong(), anyLong());
     }
 
     @Test
@@ -111,7 +146,7 @@ class CmsTopicPublishDraftTest {
         CmsTopic t = new CmsTopic();
         t.setId(1L); t.setPublishMode("simple"); t.setMemberId(100L);
         // R19-DRAFT2:可发布的主题必须有名字(草稿保存时已要求非空)。
-        t.setName("夜跑");
+        t.setName("夜跑"); t.setImgUrl("media-asset:901");
         when(cmsTopicMapper.selectCmsTopicById(1L)).thenReturn(t);
         assertTrue(svc.publishDraft(1L));
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
@@ -119,6 +154,26 @@ class CmsTopicPublishDraftTest {
         assertEquals(Integer.valueOf(1), cap.getValue().getStatus(), "简易版发布 → 已上架");
         assertEquals(Integer.valueOf(1), cap.getValue().getUserStatus());
         verify(auditTaskService, never()).submit(anyString(), any(), any(), anyString(), anyString());
+        verify(topicCommercialReviewService, never()).submitProjectReview(anyLong(), anyLong(), any());
+    }
+
+    @Test
+    void draftFreeExploreWithRecruitDeadline_submitsProjectReview() {
+        when(cmsTopicMapper.clearDraftIfDraft(8L)).thenReturn(1);
+        when(cmsTopicMapper.publishRouteSnapshot(eq(8L), eq(null), any(java.util.Date.class))).thenReturn(1);
+        CmsTopic topic = new CmsTopic();
+        topic.setId(8L);
+        topic.setMemberId(100L);
+        topic.setName("章节招商草稿");
+        topic.setPublishMode("simple");
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
+        topic.setRecruitDeadline(new java.util.Date(System.currentTimeMillis() + 86_400_000L));
+        when(cmsTopicMapper.selectCmsTopicById(8L)).thenReturn(topic);
+
+        assertTrue(svc.publishDraft(8L));
+
+        verify(topicCommercialReviewService).submitProjectReview(
+                8L, 100L, com.chengyinhub.business.domain.enums.TopicLifecycleState.RECRUITING);
     }
 
     @Test
@@ -277,4 +332,54 @@ class CmsTopicPublishDraftTest {
 
         verify(cmsActivityMapper, never()).insertCmsActivity(any(CmsActivity.class));
     }
+    @Test
+    void changedOwnerAfterControllerReadRejectsEvenRealDraftFallbackBeforeMutation() {
+        CmsTopic before = new CmsTopic(); before.setId(91L); before.setMemberId(7L); before.setImgUrl("media-asset:901");
+        when(cmsTopicMapper.selectCmsTopicById(91L)).thenReturn(before);
+        com.chengyinhub.business.service.support.TopicSupplyReviewService gate =
+                (com.chengyinhub.business.service.support.TopicSupplyReviewService) ReflectionTestUtils.getField(svc, "supplyReviewService");
+        when(gate.canResubmit(before)).thenReturn(true);
+        org.junit.jupiter.api.Assertions.assertTrue(svc.canResubmitSupplyReview(91L, 7L));
+        CmsTopic locked = new CmsTopic(); locked.setId(91L); locked.setMemberId(8L); locked.setImgUrl("media-asset:901");
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(91L)).thenReturn(locked);
+        when(cmsTopicMapper.clearDraftIfDraft(91L)).thenReturn(1);
+        com.chengyinhub.common.exception.ServiceException error = org.junit.jupiter.api.Assertions.assertThrows(
+                com.chengyinhub.common.exception.ServiceException.class, () -> svc.publishDraftWithReview(91L, 7L));
+        org.junit.jupiter.api.Assertions.assertEquals(403, error.getCode());
+        org.mockito.Mockito.verify(cmsTopicMapper, org.mockito.Mockito.never()).clearDraftIfDraft(91L);
+        org.mockito.Mockito.verify(topicBundleReviewService, org.mockito.Mockito.never()).freezeForSubmission(91L, 8L);
+        verify(mediaAssetMapper, never()).select(anyLong());
+    }
+
+    @Test
+    void noActorOverloadCannotExecuteSupplyReplacementAndExplicitActorMustBePositive() {
+        CmsTopic locked = new CmsTopic(); locked.setId(91L); locked.setMemberId(7L);
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(91L)).thenReturn(locked);
+        when(cmsTopicMapper.selectCmsTopicById(91L)).thenReturn(locked);
+        com.chengyinhub.business.service.support.TopicSupplyReviewService gate =
+                (com.chengyinhub.business.service.support.TopicSupplyReviewService) ReflectionTestUtils.getField(svc, "supplyReviewService");
+        when(gate.canResubmit(locked)).thenReturn(true);
+        when(cmsTopicMapper.clearDraftIfDraft(91L)).thenReturn(0);
+        org.junit.jupiter.api.Assertions.assertNull(svc.publishDraftWithReview(91L));
+        org.mockito.Mockito.verify(gate, org.mockito.Mockito.never()).canResubmit(locked);
+        com.chengyinhub.common.exception.ServiceException error = org.junit.jupiter.api.Assertions.assertThrows(
+                com.chengyinhub.common.exception.ServiceException.class, () -> svc.publishDraftWithReview(91L, null));
+        org.junit.jupiter.api.Assertions.assertEquals(403, error.getCode());
+        org.mockito.Mockito.verify(topicBundleReviewService, org.mockito.Mockito.never()).freezeForSubmission(91L, 7L);
+    }
+
+    @Test
+    void heldMediaCannotReachDraftCasEvenForCorrectOwner() {
+        CmsTopic topic = new CmsTopic(); topic.setId(92L); topic.setMemberId(7L);
+        topic.setName("待审媒体草稿"); topic.setPublishMode("simple"); topic.setImgUrl("media-asset:902");
+        when(cmsTopicMapper.selectCmsTopicById(92L)).thenReturn(topic);
+        when(mediaAssetMapper.select(902L)).thenReturn(java.util.Map.of(
+                "id", 902L, "ownerType", "APP", "memberId", 7L, "reviewState", "HOLD"));
+        ServiceException error = assertThrows(ServiceException.class, () -> svc.publishDraftWithReview(92L, 7L));
+        assertEquals(422, error.getCode());
+        verify(mediaAssetMapper).select(902L);
+        verify(cmsTopicMapper, never()).clearDraftIfDraft(92L);
+        verify(topicBundleReviewService, never()).freezeForSubmission(92L, 7L);
+    }
+
 }

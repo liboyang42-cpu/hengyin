@@ -36,6 +36,39 @@ public interface RoamMapper {
     /** 玩家侧按 id 查据点(同 selectPoisNear 的 status=1 + 审核口径),后台/官方活动请用 selectPoisByIds。 */
     List<RoamPoi> selectPlayerPoisByIds(@Param("ids") List<Long> ids);
 
+    List<RoamSession> selectLocationRetentionCandidates(@Param("cutoff") Date cutoff, @Param("limit") int limit);
+    int clearEndedSessionLocation(@Param("id") Long id, @Param("memberId") Long memberId,
+                                  @Param("cutoff") Date cutoff, @Param("resultJson") String resultJson);
+
+    Long lockClaimOwner(@Param("memberId") Long memberId);
+    Map<String,Object> selectCleanupTileForUpdate(@Param("id") Long id,@Param("memberId") Long memberId,@Param("sessionId") Long sessionId);
+    Map<String,Object> selectCleanupPoiForUpdate(@Param("id") Long id,@Param("memberId") Long memberId,@Param("sessionId") Long sessionId);
+    Map<String,Object> selectCleanupShopForUpdate(@Param("id") Long id,@Param("memberId") Long memberId,@Param("sessionId") Long sessionId);
+    Map<String,Object> selectCleanupRewardForUpdate(@Param("id") Long id,@Param("memberId") Long memberId,@Param("cutoff") Date cutoff);
+    int insertClaimKeyGuard(@Param("fingerprint") String fingerprint);
+    String selectClaimKeyGuard();
+    String selectClaimKeyGuardForUpdate();
+    default void requireClaimKey() {
+        String fingerprint = com.chengyinhub.business.support.RoamLocationRetention.keyFingerprint();
+        String stored = selectClaimKeyGuard();
+        if (stored == null) {
+            insertClaimKeyGuard(fingerprint);
+            stored = selectClaimKeyGuardForUpdate();
+        }
+        if (!fingerprint.equals(stored)) {
+            org.slf4j.LoggerFactory.getLogger(RoamMapper.class).error("Roam claim fingerprint key changed; claims and cleanup refused");
+            throw new IllegalStateException("Roam claim fingerprint key changed; restore the original key");
+        }
+    }
+    List<Map<String,Object>> selectSessionTileLocations(@Param("id") Long id, @Param("memberId") Long memberId);
+    List<Map<String,Object>> selectSessionPoiLocations(@Param("id") Long id, @Param("memberId") Long memberId);
+    List<Map<String,Object>> selectSessionShopLocations(@Param("id") Long id, @Param("memberId") Long memberId);
+    int clearSessionTileLocation(@Param("id") Long id, @Param("memberId") Long memberId, @Param("fingerprint") String fingerprint);
+    int clearSessionPoiLocation(@Param("id") Long id, @Param("memberId") Long memberId, @Param("fingerprint") String fingerprint);
+    int clearSessionShopLocation(@Param("id") Long id, @Param("memberId") Long memberId, @Param("fingerprint") String fingerprint);
+    List<Map<String,Object>> selectExpiredRewardLocations(@Param("cutoff") Date cutoff, @Param("limit") int limit);
+    int clearRewardLocation(@Param("id") Long id, @Param("memberId") Long memberId, @Param("fingerprint") String fingerprint);
+
     // --- 会话 ---
     RoamSession selectOwnedRecoverySession(@Param("memberId") Long memberId, @Param("sessionId") Long sessionId,
                                          @Param("clientSessionKey") String clientSessionKey);
@@ -60,8 +93,18 @@ public interface RoamMapper {
     int markRecallSent(@Param("id") Long id, @Param("sentAt") Date sentAt);
 
     // --- 迷雾格(INSERT IGNORE 幂等,返回新插入行数=真正新点亮的格子) ---
-    int batchInsertTile(@Param("memberId") Long memberId, @Param("sessionId") Long sessionId,
-                        @Param("tiles") List<String> tiles, @Param("revealedAt") Date revealedAt);
+    default int batchInsertTile(Long memberId, Long sessionId, List<String> tiles, Date revealedAt) {
+        requireClaimKey();
+        List<Map<String,Object>> claims = new java.util.ArrayList<>();
+        for (String tile : tiles) {
+            Map<String,Object> claim = new java.util.HashMap<>(); claim.put("tile", tile);
+            claim.put("fingerprint", com.chengyinhub.business.support.RoamLocationRetention.claimFingerprint("tile",memberId,tile));
+            claims.add(claim);
+        }
+        return insertTileClaims(memberId,sessionId,claims,revealedAt);
+    }
+    int insertTileClaims(@Param("memberId") Long memberId, @Param("sessionId") Long sessionId,
+                         @Param("claims") List<Map<String,Object>> claims, @Param("revealedAt") Date revealedAt);
     /** 本会话新点亮格子数(prior session 已点的格子因 uk 不会带本 session_id) */
     int countTilesBySession(@Param("sessionId") Long sessionId);
     /** 本会话服务端确认的首次 POI 数。 */
@@ -78,11 +121,40 @@ public interface RoamMapper {
                                                      @Param("limit") Integer limit);
 
     // --- POI 发现(INSERT IGNORE 幂等,返回 1=新发现 0=已发现过) ---
-    int insertPoiFoundIgnore(@Param("memberId") Long memberId, @Param("poiId") Long poiId,
-                             @Param("sessionId") Long sessionId, @Param("foundAt") Date foundAt);
+    default int insertPoiFoundIgnore(Long memberId, Long poiId, Long sessionId, Date foundAt) {
+        requireClaimKey();
+        return insertPoiClaim(memberId,poiId,sessionId,foundAt,
+                com.chengyinhub.business.support.RoamLocationRetention.claimFingerprint("poi",memberId,poiId));
+    }
+    int insertPoiClaim(@Param("memberId") Long memberId, @Param("poiId") Long poiId,
+                       @Param("sessionId") Long sessionId, @Param("foundAt") Date foundAt,
+                       @Param("fingerprint") String fingerprint);
 
     // --- 会话内探店(任意真商家:roam_poi 据点 / cms_registration_merchant 报名商家)---
     /** INSERT IGNORE 幂等(uk: session_id+source_type+source_id),返回 1=新记 0=本会话已记过 */
+    /** Anonymous cumulative facts contain neither member IDs nor coordinates. Caller keeps the original transaction. */
+    default void recordAnonymousShopVisitor(Long memberId, Integer sourceType, Long sourceId) {
+        if (!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("Anonymous visitor registration requires the original transaction");
+        if (memberId == null || memberId <= 0 || sourceId == null || sourceId <= 0
+                || sourceType == null || (sourceType != 1 && sourceType != 2))
+            throw new IllegalArgumentException("Invalid shop visitor fact");
+        requireClaimKey();
+        String fingerprint = com.chengyinhub.business.support.RoamLocationRetention.claimFingerprint(
+                "shop-visitor", memberId, sourceType + ":" + sourceId);
+        if (insertAnonymousShopVisitor(sourceType, sourceId, fingerprint) == 1
+                && incrementAnonymousShopVisitorTotal(sourceType, sourceId) <= 0)
+            throw new IllegalStateException("Anonymous visitor count receipt missing");
+    }
+    int insertAnonymousShopVisitor(@Param("sourceType") Integer sourceType, @Param("sourceId") Long sourceId,
+                                  @Param("fingerprint") String fingerprint);
+    int incrementAnonymousShopVisitorTotal(@Param("sourceType") Integer sourceType, @Param("sourceId") Long sourceId);
+    List<com.chengyinhub.business.domain.vo.ShopVisitorCountVO> selectAnonymousShopVisitorTotals(
+            @Param("sourceType") Integer sourceType, @Param("sourceIds") List<Long> sourceIds);
+    List<Map<String,Object>> selectRawShopVisitors(@Param("sourceType") Integer sourceType,
+                                                  @Param("sourceIds") List<Long> sourceIds);
+    List<String> selectKnownAnonymousShopVisitors(@Param("sourceType") Integer sourceType,
+            @Param("sourceIds") List<Long> sourceIds, @Param("fingerprints") List<String> fingerprints);
     int insertShopVisitIgnore(@Param("memberId") Long memberId, @Param("sessionId") Long sessionId,
                               @Param("sourceType") int sourceType, @Param("sourceId") Long sourceId,
                               @Param("shopName") String shopName, @Param("visitedAt") Date visitedAt);
@@ -97,14 +169,47 @@ public interface RoamMapper {
                                                        @Param("limit") int limit);
 
     /** 每个来源打过卡的**人数**(去重到人)。头像堆右边那枚 +N 用的是它,不是头像条数。 */
-    List<ShopVisitorCountVO> selectShopVisitorCounts(@Param("sourceType") Integer sourceType,
-                                                     @Param("sourceIds") List<Long> sourceIds);
+    /** Bounded to the current shop-card batch. One consistent read snapshot prevents cleanup count loss. */
+    default List<ShopVisitorCountVO> selectShopVisitorCounts(Integer sourceType, List<Long> sourceIds) {
+        String key = com.chengyinhub.business.support.RoamLocationRetention.keyFingerprint();
+        String stored = selectClaimKeyGuard();
+        if (stored != null && !key.equals(stored)) throw new IllegalStateException("Roam fingerprint key changed");
+        Map<Long,Integer> totals = new java.util.LinkedHashMap<>();
+        for (ShopVisitorCountVO total : selectAnonymousShopVisitorTotals(sourceType, sourceIds)) {
+            if (stored == null && total.getTotal() > 0) throw new IllegalStateException("Anonymous visitor key guard missing");
+            totals.put(total.getSourceId(),total.getTotal());
+        }
+        Map<String,Long> raw = new java.util.LinkedHashMap<>();
+        for (Map<String,Object> visitor : selectRawShopVisitors(sourceType, sourceIds)) {
+            Long member = ((Number)visitor.get("memberId")).longValue();
+            Long source = ((Number)visitor.get("sourceId")).longValue();
+            raw.put(com.chengyinhub.business.support.RoamLocationRetention.claimFingerprint(
+                    "shop-visitor",member,sourceType+":"+source),source);
+        }
+        List<String> fingerprints = new java.util.ArrayList<>(raw.keySet());
+        java.util.Set<String> known = new java.util.HashSet<>();
+        for (int offset=0;offset<fingerprints.size();offset+=500)
+            known.addAll(selectKnownAnonymousShopVisitors(sourceType,sourceIds,
+                    fingerprints.subList(offset,Math.min(offset+500,fingerprints.size()))));
+        for (Map.Entry<String,Long> visitor : raw.entrySet()) if (!known.contains(visitor.getKey()))
+            totals.merge(visitor.getValue(),1,Math::addExact);
+        List<ShopVisitorCountVO> result = new java.util.ArrayList<>();
+        for (Map.Entry<Long,Integer> total : totals.entrySet()) {
+            ShopVisitorCountVO row = new ShopVisitorCountVO(); row.setSourceId(total.getKey()); row.setTotal(total.getValue()); result.add(row);
+        }
+        return result;
+    }
     // --- 附近正在漫游的人(原型 otherRunners / otherSheet)---
 
     /** 心跳:把最近一次上报的位置写进这一场未结算的会话。member_id + status=0 双条件,写不进别人的。 */
     int updatePresence(@Param("id") Long id, @Param("memberId") Long memberId,
                        @Param("lat") java.math.BigDecimal lat, @Param("lng") java.math.BigDecimal lng,
                        @Param("reportAt") Date reportAt, @Param("explorePct") Integer explorePct);
+
+    RoamSession selectActivePresence(@Param("memberId") Long memberId, @Param("freshAfter") Date freshAfter);
+
+    int updatePresenceVisibility(@Param("id") Long id, @Param("memberId") Long memberId,
+                                 @Param("visible") Boolean visible);
 
     /** 半径内此刻还在走的人(不含自己)。freshAfter 之前没上报的一律算下线。 */
     List<NearbyRunnerVO> selectNearbyRunners(@Param("memberId") Long memberId,
@@ -141,10 +246,16 @@ public interface RoamMapper {
     List<Long> selectRewardedPoiIdsByMember(@Param("memberId") Long memberId, @Param("ids") List<Long> ids);
 
     /** C2:到店打卡记录(INSERT IGNORE,uk_poi_member;返回 1=首次到访 0=已到访)。有券节点传 status=0「待核销」(券由商家扫码 redeemCityNodeReward 发放);无券节点传 status=1「已完成」。 */
-    int insertRewardLogIgnore(@Param("poiId") Long poiId, @Param("memberId") Long memberId,
-                              @Param("couponId") Long couponId, @Param("lat") java.math.BigDecimal lat,
-                              @Param("lng") java.math.BigDecimal lng, @Param("status") Integer status,
-                              @Param("createTime") Date createTime);
+    default int insertRewardLogIgnore(Long poiId, Long memberId, Long couponId, java.math.BigDecimal lat,
+                                      java.math.BigDecimal lng, Integer status, Date createTime) {
+        requireClaimKey();
+        return insertRewardClaim(poiId,memberId,couponId,lat,lng,status,createTime,
+                com.chengyinhub.business.support.RoamLocationRetention.claimFingerprint("reward",memberId,poiId));
+    }
+    int insertRewardClaim(@Param("poiId") Long poiId, @Param("memberId") Long memberId,
+                          @Param("couponId") Long couponId, @Param("lat") java.math.BigDecimal lat,
+                          @Param("lng") java.math.BigDecimal lng, @Param("status") Integer status,
+                          @Param("createTime") Date createTime, @Param("fingerprint") String fingerprint);
 
     /** C2 扫码核销:商家扫玩家据点码时,把「待核销」记录 status 0→1(已核销/发券);条件更新保证幂等,返回 1=首次核销 0=未到访或已核销。 */
     int redeemCityNodeReward(@Param("poiId") Long poiId, @Param("memberId") Long memberId);

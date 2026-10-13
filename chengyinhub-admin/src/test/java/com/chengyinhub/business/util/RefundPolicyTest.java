@@ -64,6 +64,27 @@ class RefundPolicyTest {
     }
 
     @Test
+    void freeSessionCanReleaseCapacityWithin24HoursButNotAtStartOrAfterVerification() {
+        Date start = new Date(2000000000000L);
+        Date cutoff = RefundPolicy.sessionRefundDeadline(start);
+        Date justBefore = new Date(start.getTime() - 1L);
+        assertTrue(RefundPolicy.evaluate(2L, 2, 0, null, null, null, start, null, cutoff,
+                java.math.BigDecimal.ZERO, 0L, justBefore).refundable);
+        assertFalse(RefundPolicy.evaluate(2L, 2, 0, null, null, null, start, null, cutoff,
+                java.math.BigDecimal.ZERO, 0L, start).refundable);
+        assertFalse(RefundPolicy.evaluate(2L, 2, 1, null, null, null, start, null, cutoff,
+                java.math.BigDecimal.ZERO, 0L, justBefore).refundable);
+        assertFalse(RefundPolicy.evaluate(2L, 2, 0, null, null, null, start, null, cutoff,
+                java.math.BigDecimal.ONE, 0L, justBefore).refundable);
+        assertFalse(RefundPolicy.evaluate(2L, 2, 0, null, null, null, start, null, cutoff,
+                java.math.BigDecimal.ZERO, 10L, justBefore).refundable);
+        assertFalse(RefundPolicy.evaluate(2L, 2, 0, null, null, null, start, null, cutoff,
+                java.math.BigDecimal.ZERO, null, justBefore).refundable, "积分快照缺失不能当作免费票");
+        assertFalse(RefundPolicy.evaluate(2L, 2, 0, null, null, null, null, null, cutoff,
+                java.math.BigDecimal.ZERO, 0L, justBefore).refundable);
+    }
+
+    @Test
     void verified_notRefundable_evenInWindow() {
         Verdict v = RefundPolicy.evaluate(1L, 2, 1, 1, future, null, null, now);
         assertFalse(v.refundable);

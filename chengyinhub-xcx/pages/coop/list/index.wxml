@@ -10,6 +10,8 @@
 <!-- 本域是商家/主理人之间的协作(协作邀请 / 候选池 / 保证金),不是玩家面。 -->
   <cy-page-title title="协作邀请" safe-top="{{false}}" flush="{{true}}" />
   <!-- 全站合作只有「收到的 / 我发出的」两个入口;合作池已收编:申请带队在俱乐部详情「可对接的活动」。 -->
+  <cy-empty wx:if="{{listState === 'login'}}" title="登录后查看协作邀请" cta="去登录" bind:cta="onLogin" />
+  <block wx:else>
   <cy-tabs class="coop-tabs" variant="fill" wide="{{true}}" tabs="{{listTabs}}" active="{{tabKey}}" bind:change="onTabChange" />
 
   <!-- CU-C-75:从某个主题的「查看收到的申请」进来时,先把范围说清楚(并给回到全局的出口) -->
@@ -25,7 +27,7 @@
   </view>
 
   <view class="inline-state" wx:if="{{chapterState === 'loading'}}" aria-role="status">正在加载章节承接记录…</view>
-  <cy-inline-error wx:if="{{chapterError}}" title="章节承接记录未完整更新" sub="{{chapterError}}"
+  <cy-inline-error load-failure wx:if="{{chapterError}}" title="章节承接记录未完整更新" sub="{{chapterError}}"
     action="重试" bind:action="loadChapterApplications" />
   <view class="inv" wx:for="{{tab === 0 ? chapterReceived : chapterSent}}" wx:key="rowKey"
     bindtap="goChapterRecord" data-key="{{item.rowKey}}" aria-role="button"
@@ -42,7 +44,7 @@
   <block wx:if="{{tab===0}}">
     <cy-skeleton wx:if="{{listState === 'loading'}}" type="list" count="3" />
     <cy-error class="retry-lg" wx:elif="{{listState === 'permission'}}" fill title="当前账号不能查看协作邀请" sub="{{listErrorText}}" auto-back bind:retry="load" />
-    <cy-error class="retry-lg error-kind--{{listErrorKind}}" wx:elif="{{listState === 'error'}}" fill title="协作邀请没加载出来" sub="{{listErrorText || '服务暂时不可用,请稍后重试'}}" auto-back bind:retry="load" />
+    <cy-error load-failure class="retry-lg error-kind--{{listErrorKind}}" wx:elif="{{listState === 'error'}}" fill title="协作邀请没加载出来" sub="{{listErrorText || '服务暂时不可用,请稍后重试'}}" auto-back bind:retry="load" />
     <block wx:else>
     <view class="inline-state" wx:if="{{receivedApplyState === 'loading'}}" aria-role="status" aria-live="polite">正在加载带队申请…</view>
     <!-- 收到的这一路单独报错:只在「收到的」说事,不把池子请求的错误顶到「我发出的」tab 上 -->
@@ -178,7 +180,7 @@
   <block wx:else>
     <cy-skeleton wx:if="{{listState === 'loading'}}" type="list" count="3" />
     <cy-error class="retry-lg" wx:elif="{{listState === 'permission'}}" fill title="当前账号不能查看协作邀请" sub="{{listErrorText}}" auto-back bind:retry="load" />
-    <cy-error class="retry-lg error-kind--{{listErrorKind}}" wx:elif="{{listState === 'error'}}" fill title="协作邀请没加载出来" sub="{{listErrorText || '服务暂时不可用,请稍后重试'}}" auto-back bind:retry="load" />
+    <cy-error load-failure class="retry-lg error-kind--{{listErrorKind}}" wx:elif="{{listState === 'error'}}" fill title="协作邀请没加载出来" sub="{{listErrorText || '服务暂时不可用,请稍后重试'}}" auto-back bind:retry="load" />
     <block wx:else>
     <view class="inline-state" wx:if="{{sentApplyState === 'loading'}}" aria-role="status" aria-live="polite">正在加载带队申请…</view>
     <!-- 我发出的这一路单独报错:收到的池子请求失败不得在这里顶牌 -->
@@ -257,5 +259,6 @@
     </block>
   </block>
 
+</block>
 <!-- 供给申报勾选浮层与评价选择浮层已随动作搬进 pages/coop/invite-detail(卡片不再堆按钮,弹层也跟着动作走) -->
 </view>

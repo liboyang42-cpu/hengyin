@@ -65,6 +65,7 @@ class MerchantCrmRecipientAuditTransactionBoundaryTest {
                 + "merchant_id bigint not null, member_id bigint not null, channel varchar(32) not null, "
                 + "status varchar(32) not null, attempt_count int not null, failure_code varchar(64), "
                 + "message_receipt_id bigint, coupon_history_id bigint)");
+        jdbc.execute("create table coupon_history(id bigint primary key)");
         jdbc.update("insert into campaign(id,merchant_id,owner_member_id,actor_id,actor_role,channel) "
                 + "values (?,?,?,?,?,?)", CAMPAIGN, MERCHANT_ROW, OWNER, OWNER,
                 "MERCHANT_OWNER", MerchantCrmMarketingConsent.IN_APP);
@@ -99,6 +100,27 @@ class MerchantCrmRecipientAuditTransactionBoundaryTest {
         assertThrows(ServiceException.class, () -> service.deliver(MERCHANT_ROW, CAMPAIGN, RECIPIENT));
 
         assertPendingFromIndependentConnection();
+    }
+
+    @Test
+    void springProxyRollsBackCouponGrantWhenTerminalAuditFails() {
+        jdbc.update("update campaign set channel=? where id=?",
+                MerchantCrmMarketingConsent.COUPON, CAMPAIGN);
+        jdbc.update("update recipient set channel=? where id=?",
+                MerchantCrmMarketingConsent.COUPON, RECIPIENT);
+        MerchantCrmRecipientDeliveryServiceImpl target = target(true);
+        MerchantCrmCouponGrantAdapter coupon = mock(MerchantCrmCouponGrantAdapter.class);
+        when(coupon.grant(anyLong(), anyLong(), anyLong(), any())).thenAnswer(call -> {
+            jdbc.update("insert into coupon_history(id) values (?)", 77L);
+            return 77L;
+        });
+        ReflectionTestUtils.setField(target, "couponGrantAdapter", coupon);
+        IMerchantCrmRecipientDeliveryService service = proxy(target);
+
+        assertThrows(ServiceException.class, () -> service.deliver(MERCHANT_ROW, CAMPAIGN, RECIPIENT));
+
+        assertPendingFromIndependentConnection();
+        assertEquals(0L, ((Number) independentScalar("select count(*) from coupon_history")).longValue());
     }
 
     @Test

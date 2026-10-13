@@ -362,6 +362,11 @@ public class ApiRegistrationController extends BaseController {
         Long registrationId = Convert.toLong(id, 0L);
         if (registrationId <= 0) return error("缺少报名ID");
         try {
+            com.chengyinhub.business.service.support.RegistrationCancellationReadService.Result existingCase =
+                    cancellationReadService.readPlayerManualRefundCase(registrationId, memberId);
+            if (existingCase != null) {
+                return AjaxResult.success(existingCase.getMessage(), existingCase.getData());
+            }
             if (teamGroupService.cancelPaidRegistration(registrationId, memberId) == com.chengyinhub.business.service.ITeamGroupService.CANCEL_MANUAL_REVIEW) {
                 return manualReviewFeedback(registrationId, "本单已转平台人工评估，尚未退款");
             }
@@ -472,7 +477,7 @@ public class ApiRegistrationController extends BaseController {
                             registrationScanList.get(i).setMmsMerchant(mmsMerchant);
                         }
                     }else{
-                        CmsMemberTemplate memberTemplate = memberTemplateService.selectCmsMemberTemplateById(Long.valueOf(registrationScanList.get(0).getTemplateId()));
+                        CmsMemberTemplate memberTemplate = memberTemplateService.selectCmsMemberTemplateById(Long.valueOf(registrationScanList.get(i).getTemplateId()));
                         registrationScanList.get(i).setMemberTemplate(com.chengyinhub.business.util.TemplateSecrets.strip(memberTemplate)); // [防作弊] 玩家侧不带答案/提示
                     }
                 }
@@ -497,7 +502,8 @@ public class ApiRegistrationController extends BaseController {
                             com.chengyinhub.business.util.RefundPolicy.evaluate(
                                     2L, registration.getPaymentStatus(), registration.getVerificationStatus(),
                                     null, null, null, activity.getStartDate(),
-                                    registration.getPurchaseKind(), registration.getRefundDeadline(), new java.util.Date()));
+                                    registration.getPurchaseKind(), registration.getRefundDeadline(),
+                                    registration.getPayableAmount(), registration.getPointUsed(), new java.util.Date()));
                 }
 
                 // ③ 探索票:带上权益清单(哪几章待核销/已核销/已失效)。
@@ -936,7 +942,8 @@ public class ApiRegistrationController extends BaseController {
                     com.chengyinhub.business.util.RefundPolicy.evaluate(
                             2L, registration.getPaymentStatus(), registration.getVerificationStatus(),
                             null, null, null, registration.getCmsActivity().getStartDate(),
-                            registration.getPurchaseKind(), registration.getRefundDeadline(), new Date()));
+                            registration.getPurchaseKind(), registration.getRefundDeadline(),
+                            registration.getPayableAmount(), registration.getPointUsed(), new Date()));
         }
     }
 
@@ -1064,12 +1071,16 @@ public class ApiRegistrationController extends BaseController {
 
     /**
      * 把扫到的 code 解析成 CmsRegistration(BE-11):先试动态签名码(verify 通过→按 regId 查),
-     * 失败再回落旧静态 verificationCode 查询。向后兼容,不改核销/结算主逻辑。
+     * v1 动态码失败保留校验原因；只有旧静态码进入 verificationCode 查询。
+     * 选择章节/据点期间过期不会被误报为无效码，不改核销/结算主逻辑。
      */
     private CmsRegistration resolveRegistrationByScanCode(String code) {
         VerifyDynCodeUtil.Result r = VerifyDynCodeUtil.verify(code, System.currentTimeMillis(), dynSecret);
         if (r.valid && r.regId != null) {
             return registrationService.selectCmsRegistrationById(r.regId);
+        }
+        if (code != null && code.startsWith("v1.")) {
+            throw new ServiceException(r.reason);
         }
         return registrationService.selectByverificationCode(code);
     }
@@ -1174,10 +1185,11 @@ public class ApiRegistrationController extends BaseController {
             // 独立活动(无主题真源)不可能有 ③ 票 —— 走到这儿说明数据不一致,别静默当成「没供给」。
             return AjaxResult.error("该活动未关联路线,无法按章核销");
         }
-        List<Long> candidates = perkLedgerService.resolveRedeemableChapters(
+        Map<Long, Long> scannable = perkLedgerService.resolveScannableChapters(
                 registration.getId(), topicId, merchantOwnerMemberId);
+        List<Long> candidates = new ArrayList<>(scannable.keySet());
         if (candidates.isEmpty()) {
-            return AjaxResult.error("您在本路线没有生效的权益供给,或该章节已核销");
+            return AjaxResult.error("您在本路线没有可核销权益或有效核销回执");
         }
         if (candidates.size() > 1) {
             Map<String, Object> d = new HashMap<>();
@@ -1185,7 +1197,7 @@ public class ApiRegistrationController extends BaseController {
             // chapterIds 保留:老客户端(以及不需要名字的调用方)仍按它工作。新增的 chapters 是同一份
             // 候选集带上名字,前端优先用它 —— 两个 key 必须同源同序,别让它们能各说各话。
             d.put("chapterIds", candidates);
-            d.put("chapters", describeChapters(topicId, candidates));
+            d.put("chapters", describeChapters(topicId, scannable));
             // ⚠️ [P0-2] **必须是 error,且永远不许改回 success** —— 选章未完成 = 核销没发生。
             //
             // 前后端契约:前端判据是 **data.needChapterChoice**,不是 code。定成这样是因为小程序
@@ -1213,7 +1225,7 @@ public class ApiRegistrationController extends BaseController {
      *
      * @return 与入参 {@code chapterIds} **同序等长**的列表(前端可能按下标回取 id)
      */
-    private List<Map<String, Object>> describeChapters(Long topicId, List<Long> chapterIds) {
+    private List<Map<String, Object>> describeChapters(Long topicId, Map<Long, Long> scannable) {
         Map<Long, String> names = new HashMap<>();
         CmsTopicChapter probe = new CmsTopicChapter();
         probe.setTopicId(topicId);
@@ -1226,11 +1238,16 @@ public class ApiRegistrationController extends BaseController {
             }
         }
         List<Map<String, Object>> out = new ArrayList<>();
-        for (Long id : chapterIds) {
+        for (Long id : scannable.keySet()) {
             Map<String, Object> m = new HashMap<>();
             m.put("id", id);
             String name = names.get(id);
             m.put("name", name != null ? name : ("章节 " + id));
+            if (scannable.get(id) != null) {
+                m.put("replayed", true);
+                m.put("redemptionId", scannable.get(id));
+                m.put("statusText", "已核销，不重复提供权益");
+            }
             out.add(m);
         }
         return out;
@@ -1478,6 +1495,13 @@ public class ApiRegistrationController extends BaseController {
                     registration.getId(), chapterId, merchantOwnerMemberId, e);
             return AjaxResult.error(e.getMessage());
         }
+        Map<String, Object> d = new HashMap<>();
+        d.put("redemptionId", redemption.getRedemptionId());
+        d.put("chapterId", chapterId);
+        if (redemption.isReplayed()) {
+            d.put("replayed", true);
+            return AjaxResult.success("该章节已核销，请勿重复提供权益", d);
+        }
         // 积分/勋章在事务外:幂等、非资金 —— 发分失败不该让已经成立的核销回滚(同 ①② 分支口径)。
         try {
             pointsAwardService.award(registration.getMemberId(), 11L, registration.getId(), "到店核销");
@@ -1493,9 +1517,7 @@ public class ApiRegistrationController extends BaseController {
             logger.error("探店章节收藏凭证写入失败 registrationId={} chapterId={}", registration.getId(), chapterId, e);
         }
         // 通关副作用已在 redeemExploreChapterAndRecord 的同一事务收口；这里不再吞异常或重复发奖。
-        Map<String, Object> d = new HashMap<>();
-        d.put("redemptionId", redemption.getRedemptionId());
-        d.put("chapterId", chapterId);
+
         if (redemption.getCompletionEarnedXp() > 0) {
             d.put("completionEarnedXp", redemption.getCompletionEarnedXp());
         }

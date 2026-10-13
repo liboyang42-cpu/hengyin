@@ -6,8 +6,8 @@
     </view>
     <scroll-view scroll-y="true" class="ap-body" enhanced="true" show-scrollbar="{{false}}">
       <cy-skeleton wx:if="{{loading}}" type="list" count="3" />
-      <cy-error wx:elif="{{errorMsg}}" title="活动列表没能打开" sub="{{errorMsg}}" retry="重试" bind:retry="fetchList" />
-      <cy-empty wx:elif="{{list.length === 0}}" title="还没有已通关的活动" sub="去打卡通关后再来关联吧" />
+      <cy-error load-failure wx:elif="{{errorMsg}}" title="活动列表没能打开" sub="{{errorMsg}}" retry="重试" bind:retry="fetchList" />
+      <cy-empty wx:elif="{{list.length === 0}}" title="暂无可关联的已完成活动或主题" sub="这里只显示当前可用于公开关联的已完成记录" />
       <block wx:else>
         <view class="ap-item" wx:for="{{list}}" wx:key="activityId" data-index="{{index}}" catchtap="onSelect" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">
           <image class="ap-cover" src="{{item.cover}}" mode="aspectFill" lazy-load="true" />

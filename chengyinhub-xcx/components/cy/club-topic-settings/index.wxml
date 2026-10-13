@@ -8,7 +8,7 @@
 >
   <view class="cts">
     <cy-skeleton wx:if="{{loadState === 'loading'}}" type="form-section" count="4" loading-label="正在读取主题设置" />
-    <cy-error wx:elif="{{loadState === 'error'}}" title="主题设置没能打开" sub="{{loadErrorText}}" retry="重试" bind:retry="onRetry" />
+    <cy-error load-failure wx:elif="{{loadState === 'error'}}" title="主题设置没能打开" sub="{{loadErrorText}}" retry="重试" bind:retry="onRetry" />
 
     <block wx:elif="{{loadState === 'ready'}}">
       <view class="cts__card">

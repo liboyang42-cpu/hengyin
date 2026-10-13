@@ -284,8 +284,8 @@ function loadTempPage() {
 
 test('编辑页:扫码段两组选项都是下拉,不是平铺芯片', () => {
   const wxml = read('pages/publish/temp/index.wxml')
-  const start = wxml.indexOf("gameSection === 'scan'")
-  const section = wxml.slice(start, wxml.indexOf('<view class="cg-gcfg"', start + 1))
+  const start = wxml.indexOf('wx:if="{{scanSheetOpen}}"')
+  const section = wxml.slice(start, wxml.indexOf('<!-- ============ R5 附加规则', start + 1))
   assert.doesNotMatch(section, /cg-chip/, '扫码段里不该再有平铺芯片')
   assert.match(section, /<cy-dropdown [^>]*range="\{\{scanKinds\}\}" range-key="label"[^>]*bind:change="pickScanKind"/)
   assert.match(section, /<cy-dropdown [^>]*range="\{\{scanArModes\}\}" range-key="label"[^>]*bind:change="pickScanArMode"/)

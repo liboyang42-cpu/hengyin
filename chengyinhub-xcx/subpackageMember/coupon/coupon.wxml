@@ -6,7 +6,7 @@
   <cy-page-title title="优惠券" />
 
 <cy-skeleton wx:if="{{loadState === 'loading'}}" type="list" count="3" />
-<cy-error wx:elif="{{loadState === 'error'}}" class="fill-slot cy-fade-in" fill size="lg" title="优惠券加载失败" sub="{{errorMsg}}" retry="重试" bind:retry="retryLoad" auto-back />
+<cy-error load-failure wx:elif="{{loadState === 'error'}}" class="fill-slot cy-fade-in" fill size="lg" title="优惠券加载失败" sub="{{errorMsg}}" retry="重试" bind:retry="retryLoad" auto-back />
 
 <view class="david" wx:else>
   <view class="david_tkb_li" bindtap="tpClick" data-item="{{item}}" wx:for="{{list}}" wx:key="id" hover-class="cy-pressed" hover-stay-time="80">

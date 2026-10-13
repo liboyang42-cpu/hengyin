@@ -11,10 +11,17 @@
  */
 const modal = require('../../../utils/modal.js');
 const toast = require('../../../utils/toast.js');
+const { chinaParts } = require('../../../utils/datetime.js');
 'use strict'
 
-const { createClubGameDirectorAdapter } = require('../utils/club-game-director-adapter.js')
+const { createClubGameDirectorAdapter, genericOpsActions, genericOpsFields, genericOpsPayload } = require('../utils/club-game-director-adapter.js')
 let requestSequence = 0
+
+function genericOpsForm(action, draft, control) {
+  let ready = action !== 'QUEST_GUIDE' && !(action === 'STAFF_MANUAL_SIGN' && draft.signedAction === 'QUEST_GUIDE')
+  if (!ready) try { genericOpsPayload(action, draft, control); ready = true } catch (_) {}
+  return { genericOpsFields: genericOpsFields(action, draft, control), genericOpsReady: ready }
+}
 
 function numeric(value) {
   return typeof value === 'number' && Number.isFinite(value) ? value : null
@@ -363,10 +370,10 @@ function clearPendingWrite(activityId) {
 // 组件与合同都按这些名字对。
 // 预计恢复时间:后端强制必填,不接受「暂停到不知道什么时候」。
 function resumeEtaIn(minutes) {
-  const d = new Date(Date.now() + minutes * 60 * 1000)
+  const d = chinaParts(Date.now() + minutes * 60 * 1000)
   const pad = function (n) { return n < 10 ? '0' + n : String(n) }
-  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate())
-    + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00'
+  return d.year + '-' + pad(d.month) + '-' + pad(d.day)
+    + ' ' + pad(d.hours) + ':' + pad(d.minutes) + ':00'
 }
 
 // Figma D8「现场事件」的事件清单。三类都从已有投影推出:
@@ -443,6 +450,18 @@ function incidentModesFor(row) {
 }
 
 const DIRECTOR_DATA = {
+    genericOpsKnown: false,
+    genericOpsActions: [],
+    genericOpsStatus: '',
+    genericOpsTeams: '',
+    genericOpsSheet: false,
+    genericOpsAction: '',
+    genericOpsTitle: '',
+    genericOpsDraft: {},
+    genericOpsFields: [],
+    genericOpsReady: false,
+    genericOpsError: '',
+    genericOpsLedgerRows: [],
     // 导航高度由宿主页(活动详情)提供,这里不重复取 —— 顺带让本模块不依赖
     // getApp(),可以被单测直接 require 进来跑状态机。
     loadState: 'loading',
@@ -616,10 +635,15 @@ const DIRECTOR_METHODS = {
     this._pendingReceiptIndex = pendingWrite
     this._unknownRequestId = pendingWrite ? pendingWrite.requestId : ''
     this._autoReceiptStarted = false
+    this._offlineAnchorPending = null
+    try {
+      const key = pendingWriteKey(activityId), pending = key ? wx.getStorageSync(key + ':offline-start') : null
+      if (pending && Number.isSafeInteger(pending.epoch) && pending.epoch > 0) this._offlineAnchorPending = pending
+    } catch (_) {}
     this.setData({
-      writeState: pendingWrite ? 'unknown-write' : 'idle',
-      writeMessage: pendingWrite ? '检测到上次未确认的操作，正在准备核对' : '',
-      writeLocked: !!pendingWrite,
+      writeState: pendingWrite || this._offlineAnchorPending ? 'unknown-write' : 'idle',
+      writeMessage: pendingWrite || this._offlineAnchorPending ? '检测到上次未确认的操作，正在准备核对' : '',
+      writeLocked: !!(pendingWrite || this._offlineAnchorPending),
       canRetryUnknownWrite: false,
     })
     if (!activityId) {
@@ -635,6 +659,7 @@ const DIRECTOR_METHODS = {
     this.setData({ loadState: 'loading', errorText: '' })
     this._getAdapter().load(this._activityId).then(function (projection) {
       that.applyProjection(projection)
+      if (typeof that.loadPlanFallback === 'function') that.loadPlanFallback()
     }).catch(function (error) {
       that.setData({
         loadState: classifyLoadError(error),
@@ -651,6 +676,7 @@ const DIRECTOR_METHODS = {
     const leaderboard = projection.leaderboard || null
     const leaderboardVisibleKnown = !!leaderboard && typeof leaderboard.visible === 'boolean'
     const recap = projection.recap || null
+    this._genericControl = projection.genericControl || null
     this._roleOptions = roleOptions
     this._takeoverTargetOptions = []
     this._broadcastTargetOptions = []
@@ -669,6 +695,11 @@ const DIRECTOR_METHODS = {
       errorText: '',
       sessionStatusText: statusText(projection.status),
       revision: projection.revision,
+      authorityEpoch: projection.authorityEpoch == null ? null : projection.authorityEpoch,
+      genericOpsKnown: !!this._genericControl,
+      genericOpsActions: this._genericControl ? genericOpsActions(this._genericControl) : [],
+      genericOpsStatus: this._genericControl ? this._genericControl.run.operationStatus + ' · ' + this._genericControl.run.authorityMode + ' · 权威 ' + this._genericControl.run.authorityEpoch : '',
+      genericOpsTeams: this._genericControl ? this._genericControl.teams.map(team => '队伍 ' + team.teamId + (team.exited ? '（已退出）' : '')).join(' · ') : '',
       chapterOptions: chapterOptions,
       chapterOptionLabels: chapterOptions.map(function (item) { return item.title }),
       readiness: readiness,
@@ -693,7 +724,7 @@ const DIRECTOR_METHODS = {
       broadcastBlocker: projection.broadcastBlocker || '',
       broadcastDisabledText: broadcastBlockerText(projection.broadcastBlocker, statusText(projection.status)),
       canBroadcast: hasAction(availableActions, 'BROADCAST') && !projection.broadcastBlocker,
-      canUnlockChapter: hasAction(availableActions, 'UNLOCK_CHAPTER') && chapterOptions.length > 0,
+      canUnlockChapter: !this._genericControl && hasAction(availableActions, 'UNLOCK_CHAPTER') && chapterOptions.length > 0,
       leaderboard: leaderboard,
       leaderboardVisibleKnown: leaderboardVisibleKnown,
       canToggleLeaderboard: leaderboardVisibleKnown && hasAction(availableActions, 'SET_LEADERBOARD_VISIBILITY'),
@@ -704,7 +735,7 @@ const DIRECTOR_METHODS = {
       canExportRecap: !!(recap && recap.exportAvailable === true),
       canFinish: hasAction(availableActions, 'FINISH'),
     }, function () {
-      if (that.data.writeLocked && that._unknownRequestId && !that._autoReceiptStarted) {
+      if (that.data.writeLocked && (that._unknownRequestId || that._offlineAnchorPending) && !that._autoReceiptStarted) {
         that._autoReceiptStarted = true
         that.onReconcileUnknownWrite()
       }
@@ -712,6 +743,142 @@ const DIRECTOR_METHODS = {
     // 角色/接管权限刚落地,立刻重算接管候选(守卫在宿主页,见 index.js)
     if (typeof this.refreshTakeoverCandidates === 'function') this.refreshTakeoverCandidates()
     if (typeof this.refreshTeamRows === 'function') this.refreshTeamRows()
+  },
+
+  openGenericOps(event) {
+    if (this.data.writeLocked || this.data.loadState !== 'ready' || !this._genericControl) return
+    const action = event && event.currentTarget && event.currentTarget.dataset.action
+    const option = genericOpsActions(this._genericControl).find(item => item.id === action)
+    if (!option) return
+    if (action === 'OFFLINE_ANCHOR') return this.startOfflineRecord()
+    const draft = { signedAction: 'ARRIVAL_ATTEST', reviewKind: 'HIGH_WATER', unknownRequests: '[]' }
+    this.setData(Object.assign({ genericOpsSheet: true, genericOpsAction: action, genericOpsTitle: option.title, genericOpsDraft: draft,
+      genericOpsError: '', genericOpsLedgerRows: [] }, genericOpsForm(action, draft, this._genericControl)))
+    if (!['MANUAL_BEGIN', 'STAFF_MANUAL_SIGN', 'MANUAL_IMPORT', 'MANUAL_REVIEW'].includes(action)) return
+    const revision = this.data.revision
+    this._getAdapter().loadSharedExport(this._activityId).then(snapshot => {
+      if (!this.data.genericOpsSheet || this.data.genericOpsAction !== action || this.data.revision !== revision) return
+      if (snapshot.revision !== revision || snapshot.authorityEpoch !== this.data.authorityEpoch) {
+        this.setData({ genericOpsError: '本局版本已变化，请关闭并重新读取' }); return
+      }
+      this._genericExport = snapshot
+      const filled = Object.assign({}, this.data.genericOpsDraft)
+      if (action === 'MANUAL_BEGIN') Object.assign(filled, { highWaterHash: snapshot.highWaterHash, configHash: snapshot.configHash })
+      if (action === 'STAFF_MANUAL_SIGN' && snapshot.manual) filled.sequence = snapshot.manual.nextSequence
+      const ledger = snapshot.manual || {}
+      const rows = Object.keys(ledger.signatures || {}).map(id => {
+        const signature = ledger.signatures[id]
+        return '签名 ' + id + ' · 序号 ' + signature.sequence + ' · ' + (signature.command && signature.command.action || '') + (signature.used ? ' · 已消费' : ' · 待处理')
+      }).concat((ledger.unknownRequests || []).map(item => '会员 ' + item.memberId + ' · 请求 ' + item.requestId + ' · ' + item.outcome))
+      this.setData(Object.assign({ genericOpsDraft: filled,
+        genericOpsLedgerRows: rows,
+        genericOpsError: snapshot.manual && snapshot.manual.needsReview ? '人工账高水位尚待复核，不能先签署或执行' : '' }, genericOpsForm(action, filled, this._genericControl)))
+    }).catch(error => this.setData({ genericOpsError: error.message || '本局账本未读到，请关闭后重试' }))
+  },
+
+  closeGenericOps() {
+    if (!this.data.writeLocked) this.setData({ genericOpsSheet: false })
+  },
+
+  startOfflineRecord() {
+    if (this.data.writeLocked || !this._genericControl || this._genericControl.offlineAnchorAvailable !== true) return false
+    const epoch = this.data.authorityEpoch, revision = this.data.revision
+    modal.show({ title: '开始离线记录', content: '记录当前进度后，按纸账记下现场操作。恢复网络后先暂停本局，再核对并导入已签记录。',
+      confirmText: '开始记录', cancelText: '暂不开始', success: result => {
+        if (!result.confirm || this.data.writeLocked) return
+        if (!this._genericControl || this._genericControl.offlineAnchorAvailable !== true || this.data.authorityEpoch !== epoch || this.data.revision !== revision) {
+          toast('本局状态已变化，请重新读取'); return
+        }
+        const key = pendingWriteKey(this._activityId)
+        if (!key) { toast('请先确认当前登录身份'); return }
+        try { wx.setStorageSync(key + ':offline-start', { epoch }) }
+        catch (_) { toast('无法保存核对状态，未开始离线记录'); return }
+        this._offlineAnchorPending = { epoch }
+        this.setData({ writeLocked: true, writeState: 'submitting', writeMessage: '正在确认离线记录起点…', canRetryUnknownWrite: false })
+        this._getAdapter().anchorSharedRun(this._activityId).then(response => {
+          if (response && response.status === 'business-error') {
+            this._clearOfflineAnchorPending()
+            this.setData({ writeLocked: false, writeState: 'idle', writeMessage: response.message || '离线记录未开始' })
+            toast(response.message || '离线记录未开始，请重新核对后再试')
+            this.loadProjection(); return
+          }
+          return this._reconcileOfflineAnchor()
+        }).catch(() => this._reconcileOfflineAnchor())
+      }
+    })
+    return true
+  },
+
+  _clearOfflineAnchorPending() {
+    try { wx.removeStorageSync(pendingWriteKey(this._activityId) + ':offline-start') } catch (_) {}
+    this._offlineAnchorPending = null
+  },
+
+  _reconcileOfflineAnchor() {
+    if (!this._offlineAnchorPending || this._offlineAnchorReading) return false
+    this._offlineAnchorReading = true
+    this._autoReceiptStarted = true
+    return this._getAdapter().load(this._activityId).then(projection => {
+      this.applyProjection(projection)
+      const control = projection.genericControl, anchor = control && control.offlineAnchor
+      if (!anchor || anchor.epoch !== this._offlineAnchorPending.epoch || anchor.epoch !== control.run.authorityEpoch
+        || !Number.isSafeInteger(anchor.at) || anchor.at < 1 || !/^[a-f0-9]{64}$/.test(anchor.highWaterHash || '') || !/^[a-f0-9]{64}$/.test(anchor.configHash || '')) {
+        this.setData({ writeLocked: true, writeState: 'unknown-write', writeMessage: '尚未读到本局离线记录，请核对结果；不会重复开始。', canRetryUnknownWrite: false })
+        return false
+      }
+      this._clearOfflineAnchorPending()
+      this.setData({ writeLocked: false, writeState: 'idle', writeMessage: '离线记录起点已确认；恢复网络后请先暂停并核对纸账。', canRetryUnknownWrite: false })
+      toast('离线记录起点已确认')
+      return true
+    }).catch(() => {
+      this.setData({ writeLocked: true, writeState: 'unknown-write', writeMessage: '离线记录结果待确认，请重新核对；不会重复开始。', canRetryUnknownWrite: false })
+      return false
+    }).finally(() => { this._offlineAnchorReading = false })
+  },
+
+  inputGenericOps(event) {
+    if (this.data.writeLocked) return
+    const key = event.currentTarget.dataset.key
+    const field = this.data.genericOpsFields.find(item => item.key === key)
+    if (!field) return
+    const value = field.options.length ? field.options[Number(event.detail.value)] : event.detail.value
+    const draft = Object.assign({}, this.data.genericOpsDraft, { [key]: value })
+    if (key === 'signedAction') {
+      for (const obsolete of ['teamId', 'questKey', 'operationKind', 'operationKey', 'nonce', 'reason']) delete draft[obsolete]
+    }
+    if (key === 'questKey' || key === 'signedAction') for (const answerKey of Object.keys(draft)) if (answerKey.startsWith('guide_')) delete draft[answerKey]
+    if (key === 'reviewKind') {
+      for (const obsolete of ['signatureId', 'memberId', 'requestId', 'acceptLateConflict']) delete draft[obsolete]
+    }
+    this.setData(Object.assign({ genericOpsDraft: draft, genericOpsError: '' }, genericOpsForm(this.data.genericOpsAction, draft, this._genericControl)))
+  },
+
+  confirmGenericOps() {
+    if (this.data.writeLocked || this.data.loadState !== 'ready' || !this._genericControl) return false
+    const action = this.data.genericOpsAction
+    const option = genericOpsActions(this._genericControl).find(item => item.id === action)
+    if (!option || this._genericControl.revision !== this.data.revision || this._genericControl.run.authorityEpoch !== this.data.authorityEpoch) return false
+    let payload
+    try { payload = genericOpsPayload(action, this.data.genericOpsDraft, this._genericControl) }
+    catch (error) { this.setData({ genericOpsError: error.message }); return false }
+    const revision = this.data.revision, epoch = this.data.authorityEpoch
+    modal.show({ title: '确认' + option.title,
+      content: (option.irreversible ? '此操作会写入不可撤销的现场事实。' : '将按本局规则核验并应用本次操作。') + (payload.reason ? '原因：' + payload.reason : '请确认现场凭证与输入准确。'),
+      confirmText: '确认提交',
+      success: result => {
+        if (!result.confirm || this.data.writeLocked) return
+        if (revision !== this.data.revision || epoch !== this.data.authorityEpoch || !genericOpsActions(this._genericControl).some(item => item.id === action)) {
+          this.setData({ genericOpsError: '场次状态已变化，请重新核对' }); return
+        }
+        this.setData({ genericOpsSheet: false })
+        this.executeAction(action, payload)
+      } })
+    return true
+  },
+
+  _readGenericUnknown() {
+    const command = this._pendingCommand
+    if (command && this._genericControl && genericOpsActions(this._genericControl).some(item => item.id === command.action)) this.onReconcileUnknownWrite()
   },
 
   openRoleAssignment(e) {
@@ -903,7 +1070,7 @@ const DIRECTOR_METHODS = {
       toast(this.data.broadcastDisabledText || '当前不能发送广播')
       return
     }
-    this.setData({ broadcastSheetVisible: true, broadcastDraft: { targetType: 'ALL', targetIndex: 0, content: '' } })
+    this.setData({ broadcastSheetVisible: true, broadcastDraft: Object.assign({ targetType: 'ALL', targetIndex: 0, content: '' }, this.data.broadcastDraft) })
     this._setBroadcastTargetType('ALL')
   },
 
@@ -1107,6 +1274,7 @@ const DIRECTOR_METHODS = {
       nodeId: nodeId == null ? null : nodeId,
       requestId: requestId,
       expectedRevision: this.data.revision,
+      ...(this.data.authorityEpoch != null ? { authorityEpoch: this.data.authorityEpoch } : {}),
       action: action,
       payload: payload || {},
     }
@@ -1138,14 +1306,18 @@ const DIRECTOR_METHODS = {
       return false
     }
     this._getAdapter().submit(command).then(function (result) {
-      if (result && (result.state === 'unknown-write' || result.state === 'business-error')) {
+      if (that._handleDirectorAuthorityConflict(result)) return
+      if (result && (result.state === 'unknown-write' || result.state === 'business-error'
+        || (command.action === 'PLAN_FALLBACK' || that._genericControl) && result.raw && result.raw.receipt && result.raw.receipt.replayed)) {
         that._unknownRequestId = requestId
         that.setData({
           writeState: 'unknown-write',
           writeMessage: '结果待核对，核对前已锁定全部写操作',
           writeLocked: true,
-          canRetryUnknownWrite: true,
+          canRetryUnknownWrite: command.action !== 'PLAN_FALLBACK',
         })
+        if (command.action === 'PLAN_FALLBACK') that.onReconcileUnknownWrite()
+        else that._readGenericUnknown()
         return
       }
       if (result && result.state === 'rejected') {
@@ -1164,6 +1336,8 @@ const DIRECTOR_METHODS = {
       that._pendingReceiptIndex = null
       that._unknownRequestId = ''
       that.setData({ writeState: 'idle', writeMessage: '', writeLocked: false, canRetryUnknownWrite: false })
+      if (command.action === 'BROADCAST') that.setData({ broadcastDraft: Object.assign({}, that.data.broadcastDraft, { content: '' }) })
+      if (command.action === 'PLAN_FALLBACK' && typeof that.applyPlanFallbackReceipt === 'function') that.applyPlanFallbackReceipt(result)
       that.loadProjection()
       // 写成功后主题维度的核销数/场次也变了,宿主页一起刷,别停在旧态
       if (typeof that.fetchDetail === 'function') that.fetchDetail()
@@ -1173,14 +1347,17 @@ const DIRECTOR_METHODS = {
         writeState: 'unknown-write',
         writeMessage: '请求结果待核对，核对前已锁定全部写操作',
         writeLocked: true,
-        canRetryUnknownWrite: true,
+        canRetryUnknownWrite: command.action !== 'PLAN_FALLBACK',
       })
       toast('结果待核对，请勿重复操作')
+      if (command.action === 'PLAN_FALLBACK') that.onReconcileUnknownWrite()
+      else that._readGenericUnknown()
     })
     return true
   },
 
   onReconcileUnknownWrite() {
+    if (this._offlineAnchorPending) return this._reconcileOfflineAnchor()
     if (!this.data.writeLocked || !this._unknownRequestId) return
     const that = this
     const requestId = this._unknownRequestId
@@ -1208,6 +1385,7 @@ const DIRECTOR_METHODS = {
         writeLocked: false,
         canRetryUnknownWrite: false,
       })
+      if (confirmed && pendingAction === 'PLAN_FALLBACK' && typeof that.applyPlanFallbackReceipt === 'function') that.applyPlanFallbackReceipt(result)
       toast(confirmed ? '结果已确认' : (rejectedActionText(pendingAction, result.raw) || '操作未生效'),
         { icon: confirmed ? 'success' : 'none' })
       that.loadProjection()
@@ -1220,7 +1398,23 @@ const DIRECTOR_METHODS = {
     })
   },
 
+  _handleDirectorAuthorityConflict(result) {
+    const raw = result && result.raw
+    if (!raw || raw.status !== 'business-error' || raw.reasonCode !== 'GAME_AUTHORITY_CONFLICT') return false
+    clearPendingWrite(this._activityId)
+    this._pendingCommand = null
+    this._pendingReceiptIndex = null
+    this._unknownRequestId = ''
+    this.setData({ writeState: 'idle', writeMessage: raw.message, writeLocked: false, canRetryUnknownWrite: false })
+    toast(raw.message || '本局权威版本已更新，请刷新')
+    this.loadProjection()
+    return true
+  },
+
   retryUnknownWrite() {
+    if (this._offlineAnchorPending) return this._reconcileOfflineAnchor()
+    if ((this._pendingCommand || this._pendingReceiptIndex || {}).action === 'PLAN_FALLBACK') return this.onReconcileUnknownWrite()
+    if (this._genericControl && this._pendingCommand && genericOpsActions(this._genericControl).some(item => item.id === this._pendingCommand.action)) return this.onReconcileUnknownWrite()
     const command = this._pendingCommand
     if (!this.data.writeLocked || this.data.writeState !== 'unknown-write' || !command) return false
     const that = this
@@ -1236,6 +1430,7 @@ const DIRECTOR_METHODS = {
     }
     this.setData({ writeState: 'submitting', writeMessage: '正在用原请求号重试…', writeLocked: true })
     this._getAdapter().submit(command).then(function (result) {
+      if (that._handleDirectorAuthorityConflict(result)) return
       if (!result || result.state === 'unknown-write' || result.state === 'business-error') {
         that.setData({
           writeState: 'unknown-write', writeMessage: '结果仍待核对，写操作继续锁定', writeLocked: true,

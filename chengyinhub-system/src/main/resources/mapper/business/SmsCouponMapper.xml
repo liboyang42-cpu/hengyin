@@ -37,7 +37,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <sql id="crmOwnedActiveCoupon">
         member_id = #{ownerMemberId} and merchant_id = #{merchantRowId}
-        and scope_type = 1 and status = 1 and del_flag = 0
+        and scope_type = 1 and <include refid="issuableCoupon"/>
+    </sql>
+
+    <sql id="issuableCoupon">
+        status = 1 and del_flag = 0
         and (enable_time is null or enable_time &lt;= now())
         and (start_time is null or start_time &lt;= now())
         and (end_time is null or end_time &gt; now())
@@ -59,7 +63,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <select id="selectSmsCouponList" parameterType="SmsCoupon" resultMap="SmsCouponResult">
         <include refid="selectSmsCouponVo"/>
-        <where>  
+        <where>
+            <if test="params.issuableOnly == true">and <include refid="issuableCoupon"/></if>
             <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
             <if test="couponType != null "> and coupon_type = #{couponType}</if>
             <if test="platform != null "> and platform = #{platform}</if>

@@ -21,6 +21,7 @@
     <result column="voice_id" property="voiceId"/>
     <result column="voice_status" property="voiceStatus"/>
     <result column="voice_sample" property="voiceSample"/>
+    <result column="voice_version" property="voiceVersion"/>
     <result column="merchant_name" property="merchantName"/>
   </resultMap>
 
@@ -105,12 +106,13 @@
     UPDATE npc_profile
     <set>
       voice_id = #{voiceId},
+      voice_version = voice_version + 1,
       <if test="voiceStatus != null">voice_status = #{voiceStatus},</if>
       <if test="voiceSample != null">voice_sample = #{voiceSample},</if>
       audit_status = 0,
       update_time = NOW()
     </set>
-    WHERE id = #{id} AND scope_id = #{scopeId} AND scope_type = 2 AND del_flag = '0'
+    WHERE id = #{id} AND scope_id = #{scopeId} AND scope_type = 2 AND del_flag = '0' AND voice_version = #{voiceVersion}
   </update>
 
   <update id="deleteMerchantNpcById">
@@ -202,11 +204,12 @@
     UPDATE npc_profile
     <set>
       voice_id = #{voiceId},
+      voice_version = voice_version + 1,
       <if test="voiceStatus != null">voice_status = #{voiceStatus},</if>
       <if test="voiceSample != null">voice_sample = #{voiceSample},</if>
       update_time = NOW()
     </set>
-    WHERE id = #{id} AND scope_type = 4 AND del_flag = '0'
+    WHERE id = #{id} AND scope_type = 4 AND del_flag = '0' AND voice_version = #{voiceVersion}
   </update>
 
   <!--

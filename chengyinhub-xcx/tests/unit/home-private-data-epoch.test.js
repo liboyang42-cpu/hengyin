@@ -251,16 +251,16 @@ test('消毒后的操作失败不能当成手机号写入', () => {
   assert.equal(page.data['userInfo.phone'], undefined)
 })
 
-test('开发预览的游客态不能重新注入示例用户身份', (t) => {
+test('开发环境首页也不注入示例用户或假公开列表', () => {
   const page = makePage()
   isDev = true
   userId = ''
 
-  page._applyIndexUiMock()
-  t.after(() => clearInterval(page.data.countdownTimer))
+  page._buildRecoHero = () => {}
+  page.onReady()
 
   assert.deepEqual(page.data.userInfo, { avatar: '', nickname: '', point: '0' })
-  assert.ok(page.data.nearbyActivityList.length > 0, '游客仍可预览公开首页内容')
+  assert.equal(page.data.nearbyActivityList.length, 0, '真实列表为空不能伪造公开内容')
 })
 
 test('游客态不重试私人资料请求，也不显示登录过期错误', () => {
@@ -300,3 +300,13 @@ test('推荐卡报名数读 signupCount，不读对不上后端的 enrollCount',
   page._buildRecoHero()
   assert.match(page.data.recoCards[0].metaLine, /28 人已报名/)
 })
+
+test('首页真实资料回读遵守账号稍后期限，已绑定不弹，换账号独立', () => {
+ const store = {}; wx.getStorageSync = key => store[key]; wx.setStorageSync = (key,value) => {store[key]=value};
+ userId='7'; const page=makePage(); page.getUserData();sent[0].success({code:200,data:{phone:''}});
+ assert.equal(page.data.showPhoneModal,true);page.closePhoneModal();
+ page.getUserData();sent[1].success({code:200,data:{phone:''}});assert.equal(page.data.showPhoneModal,false);
+ userId='8';page.getUserData();sent[2].success({code:200,data:{phone:''}});assert.equal(page.data.showPhoneModal,true);
+ page.getUserData();sent[3].success({code:200,data:{phone:'13800000000'}});assert.equal(page.data.showPhoneModal,false);
+ wx.getStorageSync=()=>'';wx.setStorageSync=()=>{};
+});

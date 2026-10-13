@@ -50,6 +50,8 @@ class OfficialInviteAcceptanceTest {
         registrationMapper = mock(CmsRegistrationMerchantMapper.class);
         merchantMapper = mock(MmsMerchantMapper.class);
         service = new CoopInviteServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "commercialReviewService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.ITopicCommercialReviewService.class));
         ReflectionTestUtils.setField(service, "coopInviteMapper", inviteMapper);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);

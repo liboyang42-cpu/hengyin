@@ -3,10 +3,7 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-  <view class="mp-empty" wx:if="{{notFound}}" style="padding-top:{{statusBarHeight + 120}}px" aria-role="alert" aria-live="polite">
-    <text class="mp-empty__t">这家的信息没拿到</text>
-    <text class="mp-empty__s">回上一页重新进一次</text>
-    <view class="mp-empty__b" bindtap="goBack" aria-role="button" aria-label="返回上一页" hover-class="cy-pressed" hover-stay-time="80">返回</view>
+  <view class="mp-empty" wx:if="{{notFound}}" style="padding-top:{{statusBarHeight + 120}}px" aria-hidden="true">
   </view>
 
   <block wx:else>

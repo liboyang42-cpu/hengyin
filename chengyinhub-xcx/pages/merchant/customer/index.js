@@ -183,9 +183,20 @@ Page({
       method: 'POST',
       success: (res) => {
         if (!isCurrent()) return;
-        const access = res && (res.code === '200' || res.code === 200)
-          ? normalizeMerchantAccess(res.data)
-          : normalizeMerchantAccess(null);
+        const validAccess = res && (res.code === '200' || res.code === 200)
+          && res.data && typeof res.data === 'object' && !Array.isArray(res.data)
+          && (res.data.active === true || res.data.active === false);
+        if (!validAccess) {
+          this._clearScopedData('', true);
+          this.setData({ loading: false, error: '经营身份加载失败，请稍后重试', noPermission: false });
+          return;
+        }
+        const access = normalizeMerchantAccess(res.data);
+        if (access.invalid) {
+          this._clearScopedData('', true);
+          this.setData({ loading: false, error: '经营身份加载失败，请稍后重试', noPermission: false });
+          return;
+        }
         if (!access.active || !access.canReadCrm) {
           this._invalidateScopeRequests();
           this._activeQueryKey = '';

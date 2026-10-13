@@ -35,7 +35,8 @@ function loadPage() {
   return { vm, requests };
 }
 
-test('主题日期与场次选项统一显示上海日历日，不随设备时区跨日', () => {
+test('主题日期与场次选项统一显示上海日历日，不随设备时区跨日', (t) => {
+  t.mock.method(Date, 'now', () => Date.parse('2026-09-01T00:00:00Z'));
   const previousTZ = process.env.TZ;
   try {
     for (const zone of ['America/Los_Angeles', 'UTC', 'Asia/Shanghai']) {
@@ -46,7 +47,7 @@ test('主题日期与场次选项统一显示上海日历日，不随设备时�
       vm.applyDetail({ status: 1, startDate: '2026-09-30 00:00:00', endDate: '2026-10-07 00:00:00',
         activityList: [{ id: 702, startDate: '2026-10-01 09:00:00', endDate: '2026-10-02 00:00:00' }] });
       assert.equal(vm.data.topic.dateRange, '9月30日 – 10月7日', zone);
-      assert.equal(vm.data.sessions[0].whenText, '10月1日 – 10月2日', zone);
+      assert.equal(vm.data.sessions[0].whenText, '10月1日 09:00', zone);
       assert.equal(vm.formatRange('2026-09-30T16:00:00Z', ''), '10月1日', zone);
       assert.equal(vm.formatRange('2026-02-30', null), '', zone);
     }
@@ -120,7 +121,8 @@ test('E-14:普通成员(非 owner)带 clubId 进详情:不出核销区、不出�
   assert.equal(vm.data.showVerify, false, 'projection 回来也不放行非管理者');
 });
 
-test('「接下来」段用 activityList 真实字段渲染(不再读幻字段 raw.sessions)', () => {
+test('「接下来」段用 activityList 真实字段渲染(不再读幻字段 raw.sessions)', (t) => {
+  t.mock.method(Date, 'now', () => Date.parse('2026-09-01T00:00:00Z'));
   const { vm } = loadPage();
   vm._topicId = 88; vm._clubId = 9;
   vm._manageStats = { canDirect: true, canManageSessions: true, canViewVerify: true };
@@ -560,4 +562,18 @@ test('商家403和报名参与者业务错误显示真实原因，重读不保�
   requests.at(-1).fail({ errMsg: 'request:fail' });
   assert.equal(vm.data.customerState, 'error');
   assert.equal(vm.data.customerErrorReason, '');
+});
+
+
+test('upcoming sessions exclude ended/cancelled facts and sort actual Beijing start time', (t) => {
+  t.mock.method(Date, 'now', () => Date.parse('2026-10-12T01:00:00Z'));
+  const { vm } = loadPage();
+  vm.applyDetail({ status: 1, activityList: [
+    { id: 4, startDate: '2026-10-13 12:00:00' },
+    { id: 2, startDate: '2026-10-12 11:00:00' },
+    { id: 1, startDate: '2026-10-11 11:00:00', endDate: '2026-10-11 12:00:00' },
+    { id: 3, cancelTime: '2026-10-11 10:00:00', startDate: '2026-10-12 10:00:00' }
+  ] });
+  assert.deepEqual(vm.data.sessions.map(row => row.id), [2, 4]);
+  assert.equal(vm.data.sessions[0].whenText, '10月12日 11:00');
 });

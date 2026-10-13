@@ -39,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @EnabledIfEnvironmentVariable(named = "CHENGYIN_FUNDS_MYSQL_IT", matches = "1")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -48,7 +49,9 @@ class RoamShareSnapshotConcurrencyMySqlIT {
     private JdbcTemplate db;
     private RoamShareSnapshotMapper snapshots;
     private UmsMemberMapper members;
+    private com.chengyinhub.business.mapper.RoamMapper roam;
     private DriverManagerDataSource source;
+    private com.chengyinhub.business.mapper.ConsentRecordMapper consents;
 
     @BeforeAll
     void setup() throws Exception {
@@ -65,20 +68,28 @@ class RoamShareSnapshotConcurrencyMySqlIT {
         db = new JdbcTemplate(source);
         db.execute(new String(Files.readAllBytes(Paths.get("sql/migration_20260917_roam_share_snapshot.sql")),
                 StandardCharsets.UTF_8));
+        db.execute("alter table roam_share_snapshot add session_id bigint null");
+        db.execute("create table roam_session(id bigint primary key, member_id bigint, status int, finished_at datetime) engine=InnoDB");
+        db.update("insert into roam_session values(12,9,1,now())");
         db.execute("create table ums_member(id bigint primary key) engine=InnoDB");
         db.update("insert into ums_member(id) values(9)");
+        db.execute("create table consent_record(id bigint auto_increment primary key,member_id bigint not null,doc_type varchar(32) not null,doc_version varchar(32) not null,scene varchar(32) not null,scope_type varchar(16),scope_id bigint,event_type varchar(16) not null,occurred_at datetime not null,request_id varchar(64) not null unique,ip_address varchar(64),create_time datetime not null) engine=InnoDB");
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(source);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
-        factory.setMapperLocations(new ClassPathResource("mapper/business/RoamShareSnapshotMapper.xml"),
-                new ClassPathResource("mapper/business/UmsMemberMapper.xml"));
+        factory.setMapperLocations(new ClassPathResource("mapper/business/ConsentRecordMapper.xml"),new ClassPathResource("mapper/business/RoamShareSnapshotMapper.xml"),
+                new ClassPathResource("mapper/business/UmsMemberMapper.xml"), new ClassPathResource("mapper/business/RoamMapper.xml"));
         SqlSessionTemplate session = new SqlSessionTemplate(factory.getObject());
+        consents=session.getMapper(com.chengyinhub.business.mapper.ConsentRecordMapper.class);
         snapshots = session.getMapper(RoamShareSnapshotMapper.class);
         members = session.getMapper(UmsMemberMapper.class);
+        roam = session.getMapper(com.chengyinhub.business.mapper.RoamMapper.class);
     }
 
     @BeforeEach
     void seed49() {
+        db.execute("delete from consent_record");
+        db.execute("insert into consent_record(member_id,doc_type,doc_version,scene,event_type,occurred_at,request_id,create_time) values(9,'privacy_policy','v-test','roam_location','AGREE',now(),'initial9',now())");
         db.update("delete from roam_share_snapshot");
         for (int i = 1; i <= 49; i++) {
             snapshots.upsertSnapshot(String.format("%032x", i), 9L, (long) i, "{\"ts\":3600000,\"track\":[],\"pois\":[]}");
@@ -128,10 +139,10 @@ class RoamShareSnapshotConcurrencyMySqlIT {
         CountDownLatch start = new CountDownLatch(1);
         ExecutorService workers = Executors.newFixedThreadPool(2);
         try {
-            Future<?> one = workers.submit(() -> { await(start); assertEquals(200, first.publish(100L, "{}").get("code")); });
+            Future<?> one = workers.submit(() -> { await(start); assertEquals(200, first.publish(100L,12L, "{}").get("code")); });
             start.countDown();
             assertTrue(firstCountReached.await(5, TimeUnit.SECONDS), "首请求未进入上限检查");
-            Future<?> two = workers.submit(() -> assertEquals(200, second.publish(101L, "{}").get("code")));
+            Future<?> two = workers.submit(() -> assertEquals(200, second.publish(101L,12L, "{}").get("code")));
             assertTrue(secondLockAttempted.await(5, TimeUnit.SECONDS), "第二请求未到达会员行锁");
             assertFalse(secondCountReached.await(300, TimeUnit.MILLISECONDS),
                     "首请求提交前第二请求已穿过会员行锁；移除锁时该负控必须变红");
@@ -155,7 +166,7 @@ class RoamShareSnapshotConcurrencyMySqlIT {
         snapshots.upsertSnapshot(String.format("%032x", 50), 9L, 50L,
                 "{\"ts\":3600000,\"track\":[],\"pois\":[]}");
         String existingToken = snapshots.selectTokenByMemberTs(9L, 25L);
-        assertEquals(200, controller(snapshots).publish(25L, "{\"routeName\":\"已更新\"}").get("code"));
+        assertEquals(200, controller(snapshots).publish(25L,12L, "{\"routeName\":\"已更新\"}").get("code"));
         assertEquals(50, snapshots.countByMember(9L));
         assertEquals(existingToken, snapshots.selectTokenByMemberTs(9L, 25L), "更新已有足迹必须复用令牌");
         assertNotNull(snapshots.selectTokenByMemberTs(9L, 1L), "更新已有 token 不得误删别条分享");
@@ -170,6 +181,10 @@ class RoamShareSnapshotConcurrencyMySqlIT {
             @Override Long uid() { return 9L; }
         };
         RoamShareSnapshotService target = new RoamShareSnapshotService(mapper, memberMapper);
+        ReflectionTestUtils.setField(target, "roamMapper", roam);
+        com.chengyinhub.common.config.ComplianceProperties properties=new com.chengyinhub.common.config.ComplianceProperties();
+        properties.setDocVersions(java.util.Map.of("privacy_policy","v-test"));
+        ReflectionTestUtils.setField(target,"locationConsent",new com.chengyinhub.business.service.impl.RoamLocationConsentService(roam,consents,properties));
         ProxyFactory proxy = new ProxyFactory(target);
         proxy.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(source),
                 new AnnotationTransactionAttributeSource()));
@@ -186,5 +201,16 @@ class RoamShareSnapshotConcurrencyMySqlIT {
             Thread.currentThread().interrupt();
             throw new IllegalStateException(interrupted);
         }
+    }
+
+    @Test void revokedRoamLocationCannotUploadANewTrajectoryButStoredSnapshotRemainsReadable() {
+        String existing=snapshots.selectSnapshotJsonByToken(String.format("%032x",1));
+        assertNotNull(existing);
+        db.update("insert into consent_record(member_id,doc_type,doc_version,scene,event_type,occurred_at,request_id,create_time) values(9,'privacy_policy','v-test','roam_location','REVOKE',now(),'revoke9',now())");
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                ()->controller(snapshots).publish(999L,12L,"{\"track\":[]}"));
+        assertNull(snapshots.selectTokenByMemberTs(9L,999L));
+        assertEquals(49,snapshots.countByMember(9L));
+        assertEquals(existing,snapshots.selectSnapshotJsonByToken(String.format("%032x",1)));
     }
 }

@@ -15,6 +15,8 @@ import com.chengyinhub.common.utils.spring.SpringUtils;
 import com.chengyinhub.quartz.domain.SysJob;
 import com.chengyinhub.quartz.domain.SysJobLog;
 import com.chengyinhub.quartz.service.ISysJobLogService;
+import com.chengyinhub.quartz.service.MySqlSchedulerCoordinator;
+import com.chengyinhub.quartz.service.impl.SysJobServiceImpl;
 
 /**
  * 抽象quartz调用
@@ -35,16 +37,29 @@ public abstract class AbstractQuartzJob implements Job
     {
         SysJob sysJob = new SysJob();
         Exception executionFailure = null;
+        java.util.concurrent.atomic.AtomicReference<Exception> failure = new java.util.concurrent.atomic.AtomicReference<>();
+        java.util.concurrent.atomic.AtomicBoolean invoked = new java.util.concurrent.atomic.AtomicBoolean();
         try
         {
             BeanUtils.copyBeanProp(sysJob, context.getMergedJobDataMap().get(ScheduleConstants.TASK_PROPERTIES));
-            before(context, sysJob);
-            doExecute(context, sysJob);
+            boolean executed = SpringUtils.getBean(MySqlSchedulerCoordinator.class).execute(
+                    sysJob.getInvokeTarget(), context.getScheduledFireTime(), () -> {
+                        if (!SpringUtils.getBean(SysJobServiceImpl.class).isCurrentInvocation(sysJob,
+                                Boolean.TRUE.equals(context.getMergedJobDataMap().get("chengyin.manualJobInvocation")))) return;
+                        invoked.set(true);
+                        before(context, sysJob);
+                        try { doExecute(context, sysJob); }
+                        catch (Exception original) { failure.set(original); }
+                    });
+            if (!executed || !invoked.get()) return;
+            executionFailure = failure.get();
         }
         catch (Exception e)
         {
             log.error("任务执行异常  - ：", e);
-            executionFailure = e;
+            executionFailure = failure.get();
+            if (executionFailure == null) executionFailure = e;
+            else executionFailure.addSuppressed(e);
         }
 
         try

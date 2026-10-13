@@ -84,7 +84,9 @@ class CoopDepositRefundMybatisIntegrationTest {
         wx=mock(IWechatPayService.class);alarms=mock(AlarmService.class);refunds=new CoopDepositRefundService();
         ReflectionTestUtils.setField(refunds,"mapper",mapper);ReflectionTestUtils.setField(refunds,"wechatPayService",wx);
         ReflectionTestUtils.setField(refunds,"transactionManager",manager);ReflectionTestUtils.setField(refunds,"alarmService",alarms);
-        invites=new CoopInviteServiceImpl();ReflectionTestUtils.setField(invites,"coopInviteMapper",mapper);
+        invites=new CoopInviteServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(invites, "commercialReviewService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.ITopicCommercialReviewService.class));ReflectionTestUtils.setField(invites,"coopInviteMapper",mapper);
         ReflectionTestUtils.setField(invites,"depositRefundService",refunds);ReflectionTestUtils.setField(invites,"wechatPayService",wx);
         when(wx.queryRefundFacts("RDEP1T100")).thenReturn(Collections.singletonMap("status","NOT_FOUND"));
         when(wx.submitRefund(anyString(),anyString(),any(),any(),anyString())).thenReturn(RefundRequestResult.ACCEPTED);

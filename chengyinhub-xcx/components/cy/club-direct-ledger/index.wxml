@@ -5,7 +5,7 @@
   </view>
   <text class="direct-sub">俱乐部直接付款</text>
   <cy-skeleton wx:if="{{state === 'loading'}}" type="amount" count="{{1}}" />
-  <cy-inline-error wx:elif="{{state === 'error'}}" title="计酬账目暂未取回" action="重试" bind:action="load" />
+  <cy-inline-error load-failure wx:elif="{{state === 'error'}}" title="计酬账目暂未取回" action="重试" bind:action="load" />
   <block wx:else>
     <view class="direct-stats">
       <view class="direct-stat" wx:for="{{ledger.stats}}" wx:key="key">

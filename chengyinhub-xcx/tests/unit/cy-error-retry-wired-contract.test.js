@@ -17,6 +17,7 @@ function walk(dir, out = []) {
 
 /** 一个 cy-error 标签是不是「按下去什么都不会发生」。 */
 function isDeadRetry(tag) {
+  if (/\bload-failure(?:="(?:\{\{true\}\}|true)")?(?=\s|\/?>)/.test(tag)) return false // 常量读失败留白，无按钮
   if (/bind:?retry/.test(tag)) return false        // 绑了监听 = 活的
   if (/retry\s*=\s*""/.test(tag)) return false     // 显式关掉按钮 = 压根不渲染
   // auto-back 走的是组件模板第一个分支(cy-error/index.wxml:2):原位只剩一块占位 + 零按钮

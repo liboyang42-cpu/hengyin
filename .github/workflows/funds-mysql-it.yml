@@ -31,10 +31,14 @@ on:
       # (零告警),WxPayment/WxContent/ActivityCancelFreeOrder 三套单改文件都不复验。
       - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/**'
       - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/*MybatisIT.java'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/*MySqlIT.java'
       # 2026-09-16 晚:暗测试 23 套入闸,其中 business/mapper/ 与 web/controller/api/ 两处
       # 原 glob 覆盖不到(RegistrationReadContract / RoamSessionWrite)。两处 filter 同步。
       - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/**'
       - 'chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/**'
+      - 'chengyinhub-admin/sql/migration_20261012_member_password_width.sql'
+      - 'chengyinhub-admin/sql/migration_20261012_roam_presence_revoke_intent.sql'
+      - 'chengyinhub-admin/sql/migration_20261012_roam_presence_revoke_job.sql'
       - 'chengyinhub-system/src/main/**'
       - 'chengyinhub-admin/sql/migration_*funds*.sql'
       - 'chengyinhub-admin/sql/migration_20260814_tandianri_product_type_backfill.sql'
@@ -44,7 +48,7 @@ on:
       - 'ci/test_funds_it_gate.py'
       - '.github/workflows/funds-mysql-it.yml'
   pull_request:
-    branches: [master]
+    branches: [master, feature/prelaunch-audit-1007]
 
 permissions:
   contents: read
@@ -146,7 +150,7 @@ jobs:
         if: steps.scope.outputs.run == 'true'
         with:
           distribution: temurin
-          java-version: '11'
+          java-version: '21'
       - name: Start Oracle MySQL 8.0.45 scratch
         id: mysql
         if: steps.scope.outputs.run == 'true'

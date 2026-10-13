@@ -41,7 +41,7 @@
       </view>
     </scroll-view>
 
-    <view class="fabu post compose">
+    <view class="fabu post compose" wx:if="{{communityPostWrite}}">
       <view class="compose-row">
         <image class="compose-avatar" src="{{avatar || '/images/d_profile.png'}}" mode="aspectFill" />
         <view class="compose-col">
@@ -121,6 +121,7 @@
 
     <view class="sq-refresh-status" wx:if="{{isRefreshing}}" aria-live="polite">正在刷新动态…</view>
 
+    <cy-empty wx:if="{{!communityPostRead}}" kind="no-permission" title="当前账号未开放社区" sub="其他城市探索功能仍可使用" />
     <view class="list">
       <cy-post-card wx:for="{{list}}" wx:key="id" post="{{item}}" index="{{index}}" user-id="{{userId}}"
         show-follow show-more show-share show-favorite interactive-actions interactive-user interactive-media
@@ -133,13 +134,13 @@
     </view>
 
     <view class="sq-load-more-status" wx:if="{{isLoadingMore && list.length}}" aria-live="polite">正在加载更多动态…</view>
-    <cy-inline-error class="sq-load-more-error" wx:if="{{loadMoreError}}" kind="network" title="更多动态没有加载出来" sub="{{loadMoreError}}" action="重试" bind:action="retryLoadMore" />
+    <cy-inline-error load-failure class="sq-load-more-error" wx:if="{{loadMoreError}}" kind="network" title="更多动态没有加载出来" sub="{{loadMoreError}}" action="重试" bind:action="retryLoadMore" />
 
     <!-- 首屏加载铺骨架(2026-08-03「loading 全骨架」裁决):在此之前这里是一片纯黑,
          A07 拍到的「广场加载态」就是那一屏什么都没有的黑。-->
     <cy-skeleton class="fill-slot" wx:if="{{listLoading && !list.length}}" type="post-card" count="{{3}}" />
-    <cy-error class="fill-slot" wx:if="{{loadError && !list.length}}" fill="{{true}}" size="lg" title="加载失败" sub="网络开了点小差，请稍后再试" bindretry="onLoadRetry" auto-back />
-    <cy-empty class="fill-slot" wx:if="{{nodata && !list.length && !loadError}}" fill="{{true}}" size="lg" icon="/images/no_data.svg" title="广场还很安静" sub="成为第一个发布创意路线的人吧" />
+    <cy-error load-failure class="fill-slot" wx:if="{{loadError && !list.length}}" fill="{{true}}" size="lg" title="加载失败" sub="网络开了点小差，请稍后再试" bindretry="onLoadRetry" auto-back />
+    <cy-empty class="fill-slot" wx:if="{{communityPostRead && nodata && !list.length && !loadError}}" fill="{{true}}" size="lg" icon="/images/no_data.svg" title="广场还很安静" sub="成为第一个发布创意路线的人吧" />
   </scroll-view>
 
   <activity-picker show="{{activityPickerShow}}" bind:select="onActivitySelect" bind:close="onActivityPickerClose" />
@@ -169,3 +170,6 @@
 <cy-result-sheet show="{{resultSheet.show}}" kind="{{resultSheet.kind}}" title="{{resultSheet.title}}"
   sub="{{resultSheet.sub}}" meta="{{resultSheet.meta}}" pill="{{resultSheet.pill}}" why="{{resultSheet.why}}"
   duration="{{resultSheet.duration}}" bind:close="onResultSheetClose" />
+
+<cy-option-sheet show="{{reportReasonShow}}" title="选择举报原因" items="{{reportReasonItems}}"
+  confirm-text="提交举报" bind:select="onReportReasonSelect" bind:cancel="onReportReasonCancel" />

@@ -64,11 +64,12 @@ function loadPage(relativePath, response, mutate, opts) {
   const navigations = [];
   const toasts = [];
   const modalCalls = [];
+  const clipboardCalls = [], backCalls = [];
   const app = {
-    globalData: {}, getUserID: () => 1,
+    globalData: {}, _memberId: 1, getUserID() { return this._memberId; },
     sendRequest(o) {
       requests.push(o);
-      if (o.url === '/api/coop/list') o.success(response);
+      if (o.url === '/api/coop/list' && !(opts && opts.manualList)) o.success(response);
     },
   };
   const file = path.join(ROOT, relativePath);
@@ -78,9 +79,9 @@ function loadPage(relativePath, response, mutate, opts) {
     wx: {
       stopPullDownRefresh() {},
       navigateTo(o) { navigations.push(o.url); if (o.complete) o.complete(); },
-      navigateBack() {},
+      navigateBack(o) { backCalls.push(o); },
       redirectTo(o) { navigations.push(o.url); },
-      setClipboardData() {},
+      setClipboardData(o) { clipboardCalls.push(o); },
     },
     setTimeout() {}, clearTimeout() {}, console,
     require(id) {
@@ -96,7 +97,7 @@ function loadPage(relativePath, response, mutate, opts) {
     },
   });
   const page = Object.assign({}, definition, { data: JSON.parse(JSON.stringify(definition.data)), setData(patch) { applyDataPatch(this.data, patch); } });
-  return { page, requests, navigations, toasts, modalCalls };
+  return { page, app, requests, navigations, toasts, modalCalls, clipboardCalls, backCalls };
 }
 
 // setData 支持 'perkTemplates[0].checked' 这类路径键,测试替身也得支持,否则负控会假绿
@@ -311,6 +312,7 @@ test('C1 取消已接受合作:前端发 message,后端读 body.getMessage();负
   assert.equal('handleReason' in payload, false, '取消分支不得再发 handleReason');
 
   // 修取消不许把拒绝一起改坏:后端拒绝分支读 handleReason,这条要一直发它
+  env.requests.find((r) => r.url === '/api/coop/handle').success({code:200});
   env.requests.length = 0;
   env.page.onDraftInput({ detail: { value: '测试理由' } });
   env.page._post(2);
@@ -368,8 +370,8 @@ test('C2 确认框点「取消」不得提交(接受/拒绝/撤回),点「确定
 
   // 负控:只把确认判据回退成 `if (ok)`,点取消的用例必须真红
   const broken = loadPage('pages/coop/invite-detail/index.js', inviteResponse(row), (source) => source.replace(
-    'success(ok) { if (ok && ok.confirm) onOk(); }',
-    'success(ok) { if (ok) onOk(); }',
+    'if (ok && ok.confirm) onOk();',
+    'if (ok) onOk();',
   ), { manualModal: true });
   broken.page.onLoad({ inviteId: '7', box: 'received' });
   broken.page.accept();
@@ -449,4 +451,237 @@ test('详情页:评价入口按角色取被评对象(收件箱评发起方,发�
   sent.page.reviewCoop();
   sent.page.onReviewSheetSelect({ detail: { index: 0 } });
   assert.equal(JSON.parse(sent.requests.find((r) => r.url === '/api/coop/review/save').data).toId, 31);
+});
+
+
+test('俱乐部发件方按 CLUB 范围打开已接受项目', () => {
+  const env = loadPage('pages/coop/invite-detail/index.js', inviteResponse({
+    id: 7, inviteId: '7', status: 1, inviteType: 1, topicId: 990033,
+    fromType: 'club', fromId: 990005, toType: 'club', toId: 7001,
+    topicName: '双场合作', shareMode: 0, depositOwed: false,
+  }));
+  env.page.onLoad({ inviteId: '7', box: 'sent' });
+  assert.equal(env.page.data.projectActionVisible, true);
+  env.page.openAcceptedProject();
+  assert.equal(env.navigations[0],
+    '/pages/topic/merchantinfo/merchantinfo?topicId=990033&scope=CLUB');
+});
+
+test('已接受邀约按当前箱侧真实club/merchant范围，未知主体不可打开', () => {
+  for (const sample of [
+    { box: 'received', inviteType: 0, fromType: 'merchant', toType: 'club', scope: 'CLUB' },
+    { box: 'sent', inviteType: 1, fromType: 'club', toType: 'merchant', scope: 'CLUB' },
+    { box: 'received', inviteType: 0, fromType: 'club', toType: 'merchant', scope: 'MERCHANT' },
+    { box: 'sent', inviteType: 1, fromType: 'merchant', toType: 'club', scope: 'MERCHANT' },
+    { box: 'sent', inviteType: 1, fromType: 'unknown', toType: 'club', scope: '' },
+  ]) {
+    const env = loadPage('pages/coop/invite-detail/index.js', inviteResponse({
+      id: 7, inviteId: '7', status: 1, topicId: 990033, topicName: '合作主题',
+      shareMode: 0, depositOwed: false, ...sample,
+    }));
+    env.page.onLoad({ inviteId: '7', box: sample.box });
+    assert.equal(env.page.data.projectActionVisible, !!sample.scope);
+    env.page.openAcceptedProject();
+    assert.deepEqual(env.navigations, sample.scope ? [
+      '/pages/topic/merchantinfo/merchantinfo?topicId=990033&scope=' + sample.scope,
+    ] : []);
+  }
+});
+
+test('俱乐部项目入口仍拒绝未接受、legacy及缺主题，不能由scope放行', () => {
+  for (const patch of [{ status: 0 }, { inviteType: 2 }, { topicId: null }]) {
+    const env = loadPage('pages/coop/invite-detail/index.js', inviteResponse({
+      id: 7, inviteId: '7', status: 1, inviteType: 1, topicId: 990033,
+      fromType: 'club', toType: 'club', topicName: '合作', shareMode: 0, ...patch,
+    }));
+    env.page.onLoad({ inviteId: '7', box: 'sent' });
+    env.page.openAcceptedProject(); assert.deepEqual(env.navigations, []);
+  }
+});
+
+function detailContextHarness(opts) {
+  const response = inviteResponse({ id:7, inviteId:'7', status:1, inviteType:1, topicId:8,
+    fromId:21, fromType:'club', toType:'club', partner:{name:'合作方'}, shareMode:0 });
+  const env = loadPage('pages/coop/invite-detail/index.js', response, null, opts);
+  env.page.onLoad({inviteId:'7',box:'received'});
+  return { ...env, response };
+}
+
+test('详情双刷新：晚到的旧状态不能覆盖新的已接受状态', () => {
+  const e = detailContextHarness({manualList:true});
+  const first = e.requests[0];
+  e.page.load();
+  const latest = e.requests.at(-1);
+  latest.success(e.response);
+  first.success(inviteResponse({id:7,inviteId:'7',status:2,inviteType:1}));
+  assert.equal(e.page.data.invite.status,1);
+  first.fail();
+  assert.equal(e.page.data.state,'ready');
+});
+
+test('详情换号后旧读取及失败不落到新账号页面', () => {
+  const e = detailContextHarness({manualList:true});
+  const old = e.requests[0];
+  e.app._memberId = 2;
+  e.page.onShow();
+  const current = e.requests.filter(r => r.url === '/api/coop/list').at(-1);
+  assert.notEqual(current,old,'返回页面后必须读当前账号');
+  current.success(inviteResponse({id:7,inviteId:'7',status:0,inviteType:1}));
+  old.success(e.response); old.fail();
+  assert.equal(e.page.data.invite.status,0);
+  assert.equal(e.page.data.state,'ready');
+});
+
+test('详情卸载后读取、评价和联系回包不修改页面或跳转', () => {
+  const e = detailContextHarness();
+  const review = e.requests.find(r => r.url === '/api/coop/review/summary');
+  e.page.contactPartner();
+  const contact = e.requests.at(-1);
+  e.page.load();
+  const list = e.requests.filter(r => r.url === '/api/coop/list').at(-1);
+  e.page.onUnload();
+  const before = JSON.stringify(e.page.data);
+  review.success({code:200,data:{reviews:[{fromId:1,topicId:8,rating:5}]}});
+  contact.success({code:200,data:{conversationId:91}}); contact.fail();
+  list.success(e.response); list.fail();
+  assert.equal(JSON.stringify(e.page.data),before);
+  assert.deepEqual(e.navigations,[]);
+  assert.deepEqual(e.toasts,[]);
+});
+
+test('详情换号后旧确认不提交，旧项目入口不导航', () => {
+  const e = detailContextHarness({manualModal:true});
+  e.page.cancelAccepted();
+  const confirm = e.modalCalls[0];
+  e.app._memberId = 2;
+  confirm.success({confirm:true,content:'旧账号取消理由'});
+  e.page.openAcceptedProject();
+  assert.equal(e.requests.filter(r => r.url === '/api/coop/handle').length,0);
+  assert.deepEqual(e.navigations,[]);
+});
+
+test('详情刷新替换邀约后旧接受确认不处理新邀约', () => {
+  const e = detailContextHarness({manualModal:true});
+  e.page.applyInvite({inviteId:'7',status:0,inviteType:1});
+  e.page.accept();
+  const confirm = e.modalCalls[0];
+  e.page.applyInvite({inviteId:'7',status:1,inviteType:1});
+  confirm.success({confirm:true});
+  assert.equal(e.requests.filter(r => r.url === '/api/coop/handle').length,0);
+});
+
+test('详情换号后供给模板回包不发起第二次关联读取', () => {
+  const e = detailContextHarness();
+  e.page.openPerkPick();
+  const templates = e.requests.at(-1);
+  e.app._memberId = 2;
+  templates.success({code:200,data:[{id:2,name:'权益',retailValue:68,quota:10}]});
+  assert.equal(e.requests.filter(r => r.url === '/api/coop/perks/list').length,0);
+});
+
+test('详情刷新后旧评价与供给回执、完成不覆盖新状态', () => {
+  const e = detailContextHarness();
+  e.page.reviewCoop(); e.page.onReviewSheetSelect({detail:{index:0}});
+  const review = e.requests.find(r => r.url === '/api/coop/review/save');
+  e.page.data.perkState = 'ready'; e.page.data.perkTemplates = [{id:2,checked:true}];
+  e.page.submitPerks();
+  const attach = e.requests.at(-1);
+  e.page.load();
+  const before = JSON.stringify(e.page.data);
+  review.success({code:200}); review.fail();
+  attach.success({code:200,data:{count:1}}); attach.complete();
+  assert.equal(JSON.stringify(e.page.data),before);
+  assert.deepEqual(e.toasts,[]);
+});
+
+test('详情换号后旧评价弹窗不能以新会话发出写入', () => {
+  const e = detailContextHarness({manualModal:true});
+  e.page.reviewCoop(); e.page.onReviewSheetSelect({detail:{index:0}});
+  const confirm = e.modalCalls[0];
+  e.app._memberId = 2;
+  confirm.success({confirm:true,content:'旧账号评价'});
+  assert.equal(e.requests.filter(r => r.url === '/api/coop/review/save').length,0);
+});
+
+test('详情正常同身份合作仍可提交与独立重新读取状态', () => {
+  const e = detailContextHarness({manualModal:true});
+  e.page.cancelAccepted();
+  e.modalCalls[0].success({confirm:true,content:'取消原因'});
+  const post = e.requests.find(r => r.url === '/api/coop/handle');
+  assert.deepEqual(JSON.parse(post.data),{id:'7',status:3,message:'取消原因'});
+  const count = e.requests.filter(r => r.url === '/api/coop/list').length;
+  post.success({code:200});
+  assert.equal(e.requests.filter(r => r.url === '/api/coop/list').length,count+1);
+  assert.equal(e.page.data.state,'ready');
+});
+
+test('详情旧处理回包不释放新一轮提交锁或触发刷新', () => {
+  const e = detailContextHarness({manualModal:true});
+  e.page.cancelAccepted(); e.modalCalls[0].success({confirm:true,content:'第一轮'});
+  const old = e.requests.find(r => r.url === '/api/coop/handle');
+  e.page.load();
+  e.page.cancelAccepted(); e.modalCalls[1].success({confirm:true,content:'第二轮'});
+  const current = e.requests.filter(r => r.url === '/api/coop/handle').at(-1);
+  const reads = e.requests.filter(r => r.url === '/api/coop/list').length;
+  old.success({code:200}); old.fail();
+  assert.equal(e.page.data.submitting,true);
+  assert.equal(e.requests.filter(r => r.url === '/api/coop/list').length,reads);
+  assert.deepEqual(e.toasts,[]);
+  current.fail();
+  assert.equal(e.page.data.submitting,false);
+  assert.equal(e.toasts.length,1);
+});
+
+test('详情同会员切角色后旧联系结果不跳转', () => {
+  const e = detailContextHarness();
+  e.page.contactPartner(); const old = e.requests.at(-1);
+  e.app.globalData.role = 'club';
+  old.success({code:200,data:{conversationId:91}}); old.fail();
+  assert.deepEqual(e.navigations,[]); assert.deepEqual(e.toasts,[]);
+});
+
+test('详情刷新后旧本人评分不覆盖最新评分', () => {
+  const e = detailContextHarness();
+  const old = e.requests.find(r => r.url === '/api/coop/review/summary');
+  e.page.load();
+  const current = e.requests.filter(r => r.url === '/api/coop/review/summary').at(-1);
+  current.success({code:200,data:{reviews:[{fromId:1,topicId:8,rating:2}]}});
+  old.success({code:200,data:{reviews:[{fromId:1,topicId:8,rating:5}]}});
+  assert.equal(e.page.data.myReviewStars,'★★');
+});
+
+test('详情隐藏后旧联系结果不抢占别的页面，返回后重新读取', () => {
+  const e = detailContextHarness();
+  e.page.contactPartner(); const old = e.requests.at(-1);
+  e.page.onHide();
+  old.success({code:200,data:{conversationId:91}});
+  assert.deepEqual(e.navigations,[]);
+  const reads = e.requests.filter(r => r.url === '/api/coop/list').length;
+  e.page.onShow();
+  assert.equal(e.requests.filter(r => r.url === '/api/coop/list').length,reads+1);
+  assert.equal(e.page.data.state,'ready');
+});
+
+test('详情换号后旧复制回执和保证金返回失败回调不提示或导航', () => {
+  const e = detailContextHarness();
+  e.page.data.invite.partnerPhone = '00000000000';
+  e.page.copyPhone(); e.page.goDeposit();
+  e.app._memberId = 2;
+  e.clipboardCalls[0].success(); e.clipboardCalls[0].fail();
+  e.backCalls[0].fail();
+  assert.deepEqual(e.toasts,[]); assert.deepEqual(e.navigations,[]);
+});
+
+test('详情同身份返回或刷新失败重试保留未提交理由，状态变化后不复用', () => {
+  const e = detailContextHarness({manualList:true});
+  const pending = inviteResponse({id:7,inviteId:'7',status:0,inviteType:1});
+  e.requests[0].success(pending);
+  e.page.onDraftInput({detail:{value:'尚未提交的理由'}});
+  e.page.onHide();
+  e.page.onShow();
+  e.requests.at(-1).fail();
+  e.page.retry(); e.requests.at(-1).success(pending);
+  assert.equal(e.page.data.draft,'尚未提交的理由');
+  e.page.load(); e.requests.at(-1).success(e.response);
+  assert.equal(e.page.data.draft,'');
 });

@@ -140,6 +140,49 @@ test('自由探索仅对开放承接的章节校验受控品类与容量', () =>
     '自由探索章节可作为路线分组；只有开启承接后才成为商家可选章节');
 });
 
+test('aiSimple 自由探索把节点物化为 blocks，create/update 都走 V2', () => {
+  for (const editingId of ['', '77']) {
+    const p = makeReadyPage();
+    p.data.aiSimple = true;
+    p.data.editingTopicId = editingId;
+    p.data.formData.productType = 2;
+    p.data.formData.chapters[0].nodes.forEach(node => {
+      node.templateId = 0;
+      node.templateInfo = {};
+    });
+    delete p.data.formData.chapters[0].blocks;
+
+    p._doSubmit();
+
+    const expectedEndpoint = editingId ? '/api/topic/v2/update' : '/api/topic/v2/create';
+    const request = sent.find(item => item.url === expectedEndpoint);
+    assert.ok(request, `aiSimple 自由探索节点流必须走 ${expectedEndpoint}`);
+    const payload = JSON.parse(request.data);
+    assert.equal(payload.publishMode, 'ai_simple');
+    assert.equal(payload.id, editingId || undefined);
+    assert.ok(payload.chapters[0].nodes.every(node => node.templateId === 0
+      && Number.isFinite(Number(node.longitude)) && Number.isFinite(Number(node.latitude))),
+    '冻结请求还必须满足 aiSimple 后端的无玩法、已确认地点合同');
+    assert.deepEqual(payload.chapters[0].blocks.map(block => block.type),
+      ['text', 'node', 'node']);
+    assert.deepEqual(payload.chapters[0].blocks.slice(1).map(block => block.nodeIndex), [0, 1]);
+    sent = [];
+  }
+});
+
+test('pro 剧情路由保留旧 productType 的 opening/ending/blocks 判定', () => {
+  const p = makeReadyPage();
+  const submitted = p.getPublishWorkflow().submit({
+    publishMode: 'pro',
+    productType: 0,
+    chapters: [{ opening: true, blocks: [] }]
+  });
+
+  assert.equal(submitted, true);
+  assert.ok(sent.find(item => item.url === '/api/topic/v2/create'),
+    '旧 productType 只要 pro 章节含 opening/ending/blocks，仍必须走 V2');
+});
+
 // ===== onLoad 顺序:AI 草稿 vs starter 灌注 =====
 
 test('onLoad:AI 草稿当场生效、被消费掉、且不触发 starter 灌注', () => {

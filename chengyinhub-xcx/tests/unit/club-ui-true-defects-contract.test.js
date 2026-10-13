@@ -139,6 +139,45 @@ function formSnapshot(component) {
   return Object.fromEntries(fields.map((field) => [field, component.data[field]]))
 }
 
+test('club edit required inputs reject blank and whitespace without altering the draft', () => {
+  for (const field of ['name', 'city']) {
+    for (const value of ['', '   ', '\t\n']) {
+      const { component, requests } = loadEditScene()
+      Object.assign(component.data, { loadState: 'ready', name: '测试俱乐部', city: '测试城市' })
+      component.onInput({ currentTarget: { dataset: { field } }, detail: { value } })
+      assert.equal(component.data.canSave, false, `${field} must reject whitespace-only input`)
+      assert.equal(component.data[field], value, 'validation must preserve the original input')
+      component.save()
+      assert.equal(requests.length, 0, 'invalid required inputs must not submit')
+    }
+  }
+})
+
+test('club edit valid boundary spaces remain in the normal save payload and recover after failure', () => {
+  const { component, requests } = loadEditScene()
+  Object.assign(component.data, { loadState: 'ready', clubId: 990005, description: '原简介', saveErrorText: '上次保存失败' })
+  const name = '  测试俱乐部  '
+  const city = ' 测试城市 '
+  component.onInput({ currentTarget: { dataset: { field: 'name' } }, detail: { value: name } })
+  component.onInput({ currentTarget: { dataset: { field: 'city' } }, detail: { value: city } })
+  assert.equal(component.data.canSave, true)
+  assert.equal(component.data.saveErrorText, '')
+  component.save()
+  assert.equal(requests.length, 1)
+  const payload = JSON.parse(requests[0].data)
+  assert.equal(payload.name, name)
+  assert.equal(payload.city, city)
+  assert.equal(payload.address, city)
+  assert.equal(payload.description, '原简介')
+  requests[0].success({ data: { code: 500, msg: '保存失败' } })
+  assert.equal(component.data.name, name)
+  assert.equal(component.data.city, city)
+  assert.equal(component.data.saving, false)
+  component.onInput({ currentTarget: { dataset: { field: 'name' } }, detail: { value: name } })
+  assert.equal(component.data.saveErrorText, '')
+  assert.equal(component.data.canSave, true)
+})
+
 function assertEditErrorViewContract(wxml, json, js) {
   const skeletonComponent = json.usingComponents && json.usingComponents['cy-skeleton']
   const errorComponent = json.usingComponents && json.usingComponents['cy-error']

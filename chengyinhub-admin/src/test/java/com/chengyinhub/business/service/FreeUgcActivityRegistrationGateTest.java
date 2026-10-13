@@ -48,6 +48,8 @@ class FreeUgcActivityRegistrationGateTest {
     private CommercialTopicPolicy commercialTopicPolicy;
     private CmsRegistrationServiceImpl service;
     private OmsTicket ticket;
+    private CmsActivity activity;
+    private com.chengyinhub.business.mapper.ClubMemberMapper clubMemberMapper;
 
     @BeforeEach
     void setUp() {
@@ -74,7 +76,10 @@ class FreeUgcActivityRegistrationGateTest {
             ReflectionTestUtils.setField(service, "commercialTopicPolicy", commercialTopicPolicy);
         }
 
-        CmsActivity activity = new CmsActivity();
+        clubMemberMapper = mock(com.chengyinhub.business.mapper.ClubMemberMapper.class);
+        ReflectionTestUtils.setField(service, "clubMemberMapper", clubMemberMapper);
+        ReflectionTestUtils.setField(service, "clubMapper", mock(com.chengyinhub.business.mapper.ClubMapper.class));
+        activity = new CmsActivity();
         activity.setId(ACTIVITY);
         activity.setName("自办派生活动");
         activity.setTopicId(TOPIC);
@@ -87,6 +92,34 @@ class FreeUgcActivityRegistrationGateTest {
         ticket = ticket(TICKET, BigDecimal.ZERO);
         when(ticketMapper.selectOmsTicketById(TICKET)).thenReturn(ticket);
         when(ticketMapper.selectOmsTicketList(any(OmsTicket.class))).thenReturn(Arrays.asList(ticket));
+    }
+
+    @Test
+    void clubOutsiderCannotQuoteCreateOrRetryPayment() {
+        activity.setClubId(73L);
+        activity.setMemberId(42L);
+        assertEquals("请先加入俱乐部再报名", register().getMessage());
+        assertEquals("请先加入俱乐部再报名", quoteRejected().getMessage());
+        com.chengyinhub.business.domain.CmsRegistration order = new com.chengyinhub.business.domain.CmsRegistration();
+        order.setOwnerType(2L);
+        order.setOwnerId(ACTIVITY);
+        order.setMemberId(2L);
+        RuntimeException rejected = assertThrows(RuntimeException.class, () ->
+                ReflectionTestUtils.invokeMethod(service, "validateRegistrationSellableNow", order, new Date()));
+        assertEquals("请先加入俱乐部再报名", rejected.getMessage());
+        org.mockito.Mockito.verifyNoInteractions(ticketMapper);
+    }
+
+    @Test
+    void clubCreatorAndActiveMemberKeepNormalQuoteAccess() {
+        givenTopic(0, 1, CommercialTopicPolicy.Evaluation.ugc());
+        activity.setClubId(73L);
+        activity.setMemberId(2L);
+        assertEquals(0, BigDecimal.ZERO.compareTo(service.quoteRegistration(2L, 2, ACTIVITY, TICKET, null, 0).getPayAmount()));
+        verify(clubMemberMapper, never()).selectByClubAndMember(any(), any());
+        activity.setMemberId(42L);
+        when(clubMemberMapper.selectByClubAndMember(73L, 2L)).thenReturn(new com.chengyinhub.business.domain.ClubMember());
+        assertEquals(0, BigDecimal.ZERO.compareTo(service.quoteRegistration(2L, 2, ACTIVITY, TICKET, null, 0).getPayAmount()));
     }
 
     private static OmsTicket ticket(Long id, BigDecimal price) {

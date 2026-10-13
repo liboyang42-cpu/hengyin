@@ -6,7 +6,7 @@
   <cy-page-title title="我发布的" />
   <scroll-view scroll-y class="om-scroll">
     <cy-skeleton wx:if="{{loading && !hasLoaded}}" type="list" count="3" />
-    <cy-error class="cy-fade-in" wx:elif="{{error && !hasLoaded}}" fill size="lg" title="发布记录加载失败" sub="{{error}}" bind:retry="fetch" auto-back />
+    <cy-error load-failure class="cy-fade-in" wx:elif="{{error && !hasLoaded}}" fill size="lg" title="发布记录加载失败" sub="{{error}}" bind:retry="fetch" auto-back />
     <block wx:else>
       <view wx:if="{{refreshing}}" class="om-sync" aria-role="status" aria-live="polite">正在更新发布记录…</view>
       <view class="om-sec">我发起的活动 · {{events.length}}</view>

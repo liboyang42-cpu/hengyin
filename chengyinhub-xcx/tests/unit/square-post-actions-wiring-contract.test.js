@@ -80,6 +80,7 @@ function loadPage(relativePath, opts) {
   let definition;
   const absolutePath = path.join(ROOT, relativePath);
   const app = {
+    canUseCommunity: () => true, // Current-account server-open fixture.
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
     getUserID: () => 1,
     getAvatar: () => '',
@@ -116,7 +117,7 @@ function loadPage(relativePath, opts) {
     console,
     getApp: () => app,
     Page: (config) => { definition = config; },
-    require: createRequire(absolutePath),
+    require: (id) => id.includes('community-post-api') ? require('../helpers/community-page-seam') : createRequire(absolutePath)(id),
     setTimeout() {}, clearTimeout() {}, setInterval() {}, clearInterval() {},
     wx: wxApi,
   }, { filename: absolutePath });
@@ -161,7 +162,7 @@ test('详情:作者点删除走 /api/creativesquare/delete,成功后落到「暂
   const write = h.requests.find((r) => r.url === '/api/creativesquare/delete');
   assert.ok(write, '确认后必须发删除请求');
   assert.equal(String(write.data.id), '77', '删的必须是这一条');
-  write.success({ code: '200' });
+  write.success({ code: '200', data: { lifecycle: 'PUBLISHED' } });
   assert.equal(h.page.data.detailState, 'empty', '删除成功后详情切「暂不可用」,不能留一条已删帖在页上');
 
   // 负控:把 URL 变异成别的端点,「必须发删除请求」这条断言真红
@@ -240,7 +241,7 @@ test('列表:more 解析当前行的 id/归属;删除摘行、编辑开面板、
   const write = h.requests.find((r) => r.url === '/api/creativesquare/delete');
   assert.ok(write, '列表删除必须发删除请求');
   assert.equal(String(write.data.id), '11');
-  write.success({ code: '200' });
+  write.success({ code: '200', data: { lifecycle: 'PUBLISHED' } });
   assert.deepEqual(h.page.data.list.map((item) => item.id), [12], '删除成功后本地摘掉这一行');
   assert.equal(h.page.data.postActionShow, false);
 

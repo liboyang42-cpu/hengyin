@@ -338,6 +338,9 @@ class ClubEventOpsServiceImplTest {
         assertEquals(1, rows.size());
         assertEquals(Long.valueOf(61L), rows.get(0).getId());
         assertEquals(Collections.singletonList(future.toString()), detail.getFutureDates());
+        Date tomorrow = Date.from(LocalDate.now(ZoneId.of("Asia/Shanghai")).plusDays(1)
+                .atStartOfDay(ZoneId.of("Asia/Shanghai")).toInstant());
+        verify(mapper).selectFutureOccurrences(61L, CLUB, tomorrow);
         assertEquals(Integer.valueOf(0), detail.getVersion());
         verify(accessService, org.mockito.Mockito.times(2))
                 .require(ACTOR, CLUB, null, ClubPermission.ACTIVITY_MANAGE);

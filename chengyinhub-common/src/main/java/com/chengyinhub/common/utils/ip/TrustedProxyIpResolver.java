@@ -3,7 +3,7 @@ package com.chengyinhub.common.utils.ip;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /** Resolves client IP only across the production local-Nginx trust boundary. */
 public final class TrustedProxyIpResolver

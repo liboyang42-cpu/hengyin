@@ -12,6 +12,7 @@ let pageConfig;
 let requests;
 
 global.getApp = () => ({
+  getUserID: () => 7, // Explicit authenticated wall reader fixture.
   sendRequest(options) { requests.push(options); },
 });
 
@@ -406,7 +407,7 @@ test('列表视图没有 WebGL 引擎时仍可打开勋章详情', () => {
 function assertErrorRetryContract(wxml) {
   assert.match(wxml, /wx:if="\{\{loadFail \|\| partialFail \|\| \(glFail && viewMode === 'wall'\)\}\}"/);
   assert.match(wxml, /glFail \? '勋章墙渲染失败'/);
-  assert.match(wxml, /<cy-error class="bw-error-state"[\s\S]*retry="重试" bind:retry="loadData"/);
+  assert.match(wxml, /<cy-error load-failure="\{\{loadFail && !wallAuthRequired && !wallAccessDenied\}\}" class="bw-error-state"[\s\S]*retry="\{\{wallAuthRequired \? \'登录\' : \'重试\'\}\}" bind:retry="retryWall"/);
   assert.match(wxml, /<scroll-view class="bw-list" scroll-y wx:if="\{\{viewMode === 'list' && badges\.length && !loadFail && !partialFail\}\}"/);
   assert.doesNotMatch(wxml, /bw-err-btn|class="bw-err"/);
 }
@@ -625,4 +626,83 @@ test('★勋章没名字时的兜底名也不写「城市身份卡」;截图素�
     const b66 = src.split('\n').filter((l) => /B66/.test(l) || /badgeGroups: \[\{ key: 'identity'/.test(l)).join('\n');
     assert.ok(!/城市身份卡/.test(b66), f + ' 的 B66 还写着城市身份卡');
   }
+});
+
+
+test('勋章墙卸载后双源成功或失败均不写退役页面，重开实例保持正控', async () => {
+  for (const outcome of ['success', 'fail']) {
+    requests = [];
+    const retired = loadPage();
+    retired.loadData();
+    const pending = requests.slice();
+    let retiredWrites = 0;
+    const retiredSetData = retired.setData;
+    retired.setData = (...args) => { retiredWrites += 1; retiredSetData(...args); };
+    let stopped = 0;
+    let destroyed = 0;
+    retired.engine = { stop() { stopped += 1; }, destroy() { destroyed += 1; } };
+    retired.onUnload();
+    requests = [];
+    const current = loadPage();
+    await loadWall(current, { medals: [] }, { identity: [{ badgeCode: 'CURRENT', badgeName: '当前身份卡', category: 'EXPLORE', unlocked: true }] });
+    current.openSheet(0);
+    const currentState = JSON.stringify(current.data);
+    pending[0].success({ code: 200, data: { medals: [] } });
+    if (outcome === 'fail') pending[1].fail();
+    else pending[1].success({ code: 200, data: { identity: [{ badgeCode: 'OLD', badgeName: '旧身份卡', category: 'EXPLORE', unlocked: true }] } });
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.equal(retiredWrites, 0, outcome + ': unload 后不能 setData');
+    assert.equal(retired.engine, null);
+    assert.equal(stopped, 1);
+    assert.equal(destroyed, 1);
+    assert.equal(current.data.loaded, true);
+    assert.equal(current.data.sheet.name, '当前身份卡');
+    assert.equal(JSON.stringify(current.data), currentState);
+  }
+});
+
+test('勋章墙连续刷新只接收最新请求，旧成功或失败不能清除当前详情', async () => {
+  for (const outcome of ['success', 'fail']) {
+    requests = [];
+    const page = loadPage();
+    page.loadData();
+    const old = requests.slice();
+    requests = [];
+    await loadWall(page, { medals: [] }, { identity: [{ badgeCode: 'NEW', badgeName: '新身份卡', category: 'EXPLORE', unlocked: true }] });
+    page.openSheet(0);
+    const before = JSON.stringify(page.data);
+    old[0].success({ code: 200, data: { medals: [] } });
+    if (outcome === 'fail') old[1].fail();
+    else old[1].success({ code: 200, data: { identity: [] } });
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.equal(page.data.sheet.name, '新身份卡');
+    assert.equal(JSON.stringify(page.data), before, '旧回包不能覆盖或清空新快照');
+  }
+});
+
+test('勋章墙卸载后迟到 canvas 查询与后续初始化均不再写页面', () => {
+  const originalQuery = wx.createSelectorQuery;
+  let queryCallback;
+  let queryCount = 0;
+  wx.createSelectorQuery = () => {
+    queryCount += 1;
+    const q = { in: () => q, select: () => q, fields: () => q, exec(cb) { queryCallback = cb; } };
+    return q;
+  };
+  try {
+    const page = loadPage();
+    page.data.viewMode = 'wall';
+    page.initCanvas();
+    assert.equal(queryCount, 1);
+    assert.equal(typeof queryCallback, 'function');
+    page.onUnload();
+    let writes = 0;
+    const originalSetData = page.setData;
+    page.setData = (...args) => { writes += 1; originalSetData(...args); };
+    queryCallback([null]);
+    page.initCanvas();
+    assert.equal(writes, 0, '迟到查询不能在 unload 后写 glFail');
+    assert.equal(queryCount, 1, '卸载后不得启动新查询');
+    assert.equal(page.engine, undefined);
+  } finally { wx.createSelectorQuery = originalQuery; }
 });

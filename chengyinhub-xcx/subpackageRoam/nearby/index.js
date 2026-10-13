@@ -4,6 +4,7 @@
 // 纯函数在 utils/map-team.js(卡片五态 / errorCode 分支 / P6 三态)与 utils/roam-hangout*.js(主题点位 canvas),本文件只做接线。
 // ⚠️ 失败只按 errorCode 分支(map-team.resolveTeamError),走 cy-result-sheet 失败半屏,不解析 msg。
 const app = getApp();
+const session = require('../../utils/session/login-reload.js');
 const { MAP_STYLE } = require('../../utils/map-style.js');
 const { getCurrentLocation } = require('../../utils/location/location-manager.js');
 const { isRecordList } = require('../../utils/response-shape.js');
@@ -52,9 +53,11 @@ Page({
     scale: 14,
     markers: [],
     circles: [],
-    headerText: T.headerText(0),
+    headerText: '附近的队伍',
+    nearbyReadAccess: '',
     rangeText: T.rangeText(DEFAULT_RADIUS),
-    myTeamsText: T.myTeamsText(0),
+    myTeamsText: '我的队伍',
+    myReadAccess: '', myReadError: false, myLoaded: false,
     rangeItems: RANGE_ITEMS,
     rangeIndex: T.RADII.indexOf(DEFAULT_RADIUS),
     rangeSheetShow: false,
@@ -97,9 +100,14 @@ Page({
   },
 
   /* 买完票回到地图,卡片要从「去买这场的票」变成「申请加入」(P2 底注):回前台重拉一次。 */
-  onShow() { if (this._shownOnce) this.refresh(this.data.center); this._shownOnce = true; },
+  onShow() { this._hidden = false;
+    if (this._nearbyReadOwner && this._nearbyReadOwner !== this._myIdentity()) this._resetNearbyRead(this._myIdentity());
+    if (this._shownOnce) this.refresh(this.data.center); this._shownOnce = true;
+    if (this._myReadOwner && this._myReadOwner !== this._myIdentity()) this.loadMyTeams(false);
+  },
+  onHide() { this._hidden = true; },
 
-  onUnload() { if (this._regionTimer) clearTimeout(this._regionTimer); },
+  onUnload() { this._unloaded = true; if (this._regionTimer) clearTimeout(this._regionTimer); },
 
   goBack() {
     if (getCurrentPages().length > 1) wx.navigateBack();
@@ -107,46 +115,128 @@ Page({
   },
 
   refresh(center) {
+    if (!this._prepareNearbyRead()) return;
     this.fetchTeams(center, this._radius);
     this.fetchTopics(center, this._radius);
   },
 
-  retryNearby() { this.refresh(this.data.center); },
+  retryNearby() {
+    if (this.data.nearbyReadAccess === 'login') {
+      return session.retryLogin(this, app, function () { this.refresh(this.data.center); });
+    }
+    this.refresh(this.data.center);
+  },
 
   /* ---------- 数据 ---------- */
 
+  _resetNearbyRead(owner) {
+    this._nearbyReadOwner = owner;
+    this._teamSeq = (this._teamSeq || 0) + 1;
+    this._topicSeq = (this._topicSeq || 0) + 1;
+    this._nearbyTeamsLoaded = false;
+    this._nearbyFailures = { teams: false, topics: false };
+    this._teams = []; this._items = []; this._icons = {}; this._far = {}; this._iconFailed = {}; this._selfIcon = '';
+    this.setData({ headerText: '附近的队伍', nearbyReadAccess: '', loadError: false,
+      current: null, topic: null, applicants: [], leaderSub: '', leaderFoot: '', sheet: '', sheetIn: false });
+    this._syncMarkers();
+  },
+
+  _prepareNearbyRead() {
+    if (this._unloaded) return null;
+    const owner = this._myIdentity();
+    if (this._nearbyReadOwner !== owner) this._resetNearbyRead(owner);
+    if (!session.memberId(app)) {
+      this._resetNearbyRead(owner);
+      this.setData({ nearbyReadAccess: 'login' });
+      return null;
+    }
+    return owner;
+  },
+
+  _nearbyCurrent(layer, owner, seq) {
+    return !this._unloaded && owner === this._nearbyReadOwner && owner === this._myIdentity()
+      && seq === (layer === 'teams' ? this._teamSeq : this._topicSeq);
+  },
+
+  _nearbyOutcome(layer, owner, seq, res, statusCode) {
+    if (this._unloaded || owner !== this._nearbyReadOwner
+        || seq !== (layer === 'teams' ? this._teamSeq : this._topicSeq)) return true;
+    const nextOwner = this._myIdentity();
+    // 真实 request-client 重登失败会先清旧会话；仍必须清掉页面私有快照。
+    if (owner !== nextOwner) {
+      this._resetNearbyRead(nextOwner);
+      if (!session.memberId(app)) this.setData({ nearbyReadAccess: 'login' });
+      else if (!this._hidden && owner.split('|')[0] === String(session.memberId(app))) this.refresh(this.data.center);
+      return true;
+    }
+    const code = session.failureStatus(res, statusCode);
+    if (code !== 401 && code !== 403) return false;
+    this._resetNearbyRead(nextOwner);
+    this.setData({ nearbyReadAccess: code === 401 ? 'login' : 'denied' });
+    return true;
+  },
+
+  _nearbyLayerResult(layer, failed) {
+    this._nearbyFailures = this._nearbyFailures || { teams: false, topics: false };
+    this._nearbyFailures[layer] = !!failed;
+    this.setData({ loadError: this._nearbyFailures.teams || this._nearbyFailures.topics });
+  },
+
   fetchTeams(center, radius) {
     const that = this;
+    const owner = this._prepareNearbyRead();
+    if (!owner) return;
     const seq = (this._teamSeq = (this._teamSeq || 0) + 1);
+    this._nearbyTeamsLoaded = false;
+    this.setData({ headerText: '附近的队伍', nearbyReadAccess: '' });
+    this._nearbyLayerResult('teams', false);
+    const current = () => that._nearbyCurrent('teams', owner, seq);
+    const failed = (res, status) => {
+      if (that._nearbyOutcome('teams', owner, seq, res, status)) return;
+      that._teams = []; that._nearbyTeamsLoaded = false;
+      that.setData({ headerText: '附近的队伍' }); that._syncMarkers(); that._nearbyLayerResult('teams', true);
+    };
     app.sendRequest({
       url: '/api/team/nearby', method: 'GET', hideLoading: true, silentError: true,
       data: { lat: center.lat, lng: center.lng, radius },
       success(res) {
-        if (seq !== that._teamSeq) return;   // 拖图过程中的旧响应丢弃
-        if (!(res && res.code == 200 && Array.isArray(res.data))) { that.setData({ loadError: true }); return; }
-        that._teams = res.data.filter(Boolean);
+        if (that._nearbyOutcome('teams', owner, seq, res)) return;
+        if (!(res && res.code == 200 && isRecordList(res.data))) { failed(res); return; }
+        that._teams = res.data; that._nearbyTeamsLoaded = true; that._nearbyLayerResult('teams', false);
         that._syncTeams(); if (that._requestedTeamId) { const teamId = that._requestedTeamId; that._requestedTeamId = null; that.openTeam(teamId); }
-        that._queueIcons(() => that._genTeamIcons()).then((made) => { if (made && seq === that._teamSeq) that._syncMarkers(); });
+        that._queueIcons(() => current() ? that._genTeamIcons(current) : false).then((made) => { if (made && current()) that._syncMarkers(); });
       },
-      fail() { if (seq === that._teamSeq) that.setData({ loadError: true }); },
+      fail: failed,
+      successStatusAbnormal: failed,
     });
   },
 
   /* 主题 / 活动点位沿用漫游附近接口;接口里存量的局(kind=hangout)不再画 —— 地图上不存在「局」了。 */
   fetchTopics(center, radius) {
     const that = this;
+    const owner = this._prepareNearbyRead();
+    if (!owner) return;
     const seq = (this._topicSeq = (this._topicSeq || 0) + 1);
+    this._nearbyLayerResult('topics', false);
+    const current = () => that._nearbyCurrent('topics', owner, seq);
+    const failed = (res, status) => {
+      if (that._nearbyOutcome('topics', owner, seq, res, status)) return;
+      that._items = []; that._syncMarkers(); that._nearbyLayerResult('topics', true);
+    };
     app.sendRequest({
       url: '/api/roam/hangout/nearby', method: 'GET', hideLoading: true, silentError: true,
       data: { lat: center.lat, lng: center.lng, radius },
       success(res) {
-        if (seq !== that._topicSeq) return;
+        if (that._nearbyOutcome('topics', owner, seq, res)) return;
         const d = res && res.code == 200 && res.data ? res.data : null;
-        if (!d) return;                      // 主题层拉不到只是少一层点,队伍层照常
-        that._items = (isRecordList(d.items) ? d.items : []).filter((it) => it && it.kind !== 'hangout');
+        if (!d || !isRecordList(d.items)) { failed(res); return; }
+        that._items = d.items.filter((it) => it.kind !== 'hangout'); that._nearbyLayerResult('topics', false);
         that._syncMarkers();
-        that._queueIcons(() => that._genIcons(that._items)).then((made) => { if (made && seq === that._topicSeq) that._syncMarkers(); });
+        const items = that._items;
+        that._queueIcons(() => current() ? that._genIcons(items, current) : false).then((made) => { if (made && current()) that._syncMarkers(); });
       },
+      fail: failed,
+      successStatusAbnormal: failed,
     });
   },
 
@@ -155,7 +245,7 @@ Page({
     const cur = this.data.current;
     const row = cur && teams.find((t) => String(t.teamId) === String(cur.teamId));
     const next = row ? T.decorateTeam(row) : cur;
-    this.setData({ loadError: false, headerText: T.headerText(teams.length), current: next,
+    this.setData({ headerText: this._nearbyTeamsLoaded ? T.headerText(teams.length) : '附近的队伍', current: next,
       leaderSub: next ? T.leaderSub(next) : '', leaderFoot: next ? T.leaderFoot(next) : '' });
     // 卡片开着的那支队伍刷新后不在了(满员 / 开场 / 审核中,服务端已过滤):卡上的「申请加入」已经不成立,收掉
     if (cur && !row && this.data.sheet === 'team') this.closeSheet();
@@ -202,31 +292,44 @@ Page({
   },
 
   /* 队伍点位:圆头像(队长)+ 人数角标。头像下不来就画首字,一个点都不少。 */
-  async _genTeamIcons() {
+  async _genTeamIcons(current = () => !this._unloaded) {
+    if (!current()) return false;
     const need = (this._teams || []).filter((t) => !this._icons[T.teamIconKey(t)]).slice(0, M.ICON_MAX);
     const wantFar = !this._far[MAP_AVATAR_COLORS.cream];
     if (!need.length && !wantFar) return false;
     let made = 0;
     try {
       const cv = await this._canvas();
+      if (!current()) return false;
       if (wantFar) {
         cv.width = 28; cv.height = 28;
-        try { M.drawFarDot(cv.getContext('2d'), 28, MAP_AVATAR_COLORS.cream); this._far[MAP_AVATAR_COLORS.cream] = await this._save(cv); made++; } catch (e) { /* 兜底图 */ }
+        try {
+          M.drawFarDot(cv.getContext('2d'), 28, MAP_AVATAR_COLORS.cream);
+          const icon = await this._save(cv); if (!current()) return false;
+          this._far[MAP_AVATAR_COLORS.cream] = icon; made++;
+        } catch (e) { if (!current()) return false; /* 兜底图 */ }
       }
       const S = 108; cv.width = S; cv.height = S;
       const g = cv.getContext('2d');
       for (const t of need) {
+        if (!current()) return false;
         let img = null;
         const url = t.leaderAvatar ? app.getImgUrl(t.leaderAvatar) : '';
-        if (url && !this._iconFailed[url]) { try { img = await this._loadImage(cv, url); } catch (e) { this._iconFailed[url] = true; } }
-        try { M.drawMarker(g, S, T.teamMarkerSpec(t), img); this._icons[T.teamIconKey(t)] = await this._save(cv); made++; } catch (e) { /* 留给远距点 */ }
+        if (url && !this._iconFailed[url]) { try { img = await this._loadImage(cv, url); } catch (e) { if (!current()) return false; this._iconFailed[url] = true; } }
+        if (!current()) return false;
+        try {
+          M.drawMarker(g, S, T.teamMarkerSpec(t), img);
+          const icon = await this._save(cv); if (!current()) return false;
+          this._icons[T.teamIconKey(t)] = icon; made++;
+        } catch (e) { if (!current()) return false; /* 留给远距点 */ }
       }
     } catch (e) { /* canvas 拿不到:全部走远距点 */ }
     return made > 0;
   },
 
   /* 主题 / 活动点位(照片瓦片 + 玩法描边),画法与漫游同源。 */
-  async _genIcons(raw) {
+  async _genIcons(raw, current = () => !this._unloaded) {
+    if (!current()) return false;
     const need = new Map();
     const farNeed = new Set();
     (raw || []).forEach((it) => {
@@ -241,23 +344,40 @@ Page({
     let made = 0;
     try {
       const cv = await this._canvas();
+      if (!current()) return false;
       cv.width = 28; cv.height = 28;
       let g = cv.getContext('2d');
       for (const color of farNeed) {
-        try { M.drawFarDot(g, 28, color); this._far[color] = await this._save(cv); made++; } catch (e) { /* 兜底图 */ }
+        if (!current()) return false;
+        try {
+          M.drawFarDot(g, 28, color);
+          const icon = await this._save(cv); if (!current()) return false;
+          this._far[color] = icon; made++;
+        } catch (e) { if (!current()) return false; /* 兜底图 */ }
       }
       const S = 108; cv.width = S; cv.height = S;
       g = cv.getContext('2d');
       if (wantSelf) {
         let me = null;
         const av = app.getImgUrl(app.globalData.avatar || '');
-        if (av && !this._iconFailed[av]) { try { me = await this._loadImage(cv, av); } catch (e) { this._iconFailed[av] = true; } }
-        try { M.drawMarker(g, S, { role: 'player', state: 'joined', color: MAP_AVATAR_COLORS.player, initial: '我', self: true }, me); this._selfIcon = await this._save(cv); made++; } catch (e) { /* 没有自己的点也不影响队伍 */ }
+        if (av && !this._iconFailed[av]) { try { me = await this._loadImage(cv, av); } catch (e) { if (!current()) return false; this._iconFailed[av] = true; } }
+        if (!current()) return false;
+        try {
+          M.drawMarker(g, S, { role: 'player', state: 'joined', color: MAP_AVATAR_COLORS.player, initial: '我', self: true }, me);
+          const icon = await this._save(cv); if (!current()) return false;
+          this._selfIcon = icon; made++;
+        } catch (e) { if (!current()) return false; /* 没有自己的点也不影响队伍 */ }
       }
       for (const [key, n] of need) {
+        if (!current()) return false;
         let img = null;
-        if (n.url && !this._iconFailed[n.url]) { try { img = await this._loadImage(cv, n.url); } catch (e) { this._iconFailed[n.url] = true; } }
-        try { M.drawMarker(g, S, n.spec, img); this._icons[key] = await this._save(cv); made++; } catch (e) { /* 留给远距点 */ }
+        if (n.url && !this._iconFailed[n.url]) { try { img = await this._loadImage(cv, n.url); } catch (e) { if (!current()) return false; this._iconFailed[n.url] = true; } }
+        if (!current()) return false;
+        try {
+          M.drawMarker(g, S, n.spec, img);
+          const icon = await this._save(cv); if (!current()) return false;
+          this._icons[key] = icon; made++;
+        } catch (e) { if (!current()) return false; /* 留给远距点 */ }
       }
     } catch (e) { /* canvas 拿不到:全部走远距点 */ }
     return made > 0;
@@ -341,7 +461,7 @@ Page({
     const cur = this.data.current;
     if (cur) this._teams = (this._teams || []).filter((t) => String(t.teamId) !== String(cur.teamId));
     this.closeSheet();
-    this.setData({ headerText: T.headerText((this._teams || []).length) });
+    this.setData({ headerText: this._nearbyTeamsLoaded ? T.headerText((this._teams || []).length) : '附近的队伍' });
     this._syncMarkers();
   },
 
@@ -468,27 +588,64 @@ Page({
   },
 
   /* 角控件计数也靠它:onLoad 静默拉一次(不弹失败),打开 P6 / 撤回后再拉。 */
+  _myIdentity() { return [session.memberId(app), (app.globalData || {}).authorization || ''].join('|'); },
+  loginForMyTeams() {
+    if (this.data.myReadAccess === 'denied') return;
+    return session.retryLogin(this, app, function () { this.loadMyTeams(true); });
+  },
   loadMyTeams(showFail) {
-    this.setData({ myLoading: true });
+    const owner = this._myIdentity();
+    const seq = this._myReadSeq = (this._myReadSeq || 0) + 1;
+    if (this._myReadOwner !== owner) this.setData({ myRows: [], myLoaded: false, myTeamsText: '我的队伍' });
+    this._myReadOwner = owner;
+    if (!session.memberId(app)) {
+      this.setData({ myLoading: false, myReadAccess: 'login', myReadError: false }); return;
+    }
+    this.setData({ myLoading: true, myReadAccess: '', myReadError: false });
     const that = this;
     let joined = null; let apps = null; let pending = 2;
+    const current = () => !that._unloaded && seq === that._myReadSeq && owner === that._myIdentity();
+    const auth = (res, status) => {
+      if (that._unloaded || seq !== that._myReadSeq) return true;
+      if (owner !== that._myIdentity() || res && res.reason === 'sessionChanged') {
+        that._myReadSeq += 1;
+        that.setData({ myRows: [], myLoaded: false, myTeamsText: '我的队伍', myLoading: false,
+          myReadAccess: session.memberId(app) ? '' : 'login', myReadError: false });
+        if (!that._hidden && session.memberId(app)) that.loadMyTeams(showFail);
+        return true;
+      }
+      const code = session.failureStatus(res, status);
+      if (code !== 401 && code !== 403) return false;
+      that._myReadSeq += 1;
+      that.setData({ myRows: [], myLoaded: false, myTeamsText: '我的队伍', myLoading: false,
+        myReadAccess: code === 401 ? 'login' : 'denied', myReadError: false });
+      return true;
+    };
     const settle = () => {
+      if (!current()) return;
       pending -= 1;
       if (pending) return;
+      if (joined == null && apps == null) {
+        that.setData({ myLoading: false, myReadError: true });
+        if (showFail) that._showFail(T.resolveTeamError('my', null));
+        return;
+      }
       const rows = T.myTeamRows(joined || [], apps || []);
-      that.setData({ myRows: rows, myLoading: false, myTeamsText: T.myTeamsText(rows.filter((r) => r.tone !== 'bad').length) });
-      if (showFail && joined == null && apps == null) that._showFail(T.resolveTeamError('my', null));
+      const complete = joined != null && apps != null;
+      that.setData({ myRows: rows, myLoading: false, myLoaded: complete, myReadError: !complete,
+        myTeamsText: complete ? T.myTeamsText(rows.filter((r) => r.tone !== 'bad').length) : '我的队伍' });
     };
-    // 两条都读不到时 settle 里弹失败半屏;只读到一条就先显示那一条。
     app.sendRequest({
       url: '/api/team/my', method: 'POST', hideLoading: true, silentError: true, data: JSON.stringify({}), header: JSON_HEADER,
-      success(res) { if (res && res.code == 200 && Array.isArray(res.data)) joined = res.data; settle(); },
-      fail() { settle(); },
+      success(res) { if (auth(res)) return; if (res && res.code == 200 && Array.isArray(res.data)) joined = res.data; settle(); },
+      fail(res, status) { if (!auth(res, status)) settle(); },
+      successStatusAbnormal(res, status) { if (!auth(res, status)) settle(); },
     });
     app.sendRequest({
       url: '/api/team/my-applications', method: 'POST', hideLoading: true, silentError: true, data: JSON.stringify({}), header: JSON_HEADER,
-      success(res) { if (res && res.code == 200 && Array.isArray(res.data)) apps = res.data; settle(); },
-      fail() { settle(); },
+      success(res) { if (auth(res)) return; if (res && res.code == 200 && Array.isArray(res.data)) apps = res.data; settle(); },
+      fail(res, status) { if (!auth(res, status)) settle(); },
+      successStatusAbnormal(res, status) { if (!auth(res, status)) settle(); },
     });
   },
 

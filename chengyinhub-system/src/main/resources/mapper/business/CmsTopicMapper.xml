@@ -718,8 +718,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         limit #{limit}
     </select>
 
-    <select id="selectPublicCmsTopicList" parameterType="CmsTopic" resultMap="CmsTopicResult">
-        <include refid="selectCmsTopicVo"/>
+    <sql id="publicTopicListWhere">
         <where>
             status = 1 and user_status = 1 and del_flag = 0
             <!-- 模板是创作者侧素材,有自己的货架(/api/template/*)。玩家侧四个消费方
@@ -757,6 +756,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="isLike == 1"> and id in (select data_id from cms_topic_like where member_id=#{isLikeMemberId})</if>
             and <include refid="clubMemberOnlyGate"/>
         </where>
+    </sql>
+
+    <!-- PageHelper 优先使用显式 COUNT，避免反复解析公开列表复杂 SQL；两者共用同一可见性谓词。 -->
+    <select id="selectPublicCmsTopicList_COUNT" parameterType="CmsTopic" resultType="Long">
+        select count(*) from cms_topic
+        <include refid="publicTopicListWhere"/>
+    </select>
+
+    <select id="selectPublicCmsTopicList" parameterType="CmsTopic" resultMap="CmsTopicResult">
+        <include refid="selectCmsTopicVo"/>
+        <include refid="publicTopicListWhere"/>
         <!-- club_pinned 只在俱乐部自己的列表里有意义:不限定 clubId 时按它排,
              等于让某个俱乐部的置顶浮到全站推荐流最前面。 -->
         order by <if test="clubId != null">coalesce(club_pinned, 0) desc, </if>id desc

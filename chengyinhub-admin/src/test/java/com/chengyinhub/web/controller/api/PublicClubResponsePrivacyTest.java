@@ -1,6 +1,8 @@
 package com.chengyinhub.web.controller.api;
 
 import com.chengyinhub.business.domain.Club;
+import com.chengyinhub.business.domain.ClubMember;
+import com.chengyinhub.business.domain.vo.PublicClubVO;
 import com.chengyinhub.business.service.IClubLeaderService;
 import com.chengyinhub.business.service.IClubMemberService;
 import com.chengyinhub.business.service.IClubService;
@@ -87,6 +89,31 @@ class PublicClubResponsePrivacyTest {
 
         assertEquals("PublicClubVO", result.get("data").getClass().getSimpleName());
         assertPublicJsonIsSafe(new ObjectMapper().writeValueAsString(result));
+    }
+
+    @Test
+    void rejectedJoinReasonBelongsOnlyToTheAuthenticatedApplicant() throws Exception {
+        when(clubService.selectClubById(42L)).thenReturn(sensitiveClub);
+        ClubMember rejected = new ClubMember();
+        rejected.setStatus(2);
+        rejected.setReviewReason("本人的入会申请未通过说明");
+        rejected.setReviewerMemberId(778899L);
+        doReturn(101L).when(controller).getAppUserId();
+        when(memberService.selectMembershipRecord(42L, 101L)).thenReturn(rejected);
+        Club request = new Club(); request.setId(42L);
+        PublicClubVO mine = (PublicClubVO) controller.detail(request).get("data");
+        assertEquals("本人的入会申请未通过说明", mine.getMyJoinReviewReason());
+        String membershipJson = new ObjectMapper().writeValueAsString(rejected);
+        assertFalse(membershipJson.contains("本人的入会申请未通过说明"));
+        assertFalse(membershipJson.contains("778899"));
+
+        doReturn(102L).when(controller).getAppUserId();
+        PublicClubVO other = (PublicClubVO) controller.detail(request).get("data");
+        assertEquals("", other.getMyJoinReviewReason());
+        assertFalse(new ObjectMapper().writeValueAsString(other).contains("本人的入会申请未通过说明"));
+        doThrow(new RuntimeException("anonymous")).when(controller).getAppUserId();
+        PublicClubVO anonymous = (PublicClubVO) controller.detail(request).get("data");
+        assertEquals("", anonymous.getMyJoinReviewReason());
     }
 
     @Test

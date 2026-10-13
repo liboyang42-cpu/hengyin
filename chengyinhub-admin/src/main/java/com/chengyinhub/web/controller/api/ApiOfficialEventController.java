@@ -103,7 +103,7 @@ public class ApiOfficialEventController extends BaseController {
         return err == null ? success("报名成功") : error(err);
     }
 
-    @Operation(summary = "完成一个活动任务(progress+1)")
+    @Operation(summary = "旧版完成入口提示（不写进度或奖励）")
     @PostMapping("/events/{id}/complete")
     public AjaxResult complete(@PathVariable("id") Long id) {
         Long memberId = uid();

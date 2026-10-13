@@ -114,6 +114,7 @@ function normalizePersistedCommand(value, activityId) {
     nodeId,
     requestId,
     expectedRevision,
+    ...(value.authorityEpoch != null ? { authorityEpoch: value.authorityEpoch } : {}),
     action,
     payload: JSON.parse(JSON.stringify(value.payload)),
   }
@@ -315,7 +316,8 @@ Page({
       fallbackOptions,
       summary: summary || summarizeMerchantProjection(projection),
       recap: station.recap,
-      readyDraft: {
+      readyDraft: this._authorityConflictReadyDraft && this._authorityConflictReadyDraft.nodeId === station.nodeId
+        ? this._authorityConflictReadyDraft.draft : {
         checklist,
         capacity: station.capacity == null ? '' : String(station.capacity),
         serviceDate: serviceDraft.serviceDate,
@@ -324,6 +326,11 @@ Page({
         note: '',
       },
     })
+    if (this._preservedReadyDraft && this._preservedReadyDraft.nodeId === station.nodeId) {
+      this.setData({ readyDraft: this._preservedReadyDraft.draft })
+      this._preservedReadyDraft = null
+    }
+    this._authorityConflictReadyDraft = null
     if (this._focusPause) {
       this._focusPause = false
       // canPause 为假就不弹,并说明为什么 —— 静默不弹会让人以为点错了行
@@ -676,11 +683,14 @@ Page({
       task.then(done)
       return task
     }, (result) => {
+      if (this._handleAuthorityConflict(result, pendingWrite)) return
       const applied = result && result.status === 'success'
         && matchingTerminalReceipt(result, pendingWrite, 'APPLIED')
       const failed = result && result.status === 'business-error'
         && matchingTerminalReceipt(result, pendingWrite, 'FAILED')
       if (applied || failed) {
+        this._preservedReadyDraft = failed && persistedCommand.action === 'STATION_READY'
+          ? { nodeId: persistedCommand.nodeId, draft: this.data.readyDraft } : null
         this._pendingWrite = null
         this._clearPersistedWrite()
         this._recordReceipt(result.receipt)
@@ -707,6 +717,18 @@ Page({
       this.setData({ writeState: 'idle', canRetryUnknownWrite: false })
     }
     return submitted
+  },
+
+  _handleAuthorityConflict(result, pending) {
+    if (!result || result.status !== 'business-error' || result.reasonCode !== 'GAME_AUTHORITY_CONFLICT') return false
+    this._pendingWrite = null
+    this._writeWorkflow.reset(pending.key)
+    this._clearPersistedWrite()
+    this._authorityConflictReadyDraft = { nodeId: pending.nodeId, draft: this.data.readyDraft }
+    this.setData({ writeState: 'idle', writeMessage: result.message, canRetryUnknownWrite: false })
+    toast(result.message || '本局权威版本已更新，请刷新')
+    this.load()
+    return true
   },
 
   confirmUnknownWrite() {
@@ -763,9 +785,12 @@ Page({
     task.then((result) => {
       this._retrying = false
       this._retryTask = null
+      if (this._handleAuthorityConflict(result, pending)) return
       const applied = result.status === 'success' && matchingTerminalReceipt(result, pending, 'APPLIED')
       const failed = result.status === 'business-error' && matchingTerminalReceipt(result, pending, 'FAILED')
       if (applied || failed) {
+        this._preservedReadyDraft = failed && pending.command.action === 'STATION_READY'
+          ? { nodeId: pending.command.nodeId, draft: this.data.readyDraft } : null
         this._pendingWrite = null
         this._writeWorkflow.reset(pending.key)
         this._clearPersistedWrite()

@@ -20,6 +20,45 @@ public final class JourneyInitialState {
 
     private JourneyInitialState() { }
 
+    /** 数值目标只引用已启用的 counter 属性，不以显示名或幸运值替代。 */
+    public static JsonNode numericAttribute(JourneyRules rules, String key) {
+        if (rules != null && rules.isStateEnabled() && key != null && key.startsWith("counter.")) {
+            for (JsonNode row : rules.getAttributes()) if (key.equals(row.path("key").asText())) return row;
+        }
+        throw new IllegalArgumentException("数值属性未启用或未注册：" + key);
+    }
+
+    public static int numericValue(TopicRouteEngine.State state, String key) {
+        Number value = state.getVariables().get(key);
+        if (value == null || !Double.isFinite(value.doubleValue()) || value.doubleValue() != value.intValue()) {
+            throw new IllegalArgumentException("数值状态必须为已初始化的整数：" + key);
+        }
+        return value.intValue();
+    }
+
+    /** 仅用于已复制的玩家投影；保留服务端原始审计和结算差量。 */
+    public static void redactHidden(JourneyRules rules, JsonNode projection) {
+        Set<String> hidden = new HashSet<>();
+        for (JsonNode row : rules.getAttributes()) if (!row.path("visible").asBoolean(true)) hidden.add(row.path("key").asText());
+        redactHidden(projection, hidden);
+    }
+
+    private static void redactHidden(JsonNode node, Set<String> hidden) {
+        if (node.isObject()) {
+            ObjectNode object = (ObjectNode) node;
+            for (String key : hidden) object.remove(key);
+            if (hidden.contains(object.path("sourceKey").asText())) {
+                object.remove(java.util.Arrays.asList("sourceKey", "sourceBefore", "sourceAfter", "sourceDelta"));
+                object.put("sourceHidden", true);
+            }
+            if (hidden.contains(object.path("targetKey").asText())) {
+                object.remove(java.util.Arrays.asList("targetKey", "targetBefore", "targetAfter", "actualDamage", "delta"));
+            }
+            if (hidden.contains(object.path("statKey").asText())) object.remove(java.util.Arrays.asList("statKey", "delta", "amount", "requested", "charged", "needed", "current"));
+            node.elements().forEachRemaining(child -> redactHidden(child, hidden));
+        } else if (node.isArray()) node.forEach(child -> redactHidden(child, hidden));
+    }
+
     public static ArrayNode normalize(JsonNode source) {
         ArrayNode result = JSON.createArrayNode();
         if (source == null) return result;
@@ -71,8 +110,13 @@ public final class JourneyInitialState {
         for (JsonNode row : rules.getAttributes()) {
             String key = row.path("key").asText();
             Number value = state.getVariables().get(key);
-            if (value != null) state.getVariables().put(key,
-                    Math.max(row.path("min").asInt(), Math.min(row.path("max").asInt(), value.doubleValue())));
+            if (value != null) {
+                double bounded = Math.max(row.path("min").asInt(), Math.min(row.path("max").asInt(), value.doubleValue()));
+                if (key.startsWith("counter.")) {
+                    numericValue(state, key);
+                    state.getVariables().put(key, (int) bounded);
+                } else state.getVariables().put(key, bounded);
+            }
         }
     }
 
@@ -145,7 +189,8 @@ public final class JourneyInitialState {
         if (raw == null || raw.trim().isEmpty()) return raw;
         try {
             ObjectNode root = (ObjectNode) JSON.readTree(raw);
-            if (!root.has("attributes")) return raw;
+            root.remove("statLinks");
+            if (!root.has("attributes")) return root.toString();
             ArrayNode visible = JSON.createArrayNode();
             for (JsonNode row : root.path("attributes")) if (row.path("visible").asBoolean(true)) visible.add(row);
             root.set("attributes", visible);

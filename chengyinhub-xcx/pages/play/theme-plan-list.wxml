@@ -1,0 +1,21 @@
+<block wx:if="{{themeBag.planRows.length || themePlanUnknown || themePlanResult}}">
+  <text class="tb-section">共同方案</text>
+  <text class="tb-purpose">{{themeBag.planPolicyText}} · {{themeBag.planPhaseText}}</text>
+  <text class="tb-purpose tb-warning" wx:if="{{!themeBag.planReadback}}">操作信息尚未更新，当前只读</text>
+  <text class="tb-purpose tb-warning" wx:if="{{themePlanError}}" aria-live="polite">{{themePlanError}}</text>
+  <view wx:if="{{themePlanUnknown}}" class="tb-button {{themeBagBusy ? 'is-busy' : ''}}" bindtap="checkThemePlanReceipt" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">核对方案操作结果</view>
+  <view class="tb-group" wx:for="{{themeBag.planRows}}" wx:key="uiKey">
+    <view class="tb-row" data-key="{{item.uiKey}}" bindtap="openThemePlan" aria-role="button" aria-label="查看{{item.title}}的投入与表决" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="tb-avatar"><cy-icon name="list" size="48" /></view>
+      <view class="tb-copy"><text class="tb-name">{{item.title}}{{item.selected ? ' · 已选定' : ''}}</text><text class="tb-purpose">{{item.summary}}</text><text class="tb-purpose">需求：{{item.requirementText}}</text><text class="tb-purpose">{{item.conditionText}}</text></view>
+      <cy-icon name="chevron-right" size="32" />
+    </view>
+    <view class="tb-plan-lines"><text class="tb-purpose">已确认托管：{{item.confirmedText}}</text><text class="tb-purpose">本队私有意向：{{item.intentText}}</text><text class="tb-purpose tb-warning" wx:if="{{item.signatureText}}">{{item.signatureText}}</text><text class="tb-purpose" wx:if="{{item.reason}}">{{item.reason}}</text></view>
+  </view>
+  <view class="tb-group tb-details" wx:if="{{themeBag.planMaterials.length}}"><text class="tb-name">本队物资</text><view class="tb-detail-row" wx:for="{{themeBag.planMaterials}}" wx:key="itemId"><text>{{item.name}}</text><text>可用 {{item.available}} · 锁定 {{item.locked}}</text></view></view>
+  <text class="tb-purpose" wx:if="{{themeBag.planBallotText}}">{{themeBag.planBallotText}}</text>
+  <view class="tb-actions"><view class="tb-button tb-button--muted {{themeBagBusy || themePlanUnknown ? 'is-busy' : ''}}" wx:for="{{themeBag.planGlobalActions}}" wx:key="action" data-action="{{item.action}}" bindtap="onThemePlanCommand" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view></view>
+  <view class="tb-group tb-details" wx:if="{{themeBag.planCanAccept}}"><text class="tb-name">本队接受的方案</text><text class="tb-purpose">可选择多个，也可不接受任何方案；提交会由当前队长重新签署。</text><view class="tb-row {{item.actions.canAccept ? '' : 'is-disabled'}}" wx:for="{{themeBag.planRows}}" wx:key="uiKey" wx:if="{{item.proposalKey}}" data-key="{{item.proposalKey}}" bindtap="toggleThemePlanAcceptance" aria-role="checkbox" aria-checked="{{item.acceptSelected}}" aria-disabled="{{!item.actions.canAccept}}" aria-label="接受{{item.title}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="{{item.acceptSelected ? 'check' : 'plus'}}" size="48" /><text class="tb-name tb-copy">{{item.title}}</text></view><view class="tb-button {{themeBagBusy || themePlanUnknown ? 'is-busy' : ''}}" bindtap="submitThemePlanAcceptance" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">签署接受清单</view></view>
+  <view class="tb-button tb-button--muted {{themeBagBusy || themePlanUnknown ? 'is-busy' : ''}}" wx:if="{{themeBag.planCanRejectVote}}" bindtap="rejectThemePlanVote" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">本轮不选任何方案</view>
+  <view class="tb-group tb-details" wx:if="{{themePlanResult || themeBag.planResult}}"><text class="tb-heading">{{themePlanResult ? themePlanResult.title : themeBag.planResult.title}}</text><text class="tb-purpose">{{themePlanResult ? themePlanResult.summary : themeBag.planResult.summary}}</text><text class="tb-purpose">{{(themePlanResult ? themePlanResult.terminal : themeBag.planResult.terminal) ? '本场结局已确认' : '共同操作完成，继续剧情'}}</text></view>
+</block>

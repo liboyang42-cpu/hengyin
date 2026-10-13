@@ -156,7 +156,8 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
         // 日期在服务端定格式:塞进 Map 的 Date 走不到 @JsonFormat(那是字段上的注解),
         // 到了前端就是一串毫秒数。
         invite.put("handleTime", acceptedInvite.getHandleTime() == null ? null
-                : DateUtils.parseDateToStr(DateUtils.YYYY_MM_DD, acceptedInvite.getHandleTime()));
+                : acceptedInvite.getHandleTime().toInstant().atZone(java.time.ZoneId.of("Asia/Shanghai"))
+                        .toLocalDate().toString());
         join.put("coopInvite", invite);
         join.put("clubs", buildJoinClubs(topicId));
         return join;

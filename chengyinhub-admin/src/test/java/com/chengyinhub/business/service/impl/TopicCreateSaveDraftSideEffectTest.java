@@ -42,6 +42,10 @@ class TopicCreateSaveDraftSideEffectTest {
     @BeforeEach
     void setUp() {
         svc = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(svc, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(svc, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         // createTopic 途经的协作者很多且与本测试无关:全量置 mock,再对断言目标取回引用。
         for (Field f : CmsTopicServiceImpl.class.getDeclaredFields()) {
             if (Modifier.isStatic(f.getModifiers()) || f.getType().isPrimitive()) continue;
@@ -88,6 +92,7 @@ class TopicCreateSaveDraftSideEffectTest {
 
     @Test
     void draftCreateSkipsSelfHostShellAndAudit() {
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
         svc.createTopic(dto(1), 42L, "tester");
 
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
@@ -101,6 +106,7 @@ class TopicCreateSaveDraftSideEffectTest {
     /** 专业版发布即建活动，同时创建后台审核任务。 */
     @Test
     void publishedProCreateSubmitsPostReviewAndBuildsPublicShell() {
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
         svc.createTopic(dto(null), 42L, "tester");
 
         verify(activityMapper).insertCmsActivity(any(CmsActivity.class));
@@ -113,6 +119,7 @@ class TopicCreateSaveDraftSideEffectTest {
     void publishedSimpleCreateStillBuildsSelfHostShell() {
         TopicCreateDTO simple = dto(null);
         simple.setPublishMode("simple");
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
         svc.createTopic(simple, 42L, "tester");
 
         verify(activityMapper).insertCmsActivity(any(CmsActivity.class));
@@ -131,6 +138,7 @@ class TopicCreateSaveDraftSideEffectTest {
         doThrow(new ServiceException("SETTLEMENT_DEBT_OVERDUE:你有逾期未补足的欠款,暂不能发布新活动,请联系平台客服处理"))
                 .when(ledger).requireNoOverdueDebt(42L);
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
         ServiceException e = assertThrows(ServiceException.class, () -> svc.createTopic(dto(null), 42L, "tester"));
 
         assertTrue(e.getMessage().startsWith("SETTLEMENT_DEBT_OVERDUE"), e.getMessage());

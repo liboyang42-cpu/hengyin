@@ -1,14 +1,21 @@
 package com.chengyinhub.quartz.service.impl;
 
 import java.util.List;
-import javax.annotation.PostConstruct;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.Comparator;
+import java.util.ArrayList;
+import jakarta.annotation.PostConstruct;
 import org.quartz.JobDataMap;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import com.chengyinhub.common.constant.ScheduleConstants;
 import com.chengyinhub.common.exception.job.TaskException;
 import com.chengyinhub.quartz.domain.SysJob;
@@ -16,6 +23,10 @@ import com.chengyinhub.quartz.mapper.SysJobMapper;
 import com.chengyinhub.quartz.service.ISysJobService;
 import com.chengyinhub.quartz.util.CronUtils;
 import com.chengyinhub.quartz.util.ScheduleUtils;
+import com.chengyinhub.common.exception.ServiceException;
+import com.chengyinhub.quartz.service.MySqlSchedulerCoordinator;
+import com.chengyinhub.quartz.util.CanonicalJobTarget;
+import com.chengyinhub.quartz.util.MySqlSessionLock;
 
 /**
  * 定时任务调度信息 服务层
@@ -25,11 +36,18 @@ import com.chengyinhub.quartz.util.ScheduleUtils;
 @Service
 public class SysJobServiceImpl implements ISysJobService
 {
+    @Value("${chengyin.jobs.enabled:true}")
+    private boolean jobsEnabled = true;
+
     @Autowired
     private Scheduler scheduler;
 
     @Autowired
     private SysJobMapper jobMapper;
+
+    @Autowired
+    private MySqlSchedulerCoordinator coordinator;
+    private String loadedDefinitions;
 
     /**
      * 项目启动时，初始化定时器 主要是防止手动修改数据库导致未同步到定时任务处理（注：不能手动修改数据库ID和任务组名，否则会导致脏数据）
@@ -37,13 +55,73 @@ public class SysJobServiceImpl implements ISysJobService
     @PostConstruct
     public void init() throws SchedulerException, TaskException
     {
-        scheduler.clear();
+        if (!jobsEnabled) return;
         List<SysJob> jobList = jobMapper.selectJobAll();
-        for (SysJob job : jobList)
-        {
-            ScheduleUtils.createScheduleJob(scheduler, job);
-        }
+        ensureUniqueDefinitions(jobList, null);
+        coordinator.registerQuartz(this::refreshPersistedSchedule, () -> {
+            loadedDefinitions = null;
+            try { scheduler.standby(); }
+            catch (SchedulerException failure) { throw new IllegalStateException(failure); }
+        });
     }
+
+    private synchronized void refreshPersistedSchedule() {
+        List<SysJob> jobs = new ArrayList<>(jobMapper.selectJobAll());
+        ensureUniqueDefinitions(jobs, null);
+        jobs.sort(Comparator.comparing(SysJob::getJobId));
+        StringBuilder fingerprint = new StringBuilder();
+        for (SysJob job : jobs) fingerprint.append(job.getJobId()).append('|').append(job.getJobGroup()).append('|')
+                .append(CanonicalJobTarget.canonical(job.getInvokeTarget())).append('|').append(job.getCronExpression()).append('|')
+                .append(job.getStatus()).append('|').append(job.getMisfirePolicy()).append('|').append(job.getConcurrent()).append('\n');
+        if (fingerprint.toString().equals(loadedDefinitions)) return;
+        try {
+            scheduler.standby();
+            scheduler.clear();
+            for (SysJob job : jobs) ScheduleUtils.createScheduleJob(scheduler, job);
+            scheduler.start();
+            loadedDefinitions = fingerprint.toString();
+        } catch (SchedulerException | TaskException failure) { throw new IllegalStateException(failure); }
+    }
+
+    private void ensureUniqueDefinitions(List<SysJob> jobs, SysJob replacement) {
+        Map<String, Long> targets = new LinkedHashMap<>();
+        for (SysJob stored : jobs) {
+            if (replacement != null && stored.getJobId().equals(replacement.getJobId())) continue;
+            assertUnique(targets, stored);
+        }
+        if (replacement != null) assertUnique(targets, replacement);
+    }
+
+    private void assertUnique(Map<String, Long> targets, SysJob job) {
+        String canonical = CanonicalJobTarget.canonical(job.getInvokeTarget());
+        if (coordinator.isBuiltin(canonical)) throw new ServiceException("任务与内置计划重复，jobId=" + job.getJobId());
+        if (targets.containsKey(canonical)) throw new ServiceException("任务调用重复，jobIds=" + targets.get(canonical) + "," + job.getJobId());
+        targets.put(canonical, job.getJobId());
+    }
+
+    /** A committed pause/delete/edit also fences already-queued old Quartz callbacks. Manual run remains explicit. */
+    public boolean isCurrentInvocation(SysJob scheduled, boolean manual) {
+        SysJob current = jobMapper.selectJobById(scheduled.getJobId());
+        return current != null && (manual || ScheduleConstants.Status.NORMAL.getValue().equals(current.getStatus()))
+                && CanonicalJobTarget.canonical(current.getInvokeTarget()).equals(CanonicalJobTarget.canonical(scheduled.getInvokeTarget()));
+    }
+
+    private void afterCommitSchedule(SchedulerChange change) {
+        if (!jobsEnabled || !coordinator.isLeader()) return;
+        Runnable apply = () -> {
+            if (!coordinator.isLeader()) return;
+            try { change.run(); }
+            catch (SchedulerException | TaskException failure) { throw new IllegalStateException("调度配置已保存，调度同步失败", failure); }
+        };
+        if (TransactionSynchronizationManager.isActualTransactionActive()
+                && TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override public void afterCommit() { apply.run(); }
+            });
+        } else apply.run();
+    }
+
+    @FunctionalInterface private interface SchedulerChange { void run() throws SchedulerException, TaskException; }
 
     /**
      * 获取quartz调度器的计划任务列表
@@ -84,7 +162,7 @@ public class SysJobServiceImpl implements ISysJobService
         int rows = jobMapper.updateJob(job);
         if (rows > 0)
         {
-            scheduler.pauseJob(ScheduleUtils.getJobKey(jobId, jobGroup));
+            afterCommitSchedule(() -> scheduler.pauseJob(ScheduleUtils.getJobKey(jobId, jobGroup)));
         }
         return rows;
     }
@@ -98,24 +176,23 @@ public class SysJobServiceImpl implements ISysJobService
     @Transactional(rollbackFor = Exception.class)
     public int resumeJob(SysJob job) throws SchedulerException, TaskException
     {
-        Long jobId = job.getJobId();
-        String jobGroup = job.getJobGroup();
         ScheduleUtils.ensureCronHasFutureExecution(job);
-        job.setStatus(ScheduleConstants.Status.NORMAL.getValue());
-        int rows = jobMapper.updateJob(job);
-        if (rows > 0)
-        {
-            JobKey jobKey = ScheduleUtils.getJobKey(jobId, jobGroup);
-            if (scheduler.checkExists(jobKey))
+        try (MySqlSessionLock.Lease definitions = coordinator.definitionLock()) {
+            ensureUniqueDefinitions(jobMapper.selectJobAllForUpdate(), job);
+            Long jobId = job.getJobId();
+            String jobGroup = job.getJobGroup();
+            job.setStatus(ScheduleConstants.Status.NORMAL.getValue());
+            int rows = jobMapper.updateJob(job);
+            if (rows > 0 && jobsEnabled && coordinator.isLeader())
             {
-                scheduler.resumeJob(jobKey);
+                afterCommitSchedule(() -> {
+                    JobKey jobKey = ScheduleUtils.getJobKey(jobId, jobGroup);
+                    if (scheduler.checkExists(jobKey)) scheduler.resumeJob(jobKey);
+                    else ScheduleUtils.createScheduleJob(scheduler, job);
+                });
             }
-            else
-            {
-                ScheduleUtils.createScheduleJob(scheduler, job);
-            }
+            return rows;
         }
-        return rows;
     }
 
     /**
@@ -132,7 +209,7 @@ public class SysJobServiceImpl implements ISysJobService
         int rows = jobMapper.deleteJobById(jobId);
         if (rows > 0)
         {
-            scheduler.deleteJob(ScheduleUtils.getJobKey(jobId, jobGroup));
+            afterCommitSchedule(() -> scheduler.deleteJob(ScheduleUtils.getJobKey(jobId, jobGroup)));
         }
         return rows;
     }
@@ -185,20 +262,26 @@ public class SysJobServiceImpl implements ISysJobService
     @Transactional(rollbackFor = Exception.class)
     public boolean run(SysJob job) throws SchedulerException
     {
-        boolean result = false;
-        Long jobId = job.getJobId();
-        String jobGroup = job.getJobGroup();
-        SysJob properties = selectJobById(job.getJobId());
-        // 参数
-        JobDataMap dataMap = new JobDataMap();
-        dataMap.put(ScheduleConstants.TASK_PROPERTIES, properties);
-        JobKey jobKey = ScheduleUtils.getJobKey(jobId, jobGroup);
-        if (scheduler.checkExists(jobKey))
-        {
-            result = true;
-            scheduler.triggerJob(jobKey, dataMap);
+        if (!jobsEnabled) return false;
+        try (MySqlSessionLock.Lease definitions = coordinator.definitionLock()) {
+            ensureUniqueDefinitions(jobMapper.selectJobAllForUpdate(), null);
+            if (!coordinator.isLeader()) throw new ServiceException("当前实例不是调度主节点，请稍后重试");
+            boolean result = false;
+            Long jobId = job.getJobId();
+            String jobGroup = job.getJobGroup();
+            SysJob properties = selectJobById(job.getJobId());
+            // 参数
+            JobDataMap dataMap = new JobDataMap();
+            dataMap.put(ScheduleConstants.TASK_PROPERTIES, properties);
+            dataMap.put("chengyin.manualJobInvocation", true);
+            JobKey jobKey = ScheduleUtils.getJobKey(jobId, jobGroup);
+            if (scheduler.checkExists(jobKey))
+            {
+                result = true;
+                afterCommitSchedule(() -> scheduler.triggerJob(jobKey, dataMap));
+            }
+            return result;
         }
-        return result;
     }
 
     /**
@@ -212,12 +295,15 @@ public class SysJobServiceImpl implements ISysJobService
     {
         job.setStatus(ScheduleConstants.Status.PAUSE.getValue());
         ScheduleUtils.ensureCronHasFutureExecution(job);
-        int rows = jobMapper.insertJob(job);
-        if (rows > 0)
-        {
-            ScheduleUtils.createScheduleJob(scheduler, job);
+        try (MySqlSessionLock.Lease definitions = coordinator.definitionLock()) {
+            ensureUniqueDefinitions(jobMapper.selectJobAllForUpdate(), job);
+            int rows = jobMapper.insertJob(job);
+            if (rows > 0 && jobsEnabled && coordinator.isLeader())
+            {
+                afterCommitSchedule(() -> ScheduleUtils.createScheduleJob(scheduler, job));
+            }
+            return rows;
         }
-        return rows;
     }
 
     /**
@@ -230,13 +316,16 @@ public class SysJobServiceImpl implements ISysJobService
     public int updateJob(SysJob job) throws SchedulerException, TaskException
     {
         ScheduleUtils.ensureCronHasFutureExecution(job);
-        SysJob properties = selectJobById(job.getJobId());
-        int rows = jobMapper.updateJob(job);
-        if (rows > 0)
-        {
-            updateSchedulerJob(job, properties.getJobGroup());
+        try (MySqlSessionLock.Lease definitions = coordinator.definitionLock()) {
+            ensureUniqueDefinitions(jobMapper.selectJobAllForUpdate(), job);
+            SysJob properties = selectJobById(job.getJobId());
+            int rows = jobMapper.updateJob(job);
+            if (rows > 0 && jobsEnabled && coordinator.isLeader())
+            {
+                afterCommitSchedule(() -> updateSchedulerJob(job, properties.getJobGroup()));
+            }
+            return rows;
         }
-        return rows;
     }
 
     /**

@@ -107,7 +107,7 @@
   <cy-sheet show="{{activityPickerShow}}" title="选择活动" handle="{{true}}" closable bind:close="onCloseActivityPicker">
     <view class="cmp-act-pick">
       <cy-skeleton wx:if="{{activityLoading}}" type="list" count="3" />
-      <cy-error wx:elif="{{activityError}}" title="活动列表没有加载出来" sub="只显示你参加过或主办的活动" retry="重试" bind:retry="loadActivityOptions" />
+      <cy-error load-failure wx:elif="{{activityError}}" title="活动列表没有加载出来" sub="只显示你参加过或主办的活动" retry="重试" bind:retry="loadActivityOptions" />
       <block wx:else>
         <cy-cell wx:for="{{activityList}}" wx:key="activityId"
                  title="{{item.name}}" description="{{item.sourceLabel}}"

@@ -15,7 +15,7 @@
                refresher-triggered="{{refreshing}}"
                bindrefresherrefresh="onRefresh">
 
-    <cy-inline-error class="rv-console-error" wx:if="{{consoleError}}" kind="data"
+    <cy-inline-error load-failure class="rv-console-error" wx:if="{{consoleError}}" kind="data"
                      title="商家工作台没有加载出来"
                      sub="{{consoleError}}"
                      action="重新加载" bind:action="reloadConsole" />
@@ -212,7 +212,7 @@
           </view>
         </view>
 
-        <cy-error wx:if="{{joinError || hostError}}" title="项目和待办没能加载出来" sub="网络异常，请重试"
+        <cy-error load-failure wx:if="{{joinError || hostError}}" title="项目和待办没能加载出来" sub="网络异常，请重试"
                   retry="重试" bind:retry="reloadProjects" />
       </view>
       <view class="rv-project-state">
@@ -282,7 +282,7 @@
       <view class="chpick__hint">你在本路线承接了多个章节,请选择本次要核销的那一个</view>
       <view class="chpick__item" wx:for="{{chapterSheet.items}}" wx:key="id"
             data-id="{{item.id}}" bindtap="onChapterPick" aria-role="button" aria-label="选择核销章节{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
-        <text class="chpick__name">{{item.name}}</text>
+        <text class="chpick__name">{{item.name}}{{item.replayed ? '（已核销，请勿重复提供权益）' : ''}}</text>
         <cy-icon class="chpick__chev" name="arrow-right" size="28" />
       </view>
     </view>

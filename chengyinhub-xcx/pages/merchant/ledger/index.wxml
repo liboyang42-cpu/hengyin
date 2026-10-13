@@ -3,6 +3,7 @@
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar custom-back bind:back="onNavBack" />
+  <cy-empty wx:if="{{accessDenied}}" kind="no-permission" title="当前身份不能查看这份商家账本" sub="请使用具有商家查看权限的账号" />
   <view class="ledger-nav-spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>
   <cy-page-title title="{{pageTitle}}" safe-top="{{false}}" flush="{{true}}" />
   <cy-club-direct-ledger wx:if="{{!routeError && view === 'settlement' && merchantAccess.canReadFinance}}" kind="merchant" />
@@ -16,11 +17,11 @@
     <cy-tabs class="ledger-filter" wx:if="{{merchantAccess.canReadFinance}}" variant="chip" shared-slab tabs="{{redemptionTabs}}" active="{{redemptionFilter}}" bind:change="onRedemptionFilter" />
     <view class="ledger-redemption-content" aria-role="region" aria-label="核销与退款" aria-busy="{{loading ? 'true' : 'false'}}">
       <cy-skeleton wx:if="{{loading && !hasLoaded}}" type="list" count="{{3}}" />
-      <cy-error wx:elif="{{error && !hasLoaded}}" size="lg" fill title="核销记录加载失败" sub="数据服务暂不可用，请稍后重试" retry="重新加载" bind:retry="retry" />
+      <cy-error load-failure wx:elif="{{error && !hasLoaded}}" size="lg" fill title="核销记录加载失败" sub="数据服务暂不可用，请稍后重试" retry="重新加载" bind:retry="retry" />
       <block wx:else>
         <view class="ledger-inline-state" wx:if="{{(loading || error) && hasLoaded}}">
           <text class="ledger-sync" wx:if="{{loading && hasLoaded}}" aria-role="status">正在核对最新记录…</text>
-          <cy-inline-error wx:if="{{error && hasLoaded}}" title="最新记录暂未取回"
+          <cy-inline-error load-failure wx:if="{{error && hasLoaded}}" title="最新记录暂未取回"
                            sub="已保留上次确认的数据" action="重试" bind:action="retry" />
         </view>
 
@@ -56,11 +57,11 @@
 
   <block wx:elif="{{isProjectMessages}}">
     <cy-skeleton wx:if="{{loading && !hasLoaded}}" type="list" count="{{3}}" />
-    <cy-error wx:elif="{{error && !hasLoaded}}" fill size="lg" title="近期动态加载失败"
+    <cy-error load-failure wx:elif="{{error && !hasLoaded}}" fill size="lg" title="近期动态加载失败"
               sub="请稍后重试" retry="重新加载" bind:retry="retry" />
     <block wx:else>
       <text class="ledger-sync" wx:if="{{loading && hasLoaded}}" aria-role="status">正在更新近期动态…</text>
-      <cy-inline-error wx:if="{{error && hasLoaded}}" title="最新动态暂未取回"
+      <cy-inline-error load-failure wx:if="{{error && hasLoaded}}" title="最新动态暂未取回"
                        sub="已保留上次确认的数据" action="重试" bind:action="retry" />
       <view class="fin-group" wx:if="{{projectEvents.length}}">
         <text class="fin-group__title">本项目近期收入与核销</text>
@@ -79,7 +80,7 @@
     </block>
   </block>
   <cy-skeleton wx:elif="{{loading && !hasLoaded}}" type="merchant-metric" count="{{3}}" />
-  <cy-error wx:elif="{{error && !hasLoaded}}" size="lg" fill title="结算数据加载失败" sub="数据服务暂不可用，请稍后重试" retry="重新加载" bind:retry="retry" auto-back />
+  <cy-error load-failure wx:elif="{{error && !hasLoaded}}" size="lg" fill title="结算数据加载失败" sub="数据服务暂不可用，请稍后重试" retry="重新加载" bind:retry="retry" auto-back />
 
   <block wx:else>
   <block wx:if="{{view === 'settlement'}}">

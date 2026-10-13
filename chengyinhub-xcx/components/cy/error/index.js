@@ -25,6 +25,9 @@ Component({
     autoBack: { type: Boolean, value: false },
     // 页面有自己的「该去的页面」(返回俱乐部 / 返回工作台):传 custom-back 并 bind:back,组件不再自己导航。
     customBack: { type: Boolean, value: false },
+    // loadFailure:加载类失败不向用户展示任何错误文案、重试或返回半屏,只保留同尺寸空白占位。
+    // 操作类失败(提交/支付/退款/取消等)、无权限、缺参不要传它,仍按原样可见。
+    loadFailure: { type: Boolean, value: false },
   },
   data: {
     retryLabel: '重试',
@@ -45,7 +48,7 @@ Component({
   },
   methods: {
     _openAutoBack() {
-      if (!this.data.autoBack || this.data._sheet || this._page) return;
+      if (this.data.loadFailure || !this.data.autoBack || this.data._sheet || this._page) return;
       const pages = getCurrentPages();
       this._page = pages[pages.length - 1];   // 记下所在页:收起时栈顶可能已经换了
       this.setData({ _sheet: true });

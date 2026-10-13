@@ -23,6 +23,7 @@ beforeEach(() => {
     // #810 起 onLoad 会同步一次视图主题;本用例只验刷新态,给个空读即可。
     getStorageSync() { return ''; },
     setNavigationBarColor() {},
+    showToast() {},
   };
 });
 
@@ -60,7 +61,7 @@ test('帖文收藏刷新 502 保留旧卡片与操作，并在 complete 后停�
 
 function loadPage() {
   delete require.cache[require.resolve(PAGE_PATH)];
-  require(PAGE_PATH);
+  require('../helpers/community-page-seam.js').loadPage(PAGE_PATH);
   const vm = Object.assign({}, sandbox.config);
   vm.data = JSON.parse(JSON.stringify(sandbox.config.data));
   vm.setData = function (patch, callback) {
@@ -80,4 +81,37 @@ test('并发取消收藏按 ID 删除，顺序或逆序回包均保留未取消�
     order.forEach(index => sandbox.requests[index].success({ code: '200' }));
     assert.deepEqual(vm.data.postList.map(item => item.id), ['C']);
   }
+});
+
+function runTopicUnlikeScenario(responseOrder, items, eventIds) {
+  wx.showModal = options => options.success({ confirm: true, cancel: false });
+  const vm = loadPage();
+  sandbox.requests.length = 0;
+  vm.data.ztList1 = items;
+
+  vm.topicUnlike({ currentTarget: { dataset: { index: 0, id: eventIds[0] } } });
+  vm.topicUnlike({ currentTarget: { dataset: { index: 1, id: eventIds[1] } } });
+
+  assert.equal(sandbox.requests.length, 2);
+  responseOrder.forEach(requestIndex => {
+    sandbox.requests[requestIndex].success({ code: '200' });
+    sandbox.requests[requestIndex].complete();
+  });
+  assert.deepEqual(vm.data.ztList1.map(item => item.id), ['C']);
+}
+
+test('主题并发取消按发起顺序回包时按 ID 删除，兼容 number/string ID', () => {
+  runTopicUnlikeScenario(
+    [0, 1],
+    [{ id: 101 }, { id: '202' }, { id: 'C' }],
+    ['101', 202]
+  );
+});
+
+test('主题并发取消按逆序回包时按 ID 删除，兼容 number/string ID', () => {
+  runTopicUnlikeScenario(
+    [1, 0],
+    [{ id: '101' }, { id: 202 }, { id: 'C' }],
+    [101, '202']
+  );
 });

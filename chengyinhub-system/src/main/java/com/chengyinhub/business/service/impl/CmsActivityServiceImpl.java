@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.dto.ActivitySettlementDTO;
@@ -615,6 +616,39 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         q.setOwnerId(activityId);
         q.setRegistrationStatus(2);
         return cmsRegistrationMapper.countCmsRegistrationList(q);
+    }
+
+    @Override
+    public Map<Long, Integer> countSignedUpRegistrationsByActivityIds(List<Long> activityIds) {
+        if (activityIds == null || activityIds.isEmpty()) return java.util.Collections.emptyMap();
+        Map<Long, Integer> counts = new java.util.HashMap<>();
+        for (Map<String, Object> row : cmsActivityMapper.selectSignedUpRegistrationCounts(activityIds)) {
+            counts.put(((Number) row.get("activityId")).longValue(),
+                    ((Number) row.get("signupCount")).intValue());
+        }
+        return counts;
+    }
+
+    @Override
+    public Map<Long, Integer> countSignedUpRegistrationsByTopicIds(List<Long> topicIds) {
+        if (topicIds == null || topicIds.isEmpty()) return java.util.Collections.emptyMap();
+        Map<Long, Integer> counts = new java.util.HashMap<>();
+        for (Map<String, Object> row : cmsActivityMapper.selectTopicSignedUpRegistrationCounts(topicIds)) {
+            counts.put(((Number) row.get("topicId")).longValue(),
+                    ((Number) row.get("signupCount")).intValue());
+        }
+        return counts;
+    }
+
+    @Override
+    public Map<Long, Integer> countPendingVerificationByActivityIds(List<Long> activityIds) {
+        if (activityIds == null || activityIds.isEmpty()) return java.util.Collections.emptyMap();
+        Map<Long, Integer> counts = new java.util.HashMap<>();
+        for (Map<String, Object> row : cmsActivityMapper.selectPendingVerificationCounts(activityIds)) {
+            counts.put(((Number) row.get("activityId")).longValue(),
+                    ((Number) row.get("pendingVerifyCount")).intValue());
+        }
+        return counts;
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.chengyinhub.business.mapper;
 
 import java.util.List;
+import java.util.Map;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.vo.ClubSessionGapVO;
 import org.apache.ibatis.annotations.Param;
@@ -56,6 +57,12 @@ public interface CmsActivityMapper
      * @return 活动集合
      */
     public List<CmsActivity> selectCmsActivityList(CmsActivity cmsActivity);
+
+    List<Map<String, Object>> selectSignedUpRegistrationCounts(@Param("activityIds") List<Long> activityIds);
+
+    List<Map<String, Object>> selectTopicSignedUpRegistrationCounts(@Param("topicIds") List<Long> topicIds);
+
+    List<Map<String, Object>> selectPendingVerificationCounts(@Param("activityIds") List<Long> activityIds);
 
     /** 公开列表：SQL 固定未删、审核通过、已上架。 */
     List<CmsActivity> selectPublicCmsActivityList(CmsActivity cmsActivity);

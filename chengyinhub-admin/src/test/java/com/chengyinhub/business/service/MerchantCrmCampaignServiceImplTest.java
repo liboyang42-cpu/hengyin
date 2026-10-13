@@ -99,6 +99,27 @@ class MerchantCrmCampaignServiceImplTest {
     }
 
     @Test
+    void duplicateCreateReadsCommittedWinnerBeyondTransactionSnapshot() {
+        MerchantCrmCampaignRequest request = request();
+        MerchantCrmCampaign winner = campaign(MerchantCrmCampaign.READY);
+        winner.setActorMemberId(PRINCIPAL);
+        winner.setTitle(request.getTitle());
+        winner.setContent(request.getContent());
+        when(segmentMapper.selectOwnedSegmentById(MERCHANT, 5L)).thenReturn(segment(MERCHANT));
+        when(merchantMapper.selectMmsMerchantById(MERCHANT)).thenReturn(merchant());
+        when(campaignMapper.insertCampaign(any()))
+                .thenThrow(new org.springframework.dao.DuplicateKeyException("request already committed"));
+        when(campaignMapper.selectByRequestIdForShare(MERCHANT, request.getRequestId())).thenReturn(winner);
+
+        assertEquals(8L, service.create(PRINCIPAL, request).getId());
+        verify(campaignMapper, never()).insertRecipient(any());
+        verify(auditMapper, never()).insertBusinessAuditEvent(any());
+        winner.setContent("不同的触达内容");
+        assertEquals(409, assertThrows(ServiceException.class,
+                () -> service.create(PRINCIPAL, request)).getCode());
+    }
+
+    @Test
     void couponOptionsAndCouponCampaignValidationUseExactMerchantRow() {
         service.coupons(PRINCIPAL);
         verify(couponGrantAdapter).list(OWNER, MERCHANT);

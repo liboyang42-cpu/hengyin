@@ -20,6 +20,8 @@ function parseImgUrls(raw) {
   return str.split(/[,;]/).map(function (s) { return s.trim(); }).filter(Boolean);
 }
 
+const { gameTemplateCover } = require('../../../utils/template-display.js');
+
 function buildGallery(info) {
   info = info || {};
   var seen = {};
@@ -34,6 +36,7 @@ function buildGallery(info) {
   parseImgUrls(info.imgUrls).forEach(push);
   push(info.imgUrl);
   push(info.storyImg);
+  if (!list.length) push(gameTemplateCover(info));
 
   return list;
 }

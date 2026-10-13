@@ -62,10 +62,9 @@ for (const rel of PAGES) {
   });
 }
 
-test('活动表单移除介绍副标题，保留售出锁定原因与其他页面副标题', () => {
+test('活动表单保留售出锁定原因，成长中心按批准Figma不展示副标题', () => {
   const expected = {
-    'pages/publish/activity/index.wxml': "{{timeLocationLocked ? '已售出：只能改文字、图片与票务' : ''}}",
-    'subpackageP3/pages/growthcenter/index/index.wxml': '城市探索 · 成就与排行榜'
+    'pages/publish/activity/index.wxml': "{{timeLocationLocked ? '已售出：只能改文字、图片与票务' : ''}}"
   };
   for (const [rel, sub] of Object.entries(expected)) {
     const { tag } = pageTitleOf(readPage(rel), rel);
@@ -73,6 +72,8 @@ test('活动表单移除介绍副标题，保留售出锁定原因与其他页�
     assert.ok(got, `${rel}:自带头删掉了但副标题没并进 cy-page-title 的 subtitle 槽,信息丢失`);
     assert.equal(got[1], sub, `${rel}:subtitle 文案与规整专项拍板不符`);
   }
+  const growth = 'subpackageP3/pages/growthcenter/index/index.wxml';
+  assert.doesNotMatch(pageTitleOf(readPage(growth), growth).tag, /\ssubtitle=/);
 });
 
 // 2026-07-31 契约反转:用户对本页的原话是「这个都放到消息里面 没有结算和发起邀请」,

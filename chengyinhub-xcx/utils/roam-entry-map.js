@@ -1,6 +1,7 @@
 'use strict';
 
 const H = require('./roam-hangout.js');
+const { toTimestamp } = require('./datetime.js');
 
 const FALLBACK_TEAM_ICON = '/images/d_profile.png';
 const TEAM_MARKER_TAG = 4;
@@ -52,6 +53,10 @@ function buildPostMarkers(rows, getImgUrl) {
 }
 
 function activityView(row, teams, getImgUrl) {
+  // 与 ActivityLifecycle.timeBucket 一致：结束时刻已过且尚未开始条件不成立。
+  const now = Date.now();
+  const ended = !!row && row.kind === 'activity' && now > toTimestamp(row.endDate)
+    && !(now < toTimestamp(row.startDate));
   const linkedTeams = teamsFor(row, teams);
   const participantFaces = linkedTeams.reduce((all, team) => all.concat(Array.isArray(team.memberAvatars) ? team.memberAvatars : []), []).filter(Boolean).slice(0, 3);
   const participantCount = Number(row && row.participantCount) || linkedTeams.reduce((sum, team) => sum + (Number(team.joinedCount) || 0), 0);
@@ -68,13 +73,14 @@ function activityView(row, teams, getImgUrl) {
     title: String((row && row.name) || '未命名活动'),
     cover: coverOf(row, getImgUrl),
     tag: free ? '自由探索' : '城市定向',
-    meta: [distance && ('距你 ' + distance), linkedTeams.length && (linkedTeams.length + ' 支队伍招募')].filter(Boolean).join(' · '),
+    meta: [ended && '已结束', distance && ('距你 ' + distance), !ended && linkedTeams.length && (linkedTeams.length + ' 支队伍招募')].filter(Boolean).join(' · '),
     address: String((row && row.addressName) || ''),
     participantFaces,
     participantCount,
     dynamicImages,
     registered,
-    teams: linkedTeams.slice(0, 2).map((team) => ({
+    ended,
+    teams: (ended ? [] : linkedTeams).slice(0, 2).map((team) => ({
       teamId: team.teamId,
       title: team.title || '玩家队伍',
       members: (Number(team.joinedCount) || 0) + '/' + (Number(team.maxMembers) || 0) + ' 人',

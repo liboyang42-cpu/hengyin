@@ -529,4 +529,19 @@ class ApiClubLifecycleTest {
         result.setMembershipAccessEnd(accessEnd);
         return result;
     }
+
+    @Test
+    void clubChatOutsiderGetsForbiddenWithoutCreatingConversation() {
+        com.chengyinhub.business.service.IImService im = mock(com.chengyinhub.business.service.IImService.class);
+        ReflectionTestUtils.setField(controller, "imService", im);
+        ReflectionTestUtils.setField(controller, "clubParticipationGuard",
+                mock(com.chengyinhub.business.service.IClubParticipationGuard.class));
+        when(clubService.selectClubById(CLUB_ID)).thenReturn(activeClub());
+        Club body = new Club();
+        body.setId(CLUB_ID);
+        AjaxResult response = controller.chat(body);
+        assertEquals(403, response.get("code"));
+        assertEquals("加入俱乐部后才能进群聊", response.get("msg"));
+        verify(im, org.mockito.Mockito.never()).getOrCreateClubGroup(anyLong(), anyLong());
+    }
 }

@@ -12,6 +12,7 @@ public class GameSessionCommand {
     private String requestId;
     private Integer expectedRevision;
     private String action;
+    private Integer authorityEpoch;
     private Map<String, Object> payload = new LinkedHashMap<>();
     @JsonIgnore
     private String requestHash;
@@ -24,6 +25,8 @@ public class GameSessionCommand {
     public void setRequestId(String requestId) { this.requestId = requestId; }
     public Integer getExpectedRevision() { return expectedRevision; }
     public void setExpectedRevision(Integer expectedRevision) { this.expectedRevision = expectedRevision; }
+    public Integer getAuthorityEpoch() { return authorityEpoch; }
+    public void setAuthorityEpoch(Integer authorityEpoch) { this.authorityEpoch = authorityEpoch; }
     public String getAction() { return action; }
     public void setAction(String action) { this.action = action; }
     public Map<String, Object> getPayload() { return payload; }

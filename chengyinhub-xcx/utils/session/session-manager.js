@@ -11,7 +11,8 @@
 //   - isDevEnv():  bool
 //   - useDevUser():void,写入 dev mock 会话
 //
-// 返回结果结构:{ ok, authed, cached?, dev?, reason?, msg? }
+// 返回结果结构:{ ok, authed, cached?, dev?, reason?, msg?, isCurrentSession? }
+//   - isCurrentSession:成功落地的会话是否仍有效，仅供延迟回调核验。
 //   - ok=false 表示登录未成功;authed 表示是否拿到真实(或 dev)会话。
 //   - 正式版失败返回显式失败,绝不写会话、绝不伪装已认证(配合 app.js 的假 ready 修复)。
 
@@ -100,24 +101,49 @@ function createSessionManager(deps) {
     if (devToken && session.getAuthorization() === devToken) {
       return { ok: false, authed: false, reason: 'devTokenRejected' };
     }
+    // 真账号续期失败必须保留身份，不能以测试身份替换玩家/商家/主理人。
+    if (session.getUserID() && session.getAuthorization()) {
+      return { ok: false, authed: false, reason: 'realSessionRefreshFailed' };
+    }
     useDevUser();
-    return { ok: true, authed: true, dev: true };
+    return loginSucceeded({ ok: true, authed: true, dev: true });
+  }
+
+  function loginSucceeded(result) {
+    var owner = String(session.getUserID() || '');
+    var authorization = session.getAuthorization();
+    // 回调前仍可能换号；用闭包核验，避免把 token 复制到登录结果。
+    result.isCurrentSession = function () {
+      return String(session.getUserID() || '') === owner && session.getAuthorization() === authorization;
+    };
+    return result;
   }
 
   function doLogin() {
+    var owner = String(session.getUserID() || '');
+    var authorization = session.getAuthorization();
+    function isCurrent() {
+      return String(session.getUserID() || '') === owner && session.getAuthorization() === authorization;
+    }
+    function sessionChanged() {
+      return { ok: false, authed: false, reason: 'sessionChanged' };
+    }
     return Promise.resolve()
-      .then(function () { return withTimeout(wxLogin()); })
+      .then(function () { return isCurrent() ? withTimeout(wxLogin()) : sessionChanged(); })
       .then(
         function (loginRes) {
+          if (loginRes && loginRes.reason === 'sessionChanged') return loginRes;
+          if (!isCurrent()) return sessionChanged();
           return withTimeout(exchangeCode(loginRes.code)).then(
             function (body) {
+              if (!isCurrent()) return sessionChanged();
               if (isValidPayload(body)) {
                 try {
                   applySession(body);
                 } catch (error) {
                   return { ok: false, authed: false, reason: 'sessionPersistFail' };
                 }
-                return { ok: true, authed: true };
+                return loginSucceeded({ ok: true, authed: true });
               }
               if (body && body.data) {
                 return { ok: false, authed: false, reason: 'invalidPayload' };
@@ -127,6 +153,7 @@ function createSessionManager(deps) {
               return { ok: false, authed: false, reason: 'noData', msg: body && body.msg };
             },
             function () {
+              if (!isCurrent()) return sessionChanged();
               // /api/login/code 网络失败
               if (isDevEnv()) return devFallback();
               return { ok: false, authed: false, reason: 'networkFail' };
@@ -134,6 +161,7 @@ function createSessionManager(deps) {
           );
         },
         function () {
+          if (!isCurrent()) return sessionChanged();
           // wx.login 本身失败
           if (isDevEnv()) return devFallback();
           return { ok: false, authed: false, reason: 'wxLoginFail' };

@@ -13,6 +13,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import java.io.InputStream;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -20,8 +22,12 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** 真实 MyBatis + H2 回归：试点窗口的核心分母不受帖文后续状态变化影响。 */
+/**
+ * 真实 MyBatis + H2 回归：试点窗口的核心分母不受帖文后续状态变化影响。
+ * DATE_ADD/interval 使用显式 H2 方言适配，不能代替真实 MySQL 对生产 XML 的验证。
+ */
 public class BizFunnelDailyMapperMyBatisTest {
     @Test
     void pilotDenominatorSurvivesHideDeleteAndAuthorErasure() throws Exception {
@@ -92,7 +98,7 @@ public class BizFunnelDailyMapperMyBatisTest {
                 + "id bigint primary key, author_id bigint, lifecycle varchar(20))");
     }
 
-    /** H2 1.4 没有 MySQL DATE_ADD；测试别名只补足本查询用到的 DAY 间隔。 */
+    /** H2 没有 MySQL DATE_ADD；测试别名只补足本查询用到的 DAY 间隔。 */
     public static Date dateAdd(Date date, String interval) {
         if (!"INTERVAL '1' DAY".equalsIgnoreCase(interval)) {
             throw new IllegalArgumentException("unsupported interval: " + interval);
@@ -125,7 +131,15 @@ public class BizFunnelDailyMapperMyBatisTest {
             if (input == null) {
                 throw new IllegalStateException("missing " + resource);
             }
-            new XMLMapperBuilder(input, configuration, resource, configuration.getSqlFragments()).parse();
+            // H2 2.x requires quoted ANSI interval literals even in MySQL mode.
+            // Keep production MySQL XML unchanged; this existing dialect fixture also supplies DATE_ADD above.
+            String mysqlXml = new String(input.readAllBytes(), StandardCharsets.UTF_8);
+            assertEquals(2, mysqlXml.split("interval 1 day", -1).length - 1,
+                    "Review this narrow H2 grammar adapter if the production interval expressions change");
+            String h2Xml = mysqlXml.replace("interval 1 day", "interval '1' day");
+            assertTrue(h2Xml.contains("date_add(cast(#{endDate} as date), interval '1' day)"));
+            new XMLMapperBuilder(new StringReader(h2Xml), configuration, resource,
+                    configuration.getSqlFragments()).parse();
         }
         return new SqlSessionFactoryBuilder().build(configuration);
     }

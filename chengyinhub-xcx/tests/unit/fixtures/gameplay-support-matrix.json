@@ -1,0 +1,1037 @@
+{
+  "code": 200,
+  "msg": "操作成功",
+  "data": {
+    "schemaVersion": 1,
+    "zeroHpPolicies": {
+      "generic": [
+        "BLOCK_HP_COST",
+        "CHALLENGE",
+        "BLOCK_PAID",
+        "THEME_FAIL",
+        "WAIT",
+        "STEPS"
+      ],
+      "legacy": [
+        "BLOCK_HP_COST",
+        "CHALLENGE",
+        "LEGACY_END",
+        "BLOCK_PAID"
+      ]
+    },
+    "participantSelection": {
+      "toolKind": "FACILITY",
+      "targetScope": "PARTICIPANTS",
+      "payerRequired": true,
+      "runtimeScope": "TEAM",
+      "worldMode": "WORLD_SHARED"
+    },
+    "types": [
+      {
+        "key": "album",
+        "section": "album",
+        "category": "PRESENTATION",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "UNSUPPORTED"
+        }
+      },
+      {
+        "key": "qaText",
+        "section": "qa",
+        "category": "PROOF",
+        "mode": "TYPE",
+        "r5CompletionProof": true,
+        "completionProof": true,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER",
+          "WORLD",
+          "PARTICIPANTS"
+        ],
+        "tools": {
+          "costs": "OWNER_OR_TEAM",
+          "costOptions": "OWNER_OR_TEAM",
+          "limitsScope": "OWNER_OR_TEAM",
+          "targetScope": "OWNER_OR_TEAM",
+          "resourceSlots": "OWNER_OR_TEAM",
+          "trade": "WORLD_SHARED_ONLY",
+          "vote": "WORLD_SHARED_ONLY",
+          "decidesEnding": "WORLD_SHARED_ONLY",
+          "zeroChallenge": "SUPPORTED"
+        }
+      },
+      {
+        "key": "qaPick",
+        "section": "qa",
+        "category": "PROOF",
+        "mode": "PICK",
+        "r5CompletionProof": true,
+        "completionProof": true,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER",
+          "WORLD",
+          "PARTICIPANTS"
+        ],
+        "tools": {
+          "costs": "OWNER_OR_TEAM",
+          "costOptions": "OWNER_OR_TEAM",
+          "limitsScope": "OWNER_OR_TEAM",
+          "targetScope": "OWNER_OR_TEAM",
+          "resourceSlots": "OWNER_OR_TEAM",
+          "trade": "WORLD_SHARED_ONLY",
+          "vote": "WORLD_SHARED_ONLY",
+          "decidesEnding": "WORLD_SHARED_ONLY",
+          "zeroChallenge": "SUPPORTED"
+        }
+      },
+      {
+        "key": "qaShot",
+        "section": "qa",
+        "category": "NO_BRIDGE",
+        "mode": "SHOT",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "UNSUPPORTED"
+        }
+      },
+      {
+        "key": "branch",
+        "section": "branch",
+        "category": "NO_BRIDGE",
+        "r5CompletionProof": false,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "UNSUPPORTED"
+        }
+      },
+      {
+        "key": "sort",
+        "section": "sort",
+        "category": "PROOF",
+        "r5CompletionProof": true,
+        "completionProof": true,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER",
+          "WORLD",
+          "PARTICIPANTS"
+        ],
+        "tools": {
+          "costs": "OWNER_OR_TEAM",
+          "costOptions": "OWNER_OR_TEAM",
+          "limitsScope": "OWNER_OR_TEAM",
+          "targetScope": "OWNER_OR_TEAM",
+          "resourceSlots": "OWNER_OR_TEAM",
+          "trade": "WORLD_SHARED_ONLY",
+          "vote": "WORLD_SHARED_ONLY",
+          "decidesEnding": "WORLD_SHARED_ONLY",
+          "zeroChallenge": "SUPPORTED"
+        }
+      },
+      {
+        "key": "match",
+        "section": "match",
+        "category": "PROOF",
+        "r5CompletionProof": true,
+        "completionProof": true,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER",
+          "WORLD",
+          "PARTICIPANTS"
+        ],
+        "tools": {
+          "costs": "OWNER_OR_TEAM",
+          "costOptions": "OWNER_OR_TEAM",
+          "limitsScope": "OWNER_OR_TEAM",
+          "targetScope": "OWNER_OR_TEAM",
+          "resourceSlots": "OWNER_OR_TEAM",
+          "trade": "WORLD_SHARED_ONLY",
+          "vote": "WORLD_SHARED_ONLY",
+          "decidesEnding": "WORLD_SHARED_ONLY",
+          "zeroChallenge": "SUPPORTED"
+        }
+      },
+      {
+        "key": "classify",
+        "section": "classify",
+        "category": "PROOF",
+        "r5CompletionProof": true,
+        "completionProof": true,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER",
+          "WORLD",
+          "PARTICIPANTS"
+        ],
+        "tools": {
+          "costs": "OWNER_OR_TEAM",
+          "costOptions": "OWNER_OR_TEAM",
+          "limitsScope": "OWNER_OR_TEAM",
+          "targetScope": "OWNER_OR_TEAM",
+          "resourceSlots": "OWNER_OR_TEAM",
+          "trade": "WORLD_SHARED_ONLY",
+          "vote": "WORLD_SHARED_ONLY",
+          "decidesEnding": "WORLD_SHARED_ONLY",
+          "zeroChallenge": "SUPPORTED"
+        }
+      },
+      {
+        "key": "estimate",
+        "section": "estimate",
+        "category": "NO_BRIDGE",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "UNSUPPORTED"
+        }
+      },
+      {
+        "key": "pricePair",
+        "section": "pricePair",
+        "category": "NO_BRIDGE",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "UNSUPPORTED"
+        }
+      },
+      {
+        "key": "hidden",
+        "section": "hiddenObject",
+        "category": "NO_BRIDGE",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "UNSUPPORTED"
+        }
+      },
+      {
+        "key": "predict",
+        "section": "predict",
+        "category": "NO_BRIDGE",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "UNSUPPORTED"
+        }
+      },
+      {
+        "key": "random",
+        "section": "random",
+        "category": "NO_BRIDGE",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "UNSUPPORTED"
+        }
+      },
+      {
+        "key": "profile",
+        "section": "profile",
+        "category": "NO_BRIDGE",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "UNSUPPORTED"
+        }
+      },
+      {
+        "key": "note",
+        "section": "note",
+        "category": "NO_BRIDGE",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "UNSUPPORTED"
+        }
+      },
+      {
+        "key": "objectCard",
+        "section": "photoCheck",
+        "category": "NO_BRIDGE",
+        "mode": "CARD",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "UNSUPPORTED"
+        }
+      },
+      {
+        "key": "bingo",
+        "section": "",
+        "category": "PRESENTATION",
+        "r5CompletionProof": false,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "UNSUPPORTED"
+        }
+      },
+      {
+        "key": "steps",
+        "section": "steps",
+        "category": "NO_BRIDGE",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "CHALLENGE_ONLY"
+        }
+      },
+      {
+        "key": "react",
+        "section": "reaction",
+        "category": "NO_BRIDGE",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "CHALLENGE_ONLY"
+        }
+      },
+      {
+        "key": "shake",
+        "section": "ballShake",
+        "category": "NO_BRIDGE",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "CHALLENGE_ONLY"
+        }
+      },
+      {
+        "key": "quiet",
+        "section": "quietHold",
+        "category": "NO_BRIDGE",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "CHALLENGE_ONLY"
+        }
+      },
+      {
+        "key": "compass",
+        "section": "compass",
+        "category": "NO_BRIDGE",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "CHALLENGE_ONLY"
+        }
+      },
+      {
+        "key": "shout",
+        "section": "shout",
+        "category": "NO_BRIDGE",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "CHALLENGE_ONLY"
+        }
+      },
+      {
+        "key": "countdown",
+        "section": "countdown",
+        "category": "NO_BRIDGE",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "CHALLENGE_ONLY"
+        }
+      },
+      {
+        "key": "stopwatch",
+        "section": "stopwatch",
+        "category": "NO_BRIDGE",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "CHALLENGE_ONLY"
+        }
+      },
+      {
+        "key": "photoCheck",
+        "section": "photoCheck",
+        "category": "NO_BRIDGE",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "UNSUPPORTED"
+        }
+      },
+      {
+        "key": "check",
+        "section": "check",
+        "category": "NO_BRIDGE",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "UNSUPPORTED"
+        }
+      },
+      {
+        "key": "d20",
+        "section": "diceRoll",
+        "category": "NO_BRIDGE",
+        "mode": "d20",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "UNSUPPORTED"
+        }
+      },
+      {
+        "key": "typeIn",
+        "section": "typeIn",
+        "category": "NO_BRIDGE",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "CHALLENGE_ONLY"
+        }
+      },
+      {
+        "key": "coin",
+        "section": "coinFlip",
+        "category": "NO_BRIDGE",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "UNSUPPORTED"
+        }
+      },
+      {
+        "key": "dice",
+        "section": "diceRoll",
+        "category": "NO_BRIDGE",
+        "mode": "d6",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "UNSUPPORTED",
+          "costOptions": "UNSUPPORTED",
+          "limitsScope": "UNSUPPORTED",
+          "targetScope": "UNSUPPORTED",
+          "resourceSlots": "UNSUPPORTED",
+          "trade": "UNSUPPORTED",
+          "vote": "UNSUPPORTED",
+          "decidesEnding": "UNSUPPORTED",
+          "zeroChallenge": "UNSUPPORTED"
+        }
+      },
+      {
+        "key": "scan",
+        "section": "scan",
+        "category": "PROOF",
+        "r5CompletionProof": false,
+        "completionProof": true,
+        "requiresProof": false,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER",
+          "WORLD",
+          "PARTICIPANTS"
+        ],
+        "tools": {
+          "costs": "OWNER_OR_TEAM",
+          "costOptions": "OWNER_OR_TEAM",
+          "limitsScope": "OWNER_OR_TEAM",
+          "targetScope": "OWNER_OR_TEAM",
+          "resourceSlots": "OWNER_OR_TEAM",
+          "trade": "WORLD_SHARED_ONLY",
+          "vote": "WORLD_SHARED_ONLY",
+          "decidesEnding": "WORLD_SHARED_ONLY",
+          "zeroChallenge": "UNSUPPORTED"
+        }
+      }
+    ],
+    "addons": [
+      {
+        "key": "timer",
+        "section": "timer",
+        "category": "PRESENTATION",
+        "r5CompletionProof": false,
+        "completionProof": false,
+        "requiresProof": true,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "PROOF_REQUIRED",
+          "costOptions": "PROOF_REQUIRED",
+          "limitsScope": "PROOF_REQUIRED",
+          "targetScope": "PROOF_REQUIRED",
+          "resourceSlots": "PROOF_REQUIRED",
+          "trade": "PROOF_REQUIRED",
+          "vote": "PROOF_REQUIRED",
+          "decidesEnding": "PROOF_REQUIRED",
+          "zeroChallenge": "PROOF_REQUIRED"
+        }
+      },
+      {
+        "key": "leaderboard",
+        "section": "leaderboard",
+        "category": "PRESENTATION",
+        "r5CompletionProof": false,
+        "completionProof": false,
+        "requiresProof": true,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "PROOF_REQUIRED",
+          "costOptions": "PROOF_REQUIRED",
+          "limitsScope": "PROOF_REQUIRED",
+          "targetScope": "PROOF_REQUIRED",
+          "resourceSlots": "PROOF_REQUIRED",
+          "trade": "PROOF_REQUIRED",
+          "vote": "PROOF_REQUIRED",
+          "decidesEnding": "PROOF_REQUIRED",
+          "zeroChallenge": "PROOF_REQUIRED"
+        }
+      },
+      {
+        "key": "multiplayer",
+        "section": "multiplayer",
+        "category": "PRESENTATION",
+        "r5CompletionProof": false,
+        "completionProof": false,
+        "requiresProof": true,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "PROOF_REQUIRED",
+          "costOptions": "PROOF_REQUIRED",
+          "limitsScope": "PROOF_REQUIRED",
+          "targetScope": "PROOF_REQUIRED",
+          "resourceSlots": "PROOF_REQUIRED",
+          "trade": "PROOF_REQUIRED",
+          "vote": "PROOF_REQUIRED",
+          "decidesEnding": "PROOF_REQUIRED",
+          "zeroChallenge": "PROOF_REQUIRED"
+        }
+      },
+      {
+        "key": "timeWindow",
+        "section": "timeWindow",
+        "category": "PRESENTATION",
+        "r5CompletionProof": false,
+        "completionProof": false,
+        "requiresProof": true,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "PROOF_REQUIRED",
+          "costOptions": "PROOF_REQUIRED",
+          "limitsScope": "PROOF_REQUIRED",
+          "targetScope": "PROOF_REQUIRED",
+          "resourceSlots": "PROOF_REQUIRED",
+          "trade": "PROOF_REQUIRED",
+          "vote": "PROOF_REQUIRED",
+          "decidesEnding": "PROOF_REQUIRED",
+          "zeroChallenge": "PROOF_REQUIRED"
+        }
+      },
+      {
+        "key": "blindTaste",
+        "section": "blindTaste",
+        "category": "PRESENTATION",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": true,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "PROOF_REQUIRED",
+          "costOptions": "PROOF_REQUIRED",
+          "limitsScope": "PROOF_REQUIRED",
+          "targetScope": "PROOF_REQUIRED",
+          "resourceSlots": "PROOF_REQUIRED",
+          "trade": "PROOF_REQUIRED",
+          "vote": "PROOF_REQUIRED",
+          "decidesEnding": "PROOF_REQUIRED",
+          "zeroChallenge": "PROOF_REQUIRED"
+        }
+      },
+      {
+        "key": "silentOrder",
+        "section": "silentOrder",
+        "category": "PRESENTATION",
+        "r5CompletionProof": false,
+        "completionProof": false,
+        "requiresProof": true,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "PROOF_REQUIRED",
+          "costOptions": "PROOF_REQUIRED",
+          "limitsScope": "PROOF_REQUIRED",
+          "targetScope": "PROOF_REQUIRED",
+          "resourceSlots": "PROOF_REQUIRED",
+          "trade": "PROOF_REQUIRED",
+          "vote": "PROOF_REQUIRED",
+          "decidesEnding": "PROOF_REQUIRED",
+          "zeroChallenge": "PROOF_REQUIRED"
+        }
+      },
+      {
+        "key": "diyName",
+        "section": "diyName",
+        "category": "PRESENTATION",
+        "r5CompletionProof": false,
+        "completionProof": false,
+        "requiresProof": true,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "PROOF_REQUIRED",
+          "costOptions": "PROOF_REQUIRED",
+          "limitsScope": "PROOF_REQUIRED",
+          "targetScope": "PROOF_REQUIRED",
+          "resourceSlots": "PROOF_REQUIRED",
+          "trade": "PROOF_REQUIRED",
+          "vote": "PROOF_REQUIRED",
+          "decidesEnding": "PROOF_REQUIRED",
+          "zeroChallenge": "PROOF_REQUIRED"
+        }
+      },
+      {
+        "key": "musicCorner",
+        "section": "musicCorner",
+        "category": "PRESENTATION",
+        "r5CompletionProof": false,
+        "completionProof": false,
+        "requiresProof": true,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "PROOF_REQUIRED",
+          "costOptions": "PROOF_REQUIRED",
+          "limitsScope": "PROOF_REQUIRED",
+          "targetScope": "PROOF_REQUIRED",
+          "resourceSlots": "PROOF_REQUIRED",
+          "trade": "PROOF_REQUIRED",
+          "vote": "PROOF_REQUIRED",
+          "decidesEnding": "PROOF_REQUIRED",
+          "zeroChallenge": "PROOF_REQUIRED"
+        }
+      },
+      {
+        "key": "dailySign",
+        "section": "dailySign",
+        "category": "PRESENTATION",
+        "r5CompletionProof": true,
+        "completionProof": false,
+        "requiresProof": true,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "PROOF_REQUIRED",
+          "costOptions": "PROOF_REQUIRED",
+          "limitsScope": "PROOF_REQUIRED",
+          "targetScope": "PROOF_REQUIRED",
+          "resourceSlots": "PROOF_REQUIRED",
+          "trade": "PROOF_REQUIRED",
+          "vote": "PROOF_REQUIRED",
+          "decidesEnding": "PROOF_REQUIRED",
+          "zeroChallenge": "PROOF_REQUIRED"
+        }
+      },
+      {
+        "key": "slowTask",
+        "section": "slowTask",
+        "category": "PRESENTATION",
+        "r5CompletionProof": false,
+        "completionProof": false,
+        "requiresProof": true,
+        "effectSlotSupport": true,
+        "effectSlotScopes": [
+          "OWNER"
+        ],
+        "tools": {
+          "costs": "PROOF_REQUIRED",
+          "costOptions": "PROOF_REQUIRED",
+          "limitsScope": "PROOF_REQUIRED",
+          "targetScope": "PROOF_REQUIRED",
+          "resourceSlots": "PROOF_REQUIRED",
+          "trade": "PROOF_REQUIRED",
+          "vote": "PROOF_REQUIRED",
+          "decidesEnding": "PROOF_REQUIRED",
+          "zeroChallenge": "PROOF_REQUIRED"
+        }
+      }
+    ],
+    "outcomeRules": {
+      "version": 1,
+      "nextStepId": "SETTLED_FEEDBACK",
+      "failParticipants": "UNSUPPORTED",
+      "vote": "TEAM_PASS_OWNER_AFTER"
+    },
+    "legacyProofs": {
+      "GPS": 5,
+      "qaText": 1,
+      "qaPick": 3,
+      "scan": 4
+    },
+    "constraints": {
+      "PROOF_REQUIRED": "附加项不能独立产生完成证明；branch/random 可随可信主玩法呈现，但不能独立结算",
+      "OWNER_OR_TEAM": "个人和独立队伍仅 OWNER 范围和目标；WORLD/PARTICIPANTS 仅 TEAM/WORLD_SHARED",
+      "WORLD_SHARED_ONLY": "交易与投票仅 TEAM/WORLD_SHARED；投票不能叠加节点费用、次数或独立奖励",
+      "CHALLENGE_ONLY": "传感器仅归零挑战且须有客观题备选；挑战不收费用、不发普通奖励、不推进章节",
+      "FREE_RETRY": "普通 qa TYPE/PICK 的 maxTries、sort 的 maxAttempts 必须为 0"
+    }
+  }
+}

@@ -20,9 +20,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.math.BigDecimal;
 import java.util.Date;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
@@ -87,6 +90,7 @@ class ErqingGateTest {
         productRoleService = mock(IProductRoleService.class);
 
         service = new CmsRegistrationServiceImpl();
+        ReflectionTestUtils.setField(service, "platformMemberId", 100000L);
         org.springframework.test.util.ReflectionTestUtils.setField(service, "growthService",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.IGrowthService.class));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
@@ -180,10 +184,10 @@ class ErqingGateTest {
         gate(topic(), new BigDecimal("-1"));
     }
 
-    /** 独立活动(无主题真源)⇒ 放行。平台自办,卖自己的东西(2026-07-16 拍板)。 */
     @Test
-    void noTopic_passes() {
-        gate(null, new BigDecimal("100.00"));
+    void missingSellerIsRejectedForCashAndStillAllowsFreeRegistration() {
+        assertThrows(RuntimeException.class, () -> gate(null, new BigDecimal("100.00")));
+        gate(null, BigDecimal.ZERO);
     }
 
     // ------------------------------------------------- ★路径可达性:真的调进去
@@ -205,19 +209,28 @@ class ErqingGateTest {
                 "票款归第三方的活动必须拒收 —— 平台代收再分账 = 二清。实际:" + e.getMessage());
     }
 
-    /** 独立活动 + 付费 ⇒ 过闸(生产实测 12 笔付费单走这条,拦了就是打挂现网)。 */
     @Test
-    void standaloneActivity_passes() {
+    void thirdPartyStandaloneActivityIsRejectedBeforeCreatingOrder() {
         givenActivityCarrying(null);
         givenTicket(new BigDecimal("100.00"));
         givenMember();
+        activityMapper.selectCmsActivityById(ACTIVITY).setMemberId(7L);
+        RuntimeException error = assertThrows(RuntimeException.class,
+                () -> service.createRegistration(MEMBER, 2, ACTIVITY, TICKET, 0, "张三", "13800000000", null, null));
+        assertTrue(error.getMessage().contains("暂不支持在线支付"));
+        verify(registrationMapper, never()).insertCmsRegistration(any());
+    }
 
-        try {
-            service.createRegistration(MEMBER, 2, ACTIVITY, TICKET, 0, "张三", "13800000000", null, null);
-        } catch (Exception e) {
-            assertTrue(!String.valueOf(e.getMessage()).contains("暂不支持在线支付"),
-                    "独立活动 = 平台自办,不该被二清闸拦。实际:" + e.getMessage());
-        }
+    @Test
+    void standaloneCashQuoteIsRejectedBeforePaymentAndFreeQuoteStillWorks() {
+        givenActivityCarrying(null);
+        givenTicket(new BigDecimal("100.00"));
+        givenMember();
+        assertThrows(RuntimeException.class,
+                () -> service.quoteRegistration(MEMBER, 2, ACTIVITY, TICKET, null, 0));
+        givenTicket(BigDecimal.ZERO);
+        assertEquals(0, service.quoteRegistration(MEMBER, 2, ACTIVITY, TICKET, null, 0)
+                .getPayAmount().signum());
     }
 
     /** 活动挂平台自营主题 + 付费 ⇒ 过闸。 */
@@ -418,18 +431,18 @@ class ErqingGateTest {
         assertThrows(RuntimeException.class, () -> service.assertCollectible(exist));
     }
 
-    /** 幂等重放 + 独立活动 ⇒ 放行(与主路径同口径)。 */
     @Test
-    void replayExistingOrder_standalone_passes() {
+    void replayExistingStandaloneOrderRequiresExplicitPlatformOwnership() {
         givenActivityCarrying(null);
-
-        com.chengyinhub.business.domain.CmsRegistration exist =
-                new com.chengyinhub.business.domain.CmsRegistration();
-        exist.setOwnerType(2L);
-        exist.setOwnerId(ACTIVITY);
-        exist.setPayableAmount(new BigDecimal("100.00"));
-
-        service.assertCollectible(exist);
+        CmsRegistration existing = new CmsRegistration();
+        existing.setOwnerType(2L);
+        existing.setOwnerId(ACTIVITY);
+        existing.setPayableAmount(new BigDecimal("100.00"));
+        assertThrows(RuntimeException.class, () -> service.assertCollectible(existing));
+        activityMapper.selectCmsActivityById(ACTIVITY).setMemberId(100000L);
+        service.assertCollectible(existing);
+        ReflectionTestUtils.setField(service, "platformMemberId", null);
+        assertThrows(RuntimeException.class, () -> service.assertCollectible(existing));
     }
 
     /** 幂等重放 + 免费单 ⇒ 放行(不进资金链)。 */

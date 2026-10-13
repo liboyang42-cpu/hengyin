@@ -9,7 +9,7 @@
     <cy-skeleton wx:if="{{loading && !hasPreview}}" type="card" count="{{2}}" />
     <cy-empty class="cy-fade-in" wx:elif="{{errorText === '缺少主题信息'}}" fill kind="missing-param" title="缺少主题信息"
               sub="当前链接没有携带主题参数，无法确认终价。" cta="返回上一页" bind:cta="goBack" />
-    <cy-error wx:elif="{{errorText && !hasPreview}}" fill title="定价信息加载失败" sub="{{errorText}}"
+    <cy-error load-failure wx:elif="{{errorText && !hasPreview}}" fill title="定价信息加载失败" sub="{{errorText}}"
               retry="重试" bind:retry="preview" auto-back />
     <block wx:else>
       <cy-inline-error wx:if="{{errorText && hasPreview}}" title="最新定价暂未取回" sub="{{errorText}}" action="重试" bind:action="preview" />

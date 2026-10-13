@@ -201,6 +201,9 @@ public class TopicRouteEngine {
             else if ("INC".equals(op)) {
                 Number old = state.variables.get(var);
                 state.variables.put(var, (old == null ? 0D : old.doubleValue()) + value.doubleValue());
+            } else if ("FLOOR".equals(op) && var.startsWith("counter.")) {
+                Number old = state.variables.get(var);
+                state.variables.put(var, Math.max(old == null ? 0D : old.doubleValue(), value.doubleValue()));
             } else throw new IllegalArgumentException("不支持的 effect:" + op);
         }
     }
@@ -327,7 +330,7 @@ public class TopicRouteEngine {
         private com.fasterxml.jackson.databind.node.ObjectNode themeRuntime = JSON.createObjectNode();
 
         public State() {}
-        private State copy() {
+        public State copy() {
             State out = new State();
             out.status = status; out.currentNodeId = currentNodeId; out.recommendedNodeId = recommendedNodeId;
             out.nodeStates.putAll(nodeStates); out.completedNodeIds.addAll(completedNodeIds);

@@ -301,6 +301,8 @@ page{background: var(--cy-bg-card);}
   justify-content: center;
   color: var(--cy-color-text-secondary);
 }
+/* 2026-10-10 主人:章节设置页头改「左 退出(文字) / 右 完成」。 */
+.cs-close.cs-exit { width: auto; min-width: 88rpx; margin-right: 0; margin-left: calc(var(--cy-space-1) * -1); padding: 0 var(--cy-space-1); justify-content: flex-start; color: var(--cy-color-text-primary); font-size: var(--cy-type-button); font-weight: 600; }
 
 /* 2026-09-08 用户逐屏走查:发布确认也要白底。它和章节设置共用 style/common.wxss 的
    .pop-model —— 那条是全站遗留的深色玻璃(rgba(10,9,13,.85) + color:#fff),
@@ -3145,8 +3147,8 @@ page { background: var(--cy-btn-solid-bg); }
   color: var(--cy-color-text-primary);
 }
 
-.story-editor__back { justify-content: center; }
-.story-editor__done { justify-content: flex-start; font-size: var(--cy-type-button); font-weight: 700; }
+.story-editor__back { justify-content: flex-start; font-size: var(--cy-type-button); font-weight: 600; }
+.story-editor__done { justify-content: flex-end; font-size: var(--cy-type-button); font-weight: 700; }
 
 .story-editor__heading {
   flex: 1; min-width: 0;
@@ -3887,6 +3889,14 @@ page { background: var(--cy-btn-solid-bg); }
   --cy-comp-btn-radius: var(--cy-radius-pill);
 }
 
+/* 「保存草稿」与「发布」同一条底栏、同一套药丸形状,次级样式区分轻重。 */
+.slopes-tabbar__draftCta {
+  flex: none;
+  margin-right: var(--cy-space-2);
+  --cy-btn-pad-x: 40rpx;
+  --cy-comp-btn-radius: var(--cy-radius-pill);
+}
+
 /* 第 2 页(票务)的「完成」。2026-08-11 用户定:两页平铺、没有先后,不用返回箭头 ——
    「完成」说的是这一页编完了,不是"退回上一步"。
    2026-09-05 按稿 P11 / C11 改成【整宽黑色药丸】:原来是左下角一行小字,与稿子差很远,
@@ -3952,14 +3962,16 @@ page { background: var(--cy-btn-solid-bg); }
    卡内两段式:上段「圆图标 + 标题 + 右侧动作」,下段隔一条线放次要信息/次要动作。
    颜色一律走 --cy-* :cy-sheet 的 .sh__panel 会把 role 档整组重声明,写死色号会在
    玩家深色弹窗里翻车(2026-08-07 白卡白字那一族的成因)。 */
-/* CU-M-159(2026-09-24):✕ 固定落右上角(全仓统一),主操作「完成」紧贴其左。
+/* 2026-10-10 主人裁定(取代 CU-M-159):编辑页头统一「左 退出(文字) / 右 完成」,✕ 不能代替退出。
+   .node-sheet__close 保留类名但渲染成左侧文字「退出」;只有退出没有完成的层(伏笔)退出单独居左。
+   原 CU-M-159(2026-09-24):✕ 固定落右上角(全仓统一),主操作「完成」紧贴其左。
    原来这行是 space-between 的「左 ✕ / 右 完成」,和相邻弹层的右上 ✕ 反向,
    人在同一个发布流程里找关闭要来回换方向。
    「上一步」那颗仍留最左:它退一层,不是关闭,和 cy-sheet 的 canBack + ✕ 同一分工。 */
 .node-sheet__top {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: var(--cy-space-2);
   padding: var(--cy-space-4) 0 var(--cy-space-3);
 }
@@ -3978,12 +3990,16 @@ page { background: var(--cy-btn-solid-bg); }
 /* 外框 88rpx 是触达下限,里面那颗 72rpx 才是稿子画的圆 —— 两者分开,
    缩视觉不缩热区。 */
 .node-sheet__close {
-  width: 88rpx;
+  min-width: 88rpx;
   height: 88rpx;
-  margin-right: calc(var(--cy-space-1) * -1);
+  margin-left: calc(var(--cy-space-1) * -1);
+  padding: 0 var(--cy-space-1);
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  color: var(--cy-color-text-primary);
+  font-size: var(--cy-type-button);
+  font-weight: 600;
 }
 
 .node-sheet__close-circle {
@@ -4092,6 +4108,14 @@ page { background: var(--cy-btn-solid-bg); }
   padding-top: var(--cy-space-2);
   border-top: 2rpx solid var(--cy-color-border-subtle);
 }
+
+.node-binding { margin-top: var(--cy-space-3); padding-top: var(--cy-space-3); border-top: 2rpx solid var(--cy-color-border-subtle); }
+.node-binding__row { display: flex; align-items: center; gap: var(--cy-space-3); margin-top: var(--cy-space-3); }
+.node-binding__label { font-size: var(--cy-font-label); color: var(--cy-color-text-primary); }
+.node-binding__error { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-color-status-danger); }
+.node-shared { margin-top: var(--cy-space-3); }
+.node-shared__site { display: block; margin-top: var(--cy-space-1); }
+.node-shared__action { max-width: 100%; width: fit-content; height: auto; min-height: var(--cy-btn-h); margin-top: var(--cy-space-2); white-space: normal; }
 
 .node-card__addr {
   flex: 1;
@@ -4765,3 +4789,5 @@ page { background: var(--cy-btn-solid-bg); }
 .slopes-chapter-ending { margin-left: var(--cy-space-2); padding: 2rpx 14rpx; border-radius: var(--cy-radius-pill);
   font-size: var(--cy-type-caption); font-weight: 600; color: var(--cy-color-text-secondary); background: var(--cy-color-bg-surface-subtle); }
 .chapter-setting-row { margin-top: var(--cy-space-3); }
+
+@import "./game-rules.wxss"; /* 玩法规则编辑层（协调者设计） */

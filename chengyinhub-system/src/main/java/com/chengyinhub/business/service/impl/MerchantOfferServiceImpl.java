@@ -50,8 +50,20 @@ import com.chengyinhub.system.service.ISysCategoryService;
 @Service
 public class MerchantOfferServiceImpl implements IMerchantOfferService {
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.support.TopicSupplyReviewService supplyReviewService;
+
     @Autowired
     private MerchantChapterOfferMapper offerMapper;
+
+    @Autowired
+    private com.chengyinhub.business.mapper.RegistrationEntitlementMapper registrationEntitlementMapper;
+
+    @Autowired
+    private com.chengyinhub.business.service.support.CommittedBusinessNotice businessNotice;
+
+    @Autowired
+    private com.chengyinhub.business.service.INotifyService notifyService;
 
     @Autowired
     private MerchantChapterApplicationMapper applicationMapper;
@@ -108,6 +120,7 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
         // uk_offer_merchant_chapter 只挡「同一商家同一章重复」,挡不住这个;DDL 侧也没有任何
         // CHECK/触发器兜底(max_merchant 纯靠应用层数)。
         // ⚠️ 复用 reserveEntitlements 用的同一把锁(lockChaptersForCapacity),锁序天然一致,不引入 ABBA。
+        supplyReviewService.lockBeforeChapter(offer.getChapterId());
         if (chapterMapper.lockChaptersForCapacity(
                 java.util.Collections.singletonList(offer.getChapterId())).isEmpty()) {
             throw new IllegalStateException("章节不存在");
@@ -389,6 +402,7 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
         }
         // 与入驻、购票共用章节锁；锁序保持章节 -> 主题 -> 供给。
         Long chapterId = location.getChapterId();
+        supplyReviewService.lockBeforeChapter(chapterId);
         List<Long> locked = chapterId == null ? null : chapterMapper.lockChaptersForCapacity(
                 java.util.Collections.singletonList(chapterId));
         if (locked == null || locked.size() != 1) {
@@ -429,7 +443,8 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
             throw new IllegalStateException("供给状态异常，暂不能退出");
         }
         // 锁价不阻止商家退出；只暂停新增报名，已售订单、履约应收和核销事实不变。
-        if (required && Integer.valueOf(1).equals(topic.getUserStatus())
+        boolean reviewInvalidated = supplyReviewService.invalidate(topic.getId(), merchantId);
+        if ((required || reviewInvalidated) && Integer.valueOf(1).equals(topic.getUserStatus())
                 && cmsTopicService.casUserStatus(topic.getId(), 1, 0) != 1) {
             throw new IllegalStateException("主题状态刚发生变化，请刷新后重试");
         }
@@ -438,6 +453,20 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
         }
         applicationMapper.retireApprovedForSupplyExit(topic.getId(), chapterId, merchantId);
         invalidateApprovedCanonical(topic.getId(), "ordinary-chapter-supply-withdraw");
+        businessNotice.sendAfterCommit(topic.getMemberId(), "章节供给已退出",
+                "主题「" + topic.getName() + "」有章节供给退出。" + (required ? "已暂停新报名，请核对补位方案。" : "请核对已有玩家的履约安排。"),
+                "chapter-supply-withdraw-owner", offerId);
+        businessNotice.executeAfterCommit("chapter-supply-withdraw-players", offerId, () -> {
+            List<Long> affected = registrationEntitlementMapper.selectAffectedPaidMembers(topic.getId(), chapterId);
+            boolean delivered = true;
+            if (affected != null) for (Long playerId : new java.util.LinkedHashSet<>(affected)) {
+                if (playerId != null && playerId > 0 && !playerId.equals(topic.getMemberId())) {
+                    delivered = notifyService.notifyOfficialBroadcast(playerId, "已购章节供给有变化",
+                            "主题「" + topic.getName() + "」有待核销章节的商家供给退出，请在出发前联系主办方确认履约安排。") && delivered;
+                }
+            }
+            return delivered;
+        });
         return required;
     }
 
@@ -533,6 +562,7 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
 
         // ★ 与 enroll/reserveEntitlements 同一把章节行锁:调参会动 quota_total(容量的分子),
         // 不与购票预占串行的话 —— 预占在旧容量上算 capacity、这里同时把 quota_total 改小 ⇒ 超卖。
+        supplyReviewService.lockBeforeChapter(existing.getChapterId());
         if (chapterMapper.lockChaptersForCapacity(
                 java.util.Collections.singletonList(existing.getChapterId())).isEmpty()) {
             throw new IllegalStateException("章节不存在");

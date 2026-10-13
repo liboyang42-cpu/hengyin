@@ -5,6 +5,8 @@ function returnToCoopOrigin(topicId) {
     const page = pages[i];
     if (page.route !== 'pages/topic/merchantinfo/merchantinfo' || String(page.data.topicId) !== String(topicId)) continue;
     if (!((page.data.clubSheet || {}).show || (page.data.merchantSheet || {}).show)) continue;
+    if (page._disposed || (page._projectMemberId !== undefined
+        && page._projectMemberId !== String(getApp().getUserID() || ''))) continue;
     page.loadProjectHome();
     wx.navigateBack({ delta: pages.length - 1 - i });
     return true;

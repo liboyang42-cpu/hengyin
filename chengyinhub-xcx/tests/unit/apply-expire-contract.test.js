@@ -55,7 +55,7 @@ test('队长申请列表行说真实剩余时间', () => {
 const PAGE = '../../subpackageRoam/nearby/index.js';
 let config; let requests;
 global.getApp = () => ({
-  globalData: {}, getImgUrl: (u) => u || '', sendRequest: (opts) => { requests.push(opts) },
+  getUserID: () => 7, globalData: { authorization: 'fixture-token' }, getImgUrl: (u) => u || '', sendRequest: (opts) => { requests.push(opts) },
 });
 global.wx = {
   getWindowInfo: () => ({ screenHeight: 844, safeArea: { bottom: 810 } }),

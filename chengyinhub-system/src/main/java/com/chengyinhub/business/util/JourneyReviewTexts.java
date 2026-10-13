@@ -74,12 +74,39 @@ public final class JourneyReviewTexts {
         }
     }
 
+    public static List<Entry> collectChapters(List<ChapterDTO> chapters) {
+        List<Entry> entries = new ArrayList<>();
+        if (chapters == null) return entries;
+        for (int i = 0; i < chapters.size(); i++) {
+            ChapterDTO chapter = chapters.get(i);
+            if (chapter == null) continue;
+            String path = "chapters[" + i + "]";
+            add(entries, path + ".name", chapter.getName());
+            add(entries, path + ".description", chapter.getDescription());
+            add(entries, path + ".category", chapter.getCategory());
+            if (chapter.getNodes() == null) continue;
+            for (int j = 0; j < chapter.getNodes().size(); j++) {
+                com.chengyinhub.business.domain.dto.NodeDTO node = chapter.getNodes().get(j);
+                if (node == null) continue;
+                String nodePath = path + ".nodes[" + j + "]";
+                add(entries, nodePath + ".name", node.getName());
+                add(entries, nodePath + ".description", node.getDescription());
+                add(entries, nodePath + ".address", node.getAddress());
+                add(entries, nodePath + ".businessTime", node.getBusinessTime());
+                add(entries, nodePath + ".hookText", node.getHookText());
+                add(entries, nodePath + ".cardHookLong", node.getCardHookLong());
+                add(entries, nodePath + ".fragmentText", node.getFragmentText());
+            }
+        }
+        return entries;
+    }
+
     public static List<Entry> collectThemeRuntime(String rawJson) {
         List<Entry> entries=new ArrayList<>();collectThemeRuntime(parse(rawJson),"themeRuntimeConfig",entries);return entries;
     }
     private static void collectThemeRuntime(JsonNode node,String path,List<Entry> entries) {
         if(node==null)return;
-        if(node.isObject())node.fields().forEachRemaining(row->{String key=row.getKey();if(java.util.Arrays.asList("name","hpName","luckName","content","title","summary","body","label","prompt","fb","text","ally","neutral","guarded","opener","brief","line","reply","question","q","a","open").contains(key))add(entries,path+"."+key,row.getValue());collectThemeRuntime(row.getValue(),path+"."+key,entries);});
+        if(node.isObject())node.fields().forEachRemaining(row->{String key=row.getKey();if(java.util.Arrays.asList("name","hpName","luckName","content","title","summary","body","label","prompt","fb","text","ally","neutral","guarded","opener","brief","line","reply","question","q","a","open","zeroMessage").contains(key))add(entries,path+"."+key,row.getValue());collectThemeRuntime(row.getValue(),path+"."+key,entries);});
         else if(node.isArray())for(JsonNode child:node)collectThemeRuntime(child,path+"[]",entries);
     }
 
@@ -194,6 +221,8 @@ public final class JourneyReviewTexts {
             }
         }
         addPlaySections(entries, root);
+        com.chengyinhub.business.service.support.GameplayOutcomeRules.visit(root,
+                (path, row) -> add(entries, "blockConfig." + path + ".reply", row.get("reply")));
         return entries;
     }
 
@@ -202,6 +231,35 @@ public final class JourneyReviewTexts {
      * 它们与叙事段一样是创作者可写、玩家必看的文本,同一道审核闸。
      */
     private static void addPlaySections(List<Entry> entries, JsonNode root) {
+        JsonNode qa = root.path("qa");
+        for (String field : java.util.Arrays.asList("title", "lead", "answerText", "shotNote")) {
+            add(entries, "blockConfig.qa." + field, qa.get(field));
+        }
+        for (JsonNode option : array(qa.get("options"))) {
+            add(entries, "blockConfig.qa.options[].label", option.get("label"));
+            add(entries, "blockConfig.qa.options[].fb", option.get("fb"));
+        }
+        add(entries, "blockConfig.scan.reply", root.path("scan").get("reply"));
+        for (JsonNode image : array(root.path("album").get("images"))) {
+            add(entries, "blockConfig.album.images[].line", image.get("line"));
+        }
+        JsonNode photo = root.path("photoCheck");
+        for (String field : java.util.Arrays.asList("title", "shotNote", "requirement", "cardTitle")) {
+            add(entries, "blockConfig.photoCheck." + field, photo.get(field));
+        }
+        JsonNode note = root.path("note");
+        add(entries, "blockConfig.note.title", note.get("title"));
+        add(entries, "blockConfig.note.prompt", note.get("prompt"));
+        JsonNode presets = note.get("presets");
+        if (presets != null && presets.isArray()) for (JsonNode preset : presets) {
+            if (preset.isTextual()) add(entries, "blockConfig.note.presets[]", preset);
+            else if (preset.isObject()) {
+                add(entries, "blockConfig.note.presets[].text", preset.get("text"));
+                add(entries, "blockConfig.note.presets[].label", preset.get("label"));
+            }
+        }
+        add(entries, "blockConfig.typeIn.title", root.path("typeIn").get("title"));
+        add(entries, "blockConfig.typeIn.target", root.path("typeIn").get("target"));
         JsonNode sort = root.get("sort");
         if (sort != null && sort.isObject()) {
             add(entries, "blockConfig.sort.prompt", sort.get("prompt"));

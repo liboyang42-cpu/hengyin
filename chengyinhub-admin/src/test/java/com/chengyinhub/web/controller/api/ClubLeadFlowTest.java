@@ -59,6 +59,7 @@ class ClubLeadFlowTest {
     private ClubEventOpsMapper clubEventOpsMapper;
     private ClubRoleAssignmentMapper clubRoleAssignmentMapper;
     private ICmsActivityService activityService;
+    private com.chengyinhub.business.mapper.CmsActivityMapper activityMapper;
     private IClubService clubService;
     private ICmsTopicChapterService chapterService;
     private ICmsRegistrationService registrationService;
@@ -77,6 +78,8 @@ class ClubLeadFlowTest {
         ReflectionTestUtils.setField(c, "clubEventOpsMapper", clubEventOpsMapper);
         ReflectionTestUtils.setField(c, "clubRoleAssignmentMapper", clubRoleAssignmentMapper);
         ReflectionTestUtils.setField(c, "cmsActivityService", activityService);
+        ReflectionTestUtils.setField(c, "cmsActivityMapper", activityMapper);
+        ReflectionTestUtils.setField(c, "clubGatherArrivalPolicy", new com.chengyinhub.business.service.support.ClubGatherArrivalPolicy());
         ReflectionTestUtils.setField(c, "clubService", clubService);
         // 领队解析口径已抽到 ClubEventLeadResolver(与 /api/play/nodes 共用同一份);
         // 这里用同样两个 mock 现搭一个真实例,判定内容与原私有方法完全一致。
@@ -87,6 +90,7 @@ class ClubLeadFlowTest {
         ReflectionTestUtils.setField(c, "cmsRegistrationService", registrationService);
         ReflectionTestUtils.setField(c, "playerNodeProgressService", progressService);
         ReflectionTestUtils.setField(c, "umsMemberService", memberService);
+        ReflectionTestUtils.setField(c, "wxContentSecurityService", mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
         ReflectionTestUtils.setField(c, "growthService", growthService);
         ReflectionTestUtils.setField(c, "pointsAwardService", pointsAwardService);
         return c;
@@ -105,6 +109,7 @@ class ClubLeadFlowTest {
         clubEventOpsMapper = mock(ClubEventOpsMapper.class);
         clubRoleAssignmentMapper = mock(ClubRoleAssignmentMapper.class);
         activityService = mock(ICmsActivityService.class);
+        activityMapper = mock(com.chengyinhub.business.mapper.CmsActivityMapper.class);
         clubService = mock(IClubService.class);
         chapterService = mock(ICmsTopicChapterService.class);
         registrationService = mock(ICmsRegistrationService.class);
@@ -116,7 +121,11 @@ class ClubLeadFlowTest {
         // 带领场活动:club_id=5(带领场),队长=9,topic=1
         CmsActivity act = new CmsActivity();
         act.setId(100L); act.setClubId(5L); act.setMemberId(9L); act.setTopicId(1L);
+        act.setDelFlag(0); act.setStartDate(new java.util.Date(System.currentTimeMillis() + 1800000L));
+        act.setEndDate(new java.util.Date(System.currentTimeMillis() + 10800000L));
+        act.setLatitude("31.23"); act.setLongitude("121.47");
         when(activityService.selectCmsActivityById(100L)).thenReturn(act);
+        when(activityMapper.selectCmsActivityByIdForUpdate(100L)).thenReturn(act);
         // 运营权委托:带领场领队=承接俱乐部(5)主理人;本场主理人即队长9(保持"队长9"意图)
         Club club = new Club(); club.setId(5L); club.setMemberId(9L);
         when(clubService.selectClubById(5L)).thenReturn(club);
@@ -210,8 +219,8 @@ class ClubLeadFlowTest {
         assertEquals(10L, stateHolder[0].getCurrentChapterId().longValue(), "发车放行第一章");
 
         // ③ 成员签到(幂等:重复不增)
-        member.arrive("100");
-        member.arrive("100");
+        member.arrive("100", 31.23D, 121.47D);
+        member.arrive("100", 31.23D, 121.47D);
         assertEquals(1, checkins.size(), "同成员重复签到内存只一条(真库靠 uk 幂等)");
 
         // ④ 队长顺延下一章(10→20)
@@ -266,8 +275,8 @@ class ClubLeadFlowTest {
 
     @Test
     void teamProgressUsesLatestAttendanceCorrectionAndKeepsLeaderCheckin() {
-        member.arrive("100");
-        leader.arrive("100");
+        member.arrive("100", 31.23D, 121.47D);
+        leader.arrive("100", 31.23D, 121.47D);
         Map<String, Object> corrected = new HashMap<>();
         corrected.put("memberId", 7L);
         corrected.put("baseArrivedAt", new java.util.Date());
@@ -306,7 +315,7 @@ class ClubLeadFlowTest {
     void participantFromAnotherActivityCannotArriveOrReadThisTeam() {
         leader.start("100");
 
-        AjaxResult arrive = otherActivityParticipant.arrive("100");
+        AjaxResult arrive = otherActivityParticipant.arrive("100", 31.23D, 121.47D);
         AjaxResult progress = otherActivityParticipant.teamProgress(100L);
 
         assertEquals("仅本场已支付成员或领队可签到", arrive.get("msg"));

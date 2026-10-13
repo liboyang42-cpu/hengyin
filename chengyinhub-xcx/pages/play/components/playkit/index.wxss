@@ -1,1 +1,3 @@
 /* cy-playkit · 玩法分发器。本体不画任何东西 —— 视觉全在被分发的子组件里。 */
+.pk-terminal { display:flex; flex-direction:column; gap:var(--cy-space-3); padding:var(--cy-space-4); color:var(--cy-color-text-primary); }
+.pk-terminal__title { font-size:var(--cy-type-section-title); font-weight:600; }

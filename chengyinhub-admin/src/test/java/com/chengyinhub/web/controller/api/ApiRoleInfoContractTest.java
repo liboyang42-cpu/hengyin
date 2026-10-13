@@ -51,6 +51,7 @@ class ApiRoleInfoContractTest
     private IClubLeaderService leaders;
     private IMmsMerchantService merchants;
     private IClubService clubs;
+    private IRoleService roleService;
 
     @BeforeEach
     @SuppressWarnings("unchecked")
@@ -66,7 +67,7 @@ class ApiRoleInfoContractTest
 
         perm = new UserPermission();
         perm.setNodeTypes("scan,quiz");   // 库里有值也不许下发
-        IRoleService roleService = mock(IRoleService.class);
+        roleService = mock(IRoleService.class);
         when(roleService.getPermission(any(UmsMember.class))).thenReturn(perm);
         when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
 
@@ -110,6 +111,8 @@ class ApiRoleInfoContractTest
         assertEquals(42L, owned.get(0).get("id"));
         assertEquals(0L, owned.get(0).get("status"));
         when(capabilities.hasCapability(MEMBER, MemberCapability.CAP_CLUB_LEADER)).thenReturn(true);
+        assertEquals(false, ((Map<?, ?>) controller.roleInfo().get(AjaxResult.DATA_TAG)).get("isClubLeader"));
+        when(roleService.resolveRole(any(UmsMember.class))).thenReturn(IRoleService.ROLE_CLUB);
         assertEquals(true, ((Map<?, ?>) controller.roleInfo().get(AjaxResult.DATA_TAG)).get("isClubLeader"));
     }
 
@@ -123,6 +126,8 @@ class ApiRoleInfoContractTest
         merchant.setAccountStatus(1L); merchant.setDelFlag(2);
         assertEquals(false, ((Map<?, ?>) controller.roleInfo().get(AjaxResult.DATA_TAG)).get("isMerchant"));
         merchant.setDelFlag(0);
+        assertEquals(false, ((Map<?, ?>) controller.roleInfo().get(AjaxResult.DATA_TAG)).get("isMerchant"));
+        when(roleService.resolveRole(any(UmsMember.class))).thenReturn(IRoleService.ROLE_MERCHANT);
         assertEquals(true, ((Map<?, ?>) controller.roleInfo().get(AjaxResult.DATA_TAG)).get("isMerchant"));
     }
 

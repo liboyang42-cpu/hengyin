@@ -732,6 +732,43 @@ class 门禁2_task_bean注册(unittest.TestCase):
                      '    public void run() {}\n}\n')
         self.assertEqual(find_unregistered_beans(self.root), [])
 
+    def test_leader_schedule_requires_actual_startup_and_matching_typed_callback(self):
+        self._写java("LeaderDemoJob", '@Component\npublic class LeaderDemoJob { public void run() {} }\n')
+        path = os.path.join(self.root, "chengyinhub-admin/src/main/java/com/chengyinhub/web/job/LeaderScheduledJobsConfig.java")
+        os.makedirs(os.path.dirname(path))
+        source = '''import com.chengyinhub.quartz.service.MySqlSchedulerCoordinator;
+@Configuration
+public class LeaderScheduledJobsConfig {
+    private final MySqlSchedulerCoordinator coordinator;
+    private final LeaderDemoJob work;
+    @PostConstruct
+    public void register() {
+        coordinator.registerCron("leaderDemoJob.run()", "0 15 3 * * ?", work::run);
+    }
+}
+'''
+        for method in ('registerCron', 'registerFixedDelay'):
+            with open(path, "w", encoding="utf-8") as target:
+                changed = source.replace('registerCron', method)
+                if method == 'registerFixedDelay':
+                    changed = changed.replace('"0 15 3 * * ?"', 'Duration.ofSeconds(5), Duration.ZERO')
+                target.write(changed)
+            self.assertEqual([], find_unregistered_beans(self.root))
+        for changed in (
+                source.replace('coordinator.registerCron', '// coordinator.registerCron'),
+                source.replace('coordinator.registerCron', 'other.registerCron'),
+                source.replace('leaderDemoJob.run()', 'anotherJob.run()'),
+                source.replace('work::run', 'work::missing'),
+                source.replace('LeaderDemoJob work', 'OtherJob work'),
+                source.replace('@Configuration', ''),
+                source.replace('@PostConstruct', ''),
+                source.replace('coordinator.registerCron', 'if (false) coordinator.registerCron'),
+                source.replace('leaderDemoJob.run()', 'leaderDemoJob.missing()').replace('work::run', 'work::missing')):
+            with self.subTest(changed=changed):
+                with open(path, "w", encoding="utf-8") as target:
+                    target.write(changed)
+                self.assertEqual(['leaderDemoJob'], [bean for bean, _ in find_unregistered_beans(self.root)])
+
     def test_负控_注销SQL不算注册(self):
         """★ 方向陷阱:DELETE FROM sys_job 是【注销】,把它算成「有注册」= 方向搞反。
 

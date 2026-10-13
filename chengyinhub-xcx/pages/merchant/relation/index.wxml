@@ -26,7 +26,7 @@ module.exports = { valid: valid };
   <view class="body">
     <cy-skeleton wx:if="{{pageState === 'loading'}}" type="card" count="{{3}}" loading-label="合作对象加载中" />
     <!-- 未登录不再整屏拦:静默登录后自动加载;登录失败只留这条内联错误 + 重试。 -->
-    <cy-inline-error class="rel-inline-error" wx:elif="{{pageState === 'error'}}" kind="data"
+    <cy-inline-error load-failure class="rel-inline-error" wx:elif="{{pageState === 'error'}}" kind="data"
       title="合作数据加载失败" sub="{{error}}" action="重新加载" bind:action="retryRelation" />
     <block wx:else>
       <view wx:if="{{refreshing}}" class="refresh-note" aria-role="status" aria-live="polite">
@@ -34,7 +34,7 @@ module.exports = { valid: valid };
       </view>
 
       <block wx:if="{{activeTab === 'merchant'}}">
-        <cy-inline-error class="rel-inline-error" wx:if="{{merchantError}}" kind="data"
+        <cy-inline-error load-failure class="rel-inline-error" wx:if="{{merchantError}}" kind="data"
           title="部分商家资料暂不可用" sub="{{merchantError}}" action="重新加载" bind:action="loadRelationHome" />
         <!-- 2026-08-20 卡片重设计:cy-cell 行换新版商家卡(与玩家发现页同一组件,浅色主题 token 自适应) -->
         <view class="rel-list" wx:if="{{relation.valid(merchants).length}}">
@@ -60,7 +60,7 @@ module.exports = { valid: valid };
       </block>
 
       <block wx:else>
-        <cy-inline-error class="rel-inline-error" wx:if="{{clubError}}" kind="data"
+        <cy-inline-error load-failure class="rel-inline-error" wx:if="{{clubError}}" kind="data"
           title="部分俱乐部资料暂不可用" sub="{{clubError}}" action="重新加载" bind:action="loadRelationHome" />
         <!-- 俱乐部换新版俱乐部卡；整卡进主页看资料，按钮「发起合作」直达 type=1 邀约表单 -->
         <view class="rel-list" wx:if="{{relation.valid(clubs).length}}">

@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,6 +72,7 @@ public class ImServiceImpl implements IImService
     @Autowired
     private IWxContentCallbackInboxService wxContentCallbackInboxService;
     @Autowired
+    @Lazy
     private IAuditTaskService auditTaskService;
     @Autowired
     private IClubParticipationGuard clubParticipationGuard;
@@ -109,6 +111,7 @@ public class ImServiceImpl implements IImService
     {
         List<ImConversationMember> mine = memberMapper.selectMyConversations(memberId);
         List<Map<String, Object>> out = new ArrayList<>();
+        Map<Long, ImMessage> latestVisible = new HashMap<>();
         if (mine == null)
         {
             return out;
@@ -127,14 +130,35 @@ public class ImServiceImpl implements IImService
             Map<String, Object> row = new HashMap<>();
             row.put("conversationId", c.getId());
             row.put("type", c.getType());
-            row.put("lastMsgType", c.getLastMsgType());
-            row.put("lastMsgText", c.getLastMsgText());
-            row.put("lastMsgAt", c.getLastMsgAt());
+            List<ImMessage> visible = messageMapper.selectVisiblePage(c.getId(), memberId, null, 1);
+            ImMessage latest = visible == null || visible.isEmpty() ? null : visible.get(0);
+            if (latest != null)
+            {
+                latestVisible.put(c.getId(), latest);
+            }
+            row.put("lastMsgType", latest == null ? null : latest.getMsgType());
+            row.put("lastMsgText", latest == null ? "" : Integer.valueOf(ImMessage.MSG_IMAGE).equals(latest.getMsgType())
+                    ? "[图片]" : latest.getContent());
+            row.put("lastMsgAt", latest == null ? null : latest.getCreateTime());
             row.put("unread", m.getUnreadCount());
             row.put("muted", m.getMuted() == null ? 0 : m.getMuted());
             row.put("counterparty", counterpartyOf(c, memberId));
             out.add(row);
         }
+        out.sort((left, right) -> {
+            ImMessage a = latestVisible.get(left.get("conversationId"));
+            ImMessage b = latestVisible.get(right.get("conversationId"));
+            String aOrder = a == null || a.getVisibleOrderAt() == null ? "" : a.getVisibleOrderAt();
+            String bOrder = b == null || b.getVisibleOrderAt() == null ? "" : b.getVisibleOrderAt();
+            int order = bOrder.compareTo(aOrder);
+            if (order != 0)
+            {
+                return order;
+            }
+            long aId = a == null || a.getId() == null ? 0L : a.getId();
+            long bId = b == null || b.getId() == null ? 0L : b.getId();
+            return Long.compare(bId, aId);
+        });
         return out;
     }
 
@@ -267,7 +291,11 @@ public class ImServiceImpl implements IImService
             throw new RuntimeException("群聊已结束");
         }
         int s = size <= 0 ? 20 : Math.min(size, 50);
-        List<ImMessage> desc = messageMapper.selectPage(conversationId, cursorId, s);
+        List<ImMessage> desc = messageMapper.selectVisiblePage(conversationId, memberId, cursorId, s + 1);
+        boolean hasMore = desc.size() > s;
+        if (hasMore) {
+            desc = new ArrayList<>(desc.subList(0, s));
+        }
         List<ImMessage> asc = new ArrayList<>(desc);
         Collections.reverse(asc);
         // 群聊渲染:按 senderId 回填发送者昵称+头像(瞬态字段,带缓存避免重复查;系统消息 sender=0 不回填)
@@ -288,7 +316,7 @@ public class ImServiceImpl implements IImService
         Map<String, Object> res = new HashMap<>();
         res.put("list", asc);
         res.put("nextCursor", nextCursor);
-        res.put("hasMore", desc.size() >= s);
+        res.put("hasMore", hasMore);
         // 3-22:1:1 会话回读拉黑态,重进会话也能禁用输入框(拉黑只存服务端,前端内存态重进即丢)
         Long otherId = null;
         if (conversation != null && !Integer.valueOf(ImConversation.TYPE_GROUP).equals(conversation.getType()))
@@ -705,13 +733,17 @@ public class ImServiceImpl implements IImService
             {
                 throw new ServiceException(hangoutIdOfBizKey(observed.getBizKey()) != null ? "已退出该局，不能继续发送群消息"
                         : teamIdOf(observed) == null
-                        ? "已退出俱乐部，不能继续发送群消息" : "已退出队伍，不能继续发送群消息");
+                        ? "已退出俱乐部，不能继续发送群消息" : "已退出队伍，不能继续发送群消息", 403);
             }
         }
         requireConversationMembership(convId, memberId, "无权在该会话发送");
 
         // 与 closeClubGroup 共用会话行锁：关闭一旦提交，旧发送请求不能再在其后插入消息/复活未读。
         ImConversation conv = conversationMapper.selectImConversationByIdForUpdate(convId);
+        if (conv != null && Integer.valueOf(ImConversation.TYPE_SYSTEM).equals(conv.getType()))
+        {
+            throw new ServiceException("系统会话不允许用户发送消息");
+        }
         boolean isGroup = conv != null && conv.getType() != null && conv.getType() == ImConversation.TYPE_GROUP;
         if (isGroup && !Integer.valueOf(0).equals(conv.getStatus()))
         {
@@ -769,8 +801,7 @@ public class ImServiceImpl implements IImService
         else if (type == ImMessage.MSG_IMAGE)
         {
             traceId = wxContentSecurityService.checkMediaAsync(content, openid);
-            if (wxContentSecurityService.isEnabled()
-                    && (traceId == null || traceId.trim().length() == 0))
+            if (traceId == null || traceId.trim().length() == 0)
             {
                 throw new ServiceException("内容审核服务繁忙，请稍后重试");
             }
@@ -844,8 +875,9 @@ public class ImServiceImpl implements IImService
             summary = summary.substring(0, 200);
         }
         conversationMapper.updateLastMessage(convId, type, summary, new Date());
-        if (isGroup)
+        if (type != ImMessage.MSG_IMAGE && isGroup)
         {
+            // 图片在审核通过后才给收件人增加未读。
             // 群:给除发送者外的所有成员各 +1 未读(替代单聊的单一 receiver 扇出)
             if (parts != null)
             {
@@ -858,7 +890,7 @@ public class ImServiceImpl implements IImService
                 }
             }
         }
-        else if (receiverId > 0)
+        else if (type != ImMessage.MSG_IMAGE && receiverId > 0)
         {
             memberMapper.addUnread(convId, receiverId, 1);
         }
@@ -1026,9 +1058,12 @@ public class ImServiceImpl implements IImService
                     : teamIdOf(conversation) == null
                     ? "已退出俱乐部，无权操作群聊" : "已退出队伍，无权操作群聊");
         }
-        List<ImMessage> latest = messageMapper.selectPage(conversationId, null, 1);
+        List<ImMessage> latest = messageMapper.selectVisiblePage(conversationId, memberId, null, 1);
         Long lastId = (latest == null || latest.isEmpty()) ? 0L : latest.get(0).getId();
-        memberMapper.markRead(conversationId, memberId, lastId);
+        String cutoff = latest == null || latest.isEmpty() ? "1970-01-01 00:00:00.000000" : latest.get(0).getVisibleOrderAt();
+        if (memberMapper.markReadVisible(conversationId, memberId, lastId, cutoff) <= 0) {
+            throw new ServiceException("消息可见状态已变化，请刷新后重试");
+        }
     }
 
     @Override

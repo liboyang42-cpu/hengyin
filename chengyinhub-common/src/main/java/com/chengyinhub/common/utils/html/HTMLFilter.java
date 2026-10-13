@@ -198,7 +198,9 @@ public final class HTMLFilter
     public String filter(final String input)
     {
         reset();
-        String s = input;
+        String marker = "text-bracket-" + java.util.UUID.randomUUID() + "-";
+        while (input.contains(marker)) marker = "text-bracket-" + java.util.UUID.randomUUID() + "-";
+        String s = protectTextBrackets(input, marker);
 
         s = escapeComments(s);
 
@@ -210,7 +212,29 @@ public final class HTMLFilter
 
         // s = validateEntities(s);
 
-        return s;
+        return s.replace(marker + "left", "<").replace(marker + "right", ">");
+    }
+
+    private String protectTextBrackets(String input, String marker)
+    {
+        StringBuilder text = new StringBuilder(input.length());
+        boolean tag = false;
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            if (c == '<') {
+                char next = i + 1 < input.length() ? input.charAt(i + 1) : 0;
+                char afterSlash = i + 2 < input.length() ? input.charAt(i + 2) : 0;
+                boolean startsTag = (next >= 'a' && next <= 'z') || (next >= 'A' && next <= 'Z')
+                        || (next == '/' && ((afterSlash >= 'a' && afterSlash <= 'z')
+                        || (afterSlash >= 'A' && afterSlash <= 'Z'))) || next == '!' || next == '?';
+                if (startsTag) { tag = true; text.append(c); }
+                else text.append(marker).append("left");
+            } else if (c == '>') {
+                if (tag) { tag = false; text.append(c); }
+                else text.append(marker).append("right");
+            } else text.append(c);
+        }
+        return text.toString();
     }
 
     public boolean isAlwaysMakeTags()

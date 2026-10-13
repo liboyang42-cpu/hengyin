@@ -83,6 +83,7 @@ class ClubOwnerQuotaConcurrencyTransactionTest {
     private ClubMapper clubs;
     private ClubGovernanceMapper governance;
     private ICapabilityService capabilities;
+    private IRoleService roles;
     private IClubService clubService;
     private ClubGovernanceService governanceService;
 
@@ -173,7 +174,7 @@ class ClubOwnerQuotaConcurrencyTransactionTest {
         assertFalse(clubLeaderCapabilities.contains(OWNER));
         assertEquals(IRoleService.ROLE_PLAYER, accounts.get(OWNER).getRole());
         verify(members, atLeast(2)).lockMemberById(OWNER);
-        verify(capabilities, times(1)).revoke(OWNER, MemberCapability.CAP_CLUB_LEADER);
+        verify(roles, times(1)).changeRole(OWNER, IRoleService.ROLE_PLAYER, 0L);
     }
 
     private IClubService proxiedClubService() {
@@ -209,10 +210,18 @@ class ClubOwnerQuotaConcurrencyTransactionTest {
             return 1;
         });
 
-        IRoleService roles = mock(IRoleService.class);
+        roles = mock(IRoleService.class);
         when(roles.resolveRole(any(UmsMember.class)))
                 .thenAnswer(call -> call.getArgument(0, UmsMember.class).getRole());
 
+        org.mockito.Mockito.doAnswer(call -> {
+            Long memberId = call.getArgument(0, Long.class);
+            String role = call.getArgument(1, String.class);
+            accounts.get(memberId).setRole(role);
+            if (IRoleService.ROLE_CLUB.equals(role)) clubLeaderCapabilities.add(memberId);
+            else clubLeaderCapabilities.remove(memberId);
+            return null;
+        }).when(roles).changeRole(anyLong(), any(String.class), anyLong());
         IMerchantAccessService merchantAccess = mock(IMerchantAccessService.class);
         IClubRoleAssignmentService roleAssignments = mock(IClubRoleAssignmentService.class);
         when(roleAssignments.revokeAllForAccessEnd(

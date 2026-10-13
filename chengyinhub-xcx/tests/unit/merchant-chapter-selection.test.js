@@ -63,6 +63,21 @@ function requestByUrl(url) {
   return requests.find(request => request.url === url);
 }
 
+test('章节邀请撤回必须由危险确认发送，取消确认不提交', () => {
+  const page = makePage();
+  const dc = attachDangerConfirm(page);
+  page.revokeChapterInvitation({ currentTarget: { dataset: { id: 71 } } });
+  assert.equal(requests.length, 0);
+  assert.equal(dc.opens[0].key, 'merchant.chapterInvitation.revoke');
+  dc.cancel();
+  assert.equal(requests.length, 0);
+  dc.confirm();
+  const request = requestByUrl('/api/merchant/chapter-application/invite/revoke');
+  assert.equal(JSON.parse(request.data).applicationId, 71);
+  request.fail();
+  assert.ok(dc.failedCalls.length);
+});
+
 test('承接报名仅有详情和任务向导，章节内容保持顺序且不重复描述', () => {
   const page = makePage();
   assert.deepEqual(page.data.browseTabs.map(tab => tab.label), ['详情', '任务向导']);
@@ -1022,6 +1037,69 @@ function pausedReplacementPage(offer) {
   page.refreshMyChapterApplications();
   return page;
 }
+
+function pendingReplacementPage(info, offer) {
+  const page = pausedReplacementPage(offer);
+  page.data.info = Object.assign({ lifecycle: 7, status: 0, userStatus: 0,
+    productType: 2, publishMode: 'pro', delFlag: 0 }, info);
+  page.refreshMyChapterApplications();
+  return page;
+}
+
+test('待审补位仅在真实专业漫游与当前已接受本人申请中解锁既有点位表单', () => {
+  const page = pendingReplacementPage();
+  assert.equal(page.data.myChapterApplications[0].canConfigureNode, true);
+  assert.equal(page.data.myChapterApplications[0].canSubmitOffer, true);
+  page.openChapterNodeForm({ currentTarget: { dataset: { chapterId: 124 } } });
+  assert.equal(page.data.chapterNodeFormVisible, true);
+  page.onChapterNodeFormSubmit({ detail: { chapterId: 124, name: '花店补位点', templateId: 6003,
+    address: '上海市黄浦区样板花店3', longitude: '121.5', latitude: '31.26' } });
+  assert.equal(requestByUrl('/api/merchant/chapter-node/submit').data,
+    JSON.stringify({ chapterId: 124, templateId: 6003, name: '花店补位点',
+      address: '上海市黄浦区样板花店3', longitude: '121.5', latitude: '31.26', xpValue: null }));
+  assert.equal(requestByUrl('/api/merchant/chapter-application/apply'), undefined);
+  const pending = pendingReplacementPage({}, { offerId: 11, offerState: 'INACTIVE' });
+  assert.equal(pending.data.myChapterApplications[0].canConfigureNode, true);
+  assert.equal(pending.data.myChapterApplications[0].canSubmitOffer, false);
+});
+
+test('待审补位缺少任何服务端事实、普通主题、未接受或供给终态均保持只读', () => {
+  for (const patch of [{ status: null }, { status: undefined }, { status: '' }, { status: 1 },
+    { userStatus: undefined }, { userStatus: null }, { userStatus: '' }, { userStatus: false }, { userStatus: 1 },
+    { delFlag: undefined }, { delFlag: null }, { delFlag: '' }, { delFlag: false }, { delFlag: 1 }, { delFlag: 2 },
+    { productType: undefined }, { productType: 1 }, { publishMode: undefined }, { publishMode: 'simple' },
+    { lifecycle: null }, { lifecycle: 0 }, { lifecycle: 3 }, { circleThemeCode: 'CIRCLE' }]) {
+    const page = pendingReplacementPage(patch);
+    assert.equal(page.data.myChapterApplications[0].canConfigureNode, false, JSON.stringify(patch));
+    assert.equal(page.data.myChapterApplications[0].canSubmitOffer, false, JSON.stringify(patch));
+  }
+  for (const patch of [{ status: 0 }, { status: 2 }, { offerState: 'WITHDRAWN' },
+    { offerState: 'EXPIRED', offerId: 11 }, { offerState: 'ACTIVE', offerId: 11, offerActive: true },
+    { offerState: 'INACTIVE', offerId: 11, offerWithdrawReason: '已退出' }]) {
+    assert.equal(pendingReplacementPage({}, patch).data.myChapterApplications[0].canConfigureNode,
+      false, JSON.stringify(patch));
+  }
+});
+
+test('待审补位从既有本人详情补读精确产品、模式与删除标记，未知不猜可编辑', () => {
+  const page = pendingReplacementPage({ productType: undefined, publishMode: undefined, delFlag: undefined });
+  Object.assign(page.data, { topicId: 42, chapterProject: true, operationScope: 'MERCHANT' });
+  assert.equal(page.data.myChapterApplications[0].canConfigureNode, false);
+  page.loadChapterProjectLifecycle();
+  const detail = requestByUrl('/api/topic/info-to-merchant');
+  assert.deepEqual(detail.data, { id: 42, scope: 'MERCHANT' });
+  detail.success({ code: 200, data: { id: 42, lifecycle: 7, status: 0, userStatus: 0,
+    productType: 2, publishMode: 'pro', delFlag: 0 } });
+  assert.equal(page.data.myChapterApplications[0].canConfigureNode, true);
+  page.loadChapterProjectLifecycle();
+  requests.at(-1).success({ code: 200, data: { id: 42, lifecycle: 7, status: 0, userStatus: 0, delFlag: null } });
+  assert.equal(page.data.info.productType, 2, '部分响应不覆盖已确认的产品事实');
+  assert.equal(page.data.myChapterApplications[0].canConfigureNode, false, '显式未知标记必须撤销编辑入口');
+  page.data.info.delFlag = 0;
+  page.loadChapterProjectLifecycle();
+  requests.at(-1).success({ code: 200, data: { id: 42, lifecycle: 7, status: 0, userStatus: 0 } });
+  assert.equal(page.data.myChapterApplications[0].canConfigureNode, false, '最新详情省略删除标记不能沿用旧0解锁');
+});
 
 test('暂停开售的已批准补位可配置点位；待审供给不能重复提交，审核生效后冻结', () => {
   const page = pausedReplacementPage();

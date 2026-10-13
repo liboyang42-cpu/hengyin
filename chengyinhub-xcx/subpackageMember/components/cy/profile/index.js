@@ -7,6 +7,7 @@ const motion = require('../../../../utils/motion.js');
 const { readReducedMotion } = require('../../../../utils/motion-preference.js');
 const { toTimestamp } = require('../../../../utils/datetime');
 const app = getApp();
+const community = require('../../../../utils/community-post-api.js').createClient(app, wx);
 const roleGuard = require('../../../../utils/roleGuard.js');
 const policy = require('../../../../utils/identity/identity-policy.js');
 const { applyTheme } = require('../../../../utils/theme.js');
@@ -34,6 +35,13 @@ const TAB_LABELS = {
 // cy-tabs 组件用:[{key,label}],由 TAB_LABELS 派生,保持 Tab 标签单一真源
 const MEMBER_TABS = Object.keys(TAB_LABELS).map(function (k) { return { key: k, label: TAB_LABELS[k] }; });
 const PUBLIC_TABS = MEMBER_TABS.filter(function (tab) { return tab.key !== 'projects'; });
+function communityReadable() {
+  return typeof app.canUseCommunity === 'function' && app.canUseCommunity(false);
+}
+function profileTabs(isSelf, merchant) {
+  return (isSelf ? MEMBER_TABS : PUBLIC_TABS).filter(tab =>
+    (tab.key !== 'posts' || communityReadable()) && (tab.key !== 'achievements' || !merchant));
+}
 const PROFILE_METRIC_SOURCES = ['user', 'growth', 'history', 'points'];
 
 function buildBenefits(p) {
@@ -54,7 +62,7 @@ function buildBenefits(p) {
 
 function req(url, data) {
   return new Promise(function (resolve) {
-    app.sendRequest({
+    community.request({
       url: url,
       method: 'POST',
       data: data || {},
@@ -253,7 +261,7 @@ function normalizeProjectPreview(item) {
   // 2026-09-17 用户拍板第 38 条:状态章原来把「未开始」也写成「进行中」,与商家工作台
   // 的 statusLabelOf 不一致。状态文案与「已结束」判据共用同一真源(utils/merchant-workbench.js),
   // 档期未知时 statusLabelOf 返回空串 —— 宁可空着,也不编一个状态。
-  var statusText = statusLabelOf(item.startDate, item.endDate);
+  var statusText = ({ draft: '草稿', pending: '审核中', rejected: '审核未通过', offline: '已下架' })[item.state] || statusLabelOf(item.startDate, item.endDate);
   var ended = statusText === '已结束';
   var sales = item.salesAmout != null ? Number(item.salesAmout) : 0;
   return {
@@ -443,12 +451,11 @@ Component({
     },
     'isMerchantView, isSelf': function (isMerchant, isSelf) {
       if (this._profileAttached) this.refreshCoopPublisherAccess();
-      var tabs = isSelf ? MEMBER_TABS : PUBLIC_TABS;
-      if (isMerchant) tabs = tabs.filter(function (t) { return t.key !== 'achievements'; });
+      var tabs = profileTabs(isSelf, isMerchant);
       // 写成对象字面量而不是累积 patch:U4 门禁要能静态看出写了哪些顶层字段,
       // 累积式 this.setData(patch) 它读不出来,会变成一条新的动态 setData 债务(棘轮只许变小)。
       var tabsChanged = JSON.stringify(tabs) !== JSON.stringify(this.data.memberTabs);
-      var resetActive = isMerchant && this.data.activeTab === 'achievements';
+      var resetActive = !tabs.some(tab => tab.key === this.data.activeTab);
       if (tabsChanged && resetActive) this.setData({ memberTabs: tabs, activeTab: 'about' });
       else if (tabsChanged) this.setData({ memberTabs: tabs });
       else if (resetActive) this.setData({ activeTab: 'about' });
@@ -460,6 +467,7 @@ Component({
       this._profileAttached = true;
       this._syncProfileReducedMotion();
       this.initializeProfile();
+      this._syncCommunityProfile();
     },
     detached: function () {
       this._profileAttached = false;
@@ -474,18 +482,19 @@ Component({
     show: function () {
       if (!this._profileAttached) return;
       this._syncProfileReducedMotion();
-      if (!this._profileShown) {
-        this._profileShown = true;
-        return;
-      }
+      const firstShow = !this._profileShown;
+      this._profileShown = true;
       // 登录态可能在页面存续期变化(登录 / 退出 / 换号)⇒ 每次 onShow 重算
       // effectiveIsSelf 与观看者身份;身份变了就整块重来。
       this.syncViewerIdentity();
+      this._syncCommunityProfile();
       this.refreshCoopPublisherAccess();
       if (this.computeIsSelf() !== this.data.isSelf) {
         this.initializeProfile();
         return;
       }
+      this.refreshDirtyPosts();
+      if (firstShow) return;
       if (this.data.hostSelf) {
         this.syncMerchantView();
         wx.hideTabBar();
@@ -501,6 +510,7 @@ Component({
     // applyTheme 的那些)会顶着一条白导航栏 —— 旧 merchant/profile 页用
     // merchantPageRestore 处理的就是这件事,收编后这层责任跟着搬过来。
     hide: function () {
+      this._profileShown = true;
       if (!this.data.hostSelf && this.data.subjectIsMerchant) applyTheme('dark');
     }
   },
@@ -568,15 +578,42 @@ Component({
     this._viewerIsMerchant = viewerIsMerchant;
   },
 
+  _syncCommunityProfile() {
+    const owner = String(app.getUserID() || '');
+    const target = String(this.data.userId || '');
+    const epoch = (this._communityProfileEpoch || 0) + 1;
+    this._communityProfileEpoch = epoch;
+    const settle = () => {
+      if (this._profileAttached === false || epoch !== this._communityProfileEpoch
+          || owner !== String(app.getUserID() || '') || target !== String(this.data.userId || '')) return;
+      const tabs = profileTabs(this.data.isSelf, this.data.isMerchantView);
+      if (!communityReadable()) {
+        this._postsRequestGeneration = (this._postsRequestGeneration || 0) + 1;
+        this.setData({ memberTabs: tabs, list: [], hasMore: false, feedErr: false, feedAuthError: false,
+          activeTab: this.data.activeTab === 'posts' ? 'about' : this.data.activeTab });
+      } else {
+        const activatePosts = this._pendingCommunityTab;
+        this._pendingCommunityTab = false;
+        this.setData({ memberTabs: tabs, activeTab: activatePosts ? 'posts' : this.data.activeTab });
+        if (activatePosts && !this.data.list.length) this.getCreativesquareList();
+      }
+    };
+    settle();
+    const pending = typeof app.loadFeatureFlags === 'function' ? app.loadFeatureFlags() : null;
+    if (pending && typeof pending.then === 'function') pending.then(settle);
+  },
+
   initializeProfile: function () {
     var hostSelf = this.data.viewer !== 'other';
     var isSelf = this.computeIsSelf();
     var userId = hostSelf ? String(app.getUserID() || '') : String(this.data.userId || '');
-    var memberTabs = isSelf ? MEMBER_TABS : PUBLIC_TABS;
+    var memberTabs = profileTabs(isSelf, this.data.isMerchantView);
     var initialTab = resolveInitialTab(this.data.initialTab, memberTabs);
     var profileKey = (isSelf ? 'self:' : 'other:') + userId + '|' + initialTab;
     if (this._profileKey === profileKey) return;
     this._profileKey = profileKey;
+    this._pendingCommunityTab = !communityReadable() &&
+      (this.data.initialTab === 'posts' || !isSelf && !initialTab);
     this._following = false;
     this._followEpoch = (this._followEpoch || 0) + 1;
     this._profileShown = false;
@@ -598,7 +635,7 @@ Component({
       merchantCategories: [],
       merchantHasGeo: false,
       // 合法 initialTab 优先;非法值回退原规则(自己 projects、别人 posts)
-      activeTab: initialTab || (isSelf ? 'projects' : 'posts'),
+      activeTab: initialTab || (isSelf ? 'projects' : (communityReadable() ? 'posts' : 'about')),
       memberTabs: memberTabs,
       isMerchantView: false,
       primaryCta: isSelf ? '开始探索' : '关注',
@@ -642,7 +679,7 @@ Component({
       return;
     }
     this.setData({ merchantState: 'loading' });
-    app.sendRequest({
+    community.request({
       url: '/api/merchant/public-home',
       method: 'POST',
       hideLoading: true,
@@ -819,6 +856,9 @@ Component({
 
   loadUserData: function () {
     var that = this;
+    if (that._profileAttached === false) return Promise.resolve();
+    var loginMemberId = app.getUserID();
+    var requestId = that._userDataRequestId = (that._userDataRequestId || 0) + 1;
     var memberId = this.data.isSelf ? app.getUserID() : this.data.userId;
     var followEpoch = this._followEpoch || 0;
     var followStateVersion = this._followStateVersion || 0;
@@ -828,6 +868,8 @@ Component({
     // viewer —— 否则本人从 canonical 进来会误走公开分支。
     var url = this.data.isSelf ? '/api/user/info' : '/api/user/public-info';
     return req(url, { member_id: memberId }).then(function (res) {
+      if (that._profileAttached === false || requestId !== that._userDataRequestId
+          || loginMemberId !== app.getUserID()) return;
       // 换了被看者后，旧资料响应整包作废；同一被看者若在请求期间完成关注写入，
       // 资料仍可补齐，但不能用请求发出前的 isFollow 把服务端已确认回执倒灌回去。
       if (followEpoch !== (that._followEpoch || 0)) return;
@@ -920,7 +962,13 @@ Component({
 
   loadGrowthBundle: function () {
     var that = this;
+    if (that._profileAttached === false) return Promise.resolve();
+    var memberId = app.getUserID();
+    var requestId = that._growthRequestId = (that._growthRequestId || 0) + 1;
+    var profileEpoch = that._followEpoch || 0;
     return Promise.all([req('/api/play/growth', {}), req('/api/growth/center', {})]).then(function (arr) {
+      if (that._profileAttached === false || requestId !== that._growthRequestId
+          || memberId !== app.getUserID() || profileEpoch !== (that._followEpoch || 0)) return;
       var playOk = arr[0].code == '200' && arr[0].data;
       var centerOk = arr[1].code == '200' && arr[1].data && arr[1].data.growth;
       if (!playOk || !centerOk) {
@@ -971,7 +1019,13 @@ Component({
 
   loadThemes: function () {
     var that = this;
+    if (that._profileAttached === false) return Promise.resolve();
+    var memberId = app.getUserID();
+    var requestId = that._themesRequestId = (that._themesRequestId || 0) + 1;
+    var profileEpoch = that._followEpoch || 0;
     return req('/api/play/my-completed', {}).then(function (res) {
+      if (that._profileAttached === false || requestId !== that._themesRequestId
+          || memberId !== app.getUserID() || profileEpoch !== (that._followEpoch || 0)) return;
       if (res.code != '200' || !isRecordList(res.data)) {
         that.recordProfileMetricSource('history', 'error', res);
         return;
@@ -1027,7 +1081,13 @@ Component({
 
   loadPointsStat: function () {
     var that = this;
+    if (that._profileAttached === false) return Promise.resolve();
+    var memberId = app.getUserID();
+    var requestId = that._pointsStatRequestId = (that._pointsStatRequestId || 0) + 1;
+    var profileEpoch = that._followEpoch || 0;
     return req('/api/user/points/statistics', {}).then(function (res) {
+      if (that._profileAttached === false || requestId !== that._pointsStatRequestId
+          || memberId !== app.getUserID() || profileEpoch !== (that._followEpoch || 0)) return;
       if (res.code != '200' || !res.data) {
         that.recordProfileMetricSource('points', 'error', res);
         return;
@@ -1038,6 +1098,7 @@ Component({
         that.recordProfileMetricSource('points', 'error');
         return;
       }
+      var hasRank = rankPercentage.trim() !== 'TOP0%' && metricNumber(res.data.userRank) !== 0;
       that.setData({
         pointsStat: {
           weekPoints: weekPoints,
@@ -1047,8 +1108,8 @@ Component({
         // 故此块按各自真实口径分别标注,别用一个「本周」把两种口径盖在一起。
         'exploreStat.weekExp': weekPoints,
         rankDisplay: {
-          no: rankPercentage,
-          delta: res.data.rankDelta ? ('上升 ' + res.data.rankDelta) : ''
+          no: hasRank ? rankPercentage : '—',
+          delta: hasRank && res.data.rankDelta ? ('上升 ' + res.data.rankDelta) : ''
         }
       });
       that.recordProfileMetricSource('points', 'ready', [weekPoints]);
@@ -1057,12 +1118,22 @@ Component({
 
   loadOrderPreview: function () {
     var that = this;
+    if (that._profileAttached === false) return Promise.resolve();
+    var memberId = app.getUserID();
+    var requestId = that._orderPreviewRequestId = (that._orderPreviewRequestId || 0) + 1;
+    var profileEpoch = that._followEpoch || 0;
+    if (that._orderPreviewMemberId !== undefined && that._orderPreviewMemberId !== memberId) {
+      that.setData({ orderPreviewList: [], orderLoaded: false, orderErr: false, orderAuthError: false });
+    }
+    that._orderPreviewMemberId = memberId;
     return req('/api/registration/list', {
       pageNum: 1,
       pageSize: 8,
       owner_type: 3,
       status: '0'
     }).then(function (res) {
+      if (that._profileAttached === false || requestId !== that._orderPreviewRequestId
+          || memberId !== app.getUserID() || profileEpoch !== (that._followEpoch || 0)) return;
       // 原码把失败和「200 但没有订单」都收敛成 list=[] → 渲染「暂无订单」
       if (res.code != '200' || !res.data) {
         that.setData({ orderErr: true, orderAuthError: isAuthFailure(res) });
@@ -1090,6 +1161,14 @@ Component({
   // MAX_PAGES 是兜底:预览不值得为一个老账号翻几十页,5 页内没有进行中的就如实收起。
   loadProjectPreview: function () {
     var that = this;
+    if (that._profileAttached === false) return Promise.resolve();
+    var memberId = app.getUserID();
+    var requestId = that._projectPreviewRequestId = (that._projectPreviewRequestId || 0) + 1;
+    var profileEpoch = that._followEpoch || 0;
+    if (that._projectPreviewMemberId !== undefined && that._projectPreviewMemberId !== memberId) {
+      that.setData({ projectPreviewList: [], projectErr: false, projectAuthError: false });
+    }
+    that._projectPreviewMemberId = memberId;
     var PAGE_SIZE = 8;
     var MAX_PAGES = 5;
     var live = [];
@@ -1111,16 +1190,16 @@ Component({
         pageNum: pageNum,
         pageSize: PAGE_SIZE
       }).then(function (res) {
+        if (that._profileAttached === false || requestId !== that._projectPreviewRequestId
+            || memberId !== app.getUserID() || profileEpoch !== (that._followEpoch || 0)) return;
         // 读取失败保留旧列表,不能当作本人没有项目。
         if (res.code != '200' || !res.data) {
           that.setData({ projectErr: true, projectAuthError: isAuthFailure(res) });
-          if (app.tips) app.tips('项目没加载出来，请下拉刷新重试');
           return;
         }
         var rows = res.data.rows || [];
         if (!isRecordList(rows)) {
           that.setData({ projectErr: true, projectAuthError: false });
-          if (app.tips) app.tips('项目没加载出来，请下拉刷新重试');
           return;
         }
         fetched += 1;
@@ -1173,8 +1252,13 @@ Component({
   // cy-tabs 切换:组件 change 事件带 { key }
   onTabChange: function (e) {
     var tab = e.detail.key;
-    if (!tab || tab === this.data.activeTab) return;
+    this._pendingCommunityTab = false;
+    if (!tab || tab === this.data.activeTab || tab === 'posts' && !communityReadable()) return;
     this.setData({ activeTab: tab });
+    if (tab === 'posts') {
+      this.refreshDirtyPosts();
+      if (this._squareListDirty || this._postsDirtyRefreshPromise) return;
+    }
     if (tab === 'posts' && this.data.list.length === 0) {
       this.setData({ page_no: 1 });
       this.getCreativesquareList();
@@ -1287,7 +1371,7 @@ Component({
       if (app.tips) app.tips('用户不存在');
       return;
     }
-    app.sendRequest({
+    community.request({
       url: '/api/im/start',
       method: 'POST',
       hideLoading: true,
@@ -1387,6 +1471,8 @@ Component({
       data: { code: code, chapterId: id },
       method: 'POST',
     }, function (r) {
+        var verdict = resolveVerificationResult(r, '核销');
+        if (verdict.state === 'duplicate') { cyToast(verdict.title + '：' + verdict.message, { icon: 'none' }); return; }
         var ok = r.code == '200';
         if (ok) motion.haptic({ type: 'medium', reducedMotion: readReducedMotion() });
         cyToast(ok ? completionReceiptMessage(r, '核销成功') : (r.msg || '核销失败'), { icon: ok ? 'success' : 'none' });
@@ -1555,25 +1641,56 @@ Component({
   // CU-M-43(2026-09-23 用户裁决 B):onBlock 随「屏蔽」入口一起摘掉 —— 原来只弹一句
   //「已屏蔽」,没有请求也没有持久化,重进无状态变化。接上写路径前不带这条假成功。
 
+  markSquareListDirty: function () {
+    this._squareListDirty = true;
+    this._squareListDirtyVersion = (this._squareListDirtyVersion || 0) + 1;
+  },
+
+  refreshDirtyPosts: function () {
+    const feedVersion = app.globalData && app.globalData.squareListDirtyVersion || 0;
+    if (feedVersion > (this._communityFeedVersion || 0)) {
+      this._communityFeedVersion = feedVersion;
+      this.markSquareListDirty();
+    }
+    if (!this._squareListDirty || this.data.activeTab !== 'posts' || this._postsDirtyRefreshPromise) return;
+    const version = this._squareListDirtyVersion;
+    this.setData({ page_no: 1 });
+    const pending = this.getCreativesquareList().then((success) => {
+      if (success && version === this._squareListDirtyVersion) this._squareListDirty = false;
+      return success;
+    });
+    this._postsDirtyRefreshPromise = pending;
+    const complete = () => {
+      if (this._postsDirtyRefreshPromise === pending) this._postsDirtyRefreshPromise = null;
+    };
+    pending.then(complete, complete);
+    return pending;
+  },
+
   getCreativesquareList: function () {
     var that = this;
+    if (!communityReadable()) return Promise.resolve(false);
+    const pageNum = that.data.page_no;
+    if (pageNum === 1) that._postsRequestGeneration = (that._postsRequestGeneration || 0) + 1;
+    const generation = that._postsRequestGeneration;
     var data = {
       is_my: that.data.isSelf ? 1 : 0,
-      pageNum: that.data.page_no,
+      pageNum: pageNum,
       pageSize: app.getPageSize()
     };
     if (!that.data.isSelf) data.user_id = that.data.userId;
-    req('/api/creativesquare/list', data).then(function (res) {
+    return req('/api/creativesquare/list', data).then(function (res) {
+      if (generation !== that._postsRequestGeneration) return false;
       // 原码把失败显式写成 nodata=true → 渲染「还没有动态,发布一次城市发现吧」
       if (res.code != '200') {
         that.setData({ hasMore: false, feedErr: true, feedAuthError: isAuthFailure(res) });
-        return;
+        return false;
       }
       var result = isRecord(res.data) ? res.data : {};
       var newlist = result.rows || [];
       if (!isRecordList(newlist)) {
         that.setData({ hasMore: false, feedErr: true, feedAuthError: false });
-        return;
+        return false;
       }
       newlist.forEach(function (row) {
         if (row.pics) row.picList = String(row.pics).split(';').filter(function (pic) { return pic; });
@@ -1582,25 +1699,26 @@ Component({
       // P0-4:翻页只按数组路径回传新增行(旧写法整表 concat 全量跨序列化线重发)。
       // 就地内联不引 utils/list-append:本组件被 unexpected-require 白名单沙箱单测装载
       // (tests/unit/merchant-operator-ui-contract),多一个跨文件 require 会连坐测试装置。
-      if (that.data.page_no !== 1) {
+      if (pageNum !== 1) {
         const oldLen = that.data.list.length;
         const patch = {};
         for (let i = 0; i < newlist.length; i++) patch['list[' + (oldLen + i) + ']'] = newlist[i];
         that.setData(Object.assign({
           feedErr: false,
           feedAuthError: false,
-          hasMore: app.getTotalPage(result.total || 0, app.getPageSize()) > that.data.page_no,
+          hasMore: result.hasMore === true,
           nodata: oldLen + newlist.length < 1
         }, patch));
-        return;
+        return true;
       }
       that.setData({
         feedErr: false,
         feedAuthError: false,
         list: newlist,
-        hasMore: app.getTotalPage(result.total || 0, app.getPageSize()) > that.data.page_no,
+        hasMore: result.hasMore === true,
         nodata: newlist.length < 1
       });
+      return true;
     });
   },
 
@@ -1620,7 +1738,15 @@ Component({
   // C7:我的项目入口待处理角标(未通过+审核中;/api/publish/home projectSummary 无草稿档)
   loadProjectPending: function () {
     var that = this;
+    if (that._profileAttached === false) return Promise.resolve();
+    var memberId = app.getUserID();
+    var requestId = that._projectPendingRequestId = (that._projectPendingRequestId || 0) + 1;
+    var profileEpoch = that._followEpoch || 0;
+    if (that._projectPendingMemberId !== undefined && that._projectPendingMemberId !== memberId) that.setData({ projectPendingCount: 0 });
+    that._projectPendingMemberId = memberId;
     return req('/api/publish/home', {}).then(function (res) {
+      if (that._profileAttached === false || requestId !== that._projectPendingRequestId
+          || memberId !== app.getUserID() || profileEpoch !== (that._followEpoch || 0)) return;
       if (res.code != '200' || !res.data || !res.data.projectSummary) return;
       var s = res.data.projectSummary;
       that.setData({ projectPendingCount: (s.pending || 0) + (s.rejected || 0) });
@@ -1633,6 +1759,7 @@ Component({
   },
 
   onFeedReachBottom: function () {
+    if (this._squareListDirty || this._postsDirtyRefreshPromise) return;
     if (!this.data.hasMore || this.data.activeTab !== 'posts') return;
     this.setData({ page_no: this.data.page_no + 1 });
     this.getCreativesquareList();
@@ -1650,15 +1777,7 @@ Component({
         return;
       }
       var current = that.data.list[index];
-      if (type == 1) {
-        if (current.isLiked == 0) { current.likeCount = (current.likeCount || 0) + 1; current.isLiked = 1; }
-        else if (current.isLiked == 1) { current.likeCount = (current.likeCount || 1) - 1; current.isLiked = 0; }
-        else if (current.isLiked == 2) { current.likeCount = (current.likeCount || 0) + 1; current.isLiked = 1; }
-      } else {
-        if (current.isLiked == 0) current.isLiked = 2;
-        else if (current.isLiked == 1) { current.likeCount = (current.likeCount || 1) - 1; current.isLiked = 2; }
-        else if (current.isLiked == 2) current.isLiked = 0;
-      }
+      current = Object.assign({}, current, { isLiked: res.data.isLiked, likeCount: res.data.likeCount, version: res.data.version });
       that.setData({ ['list[' + index + ']']: current });
     });
   },
@@ -1683,7 +1802,7 @@ Component({
         cyToast(app.getRequestErrorMessage(res, '操作失败'));
         return;
       }
-      that.setData({ ['list[' + index + '].isBookmarked']: next });
+      that.setData({ ['list[' + index + '].isBookmarked']: res.data.isBookmarked });
     });
   },
 

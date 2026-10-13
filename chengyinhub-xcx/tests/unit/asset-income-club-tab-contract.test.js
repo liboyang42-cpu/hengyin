@@ -15,6 +15,7 @@ function loadDefinition(source, app) {
   let definition = null
   const component = (value) => { definition = value }
   const localRequire = (request) => {
+    if (request.includes('login-reload')) return require('../../utils/session/login-reload.js')
     if (request.includes('merchant-theme')) return {}
     // 2026-09-15 提现改弹客服微信后 scene-merchant-profit 多了一条 require;本组件测试不驱动提现。
     if (request.includes('withdraw-cs')) return { showWithdrawCsPopup() {} }
@@ -38,6 +39,7 @@ function instantiate(definition) {
 test('收益明细提供俱乐部筛选分支，并委托给财务唯一正文', () => {
   const requests = []
   const definition = loadDefinition(read(INCOME_DIR, 'index.js'), {
+    getUserID: () => 7,
     sendRequest(options) { requests.push(options) },
   })
   const context = instantiate(definition)
@@ -98,6 +100,7 @@ test('negative control CU-M-162: 标签退回「俱乐部」必须判红', () =>
 test('俱乐部分支可见地保留由应收与已付金额推导的打款状态', () => {
   const requests = []
   const definition = loadDefinition(read(PROFIT_DIR, 'index.js'), {
+    getUserID: () => 7,
     sendRequest(options) { requests.push(options) },
   })
   const context = instantiate(definition)

@@ -59,6 +59,10 @@ user:
 
 # Spring配置
 spring:
+  # Boot 4 temporary bridge: preserve existing Jackson 2 request/response contracts.
+  http:
+    converters:
+      preferred-json-mapper: jackson2
   # 资源信息
   messages:
     # 国际化资源文件路径
@@ -78,27 +82,28 @@ spring:
       # 热部署开关
       enabled: true
   # redis 配置
-  redis:
-    # 地址
-    host: localhost
-    # 端口，默认为6379
-    port: 6379
-    # 数据库索引
-    database: 0
-    # 密码
-    password:
-    # 连接超时时间
-    timeout: 10s
-    lettuce:
-      pool:
-        # 连接池中的最小空闲连接
-        min-idle: 0
-        # 连接池中的最大空闲连接
-        max-idle: 8
-        # 连接池的最大数据库连接数
-        max-active: 8
-        # #连接池最大阻塞等待时间（使用负值表示没有限制）
-        max-wait: -1ms
+  data:
+    redis:
+      # 地址
+      host: localhost
+      # 端口，默认为6379
+      port: 6379
+      # 数据库索引
+      database: 0
+      # 密码
+      password:
+      # 连接超时时间
+      timeout: 10s
+      lettuce:
+        pool:
+          # 连接池中的最小空闲连接
+          min-idle: 0
+          # 连接池中的最大空闲连接
+          max-idle: 8
+          # 连接池的最大数据库连接数
+          max-active: 8
+          # #连接池最大阻塞等待时间（使用负值表示没有限制）
+          max-wait: -1ms
 
 # token配置
 token:
@@ -107,17 +112,16 @@ token:
   # 令牌密钥 [P0-安全] 改为环境变量注入,不再入库;未设 CHENGYIN_JWT_SECRET 启动即报错(fail-fast)
   secret: ${CHENGYIN_JWT_SECRET}
   # 令牌有效期（默认30分钟）   现在已经改成1天了
-  expireTime: 21600
+  expireTime: 1440
   app:
     # 小程序会话空闲有效期：24 小时
     idleTime: 1440
     # 小程序会话绝对有效期：7 天
     absoluteTime: 10080
 
-# 优惠券出示码 HMAC-SHA256 密钥 [F5] 只占位,不入库。优先 CHENGYIN_COUPON_QR_SECRET;
-# 未单独配置时回落 token.secret(同样无默认、缺失即启动失败)。空白值由 SmsCouponServiceImpl 启动校验拒绝。
+# 优惠券出示码使用独立密钥；缺少配置时仅关闭签发/核验入口，不能借用 JWT 密钥。
 coupon:
-  qr-secret: ${CHENGYIN_COUPON_QR_SECRET:${token.secret}}
+  qr-secret: ${COUPON_QR_SECRET:}
 
 # 提现敏感资料 AES-256-GCM 密钥。仅从环境变量注入；未配置即启动失败，禁止明文降级。
 withdrawal:
@@ -268,6 +272,8 @@ compliance:
   doc-versions:
     privacy_policy: v2.1
     user_service_agreement: v2.2
+    photo_model_processing: v1.0
+    voice_clone_processing: v1.0
     community_content_rules: v2.0
     refund_rules: v2.1
     merchant_host_rules: v2.1

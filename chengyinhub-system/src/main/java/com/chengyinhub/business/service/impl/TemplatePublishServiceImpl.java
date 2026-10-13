@@ -77,13 +77,12 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
     private AuditTaskMapper auditTaskMapper;
 
 
+    @Autowired
+    private com.chengyinhub.business.service.support.AppMediaPublicationGuard mediaPublicationGuard;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long publishTemplateWithTransaction(CmsTemplatePublishRequest request, Long memberId, String username) {
-        validateSensorFields(request);
-        normalizeAdvancedConfig(request);
-        normalizeAdoptedReward(request);
-        assertCapabilities(request, memberId);
         Date now = new Date();
 
         // 编辑既有模板:request 带 id 即为改写自己已发布的那一份。
@@ -102,9 +101,16 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             }
         }
 
+        prepareClearFields(request, existing);
+        validateSensorFields(request);
+        normalizeAdvancedConfig(request);
+        normalizeAdoptedReward(request);
+        assertCapabilities(request, memberId);
+
         // 1. 保存到我的模板表
         CmsMemberTemplate memberTemplate = new CmsMemberTemplate();
         copyPropertiesToMemberTemplate(request, memberTemplate);
+        mediaPublicationGuard.requireTemplate(memberId, memberTemplate, true);
         validatePreferenceForReview(memberTemplate);
 
         // 设置基本信息
@@ -187,6 +193,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         }
         normalizeAndValidateSensorFields(template);
         normalizeAdvancedConfig(template);
+        mediaPublicationGuard.requireTemplate(template.getMemberId(), template, true);
         validatePreferenceForReview(template);
         Date now = new Date();
         template.setCreateBy(username);
@@ -211,6 +218,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         normalizeAdvancedConfig(template);
         CmsMemberTemplate existing = requireActiveTemplate(template.getId());
         template.setMemberId(existing.getMemberId());
+        mediaPublicationGuard.requireTemplate(existing.getMemberId(), template, true);
         template.setOriginalTemplateId(existing.getOriginalTemplateId());
         if (Integer.valueOf(ValidationMethod.PREFERENCE_GROUP).equals(template.getValidationMethod())
                 && template.getPreferenceJson() == null) {
@@ -235,6 +243,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         CmsMemberTemplate template = requireActiveTemplate(templateId);
         validatePreferenceForReview(template);
         if (!Integer.valueOf(1).equals(template.getDraftStatus())) throw new ServiceException("草稿请先发布");
+        mediaPublicationGuard.requireTemplate(template.getMemberId(), template, true);
         withdrawProjections(templateId, false, template.getUpdateBy());
         prepareForReview(template, template.getUpdateBy(), new Date(), false);
         if (memberTemplateService.updateCmsMemberTemplate(template) != 1) throw new ServiceException("提交审核失败");
@@ -264,6 +273,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         CmsTemplateLibrary projection = findLiveProjection(templateId);
         boolean creating = projection == null;
         if (creating) projection = new CmsTemplateLibrary();
+        mediaPublicationGuard.requireTemplate(memberId, template, true);
         copyCanonicalToProjection(template, projection, username, now, creating);
         int rows = creating
                 ? templateLibraryService.insertCmsTemplateLibrary(projection)
@@ -393,6 +403,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         normalizeAdvancedConfig(request);
         CmsMemberTemplate saved = new CmsMemberTemplate();
         copyPropertiesToMemberTemplate(request, saved);
+        mediaPublicationGuard.requireTemplate(memberId, saved, true);
         saved.setInteractionType(input.getInteractionType());
         saved.setId(existing == null ? null : existing.getId());
         saved.setMemberId(memberId); saved.setDelFlag(0); saved.setDraftStatus(1);
@@ -492,6 +503,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
      * 复制属性到我的模板表
      */
     private void copyPropertiesToMemberTemplate(CmsTemplatePublishRequest request, CmsMemberTemplate template) {
+        if (request.getClearFields() != null) template.setClearFields(new HashSet<>(request.getClearFields()));
         template.setCategoryId(request.getCategoryId());
         template.setTitle(request.getTitle());
         template.setDescription(request.getDescription());
@@ -561,23 +573,62 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long saveOrUpdateDraft(CmsTemplatePublishRequest request, Long memberId, String username) {
-        validateSensorFields(request);
-        normalizeAdvancedConfig(request);
-        normalizeAdoptedReward(request);
-        assertCapabilities(request, memberId);
+        if (request != null && Boolean.TRUE.equals(request.getAdoptSourceOnly())) {
+            if (request.getId() != null || request.getOriginalTemplateId() == null
+                    || request.getOriginalTemplateId() <= 0) {
+                throw new IllegalArgumentException("采用模板必须指定来源，不能覆盖已有草稿");
+            }
+            Long sourceId = request.getOriginalTemplateId();
+            String scope = request.getScope();
+            CmsTemplateLibrary source = templateLibraryService.selectCmsTemplateLibraryById(sourceId);
+            if (source == null || !Integer.valueOf(0).equals(source.getDelFlag())
+                    || !Long.valueOf(1L).equals(source.getStatus())
+                    || !Long.valueOf(1L).equals(source.getPublishStatus())) {
+                throw new IllegalArgumentException("源模板不存在或已下架");
+            }
+            // 作者配置从服务端复制；公开详情仍不下发答案、卡池和分支内容。
+            BeanUtils.copyProperties(source, request, "id", "scope", "originalTemplateId", "duration");
+            request.setDuration(source.getDuration() == null ? null : Math.toIntExact(source.getDuration()));
+            request.setScope(scope);
+            request.setOriginalTemplateId(sourceId);
+            request.setIsSync(0);
+            // 优惠券是原商家的资产，采用内容不能顺带复制发券权限。
+            if (source.getCouponId() != null && source.getCouponId() > 0) {
+                throw new IllegalArgumentException("该模板含商家专属优惠券，请先由原作者提供不含优惠券的可采用版本");
+            }
+            String sourceRewards = rewardRulesValidator.validateAndNormalize(source.getRewardRulesJson());
+            if (sourceRewards != null) {
+                try {
+                    for (com.fasterxml.jackson.databind.JsonNode rule : new com.fasterxml.jackson.databind.ObjectMapper().readTree(sourceRewards)) {
+                        if (rule.path("couponId").asLong(0) > 0) {
+                            throw new IllegalArgumentException("该模板含商家专属条件优惠券，不能跨商家采用");
+                        }
+                    }
+                } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                    throw new IllegalArgumentException("源模板奖励配置格式不正确", e);
+                }
+            }
+        }
+        CmsMemberTemplate existingDraft = null;
         if (request.getId() != null && request.getId() > 0) {
-            CmsMemberTemplate existingDraft = lockTemplate(request.getId());
+            existingDraft = lockTemplate(request.getId());
             if (existingDraft == null || !Integer.valueOf(0).equals(existingDraft.getDelFlag())
                     || !memberId.equals(existingDraft.getMemberId())) {
                 throw new RuntimeException("草稿不存在或无权修改");
             }
-            if (StringUtils.isBlank(request.getMedalStyle())) {
-                request.setMedalStyle(existingDraft.getMedalStyle());
-            }
+        }
+        prepareClearFields(request, existingDraft);
+        validateSensorFields(request);
+        normalizeAdvancedConfig(request);
+        normalizeAdoptedReward(request);
+        assertCapabilities(request, memberId);
+        if (existingDraft != null && StringUtils.isBlank(request.getMedalStyle())) {
+            request.setMedalStyle(existingDraft.getMedalStyle());
         }
         Date now = new Date();
         CmsMemberTemplate t = new CmsMemberTemplate();
         copyPropertiesToMemberTemplate(request, t);
+        mediaPublicationGuard.requireTemplate(memberId, t, false);
         t.setMemberId(memberId);
         t.setUpdateBy(username);
         t.setUpdateTime(now);
@@ -604,7 +655,9 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         } else {
             t.setCreateBy(username);
             t.setCreateTime(now);
-            memberTemplateService.insertCmsMemberTemplate(t); // useGeneratedKeys 回填 id
+            if (memberTemplateService.insertCmsMemberTemplate(t) != 1 || t.getId() == null) {
+                throw new ServiceException("保存草稿失败");
+            }
             return t.getId();
         }
     }
@@ -687,6 +740,27 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
                 && Integer.valueOf(0).equals(canonical.getDelFlag())
                 && Long.valueOf(1L).equals(canonical.getStatus())
                 && Long.valueOf(1L).equals(canonical.getPublishStatus());
+    }
+
+    private void prepareClearFields(CmsTemplatePublishRequest request, CmsMemberTemplate existing) {
+        Set<String> fields = request.getClearFields();
+        if (fields == null || fields.isEmpty()) return;
+        Set<String> allowed = new HashSet<>(Arrays.asList("rewardRulesJson", "merchantGuide", "sensorType", "sensorConfig", "storyImg"));
+        for (String field : fields) if (!allowed.contains(field)) throw new IllegalArgumentException("不支持清空字段：" + field);
+        Integer method = request.getValidationMethod() != null ? request.getValidationMethod()
+                : existing == null ? null : existing.getValidationMethod();
+        String sensorType = request.getSensorType() != null ? request.getSensorType()
+                : existing == null ? null : existing.getSensorType();
+        if ((fields.contains("sensorType") || fields.contains("sensorConfig"))
+                && (isAppSensor(method) || isPhotoFilter(method, sensorType)
+                || (existing != null && isPhotoFilter(method, existing.getSensorType())))) {
+            throw new IllegalArgumentException("当前验证方式需要传感器配置，请先切换为非传感器验证方式再清空");
+        }
+        if (fields.contains("rewardRulesJson")) request.setRewardRulesJson(null);
+        if (fields.contains("merchantGuide")) request.setMerchantGuide(null);
+        if (fields.contains("sensorType")) request.setSensorType(null);
+        if (fields.contains("sensorConfig")) request.setSensorConfig(null);
+        if (fields.contains("storyImg")) request.setStoryImg(null);
     }
 
     private void validateSensorFields(CmsTemplatePublishRequest request) {

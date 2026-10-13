@@ -64,6 +64,10 @@ class CoopSettlementPayoutTransactionTest {
 
         DataSourceTransactionManager transactionManager = new DataSourceTransactionManager(dataSource);
         CmsTopicServiceImpl target = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(target, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(target, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(target, "transactionManager", transactionManager);
         ReflectionTestUtils.setField(target, "coopSettlementMapper", settlementMapper());
         ReflectionTestUtils.setField(target, "coopComplaintMapper", complaintMapper());

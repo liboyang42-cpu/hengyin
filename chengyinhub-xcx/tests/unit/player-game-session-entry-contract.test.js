@@ -538,7 +538,7 @@ test('敏感玩家写只在内存保留原命令，重启后仅按落盘回执�
     reopened.page.reconcilePlayerChoice()
     await settle()
 
-    assert.equal(reopened.page.data.gameModule.write.status, 'idle', '精确 APPLIED 后清锁并回到最新服务端投影')
+    assert.equal(reopened.page.data.gameModule.write.status, 'confirmed', '精确 APPLIED 后清锁；较旧projection不能覆盖确认回执')
     assert.equal(reopened.page._playerPendingWrite, null)
     assert.equal(storage.has('game_player_pending_m9_a701'), false)
     assert.equal(reopened.submitCalls.length, 0)
@@ -807,6 +807,52 @@ test('玩家初次选择收到无回执业务错误也进入 unknown，精确 FA
   }
 })
 
+test('另一队版本推进后，持久化 FAILED 回执刷新并解锁；没有回执时仍冻结原请求', async () => {
+  const harness = loadUnknownWritePlayer()
+  try {
+    harness.page.data.gameModule.write = { status: 'idle' }
+    harness.page._playerPendingWrite = null
+    harness.setSubmitResult((role, command) => ({
+      status: 'business-error', requestId: command.requestId,
+      reasonCode: 'GAME_STATE_CONFLICT', message: '客户端版本已过期，请刷新后重试',
+      receipt: terminalReceipt(command, 'FAILED', { reasonCode: 'GAME_STATE_CONFLICT' }),
+    }))
+    harness.page.submitPlayerChoice({ currentTarget: { dataset: { node: 31, choice: 'A' } } })
+    await settle()
+    assert.equal(harness.page.data.gameModule.write.status, 'error')
+    assert.equal(harness.page._playerPendingWrite, null)
+    assert.ok(harness.page._reloads > 0)
+    assert.equal(harness.submitCalls.length, 1, '刷新不得自动重发命令')
+    harness.page.data.gameModule.revision = 10
+    harness.setSubmitResult({ status: 'business-error', reasonCode: 'GAME_STATE_CONFLICT' })
+    harness.page.submitPlayerChoice({ currentTarget: { dataset: { node: 31, choice: 'A' } } })
+    await settle()
+    assert.equal(harness.submitCalls[1].input.expectedRevision, 10)
+    assert.equal(harness.page.data.gameModule.write.status, 'unknown')
+    assert.ok(harness.page._playerPendingWrite)
+  } finally { harness.cleanup() }
+})
+
+test('新版玩法重试只委托同局同版本的真实高级玩法组件，不自行发第二请求', () => {
+  const harness = loadUnknownWritePlayer()
+  try {
+    let retries = 0
+    const game = { data: { state: { sessionId: 42, version: 3, canRetry: true } }, retry() { retries += 1 } }
+    harness.page.selectComponent = () => game
+    harness.page.data.playKit = { kit: { type: 'qa', sessionId: 42, version: 3, terminal: true, canRetry: true } }
+    harness.page.onPlayKitAction({ detail: { type: 'qa', action: 'retry' } })
+    assert.equal(retries, 1)
+    game.data.state.version = 4
+    harness.page.onPlayKitAction({ detail: { type: 'qa', action: 'retry' } })
+    assert.equal(retries, 1)
+    game.data.state.version = 3
+    game.data.state.canRetry = false
+    harness.page.onPlayKitAction({ detail: { type: 'qa', action: 'retry' } })
+    assert.equal(retries, 1)
+    assert.equal(harness.submitCalls.length, 0)
+  } finally { harness.cleanup() }
+})
+
 test('玩家未知写回读：非终态不解锁，精确 APPLIED/FAILED 终态分别确认或驳回', async () => {
   const failed = loadUnknownWritePlayer()
   try {
@@ -909,4 +955,31 @@ test('城市定向和自由探索不弹旧导航员身份，真实剧情分配�
       assert.equal(h.page.data.roleCard.code, 'SCOUT')
     } finally { h.cleanup() }
   }
+})
+
+test('玩家选择与原命令重试遇旧纪元：显示服务端提示并重读，绝不换纪元自动重发', async () => {
+  const harness = loadUnknownWritePlayer()
+  try {
+    harness.page.data.gameModule.authorityEpoch = 4
+    harness.page.data.gameModule.write = { status: 'idle' }
+    harness.setSubmitResult({ status: 'business-error', reasonCode: 'GAME_AUTHORITY_CONFLICT', message: '本局权威版本已更新，请刷新' })
+    harness.page.submitPlayerChoice({ currentTarget: { dataset: { node: 31, choice: 'A' } } })
+    await settle()
+    assert.equal(harness.submitCalls[0].input.authorityEpoch, 4)
+    assert.equal(harness.page._reloads, 1)
+    assert.equal(harness.page._playerPendingWrite, null)
+    assert.equal(harness.page.data.gameModule.write.status, 'error')
+    assert.match(harness.page.data.gameModule.write.message, /权威版本/)
+    assert.equal(harness.submitCalls.length, 1)
+    assert.equal(harness.page.retryPlayerUnknownWrite(), false)
+
+    harness.command.authorityEpoch = 2
+    harness.page._playerPendingWrite = { requestId: harness.command.requestId, action: harness.command.action, command: harness.command }
+    harness.page.data.gameModule.write = { status: 'unknown' }
+    harness.page.retryPlayerUnknownWrite()
+    await settle()
+    assert.equal(harness.submitCalls[1].input.authorityEpoch, 2, '显式重试也必须冻结旧纪元')
+    assert.equal(harness.page._reloads, 2)
+    assert.equal(harness.submitCalls.length, 2)
+  } finally { harness.cleanup() }
 })

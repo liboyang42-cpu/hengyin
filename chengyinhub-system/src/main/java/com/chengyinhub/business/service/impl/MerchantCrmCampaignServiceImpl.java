@@ -150,7 +150,8 @@ public class MerchantCrmCampaignServiceImpl implements IMerchantCrmCampaignServi
         try {
             if (campaignMapper.insertCampaign(campaign) != 1) throw new ServiceException("触达任务创建失败", 409);
         } catch (DuplicateKeyException e) {
-            MerchantCrmCampaign existing = campaignMapper.selectByRequestId(access.getMerchantId(), requestId);
+            // 唯一键冲突后的回执须越过当前事务的旧快照。
+            MerchantCrmCampaign existing = campaignMapper.selectByRequestIdForShare(access.getMerchantId(), requestId);
             return exactReplay(existing, access.getMerchantId(), principalMemberId, segment.getId(), channel,
                     couponId, title, content, true);
         }

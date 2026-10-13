@@ -307,11 +307,11 @@ public class ApiTopicController extends BaseController {
      *    与前端的取舍一致:锁态只读不清空,不替用户删图。
      */
     private java.util.List<JourneyReviewTexts.Entry> combinedThemeReviewTexts(TopicCreateDTO dto) {
-        java.util.List<JourneyReviewTexts.Entry> entries=JourneyReviewTexts.collectJourneyStory(dto.getJourneyStory());entries.addAll(JourneyReviewTexts.collectThemeRuntime(dto.getThemeRuntimeConfig()));return entries;
+        java.util.List<JourneyReviewTexts.Entry> entries=JourneyReviewTexts.collectJourneyStory(dto.getJourneyStory());entries.addAll(JourneyReviewTexts.collectThemeRuntime(dto.getThemeRuntimeConfig()));entries.addAll(JourneyReviewTexts.collectChapters(dto.getChapters()));return entries;
     }
     private String checkThemeMedalCapability(Long memberId,String raw) { return checkThemeMedalCapability(memberId,raw,null); }
     private String checkThemeMedalCapability(Long memberId, String raw, String previousRaw) {
-        com.fasterxml.jackson.databind.node.ObjectNode config = com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseDraft(raw);
+        com.fasterxml.jackson.databind.node.ObjectNode config = com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseForNodeSave(raw);
         if (config == null) return null;
         com.fasterxml.jackson.databind.node.ObjectNode previous=com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseDraft(previousRaw);
         for (com.fasterxml.jackson.databind.JsonNode item : config.path("items")) {
@@ -766,9 +766,10 @@ public class ApiTopicController extends BaseController {
             return error("无权编辑该主题");
         }
         com.chengyinhub.business.util.TopicEditWindow.Scope editWindowScope;
+        Integer isDraft = cmsTopicService.selectTopicIsDraft(topicId);
         try {
             editWindowScope = com.chengyinhub.business.util.TopicEditWindow.resolve(
-                    topic, cmsTopicService.selectTopicIsDraft(topicId), new Date());
+                    topic, isDraft, new Date());
         } catch (RuntimeException e) {
             return error(e.getMessage());
         }
@@ -816,6 +817,8 @@ public class ApiTopicController extends BaseController {
         data.put("collaboratorIds", collaboratorIds);
         // 前端据此决定「结构/票价能不能编」:WHITELIST 档只许改文案与图
         data.put("editScope", editWindowScope.name());
+        // 服务端草稿（is_draft=1）：编辑器据此继续「保存草稿 / 发布草稿」，而不是按已发布主题处理
+        data.put("isDraft", Integer.valueOf(1).equals(isDraft));
         return success(data);
     }
 
@@ -1104,8 +1107,26 @@ public class ApiTopicController extends BaseController {
         }
         // 门禁:必须当前确为草稿,防 rejected(审核未通过)/已上架 主题借道发布绕过审核
         Integer isDraft = cmsTopicService.selectTopicIsDraft(cid);
-        if (isDraft == null || isDraft != 1) {
+        if ((isDraft == null || isDraft != 1) && !cmsTopicService.canResubmitSupplyReview(cid, memberId)) {
             return error("该主题不是草稿，无法发布");
+        }
+        TopicCreateDTO publication = new TopicCreateDTO();
+        publication.setSelfPlay(topic.getSelfPlay());
+        publication.setSelfPlayPrice(topic.getSelfPlayPrice());
+        java.util.List<com.chengyinhub.business.domain.dto.ActivityTicketRequest> persistedTickets =
+                new java.util.ArrayList<>();
+        for (OmsTicket ticket : selectTopicTickets(cid)) {
+            com.chengyinhub.business.domain.dto.ActivityTicketRequest persistedTicket =
+                    new com.chengyinhub.business.domain.dto.ActivityTicketRequest();
+            persistedTicket.setPrice(ticket.getPrice());
+            persistedTickets.add(persistedTicket);
+        }
+        publication.setTickets(persistedTickets);
+        if (requiresPublisherIdentity(publication)) {
+            String identityErr = memberIdentityService.checkRegistered(memberId);
+            if (identityErr != null) {
+                return error(identityErr);
+            }
         }
         // 简易版免审直发会立即占在架额度:锁会员 → 复查在架数 → publishDraft,同事务原子,防并发绕过上限
         //(publishDraft 内部再以 WHERE is_draft=1 竞态安全兜底防重复发布);超限时 guard 抛 ServiceException。
@@ -1114,11 +1135,11 @@ public class ApiTopicController extends BaseController {
             final Long fMemberId = memberId;
             final Long fCid = cid;
             Boolean ok = quotaService.runWithThemeOnlineGuard(fMemberId, fCid,
-                    () -> cmsTopicService.publishDraft(fCid));
+                    () -> cmsTopicService.publishDraft(fCid, fMemberId));
             return (ok != null && ok) ? success("已发布") : error("该主题不是草稿，无法发布");
         }
         com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO result =
-                cmsTopicService.publishDraftWithReview(cid);
+                cmsTopicService.publishDraftWithReview(cid, memberId);
         if (result == null) {
             return error("该主题不是草稿，无法发布");
         }
@@ -1172,43 +1193,19 @@ public class ApiTopicController extends BaseController {
             @Parameter(name = "type", description = "类型 1点赞")
     })
     public AjaxResult topicLike(String id, String type) {
-        CmsTopicLike cmsTopicLike = new CmsTopicLike();
         Long memberId = getAppUserId();
-        Long dataId = Convert.toLong(id, 0L);
-        Integer likeType = Convert.toInt(type, 1);
-        if (dataId < 1) {
-            return error("参数不合规");
-        }
-
-        cmsTopicLike.setDataId(dataId);
-        cmsTopicLike.setMemberId(memberId);
-
-
-        List<CmsTopicLike> list = cmsTopicLikeService.selectCmsTopicLikeList(cmsTopicLike);
-        if (list.size() > 0) {
-            //取消点赞
-            // 提取ID集合
-            Long[] ids = list.stream()
-                    .map(CmsTopicLike::getId)
-                    .toArray(Long[]::new);
-
-            // 调用批量删除方法
-            int rows = cmsTopicLikeService.deleteCmsTopicLikeByIds(ids);
-            if (rows > 0) {
-                return success("取消点赞成功");
-            } else {
-                return error("取消点赞失败");
-            }
-        } else {
-            //新增
-            cmsTopicLike.setLikeType(likeType);
-            int rows = cmsTopicLikeService.insertCmsTopicLike(cmsTopicLike);
-            if (rows > 0) {
-                return success("点赞成功");
-            } else {
-                return error("点赞失败");
+        Long topicId = Convert.toLong(id, 0L);
+        Integer desired = type == null || type.trim().isEmpty() ? 1 : Convert.toInt(type, -1);
+        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (topicId < 1 || (desired != 0 && desired != 1)) return error("参数不合规");
+        if (desired == 1) {
+            CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
+            if (topic == null || (topic.getDelFlag() != null && topic.getDelFlag() != 0)) {
+                return error("主题不存在");
             }
         }
+        cmsTopicLikeService.setLiked(memberId, topicId, desired == 1);
+        return success(desired == 1 ? "点赞成功" : "取消点赞成功");
     }
 
 
@@ -1446,6 +1443,7 @@ public class ApiTopicController extends BaseController {
         if (cmsTopic != null) {
             TopicInfoVO topicInfoVO = new TopicInfoVO();
             BeanUtils.copyBeanProp(topicInfoVO, cmsTopic);
+            topicInfoVO.setCanResubmitSupplyReview(cmsTopicService.canResubmitSupplyReview(topicId, memberId));
             // R2-B10 玩家侧只读下发:归一化后的主题数值规则(保存时已归一化,这里原样透传)。
             // 未配置 = null(不下发);作者关了检定 = 下发 checkEnabled=false。新增字段,不改已有字段。
             topicInfoVO.setJourneyRules(com.chengyinhub.business.service.support.JourneyInitialState.publicRules(cmsTopic.getJourneyRulesJson()));
@@ -2093,10 +2091,10 @@ public class ApiTopicController extends BaseController {
         if (umsMember == null) {
             return error("用户不存在");
         }
-        if (umsMember.getStatus() != 1) {
+        if (!Long.valueOf(1L).equals(umsMember.getStatus())) {
             return error("会员已禁用，请联系管理员");
         }
-        if (umsMember.getUserType() != 2) {
+        if (!IRoleService.ROLE_MERCHANT.equals(umsMember.getRole())) {
             return error("商家才能报名");
         }
 
@@ -2341,6 +2339,7 @@ public class ApiTopicController extends BaseController {
         if (cmsTopic != null) {
             TopicInfoVO topicInfoVO = new TopicInfoVO();
             BeanUtils.copyBeanProp(topicInfoVO, cmsTopic);
+            topicInfoVO.setCanResubmitSupplyReview(canManage && cmsTopicService.canResubmitSupplyReview(topicId, merchantOwnerMemberId));
             boolean resolveBlocks = cmsTopic.getProductType() == null
                     ? ChapterBlockReadSupport.shouldResolveBlocks(null, selectTopicTickets(topicId))
                     : ChapterBlockReadSupport.shouldResolveBlocks(cmsTopic.getProductType(), null);

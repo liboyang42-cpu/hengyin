@@ -5,6 +5,7 @@ const toast = require('../../../utils/toast.js');
 const app = getApp();
 const discoverSearch = require('../../../utils/discover-search.js');
 const { openScene } = require('../../../utils/scene-entry.js');
+const { memberId, failureStatus, retryLogin, recoverReadSession } = require('../../../utils/session/login-reload.js');
 const DEFAULT_RESULT_TABS = [{ key: 'all', label: '全部' }];
 
 Page({
@@ -16,6 +17,8 @@ Page({
     searchLoading: false,
     showSearchSkeleton: false,
     searchError: '',
+    clubLoginRequired: false,
+    clubSearchDenied: '',
     // 出过结果没有。只用来判 auto-back:首屏搜索失败才自动退页,
     // 页内改关键词再搜的失败留在页内,别把用户刚打的词一起退掉(审查C A1)。
     everLoaded: false,
@@ -51,24 +54,51 @@ Page({
   },
 
   onUnload() {
+    this._unloaded = true;
     this._searchSeq = (this._searchSeq || 0) + 1;
     if (this._searchSkeletonTimer) clearTimeout(this._searchSkeletonTimer);
   },
 
+  onShow() {
+    this._hidden = false;
+    if (this._searchWasHidden || (this._resultOwner !== undefined && this._resultOwner !== memberId(app))) {
+      this._searchWasHidden = false;
+      this.runSearch();
+    }
+  },
+  onHide() {
+    this._hidden = true;
+    this._searchWasHidden = true;
+    this._searchSeq = (this._searchSeq || 0) + 1;
+    if (this._searchSkeletonTimer) clearTimeout(this._searchSkeletonTimer);
+  },
+  loginForClubs() {
+    const seq = this._searchSeq;
+    const owner = memberId(app);
+    return retryLogin(this, app, function () {
+      if (seq === this._searchSeq && (!owner || owner === memberId(app))) this.runSearch();
+    });
+  },
+
   runSearch() {
+    if (this._hidden || this._unloaded) return;
     const { keyword, categoryId } = this.data;
     const filters = this._filters || {};
-    const requests = discoverSearch.buildRequests(keyword, categoryId, filters);
+    const owner = memberId(app);
+    const requests = discoverSearch.buildRequests(keyword, categoryId, filters).filter(request => owner || request.auth === false);
     const queryKey = String(keyword || '').trim() + '::' + String(categoryId || '')
       + '::' + String(filters.startDate || '') + '::' + String(filters.endDate || '')
       + '::' + String(filters.minPrice || '') + '::' + String(filters.maxPrice || '')
       + '::' + String(filters.sortType || '');
-    const preserveExisting = this._resultQueryKey === queryKey
+    const preserveExisting = this._resultOwner === owner && this._resultQueryKey === queryKey
       && (this.data.resultGroups || []).some((group) => (group.items || []).length > 0);
     const previousGroups = {};
     if (preserveExisting) (this.data.resultGroups || []).forEach((group) => { previousGroups[group.type] = group.items || []; });
     const seq = (this._searchSeq || 0) + 1;
     this._searchSeq = seq;
+    this._resultOwner = owner;
+    this.setData({ clubLoginRequired: !owner, clubSearchDenied: '' });
+    const isCurrent = () => !this._hidden && !this._unloaded && seq === this._searchSeq && owner === memberId(app);
     const groupsByType = {};
     let pending = requests.length;
     let failed = 0;
@@ -81,7 +111,7 @@ Page({
       this.setData({ searchLoading: true, showSearchSkeleton: false, searchError: '', activeResultType: 'all', resultTabs: DEFAULT_RESULT_TABS, resultGroups: [], visibleResults: [] });
       if (requests.length) {
         this._searchSkeletonTimer = setTimeout(() => {
-          if (this._searchSeq === seq && this.data.searchLoading && !this.data.visibleResults.length) {
+          if (isCurrent() && this.data.searchLoading && !this.data.visibleResults.length) {
             this.setData({ showSearchSkeleton: true });
           }
         }, 400);
@@ -90,7 +120,7 @@ Page({
 
     const finish = () => {
       pending -= 1;
-      if (pending > 0 || this._searchSeq !== seq) return;
+      if (pending > 0 || !isCurrent()) return;
       if (this._searchSkeletonTimer) clearTimeout(this._searchSkeletonTimer);
       const resultGroups = requests.map((request) => ({
         type: request.type,
@@ -119,6 +149,23 @@ Page({
       this._resultQueryKey = queryKey; this.setData({ searchLoading: false, showSearchSkeleton: false }); return; }
 
     requests.forEach((request) => {
+      const requestFailed = (res, status) => {
+        if (this._hidden || this._unloaded || seq !== this._searchSeq) return;
+        if (recoverReadSession(this, app, res, function (anonymous) {
+          this._searchSeq++;
+          this.setData({ resultGroups: [], visibleResults: [], resultTabs: DEFAULT_RESULT_TABS,
+            searchLoading: false, showSearchSkeleton: false, searchError: '', clubLoginRequired: anonymous });
+        }, this.runSearch, status)) return;
+        if (!isCurrent()) return;
+        const code = failureStatus(res, status);
+        if (code === 401 || code === 403) {
+          groupsByType[request.type] = [];
+          this.setData({ clubLoginRequired: code === 401,
+            clubSearchDenied: code === 403 ? '当前账号没有俱乐部搜索权限' : '' });
+        }
+        failed += 1;
+        finish();
+      };
       app.sendRequest({
         hideLoading: true,
         autoErrorToast: false,   // 多路并发各自 toast 会连弹;全失败由 auto-back 半屏讲,部分失败在 finish 里报一次
@@ -128,6 +175,7 @@ Page({
         data: request.data,
         header: request.header,
         success: (res) => {
+          if (!isCurrent()) return;
           if (res && (res.code == 200 || res.code == '200')) {
             groupsByType[request.type] = discoverSearch.decorateRows(request.type, res.data, filters);
             if (request.type === 'merchant' || request.type === 'club') {
@@ -141,14 +189,12 @@ Page({
               });
             }
           } else {
-            failed += 1;
+            requestFailed(res); return;
           }
           finish();
         },
-        fail: () => {
-          failed += 1;
-          finish();
-        }
+        fail: requestFailed,
+        successStatusAbnormal: requestFailed,
       });
     });
   },

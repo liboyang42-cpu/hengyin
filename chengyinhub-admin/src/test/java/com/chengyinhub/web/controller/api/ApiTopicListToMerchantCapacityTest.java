@@ -154,6 +154,16 @@ class ApiTopicListToMerchantCapacityTest {
 
     // ====== helpers ======
 
+    @Test
+    void compatibilityTypeDoesNotGrantRecruitmentListToPlayerRole() {
+        Fixture f = fixture(Collections.<CmsTopic>emptyList(), Collections.<CmsTopicChapter>emptyList(), Collections.<Long, MerchantChapterRecruitmentStats>emptyMap());
+        IUmsMemberService members = (IUmsMemberService) ReflectionTestUtils.getField(f.controller, "umsMemberService");
+        UmsMember player = new UmsMember(); player.setId(MERCHANT_VIEWER); player.setStatus(1L);
+        player.setRole("player"); player.setUserType(2L);
+        when(members.selectUmsMemberById(anyLong())).thenReturn(player);
+        assertEquals("商家才能报名", f.controller.topicListToMerchant().get("msg"));
+    }
+
     private static class Fixture {
         ApiTopicController controller;
         IMerchantChapterApplicationService recruitService;
@@ -211,7 +221,8 @@ class ApiTopicListToMerchantCapacityTest {
         UmsMember merchant = new UmsMember();
         merchant.setId(MERCHANT_VIEWER);
         merchant.setStatus(1L);
-        merchant.setUserType(2L);
+        merchant.setUserType(1L); // 旧兼容字段不能否决真实商家角色
+        merchant.setRole("merchant");
         when(memberSvc.selectUmsMemberById(anyLong())).thenReturn(merchant);
 
         IMerchantChapterApplicationService recruitSvc = mock(IMerchantChapterApplicationService.class);

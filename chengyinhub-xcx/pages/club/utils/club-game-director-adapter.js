@@ -6,6 +6,7 @@ const {
 } = require('../../../utils/game-session-client.js')
 
 const CLUB_ROLE = 'club'
+const { genericOpsActions, genericOpsFields, genericOpsPayload } = require('./generic-director-ops.js')
 
 function directorError(code, message, cause) {
   const error = new Error(message || code)
@@ -145,7 +146,10 @@ function normalizeClubProjection(raw) {
     sessionId: raw.sessionId == null ? null : raw.sessionId,
     activityId: raw.activityId == null ? null : raw.activityId,
     status: raw.status || '',
+    playMode: club.playMode || '',
+    genericControl: null,
     revision: raw.revision == null ? null : raw.revision,
+    ...(raw.authorityEpoch != null ? { authorityEpoch: raw.authorityEpoch } : {}),
     currentChapterId: raw.currentChapterId == null ? null : raw.currentChapterId,
     chapterOptions: asArray(club.chapterOptions).filter(function (item) {
       if (!item || numberOrNull(item.chapterId) === null || item.chapterId <= 0) return false
@@ -275,8 +279,30 @@ function createClubGameDirectorAdapter(explicitClient) {
             throw directorError('PROJECTION_MISMATCH', '活动导演数据与当前活动不匹配')
           }
           authorizedActivities.set(activityKey(activityId), projection)
-          return projection
+          if (projection.playMode !== 'ROUTE' || typeof client.loadSharedControl !== 'function') return projection
+          return Promise.resolve(client.loadSharedControl(activityId)).then(function (result) {
+            if (result && result.status === 'ready') {
+              if (result.data.revision !== projection.revision || result.data.run.authorityEpoch !== projection.authorityEpoch) {
+                throw directorError('GAME_STATE_CONFLICT', '运营状态已变化，请重新读取')
+              }
+              projection.genericControl = result.data
+            } else if (!result || result.reasonCode !== 'GAME_ACTION_UNSUPPORTED') {
+              throw directorError((result && result.reasonCode) || 'CONTROL_UNAVAILABLE', (result && result.message) || '运营状态暂时无法读取')
+            }
+            return projection
+          })
         })
+    },
+    loadSharedExport(activityId) {
+      const denied = requireAuthorized(activityId)
+      if (denied) return Promise.reject(denied)
+      const client = getClient()
+      return Promise.resolve(requireClientMethod(client, 'loadSharedExport').call(client, activityId)).then(unwrapProjectionEnvelope)
+    },
+    anchorSharedRun(activityId) {
+      const denied = requireAuthorized(activityId)
+      if (denied) return Promise.reject(denied)
+      return Promise.resolve(requireClientMethod(getClient(), 'anchorSharedRun').call(getClient(), activityId))
     },
     exportRecap(activityId) {
       const denied = requireAuthorized(activityId)
@@ -336,4 +362,7 @@ module.exports = {
   normalizeReceiptResult,
   normalizeSubmitResult,
   unwrapProjectionEnvelope,
+  genericOpsActions,
+  genericOpsFields,
+  genericOpsPayload,
 }

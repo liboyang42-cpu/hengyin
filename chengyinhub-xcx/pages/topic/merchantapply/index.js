@@ -2,6 +2,7 @@ const modal = require('../../../utils/modal.js');
 const cyLoading = require('../../../utils/loading.js');
 const toast = require('../../../utils/toast.js');
 const app = getApp();
+const { memberId, failureStatus, retryLogin, recoverReadSession } = require('../../../utils/session/login-reload.js');
 // 时/分选项与 HH:mm 格式化的单一真源(补零口径全仓一致)
 const timeOptions = require('../../../utils/time-picker-options.js');
 const { pickLocation } = require('../../../utils/location/location-manager.js');
@@ -171,12 +172,26 @@ Page({
   },
 
   onShow() {
+    this._hidden = false;
     merchantTheme.merchantPageShow();
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
+    if (this._resumePrivateRead || (this._privateReadOwner !== undefined && this._privateReadOwner !== memberId(app))) {
+      this._resumePrivateRead = false;
+      this.retryLoadRegistration();
+    }
   },
-  onHide() { merchantTheme.merchantPageRestore(); },
+  onHide() {
+    this._hidden = true;
+    this._resumePrivateRead = this._registrationLoading || this._shopLoading;
+    this._registrationLoading = false;
+    this._loadEpoch = (this._loadEpoch || 0) + 1;
+    this._shopEpoch = (this._shopEpoch || 0) + 1;
+    merchantTheme.merchantPageRestore();
+  },
   onUnload() {
+    this._unloaded = true;
+    this._shopEpoch = (this._shopEpoch || 0) + 1;
     this._loadEpoch = (this._loadEpoch || 0) + 1;
     this._submitEpoch = (this._submitEpoch || 0) + 1;
     this._registrationLoading = false;
@@ -192,10 +207,27 @@ Page({
      ⚠️ 失败不打断填表:这三行是**给对方看的补充信息**,不是提交字段 —— 拉不到就整块不出,
      照样能报名。也不兜底成「未填写」,那会让人以为自己的资料丢了。 */
   loadMyShop() {
+    const owner = this._preparePrivateRead();
+    if (!owner) return;
     const that = this;
+    const epoch = this._shopEpoch = (this._shopEpoch || 0) + 1;
+    this._shopLoading = true;
+    const isCurrent = () => !that._hidden && !that._unloaded && epoch === that._shopEpoch && owner === memberId(app);
+    const denied = (res, status) => {
+      if (that._hidden || that._unloaded || epoch !== that._shopEpoch) return;
+      if (recoverReadSession(that, app, res, that._resetPrivateSession, that.retryLoadRegistration, status)) return;
+      if (!isCurrent()) return;
+      const code = failureStatus(res, status);
+      if (code !== 401 && code !== 403) return;
+      that.setData({ shop: { name: '', address: '', businessTime: '', cover: '' }, canSubmit: false,
+        loadState: code === 401 ? 'login' : 'permission',
+        loadError: app.getRequestErrorMessage(res, code === 401 ? '请重新登录' : '当前账号没有门店查看权限') });
+    };
     app.sendRequest({
       url: '/api/merchant/info', method: 'POST', hideLoading: true, silentError: true,
       success(res) {
+        if (!isCurrent()) return;
+        if ([401, 403].includes(failureStatus(res))) { denied(res); return; }
         const d = res && res.code == '200' && res.data ? res.data : null;
         if (!d) return;
         that.setData({
@@ -209,10 +241,41 @@ Page({
         });
         that.applyShopBusinessTime(String(d.businessTime || '').trim());
       },
+      fail: denied,
+      successStatusAbnormal: denied,
+      complete() { if (isCurrent()) that._shopLoading = false; },
     });
   },
 
+  _preparePrivateRead() {
+    if (this._hidden || this._unloaded) return '';
+    const owner = memberId(app);
+    if (this._privateReadOwner !== undefined && this._privateReadOwner !== owner) {
+      this._loadEpoch = (this._loadEpoch || 0) + 1;
+      this._shopEpoch = (this._shopEpoch || 0) + 1;
+      this._registrationLoading = false;
+      this.setData({ shop: { name: '', address: '', businessTime: '', cover: '' }, address: '', addressName: '',
+        longitude: '', latitude: '', startDate: '', endDate: '', cooperateDate: '', ruleInstructions: '', picUrl: '',
+        canSubmit: false, dirty: false, loadState: this.data.registrationId ? 'loading' : 'ready', loadError: '' });
+    }
+    this._privateReadOwner = owner;
+    if (!owner) this.setData({ loadState: 'login', loadError: '请先登录后填写商家报名', canSubmit: false });
+    return owner;
+  },
+
+  _resetPrivateSession(anonymous) {
+    this._loadEpoch = (this._loadEpoch || 0) + 1;
+    this._shopEpoch = (this._shopEpoch || 0) + 1;
+    this._registrationLoading = false;
+    this._shopLoading = false;
+    this._preparePrivateRead();
+    this.setData({ loadState: anonymous ? 'login' : this.data.registrationId ? 'loading' : 'ready',
+      loadError: anonymous ? '请重新登录后填写商家报名' : '', canSubmit: false });
+  },
+
   loadRegistration() {
+    const owner = this._preparePrivateRead();
+    if (!owner) return;
     const registrationId = this.data.registrationId;
     if (!registrationId || this._registrationLoading) return;
     this._registrationLoading = true;
@@ -223,15 +286,17 @@ Page({
     });
     let settled = false;
     const finish = () => {
-      if (settled || epoch !== this._loadEpoch) return false;
+      if (settled || this._hidden || this._unloaded || epoch !== this._loadEpoch || owner !== memberId(app)) return false;
       settled = true;
       this._registrationLoading = false;
       return true;
     };
-    const failClosed = (message) => {
+    const failClosed = (message, res, status) => {
+      if (this._hidden || this._unloaded || epoch !== this._loadEpoch) return;
+      if (recoverReadSession(this, app, res, this._resetPrivateSession, this.retryLoadRegistration, status)) return;
       if (!finish()) return;
       this.setData({
-        loadState: 'error',
+        loadState: failureStatus(res, status) === 401 ? 'login' : failureStatus(res, status) === 403 ? 'permission' : 'error',
         loadError: message || '报名信息没有加载完整，请重试',
         submitError: '',
         canSubmit: false,
@@ -245,12 +310,12 @@ Page({
       method: 'POST',
       data: { id: registrationId },
       success: (res) => {
-        if (epoch !== this._loadEpoch) return;
+        if (this._hidden || this._unloaded || epoch !== this._loadEpoch || owner !== memberId(app)) return;
         const detail = res && res.data;
         if (!isSuccess(res) || !isEditableRegistration(detail, registrationId)) {
           failClosed(isSuccess(res)
             ? '报名信息没有加载完整，请重试'
-            : ((app.getRequestErrorMessage && app.getRequestErrorMessage(res, '报名信息加载失败')) || '报名信息加载失败'));
+            : ((app.getRequestErrorMessage && app.getRequestErrorMessage(res, '报名信息加载失败')) || '报名信息加载失败'), res);
           return;
         }
         const blockReason = editBlockReason(detail);
@@ -303,14 +368,22 @@ Page({
           canSubmit,
         });
       },
-      fail: () => failClosed('网络不稳定，报名信息没有加载出来'),
-      successStatusAbnormal: (error) => failClosed(
-        (app.getRequestErrorMessage && app.getRequestErrorMessage(error, '报名信息加载失败')) || '报名信息加载失败'),
+      fail: (error, status) => failClosed(app.getRequestErrorMessage(error, '网络不稳定，报名信息没有加载出来'), error, status),
+      successStatusAbnormal: (error, status) => failClosed(
+        (app.getRequestErrorMessage && app.getRequestErrorMessage(error, '报名信息加载失败')) || '报名信息加载失败', error, status),
       complete: () => failClosed('报名信息加载没有完成，请重试'),
     });
   },
 
-  retryLoadRegistration() { this.loadRegistration(); },
+  retryLoadRegistration() {
+    const reload = function () { this.loadRegistration(); this.loadMyShop(); };
+    if (this.data.loadState !== 'login') { reload.call(this); return; }
+    const epoch = this._loadEpoch;
+    const owner = memberId(app);
+    return retryLogin(this, app, function () {
+      if (epoch === this._loadEpoch && (!owner || owner === memberId(app))) reload.call(this);
+    });
+  },
 
   // ===== 脏态:任一字段非空即视为"有未保存输入" =====
   _refreshDirty() {

@@ -64,6 +64,8 @@ public class MerchantReviewServiceImpl implements IMerchantReviewService {
     @Autowired private IAuditTaskService auditTaskService;
     @Autowired private BusinessAuditEventMapper businessAuditEventMapper;
     @Autowired private Environment environment;
+    @Autowired private com.chengyinhub.business.service.IWxContentSecurityService wxContentSecurityService;
+    @Autowired private com.chengyinhub.business.service.IUmsMemberService umsMemberService;
 
     @Override
     public MerchantReviewPageVO publicList(Long viewerMemberId, Long merchantRowId,
@@ -213,6 +215,7 @@ public class MerchantReviewServiceImpl implements IMerchantReviewService {
         }
         if (review.getReplyContent() != null) throw conflict("每条评价只允许一次公开回复");
         if (!input.expectedVersion.equals(review.getVersion())) throw conflict("评价已变化，请刷新后重试");
+        checkReplyText(principalMemberId, input.content);
         if (merchantReviewMapper.replyCas(review.getId(), access.getMerchantId(), access.getOwnerMemberId(), input.content,
                 access.getPrincipalMemberId(), access.getRoleCode(), input.requestId,
                 input.fingerprint, input.expectedVersion) != 1) {
@@ -248,6 +251,7 @@ public class MerchantReviewServiceImpl implements IMerchantReviewService {
         }
         if (review.getReplyContent() == null) throw conflict("这条评价还没有公开回复，不能修改");
         if (!input.expectedVersion.equals(review.getVersion())) throw conflict("评价已变化，请刷新后重试");
+        checkReplyText(principalMemberId, input.content);
         if (merchantReviewMapper.updateReplyCas(review.getId(), access.getMerchantId(),
                 access.getOwnerMemberId(), input.content, access.getPrincipalMemberId(), access.getRoleCode(),
                 input.requestId, input.fingerprint, input.expectedVersion) != 1) {
@@ -258,6 +262,12 @@ public class MerchantReviewServiceImpl implements IMerchantReviewService {
                 "MERCHANT_REVIEW_REPLY_UPDATED", null, input.requestId, "merchant public reply updated",
                 "{\"reviewId\":" + review.getId() + ",\"version\":" + review.getVersion() + "}");
         return writeResult(review, false, null);
+    }
+
+    private void checkReplyText(Long principalMemberId, String content) {
+        com.chengyinhub.business.domain.UmsMember member = umsMemberService.selectUmsMemberById(principalMemberId);
+        String risk = wxContentSecurityService.checkText(content, member == null ? null : member.getWxOpenId());
+        if (risk != null) throw badRequest(risk);
     }
 
     @Override

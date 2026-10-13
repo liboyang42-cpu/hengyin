@@ -6,6 +6,7 @@ const app = getApp();
 
 Page({
   data: {
+    communityPostRead: false,
     statusBarHeight: 20,
     navBarHeight: 44,
     capsuleRightGap: 96,
@@ -38,16 +39,35 @@ Page({
     this.loadConversations();
   },
   onShow() {
+    this._syncCommunityEntry();
     // 从聊天页返回时刷新未读/最后一条
     if (this.data.loaded) this.loadConversations(true);
     this.loadMerchantEntry();
   },
+  onUnload() { this._disposed = true; },
+
+  _isPageContextCurrent(memberId) {
+    return !this._disposed && memberId == (app.getUserID ? app.getUserID() : 0)
+      && (this._conversationMemberId === undefined || this._conversationMemberId == memberId);
+  },
 
   loadConversations(silent) {
     const that = this;
-    const preserveConfirmed = !!silent && this.data.loaded;
+    const memberId = app.getUserID ? app.getUserID() : 0;
+    const identityChanged = this._conversationMemberId !== undefined && this._conversationMemberId != memberId;
+    const preserveConfirmed = !!silent && this.data.loaded && !identityChanged;
+    this._conversationMemberId = memberId;
+    if (identityChanged) {
+      this.setData({ list: [], viewList: [], loaded: false, hasUnread: false, canSettlePredict: false });
+      this._pendingDelete = null;
+      const dc = this.selectComponent && this.selectComponent('#dc');
+      if (dc) dc.close();
+    }
     const requestEpoch = (this._conversationRequestEpoch || 0) + 1;
     this._conversationRequestEpoch = requestEpoch;
+    const current = function () {
+      return requestEpoch === that._conversationRequestEpoch && that._isPageContextCurrent(memberId);
+    };
     if (preserveConfirmed) {
       this.setData({ refreshing: true });
     } else {
@@ -59,7 +79,7 @@ Page({
       hideLoading: true,
       silentError: true,
       success(res) {
-        if (requestEpoch !== that._conversationRequestEpoch) return;
+        if (!current()) return;
         if (res && res.code == 200 && isRecordList(res.data)) {
           const list = res.data.map(function (c) {
             const cp = c.counterparty || {};
@@ -87,7 +107,7 @@ Page({
         }
       },
       fail(res) {
-        if (requestEpoch !== that._conversationRequestEpoch) return;
+        if (!current()) return;
         that._setConversationError(res, preserveConfirmed);
       },
     });
@@ -159,22 +179,40 @@ Page({
    */
   loadMerchantEntry() {
     const that = this;
+    const requestEpoch = (this._merchantEntryRequestEpoch || 0) + 1;
+    this._merchantEntryRequestEpoch = requestEpoch;
+    const memberId = app.getUserID ? app.getUserID() : 0;
+    const current = function () {
+      return requestEpoch === that._merchantEntryRequestEpoch && that._isPageContextCurrent(memberId);
+    };
     app.sendRequest({
       hideLoading: true,
       url: '/api/merchant/access/me',
       method: 'POST',
       data: {},
       success(res) {
+        if (!current()) return;
         const ok = res && (res.code == '200' || res.code === 200);
         const access = normalizeMerchantAccess(ok ? res.data : null);
         that.setData({ canSettlePredict: !!(access.active && access.canManageProjects) });
       },
-      fail() { that.setData({ canSettlePredict: false }); },
+      fail() { if (current()) that.setData({ canSettlePredict: false }); },
     });
   },
 
   // 空态 CTA:私信→广场(帖文已降级为非 tab 页面,改为 navigateTo)
+  _syncCommunityEntry() {
+    const memberId = app.getUserID && app.getUserID();
+    const sync = () => {
+      if (this._disposed || memberId !== (app.getUserID && app.getUserID())) return;
+      this.setData({ communityPostRead: typeof app.canUseCommunity === 'function' && app.canUseCommunity(false) });
+    };
+    const pending = typeof app.loadFeatureFlags === 'function' ? app.loadFeatureFlags() : null;
+    sync();
+    if (pending && typeof pending.then === 'function') pending.then(sync);
+  },
   onEmptyCta() {
+    if (typeof app.canUseCommunity !== 'function' || !app.canUseCommunity(false)) return;
     const tab = this.data.activeTab;
     if (tab === 'dm') { wx.navigateTo({ url: '/pages/square/list/index' }); }
   },
@@ -182,8 +220,8 @@ Page({
   fmtPreview(c) {
     const t = c.lastMsgType;
     if (t == 2) return '[图片]';
-    if (t == 3) return c.lastMsgText || '[系统卡片]';
-    return c.lastMsgText || '';
+    if (t == 3) return String(c.lastMsgText || '[系统卡片]').replace(/[\r\n]+/g, ' ');
+    return String(c.lastMsgText || '').replace(/[\r\n]+/g, ' ');
   },
 
   fmtTime(v) {
@@ -240,34 +278,42 @@ Page({
       ['viewList[' + idx + ']._dragging']: false,
     });
   },
-  closeRow(idx) {
+  closeRow(id) {
+    const idx = this.data.viewList.findIndex(c => c.conversationId === id);
+    if (idx < 0) return;
     this.setData({ ['viewList[' + idx + '].offset']: 0, ['viewList[' + idx + ']._open']: false });
   },
 
   onRowRead(e) {
     const id = e.currentTarget.dataset.id;
-    const idx = e.currentTarget.dataset.index;
     const that = this;
+    const memberId = app.getUserID ? app.getUserID() : 0;
+    if (!this._isPageContextCurrent(memberId)) return;
+    const row = this.data.list.find(c => c.conversationId === id);
+    if (!row) return;
+    const current = () => that._isPageContextCurrent(memberId) && that.data.list.indexOf(row) >= 0;
     app.sendRequest({
       url: '/api/im/read', method: 'POST', hideLoading: true,
       data: { conversation_id: id },
       // ⚠️ success() 被调用不等于服务端做成了:HTTP 200 + 业务 code!=200 也走这里。
       // 不判 code 就直接把未读清零,是给用户一个假回执。
       success(res) {
+        if (!current()) return;
         if (!isBizOk(res)) { app.tips && app.tips((res && res.msg) || '标记已读失败'); return; }
         const li = that.data.list.findIndex(function (c) { return c.conversationId === id; });
         if (li >= 0) that.setData({ ['list[' + li + '].unread']: 0 });
-        that.closeRow(idx);
+        that.closeRow(id);
         that.refreshView();
       },
-      fail() { app.tips && app.tips('操作失败'); },
+      fail() { if (current()) app.tips && app.tips('操作失败'); },
     });
   },
 
   onRowDelete(e) {
     const id = e.currentTarget.dataset.id;
-    const idx = e.currentTarget.dataset.index;
-    this._pendingDelete = { id: id, idx: idx };
+    const memberId = app.getUserID ? app.getUserID() : 0;
+    if (!this._isPageContextCurrent(memberId)) return;
+    this._pendingDelete = { id: id, memberId: memberId };
     const dc = this.selectComponent && this.selectComponent('#dc');
     if (dc) dc.open('im.conversation.delete');
   },
@@ -275,9 +321,11 @@ Page({
   onDangerConfirm(e) {
     if (e.detail.key !== 'im.conversation.delete') return;
     const pending = this._pendingDelete;
-    if (!pending) return;
+    if (!pending || pending.submitting || !this._isPageContextCurrent(pending.memberId)) return;
+    pending.submitting = true;
     const that = this;
     const id = pending.id;
+    const current = () => that._pendingDelete === pending && that._isPageContextCurrent(pending.memberId);
     const dc = this.selectComponent && this.selectComponent('#dc');
     if (dc) dc.busyOn();
     app.sendRequest({
@@ -285,6 +333,8 @@ Page({
       data: { conversation_id: id },
       // 同上:业务失败时会话其实还在,不能从列表里抹掉再报「已删除」。
       success(res) {
+        pending.submitting = false;
+        if (!current()) return;
         if (!isBizOk(res)) { if (dc) dc.failed((res && res.msg) || '删除失败'); return; }
         const list = that.data.list.filter(function (c) { return c.conversationId !== id; });
         that.setData({ list: list });
@@ -292,14 +342,14 @@ Page({
         that._pendingDelete = null;
         if (dc) dc.done();
       },
-      fail() { if (dc) dc.failed('删除失败'); },
+      fail() { pending.submitting = false; if (current() && dc) dc.failed('删除失败'); },
     });
   },
 
   onDangerCancel() {
     const pending = this._pendingDelete;
     this._pendingDelete = null;
-    if (pending) this.closeRow(pending.idx);
+    if (pending && this._isPageContextCurrent(pending.memberId)) this.closeRow(pending.id);
   },
 
   onRowMute(e) {
@@ -307,19 +357,28 @@ Page({
     const idx = e.currentTarget.dataset.index;
     const that = this;
     const cur = this.data.viewList[idx];
-    if (!cur) return;
+    if (!cur || cur.conversationId !== id) return;
+    const memberId = app.getUserID ? app.getUserID() : 0;
+    if (!this._isPageContextCurrent(memberId)) return;
+    const pending = this._mutePending || (this._mutePending = new Set());
+    const pendingKey = memberId + ':' + id;
+    if (pending.has(pendingKey)) return;
     const prevMuted = cur.muted; // 基本类型拷贝:viewList[idx] 与 list[li] 是同一引用(refreshView 的 filter/map 不克隆),setData 路径写法会就地污染 cur,不能再用 cur.muted 回滚
     const next = (prevMuted == 1) ? 0 : 1;
     const li = this.data.list.findIndex(function (c) { return c.conversationId === id; });
     if (li < 0) return;
+    pending.add(pendingKey);
+    const current = () => that._isPageContextCurrent(memberId) && that.data.list[li] === cur;
     // 乐观更新
     this.setData({ ['list[' + li + '].muted']: next });
     this.refreshView();
-    this.closeRow(idx);
+    this.closeRow(id);
     app.sendRequest({
       url: '/api/im/mute', method: 'POST', hideLoading: true,
       data: { conversation_id: id, muted: next },
       success(res) {
+        pending.delete(pendingKey);
+        if (!current()) return;
         if (!(res && res.code == 200)) {
           // 回滚,不留假状态
           that.setData({ ['list[' + li + '].muted']: prevMuted });
@@ -330,6 +389,8 @@ Page({
         toast(next ? '已开启免打扰' : '已关闭免打扰');
       },
       fail() {
+        pending.delete(pendingKey);
+        if (!current()) return;
         that.setData({ ['list[' + li + '].muted']: prevMuted });
         that.refreshView();
         app.tips && app.tips('操作失败');
@@ -341,10 +402,15 @@ Page({
 
   onReadAll() {
     const that = this;
+    const memberId = app.getUserID ? app.getUserID() : 0;
+    if (!this._isPageContextCurrent(memberId)) return;
+    const pending = this._readAllPending || (this._readAllPending = new Set());
+    if (pending.has(memberId)) return;
     const ids = this.data.list.filter(function (c) {
       return c.unread > 0 && that.tabOf(c) !== null;
     }).map(function (c) { return c.conversationId; });
     if (ids.length === 0) { toast('没有未读消息'); return; }
+    pending.add(memberId);
     // ⚠️ 原实现用 complete() 计数:断网、HTTP 错误、业务失败全都会走到 complete,
     // 于是一条都没成功也照样弹「已全部标为已读」。改成分别记成功数与失败数,
     // 只有全成功才报成功;有失败就如实说明还剩几条。
@@ -359,6 +425,8 @@ Page({
         complete() {
           done++;
           if (done === ids.length) {
+            pending.delete(memberId);
+            if (!that._isPageContextCurrent(memberId)) return;
             that.loadConversations(true);
             if (failed === 0) {
               toast.success('已全部标为已读');

@@ -172,3 +172,52 @@ test('RUN-012: 选择勾在文字前，未选中行保留同宽位置', () => {
   assert.ok(wxml.indexOf('cdd__check') < wxml.indexOf('cdd__item-txt'))
   assert.match(wxml, /<view class="cdd__check">/)
 })
+
+// 2026-10-10 两列卡片档(主人:下拉弹层一行两项)
+test('两列档:不可选卡片(带原因)点了不收起、不回传;可选卡片照常回传下标', () => {
+  const { instance, events } = loadDropdown()
+  instance.data.labels = ['选项问答', '九宫格']
+  instance.data.cells = [{ label: '选项问答', sub: '文字 / 图片选项', reason: '' }, { label: '九宫格', sub: '', reason: '在主题里配置' }]
+  instance.data.columns = 2
+  instance.onPick({ currentTarget: { dataset: { index: '1' } } })
+  assert.equal(events.length, 0, '不可选项不能回传 change')
+  instance.onPick({ currentTarget: { dataset: { index: '0' } } })
+  assert.equal(events.length, 1)
+  assert.equal(events[0].detail.value, 0)
+})
+
+test('两列档模板:名称+说明/原因、选中标记、header 插槽,单列档原样保留', () => {
+  const wxml = read('components/cy/dropdown/index.wxml')
+  assert.match(wxml, /wx:elif="\{\{columns > 1\}\}"/)
+  assert.match(wxml, /<slot name="header" \/>/)
+  assert.match(wxml, /\{\{item\.reason \|\| item\.sub\}\}/, '不可选时原因代替说明显示')
+  assert.match(wxml, /class="cdd__item \{\{index === value/, '单列档条目必须仍在')
+  const wxss = read('components/cy/dropdown/index.wxss')
+  assert.match(wxss, /\.cdd__grid\s*\{[^}]*grid-template-columns:\s*1fr 1fr/, '一行两项')
+})
+
+test('两列档无说明时用紧凑卡片；R5 编辑器下拉不显示灰色说明，只保留不可选原因', () => {
+  const src = read(REL)
+  assert.match(src, /compact: !cells\.some\(function \(cell\) \{ return cell\.sub \|\| cell\.reason; \}\)/, '全部卡片无说明/原因才紧凑')
+  assert.match(src, /that\.data\.compact \? CELL_H_COMPACT_RPX : CELL_H_RPX/, '面板高度跟随紧凑档')
+  assert.match(read('components/cy/dropdown/index.wxml'), /\{\{compact \? 'cdd__cell--compact' : ''\}\}/)
+  assert.match(read('components/cy/dropdown/index.wxss'), /\.cdd__cell--compact\s*\{[^}]*min-height:\s*88rpx/)
+  const temp = read('pages/publish/temp/index.wxml')
+  for (const key of ['r5Editor.participationOptions', 'r5Editor.toolOptions', 'r5Editor.forms']) {
+    const tags = temp.match(new RegExp('<cy-dropdown[^>]*range="\\{\\{' + key.replace('.', '\\.') + '\\}\\}"[^>]*>', 'g')) || []
+    assert.ok(tags.length > 0, key)
+    for (const tag of tags) { assert.doesNotMatch(tag, /sub-key=/, key + ' 不显示灰色说明'); assert.match(tag, /reason-key="reason"/, key + ' 仍显示不可选原因') }
+  }
+  assert.doesNotMatch(read('pages/publish/fabu/zero-hp-editor.wxml'), /sub-key=/, '归零策略下拉不显示灰色说明')
+})
+
+test('选择玩法：带分类标签的纵向列表，只列玩法（不含互动工具），页头左退出右完成', () => {
+  const temp = read('pages/publish/temp/index.wxml')
+  const sheet = temp.slice(temp.indexOf('选择玩法 sheet：'), temp.indexOf('</scroll-view>', temp.indexOf('cg-gsheet-scroll')))
+  assert.match(sheet, /wx:for="\{\{ r5Editor\.gameGroups \}\}"/, '分组来自玩法分类')
+  assert.match(sheet, /cg-edit-head__exit[^>]*bindtap="closeR5GameSheet"[^>]*>退出<\/view>/)
+  assert.match(sheet, /cg-edit-head__done[^>]*>完成<\/view>/)
+  assert.doesNotMatch(sheet, /toolSelected|addR5Tool|toolOptions/, '玩法列表里没有互动工具')
+  assert.doesNotMatch(temp, /range="\{\{r5Editor\.gameItems\}\}"/, '不再用两列下拉选玩法')
+  assert.match(temp, /range="\{\{r5Editor\.toolOptions\}\}"[^>]*bind:change="addR5Tool"/, '互动工具在选好玩法后单独添加')
+})

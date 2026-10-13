@@ -35,6 +35,37 @@ public class DataRetentionServiceImpl implements IDataRetentionService {
     @Autowired
     private NpcChatRequestMapper npcChatRequestMapper;
 
+    @Autowired
+    private com.chengyinhub.business.mapper.RoamMapper roamMapper;
+    @Autowired
+    private com.chengyinhub.business.mapper.RoamShareSnapshotMapper roamShareSnapshotMapper;
+    @Autowired
+    private RoamLocationRetentionService roamLocationRetentionService;
+    @Autowired
+    private RoamOrphanLocationRetentionService roamOrphanLocationRetentionService;
+
+    @Override
+    public int cleanRoamLocations(Date cutoff, int batchSize, int maxBatches) {
+        if (cutoff == null || batchSize <= 0 || maxBatches <= 0) return 0;
+        int total = 0;
+        for (int i = 0; i < maxBatches; i++) {
+            java.util.List<com.chengyinhub.business.domain.RoamSession> rows = roamMapper.selectLocationRetentionCandidates(cutoff, batchSize);
+            for (com.chengyinhub.business.domain.RoamSession row : rows)
+                total += roamLocationRetentionService.clear(row.getId(), row.getMemberId(), cutoff);
+            if (rows.size() < batchSize) break;
+        }
+        total += loopDelete("roam_orphan_tiles", cutoff, batchSize, maxBatches,
+                (c,l) -> roamOrphanLocationRetentionService.clearTiles(c,l));
+        total += loopDelete("roam_orphan_pois", cutoff, batchSize, maxBatches,
+                (c,l) -> roamOrphanLocationRetentionService.clearPois(c,l));
+        total += loopDelete("roam_orphan_shops", cutoff, batchSize, maxBatches,
+                (c,l) -> roamOrphanLocationRetentionService.clearShops(c,l));
+        total += loopDelete("roam_poi_reward_log_coordinates", cutoff, batchSize, maxBatches,
+                (c,l) -> roamLocationRetentionService.clearRewardLocations(c,l));
+        return total + loopDelete("roam_share_snapshot_unbound", cutoff, batchSize, maxBatches,
+                (c, l) -> roamShareSnapshotMapper.deleteExpiredUnbound(c, l));
+    }
+
     @Override
     public int cleanBrowseRecords(Date cutoff, int batchSize, int maxBatches) {
         return loopDelete("tms_browse_record", cutoff, batchSize, maxBatches,

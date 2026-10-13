@@ -69,7 +69,7 @@ class NearbyRunnerShopsMybatisIntegrationTest {
         execute("create table ums_member(id bigint primary key,nickname varchar(80),avatar varchar(500),del_flag int)");
         execute("create table roam_session(id bigint primary key,member_id bigint,status int,"
                 + "last_report_at datetime,last_lat decimal(10,6),last_lng decimal(10,6),"
-                + "explore_pct int,started_at datetime,create_time datetime)");
+                + "explore_pct int,started_at datetime,create_time datetime,presence_visible tinyint not null default 0)");
         execute("create table roam_shop_visit(id bigint primary key,member_id bigint,session_id bigint,"
                 + "source_type int,source_id bigint,shop_name varchar(80),visited_at datetime)");
         execute("insert into ums_member values(1,'viewer','',0),(2,'runner','',0),(3,'outside','',0)");
@@ -166,6 +166,25 @@ class NearbyRunnerShopsMybatisIntegrationTest {
         }
     }
 
+    @Test
+    void privateSessionsAreHiddenAndClosingCannotBeReversedByHeartbeat() throws Exception {
+        execute("update roam_session set presence_visible=0 where member_id=2");
+        try (SqlSession session = factory.openSession(true)) {
+            RoamMapper mapper = session.getMapper(RoamMapper.class);
+            assertTrue(mapper.selectNearbyRunners(1L, 31.0, 121.0, 1000,
+                    new Date(NOW - 300000), new Date(NOW), 20).stream()
+                    .noneMatch(row -> Long.valueOf(2L).equals(row.getMemberId())));
+            mapper.updatePresence(20L, 2L, new java.math.BigDecimal("31"), new java.math.BigDecimal("121"),
+                    new Date(NOW), 10);
+            assertEquals(0, Integer.parseInt(scalar("select presence_visible from roam_session where id=20")));
+            assertNull(mapper.selectActivePresence(2L, new Date(NOW - 300000)));
+            mapper.updatePresenceVisibility(20L, 2L, true);
+            assertNotNull(mapper.selectActivePresence(2L, new Date(NOW - 300000)));
+            mapper.updatePresenceVisibility(null, 2L, false);
+            assertNull(mapper.selectActivePresence(2L, new Date(NOW - 300000)));
+        }
+    }
+
     private List<String> images(List<RunnerShopVO> rows) {
         return rows.stream().map(RunnerShopVO::getShopImage).sorted().collect(Collectors.toList());
     }
@@ -179,7 +198,7 @@ class NearbyRunnerShopsMybatisIntegrationTest {
     private void session(long id, long member, int status, int ageSeconds) throws Exception {
         execute("insert into roam_session values(" + id + "," + member + "," + status
                 + ",from_unixtime(" + (NOW / 1000 - ageSeconds)
-                + "),31,121,10,from_unixtime(" + (NOW / 1000 - 600) + "),null)");
+                + "),31,121,10,from_unixtime(" + (NOW / 1000 - 600) + "),null,1)");
     }
 
     private void visit(long id, long member, long session, int type, long source) throws Exception {

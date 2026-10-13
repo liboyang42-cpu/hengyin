@@ -69,6 +69,7 @@ class AppLoginServiceSecurityTest {
     void rejectsBlankPasswordLoginInputsBeforeMemberLookup(String username, String password, String openid) {
         IUmsMemberService memberService = mock(IUmsMemberService.class);
         AppLoginService loginService = new AppLoginService();
+        ReflectionTestUtils.setField(loginService, "redisCache", mock(RedisCache.class));
         ReflectionTestUtils.setField(loginService, "appUserSevice", memberService);
 
         ServiceException exception = assertThrows(ServiceException.class,
@@ -83,6 +84,7 @@ class AppLoginServiceSecurityTest {
     void rejectsBlankOpenIdLoginBeforeMemberLookup(String openid) {
         IUmsMemberService memberService = mock(IUmsMemberService.class);
         AppLoginService loginService = new AppLoginService();
+        ReflectionTestUtils.setField(loginService, "redisCache", mock(RedisCache.class));
         ReflectionTestUtils.setField(loginService, "appUserSevice", memberService);
 
         ServiceException exception = assertThrows(ServiceException.class, () -> loginService.login(openid));
@@ -100,6 +102,7 @@ class AppLoginServiceSecurityTest {
         IUmsMemberService missingMemberService = mock(IUmsMemberService.class);
         when(missingMemberService.selectUmsMemberList(any(UmsMember.class))).thenReturn(Collections.emptyList());
         AppLoginService missingLoginService = new AppLoginService();
+        ReflectionTestUtils.setField(missingLoginService, "redisCache", mock(RedisCache.class));
         ReflectionTestUtils.setField(missingLoginService, "appUserSevice", missingMemberService);
 
         IUmsMemberService wrongPasswordMemberService = mock(IUmsMemberService.class);
@@ -108,6 +111,7 @@ class AppLoginServiceSecurityTest {
         when(wrongPasswordMemberService.selectUmsMemberList(any(UmsMember.class)))
                 .thenReturn(Collections.singletonList(member));
         AppLoginService wrongPasswordLoginService = new AppLoginService();
+        ReflectionTestUtils.setField(wrongPasswordLoginService, "redisCache", mock(RedisCache.class));
         ReflectionTestUtils.setField(wrongPasswordLoginService, "appUserSevice", wrongPasswordMemberService);
         ReflectionTestUtils.setField(wrongPasswordLoginService, "appSessionRegistryService", stableRegistry());
 
@@ -136,6 +140,7 @@ class AppLoginServiceSecurityTest {
         when(memberService.selectUmsMemberList(any(UmsMember.class)))
                 .thenReturn(Collections.singletonList(member));
         AppLoginService loginService = new AppLoginService();
+        ReflectionTestUtils.setField(loginService, "redisCache", mock(RedisCache.class));
         ReflectionTestUtils.setField(loginService, "appUserSevice", memberService);
         ReflectionTestUtils.setField(loginService, "appSessionRegistryService", stableRegistry());
 
@@ -160,6 +165,7 @@ class AppLoginServiceSecurityTest {
         when(memberService.selectUmsMemberList(any(UmsMember.class)))
                 .thenReturn(Collections.singletonList(member));
         AppLoginService loginService = new AppLoginService();
+        ReflectionTestUtils.setField(loginService, "redisCache", mock(RedisCache.class));
         ReflectionTestUtils.setField(loginService, "appUserSevice", memberService);
         ReflectionTestUtils.setField(loginService, "appTokenService", realTokenService());
         ReflectionTestUtils.setField(loginService, "appSessionRegistryService", stableRegistry());
@@ -192,6 +198,7 @@ class AppLoginServiceSecurityTest {
         when(memberService.selectUmsMemberById(42L)).thenReturn(current);
         when(registry.currentOrCreateEpoch(42L)).thenReturn(3L);
         AppLoginService loginService = new AppLoginService();
+        ReflectionTestUtils.setField(loginService, "redisCache", mock(RedisCache.class));
         ReflectionTestUtils.setField(loginService, "appUserSevice", memberService);
         ReflectionTestUtils.setField(loginService, "appSessionRegistryService", registry);
         ReflectionTestUtils.setField(loginService, "appTokenService", tokenService);
@@ -216,6 +223,7 @@ class AppLoginServiceSecurityTest {
         current.setPhone("13900000000");
         when(memberService.selectUmsMemberById(42L)).thenReturn(current);
         AppLoginService loginService = new AppLoginService();
+        ReflectionTestUtils.setField(loginService, "redisCache", mock(RedisCache.class));
         ReflectionTestUtils.setField(loginService, "appUserSevice", memberService);
         ReflectionTestUtils.setField(loginService, "appSessionRegistryService", registry);
         ReflectionTestUtils.setField(loginService, "appTokenService", tokenService);
@@ -243,6 +251,7 @@ class AppLoginServiceSecurityTest {
         when(memberService.selectUmsMemberList(any(UmsMember.class)))
                 .thenReturn(Collections.singletonList(member));
         AppLoginService loginService = new AppLoginService();
+        ReflectionTestUtils.setField(loginService, "redisCache", mock(RedisCache.class));
         ReflectionTestUtils.setField(loginService, "appUserSevice", memberService);
         ReflectionTestUtils.setField(loginService, "umsMemberMapper", memberMapper);
         ReflectionTestUtils.setField(loginService, "appTokenService", tokenService);
@@ -279,6 +288,7 @@ class AppLoginServiceSecurityTest {
                 "token-" + issuedTokens.incrementAndGet());
 
         AppLoginService loginService = new AppLoginService();
+        ReflectionTestUtils.setField(loginService, "redisCache", mock(RedisCache.class));
         ReflectionTestUtils.setField(loginService, "appUserSevice", memberService);
         ReflectionTestUtils.setField(loginService, "umsMemberMapper", memberMapper);
         ReflectionTestUtils.setField(loginService, "appTokenService", tokenService);
@@ -311,6 +321,7 @@ class AppLoginServiceSecurityTest {
         when(memberService.selectUmsMemberList(any(UmsMember.class)))
                 .thenReturn(Collections.singletonList(member));
         AppLoginService loginService = new AppLoginService();
+        ReflectionTestUtils.setField(loginService, "redisCache", mock(RedisCache.class));
         ReflectionTestUtils.setField(loginService, "appUserSevice", memberService);
         ReflectionTestUtils.setField(loginService, "appSessionRegistryService", stableRegistry());
 
@@ -338,6 +349,7 @@ class AppLoginServiceSecurityTest {
         when(memberService.selectUmsMemberList(any(UmsMember.class)))
                 .thenReturn(Collections.singletonList(member));
         AppLoginService loginService = new AppLoginService();
+        ReflectionTestUtils.setField(loginService, "redisCache", mock(RedisCache.class));
         ReflectionTestUtils.setField(loginService, "appUserSevice", memberService);
         ReflectionTestUtils.setField(loginService, "umsMemberMapper", memberMapper);
         ReflectionTestUtils.setField(loginService, "appSessionRegistryService", registry);
@@ -367,6 +379,7 @@ class AppLoginServiceSecurityTest {
                 .thenReturn(Collections.singletonList(member));
         when(memberMapper.upgradePasswordIfMatches(eq(42L), eq("legacy-password"), anyString())).thenReturn(0);
         AppLoginService loginService = new AppLoginService();
+        ReflectionTestUtils.setField(loginService, "redisCache", mock(RedisCache.class));
         ReflectionTestUtils.setField(loginService, "appUserSevice", memberService);
         ReflectionTestUtils.setField(loginService, "umsMemberMapper", memberMapper);
         ReflectionTestUtils.setField(loginService, "appSessionRegistryService", registry);
@@ -393,6 +406,7 @@ class AppLoginServiceSecurityTest {
         when(memberService.selectUmsMemberList(any(UmsMember.class)))
                 .thenReturn(java.util.Arrays.asList(first, second));
         AppLoginService loginService = new AppLoginService();
+        ReflectionTestUtils.setField(loginService, "redisCache", mock(RedisCache.class));
         ReflectionTestUtils.setField(loginService, "appUserSevice", memberService);
         ReflectionTestUtils.setField(loginService, "appTokenService", realTokenService());
         ReflectionTestUtils.setField(loginService, "appSessionRegistryService", stableRegistry());
@@ -420,6 +434,7 @@ class AppLoginServiceSecurityTest {
         when(memberService.selectUmsMemberList(any(UmsMember.class)))
                 .thenReturn(java.util.Arrays.asList(first, second));
         AppLoginService loginService = new AppLoginService();
+        ReflectionTestUtils.setField(loginService, "redisCache", mock(RedisCache.class));
         ReflectionTestUtils.setField(loginService, "appUserSevice", memberService);
         ReflectionTestUtils.setField(loginService, "appTokenService", realTokenService());
 
@@ -441,6 +456,7 @@ class AppLoginServiceSecurityTest {
         when(memberService.selectUmsMemberList(any(UmsMember.class)))
                 .thenReturn(Collections.singletonList(member));
         AppLoginService loginService = new AppLoginService();
+        ReflectionTestUtils.setField(loginService, "redisCache", mock(RedisCache.class));
         ReflectionTestUtils.setField(loginService, "appUserSevice", memberService);
         ReflectionTestUtils.setField(loginService, "appTokenService", realTokenService());
         ReflectionTestUtils.setField(loginService, "appSessionRegistryService", stableRegistry());
@@ -450,6 +466,27 @@ class AppLoginServiceSecurityTest {
         assertFalse(token.isEmpty());
         assertEquals("existing-openid", member.getWxOpenId());
         verify(memberService).updateUmsMember(any(UmsMember.class));
+    }
+
+    @Test
+    void passwordFailuresAreBoundedPerPhoneAndLockedBeforeAccountLookup() {
+        IUmsMemberService members = mock(IUmsMemberService.class);
+        UmsMember member = new UmsMember();
+        member.setId(42L); member.setPhone("13800000000"); member.setPassword(SecurityUtils.encryptPassword("correct"));
+        when(members.selectUmsMemberList(any(UmsMember.class))).thenReturn(Collections.singletonList(member));
+        RedisCache cache = mock(RedisCache.class);
+        AppLoginService service = new AppLoginService();
+        ReflectionTestUtils.setField(service, "appUserSevice", members);
+        ReflectionTestUtils.setField(service, "appSessionRegistryService", stableRegistry());
+        ReflectionTestUtils.setField(service, "redisCache", cache);
+        assertThrows(ServiceException.class, () -> service.login("13800000000", "wrong", "openid"));
+        verify(cache).incrementWithinWindow("app_password_fail_13800000000", 10, TimeUnit.MINUTES);
+        when(cache.getCacheObject("app_password_fail_13800000000")).thenReturn(5L);
+        org.mockito.Mockito.clearInvocations(members);
+        ServiceException locked = assertThrows(ServiceException.class,
+                () -> service.login("13800000000", "correct", "openid"));
+        assertTrue(locked.getMessage().contains("10分钟"));
+        verifyNoInteractions(members);
     }
 
     private AppTokenService realTokenService() {

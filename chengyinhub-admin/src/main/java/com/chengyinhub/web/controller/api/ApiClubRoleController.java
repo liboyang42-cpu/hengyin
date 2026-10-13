@@ -39,6 +39,12 @@ import java.util.LinkedHashSet;
 @Tag(name = "俱乐部角色与权限")
 @RequestMapping("/api/club")
 public class ApiClubRoleController extends BaseController {
+    @org.springframework.web.bind.annotation.ExceptionHandler(
+            org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public AjaxResult invalidRoleRequest() {
+        return new AjaxResult(HttpStatus.BAD_REQUEST, "角色请求格式或字段不正确");
+    }
+
     @Autowired private IClubAccessService clubAccessService;
     @Autowired private IClubRoleAssignmentService clubRoleAssignmentService;
     @Autowired private IClubService clubService;

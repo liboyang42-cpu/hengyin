@@ -9,14 +9,18 @@
   mask-closable="{{false}}"
 >
   <view class="pg">
-    <text class="pg__body">城瘾会在你使用相关功能时处理必要信息。漫游定位仅用于实时位置展示、到点打卡和轨迹记录；不使用时不会在后台持续采集。</text>
+    <text class="pg__body">城瘾在你主动开启漫游后使用定位用于到点打卡和记录足迹；锁屏或切到后台后仍记录，结束漫游即停止。向附近用户分享位置默认关闭，需另行单独同意；开启后展示街区模糊位置、昵称、头像及本次漫游信息，可随时关闭，关闭不影响自己的轨迹。</text>
     <view class="pg__link" bindtap="openPrivacyContract" aria-role="button" aria-label="查看用户隐私保护指引" hover-class="cy-pressed" hover-stay-time="80">查看《用户隐私保护指引》</view>
     <!-- 微信强制:同意必须是原生 button open-type,不能收编 cy-btn。
          2026-09-18 对齐 pages/privacy 已定方案:两颗并排,不同意在左(secondary 描边)、同意在右;
          原来竖排 + ghost 玻璃底与卡面同色,「暂不同意」根本看不清。 -->
+    <view bindtap="openService" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="阅读用户服务协议">阅读《用户服务协议》</view>
+    <checkbox-group bindchange="toggleService"><label><checkbox value="service" checked="{{serviceAgreed}}"/>我已阅读并同意《用户服务协议》及隐私保护指引</label></checkbox-group>
     <view class="pg__actions">
       <cy-btn variant="secondary" disabled="{{submitting}}" class="pg__action" bindtap="disagreePrivacy">暂不同意</cy-btn>
-      <button class="pg__agree" open-type="agreePrivacyAuthorization" bindagreeprivacyauthorization="agreePrivacy" loading="{{submitting}}">同意并继续</button>
+      <button class="pg__agree" open-type="agreePrivacyAuthorization" bindagreeprivacyauthorization="agreePrivacy" loading="{{submitting}}" disabled="{{submitting || !serviceAgreed}}" aria-disabled="{{submitting || !serviceAgreed}}">同意并继续</button>
     </view>
   </view>
 </cy-scene-sheet>
+
+<cy-agreement-sheet show="{{showServiceSheet}}" type="service" theme="player" bind:close="closeService" />

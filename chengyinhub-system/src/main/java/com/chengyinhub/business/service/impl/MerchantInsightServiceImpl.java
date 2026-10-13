@@ -93,6 +93,12 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
         if (cached != null)
         {
             cached.setProfile(profileView);
+            // facts/AI 可按日缓存，『招商中』不能：报名截止可能在当天跨过，开关也可能被关闭。
+            // 用当前候选池重放缓存里的 AI 选择；失效选择沿用既有规则丢弃并回退到当前池。
+            List<com.chengyinhub.business.domain.CmsTopic> topicPool = recruitingTopicPool(merchantMemberId);
+            AiMerchantInsightResp cachedAi = cached.getAi();
+            cached.setRecommendedTopics(fillTopicPicks(
+                    cachedAi == null ? null : cachedAi.getRecommendedTopics(), topicPool));
             return cached;
         }
 
@@ -214,8 +220,14 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
         List<com.chengyinhub.business.domain.CmsTopic> topics = cmsTopicService.selectCmsTopicList(query);
         if (topics == null) return new ArrayList<>();
         // 商家不能承接自己的主题；AI 候选和无 AI 推荐使用同一份过滤后的池。
+        // 合作中心以 merchantSignUpEndDate 判『已截止』；活动 start/end 与商业生命周期
+        // recruitDeadline 都不是商家报名截止。推荐卡固定写『招商中』，所以截止项必须在这里剔除。
+        Date recruitNow = new Date();
         topics = new ArrayList<>(topics);
-        topics.removeIf(topic -> topic == null || merchantMemberId.equals(topic.getMemberId()));
+        topics.removeIf(topic -> topic == null
+                || merchantMemberId.equals(topic.getMemberId())
+                || (topic.getMerchantSignUpEndDate() != null
+                    && !topic.getMerchantSignUpEndDate().after(recruitNow)));
         // CU-M-85(2026-09-24 走查):推荐卡要能区分同名主题的场次,主办方名走 app 侧同一份
         // 「来源」投影(内容是产品槽,不在 cms_topic 表上)。池子 ≤8 条,一次批量查询。
         topicContentPublisherProjectionService.project(topics);

@@ -11,11 +11,13 @@
     <text class="deregister-copy">注销后账号无法恢复；公开内容将匿名化，依法需要留存的交易记录将停止用于其他目的。</text>
     <text class="deregister-link" bindtap="goCancellationNotice" hover-class="cy-pressed" hover-stay-time="80">查看《账号注销须知》</text>
     <checkbox-group bindchange="toggleConfirmed"><label class="deregister-check"><checkbox value="confirmed" color="#1a1a1a"/>我已阅读并理解注销后果</label></checkbox-group>
-    <view class="deregister-code-row"><input class="deregister-code-input" placeholder="短信验证码" value="{{smscode}}" bindinput="inputCode" maxlength="6" aria-label="短信验证码"/><text class="deregister-code-send {{smsSending ? 'is-disabled' : ''}}" bindtap="sendSms" aria-role="button" aria-disabled="{{smsSending}}" aria-label="{{smsSending ? '正在发送验证码' : '获取验证码'}}" hover-class="{{smsSending ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{smsSending ? '发送中…' : (smsSent ? '重新发送' : '获取验证码')}}</text></view>
-    <text wx:if="{{smsSent}}" class="deregister-inline-status" aria-role="status">验证码已发送至尾号 {{phoneMasked}} 的手机号</text>
-    <cy-error wx:elif="{{smsError}}" title="验证码没有发送" sub="{{smsError}}" retry="重试" bind:retry="sendSms" />
+    <view wx:if="{{verificationMethod === 'SMS'}}" class="deregister-code-row"><input class="deregister-code-input" placeholder="短信验证码" value="{{smscode}}" bindinput="inputCode" maxlength="6" aria-label="短信验证码"/><text class="deregister-code-send {{smsSending ? 'is-disabled' : ''}}" bindtap="sendSms" aria-role="button" aria-disabled="{{smsSending}}" aria-label="{{smsSending ? '正在发送验证码' : '获取验证码'}}" hover-class="{{smsSending ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{smsSending ? '发送中…' : (smsSent ? '重新发送' : '获取验证码')}}</text></view>
+    <text wx:if="{{verificationMethod === 'SMS' && smsSent}}" class="deregister-inline-status" aria-role="status">验证码已发送至尾号 {{phoneMasked}} 的手机号</text>
+    <cy-error wx:elif="{{verificationMethod === 'SMS' && smsError}}" title="验证码没有发送" sub="{{smsError}}" retry="重试" bind:retry="sendSms" />
+    <text wx:if="{{verificationMethod === 'WECHAT'}}" class="deregister-copy">此账号未绑定手机号，提交时将通过微信重新确认本人。</text>
+    <text wx:if="{{verificationMethod === 'UNAVAILABLE'}}" class="deregister-copy">身份验证暂不可用，请重新核验注销条件。</text>
     <cy-error wx:if="{{applyError}}" title="注销申请没有提交" sub="{{applyError}}" retry="重试" bind:retry="apply" />
-    <cy-btn class="deregister-action" variant="danger" loading="{{submitting}}" disabled="{{!canApply}}" bindtap="apply">确认申请注销</cy-btn>
+    <cy-btn class="deregister-action" variant="danger" loading="{{submitting}}" disabled="{{!canApply}}" bindtap="apply">{{verificationMethod === 'WECHAT' ? '微信确认并申请注销' : '确认申请注销'}}</cy-btn>
   </view>
 
   <view class="deregister-card deregister-card--blocked" wx:elif="{{status === 'BLOCKED'}}">
@@ -24,6 +26,10 @@
     <text class="deregister-blocker" wx:for="{{blockers}}" wx:key="*this">· {{item}}</text>
   </view>
 
+  <cy-empty wx:elif="{{status === 'LOGIN_REQUIRED' || status === 'DENIED'}}" kind="no-permission" fill size="lg"
+    title="{{status === 'LOGIN_REQUIRED' ? '登录后查看账号注销条件' : '当前账号无法查看注销条件'}}"
+    sub="{{status === 'LOGIN_REQUIRED' ? '请先登录需要注销的账号' : '请确认当前账号的查看权限'}}"
+    cta="{{status === 'LOGIN_REQUIRED' ? '登录' : '刷新'}}" bind:cta="loginToRead" />
   <cy-error wx:elif="{{status === 'ERROR'}}" fill title="注销条件核验失败" sub="{{statusError || '没能确认注销条件，请稍后重试。'}}" retry="重试" bind:retry="loadStatus" />
 
   <cy-empty class="deregister-loading" wx:elif="{{status === 'LOADING'}}" kind="loading" fill size="lg" title="正在核验注销条件" />

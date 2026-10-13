@@ -54,7 +54,9 @@ class TokenServiceObservabilityTest {
 
             String msg = event.getFormattedMessage();
             assertTrue(msg.contains("uri=/api/test"), "should contain uri");
-            assertTrue(msg.contains("tokenPrefix="), "should contain tokenPrefix");
+            assertFalse(msg.contains("tokenPrefix="), "must not log token fragments");
+            assertFalse(msg.contains("this-is-not"), "must not log a malformed token prefix");
+            assertFalse(msg.contains("error="), "raw parser messages may contain submitted token data");
             assertTrue(msg.contains("errorType="), "should contain errorType");
 
             assertFalse(msg.contains("this-is-not-a-valid-jwt-token-at-all"),

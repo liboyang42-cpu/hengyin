@@ -2,11 +2,18 @@ const modal = require('../../../utils/modal.js');
 const loading = require('../../../utils/loading.js');
 const toast = require('../../../utils/toast.js');
 const app = getApp();
+const { chinaParts } = require('../../../utils/datetime.js');
+const themeRecords = require('../../../utils/theme-records.js');
+function recordsRequest(url, method, data, header) {
+  return new Promise(resolve => app.sendRequest({ url, method, data, header, hideLoading: true, autoErrorToast: false,
+    success: res => resolve(res || {}), successStatusAbnormal: () => resolve({ code: 'fail' }), fail: () => resolve({ code: 'fail', netFail: true }) }));
+}
 /* 结果面板终态停留时长;跳转挂在面板 close 上,时长只此一处 */
 const RESULT_SHEET_MS = 2000;
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const { createCheckoutWorkflow, isOrderExpiredFailure, isTerminalOrderConflict,
   ORDER_REBUILD_REQUIRED, ORDER_EXPIRED_USER_MESSAGE } = require('../../../utils/checkout/checkout-workflow.js');
+const subscribe = require('../../../utils/subscribe.js');
 const { createRegistrationPaymentVerifier } = require('../../../utils/checkout/registration-payment-verifier.js');
 const { buildTopicStatBar } = require('../utils/topic-detail-facts.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
@@ -66,7 +73,10 @@ function hasTopicDetail(data) {
 }
 
 Page({
+  ...themeRecords.methods(recordsRequest, false),
+  openThemeRecordCard(e) { return this.openThemeResultCard({ currentTarget: { dataset: e.detail } }); },
   data: {
+    ...themeRecords.data,
     // 选场次 / 选票种弹层(稿 11 240:401 · 11a 240:446)
     sessionPicker: { show: false },
     clubSheetShow: false,
@@ -319,6 +329,8 @@ Page({
    * 页面卸载时
    */
   onUnload() {
+    this._themeRecordsDisposed = true;
+    this._themeRecordsEpoch = (this._themeRecordsEpoch || 0) + 1;
     this.destroyTopicAudio();
     if (this._workflow) this._workflow.destroy();
     if (this._scrollTimer) {
@@ -1026,11 +1038,15 @@ Page({
     const that = this;
     if (that.lockedTip()) return;
     const topicId = that._selfPlayTopicId || (that.data.info && that.data.info.id) || that.data.id;
-    if (!topicId || that.data.selfPlayConfirmLoading) return;
+    if (!topicId || that.data.selfPlayConfirmLoading || that._selfPlaySubmitting) return;
     if (!that.data.selfPlayConsentChecked) {
       // 单独同意只能用户自己勾,按钮不代勾;这里只提示,不算错误态
       that.setData({ selfPlayConsentHint: '请先勾选上面的同意，才能为你建单' });
       return;
+    }
+    // 保持用户点击手势：订阅拒绝/失败不阻塞既有同意记录和支付链。
+    if (that._hostShareConsentReady || app.recordConsent) {
+      subscribe.request(['signupSuccess', 'activityStart', 'refund']);
     }
     if (that._hostShareConsentReady) {
       that.setData({ selfPlayConfirmShow: false });
@@ -1431,7 +1447,12 @@ Page({
    */
   formatDate(dateString) {
     if (!dateString) return '';
+    if (typeof dateString === 'string' && /^\d{4}[-/]\d{1,2}[-/]\d{1,2}(?:[ T]\d{1,2}:\d{1,2}(?::\d{1,2}(?:\.\d{1,9})?)?)?$/.test(dateString.trim())) {
+      const parts = chinaParts(dateString);
+      return parts ? `${parts.month}.${parts.day}` : '';
+    }
     const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return '';
     const month = date.getMonth() + 1;
     const day = date.getDate();
     return `${month}.${day}`;

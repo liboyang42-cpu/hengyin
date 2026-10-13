@@ -17,6 +17,8 @@
     </view>
   </view>
 
+  <cy-empty wx:if="{{creatorLoginRequired}}" title="登录后配置路线" cta="去登录" bind:cta="onCreatorLogin" />
+  <block wx:else>
   <scroll-view class="simple-ai__scroll" scroll-y="true">
     <view class="simple-ai__body">
       <view class="simple-ai__hero">
@@ -96,4 +98,5 @@
       </view>
     </view>
   </view>
+  </block>
 </view>
