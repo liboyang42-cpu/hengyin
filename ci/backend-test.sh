@@ -31,6 +31,7 @@ MYBATIS_ITS=(
   # 合成账号/内容：真实HTTP角色幂等与撤权、公开节点计数一致性及分页SQL预算。
   ClubRoleHttpMySqlIT
   PublicTopicStationCountMySqlIT
+  PublicMemberFriendCountMySqlIT
   CommunityActivityReferenceMySqlIT
   CommunityMediaEditMySqlIT
   AppMediaAssetMySqlIT
@@ -44,6 +45,7 @@ MYBATIS_ITS=(
   MerchantGeoSortMyBatisIT
   NpcChatRetentionMyBatisIT
   NpcChatUserDataMyBatisIT
+  NpcGeneratedAudioMySqlIT
   NpcGovernanceMapperMyBatisIT
   # 2026-09-15 CR-927 节点NPC:npc_profile scope_type=4 的读闸(未审/停用不下发)、
   #   一节点一条的 uk_active_scope 唯一键、以及三条写语句的 scope 隔离 —— 全要真库才验得动。
@@ -77,6 +79,8 @@ MYBATIS_ITS=(
   # MySQL leader session, failover fence, strict Druid wall and transactional duplicate definitions.
   SchedulerSessionLockMySqlIT
   ClubGatherArrivalMySqlIT
+  ClubAttendanceTimeMappingMyBatisIT
+  VerificationRiskQueueMySqlIT
   AccountDeregistrationRaceMySqlIT
   # R12-E2E 旅程全链路:建局→到店→问问题→判错→检定→推进→阶段结算→结局全走真库真 mapper;
   #   并发 settle 幂等另有一条负控(测试内临时摘掉动作/回执两把唯一键,断言并发重放消失后再还原)。

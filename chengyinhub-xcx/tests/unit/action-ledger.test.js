@@ -47,11 +47,9 @@ const {
   evidenceMaxAgeMs,
   deviceBranchReadbackDigests,
 } = require('../../scripts/uiaudit/build-action-ledger.js')
-// 本文件只读全仓合同共享一次扫描；临时文件变更仍由 targetsForHandler 实时读取。
-const rebuiltLedger = buildLedger()
 
 test('动态事件绑定保留同一入口的全部字面分支，不以别处同名入口去重', () => {
-  const controls = rebuiltLedger.controls
+  const controls = readCurrentLedger().controls
   for (const [wxml, names] of [
     ['pages/club/detail/index.wxml', ['expandMembers', 'goMemberProfile']],
     ['pages/play/index.wxml', ['noop', 'openStory']],
@@ -75,6 +73,10 @@ test('动态事件绑定未知取值路径显式失败，不能静默漏记', ()
   }
 })
 
+// 本文件的源码只读断言共用一次扫描，避免每条用例重复重建全量清单。
+let currentLedger
+const readCurrentLedger = () => currentLedger || (currentLedger = buildLedger())
+
 test('分类只看代码:注释与字符串里的 wx.* 不算能力(A)', () => {
   // 2026-09-22 实证:两行中文注释(里面并无 wx.*)把 play 页 4 个控件从 read 翻成 external。
   // 反向同样危险 —— 注释里写一句 wx.scanCode( 就能给控件挂上它并不具备的能力。
@@ -91,7 +93,7 @@ test('分类只看代码:注释与字符串里的 wx.* 不算能力(A)', () => {
 })
 
 test('分类跟得进 require 来的模块级 helper(B)', () => {
-  const rebuilt = rebuiltLedger
+  const rebuilt = readCurrentLedger()
   // publish/fabu 的 choosePoiForNode 调的是 pickLocation(...),内部才是 wx.chooseLocation;
   // 页面代码里根本没有 wx.chooseLocation —— 跟不进 helper 就会漏判成 state,
   // 等于把一个真需要真机验证的控件挪出证据要求。
@@ -126,7 +128,7 @@ test('同页 scene 或 sheet 入口不得因 go/open 命名误判为页面跳转
   assert.deepEqual(inferEffectClasses('goDetail', "wx.navigateTo({url:'/pages/x/index'});this.setData({busy:true})"), [
     'navigation', 'state',
   ])
-  const rebuilt = rebuiltLedger
+  const rebuilt = readCurrentLedger()
   const privacy = rebuilt.controls.find((item) => item.entry.wxml === 'pages/shezhi/shezhi.wxml'
     && item.control.handler === 'goPrivacy')
   assert.ok(privacy, '设置页隐私入口必须进入动作台账')
@@ -200,7 +202,7 @@ test('确认框合同沿同步 helper 展开，但截断异步回调与互斥 va
   ]])
   assert.equal(modalContractForHandler('deleteAddress', legacyProperty, 'tap'), 'wx.showModal')
 
-  const rebuilt = rebuiltLedger
+  const rebuilt = readCurrentLedger()
   const assertConfirmGate = (action, label) => {
     // 契约钉的是「这个危险动作有确认闸」,不是「必须用 wx.showModal」。
     // 2026-08-30:三段式确认组件 cy-danger-confirm 是同一道闸的新实现 ——
@@ -802,7 +804,7 @@ test('external 分支按微信能力定义，振动不伪造取消/拒权，选�
 })
 
 test('漫游拍照启动的取消事实必须绑定 chooseMedia，不能由定位能力冒充', () => {
-  const control = rebuiltLedger.controls.find((item) => item.entry.js === 'pages/roam/index.js'
+  const control = readCurrentLedger().controls.find((item) => item.entry.js === 'pages/roam/index.js'
     && item.control.handler === 'goStartAndShoot')
   assert.ok(control)
   assert.equal(control.requiredCapabilityByBranch.cancelled, 'chooseMedia')
@@ -885,7 +887,7 @@ test('真机 capture 的签名起点也必须在 freshness 窗内，不能只刷
 })
 
 test('external success 只要求主能力，不把拒权恢复 openSetting 合并成同一路径', () => {
-  const control = rebuiltLedger.controls.find((item) => item.entry.wxml === 'pages/merchant/apply/index.wxml'
+  const control = readCurrentLedger().controls.find((item) => item.entry.wxml === 'pages/merchant/apply/index.wxml'
     && item.control.handler === 'chooseLocation')
   assert.ok(control)
   assert.ok(control.externalCapabilities.includes('chooseLocation'))
@@ -895,7 +897,7 @@ test('external success 只要求主能力，不把拒权恢复 openSetting 合�
 })
 
 test('互斥 CTA 路径拆成独立 variant，不用一次扫码冒充关注与漫游', () => {
-  const controls = rebuiltLedger.controls.filter((item) => item.entry.wxml === 'subpackageMember/components/cy/profile/index.wxml'
+  const controls = readCurrentLedger().controls.filter((item) => item.entry.wxml === 'subpackageMember/components/cy/profile/index.wxml'
     && item.control.handler === 'onPrimaryCta')
   assert.deepEqual(controls.map((item) => item.variant.id).sort(), ['self-merchant-scan', 'visitor-follow'])
   const follow = controls.find((item) => item.variant.id === 'visitor-follow')
@@ -972,7 +974,7 @@ test('App 登录续期不能把全部 sendRequest 读写动作污染成真机能
 })
 
 test('写操作与动态 URL 合同不能降级成普通读取', () => {
-  const rebuilt = rebuiltLedger
+  const rebuilt = readCurrentLedger()
   const adoptions = rebuilt.controls.filter(item => item.targets.primaryApis.includes('/api/template/adopt-draft'))
   assert.ok(adoptions.length > 0, '采用草稿必须进入动作台账')
   assert.ok(adoptions.every(item => item.effectClasses.includes('write')
@@ -1120,7 +1122,7 @@ test('批准稿控件差分保留草稿双分支与成长中心真实绑定及�
 })
 
 test('前端 API method 必须与后端 Controller annotation 真源一致', () => {
-  const rebuilt = rebuiltLedger
+  const rebuilt = readCurrentLedger()
   const server = serverApiContracts()
   const conflicts = rebuilt.controls.flatMap((control) => control.targets.apiContracts.map((contract) => ({ control, contract })))
     .filter(({ contract }) => server.has(contract.url) && !server.get(contract.url).has(contract.method))
@@ -1131,7 +1133,7 @@ test('前端 API method 必须与后端 Controller annotation 真源一致', () 
 })
 
 test('结算 CTA 按同意与报价就绪态穷尽真实请求链，报价失败不能伪装成直接建单', () => {
-  const controls = rebuiltLedger.controls.filter((item) => item.entry.js === 'pages/activity/baoming/baoming.js'
+  const controls = readCurrentLedger().controls.filter((item) => item.entry.js === 'pages/activity/baoming/baoming.js'
     && item.control.handler === 'handlePayment' && item.control.event === 'bindtap')
   assert.equal(controls.length, 6)
   const paid = controls.filter((item) => /-paid-/.test(item.variant.id))
@@ -1147,7 +1149,7 @@ test('结算 CTA 按同意与报价就绪态穷尽真实请求链，报价失败
 })
 
 test('章节危险确认按实际互斥分支登记单次写入', () => {
-  const rows = rebuiltLedger.controls.filter(row => row.entry.js === 'pages/topic/merchantinfo/merchantinfo.js'
+  const rows = readCurrentLedger().controls.filter(row => row.entry.js === 'pages/topic/merchantinfo/merchantinfo.js'
     && row.control.handler === 'onDangerConfirm');
   assert.deepEqual(rows.map(row => row.variant.id).sort(), [
     'chapter-application-withdraw', 'chapter-finish', 'chapter-invitation-reject', 'chapter-invitation-revoke',
@@ -1159,7 +1161,7 @@ test('章节危险确认按实际互斥分支登记单次写入', () => {
 });
 
 test('按钮台账不把定位回调的 reveal 或 GET ending 冒充当前点击的第二次写入', () => {
-  const rebuilt = rebuiltLedger
+  const rebuilt = readCurrentLedger()
   assert.equal(rebuilt.controls.filter((item) => (item.targets.writeApis || []).length > 1
     && !(item.requiredRequests || item.requiredRequestsByBranch)).length, 0)
   const play = (handler) => rebuilt.controls.find((item) => item.entry.js === 'pages/play/index.js' && item.control.handler === handler)
@@ -1184,7 +1186,7 @@ test('按钮台账不把定位回调的 reveal 或 GET ending 冒充当前点击
 })
 
 test('评价举报与团队危险操作按页面状态拆成互斥单写 variant', () => {
-  const rebuilt = rebuiltLedger
+  const rebuilt = readCurrentLedger()
   const reports = rebuilt.controls.filter((item) => item.entry.js === 'pages/merchant/reviews/index.js'
     && item.control.handler === 'submitReport')
   assert.deepEqual(reports.map((item) => item.variant.id).sort(), ['manage', 'public'])
@@ -1209,7 +1211,7 @@ test('评价举报与团队危险操作按页面状态拆成互斥单写 variant
 })
 
 test('当前用户关系写不伪造 forbidden-owner，组件动作必须声明真实宿主页', () => {
-  const rebuilt = rebuiltLedger
+  const rebuilt = readCurrentLedger()
   const favorite = rebuilt.controls.find((item) => item.control.handler === 'toggleFavorite')
   assert.ok(favorite)
   assert.equal(favorite.accessBoundary, 'self')
@@ -1223,7 +1225,7 @@ test('当前用户关系写不伪造 forbidden-owner，组件动作必须声明�
 })
 
 test('服务端写入叠加设备能力时同时保留两类验收事实', () => {
-  const control = rebuiltLedger.controls.find((item) => item.id.includes('pages/privacy/index.wxml')
+  const control = readCurrentLedger().controls.find((item) => item.id.includes('pages/privacy/index.wxml')
     && item.control.handler === 'withdrawRoamLocationConsent')
   assert.ok(control)
   assert.equal(control.actionClass, 'external')
@@ -1250,7 +1252,7 @@ test('服务端写入叠加设备能力时同时保留两类验收事实', () =>
       fromPath: `observed.roamRevocation.recordRequest.body.${field}`, toPath: `authoritativeReadback.authority.after.${field}`,
     })),
   ])
-  const revokeEntries = rebuiltLedger.controls.filter(item => item.control.handler === 'withdrawRoamLocationConsent')
+  const revokeEntries = readCurrentLedger().controls.filter(item => item.control.handler === 'withdrawRoamLocationConsent')
   assert.equal(revokeEntries.length, 2)
   for (const entry of revokeEntries) {
     assert.equal(entry.successCapabilityContract, control.successCapabilityContract)
@@ -1261,7 +1263,7 @@ test('服务端写入叠加设备能力时同时保留两类验收事实', () =>
 })
 
 test('Beta 转正式按作者归属写操作验收，不能误归只读', () => {
-  const control = rebuiltLedger.controls.find((item) => item.control.handler === 'onGraduateBeta')
+  const control = readCurrentLedger().controls.find((item) => item.control.handler === 'onGraduateBeta')
   assert.ok(control)
   assert.equal(control.actionClass, 'write')
   assert.equal(control.baseActionClass, 'write')
@@ -1271,7 +1273,7 @@ test('Beta 转正式按作者归属写操作验收，不能误归只读', () => 
 })
 
 test('合并后可达动作 variant 全部进入台账且 handler 真源可定位', () => {
-  const rebuilt = rebuiltLedger
+  const rebuilt = readCurrentLedger()
   assert.equal(rebuilt.schemaVersion, 7, '并发请求 trace、结算状态 variant 与后端 method 真源变更后必须升级 inventory schema')
   // 商家/俱乐部补全基线 3187；主线详情重做与管理员治理入口净增 9 个 variant。
   // 2026-08-26 状态补全:五个新页各多一条「无权限/网络失败」空态或错误态入口。
@@ -1664,9 +1666,15 @@ test('inventory 与可持久化动态证据分离，freshness 不会抹掉执行
   assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /证据已过期/)
   sample.results[id].sourceDigest = validDigest
 
-  const rootSha = execFileSync('git', ['rev-list', '--max-parents=0', 'HEAD'], { encoding: 'utf8' }).trim().split('\n')[0]
-  const missingAtRoot = ledger.controls.find((control) => sourceDigestAtCommit(control, rootSha) === null)
-  assert.ok(missingAtRoot, '负控需要一个根提交尚不存在的 WXML/JS 控件')
+  // 空树提交明确缺少源码，负控不依赖仓库是否保留历史；不创建分支或修改工作区。
+  const emptyTree = execFileSync('git', ['mktree'], { input: '', encoding: 'utf8' }).trim()
+  const rootSha = execFileSync('git', ['commit-tree', emptyTree, '-m', 'test: missing source fixture'], {
+    encoding: 'utf8',
+    env: { ...process.env, GIT_AUTHOR_NAME: 'Test', GIT_AUTHOR_EMAIL: 'test@example.invalid',
+      GIT_COMMITTER_NAME: 'Test', GIT_COMMITTER_EMAIL: 'test@example.invalid' },
+  }).trim()
+  const missingAtRoot = control
+  assert.equal(sourceDigestAtCommit(missingAtRoot, rootSha), null)
   const forgedHistorical = {
     schemaVersion: 1,
     results: {

@@ -352,58 +352,66 @@ def main():
     if deferred:
         print("DEFERRED_POST_DEPLOY: " + ", ".join(m["migrationId"] for m in deferred))
 
-    c = connect(a); cur = c.cursor()
-    cur.execute("SELECT VERSION(), @@version_comment")
-    ver = cur.fetchone()
-    print("目标实例: %s / %s  @ %s:%d" % (ver[0], ver[1], a.host, a.port))
-    if a.drop:
-        cur.execute("DROP DATABASE IF EXISTS `%s`" % a.schema)
-    cur.execute("CREATE DATABASE IF NOT EXISTS `%s` DEFAULT CHARACTER SET utf8mb4" % a.schema)
-    c.close()
-
-    c = connect(a, a.schema); cur = c.cursor()
-    results = []
-    observations = []
-    t0 = time.time()
-    print("\n[1/3] 导入 base schema 基线快照 …")
-    run_file(cur, BASELINE, "baseline", results, keep_going=True)
-    cur.execute("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s", (a.schema,))
-    print("      建表数: %d   基线阶段问题: %d" % (cur.fetchone()[0], len(results)))
-
-    print("\n[2/3] 导入指纹化 base seed …")
-    baseline_problems = len(results)
-    seed_ok = run_file(cur, BASELINE_SEED, "baseline-seed", results, keep_going=False)
-    seed_problems = len(results) - baseline_problems
-    print("      seed 阶段问题: %d" % seed_problems)
-    if not seed_ok:
+    c = connect(a)
+    try:
+        cur = c.cursor()
+        cur.execute("SELECT VERSION(), @@version_comment")
+        ver = cur.fetchone()
+        print("目标实例: %s / %s  @ %s:%d" % (ver[0], ver[1], a.host, a.port))
+        if a.drop:
+            cur.execute("DROP DATABASE IF EXISTS `%s`" % a.schema)
+        cur.execute("CREATE DATABASE IF NOT EXISTS `%s` DEFAULT CHARACTER SET utf8mb4" % a.schema)
+    finally:
         c.close()
-        for label, idx, kind, msg, sql_head in results:
-            print("  [%s] %s #%d  %s\n        %s" %
-                  (kind, label, idx, msg, sql_head))
-        return 1
-    print("      seed 负控: %d/%d 可转红且回滚恢复" %
-          (verify_seed_negative_controls(c), len(SEED_NEGATIVE_CONTROLS)))
 
-    print("\n[3/3] 按台账拓扑序叠加 migration …")
-    print("      台账内迁移数: %d   快照后待回放: %d" %
-          (len(all_migrations), len(ordered)))
-    pre_migration_problems = len(results)
-    for m in ordered:
-        run_file(cur, REPO / m["path"], m["migrationId"], results,
-                 keep_going=a.keep_going, schema_only=True, observations=observations)
-    cur.execute("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s", (a.schema,))
-    tables = cur.fetchone()[0]
+    c = connect(a, a.schema)
+    try:
+        cur = c.cursor()
+        results = []
+        observations = []
+        t0 = time.time()
+        print("\n[1/3] 导入 base schema 基线快照 …")
+        run_file(cur, BASELINE, "baseline", results, keep_going=True)
+        cur.execute("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s", (a.schema,))
+        print("      建表数: %d   基线阶段问题: %d" % (cur.fetchone()[0], len(results)))
 
-    print("\n===== 结果 =====")
-    print("最终表数: %d   耗时: %.1fs" % (tables, time.time() - t0))
-    print("基线阶段问题: %d   seed 阶段问题: %d   迁移阶段问题: %d" %
-          (baseline_problems, seed_problems, len(results) - pre_migration_problems))
-    for label, idx, kind, msg, head in results:
-        print("  [%s] %s #%d  %s\n        %s" % (kind, label, idx, msg, head))
-    print("数据前置观察: %d（纯 schema 快照不包含业务行，不冒充数据迁移通过）" % len(observations))
-    for label, idx, kind, msg, head in observations:
-        print("  [%s] %s #%d  %s\n        %s" % (kind, label, idx, msg, head))
-    return 0 if not results else 1
+        print("\n[2/3] 导入指纹化 base seed …")
+        baseline_problems = len(results)
+        seed_ok = run_file(cur, BASELINE_SEED, "baseline-seed", results, keep_going=False)
+        seed_problems = len(results) - baseline_problems
+        print("      seed 阶段问题: %d" % seed_problems)
+        if not seed_ok:
+            for label, idx, kind, msg, sql_head in results:
+                print("  [%s] %s #%d  %s\n        %s" %
+                      (kind, label, idx, msg, sql_head))
+            return 1
+        print("      seed 负控: %d/%d 可转红且回滚恢复" %
+              (verify_seed_negative_controls(c), len(SEED_NEGATIVE_CONTROLS)))
+
+        print("\n[3/3] 按台账拓扑序叠加 migration …")
+        print("      台账内迁移数: %d   快照后待回放: %d" %
+              (len(all_migrations), len(ordered)))
+        pre_migration_problems = len(results)
+        for m in ordered:
+            ok = run_file(cur, REPO / m["path"], m["migrationId"], results,
+                          keep_going=a.keep_going, schema_only=True, observations=observations)
+            if not ok and not a.keep_going:
+                break
+        cur.execute("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s", (a.schema,))
+        tables = cur.fetchone()[0]
+
+        print("\n===== 结果 =====")
+        print("最终表数: %d   耗时: %.1fs" % (tables, time.time() - t0))
+        print("基线阶段问题: %d   seed 阶段问题: %d   迁移阶段问题: %d" %
+              (baseline_problems, seed_problems, len(results) - pre_migration_problems))
+        for label, idx, kind, msg, head in results:
+            print("  [%s] %s #%d  %s\n        %s" % (kind, label, idx, msg, head))
+        print("数据前置观察: %d（纯 schema 快照不包含业务行，不冒充数据迁移通过）" % len(observations))
+        for label, idx, kind, msg, head in observations:
+            print("  [%s] %s #%d  %s\n        %s" % (kind, label, idx, msg, head))
+        return 0 if not results else 1
+    finally:
+        c.close()
 
 
 if __name__ == "__main__":

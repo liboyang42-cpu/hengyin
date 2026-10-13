@@ -348,5 +348,73 @@ class BuildSchemaMigrationSelectionTest(unittest.TestCase):
             self.assertEqual("ASSERT", mixed_failures[0][2])
 
 
+class BuildSchemaExecutionFailureTest(unittest.TestCase):
+    def run_failed_migration(self, keep_going):
+        cursor = mock.Mock()
+        cursor.fetchone.side_effect = [("8.0.45", "isolated-test"), (1,), (1,)]
+        executed = []
+        def execute(sql, *args):
+            executed.append(sql)
+            if "first_failure" in sql:
+                raise RuntimeError("controlled first migration failure")
+        cursor.execute.side_effect = execute
+        admin = mock.Mock()
+        connection = mock.Mock()
+        admin.cursor.return_value = connection.cursor.return_value = cursor
+        original_run = build_schema.run_file
+        with tempfile.TemporaryDirectory() as tmp:
+            first = pathlib.Path(tmp) / "first.sql"
+            second = pathlib.Path(tmp) / "second.sql"
+            first.write_text("SELECT 1 AS first_failure;\n", encoding="utf-8")
+            second.write_text("SELECT 1 AS second_success;\n", encoding="utf-8")
+            candidate = [{"migrationId": "first", "path": str(first)},
+                         {"migrationId": "second", "path": str(second)}]
+            def run_file(cur, path, label, results, *args, **kwargs):
+                return True if label in {"baseline", "baseline-seed"} else original_run(
+                    cur, path, label, results, *args, **kwargs)
+            argv = ["build_schema.py", "--schema", "cy_e2e_failure"]
+            if keep_going:
+                argv.append("--keep-going")
+            with mock.patch.object(sys, "argv", argv), \
+                    mock.patch.object(build_schema, "build_manifest", return_value={"migrations": candidate}), \
+                    mock.patch.object(build_schema, "migrations_after_baseline", return_value=candidate), \
+                    mock.patch.object(build_schema, "connect", side_effect=[admin, connection]), \
+                    mock.patch.object(build_schema, "run_file", side_effect=run_file), \
+                    mock.patch.object(build_schema, "verify_seed_negative_controls", return_value=6), \
+                    mock.patch("builtins.print") as emitted:
+                result = build_schema.main()
+            self.assertTrue(any("controlled first migration failure" in str(call)
+                                for call in emitted.call_args_list))
+        return result, executed, admin, connection
+
+    def test_default_stops_before_second_migration_and_closes_connections(self):
+        result, executed, admin, connection = self.run_failed_migration(False)
+        self.assertEqual(1, result)
+        self.assertTrue(any("first_failure" in sql for sql in executed))
+        self.assertFalse(any("second_success" in sql for sql in executed))
+        admin.close.assert_called_once_with()
+        connection.close.assert_called_once_with()
+
+    def test_explicit_keep_going_runs_second_but_stays_failed_and_closes(self):
+        result, executed, admin, connection = self.run_failed_migration(True)
+        self.assertEqual(1, result)
+        self.assertTrue(any("second_success" in sql for sql in executed))
+        admin.close.assert_called_once_with()
+        connection.close.assert_called_once_with()
+
+    def test_migration_read_exception_closes_connection(self):
+        connection = mock.Mock()
+        connection.cursor.return_value.fetchone.side_effect = [("8.0.45", "isolated-test")]
+        with mock.patch.object(sys, "argv", ["build_schema.py", "--schema", "cy_e2e_failure"]), \
+                mock.patch.object(build_schema, "build_manifest", return_value={"migrations": []}), \
+                mock.patch.object(build_schema, "migrations_after_baseline", return_value=[]), \
+                mock.patch.object(build_schema, "connect", return_value=connection), \
+                mock.patch.object(build_schema, "run_file", side_effect=OSError("unreadable SQL")), \
+                mock.patch("builtins.print"):
+            with self.assertRaisesRegex(OSError, "unreadable SQL"):
+                build_schema.main()
+        self.assertEqual(2, connection.close.call_count)
+
+
 if __name__ == "__main__":
     unittest.main()
