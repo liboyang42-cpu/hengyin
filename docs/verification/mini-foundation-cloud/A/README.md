@@ -16,6 +16,7 @@
 
 - Node 专项 47/47 通过：registration-payment-verifier、baoming-page-reliability、baoming-load-state、club-waitlist-checkout、baoming-submit-inline-error；包括真实Page付款回调取原 registrationId 与稳定原事件键的断言。不是后端资金/身份或真机通过证据。
 - 修改 Mapper XML 语法解析、JS语法、git diff --check 通过。公开差异文件 gitleaks 扫描无新增命中（最终详见validation.json）。
+- 最终HEAD的migration-safety前四门（125分句器/41台账用例、实际新SQL分句、task bean注册）通过；第五门因共享ci/migration-dependencies.json缺新migration明确依赖条目而失败，协调者处理单一owner声明后再跑，不修改gate/workflow压错误。
 - Java编译、JUnit、H2、真实MySQL/Redis、渠道签名、真实身份、微信开发者工具与真机 **未执行**。新增Java用例数只按源码记录，不能视为运行通过。历史193个局部结果不转移至本分支。
 - VPS当前TCP grant未应用；HTTP80拒连只说明该HTTP入口未监听，不能证明SSH22不可达。既有CI不自动匹配交接base，CLI dispatch通路未具备；未改CI或依赖来压错误。
 
