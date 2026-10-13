@@ -47,7 +47,7 @@ Component({
           if (resolved) this.savePending(null);
           const unknownId = resolved ? '' : this.data.unknownId;
           this.setData({ state: 'ready', rows, cursor: res.data.nextCursor || null, unknownId });
-        }, fail, successStatusAbnormal: fail
+        }, fail: () => fail(), successStatusAbnormal: fail
       });
     },
     appeal(e) {
@@ -79,7 +79,7 @@ Component({
               }
               unknown();
               this.load();
-            }, fail: unknown, successStatusAbnormal: unknown
+            }, fail: () => unknown(), successStatusAbnormal: unknown
           });
         }
       });

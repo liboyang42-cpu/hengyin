@@ -486,7 +486,7 @@ Page({
         if (!res || ![200, '200'].includes(res.code) || !res.data || typeof res.data.selfCheckoutEnabled !== 'boolean') return capabilityFail();
         this.setData({ chargeEnabled: res.data.selfCheckoutEnabled && !iosCommerce, commerceState: 'ready' });
       },
-      fail: capabilityFail, successStatusAbnormal: capabilityFail
+      fail: () => capabilityFail(), successStatusAbnormal: capabilityFail
     });
     const subscriptionFail = () => {
       if (seq === this._subscriptionSeq) this.setData({ subscriptionState: 'error', subscriptions: [] });
@@ -506,7 +506,7 @@ Page({
         });
         this.setData({ subscriptions, subscriptionState: 'ready' });
       },
-      fail: subscriptionFail, successStatusAbnormal: subscriptionFail
+      fail: () => subscriptionFail(), successStatusAbnormal: subscriptionFail
     });
   },
   _initCommerceWorkflow() {

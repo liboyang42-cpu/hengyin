@@ -473,7 +473,7 @@ Page({
         const code = sc.result;
         if (!code) return toast('未识别到核销码');
         if (!that._cityRedeemWorkflow) that._cityRedeemWorkflow = createWriteActionWorkflow({ deadlineMs: 15000 });
-        const key = '/api/verify/citynode/redeem:' + code;
+        const key = ['/api/verify/citynode/redeem', code].join(':');
         if (that._cityRedeemWorkflow.isBusy(key)) {
           toast('核销结果待确认，请勿重复核销');
           offerVerificationReadback(key, that._cityRedeemWorkflow);
