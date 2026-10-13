@@ -1,0 +1,39 @@
+{
+  "testedCommit": "8d5882a",
+  "metadataOriginCommit": "4db987a14b53cbda2d11587e89cda5a36150ee34",
+  "originAndLocalBlobIdentical": true,
+  "command": "bash ci/migration-safety-check.sh",
+  "prTitleAndBody": "Actual PR #7 body with ## 影响分类 / ③ database migration supplied as environment values",
+  "exitCode": 0,
+  "migrationGatesUnitTests": 125,
+  "migrationLedgerUnitTests": 41,
+  "gates": [
+    {
+      "number": 1,
+      "status": "PASS",
+      "scope": "125 migration gate + 41 ledger tests including negative controls"
+    },
+    {
+      "number": 2,
+      "status": "PASS",
+      "scope": "one changed B migration correctly split"
+    },
+    {
+      "number": 3,
+      "status": "PASS",
+      "scope": "all task beans registered"
+    },
+    {
+      "number": 4,
+      "status": "PASS",
+      "scope": "actual PR migration declaration fixed"
+    },
+    {
+      "number": 5,
+      "status": "PASS",
+      "scope": "dependencies only added; one B new migration explicitly declared and order valid"
+    }
+  ],
+  "priorFailure": "Gate 4 lacked required 影响分类③ marker; PR description repaired, original gate unchanged. Gate 5 passed after root metadata cherry-pick.",
+  "notVerified": "No Java/MySQL/Redis, real DDL, task enablement, deployment, or production readback performed."
+}

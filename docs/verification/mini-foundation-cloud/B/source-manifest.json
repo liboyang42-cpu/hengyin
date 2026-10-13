@@ -283,6 +283,18 @@
       "sha256": "d4676fa09a53012883bdc158edb7387e7fe9feb2b1ba8e394cb2905174f50cff",
       "baseSha256": null,
       "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "ci/migration-dependencies.json",
+      "sha256": "c157643829835a88ef023ea9d39a5c26fb331f4c2b1e6e37c42f56886b56a2c6",
+      "baseSha256": "1cd31cdae174fb94053f7c79bcca18735276b619e72ab96ec1e87fac7cb9febe",
+      "owner": "ROOT single owner; unmodified cherry-pick of 4db987a14b53cbda2d11587e89cda5a36150ee34"
     }
-  ]
+  ],
+  "sharedMetadataDependency": {
+    "originCommit": "4db987a14b53cbda2d11587e89cda5a36150ee34",
+    "localCherryPick": "8d5882a",
+    "path": "ci/migration-dependencies.json",
+    "productionAndNodeSourceUnchanged": true
+  }
 }
