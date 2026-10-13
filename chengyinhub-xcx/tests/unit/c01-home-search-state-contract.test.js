@@ -101,6 +101,9 @@ const loadPage = (rel, options = {}) => {
     reLaunch: () => {},
   }, options.wx || {})
   const requireStub = (request) => {
+    if (request === '../../../utils/community-report-sheet.js' || request === '../../../utils/community-post-api.js') {
+      return require(path.join(ROOT, 'utils', path.basename(request)))
+    }
     if (request === '../../../utils/datetime') return { toTimestamp: (value) => value }
     if (request === '../../../utils/analytics.js') return { track: () => {} }
     if (request === '../../../utils/feed-play-card.js') return require(path.join(ROOT, 'utils/feed-play-card.js'))
