@@ -129,6 +129,7 @@ chengyinhub-xcx/pages/search2/index.js 1  # 2026-08-25 状态底座:失败落页
 chengyinhub-xcx/pages/shezhi/components/marketing-consent/index.js 2  # 2026-08-25 营销授权:加载/保存失败落组件 error 状态,保留原值与重试入口;通用 toast 会双弹
 chengyinhub-xcx/pages/shezhi/shezhi.js 1  # 2026-08-25 状态底座:调用点自己 showToast 精确文案,关掉通用 toast 是防双弹
 chengyinhub-xcx/pages/square/detail/index.js 1  # 2026-09-21 状态底座:读取失败落页内错误态;收藏等提交动作自带精确 toast,通用 toast 会双弹
+chengyinhub-xcx/pages/square/list/index.js 0  # UNREVIEWED_BASELINE_20260818:1 旧调用已迁入社区适配器并由当前页可见错误处理接管；申报清零，保留历史冻结收据，不扩额度。
 chengyinhub-xcx/pages/square/list/index.js 2  # 2026-09-21 状态底座:背景预取静默降级;列表失败落页内错误态;收藏动作自带精确 toast
 chengyinhub-xcx/pages/talent/list/index.js 3  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/pages/template/index.js 3  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹;同日删「圈层自由探索」整节,连带收回它那一处(4→3)

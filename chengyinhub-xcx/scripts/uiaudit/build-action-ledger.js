@@ -1577,6 +1577,18 @@ function communityRequestContracts(source, aliases, helperSource) {
 function communityTypedRequestPlan(contracts, sourceFile, caller) {
   const actual=contracts.filter(c=>c.adapterMethod && c.adapterMethod!=='request')
   if(!actual.length)return null
+  if(sourceFile){
+    const app=JSON.parse(fs.readFileSync(path.join(ROOT,'app.json'),'utf8'))
+    const roots=['pages','components',...(app.subPackages || app.subpackages || []).map(pkg=>pkg.root)]
+    if(typeof sourceFile!=='string' || path.isAbsolute(sourceFile) || sourceFile.includes('\\')
+      || sourceFile.split('/').some(part=>part==='.' || part==='..') || !sourceFile.endsWith('.js')
+      || !roots.some(root=>sourceFile.startsWith(root+'/')))
+      throw new Error('community caller requires repository-relative production source')
+    const absolute=path.join(ROOT,sourceFile)
+    if(!fs.realpathSync(absolute).startsWith(fs.realpathSync(ROOT)+path.sep))
+      throw new Error('community caller requires repository-relative production source')
+    sourceFile=absolute
+  }
   const request=c=>({urlTemplate:c.url,method:c.method,kind:c.method==='GET'?'read':'write'})
   const byBranch={},outcomes={}
   const branch=(name,sequence,failures=true)=>{
@@ -1713,7 +1725,7 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
   targets.apis = targets.apis.filter((url) => !communityTargets.commands.has(url))
   targets.apiContracts = targets.apiContracts.filter((c) => !communityTargets.commands.has(c.url))
   targets.communityContracts = communityTargets.contracts
-  targets.communitySourceFile = jsFile
+  targets.communitySourceFile = rel(jsFile)
   targets.apis.push(...communityTargets.contracts.map((c) => c.url))
   targets.apiContracts.push(...communityTargets.contracts)
   for (const declaration of fileSource.matchAll(/\bfunction\s+([A-Za-z_$][\w$]*)\s*\(([^)]*)\)\s*\{/g)) {
@@ -1864,7 +1876,7 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
     auxiliaryApis: contracted.filter((api) => AUXILIARY_APIS.has(api)).sort(),
     apiContracts,
     communityContracts: targets.communityContracts,
-    communitySourceFile: jsFile,
+    communitySourceFile: rel(jsFile),
   }
 }
 
