@@ -88,6 +88,12 @@ function currentAccountId() {
   return id === null || id === undefined || id === '' ? 'anonymous' : String(id);
 }
 
+function currentAuthorization() {
+  const app = getAppSafe();
+  try { return app && typeof app.getAuthorization === 'function' ? app.getAuthorization() : ''; }
+  catch (e) { return null; }
+}
+
 function queueKey(accountId) {
   return STORAGE_KEY + ':' + (accountId || currentAccountId());
 }
@@ -194,7 +200,7 @@ function normalizePayload(eventName, payload) {
     bizId: data.bizId || null,
     cityCode: data.cityCode || '',
     propertiesJson: sanitizePropertiesJson(data),
-    idempotencyKey: data.idempotencyKey || eventName + '_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+    idempotencyKey: data.idempotencyKey || data.eventKey || eventName + '_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
     occurredAt: new Date().toISOString()
   };
 }
@@ -209,24 +215,24 @@ function postBatch(events, onDone) {
   // 埋点全程静默:silentError 关业务错误 toast、successStatusAbnormal 吞 HTTP 异常,均归一为投递失败。
   const batchSize = events.length;
   try {
-  app.sendRequest({
-    url: '/api/analytics/events/batch',
-    method: 'POST',
-    header: { 'content-type': 'application/json' },
-    data: { events: events },
-    silentError: true,
-    success: function (body) {
-      const accepted = body && body.data && body.data.accepted;
-      typeof onDone === 'function' && onDone(!!(body && body.code === 200
-        && Number.isInteger(accepted) && accepted === batchSize));
-    },
-    successStatusAbnormal: function () {
-      typeof onDone === 'function' && onDone(false);
-    },
-    fail: function () {
-      typeof onDone === 'function' && onDone(false);
-    }
-  });
+    app.sendRequest({
+      url: '/api/analytics/events/batch',
+      method: 'POST',
+      header: { 'content-type': 'application/json' },
+      data: { events: events },
+      silentError: true,
+      success: function (body) {
+        const accepted = body && body.data && body.data.accepted;
+        typeof onDone === 'function' && onDone(!!(body && body.code === 200
+          && Number.isInteger(accepted) && accepted === batchSize));
+      },
+      successStatusAbnormal: function () {
+        typeof onDone === 'function' && onDone(false);
+      },
+      fail: function () {
+        typeof onDone === 'function' && onDone(false);
+      }
+    });
   } catch (e) {
     typeof onDone === 'function' && onDone(false);
   }
@@ -255,35 +261,60 @@ function flush() {
   if (!queue || !queue.length || accountId === 'anonymous') return;
   if (pendingQueues[accountId] && !setQueue(queue, accountId)) return;
   const generation = accountGeneration;
-  const batch = copyQueue(queue.slice(0, MAX_BATCH));
-  const snapshots = batch.map(function (event) { return JSON.stringify(event); });
+  const authorization = currentAuthorization(); // 仅内存快照，不落盘/埋点。
+  const attempted = [];
   flushing = true;
-  let settled = false;
-  postBatch(batch, function (ok) {
-    if (settled) return;
-    settled = true;
-    flushing = false;
-    if (currentAccountId() !== accountId || generation !== accountGeneration) {
-      // 请求的认证/回执属于原账号；迟到响应不修改任何账号的队列。
+  function accountChanged() {
+    return currentAccountId() !== accountId || generation !== accountGeneration
+      || currentAuthorization() !== authorization;
+  }
+
+  function drain() {
+    if (accountChanged()) {
+      flushing = false;
+      // 旧代响应不写任一账号队列，新账号可自行排空原身份队列。
       flush();
       return;
     }
-    if (!ok) return;
     const latest = getQueue(accountId);
-    if (!latest) return;
-    const remaining = latest.filter(function (event) {
-      const index = snapshots.indexOf(JSON.stringify(event));
-      if (index < 0) return true;
-      snapshots.splice(index, 1);
-      return false;
+    if (!latest) { flushing = false; return; }
+    if (pendingQueues[accountId] && !setQueue(latest, accountId)) { flushing = false; return; }
+    const batch = copyQueue(latest.filter(function (event) {
+      return attempted.indexOf(JSON.stringify(event)) < 0;
+    }).slice(0, MAX_BATCH));
+    if (!batch.length) { flushing = false; return; }
+    const snapshots = batch.map(function (event) { return JSON.stringify(event); });
+    attempted.push.apply(attempted, snapshots);
+    let settled = false;
+    postBatch(batch, function (ok) {
+      if (settled) return;
+      settled = true;
+      if (accountChanged()) {
+        flushing = false;
+        flush();
+        return;
+      }
+      if (ok) {
+        const current = getQueue(accountId);
+        if (!current) { flushing = false; return; }
+        const remaining = current.filter(function (event) {
+          const index = snapshots.indexOf(JSON.stringify(event));
+          if (index < 0) return true;
+          snapshots.splice(index, 1);
+          return false;
+        });
+        // 出队落盘失败保留原已确认事件，重试仍用原身份；不忙循环。
+        if (!setQueue(remaining, accountId)) {
+          pendingQueues[accountId] = current;
+          flushing = false;
+          return;
+        }
+      }
+      // 本轮每个原对象至多尝试一次；单批失败不阻断后批，也不盲重发未知原批。
+      drain();
     });
-    // 出队落盘失败保留原已确认事件，重试使用同一身份，后端只计一次。
-    if (!setQueue(remaining, accountId)) {
-      pendingQueues[accountId] = latest;
-      return;
-    }
-    if (remaining.length) flush();
-  });
+  }
+  drain();
 }
 
 function track(eventName, payload) {

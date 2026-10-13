@@ -20,18 +20,19 @@ global.wx = {
 // app 桩:捕获 sendRequest 调用,测试手动驱动 success
 let sent = [];
 let currentUserId = 'u1';
+let currentAuthorization = 'T';
 let failWrites = false;
 let failReads = false;
 let throwSend = false;
 global.getApp = () => ({
   globalData: { siteBaseUrl: 'https://base' },
-  getAuthorization: () => 'T',
+  getAuthorization: () => currentAuthorization,
   getUserID: () => currentUserId,
   sendRequest: (param) => { if (throwSend) throw new Error('sync transport error'); sent.push(param); },
 });
 
 const QKEY = 'p3_analytics_queue_v1:u1';
-const ANALYTICS_PATH = '../../utils/analytics.js';
+const ANALYTICS_PATH = process.env.MINI_B_ANALYTICS_SOURCE || '../../utils/analytics.js';
 
 // 每个测试重新加载模块,隔离模块级状态(投递锁 flushing、sessionContext)。
 let analytics;
@@ -39,6 +40,7 @@ beforeEach(() => {
   for (const k of Object.keys(store)) delete store[k];
   sent = [];
   currentUserId = 'u1';
+  currentAuthorization = 'T';
   failReads = false;
   throwSend = false;
   failWrites = false;
@@ -216,6 +218,7 @@ test('账号 A-B-A 的旧代回执不能出队 A 原记录', () => {
   currentUserId = 'u2';
   analytics.setSessionContext({ sessionId: 'b' });
   currentUserId = 'u1';
+  currentAuthorization = 'T';
   analytics.setSessionContext({ sessionId: 'a-again' });
   sent[0].success({ code: 200, data: { accepted: 1 } });
   assert.equal(store[QKEY].length, 1);
@@ -242,4 +245,45 @@ test('同步请求异常保留原队列并释放单飞锁，可按原身份重�
   analytics.flush();
   assert.equal(sent.length, 1);
   assert.equal(sent[0].data.events[0].idempotencyKey, 'sync-original');
+});
+
+test('A 报名 producer 的原 eventKey 与报名ID进入现有请求协议，显式 idempotencyKey 优先', () => {
+  analytics.track('payment_success', {
+    eventKey: 'payment_success_registration_9', bizType: 'activity', bizId: 42,
+    properties: { registrationId: 9, payableAmount: 100 }
+  });
+  assert.equal(sent[0].data.events[0].idempotencyKey, 'payment_success_registration_9');
+  assert.equal(JSON.parse(sent[0].data.events[0].propertiesJson).registrationId, 9);
+  sent[0].fail();
+  analytics.track('signup_submit', { eventKey: 'alias', idempotencyKey: 'explicit', properties: { registrationId: 10 } });
+  assert.equal(sent[1].data.events[1].idempotencyKey, 'explicit');
+});
+
+test('失败原批保留且每轮只发一次，不阻断后批独立原事件', () => {
+  const events = Array.from({ length: 52 }, (_, i) => ({
+    eventName: 'content_view', actorScope: 'member:u1', idempotencyKey: 'original-' + i,
+    occurredAt: '2026-10-13T00:00:00Z', bizId: i
+  }));
+  store[QKEY] = events;
+  analytics.flush();
+  assert.equal(sent[0].data.events.length, 50);
+  sent[0].fail();
+  assert.equal(sent.length, 2);
+  assert.equal(sent[1].data.events.length, 2);
+  assert.equal(sent[1].data.events[0].idempotencyKey, 'original-50');
+  sent[1].success({ code: 200, data: { accepted: 2 } });
+  assert.equal(store[QKEY].length, 50);
+  assert.equal(sent.length, 2, '失败批不能在同轮忙循环');
+  analytics.flush();
+  assert.deepEqual(sent[2].data.events, events.slice(0, 50), '后续重试只用失败批原对象');
+});
+
+test('未经过埋点的 A-B-A 登录换凭据，原凭据迟到响应也不写队列', () => {
+  analytics.track('content_view', { bizId: 1, idempotencyKey: 'original-auth' });
+  // A→B→A 之间没有 track/setSessionContext；新登录凭据仍须区分代次。
+  currentAuthorization = 'new-A-login';
+  sent[0].success({ code: 200, data: { accepted: 1 } });
+  assert.equal(store[QKEY].length, 1);
+  assert.equal(sent.length, 2);
+  assert.equal(sent[1].data.events[0].idempotencyKey, 'original-auth');
 });

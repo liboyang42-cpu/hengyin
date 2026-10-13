@@ -6,17 +6,15 @@ import com.chengyinhub.business.service.IImService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /** 原站内消息投递：固定本轮最大ID、逐项事务，单条失败不饿死后页。 */
-@Component
+@Component("imNotificationDeliveryTask")
 public class ImNotificationDeliveryTask {
     private static final Logger log = LoggerFactory.getLogger(ImNotificationDeliveryTask.class);
     @Autowired private ImNotificationIntentMapper mapper;
     @Autowired private IImService imService;
 
-    @Scheduled(fixedDelay = 60000)
     public void deliverPending() {
         Long maxId = mapper.maxPendingId();
         if (maxId == null) return;
