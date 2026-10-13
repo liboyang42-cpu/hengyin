@@ -1,6 +1,7 @@
 package com.chengyinhub.business.it;
 
 import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.domain.OmsTicket;
 import com.chengyinhub.business.domain.MmsMerchant;
 import com.chengyinhub.business.domain.dto.RegistrationOrderResult;
 import com.chengyinhub.business.domain.dto.RegistrationRequest;
@@ -35,6 +36,7 @@ import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.mybatis.spring.SqlSessionTemplate;
@@ -95,6 +97,7 @@ class FreeSelfPlayCreateRealDbIT {
     private static final long TOPIC_ID = 990059L;
     private static final long MEMBER_ID = 100092L;
 
+    private static boolean databaseCreated;
     private static SqlSessionTemplate template;
     private static RegistrationOrderServiceImpl orderService;
 
@@ -107,6 +110,7 @@ class FreeSelfPlayCreateRealDbIT {
             // 一类一库、每次从零建 —— 沿用 MybatisItDatabase 的口径,不接受环境残留。
             s.execute("DROP DATABASE IF EXISTS " + DB_NAME);
             s.execute("CREATE DATABASE " + DB_NAME + " CHARACTER SET utf8mb4");
+            databaseCreated = true;
         }
         DataSource ds = dataSource("jdbc:mysql://127.0.0.1:3306/" + DB_NAME
                 + "?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=LOCAL");
@@ -123,6 +127,9 @@ class FreeSelfPlayCreateRealDbIT {
             }
             assertTrue(migration.exists(), "RUN-41 修复迁移必须存在且随仓库演进: " + migration);
             ScriptUtils.executeSqlScript(db, new FileSystemResource(migration));
+            ItSchema.applyMigrations(db, "sql/migration_20261013_club_profile_edit_version.sql",
+                    "sql/migration_20260930_registration_first_successful_scan.sql");
+            applyRequiredMapperAlters(db);
             ScriptUtils.executeSqlScript(db, new org.springframework.core.io.ClassPathResource(
                     "it-schema/run41-prod-seed.sql"));
         }
@@ -130,6 +137,16 @@ class FreeSelfPlayCreateRealDbIT {
         template = new SqlSessionTemplate(buildFactory(ds));
         CmsTopicMapper topicMapper = template.getMapper(CmsTopicMapper.class);
         CmsRegistrationMapper registrationMapper = template.getMapper(CmsRegistrationMapper.class);
+        // 在实际 create/open 之前完整核对其 Mapper 投影，避免逐列试错。
+        assertNotNull(topicMapper.selectCmsTopicById(TOPIC_ID));
+        registrationMapper.selectCmsRegistrationList(new CmsRegistration());
+        template.getMapper(OmsTicketMapper.class).selectOmsTicketList(new OmsTicket());
+        template.getMapper(CmsTopicChapterMapper.class).selectCmsTopicChapterList(new com.chengyinhub.business.domain.CmsTopicChapter());
+        template.getMapper(MerchantChapterOfferMapper.class).selectByTopic(TOPIC_ID);
+        template.getMapper(UmsMemberMapper.class).selectUmsMemberById(MEMBER_ID);
+        template.getMapper(MmsMerchantMapper.class).selectMmsMerchantByMemberId(100000L);
+        template.getMapper(ClubMapper.class).selectClubById(0L);
+        template.getMapper(TopicSaleSnapshotMapper.class).selectSnapshotByTopicId(TOPIC_ID);
 
         // ── 建单事务本体：与生产 Spring 装配同构（真 mapper、真门禁、真策略）──
         CmsRegistrationServiceImpl target = new CmsRegistrationServiceImpl();
@@ -234,12 +251,52 @@ class FreeSelfPlayCreateRealDbIT {
         return template.getMapper(CmsRegistrationMapper.class).selectCmsRegistrationList(query);
     }
 
+    private static void applyRequiredMapperAlters(Connection db) throws Exception {
+        // 仅执行现有迁移中本建单链实际需要的 ALTER，不创建未触达的广播、申请或应收表。
+        String[] paths = { "sql/migration_theme_runtime_20261004.sql",
+                "sql/migration_club_direct_merchant_receivable_20261004.sql" };
+        String[] tables = { "cms_topic", "merchant_chapter_offer" };
+        try (Statement statement = db.createStatement()) {
+            for (int i = 0; i < paths.length; i++) {
+                String script = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(paths[i])),
+                        java.nio.charset.StandardCharsets.UTF_8).replaceAll("(?m)^--.*$", "");
+                String alter = script.split(";", 2)[0].trim();
+                assertTrue(alter.startsWith("ALTER TABLE " + tables[i]), "迁移首句必须仍是本夹具需要的表 ALTER");
+                statement.execute(alter);
+            }
+            String script = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
+                    "sql/migration_20261003_merchant_offer_withdrawal_columns.sql")), java.nio.charset.StandardCharsets.UTF_8);
+            java.util.regex.Matcher matcher = java.util.regex.Pattern.compile(
+                    "(?s)'(ALTER TABLE merchant_chapter_offer(?:''|[^'])*)'").matcher(script);
+            java.util.List<String> alters = new java.util.ArrayList<>();
+            while (matcher.find()) alters.add(matcher.group(1).replace("''", "'"));
+            assertEquals(3, alters.size(), "只执行原迁移中的三个 offer ALTER，脚本变更必须重新核对");
+            for (String alter : alters) statement.execute(alter);
+        }
+    }
+
+    @AfterAll
+    static void dropTaskFixture() throws Exception {
+        if (!databaseCreated) return;
+        try (Connection db = dataSource("jdbc:mysql://127.0.0.1:3306/mysql"
+                + "?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=LOCAL").getConnection();
+             Statement statement = db.createStatement()) {
+            statement.execute("DROP DATABASE " + DB_NAME);
+            try (java.sql.ResultSet result = statement.executeQuery(
+                    "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name='" + DB_NAME + "'")) {
+                assertTrue(result.next()); assertEquals(0, result.getInt(1));
+            }
+        }
+    }
+
     private static DataSource dataSource(String url) {
         DriverManagerDataSource ds = new DriverManagerDataSource();
         ds.setDriverClassName("com.mysql.cj.jdbc.Driver");
         ds.setUrl(url);
-        ds.setUsername("root");
-        ds.setPassword("");
+        com.chengyinhub.business.service.MysqlIntegrationTestConfig config =
+                com.chengyinhub.business.service.MysqlIntegrationTestConfig.fromEnvironment("run41_selfplay");
+        ds.setUsername(config.user());
+        ds.setPassword(config.password());
         return ds;
     }
 

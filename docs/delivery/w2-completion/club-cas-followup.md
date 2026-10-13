@@ -37,7 +37,7 @@ F0498 与原有相关回归：11 个类，120 个不同用例（Controller 6、�
 
 完整 r2 tree 为 `22559d2829b9acc2a2b11fb3447a6a0973880f10`，Controller 纠正测试桩后的 r3 tree 为 `7a2129ef58ec6bc23b73ec45a9e0877bd0746fb6`；r2→r3 只有两处 test 文件变化，CAS 生产源码逐文件一致。后续前端存储冲突保护已独立复跑 36/36。
 
-前两次验证发现并修正**测试设置**问题：历史 run41 DDL 已包含 join_policy，移除新增测试里的重复 ALTER；Mockito 默认 Map 返回空 Map，明确 stub 无回执为 null，并用 doThrow 重新配置已有抛错桩；FreeSelfPlay 原本硬编码 root/空密码，现读现有 MysqlIntegrationTestConfig 的 fixture 用户与密码，并补应用其原先遗漏的公开迁移 migration_20260930_registration_first_successful_scan.sql，历史 DDL 未改。没有为通过测试改变授权或应用错误处理。历史 migration / 生产 DDL 快照未改；MerchantIdentity fixture 加版本列，transfer/cancel fixture 在旧 DDL 后应用本轮新增迁移。FreeSelfPlay 的现有 Mapper/历史 DDL 连续漂移已按协调者指示作为**第二个独立 fixture 提交**处理；第一份 CAS 提交不含这个文件。当前检测到的 theme runtime / merchant offer 字段缺失不是 club CAS 失败，完整字段清单与最终复验在后续提交补记。
+前两次验证发现并修正**测试设置**问题：历史 run41 DDL 已包含 join_policy，移除新增测试里的重复 ALTER；Mockito 默认 Map 返回空 Map，明确 stub 无回执为 null，并用 doThrow 重新配置已有抛错桩；FreeSelfPlay 原本硬编码 root/空密码，现读现有 MysqlIntegrationTestConfig 的 fixture 用户与密码，并补应用其原先遗漏的公开迁移 migration_20260930_registration_first_successful_scan.sql，历史 DDL 未改。没有为通过测试改变授权或应用错误处理。历史 migration / 生产 DDL 快照未改；MerchantIdentity fixture 加版本列，transfer/cancel fixture 在旧 DDL 后应用本轮新增迁移。FreeSelfPlay 的现有 Mapper/历史 DDL 连续漂移已按协调者指示作为**第二个独立 fixture 提交**处理；第一份 CAS 提交不含这个文件。原 theme runtime / merchant offer 字段缺失已通过下方独立 fixture 跟进修正，与 club CAS 无关。
 
 公开差分 `gitleaks stdin --redact` 零泄漏，没有加忽略规则；`git diff --check` 通过。最终报告入暂存后重扫，正常提交仍执行完整门禁。
 
@@ -53,3 +53,26 @@ F0498 与原有相关回归：11 个类，120 个不同用例（Controller 6、�
 - 生产迁移、新后端部署、微信上传、CI、合并与生产验收均未做。代码需要新增迁移；不能只发前端。
 - 无版本旧客户端仍保留原覆盖合同，因而不能承诺所有历史客户端都具备防覆盖。新编辑页与版本客户端的双编辑冲突已有真实服务/数据库验证。
 - 持久原结果需要保留回执；本轮不擅定 TTL、删除策略或自动合并政策。账号权限已撤销时仍拒绝回读，不新增绕过权限的恢复通道。
+
+
+## 独立历史 fixture 跟进
+
+CAS 源码提交：`8cc108ede7ead4b4ec134fe30bf79588a44e673a`，tree `a8f97d976fb4f8c57d4736b452184d37785a42eb`；正常原门禁与批准任务 hook 完整 VPS compile 通过，日志 `/tmp/w2-club-core-commit.log`。这个提交不含 FreeSelfPlay fixture 的改动。
+
+协调者在本轮明确要求把已触达的历史 fixture 的实际 Mapper/DDL 一次核全，并独立提交。只改 `FreeSelfPlayCreateRealDbIT` 的建库/fixture 验证与清理，不改建单、扫码、主题、商业政策或鉴权源码，不修改历史 DDL/migration。
+
+| 实际 create/open 读取路径 | 原 fixture 缺口 | 沿用的已有迁移/处理 |
+| --- | --- | --- |
+| RegistrationOrder.createOrReplay → CmsRegistrationMapper 注册单查询/写入/原请求重放 | first_successful_scan_at | migration_20260930_registration_first_successful_scan.sql |
+| create gate / 创建自玩票的 topic 普通读及 FOR UPDATE | theme_runtime_config_json、published_theme_runtime_config_json | migration_theme_runtime_20261004.sql 的原 cms_topic ALTER |
+| CommercialTopicPolicy.evaluate → selectByTopic | payer_club_id、withdraw_reason、withdraw_required、replacement_of_offer_id | 原 direct_merchant_receivable 的首句 offer ALTER 和 withdrawal 迁移中 3 条原 offer ALTER |
+| ClubMapper 的原资料投影 | profile_version | 本轮新增 club 版本迁移 |
+| UmsMember、MmsMerchant、OmsTicket、CmsActivity、CmsTopicChapter、ClubMember、TopicSaleSnapshot 的本链字段 | 本轮核对与原 fixture 一致 | 不添加额外字段或表 |
+
+迁移同时包含运行时、广播、申请、应收等本用例不触达的表时，只提取并执行脚本里本链所需的**原 ALTER**，不复制编造新 DDL；断言目标表和原 offer ALTER 数量必须为 3，脚本变化会 fail closed。初始化后通过真实 Mapper 做上述投影预检，再跑实际建单事务、单行回读和同 requestId 幂等重放。使用既有 MysqlIntegrationTestConfig 的 fixture 用户/密码，原加密/门禁/事务保持；AfterAll 只删除本次明确创建的静态 scratch，并从 information_schema 回读不存在。
+
+该 fixture 最终测试 tree `e8840313c1dcde68b0740eae695b9a2eef129190`，归档 SHA-256 `3c281d84272947ea2a28c11c08c1a45c9aa7e230542468063c55dce424f565bd`；fixture 文件 SHA-256 `305e674fbb1c225af902e901367b26e8ef7764dace8239f2195c5c03518d21d6`。源文件在 VPS 从归档增量更新并重读哈希，其他生产源码保持已通过 core120 的版本。
+
+最终 fixture **1/1，0 failure/error/skip，BUILD SUCCESS，退出 0**，2026-10-13 19:58:50 UTC，日志 `/tmp/w2-club-fixture-final-test.log`。原建单、单行回读与相同 requestId 幂等重放断言保持，Mapper 投影预检及 AfterAll 删除/独立回读也通过。此前密码错误和 schema drift 明确作为失败保留，未压制错误或绕过验证。
+
+两份独立提交的合计证据为前端 **36 个不同用例**、VPS 后端/数据库 **121 个不同用例**（core120 + fixture1）；没有把重复复验计入总数。最终新增报告/fixture 公开差分重扫 gitleaks 零泄漏，第二份提交仍走同一批准的正常完整门禁，最终 commit/tree 由交接消息给出。
