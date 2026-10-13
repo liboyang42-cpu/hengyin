@@ -83,7 +83,9 @@ class PlayKitV51RuntimeTest {
         ReflectionTestUtils.setField(service, "nodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "templateMapper", templateMapper);
         ReflectionTestUtils.setField(service, "activityMapper", activityMapper);
-        ReflectionTestUtils.setField(service, "registrationMapper", mock(CmsRegistrationMapper.class));
+        CmsRegistrationMapper registrations=mock(CmsRegistrationMapper.class);
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.install(activityMapper,registrations);
+        ReflectionTestUtils.setField(service, "registrationMapper", registrations);
         ReflectionTestUtils.setField(service, "teamMapper", teamMapper);
         ReflectionTestUtils.setField(service, "attemptMapper", attemptMapper);
         ReflectionTestUtils.setField(service, "weChatMiniSessionService", weChatMiniSessionService);

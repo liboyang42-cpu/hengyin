@@ -46,7 +46,7 @@ const MOCK_IMG = '/images/index-figma/nearby-card.jpg';
 const { onRoamCacheInvalidated } = require('../../utils/roam-cache-epoch.js');
 function roamMemory(page) {
   const memory = bindPlayerRoamMemory(page, getApp(), wx);
-  if (page._roamCacheOwner !== memory.playerId) {
+  if (page._roamCacheOwner !== memory.playerId || !page._roamCacheUnsubscribe) {
     if (page._roamCacheUnsubscribe) page._roamCacheUnsubscribe();
     page._roamCacheOwner = memory.playerId;
     page._roamCacheUnsubscribe = onRoamCacheInvalidated(memory.playerId, () => page._discardRoamLocal());
@@ -886,8 +886,6 @@ Page({
 
   onUnload() {
     if (this._sessionClock) this._saveRoamRecovery();
-    if (this._roamCacheUnsubscribe) this._roamCacheUnsubscribe();
-    this._roamCacheUnsubscribe = null;
     this._cancelShareWork();
     this._stopReal(); this._stopClock();
     this._clearRollTimers();   // 读数滚动的计时器,离页必须掐掉
@@ -914,6 +912,8 @@ Page({
     if (this._cancelEndHold) this._cancelEndHold();
     if (this._shareUploadOperation) this._shareUploadOperation.abort();
     this._roamWriteGeneration = (this._roamWriteGeneration || 0) + 1;
+    if (this._roamCacheUnsubscribe) this._roamCacheUnsubscribe();
+    this._roamCacheUnsubscribe = null;
   },
   onHide() {
     if (this._sessionClock) this._saveRoamRecovery();
@@ -975,6 +975,7 @@ Page({
     if (av !== this.data.avatar) this.setData({ avatar: av || '' }); if (this.data.screen === 'entry-map' && this._entryShownOnce && typeof getApp().sendRequest === 'function') this._loadEntryMap(this.data.center); this._entryShownOnce = true;
     // 漫游不自动补造路径；定位恢复后由用户再次主动开启。
     // switchTab 不带 query 参数,official-detail 经 globalData 暂存 eventId,此处消费后即清
+    if (this._roamBadgePending && !this._recoveryPromise) this.recoverRoam();
     const pendingEventId = getApp().globalData.roamEventId;
     const pendingMissionCode = getApp().globalData.roamEventMissionCode;
     if (pendingEventId) {
@@ -1453,7 +1454,7 @@ Page({
     this._sessionTiles = {}; this._sessionTileCount = 0;
     this._track = []; this._reveals = []; this._historyReveals = []; this._footprintSessions = [];
     this._sessionPhotos = []; this._foundRoamPois = {}; this._recoveryArchiveTs = 0;
-    this._roamRecoveryAbandoned = true;
+    this._roamRecoveryAbandoned = true; this._roamBadgePending = false; this._shopMedalFromServer = false;
     this._recoveryNeedsLookup = this._revealBootstrapUnknown = this._recoveryReadFailed = false;
     this._finishRequested = false; this._revealInFlight = false;
     this.setData({ recoveryError: '', recoveryAvailable: false, recoveryCanContinue: false, revealWriteUnknown: false });
@@ -1475,7 +1476,7 @@ Page({
     this._roamPoiFinishBlocked = this._revealInFlight = false;
     if (this._revealTimer) { clearTimeout(this._revealTimer); this._revealTimer = null; }
     this._clientSessionKey = ''; this._roamSid = 0;
-    this._pendingTiles = []; this._pendingCollectedAt = {}; this._roamRecoveryAbandoned = false;
+    this._pendingTiles = []; this._pendingCollectedAt = {}; this._roamRecoveryAbandoned = false; this._roamBadgePending = false; this._shopMedalFromServer = false;
     this._sessionTiles = {}; this._sessionTileCount = 0;
     this._track = []; this._sessionPhotos = []; this._foundRoamPois = {}; this._pois = [];
     this._stats = { time: '00:00', shops: 0, explorePct: 0, distance: '0.0' };
@@ -1544,7 +1545,7 @@ Page({
       if (generation !== this._roamWriteGeneration || !this._recoveryOwnerCurrent()) return false;
       this._clientSessionKey = key;
       return this._saveRoamRecovery();
-    }).catch(error => this._recoveryFailure(error.message));
+    }).catch(error => generation === this._roamWriteGeneration && this._recoveryOwnerCurrent() ? this._recoveryFailure(error.message) : false);
     this._recoveryKeyPromise = pending;
     pending.then(() => { if (this._recoveryKeyPromise === pending) this._recoveryKeyPromise = null; });
     return pending;
@@ -1616,7 +1617,7 @@ Page({
         const result = fact.result;
         if (!result || typeof result.totalXp !== 'number' || !Number.isFinite(result.totalXp))
           return this._recoveryFailure('结算事实暂时无法读取，请重新核对');
-        return this._archiveFinishedRecords().then(ok => ok && this._applyRoamFinishResult(result, fact.resultComplete === true));
+        return this._archiveFinishedRecords().then(ok => ok && this._applyRoamFinishResult(result, fact.resultComplete === true, fact.badgeDelivery));
       }
       this._recoveryNeedsLookup = false; this._revealBootstrapUnknown = false;
       this.setData({ revealWriteUnknown: false, recoveryError: '', roamSessionReady: !!this._roamSid, 'finish.settleErr': '' });
@@ -1904,11 +1905,14 @@ Page({
     return true;
   },
 
-  _applyRoamFinishResult(result, complete) {
+  _applyRoamFinishResult(result, complete, badgeDelivery) {
     if (typeof result.totalXp !== 'number' || !Number.isFinite(result.totalXp))
       return this._recoveryFailure('结算事实暂时无法读取，请重新核对');
-    const shopMedal = result.shopMedal || null;
-    this.setData({ screen: 'arrive', 'finish.xpAwarded': result.totalXp, 'finish.medal': result.medal || '',
+    const statuses = Array.isArray(badgeDelivery) ? badgeDelivery : result.badgeDelivery;
+    const delivered = code => Array.isArray(statuses) && statuses.some(row => row.badgeCode === code && row.state === 'DELIVERED');
+    const medal = result.medal && (Array.isArray(statuses) && statuses.some(row => /^ROAM_TILES_/.test(row.badgeCode) && row.state === 'DELIVERED')) ? result.medal : '';
+    const shopMedal = result.shopMedal && delivered(result.shopMedal.code) ? result.shopMedal : null;
+    this.setData({ screen: 'arrive', 'finish.xpAwarded': result.totalXp, 'finish.medal': medal,
       'finish.shopMedal': shopMedal, 'finish.routeStory': result.routeStory || '',
       'finish.resultIncomplete': !complete, 'finish.settleErr': '', recoveryError: '', recoveryAvailable: false });
     this._shopMedalFromServer = !!shopMedal;
@@ -1923,14 +1927,17 @@ Page({
     if (archived) {
       archived.sessionId = exactSessionId(this._roamSid);
       archived.xpAwarded = result.totalXp;
-      archived.medal = result.medal || ''; archived.shopMedalName = shopMedal ? shopMedal.name : '';
+      archived.medal = medal; archived.shopMedalName = shopMedal ? shopMedal.name : '';
       if (!memory.writeSessions(arr)) return this._recoveryFailure('结算已确认，足迹存档更新失败，请重试核对');
     }
-    if (!memory.writeRecovery(null)) return this._recoveryFailure('结算已确认，本机恢复记录更新失败，请重试核对');
+    this._roamBadgePending = Array.isArray(statuses) && statuses.some(row => row.state === 'DUE');
+    if (this._roamBadgePending) {
+      if (!this._saveRoamRecovery()) return false; // Preserve original SID solely for a later read of its badge receipt.
+    } else if (!memory.writeRecovery(null)) return this._recoveryFailure('结算已确认，本机恢复记录更新失败，请重试核对');
     if (!this._roamCompleted) {
-      if (result.medal || shopMedal) this._triggerCelebration('medal-earned');
+      if (medal || shopMedal) this._triggerCelebration('medal-earned');
       if (result.routeStory) analytics.track('roam_route_story_shown', { bizType: 'roam' });
-      if (result.medal) cyToast('获得勋章:' + result.medal);
+      if (medal) cyToast('获得勋章:' + medal);
     }
     this._roamCompleted = true; this._finishRequested = false;
     this._recoveryNeedsLookup = false; this._revealBootstrapUnknown = false;
@@ -4207,7 +4214,7 @@ Page({
     cyToast('+' + (poiRef.points || 30) + ' 探索值');  // 奖励文案统一:全程「探索值」,不再混用「分」
     // 首次发现商家 → 券/任务二选一仪式卡;park/landmark 只 +分
     // #23:阈值读配置(_shopBadgeThreshold),不再写死 3。用 === 而非 >= 保持"只在跨过那一刻弹一次"。
-    const hitStreak = shops === this._shopBadgeThreshold();
+    const hitStreak = shops === this._shopBadgeThreshold() && this._shopMedalFromServer === true && !!(this.data.finish && this.data.finish.shopMedal);
     if (wasFirst && poi && poi.cat === 'merchant') {
       // 商家二选一卡是高优先级仪式，旧足迹提示不能在关闭后重新浮出抢走收尾注意力。
       this._clearFootprintHintForPriority();
@@ -4419,11 +4426,11 @@ Page({
   /**
    * #23:三店连亮弹层。阈值/文案不再硬编码,读 /api/roam/badge/shop-streak 的 def
    * (真源 = growth_badge.unlock_rule_json,改配置 = UPDATE 一行 SQL,不发版)。
-   * 这里是**乐观 UI**(仪式感要即时);真正的发章在 /api/roam/finish 服务端判定并落 player_badge,
-   * 结算屏显示的是后端返回的那枚 —— 后端始终是权威。
+   * 原服务端交付收据为 DELIVERED 后才使用已有获得语义；阈值不充当交付证明。
    */
   _popMedal() {
-    const cfg = this._shopBadgeCfg || {};
+    if (!this._shopMedalFromServer || !(this.data.finish && this.data.finish.shopMedal)) return false;
+    const cfg = this.data.finish.shopMedal;
     this.setData({
       medal: {
         show: true,
@@ -4433,6 +4440,7 @@ Page({
       },
     });
     this._triggerCelebration('medal-earned');
+    return true;
   },
 
   /** 拉勋章配置(阈值+文案)。拿不到就用兜底常量,fail-open:不比改动前差。 */

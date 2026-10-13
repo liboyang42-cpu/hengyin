@@ -1,0 +1,100 @@
+{
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+      "sha256": "3891960009c6817e9d9817798d1d603b04e386ff8a3b06e817702f2a75a93640"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamSessionWriteService.java",
+      "sha256": "19eb8a06246014c41b9191ced60ad08a950a38fda162292f5a794978c30971e6"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/RoamRecoveryService.java",
+      "sha256": "ad6daeddb06c2875976d4be457be44bff6f19304f2cf0994f2449c09e231ac78"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamPoiApplicationServiceImpl.java",
+      "sha256": "6607dba15941e6ef352bf05570c29897424d45d1c28d07939acd95cff8acc97d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RoamMapper.java",
+      "sha256": "cf66a112eaf8fb8f27855dce5d85b035db11dd04984467850913578cb829f493"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RoamMapper.xml",
+      "sha256": "bdce0cd62649fae66b513535aee7b854107716c1c6b701bf5094751248fed6c2"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/roam/index.js",
+      "sha256": "c7dad80ea5b21ee8871f74289b5551fb3d4d18faf65cc03783311e8e3b71fc14"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/roam-player-memory.js",
+      "sha256": "d69d80201d27c93c6a21eaa79156829d3500027f5d03695b4ebef54714d392e2"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/roam-recovery.js",
+      "sha256": "7ed443ee2e6c583b48f25d33057cab6217fe5dc48fdd65ce6910435f0250578e"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/roam-tile-memory-sync.js",
+      "sha256": "b2ed5ebc1981eedb8cfc16bca8ff75274b170719cb060241772681396206738b"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/roam-cache-epoch.js",
+      "sha256": "fa8642d9f694b0a4fbe8d85c263ad1107c075338d89855cdc1826e4382a197c3"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/roam-track-filter.js",
+      "sha256": "72bcb55a97aee0efdf556756a7e5b29d8d1198861649865e2929c08438f46d51"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RoamRewardDeliveryTask.java",
+      "sha256": "bae467e9a74638cd12141c697c9b7fdc87b48354e1ca16e082ca74772d0ce717"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RoamSessionRecordMapper.java",
+      "sha256": "ab620e4ba5876e5b86fba6744e579fe9105ee60547d83befcfff46262eacf1c3"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RoamSessionRecordMapper.xml",
+      "sha256": "920a066b4bc171043d0f1cb94466727d38c716b8645a65c32dae8c4421369929"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RoamRewardDeliveryMapper.java",
+      "sha256": "a7f7f62d4c9e8f340680bbb78cc06c5a1d19728a0f7eb23bebb1a0014ee25445"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RoamRewardDeliveryMapper.xml",
+      "sha256": "eb534b53098f70ad59fdc677fc0302249bea262c5d075274359354d20c24ad1f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RoamBadgeDeliveryMapper.java",
+      "sha256": "a5552ec8f19fb549b38d50454f7a97361696e4d939dd4c9d1c82c879fd2927c4"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RoamBadgeDeliveryMapper.xml",
+      "sha256": "82855f4c2d884d5bc1cd2351177f2ecdf70fa4360f0354fc248fb365ead2d48d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamRewardDeliveryService.java",
+      "sha256": "90378122d957bdc2df719fc79f94989a6606f48c689c7590260adbdec3871d9a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamBadgeDeliveryService.java",
+      "sha256": "fe2ce757649e14ec5bd15f4bf213c1ae367f8863cb04742a5620c85b642041bf"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261013_roam_badge_delivery.sql",
+      "sha256": "d61e3da63b28e46cff6b77acc22cfb2f665dd6bcf9b0315c763189d56e79dec7"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261013_roam_reward_delivery.sql",
+      "sha256": "1c0bb85009f68b3ed5e631a26136175fc64cbaa53a2f5285843449360c6111b1"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261013_roam_session_record_archive.sql",
+      "sha256": "b3324e059d13605d207d0caddfd1f7b3d9e26d1d1007a1983b3c641c63e1a31a"
+    }
+  ]
+}

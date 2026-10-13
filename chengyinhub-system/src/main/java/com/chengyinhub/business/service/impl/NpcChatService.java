@@ -116,6 +116,7 @@ public class NpcChatService
         }
         if (existing != null)
         {
+            if(!req.getBizId().equals(existing.getSessionId())) return requestScopeMismatch(requestId);
             return fromStored(existing);
         }
 
@@ -236,6 +237,7 @@ public class NpcChatService
         }
         if (existing != null)
         {
+            if(!Long.valueOf(-nodeId).equals(existing.getSessionId())) return requestScopeMismatch(rid);
             return fromStored(existing);
         }
 
@@ -520,8 +522,9 @@ public class NpcChatService
     {
         if (NpcChatRequest.STATUS_PROCESSING.equals(state.getStatus()))
         {
-            if("REQUEST_OUTCOME_UNKNOWN".equals(state.getErrorCode())) {
-                return response(state.getRequestId(),state.getStatus(),"UNKNOWN",state.getErrorCode(),null,
+            if("REQUEST_OUTCOME_UNKNOWN".equals(state.getErrorCode())
+                    || (state.getLeaseUntil()!=null && !state.getLeaseUntil().after(new Date()))) {
+                return response(state.getRequestId(),state.getStatus(),"UNKNOWN","REQUEST_OUTCOME_UNKNOWN",null,
                         false,true,"原请求结果待确认，请稍后查看原请求。");
             }
             return inProgress(state.getRequestId());
@@ -535,6 +538,25 @@ public class NpcChatService
     {
         return response(requestId, NpcChatRequest.STATUS_PROCESSING, "NOT_RUN", "REQUEST_IN_PROGRESS", null,
                 true, true, SAFE_IN_PROGRESS, 1);
+    }
+
+    /** 原答案只读恢复，不重新检测资格或启动ASR/模型；严格限定本人、原节点、原requestId。 */
+    public NpcChatResp storedShopRequest(String requestId,Long userId,Long nodeId) {
+        if(userId==null || userId<=0 || nodeId==null || nodeId<=0 || nodeId>MAX_CHAT_ENTITY_ID
+                || requestId==null || !UUID_PATTERN.matcher(requestId.trim()).matches()) {
+            return requestScopeMismatch(requestId);
+        }
+        try {
+            NpcChatRequest stored=npcChatRequestMapper.selectByUserAndRequestId(userId,requestId.trim());
+            if(stored==null) return null;
+            if(!Long.valueOf(-nodeId).equals(stored.getSessionId())) return requestScopeMismatch(requestId);
+            return fromStored(stored);
+        } catch(RuntimeException unavailable) { return requestStateUnavailable(requestId); }
+    }
+
+    private NpcChatResp requestScopeMismatch(String requestId) {
+        return response(requestId,NpcChatRequest.STATUS_REJECTED,"NOT_RUN","INVALID_REQUEST",null,
+                false,true,SAFE_INVALID_REQUEST);
     }
 
     private NpcChatResp requestStateUnavailable(String requestId)

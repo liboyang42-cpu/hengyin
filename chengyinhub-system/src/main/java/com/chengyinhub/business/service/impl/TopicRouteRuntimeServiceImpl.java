@@ -247,7 +247,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public TopicRouteState completeOpening(Long memberId, Long topicId, Long activityId, Long chapterId,
                                           Integer expectedVersion) {
-        Scope scope = requireScope(memberId, topicId, activityId);
+        Scope scope = requireScope(memberId, topicId, activityId,true);
         TopicRouteSession session = routeMapper.selectByOwner(scope.activityId, topicId, memberId, DEFAULT_INSTANCE);
         JsonNode opening = openingSnapshot(session);
         if (opening == null || chapterId == null || chapterId != opening.path("chapterId").asLong()) {
@@ -327,7 +327,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public TopicRouteState syncThoughts(Long memberId, Long topicId, Long activityId,
                                         List<String> claim, int todaySteps, long readingDay) {
-        Scope scope = requireScope(memberId, topicId, activityId);
+        Scope scope = requireScope(memberId, topicId, activityId,true);
         TopicRouteSession session = currentSession(memberId,topicId,scope.activityId);
         if (session == null) throw new IllegalStateException("本局还没开始");
         if (!Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus()))
@@ -592,7 +592,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public TopicRouteState advance(Long memberId, Long topicId, Long activityId, Integer expectedVersion,
                                    String routeActionId, String trustedTriggerType, NodeOutcome outcome) {
-        Scope scope = requireScope(memberId, topicId, activityId);
+        Scope scope = requireScope(memberId, topicId, activityId,true);
         if (!TopicRouteState.BRANCH_GRAPH.equals(routeMode(scope))) {
             List<CmsTopicNode> liveNodes = nodes(topicId);
             JourneyTemplateProbe probe = new JourneyTemplateProbe(liveNodes);
@@ -709,7 +709,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public boolean canPlay(Long memberId, Long topicId, Long activityId, Long nodeId, String routeActionId) {
         if (gameSessionRuntimeService != null) gameSessionRuntimeService.assertRoutePlayable(activityId, nodeId);
-        Scope scope = requireScope(memberId, topicId, activityId);
+        Scope scope = requireScope(memberId, topicId, activityId,true);
         CmsTopicNode requested = nodeMapper.selectCmsTopicNodeById(nodeId);
         if (requested == null || !topicId.equals(requested.getTopicId())) return false;
         List<CmsTopicNode> nodes = nodes(topicId);
@@ -945,7 +945,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         String actionId = "rest:" + nodeId + ":" + version;
         PlayCheckReceipt replayed = replayCheck(session, memberId, actionId);
         if (replayed != null) return replayed;
-        Scope scope = requireScope(memberId, topicId, session.getActivityId());
+        Scope scope = requireScope(memberId, topicId, session.getActivityId(),true);
         CmsTopicNode node = nodeMapper.selectCmsTopicNodeById(nodeId);
         if (node == null || !topicId.equals(node.getTopicId())) throw new IllegalStateException("节点不存在");
         JourneyRules rules = journeyRules(session, scope.topic);
@@ -1079,6 +1079,8 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     private TopicRouteSession ensureBranchSession(Scope scope) {
         TopicRouteSession existing = currentSession(scope.memberId, scope.topic.getId(), scope.activityId);
         if (existing != null) return existing;
+        com.chengyinhub.business.service.support.CurrentPlayRegistration.require(activityMapper,registrationMapper,
+                scope.memberId,scope.activityId>0 ? 2L : 1L,scope.activityId>0 ? scope.activityId : scope.topic.getId(),null,new Date());
         if (scope.topic.getPublishedRouteGraphJson() == null
                 || scope.topic.getPublishedRouteGraphJson().trim().isEmpty()
                 || scope.topic.getPublishedConfigVersion() == null
@@ -1441,6 +1443,8 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         List<CmsTopicNode> liveNodes = probe.liveNodes;
         TopicRouteSession existing = currentSession(scope.memberId, scope.topic.getId(), scope.activityId);
         if (existing != null) return existing;
+        com.chengyinhub.business.service.support.CurrentPlayRegistration.require(activityMapper,registrationMapper,
+                scope.memberId,scope.activityId>0 ? 2L : 1L,scope.activityId>0 ? scope.activityId : scope.topic.getId(),null,new Date());
         if (scope.topic.getPublishedConfigVersion() == null || scope.topic.getPublishedConfigVersion() <= 0L) {
             throw new IllegalStateException("路线尚未发布");
         }
@@ -1743,10 +1747,16 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     }
 
     private Scope requireScope(Long memberId, Long topicId, Long activityId) {
+        return requireScope(memberId,topicId,activityId,false);
+    }
+    private Scope requireScope(Long memberId, Long topicId, Long activityId,boolean newUse) {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L) throw new IllegalArgumentException("参数有误");
         CmsTopic topic = topicMapper.selectCmsTopicById(topicId);
         if (topic == null || Integer.valueOf(2).equals(topic.getDelFlag())) throw new IllegalArgumentException("主题不存在");
         long actId = activityId == null ? 0L : activityId;
+        CmsRegistration current=null;
+        if(newUse) current=com.chengyinhub.business.service.support.CurrentPlayRegistration.require(
+                activityMapper,registrationMapper,memberId,actId>0 ? 2L : 1L,actId>0 ? actId : topicId,null,new Date());
         CmsRegistration probe = new CmsRegistration(); probe.setMemberId(memberId); probe.setRegistrationStatus(2);
         if (actId > 0L) {
             CmsActivity activity = activityMapper.selectCmsActivityById(actId);
@@ -1769,6 +1779,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             }
             if (currentRegistrations.isEmpty()) throw new IllegalStateException("自玩通行证已过期");
         } else currentRegistrations.addAll(rows);
+        if(newUse) { currentRegistrations.clear();currentRegistrations.add(current); }
         boolean hasPublishedRoute = topic.getPublishedConfigVersion() != null
                 && topic.getPublishedConfigVersion() > 0L;
         if (!hasPublishedRoute
@@ -2432,7 +2443,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         }
         TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
         if (session == null) throw new IllegalStateException("本局尚未开始");
-        requireScope(memberId, topicId, session.getActivityId());
+        requireScope(memberId, topicId, session.getActivityId(),true);
         if (session.getStatus() != null
                 && !Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus())) {
             throw new IllegalStateException("本局已结束");
@@ -2443,7 +2454,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     /** 检定前置与配置解析:节点启用 check、checkId 对齐、主题启用检定、档位可识别。 */
     private CheckContext checkContext(Long memberId, Long topicId, TopicRouteSession session, Long nodeId,
                                       String checkId) {
-        Scope scope = requireScope(memberId, topicId, session.getActivityId());
+        Scope scope = requireScope(memberId, topicId, session.getActivityId(),true);
         CmsTopicNode node = nodeMapper.selectCmsTopicNodeById(nodeId);
         if (node == null || !topicId.equals(node.getTopicId())) throw new IllegalStateException("节点不存在");
         JsonNode blockConfig = nodeBlockConfig(session, node);
@@ -2878,7 +2889,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             return JSON.convertValue(validator.readTree(replay.getResponseJson()),new TypeReference<Map<String,Object>>(){});
         }
         if ("END".equals(operation) && readEngineState(session.getStateJson()).getThemeRuntime().has("result")) return themeViewOf(session);
-        Scope scope=requireScope(memberId,session.getTopicId(),session.getActivityId());
+        Scope scope=requireScope(memberId,session.getTopicId(),session.getActivityId(),true);
         TopicRouteSession current=currentSession(memberId,session.getTopicId(),session.getActivityId());
         if(current==null || !sessionId.equals(current.getId()) || !Integer.valueOf(0).equals(session.getStatus()))throw new ServiceException("本局已结束");
         if(version==null || !version.equals(session.getVersion()))throw new ServiceException("本局已更新，请刷新",409);
@@ -2935,7 +2946,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         TopicRouteSession previous=routeMapper.selectAccessibleById(sessionId,memberId);
         if(previous==null)throw new ServiceException("本局不存在或无权操作",403);
         if(Integer.valueOf(0).equals(previous.getStatus()))throw new ServiceException("请先结束当前局");
-        Scope scope=requireScope(memberId,previous.getTopicId(),previous.getActivityId());
+        Scope scope=requireScope(memberId,previous.getTopicId(),previous.getActivityId(),true);
         ObjectNode live=com.chengyinhub.business.service.support.ThemeRuntimeConfig.parse(scope.topic.getPublishedThemeRuntimeConfigJson());
         if(live==null || !live.path("replayEnabled").asBoolean())throw new ServiceException("此主题未开放重玩");
         String instance="replay:"+sessionId;

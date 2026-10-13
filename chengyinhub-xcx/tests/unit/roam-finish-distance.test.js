@@ -120,11 +120,19 @@ test('多段短程累计后按原始米数提交,不因每段显示粒度归零'
   const p0 = { lat: 31.23, lng: 121.47 }
   page._reveals = [p0]
 
-  page._realTick({ latitude: p0.lat, longitude: p0.lng, accuracy: 10 })
-  const p1 = { lat: p0.lat + m2lat(20), lng: p0.lng }
-  page._realTick({ latitude: p1.lat, longitude: p1.lng, accuracy: 10 })
-  const p2 = { lat: p1.lat + m2lat(24.528), lng: p1.lng }
-  page._realTick({ latitude: p2.lat, longitude: p2.lng, accuracy: 10 })
+  page._realOn = true
+  const originalNow = Date.now
+  let now = 1000
+  Date.now = () => now
+  try {
+    page._realTick({ latitude: p0.lat, longitude: p0.lng, accuracy: 10 })
+    now += 1000
+    const p1 = { lat: p0.lat + m2lat(20), lng: p0.lng }
+    page._realTick({ latitude: p1.lat, longitude: p1.lng, accuracy: 10 })
+    now += 1000
+    const p2 = { lat: p1.lat + m2lat(24.528), lng: p1.lng }
+    page._realTick({ latitude: p2.lat, longitude: p2.lng, accuracy: 10 })
+  } finally { Date.now = originalNow }
 
   assert.ok(Math.abs(page._dist - 44.528) < 0.01, '三段应累计出约 44.528 米')
 

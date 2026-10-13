@@ -1,0 +1,1069 @@
+{
+  "base": "e67e72a",
+  "originalItemsSourceSha256": "f84617264f7e2379a0fa92f6731b8c87f93a6204fffff9e2c4d6fa4a7546981e",
+  "items": [
+    {
+      "id": "X029",
+      "title": "人工账与离线记录、恢复在线权威（高水位/epoch）",
+      "workUnit": "C6",
+      "originalScopeDisposition": "后置",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "核原冻结/局scope/command回执/资源和投影；原资格新使用当前锁读不新增统一付费门，免费报名保留；WeRun严格整数字段/全PKCS7 padding/今日非未来时间/单次达标原机制。"
+      ],
+      "sourceSymbols": [
+        "AdvancedGameRuntimeServiceImpl",
+        "CurrentPlayRegistration",
+        "GameSessionRuntimeServiceImpl",
+        "TopicRouteRuntimeServiceImpl",
+        "WeRunDecryptor"
+      ],
+      "testSelectors": [
+        "AdvancedGameRuntimeServiceImplTest",
+        "ApiPlayCurrentUseBoundaryTest",
+        "CurrentPlayRegistrationTest",
+        "GameSessionRuntimeServiceImplTest",
+        "PlayKitV51RuntimeTest",
+        "TopicRouteCheckServiceImplTest",
+        "TopicRouteRuntimeServiceImplTest",
+        "WeRunDecryptorTest"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "Java/DB/真实WeRun未验；原缺失C类桥、配给、全场设施、章节新增约束、共享世界唯一结局、离线人工账/可达性模拟器后置；秘密媒体所有出口仍需实际身份回读。"
+      ],
+      "originalGapPreserved": "本项目标的离线账签署、epoch/高水位、导入幂等及在线权威恢复在public当前未找到，旧私库实现/测试不能继承；需审核差分后再迁移。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "F0385",
+      "title": "撤回漫游位置同意",
+      "workUnit": "C3",
+      "originalScopeDisposition": "当前底层复核",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "revision成功确认才清dirty；账号/SID恢复；结束补原已采记录存专用档案、与fog/奖励/结算分离；清本范围缓存失效旧回包；原授权与鉴权保留。"
+      ],
+      "sourceSymbols": [
+        "ApiRoamController",
+        "RoamSessionRecordMapper",
+        "RoamSessionWriteService",
+        "roam-cache-epoch",
+        "roam-player-memory",
+        "roam-recovery",
+        "roam-tile-memory-sync"
+      ],
+      "testSelectors": [
+        "RoamSessionArchiveTest",
+        "RoamSessionWriteMybatisIntegrationTest",
+        "roam-recovery-flow.test.js",
+        "roam-tile-memory-sync.test.js"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "Node漫游已实际专项执行，真机/网络重启与真实DB待验；客户端采集时间/坐标自报不证明真实采集或真人到店。"
+      ],
+      "originalGapPreserved": "连接授权真源、定位持有者清理和所有重新启动闸门，再测跨页/锁屏/重进。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "M0090",
+      "title": "条件叙事与隐藏信息",
+      "workUnit": "C6",
+      "originalScopeDisposition": "当前范围",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "核原冻结/局scope/command回执/资源和投影；原资格新使用当前锁读不新增统一付费门，免费报名保留；WeRun严格整数字段/全PKCS7 padding/今日非未来时间/单次达标原机制。"
+      ],
+      "sourceSymbols": [
+        "AdvancedGameRuntimeServiceImpl",
+        "CurrentPlayRegistration",
+        "GameSessionRuntimeServiceImpl",
+        "TopicRouteRuntimeServiceImpl",
+        "WeRunDecryptor"
+      ],
+      "testSelectors": [
+        "AdvancedGameRuntimeServiceImplTest",
+        "ApiPlayCurrentUseBoundaryTest",
+        "CurrentPlayRegistrationTest",
+        "GameSessionRuntimeServiceImplTest",
+        "PlayKitV51RuntimeTest",
+        "TopicRouteCheckServiceImplTest",
+        "TopicRouteRuntimeServiceImplTest",
+        "WeRunDecryptorTest"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "Java/DB/真实WeRun未验；原缺失C类桥、配给、全场设施、章节新增约束、共享世界唯一结局、离线人工账/可达性模拟器后置；秘密媒体所有出口仍需实际身份回读。"
+      ],
+      "originalGapPreserved": "缺旧玩法/完整状态与变化明细、媒体URL、各NPC上下文的统一已得事实投影矩阵；不能由属性列表过滤推所有秘密安全。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "M0091",
+      "title": "不可达结局检测",
+      "workUnit": "C6",
+      "originalScopeDisposition": "后置",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "核原冻结/局scope/command回执/资源和投影；原资格新使用当前锁读不新增统一付费门，免费报名保留；WeRun严格整数字段/全PKCS7 padding/今日非未来时间/单次达标原机制。"
+      ],
+      "sourceSymbols": [
+        "AdvancedGameRuntimeServiceImpl",
+        "CurrentPlayRegistration",
+        "GameSessionRuntimeServiceImpl",
+        "TopicRouteRuntimeServiceImpl",
+        "WeRunDecryptor"
+      ],
+      "testSelectors": [
+        "AdvancedGameRuntimeServiceImplTest",
+        "ApiPlayCurrentUseBoundaryTest",
+        "CurrentPlayRegistrationTest",
+        "GameSessionRuntimeServiceImplTest",
+        "PlayKitV51RuntimeTest",
+        "TopicRouteCheckServiceImplTest",
+        "TopicRouteRuntimeServiceImplTest",
+        "WeRunDecryptorTest"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "Java/DB/真实WeRun未验；原缺失C类桥、配给、全场设施、章节新增约束、共享世界唯一结局、离线人工账/可达性模拟器后置；秘密媒体所有出口仍需实际身份回读。"
+      ],
+      "originalGapPreserved": "尚未见联合资源消耗、条件互斥和动态状态的可达解搜索/失败路径预演；图合法不能证明可通关。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "M0107",
+      "title": "定位漂移处理",
+      "workUnit": "C7",
+      "originalScopeDisposition": "当前范围",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "GCJ02/质量/异常速度过滤保持已有阈值；member→原SID结算；原奖励source logId/XP snapshot与原session徽章意图补交付，不重新掷骰/结算；原200日上限不改。"
+      ],
+      "sourceSymbols": [
+        "ApiRoamController",
+        "RoamBadgeDeliveryService",
+        "RoamRecoveryService",
+        "RoamRewardDeliveryService",
+        "RoamSessionWriteService",
+        "roam-track-filter"
+      ],
+      "testSelectors": [
+        "RoamRewardDeliveryTest",
+        "RoamSessionWriteMybatisIntegrationTest",
+        "RoamShopBadgeTest",
+        "roam-finish-distance.test.js",
+        "roam-track-filter.test.js"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "真实DB并发/独立XP与徽章回读未运行；旧无原发券收据/XP冻结金额不猜补；自报坐标不能替代可信到店凭证，新权益政策不做。"
+      ],
+      "originalGapPreserved": "缺明确定位质量状态/坐标体系/客户端估计标签；这不是硬件位置证明，也没有服务端完整轨迹验真。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "M0108",
+      "title": "到店验证半径",
+      "workUnit": "C7",
+      "originalScopeDisposition": "待核",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "GCJ02/质量/异常速度过滤保持已有阈值；member→原SID结算；原奖励source logId/XP snapshot与原session徽章意图补交付，不重新掷骰/结算；原200日上限不改。"
+      ],
+      "sourceSymbols": [
+        "ApiRoamController",
+        "RoamBadgeDeliveryService",
+        "RoamRecoveryService",
+        "RoamRewardDeliveryService",
+        "RoamSessionWriteService",
+        "roam-track-filter"
+      ],
+      "testSelectors": [
+        "RoamRewardDeliveryTest",
+        "RoamSessionWriteMybatisIntegrationTest",
+        "RoamShopBadgeTest",
+        "roam-finish-distance.test.js",
+        "roam-track-filter.test.js"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "真实DB并发/独立XP与徽章回读未运行；旧无原发券收据/XP冻结金额不猜补；自报坐标不能替代可信到店凭证，新权益政策不做。"
+      ],
+      "originalGapPreserved": "当前空间条件仍是自报坐标，不能称真实到店；高价值权益必须逐个核准可信凭证，当前roam掉落券未见商家核验前置，价值/适用政策待确认。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "M0109",
+      "title": "异常轨迹过滤",
+      "workUnit": "C7",
+      "originalScopeDisposition": "当前范围",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "GCJ02/质量/异常速度过滤保持已有阈值；member→原SID结算；原奖励source logId/XP snapshot与原session徽章意图补交付，不重新掷骰/结算；原200日上限不改。"
+      ],
+      "sourceSymbols": [
+        "ApiRoamController",
+        "RoamBadgeDeliveryService",
+        "RoamRecoveryService",
+        "RoamRewardDeliveryService",
+        "RoamSessionWriteService",
+        "roam-track-filter"
+      ],
+      "testSelectors": [
+        "RoamRewardDeliveryTest",
+        "RoamSessionWriteMybatisIntegrationTest",
+        "RoamShopBadgeTest",
+        "roam-finish-distance.test.js",
+        "roam-track-filter.test.js"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "真实DB并发/独立XP与徽章回读未运行；旧无原发券收据/XP冻结金额不猜补；自报坐标不能替代可信到店凭证，新权益政策不做。"
+      ],
+      "originalGapPreserved": "所查拒绝分支仅返回错误，未见异常尝试原因/关联POI时间的持久审计与申诉原尝试链；不补造轨迹。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "M0111",
+      "title": "轨迹记录省电",
+      "workUnit": "C7",
+      "originalScopeDisposition": "后置",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "GCJ02/质量/异常速度过滤保持已有阈值；member→原SID结算；原奖励source logId/XP snapshot与原session徽章意图补交付，不重新掷骰/结算；原200日上限不改。"
+      ],
+      "sourceSymbols": [
+        "ApiRoamController",
+        "RoamBadgeDeliveryService",
+        "RoamRecoveryService",
+        "RoamRewardDeliveryService",
+        "RoamSessionWriteService",
+        "roam-track-filter"
+      ],
+      "testSelectors": [
+        "RoamRewardDeliveryTest",
+        "RoamSessionWriteMybatisIntegrationTest",
+        "RoamShopBadgeTest",
+        "roam-finish-distance.test.js",
+        "roam-track-filter.test.js"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "真实DB并发/独立XP与徽章回读未运行；旧无原发券收据/XP冻结金额不猜补；自报坐标不能替代可信到店凭证，新权益政策不做。"
+      ],
+      "originalGapPreserved": "目标低电量/距离/精度自适应采样档与耗电反馈在所查tracker/roam未见；生命周期管理是基础，不能称省电策略实现。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "M0113",
+      "title": "个人迷雾持久化",
+      "workUnit": "C3",
+      "originalScopeDisposition": "当前范围",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "revision成功确认才清dirty；账号/SID恢复；结束补原已采记录存专用档案、与fog/奖励/结算分离；清本范围缓存失效旧回包；原授权与鉴权保留。"
+      ],
+      "sourceSymbols": [
+        "ApiRoamController",
+        "RoamSessionRecordMapper",
+        "RoamSessionWriteService",
+        "roam-cache-epoch",
+        "roam-player-memory",
+        "roam-recovery",
+        "roam-tile-memory-sync"
+      ],
+      "testSelectors": [
+        "RoamSessionArchiveTest",
+        "RoamSessionWriteMybatisIntegrationTest",
+        "roam-recovery-flow.test.js",
+        "roam-tile-memory-sync.test.js"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "Node漫游已实际专项执行，真机/网络重启与真实DB待验；客户端采集时间/坐标自报不证明真实采集或真人到店。"
+      ],
+      "originalGapPreserved": "确定代码缺口：实时失败保持dirty/可重试及保存成功回读；分页readTiles失败/账号隔离还需严格同一合同。旧私库已修说明未进public。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "M0114",
+      "title": "本地未同步轨迹",
+      "workUnit": "C3",
+      "originalScopeDisposition": "当前范围",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "revision成功确认才清dirty；账号/SID恢复；结束补原已采记录存专用档案、与fog/奖励/结算分离；清本范围缓存失效旧回包；原授权与鉴权保留。"
+      ],
+      "sourceSymbols": [
+        "ApiRoamController",
+        "RoamSessionRecordMapper",
+        "RoamSessionWriteService",
+        "roam-cache-epoch",
+        "roam-player-memory",
+        "roam-recovery",
+        "roam-tile-memory-sync"
+      ],
+      "testSelectors": [
+        "RoamSessionArchiveTest",
+        "RoamSessionWriteMybatisIntegrationTest",
+        "roam-recovery-flow.test.js",
+        "roam-tile-memory-sync.test.js"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "Node漫游已实际专项执行，真机/网络重启与真实DB待验；客户端采集时间/坐标自报不证明真实采集或真人到店。"
+      ],
+      "originalGapPreserved": "目标中终结后未确认点可续传尚未完成：当前明确阻断并保留；清缓存/主动删除规则未确认，不能自作主张补。可选字段严格结构校验与原SID回读完整性需当前复核。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "M0116",
+      "title": "漫游结算一致性",
+      "workUnit": "C7",
+      "originalScopeDisposition": "当前修补",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "GCJ02/质量/异常速度过滤保持已有阈值；member→原SID结算；原奖励source logId/XP snapshot与原session徽章意图补交付，不重新掷骰/结算；原200日上限不改。"
+      ],
+      "sourceSymbols": [
+        "ApiRoamController",
+        "RoamBadgeDeliveryService",
+        "RoamRecoveryService",
+        "RoamRewardDeliveryService",
+        "RoamSessionWriteService",
+        "roam-track-filter"
+      ],
+      "testSelectors": [
+        "RoamRewardDeliveryTest",
+        "RoamSessionWriteMybatisIntegrationTest",
+        "RoamShopBadgeTest",
+        "roam-finish-distance.test.js",
+        "roam-track-filter.test.js"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "真实DB并发/独立XP与徽章回读未运行；旧无原发券收据/XP冻结金额不猜补；自报坐标不能替代可信到店凭证，新权益政策不做。"
+      ],
+      "originalGapPreserved": "在既有奖励链补原session/里程碑唯一补发意图和消费者；先核现有奖励outbox可否复用，避免另建奖励政策。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "M0146",
+      "title": "AI 请求防重复计费",
+      "workUnit": "C1",
+      "originalScopeDisposition": "当前修补",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "原日/原池/原nonce/代次候选接入；所有实际配额写调用已携带原凭证；明确服务故障退、明确违规留；NPC租约到期不复活，未知提供方不接管盲调。"
+      ],
+      "sourceSymbols": [
+        "AiCreatorServiceImpl",
+        "AiGatewayServiceImpl",
+        "NpcChatService",
+        "PhotoCheckVisionService"
+      ],
+      "testSelectors": [
+        "AiCreatorServiceImplTest",
+        "AiGatewayServiceImplTest",
+        "AiQuotaReservationRedisIT",
+        "NpcChatServiceTest",
+        "PhotoCheckQuotaPoolTest",
+        "PhotoCheckVisionServiceTest"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "Java与真实Redis未运行；普通Creator端点未有业务requestId，不能将本次nonce防重退款称作全部创建接口请求防重；真实provider结果与成本未知另列。"
+      ],
+      "originalGapPreserved": "给既有请求冻结意图指纹、回放前按当前范围核资格；保持原请求恢复，不新增NPC功能。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "M0149",
+      "title": "AI 内容安全后展示",
+      "workUnit": "C1",
+      "originalScopeDisposition": "当前修补",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "原日/原池/原nonce/代次候选接入；所有实际配额写调用已携带原凭证；明确服务故障退、明确违规留；NPC租约到期不复活，未知提供方不接管盲调。"
+      ],
+      "sourceSymbols": [
+        "AiCreatorServiceImpl",
+        "AiGatewayServiceImpl",
+        "NpcChatService",
+        "PhotoCheckVisionService"
+      ],
+      "testSelectors": [
+        "AiCreatorServiceImplTest",
+        "AiGatewayServiceImplTest",
+        "AiQuotaReservationRedisIT",
+        "NpcChatServiceTest",
+        "PhotoCheckQuotaPoolTest",
+        "PhotoCheckVisionServiceTest"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "Java与真实Redis未运行；普通Creator端点未有业务requestId，不能将本次nonce防重退款称作全部创建接口请求防重；真实provider结果与成本未知另列。"
+      ],
+      "originalGapPreserved": "覆盖真正发送输入的审核边界，落实已批准故障退次数/违规不退；不另问规则。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "M0150",
+      "title": "AI 超时与保底",
+      "workUnit": "C1",
+      "originalScopeDisposition": "当前修补",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "原日/原池/原nonce/代次候选接入；所有实际配额写调用已携带原凭证；明确服务故障退、明确违规留；NPC租约到期不复活，未知提供方不接管盲调。"
+      ],
+      "sourceSymbols": [
+        "AiCreatorServiceImpl",
+        "AiGatewayServiceImpl",
+        "NpcChatService",
+        "PhotoCheckVisionService"
+      ],
+      "testSelectors": [
+        "AiCreatorServiceImplTest",
+        "AiGatewayServiceImplTest",
+        "AiQuotaReservationRedisIT",
+        "NpcChatServiceTest",
+        "PhotoCheckQuotaPoolTest",
+        "PhotoCheckVisionServiceTest"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "Java与真实Redis未运行；普通Creator端点未有业务requestId，不能将本次nonce防重退款称作全部创建接口请求防重；真实provider结果与成本未知另列。"
+      ],
+      "originalGapPreserved": "先按既有provider能力区分未调用/明确失败/未知；未知抑制盲重试，原请求可查。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "M0152",
+      "title": "额度消耗与恢复",
+      "workUnit": "C1/C2",
+      "originalScopeDisposition": "当前修补",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "原日/原池/原nonce/代次候选接入；所有实际配额写调用已携带原凭证；明确服务故障退、明确违规留；NPC租约到期不复活，未知提供方不接管盲调。",
+        "独立已提交PREPARED、原收据代次读取、提供方前阶段、确定REFUND_DUE、owner/fence短claim与原身份补偿；失证或上游未知明确UNCERTAIN；失效原计数不裸减新日/新代次。"
+      ],
+      "sourceSymbols": [
+        "AiCreatorServiceImpl",
+        "AiGatewayServiceImpl",
+        "AiQuotaRecoveryService",
+        "AiQuotaRecoveryTask",
+        "AiQuotaReservationMapper",
+        "NpcChatService",
+        "PhotoCheckVisionService"
+      ],
+      "testSelectors": [
+        "AiCreatorServiceImplTest",
+        "AiGatewayServiceImplTest",
+        "AiQuotaRecoveryMySqlRedisIT",
+        "AiQuotaRecoveryServiceTest",
+        "AiQuotaReservationRedisIT",
+        "NpcChatServiceTest",
+        "PhotoCheckQuotaPoolTest",
+        "PhotoCheckVisionServiceTest"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "Java与真实Redis未运行；普通Creator端点未有业务requestId，不能将本次nonce防重退款称作全部创建接口请求防重；真实provider结果与成本未知另列。",
+        "双故障且权威终态未落库不能保证结果；收据过期且counter仍在保UNCERTAIN；生产DDL/Quartz启用不在范围，真实DB+Redis/重启待验。"
+      ],
+      "originalGapPreserved": "最小原请求/原日期的防重恢复与错误分类，按已定服务故障退/违规不退实施。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "X001",
+      "title": "通用玩法支持矩阵与发布门禁",
+      "workUnit": "C6",
+      "originalScopeDisposition": "后置新能力",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "核原冻结/局scope/command回执/资源和投影；原资格新使用当前锁读不新增统一付费门，免费报名保留；WeRun严格整数字段/全PKCS7 padding/今日非未来时间/单次达标原机制。"
+      ],
+      "sourceSymbols": [
+        "AdvancedGameRuntimeServiceImpl",
+        "CurrentPlayRegistration",
+        "GameSessionRuntimeServiceImpl",
+        "TopicRouteRuntimeServiceImpl",
+        "WeRunDecryptor"
+      ],
+      "testSelectors": [
+        "AdvancedGameRuntimeServiceImplTest",
+        "ApiPlayCurrentUseBoundaryTest",
+        "CurrentPlayRegistrationTest",
+        "GameSessionRuntimeServiceImplTest",
+        "PlayKitV51RuntimeTest",
+        "TopicRouteCheckServiceImplTest",
+        "TopicRouteRuntimeServiceImplTest",
+        "WeRunDecryptorTest"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "Java/DB/真实WeRun未验；原缺失C类桥、配给、全场设施、章节新增约束、共享世界唯一结局、离线人工账/可达性模拟器后置；秘密媒体所有出口仍需实际身份回读。"
+      ],
+      "originalGapPreserved": "现有玩法发布/运行逐对核；新增C类桥接后置，不迁私库整引擎。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "X002",
+      "title": "局类型与归属（个人/独立队伍/队伍共用现场/共享世界）",
+      "workUnit": "C6",
+      "originalScopeDisposition": "当前修补",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "核原冻结/局scope/command回执/资源和投影；原资格新使用当前锁读不新增统一付费门，免费报名保留；WeRun严格整数字段/全PKCS7 padding/今日非未来时间/单次达标原机制。"
+      ],
+      "sourceSymbols": [
+        "AdvancedGameRuntimeServiceImpl",
+        "CurrentPlayRegistration",
+        "GameSessionRuntimeServiceImpl",
+        "TopicRouteRuntimeServiceImpl",
+        "WeRunDecryptor"
+      ],
+      "testSelectors": [
+        "AdvancedGameRuntimeServiceImplTest",
+        "ApiPlayCurrentUseBoundaryTest",
+        "CurrentPlayRegistrationTest",
+        "GameSessionRuntimeServiceImplTest",
+        "PlayKitV51RuntimeTest",
+        "TopicRouteCheckServiceImplTest",
+        "TopicRouteRuntimeServiceImplTest",
+        "WeRunDecryptorTest"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "Java/DB/真实WeRun未验；原缺失C类桥、配给、全场设施、章节新增约束、共享世界唯一结局、离线人工账/可达性模拟器后置；秘密媒体所有出口仍需实际身份回读。"
+      ],
+      "originalGapPreserved": "先核既有队伍/局读写隔离和掉线恢复；扩展局类型/物资新规则后置。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "X004",
+      "title": "成功次数与同场共用范围（limitsScope）",
+      "workUnit": "C6",
+      "originalScopeDisposition": "待核",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "核原冻结/局scope/command回执/资源和投影；原资格新使用当前锁读不新增统一付费门，免费报名保留；WeRun严格整数字段/全PKCS7 padding/今日非未来时间/单次达标原机制。"
+      ],
+      "sourceSymbols": [
+        "AdvancedGameRuntimeServiceImpl",
+        "CurrentPlayRegistration",
+        "GameSessionRuntimeServiceImpl",
+        "TopicRouteRuntimeServiceImpl",
+        "WeRunDecryptor"
+      ],
+      "testSelectors": [
+        "AdvancedGameRuntimeServiceImplTest",
+        "ApiPlayCurrentUseBoundaryTest",
+        "CurrentPlayRegistrationTest",
+        "GameSessionRuntimeServiceImplTest",
+        "PlayKitV51RuntimeTest",
+        "TopicRouteCheckServiceImplTest",
+        "TopicRouteRuntimeServiceImplTest",
+        "WeRunDecryptorTest"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "Java/DB/真实WeRun未验；原缺失C类桥、配给、全场设施、章节新增约束、共享世界唯一结局、离线人工账/可达性模拟器后置；秘密媒体所有出口仍需实际身份回读。"
+      ],
+      "originalGapPreserved": "先追现玩法配置→校验→成功计数→回滚；若原能力未迁是新增迁移包后置，禁止猜次数政策。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "X011",
+      "title": "收场判定：最终章、冻结局沿用冻结收场、共享世界唯一结局",
+      "workUnit": "C6",
+      "originalScopeDisposition": "待核",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "核原冻结/局scope/command回执/资源和投影；原资格新使用当前锁读不新增统一付费门，免费报名保留；WeRun严格整数字段/全PKCS7 padding/今日非未来时间/单次达标原机制。"
+      ],
+      "sourceSymbols": [
+        "AdvancedGameRuntimeServiceImpl",
+        "CurrentPlayRegistration",
+        "GameSessionRuntimeServiceImpl",
+        "TopicRouteRuntimeServiceImpl",
+        "WeRunDecryptor"
+      ],
+      "testSelectors": [
+        "AdvancedGameRuntimeServiceImplTest",
+        "ApiPlayCurrentUseBoundaryTest",
+        "CurrentPlayRegistrationTest",
+        "GameSessionRuntimeServiceImplTest",
+        "PlayKitV51RuntimeTest",
+        "TopicRouteCheckServiceImplTest",
+        "TopicRouteRuntimeServiceImplTest",
+        "WeRunDecryptorTest"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "Java/DB/真实WeRun未验；原缺失C类桥、配给、全场设施、章节新增约束、共享世界唯一结局、离线人工账/可达性模拟器后置；秘密媒体所有出口仍需实际身份回读。"
+      ],
+      "originalGapPreserved": "先核现END冻结版本、重复动作和中止区分；共享世界新能力后置。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "X013",
+      "title": "微信运动加密步数同步（服务端解密、appid 水印、同键重试）",
+      "workUnit": "C6",
+      "originalScopeDisposition": "当前修补",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "核原冻结/局scope/command回执/资源和投影；原资格新使用当前锁读不新增统一付费门，免费报名保留；WeRun严格整数字段/全PKCS7 padding/今日非未来时间/单次达标原机制。"
+      ],
+      "sourceSymbols": [
+        "AdvancedGameRuntimeServiceImpl",
+        "CurrentPlayRegistration",
+        "GameSessionRuntimeServiceImpl",
+        "TopicRouteRuntimeServiceImpl",
+        "WeRunDecryptor"
+      ],
+      "testSelectors": [
+        "AdvancedGameRuntimeServiceImplTest",
+        "ApiPlayCurrentUseBoundaryTest",
+        "CurrentPlayRegistrationTest",
+        "GameSessionRuntimeServiceImplTest",
+        "PlayKitV51RuntimeTest",
+        "TopicRouteCheckServiceImplTest",
+        "TopicRouteRuntimeServiceImplTest",
+        "WeRunDecryptorTest"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "Java/DB/真实WeRun未验；原缺失C类桥、配给、全场设施、章节新增约束、共享世界唯一结局、离线人工账/可达性模拟器后置；秘密媒体所有出口仍需实际身份回读。"
+      ],
+      "originalGapPreserved": "校当前既有计步挑战日期与重放边界；微信步数驱动HP恢复属于缺失扩展后置。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "X015",
+      "title": "幕末配给与缺粮封底（不欠负 HP、重进不重复）",
+      "workUnit": "C6",
+      "originalScopeDisposition": "后置新能力",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "核原冻结/局scope/command回执/资源和投影；原资格新使用当前锁读不新增统一付费门，免费报名保留；WeRun严格整数字段/全PKCS7 padding/今日非未来时间/单次达标原机制。"
+      ],
+      "sourceSymbols": [
+        "AdvancedGameRuntimeServiceImpl",
+        "CurrentPlayRegistration",
+        "GameSessionRuntimeServiceImpl",
+        "TopicRouteRuntimeServiceImpl",
+        "WeRunDecryptor"
+      ],
+      "testSelectors": [
+        "AdvancedGameRuntimeServiceImplTest",
+        "ApiPlayCurrentUseBoundaryTest",
+        "CurrentPlayRegistrationTest",
+        "GameSessionRuntimeServiceImplTest",
+        "PlayKitV51RuntimeTest",
+        "TopicRouteCheckServiceImplTest",
+        "TopicRouteRuntimeServiceImplTest",
+        "WeRunDecryptorTest"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "Java/DB/真实WeRun未验；原缺失C类桥、配给、全场设施、章节新增约束、共享世界唯一结局、离线人工账/可达性模拟器后置；秘密媒体所有出口仍需实际身份回读。"
+      ],
+      "originalGapPreserved": "当前章末扣费封底可补回归；粮食配给作为缺失能力后置，不搬寒冬专用规则。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "X016",
+      "title": "行动额度与 HP 成本（付 HP 至 0 仍成功、上限后拒绝、战术休整次数）",
+      "workUnit": "C6",
+      "originalScopeDisposition": "当前修补",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "核原冻结/局scope/command回执/资源和投影；原资格新使用当前锁读不新增统一付费门，免费报名保留；WeRun严格整数字段/全PKCS7 padding/今日非未来时间/单次达标原机制。"
+      ],
+      "sourceSymbols": [
+        "AdvancedGameRuntimeServiceImpl",
+        "CurrentPlayRegistration",
+        "GameSessionRuntimeServiceImpl",
+        "TopicRouteRuntimeServiceImpl",
+        "WeRunDecryptor"
+      ],
+      "testSelectors": [
+        "AdvancedGameRuntimeServiceImplTest",
+        "ApiPlayCurrentUseBoundaryTest",
+        "CurrentPlayRegistrationTest",
+        "GameSessionRuntimeServiceImplTest",
+        "PlayKitV51RuntimeTest",
+        "TopicRouteCheckServiceImplTest",
+        "TopicRouteRuntimeServiceImplTest",
+        "WeRunDecryptorTest"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "Java/DB/真实WeRun未验；原缺失C类桥、配给、全场设施、章节新增约束、共享世界唯一结局、离线人工账/可达性模拟器后置；秘密媒体所有出口仍需实际身份回读。"
+      ],
+      "originalGapPreserved": "先核现行动计数、预算与HP封底，补现有规则回归；战术休整新增分支后置。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "X017",
+      "title": "全场一次设施竞争（并发仅一队结算、后到者免费改选）",
+      "workUnit": "C6",
+      "originalScopeDisposition": "后置新能力",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "核原冻结/局scope/command回执/资源和投影；原资格新使用当前锁读不新增统一付费门，免费报名保留；WeRun严格整数字段/全PKCS7 padding/今日非未来时间/单次达标原机制。"
+      ],
+      "sourceSymbols": [
+        "AdvancedGameRuntimeServiceImpl",
+        "CurrentPlayRegistration",
+        "GameSessionRuntimeServiceImpl",
+        "TopicRouteRuntimeServiceImpl",
+        "WeRunDecryptor"
+      ],
+      "testSelectors": [
+        "AdvancedGameRuntimeServiceImplTest",
+        "ApiPlayCurrentUseBoundaryTest",
+        "CurrentPlayRegistrationTest",
+        "GameSessionRuntimeServiceImplTest",
+        "PlayKitV51RuntimeTest",
+        "TopicRouteCheckServiceImplTest",
+        "TopicRouteRuntimeServiceImplTest",
+        "WeRunDecryptorTest"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "Java/DB/真实WeRun未验；原缺失C类桥、配给、全场设施、章节新增约束、共享世界唯一结局、离线人工账/可达性模拟器后置；秘密媒体所有出口仍需实际身份回读。"
+      ],
+      "originalGapPreserved": "先确认是否有其他现用设施实现；若无则新增合作玩法后置，本轮不造改选交互。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "X018",
+      "title": "章节运行约束（互斥组、任选N、额外节点、机动额度）",
+      "workUnit": "C6",
+      "originalScopeDisposition": "后置新能力",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "核原冻结/局scope/command回执/资源和投影；原资格新使用当前锁读不新增统一付费门，免费报名保留；WeRun严格整数字段/全PKCS7 padding/今日非未来时间/单次达标原机制。"
+      ],
+      "sourceSymbols": [
+        "AdvancedGameRuntimeServiceImpl",
+        "CurrentPlayRegistration",
+        "GameSessionRuntimeServiceImpl",
+        "TopicRouteRuntimeServiceImpl",
+        "WeRunDecryptor"
+      ],
+      "testSelectors": [
+        "AdvancedGameRuntimeServiceImplTest",
+        "ApiPlayCurrentUseBoundaryTest",
+        "CurrentPlayRegistrationTest",
+        "GameSessionRuntimeServiceImplTest",
+        "PlayKitV51RuntimeTest",
+        "TopicRouteCheckServiceImplTest",
+        "TopicRouteRuntimeServiceImplTest",
+        "WeRunDecryptorTest"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "Java/DB/真实WeRun未验；原缺失C类桥、配给、全场设施、章节新增约束、共享世界唯一结局、离线人工账/可达性模拟器后置；秘密媒体所有出口仍需实际身份回读。"
+      ],
+      "originalGapPreserved": "核当前已配置规则真源和发布回读；缺失约束作为新能力后置，不依据私库G01结论重写。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "X025",
+      "title": "主题服务端草稿与发布前配置章节规则（G01）",
+      "workUnit": "C4",
+      "originalScopeDisposition": "当前底层复核",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "核既有create/update/edit-detail及实际fabu回填/提交configVersion、节点/章节重映射与已有CAS；不复制未提交server-draft，不新增作者UI。"
+      ],
+      "sourceSymbols": [
+        "ApiTopicController",
+        "CmsTopicServiceImpl",
+        "pages/publish/fabu/index.js"
+      ],
+      "testSelectors": [
+        "ApiTopicSaveDraftContractTest",
+        "TopicCreateSaveDraftSideEffectTest",
+        "ai-plan-to-draft.test.js",
+        "pro-editor-draft.test.js"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "既有Java/数据库语义回读、双编辑与丢响应未执行；旧客户端没有expected configVersion的分支仍保旧协议，不能称所有老编辑冲突均已解决。"
+      ],
+      "originalGapPreserved": "断点（G01，寒冬实测）：章节规则编辑器只列已保存站点，新主题发布前不可配互斥组/任选/额外节点/章末配给，发布后 TopicEditWindow 只允许白名单文案编辑——手机上无法创作完整寒冬规则。服务端草稿保存也无版本号，两台设备可互相覆盖。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "M0141",
+      "title": "NPC 人设和事实边界",
+      "workUnit": "C8",
+      "originalScopeDisposition": "后置新能力",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "原UUID/member/负node或正roam SID绑定，原答案只读恢复在ASR/新问资格前，不再转写/调用模型；新问保当前资格；token+有效lease闸，迟到结果不得返旧未保存文本或TTS。"
+      ],
+      "sourceSymbols": [
+        "ApiAiNpcController",
+        "NpcChatRequestMapper",
+        "NpcChatService",
+        "NpcMemoryBuilder"
+      ],
+      "testSelectors": [
+        "ApiAiNpcPassExpiryTest",
+        "NpcChatServiceTest",
+        "npc-chat-component.test.js",
+        "npc-roam-gate.test.js"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "真实provider/双身份/语音URL与临时录音重启未验；长summary、剧情NPC扩展和持久音频任务后置；普通客户端杀进程后原UUID落盘恢复仍需既有宿主合同，不称全链完成。"
+      ],
+      "originalGapPreserved": "本轮防越权与安全输出；逐事实引用/工具核验为新增增强后置。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "M0142",
+      "title": "NPC 记忆范围",
+      "workUnit": "C8",
+      "originalScopeDisposition": "后置新能力",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "原UUID/member/负node或正roam SID绑定，原答案只读恢复在ASR/新问资格前，不再转写/调用模型；新问保当前资格；token+有效lease闸，迟到结果不得返旧未保存文本或TTS。"
+      ],
+      "sourceSymbols": [
+        "ApiAiNpcController",
+        "NpcChatRequestMapper",
+        "NpcChatService",
+        "NpcMemoryBuilder"
+      ],
+      "testSelectors": [
+        "ApiAiNpcPassExpiryTest",
+        "NpcChatServiceTest",
+        "npc-chat-component.test.js",
+        "npc-roam-gate.test.js"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "真实provider/双身份/语音URL与临时录音重启未验；长summary、剧情NPC扩展和持久音频任务后置；普通客户端杀进程后原UUID落盘恢复仍需既有宿主合同，不称全链完成。"
+      ],
+      "originalGapPreserved": "保持当前最小聚合范围；跨会话长期记忆和删除管理属于新能力后置。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "M0143",
+      "title": "NPC 已知剧情限制",
+      "workUnit": "C8",
+      "originalScopeDisposition": "当前修补",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "原UUID/member/负node或正roam SID绑定，原答案只读恢复在ASR/新问资格前，不再转写/调用模型；新问保当前资格；token+有效lease闸，迟到结果不得返旧未保存文本或TTS。"
+      ],
+      "sourceSymbols": [
+        "ApiAiNpcController",
+        "NpcChatRequestMapper",
+        "NpcChatService",
+        "NpcMemoryBuilder"
+      ],
+      "testSelectors": [
+        "ApiAiNpcPassExpiryTest",
+        "NpcChatServiceTest",
+        "npc-chat-component.test.js",
+        "npc-roam-gate.test.js"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "真实provider/双身份/语音URL与临时录音重启未验；长summary、剧情NPC扩展和持久音频任务后置；普通客户端杀进程后原UUID落盘恢复仍需既有宿主合同，不称全链完成。"
+      ],
+      "originalGapPreserved": "先确认所有build调用；若未用不接入，维护当前事实范围；活动剧情NPC扩展后置。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "M0144",
+      "title": "NPC 上下文恢复",
+      "workUnit": "C8",
+      "originalScopeDisposition": "后置新能力",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "原UUID/member/负node或正roam SID绑定，原答案只读恢复在ASR/新问资格前，不再转写/调用模型；新问保当前资格；token+有效lease闸，迟到结果不得返旧未保存文本或TTS。"
+      ],
+      "sourceSymbols": [
+        "ApiAiNpcController",
+        "NpcChatRequestMapper",
+        "NpcChatService",
+        "NpcMemoryBuilder"
+      ],
+      "testSelectors": [
+        "ApiAiNpcPassExpiryTest",
+        "NpcChatServiceTest",
+        "npc-chat-component.test.js",
+        "npc-roam-gate.test.js"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "真实provider/双身份/语音URL与临时录音重启未验；长summary、剧情NPC扩展和持久音频任务后置；普通客户端杀进程后原UUID落盘恢复仍需既有宿主合同，不称全链完成。"
+      ],
+      "originalGapPreserved": "本轮只修现有原答案恢复与请求防重；新增长期上下文恢复后置。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "M0145",
+      "title": "语音识别与回复状态",
+      "workUnit": "C8",
+      "originalScopeDisposition": "当前修补",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "原UUID/member/负node或正roam SID绑定，原答案只读恢复在ASR/新问资格前，不再转写/调用模型；新问保当前资格；token+有效lease闸，迟到结果不得返旧未保存文本或TTS。"
+      ],
+      "sourceSymbols": [
+        "ApiAiNpcController",
+        "NpcChatRequestMapper",
+        "NpcChatService",
+        "NpcMemoryBuilder"
+      ],
+      "testSelectors": [
+        "ApiAiNpcPassExpiryTest",
+        "NpcChatServiceTest",
+        "npc-chat-component.test.js",
+        "npc-roam-gate.test.js"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "真实provider/双身份/语音URL与临时录音重启未验；长summary、剧情NPC扩展和持久音频任务后置；普通客户端杀进程后原UUID落盘恢复仍需既有宿主合同，不称全链完成。"
+      ],
+      "originalGapPreserved": "先明确现文字成功/语音失败的返回和不重复对话；新增音频任务恢复系统后置。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "M0147",
+      "title": "AI 并发租约",
+      "workUnit": "C1",
+      "originalScopeDisposition": "当前修补",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "原日/原池/原nonce/代次候选接入；所有实际配额写调用已携带原凭证；明确服务故障退、明确违规留；NPC租约到期不复活，未知提供方不接管盲调。"
+      ],
+      "sourceSymbols": [
+        "AiCreatorServiceImpl",
+        "AiGatewayServiceImpl",
+        "NpcChatService",
+        "PhotoCheckVisionService"
+      ],
+      "testSelectors": [
+        "AiCreatorServiceImplTest",
+        "AiGatewayServiceImplTest",
+        "AiQuotaReservationRedisIT",
+        "NpcChatServiceTest",
+        "PhotoCheckQuotaPoolTest",
+        "PhotoCheckVisionServiceTest"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "Java与真实Redis未运行；普通Creator端点未有业务requestId，不能将本次nonce防重退款称作全部创建接口请求防重；真实provider结果与成本未知另列。"
+      ],
+      "originalGapPreserved": "补既有租约到期条件与调用前失权阻断，未知上游不盲重调；远端取消新能力后置。",
+      "completeAcceptance": false
+    },
+    {
+      "id": "M0148",
+      "title": "AI 配额与预算",
+      "workUnit": "C1",
+      "originalScopeDisposition": "后置新能力",
+      "scope": "本轮确定修补；混合UI/新增能力分别保留，不勾整原项",
+      "changeEvidence": [
+        "原日/原池/原nonce/代次候选接入；所有实际配额写调用已携带原凭证；明确服务故障退、明确违规留；NPC租约到期不复活，未知提供方不接管盲调。"
+      ],
+      "sourceSymbols": [
+        "AiCreatorServiceImpl",
+        "AiGatewayServiceImpl",
+        "NpcChatService",
+        "PhotoCheckVisionService"
+      ],
+      "testSelectors": [
+        "AiCreatorServiceImplTest",
+        "AiGatewayServiceImplTest",
+        "AiQuotaReservationRedisIT",
+        "NpcChatServiceTest",
+        "PhotoCheckQuotaPoolTest",
+        "PhotoCheckVisionServiceTest"
+      ],
+      "javaExecuted": false,
+      "databaseExecuted": false,
+      "deviceExecuted": false,
+      "remainingCodeOrVerification": [
+        "Java与真实Redis未运行；普通Creator端点未有业务requestId，不能将本次nonce防重退款称作全部创建接口请求防重；真实provider结果与成本未知另列。"
+      ],
+      "originalGapPreserved": "日次数恢复缺陷归M0152当前修补；新增金额预算/供应商账单平台后置。",
+      "completeAcceptance": false
+    }
+  ],
+  "note": "32个C域原ID全部保留；没有继承193或候选100/15通过数；源码/测试编写不等业务验收"
+}

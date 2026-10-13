@@ -1,0 +1,331 @@
+{
+  "baseCommit": "e67e72a",
+  "files": [
+    {
+      "path": "chengyinhub-admin/sql/migration_20261013_roam_badge_delivery.sql",
+      "sha256": "d61e3da63b28e46cff6b77acc22cfb2f665dd6bcf9b0315c763189d56e79dec7"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261013_roam_reward_delivery.sql",
+      "sha256": "1c0bb85009f68b3ed5e631a26136175fc64cbaa53a2f5285843449360c6111b1"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261013_roam_session_record_archive.sql",
+      "sha256": "b3324e059d13605d207d0caddfd1f7b3d9e26d1d1007a1983b3c641c63e1a31a"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_ai_quota_reservation_recovery_20261013.sql",
+      "sha256": "774e7d431123ae959910612497741cb37326dd692246c7c08cf4d134016985ea"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiNpcController.java",
+      "sha256": "9931e7bd2e52cdc977929562ff3b1ff262db96663a682bfaddf1a57c0a4e428d"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+      "sha256": "45cdee110830cf308bdd27daef3a50808d3c094a38586282b3f6135059480d90"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+      "sha256": "3891960009c6817e9d9817798d1d603b04e386ff8a3b06e817702f2a75a93640"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/RoamQuotaCurrentReadContractTest.java",
+      "sha256": "e20aa999fabeb49b73c195ccafb139bd3b0294547f4926616c299ccbd19c14b3"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryMySqlRedisIT.java",
+      "sha256": "0d271daf28f21def5f0fac5e688ccfcc0a4b7dd1878eaeb01cbf208c9da9e3c2"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryServiceTest.java",
+      "sha256": "36703b036dca9dec0dc1aa433ce923518879c425624217d44dae92105fe897a7"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckVisionServiceTest.java",
+      "sha256": "401cc0db280c6ed71a6e01f11cddbefb75a2dc29c63333d5b6c345f0e2841a74"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImplTest.java",
+      "sha256": "1360b181d23c9dc192e1cf42fa6b76b63d70152773a8a3da1f14bec30a9ca3bf"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiQuotaReservationRedisIT.java",
+      "sha256": "b0215fd9a66b529fcc3e3a754384af677cb90874963d5d98893d02aa0f070037"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/PhotoCheckQuotaPoolTest.java",
+      "sha256": "e8cee3986d60840c96cbf01aa3fe975fd1aeb6cb5e300f314199478e65c5fa54"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImplTest.java",
+      "sha256": "3290d22b29fba5d96c75aa9313179f1564b2b61323e06134a3eaf53fbf571b69"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorServiceImplTest.java",
+      "sha256": "cde083865c087b77e9e36e121bde945d42ea110147e078958754c231900c90da"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java",
+      "sha256": "dd0e77f3f30f675d44d2ace4c12108bb501a89f3b03aa9248e73e21934eb57ae"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NpcChatServiceTest.java",
+      "sha256": "1d5b3a6d4cbd88f2db3beea1d18ec55946781f45a038ac2ca3ce9ab0d037d234"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitV51RuntimeTest.java",
+      "sha256": "99b817228c3d1e69e6d283f6d52a3757cb2fdb75260537b92e4d164c9dd05723"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RoamBadgeDeliveryTest.java",
+      "sha256": "4c534eee2afe255869ebc6f55c473eff12367e71c74970c548879c523a0b01c5"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RoamPoiApplicationServiceTest.java",
+      "sha256": "5a8d741067c5fc25b57d19ca3299478dd9ddf9d9b8a4ffc7ea32a4efceed1670"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RoamRewardDeliveryTest.java",
+      "sha256": "16555ff7a74bcca3ef0ec5115748abc47f966d384f166a7bdd80b110ad7da736"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RoamSessionArchiveTest.java",
+      "sha256": "e59833aac4598e54abb937cfef1b2f0a3974c614ec17f5395589a613dbf4eb94"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteCheckServiceImplTest.java",
+      "sha256": "60971bf56a53d4b1959483e44f6084d07a82c409320a1d1d43814ec38d28c6f0"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImplTest.java",
+      "sha256": "603c65ae498989b6b8ddc888f5f1ef78d8c2001b3df9b0516d765a812178cb1d"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WeRunFixtures.java",
+      "sha256": "272a45ca4dc00e8944773f0776b9450558d5b4710b25b11c8ed9d55d5450f7e5"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/CurrentPlayRegistrationTest.java",
+      "sha256": "8604951cfbdfd15562b4232261639ab63f62c515c9f058f773db112d14a81609"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/CurrentPlayTestFixtures.java",
+      "sha256": "7b33d7ee5e61eb61e8ebf1bf85e5ac1b719138e0446d7e9f9a9fd216e5d63e7c"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/WeRunDecryptorTest.java",
+      "sha256": "5fd2b8349df2d2c9a1b80f6681eb4eb0a2d8fa14b6d6894b1ebe17d2c28dd525"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAiNpcPassExpiryTest.java",
+      "sha256": "b64e06acabc6bdda0b54e1e9b29b5a2f93f882161d07b7cd9bd0a08280f7ca63"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCurrentUseBoundaryTest.java",
+      "sha256": "3a8fc733ef87b33b74dc15efe2641ada55b84e71c7b332cf7b7ca7acf9b121d4"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamAiContentApiGateTest.java",
+      "sha256": "28f39ed645a2f712baa13a8128d5fc3a5f5717c66d1f37ed590144183801c96b"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamSessionWriteMybatisIntegrationTest.java",
+      "sha256": "9705e2a74a564af875acf350161a54178bcd2aba31a403023550f81fb9d04b69"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamShopBadgeTest.java",
+      "sha256": "fe955bb0c156f70c8cc7ca5e3a38b6a3bf9302a1a5cdc1d14d4fe7b0792065f9"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/AiQuotaReservationRecord.java",
+      "sha256": "5d1d738a5bbb5a1e694dbfcc11d215e2bca0804721135ed6deb295d34fd88a19"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/AiQuotaReservationMapper.java",
+      "sha256": "91a53d4897d28bc8e869c9848e5cb2831037700890c9efe41f46a07d6a5b5bbb"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/NpcChatRequestMapper.java",
+      "sha256": "fe76104fb5afba487a4b08b749124a77f4785ff37e0b67f1117fa2afda7c3a6b"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RoamBadgeDeliveryMapper.java",
+      "sha256": "a5552ec8f19fb549b38d50454f7a97361696e4d939dd4c9d1c82c879fd2927c4"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RoamMapper.java",
+      "sha256": "cf66a112eaf8fb8f27855dce5d85b035db11dd04984467850913578cb829f493"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RoamRewardDeliveryMapper.java",
+      "sha256": "a7f7f62d4c9e8f340680bbb78cc06c5a1d19728a0f7eb23bebb1a0014ee25445"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RoamSessionRecordMapper.java",
+      "sha256": "ab620e4ba5876e5b86fba6744e579fe9105ee60547d83befcfff46262eacf1c3"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IRewardDropService.java",
+      "sha256": "51596e4e9587a3790f57f0daca373d44b6679c42446a0312c06ac3cd3150ba46"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ISmsCouponHistoryService.java",
+      "sha256": "b3069bf59ab73aa401faca6390a29879b62adce0623313769fa1f997d80751c4"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiGatewayService.java",
+      "sha256": "ebfbbbce98733194de0cab9ea480e04e5f139b27119b12b0e7477729642866fe"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryService.java",
+      "sha256": "d943ee2dcffe2ba25fb7027b74aeff65fc95eb9f33ece84de26e504c5e6e372f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java",
+      "sha256": "b1108b4e7acc729a6a56215e7b9a85ac9f22548b4b6521a81b98d672f9c412e9"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+      "sha256": "61e451d588e60c202a61ce8c3bbc3f64c1624e478da2586419ca87d1684c6a9d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java",
+      "sha256": "cab769bc60cceb0ad645c536bc8ca604087e7460e12d80760fb9e122abd20eae"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java",
+      "sha256": "8b4ca4780f86d01f8de52243b24fed0896a191ccc8b292af13880ebc04aff25b"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+      "sha256": "9ae0cb94fcc3ca83a87f3f5fed2e21ba7e04806495a7f111f977e59becd9539d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java",
+      "sha256": "aab02ade4944031f8eae7af60b5ab8f4c8c55a1748717895383c2b1e89f3e011"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamBadgeDeliveryService.java",
+      "sha256": "fe2ce757649e14ec5bd15f4bf213c1ae367f8863cb04742a5620c85b642041bf"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamPoiApplicationServiceImpl.java",
+      "sha256": "6607dba15941e6ef352bf05570c29897424d45d1c28d07939acd95cff8acc97d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamRewardDeliveryService.java",
+      "sha256": "90378122d957bdc2df719fc79f94989a6606f48c689c7590260adbdec3871d9a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamSessionWriteService.java",
+      "sha256": "19eb8a06246014c41b9191ced60ad08a950a38fda162292f5a794978c30971e6"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+      "sha256": "3763006222ba6bc738f272f0d6ccd3e1cc248a9d7f22fea295931db4c5ace19f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CurrentPlayRegistration.java",
+      "sha256": "b85ae2df2c6adb131700710cff1cbfd809e562e7199381d27194f2bfb36b7ec2"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ExploreTicketUsePolicy.java",
+      "sha256": "58042d8096aea3b975c0323a0cce14c4b90f0a0382e57cff4fc17dd47b669e6f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/RoamRecoveryService.java",
+      "sha256": "ad6daeddb06c2875976d4be457be44bff6f19304f2cf0994f2449c09e231ac78"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WeRunDecryptor.java",
+      "sha256": "b6276f8525b59804b0cd5ddd4df8993ddf19296f24cf4ddf082c548a0cb4cd34"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/AiQuotaRecoveryTask.java",
+      "sha256": "4d3f6644e3637fb061e1c78014ca10015daedc07177862ccba694de6877b652d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RoamRewardDeliveryTask.java",
+      "sha256": "bae467e9a74638cd12141c697c9b7fdc87b48354e1ca16e082ca74772d0ce717"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml",
+      "sha256": "de0be94334ef7fad441aa8a47a9ed21340ccbe61e18850f16f67364145ec1d5d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/NpcChatRequestMapper.xml",
+      "sha256": "c8fe533aca4ec91f98bda10af8099af048b3608009aa245d16f8e7afb63cb682"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RoamBadgeDeliveryMapper.xml",
+      "sha256": "82855f4c2d884d5bc1cd2351177f2ecdf70fa4360f0354fc248fb365ead2d48d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RoamMapper.xml",
+      "sha256": "bdce0cd62649fae66b513535aee7b854107716c1c6b701bf5094751248fed6c2"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RoamRewardDeliveryMapper.xml",
+      "sha256": "eb534b53098f70ad59fdc677fc0302249bea262c5d075274359354d20c24ad1f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RoamSessionRecordMapper.xml",
+      "sha256": "920a066b4bc171043d0f1cb94466727d38c716b8645a65c32dae8c4421369929"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/roam/index.js",
+      "sha256": "c7dad80ea5b21ee8871f74289b5551fb3d4d18faf65cc03783311e8e3b71fc14"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/roam-finish-distance.test.js",
+      "sha256": "de15aa8dbc830078fe54b19872264fee854b3320cdd3cac974d63c8035d5a18d"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/roam-location-release-contract.test.js",
+      "sha256": "ffa956b98b16b4699628275380a47d223d45e5f4c60862a51875c5c4c9f82cb5"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/roam-recovery-flow.test.js",
+      "sha256": "8d9dc580fb5ef8ef741b1ec7a54599b1182d9c929d98db05603f7ab0706b4e51"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/roam-start-real.test.js",
+      "sha256": "eaecf4183f70893a844d9893a8c8943a0a9acdf280eebe2eb54a8c4cfa381d3c"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/roam-tile-memory-sync.test.js",
+      "sha256": "2303605c1d6e3acea6136c600e5c9763005e4b95f216f119e6ae9ac2f688f70c"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/roam-track-filter.test.js",
+      "sha256": "73fdd2a9ae9eecbc55c0ab63e75a73c759da791bc150e0e42435a388b1434206"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/roam-cache-epoch.js",
+      "sha256": "fa8642d9f694b0a4fbe8d85c263ad1107c075338d89855cdc1826e4382a197c3"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/roam-player-memory.js",
+      "sha256": "d69d80201d27c93c6a21eaa79156829d3500027f5d03695b4ebef54714d392e2"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/roam-recovery.js",
+      "sha256": "7ed443ee2e6c583b48f25d33057cab6217fe5dc48fdd65ce6910435f0250578e"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/roam-tile-memory-sync.js",
+      "sha256": "b2ed5ebc1981eedb8cfc16bca8ff75274b170719cb060241772681396206738b"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/roam-track-filter.js",
+      "sha256": "72bcb55a97aee0efdf556756a7e5b29d8d1198861649865e2929c08438f46d51"
+    },
+    {
+      "path": "ci/migration-dependencies.json",
+      "sha256": "c157643829835a88ef023ea9d39a5c26fb331f4c2b1e6e37c42f56886b56a2c6"
+    }
+  ],
+  "count": 81,
+  "note": "最终业务源码、测试、4新迁移与原样依赖摘要；证据目录不参与循环摘要"
+}

@@ -175,7 +175,7 @@ test('finish已提交但timeout，冷重进只回读原结果，不重复奖励�
     if (o.url !== '/api/roam/finish') return original(o)
     calls.push({ url: o.url, data: o.data })
     const key = Object.keys(sessions)[0]
-    sessions[key] = { ...sessions[key], state: 'FINISHED', resultComplete: true, result: { totalXp: 7, medal: '原结算徽章' } }
+    sessions[key] = { ...sessions[key], state: 'FINISHED', resultComplete: true, badgeDelivery: [{ badgeCode: 'ROAM_TILES_50', state: 'DELIVERED' }], result: { totalXp: 7, medal: '原结算徽章' } }
     o.fail({ errMsg: 'request:fail timeout' })
   }
   const first = mount(); first._pendingTiles = ['wtw3sjq']; first._pois = []; first._dist = 10
@@ -552,4 +552,29 @@ test('C7异常跳点不改player，停止后的已排队定位回调不再记轨
   config._stopReal.call(page)
   page._realTick({ latitude: 31.2001, longitude: 121.5 })
   assert.deepEqual(page._track, [])
+})
+
+test('M0116已成功结算的待交付徽章不伪报到手，独立回读DELIVERED后显示原徽章', () => {
+  const page = mount(); page._roamSid = SID
+  const result = { totalXp: 7, medal: '原50格徽章', shopMedal: { code: 'ROAM_SHOP_STREAK', name: '原三店徽章' },
+    badgeDelivery: [{ badgeCode: 'ROAM_TILES_50', state: 'DUE' }, { badgeCode: 'ROAM_SHOP_STREAK', state: 'DUE' }] }
+  assert.equal(page._applyRoamFinishResult(result, true), true)
+  assert.equal(page.data.finish.xpAwarded, 7); assert.equal(page.data.finish.medal, ''); assert.equal(page.data.finish.shopMedal, null)
+  assert.equal(page._applyRoamFinishResult(result, true, result.badgeDelivery.map(r => ({ ...r, state: 'DELIVERED' }))), true)
+  assert.equal(page.data.finish.medal, '原50格徽章'); assert.equal(page.data.finish.shopMedal.name, '原三店徽章')
+  assert.equal(calls.filter(c => c.url === '/api/roam/finish').length, 0)
+})
+
+test('M0116阈值和DUE不能弹获得徽章，只有原DELIVERED收据可弹', () => {
+  const page = mount(); page._shopBadgeCfg = { name: 'pending badge' }
+  assert.equal(page._popMedal(), false); assert.equal(page.data.medal.show, false)
+  page._shopMedalFromServer = true; page.data.finish.shopMedal = { name: '原已交付徽章', statement: '原文案' }
+  assert.equal(page._popMedal(), true); assert.equal(page.data.medal.name, '原已交付徽章')
+})
+
+test('M0116缺原徽章交付状态是未核，不当已获得', () => {
+  const page = mount()
+  assert.equal(page._applyRoamFinishResult({ totalXp: 7, medal: '未核徽章', shopMedal: { code: 'ROAM_SHOP_STREAK', name: '未核店章' } }, true), true)
+  assert.equal(page.data.finish.medal, ''); assert.equal(page.data.finish.shopMedal, null); assert.equal(page._shopMedalFromServer, false)
+  assert.equal(page._popMedal(), false)
 })

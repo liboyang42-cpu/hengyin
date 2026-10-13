@@ -211,7 +211,7 @@ public class RoamPoiApplicationServiceImpl implements IRoamPoiApplicationService
     private void assertActiveQuota(Long memberId, MmsMerchant merchant) {
         UmsMember member = memberService.selectUmsMemberById(memberId);
         String role = roleService.resolveRole(member);
-        int used = roamMapper.countActiveNodesByMerchant(merchant.getId());
+        int used = roamMapper.countActiveNodesByMerchantForUpdate(merchant.getId());
         int max = merchantCommerceService.entitlement(memberId, role,
                 MerchantCommerceService.ENTITLEMENT_CITY_NODE, used).getLimit();
         if (used >= max) throw new IllegalStateException("在架据点已达上限(" + max + ")");

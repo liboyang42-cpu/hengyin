@@ -1,0 +1,14 @@
+{
+  "candidate": "docs/handoffs/mini-foundation-20261013/candidates/C-ai/candidate.patch",
+  "candidateSha256": "4573b86042563a65c5a39477dc8c068aa81defee2f55df03e1a7208a9de8d877",
+  "adaptation": [
+    "本项目已审AI候选按原身份接入并补持久台账/阶段/任务，不复制整外部库",
+    "transaction-outbox固定参考仅借独立提交意图/claim/fence思想；其Java17源码未引入Java8项目",
+    "localForage只借成功落盘才能确认语义，实际用wx存储及revision/epoch",
+    "WeRun保本项目服务端校验并补PKCS7/整数/日期，不引入WxJava",
+    "玩法/草稿/NPC保本项目原配置、当前资格、冻结/回执；新增桥和离线账后置"
+  ],
+  "sourceIndex": "docs/handoffs/mini-foundation-20261013/reference-rules.json",
+  "dependenciesAdded": false,
+  "frameworkOrConfigChanged": false
+}

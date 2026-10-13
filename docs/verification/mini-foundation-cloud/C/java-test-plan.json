@@ -1,0 +1,140 @@
+{
+  "note": "声明@Test数不是实际JUnit发现/通过数；Java执行0，不继承历史通过",
+  "suites": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/RoamQuotaCurrentReadContractTest.java",
+      "declaredTestAnnotations": 1,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryMySqlRedisIT.java",
+      "declaredTestAnnotations": 7,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryServiceTest.java",
+      "declaredTestAnnotations": 11,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckVisionServiceTest.java",
+      "declaredTestAnnotations": 13,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImplTest.java",
+      "declaredTestAnnotations": 32,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiQuotaReservationRedisIT.java",
+      "declaredTestAnnotations": 15,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/PhotoCheckQuotaPoolTest.java",
+      "declaredTestAnnotations": 5,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImplTest.java",
+      "declaredTestAnnotations": 100,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorServiceImplTest.java",
+      "declaredTestAnnotations": 34,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java",
+      "declaredTestAnnotations": 122,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NpcChatServiceTest.java",
+      "declaredTestAnnotations": 20,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitV51RuntimeTest.java",
+      "declaredTestAnnotations": 12,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RoamBadgeDeliveryTest.java",
+      "declaredTestAnnotations": 5,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RoamPoiApplicationServiceTest.java",
+      "declaredTestAnnotations": 19,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RoamRewardDeliveryTest.java",
+      "declaredTestAnnotations": 10,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RoamSessionArchiveTest.java",
+      "declaredTestAnnotations": 6,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteCheckServiceImplTest.java",
+      "declaredTestAnnotations": 32,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImplTest.java",
+      "declaredTestAnnotations": 74,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WeRunFixtures.java",
+      "declaredTestAnnotations": 0,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/CurrentPlayRegistrationTest.java",
+      "declaredTestAnnotations": 11,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/CurrentPlayTestFixtures.java",
+      "declaredTestAnnotations": 0,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/WeRunDecryptorTest.java",
+      "declaredTestAnnotations": 10,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAiNpcPassExpiryTest.java",
+      "declaredTestAnnotations": 8,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCurrentUseBoundaryTest.java",
+      "declaredTestAnnotations": 4,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamAiContentApiGateTest.java",
+      "declaredTestAnnotations": 5,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamSessionWriteMybatisIntegrationTest.java",
+      "declaredTestAnnotations": 13,
+      "executed": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamShopBadgeTest.java",
+      "declaredTestAnnotations": 10,
+      "executed": false
+    }
+  ]
+}

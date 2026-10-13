@@ -235,7 +235,7 @@ class RoamPoiApplicationServiceTest {
     @Test
     void approvalRechecksQuotaBeforePromotingClaim() {
         when(roamMapper.selectRoamApplicationById(600L)).thenReturn(pending(2));
-        when(roamMapper.countActiveNodesByMerchant(88L)).thenReturn(3);
+        when(roamMapper.countActiveNodesByMerchantForUpdate(88L)).thenReturn(3);
         when(merchantCommerceService.entitlement(7L, "merchant",
                 MerchantCommerceService.ENTITLEMENT_CITY_NODE, 3))
                 .thenReturn(new MerchantCommerceService.Entitlement(3, 3));
@@ -308,7 +308,7 @@ class RoamPoiApplicationServiceTest {
         offline.setMerchantId(88L);
         offline.setStatus(0);
         when(roamMapper.selectMerchantPoiOwned(501L, 88L)).thenReturn(offline);
-        when(roamMapper.countActiveNodesByMerchant(88L)).thenReturn(2);
+        when(roamMapper.countActiveNodesByMerchantForUpdate(88L)).thenReturn(2);
         when(merchantCommerceService.entitlement(7L, "merchant",
                 MerchantCommerceService.ENTITLEMENT_CITY_NODE, 2))
                 .thenReturn(new MerchantCommerceService.Entitlement(3, 2));
@@ -319,7 +319,7 @@ class RoamPoiApplicationServiceTest {
         InOrder gateOrder = inOrder(roamMapper);
         gateOrder.verify(roamMapper).lockMerchantForNodeReview(7L);
         gateOrder.verify(roamMapper).selectMerchantPoiOwned(501L, 88L);
-        gateOrder.verify(roamMapper).countActiveNodesByMerchant(88L);
+        gateOrder.verify(roamMapper).countActiveNodesByMerchantForUpdate(88L);
         gateOrder.verify(roamMapper).setNodeStatusOwned(501L, 88L, 1);
     }
 
