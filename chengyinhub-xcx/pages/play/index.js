@@ -33,6 +33,7 @@ const {
 const { readReducedMotion, writeReducedMotion } = require('../../utils/motion-preference.js');
 const { chinaParts, formatDayDots, toTimestamp } = require('../../utils/datetime.js');
 const npcFigure = require('./utils/npc-figure.js');   // 低模人形:几何代码里生成,不依赖模型资产
+const npcPending = require('../../utils/npc-pending-request.js');
 const { pickPlayKit, pickJourneyCheck, checkReceiptView, serverAction, serverPayload, dailySignRevealState, applyStoryVars } = require('./utils/playkit-view.js'); // v5.1 新玩法:会话视图→可渲染 kit
 
 const RUN_HOLD_MS = 3000;   // 主键长按结束:与漫游页 END_HOLD_MS 同一口径
@@ -583,6 +584,8 @@ Page({
     });
   },
   onShow() {
+    this._npcPageClosed = false; this._npcPageHidden = false;
+    if (this.data.shopNpc.show) { this._restoreShopNpcPending(); this._startNpcFigure(); }
     this.setData({ pageStyle: readPageStyle() });
     const npcFlags = app.globalData.features || {};
     this.setData({ shopNpcChatEnabled: npcFlags.shopNpcChat === true, shopNpcVoiceEnabled: npcFlags.shopNpcVoice === true });
@@ -735,7 +738,10 @@ Page({
   },
 
   onUnload() {
+    this._npcPageClosed = true;
+    this._npcReplyEpoch = (this._npcReplyEpoch || 0) + 1;
     this._cancelNpcRecording(false);
+    this._stopNpcFigure();
     this._themeHidden = true; this._stopThemePoll();
     this._themeEpoch = (this._themeEpoch || 0) + 1;
     if (this._gateTimer) clearTimeout(this._gateTimer);
@@ -773,7 +779,11 @@ Page({
   // 2026-08-20 并 master:开卡包的三个 timeout 与定位无关,该清照清;
   //    只把 master 那侧的 _watching=false / offLocationChange / stopLocationUpdate 三句拿掉。
   onHide() {
+    this._npcPageHidden = true;
+    this._npcReplyEpoch = (this._npcReplyEpoch || 0) + 1;
+    if (this._shopNpcPending) this.setData({ 'shopNpc.thinking': false, 'shopNpc.recovering': true });
     this._cancelNpcRecording();
+    this._stopNpcFigure();
     this._themeHidden = true; this._stopThemePoll();
     if (this._sound) { this._sound.dispose(); this._sound = null; }   // 回来时按当前氛围重起
     this._stopStoryDust();
@@ -1641,16 +1651,20 @@ Page({
    *  没写才回落到按时段拼的那句 —— 不要用模板顶掉作者写过的话。 */
   openShopNpc() {
     if (!this._canShopNpcChat()) return;
+    if (this._npcTimer) { clearTimeout(this._npcTimer); this._npcTimer = 0; }
     const v = this.data.hero.node || {};
     if (!v.nodeId) { cyToast('这家店还没有可对话的分身'); return; }
     if (!v.npcName) { cyToast('这家还没有店铺分身'); return; }
     const pending = this._shopNpcPending;
-    if ((pending && pending.owner === String(app.getUserID()) && String(pending.nodeId) === String(v.nodeId))
-        || (this.data.shopNpc.recovering && this._shopNpcOwner === String(app.getUserID()) && String(this.data.shopNpc.nodeId) === String(v.nodeId))) {
+    if (pending && npcPending.sameContext(pending, this._shopNpcContext(v.nodeId))) {
       this.setData({ 'shopNpc.show': true, 'shopNpc.open': true });
       this._startNpcFigure();
+      this._restoreShopNpcPending();
       return;
     }
+    this._npcReplyEpoch = (this._npcReplyEpoch || 0) + 1;
+    this._shopNpcPending = null;
+    this._shopNpcOwner = String(app.getUserID());
     const node = (this.data.nodes || []).find((n) => String(n.nodeId) === String(v.nodeId)) || {};
     const h = new Date().getHours();
     const hi = (h < 6 ? '凌晨好' : h < 11 ? '早上好' : h < 13 ? '中午好' : h < 18 ? '下午好' : '晚上好');
@@ -1661,7 +1675,47 @@ Page({
         greeting: authored || (hi + '，我是' + v.npcName + '，欢迎来到' + (v.name || '我们店铺')),
         started: false, msgs: [], input: '', thinking: false, thinkPhase: 0, nodeId: v.nodeId, ry: 0, recording: false,
       },
-    }, () => { this._npcTimer = setTimeout(() => { this.setData({ 'shopNpc.open': true }); this._startNpcFigure(); }, 30); });
+    }, () => { this._npcTimer = setTimeout(() => {
+      if (this._npcPageClosed || this._npcPageHidden || !this.data.shopNpc.show) return;
+      this.setData({ 'shopNpc.open': true }); this._startNpcFigure();
+    }, 30); });
+    this._restoreShopNpcPending();
+  },
+
+  _shopNpcContext(nodeId) {
+    const session = this.data.activityId ? 'activity:' + this.data.activityId : 'topic:' + this.data.topicId;
+    return npcPending.context(app.getUserID(), 'shop', nodeId || this.data.shopNpc.nodeId, session);
+  },
+
+  _restoreShopNpcPending() {
+    const target = this._shopNpcContext();
+    const changed = this._shopNpcActiveContext && !npcPending.sameContext(this._shopNpcActiveContext, target);
+    if (changed) {
+      this._npcReplyEpoch = (this._npcReplyEpoch || 0) + 1;
+      this._shopNpcPending = null;
+      this.setData({ 'shopNpc.msgs': [], 'shopNpc.input': '', 'shopNpc.thinking': false, 'shopNpc.recovering': false });
+    }
+    this._shopNpcActiveContext = target;
+    this._shopNpcOwner = target.owner;
+    const stored = npcPending.read(target);
+    if (stored.error) {
+      this.setData({ 'shopNpc.thinking': false, 'shopNpc.recovering': true,
+        'shopNpc.statusText': '无法读取原问题的恢复记录，请检查本机存储' });
+      return true;
+    }
+    if (!stored.pending) return !!changed;
+    if (this.data.shopNpc.thinking && this._shopNpcPending && this._shopNpcPending.requestId === stored.pending.requestId) return true;
+    this._shopNpcPending = stored.pending;
+    if (!this.data.shopNpc.show || this._npcPageClosed || this._npcPageHidden) return true;
+    let idx = this.data.shopNpc.msgs.findIndex(m => m.pending && m.pending.requestId === stored.pending.requestId);
+    if (idx < 0) {
+      this._pushShopNpcReply('回答结果待确认，正在核对原问题。');
+      idx = this.data.shopNpc.msgs.length - 1;
+    }
+    this.setData({ ['shopNpc.msgs.' + idx + '.pending']: stored.pending, 'shopNpc.recovering': true,
+      'shopNpc.started': true, 'shopNpc.thinking': true });
+    this._askShopNpc(undefined, idx);
+    return true;
   },
 
   /** 画那个人形。几何由 utils/npc-figure 生成(纯函数,可单测),这里只负责上色与绘制 ——
@@ -1669,6 +1723,8 @@ Page({
   _startNpcFigure() {
     const that = this;
     wx.createSelectorQuery().in(this).select('#npcFig').fields({ node: true, size: true }).exec((res) => {
+      if (this._npcPageClosed || this._npcPageHidden || !this.data.shopNpc.show) return;
+      this._stopNpcFigure();
       const item = res && res[0];
       if (!item || !item.node) return;
       const cv = item.node, ctx = cv.getContext('2d');
@@ -1821,9 +1877,12 @@ Page({
 
   _sendVoice(filePath, fileSize) {
     const s = this.data.shopNpc;
-    const owner = this._shopNpcOwner = String(app.getUserID());
+    if (s.thinking || s.recovering || this._restoreShopNpcPending()) return;
     const epoch = this._npcReplyEpoch = (this._npcReplyEpoch || 0) + 1;
     const requestId = uuid4();
+    const pending = Object.assign(this._shopNpcContext(), { requestId });
+    if (!npcPending.save(pending)) { cyToast('无法保存原问题的恢复记录，未发送语音'); return; }
+    this._shopNpcPending = pending;
     this.setData({ 'shopNpc.thinking': true, 'shopNpc.statusText': '正在识别语音并准备回答' });
     this._startThinkBeat();
     app.getUploadClient().uploadOne(filePath, {
@@ -1831,27 +1890,29 @@ Page({
       fileSize, maxFileSize: 2 * 1024 * 1024,
       formData: { nodeId: s.nodeId, requestId },
       onDone: (r) => {
-        if (epoch !== this._npcReplyEpoch || !this.data.shopNpc.show || this.data.shopNpc !== s || owner !== String(app.getUserID())) return;
+        if (epoch !== this._npcReplyEpoch || this._npcPageClosed || this._npcPageHidden || !this.data.shopNpc.show || this.data.shopNpc !== s || !npcPending.sameContext(pending, this._shopNpcContext())) return;
         if (!r.ok) {
           this._pushShopNpcReply('语音处理结果待确认，暂不能重复发送。');
-          this.setData({ 'shopNpc.recovering': true, 'shopNpc.statusText': '语音结果待确认，当前无法恢复' });
+          this.setData({ ['shopNpc.msgs.' + (this.data.shopNpc.msgs.length - 1) + '.pending']: pending });
+          this.setData({ 'shopNpc.recovering': true, 'shopNpc.statusText': '语音结果待确认，可核对原问题' });
           return;
         }
         const d = r.data || {};
         const asr = typeof d.asr === 'string' ? d.asr.trim() : '';
         if (!asr) {
           this._pushShopNpcReply('未收到识别文字，不能确认这段语音的结果。');
+          this.setData({ ['shopNpc.msgs.' + (this.data.shopNpc.msgs.length - 1) + '.pending']: pending });
           this.setData({ 'shopNpc.recovering': true, 'shopNpc.statusText': '识别结果待确认' });
           return;
         }
         const result = d.data || {};
-        const pending = { requestId, nodeId: s.nodeId, message: asr, owner };
-        const recovering = result.requestId !== requestId || result.outcomeStatus === 'PROCESSING' || result.errorCode === 'REQUEST_IN_PROGRESS' || result.errorCode === 'REQUEST_STATE_UNAVAILABLE';
+        const recovering = result.requestId !== requestId || !npcPending.isTerminal(result);
         const succeeded = !recovering && result.outcomeStatus === 'SUCCEEDED' && result.safetyDecision === 'PASS';
         const msgs = this.data.shopNpc.msgs.concat([{ id: this.data.shopNpc.msgs.length + 1, role: 'me', text: asr }]);
         this.setData({ 'shopNpc.msgs': msgs });
         this._pushShopNpcReply(recovering ? '回答结果待确认，请恢复原问题。' : (result.safeText || '暂时无法回答。'), undefined, succeeded ? result.audioUrl : undefined);
         const idx = this.data.shopNpc.msgs.length - 1;
+        if (!recovering) { npcPending.clear(pending); this._shopNpcPending = null; }
         this.setData({ ['shopNpc.msgs.' + idx + '.pending']: recovering ? pending : null,
           'shopNpc.recovering': recovering,
           'shopNpc.statusText': recovering ? '文字回复待确认' : succeeded ? '文字回复已完成' : result.safetyDecision === 'BLOCKED' ? '内容未通过安全检查' : result.errorCode === 'RATE_LIMITED' ? '对话次数已用完' : '对话暂不可用' });
@@ -1876,36 +1937,44 @@ Page({
     const s = this.data.shopNpc;
     const text = String(s.input || '').trim();
     if (!text || s.thinking || s.recovering) return;
+    if (this._restoreShopNpcPending()) return;
     const msgs = s.msgs.concat([{ id: s.msgs.length + 1, role: 'me', text }]);
     this.setData({ 'shopNpc.msgs': msgs, 'shopNpc.input': '', 'shopNpc.thinking': true, 'shopNpc.started': true });
     this._startThinkBeat();
     this._askShopNpc(text);
   },
 
-  /** 恢复只重放原对象与原问题，不把新生成当作重试。 */
+  /** 恢复只查询原请求，不重发会消费的模型请求。 */
   _askShopNpc(text, replaceIdx) {
     const prior = replaceIdx == null ? null : this.data.shopNpc.msgs[replaceIdx];
     const pending = prior && prior.pending ? prior.pending : {
-      requestId: uuid4(), nodeId: this.data.shopNpc.nodeId, message: text,
-      owner: String(app.getUserID()),
+      ...this._shopNpcContext(), requestId: uuid4(),
     };
-    if (pending.owner !== String(app.getUserID()) || String(pending.nodeId) !== String(this.data.shopNpc.nodeId)) return;
+    if (!npcPending.sameContext(pending, this._shopNpcContext())) return;
+    const readback = !!(prior && prior.pending);
+    if (!readback && !npcPending.save(pending)) {
+      this.setData({ 'shopNpc.thinking': false, 'shopNpc.statusText': '无法保存恢复记录，原问题未发送' });
+      return;
+    }
     this._shopNpcPending = pending;
     const conversation = this.data.shopNpc;
     const epoch = this._npcReplyEpoch = (this._npcReplyEpoch || 0) + 1;
-    req('/api/ai/npc/shop-chat', 'POST', { requestId: pending.requestId, nodeId: pending.nodeId, message: pending.message }, { 'content-type': 'application/json' }, true).then((r) => {
-      if (epoch !== this._npcReplyEpoch || !this.data.shopNpc.show || this.data.shopNpc !== conversation || pending.owner !== String(app.getUserID())) return;
+    const request = readback
+      ? req('/api/ai/npc/request-status', 'GET', { requestId: pending.requestId, scope: pending.scope, bizId: pending.bizId }, undefined, true)
+      : req('/api/ai/npc/shop-chat', 'POST', { requestId: pending.requestId, nodeId: this.data.shopNpc.nodeId, message: text }, { 'content-type': 'application/json' }, true);
+    request.then((r) => {
+      if (epoch !== this._npcReplyEpoch || this._npcPageClosed || this._npcPageHidden || !this.data.shopNpc.show || this.data.shopNpc !== conversation || !npcPending.sameContext(pending, this._shopNpcContext())) return;
       const d = (r && r.data) || {};
       const denied = String(r.code) === '403' || String(r.code) === '401';
-      const unknown = !denied && (r.netFail || r.httpFail || d.requestId !== pending.requestId);
-      const recovering = unknown || d.outcomeStatus === 'PROCESSING' || d.errorCode === 'REQUEST_IN_PROGRESS' || d.errorCode === 'REQUEST_STATE_UNAVAILABLE';
-      const succeeded = !unknown && String(r.code) === '200' && d.outcomeStatus === 'SUCCEEDED' && d.safetyDecision === 'PASS';
-      if (!recovering) this._shopNpcPending = null;
+      const unknown = (!denied || readback) && (r.netFail || r.httpFail || d.requestId !== pending.requestId);
+      const recovering = unknown || (!denied && (String(r.code) !== '200' || !npcPending.isTerminal(d))) || (readback && denied);
+      const succeeded = !recovering && !denied && d.outcomeStatus === 'SUCCEEDED' && d.safetyDecision === 'PASS';
+      if (!recovering) { npcPending.clear(pending); this._shopNpcPending = null; }
       const stateText = recovering ? '回答结果待确认' : succeeded ? '文字回复已完成'
         : d.errorCode === 'RATE_LIMITED' ? '对话次数已用完'
         : d.safetyDecision === 'BLOCKED' ? '内容未通过安全检查'
         : denied ? '当前不能对话' : '对话暂不可用';
-      const reply = unknown ? '回答结果待确认，请恢复原问题，不要重复发送。'
+      const reply = recovering ? '回答结果待确认，请恢复原问题，不要重复发送。'
         : (d.safeText || (denied ? '当前无法对话，请确认通行证和店铺开放状态。' : '暂时无法回答，请稍后再来。'));
       this._pushShopNpcReply(reply, replaceIdx, succeeded ? d.audioUrl : undefined);
       const idx = replaceIdx == null ? this.data.shopNpc.msgs.length - 1 : replaceIdx;
@@ -1973,10 +2042,10 @@ Page({
     const idx = Number(e.currentTarget.dataset.idx);
     const item = s.msgs[idx];
     if (s.thinking || !item || !item.pending) return;
-    if (item.pending.owner !== String(app.getUserID()) || String(item.pending.nodeId) !== String(s.nodeId)) return;
+    if (!npcPending.sameContext(item.pending, this._shopNpcContext())) { this._restoreShopNpcPending(); return; }
     this.setData({ 'shopNpc.thinking': true });
     this._startThinkBeat();
-    this._askShopNpc(item.pending.message, idx);
+    this._askShopNpc(undefined, idx);
   },
 
   /** 卡片飞到位之后自转一整圈:一圈之内正面、右脊、背面、左脊各露一次,
