@@ -17,6 +17,7 @@
 (实证:migration_c3_team_job.sql 至今注册着 autoRefundTask,而该 bean 已从代码里拆除 ——
  这是【注销没落库】,反射性补注册会把一条全自动微信原路退款接回生产。方向搞反会出事。)
 """
+import ast
 import json
 import os
 import re
@@ -661,6 +662,82 @@ def select_added_migrations(root, base):
     return names
 
 
+def check_manifest_dependency_order(manifest, batch, dependencies):
+    """Validate the actual ledger order, including every declared edge and batch path."""
+    migrations = manifest.get("migrations", [])
+    problems = []
+    ids = [m["migrationId"] for m in migrations]
+    paths = [m["path"] for m in migrations]
+    if len(ids) != len(set(ids)) or len(paths) != len(set(paths)):
+        problems.append("duplicate migration identity or path")
+    positions = {migration_id: index for index, migration_id in enumerate(ids)}
+    for name in batch:
+        path = SQL_DIRS[0] + "/" + name
+        if paths.count(path) != 1:
+            problems.append("batch path missing or duplicated: " + path)
+    for index, migration in enumerate(migrations, 1):
+        migration_id = migration["migrationId"]
+        expected = sorted(set(dependencies.get(migration_id, [])))
+        if migration.get("order") != index or migration.get("dependsOn") != expected:
+            problems.append("ledger order/dependency metadata mismatch: " + migration_id)
+        for dependency in expected:
+            if dependency not in positions or positions[dependency] >= positions[migration_id]:
+                problems.append("dependency must run first: %s -> %s" % (migration_id, dependency))
+    for migration_id in dependencies:
+        if migration_id not in positions:
+            problems.append("declared dependency owner missing: " + migration_id)
+    return problems
+
+
+def check_schema_manifest_order_source(source):
+    """Bind the gate to the real schema runner's import, ordered selection and execution."""
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return ["schema runner syntax invalid"]
+    imported = any(isinstance(node, ast.ImportFrom) and node.module == "ci.migration_ledger"
+                   and any(alias.name == "build_manifest" and alias.asname is None
+                           for alias in node.names) for node in tree.body)
+    main = next((node for node in tree.body if isinstance(node, ast.FunctionDef)
+                 and node.name == "main"), None)
+    if not imported or main is None:
+        return ["schema runner must import the shared build_manifest and define main"]
+    expected = [
+        'manifest = build_manifest(REPO, target_commit=head, dependency_path=REPO / "ci/migration-dependencies.json")',
+        'all_migrations = manifest["migrations"]',
+        'selected = migrations_after_baseline(all_migrations)',
+        'ordered = [m for m in selected if m.get("executionPhase") != "POST_DEPLOY"]',
+    ]
+    indices = []
+    problems = []
+    for statement in expected:
+        wanted = ast.parse(statement).body[0]
+        target = wanted.targets[0].id
+        writes = [node for node in ast.walk(main) if isinstance(node, ast.Name)
+                  and isinstance(node.ctx, (ast.Store, ast.Del)) and node.id == target]
+        matches = [i for i, node in enumerate(main.body)
+                   if ast.dump(node) == ast.dump(wanted)]
+        if len(matches) != 1 or len(writes) != 1:
+            problems.append("schema runner must preserve ledger selection: " + target)
+        else:
+            indices.append(matches[0])
+    loops = [i for i, node in enumerate(main.body) if isinstance(node, ast.For)
+             and isinstance(node.target, ast.Name) and node.target.id == "m"
+             and isinstance(node.iter, ast.Name) and node.iter.id == "ordered"
+             and node.body and isinstance(node.body[0], ast.Expr)
+             and ast.dump(node.body[0].value) == ast.dump(ast.parse(
+                 'run_file(cur, REPO / m["path"], m["migrationId"], results, keep_going=a.keep_going, schema_only=True, observations=observations)',
+                 mode="eval").body)]
+    if len(loops) != 1 or len(indices) != 4 or indices != sorted(indices) or (loops and indices[-1] >= loops[0]):
+        problems.append("schema runner must execute the ledger selection in its original order")
+    flow = {"manifest", "all_migrations", "selected", "ordered"}
+    for node in ast.walk(main):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+            if isinstance(node.func.value, ast.Name) and node.func.value.id in flow:
+                problems.append("schema runner must not mutate ledger selection")
+    return problems
+
+
 def _cmd_dep_order(root, argv):
     """用法:dep-order --base <ref>   或   dep-order <文件...>(手工核查用)。
 
@@ -701,9 +778,6 @@ def _cmd_dep_order(root, argv):
     if not batch:
         print("  (本分支没有【新增】迁移,跳过批内排序 —— 仅修改历史迁移不参与本批排序)")
         return 0
-    sql_dir = os.path.join(root, SQL_DIRS[0])
-    all_files = [f for f in os.listdir(sql_dir) if f.endswith(".sql")]
-
     undeclared = check_dependency_declared(batch, dependencies)
     if undeclared:
         print("::error::本批新增的迁移没有依赖声明 —— 顺序门只看得见已声明的边,不写就等于没被检查")
@@ -716,25 +790,24 @@ def _cmd_dep_order(root, argv):
         print("          确实不依赖本仓任何其它迁移,就写空数组 [] —— 那是一句明确的声明,不是省略。")
         return 1
 
-    violations = check_dependency_order(batch, all_files, dependencies)
-    if violations:
-        print("::error::本批迁移按文件名顺序跑会踩到依赖 —— 落库那一刻当场失败")
-        for name, dep_name in violations:
-            print("  ✗ %s" % name)
-            print("      必须先跑 %s,但它的文件名排在后面" % dep_name)
-        print("  为什么:人落一批迁移最自然的做法就是 `ls` 出来按顺序跑。2026-08-18 实测,")
-        print("          探店日候选那 25 条这么跑,r7_distribution_backfill 第 1 句就")
-        print("          1054 Unknown column 'organizer.declared_by' 当场挂。")
-        print("  怎么修:把【被依赖的那个文件改名】,让它的文件名排在前面。")
-        print("          尚未落库的迁移可以随便改名 —— 候选那批就是这么修的,")
-        print("          migration_shop_day_organizer_actor_20260815.sql →")
-        print("          migration_20260815_shop_day_organizer_actor.sql,一次改名两对全消。")
-        print("  ⚠️ 不要靠删/改依赖声明来消这条红。那是把「顺序不对」改成「我不知道顺序」,")
-        print("     闸会转绿而风险原样留在生产落库那一刻 —— 这条红说的是真的会 1054。")
-        print("     声明确实写错了要改,那就单独一个 commit、写清为什么它不需要先跑,")
-        print("     并且要过下面那道「声明只许加不许删」的闸。")
+    from migration_ledger import LedgerError, build_manifest
+    try:
+        target = subprocess.run(["git", "-C", root, "rev-parse", "HEAD"],
+                                capture_output=True, text=True, check=True).stdout.strip()
+        manifest = build_manifest(root, target_commit=target, dependencies=dependencies)
+        violations = check_manifest_dependency_order(manifest, batch, dependencies)
+        with open(os.path.join(root, "scripts/e2e/build_schema.py"), encoding="utf-8") as handle:
+            violations.extend(check_schema_manifest_order_source(handle.read()))
+    except (LedgerError, OSError, subprocess.CalledProcessError) as exc:
+        print("::error::无法验证共享 migration 台账执行序: %s" % exc)
         return 1
-    print("  OK: 本批新增 %d 个迁移,均已声明依赖,且按文件名顺序跑即满足全部批内依赖" % len(batch))
+    if violations:
+        print("::error::共享 migration 台账或 schema 执行器依赖顺序不安全")
+        for violation in violations:
+            print("  ✗ " + violation)
+        return 1
+    print("  OK: 本批新增 %d 个迁移均被共享台账覆盖,全部依赖边顺序正确;schema 执行器使用同一拓扑序" % len(batch))
+    print("  必须通过台账执行;裸 ls 顺序未经验证,不得用于落库。")
     return 0
 
 

@@ -12,6 +12,7 @@
 那个真病例文件哪天真被删,引用它的单测就白做了。所以形状照抄、文件自造。
 """
 import json
+import copy
 import hashlib
 import os
 import re
@@ -28,6 +29,8 @@ from migration_gates import (  # noqa: E402
     check_dependency_declared,
     check_dependency_ratchet,
     check_dependency_order,
+    check_manifest_dependency_order,
+    check_schema_manifest_order_source,
     select_added_migrations,
     check_pr_declaration,
     check_sql_text,
@@ -1116,6 +1119,77 @@ class 依赖声明棘轮(unittest.TestCase):
         """只报第一条 = 修完一条又红一条,人会以为门禁在抖。"""
         lost = check_dependency_ratchet({"a": []}, {"a": ["b", "c", "d"]})
         self.assertEqual(len(lost), 3)
+
+
+class SharedLedgerExecutionOrder(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="ledger-order-gate-")
+        sql = os.path.join(self.tmp, "chengyinhub-admin/sql")
+        os.makedirs(sql)
+        for name in ("a_child", "z_parent"):
+            with open(os.path.join(sql, "migration_" + name + ".sql"), "w") as handle:
+                handle.write("SELECT 1;\n")
+        self.dependencies = {"a_child": ["z_parent"], "z_parent": []}
+        self.batch = ["migration_a_child.sql", "migration_z_parent.sql"]
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def manifest(self, dependencies=None):
+        from migration_ledger import build_manifest
+        return build_manifest(self.tmp, "a" * 40,
+                              dependencies=self.dependencies if dependencies is None else dependencies)
+
+    def test_real_ledger_resolves_filename_conflict_and_covers_all_edges(self):
+        self.assertTrue(check_dependency_order(self.batch, self.batch, self.dependencies))
+        self.assertEqual(check_manifest_dependency_order(self.manifest(), self.batch,
+                                                         self.dependencies), [])
+
+    def test_missing_edge_reversed_order_and_missing_batch_path_are_rejected(self):
+        original = self.manifest()
+        mutations = []
+        missing_edge = copy.deepcopy(original)
+        missing_edge["migrations"][1]["dependsOn"] = []
+        mutations.append(missing_edge)
+        reversed_order = copy.deepcopy(original)
+        reversed_order["migrations"].reverse()
+        for index, migration in enumerate(reversed_order["migrations"], 1):
+            migration["order"] = index
+        mutations.append(reversed_order)
+        missing_path = copy.deepcopy(original)
+        missing_path["migrations"] = missing_path["migrations"][:1]
+        mutations.append(missing_path)
+        duplicate_path = copy.deepcopy(original)
+        duplicate_path["migrations"].append(duplicate_path["migrations"][0])
+        mutations.append(duplicate_path)
+        for manifest in mutations:
+            with self.subTest(manifest=manifest):
+                self.assertTrue(check_manifest_dependency_order(manifest, self.batch,
+                                                                self.dependencies))
+
+    def test_real_ledger_rejects_missing_dependency_and_cycle(self):
+        from migration_ledger import LedgerError
+        for dependencies in ({"a_child": ["absent"]},
+                             {"a_child": ["z_parent"], "z_parent": ["a_child"]}):
+            with self.subTest(dependencies=dependencies), self.assertRaises(LedgerError):
+                self.manifest(dependencies)
+
+    def test_actual_schema_runner_uses_ledger_order_and_mutations_are_rejected(self):
+        with open(os.path.join(REPO_ROOT, "scripts/e2e/build_schema.py"), encoding="utf-8") as handle:
+            source = handle.read()
+        self.assertEqual(check_schema_manifest_order_source(source), [])
+        mutations = [
+            source.replace("from ci.migration_ledger import build_manifest,", "from unrelated import build_manifest,"),
+            source.replace('all_migrations = manifest["migrations"]', 'all_migrations = sorted(manifest["migrations"])'),
+            source.replace("selected = migrations_after_baseline(all_migrations)", "selected = []"),
+            source.replace("for m in ordered:", "for m in reversed(ordered):"),
+            source.replace("for m in ordered:", "ordered.reverse()\n    for m in ordered:"),
+            source.replace("REPO / m[\"path\"], m[\"migrationId\"]", "REPO / \"other.sql\", m[\"migrationId\"]"),
+        ]
+        for mutated in mutations:
+            with self.subTest(mutation=mutations.index(mutated)):
+                self.assertNotEqual(source, mutated)
+                self.assertTrue(check_schema_manifest_order_source(mutated))
 
 
 class 依赖顺序门禁_选批口径(unittest.TestCase):
