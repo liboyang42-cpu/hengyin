@@ -549,8 +549,8 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-09-25 CU-M-92 受邀商家承接视图:project-join 底栏主按钮拆成「扫码核销 / 原主按钮」两个互斥分支,各 1 tap ⇒ 1746 → 1747(重建实测)。
   // 2026-09-30 最终源码重建实测:local tap 1781 → 1785;实际增删/能力分类见本轮差分证据。
   // 2026-10-06 合并弹窗/模板分支与最新主线后按最终源码重建，数值待生成台账后校准。
-  // W2 源码重建：本地 tap 1800、事件 2326、外部能力 336，合计 4462；证据状态不变。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1800)  /* 2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  // W2 源码重建：本地 tap 1810、事件 2329、外部能力 337，合计 4476；证据状态不变。
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1810)  /* 2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -757,7 +757,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-09-30 项目近期动态首次失败/保留数据重试各新增1个事件合同；本地事件合同 2298 → 2300，tap分母不变。
   // 2026-10-06 合并最新主线后按最终源码重建，数值待生成台账后校准。
   // 2026-09-27 主页空区隐藏与失败保留旧数据：移除四个旧状态控件。
-  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2326)  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
+  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2329)  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
   // 商家承接接入 cy-date-range-sheet 后新增 confirm / cancel 两条事件合同，1662 → 1664。
   // 合作页将会话失效与无权限拆为两个 cy-empty CTA，新增 goLogin / goWorkbench 两条事件合同，1664 → 1666。
   //   带一个 bind:cta 首发引导(+1),净 -2;同批新增两条 cy-state-shell 的 bind:primary
@@ -1051,6 +1051,22 @@ test('结算 CTA 按同意与报价就绪态穷尽真实请求链，报价失败
   ])
   assert.deepEqual(pending.requiredRequestOutcomes['quote-error-then-create-error'], ['success', 'error', 'error'])
   assert.equal(pending.requiredCapabilityByBranch['payment-cancelled'], 'requestPayment')
+})
+
+test('配置草稿台账按实际版本与新建更新分支登记，重试只读且禁止重复发送', () => {
+  const control = buildLedger().controls.find(item => item.control.handler === 'saveConfigDraft')
+  assert.ok(control)
+  for (const [name, url] of Object.entries({ create: '/api/topic/create', update: '/api/topic/update',
+    'v2-create': '/api/topic/v2/create', 'v2-update': '/api/topic/v2/update' })) {
+    assert.deepEqual(control.requiredRequestsByBranch[`${name}-success`].map(row => [row.urlTemplate, row.kind]),
+      [[url, 'write'], ['/api/topic/edit-detail', 'read']])
+    assert.equal(control.requiredRequestsByBranch[`${name}-timeout`].length, 1)
+    assert.deepEqual(control.requiredRequestOutcomes[`${name}-readback-error`], ['success', 'error'])
+  }
+  assert.deepEqual(control.requiredRequestsByBranch['readback-retry-success'],
+    [{ urlTemplate: '/api/topic/edit-detail', method: 'POST', kind: 'read' }])
+  assert.deepEqual(control.requiredRequestsByBranch['duplicate-trigger'], [])
+  assert.ok(!control.targets.writeApis.includes('/api/topic/edit-detail'))
 })
 
 test('按钮台账不把定位回调的 reveal 或 GET ending 冒充当前点击的第二次写入', () => {
@@ -1370,7 +1386,7 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 2026-09-30 项目铃铛接真实近期动态列表，首次加载失败与保留数据重试新增2个事件合同；重建实测 4396 → 4398。
   // 清空聊天取消确认及互斥的确认分支各新增1个事件合同，tap分母不变。
   // 2026-10-06 合并最新主线与弹窗分支后按生成台账校准。
-  assert.equal(ledger.controlCount, 4462)  /* 2026-10-13 W2 原八线恢复与失败重试入口，逐源重建；未改变动态证据状态。 */
+  assert.equal(ledger.controlCount, 4476)  /* 2026-10-13 W2 原八线恢复与失败重试入口，逐源重建；未改变动态证据状态。 */
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。

@@ -180,7 +180,7 @@ function createServerDraftWorkflow(request, initialId) {
         const returnedId = res.data && typeof res.data === 'object' ? res.data.topicId : res.data;
         if (!numberId(returnedId) || (topicId && String(returnedId) !== String(topicId))) {
           state = topicId ? 'readbackFailed' : 'unknownCreate';
-          handlers.onFail('保存回执编号不匹配，内容已保留');
+          handlers.onFail('保存结果与当前草稿不一致，内容已保留');
           return;
         }
         topicId = returnedId;

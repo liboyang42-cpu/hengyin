@@ -113,6 +113,32 @@ function twoStepWritePlan(first, second, forbiddenIndex = 0) {
   }
 }
 
+function configDraftSavePlan() {
+  const read = { urlTemplate: '/api/topic/edit-detail', method: 'POST', kind: 'read' }
+  const byBranch = {}, outcomes = {}
+  for (const [name, url] of Object.entries({
+    'create': '/api/topic/create', 'update': '/api/topic/update',
+    'v2-create': '/api/topic/v2/create', 'v2-update': '/api/topic/v2/update',
+  })) {
+    const write = { urlTemplate: url, method: 'POST', kind: 'write' }
+    for (const failure of ['success', 'error', 'timeout', 'forbidden-owner']) {
+      const branch = `${name}-${failure}`
+      byBranch[branch] = failure === 'success' ? [write, read] : [write]
+      outcomes[branch] = failure === 'success' ? ['success', 'success'] : [failure]
+    }
+    const branch = `${name}-readback-error`
+    byBranch[branch] = [write, read]
+    outcomes[branch] = ['success', 'error']
+  }
+  for (const outcome of ['success', 'error', 'timeout']) {
+    byBranch[`readback-retry-${outcome}`] = [read]
+    outcomes[`readback-retry-${outcome}`] = [outcome]
+  }
+  byBranch['duplicate-trigger'] = []
+  outcomes['duplicate-trigger'] = []
+  return { requiredRequestsByBranch: byBranch, requiredRequestOutcomes: outcomes, requiredBranches: Object.keys(byBranch) }
+}
+
 function photoCompletionPlan() {
   const upload = { urlTemplate: '/api/common/uploadOSS', method: 'POST', kind: 'write' }
   const complete = { urlTemplate: '/api/city/nodes/{param}/complete', method: 'POST', kind: 'write' }
@@ -555,6 +581,11 @@ const ACTION_VARIANTS = new Map([
       id: 'edit', handler: 'onSubmit', predicate: { registrationId: { $not: 0 } },
       apis: ['/api/registration/merchant/update'],
     },
+  ]],
+  ['pages/publish/fabu/index.js:saveConfigDraft', [
+    { id: 'config-draft', handler: 'saveConfigDraft',
+      apis: ['/api/topic/create', '/api/topic/update', '/api/topic/v2/create', '/api/topic/v2/update', '/api/topic/edit-detail'],
+      ...configDraftSavePlan() },
   ]],
   ['pages/publish/fabu/index.js:submitForm', [
     { id: 'create-precheck', handler: 'runPublishPrecheck', predicate: { editingTopicId: '' }, apis: ['/api/ai/safety/precheck'] },
