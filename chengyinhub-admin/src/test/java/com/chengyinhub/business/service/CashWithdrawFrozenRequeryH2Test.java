@@ -115,6 +115,16 @@ class CashWithdrawFrozenRequeryH2Test {
         ReflectionTestUtils.setField(target, "mapper", mapper);
         ReflectionTestUtils.setField(target, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(target, "wechatPayService", wechatPayService);
+        com.chengyinhub.business.service.impl.CashWithdrawFailureRecoveryService recovery =
+                new com.chengyinhub.business.service.impl.CashWithdrawFailureRecoveryService();
+        ReflectionTestUtils.setField(recovery, "mapper", mapper);
+        ReflectionTestUtils.setField(recovery, "umsMemberService", umsMemberService);
+        org.springframework.aop.framework.ProxyFactory recoveryProxy = new org.springframework.aop.framework.ProxyFactory(recovery);
+        recoveryProxy.setProxyTargetClass(true);
+        recoveryProxy.addAdvice(new org.springframework.transaction.interceptor.TransactionInterceptor(
+                new org.springframework.jdbc.datasource.DataSourceTransactionManager(dataSource),
+                new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource()));
+        ReflectionTestUtils.setField(target, "failureRecoveryService", recoveryProxy.getProxy());
         ReflectionTestUtils.setField(target, "alarmService", mock(AlarmService.class));
         com.chengyinhub.business.service.IPlayerWithdrawalCooldownService cooldownStub = mock(com.chengyinhub.business.service.IPlayerWithdrawalCooldownService.class);
         when(cooldownStub.frozenAmount(org.mockito.ArgumentMatchers.anyLong()))

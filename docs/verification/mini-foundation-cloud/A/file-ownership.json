@@ -1,0 +1,335 @@
+{
+  "files": [
+    {
+      "path": "chengyinhub-admin/sql/migration_mini_foundation_coupon_source_grant_20261013.sql",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+      "owner": "A"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiVerifyController.java",
+      "owner": "A"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/FreeSelfPlayCreateRealDbIT.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/MerchantSubscriptionBoundaryMyBatisTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawFailureRecoveryTransactionTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawFrozenRequeryH2Test.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawStateMachineTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistClaimMembershipRaceTransactionTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistMaintenanceCursorTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistMaintenanceIsolationTransactionTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistServiceImplTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CouponSourceGrantTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreNeverWholeOrderSettleTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemRecordTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantCommerceServiceTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/OfficialV1CapacityMySqlTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PaymentCallbackFenceEntryTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationCurrentUseGateTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationPaymentAtomicityContractTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerificationAuditTransactionBoundaryTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/StoreVerifyGrowthDeliveryTransactionTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/VerificationQrcodeRepairTaskTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawServiceTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ClubOperationBenefitTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/MoneyPathContractTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialEventContractTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RegistrationSignupNotificationServiceTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RewardDropServiceTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SelfPlayPassIdempotencyTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SettlementServiceImplTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TicketSourceAttributionTrustBoundaryTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImplTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/ExploreTicketUsePolicyTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/task/OrderCloseUnpaidCursorTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/task/RefundReconcileTaskTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationCompletionCouponTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiVerifyControllerTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ExploreIssueCodeGateTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ExploreScanDispatchTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ScanContextSharedGateTest.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CouponSourceGrant.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ClubEventOpsMapper.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsRegistrationMapper.java",
+      "owner": "A"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CouponSourceGrantMapper.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/EventSignupMapper.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RefundApplicationMapper.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RewardDropLogMapper.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsRegistrationService.java",
+      "owner": "A"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IRewardDropService.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ISmsCouponHistoryService.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ISystemNotificationIntentService.java",
+      "owner": "B单一owner先导cherry-pick；A不编辑"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawFailureRecoveryService.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java",
+      "owner": "A"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java",
+      "owner": "A"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "owner": "A"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java",
+      "owner": "A"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialEventServiceImpl.java",
+      "owner": "READ_ONLY_SHARED"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java",
+      "owner": "A"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationSignupNotificationService.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RewardDropServiceImpl.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementServiceImpl.java",
+      "owner": "A"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
+      "owner": "A"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java",
+      "owner": "A"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ExploreTicketUsePolicy.java",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java",
+      "owner": "A"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java",
+      "owner": "A"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/VerificationQrcodeRepairTask.java",
+      "owner": "A"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml",
+      "owner": "READ_ONLY_SHARED"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "owner": "A"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CouponSourceGrantMapper.xml",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/EventSignupMapper.xml",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/MerchantSubscriptionMapper.xml",
+      "owner": "A"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/PlayTeamMapper.xml",
+      "owner": "A"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+      "owner": "A"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RewardDropLogMapper.xml",
+      "owner": "A域新文件/已协调的域扩展"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/activity/baoming/baoming.js",
+      "owner": "A"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/baoming-submit-inline-error.test.js",
+      "owner": "A域新文件/已协调的域扩展"
+    }
+  ],
+  "explicitCoordinatedOwners": [
+    "RewardDropService/RewardDropLogMapper: A原奖励来源",
+    "OfficialEventService/OfficialEventMapper/EventSignupMapper: A原V1容量",
+    "ClubEventOpsMapper候补扫描片段: A",
+    "TeamGroupServiceImpl原取消内支付补记单一调用: A"
+  ],
+  "sharedEdits": "B接口原样挑入；其他共享/CI/依赖/鉴权不改"
+}

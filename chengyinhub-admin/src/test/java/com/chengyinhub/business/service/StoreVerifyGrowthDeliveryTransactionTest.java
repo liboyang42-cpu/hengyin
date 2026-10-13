@@ -49,6 +49,7 @@ import static org.mockito.Mockito.when;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class StoreVerifyGrowthDeliveryTransactionTest {
     private String database;
+    private boolean createdDatabase;
     private JdbcTemplate admin;
     private JdbcTemplate db;
     private ICmsRegistrationService registrationService;
@@ -64,6 +65,7 @@ class StoreVerifyGrowthDeliveryTransactionTest {
         database = "chengyin_growth_tx_" + UUID.randomUUID().toString().replace("-", "");
         admin = new JdbcTemplate(new DriverManagerDataSource(config.adminUrl(), config.user(), config.password()));
         admin.execute("CREATE DATABASE " + database + " CHARACTER SET utf8mb4");
+        createdDatabase = true;
         DriverManagerDataSource source = new DriverManagerDataSource(
                 config.databaseUrl().replace("/" + config.databaseName() + "?", "/" + database + "?"),
                 config.user(), config.password());
@@ -131,7 +133,7 @@ class StoreVerifyGrowthDeliveryTransactionTest {
     @AfterAll
     void cleanup() {
         if (database == null || admin == null) return;
-        admin.execute("DROP DATABASE " + database);
+        if (createdDatabase) { admin.execute("DROP DATABASE " + database); createdDatabase = false; }
         assertEquals(0, admin.queryForObject(
                 "SELECT count(*) FROM information_schema.schemata WHERE schema_name=?", Integer.class, database));
     }

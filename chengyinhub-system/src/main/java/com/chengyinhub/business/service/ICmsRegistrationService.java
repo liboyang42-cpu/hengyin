@@ -203,6 +203,9 @@ public interface ICmsRegistrationService
      */
     public String handleWechatPayCallback(Map<String, String> resultMap);
 
+    /** 仅原取消活动事务内的真实渠道SUCCESS查询补记；不是回调/免验证入口。 */
+    public String applyConfirmedWechatPaymentWithinTransaction(Map<String, String> resultMap);
+
     /** 零现金报名专用完成入口；不得伪造微信 SUCCESS 回调。 */
     public String completeZeroAmountPayment(String registrationNo);
 

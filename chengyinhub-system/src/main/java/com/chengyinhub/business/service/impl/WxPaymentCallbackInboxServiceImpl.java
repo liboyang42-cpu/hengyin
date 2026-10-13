@@ -55,7 +55,14 @@ public class WxPaymentCallbackInboxServiceImpl implements IWxPaymentCallbackInbo
         candidate.setBizId(bizId);
         candidate.setEventType(truncateEventType(eventType));
         candidate.setState(WxPaymentCallbackInbox.STATE_WAITING);
-        return mapper.insertIgnore(candidate) == 1;
+        if (mapper.insertIgnore(candidate) == 1) return true;
+        WxPaymentCallbackInbox original = mapper.selectByNotifyHash(candidate.getNotifyHash());
+        if (original == null || !candidate.getBizType().equals(original.getBizType())
+                || !candidate.getBizId().equals(original.getBizId())
+                || !java.util.Objects.equals(candidate.getEventType(), original.getEventType())) {
+            throw new IllegalStateException("支付回调幂等键对应的原业务身份冲突");
+        }
+        return false;
     }
 
     @Override

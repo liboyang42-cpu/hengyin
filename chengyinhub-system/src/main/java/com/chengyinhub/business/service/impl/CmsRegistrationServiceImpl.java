@@ -774,6 +774,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     private CmsRegistration createSelfPlayPassInternal(Long memberId, Long topicId,
                                                        String realName, String phone, String requestId,
                                                        String requestFingerprint) {
+        return createSelfPlayPassInternal(memberId, topicId, realName, phone, requestId, requestFingerprint, null);
+    }
+
+    private CmsRegistration createSelfPlayPassInternal(Long memberId, Long topicId,
+                                                       String realName, String phone, String requestId,
+                                                       String requestFingerprint, Runnable onCreated) {
         // 自玩配额没有独立库存列，锁主题行作为同主题建单的串行点；不能先做普通读再计数，
         // 否则并发非会员会同时看见同一个剩余名额并绕过会员保留规则。
         CmsTopic lockedTopic = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
@@ -867,7 +873,10 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         r.setPurchaseKind(PurchaseKind.SELF_PLAY_PASS);
         r.setCreateBy(memberId.toString());
         r.setCreateTime(new Date());
-        cmsRegistrationMapper.insertCmsRegistration(r);
+        if (cmsRegistrationMapper.insertCmsRegistration(r) != 1 || r.getId() == null) {
+            throw new IllegalStateException("自玩报名原订单写入失败");
+        }
+        if (onCreated != null) onCreated.run();
         return r;
     }
 
@@ -1470,6 +1479,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     public List<CmsRegistration> create(Long memberId, RegistrationRequest request,
                                         String normalizedRequestId, String requestFingerprint) {
         List<CmsRegistration> created = new ArrayList<>();
+        final boolean[] selfPlayCreated = {false};
         ClubWaitlistClaim waitlistClaim;
         if (clubWaitlistOrderBridge == null) {
             if (request.getWaitlistOfferId() != null || request.getWaitlistOfferToken() != null) {
@@ -1482,7 +1492,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         if (Integer.valueOf(1).equals(request.getOwnerType())) {
             if (waitlistClaim != null) throw new RuntimeException("自玩通行证不支持候补 offer");
             created.add(createSelfPlayPassInternal(memberId, request.getOwnerId(),
-                    request.getRealName(), request.getPhone(), normalizedRequestId, requestFingerprint));
+                    request.getRealName(), request.getPhone(), normalizedRequestId, requestFingerprint,
+                    () -> selfPlayCreated[0] = true));
         } else if (request.getTickets() != null && !request.getTickets().isEmpty()) {
             if (waitlistClaim != null) throw new RuntimeException("多票报名不支持候补 offer");
             created = createMultiTicketRegistrationsInternal(memberId, request.getOwnerType(),
@@ -1497,7 +1508,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                     request.getSourceClubId(), request.getSourceChannelCode(), waitlistClaim));
         }
         bindRequestFingerprint(created, normalizedRequestId, requestFingerprint);
-        if (!created.isEmpty()) registrationSignupNotificationService.recordIntent(memberId, created.get(0));
+        if (!created.isEmpty() && (!Integer.valueOf(1).equals(request.getOwnerType()) || selfPlayCreated[0])) {
+            registrationSignupNotificationService.recordIntent(memberId, created.get(0));
+        }
         return created;
     }
 
@@ -2011,11 +2024,14 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         }
         String qrcodeUrl = qrcodeService.generateQrcode(qrcodeContent, 300, 300);
 
+        if (StringUtils.isBlank(qrcodeUrl)) throw new IllegalStateException("核销二维码生成结果为空");
         registration.setQrcodeUrl(qrcodeUrl);
         //registration.setUpdateBy(SecurityUtils.getUsername());
         registration.setUpdateTime(new Date());
 
-        cmsRegistrationMapper.updateCmsRegistration(registration);
+        if (cmsRegistrationMapper.updateCmsRegistration(registration) != 1) {
+            throw new IllegalStateException("核销二维码原订单落库失败");
+        }
         return qrcodeUrl;
     }
 
@@ -2023,32 +2039,66 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
      * 处理微信支付回调
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public String handleWechatPayCallback(Map<String, String> resultMap) {
-        if (resultMap == null) {
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            throw new IllegalStateException("渠道回调不能在未提交业务事务内领取inbox，请使用原事务补记合同");
+        }
+        if (resultMap == null || StringUtils.isBlank(resultMap.get("out_trade_no"))
+                || StringUtils.isBlank(resultMap.get("trade_state"))) return "FAIL";
+        final Map<String, String> payload = new java.util.HashMap<>(resultMap);
+        final String tradeState = payload.get("trade_state");
+        if (!java.util.Arrays.asList("SUCCESS", "REFUND", "NOTPAY", "CLOSED", "REVOKED",
+                "PAYERROR", "USERPAYING").contains(tradeState)) return "FAIL";
+        final CmsRegistration original = getByRegistrationNo(payload.get("out_trade_no"));
+        if (original == null) return "FAIL";
+        if ("SUCCESS".equals(tradeState) && !matchesFrozenWechatAmount(original, payload.get("total"))) return "FAIL";
+        final String transactionId = payload.get("transaction_id");
+        final String notifyId = "PAY:" + (StringUtils.isNotEmpty(transactionId)
+                ? transactionId : original.getRegistrationNo()) + ":" + tradeState;
+        try {
+            // register 独立提交后，claim 的 REQUIRES_NEW 才能看到原inbox，不让外层未提交事务锁死领取。
+            wxPaymentCallbackInboxService.register(notifyId, WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT,
+                    original.getId(), tradeState);
+            boolean completed = wxPaymentCallbackInboxService.process(notifyId,
+                    new IWxPaymentCallbackInboxService.Mutation() {
+                        @Override public boolean isCurrent(WxPaymentCallbackInbox inbox) {
+                            if (!original.getId().equals(inbox.getBizId())
+                                    || !Integer.valueOf(WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT).equals(inbox.getBizType())
+                                    || !tradeState.equals(inbox.getEventType())) {
+                                throw new IllegalStateException("支付回调原业务身份不匹配");
+                            }
+                            // 迟到SUCCESS/未知资金冲突不得被标为STALE并假ACK，交给原状态机待核/重试。
+                            return true;
+                        }
+                        @Override public boolean apply(WxPaymentCallbackInbox inbox) {
+                            return "SUCCESS".equals(applyWechatPayCallback(payload));
+                        }
+                    });
+            return completed ? "SUCCESS" : "FAIL";
+        } catch (RuntimeException callbackFailure) {
+            logger.error("支付回调处理未确认，保留原单待核 registrationId={}", original.getId());
             return "FAIL";
         }
-        String outTradeNo = resultMap.get("out_trade_no");
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
+    public String applyConfirmedWechatPaymentWithinTransaction(Map<String, String> resultMap) {
+        if (resultMap == null || !"SUCCESS".equals(resultMap.get("trade_state"))
+                || StringUtils.isBlank(resultMap.get("out_trade_no"))) return "FAIL";
+        CmsRegistration original = getByRegistrationNo(resultMap.get("out_trade_no"));
+        if (original == null || !matchesFrozenWechatAmount(original, resultMap.get("total"))) return "FAIL";
+        return applyWechatPayCallback(new java.util.HashMap<>(resultMap));
+    }
+
+    /** 仅由inbox目标行锁所在事务调用；业务事实与inbox DONE一次提交。 */
+    private String applyWechatPayCallback(Map<String, String> resultMap) {
         String transactionId = resultMap.get("transaction_id");
         String tradeState = resultMap.get("trade_state");
-
-        if (outTradeNo == null || outTradeNo.trim().isEmpty()
-                || tradeState == null || tradeState.trim().isEmpty()) {
-            return "FAIL";
-        }
-
-        // 查询报名记录
-        CmsRegistration registration = getByRegistrationNo(outTradeNo);
-        if (registration == null) {
-            return "FAIL";
-        }
-
-        // P1:回调先落 inbox 去重(表 wx_payment_callback_inbox,notify_hash 唯一键)。
-        // 同一个 notify 重投时 insert ignore 返回 false,不改变下方 ACK 与状态推进语义。
-        wxPaymentCallbackInboxService.register(
-                "PAY:" + (StringUtils.isNotEmpty(transactionId) ? transactionId : outTradeNo)
-                        + ":" + tradeState,
-                WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT, registration.getId(), tradeState);
+        CmsRegistration registration = getByRegistrationNo(resultMap.get("out_trade_no"));
+        if (registration == null) return "FAIL";
+        registration = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(registration.getId());
+        if (registration == null) return "FAIL";
 
         // 根据交易状态处理不同的业务逻辑
         switch (tradeState) {
@@ -2119,7 +2169,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
             default:
                 // 未知状态，记录日志
-                logger.warn("未知的支付状态: {}, 订单号: {}", tradeState, outTradeNo);
+                logger.warn("支付状态无法确认，保留原单待核");
                 break;
         }
 
