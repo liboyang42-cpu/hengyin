@@ -1482,9 +1482,15 @@ test('inventory 与可持久化动态证据分离，freshness 不会抹掉执行
   assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /证据已过期/)
   sample.results[id].sourceDigest = validDigest
 
-  const rootSha = execFileSync('git', ['rev-list', '--max-parents=0', 'HEAD'], { encoding: 'utf8' }).trim().split('\n')[0]
-  const missingAtRoot = ledger.controls.find((control) => sourceDigestAtCommit(control, rootSha) === null)
-  assert.ok(missingAtRoot, '负控需要一个根提交尚不存在的 WXML/JS 控件')
+  // 空树提交明确缺少源码，负控不依赖仓库是否保留历史；不创建分支或修改工作区。
+  const emptyTree = execFileSync('git', ['mktree'], { input: '', encoding: 'utf8' }).trim()
+  const rootSha = execFileSync('git', ['commit-tree', emptyTree, '-m', 'test: missing source fixture'], {
+    encoding: 'utf8',
+    env: { ...process.env, GIT_AUTHOR_NAME: 'Test', GIT_AUTHOR_EMAIL: 'test@example.invalid',
+      GIT_COMMITTER_NAME: 'Test', GIT_COMMITTER_EMAIL: 'test@example.invalid' },
+  }).trim()
+  const missingAtRoot = control
+  assert.equal(sourceDigestAtCommit(missingAtRoot, rootSha), null)
   const forgedHistorical = {
     schemaVersion: 1,
     results: {
