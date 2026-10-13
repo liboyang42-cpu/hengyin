@@ -111,11 +111,16 @@ class MerchantCrmLegacyChildNamespaceMyBatisTest {
                 String collisionAssertion = assertionQuery(migration, "-- 可唯一映射的 v0 行");
                 assertFalse(scalarBoolean(statement, collisionAssertion),
                         "1 个有效门店加 1 个停用门店仍是唯一有效归属，assignment 冲突必须阻断");
-                statement.execute("delete from merchant_customer_tag_assignment where merchant_scope_version=2");
+                assertLegacyRowsUnchanged(statement);
+                assertEquals(1, statement.executeUpdate("delete from merchant_customer_tag_assignment "
+                        + "where merchant_scope_version=2"));
                 assertFalse(scalarBoolean(statement, collisionAssertion),
                         "note 的 projected v2 requestId 冲突必须阻断");
-                statement.execute("delete from merchant_customer_note where merchant_scope_version=2");
+                assertLegacyRowsUnchanged(statement);
+                assertEquals(1, statement.executeUpdate("delete from merchant_customer_note "
+                        + "where merchant_scope_version=2"));
                 assertTrue(scalarBoolean(statement, collisionAssertion));
+                assertLegacyRowsUnchanged(statement);
             }
             session.rollback();
         }
@@ -123,8 +128,9 @@ class MerchantCrmLegacyChildNamespaceMyBatisTest {
 
     private SqlSessionFactory factory() throws Exception {
         Configuration configuration = new Configuration();
+        // H2 EXISTS result reuse can retain pre-delete results inside this fixture transaction.
         UnpooledDataSource dataSource = new UnpooledDataSource("org.h2.Driver",
-                "jdbc:h2:mem:merchant_crm_child_namespace;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE",
+                "jdbc:h2:mem:merchant_crm_child_namespace;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE;OPTIMIZE_REUSE_RESULTS=0",
                 "sa", "");
         configuration.setEnvironment(new Environment("test", new JdbcTransactionFactory(), dataSource));
         try (InputStream input = Resources.getResourceAsStream(APP_XML)) {
@@ -169,6 +175,19 @@ class MerchantCrmLegacyChildNamespaceMyBatisTest {
                     + "values (77,0,41,77,'shared-note','A店历史备注',0,0,current_timestamp),"
                     + "(77,2,41,88,'shared-note','B店备注',0,0,current_timestamp)");
         }
+    }
+
+    private void assertLegacyRowsUnchanged(Statement statement) throws Exception {
+        assertTrue(scalarBoolean(statement, "select count(*) = 1 from merchant_customer_tag_assignment "
+                + "where merchant_id=900 and merchant_scope_version=0 and member_id=41 and tag_id=3 "
+                + "and actor_member_id=900 and action='ASSIGN' and request_id='collision-tag'"),
+                "碰撞预检不得改写 legacy assignment");
+        assertTrue(scalarBoolean(statement, "select count(*) = 1 from merchant_customer_note "
+                + "where merchant_id=900 and merchant_scope_version=0 and member_id=41 "
+                + "and actor_member_id=900 and request_id='collision-note' and content='legacy' "
+                + "and hidden=0 and version=0 and corrects_note_id is null and deleted_by is null "
+                + "and deleted_at is null and hidden_request_id is null"),
+                "碰撞预检不得改写 legacy note");
     }
 
     private String normalized(String value) {

@@ -5,7 +5,7 @@ import com.chengyinhub.business.domain.CmsRegistrationMerchant;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
-import com.chengyinhub.business.service.ICmsActivityService;
+import com.chengyinhub.business.service.impl.CmsActivityServiceImpl;
 import com.chengyinhub.business.service.ICmsRegistrationMerchantService;
 import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -229,14 +229,18 @@ class PublicVisibilityMyBatisTest {
             assertTrue(activityMapper.selectCmsActivityList(dissolvedOwnerQuery).isEmpty(),
                     "玩家我发布的活动列表不得保留已解散俱乐部场次");
 
-            assertProjectOwnership(ownerRows);
+            st.execute("INSERT INTO cms_registration "
+                    + "(id,owner_type,owner_id,member_id,registration_status,payment_status,verification_status)"
+                    + " VALUES (1001,2,102,81,2,2,1),(1002,2,102,82,2,2,0)");
+            assertProjectOwnership(activityMapper);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private void assertProjectOwnership(List<CmsActivity> ownerRows) {
+    private void assertProjectOwnership(CmsActivityMapper activityMapper) {
         ICmsTopicService topicService = mock(ICmsTopicService.class);
-        ICmsActivityService activityService = mock(ICmsActivityService.class);
+        CmsActivityServiceImpl activityService = new CmsActivityServiceImpl();
+        ReflectionTestUtils.setField(activityService, "cmsActivityMapper", activityMapper);
         ICmsRegistrationMerchantService merchantService = mock(ICmsRegistrationMerchantService.class);
         ApiProjectController controller = spy(new ApiProjectController());
         doReturn(42L).when(controller).getAppUserId();
@@ -247,15 +251,8 @@ class PublicVisibilityMyBatisTest {
                 mock(com.chengyinhub.business.service.ICoopInviteService.class);
         ReflectionTestUtils.setField(controller, "coopInviteService", inviteService);
         when(inviteService.selectCoopInviteList(any())).thenReturn(Collections.emptyList());
-        // 承办活动卡的「待核销 N」要查一次报名表。本用例只验归属派生,空返回即可 ——
-        // 但依赖必须注入,漏了会在 mapActivity 直接 NPE。
-        com.chengyinhub.business.service.ICmsRegistrationService registrationService =
-                mock(com.chengyinhub.business.service.ICmsRegistrationService.class);
-        when(registrationService.selectCmsRegistrationList(any())).thenReturn(Collections.emptyList());
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
         when(topicService.selectDraftTopicIds(anyLong())).thenReturn(Collections.emptyList());
         when(topicService.selectCmsTopicList(any())).thenReturn(Collections.emptyList());
-        when(activityService.selectCmsActivityList(any())).thenReturn(new ArrayList<>(ownerRows));
         CmsRegistrationMerchant won = new CmsRegistrationMerchant();
         won.setTopicId(900L);
         when(merchantService.selectCmsRegistrationMerchantList(any()))
@@ -267,6 +264,11 @@ class PublicVisibilityMyBatisTest {
         assertTrue(rows.stream().anyMatch(r -> "club".equals(r.get("ownerType"))));
         assertTrue(rows.stream().anyMatch(r -> "merchant".equals(r.get("ownerType"))));
         assertTrue(rows.stream().anyMatch(r -> "member".equals(r.get("ownerType"))));
+        Map<String, Object> merchantRow = rows.stream()
+                .filter(r -> Long.valueOf(102L).equals(r.get("id"))).findFirst().orElseThrow();
+        assertEquals("merchant", merchantRow.get("ownerType"));
+        assertEquals(2, merchantRow.get("signupCount"), "报名数必须来自真实批量统计");
+        assertEquals(1, merchantRow.get("pendingVerifyCount"), "已核销报名不得计入待核销");
     }
 
     /**
@@ -373,7 +375,7 @@ class PublicVisibilityMyBatisTest {
         st.execute("CREATE TABLE cms_registration ("
                 + "id BIGINT PRIMARY KEY, owner_type INT, owner_id BIGINT, member_id BIGINT,"
                 + " topic_id BIGINT,"
-                + " registration_status INT, payment_status INT)");
+                + " registration_status INT, payment_status INT, verification_status INT)");
     }
 
     private void seedClubs(Statement st) throws Exception {

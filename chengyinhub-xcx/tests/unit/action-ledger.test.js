@@ -255,6 +255,27 @@ test('确认框深度判定先屏蔽字符串/注释/正则，不得记下假事
 // 2026-10-05 经营时间拆为独立面板，按钮与触摸事件调整后重建：4373 个控件，本地 tap 1759、事件合同 2262。
 // 页内取消退役：资料 -4、发布 -2；模板补关闭 +2、商家迁移关闭 -5、完成面板本地入口 -2。
 // 商家 cy-sheet 关闭 +2 事件合同；完成面板保存卡退役 -1 external。昵称 bindinput → bind:input 等量替换。
+test('编辑态新增保存草稿按钮独立登记正常与据点拒绝两条 tap 分支', () => {
+  const wxml = 'pages/publish/temp/index.wxml'
+  const source = fs.readFileSync(path.join(__dirname, '../..', wxml), 'utf8')
+  const condition = "{{!previewMode && from !== 'fabu' && from !== 'citynode'}}"
+  const buttons = [...source.matchAll(/<cy-btn\b[^>]*\bbindtap="saveDraft"[^>]*>保存草稿<\/cy-btn>/g)]
+  const editor = buttons.filter(match => match[0].includes(`wx:if="${condition}"`))
+  assert.equal(editor.length, 1, '编辑态必须保留一个独立保存草稿按钮')
+  const line = source.slice(0, editor[0].index).split('\n').length
+  const rows = ledger.controls.filter(row => row.entry.wxml === wxml && row.control.line === line)
+  assert.deepEqual(rows.map(row => row.variant.id).sort(), ['citynode-unavailable', 'draft'])
+  for (const row of rows) {
+    assert.equal(row.control.handler, 'saveDraft')
+    assert.equal(row.control.event, 'bindtap')
+    assert.equal(row.control.visibleCondition, condition)
+    assert.equal(row.interactionMode, 'tap')
+    assert.notEqual(row.actionClass, 'external')
+  }
+  assert.deepEqual(rows.find(row => row.variant.id === 'draft').targets.writeApis, ['/api/template/draft'])
+  assert.deepEqual(rows.find(row => row.variant.id === 'citynode-unavailable').targets.writeApis, [])
+})
+
 test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮点击', () => {
   assert.equal(interactionModeFor('bindtap'), 'tap')
   assert.equal(interactionModeFor('bind:close'), 'event-contract')
@@ -531,7 +552,8 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-09-25 CU-M-92 受邀商家承接视图:project-join 底栏主按钮拆成「扫码核销 / 原主按钮」两个互斥分支,各 1 tap ⇒ 1746 → 1747(重建实测)。
   // 2026-09-30 最终源码重建实测:local tap 1781 → 1785;实际增删/能力分类见本轮差分证据。
   // 2026-10-06 合并弹窗/模板分支与最新主线后按最终源码重建，数值待生成台账后校准。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1781)  /* 2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  // 2026-10-13 编辑态新增保存草稿按钮，沿既有 draft / citynode-unavailable 两分支净增 2。
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1783)  /* 2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -1351,7 +1373,7 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 2026-09-30 项目铃铛接真实近期动态列表，首次加载失败与保留数据重试新增2个事件合同；重建实测 4396 → 4398。
   // 清空聊天取消确认及互斥的确认分支各新增1个事件合同，tap分母不变。
   // 2026-10-06 合并最新主线与弹窗分支后按生成台账校准。
-  assert.equal(ledger.controlCount, 4432)  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试控件后按最终树重建。 */
+  assert.equal(ledger.controlCount, 4434)  /* 2026-10-13 编辑态 saveDraft 的正常/据点拒绝两条分支；预览态按钮已在旧基线内。 */
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。
