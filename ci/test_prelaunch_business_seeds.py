@@ -54,7 +54,7 @@ class MissingBusinessSeedsContract(unittest.TestCase):
                 self.assertTrue(row["proof"]["route"])
 
     def test_role_conflict_report_is_only_read_queries_and_has_no_personal_fields(self):
-        statements = split_statements((ROOT / "chengyinhub-admin/sql/diag_canonical_role_conflicts_20261012.sql").read_text())
+        statements = split_statements((ROOT / "chengyinhub-admin/sql/_precheck_canonical_role_conflicts_20261012.sql").read_text())
         self.assertEqual(3, len(statements))
         for statement in statements:
             self.assertTrue(statement.lstrip().upper().startswith("SELECT "))
