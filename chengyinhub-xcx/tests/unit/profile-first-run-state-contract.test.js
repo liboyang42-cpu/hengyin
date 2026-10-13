@@ -249,14 +249,24 @@ test('订单、项目、推文和勋章分别区分登录与网络失败，成�
   const cases = [
     ['loadOrderPreview', '/api/registration/list', 'order', { rows: [] }],
     ['loadProjectPreview', '/api/topic/list', 'project', { rows: [], total: 0 }],
-    ['getCreativesquareList', '/api/creativesquare/list', 'feed', { rows: [], total: 0 }],
+    ['getCreativesquareList', '/api/v1/community/me/posts', 'feed', { items: [], hasMore: false, nextCursor: null }],
     ['loadMedals', '/api/medal/wall', 'medal', { medals: [], count: 0 }],
   ]
   for (const [method, url, section, data] of cases) {
     const component = loadProfile()
+    if (section === 'feed') {
+      global.wx = { getStorageSync: () => '', setStorageSync() {}, removeStorageSync() {} }
+      const initialize = component.initializeProfile, syncMotion = component._syncProfileReducedMotion
+      component.initializeProfile = () => {}
+      component._syncProfileReducedMotion = () => {}
+      componentDefinition.lifetimes.attached.call(component)
+      component.initializeProfile = initialize
+      component._syncProfileReducedMotion = syncMotion
+    }
     for (const status of [401, 500]) {
       requests = []
       const pending = component[method]()
+      await flush()
       requests.find((r) => r.url === url).fail({ code: status }, status)
       await pending
       await flush()
@@ -265,6 +275,7 @@ test('订单、项目、推文和勋章分别区分登录与网络失败，成�
     }
     requests = []
     const pending = component[method]()
+    await flush()
     respond(url, { code: 200, data })
     await pending
     await flush()

@@ -1,52 +1,7 @@
-const { test } = require('node:test')
-const assert = require('node:assert/strict')
-
-// 3-20:评论点赞是开关语义。第二次点后端已取消,前端曾仍置 isLiked=1 并 +1。
-function loadDetail() {
-  let def
-  const requests = []
-  global.getApp = () => ({
-    globalData: {}, sendRequest: o => requests.push(o),
-    getRequestErrorMessage: (_r, f) => f, getUserID: () => 7,
-  })
-  global.wx = { getStorageSync: () => '', showToast() {} }
-  global.Page = c => { def = c }
-  const mod = require.resolve('../../pages/square/detail/index.js')
-  delete require.cache[mod]
-  require(mod)
-  const page = Object.assign({}, def)
-  page.data = { list: [{ id: 5, isLiked: 1, likeCount: 3 }] }
-  page.setData = function (patch) { Object.assign(this.data, patch) }
-  return { page, requests }
-}
-
-const tap = (page) => page.commentLikeClick({ currentTarget: { dataset: { index: 0 } } })
-
-test('后端回包 isLiked=0(已取消):前端取消高亮并 -1', () => {
-  const { page, requests } = loadDetail()
-  tap(page)
-  requests[0].success({ code: 200, msg: '取消点赞成功', data: { isLiked: 0 } })
-  assert.equal(page.data.list[0].isLiked, 0)
-  assert.equal(page.data.list[0].likeCount, 2)
-})
-
-test('后端回包 isLiked=1:高亮并 +1;已是终态不重复加', () => {
-  const { page, requests } = loadDetail()
-  page.data.list[0] = { id: 5, isLiked: 0, likeCount: 3 }
-  tap(page)
-  requests[0].success({ code: 200, msg: '点赞成功', data: { isLiked: 1 } })
-  assert.equal(page.data.list[0].isLiked, 1)
-  assert.equal(page.data.list[0].likeCount, 4)
-  requests[0].complete()
-  tap(page)
-  requests[1].success({ code: 200, data: { isLiked: 1 } })
-  assert.equal(page.data.list[0].likeCount, 4, '终态没变就不动计数')
-})
-
-test('旧后端没回 isLiked:按开关语义取反', () => {
-  const { page, requests } = loadDetail()
-  tap(page)
-  requests[0].success({ code: 200, msg: '取消点赞成功' })
-  assert.equal(page.data.list[0].isLiked, 0)
-  assert.equal(page.data.list[0].likeCount, 2)
-})
+const test=require('node:test'),assert=require('node:assert/strict');
+const {load,post,comment,tick}=require('../helpers/community-square-vm');
+const tap=h=>h.page.commentLikeClick({currentTarget:{dataset:{index:0}}});
+async function readback(h,row){await h.answer('/api/v1/community/posts/77/comments',{items:[row],hasMore:false,nextCursor:501});await h.answer('/api/v1/community/posts/77',post());}
+test('真实unlike回执后GET权威isLiked=false和计数,不本地减一',async()=>{const h=load('detail');await h.ready(post(),[comment(501,1,{viewer_liked:1,like_count:3})]);tap(h);await tick();assert.equal(h.asked('/api/v1/community/comments/501/actions/LIKE')[0].method,'DELETE');await h.answer('/api/v1/community/comments/501/actions/LIKE',null);assert.equal(h.page.data.list[0].isLiked,true,'空写回执不能猜状态');await readback(h,comment(501,1,{viewer_liked:0,like_count:17}));assert.equal(h.page.data.list[0].isLiked,false);assert.equal(h.page.data.list[0].likeCount,17)});
+test('真实LIKE与后续取消均按GET终态,同一回包不重复加计数',async()=>{const h=load('detail');await h.ready(post(),[comment()]);tap(h);await tick();assert.equal(h.asked('/api/v1/community/comments/501/actions')[0].method,'POST');await h.answer('/api/v1/community/comments/501/actions',null);await readback(h,comment(501,1,{viewer_liked:1,like_count:4}));assert.equal(h.page.data.list[0].isLiked,true);assert.equal(h.page.data.list[0].likeCount,4);tap(h);await tick();await h.answer('/api/v1/community/comments/501/actions/LIKE',null);await readback(h,comment(501,1,{viewer_liked:0,like_count:4}));assert.equal(h.page.data.list[0].likeCount,4)});
+test('新协议缺权威viewerLiked时保留状态并拒绝猜开关/计数',async()=>{const h=load('detail');const row=comment();delete row.viewer_liked;await h.ready(post(),[row]);const count=h.requests.length;tap(h);await tick();assert.equal(h.requests.length,count);assert.equal(h.page.data.list[0].isLiked,undefined);assert.equal(h.page.data.list[0].likeCount,3);assert.deepEqual(h.toasts,['互动状态未确认，请刷新'])});

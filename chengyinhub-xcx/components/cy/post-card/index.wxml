@@ -34,7 +34,7 @@
       </view>
     </view>
 
-    <view class="post-card__audit" wx:if="{{post.status == 2}}">未通过审核 · 仅自己可见</view>
+    <view class="post-card__audit" wx:if="{{post.lifecycleLabel || post.status == 2}}">{{post.lifecycleLabel || '未通过审核 · 仅自己可见'}}</view>
     <view class="post-card__body" wx:if="{{post.contents}}" catchtap="emitDetail" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">
       <view class="post-card__text">{{post.contents}}<text wx:if="{{post.link}}" class="post-card__link">{{post.link}}</text></view>
       <!-- 正文按稿夹到 2 行。没有展开态(那要改 js),这行只是「还有下文」的提示,点它跟点卡片一样进详情。

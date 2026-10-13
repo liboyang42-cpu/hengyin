@@ -76,6 +76,21 @@ class CommunityPostLifecyclePolicyTest {
         assertTrue(policy.canComment(post, 7L, false, false, false));
     }
 
+    @Test
+    void checkingEditRequiresOwnerAndCurrentVersionAndRemainsHiddenForReview() {
+        CommunityPost post = post(CommunityPost.LIFECYCLE_CHECKING, 4);
+        CommunityPostLifecyclePolicy.Decision next = policy.decide(post, "EDIT", 4, true);
+        assertEquals("CHECKING", next.getLifecycle());
+        assertEquals(5, next.getVersion());
+        assertFalse(next.isPubliclyVisible());
+        assertEquals(403, assertThrows(ServiceException.class, () -> policy.decide(post, "EDIT", 4, false)).getCode());
+        assertEquals(409, assertThrows(ServiceException.class, () -> policy.decide(post, "EDIT", 3, true)).getCode());
+        for (String forbidden : new String[] {"REMOVED", "DELETED"}) {
+            post.setLifecycle(forbidden);
+            assertEquals(409, assertThrows(ServiceException.class, () -> policy.decide(post, "EDIT", 4, true)).getCode());
+        }
+    }
+
     private CommunityPost post(String lifecycle, int version) {
         CommunityPost post = new CommunityPost();
         post.setId(11L);

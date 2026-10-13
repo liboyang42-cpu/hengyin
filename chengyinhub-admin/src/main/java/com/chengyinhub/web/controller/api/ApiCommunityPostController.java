@@ -75,6 +75,18 @@ public class ApiCommunityPostController extends BaseController {
         catch (ServiceException e) { return serviceError(e); }
     }
 
+    @GetMapping("/me/posts")
+    public AjaxResult myPosts(@RequestParam(required = false) Long cursor,
+                              @RequestParam(required = false) Integer limit) {
+        return withReadPrincipal(memberId -> success(service.myPosts(memberId, cursor, limit)));
+    }
+
+    @GetMapping("/me/bookmarks")
+    public AjaxResult myBookmarks(@RequestParam(required = false) Long cursor,
+                                  @RequestParam(required = false) Integer limit) {
+        return withReadPrincipal(memberId -> success(service.myBookmarks(memberId, cursor, limit)));
+    }
+
     @GetMapping("/drafts")
     public AjaxResult drafts(@RequestParam(required = false) Long cursor,
                              @RequestParam(required = false) Integer limit) {

@@ -22,6 +22,8 @@ public interface ICommunityPostService {
     List<Map<String, Object>> revisions(Long viewerId, Long postId);
     List<Map<String, Object>> referenceOptions(Long memberId, String referenceType, Integer limit);
     Map<String, Object> feed(Long viewerId, CommunityPostFeedQuery query);
+    Map<String, Object> myPosts(Long memberId, Long cursor, Integer limit);
+    Map<String, Object> myBookmarks(Long memberId, Long cursor, Integer limit);
     Map<String, Object> drafts(Long memberId, Long cursor, Integer limit);
     Map<String, Object> act(Long memberId, Long postId, CommunityPostRequests.Action request);
     Map<String, Object> unact(Long memberId, Long postId, String actionType, String requestId);
@@ -50,7 +52,7 @@ public interface ICommunityPostService {
     void reviewAppeal(Long operatorUserId, Long appealId, CommunityPostRequests.AppealReview request);
     List<Map<String, Object>> enforcements(Long postId);
     Map<String, Object> appeals(String status, Long cursor, Integer limit);
-    void applyAuditDecision(Long postId, boolean approved);
+    void applyAuditDecision(Long postId, boolean approved, Integer expectedPostVersion);
     void applyCommentAuditDecision(Long commentId, boolean approved);
     Map<String, Integer> runMaintenance(Integer limit);
 }

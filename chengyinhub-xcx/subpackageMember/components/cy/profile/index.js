@@ -1,3 +1,5 @@
+const communityApi = require('../../../../utils/community-post-api.js');
+const { toPostView } = require('../../../../utils/community-post-view.js');
 const { readPublisherAccess } = require('../../../../utils/coop-publisher-access.js');
 const { returnToCoopOrigin } = require('../../../../utils/coop-invite-return.js');
 const modal = require('../../../../utils/modal.js');
@@ -403,7 +405,6 @@ Component({
     joinDate: '—',
 
     list: [],
-    page_no: 1,
     hasMore: false,
     nodata: false,
     orderPreviewList: [],
@@ -463,6 +464,8 @@ Component({
     },
     detached: function () {
       this._profileAttached = false;
+      this._feedEpoch = (this._feedEpoch || 0) + 1;
+      if (this._community) this._community.dispose();
       this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1;
       this._following = false;
       this._followEpoch = (this._followEpoch || 0) + 1;
@@ -473,6 +476,10 @@ Component({
   pageLifetimes: {
     show: function () {
       if (!this._profileAttached) return;
+      if (this._communityOwner != null && this._communityOwner !== String(app.getUserID() || '')) {
+        this.communityClient(); this._profileKey = null; this._feedEpoch = (this._feedEpoch || 0) + 1;
+        this.initializeProfile(); return;
+      }
       this._syncProfileReducedMotion();
       if (!this._profileShown) {
         this._profileShown = true;
@@ -506,6 +513,17 @@ Component({
   },
 
   methods: {
+    communityClient() {
+      const owner = String(app.getUserID() || '');
+      if (!this._community || this._communityOwner !== owner) {
+        if (this._community) this._community.dispose();
+        this._community = communityApi.createClient(app, wx);
+        this._communityOwner = owner;
+        this._communityActions = Object.create(null);
+      }
+      return this._community;
+    },
+
     refreshCoopPublisherAccess: function () {
       const epoch = this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1;
       this.setData({ canInviteCoop: false });
@@ -574,9 +592,11 @@ Component({
     var userId = hostSelf ? String(app.getUserID() || '') : String(this.data.userId || '');
     var memberTabs = isSelf ? MEMBER_TABS : PUBLIC_TABS;
     var initialTab = resolveInitialTab(this.data.initialTab, memberTabs);
-    var profileKey = (isSelf ? 'self:' : 'other:') + userId + '|' + initialTab;
+    var profileKey = String(app.getUserID() || '') + '|' + (isSelf ? 'self:' : 'other:') + userId + '|' + initialTab;
     if (this._profileKey === profileKey) return;
     this._profileKey = profileKey;
+    this._feedEpoch = (this._feedEpoch || 0) + 1;
+    this._feedBusy = false; this._feedCursor = null;
     this._following = false;
     this._followEpoch = (this._followEpoch || 0) + 1;
     this._profileShown = false;
@@ -605,7 +625,6 @@ Component({
       followSubmitting: false,
       followReceipt: false,
       list: [],
-      page_no: 1,
       hasMore: false,
       nodata: false,
       feedErr: false
@@ -708,7 +727,7 @@ Component({
   refreshPublicProfile: function (silent) {
     var that = this;
     if (!silent) {
-      this.setData({ page_no: 1, list: [], hasMore: false, nodata: false, feedErr: false });
+      this.setData({ list: [], hasMore: false, nodata: false, feedErr: false });
     }
     return this.loadUserData().then(function () {
       if (!silent && that.data.activeTab === 'posts') that.getCreativesquareList();
@@ -776,7 +795,7 @@ Component({
 
   refreshAll: function (silent) {
     var that = this;
-    if (!silent) this.setData({ page_no: 1, list: [], hasMore: false, nodata: false, feedErr: false });
+    if (!silent) this.setData({ list: [], hasMore: false, nodata: false, feedErr: false });
     this.resetProfileMetricState();
     // ⚠️ 按视角分流，不能无条件拉全部：下面这些接口要么用 app.getUserID()（当前登录用户）、
     // 要么只对「自己」有意义（订单/项目/积分/加入信息）。他人主页调它们既白跑一轮请求，
@@ -1181,7 +1200,6 @@ Component({
     if (!tab || tab === this.data.activeTab) return;
     this.setData({ activeTab: tab });
     if (tab === 'posts' && this.data.list.length === 0) {
-      this.setData({ page_no: 1 });
       this.getCreativesquareList();
     }
   },
@@ -1560,53 +1578,32 @@ Component({
   // CU-M-43(2026-09-23 用户裁决 B):onBlock 随「屏蔽」入口一起摘掉 —— 原来只弹一句
   //「已屏蔽」,没有请求也没有持久化,重进无状态变化。接上写路径前不带这条假成功。
 
-  getCreativesquareList: function () {
-    var that = this;
-    var data = {
-      is_my: that.data.isSelf ? 1 : 0,
-      pageNum: that.data.page_no,
-      pageSize: app.getPageSize()
+  getCreativesquareList: function (loadMore) {
+    if (loadMore && this._feedBusy) return;
+    this.communityClient();
+    const owner = this._communityOwner, target = String(this.data.userId || ''), self = this.data.isSelf;
+    const epoch = (this._feedEpoch || 0) + 1; this._feedEpoch = epoch; this._feedBusy = true;
+    const current = () => this._profileAttached && this._feedEpoch === epoch
+      && String(app.getUserID() || '') === owner && String(this.data.userId || '') === target && this.data.isSelf === self;
+    const fail = res => { if (current() && Number(res && res.code) !== 499) this.setData({ feedErr: true, feedAuthError: isAuthFailure(res) }); };
+    const options = { query: { limit: app.getPageSize(), cursor: loadMore ? this._feedCursor : null }, current, autoErrorToast: false,
+      success: res => {
+        if (res.code !== 200) { fail(res); return; }
+        const rows = res.data.items.map(toPostView).map(row => Object.assign(row, {
+          picList: row.pics ? row.pics.split(';') : [], formattedCreateTime: row.createTime ? this.formatTimeDifference(row.createTime) : '' }));
+        const existing = loadMore ? this.data.list : [], seen = new Set(existing.map(row => String(row.id)));
+        const newRows = rows.filter(row => !seen.has(String(row.id)));
+        this._feedCursor = res.data.nextCursor;
+        if (loadMore) {
+          const oldLen = existing.length, patch = {};
+          for (let i = 0; i < newRows.length; i++) patch['list[' + (oldLen + i) + ']'] = newRows[i];
+          this.setData(patch);
+          this.setData({ hasMore: res.data.hasMore, nodata: oldLen + newRows.length === 0, feedErr: false, feedAuthError: false });
+        } else this.setData({ list: newRows, hasMore: res.data.hasMore, nodata: newRows.length === 0, feedErr: false, feedAuthError: false });
+      }, fail, complete: () => { if (current()) this._feedBusy = false; }
     };
-    if (!that.data.isSelf) data.user_id = that.data.userId;
-    req('/api/creativesquare/list', data).then(function (res) {
-      // 原码把失败显式写成 nodata=true → 渲染「还没有动态,发布一次城市发现吧」
-      if (res.code != '200') {
-        that.setData({ hasMore: false, feedErr: true, feedAuthError: isAuthFailure(res) });
-        return;
-      }
-      var result = isRecord(res.data) ? res.data : {};
-      var newlist = result.rows || [];
-      if (!isRecordList(newlist)) {
-        that.setData({ hasMore: false, feedErr: true, feedAuthError: false });
-        return;
-      }
-      newlist.forEach(function (row) {
-        if (row.pics) row.picList = String(row.pics).split(';').filter(function (pic) { return pic; });
-        if (row.createTime) row.formattedCreateTime = that.formatTimeDifference(row.createTime);
-      });
-      // P0-4:翻页只按数组路径回传新增行(旧写法整表 concat 全量跨序列化线重发)。
-      // 就地内联不引 utils/list-append:本组件被 unexpected-require 白名单沙箱单测装载
-      // (tests/unit/merchant-operator-ui-contract),多一个跨文件 require 会连坐测试装置。
-      if (that.data.page_no !== 1) {
-        const oldLen = that.data.list.length;
-        const patch = {};
-        for (let i = 0; i < newlist.length; i++) patch['list[' + (oldLen + i) + ']'] = newlist[i];
-        that.setData(Object.assign({
-          feedErr: false,
-          feedAuthError: false,
-          hasMore: app.getTotalPage(result.total || 0, app.getPageSize()) > that.data.page_no,
-          nodata: oldLen + newlist.length < 1
-        }, patch));
-        return;
-      }
-      that.setData({
-        feedErr: false,
-        feedAuthError: false,
-        list: newlist,
-        hasMore: app.getTotalPage(result.total || 0, app.getPageSize()) > that.data.page_no,
-        nodata: newlist.length < 1
-      });
-    });
+    if (self) this.communityClient().myPosts(options);
+    else { options.query.authorId = this.data.userId; this.communityClient().feed(options); }
   },
 
   // cy-error 的重试:各自只重拉自己那条链路,不整页刷新(别的区块的数据没坏,不该被连坐)
@@ -1633,63 +1630,59 @@ Component({
   },
   reloadMedals: function () { this.loadMedals(); },
   reloadFeed: function () {
-    this.setData({ page_no: 1 });
     this.getCreativesquareList();
   },
 
   onFeedReachBottom: function () {
     if (!this.data.hasMore || this.data.activeTab !== 'posts') return;
-    this.setData({ page_no: this.data.page_no + 1 });
-    this.getCreativesquareList();
+    this.getCreativesquareList(true);
   },
 
   lickClick: function (e) {
-    var that = this;
-    var index = e.currentTarget.dataset.index;
-    var type = e.currentTarget.dataset.type;
-    var item = that.data.list[index];
-    if (!item) return;
-    req('/api/creativesquare/like', { id: item.id, type: type }).then(function (res) {
-      if (res.code != '200') {
-        cyToast(app.getRequestErrorMessage(res, '操作失败'));
-        return;
-      }
-      var current = that.data.list[index];
-      if (type == 1) {
-        if (current.isLiked == 0) { current.likeCount = (current.likeCount || 0) + 1; current.isLiked = 1; }
-        else if (current.isLiked == 1) { current.likeCount = (current.likeCount || 1) - 1; current.isLiked = 0; }
-        else if (current.isLiked == 2) { current.likeCount = (current.likeCount || 0) + 1; current.isLiked = 1; }
-      } else {
-        if (current.isLiked == 0) current.isLiked = 2;
-        else if (current.isLiked == 1) { current.likeCount = (current.likeCount || 1) - 1; current.isLiked = 2; }
-        else if (current.isLiked == 2) current.isLiked = 0;
-      }
-      that.setData({ ['list[' + index + ']']: current });
-    });
+    const item = this.data.list[e.currentTarget.dataset.index];
+    if (item) this.performPostAction(item, e.currentTarget.dataset.type == 2 ? 'NOT_INTERESTED' : 'LIKE');
   },
 
   favoriteClick: function (e) {
-    var that = this;
-    var index = e.currentTarget.dataset.index;
-    var item = that.data.list[index];
-    if (!item) return;
-    var requestKey = String(item.id);
-    that._favoriteRequests = that._favoriteRequests || Object.create(null);
-    if (that._favoriteRequests[requestKey]) return;
-    that._favoriteRequests[requestKey] = true;
-    var next = item.isBookmarked == 1 ? 0 : 1;
-    req('/api/creativesquare/bookmark', {
-      id: item.id,
-      bookmark: next,
-      request_id: 'bookmark-' + item.id + '-' + next + '-' + Date.now().toString(36)
-    }).then(function (res) {
-      delete that._favoriteRequests[requestKey];
-      if (res.code != '200') {
-        cyToast(app.getRequestErrorMessage(res, '操作失败'));
-        return;
-      }
-      that.setData({ ['list[' + index + '].isBookmarked']: next });
-    });
+    const item = this.data.list[e.currentTarget.dataset.index];
+    if (item) this.performPostAction(item, 'BOOKMARK');
+  },
+
+  performPostAction(item, actionType) {
+    if (this._communityOwner != null && this._communityOwner !== String(app.getUserID() || '')) { cyToast('登录身份已变化，请刷新'); return; }
+    this.communityClient();
+    const owner = this._communityOwner, target = String(this.data.userId || ''), self = this.data.isSelf, epoch = this._feedEpoch;
+    const current = () => this._profileAttached && this._feedEpoch === epoch && String(app.getUserID() || '') === owner
+      && String(this.data.userId || '') === target && this.data.isSelf === self;
+    if (!Number.isInteger(item.version) || item.version < 0) { cyToast('请刷新动态后重试'); return; }
+    const state = actionType === 'LIKE' ? item.isLiked : item.isBookmarked;
+    if (actionType !== 'NOT_INTERESTED' && typeof state !== 'boolean') { cyToast('互动状态未确认，请刷新'); return; }
+    const key = actionType + ':' + item.id;
+    const action = this._communityActions[key] || { requestId: 'profile-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2), removing: state === true && actionType !== 'NOT_INTERESTED' };
+    if (action.busy && action.current && action.current()) return;
+    action.current = current; action.busy = true; this._communityActions[key] = action;
+    const fail = res => { if (current() && Number(res && res.code) !== 499) cyToast(app.getRequestErrorMessage(res, '操作结果未确认，请重试')); };
+    const options = { postId: item.id, actionType, command: { actionType, requestId: action.requestId, source: 'profile' }, current, autoErrorToast: false,
+      success: res => {
+        if (res.code !== 200) { fail(res); return; }
+        if (actionType === 'NOT_INTERESTED') {
+          if (String(res.data.postId) !== String(item.id) || res.data.action !== actionType || res.data.applied !== true) { fail({ msg: '隐藏结果未确认，请重试' }); return; }
+          this.setData({ list: this.data.list.filter(row => String(row.id) !== String(item.id)) });
+          delete this._communityActions[key];
+          this.reloadFeed();
+        } else {
+          const row = toPostView(res.data), index = this.data.list.findIndex(post => String(post.id) === String(item.id));
+          if (index >= 0) {
+            const state = actionType === 'LIKE' ? { isLiked: row.isLiked, likeCount: row.likeCount }
+              : { isBookmarked: row.isBookmarked, bookmarkCount: row.bookmarkCount };
+            this.setData({ ['list[' + index + ']']: Object.assign({}, this.data.list[index], state) });
+          }
+          delete this._communityActions[key];
+        }
+      }, fail, complete: () => { if (current()) action.busy = false; }
+    };
+    if (action.removing) this.communityClient().removePostAction(options);
+    else this.communityClient().addPostAction(options);
   },
 
   goBack: function () {

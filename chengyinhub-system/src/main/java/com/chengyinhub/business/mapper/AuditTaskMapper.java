@@ -46,6 +46,13 @@ public interface AuditTaskMapper {
                                  @Param("submitterId") Long submitterId,
                                  @Param("submittedAt") Date submittedAt);
 
+    int refreshCommunitySafetySnapshotCas(@Param("id") Long id,
+                                           @Param("expectedVersion") Integer expectedVersion,
+                                           @Param("submitterId") Long submitterId,
+                                           @Param("riskLevel") String riskLevel,
+                                           @Param("snapshotJson") String snapshotJson,
+                                           @Param("now") Date now);
+
     /** 待审(status=0)且提交时间早于 cutoff 的积压条数(SLA 监控)。 */
     int countPendingBacklog(@Param("cutoff") Date cutoff);
 

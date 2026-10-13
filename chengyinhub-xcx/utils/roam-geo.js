@@ -7,9 +7,19 @@ const GEO32 = '0123456789bcdefghjkmnpqrstuvwxyz';
 
 // 7 位 geohash 编码(经纬交替二分,与 geohashDecode7 互逆)。
 function geohash7(lat, lng) {
+  return encodeGeohash(lat, lng, 7);
+}
+
+function geohash9(lat, lng) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180)
+    throw new Error('地点坐标无效，请重新选择');
+  return encodeGeohash(lat, lng, 9);
+}
+
+function encodeGeohash(lat, lng, precision) {
   let latR0 = -90, latR1 = 90, lngR0 = -180, lngR1 = 180;
   let hash = '', bit = 0, ch = 0, even = true;
-  while (hash.length < 7) {
+  while (hash.length < precision) {
     if (even) {
       const mid = (lngR0 + lngR1) / 2;
       if (lng >= mid) { ch = (ch << 1) | 1; lngR0 = mid; } else { ch = ch << 1; lngR1 = mid; }
@@ -55,4 +65,4 @@ function distM(a, b) {
   return Math.hypot(dx, dy);
 }
 
-module.exports = { geohash7, geohashDecode7, m2lat, m2lng, distM };
+module.exports = { geohash7, geohash9, geohashDecode7, m2lat, m2lng, distM };

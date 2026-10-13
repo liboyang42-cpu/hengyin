@@ -46,10 +46,11 @@
         <image class="compose-avatar" src="{{avatar || '/images/d_profile.png'}}" mode="aspectFill" />
         <view class="compose-col">
         <text class="compose-title">{{nickname || '城瘾玩家'}}</text>
+        <text wx:if="{{postAudience === 'PRIVATE'}}" aria-role="status">仅自己可见</text>
       <textarea
         class="compose-input post-text"
         placeholder-class="compose-ph"
-        maxlength="8000"
+        maxlength="5000"
         value="{{valCont}}"
         bindinput="bindTextAreaBlur"
         bindconfirm="submitFormData"

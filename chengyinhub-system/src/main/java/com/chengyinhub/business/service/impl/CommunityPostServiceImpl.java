@@ -14,6 +14,7 @@ import com.chengyinhub.business.service.ICommunityPostService;
 import com.chengyinhub.business.service.ICommunityMediaReceiptService;
 import com.chengyinhub.business.service.IContentSafetyGate;
 import com.chengyinhub.business.service.support.CommunityPostLifecyclePolicy;
+import com.chengyinhub.business.service.support.CommunityPostAuditSnapshot;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.JsonUtils;
 import com.chengyinhub.common.utils.file.FileOssUploadUtils;
@@ -147,7 +148,15 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         Map<String, Object> receipt = mapper.selectCommandReceipt(memberId, request.getClientRequestId());
         if (receipt != null) {
             validateCreateReplay(receipt, fingerprint);
-            return detail(memberId, number(value(receipt, "aggregate_id")));
+            Long aggregateId = number(value(receipt, "aggregate_id"));
+            CommunityPost replayed = mapper.selectByAuthorRequest(memberId, request.getClientRequestId());
+            if (positive(aggregateId) && replayed != null && memberId.equals(replayed.getAuthorId())
+                    && aggregateId.equals(replayed.getId())
+                    && CommunityPost.LIFECYCLE_DELETED.equals(replayed.getLifecycle())
+                    && mapper.countAuthorDeleteEvidence(memberId, aggregateId) == 1) {
+                return Collections.singletonMap("intentDiscarded", true);
+            }
+            return detail(memberId, aggregateId);
         }
         CommunityPost existing = mapper.selectByAuthorRequest(memberId, request.getClientRequestId());
         if (existing != null) {
@@ -189,12 +198,14 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
                 CommunityPost.LIFECYCLE_DRAFT.equals(current.getLifecycle()) ? "NOT_REQUIRED" : "PENDING", now);
         CommunityPost replacement = mapPost(memberId, request);
         replacement.setId(postId);
+        replacement.setVersion(decision.getVersion());
+        replacement.setLifecycle(decision.getLifecycle());
         if (mapper.updateContentCas(replacement, expectedVersion, decision.getLifecycle(), now) != 1) stale();
         replaceRelations(replacement, request, now);
         mapper.upsertSearchDocument(postId, "HIDDEN", now);
         if (CommunityPost.LIFECYCLE_CHECKING.equals(decision.getLifecycle())) {
             auditTaskService.submitSafetyHold(AuditTask.BIZ_COMMUNITY_POST, postId, memberId,
-                    "EDIT_REVIEW", json(replacement));
+                    "EDIT_REVIEW", CommunityPostAuditSnapshot.capture(replacement, decision.getVersion(), mapper));
         }
         outbox(postId, "POST_EDITED", payload("version", expectedVersion + 1), now);
         return detail(memberId, postId);
@@ -230,10 +241,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         }
         safety.setMediaUrls(mediaUrls);
         safety.setHasGeo(!"NONE".equals(current.getLocationPrecision()));
-        Map<String, Object> safetySnapshot = new HashMap<>();
-        safetySnapshot.put("post", current);
-        safetySnapshot.put("media", media);
-        safety.setSnapshot(json(safetySnapshot));
+        safety.setSnapshot(CommunityPostAuditSnapshot.capture(current, expectedVersion + 1, mapper));
         SafetyDecision safetyDecision = safetyGate.decide(safety);
         if (safetyDecision == null || safetyDecision.isBlock()) {
             throw error("内容未通过安全检查，请修改后重试", 400);
@@ -371,6 +379,32 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         result.put("nextCursor", rows.isEmpty() ? null : rows.get(rows.size() - 1).getId());
         result.put("nextCursorScore", rows.isEmpty() ? null : rows.get(rows.size() - 1).getTrendingScore());
         result.put("mode", mode);
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> myPosts(Long memberId, Long cursor, Integer limit) {
+        requirePrincipal(memberId);
+        int pageLimit = boundedLimit(limit);
+        return postPage(memberId, mapper.selectAuthorPosts(memberId, cursor, pageLimit + 1), pageLimit);
+    }
+
+    @Override
+    public Map<String, Object> myBookmarks(Long memberId, Long cursor, Integer limit) {
+        requirePrincipal(memberId);
+        int pageLimit = boundedLimit(limit);
+        return postPage(memberId, mapper.selectBookmarkedPosts(memberId, cursor, pageLimit + 1), pageLimit);
+    }
+
+    private Map<String, Object> postPage(Long memberId, List<CommunityPost> rows, int limit) {
+        boolean hasMore = rows.size() > limit;
+        if (hasMore) rows = rows.subList(0, limit);
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (CommunityPost post : rows) items.add(hydrate(post, memberId));
+        Map<String, Object> result = new HashMap<>();
+        result.put("items", items);
+        result.put("hasMore", hasMore);
+        result.put("nextCursor", rows.isEmpty() ? null : rows.get(rows.size() - 1).getId());
         return result;
     }
 
@@ -529,13 +563,22 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     public Map<String, Object> comments(Long viewerId, Long postId, Long cursor, Integer limit) {
         viewerId = viewerId == null || viewerId < 0 ? 0L : viewerId;
         detail(viewerId, postId);
-        List<Map<String, Object>> rows = mapper.selectComments(postId, viewerId, cursor, boundedLimit(limit));
-        Map<String, Object> result = new HashMap<>();
-        result.put("items", rows);
+        int pageLimit = boundedLimit(limit);
+        List<Map<String, Object>> rows = mapper.selectComments(postId, viewerId, cursor, pageLimit + 1);
+        List<Map<String, Object>> items = new ArrayList<>();
         Long nextCursor = null;
+        int roots = 0;
+        boolean hasMore = false;
         for (Map<String, Object> row : rows) {
-            if (value(row, "parent_id") == null) nextCursor = number(value(row, "id"));
+            if (value(row, "parent_id") == null) {
+                if (++roots > pageLimit) { hasMore = true; break; }
+                nextCursor = number(value(row, "id"));
+            }
+            items.add(row);
         }
+        Map<String, Object> result = new HashMap<>();
+        result.put("items", items);
+        result.put("hasMore", hasMore);
         result.put("nextCursor", nextCursor);
         return result;
     }
@@ -951,11 +994,12 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
 
     @Override
     @Transactional
-    public void applyAuditDecision(Long postId, boolean approved) {
+    public void applyAuditDecision(Long postId, boolean approved, Integer expectedPostVersion) {
         CommunityPost post = locked(postId);
+        if (expectedPostVersion == null || !expectedPostVersion.equals(post.getVersion())) stale();
         if (approved) requireGuidelineAck(post.getAuthorId(), post.getGuidelineVersionId());
         String action = approved ? CommunityPostLifecyclePolicy.ACTION_APPROVE : CommunityPostLifecyclePolicy.ACTION_REMOVE;
-        CommunityPostLifecyclePolicy.Decision decision = policy.decide(post, action, post.getVersion(), false);
+        CommunityPostLifecyclePolicy.Decision decision = policy.decide(post, action, expectedPostVersion, false);
         Date now = new Date();
         if (mapper.transitionCas(postId, post.getLifecycle(), decision.getLifecycle(), post.getVersion(), approved ? now : null,
                 null, approved ? 1 : 0, approved ? 1 : 0, approved ? 1 : 0, now) != 1) stale();
@@ -1340,14 +1384,18 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         boolean viewerIsAuthor = viewerId.equals(post.getAuthorId());
         result.put("mentions", viewerIsAuthor
                 ? mapper.selectMentionedMemberIds(post.getId()) : Collections.emptyList());
+        result.put("topicCodes", viewerIsAuthor
+                ? mapper.selectTopicCodes(post.getId()) : Collections.emptyList());
         result.put("viewerIsAuthor", viewerIsAuthor);
+        boolean viewerFollowing = positive(viewerId) && mapper.countFollow(viewerId, post.getAuthorId()) > 0;
+        result.put("viewerFollowing", viewerFollowing);
         boolean viewerCanComment = false;
         if (positive(viewerId)) {
             boolean follows = false;
             boolean communityMember = false;
             boolean mentioned = false;
             if (CommunityPost.COMMENT_FOLLOWERS.equals(post.getCommentPolicy())) {
-                follows = mapper.countFollow(viewerId, post.getAuthorId()) > 0;
+                follows = viewerFollowing;
             } else if (CommunityPost.COMMENT_MEMBERS.equals(post.getCommentPolicy()) && positive(post.getCommunityId())) {
                 communityMember = mapper.countCommunityMember(viewerId, post.getCommunityId()) > 0;
             } else if (CommunityPost.COMMENT_MENTIONED.equals(post.getCommentPolicy())) {

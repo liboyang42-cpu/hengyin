@@ -44,7 +44,8 @@
                     aria-label="帖文内容"
                     placeholder="有什么新鲜好玩的分享吗？"
                     placeholder-class="cmp-ph" />
-          <view class="cmp-preview" wx:if="{{picList.length || address || selectedActivity}}">
+          <view class="cmp-preview" wx:if="{{picList.length || address || selectedActivity || postAudience === 'PRIVATE'}}">
+            <view class="cmp-chip" wx:if="{{postAudience === 'PRIVATE'}}"><text>仅自己可见</text></view>
             <view class="cmp-preview-pics" wx:if="{{picList.length}}">
             <view class="cmp-pic" wx:for="{{picList}}" wx:key="*this">
               <image class="cmp-pic-img" src="{{item}}" mode="aspectFill" />

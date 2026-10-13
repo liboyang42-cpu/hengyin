@@ -260,6 +260,7 @@ export default {
         { label: '商家城市节点', value: 'merchant_node' },
         { label: '商家节点模板', value: 'merchant_node_template' },
         { label: '创意广场', value: 'SQUARE' },
+        { label: '社区帖文', value: 'COMMUNITY_POST' },
         { label: '评论', value: 'COMMENT' },
         { label: '俱乐部动态', value: 'CLUB_POST' },
         { label: '动态评论', value: 'CLUB_POST_COMMENT' },

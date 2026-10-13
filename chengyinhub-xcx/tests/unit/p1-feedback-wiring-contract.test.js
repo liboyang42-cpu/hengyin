@@ -180,11 +180,11 @@ test('动态评论列表的关注图标必须真正绑定动作并回读服务�
     '评论头像上的 + 按钮不能只有图标，必须绑定当前行并有可读名称')
   assert.match(js, /commentFollowClick\(e\)[\s\S]*e\.currentTarget\.dataset\.index[\s\S]*follow_member_id:\s*item\.memberId/,
     '关注请求必须使用当前评论行的 memberId')
-  assert.match(js, /commentFollowClick\(e\)[\s\S]*sendUiStateRequest\(app,\s*'\/api\/comment\/list'[\s\S]*isRecordList\(readback\.data\.rows\)[\s\S]*authoritative\.isFollowTheUser[\s\S]*this\.setData\(\{\s*list\s*\},[\s\S]*toast\('关注成功'\)/, // 2026-09-06 轻提示收口:toast('…') 取代 wx.showToast({ title })
-    '只有回读当前评论行的服务端权威终态后才能回写并报成功')
-  assert.match(js, /已提交，但状态确认失败，请刷新/,
+  assert.match(js, /commentFollowClick\(e\)[\s\S]*communityClient\(\)\.comments\([\s\S]*response\.data\.items\.map\(communityView\.toCommentView\)[\s\S]*authority\.isFollowTheUser!==true[\s\S]*this\.setData\(\{list\}\);toast\('关注成功'\)/,
+    '只有实际根游标回读并核实服务端关注终态后才能回写并报成功')
+  assert.match(js, /已提交，但状态未确认，请刷新/,
     '回读失败不能静默或伪报成功')
-  assert.match(js, /commentFollowClick\(e\)[\s\S]*fail\(\)[\s\S]*toast\('网络错误，请重试'\)/, // 同上
+  assert.match(js, /commentFollowClick\(e\)[\s\S]*fail:\(\)=>\{[\s\S]*toast\('网络错误，请重试'\)/, // 同上
     '网络失败必须明确可重试')
 })
 

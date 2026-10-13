@@ -78,22 +78,25 @@ test('我的模板接口 rows 含空元素不得生成伪模板卡片', () => {
   assert.deepEqual(page.data.list, []);
 });
 
-test('广场列表 200 空 payload 进入错误态，不得抛异常', () => {
+test('广场列表 200 空 payload 进入错误态，不得抛异常', async () => {
   const { page, requests } = loadPage('pages/square/list/index.js');
   page.getList();
+  await new Promise(resolve => setImmediate(resolve));
 
   assert.doesNotThrow(() => requests[0].success({ code: 200, data: null }));
-  requests[0].complete();
+  await new Promise(resolve => setImmediate(resolve));
 
   assert.equal(page.data.loadError, true);
   assert.equal(page.data.listLoading, false);
 });
 
-test('动态详情评论 200 空 payload 进入可重试错误态', () => {
+test('动态详情评论 200 空 payload 进入可重试错误态', async () => {
   const { page, requests } = loadPage('pages/square/detail/index.js');
   page.data.id = 9;
   page.getList();
+  await new Promise(resolve => setImmediate(resolve));
 
   assert.doesNotThrow(() => requests[0].success({ code: 200, data: null }));
+  await new Promise(resolve => setImmediate(resolve));
   assert.equal(page.data.commentLoadError, true);
 });

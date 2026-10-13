@@ -139,6 +139,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id} and biz_type = #{bizType} and status in (0, 3)
     </update>
 
+    <update id="refreshCommunitySafetySnapshotCas">
+        update audit_task
+        set snapshot_json = #{snapshotJson}, risk_level = #{riskLevel},
+            submitted_at = #{now}, update_time = #{now}, version = version + 1
+        where id = #{id} and biz_type = 'COMMUNITY_POST' and source_type = 'auto_gate'
+          and submitter_id = #{submitterId} and status in (0, 3) and version = #{expectedVersion}
+    </update>
+
     <!-- SLA 监控:待审积压 / 超期 计数 -->
     <select id="countPendingBacklog" resultType="int">
         select count(*) from audit_task

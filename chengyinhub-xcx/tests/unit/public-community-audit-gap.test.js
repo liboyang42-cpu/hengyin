@@ -136,7 +136,7 @@ test('public growth CTA retains the old goExplore obligation without recreating 
 test('negative control: removing the unload guard reopens a late reason sheet', async () => {
   for (const route of ['pages/square/list', 'pages/square/detail']) {
     const source = fs.readFileSync(path.join(root, route, 'index.js'), 'utf8');
-    const anchor = '  onUnload() {\n    this._unloaded = true;\n    reportSheet.cancel(this);';
+    const anchor = '  onUnload() {\n    this._unloaded = true;\n    if (this._community) this._community.dispose();\n    reportSheet.cancel(this);';
     assert.ok(source.includes(anchor));
     const h = reportPage(route, source.replace(anchor, '  onUnload() {\n    reportSheet.cancel(this);'));
     h.page.reportSquare(); await tick(); h.page.onUnload();
@@ -179,8 +179,23 @@ test('mapping: ten restored controls preserve every public baseline identity, ev
   const restored = restoredMappings.map(m => mappedControl(frozen.controls, m));
   assert.equal(new Set(restored.map(c => c.id)).size, 10);
   const restoredIds = new Set(restored.map(c => c.id));
-  const retained = frozen.controls.filter(c => !restoredIds.has(c.id));
-  assert.equal(frozen.controlCount, 4444); assert.equal(retained.length, 4434);
+  assert.equal(frozen.controlCount, 4445);
+  const publishRoute = 'component:pages/square/components/cy/post-compose/index';
+  const feedbackRoute = 'component:subpackageMember/components/cy/profile/index';
+  const publish = frozen.controls.filter(c => c.route === publishRoute && c.control.handler === 'onPublish');
+  assert.equal(publish.length, 2);
+  assert.deepEqual(publish.map(c => [c.variant.id, c.variant.predicate.editMode]).sort(), [['create', false], ['edit', true]]);
+  const feedback = frozen.controls.filter(c => c.route === feedbackRoute && c.control.handler === 'lickClick' && c.control.ariaLabel === '不感兴趣');
+  assert.equal(feedback.length, 1); assert.equal(feedback[0].control.ariaLabel, '不感兴趣');
+  // Two reviewed substitutions: one publish control has explicit create/edit
+  // variants; the misleading feedback label now follows the approved action.
+  const retained = frozen.controls.filter(c => !restoredIds.has(c.id)
+    && !(c.route === publishRoute && c.control.handler === 'onPublish' && c.variant.id === 'edit')).map(c => {
+      if (c.route === publishRoute && c.control.handler === 'onPublish') return { ...c, variant: null };
+      if (c.route === feedbackRoute && c.control.handler === 'lickClick' && c.control.ariaLabel === '不感兴趣') return { ...c, control: { ...c.control, ariaLabel: '点赞' } };
+      return c;
+    });
+  assert.equal(retained.length, 4434);
   // Reviewed public d16c292 baseline; excludes line/index shifts but preserves
   // multiplicity, variant, role and actual control identity. No private Git needed.
   const baselineDigest = '7831b983503e787af0df487ee917c0fb4f69840132c8246e9b8ee2c7a1a7fd7e';

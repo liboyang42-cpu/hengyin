@@ -101,7 +101,7 @@ const loadPage = (rel, options = {}) => {
     reLaunch: () => {},
   }, options.wx || {})
   const requireStub = (request) => {
-    if (request === '../../../utils/community-report-sheet.js' || request === '../../../utils/community-post-api.js') {
+    if (request === '../../../utils/community-report-sheet.js' || request === '../../../utils/community-post-api.js' || request === '../../../utils/community-post-view.js') {
       return require(path.join(ROOT, 'utils', path.basename(request)))
     }
     if (request === '../../../utils/datetime') return { toTimestamp: (value) => value }
@@ -232,7 +232,7 @@ test('P0-E negative control: a bogus cy-icon name is rejected', () => {
 // P0 · 动态详情不能把无 id、加载中、服务错误和空数据退化成同一张空壳。
 // 公开 seam：onLoad(options) 只在有 id 时请求；详情 request 的回调决定页面状态。
 // ---------------------------------------------------------------------------
-test('P0: square/detail gives no-id, loading, error and empty data distinct visible exits', () => {
+test('P0: square/detail gives no-id, loading, errors and valid detail distinct visible exits', async () => {
   const wxml = read('pages/square/detail/index.wxml')
   const json = readJson('pages/square/detail/index.json')
   for (const component of ['cy-skeleton', 'cy-error', 'cy-empty', 'cy-btn']) {
@@ -249,23 +249,29 @@ test('P0: square/detail gives no-id, loading, error and empty data distinct visi
   assert.equal(missing.page.data.detailState, 'missing-param')
 
   const failed = loadPage('pages/square/detail/index.js')
-  failed.page.onLoad({ id: 'post-1' })
-  const detailRequest = failed.requests.find((request) => request.url === '/api/creativesquare/info')
+  failed.page.onLoad({ id: '1' })
+  await new Promise(resolve => setImmediate(resolve))
+  const detailRequest = failed.requests.find((request) => request.url === '/api/v1/community/posts/1')
   assert.ok(detailRequest, '有 id 时必须请求动态详情')
   detailRequest.fail()
+  await new Promise(resolve => setImmediate(resolve))
   assert.equal(failed.page.data.detailState, 'error')
 
   const empty = loadPage('pages/square/detail/index.js')
-  empty.page.onLoad({ id: 'post-empty' })
-  empty.requests.find((request) => request.url === '/api/creativesquare/info').success({ code: '200', data: {} })
-  assert.equal(empty.page.data.detailState, 'empty')
+  empty.page.onLoad({ id: '3' })
+  await new Promise(resolve => setImmediate(resolve))
+  empty.requests.find((request) => request.url === '/api/v1/community/posts/3').success({ code: '200', data: {} })
+  await new Promise(resolve => setImmediate(resolve))
+  assert.equal(empty.page.data.detailState, 'error', '规范详情200空包是异常，不能伪装成真实无内容')
 
   const ready = loadPage('pages/square/detail/index.js')
-  ready.page.onLoad({ id: 'post-2' })
-  ready.requests.find((request) => request.url === '/api/creativesquare/info').success({
+  ready.page.onLoad({ id: '2' })
+  await new Promise(resolve => setImmediate(resolve))
+  ready.requests.find((request) => request.url === '/api/v1/community/posts/2').success({
     code: '200',
-    data: { id: 2, memberNickname: '正常内容', pics: '' },
+    data: require('../helpers/community-square-vm').post(2, 9, {authorNickname:'正常内容'}),
   })
+  await new Promise(resolve => setImmediate(resolve))
   assert.equal(ready.page.data.detailState, 'ready', '正常内容必须仍进入原详情结构')
   assert.equal(ready.page.data.info.memberNickname, '正常内容')
 })
@@ -284,9 +290,9 @@ test('square/detail 的更多入口先打开操作菜单，再由菜单进入举
   assert.equal(reportCalls, 1, '只有点击菜单中的举报项才进入举报确认')
 })
 
-test('square/detail 关注评论者只在服务端回读确认后报成功，回读失败保留旧列表', () => {
+test('square/detail 关注评论者只在服务端回读确认后报成功，回读失败保留旧列表', async () => {
   const event = { currentTarget: { dataset: { index: 0 } } }
-  const original = [{ id: 31, memberId: 9, memberNickname: '玩家九', isFollowTheUser: 0 }]
+  const original = [{ id: 31, memberId: 9, memberNickname: '玩家九', isFollowTheUser: false }]
 
   const failedToasts = []
   const failed = loadPage('pages/square/detail/index.js', {
@@ -299,11 +305,13 @@ test('square/detail 关注评论者只在服务端回读确认后报成功，回
   assert.ok(failedPost)
   failedPost.success({ code: '200' })
   assert.doesNotMatch(failedToasts.join('|'), /关注成功/, 'POST 200 还不是权威终态')
-  const failedReadback = failed.requests.find((request) => request.url === '/api/comment/list')
+  await new Promise(resolve => setImmediate(resolve))
+  const failedReadback = failed.requests.find((request) => request.url === '/api/v1/community/posts/88/comments')
   assert.ok(failedReadback, '写后必须回读评论行的 isFollowTheUser')
   failedReadback.fail()
+  await new Promise(resolve => setImmediate(resolve))
   assert.deepEqual(failed.page.data.list, original, '回读失败不能清空或伪造列表终态')
-  assert.match(failedToasts.at(-1), /状态确认失败.*刷新/)
+  assert.match(failedToasts.at(-1), /状态未确认.*刷新/)
 
   const malformedToasts = []
   const malformed = loadPage('pages/square/detail/index.js', {
@@ -313,10 +321,12 @@ test('square/detail 关注评论者只在服务端回读确认后报成功，回
   malformed.page.data.list = JSON.parse(JSON.stringify(original))
   malformed.page.commentFollowClick(event)
   malformed.requests.find((request) => request.url === '/api/user/follow/action').success({ code: '200' })
-  const malformedReadback = malformed.requests.find((request) => request.url === '/api/comment/list')
-  assert.doesNotThrow(() => malformedReadback.success({ code: '200', data: { rows: {} } }))
+  await new Promise(resolve => setImmediate(resolve))
+  const malformedReadback = malformed.requests.find((request) => request.url === '/api/v1/community/posts/88/comments')
+  assert.doesNotThrow(() => malformedReadback.success({ code: '200', data: { items: {} } }))
+  await new Promise(resolve => setImmediate(resolve))
   assert.deepEqual(malformed.page.data.list, original, '畸形回读不能写入或清空旧列表')
-  assert.match(malformedToasts.at(-1), /状态确认失败.*刷新/)
+  assert.match(malformedToasts.at(-1), /状态未确认.*刷新/)
 
   const successToasts = []
   const success = loadPage('pages/square/detail/index.js', {
@@ -326,11 +336,13 @@ test('square/detail 关注评论者只在服务端回读确认后报成功，回
   success.page.data.list = JSON.parse(JSON.stringify(original))
   success.page.commentFollowClick(event)
   success.requests.find((request) => request.url === '/api/user/follow/action').success({ code: '200' })
-  success.requests.find((request) => request.url === '/api/comment/list').success({
+  await new Promise(resolve => setImmediate(resolve))
+  success.requests.find((request) => request.url === '/api/v1/community/posts/88/comments').success({
     code: '200',
-    data: { rows: [{ id: 31, memberId: 9, memberNickname: '玩家九', isFollowTheUser: 1 }] },
+    data: { items: [require('../helpers/community-square-vm').comment(31, 9, {post_id:88,viewer_following:true})],hasMore:false,nextCursor:31 },
   })
-  assert.equal(success.page.data.list[0].isFollowTheUser, 1)
+  await new Promise(resolve => setImmediate(resolve))
+  assert.equal(success.page.data.list[0].isFollowTheUser, true)
   assert.equal(successToasts.at(-1), '关注成功')
 })
 

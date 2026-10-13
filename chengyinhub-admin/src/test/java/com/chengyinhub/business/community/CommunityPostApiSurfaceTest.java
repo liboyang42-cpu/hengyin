@@ -31,6 +31,14 @@ class CommunityPostApiSurfaceTest {
         assertTrue(routes.contains("DELETE /posts/{id}"));
         assertTrue(routes.contains("GET /posts/{id}"));
         assertTrue(routes.contains("GET /drafts"));
+        assertTrue(routes.contains("GET /me/posts"));
+        assertTrue(routes.contains("GET /me/bookmarks"));
+        for (String method : new String[]{"myPosts", "myBookmarks"}) {
+            try {
+                assertEquals(false, ApiCommunityPostController.class.getDeclaredMethod(method, Long.class, Integer.class)
+                        .isAnnotationPresent(Anonymous.class));
+            } catch (NoSuchMethodException e) { throw new AssertionError(e); }
+        }
         assertTrue(routes.contains("GET /posts/{id}/revisions"));
         assertTrue(routes.contains("GET /feeds/{mode}"));
         assertTrue(routes.contains("POST /posts/{id}/actions"));

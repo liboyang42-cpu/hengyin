@@ -156,5 +156,23 @@ assert.match(composeJs, /pickLocation\(/, '选点必须走现成的 chooseLocati
 assert.match(composeJs, /\/api\/registration\/list/, '活动只能从我报名的列表里挑,禁止公开活动劫持')
 assert.match(composeJs, /owner_type:\s*2/, '报名列表必须限定活动 owner_type=2')
 assert.match(composeJs, /is_my:\s*1/, '活动也要从我主办的列表里挑')
-assert.match(composeJs, /data_id/, '发布必须把活动写进后端已有的 data_id 字段')
+const { test } = require('node:test')
+const { mount, COMPOSE, flush, reply, request } = require('../fixtures/community-caller-harness.cjs')
+for (const [dataType, referenceType] of [[1, 'ACTIVITY'], [2, 'TOPIC']]) test('所选活动进入真实发布关联：' + referenceType, async () => {
+  const h = mount(COMPOSE)
+  h.definition.observers.show.call(h.instance, true)
+  h.instance.data.content = '测试关联'
+  h.instance.data.selectedActivity = { activityId: 73, dataType }
+  h.instance.onPublish()
+  await flush()
+  reply(request(h, '/guidelines/active'), { id: 1, contentJson: { rules: [{ title: '规范' }] } })
+  await flush()
+  h.modals.at(-1).success({ confirm: true })
+  await flush()
+  reply(request(h, '/guidelines/ack'), {})
+  await flush()
+  const create = h.requests.find(r => r.url === '/api/v1/community/posts')
+  assert.ok(create, '真实规范确认后应创建草稿')
+  assert.deepEqual(create.data.references, [{ referenceType, referenceId: 73 }])
+})
 

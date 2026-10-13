@@ -3,7 +3,8 @@ const modal = require('../../../utils/modal.js');
 const toast = require('../../../utils/toast.js');
 const { toTimestamp } = require('../../../utils/datetime');
 const app = getApp();
-const community = require('../../../utils/community-post-api.js').createClient(app, wx);
+const communityApi = require('../../../utils/community-post-api.js');
+const communityView = require('../../../utils/community-post-view.js');
 /* 结果面板终态停留时长。发帖不跳页,收掉就留在广场。 */
 const RESULT_SHEET_MS = 2000;
 const analytics = require('../../../utils/analytics.js');
@@ -19,8 +20,7 @@ const {
   isCompletedShare,
 } = require('../../../utils/feed-play-card.js');
 const { remixTopicTemplate } = require('../utils/topic-template-remix.js');
-const { isRecordList } = require('../../../utils/response-shape.js');
-const publishIntent = require('../../../utils/publish/publish-intent.js');
+const { geohash9 } = require('../../../utils/roam-geo.js');
 
 // 开场倒计时文案:天/小时/分三档取整,不到 1 分钟按「即将开始」收口。
 // 与 activity/list 的 fmtDur 同一套档位,避免两处对同一活动给出不同口径。
@@ -43,6 +43,59 @@ function feedIndexFromEvent(e) {
 }
 
 Page({
+  communityClient() {
+    const owner = String(app.getUserID() || '');
+    if (!this._community || this._communityOwner !== owner) {
+      const replacing = Boolean(this._community);
+      if (this._community) this._community.dispose();
+      this._community = communityApi.createClient(app, wx);
+      this._communityOwner = owner;
+      this._communityCommands = Object.create(null);
+      this._actionRequests = Object.create(null);
+      this._followRequests=Object.create(null);this._followRequestInFlight=false;
+      this._commentLikeRequests = Object.create(null);
+      this._commentDeleteRequests = Object.create(null);
+      this._commentFollowRequests = Object.create(null);
+      this._commentSubmitting = this._replySubmitting = this._deleting = this._deletingPost = this._submitting = false;
+      if (replacing) {
+        this._feedRequestId = (this._feedRequestId || 0) + 1;
+        this._detailRequestId = (this._detailRequestId || 0) + 1;
+        this._commentsRequestId = (this._commentsRequestId || 0) + 1;
+        this._feedRequestInFlight = this._detailRequestInFlight = this._commentsRequestInFlight = false;
+      }
+    }
+    return this._community;
+  },
+
+  communityCurrent() {
+    this.communityClient();
+    const owner = String(app.getUserID() || '');
+    return () => !this._unloaded && String(app.getUserID() || '') === owner;
+  },
+
+  communityCommand(key, payload) {
+    this._communityCommands = this._communityCommands || Object.create(null);
+    const owner = String(app.getUserID() || '');
+    const fingerprint = JSON.stringify([owner, payload]);
+    const previous = this._communityCommands[key];
+    if (!previous || previous.fingerprint !== fingerprint) this._communityCommands[key] = {
+      fingerprint, requestId: 'square-' + Date.now() + '-' + Math.random().toString(36).slice(2)
+    };
+    return this._communityCommands[key].requestId;
+  },
+
+  postView(bundle) {
+    const row = communityView.toPostView(bundle);
+    row.picList = String(row.pics || '').split(';').filter(Boolean);
+    row.formattedCreateTime = row.createTime ? this.formatTimeDifference(row.createTime) : '';
+    row.playCover = resolveFeedPlayCover(row);
+    row.hasPlayCover = hasFeedPlayCover(row);
+    row.isCompletionShare = isCompletedShare(row);
+    row.isRoamResultShare = isRoamResultShare(row);
+    row.completionImage = resolveCompletionShareImage(row);
+    if (row.sportName) row.playSubtitle = buildFeedPlaySubtitle(row);
+    return row;
+  },
   data: {
     reportReasonShow: false,
     reportReasonItems: [],
@@ -69,6 +122,7 @@ Page({
     avatar: '',
     nickname: '',
 
+    postAudience: 'PUBLIC',
     address: '',
     longitude: '',
     latitude: '',
@@ -157,113 +211,46 @@ Page({
   },
 
   lickClick(e) {
-    var that = this
-    let index = feedIndexFromEvent(e);
-    let type = (e.detail && e.detail.type) || e.currentTarget.dataset.type;
-    let item = that.data.list[index]
+    const item = this.data.list[feedIndexFromEvent(e)];
+    const type = (e.detail && e.detail.type) || (e.currentTarget && e.currentTarget.dataset.type);
     if (!item || !item.id) return;
-    let id = item['id']
-    const requestKey = String(id);
-    that._likeRequests = that._likeRequests || Object.create(null);
-    if (that._likeRequests[requestKey]) return;
-    that._likeRequests[requestKey] = true;
-    
-    app.sendRequest({
-      hideLoading: true,
-      silentError: true,
-      url: '/api/creativesquare/like',
-      method: "POST",
-      data: {
-        id: id,
-        type: type
-      },
-      success: function (res) {
-        if (res.code != "200") {
-          toast(res.msg || '操作失败');
-          return;
-        }
-        let newlist = that.data.list
-        let currentItem = newlist[index]
-        
-        if (type == 1) { // 点赞
-          if (currentItem['isLiked'] == 0) {
-            currentItem['likeCount'] = (currentItem['likeCount'] || 0) + 1
-            currentItem['isLiked'] = 1
-          } else if (currentItem['isLiked'] == 1) {
-            currentItem['likeCount'] = (currentItem['likeCount'] || 1) - 1
-            currentItem['isLiked'] = 0
-          } else if (currentItem['isLiked'] == 2) {
-            currentItem['likeCount'] = (currentItem['likeCount'] || 0) + 1
-            currentItem['isLiked'] = 1
-          }
-        } else { // 踩一踩
-          if (currentItem['isLiked'] == 0) {
-            currentItem['isLiked'] = 2
-          } else if (currentItem['isLiked'] == 1) {
-            currentItem['likeCount'] = (currentItem['likeCount'] || 1) - 1
-            currentItem['isLiked'] = 2
-          } else if (currentItem['isLiked'] == 2) {
-            currentItem['isLiked'] = 0
-          }
-        }
-        
-        // 更新列表数据
-        const key = `list[${index}]`;
-        that.setData({
-          [key]: currentItem
-        });
-        analytics.track('content_like', {
-          bizType: 'square',
-          bizId: id,
-          properties: {
-            actionType: type,
-            isLiked: currentItem.isLiked
-          }
-        });
-      },
-      fail: function (res) {
-        toast('网络错误，请重试');
-      },
-      complete: function () {
-        delete that._likeRequests[requestKey];
-      }
-    })
+    if (String(type) === '1' && typeof item.isLiked !== 'boolean') { toast('互动状态未确认，请刷新'); return; }
+    this.changePostAction(item, String(type) === '1' ? 'LIKE' : 'NOT_INTERESTED', String(type) === '1' && item.isLiked);
   },
 
   favoriteClick(e) {
-    const index = feedIndexFromEvent(e);
-    const item = this.data.list[index];
+    const item = this.data.list[feedIndexFromEvent(e)];
     if (!item || !item.id) return;
-    const requestKey = String(item.id);
-    this._favoriteRequests = this._favoriteRequests || Object.create(null);
-    if (this._favoriteRequests[requestKey]) return;
-    this._favoriteRequests[requestKey] = true;
-    const next = item.isBookmarked == 1 ? 0 : 1;
-    app.sendRequest({
-      hideLoading: true,
-      silentError: true,
-      url: '/api/creativesquare/bookmark',
-      method: 'POST',
-      data: {
-        id: item.id,
-        bookmark: next,
-        request_id: 'bookmark-' + item.id + '-' + next + '-' + Date.now().toString(36)
+    if (typeof item.isBookmarked !== 'boolean') { toast('收藏状态未确认，请刷新'); return; }
+    this.changePostAction(item, 'BOOKMARK', item.isBookmarked);
+  },
+
+  changePostAction(item, actionType, removing) {
+    this.communityClient();
+    const key = String(item.id) + ':' + actionType;
+    this._actionRequests = this._actionRequests || Object.create(null);
+    if (this._actionRequests[key]) return;
+    this._actionRequests[key] = true;
+    const current = this.communityCurrent();
+    const commandKey = 'post:' + key;
+    const requestId = this.communityCommand(commandKey, [item.id, actionType, Boolean(removing)]);
+    const options = { postId: item.id, actionType, command: { requestId, actionType }, current, autoErrorToast: false,
+      success: res => {
+        if (res.code != 200) { if (res.code !== 499) toast(res.msg || '操作未确认，请刷新重试'); return; }
+        const list = this.data.list.slice(), index = list.findIndex(row => String(row.id) === String(item.id));
+        if (index < 0) return;
+        if (actionType === 'NOT_INTERESTED') list.splice(index, 1);
+        else { const authority=this.postView(res.data);
+          list[index]=Object.assign({},list[index],actionType==='LIKE'?{isLiked:authority.isLiked,likeCount:authority.likeCount}:{isBookmarked:authority.isBookmarked,bookmarkCount:authority.bookmarkCount}); }
+        this.setData({ list, nodata: list.length < 1 });
+        delete this._communityCommands[commandKey];
+        analytics.track('content_like', { bizType: 'square', bizId: item.id, properties: { actionType } });
       },
-      success: (res) => {
-        if (!res || res.code != '200') {
-          toast((res && res.msg) || '操作失败');
-          return;
-        }
-        const current = this.data.list[index];
-        if (!current || String(current.id) !== String(item.id)) return;
-        const list = this.data.list.slice();
-        current.isBookmarked = next;
-        list[index] = current;
-        this.setData({ list: list });
-      },
-      fail: () => toast('网络错误，请重试'),
-      complete: () => { delete this._favoriteRequests[requestKey]; }
-    });
+      fail: () => toast('结果未确认，请重试同一操作或刷新'),
+      complete: () => { delete this._actionRequests[key]; }
+    };
+    if (removing) this.communityClient().removePostAction(options);
+    else this.communityClient().addPostAction(options);
   },
 
   followClick(e) {
@@ -272,11 +259,13 @@ Page({
     let topicList = that.data.list
     let item = topicList[index]
     if (!item || !item.memberId) return;
+    if (![true,false,0,1].includes(item.isFollowTheUser)) { toast('关注状态未确认，请刷新'); return; }
     const requestKey = String(item.memberId);
     that._followRequests = that._followRequests || Object.create(null);
     if (that._followRequests[requestKey]) return;
     that._followRequests[requestKey] = true;
     // R10-07:带上「期望状态」,丢响应后重试同一意图不会反转服务端关系。
+    const current = this.communityCurrent();
     const intendedFollow = item.isFollowTheUser ? 0 : 1;
     app.sendRequest({
       hideLoading: true,
@@ -288,6 +277,7 @@ Page({
         follow: intendedFollow,
       },
       success: function (res) {
+        if (!current()) return;
         if (res.code == "200") {
           const nextFollowState = intendedFollow;
           const nextList = topicList.slice();
@@ -300,6 +290,7 @@ Page({
         }
       },
       fail: function (res) {
+        if (!current()) return;
         toast('网络错误，请重试');
       },
       complete: function () {
@@ -326,7 +317,14 @@ Page({
   },
   onActivitySelect: function (e) {
     const activity = e.detail.activity || null;
-    if (activity) activity.routePreviewImg = e.detail.routePreviewImg || '';
+    if (activity) {
+      const preview=e.detail.routePreviewImg || '';
+      if(preview){
+        try{const receipt=e.detail.routePreviewReceipt;if(!receipt || receipt.url!==preview)throw new Error('路线预览上传未完成，请重新选择活动');this.communityClient().captureUpload(receipt);}
+        catch(error){toast(error.msg || error.message || '路线预览状态无法确认，请重新选择');return;}
+      }
+      activity.routePreviewImg=preview;
+    }
     this.setData({
       selectedActivity: activity,
       activityPickerShow: false
@@ -346,7 +344,7 @@ Page({
       postActionShow: true,
       currentActionId: item.id == null ? '' : String(item.id),
       currentActionSummary: item.contents || '',
-      currentActionOwner: !!(item.memberId && String(item.memberId) === String(this.data.userId))
+      currentActionOwner: item.viewerIsAuthor === true && item.lifecycle !== 'REMOVED'
     });
   },
 
@@ -371,33 +369,26 @@ Page({
 
   // 删除(H051):软删 + 归属校验都在后端;成功后本地摘掉这一行(与举报同一口径)。
   deleteCurrentSquarePost: function () {
-    const index = this._actionIndex;
-    const item = this.data.list[index];
+    this.communityClient();
+    const item = this.data.list[this._actionIndex];
     if (!item || !item.id || this._deletingPost) return;
-    const that = this;
+    const current = this.communityCurrent();
     const pa = this.selectComponent && this.selectComponent('#post-actions');
     this._deletingPost = true;
-    app.sendRequest({
-      hideLoading: true,
-      url: '/api/creativesquare/delete',
-      method: 'POST',
-      data: { id: item.id },
-      success(res) {
-        that._deletingPost = false;
-        if (res && res.code == '200') {
+    const key = 'delete:' + item.id;
+    this.communityClient().deletePost({ postId: item.id, current, autoErrorToast: false,
+      command: { expectedVersion: item.version, requestId: this.communityCommand(key, [item.id, item.version]) },
+      success: res => {
+        if (res.code == 200) {
           if (pa) pa.deleteDone();
-          const list = that.data.list.slice();
-          list.splice(index, 1);
-          that.setData({ list: list, nodata: list.length < 1 });
-          that.closePostActions();
-        } else if (pa) {
-          pa.deleteFailed((res && res.msg) || '删除失败');
-        }
+          const list = this.data.list.filter(row => String(row.id) !== String(item.id));
+          this.setData({ list, nodata: list.length < 1 });
+          delete this._communityCommands[key];
+          this.closePostActions();
+        } else if (pa && res.code !== 499) pa.deleteFailed(res.msg || '删除未确认，请刷新后重试');
       },
-      fail() {
-        that._deletingPost = false;
-        if (pa) pa.deleteFailed('网络异常，请重试');
-      }
+      fail: () => { if (pa) pa.deleteFailed('删除结果未确认，请刷新后重试'); },
+      complete: () => { this._deletingPost = false; }
     });
   },
 
@@ -412,7 +403,8 @@ Page({
       id: String(item.id),
       contents: item.contents || '',
       dataId: item.dataId,
-      dataType: item.dataType
+      dataType: item.dataType,
+      version: item.version, lifecycle: item.lifecycle
     } });
     this.setData({ composeShow: true });
   },
@@ -439,7 +431,7 @@ Page({
         if (!res.confirm || !current()) {
           return;
         }
-        community.request({
+        that.communityClient().request({
           hideLoading: true,
           autoErrorToast: false,
           url: '/api/creativesquare/report',
@@ -590,6 +582,7 @@ Page({
 
   onUnload() {
     this._unloaded = true;
+    if (this._community) this._community.dispose();
     reportSheet.cancel(this);
     this._feedRequestId = (this._feedRequestId || 0) + 1;
     if (this._feedRequestTask && typeof this._feedRequestTask.abort === 'function') {
@@ -720,6 +713,7 @@ Page({
   },
 
   onLoad(options) {
+    this._unloaded = false;
     var that = this
     this._skipInitialShow = true;
     var app = getApp();
@@ -833,9 +827,15 @@ Page({
 
   // 为节点选择地点
   choosePoiForNode() {
+    if (this._unloaded) return;
     const that = this;
+    const current = this.communityCurrent();
+    const epoch = (this._poiEpoch || 0) + 1;
+    this._poiEpoch = epoch;
+    if (!current()) return;
     pickLocation({
       onPick(poi) {
+        if (!current() || that._poiEpoch !== epoch) return;
         that.setData({
           address: poi.name,
           longitude: poi.longitude,
@@ -861,6 +861,7 @@ Page({
   resetForm: function (e) {
     var that = this
     that.setData({
+      postAudience: 'PUBLIC',
       address: '',
       longitude: '',
       latitude: '',
@@ -876,129 +877,102 @@ Page({
     });
   },
 
-  // 提交表单数据
-  submitFormData() {
-    const that = this;
-
-    // 验证必填字段
-    const content = String(that.data.valCont || '').trim();
-    if (!content) {
-      toast('请输入内容');
-      return;
+  // 完整发布意图由共享 client 持久化，未知结果保留原输入和命令。
+  submitFormData(recoveryOptions) {
+    this.communityClient();
+    const content = String(this.data.valCont || '').trim();
+    if (!content) { toast('请输入内容'); return; }
+    if (this._submitting) return;
+    const current = this.communityCurrent();
+    this._submitting = true;
+    this.setData({ submitting: true, submitError: '', submitErrorKind: 'data' });
+    const snapshot = JSON.stringify([this.data.valCont, this.data.picList, this.data.fileList, this.data.address,
+      this.data.longitude, this.data.latitude, this.data.selectedActivity, this.data.switch1Checked, this.data.postAudience]);
+    const form = { body: content, mediaPaths: this.data.picList.slice(), audience: this.data.postAudience, locationPrecision: 'NONE' };
+    const activity = this.data.selectedActivity;
+    if (activity) {
+      const referenceId = activity.dataId != null && activity.dataId !== '' ? activity.dataId : activity.activityId;
+      if(activity.routePreviewImg && !form.mediaPaths.includes(activity.routePreviewImg))form.mediaPaths.push(activity.routePreviewImg);
+      form.references = [{ referenceType: String(activity.dataType || 1) === '2' ? 'TOPIC' : 'ACTIVITY', referenceId }];
     }
-
-    // 防重:发布在途中禁止重复提交,避免重复发帖
-    if (that._submitting) {
-      return;
-    }
-    that._submitting = true;
-    that.setData({
-      submitting: true,
-      submitError: '',
-      submitErrorKind: 'data'
-    });
-
-    let data = {
-      contents: content,
-      pics: that.data.picList.join(';'),
-      file_url: that.data.fileList.join(';'),
-      address: that.data.address,
-      longitude: that.data.longitude,
-      latitude: that.data.latitude,
-      is_crowdfunding: that.data.switch1Checked ? 1 : 2,
-      // 关联运动feed:data_type 1活动/2自玩主题(picker仅返回已完成项);data_id优先显式dataId,旧结构回退activityId,无则空
-      data_id: that.data.selectedActivity
-        ? (that.data.selectedActivity.dataId != null && that.data.selectedActivity.dataId !== ''
-            ? that.data.selectedActivity.dataId
-            : (that.data.selectedActivity.activityId || ''))
-        : '',
-      data_type: that.data.selectedActivity ? (that.data.selectedActivity.dataType || 1) : '',
-      route_preview_img: that.data.selectedActivity ? (that.data.selectedActivity.routePreviewImg || '') : ''
-    };
-    // R10-03:稳定发布意图键(账号隔离);同 payload 重试/冷恢复复用,成功后清除,改内容=新意图。
-    const publishMemberId = (typeof app.getUserID === 'function' ? String(app.getUserID() || '') : '');
-    const intent = publishIntent.begin(wx, {
-      scope: 'square:list',
-      memberId: publishMemberId,
-      payload: [data.contents, data.pics, data.file_url, data.address, data.longitude, data.latitude, data.is_crowdfunding, data.data_id, data.data_type, data.route_preview_img]
-    });
-    data.request_id = intent.key;
-    if (intent.previousUnknown) toast('上次结果未确认，重试不重复发');
-
-    app.sendRequest({
-      hideLoading: true,
-      silentError: true,
-      url: '/api/creativesquare/action',
-      data: data,
-      method: "POST",
-      success: function (res) {
-        if (res.code == "200") {
-          publishIntent.settle(wx, 'square:list', publishMemberId, intent.key, 'success');
-          // 先发后审:发布即可见(status=1)。图片是异步送检,命中违规由后端回调下架成
-          // status=2,作者在卡片上见「未通过审核」徽章 —— 那是**状态**不是动作结果,
-          // 不归结果面板(见 cy-state-shell 那条分界)。pill 把这条规则当场说清楚,
-          // 免得之后被下架时觉得是平台出尔反尔。
-          that.setData({
-            resultSheet: {
-              show: true, kind: 'success', title: '发布成功',
-              sub: '帖文已发布,现在广场里就能看到。',
-              meta: '', pill: '先发后审 · 命中违规会自动下架',
-              why: '', duration: RESULT_SHEET_MS,
-            },
-          });
-          that.resetForm();
-          that.refreshList();
-        } else {
-          if (res && res.intentDiscarded === true) {
-            // 服务端明确该发布已软删:丢弃意图键,重新发布自然换新键(旧帖不自动复活)
-            publishIntent.discard(wx, 'square:list', publishMemberId, intent.key);
-          } else {
-            publishIntent.settle(wx, 'square:list', publishMemberId, intent.key, 'rejected');
-          }
-          // 文本机审是**同步**拦下的(status=2 + 返错),这一下有明确的动作结果 ⇒ 面板说清楚;
-          // 页内 cy-inline-error 带「重试」,仍是持久的恢复出口,面板收掉它还在。
-          const message = app.getRequestErrorMessage(res, '发布失败，请稍后重试');
-          that.setData({
-            submitError: message,
-            submitErrorKind: 'data',
-            resultSheet: {
-              show: true, kind: 'fail', title: '这条没有发出去',
-              sub: '内容还在,改完可以直接重发。',
-              meta: '', pill: '', why: message, duration: RESULT_SHEET_MS,
-            },
-          });
+    const fail = res => {
+      if (!current() || Number(res && res.code) === 499) return;
+      if(res && (res.requiresRecovery===true || (res.intentDiscarded===true && res.requiresRestart===true))){
+        const restart=res.intentDiscarded===true && res.requiresRestart===true;
+        if(recoveryOptions && (restart?recoveryOptions.restartDiscarded:recoveryOptions.recoverPrevious)) {
+          this.setData({submitError:res.msg || '仍未确认，内容已保留'});return;
         }
-      },
-      fail: function (res) {
-        publishIntent.settle(wx, 'square:list', publishMemberId, intent.key, 'unknown');
-        that.setData({
-          submitError: app.getRequestErrorMessage(res, '网络错误，请检查连接后重试'),
-          submitErrorKind: 'network'
-        });
-      },
-      complete: function () {
-        that._submitting = false;
-        that.setData({ submitting: false });
+        const confirmSnapshot=JSON.stringify([this.data.valCont,this.data.picList,this.data.fileList,this.data.selectedActivity,
+          this.data.postAudience,this.data.address,this.data.latitude,this.data.longitude]);
+        modal.show({title:restart?'原提交已删除':'先核对上次提交',
+          content:restart?'保留当前内容作为新帖重新提交？原提交不会复活。':'上次结果还未确认。先核对原提交，本次正文、图片和可见范围仍保留，核对后再提交本次修改。',
+          confirmText:restart?'作为新帖提交':'核对上次',cancelText:'取消',success:result=>{
+            if(!result.confirm || !current() || confirmSnapshot!==JSON.stringify([this.data.valCont,this.data.picList,this.data.fileList,this.data.selectedActivity,
+              this.data.postAudience,this.data.address,this.data.latitude,this.data.longitude]))return;
+            this.submitFormData(restart?{restartDiscarded:true}:{recoverPrevious:true});
+          }});
+        return;
       }
-    });
+      this.setData({ submitError: app.getRequestErrorMessage(res, '发布结果未确认，内容已保留，请重试'),
+        submitErrorKind: res && res.transportFailure ? 'network' : 'data' });
+    };
+    const send = () => {
+      if (!current()) return;
+      this.communityClient().publishNew({ scope: 'square:list', form, current, autoErrorToast: false,
+        recoverPrevious:Boolean(recoveryOptions && recoveryOptions.recoverPrevious===true),restartDiscarded:Boolean(recoveryOptions && recoveryOptions.restartDiscarded===true),
+        selectGuideline: (document, task) => new Promise((resolve, reject) => modal.show({ title: '社区发布规范',
+          content: document.rules.map(rule => rule.title + (rule.content ? '：' + rule.content : '')).join('\n'),
+          confirmText: '同意并提交', cancelText: '取消',
+          success: result => current() && !task.aborted ? resolve(result.confirm === true) : reject({ code:499,msg:'已取消提交' }),
+          fail: reject })),
+        success: res => {
+          if (res.code !== 200) { fail(res); return; }
+          const post = res.data.post;
+          const unchanged = res.recoveredPrevious!==true && snapshot === JSON.stringify([this.data.valCont, this.data.picList, this.data.fileList, this.data.address,
+            this.data.longitude, this.data.latitude, this.data.selectedActivity, this.data.switch1Checked, this.data.postAudience]);
+          if (unchanged) this.resetForm();
+          this.setData({ resultSheet: { show:true,kind:'success',title:res.recoveredPrevious===true?'上次提交已确认':post.lifecycle === 'CHECKING' ? '已提交审核' : '提交成功',
+            sub: post.lifecycle === 'CHECKING' ? '审核通过后按可见范围展示。' : post.audience === 'PRIVATE' ? '仅自己可见，未公开到广场。' : '帖文已发布。',
+            meta:res.recoveredPrevious===true?'本次修改尚未提交，内容已保留':unchanged ? '' : '后续输入已保留',pill:'',why:'',duration:RESULT_SHEET_MS } });
+          this.refreshList();
+        }, fail,
+        complete: () => { this._submitting = false; this.setData({ submitting:false }); }
+      });
+    };
+    if (this.data.fileList.length || this.data.switch1Checked) {
+      fail({msg:'当前附件或众筹选项尚未接通，内容已保留，请移除该选项后重试'});
+      this._submitting = false; this.setData({submitting:false}); return;
+    }
+    const hasLocation = this.data.longitude !== '' || this.data.latitude !== '' || Boolean(this.data.address);
+    if (hasLocation) {
+      let grid;
+      try { grid = geohash9(this.data.latitude, this.data.longitude); }
+      catch (error) { fail(error); this._submitting = false; this.setData({submitting:false}); return; }
+      if(this.data.postAudience==='PRIVATE'){Object.assign(form,{audience:'PRIVATE',locationPrecision:'EXACT',approximateGeohash:grid,cityCode:null});send();return;}
+      modal.show({ title:'精确地点仅自己可见', content:'保留这个精确地点将作为私密帖文提交。之后清除地点也会保持仅自己可见。',
+        confirmText:'仅自己可见',cancelText:'取消', success: result => {
+          if (!current()) return;
+          if (!result.confirm) { this._submitting = false; this.setData({submitting:false}); return; }
+          this.setData({postAudience:'PRIVATE'});
+          Object.assign(form,{audience:'PRIVATE',locationPrecision:'EXACT',approximateGeohash:grid,cityCode:null}); send();
+        }, fail: error => { if (!current()) return; fail(error); this._submitting=false;this.setData({submitting:false}); }
+      });
+    } else send();
   },
 
   retrySubmit() {
     this.submitFormData();
   },
 
-  // 上传图片
-  uploadPic: function (e) {
-    var that = this;
-    app.chooseImage(function (res) {
-      let ll = that.data.picList != "" ? that.data.picList : [];
-      res.forEach(function (v) {
-        ll.push(v);
-      })
-      that.setData({
-        'picList': ll
-      })
-    }, 6);
+  // 只保存正常上传接口签发的回执；发布阶段再按原命令注册媒体。
+  uploadPic: function () {
+    const current = this.communityCurrent(), client = this.communityClient();
+    const count = Math.max(0, 6 - this.data.picList.length);
+    if (!count) return;
+    app.chooseImage(rows => {
+      if (!current()) return;
+      this.setData({ picList: this.data.picList.concat(rows).slice(0,6) });
+    }, count, {bizType:'COMMUNITY_POST',mapResult: data => client.captureUpload(data)});
   },
 
   // 删除图片
@@ -1079,8 +1053,12 @@ Page({
   },
 
   // 弹窗发布/保存成功 —— 同页,直接刷,不必再靠 onShow 猜。
-  onComposePublished: function () {
-    this.setData({ valCont: '', canSubmit: false, composePrefill: '', composeEdit: null });
+  onComposePublished: function (event) {
+    const detail = event && event.detail || {};
+    if (this._unloaded || (detail.ownerId != null && String(detail.ownerId) !== String(app.getUserID() || ''))) return;
+    if (detail.keepOpen !== true) {
+      this.setData({ valCont: '', canSubmit: false, composePrefill: '', composeEdit: null });
+    }
     this.refreshList();
   },
 
@@ -1153,6 +1131,7 @@ Page({
 
   // 修改：获取列表数据，增加isRefresh参数区分刷新还是加载更多
   getList: function (isRefresh = false, requestedPage) {
+    this.communityClient();
     var that = this;
     const pageNum = requestedPage || (isRefresh ? 1 : that.data.page_no || 1);
     const isLoadMore = pageNum > 1 && !isRefresh;
@@ -1180,24 +1159,16 @@ Page({
         that.setData({ loadError: true });
       }
     };
-    that._feedRequestTask = app.sendRequest({
-      hideLoading: true,
-      silentError: true,
-      url: '/api/creativesquare/list',
-      method: "POST",
-      // 登录则带 token 让后端识别本人(放行自己的 status=0/2 待审/驳回帖 → 徽章生效);登出保持匿名不变。
-      // 实时读 getUserID 而非 onLoad 快照,避免"进页后再登录"时身份丢失。
-      auth: app.getUserID() > 0 ? true : false,
-      data: {
-        is_my: 0,
-        user_id: 0,
-        pageNum: pageNum,
-        pageSize: app.getPageSize(),
-      },
+    const current = that.communityCurrent();
+    that._feedRequestTask = that.communityClient().feed({
+      current: () => current() && requestId === that._feedRequestId,
+      autoErrorToast: false,
+      query: { cursor: isLoadMore ? that._nextCursor : null, limit: app.getPageSize() },
       success: function (res) {
         if (requestId !== that._feedRequestId) return;
-        if (res && res.code == "200" && res.data && isRecordList(res.data.rows)) {
-          let newlist = res.data.rows
+        if (res && res.code == "200" && res.data && Array.isArray(res.data.items)) {
+          that._nextCursor = res.data.nextCursor;
+          let newlist = res.data.items.map(bundle => that.postView(bundle))
           for (let i = 0; i < newlist.length; i++) {
             if (newlist[i]['pics'] != null) {
               // R10-06:清空后的 '' 不得被解析成一个空图片位
@@ -1228,7 +1199,7 @@ Page({
             that.setData({
               list: newlist,
               page_no: pageNum,
-              hasMore: (app.getTotalPage(res.data.total, app.getPageSize()) > pageNum),
+              hasMore: res.data.hasMore,
               loadError: false,
               loadMoreError: '',
               nodata: newlist.length < 1
@@ -1239,7 +1210,7 @@ Page({
             that.setData(Object.assign(
               {
                 page_no: pageNum,
-                hasMore: (app.getTotalPage(res.data.total, app.getPageSize()) > pageNum),
+                hasMore: res.data.hasMore,
                 loadError: false,
                 loadMoreError: '',
                 nodata: oldLen + newlist.length < 1

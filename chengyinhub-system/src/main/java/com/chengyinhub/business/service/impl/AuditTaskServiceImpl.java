@@ -5,6 +5,9 @@ import com.chengyinhub.business.domain.CmsTemplateLibrary;
 import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
 import com.chengyinhub.business.mapper.CmsTemplateLibraryMapper;
 import com.chengyinhub.business.service.support.TemplateAuditSnapshot;
+import com.chengyinhub.business.service.support.CommunityPostAuditSnapshot;
+import com.chengyinhub.business.domain.community.CommunityPost;
+import com.chengyinhub.business.mapper.CommunityPostMapper;
 
 import com.chengyinhub.business.domain.AuditRecord;
 import com.chengyinhub.business.domain.AuditTask;
@@ -86,6 +89,9 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
 
     @Autowired
     private AuditTaskMapper auditTaskMapper;
+
+    @Autowired
+    private CommunityPostMapper communityPostMapper;
 
     @Autowired
     private com.chengyinhub.business.mapper.RoamHangoutMapper roamHangoutMapper;
@@ -311,9 +317,66 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Long submitSafetyHold(String bizType, Long bizId, Long submitterId, String riskLevel, String snapshotJson) {
+        if (AuditTask.BIZ_COMMUNITY_POST.equals(bizType)) {
+            return submitCommunitySafetyHold(bizId, submitterId, riskLevel, snapshotJson);
+        }
         // 幂等:同 bizType+bizId 已有未结审核单(PENDING/ESCALATED)则复用,避免重复检测/重复举报刷单
         return findOrCreateOpenTask(bizType, bizId, submitterId, "auto_gate", riskLevel, snapshotJson);
+    }
+
+    /** 与帖文编辑/发布/审核统一先锁帖文、再锁审核单；失败随外层写事务回滚。 */
+    private Long submitCommunitySafetyHold(Long postId, Long submitterId, String riskLevel, String snapshotJson) {
+        CommunityPost post = communityPostMapper.selectByIdForUpdate(postId);
+        if (post == null || post.getVersion() == null || submitterId == null
+                || !submitterId.equals(post.getAuthorId())) throw communityReviewStale();
+        int reviewedVersion = CommunityPostAuditSnapshot.reviewedVersion(snapshotJson, postId, submitterId);
+        int expectedVersion;
+        if (CommunityPost.LIFECYCLE_DRAFT.equals(post.getLifecycle())) {
+            expectedVersion = post.getVersion() + 1; // publish 尚未完成的同事务 CAS
+        } else if (CommunityPost.LIFECYCLE_CHECKING.equals(post.getLifecycle())) {
+            expectedVersion = post.getVersion(); // edit 已完成内容 CAS
+        } else {
+            throw communityReviewStale();
+        }
+        if (reviewedVersion != expectedVersion || !CommunityPostAuditSnapshot.matches(snapshotJson,
+                CommunityPostAuditSnapshot.capture(post, expectedVersion, communityPostMapper))) {
+            throw communityReviewStale();
+        }
+        AuditTask task = auditTaskMapper.selectOpenAuditTaskForUpdate(AuditTask.BIZ_COMMUNITY_POST, postId);
+        Date now = DateUtils.getNowDate();
+        if (task == null) {
+            task = new AuditTask();
+            task.setBizType(AuditTask.BIZ_COMMUNITY_POST); task.setBizId(postId);
+            task.setSubmitterId(submitterId); task.setSourceType("auto_gate");
+            task.setRiskLevel(riskLevel); task.setStatus(AuditTask.STATUS_PENDING);
+            task.setSnapshotJson(snapshotJson); task.setVersion(0);
+            task.setSubmittedAt(now); task.setCreateTime(now);
+            try {
+                if (auditTaskMapper.insertAuditTask(task) != 1 || task.getId() == null) throw communityReviewStale();
+            } catch (org.springframework.dao.DuplicateKeyException duplicate) {
+                task = auditTaskMapper.selectOpenAuditTaskForUpdate(AuditTask.BIZ_COMMUNITY_POST, postId);
+                if (task == null) throw duplicate;
+                refreshCommunitySafetyTask(task, submitterId, riskLevel, snapshotJson, now);
+            }
+        } else {
+            refreshCommunitySafetyTask(task, submitterId, riskLevel, snapshotJson, now);
+        }
+        AuditRecord submitted = new AuditRecord();
+        submitted.setTaskId(task.getId()); submitted.setAction("SUBMIT");
+        submitted.setOperatorId(submitterId); submitted.setSnapshotJson(snapshotJson); submitted.setCreateTime(now);
+        if (auditRecordMapper.insertAuditRecord(submitted) != 1) throw communityReviewStale();
+        return task.getId();
+    }
+
+    private void refreshCommunitySafetyTask(AuditTask task, Long submitterId, String riskLevel,
+                                            String snapshotJson, Date now) {
+        if (!"auto_gate".equals(task.getSourceType()) || !submitterId.equals(task.getSubmitterId())) {
+            throw new ServiceException("存在其他来源的开放审核任务，请联系审核人员处理后重新保存", HttpStatus.CONFLICT);
+        }
+        if (task.getVersion() == null || auditTaskMapper.refreshCommunitySafetySnapshotCas(task.getId(),
+                task.getVersion(), submitterId, riskLevel, snapshotJson, now) != 1) throw communityReviewStale();
     }
 
     @Override
@@ -487,7 +550,10 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         }
         TemplateReviewLock templateLock = isTemplateTask(task) ? lockTemplateReview(task) : null;
         if (templateLock != null) task = templateLock.task;
-        boolean versionedReview = templateLock != null || isTopicBundle(task);
+        CommunityReviewLock communityLock = AuditTask.BIZ_COMMUNITY_POST.equals(task.getBizType())
+                ? lockCommunityReview(task) : null;
+        if (communityLock != null) task = communityLock.task;
+        boolean versionedReview = templateLock != null || communityLock != null || isTopicBundle(task);
         if (versionedReview && request.getExpectedVersion() == null) {
             throw new ServiceException("请刷新审核内容后重试", HttpStatus.CONFLICT);
         }
@@ -510,6 +576,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             throw new ServiceException("审核内容已变化，请刷新后重试", HttpStatus.CONFLICT);
         }
         if (templateLock != null) assertTemplateReviewCurrent(templateLock, request);
+        if (communityLock != null) assertCommunityReviewCurrent(communityLock);
         Date now = DateUtils.getNowDate();
         int rows = auditTaskMapper.updateAuditTaskReviewCas(taskId, task.getStatus(), request.getStatus(),
                 operatorId, task.getVersion(), now);
@@ -519,6 +586,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 requireExactReviewReplay(replay, operatorId, decisionVersion, request);
                 return 1;
             }
+            if (communityLock != null) throw communityReviewStale();
             return 0;
         }
         if (isTopicBundle(task)) {
@@ -551,6 +619,36 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         applyModeration(task, request.getStatus(), request.getReasonText());
         appendDecisionAudit(task, operatorId, request, record, now);
         return rows;
+    }
+
+    private CommunityReviewLock lockCommunityReview(AuditTask hint) {
+        CommunityReviewLock locked = new CommunityReviewLock();
+        locked.post = communityPostMapper.selectByIdForUpdate(hint.getBizId());
+        locked.task = auditTaskMapper.selectAuditTaskByIdForUpdate(hint.getId());
+        if (locked.task == null || !AuditTask.BIZ_COMMUNITY_POST.equals(locked.task.getBizType())
+                || !java.util.Objects.equals(hint.getBizId(), locked.task.getBizId())) throw communityReviewStale();
+        return locked;
+    }
+
+    private void assertCommunityReviewCurrent(CommunityReviewLock locked) {
+        AuditTask task = locked.task;
+        CommunityPost post = locked.post;
+        if (post == null || post.getVersion() == null || !"auto_gate".equals(task.getSourceType())
+                || !java.util.Objects.equals(post.getAuthorId(), task.getSubmitterId())
+                || !CommunityPost.LIFECYCLE_CHECKING.equals(post.getLifecycle())) throw communityReviewStale();
+        int reviewedVersion = CommunityPostAuditSnapshot.reviewedVersion(task.getSnapshotJson(),
+                post.getId(), post.getAuthorId());
+        if (reviewedVersion != post.getVersion() || !CommunityPostAuditSnapshot.matches(task.getSnapshotJson(),
+                CommunityPostAuditSnapshot.capture(post, reviewedVersion, communityPostMapper))) throw communityReviewStale();
+    }
+
+    private ServiceException communityReviewStale() {
+        return new ServiceException("帖文或审核内容已变化，请由作者重新保存并刷新审核任务", HttpStatus.CONFLICT);
+    }
+
+    private static class CommunityReviewLock {
+        private CommunityPost post;
+        private AuditTask task;
     }
 
     private boolean isTemplateTask(AuditTask task) {
@@ -907,7 +1005,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if (!down && !up) return;
         try {
             if (AuditTask.BIZ_COMMUNITY_POST.equals(bizType)) {
-                communityPostServiceProvider.getObject().applyAuditDecision(bizId, up);
+                communityPostServiceProvider.getObject().applyAuditDecision(bizId, up,
+                        CommunityPostAuditSnapshot.reviewedVersion(task.getSnapshotJson(), bizId, task.getSubmitterId()));
             } else if (AuditTask.BIZ_COMMUNITY_POST_COMMENT.equals(bizType)) {
                 communityPostServiceProvider.getObject().applyCommentAuditDecision(bizId, up);
             } else if (AuditTask.BIZ_SQUARE.equals(bizType)) {

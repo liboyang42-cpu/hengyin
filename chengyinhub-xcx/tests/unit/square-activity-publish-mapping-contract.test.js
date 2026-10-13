@@ -1,5 +1,5 @@
 // R10-09 发帖关联映射:真实 activity-picker emit → 真实 square/list 发布请求。
-// 自玩完成必须发 data_type=2 + data_id=topicId;活动仍 1 + activityId;清除/失败/迟回不得退化直发。
+// 自玩完成发送 TOPIC 引用；活动发送 ACTIVITY 引用；附件须真实上传回执登记，清除/失败/迟回不得退化直发。
 const { beforeEach, test } = require('node:test')
 const assert = require('node:assert/strict')
 const path = require('node:path')
@@ -25,10 +25,11 @@ beforeEach(() => {
   pageConfig = null
   pickerDef = null
   requests = []
-  global.getApp = () => ({
+  const app = {
     globalData: { statusBarHeight: 20, user_id: 1, features: {} },
     getUserID: () => 1,
     getAvatar: () => '',
+    getPageSize: () => 10,
     getUserRole: () => '',
     getUserType: () => 0,
     isDevEnv: () => false,
@@ -36,16 +37,21 @@ beforeEach(() => {
     getUploadClient: () => ({
       uploadAll(paths, opts) {
         // 路线预览图上传:直接成功,让 picker 走真实 finish→emitSelect
-        opts.onDone({ ok: true, results: ['https://img.example/route.png'] })
+        assert.equal(opts.bizType, 'COMMUNITY_POST')
+        opts.onDone({ ok: true, results: [opts.mapResult(uploadReceipt('https://img.example/route.png'))] })
         return { abort() {}, destroy() {} }
       },
     }),
     tips() {},
     getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
-  })
+  }
+  global.getApp = () => app
+  const store = new Map()
   global.wx = {
-    getStorageSync: () => '',
-    setStorageSync() {},
+    getStorageSync: key => store.get(key),
+    setStorageSync: (key, value) => store.set(key, structuredClone(value)),
+    removeStorageSync: key => store.delete(key),
+    showModal: options => options.success({ confirm: true }),
     hideTabBar() {},
     getWindowInfo: () => ({ statusBarHeight: 20, windowHeight: 800 }),
     getSystemInfoSync: () => ({ statusBarHeight: 20, windowHeight: 800 }),
@@ -120,99 +126,121 @@ function primeSubmit(page) {
   page.data.switch1Checked = false
 }
 
-test('自玩完成:真实 picker emit 到发布请求必须是 data_type=2 + data_id=topicId', async () => {
+const tick = () => new Promise(resolve => setImmediate(resolve))
+function uploadReceipt(url) { return { url, uploadReceipt: 'fixture-upload-receipt', byteSize: 32, mimeType: 'image/png' } }
+async function awaitCreate() {
+  await tick()
+  let req = requests.at(-1)
+  if (req.url === '/api/v1/community/guidelines/active') {
+    req.success({code:200,data:{id:3,contentJson:{rules:[{title:'真实规范'}]}}})
+    await tick(); req = requests.at(-1)
+    assert.equal(req.url, '/api/v1/community/guidelines/ack')
+    req.success({code:200,data:{}})
+    await tick(); req = requests.at(-1)
+  }
+  if (req.url === '/api/v1/community/media/register') {
+    assert.equal(req.method, 'POST')
+    assert.equal(req.data.uploadReceipt, 'fixture-upload-receipt')
+    assert.equal(req.data.byteSize, 32)
+    assert.equal(req.data.mimeType, 'image/png')
+    req.success({code:200,data:{id:91}})
+    await tick(); req = requests.at(-1)
+  }
+  assert.equal(req.url, '/api/v1/community/posts')
+  assert.equal(req.method, 'POST')
+  assert.ok(req.data.clientRequestId)
+  return req
+}
+function assertReference(body, type, id) {
+  assert.deepEqual(body.references.map(row => [row.referenceType, row.referenceId]), [[type, id]])
+  assert.equal(body.data_type, undefined)
+  assert.equal(body.data_id, undefined)
+}
+
+test('自玩完成:真实 picker emit 到规范发布必须保留 TOPIC 关联和已登记路线图片', async () => {
   const page = loadListPage()
   const emitted = await pickerEmitFor(SELF_PLAY_ITEM)
-
   page.onActivitySelect({ detail: emitted })
   primeSubmit(page)
   page.submitFormData()
-
-  assert.equal(requests.length, 2, 'picker 1 次 + 发布 1 次')
-  const body = requests[1].data
-  assert.equal(body.data_type, 2, '自玩发布必须是 2=主题')
-  assert.equal(body.data_id, 990062, '自玩发布必须携带主题 ID,不得空值退化直发')
-  assert.equal(body.route_preview_img, 'https://img.example/route.png')
+  const create = await awaitCreate()
+  assertReference(create.data, 'TOPIC', 990062)
+  assert.deepEqual(create.data.mediaIds, [91])
+  const register = requests.find(r => r.url === '/api/v1/community/media/register')
+  assert.equal(register.data.objectKey, 'https://img.example/route.png')
+  assert.equal(requests[0].url, '/api/play/my-completed')
+  const draft = { post: { ...create.data, id: 77, authorId: 1, version: 0, lifecycle: 'DRAFT' },
+    viewerIsAuthor: true, viewerCanComment: true, viewerFollowing: false,
+    media: [{id:91,mediaType:'IMAGE',objectKey:'https://img.example/route.png'}], references:create.data.references, topicCodes:[], mentions:[] }
+  create.success({code:200,data:draft}); await tick()
+  const publish = requests.at(-1)
+  assert.equal(publish.url, '/api/v1/community/posts/77/publish')
+  assert.equal(publish.data.expectedVersion, 0)
+  publish.success({code:200,data:{...draft,post:{...draft.post,version:1,lifecycle:'CHECKING'}}}); await tick()
+  assert.equal(page.data.submitError, '')
+  assert.equal(page.data.submitting, false)
 })
 
-test('正式活动:仍是 data_type=1 + data_id=activityId', () => {
+test('正式活动:保留 ACTIVITY 及 activityId', async () => {
   const page = loadListPage()
   page.onActivitySelect({ detail: { activity: ACTIVITY_ITEM, routePreviewImg: '' } })
-  primeSubmit(page)
-  page.submitFormData()
-
-  const body = requests[0].data
-  assert.equal(body.data_type, 1)
-  assert.equal(body.data_id, 501)
+  primeSubmit(page); page.submitFormData()
+  assertReference((await awaitCreate()).data, 'ACTIVITY', 501)
 })
 
-test('清除选择:发布为无关联,不残留上一条 data_id', () => {
+test('清除选择:发布为无关联,不残留上一条引用或图片', async () => {
   const page = loadListPage()
   page.onActivitySelect({ detail: { activity: SELF_PLAY_ITEM, routePreviewImg: '' } })
-  page.clearActivity()
-  primeSubmit(page)
-  page.submitFormData()
-
-  const body = requests[0].data
-  assert.equal(body.data_id, '')
-  assert.equal(body.data_type, '')
-  assert.equal(body.route_preview_img, '')
+  page.clearActivity(); primeSubmit(page); page.submitFormData()
+  const body = (await awaitCreate()).data
+  assert.deepEqual(body.references, [])
+  assert.deepEqual(body.mediaIds, [])
 })
 
-test('兼容旧结构(无 dataId):回退到 activityId,不丢活动关联', () => {
+test('兼容旧结构(无 dataId):回退到 activityId,不丢活动关联', async () => {
   const page = loadListPage()
   const legacy = { activityId: 601, topicId: 990064, dataType: 1, name: '旧活动' }
   page.onActivitySelect({ detail: { activity: legacy, routePreviewImg: '' } })
-  primeSubmit(page)
-  page.submitFormData()
-
-  const body = requests[0].data
-  assert.equal(body.data_id, 601)
-  assert.equal(body.data_type, 1)
+  primeSubmit(page); page.submitFormData()
+  assertReference((await awaitCreate()).data, 'ACTIVITY', 601)
 })
 
-test('失败恢复:发布失败保留选择,重试仍带同一自玩关联', () => {
+test('失败恢复:发布失败保留选择,重试仍带同一完整自玩关联 wire', async () => {
   const page = loadListPage()
   page.onActivitySelect({ detail: { activity: SELF_PLAY_ITEM, routePreviewImg: '' } })
-  primeSubmit(page)
-  page.submitFormData()
-  assert.equal(requests.length, 1)
-
-  requests[0].fail({ errMsg: 'network fail' })
-  requests[0].complete()
+  primeSubmit(page); page.submitFormData()
+  const first = await awaitCreate()
+  first.fail({ errMsg: 'network fail' }); await tick()
   assert.equal(page.data.submitting, false)
-  assert.equal(page.data.selectedActivity && page.data.selectedActivity.topicId, 990062, '失败不得丢选择')
-
+  assert.equal(page.data.selectedActivity.topicId, 990062, '失败不得丢选择')
   page.retrySubmit()
-  assert.equal(requests.length, 2)
-  assert.equal(requests[1].data.data_id, 990062)
-  assert.equal(requests[1].data.data_type, 2)
+  const retry = await awaitCreate()
+  assert.notEqual(retry, first)
+  assert.deepEqual(retry.data, first.data, '未知结果后连意图键与完整引用必须保持不变')
+  assertReference(retry.data, 'TOPIC', 990062)
 })
 
-test('迟回/改动选择后重试:按重试当刻的选择发,不用旧值', () => {
-  const page = loadListPage()
+test('未知结果后改变关联必须核旧wire，新关联与图片保留且不换键', async () => {
+  const page = loadListPage(), dialogs=[]
+  global.wx.showModal=options=>{if(options.title==='先核对上次提交')dialogs.push(options);else options.success({confirm:true})}
   page.onActivitySelect({ detail: { activity: SELF_PLAY_ITEM, routePreviewImg: '' } })
-  primeSubmit(page)
-  page.submitFormData()
-  requests[0].fail({})
-  requests[0].complete()
-
-  // 用户在重试前改选正式活动
-  page.onActivitySelect({ detail: { activity: ACTIVITY_ITEM, routePreviewImg: 'https://img.example/new.png' } })
-  page.retrySubmit()
-
-  const body = requests[1].data
-  assert.equal(body.data_type, 1, '重试必须用当前选择,不得残留自玩关联')
-  assert.equal(body.data_id, 501)
-  assert.equal(body.route_preview_img, 'https://img.example/new.png')
+  primeSubmit(page); page.submitFormData();const first = await awaitCreate();first.fail({});await tick()
+  page.onActivitySelect({ detail: { activity: ACTIVITY_ITEM, routePreviewImg: 'https://img.example/new.png', routePreviewReceipt: uploadReceipt('https://img.example/new.png') } })
+  const count=requests.length;page.retrySubmit();await tick();assert.equal(requests.length,count)
+  assert.equal(page.data.selectedActivity.activityId,ACTIVITY_ITEM.activityId);dialogs[0].success({confirm:false});await tick();assert.equal(requests.length,count)
+  page.retrySubmit();await tick();dialogs[1].success({confirm:true});await tick();const replay=requests.at(-1)
+  assert.deepEqual(replay.data,first.data);assertReference(replay.data,'TOPIC',990062);assert.equal(replay.data.clientRequestId,first.data.clientRequestId)
+  assert.equal(requests.filter(r=>r.url==='/api/v1/community/media/register').length,0,'核旧wire不得登记新关联预览图片')
+  assert.equal(page.data.selectedActivity.activityId,ACTIVITY_ITEM.activityId)
+  assert.equal(page.data.selectedActivity.routePreviewImg,'https://img.example/new.png')
 })
 
-test('发布在途防重复提交:第二次点击不发请求', () => {
+test('发布在途防重复提交:第二次点击不发重复请求', async () => {
   const page = loadListPage()
   page.onActivitySelect({ detail: { activity: SELF_PLAY_ITEM, routePreviewImg: '' } })
-  primeSubmit(page)
-  page.submitFormData()
-  page.submitFormData()
-
-  assert.equal(requests.length, 1, '在途不得重复发帖')
+  primeSubmit(page); page.submitFormData(); page.submitFormData()
+  await tick()
+  assert.equal(requests.length, 1, '规范确认在途也不得重复请求')
+  await awaitCreate()
+  assert.equal(requests.filter(r => r.url === '/api/v1/community/posts').length, 1)
 })

@@ -202,16 +202,22 @@ test('首页列表包含空元素时进入显式错误态且不崩溃', () => {
   assert.equal(h.vm.data.listErr.recommendedTopicList, true);
 });
 
-test('广场帖子和评论列表包含空元素时进入错误态且不崩溃', () => {
+test('广场帖子和评论列表包含空元素时进入错误态且不崩溃', async () => {
   const feed = harness('pages/square/list/index.js', 'page');
   feed.vm.getList();
-  assert.doesNotThrow(() => feed.requests[0].success({ code: '200', data: { rows: [null], total: 1 } }));
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(feed.requests[0].url, '/api/v1/community/feeds/LATEST');
+  assert.doesNotThrow(() => feed.requests[0].success({ code: '200', data: {items:[null],hasMore:false,nextCursor:9} }));
+  await new Promise(resolve => setImmediate(resolve));
   assert.equal(feed.vm.data.loadError, true);
 
   const detail = harness('pages/square/detail/index.js', 'page');
   detail.vm.data.id = 9;
   detail.vm.getList();
-  assert.doesNotThrow(() => detail.requests[0].success({ code: '200', data: { rows: [null], total: 1 } }));
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(detail.requests[0].url, '/api/v1/community/posts/9/comments');
+  assert.doesNotThrow(() => detail.requests[0].success({ code: '200', data: {items:[null],hasMore:false,nextCursor:9} }));
+  await new Promise(resolve => setImmediate(resolve));
   assert.equal(detail.vm.data.commentLoadError, true);
 });
 

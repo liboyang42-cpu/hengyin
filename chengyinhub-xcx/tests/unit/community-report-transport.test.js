@@ -18,13 +18,17 @@ function harness() {
   return { calls, tips, results, failures, completions, client, request, setActor(id) { actor = id; } };
 }
 
-test('transport only exports the report client and exposes no unused CRUD/upload adapters', () => {
+test('legacy request still supports only real report commands while typed operations are explicit', () => {
   assert.deepEqual(Object.keys(transport), ['createClient']);
-  assert.deepEqual(Object.keys(harness().client), ['request']);
+  assert.deepEqual(Object.keys(harness().client), ['request', 'feed', 'myPosts', 'bookmarks', 'detail', 'comments',
+    'addPostAction', 'removePostAction', 'addComment', 'likeComment', 'unlikeComment', 'deletePost',
+    'deleteComment', 'captureUpload', 'publishNew', 'saveEdit', 'dispose']);
+  assert.equal(harness().client.normalizePost, undefined);
+  assert.equal(harness().client.normalizeComment, undefined);
   const source = fs.readFileSync(path.resolve(__dirname, '../../utils/community-post-api.js'), 'utf8');
   assert.match(source, /app\.sendRequest\(\{[\s\S]*?url:\s*'\/api\/v1\/community\/capabilities'/);
   assert.match(source, /app\.sendRequest\(\{[\s\S]*?url:\s*'\/api\/v1\/community\/reports'/);
-  assert.doesNotMatch(source, /\/me\/|normalizePost|normalizeComment|captureUpload|guidelines\/|getRequestPlan/);
+  assert.doesNotMatch(source, /getRequestPlan/);
 });
 
 test('unsupported commands cannot forward requests or call removed CRUD paths', async () => {
@@ -42,11 +46,11 @@ for (const [url, targetType, id] of [['/api/creativesquare/report', 'CONTENT', 5
     await tick(); assert.equal(h.calls[0].url, '/api/v1/community/capabilities'); assert.equal(h.calls[0].method, 'GET');
     h.calls[0].success({ code: 200, data: { reporting } }); await tick();
     assert.deepEqual(labels, [['服务端原因']]); assert.equal(h.calls.length, 2);
-    const post = h.calls[1]; assert.equal(post.url, '/api/v1/community/reports'); assert.equal(post.method, 'POST');
+    const post = h.calls[1]; assert.equal(post.url, '/api/v1/community/reports'); assert.equal(post.method, 'POST'); assert.equal(post.header, 'application/json');
     for (const call of h.calls) {
       assert.equal(call.hideLoading, true); assert.equal(call.silentError, true);
+
     }
-    assert.deepEqual(post.header, { 'content-type': 'application/json' });
     assert.deepEqual(post.data, { targetType, targetId: id, reasonCode: 'SERVER_REASON', policyVersion: 'server-policy', requestId: 'caller-request' });
     post.success({ code: 200, data: { id: 71 } }); await tick();
     assert.equal(h.results[0].code, 200); assert.equal(h.completions.length, 1);

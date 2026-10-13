@@ -28,6 +28,10 @@ public interface CommunityPostMapper {
     int countActiveMemberEnforcement(@Param("memberId") Long memberId,
                                      @Param("types") List<String> types, @Param("now") Date now);
     List<CommunityPost> selectFeed(CommunityPostFeedQuery query);
+    List<CommunityPost> selectAuthorPosts(@Param("authorId") Long authorId,
+                                          @Param("cursor") Long cursor, @Param("limit") int limit);
+    List<CommunityPost> selectBookmarkedPosts(@Param("viewerId") Long viewerId,
+                                              @Param("cursor") Long cursor, @Param("limit") int limit);
     List<CommunityPost> selectAuthorDrafts(@Param("authorId") Long authorId,
                                            @Param("cursor") Long cursor, @Param("limit") int limit);
     int insertPost(CommunityPost post);
@@ -67,6 +71,7 @@ public interface CommunityPostMapper {
     List<Map<String, Object>> selectMediaForSafety(Long postId);
     int updateMediaReviewState(@Param("postId") Long postId, @Param("reviewState") String reviewState,
                                @Param("now") Date now);
+    List<String> selectTopicCodes(Long postId);
     int deleteTopics(Long postId);
     int insertTopic(@Param("postId") Long postId, @Param("topicCode") String topicCode,
                     @Param("now") Date now);
@@ -100,6 +105,7 @@ public interface CommunityPostMapper {
     int insertCommandReceipt(@Param("memberId") Long memberId, @Param("requestId") String requestId,
                              @Param("commandType") String commandType, @Param("aggregateId") Long aggregateId,
                              @Param("resultJson") String resultJson, @Param("now") Date now);
+    int countAuthorDeleteEvidence(@Param("memberId") Long memberId, @Param("postId") Long postId);
     int recomputeCounts(Long postId);
     int insertOutbox(@Param("eventId") String eventId, @Param("aggregateId") Long aggregateId,
                      @Param("eventType") String eventType, @Param("payloadJson") String payloadJson,

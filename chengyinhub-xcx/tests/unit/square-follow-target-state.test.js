@@ -7,6 +7,9 @@ const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
 const vm = require('node:vm')
+const {createRequire}=require('node:module')
+const tick=()=>new Promise(resolve=>setImmediate(resolve))
+const canonicalPost=(id=5)=>({post:{id,authorId:9,version:3,lifecycle:'PUBLISHED',body:'正文',viewerLiked:0,viewerBookmarked:0},media:[],references:[],viewerIsAuthor:true,viewerFollowing:false,viewerCanComment:true})
 
 const ROOT = path.resolve(__dirname, '../..')
 const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'utf8')
@@ -66,7 +69,7 @@ function mount(relativePath, kind, options = {}) {
     wx: global.wx,
     Page: (d) => { definition = d },
     Component: (d) => { definition = d },
-    require: () => noopModule(),
+    require: id => /community-post-(?:api|view)/.test(id) ? createRequire(path.join(ROOT,relativePath))(id) : noopModule(),
     setInterval: () => 1,
     clearInterval() {},
     setTimeout: () => 1,
@@ -235,7 +238,7 @@ test('广场详情:关注带意图态并只有成功才翻 UI', () => {
 
 test('广场详情评论区:关注按钮只表达关注,重试幂等', () => {
   const { instance, asked } = mount(SQUARE_DETAIL, 'page')
-  instance.setData({ id: 5, list: [{ id: 1, memberId: 88, isFollowTheUser: 0 }] })
+  instance.setData({ id: 5, list: [{ id: 1, memberId: 88, isFollowTheUser: false }] })
 
   instance.commentFollowClick({ currentTarget: { dataset: { index: 0 } } })
   const request = asked('/api/user/follow/action')[0]
@@ -304,37 +307,43 @@ test('负控:个人主页去掉意图态参数时必须判红', () => {
 
 // ---------------------------------------------------------------- R10-06 读侧:清空后对端不可见
 
-test('广场详情:清空后的空 pics 不再渲染空媒体位', () => {
+test('广场详情:清空后的空 pics 不再渲染空媒体位', async () => {
   const { instance } = mount(SQUARE_DETAIL, 'page')
   instance.setData({ id: 5 })
   instance.getData()
-  instance.answer('/api/creativesquare/info', {
+  await tick()
+  instance.answer('/api/v1/community/posts/5', {
     code: '200',
-    data: { id: 5, memberId: 9, contents: '正文', pics: '', address: '', longitude: '', latitude: '' },
+    data: canonicalPost(),
   })
+  await tick()
   assert.equal(instance.data.picList.length, 0, '空 pics 必须解析为空数组,不能是 [""]')
 })
 
-test('广场列表:清空后的空 pics 解析为空数组', () => {
+test('广场列表:清空后的空 pics 解析为空数组', async () => {
   const { instance } = mount(SQUARE_LIST, 'page')
   instance.getList(true, 1)
-  instance.answer('/api/creativesquare/list', {
+  await tick()
+  instance.answer('/api/v1/community/feeds/LATEST', {
     code: '200',
-    data: { rows: [{ id: 5, memberId: 9, contents: '正文', pics: '', address: '' }], total: 1 },
+    data: {items:[canonicalPost()],hasMore:false,nextCursor:5},
   })
+  await tick()
   assert.equal(instance.data.list[0].picList.length, 0, '列表空 pics 不得解析出空图片位')
 })
 
-test('负控:详情读侧不做空段过滤时必须判红', () => {
+test('负控:详情读侧不做空段过滤时必须判红', async () => {
   const source = read(SQUARE_DETAIL)
   const mutated = source.replace(".split(';').filter(function (pic) { return pic; })", ".split(';')")
   assert.notEqual(mutated, source, '负控锚点失效:未找到空段过滤')
   const { instance } = mount(SQUARE_DETAIL, 'page', { source: mutated })
   instance.setData({ id: 5 })
   instance.getData()
-  instance.answer('/api/creativesquare/info', {
+  await tick()
+  instance.answer('/api/v1/community/posts/5', {
     code: '200',
-    data: { id: 5, memberId: 9, contents: '正文', pics: '', address: '' },
+    data: canonicalPost(),
   })
+  await tick()
   assert.throws(() => assert.equal(instance.data.picList.length, 0), assert.AssertionError)
 })
