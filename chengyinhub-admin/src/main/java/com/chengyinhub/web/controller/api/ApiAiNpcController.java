@@ -389,6 +389,32 @@ public class ApiAiNpcController extends BaseController
         return success(npcChatService.chatWithMerchant(req, userId, merchantId));
     }
 
+    @Operation(summary = "查询原NPC请求结果")
+    @RateLimiter(time = 60, count = 60, limitType = LimitType.MEMBER)
+    @GetMapping("/request-status")
+    public AjaxResult requestStatus(@RequestParam("requestId") String requestId, @RequestParam("scope") String scope,
+                                   @RequestParam("bizId") Long bizId)
+    {
+        Long userId = getAppUserId();
+        if (userId == null || userId <= 0) return AjaxResult.error(HttpStatus.UNAUTHORIZED, "请先登录");
+        if ("shop".equals(scope))
+        {
+            if (!npcFeatureFlags.shopChatOn()) return AjaxResult.error(HttpStatus.FORBIDDEN, "店铺分身对话还没开放");
+            ShopGate gate = gateShopChat(userId, bizId);
+            if (gate.deny != null) return gate.deny;
+        }
+        else if ("merchant".equals(scope))
+        {
+            if (!npcFeatureFlags.merchantChatOn()) return AjaxResult.error(HttpStatus.FORBIDDEN, "门店对话未开放");
+        }
+        else if ("roam".equals(scope))
+        {
+            if (!npcFeatureFlags.chatOn()) return AjaxResult.error(HttpStatus.FORBIDDEN, "NPC 自由追问未开放");
+        }
+        else return AjaxResult.error("参数有误");
+        return success(npcChatService.requestStatus(requestId, userId, scope, bizId));
+    }
+
     /**
      * 导出我的 NPC 聊天记录(《漫游AI方案》§7.4 数据复制/导出义务,可读 JSON)。
      *

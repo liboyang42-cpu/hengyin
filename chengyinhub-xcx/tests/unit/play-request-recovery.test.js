@@ -18,12 +18,13 @@ let pageConfig
 let requests
 let storage
 let voiceUploads
+let npcOwner
 
 global.getApp = () => ({
   globalData: { user_id: 9, features: { shopNpcChat: true } },
   isDevEnv: () => false,
   // F13 恢复链的所有权归属判据(_recoveryOwnerCurrent)依赖真实 getApp().getUserID(app.js 恒提供)。
-  getUserID: () => '9',
+  getUserID: () => npcOwner,
   sendRequest: (request) => { requests.push(request) },
   getUploadClient: () => ({ uploadOne: (_path, opts) => voiceUploads.push(opts) }),
 })
@@ -45,6 +46,7 @@ beforeEach(() => {
   requests = []
   storage = {}
   voiceUploads = []
+  npcOwner = '9'
   global.wx.showModal = ({ success }) => success && success({ confirm: true, content: '分享内容' })
 })
 
@@ -684,9 +686,10 @@ test('漫游结算重试按结果确定性路由:未知态只回读,确定失败
 })
 
 
-test('NPC 未知回答恢复同一 ID 与原文，终态后不再提供恢复', async () => {
+test('NPC 未知回答只查询同一 ID，终态后不再提供恢复', async () => {
   const page = loadPage(PLAY_PAGE)
   page._playable = true
+  page.data.activityId = 123
   page.data.shopNpc = { show: true, nodeId: 11, msgs: [], input: '问路' }
   page.sendShopNpc()
   requests[0].fail()
@@ -697,7 +700,8 @@ test('NPC 未知回答恢复同一 ID 与原文，终态后不再提供恢复', 
   page.sendShopNpc()
   assert.equal(requests.length, 1)
   page.retryNpcMsg({ currentTarget: { dataset: { idx: 1 } } })
-  assert.deepEqual(requests[1].data, original)
+  assert.equal(requests[1].method, 'GET')
+  assert.deepEqual(requests[1].data, { requestId: original.requestId, scope: 'shop', bizId: '11' })
   requests[1].success({ code: 200, data: { requestId: original.requestId, outcomeStatus: 'SUCCEEDED', safetyDecision: 'PASS', safeText: '往前走' } })
   await new Promise(resolve => setImmediate(resolve))
   assert.equal(page.data.shopNpc.msgs.length, 2)
@@ -719,6 +723,7 @@ test('玩家资格未确认时不发送 NPC 文本', () => {
 
 test('语音没有 ASR 文字时不补造玩家发言，也不重复上传', () => {
   const page = loadPage(PLAY_PAGE)
+  page.data.activityId = 123
   page.data.shopNpc = { show: true, nodeId: 11, msgs: [] }
   page._sendVoice('/tmp/voice.mp3', 4000)
   voiceUploads[0].onDone({ ok: true, data: { data: { safeText: '不可用回复' } } })
@@ -729,6 +734,7 @@ test('语音没有 ASR 文字时不补造玩家发言，也不重复上传', () 
 
 test('语音文字完成但无音频时保留文字并单列音频状态', () => {
   const page = loadPage(PLAY_PAGE)
+  page.data.activityId = 123
   page.data.shopNpc = { show: true, nodeId: 11, msgs: [] }
   page._sendVoice('/tmp/voice.mp3', 4000)
   const requestId = voiceUploads[0].formData.requestId
@@ -739,6 +745,7 @@ test('语音文字完成但无音频时保留文字并单列音频状态', () =>
 
 test('语音上传失败保留未知，关闭后迟到响应不进入新对话', () => {
   const page = loadPage(PLAY_PAGE)
+  page.data.activityId = 123
   page.data.shopNpc = { show: true, nodeId: 11, msgs: [] }
   page._sendVoice('/tmp/voice.mp3', 4000)
   voiceUploads[0].onDone({ ok: false })
@@ -746,4 +753,133 @@ test('语音上传失败保留未知，关闭后迟到响应不进入新对话',
   page.data.shopNpc = { show: true, nodeId: 12, msgs: [] }
   voiceUploads[0].onDone({ ok: true, data: { asr: '旧问题', data: {} } })
   assert.equal(page.data.shopNpc.msgs.length, 0)
+})
+
+function npcPage(activityId = 123, nodeId = 11) {
+  const page = loadPage(PLAY_PAGE)
+  page._playable = true
+  page.data.activityId = activityId
+  page.data.shopNpc = { show: true, nodeId, msgs: [], input: '原来的私密问题' }
+  page.data.hero = { node: { nodeId, npcName: '店铺分身' } }
+  page._startNpcFigure = () => {}
+  return page
+}
+
+test('F0231 recreated play page recovers stored original UUID with GET only, without restoring question text', async () => {
+  const first = npcPage()
+  first.sendShopNpc()
+  const original = requests[0].data.requestId
+  assert.doesNotMatch(JSON.stringify(storage), /私密|message|audio|token/)
+
+  const recreated = npcPage()
+  recreated.openShopNpc()
+  clearTimeout(recreated._npcTimer)
+  assert.equal(requests.length, 2)
+  assert.equal(requests[1].url, '/api/ai/npc/request-status')
+  assert.equal(requests[1].method, 'GET')
+  assert.deepEqual(requests[1].data, { requestId: original, scope: 'shop', bizId: '11' })
+  assert.equal(recreated.data.shopNpc.msgs.some(m => m.role === 'me'), false)
+  first.closeShopNpc()
+  clearTimeout(first._npcTimer)
+  requests[0].success({ code: 200, data: { requestId: original, outcomeStatus: 'SUCCEEDED', safetyDecision: 'PASS', safeText: '迟到答案' } })
+  await new Promise(resolve => setImmediate(resolve))
+  assert.equal(recreated.data.shopNpc.thinking, true)
+  requests[1].success({ code: 200, data: { requestId: original, outcomeStatus: 'SUCCEEDED', safetyDecision: 'PASS', safeText: '原答案' } })
+  await new Promise(resolve => setImmediate(resolve))
+  assert.equal(recreated.data.shopNpc.msgs.at(-1).text, '原答案')
+  assert.match(recreated.data.shopNpc.audioStatus, /暂无语音/)
+  assert.equal(storage['npc_pending_requests_v1:9'].requests.length, 0)
+})
+
+test('F0231 A -> logout/B -> recreated A preserves original UUID and isolates B, nodes and play contexts', () => {
+  npcPage().sendShopNpc()
+  const original = requests[0].data.requestId
+  npcOwner = ''
+  assert.equal(npcPage()._restoreShopNpcPending(), true)
+  npcOwner = '10'
+  assert.equal(npcPage()._restoreShopNpcPending(), false)
+  npcOwner = '9'
+  assert.equal(npcPage(124)._restoreShopNpcPending(), false)
+  assert.equal(npcPage(123, 12)._restoreShopNpcPending(), false)
+  assert.equal(requests.length, 1)
+  const restored = npcPage()
+  restored._restoreShopNpcPending()
+  assert.equal(requests.length, 2)
+  assert.equal(requests[1].method, 'GET')
+  assert.equal(requests[1].data.requestId, original)
+})
+
+test('F0231 denied, missing, malformed, conflicting and unavailable status retain the same original request', async () => {
+  for (const result of [
+    { code: 403 }, { code: 401 }, { code: 200, data: { outcomeStatus: 'SUCCEEDED', safeText: 'wrong ID' } },
+    { code: 200, data: { outcomeStatus: 'PROCESSING', errorCode: 'REQUEST_NOT_FOUND' } },
+    { code: 200, data: { outcomeStatus: 'FAILED', errorCode: 'REQUEST_STATE_UNAVAILABLE' } },
+    { code: 200, data: { outcomeStatus: 'REJECTED', errorCode: 'INVALID_REQUEST', safetyDecision: 'NOT_RUN', safeText: 'invalid' } },
+  ]) {
+    storage = {}; requests = []
+    npcPage().sendShopNpc()
+    const original = requests[0].data.requestId
+    const recreated = npcPage()
+    recreated._restoreShopNpcPending()
+    if (result.data && !result.data.safeText?.includes('wrong')) result.data.requestId = original
+    requests[1].success(result)
+    await new Promise(resolve => setImmediate(resolve))
+    assert.equal(recreated.data.shopNpc.recovering, true)
+    recreated.data.shopNpc.input = '另一个问题'
+    recreated.sendShopNpc()
+    assert.equal(requests.length, 2)
+    recreated.retryNpcMsg({ currentTarget: { dataset: { idx: 0 } } })
+    assert.equal(requests[2].method, 'GET')
+    assert.equal(requests[2].data.requestId, original)
+  }
+})
+
+test('F0231 storage corruption/read/write failure prevents billable text and voice requests', () => {
+  const originalRead = wx.getStorageSync
+  const originalWrite = wx.setStorageSync
+  for (const fault of ['corrupt', 'read', 'write']) {
+    requests = []; voiceUploads = []; storage = {}
+    wx.getStorageSync = fault === 'read' ? () => { throw Error('unavailable') } : originalRead
+    wx.setStorageSync = fault === 'write' ? () => { throw Error('quota') } : originalWrite
+    if (fault === 'corrupt') storage['npc_pending_requests_v1:9'] = { broken: true }
+    npcPage().sendShopNpc()
+    npcPage()._sendVoice('/tmp/private-audio.aac', 10)
+    assert.equal(requests.length, 0)
+    assert.equal(voiceUploads.length, 0)
+  }
+  wx.getStorageSync = originalRead; wx.setStorageSync = originalWrite
+})
+
+test('F0231 unload and changed account or object discard late responses without deleting original pending', async () => {
+  for (const change of ['unload', 'owner', 'node', 'session']) {
+    requests = []; storage = {}; npcOwner = '9'
+    const page = npcPage()
+    page.sendShopNpc()
+    const original = requests[0].data.requestId
+    if (change === 'unload') {
+      for (const name of ['_stopTracking', 'destroyAudio', '_persistRunSession', '_destroySessionClock', '_clearPackTimers', '_clearTransientUiTimers', '_stopStoryDust', '_cancelRunHold']) page[name] = () => {}
+      page.onUnload()
+    } else if (change === 'owner') npcOwner = '10'
+    else if (change === 'node') page.data.shopNpc.nodeId = 12
+    else page.data.activityId = 124
+    const before = JSON.stringify(page.data.shopNpc.msgs)
+    requests[0].success({ code: 200, data: { requestId: original, outcomeStatus: 'SUCCEEDED', safetyDecision: 'PASS', safeText: '迟到答案' } })
+    await new Promise(resolve => setImmediate(resolve))
+    assert.equal(JSON.stringify(page.data.shopNpc.msgs), before, change)
+    assert.equal(storage['npc_pending_requests_v1:9'].requests[0].requestId, original, change)
+    if (page._thinkTimer) clearTimeout(page._thinkTimer)
+  }
+})
+
+test('F0231 unknown voice upload survives recreated page with same UUID and no second ASR upload', () => {
+  const first = npcPage()
+  first._sendVoice('/tmp/private-audio.aac', 10)
+  const original = voiceUploads[0].formData.requestId
+  const recreated = npcPage()
+  recreated._restoreShopNpcPending()
+  assert.equal(voiceUploads.length, 1)
+  assert.equal(requests[0].method, 'GET')
+  assert.equal(requests[0].data.requestId, original)
+  assert.doesNotMatch(JSON.stringify(storage), /private-audio|message|token/)
+  if (first._thinkTimer) clearTimeout(first._thinkTimer)
 })

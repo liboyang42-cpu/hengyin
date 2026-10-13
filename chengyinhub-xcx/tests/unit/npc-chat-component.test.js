@@ -1,5 +1,17 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
+let storage;
+test.beforeEach(() => {
+  storage = {};
+  global.wx = {
+    getStorageSync: key => storage[key],
+    setStorageSync: (key, value) => { storage[key] = JSON.parse(JSON.stringify(value)); },
+  };
+});
 
 const COMPONENT_PATH = require.resolve('../../components/cy/npc-chat/index.js');
 let definition;
@@ -14,9 +26,10 @@ function loadDefinition() {
 }
 
 function createChat(app, properties) {
+  if (!app.getUserID) app.getUserID = () => '9';
   activeApp = app;
   const instance = {
-    properties: Object.assign({ show: true, sessionId: 91 }, properties),
+    properties: Object.assign({ show: true, sessionId: 91, scope: 'roam' }, properties),
     data: JSON.parse(JSON.stringify(definition.data)),
     events: [],
     setData(update) { Object.assign(this.data, update); },
@@ -81,7 +94,7 @@ test('商家分身回复带 audioUrl 时播放语音，关闭时销毁', () => {
     play() { this.played++; }, stop() { this.stopped++; }, destroy() { this.destroyed++; },
     onEnded(fn) { this.ended = fn; }, onError(fn) { this.failed = fn; } };
   const previousWx = global.wx;
-  global.wx = { createInnerAudioContext: () => audio };
+  global.wx = Object.assign({}, previousWx, { createInnerAudioContext: () => audio });
   const chat = createChat({
     sendRequest(options) { requests.push(options); return { abort() {} }; },
   }, { scope: 'merchant' });
@@ -115,7 +128,8 @@ test('等待原回答时禁止发送新问题', async () => {
   inputAndSend(chat, '第三条');
   assert.equal(requests.length, 1, '未知结果不能生成新请求');
   chat.onRecover();
-  assert.deepEqual(requests[1].data, first.data, '恢复必须保留原 ID、问题、对象');
+  assert.equal(requests[1].method, 'GET');
+  assert.deepEqual(requests[1].data, { requestId: first.data.requestId, scope: 'roam', bizId: '91' }, '恢复只查原 ID/对象，不重发原文');
   first.success(response(first.data.requestId, '旧响应不应出现'));
   requests[1].success(response(first.data.requestId, '已恢复'));
   await sleep(80);
@@ -168,5 +182,113 @@ test('关闭再打开对话仍保留原问题恢复，不重建 ID', () => {
   chat._resetForClose();
   assert.equal(chat.data.canRecover, true);
   chat.onRecover();
-  assert.deepEqual(requests[1].data, requests[0].data);
+  assert.equal(requests[1].method, 'GET');
+  assert.equal(requests[1].data.requestId, requests[0].data.requestId);
+});
+
+test('F0231 real Node process exit/restart restores only original UUID; B cannot see A and no second model POST occurs', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'npc-restart-'));
+  const file = path.join(dir, 'storage.json');
+  const harness = `
+    const fs = require('node:fs');
+    const [componentPath, file, phase, owner] = process.argv.slice(1);
+    const requests = [];
+    let stored = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {};
+    global.wx = { getStorageSync: key => stored[key], setStorageSync: (key, value) => {
+      stored[key] = value; fs.writeFileSync(file, JSON.stringify(stored));
+    } };
+    global.getApp = () => ({ getUserID: () => owner, sendRequest: options => {
+      requests.push(options); return { abort() {} };
+    } });
+    let definition;
+    global.Component = value => { definition = value; };
+    require(componentPath);
+    const chat = Object.assign({ properties: { show: true, sessionId: 91, scope: 'merchant' },
+      data: JSON.parse(JSON.stringify(definition.data)), setData(patch) { Object.assign(this.data, patch); }
+    }, definition.methods);
+    if (phase === 'send') { chat.onInput({ detail: { value: 'private original text' } }); chat.onSend(); }
+    else definition.lifetimes.attached.call(chat);
+    if (phase === 'resolve') requests[0].success({ code: 200, data: { requestId: requests[0].data.requestId,
+      outcomeStatus: 'SUCCEEDED', safetyDecision: 'PASS', safeText: 'OK' } });
+    process.stdout.write(JSON.stringify({ requests: requests.map(r => ({ url: r.url, method: r.method, data: r.data })),
+      messages: chat.data.messages, canRecover: chat.data.canRecover }));
+  `;
+  function run(phase, owner = '9') {
+    const result = spawnSync(process.execPath, ['-e', harness, COMPONENT_PATH, file, phase, owner], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+    return JSON.parse(result.stdout);
+  }
+  try {
+    const sent = run('send');
+    const original = sent.requests[0].data.requestId;
+    assert.equal(sent.requests[0].method, 'POST');
+    assert.doesNotMatch(fs.readFileSync(file, 'utf8'), /private|message|audio|token/);
+    assert.deepEqual(run('recover', '10').requests, []);
+    assert.deepEqual(run('recover', '').requests, []);
+    const recovered = run('recover');
+    assert.deepEqual(recovered.requests, [{ url: '/api/ai/npc/request-status', method: 'GET',
+      data: { requestId: original, scope: 'merchant', bizId: '91' } }]);
+    assert.equal(recovered.messages.length, 0, 'reentry must not reconstruct the private input');
+    const resolved = run('resolve');
+    assert.equal(resolved.requests[0].data.requestId, original);
+    assert.equal(resolved.messages.at(-1).text, 'OK');
+    assert.equal(resolved.canRecover, false);
+    assert.deepEqual(run('recover').requests, [], 'terminal cleanup survives another process restart');
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('F0231 recreated component rejects different NPC/scope and stale owner/page callbacks without clearing A', () => {
+  let owner = '9';
+  const requests = [];
+  const app = { getUserID: () => owner, sendRequest: opts => { requests.push(opts); return { abort() {} }; } };
+  const first = createChat(app);
+  inputAndSend(first, 'original');
+  const original = requests[0].data.requestId;
+  for (const properties of [{ sessionId: 92 }, { scope: 'merchant' }]) {
+    const other = createChat(app, properties);
+    definition.lifetimes.attached.call(other);
+    assert.equal(other.data.canRecover, false);
+  }
+  owner = '10';
+  requests[0].success(response(original, 'old owner text'));
+  assert.equal(first.data.messages.length, 1);
+  owner = '9';
+  definition.lifetimes.detached.call(first);
+  requests[0].success(response(original, 'closed page text'));
+  assert.equal(first.data.messages.length, 1);
+  const recreated = createChat(app);
+  definition.lifetimes.attached.call(recreated);
+  assert.equal(requests.length, 2);
+  assert.equal(requests[1].data.requestId, original);
+  requests[1].success({ code: 403 });
+  assert.equal(recreated.data.canRecover, true);
+  assert.equal(storage['npc_pending_requests_v1:9'].requests[0].requestId, original);
+});
+
+test('F0231 component storage failures stop POST; malformed terminal and cleanup failure keep original locked', () => {
+  const requests = [];
+  const app = { sendRequest: opts => { requests.push(opts); return { abort() {} }; } };
+  const originalWrite = wx.setStorageSync;
+  wx.setStorageSync = () => { throw Error('quota'); };
+  inputAndSend(createChat(app), 'unsent');
+  assert.equal(requests.length, 0);
+  wx.setStorageSync = originalWrite;
+  const chat = createChat(app);
+  inputAndSend(chat, 'original');
+  const original = requests[0].data.requestId;
+  requests[0].fail();
+  chat.onRecover();
+  requests[1].success({ code: 200, data: { requestId: original, outcomeStatus: 'REJECTED',
+    safetyDecision: 'NOT_RUN', errorCode: 'INVALID_REQUEST', safeText: 'invalid' } });
+  assert.equal(chat.data.canRecover, true);
+  chat.onRecover();
+  wx.setStorageSync = () => { throw Error('quota'); };
+  requests[2].success(response(original, 'OK'));
+  wx.setStorageSync = originalWrite;
+  inputAndSend(chat, 'next');
+  assert.equal(requests.length, 3, 'failed cleanup cannot permit a second billable send');
+  assert.equal(chat.data.canRecover, true);
+  chat.onRecover();
+  assert.equal(requests[3].method, 'GET');
+  assert.equal(requests[3].data.requestId, original);
 });

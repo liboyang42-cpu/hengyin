@@ -8,6 +8,7 @@
 //   ⚠️ 两轨的**开关是分开的**(roamNpcChat 硬编码 false / merchantNpcChat 读配置),
 //     由调用方各自判,组件不判 —— 组件判的话两轨就又绑一起了。
 const analytics = require('../../../utils/analytics.js');
+const npcPending = require('../../../utils/npc-pending-request.js');
 
 const MAX_MESSAGE_CODE_POINTS = 300;
 const MAX_VISIBLE_MESSAGES = 20;
@@ -33,15 +34,12 @@ Component({
       value: false,
       observer: function (visible) {
         if (!visible) this._resetForClose();
-        else if (this._pending && (this._pending.owner !== this._owner() || this._pending.bizId !== this.properties.sessionId || this._pending.scope !== this.properties.scope)) {
-          this._pending = null;
-          this._resetForClose();
-        }
+        else this._restorePending();
       },
     },
-    sessionId: { type: Number, value: 0 },
+    sessionId: { type: Number, value: 0, observer: function () { if (this.properties.show) this._restorePending(); } },
     /** 'roam' | 'merchant'。决定打哪个端点、以及 bizId 缺席时说什么。 */
-    scope: { type: String, value: 'roam' },
+    scope: { type: String, value: 'roam', observer: function () { if (this.properties.show) this._restorePending(); } },
     /** scope='merchant' 时的标题(形象名)与空态招呼语,由店铺主页传入。 */
     npcName: { type: String, value: '' },
     greeting: { type: String, value: '' },
@@ -59,7 +57,13 @@ Component({
   },
 
   lifetimes: {
-    detached: function () { this.cancelPending(); },
+    attached: function () { this._detached = false; if (this.properties.show) this._restorePending(); },
+    detached: function () { this._detached = true; this._invalidate(false); },
+  },
+
+  pageLifetimes: {
+    hide: function () { this._hidden = true; this.cancelPending(); },
+    show: function () { this._hidden = false; if (this.properties.show) this._restorePending(); },
   },
 
   methods: {
@@ -71,6 +75,7 @@ Component({
     },
 
     onSend: function () {
+      if (this._restorePending(false)) return;
       const message = (this.data.input || '').trim();
       if (!message || this.data.isThinking || this.data.canRecover) return;
       if (!this.properties.sessionId) {
@@ -82,10 +87,14 @@ Component({
         );
         return;
       }
+      const pending = Object.assign(this._context(), { requestId: makeRequestId() });
+      if (!npcPending.save(pending)) {
+        this._appendAssistant('无法保存原问题的恢复记录，请检查本机存储后再发送。', 'STORAGE_ERROR');
+        return;
+      }
 
       this._invalidate(false);
       const generation = ++this._generation;
-      const requestId = makeRequestId();
       const userMessage = this._message('user', message);
       const messages = this._capMessages((this.data.messages || []).concat(userMessage));
       this.setData({
@@ -99,8 +108,8 @@ Component({
       });
       this._track('npc_chat_submit');
 
-      this._pending = { requestId: requestId, bizId: this.properties.sessionId, message: message, scope: this.properties.scope, owner: this._owner() };
-      this._sendPending(generation);
+      this._pending = pending;
+      this._sendPending(generation, message);
     },
 
     _owner: function () {
@@ -108,16 +117,59 @@ Component({
       return String(app.getUserID ? app.getUserID() : '');
     },
 
+    _context: function () {
+      return npcPending.context(this._owner(), this.properties.scope, this.properties.sessionId);
+    },
+
+    _restorePending: function (query = true) {
+      const target = this._context();
+      const changed = this._activeContext && !npcPending.sameContext(this._activeContext, target);
+      if (changed) {
+        this._invalidate(false);
+        this._pending = null;
+        this.setData({ messages: [], input: '', inputCount: 0, canSend: false, canRecover: false, isThinking: false, state: 'IDLE' });
+      }
+      this._activeContext = target;
+      if (!this.properties.sessionId) return !!changed;
+      const stored = npcPending.read(target);
+      if (stored.error) {
+        this._invalidate(false);
+        this._pending = null;
+        this.setData({ canRecover: false });
+        this._appendAssistant('无法读取原问题的恢复记录，请检查本机存储后再发送。', 'STORAGE_ERROR');
+        return true;
+      }
+      if (!stored.pending) return !!changed;
+      if (this._pending && this._pending.requestId === stored.pending.requestId && this.data.isThinking) return true;
+      this._pending = stored.pending;
+      this.setData({ canRecover: true, isThinking: false, state: 'UNKNOWN' });
+      if (query) this.onRecover();
+      return true;
+    },
+
     onRecover: function () {
       const pending = this._pending;
       if (!pending || !this.data.canRecover || this.data.isThinking) return;
-      if (pending.owner !== this._owner() || pending.bizId !== this.properties.sessionId || pending.scope !== this.properties.scope) return;
+      if (!npcPending.sameContext(pending, this._context())) { this._restorePending(); return; }
       this._invalidate(false);
       this.setData({ isThinking: true, state: 'CHECKING' });
-      this._sendPending(++this._generation);
+      this._queryPending(++this._generation);
     },
 
-    _sendPending: function (generation) {
+    _queryPending: function (generation) {
+      const pending = this._pending;
+      const control = getApp().sendRequest({
+        url: '/api/ai/npc/request-status', method: 'GET',
+        data: { requestId: pending.requestId, scope: pending.scope, bizId: pending.bizId },
+        silentError: true,
+        success: res => this._onResponse(generation, pending.requestId, res, true),
+        fail: () => this._onNetworkFailure(generation),
+        successStatusAbnormal: () => this._onNetworkFailure(generation),
+      });
+      if (this._isCurrent(generation)) this._requestControl = control;
+    },
+
+    _sendPending: function (generation, message) {
       const pending = this._pending;
       const requestId = pending.requestId;
       const app = getApp();
@@ -128,7 +180,7 @@ Component({
           ? '/api/ai/npc/merchant-chat'
           : '/api/ai/npc/chat',
         method: 'POST',
-        data: { requestId: requestId, bizId: pending.bizId, message: pending.message },
+        data: { requestId: requestId, bizId: this.properties.sessionId, message },
         header: { 'content-type': 'application/json' },
         timeout: 30000,
         silentError: true,
@@ -152,11 +204,14 @@ Component({
       if (unknown) this.setData({ canRecover: true });
     },
 
-    _onResponse: function (generation, requestId, res) {
+    _onResponse: function (generation, requestId, res, readback) {
       if (!this._isCurrent(generation) || !this._pending || this._pending.owner !== this._owner()) return;
       this._requestControl = null;
       const payload = res && res.data;
-      if (res && String(res.code) === '403') {
+      if (res && ['401', '403'].includes(String(res.code))) {
+        if (readback) { this._onNetworkFailure(generation); return; }
+        npcPending.clear(this._pending);
+        this._pending = null;
         this.setData({ canRecover: false });
         this._appendAssistant(res.msg || '当前暂不能对话。', 'BLOCKED');
         return;
@@ -166,12 +221,10 @@ Component({
         this._onNetworkFailure(generation);
         return;
       }
-      this.setData({ canRecover: payload.outcomeStatus === 'PROCESSING' || payload.errorCode === 'REQUEST_IN_PROGRESS' || payload.errorCode === 'REQUEST_STATE_UNAVAILABLE' });
-      if (res.code != 200 && res.code != '200') {
-        this._trackComplete(payload);
-        this._appendAssistant(payload.safeText || '这次没有收到有效回答，请稍后再试。', 'FAILED');
-        return;
-      }
+      const terminal = String(res.code) === '200' && npcPending.isTerminal(payload);
+      if (!terminal) { this._onNetworkFailure(generation); return; }
+      this.setData({ canRecover: !terminal });
+      if (terminal) { npcPending.clear(this._pending); this._pending = null; }
       this._trackComplete(payload);
       if (payload.outcomeStatus === 'SUCCEEDED' && payload.safetyDecision === 'PASS') {
         this._startTypewriter(generation, payload.safeText || '', payload.audioUrl);
@@ -278,8 +331,9 @@ Component({
     },
 
     _isCurrent: function (generation) {
-      return this.properties.show && generation === this._generation
-        && (!this._pending || (this._pending.owner === this._owner() && this._pending.bizId === this.properties.sessionId && this._pending.scope === this.properties.scope));
+      return !this._detached && !this._hidden && this.properties.show && generation === this._generation
+        && npcPending.sameContext(this._activeContext, this._context())
+        && (!this._pending || npcPending.sameContext(this._pending, this._context()));
     },
 
     _message: function (role, text) {

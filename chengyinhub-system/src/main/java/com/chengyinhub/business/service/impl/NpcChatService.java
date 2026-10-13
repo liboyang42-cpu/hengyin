@@ -90,6 +90,55 @@ public class NpcChatService
     @Resource(name = "scheduledExecutorService")
     private ScheduledExecutorService scheduledExecutorService;
 
+    /** Read only: an absent original request is unknown, never permission to generate again. */
+    public NpcChatResp requestStatus(String requestId, Long userId, String scope, Long bizId)
+    {
+        if (userId == null || userId <= 0 || requestId == null || !UUID_PATTERN.matcher(requestId).matches()
+                || bizId == null || bizId <= 0 || !("shop".equals(scope) || "merchant".equals(scope) || "roam".equals(scope))
+                || (!"roam".equals(scope) && bizId > MAX_CHAT_ENTITY_ID))
+        {
+            return response(requestId, NpcChatRequest.STATUS_REJECTED, "NOT_RUN", "INVALID_REQUEST", null,
+                    false, true, SAFE_INVALID_REQUEST);
+        }
+        Long sessionId = "shop".equals(scope) ? -bizId
+                : "merchant".equals(scope) ? -(MAX_CHAT_ENTITY_ID + bizId) : bizId;
+        if ("roam".equals(scope) && ownedActiveSession(userId, bizId) == null)
+        {
+            return response(requestId, NpcChatRequest.STATUS_PROCESSING, "NOT_RUN", "REQUEST_NOT_FOUND", null,
+                    false, true, "原问题结果尚未确认，请稍后核对。");
+        }
+        try
+        {
+            NpcChatRequest stored = npcChatRequestMapper.selectByUserAndRequestId(userId, requestId);
+            if (stored == null || !userId.equals(stored.getUserId()) || !sessionId.equals(stored.getSessionId()))
+            {
+                return response(requestId, NpcChatRequest.STATUS_PROCESSING, "NOT_RUN", "REQUEST_NOT_FOUND", null,
+                        false, true, "原问题结果尚未确认，请稍后核对。");
+            }
+            if (!requestId.equals(stored.getRequestId())
+                    || !(NpcChatRequest.STATUS_PROCESSING.equals(stored.getStatus())
+                    || NpcChatRequest.STATUS_SUCCEEDED.equals(stored.getStatus())
+                    || NpcChatRequest.STATUS_REJECTED.equals(stored.getStatus())
+                    || NpcChatRequest.STATUS_FAILED.equals(stored.getStatus()))
+                    || (!NpcChatRequest.STATUS_PROCESSING.equals(stored.getStatus())
+                    && (!nonBlank(stored.getSafeText()) || !("PASS".equals(stored.getSafetyDecision())
+                    || "BLOCKED".equals(stored.getSafetyDecision()) || "NOT_RUN".equals(stored.getSafetyDecision()))))
+                    || (NpcChatRequest.STATUS_SUCCEEDED.equals(stored.getStatus())
+                    && !"PASS".equals(stored.getSafetyDecision()))
+                    || ((NpcChatRequest.STATUS_FAILED.equals(stored.getStatus()) || NpcChatRequest.STATUS_REJECTED.equals(stored.getStatus()))
+                    && !nonBlank(stored.getErrorCode())))
+            {
+                return requestStateUnavailable(requestId);
+            }
+            return fromStored(stored);
+        }
+        catch (Exception e)
+        {
+            log.warn("[NpcChat] original request lookup failed errorType={}", e.getClass().getName());
+            return requestStateUnavailable(requestId);
+        }
+    }
+
     public NpcChatResp chat(NpcChatReq req, Long userId)
     {
         String requestId = requestIdOf(req);
