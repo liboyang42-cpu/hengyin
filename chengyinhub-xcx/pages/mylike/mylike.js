@@ -17,6 +17,7 @@ Page({
     isMerchantView: false,
     favoriteTabs: [{ key: 'posts', label: '帖文' }, { key: 'topics', label: '主题' }],
     activeFavoriteTab: 'posts',
+    preferenceVisible: false,
     postList: [],
     ztList1: [], // 路线列表
     loading: false,
@@ -51,8 +52,11 @@ Page({
     this.refreshData();
   },
 
+  openPreference() { this.setData({ preferenceVisible: true }); },
+  closePreference() { this.setData({ preferenceVisible: false }); },
+
   onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() { merchantTheme.merchantPageRestore(); },
+  onUnload() { this._favoriteLoadEpoch = (this._favoriteLoadEpoch || 0) + 1; merchantTheme.merchantPageRestore(); },
 
   syncViewTheme() {
     const isMerchantView = policy.isMerchantView({
@@ -139,9 +143,13 @@ Page({
    */
   getTopicLikeList: function(stopPullAfterComplete) {
     const that = this;
+    const owner = String(app.getUserID ? app.getUserID() : '');
+    const epoch = this._favoriteLoadEpoch = (this._favoriteLoadEpoch || 0) + 1;
+    const current = () => epoch === this._favoriteLoadEpoch && owner === String(app.getUserID ? app.getUserID() : '');
     const pageConfig = that.data.pageConfig;
     const hasOldContent = that.data.ztList1.length > 0;
     const finishLoadError = function (res, fallback) {
+      if (!current()) return;
       const message = app.getRequestErrorMessage(res, fallback);
       if (hasOldContent) {
         that.setData({
@@ -166,6 +174,7 @@ Page({
         pageSize: pageConfig.pageSize
       },
       success: function (res) {
+        if (!current()) return;
         if (res && res.code == "200" && res.data && isRecordList(res.data.rows)) {
           let list = res.data.rows;
           
@@ -197,6 +206,7 @@ Page({
         finishLoadError(res, '服务暂时不可用，请稍后再试');
       },
       complete: function () {
+        if (!current()) return;
         const shouldStopPull = stopPullAfterComplete || that._stopPullWithCurrent;
         that._stopPullWithCurrent = false;
         that.setData({ loading: false, refreshing: false });
@@ -234,10 +244,21 @@ Page({
     const index = e.currentTarget.dataset.index;
     const id = e.currentTarget.dataset.id;
     const requestKey = String(id);
-    // A-07:后端 /api/topic/like 是「查无即插」的 toggle(type=0 被忽略),
-    // 取消请求在途时再点一次会把刚删的收藏重新插回去。per-id in-flight 锁挡住第二次发送。
+    // Explicit target keeps retries from recreating a removed favorite.
+    const owner = String(app.getUserID ? app.getUserID() : '');
     that._unlikeRequests = that._unlikeRequests || Object.create(null);
+    if (that._unlikeRequests[requestKey] === 'unknown') {
+      toast('结果待确认，正在刷新收藏记录');
+      that.recoverTopicUnlike(id);
+      return;
+    }
     if (that._unlikeRequests[requestKey]) return;
+
+    function recoverUnknown() {
+      that._unlikeRequests[requestKey] = 'unknown';
+      toast('结果待确认，正在刷新收藏记录');
+      that.recoverTopicUnlike(id);
+    }
 
     modal.show({
       title: '提示',
@@ -251,29 +272,43 @@ Page({
             method: "POST",
             data: {
               id: id,
-              type: 0 // 0表示取消点赞
+              type: 0, target: 0
             },
             success: function (res) {
-              if (res.code == "200") {
+              if (owner !== String(app.getUserID ? app.getUserID() : '')) return;
+              if (res.code == "200" && res.data && res.data.liked === false) {
                 toast.success('取消点赞成功');
                 
                 // 从列表中移除
-                const ztList1 = [...that.data.ztList1];
-                ztList1.splice(index, 1);
+                const ztList1 = that.data.ztList1.filter((item) => String(item.id) !== requestKey);
                 that.setData({ ztList1 });
               } else {
-                toast(res.msg || '操作失败');
+                recoverUnknown();
               }
             },
-            fail: function (res) {
-              toast('网络错误，请重试');
-            },
+            fail: function () { recoverUnknown(); },
+            successStatusAbnormal: function () { recoverUnknown(); },
             complete: function () {
-              delete that._unlikeRequests[requestKey];
+              if (that._unlikeRequests[requestKey] !== 'unknown') delete that._unlikeRequests[requestKey];
             }
           });
         }
       }
+    });
+  },
+
+  recoverTopicUnlike(id) {
+    const key = String(id);
+    const owner = String(app.getUserID ? app.getUserID() : '');
+    app.sendRequest({
+      url: '/api/topic/like-state', method: 'POST', data: { id }, hideLoading: true,
+      success: (res) => {
+        if (owner !== String(app.getUserID ? app.getUserID() : '')) return;
+        if (!res || String(res.code) !== '200' || !res.data || String(res.data.id) !== key || typeof res.data.liked !== 'boolean') return;
+        delete this._unlikeRequests[key];
+        if (!res.data.liked) this.setData({ ztList1: this.data.ztList1.filter(item => String(item.id) !== key) });
+      },
+      fail: () => {},
     });
   },
 

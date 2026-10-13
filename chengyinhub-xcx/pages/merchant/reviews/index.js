@@ -113,7 +113,7 @@ Page({
 
   onShow() { merchantTheme.merchantPageShow(); },
   onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() { merchantTheme.merchantPageRestore(); },
+  onUnload() { this._reviewLoadEpoch = (this._reviewLoadEpoch || 0) + 1; merchantTheme.merchantPageRestore(); },
 
   onNavBack() {
     if (getCurrentPages().length > 1) wx.navigateBack();
@@ -136,13 +136,19 @@ Page({
   loadReviews(append) {
     if (append && (this.data.loadingMore || !this.data.hasMore)) return;
     const mode = this.data.mode;
+    const filter = this.data.activeFilter;
+    const epoch = this._reviewLoadEpoch = (this._reviewLoadEpoch || 0) + 1;
+    const owner = String(app.getUserID ? app.getUserID() : '');
+    const current = () => epoch === this._reviewLoadEpoch && filter === this.data.activeFilter
+      && owner === String(app.getUserID ? app.getUserID() : '');
     const pageNum = append ? this._pageNum + 1 : 1;
     if (append) this.setData({ loadingMore: true });
-    else this.setData({ pageState: 'loading', errorMessage: '' });
+    else this.setData({ pageState: 'loading', errorMessage: '', loadingMore: false });
     const requestOptions = {
       hideLoading: true,
       method: 'POST',
       success: (res) => {
+        if (!current()) return;
         if (mode === 'manage' && isAuthenticationFailure(res)) {
           this.recoverSession();
           return;
@@ -158,18 +164,18 @@ Page({
           });
           return;
         }
-        const shaped = shapePage(res.data, mode, pageNum, 20);
+        const shaped = shapePage(res.data, mode, pageNum, 20, filter);
         if (!shaped) {
           this.setData({ pageState: 'error', loadingMore: false, errorMessage: '评价数据不完整，请稍后重试' });
           return;
         }
         const items = append ? this.data.items.concat(shaped.items) : shaped.items;
         this._pageNum = shaped.pageNum;
-        const empty = mode === 'manage' && items.length === 0;
+        const empty = mode === 'manage' && filter === 'all' && items.length === 0;
         this.setData({
           pageState: empty ? 'empty' : 'ready',
           items,
-          filteredItems: filterReviewItems(items, this.data.activeFilter),
+          filteredItems: items,
           total: shaped.total,
           averageRating: shaped.averageRating,
           ratingStars: shaped.ratingStars,
@@ -184,6 +190,7 @@ Page({
         this.refreshCreateState();
       },
       fail: (res, status) => {
+        if (!current()) return;
         if (mode === 'manage' && isAuthenticationFailure(res, status)) {
           this.recoverSession();
           return;
@@ -198,7 +205,7 @@ Page({
     if (mode === 'manage') {
       app.sendRequest({
         hideLoading: requestOptions.hideLoading, autoErrorToast: !!append,
-        url: `/api/merchant/reviews/manage?pageNum=${pageNum}&pageSize=20`,
+        url: `/api/merchant/reviews/manage?pageNum=${pageNum}&pageSize=20&filter=${encodeURIComponent(filter)}`,
         method: requestOptions.method,
         success: requestOptions.success,
         fail: requestOptions.fail,
@@ -207,7 +214,7 @@ Page({
     } else {
       app.sendRequest({
         hideLoading: requestOptions.hideLoading, autoErrorToast: !!append,
-        url: `/api/merchant/reviews/public?merchantRowId=${encodeURIComponent(this._merchantRowId)}&pageNum=${pageNum}&pageSize=20`,
+        url: `/api/merchant/reviews/public?merchantRowId=${encodeURIComponent(this._merchantRowId)}&pageNum=${pageNum}&pageSize=20&filter=${encodeURIComponent(filter)}`,
         method: requestOptions.method,
         success: requestOptions.success,
         fail: requestOptions.fail,
@@ -223,12 +230,14 @@ Page({
     if (!['all', 'pending', 'low', 'photo'].includes(filter)) return;
     this.setData({
       activeFilter: filter,
-      filteredItems: filterReviewItems(this.data.items, filter),
+      items: [], filteredItems: [], hasMore: false,
       replyReviewId: null,
       replyEditing: false,
       replyContent: '',
       replyError: '',
     });
+    this._pageNum = 1;
+    this.loadReviews(false);
   },
 
   selectRating(event) {
@@ -523,12 +532,4 @@ function isAuthenticationFailure(res, status) {
 function isSuccessObject(res) {
   return !!(res && (res.code === 200 || res.code === '200')
     && res.data && typeof res.data === 'object' && !Array.isArray(res.data));
-}
-
-function filterReviewItems(items, filter) {
-  const source = Array.isArray(items) ? items : [];
-  if (filter === 'pending') return source.filter((item) => item && item.canReply === true && !item.merchantReply);
-  if (filter === 'low') return source.filter((item) => item && item.rating <= 3);
-  if (filter === 'photo') return source.filter((item) => item && item.imageUrls && item.imageUrls.length > 0);
-  return source;
 }

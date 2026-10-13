@@ -111,6 +111,22 @@ class ClubPostWriteLifecycleTest {
     }
 
     @Test
+    void newLikeStateUsesExistingVisibilityAndOnlyCurrentMemberRelationship() {
+        when(postService.selectClubPostById(POST_ID)).thenReturn(post());
+        Club club = new Club(); club.setId(CLUB_ID); club.setMemberId(99L); club.setPublicVisible(0);
+        when(clubService.selectClubById(CLUB_ID)).thenReturn(club);
+        ClubPostLike body = new ClubPostLike(); body.setPostId(POST_ID); body.setMemberId(99L);
+        assertEquals(403, controller.postLikeState(body).get("code"));
+        verify(likeService, never()).selectByPostAndMember(any(), any());
+        club.setPublicVisible(1);
+        AjaxResult publicState = controller.postLikeState(body);
+        assertEquals(200, publicState.get("code"));
+        verify(likeService).selectByPostAndMember(POST_ID, MEMBER_ID);
+        club.setPublicVisible(0); club.setMemberId(MEMBER_ID);
+        assertEquals(200, controller.postLikeState(body).get("code"));
+    }
+
+    @Test
     void dissolvedClubRejectsCommentBeforeInsertOrCounterWrite() {
         when(postService.selectClubPostById(POST_ID)).thenReturn(post());
         when(clubService.selectClubByIdForUpdate(CLUB_ID)).thenReturn(null);

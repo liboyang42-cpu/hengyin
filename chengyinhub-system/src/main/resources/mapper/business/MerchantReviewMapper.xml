@@ -235,6 +235,31 @@
         limit #{offset}, #{limit}
     </select>
 
+    <sql id="filteredReviewScope">
+        mr.merchant_row_id = #{merchantRowId}
+        <if test="!manage">and mr.status = 'VISIBLE'</if>
+        <choose>
+            <when test="filter == 'pending'">and mr.status = 'VISIBLE' and mr.reply_content is null</when>
+            <when test="filter == 'low'">and mr.rating &lt;= 3</when>
+            <when test="filter == 'photo'">and json_length(mr.images_json) &gt; 0</when>
+        </choose>
+    </sql>
+
+    <select id="countFilteredReviews" resultType="long">
+        select count(1) from merchant_review mr
+        where <include refid="filteredReviewScope"/>
+    </select>
+
+    <select id="selectFilteredReviews" resultMap="MerchantReviewResult">
+        select <include refid="reviewColumns"/>,
+               u.nickname as author_nickname, u.avatar as author_avatar
+        from merchant_review mr
+        left join ums_member u on u.id = mr.author_member_id
+        where <include refid="filteredReviewScope"/>
+        order by mr.create_time desc, mr.id desc
+        limit #{offset}, #{limit}
+    </select>
+
     <update id="replyCas">
         update merchant_review
         set reply_content = #{content}, reply_actor_member_id = #{actorMemberId},

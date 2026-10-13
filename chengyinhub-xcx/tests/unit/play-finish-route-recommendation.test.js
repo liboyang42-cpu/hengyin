@@ -81,7 +81,7 @@ test('附近候选排除当前活动与同主题路线，并保留服务端距�
   assert.equal(candidate.id, 12)
   assert.equal(candidate.title, '下一条路线')
   assert.match(candidate.meta, /1\.3 公里/)
-  assert.equal(candidate.priceText, '¥39.9 起')
+  assert.equal(candidate.priceText, '展示价 ¥39.9 起')
 })
 
 test('当前会话缺少可排除 ID 时仍可选择真实附近候选', () => {
@@ -158,3 +158,32 @@ test('点击推荐卡只埋一次点击，并携候选 ID 打开活动详情场�
     analytics.track = originalTrack
   }
 })
+
+ test('未知距离和非法价格不伪装零距离或免费', () => {
+  const { pickCandidate } = require('../../pages/play/finish-route-recommendation.js');
+  for (const value of [null, '', 'bad', -1]) {
+    const card = pickCandidate([{ id: 1, distance: value, minAmout: value }]);
+    assert.equal(card.meta, '距离待确认');
+    assert.equal(card.priceText, '价格待确认');
+  }
+});
+
+test('完赛候选请求失败与真实空结果分开呈现', async () => {
+  for (const [response, state] of [[{ code: 500 }, 'error'], [{ code: 200, data: { rows: [] } }, 'empty'], [{ code: 200, data: {} }, 'error']]) {
+    const { page, requests } = loadPlayPage();
+    const promise = page.loadFinishRouteRecommendation();
+    assert.equal(page.data.finishRecommendationState, 'loading');
+    requests[0].success(response);
+    await promise;
+    assert.equal(page.data.finishRecommendationState, state);
+    assert.equal(page.data.finishRouteRecommendation, null);
+  }
+});
+
+test('缺失或越界位置不变成零点附近，零经纬度数值仍合法', () => {
+  const { resolveOrigin } = require('../../pages/play/finish-route-recommendation.js');
+  for (const location of [{ latitude: null, longitude: null }, { latitude: 91, longitude: 121 }, { latitude: '', longitude: 121 }]) {
+    assert.equal(resolveOrigin(location, []), null);
+  }
+  assert.deepEqual(resolveOrigin({ latitude: 0, longitude: 0 }, []), { latitude: 0, longitude: 0 });
+});

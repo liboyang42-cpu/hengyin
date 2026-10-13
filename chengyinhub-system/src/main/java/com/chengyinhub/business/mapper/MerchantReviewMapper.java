@@ -49,6 +49,13 @@ public interface MerchantReviewMapper {
                                              @Param("offset") int offset,
                                              @Param("limit") int limit);
 
+    long countFilteredReviews(@Param("merchantRowId") Long merchantRowId,
+                              @Param("manage") boolean manage, @Param("filter") String filter);
+
+    List<MerchantReview> selectFilteredReviews(@Param("merchantRowId") Long merchantRowId,
+                                               @Param("manage") boolean manage, @Param("filter") String filter,
+                                               @Param("offset") int offset, @Param("limit") int limit);
+
     int replyCas(@Param("id") Long id,
                  @Param("merchantRowId") Long merchantRowId,
                  @Param("merchantOwnerMemberId") Long merchantOwnerMemberId,

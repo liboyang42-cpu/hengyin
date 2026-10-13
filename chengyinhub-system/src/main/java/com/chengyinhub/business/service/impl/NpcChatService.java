@@ -104,6 +104,7 @@ public class NpcChatService
                     false, true, SAFE_INVALID_REQUEST);
         }
 
+        String requestHash = requestHash(userId, "npc_chat", req.getBizId(), null, normalizedMessage(req));
         NpcChatRequest existing;
         try
         {
@@ -116,13 +117,13 @@ public class NpcChatService
         }
         if (existing != null)
         {
-            return fromStored(existing);
+            return replay(existing, req.getBizId(), requestHash);
         }
 
         String message = normalizedMessage(req);
         if (!isMessageValid(message))
         {
-            return persistTerminal(newTerminal(userId, req.getBizId(), requestId,
+            return persistTerminal(newTerminal(userId, req.getBizId(), requestId, requestHash,
                     NpcChatRequest.STATUS_REJECTED, "NOT_RUN", "INVALID_MESSAGE", null,
                     false, SAFE_INVALID_REQUEST));
         }
@@ -130,7 +131,7 @@ public class NpcChatService
         RoamSession session = ownedActiveSession(userId, req.getBizId());
         if (session == null)
         {
-            return persistTerminal(newTerminal(userId, req.getBizId(), requestId,
+            return persistTerminal(newTerminal(userId, req.getBizId(), requestId, requestHash,
                     NpcChatRequest.STATUS_REJECTED, "NOT_RUN", "INVALID_SESSION", null,
                     false, SAFE_INVALID_SESSION));
         }
@@ -146,14 +147,14 @@ public class NpcChatService
             return requestStateUnavailable(requestId);
         }
 
-        NpcChatRequest processing = newProcessing(userId, session.getId(), requestId);
+        NpcChatRequest processing = newProcessing(userId, session.getId(), requestId, requestHash);
         try
         {
             npcChatRequestMapper.insertNpcChatRequest(processing);
         }
         catch (DuplicateKeyException e)
         {
-            return afterInsertCollision(userId, requestId);
+            return afterInsertCollision(processing);
         }
         catch (Exception e)
         {
@@ -224,6 +225,9 @@ public class NpcChatService
                     false, true, SAFE_INVALID_REQUEST);
         }
 
+        Long sessionKey = -nodeId;
+        String message = rawMessage == null ? null : rawMessage.trim();
+        String requestHash = requestHash(userId, bizType, sessionKey, merchantId, message);
         NpcChatRequest existing;
         try
         {
@@ -236,14 +240,12 @@ public class NpcChatService
         }
         if (existing != null)
         {
-            return fromStored(existing);
+            return replay(existing, sessionKey, requestHash);
         }
 
-        Long sessionKey = -nodeId;
-        String message = rawMessage == null ? null : rawMessage.trim();
         if (!isMessageValid(message))
         {
-            return persistTerminal(newTerminal(userId, sessionKey, rid,
+            return persistTerminal(newTerminal(userId, sessionKey, rid, requestHash,
                     NpcChatRequest.STATUS_REJECTED, "NOT_RUN", "INVALID_MESSAGE", null,
                     false, SAFE_INVALID_REQUEST));
         }
@@ -252,7 +254,7 @@ public class NpcChatService
         if (profile == null || !nonBlank(profile.getPersona()))
         {
             // 商家没配人设就别硬答:比让全局 NPC 冒充店主可信
-            return persistTerminal(newTerminal(userId, sessionKey, rid,
+            return persistTerminal(newTerminal(userId, sessionKey, rid, requestHash,
                     NpcChatRequest.STATUS_FAILED, "NOT_RUN", "NPC_PROFILE_UNAVAILABLE", null,
                     false, SAFE_SHOP_NO_PROFILE));
         }
@@ -267,14 +269,14 @@ public class NpcChatService
             return requestStateUnavailable(rid);
         }
 
-        NpcChatRequest processing = newProcessing(userId, sessionKey, rid);
+        NpcChatRequest processing = newProcessing(userId, sessionKey, rid, requestHash);
         try
         {
             npcChatRequestMapper.insertNpcChatRequest(processing);
         }
         catch (DuplicateKeyException e)
         {
-            return afterInsertCollision(userId, rid);
+            return afterInsertCollision(processing);
         }
         catch (Exception e)
         {
@@ -483,7 +485,7 @@ public class NpcChatService
         }
         catch (DuplicateKeyException e)
         {
-            return afterInsertCollision(terminal.getUserId(), terminal.getRequestId());
+            return afterInsertCollision(terminal);
         }
         catch (Exception e)
         {
@@ -493,17 +495,48 @@ public class NpcChatService
         }
     }
 
-    private NpcChatResp afterInsertCollision(Long userId, String requestId)
+    private NpcChatResp afterInsertCollision(NpcChatRequest proposed)
     {
+        Long userId = proposed.getUserId();
+        String requestId = proposed.getRequestId();
         try
         {
             NpcChatRequest stored = npcChatRequestMapper.selectByUserAndRequestId(userId, requestId);
-            return stored != null ? fromStored(stored) : inProgress(requestId);
+            return stored != null ? replay(stored, proposed.getSessionId(), proposed.getRequestHash()) : inProgress(requestId);
         }
         catch (Exception e)
         {
             log.error("[NpcChat] request state collision lookup failed userId={} requestId={}", userId, requestId, e);
             return requestStateUnavailable(requestId);
+        }
+    }
+
+    private NpcChatResp replay(NpcChatRequest state, Long sessionId, String requestHash)
+    {
+        // Legacy rows have no fingerprint; only their stored object can be replayed.
+        if (!java.util.Objects.equals(state.getSessionId(), sessionId)
+                || (state.getRequestHash() != null && !state.getRequestHash().equals(requestHash)))
+        {
+            return response(state.getRequestId(), NpcChatRequest.STATUS_REJECTED, "NOT_RUN",
+                    "REQUEST_CONFLICT", null, false, true, "原请求与当前问题不一致，请恢复原问题。");
+        }
+        return fromStored(state);
+    }
+
+    private String requestHash(Long userId, String scope, Long sessionId, Long merchantId, String message)
+    {
+        String value = userId + "\n" + scope + "\n" + sessionId + "\n" + merchantId + "\n" + (message == null ? "" : message);
+        try
+        {
+            byte[] bytes = java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(value.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(64);
+            for (byte b : bytes) hex.append(String.format("%02x", b & 0xff));
+            return hex.toString();
+        }
+        catch (java.security.NoSuchAlgorithmException e)
+        {
+            throw new IllegalStateException("SHA-256 unavailable", e);
         }
     }
 
@@ -548,12 +581,13 @@ public class NpcChatService
         }
     }
 
-    private NpcChatRequest newProcessing(Long userId, Long sessionId, String requestId)
+    private NpcChatRequest newProcessing(Long userId, Long sessionId, String requestId, String requestHash)
     {
         NpcChatRequest state = new NpcChatRequest();
         state.setUserId(userId);
         state.setSessionId(sessionId);
         state.setRequestId(requestId);
+        state.setRequestHash(requestHash);
         state.setStatus(NpcChatRequest.STATUS_PROCESSING);
         state.setSafetyDecision("NOT_RUN");
         state.setRetryable(false);
@@ -564,7 +598,7 @@ public class NpcChatService
         return state;
     }
 
-    private NpcChatRequest newTerminal(Long userId, Long sessionId, String requestId, String status,
+    private NpcChatRequest newTerminal(Long userId, Long sessionId, String requestId, String requestHash, String status,
                                        String safetyDecision, String errorCode, String limitType,
                                        boolean retryable, String safeText)
     {
@@ -572,6 +606,7 @@ public class NpcChatService
         state.setUserId(userId);
         state.setSessionId(sessionId);
         state.setRequestId(requestId);
+        state.setRequestHash(requestHash);
         terminalize(state, status, safetyDecision, errorCode, limitType, retryable, safeText);
         return state;
     }

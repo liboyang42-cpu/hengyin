@@ -1,6 +1,7 @@
 package com.chengyinhub.business.mapper;
 
 import java.util.List;
+import org.apache.ibatis.annotations.Param;
 import com.chengyinhub.business.domain.CmsCollaborators;
 
 /**
@@ -11,6 +12,9 @@ import com.chengyinhub.business.domain.CmsCollaborators;
  */
 public interface CmsCollaboratorsMapper 
 {
+    int deleteActivityCollaboratorsByOwner(@Param("activityId") Long activityId,
+                                           @Param("ownerMemberId") Long ownerMemberId);
+
     /**
      * 查询活动/主题合作者
      * 

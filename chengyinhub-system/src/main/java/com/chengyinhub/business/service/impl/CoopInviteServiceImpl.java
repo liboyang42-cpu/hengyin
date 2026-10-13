@@ -1315,7 +1315,11 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
         }
         r.setDelFlag(0);
         r.setCreateTime(DateUtils.getNowDate());
-        coopReviewMapper.insertCoopReview(r);
+        try {
+            if (coopReviewMapper.insertCoopReview(r) != 1) throw new IllegalStateException("评价未保存，请重试");
+        } catch (org.springframework.dao.DuplicateKeyException e) {
+            throw new IllegalStateException("已评价过该合作");
+        }
     }
 
     @Override

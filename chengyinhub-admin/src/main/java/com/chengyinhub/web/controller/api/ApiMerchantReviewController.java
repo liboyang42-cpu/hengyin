@@ -29,9 +29,10 @@ public class ApiMerchantReviewController extends BaseController {
     @PostMapping("/public")
     public AjaxResult publicList(@RequestParam("merchantRowId") Long merchantRowId,
                                  @RequestParam(value = "pageNum", required = false) Integer pageNum,
-                                 @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+                                 @RequestParam(value = "pageSize", required = false) Integer pageSize,
+                                 @RequestParam(value = "filter", required = false) String filter) {
         try {
-            return success(merchantReviewService.publicList(optionalPrincipal(), merchantRowId, pageNum, pageSize));
+            return success(merchantReviewService.publicList(optionalPrincipal(), merchantRowId, pageNum, pageSize, filter));
         } catch (ServiceException e) {
             return serviceError(e);
         }
@@ -40,11 +41,12 @@ public class ApiMerchantReviewController extends BaseController {
     @Operation(summary = "商家评价管理列表（当前商家主体）")
     @PostMapping("/manage")
     public AjaxResult manageList(@RequestParam(value = "pageNum", required = false) Integer pageNum,
-                                 @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+                                 @RequestParam(value = "pageSize", required = false) Integer pageSize,
+                                 @RequestParam(value = "filter", required = false) String filter) {
         Long principal = optionalPrincipal();
         if (principal == null) return error("请先登录");
         try {
-            return success(merchantReviewService.manageList(principal, pageNum, pageSize));
+            return success(merchantReviewService.manageList(principal, pageNum, pageSize, filter));
         } catch (ServiceException e) {
             return serviceError(e);
         }

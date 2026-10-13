@@ -1164,6 +1164,10 @@ public class ApiTopicController extends BaseController {
         return success("已转为正式主题");
     }
 
+    @Autowired
+    private com.chengyinhub.business.mapper.UmsMemberMapper favoriteMemberMapper;
+
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     @Operation(summary = "主题点赞")
     @RateLimiter(time = 60, count = 60, limitType = LimitType.MEMBER)
     @PostMapping("/like")
@@ -1171,20 +1175,27 @@ public class ApiTopicController extends BaseController {
             @Parameter(name = "id", description = "主题ID"),
             @Parameter(name = "type", description = "类型 1点赞")
     })
-    public AjaxResult topicLike(String id, String type) {
+    public AjaxResult topicLike(String id, String type, String target) {
         CmsTopicLike cmsTopicLike = new CmsTopicLike();
         Long memberId = getAppUserId();
+        if (memberId == null || memberId <= 0) return error("请先登录");
         Long dataId = Convert.toLong(id, 0L);
         Integer likeType = Convert.toInt(type, 1);
         if (dataId < 1) {
             return error("参数不合规");
         }
 
+        if (target != null && !"0".equals(target) && !"1".equals(target))
+            return AjaxResult.error(400, "target 必须为 0 或 1");
+        if (favoriteMemberMapper.lockMemberById(memberId) == null) return error("会员不存在");
         cmsTopicLike.setDataId(dataId);
         cmsTopicLike.setMemberId(memberId);
 
 
         List<CmsTopicLike> list = cmsTopicLikeService.selectCmsTopicLikeList(cmsTopicLike);
+        if (target != null && ("1".equals(target) == !list.isEmpty())) {
+            return success(java.util.Collections.singletonMap("liked", !list.isEmpty()));
+        }
         if (list.size() > 0) {
             //取消点赞
             // 提取ID集合
@@ -1195,21 +1206,40 @@ public class ApiTopicController extends BaseController {
             // 调用批量删除方法
             int rows = cmsTopicLikeService.deleteCmsTopicLikeByIds(ids);
             if (rows > 0) {
-                return success("取消点赞成功");
+                return target == null ? success("取消点赞成功") : success(java.util.Collections.singletonMap("liked", false));
             } else {
                 return error("取消点赞失败");
             }
         } else {
             //新增
-            cmsTopicLike.setLikeType(likeType);
+            cmsTopicLike.setLikeType(target == null ? likeType : 1);
             int rows = cmsTopicLikeService.insertCmsTopicLike(cmsTopicLike);
             if (rows > 0) {
-                return success("点赞成功");
+                return target == null ? success("点赞成功") : success(java.util.Collections.singletonMap("liked", true));
             } else {
                 return error("点赞失败");
             }
         }
     }
+    public AjaxResult topicLike(String id, String type) {
+        return topicLike(id, type, null);
+    }
+
+    @PostMapping("/like-state")
+    public AjaxResult topicLikeState(String id) {
+        Long memberId = getAppUserId();
+        if (memberId == null || memberId <= 0) return error("请先登录");
+        Long dataId = Convert.toLong(id, 0L);
+        if (dataId < 1) return error("参数不合规");
+        CmsTopicLike probe = new CmsTopicLike();
+        probe.setMemberId(memberId);
+        probe.setDataId(dataId);
+        java.util.Map<String, Object> state = new java.util.HashMap<>();
+        state.put("id", dataId);
+        state.put("liked", !cmsTopicLikeService.selectCmsTopicLikeList(probe).isEmpty());
+        return success(state);
+    }
+
 
 
     /**

@@ -433,6 +433,7 @@ test('详情页:评价入口按角色取被评对象(收件箱评发起方,发�
     depositOwed: false, fromId: 21, partner: { name: '合作方' },
   }));
   received.page.onLoad({ inviteId: '7', box: 'received' });
+  received.requests.find(r => r.url === '/api/coop/review/summary').success({ code: 200, data: { reviews: [] } });
   received.page.reviewCoop();
   assert.equal(received.page.data.reviewSheetShow, true);
   received.page.onReviewSheetSelect({ detail: { index: 0 } });
@@ -446,6 +447,7 @@ test('详情页:评价入口按角色取被评对象(收件箱评发起方,发�
     depositOwed: false, toId: 31, toType: 'merchant', partner: { name: '合作方' },
   }));
   sent.page.onLoad({ inviteId: '7', box: 'sent' });
+  sent.requests.find(r => r.url === '/api/coop/review/summary').success({ code: 200, data: { reviews: [] } });
   sent.page.reviewCoop();
   sent.page.onReviewSheetSelect({ detail: { index: 0 } });
   assert.equal(JSON.parse(sent.requests.find((r) => r.url === '/api/coop/review/save').data).toId, 31);

@@ -129,8 +129,7 @@ Page({
     if (filterConditions.endDate) query.push('endDate=' + encodeURIComponent(filterConditions.endDate));
     if (filterConditions.minPrice != null && filterConditions.minPrice !== '') query.push('minPrice=' + filterConditions.minPrice);
     if (filterConditions.maxPrice != null && filterConditions.maxPrice !== '') query.push('maxPrice=' + filterConditions.maxPrice);
-    // CU-M-66:排序先前只存在本页 filterConditions 里,跳转 URL 不拼它 ⇒ 选项选了跟没选一样。
-    // 结果页收下后只对 /api/activity/list 生效(其余三类后端没有排序参数,不装样子)。
+    // 保留已选择的列表默认顺序；不映射为活动附近排序。
     if (filterConditions.sortType) query.push('sortType=' + filterConditions.sortType);
     wx.navigateTo({ url: '/pages/search2/result/index?' + query.join('&') });
   },

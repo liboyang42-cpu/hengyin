@@ -8,21 +8,26 @@ const WXML = path.join(__dirname, '../../pages/publish/simple/index.wxml');
 
 let sent = [];
 let pageConfig = null;
+let storage = {};
+let member = '9';
 
 global.getApp = () => ({
   sendRequest: (request) => { sent.push(request); },
   getAuthorization: () => '',
+  getUserID: () => member,
 });
 global.wx = {
   navigateBack: () => {},
   choosePoi: () => {},
-  setStorageSync: () => {},
+  setStorageSync: (key, value) => { storage[key] = value; },
+  getStorageSync: key => storage[key],
   navigateTo: () => {},
 };
 global.Page = (config) => { pageConfig = config; };
 
 beforeEach(() => {
   sent = [];
+  storage = {}; member = '9';
   pageConfig = null;
   delete require.cache[require.resolve(PAGE)];
   require(PAGE);
@@ -67,6 +72,7 @@ test('成功生成后用响应中的额度刷新提示', () => {
   request.success({
     code: 200,
     data: {
+      requestId: JSON.parse(request.data).requestId, outcomeStatus: 'SUCCEEDED',
       traceId: 'trace-1',
       remainingQuota: 2,
       draft: { title: '夜游', storyline: '沿街探索', nodes: [{ merchantName: '第一站', task: '观察招牌' }] }
@@ -87,6 +93,7 @@ test('AI 返回超过三站的草稿时保持 fail-closed，不进入后续编�
   sent[1].success({
     code: 200,
     data: {
+      requestId: JSON.parse(sent[1].data).requestId, outcomeStatus: 'SUCCEEDED',
       traceId: 'trace-too-many-nodes',
       remainingQuota: 2,
       draft: {
@@ -115,7 +122,7 @@ test('AI 重试失败时保留已经生成的草稿与点位', () => {
 
   assert.deepEqual(page.data.aiPlan, previousPlan);
   assert.deepEqual(page.data.aiPlanNodes, previousNodes);
-  assert.match(page.data.aiError, /网络暂时不可用/);
+  assert.match(page.data.aiError, /生成结果待确认/);
   assert.equal(page.data.aiGenerating, false);
 });
 
@@ -196,4 +203,49 @@ test('简易版不带发布链路:零绑定的孤儿方法不得复活', () => {
     '本页不发发布请求,成功面板没有生产者');
   const js = fs.readFileSync(path.join(__dirname, '../../pages/publish/simple/index.js'), 'utf8');
   assert.doesNotMatch(js, /\/api\/topic\/create/, '发布只在 fabu,简易页不得重新直提');
+});
+
+
+test('生成结果未知只能查询次数，不能再次触发模型或丢掉已有草稿', () => {
+  const page = makePage();
+  page.data.aiIdea = '老城';
+  page.generateAiPlan();
+  sent[0].successStatusAbnormal({ code: 500 });
+  sent[0].complete();
+  assert.equal(page.data.aiUnknown, true);
+  assert.equal(sent[1].url, '/api/ai/theme/draft/quota');
+  sent[1].success({ code: 200, data: { limited: true, remaining: 2 } });
+  page.generateAiPlan();
+  assert.equal(sent.length, 2, '次数读回不等于生成结果终态');
+});
+
+
+test('unknown draft survives page recreation using only request ID and queries without regenerating', () => {
+  const first = makePage(); first.data.aiIdea = '原灵感'; first.generateAiPlan();
+  const original = JSON.parse(sent[0].data).requestId;
+  sent[0].fail(); sent[0].complete();
+  const marker = storage['ai_topic_draft:m9:request'];
+  assert.deepEqual(Object.keys(marker).sort(), ['mode', 'requestId']);
+  const reopened = makePage(); reopened.onLoad({ mode: '2' });
+  const lookup = sent.find(request => request.url === '/api/ai/theme/draft/status');
+  assert.deepEqual(JSON.parse(lookup.data), { requestId: original });
+  assert.equal(sent.filter(request => request.url === '/api/ai/theme/draft').length, 1);
+  lookup.success({ code: 200, data: { requestId: original, outcomeStatus: 'SUCCEEDED', traceId: 'original', draft: { title: '原草稿', nodes: [{ merchantName: '地点' }] } } });
+  assert.equal(reopened.data.aiPlan.title, '原草稿');
+  assert.equal(reopened.data.aiUnknown, false);
+  assert.equal(storage['ai_topic_draft:m9:request'], '');
+});
+
+test('draft response cannot cross accounts and a quota read does not close processing', () => {
+  const page = makePage(); page.data.aiIdea = '原灵感'; page.generateAiPlan();
+  const original = JSON.parse(sent[0].data).requestId;
+  member = '10';
+  sent[0].success({ code: 200, data: { requestId: original, outcomeStatus: 'SUCCEEDED', draft: { title: '另人不可见', nodes: [{ merchantName: '地点' }] } } });
+  assert.equal(page.data.aiPlan, null);
+  member = '9';
+  sent[0].success({ code: 200, data: { requestId: original, outcomeStatus: 'PROCESSING' } });
+  sent[0].complete();
+  assert.equal(page.data.aiUnknown, true);
+  page.generateAiPlan();
+  assert.equal(sent.filter(request => request.url === '/api/ai/theme/draft').length, 1);
 });

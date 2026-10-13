@@ -28,6 +28,7 @@ public interface IAiCreatorService
 {
     AiMerchantPlanResp merchantPlan(AiMerchantPlanReq req, Long memberId);
     AiThemeDraftResp themeDraft(AiThemeDraftReq req, Long memberId);
+    AiThemeDraftResp themeDraftStatus(Long memberId, String requestId);
     AiThemeDraftQuotaResp themeDraftQuota(Long memberId);
     AiNodeGenResp nodeGenerate(AiNodeGenReq req, Long memberId);
 

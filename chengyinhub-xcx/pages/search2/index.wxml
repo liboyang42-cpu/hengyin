@@ -159,14 +159,12 @@
         </view>
       </view>
 
-      <!-- 排序:2026-09-24 裁决(CU-M-66)把「最热」撤掉——四类后端都没有热度排序,
-           留着只是一个点了不生效的选项。剩下「最近」去结果页真的会拼进查询
-           (/api/activity/list 的 sort_type),不再是死选项。 -->
+      <!-- 各类沿用既有列表顺序；没有统一的发布时间排序合同。 -->
       <view class="dl">
         <view class="dt">排序</view>
         <view class="cont">
           <view class="dd {{activeSort === '1' ? 'active' : ''}}" bindtap="selectSort" data-value="1" hover-class="cy-pressed" hover-stay-time="80">
-            <view class="tit">最近</view>
+            <view class="tit">默认顺序</view>
             <cy-icon wx:if="{{activeSort === '1'}}" class="ck" name="check" size="40" />
           </view>
         </view>

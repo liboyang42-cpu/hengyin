@@ -159,6 +159,20 @@ class MerchantReviewServiceImplTest {
     }
 
     @Test
+    void filterCountAndRowsUseSameStoreAndFilterBeforePagination() {
+        when(mapper.countFilteredReviews(MERCHANT_ROW, true, "low")).thenReturn(21L);
+        when(mapper.selectFilteredReviews(MERCHANT_ROW, true, "low", 20, 20))
+                .thenReturn(Collections.emptyList());
+        com.chengyinhub.business.domain.vo.MerchantReviewPageVO page = service.manageList(PRINCIPAL, 2, 20, "low");
+        assertEquals(21L, page.getTotal());
+        assertEquals("low", page.getFilter());
+        verify(mapper).selectFilteredReviews(MERCHANT_ROW, true, "low", 20, 20);
+        verify(mapper, never()).countManageReviews(any());
+        assertThrows(ServiceException.class, () -> service.publicList(null, MERCHANT_ROW, 1, 20, "pending"));
+        assertThrows(ServiceException.class, () -> service.manageList(PRINCIPAL, 1, 20, "unknown"));
+    }
+
+    @Test
     void manageListUsesMarketingReadInsteadOfAftercarePermission() {
         when(mapper.countManageReviews(MERCHANT_ROW)).thenReturn(0L);
 

@@ -54,6 +54,7 @@ Page({
     settlementErrors: { overview: '', entries: '', batches: '' },
     settlementLoading: { overview: false, entries: false, batches: false },
     settleAlertsEnabled: false,
+    settleAlertsState: 'unknown',
     settleAlertsLoading: false,
   },
 
@@ -559,6 +560,7 @@ Page({
   goInbox() { wx.navigateTo({ url: '/subpackageB/pages/im/list/index' }); },
   syncCoopSettleAlertSetting() {
     const templateId = subscribe.TEMPLATES && subscribe.TEMPLATES.coopSettle;
+    this.setData({ settleAlertsState: 'unknown', settleAlertsEnabled: false });
     if (!templateId || typeof wx.getSetting !== 'function') return;
     wx.getSetting({
       withSubscriptions: true,
@@ -566,6 +568,7 @@ Page({
         const settings = res && res.subscriptionsSetting;
         const itemSettings = settings && settings.itemSettings;
         this.setData({
+          settleAlertsState: !settings || !itemSettings ? 'unknown' : 'known',
           settleAlertsEnabled: !!(settings && settings.mainSwitch !== false
             && itemSettings && itemSettings[templateId] === 'accept'),
         });
@@ -590,12 +593,15 @@ Page({
     this.setData({ settleAlertsLoading: true });
     return subscribe.request(['coopSettle']).then((result) => {
       if (result && Array.isArray(result.acceptedKeys) && result.acceptedKeys.includes('coopSettle')) {
-        this.setData({ settleAlertsEnabled: true });
-        toast('已开启到账提醒');
+        this.setData({ settleAlertsEnabled: true, settleAlertsState: 'known' });
+        toast('已允许结算通知');
       } else {
-        this.setData({ settleAlertsEnabled: false });
+        this.setData({ settleAlertsEnabled: false, settleAlertsState: 'known' });
       }
       return result;
+    }).catch(() => {
+      this.setData({ settleAlertsState: 'unknown', settleAlertsEnabled: false });
+      toast('授权结果未确认，请稍后重新查看');
     }).finally(() => this.setData({ settleAlertsLoading: false }));
   },
 });

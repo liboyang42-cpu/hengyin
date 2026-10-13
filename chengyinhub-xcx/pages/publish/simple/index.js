@@ -26,6 +26,7 @@ Page({
     aiIdea: '',
     aiGenerating: false,
     aiError: '',
+    aiUnknown: false,
     aiPlan: null,
     aiPlanNodes: [],
     canEnterAiEditor: false,
@@ -51,7 +52,16 @@ Page({
       navBarHeight: (app.globalData && app.globalData.navBarHeight) || 44, reducedMotion: readReducedMotion(),
     });
     this.loadAiQuota();
+    const key = aiDraftStorageKey();
+    const pending = key && wx.getStorageSync && wx.getStorageSync(key + ':request');
+    if (pending && typeof pending.requestId === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(pending.requestId)) {
+      this._pendingAiDraft = pending;
+      this.setData({ mode: Number(pending.mode) === 2 ? 2 : 1, aiUnknown: true });
+      this.recoverAiPlan();
+    }
   },
+
+  onUnload() { this._aiDisposed = true; },
 
   // ===== 简单 AI 对话 =====
   loadAiQuota() {
@@ -68,39 +78,86 @@ Page({
       }
     });
   },
-  onAiIdeaInput(e) { this.setData({ aiIdea: e.detail.value, aiError: '' }); },
-  useAiPrompt(e) { this.setData({ aiIdea: e.currentTarget.dataset.text || '', aiError: '' }); },
+  onAiIdeaInput(e) { if (this.data.aiUnknown) return; this.setData({ aiIdea: e.detail.value, aiError: '' }); },
+  useAiPrompt(e) { if (this.data.aiUnknown) return; this.setData({ aiIdea: e.currentTarget.dataset.text || '', aiError: '' }); },
   generateAiPlan() {
     const idea = (this.data.aiIdea || '').trim();
     if (!idea) { this.setData({ aiError: '先说说你想做什么路线。' }); return; }
-    if (this.data.aiGenerating) return;
+    if (this.data.aiGenerating || this.data.aiUnknown) return;
     // 配额已用完就不要再发一趟注定被后端拒掉的请求 —— 页面顶部明明写着「还可生成 0 次」,
     // 输入框和发送钮却照常可用(2026-08-19 B51 实拍)。后端那道闸保留,这里只是不让用户白跑。
     if (this.data.aiQuotaLoaded && Number(this.data.aiRemaining) <= 0) {
       this.setData({ aiError: '这一轮的 AI 起草次数用完了,可以先手动填,或稍后再试。' });
       return;
     }
+    const owner = aiDraftStorageKey();
+    if (!owner) { this.setData({ aiError: '请先登录后生成草稿。' }); return; }
+    const requestId = 'td-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2) + '-' + Math.random().toString(36).slice(2);
+    this._pendingAiDraft = { requestId, mode: this.data.mode };
+    try { wx.setStorageSync(owner + ':request', this._pendingAiDraft); }
+    catch (e) { this.setData({ aiError: '生成请求未能保存，请稍后重试。' }); return; }
     this.setData({ aiGenerating: true, aiError: '' });
     app.sendRequest({
       url: '/api/ai/theme/draft',
       method: 'POST',
       hideLoading: true,
-      data: JSON.stringify({ idea, productType: this.data.mode }),
+      data: JSON.stringify({ requestId, idea, productType: this.data.mode }),
       header: { 'Content-Type': 'application/json', 'Authorization': app.getAuthorization() },
-      success: (res) => {
+      success: (res) => { if (this.isCurrentAiRequest(requestId, owner)) this.applyAiDraftResult(res, requestId); },
+      fail: () => { if (this.isCurrentAiRequest(requestId, owner)) this.markAiUnknown(); },
+      successStatusAbnormal: () => { if (this.isCurrentAiRequest(requestId, owner)) this.markAiUnknown(); },
+      complete: () => { if (this.isCurrentAiRequest(requestId, owner)) this.setData({ aiGenerating: false }); }
+    });
+  },
+  isCurrentAiRequest(requestId, owner) {
+    return !this._aiDisposed && owner === aiDraftStorageKey() && this._pendingAiDraft
+      && this._pendingAiDraft.requestId === requestId;
+  },
+  recoverAiPlan() {
+    const pending = this._pendingAiDraft;
+    const owner = aiDraftStorageKey();
+    if (!pending || !owner || this.data.aiGenerating) return;
+    const requestId = pending.requestId;
+    this.setData({ aiGenerating: true, aiUnknown: true, aiError: '正在查询原生成结果…' });
+    app.sendRequest({
+      url: '/api/ai/theme/draft/status', method: 'POST', hideLoading: true,
+      data: JSON.stringify({ requestId }),
+      header: { 'Content-Type': 'application/json', 'Authorization': app.getAuthorization() },
+      success: (res) => { if (this.isCurrentAiRequest(requestId, owner)) this.applyAiDraftResult(res, requestId); },
+      fail: () => { if (this.isCurrentAiRequest(requestId, owner)) this.markAiUnknown(); },
+      successStatusAbnormal: () => { if (this.isCurrentAiRequest(requestId, owner)) this.markAiUnknown(); },
+      complete: () => { if (this.isCurrentAiRequest(requestId, owner)) this.setData({ aiGenerating: false }); },
+    });
+  },
+  applyAiDraftResult(res, requestId) {
+    const result = res && res.data;
+    if (!res || String(res.code) !== '200' || !result || result.requestId !== requestId) { this.markAiUnknown(); return; }
+    if (result.outcomeStatus === 'FAILED') {
+      try { wx.setStorageSync(aiDraftStorageKey() + ':request', ''); } catch (e) { /* The server retains this terminal state. */ }
+      this._pendingAiDraft = null;
+      this.setData({ aiUnknown: false, aiGenerating: false, aiError: result.safeText || '原生成任务已失败，可重新描述后生成；次数以当前额度为准。' });
+      this.loadAiQuota();
+      return;
+    }
+    if (result.outcomeStatus !== 'SUCCEEDED') { this.markAiUnknown(); return; }
+
         const draft = res && res.data && res.data.draft;
         const nodes = draft && Array.isArray(draft.nodes) ? draft.nodes : [];
         const hasUsableNodes = nodes.every((node) => node && typeof node === 'object'
           && String(node.merchantName || node.roleText || node.task || '').trim());
         if ((res.code !== 200 && res.code !== '200') || !draft || !String(draft.title || '').trim() || !nodes.length || !hasUsableNodes) {
-          this.setData({ aiError: (res && res.msg) || 'AI 返回的主题不完整，请换一种说法重试。' });
+          this.setData({ aiError: (res && res.msg) || 'AI 返回的主题不完整，请查询原结果。', aiUnknown: true });
           return;
         }
         if (nodes.length > MAX_AI_PLAN_NODES) {
-          this.setData({ aiError: 'AI 草稿最多只能包含不超过 3 个点位，请换一种说法重试。' });
+          this.setData({ aiError: 'AI 草稿最多只能包含不超过 3 个点位，请查询原结果。', aiUnknown: true });
           return;
         }
+        const key = aiDraftStorageKey();
+        try { wx.setStorageSync(key + ':request', ''); } catch (e) { /* A saved request can safely be queried again. */ }
+        this._pendingAiDraft = null;
         this.setData({
+          aiUnknown: false, aiGenerating: false, aiError: '',
           aiPlan: { title: draft.title, subtitle: draft.subtitle || '', storyline: draft.storyline || '' },
           aiPlanNodes: nodes.map((node, index) => ({
             name: node.merchantName || node.roleText || node.task || ('点位 ' + (index + 1)),
@@ -111,10 +168,11 @@ Page({
           aiQuotaLoaded: res.data.remainingQuota != null ? true : this.data.aiQuotaLoaded,
           aiRemaining: res.data.remainingQuota != null ? Number(res.data.remainingQuota) : this.data.aiRemaining
         }, () => this.refreshEnterEditorState());
-      },
-      fail: () => this.setData({ aiError: '网络暂时不可用，请稍后重试。' }),
-      complete: () => this.setData({ aiGenerating: false })
-    });
+
+  },
+  markAiUnknown() {
+    this.setData({ aiUnknown: true, aiError: '生成结果待确认，请查询原生成结果；暂不能再次生成，已有草稿仍可编辑。' });
+    this.loadAiQuota();
   },
   refreshEnterEditorState() {
     const plan = this.data.aiPlan || {};

@@ -16,6 +16,7 @@ Page({
     searchLoading: false,
     showSearchSkeleton: false,
     searchError: '',
+    hasMore: false,
     // 出过结果没有。只用来判 auto-back:首屏搜索失败才自动退页,
     // 页内改关键词再搜的失败留在页内,别把用户刚打的词一起退掉(审查C A1)。
     everLoaded: false,
@@ -33,8 +34,7 @@ Page({
       endDate: options.endDate ? decodeURIComponent(options.endDate) : '',
       minPrice: options.minPrice != null && options.minPrice !== '' ? Number(options.minPrice) : null,
       maxPrice: options.maxPrice != null && options.maxPrice !== '' ? Number(options.maxPrice) : null,
-      // CU-M-66:入口页的排序选择必须活到请求里。四类里只有 /api/activity/list 有 sort_type,
-      // 其余三类后端没有排序参数(buildRequests 只把它给 activity)。
+      // 各列表沿用既有默认顺序，不把默认顺序冒充发布时间排序。
       sortType: options.sortType ? String(options.sortType) : '',
     };
     this.setData({ keyword, categoryId });
@@ -55,14 +55,22 @@ Page({
     if (this._searchSkeletonTimer) clearTimeout(this._searchSkeletonTimer);
   },
 
-  runSearch() {
+  loadMore() { if (!this.data.searchLoading && this.data.hasMore) this.runSearch(true); },
+  onReachBottom() { this.loadMore(); },
+
+  runSearch(append) {
+    append = append === true;
+    if (append && this.data.searchLoading) return;
     const { keyword, categoryId } = this.data;
     const filters = this._filters || {};
-    const requests = discoverSearch.buildRequests(keyword, categoryId, filters);
+    const allRequests = discoverSearch.buildRequests(keyword, categoryId, filters);
     const queryKey = String(keyword || '').trim() + '::' + String(categoryId || '')
       + '::' + String(filters.startDate || '') + '::' + String(filters.endDate || '')
-      + '::' + String(filters.minPrice || '') + '::' + String(filters.maxPrice || '')
+      + '::' + String(filters.minPrice == null ? '' : filters.minPrice) + '::' + String(filters.maxPrice == null ? '' : filters.maxPrice)
       + '::' + String(filters.sortType || '');
+    if (this._resultQueryKey !== queryKey) { append = false; this._searchPages = {}; }
+    this._searchPages = this._searchPages || {};
+    const requests = allRequests.filter((request) => !append || (this._searchPages[request.type] && this._searchPages[request.type].hasMore));
     const preserveExisting = this._resultQueryKey === queryKey
       && (this.data.resultGroups || []).some((group) => (group.items || []).length > 0);
     const previousGroups = {};
@@ -92,7 +100,7 @@ Page({
       pending -= 1;
       if (pending > 0 || this._searchSeq !== seq) return;
       if (this._searchSkeletonTimer) clearTimeout(this._searchSkeletonTimer);
-      const resultGroups = requests.map((request) => ({
+      const resultGroups = allRequests.map((request) => ({
         type: request.type,
         label: discoverSearch.TYPE_META[request.type].label,
         items: Object.prototype.hasOwnProperty.call(groupsByType, request.type) ? groupsByType[request.type] : (previousGroups[request.type] || [])
@@ -101,6 +109,7 @@ Page({
       this.setData({
         searchLoading: false,
         showSearchSkeleton: false,
+        hasMore: Object.keys(this._searchPages).some((type) => this._searchPages[type].hasMore),
         everLoaded: this.data.everLoaded || hasResults,
         searchError: failed > 0 && !hasResults
           ? (allFailed ? '搜索服务暂时不可用，请重试' : '部分搜索没有完成，请重试后再确认结果')
@@ -119,17 +128,29 @@ Page({
       this._resultQueryKey = queryKey; this.setData({ searchLoading: false, showSearchSkeleton: false }); return; }
 
     requests.forEach((request) => {
-      app.sendRequest({
+      const paged = request.type === 'topic' || request.type === 'activity';
+      const previousPage = this._searchPages[request.type];
+      let pageNum = append && previousPage ? previousPage.pageNum + 1 : 1;
+      const sendPage = () => app.sendRequest({
         hideLoading: true,
         autoErrorToast: false,   // 多路并发各自 toast 会连弹;全失败由 auto-back 半屏讲,部分失败在 finish 里报一次
         url: request.url,
         method: 'POST',
         auth: request.auth,
-        data: request.data,
+        data: paged ? Object.assign({}, request.data, { pageNum }) : request.data,
         header: request.header,
         success: (res) => {
-          if (res && (res.code == 200 || res.code == '200')) {
-            groupsByType[request.type] = discoverSearch.decorateRows(request.type, res.data, filters);
+          if (this._searchSeq !== seq) return;
+          if (res && (res.code == 200 || res.code == '200') && res.data != null) {
+            const rows = discoverSearch.rowsOf(res.data);
+            const total = paged && Number.isSafeInteger(res.data.total) && res.data.total >= 0 ? res.data.total : null;
+            if (paged && (!Array.isArray(res.data.rows) || total == null)) { failed += 1; finish(); return; }
+            const hasMore = paged && pageNum * request.data.pageSize < total;
+            this._searchPages[request.type] = { pageNum, hasMore };
+            const decorated = discoverSearch.decorateRows(request.type, res.data, filters);
+            if (hasMore && !decorated.length) { pageNum += 1; sendPage(); return; }
+            const prior = append ? (previousGroups[request.type] || []) : [];
+            groupsByType[request.type] = prior.concat(decorated.filter((item) => !prior.some((old) => old.key === item.key)));
             if (request.type === 'merchant' || request.type === 'club') {
               groupsByType[request.type].forEach((item) => {
                 item.cardCover = app.getImgUrl(item.cardCover);
@@ -146,10 +167,17 @@ Page({
           finish();
         },
         fail: () => {
+          if (this._searchSeq !== seq) return;
+          failed += 1;
+          finish();
+        },
+        successStatusAbnormal: () => {
+          if (this._searchSeq !== seq) return;
           failed += 1;
           finish();
         }
       });
+      sendPage();
     });
   },
 

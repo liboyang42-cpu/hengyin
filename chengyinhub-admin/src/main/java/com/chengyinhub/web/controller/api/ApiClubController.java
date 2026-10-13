@@ -1641,13 +1641,18 @@ public class ApiClubController extends BaseController {
     public AjaxResult postLike(@RequestBody ClubPostLike body) {
         Long memberId;
         try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body.getPostId() == null) return error("缺少动态ID");
+        if (body == null || body.getPostId() == null) return error("缺少动态ID");
+        if (body.getTarget() != null && body.getTarget() != 0 && body.getTarget() != 1)
+            return AjaxResult.error(400, "target 必须为 0 或 1");
         ClubPost targetPost = clubPostService.selectClubPostById(body.getPostId());
         if (targetPost == null || clubService.selectClubByIdForUpdate(targetPost.getClubId()) == null) {
             return error("动态不存在");
         }
+        boolean current = clubPostLikeService.selectByPostAndMemberForUpdate(body.getPostId(), memberId) != null;
+        if (body.getTarget() != null && (body.getTarget() == 1) == current)
+            return AjaxResult.success(java.util.Collections.singletonMap("liked", current));
         boolean liked;
-        if (clubPostLikeService.selectByPostAndMember(body.getPostId(), memberId) != null) {
+        if (current) {
             clubPostLikeService.deleteByPostAndMember(body.getPostId(), memberId);
             clubPostService.incrementLikeCount(body.getPostId(), -1);
             liked = false;
@@ -1662,6 +1667,22 @@ public class ApiClubController extends BaseController {
         Map<String, Object> d = new HashMap<>();
         d.put("liked", liked);
         return AjaxResult.success(d);
+    }
+
+    @PostMapping("/post/like-state")
+    public AjaxResult postLikeState(@RequestBody ClubPostLike body) {
+        Long memberId;
+        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        if (body == null || body.getPostId() == null) return error("缺少动态ID");
+        ClubPost post = clubPostService.selectClubPostById(body.getPostId());
+        if (memberId == null || memberId <= 0) return AjaxResult.error(401, "请先登录");
+        Club club = post == null ? null : clubService.selectClubById(post.getClubId());
+        if (club == null) return error("动态不存在");
+        if (!canViewClub(club)) return AjaxResult.error(403, "这个俱乐部只对成员开放");
+        Map<String, Object> state = new HashMap<>();
+        state.put("postId", body.getPostId());
+        state.put("liked", clubPostLikeService.selectByPostAndMember(body.getPostId(), memberId) != null);
+        return AjaxResult.success(state);
     }
 
     @Operation(summary = "兼容旧成员角色入口(映射为俱乐部运营委派)")

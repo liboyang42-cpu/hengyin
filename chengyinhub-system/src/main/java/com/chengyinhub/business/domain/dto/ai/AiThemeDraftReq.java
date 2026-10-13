@@ -7,12 +7,15 @@ import java.util.List;
  */
 public class AiThemeDraftReq
 {
+    private String requestId;
     private String idea;
     /** 主题产品模式:1=经典定向,2=自由探索。 */
     private Integer productType;
     /** 可选:已有节点名,AI 按此续写 */
     private List<String> existingNodeNames;
 
+    public String getRequestId() { return requestId; }
+    public void setRequestId(String requestId) { this.requestId = requestId; }
     public String getIdea() { return idea; }
     public void setIdea(String idea) { this.idea = idea; }
     public Integer getProductType() { return productType; }

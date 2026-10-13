@@ -68,15 +68,26 @@ public class MerchantReviewServiceImpl implements IMerchantReviewService {
     @Override
     public MerchantReviewPageVO publicList(Long viewerMemberId, Long merchantRowId,
                                            Integer pageNum, Integer pageSize) {
+        return publicList(viewerMemberId, merchantRowId, pageNum, pageSize, "all");
+    }
+
+    @Override
+    public MerchantReviewPageVO publicList(Long viewerMemberId, Long merchantRowId,
+                                           Integer pageNum, Integer pageSize, String filter) {
         requirePositive(merchantRowId, "merchantRowId");
+        filter = reviewFilter(filter);
+        if ("pending".equals(filter)) throw new ServiceException("待回复筛选仅用于管理列表", 400);
         Page page = page(pageNum, pageSize);
-        long total = merchantReviewMapper.countPublicReviews(merchantRowId);
+        long total = "all".equals(filter) ? merchantReviewMapper.countPublicReviews(merchantRowId)
+                : merchantReviewMapper.countFilteredReviews(merchantRowId, false, filter);
         List<MerchantReview> rows = total == 0 ? Collections.<MerchantReview>emptyList()
-                : merchantReviewMapper.selectPublicReviews(merchantRowId, page.offset, page.size);
+                : "all".equals(filter) ? merchantReviewMapper.selectPublicReviews(merchantRowId, page.offset, page.size)
+                : merchantReviewMapper.selectFilteredReviews(merchantRowId, false, filter, page.offset, page.size);
         Map<String, Object> summary = merchantReviewMapper.selectPublicRatingSummary(merchantRowId);
 
         MerchantReviewPageVO out = basePage("public", page, total, rows, viewerMemberId != null && viewerMemberId > 0,
                 false);
+        out.setFilter(filter);
         out.setAverageRating(decimalValue(summary, "averageRating"));
         applyReviewStats(out, merchantRowId);
         MerchantReviewEligibilityVO eligibility = new MerchantReviewEligibilityVO();
@@ -105,18 +116,34 @@ public class MerchantReviewServiceImpl implements IMerchantReviewService {
 
     @Override
     public MerchantReviewPageVO manageList(Long principalMemberId, Integer pageNum, Integer pageSize) {
+        return manageList(principalMemberId, pageNum, pageSize, "all");
+    }
+
+    @Override
+    public MerchantReviewPageVO manageList(Long principalMemberId, Integer pageNum, Integer pageSize, String filter) {
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.MARKETING_READ);
+        filter = reviewFilter(filter);
         Page page = page(pageNum, pageSize);
-        long total = merchantReviewMapper.countManageReviews(access.getMerchantId());
+        long total = "all".equals(filter) ? merchantReviewMapper.countManageReviews(access.getMerchantId())
+                : merchantReviewMapper.countFilteredReviews(access.getMerchantId(), true, filter);
         List<MerchantReview> rows = total == 0 ? Collections.<MerchantReview>emptyList()
-                : merchantReviewMapper.selectManageReviews(access.getMerchantId(), page.offset, page.size);
+                : "all".equals(filter) ? merchantReviewMapper.selectManageReviews(access.getMerchantId(), page.offset, page.size)
+                : merchantReviewMapper.selectFilteredReviews(access.getMerchantId(), true, filter, page.offset, page.size);
         MerchantReviewPageVO out = basePage("manage", page, total, rows,
                 access.hasPermission(MerchantPermission.MARKETING_WRITE), true);
+        out.setFilter(filter);
         out.setAverageRating(decimalValue(merchantReviewMapper.selectPublicRatingSummary(access.getMerchantId()), "averageRating"));
         applyReviewStats(out, access.getMerchantId());
         out.setEligibility(null);
         return out;
+    }
+
+    private String reviewFilter(String filter) {
+        if (filter == null || filter.trim().isEmpty()) return "all";
+        if (!java.util.Arrays.asList("all", "pending", "low", "photo").contains(filter))
+            throw new ServiceException("评价筛选条件无效", 400);
+        return filter;
     }
 
     @Override

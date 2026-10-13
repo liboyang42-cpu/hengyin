@@ -276,3 +276,26 @@ test('录音回调拒绝缺失、空、负数与非有限文件大小', () => {
     assert.ok(h.page.data.voiceError)
   }
 })
+
+
+test('原录音提交未知时读到旧样本不能解锁再次生成', async () => {
+  const { page } = loadPage()
+  page._voicePendingSample = 'https://sample/current.mp3'
+  page.data.voiceUnknown = true
+  page._request = () => Promise.resolve({ data: { voiceStatus: 2, voiceSample: 'https://sample/old.mp3' } })
+  await page.refreshVoice()
+  assert.equal(page.data.voiceUnknown, true)
+  page._request = () => Promise.resolve({ data: { voiceStatus: 2, voiceSample: 'https://sample/current.mp3' } })
+  await page.refreshVoice()
+  assert.equal(page.data.voiceUnknown, false)
+})
+
+test('缺声音状态或状态读取失败不伪装未录制', async () => {
+  const { page } = loadPage()
+  page._request = () => Promise.resolve({ data: {} })
+  await page.refreshVoice()
+  assert.equal(page.data.voiceUnknown, true)
+  page._request = () => Promise.reject(Error('offline'))
+  await page.refreshVoice()
+  assert.equal(page.data.voiceUnknown, true)
+})

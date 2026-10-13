@@ -13,6 +13,11 @@ public interface IMerchantReviewService {
 
     MerchantReviewPageVO manageList(Long principalMemberId, Integer pageNum, Integer pageSize);
 
+    MerchantReviewPageVO publicList(Long viewerMemberId, Long merchantRowId,
+                                    Integer pageNum, Integer pageSize, String filter);
+
+    MerchantReviewPageVO manageList(Long principalMemberId, Integer pageNum, Integer pageSize, String filter);
+
     /** 创建后为 PENDING_REVIEW；统一 AuditTask 通过后才进入公开 VISIBLE。 */
     MerchantReviewWriteResultVO create(Long authorMemberId, MerchantReviewCreateRequest request);
 

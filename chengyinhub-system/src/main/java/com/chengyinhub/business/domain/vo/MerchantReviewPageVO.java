@@ -6,6 +6,7 @@ import java.util.List;
 
 public class MerchantReviewPageVO {
     private String mode;
+    private String filter;
     private int pageNum;
     private int pageSize;
     private long total;
@@ -17,6 +18,8 @@ public class MerchantReviewPageVO {
     private MerchantReviewEligibilityVO eligibility;
     private List<MerchantReviewVO> items = new ArrayList<>();
 
+    public String getFilter() { return filter; }
+    public void setFilter(String filter) { this.filter = filter; }
     public String getMode() { return mode; }
     public void setMode(String mode) { this.mode = mode; }
     public int getPageNum() { return pageNum; }

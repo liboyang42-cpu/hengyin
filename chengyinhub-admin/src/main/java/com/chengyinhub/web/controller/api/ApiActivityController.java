@@ -701,13 +701,17 @@ public class ApiActivityController extends BaseController {
     }
 
 
+    @Autowired
+    private com.chengyinhub.business.mapper.UmsMemberMapper favoriteMemberMapper;
+
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     @Operation(summary = "活动点赞")
     @PostMapping("/like")
     @Parameters({
             @Parameter(name = "id", description = "活动ID"),
             @Parameter(name = "type", description = "类型 1点赞")
     })
-    public AjaxResult activityLike(String id, String type) {
+    public AjaxResult activityLike(String id, String type, String target) {
         CmsActivityLike cmsActivityLike = new CmsActivityLike();
         Long member_id = getAppUserId();
         // 参数校验
@@ -720,11 +724,17 @@ public class ApiActivityController extends BaseController {
             return error("参数不合规");
         }
 
+        if (target != null && !"0".equals(target) && !"1".equals(target))
+            return AjaxResult.error(400, "target 必须为 0 或 1");
+        if (favoriteMemberMapper.lockMemberById(member_id) == null) return error("会员不存在");
         cmsActivityLike.setDataId(dataId);
         cmsActivityLike.setMemberId(member_id);
 
 
         List<CmsActivityLike> list = cmsActivityLikeService.selectCmsActivityLikeList(cmsActivityLike);
+        if (target != null && ("1".equals(target) == !list.isEmpty())) {
+            return success(java.util.Collections.singletonMap("liked", !list.isEmpty()));
+        }
         if (list.size() > 0) {
             //取消点赞
             // 提取ID集合
@@ -735,21 +745,40 @@ public class ApiActivityController extends BaseController {
             // 调用批量删除方法
             int rows = cmsActivityLikeService.deleteCmsActivityLikeByIds(ids);
             if (rows > 0) {
-                return success("取消点赞成功");
+                return target == null ? success("取消点赞成功") : success(java.util.Collections.singletonMap("liked", false));
             } else {
                 return error("取消点赞失败");
             }
         } else {
             //新增
-            cmsActivityLike.setLikeType(likeType);
+            cmsActivityLike.setLikeType(target == null ? likeType : 1);
             int rows = cmsActivityLikeService.insertCmsActivityLike(cmsActivityLike);
             if (rows > 0) {
-                return success("点赞成功");
+                return target == null ? success("点赞成功") : success(java.util.Collections.singletonMap("liked", true));
             } else {
                 return error("点赞失败");
             }
         }
     }
+    public AjaxResult activityLike(String id, String type) {
+        return activityLike(id, type, null);
+    }
+
+    @PostMapping("/like-state")
+    public AjaxResult activityLikeState(String id) {
+        Long memberId = getAppUserId();
+        if (memberId == null || memberId <= 0) return error("请先登录");
+        Long dataId = Convert.toLong(id, 0L);
+        if (dataId < 1) return error("参数不合规");
+        CmsActivityLike probe = new CmsActivityLike();
+        probe.setMemberId(memberId);
+        probe.setDataId(dataId);
+        java.util.Map<String, Object> state = new java.util.HashMap<>();
+        state.put("id", dataId);
+        state.put("liked", !cmsActivityLikeService.selectCmsActivityLikeList(probe).isEmpty());
+        return success(state);
+    }
+
 
     @Operation(summary = "发布活动")
     @Log(title = "发布活动", businessType = BusinessType.INSERT)

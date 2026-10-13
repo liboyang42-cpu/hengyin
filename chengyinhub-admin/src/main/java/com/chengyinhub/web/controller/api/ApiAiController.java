@@ -164,6 +164,18 @@ public class ApiAiController extends BaseController
         }
     }
 
+    @Operation(summary = "查询本人的原主题草稿生成结果")
+    @PostMapping("/theme/draft/status")
+    public AjaxResult themeDraftStatus(@RequestBody AiThemeDraftReq req)
+    {
+        Long memberId = resolveMemberId();
+        if (memberId == null) return error("请先登录");
+        String gate = gateThemeDraftRole(memberId);
+        if (gate != null) return error(gate);
+        try { return success(aiCreatorService.themeDraftStatus(memberId, req == null ? null : req.getRequestId())); }
+        catch (AiServiceException e) { return error(e.getMessage()); }
+    }
+
     @Operation(summary = "简单 AI 主题草稿剩余额度")
     @PostMapping("/theme/draft/quota")
     public AjaxResult themeDraftQuota()

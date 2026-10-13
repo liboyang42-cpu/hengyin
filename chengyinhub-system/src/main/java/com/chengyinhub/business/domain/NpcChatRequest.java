@@ -14,6 +14,7 @@ public class NpcChatRequest {
     private Long id;
     private Long userId;
     private String requestId;
+    private String requestHash;
     private Long sessionId;
     private String status;
     private String safetyDecision;
@@ -36,6 +37,8 @@ public class NpcChatRequest {
     public void setUserId(Long userId) { this.userId = userId; }
     public String getRequestId() { return requestId; }
     public void setRequestId(String requestId) { this.requestId = requestId; }
+    public String getRequestHash() { return requestHash; }
+    public void setRequestHash(String requestHash) { this.requestHash = requestHash; }
     public Long getSessionId() { return sessionId; }
     public void setSessionId(Long sessionId) { this.sessionId = sessionId; }
     public String getStatus() { return status; }

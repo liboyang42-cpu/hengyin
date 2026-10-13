@@ -9,6 +9,8 @@ public interface IClubPostLikeService
 {
     public ClubPostLike selectByPostAndMember(Long postId, Long memberId);
 
+    public ClubPostLike selectByPostAndMemberForUpdate(Long postId, Long memberId);
+
     public int insertClubPostLike(ClubPostLike clubPostLike);
 
     public int deleteByPostAndMember(Long postId, Long memberId);

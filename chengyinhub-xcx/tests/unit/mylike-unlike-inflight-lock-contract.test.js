@@ -81,7 +81,7 @@ test('取消成功本地摘行;失败不摘行且锁释放', () => {
 
   page.topicUnlike({ currentTarget: { dataset: { index: 0, id: 11 } } });
   modals[0].success({ confirm: true });
-  unlikeRequests(requests)[0].success({ code: '200' });
+  unlikeRequests(requests)[0].success({ code: '200', data: { liked: false } });
   assert.deepEqual(page.data.ztList1.map((item) => item.id), [12]);
   unlikeRequests(requests)[0].complete({ code: '200' });
 
@@ -91,6 +91,7 @@ test('取消成功本地摘行;失败不摘行且锁释放', () => {
   assert.deepEqual(page.data.ztList1.map((item) => item.id), [12], '失败不得把行摘掉');
   unlikeRequests(requests)[1].complete({ code: '500' });
 
+  requests.filter(r => r.url === '/api/topic/like-state').at(-1).success({ code: 200, data: { id: 12, liked: true } });
   page.topicUnlike({ currentTarget: { dataset: { index: 0, id: 12 } } });
   modals[2].success({ confirm: true });
   assert.equal(unlikeRequests(requests).length, 3, '失败后锁必须释放,允许重试');
@@ -99,7 +100,7 @@ test('取消成功本地摘行;失败不摘行且锁释放', () => {
 test('负控:摘掉 in-flight 锁,连点必然发出两个 toggle 请求 ⇒ 用例真红', () => {
   const source = read();
   const broken = source
-    .replace("    if (that._unlikeRequests[requestKey]) return;\n\n    modal.show({", '    modal.show({')
+    .replace("    if (that._unlikeRequests[requestKey]) return;\n", '')
     .replace("          if (that._unlikeRequests[requestKey]) return;\n          that._unlikeRequests[requestKey] = true;\n", '');
   assert.notEqual(broken, source, '负控锚点失效:锁未命中');
 
@@ -110,4 +111,33 @@ test('负控:摘掉 in-flight 锁,连点必然发出两个 toggle 请求 ⇒ 用
   page.topicUnlike({ currentTarget: { dataset: { index: 0, id: 11 } } });
   modals[1].success({ confirm: true });
   assert.equal(unlikeRequests(requests).length, 2, '负控必须真的把锁摘掉');
+});
+
+test('取消丢响应后只回读，没确认原关系前不再次 toggle', () => {
+  const { page, requests, modals } = loadPage();
+  page.setData({ ztList1: [{ id: 11 }] });
+  const event = { currentTarget: { dataset: { index: 0, id: 11 } } };
+  page.topicUnlike(event);
+  modals[0].success({ confirm: true });
+  const write = unlikeRequests(requests)[0];
+  write.fail();
+  write.complete();
+  assert.equal(page._unlikeRequests['11'], 'unknown');
+  page.topicUnlike(event);
+  assert.equal(unlikeRequests(requests).length, 1);
+  const reads = requests.filter(r => r.url === '/api/topic/like-state');
+  assert.ok(reads.length >= 1);
+  reads.at(-1).success({ code: 200, data: { id: 11, liked: true } });
+  assert.equal(page._unlikeRequests['11'], undefined);
+});
+test('不同收藏同时取消按原 id 删除，不能按过期下标误删其他项', () => {
+  const { page, requests, modals } = loadPage();
+  page.setData({ ztList1: [{ id: 11 }, { id: 12 }, { id: 13 }] });
+  for (const [index, id] of [[0, 11], [1, 12]]) {
+    page.topicUnlike({ currentTarget: { dataset: { index, id } } });
+    modals.at(-1).success({ confirm: true });
+  }
+  unlikeRequests(requests)[0].success({ code: 200, data: { liked: false } });
+  unlikeRequests(requests)[1].success({ code: 200, data: { liked: false } });
+  assert.deepEqual(page.data.ztList1.map(x => x.id), [13]);
 });
