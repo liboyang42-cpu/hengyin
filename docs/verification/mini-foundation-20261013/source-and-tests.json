@@ -1,0 +1,94 @@
+{
+  "publicBase": "fafde98723211ccbc12b78a534a0cb2c1685e361",
+  "scope": "PAYING page progress, IM list response races, submitted draft ordering only",
+  "sourceFiles": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java",
+      "sha256": "e810046c1cb0d7e685030bbf5d016813e7c175bbc9afc0849fdda72d6f44696f"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/task/OrderClosePayingReconcileTaskContractTest.java",
+      "sha256": "fecda0b85ce12fec4e4eaacd1dfcf3ca89d04a98b66a188dd01ec877e81639a4"
+    },
+    {
+      "path": "chengyinhub-xcx/subpackageB/pages/im/list/index.js",
+      "sha256": "40c93728da42b87c81f2548bee45f715af9123efd35bf887c11994b299f853ce"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/im-list-mutation-race.test.js",
+      "sha256": "148a34ceb4dc132dcf81a94b14ef010e0e110831e50c1770862cfcf1cabb2e42"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+      "sha256": "39a730127d4ec932785f16099987997758c8ee73db7c34dbe74188f17ec21ca1"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDraftSubmittedOrderTest.java",
+      "sha256": "5561cf30b9b9e8483b24080bf64e0116a495fdb264c0de678ee545db30494400"
+    }
+  ],
+  "backendTests": {
+    "tests": 76,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "suites": [
+      {
+        "name": "com.chengyinhub.business.task.OrderClosePayingReconcileTaskContractTest",
+        "tests": "2",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0"
+      },
+      {
+        "name": "com.chengyinhub.business.service.TopicDraftSubmittedOrderTest",
+        "tests": "2",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0"
+      },
+      {
+        "name": "com.chengyinhub.business.service.TopicDraftPartialSaveGateTest",
+        "tests": "19",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0"
+      },
+      {
+        "name": "com.chengyinhub.business.service.impl.TopicCreateSaveDraftSideEffectTest",
+        "tests": "4",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0"
+      },
+      {
+        "name": "com.chengyinhub.business.service.CmsTopicRoutePublishPolicyTest",
+        "tests": "8",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0"
+      },
+      {
+        "name": "com.chengyinhub.business.service.impl.ChapterFlowWriteServiceTest",
+        "tests": "41",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0"
+      }
+    ],
+    "context": "Run on the dedicated test VPS in a source snapshot also containing a separate consent candidate; that candidate is excluded from this patch and these counts."
+  },
+  "nodeTests": {
+    "tests": 28,
+    "failures": 0,
+    "skipped": 0
+  },
+  "notVerified": [
+    "real-identity HTTP",
+    "WeChat DevTools",
+    "physical device",
+    "production deployment"
+  ],
+  "sourceCommit": "0984189e1f08bff0bf91ad1ae59d4b3db3a255b8",
+  "stagedSnapshotVpsCompile": "passed by pre-commit"
+}
