@@ -19,7 +19,7 @@ B 从交接 e67e72a 分支执行，只改消息/审计/事件/既有广场域和
 - 交接NPC26 + IM现有47 + 新IM12：针对性Node最终85/85。新增12覆盖落盘失败、原收据、明确重试原payload、重进、账号/凭据切换、清缓存、删除迟到、缺段连续水位、路线缓存当前私密与旧公开回包。见 im-evidence/node-green.txt。
 - 用交接原chat源在隔离fixture运行相同新测试，初11项全部红；最终追加的凭据用例同属新增守卫，不把fixture当真身份。见 im-evidence/node-baseline-red.txt。
 - analytics/广场主组59/59 + 既有推荐经营消费者28/28；红版本analytics26中18失败、广场4中3失败。明细见analytics-evidence；这些不同分组不累加为历史全包193。
-- 运行过工作树整套Node：8231用例/8221通过/8失败/2skip。7个失败是新增账号/落盘前置令旧fixture失效，随后按本域最小修fixture并保原assert/负控，相关91项已逐类修复；1个release inventory摘要需协调者统一更新。整套运行期间事件最后修补仍在进行，最终受影响域已重新验证，不能宣称最终HEAD整套全绿。
+- 运行过工作树整套Node：8231用例/8221通过/8失败/2skip。7个失败是新增账号/落盘前置令旧fixture失效，随后按本域最小修fixture并保原assert/负控，相关91项已逐类修复；1个release inventory摘要经协调者指定B单一owner，按相同4432控制全集机器生成刷新70条既有控制（来源行号及3条原IM认证收据读targets）；未改status/分类/验收/写API或动作证据。整套运行期间事件最后修补仍在进行，最终受影响域已重新验证，不能宣称最终HEAD整套全绿。
 - JS scope lint：556个生产JS，未解析标识符0、不存在导出0。原migration layout门通过、SQL splitter两条完整语句、未注册bean清单为空、IM XML解析通过、diff check通过。更新源后相关轻量门继续复验。
 - 变更内容gitleaks无新增命中；root全源基线既有4条测试夹具命中区分保留，不加allowlist。扫描不公开密钥/临时SSH文件。
 
