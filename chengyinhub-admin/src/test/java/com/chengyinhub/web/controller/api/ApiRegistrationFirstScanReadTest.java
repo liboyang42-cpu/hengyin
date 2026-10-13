@@ -2,6 +2,11 @@ package com.chengyinhub.web.controller.api;
 
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.domain.CmsRegistrationScan;
+import com.chengyinhub.business.domain.CmsMemberTemplate;
+import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.service.ICmsRegistrationScanService;
+import com.chengyinhub.business.service.ICmsMemberTemplateService;
 import com.chengyinhub.business.service.ICmsActivityService;
 import com.chengyinhub.business.service.ICmsRegistrationService;
 import com.chengyinhub.business.service.ICmsTopicService;
@@ -98,6 +103,46 @@ class ApiRegistrationFirstScanReadTest {
         assertEquals(scanned.getFirstSuccessfulScanAt(), read.getFirstSuccessfulScanAt());
         assertTrue(read.getRefundInfo().refundable);
         assertEquals(0, read.getVerificationStatus());
+    }
+
+    @Test
+    void orderDetailKeepsEachScannedTemplateAndStripsItsOwnAnswers() {
+        ICmsTopicService topics = mock(ICmsTopicService.class);
+        ICmsRegistrationScanService scans = mock(ICmsRegistrationScanService.class);
+        ICmsMemberTemplateService templates = mock(ICmsMemberTemplateService.class);
+        ReflectionTestUtils.setField(controller, "topicService", topics);
+        ReflectionTestUtils.setField(controller, "registrationScanService", scans);
+        ReflectionTestUtils.setField(controller, "memberTemplateService", templates);
+        CmsTopic topic = new CmsTopic();
+        topic.setId(100L);
+        when(topics.selectCmsTopicById(100L)).thenReturn(topic);
+        scanned.setOwnerType(1L);
+        when(registrations.selectCmsRegistrationById(1L)).thenReturn(scanned);
+        CmsRegistrationScan first = new CmsRegistrationScan();
+        first.setRegistrationType(2);
+        first.setTemplateId(6016L);
+        CmsRegistrationScan second = new CmsRegistrationScan();
+        second.setRegistrationType(2);
+        second.setTemplateId(6018L);
+        when(scans.selectCmsRegistrationScanList(any())).thenReturn(Arrays.asList(first, second));
+        for (Long templateId : Arrays.asList(6016L, 6018L)) {
+            CmsMemberTemplate template = new CmsMemberTemplate();
+            template.setId(templateId);
+            template.setQuestionAnswer("private-answer-" + templateId);
+            template.setHint1("private-hint-" + templateId);
+            when(templates.selectCmsMemberTemplateById(templateId)).thenReturn(template);
+        }
+        AjaxResult result = controller.getRegistrationDetail("1");
+        assertEquals(200, result.get("code"));
+        List<CmsRegistrationScan> rows = ((CmsRegistration) result.get("data")).getRegistrationScanList();
+        assertEquals(Arrays.asList(first, second), rows);
+        for (CmsRegistrationScan row : rows) {
+            assertEquals(row.getTemplateId(), row.getMemberTemplate().getId());
+            assertNull(row.getMemberTemplate().getQuestionAnswer());
+            assertNull(row.getMemberTemplate().getHint1());
+        }
+        verify(templates).selectCmsMemberTemplateById(6016L);
+        verify(templates).selectCmsMemberTemplateById(6018L);
     }
 
     private CmsRegistration row(Long id) {

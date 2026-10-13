@@ -36,11 +36,12 @@ jobs:
     # workflow_run 只有「master push 触发的 GitHub CI 成功」才有资格部署；
     # workflow_dispatch 仅供仓库管理员在迁移/恢复时显式使用。
     if: >-
-      (github.event_name == 'workflow_run' &&
+      github.repository == 'liboyang42-cpu/chengyin' &&
+      ((github.event_name == 'workflow_run' &&
        github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.event == 'push' &&
        github.event.workflow_run.head_branch == 'master') ||
-      github.event_name == 'workflow_dispatch'
+      github.event_name == 'workflow_dispatch')
     runs-on: [self-hosted, macOS, ARM64, chengyin]
     outputs:
       sha: ${{ steps.classify.outputs.sha }}
@@ -73,7 +74,7 @@ jobs:
 
   deploy:
     needs: prepare
-    if: needs.prepare.outputs.should_deploy == 'true'
+    if: github.repository == 'liboyang42-cpu/chengyin' && needs.prepare.outputs.should_deploy == 'true'
     runs-on: [self-hosted, macOS, ARM64, chengyin]
     environment: production
     timeout-minutes: 90

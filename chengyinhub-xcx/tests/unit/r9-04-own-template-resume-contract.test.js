@@ -46,8 +46,9 @@ function installGlobals() {
     nextTick: (cb) => cb(),
     navigateTo(options) { navigations.push({ method: 'navigateTo', url: options.url }) },
     redirectTo(options) { navigations.push({ method: 'redirectTo', url: options.url }) },
+    switchTab(options) { navigations.push({ method: 'switchTab', url: options.url }) },
     navigateBack() {},
-    reLaunch() {},
+    reLaunch(options) { navigations.push({ method: 'reLaunch', url: options.url }) },
     createSelectorQuery: () => ({ in: () => ({ select: () => ({ boundingClientRect: () => ({ exec() {} }) }), exec() {} }) }),
   }
 }
@@ -70,7 +71,7 @@ function loadPage(relative) {
       }
       cursor[parts[parts.length - 1]] = patch[key]
     })
-    if (callback) callback()
+    if (callback) callback.call(this)
   }
   return page
 }
@@ -90,6 +91,7 @@ test('RED 锚点:scope=my 的详情开始应用必须把 scope 带进编辑页',
   page.data.id = 6029
   page.data.scope = 'my'
   page.data.isMyScope = true
+  page.data.info = { canEdit: true }
 
   page.goPrimary()
 
@@ -97,6 +99,42 @@ test('RED 锚点:scope=my 的详情开始应用必须把 scope 带进编辑页',
     method: 'navigateTo',
     url: '/pages/publish/temp/index?id=6029&scope=my',
   }])
+})
+
+test('非本人或归属缺失的个人模板仅引导真实模板广场，不进入编辑或采用', () => {
+  for (const canEdit of [false, undefined, null, 'true', 1]) {
+    navigations = []
+    const page = loadPage('pages/templatedetail/templatedetail.js')
+    page.data.id = 6029
+    page.data.scope = 'my'
+    page.applyDetailPayload({ id: 6029, title: '他人的个人模板', memberId: 9005, canEdit })
+    page.goPrimary()
+    assert.equal(page.data.primaryLabel, '去模板广场选用')
+    assert.notEqual(page.data.publisherText, '玩家9004')
+    assert.deepEqual(navigations, [{ method: 'switchTab', url: '/pages/template/index' }])
+    assert.equal(requests.length, 0)
+  }
+})
+
+test('个人模板编辑深链缺明确编辑权限时返回只读详情，加载前后都不能保存', () => {
+  for (const canEdit of [false, undefined, null, 'true', 1]) {
+    for (const scope of ['', 'MERCHANT']) {
+      requests = []
+      navigations = []
+      const page = loadPage('pages/publish/temp/index.js')
+      page.onLoad({ id: '6029', scope: scope || 'my', templateScope: 'my' })
+      page.validateForm = () => true
+      page.saveDraft()
+      page.publishGame()
+      templateRequest().success({ code: 200, data: { id: 6029, title: '他人的个人模板', canEdit } })
+      page.saveDraft()
+      page.publishGame()
+      assert.ok(page.data.loadError)
+      assert.equal(page.data.formData.title, '')
+      assert.deepEqual(navigations, [{ method: 'redirectTo', url: '/pages/templatedetail/templatedetail?id=6029&scope=my' + (scope ? '&operationScope=MERCHANT' : '') }])
+      assert.equal(requests.filter(item => /\/api\/template\/(draft|publish|adopt-draft)$/.test(item.url)).length, 0)
+    }
+  }
 })
 
 test('公共库模板的应用跳转保持原样(不额外塞 scope)', () => {
@@ -145,6 +183,7 @@ test('scope=my 不污染写链路身份:operationScope 仍只认 MERCHANT', () =
 test('续编:个人草稿保存草稿时仍带原 id 走 /api/template/draft', () => {
   const page = loadPage('pages/publish/temp/index.js')
   page.onLoad({ id: '6029', scope: 'my' })
+  templateRequest().success({ code: 200, data: { id: 6029, title: '我的草稿', canEdit: true } })
   page.data.formData.title = '我的草稿'
   page.validateForm = () => true
 
@@ -155,6 +194,51 @@ test('续编:个人草稿保存草稿时仍带原 id 走 /api/template/draft', (
   const body = JSON.parse(draft.data)
   assert.equal(body.id, 6029, '续编必须更新原草稿而不是另建一份')
   assert.equal(body.scope, '')
+})
+
+test('商家草稿列表、详情、继续编辑与保存返回完整保留作用域；个人入口不转商家', () => {
+  for (const scope of ['', 'MERCHANT']) {
+    requests = []
+    navigations = []
+    const list = loadPage('subpackageMember/mytemplate/mytemplate.js')
+    list.onLoad({ scope })
+    const listRequest = requests.find(item => item.url === '/api/template/my-list')
+    assert.equal(listRequest.data.scope || '', scope)
+    listRequest.success({ code: 200, data: { rows: [{ id: 6029, title: '已采用草稿' }], total: 1 } })
+    listRequest.complete()
+    list.goInfo({ currentTarget: { dataset: { index: 0 } } })
+    const query = url => Object.fromEntries(new URL(url, 'https://local.invalid').searchParams)
+
+    const detail = loadPage('pages/templatedetail/templatedetail.js')
+    detail.onLoad(query(navigations.at(-1).url))
+    assert.equal(requests.filter(item => item.url === '/api/template/myinfo').at(-1).data.scope || '', scope)
+    requests.filter(item => item.url === '/api/template/myinfo').at(-1).success({ code: 200, data: { id: 6029, title: '已采用草稿', canEdit: true } })
+    detail.goPrimary()
+
+    const editor = loadPage('pages/publish/temp/index.js')
+    editor.onLoad(query(navigations.at(-1).url))
+    assert.equal(editor.data.isMyScope, true)
+    assert.equal(editor.data.operationScope, scope)
+    const readback = requests.filter(item => item.url === '/api/template/myinfo').at(-1)
+    assert.equal(readback.data.scope || '', scope)
+    readback.success({ code: 200, data: { id: 6029, title: '已采用草稿', canEdit: true, originalTemplateId: 16, validationMethod: 1 } })
+    editor.validateForm = () => true
+    editor.saveDraft()
+    const body = JSON.parse(requests.filter(item => item.url === '/api/template/draft').at(-1).data)
+    assert.equal(body.id, 6029)
+    assert.equal(body.scope, scope)
+    assert.equal(body.originalTemplateId, 16)
+
+    const expected = '/subpackageMember/mytemplate/mytemplate' + (scope ? '?scope=MERCHANT' : '')
+    editor.onResultSheetClose()
+    assert.deepEqual(navigations.at(-1), { method: 'reLaunch', url: expected })
+    editor.data.creationSuccess = { secondaryAction: 'templates' }
+    editor._leaveCreationSuccess('secondaryAction')
+    assert.deepEqual(navigations.at(-1), { method: 'reLaunch', url: expected })
+    editor._adoptionUnconfirmed = true
+    editor.retryGetData()
+    assert.deepEqual(navigations.at(-1), { method: 'reLaunch', url: expected })
+  }
 })
 
 test('主题内玩法完整保存为私有草稿并回传呈现和规则，不独立发布', () => {

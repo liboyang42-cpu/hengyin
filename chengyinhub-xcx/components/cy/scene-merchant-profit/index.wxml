@@ -43,6 +43,6 @@
   </block>
 
   <view wx:else class="err-wrap" aria-role="alert">
-    <cy-error size="lg" style="flex:1;min-height:0;" icon="/images/no_data.svg" fill title="分润数据没加载出来" sub="网络可能不稳定，你的分润记录还在" retry="重试" bind:retry="onRetry" />
+    <cy-error size="lg" style="flex:1;min-height:0;" icon="/images/no_data.svg" fill title="分润数据没加载出来" sub="请重新加载分润数据" retry="重试" bind:retry="onRetry" />
   </view>
 </view>

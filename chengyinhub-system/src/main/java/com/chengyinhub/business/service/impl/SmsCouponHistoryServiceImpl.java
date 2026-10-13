@@ -257,26 +257,16 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
     @Transactional(rollbackFor = Exception.class)
     public Long grantCouponWithReceipt(Long memberId, com.chengyinhub.business.domain.SmsCoupon coupon) {
         if (coupon == null || coupon.getId() == null) return null;
-        // C-30:手动失效的券拒发;商家停发(4)同样不再新增发放。
-        // 两者与库存耗尽同口径返回 null,调用方已按「发放失败」处理。
+        // 日期预检用于尽早跳过；真正占库存时仍以数据库当前状态和时间为准。
         if (isNotIssuable(coupon)) {
-            logger.warn("券已失效或停发,拒发 couponId={} status={} member={}",
+            logger.warn("券已失效、停发或不在可发放期,拒发 couponId={} status={} member={}",
                     coupon.getId(), coupon.getStatus(), memberId);
             return null;
         }
-        Long publishCount = coupon.getPublishCount();
-        if (publishCount != null && publishCount > 0) {
-            // 限量券:原子占坑(receive_count < publish_count 才 +1),返回 0 = 已抢光
-            if (smsCouponMapper.tryIncrementReceiveCount(coupon.getId()) == 0) {
-                logger.warn("券库存耗尽,拒发 couponId={} member={} publishCount={}",
-                        coupon.getId(), memberId, publishCount);
-                return null;
-            }
-        } else {
-            // 不限量券:仅维护领取计数(统计用),不设上限
-            if (smsCouponMapper.incrementReceiveCount(coupon.getId()) != 1) {
-                throw new IllegalStateException("优惠券领取计数更新失败");
-            }
+        if (smsCouponMapper.tryIncrementIssuableReceiveCount(coupon.getId()) == 0) {
+            logger.warn("券当前不可发放或库存耗尽,拒发 couponId={} member={}",
+                    coupon.getId(), memberId);
+            return null;
         }
         SmsCouponHistory h = new SmsCouponHistory();
         h.setMemberId(memberId);
@@ -305,12 +295,20 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
     }
 
     /**
-     * 不可再发放(发券闸门):3 平台手动失效 / 4 商家停发。
+     * 不可再发放(发券闸门):3 平台手动失效 / 4 商家停发 / 不在可发放期。
      * ⚠️ 与核销闸门 {@link #isDisabled} 不同:商家停发只阻新增发放,已领的照常可核销。
      */
     private static boolean isNotIssuable(com.chengyinhub.business.domain.SmsCoupon coupon) {
         return Integer.valueOf(3).equals(coupon.getStatus())
-                || Integer.valueOf(4).equals(coupon.getStatus());
+                || Integer.valueOf(4).equals(coupon.getStatus())
+                || outsideIssuanceWindow(coupon, new java.util.Date());
+    }
+
+    private static boolean outsideIssuanceWindow(com.chengyinhub.business.domain.SmsCoupon coupon,
+                                                  java.util.Date now) {
+        return (coupon.getEnableTime() != null && coupon.getEnableTime().after(now))
+                || (coupon.getStartTime() != null && coupon.getStartTime().after(now))
+                || (coupon.getEndTime() != null && !coupon.getEndTime().after(now));
     }
 
     /** 核销闸门:sms_coupon.status 0 未开始 / 1 进行中 / 2 已结束 / 3 手动失效 / 4 已停发(可核销)。 */
@@ -321,7 +319,7 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
     /**
      * C1 发行上限判定(纯函数,单测友好,亦供只读"是否可领"/对账复用)。
      * publish_count 为 null 或 <=0 视为不限量;>0 时 receive_count 必须 < publish_count 才可再发。
-     * 运行时并发原子性由 SmsCouponMapper.tryIncrementReceiveCount 的条件 UPDATE 保证(与此语义一致)。
+     * 运行时并发原子性由 SmsCouponMapper.tryIncrementIssuableReceiveCount 的条件 UPDATE 保证(与此语义一致)。
      */
     public static boolean hasStock(Long receiveCount, Long publishCount) {
         if (publishCount == null || publishCount <= 0) return true;

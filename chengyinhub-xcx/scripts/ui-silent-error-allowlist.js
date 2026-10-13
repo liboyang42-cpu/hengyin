@@ -57,7 +57,7 @@ module.exports = [
   { file: 'pages/publish/activity/index.js', count: 4, reason: '发布身份失败落到 accessState/accessError，编辑回填失败落到 activityLoadError，发起人失败落到 ownerLoadError，模板列表失败落到 templateError/templateStaleError，四路均可见可重试。' },
   { file: 'pages/publish/fabu/index.js', count: 3, reason: '编辑内容加载失败写入 editLoadError，AI 安全预检失败由表单内提示承接，公开模板增强失败明确回退空列表。' },
   // 2026-09-19 本支批3C 删 AI 节点链(/api/ai/template/fill)连带收回其 silentError 一处(5→4),与 ci/silent-error-allowlist.txt 同批对账。
-  { file: 'pages/publish/temp/index.js', count: 4, reason: '商家权限、字典、模板提交与编辑详情失败分别写入权限反馈、dictErrors、submitError、loadError，均在当前表单可见。' },
+  { file: 'pages/publish/temp/index.js', count: 5, reason: '商家权限、字典、模板提交与编辑详情失败分别写入权限反馈、dictErrors、submitError、loadError，均在当前表单可见；adopt-draft 失败由 loadError 自管，结果不确定时保留到我的玩法核对提示，避免重复采用。' },
   { file: 'pages/publish/template-intro/index.js', count: 1, reason: '模板介绍页以页面错误态承接加载失败。' },
   // 2026-09-10 7 → 9:「附近还在走的人」新增一对位置心跳(_reportPresence 30 s 上行 /
   //   _fetchRunners 45 s 下行)。两条都必须静默 —— 它们每分钟各跑一两次、不承载任何用户
@@ -87,7 +87,7 @@ module.exports = [
   { file: 'subpackageMember/mycanyu/mycanyu.js', count: 1, reason: '我的参与页把失败写入 errorMsg 并展示。' },
   { file: 'components/cy/scene-asset-earnings/index.js', count: 1, reason: '资产收益读取失败会切换 state=error，组件渲染错误态而不留在 loading。' },
   { file: 'subpackageA/components/scene-how-to-play-detail/index.js', count: 1, reason: '玩法说明读取失败会清理旧内容并设置 empty=true/loading=false，组件显示可见空错态。' },
-  { file: 'subpackageA/pages/myproject/index.js', count: 5, reason: '我的项目读取失败落到 projectState/projectErrorMsg，模板上下架失败显式 toast；取消活动/主题前的退款人数预览(C8-05)失败显式 toast 且不弹确认，新增提交广场失败同样显式 toast 并释放操作锁，五路都可见可重试。' },
+  { file: 'subpackageA/pages/myproject/index.js', count: 10, reason: '项目读取失败写入projectState/projectErrorMsg；两路取消预览、模板上下架及提交广场失败显式toast。新增上下架、两路取消、项目共用删除和模板删除均绑定会员及页面epoch，当前失败用toast或dc.failed提示并可重试，旧身份或隐藏后的回包不提示、不刷新新页面。' },
   { file: 'subpackageB/pages/im/chat/index.js', count: 3, reason: '消息首载、更多消息与路线选择三路失败分别落到 loadErrorText、loadMoreError、routeError，当前聊天页均可见。' },
   { file: 'subpackageB/pages/im/list/index.js', count: 1, reason: '会话列表首载失败落到 error/errorMsg，有快照时落到 staleError，页内显示重试或保留内容提示。' },
   { file: 'subpackageMember/complaint/index.js', count: 2, reason: '投诉对象读取失败落到 errorMsg，投诉提交失败落到 submitError/submitErrorKind，两处均在页内显示。' },

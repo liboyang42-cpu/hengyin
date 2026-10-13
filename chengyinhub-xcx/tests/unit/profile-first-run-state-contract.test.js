@@ -65,6 +65,10 @@ function loadProfile() {
   return component
 }
 
+function weekExpResponse(score = 0, memberId = app.getUserID()) {
+  return { code: 200, data: { metric: 'exp', period: 'week', list: [], me: { memberId, score, rank: null } } }
+}
+
 function respond(url, response) {
   const request = requests.find((item) => item.url === url)
   assert.ok(request, `缺少请求 ${url}`)
@@ -141,6 +145,7 @@ function successSources(overrides) {
     center: { growth: { levelNo: 1, expValue: 0 }, points: 0 },
     completed: [],
     points: { weekPoints: 0, rankPercentage: 'TOP0%', rankDelta: 0 },
+    weekExp: 0,
   }, overrides)
   return {
     '/api/user/info': { code: 200, data: values.user },
@@ -148,6 +153,7 @@ function successSources(overrides) {
     '/api/growth/center': { code: 200, data: values.center },
     '/api/play/my-completed': { code: 200, data: values.completed },
     '/api/user/points/statistics': { code: 200, data: values.points },
+    '/api/growth/leaderboard': weekExpResponse(values.weekExp),
   }
 }
 
@@ -366,5 +372,106 @@ test('开发版真实空订单和空项目保持为空，不用演示卡替代�
     assert.deepEqual(component.data.projectPreviewList, [])
   } finally {
     app.isDevEnv = originalIsDevEnv
+  }
+})
+
+test('本周EXP：积分7与EXP13分别展示，累计积分50不改写', async () => {
+  const component = loadProfile()
+  component.data.profilePoint = 50
+  const pending = component.loadPointsStat()
+  respond('/api/user/points/statistics', { code: 200, data: { weekPoints: 7, rankPercentage: 'TOP20%', userRank: 1 } })
+  respond('/api/growth/leaderboard', weekExpResponse(13))
+  await pending
+  assert.equal(component.data.pointsStat.weekPoints, 7)
+  assert.equal(component.data.exploreStat.weekExp, 13)
+  assert.equal(component.data.profilePoint, 50)
+  const request = requests.find(request => request.url === '/api/growth/leaderboard')
+  assert.equal(request.method, 'POST')
+  assert.deepEqual(request.data, { metric: 'exp', period: 'week', limit: 1 })
+})
+
+for (const [name, response] of [
+  ['网络失败', 'fail'],
+  ['业务错误', { code: 500 }],
+  ['登录失效', { code: 401 }],
+  ['缺少本人', { code: 200, data: { metric: 'exp', period: 'week', me: null } }],
+  ['错误身份', weekExpResponse(99, '43')],
+  ['错误指标', { code: 200, data: Object.assign({}, weekExpResponse(99).data, { metric: 'point' }) }],
+  ['错误周期', { code: 200, data: Object.assign({}, weekExpResponse(99).data, { period: 'total' }) }],
+  ['缺少分数', { code: 200, data: { metric: 'exp', period: 'week', me: { memberId: '42' } } }],
+  ['空分数', weekExpResponse(null)],
+  ['负分数', weekExpResponse(-1)],
+  ['非安全分数', weekExpResponse(Number.MAX_SAFE_INTEGER + 1)],
+  ['小数', weekExpResponse(1.5)],
+  ['字符串分数', weekExpResponse('13')],
+  ['布尔分数', weekExpResponse(false)],
+]) test(`本周EXP：${name}保留EXP快照且积分独立成功`, async () => {
+  const component = loadProfile()
+  component.data.exploreStat.weekExp = 13
+  const pending = component.loadPointsStat()
+  respond('/api/user/points/statistics', { code: 200, data: { weekPoints: 7, rankPercentage: 'TOP20%', userRank: 1 } })
+  respond('/api/growth/leaderboard', response)
+  await pending
+  assert.equal(component.data.pointsStat.weekPoints, 7)
+  assert.equal(component.data.rankDisplay.no, 'TOP20%')
+  assert.equal(component.data.exploreStat.weekExp, 13)
+  assert.equal(component._profileMetricSourceStates.points, 'error')
+  assert.equal(component.data.profileMetricAuthError, name === '登录失效')
+})
+
+test('本周EXP：首次缺失进入指标错误态，不声称真实0', async () => {
+  const component = loadProfile()
+  const sources = successSources({ play: { level: 1, totalCheckins: 1, totalMileage: 0, streakDays: 0 } })
+  sources['/api/growth/leaderboard'] = { code: 200, data: { metric: 'exp', period: 'week', me: { memberId: '42' } } }
+  await loadMetricSources(component, sources)
+  assert.equal(component.data.profileMetricState, 'error')
+  assert.equal(component.data.pointsStat.weekPoints, 0)
+})
+
+test('本周EXP：真实0且无排名有效，不拿榜首或积分替代', async () => {
+  const component = loadProfile()
+  const reply = weekExpResponse()
+  reply.data.list = [{ memberId: '43', score: 99, rank: 1 }]
+  const pending = component.loadPointsStat()
+  respond('/api/user/points/statistics', { code: 200, data: { weekPoints: 7, rankPercentage: 'TOP20%', userRank: 1 } })
+  respond('/api/growth/leaderboard', reply)
+  await pending
+  assert.equal(component.data.exploreStat.weekExp, 0)
+  assert.equal(component.data.pointsStat.weekPoints, 7)
+  assert.equal(component._profileMetricSourceStates.points, 'ready')
+})
+
+test('本周EXP：积分失败保留积分快照，EXP独立成功', async () => {
+  const component = loadProfile()
+  component.data.pointsStat = { weekPoints: 7, rankPercentage: 'TOP20%' }
+  const pending = component.loadPointsStat()
+  respond('/api/user/points/statistics', 'fail')
+  respond('/api/growth/leaderboard', weekExpResponse(13))
+  await pending
+  assert.deepEqual(component.data.pointsStat, { weekPoints: 7, rankPercentage: 'TOP20%' })
+  assert.equal(component.data.exploreStat.weekExp, 13)
+  assert.equal(component._profileMetricSourceStates.points, 'error')
+})
+
+test('本周EXP：他人视角不发本人指标请求', async () => {
+  const component = loadProfile()
+  component.data.isSelf = false
+  await component.loadPointsStat()
+  assert.equal(requests.length, 0)
+})
+
+test('本周EXP：发起账号变化后旧积分与EXP回包均不覆盖当前快照', async () => {
+  const component = loadProfile()
+  const originalGetUserID = app.getUserID
+  const snapshot = structuredClone(component.data)
+  const pending = component.loadPointsStat()
+  try {
+    app.getUserID = () => '43'
+    respond('/api/user/points/statistics', { code: 200, data: { weekPoints: 7, rankPercentage: 'TOP20%', userRank: 1 } })
+    respond('/api/growth/leaderboard', weekExpResponse(13, '42'))
+    await pending
+    assert.deepEqual(component.data, snapshot)
+  } finally {
+    app.getUserID = originalGetUserID
   }
 })

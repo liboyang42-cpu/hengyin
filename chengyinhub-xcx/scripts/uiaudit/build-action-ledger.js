@@ -257,6 +257,16 @@ function withdrawSubmitVariant(handler) {
 }
 
 const ACTION_VARIANTS = new Map([
+  // 身份失效会清除金额，但这三个场景入口仍须验成功与拒绝分支。
+  ['components/cy/scene-asset-earnings/index.js:openWithdraw', [
+    { id: null, handler: 'openWithdraw', requiredBranches: ['success', 'error'] },
+  ]],
+  ['components/cy/scene-asset-earnings/index.js:openWithdrawHistory', [
+    { id: null, handler: 'openWithdrawHistory', requiredBranches: ['success', 'error'] },
+  ]],
+  ['components/cy/scene-asset-earnings/index.js:openInvite', [
+    { id: null, handler: 'openInvite', requiredBranches: ['success', 'error'] },
+  ]],
   ['subpackageMember/components/cy/profile/index.js:onPrimaryCta', [
     {
       id: 'visitor-follow', handler: 'toggleFollow', predicate: { isSelf: false, subjectIsMerchant: false },

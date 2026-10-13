@@ -13,7 +13,7 @@ import com.chengyinhub.framework.web.service.SmsVerificationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

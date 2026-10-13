@@ -7,6 +7,7 @@ const assert = require('node:assert/strict')
 const CONFIRM_MODES = ['wx.showModal', 'cy-danger-confirm']
 const fs = require('node:fs')
 const path = require('node:path')
+const os = require('node:os')
 const crypto = require('node:crypto')
 const { execFileSync } = require('node:child_process')
 
@@ -1418,93 +1419,132 @@ test('动态证据只绑定真实全局运行时依赖，新增无关路由不�
   assert.equal(sourceFilesFor(appBacked).includes('app.json'), false)
 })
 
+// Isolated Git history makes provenance contracts independent of a checkout's dirty state.
+function withSourceHistory(control, run) {
+  const fixtureRepo = fs.mkdtempSync(path.join(os.tmpdir(), 'action-ledger-history-'))
+  const previousAlternates = process.env.GIT_ALTERNATE_OBJECT_DIRECTORIES
+  try {
+    execFileSync('git', ['init', '--bare', '--quiet', fixtureRepo], { stdio: 'ignore' })
+    const git = (args, input = '') => execFileSync('git', ['--git-dir', fixtureRepo, ...args], {
+      input, encoding: 'utf8', env: { ...process.env, GIT_INDEX_FILE: path.join(fixtureRepo, 'index') },
+    }).trim()
+    const commit = tree => git(['-c', 'user.name=Ledger fixture',
+      '-c', 'user.email=fixture@example.invalid', '-c', 'commit.gpgSign=false', 'commit-tree', tree],
+    'Synthetic action source history\n')
+    const missingSha = commit(git(['mktree']))
+    const sourceRoot = path.resolve(__dirname, '../..')
+    const files = sourceFilesFor(control)
+    assert.ok(files.length > 0, '来源正负控必须包含实际依赖文件')
+    const store = (relative, content) => {
+      const blob = git(['hash-object', '-w', '--stdin'], content)
+      git(['update-index', '--add', '--cacheinfo', '100644', blob,
+        path.posix.join(path.basename(sourceRoot), relative)])
+    }
+    files.forEach(relative => store(relative, fs.readFileSync(path.join(sourceRoot, relative))))
+    const currentSha = commit(git(['write-tree']))
+    store(files[0], Buffer.concat([fs.readFileSync(path.join(sourceRoot, files[0])),
+      Buffer.from('\nsynthetic source mutation\n')]))
+    const changedSha = commit(git(['write-tree']))
+    process.env.GIT_ALTERNATE_OBJECT_DIRECTORIES = [path.join(fixtureRepo, 'objects'), previousAlternates]
+      .filter(Boolean).join(path.delimiter)
+    return run({ currentSha, changedSha, missingSha })
+  } finally {
+    if (previousAlternates === undefined) delete process.env.GIT_ALTERNATE_OBJECT_DIRECTORIES
+    else process.env.GIT_ALTERNATE_OBJECT_DIRECTORIES = previousAlternates
+    fs.rmSync(fixtureRepo, { recursive: true, force: true })
+  }
+}
+
 test('inventory 与可持久化动态证据分离，freshness 不会抹掉执行结果', () => {
   assert.deepEqual(validateEvidenceOverlay(ledger, overlay), [])
 
   const control = ledger.controls.find((item) =>
     item.id === 'components/cy/sheet/index.wxml:10:catchtouchmove:onDragMove:3')
-  assert.ok(control, '负控需要一个源码未被当前改动触及的本地状态动作')
+  assert.ok(control, '负控需要一个当前存在的本地状态动作')
   const id = control.id
-  const artifactPath = path.join(__dirname, '../../scripts/uiaudit/action-evidence.json')
-  const headSha = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
-  assert.equal(sourceDigestAtCommit(control, headSha), sourceDigestFor(control))
-  const sample = {
-    schemaVersion: 1,
-    results: {
-      [id]: {
-        status: 'failed',
-        sourceSha: headSha,
-        sourceDigest: sourceDigestFor(control),
-        verifiedAt: freshAt(),
-        branches: control.requiredBranches.slice(),
-        artifacts: [{
-          uri: 'scripts/uiaudit/action-evidence.json',
-          sha256: crypto.createHash('sha256').update(fs.readFileSync(artifactPath)).digest('hex'),
-        }],
-        fixture: {
-          id: 'synthetic-player-01', accountRole: 'player', networkProfile: 'wifi-controlled',
-          backendMode: 'isolated-test', synthetic: true,
-        },
-        fixtureAttestations: control.requiredBranches.map(() => ({
-          fixtureId: 'synthetic-player-01', synthetic: true,
-          identityFingerprint: 'sha256:test-account', backendBase: 'isolated-test', backendDeploymentSha: 'd'.repeat(40),
-          assertions: ['受控身份回读一致'],
-        })),
-        observations: control.requiredBranches.map((branch) => ({
-          branch,
-          readback: {
-            changed: { data: true, dom: true, routeStack: false },
-            assertions: { state: { expected: { show: false }, observed: { show: false } } },
-          },
+  withSourceHistory(control, history => {
+    const artifactPath = path.join(__dirname, '../../scripts/uiaudit/action-evidence.json')
+    const headSha = history.currentSha
+    assert.equal(sourceDigestAtCommit(control, headSha), sourceDigestFor(control))
+    const sample = {
+      schemaVersion: 1,
+      results: {
+        [id]: {
+          status: 'failed',
+          sourceSha: headSha,
+          sourceDigest: sourceDigestFor(control),
+          verifiedAt: freshAt(),
+          branches: control.requiredBranches.slice(),
           artifacts: [{
             uri: 'scripts/uiaudit/action-evidence.json',
             sha256: crypto.createHash('sha256').update(fs.readFileSync(artifactPath)).digest('hex'),
           }],
-        })),
-        readback: 'tap 后 DOM 已关闭，page.data.show=false',
+          fixture: {
+            id: 'synthetic-player-01', accountRole: 'player', networkProfile: 'wifi-controlled',
+            backendMode: 'isolated-test', synthetic: true,
+          },
+          fixtureAttestations: control.requiredBranches.map(() => ({
+            fixtureId: 'synthetic-player-01', synthetic: true,
+            identityFingerprint: 'sha256:test-account', backendBase: 'isolated-test', backendDeploymentSha: 'd'.repeat(40),
+            assertions: ['受控身份回读一致'],
+          })),
+          observations: control.requiredBranches.map((branch) => ({
+            branch,
+            readback: {
+              changed: { data: true, dom: true, routeStack: false },
+              assertions: { state: { expected: { show: false }, observed: { show: false } } },
+            },
+            artifacts: [{
+              uri: 'scripts/uiaudit/action-evidence.json',
+              sha256: crypto.createHash('sha256').update(fs.readFileSync(artifactPath)).digest('hex'),
+            }],
+          })),
+          readback: 'tap 后 DOM 已关闭，page.data.show=false',
+        },
       },
-    },
-  }
-  assert.deepEqual(validateEvidenceOverlay(ledger, sample), [])
-  assert.equal(evidenceReadiness(ledger, sample).ready, false)
+    }
+    assert.deepEqual(validateEvidenceOverlay(ledger, sample), [])
+    assert.equal(evidenceReadiness(ledger, sample).ready, false)
 
-  const vague = JSON.parse(JSON.stringify(sample))
-  vague.results[id].status = 'passed'
-  vague.results[id].observations[0].readback = { assertions: ['人工说已完成'] }
-  assert.match(validateEvidenceOverlay(ledger, vague).join('\n'), /精确前后状态断言/)
+    const vague = JSON.parse(JSON.stringify(sample))
+    vague.results[id].status = 'passed'
+    vague.results[id].observations[0].readback = { assertions: ['人工说已完成'] }
+    assert.match(validateEvidenceOverlay(ledger, vague).join('\n'), /精确前后状态断言/)
 
-  const validDigest = sample.results[id].sourceDigest
-  sample.results[id].sourceDigest = '0'.repeat(64)
-  assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /证据已过期/)
-  sample.results[id].sourceDigest = validDigest
+    const validDigest = sample.results[id].sourceDigest
+    sample.results[id].sourceDigest = '0'.repeat(64)
+    assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /证据已过期/)
+    sample.results[id].sourceDigest = validDigest
 
-  const rootSha = execFileSync('git', ['rev-list', '--max-parents=0', 'HEAD'], { encoding: 'utf8' }).trim().split('\n')[0]
-  const missingAtRoot = ledger.controls.find((control) => sourceDigestAtCommit(control, rootSha) === null)
-  assert.ok(missingAtRoot, '负控需要一个根提交尚不存在的 WXML/JS 控件')
-  const forgedHistorical = {
-    schemaVersion: 1,
-    results: {
-      [missingAtRoot.id]: {
-        ...sample.results[id],
-        sourceSha: rootSha,
-        sourceDigest: sourceDigestFor(missingAtRoot),
-        branches: missingAtRoot.requiredBranches.slice(),
-      },
-    },
-  }
-  assert.match(validateEvidenceOverlay(ledger, forgedHistorical).join('\n'), /不包含当前 WXML\/JS/)
+    const changedSource = JSON.parse(JSON.stringify(sample))
+    changedSource.results[id].sourceSha = history.changedSha
+    const changedDigest = sourceDigestAtCommit(control, history.changedSha)
+    assert.ok(changedDigest, '内容变更负控必须仍有完整依赖，不能靠文件缺失判红')
+    assert.notEqual(changedDigest, validDigest)
+    assert.match(validateEvidenceOverlay(ledger, changedSource).join('\n'),
+      /sourceDigest 与 sourceSha 提交中的 WXML\/JS 不一致/)
 
-  sample.results[id].artifacts = []
-  assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /artifacts/)
+    assert.equal(sourceDigestAtCommit(control, history.missingSha), null,
+      '真实旧提交不含目标控件，必须拒绝使用当前工作区内容补齐')
+    const forgedHistorical = JSON.parse(JSON.stringify(sample))
+    forgedHistorical.results[id].sourceSha = history.missingSha
+    const historicalErrors = validateEvidenceOverlay(ledger, forgedHistorical).join('\n')
+    assert.doesNotMatch(historicalErrors, /sourceSha 在当前 Git 对象库中不存在/,
+      '负控必须使用真实可读取提交，不能仅验证不存在的 SHA')
+    assert.match(historicalErrors, /不包含当前 WXML\/JS/)
 
-  sample.results[id].artifacts = [{ uri: 'missing.json', sha256: '0'.repeat(64) }]
-  assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /不存在/)
+    sample.results[id].artifacts = []
+    assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /artifacts/)
 
-  sample.results[id].artifacts = [{ uri: 'https://invalid.example/evidence.json', sha256: '0'.repeat(64) }]
-  assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /远端 artifact 未回读/)
+    sample.results[id].artifacts = [{ uri: 'missing.json', sha256: '0'.repeat(64) }]
+    assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /不存在/)
 
-  sample.results[id].status = 'blocked'
-  assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /blocked 必须含/)
+    sample.results[id].artifacts = [{ uri: 'https://invalid.example/evidence.json', sha256: '0'.repeat(64) }]
+    assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /远端 artifact 未回读/)
+
+    sample.results[id].status = 'blocked'
+    assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /blocked 必须含/)
+  })
 })
 
 test('external passed 证据必须逐平台逐分支绑定受控真机环境与媒体，不接受任意仓库文件', () => {

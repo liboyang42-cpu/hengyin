@@ -171,7 +171,11 @@ App({
   // 保留:开发版 mock 兜底、各失败路径原文案 toast。始终 resolve(初始化与认证解耦,不阻断 appReady)。
   firstLogin: function (e) {
     var that = this;
+    var owner = String(this.getUserID() || '');
+    var authorization = this.getAuthorization();
     return this.getSessionManager().ensureSession().then(function (r) {
+      if (r && !r.ok && (r.reason === 'sessionChanged'
+          || String(that.getUserID() || '') !== owner || that.getAuthorization() !== authorization)) return;
       // 仅"真鉴权拒绝"(服务端换 token 成功但拒登=noData)才清会话;networkFail/wxLoginFail
       // 属瞬时失败,保留刚恢复的缓存会话,避免弱网把持有效 token 的用户登出本次。
       if (r && !r.ok && r.reason === 'noData') {
@@ -204,10 +208,19 @@ App({
   // N 个并发 401 只触发一次换 token)。完成后回调 ok=true/false,对调用方语义不变。
   reLogin: function (callback) {
     var that = this;
+    var owner = String(this.getUserID() || '');
+    var authorization = this.getAuthorization();
     this.getSessionManager().refresh().then(function (r) {
       var ok = !!(r && r.ok);
-      if (!ok) {
+      var sessionChanged = (r && r.reason === 'sessionChanged')
+        || (!ok && (String(that.getUserID() || '') !== owner || that.getAuthorization() !== authorization))
+        || (ok && typeof r.isCurrentSession === 'function' && !r.isCurrentSession());
+      if (sessionChanged) {
+        ok = false;
+        r = { ok: false, authed: false, reason: 'sessionChanged' };
+      } else if (!ok) {
         that.getSession().clearSession();
+        r = Object.assign({}, r, { sessionCleared: true });
       }
       typeof callback == 'function' && callback(ok, r);
     });
@@ -292,6 +305,7 @@ App({
         wxRequest: function (opts) { return wx.request(opts); },
         getBaseUrl: function () { return that.globalData.siteBaseUrl; },
         getAuthorization: function () { return that.getAuthorization(); },
+        getUserID: function () { return that.getUserID(); },
         reLogin: function (cb) { that.reLogin(cb); },
         showToast: function (msg) { cyToast(msg); },
         hideToast: function () { that.hideToast(); },
@@ -309,16 +323,19 @@ App({
       this._uploadClient = createUploadClient({
         wxUploadFile: function (opts) { return wx.uploadFile(opts); },
         getBaseUrl: function () { return that.globalData.siteBaseUrl; },
+        getUserID: function () { return that.getUserID(); },
         getAuthorization: function () { return that.getAuthorization(); }
       });
     }
     return this._uploadClient;
   },
-  // 原生选择/裁剪可能比页面活得更久；统一监视发起页面，离页即 abort。
+  // 原生选择/裁剪可能比页面和账号活得更久；离页或换号即 abort。
   createPageBoundOperation: function () {
+    var that = this;
     var pages = getCurrentPages();
     return createPageBoundOperation({
       owner: pages[pages.length - 1] || null,
+      getUserID: function () { return that.getUserID(); },
       getPages: function () { return getCurrentPages(); }
     });
   },
@@ -512,6 +529,7 @@ App({
     var doUpload = function (filePaths) {
       if (operation.isAborted()) return;
       if (typeof options.onUploadStart === 'function') options.onUploadStart(filePaths);
+      if (operation.isAborted()) return;
       operation.onAbort(function () { cyLoading.hide(); });
       cyLoading.show('提交中');
       operation.attach(that.getUploadClient().uploadAll(filePaths, {

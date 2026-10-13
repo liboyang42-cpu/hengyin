@@ -1,12 +1,13 @@
 package com.chengyinhub.quartz.service.impl;
 
 import java.util.List;
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import org.quartz.JobDataMap;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.chengyinhub.common.constant.ScheduleConstants;
@@ -25,6 +26,9 @@ import com.chengyinhub.quartz.util.ScheduleUtils;
 @Service
 public class SysJobServiceImpl implements ISysJobService
 {
+    @Value("${chengyin.jobs.enabled:true}")
+    private boolean jobsEnabled = true;
+
     @Autowired
     private Scheduler scheduler;
 
@@ -37,6 +41,7 @@ public class SysJobServiceImpl implements ISysJobService
     @PostConstruct
     public void init() throws SchedulerException, TaskException
     {
+        if (!jobsEnabled) return;
         scheduler.clear();
         List<SysJob> jobList = jobMapper.selectJobAll();
         for (SysJob job : jobList)
@@ -185,6 +190,7 @@ public class SysJobServiceImpl implements ISysJobService
     @Transactional(rollbackFor = Exception.class)
     public boolean run(SysJob job) throws SchedulerException
     {
+        if (!jobsEnabled) return false;
         boolean result = false;
         Long jobId = job.getJobId();
         String jobGroup = job.getJobGroup();

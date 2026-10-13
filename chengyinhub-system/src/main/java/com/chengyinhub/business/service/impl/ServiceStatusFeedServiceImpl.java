@@ -31,6 +31,9 @@ public class ServiceStatusFeedServiceImpl implements IServiceStatusFeedService {
     private static final Logger log = LoggerFactory.getLogger(ServiceStatusFeedServiceImpl.class);
     private static final Set<String> VALID_STATUSES = new HashSet<>(Arrays.asList(
             "OPERATIONAL", "DEGRADED", "PARTIAL_OUTAGE", "MAJOR_OUTAGE", "MAINTENANCE", "UNKNOWN"));
+    @Value("${chengyin.jobs.enabled:true}")
+    private boolean jobsEnabled = true;
+
     private final ObjectMapper objectMapper;
     private final String feedFile;
     private final long maxAgeSeconds;
@@ -89,6 +92,7 @@ public class ServiceStatusFeedServiceImpl implements IServiceStatusFeedService {
     @Scheduled(fixedDelayString = "${chengyin.status.publish-ms:30000}",
             initialDelayString = "${chengyin.status.publish-initial-delay-ms:1000}")
     public void publishCoreApiHeartbeat() {
+        if (!jobsEnabled) return;
         try {
             String now = Instant.now().toString();
             ServiceStatusVO feed = new ServiceStatusVO();

@@ -167,6 +167,17 @@ public class ApiTemplateController extends BaseController {
         }
     }
 
+    @Operation(summary = "采用来源模板为草稿")
+    @Log(title = "采用模板草稿", businessType = BusinessType.INSERT)
+    @RateLimiter(time = 60, count = 30, limitType = LimitType.MEMBER)
+    @PostMapping("/adopt-draft")
+    public AjaxResult adoptDraft(@RequestBody CmsTemplatePublishRequest request) {
+        if (request == null) return error("请指定来源模板");
+        // 独立入口使旧后端明确拒绝，而非忽略新字段后误存不完整草稿。
+        request.setAdoptSourceOnly(true);
+        return draft(request);
+    }
+
     @Operation(summary = "提交模板广场审核")
     @Log(title = "提交模板广场审核", businessType = BusinessType.INSERT)
     @RateLimiter(time = 60, count = 10, limitType = LimitType.MEMBER)
@@ -609,7 +620,8 @@ public class ApiTemplateController extends BaseController {
     @Parameters({
             @Parameter(name = "id", description = "公共模版id")
     })
-    public AjaxResult myInfo(String id) {
+    public AjaxResult myInfo(@RequestParam(name = "id", required = false) String id,
+                             @RequestParam(name = "scope", required = false) String scope) {
         CmsMemberTemplate cmsMemberTemplate = new CmsMemberTemplate();
         Long templateId = Convert.toLong(id, 0L);
 
@@ -619,14 +631,26 @@ public class ApiTemplateController extends BaseController {
             return error("参数不合规");
         }
 
+        Long viewerId = getAppUserId();
+        if (viewerId == null || viewerId <= 0) return error("请先登录");
+        Long ownerId;
+        try {
+            ownerId = resolveTemplateOwner(viewerId, scope);
+        } catch (ServiceException e) {
+            return new AjaxResult(e.getCode(), e.getMessage());
+        }
         cmsMemberTemplate = memberTemplateService.selectCmsMemberTemplateById(templateId);
         if (cmsMemberTemplate == null) {
             return error("模版不存在");
         } else {
-            Long viewerId = getAppUserId();
-            boolean isOwner = viewerId != null && viewerId.equals(cmsMemberTemplate.getMemberId());
+            boolean isOwner = ownerId != null && ownerId.equals(cmsMemberTemplate.getMemberId());
+            cmsMemberTemplate.setCanEdit(isOwner);
             // 草稿(draftStatus=0)允许本人回填编辑,跳过"审核中/已下架"拦截
             boolean isDraft = cmsMemberTemplate.getDraftStatus() != null && cmsMemberTemplate.getDraftStatus() == 0;
+            boolean isOwnerPending = isOwner
+                    && Integer.valueOf(0).equals(cmsMemberTemplate.getDelFlag())
+                    && Integer.valueOf(1).equals(cmsMemberTemplate.getDraftStatus())
+                    && Long.valueOf(0L).equals(cmsMemberTemplate.getStatus());
             boolean isPublicEligible = Integer.valueOf(0).equals(cmsMemberTemplate.getDelFlag())
                     && !isDraft
                     && Long.valueOf(1L).equals(cmsMemberTemplate.getStatus())
@@ -636,9 +660,9 @@ public class ApiTemplateController extends BaseController {
                 return error("模版不存在");
             } else if (Integer.valueOf(2).equals(cmsMemberTemplate.getDelFlag())) {
                 return error("模版已删除");
-            } else if (!isDraft && cmsMemberTemplate.getStatus() != 1) {
+            } else if (!isDraft && !isOwnerPending && !Long.valueOf(1L).equals(cmsMemberTemplate.getStatus())) {
                 return error("模版审核中");
-            } else if (!isDraft && cmsMemberTemplate.getPublishStatus() == 0) {
+            } else if (!isDraft && !isOwnerPending && cmsMemberTemplate.getPublishStatus() == 0) {
                 return error("模版已下架");
             } else {
                 cmsMemberTemplate.setValidationMethodStr(

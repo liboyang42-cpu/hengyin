@@ -1409,6 +1409,7 @@
 
   <!-- 编辑态底部栏 -->
   <view class="cg-bottombar" wx:if="{{!editorLoading && !loadError}}">
+    <cy-btn wx:if="{{!previewMode && from !== 'fabu' && from !== 'citynode'}}" variant="secondary" disabled="{{submitting}}" loading="{{submitting && submittingAction === 'draft'}}" bindtap="saveDraft">保存草稿</cy-btn>
     <cy-btn variant="primary" disabled="{{!canOpenPreview}}" aria-disabled="{{!canOpenPreview || submitting}}" loading="{{submitting}}" bindtap="openPreview" bind:disabledtap="onPreviewDisabledTap">查看预览</cy-btn>
   </view>
 

@@ -20,12 +20,15 @@ public class WithdrawalPiiBackfillRunner implements ApplicationRunner {
     @Autowired
     private IUmsMemberWithdrawalService withdrawalService;
 
+    @Value("${chengyin.jobs.enabled:true}")
+    private boolean jobsEnabled = true;
+
     @Value("${withdrawal.pii.backfill-limit:0}")
     private int backfillLimit;
 
     @Override
     public void run(ApplicationArguments args) {
-        if (backfillLimit <= 0) {
+        if (!jobsEnabled || backfillLimit <= 0) {
             return;
         }
         int migrated = withdrawalService.migrateLegacySensitiveData(backfillLimit);

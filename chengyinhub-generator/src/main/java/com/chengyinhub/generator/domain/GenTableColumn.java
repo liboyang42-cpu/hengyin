@@ -1,6 +1,6 @@
 package com.chengyinhub.generator.domain;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 import com.chengyinhub.common.core.domain.BaseEntity;
 import com.chengyinhub.common.utils.StringUtils;
 

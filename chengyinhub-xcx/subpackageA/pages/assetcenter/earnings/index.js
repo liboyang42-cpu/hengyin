@@ -13,6 +13,14 @@ const withdrawalPreflight = require('../../../utils/withdrawal-preflight.js')
 // 2026-09-15 起「提现」不再走银行卡表单:平台不打款,一律弹平台客服微信线下处理。
 const withdrawCs = require('../../../../utils/withdraw-cs.js')
 
+function identityKey() {
+  const gd = app.globalData || {}
+  const member = typeof app.getUserID === 'function' ? app.getUserID() : gd.user_id
+  const role = typeof app.getUserRole === 'function' ? app.getUserRole() : gd.role
+  const type = typeof app.getUserType === 'function' ? app.getUserType() : gd.user_type
+  return [member == null ? '' : member, role || '', type == null ? '' : type].join('|')
+}
+
 Page({
   data: {
     statusBarHeight: app.globalData.statusBarHeight,
@@ -38,14 +46,16 @@ Page({
   },
 
   onLoad(options) {
+    this._hidden = false
+    this._unloaded = false
     if (!options || options.scene !== 'merchant-profit') return
     const params = options.topicId ? { topicId: options.topicId } : {}
     this.openScene({ detail: { id: 'merchant-profit', params } })
   },
 
-  onShow() { merchantTheme.merchantPageRestore() },
-  onHide() { merchantTheme.merchantPageRestore() },
-  onUnload() { merchantTheme.merchantPageRestore() },
+  onShow() { this._hidden = false; merchantTheme.merchantPageRestore() },
+  onHide() { this._hidden = true; this._withdrawEpoch = (this._withdrawEpoch || 0) + 1; merchantTheme.merchantPageRestore() },
+  onUnload() { this._unloaded = true; this._withdrawEpoch = (this._withdrawEpoch || 0) + 1; merchantTheme.merchantPageRestore() },
 
   blockSceneTouch() {},
 
@@ -68,7 +78,12 @@ Page({
   // 改为弹平台客服微信;txSheet 及其表单代码暂留(后端 /api/withdrawal/create 不动),
   // 已无入口可到达。
   openWithdrawSheet() {
-    roleGuard.load(function () {
+    if (this._hidden || this._unloaded) return
+    const identity = identityKey()
+    const epoch = (this._withdrawEpoch || 0) + 1
+    this._withdrawEpoch = epoch
+    roleGuard.load(() => {
+      if (this._hidden || this._unloaded || epoch !== this._withdrawEpoch || identity !== identityKey()) return
       if (!roleGuard.can('withdrawable')) {
         toast('暂无提现权限')
         return

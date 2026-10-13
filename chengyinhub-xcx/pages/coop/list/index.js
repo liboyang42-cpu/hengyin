@@ -85,8 +85,10 @@ function linkRepliedApplies(applies, sentInvites) {
   return (applies || []).map(function (it) {
     if (!it || it.status !== 3) return it;
     const inv = byApply[String(it.applyId)];
-    if (!inv) return it;
-    return Object.assign({}, it, {
+    const row = Object.assign({}, it, { statusText: '已回邀约' });
+    delete row.linkedInviteId;
+    if (!inv) return row;
+    return Object.assign(row, {
       linkedInviteId: inv.inviteId,
       statusText: inv.status === 1 ? '对方已接受' : '已回邀约',
     });
@@ -207,6 +209,7 @@ Page({
     const scopeChanged = this._listDataScope !== undefined && this._listDataScope !== scope;
     if (scopeChanged) {
       this._listLoadedScope = '';
+      this._sentAll = [];
       this.setData({ received: [], sent: [] });
     }
     this._listDataScope = scope;
@@ -233,7 +236,9 @@ Page({
       const text = failureText(value, '协作邀请没加载出来');
       if (kind === 'permission') {
         that._listLoadedScope = '';
-        that.setData({ received: [], sent: [], listState: 'permission', listRefreshing: false, listErrorKind: kind, listErrorText: text });
+        that._sentAll = [];
+        that.setData({ receivedApplies: linkRepliedApplies(that._receivedApplyLoadedScope === scope ? that.data.receivedApplies : [], []),
+          received: [], sent: [], listState: 'permission', listRefreshing: false, listErrorKind: kind, listErrorText: text });
       } else if (hadSnapshot) {
         that.setData({ listState: 'ready', listRefreshing: false, listErrorKind: kind, listErrorText: text });
       } else {
@@ -257,7 +262,7 @@ Page({
         that.setData({
           received: that.applyTopicFilter(decorate(d.received, d.slots)),
           sent: that.applyTopicFilter(sent),
-          receivedApplies: that.applyTopicFilter(linkRepliedApplies(that.data.receivedApplies, sent)),
+          receivedApplies: that.applyTopicFilter(linkRepliedApplies(that._receivedApplyLoadedScope === scope ? that.data.receivedApplies : [], sent)),
           listState: 'ready', listRefreshing: false, listErrorKind: '', listErrorText: '',
         });
       },
@@ -372,7 +377,7 @@ Page({
           that._receivedApplyLoadedScope = scope;
           that.setData({
             receivedApplies: that.applyTopicFilter(
-              linkRepliedApplies(decorateApplies(res.data, 'received'), that._sentAll || [])),
+              linkRepliedApplies(decorateApplies(res.data, 'received'), that._listLoadedScope === scope ? that._sentAll : [])),
             receivedApplyState: 'ready', receivedApplyErrorText: '',
           });
         } else {

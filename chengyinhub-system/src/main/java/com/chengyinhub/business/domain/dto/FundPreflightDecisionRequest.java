@@ -1,6 +1,6 @@
 package com.chengyinhub.business.domain.dto;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 public class FundPreflightDecisionRequest {
     @NotBlank(message = "确认凭证不能为空")

@@ -60,7 +60,7 @@ function assertAnnotationDContract(files) {
   assert.match(files.tixianjiluWxml, /<cy-scene-member-withdraw-history id="withdrawHistory"/)
   assert.match(files.tixianjiluSceneWxml, /wx:if="\{\{hasMore && !loading\}\}" bindtap="loadMore"/)
   assert.match(files.earningsWxml, /sceneCurrent\.id === 'member-withdraw-history'[\s\S]*?<cy-scene-sheet show="\{\{true\}\}"[\s\S]*?<cy-scene-member-withdraw-history/)
-  assert.match(files.earningsSceneJs, /openWithdrawHistory\(\)\s*\{\s*this\.triggerEvent\('open', \{ id: 'member-withdraw-history' \}\)\s*\}/)
+  assert.match(files.earningsSceneJs, /openWithdrawHistory\(\)\s*\{\s*if \(!this\._hasCurrentBalance\(\)\) return;\s*this\.triggerEvent\('open', \{ id: 'member-withdraw-history' \}\)\s*\}/)
   assert.doesNotMatch(files.earningsSceneJs, /openWithdrawHistory\(\)\s*\{\s*wx\.navigateTo/)
   assert.match(files.tixianjiluSceneWxml, /txjl-st--\{\{item\.statusVariant\}\}"[^>]*>\{\{item\.statusText\}\}/)
   assert.doesNotMatch(files.tixianjiluSceneWxml, /item\.status\s*==/,
@@ -122,7 +122,7 @@ function assertAnnotationDContract(files) {
   assert.match(files.earningsWxml, /<view class="er-page theme-dark">/,
     'D33 账户收益是玩家资金页，页面根必须显式进入深色主题')
   assert.match(files.earningsJs, /require\('\.\.\/\.\.\/\.\.\/\.\.\/utils\/merchant-theme\.js'\)/)
-  assert.match(files.earningsJs, /onShow\(\)\s*\{\s*merchantTheme\.merchantPageRestore\(\)\s*\}/,
+  assert.match(files.earningsJs, /onShow\(\)\s*\{\s*this\._hidden = false;\s*merchantTheme\.merchantPageRestore\(\)\s*\}/,
     'D33 原生导航栏必须与玩家深色页面同步')
   const earningsRoot = rule(files.earningsWxss, '.er-page.theme-dark')
   assert.match(earningsRoot, /background:\s*var\(--cy-color-bg-page\)/,
@@ -276,8 +276,8 @@ test('负控：资金弹窗入口退回独立页、提现行退回横线时必�
   const broken = {
     ...original,
     earningsSceneJs: original.earningsSceneJs.replace(
-      "openWithdrawHistory() { this.triggerEvent('open', { id: 'member-withdraw-history' }) }",
-      "openWithdrawHistory() { wx.navigateTo({ url: '/subpackageMember/tixianjilu/tixianjilu' }) }",
+      "openWithdrawHistory() { if (!this._hasCurrentBalance()) return; this.triggerEvent('open', { id: 'member-withdraw-history' }) }",
+      "openWithdrawHistory() { if (!this._hasCurrentBalance()) return; wx.navigateTo({ url: '/subpackageMember/tixianjilu/tixianjilu' }) }",
     ),
     tixianWxss: original.tixianWxss.replace(
       'background: var(--cy-color-input-bg-empty);',

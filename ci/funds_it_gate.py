@@ -173,7 +173,7 @@ EXPECTED = {
     # +3 真实领取:最后一张并发不超发、不限量正常计数、领取记录失败回滚库存后可重试。
     # +2 撤销状态 1/2 保留历史事实，以及初读后撤销由真实 CAS/当前读识别。
     # 2026-09-15 F1 +1:selectSmsCouponHistoryList 的 delFlag 条件经真实 XML 排除软删行,不传则不过滤。
-    "CouponLifecycleMybatisIntegrationTest": 12,
+    "CouponLifecycleMybatisIntegrationTest": 16,
     # 2026-09-16 并入支付回调 fencing 真库 IT(5 条 @Test)。
     # 病象:它自己发明了门控变量 CHENGYIN_PAYMENT_MYSQL_IT(全仓真库 IT 统一用
     # CHENGYIN_FUNDS_MYSQL_IT),又不在 EXPECTED/-Dtest 里 ⇒ CI 里这 5 条永远 skip、永远算绿。
@@ -194,7 +194,7 @@ EXPECTED = {
     # C 组 18 套原用标准变量但三处均未登记。每套首跑证据与红绿分类见
     # ~/Documents/城瘾/小程序/修复交接材料/worktree收口_0915/暗测试真跑_报告.md。
     "CoopDepositRefundMybatisIntegrationTest": 27,
-    "GrowthMissionProofMybatisIntegrationTest": 15,
+    "GrowthMissionProofMybatisIntegrationTest": 24,
     "MerchantIdentityMybatisIntegrationTest": 21,
     # 2026-09-24 CU-M-78 +1 条(解除招牌主推显式清空 featured_id,真 XML + 真库回读),8 → 9。
     "MerchantProfilePersistenceMybatisIntegrationTest": 9,

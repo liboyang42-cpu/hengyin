@@ -14,9 +14,10 @@ const APPLY = { applyId: 31, topicId: 8, clubId: 7, status: 0, clubName: '夜跑
 
 function loadList(backend, role) {
   let definition;
+  let memberId = 1;
   const requests = [];
   const navigations = [];
-  const app = { globalData: {}, getUserID: () => 1, getUserRole: () => role || 'user', sendRequest(o) {
+  const app = { globalData: {}, getUserID: () => memberId, getUserRole: () => role || 'user', sendRequest(o) {
     requests.push(o);
     const res = backend[o.url] || (/chapter-application/.test(o.url) ? { code: 200, data: [] } : null);
     if (res) o.success(res);
@@ -36,7 +37,7 @@ function loadList(backend, role) {
     },
   });
   const page = Object.assign({}, definition, { data: JSON.parse(JSON.stringify(definition.data)), setData(patch) { Object.assign(this.data, patch); } });
-  return { page, requests, navigations };
+  return { page, requests, navigations, switchOwner: id => { memberId = id; } };
 }
 
 const EMPTY_LIST = { code: 200, data: { received: [], sent: [], slots: {} } };
@@ -275,4 +276,64 @@ test('同一条预批准章节邀约分别进入主理人发件箱和商家收�
   assert.equal(merchant.page.data.chapterState, 'ready');
   merchant.page.goChapterRecord({ currentTarget: { dataset: { key: 'mine:2' } } });
   assert.match(merchant.navigations[0], /topicId=990065/);
+});
+
+function repliedFixture() {
+  const invite = { inviteId: 91, originApplyId: 31, status: 1, topicId: 8, targetId: 7, targetType: 1 };
+  const backend = {
+    '/api/coop/list': { code: 200, data: { received: [], sent: [invite], slots: {} } },
+    '/api/coop/pool/received': { code: 200, data: [Object.assign({}, APPLY, { status: 3 })] },
+    '/api/coop/pool/mine': { code: 200, data: [] },
+  };
+  const f = loadList(backend);
+  f.page.load();
+  assert.equal(f.page.data.receivedApplies[0].linkedInviteId, '91');
+  assert.equal(f.page.data.receivedApplies[0].statusText, '对方已接受');
+  return { ...f, backend };
+}
+test('同身份正常刷新仍按当前发出邀请关联申请', () => {
+  const f = repliedFixture();
+  f.page.load();
+  assert.equal(f.page.data.receivedApplies[0].linkedInviteId, '91');
+  assert.equal(f.page.data.receivedApplies[0].statusText, '对方已接受');
+});
+test('发出邀请刷新为空时先清除旧申请卡派生链接，申请刷新失败仍不复活', () => {
+  const f = repliedFixture();
+  f.backend['/api/coop/list'] = EMPTY_LIST;
+  f.backend['/api/coop/pool/received'] = { code: 500, msg: 'fixture-failure' };
+  f.page.load();
+  assert.equal(f.page.data.receivedApplies[0].linkedInviteId, undefined);
+  assert.equal(f.page.data.receivedApplies[0].statusText, '已回邀约');
+});
+test('换号后的申请先回包，不能借用旧账号的发出邀请缓存', () => {
+  const f = repliedFixture();
+  f.switchOwner(2);
+  delete f.backend['/api/coop/list'];
+  f.page.load();
+  assert.equal(f.page.data.receivedApplies[0].linkedInviteId, undefined);
+  assert.equal(f.page.data.receivedApplies[0].statusText, '已回邀约');
+});
+test('单独刷新申请也不能借用其他账号的发出邀请缓存', () => {
+  const f = repliedFixture();
+  f.switchOwner(2);
+  f.page.loadApplies();
+  assert.equal(f.page.data.receivedApplies[0].linkedInviteId, undefined);
+});
+test('换号后的邀请先回包，不能重新渲染旧账号的申请快照', () => {
+  const f = repliedFixture();
+  f.switchOwner(2);
+  f.backend['/api/coop/list'] = EMPTY_LIST;
+  delete f.backend['/api/coop/pool/received'];
+  const patches = [];
+  const setData = f.page.setData.bind(f.page);
+  f.page.setData = patch => { patches.push(patch); setData(patch); };
+  f.page.load();
+  assert.equal(patches.some(patch => Array.isArray(patch.receivedApplies) && patch.receivedApplies.length > 0), false);
+});
+test('邀请权限拒绝后清除派生链接，随后申请回包不得复用被拒绝的缓存', () => {
+  const f = repliedFixture();
+  f.backend['/api/coop/list'] = { code: 403, msg: 'fixture-denied' };
+  f.page.load();
+  assert.equal(f.page.data.receivedApplies[0].linkedInviteId, undefined);
+  assert.equal(f.page.data.receivedApplies[0].statusText, '已回邀约');
 });

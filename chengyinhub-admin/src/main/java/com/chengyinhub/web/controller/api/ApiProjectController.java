@@ -5,7 +5,6 @@ import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
 import com.chengyinhub.business.access.merchant.MerchantOperationScope;
 import com.chengyinhub.business.domain.CmsActivity;
-import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.CmsRegistrationMerchant;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CoopInvite;
@@ -77,11 +76,6 @@ public class ApiProjectController extends BaseController {
     @Autowired
     private IMmsMerchantService mmsMerchantService;
 
-    /* 稿 260:277 承办卡的底行是「待核销 2」。口径与商家工作台 todo-summary 逐字相同:
-       已支付(payment=2)且未核销(verification=0)的报名条数。两处必须同源,
-       否则工作台说 2、项目卡说 3,商家不知道信哪个。 */
-    @Autowired
-    private com.chengyinhub.business.service.ICmsRegistrationService cmsRegistrationService;
 
     /**
      * 项目主页:同一条路线上的主办方和承接方落到同一个页面。
@@ -235,6 +229,21 @@ public class ApiProjectController extends BaseController {
         topicQuery.setDelFlag(0);
         topicQuery.setActiveClubOnly(true);
         List<CmsTopic> topics = cmsTopicService.selectCmsTopicList(topicQuery);
+        Map<Long, java.util.Set<String>> acceptedTypes = new HashMap<>();
+        if (topics != null && !topics.isEmpty()) {
+            List<Long> topicIds = topics.stream().map(CmsTopic::getId)
+                    .filter(java.util.Objects::nonNull).collect(java.util.stream.Collectors.toList());
+            CoopInvite inviteQuery = new CoopInvite();
+            inviteQuery.setStatus(1);
+            inviteQuery.getParams().put("topicIds", topicIds);
+            List<CoopInvite> accepted = coopInviteService.selectCoopInviteList(inviteQuery);
+            if (accepted != null) {
+                for (CoopInvite invite : accepted) {
+                    acceptedTypes.computeIfAbsent(invite.getTopicId(), key -> new java.util.HashSet<>())
+                            .add(invite.getToType());
+                }
+            }
+        }
         java.util.Set<Long> acceptedChapterTopics = new java.util.HashSet<>();
         if (topics != null && topics.stream().anyMatch(t -> t.getClubId() != null
                 && Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE)
@@ -250,7 +259,7 @@ public class ApiProjectController extends BaseController {
         }
         if (topics != null) {
             for (CmsTopic t : topics) {
-                all.add(mapTopic(t, draftSet, acceptedChapterTopics));
+                all.add(mapTopic(t, draftSet, acceptedChapterTopics, acceptedTypes));
             }
         }
 
@@ -260,8 +269,18 @@ public class ApiProjectController extends BaseController {
         actQuery.setActiveClubOnly(true);
         List<CmsActivity> acts = cmsActivityService.selectCmsActivityList(actQuery);
         if (acts != null) {
+            Map<Long, Integer> signupCounts = cmsActivityService.countSignedUpRegistrationsByActivityIds(
+                    acts.stream().map(CmsActivity::getId).filter(java.util.Objects::nonNull)
+                            .collect(java.util.stream.Collectors.toList()));
+            List<Long> merchantActivityIds = acts.stream()
+                    .filter(a -> a.getClubId() == null && wonTopicIds.contains(a.getTopicId()))
+                    .map(CmsActivity::getId).filter(java.util.Objects::nonNull)
+                    .collect(java.util.stream.Collectors.toList());
+            Map<Long, Integer> pendingVerifyCounts = merchantActivityIds.isEmpty()
+                    ? java.util.Collections.emptyMap()
+                    : cmsActivityService.countPendingVerificationByActivityIds(merchantActivityIds);
             for (CmsActivity a : acts) {
-                all.add(mapActivity(a, wonTopicIds));
+                all.add(mapActivity(a, wonTopicIds, signupCounts, pendingVerifyCounts));
             }
         }
 
@@ -348,7 +367,8 @@ public class ApiProjectController extends BaseController {
     }
 
     private Map<String, Object> mapTopic(CmsTopic t, java.util.Set<Long> draftSet,
-                                       java.util.Set<Long> acceptedChapterTopics) {
+                                       java.util.Set<Long> acceptedChapterTopics,
+                                       Map<Long, java.util.Set<String>> acceptedTypes) {
         Map<String, Object> m = new HashMap<>();
         m.put("id", t.getId());
         m.put("bizType", "topic");
@@ -386,7 +406,7 @@ public class ApiProjectController extends BaseController {
            缺就不下发，前端按稿自己的规矩「缺就整行不出」。 */
         m.put("addressName", t.getAddressName());
         m.put("createTime", t.getCreateTime());
-        putAcceptStatus(m, t, acceptedChapterTopics);
+        putAcceptStatus(m, t, acceptedChapterTopics, acceptedTypes);
         return m;
     }
 
@@ -397,20 +417,13 @@ public class ApiProjectController extends BaseController {
      * 「未承接」= 开了对应池(open_club_pool / merchant_status)但还没成交;其余 = 自行承办。
      */
     private void putAcceptStatus(Map<String, Object> m, CmsTopic t,
-                                 java.util.Set<Long> acceptedChapterTopics) {
-        boolean clubAccepted = false;
-        boolean merchantAccepted = Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE)
-                .equals(t.getProductType()) && acceptedChapterTopics.contains(t.getId());
-        CoopInvite q = new CoopInvite();
-        q.setTopicId(t.getId());
-        q.setStatus(1);
-        List<CoopInvite> accepted = coopInviteService.selectCoopInviteList(q);
-        if (accepted != null) {
-            for (CoopInvite i : accepted) {
-                if ("club".equals(i.getToType())) clubAccepted = true;
-                else if ("merchant".equals(i.getToType())) merchantAccepted = true;
-            }
-        }
+                                 java.util.Set<Long> acceptedChapterTopics,
+                                 Map<Long, java.util.Set<String>> acceptedTypes) {
+        java.util.Set<String> types = acceptedTypes.getOrDefault(t.getId(), java.util.Collections.emptySet());
+        boolean clubAccepted = types.contains("club");
+        boolean merchantAccepted = types.contains("merchant")
+                || (Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE)
+                .equals(t.getProductType()) && acceptedChapterTopics.contains(t.getId()));
         String status;
         String text;
         if (t.getClubId() != null) {
@@ -428,7 +441,9 @@ public class ApiProjectController extends BaseController {
         m.put("acceptStatusText", text);
     }
 
-    private Map<String, Object> mapActivity(CmsActivity a, java.util.Set<Long> wonTopicIds) {
+    private Map<String, Object> mapActivity(CmsActivity a, java.util.Set<Long> wonTopicIds,
+                                            Map<Long, Integer> signupCounts,
+                                            Map<Long, Integer> pendingVerifyCounts) {
         Map<String, Object> m = new HashMap<>();
         m.put("id", a.getId());
         m.put("bizType", "activity");
@@ -449,7 +464,7 @@ public class ApiProjectController extends BaseController {
         // CU-M-175:卡片「N 报名」与详情页「已报名 N 人」必须是同一个数。原来这里取
         // countOpenSaleRegistrations(payment_status 0/1/2,含拉起支付没付完的弃单),详情取
         // registration_status=2,同一活动两张屏 1 vs 0。开卖口径只留给「已售不可改」那类锁判据。
-        m.put("signupCount", cmsActivityService.countSignedUpRegistrations(a.getId()));
+        m.put("signupCount", signupCounts.getOrDefault(a.getId(), 0));
         m.put("viewCount", a.getViewCount() == null ? 0L : a.getViewCount());
         // ownerType 优先级:club > merchant(中标承接活动) > member
         String ownerType;
@@ -465,13 +480,7 @@ public class ApiProjectController extends BaseController {
            只对承办卡算 —— 主办卡的底行是「N 报名 · N 浏览」,不需要这个数,
            全量算等于给每张卡多打一次库。 */
         if ("merchant".equals(ownerType)) {
-            CmsRegistration vq = new CmsRegistration();
-            vq.setPaymentStatus(2);
-            vq.setOwnerType(2L);
-            vq.setOwnerId(a.getId());
-            vq.setVerificationStatus(0);
-            List<CmsRegistration> pending = cmsRegistrationService.selectCmsRegistrationList(vq);
-            m.put("pendingVerifyCount", pending == null ? 0 : pending.size());
+            m.put("pendingVerifyCount", pendingVerifyCounts.getOrDefault(a.getId(), 0));
         }
         m.put("clubId", a.getClubId());
         m.put("startTime", activityStart);

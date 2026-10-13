@@ -6,20 +6,22 @@ const vm = require('node:vm')
 
 const ROOT = path.resolve(__dirname, '../..')
 
-function loadPage(relativePath, wx, transform = source => source) {
+function loadPage(relativePath, wx, transform = source => source, runtime = {}) {
   const filename = path.join(ROOT, relativePath)
   let definition = null
   const source = transform(fs.readFileSync(filename, 'utf8'))
   const sandbox = {
     Page(config) { definition = config },
     getApp() {
-      return {
+      return runtime.app || {
         globalData: { statusBarHeight: 20, navBarHeight: 44 },
         sendRequest() {},
       }
     },
     wx,
+    setTimeout: runtime.setTimeout,
     require(request) {
+      if (request.endsWith('/toast.js')) return Object.assign(() => {}, { success() {} })
       if (request.includes('motion-preference')) return { readReducedMotion: () => false }
       if (request.includes('play-visual-tokens')) return { TOPIC_EDITOR_SWITCH_COLOR: '#000000' }
       if (request.includes('advanced-game-config')) return { defaultConfig: () => ({}) }
@@ -90,18 +92,37 @@ test('负控：把两次 navigateTo 变回 redirectTo 时，契约必须识别�
   assert.equal(stack.at(-1), '/pages/template/index', '负控必须真实复现“一次返回直接回首页”')
 })
 
-/* 2026-09-06:本页现在有**两条**去模板库的离场路径 ——
- *   ① creation-success 的「查看模板库」(flow[key] === 'templates');
- *   ② 结果面板收掉后的 onResultSheetClose(「模板草稿已保存 / 已发布」那一支改走面板)。
- * 两条都必须 reLaunch:清栈才不会在模板库上面压着一个已经保存完的编辑器。
- * ⚠️ 只钉第一条是不够的 —— 加第二条的时候我就把原来的负控变成了空负控:
- * 它用 String.replace 只换第一处,新加的那处顶在前面,变异后另一处仍是 reLaunch,
- * 契约照样绿。所以这里改成「逐条都要满足」+「全仓不许出现指向模板库的 redirectTo」。 */
-function hasCleanTemplateLibraryExit(source) {
-  const viaCreationSuccess = /flow\[key\]\s*===\s*'templates'\)\s*wx\.reLaunch\(\{\s*url:\s*'\/subpackageMember\/mytemplate\/mytemplate'/.test(source)
-  const viaResultSheet = /onResultSheetClose\(\)\s*\{[\s\S]{0,240}?wx\.reLaunch\(\{\s*url:\s*'\/subpackageMember\/mytemplate\/mytemplate'/.test(source)
-  const noDirtyExit = !/wx\.(redirectTo|navigateTo)\(\{\s*url:\s*'\/subpackageMember\/mytemplate\/mytemplate'/.test(source)
-  return viaCreationSuccess && viaResultSheet && noDirtyExit
+// 两个真实成功动作都必须清栈，且保留本人/商家模板库口径。
+function assertCleanTemplateLibraryExit(transform = source => source) {
+  for (const scope of ['PERSONAL', 'MERCHANT']) {
+    for (const action of ['result', 'creation']) {
+      const events = []
+      const page = loadPage('pages/publish/temp/index.js', {
+        reLaunch({ url }) { events.push({ type: 'reLaunch', url }) },
+        redirectTo({ url }) { events.push({ type: 'redirectTo', url }) },
+        navigateTo({ url }) { events.push({ type: 'navigateTo', url }) },
+      }, transform)
+      page.data.operationScope = scope
+      page.data.dirty = false
+      page.data.creationSuccess = { primaryAction: 'templates', show: true }
+      if (action === 'result') page.onResultSheetClose()
+      else page._leaveCreationSuccess('primaryAction')
+      assert.deepEqual(events, [{
+        type: 'reLaunch',
+        url: '/subpackageMember/mytemplate/mytemplate' + (scope === 'MERCHANT' ? '?scope=MERCHANT' : ''),
+      }], action + ':' + scope)
+    }
+  }
+}
+
+// 把变异限定到指定真实方法，并确认替换发生，避免源码演进后负控悄悄失效。
+function mutateMethod(source, start, end, original, replacement) {
+  const from = source.indexOf(start)
+  const to = source.indexOf(end, from + start.length)
+  assert.ok(from >= 0 && to > from, '负控必须定位真实方法')
+  const method = source.slice(from, to)
+  assert.equal(method.split(original).length - 1, 1, '负控必须命中唯一真实分支')
+  return source.slice(0, from) + method.replace(original, replacement) + source.slice(to)
 }
 
 function loadMyTemplatePage(stackLength, events, transform = source => source) {
@@ -129,8 +150,7 @@ function loadMyTemplatePage(stackLength, events, transform = source => source) {
 }
 
 test('保存完成后进入模板库会清理创建栈，不把旧命名页留在返回路径里', () => {
-  const source = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.js'), 'utf8')
-  assert.equal(hasCleanTemplateLibraryExit(source), true)
+  assertCleanTemplateLibraryExit()
 })
 
 function runEditorSuccessBack(transform = source => source) {
@@ -146,20 +166,77 @@ function runEditorSuccessBack(transform = source => source) {
   return { events, page }
 }
 
+function runCityNodeSuccessBack(transform = source => source, beforeTimer = () => {}) {
+  const events = [], requests = [], timers = []
+  const app = {
+    globalData: {},
+    getUserID: () => 1,
+    getAuthorization: () => '',
+    sendRequest(request) { requests.push(request) },
+  }
+  const page = loadPage('pages/publish/temp/index.js', {
+    navigateBack(options) { events.push({ type: 'navigateBack', options }) },
+    switchTab(options) { events.push({ type: 'switchTab', options }) },
+  }, transform, { app, setTimeout(callback, delay) { timers.push({ callback, delay }) } })
+  page.destroyPreviewAudio = function () {}
+  page.prepareFormData = () => ({ title: '保存的玩法' })
+  page._editorMemberId = '1'
+  page.data.from = 'citynode'
+  page.data.previewVisible = true
+  page.data.merchantAccess = { canManageProjects: true }
+  page.sendData({ title: '保存的玩法', status: 1 }, '/api/merchant/city-node/template/submit', 'publish')
+  assert.equal(requests.length, 1)
+  requests[0].success({ code: 200, data: 101 })
+  assert.equal(timers.length, 1, '成功回调必须安排返回')
+  assert.equal(timers[0].delay, 600)
+  beforeTimer(page, app)
+  timers[0].callback()
+  return { events, page }
+}
+
+test('成功后的延迟返回保留新输入、卸载和换号保护', () => {
+  for (const change of [
+    page => { page.data.dirty = true },
+    page => { page._disposed = true },
+    (page, app) => { app.getUserID = () => 2 },
+  ]) {
+    const result = runCityNodeSuccessBack(source => source, change)
+    assert.equal(result.events.length, 0)
+    assert.equal(result.page.data.previewVisible, true)
+  }
+})
+
+test('结果面板迟到关闭不得带走尚未保存的输入', () => {
+  const events = []
+  const page = loadPage('pages/publish/temp/index.js', {
+    reLaunch(options) { events.push(options) },
+  })
+  page.data.dirty = true
+  page.onResultSheetClose()
+  assert.deepEqual(events, [])
+})
+
 test('预览层内保存成功的“返回上一页”必须离开编辑器，不能只关预览', () => {
   const result = runEditorSuccessBack()
   assert.equal(result.events[0].type, 'navigateBack')
   assert.equal(result.events[0].options.delta, 1)
-  const source = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.js'), 'utf8')
-  assert.match(source, /setTimeout\(function \(\) \{ that\.exitPage\(\); \}, 600\)/)
+  const delayed = runCityNodeSuccessBack()
+  assert.equal(delayed.events[0].type, 'navigateBack')
+  assert.equal(delayed.events[0].options.delta, 1)
 })
 
 test('负控：成功离场误复用 goBack 时，previewVisible 会把用户留在编辑器', () => {
-  const result = runEditorSuccessBack(source => source
-    .replace("if (flow[key] === 'back') this.exitPage();", "if (flow[key] === 'back') this.goBack();")
-    .replace('setTimeout(function () { that.exitPage(); }, 600);', 'setTimeout(function () { that.goBack(); }, 600);'))
+  const result = runEditorSuccessBack(source => mutateMethod(source,
+    '_leaveCreationSuccess(key) {', '// ===== 回填 =====',
+    'else this.exitPage();', 'else this.goBack();'))
   assert.equal(result.events.length, 0)
   assert.equal(result.page.data.previewVisible, false)
+  const delayed = runCityNodeSuccessBack(source => mutateMethod(source,
+    'sendData: function (data, url, action) {', 'onResultSheetClose() {',
+    'if (current() && !that.data.dirty) that.exitPage();',
+    'if (current() && !that.data.dirty) that.goBack();'))
+  assert.equal(delayed.events.length, 0)
+  assert.equal(delayed.page.data.previewVisible, false)
 })
 
 test('创建栈清理后，我的节点玩法页返回仍能回到节点玩法主页', () => {
@@ -179,14 +256,15 @@ test('创建栈清理后，我的节点玩法页返回仍能回到节点玩法�
   assert.equal(stackedEvents[0].options.delta, 1)
 })
 
-test('负控：成功离场退回 redirectTo 时契约必须判红', () => {
-  const source = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.js'), 'utf8')
-  // ⚠️ 必须 replaceAll:本页有两条去模板库的离场路径,只换第一处会留下另一处仍是
-  // reLaunch —— 那样这条负控就永远红不了(2026-09-06 实际踩到)。
-  const mutated = source.replaceAll("wx.reLaunch({ url: '/subpackageMember/mytemplate/mytemplate' })",
-    "wx.redirectTo({ url: '/subpackageMember/mytemplate/mytemplate' })")
-  assert.notEqual(mutated, source, '负控必须真实改动成功离场 API')
-  assert.equal(hasCleanTemplateLibraryExit(mutated), false)
+test('负控：任一成功离场退回 redirectTo 时契约必须判红', () => {
+  for (const [start, end] of [
+    ['onResultSheetClose() {', 'onCreationSuccessAction(e) {'],
+    ['_leaveCreationSuccess(key) {', '// ===== 回填 ====='],
+  ]) {
+    const source = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.js'), 'utf8')
+    const mutated = mutateMethod(source, start, end, 'wx.reLaunch(', 'wx.redirectTo(')
+    assert.throws(() => assertCleanTemplateLibraryExit(() => mutated), { name: 'AssertionError' })
+  }
 })
 
 test('负控：清栈页丢失主页兜底时必须判红', () => {

@@ -472,7 +472,7 @@ public class ApiRegistrationController extends BaseController {
                             registrationScanList.get(i).setMmsMerchant(mmsMerchant);
                         }
                     }else{
-                        CmsMemberTemplate memberTemplate = memberTemplateService.selectCmsMemberTemplateById(Long.valueOf(registrationScanList.get(0).getTemplateId()));
+                        CmsMemberTemplate memberTemplate = memberTemplateService.selectCmsMemberTemplateById(Long.valueOf(registrationScanList.get(i).getTemplateId()));
                         registrationScanList.get(i).setMemberTemplate(com.chengyinhub.business.util.TemplateSecrets.strip(memberTemplate)); // [防作弊] 玩家侧不带答案/提示
                     }
                 }

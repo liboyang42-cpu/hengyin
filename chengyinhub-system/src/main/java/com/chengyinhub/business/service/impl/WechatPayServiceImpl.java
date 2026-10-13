@@ -49,9 +49,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 /**
  * 微信支付服务实现 (适配新版SDK v3) - 修正版
@@ -65,9 +66,11 @@ public class WechatPayServiceImpl implements IWechatPayService {
     private ICmsRegistrationService registrationService;
 
     @Autowired
+    @Lazy
     private ICoopInviteService coopInviteService;
 
     @Autowired
+    @Lazy
     private com.chengyinhub.business.service.IMerchantCommerceService merchantCommerceService;
 
     /** ObjectProvider 打破 membership 下单依赖 IWechatPayService 形成的启动期依赖环。 */

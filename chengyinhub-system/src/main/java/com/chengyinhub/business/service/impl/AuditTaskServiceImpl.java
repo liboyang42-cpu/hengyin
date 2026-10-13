@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
@@ -134,6 +135,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     private CmsTemplateLibraryMapper libraryMapper;
     // 过审自动上架需过配额闸(锁+复查,单一实现在 QuotaService),防并发批准绕过 maxThemes
     @Autowired
+    @Lazy
     private IQuotaService quotaService;
     @Autowired
     private ITopicLifecycleService topicLifecycleService;

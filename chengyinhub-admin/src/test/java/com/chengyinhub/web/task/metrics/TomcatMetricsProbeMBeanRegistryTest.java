@@ -6,10 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Date;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.tomcat.autoconfigure.TomcatServerProperties;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.env.YamlPropertySourceLoader;
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServer;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.StandardEnvironment;
@@ -54,7 +54,7 @@ class TomcatMetricsProbeMBeanRegistryTest {
     /**
      * 走 Spring 真正的属性绑定,而不是把 YAML 当 Map 查字符串键 —— 后者只能抓到「整行被删」,
      * 属性名写错(如 mbean-registry)或挪错层级时它照样绿,而生产照旧恒失败。
-     * 这里绑到 ServerProperties 本尊:名字对不上就绑不进来,isEnabled() 即为 false。
+     * 这里绑到 TomcatServerProperties 本尊:名字对不上就绑不进来,isEnabled() 即为 false。
      */
     @Test
     void application_yml必须真能绑出mbeanregistry开启() {
@@ -69,11 +69,11 @@ class TomcatMetricsProbeMBeanRegistryTest {
         assertTrue(!sources.isEmpty(), "application.yml 未加载出任何属性源");
         sources.forEach(environment.getPropertySources()::addLast);
 
-        ServerProperties server = Binder.get(environment)
-                .bind("server", ServerProperties.class)
+        TomcatServerProperties server = Binder.get(environment)
+                .bind("server.tomcat", TomcatServerProperties.class)
                 .orElseThrow(() -> new AssertionError("application.yml 里绑不出 server.* 配置"));
 
-        assertEquals(true, server.getTomcat().getMbeanregistry().isEnabled(),
+        assertEquals(true, server.getMbeanregistry().isEnabled(),
                 "server.tomcat.mbeanregistry.enabled 必须为 true,否则 TomcatMetricsProbe 每轮必失败并刷屏");
     }
 }

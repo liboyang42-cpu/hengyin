@@ -38,6 +38,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             update_time = #{updateTime}
         where member_id = #{memberId}
     </update>
+    <insert id="insertEarnedExp">
+        insert into member_exp_earned(member_id, exp_value, reason, earned_at, mission_progress_id)
+        <!-- DATETIME按秒存储；截去毫秒，避免周日末秒被MySQL舍入到下周。 -->
+        values(#{memberId}, #{exp}, #{reason}, DATE_FORMAT(#{earnedAt}, '%Y-%m-%d %H:%i:%s'), #{missionProgressId})
+    </insert>
+
     <!-- 第二轮拍板第 4 条:后台撤销核销勾选「同时冲回积分和经验」用。 -->
     <select id="selectExpForUpdate" resultType="java.lang.Integer">
         select exp_value from member_growth where member_id = #{memberId} for update

@@ -4,7 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import com.chengyinhub.business.domain.Club;
 import com.chengyinhub.business.domain.ClubLeader;

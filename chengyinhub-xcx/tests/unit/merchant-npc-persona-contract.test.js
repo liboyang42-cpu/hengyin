@@ -28,6 +28,7 @@ function loadPage() {
   const requests = [];
   const app = {
     globalData: {},
+    getUserID: () => '7',
     sendRequest(o) { requests.push(o); },
     chooseImage() {},
   };

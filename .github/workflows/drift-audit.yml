@@ -70,11 +70,12 @@ jobs:
     #   把它算进来 = 每次 CI 红都白烧一次云端对账,恰好抵掉把 cron 从 1 小时放宽到 6 小时
     #   省下的额度;而 CI 红本身已经是个告警了。
     if: >-
-      github.event_name != 'workflow_run' ||
+      github.repository == 'liboyang42-cpu/chengyin' &&
+      (github.event_name != 'workflow_run' ||
       (github.event.workflow_run.event != 'workflow_dispatch' &&
        (github.event.workflow_run.conclusion == 'failure' ||
         github.event.workflow_run.conclusion == 'cancelled' ||
-        github.event.workflow_run.conclusion == 'timed_out'))
+        github.event.workflow_run.conclusion == 'timed_out')))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -246,7 +247,7 @@ jobs:
     # 部署失败触发的快速对账只走云端那条轴:迁移落差只在「合了带迁移的 PR」时才新增,
     # 与一次部署失败无关;而这个 job 在 Mac 上,Mac 睡着时它会排队挂住,把整个 run 的
     # 结论拖成 pending —— 那正好毁掉「快速拿到红/绿判决」这唯一的用处。
-    if: github.event_name != 'workflow_run'
+    if: github.repository == 'liboyang42-cpu/chengyin' && github.event_name != 'workflow_run'
     # ★ 跑在自托管 Mac,不在 ubuntu-latest —— 那台机器已经有 ~/.ssh/chengyin_deploy,
     #   ci/run_migration.py 的 SSH_KEY 就是写死的这个路径(没有 env 覆盖)。
     #   换云端 runner 就得改那个文件,而它是生产迁移执行器、带契约测试,不该为接一道

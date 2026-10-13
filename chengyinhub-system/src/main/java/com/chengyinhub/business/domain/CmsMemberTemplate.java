@@ -32,6 +32,13 @@ public class CmsMemberTemplate extends BaseEntity
     @Excel(name = "发布用户ID")
     private Long memberId;
 
+    /** 当前查看者能否续编，由详情接口按实际归属返回。 */
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
+    private Boolean canEdit;
+
+    public Boolean getCanEdit() { return canEdit; }
+    public void setCanEdit(Boolean canEdit) { this.canEdit = canEdit; }
+
     /** 模板类别ID */
     @Excel(name = "模板类别ID")
     private Long categoryId;

@@ -561,6 +561,42 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long saveOrUpdateDraft(CmsTemplatePublishRequest request, Long memberId, String username) {
+        if (request != null && Boolean.TRUE.equals(request.getAdoptSourceOnly())) {
+            if (request.getId() != null || request.getOriginalTemplateId() == null
+                    || request.getOriginalTemplateId() <= 0) {
+                throw new IllegalArgumentException("采用模板必须指定来源，不能覆盖已有草稿");
+            }
+            Long sourceId = request.getOriginalTemplateId();
+            String scope = request.getScope();
+            CmsTemplateLibrary source = templateLibraryService.selectCmsTemplateLibraryById(sourceId);
+            if (source == null || !Integer.valueOf(0).equals(source.getDelFlag())
+                    || !Long.valueOf(1L).equals(source.getStatus())
+                    || !Long.valueOf(1L).equals(source.getPublishStatus())) {
+                throw new IllegalArgumentException("源模板不存在或已下架");
+            }
+            // 作者配置从服务端复制；公开详情仍不下发答案、卡池和分支内容。
+            BeanUtils.copyProperties(source, request, "id", "scope", "originalTemplateId", "duration");
+            request.setDuration(source.getDuration() == null ? null : Math.toIntExact(source.getDuration()));
+            request.setScope(scope);
+            request.setOriginalTemplateId(sourceId);
+            request.setIsSync(0);
+            // 优惠券是原商家的资产，采用内容不能顺带复制发券权限。
+            if (source.getCouponId() != null && source.getCouponId() > 0) {
+                throw new IllegalArgumentException("该模板含商家专属优惠券，请先由原作者提供不含优惠券的可采用版本");
+            }
+            String sourceRewards = rewardRulesValidator.validateAndNormalize(source.getRewardRulesJson());
+            if (sourceRewards != null) {
+                try {
+                    for (com.fasterxml.jackson.databind.JsonNode rule : new com.fasterxml.jackson.databind.ObjectMapper().readTree(sourceRewards)) {
+                        if (rule.path("couponId").asLong(0) > 0) {
+                            throw new IllegalArgumentException("该模板含商家专属条件优惠券，不能跨商家采用");
+                        }
+                    }
+                } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                    throw new IllegalArgumentException("源模板奖励配置格式不正确", e);
+                }
+            }
+        }
         validateSensorFields(request);
         normalizeAdvancedConfig(request);
         normalizeAdoptedReward(request);
@@ -604,7 +640,9 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         } else {
             t.setCreateBy(username);
             t.setCreateTime(now);
-            memberTemplateService.insertCmsMemberTemplate(t); // useGeneratedKeys 回填 id
+            if (memberTemplateService.insertCmsMemberTemplate(t) != 1 || t.getId() == null) {
+                throw new ServiceException("保存草稿失败");
+            }
             return t.getId();
         }
     }

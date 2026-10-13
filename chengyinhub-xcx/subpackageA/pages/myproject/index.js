@@ -57,6 +57,13 @@ const PENDING_RANK = { rejected: 0, draft: 1, pending: 2 };
 
 const LOAD_CAP = 200;
 
+function currentRead(page) {
+  const epoch = page._readEpoch || 0;
+  const memberId = String(app.getUserID() || '');
+  return () => page._visible !== false && (page._readEpoch || 0) === epoch
+    && String(app.getUserID() || '') === memberId;
+}
+
 Page({
   data: {
     typeTabs: TYPE_TABS,
@@ -85,6 +92,7 @@ Page({
 
   onLoad(options) {
     options = options || {};
+    this._ownerId = String(app.getUserID() || '');
     // 2026-09-23 裁决(CU-C-22):俱乐部主理人可发独立单场活动,原来全站没有新建入口。
     // 2026-09-25 裁决(CU-M-05):商家同样可发单场活动,商家态入口改看岗位权限。
     // 本地身份只决定入口显不显示;能不能发由发布页 guardPublisherRole 回读权威接口判定,
@@ -97,7 +105,9 @@ Page({
     if (merchantScope) {
       this.loadMerchantPublishEntry();
     } else {
+      const current = currentRead(this);
       roleGuard.load(() => {
+        if (!current()) return;
         this.setData({ canPublishActivity: roleGuard.role() === 'club' });
         if (this.data.typeTab === 'activity') this.applyView();
       });
@@ -113,6 +123,27 @@ Page({
   },
 
   onShow() {
+    const memberId = String(app.getUserID() || '');
+    const changedOwner = this._ownerId !== undefined && this._ownerId !== memberId;
+    const refreshAccess = this._visible === false || changedOwner;
+    this._visible = true;
+    if (changedOwner) {
+      this._all = [];
+      this.setData({ list: [], loaded: false, capped: false, hasRowOps: false,
+        tplList: [], tplLoaded: false, tplLoading: false, tplErrorMsg: '',
+        canPublishActivity: false, 'opsSheet.show': false });
+    }
+    this._ownerId = memberId;
+    if (refreshAccess && this.data.operationScope === 'MERCHANT') {
+      this.loadMerchantPublishEntry();
+    } else if (refreshAccess) {
+      const current = currentRead(this);
+      roleGuard.load(() => {
+        if (!current()) return;
+        this.setData({ canPublishActivity: roleGuard.role() === 'club' });
+        if (this.data.typeTab === 'activity') this.applyView();
+      });
+    }
     // ★ 在途守卫在这里**无条件归零**。本仓栽过一次:tabBar 页的在途 flag 卡住 = 永久死锁,
     //   热启动都不自愈(漫游 GO 点不动的真根因)。只在回调里清是不够的 —— 回调没被调用到的
     //   路径(同步抛错 / 页面被顶掉再回来)会把 flag 永远留在 true,按钮就此死掉。
@@ -121,8 +152,17 @@ Page({
     merchantTheme.merchantPageShow();
     this.reload();
   },
-  onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() { merchantTheme.merchantPageRestore(); },
+  onHide() {
+    this._visible = false;
+    this._readEpoch = (this._readEpoch || 0) + 1;
+    ['#dcActivity', '#dcCancel', '#dcCancelTopic', '#dcRoute', '#dcTpl'].forEach(id => {
+      const dc = this.selectComponent && this.selectComponent(id);
+      if (dc && typeof dc.close === 'function') dc.close();
+    });
+    this.setData({ loading: false, tplLoading: false });
+    merchantTheme.merchantPageRestore();
+  },
+  onUnload() { this.onHide(); },
 
   reload() {
     // 递增序号作废在途请求(修 toggle/delete 后空跑 + 响应污染,沿旧版)
@@ -147,18 +187,23 @@ Page({
      本地 scope 参数只决定问哪个接口,不作放行依据;读不到就按没有入口处理(fail-closed),
      真闸在服务端 —— 商家 scope 下 publish 仍要过 merchantAccessService.require。 */
   loadMerchantPublishEntry() {
+    if (this._visible === false) return;
+    this.setData({ canPublishActivity: false });
     const that = this;
+    const current = currentRead(this);
     app.sendRequest({
       hideLoading: true,
       url: '/api/merchant/access/me',
       method: 'POST',
       data: {},
       success(res) {
+        if (!current()) return;
         const access = merchantAccessPolicy.normalizeMerchantAccess(res && res.code == '200' ? res.data : null);
         that.setData({ canPublishActivity: access.canManageProjects });
         if (that.data.typeTab === 'activity') that.applyView();
       },
       fail(res) {
+        if (!current()) return;
         that.setData({ canPublishActivity: false });
         toast(app.getRequestErrorMessage(res, '发布权限没能读取，请重试'));
       }
@@ -167,7 +212,9 @@ Page({
 
   // ===== 数据:一次拉全,前端派生 =====
   loadProjects() {
+    if (this._visible === false) return;
     const that = this;
+    const current = currentRead(this);
     const seq = (this._seq || 0) + 1;
     this._seq = seq;
     const hasContent = this.data.loaded === true;
@@ -184,7 +231,7 @@ Page({
       data: { ownerType: 'all', state: 'all', type: 'all', pageNum: 1, pageSize: LOAD_CAP,
         scope: this.data.operationScope },
       success(res) {
-        if (that._seq !== seq) return;
+        if (!current() || that._seq !== seq) return;
         if (res && res.code == '200' && res.data && isRecordList(res.data.rows)) {
           const rows = res.data.rows.map(decorate);
           that._all = rows;
@@ -204,7 +251,7 @@ Page({
         }
       },
       fail(res) {
-        if (that._seq === seq) {
+        if (current() && that._seq === seq) {
           that.setData({
             loaded: hasContent,
             projectState: hasContent ? 'ready' : 'error',
@@ -212,7 +259,7 @@ Page({
           });
         }
       },
-      complete() { if (that._seq === seq) that.setData({ loading: false }); }
+      complete() { if (current() && that._seq === seq) that.setData({ loading: false }); }
     });
   },
 
@@ -341,6 +388,7 @@ Page({
   cancelActivity(e) {
     const ds = e.currentTarget.dataset;
     const that = this;
+    const current = currentRead(this);
     app.sendRequest({
       hideLoading: true,
       silentError: true,
@@ -348,11 +396,12 @@ Page({
       method: 'POST',
       data: { id: ds.id, scope: this.data.operationScope },
       success(res) {
+        if (!current()) return;
         const n = paidPlayersOrToast(res);
         const dc = n === null ? null : that.selectComponent && that.selectComponent('#dcCancel');
         if (dc) dc.open('activity.cancel-refund', { name: ds.title || '', id: ds.id, count: n });
       },
-      fail() { toast('网络异常，请重试'); }
+      fail() { if (current()) toast('网络异常，请重试'); }
     });
   },
 
@@ -360,6 +409,7 @@ Page({
   cancelTopic(e) {
     const ds = e.currentTarget.dataset;
     const that = this;
+    const current = currentRead(this);
     app.sendRequest({
       hideLoading: true,
       silentError: true,
@@ -367,11 +417,12 @@ Page({
       method: 'POST',
       data: { id: ds.id, scope: this.data.operationScope },
       success(res) {
+        if (!current()) return;
         const n = paidPlayersOrToast(res);
         const dc = n === null ? null : that.selectComponent && that.selectComponent('#dcCancelTopic');
         if (dc) dc.open('topic.cancel-refund', { name: ds.title || '', id: ds.id, count: n });
       },
-      fail() { toast('网络异常，请重试'); }
+      fail() { if (current()) toast('网络异常，请重试'); }
     });
   },
 
@@ -389,12 +440,14 @@ Page({
   //   ② 弱网下重复点/超时重试,第二次把第一次的结果又翻回去。
   // ⚠️ 拿 ds.online 而不是重新读列表:期望态的意义就是「用户看到的那个态」,重读就没意义了。
   toggleStatus(e) {
+    const current = currentRead(this);
     const ds = e.currentTarget.dataset;
     const id = ds.id;
-    // 在途守卫:按 id 记,不同卡片互不影响(整页一个门闩会让批量操作变成排队)
+    // 主题与活动可有相同 ID，按业务类型区分在途卡片。
     const inflight = this._togglingIds || (this._togglingIds = {});
-    if (inflight[id]) return;
-    inflight[id] = true;
+    const key = (ds.biz || 'topic') + ':' + id;
+    if (inflight[key]) return;
+    inflight[key] = true;
     const url = ds.biz === 'activity' ? '/api/activity/update_publish_status' : '/api/topic/update_user_status';
     const data = { id: id, scope: this.data.operationScope };
     // 活动线是另一个接口,没有这个参数,别乱塞
@@ -403,13 +456,14 @@ Page({
     let settled = false;
     // complete 兜底清 flag。request-client 保证 complete 恰好触发一次(重登重试时也只在最后一跳),
     // 但仍在 success/fail 里各清一次 —— 万一将来有人换掉传输层、complete 不再保证,按钮也不会死。
-    const release = function () { if (that._togglingIds) delete that._togglingIds[id]; };
+    const release = function () { delete inflight[key]; };
     try {
       app.sendRequest({
-        hideLoading: true, url: url, method: 'POST', data: data,
+        hideLoading: true, silentError: true, url: url, method: 'POST', data: data,
         success(res) {
           settled = true;
           release();
+          if (!current()) return;
           if (res.code == '200') { toast('操作成功'); that.reload(); }
           else {
             // 后端 CAS 拒绝会带上「当前是什么态」,原样透出比「操作失败」有用得多;
@@ -418,7 +472,7 @@ Page({
             that.reload();
           }
         },
-        fail() { settled = true; release(); toast('网络异常，请重试'); },
+        fail() { settled = true; release(); if (current()) toast('网络异常，请重试'); },
         complete() { release(); }
       });
     } catch (err) {
@@ -446,8 +500,9 @@ Page({
 
   // ===== 模板 tab(原 mytemplate 列表收编) =====
   loadTemplates() {
-    if (this.data.tplLoading) return;
+    if (this._visible === false || this.data.tplLoading) return;
     const that = this;
+    const current = currentRead(this);
     this.setData({ tplLoading: true, tplErrorMsg: '' });
     app.sendRequest({
       hideLoading: true,
@@ -458,6 +513,7 @@ Page({
         scope: this.data.operationScope
       },
       success(res) {
+        if (!current()) return;
         if (res.code == '200' && res.data && isRecordList(res.data.rows)) {
           const rows = res.data.rows.map(function (t) {
             const view = marketView(t);
@@ -469,9 +525,10 @@ Page({
         }
       },
       fail(res) {
+        if (!current()) return;
         that.setData({ tplErrorMsg: app.getRequestErrorMessage(res, '节点玩法加载失败') });
       },
-      complete() { that.setData({ tplLoading: false }); }
+      complete() { if (current()) that.setData({ tplLoading: false }); }
     });
   },
 
@@ -484,6 +541,7 @@ Page({
   },
 
   tplSubmitMarket(e) {
+    const current = currentRead(this);
     const id = e.currentTarget.dataset.id;
     const row = this.data.tplList.find(item => String(item.id) === String(id));
     if (!row || !row._canSubmitMarket) return;
@@ -497,10 +555,11 @@ Page({
         url: `/api/template/${id}/market-submit`, method: 'POST',
         data: { scope: this.data.operationScope },
         success: (res) => {
+          if (!current()) return;
           if (res.code == '200') { toast('已提交广场审核'); this.loadTemplates(); }
           else toast((res && res.msg) || '提交失败');
         },
-        fail: () => { release(); toast('网络异常，请重试'); },
+        fail: () => { release(); if (current()) toast('网络异常，请重试'); },
         complete: release
       });
     } catch (error) { release(); toast('网络异常，请重试'); }
@@ -508,14 +567,13 @@ Page({
 
   // 发布到/下架节点玩法库(沿 mytemplate:publish_status 翻转)
   tplToggle(e) {
+    const current = currentRead(this);
     const ds = e.currentTarget.dataset;
     const that = this;
     const inflight = this._templateActionIds || (this._templateActionIds = {});
     if (inflight[ds.id]) return;
     inflight[ds.id] = true;
-    const release = function () {
-      if (that._templateActionIds) delete that._templateActionIds[ds.id];
-    };
+    const release = function () { delete inflight[ds.id]; };
     app.sendRequest({
       hideLoading: true,
       silentError: true,
@@ -528,10 +586,11 @@ Page({
       },
       success(res) {
         release();
+        if (!current()) return;
         if (res.code == '200') { toast('操作成功'); that.loadTemplates(); }
         else { toast((res && res.msg) || '操作失败'); }
       },
-      fail() { release(); toast('网络异常，请重试'); },
+      fail() { release(); if (current()) toast('网络异常，请重试'); },
       complete() { release(); }
     });
   },
@@ -553,75 +612,87 @@ Page({
   onConfirmDeleteRoute(e) { this._deleteProjectItem(e, '#dcRoute', '/api/topic/delete'); },
 
   onConfirmCancelActivity(e) {
+    const current = currentRead(this);
     const p = e.detail.params || {};
     const dc = this.selectComponent && this.selectComponent('#dcCancel');
     const that = this;
     dc.busyOn();
     app.sendRequest({
       hideLoading: true,
+      silentError: true,
       url: '/api/activity/cancel',
       method: 'POST',
       data: { id: p.id, reason: '主办方取消活动', scope: this.data.operationScope },
       success(res) {
+        if (!current()) return;
         if (res.code == '200') { dc.done(); that.reload(); }
         else dc.failed((res && res.msg) || '取消失败');
       },
-      fail() { dc.failed('网络异常，请重试'); }
+      fail() { if (current()) dc.failed('网络异常，请重试'); }
     });
   },
 
   onConfirmCancelTopic(e) {
+    const current = currentRead(this);
     const p = e.detail.params || {};
     const dc = this.selectComponent && this.selectComponent('#dcCancelTopic');
     const that = this;
     dc.busyOn();
     app.sendRequest({
       hideLoading: true,
+      silentError: true,
       url: '/api/topic/cancel',
       method: 'POST',
       data: { id: p.id, reason: '主办方取消主题', scope: this.data.operationScope },
       success(res) {
+        if (!current()) return;
         if (res.code == '200') { dc.done(res.msg); that.reload(); }
         else dc.failed((res && res.msg) || '取消失败');
       },
-      fail() { dc.failed('网络异常，请重试'); }
+      fail() { if (current()) dc.failed('网络异常，请重试'); }
     });
   },
 
   _deleteProjectItem(e, dcId, url) {
+    const current = currentRead(this);
     const p = e.detail.params || {};
     const dc = this.selectComponent && this.selectComponent(dcId);
     const that = this;
     dc.busyOn();
     app.sendRequest({
       hideLoading: true,
+      silentError: true,
       url: url,
       method: 'POST',
       data: { id: p.id, scope: this.data.operationScope },
       success(res) {
+        if (!current()) return;
         // 三段式第三段:结果确认卡
         if (res.code == '200') { dc.done(); that.reload(); }
         else dc.failed((res && res.msg) || '删除失败');
       },
-      fail() { dc.failed('网络异常，请重试'); }
+      fail() { if (current()) dc.failed('网络异常，请重试'); }
     });
   },
 
   onConfirmDeleteTemplate(e) {
+    const current = currentRead(this);
     const p = e.detail.params || {};
     const dc = this.selectComponent && this.selectComponent('#dcTpl');
     const that = this;
     dc.busyOn();
     app.sendRequest({
       hideLoading: true,
+      silentError: true,
       url: '/api/template/delete',
       method: 'POST',
       data: { template_id: p.id, scope: this.data.operationScope },
       success(res) {
+        if (!current()) return;
         if (res.code == '200') { dc.done(); that.loadTemplates(); }
         else dc.failed((res && res.msg) || '删除失败');
       },
-      fail() { dc.failed('网络异常，请重试'); }
+      fail() { if (current()) dc.failed('网络异常，请重试'); }
     });
   },
 

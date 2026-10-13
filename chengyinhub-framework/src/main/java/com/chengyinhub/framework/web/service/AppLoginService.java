@@ -31,7 +31,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -126,7 +126,11 @@ public class AppLoginService {
         }
 
         if (StringUtils.isEmpty(member.getWxOpenId())) {
-            if (umsMemberMapper.bindWxOpenIdIfBlank(memberId, openid) != 1) {
+            try {
+                if (umsMemberMapper.bindWxOpenIdIfBlank(memberId, openid) != 1) {
+                    throw new ServiceException(AUTHENTICATION_ERROR);
+                }
+            } catch (org.springframework.dao.DuplicateKeyException collision) {
                 throw new ServiceException(AUTHENTICATION_ERROR);
             }
             member.setWxOpenId(openid);

@@ -1062,6 +1062,6 @@
 
 <view class="theme-dark">
 <view wx:if="{{club && canInviteCoop && !club.isOwner}}" class="club-coop-floating"><view class="join-btn cy-btn cy-btn--primary" bindtap="goClubCoop" aria-role="button" aria-label="向该俱乐部发起合作" hover-class="cy-pressed">发起合作</view></view>
-<cy-coop-invite-sheet id="coop-invite" show="{{coopInviteShow}}" target-id="{{clubId}}" target-name="{{club.name}}" invite-type="{{1}}" topic-id="{{topicId}}" chapter-id="{{chapterId}}" topic-name="{{topicName}}" operation-scope="{{coopInviteScope}}" bind:close="closeCoopInvite" bind:sent="onCoopInviteSent" />
+<cy-coop-invite-sheet id="coop-invite" show="{{coopInviteShow}}" target-id="{{clubId}}" target-name="{{(club && club.name) || ''}}" invite-type="{{1}}" topic-id="{{topicId}}" chapter-id="{{chapterId}}" topic-name="{{topicName || ''}}" operation-scope="{{coopInviteScope || ''}}" bind:close="closeCoopInvite" bind:sent="onCoopInviteSent" />
 
 </view>

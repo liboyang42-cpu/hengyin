@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service;
 
 import java.util.List;
+import java.util.Map;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.enums.PublicActivityScope;
 import com.chengyinhub.business.domain.dto.CmsActivityPublishRequest;
@@ -70,6 +71,12 @@ public interface ICmsActivityService
      * 待支付也算数,与详情页并排看必然打架(CU-M-175)。
      */
     int countSignedUpRegistrations(Long activityId);
+
+    /** 批量读取项目卡报名人数，与单场详情使用同一报名口径。 */
+    Map<Long, Integer> countSignedUpRegistrationsByActivityIds(List<Long> activityIds);
+
+    /** 商家承办项目已支付、尚未核销的人数。 */
+    Map<Long, Integer> countPendingVerificationByActivityIds(List<Long> activityIds);
 
     public CmsActivity selectCmsActivityById(Long id);
 

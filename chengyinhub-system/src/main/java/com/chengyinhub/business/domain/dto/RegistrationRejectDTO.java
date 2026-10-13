@@ -1,7 +1,7 @@
 package com.chengyinhub.business.domain.dto;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 /**
  * 商家报名调配驳回请求。

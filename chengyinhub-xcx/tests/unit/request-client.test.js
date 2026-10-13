@@ -505,3 +505,81 @@ test('失败体里的 11 位号仍消毒,不能当业务文案透出', () => {
   });
   assert.equal(got.msg, '操作失败');
 });
+
+function ownerRequestFixture() {
+  let owner = '7', auth = 'A', finishLogin;
+  let loginCalls = 0;
+  const calls = [], scheduled = [], events = [], toasts = [];
+  const client = createRequestClient({
+    wxRequest: options => { calls.push(options); return { abort() {} }; },
+    getBaseUrl: () => 'https://fixture',
+    getUserID: () => owner, getAuthorization: () => auth,
+    reLogin: cb => { loginCalls++; finishLogin = cb; },
+    scheduleRetry: fn => scheduled.push(fn),
+    showToast: msg => toasts.push(msg)
+  });
+  const param = { url: '/api/fixture', method: 'POST', data: { draft: 'A-content' },
+    success: () => events.push('success'),
+    fail: body => { events.push('fail'); assert.equal(body.reason, 'sessionChanged'); },
+    complete: () => events.push('complete') };
+  return { client, calls, scheduled, events, toasts, param,
+    setSession(id, token) { owner = id; auth = token; },
+    finishLogin(ok, result) { finishLogin(ok, result); },
+    loginCalls: () => loginCalls };
+}
+const ownerAuthResponses = [
+  { statusCode: 401, data: {} },
+  { statusCode: 200, data: { code: 401 } },
+  { statusCode: 200, data: { code: 2 } }
+];
+for (const response of ownerAuthResponses) {
+  for (const phase of ['before-auth-response', 'during-login']) {
+    test('换账号停止旧写请求登录/重发并恰好收尾一次: ' + phase + '/' + response.statusCode + '/' + response.data.code, () => {
+      const f = ownerRequestFixture();
+      f.client.send(f.param);
+      if (phase === 'before-auth-response') f.setSession('9', 'B');
+      f.calls[0].success(response); f.calls[0].complete(response);
+      if (phase === 'during-login') {
+        f.setSession('9', 'B'); f.finishLogin(true);
+      }
+      assert.equal(f.loginCalls(), phase === 'during-login' ? 1 : 0);
+      assert.equal(f.calls.length, 1);
+      assert.deepEqual(f.events, ['fail', 'complete']);
+      assert.deepEqual(f.toasts, []);
+    });
+  }
+}
+test('换号后旧 GET 延迟网络重试停止并释放回调', () => {
+  const f = ownerRequestFixture();
+  f.client.send(Object.assign({}, f.param, { method: 'GET', retry: 1 }));
+  f.calls[0].fail({ errMsg: 'timeout' }); f.calls[0].complete({});
+  f.setSession('9', 'B'); f.scheduled[0]();
+  assert.equal(f.calls.length, 1);
+  assert.deepEqual(f.events, ['fail', 'complete']);
+});
+test('退出后旧请求不触发自动登录', () => {
+  const f = ownerRequestFixture(); f.client.send(f.param);
+  f.setSession('', ''); f.calls[0].success(ownerAuthResponses[0]); f.calls[0].complete({});
+  assert.equal(f.loginCalls(), 0);
+  assert.deepEqual(f.events, ['fail', 'complete']);
+});
+test('同账号正常续期仍用新 token 重发并只完成最终响应', () => {
+  const f = ownerRequestFixture(); f.client.send(f.param);
+  f.calls[0].success(ownerAuthResponses[0]); f.calls[0].complete({});
+  f.setSession(7, 'A-new'); f.finishLogin(true);
+  assert.equal(f.calls.length, 2); assert.equal(f.calls[1].header.Authorization, 'A-new');
+  f.calls[1].success({ statusCode: 200, data: { code: 200 } }); f.calls[1].complete({ data: { code: 200 } });
+  assert.deepEqual(f.events, ['success', 'complete']);
+});
+test('取消发生在换号后的登录窗口，旧请求没有回调或重发', () => {
+  const f = ownerRequestFixture(); const control = f.client.send(f.param);
+  f.calls[0].success(ownerAuthResponses[0]); f.calls[0].complete({});
+  f.setSession('9', 'B'); control.abort(); f.finishLogin(true);
+  assert.equal(f.calls.length, 1); assert.deepEqual(f.events, []);
+});
+test('尚未登录的请求不能把外部换号误当成自己首登', () => {
+  const f = ownerRequestFixture(); f.setSession('', ''); f.client.send(f.param);
+  f.calls[0].success(ownerAuthResponses[0]); f.calls[0].complete({});
+  f.setSession('9', 'B'); f.finishLogin(true);
+  assert.equal(f.calls.length, 1); assert.deepEqual(f.events, ['fail', 'complete']);
+});

@@ -201,10 +201,15 @@ public class NodeNpcService {
 
         NpcProfile pending = new NpcProfile();
         pending.setId(mine.getId());
+        pending.setVoiceVersion(mine.getVoiceVersion());
         pending.setVoiceId(null);
         pending.setVoiceStatus(VOICE_PENDING);
         pending.setVoiceSample(sample);
         if (npcProfileMapper.updateNodeNpcVoice(pending) != 1) {
+            NpcProfile latest = npcProfileMapper.selectNodeNpcByNodeId(nodeId);
+            if (latest != null && sample.equals(latest.getVoiceSample())
+                    && (Integer.valueOf(VOICE_PENDING).equals(latest.getVoiceStatus())
+                        || Integer.valueOf(VOICE_READY).equals(latest.getVoiceStatus()))) return latest;
             throw new IllegalStateException("声音任务未保存，请重试");
         }
 
@@ -214,6 +219,7 @@ public class NodeNpcService {
         } catch (AiServiceException e) {
             NpcProfile failed = new NpcProfile();
             failed.setId(mine.getId());
+            failed.setVoiceVersion(mine.getVoiceVersion() + 1);
             failed.setVoiceId(null);
             failed.setVoiceStatus(VOICE_FAILED);
             npcProfileMapper.updateNodeNpcVoice(failed);
@@ -229,11 +235,13 @@ public class NodeNpcService {
 
         NpcProfile done = new NpcProfile();
         done.setId(mine.getId());
+        done.setVoiceVersion(mine.getVoiceVersion() + 1);
         done.setVoiceId(voiceId);
         done.setVoiceStatus(ready ? VOICE_READY : VOICE_PENDING);
         if (npcProfileMapper.updateNodeNpcVoice(done) != 1) {
             throw new IllegalStateException("声音结果待确认，请稍后查询状态");
         }
+        mine.setVoiceVersion(mine.getVoiceVersion() + 2);
         mine.setVoiceId(voiceId);
         mine.setVoiceStatus(ready ? VOICE_READY : VOICE_PENDING);
         mine.setVoiceSample(sample);
@@ -252,6 +260,7 @@ public class NodeNpcService {
                 if (voiceCloneClient.isReady(mine.getVoiceId())) {
                     NpcProfile upd = new NpcProfile();
                     upd.setId(mine.getId());
+                    upd.setVoiceVersion(mine.getVoiceVersion());
                     upd.setVoiceId(mine.getVoiceId());
                     upd.setVoiceStatus(VOICE_READY);
                     if (npcProfileMapper.updateNodeNpcVoice(upd) == 1) {
@@ -261,6 +270,7 @@ public class NodeNpcService {
             } catch (AiServiceException ignore) {
                 // 上游查不到不代表失败:保持「复刻中」,等下一次轮询
             }
+            return npcProfileMapper.selectNodeNpcByNodeId(nodeId);
         }
         return mine;
     }
@@ -273,6 +283,7 @@ public class NodeNpcService {
         if (mine == null) return null;
         NpcProfile upd = new NpcProfile();
         upd.setId(mine.getId());
+        upd.setVoiceVersion(mine.getVoiceVersion());
         upd.setVoiceId(null);
         upd.setVoiceStatus(VOICE_NONE);
         if (npcProfileMapper.updateNodeNpcVoice(upd) != 1) {

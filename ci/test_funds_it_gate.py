@@ -49,7 +49,7 @@ def all_required_clean(directory):
     write_report(directory, "ClubEditionCompensationMybatisIntegrationTest", 21)
     write_report(directory, "PlayerWithdrawalCooldownMybatisIntegrationTest", 16)
     write_report(directory, "ClubPayableMybatisIntegrationTest", 20)
-    write_report(directory, "CouponLifecycleMybatisIntegrationTest", 12)
+    write_report(directory, "CouponLifecycleMybatisIntegrationTest", 16)
     write_report(directory, "MysqlItSchemaIsolationTest", 3)
     # 2026-09-15 起登记:R9-16 免费单主办取消真库复现 IT(8 条)。
     write_report(directory, "ActivityCancelFreeOrderMybatisIT", 8)
@@ -62,7 +62,7 @@ def all_required_clean(directory):
     # 2026-09-16 晚:暗测试 23 套(197 条)首跑判绿后入闸;计数与 EXPECTED/SOURCE_FILES 同源。
     for short, tests in (
         ("CoopDepositRefundMybatisIntegrationTest", 27),
-        ("GrowthMissionProofMybatisIntegrationTest", 15),
+        ("GrowthMissionProofMybatisIntegrationTest", 24),
         ("MerchantIdentityMybatisIntegrationTest", 21),
         ("MerchantProfilePersistenceMybatisIntegrationTest", 9),
         ("StoreVerifyGrowthDeliveryTransactionTest", 3),

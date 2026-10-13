@@ -27,6 +27,7 @@ function createUploadClient(deps) {
   var wxUploadFile = deps.wxUploadFile;
   var getBaseUrl = deps.getBaseUrl;
   var getAuthorization = deps.getAuthorization;
+  var getUserID = deps.getUserID || function () { return ''; };
   var uploadPath = deps.uploadPath || '/api/common/uploadOSS';
   var setTimer = deps.setTimer || setTimeout;
   var clearTimer = deps.clearTimer || clearTimeout;
@@ -49,6 +50,7 @@ function createUploadClient(deps) {
 
   function uploadAll(filePaths, opts) {
     opts = opts || {};
+    var member = String(getUserID() || '');
     filePaths = Array.isArray(filePaths) ? filePaths.slice() : [];
     var total = filePaths.length;
     var concurrency = Math.max(1, Math.min(3, Number(opts.concurrency) || 3));
@@ -87,11 +89,18 @@ function createUploadClient(deps) {
       if (finished) return;
       finished = true;
       cleanup();
-      if (!cancelled) onDone({ ok: failures.length === 0, results: results, failures: failures });
+      if (!cancelled && String(getUserID() || '') === member) onDone({ ok: failures.length === 0, results: results, failures: failures });
+    }
+
+    function isCurrentOwner() {
+      if (finished) return false;
+      if (String(getUserID() || '') === member) return true;
+      finish(true);
+      return false;
     }
 
     function settle(index, failure) {
-      if (finished || settled[index]) return;
+      if (!isCurrentOwner() || settled[index]) return;
       settled[index] = true;
       var record = active[index];
       if (record && record.watchdog !== null) clearTimer(record.watchdog);
@@ -112,6 +121,7 @@ function createUploadClient(deps) {
       }
       var formData = (opts.formData && opts.formData(index)) || {};
       if (opts.bizType) formData.bizType = typeof opts.bizType === 'function' ? opts.bizType(index) : opts.bizType;
+      if (!isCurrentOwner()) return;
       var record = { task: null, watchdog: null };
       active[index] = record;
       record.watchdog = schedule(function () {
@@ -128,6 +138,7 @@ function createUploadClient(deps) {
         header: authHeader(),
         formData: Object.keys(formData).length ? formData : undefined,
         success: function (res) {
+          if (!isCurrentOwner()) return;
           var data;
           try { data = JSON.parse(res.data); }
           catch (e) { settle(index, { status: 'failed', msg: '上传结果解析失败' }); return; }
@@ -156,8 +167,8 @@ function createUploadClient(deps) {
     }
 
     function launch() {
-      if (finished) return;
-      while (Object.keys(active).length < concurrency && nextIndex < total) start(nextIndex++);
+      if (!isCurrentOwner()) return;
+      while (!finished && Object.keys(active).length < concurrency && nextIndex < total) start(nextIndex++);
     }
 
     var control = {
@@ -169,6 +180,7 @@ function createUploadClient(deps) {
       return control;
     }
     deadlineTimer = schedule(function () {
+      if (!isCurrentOwner()) return;
       for (var i = 0; i < total; i++) {
         if (!settled[i]) {
           settled[i] = true;
@@ -197,6 +209,7 @@ function createUploadClient(deps) {
    */
   function uploadOne(filePath, opts) {
     opts = opts || {};
+    var member = String(getUserID() || '');
     var path = opts.path || uploadPath;
     var onDone = opts.onDone || function () {};
     var timeoutMs = Math.max(1000, Number(opts.timeoutMs) || 20000);
@@ -210,7 +223,7 @@ function createUploadClient(deps) {
       done = true;
       if (watchdog !== null) clearTimer(watchdog);
       watchdog = null;
-      if (payload) onDone(payload);
+      if (payload && String(getUserID() || '') === member) onDone(payload);
     }
 
     // 已知超限:同 uploadAll,在共享入口拒绝,不发起注定被容器截断的连接。

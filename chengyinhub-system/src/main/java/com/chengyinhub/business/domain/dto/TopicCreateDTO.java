@@ -2,7 +2,7 @@ package com.chengyinhub.business.domain.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 import java.io.Serializable;
 import java.time.LocalDate;

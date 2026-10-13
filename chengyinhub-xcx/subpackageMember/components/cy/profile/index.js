@@ -1027,31 +1027,36 @@ Component({
 
   loadPointsStat: function () {
     var that = this;
-    return req('/api/user/points/statistics', {}).then(function (res) {
-      if (res.code != '200' || !res.data) {
-        that.recordProfileMetricSource('points', 'error', res);
-        return;
+    if (!that.data.isSelf) return Promise.resolve();
+    var memberId = app.getUserID();
+    return Promise.all([
+      req('/api/user/points/statistics', {}),
+      req('/api/growth/leaderboard', { metric: 'exp', period: 'week', limit: 1 })
+    ]).then(function (arr) {
+      if (!that.data.isSelf || memberId !== app.getUserID()) return;
+      var res = arr[0];
+      var weekPoints = res.code == '200' && isRecord(res.data) ? metricNumber(res.data.weekPoints) : null;
+      var rankPercentage = isRecord(res.data) ? res.data.rankPercentage : null;
+      var pointsOk = weekPoints != null && typeof rankPercentage === 'string' && !!rankPercentage.trim();
+      if (pointsOk) {
+        that.setData({
+          pointsStat: {
+            weekPoints: weekPoints,
+            rankPercentage: rankPercentage
+          },
+          rankDisplay: {
+            no: rankPercentage,
+            delta: res.data.rankDelta ? ('上升 ' + res.data.rankDelta) : ''
+          }
+        });
       }
-      var weekPoints = metricNumber(res.data.weekPoints);
-      var rankPercentage = res.data.rankPercentage;
-      if (weekPoints == null || typeof rankPercentage !== 'string' || !rankPercentage.trim()) {
-        that.recordProfileMetricSource('points', 'error');
-        return;
-      }
-      that.setData({
-        pointsStat: {
-          weekPoints: weekPoints,
-          rankPercentage: rankPercentage
-        },
-        // shops 来自 play.totalCheckins = 历史累计签到,不是本周;exp 才是周值(weekPoints)。
-        // 故此块按各自真实口径分别标注,别用一个「本周」把两种口径盖在一起。
-        'exploreStat.weekExp': weekPoints,
-        rankDisplay: {
-          no: rankPercentage,
-          delta: res.data.rankDelta ? ('上升 ' + res.data.rankDelta) : ''
-        }
-      });
-      that.recordProfileMetricSource('points', 'ready', [weekPoints]);
+      var board = arr[1];
+      var me = isRecord(board.data) && isRecord(board.data.me) ? board.data.me : null;
+      var expOk = board.code == '200' && me && board.data.metric === 'exp' && board.data.period === 'week'
+        && String(me.memberId) === String(memberId) && Number.isSafeInteger(me.score) && me.score >= 0;
+      if (expOk) that.setData({ 'exploreStat.weekExp': me.score });
+      that.recordProfileMetricSource('points', pointsOk && expOk ? 'ready' : 'error',
+        pointsOk && expOk ? [weekPoints, me.score] : arr.find(isAuthFailure));
     });
   },
 

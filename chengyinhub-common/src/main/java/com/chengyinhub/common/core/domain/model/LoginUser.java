@@ -261,6 +261,6 @@ public class LoginUser implements UserDetails
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities()
     {
-        return null;
+        return java.util.Collections.emptyList();
     }
 }

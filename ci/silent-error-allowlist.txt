@@ -125,7 +125,7 @@ chengyinhub-xcx/components/cy/scene-qr-ticket/index.js 1  # 2026-08-25 状态底
 chengyinhub-xcx/pages/square/components/cy/post-compose/index.js 2  # 2026-09-12 广场选活动:报名列表与「我主办的」失败落组件 activityError,由选活动层呈现并给重试,关掉自动 toast 避免双弹;2026-09-18 主包瘦身随 pages/square 下沉,路径同步
 chengyinhub-xcx/pages/publish/activity/index.js 4  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹;2026-09-12 编辑回填 /api/activity/info 同口径 +1
 chengyinhub-xcx/pages/publish/fabu/index.js 1  # 2026-08-25 状态底座:AI 安全预检失败按可用性红线降级放行(不堵发布路),其余为页内错误态承接;两类都不该再弹通用 toast
-chengyinhub-xcx/pages/publish/temp/index.js 4  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
+chengyinhub-xcx/pages/publish/temp/index.js 5  # 商家权限、字典、提交、编辑读取与采用失败均落页内错误态；采用结果不确定时引导核对草稿，避免重复创建
 chengyinhub-xcx/pages/search2/index.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/pages/shezhi/components/marketing-consent/index.js 2  # 2026-08-25 营销授权:加载/保存失败落组件 error 状态,保留原值与重试入口;通用 toast 会双弹
 chengyinhub-xcx/pages/shezhi/shezhi.js 1  # 2026-08-25 状态底座:调用点自己 showToast 精确文案,关掉通用 toast 是防双弹
@@ -183,3 +183,4 @@ chengyinhub-xcx/subpackageMember/components/cy/profile/index.js 1  # 商家身�
 chengyinhub-xcx/subpackageMember/components/cy/scene-play-activity-detail/index.js 4  # 详情读取落 state:error，取消预检和取消提交落 cancelError，评价提交落 commentError；各有页内反馈与恢复入口，通道 toast 会重复报错。
 chengyinhub-xcx/subpackageMember/components/cy/scene-qr-coupon/index.js 2  # 凭证签发失败落 qrState:error，状态轮询失败落 pollError；已使用或失效会清凭证，各有页内恢复入口，通道 toast 会重复报错。
 chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js 4  # 据点和商家读取落页内错误态，收藏失败落 favoriteError，打卡业务拒绝或网络异常落专用恢复面板；通道 toast 会重复报错。
+chengyinhub-xcx/subpackageA/pages/myproject/index.js 5  # 当前上下架、活动/主题取消、项目共用删除与模板删除五个调用均先绑定会员和页面epoch；当前回包失败分别显式toast或确认组件dc.failed并可重试，换号/隐藏后的旧回包不提示、不刷新新页面，避免通道全局toast越过身份保护。

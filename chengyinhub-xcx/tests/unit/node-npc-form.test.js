@@ -44,6 +44,7 @@ function load(options = {}) {
     clearTimer: () => {},
   });
   const app = {
+    getUserID: () => '7',
     getUploadClient: () => client,
     sendRequest(opts) {
       const payload = JSON.parse(opts.data || '{}');
@@ -86,6 +87,7 @@ function load(options = {}) {
   component.data = Object.assign(JSON.parse(JSON.stringify(state.def.data)), {
     show: true, nodeId: NODE, nodeName: '幸会咖啡',
   });
+  component._photoMember = component._voiceMember = '7';
   component.setData = function (patch, cb) {
     Object.keys(patch || {}).forEach((key) => setAtPath(this.data, key, patch[key]));
     if (cb) cb();

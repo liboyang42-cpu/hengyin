@@ -206,13 +206,30 @@ test('基础玩法后的投影读取不能凭依赖文件混入游戏 command �
 test('保存草稿按普通草稿与据点拒绝两条真实分支登记', () => {
   const rows = ledger().controls.filter(row => row.entry.js === 'pages/publish/temp/index.js'
     && row.control.handler === 'saveDraft')
-  assert.equal(rows.length, 2)
-  const draft = rows.find(row => row.variant.id === 'draft')
-  assert.deepEqual(draft.targets.writeApis, ['/api/template/draft'])
-  assert.deepEqual(draft.targets.primaryApis, ['/api/template/draft'])
-  const blocked = rows.find(row => row.variant.id === 'citynode-unavailable')
-  assert.deepEqual(blocked.targets.primaryApis, [])
-  assert.ok(!blocked.effectClasses.includes('write'))
+  const entryConditions = [
+    "{{!previewMode && from !== 'fabu' && from !== 'citynode'}}",
+    "{{from !== 'citynode' && from !== 'fabu'}}",
+  ]
+  assert.deepEqual([...new Set(rows.map(row => row.control.visibleCondition))].sort(),
+    entryConditions.slice().sort())
+  assert.equal(new Set(rows.map(row => row.control.line)).size, 2,
+    '编辑态与预览态的保存草稿必须是两个独立按钮入口')
+  for (const condition of entryConditions) {
+    const entryRows = rows.filter(row => row.control.visibleCondition === condition)
+    assert.deepEqual(entryRows.map(row => row.variant.id).sort(), ['citynode-unavailable', 'draft'])
+    assert.ok(entryRows.every(row => row.entry.wxml === 'pages/publish/temp/index.wxml'
+      && row.control.tag === 'cy-btn' && row.control.event === 'bindtap'))
+    const draft = entryRows.find(row => row.variant.id === 'draft')
+    assert.ok(draft.effectClasses.includes('write'))
+    assert.deepEqual(draft.targets.writeApis, ['/api/template/draft'])
+    assert.deepEqual(draft.targets.primaryApis, ['/api/template/draft'])
+    assert.ok(draft.targets.apiContracts.some(api => api.url === '/api/template/draft'
+      && api.method === 'POST'))
+    const blocked = entryRows.find(row => row.variant.id === 'citynode-unavailable')
+    assert.deepEqual(blocked.targets.primaryApis, [])
+    assert.deepEqual(blocked.targets.writeApis, [])
+    assert.ok(!blocked.effectClasses.includes('write') && !blocked.effectClasses.includes('read'))
+  }
 })
 
 test('同一行的独立方法不互相截断或串入后续函数', () => {
@@ -232,4 +249,29 @@ test('本文件覆盖混入方法后仍只提取获胜方法自身', () => {
     fs.writeFileSync(file, "const {METHODS} = require('./mixed');\nPage({...METHODS,copy(){return 'overridden'}});\n")
     assert.deepEqual([...discoverExternalHelperNames([file])], ['locate'])
   } finally { fs.rmSync(dir, { recursive: true, force: true }) }
+})
+
+function assertEarningsGuardBranches(controls) {
+  const rows = controls.filter(row => row.entry.wxml === 'components/cy/scene-asset-earnings/index.wxml')
+  for (const handler of ['openWithdraw', 'openWithdrawHistory', 'openInvite']) {
+    const matches = rows.filter(row => row.control.handler === handler)
+    assert.equal(matches.length, 1, handler + '不得增加或重复入口')
+    const row = matches[0]
+    assert.equal(row.variant, null, handler + '保留原控件身份')
+    assert.deepEqual(row.requiredBranches, ['success', 'error'], handler + '必须保留成功及身份/能力拒绝验收')
+    assert.deepEqual(row.targets.writeApis, [], handler + '不得引入提现写接口')
+    assert.equal(row.evidence.status, 'pending', handler + '静态合同不能转为动态通过')
+  }
+}
+
+test('收益场景的身份拒绝状态不得删掉原成功与错误验收分支', () => {
+  assertEarningsGuardBranches(ledger().controls)
+})
+
+test('负控：任一收益场景入口删去错误验收分支必须判红', () => {
+  for (const handler of ['openWithdraw', 'openWithdrawHistory', 'openInvite']) {
+    const controls = ledger().controls.map(row => row.entry.wxml === 'components/cy/scene-asset-earnings/index.wxml'
+      && row.control.handler === handler ? { ...row, requiredBranches: ['success'] } : row)
+    assert.throws(() => assertEarningsGuardBranches(controls), assert.AssertionError)
+  }
 })

@@ -38,6 +38,7 @@ function loadPage(source) {
   const noop = () => {};
   const app = {
     globalData: {},
+    getUserID: () => '7',
     sendRequest: (options) => { requests.push(options); return { abort: noop }; },
     getUploadClient: () => ({ uploadAll: noop }),
   };

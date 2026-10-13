@@ -76,6 +76,7 @@ class XpAutoAllocateTest {
         MemberGrowthMapper gm = mock(MemberGrowthMapper.class);
         GrowthServiceImpl s = new GrowthServiceImpl();
         ReflectionTestUtils.setField(s, "memberGrowthMapper", gm);
+        when(gm.insertEarnedExp(any(), org.mockito.ArgumentMatchers.anyInt(), any(), any(), any())).thenReturn(1);
 
         int r = s.addExp(7L, 150, "节点探索");
 

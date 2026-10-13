@@ -117,6 +117,40 @@ class TemplateAdoptSecretBackfillTest {
     }
 
     @Test
+    void sourceOnlyDraftCopiesAuthorConfigInsteadOfClientDefaults() throws Exception {
+        CmsTemplateLibrary source = visibleSource(R3_SOURCE_CONFIG);
+        source.setTitle("源玩法"); source.setDescription("旧描述不能截断");
+        source.setDuration(7L); source.setActivityCategoryids("12");
+        when(libraryService.selectCmsTemplateLibraryById(9001L)).thenReturn(source);
+        CmsTemplatePublishRequest request = adoptedRequest(9001L, "{\"schemaVersion\":1}");
+        request.setAdoptSourceOnly(true); request.setScope("MERCHANT");
+        assertEquals(91L, service.saveOrUpdateDraft(request, 7L, "member7"));
+        CmsMemberTemplate saved = inserted.get();
+        assertEquals(new ObjectMapper().readTree(R3_SOURCE_CONFIG), new ObjectMapper().readTree(saved.getAdvancedConfigJson()));
+        assertEquals("源玩法", saved.getTitle()); assertEquals(7L, saved.getDuration());
+        assertEquals("12", saved.getActivityCategoryids()); assertEquals(7L, saved.getMemberId());
+        assertEquals(9001L, saved.getOriginalTemplateId()); assertEquals(0L, saved.getPublishStatus());
+        assertEquals("MERCHANT", request.getScope());
+        assertFalse(AdvancedGamePublicProjection.safeConfigJson(saved.getAdvancedConfigJson()).contains("answerOrder"));
+    }
+
+    @Test
+    void sourceOnlyDraftRejectsHiddenSourcesExistingIdsAndForeignCoupons() {
+        CmsTemplateLibrary source = visibleSource(SOURCE_CONFIG);
+        when(libraryService.selectCmsTemplateLibraryById(9001L)).thenReturn(source);
+        CmsTemplatePublishRequest request = adoptedRequest(9001L, STRIPPED_CONFIG);
+        request.setAdoptSourceOnly(true); request.setId(10L);
+        assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(request, 7L, "member7"));
+        request.setId(null); source.setPublishStatus(0L);
+        assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(request, 7L, "member7"));
+        source.setPublishStatus(1L); source.setCouponId(99L);
+        assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(request, 7L, "member7"));
+        source.setCouponId(null); source.setRewardRulesJson("[{\"outcomeCode\":\"COMPLETED\",\"couponId\":99}]");
+        assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(request, 7L, "member7"));
+        assertTrue(inserted.get() == null);
+    }
+
+    @Test
     void adoptedPublishBackfillsR3AnswersAndQaCorrectFlagsFromSourceTemplate() throws Exception {
         // 采用方的配置不是手写的,而是投影真正下发的那一份 —— 这条链路整体走一遍
         String stripped = AdvancedGamePublicProjection.safeConfigJson(R3_SOURCE_CONFIG);

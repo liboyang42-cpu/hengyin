@@ -26,6 +26,6 @@ class SecurityConfigHeaderContractTest {
         Path root = Files.exists(current.resolve("chengyinhub-framework")) ? current : current.getParent();
         String source = new String(Files.readAllBytes(root.resolve("chengyinhub-framework/src/main/java/com/chengyinhub/framework/config/SecurityConfig.java")), StandardCharsets.UTF_8);
 
-        assertTrue(source.contains(".antMatchers(\"/api/common/upload\", \"/api/common/uploads\", \"/api/common/uploadOSS\").authenticated()"));
+        assertTrue(source.contains(".requestMatchers(legacyMatchers(\"/api/common/upload\", \"/api/common/uploads\", \"/api/common/uploadOSS\")).authenticated()"));
     }
 }

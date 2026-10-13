@@ -12,6 +12,7 @@ import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.common.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper;
 import com.chengyinhub.business.domain.UmsMemberBalanceDetail;
@@ -30,9 +31,11 @@ public class UmsMemberBalanceDetailServiceImpl implements IUmsMemberBalanceDetai
     private UmsMemberBalanceDetailMapper umsMemberBalanceDetailMapper;
 
     @Autowired
+    @Lazy
     private IUmsMemberService umsMemberService;
 
     @Autowired
+    @Lazy
     private ICmsTopicService cmsTopicService;
 
     /**

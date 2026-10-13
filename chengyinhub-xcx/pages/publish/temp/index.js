@@ -36,6 +36,15 @@ function safeDecode(value) {
   try { return decodeURIComponent(String(value || '')); } catch (error) { return String(value || ''); }
 }
 
+function editorMemberId() {
+  return String((typeof app.getUserID === 'function' ? app.getUserID() : (app.globalData || {}).user_id) || '');
+}
+
+function currentEditor(page) {
+  const memberId = page._editorMemberId === undefined ? editorMemberId() : page._editorMemberId;
+  return () => !page._disposed && editorMemberId() === memberId;
+}
+
 function positiveId(value) {
   const id = typeof value === 'number' ? value : Number(String(value || '').trim());
   return Number.isSafeInteger(id) && id > 0 ? id : null;
@@ -452,6 +461,7 @@ Page({
   },
 
   exitPage() {
+    if (this._disposed) return;
     this.destroyPreviewAudio();
     wx.navigateBack({
       delta: 1,
@@ -459,9 +469,18 @@ Page({
     });
   },
 
-  onUnload: function () { this._albumEditRevision = (this._albumEditRevision || 0) + 1; this.destroyPreviewAudio(); },
+  onUnload: function () {
+    this._disposed = true;
+    this._templateLoadToken = (this._templateLoadToken || 0) + 1;
+    this._albumEditRevision = (this._albumEditRevision || 0) + 1;
+    this.destroyPreviewAudio();
+  },
 
   onShow: function () {
+    if (this._editorMemberId !== undefined && this._editorMemberId !== editorMemberId()) {
+      wx.switchTab({ url: '/pages/template/index' });
+      return;
+    }
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
   },
@@ -1175,6 +1194,7 @@ Page({
   },
 
   onLoad: function (options) {
+    this._editorMemberId = editorMemberId();
     options = options || {};
     var that = this;
     const windowInfo = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
@@ -1192,7 +1212,7 @@ Page({
       operationScope: options.scope === 'MERCHANT' ? 'MERCHANT' : '',
       // R9-04:scope=my 说明 id 来自「我的模板」,回填要走 /api/template/myinfo 才能读草稿。
       // 它不参与写链路身份 —— 写身份仍只由 operationScope(MERCHANT)决定。
-      isMyScope: options.scope === 'my',
+      isMyScope: options.scope === 'my' || options.templateScope === 'my',
       from: options.from || '',
       editorLoading: !!editingId,
       loadError: editingId || options.id == null ? '' : '模板编号无效，请返回后重试',
@@ -1250,6 +1270,8 @@ Page({
   },
 
   loadCityNodeAccess: function () {
+    const current = currentEditor(this);
+    if (!current()) return;
     const that = this;
     this.setData({
       merchantAccess: merchantAccessPolicy.inactiveAccess(),
@@ -1257,6 +1279,7 @@ Page({
     app.sendRequest({
       url: '/api/merchant/access/me', method: 'POST', hideLoading: true, silentError: true,
       success: function (res) {
+        if (!current()) return;
         if (!(res && (res.code === '200' || res.code === 200))) {
           toast('商家权限没能读取');
           return;
@@ -1264,12 +1287,14 @@ Page({
         const access = merchantAccessPolicy.normalizeMerchantAccess(res.data);
         that.setData({ merchantAccess: access });
       },
-      fail: function () { toast('商家权限没能读取'); },
-      successStatusAbnormal: function () { toast('商家权限没能读取'); },
+      fail: function () { if (current()) toast('商家权限没能读取'); },
+      successStatusAbnormal: function () { if (current()) toast('商家权限没能读取'); },
     });
   },
 
   getDictTypeList: function (dictType, listName, stateKey, callback) {
+    const current = currentEditor(this);
+    if (!current()) return;
     var that = this;
     this._dictRequestTokens = this._dictRequestTokens || {};
     const token = (this._dictRequestTokens[dictType] || 0) + 1;
@@ -1282,26 +1307,26 @@ Page({
       method: "POST",
       data: { dictType: dictType },
       success: function (res) {
-        if (token !== that._dictRequestTokens[dictType]) return;
+        if (!current() || token !== that._dictRequestTokens[dictType]) return;
         if (res && res.code == "200" && isRecordList(res.data)) {
           var optionLabels = res.data.map(item => item.dictLabel);
           that.setData({
             [listName]: optionLabels,
             [listName + 'Data']: res.data,
-            [`dictErrors.${stateKey}`]: ''
+            [`dictErrors.${stateKey}`]: res.data.length ? '' : '暂无可选项，请稍后重试'
           });
-          if (callback && typeof callback === 'function') {
-            callback(res.data);
+          if (res.data.length && callback && typeof callback === 'function') {
+            callback.call(that, res.data);
           }
         } else that.setData({ [`dictErrors.${stateKey}`]: '选项加载失败，请重试' });
       },
       fail: function () {
-        if (token === that._dictRequestTokens[dictType]) {
+        if (current() && token === that._dictRequestTokens[dictType]) {
           that.setData({ [`dictErrors.${stateKey}`]: '选项加载失败，请重试' });
         }
       },
       complete: function () {
-        if (token === that._dictRequestTokens[dictType]) {
+        if (current() && token === that._dictRequestTokens[dictType]) {
           that.setData({ [`dictLoading.${stateKey}`]: false });
         }
       }
@@ -2025,7 +2050,8 @@ Page({
   initModuleState: function (pristine) {
     const f = this.data.formData;
     const onKeys = [];
-    if (f.validationMethod > 0 || f.questionName || this.data.optionQuestion || this.data.optionItems.length) onKeys.push('finish');
+    if (f.validationMethod > 0 || f.questionName || this.data.optionQuestion || this.data.optionItems.length
+        || advancedGameConfig.enabledSections(this.data.advanced).length) onKeys.push('finish');
     if (f.couponId > 0 || f.feedbackText || f.medalImg || f.medalName) onKeys.push('reward');
     if (this.data.storyBeats.some(b => (b.text && b.text.trim()) || (b.imgs && b.imgs.length))) onKeys.push('story');
     if (f.audioUrl) onKeys.push('voice');
@@ -2695,6 +2721,7 @@ Page({
   },
 
   validateForm: function (formData, draft) {
+    if (this.data.editorLoading || this.data.loadError) return false;
     const errors = this._collectValidationErrors(draft);
 
     this.setData({ errors });
@@ -2746,6 +2773,8 @@ Page({
     if (this.data.from === 'citynode') {
       return this.sendData(this.toNodeTemplate(formData), '/api/merchant/city-node/template/submit', 'publish');
     }
+    // 本人模板发布原位更新；库 ID 只作来源，不能当会员模板 ID。
+    if (this.data.isMyScope === true && this._templateId > 0) formData.id = this._templateId;
     this.sendData(formData, '/api/template/publish', 'publish');
   },
 
@@ -2810,6 +2839,12 @@ Page({
   },
 
   sendData: function (data, url, action) {
+    const current = currentEditor(this);
+    if (!current()) return;
+    if (this.data.isMyScope && this._templateCanEdit !== true) {
+      toast('请先确认该模板可由你编辑');
+      return;
+    }
     const that = this;
     if (url === '/api/merchant/city-node/template/submit'
         && !that.data.merchantAccess.canManageProjects) {
@@ -2818,6 +2853,7 @@ Page({
     }
     if (that._submitting) return;
     that._submitting = true;
+    const submittedForm = JSON.stringify(that.prepareFormData());
 
     const isDraft = (data.status === 0);
     const submittingAction = action || (isDraft ? 'draft' : 'publish');
@@ -2840,14 +2876,23 @@ Page({
         'Authorization': app.getAuthorization()
       },
       success: function (res) {
+        if (!current()) return;
         const createdId = positiveId(res && res.data && typeof res.data === 'object' ? res.data.id : res && res.data);
         if (res && res.code == "200" && createdId) {
+          const changedSinceSubmit = JSON.stringify(that.prepareFormData()) !== submittedForm;
+          that.data.dirty = changedSinceSubmit;
+          if (changedSinceSubmit) toast('已保存，新修改尚未保存');
           /* CU-M-68:草稿存成功后,本页此后编辑的就是「本人这份草稿」—— 换成新草稿 id 并切到本人口径。
              否则采用公开玩法后留在页里再存一次,还会拿公开库 id 走「采用」分支,再建一份重复草稿。 */
           // 发布页(from=fabu)进来时保存走的是 bind 分支,同样切到本人草稿(再存由 _boundDraftId 更新同一份)
           if (submittingAction === 'draft' || submittingAction === 'bind') {
+            const needsOwnerConfirmation = that._templateCanEdit !== true || positiveId(that._templateId) !== createdId;
             that._templateId = createdId;
             that.data.isMyScope = true;
+            if (needsOwnerConfirmation && that.data.from !== 'citynode') {
+              that._confirmingNewDraft = true;
+              that.getData(true);
+            }
           }
           if (that.data.from === 'citynode') {
             // 回传给据点页:它拿 templateId 去提交投放申请。
@@ -2856,28 +2901,22 @@ Page({
             if (ch && ch.emit) {
               ch.emit('templateCreated', {
                 id: createdId,
-                title: that.data.formData.title,
-                interactionType: that.data.interactionType,
+                title: data.title,
+                interactionType: data.interactionType,
                 advancedConfigJson: data.advancedConfigJson,
-                validationMethod: that.data.formData.validationMethod
+                validationMethod: data.validationMethod
               });
             }
             that._submitting = false;
-            that.data.dirty = false;
             that.setData({ submitting: false, submittingAction: '', submitError: '' });
             toast.success('玩法已保存');
-            setTimeout(function () { that.exitPage(); }, 600);
+            setTimeout(function () { if (current() && !that.data.dirty) that.exitPage(); }, 600);
             return;
           }
           if (that.data.from === 'fabu') {
             that._boundDraftId = createdId;
             const tpl = Object.assign({}, data, {
               id: createdId,
-              title: that.data.formData.title,
-              players: that.data.formData.players,
-              duration: that.data.formData.duration,
-              advancedConfigJson: data.advancedConfigJson,
-              imgUrl: that.data.formData.imgUrl || '',
               draftStatus: 0,
               status: 0,
               checkStatus: 0,
@@ -2886,13 +2925,12 @@ Page({
             const ch = that.getOpenerEventChannel && that.getOpenerEventChannel();
             if (ch && ch.emit) ch.emit('templateCreated', tpl);
             that._submitting = false;
-            that.data.dirty = false;
             that.setData({
               submitting: false,
               submittingAction: '',
               submitError: '',
               creationSuccess: {
-                show: true, eyebrow: '节点玩法已保存', title: tpl.title || '新玩法', icon: that._gameIcon(),
+                show: !changedSinceSubmit, eyebrow: '节点玩法已保存', title: tpl.title || '新玩法', icon: that._gameIcon(),
                 detail: '已绑定当前主题，将随主题一起审核。',
                 // 故事玩法不出人数 / 时长(W-04),表单里那两个是默认值,作者从没填过 —— 不印
                 metaPrimary: '',
@@ -2903,7 +2941,6 @@ Page({
             });
           } else {
             that._submitting = false;
-            that.data.dirty = false;
             that.setData({
               submitting: false,
               submittingAction: '',
@@ -2914,7 +2951,7 @@ Page({
                  dismiss —— 「继续编辑玩法」是留在本页接着编,不是去别的页。
                  那是真分叉,自动跳走等于保存一次就把人踢出编辑器。 */
               resultSheet: {
-                show: true, kind: 'success',
+                show: !changedSinceSubmit, kind: 'success',
                 title: isDraft ? '模板草稿已保存' : '节点玩法已发布',
                 sub: isDraft ? '可以随时回到模板库继续编辑。' : '已进入你的模板库，可以用于新的城市路线。',
                 meta: that.data.formData.duration ? ('预计 ' + that.data.formData.duration + ' 分钟') : '',
@@ -2932,6 +2969,7 @@ Page({
         }
       },
       fail: function (res) {
+        if (!current()) return;
         that._submitting = false;
         that.setData({
           submitting: false,
@@ -2945,8 +2983,10 @@ Page({
   /* 面板收掉才走。只有「模板草稿已保存 / 节点玩法已发布」那一支用面板,落点固定模板库;
      「节点玩法已保存」那支仍走 creation-success 的两颗按钮(它有 dismiss = 留在原地)。 */
   onResultSheetClose() {
+    if (!currentEditor(this)()) return;
     this.setData({ 'resultSheet.show': false });
-    wx.reLaunch({ url: '/subpackageMember/mytemplate/mytemplate' });
+    if (this.data.dirty) return;
+    wx.reLaunch({ url: '/subpackageMember/mytemplate/mytemplate' + (this.data.operationScope === 'MERCHANT' ? '?scope=MERCHANT' : '') });
   },
 
   onCreationSuccessAction(e) {
@@ -2954,30 +2994,89 @@ Page({
     this._leaveCreationSuccess(key === 'close' ? 'closeAction' : (key + 'Action'));
   },
   _leaveCreationSuccess(key) {
+    if (!currentEditor(this)()) return;
     const flow = this.data.creationSuccess || {};
     this.setData({ 'creationSuccess.show': false });
     if (flow[key] === 'dismiss') return;
-    if (flow[key] === 'back') this.exitPage();
-    else if (flow[key] === 'templates') wx.reLaunch({ url: '/subpackageMember/mytemplate/mytemplate' });
+    if (flow[key] === 'back') {
+      if (this.data.dirty) this.goBack();
+      else this.exitPage();
+    }
+    else if (flow[key] === 'templates') wx.reLaunch({ url: '/subpackageMember/mytemplate/mytemplate' + (this.data.operationScope === 'MERCHANT' ? '?scope=MERCHANT' : '') });
   },
 
   // ===== 回填 =====
-  getData: function () {
+  getData: function (preserveForm) {
+    const current = currentEditor(this);
+    if (!current()) return;
+    if (this._adoptingTemplate || this._adoptionUnconfirmed) return;
     var that = this;
     const requestToken = (this._templateLoadToken || 0) + 1;
     this._templateLoadToken = requestToken;
     const isMyScope = this.data.isMyScope === true;
+    const requestedTemplateId = positiveId(this._templateId);
+    this._templateCanEdit = false;
     this.setData({ editorLoading: true, loadError: '' });
     app.sendRequest({
       hideLoading: true,
       silentError: true,
       url: isMyScope ? '/api/template/myinfo' : '/api/template/info',
-      data: { id: that._templateId },
+      data: { id: that._templateId, scope: isMyScope ? that.data.operationScope : '' },
       method: "POST",
       success: function (res) {
-        if (requestToken !== that._templateLoadToken) return;
-        const validRecord = isTemplateDetailPayload(res && res.data);
+        if (!current() || requestToken !== that._templateLoadToken) return;
+        const validRecord = isTemplateDetailPayload(res && res.data)
+          && (preserveForm !== true || (positiveId(res.data.id) === requestedTemplateId
+            && positiveId(that._templateId) === requestedTemplateId));
         if (res && res.code == "200" && validRecord) {
+          if (isMyScope && res.data.canEdit !== true) {
+            that.setData({ editorLoading: false, loadError: '此个人模板仅供查看，请从模板广场选用玩法' });
+            wx.redirectTo({ url: '/pages/templatedetail/templatedetail?id=' + that._templateId + '&scope=my' +
+              (that.data.operationScope === 'MERCHANT' ? '&operationScope=MERCHANT' : '') });
+            return;
+          }
+          that._templateCanEdit = isMyScope;
+          if (!isMyScope && !that.data.previewMode) {
+            that._adoptingTemplate = true;
+            // 旧请求 complete 不能把创建/回读途中显示为已加载。
+            that._templateLoadToken++;
+            app.sendRequest({
+              url: '/api/template/adopt-draft', method: 'POST', hideLoading: true, silentError: true,
+              header: { 'Content-Type': 'application/json' },
+              data: JSON.stringify({ originalTemplateId: that._templateId, title: res.data.title,
+                adoptSourceOnly: true, scope: that.data.operationScope }),
+              success(adopted) {
+                if (!current()) return;
+                that._adoptingTemplate = false;
+                const draftId = adopted && adopted.code == '200' && positiveId(adopted.data);
+                if (draftId) {
+                  that._templateId = draftId;
+                  that.data.isMyScope = true;
+                  that.getData();
+                } else {
+                  if (adopted && adopted.code == '200') that._adoptionUnconfirmed = true;
+                  that.setData({ editorLoading: false, loadError: safeUserMessage(adopted, '采用结果未确认，请到我的玩法核对') });
+                }
+              },
+              fail(_res, status) {
+                if (!current()) return;
+                that._adoptingTemplate = false;
+                if (status == 404 || status == 405) {
+                  that.setData({ editorLoading: false, loadError: '当前服务尚未支持采用旧模板，请更新服务后再试' });
+                  return;
+                }
+                that._adoptionUnconfirmed = true;
+                that.setData({ editorLoading: false, loadError: '采用结果未确认，请先到我的玩法核对，避免重复创建' });
+              }
+            });
+            return;
+          }
+          if (preserveForm === true) {
+            // 首次保存后只确认归属，不能覆盖保存期间继续输入的内容。
+            that._confirmingNewDraft = false;
+            that.setData({ editorLoading: false, loadError: '' });
+            return;
+          }
           if (isRecordList(res.data.sysCategoryList) && res.data.sysCategoryList.length > 0) {
             const selectedIds = res.data.sysCategoryList.map(item => item.id);
             const selectedNames = res.data.sysCategoryList.map(item => item.categoryName);
@@ -3000,14 +3099,14 @@ Page({
         }
       },
       fail: function (res) {
-        if (requestToken !== that._templateLoadToken) return;
+        if (!current() || requestToken !== that._templateLoadToken) return;
         that.setData({
           editorLoading: false,
           loadError: safeUserMessage(res, '网络暂时不可用，玩法详情未加载')
         });
       },
       complete: function () {
-        if (requestToken === that._templateLoadToken && that.data.editorLoading) {
+        if (current() && requestToken === that._templateLoadToken && that.data.editorLoading) {
           that.setData({ editorLoading: false });
         }
       }
@@ -3015,7 +3114,11 @@ Page({
   },
 
   retryGetData: function () {
-    if (positiveId(this._templateId)) this.getData();
+    if (this._adoptionUnconfirmed) {
+      wx.reLaunch({ url: '/subpackageMember/mytemplate/mytemplate' + (this.data.operationScope === 'MERCHANT' ? '?scope=MERCHANT' : '') });
+      return;
+    }
+    if (positiveId(this._templateId)) this.getData(this._confirmingNewDraft === true);
   },
 
   fillFormWithTemplateData: function (templateData) {
@@ -3177,6 +3280,8 @@ Page({
   },
 
   getUserData: function () {
+    const current = currentEditor(this);
+    if (!current()) return;
     let that = this;
     app.sendRequest({
       hideLoading: true,
@@ -3184,6 +3289,7 @@ Page({
       data: { member_id: app.getUserID() },
       method: "POST",
       success: function (res) {
+        if (!current()) return;
         if (res.code == "200") {
           that.setData({ 'userData': res.data });
           loading.hide();
