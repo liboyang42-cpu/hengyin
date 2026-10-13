@@ -18,6 +18,8 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.chengyinhub.business.domain.UmsMember;
+import com.chengyinhub.business.domain.AiThemeDraftRequest;
+import com.chengyinhub.business.mapper.AiThemeDraftRequestMapper;
 import com.chengyinhub.business.domain.dto.ai.AiClubDesignReq;
 import com.chengyinhub.business.domain.dto.ai.AiMerchantPlanReq;
 import com.chengyinhub.business.domain.dto.ai.AiMerchantTaskSuggestReq;
@@ -86,6 +88,9 @@ public class AiCreatorServiceImpl implements IAiCreatorService
     @Autowired
     private RedisTemplate<Object, Object> redisTemplate;
 
+    @Autowired
+    private AiThemeDraftRequestMapper draftRequestMapper;
+
     @Override
     public AiMerchantPlanResp merchantPlan(AiMerchantPlanReq req, Long memberId)
     {
@@ -94,6 +99,106 @@ public class AiCreatorServiceImpl implements IAiCreatorService
 
     @Override
     public AiThemeDraftResp themeDraft(AiThemeDraftReq req, Long memberId)
+    {
+        if (req == null) throw new AiServiceException("缺少生成参数");
+        if (req.getRequestId() == null) return generateThemeDraft(req, memberId);
+        String requestId = draftRequestId(req.getRequestId());
+        String hash = draftFingerprint(req);
+        AiThemeDraftRequest existing = draftRequestMapper.selectByUserAndRequestId(memberId, requestId);
+        if (existing != null) return replayDraft(existing, hash);
+        AiThemeDraftRequest state = new AiThemeDraftRequest();
+        state.setUserId(memberId);
+        state.setRequestId(requestId);
+        state.setRequestHash(hash);
+        state.setStatus("PROCESSING");
+        try {
+            if (draftRequestMapper.insertRequest(state) != 1) return draftState(requestId, "PROCESSING", "REQUEST_STATE_UNAVAILABLE");
+        } catch (org.springframework.dao.DuplicateKeyException e) {
+            existing = draftRequestMapper.selectByUserAndRequestId(memberId, requestId);
+            return existing == null ? draftState(requestId, "PROCESSING", "REQUEST_STATE_UNAVAILABLE") : replayDraft(existing, hash);
+        }
+        AiThemeDraftResp result;
+        try {
+            result = generateThemeDraft(req, memberId);
+        } catch (RuntimeException e) {
+            state.setStatus("FAILED");
+            AiThemeDraftResp failed = draftState(requestId, "FAILED", "GENERATION_FAILED");
+            if (e instanceof AiServiceException) {
+                failed.setSafeText(e.getMessage());
+                failed.setErrorCode(((AiServiceException)e).getReason().name());
+            }
+            state.setResultJson(JSON.toJSONString(failed));
+            return finishDraft(state, failed);
+        }
+        result.setRequestId(requestId);
+        result.setOutcomeStatus("SUCCEEDED");
+        state.setStatus("SUCCEEDED");
+        state.setResultJson(JSON.toJSONString(result));
+        return finishDraft(state, result);
+    }
+
+    @Override
+    public AiThemeDraftResp themeDraftStatus(Long memberId, String requestId)
+    {
+        requestId = draftRequestId(requestId);
+        AiThemeDraftRequest state = draftRequestMapper.selectByUserAndRequestId(memberId, requestId);
+        return state == null ? draftState(requestId, "PROCESSING", "REQUEST_NOT_FOUND") : replayDraft(state, null);
+    }
+
+    private AiThemeDraftResp finishDraft(AiThemeDraftRequest state, AiThemeDraftResp result)
+    {
+        try {
+            if (draftRequestMapper.finishRequest(state) == 1) return result;
+        } catch (RuntimeException e) {
+            // A lost result write must never authorize a second model call.
+            log.warn("[AiCreator] draft result persistence unavailable");
+        }
+        return draftState(state.getRequestId(), "PROCESSING", "RESULT_STATE_UNAVAILABLE");
+    }
+
+    private AiThemeDraftResp replayDraft(AiThemeDraftRequest state, String hash)
+    {
+        if (hash != null && !hash.equals(state.getRequestHash()))
+            return draftState(state.getRequestId(), "REJECTED", "REQUEST_CONFLICT");
+        if (("SUCCEEDED".equals(state.getStatus()) || "FAILED".equals(state.getStatus())) && state.getResultJson() != null) {
+            try { return JSON.parseObject(state.getResultJson(), AiThemeDraftResp.class); }
+            catch (RuntimeException e) { return draftState(state.getRequestId(), "PROCESSING", "RESULT_STATE_UNAVAILABLE"); }
+        }
+        return draftState(state.getRequestId(), state.getStatus(), "FAILED".equals(state.getStatus()) ? "GENERATION_FAILED" : "REQUEST_IN_PROGRESS");
+    }
+
+    private AiThemeDraftResp draftState(String requestId, String status, String errorCode)
+    {
+        AiThemeDraftResp out = new AiThemeDraftResp();
+        out.setRequestId(requestId);
+        out.setOutcomeStatus(status);
+        out.setErrorCode(errorCode);
+        return out;
+    }
+
+    private String draftRequestId(String requestId)
+    {
+        if (requestId == null || !requestId.matches("^[A-Za-z0-9_-]{1,64}$"))
+            throw new AiServiceException("生成请求编号无效");
+        return requestId;
+    }
+
+    private String draftFingerprint(AiThemeDraftReq req)
+    {
+        JSONObject value = new JSONObject();
+        value.put("idea", req.getIdea());
+        value.put("productType", req.getProductType());
+        value.put("existingNodeNames", req.getExistingNodeNames());
+        try {
+            byte[] bytes = java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(value.toJSONString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(64);
+            for (byte b : bytes) hex.append(String.format("%02x", b & 0xff));
+            return hex.toString();
+        } catch (java.security.NoSuchAlgorithmException e) { throw new IllegalStateException(e); }
+    }
+
+    private AiThemeDraftResp generateThemeDraft(AiThemeDraftReq req, Long memberId)
     {
         String role = resolveRole(memberId);
         PlayerThemeDraftQuotaReservation reservation = null;

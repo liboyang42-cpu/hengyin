@@ -470,6 +470,7 @@ Page({
     eventView: 'list',
     eventCalendarMonth: localDateText(new Date()).slice(0, 7),
     eventCalendarTitle: '',
+    eventCalendarUpdatedAt: '',
     eventCalendarCells: [],
     eventCalendarHasEvents: false,
     shareEditions: [],
@@ -732,7 +733,7 @@ Page({
   onPullDownRefresh() { this.loadAll(function () { wx.stopPullDownRefresh(); }); },
 
   // 页面销毁:作废在途 AI 生成的回调,避免 setData after unload(sendRequest 不可中断)
-  onUnload() { this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1; this._clubAiToken = (this._clubAiToken || 0) + 1; this.clearGroupCodeTimer(); },
+  onUnload() { this._topicsLoadEpoch = (this._topicsLoadEpoch || 0) + 1; this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1; this._clubAiToken = (this._clubAiToken || 0) + 1; this.clearGroupCodeTimer(); },
 
   onRetry() {
     this.setData({ detailLoaded: false, notFound: false, club: null });
@@ -1921,6 +1922,10 @@ Page({
 
   loadTopics(cb) {
     const that = this;
+    const epoch = (this._topicsLoadEpoch || 0) + 1;
+    this._topicsLoadEpoch = epoch;
+    const clubId = this.data.clubId;
+    const current = () => epoch === this._topicsLoadEpoch && clubId === this.data.clubId;
     this.setData({ topicsLoaded: false, topicState: 'loading' });
     if (isDemoClubId(this.data.clubId)) {
       const list = mockData.getDemoClubTopics().map(function (t) {
@@ -1938,6 +1943,7 @@ Page({
         manageTopics: that.scopedManageTopics(list),
         topicsLoaded: true,
         topicState: 'ready',
+        eventCalendarUpdatedAt: '',
         upcomingTopics: split.upcomingTopics,
         endedTopics: split.endedTopics,
       });
@@ -1949,6 +1955,7 @@ Page({
     app.sendRequest({
       hideLoading: true, url: '/api/club/topics', method: 'POST', data: jsonBody({ id: this.data.clubId }), header: jsonHeader(),
       success(res) {
+        if (!current()) return;
         if (!isSuccess(res) || !Array.isArray(res.data)) {
           that._topics = [];
       that.setData({ manageTopics: [], topicsLoaded: true, topicState: 'error', upcomingTopics: [], endedTopics: [] });
@@ -1974,6 +1981,7 @@ Page({
           manageTopics: that.scopedManageTopics(list),
           topicsLoaded: true,
           topicState: 'ready',
+          eventCalendarUpdatedAt: new Date().toLocaleString(),
           upcomingTopics: split.upcomingTopics,
           endedTopics: split.endedTopics,
         });
@@ -1981,12 +1989,13 @@ Page({
         that.applySentInviteFilter();
       },
       fail() {
+        if (!current()) return;
         that._topics = [];
       that.setData({ manageTopics: [], topicsLoaded: true, topicState: 'error', upcomingTopics: [], endedTopics: [] });
         that.applySentInviteFilter();
         that.updateOwnerStage();
       },
-      complete() { cb && cb(); },
+      complete() { if (current() && typeof cb === 'function') cb(); },
     });
   },
 
@@ -2011,7 +2020,10 @@ Page({
     const view = (e.detail && e.detail.key) || (e.currentTarget && e.currentTarget.dataset.view);
     if (view !== 'list' && view !== 'calendar') return;
     this.setData({ eventView: view });
-    if (view === 'calendar') this.refreshEventCalendar();
+    if (view === 'calendar') {
+      this.refreshEventCalendar();
+      this.loadTopics();
+    }
   },
 
   onShiftEventMonth(e) {
@@ -2019,6 +2031,7 @@ Page({
     if (!Number.isInteger(delta) || !delta) return;
     this.setData({ eventCalendarMonth: shiftMonth(this.data.eventCalendarMonth, delta) });
     this.refreshEventCalendar();
+    this.loadTopics();
   },
 
   refreshEventCalendar() {
@@ -2779,14 +2792,52 @@ Page({
     this.setData({ groupCodeVisible: false });
   },
 
-  // 动态点赞/取消
+  // Explicit targets are safe to retry after reading the current relationship.
   onLikePost(e) {
     const id = (e.detail && e.detail.postId) || e.currentTarget.dataset.id;
-    const that = this;
+    if (!id) return;
+    const key = String(id);
+    this._postLikeRequests = this._postLikeRequests || Object.create(null);
+    if (this._postLikeRequests[key] === 'unknown') {
+      cyToast('结果待确认，正在刷新动态');
+      this.recoverPostLike(id);
+      return;
+    }
+    if (this._postLikeRequests[key]) return;
+    const post = (this.data.posts || []).find(row => String(row.id) === key);
+    if (!post || typeof post.isLiked !== 'boolean') { this.recoverPostLike(id); return; }
+    const owner = String(app.getUserID ? app.getUserID() : '');
+    this._postLikeRequests[key] = true;
+    const readback = () => {
+      this._postLikeRequests[key] = 'unknown';
+      if (owner === String(app.getUserID ? app.getUserID() : '')) this.recoverPostLike(id);
+    };
     app.sendRequest({
-      url: '/api/club/post/like', method: 'POST', data: jsonBody({ postId: id }), header: jsonHeader(),
-      success(res) { if (res.code == '200') that.loadPosts(); },
-      fail() { cyToast('操作失败'); },
+      url: '/api/club/post/like', method: 'POST', data: jsonBody({ postId: id, target: post.isLiked ? 0 : 1 }), header: jsonHeader(),
+      success: (res) => {
+        if (!res || res.code != '200') cyToast('点赞结果待确认');
+        readback();
+      },
+      fail: () => { cyToast('结果待确认，正在刷新动态'); readback(); },
+      successStatusAbnormal: () => { cyToast('结果待确认，正在刷新动态'); readback(); },
+    });
+  },
+
+  recoverPostLike(id) {
+    const key = String(id);
+    const owner = String(app.getUserID ? app.getUserID() : '');
+    this._postLikeRequests = this._postLikeRequests || Object.create(null);
+    this._postLikeRequests[key] = 'unknown';
+    app.sendRequest({
+      url: '/api/club/post/like-state', method: 'POST', data: jsonBody({ postId: id }), header: jsonHeader(), hideLoading: true,
+      success: (res) => {
+        if (owner !== String(app.getUserID ? app.getUserID() : '')) return;
+        if (!res || String(res.code) !== '200' || !res.data || String(res.data.postId) !== key || typeof res.data.liked !== 'boolean') return;
+        delete this._postLikeRequests[key];
+        this.setData({ posts: (this.data.posts || []).map(post => String(post.id) === key ? Object.assign({}, post, { isLiked: res.data.liked }) : post) });
+        this.loadPosts();
+      },
+      fail: () => {},
     });
   },
 

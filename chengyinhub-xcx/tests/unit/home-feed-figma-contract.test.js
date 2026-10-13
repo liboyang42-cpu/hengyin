@@ -48,14 +48,14 @@ test('附近活动与 feed 共用封面归一化，imgUrl 也会成为可展示 
   assert.deepEqual(item.feedImages, ['cdn/activity.jpg']);
 });
 
-test('推荐主题紧跟 banner，标题精确为“推荐主题”', () => {
+test('编辑精选紧跟 banner，标题明确运营来源', () => {
   const wxml = read('pages/index/index.wxml');
   const hero = wxml.indexOf('id="sec-hero"');
   const reco = wxml.indexOf('id="sec-reco"');
   const nearby = wxml.indexOf('id="sec-nearby"');
 
-  assert.ok(hero >= 0 && reco > hero && nearby > reco, '区块顺序必须是 banner → 推荐主题 → 附近活动');
-  assert.match(wxml, /id="sec-reco"[\s\S]*?<text class="v3-sec-title">推荐主题<\/text>/);
+  assert.ok(hero >= 0 && reco > hero && nearby > reco, '区块顺序必须是 banner → 编辑精选 → 附近活动');
+  assert.match(wxml, /id="sec-reco"[\s\S]*?<text class="v3-sec-title">编辑精选<\/text>/);
   assert.doesNotMatch(wxml, />为你专属推荐主题<\/text>/);
 });
 

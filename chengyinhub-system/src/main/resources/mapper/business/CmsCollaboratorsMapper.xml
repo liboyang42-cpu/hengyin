@@ -79,4 +79,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+    <delete id="deleteActivityCollaboratorsByOwner">
+        delete from cms_collaborators
+        where data_type = 2 and data_id = #{activityId}
+          and exists (select 1 from cms_activity a
+                      where a.id = #{activityId} and a.member_id = #{ownerMemberId})
+    </delete>
 </mapper>

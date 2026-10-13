@@ -1170,9 +1170,15 @@ Page({
         endTime: ticket.endTime || ''
       }))
       : this.data.formData.tickets
+    const collaboratorList = (Array.isArray(detail.collaboratorsList) ? detail.collaboratorsList : [])
+      .filter(item => item && item.memberId)
+      .map(item => ({ id: item.memberId, nickname: item.memberNickname || '',
+        avatar: item.memberAvatar || '', isOwner: String(item.memberId) === String(detail.memberId) ? 1 : 0 }))
     const startDate = this.normalizeActivityDate(detail.startDate)
     const endDate = this.normalizeActivityDate(detail.endDate)
     this.setData({
+      'formData.collaboratorList': collaboratorList,
+      'formData.collaborators': collaboratorList.map(item => item.id),
       'formData.name': detail.name || '',
       'formData.description': detail.description || '',
       'formData.imgUrl': detail.imgUrl || '',
@@ -1245,6 +1251,10 @@ Page({
             isOwner: 1
           }
 
+          if (that.editingActivityId) {
+            that.setData({ ownerLoadError: '' });
+            return;
+          }
           let collaboratorList = [];
           let collaborators = [];
 

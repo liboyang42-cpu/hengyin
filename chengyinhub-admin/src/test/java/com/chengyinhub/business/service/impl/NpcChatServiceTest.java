@@ -133,6 +133,34 @@ class NpcChatServiceTest {
         verify(npcChatRequestMapper, never()).insertNpcChatRequest(any(NpcChatRequest.class));
     }
 
+    @Test
+    void fingerprintRejectsDifferentTextAndSceneButReplaysNormalizedOriginal() {
+        when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new AiGatewayResult("trace-hash", "原回答", "qwen", 0));
+        service.chat(req("hash-bound", " 原问题 "), USER_ONE);
+        ArgumentCaptor<NpcChatRequest> inserted = ArgumentCaptor.forClass(NpcChatRequest.class);
+        verify(npcChatRequestMapper).insertNpcChatRequest(inserted.capture());
+        NpcChatRequest state = inserted.getValue();
+        assertTrue(state.getRequestHash().matches("[a-f0-9]{64}"));
+        when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE, requestId("hash-bound"))).thenReturn(state);
+        assertEquals("SUCCEEDED", service.chat(req("hash-bound", "原问题"), USER_ONE).getOutcomeStatus());
+        assertEquals("REQUEST_CONFLICT", service.chat(req("hash-bound", "不同问题"), USER_ONE).getErrorCode());
+        NpcChatReq other = req("hash-bound", "原问题");
+        other.setBizId(100L);
+        assertEquals("REQUEST_CONFLICT", service.chat(other, USER_ONE).getErrorCode());
+        verify(aiGatewayService).generate(anyLong(), anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void legacyReplayCannotCrossObjects() {
+        NpcChatRequest state = terminal("legacy-bound", USER_ONE, "SUCCEEDED", "PASS", null, false, "旧回答");
+        when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE, state.getRequestId())).thenReturn(state);
+        NpcChatReq request = req("legacy-bound", "问题");
+        request.setBizId(100L);
+        assertEquals("REQUEST_CONFLICT", service.chat(request, USER_ONE).getErrorCode());
+        verify(aiGatewayService, never()).generate(anyLong(), anyString(), anyString(), anyString(), anyString());
+    }
+
     /** 负控：同一个 requestId 不能跨 userId 重放终态。 */
     @Test
     void sameRequestIdForDifferentUsersStartsIndependentRequests() {

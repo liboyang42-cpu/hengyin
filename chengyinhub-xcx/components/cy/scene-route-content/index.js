@@ -347,29 +347,64 @@ Component({
       const index = Number(event.currentTarget.dataset.index)
       const item = this.data.items[index]
       if (!item || !item.id) return
+      const key = String(item.id)
+      const owner = String(app.getUserID ? app.getUserID() : '')
+      const token = this._loadToken
+      this._unlikeRequests = this._unlikeRequests || Object.create(null)
+      if (this._unlikeRequests[key] === 'unknown') {
+        toast('结果待确认，正在刷新收藏记录')
+        this.recoverTopicUnlike(item.id, token)
+        return
+      }
+      if (this._unlikeRequests[key]) return
+      const recoverUnknown = () => {
+        this._unlikeRequests[key] = 'unknown'
+        toast('结果待确认，正在刷新收藏记录')
+        this.recoverTopicUnlike(item.id, token)
+      }
       modal.show({
         title: '提示',
         content: '确定要取消点赞吗？',
         success: (modalRes) => {
-          if (!modalRes.confirm) return
+          if (!modalRes.confirm || this._unlikeRequests[key]) return
+          this._unlikeRequests[key] = true
           app.sendRequest({
             url: '/api/topic/like',
             method: 'POST',
-            data: { id: item.id, type: 0 },
+            data: { id: item.id, type: 0, target: 0 },
             hideLoading: true,
             success: (res) => {
-              if (!isOk(res)) {
-                toast((res && res.msg) || '操作失败')
-                return
-              }
-              const items = this.data.items.slice()
-              items.splice(index, 1)
+              if (token !== this._loadToken || owner !== String(app.getUserID ? app.getUserID() : '')) return
+              if (!isOk(res) || !res.data || res.data.liked !== false) { recoverUnknown(); return }
+              const items = this.data.items.filter((row) => String(row.id) !== key)
               this.setData({ items, state: items.length ? 'ready' : 'empty' })
               toast.success('取消点赞成功')
             },
-            fail: () => toast('网络错误，请重试'),
+            fail: recoverUnknown,
+            successStatusAbnormal: recoverUnknown,
+            complete: () => {
+              if (this._unlikeRequests[key] !== 'unknown') delete this._unlikeRequests[key]
+            },
           })
         },
+      })
+    },
+
+    recoverTopicUnlike(id, token) {
+      const key = String(id)
+      const owner = String(app.getUserID ? app.getUserID() : '')
+      app.sendRequest({
+        url: '/api/topic/like-state', method: 'POST', data: { id }, hideLoading: true,
+        success: (res) => {
+          if (token !== this._loadToken || owner !== String(app.getUserID ? app.getUserID() : '')) return
+          if (!isOk(res) || !res.data || String(res.data.id) !== key || typeof res.data.liked !== 'boolean') return
+          delete this._unlikeRequests[key]
+          if (!res.data.liked) {
+            const items = this.data.items.filter(row => String(row.id) !== key)
+            this.setData({ items, state: items.length ? 'ready' : 'empty' })
+          }
+        },
+        fail: () => {},
       })
     },
 

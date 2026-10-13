@@ -71,6 +71,8 @@ function decorateItem(type, item) {
     type: type,
     typeLabel: meta.label,
     title: item.name || meta.label,
+    priceText: type === 'topic' || type === 'activity' ? (rowPrice(item) == null ? '价格待确认' : '展示价 ¥' + rowPrice(item) + ' 起，当前票价以详情为准') : '',
+    dateText: type === 'topic' || type === 'activity' ? (ymdOf(item.startDate || item.start_date) || '日期待确认') : '',
     detail: detail,
     cover: image,
     icon: type === 'club' ? 'users' : (type === 'merchant' ? 'poi-shop' : 'map'),
@@ -102,8 +104,9 @@ function ymdOf(value) {
 
 function rowPrice(item) {
   const raw = item && (item.minAmout != null ? item.minAmout : (item.minAmount != null ? item.minAmount : item.price));
+  if (raw == null || String(raw).trim() === '' || typeof raw === 'boolean') return null;
   const n = Number(raw);
-  return Number.isFinite(n) ? n : null;
+  return Number.isFinite(n) && n >= 0 ? n : null;
 }
 
 function matchesFilters(type, item, filters) {
@@ -115,8 +118,8 @@ function matchesFilters(type, item, filters) {
     if (startBound && rowDay < startBound) return false;
     if (endBound && rowDay > endBound) return false;
   }
-  const minP = Number(filters.minPrice);
-  const maxP = Number(filters.maxPrice);
+  const minP = filters.minPrice == null || filters.minPrice === '' ? NaN : Number(filters.minPrice);
+  const maxP = filters.maxPrice == null || filters.maxPrice === '' ? NaN : Number(filters.maxPrice);
   const applyPrice = (Number.isFinite(minP) && minP > 0) || (Number.isFinite(maxP) && maxP < 1000);
   if (applyPrice) {
     const price = rowPrice(item);
@@ -150,7 +153,7 @@ function buildRequests(keyword, categoryId, filters) {
     merchantData.categoryId = categoryData.category_id;
   }
   // filters 仅客户端消费:后端 /api/topic/list 与 /api/activity/list 没有 minPrice/startDate 字段。
-  // CU-M-66:筛选里只剩「最近」,它就是四类列表的默认排序(create_time desc),不需要发参数。
+  // 各列表的默认顺序不同，不存在统一发布时间排序参数。
   // ⚠️ 别把它映射成 /api/activity/list 的 sort_type=1 —— 那个值是「附近的活动」(带经纬度按距离排)。
   void filters;
   return [

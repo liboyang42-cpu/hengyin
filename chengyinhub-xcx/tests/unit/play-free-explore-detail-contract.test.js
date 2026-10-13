@@ -133,12 +133,10 @@ test('负控:真往 .st-scroll 里塞 padding 必须判红,而注释里提到 pa
     /padding:[^;]*rpx/, '注释被当成了真声明 —— 误报会拿不存在的问题挡住别人的 PR')
 })
 
-test('重答失败不许覆盖原来那条答案', () => {
-  const ask = between(js, '  _askShopNpc(text, replaceIdx) {', '  _pushShopNpcReply(text, replaceIdx, audioUrl) {', '_askShopNpc')
-  assert.match(ask, /if \(!reply && replaceIdx != null\)[\s\S]{0,320}return;/,
-    '重答拿不到回答就该保住原文;覆盖成「网络异常」= 玩家为了再问一次把好答案弄丢了')
-  // 负控:兜底文案那一支仍然要能覆盖(正常问答的失败提示还是要出现在流里)
-  assert.match(ask, /_pushShopNpcReply\(reply \|\| \(r && r\.msg/)
+test('只为原请求未知结果提供恢复入口，不主动收费重答', () => {
+  assert.match(js, /prior && prior.pending/)
+  assert.match(js, /requestId: pending.requestId/)
+  assert.match(wxml, /wx:if="\{\{item.pending\}\}"[^>]*bindtap="retryNpcMsg"/)
 })
 
 test('对方消息不套气泡,我方才是右侧胶囊', () => {
@@ -159,7 +157,7 @@ test('门店分身对话:归属校验必须在进模型之前', () => {
   // 归属判定只有一份(gateShopChat),打字与语音都必须先过它再进模型 ——
   // 各写一遍的话规则一改总会漏掉一边,而漏掉的那一边就是越权面。
   const gateBody = between(ctrl, 'private ShopGate gateShopChat(', 'private static final class ShopGate', '闸门实现')
-  assert.match(gateBody, /hasPaidRegistration\(userId, 1, node\.getTopicId\(\)\)/,
+  assert.match(gateBody, /hasCurrentNpcRegistration\(userId, node\.getTopicId\(\)\)/,
     '没有归属校验的话,任何登录用户都能拿任意 nodeId 把别人家的分身当免费模型用')
 
   for (const [name, endAnchor] of [
@@ -213,16 +211,16 @@ test('接口被闸掉时不许编借口,要把服务端原话端出来', () => {
   // 再去掉注释 —— 否则「不许出现某句话」会被解释那句话的注释本身命中。
   const send = js.slice(js.indexOf('  sendShopNpc() {'), js.indexOf('\n  _pushShopNpcReply(text, replaceIdx, audioUrl) {'))
     .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
-  assert.match(send, /r && r\.msg \? String\(r\.msg\)/,
+  assert.match(send, /denied \? '当前无法对话，请确认通行证和店铺开放状态。'/,
     '默认关的接口回 403,编一句「我有点忙」会让玩家一直重试')
   assert.doesNotMatch(send, /有点忙/)
 })
 
 test('店铺分身语音回复走独立播放器并在离场时停止', () => {
-  assert.match(js, /_pushShopNpcReply\([\s\S]{0,180}replaceIdx, d\.audioUrl\)/)
-  assert.match(js, /d\.data && d\.data\.audioUrl/)
+  assert.match(js, /_pushShopNpcReply\([\s\S]{0,180}replaceIdx, succeeded \? d\.audioUrl : undefined\)/)
+  assert.match(js, /succeeded \? result\.audioUrl : undefined/)
   assert.match(js, /_pushShopNpcReply\(text, replaceIdx, audioUrl\)[\s\S]{0,900}_playShopNpcVoice\(audioUrl\)/)
-  assert.match(js, /closeShopNpc\(\)[\s\S]{0,260}_stopShopNpcVoice\(\)/)
+  assert.match(between(js, '  closeShopNpc() {', '  onShopNpcFocus()', 'close NPC'), /_stopShopNpcVoice\(\)/)
   assert.match(js, /onUnload\(\)[\s\S]*?_stopShopNpcVoice\(\)/)
 })
 

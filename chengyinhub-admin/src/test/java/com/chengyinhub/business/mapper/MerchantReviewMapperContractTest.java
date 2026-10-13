@@ -73,6 +73,26 @@ class MerchantReviewMapperContractTest {
     }
 
     @Test
+    void eachFilterSharesScopeBetweenCountAndPaginatedRows() throws Exception {
+        Configuration configuration = parse();
+        Map<String, Object> params = new HashMap<>();
+        params.put("merchantRowId", 7L);
+        params.put("offset", 20);
+        params.put("limit", 20);
+        params.put("manage", false);
+        for (String filter : java.util.Arrays.asList("low", "photo", "pending")) {
+            params.put("filter", filter);
+            String count = sql(configuration, "countFilteredReviews", params);
+            String rows = sql(configuration, "selectFilteredReviews", params);
+            assertTrue(count.contains("mr.merchant_row_id = ?"));
+            assertTrue(rows.contains("mr.status = 'visible'"));
+            String where = count.substring(count.indexOf("where "));
+            assertTrue(rows.contains(where), rows);
+            assertTrue(rows.endsWith("limit ?, ?"), rows);
+        }
+    }
+
+    @Test
     void replyModerationAndReportsUseCasAndDatabaseUniqueness() throws Exception {
         Configuration configuration = parse();
         Map<String, Object> params = new HashMap<>();

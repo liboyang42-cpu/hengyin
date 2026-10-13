@@ -10,6 +10,8 @@ public interface ClubPostLikeMapper
 {
     public ClubPostLike selectByPostAndMember(@Param("postId") Long postId, @Param("memberId") Long memberId);
 
+    public ClubPostLike selectByPostAndMemberForUpdate(@Param("postId") Long postId, @Param("memberId") Long memberId);
+
     public int insertClubPostLike(ClubPostLike clubPostLike);
 
     public int deleteByPostAndMember(@Param("postId") Long postId, @Param("memberId") Long memberId);

@@ -17,6 +17,10 @@ public class ClubPostLike extends BaseEntity
     /** 点赞会员ID */
     private Long memberId;
 
+    private Integer target;
+
+    public Integer getTarget() { return target; }
+    public void setTarget(Integer target) { this.target = target; }
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Long getPostId() { return postId; }

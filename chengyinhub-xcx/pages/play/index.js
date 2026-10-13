@@ -389,6 +389,8 @@ Page({
     // 点卡 hero 层:show 挂节点,open 驱动过渡(先 show 再下一帧 open,过渡才有起点)
     hero: { show: false, open: false, node: null, style: '', bodyTop: 0, ry: 0, spun: false, turned: false, sx: 0, ss: '1', faded: false, collapsed: false, scrollTop: 0 },
     // 店铺分身对话(自由探索卡片详情 → 点店铺卡)。started 一旦为真,居中的大字问候让位给消息流。
+    shopNpcChatEnabled: false,
+    shopNpcVoiceEnabled: false,
     shopNpc: { show: false, open: false, name: '', greeting: '', started: false, msgs: [], input: '', thinking: false, thinkPhase: 0, nodeId: 0, ry: 0, recording: false },
     // 章节剧情全屏故事流(自由探索卡片详情 → 点大卡片)。lines 逐行显形,不是整段一次淡入。
     chapStory: { show: false, open: false, title: '', lines: [], audio: '', audioDur: '', playing: false, barAway: false, frames: 0 },
@@ -472,6 +474,7 @@ Page({
     finishMedals: 0, finishSnap: '', finishSnapError: false, finishPhotos: [], canReplayJournal: false,
     branchPath: [],
     finishRouteRecommendation: null,
+    finishRecommendationState: '',
     voucher: { show: false },
     ticket: { show: false, url: '', code: '', loading: false, expiresAt: 0 },
     // B 通关轨迹回顾层(2D):只连已完成节点、按真实走法排序,渐进描线 + 成就气泡。
@@ -581,6 +584,8 @@ Page({
   },
   onShow() {
     this.setData({ pageStyle: readPageStyle() });
+    const npcFlags = app.globalData.features || {};
+    this.setData({ shopNpcChatEnabled: npcFlags.shopNpcChat === true, shopNpcVoiceEnabled: npcFlags.shopNpcVoice === true });
     this._themeHidden = false; this._startThemePoll();
     if (this.data.chapterFull && !this.data.chapterGate.show) this.measureChapter();
     else if (this.data.chapStory.show) this._startStoryDust();
@@ -730,6 +735,7 @@ Page({
   },
 
   onUnload() {
+    this._cancelNpcRecording();
     this._themeHidden = true; this._stopThemePoll();
     this._themeEpoch = (this._themeEpoch || 0) + 1;
     if (this._gateTimer) clearTimeout(this._gateTimer);
@@ -767,6 +773,7 @@ Page({
   // 2026-08-20 并 master:开卡包的三个 timeout 与定位无关,该清照清;
   //    只把 master 那侧的 _watching=false / offLocationChange / stopLocationUpdate 三句拿掉。
   onHide() {
+    this._cancelNpcRecording();
     this._themeHidden = true; this._stopThemePoll();
     if (this._sound) { this._sound.dispose(); this._sound = null; }   // 回来时按当前氛围重起
     this._stopStoryDust();
@@ -1633,9 +1640,17 @@ Page({
   /** 店铺卡 → 店铺分身对话。开场是一句居中大字问候,商家自己写了 greeting 就用他的,
    *  没写才回落到按时段拼的那句 —— 不要用模板顶掉作者写过的话。 */
   openShopNpc() {
+    if (!this._canShopNpcChat()) return;
     const v = this.data.hero.node || {};
     if (!v.nodeId) { cyToast('这家店还没有可对话的分身'); return; }
     if (!v.npcName) { cyToast('这家还没有店铺分身'); return; }
+    const pending = this._shopNpcPending;
+    if ((pending && pending.owner === String(app.getUserID()) && String(pending.nodeId) === String(v.nodeId))
+        || (this.data.shopNpc.recovering && this._shopNpcOwner === String(app.getUserID()) && String(this.data.shopNpc.nodeId) === String(v.nodeId))) {
+      this.setData({ 'shopNpc.show': true, 'shopNpc.open': true });
+      this._startNpcFigure();
+      return;
+    }
     const node = (this.data.nodes || []).find((n) => String(n.nodeId) === String(v.nodeId)) || {};
     const h = new Date().getHours();
     const hi = (h < 6 ? '凌晨好' : h < 11 ? '早上好' : h < 13 ? '中午好' : h < 18 ? '下午好' : '晚上好');
@@ -1720,8 +1735,19 @@ Page({
   onNpcTouchEnd() { this._npcX = null; },
 
   closeShopNpc() {
+    this._npcReplyEpoch = (this._npcReplyEpoch || 0) + 1;
+    this._cancelNpcRecording();
     if (!this.data.shopNpc.show) return;
     if (this._npcTimer) { clearTimeout(this._npcTimer); this._npcTimer = 0; }
+    if (this.data.shopNpc.thinking && this._shopNpcPending) {
+      const previous = this.data.shopNpc.msgs.findIndex((m) => m.pending && m.pending.requestId === this._shopNpcPending.requestId);
+      this._pushShopNpcReply('回答结果待确认，请恢复原问题。', previous < 0 ? undefined : previous);
+      const idx = previous < 0 ? this.data.shopNpc.msgs.length - 1 : previous;
+      this.setData({ ['shopNpc.msgs.' + idx + '.pending']: this._shopNpcPending, 'shopNpc.recovering': true });
+    }
+    if (this.data.shopNpc.thinking) {
+      this.setData({ 'shopNpc.thinking': false, 'shopNpc.recovering': true, 'shopNpc.statusText': '语音结果待确认，当前无法恢复' });
+    }
     this._stopThinkBeat();
     this._stopShopNpcVoice();
     this._stopNpcFigure();
@@ -1739,53 +1765,96 @@ Page({
    *  文件 URL(它是给要落 OSS 的资产用的),而语音片段是临时的、刻意不持久化。 */
   onVoiceStart() {
     const s = this.data.shopNpc;
-    if (!s.show || s.thinking) return;
-    const that = this;
+    if (!s.show || s.thinking || s.recovering || s.recording || !this._canShopNpcChat()) return;
+    if ((app.globalData.features || {}).shopNpcVoice !== true) { cyToast('语音暂不可用，请先打字'); return; }
+    this._npcVoiceReleased = false;
+    if (this._npcVoiceAuthorizing) return;
+    this._npcVoiceAuthorizing = true;
     wx.authorize({ scope: 'scope.record' })
-      .then(() => that._beginRecord())
-      .catch(() => cyToast('没有录音权限，先在设置里打开'));
+      .then(() => {
+        if (!this._npcVoiceReleased && this.data.shopNpc === s && s.show) this._beginRecord();
+      })
+      .catch(() => cyToast('没有录音权限，先在设置里打开'))
+      .finally(() => { this._npcVoiceAuthorizing = false; });
   },
 
   _beginRecord() {
-    const rec = wx.getRecorderManager();
-    this._rec = rec;
-    rec.onStop((res) => {
-      this.setData({ 'shopNpc.recording': false });
-      if (!res || !res.tempFilePath || (res.duration || 0) < 500) return;   // 误触:不到半秒不算一句话
-      this._sendVoice(res.tempFilePath);
-    });
-    rec.onError(() => { this.setData({ 'shopNpc.recording': false }); cyToast('录音出错了'); });
-    rec.start({ duration: 60000, format: 'mp3', sampleRate: 16000, numberOfChannels: 1 });
+    if (!this._rec) {
+      const rec = wx.getRecorderManager();
+      this._rec = rec;
+      this._npcRecordStop = (res) => {
+        this.setData({ 'shopNpc.recording': false });
+        if (this._npcDiscardRecording || !this.data.shopNpc.show) return;
+        if (!res || !res.tempFilePath || (res.duration || 0) < 500) return;
+        if (!(res.fileSize > 0) || res.fileSize > 2 * 1024 * 1024) { cyToast('录音为空或过长，请重新录制'); return; }
+        this._sendVoice(res.tempFilePath, res.fileSize);
+      };
+      this._npcRecordError = () => {
+        this.setData({ 'shopNpc.recording': false });
+        cyToast('录音出错了');
+      };
+      rec.onStop(this._npcRecordStop);
+      rec.onError(this._npcRecordError);
+    }
+    this._npcDiscardRecording = false;
+    this._rec.start({ duration: 60000, format: 'mp3', sampleRate: 16000, numberOfChannels: 1 });
     this.setData({ 'shopNpc.recording': true, 'shopNpc.started': true });
   },
 
   onVoiceEnd() {
+    this._npcVoiceReleased = true;
     if (!this.data.shopNpc.recording) return;
     try { this._rec && this._rec.stop(); } catch (e) { this.setData({ 'shopNpc.recording': false }); }
   },
 
-  /** 语音走**统一上传通道的 uploadOne**,不裸调 wx.uploadFile ——
-   *  裸调会漏掉认证头构造,而这条链路是要花钱的写操作。
-   *  这里用 uploadOne 而不是 uploadAll:后者强制结果里带文件地址,而语音刻意不落盘,
-   *  返回的是分身的回答。 */
-  _sendVoice(filePath) {
+  _cancelNpcRecording() {
+    this._npcVoiceReleased = true;
+    this._npcDiscardRecording = true;
+    if (this._rec) {
+      if (this._rec.offStop) this._rec.offStop(this._npcRecordStop);
+      if (this._rec.offError) this._rec.offError(this._npcRecordError);
+      if (this.data.shopNpc.recording) this._rec.stop();
+      this._rec = null;
+    }
+    this.setData({ 'shopNpc.recording': false });
+  },
+
+  _sendVoice(filePath, fileSize) {
     const s = this.data.shopNpc;
-    const that = this;
-    this.setData({ 'shopNpc.thinking': true });
+    const owner = this._shopNpcOwner = String(app.getUserID());
+    const epoch = this._npcReplyEpoch = (this._npcReplyEpoch || 0) + 1;
+    const requestId = uuid4();
+    this.setData({ 'shopNpc.thinking': true, 'shopNpc.statusText': '正在识别语音并准备回答' });
     this._startThinkBeat();
     app.getUploadClient().uploadOne(filePath, {
       path: '/api/ai/npc/voice-chat',
-      formData: { nodeId: s.nodeId, requestId: uuid4() },
-      onDone(r) {
-        if (!r.ok) { that._pushShopNpcReply(r.msg || '没听清，再说一次'); return; }
-        const d = r.data;
-        // 先把识别出的原话作为我方消息补上 —— 玩家要能看见自己被听成了什么
-        const asr = d.asr || '（语音）';
-        const msgs = that.data.shopNpc.msgs.concat([{ id: that.data.shopNpc.msgs.length + 1, role: 'me', text: asr }]);
-        that.setData({ 'shopNpc.msgs': msgs });
-        const reply = (d.data && (d.data.safeText || d.data.text)) || '';
-        that._pushShopNpcReply(reply || '这个我说不好，你到店里当面问我一次。', undefined,
-          d.data && d.data.audioUrl);
+      fileSize, maxFileSize: 2 * 1024 * 1024,
+      formData: { nodeId: s.nodeId, requestId },
+      onDone: (r) => {
+        if (epoch !== this._npcReplyEpoch || !this.data.shopNpc.show || this.data.shopNpc !== s || owner !== String(app.getUserID())) return;
+        if (!r.ok) {
+          this._pushShopNpcReply('语音处理结果待确认，暂不能重复发送。');
+          this.setData({ 'shopNpc.recovering': true, 'shopNpc.statusText': '语音结果待确认，当前无法恢复' });
+          return;
+        }
+        const d = r.data || {};
+        const asr = typeof d.asr === 'string' ? d.asr.trim() : '';
+        if (!asr) {
+          this._pushShopNpcReply('未收到识别文字，不能确认这段语音的结果。');
+          this.setData({ 'shopNpc.recovering': true, 'shopNpc.statusText': '识别结果待确认' });
+          return;
+        }
+        const result = d.data || {};
+        const pending = { requestId, nodeId: s.nodeId, message: asr, owner };
+        const recovering = result.requestId !== requestId || result.outcomeStatus === 'PROCESSING' || result.errorCode === 'REQUEST_IN_PROGRESS' || result.errorCode === 'REQUEST_STATE_UNAVAILABLE';
+        const succeeded = !recovering && result.outcomeStatus === 'SUCCEEDED' && result.safetyDecision === 'PASS';
+        const msgs = this.data.shopNpc.msgs.concat([{ id: this.data.shopNpc.msgs.length + 1, role: 'me', text: asr }]);
+        this.setData({ 'shopNpc.msgs': msgs });
+        this._pushShopNpcReply(recovering ? '回答结果待确认，请恢复原问题。' : (result.safeText || '暂时无法回答。'), undefined, succeeded ? result.audioUrl : undefined);
+        const idx = this.data.shopNpc.msgs.length - 1;
+        this.setData({ ['shopNpc.msgs.' + idx + '.pending']: recovering ? pending : null,
+          'shopNpc.recovering': recovering,
+          'shopNpc.statusText': recovering ? '文字回复待确认' : succeeded ? '文字回复已完成' : result.safetyDecision === 'BLOCKED' ? '内容未通过安全检查' : result.errorCode === 'RATE_LIMITED' ? '对话次数已用完' : '对话暂不可用' });
       },
     });
   },
@@ -1795,38 +1864,52 @@ Page({
 
   /** 问一句。requestId 由本端生成,后端按 (user, requestId) 幂等 ——
    *  网络抖动重发不会二次调用模型、不会二次计费。 */
+  _canShopNpcChat() {
+    const flags = app.globalData.features || {};
+    if (flags.shopNpcChat !== true) { cyToast('当前场景无法使用店铺对话'); return false; }
+    if (!this._playable || this.data.isPreview || this.data.isMock) { cyToast('请先确认当前游玩资格'); return false; }
+    return true;
+  },
+
   sendShopNpc() {
+    if (!this._canShopNpcChat()) return;
     const s = this.data.shopNpc;
     const text = String(s.input || '').trim();
-    if (!text || s.thinking) return;
+    if (!text || s.thinking || s.recovering) return;
     const msgs = s.msgs.concat([{ id: s.msgs.length + 1, role: 'me', text }]);
     this.setData({ 'shopNpc.msgs': msgs, 'shopNpc.input': '', 'shopNpc.thinking': true, 'shopNpc.started': true });
     this._startThinkBeat();
     this._askShopNpc(text);
   },
 
-  /** 真正发问那一段。打字与「重答」共用 —— 兜底文案的口径只能有一份。
-   *  @param replaceIdx 传了就改写这一条(重答),不传则追加一条(正常问答)。 */
+  /** 恢复只重放原对象与原问题，不把新生成当作重试。 */
   _askShopNpc(text, replaceIdx) {
-    const that = this;
-    const requestId = uuid4();
-    req('/api/ai/npc/shop-chat', 'POST', { requestId, nodeId: this.data.shopNpc.nodeId, message: text }).then((r) => {
+    const prior = replaceIdx == null ? null : this.data.shopNpc.msgs[replaceIdx];
+    const pending = prior && prior.pending ? prior.pending : {
+      requestId: uuid4(), nodeId: this.data.shopNpc.nodeId, message: text,
+      owner: String(app.getUserID()),
+    };
+    if (pending.owner !== String(app.getUserID()) || String(pending.nodeId) !== String(this.data.shopNpc.nodeId)) return;
+    this._shopNpcPending = pending;
+    const conversation = this.data.shopNpc;
+    const epoch = this._npcReplyEpoch = (this._npcReplyEpoch || 0) + 1;
+    req('/api/ai/npc/shop-chat', 'POST', { requestId: pending.requestId, nodeId: pending.nodeId, message: pending.message }, { 'content-type': 'application/json' }, true).then((r) => {
+      if (epoch !== this._npcReplyEpoch || !this.data.shopNpc.show || this.data.shopNpc !== conversation || pending.owner !== String(app.getUserID())) return;
       const d = (r && r.data) || {};
-      // safeText 是后端在拒绝/失败时给的安全兜底文案;正常回答也走同一个字段。
-      const reply = d.safeText || d.text || '';
-      // ⚠️ 重答失败时**不能覆盖**原来那条:玩家点「重答」是想要个更好的答案,
-      //    结果把已经拿到的好答案换成一句「网络异常」,等于为了再问一次把答案弄丢了。
-      //    失败就保住原文,错误走轻提示。(2026-09-08 实拍抓到)
-      if (!reply && replaceIdx != null) {
-        that._stopThinkBeat();
-        that.setData({ 'shopNpc.thinking': false, 'shopNpc.thinkPhase': 0 });
-        cyToast(r && r.msg ? String(r.msg) : '没问成，原来那条还在');
-        return;
-      }
-      // ⚠️ 接口被闸掉(店铺分身对话默认关)或没配人设时,不要编一句「我有点忙」——
-      //    那是假话,玩家会一直重试。把服务端说的原话端出来。
-      that._pushShopNpcReply(reply || (r && r.msg ? String(r.msg) : '这个我说不好，你到店里当面问我一次。'),
-        replaceIdx, d.audioUrl);
+      const denied = String(r.code) === '403' || String(r.code) === '401';
+      const unknown = !denied && (r.netFail || r.httpFail || d.requestId !== pending.requestId);
+      const recovering = unknown || d.outcomeStatus === 'PROCESSING' || d.errorCode === 'REQUEST_IN_PROGRESS' || d.errorCode === 'REQUEST_STATE_UNAVAILABLE';
+      const succeeded = !unknown && String(r.code) === '200' && d.outcomeStatus === 'SUCCEEDED' && d.safetyDecision === 'PASS';
+      if (!recovering) this._shopNpcPending = null;
+      const stateText = recovering ? '回答结果待确认' : succeeded ? '文字回复已完成'
+        : d.errorCode === 'RATE_LIMITED' ? '对话次数已用完'
+        : d.safetyDecision === 'BLOCKED' ? '内容未通过安全检查'
+        : denied ? '当前不能对话' : '对话暂不可用';
+      const reply = unknown ? '回答结果待确认，请恢复原问题，不要重复发送。'
+        : (d.safeText || (denied ? '当前无法对话，请确认通行证和店铺开放状态。' : '暂时无法回答，请稍后再来。'));
+      this._pushShopNpcReply(reply, replaceIdx, succeeded ? d.audioUrl : undefined);
+      const idx = replaceIdx == null ? this.data.shopNpc.msgs.length - 1 : replaceIdx;
+      this.setData({ ['shopNpc.msgs.' + idx + '.pending']: recovering ? pending : null, 'shopNpc.recovering': recovering, 'shopNpc.statusText': stateText });
     });
   },
 
@@ -1845,13 +1928,14 @@ Page({
   },
 
   _playShopNpcVoice(audioUrl) {
-    if (!audioUrl) return;
     this._stopShopNpcVoice();
+    this.setData({ 'shopNpc.audioStatus': audioUrl ? '正在播放语音' : '暂无语音，可阅读文字回复' });
+    if (!audioUrl) return;
     const audio = wx.createInnerAudioContext();
     this._shopNpcVoiceAudio = audio;
     audio.src = audioUrl;
-    audio.onEnded(() => this._stopShopNpcVoice());
-    audio.onError(() => this._stopShopNpcVoice());
+    audio.onEnded(() => { this._stopShopNpcVoice(); this.setData({ 'shopNpc.audioStatus': '语音播放完毕' }); });
+    audio.onError(() => { this._stopShopNpcVoice(); this.setData({ 'shopNpc.audioStatus': '音频暂不可播放或已失效，文字回复仍可阅读' }); });
     audio.play();
   },
 
@@ -1882,21 +1966,17 @@ Page({
     wx.setClipboardData({ data: text });
   },
 
-  /** 重答:把这条回答**之前**最近的那句我方提问原样再问一次,新答案**改写原来那一条**。
-   *  两条都不做:不写回输入框(会覆盖玩家正在打的字)、不追加一条新回答
-   *  (同一个问题挂两个答案,读起来像分身自言自语说了两遍)。 */
+  /** 只允许恢复未确认的原问题；新生成的收费合同尚未确定。 */
   retryNpcMsg(e) {
+    if (!this._canShopNpcChat()) return;
     const s = this.data.shopNpc;
-    if (s.thinking) return;
     const idx = Number(e.currentTarget.dataset.idx);
-    let ask = '';
-    for (let i = idx - 1; i >= 0; i--) {
-      if (s.msgs[i] && s.msgs[i].role === 'me') { ask = s.msgs[i].text; break; }
-    }
-    if (!ask) return;
+    const item = s.msgs[idx];
+    if (s.thinking || !item || !item.pending) return;
+    if (item.pending.owner !== String(app.getUserID()) || String(item.pending.nodeId) !== String(s.nodeId)) return;
     this.setData({ 'shopNpc.thinking': true });
     this._startThinkBeat();
-    this._askShopNpc(ask, idx);
+    this._askShopNpc(item.pending.message, idx);
   },
 
   /** 卡片飞到位之后自转一整圈:一圈之内正面、右脊、背面、左脊各露一次,
@@ -6429,11 +6509,15 @@ Page({
   loadFinishRouteRecommendation() {
     const requestEpoch = (this._finishRecommendationEpoch || 0) + 1;
     this._finishRecommendationEpoch = requestEpoch;
-    this.setData({ finishRouteRecommendation: null });
+    this.setData({ finishRouteRecommendation: null, finishRecommendationState: '' });
     if (!finishRouteRecommendation.isEnabled(app.globalData && app.globalData.features)
         || this.data.isPreview || this.data.isMock) return Promise.resolve(null);
     const origin = finishRouteRecommendation.resolveOrigin(this._loc, this.data.nodes);
-    if (!origin) return Promise.resolve(null);
+    if (!origin) {
+      this.setData({ finishRecommendationState: 'locationUnknown' });
+      return Promise.resolve(null);
+    }
+    this.setData({ finishRecommendationState: 'loading' });
     return req('/api/activity/list', 'POST', {
       is_my: 0,
       sort_type: 1,
@@ -6444,10 +6528,14 @@ Page({
     }).then((response) => {
       if (requestEpoch !== this._finishRecommendationEpoch || !this.data.showFinish) return null;
       const rows = response && response.code == 200 && response.data && response.data.rows;
+      if (!Array.isArray(rows)) {
+        this.setData({ finishRecommendationState: 'error' });
+        return null;
+      }
       const card = finishRouteRecommendation.pickCandidate(
         Array.isArray(rows) ? rows : [], this.data.activityId, this.data.topicId
       );
-      this.setData({ finishRouteRecommendation: card }, () => {
+      this.setData({ finishRouteRecommendation: card, finishRecommendationState: card ? 'ready' : 'empty' }, () => {
         if (!card || requestEpoch !== this._finishRecommendationEpoch || !this.data.showFinish) return;
         analytics.track('finish_route_recommendation_shown', {
           bizType: 'activity', bizId: card.id,

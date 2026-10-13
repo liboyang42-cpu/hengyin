@@ -6,6 +6,7 @@
     <id property="id" column="id" />
     <result property="userId" column="user_id" />
     <result property="requestId" column="request_id" />
+    <result property="requestHash" column="request_hash" />
     <result property="sessionId" column="session_id" />
     <result property="status" column="status" />
     <result property="safetyDecision" column="safety_decision" />
@@ -24,7 +25,7 @@
   </resultMap>
 
   <select id="selectByUserAndRequestId" resultMap="NpcChatRequestResult">
-    select id, user_id, request_id, session_id, status, safety_decision, error_code, limit_type,
+    select id, user_id, request_id, request_hash, session_id, status, safety_decision, error_code, limit_type,
            retry_after_seconds, retryable, safe_text, ai, lease_token, lease_until, active_slot,
            completed_at, create_time, update_time
     from npc_chat_request
@@ -34,11 +35,11 @@
   <insert id="insertNpcChatRequest" parameterType="com.chengyinhub.business.domain.NpcChatRequest"
           useGeneratedKeys="true" keyProperty="id">
     insert into npc_chat_request (
-      user_id, request_id, session_id, status, safety_decision, error_code, limit_type,
+      user_id, request_id, request_hash, session_id, status, safety_decision, error_code, limit_type,
       retry_after_seconds, retryable, safe_text, ai, lease_token, lease_until, active_slot,
       completed_at, create_time, update_time
     ) values (
-      #{userId}, #{requestId}, #{sessionId}, #{status}, #{safetyDecision}, #{errorCode}, #{limitType},
+      #{userId}, #{requestId}, #{requestHash}, #{sessionId}, #{status}, #{safetyDecision}, #{errorCode}, #{limitType},
       #{retryAfterSeconds}, #{retryable}, #{safeText}, #{ai}, #{leaseToken}, #{leaseUntil}, #{activeSlot},
       #{completedAt}, now(), now()
     )

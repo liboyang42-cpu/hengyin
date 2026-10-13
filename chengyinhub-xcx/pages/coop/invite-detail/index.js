@@ -57,6 +57,7 @@ Page({
     // 评价:先选星级(cy-option-sheet)再写评语(可输入 modal)
     reviewSheetShow: false,
     myReviewStars: '',
+    reviewReadState: 'unknown',
     reviewSheetItems: ['★★★★★ 非常好', '★★★★ 好', '★★★ 一般', '★★ 较差', '★ 差'],
   },
 
@@ -80,6 +81,7 @@ Page({
     this._contacting = false;
     this._perkLoading = false;
     this._reviewing = false;
+    this._reviewReadEpoch = (this._reviewReadEpoch || 0) + 1;
     merchantTheme.merchantPageRestore();
   },
   onPullDownRefresh() { this.load(true); },
@@ -148,28 +150,37 @@ Page({
     if (status === 1 && !inv.legacyReadonly) this.loadMyReview(inv);
   },
 
-  // 被评对象与 reviewCoop 同一口径;回读「我对这次合作打过的分」。读不到就照常给「评价」入口,
-  // 真重复提交由后端「已评价过该合作」兜底。
+  // Only a confirmed relationship read can reopen the one-time review action.
   loadMyReview(inv) {
     const toId = this.data.box === 'received' ? inv.fromId : inv.toId;
     if (!toId || !inv.topicId) return;
     const me = String(app.getUserID() || '');
+    const epoch = this._reviewReadEpoch = (this._reviewReadEpoch || 0) + 1;
+    const current = () => epoch === this._reviewReadEpoch && me === String(app.getUserID() || '')
+      && this.data.invite && String(this.data.invite.inviteId) === String(inv.inviteId);
+    this.setData({ reviewReadState: 'loading' });
     const that = this;
     app.sendRequest({
       hideLoading: true,
       url: '/api/coop/review/summary', method: 'POST',
       data: JSON.stringify({ toId: toId }), header: jsonHeader(),
       success(res) {
-        const rows = res && String(res.code) === '200' && res.data && Array.isArray(res.data.reviews) ? res.data.reviews : [];
+        if (!current()) return;
+        if (!res || String(res.code) !== '200' || !res.data || !Array.isArray(res.data.reviews)) {
+          that.setData({ reviewReadState: 'unknown' }); return;
+        }
+        const rows = res.data.reviews;
         const mine = rows.filter(function (r) {
           return r && String(r.fromId) === me && String(r.topicId) === String(inv.topicId);
         })[0];
         const rating = mine ? Number(mine.rating) : 0;
         // setData 会拷贝对象,不能用引用相等判断「还是同一条邀约」
         if (rating >= 1 && rating <= 5 && that.data.invite && String(that.data.invite.inviteId) === String(inv.inviteId)) {
-          that.setData({ myReviewStars: '★★★★★'.slice(0, rating) });
-        }
+          that.setData({ myReviewStars: '★★★★★'.slice(0, rating), reviewReadState: 'ready' });
+        } else that.setData({ myReviewStars: '', reviewReadState: 'ready' });
       },
+      fail() { if (current()) that.setData({ reviewReadState: 'unknown' }); },
+      successStatusAbnormal() { if (current()) that.setData({ reviewReadState: 'unknown' }); },
     });
   },
 
@@ -420,11 +431,12 @@ Page({
   // 被评对象与卡片搬迁前一致:收件箱评发起方(fromId),发件箱只对商家评(toId)。
   reviewCoop() {
     const inv = this.data.invite;
-    if (!inv || inv.legacyReadonly || this._reviewing) return;
+    if (!inv || inv.legacyReadonly || Number(inv.status) !== 1 || this._reviewing || this.data.myReviewStars) return;
+    if (this.data.reviewReadState !== 'ready') { this.loadMyReview(inv); toast('正在核对原评价，请确认后再提交'); return; }
     const toId = this.data.box === 'received' ? inv.fromId : inv.toId;
     if (!toId || !inv.topicId) { toast('该合作暂不可评价'); return; }
     this._reviewing = true;
-    this._reviewSheet = { toId: toId, topicId: inv.topicId };
+    this._reviewSheet = { toId: toId, topicId: inv.topicId, inviteId: inv.inviteId, owner: String(app.getUserID()) };
     this.setData({ reviewSheetShow: true, actionReceipt: '', actionError: '' });
   },
   onReviewSheetCancel() {
@@ -440,18 +452,31 @@ Page({
     modal.show({
       title: '评语(选填)', editable: true, placeholderText: '说说这次合作…', confirmText: '提交',
       success(rr) {
-        that._reviewing = false;
-        if (!rr.confirm) return;
+        if (!rr.confirm) { that._reviewing = false; return; }
+        const current = () => ctx.owner === String(app.getUserID()) && that.data.invite
+          && String(ctx.inviteId) === String(that.data.invite.inviteId);
+        if (!current()) { that._reviewing = false; return; }
+        that.setData({ reviewReadState: 'unknown' });
+        const recover = () => { if (!current()) return; that._reviewing = false; that.loadMyReview(that.data.invite); };
         app.sendRequest({
           hideLoading: true, silentError: true,
           url: '/api/coop/review/save', method: 'POST',
           data: JSON.stringify({ topicId: ctx.topicId, toId: ctx.toId, rating: rating, comment: String(rr.content || '').trim() }),
           header: jsonHeader(),
           success(res) {
-            if (res.code == '200') that.setData({ actionReceipt: '评价已提交', myReviewStars: '★★★★★'.slice(0, rating) });
-            else toast((res && res.msg) || '评价失败');
+            if (!current()) return;
+            that._reviewing = false;
+            if (res.code == '200') that.setData({ actionReceipt: '评价已提交', myReviewStars: '★★★★★'.slice(0, rating), reviewReadState: 'ready' });
+            else {
+              recover();
+              toast((res && res.msg) || '评价结果未确认，请查看原评价');
+            }
           },
-          fail() { toast('网络开小差了，评价没提交'); },
+          fail() {
+            recover();
+            toast('评价结果未确认，正在核对原评价');
+          },
+          successStatusAbnormal: recover,
         });
       },
       fail() { that._reviewing = false; toast('评价确认没有打开，请重试'); },

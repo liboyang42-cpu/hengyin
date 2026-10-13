@@ -118,7 +118,7 @@ test('评价分页元数据与每一行必须完整匹配请求，畸形 200 整
   });
 
   const js = read('pages/merchant/reviews/index.js');
-  assert.match(js, /shapePage\(res\.data,\s*mode,\s*pageNum,\s*20\)/,
+  assert.match(js, /shapePage\(res\.data,\s*mode,\s*pageNum,\s*20,\s*filter\)/,
     '页面必须把本次请求页码和页大小交给 shape 层核对');
 });
 
@@ -135,7 +135,7 @@ test('merchant reputation redesign keeps backend stats visible instead of derivi
   assert.match(wxml, /data-filter="low"/);
   assert.match(wxml, /data-filter="photo"/);
   assert.match(wxml, /wx:for="\{\{filteredItems\}\}"/);
-  assert.match(js, /filteredItems:\s*filterReviewItems\(items,\s*this\.data\.activeFilter\)/);
+  assert.match(js, /filteredItems:\s*items/);
   assert.doesNotMatch(js, /pendingReplyCount:\s*items\.filter/);
   assert.match(wxss, /\.review-stats-grid\s*\{/);
 });
@@ -181,7 +181,7 @@ test('ambiguous legacy owner redemption is shown as fail-closed instead of guess
   const js = read('pages/merchant/reviews/index.js');
   const wxml = read('pages/merchant/reviews/index.wxml');
 
-  assert.match(js, /mode === 'manage' && items\.length === 0/);
+  assert.match(js, /mode === 'manage' && filter === 'all' && items\.length === 0/);
   assert.match(wxml, /AMBIGUOUS_LEGACY_MERCHANT_SCOPE/);
   assert.match(wxml, /平台不会替你猜测归属/);
 });

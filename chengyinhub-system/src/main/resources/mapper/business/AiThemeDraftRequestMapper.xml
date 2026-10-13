@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.AiThemeDraftRequestMapper">
+    <resultMap id="DraftRequest" type="com.chengyinhub.business.domain.AiThemeDraftRequest">
+        <result property="userId" column="user_id"/>
+        <result property="requestId" column="request_id"/>
+        <result property="requestHash" column="request_hash"/>
+        <result property="status" column="status"/>
+        <result property="resultJson" column="result_json"/>
+    </resultMap>
+    <select id="selectByUserAndRequestId" resultMap="DraftRequest">
+        select user_id, request_id, request_hash, status, result_json
+        from ai_theme_draft_request where user_id = #{userId} and request_id = #{requestId}
+    </select>
+    <insert id="insertRequest">
+        insert into ai_theme_draft_request (user_id, request_id, request_hash, status, create_time, update_time)
+        values (#{userId}, #{requestId}, #{requestHash}, 'PROCESSING', now(), now())
+    </insert>
+    <update id="finishRequest">
+        update ai_theme_draft_request set status = #{status}, result_json = #{resultJson}, update_time = now()
+        where user_id = #{userId} and request_id = #{requestId} and request_hash = #{requestHash} and status = 'PROCESSING'
+    </update>
+</mapper>

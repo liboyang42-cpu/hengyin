@@ -32,7 +32,7 @@
             <image wx:for="{{ratingStars}}" wx:key="value" class="review-score-star"
                    src="{{item.filled ? '/images/merchant/reviews/icon-star-filled.svg' : '/images/merchant/reviews/icon-star-muted.svg'}}" mode="aspectFit" />
           </view>
-          <text class="review-score-copy">{{total || 0}} 条已核销评价<block wx:if="{{mode === 'manage'}}"> · 商家不能改用户原评</block></text>
+          <text class="review-score-copy">{{total || 0}} 条{{mode === 'manage' ? '管理范围评价（含待复核）' : '公开已核销评价'}}<block wx:if="{{mode === 'manage'}}"> · 商家不能改用户原评</block></text>
         </view>
       </view>
 
@@ -52,7 +52,7 @@
           </view>
           <text class="review-stat-value">{{monthNewCount}}</text>
           <text class="review-stat-label">本月新增</text>
-          <text class="review-stat-sub">来自本月核销评价</text>
+          <text class="review-stat-sub">含待复核，仅管理可见</text>
         </view>
         <view class="review-stat-card">
           <view class="review-stat-icon review-stat-icon--rate">
@@ -67,11 +67,12 @@
             <image src="/pages/merchant/images/merchant/reviews/icon-star-outline.svg" mode="aspectFit" />
           </view>
           <text class="review-stat-value">{{averageRating}}</text>
-          <text class="review-stat-label">近 30 天均分</text>
+          <text class="review-stat-label">公开评价均分</text>
           <text class="review-stat-sub">公开评价平均分</text>
         </view>
       </view>
 
+      <view class="review-section-sub">评分仅统计公开评价；筛选在全部{{mode === 'manage' ? '管理范围' : '公开'}}评价中查询；当前筛选共 {{total}} 条，已加载 {{items.length}} 条。</view>
       <view class="review-segments" aria-role="tablist">
         <view class="review-segment {{activeFilter === 'all' ? 'review-segment--active' : ''}}"
               data-filter="all" bindtap="setReviewFilter" aria-role="tab" hover-class="cy-pressed" hover-stay-time="80">全部</view>
@@ -128,8 +129,8 @@
         <text class="review-eligibility-sub">{{eligibility.reasonCode === 'AMBIGUOUS_LEGACY_MERCHANT_SCOPE' ? '历史核销尚未保存具体门店，平台不会替你猜测归属。' : '本人报名并在这家店完成核销后才能评价。'}}</text>
       </view>
 
-      <view wx:if="{{!filteredItems.length && items.length}}" class="review-filter-empty">
-        还没有符合条件的评价
+      <view wx:if="{{!filteredItems.length && pageState === 'ready'}}" class="review-filter-empty">
+        当前筛选没有符合条件的评价
       </view>
 
       <view wx:for="{{filteredItems}}" wx:key="id" wx:for-index="reviewIndex" class="review-card">

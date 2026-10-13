@@ -33,8 +33,9 @@ function createReviewRequestId(kind, now, random, sequence) {
   return `mr-${prefix}-${timePart}-${randomPart}-${sequencePart}`.slice(0, 64);
 }
 
-function shapePage(raw, expectedMode, expectedPageNum, expectedPageSize) {
+function shapePage(raw, expectedMode, expectedPageNum, expectedPageSize, expectedFilter) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  if (expectedFilter !== undefined && raw.filter !== expectedFilter) return null;
   const mode = raw.mode;
   if ((mode !== 'manage' && mode !== 'public') || mode !== expectedMode || !Array.isArray(raw.items)) return null;
   const total = strictNonNegative(raw.total);

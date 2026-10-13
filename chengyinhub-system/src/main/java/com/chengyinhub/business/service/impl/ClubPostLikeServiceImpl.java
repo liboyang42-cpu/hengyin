@@ -17,6 +17,11 @@ public class ClubPostLikeServiceImpl implements IClubPostLikeService
     private ClubPostLikeMapper clubPostLikeMapper;
 
     @Override
+    public ClubPostLike selectByPostAndMemberForUpdate(Long postId, Long memberId) {
+        return clubPostLikeMapper.selectByPostAndMemberForUpdate(postId, memberId);
+    }
+
+    @Override
     public ClubPostLike selectByPostAndMember(Long postId, Long memberId)
     {
         return clubPostLikeMapper.selectByPostAndMember(postId, memberId);

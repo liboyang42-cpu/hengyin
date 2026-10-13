@@ -17,6 +17,11 @@
         where post_id = #{postId} and member_id = #{memberId} limit 1
     </select>
 
+    <select id="selectByPostAndMemberForUpdate" resultMap="ClubPostLikeResult">
+        select id, post_id, member_id, create_time from club_post_like
+        where post_id = #{postId} and member_id = #{memberId} limit 1 for update
+    </select>
+
     <insert id="insertClubPostLike" parameterType="ClubPostLike" useGeneratedKeys="true" keyProperty="id">
         insert into club_post_like (post_id, member_id, create_time)
         values (#{postId}, #{memberId}, #{createTime})

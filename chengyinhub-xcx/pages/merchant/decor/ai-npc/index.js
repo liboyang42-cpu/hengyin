@@ -586,7 +586,7 @@ Page({
       toast('请先保存角色形象');
       return;
     }
-    this.setData({ voiceVisible: true, voiceError: '' });
+    this.setData({ voiceVisible: true, voiceUnknown: true, voiceError: '' });
     this.refreshVoice();
   },
   closeVoice() {
@@ -603,21 +603,24 @@ Page({
         if (this._destroyed) return;
         const value = res.data || res,
           status = Number(value.voiceStatus);
-        if (![0, 1, 2, 3].includes(status)) throw Error('声音状态暂时无法确认');
+        if (value.voiceStatus == null || ![0, 1, 2, 3].includes(status)) throw Error('声音状态暂时无法确认');
         const confirmed =
           (status === 1 || status === 2) &&
           this.data.voiceFile &&
           value.voiceSample === this.data.voiceFile.url;
+        const matched = !this._voicePendingSample || (value.voiceSample === this._voicePendingSample && [1, 2, 3].includes(status));
+        if (matched) this._voicePendingSample = '';
         this.setData({
           voiceStatus: status,
           voiceSample: value.voiceSample || this.data.voiceSample,
-          voiceUnknown: false,
+          voiceUnknown: !matched,
+          voiceError: matched ? '' : '尚未查到这段录音的生成结果，请稍后继续查询，勿重复生成。',
           voiceFile: confirmed ? null : this.data.voiceFile,
         });
         if (status === 1 && !this._hidden) this._voiceTimer = setTimeout(() => this.refreshVoice(), 5000);
       })
       .catch((e) => {
-        if (!this._destroyed) this.setData({ voiceError: e.message });
+        if (!this._destroyed) this.setData({ voiceUnknown: true, voiceError: '声音状态暂时无法确认，请稍后查询。' });
       });
   },
   onVoiceConsentChange(e) {
@@ -839,6 +842,7 @@ Page({
       .then((url) => {
         this.setData({ 'voiceFile.url': url });
         this._voiceSubmitted = true;
+        this._voicePendingSample = url;
         return this._request('/api/merchant/npc/voice/enroll', {
           voiceSample: url,
           voiceConsent: this.data.voiceConsent,
@@ -847,6 +851,8 @@ Page({
       .then((res) => {
         if (this._destroyed) return;
         const d = res.data || res;
+        if (d.voiceStatus == null || ![1, 2, 3].includes(Number(d.voiceStatus))) throw Error('声音结果待确认，请查询状态');
+        this._voicePendingSample = '';
         this.setData({
           voiceBusy: false,
           voiceStatus: Number(d.voiceStatus),

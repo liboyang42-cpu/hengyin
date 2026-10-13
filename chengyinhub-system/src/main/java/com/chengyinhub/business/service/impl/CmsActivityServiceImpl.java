@@ -772,17 +772,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
             logger.error("活动发布审核任务提交失败 activityId={}", activityId, ignore);
         }
 
-        //3. 处理合作者
-        if (request.getCollaborators() != null && !request.getCollaborators().isEmpty()) {
-            for (Long collaboratorId : request.getCollaborators()) {
-                CmsCollaborators collaborator = new CmsCollaborators();
-                collaborator.setDataType(2L);
-                collaborator.setDataId(activityId);
-                collaborator.setMemberId(memberId);
-                collaborator.setCreateTime(new Date());
-                cmsCollaboratorsMapper.insertCmsCollaborators(collaborator);
-            }
-        }
+        saveActivityCollaborators(request.getCollaborators(), activityId);
 
         //4. 处理票务
         if (request.getTickets() != null && !request.getTickets().isEmpty()) {
@@ -839,7 +829,29 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         if (rows <= 0) {
             throw new ServiceException("更新失败");
         }
+        if (request.getCollaborators() != null) {
+            cmsCollaboratorsMapper.deleteActivityCollaboratorsByOwner(request.getId(), memberId);
+            saveActivityCollaborators(request.getCollaborators(), request.getId());
+        }
         return rows;
+    }
+
+    private void saveActivityCollaborators(List<Long> memberIds, Long activityId) {
+        if (memberIds == null) return;
+        for (Long collaboratorId : new java.util.LinkedHashSet<>(memberIds)) {
+            if (collaboratorId == null || collaboratorId <= 0
+                    || umsMemberService.selectUmsMemberById(collaboratorId) == null) {
+                throw new ServiceException("合作者不存在，请重新选择");
+            }
+            CmsCollaborators collaborator = new CmsCollaborators();
+            collaborator.setDataType(2L);
+            collaborator.setDataId(activityId);
+            collaborator.setMemberId(collaboratorId);
+            collaborator.setCreateTime(new Date());
+            if (cmsCollaboratorsMapper.insertCmsCollaborators(collaborator) <= 0) {
+                throw new ServiceException("保存合作者失败");
+            }
+        }
     }
 
     private void requirePaidPublisherIdentity(CmsActivityPublishRequest request, Long memberId) {
