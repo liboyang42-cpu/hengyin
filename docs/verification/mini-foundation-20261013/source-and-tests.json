@@ -1,6 +1,6 @@
 {
   "publicBase": "fafde98723211ccbc12b78a534a0cb2c1685e361",
-  "scope": "PAYING page progress, IM list response races, submitted draft ordering only",
+  "scope": "PAYING page progress, IM list response races, submitted draft ordering, consent event idempotency",
   "sourceFiles": [
     {
       "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java",
@@ -25,58 +25,131 @@
     {
       "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDraftSubmittedOrderTest.java",
       "sha256": "5561cf30b9b9e8483b24080bf64e0116a495fdb264c0de678ee545db30494400"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ConsentRecordMapper.java",
+      "sha256": "4fe278fc0979fde069848227870a8a41232db946a8070224b93280fdc245ff59"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ConsentRecordMapper.xml",
+      "sha256": "e4c9ba0a05e250b1117319a31a645c36d4041530bd8dce769dd962978c0eccde"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ConsentRecordServiceImpl.java",
+      "sha256": "24a9f6a2c0ef3e5ce5deef2dcf0bbf2f146565181a5c70fff567d6be85778606"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ConsentRecordServiceImplTest.java",
+      "sha256": "a6e95bc23e4462282d2084af8214540064aaa0d51a537a1f2e5c146d318b9d7d"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiComplianceControllerTest.java",
+      "sha256": "fa192cbeaeed4414957112a725ccab66685cf01cb32f4c0eb68d30b425ec6e4b"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ConsentRecordIdempotencyMySqlIT.java",
+      "sha256": "698f2f572cb4e6791d33ef76f796de66437b3774637e48011c729768f6024c7d"
     }
   ],
   "backendTests": {
-    "tests": 76,
+    "distinctTests": 99,
+    "unitTests": 94,
+    "mysqlTests": 5,
     "failures": 0,
     "errors": 0,
     "skipped": 0,
-    "suites": [
+    "unitSuites": [
+      {
+        "name": "com.chengyinhub.business.service.impl.ConsentRecordServiceImplTest",
+        "tests": "10",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "time": "0.019",
+        "failureMessages": [],
+        "errorMessages": []
+      },
+      {
+        "name": "com.chengyinhub.web.controller.api.ApiComplianceControllerTest",
+        "tests": "8",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "time": "1.191",
+        "failureMessages": [],
+        "errorMessages": []
+      },
       {
         "name": "com.chengyinhub.business.task.OrderClosePayingReconcileTaskContractTest",
         "tests": "2",
         "failures": "0",
         "errors": "0",
-        "skipped": "0"
+        "skipped": "0",
+        "time": "0.863",
+        "failureMessages": [],
+        "errorMessages": []
       },
       {
         "name": "com.chengyinhub.business.service.TopicDraftSubmittedOrderTest",
         "tests": "2",
         "failures": "0",
         "errors": "0",
-        "skipped": "0"
+        "skipped": "0",
+        "time": "0.044",
+        "failureMessages": [],
+        "errorMessages": []
       },
       {
         "name": "com.chengyinhub.business.service.TopicDraftPartialSaveGateTest",
         "tests": "19",
         "failures": "0",
         "errors": "0",
-        "skipped": "0"
+        "skipped": "0",
+        "time": "0.185",
+        "failureMessages": [],
+        "errorMessages": []
       },
       {
         "name": "com.chengyinhub.business.service.impl.TopicCreateSaveDraftSideEffectTest",
         "tests": "4",
         "failures": "0",
         "errors": "0",
-        "skipped": "0"
+        "skipped": "0",
+        "time": "0.467",
+        "failureMessages": [],
+        "errorMessages": []
       },
       {
         "name": "com.chengyinhub.business.service.CmsTopicRoutePublishPolicyTest",
         "tests": "8",
         "failures": "0",
         "errors": "0",
-        "skipped": "0"
+        "skipped": "0",
+        "time": "0.062",
+        "failureMessages": [],
+        "errorMessages": []
       },
       {
         "name": "com.chengyinhub.business.service.impl.ChapterFlowWriteServiceTest",
         "tests": "41",
         "failures": "0",
         "errors": "0",
-        "skipped": "0"
+        "skipped": "0",
+        "time": "1.486",
+        "failureMessages": [],
+        "errorMessages": []
       }
     ],
-    "context": "Run on the dedicated test VPS in a source snapshot also containing a separate consent candidate; that candidate is excluded from this patch and these counts."
+    "mysqlSuite": {
+      "name": "com.chengyinhub.business.service.impl.ConsentRecordIdempotencyMySqlIT",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "schemaSetUnchanged": true,
+      "testSha256": "698f2f572cb4e6791d33ef76f796de66437b3774637e48011c729768f6024c7d"
+    },
+    "context": "94 units passed in the combined snapshot. The initial MySQL fixture had two barrier timeouts; after correcting only that fixture, all 5 MySQL tests passed in a separate invocation. This is not a single 99-test successful invocation."
   },
   "nodeTests": {
     "tests": 28,
@@ -89,6 +162,17 @@
     "physical device",
     "production deployment"
   ],
-  "sourceCommit": "0984189e1f08bff0bf91ad1ae59d4b3db3a255b8",
-  "stagedSnapshotVpsCompile": "passed by pre-commit"
+  "stagedSnapshotVpsCompile": "passed by pre-commit",
+  "sourceCommits": [
+    "0984189e1f08bff0bf91ad1ae59d4b3db3a255b8",
+    "55cd5573c02b67cc61fac7b2896eb2669aa25f29"
+  ],
+  "githubCi": {
+    "previousRun": 38365659866,
+    "head": "1a8726320c4184e10d7f60fe7fd1e896707cefbe",
+    "conclusion": "cancelled",
+    "passedJobs": 9,
+    "cancelledJobs": 1,
+    "currentHead": "pending"
+  }
 }
