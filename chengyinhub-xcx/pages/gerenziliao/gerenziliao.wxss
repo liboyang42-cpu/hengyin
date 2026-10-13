@@ -44,6 +44,7 @@ button.shzlbox_bind{
 .shzlbox_li_left_ntu_li image{ width:100%; height: 100%; vertical-align: top;}
 .shzlbox_li_left_txt_li{ height: 50rpx; line-height: 50rpx; overflow: hidden; background: var(--cy-bg-subtle); border: 1rpx solid var(--cy-border-line); border-radius: 25rpx; padding: 0 var(--cy-legacy-10) 0 16rpx; float: left; font-size: var(--cy-font-caption); margin: var(--cy-legacy-10) var(--cy-legacy-18) 0 0;} /* ds-ok */
 .shzlbox_li_left_txt_li image{ width: 24rpx; height: 24rpx; vertical-align: top; margin: var(--cy-space-1-5) var(--cy-legacy-6) 0 0;}
+.profile-category-icon { background: var(--cy-color-action-primary-bg); }
 .shzlbox_li_left_txt_li image.del{width: 24rpx; height: 24rpx; display: block;}
 /* 触控热区:删除图标视觉 24rpx(12px),是全站最小的可点元素。
    ★ 这一处到不了 88rpx,原因是几何而不是没做:
