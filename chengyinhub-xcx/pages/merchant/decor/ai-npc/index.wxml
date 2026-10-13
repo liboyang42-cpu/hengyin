@@ -236,6 +236,7 @@
       </block>
       <cy-inline-error kind="error" wx:if="{{voiceError}}" title="暂未完成" sub="{{voiceError}}" />
       <cy-btn wx:if="{{voiceUnknown}}" variant="secondary" bindtap="refreshVoice">查询生成状态</cy-btn>
+      <cy-btn wx:if="{{voiceUnknown && voiceResetPending}}" variant="secondary" bindtap="resetVoiceRecording" disabled="{{voiceBusy}}">继续清除原声音</cy-btn>
     </view>
   </cy-sheet>
   <canvas type="2d" id="npc-work" class="npc-work" />

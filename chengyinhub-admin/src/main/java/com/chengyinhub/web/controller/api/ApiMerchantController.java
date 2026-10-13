@@ -9,7 +9,6 @@ import com.chengyinhub.business.domain.Club;
 import com.chengyinhub.business.domain.CmsRegistrationScan;
 import com.chengyinhub.business.domain.MmsMerchant;
 import com.chengyinhub.business.service.ai.VoiceCloneClient;
-import com.chengyinhub.business.service.ai.AiServiceException;
 import com.chengyinhub.business.mapper.NpcProfileMapper;
 import com.chengyinhub.business.domain.NpcProfile;
 import com.chengyinhub.business.service.IMerchantLeadService;
@@ -61,6 +60,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 
@@ -100,6 +102,9 @@ public class ApiMerchantController extends BaseController {
 
     @Autowired
     private VoiceCloneClient voiceCloneClient;
+
+    @Autowired
+    private PlatformTransactionManager voiceTransactionManager;
 
     private static final int NPC_SCOPE_MERCHANT = 2;
     private static final String NPC_PRESET_PREFIX = "px1:";
@@ -843,18 +848,12 @@ public class ApiMerchantController extends BaseController {
     // 复刻不是立刻可用,中间有部署过程,所以状态必须落库:只看 voice_id 有没有值,
     // 会在音色还没就绪时就拿去合成,得到一个长得像「服务抖了一下」的失败。
 
-    /** voice_status:0=未配置 1=复刻中 2=可用 3=复刻失败 */
+    /** voice_status:0=未配置 1=复刻中 2=可用 3=复刻失败 4=结果未知 */
     private static final int VOICE_NONE = 0;
     private static final int VOICE_PENDING = 1;
     private static final int VOICE_READY = 2;
-    private static final int VOICE_FAILED = 3;
+    private static final int VOICE_UNKNOWN = 4;
 
-    /**
-     * 用商家上传的录音创建音色。
-     *
-     * 录音要求由上游定:mp3/m4a/wav、10 秒到 5 分钟、20MB 以内。这里不重复校验时长
-     * (拿不到音频时长,校验只能是假的),但会把上游的拒绝原因原样带回给商家。
-     */
     @PostMapping("/npc/voice/enroll")
     public AjaxResult npcVoiceEnroll(@RequestBody NpcProfile body) {
         Long memberId;
@@ -862,123 +861,177 @@ public class ApiMerchantController extends BaseController {
         if (memberId == null || memberId < 1) return error("请先登录");
         if (body == null) return error("参数有误");
         if (!Boolean.TRUE.equals(body.getVoiceConsent())) return error("请先确认声音为本人所有或已获得授权");
-        MerchantAccessContext access = merchantAccessService.require(
-                memberId, MerchantPermission.PROFILE_WRITE);
-
+        MerchantAccessContext access = merchantAccessService.require(memberId, MerchantPermission.PROFILE_WRITE);
         String sample = trimOrNull(body.getVoiceSample());
         if (sample == null) return error("请先录一段话");
         if (sample.length() > 255) return error("录音地址过长");
         if (!sample.startsWith("/") && !sample.startsWith("https://") && !sample.startsWith("http://")) return error("录音地址不支持");
-
+        String suppliedId = trimOrNull(body.getVoiceRequestId());
+        if (suppliedId != null && !suppliedId.matches("[A-Za-z0-9_-]{1,64}")) return error("声音请求编号有误");
         NpcProfile mine = ownNpcOrNull(access.getMerchantId());
         if (mine == null) return error("请先保存形象,再给它配声音");
-        if (sample.equals(mine.getVoiceSample()) && (Integer.valueOf(VOICE_PENDING).equals(mine.getVoiceStatus())
-                || Integer.valueOf(VOICE_READY).equals(mine.getVoiceStatus()))) {
-            AjaxResult existing = AjaxResult.success();
-            existing.put("voiceStatus", mine.getVoiceStatus());
-            return existing;
-        }
-        if (Integer.valueOf(VOICE_PENDING).equals(mine.getVoiceStatus())) return error("声音仍在生成，请稍后再试");
-
-
-        if (!voiceCloneClient.usable()) {
-            // 开关没开时明确说未开通。返回「成功但没声音」会让商家反复重试一件做不到的事。
-            return error("语音服务未开通");
-        }
-
-        // 先落「复刻中」再打上游:反过来的话,上游成功但落库失败就成了花了钱没记住,
-        // 而商家看到的是失败、会再点一次,又生成一个音色。
-        NpcProfile pending = new NpcProfile();
-        pending.setId(mine.getId());
-        pending.setScopeId(access.getMerchantId());
-        pending.setVoiceId(null);
-        pending.setVoiceStatus(VOICE_PENDING);
-        pending.setVoiceSample(sample);
-        if (npcProfileMapper.updateMerchantNpcVoice(pending) != 1) return error("声音任务未保存，请重试");
-
+        NpcProfile request = new NpcProfile();
+        request.setId(mine.getId()); request.setScopeId(access.getMerchantId());
+        request.setVoiceRequestMemberId(memberId);
+        request.setVoiceSample(sample); request.setVoiceStatus(VOICE_UNKNOWN);
+        boolean[] claimed = {false};
+        AjaxResult prior = voiceTransaction().execute(tx -> {
+            NpcProfile current = npcProfileMapper.selectMerchantVoiceForUpdate(mine.getId(), access.getMerchantId());
+            if (current == null) return error("形象不存在");
+            // Explicit reset starts a new legacy epoch; an unknown current request always replays its original ID.
+            String requestId = suppliedId;
+            if (requestId == null) {
+                requestId = sample.equals(current.getVoiceSample()) && current.getVoiceRequestId() != null
+                        && current.getVoiceRequestId().startsWith("legacy-") ? current.getVoiceRequestId()
+                        : "legacy-" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(
+                                current.getId() + ":" + current.getVoiceGeneration() + ":" + sample).substring(0, 56);
+            }
+            request.setVoiceRequestId(requestId);
+            NpcProfile original = npcProfileMapper.selectMerchantVoiceRequest(access.getMerchantId(), requestId);
+            if (original != null) {
+                if (!memberId.equals(original.getVoiceRequestMemberId()) || !sample.equals(original.getVoiceSample()))
+                    return error("声音请求编号已用于其他请求，请查询原结果");
+                return voiceResult(original, current);
+            }
+            if (sample.equals(current.getVoiceSample()) && (Integer.valueOf(VOICE_PENDING).equals(current.getVoiceStatus())
+                    || Integer.valueOf(VOICE_READY).equals(current.getVoiceStatus()))) return voiceResult(current, current);
+            if (Integer.valueOf(VOICE_PENDING).equals(current.getVoiceStatus())
+                    || Integer.valueOf(VOICE_UNKNOWN).equals(current.getVoiceStatus())) return error("原声音结果待确认，请查询原状态，勿重复生成");
+            if (!voiceCloneClient.usable()) return error("语音服务未开通");
+            request.setVoiceGeneration(current.getVoiceGeneration() == null ? 0L : current.getVoiceGeneration());
+            if (npcProfileMapper.claimMerchantNpcVoice(request) != 1) return error("声音任务未保存，请重试");
+            request.setVoiceGeneration(request.getVoiceGeneration() + 1);
+            if (npcProfileMapper.insertMerchantVoiceRequest(request) != 1) throw new ServiceException("声音任务未保存");
+            claimed[0] = true;
+            return null;
+        });
+        if (!claimed[0]) return prior;
         String voiceId;
+        try { voiceId = trimOrNull(voiceCloneClient.enroll(sample)); }
+        catch (Exception e) {
+            // The supplier client does not distinguish rejection from lost response: neither authorizes another spend.
+            return voiceResult(request, ownNpcOrNull(access.getMerchantId()));
+        }
+        if (voiceId == null) return voiceResult(request, ownNpcOrNull(access.getMerchantId()));
+        request.setVoiceId(voiceId); request.setVoiceStatus(VOICE_PENDING);
+        // Persist the actual supplier ID before querying readiness, so restart recovery can use query_voice.
+        try { recordMerchantVoice(request); }
+        catch (Exception e) { return error("声音结果待确认，请查询原请求，勿重复生成"); }
         try {
-            voiceId = voiceCloneClient.enroll(sample);
-        } catch (AiServiceException e) {
-            NpcProfile failed = new NpcProfile();
-            failed.setId(mine.getId());
-            failed.setScopeId(access.getMerchantId());
-            failed.setVoiceId(null);
-            failed.setVoiceStatus(VOICE_FAILED);
-            npcProfileMapper.updateMerchantNpcVoice(failed);
-            return error(e.getMessage());
-        }
-
-        // 刚建好的音色可能还在部署。就绪与否如实落库,不要一律写「可用」——
-        // 那会把「还没好」伪装成「好了」,失败推迟到第一次说话时才暴露。
-        boolean ready;
-        try { ready = voiceCloneClient.isReady(voiceId); }
-        catch (AiServiceException e) { ready = false; }
-
-        NpcProfile done = new NpcProfile();
-        done.setId(mine.getId());
-        done.setScopeId(access.getMerchantId());
-        done.setVoiceId(voiceId);
-        done.setVoiceStatus(ready ? VOICE_READY : VOICE_PENDING);
-        if (npcProfileMapper.updateMerchantNpcVoice(done) != 1) return error("声音结果待确认，请稍后查询状态");
-
-        AjaxResult r = AjaxResult.success(ready ? "声音已就绪" : "声音正在生成,稍后可用");
-        r.put("voiceStatus", ready ? VOICE_READY : VOICE_PENDING);
-        return r;
+            if (voiceCloneClient.isReady(voiceId)) {
+                request.setVoiceStatus(VOICE_READY);
+                recordMerchantVoice(request);
+            }
+        } catch (Exception ignore) { }
+        return recoveredMerchantVoice(request, ownNpcOrNull(access.getMerchantId()));
     }
 
-    /** 查声音状态。复刻中时前端轮询这里,不要拿合成失败去反推状态。 */
     @PostMapping("/npc/voice/status")
-    public AjaxResult npcVoiceStatus() {
+    public AjaxResult npcVoiceStatus(@RequestBody(required = false) NpcProfile body) {
         Long memberId;
         try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
         if (memberId == null || memberId < 1) return error("请先登录");
-        MerchantAccessContext access = merchantAccessService.require(
-                memberId, MerchantPermission.PROFILE_WRITE);
-
-        NpcProfile mine = ownNpcOrNull(access.getMerchantId());
-        AjaxResult r = AjaxResult.success();
-        if (mine == null) {
-            r.put("voiceStatus", VOICE_NONE);
-            return r;
-        }
-        int status = mine.getVoiceStatus() == null ? VOICE_NONE : mine.getVoiceStatus();
-        // 还在部署的,顺手问一次上游;上游挂了就保持原状,不要因为查不到就判失败
-        if (status == VOICE_PENDING && mine.getVoiceId() != null && voiceCloneClient.usable()) {
+        MerchantAccessContext access = merchantAccessService.require(memberId, MerchantPermission.PROFILE_WRITE);
+        NpcProfile current = ownNpcOrNull(access.getMerchantId());
+        String requestId = body == null ? null : trimOrNull(body.getVoiceRequestId());
+        if (requestId != null && !requestId.matches("[A-Za-z0-9_-]{1,64}")) return error("声音请求编号有误");
+        NpcProfile original = requestId == null ? current
+                : npcProfileMapper.selectMerchantVoiceRequest(access.getMerchantId(), requestId);
+        if (requestId != null && (original == null || !memberId.equals(original.getVoiceRequestMemberId())))
+            return error("未查到本人的原声音请求，勿重复生成");
+        // Query only the vendor ID we actually persisted. Missing ID remains explicitly unknown.
+        if (original != null && (Integer.valueOf(VOICE_PENDING).equals(original.getVoiceStatus())
+                || Integer.valueOf(VOICE_UNKNOWN).equals(original.getVoiceStatus()))
+                && trimOrNull(original.getVoiceId()) != null && voiceCloneClient.usable()) {
             try {
-                if (voiceCloneClient.isReady(mine.getVoiceId())) {
-                    NpcProfile upd = new NpcProfile();
-                    upd.setId(mine.getId());
-                    upd.setScopeId(access.getMerchantId());
-                    upd.setVoiceId(mine.getVoiceId());
-                    upd.setVoiceStatus(VOICE_READY);
-                    if (npcProfileMapper.updateMerchantNpcVoice(upd) == 1) status = VOICE_READY;
+                if (voiceCloneClient.isReady(original.getVoiceId())) {
+                    original.setVoiceStatus(VOICE_READY);
+                    if (original.getVoiceRequestId() != null) recordMerchantVoice(original);
+                    else npcProfileMapper.updateMerchantNpcVoice(original);
                 }
-            } catch (AiServiceException ignore) {}
+            } catch (Exception ignore) { }
         }
-        r.put("voiceStatus", status);
-        r.put("voiceSample", mine.getVoiceSample());
-        return r;
+        current = ownNpcOrNull(access.getMerchantId());
+        if (requestId == null) return voiceResult(current, current);
+        return recoveredMerchantVoice(original, current);
     }
 
-    /** 清除音色。商家想重录时先清,避免旧音色继续被用来合成。 */
+    public AjaxResult npcVoiceStatus() { return npcVoiceStatus(null); }
+
     @PostMapping("/npc/voice/reset")
-    public AjaxResult npcVoiceReset() {
+    public AjaxResult npcVoiceReset(@RequestBody(required = false) NpcProfile body) {
         Long memberId;
         try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
         if (memberId == null || memberId < 1) return error("请先登录");
-        MerchantAccessContext access = merchantAccessService.require(
-                memberId, MerchantPermission.PROFILE_WRITE);
-
+        MerchantAccessContext access = merchantAccessService.require(memberId, MerchantPermission.PROFILE_WRITE);
         NpcProfile mine = ownNpcOrNull(access.getMerchantId());
-        if (mine == null) return AjaxResult.success("已清除");
-        NpcProfile upd = new NpcProfile();
-        upd.setId(mine.getId());
-        upd.setScopeId(access.getMerchantId());
-        upd.setVoiceId(null);
-        upd.setVoiceStatus(VOICE_NONE);
-        return npcProfileMapper.updateMerchantNpcVoice(upd) == 1
-                ? AjaxResult.success("已清除") : error("声音未清除，请重试");
+        if (body != null && body.getVoiceGeneration() != null && (body.getVoiceGeneration() < 0 || body.getId() == null))
+            return error("声音版本有误，请查询原状态");
+        if (mine == null) return body != null && body.getVoiceGeneration() != null
+                ? error("原声音形象已改变，请查询状态") : AjaxResult.success("已清除");
+        return voiceTransaction().execute(tx -> {
+            NpcProfile current = npcProfileMapper.selectMerchantVoiceForUpdate(mine.getId(), access.getMerchantId());
+            if (current == null) return error("原声音形象已改变，请查询状态");
+            if (body != null && body.getVoiceGeneration() != null) {
+                if (!current.getId().equals(body.getId())) return error("原声音形象已改变，请查询状态");
+                if (current.getVoiceGeneration() == body.getVoiceGeneration() + 1
+                        && Integer.valueOf(VOICE_NONE).equals(current.getVoiceStatus()) && current.getVoiceRequestId() == null)
+                    return AjaxResult.success("已清除");
+                if (!current.getVoiceGeneration().equals(body.getVoiceGeneration())
+                        || !Objects.equals(current.getVoiceRequestId(), body.getVoiceRequestId()))
+                    return error("声音版本已改变，未清除新声音，请查询原状态");
+            }
+            return npcProfileMapper.resetMerchantNpcVoice(current) == 1
+                    ? AjaxResult.success("已清除") : error("声音未清除，请重试");
+        });
+    }
+
+    public AjaxResult npcVoiceReset() { return npcVoiceReset(null); }
+
+    private AjaxResult recoveredMerchantVoice(NpcProfile original, NpcProfile current) {
+        NpcProfile stored;
+        try { stored = npcProfileMapper.selectMerchantVoiceRequest(original.getScopeId(), original.getVoiceRequestId()); }
+        catch (Exception e) { stored = null; }
+        if (stored == null || stored.getVoiceStatus() == null
+                || (stored.getVoiceStatus() != VOICE_PENDING && stored.getVoiceStatus() != VOICE_READY
+                    && stored.getVoiceStatus() != VOICE_UNKNOWN)) {
+            original.setVoiceStatus(VOICE_UNKNOWN); stored = original;
+        }
+        return voiceResult(stored, current);
+    }
+
+    private TransactionTemplate voiceTransaction() {
+        TransactionTemplate tx =
+                new TransactionTemplate(voiceTransactionManager);
+        tx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        return tx;
+    }
+
+    private void recordMerchantVoice(NpcProfile request) {
+        voiceTransaction().execute(tx -> {
+            // Lock in the same order as claim/reset. A late result may update its own ledger, never a newer profile.
+            npcProfileMapper.selectMerchantVoiceForUpdate(request.getId(), request.getScopeId());
+            if (npcProfileMapper.finishMerchantVoiceRequest(request) != 1) throw new ServiceException("声音结果未保存");
+            npcProfileMapper.updateMerchantNpcVoice(request);
+            return null;
+        });
+    }
+
+    private AjaxResult voiceResult(NpcProfile original, NpcProfile current) {
+        AjaxResult result = AjaxResult.success();
+        int status = original == null || original.getVoiceStatus() == null ? VOICE_NONE : original.getVoiceStatus();
+        if (status == VOICE_PENDING && trimOrNull(original.getVoiceId()) == null) status = VOICE_UNKNOWN;
+        result.put("voiceStatus", status);
+        result.put("voiceSample", original == null ? null : original.getVoiceSample());
+        result.put("voiceRequestId", original == null ? null : original.getVoiceRequestId());
+        result.put("voiceGeneration", original == null ? null : original.getVoiceGeneration());
+        result.put("voiceProfileId", original == null ? null : original.getId());
+        result.put("voiceCurrent", original != null && current != null && Objects.equals(original.getId(), current.getId())
+                && Objects.equals(original.getVoiceGeneration(), current.getVoiceGeneration())
+                && Objects.equals(original.getVoiceRequestId(), current.getVoiceRequestId()));
+        result.put("voiceUnknown", status == VOICE_UNKNOWN);
+        if (status == VOICE_UNKNOWN) result.put("msg", "原声音结果尚未确认，勿重复生成；未取得供应商音色编号时暂无法查询恢复");
+        return result;
     }
 
     /**

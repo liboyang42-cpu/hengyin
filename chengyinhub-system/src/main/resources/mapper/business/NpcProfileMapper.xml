@@ -21,6 +21,9 @@
     <result column="voice_id" property="voiceId"/>
     <result column="voice_status" property="voiceStatus"/>
     <result column="voice_sample" property="voiceSample"/>
+    <result column="voice_request_id" property="voiceRequestId"/>
+    <result column="voice_generation" property="voiceGeneration"/>
+    <result column="voice_request_member_id" property="voiceRequestMemberId"/>
     <result column="merchant_name" property="merchantName"/>
   </resultMap>
 
@@ -101,16 +104,50 @@
     合成一个 update 的话,任一方传了 null 都会把另一方的值当作「没改」或「要清空」,
     取决于 <if> 怎么写 —— 而这两种误判都不报错。
   -->
+  <!-- All merchant voice writers require the persisted generation and request identity. -->
   <update id="updateMerchantNpcVoice" parameterType="com.chengyinhub.business.domain.NpcProfile">
-    UPDATE npc_profile
-    <set>
-      voice_id = #{voiceId},
-      <if test="voiceStatus != null">voice_status = #{voiceStatus},</if>
-      <if test="voiceSample != null">voice_sample = #{voiceSample},</if>
-      audit_status = 0,
-      update_time = NOW()
-    </set>
+    UPDATE npc_profile SET voice_id = #{voiceId}, voice_status = #{voiceStatus},
+      audit_status = 0, update_time = NOW()
     WHERE id = #{id} AND scope_id = #{scopeId} AND scope_type = 2 AND del_flag = '0'
+      AND voice_generation = #{voiceGeneration}
+      AND voice_request_id &lt;=> #{voiceRequestId} AND voice_status IN (1, 4)
+  </update>
+
+  <select id="selectMerchantVoiceForUpdate" resultMap="BaseResultMap">
+    SELECT * FROM npc_profile WHERE id = #{id} AND scope_id = #{scopeId}
+      AND scope_type = 2 AND del_flag = '0' FOR UPDATE
+  </select>
+  <select id="selectMerchantVoiceRequest" resultMap="BaseResultMap">
+    SELECT profile_id AS id, merchant_id AS scope_id, request_id AS voice_request_id,
+      generation AS voice_generation, member_id AS voice_request_member_id,
+      sample AS voice_sample, voice_id, voice_status
+    FROM npc_voice_request WHERE merchant_id = #{scopeId} AND request_id = #{voiceRequestId}
+  </select>
+  <insert id="insertMerchantVoiceRequest">
+    INSERT INTO npc_voice_request
+      (merchant_id, request_id, profile_id, generation, member_id, sample, voice_status)
+    VALUES (#{scopeId}, #{voiceRequestId}, #{id}, #{voiceGeneration}, #{voiceRequestMemberId}, #{voiceSample}, 4)
+  </insert>
+  <update id="finishMerchantVoiceRequest">
+    UPDATE npc_voice_request SET voice_id = #{voiceId},
+      voice_status = CASE WHEN voice_status = 2 THEN 2 ELSE #{voiceStatus} END, update_time = NOW()
+    WHERE merchant_id = #{scopeId} AND request_id = #{voiceRequestId}
+      AND profile_id = #{id} AND generation = #{voiceGeneration}
+      AND (voice_id IS NULL OR voice_id = #{voiceId})
+  </update>
+  <update id="claimMerchantNpcVoice">
+    UPDATE npc_profile SET voice_generation = voice_generation + 1,
+      voice_request_id = #{voiceRequestId}, voice_id = NULL, voice_status = 4,
+      voice_sample = #{voiceSample}, audit_status = 0, update_time = NOW()
+    WHERE id = #{id} AND scope_id = #{scopeId} AND scope_type = 2 AND del_flag = '0'
+      AND voice_generation = #{voiceGeneration} AND voice_status NOT IN (1, 4)
+  </update>
+  <update id="resetMerchantNpcVoice">
+    UPDATE npc_profile SET voice_generation = voice_generation + 1,
+      voice_request_id = NULL, voice_id = NULL, voice_status = 0, voice_sample = NULL,
+      audit_status = 0, update_time = NOW()
+    WHERE id = #{id} AND scope_id = #{scopeId} AND scope_type = 2 AND del_flag = '0'
+      AND voice_generation = #{voiceGeneration} AND voice_request_id &lt;=> #{voiceRequestId}
   </update>
 
   <update id="deleteMerchantNpcById">
