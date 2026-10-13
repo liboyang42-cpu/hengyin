@@ -945952,7 +945952,209 @@
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:101:bind:settled:onPrivacyGateSettled:31",
+      "id": "pages/shezhi/shezhi.wxml:100:bindtap:submitSceneForm:28",
+      "route": "pages/shezhi/shezhi",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/shezhi/shezhi.wxml",
+        "js": "pages/shezhi/shezhi.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "submitSceneForm",
+        "line": 100,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/shezhi/shezhi.js:270"
+      }
+    },
+    {
+      "id": "pages/shezhi/shezhi.wxml:104:bind:cancel:cancelSceneDiscard:30",
+      "route": "pages/shezhi/shezhi",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/shezhi/shezhi.wxml",
+        "js": "pages/shezhi/shezhi.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-modal",
+        "event": "bind:cancel",
+        "handler": "cancelSceneDiscard",
+        "line": 104,
+        "selectorHint": ".{{isMerchantView",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/shezhi/shezhi.js:258"
+      }
+    },
+    {
+      "id": "pages/shezhi/shezhi.wxml:104:bind:confirm:confirmSceneDiscard:29",
+      "route": "pages/shezhi/shezhi",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/shezhi/shezhi.wxml",
+        "js": "pages/shezhi/shezhi.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-modal",
+        "event": "bind:confirm",
+        "handler": "confirmSceneDiscard",
+        "line": 104,
+        "selectorHint": ".{{isMerchantView",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/shezhi/shezhi.js:245"
+      }
+    },
+    {
+      "id": "pages/shezhi/shezhi.wxml:107:bind:settled:onPrivacyGateSettled:31",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -945975,7 +946177,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 101,
+        "line": 107,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -946019,7 +946221,7 @@
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:103:bind:confirm:onDangerConfirm:32",
+      "id": "pages/shezhi/shezhi.wxml:109:bind:confirm:onDangerConfirm:32",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -946042,7 +946244,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onDangerConfirm",
-        "line": 103,
+        "line": 109,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -947277,7 +947479,7 @@
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:59:bind:close:closeAgreementSheet:14",
+      "id": "pages/shezhi/shezhi.wxml:65:bind:close:closeAgreementSheet:14",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -947300,7 +947502,7 @@
         "tag": "cy-agreement-sheet",
         "event": "bind:close",
         "handler": "closeAgreementSheet",
-        "line": 59,
+        "line": 65,
         "selectorHint": "cy-agreement-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -947344,7 +947546,7 @@
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:61:bind:close:closePrivacySheet:15",
+      "id": "pages/shezhi/shezhi.wxml:67:bind:close:closePrivacySheet:15",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -947367,7 +947569,7 @@
         "tag": "cy-privacy-sheet",
         "event": "bind:close",
         "handler": "closePrivacySheet",
-        "line": 61,
+        "line": 67,
         "selectorHint": "cy-privacy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -947411,7 +947613,7 @@
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:62:bind:close:closeMarketingConsent:16",
+      "id": "pages/shezhi/shezhi.wxml:68:bind:close:closeMarketingConsent:16",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -947434,7 +947636,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeMarketingConsent",
-        "line": 62,
+        "line": 68,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -947478,7 +947680,7 @@
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:67:catchtouchmove:blockSceneTouch:17",
+      "id": "pages/shezhi/shezhi.wxml:73:catchtouchmove:blockSceneTouch:17",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -947501,7 +947703,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 67,
+        "line": 73,
         "selectorHint": ".scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'settings-identity-picker'}}",
         "disabledCondition": null,
@@ -947546,7 +947748,7 @@
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:68:bind:requestclose:closeRegPicker:18",
+      "id": "pages/shezhi/shezhi.wxml:74:bind:requestclose:closeRegPicker:18",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -947569,7 +947771,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "closeRegPicker",
-        "line": 68,
+        "line": 74,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -947613,7 +947815,7 @@
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:69:bindtap:pickClub:19",
+      "id": "pages/shezhi/shezhi.wxml:75:bindtap:pickClub:19",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -947636,7 +947838,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickClub",
-        "line": 69,
+        "line": 75,
         "selectorHint": ".reg-opt",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -947726,7 +947928,7 @@
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:77:bindtap:pickMerchant:20",
+      "id": "pages/shezhi/shezhi.wxml:83:bindtap:pickMerchant:20",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -947749,7 +947951,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickMerchant",
-        "line": 77,
+        "line": 83,
         "selectorHint": ".reg-opt",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -947797,7 +947999,7 @@
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:90:catchtouchmove:blockSceneTouch:21",
+      "id": "pages/shezhi/shezhi.wxml:96:catchtouchmove:blockSceneTouch:21",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -947820,7 +948022,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 90,
+        "line": 96,
         "selectorHint": ".settings-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id !== 'settings-identity-picker'}}",
         "disabledCondition": null,
@@ -947865,7 +948067,7 @@
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:91:bind:back:backScene:23",
+      "id": "pages/shezhi/shezhi.wxml:97:bind:back:backScene:23",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -947888,7 +948090,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:back",
         "handler": "backScene",
-        "line": 91,
+        "line": 97,
         "selectorHint": "cy-scene-sheet[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -947932,7 +948134,7 @@
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:91:bind:requestclose:requestSceneClose:22",
+      "id": "pages/shezhi/shezhi.wxml:97:bind:requestclose:requestSceneClose:22",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -947955,7 +948157,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "requestSceneClose",
-        "line": 91,
+        "line": 97,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -947999,7 +948201,7 @@
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:92:bind:back:backScene:25",
+      "id": "pages/shezhi/shezhi.wxml:98:bind:back:backScene:25",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -948022,7 +948224,7 @@
         "tag": "cy-scene-route-content",
         "event": "bind:back",
         "handler": "backScene",
-        "line": 92,
+        "line": 98,
         "selectorHint": "#sceneRouteContent",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -948066,7 +948268,7 @@
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:92:bind:close:closeScene:26",
+      "id": "pages/shezhi/shezhi.wxml:98:bind:close:closeScene:26",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -948089,7 +948291,7 @@
         "tag": "cy-scene-route-content",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 92,
+        "line": 98,
         "selectorHint": "#sceneRouteContent",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -948133,7 +948335,7 @@
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:92:bind:dirtychange:onSceneDirtyChange:27",
+      "id": "pages/shezhi/shezhi.wxml:98:bind:dirtychange:onSceneDirtyChange:27",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -948156,7 +948358,7 @@
         "tag": "cy-scene-route-content",
         "event": "bind:dirtychange",
         "handler": "onSceneDirtyChange",
-        "line": 92,
+        "line": 98,
         "selectorHint": "#sceneRouteContent",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -948200,7 +948402,7 @@
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:92:bind:open:openChildScene:24",
+      "id": "pages/shezhi/shezhi.wxml:98:bind:open:openChildScene:24",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -948223,7 +948425,7 @@
         "tag": "cy-scene-route-content",
         "event": "bind:open",
         "handler": "openChildScene",
-        "line": 92,
+        "line": 98,
         "selectorHint": "#sceneRouteContent",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -948345,208 +948547,6 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/shezhi/shezhi.js:266"
-      }
-    },
-    {
-      "id": "pages/shezhi/shezhi.wxml:94:bindtap:submitSceneForm:28",
-      "route": "pages/shezhi/shezhi",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/shezhi/shezhi.wxml",
-        "js": "pages/shezhi/shezhi.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "submitSceneForm",
-        "line": 94,
-        "selectorHint": "cy-btn[bindtap]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "tap",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:270"
-      }
-    },
-    {
-      "id": "pages/shezhi/shezhi.wxml:98:bind:cancel:cancelSceneDiscard:30",
-      "route": "pages/shezhi/shezhi",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/shezhi/shezhi.wxml",
-        "js": "pages/shezhi/shezhi.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-modal",
-        "event": "bind:cancel",
-        "handler": "cancelSceneDiscard",
-        "line": 98,
-        "selectorHint": ".{{isMerchantView",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:258"
-      }
-    },
-    {
-      "id": "pages/shezhi/shezhi.wxml:98:bind:confirm:confirmSceneDiscard:29",
-      "route": "pages/shezhi/shezhi",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/shezhi/shezhi.wxml",
-        "js": "pages/shezhi/shezhi.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-modal",
-        "event": "bind:confirm",
-        "handler": "confirmSceneDiscard",
-        "line": 98,
-        "selectorHint": ".{{isMerchantView",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:245"
       }
     },
     {

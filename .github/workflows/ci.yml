@@ -188,6 +188,10 @@ jobs:
         # 2026-08-25 之前这个测试文件存在但没接进任何 workflow,从来没跑过。
         # 纯 stdlib、毫秒级,不引入扫描成本。
         run: python3 ci/test_template_cover_contract.py
+      - name: Verify licensed seed assets and read-only replacement preparation
+        run: |
+          node --test chengyinhub-xcx/tests/unit/licensed-seed-icon-assets.test.js
+          python3 scripts/test_prepare_licensed_seed_assets.py
       - name: Run control-plane readback negative controls
         # Detect changed areas 是 required context 且每次都跑；部署/镜像/漂移脚本不能落到可 skip 的盲区。
         run: bash ci/test_control_plane_readbacks.sh
