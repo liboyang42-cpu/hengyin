@@ -68,6 +68,7 @@ class ExploreIssueCodeGateTest {
         r.setOwnerType(2L);
         r.setOwnerId(ACTIVITY);
         r.setRegistrationStatus(2);
+        r.setPaymentStatus(2);
         r.setVerificationStatus(verificationStatus);
         when(regSvc.selectCmsRegistrationById(REG)).thenReturn(r);
         CmsActivity activity = new CmsActivity();

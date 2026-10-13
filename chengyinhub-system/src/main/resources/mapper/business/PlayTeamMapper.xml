@@ -242,6 +242,10 @@
         where r.member_id = #{memberId}
           and r.payment_status = 2
           and r.registration_status = 2
+          and (r.owner_type &lt;&gt; 1 or r.expires_at is null or r.expires_at &gt; now())
+          and (r.purchase_kind is null or r.purchase_kind &lt;&gt; 3
+               or (r.owner_type = 2 and a.cancel_time is null
+                   and a.end_date is not null and a.end_date &gt; now()))
           and (
             (#{ownerType} = 2 and r.owner_type = 2 and r.owner_id = #{ownerId})
             or
@@ -264,7 +268,7 @@
                 and (r.expires_at is null or r.expires_at &gt; now()))
             or (r.owner_type = 2 and a.topic_id = #{topicId}
                 and (r.purchase_kind is null or r.purchase_kind &lt;&gt; 3
-                    or (a.end_date is not null and a.end_date &gt; now())))
+                    or (a.cancel_time is null and a.end_date is not null and a.end_date &gt; now())))
           )
     </select>
 

@@ -87,6 +87,23 @@ public class RewardDropServiceImpl implements IRewardDropService {
         } catch (DuplicateKeyException e) {
             return null; // 并发已占位,不重复掉
         }
+        if (log.getId() == null) throw new IllegalStateException("掉落流水缺少原ID");
+        drop.put("dropLogId", log.getId());
+        return drop;
+    }
+
+    @Override
+    public Map<String, Object> findOriginalDrop(Long memberId, Long topicId, Long nodeId, Long activityId, String sceneKey) {
+        if (memberId == null || nodeId == null || sceneKey == null) return null;
+        RewardDropLog log = logMapper.selectByUk(memberId, topicId == null ? 0L : topicId, nodeId,
+                activityId == null ? 0L : activityId, sceneKey);
+        if (log == null || log.getId() == null || !Integer.valueOf(3).equals(log.getDropType())) return null;
+        RewardDropRule original = new RewardDropRule();
+        original.setDropType(log.getDropType());
+        original.setParamJson(log.getParamJson());
+        Map<String, Object> drop = buildDrop(original, 0L);
+        drop.put("sceneKey", log.getSceneKey());
+        drop.put("dropLogId", log.getId());
         return drop;
     }
 
