@@ -286,8 +286,10 @@ Page({
       // 同上:业务失败时会话其实还在,不能从列表里抹掉再报「已删除」。
       success(res) {
         if (!isBizOk(res)) { if (dc) dc.failed((res && res.msg) || '删除失败'); return; }
+        // 删除确认后，早于该确认发出的列表不能把旧会话及摘要带回来。
+        that._conversationRequestEpoch = (that._conversationRequestEpoch || 0) + 1;
         const list = that.data.list.filter(function (c) { return c.conversationId !== id; });
-        that.setData({ list: list });
+        that.setData({ list: list, loading: false, refreshing: false });
         that.refreshView();
         that._pendingDelete = null;
         if (dc) dc.done();
@@ -308,10 +310,26 @@ Page({
     const that = this;
     const cur = this.data.viewList[idx];
     if (!cur) return;
+    const pending = this._mutePending || (this._mutePending = Object.create(null));
+    if (pending[id]) return;
     const prevMuted = cur.muted; // 基本类型拷贝:viewList[idx] 与 list[li] 是同一引用(refreshView 的 filter/map 不克隆),setData 路径写法会就地污染 cur,不能再用 cur.muted 回滚
     const next = (prevMuted == 1) ? 0 : 1;
     const li = this.data.list.findIndex(function (c) { return c.conversationId === id; });
     if (li < 0) return;
+    const operation = {};
+    pending[id] = operation;
+    const finish = function () {
+      if (pending[id] !== operation) return false;
+      delete pending[id];
+      return true;
+    };
+    const rollback = function () {
+      // 请求期间列表可能重排或移除对象，回滚必须重新按会话 ID 定位。
+      const currentIndex = that.data.list.findIndex(function (c) { return c.conversationId === id; });
+      if (currentIndex < 0) return;
+      that.setData({ ['list[' + currentIndex + '].muted']: prevMuted });
+      that.refreshView();
+    };
     // 乐观更新
     this.setData({ ['list[' + li + '].muted']: next });
     this.refreshView();
@@ -320,18 +338,24 @@ Page({
       url: '/api/im/mute', method: 'POST', hideLoading: true,
       data: { conversation_id: id, muted: next },
       success(res) {
+        if (!finish()) return;
         if (!(res && res.code == 200)) {
           // 回滚,不留假状态
-          that.setData({ ['list[' + li + '].muted']: prevMuted });
-          that.refreshView();
+          rollback();
           app.tips && app.tips((res && res.msg) || '操作失败');
           return;
         }
+        that._conversationRequestEpoch = (that._conversationRequestEpoch || 0) + 1;
+        const currentIndex = that.data.list.findIndex(function (c) { return c.conversationId === id; });
+        const patch = { loading: false, refreshing: false };
+        if (currentIndex >= 0) patch['list[' + currentIndex + '].muted'] = next;
+        that.setData(patch);
+        that.refreshView();
         toast(next ? '已开启免打扰' : '已关闭免打扰');
       },
       fail() {
-        that.setData({ ['list[' + li + '].muted']: prevMuted });
-        that.refreshView();
+        if (!finish()) return;
+        rollback();
         app.tips && app.tips('操作失败');
       },
     });
