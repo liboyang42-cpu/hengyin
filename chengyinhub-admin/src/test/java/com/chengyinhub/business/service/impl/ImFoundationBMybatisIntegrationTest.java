@@ -33,6 +33,7 @@ class ImFoundationBMybatisIntegrationTest {
     private JdbcTemplate admin;
     private JdbcTemplate db;
     private String schema;
+    private boolean schemaCreated;
     private javax.sql.DataSource source;
     private IImService service;
     private IWxContentSecurityService safety;
@@ -52,6 +53,7 @@ class ImFoundationBMybatisIntegrationTest {
         assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(version), "需要 MySQL >= 8,实际 " + version);
         schema = "cy_im_b_" + UUID.randomUUID().toString().replace("-", "");
         admin.execute("create database " + schema);
+        schemaCreated = true;
         source = new DriverManagerDataSource(base + schema + options, user, password);
         db = new JdbcTemplate(source);
         Path sql = Paths.get("chengyinhub-admin/sql");
@@ -94,7 +96,11 @@ class ImFoundationBMybatisIntegrationTest {
         db.update("insert into im_conversation_member(conversation_id,member_id) values(100,1),(100,2),(200,1)");
     }
     @AfterAll void cleanup() {
-        if (schema != null && admin != null) admin.execute("drop database " + schema);
+        if (schemaCreated && schema != null && admin != null) {
+            admin.execute("drop database " + schema);
+            assertEquals(0, admin.queryForObject("select count(*) from information_schema.schemata where schema_name=?", Integer.class, schema));
+            schemaCreated = false;
+        }
     }
     private JdbcTemplate independent() { return new JdbcTemplate(source); }
 
