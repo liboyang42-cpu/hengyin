@@ -1,0 +1,252 @@
+{
+  "asOf": "2026-10-13",
+  "verifiedFiles": 14,
+  "verification": "固定版本源码存在且SHA256与原索引相同；未构建/引入外部组件",
+  "files": [
+    {
+      "repo": "pretix/pretix",
+      "path": "src/pretix/base/models/orders.py",
+      "commit": "6b7f2ad6846af875d14ec0995572e61a48dd56aa",
+      "url": "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/src/pretix/base/models/orders.py#L2259",
+      "sha256": "ea8bb447feab2af201d85d87cc88bb23a8eb65e47b5e57a37bd4439aebe14485",
+      "lines": 3743,
+      "key": "refund",
+      "line": 2259,
+      "anchor": "def done(self, user=None, auth=None):",
+      "part": "退款实体完成及原单关联",
+      "missing": "银行到账、多方冲回、城瘾退款政策和真实调度未由该方法解决",
+      "stack": "Python/Django；不能直接替城瘾退款服务",
+      "license": "AGPLv3及附加条款；多许可目录需逐文件核对",
+      "licenseUrls": [
+        "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/LICENSE"
+      ],
+      "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+    },
+    {
+      "repo": "pretix/pretix",
+      "path": "src/pretix/base/services/orders.py",
+      "commit": "6b7f2ad6846af875d14ec0995572e61a48dd56aa",
+      "url": "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/src/pretix/base/services/orders.py#L1437",
+      "sha256": "a101e48fe7f410fe212911815004bd21c68f2b650d4cc864590d4f3767dfcd0b",
+      "lines": 3634,
+      "key": "expire",
+      "line": 1437,
+      "anchor": "def expire_orders(sender, **kwargs):",
+      "part": "过期订单维护入口",
+      "missing": "支付中未知保占用及城瘾调度活性/积压需原链补齐",
+      "stack": "Python/Django；参考维护扫描",
+      "license": "AGPLv3及附加条款；多许可目录需逐文件核对",
+      "licenseUrls": [
+        "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/LICENSE"
+      ],
+      "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+    },
+    {
+      "repo": "pretix/pretix",
+      "path": "src/pretix/base/services/waitinglist.py",
+      "commit": "6b7f2ad6846af875d14ec0995572e61a48dd56aa",
+      "url": "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/src/pretix/base/services/waitinglist.py#L45",
+      "sha256": "508a19e1361e1b0ffff8ef272e11d471259271bddbae5f3fb4bb4615b0a993c3",
+      "lines": 186,
+      "key": "wait",
+      "line": 45,
+      "anchor": "def assign_automatically(",
+      "part": "候补自动分配、可用席位检查与事务",
+      "missing": "城瘾OFFERED占位/期限/队首公平和单项故障隔离仍需本地合同",
+      "stack": "Python/Django；候补规则对照",
+      "license": "AGPLv3及附加条款；多许可目录需逐文件核对",
+      "licenseUrls": [
+        "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/LICENSE"
+      ],
+      "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+    },
+    {
+      "repo": "gruelbox/transaction-outbox",
+      "path": "transactionoutbox-core/src/main/java/com/gruelbox/transactionoutbox/TransactionOutboxImpl.java",
+      "commit": "7799866575eac6e47343bd2a33712b4a34097b15",
+      "url": "https://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/transactionoutbox-core/src/main/java/com/gruelbox/transactionoutbox/TransactionOutboxImpl.java#L323",
+      "sha256": "639999255ef6cc9e80deed027e4582f93fceca70d5b319b42eec5c9c5f45d2f7",
+      "lines": 505,
+      "key": "outbox",
+      "line": 323,
+      "anchor": "private void processNowInternal(",
+      "part": "同事务持久事件、处理锁、成功保留和失败尝试",
+      "missing": "需要城瘾消费者/业务键/当前权限；不自带供应商恰好一次或当前微信送达回执",
+      "stack": "所读pom要求Java17；当前城瘾Java8不能直接引入该HEAD",
+      "license": "Apache-2.0",
+      "licenseUrls": [
+        "https://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/LICENSE"
+      ],
+      "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+    },
+    {
+      "repo": "gruelbox/transaction-outbox",
+      "path": "transactionoutbox-core/src/main/java/com/gruelbox/transactionoutbox/TransactionOutbox.java",
+      "commit": "7799866575eac6e47343bd2a33712b4a34097b15",
+      "url": "https://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/transactionoutbox-core/src/main/java/com/gruelbox/transactionoutbox/TransactionOutbox.java#L349",
+      "sha256": "85fb5f70cd6a8339da0920fb079790987b5e54d8ea7395d314f2debc26290a12",
+      "lines": 438,
+      "key": "unique",
+      "line": 349,
+      "anchor": "ParameterizedScheduleBuilder uniqueRequestId(",
+      "part": "任务稳定uniqueRequestId和保留期限",
+      "missing": "重复调度会拒绝，不等于返回原业务结果；未自带同键参数hash比较",
+      "stack": "所读版本Java17；仅抽取规则，不能直接接Java8",
+      "license": "Apache-2.0",
+      "licenseUrls": [
+        "https://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/LICENSE"
+      ],
+      "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+    },
+    {
+      "repo": "kagkarlsson/db-scheduler",
+      "path": "db-scheduler/src/main/java/com/github/kagkarlsson/scheduler/Scheduler.java",
+      "commit": "466ff4b458b971470b16cfaf4fb840b60d0266fa",
+      "url": "https://github.com/kagkarlsson/db-scheduler/blob/466ff4b458b971470b16cfaf4fb840b60d0266fa/db-scheduler/src/main/java/com/github/kagkarlsson/scheduler/Scheduler.java#L370",
+      "sha256": "523a6380387194260c3fa55e71bf040164f6e501b52c26faae9396d94f06680a",
+      "lines": 484,
+      "key": "scheduler",
+      "line": 370,
+      "anchor": "protected void detectDeadExecutions()",
+      "part": "持久任务/心跳/死执行检测与恢复原语",
+      "missing": "运行环境配置、积压年龄/告警、外部请求取消和城瘾业务幂等另接",
+      "stack": "所读pom要求Java17；现Java8不直接引入",
+      "license": "Apache-2.0",
+      "licenseUrls": [
+        "https://github.com/kagkarlsson/db-scheduler/blob/466ff4b458b971470b16cfaf4fb840b60d0266fa/LICENSE"
+      ],
+      "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+    },
+    {
+      "repo": "matrix-org/matrix-js-sdk",
+      "path": "src/sync.ts",
+      "commit": "9264875705b75f8013cb39592490a1974e9d1c90",
+      "url": "https://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/src/sync.ts#L150",
+      "sha256": "19b79aa8a268472f7ce56865ca33ed22b664a8aba29ee3553747957c28255de6",
+      "lines": 2104,
+      "key": "sync",
+      "line": 150,
+      "anchor": "next_batch",
+      "part": "同步水位、受限时间线及重连处理",
+      "missing": "不能只拷SDK；城瘾服务端需增量游标/缺段分页与当前成员范围",
+      "stack": "TypeScript/Matrix协议；现小程序/App API需适配",
+      "license": "Apache-2.0",
+      "licenseUrls": [
+        "https://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/LICENSE"
+      ],
+      "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+    },
+    {
+      "repo": "matrix-org/matrix-js-sdk",
+      "path": "src/client.ts",
+      "commit": "9264875705b75f8013cb39592490a1974e9d1c90",
+      "url": "https://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/src/client.ts#L2752",
+      "sha256": "2a4cdfe0c59d3846f3d70dffe450685c5ec9ce2ca0c82f9382251f1fbee2ccd8",
+      "lines": 9257,
+      "key": "send",
+      "line": 2752,
+      "anchor": "public sendEvent(",
+      "part": "显式发送事务ID、原事件发送与结果",
+      "missing": "不能把自动生成新ID当重试；城瘾历史null客户端/持久原ID要补",
+      "stack": "TypeScript；代码模式可读，非现Java/Flutter的直接模块",
+      "license": "Apache-2.0",
+      "licenseUrls": [
+        "https://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/LICENSE"
+      ],
+      "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+    },
+    {
+      "repo": "element-hq/synapse",
+      "path": "synapse/storage/databases/main/receipts.py",
+      "commit": "c0805eabb1bda3b1ffc370fec35a73d524674d60",
+      "url": "https://github.com/element-hq/synapse/blob/c0805eabb1bda3b1ffc370fec35a73d524674d60/synapse/storage/databases/main/receipts.py#L910",
+      "sha256": "d016b19cf3b627f89130a3827772918444d1cd1190e13f60842a65bce642081f",
+      "lines": 1372,
+      "key": "receipt",
+      "line": 910,
+      "anchor": "def _insert_linearized_receipt_txn(",
+      "part": "比较event_stream_ordering，旧/相同已读不覆盖更新记录",
+      "missing": "客户端实际看到消息以及城瘾未读重算/并发新增仍需落实",
+      "stack": "Python/Matrix；AGPL源码规则对照，非直接替换IM",
+      "license": "AGPL-3.0",
+      "licenseUrls": [
+        "https://github.com/element-hq/synapse/blob/c0805eabb1bda3b1ffc370fec35a73d524674d60/LICENSE-AGPL-3.0",
+        "https://github.com/element-hq/synapse/blob/c0805eabb1bda3b1ffc370fec35a73d524674d60/LICENSE-COMMERCIAL"
+      ],
+      "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+    },
+    {
+      "repo": "Turfjs/turf",
+      "path": "packages/turf-boolean-point-in-polygon/index.ts",
+      "commit": "0c20329dfc2b63555ddd5d5388c4858669df6037",
+      "url": "https://github.com/Turfjs/turf/blob/0c20329dfc2b63555ddd5d5388c4858669df6037/packages/turf-boolean-point-in-polygon/index.ts#L39",
+      "sha256": "1b28ae3452003058bfc3b7c05834dfa8efde551fe7be40f4ae0d174e9cce7d2d",
+      "lines": 99,
+      "key": "polygon",
+      "line": 39,
+      "anchor": "function booleanPointInPolygon<",
+      "part": "点在多边形内的判断原语",
+      "missing": "不是完整住宅不可反推保护、线段裁剪或服务端字段白名单/分享撤销",
+      "stack": "TypeScript/GeoJSON；坐标体系/边界需统一",
+      "license": "MIT",
+      "licenseUrls": [
+        "https://github.com/Turfjs/turf/blob/0c20329dfc2b63555ddd5d5388c4858669df6037/LICENSE"
+      ],
+      "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+    },
+    {
+      "repo": "Turfjs/turf",
+      "path": "packages/turf-distance/index.ts",
+      "commit": "0c20329dfc2b63555ddd5d5388c4858669df6037",
+      "url": "https://github.com/Turfjs/turf/blob/0c20329dfc2b63555ddd5d5388c4858669df6037/packages/turf-distance/index.ts#L29",
+      "sha256": "a6f8ed25a9e2ca6be0f4b7a806bfccabf693561b0a51f54aa8ef350ef06253d8",
+      "lines": 54,
+      "key": "distance",
+      "line": 29,
+      "anchor": "function distance(",
+      "part": "球面距离计算",
+      "missing": "距离公式不能证坐标真伪/完整轨迹；GCJ02/WGS84使用条件要明确",
+      "stack": "TypeScript；可抽取算法，现服务端/Flutter各自适配",
+      "license": "MIT",
+      "licenseUrls": [
+        "https://github.com/Turfjs/turf/blob/0c20329dfc2b63555ddd5d5388c4858669df6037/LICENSE"
+      ],
+      "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+    },
+    {
+      "repo": "localForage/localForage",
+      "path": "src/drivers/indexeddb.js",
+      "commit": "fb78c77ee583fb727a558c439b5174aca38c5924",
+      "url": "https://github.com/localForage/localForage/blob/fb78c77ee583fb727a558c439b5174aca38c5924/src/drivers/indexeddb.js#L616",
+      "sha256": "d7399dfef69905e99594dd4465c2fd5ca9151051f6871b0a0f4c3c66ba7567a4",
+      "lines": 1116,
+      "key": "storage",
+      "line": 616,
+      "anchor": "function setItem(key, value, callback)",
+      "part": "IndexedDB写入Promise成功/失败接口",
+      "missing": "城瘾小程序不是IndexedDB；dirty/recovery清理与云同步仍在宿主",
+      "stack": "JavaScript浏览器组件；读规则，不替换微信/App存储",
+      "license": "Apache-2.0",
+      "licenseUrls": [
+        "https://github.com/localForage/localForage/blob/fb78c77ee583fb727a558c439b5174aca38c5924/LICENSE"
+      ],
+      "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+    },
+    {
+      "repo": "discourse/discourse",
+      "path": "app/models/draft.rb",
+      "commit": "fe97c2951fdcce6048bf5a5ca2b4436439f8d486",
+      "url": "https://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/app/models/draft.rb",
+      "sha256": "c7c72f1dbac643ce52ef7aba489cca07d9062bd1958d537b10963fe84f46b590",
+      "lines": 365
+    },
+    {
+      "repo": "discourse/discourse",
+      "path": "app/models/draft_sequence.rb",
+      "commit": "fe97c2951fdcce6048bf5a5ca2b4436439f8d486",
+      "url": "https://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/app/models/draft_sequence.rb",
+      "sha256": "304caf5f9a5beb1f29373e2a233d229417509008e6ecef8bdc5ceb8dfb5d190f",
+      "lines": 61
+    }
+  ]
+}

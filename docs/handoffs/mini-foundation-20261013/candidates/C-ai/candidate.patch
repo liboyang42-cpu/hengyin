@@ -1,0 +1,1640 @@
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckVisionServiceTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckVisionServiceTest.java
+@@ -60,6 +60,7 @@
+ 
+         service = new PhotoCheckVisionService();
+         gateway = mock(AiGatewayService.class);
++        org.mockito.Mockito.when(gateway.consumeQuota(MEMBER_ID, "photo_check")).thenReturn("reservation");
+         alarm = mock(AlarmService.class);
+         sentImage = new AtomicReference<>();
+         ReflectionTestUtils.setField(service, "aiGatewayService", gateway);
+@@ -149,7 +150,7 @@
+         org.mockito.Mockito.doAnswer(invocation -> {
+             refunded.set(true);
+             return null;
+-        }).when(gateway).refundQuota(MEMBER_ID, "photo_check");
++        }).when(gateway).refundQuota(MEMBER_ID, "photo_check", "reservation");
+ 
+         PhotoCheckVisionResult result = service.review(MEMBER_ID, IMAGE_URL, REQUIREMENT);
+ 
+@@ -188,7 +189,7 @@
+         assertTrue(result.isDegraded(), "额度耗尽也要降级而不是把玩家拦住");
+         assertFalse(result.isPass(), "额度耗尽绝不能假装通过");
+         assertFalse(called.get(), "超限后不该再发模型调用");
+-        verify(gateway, never()).refundQuota(anyLong(), anyString());
++        verify(gateway, never()).refundQuota(anyLong(), anyString(), anyString());
+     }
+ 
+     @Test
+@@ -228,7 +229,7 @@
+         assertTrue(result.isDegraded(), "不支持的格式要降级而不是硬拦:" + result.getReason());
+         assertFalse(result.isPass());
+         verify(gateway, never()).consumeQuota(anyLong(), anyString());
+-        verify(gateway, never()).refundQuota(anyLong(), anyString());
++        verify(gateway, never()).refundQuota(anyLong(), anyString(), anyString());
+     }
+ 
+     @Test
+@@ -256,7 +257,7 @@
+         assertTrue(result.isDegraded(), "按魔数判不出格式必须降级:" + result.getReason());
+         assertTrue(result.getReason().contains("格式不支持"), "降级理由要说清格式不支持:" + result.getReason());
+         verify(gateway, never()).consumeQuota(anyLong(), anyString());
+-        verify(gateway, never()).refundQuota(anyLong(), anyString());
++        verify(gateway, never()).refundQuota(anyLong(), anyString(), anyString());
+     }
+ 
+     @Test
+@@ -288,7 +289,7 @@
+         assertTrue(result.isDegraded(), "超限必须降级:" + result.getReason());
+         assertTrue(result.getReason().contains("32MB"), "降级理由要说清超限:" + result.getReason());
+         verify(gateway, never()).consumeQuota(anyLong(), anyString());
+-        verify(gateway, never()).refundQuota(anyLong(), anyString());
++        verify(gateway, never()).refundQuota(anyLong(), anyString(), anyString());
+     }
+ 
+     @Test
+@@ -298,7 +299,7 @@
+         service.review(MEMBER_ID, IMAGE_URL, REQUIREMENT);
+ 
+         verify(gateway).consumeQuota(MEMBER_ID, "photo_check");
+-        verify(gateway, never()).refundQuota(anyLong(), anyString());
++        verify(gateway, never()).refundQuota(anyLong(), anyString(), anyString());
+     }
+ 
+     // ==================== 脚手架 ====================
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImplTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImplTest.java
+@@ -51,6 +51,38 @@
+     private AiModelConfig aiModelConfig;
+     private LlmClient mockLlm;
+ 
++    private Long reserveResult = 1L;
++    private boolean countByKey;
++    private final java.util.Map<String, Long> counters = new java.util.HashMap<>();
++    private final java.util.List<java.util.List<Object>> reserved = new java.util.ArrayList<>();
++    private final java.util.List<java.util.List<Object>> refunded = new java.util.ArrayList<>();
++    private final java.util.List<Integer> reserveTtls = new java.util.ArrayList<>();
++
++    @SuppressWarnings("unchecked")
++    private void installReservationStub() {
++        when(redisTemplate.execute(org.mockito.ArgumentMatchers.any(org.springframework.data.redis.core.script.RedisScript.class),
++                org.mockito.ArgumentMatchers.anyList(), org.mockito.ArgumentMatchers.anyInt(),
++                org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt())).thenAnswer(inv -> {
++            java.util.List<Object> keys = inv.getArgument(1);
++            reserved.add(new java.util.ArrayList<>(keys));
++            Object ttl = inv.getArgument(2);
++            assertTrue(ttl instanceof Integer, "production serializer requires Integer TTL");
++            reserveTtls.add((Integer) ttl);
++            String key = String.valueOf(keys.get(0));
++            if (countByKey) {
++                long value = counters.getOrDefault(key, 0L) + 1;
++                counters.put(key, value);
++                return value;
++            }
++            return reserveResult;
++        });
++        when(redisTemplate.execute(org.mockito.ArgumentMatchers.any(org.springframework.data.redis.core.script.RedisScript.class),
++                org.mockito.ArgumentMatchers.anyList())).thenAnswer(inv -> {
++            refunded.add(new java.util.ArrayList<>((java.util.List<Object>) inv.getArgument(1)));
++            return 1L;
++        });
++    }
++
+     private static final Long MEMBER_ID = 1001L;
+ 
+     @SuppressWarnings("unchecked")
+@@ -83,8 +115,9 @@
+         // 默认: 日志写入成功
+         when(aiGenerationLogMapper.insertAiGenerationLog(any())).thenReturn(1);
+ 
+-        // 默认: 频控未超(used=1, 首次)
+-        when(valueOperations.increment(anyString())).thenReturn(1L);
++        installReservationStub();
++        // 默认预占回执：这里只验证调用合同，Lua由真实Redis IT覆盖。
++        reserveResult = 1L;
+ 
+         List<LlmClient> clients = Collections.singletonList(mockLlm);
+ 
+@@ -101,7 +134,7 @@
+ 
+     @Test
+     void generateNormalFlowReturnsResult() {
+-        when(valueOperations.increment(anyString())).thenReturn(1L);
++        reserveResult = 1L;
+ 
+         AiGatewayResult result = service.generate(MEMBER_ID, "club", "merchant_plan",
+                 "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}");
+@@ -125,7 +158,7 @@
+                 "[BIZ:theme_draft]\n", "{\"idea\":\"night walk\"}");
+ 
+         assertNotNull(result);
+-        verify(valueOperations, never()).increment(anyString());
++        assertEquals(0, reserved.size());
+     }
+ 
+     // ---- input safety block ----
+@@ -173,7 +206,7 @@
+ 
+     @Test
+     void generateRateLimitExceededThrowsException() {
+-        when(valueOperations.increment(anyString())).thenReturn(25L); // dailyLimit is 20
++        reserveResult = 25L; // dailyLimit is 20
+ 
+         AiServiceException ex = assertThrows(AiServiceException.class, () -> {
+             service.generate(MEMBER_ID, "club", "merchant_plan",
+@@ -215,22 +248,8 @@
+         assertTrue(error.getMessage().contains("traceId="), "外部报错必须带可查日志的追踪号");
+     }
+ 
+-    // ---- 频控回滚:我们的锅不该扣用户额度 ----
+-    //
+-    // 病理:generate() 先 increment 再调模型,模型炸时 catch 只 saveLog + throw「AI 繁忙」,
+-    // 从不 decrement ⇒ 用户什么都没拿到,每日额度照扣一次。每天 20 次的池子,
+-    // AI 抖 3 次就白掉 15%,而用户完全无从知晓、也无处申诉(日志里只有 ERROR)。
+-    //
+-    // 本次退的:模型调用抛异常、选不到可用模型 —— 都是我们的锅,用户零所得。
+-    // 本次不退的,理由各不相同(**别一视同仁**,详见 refundQuota 的 javadoc):
+-    //   · 已超限 —— 确定不退;
+-    //   · 出参安全拦截 —— 产品策略未拍板;
+-    // ⚠️ 全篇不写行号:指语义,别指坐标 —— 坐标随任何编辑静默失准。
+-    //
+-    //   · 入参安全拦截 —— **边界未决,不是「刻意设计」**:checkText fail-close,
+-    //     「审核服务繁忙」(我们的锅)与「内容违规」(用户的锅)走同一个非空 String 通道,
+-    //     本层区分不了。修它要改内容安全接口(合规路径)→ 另开单。
+-    //
++    // 输入审核服务故障与模型失败退本次预占；明确违规不退。
++    // REVIEW_REQUIRED 与输出审核沿原规则，原子补偿另由真实 Redis IT 验证。
+ 
+     @Test
+     void modelError_refundsQuota_notUserFault() {
+@@ -240,7 +259,7 @@
+                 MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
+ 
+         // 模型炸了是我们的锅,用户没拿到任何东西 → 必须把刚才 increment 的那一次退回来
+-        verify(valueOperations, times(1)).decrement(anyString());
++        assertEquals(1, refunded.size());
+     }
+ 
+     @Test
+@@ -252,95 +271,65 @@
+         assertThrows(AiServiceException.class, () -> service.generate(
+                 MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
+ 
+-        verify(valueOperations, times(1)).decrement(anyString());
+-    }
+-
+-    /**
+-     * 入参内容安全拦截:维持「不退」——但这是<b>现状锁定,不是「设计如此」</b>。
+-     *
+-     * <p>⚠️ checkText 是 fail-close,且用同一个非空 String 通道表达
+-     * 「审核服务繁忙」(我们的锅)与「内容含违规」(用户的锅),本层区分不了 ⇒
+-     * 微信审核一抖,用户白扣额度还被标 SAFETY_INPUT_BLOCKED。修它要改内容安全接口
+-     * (合规路径),另开单。本用例只锁住「本次没顺手改这里的行为」,
+-     * <b>将来那单落地时它应该被改掉,不是被绕开</b>。
+-     */
+-    @Test
+-    void inputBlocked_doesNotRefund_currentBehaviorLocked_boundaryUnresolved() {
++        assertEquals(1, refunded.size());
++    }
++
++    @Test
++    void unknownInputRejectionKeepsExistingNonRefundPolicy() {
+         when(wxContentSecurityService.checkText(anyString(), anyString())).thenReturn("含违规内容");
+ 
+         assertThrows(AiServiceException.class, () -> service.generate(
+                 MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
+ 
+-        verify(valueOperations, never()).decrement(anyString());
++        assertEquals(0, refunded.size());
+     }
+ 
+     @Test
+     void normalFlow_doesNotRefund() {
+         service.generate(MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}");
+-        verify(valueOperations, never()).decrement(anyString());
++        assertEquals(0, refunded.size());
+     }
+ 
+     @Test
+     void rateLimitExceeded_doesNotRefund_alreadyOverAnyway() {
+-        when(valueOperations.increment(anyString())).thenReturn(25L); // dailyLimit=20
++        reserveResult = 25L; // dailyLimit=20
+ 
+         assertThrows(AiServiceException.class, () -> service.generate(
+                 MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
+ 
+         // 已经超了,退不退都拦;退反而会让「攻击者狂刷」看起来像没刷过。不退。
++        assertEquals(0, refunded.size());
++    }
++
++    @Test
++    void refundRequestsAtomicCompensationWithoutStandaloneDelete() {
++        when(mockLlm.chat(anyString(), anyString())).thenThrow(new RuntimeException("model down"));
++        assertThrows(AiServiceException.class, () -> service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u"));
++        assertEquals(1, refunded.size());
++        assertEquals(reserved.get(0), refunded.get(0));
++        verify(redisTemplate, never()).delete(anyString());
+         verify(valueOperations, never()).decrement(anyString());
+     }
+ 
+-    /**
+-     * ★ DECR 扑空(key 不存在)会建出一个 -1 且**无 TTL** 的 key。
+-     *
+-     * <p>本机 Redis 实测:{@code DEL k; DECR k} → 值 -1、{@code TTL k} = -1(永不过期)。
+-     * <p>两种扑空,后果不同(详见 {@code refundQuota} 的注释):
+-     * <ul>
+-     *   <li><b>正常 TTL 到期</b> ⇒ 只可能发生在次日零点后,而那之后再没请求会算出这个日期 key
+-     *       ⇒ -1 key 没人读得到 = <b>纯内存泄漏,不是白送额度</b>;</li>
+-     *   <li><b>日期内 key 丢失</b>(淘汰/重启/人工 DEL)⇒ 当天后续请求会读到 -1
+-     *       ⇒ 计数从 -1 起 = <b>真白送一次</b>。上面那个 DEL 实验模拟的正是这一种。</li>
+-     * </ul>
+-     * 两种都该删 key。本用例用 mock 让 decrement 返回 -1,覆盖的是「扑空后必须 delete」这条不变式。
+-     */
+-    @Test
+-    void refund_onExpiredKey_deletesInsteadOfLeavingImmortalNegativeKey() {
++    /** 正常退款(余额 >= 0)不该删 key —— 删了会把当天已用次数清零 = 白送整池额度。 */
++    @Test
++    void refund_normal_doesNotDeleteKey() {
+         when(mockLlm.chat(anyString(), anyString())).thenThrow(new RuntimeException("model down"));
+-        // 模拟:increment 时 key 还在(返回 1),decrement 时 key 已过期 → DECR 建 key 得 -1
+-        when(valueOperations.decrement(anyString())).thenReturn(-1L);
++
+ 
+         assertThrows(AiServiceException.class, () -> service.generate(
+                 MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
+ 
+-        verify(redisTemplate, times(1)).delete(anyString());
+-    }
+-
+-    /** 正常退款(余额 >= 0)不该删 key —— 删了会把当天已用次数清零 = 白送整池额度。 */
+-    @Test
+-    void refund_normal_doesNotDeleteKey() {
++        verify(redisTemplate, never()).delete(anyString());
++    }
++
++    /** 退款要退到和扣的同一个 key —— 退错池子等于没退,还会把别人的额度还错。 */
++    @Test
++    void refundUsesSameOriginalDayGenerationAndNonceKeys() {
+         when(mockLlm.chat(anyString(), anyString())).thenThrow(new RuntimeException("model down"));
+-        when(valueOperations.decrement(anyString())).thenReturn(3L);
+-
+-        assertThrows(AiServiceException.class, () -> service.generate(
+-                MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
+-
+-        verify(redisTemplate, never()).delete(anyString());
+-    }
+-
+-    /** 退款要退到和扣的同一个 key —— 退错池子等于没退,还会把别人的额度还错。 */
+-    @Test
+-    void refund_usesSameKeyAsIncrement() {
+-        when(mockLlm.chat(anyString(), anyString())).thenThrow(new RuntimeException("model down"));
+-        ArgumentCaptor<Object> inc = ArgumentCaptor.forClass(Object.class);
+-        ArgumentCaptor<Object> dec = ArgumentCaptor.forClass(Object.class);
+-
+-        assertThrows(AiServiceException.class, () -> service.generate(
+-                MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
+-
+-        verify(valueOperations).increment((Object) inc.capture());
+-        verify(valueOperations).decrement((Object) dec.capture());
+-        assertEquals(inc.getValue(), dec.getValue(), "退的 key 必须与扣的 key 逐字相同");
++        assertThrows(AiServiceException.class, () -> service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u"));
++        assertEquals(1, reserved.size());
++        assertEquals(reserved, refunded);
+     }
+ 
+     // ---- trace ID ----
+@@ -447,26 +436,15 @@
+         verify(mockLlm, never()).chat(anyString(), anyString());
+     }
+ 
+-    // ---- 频控分池: npc_chat 独立额度, 创作类共用原池 ----
+-    // ⚠️ 用真计数器(HashMap<key,count>)而不是 thenReturn 固定值:
+-    //    固定值的 stub 无论 key 是什么都返回同一个数 ⇒ 分池断掉时照样绿(假绿)。
+-    //    只有「按 key 各自计数」才能真的证明两个池互不相干。
+-
+-    /** 让 increment(key) 按 key 真计数,返回该 key 的当前值。 */
+-    private java.util.Map<String, Long> installRealCounter() {
+-        java.util.Map<String, Long> counters = new java.util.HashMap<>();
+-        when(valueOperations.increment(anyString())).thenAnswer(inv -> {
+-            String key = inv.getArgument(0);
+-            long v = counters.getOrDefault(key, 0L) + 1;
+-            counters.put(key, v);
+-            return v;
+-        });
++    // 按 key 维护 mock 计数，仅验证调用分池；不是 Redis 脚本或并发验收。
++    private java.util.Map<String, Long> installPerKeyCounterStub() {
++        countByKey = true;
+         return counters;
+     }
+ 
+     @Test
+     void npcChatAndCreationUseDifferentRateKeys() {
+-        java.util.Map<String, Long> counters = installRealCounter();
++        java.util.Map<String, Long> counters = installPerKeyCounterStub();
+ 
+         service.generate(MEMBER_ID, "player", "npc_chat", "s", "u");
+         service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u");
+@@ -486,7 +464,7 @@
+     void creationBizTypesShareOneRateKey() {
+         // 分组的意义:创作类 7 个 bizType **共用一池**。
+         // 若按 bizType 各自一池,单用户实际额度会被悄悄放大 7 倍。
+-        java.util.Map<String, Long> counters = installRealCounter();
++        java.util.Map<String, Long> counters = installPerKeyCounterStub();
+ 
+         service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u");
+         service.generate(MEMBER_ID, "club", "theme_draft", "s", "u");
+@@ -500,7 +478,7 @@
+     void npcUsageDoesNotConsumeCreationQuota() {
+         ReflectionTestUtils.setField(aiModelConfig, "npcDailyLimit", 100);
+         ReflectionTestUtils.setField(aiModelConfig, "dailyLimit", 20);
+-        installRealCounter();
++        installPerKeyCounterStub();
+ 
+         // NPC 用掉 30 次(远超创作类的 20/天上限)
+         for (int i = 0; i < 30; i++) {
+@@ -517,7 +495,7 @@
+     void creationExhaustedDoesNotBlockNpc() {
+         ReflectionTestUtils.setField(aiModelConfig, "npcDailyLimit", 100);
+         ReflectionTestUtils.setField(aiModelConfig, "dailyLimit", 20);
+-        installRealCounter();
++        installPerKeyCounterStub();
+ 
+         // 创作类用满 20 次
+         for (int i = 0; i < 20; i++) {
+@@ -538,7 +516,7 @@
+         ReflectionTestUtils.setField(aiModelConfig, "npcDailyLimit", 100);
+         ReflectionTestUtils.setField(aiModelConfig, "dailyLimit", 20);
+         // 第 101 次 NPC 调用 → 超 npcDailyLimit(100)
+-        when(valueOperations.increment(anyString())).thenReturn(101L);
++        reserveResult = 101L;
+ 
+         AiServiceException ex = assertThrows(AiServiceException.class,
+                 () -> service.generate(MEMBER_ID, "player", "npc_chat", "s", "u"));
+@@ -553,7 +531,7 @@
+     void npcUnderLimitPasses() {
+         ReflectionTestUtils.setField(aiModelConfig, "npcDailyLimit", 100);
+         // 第 21 次 NPC 调用:超了创作类的 20,但没超 NPC 的 100 → 必须放行
+-        when(valueOperations.increment(anyString())).thenReturn(21L);
++        reserveResult = 21L;
+ 
+         AiGatewayResult r = service.generate(MEMBER_ID, "player", "npc_chat", "s", "u");
+         assertNotNull(r);
+@@ -561,22 +539,62 @@
+     }
+ 
+     @Test
+-    void generateSetsExpireOnFirstRequest() {
+-        when(valueOperations.increment(anyString())).thenReturn(1L);
++    void generatePassesOriginalTtlAsIntegerToAtomicReservation() {
++        reserveResult = 1L;
+ 
+         service.generate(MEMBER_ID, "club", "merchant_plan",
+                 "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}");
+ 
+-        verify(redisTemplate).expire(anyString(), eq(86400L), eq(TimeUnit.SECONDS));
+-    }
+-
+-    @Test
+-    void generateDoesNotSetExpireOnSubsequentRequests() {
+-        when(valueOperations.increment(anyString())).thenReturn(5L);
++        assertEquals(Integer.valueOf(86400), reserveTtls.get(0));
++        verify(redisTemplate, never()).expire(anyString(), anyLong(), any(TimeUnit.class));
++    }
++
++    @Test
++    void generateDoesNotRenewTtlOutsideAtomicReservation() {
++        reserveResult = 5L;
+ 
+         service.generate(MEMBER_ID, "club", "merchant_plan",
+                 "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}");
+ 
+         verify(redisTemplate, never()).expire(anyString(), anyLong(), any(TimeUnit.class));
+     }
++
++    @Test
++    void detectionServiceFailureRefundsWithoutCallingProvider() {
++        when(wxContentSecurityService.checkText(anyString(), anyString())).thenReturn(IWxContentSecurityService.MSG_BUSY);
++        AiServiceException error = assertThrows(AiServiceException.class,
++                () -> service.generate(MEMBER_ID, "club", "theme_draft", "s", "u"));
++        assertEquals(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, error.getReason());
++        assertEquals(reserved, refunded);
++        verify(mockLlm, never()).chat(anyString(), anyString());
++    }
++
++    @Test
++    void explicitRiskyInputKeepsQuotaAndTypedBlockedReason() {
++        when(wxContentSecurityService.checkText(anyString(), anyString())).thenReturn("内容包含违规信息，请修改后重试");
++        AiServiceException error = assertThrows(AiServiceException.class,
++                () -> service.generate(MEMBER_ID, "club", "theme_draft", "s", "u"));
++        assertEquals(AiServiceException.Reason.INPUT_BLOCKED, error.getReason());
++        assertEquals(0, refunded.size());
++        verify(mockLlm, never()).chat(anyString(), anyString());
++    }
++
++    @Test
++    void reviewRequiredRetainsUnknownAndDoesNotRefundOrdinaryPool() {
++        when(wxContentSecurityService.checkText(anyString(), anyString())).thenReturn(IWxContentSecurityService.REVIEW_REQUIRED);
++        AiServiceException error = assertThrows(AiServiceException.class,
++                () -> service.generate(MEMBER_ID, "club", "theme_draft", "s", "u"));
++        assertEquals(AiServiceException.Reason.UNKNOWN, error.getReason());
++        assertEquals(0, refunded.size());
++    }
++
++    @Test
++    void unknownReservationReplyCancelsOnlyItsOwnNonceBeforeProvider() {
++        reserveResult = null;
++        assertThrows(IllegalStateException.class,
++                () -> service.generate(MEMBER_ID, "club", "theme_draft", "s", "u"));
++        assertEquals(1, reserved.size());
++        assertEquals(reserved, refunded);
++        verify(mockLlm, never()).chat(anyString(), anyString());
++    }
+ }
+--- /dev/null
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiQuotaReservationRedisIT.java
+@@ -0,0 +1,259 @@
++package com.chengyinhub.business.service.ai.impl;
++
++import java.util.*;
++import java.util.concurrent.*;
++import java.util.concurrent.atomic.AtomicBoolean;
++import org.junit.jupiter.api.*;
++import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
++import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
++import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
++import org.springframework.data.redis.core.RedisTemplate;
++import org.springframework.data.redis.core.StringRedisTemplate;
++import org.springframework.data.redis.core.script.RedisScript;
++import org.springframework.test.util.ReflectionTestUtils;
++import com.chengyinhub.business.service.ai.PhotoCheckVisionService;
++import com.chengyinhub.business.service.impl.AiCreatorServiceImpl;
++import com.chengyinhub.common.config.AiModelConfig;
++import com.chengyinhub.framework.config.RedisConfig;
++import static org.junit.jupiter.api.Assertions.*;
++
++/** Real Lua with the production FastJson2 serializer, isolated exact keys only. */
++@EnabledIfEnvironmentVariable(named="CHENGYIN_AI_RESERVATION_REDIS_IT",matches="1")
++@TestInstance(TestInstance.Lifecycle.PER_CLASS)
++@Timeout(40)
++class AiQuotaReservationRedisIT {
++    private LettuceConnectionFactory factory;
++    private RedisTemplate<Object,Object> production;
++    private StringRedisTemplate raw;
++    private final Set<String> owned = Collections.synchronizedSet(new HashSet<>());
++    private Long member;
++
++    private String required(String name) {
++        String value=System.getenv(name);
++        assertNotNull(value,"explicit task environment required: "+name);
++        return value;
++    }
++    @BeforeAll void connect() {
++        String host=required("CHENGYIN_AI_REDIS_IT_HOST");
++        assertEquals("127.0.0.1",host);
++        int port=Integer.parseInt(required("CHENGYIN_AI_REDIS_IT_PORT"));
++        int database=Integer.parseInt(required("CHENGYIN_AI_REDIS_IT_DATABASE"));
++        assertTrue(port>0 && port<=65535 && database>=0 && database<=15);
++        RedisStandaloneConfiguration config=new RedisStandaloneConfiguration(host,port);
++        config.setDatabase(database);
++        String password=System.getenv("CHENGYIN_AI_REDIS_IT_PASSWORD");
++        if(password!=null && !password.isEmpty()) config.setPassword(password);
++        factory=new LettuceConnectionFactory(config);factory.afterPropertiesSet();
++        production=new RedisConfig().redisTemplate(factory);
++        raw=new StringRedisTemplate(factory);
++        assertEquals("PONG",raw.execute((org.springframework.data.redis.core.RedisCallback<String>) connection->connection.ping()));
++    }
++    @BeforeEach void uniqueMember() {
++        member=1000000000000L+Math.floorMod(UUID.randomUUID().getMostSignificantBits(),8000000000000L);
++    }
++    @AfterEach void cleanup() {
++        for(String key:new ArrayList<>(owned)) raw.delete(key);
++        owned.clear();
++    }
++    @AfterAll void disconnect() { if(factory!=null) factory.destroy(); }
++
++    private void claim(List<Object> keys) {
++        synchronized(owned) {
++            for(Object value:keys) {
++                String key=String.valueOf(value);
++                if(!owned.contains(key)) {
++                    assertFalse(Boolean.TRUE.equals(raw.hasKey(key)),"refusing pre-existing key "+key);
++                    owned.add(key);
++                }
++            }
++        }
++    }
++    private RedisTemplate<Object,Object> recording(final boolean lostReply,final boolean applied,final boolean nullReply) {
++        AtomicBoolean first=new AtomicBoolean(true);
++        return new RedisTemplate<Object,Object>() {
++            @Override public <T> T execute(RedisScript<T> script,List<Object> keys,Object...args) {
++                claim(keys);
++                if(args.length==3 && first.getAndSet(false) && (lostReply || nullReply)) {
++                    T value=null;
++                    if(applied) value=production.execute(script,keys,args);
++                    if(nullReply) return null;
++                    throw new IllegalStateException("simulated client lost reply after applied="+applied);
++                }
++                return production.execute(script,keys,args);
++            }
++        };
++    }
++    private AiGatewayServiceImpl gateway(RedisTemplate<Object,Object> redis) {
++        AiGatewayServiceImpl service=new AiGatewayServiceImpl();
++        AiModelConfig config=new AiModelConfig();
++        ReflectionTestUtils.setField(config,"dailyLimit",20);
++        ReflectionTestUtils.setField(config,"npcDailyLimit",100);
++        ReflectionTestUtils.setField(service,"photoDailyLimit",30);
++        ReflectionTestUtils.setField(service,"aiModelConfig",config);
++        ReflectionTestUtils.setField(service,"redisTemplate",redis);
++        return service;
++    }
++    private List<Object> keys(String prefix) {
++        String key=prefix+member+":"+UUID.randomUUID().toString().replace("-","");
++        List<Object> keys=Arrays.<Object>asList(key,key+":generation",key+":nonce");
++        claim(keys);return keys;
++    }
++    @SuppressWarnings("unchecked") private RedisScript<Long> script(Object source,String name) {
++        return (RedisScript<Long>)ReflectionTestUtils.getField(source,name);
++    }
++    private Long reserve(Object source,List<Object> keys,int capped) {
++        return production.execute(script(source,"RESERVE_QUOTA_SCRIPT"),keys,
++                Integer.valueOf(86400),Integer.valueOf(capped==1?3:20),Integer.valueOf(capped));
++    }
++    private Long refund(Object source,List<Object> keys) {
++        return production.execute(script(source,"REFUND_QUOTA_SCRIPT"),keys);
++    }
++    private String key(String token) { return token.substring(0,token.indexOf('|')); }
++
++    @Test void actualGatewayCompensatesAppliedLostReplyOnlyOnce() {
++        AiGatewayServiceImpl service=gateway(recording(true,true,false));
++        assertThrows(IllegalStateException.class,()->service.consumeQuota(member,"theme_draft"));
++        String counter=owned.stream().filter(k->k.startsWith("ai:gen:limit:gen:")&&!k.endsWith(":generation")).findFirst().get();
++        assertEquals("0",raw.opsForValue().get(counter));
++        String token=service.consumeQuota(member,"theme_draft");
++        assertEquals("1",raw.opsForValue().get(key(token)));
++        service.refundQuota(member,"theme_draft",token);
++        service.refundQuota(member,"theme_draft",token);
++        assertEquals("0",raw.opsForValue().get(key(token)));
++    }
++    @Test void notAppliedLostReplyCancelsLateReservationWithoutCreatingCount() {
++        AiGatewayServiceImpl service=gateway(recording(true,false,false));
++        assertThrows(IllegalStateException.class,()->service.consumeQuota(member,"photo_check"));
++        String receipt=owned.stream().filter(k->k.startsWith("ai:gen:reservation:")).findFirst().get();
++        String counter=owned.stream().filter(k->k.startsWith("ai:gen:limit:photo:")&&!k.endsWith(":generation")).findFirst().get();
++        assertFalse(Boolean.TRUE.equals(raw.hasKey(counter)));
++        assertEquals(Long.valueOf(-1L),reserve(service,Arrays.<Object>asList(counter,counter+":generation",receipt),0));
++        assertFalse(Boolean.TRUE.equals(raw.hasKey(counter)));
++    }
++    @Test void photoUnknownReplyPreservesUnmeteredFallbackAfterActualCompensation() {
++        AiGatewayServiceImpl service=gateway(recording(false,true,true));
++        PhotoCheckVisionService photo=new PhotoCheckVisionService();
++        ReflectionTestUtils.setField(photo,"aiGatewayService",service);
++        assertEquals("",ReflectionTestUtils.invokeMethod(photo,"chargeQuota",member));
++        String counter=owned.stream().filter(k->k.startsWith("ai:gen:limit:photo:")&&!k.endsWith(":generation")).findFirst().get();
++        assertEquals("0",raw.opsForValue().get(counter));
++    }
++    @Test void gatewayOldGenerationCannotRefundRecreatedCounter() { generationBoundary(new AiGatewayServiceImpl(),0); }
++    @Test void playerOldGenerationCannotRefundRecreatedCounter() { generationBoundary(new AiCreatorServiceImpl(),1); }
++    private void generationBoundary(Object service,int capped) {
++        List<Object> a=keys("ai:quota:it:");
++        assertEquals(Long.valueOf(1),reserve(service,a,capped));
++        raw.delete(String.valueOf(a.get(0)));
++        List<Object> b=Arrays.<Object>asList(a.get(0),a.get(1),a.get(2)+"-b");claim(b);
++        assertEquals(Long.valueOf(1),reserve(service,b,capped));
++        assertEquals(Long.valueOf(0),refund(service,a));
++        assertEquals("1",raw.opsForValue().get(String.valueOf(a.get(0))));
++        assertEquals(Long.valueOf(1),refund(service,b));
++        assertEquals("0",raw.opsForValue().get(String.valueOf(a.get(0))));
++    }
++    @Test void generationLossConservativelyProtectsNewReservations() {
++        Object service=new AiGatewayServiceImpl();List<Object>a=keys("ai:quota:it:");
++        reserve(service,a,0);raw.delete(String.valueOf(a.get(1)));
++        List<Object>b=Arrays.<Object>asList(a.get(0),a.get(1),a.get(2)+"-b");claim(b);reserve(service,b,0);
++        assertEquals(Long.valueOf(0),refund(service,a));
++        assertEquals("2",raw.opsForValue().get(String.valueOf(a.get(0))));
++    }
++    @Test void missingOldDayDoesNotRecreateAndReplayDoesNotTouchLaterCounter() {
++        Object service=new AiGatewayServiceImpl();List<Object>a=keys("ai:quota:old:");reserve(service,a,0);
++        raw.delete(String.valueOf(a.get(0)));
++        assertEquals(Long.valueOf(0),refund(service,a));
++        assertFalse(Boolean.TRUE.equals(raw.hasKey(String.valueOf(a.get(0)))));
++        raw.opsForValue().set(String.valueOf(a.get(0)),"7");
++        assertEquals(Long.valueOf(0),refund(service,a));
++        assertEquals("7",raw.opsForValue().get(String.valueOf(a.get(0))));
++    }
++    @Test void invalidCounterRetainsReceiptAndZeroNeverGoesNegative() {
++        Object service=new AiCreatorServiceImpl();List<Object>a=keys("ai:quota:it:");reserve(service,a,1);
++        String receipt=raw.opsForValue().get(String.valueOf(a.get(2)));
++        raw.opsForValue().set(String.valueOf(a.get(0)),"invalid");
++        assertThrows(RuntimeException.class,()->refund(service,a));
++        assertEquals(receipt,raw.opsForValue().get(String.valueOf(a.get(2))));
++        raw.opsForValue().set(String.valueOf(a.get(0)),"0");
++        assertEquals(Long.valueOf(0),refund(service,a));
++        assertEquals("0",raw.opsForValue().get(String.valueOf(a.get(0))));
++    }
++    @Test void productionSerializerUsesIntegerTtlAndRejectsLongBeforeWriting() {
++        Object service=new AiGatewayServiceImpl();List<Object>a=keys("ai:quota:it:");
++        assertThrows(RuntimeException.class,()->production.execute(script(service,"RESERVE_QUOTA_SCRIPT"),a,
++                Long.valueOf(86400),Integer.valueOf(20),Integer.valueOf(0)));
++        assertFalse(Boolean.TRUE.equals(raw.hasKey(String.valueOf(a.get(0)))));
++        assertEquals(Long.valueOf(1),reserve(service,a,0));
++        long ttl=raw.getExpire(String.valueOf(a.get(0)),TimeUnit.SECONDS);
++        assertTrue(ttl>0 && ttl<=86400);
++        long counterTtl=raw.getExpire(String.valueOf(a.get(0)),TimeUnit.MILLISECONDS);
++        assertTrue(raw.getExpire(String.valueOf(a.get(1)),TimeUnit.MILLISECONDS)<=counterTtl);
++    }
++    @Test void positiveCounterTtlDoesNotRenewAndOrdinaryOverLimitStillCounts() {
++        Object service=new AiGatewayServiceImpl();List<Object>a=keys("ai:quota:it:");
++        raw.opsForValue().set(String.valueOf(a.get(0)),"20",60,TimeUnit.SECONDS);
++        assertEquals(Long.valueOf(21),reserve(service,a,0));
++        assertTrue(raw.getExpire(String.valueOf(a.get(0)),TimeUnit.SECONDS)<=60);
++    }
++    @Test void playerConcurrentReservationsCapThreeAndNonceReplayDoesNotIncrement() throws Exception {
++        Object service=new AiCreatorServiceImpl();List<Object>a=keys("ai:quota:it:");
++        ExecutorService pool=Executors.newFixedThreadPool(4);List<Future<Long>> futures=new ArrayList<>();
++        List<List<Object>> requests=new ArrayList<>();
++        try {
++            for(int i=0;i<4;i++) {
++                List<Object> k=Arrays.<Object>asList(a.get(0),a.get(1),a.get(2)+"-"+i);claim(k);requests.add(k);
++                futures.add(pool.submit(()->reserve(service,k,1)));
++            }
++            List<Long> results=new ArrayList<>();for(Future<Long> f:futures)results.add(f.get(10,TimeUnit.SECONDS));
++            assertEquals(1,Collections.frequency(results,-2L));assertEquals("3",raw.opsForValue().get(String.valueOf(a.get(0))));
++            int success=results.indexOf(1L);assertTrue(success>=0);
++            assertEquals(Long.valueOf(1L),reserve(service,requests.get(success),1));
++            assertEquals("3",raw.opsForValue().get(String.valueOf(a.get(0))));
++        } finally {pool.shutdownNow();}
++    }
++    @Test void concurrentRefundsDebitOnlyOnce() throws Exception {
++        Object service=new AiGatewayServiceImpl();List<Object>a=keys("ai:quota:it:");reserve(service,a,0);
++        ExecutorService pool=Executors.newFixedThreadPool(2);
++        try {
++            Future<Long>x=pool.submit(()->refund(service,a));Future<Long>y=pool.submit(()->refund(service,a));
++            assertEquals(1L,x.get(10,TimeUnit.SECONDS)+y.get(10,TimeUnit.SECONDS));
++            assertEquals("0",raw.opsForValue().get(String.valueOf(a.get(0))));
++        } finally {pool.shutdownNow();}
++    }
++    @Test void actualPlayerServiceCompensatesAppliedLostReply() {
++        AiCreatorServiceImpl service=new AiCreatorServiceImpl();
++        ReflectionTestUtils.setField(service,"redisTemplate",recording(true,true,false));
++        assertThrows(RuntimeException.class,()->ReflectionTestUtils.invokeMethod(service,"reservePlayerThemeDraftQuota",member));
++        String counter=owned.stream().filter(k->!k.contains("reservation")&&!k.endsWith(":generation")).findFirst().get();
++        assertEquals("0",raw.opsForValue().get(counter));
++        Object reservation=ReflectionTestUtils.invokeMethod(service,"reservePlayerThemeDraftQuota",member);
++        assertNotNull(reservation);
++        assertEquals("1",raw.opsForValue().get(counter));
++        ReflectionTestUtils.invokeMethod(service,"releasePlayerThemeDraftQuota",reservation);
++        assertEquals("0",raw.opsForValue().get(counter));
++    }
++    @Test void actualRefundUsesOriginalDayAndRejectsOtherMemberOrPool() {
++        AiGatewayServiceImpl service=gateway(recording(false,false,false));
++        String old="ai:gen:limit:gen:"+member+":20200101";
++        String nonce=UUID.randomUUID().toString().replace("-","");
++        List<Object> a=Arrays.<Object>asList(old,old+":generation","ai:gen:reservation:"+old+":"+nonce);
++        claim(a);reserve(service,a,0);
++        String today=service.consumeQuota(member,"theme_draft");
++        String oldToken=old+"|"+nonce;
++        service.refundQuota(member+1,"theme_draft",oldToken);
++        service.refundQuota(member,"photo_check",oldToken);
++        assertEquals("1",raw.opsForValue().get(old));
++        service.refundQuota(member,"theme_draft",oldToken);
++        service.refundQuota(member,"theme_draft",oldToken);
++        assertEquals("0",raw.opsForValue().get(old));
++        assertEquals("1",raw.opsForValue().get(key(today)));
++    }
++    @Test void invalidCounterRejectsReserveBeforeReceiptOrCounterChanges() {
++        Object service=new AiGatewayServiceImpl();List<Object>a=keys("ai:quota:it:");
++        raw.opsForValue().set(String.valueOf(a.get(0)),"1L");
++        assertThrows(RuntimeException.class,()->reserve(service,a,0));
++        assertEquals("1L",raw.opsForValue().get(String.valueOf(a.get(0))));
++        assertFalse(Boolean.TRUE.equals(raw.hasKey(String.valueOf(a.get(1)))));
++        assertFalse(Boolean.TRUE.equals(raw.hasKey(String.valueOf(a.get(2)))));
++    }
++
++}
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/PhotoCheckQuotaPoolTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/PhotoCheckQuotaPoolTest.java
+@@ -1,110 +1,74 @@
+ package com.chengyinhub.business.service.ai.impl;
+ 
+-import java.time.LocalDate;
+-import java.time.format.DateTimeFormatter;
+-
+-import org.junit.jupiter.api.BeforeEach;
+-import org.junit.jupiter.api.Test;
++import java.util.*;
++import org.junit.jupiter.api.*;
+ import org.springframework.data.redis.core.RedisTemplate;
+-import org.springframework.data.redis.core.ValueOperations;
++import org.springframework.data.redis.core.script.RedisScript;
+ import org.springframework.test.util.ReflectionTestUtils;
+-
+ import com.chengyinhub.business.service.ai.AiServiceException;
+ import com.chengyinhub.common.config.AiModelConfig;
++import static org.junit.jupiter.api.Assertions.*;
++import static org.mockito.ArgumentMatchers.*;
++import static org.mockito.Mockito.*;
+ 
+-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+-import static org.junit.jupiter.api.Assertions.assertThrows;
+-import static org.mockito.ArgumentMatchers.anyString;
+-import static org.mockito.Mockito.mock;
+-import static org.mockito.Mockito.never;
+-import static org.mockito.Mockito.verify;
+-import static org.mockito.Mockito.when;
++/** Pool and receipt call contracts; actual Lua execution is covered separately by Redis IT. */
++class PhotoCheckQuotaPoolTest {
++    private AiGatewayServiceImpl service;
++    private RedisTemplate<Object,Object> redis;
++    private Long used = 1L;
++    private final List<List<Object>> reserves = new ArrayList<>();
++    private final List<List<Object>> refunds = new ArrayList<>();
+ 
+-/**
+- * 拍照审核额度分池契约(2026-09-18)。
+- *
+- * <p>硬负控:photo_check 必须计进 photo 独立池,绝不吃 gen 创作额度。
+- * 共用 gen 池时,玩家拍几张照就会把创作额度耗光,之后审核静默降级
+- * (degraded 只打标不拦路),真审核悄悄停掉 —— 不炸所以发现不了,必须有门禁看着。
+- */
+-class PhotoCheckQuotaPoolTest {
+-
+-    private static final long MEMBER_ID = 7L;
+-    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
+-
+-    private AiGatewayServiceImpl service;
+-    private ValueOperations<Object, Object> valueOperations;
+-
+-    private final String today = LocalDate.now().format(DATE_FMT);
+-    private final String photoKey = "ai:gen:limit:photo:" + MEMBER_ID + ":" + today;
+-    private final String genKey = "ai:gen:limit:gen:" + MEMBER_ID + ":" + today;
+-
+-    @SuppressWarnings("unchecked")
+-    @BeforeEach
+-    void setUp() {
+-        RedisTemplate<Object, Object> redisTemplate = mock(RedisTemplate.class);
+-        valueOperations = mock(ValueOperations.class);
+-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+-
+-        AiModelConfig aiModelConfig = new AiModelConfig();
+-        ReflectionTestUtils.setField(aiModelConfig, "dailyLimit", 20);
+-        ReflectionTestUtils.setField(aiModelConfig, "npcDailyLimit", 100);
+-
++    @BeforeEach @SuppressWarnings("unchecked")
++    void setup() {
++        redis = mock(RedisTemplate.class);
++        when(redis.execute(any(RedisScript.class), anyList(), anyInt(), anyInt(), anyInt())).thenAnswer(call -> {
++            reserves.add(new ArrayList<>((List<Object>)call.getArgument(1)));
++            return used;
++        });
++        when(redis.execute(any(RedisScript.class), anyList())).thenAnswer(call -> {
++            refunds.add(new ArrayList<>((List<Object>)call.getArgument(1)));
++            return 1L;
++        });
+         service = new AiGatewayServiceImpl();
+-        ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
+-        ReflectionTestUtils.setField(service, "aiModelConfig", aiModelConfig);
+-        ReflectionTestUtils.setField(service, "photoDailyLimit", 30);
++        AiModelConfig config = new AiModelConfig();
++        ReflectionTestUtils.setField(config,"dailyLimit",20);
++        ReflectionTestUtils.setField(config,"npcDailyLimit",100);
++        ReflectionTestUtils.setField(service,"photoDailyLimit",30);
++        ReflectionTestUtils.setField(service,"aiModelConfig",config);
++        ReflectionTestUtils.setField(service,"redisTemplate",redis);
+     }
+ 
+-    @Test
+-    void 负控_拍照审核计进photo池_不碰gen创作池() {
+-        when(valueOperations.increment(anyString())).thenReturn(1L);
+-
+-        service.consumeQuota(MEMBER_ID, "photo_check");
+-
+-        verify(valueOperations).increment(photoKey);
+-        verify(valueOperations, never()).increment(genKey);
++    @Test void photoUsesOwnPoolAndReturnsOpaqueReceipt() {
++        String receipt = service.consumeQuota(7L,"photo_check");
++        assertTrue(receipt.startsWith("ai:gen:limit:photo:7:"));
++        assertTrue(String.valueOf(reserves.get(0).get(0)).startsWith("ai:gen:limit:photo:7:"));
++        assertTrue(String.valueOf(reserves.get(0).get(2)).contains(receipt.substring(receipt.indexOf('|')+1)));
+     }
+-
+-    @Test
+-    void 负控_photo池按photoDailyLimit判_不按gen的dailyLimit() {
+-        // 25 > gen 的 20,但 ≤ photo 的 30:拍照不该在创作额度用完时被误伤
+-        when(valueOperations.increment(anyString())).thenReturn(25L);
+-        assertDoesNotThrow(() -> service.consumeQuota(MEMBER_ID, "photo_check"),
+-                "photo 池上限是 30,25 次不该被判超限");
+-
+-        when(valueOperations.increment(anyString())).thenReturn(31L);
+-        assertThrows(AiServiceException.class, () -> service.consumeQuota(MEMBER_ID, "photo_check"),
+-                "31 > 30 必须判超限");
++    @Test void photoUsesThirtyWhileCreationUsesTwenty() {
++        used=25L;
++        assertDoesNotThrow(() -> service.consumeQuota(7L,"photo_check"));
++        assertThrows(AiServiceException.class,()->service.consumeQuota(7L,"theme_draft"));
++        used=31L;
++        assertThrows(AiServiceException.class,()->service.consumeQuota(7L,"photo_check"));
++        assertTrue(refunds.isEmpty());
+     }
+-
+-    @Test
+-    void 创作类仍走gen池按dailyLimit判() {
+-        when(valueOperations.increment(anyString())).thenReturn(25L);
+-
+-        assertThrows(AiServiceException.class, () -> service.consumeQuota(MEMBER_ID, "theme_draft"),
+-                "创作类 25 > 20,仍必须按 gen 池判超限");
+-        verify(valueOperations).increment(genKey);
+-        verify(valueOperations, never()).increment(photoKey);
++    @Test void refundUsesExactOriginalReceiptAndRejectsOtherMemberOrPool() {
++        String token=service.consumeQuota(7L,"photo_check");
++        service.refundQuota(8L,"photo_check",token);
++        service.refundQuota(7L,"theme_draft",token);
++        assertTrue(refunds.isEmpty());
++        service.refundQuota(7L,"photo_check",token);
++        assertEquals(reserves,refunds);
+     }
+-
+-    @Test
+-    void 退款退的是photo池键() {
+-        when(valueOperations.decrement(anyString())).thenReturn(29L);
+-
+-        service.refundQuota(MEMBER_ID, "photo_check");
+-
+-        verify(valueOperations).decrement(photoKey);
+-        verify(valueOperations, never()).decrement(genKey);
++    @Test void unknownReplyIsServiceFailureAndCompensatesItsOwnNonce() {
++        used=null;
++        assertThrows(IllegalStateException.class,()->service.consumeQuota(7L,"photo_check"));
++        assertEquals(1, refunds.size());
++        assertEquals(reserves,refunds);
+     }
+-
+-    @Test
+-    void 未知场景仍落gen池_分池只认白名单() {
+-        when(valueOperations.increment(anyString())).thenReturn(1L);
+-
+-        service.consumeQuota(MEMBER_ID, "some_future_scene");
+-
+-        verify(valueOperations).increment(genKey);
+-        verify(valueOperations, never()).increment(photoKey);
++    @Test void futureScenesKeepCreationPool() {
++        String token=service.consumeQuota(7L,"some_future_scene");
++        assertTrue(token.startsWith("ai:gen:limit:gen:7:"));
+     }
+ }
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorServiceImplTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorServiceImplTest.java
+@@ -67,6 +67,38 @@
+     private RedisTemplate<Object, Object> redisTemplate;
+     private ValueOperations<Object, Object> valueOperations;
+ 
++    private Long reserveResult = 1L;
++    private boolean countByKey;
++    private final java.util.Map<String, Long> counters = new java.util.HashMap<>();
++    private final java.util.List<java.util.List<Object>> reserved = new java.util.ArrayList<>();
++    private final java.util.List<java.util.List<Object>> refunded = new java.util.ArrayList<>();
++    private final java.util.List<Integer> reserveTtls = new java.util.ArrayList<>();
++
++    @SuppressWarnings("unchecked")
++    private void installReservationStub() {
++        when(redisTemplate.execute(org.mockito.ArgumentMatchers.any(org.springframework.data.redis.core.script.RedisScript.class),
++                org.mockito.ArgumentMatchers.anyList(), org.mockito.ArgumentMatchers.anyInt(),
++                org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt())).thenAnswer(inv -> {
++            java.util.List<Object> keys = inv.getArgument(1);
++            reserved.add(new java.util.ArrayList<>(keys));
++            Object ttl = inv.getArgument(2);
++            assertTrue(ttl instanceof Integer, "production serializer requires Integer TTL");
++            reserveTtls.add((Integer) ttl);
++            String key = String.valueOf(keys.get(0));
++            if (countByKey) {
++                long value = counters.getOrDefault(key, 0L) + 1;
++                counters.put(key, value);
++                return value;
++            }
++            return reserveResult;
++        });
++        when(redisTemplate.execute(org.mockito.ArgumentMatchers.any(org.springframework.data.redis.core.script.RedisScript.class),
++                org.mockito.ArgumentMatchers.anyList())).thenAnswer(inv -> {
++            refunded.add(new java.util.ArrayList<>((java.util.List<Object>) inv.getArgument(1)));
++            return 1L;
++        });
++    }
++
+     private static final Long MEMBER_ID = 1001L;
+ 
+     @BeforeEach
+@@ -165,7 +197,8 @@
+         redisTemplate = mock(RedisTemplate.class);
+         valueOperations = mock(ValueOperations.class);
+         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+-        when(valueOperations.increment(anyString())).thenReturn(1L);
++        reserveResult = 1L;
++        installReservationStub();
+         ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
+         when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
+         when(gateway.generate(any(Long.class), eq("player"), eq("theme_draft"),
+@@ -178,8 +211,8 @@
+                 () -> service.themeDraft(new AiThemeDraftReq(), MEMBER_ID));
+         assertEquals("AI 服务暂未就绪,请稍后重试", ex.getMessage());
+ 
+-        verify(valueOperations).increment(anyString());
+-        verify(valueOperations).decrement(anyString());
++        assertEquals(1, reserved.size());
++        assertEquals(1, refunded.size());
+     }
+ 
+     @Test
+@@ -189,7 +222,8 @@
+         redisTemplate = mock(RedisTemplate.class);
+         valueOperations = mock(ValueOperations.class);
+         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+-        when(valueOperations.increment(anyString())).thenReturn(1L);
++        reserveResult = 1L;
++        installReservationStub();
+         ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
+         when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
+         when(gateway.generate(any(Long.class), eq("player"), eq("theme_draft"),
+@@ -200,11 +234,10 @@
+         AiThemeDraftResp resp = service.themeDraft(new AiThemeDraftReq(), MEMBER_ID);
+ 
+         assertNotNull(resp.getDraft());
+-        verify(valueOperations).increment(anyString());
+-        ArgumentCaptor<Long> ttlCaptor = ArgumentCaptor.forClass(Long.class);
+-        verify(redisTemplate).expire(any(), ttlCaptor.capture(), org.mockito.ArgumentMatchers.eq(TimeUnit.SECONDS));
++        assertEquals(1, reserved.size());
++        assertEquals(0, refunded.size());
+         LocalDateTime after = LocalDateTime.now();
+-        long ttl = ttlCaptor.getValue();
++        long ttl = reserveTtls.get(0).longValue();
+         if (before.toLocalDate().equals(after.toLocalDate())) {
+             long minExpected = Duration.between(after, after.toLocalDate().plusDays(1).atStartOfDay()).getSeconds();
+             long maxExpected = Duration.between(before, before.toLocalDate().plusDays(1).atStartOfDay()).getSeconds();
+@@ -220,7 +253,8 @@
+         redisTemplate = mock(RedisTemplate.class);
+         valueOperations = mock(ValueOperations.class);
+         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+-        when(valueOperations.increment(anyString())).thenReturn(1L);
++        reserveResult = 1L;
++        installReservationStub();
+         ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
+         when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
+         when(gateway.generate(any(Long.class), eq("player"), eq("theme_draft"),
+@@ -230,8 +264,8 @@
+ 
+         assertThrows(com.chengyinhub.business.service.ai.AiServiceException.class,
+                 () -> service.themeDraft(new AiThemeDraftReq(), MEMBER_ID));
+-        verify(valueOperations).increment(anyString());
+-        verify(valueOperations).decrement(anyString());
++        assertEquals(1, reserved.size());
++        assertEquals(1, refunded.size());
+     }
+ 
+     @Test
+@@ -240,7 +274,8 @@
+         redisTemplate = mock(RedisTemplate.class);
+         valueOperations = mock(ValueOperations.class);
+         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+-        when(valueOperations.increment(anyString())).thenReturn(4L);
++        reserveResult = -2L;
++        installReservationStub();
+         ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
+         when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
+         when(gateway.generate(any(Long.class), eq("player"), eq("theme_draft"),
+@@ -253,7 +288,7 @@
+ 
+         verify(gateway, never()).generate(any(Long.class), anyString(), eq("theme_draft"),
+                 anyString(), anyString());
+-        verify(valueOperations).decrement(anyString());
++        assertEquals(0, refunded.size());
+     }
+ 
+     @Test
+@@ -262,7 +297,8 @@
+         redisTemplate = mock(RedisTemplate.class);
+         valueOperations = mock(ValueOperations.class);
+         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+-        when(valueOperations.increment(anyString())).thenReturn(1L);
++        reserveResult = 1L;
++        installReservationStub();
+         ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
+         when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
+         when(gateway.generate(any(Long.class), eq("player"), eq("theme_draft"),
+@@ -271,8 +307,8 @@
+         assertThrows(com.chengyinhub.business.service.ai.AiServiceException.class,
+                 () -> service.themeDraft(new AiThemeDraftReq(), MEMBER_ID));
+ 
+-        verify(valueOperations).increment(anyString());
+-        verify(valueOperations).decrement(anyString());
++        assertEquals(1, reserved.size());
++        assertEquals(1, refunded.size());
+     }
+ 
+     @Test
+@@ -728,4 +764,28 @@
+         sb.append("]}");
+         return sb.toString();
+     }
++
++    @Test
++    void playerExplicitInputBlockedKeepsReservation() {
++        playerInputFailure(com.chengyinhub.business.service.ai.AiServiceException.Reason.INPUT_BLOCKED, 0);
++    }
++
++    @Test
++    void playerReviewRequiredUnknownRetainsOldRefundPolicy() {
++        playerInputFailure(com.chengyinhub.business.service.ai.AiServiceException.Reason.UNKNOWN, 1);
++    }
++
++    private void playerInputFailure(com.chengyinhub.business.service.ai.AiServiceException.Reason reason, int refunds) {
++        redisTemplate = mock(RedisTemplate.class);
++        installReservationStub();
++        ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
++        when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
++        when(gateway.generate(any(Long.class), eq("player"), eq("theme_draft"), anyString(), anyString()))
++                .thenThrow(new com.chengyinhub.business.service.ai.AiServiceException(reason, "input decision"));
++        assertThrows(com.chengyinhub.business.service.ai.AiServiceException.class,
++                () -> service.themeDraft(new AiThemeDraftReq(), MEMBER_ID));
++        assertEquals(1, reserved.size());
++        assertEquals(refunds, refunded.size());
++        if (refunds == 1) assertEquals(reserved, refunded);
++    }
+ }
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NpcChatServiceTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NpcChatServiceTest.java
+@@ -369,4 +369,32 @@
+     private String requestId(String label) {
+         return String.format("00000000-0000-4000-8000-%012d", Math.abs((long) label.hashCode()));
+     }
++
++    @Test
++    void typedInputBlockIsNonRetryableAndNeverSynthesizesAudio() {
++        when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString()))
++                .thenThrow(new AiServiceException(AiServiceException.Reason.INPUT_BLOCKED, "blocked"));
++        NpcChatResp response = service.chat(req("blocked-1", "hi"), USER_ONE);
++        assertEquals("REJECTED", response.getOutcomeStatus());
++        assertEquals("INPUT_BLOCK", response.getErrorCode());
++        assertEquals(false, response.isRetryable());
++        ArgumentCaptor<NpcChatRequest> terminal = ArgumentCaptor.forClass(NpcChatRequest.class);
++        verify(npcChatRequestMapper).finishIfLeaseOwned(terminal.capture());
++        assertEquals("BLOCKED", terminal.getValue().getSafetyDecision());
++        org.mockito.Mockito.verifyNoInteractions(voiceCloneClient);
++    }
++
++    @Test
++    void unknownReviewDecisionKeepsOriginalRetryableFailure() {
++        when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString()))
++                .thenThrow(new AiServiceException(AiServiceException.Reason.UNKNOWN, "review"));
++        NpcChatResp response = service.chat(req("review-1", "hi"), USER_ONE);
++        assertEquals("FAILED", response.getOutcomeStatus());
++        assertEquals("AI_UNAVAILABLE", response.getErrorCode());
++        assertTrue(response.isRetryable());
++        ArgumentCaptor<NpcChatRequest> terminal = ArgumentCaptor.forClass(NpcChatRequest.class);
++        verify(npcChatRequestMapper).finishIfLeaseOwned(terminal.capture());
++        assertEquals("NOT_RUN", terminal.getValue().getSafetyDecision());
++        org.mockito.Mockito.verifyNoInteractions(voiceCloneClient);
++    }
+ }
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiGatewayService.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiGatewayService.java
+@@ -51,9 +51,10 @@
+      *
+      * @param memberId 会员
+      * @param bizType  场景,决定落在哪个额度池(如 photo_check)
++     * @return 绑定本会员、本额度池和原日的预占凭证，退款必须传回同一凭证
+      * @throws AiServiceException 超限时抛出(调用方据此降级,而不是阻断玩家)
+      */
+-    void consumeQuota(Long memberId, String bizType);
++    String consumeQuota(Long memberId, String bizType);
+ 
+     /**
+      * 退还 {@link #consumeQuota} 扣掉的那一次。只在「用户没拿到任何结论」时调用
+@@ -62,6 +63,7 @@
+      *
+      * @param memberId 会员
+      * @param bizType  与 consumeQuota 逐字相同的场景(退错池子 = 没退)
++     * @param reservation 本次 consumeQuota 返回的原预占凭证
+      */
+-    void refundQuota(Long memberId, String bizType);
++    void refundQuota(Long memberId, String bizType, String reservation);
+ }
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java
+@@ -87,7 +87,8 @@
+             log.info("[PhotoCheckVision] image-rejected memberId={} reason={}", memberId, encoded.getRejectReason());
+             return PhotoCheckVisionResult.degraded(encoded.getRejectReason());
+         }
+-        if (!chargeQuota(memberId))
++        String reservation = chargeQuota(memberId);
++        if (reservation == null)
+         {
+             return PhotoCheckVisionResult.degraded("今天的照片审核次数用完了");
+         }
+@@ -105,7 +106,7 @@
+         {
+             // 没走到模型(未配置 key / 未启用)或调用失败(超时 / 限流 / HTTP 错):
+             // 用户没拿到结论,按网关口径退还这一次,再按降级处理。
+-            refundQuota(memberId);
++            refundQuota(memberId, reservation);
+             String reason = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+             alarm("拍照视觉审核调用失败", "memberId=" + memberId + " reason=" + truncate(reason, 200));
+             return PhotoCheckVisionResult.degraded("照片暂时无法审核(" + truncate(reason, MAX_REASON_LENGTH) + ")");
+@@ -130,42 +131,41 @@
+     /**
+      * 抢一次每日额度。超限不是错误,是降级原因之一 —— 玩家侧绝不因为额度耗尽被硬拦。
+      *
+-     * @return true=可以继续调模型;false=超限(已按降级口径返回)
++     * @return 凭证=已计费；空串=原基础服务故障降级；null=真实超限
+      */
+-    private boolean chargeQuota(Long memberId)
++    private String chargeQuota(Long memberId)
+     {
+         if (aiGatewayService == null || memberId == null)
+         {
+-            return true;
+-        }
+-        try
+-        {
+-            aiGatewayService.consumeQuota(memberId, BIZ_TYPE);
+-            return true;
++            return "";
++        }
++        try
++        {
++            return aiGatewayService.consumeQuota(memberId, BIZ_TYPE);
+         }
+         catch (AiServiceException overLimit)
+         {
+             log.info("[PhotoCheckVision] quota-exhausted memberId={}", memberId);
+-            return false;
++            return null;
+         }
+         catch (RuntimeException quotaBroken)
+         {
+             // 额度层自身故障(Redis 抖动等)不该把玩家拦死:放行去调模型,
+             // 与 remainingQuota 读不到时报满额的 fail-open 口径一致。
+             log.warn("[PhotoCheckVision] quota-charge-failed memberId={}", memberId, quotaBroken);
+-            return true;
+-        }
+-    }
+-
+-    private void refundQuota(Long memberId)
+-    {
+-        if (aiGatewayService == null || memberId == null)
++            return "";
++        }
++    }
++
++    private void refundQuota(Long memberId, String reservation)
++    {
++        if (aiGatewayService == null || memberId == null || reservation == null || reservation.isEmpty())
+         {
+             return;
+         }
+         try
+         {
+-            aiGatewayService.refundQuota(memberId, BIZ_TYPE);
++            aiGatewayService.refundQuota(memberId, BIZ_TYPE, reservation);
+         }
+         catch (Exception e)
+         {
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java
+@@ -5,7 +5,6 @@
+ import java.util.HashMap;
+ import java.util.List;
+ import java.util.Map;
+-import java.util.concurrent.TimeUnit;
+ 
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+@@ -41,6 +40,34 @@
+     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
+     private static final String RATE_KEY_PREFIX = "ai:gen:limit:";
+     private static final int BRIEF_MAX = 500;
++    private static final org.springframework.data.redis.core.script.DefaultRedisScript<Long> RESERVE_QUOTA_SCRIPT =
++            new org.springframework.data.redis.core.script.DefaultRedisScript<>(
++                    "local ttl=tonumber(ARGV[1]); local limit=tonumber(ARGV[2]); local capped=tonumber(ARGV[3]);\n" +
++                    "if not ttl or ttl<1 or ttl>86400 or ttl~=math.floor(ttl) or not limit or limit<0 then return redis.error_reply('invalid quota arguments') end;\n" +
++                    "local prior=redis.call('GET',KEYS[3]);\n" +
++                    "if prior=='0' then return -1 end;\n" +
++                    "if prior then local sep=string.find(prior,'|',1,true); if not sep then return -1 end; local gen=string.sub(prior,1,sep-1); if redis.call('EXISTS',KEYS[1])==1 and redis.call('GET',KEYS[2])==gen then return tonumber(string.sub(prior,sep+1)) end; return -1 end;\n" +
++                    "local raw=redis.call('GET',KEYS[1]);\n" +
++                    "if raw and not (raw=='0' or string.match(raw,'^[1-9]%d*$')) then return redis.error_reply('invalid quota counter') end;\n" +
++                    "local used=raw and tonumber(raw) or 0;\n" +
++                    "if not used or used>9007199254740990 then return redis.error_reply('quota counter out of range') end;\n" +
++                    "if capped==1 and used>=limit then redis.call('SET',KEYS[3],'0','EX',172800); return -2 end;\n" +
++                    "local gen=redis.call('GET',KEYS[2]); if not raw or not gen then gen=KEYS[3] end;\n" +
++                    "local next=redis.call('INCR',KEYS[1]); if next==1 then redis.call('EXPIRE',KEYS[1],ttl) end;\n" +
++                    "local life=redis.call('PTTL',KEYS[1]); if life>0 then redis.call('SET',KEYS[2],gen,'PX',life) elseif life==-1 then redis.call('SET',KEYS[2],gen) else redis.call('DEL',KEYS[2]) end;\n" +
++                    "redis.call('SET',KEYS[3],gen..'|'..next,'EX',172800); return next;", Long.class);
++    private static final org.springframework.data.redis.core.script.DefaultRedisScript<Long> REFUND_QUOTA_SCRIPT =
++            new org.springframework.data.redis.core.script.DefaultRedisScript<>(
++                    "local receipt=redis.call('GET',KEYS[3]); if receipt=='0' then return 0 end;\n" +
++                    "if not receipt then redis.call('SET',KEYS[3],'0','EX',172800); return 0 end;\n" +
++                    "local sep=string.find(receipt,'|',1,true); if not sep then return redis.error_reply('invalid quota receipt') end;\n" +
++                    "local gen=string.sub(receipt,1,sep-1); local raw=redis.call('GET',KEYS[1]); local refunded=0;\n" +
++                    "if raw and redis.call('GET',KEYS[2])==gen then\n" +
++                    "if not (raw=='0' or string.match(raw,'^[1-9]%d*$')) then return redis.error_reply('invalid quota counter') end;\n" +
++                    "local used=tonumber(raw); if not used or used>9007199254740991 then return redis.error_reply('quota counter out of range') end;\n" +
++                    "if used>0 then redis.call('DECR',KEYS[1]); refunded=1 end; end;\n" +
++                    "redis.call('SET',KEYS[3],'0','EX',172800); return refunded;", Long.class);
++
+ 
+     /** 频控分组:NPC 聊天(独立额度) */
+     private static final String RATE_GROUP_NPC = "npc";
+@@ -97,42 +124,30 @@
+         //    两条分支落库的 trace_id 与返给前端的对不上(审计无法 join)。
+         String traceId = IdUtils.simpleUUID();
+ 
+-        // 1. 频控:单用户每日上限,按「组」分池(npc 一池 / 创作类共用一池)
+-        //
+-        // ⚠️ 额度先扣、后调模型 ⇒ 从这里到「拿到 modelText」之间**每一条失败路径**都要想清楚
+-        //    退不退(refundQuota 的 javadoc 列了当前判定)。现在是**逐点**退(选模型/调模型两处
+-        //    catch),不是区域级守卫 —— 代价是:**新加的前置检查若不显式退,就默认白扣用户额度**。
+-        //    没做成「区域 try/finally + 成功标志」是因为那需要先定死「入参内容安全拦截退不退」,
+-        //    而那条边界恰恰未决(见 refundQuota javadoc)。等那单落地,这里应改成区域守卫。
++        // 玩家草稿由 Creator 的三次独立池计费；其他场景绑定本次原日预占。
+         boolean playerThemeDraft = "player".equals(role) && "theme_draft".equals(bizType);
+-        String rateKey = null;
+-        Long used = null;
+-        if (!playerThemeDraft)
+-        {
+-            String today = LocalDate.now().format(DATE_FMT);
+-            String rateGroup = rateGroupOf(bizType);
+-            rateKey = RATE_KEY_PREFIX + rateGroup + ":" + memberId + ":" + today;
+-            used = redisTemplate.opsForValue().increment(rateKey);
+-            if (used != null && used == 1)
+-            {
+-                redisTemplate.expire(rateKey, 86400, TimeUnit.SECONDS);
+-            }
+-            int dailyLimit = dailyLimitOf(rateGroup);
+-            if (used != null && used > dailyLimit)
+-            {
+-                log.info("[AiGateway] rate-limit memberId={} used={} limit={}", memberId, used, dailyLimit);
+-                throw new AiServiceException("今日AI次数已用完(" + dailyLimit + "/天),明天再来吧");
+-            }
+-        }
+-
+-        // 2. 入参内容安全
++        String reservation = playerThemeDraft ? null : consumeQuota(memberId, bizType);
+         String openid = resolveOpenid(memberId);
+-        String secIn = wxContentSecurityService.checkText(truncate(userPrompt, 2000), openid);
+-        if (secIn != null)
+-        {
+-            log.info("[AiGateway] input-blocked memberId={} bizType={}", memberId, bizType);
++        String secIn;
++        try {
++            secIn = wxContentSecurityService.checkText(truncate(userPrompt, 2000), openid);
++        } catch (RuntimeException unavailable) {
++            if (!playerThemeDraft) refundQuota(memberId, bizType, reservation);
++            throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
++                    "内容审核暂时不可用，请稍后重试", unavailable);
++        }
++        if (secIn != null) {
++            if (IWxContentSecurityService.isDetectionUnavailable(secIn)) {
++                if (!playerThemeDraft) refundQuota(memberId, bizType, reservation);
++                saveLog(traceId, memberId, role, bizType, null, userPrompt, secIn, 0, 0, 0, 0);
++                throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, secIn);
++            }
+             saveLog(traceId, memberId, role, bizType, null, userPrompt, secIn,
+                     AiGenerationLog.SAFETY_INPUT_BLOCKED, 0, 0, 0);
++            // 人工复核及未知拒绝仍沿用 UNKNOWN；只有现有微信明确违规文案改变分类。
++            if ("内容包含违规信息，请修改后重试".equals(secIn)) {
++                throw new AiServiceException(AiServiceException.Reason.INPUT_BLOCKED, secIn);
++            }
+             throw new AiServiceException(secIn);
+         }
+ 
+@@ -147,7 +162,7 @@
+             // 「无可用的 AI 模型」= 配置错,纯我们的锅,用户没拿到任何东西 → 退额度。
+             // ⚠️ catch RuntimeException 而非 AiServiceException:选模型/场景路由里的
+             //    NPE、IllegalStateException 同样是我们的锅,窄 catch 会让它们带着已扣的额度跑掉。
+-            if (!playerThemeDraft) refundQuota(traceId, memberId, rateKey, used);
++            if (!playerThemeDraft) refundQuota(memberId, bizType, reservation);
+             throw e;
+         }
+         if (client == null)
+@@ -171,7 +186,7 @@
+             saveLog(traceId, memberId, role, bizType, modelName, userPrompt, "ERROR:" + truncate(e.getMessage(), 100),
+                     0, (int) (System.currentTimeMillis() - t0), tokenIn, 0);
+             // 模型炸了是我们的锅,用户什么都没拿到 → 退还刚才扣的那一次
+-            if (!playerThemeDraft) refundQuota(traceId, memberId, rateKey, used);
++            if (!playerThemeDraft) refundQuota(memberId, bizType, reservation);
+             if (isConfigurationFailure(e))
+             {
+                 throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
+@@ -273,32 +288,55 @@
+      * 「用户有没有拿到结论」决定(refundQuota 对应本方法)。
+      */
+     @Override
+-    public void consumeQuota(Long memberId, String bizType)
+-    {
+-        String today = LocalDate.now().format(DATE_FMT);
+-        String rateGroup = rateGroupOf(bizType);
+-        String rateKey = RATE_KEY_PREFIX + rateGroup + ":" + memberId + ":" + today;
+-        Long used = redisTemplate.opsForValue().increment(rateKey);
+-        if (used != null && used == 1)
+-        {
+-            redisTemplate.expire(rateKey, 86400, TimeUnit.SECONDS);
+-        }
+-        int dailyLimit = dailyLimitOf(rateGroup);
+-        if (used != null && used > dailyLimit)
+-        {
+-            log.info("[AiGateway] rate-limit bizType={} group={} memberId={} used={} limit={}",
+-                    bizType, rateGroup, memberId, used, dailyLimit);
+-            throw new AiServiceException("今日AI次数已用完(" + dailyLimit + "/天),明天再来吧");
+-        }
+-    }
+-
+-    /** 退还 consumeQuota 扣掉的那一次;池子与 consumeQuota 逐字一致(退错池子 = 没退)。 */
++    public String consumeQuota(Long memberId, String bizType)
++    {
++        String group = rateGroupOf(bizType);
++        String key = RATE_KEY_PREFIX + group + ":" + memberId + ":" + LocalDate.now().format(DATE_FMT);
++        String nonce = IdUtils.simpleUUID();
++        String receipt = "ai:gen:reservation:" + key + ":" + nonce;
++        Long used;
++        try {
++            used = redisTemplate.execute(RESERVE_QUOTA_SCRIPT,
++                    java.util.Arrays.<Object>asList(key, key + ":generation", receipt),
++                    Integer.valueOf(86400), Integer.valueOf(dailyLimitOf(group)), Integer.valueOf(0));
++        } catch (RuntimeException unknown) {
++            cancelQuota(key, receipt);
++            throw unknown;
++        }
++        if (used == null || used < 1) {
++            cancelQuota(key, receipt);
++            // 不可确认预占是基础服务故障，不能被 Photo 当作真实超限。
++            throw new IllegalStateException("AI quota reservation unavailable");
++        }
++        if (used > dailyLimitOf(group)) {
++            throw new AiServiceException("今日AI次数已用完(" + dailyLimitOf(group) + "/天),明天再来吧");
++        }
++        return key + "|" + nonce;
++    }
++
+     @Override
+-    public void refundQuota(Long memberId, String bizType)
+-    {
+-        String today = LocalDate.now().format(DATE_FMT);
+-        String rateKey = RATE_KEY_PREFIX + rateGroupOf(bizType) + ":" + memberId + ":" + today;
+-        refundQuota("non-text:" + bizType, memberId, rateKey, 1L);
++    public void refundQuota(Long memberId, String bizType, String reservation)
++    {
++        if (reservation == null) return;
++        int split = reservation.lastIndexOf('|');
++        if (split <= 0) return;
++        String key = reservation.substring(0, split);
++        String nonce = reservation.substring(split + 1);
++        String prefix = RATE_KEY_PREFIX + rateGroupOf(bizType) + ":" + memberId + ":";
++        if (!key.startsWith(prefix) || !key.substring(prefix.length()).matches("[0-9]{8}")
++                || !nonce.matches("[a-fA-F0-9]{32}")) return;
++        cancelQuota(key, "ai:gen:reservation:" + key + ":" + nonce);
++    }
++
++    private void cancelQuota(String key, String receipt)
++    {
++        try {
++            redisTemplate.execute(REFUND_QUOTA_SCRIPT,
++                    java.util.Arrays.<Object>asList(key, key + ":generation", receipt));
++        } catch (RuntimeException unavailable) {
++            // 持续故障或进程崩溃仍无持久补偿；保留原错误，不承诺必达退款。
++            log.warn("[AiGateway] quota compensation unavailable key={}", key, unavailable);
++        }
+     }
+ 
+     private String rateGroupOf(String bizType)
+@@ -425,77 +463,6 @@
+             throw new AiServiceException("无可用的 AI 模型");
+         }
+         return c;
+-    }
+-
+-    /**
+-     * 退还刚才 increment 掉的那一次每日额度。
+-     *
+-     * <p>⚠️ 只在**我们的锅**时调用 —— 模型炸(AI 繁忙)、无可用模型(配置错)。
+-     * 这两种情况用户什么都没拿到,不该扣他的额度:每天 20 次的池子,AI 抖 3 次就白掉 15%,
+-     * 而用户完全无从知晓(日志里只有 ERROR),也无处申诉。
+-     *
+-     * <p>⚠️ 本次<b>不</b>退的几处,理由各不相同,别一视同仁:
+-     * <ul>
+-     *   <li>已超限 —— 本来就超了,退了反而让狂刷看起来像没刷过。<b>这条是确定的。</b></li>
+-     *   <li>出参安全拦截 —— 模型产出违规算谁的?产品策略未拍板,不动。</li>
+-     *   <li><b>入参内容安全拦截 —— 边界未决,不是「刻意不退」。</b>
+-     *       {@code WxContentSecurityServiceImpl.checkText} 是 fail-close,且用<b>同一个非空
+-     *       String 通道</b>表达两件事:<b>四条 fail-close 的「审核服务繁忙」返回</b>(微信接口报错/
+-     *       超时/兜底 catch —— 我们的锅)与<b>两条真违规返回</b>(87014 命中、suggest=risky ——
+-     *       用户的锅)。本层 {@code secIn != null} 把两者塌成一种处理 ⇒ <b>微信审核一抖,
+-     *       用户白扣额度、还在 ai_generation_log 里被标成 SAFETY_INPUT_BLOCKED(审计留污点)</b>
+-     *       —— 与本方法要修的是同一类病。要分开需让 checkText 返回可区分的判定
+-     *       (改内容安全接口 = 合规路径),超出本次范围,<b>另开单</b>。
+-     *       在那之前这里维持原状,但别把它当成「设计如此」。
+-     *       <p>(刻意不写行号:跨文件坐标必烂,且烂得静默。指语义,别指坐标。)</li>
+-     *   <li>cache-only 早返回(选不到 client ⇒ npc_event 直接返回 {@code []})——
+-     *       <b>扣了额度但没调模型</b>。当前不退:调用方拿到了可用结果,算一次。
+-     *       ⚠️ 若将来认为「没调模型就不该计费」,这里就是要改的地方。</li>
+-     * </ul>
+-     *
+-     * <p>用与 increment 逐字相同的 rateKey(退错池子 = 没退,还会还错别人的额度)。
+-     * used==null 表示 increment 本身就没成功(Redis 异常),没什么可退。
+-     * 退失败只 warn:少还一次额度事小,把原始错误盖掉事大。
+-     */
+-    private void refundQuota(String traceId, Long memberId, String rateKey, Long used)
+-    {
+-        if (used == null)
+-        {
+-            return;
+-        }
+-        try
+-        {
+-            Long left = redisTemplate.opsForValue().decrement(rateKey);
+-            // ⚠️ Redis DECR 对**不存在的 key** 会「先建 key 置 0 再减 1」⇒ 留下一个值 -1、
+-            //    且**没有 TTL** 的 key(TTL 只在 increment 返回 1 那一刻设过)。本机实测:
+-            //      DEL k; DECR k → 值 -1、TTL -1(永不过期)。
+-            //
+-            //    key 何时会「不存在」?两种,后果不同,别混:
+-            //     ① **正常 TTL 到期**:rateKey 带日期(…:yyyyMMdd),而每个请求在自己开始时算 today
+-            //        ⇒ 用 K_D 的请求必然发生在 D 当天,早于 K_D 过期(TTL 从首次调用起 86400s,
+-            //        必然 ≥ D+1 零点)。所以 DECR 扑空只可能发生在 D+1 零点之后,而那之后
+-            //        再没有请求会算出 K_D ⇒ 这个 -1 key **没人读得到**,是纯内存泄漏,**不是白送额度**。
+-            //     ② **日期内 key 丢失**(maxmemory 淘汰 / Redis 重启无持久化 / 人工 DEL):
+-            //        当天后续请求仍会算出同一个 K_D、读到 -1 ⇒ 计数从 -1 起 ⇒ **真会白送一次**。
+-            //        (本机那次 `DEL k; DECR k` 实验模拟的正是这一种,不是 ①。)
+-            //
+-            //    两种都该删:① 是泄漏,② 是白送。key 都没了,这一天的计数本就该归零。
+-            //
+-            // ⚠️ decrement→delete 非原子(TOCTOU):若在这两步之间有并发 increment 把 key 重建,
+-            //    这里的 delete 会把它抹掉 ⇒ 该用户当天计数清零。窗口极窄、只影响他自己、
+-            //    且方向对用户有利(本方法本就是给用户退额度),故本次不上 Lua;
+-            //    真要收口就把「DECR; IF result < 0 THEN DEL」写成一个 Lua 脚本原子执行。
+-            if (left != null && left < 0)
+-            {
+-                redisTemplate.delete(rateKey);
+-            }
+-        }
+-        catch (RuntimeException e)
+-        {
+-            // 带上 traceId/memberId:退款失败 = 用户被静默多扣一次,只打 rateKey 的话
+-            // 事后无法按人排查、也无法与 ai_generation_log join。
+-            log.warn("[AiGateway] refund-quota failed traceId={} memberId={} key={}", traceId, memberId, rateKey, e);
+-        }
+     }
+ 
+     private String resolveOpenid(Long memberId)
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java
+@@ -98,6 +98,7 @@
+         String role = resolveRole(memberId);
+         PlayerThemeDraftQuotaReservation reservation = null;
+         boolean accepted = false;
++        boolean inputBlocked = false;
+         JSONObject user = new JSONObject();
+         user.put("idea", req.getIdea());
+         user.put("productType", req.getProductType());
+@@ -134,6 +135,11 @@
+             accepted = true;
+             return resp;
+         }
++        catch (AiServiceException failure)
++        {
++            inputBlocked = failure.getReason() == AiServiceException.Reason.INPUT_BLOCKED;
++            throw failure;
++        }
+         catch (com.alibaba.fastjson2.JSONException je)
+         {
+             log.error("[AiCreator] JSON parse failed bizType=theme_draft", je);
+@@ -141,7 +147,7 @@
+         }
+         finally
+         {
+-            if (reservation != null && !accepted)
++            if (reservation != null && !accepted && !inputBlocked)
+             {
+                 releasePlayerThemeDraftQuota(reservation);
+             }
+@@ -552,56 +558,69 @@
+         return value == null || value.trim().isEmpty();
+     }
+ 
+-    /** 在模型调用前预占一次额度；调用失败、Mock 或草稿无效时由 finally 归还。 */
++    private static final org.springframework.data.redis.core.script.DefaultRedisScript<Long> RESERVE_QUOTA_SCRIPT =
++            new org.springframework.data.redis.core.script.DefaultRedisScript<>(
++                    "local ttl=tonumber(ARGV[1]); local limit=tonumber(ARGV[2]); local capped=tonumber(ARGV[3]);\n" +
++                    "if not ttl or ttl<1 or ttl>86400 or ttl~=math.floor(ttl) or not limit or limit<0 then return redis.error_reply('invalid quota arguments') end;\n" +
++                    "local prior=redis.call('GET',KEYS[3]);\n" +
++                    "if prior=='0' then return -1 end;\n" +
++                    "if prior then local sep=string.find(prior,'|',1,true); if not sep then return -1 end; local gen=string.sub(prior,1,sep-1); if redis.call('EXISTS',KEYS[1])==1 and redis.call('GET',KEYS[2])==gen then return tonumber(string.sub(prior,sep+1)) end; return -1 end;\n" +
++                    "local raw=redis.call('GET',KEYS[1]);\n" +
++                    "if raw and not (raw=='0' or string.match(raw,'^[1-9]%d*$')) then return redis.error_reply('invalid quota counter') end;\n" +
++                    "local used=raw and tonumber(raw) or 0;\n" +
++                    "if not used or used>9007199254740990 then return redis.error_reply('quota counter out of range') end;\n" +
++                    "if capped==1 and used>=limit then redis.call('SET',KEYS[3],'0','EX',172800); return -2 end;\n" +
++                    "local gen=redis.call('GET',KEYS[2]); if not raw or not gen then gen=KEYS[3] end;\n" +
++                    "local next=redis.call('INCR',KEYS[1]); if next==1 then redis.call('EXPIRE',KEYS[1],ttl) end;\n" +
++                    "local life=redis.call('PTTL',KEYS[1]); if life>0 then redis.call('SET',KEYS[2],gen,'PX',life) elseif life==-1 then redis.call('SET',KEYS[2],gen) else redis.call('DEL',KEYS[2]) end;\n" +
++                    "redis.call('SET',KEYS[3],gen..'|'..next,'EX',172800); return next;", Long.class);
++    private static final org.springframework.data.redis.core.script.DefaultRedisScript<Long> REFUND_QUOTA_SCRIPT =
++            new org.springframework.data.redis.core.script.DefaultRedisScript<>(
++                    "local receipt=redis.call('GET',KEYS[3]); if receipt=='0' then return 0 end;\n" +
++                    "if not receipt then redis.call('SET',KEYS[3],'0','EX',172800); return 0 end;\n" +
++                    "local sep=string.find(receipt,'|',1,true); if not sep then return redis.error_reply('invalid quota receipt') end;\n" +
++                    "local gen=string.sub(receipt,1,sep-1); local raw=redis.call('GET',KEYS[1]); local refunded=0;\n" +
++                    "if raw and redis.call('GET',KEYS[2])==gen then\n" +
++                    "if not (raw=='0' or string.match(raw,'^[1-9]%d*$')) then return redis.error_reply('invalid quota counter') end;\n" +
++                    "local used=tonumber(raw); if not used or used>9007199254740991 then return redis.error_reply('quota counter out of range') end;\n" +
++                    "if used>0 then redis.call('DECR',KEYS[1]); refunded=1 end; end;\n" +
++                    "redis.call('SET',KEYS[3],'0','EX',172800); return refunded;", Long.class);
++    /** 原日、nonce 与代际绑定；未知响应只补偿自己的预占。 */
+     private PlayerThemeDraftQuotaReservation reservePlayerThemeDraftQuota(Long memberId)
+     {
+         LocalDateTime now = LocalDateTime.now();
+         String key = PLAYER_THEME_DRAFT_RATE_PREFIX + memberId + ":" + now.toLocalDate().format(RATE_DATE_FMT);
+-        boolean incremented = false;
+-        try
+-        {
+-            Long used = redisTemplate.opsForValue().increment(key);
+-            if (used == null)
+-            {
+-                throw new AiServiceException("AI 服务繁忙,请稍后重试");
+-            }
+-            incremented = true;
+-            if (used == 1)
+-            {
+-                redisTemplate.expire(key, secondsUntilNextLocalMidnight(now), TimeUnit.SECONDS);
+-            }
+-            if (used > PLAYER_THEME_DRAFT_DAILY_LIMIT)
+-            {
+-                redisTemplate.opsForValue().decrement(key);
+-                throw new AiServiceException("今日简单创作次数已用完(3/天),明天再来吧");
+-            }
+-            return new PlayerThemeDraftQuotaReservation(key,
+-                    PLAYER_THEME_DRAFT_DAILY_LIMIT - used.intValue());
+-        }
+-        catch (AiServiceException e)
+-        {
+-            throw e;
+-        }
+-        catch (RuntimeException e)
+-        {
+-            if (incremented)
+-            {
+-                releasePlayerThemeDraftQuota(new PlayerThemeDraftQuotaReservation(key, 0));
+-            }
+-            log.warn("[AiCreator] player-theme-draft quota unavailable memberId={}", memberId, e);
++        String receipt = "ai:player:theme:draft:reservation:" + key + ":"
++                + com.chengyinhub.common.utils.uuid.IdUtils.simpleUUID();
++        PlayerThemeDraftQuotaReservation reservation = new PlayerThemeDraftQuotaReservation(key, receipt, 0);
++        Long used;
++        try {
++            used = redisTemplate.execute(RESERVE_QUOTA_SCRIPT,
++                    java.util.Arrays.<Object>asList(key, key + ":generation", receipt),
++                    Integer.valueOf((int) secondsUntilNextLocalMidnight(now)),
++                    Integer.valueOf(PLAYER_THEME_DRAFT_DAILY_LIMIT), Integer.valueOf(1));
++        } catch (RuntimeException unknown) {
++            releasePlayerThemeDraftQuota(reservation);
++            throw new AiServiceException("AI 服务繁忙,请稍后重试", unknown);
++        }
++        if (Long.valueOf(-2L).equals(used)) {
++            throw new AiServiceException("今日简单创作次数已用完(3/天),明天再来吧");
++        }
++        if (used == null || used < 1) {
++            releasePlayerThemeDraftQuota(reservation);
+             throw new AiServiceException("AI 服务繁忙,请稍后重试");
+         }
++        return new PlayerThemeDraftQuotaReservation(key, receipt,
++                PLAYER_THEME_DRAFT_DAILY_LIMIT - used.intValue());
+     }
+ 
+     private void releasePlayerThemeDraftQuota(PlayerThemeDraftQuotaReservation reservation)
+     {
+-        try
+-        {
+-            redisTemplate.opsForValue().decrement(reservation.key);
+-        }
+-        catch (RuntimeException e)
+-        {
+-            log.warn("[AiCreator] player-theme-draft quota release failed", e);
++        try {
++            redisTemplate.execute(REFUND_QUOTA_SCRIPT, java.util.Arrays.<Object>asList(
++                    reservation.key, reservation.key + ":generation", reservation.receipt));
++        } catch (RuntimeException unavailable) {
++            log.warn("[AiCreator] player-theme-draft quota compensation unavailable", unavailable);
+         }
+     }
+ 
+@@ -626,11 +645,13 @@
+     private static final class PlayerThemeDraftQuotaReservation
+     {
+         private final String key;
++        private final String receipt;
+         private final int remaining;
+ 
+-        private PlayerThemeDraftQuotaReservation(String key, int remaining)
++        private PlayerThemeDraftQuotaReservation(String key, String receipt, int remaining)
+         {
+             this.key = key;
++            this.receipt = receipt;
+             this.remaining = remaining;
+         }
+     }

@@ -1,0 +1,1580 @@
+{
+  "status": "READ_ONLY_SCOPE_CORRECTION",
+  "createdAt": "2026-10-13T10:53:51.155246-07:00",
+  "sourceOutputSha256": "6bab7fd486f1aa6aabab97974210a7f68d459a9640ab2f609380f19676821980",
+  "reviewedExecutionDocSha256": "9c232f07d47a3579329a6c1758f908b300e8d212750e1b759d10a23ce370f0ab",
+  "rule": "新表/任务/队列/锁等内部架构并不自动等于新用户功能。已有小程序业务规则下的可靠性、限额、库存、隐私与可恢复性纳当前执行；产品规则未定部分拆开待核；App仅凭真实端调用归类。",
+  "noUserQuestionsAdded": true,
+  "suggestedNewUnits": [
+    {
+      "unit": "A4(建议编号)",
+      "name": "支付回调幂等、乱序与原事件恢复",
+      "ids": [
+        "M0055",
+        "M0056"
+      ]
+    },
+    {
+      "unit": "A5(建议编号)",
+      "name": "已有总量、限额、占票库存并发一致性",
+      "ids": [
+        "M0035",
+        "M0043",
+        "M0139"
+      ]
+    },
+    {
+      "unit": "A6(建议编号)",
+      "name": "原奖励券发放与核销恢复",
+      "ids": [
+        "M0053",
+        "M0108"
+      ]
+    },
+    {
+      "unit": "A7(建议编号)",
+      "name": "既有资金快照、余额和凭证对账边界",
+      "ids": [
+        "M0072",
+        "M0073",
+        "M0076"
+      ]
+    },
+    {
+      "unit": "B5(建议编号)",
+      "name": "游戏秘密和NPC上下文服务端投影",
+      "ids": [
+        "M0090"
+      ]
+    },
+    {
+      "unit": "B6(建议编号)",
+      "name": "高风险操作审计与安全投影",
+      "ids": [
+        "M0136"
+      ]
+    },
+    {
+      "unit": "C6(建议编号)",
+      "name": "订阅当前有效期与已有扣额消费者",
+      "ids": [
+        "M0153"
+      ]
+    }
+  ],
+  "expandExistingUnits": [
+    {
+      "unit": "C3",
+      "ids": [
+        "M0107",
+        "M0108",
+        "M0109",
+        "M0111"
+      ],
+      "work": "定位输入、里程证据、原异常尝试、tracker生命周期；UI/新凭证另列"
+    },
+    {
+      "unit": "C5",
+      "ids": [
+        "M0134"
+      ],
+      "work": "现有事件按用途属性最小化；推荐算法后置不影响此修补"
+    },
+    {
+      "unit": "A3+B2",
+      "ids": [
+        "M0085"
+      ],
+      "work": "已有允许退出及保证金原请求恢复，不添加新补偿政策"
+    },
+    {
+      "unit": "C4",
+      "ids": [
+        "M0091"
+      ],
+      "work": "现有发布规则校验正确性，不假称新动态求解器已实现"
+    }
+  ],
+  "counts": {
+    "totalRows": 30,
+    "appOnlyPostponed": 2,
+    "newPublicBusinessProtocolPostponed": 1,
+    "hasCurrentExistingChainWorkOrVerification": 27
+  },
+  "countCaveat": "27条有当前既有链工作/核对范围，不代表27条均已证明有代码bug，也不代表整条研究目标全部实施；每条不确定子范围已单列。",
+  "items": [
+    {
+      "id": "M0137",
+      "title": "弱网写操作恢复",
+      "originalOrder": 1,
+      "originalScope": "共用backend",
+      "previousDisposition": "当前范围",
+      "correctedDisposition": "当前执行",
+      "currentWorkPackageMapping": "B2 + C3/C4，A按实际订单宿主配合",
+      "implementationEvidenceStatus": "已有调用覆盖待补",
+      "currentExistingChainWork": "逐个原有写入宿主保存原请求身份与内容，未知只回读原对象；App购物车不混入。",
+      "acceptance": "每宿主提交丢响应、重进、错账号、同键换内容；原资源一次，清缓存后迟到回包不恢复。",
+      "policyOrScopeBoundary": "新页面/新业务动作不在本包。",
+      "priority": "第1级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-xcx/utils/write-action-workflow.js",
+          "symbolOrRule": "function run(",
+          "line": 17,
+          "previousSha256": "6f4b327446df18ed4debc744ddf3378fd4b66a6b12712d0538433a274506e8bb",
+          "currentSha256": "6f4b327446df18ed4debc744ddf3378fd4b66a6b12712d0538433a274506e8bb",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 17
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/game-node/index.js",
+          "symbolOrRule": "this._client.readReceipt",
+          "line": 717,
+          "previousSha256": "4f37a7ec961ff25dff4e8cb5c5df5ae2fed7f8ecb1b54a77e07e27e1bb7b249c",
+          "currentSha256": "4f37a7ec961ff25dff4e8cb5c5df5ae2fed7f8ecb1b54a77e07e27e1bb7b249c",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 717
+        },
+        {
+          "path": "chengyinhub-xcx/utils/checkout/registration-payment-verifier.js",
+          "symbolOrRule": "requestStatus(ref",
+          "line": 15,
+          "previousSha256": "9a6f5361217c8532ab1a91832aa245daa4a8b9befa8e48789859fa0d7a088f0f",
+          "currentSha256": "9a6f5361217c8532ab1a91832aa245daa4a8b9befa8e48789859fa0d7a088f0f",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 15
+        },
+        {
+          "path": "chengyinhub-xcx/pages/activity/baoming/baoming.js",
+          "symbolOrRule": "requestId: requestId",
+          "line": 1393,
+          "previousSha256": "3b097e0d26e7f99ebab5ee255edfc4e59ae9c3574d1bd48876a20b9c0c3894ba",
+          "currentSha256": "3b097e0d26e7f99ebab5ee255edfc4e59ae9c3574d1bd48876a20b9c0c3894ba",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 1393
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0139",
+      "title": "重复点击与并发操作",
+      "originalOrder": 2,
+      "originalScope": "共用backend",
+      "previousDisposition": "当前范围",
+      "correctedDisposition": "当前执行",
+      "currentWorkPackageMapping": "B1/B2 + 拟A5",
+      "implementationEvidenceStatus": "已有调用覆盖待补",
+      "currentExistingChainWork": "同键内容校验和数据库资源约束逐宿主检查；对既有票额/库存规则补并发保护。",
+      "acceptance": "两连接最后容量、相同请求、同键换内容；事务后独立读账，无重复资源。",
+      "policyOrScopeBoundary": "不能从页面锁或App商城例子推全站。",
+      "priority": "第1级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+          "symbolOrRule": "public GameCommandReceiptView command(",
+          "line": 261,
+          "previousSha256": "6e52c74d1d6e225a842080d73b15b6c559d123a08cd43c4af17d30ce1800e9bb",
+          "currentSha256": "6e52c74d1d6e225a842080d73b15b6c559d123a08cd43c4af17d30ce1800e9bb",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 261
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+          "symbolOrRule": "private GameCommandReceiptView replay(",
+          "line": 2943,
+          "previousSha256": "6e52c74d1d6e225a842080d73b15b6c559d123a08cd43c4af17d30ce1800e9bb",
+          "currentSha256": "6e52c74d1d6e225a842080d73b15b6c559d123a08cd43c4af17d30ce1800e9bb",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 2943
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "private CmsRegistration createSelfPlayPassInternal(",
+          "line": 762,
+          "previousSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "currentSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 762
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java",
+          "symbolOrRule": "public Long settleCart(",
+          "line": 263,
+          "previousSha256": "b7fcc37e585a3541331f4bccf39f01e030077bc037740345751d6346afb0d3c7",
+          "currentSha256": "b7fcc37e585a3541331f4bccf39f01e030077bc037740345751d6346afb0d3c7",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 263
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "F0510",
+      "title": "商城订单支付恢复",
+      "originalOrder": 3,
+      "originalScope": "App专属",
+      "previousDisposition": "后置",
+      "correctedDisposition": "App后置",
+      "currentWorkPackageMapping": "App暂停",
+      "implementationEvidenceStatus": "App范围",
+      "currentExistingChainWork": "不纳本期小程序执行；若找到真实小程序购物车调用再重新归属。",
+      "acceptance": "本期不打勾。",
+      "policyOrScopeBoundary": "小程序未发现api/cart调用，public无App端。",
+      "priority": "第1级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java",
+          "symbolOrRule": "public Long settleCart(",
+          "line": 263,
+          "previousSha256": "b7fcc37e585a3541331f4bccf39f01e030077bc037740345751d6346afb0d3c7",
+          "currentSha256": "b7fcc37e585a3541331f4bccf39f01e030077bc037740345751d6346afb0d3c7",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 263
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java",
+          "symbolOrRule": "return firstOrderId;",
+          "line": 353,
+          "previousSha256": "b7fcc37e585a3541331f4bccf39f01e030077bc037740345751d6346afb0d3c7",
+          "currentSha256": "b7fcc37e585a3541331f4bccf39f01e030077bc037740345751d6346afb0d3c7",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 353
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCartController.java",
+          "symbolOrRule": "settleCart(",
+          "line": 134,
+          "previousSha256": "539e6fb035f30f290183e8ca293f95452bf3b42a1fa9746fce3078a3ba2a215d",
+          "currentSha256": "539e6fb035f30f290183e8ca293f95452bf3b42a1fa9746fce3078a3ba2a215d",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 134
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": false,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "F0511",
+      "title": "兑换商品权益",
+      "originalOrder": 4,
+      "originalScope": "App专属",
+      "previousDisposition": "后置",
+      "correctedDisposition": "App后置",
+      "currentWorkPackageMapping": "App暂停",
+      "implementationEvidenceStatus": "App范围",
+      "currentExistingChainWork": "商城订单行交付本轮不改。",
+      "acceptance": "本期不打勾。",
+      "policyOrScopeBoundary": "不将共用后端文件存在等同小程序宿主。",
+      "priority": "第1级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java",
+          "symbolOrRule": "order.setStatus(1L);",
+          "line": 320,
+          "previousSha256": "b7fcc37e585a3541331f4bccf39f01e030077bc037740345751d6346afb0d3c7",
+          "currentSha256": "b7fcc37e585a3541331f4bccf39f01e030077bc037740345751d6346afb0d3c7",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 320
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java",
+          "symbolOrRule": "omsOrderItemService.insertOmsOrderItem(item);",
+          "line": 344,
+          "previousSha256": "b7fcc37e585a3541331f4bccf39f01e030077bc037740345751d6346afb0d3c7",
+          "currentSha256": "b7fcc37e585a3541331f4bccf39f01e030077bc037740345751d6346afb0d3c7",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 344
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": false,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0035",
+      "title": "多票种共享容量",
+      "originalOrder": 5,
+      "originalScope": "共用backend",
+      "previousDisposition": "后置",
+      "correctedDisposition": "部分当前执行、部分规则待核",
+      "currentWorkPackageMapping": "拟A5 已有票额及库存一致性",
+      "implementationEvidenceStatus": "现有规则待验，新增共池规则待核",
+      "currentExistingChainWork": "保留并验自玩总quota、普通票种库存、候补预留的原子占用/释放；若活动已有明确总人数限制，追其真实字段与跨票种消费者再修。",
+      "acceptance": "按现有规则两票种/两请求竞争、取消重复、关闭与付款竞争；同一占位只释放一次。",
+      "policyOrScopeBoundary": "普通活动是否跨票种共享一个新上限未有现规则证据，不能直接新增政策；不能因要建容量表而把整个条目后置。",
+      "priority": "第1级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "int occupied = cmsRegistrationMapper.countActiveSelfPlayPasses",
+          "line": 807,
+          "previousSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "currentSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 807
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "omsTicketMapper.deductInventory(ticket.getId()",
+          "line": 560,
+          "previousSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "currentSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 560
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/OmsTicketMapper.xml",
+          "symbolOrRule": "id=\"deductInventory\"",
+          "line": 334,
+          "previousSha256": "db3adf83a89ffca7849715f81fa0a3ba519c12075144bdd54107d8cfdba34581",
+          "currentSha256": "db3adf83a89ffca7849715f81fa0a3ba519c12075144bdd54107d8cfdba34581",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 334
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0043",
+      "title": "同用户购票限额",
+      "originalOrder": 6,
+      "originalScope": "共用backend",
+      "previousDisposition": "后置",
+      "correctedDisposition": "部分当前执行、部分规则待核",
+      "currentWorkPackageMapping": "拟A5 已有购票限额并发",
+      "implementationEvidenceStatus": "现有探索/自玩规则已存在，未发现全品类政策",
+      "currentExistingChainWork": "针对探索每单1张/一期一票、自玩live原单复用做真实锁内当前读和同键回放验收，出现绕过即修。",
+      "acceptance": "同会员双端、换票种、已取消重购、原请求重放；按每个既有对象规则拒超限，不占两份。",
+      "policyOrScopeBoundary": "普通多票/代买统一新上限不擅自决定。",
+      "priority": "第1级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "探索票每单限购 1 张",
+          "line": 435,
+          "previousSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "currentSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 435
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "ExploreAccountTicketGate.assertAvailable(",
+          "line": 748,
+          "previousSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "currentSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 748
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "CmsRegistration reusable = findLiveSelfPlayPass",
+          "line": 794,
+          "previousSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "currentSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 794
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0055",
+      "title": "支付回调重复处理",
+      "originalOrder": 7,
+      "originalScope": "共用backend",
+      "previousDisposition": "后置",
+      "correctedDisposition": "当前执行",
+      "currentWorkPackageMapping": "拟A4 支付回调幂等与乱序恢复",
+      "implementationEvidenceStatus": "确定接线缺口",
+      "currentExistingChainWork": "实际支付/退款入口目前只register，需接原事件处理权、fence终态及恢复消费者；保留业务CAS，按现有付款/退款终态推进。",
+      "acceptance": "同事件10次、双worker、claim后崩溃、业务提交与终态确认丢响应；只有一笔推进且失权者不能覆盖终态。",
+      "policyOrScopeBoundary": "统一inbox是旧付款链内部可靠性实现，不是新用户功能；不得自动发新退款/转账。",
+      "priority": "第1级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "wxPaymentCallbackInboxService.register(",
+          "line": 2033,
+          "previousSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "currentSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 2033
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java",
+          "symbolOrRule": "wxPaymentCallbackInboxService.register(",
+          "line": 385,
+          "previousSha256": "1da9211add78cb852a5b3028e4ad88e244e985f4d0cebe025809a42f2bb3d8bb",
+          "currentSha256": "1da9211add78cb852a5b3028e4ad88e244e985f4d0cebe025809a42f2bb3d8bb",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 385
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java",
+          "symbolOrRule": "public boolean process(",
+          "line": 68,
+          "previousSha256": "b9b8ba3fd939d3c1af00b6b4c09d426eb1491ba0cc033cd684dee25db61ef76a",
+          "currentSha256": "b9b8ba3fd939d3c1af00b6b4c09d426eb1491ba0cc033cd684dee25db61ef76a",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 68
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java",
+          "symbolOrRule": "mapper.markDone(",
+          "line": 49,
+          "previousSha256": "a235e1b3984f4d72998c338af4f4abd2e241bf404bd394f618395d7dc7bf0c32",
+          "currentSha256": "a235e1b3984f4d72998c338af4f4abd2e241bf404bd394f618395d7dc7bf0c32",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 49
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0056",
+      "title": "支付回调乱序",
+      "originalOrder": 8,
+      "originalScope": "共用backend",
+      "previousDisposition": "待核",
+      "correctedDisposition": "当前执行；新增资金动作待核",
+      "currentWorkPackageMapping": "拟A4 支付回调幂等与乱序恢复",
+      "implementationEvidenceStatus": "现有防回退存在；迟到归因与持久处置未闭合",
+      "currentExistingChainWork": "按现有CAS及原交易身份形成乱序矩阵；迟到冲突保存原事件/原单处理结果，不将FAIL当已有人处理。",
+      "acceptance": "成功/失败乱序、取消后SUCCESS、旧退款重送；状态不回退/重复释放，冲突可独立回读。",
+      "policyOrScopeBoundary": "不得自行规定迟到款自动退款或补票；其资金政策如需改变另核。",
+      "priority": "第1级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "private String completePaymentSuccess(",
+          "line": 2143,
+          "previousSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "currentSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 2143
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "if (!isSameCompletedPayment(current, transactionId))",
+          "line": 2153,
+          "previousSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "currentSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 2153
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java",
+          "symbolOrRule": "private boolean updatePayoutTerminal(",
+          "line": 410,
+          "previousSha256": "1da9211add78cb852a5b3028e4ad88e244e985f4d0cebe025809a42f2bb3d8bb",
+          "currentSha256": "1da9211add78cb852a5b3028e4ad88e244e985f4d0cebe025809a42f2bb3d8bb",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 410
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java",
+          "symbolOrRule": "mutation.isCurrent(",
+          "line": 36,
+          "previousSha256": "a235e1b3984f4d72998c338af4f4abd2e241bf404bd394f618395d7dc7bf0c32",
+          "currentSha256": "a235e1b3984f4d72998c338af4f4abd2e241bf404bd394f618395d7dc7bf0c32",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 36
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0131",
+      "title": "补偿任务可恢复",
+      "originalOrder": 9,
+      "originalScope": "共用backend",
+      "previousDisposition": "当前范围",
+      "correctedDisposition": "当前执行",
+      "currentWorkPackageMapping": "A1/A3 + C2",
+      "implementationEvidenceStatus": "确定稳定扫描缺口及运行待验",
+      "currentExistingChainWork": "已有补偿任务按稳定分页、原未解决年龄、失败隔离推进；AI持久补偿属于此项既有服务故障退款恢复。",
+      "acceptance": "超过批上限失败前缀与后续正常项、重启、双worker；后页不饿死，失败年龄不清零。",
+      "policyOrScopeBoundary": "实际调度/告警送达需运行证据，不以源文件代替。",
+      "priority": "第3级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java",
+          "symbolOrRule": "public void reconcile()",
+          "line": 50,
+          "previousSha256": "184d39185cbfb3b640970dd38d3ab06465f9437e93d75939ca50ca83fcb181c4",
+          "currentSha256": "184d39185cbfb3b640970dd38d3ab06465f9437e93d75939ca50ca83fcb181c4",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 50
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+          "symbolOrRule": "id=\"selectStalePayoutProcessing\"",
+          "line": 281,
+          "previousSha256": "7ccaa1a08ba279508703bbe487cb092c8b2b81b91dffa152741d4ff07b83f0bf",
+          "currentSha256": "7ccaa1a08ba279508703bbe487cb092c8b2b81b91dffa152741d4ff07b83f0bf",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 281
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0033",
+      "title": "占票超时释放",
+      "originalOrder": 10,
+      "originalScope": "共用backend",
+      "previousDisposition": "当前范围",
+      "correctedDisposition": "当前执行",
+      "currentWorkPackageMapping": "A1",
+      "implementationEvidenceStatus": "已有实现待实际调度验收",
+      "currentExistingChainWork": "保持现有渠道未知不释放规则；核未付/支付中真实调度和原单释放消费者。",
+      "acceptance": "关闭与渠道成功竞争、重复扫描、事务失败；独立读库存/原单且最多释放一次。",
+      "policyOrScopeBoundary": "当前没有确认额外产品规则。",
+      "priority": "第1级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java",
+          "symbolOrRule": "public void",
+          "line": 58,
+          "previousSha256": "e810046c1cb0d7e685030bbf5d016813e7c175bbc9afc0849fdda72d6f44696f",
+          "currentSha256": "e810046c1cb0d7e685030bbf5d016813e7c175bbc9afc0849fdda72d6f44696f",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 58
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java",
+          "symbolOrRule": "\"NOTPAY\".equalsIgnoreCase(tradeState)",
+          "line": 182,
+          "previousSha256": "e810046c1cb0d7e685030bbf5d016813e7c175bbc9afc0849fdda72d6f44696f",
+          "currentSha256": "e810046c1cb0d7e685030bbf5d016813e7c175bbc9afc0849fdda72d6f44696f",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 182
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "public boolean closeExpiredOne(",
+          "line": 2561,
+          "previousSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "currentSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 2561
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "public boolean settlePayingOne(",
+          "line": 2581,
+          "previousSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "currentSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 2581
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "private void releaseHeldResources(",
+          "line": 2609,
+          "previousSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "currentSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 2609
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0066",
+      "title": "退款对账",
+      "originalOrder": 11,
+      "originalScope": "共用backend",
+      "previousDisposition": "当前范围",
+      "correctedDisposition": "当前执行",
+      "currentWorkPackageMapping": "A3",
+      "implementationEvidenceStatus": "已存在对账链，公平恢复待补",
+      "currentExistingChainWork": "按原refundNo恢复和原渠道事实终态，稳定扫描和持续失败可追踪。",
+      "acceptance": "丢响应、pending成功、长期失败、重试同退款号；只退一次，不误报完成。",
+      "policyOrScopeBoundary": "渠道真实调用/投递仍另验。",
+      "priority": "第1级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java",
+          "symbolOrRule": "wechatPayService.refreshPayoutFromWx(refundNo);",
+          "line": 95,
+          "previousSha256": "184d39185cbfb3b640970dd38d3ab06465f9437e93d75939ca50ca83fcb181c4",
+          "currentSha256": "184d39185cbfb3b640970dd38d3ab06465f9437e93d75939ca50ca83fcb181c4",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 95
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java",
+          "symbolOrRule": "refreshPayoutFromWx(",
+          "line": 780,
+          "previousSha256": "19a61c32a207f82ee68d9efd73a1a59bd36dca3154cf2a99cef604d27bc78a8c",
+          "currentSha256": "19a61c32a207f82ee68d9efd73a1a59bd36dca3154cf2a99cef604d27bc78a8c",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 780
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java",
+          "symbolOrRule": "private boolean updatePayoutTerminal(",
+          "line": 410,
+          "previousSha256": "1da9211add78cb852a5b3028e4ad88e244e985f4d0cebe025809a42f2bb3d8bb",
+          "currentSha256": "1da9211add78cb852a5b3028e4ad88e244e985f4d0cebe025809a42f2bb3d8bb",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 410
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+          "symbolOrRule": "id=\"selectStalePayoutProcessing\"",
+          "line": 281,
+          "previousSha256": "7ccaa1a08ba279508703bbe487cb092c8b2b81b91dffa152741d4ff07b83f0bf",
+          "currentSha256": "7ccaa1a08ba279508703bbe487cb092c8b2b81b91dffa152741d4ff07b83f0bf",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 281
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0049",
+      "title": "候补维护故障隔离",
+      "originalOrder": 12,
+      "originalScope": "共用backend",
+      "previousDisposition": "当前范围",
+      "correctedDisposition": "当前执行",
+      "currentWorkPackageMapping": "A3",
+      "implementationEvidenceStatus": "确定跨批公平性未覆盖",
+      "currentExistingChainWork": "候补维护保留REQUIRES_NEW隔离，再补稳定推进越过失败前缀和过期原offer一次释放。",
+      "acceptance": "异常队首超过100、后项过期、重启；合法队首不被跳过抢票，预留账一致。",
+      "policyOrScopeBoundary": "内部游标不是新候补功能。",
+      "priority": "第1级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java",
+          "symbolOrRule": "public int maintain(",
+          "line": 300,
+          "previousSha256": "06acfbe04688fb84eb7ff9e7269b149e15648b5f6f1d737ef812221c9c1d22fb",
+          "currentSha256": "06acfbe04688fb84eb7ff9e7269b149e15648b5f6f1d737ef812221c9c1d22fb",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 300
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java",
+          "symbolOrRule": "maintenanceRequiresNew(",
+          "line": 305,
+          "previousSha256": "06acfbe04688fb84eb7ff9e7269b149e15648b5f6f1d737ef812221c9c1d22fb",
+          "currentSha256": "06acfbe04688fb84eb7ff9e7269b149e15648b5f6f1d737ef812221c9c1d22fb",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 305
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml",
+          "symbolOrRule": "id=\"selectExpiredOfferedIds\"",
+          "line": 439,
+          "previousSha256": "559186e663080b314377efff3013e7e07b6ec4caa015c6d8295c76f3f8e25897",
+          "currentSha256": "559186e663080b314377efff3013e7e07b6ec4caa015c6d8295c76f3f8e25897",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 439
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml",
+          "symbolOrRule": "id=\"selectClaimedPaidRegistrationIds\"",
+          "line": 452,
+          "previousSha256": "559186e663080b314377efff3013e7e07b6ec4caa015c6d8295c76f3f8e25897",
+          "currentSha256": "559186e663080b314377efff3013e7e07b6ec4caa015c6d8295c76f3f8e25897",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 452
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0061",
+      "title": "已支付未出票补偿",
+      "originalOrder": 13,
+      "originalScope": "共用backend",
+      "previousDisposition": "当前范围",
+      "correctedDisposition": "当前执行",
+      "currentWorkPackageMapping": "A3 + C5通知子链",
+      "implementationEvidenceStatus": "确定有限补码窗口与交付恢复缺口",
+      "currentExistingChainWork": "将现有付后二维码/权益/账/通知缺项按原单恢复，失败跨原窗口仍可发现，不给已完成项二次副作用。",
+      "acceptance": "每现有交付点故障，补原缺项，超7天失败样本不静默消失；券、账、通知分别回读。",
+      "policyOrScopeBoundary": "不新建售票功能或改变应收策略。",
+      "priority": "第1级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "private String completePaymentSuccess(",
+          "line": 2143,
+          "previousSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "currentSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 2143
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/VerificationQrcodeRepairTask.java",
+          "symbolOrRule": "public void repairMissing()",
+          "line": 29,
+          "previousSha256": "cbaeced85d0720a14734907ebe909601e42a018a57c444cf6897b5597f9bb54b",
+          "currentSha256": "cbaeced85d0720a14734907ebe909601e42a018a57c444cf6897b5597f9bb54b",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 29
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+          "symbolOrRule": "id=\"selectPaidMissingQrcodeIds\"",
+          "line": 859,
+          "previousSha256": "c20813382430f1f6faff9fee207784f764c81e5460483b9313e3fa4a3c88d757",
+          "currentSha256": "c20813382430f1f6faff9fee207784f764c81e5460483b9313e3fa4a3c88d757",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 859
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0153",
+      "title": "订阅/权益到期",
+      "originalOrder": 14,
+      "originalScope": "共用backend",
+      "previousDisposition": "当前范围",
+      "correctedDisposition": "当前执行；未证实消费者待核",
+      "currentWorkPackageMapping": "拟C6 订阅有效期与原扣额消费者",
+      "implementationEvidenceStatus": "确定SQL边界缺口",
+      "currentExistingChainWork": "MerchantSubscriptionMapper有效查询统一start<=now且now<end（NULL沿既有兼容）；entitlement投影和ApiMerchantNode/RoamPoiApplication实际写入使用相同当前结果，补最后额度并发；所有已有订阅消费端逐一列明。",
+      "acceptance": "未来生效前/正生效/恰结束/过期、时间跳变、双连接争最后节点；显示与写入一致，原资源读取不被擅删。",
+      "policyOrScopeBoundary": "premiumTemplate仅找到投影，不能杜撰模板扣额入口；先追调用，不因此漏掉已证实cityNode。NPC90天包不是本项替代。",
+      "priority": "第1级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/MerchantSubscriptionMapper.xml",
+          "symbolOrRule": "id=\"selectMerchantSubscriptionList\"",
+          "line": 25,
+          "previousSha256": "7beb98a72dbb66ef398d64283ea7dba30ba30d54b749f5521838419e53e4fd6b",
+          "currentSha256": "7beb98a72dbb66ef398d64283ea7dba30ba30d54b749f5521838419e53e4fd6b",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 25
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java",
+          "symbolOrRule": "public Entitlement entitlement(",
+          "line": 153,
+          "previousSha256": "074736afc7a88bb7225ce9da78021a2ae3b51cb9c596734960dfa653608e9b73",
+          "currentSha256": "074736afc7a88bb7225ce9da78021a2ae3b51cb9c596734960dfa653608e9b73",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 153
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamPoiApplicationServiceImpl.java",
+          "symbolOrRule": "int max = merchantCommerceService.entitlement",
+          "line": 215,
+          "previousSha256": "d0665aa61be20c4abe6373221ca6165137a72c0ed2abc240f69b91daf1ee9dd1",
+          "currentSha256": "d0665aa61be20c4abe6373221ca6165137a72c0ed2abc240f69b91daf1ee9dd1",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 215
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantCommerceController.java",
+          "symbolOrRule": "result.put(\"premiumTemplate\"",
+          "line": 42,
+          "previousSha256": "0714d0ce9ce9b69b35dc8d459e6ee2df49a66926b44402a34cd5ace2eb8e9c1d",
+          "currentSha256": "0714d0ce9ce9b69b35dc8d459e6ee2df49a66926b44402a34cd5ace2eb8e9c1d",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 42
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0053",
+      "title": "优惠券领取/核销幂等",
+      "originalOrder": 15,
+      "originalScope": "共用backend",
+      "previousDisposition": "当前范围",
+      "correctedDisposition": "当前执行",
+      "currentWorkPackageMapping": "拟A6 原奖励券发放、核销与失败恢复",
+      "implementationEvidenceStatus": "确定通用来源幂等及漫游交付恢复缺口",
+      "currentExistingChainWork": "通用发券增加原奖励来源身份和内容指纹，返回同原券；优先接真实漫游merchant POI掉落：recordPoiFound已提交后发券失败只日志，重试inserted=0不再发，需按原drop事实补缺，不能重roll或盲发。保留核销CAS与库存事务。",
+      "acceptance": "同原来源双连接/丢响应/发券后记回执前崩溃、原发现成功而发券失败重进；一张券一次receiveCount；同源换模板拒绝；不同奖励正常各发。",
+      "policyOrScopeBoundary": "通关专用去重不可外推通用；不改变券资格、停发政策或创建新奖励。",
+      "priority": "第1级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
+          "symbolOrRule": "public Long grantCouponWithReceipt(",
+          "line": 258,
+          "previousSha256": "6e74a14072ceea933f23731b6474303c11ecf31a33686e2c02ec895f848641a3",
+          "currentSha256": "6e74a14072ceea933f23731b6474303c11ecf31a33686e2c02ec895f848641a3",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 258
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
+          "symbolOrRule": "smsCouponHistoryMapper.claimUnusedCoupon(",
+          "line": 112,
+          "previousSha256": "6e74a14072ceea933f23731b6474303c11ecf31a33686e2c02ec895f848641a3",
+          "currentSha256": "6e74a14072ceea933f23731b6474303c11ecf31a33686e2c02ec895f848641a3",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 112
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+          "symbolOrRule": "smsCouponHistoryService.grantCouponById(",
+          "line": 231,
+          "previousSha256": "d2c0f7b763d63e8f38d4dc09860b0a2d0f576cb43d10127910ab89bad2185455",
+          "currentSha256": "d2c0f7b763d63e8f38d4dc09860b0a2d0f576cb43d10127910ab89bad2185455",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 231
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImpl.java",
+          "symbolOrRule": "public",
+          "line": 13,
+          "previousSha256": "17722adbb0e2fd98aa50e1a51399cd84a3dfff24358b6503fc536d11879f528a",
+          "currentSha256": "17722adbb0e2fd98aa50e1a51399cd84a3dfff24358b6503fc536d11879f528a",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 13
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0072",
+      "title": "多方分账规则快照",
+      "originalOrder": 16,
+      "originalScope": "共用backend",
+      "previousDisposition": "待核",
+      "correctedDisposition": "当前核对与现规则修补；新定价政策待核",
+      "currentWorkPackageMapping": "拟A7 既有资金快照与对账完整性",
+      "implementationEvidenceStatus": "费率快照已有，跨所有资金链覆盖待核",
+      "currentExistingChainWork": "列实际金额推进的原成交字段，验证付款费率/票源冻结及退款按原事实；已确定应冻结却漏字段时补快照；券使用当前amount/rule不能未经政策改成全新快照时点。",
+      "acceptance": "成交后改模板/费率，原账重算保持；新单按现生效规则；收款人与金额独立对账。",
+      "policyOrScopeBoundary": "不是App，也不是因需新列而后置；券规则快照时点待真实合同，不猜缺。",
+      "priority": "第1级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java",
+          "symbolOrRule": "BigDecimal platformRate = registration.getFeePlatformRate();",
+          "line": 154,
+          "previousSha256": "090e42d3d3c9b30bf079c5b7097d4f3ff404044b71e5c047091c22920d4b2546",
+          "currentSha256": "090e42d3d3c9b30bf079c5b7097d4f3ff404044b71e5c047091c22920d4b2546",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 154
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java",
+          "symbolOrRule": "public int recordCouponVerification(",
+          "line": 183,
+          "previousSha256": "090e42d3d3c9b30bf079c5b7097d4f3ff404044b71e5c047091c22920d4b2546",
+          "currentSha256": "090e42d3d3c9b30bf079c5b7097d4f3ff404044b71e5c047091c22920d4b2546",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 183
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "registration = freezeTicketSourceOnPayment(registration);",
+          "line": 2167,
+          "previousSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "currentSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 2167
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0073",
+      "title": "待结算与可提现分离",
+      "originalOrder": 17,
+      "originalScope": "共用backend",
+      "previousDisposition": "待核",
+      "correctedDisposition": "当前核对与底层对账",
+      "currentWorkPackageMapping": "拟A7 既有资金快照与对账完整性",
+      "implementationEvidenceStatus": "两套账职责已有，差额覆盖待核",
+      "currentExistingChainWork": "核现有系统1真实入余额、系统2只确认账本、提现扣可用额的实际全部推进点；按原账构造可核对差额和重复入账负控，确定漏口再修。",
+      "acceptance": "重复确认/并发提现/留置债务；真实余额只一笔推进，待结/已结/占用能从原流水对上。",
+      "policyOrScopeBoundary": "不新增用户报表或资金规则；新差异页面后置，但后台对账不能整体漏。",
+      "priority": "第1级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementServiceImpl.java",
+          "symbolOrRule": "public int confirmBatch(",
+          "line": 93,
+          "previousSha256": "f000985be141dde313133ad6643c167f7a53cdce715297240121169a2585db9a",
+          "currentSha256": "f000985be141dde313133ad6643c167f7a53cdce715297240121169a2585db9a",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 93
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsActivityServiceImpl.java",
+          "symbolOrRule": "cmsActivityMapper.claimActivityForSettlement(",
+          "line": 244,
+          "previousSha256": "4200fb4f75b62a677e0efb2079a24813fa05aaa18be2752b30d1766ca1cdac5e",
+          "currentSha256": "4200fb4f75b62a677e0efb2079a24813fa05aaa18be2752b30d1766ca1cdac5e",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 244
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java",
+          "symbolOrRule": "umsMemberService.deductWithdrawableBalance(",
+          "line": 144,
+          "previousSha256": "f4f711e68ba9c5c17c1fa2a424b56bca356735bece3665605a14198d0675a42b",
+          "currentSha256": "f4f711e68ba9c5c17c1fa2a424b56bca356735bece3665605a14198d0675a42b",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 144
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0076",
+      "title": "对公付款凭证核对",
+      "originalOrder": 18,
+      "originalScope": "共用backend",
+      "previousDisposition": "后置",
+      "correctedDisposition": "现有凭证流程核对在范围；银行新接入后置",
+      "currentWorkPackageMapping": "拟A7 既有资金快照与对账完整性",
+      "implementationEvidenceStatus": "银行独立核验未实现，不冒充已到账",
+      "currentExistingChainWork": "先验当前双人确认、凭证归属/重复与CAS，确保现有结果语义仍人工声明；已有银行来源若确无，不编造到账证明。",
+      "acceptance": "重复凭证与状态重放不能重复推进；原操作人和声明事实可回读。",
+      "policyOrScopeBoundary": "新银行连接/新核验交互属于新增能力后置；不能把凭证输入成功当实际到账。",
+      "priority": "第1级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantPayableServiceImpl.java",
+          "symbolOrRule": "public boolean markBatchPaid(",
+          "line": 305,
+          "previousSha256": "19f8c7723a2d00da0ac4a9e2f57f66b54c498627a691c9f1a507546cfb2ebc13",
+          "currentSha256": "19f8c7723a2d00da0ac4a9e2f57f66b54c498627a691c9f1a507546cfb2ebc13",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 305
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/MerchantPayableBatchMapper.xml",
+          "symbolOrRule": "id=\"markPaid\"",
+          "line": 106,
+          "previousSha256": "c336b2ba183c7b960d61562f48cfa6ac57f28f165558b74262e80cb154c2ce35",
+          "currentSha256": "c336b2ba183c7b960d61562f48cfa6ac57f28f165558b74262e80cb154c2ce35",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 106
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0085",
+      "title": "合作退出补偿",
+      "originalOrder": 19,
+      "originalScope": "共用backend",
+      "previousDisposition": "后置",
+      "correctedDisposition": "现有允许退出链当前执行；新补偿政策后置",
+      "currentWorkPackageMapping": "A3 + B2原请求恢复",
+      "implementationEvidenceStatus": "现有拒绝/作废/保证金入口存在，链路待验",
+      "currentExistingChainWork": "已有允许退出的邀约、coop_order、保证金请求同原身份恢复；锁定后拒绝不得显示已退出；复核原供给/订单是否按既有规则停用。",
+      "acceptance": "同退出请求并发/丢响应/保证金未知/事务失败；邀约与供给事实一致，重复不再补偿。",
+      "policyOrScopeBoundary": "运行中新替换/退款选择及补偿额度未定，不擅自添加。",
+      "priority": "第1级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java",
+          "symbolOrRule": "public void cancelAcceptedInvite(",
+          "line": 1059,
+          "previousSha256": "bfccf95cadb66a571f8b7fc4e881c71c1bd3aa8fc637b2c65540d93ecc49d48b",
+          "currentSha256": "bfccf95cadb66a571f8b7fc4e881c71c1bd3aa8fc637b2c65540d93ecc49d48b",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 1059
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java",
+          "symbolOrRule": "coopOrderMapper.voidOrderByInviteId(",
+          "line": 1106,
+          "previousSha256": "bfccf95cadb66a571f8b7fc4e881c71c1bd3aa8fc637b2c65540d93ecc49d48b",
+          "currentSha256": "bfccf95cadb66a571f8b7fc4e881c71c1bd3aa8fc637b2c65540d93ecc49d48b",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 1106
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java",
+          "symbolOrRule": "depositRefundService.requestLocked(inv);",
+          "line": 1109,
+          "previousSha256": "bfccf95cadb66a571f8b7fc4e881c71c1bd3aa8fc637b2c65540d93ecc49d48b",
+          "currentSha256": "bfccf95cadb66a571f8b7fc4e881c71c1bd3aa8fc637b2c65540d93ecc49d48b",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 1109
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0136",
+      "title": "操作审计",
+      "originalOrder": 20,
+      "originalScope": "共用backend",
+      "previousDisposition": "当前范围",
+      "correctedDisposition": "当前执行",
+      "currentWorkPackageMapping": "拟B6 高风险操作审计与安全投影",
+      "implementationEvidenceStatus": "已有审计局部，完整覆盖待核；reason/requestId未遮敏属确定投影边界",
+      "currentExistingChainWork": "列当前付款/退出/审核/核销等实际写入的成功、拒绝、未知审计关联；核before/after之外reason/requestId是否会承载敏感值，按结构化代码/允许字段投影修已证实泄露面。",
+      "acceptance": "真实宿主成功/拒绝/未知能定位原请求；构造正文/银行卡/令牌藏入自由文本时不外泄；审计异常沿原事务合同。",
+      "policyOrScopeBoundary": "不擅自把所有审计失败改成业务阻断；新后台UI不用做。",
+      "priority": "第2级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/BusinessAuditLogQueryServiceImpl.java",
+          "symbolOrRule": "public BusinessAuditLogPageVO query(",
+          "line": 32,
+          "previousSha256": "304ddb08c0f19734c2a12902265a6707971af446c1b4d3b4dc7bbe1c1515301b",
+          "currentSha256": "304ddb08c0f19734c2a12902265a6707971af446c1b4d3b4dc7bbe1c1515301b",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 32
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/BusinessAuditLogQueryServiceImpl.java",
+          "symbolOrRule": "private BusinessAuditEvent safeProjection(",
+          "line": 56,
+          "previousSha256": "304ddb08c0f19734c2a12902265a6707971af446c1b4d3b4dc7bbe1c1515301b",
+          "currentSha256": "304ddb08c0f19734c2a12902265a6707971af446c1b4d3b4dc7bbe1c1515301b",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 56
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "private void writeVerificationAudit(",
+          "line": 2972,
+          "previousSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "currentSha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 2972
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
+          "symbolOrRule": "audit.setAction(\"COUPON_REDEEM\")",
+          "line": 139,
+          "previousSha256": "6e74a14072ceea933f23731b6474303c11ecf31a33686e2c02ec895f848641a3",
+          "currentSha256": "6e74a14072ceea933f23731b6474303c11ecf31a33686e2c02ec895f848641a3",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 139
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0134",
+      "title": "敏感数据最小化",
+      "originalOrder": 21,
+      "originalScope": "共用backend",
+      "previousDisposition": "当前范围",
+      "correctedDisposition": "当前执行；新保留期政策待核",
+      "currentWorkPackageMapping": "C5 增补事件属性最小化子单",
+      "implementationEvidenceStatus": "事件黑名单基础已有，按用途结构白名单未实现",
+      "currentExistingChainWork": "从现有小程序事件真实调用形成合法属性/类型/长度矩阵，再服务器按用途收敛；拒绝正文/精确位置等无用途字段，认证memberId不称匿名；复核撤同意后既有画像消费。",
+      "acceptance": "所有现有合法事件回归；别名/嵌套/长URL/精确位置注入不入库或画像；拒绝事件不能删除客户端待确认队列。",
+      "policyOrScopeBoundary": "保留天数和新增删除UI不擅定；推荐算法后置不等于现有事件隐私也后置。",
+      "priority": "第2级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java",
+          "symbolOrRule": "private String validateBatch(",
+          "line": 185,
+          "previousSha256": "137830a8542d9a71c9e558075af68ad01b40e6dc01f0f65372d28dcc95a58ec7",
+          "currentSha256": "137830a8542d9a71c9e558075af68ad01b40e6dc01f0f65372d28dcc95a58ec7",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 185
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java",
+          "symbolOrRule": "private boolean containsSensitiveNode(",
+          "line": 256,
+          "previousSha256": "137830a8542d9a71c9e558075af68ad01b40e6dc01f0f65372d28dcc95a58ec7",
+          "currentSha256": "137830a8542d9a71c9e558075af68ad01b40e6dc01f0f65372d28dcc95a58ec7",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 256
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java",
+          "symbolOrRule": "event.setPropertiesJson(item.getPropertiesJson());",
+          "line": 58,
+          "previousSha256": "a4f8207df97ea9986748c6b6685a50917d9c76bb4820147f8e365b1069c63a77",
+          "currentSha256": "a4f8207df97ea9986748c6b6685a50917d9c76bb4820147f8e365b1069c63a77",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 58
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java",
+          "symbolOrRule": "recommendationService.updateProfileFromEvent(event);",
+          "line": 72,
+          "previousSha256": "a4f8207df97ea9986748c6b6685a50917d9c76bb4820147f8e365b1069c63a77",
+          "currentSha256": "a4f8207df97ea9986748c6b6685a50917d9c76bb4820147f8e365b1069c63a77",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 72
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "X029",
+      "title": "人工账与离线记录、恢复在线权威（高水位/epoch）",
+      "originalOrder": 22,
+      "originalScope": "小程序专属",
+      "previousDisposition": "后置",
+      "correctedDisposition": "新增业务协议后置",
+      "currentWorkPackageMapping": "单列未纳当前实现",
+      "implementationEvidenceStatus": "公开缺实际人工账/epoch调用链",
+      "currentExistingChainWork": "只保留公共game command/receipt已有恢复验收，不凭私有历史宣称人工模式已上线。",
+      "acceptance": "未接公开业务入口前不验成既有链。",
+      "policyOrScopeBoundary": "人工记账/恢复在线权威是新可操作模式，不只是内部队列；若root证实已有公开入口再重新归属。",
+      "priority": "第1级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+          "symbolOrRule": "public GameCommandReceiptView command(",
+          "line": 261,
+          "previousSha256": "6e52c74d1d6e225a842080d73b15b6c559d123a08cd43c4af17d30ce1800e9bb",
+          "currentSha256": "6e52c74d1d6e225a842080d73b15b6c559d123a08cd43c4af17d30ce1800e9bb",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 261
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/topic-detail/director.js",
+          "symbolOrRule": "wx.setStorageSync(",
+          "line": 339,
+          "previousSha256": "ac0086be8ebd87920a1700e0ad589cbc35f39de3a0718f25b0f4fbf4a77af69e",
+          "currentSha256": "ac0086be8ebd87920a1700e0ad589cbc35f39de3a0718f25b0f4fbf4a77af69e",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 339
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": false,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0090",
+      "title": "条件叙事与隐藏信息",
+      "originalOrder": 23,
+      "originalScope": "共用backend",
+      "previousDisposition": "当前范围",
+      "correctedDisposition": "当前执行",
+      "currentWorkPackageMapping": "拟B5 游戏秘密与NPC事实投影",
+      "implementationEvidenceStatus": "已有属性过滤/模板strip，出口完整性待核",
+      "currentExistingChainWork": "按现有已得线索/成员资格追旧玩法、详情、状态变化、回执、模板、媒体URL、NPC提示词出口；确认泄露即在服务端当前投影补齐，保留真实原规则。",
+      "acceptance": "未得/已得、他队/退队、旧局版本、媒体和NPC；直接调用各API不能获得无资格正文/URL，获得后可正常读。",
+      "policyOrScopeBoundary": "不增加新叙事或线索系统；现有helper并不代表全出口安全，也不因无全表而断言全泄露。",
+      "priority": "第2级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/JourneyInitialState.java",
+          "symbolOrRule": "public static List<Map<String, Object>> playerView(",
+          "line": 79,
+          "previousSha256": "6d5f0f4887856b7ae932b0a4995dd34be40746eaf8971f15777c7623d0cdde2f",
+          "currentSha256": "6d5f0f4887856b7ae932b0a4995dd34be40746eaf8971f15777c7623d0cdde2f",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 79
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+          "symbolOrRule": "receipt.put(\"attributes\", JourneyInitialState.playerView",
+          "line": 1022,
+          "previousSha256": "9738b481a05368151be8d8a58ba9fb05a300969009d90f4f68ec7642f4114006",
+          "currentSha256": "9738b481a05368151be8d8a58ba9fb05a300969009d90f4f68ec7642f4114006",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 1022
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+          "symbolOrRule": "TemplateSecrets.strip(memberTemplate)",
+          "line": 1592,
+          "previousSha256": "f796eddd230923fca8b70faa2347d640c6a0ab2265b009668bf3e190f8a2669c",
+          "currentSha256": "f796eddd230923fca8b70faa2347d640c6a0ab2265b009668bf3e190f8a2669c",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 1592
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0091",
+      "title": "不可达结局检测",
+      "originalOrder": 24,
+      "originalScope": "共用backend",
+      "previousDisposition": "后置",
+      "correctedDisposition": "现有校验正确性当前核对；新求解器待核",
+      "currentWorkPackageMapping": "C4 附已有规则校验回归",
+      "implementationEvidenceStatus": "图校验已存在，动态可达性求解未见",
+      "currentExistingChainWork": "先核现有validator承诺的连通/循环/fallback/条件语法与运行引擎同义；找到现规则反例即修。不将缺动态求解器直接定义为现有运行bug。",
+      "acceptance": "现有非法图拒绝、合法图运行规则一致；资源耗尽样例先标能力未覆盖，不能假称可完成。",
+      "policyOrScopeBoundary": "无新增UI不自动等于可随意加算法；动态搜索目标需真实现有发布规则支持。",
+      "priority": "第2级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicRouteConfigValidator.java",
+          "symbolOrRule": "Set<Long> canReachTerminal = reverseReachable",
+          "line": 107,
+          "previousSha256": "24c19cb9da6e7730814cfe317bebc02d62809c226e86afcb4784a4f0aeeddabd",
+          "currentSha256": "24c19cb9da6e7730814cfe317bebc02d62809c226e86afcb4784a4f0aeeddabd",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 107
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+          "symbolOrRule": "validator.validateAndNormalize(",
+          "line": 1092,
+          "previousSha256": "9738b481a05368151be8d8a58ba9fb05a300969009d90f4f68ec7642f4114006",
+          "currentSha256": "9738b481a05368151be8d8a58ba9fb05a300969009d90f4f68ec7642f4114006",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 1092
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0113",
+      "title": "个人迷雾持久化",
+      "originalOrder": 25,
+      "originalScope": "小程序专属",
+      "previousDisposition": "当前范围",
+      "correctedDisposition": "当前执行",
+      "currentWorkPackageMapping": "C3",
+      "implementationEvidenceStatus": "确定实时dirty丢失缺口",
+      "currentExistingChainWork": "实时写盘成功并对应相同版本才清dirty；失败保待写并按已确认清缓存规则处理。",
+      "acceptance": "储存满/false/旧回包/账号切换，恢复成功才清dirty，清理后不复活。",
+      "policyOrScopeBoundary": "不加新UI。",
+      "priority": "第2级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.js",
+          "symbolOrRule": "_persistTiles() {",
+          "line": 1416,
+          "previousSha256": "d8ebb032078273de42f35b7aad0f8338600823a64983fc59aed1314f93056934",
+          "currentSha256": "d8ebb032078273de42f35b7aad0f8338600823a64983fc59aed1314f93056934",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 1416
+        },
+        {
+          "path": "chengyinhub-xcx/utils/roam-tile-memory-sync.js",
+          "symbolOrRule": "if (!memory.writeTiles(tiles, cursor))",
+          "line": 40,
+          "previousSha256": "c10e940ab4958a6939c2a6959ca0d64980ca2854f7a1f4ee324bef279045be1c",
+          "currentSha256": "c10e940ab4958a6939c2a6959ca0d64980ca2854f7a1f4ee324bef279045be1c",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 40
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RoamMapper.xml",
+          "symbolOrRule": "id=\"selectTilePageByMember\"",
+          "line": 310,
+          "previousSha256": "29f45b53b67eb406799d23feb64136a6aebde1a887a00bf8e4cfb4d2371495aa",
+          "currentSha256": "29f45b53b67eb406799d23feb64136a6aebde1a887a00bf8e4cfb4d2371495aa",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 310
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0114",
+      "title": "本地未同步轨迹",
+      "originalOrder": 26,
+      "originalScope": "小程序专属",
+      "previousDisposition": "当前范围",
+      "correctedDisposition": "当前执行，规则已补充明确",
+      "currentWorkPackageMapping": "C3",
+      "implementationEvidenceStatus": "已确认结束后补传与清缓存规则可执行",
+      "currentExistingChainWork": "按最新用户规则只补结束前原行程记录，不加奖励不改结算；清缓存全部本地待同步/恢复记录删除且迟到回包失效。",
+      "acceptance": "原SID与本人校验、重复补传、已结算账不变；飞行请求清缓存后不恢复。",
+      "policyOrScopeBoundary": "纠正原output中“需用户确认”：两条规则现已回答，不继续阻塞。",
+      "priority": "第2级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.js",
+          "symbolOrRule": "_saveRoamRecovery() {",
+          "line": 1482,
+          "previousSha256": "d8ebb032078273de42f35b7aad0f8338600823a64983fc59aed1314f93056934",
+          "currentSha256": "d8ebb032078273de42f35b7aad0f8338600823a64983fc59aed1314f93056934",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 1482
+        },
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.js",
+          "symbolOrRule": "会话已结束，仍有待确认格子",
+          "line": 1576,
+          "previousSha256": "d8ebb032078273de42f35b7aad0f8338600823a64983fc59aed1314f93056934",
+          "currentSha256": "d8ebb032078273de42f35b7aad0f8338600823a64983fc59aed1314f93056934",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 1576
+        },
+        {
+          "path": "chengyinhub-xcx/utils/roam-recovery.js",
+          "symbolOrRule": "function validRecovery(",
+          "line": 10,
+          "previousSha256": "4dcb0444501c4950ec54fafb91faab2e2c593ba2b5e45529ea02ec587cee3b28",
+          "currentSha256": "4dcb0444501c4950ec54fafb91faab2e2c593ba2b5e45529ea02ec587cee3b28",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 10
+        },
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.js",
+          "symbolOrRule": "if (!memory.writeRecovery(null))",
+          "line": 1866,
+          "previousSha256": "d8ebb032078273de42f35b7aad0f8338600823a64983fc59aed1314f93056934",
+          "currentSha256": "d8ebb032078273de42f35b7aad0f8338600823a64983fc59aed1314f93056934",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 1866
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0107",
+      "title": "定位漂移处理",
+      "originalOrder": 27,
+      "originalScope": "小程序专属",
+      "previousDisposition": "当前范围",
+      "correctedDisposition": "当前执行；视觉质量提示后置",
+      "currentWorkPackageMapping": "C3 增补定位输入与里程来源子单",
+      "implementationEvidenceStatus": "现有80m/3m/120m规则存在，异常输入/坐标覆盖待核",
+      "currentExistingChainWork": "沿现有定位阈值校有限合法坐标/accuracy/顺序，明确真实SDK坐标体系及转换边界；异常不入累计或使后续合法点永久失效；客户端估计里程不提升为可信资金/硬件证据。",
+      "acceptance": "NaN/Infinity/低精度/120m跳点、锁屏重启、坐标混用；不积异常里程，后续合法移动恢复。",
+      "policyOrScopeBoundary": "不调整用户阈值、不新采集硬件证明；新的质量UI标签后置，底层校验不漏。",
+      "priority": "第2级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.js",
+          "symbolOrRule": "_realTick(loc) {",
+          "line": 3616,
+          "previousSha256": "d8ebb032078273de42f35b7aad0f8338600823a64983fc59aed1314f93056934",
+          "currentSha256": "d8ebb032078273de42f35b7aad0f8338600823a64983fc59aed1314f93056934",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 3616
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+          "symbolOrRule": "session.setDistanceM(",
+          "line": 644,
+          "previousSha256": "d2c0f7b763d63e8f38d4dc09860b0a2d0f576cb43d10127910ab89bad2185455",
+          "currentSha256": "d2c0f7b763d63e8f38d4dc09860b0a2d0f576cb43d10127910ab89bad2185455",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 644
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0108",
+      "title": "到店验证半径",
+      "originalOrder": 28,
+      "originalScope": "共用backend",
+      "previousDisposition": "待核",
+      "correctedDisposition": "当前空间规则与现有发券链核对；新高价值策略待核",
+      "currentWorkPackageMapping": "C3空间输入 + 拟A6券交付",
+      "implementationEvidenceStatus": "自报坐标及离散速度限制已证实，可信到店能力不足",
+      "currentExistingChainWork": "验当前半径+容差、会员原session、上架POI、重复发现/奖励一次；不得将自报位置称真实到店。具体受控高价值券先追现有资格再判缺口。",
+      "acceptance": "边界内外/失效POI/伪造坐标/并发重复，拒绝不入账；合法发现原奖励可恢复。",
+      "policyOrScopeBoundary": "新增商家凭证或高价值券门槛属于产品政策，不自行设计。",
+      "priority": "第2级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+          "symbolOrRule": "public AjaxResult discoverPoi(",
+          "line": 150,
+          "previousSha256": "d2c0f7b763d63e8f38d4dc09860b0a2d0f576cb43d10127910ab89bad2185455",
+          "currentSha256": "d2c0f7b763d63e8f38d4dc09860b0a2d0f576cb43d10127910ab89bad2185455",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 150
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamSessionWriteService.java",
+          "symbolOrRule": "recordPoiFound(",
+          "line": 19,
+          "previousSha256": "10900aa593658e0f0f698c789e4a615c89e2b4b5b4723324d76d8a90ba2e24fb",
+          "currentSha256": "10900aa593658e0f0f698c789e4a615c89e2b4b5b4723324d76d8a90ba2e24fb",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 19
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+          "symbolOrRule": "private void applyRoamDrop(",
+          "line": 220,
+          "previousSha256": "d2c0f7b763d63e8f38d4dc09860b0a2d0f576cb43d10127910ab89bad2185455",
+          "currentSha256": "d2c0f7b763d63e8f38d4dc09860b0a2d0f576cb43d10127910ab89bad2185455",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 220
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0109",
+      "title": "异常轨迹过滤",
+      "originalOrder": 29,
+      "originalScope": "共用backend",
+      "previousDisposition": "当前范围",
+      "correctedDisposition": "当前执行；新申诉入口后置",
+      "currentWorkPackageMapping": "C3 增补异常发现审计子单",
+      "implementationEvidenceStatus": "拒绝仅返回错误，原尝试可追溯性未见",
+      "currentExistingChainWork": "保留既有300m/35m每秒规则；以原member/session/poi关联最小异常原因、服务端间隔和规则版本，不虚构完整轨迹；检查并发时间基准与后续合法点恢复。",
+      "acceptance": "短时间远距/旧时间/并发发现/离散无轨迹；拒绝不产生奖励，最小诊断关联原尝试，合法后续可继续。",
+      "policyOrScopeBoundary": "不新增精确连续定位收集或申诉页面，不改阈值。",
+      "priority": "第2级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+          "symbolOrRule": "MAX_MOVE_SPEED_MPS = 35.0",
+          "line": 138,
+          "previousSha256": "d2c0f7b763d63e8f38d4dc09860b0a2d0f576cb43d10127910ab89bad2185455",
+          "currentSha256": "d2c0f7b763d63e8f38d4dc09860b0a2d0f576cb43d10127910ab89bad2185455",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 138
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+          "symbolOrRule": "移动过快,疑似伪造定位",
+          "line": 177,
+          "previousSha256": "d2c0f7b763d63e8f38d4dc09860b0a2d0f576cb43d10127910ab89bad2185455",
+          "currentSha256": "d2c0f7b763d63e8f38d4dc09860b0a2d0f576cb43d10127910ab89bad2185455",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 177
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RoamMapper.xml",
+          "symbolOrRule": "id=\"selectLastPoiFoundLoc\"",
+          "line": 132,
+          "previousSha256": "29f45b53b67eb406799d23feb64136a6aebde1a887a00bf8e4cfb4d2371495aa",
+          "currentSha256": "29f45b53b67eb406799d23feb64136a6aebde1a887a00bf8e4cfb4d2371495aa",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 132
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    },
+    {
+      "id": "M0111",
+      "title": "轨迹记录省电",
+      "originalOrder": 30,
+      "originalScope": "小程序专属",
+      "previousDisposition": "后置",
+      "correctedDisposition": "现有采样生命周期/耗电核对当前；新模式待核",
+      "currentWorkPackageMapping": "C3 附定位持有与生命周期回归",
+      "implementationEvidenceStatus": "多owner tracker基础已有，无已证明电耗bug",
+      "currentExistingChainWork": "核现有owner acquire/release、前后台降级、重复监听与最后owner关闭；若重复采样/泄漏确定即修；自动节流优化须真机效果证据。",
+      "acceptance": "两个owner、最后释放、后台失败恢复、系统杀进程；无遗留监听且不漏原到点条件，真机耗电单独记录。",
+      "policyOrScopeBoundary": "省电属于既有漫游性能，不是App；新增可选采样档/新UI后置，没有电耗测量不承诺优化率。",
+      "priority": "第2级",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-xcx/utils/location/bg-tracker.js",
+          "symbolOrRule": "function acquire(",
+          "line": 105,
+          "previousSha256": "564f79b1f43dc1ba84a4a43456ca1ff8bfc55e23d05402b5c15e3572a2f532ca",
+          "currentSha256": "564f79b1f43dc1ba84a4a43456ca1ff8bfc55e23d05402b5c15e3572a2f532ca",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 105
+        },
+        {
+          "path": "chengyinhub-xcx/utils/location/bg-tracker.js",
+          "symbolOrRule": "function release(",
+          "line": 115,
+          "previousSha256": "564f79b1f43dc1ba84a4a43456ca1ff8bfc55e23d05402b5c15e3572a2f532ca",
+          "currentSha256": "564f79b1f43dc1ba84a4a43456ca1ff8bfc55e23d05402b5c15e3572a2f532ca",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 115
+        },
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.js",
+          "symbolOrRule": "bgTracker.acquire('roam'",
+          "line": 3583,
+          "previousSha256": "d8ebb032078273de42f35b7aad0f8338600823a64983fc59aed1314f93056934",
+          "currentSha256": "d8ebb032078273de42f35b7aad0f8338600823a64983fc59aed1314f93056934",
+          "unchangedSinceOriginalAudit": true,
+          "currentSymbolLine": 3583
+        }
+      ],
+      "checked": false,
+      "evidenceLevel": "只读源码复核；无Java/VPS/真实API运行；不继承私库测试",
+      "implementationAuthorizedByExistingRepairScope": true,
+      "newDocCoverage": "既有执行单需按具体子范围补录，不能仅标整项已映射"
+    }
+  ]
+}

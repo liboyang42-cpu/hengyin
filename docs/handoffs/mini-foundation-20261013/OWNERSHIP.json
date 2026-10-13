@@ -1,0 +1,779 @@
+{
+  "sourceBase": "0f0c32f1edc955f6117108daecbb492652212931",
+  "assignment": "cloud execution file boundaries; original domain unit grouping is not file ownership",
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCartController.java",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiConfigController.java",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantCommerceController.java",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiOfficialEventController.java",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRecommendationController.java",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiVerifyController.java",
+      "owner": "A",
+      "rule": "Single A owner; existing policies only. Caller changes in C-owned controllers are delivered as explicit method contracts."
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/NpcFeatureFlags.java",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CommunityTrustPlatformController.java",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/UmsCreativeSquareController.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/UmsCreativeSquareLikeController.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/ViewCreativeSquareController.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/AnalyticsAggregationTask.java",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ViewCreativeSquareCommunityPolicyMyBatisTest.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ViewCreativeSquareCommunityPolicySqlTest.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CreativeSquarePublishIdempotencyMybatisIntegrationTest.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/UmsCreativeSquareServiceImplIdempotencyTest.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckVisionServiceTest.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImplTest.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiQuotaReservationRedisIT.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/PhotoCheckQuotaPoolTest.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorServiceImplTest.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImRouteProjectionTest.java",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImServiceImplTest.java",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NpcChatServiceTest.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCreativeSquareActivityAttachGuardTest.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCreativeSquareCommunityPolicyTest.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCreativeSquareEditClearTest.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCreativeSquareEditStatusGuardTest.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCreativeSquarePublishIdempotencyTest.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCreativeSquareReadModelBudgetTest.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/UmsCreativeSquare.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/UmsCreativeSquareLike.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/ViewCreativeSquare.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsRegistrationMapper.java",
+      "owner": "A",
+      "rule": "Single A owner; existing policies only. Caller changes in C-owned controllers are delivered as explicit method contracts."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ImMessageMapper.java",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayTeamMapper.java",
+      "owner": "A",
+      "rule": "Single A owner; existing policies only. Caller changes in C-owned controllers are delivered as explicit method contracts."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/UmsCreativeSquareLikeMapper.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/UmsCreativeSquareMapper.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ViewCreativeSquareMapper.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsRegistrationService.java",
+      "owner": "A",
+      "rule": "Single A owner; existing policies only. Caller changes in C-owned controllers are delivered as explicit method contracts."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICreativeSquareCommunityPolicyService.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IUmsCreativeSquareLikeService.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IUmsCreativeSquareService.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IViewCreativeSquareService.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiGatewayService.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/BusinessAuditLogQueryServiceImpl.java",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventNotificationTransactionService.java",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsActivityServiceImpl.java",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityTrustServiceImpl.java",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CreativeSquareCommunityPolicyServiceImpl.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCrmRecipientDeliveryServiceImpl.java",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantPayableServiceImpl.java",
+      "owner": "A",
+      "rule": "Single A owner; existing policies only. Caller changes in C-owned controllers are delivered as explicit method contracts."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcMemoryBuilder.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialEventServiceImpl.java",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialEventV2ServiceImpl.java",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PerkLedgerServiceImpl.java",
+      "owner": "A",
+      "rule": "Single A owner; existing policies only. Caller changes in C-owned controllers are delivered as explicit method contracts."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationOrderCreateGateImpl.java",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationOrderServiceImpl.java",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamPoiApplicationServiceImpl.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamSessionWriteService.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java",
+      "owner": "A",
+      "rule": "Single A owner; existing policies only. Caller changes in C-owned controllers are delivered as explicit method contracts."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementServiceImpl.java",
+      "owner": "A",
+      "rule": "Single A owner; existing policies only. Caller changes in C-owned controllers are delivered as explicit method contracts."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImpl.java",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsCreativeSquareLikeServiceImpl.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsCreativeSquareServiceImpl.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ViewCreativeSquareServiceImpl.java",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayCooperationEngine.java",
+      "owner": "READ_ONLY_DEFERRED_C",
+      "rule": "Missing/new cooperative gameplay protocol is deferred; do not manufacture a new player capability."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayRuntimeConfig.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplaySupportMatrix.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplaySurvivalEngine.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayTemplateRules.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/JourneyInitialState.java",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeRuntimeConfig.java",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeRuntimeEngine.java",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicRouteConfigValidator.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WeRunDecryptor.java",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RegistrationAutoVerifyTask.java",
+      "owner": "A",
+      "rule": "Single A owner; existing policies only. Caller changes in C-owned controllers are delivered as explicit method contracts."
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/VerificationQrcodeRepairTask.java",
+      "owner": "A",
+      "rule": "Single A owner; existing policies only. Caller changes in C-owned controllers are delivered as explicit method contracts."
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/BizEventLogMapper.xml",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/BizFunnelDailyMapper.xml",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "owner": "A",
+      "rule": "Single A owner; existing policies only. Caller changes in C-owned controllers are delivered as explicit method contracts."
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsTopicMapper.xml",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ImConversationMemberMapper.xml",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ImMessageMapper.xml",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/MemberInterestProfileMapper.xml",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/MerchantPayableBatchMapper.xml",
+      "owner": "A",
+      "rule": "Single A owner; existing policies only. Caller changes in C-owned controllers are delivered as explicit method contracts."
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/MerchantSubscriptionMapper.xml",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/NpcChatRequestMapper.xml",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/OmsTicketMapper.xml",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/PlayTeamMapper.xml",
+      "owner": "A",
+      "rule": "Single A owner; existing policies only. Caller changes in C-owned controllers are delivered as explicit method contracts."
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RoamMapper.xml",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/UmsCreativeSquareLikeMapper.xml",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/UmsCreativeSquareMapper.xml",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ViewCreativeSquareMapper.xml",
+      "owner": "B",
+      "rule": "Existing metrics and real square/feed consumer; no new recommendation UI or protocol."
+    },
+    {
+      "path": "chengyinhub-xcx/app.js",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/components/cy/npc-chat/index.js",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/pages/activity/baoming/baoming.js",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/pages/activity/official-detail/index.js",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/pages/club/notify/index.js",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/pages/club/topic-detail/director.js",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/pages/merchant/game-node/index.js",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/index.js",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/utils/play-recommend.js",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/fabu/theme-ownership.js",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/fabu/theme-runtime.js",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/utils/publish/gameplay-support-matrix.js",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/pages/roam/index.js",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/pages/searchmap/index.js",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/pages/square/list/index.js",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/subpackageB/pages/im/chat/index.js",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/play-free-explore-detail-contract.test.js",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/utils/analytics.js",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/utils/checkout/registration-payment-verifier.js",
+      "owner": "A",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/utils/location/bg-tracker.js",
+      "owner": "READ_ONLY_SHARED",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/utils/roam-recovery.js",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/utils/roam-tile-memory-sync.js",
+      "owner": "C",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    },
+    {
+      "path": "chengyinhub-xcx/utils/write-action-workflow.js",
+      "owner": "B",
+      "rule": "Ownership controls edits, not reads; any shared change needs a written method/field contract. No blind whole-file copy."
+    }
+  ],
+  "newFiles": "New domain files and tests follow the corresponding domain owner. Unlisted/shared infrastructure stays read-only until a contract assigns its single owner; no permission question needed for ordinary file coordination.",
+  "crossPackageContracts": [
+    "A owns original coupon delivery; C owns ApiRoamController triggers.",
+    "A owns registration submit/notification intent; B owns message delivery.",
+    "A owns eligibility Mapper; C owns NPC production Controller; B owns NPC static contract test.",
+    "B owns analytics/feed/metrics consumers; C owns roam/play producer call sites.",
+    "A supplies expiry/eligibility policy; C applies it to C-owned play/NPC controllers without changing current gameplay rules."
+  ],
+  "reportDirectories": {
+    "A": "docs/verification/mini-foundation-cloud/A",
+    "B": "docs/verification/mini-foundation-cloud/B",
+    "C": "docs/verification/mini-foundation-cloud/C"
+  }
+}

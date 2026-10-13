@@ -1,0 +1,5 @@
+AI quota regenerated candidate. Old temporary package is lost; old hashes are not recoverable. This package is NOT tested.
+Four production sources only. consumeQuota(Long,String) returns an opaque String reservation; refundQuota(Long,String,String) validates member/pool/original day. Photo null means quota exhausted; empty token means existing unmetered degradation.
+Redis K retains old daily key/limit/TTL; K:generation identifies each recreated counter; nonce receipt stores generation|count. Refund decrements only existing positive matching generation, then cancels nonce for 172800 seconds. Late reservation rejects cancelled nonce. Numeric Lua arguments use Integer with production FastJson2 serializer.
+INPUT_BLOCKED only for explicitly risky input, no refund; isDetectionUnavailable refunds service failure; REVIEW_REQUIRED keeps UNKNOWN and original consumer policy. Output review/cache-only unchanged. Persistent Redis outage/process crash lacks durable compensation.
+No shared source writes, Java, Redis, VPS, commits or external calls.

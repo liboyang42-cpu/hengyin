@@ -1,0 +1,1740 @@
+{
+  "publicHead": "0f0c32f1edc955f6117108daecbb492652212931",
+  "scopeRule": "仅小程序已有功能底层；新增算法/指标/可靠性机制不能因此移除。无实际消费者的机制继续待核，新增UI/交互部分单列。线上启用/身份/设备均未验。",
+  "correction": "原 output-3 把多项“新增能力”笼统后置，现细分新增底层与新增用户功能。CommunityPost feed 与旧 creativesquare feed 不是同链；专用 recommendation API 无已核小程序消费者。",
+  "items": [
+    {
+      "id": "M0130",
+      "title": "业务写入与通知一致性",
+      "originalOrder": 1,
+      "retainedInBottomChecklist": true,
+      "category": "本轮",
+      "mechanismKind": "现有通知链可靠性",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/pages/activity/baoming/baoming.js",
+          "line": 1402,
+          "needle": "url: '/api/registration/create'",
+          "role": "已有报名建单消费者；不证明用户已读通知",
+          "sha256": "3b097e0d26e7f99ebab5ee255edfc4e59ae9c3574d1bd48876a20b9c0c3894ba"
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/notify/index.js",
+          "line": 230,
+          "needle": "url: '/api/club/event-notification/send'",
+          "role": "已有圈活动通知发送消费者；渠道送达另验",
+          "sha256": "3e9683bdc9d3e041877b023581f85746556954a6a7cfa6c93e2c0db7d6691299"
+        }
+      ],
+      "specificGap": "报名 finishOrder→notifySignup 为站内 IM best-effort 吞错；圈活动已有 outbox。用户当前称小程序无 IM，线上通知呈现/启用仍待核，不能把群聊投影 B4 代入通知。",
+      "workPackage": "BAS-NOTIFY-A：先核现有报名/圈通知事务与原事件回读；保 best-effort 与 CRM UNKNOWN 原政策，不新增渠道/界面。",
+      "acceptance": "真实建单回读与既有通知原ID、提交/回滚/重复触发；呈现和送达未核时不整项打勾。",
+      "splitScope": [],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java",
+          "line": 179,
+          "symbolOrRule": "private void notifySignup(",
+          "sha256": "3338d69caa1ef5ef52ec2d0bb527dd0ac43d766d2766bd17ef89cbe08a02efab"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCrmRecipientDeliveryServiceImpl.java",
+          "line": 34,
+          "symbolOrRule": "public void deliver(",
+          "sha256": "fb6e105e89b694d3d010ec521221f2d9e28613c522c010665f822df7604a696e"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventNotificationTransactionService.java",
+          "line": 88,
+          "symbolOrRule": "deliver(",
+          "sha256": "e4cc931cbee6e2e144c27837e5572e42705fd8a9479c848f2786a5cd4719bbd4"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0132",
+      "title": "重复通知抑制",
+      "originalOrder": 2,
+      "retainedInBottomChecklist": true,
+      "category": "本轮",
+      "mechanismKind": "现有通知链幂等",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/pages/activity/baoming/baoming.js",
+          "line": 1402,
+          "needle": "url: '/api/registration/create'",
+          "role": "已有报名建单消费者；不证明用户已读通知",
+          "sha256": "3b097e0d26e7f99ebab5ee255edfc4e59ae9c3574d1bd48876a20b9c0c3894ba"
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/notify/index.js",
+          "line": 230,
+          "needle": "url: '/api/club/event-notification/send'",
+          "role": "已有圈活动通知发送消费者；渠道送达另验",
+          "sha256": "3e9683bdc9d3e041877b023581f85746556954a6a7cfa6c93e2c0db7d6691299"
+        }
+      ],
+      "specificGap": "圈活动 campaign/delivery 唯一身份与 CRM UNKNOWN 已有；报名是否同事实重触发需逐入口核，不把未知当未发。",
+      "workPackage": "BAS-NOTIFY-A：和 M0130 共包核已有重复消费者；查明代码后才提最小修补，保持现有渠道政策。",
+      "acceptance": "同原请求/两worker/原消息已提交后响应丢失，唯一消息与原渠道状态独立回读。",
+      "splitScope": [],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java",
+          "line": 179,
+          "symbolOrRule": "private void notifySignup(",
+          "sha256": "3338d69caa1ef5ef52ec2d0bb527dd0ac43d766d2766bd17ef89cbe08a02efab"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCrmRecipientDeliveryServiceImpl.java",
+          "line": 34,
+          "symbolOrRule": "public void deliver(",
+          "sha256": "fb6e105e89b694d3d010ec521221f2d9e28613c522c010665f822df7604a696e"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventNotificationTransactionService.java",
+          "line": 88,
+          "symbolOrRule": "deliver(",
+          "sha256": "e4cc931cbee6e2e144c27837e5572e42705fd8a9479c848f2786a5cd4719bbd4"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0024",
+      "title": "行为事件去重",
+      "originalOrder": 3,
+      "retainedInBottomChecklist": true,
+      "category": "本轮",
+      "mechanismKind": "现有事件队列可靠性",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/utils/analytics.js",
+          "line": 197,
+          "needle": "url: '/api/analytics/events/batch'",
+          "role": "已有小程序事件上报消费者，不是推荐结果消费者",
+          "sha256": "b222e8c78adeadc92c077f1b16b2e55db445e3574ba457ad12635af051939017"
+        }
+      ],
+      "specificGap": "postBatch 仅看 code200；切片出队、存储失败吞错与原事件确认存在确定断点。",
+      "workPackage": "BAS-EVENT-A：真实 analytics.js 原队列快照出队、accepted 回执、存储失败保留与账号晚回包隔离。",
+      "acceptance": "真实 JS 故障注入和服务回读覆盖 accepted0/缺失、存储失败、切账号、并发新事件、原请求重放；不改UI。",
+      "splitScope": [],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-xcx/utils/analytics.js",
+          "line": 250,
+          "symbolOrRule": "function track(",
+          "sha256": "b222e8c78adeadc92c077f1b16b2e55db445e3574ba457ad12635af051939017"
+        },
+        {
+          "path": "chengyinhub-xcx/utils/analytics.js",
+          "line": 229,
+          "symbolOrRule": "function flush(",
+          "sha256": "b222e8c78adeadc92c077f1b16b2e55db445e3574ba457ad12635af051939017"
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java",
+          "line": 124,
+          "symbolOrRule": "public AjaxResult",
+          "sha256": "137830a8542d9a71c9e558075af68ad01b40e6dc01f0f65372d28dcc95a58ec7"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java",
+          "line": 40,
+          "symbolOrRule": "recordBatch(",
+          "sha256": "a4f8207df97ea9986748c6b6685a50917d9c76bb4820147f8e365b1069c63a77"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/BizEventLogMapper.xml",
+          "line": 44,
+          "symbolOrRule": "insert ignore",
+          "sha256": "d87f9e420c4d0f53006c78ff30fcdb10d0c106150f1fdce2f33ced20469df1c7"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0026",
+      "title": "作弊互动过滤",
+      "originalOrder": 4,
+      "retainedInBottomChecklist": true,
+      "category": "本轮",
+      "mechanismKind": "现有事件真实性 + 后批反作弊增强",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/utils/analytics.js",
+          "line": 197,
+          "needle": "url: '/api/analytics/events/batch'",
+          "role": "已有小程序事件上报消费者，不是推荐结果消费者",
+          "sha256": "b222e8c78adeadc92c077f1b16b2e55db445e3574ba457ad12635af051939017"
+        }
+      ],
+      "specificGap": "会员限频/社区资格已有；普通客户端 payment_success 直接影响画像权重，非权威成交。",
+      "workPackage": "BAS-EVENT-B：先确认已有成交埋点的服务端事实来源及权重消费；设备协同模型属后批底层，不因算法新而删项。",
+      "acceptance": "伪成交不进入可信成交特征；合法高频行为不被新增未授权处罚。",
+      "splitScope": [
+        {
+          "category": "后批底层",
+          "scope": "异常速率/协同行为评分，先实测后定规则，无需新用户入口"
+        },
+        {
+          "category": "新用户交互",
+          "scope": "只有新增验证码/申诉流程时才另列，本轮不做"
+        }
+      ],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-xcx/utils/analytics.js",
+          "line": 250,
+          "symbolOrRule": "function track(",
+          "sha256": "b222e8c78adeadc92c077f1b16b2e55db445e3574ba457ad12635af051939017"
+        },
+        {
+          "path": "chengyinhub-xcx/utils/analytics.js",
+          "line": 229,
+          "symbolOrRule": "function flush(",
+          "sha256": "b222e8c78adeadc92c077f1b16b2e55db445e3574ba457ad12635af051939017"
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java",
+          "line": 124,
+          "symbolOrRule": "public AjaxResult",
+          "sha256": "137830a8542d9a71c9e558075af68ad01b40e6dc01f0f65372d28dcc95a58ec7"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java",
+          "line": 40,
+          "symbolOrRule": "recordBatch(",
+          "sha256": "a4f8207df97ea9986748c6b6685a50917d9c76bb4820147f8e365b1069c63a77"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/BizEventLogMapper.xml",
+          "line": 44,
+          "symbolOrRule": "insert ignore",
+          "sha256": "d87f9e420c4d0f53006c78ff30fcdb10d0c106150f1fdce2f33ced20469df1c7"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 69,
+          "symbolOrRule": "private int eventWeight(",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0133",
+      "title": "多端事件口径一致",
+      "originalOrder": 5,
+      "retainedInBottomChecklist": true,
+      "category": "待核",
+      "mechanismKind": "共用事件口径；App 部分后置",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/utils/analytics.js",
+          "line": 197,
+          "needle": "url: '/api/analytics/events/batch'",
+          "role": "已有小程序事件上报消费者，不是推荐结果消费者",
+          "sha256": "b222e8c78adeadc92c077f1b16b2e55db445e3574ba457ad12635af051939017"
+        }
+      ],
+      "specificGap": "小程序和服务端可读；公开目标无历史 App tracker，不可推定跨端已一致。",
+      "workPackage": "BAS-EVENT-A 先覆盖小程序；跨端合同保留待核，不要求迁 App。",
+      "acceptance": "小程序成功/失败/未知与账号归属回读；App 对照不作本轮前置。",
+      "splitScope": [],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-xcx/utils/analytics.js",
+          "line": 250,
+          "symbolOrRule": "function track(",
+          "sha256": "b222e8c78adeadc92c077f1b16b2e55db445e3574ba457ad12635af051939017"
+        },
+        {
+          "path": "chengyinhub-xcx/utils/analytics.js",
+          "line": 229,
+          "symbolOrRule": "function flush(",
+          "sha256": "b222e8c78adeadc92c077f1b16b2e55db445e3574ba457ad12635af051939017"
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java",
+          "line": 124,
+          "symbolOrRule": "public AjaxResult",
+          "sha256": "137830a8542d9a71c9e558075af68ad01b40e6dc01f0f65372d28dcc95a58ec7"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java",
+          "line": 40,
+          "symbolOrRule": "recordBatch(",
+          "sha256": "a4f8207df97ea9986748c6b6685a50917d9c76bb4820147f8e365b1069c63a77"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/BizEventLogMapper.xml",
+          "line": 44,
+          "symbolOrRule": "insert ignore",
+          "sha256": "d87f9e420c4d0f53006c78ff30fcdb10d0c106150f1fdce2f33ced20469df1c7"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0014",
+      "title": "推荐特征更新",
+      "originalOrder": 6,
+      "retainedInBottomChecklist": true,
+      "category": "本轮",
+      "mechanismKind": "已有画像写入真实性",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/utils/analytics.js",
+          "line": 197,
+          "needle": "url: '/api/analytics/events/batch'",
+          "role": "已有小程序事件上报消费者，不是推荐结果消费者",
+          "sha256": "b222e8c78adeadc92c077f1b16b2e55db445e3574ba457ad12635af051939017"
+        }
+      ],
+      "specificGap": "事件insert1→画像更新已有；支付来源未验证。画像读取到评分生产/小程序结果消费者未找到。",
+      "workPackage": "BAS-EVENT-B：只核已有画像写入的来源/重放/时间；评分生产不是 App，留后批底层但先核消费者。",
+      "acceptance": "原事件→画像增量可重建，迟到不倒退时间，伪成交不能当业务成交。",
+      "splitScope": [],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java",
+          "line": 72,
+          "symbolOrRule": "recommendationService.updateProfileFromEvent",
+          "sha256": "a4f8207df97ea9986748c6b6685a50917d9c76bb4820147f8e365b1069c63a77"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 29,
+          "symbolOrRule": "public void updateProfileFromEvent",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/MemberInterestProfileMapper.xml",
+          "line": 48,
+          "symbolOrRule": "last_event_at = greatest",
+          "sha256": "f030a045193e9c11e27f9c641b14a53bcdd003e2229c253f4f8f01967254c70b"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0023",
+      "title": "有效曝光定义",
+      "originalOrder": 7,
+      "retainedInBottomChecklist": true,
+      "category": "后批底层",
+      "mechanismKind": "已有页面的合格曝光采集；不新增用户功能",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/pages/square/list/index.js",
+          "line": 1168,
+          "needle": "url: '/api/creativesquare/list'",
+          "role": "现有广场列表，实际调用旧 creativesquare 列表，不是 /community/feeds 或 /recommendation/list",
+          "sha256": "a880d5a3b399136a4754c5f5513d9f932345c2f886483d9af024f9fd4656f243"
+        },
+        {
+          "path": "chengyinhub-xcx/utils/analytics.js",
+          "line": 197,
+          "needle": "url: '/api/analytics/events/batch'",
+          "role": "已有小程序事件上报消费者，不是推荐结果消费者",
+          "sha256": "b222e8c78adeadc92c077f1b16b2e55db445e3574ba457ad12635af051939017"
+        }
+      ],
+      "specificGap": "现有广场只见点赞/分享等事件；没有 community_post_qualified_view 小程序消费者。App 的10秒/70%不能直接当当前规则；旧帖与 community_post ID 桥也须核。",
+      "workPackage": "BAS-EXPOSURE-A：在已有页面生命周期内补有效曝光/前后台过滤与稳定事件；不新增按钮，但计量规则与ID真源先审合同。",
+      "acceptance": "真实页面前后台/停留/滚动/作者自看/切账号，事件对象与服务端日去重同源；阈值未明确不猜。",
+      "splitScope": [],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-xcx/utils/analytics.js",
+          "line": 10,
+          "symbolOrRule": "const ALLOWED_EVENTS",
+          "sha256": "b222e8c78adeadc92c077f1b16b2e55db445e3574ba457ad12635af051939017"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java",
+          "line": 63,
+          "symbolOrRule": "community-post-qualified-",
+          "sha256": "a4f8207df97ea9986748c6b6685a50917d9c76bb4820147f8e365b1069c63a77"
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java",
+          "line": 140,
+          "symbolOrRule": "visiblePostAuthors",
+          "sha256": "137830a8542d9a71c9e558075af68ad01b40e6dc01f0f65372d28dcc95a58ec7"
+        },
+        {
+          "path": "chengyinhub-xcx/pages/play/index.js",
+          "line": 6391,
+          "symbolOrRule": "analytics.track('finish_route_recommendation_shown'",
+          "sha256": "6fef742d00bdea90584014730777ce8be33b0a586e23dbc2b56fd15210092dd6"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0135",
+      "title": "运营指标分母",
+      "originalOrder": 8,
+      "retainedInBottomChecklist": true,
+      "category": "待核",
+      "mechanismKind": "已有聚合指标规则；不是新用户功能",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/utils/analytics.js",
+          "line": 197,
+          "needle": "url: '/api/analytics/events/batch'",
+          "role": "已有小程序事件上报消费者，不是推荐结果消费者",
+          "sha256": "b222e8c78adeadc92c077f1b16b2e55db445e3574ba457ad12635af051939017"
+        }
+      ],
+      "specificGap": "BizFunnelDailyMapper 已按人/日汇总，但未找到小程序读取此报表的消费者。导演 recap 是另一指标链，不能混认；后台 Vue 消费不等于 App。",
+      "workPackage": "BAS-METRIC-A：先核运营是否实际依赖该聚合/作业，再修原分母、跨日/同订单语义；指标规则保留在底层，新增报表UI另列。",
+      "acceptance": "原事件与3人5单手算对照、失效作业明确陈旧；不使用前台成功埋点证明到账。",
+      "splitScope": [],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java",
+          "line": 91,
+          "symbolOrRule": "aggregateDaily(",
+          "sha256": "a4f8207df97ea9986748c6b6685a50917d9c76bb4820147f8e365b1069c63a77"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/BizFunnelDailyMapper.xml",
+          "line": 113,
+          "symbolOrRule": "starter.first_started_at",
+          "sha256": "5fadf0c29e24897b5f420a1cf4d057cfafd1f7fec57f16255b95446aaad5c849"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/BizFunnelDailyMapper.xml",
+          "line": 125,
+          "symbolOrRule": "user_count / start_user_count",
+          "sha256": "5fadf0c29e24897b5f420a1cf4d057cfafd1f7fec57f16255b95446aaad5c849"
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/AnalyticsAggregationTask.java",
+          "line": 31,
+          "symbolOrRule": "aggregateRecentWindow",
+          "sha256": "0a9b4bc06c6b5e5f2bd84d72d83d4e2d2b1840513f54ceaa7058bc2910c1c511"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0003",
+      "title": "内容语义标签",
+      "originalOrder": 9,
+      "retainedInBottomChecklist": true,
+      "category": "后批底层",
+      "mechanismKind": "现有城市/商家标签查询增强",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/pages/searchmap/index.js",
+          "line": 598,
+          "needle": "url: '/api/city/nodes'",
+          "role": "现有带 keyword/categoryId/tag/cityRole 的附近商家节点查询",
+          "sha256": "364652952d05b4dcc6c42171ed5f188dd86ab0781f81b1afc28302353e3fa78a"
+        }
+      ],
+      "specificGap": "现有 tag/category 查询真实被小程序使用；画像 key 仍只是 bizType，语义标签版本尚无召回消费者。",
+      "workPackage": "BAS-TAG-A：先核现有标签规范/纠错与过滤；版本化与语义增强后批，不把新算法认作 App。",
+      "acceptance": "既有 tag 搜索合法命中、错误/空标签不泄权限；语义评分上线前补实际消费者。",
+      "splitScope": [],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRecommendationController.java",
+          "line": 28,
+          "symbolOrRule": "public AjaxResult list(",
+          "sha256": "97bc5804fae1957f163d80071473e88f148f6d0916690bfd1a31221f42f1f644"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 50,
+          "symbolOrRule": "public List<RecommendationItemVO> listForMember",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 68,
+          "symbolOrRule": "<select id=\"selectCandidateItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 27,
+          "symbolOrRule": "<select id=\"selectColdStartItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml",
+          "line": 111,
+          "symbolOrRule": "<select id=\"selectFeed\"",
+          "sha256": "4c4e9472a142c92fb2b68a2e6176f973589dfd4e65f08b7e8807fe88c1992212"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0004",
+      "title": "推荐候选召回",
+      "originalOrder": 10,
+      "retainedInBottomChecklist": true,
+      "category": "待核",
+      "mechanismKind": "新增或改进推荐底层；不是 App/新用户入口",
+      "actualMiniConsumers": [
+        {
+          "confirmed": false,
+          "target": "/api/recommendation/list",
+          "reason": "专用 /api/recommendation/list 未找到小程序生产 JS 调用，评分生产 Java 调用亦未找到；不得把附近路线或局部站点排序冒充此画像评分消费者。"
+        },
+        {
+          "path": "chengyinhub-xcx/utils/analytics.js",
+          "line": 197,
+          "needle": "url: '/api/analytics/events/batch'",
+          "role": "仅画像输入侧，不能证明排序结果已被小程序使用",
+          "sha256": "b222e8c78adeadc92c077f1b16b2e55db445e3574ba457ad12635af051939017"
+        }
+      ],
+      "specificGap": "专用 /api/recommendation/list 未找到小程序生产 JS 调用，评分生产 Java 调用亦未找到；不得把附近路线或局部站点排序冒充此画像评分消费者。现存 SQL 缺 club_member_only 当前读者 gate，保留潜在私密投影风险待核，不改权限。",
+      "workPackage": "BAS-REC-A：候选召回资格保留。先查实际部署消费者和分发入口；确认绑定既有小程序入口后列后批底层，可不新增UI。",
+      "acceptance": "先给实际请求→资格→候选/版本→结果的可回读链，再针对本项红绿测试；无消费者不宣称缺新界面。",
+      "splitScope": [
+        {
+          "category": "后批底层",
+          "scope": "候选召回资格，消费者确认后实施；不从底层清单删除"
+        }
+      ],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRecommendationController.java",
+          "line": 28,
+          "symbolOrRule": "public AjaxResult list(",
+          "sha256": "97bc5804fae1957f163d80071473e88f148f6d0916690bfd1a31221f42f1f644"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 50,
+          "symbolOrRule": "public List<RecommendationItemVO> listForMember",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 68,
+          "symbolOrRule": "<select id=\"selectCandidateItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 27,
+          "symbolOrRule": "<select id=\"selectColdStartItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/CmsTopicMapper.xml",
+          "line": 549,
+          "symbolOrRule": "<sql id=\"clubMemberOnlyGate\">",
+          "sha256": "fea76c84b6d818d74bbef64a9a96dc21d01b58493e46f617fc025d126a944ac2"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0001",
+      "title": "跨场景兴趣共享",
+      "originalOrder": 11,
+      "retainedInBottomChecklist": true,
+      "category": "待核",
+      "mechanismKind": "新增或改进推荐底层；不是 App/新用户入口",
+      "actualMiniConsumers": [
+        {
+          "confirmed": false,
+          "target": "/api/recommendation/list",
+          "reason": "专用 /api/recommendation/list 未找到小程序生产 JS 调用，评分生产 Java 调用亦未找到；不得把附近路线或局部站点排序冒充此画像评分消费者。"
+        },
+        {
+          "path": "chengyinhub-xcx/utils/analytics.js",
+          "line": 197,
+          "needle": "url: '/api/analytics/events/batch'",
+          "role": "仅画像输入侧，不能证明排序结果已被小程序使用",
+          "sha256": "b222e8c78adeadc92c077f1b16b2e55db445e3574ba457ad12635af051939017"
+        }
+      ],
+      "specificGap": "专用 /api/recommendation/list 未找到小程序生产 JS 调用，评分生产 Java 调用亦未找到；不得把附近路线或局部站点排序冒充此画像评分消费者。",
+      "workPackage": "BAS-REC-A：共用兴趣画像消费保留。先查实际部署消费者和分发入口；确认绑定既有小程序入口后列后批底层，可不新增UI。",
+      "acceptance": "先给实际请求→资格→候选/版本→结果的可回读链，再针对本项红绿测试；无消费者不宣称缺新界面。",
+      "splitScope": [
+        {
+          "category": "后批底层",
+          "scope": "共用兴趣画像消费，消费者确认后实施；不从底层清单删除"
+        }
+      ],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRecommendationController.java",
+          "line": 28,
+          "symbolOrRule": "public AjaxResult list(",
+          "sha256": "97bc5804fae1957f163d80071473e88f148f6d0916690bfd1a31221f42f1f644"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 50,
+          "symbolOrRule": "public List<RecommendationItemVO> listForMember",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 68,
+          "symbolOrRule": "<select id=\"selectCandidateItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 27,
+          "symbolOrRule": "<select id=\"selectColdStartItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 29,
+          "symbolOrRule": "public void updateProfileFromEvent",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0015",
+      "title": "推荐训练和在线数据一致性",
+      "originalOrder": 12,
+      "retainedInBottomChecklist": true,
+      "category": "待核",
+      "mechanismKind": "新增或改进推荐底层；不是 App/新用户入口",
+      "actualMiniConsumers": [
+        {
+          "confirmed": false,
+          "target": "/api/recommendation/list",
+          "reason": "专用 /api/recommendation/list 未找到小程序生产 JS 调用，评分生产 Java 调用亦未找到；不得把附近路线或局部站点排序冒充此画像评分消费者。"
+        },
+        {
+          "path": "chengyinhub-xcx/utils/analytics.js",
+          "line": 197,
+          "needle": "url: '/api/analytics/events/batch'",
+          "role": "仅画像输入侧，不能证明排序结果已被小程序使用",
+          "sha256": "b222e8c78adeadc92c077f1b16b2e55db445e3574ba457ad12635af051939017"
+        }
+      ],
+      "specificGap": "专用 /api/recommendation/list 未找到小程序生产 JS 调用，评分生产 Java 调用亦未找到；不得把附近路线或局部站点排序冒充此画像评分消费者。",
+      "workPackage": "BAS-REC-A：训练/在线特征一致保留。先查实际部署消费者和分发入口；确认绑定既有小程序入口后列后批底层，可不新增UI。",
+      "acceptance": "先给实际请求→资格→候选/版本→结果的可回读链，再针对本项红绿测试；无消费者不宣称缺新界面。",
+      "splitScope": [
+        {
+          "category": "后批底层",
+          "scope": "训练/在线特征一致，消费者确认后实施；不从底层清单删除"
+        }
+      ],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRecommendationController.java",
+          "line": 28,
+          "symbolOrRule": "public AjaxResult list(",
+          "sha256": "97bc5804fae1957f163d80071473e88f148f6d0916690bfd1a31221f42f1f644"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 50,
+          "symbolOrRule": "public List<RecommendationItemVO> listForMember",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 68,
+          "symbolOrRule": "<select id=\"selectCandidateItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 27,
+          "symbolOrRule": "<select id=\"selectColdStartItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 29,
+          "symbolOrRule": "public void updateProfileFromEvent",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0011",
+      "title": "推荐时效",
+      "originalOrder": 13,
+      "retainedInBottomChecklist": true,
+      "category": "待核",
+      "mechanismKind": "新增或改进推荐底层；不是 App/新用户入口",
+      "actualMiniConsumers": [
+        {
+          "confirmed": false,
+          "target": "/api/recommendation/list",
+          "reason": "专用 /api/recommendation/list 未找到小程序生产 JS 调用，评分生产 Java 调用亦未找到；不得把附近路线或局部站点排序冒充此画像评分消费者。"
+        },
+        {
+          "path": "chengyinhub-xcx/utils/analytics.js",
+          "line": 197,
+          "needle": "url: '/api/analytics/events/batch'",
+          "role": "仅画像输入侧，不能证明排序结果已被小程序使用",
+          "sha256": "b222e8c78adeadc92c077f1b16b2e55db445e3574ba457ad12635af051939017"
+        }
+      ],
+      "specificGap": "专用 /api/recommendation/list 未找到小程序生产 JS 调用，评分生产 Java 调用亦未找到；不得把附近路线或局部站点排序冒充此画像评分消费者。selectCandidateItems 不筛 stat_date/TTL/成功run。",
+      "workPackage": "BAS-REC-A：评分新鲜度保留。先查实际部署消费者和分发入口；确认绑定既有小程序入口后列后批底层，可不新增UI。",
+      "acceptance": "先给实际请求→资格→候选/版本→结果的可回读链，再针对本项红绿测试；无消费者不宣称缺新界面。",
+      "splitScope": [
+        {
+          "category": "后批底层",
+          "scope": "评分新鲜度，消费者确认后实施；不从底层清单删除"
+        }
+      ],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRecommendationController.java",
+          "line": 28,
+          "symbolOrRule": "public AjaxResult list(",
+          "sha256": "97bc5804fae1957f163d80071473e88f148f6d0916690bfd1a31221f42f1f644"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 50,
+          "symbolOrRule": "public List<RecommendationItemVO> listForMember",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 68,
+          "symbolOrRule": "<select id=\"selectCandidateItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 27,
+          "symbolOrRule": "<select id=\"selectColdStartItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0016",
+      "title": "推荐降级",
+      "originalOrder": 14,
+      "retainedInBottomChecklist": true,
+      "category": "待核",
+      "mechanismKind": "新增或改进推荐底层；不是 App/新用户入口",
+      "actualMiniConsumers": [
+        {
+          "confirmed": false,
+          "target": "/api/recommendation/list",
+          "reason": "专用 /api/recommendation/list 未找到小程序生产 JS 调用，评分生产 Java 调用亦未找到；不得把附近路线或局部站点排序冒充此画像评分消费者。"
+        },
+        {
+          "path": "chengyinhub-xcx/utils/analytics.js",
+          "line": 197,
+          "needle": "url: '/api/analytics/events/batch'",
+          "role": "仅画像输入侧，不能证明排序结果已被小程序使用",
+          "sha256": "b222e8c78adeadc92c077f1b16b2e55db445e3574ba457ad12635af051939017"
+        }
+      ],
+      "specificGap": "专用 /api/recommendation/list 未找到小程序生产 JS 调用，评分生产 Java 调用亦未找到；不得把附近路线或局部站点排序冒充此画像评分消费者。现存回退仅全空触发，部分不足/异常与回退资格未闭合。",
+      "workPackage": "BAS-REC-A：评分回退保留。先查实际部署消费者和分发入口；确认绑定既有小程序入口后列后批底层，可不新增UI。",
+      "acceptance": "先给实际请求→资格→候选/版本→结果的可回读链，再针对本项红绿测试；无消费者不宣称缺新界面。",
+      "splitScope": [
+        {
+          "category": "后批底层",
+          "scope": "评分回退，消费者确认后实施；不从底层清单删除"
+        }
+      ],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRecommendationController.java",
+          "line": 28,
+          "symbolOrRule": "public AjaxResult list(",
+          "sha256": "97bc5804fae1957f163d80071473e88f148f6d0916690bfd1a31221f42f1f644"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 50,
+          "symbolOrRule": "public List<RecommendationItemVO> listForMember",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 68,
+          "symbolOrRule": "<select id=\"selectCandidateItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 27,
+          "symbolOrRule": "<select id=\"selectColdStartItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0017",
+      "title": "推荐分页去重",
+      "originalOrder": 15,
+      "retainedInBottomChecklist": true,
+      "category": "本轮",
+      "mechanismKind": "现有列表分页一致性",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/pages/square/list/index.js",
+          "line": 1168,
+          "needle": "url: '/api/creativesquare/list'",
+          "role": "现有广场列表，实际调用旧 creativesquare 列表，不是 /community/feeds 或 /recommendation/list",
+          "sha256": "a880d5a3b399136a4754c5f5513d9f932345c2f886483d9af024f9fd4656f243"
+        }
+      ],
+      "specificGap": "真实小程序走 pageNum/offset，按返回行 appendByIndex 未去重；新帖插入导致下一页偏移可重复。CommunityPost 的游标不在此实际消费者链。",
+      "workPackage": "BAS-FEED-A：真实 Page 先复现插入/删除跨页重复与旧回包；先提最小ID去重或既有接口稳定分页合同，不造新列表。",
+      "acceptance": "首屏后插入新帖→下一页不重复；删除/刷新/旧回包不覆盖；不把去重等同完整防漏，服务端游标若需要单列后批底层。",
+      "splitScope": [],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRecommendationController.java",
+          "line": 28,
+          "symbolOrRule": "public AjaxResult list(",
+          "sha256": "97bc5804fae1957f163d80071473e88f148f6d0916690bfd1a31221f42f1f644"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 50,
+          "symbolOrRule": "public List<RecommendationItemVO> listForMember",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 68,
+          "symbolOrRule": "<select id=\"selectCandidateItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 27,
+          "symbolOrRule": "<select id=\"selectColdStartItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml",
+          "line": 111,
+          "symbolOrRule": "<select id=\"selectFeed\"",
+          "sha256": "4c4e9472a142c92fb2b68a2e6176f973589dfd4e65f08b7e8807fe88c1992212"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "X041",
+      "title": "灰度功能开关下发与端点必经闸",
+      "originalOrder": 16,
+      "retainedInBottomChecklist": true,
+      "category": "本轮",
+      "mechanismKind": "现有功能开关一致性",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/app.js",
+          "line": 157,
+          "needle": "url: '/api/config/features'",
+          "role": "已有小程序 feature 开关加载消费者",
+          "sha256": "7df518c5dc21e709f01f2cfc0109f2aad1ffb1459ff9e0844d91159d13ee4d05"
+        }
+      ],
+      "specificGap": "服务端各入口同门需逐项核；已有 SysConfig 审计，不能写成全无。比例分桶是后批底层增强。",
+      "workPackage": "BAS-FLAG-A：逐现有开关查启动默认/请求失败/真实API门；不启用已禁用功能、不新建UI。",
+      "acceptance": "功能关闭时绕前端直打仍按既有门拒绝；缓存陈旧/加载失败不误放行。",
+      "splitScope": [
+        {
+          "category": "后批底层",
+          "scope": "比例分桶、版本化配置等增强，不等同新增用户功能"
+        }
+      ],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiConfigController.java",
+          "line": 60,
+          "symbolOrRule": "public AjaxResult features(",
+          "sha256": "74d6bd12aebaf5c1f9b62a40d71cedff4a0e88daf10dbec69be0dc314f101817"
+        },
+        {
+          "path": "chengyinhub-xcx/app.js",
+          "line": 83,
+          "symbolOrRule": "finishNearbyRoute",
+          "sha256": "7df518c5dc21e709f01f2cfc0109f2aad1ffb1459ff9e0844d91159d13ee4d05"
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/NpcFeatureFlags.java",
+          "line": 35,
+          "symbolOrRule": "boolean chatOn(",
+          "sha256": "1a5ffc25ec83d5cd09404adca769c16b774aab7d62513ead45ad06720d45f6e7"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0008",
+      "title": "新商家冷启动",
+      "originalOrder": 17,
+      "retainedInBottomChecklist": true,
+      "category": "后批底层",
+      "mechanismKind": "现有附近商家排序/曝光增强",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/pages/searchmap/index.js",
+          "line": 598,
+          "needle": "url: '/api/city/nodes'",
+          "role": "现有带 keyword/categoryId/tag/cityRole 的附近商家节点查询",
+          "sha256": "364652952d05b4dcc6c42171ed5f188dd86ab0781f81b1afc28302353e3fa78a"
+        }
+      ],
+      "specificGap": "当前距离/级别/排序号，无新商家曝光预算；这是已有列表排序能力增强。",
+      "workPackage": "BAS-REC-CITY：先测现有合法供给与曝光，后批制定有限冷启动策略，不新增入口。",
+      "acceptance": "同城合法新商家可按审定规则参与，距离/可执行性与试投独立，不能靠刷量。",
+      "splitScope": [],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRecommendationController.java",
+          "line": 28,
+          "symbolOrRule": "public AjaxResult list(",
+          "sha256": "97bc5804fae1957f163d80071473e88f148f6d0916690bfd1a31221f42f1f644"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 50,
+          "symbolOrRule": "public List<RecommendationItemVO> listForMember",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 68,
+          "symbolOrRule": "<select id=\"selectCandidateItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 27,
+          "symbolOrRule": "<select id=\"selectColdStartItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RoamMapper.xml",
+          "line": 424,
+          "symbolOrRule": "<select id=\"selectMerchantNodesNear\"",
+          "sha256": "29f45b53b67eb406799d23feb64136a6aebde1a887a00bf8e4cfb4d2371495aa"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0006",
+      "title": "新帖冷启动",
+      "originalOrder": 18,
+      "retainedInBottomChecklist": true,
+      "category": "后批底层",
+      "mechanismKind": "现有广场分发增强",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/pages/square/list/index.js",
+          "line": 1168,
+          "needle": "url: '/api/creativesquare/list'",
+          "role": "现有广场列表，实际调用旧 creativesquare 列表，不是 /community/feeds 或 /recommendation/list",
+          "sha256": "a880d5a3b399136a4754c5f5513d9f932345c2f886483d9af024f9fd4656f243"
+        }
+      ],
+      "specificGap": "实际列表 ViewCreativeSquare order id desc；CommunityPost FOR_YOU 不是当前小程序 feed。新帖试投可基于既有列表设计底层策略，不认作 App。",
+      "workPackage": "BAS-REC-FEED：围绕现有 creativesquare 列表核资格/有限曝光，规则先审，不先迁未用的推荐接口。",
+      "acceptance": "新人帖审核/可见性不绕过；同作者与重复曝光可回读；不得保证曝光收益。",
+      "splitScope": [],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRecommendationController.java",
+          "line": 28,
+          "symbolOrRule": "public AjaxResult list(",
+          "sha256": "97bc5804fae1957f163d80071473e88f148f6d0916690bfd1a31221f42f1f644"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 50,
+          "symbolOrRule": "public List<RecommendationItemVO> listForMember",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 68,
+          "symbolOrRule": "<select id=\"selectCandidateItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 27,
+          "symbolOrRule": "<select id=\"selectColdStartItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml",
+          "line": 111,
+          "symbolOrRule": "<select id=\"selectFeed\"",
+          "sha256": "4c4e9472a142c92fb2b68a2e6176f973589dfd4e65f08b7e8807fe88c1992212"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0007",
+      "title": "新主题冷启动",
+      "originalOrder": 19,
+      "retainedInBottomChecklist": true,
+      "category": "待核",
+      "mechanismKind": "主题冷启动底层",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/pages/play/index.js",
+          "line": 6167,
+          "needle": "loadFinishRouteRecommendation()",
+          "role": "既有结束附近路线：feature flag→/api/activity/list→首个不同路线；非画像评分 API",
+          "sha256": "6fef742d00bdea90584014730777ce8be33b0a586e23dbc2b56fd15210092dd6"
+        },
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.js",
+          "line": 4174,
+          "needle": "req('/api/roam/nearby-exploreday'",
+          "role": "已有漫游记录成功后附近自由探索推荐，非 /recommendation/list",
+          "sha256": "d8ebb032078273de42f35b7aad0f8338600823a64983fc59aed1314f93056934"
+        },
+        {
+          "confirmed": false,
+          "target": "/api/recommendation/list topic cold_start",
+          "reason": "当前附近活动卡不是主题画像回退消费者"
+        }
+      ],
+      "specificGap": "专用主题 cold_start 小程序消费者未见；现有结束附近/漫游探索推荐消费活动，两者不能串成主题试投闭环。",
+      "workPackage": "BAS-REC-A 保留新主题底层；先定位真实主题列表入口/供给资格，再决定后批适配。",
+      "acceptance": "主题试投先核上架、私密、截止及实际入口；现有活动推荐不得被冒名验收。",
+      "splitScope": [],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRecommendationController.java",
+          "line": 28,
+          "symbolOrRule": "public AjaxResult list(",
+          "sha256": "97bc5804fae1957f163d80071473e88f148f6d0916690bfd1a31221f42f1f644"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 50,
+          "symbolOrRule": "public List<RecommendationItemVO> listForMember",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 68,
+          "symbolOrRule": "<select id=\"selectCandidateItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 27,
+          "symbolOrRule": "<select id=\"selectColdStartItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0009",
+      "title": "新用户冷启动",
+      "originalOrder": 20,
+      "retainedInBottomChecklist": true,
+      "category": "待核",
+      "mechanismKind": "新用户无历史排序为底层；问答才是新交互",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/pages/play/index.js",
+          "line": 6167,
+          "needle": "loadFinishRouteRecommendation()",
+          "role": "既有结束附近路线：feature flag→/api/activity/list→首个不同路线；非画像评分 API",
+          "sha256": "6fef742d00bdea90584014730777ce8be33b0a586e23dbc2b56fd15210092dd6"
+        },
+        {
+          "path": "chengyinhub-xcx/pages/searchmap/index.js",
+          "line": 598,
+          "needle": "url: '/api/city/nodes'",
+          "role": "现有带 keyword/categoryId/tag/cityRole 的附近商家节点查询",
+          "sha256": "364652952d05b4dcc6c42171ed5f188dd86ab0781f81b1afc28302353e3fa78a"
+        }
+      ],
+      "specificGap": "专用画像回退未接小程序；现有位置/标签字段可作为已有上下文，不能声称有新用户兴趣问答。",
+      "workPackage": "BAS-REC-CONTEXT：现有字段无历史回退后批底层，先确认消费链；新增问答明确另列。",
+      "acceptance": "无位置/无历史按现有输入合法回退；不强迫新增问答。",
+      "splitScope": [
+        {
+          "category": "后批底层",
+          "scope": "复用已有城市/位置/行为做无历史回退"
+        },
+        {
+          "category": "新用户交互",
+          "scope": "新增兴趣/预算问答、偏好编辑页面"
+        }
+      ],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRecommendationController.java",
+          "line": 28,
+          "symbolOrRule": "public AjaxResult list(",
+          "sha256": "97bc5804fae1957f163d80071473e88f148f6d0916690bfd1a31221f42f1f644"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 50,
+          "symbolOrRule": "public List<RecommendationItemVO> listForMember",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 68,
+          "symbolOrRule": "<select id=\"selectCandidateItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 27,
+          "symbolOrRule": "<select id=\"selectColdStartItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-xcx/pages/play/utils/play-recommend.js",
+          "line": 10,
+          "symbolOrRule": "function scoreCandidates(",
+          "sha256": "9948f02d98385a2e81c0f02ce49e3b30f24d372bffb6a572e697ac72d6dfbff3"
+        },
+        {
+          "path": "chengyinhub-xcx/pages/play/index.js",
+          "line": 6167,
+          "symbolOrRule": "loadFinishRouteRecommendation()",
+          "sha256": "6fef742d00bdea90584014730777ce8be33b0a586e23dbc2b56fd15210092dd6"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0002",
+      "title": "长期兴趣与本次意图区分",
+      "originalOrder": 21,
+      "retainedInBottomChecklist": true,
+      "category": "待核",
+      "mechanismKind": "长期画像/短期上下文分离可纯底层",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/pages/play/utils/play-recommend.js",
+          "line": 10,
+          "needle": "function scoreCandidates(",
+          "role": "已有站点推荐：距离/营业窗/顺路打分，不是长期画像引擎",
+          "sha256": "9948f02d98385a2e81c0f02ce49e3b30f24d372bffb6a572e697ac72d6dfbff3"
+        },
+        {
+          "path": "chengyinhub-xcx/utils/analytics.js",
+          "line": 197,
+          "needle": "url: '/api/analytics/events/batch'",
+          "role": "已有小程序事件上报消费者，不是推荐结果消费者",
+          "sha256": "b222e8c78adeadc92c077f1b16b2e55db445e3574ba457ad12635af051939017"
+        }
+      ],
+      "specificGap": "局部推荐用本次 GPS/营业时刻；长期画像有写入，但没有同时消费两者的排序链。",
+      "workPackage": "BAS-REC-CONTEXT：先追现有上下文输入和生命周期，底层分离留后批；不必须加预算输入UI。",
+      "acceptance": "会话上下文过期不污染长期画像，用户既有城市选择即时生效；没有联合消费者先待核。",
+      "splitScope": [
+        {
+          "category": "后批底层",
+          "scope": "既有 GPS/页面上下文短期化及长期画像隔离"
+        },
+        {
+          "category": "新用户交互",
+          "scope": "只有新增预算/时长输入控件时单列"
+        }
+      ],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRecommendationController.java",
+          "line": 28,
+          "symbolOrRule": "public AjaxResult list(",
+          "sha256": "97bc5804fae1957f163d80071473e88f148f6d0916690bfd1a31221f42f1f644"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 50,
+          "symbolOrRule": "public List<RecommendationItemVO> listForMember",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 68,
+          "symbolOrRule": "<select id=\"selectCandidateItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 27,
+          "symbolOrRule": "<select id=\"selectColdStartItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 29,
+          "symbolOrRule": "public void updateProfileFromEvent",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        },
+        {
+          "path": "chengyinhub-xcx/pages/play/utils/play-recommend.js",
+          "line": 10,
+          "symbolOrRule": "function scoreCandidates(",
+          "sha256": "9948f02d98385a2e81c0f02ce49e3b30f24d372bffb6a572e697ac72d6dfbff3"
+        },
+        {
+          "path": "chengyinhub-xcx/pages/play/index.js",
+          "line": 6167,
+          "symbolOrRule": "loadFinishRouteRecommendation()",
+          "sha256": "6fef742d00bdea90584014730777ce8be33b0a586e23dbc2b56fd15210092dd6"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0005",
+      "title": "多种内容联合推荐",
+      "originalOrder": 22,
+      "retainedInBottomChecklist": true,
+      "category": "待核",
+      "mechanismKind": "多类型合并排序是底层；新增卡型展示另列",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/pages/square/list/index.js",
+          "line": 1168,
+          "needle": "url: '/api/creativesquare/list'",
+          "role": "现有广场列表，实际调用旧 creativesquare 列表，不是 /community/feeds 或 /recommendation/list",
+          "sha256": "a880d5a3b399136a4754c5f5513d9f932345c2f886483d9af024f9fd4656f243"
+        },
+        {
+          "path": "chengyinhub-xcx/pages/play/index.js",
+          "line": 6167,
+          "needle": "loadFinishRouteRecommendation()",
+          "role": "既有结束附近路线：feature flag→/api/activity/list→首个不同路线；非画像评分 API",
+          "sha256": "6fef742d00bdea90584014730777ce8be33b0a586e23dbc2b56fd15210092dd6"
+        },
+        {
+          "path": "chengyinhub-xcx/pages/searchmap/index.js",
+          "line": 598,
+          "needle": "url: '/api/city/nodes'",
+          "role": "现有带 keyword/categoryId/tag/cityRole 的附近商家节点查询",
+          "sha256": "364652952d05b4dcc6c42171ed5f188dd86ab0781f81b1afc28302353e3fa78a"
+        }
+      ],
+      "specificGap": "多个现有入口各自查询，不存在已证实联合推荐消费者；不能直接拼接相异分数。",
+      "workPackage": "BAS-REC-MIX：先核哪个已有列表支持何种卡类型，后批做分数标定/配额；新增卡型交互另列。",
+      "acceptance": "类型资格独立、分数可比、实际已有卡动作正确；未有联合消费者不发明。",
+      "splitScope": [
+        {
+          "category": "后批底层",
+          "scope": "多池召回、标定与编排"
+        },
+        {
+          "category": "新用户交互",
+          "scope": "新混排页面或现有页面不支持的新卡型"
+        }
+      ],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRecommendationController.java",
+          "line": 28,
+          "symbolOrRule": "public AjaxResult list(",
+          "sha256": "97bc5804fae1957f163d80071473e88f148f6d0916690bfd1a31221f42f1f644"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 50,
+          "symbolOrRule": "public List<RecommendationItemVO> listForMember",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 68,
+          "symbolOrRule": "<select id=\"selectCandidateItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 27,
+          "symbolOrRule": "<select id=\"selectColdStartItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0010",
+      "title": "推荐多样性",
+      "originalOrder": 23,
+      "retainedInBottomChecklist": true,
+      "category": "后批底层",
+      "mechanismKind": "现有列表多样性重排",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/pages/square/list/index.js",
+          "line": 1168,
+          "needle": "url: '/api/creativesquare/list'",
+          "role": "现有广场列表，实际调用旧 creativesquare 列表，不是 /community/feeds 或 /recommendation/list",
+          "sha256": "a880d5a3b399136a4754c5f5513d9f932345c2f886483d9af024f9fd4656f243"
+        }
+      ],
+      "specificGap": "当前旧列表时间序无作者/题材配额；这是后台规则增强，可保持既有列表交互。",
+      "workPackage": "BAS-REC-FEED：审定作者/题材上限及不足放宽规则后，在实际 feed 查询链做有限重排。",
+      "acceptance": "集中单作者候选的上限可解释；隐私资格不变、分页稳定、不足可回退。",
+      "splitScope": [],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRecommendationController.java",
+          "line": 28,
+          "symbolOrRule": "public AjaxResult list(",
+          "sha256": "97bc5804fae1957f163d80071473e88f148f6d0916690bfd1a31221f42f1f644"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 50,
+          "symbolOrRule": "public List<RecommendationItemVO> listForMember",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 68,
+          "symbolOrRule": "<select id=\"selectCandidateItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 27,
+          "symbolOrRule": "<select id=\"selectColdStartItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml",
+          "line": 111,
+          "symbolOrRule": "<select id=\"selectFeed\"",
+          "sha256": "4c4e9472a142c92fb2b68a2e6176f973589dfd4e65f08b7e8807fe88c1992212"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0027",
+      "title": "推荐实验分组",
+      "originalOrder": 24,
+      "retainedInBottomChecklist": true,
+      "category": "待核",
+      "mechanismKind": "新增推荐底层机制，保留清单不归 App",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/pages/square/list/index.js",
+          "line": 1168,
+          "needle": "url: '/api/creativesquare/list'",
+          "role": "现有广场列表，实际调用旧 creativesquare 列表，不是 /community/feeds 或 /recommendation/list",
+          "sha256": "a880d5a3b399136a4754c5f5513d9f932345c2f886483d9af024f9fd4656f243"
+        },
+        {
+          "confirmed": false,
+          "target": "策略/实验消费者",
+          "reason": "已有 feed 消费者存在；尚未确认要挂载的推荐策略、版本或实验路径"
+        }
+      ],
+      "specificGap": "当前没有本项策略实际消费者；存在旧 feed 不等于已运行实验。",
+      "workPackage": "BAS-REC-CONTROL：稳定实验分组保留后批底层。先确定实际既有排序入口与指标消费者，再挂分桶/护栏/回退；不新建用户入口。",
+      "acceptance": "同身份策略版本可回读、指标陈旧不决策、停止后实际旧策略生效；先确认链再实跑。",
+      "splitScope": [
+        {
+          "category": "后批底层",
+          "scope": "稳定实验分组；新增代码机制不等于新增用户功能"
+        }
+      ],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRecommendationController.java",
+          "line": 28,
+          "symbolOrRule": "public AjaxResult list(",
+          "sha256": "97bc5804fae1957f163d80071473e88f148f6d0916690bfd1a31221f42f1f644"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 50,
+          "symbolOrRule": "public List<RecommendationItemVO> listForMember",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 68,
+          "symbolOrRule": "<select id=\"selectCandidateItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 27,
+          "symbolOrRule": "<select id=\"selectColdStartItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0028",
+      "title": "推荐质量护栏",
+      "originalOrder": 25,
+      "retainedInBottomChecklist": true,
+      "category": "待核",
+      "mechanismKind": "新增推荐底层机制，保留清单不归 App",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/pages/square/list/index.js",
+          "line": 1168,
+          "needle": "url: '/api/creativesquare/list'",
+          "role": "现有广场列表，实际调用旧 creativesquare 列表，不是 /community/feeds 或 /recommendation/list",
+          "sha256": "a880d5a3b399136a4754c5f5513d9f932345c2f886483d9af024f9fd4656f243"
+        },
+        {
+          "confirmed": false,
+          "target": "策略/实验消费者",
+          "reason": "已有 feed 消费者存在；尚未确认要挂载的推荐策略、版本或实验路径"
+        }
+      ],
+      "specificGap": "当前没有本项策略实际消费者；存在旧 feed 不等于已运行实验。",
+      "workPackage": "BAS-REC-CONTROL：质量护栏保留后批底层。先确定实际既有排序入口与指标消费者，再挂分桶/护栏/回退；不新建用户入口。",
+      "acceptance": "同身份策略版本可回读、指标陈旧不决策、停止后实际旧策略生效；先确认链再实跑。",
+      "splitScope": [
+        {
+          "category": "后批底层",
+          "scope": "质量护栏；新增代码机制不等于新增用户功能"
+        }
+      ],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRecommendationController.java",
+          "line": 28,
+          "symbolOrRule": "public AjaxResult list(",
+          "sha256": "97bc5804fae1957f163d80071473e88f148f6d0916690bfd1a31221f42f1f644"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 50,
+          "symbolOrRule": "public List<RecommendationItemVO> listForMember",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 68,
+          "symbolOrRule": "<select id=\"selectCandidateItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 27,
+          "symbolOrRule": "<select id=\"selectColdStartItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0029",
+      "title": "推荐变化回滚",
+      "originalOrder": 26,
+      "retainedInBottomChecklist": true,
+      "category": "待核",
+      "mechanismKind": "新增推荐底层机制，保留清单不归 App",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/pages/square/list/index.js",
+          "line": 1168,
+          "needle": "url: '/api/creativesquare/list'",
+          "role": "现有广场列表，实际调用旧 creativesquare 列表，不是 /community/feeds 或 /recommendation/list",
+          "sha256": "a880d5a3b399136a4754c5f5513d9f932345c2f886483d9af024f9fd4656f243"
+        },
+        {
+          "confirmed": false,
+          "target": "策略/实验消费者",
+          "reason": "已有 feed 消费者存在；尚未确认要挂载的推荐策略、版本或实验路径"
+        }
+      ],
+      "specificGap": "当前没有本项策略实际消费者；存在旧 feed 不等于已运行实验。",
+      "workPackage": "BAS-REC-CONTROL：策略版本回退保留后批底层。先确定实际既有排序入口与指标消费者，再挂分桶/护栏/回退；不新建用户入口。",
+      "acceptance": "同身份策略版本可回读、指标陈旧不决策、停止后实际旧策略生效；先确认链再实跑。",
+      "splitScope": [
+        {
+          "category": "后批底层",
+          "scope": "策略版本回退；新增代码机制不等于新增用户功能"
+        }
+      ],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRecommendationController.java",
+          "line": 28,
+          "symbolOrRule": "public AjaxResult list(",
+          "sha256": "97bc5804fae1957f163d80071473e88f148f6d0916690bfd1a31221f42f1f644"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 50,
+          "symbolOrRule": "public List<RecommendationItemVO> listForMember",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 68,
+          "symbolOrRule": "<select id=\"selectCandidateItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 27,
+          "symbolOrRule": "<select id=\"selectColdStartItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0013",
+      "title": "推荐探索与利用",
+      "originalOrder": 27,
+      "retainedInBottomChecklist": true,
+      "category": "待核",
+      "mechanismKind": "新增推荐底层机制，保留清单不归 App",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/pages/square/list/index.js",
+          "line": 1168,
+          "needle": "url: '/api/creativesquare/list'",
+          "role": "现有广场列表，实际调用旧 creativesquare 列表，不是 /community/feeds 或 /recommendation/list",
+          "sha256": "a880d5a3b399136a4754c5f5513d9f932345c2f886483d9af024f9fd4656f243"
+        },
+        {
+          "confirmed": false,
+          "target": "策略/实验消费者",
+          "reason": "已有 feed 消费者存在；尚未确认要挂载的推荐策略、版本或实验路径"
+        }
+      ],
+      "specificGap": "当前没有本项策略实际消费者；存在旧 feed 不等于已运行实验。",
+      "workPackage": "BAS-REC-CONTROL：探索/利用分配保留后批底层。先确定实际既有排序入口与指标消费者，再挂分桶/护栏/回退；不新建用户入口。",
+      "acceptance": "同身份策略版本可回读、指标陈旧不决策、停止后实际旧策略生效；先确认链再实跑。",
+      "splitScope": [
+        {
+          "category": "后批底层",
+          "scope": "探索/利用分配；新增代码机制不等于新增用户功能"
+        }
+      ],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRecommendationController.java",
+          "line": 28,
+          "symbolOrRule": "public AjaxResult list(",
+          "sha256": "97bc5804fae1957f163d80071473e88f148f6d0916690bfd1a31221f42f1f644"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 50,
+          "symbolOrRule": "public List<RecommendationItemVO> listForMember",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 68,
+          "symbolOrRule": "<select id=\"selectCandidateItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 27,
+          "symbolOrRule": "<select id=\"selectColdStartItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0021",
+      "title": "创作者曝光机会",
+      "originalOrder": 28,
+      "retainedInBottomChecklist": true,
+      "category": "后批底层",
+      "mechanismKind": "现有创作者分发机会和度量",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/pages/square/list/index.js",
+          "line": 1168,
+          "needle": "url: '/api/creativesquare/list'",
+          "role": "现有广场列表，实际调用旧 creativesquare 列表，不是 /community/feeds 或 /recommendation/list",
+          "sha256": "a880d5a3b399136a4754c5f5513d9f932345c2f886483d9af024f9fd4656f243"
+        },
+        {
+          "path": "chengyinhub-xcx/utils/analytics.js",
+          "line": 197,
+          "needle": "url: '/api/analytics/events/batch'",
+          "role": "已有小程序事件上报消费者，不是推荐结果消费者",
+          "sha256": "b222e8c78adeadc92c077f1b16b2e55db445e3574ba457ad12635af051939017"
+        }
+      ],
+      "specificGap": "已有发布/广场/行为事件，缺曝光质量与作者机会预算；当前 community 指标不能无证据嫁接旧帖ID。",
+      "workPackage": "BAS-REC-FEED＋BAS-EXPOSURE-A：先建立旧帖真实曝光身份，后批讨论作者机会规则，保持当前UI。",
+      "acceptance": "同城作者数/合格曝光/真实参加分开，防重复事件及刷量，提升机会不冒称提升转化。",
+      "splitScope": [],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRecommendationController.java",
+          "line": 28,
+          "symbolOrRule": "public AjaxResult list(",
+          "sha256": "97bc5804fae1957f163d80071473e88f148f6d0916690bfd1a31221f42f1f644"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RecommendationServiceImpl.java",
+          "line": 50,
+          "symbolOrRule": "public List<RecommendationItemVO> listForMember",
+          "sha256": "d4f2ef1f9381693948a76aff1c83b4018da4a5da614d05950e9c79136740ffca"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 68,
+          "symbolOrRule": "<select id=\"selectCandidateItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RecommendationScoreDailyMapper.xml",
+          "line": 27,
+          "symbolOrRule": "<select id=\"selectColdStartItems\"",
+          "sha256": "cc2eb5f1d3eaa78e021835e94f07347ab1484602f086810e3a61c9ae3de5c638"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml",
+          "line": 111,
+          "symbolOrRule": "<select id=\"selectFeed\"",
+          "sha256": "4c4e9472a142c92fb2b68a2e6176f973589dfd4e65f08b7e8807fe88c1992212"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0041",
+      "title": "高峰购票准入",
+      "originalOrder": 29,
+      "retainedInBottomChecklist": true,
+      "category": "后批底层",
+      "mechanismKind": "现有建单准入/吞吐增强",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/pages/activity/baoming/baoming.js",
+          "line": 1402,
+          "needle": "url: '/api/registration/create'",
+          "role": "已有报名建单消费者；不证明用户已读通知",
+          "sha256": "3b097e0d26e7f99ebab5ee255edfc4e59ae9c3574d1bd48876a20b9c0c3894ba"
+        }
+      ],
+      "specificGap": "现有请求幂等/资格/库存，缺峰值实测。后台限流和签名准入可不新增用户入口；可视等待队列则新交互。",
+      "workPackage": "BAS-ORDER-LOAD：先测既有建单峰值/库存与幂等，再决定限流准入，不先做排队页面。",
+      "acceptance": "超卖为0、合法重试同单、超载明确失败可恢复；如引入队列另验令牌与期限。",
+      "splitScope": [
+        {
+          "category": "新用户交互",
+          "scope": "等待队列页、排队位置等用户可见新流程；另列后置"
+        }
+      ],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+          "line": 193,
+          "symbolOrRule": "createRegistration(",
+          "sha256": "7348fc2638ed25aae7638bea49d95b9fa7611640626047dfcc14bfcd58f96472"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationOrderServiceImpl.java",
+          "line": 85,
+          "symbolOrRule": "createOrReplay(",
+          "sha256": "a2b5e55d37268dd1ae946ce7da50b7c86018b7a6131f09f2503b80915ecaadb0"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationOrderCreateGateImpl.java",
+          "line": 32,
+          "symbolOrRule": "public void validate(",
+          "sha256": "ef2faef259351d9f8cb35161e11b966862274231343206e8c8efb43302e9356d"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "line": 561,
+          "symbolOrRule": "if (inventoryUpdated == 0)",
+          "sha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36"
+        }
+      ],
+      "checked": false
+    },
+    {
+      "id": "M0042",
+      "title": "购票防机器人",
+      "originalOrder": 30,
+      "retainedInBottomChecklist": true,
+      "category": "后批底层",
+      "mechanismKind": "现有购票反自动化底层增强",
+      "actualMiniConsumers": [
+        {
+          "path": "chengyinhub-xcx/pages/activity/baoming/baoming.js",
+          "line": 1402,
+          "needle": "url: '/api/registration/create'",
+          "role": "已有报名建单消费者；不证明用户已读通知",
+          "sha256": "3b097e0d26e7f99ebab5ee255edfc4e59ae9c3574d1bd48876a20b9c0c3894ba"
+        }
+      ],
+      "specificGap": "现有幂等/库存不是机器人防护；后台频率/异常协同可纯底层，挑战/申诉是新交互。",
+      "workPackage": "BAS-ORDER-LOAD：先测现有限频和误伤，后台可解释风险保护后批；不自行加验证码或封禁政策。",
+      "acceptance": "脚本多请求不绕既有额度/库存，合法弱网同ID可恢复；新增处罚规则先确认。",
+      "splitScope": [
+        {
+          "category": "新用户交互",
+          "scope": "验证码、人机挑战或申诉流程"
+        }
+      ],
+      "previousSourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+          "line": 193,
+          "symbolOrRule": "createRegistration(",
+          "sha256": "7348fc2638ed25aae7638bea49d95b9fa7611640626047dfcc14bfcd58f96472"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationOrderServiceImpl.java",
+          "line": 85,
+          "symbolOrRule": "createOrReplay(",
+          "sha256": "a2b5e55d37268dd1ae946ce7da50b7c86018b7a6131f09f2503b80915ecaadb0"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationOrderCreateGateImpl.java",
+          "line": 32,
+          "symbolOrRule": "public void validate(",
+          "sha256": "ef2faef259351d9f8cb35161e11b966862274231343206e8c8efb43302e9356d"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "line": 561,
+          "symbolOrRule": "if (inventoryUpdated == 0)",
+          "sha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36"
+        }
+      ],
+      "checked": false
+    }
+  ]
+}

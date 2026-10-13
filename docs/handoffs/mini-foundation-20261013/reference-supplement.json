@@ -1,0 +1,66 @@
+[
+  {
+    "repo": "discourse/discourse",
+    "path": "app/models/draft.rb",
+    "commit": "fe97c2951fdcce6048bf5a5ca2b4436439f8d486",
+    "url": "https://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/app/models/draft.rb",
+    "sha256": "c7c72f1dbac643ce52ef7aba489cca07d9062bd1958d537b10963fe84f46b590",
+    "lines": 365
+  },
+  {
+    "repo": "discourse/discourse",
+    "path": "app/models/draft_sequence.rb",
+    "commit": "fe97c2951fdcce6048bf5a5ca2b4436439f8d486",
+    "url": "https://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/app/models/draft_sequence.rb",
+    "sha256": "304caf5f9a5beb1f29373e2a233d229417509008e6ecef8bdc5ceb8dfb5d190f",
+    "lines": 61
+  },
+  {
+    "repo": "discourse/discourse",
+    "path": "plugins/poll/lib/poll.rb",
+    "commit": "fe97c2951fdcce6048bf5a5ca2b4436439f8d486",
+    "url": "https://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/plugins/poll/lib/poll.rb",
+    "sha256": "00c08a5735ff5b847aec735a006bd6128ea4933e449211537a3c543dfd728cba",
+    "lines": 569
+  },
+  {
+    "repo": "discourse/discourse",
+    "path": "plugins/poll/app/models/poll.rb",
+    "commit": "fe97c2951fdcce6048bf5a5ca2b4436439f8d486",
+    "url": "https://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/plugins/poll/app/models/poll.rb",
+    "sha256": "b235d25009eb4ea9d55dfd1cdc6ec73581b46172d3df498af54303196c1e8b58",
+    "lines": 133
+  },
+  {
+    "repo": "binarywang/WxJava",
+    "path": "LICENSE",
+    "commit": "b73861bcbc8865c90fab328b9cbef2b6a9a7b122",
+    "url": "https://github.com/binarywang/WxJava/blob/b73861bcbc8865c90fab328b9cbef2b6a9a7b122/LICENSE",
+    "sha256": "3760a0dba24568a5b4a4e41e8aabe5e5e23d81422f26e7623c8ba5cf13ef6c05",
+    "lines": 53
+  },
+  {
+    "repo": "binarywang/WxJava",
+    "path": "weixin-java-miniapp/src/main/java/cn/binarywang/wx/miniapp/api/impl/WxMaRunServiceImpl.java",
+    "commit": "b73861bcbc8865c90fab328b9cbef2b6a9a7b122",
+    "url": "https://github.com/binarywang/WxJava/blob/b73861bcbc8865c90fab328b9cbef2b6a9a7b122/weixin-java-miniapp/src/main/java/cn/binarywang/wx/miniapp/api/impl/WxMaRunServiceImpl.java",
+    "sha256": "2469c6ae65cc58d62167b00c80ae9447a9ccf88e5f305c971f8647c15f7939fe",
+    "lines": 26
+  },
+  {
+    "repo": "binarywang/WxJava",
+    "path": "weixin-java-miniapp/src/main/java/cn/binarywang/wx/miniapp/util/crypt/WxMaCryptUtils.java",
+    "commit": "b73861bcbc8865c90fab328b9cbef2b6a9a7b122",
+    "url": "https://github.com/binarywang/WxJava/blob/b73861bcbc8865c90fab328b9cbef2b6a9a7b122/weixin-java-miniapp/src/main/java/cn/binarywang/wx/miniapp/util/crypt/WxMaCryptUtils.java",
+    "sha256": "c95e51ebcf274dfb1d949c46c7ab7534a65675c2ce1eb653bf48daf45f728a5d",
+    "lines": 186
+  },
+  {
+    "repo": "binarywang/WxJava",
+    "path": "weixin-java-miniapp/src/main/java/cn/binarywang/wx/miniapp/bean/WxMaRunStepInfo.java",
+    "commit": "b73861bcbc8865c90fab328b9cbef2b6a9a7b122",
+    "url": "https://github.com/binarywang/WxJava/blob/b73861bcbc8865c90fab328b9cbef2b6a9a7b122/weixin-java-miniapp/src/main/java/cn/binarywang/wx/miniapp/bean/WxMaRunStepInfo.java",
+    "sha256": "716818e2fe8c5078d5bef6c51727c046763f4473eb88237a50c95be7b1dbe9af",
+    "lines": 38
+  }
+]

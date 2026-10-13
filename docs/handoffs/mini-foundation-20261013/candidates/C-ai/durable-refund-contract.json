@@ -1,0 +1,241 @@
+{
+  "status": "READ_ONLY_CONTRACT_NOT_IMPLEMENTED",
+  "createdAt": "2026-10-13T10:30:45.689700-07:00",
+  "scope": "Existing Mini Program AI quota refund durability; backend only. Separate successor to regenerated-v1, no changes to frozen four-production-source package.",
+  "confirmedPolicy": [
+    "Service failures refund only this original-day reservation. Explicitly violating input is retained.",
+    "REVIEW_REQUIRED and output moderation retain current per-consumer behavior.",
+    "Photo infrastructure-failure unmetered fallback remains.",
+    "No new user-facing feature, quota limit, pool, premium entitlement, dependency, Redis/JWT configuration or production DDL."
+  ],
+  "finding": "No public generic durable AI reservation/refund queue exists. Existing outboxes offer implementation patterns, not reusable AI storage or worker contracts.",
+  "reuseAssessment": [
+    {
+      "type": "WxPaymentCallbackOutboxServiceImpl",
+      "decision": "Do not reuse its table or enqueue method for AI",
+      "reason": "Payment-specific bizId/money_affecting and maximum-three-attempts-to-manual policy; no original K/nonce/generation/outcome; broadening would mix money workflow semantics. Reuse short claim transaction + owner/fence CAS pattern only."
+    },
+    {
+      "type": "StoreVerifyGrowthDeliveryMapper / StoreVerifyGrowthTask",
+      "decision": "Do not insert AI rows",
+      "reason": "Primary identity registrationId and missionsJson; worker calls IGrowthService.deliverStoreVerification. Reuse stable due ordering and per-row recorded failure pattern only."
+    },
+    {
+      "type": "AiGenerationLog / saveLog",
+      "decision": "Cannot recover authoritative refund eligibility",
+      "reason": "No K/nonce/generation; safetyFlag does not distinguish review required from explicit violation; saveLog catches database errors. Audit presence/absence cannot prove refund entitlement."
+    },
+    {
+      "type": "NpcChatRequest",
+      "decision": "Optional correlated NPC evidence, not all-AI quota ledger",
+      "reason": "Only NPC requests carry requestId/lease/terminal safety; no quota identity. expireProcessing overwrites to FAILED/NOT_RUN/REQUEST_TIMEOUT, which is not proof moderation never ran."
+    }
+  ],
+  "proposedFiles": [
+    "sql/migration_ai_quota_reservation_recovery_20261013.sql (new only, no editing old migration)",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/AiQuotaReservationRecord.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/AiQuotaReservationMapper.java",
+    "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryService.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/task/AiQuotaRecoveryTask.java",
+    "Four existing quota sources only for reserve/outcome hooks, in a separate reviewed delta",
+    "Focused admin-unit tests and task-isolated real MySQL+Redis IT"
+  ],
+  "newTable": {
+    "name": "ai_quota_reservation",
+    "fields": {
+      "id": "bigint generated internal id",
+      "member_id": "bigint, required",
+      "biz_type": "varchar(64), required exact existing scene",
+      "pool": "varchar(32), existing gen/npc/photo/player-draft identity",
+      "original_day": "char(8), frozen original date",
+      "counter_key": "varchar(191), frozen original K",
+      "nonce": "char(32), unique",
+      "receipt_key": "varchar(255), exact request receipt",
+      "generation": "varchar(255), nullable only until atomic reserve identity known",
+      "used_after_reserve": "bigint nullable, diagnostic not authority",
+      "state": "PREPARED / RESERVED / REFUND_DUE / RETAINED / REFUNDED / RESOLVED_NO_ACTIVE_RESERVATION / UNCERTAIN",
+      "stage": "PRE_RESERVE / INPUT_REVIEW_STARTED / MODEL_STARTED / RESULT_CLASSIFIED",
+      "decision_reason": "fixed internal code, never raw prompts/images/provider output",
+      "request_lease_token": "char(32), fences live request against recovery",
+      "request_lease_until": "datetime(3), stale does not by itself prove refund eligibility",
+      "owner_token": "char(32), recovery claim owner",
+      "fence_version": "bigint monotonically incremented",
+      "next_attempt_at": "datetime(3)",
+      "attempt_count": "int",
+      "last_error_code": "varchar(64), sanitized",
+      "created_at/updated_at/completed_at": "datetime(3)"
+    },
+    "indexes": [
+      "UNIQUE(nonce)",
+      "INDEX(state,next_attempt_at,id)",
+      "INDEX(member_id,original_day)"
+    ],
+    "retention": "No automatic deletion or invented retention rule in this repair. Production migration and job enablement remain deployment gates."
+  },
+  "newInternalSignatures": [
+    "AiQuotaReservationRecord prepare(Long memberId, String bizType, String pool, String originalDay, String counterKey, String nonce, String receiptKey); // independent short committed transaction before Redis charge",
+    "boolean recordReserved(Long id, String requestLeaseToken, String generation, long used); // nonce-bound identity returned by same reserve EVAL or matching receipt, never standalone current-generation read",
+    "boolean advanceStage(Long id, String requestLeaseToken, String stage); // CAS before review/model side effect",
+    "boolean retain(Long id, String requestLeaseToken, String decisionReason); // success or existing no-refund outcome persisted before returning it",
+    "boolean requireRefund(Long id, String requestLeaseToken, String reason); // durable definitive failure intent before best-effort Redis refund",
+    "List<AiQuotaReservationRecord> claimDue(int limit, String ownerToken); // short DB transaction; deterministic due+id order, fence+claim expiry",
+    "void reconcileClaim(AiQuotaReservationRecord row); // Redis outside DB transaction; completion WHERE id/state/owner/fence",
+    "AiQuotaRecoveryTask.run(); // existing Quartz bean mechanism, no new external endpoint"
+  ],
+  "flow": [
+    "1. Freeze original member/pool/K/day/nonce and commit PREPARED before Redis. If DB preparation fails, no quota mutation; ordinary/player fail as upstream unavailable, Photo retains existing unmetered fallback.",
+    "2. Reserve Lua keeps current counter/generation rules and returns count+generation in one EVAL. Avoid guessing generation from nonce when K already exists. For lost response, inspect only this receipt; persist resolved identity if available; no bare current G substitution.",
+    "3. An independent committed stage update precedes external moderation/model. Request outcome writes use owner CAS. Player draft retention remains at Creator valid-draft boundary, not Gateway output; Photo invalid parse remains its existing retained policy; ordinary output/review retain current behavior.",
+    "4. Definitive service failure writes REFUND_DUE durably before Redis compensation. A crash after this point is recoverable from DB. Refund attempts only exact original K+G+R. Keep original nonce cancellation and generation checks; never decrement only because DB stores old generation.",
+    "5. Worker claims small due batch and releases DB transaction before Redis network work. Success/final-no-active result uses fenced CAS. Transient failure persists next attempt; no blind three-attempt deletion or false completion. Losing completion response retries same nonce idempotently.",
+    "6. Missing K resolves without creating K or touching another date. Generation mismatch resolves old claim without debit. Missing receipt while K remains is UNCERTAIN unless the script conclusively proves not applied/cancelled: durable generation alone is insufficient to repeat a decrement after a prior refund marker expired.",
+    "7. After crash, stale PREPARED before review ever started can safely cancel its own reservation and resolve no user output/violation. Stale records after INPUT_REVIEW_STARTED or MODEL_STARTED without authoritative terminal outcome must remain UNCERTAIN: stage timeout cannot distinguish service failure from completed violation/success. Do not infer from absent audit row."
+  ],
+  "atomicReturnPlan": "Successor may change reserve Lua internal return to [used,generation], using explicit per-execution StringRedisSerializer for returned generation and the existing production argument serializer. Both business callers adapt together. No global serializer/config change; current frozen v1 remains Long return. A matching receipt GET for a lost reply must parse gen from that exact nonce receipt, not from K:generation.",
+  "nonNegotiableEvidenceLimits": [
+    "Cannot guarantee arbitrary process crash exact business outcome with no durable terminal write. Crash after moderation decides violation but before decision persistence is intrinsically unclassified; automatic refund would violate approved no-refund policy.",
+    "If DB and Redis both fail before a terminal fact is durable, preserve UNCERTAIN and report pending evidence. This is a technical cut point, not a new user policy question.",
+    "Current 172800-second cancel-marker lifetime is finite. A durable worker must not fall back to direct decrement using DB identity when receipt/cancel evidence has expired.",
+    "An expired original quota counter means no current-day quota is owed under the existing date-key policy; record no-active resolution, do not grant extra new-day allowance.",
+    "No production migration, scheduling or recovery has occurred; this is a proposal only."
+  ],
+  "acceptance": [
+    "Random task MySQL schema, CREATE-success flag before DROP; loopback task Redis with exact absent-before-use random keys; production Redis serializer.",
+    "Persist PREPARED then crash after Lua apply before returned identity: restart reads exact receipt, resolves/cancels only its own original reservation.",
+    "Persist REFUND_DUE, force Redis outage across process restart, restore Redis: same K/nonce decremented once, independent SQL+raw Redis readback.",
+    "Lua refund applied but reply lost; DB still REFUND_DUE: retry observes same nonce finalization and never debits B.",
+    "A reserve, K deleted, B recreated same date: A recovery cannot debit B; repeat with generation-only loss.",
+    "Original day expires while recovery blocked: next-day counter unchanged, old counter never recreated.",
+    "Concurrent workers and expired claim takeover: exactly one current owner can finalize DB; repeated Redis calls remain same nonce idempotent.",
+    "Explicit INPUT_BLOCKED and valid success retained, no recovery debit; REVIEW and Photo invalid-result policies retain prior behavior.",
+    "Crash after INPUT_REVIEW_STARTED with no authoritative terminal decision: UNCERTAIN, no automatic debit or false recovered status.",
+    "DB prepare failure produces no Redis charge; Photo existing unmetered behavior kept.",
+    "Continuous outage leaves pending and bounded scheduled retries, never marks refunded; one failing early row must not starve later due rows.",
+    "Actual Quartz schedule enablement and device/HTTP acceptance remain separate deployment evidence."
+  ],
+  "sourceEvidence": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackOutboxServiceImpl.java",
+      "sha256": "45dc8ca1dcea4b963e4083b91dc675b7cb7ffe0ef8a92482317b46f63d79a132",
+      "symbols": [
+        {
+          "term": "enqueue",
+          "line": 44
+        },
+        {
+          "term": "claimForRetry",
+          "line": 21
+        },
+        {
+          "term": "retryOrEscalate",
+          "line": 21
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IWxPaymentCallbackOutboxService.java",
+      "sha256": "81660c92bab113aeeed43008db6737627e9a55401fb1ca0e9a3af795a446cadb",
+      "symbols": [
+        {
+          "term": "enqueue",
+          "line": 21
+        },
+        {
+          "term": "claimForRetry",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/StoreVerifyGrowthDeliveryMapper.java",
+      "sha256": "fd328849fb5b309b5d0bfc5007d0547e02a6c3d72d0f3db039420caa51e54f9a",
+      "symbols": [
+        {
+          "term": "enqueue",
+          "line": 8
+        },
+        {
+          "term": "selectDue",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/StoreVerifyGrowthDeliveryMapper.xml",
+      "sha256": "8410c39bb52ae16ade82bef240d31932c2cff5b8e7acb846f2fbc68265e6316a",
+      "symbols": [
+        {
+          "term": "id=\"enqueue\"",
+          "line": 9
+        },
+        {
+          "term": "id=\"selectDue\"",
+          "line": 19
+        },
+        {
+          "term": "id=\"recordFailure\"",
+          "line": 28
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/StoreVerifyGrowthTask.java",
+      "sha256": "221c92f2c762d2f075b141ed03f83f6e5a9f57d20e83f03da3f2de370a5cca26",
+      "symbols": [
+        {
+          "term": "public void run",
+          "line": 21
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/AiGenerationLog.java",
+      "sha256": "33a015c23084ac3659e501a892ac6e4be2729bd3a27d817209c7dc6b385f6676",
+      "symbols": [
+        {
+          "term": "private String traceId",
+          "line": 36
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+      "sha256": "e02e5fe4f5e917e3de031d1138860715f9b4ec3ed1ab441bd2eb72f063b1f7c7",
+      "symbols": [
+        {
+          "term": "private void saveLog",
+          "line": 514
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/NpcChatRequest.java",
+      "sha256": "e504de51c8bdcb8ba56820cac3f63e37297cf848b16bc4e285e4930a0c2c384e",
+      "symbols": [
+        {
+          "term": "private String safetyDecision",
+          "line": 19
+        },
+        {
+          "term": "private String leaseToken",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/NpcChatRequestMapper.xml",
+      "sha256": "f96af7e5734272e4cb592c793a2099091f73b91140f84f61f749ee92087bdd5f",
+      "symbols": [
+        {
+          "term": "id=\"expireProcessingByUserAndSession\"",
+          "line": 47
+        },
+        {
+          "term": "id=\"finishIfLeaseOwned\"",
+          "line": 56
+        }
+      ]
+    }
+  ]
+}
