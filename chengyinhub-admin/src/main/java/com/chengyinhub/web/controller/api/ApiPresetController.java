@@ -33,13 +33,13 @@ public class ApiPresetController extends BaseController {
 
     @Operation(summary = "城市路线列表")
     @GetMapping("/route/list")
-    public AjaxResult routeList(@RequestParam(required = false) String city) {
+    public AjaxResult routeList(@RequestParam(value = "city", required = false) String city) {
         return AjaxResult.success(presetService.listRoutes(city));
     }
 
     @Operation(summary = "单条路线含站点")
     @GetMapping("/route/info")
-    public AjaxResult routeInfo(@RequestParam Long id) {
+    public AjaxResult routeInfo(@RequestParam("id") Long id) {
         CmsPresetRoute route = presetService.getRouteWithNodes(id);
         if (route == null) {
             return AjaxResult.error("路线不存在");

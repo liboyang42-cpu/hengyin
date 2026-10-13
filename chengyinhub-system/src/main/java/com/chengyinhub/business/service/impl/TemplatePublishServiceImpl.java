@@ -553,6 +553,53 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         return normalized;
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long copyPublicTemplateToDraft(Long libraryId, Long memberId, String username) {
+        CmsTemplateLibrary projection = templateLibraryService.selectCmsTemplateLibraryById(libraryId);
+        if (projection == null || !Integer.valueOf(0).equals(projection.getDelFlag())
+                || !Long.valueOf(1).equals(projection.getStatus())
+                || !Long.valueOf(1).equals(projection.getPublishStatus())
+                || projection.getMemberTemplateId() == null) {
+            throw new IllegalArgumentException("路线引用的公共玩法不可用，请重新选择");
+        }
+        CmsMemberTemplate canonical = memberTemplateService.selectCmsMemberTemplateById(projection.getMemberTemplateId());
+        if (!isPublishedCanonical(canonical)) throw new IllegalArgumentException("路线引用的玩法尚未公开");
+        if ((canonical.getCouponId() != null && canonical.getCouponId() > 0)
+                || hasExternalDraftReference(canonical.getAdvancedConfigJson())
+                || hasExternalDraftReference(canonical.getStoryJson())
+                || hasExternalDraftReference(canonical.getRewardRulesJson())) {
+            throw new IllegalArgumentException("该路线玩法引用外部人物、状态或权益，请先独立配置玩法后使用");
+        }
+        CmsTemplatePublishRequest request = new CmsTemplatePublishRequest();
+        BeanUtils.copyProperties(canonical, request);
+        request.setId(null);
+        request.setOriginalTemplateId(libraryId);
+        request.setIsSync(0);
+        if (canonical.getDuration() != null) request.setDuration(Math.toIntExact(canonical.getDuration()));
+        Long id = saveOrUpdateDraft(request, memberId, username);
+        if (id == null || id <= 0) throw new IllegalStateException("路线玩法副本未保存");
+        return id;
+    }
+
+    private boolean hasExternalDraftReference(String raw) {
+        if (StringUtils.isBlank(raw)) return false;
+        try { return hasExternalDraftReference(new com.fasterxml.jackson.databind.ObjectMapper().readTree(raw)); }
+        catch (Exception e) { throw new IllegalArgumentException("路线玩法配置无法读取", e); }
+    }
+
+    private boolean hasExternalDraftReference(com.fasterxml.jackson.databind.JsonNode node) {
+        if (node == null) return false;
+        if (node.isObject()) {
+            for (String key : Arrays.asList("npcId", "nodeId", "chapterId", "dispositionNodeId", "relationKey"))
+                if (node.hasNonNull(key)) return true;
+            if (node.path("couponId").asLong() > 0) return true;
+            if (node.has("var") && !Arrays.asList("sys.hp", "sys.luck", "sys.actions").contains(node.path("var").asText())) return true;
+        }
+        for (com.fasterxml.jackson.databind.JsonNode child : node) if (hasExternalDraftReference(child)) return true;
+        return false;
+    }
+
     private String preferenceJson(CmsTemplatePublishRequest request) {
         return Integer.valueOf(ValidationMethod.PREFERENCE_GROUP).equals(request.getValidationMethod())
                 ? request.getPreferenceJson() : null;

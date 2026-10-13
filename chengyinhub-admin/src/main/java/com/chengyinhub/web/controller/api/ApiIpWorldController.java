@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -24,7 +25,8 @@ public class ApiIpWorldController extends BaseController {
 
     @Operation(summary = "IP世界首页")
     @PostMapping("/home")
-    public AjaxResult home(String city_code, Long world_id) {
+    public AjaxResult home(@RequestParam(value = "city_code", required = false) String city_code,
+                           @RequestParam(value = "world_id", required = false) Long world_id) {
         IpWorldQueryDTO query = new IpWorldQueryDTO();
         query.setCityCode(city_code);
         query.setWorldId(world_id);
