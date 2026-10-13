@@ -30,7 +30,7 @@ const {
   expandHandlerBody,
   discoverExternalHelperNames,
   serverApiContracts,
-  buildLedger,
+  buildLedger: generateLedger,
   sourceDigestFor,
   sourceDigestAtCommit,
   sourceFilesFor,
@@ -44,6 +44,14 @@ const {
   evidenceMaxAgeMs,
   deviceBranchReadbackDigests,
 } = require('../../scripts/uiaudit/build-action-ledger.js')
+
+// Repository source is unchanged by these tests; mutations use cloned objects,
+// digest overrides or an isolated Git fixture. The inventory API checks stay fresh.
+let frozenSourceLedger
+function buildLedger() {
+  if (!frozenSourceLedger) frozenSourceLedger = generateLedger()
+  return structuredClone(frozenSourceLedger)
+}
 
 test('分类只看代码:注释与字符串里的 wx.* 不算能力(A)', () => {
   // 2026-09-22 实证:两行中文注释(里面并无 wx.*)把 play 页 4 个控件从 read 翻成 external。
@@ -553,7 +561,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-09-30 最终源码重建实测:local tap 1781 → 1785;实际增删/能力分类见本轮差分证据。
   // 2026-10-06 合并弹窗/模板分支与最新主线后按最终源码重建，数值待生成台账后校准。
   // 2026-10-13 编辑态新增保存草稿按钮，沿既有 draft / citynode-unavailable 两分支净增 2。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1783)  /* 2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1787)  /* 2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -760,7 +768,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-09-30 项目近期动态首次失败/保留数据重试各新增1个事件合同；本地事件合同 2298 → 2300，tap分母不变。
   // 2026-10-06 合并最新主线后按最终源码重建，数值待生成台账后校准。
   // 2026-09-27 主页空区隐藏与失败保留旧数据：移除四个旧状态控件。
-  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2321)  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
+  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2326)  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
   // 商家承接接入 cy-date-range-sheet 后新增 confirm / cancel 两条事件合同，1662 → 1664。
   // 合作页将会话失效与无权限拆为两个 cy-empty CTA，新增 goLogin / goWorkbench 两条事件合同，1664 → 1666。
   //   带一个 bind:cta 首发引导(+1),净 -2;同批新增两条 cy-state-shell 的 bind:primary
@@ -1373,7 +1381,7 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 2026-09-30 项目铃铛接真实近期动态列表，首次加载失败与保留数据重试新增2个事件合同；重建实测 4396 → 4398。
   // 清空聊天取消确认及互斥的确认分支各新增1个事件合同，tap分母不变。
   // 2026-10-06 合并最新主线与弹窗分支后按生成台账校准。
-  assert.equal(ledger.controlCount, 4434)  /* 2026-10-13 编辑态 saveDraft 的正常/据点拒绝两条分支；预览态按钮已在旧基线内。 */
+  assert.equal(ledger.controlCount, 4444)  /* 2026-10-13 编辑态 saveDraft 的正常/据点拒绝两条分支；预览态按钮已在旧基线内。 */
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。

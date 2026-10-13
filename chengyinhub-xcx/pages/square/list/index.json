@@ -1,5 +1,6 @@
 {
   "usingComponents": {
+    "cy-option-sheet": "/components/cy/option-sheet/index",
     "tabBar": "/components/tabBar/index",
     "activity-picker": "/pages/square/components/activity-picker/index",
     "cy-empty": "/components/cy/empty/index",

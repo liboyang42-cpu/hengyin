@@ -1,7 +1,9 @@
+const reportSheet = require('../../../utils/community-report-sheet.js');
 const modal = require('../../../utils/modal.js');
 const toast = require('../../../utils/toast.js');
 const { toTimestamp } = require('../../../utils/datetime');
 const app = getApp();
+const community = require('../../../utils/community-post-api.js').createClient(app, wx);
 /* 结果面板终态停留时长。发帖不跳页,收掉就留在广场。 */
 const RESULT_SHEET_MS = 2000;
 const analytics = require('../../../utils/analytics.js');
@@ -42,6 +44,8 @@ function feedIndexFromEvent(e) {
 
 Page({
   data: {
+    reportReasonShow: false,
+    reportReasonItems: [],
     resultSheet: { show: false, kind: 'success', title: '', sub: '', meta: '', pill: '',
       why: '', duration: RESULT_SHEET_MS },
     list: [],//列表数组
@@ -413,8 +417,14 @@ Page({
     this.setData({ composeShow: true });
   },
 
+  onReportReasonSelect(e) { reportSheet.select(this, e); },
+  onReportReasonCancel() { reportSheet.cancel(this); },
+
   reportSquare: function () {
     const that = this;
+    const owner = String(app.getUserID() || '');
+    const current = () => !that._unloaded && String(app.getUserID() || '') === owner;
+    if (!current()) return;
     const index = that._actionIndex;
     const item = that.data.list[index];
     if (!item || !item.id) {
@@ -426,17 +436,21 @@ Page({
       content: '确认举报这条内容？举报后将提交平台审核。',
       confirmText: '举报',
       success(res) {
-        if (!res.confirm) {
+        if (!res.confirm || !current()) {
           return;
         }
-        app.sendRequest({
+        community.request({
           hideLoading: true,
+          autoErrorToast: false,
           url: '/api/creativesquare/report',
+          selectReportReason: (items, task) => current() ? reportSheet.open(that, items, task)
+            : Promise.reject({ code: 499, msg: '已取消举报' }),
           method: 'POST',
           data: {
             id: item.id
           },
           success(resp) {
+            if (!current() || Number(resp && resp.code) === 499) return;
             if (resp.code == '200') {
               const list = that.data.list.slice();
               list.splice(index, 1);
@@ -449,10 +463,12 @@ Page({
               toast(resp.msg || '举报失败');
             }
           },
-          fail() {
+          fail(resp) {
+            if (!current() || Number(resp && resp.code) === 499) return;
             toast('网络异常，请重试');
           },
           complete() {
+            if (!current()) return;
             that.closePostActions();
           }
         });
@@ -573,6 +589,8 @@ Page({
   },
 
   onUnload() {
+    this._unloaded = true;
+    reportSheet.cancel(this);
     this._feedRequestId = (this._feedRequestId || 0) + 1;
     if (this._feedRequestTask && typeof this._feedRequestTask.abort === 'function') {
       this._feedRequestTask.abort();

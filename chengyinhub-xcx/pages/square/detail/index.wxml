@@ -244,3 +244,6 @@
      塞进帖文区会被上面的 overflow 裁掉。 -->
 <cy-popover show="{{avatarPopShow}}" anchor="{{avatarPopAnchor}}" items="{{avatarPopItems}}"
             bind:pick="onAvatarPopPick" bind:close="onAvatarPopClose" />
+
+<cy-option-sheet show="{{reportReasonShow}}" title="选择举报原因" items="{{reportReasonItems}}"
+  confirm-text="提交举报" bind:select="onReportReasonSelect" bind:cancel="onReportReasonCancel" />

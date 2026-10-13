@@ -69,7 +69,7 @@ const APP_WRITE_HELPERS = new Set(['recordConsent', 'chooseImage', 'chooseDocume
 // ApiMerchantAftercareController:respond），路径里没有通用写动词，只能按真实合同逐个登记；
 // 同前缀的 /aftercare/detail、/customers/{param}/detail 是查询读，绝不登记，避免写读串味。
 const EXPLICIT_WRITE_APIS = new Set([
-  '/api/template/draft', '/api/game/session/command', '/api/im/block',
+  '/api/template/draft', '/api/template/adopt-draft', '/api/game/session/command', '/api/im/block',
   '/api/merchant/aftercare/respond',
   '/api/merchant/crm/customers/{param}/notes',
   '/api/merchant/crm/customers/{param}/notes/hide',
@@ -617,12 +617,12 @@ const ACTION_VARIANTS = new Map([
   ['pages/square/detail/index.js:onPostAction', [
     { id: 'edit', handler: 'openPostEdit', predicate: { selectAction: 'edit' }, apis: [], effectClasses: ['state'] },
     { id: 'delete', handler: 'deleteSquarePost', predicate: { selectAction: 'delete' }, apis: ['/api/creativesquare/delete'] },
-    { id: 'report', handler: 'reportSquareFromActions', predicate: { selectAction: 'report' }, apis: ['/api/creativesquare/report'], confirmationMode: 'wx.showModal' },
+    { id: 'report', handler: 'reportSquareFromActions', predicate: { selectAction: 'report' }, apis: ['/api/v1/community/capabilities', '/api/v1/community/reports'], confirmationMode: 'wx.showModal' },
   ]],
   ['pages/square/list/index.js:onPostAction', [
     { id: 'edit', handler: 'editCurrentSquarePost', predicate: { selectAction: 'edit' }, apis: [], effectClasses: ['state'] },
     { id: 'delete', handler: 'deleteCurrentSquarePost', predicate: { selectAction: 'delete' }, apis: ['/api/creativesquare/delete'] },
-    { id: 'report', handler: 'reportSquare', predicate: { selectAction: 'report' }, apis: ['/api/creativesquare/report'], confirmationMode: 'wx.showModal' },
+    { id: 'report', handler: 'reportSquare', predicate: { selectAction: 'report' }, apis: ['/api/v1/community/capabilities', '/api/v1/community/reports'], confirmationMode: 'wx.showModal' },
   ]],
   ['pages/square/components/cy/post-actions/index.js:onDelete', [
     // 组件的删除闸走 this._danger() 间接拿 cy-danger-confirm(selectComponent 不在本函数体),
@@ -859,7 +859,11 @@ function reconcileServerContracts(apiContracts) {
     const methods = server.get(normalizeApiTemplate(contract.url))
     if (!methods || methods.size === 0) return contract
     if (methods.size === 1) {
-      return { ...contract, method: [...methods.keys()][0], source: 'server-controller' }
+      const serverMethod = [...methods.keys()][0]
+      if (contract.source === 'local-wrapper' && String(contract.method).toUpperCase() !== serverMethod) {
+        throw new Error(`${contract.url}: 本地 wrapper method ${contract.method} 不匹配后端 Controller ${serverMethod}`)
+      }
+      return { ...contract, method: serverMethod, source: 'server-controller' }
     }
     if (!methods.has(String(contract.method || '').toUpperCase())) {
       throw new Error(`${contract.url}: 前端 method ${contract.method || 'null'} 不在后端 Controller 合同 ${[...methods.keys()].join('/')}`)
@@ -946,7 +950,8 @@ function inferEffectClasses(handlerName, source, appHelperBodies, targets, direc
   const body = String(source || '')
   const directBody = directSource == null ? body : String(directSource)
   const effects = []
-  const targetWrites = targets && (targets.primaryApis || []).some(isWriteApi)
+  const targetWrites = targets && ((targets.primaryApis || []).some(isWriteApi)
+    || (targets.apiContracts || []).some((c) => c.adapterBranch && c.method !== 'GET'))
   if (NETWORK_RE.test(body)) effects.push(WRITE_RE.test(name) || targetWrites ? 'write' : 'read')
   const appNetworkCalls = appHelperCalls(body, appHelperBodies)
     .filter(([, helperBody]) => NETWORK_RE.test(helperBody))
@@ -1076,6 +1081,16 @@ function staticAttr(value) {
 function dynamicAttr(value) {
   const text = value == null ? '' : String(value)
   return text.includes('{{') ? text : null
+}
+// ponytail: only literal branches under a simple data-path condition are supported.
+// Extend this grammar when a real binding needs more; unknown expressions fail closed.
+function eventHandlerNames(value) {
+  const classified = classifyBinding(value)
+  if (classified.kind === 'identifier') return [classified.name]
+  if (classified.kind === 'empty') return []
+  const match = /^\{\{\s*!?[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\s*\?\s*(['"])([A-Za-z_$][\w$]*)\1\s*:\s*(['"])([A-Za-z_$][\w$]*)\3\s*\}\}$/.exec(value)
+  if (!match) throw new Error(`无法静态解析事件绑定: ${value}`)
+  return [...new Set([match[2], match[4]])]
 }
 
 /**
@@ -1443,6 +1458,69 @@ function isSelfOnlyWriteApi(api) {
   return SELF_ONLY_WRITE_APIS.has(api) || SELF_ONLY_WRITE_API_RE.test(api)
 }
 
+function communityAliasesForSource(source, jsFile) {
+  if (!source.includes('community-post-api')) return []
+  const masked = maskNonCodeSafely(source)
+  return [...source.matchAll(/(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*require\(['"]([^'"]+)['"]\)\.createClient\s*\(/g)]
+    .filter((m) => /^(?:const|let|var)\b/.test(masked.slice(m.index))
+      && resolveSourceDependency(rel(jsFile), m[2], ['.js', '/index.js']) === 'utils/community-post-api.js').map((m) => m[1])
+}
+
+// Resolve only real community adapter calls; legacy URLs are commands, not HTTP routes.
+function communityRequestContracts(source, aliases) {
+  const contracts = []
+  const commands = new Set()
+  if (!aliases.length) return { commands, contracts }
+  const base = '/api/v1/community'
+  const add = (path, method, branch) => contracts.push({ url: base + path, method,
+    auth: 'authenticated', source: 'community-adapter-call', adapterBranch: branch })
+  const masked = maskNonCodeSafely(source)
+  for (const alias of aliases) {
+    const pattern = new RegExp(`\\b${alias.replace(/[$]/g, '\\$&')}\\.request\\s*\\(\\s*\\{`, 'g')
+    for (const match of source.matchAll(pattern)) {
+      if (!masked.slice(match.index).startsWith(alias + '.request')) continue
+      const start = match.index + match[0].lastIndexOf('{')
+      let depth = 1, end = start + 1
+      for (; end < masked.length && depth; end += 1) {
+        if (masked[end] === '{') depth += 1
+        if (masked[end] === '}') depth -= 1
+      }
+      if (depth) throw new Error('community request object incomplete')
+      const call = source.slice(start, end)
+      const url = call.match(/\burl\s*:\s*['"]([^'"]+)['"]/)?.[1]
+      if (!url) throw new Error('community request URL must be literal')
+      commands.add(url)
+      switch (url) {
+        case '/api/creativesquare/report': case '/api/comment/report':
+          add('/capabilities', 'GET', 'report-taxonomy'); add('/reports', 'POST', 'confirmed-report'); break
+        default: throw new Error(`未登记 community adapter 指令: ${url}`)
+      }
+    }
+  }
+  return { commands, contracts }
+}
+
+function communityRequestPlan(contracts) {
+  const community = contracts.filter((c) => c.adapterBranch)
+  if (!community.length) return null
+  if (community.some((c) => !['report-taxonomy', 'confirmed-report'].includes(c.adapterBranch)))
+    throw new Error('未登记 community adapter request plan')
+  const taxonomy = community.find((c) => c.adapterBranch === 'report-taxonomy')
+  const report = community.find((c) => c.adapterBranch === 'confirmed-report')
+  if (!taxonomy || !report) throw new Error('community report request plan 不完整')
+  const request = (c) => ({ urlTemplate: c.url, method: c.method, kind: c.method === 'GET' ? 'read' : 'write' })
+  const success = [request(taxonomy), request(report)]
+  const byBranch = { success, 'duplicate-trigger': success }
+  const outcomes = { success: ['success', 'success'], 'duplicate-trigger': ['success', 'success'] }
+  for (const failure of ['error', 'timeout']) {
+    byBranch[failure] = success.slice(0, 1); outcomes[failure] = [failure]
+    byBranch[`stage-2-${failure}`] = success
+    outcomes[`stage-2-${failure}`] = ['success', failure]
+  }
+  return { requiredRequests: success, requiredRequestsByBranch: byBranch,
+    requiredRequestOutcomes: outcomes, branches: Object.keys(byBranch) }
+}
+
 function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodies) {
   const expandedSource = [source].concat(appHelperCalls(source, appHelperBodies).map(([, body]) => body)).join('\n')
   const targets = extractTargets(expandedSource)
@@ -1464,6 +1542,12 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
     }
   }
   const fileSource = fs.readFileSync(jsFile, 'utf8')
+  const communityAliases = communityAliasesForSource(fileSource, jsFile)
+  const communityTargets = communityRequestContracts(expandedSource, communityAliases)
+  targets.apis = targets.apis.filter((url) => !communityTargets.commands.has(url))
+  targets.apiContracts = targets.apiContracts.filter((c) => !communityTargets.commands.has(c.url))
+  targets.apis.push(...communityTargets.contracts.map((c) => c.url))
+  targets.apiContracts.push(...communityTargets.contracts)
   for (const declaration of fileSource.matchAll(/\bfunction\s+([A-Za-z_$][\w$]*)\s*\(([^)]*)\)\s*\{/g)) {
     const helperName = declaration[1]
     const urlParam = declaration[2].split(',')[0].trim()
@@ -1474,9 +1558,10 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
     const methodMatch = body.match(/\bmethod\s*:\s*["']([A-Za-z]+)["']/)
     const urlBinding = new RegExp(`\\burl\\s*:\\s*${urlParam.replace(/[$]/g, '\\$&')}\\b`).test(body)
       || (urlParam === 'url' && /(?:^|[,\n{])\s*url\s*,/.test(body))
-    if (!methodMatch || !urlBinding) continue
+    if (!urlBinding || !methodMatch) continue
     const callPattern = new RegExp(`\\b${helperName.replace(/[$]/g, '\\$&')}\\s*\\(\\s*["'](\\/api\\/[^"']+)["']`, 'g')
     for (const call of expandedSource.matchAll(callPattern)) {
+      if (!maskNonCodeSafely(expandedSource).slice(call.index).startsWith(helperName)) continue
       targets.apiContracts.push({
         url: call[1], method: methodMatch[1].toUpperCase(), auth: 'authenticated', source: 'local-wrapper',
       })
@@ -1505,6 +1590,7 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
       if (!names.some((alias) => new RegExp(`\\b${alias.replace(/[$]/g, '\\$&')}(?:\\.[A-Za-z_$][\\w$]*)?\\s*\\(`).test(expandedSource))) return
       const dependency = resolveSourceDependency(rel(scanFile), request, ['.js', '/index.js'])
       if (!dependency) return
+      if (dependency === 'utils/community-post-api.js') return
       if (dependency === 'utils/game-session-client.js') {
         const methods = {
           loadProjection: ['/api/game/session/view', 'GET'],
@@ -1583,6 +1669,8 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
   }
   appendDependencyTargets(jsFile)
   if (appHelperCalls(source, appHelperBodies).length) appendDependencyTargets(path.join(ROOT, 'app.js'))
+  targets.apis = targets.apis.filter((url) => !communityTargets.commands.has(url))
+  targets.apiContracts = targets.apiContracts.filter((c) => !communityTargets.commands.has(c.url))
   let apiContracts = [...new Map(targets.apiContracts.map((item) => [`${item.url}\0${item.method || ''}`, item])).values()]
     .sort((a, b) => a.url.localeCompare(b.url) || String(a.method).localeCompare(String(b.method)))
   const templatePrefixes = new Set(apiContracts.filter((item) => item.url.includes('{param}'))
@@ -1608,6 +1696,14 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
     auxiliaryApis: contracted.filter((api) => AUXILIARY_APIS.has(api)).sort(),
     apiContracts,
   }
+}
+
+// Native page handlers have no WXML binding; reuse the same resolver without adding controls.
+function targetsForHandler(jsFile, handlerName) {
+  const slices = handlerSlices(jsFile)
+  if (!slices.has(handlerName)) throw new Error(`未找到实际 handler: ${handlerName}`)
+  return extractHandlerTargets(expandHandlerBody(handlerName, slices), jsFile, handlerName, {},
+    discoverAppHelperBodies(path.join(ROOT, 'app.js')))
 }
 
 function buildLedger() {
@@ -1637,15 +1733,15 @@ function buildLedger() {
       const hostRoutes = [...new Set(hostComponentPaths.map((item) => item.route))].sort()
       // 未被任何 app page（含组件依赖闭包）引用的孤儿组件不属于可操作产品分母。
       if (route.startsWith('component:') && hostRoutes.length === 0) return
-      findEventBindings(source).forEach((binding, bindingIndex) => {
-        const classified = classifyBinding(binding.value)
-        if (classified.kind !== 'identifier') return
+      findEventBindings(source).flatMap((binding, bindingIndex) =>
+        eventHandlerNames(binding.value).map(name => ({ binding, bindingIndex, name }))
+      ).forEach(({ binding, bindingIndex, name }) => {
         const tag = tags.find((candidate) => candidate.start <= binding.offset && binding.offset <= candidate.end)
         const tagSource = tag ? source.slice(tag.start, tag.end + 1) : ''
         const attrs = parseAttrs(tagSource)
         const rawAriaLabel = attrs['aria-label'] || attrs['accessibility-label'] || null
-        const variantKey = `${rel(jsFile)}:${classified.name}`
-        const variants = (ACTION_VARIANTS.get(variantKey) || [{ id: null, handler: classified.name, predicate: null }])
+        const variantKey = `${rel(jsFile)}:${name}`
+        const variants = (ACTION_VARIANTS.get(variantKey) || [{ id: null, handler: name, predicate: null }])
           .filter((variant) => !variant.events || variant.events.includes(binding.attrName))
         variants.forEach((variant) => {
         const body = expandHandlerBody(variant.sourceHandler || variant.handler, slices)
@@ -1684,9 +1780,8 @@ function buildLedger() {
           ? variant.confirmationMode
           : modalContractForHandler(variant.handler, slices, interactionModeFor(binding.attrName))
         const inferredWriteApis = effectClasses.includes('write') ? targets.primaryApis.filter((api) => {
-          const contract = targets.apiContracts.find((item) => item.url === api)
-          return contract && contract.method && contract.method !== 'GET'
-            && (isWriteApi(api) || SELF_ONLY_WRITE_APIS.has(api))
+          return targets.apiContracts.some((contract) => contract.url === api && contract.method && contract.method !== 'GET'
+            && (contract.adapterBranch || isWriteApi(api) || SELF_ONLY_WRITE_APIS.has(api)))
         }) : []
         const writeApis = variant.writeApis || inferredWriteApis
         if (writeApis.some((api) => !targets.primaryApis.includes(api)
@@ -1708,7 +1803,13 @@ function buildLedger() {
             requiredRequestOutcomes: { ...plan.requiredRequestOutcomes, 'without-chapter-grant': ['success'] },
             requiredBranches: plan.requiredBranches.concat(['without-chapter-grant']) }
         }
-        const baseControlId = `${rel(wxmlFile)}:${binding.line}:${binding.attrName}:${classified.name}:${bindingIndex}`
+        const communityPlan = communityRequestPlan(targets.apiContracts)
+        if (communityPlan && !variant.requiredRequests && !variant.requiredRequestsByBranch) {
+          variant = { ...variant, ...communityPlan,
+            requiredBranches: [...new Set(requiredBranchesFor(actionClass, baseActionClass,
+              externalCapabilities, effectClasses, accessBoundary).concat(communityPlan.branches))] }
+        }
+        const baseControlId = `${rel(wxmlFile)}:${binding.line}:${binding.attrName}:${name}:${bindingIndex}`
         const controlId = variant.id ? `${baseControlId}:variant:${variant.id}` : baseControlId
         controls.push({
           id: controlId,
@@ -1739,7 +1840,7 @@ function buildLedger() {
           control: {
             tag: tag ? tag.name : 'unknown',
             event: binding.attrName,
-            handler: classified.name,
+            handler: name,
             line: binding.line,
             selectorHint: attrs.id ? `#${attrs.id}` : (attrs.class ? `.${attrs.class.trim().split(/\s+/)[0]}` : `${tag ? tag.name : 'unknown'}[${binding.attrName}]`),
             visibleCondition: attrs['wx:if'] || attrs['wx:elif'] || attrs.hidden || null,
@@ -1769,7 +1870,7 @@ function buildLedger() {
           )).concat(confirmationMode ? ['modal-cancelled'] : []))],
           requiredPlatforms: requiredPlatformsFor(actionClass),
           externalGate: actionClass === 'external' ? 'real-device-required' : null,
-          evidence: { status: 'pending', staticSource: handlerSources.get(classified.name) || `${rel(jsFile)}:0` },
+          evidence: { status: 'pending', staticSource: handlerSources.get(name) || `${rel(jsFile)}:0` },
         })
         })
       })
@@ -2586,6 +2687,7 @@ function main() {
 if (require.main === module) process.exitCode = main()
 
 module.exports = {
+  eventHandlerNames,
   inferActionClass,
   inferEffectClasses,
   buildExpectedReadback,
@@ -2598,6 +2700,12 @@ module.exports = {
   discoverExternalHelperNames,
   serverApiContracts,
   buildLedger,
+  targetsForHandler,
+  communityRequestContracts,
+  communityAliasesForSource,
+  communityRequestPlan,
+  isSelfOnlyWriteApi,
+  extractTargets,
   sourceFilesFor,
   sourceDigestFor,
   sourceDigestAtCommit,

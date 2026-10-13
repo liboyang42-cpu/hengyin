@@ -522,6 +522,7 @@ Page({
 
   onDangerCancel(e) {
     if (e.detail.key === 'im.conversation.delete') this._pendingClearId = null;
+    if (e.detail.key === 'im.block') this._pendingBlockId = null;
   },
 
   onMoreCancel() { this.setData({ moreSheetShow: false }); },

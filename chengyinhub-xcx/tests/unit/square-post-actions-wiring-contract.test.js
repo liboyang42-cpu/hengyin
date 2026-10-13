@@ -207,7 +207,7 @@ test('详情:编辑以编辑态打开新建面板并带原帖 id/正文/关联;�
   }, assert.AssertionError, '掐掉分发分支后必须变红');
 });
 
-test('列表:more 解析当前行的 id/归属;删除摘行、编辑开面板、举报走确认', () => {
+test('列表:more 解析当前行的 id/归属;删除摘行、编辑开面板、举报走确认', async () => {
   const h = loadPage('pages/square/list/index.js');
   h.page.data.userId = 1;
   h.page.data.list = [
@@ -247,9 +247,22 @@ test('列表:more 解析当前行的 id/归属;删除摘行、编辑开面板、
   h.page.showAction({ detail: { index: 0 } });
   h.page.onPostAction({ detail: { action: 'report', id: '12' } });
   assert.equal(h.modalCalls.length >= 1, true, '举报必须过确认框');
-  const report = h.requests.find((r) => r.url === '/api/creativesquare/report');
-  assert.ok(report, '确认后必须发举报请求');
-  assert.equal(String(report.data.id), '12');
+  await new Promise(resolve => setImmediate(resolve));
+  const capabilities = h.requests.find((r) => r.url === '/api/v1/community/capabilities');
+  assert.ok(capabilities, '确认后必须读取真实举报原因');
+  assert.equal(capabilities.method, 'GET');
+  capabilities.success({ code: 200, data: { reporting: {
+    policyVersion: 'test-policy', reasons: [{ code: 'SERVER_REASON', label: '服务端原因' }],
+  } } });
+  await new Promise(resolve => setImmediate(resolve));
+  h.page.onReportReasonSelect({ detail: { index: 0 } });
+  await new Promise(resolve => setImmediate(resolve));
+  const report = h.requests.find((r) => r.url === '/api/v1/community/reports');
+  assert.ok(report, '选中服务端原因后必须发真实举报请求');
+  assert.equal(report.method, 'POST');
+  assert.equal(String(report.data.targetId), '12');
+  assert.equal(report.data.reasonCode, 'SERVER_REASON');
+  assert.equal(report.data.policyVersion, 'test-policy');
 });
 
 test('A-09:非本人纯文本帖在详情也有举报入口(owner=false 只渲染举报行)', () => {

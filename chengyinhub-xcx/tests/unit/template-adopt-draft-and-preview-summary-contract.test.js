@@ -15,6 +15,30 @@ const assert = require('node:assert/strict')
 
 const TEMP_PAGE = '../../pages/publish/temp/index.js'
 
+test('已有封面可从真实封面入口更换，删除仍使用独立 catchtap', () => {
+  const markup = require('node:fs').readFileSync(require('node:path').resolve(__dirname, '../../pages/publish/temp/index.wxml'), 'utf8')
+  const cover = /<view\b[^>]*class="cg-hero-cover cg-hero-cover--picked"[^>]*>/.exec(markup)[0]
+  const binding = /\bbindtap="([^"]+)"/.exec(cover)
+  assert.ok(binding, '已有图片也必须可以直接更换')
+  assert.match(cover, /aria-role="button"/)
+  assert.match(cover, /aria-label="更换玩法封面"/)
+  assert.match(markup, /class="cg-cover-del"[^>]*catchtap="clearCover"/)
+  const page = loadPage(TEMP_PAGE)
+  page.data.formData.imgUrl = '/synthetic-old.png'
+  let options
+  appStub.chooseImage = (callback, count, value) => {
+    assert.equal(count, 1)
+    options = value
+    callback(['/synthetic-new.png'])
+  }
+  page[binding[1]]()
+  assert.equal(page.data.formData.imgUrl, '/synthetic-new.png')
+  assert.deepEqual(options, { crop: true, cropScale: '16:9' })
+  page.clearCover()
+  assert.equal(page.data.formData.imgUrl, '')
+  assert.equal(requests.length, 0)
+})
+
 let appStub
 let requests
 
