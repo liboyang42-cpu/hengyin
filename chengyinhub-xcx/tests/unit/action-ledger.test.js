@@ -1503,7 +1503,8 @@ test('inventory 与可持久化动态证据分离，freshness 不会抹掉执行
 
   // 公开仓库从完整快照起根，不能假定旧根提交缺少某个现有控件。
   // 构造当前存在但 HEAD 不含的真文件，仍让 Git 读取和证据校验自行拒绝。
-  const fixtureDir = fs.mkdtempSync(path.join(__dirname, '../../.action-ledger-history-'))
+  // 建在 tests/ 下：全目录扫描(如 skeleton-host-flex-contract)都跳过 tests，并行跑时不会撞上半删的临时目录。
+  const fixtureDir = fs.mkdtempSync(path.join(__dirname, '.action-ledger-history-'))
   try {
     const fixtureWxml = path.join(fixtureDir, 'index.wxml')
     fs.writeFileSync(fixtureWxml, '<view>historical-source-negative-control</view>\n')
