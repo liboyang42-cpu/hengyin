@@ -64,6 +64,23 @@ if [[ ! "$CHENGYIN_WITHDRAWAL_PII_KEY" =~ ^[A-Za-z0-9+/]{43}=$ ]]; then
   exit 1
 fi
 
+# 密钥复用会让一次轮换或一次泄露波及多个能力（F-L6-11）：只比较是否相同，不输出任何值。
+secret_names=(CHENGYIN_JWT_SECRET COUPON_QR_SECRET CHENGYIN_WXPAY_APIV3_KEY CHENGYIN_WXMINI_SECRET
+  CHENGYIN_DRUID_PASSWORD CHENGYIN_DB_PASSWORD CHENGYIN_WITHDRAWAL_PII_KEY CHENGYIN_OSS_ACCESS_KEY_SECRET)
+for ((i = 0; i < ${#secret_names[@]}; i++)); do
+  for ((j = i + 1; j < ${#secret_names[@]}; j++)); do
+    if [[ "${!secret_names[i]}" == "${!secret_names[j]}" ]]; then
+      echo "${secret_names[i]} 与 ${secret_names[j]} 不得复用同一值，请分别注入独立密钥" >&2
+      exit 1
+    fi
+  done
+done
+
+if [[ -n "${ALARM_FAILURE_WEBHOOK:-}" && "${ALARM_FAILURE_WEBHOOK}" == "${ALARM_WEBHOOK}" ]]; then
+  echo 'ALARM_FAILURE_WEBHOOK 必须是独立于 ALARM_WEBHOOK 的告警出口' >&2
+  exit 1
+fi
+
 if [[ "${CHENGYIN_TENCENT_MAP_ENABLED:-false}" != "true" ]]; then
   echo 'CHENGYIN_TENCENT_MAP_ENABLED 必须为 true，生产定位服务不可静默降级' >&2
   exit 1
