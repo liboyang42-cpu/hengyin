@@ -31,7 +31,7 @@ function executeAfterText(value) {
   return text || (typeof value === 'string' ? value : '');
 }
 
-// F-R2S-07:冷静期满到每日批次执行之间,服务端拒绝撤销;页面按真实 executeAfter 隐藏撤销按钮。
+// F-R2S-07:冷静期满到每日批次执行之间仍可撤销(服务端与批次行锁互斥);页面按真实 executeAfter 切换说明文案。
 function executeAfterPassed(value, now) {
   if (value === null || value === undefined || value === '') return false;
   const ts = toTimestamp(value);
@@ -294,8 +294,7 @@ const methods = {
     const token = (this._reconcileToken || 0) + 1;
     this._reconcileToken = token;
     const applyToken = this._applyToken;
-    sendUiStateRequest(app, '/api/user/deregister/status', {
-      method: 'GET',
+    sendUiStateRequest(app, '/api/user/deregister/status', { method: 'GET',
       success: (res) => {
         if (token !== this._reconcileToken || applyToken !== this._applyToken || this._hidden || this._detached || this._unloaded) return;
         if (memberId !== String(app.getUserID && app.getUserID() || '')) return;
@@ -316,7 +315,7 @@ const methods = {
   },
 
   cancel() {
-    if (this.data.canceling || this.data.coolingOffEnded) return;
+    if (this.data.canceling) return;
     const token = (this._cancelToken || 0) + 1;
     this._cancelToken = token;
     this.setData({ canceling: true, cancelError: '' });

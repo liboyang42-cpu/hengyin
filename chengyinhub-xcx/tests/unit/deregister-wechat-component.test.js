@@ -118,16 +118,17 @@ test('F-R2S-07 BLOCKED card offers an in-place recheck', () => {
   const wxml = fs.readFileSync(path.join(root, 'components/cy/scene-settings-deregister/index.wxml'), 'utf8');
   assert.match(wxml, /bindtap="recheck">我已处理，重新检查</);
 });
-test('F-R2S-07 after cooling-off ends the cancel action is hidden and not callable', () => {
+test('F-R2S-07 after cooling-off ends but before the batch runs, cancel stays available', () => {
   const h = mount(); h.def.lifetimes.attached.call(h.page);
   reply(h.requests[0],200,{code:200,data:{status:'PENDING', executeAfter: Date.now() - 60000}});
   assert.equal(h.page.data.status, 'PENDING'); assert.equal(h.page.data.coolingOffEnded, true);
   let modals = 0; h.page.data.canceling = false;
-  const before = h.requests.length; const realShow = require('../../utils/modal.js').show;
+  const realShow = require('../../utils/modal.js').show;
   require('../../utils/modal.js').show = () => { modals++; };
   try { h.page.cancel(); } finally { require('../../utils/modal.js').show = realShow; }
-  assert.equal(modals, 0); assert.equal(h.requests.length, before);
+  assert.equal(modals, 1, '冷静期满但批次未执行时仍可发起撤销确认');
   const wxml = fs.readFileSync(path.join(root, 'components/cy/scene-settings-deregister/index.wxml'), 'utf8');
-  assert.match(wxml, /<cy-btn wx:if="\{\{!coolingOffEnded\}\}"[^>]*bindtap="cancel">撤销注销申请/);
-  assert.match(wxml, /冷静期已结束，账号将在随后的凌晨批次中完成注销/);
+  assert.match(wxml, /<cy-btn class="deregister-action"[^>]*bindtap="cancel">撤销注销申请/);
+  assert.doesNotMatch(wxml, /coolingOffEnded\}\}"[^>]*bindtap="cancel"/);
+  assert.match(wxml, /冷静期已结束，账号将在随后的凌晨批次中完成注销；完成前仍可撤销/);
 });

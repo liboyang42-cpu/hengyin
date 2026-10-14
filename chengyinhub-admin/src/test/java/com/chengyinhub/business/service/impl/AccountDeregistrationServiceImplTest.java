@@ -385,6 +385,29 @@ class AccountDeregistrationServiceImplTest {
         verify(d).markMemberNormal(1001L);
     }
 
+    @Test
+    void cancelStillAllowedAfterCoolingOffUntilBatchExecutes() {
+        AccountDeregistrationMapper d = mock(AccountDeregistrationMapper.class);
+        AccountDeregistration pending = new AccountDeregistration();
+        pending.setStatus("PENDING");
+        pending.setExecuteAfter(new Date(System.currentTimeMillis() - 60000));
+        when(d.selectLatestByMemberId(1001L)).thenReturn(pending);
+        when(d.cancelPending(eq(1001L), any(Date.class))).thenReturn(1);
+        AccountDeregistrationServiceImpl service = wired(d, mock(UmsMemberMapper.class),
+                mock(OmsOrderMapper.class), mock(CmsRegistrationMapper.class), mock(ICashWithdrawService.class),
+                mock(PlatformTransactionManager.class), mock(AlarmService.class));
+
+        assertEquals("CANCELLED", service.cancel(1001L).getStatus());
+        verify(d).markMemberNormal(1001L);
+
+        AccountDeregistration completed = new AccountDeregistration();
+        completed.setStatus("COMPLETED");
+        completed.setExecuteAfter(new Date(System.currentTimeMillis() - 60000));
+        when(d.selectLatestByMemberId(1002L)).thenReturn(completed);
+        assertThrows(IllegalStateException.class, () -> service.cancel(1002L));
+        verify(d, never()).markMemberNormal(1002L);
+    }
+
     private AccountDeregistrationServiceImpl wired(AccountDeregistrationMapper d, UmsMemberMapper m,
             OmsOrderMapper o, CmsRegistrationMapper r, ICashWithdrawService c,
             PlatformTransactionManager t, AlarmService a) {
