@@ -210,6 +210,9 @@ public class ApiAiNpcController extends BaseController
         }
         if (req == null) return AjaxResult.error("参数有误");
         Long userId = getAppUserId();
+        com.chengyinhub.business.domain.vo.ai.NpcChatResp stored=
+                npcChatService.storedShopRequest(req.getRequestId(),userId,req.getNodeId());
+        if(stored!=null) return success(stored);
         ShopGate gate = gateShopChat(userId, req.getNodeId());
         if (gate.deny != null) return gate.deny;
         return success(npcChatService.chatWithShop(req.getRequestId(), userId, gate.node.getId(),
@@ -276,6 +279,10 @@ public class ApiAiNpcController extends BaseController
         {
             return AjaxResult.error(HttpStatus.FORBIDDEN, "店铺分身对话还没开放");
         }
+        Long userId = getAppUserId();
+        com.chengyinhub.business.domain.vo.ai.NpcChatResp stored=
+                npcChatService.storedShopRequest(requestId,userId,nodeId);
+        if(stored!=null) return success(stored);
         if (!speechToTextService.available())
         {
             // 说清楚缺的是什么,不要含糊成「暂时不可用」——含糊会让人以为是抖动、反复重试
@@ -283,7 +290,6 @@ public class ApiAiNpcController extends BaseController
         }
         if (file == null || file.isEmpty()) return AjaxResult.error("参数有误");
         if (file.getSize() > VOICE_MAX_BYTES) return AjaxResult.error("这段录音太长了，说短一点");
-        Long userId = getAppUserId();
         ShopGate gate = gateShopChat(userId, nodeId);
         if (gate.deny != null) return gate.deny;
         CmsTopicNode node = gate.node;

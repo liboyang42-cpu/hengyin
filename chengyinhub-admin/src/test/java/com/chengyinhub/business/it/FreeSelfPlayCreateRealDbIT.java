@@ -35,6 +35,8 @@ import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterAll;
+import com.chengyinhub.business.service.MysqlIntegrationTestConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.mybatis.spring.SqlSessionTemplate;
@@ -89,7 +91,9 @@ import static org.mockito.Mockito.when;
 class FreeSelfPlayCreateRealDbIT {
 
     private static final String TEST_PII_KEY = Base64.getEncoder().encodeToString(new byte[32]);
-    private static final String DB_NAME = "chengyin_run41_selfplay_it";
+    private static final String DB_NAME = "chengyin_a_selfplay_" + java.util.UUID.randomUUID().toString().replace("-", "");
+    private static final MysqlIntegrationTestConfig MYSQL = MysqlIntegrationTestConfig.fromEnvironment("a_selfplay");
+    private static boolean createdDatabase;
 
     /** 生产事实（990059 / 100092），不随 fixture 漂移。 */
     private static final long TOPIC_ID = 990059L;
@@ -101,28 +105,49 @@ class FreeSelfPlayCreateRealDbIT {
     @BeforeAll
     static void createSchemaAndWireProductionShape() throws Exception {
         new PiiCryptoService(TEST_PII_KEY, "run41-it-hmac").register();
-        DataSource admin = dataSource("jdbc:mysql://127.0.0.1:3306/mysql"
-                + "?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=LOCAL");
-        try (Connection c = admin.getConnection(); Statement s = c.createStatement()) {
-            // 一类一库、每次从零建 —— 沿用 MybatisItDatabase 的口径,不接受环境残留。
-            s.execute("DROP DATABASE IF EXISTS " + DB_NAME);
-            s.execute("CREATE DATABASE " + DB_NAME + " CHARACTER SET utf8mb4");
+        for (String key : new String[]{"CHENGYIN_TEST_MYSQL_HOST", "CHENGYIN_TEST_MYSQL_PORT", "CHENGYIN_TEST_MYSQL_USER"}) {
+            if (System.getenv(key) == null || System.getenv(key).trim().isEmpty()) throw new IllegalStateException("missing test target: " + key);
         }
-        DataSource ds = dataSource("jdbc:mysql://127.0.0.1:3306/" + DB_NAME
-                + "?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=LOCAL");
+        if (!MYSQL.adminUrl().startsWith("jdbc:mysql://127.0.0.1:") && !MYSQL.adminUrl().startsWith("jdbc:mysql://localhost:")) {
+            throw new IllegalStateException("scratch localhost only");
+        }
+        DataSource admin = dataSource(MYSQL.adminUrl());
+        try (Connection c = admin.getConnection(); Statement s = c.createStatement()) {
+            s.execute("CREATE DATABASE " + DB_NAME + " CHARACTER SET utf8mb4");
+            createdDatabase = true;
+        }
+        DataSource ds = dataSource(MYSQL.databaseUrl().replace("/" + MYSQL.databaseName() + "?", "/" + DB_NAME + "?"));
         try (Connection db = ds.getConnection()) {
             ScriptUtils.executeSqlScript(db, new org.springframework.core.io.ClassPathResource(
                     "it-schema/run41-prod-ddl.sql"));
             // ★ 按生产的真实演进顺序叠仓库迁移:基线 DDL(今天生产的样子)→ 本次修复的迁移。
             //   这同时把「迁移必须先于 jar 落库」的发布顺序焊进了测试 —— 谁删迁移文件,本闸立刻红。
-            java.io.File migration = new java.io.File(
-                    "sql/migration_20260919_cms_registration_selfplay_ticket_columns_nullable.sql");
-            if (!migration.exists()) {
-                // surefire 工作目录是模块目录时走 ../;两种都认,别再犯 ExploreItDatabase 被 cwd 咬的错。
-                migration = new java.io.File("../" + migration.getPath());
+            // 2026-10-14 集成:快照之后仓库演进到本 IT 用到的列(mapper 已读)一并叠加，否则查询直接 Unknown column。
+            for (String name : new String[]{
+                    "migration_20260919_cms_registration_selfplay_ticket_columns_nullable.sql",
+                    "migration_20260930_registration_first_successful_scan.sql"}) {
+                java.io.File migration = new java.io.File("sql/" + name);
+                if (!migration.exists()) {
+                    // surefire 工作目录是模块目录时走 ../;两种都认,别再犯 ExploreItDatabase 被 cwd 咬的错。
+                    migration = new java.io.File("../" + migration.getPath());
+                }
+                assertTrue(migration.exists(), "RUN-41 修复迁移必须存在且随仓库演进: " + migration);
+                ScriptUtils.executeSqlScript(db, new FileSystemResource(migration));
             }
-            assertTrue(migration.exists(), "RUN-41 修复迁移必须存在且随仓库演进: " + migration);
-            ScriptUtils.executeSqlScript(db, new FileSystemResource(migration));
+            try (Statement ddl = db.createStatement()) {
+                for (String sql : new String[]{
+                        // cms_topic: migration_theme_runtime_20261004.sql
+                        "ALTER TABLE cms_topic ADD COLUMN theme_runtime_config_json MEDIUMTEXT NULL",
+                        "ALTER TABLE cms_topic ADD COLUMN published_theme_runtime_config_json MEDIUMTEXT NULL",
+                        // merchant_chapter_offer: migration_20261003_merchant_offer_withdrawal_columns.sql
+                        "ALTER TABLE merchant_chapter_offer ADD COLUMN replacement_of_offer_id BIGINT NULL DEFAULT NULL",
+                        "ALTER TABLE merchant_chapter_offer ADD COLUMN withdraw_reason VARCHAR(500) NULL DEFAULT NULL",
+                        "ALTER TABLE merchant_chapter_offer ADD COLUMN withdraw_required TINYINT(1) NULL DEFAULT NULL",
+                        // merchant_chapter_offer: migration_club_direct_merchant_receivable_20261004.sql
+                        "ALTER TABLE merchant_chapter_offer ADD COLUMN payer_club_id BIGINT NULL"}) {
+                    ddl.execute(sql);
+                }
+            }
             ScriptUtils.executeSqlScript(db, new org.springframework.core.io.ClassPathResource(
                     "it-schema/run41-prod-seed.sql"));
         }
@@ -134,6 +159,8 @@ class FreeSelfPlayCreateRealDbIT {
         // ── 建单事务本体：与生产 Spring 装配同构（真 mapper、真门禁、真策略）──
         CmsRegistrationServiceImpl target = new CmsRegistrationServiceImpl();
         ReflectionTestUtils.setField(target, "cmsRegistrationMapper", registrationMapper);
+        ReflectionTestUtils.setField(target, "registrationSignupNotificationService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.RegistrationSignupNotificationService.class));
         ReflectionTestUtils.setField(target, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(target, "omsTicketMapper", template.getMapper(OmsTicketMapper.class));
         ReflectionTestUtils.setField(target, "umsMemberMapper", template.getMapper(UmsMemberMapper.class));
@@ -234,12 +261,21 @@ class FreeSelfPlayCreateRealDbIT {
         return template.getMapper(CmsRegistrationMapper.class).selectCmsRegistrationList(query);
     }
 
+    @AfterAll
+    static void dropOnlyCreatedScratchSchema() throws Exception {
+        if (!createdDatabase) return;
+        try (Connection c = dataSource(MYSQL.adminUrl()).getConnection(); Statement s = c.createStatement()) {
+            s.execute("DROP DATABASE " + DB_NAME);
+            createdDatabase = false;
+        }
+    }
+
     private static DataSource dataSource(String url) {
         DriverManagerDataSource ds = new DriverManagerDataSource();
         ds.setDriverClassName("com.mysql.cj.jdbc.Driver");
         ds.setUrl(url);
-        ds.setUsername("root");
-        ds.setPassword("");
+        ds.setUsername(MYSQL.user());
+        ds.setPassword(MYSQL.password());
         return ds;
     }
 

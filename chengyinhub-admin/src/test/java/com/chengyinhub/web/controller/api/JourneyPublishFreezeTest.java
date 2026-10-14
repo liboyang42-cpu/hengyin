@@ -159,6 +159,7 @@ class JourneyPublishFreezeTest {
         when(activityService.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
 
         CmsRegistration pass = new CmsRegistration();
+        pass.setId(9_000_001L); // 真实报名行必有主键；C包当前资格按原ID锁读
         pass.setMemberId(MEMBER);
         pass.setRegistrationStatus(2);
         when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class)))
@@ -216,6 +217,8 @@ class JourneyPublishFreezeTest {
         when(shopDayProofService.hasArrived(anyLong(), anyLong(), anyLong())).thenReturn(true);
 
         wireController();
+        CurrentPlayControllerFixtures.install(controller);
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.delegateLocks(activityMapper, registrationMapper);
     }
 
     private void wireController() {

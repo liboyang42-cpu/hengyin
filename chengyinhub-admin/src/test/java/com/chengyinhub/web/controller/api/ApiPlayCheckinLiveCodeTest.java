@@ -53,6 +53,7 @@ class ApiPlayCheckinLiveCodeTest {
         ReflectionTestUtils.setField(controller, "playCheckinCodeService", liveCodes);
         ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
         ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
+        CurrentPlayControllerFixtures.install(controller);
     }
 
     @Test

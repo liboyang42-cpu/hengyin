@@ -1,0 +1,3 @@
+  · 豁免(@Scheduled 自调度,不进 sys_job):accountDeregistrationJob  (chengyinhub-admin/src/main/java/com/chengyinhub/web/job/AccountDeregistrationJob.java)
+  · 豁免(@Scheduled 自调度,不进 sys_job):merchantCrmExportJob  (chengyinhub-admin/src/main/java/com/chengyinhub/web/job/MerchantCrmExportJob.java)
+  OK: 全部 task bean 都有配套注册 SQL

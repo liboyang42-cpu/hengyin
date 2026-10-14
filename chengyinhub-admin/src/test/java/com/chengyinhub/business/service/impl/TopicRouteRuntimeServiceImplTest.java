@@ -96,8 +96,26 @@ class TopicRouteRuntimeServiceImplTest {
         when(nodeMapper.selectCmsTopicNodeById(1L)).thenReturn(one);
         when(nodeMapper.selectCmsTopicNodeById(2L)).thenReturn(two);
         CmsRegistration pass = new CmsRegistration(); pass.setExpiresAt(null);
-        when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class)))
-                .thenReturn(Collections.singletonList(pass));
+        pass.setId(9000001L);pass.setMemberId(7L);pass.setOwnerType(1L);pass.setOwnerId(10L);pass.setRegistrationStatus(2);pass.setPaymentStatus(0);pass.setPurchaseKind(2);
+        // 按查询人/归属返回其本人的成功报名(与 member/owner 过滤的真实查询一致)：7 号自玩仍是原 pass，
+        // 其他成员或活动场次各有自己的同口径免费成功报名；锁读按原ID回同一行。用例内显式 stub 仍优先。
+        when(activityMapper.selectCmsActivityByIdForUpdate(anyLong()))
+                .thenAnswer(call -> activityMapper.selectCmsActivityById(call.<Long>getArgument(0)));
+        java.util.Map<Long, CmsRegistration> issued = new java.util.HashMap<>();
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(anyLong())).thenAnswer(call -> issued.get(call.<Long>getArgument(0)));
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(9000001L)).thenReturn(pass);
+        when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class))).thenAnswer(call -> {
+            CmsRegistration probe = call.getArgument(0);
+            if (Long.valueOf(7L).equals(probe.getMemberId()) && Long.valueOf(1L).equals(probe.getOwnerType())
+                    && Long.valueOf(10L).equals(probe.getOwnerId())) return Collections.singletonList(pass);
+            CmsRegistration own = new CmsRegistration();
+            own.setId(9_100_000L + probe.getMemberId() * 1_000L + probe.getOwnerType() * 100L + probe.getOwnerId());
+            own.setMemberId(probe.getMemberId()); own.setOwnerType(probe.getOwnerType()); own.setOwnerId(probe.getOwnerId());
+            own.setRegistrationStatus(2); own.setPaymentStatus(0);
+            own.setPurchaseKind(Long.valueOf(2L).equals(probe.getOwnerType()) ? 1 : 2);
+            issued.put(own.getId(), own);
+            return Collections.singletonList(own);
+        });
         stored = new TopicRouteSession[1];
         storedAction = new TopicRouteAction[1];
         when(routeMapper.selectByOwner(0L, 10L, 7L, "default")).thenAnswer(inv -> stored[0]);
@@ -1061,8 +1079,11 @@ class TopicRouteRuntimeServiceImplTest {
         when(routeMapper.selectByOwner(44L, 10L, 7L, "default")).thenAnswer(inv -> stored[0]);
         CmsTopicNode one = node(1L, 1L); CmsTopicNode two = node(2L, 2L); CmsTopicNode three = node(3L, 3L);
         when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class))).thenReturn(Arrays.asList(one, two, three));
+        // registration() 内含锁读 stub，不能嵌在 when(...).thenReturn 里；本例是活动 44 的场次报名。
+        CmsRegistration activityTicket = registration(7L, 1);
+        activityTicket.setOwnerType(2L); activityTicket.setOwnerId(44L);
         when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class)))
-                .thenReturn(Collections.singletonList(registration(7L, 1)));
+                .thenReturn(Collections.singletonList(activityTicket));
         PlayerActivityRole role = new PlayerActivityRole(); role.setRoleCode("OBSERVER");
         when(roleMapper.selectByActivityAndMember(44L, 7L)).thenReturn(role);
         runtime = policyRuntime();
@@ -1788,7 +1809,11 @@ class TopicRouteRuntimeServiceImplTest {
 
     private CmsRegistration registration(Long ticketId, Integer purchaseKind) {
         CmsRegistration registration = new CmsRegistration(); registration.setTicketId(ticketId);
-        registration.setPurchaseKind(purchaseKind); return registration;
+        registration.setPurchaseKind(purchaseKind); registration.setId(ticketId);
+        registration.setMemberId(7L);registration.setOwnerType(1L);registration.setOwnerId(10L);
+        registration.setPaymentStatus(0);registration.setRegistrationStatus(2);
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(ticketId)).thenReturn(registration);
+        return registration;
     }
 
     private CmsActivity playableActivity() {

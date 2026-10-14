@@ -89,6 +89,10 @@ public class ApiRoamController extends BaseController {
     @Autowired
     private IRewardDropService rewardDropService;
     @Autowired
+    private com.chengyinhub.business.service.impl.RoamRewardDeliveryService roamRewardDeliveryService;
+    @Autowired
+    private com.chengyinhub.business.service.impl.RoamBadgeDeliveryService roamBadgeDeliveryService;
+    @Autowired
     private ISmsCouponHistoryService smsCouponHistoryService;
     @Autowired
     private IRoamExploreDayCandidateService roamExploreDayCandidateService;
@@ -189,11 +193,12 @@ public class ApiRoamController extends BaseController {
         int poiXp = poi.getXp() != null ? poi.getXp() : 20;
         data.put("xp", poiXp);
         // L1:商户据点首次发现复用 M6 掉落引擎，但用独立 sceneKey 分流规则与流水幂等。
-        if (inserted > 0 && Integer.valueOf(2).equals(poi.getType())) {
+        if (Integer.valueOf(2).equals(poi.getType())) {
             try {
-                Map<String, Object> drop = rewardDropService.rollDrop(memberId, 0L, poiId, sid,
-                        IRewardDropService.SCENE_ROAM_MERCHANT_POI, poiXp);
-                if (drop != null) {
+                Map<String, Object> drop = inserted > 0
+                        ? roamRewardDeliveryService.rollOriginalDrop(memberId, poiId, sid, poiXp)
+                        : rewardDropService.findOriginalDrop(memberId, 0L, poiId, sid, IRewardDropService.SCENE_ROAM_MERCHANT_POI);
+                if (drop != null && (inserted > 0 || Integer.valueOf(3).equals(drop.get("dropType")))) {
                     applyRoamDrop(memberId, drop);
                     data.put("drop", drop);
                 }
@@ -221,16 +226,18 @@ public class ApiRoamController extends BaseController {
         Object rawType = drop.get("dropType");
         int type = rawType instanceof Number ? ((Number) rawType).intValue() : 0;
         if (type == 1 && drop.get("extraXp") instanceof Number) {
-            int extraXp = ((Number) drop.get("extraXp")).intValue();
-            if (extraXp > 0) growthService.addExp(memberId, extraXp, "掉落·漫游探索值翻倍");
+            Object rawSource = drop.get("dropLogId");
+            if (!(rawSource instanceof Number) || ((Number) rawSource).longValue() <= 0)
+                throw new ServiceException("原掉落交付身份缺失");
+            if (!roamRewardDeliveryService.deliverOriginal(memberId, ((Number) rawSource).longValue()))
+                logger.warn("原漫游探索值交付待补 member={} dropLogId={}", memberId, rawSource);
         } else if (type == 3 && drop.get("couponTemplateId") instanceof Number) {
             long couponId = ((Number) drop.get("couponTemplateId")).longValue();
-            // C-30:券已失效(3)/已停发(4) 不可发放 → 跳过发券,掉落照常记录;仅券不存在/库存耗尽才算失败
-            if (couponId > 0 && smsCouponHistoryService.isCouponNotIssuable(couponId)) {
-                logger.warn("COUPON_DISABLED_SKIP caller=roamDrop member={} coupon={}", memberId, couponId);
-            } else if (couponId > 0 && !smsCouponHistoryService.grantCouponById(memberId, couponId)) {
-                logger.error("漫游据点掉落发券失败(券不存在或库存耗尽) member={} coupon={},需人工补发/核查", memberId, couponId);
-            }
+            Object rawSource = drop.get("dropLogId");
+            if (!(rawSource instanceof Number) || ((Number) rawSource).longValue() <= 0)
+                throw new ServiceException("原掉落交付身份缺失");
+            if (couponId > 0 && !roamRewardDeliveryService.deliverOriginal(memberId, ((Number) rawSource).longValue()))
+                logger.warn("原漫游掉落券交付待补 member={} dropLogId={}", memberId, rawSource);
         }
     }
 
@@ -371,7 +378,7 @@ public class ApiRoamController extends BaseController {
      * source_id 恒 0 = 终身一次:用阈值做 source_id 会导致调阈值(3→4)后老用户重复拿章。
      * @return 新发放的章(供前端结算屏显示)或 null
      */
-    private Map<String, Object> awardShopStreak(Long memberId, int sessionShops) {
+    private Map<String, Object> awardShopStreak(Long memberId, Long sessionId, int sessionShops) {
         GrowthBadge def = growthBadgeMapper.selectByCode(SHOP_STREAK_CODE);
         if (def == null) {
             logger.warn("三店连亮 def 未落库(badge_code={}),本次不发章 —— 检查 migration_roam_shop_visit_*.sql 是否已跑", SHOP_STREAK_CODE);
@@ -392,12 +399,7 @@ public class ApiRoamController extends BaseController {
         b.setObtainTime(new Date());
         b.setDelFlag(0);
         b.setCreateTime(new Date());
-        try {
-            playerBadgeMapper.insertPlayerBadge(b);
-        } catch (Exception e) {
-            logger.error("三店连亮发放失败 member={},需人工补发", memberId, e);
-            return null;
-        }
+        roamBadgeDeliveryService.prepare(sessionId, b);
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("code", def.getBadgeCode());
         m.put("name", def.getBadgeName());
@@ -474,6 +476,22 @@ public class ApiRoamController extends BaseController {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
         return success(roamRecoveryService.read(memberId, sessionId, clientSessionKey));
+    }
+
+    @PostMapping("/session/records")
+    public AjaxResult archiveRecords(String sessionId, String clientSessionKey, String records) {
+        Long memberId = uid();
+        if (memberId <= 0) return error("请先登录");
+        Long sid = Convert.toLong(sessionId);
+        if (sid == null || sid <= 0 || sessionId == null || !sessionId.matches("[1-9][0-9]{0,18}"))
+            return error("会话编号无效");
+        if (clientSessionKey != null && !clientSessionKey.matches("[a-f0-9]{32}")) return error("会话关联标识无效");
+        int accepted = roamSessionWriteService.archiveFinishedRecords(memberId, sid, clientSessionKey, records);
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("sessionId", String.valueOf(sid));
+        data.put("acceptedRecords", accepted);
+        data.put("evidenceType", "CLIENT_REPORTED");
+        return success(data);
     }
 
     @Operation(summary = "点亮迷雾格(批量,幂等)")
@@ -620,6 +638,7 @@ public class ApiRoamController extends BaseController {
     public AjaxResult finish(String sessionId, String poiIds, Integer distanceM) {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
+        roamMapper.lockSettlementOwner(memberId);
         Long sid = Convert.toLong(sessionId, 0L);
         RoamSession session = sid > 0 ? roamMapper.selectOwnedSessionForUpdate(sid, memberId) : null;
         if (session == null || !memberId.equals(session.getMemberId())) return error("会话不存在");
@@ -667,8 +686,8 @@ public class ApiRoamController extends BaseController {
                 b.setObtainTime(new Date());
                 b.setDelFlag(0);
                 b.setCreateTime(new Date());
-                try { playerBadgeMapper.insertPlayerBadge(b); medalName = b.getBadgeName(); }
-                catch (Exception e) { logger.error("漫游里程碑勋章发放失败 member={} tiles={},需人工补发", memberId, crossed, e); }
+                roamBadgeDeliveryService.prepare(sid, b);
+                medalName = b.getBadgeName();
             }
         }
 
@@ -676,7 +695,7 @@ public class ApiRoamController extends BaseController {
         //    _popMedal() 只 setData、零请求,勋章墙永远查不到,而 shareMedal() 还能把它画成图分享出去。
         //    口径 = 本会话 count(distinct source_type, source_id),含 roam 据点与报名商家(用户拍板「任意真商家」)。
         int sessionShops = roamMapper.countDistinctShopsBySession(sid);
-        Map<String, Object> shopMedal = awardShopStreak(memberId, sessionShops);
+        Map<String, Object> shopMedal = awardShopStreak(memberId, sid, sessionShops);
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("tileXp", tileXp);
@@ -687,6 +706,7 @@ public class ApiRoamController extends BaseController {
         data.put("tilesEver", tilesEver);
         data.put("medal", medalName);
         data.put("sessionShops", sessionShops);
+        data.put("badgeDelivery", roamBadgeDeliveryService.readStatus(memberId, sid));
         data.put("shopMedal", shopMedal);   // null = 未达阈值/已拿过/def 未落库
         // 终点故事只消费本次已经由服务端结算的统计值；开关关闭或内容未审时静默。
         if (npcFeatureFlags.eventOn()) {
@@ -701,6 +721,16 @@ public class ApiRoamController extends BaseController {
         }
         if (roamMapper.saveFinishResult(sid, memberId, com.alibaba.fastjson2.JSON.toJSONString(data)) != 1)
             throw new com.chengyinhub.common.exception.ServiceException("结算结果保存失败，请重新核对");
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
+            final Long originalSid = sid;
+            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                    new org.springframework.transaction.support.TransactionSynchronization() {
+                        @Override public void afterCommit() {
+                            try { data.put("badgeDelivery", roamBadgeDeliveryService.readCommittedStatus(memberId, originalSid)); }
+                            catch (RuntimeException ex) { logger.warn("原漫游徽章回读待重试 sessionId={}", originalSid); }
+                        }
+                    });
+        }
         return success(data);
     }
 

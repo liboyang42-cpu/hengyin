@@ -103,6 +103,8 @@ class RegistrationVerifyAndSettleTest {
         r.setOwnerType(1L);
         r.setOwnerId(300L);
         r.setPaymentStatus(2);
+        r.setRegistrationStatus(2);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(r);
         return r;
     }
 
@@ -117,7 +119,7 @@ class RegistrationVerifyAndSettleTest {
         com.chengyinhub.business.domain.CmsActivity activity = new com.chengyinhub.business.domain.CmsActivity();
         activity.setCancelTime(new java.util.Date());
         when(activityMapper.selectCmsActivityByIdForUpdate(300L)).thenReturn(activity);
-        assertEquals("活动已取消，无法核销", assertThrows(IllegalStateException.class,
+        assertEquals("活动已取消，无法使用", assertThrows(IllegalStateException.class,
                 () -> service.verifyAndSettle(row, MERCHANT, PAYEE, 1)).getMessage());
         verify(regMapper, never()).verifyIfNotVerified(anyLong(), anyLong());
         verify(settlementSvc, never()).recordPaidRegistration(any(), any());
@@ -330,7 +332,7 @@ class RegistrationVerifyAndSettleTest {
     /** 所选记录不是当前商家自己的,必须在 CAS/入账/台账之前被归属闸拦下。 */
     @Test
     void selectedStationOwnedByAnotherMerchant_rejectedBeforeVerification() {
-        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(reg());
+        reg(); // reg() 自带同一原行锁读 stub；嵌套在 when(...).thenReturn 里会 UnfinishedStubbing
         when(registrationMerchantMapper.selectCmsRegistrationMerchantByIdForUpdate(701L))
                 .thenReturn(station(999L, 300L, 3));
 
@@ -347,7 +349,7 @@ class RegistrationVerifyAndSettleTest {
     /** 同商家但属于另一条路线的据点也不能拿来核销本票。 */
     @Test
     void selectedStationFromAnotherTopic_rejectedBeforeVerification() {
-        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(reg());
+        reg(); // reg() 自带同一原行锁读 stub；嵌套在 when(...).thenReturn 里会 UnfinishedStubbing
         when(registrationMerchantMapper.selectCmsRegistrationMerchantByIdForUpdate(701L))
                 .thenReturn(station(MERCHANT, 301L, 3));
 
@@ -367,7 +369,7 @@ class RegistrationVerifyAndSettleTest {
         // 是本次改动新造的故障模式,比「流水少一个方法字段」严重得多。
         //
         // 本次要解决的是「流水答不出是哪一站」。所以判据换成:**归属照落,核销照过**。
-        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(reg());
+        reg(); // reg() 自带同一原行锁读 stub；嵌套在 when(...).thenReturn 里会 UnfinishedStubbing
         when(registrationMerchantMapper.selectCmsRegistrationMerchantByIdForUpdate(701L))
                 .thenReturn(station(MERCHANT, 300L, null));
         when(regMapper.verifyIfNotVerified(anyLong(), anyLong())).thenReturn(1);
@@ -384,7 +386,7 @@ class RegistrationVerifyAndSettleTest {
     /** 合法选择必须把所选行自己的 validationMethod 写进流水,而不是 null 或候选第一行。 */
     @Test
     void selectedStationWritesItsValidationMethodToLedger() {
-        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(reg());
+        reg(); // reg() 自带同一原行锁读 stub；嵌套在 when(...).thenReturn 里会 UnfinishedStubbing
         when(registrationMerchantMapper.selectCmsRegistrationMerchantByIdForUpdate(701L))
                 .thenReturn(station(MERCHANT, 300L, 3));
         when(regMapper.verifyIfNotVerified(REG, MERCHANT)).thenReturn(1);
@@ -404,7 +406,7 @@ class RegistrationVerifyAndSettleTest {
     /** 同一码并发/重复选择仍共用报名单 CAS,只有第一次能入账与写流水。 */
     @Test
     void repeatedStationChoiceOnlySettlesOnce() {
-        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(reg());
+        reg(); // reg() 自带同一原行锁读 stub；嵌套在 when(...).thenReturn 里会 UnfinishedStubbing
         when(registrationMerchantMapper.selectCmsRegistrationMerchantByIdForUpdate(701L))
                 .thenReturn(station(MERCHANT, 300L, 3));
         when(regMapper.verifyIfNotVerified(REG, MERCHANT)).thenReturn(1, 0);
@@ -419,12 +421,14 @@ class RegistrationVerifyAndSettleTest {
     /** 退款与核销并发时,事务内锁定回读到退款态必须停在支付闸,不能继续 CAS 入账。 */
     @Test
     void refundedRegistrationRecheckedInsideTransaction_beforeStationOrFundsWrite() {
+        // 先取调用方旧快照：reg() 会重设锁读 stub，必须在设定「已退款当前行」之前调用。
+        CmsRegistration snapshot = reg();
         CmsRegistration refunded = reg();
         refunded.setPaymentStatus(3);
         when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(refunded);
 
         IllegalStateException e = assertThrows(IllegalStateException.class,
-                () -> service.verifyAndSettleForStation(reg(), MERCHANT, 701L));
+                () -> service.verifyAndSettleForStation(snapshot, MERCHANT, 701L));
 
         assertEquals("订单未完成支付或已退款,无法核销", e.getMessage());
         verify(registrationMerchantMapper, never()).selectCmsRegistrationMerchantByIdForUpdate(anyLong());

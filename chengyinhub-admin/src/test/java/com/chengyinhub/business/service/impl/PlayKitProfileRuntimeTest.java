@@ -97,6 +97,7 @@ class PlayKitProfileRuntimeTest {
         activity.setEndDate(at(2026, 9, 30, 23, 59));
         when(activityMapper.selectCmsActivityById(ACTIVITY_ID)).thenReturn(activity);
         when(teamMapper.hasPaidRegistration(MEMBER_ID, 2, ACTIVITY_ID)).thenReturn(1);
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.installOn(service);
     }
 
     private static final String PROFILE_CONFIG = "{\"schemaVersion\":1,\"profile\":{\"enabled\":true,"

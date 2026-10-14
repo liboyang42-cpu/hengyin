@@ -54,6 +54,7 @@ class SettlementServiceImplTest {
         SettlementServiceImpl service = service(batchMapper, detailMapper);
         SettlementBatch existing = new SettlementBatch();
         existing.setId(88L);
+        existing.setMerchantId(9L);
         when(batchMapper.selectByIdempotencyKey("merchant-9-20260619")).thenReturn(existing);
 
         Long batchId = service.generateBatch(request());
@@ -81,6 +82,7 @@ class SettlementServiceImplTest {
                 query -> query != null && Long.valueOf(66L).equals(query.getBatchId()))))
                 .thenReturn(Arrays.asList(detail("merchant", 9L, "108.00"), detail("platform", 0L, "12.00")));
 
+        when(batchMapper.updateBatchTotals(eq(66L), any(), eq(2L))).thenReturn(1);
         Long batchId = service.generateBatch(request());
 
         assertEquals(66L, batchId);
@@ -178,5 +180,29 @@ class SettlementServiceImplTest {
 
         assertEquals(0, rows);
         verify(detailMapper, never()).markBatchSettled(any());
+    }
+    @Test
+    void replayCannotReturnAnotherMerchantsBatch() {
+        SettlementBatchMapper batches = mock(SettlementBatchMapper.class);
+        SettlementDetailMapper details = mock(SettlementDetailMapper.class);
+        SettlementBatch foreign = new SettlementBatch();
+        foreign.setId(88L); foreign.setMerchantId(10L);
+        when(batches.selectByIdempotencyKey("merchant-9-20260619")).thenReturn(foreign);
+        assertThrows(IllegalArgumentException.class, () -> service(batches, details).generateBatch(request()));
+        verify(details, never()).selectPendingByMerchant(any());
+    }
+
+    @Test
+    void lostTotalsWriteFailsInsteadOfLeavingZeroBatch() {
+        SettlementBatchMapper batches = mock(SettlementBatchMapper.class);
+        SettlementDetailMapper details = mock(SettlementDetailMapper.class);
+        when(details.selectPendingByMerchant(9L)).thenReturn(Collections.singletonList(detail("merchant", 9L, "12.00")));
+        when(batches.insertSettlementBatch(any())).thenAnswer(invocation -> {
+            ((SettlementBatch) invocation.getArgument(0)).setId(66L); return 1;
+        });
+        when(details.bindBatch(66L, 9L)).thenReturn(1);
+        when(details.selectDetailList(any())).thenReturn(Collections.singletonList(detail("merchant", 9L, "12.00")));
+        when(batches.updateBatchTotals(eq(66L), any(), eq(1L))).thenReturn(0);
+        assertThrows(IllegalStateException.class, () -> service(batches, details).generateBatch(request()));
     }
 }

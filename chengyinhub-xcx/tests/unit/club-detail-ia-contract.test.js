@@ -100,6 +100,8 @@ function loadSettings() {
     Page(page) { definition = page },
     require(request) {
       const modules = {
+        '../../utils/im-send-recovery.js': { invalidate() {} },
+        '../../utils/roam-cache-epoch.js': require('../../utils/roam-cache-epoch.js'),
         '../../utils/motion.js': require('../../utils/motion.js'),
         '../../utils/motion-preference.js': require('../../utils/motion-preference.js'),
         '../../utils/identity/identity-policy.js': { isMerchantView: () => false },

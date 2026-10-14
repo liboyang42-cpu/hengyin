@@ -55,6 +55,11 @@ class CashWithdrawServiceTest {
         ReflectionTestUtils.setField(svc, "mapper", mapper);
         ReflectionTestUtils.setField(svc, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(svc, "wechatPayService", wechatPayService);
+        com.chengyinhub.business.service.impl.CashWithdrawFailureRecoveryService recovery =
+                new com.chengyinhub.business.service.impl.CashWithdrawFailureRecoveryService();
+        ReflectionTestUtils.setField(recovery, "mapper", mapper);
+        ReflectionTestUtils.setField(recovery, "umsMemberService", umsMemberService);
+        ReflectionTestUtils.setField(svc, "failureRecoveryService", recovery);
         ReflectionTestUtils.setField(svc, "alarmService", alarmService);
         ReflectionTestUtils.setField(svc, "wxPayConfig", wxPayConfig);
         com.chengyinhub.business.service.IPlayerWithdrawalCooldownService cooldownStub = mock(com.chengyinhub.business.service.IPlayerWithdrawalCooldownService.class);
@@ -64,11 +69,13 @@ class CashWithdrawServiceTest {
                 new com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver(merchantReferralBountyService, cooldownStub));
         when(merchantReferralBountyService.frozenAmount(any())).thenReturn(BigDecimal.ZERO);
         // insert 时给对象分配 id(用于 out_batch_no=CW+id)
+        when(mapper.updateMemberCashWithdraw(any())).thenReturn(1);
         when(mapper.insertMemberCashWithdraw(any())).thenAnswer(inv -> {
-            ((MemberCashWithdraw) inv.getArgument(0)).setId(500L);
+            MemberCashWithdraw created = inv.getArgument(0);
+            created.setId(500L);
+            when(mapper.selectById(500L)).thenReturn(created);
             return 1;
         });
-        when(mapper.selectById(500L)).thenReturn(new MemberCashWithdraw());
     }
 
     private UmsMember member(String openid, String balance) {
@@ -291,5 +298,22 @@ class CashWithdrawServiceTest {
     void withdraw_belowMinAmount_rejected() {
         assertThrows(IllegalStateException.class, () -> svc.withdraw(900002L, new BigDecimal("0.5")));
         verify(mapper, never()).insertMemberCashWithdraw(any());
+    }
+    @Test
+    void lostOriginalLedgerWriteStopsBeforeBalanceOrWechatMutation() {
+        when(umsMemberService.selectUmsMemberById(900002L)).thenReturn(member("oXAbc", "100"));
+        org.mockito.Mockito.doReturn(0).when(mapper).insertMemberCashWithdraw(any());
+        assertThrows(IllegalStateException.class, () -> svc.withdraw(900002L, new BigDecimal("1.00")));
+        verify(umsMemberService, never()).deductWithdrawableBalance(any(), any(), any());
+        verify(wechatPayService, never()).transferToBalance(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void lostDeterministicChannelNumberStopsBeforeDebit() {
+        when(umsMemberService.selectUmsMemberById(900002L)).thenReturn(member("oXAbc", "100"));
+        when(mapper.updateMemberCashWithdraw(any())).thenReturn(0);
+        assertThrows(IllegalStateException.class, () -> svc.withdraw(900002L, new BigDecimal("1.00")));
+        verify(umsMemberService, never()).deductWithdrawableBalance(any(), any(), any());
+        verify(wechatPayService, never()).transferToBalance(any(), any(), any(), any(), any(), any());
     }
 }

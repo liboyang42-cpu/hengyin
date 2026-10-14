@@ -12,6 +12,8 @@ import java.util.Map;
 @Service
 public class RoamRecoveryService {
     private final RoamMapper mapper;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.impl.RoamBadgeDeliveryService badges;
 
     public RoamRecoveryService(RoamMapper mapper) { this.mapper = mapper; }
 
@@ -54,6 +56,7 @@ public class RoamRecoveryService {
             }
             data.put("result", result);
             data.put("resultComplete", complete);
+            data.put("badgeDelivery", badges.readStatus(owner, row.getId()));
         } else {
             throw new ServiceException("会话状态暂时无法确认");
         }
