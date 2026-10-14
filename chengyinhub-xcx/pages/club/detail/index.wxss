@@ -533,6 +533,9 @@ page { background: var(--cy-bg-page); }
   background: var(--club-surface-2); border-radius: var(--cy-radius-pill);
 }
 .manage-project-share::after { border: none; }
+/* F-W5-11:期次行没有封面,不能套主题行的「封面 / 标题 / 箭头」三列 —— 否则标题落进 112rpx 封面列被挤成竖排。 */
+.manage-project--edition { grid-template-columns: minmax(0, 1fr) auto; }
+.manage-project--edition .manage-project-main { margin-left: 0; }
 
 .manage-tools { display: grid; grid-template-columns: 1fr 1fr; gap: var(--cy-space-2); }
 .manage-tool {

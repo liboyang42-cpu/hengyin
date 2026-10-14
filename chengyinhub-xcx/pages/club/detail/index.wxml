@@ -527,7 +527,7 @@
         <cy-skeleton wx:if="{{shareEditionState === 'loading'}}" type="list" count="1" />
         <cy-error load-failure class="cy-fade-in" wx:elif="{{shareEditionState === 'error'}}" title="期次加载失败" retry="重新加载" bind:retry="loadShareEditions" />
         <view wx:elif="{{shareEditions.length}}" class="manage-project-list">
-          <view class="manage-project" wx:for="{{shareEditions}}" wx:key="topicId">
+          <view class="manage-project manage-project--edition" wx:for="{{shareEditions}}" wx:key="topicId">
             <view class="manage-project-main">
               <view class="manage-project-name">{{item.topicName || ('期次 #' + item.topicId)}}</view>
               <view class="manage-project-meta">{{item.dateText || '时间待定'}} · 执行俱乐部期次</view>
