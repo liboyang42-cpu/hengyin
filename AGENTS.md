@@ -6,9 +6,9 @@
 > 注意：本仓库是 monorepo，根目录同时含**后端 Java 模块**、**小程序 `chengyinhub-xcx/`**、**前端 `chengyinhub-ui/`**、`docs/`。编辑小程序时以 `chengyinhub-xcx/AGENTS.md` 为准（就近覆盖）。
 
 ## 项目结构（带版本）
-- Spring Boot 2.5.15 · Java 8 · Maven 多模块 · MySQL · Redis · Druid · jjwt(JWT) · Quartz
+- Spring Boot 4.1.1 · Java 21（Jakarta EE；pom 的 maven-compiler-plugin 必须保留 `<release>${java.version}</release>` 与 `<parameters>true</parameters>`） · Maven 多模块 · MySQL · Redis · Druid · jjwt(JWT) · Quartz
 - 模块：chengyinhub-admin(入口/接口) · framework(配置/鉴权) · system(业务) · quartz · common · generator · ui(RuoYi-UI 后台 Vue2)
-- 正在进行：① Boot3/Java17 升级（feature/upgrade-boot3，规划中） ② user_type → RBAC role 迁移收尾
+- 正在进行：user_type → RBAC role 迁移收尾（Boot 4.1.1/Java 21 升级已完成，回退不得回到 Boot 2.5/Java 8 的旧 master 制品）
 - 小程序端登录走 AppLoginService（JWT 自动续期，RBAC role 登录即落地为单一真源）
 
 ## 命令
