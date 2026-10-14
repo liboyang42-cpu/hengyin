@@ -98,7 +98,10 @@ public class AppLoginService {
         if (stored != null && stored.startsWith("$2")) {
             matched = SecurityUtils.matchesPassword(password, stored); // 已是 BCrypt 哈希
         } else {
-            matched = stored != null && stored.equals(password);       // 旧明文口令:兼容比对
+            // 旧明文口令:兼容比对(常量时间)；存量由 MemberLegacyPasswordHashRunner 批量哈希后此分支不再命中
+            matched = stored != null && java.security.MessageDigest.isEqual(
+                    stored.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                    password.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             needUpgrade = matched;
         }
         if (!matched) {
@@ -142,7 +145,7 @@ public class AppLoginService {
         redisCache.deleteObject("app_password_fail_" + username);
         AppUser appUser = new AppUser();
         appUser.setUserId(memberId);
-        appUser.setPassword(member.getPassword());
+        // 会话不保存口令或其哈希：App 会话鉴权只看 token + sessionEpoch，从不读取会话里的口令。
         appUser.setUserName(member.getPhone());
 
         LoginAppUser loginAppUser = new LoginAppUser();
@@ -193,7 +196,7 @@ public class AppLoginService {
 
         AppUser appUser = new AppUser();
         appUser.setUserId(memberId);
-        appUser.setPassword(member.getPassword());
+        // 会话不保存口令或其哈希：App 会话鉴权只看 token + sessionEpoch，从不读取会话里的口令。
         appUser.setUserName(member.getPhone());
 
         LoginAppUser loginAppUser = new LoginAppUser();
@@ -227,7 +230,7 @@ public class AppLoginService {
         }
         AppUser appUser = new AppUser();
         appUser.setUserId(member.getId());
-        appUser.setPassword(member.getPassword());
+        // 会话不保存口令或其哈希：App 会话鉴权只看 token + sessionEpoch，从不读取会话里的口令。
         appUser.setUserName(member.getPhone());
 
         LoginAppUser loginAppUser = new LoginAppUser();
