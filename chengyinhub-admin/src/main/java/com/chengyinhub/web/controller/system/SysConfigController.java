@@ -82,7 +82,9 @@ public class SysConfigController extends BaseController
     static boolean sensitiveKey(String key) {
         String normalized = key == null ? "" : key.toLowerCase(java.util.Locale.ROOT);
         return normalized.contains("secret") || normalized.contains("token")
-                || normalized.contains("password") || normalized.contains("privatekey");
+                || normalized.contains("password") || normalized.contains("privatekey")
+                || normalized.contains("accesskey") || normalized.contains("aeskey")
+                || normalized.contains("apikey") || normalized.contains("credential");
     }
 
     private SysConfig maskSensitive(SysConfig config) {

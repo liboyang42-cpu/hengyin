@@ -85,6 +85,23 @@ class SysConfigPrivacyTest {
     }
 
     @ParameterizedTest
+    @ValueSource(strings = {"sms.aliyun.accessKeyId", "sms.aliyun.accessKeySecret", "wx.msgpush.encodingAesKey",
+            "llm.apiKey", "oss.credential.json"})
+    void keyIdsAesKeysAndApiKeysAreTreatedAsSensitive(String key) {
+        ISysConfigService configs = mock(ISysConfigService.class);
+        SysConfigController controller = controller(configs);
+        assertTrue(SysConfigController.sensitiveKey(key));
+        assertEquals(500, controller.getConfigKey(key).get("code"));
+        verifyNoInteractions(configs);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"feature.flag.drops", "sys.account.captchaEnabled", "sms.aliyun.signName"})
+    void ordinaryFlagsStayReadable(String key) {
+        assertFalse(SysConfigController.sensitiveKey(key));
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {"app.wechat.appsecret", "sys.user.initPassword"})
     void detailMaskDoesNotReturnOriginalSecret(String key) {
         ISysConfigService configs = mock(ISysConfigService.class);
