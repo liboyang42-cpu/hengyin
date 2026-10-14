@@ -1,5 +1,6 @@
 const { toTimestamp, chinaDateKey, chinaParts } = require('../../../../utils/datetime');
 const { isRecordList, isBizOk } = require('../../../../utils/response-shape.js');
+const { showPermissionGuide } = require('../../../../utils/location/location-manager.js');
 const app = getApp();
 
 // 服务端可见顺序含微秒：不要转 JS Date 丢精度，也不要以客户端时钟推测审批时间。
@@ -502,9 +503,9 @@ Page({
       },
       fail(e) {
         if (!current()) return;
-        // 用户取消不提示;权限被拒才引导
-        if (e && String(e.errMsg || '').indexOf('auth deny') >= 0) {
-          app.tips && app.tips('需要位置权限才能发送位置');
+        // 用户取消不提示;权限被拒才引导。F-R2S-10:给出「去设置」恢复入口,授权后回到选址。
+        if (e && /auth (deny|denied)/.test(String(e.errMsg || ''))) {
+          showPermissionGuide(null, () => { if (current()) that.onSendLocation(); });
         }
       },
     });
