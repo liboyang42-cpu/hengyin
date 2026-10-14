@@ -300,8 +300,9 @@ class MerchantCommerceServiceTest {
         when(orderMapper.selectOmsOrderByOrderSn("CUSTOM_19")).thenReturn(order);
         when(wechatPayService.queryOrderStatus("CUSTOM_19"))
                 .thenThrow(new com.chengyinhub.business.service.WechatOrderNotExistException("missing", null));
-        assertThrows(IllegalStateException.class, () -> service.reconcileOrder("CUSTOM_19"));
+        service.reconcileOrder("CUSTOM_19");   // 未建单=未付款的已知状态:窗口内保持待支付,不报失败
         verify(orderMapper, never()).markCommerceOrderClosed(any());
+        verify(subscriptionMapper, never()).grantMerchantSubscription(any());
         order.setCreateTime(new java.util.Date(System.currentTimeMillis() - 25 * 60 * 60 * 1000L));
         service.reconcileOrder("CUSTOM_19");
         verify(orderMapper).markCommerceOrderClosed(19L);

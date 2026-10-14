@@ -166,12 +166,12 @@ public class MerchantCommerceService implements IMerchantCommerceService {
         try {
             observed = wechatPayService.queryOrderStatus(outTradeNo);
         } catch (com.chengyinhub.business.service.WechatOrderNotExistException missing) {
-            // 微信侧从未建单 = 不可能已付款。过了放弃窗口才本地关单；新单仍按异常上报。
+            // 微信侧从未建单 = 不可能已付款(已知状态，不按失败告警)。过了放弃窗口才本地关单；
+            // 窗口内保持待支付，用户仍可能回来拉起预支付。
             if (abandoned) {
                 orderMapper.markCommerceOrderClosed(order.getId());
-                return;
             }
-            throw new IllegalStateException("商业化订单微信侧不存在", missing);
+            return;
         }
         if (observed == null || !outTradeNo.equals(observed.get("out_trade_no"))) {
             throw new IllegalStateException("商业化查单结果无法确认");
