@@ -106,6 +106,16 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     /** These actions mutate a current member/node or TEAM story, not shared world/director state. */
     private static final Set<String> INDEPENDENT_PLAYER_ACTIONS = new HashSet<>(Arrays.asList(
             "PLAYER_HINT", "PLAYER_REVEAL", "PLAYER_SUBMIT", "PLAYER_CHOICE"));
+    /**
+     * F-L3-01:商家/俱乐部对「某一条提交」或「某一个站点」的写动作。并发控制下沉到对象本身 ——
+     * 提交行 decideSubmissionCas(只认 PENDING)、站点行 updateStationStatusCas(只认原状态 + 站点 revision),
+     * 且整条命令在 game_session 行锁内执行。全局 revision 只拦「比服务端还新」的伪造版本,
+     * 不再因为别队玩家的提示/提交/选择把商家核验、站点暂停/恢复判成过期。
+     * 导演台(UNLOCK_CHAPTER/START/ASSIGN_ROLES/FINISH...)、角色确认和就绪配置仍要求精确版本。
+     */
+    private static final Set<String> OBJECT_SCOPED_STAFF_ACTIONS = new HashSet<>(Arrays.asList(
+            "VERIFY_SUBMISSION", "CLUB_REJECT_SUBMISSION",
+            "STATION_PAUSE", "STATION_RESUME", "CLUB_STATION_PAUSE", "CLUB_STATION_RESUME"));
     private static final Set<String> PLAYER_ACTIONS = new HashSet<>(Arrays.asList(
             "CONFIRM_ROLE", "PLAYER_CHOICE", "PLAYER_SUBMIT", "PLAYER_HINT", "PLAYER_REVEAL"));
     private static final Set<String> RUN_CONTROL_ACTIONS = new HashSet<>(Arrays.asList(
@@ -2564,7 +2574,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         preauthorize(actor, activity, session, command);
         if (isSharedRoute(session)) requireSharedWrite(session, command);
         if (!preparing) {
-            boolean independent = INDEPENDENT_PLAYER_ACTIONS.contains(command.getAction());
+            boolean independent = INDEPENDENT_PLAYER_ACTIONS.contains(command.getAction())
+                    || (!isSharedRoute(session) && OBJECT_SCOPED_STAFF_ACTIONS.contains(command.getAction()));
             if (session == null || session.getRevision() == null
                     || command.getExpectedRevision() > session.getRevision()
                     || (!independent && !command.getExpectedRevision().equals(session.getRevision()))) {
@@ -3057,6 +3068,10 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                                            GameSessionCommand command) {
         requireSessionStatus(session, GameSession.RUNNING);
         GameStationRun station = requireSessionStation(session, command.getNodeId());
+        if (GameStationRun.ACTIVE.equals(station.getStatus())) {
+            // 与暂停同口径:已被另一终端恢复时返回当前站点,而不是让后到的一方看到「待核对/版本过期」
+            return result(session, singleton("station", stationView(station, sessionConfig(session))));
+        }
         if (!GameStationRun.PAUSED.equals(station.getStatus())) throw error("GAME_STATE_CONFLICT", "站点当前不能恢复");
         Date now = evaluationTime();
         requireActivityServiceWindow(activity, now);
@@ -3114,6 +3129,9 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                                        GameSessionCommand command) {
         requireSessionStatus(session, GameSession.RUNNING);
         GameStationRun station = requireMerchantStation(actor, session, command.getNodeId());
+        if (GameStationRun.ACTIVE.equals(station.getStatus())) {
+            return result(session, singleton("station", stationView(station, sessionConfig(session))));
+        }
         if (!GameStationRun.PAUSED.equals(station.getStatus())) throw error("GAME_STATE_CONFLICT", "站点当前不能恢复");
         Date now = evaluationTime();
         requireActivityServiceWindow(activity, now);

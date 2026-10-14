@@ -37,6 +37,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -840,5 +841,40 @@ class ApiRegistrationVerifyGateTest {
         controller.scanQrCode("activity", CODE);
 
         verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+    }
+
+    /** F-R2F-01:俱乐部场次开场前 60 分钟之外不能整单核销(避免提前核销被算作已到场/已交付)。 */
+    @Test
+    void clubSessionScanBeforeWindow_rejectedWithoutSettlement() {
+        givenActivityRegistration();
+        CmsActivity club = new CmsActivity();
+        club.setId(ACTIVITY);
+        club.setMemberId(MEMBER);
+        club.setClubId(CLUB);
+        club.setStartDate(new java.util.Date(System.currentTimeMillis() + 2L * 24 * 3600 * 1000));
+        when(activitySvc.selectCmsActivityById(ACTIVITY)).thenReturn(club);
+
+        AjaxResult r = controller.scanQrCode("activity", CODE);
+
+        assertEquals("俱乐部场次开始前60分钟内才可核销", r.get("msg"));
+        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+    }
+
+    /** 窗口内(含已开场)与非俱乐部活动照常核销。 */
+    @Test
+    void clubSessionVerificationWindowBoundary() {
+        java.util.Date now = new java.util.Date(1_800_000_000_000L);
+        CmsActivity club = new CmsActivity();
+        club.setClubId(CLUB);
+        club.setStartDate(new java.util.Date(now.getTime() + 60L * 60 * 1000));
+        assertNull(ApiRegistrationController.clubSessionVerificationTooEarly(club, now));
+        club.setStartDate(new java.util.Date(now.getTime() + 60L * 60 * 1000 + 1));
+        assertEquals("俱乐部场次开始前60分钟内才可核销",
+                ApiRegistrationController.clubSessionVerificationTooEarly(club, now).get("msg"));
+        club.setStartDate(new java.util.Date(now.getTime() - 1));
+        assertNull(ApiRegistrationController.clubSessionVerificationTooEarly(club, now));
+        CmsActivity ordinary = new CmsActivity();
+        ordinary.setStartDate(new java.util.Date(now.getTime() + 7L * 24 * 3600 * 1000));
+        assertNull(ApiRegistrationController.clubSessionVerificationTooEarly(ordinary, now));
     }
 }

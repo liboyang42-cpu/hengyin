@@ -1329,6 +1329,8 @@ const DIRECTOR_METHODS = {
         // CU-C-76:后端把驳回原因放在 reasonCode 里(如 GAME_BROADCAST_NO_RECIPIENT),
         // 以前这里不分原因统一一句「操作未生效」,把可执行的下一步抹掉了。
         toast(rejectedActionText(command.action, result.raw) || '操作未生效，请刷新后重试')
+        // F-L3-01:驳回(含 GAME_STATE_CONFLICT)说明本地投影已落后，自动重读，下一次操作带新 revision
+        that.loadProjection()
         return
       }
       clearPendingWrite(that._activityId)
