@@ -98,7 +98,7 @@ public class ApiMerchantChapterApplicationController extends BaseController {
         }
     }
 
-    @Operation(summary = "邀请商家承接本章节（仅主题原发布者;邀请=预先批准的申请）")
+    @Operation(summary = "邀请商家承接本章节（仅主题原发布者;商家接受后才占名额，主办可撤回）")
     @PostMapping("/invite")
     public AjaxResult invite(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId = currentMemberId();

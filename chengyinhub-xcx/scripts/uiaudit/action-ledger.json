@@ -660923,7 +660923,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/join-requests/index.js:153"
+        "staticSource": "pages/club/join-requests/index.js:172"
       }
     },
     {
@@ -661018,7 +661018,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/join-requests/index.js:153"
+        "staticSource": "pages/club/join-requests/index.js:172"
       }
     },
     {
@@ -663279,7 +663279,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/director.js:1359"
+        "staticSource": "pages/club/topic-detail/director.js:1361"
       }
     },
     {
@@ -663388,7 +663388,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/director.js:1414"
+        "staticSource": "pages/club/topic-detail/director.js:1416"
       }
     },
     {
@@ -671940,7 +671940,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/director.js:1359"
+        "staticSource": "pages/club/topic-detail/director.js:1361"
       }
     },
     {

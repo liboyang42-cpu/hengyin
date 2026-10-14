@@ -108,7 +108,7 @@ const DANGER_ACTIONS = {
     irreversible: false,
     title: '拒绝「{name}」的入会申请?',
     consequences: [
-      { icon: 'bell', text: '对方会看到申请未通过,但看不到具体原因' },
+      { icon: 'bell', text: '对方会收到未通过通知;下一步可选填原因一并告知' },
       { icon: 'clock', text: '对方之后仍可以重新提交申请' },
     ],
     confirmText: '拒绝申请',
