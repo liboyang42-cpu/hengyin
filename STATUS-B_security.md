@@ -5,7 +5,7 @@
 - Work branch: fix/remaining-b-security-20261013
 
 ## Done
-F-L5S-01 F-L5S-02 F-L5S-04 F-L5S-05 F-L5S-06 F-L5S-07 F-L5S-09 F-R2F-06 F-L5S-08 F-L5S-10 F-R2SEC-01 F-L6-17 F-L6-18
+F-L5S-01,02,05,06,10, F-R2F-06, F-R2SEC-01, F-L6-17 (code); F-L5S-04,07,08,09, F-L6-18 code part
 
 ## Remaining
-none
+F-L5S-04,07,08,09, F-L6-17, F-L6-18: remaining parts need ops action or a product decision
