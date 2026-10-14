@@ -733,6 +733,8 @@ class MerchantChapterApplicationServiceImplTest {
     @Test
     void acceptingReplacementInvitationRejectsWhenAnotherReplacementAlreadyAccepted() {
         arrangeEligibleApplication();
+        CmsTopic paused = availableTopic(); paused.setLifecycle(3); paused.setUserStatus(0);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(paused);
         MerchantChapterApplication invited = application(MerchantChapterApplication.STATUS_PENDING, MERCHANT, 0);
         invited.setSource(MerchantChapterApplication.SOURCE_INVITE); invited.setReplacementOfOfferId(800L);
         when(applicationMapper.selectMerchantChapterApplicationById(APPLICATION)).thenReturn(invited);

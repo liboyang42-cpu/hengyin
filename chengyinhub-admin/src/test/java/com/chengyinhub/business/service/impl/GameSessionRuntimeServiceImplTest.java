@@ -594,11 +594,17 @@ class GameSessionRuntimeServiceImplTest {
         when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(runningSession(9));
         when(runtimeMapper.selectStation(SESSION, NODE)).thenReturn(station(MERCHANT, "ACTIVE"));
 
+        // F-L3-01:站点暂停/恢复与核验改为按对象 CAS,旧版本不再被拒;精确版本动作(STATION_READY)
+        // 与「比服务端还新」的版本仍在回执认领前被拒。
         GameSessionException error = assertThrows(GameSessionException.class,
                 () -> service.command(GameActorContext.merchant(MERCHANT),
-                        command("stale-revision", 8, "STATION_PAUSE", mapOf("reasonCode", "WEATHER"))));
-
+                        command("stale-revision", 8, "STATION_READY", Collections.emptyMap())));
         assertEquals("GAME_STATE_CONFLICT", error.getErrorCode());
+        GameSessionException future = assertThrows(GameSessionException.class,
+                () -> service.command(GameActorContext.merchant(MERCHANT),
+                        command("future-revision", 10, "STATION_PAUSE", mapOf("reasonCode", "WEATHER"))));
+        assertEquals("GAME_STATE_CONFLICT", future.getErrorCode());
+
         verify(runtimeMapper, never()).insertReceiptClaim(any(GameCommandReceipt.class));
         verify(runtimeMapper, never()).updateStationStatusCas(any(GameStationRun.class), anyLong(), anyString(),
                 anyString(), anyInt(), any());
