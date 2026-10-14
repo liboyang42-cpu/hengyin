@@ -503,7 +503,7 @@ page { background: var(--cy-bg-page); }
 }
 .manage-project-cover { width: 112rpx; height: 88rpx; border-radius: var(--cy-radius-sm); background: var(--club-surface-2); flex-shrink: 0; }
 .manage-project-main { flex: 1; min-width: 0; margin-left: var(--cy-space-2-5); }
-.manage-project-name { color: var(--club-text); font-size: var(--cy-font-body); font-weight: 700; }
+.manage-project-name { color: var(--club-text); font-size: var(--cy-font-body); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .manage-project-meta { margin-top: var(--cy-space-1); color: var(--club-text-muted); font-size: var(--cy-font-caption); }
 /* F-W5-11:工具按钮同处第二行(标题列起、跨到箭头列),第一行只留封面 / 标题+报名 / 箭头。 */
 .manage-project-tools {

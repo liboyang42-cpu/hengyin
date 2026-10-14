@@ -626,7 +626,11 @@ Page({
     const now = Date.now();
     const rows = (Array.isArray(raw.activityList) ? raw.activityList : [])
       .filter((s) => !s.cancelTime && toTimestamp(s.endDate || s.startDate) > now)
-      .sort((a, b) => toTimestamp(a.startDate) - toTimestamp(b.startDate));
+      // 缺集合时刻的场次排在最后:NaN 参与比较会让 sort 结果不确定。
+      .sort((a, b) => {
+        const ta = toTimestamp(a.startDate), tb = toTimestamp(b.startDate);
+        return (Number.isNaN(ta) ? Infinity : ta) - (Number.isNaN(tb) ? Infinity : tb) || 0;
+      });
     return rows.map((s, i) => ({
       id: s.id || ('s' + i),
       whenText: (() => {

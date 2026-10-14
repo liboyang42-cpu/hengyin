@@ -230,3 +230,45 @@ test('F-W5-11 管理 tab:快捷区五等分;项目行工具按钮收进第二行
   assert.ok(tools, '缺少工具按钮行')
   assert.equal((tools[1].match(/class="manage-project-director"/g) || []).length, 3, '导演台(主理人/管理员)与场次工具都在工具行里')
 })
+
+test('F-W5-11 管理 tab:项目标题单行省略,不被工具按钮挤成多行', () => {
+  const name = rule(read('pages/club/detail/index.wxss'), '.manage-project-name')
+  assert.match(name, /white-space:\s*nowrap/)
+  assert.match(name, /text-overflow:\s*ellipsis/)
+  assert.match(name, /overflow:\s*hidden/)
+})
+
+// ---------- F-W5-08 主题管理页「接下来」 ----------
+
+function loadTopicDetailPage() {
+  const pagePath = path.join(ROOT, 'pages/club/topic-detail/index.js')
+  let config = null
+  const previous = { getApp: global.getApp, Page: global.Page, wx: global.wx, getCurrentPages: global.getCurrentPages }
+  global.getApp = () => ({ globalData: { statusBarHeight: 20, navBarHeight: 44 }, sendRequest: () => {} })
+  global.Page = (value) => { config = value }
+  global.getCurrentPages = () => [{}]
+  global.wx = { getStorageSync: () => '', setStorageSync: () => {}, removeStorageSync: () => {}, getSystemInfoSync: () => ({}) }
+  delete require.cache[pagePath]
+  try { require(pagePath) } finally { Object.assign(global, previous) }
+  return config
+}
+
+test('F-W5-08 接下来:排除已取消/已过去,按集合时刻升序,缺时刻的排最后,文案带时分', () => {
+  const page = loadTopicDetailPage()
+  const future = (days, hh) => {
+    const d = new Date(Date.now() + days * 86400000 + 8 * 3600000)
+    return d.toISOString().slice(0, 10) + ' ' + hh + ':00'
+  }
+  const rows = page.buildSessions({ activityList: [
+    { id: 3, name: '后天', startDate: future(2, '09:30'), endDate: future(2, '23:59') },
+    { id: 9, name: '缺集合时刻', endDate: future(5, '23:59') },
+    { id: 1, name: '明天', startDate: future(1, '19:00'), endDate: future(1, '23:59') },
+    { id: 4, name: '已取消', cancelTime: '2026-01-01 00:00:00', startDate: future(1, '08:00'), endDate: future(1, '23:59') },
+    { id: 5, name: '已过去', startDate: '2020-01-01 10:00:00', endDate: '2020-01-01 23:59:00' },
+  ] })
+  assert.deepEqual(rows.map((r) => r.id), [1, 3, 9])
+  assert.match(rows[0].whenText, /^\d+月\d+日 19:00$/)
+  assert.match(rows[1].whenText, /^\d+月\d+日 09:30$/)
+  const dot = rule(read('pages/club/topic-detail/index.wxss'), '.ctd-next__row')
+  assert.match(dot, /padding:[^;]*calc\(/, '文字左边距要让出圆点')
+})
