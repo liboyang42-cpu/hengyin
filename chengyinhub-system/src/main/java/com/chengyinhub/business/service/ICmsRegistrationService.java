@@ -203,6 +203,9 @@ public interface ICmsRegistrationService
      */
     public String handleWechatPayCallback(Map<String, String> resultMap);
 
+    /** 仅原取消活动事务内的真实渠道SUCCESS查询补记；不是回调/免验证入口。 */
+    public String applyConfirmedWechatPaymentWithinTransaction(Map<String, String> resultMap);
+
     /** 零现金报名专用完成入口；不得伪造微信 SUCCESS 回调。 */
     public String completeZeroAmountPayment(String registrationNo);
 
@@ -239,6 +242,13 @@ public interface ICmsRegistrationService
      */
     public List<Long> listExpiredUnpaidIds();
 
+    /** 固定本轮时间及最大ID，失败订单不阻塞后页。 */
+    public Long getExpiredUnpaidScanUpperBound(java.util.Date now);
+    public List<Long> listExpiredUnpaidIdsAfter(java.util.Date now, long afterId, long maxId, int limit);
+
+    /** 在调用方事务内按 activity→registration 当前读，拒绝旧归属/退款/到期快照。 */
+    public CmsRegistration requireCurrentUsableRegistration(CmsRegistration snapshot);
+
     /**
      * §5-3 PAYING 超时对账:过支付窗口仍处支付中(payment_status=1)的订单 id 列表(供定时任务扫描)。
      * 这些单既不能被用户再支付(/pay 拒过期),也不会被 {@link #listExpiredUnpaidIds()} 扫到。
@@ -271,6 +281,8 @@ public interface ICmsRegistrationService
      * 场景=支付回调期 generateVerificationQrcode 失败被吞:钱已扣、码为空,微信不再重推回调。
      */
     public List<Long> listPaidMissingQrcodeIds();
+    public Long getPaidMissingQrcodeScanUpperBound();
+    public List<Long> listPaidMissingQrcodeIdsAfter(long afterId, long maxId, int limit);
 
     /**
      * P0-10 弃单关单:关闭单笔过期未支付订单(回补库存+退还预扣积分)

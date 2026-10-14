@@ -144,7 +144,9 @@ public class MerchantCommerceService implements IMerchantCommerceService {
         grant.setMaxUsage(order.getEntitlementMaxUsage());
         grant.setUsedCount(0);
         grant.setIsActive(1);
-        if (subscriptionMapper.grantMerchantSubscription(grant) != 1) {
+        // MySQL INSERT=1，ON DUPLICATE KEY UPDATE实际续订=2；两者都是真实成功。
+        int grantRows = subscriptionMapper.grantMerchantSubscription(grant);
+        if (grantRows != 1 && grantRows != 2) {
             throw new IllegalStateException("商业化权益授予失败");
         }
         return true;

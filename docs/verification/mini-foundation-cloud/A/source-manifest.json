@@ -1,0 +1,411 @@
+{
+  "base": "e67e72a",
+  "files": [
+    {
+      "path": "chengyinhub-admin/sql/migration_mini_foundation_coupon_source_grant_20261013.sql",
+      "sha256": "d36fb94fc10209763852d4dcacc63d6641818847286ed32e78195f1cceef73f3",
+      "bytes": 558
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+      "sha256": "a2cebd1da074aae613dfd05e58002bb3c5115f7f1e5fb34324559f4c23d4412b",
+      "bytes": 104490
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiVerifyController.java",
+      "sha256": "803cfdb77090f50b269c6f69b0c4c820ac905cf5eb17498d64a2a15b3a1f1488",
+      "bytes": 14665
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/FreeSelfPlayCreateRealDbIT.java",
+      "sha256": "2c74986c7eae152aba2e12ea4d61d09443576fb3b74751e94a050e2af65b138d",
+      "bytes": 18376
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/MerchantSubscriptionBoundaryMyBatisTest.java",
+      "sha256": "250e2ecd6499c53616eb4920b729330e747f78f57cf795591fb628c91ce7c4af",
+      "bytes": 2521
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawFailureRecoveryTransactionTest.java",
+      "sha256": "7126ee4feb11966a72f3115c4a5e357ae9d867c9501b4e93b91fba406c8d3262",
+      "bytes": 5964
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawFrozenRequeryH2Test.java",
+      "sha256": "5bcc9cdd2c786b2c6af6fa40b6cbc24b6f97037977590ca40600d4cc2e2a41af",
+      "bytes": 17025
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawStateMachineTest.java",
+      "sha256": "3b4095adbbee60eae38bcf032c18c78cc8ef3edcb56bf8363bed925f2b004c0a",
+      "bytes": 27702
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistClaimMembershipRaceTransactionTest.java",
+      "sha256": "178763b5c7ab9110fd46645a5f4a180c6f6a8eb9a63b9966da91e1fb6a79546a",
+      "bytes": 13017
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistMaintenanceCursorTest.java",
+      "sha256": "1a74d4523afa534a6354ff11d659138ca082bbcef36f4fbfbe7e8f30a5d7a37a",
+      "bytes": 2739
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistMaintenanceIsolationTransactionTest.java",
+      "sha256": "875e8a51a21a82dbe7f36de3f951fadfc5931e6970a366bcfb99e84ec8c480b4",
+      "bytes": 9727
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistServiceImplTest.java",
+      "sha256": "3fd62bb898ff89f4f90a571f22cbbf38bbbc622156606f3284e89a6244805229",
+      "bytes": 26144
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CouponSourceGrantTest.java",
+      "sha256": "5a503f9a897417ffa2bb8d82b1e70c42dd97157bfd765e860754dff2cd1dd753",
+      "bytes": 4537
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreNeverWholeOrderSettleTest.java",
+      "sha256": "83976fd9aaf1152ab928bc062aa0335d90841e616baa3a39943fec666815f7d5",
+      "bytes": 7325
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemRecordTest.java",
+      "sha256": "1e1d6b048e5bf0c8f41754aa4ba2117c630cb725a7e8c9f1963769163fb966d4",
+      "bytes": 19944
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantCommerceServiceTest.java",
+      "sha256": "50b1866cf314c4f6f7282d438aac4200de227bb054d92c5bc4543c1eaccd0f0f",
+      "bytes": 12704
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/OfficialV1CapacityMySqlTest.java",
+      "sha256": "0dcb97d7a064385f991ae739982032585f1c0d18a0e36d124005167e7c57cbbe",
+      "bytes": 5887
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PaymentCallbackFenceEntryTest.java",
+      "sha256": "ac420bd3f55647810c1f85027b20f5cf00c8cf25ef1ae9377f7e404440152b4c",
+      "bytes": 3427
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationCurrentUseGateTest.java",
+      "sha256": "d7db188e8cd3b59fd89ce69826b56e408f21187ca33624742e04e1ab6da52907",
+      "bytes": 4712
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+      "sha256": "e0f547f7d746817731b5ff10a38776f55bc40e717f8c54795a288cca68c558de",
+      "bytes": 153205
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationPaymentAtomicityContractTest.java",
+      "sha256": "bb9b42d424f950f34f01b22be191525782b69200929c75e892c42e129e42d2b2",
+      "bytes": 3294
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerificationAuditTransactionBoundaryTest.java",
+      "sha256": "6ca21c91ffbedf978c78992f208b506b2220ecf5c35fe8c6dc659f30c854198b",
+      "bytes": 7664
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java",
+      "sha256": "4c150a9f807a2727bffcb6577ccf1ddce22f9dc4e27aeaea15c4a5b22202ed3f",
+      "bytes": 23605
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/StoreVerifyGrowthDeliveryTransactionTest.java",
+      "sha256": "d1af4fb9be2c8eccfac703da26b388916b74611525d63e1e02f6f022257b7c71",
+      "bytes": 13290
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/VerificationQrcodeRepairTaskTest.java",
+      "sha256": "a92eb231bdc5d567d5f54fa28bd211f3e7bf8e7d6d5fa0b892b740f1f79cd957",
+      "bytes": 3565
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawServiceTest.java",
+      "sha256": "154b55528d40148ccdd5a5bfcb6a5b4c2dc7a6a5b9d1bd8d8f2dcd6fbe404b24",
+      "bytes": 18448
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ClubOperationBenefitTest.java",
+      "sha256": "72f4e4c71162ececc5ebac632ffea48045b594c167e26a5b9fc8a8d63d866ae6",
+      "bytes": 13656
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/MoneyPathContractTest.java",
+      "sha256": "1cedf5d55a38c9a25bbdd537850f7f9f21c491d649ac87e2e6c75e17c0fd4580",
+      "bytes": 11879
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialEventContractTest.java",
+      "sha256": "632356f7c24c367f570a56a6cc9e8250e66fafab20fb4171ead914d446db3471",
+      "bytes": 26468
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RegistrationSignupNotificationServiceTest.java",
+      "sha256": "58d23e9405c45b3877ebfccb1dd8798cb0ff76b2f4a9beb80fa431b5d9cb68ad",
+      "bytes": 6289
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RewardDropServiceTest.java",
+      "sha256": "7e0138448dac216523173063a9ffda884777ed6b8e5662155d27e0d7d34c073e",
+      "bytes": 11966
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SelfPlayPassIdempotencyTest.java",
+      "sha256": "561510b9a0b79fd6e30410df3827270871b0dc39d41faf47b8fe40bd6e783302",
+      "bytes": 10059
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SettlementServiceImplTest.java",
+      "sha256": "a9dfe6ffde94e12f9f91de963721ee91bd5313ea76feefb36a458086ea38a51c",
+      "bytes": 10809
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TicketSourceAttributionTrustBoundaryTest.java",
+      "sha256": "ff81eed18cafa4dad84e43602702b102164f79c34bccb4d8fef6eb1fd9be4297",
+      "bytes": 10557
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImplTest.java",
+      "sha256": "2d4807aa72f0604b51b65469defd80142c1d73d049a7641cb1b66d348427e615",
+      "bytes": 8789
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/ExploreTicketUsePolicyTest.java",
+      "sha256": "3ec03ebadf41797a2a9ba064fc4559b2602b37fa5a333d7e1a6dc39ad8831c5c",
+      "bytes": 1103
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/task/OrderCloseUnpaidCursorTest.java",
+      "sha256": "b7c4cbba03ac3fb446f74dedb7abc753d72e65ab35119af0c0c4aeca6e66b4e3",
+      "bytes": 3829
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/task/RefundReconcileTaskTest.java",
+      "sha256": "07074bbae113cc49a0b12198f5d0179c95ee1942a1b3f1cc84fe83cbf5831c58",
+      "bytes": 18214
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationCompletionCouponTest.java",
+      "sha256": "3b666c83ef7cd02b5375b0ff1a55e5c85cb7a98be3a9e7f70589bf5d39e8662a",
+      "bytes": 13909
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiVerifyControllerTest.java",
+      "sha256": "ad88431d154baa8aaf0f7892c3b6c7bab6fbbff45f904459765354229df862f4",
+      "bytes": 19758
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ExploreIssueCodeGateTest.java",
+      "sha256": "311ecbaf62bb2cf1131222148dde6384a4a6a68d1f7cac4cd23b24cbf609a36f",
+      "bytes": 7917
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ExploreScanDispatchTest.java",
+      "sha256": "0594e41682092957cd67b096c56aa51a031914c8c89334efb45e5bc68e99a4f6",
+      "bytes": 23886
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ScanContextSharedGateTest.java",
+      "sha256": "8da06b3e54384870664f91157474b22f8faee8334438611099a9832b1bf9e226",
+      "bytes": 12145
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CouponSourceGrant.java",
+      "sha256": "f781321d2951492f086b815ac2c15a71446e614c0905f2e031a5c16fbd49e67b",
+      "bytes": 583
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ClubEventOpsMapper.java",
+      "sha256": "bf6b5dfb0c684bc8d0450503790f556d5a07aac16f789d418f7e0ce4994c437c",
+      "bytes": 12395
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsRegistrationMapper.java",
+      "sha256": "6e7d52c084df7ec2ba044e2683765281a29c4750478be8ef6657d3be86c95e52",
+      "bytes": 17372
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CouponSourceGrantMapper.java",
+      "sha256": "f72e4433a9b8e4245012de32b34844fac26d83f2ec7f3503618a36eb0ef0c32d",
+      "bytes": 734
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/EventSignupMapper.java",
+      "sha256": "8875e846350566de4b2230ee33342e2cd9c876efb11a8f6ee62b4514525fb93a",
+      "bytes": 1834
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RefundApplicationMapper.java",
+      "sha256": "0760a628389e577902a551e7eac6f2956b9dc3bb353d9d7cac5e4081dea032c4",
+      "bytes": 5664
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RewardDropLogMapper.java",
+      "sha256": "5d3bc7dc562d87f67bacdef14914fe6e13afd700961cfb4277e65d534c22abbc",
+      "bytes": 927
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsRegistrationService.java",
+      "sha256": "cc4372a4fa68dde8ba772bab7da103e7ae34472d7b6692f038bcfa3cf65928d6",
+      "bytes": 25253
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IRewardDropService.java",
+      "sha256": "51596e4e9587a3790f57f0daca373d44b6679c42446a0312c06ac3cd3150ba46",
+      "bytes": 1501
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ISmsCouponHistoryService.java",
+      "sha256": "b3069bf59ab73aa401faca6390a29879b62adce0623313769fa1f997d80751c4",
+      "bytes": 5001
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ISystemNotificationIntentService.java",
+      "sha256": "efc7f6a956738131dd1eb1b70a424a6020822e790c68690f2fa3e30bba696d0c",
+      "bytes": 560
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawFailureRecoveryService.java",
+      "sha256": "084be58c5916bbb059e4f5876587adec678e3ce300f208d1c44a7bcce2a972f8",
+      "bytes": 3077
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java",
+      "sha256": "66ae0c111be1358bbfd2679382f9f411d90b39535664dd35105d25e302ea0a9a",
+      "bytes": 26658
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java",
+      "sha256": "695cfa9182709571366b5e288df8f96bfed08fdea5c4796f900ebbd865535eb3",
+      "bytes": 30324
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "sha256": "703c46bb9570eeea2dc4c829ed73269c8683b2ccd4de2873a35005b892ba7503",
+      "bytes": 165962
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java",
+      "sha256": "c329225d71237ef2c50dcad6c19b227ac978d4400d5a59f7e5886e61559f6625",
+      "bytes": 11647
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialEventServiceImpl.java",
+      "sha256": "8c26b751018f6b33ad38f179fec37f3170fa7e33b5fbd2830d5402cd96050fd7",
+      "bytes": 20051
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java",
+      "sha256": "9f389131d88a35e8e96cd586320b99f50d429913992ed30afe44794cd06217b5",
+      "bytes": 8387
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationSignupNotificationService.java",
+      "sha256": "5f947b080ec47c782f55664b3529112575b13deb7accb0007bfc25d2218a87a4",
+      "bytes": 2039
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RewardDropServiceImpl.java",
+      "sha256": "6860c1eeecd589d72ce1426320c9470382cc4d4beaa722ee8a450b420e98735a",
+      "bytes": 8171
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementServiceImpl.java",
+      "sha256": "9aab3bc832bdb5ee4a429624fe595f9b731d83730114a5cd761f8d77176d8313",
+      "bytes": 8038
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
+      "sha256": "3194f3b28f8f7039da122c8e2385b128eebe2f358f6a1e6bae3f4edb5b9e6524",
+      "bytes": 23119
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java",
+      "sha256": "2cdf0b719fdcf68cf2b6e899cd7c67f40a594990234a838e4e5ee13725227986",
+      "bytes": 91935
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java",
+      "sha256": "258d736f0bc92a4b3c73650fe4fc7419c585958974e5e2c6b8955f129d4428a3",
+      "bytes": 5545
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ExploreTicketUsePolicy.java",
+      "sha256": "58042d8096aea3b975c0323a0cce14c4b90f0a0382e57cff4fc17dd47b669e6f",
+      "bytes": 708
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java",
+      "sha256": "16f0ad37baa65791a2ee2e311a4ce990c52c9da3adf6d2b928dfa0d8e3c7e426",
+      "bytes": 13752
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java",
+      "sha256": "f006f47e5675003434386013b8854f6ab492add87f40b8ab165793506d1e4fb8",
+      "bytes": 8004
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/VerificationQrcodeRepairTask.java",
+      "sha256": "a1523d5f0d21b5bad5169b767f6ad72f2cc028073ac51633ce5a4479da029ff9",
+      "bytes": 2739
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml",
+      "sha256": "cb204cb506dda61f1511db6b0866c0feef058052fd6a55eb4c7dd14b8df637a3",
+      "bytes": 52460
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "sha256": "8b762ddbd5e08ef80ad9d3f9c4f0ec3565df6da602c8eaecfe7976593b872a7c",
+      "bytes": 62669
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CouponSourceGrantMapper.xml",
+      "sha256": "9c214e64d46315c07c75333dad270c236aedd2a10adf4ed199f8c0f13cdfaf76",
+      "bytes": 1302
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/EventSignupMapper.xml",
+      "sha256": "b9fe1c0ce8db5d25b3a02ffac99b035e791792a1589969a8dcf37b1a0ceab402",
+      "bytes": 3846
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/MerchantSubscriptionMapper.xml",
+      "sha256": "73a35ec7fe04c623553c460f399c13619737711707ca0e2ce6005457165ebb57",
+      "bytes": 3990
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/PlayTeamMapper.xml",
+      "sha256": "f98347820cb5ab9a57e7058f7e9ffc2baa8ece36c12c6128b3a4b284934616f3",
+      "bytes": 14702
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+      "sha256": "ad43f28ff0d7b3312be3db5f566f07124491252d910d7f76b1e26126122c6f61",
+      "bytes": 15996
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RewardDropLogMapper.xml",
+      "sha256": "3fff7b5f8946b06bc801ec9961cdbff1c3539b7a19df210e27d7c04d5152e9fb",
+      "bytes": 1730
+    },
+    {
+      "path": "chengyinhub-xcx/pages/activity/baoming/baoming.js",
+      "sha256": "886a6d857511d6cc6d1712d1e3849cf349951ed6290c6e152c9ba32ce4ecf32a",
+      "bytes": 82736
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/baoming-submit-inline-error.test.js",
+      "sha256": "008501af4aeff19ecb59d6543e83eea01e8d6292cab0f4c81995a3cfaf460261",
+      "bytes": 6676
+    }
+  ],
+  "note": "最终业务/测试源码摘要；报告不循环摘要。运行待验。"
+}

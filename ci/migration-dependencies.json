@@ -647,6 +647,12 @@
     ],
     "club_direct_merchant_receivable_20261004": [
       "perk_ledger_20260716"
-    ]
+    ],
+    "mini_foundation_coupon_source_grant_20261013": [],
+    "20261013_b_im_notification_intent": [],
+    "20261013_roam_badge_delivery": [],
+    "20261013_roam_reward_delivery": [],
+    "20261013_roam_session_record_archive": [],
+    "ai_quota_reservation_recovery_20261013": []
   }
 }

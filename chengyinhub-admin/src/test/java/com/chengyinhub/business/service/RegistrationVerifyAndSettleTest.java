@@ -103,6 +103,8 @@ class RegistrationVerifyAndSettleTest {
         r.setOwnerType(1L);
         r.setOwnerId(300L);
         r.setPaymentStatus(2);
+        r.setRegistrationStatus(2);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(r);
         return r;
     }
 
@@ -117,7 +119,7 @@ class RegistrationVerifyAndSettleTest {
         com.chengyinhub.business.domain.CmsActivity activity = new com.chengyinhub.business.domain.CmsActivity();
         activity.setCancelTime(new java.util.Date());
         when(activityMapper.selectCmsActivityByIdForUpdate(300L)).thenReturn(activity);
-        assertEquals("活动已取消，无法核销", assertThrows(IllegalStateException.class,
+        assertEquals("活动已取消，无法使用", assertThrows(IllegalStateException.class,
                 () -> service.verifyAndSettle(row, MERCHANT, PAYEE, 1)).getMessage());
         verify(regMapper, never()).verifyIfNotVerified(anyLong(), anyLong());
         verify(settlementSvc, never()).recordPaidRegistration(any(), any());

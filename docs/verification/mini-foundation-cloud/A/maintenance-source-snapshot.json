@@ -1,0 +1,73 @@
+{
+  "scope": "A maintenance authored source snapshot (not runtime validation)",
+  "verification": {
+    "git_diff_check": "passed",
+    "xml_well_formed": 4,
+    "java_compile": "not_run",
+    "junit": "not_run",
+    "mysql": "not_run",
+    "redis": "not_run"
+  },
+  "files": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java",
+      "sha256": "f006f47e5675003434386013b8854f6ab492add87f40b8ab165793506d1e4fb8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/VerificationQrcodeRepairTask.java",
+      "sha256": "a1523d5f0d21b5bad5169b767f6ad72f2cc028073ac51633ce5a4479da029ff9"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawFailureRecoveryService.java",
+      "sha256": "084be58c5916bbb059e4f5876587adec678e3ce300f208d1c44a7bcce2a972f8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java",
+      "sha256": "66ae0c111be1358bbfd2679382f9f411d90b39535664dd35105d25e302ea0a9a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationSignupNotificationService.java",
+      "sha256": "5f947b080ec47c782f55664b3529112575b13deb7accb0007bfc25d2218a87a4"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java",
+      "sha256": "9f389131d88a35e8e96cd586320b99f50d429913992ed30afe44794cd06217b5"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
+      "sha256": "3194f3b28f8f7039da122c8e2385b128eebe2f358f6a1e6bae3f4edb5b9e6524"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RewardDropServiceImpl.java",
+      "sha256": "6860c1eeecd589d72ce1426320c9470382cc4d4beaa722ee8a450b420e98735a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementServiceImpl.java",
+      "sha256": "9aab3bc832bdb5ee4a429624fe595f9b731d83730114a5cd761f8d77176d8313"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java",
+      "sha256": "c329225d71237ef2c50dcad6c19b227ac978d4400d5a59f7e5886e61559f6625"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CouponSourceGrantMapper.xml",
+      "sha256": "9c214e64d46315c07c75333dad270c236aedd2a10adf4ed199f8c0f13cdfaf76"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+      "sha256": "ad43f28ff0d7b3312be3db5f566f07124491252d910d7f76b1e26126122c6f61"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/MerchantSubscriptionMapper.xml",
+      "sha256": "73a35ec7fe04c623553c460f399c13619737711707ca0e2ce6005457165ebb57"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RewardDropLogMapper.xml",
+      "sha256": "3fff7b5f8946b06bc801ec9961cdbff1c3539b7a19df210e27d7c04d5152e9fb"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_mini_foundation_coupon_source_grant_20261013.sql",
+      "sha256": "d36fb94fc10209763852d4dcacc63d6641818847286ed32e78195f1cceef73f3"
+    }
+  ]
+}
