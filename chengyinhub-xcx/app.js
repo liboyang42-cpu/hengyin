@@ -104,8 +104,9 @@ App({
       // 同一对象,故现有「直接读 globalData.*」的代码无需改动即自动同步。
       // RBAC 角色仍作前端身份单一真源,user_type 双身份机制保持不变。
       this.getSession().restore();
-      // F-W1-01:旧开发版兜底留下的假 dev-token 会话在任何环境都不再恢复。
-      if (this.getAuthorization() === this.DEV_TOKEN) {
+      // F-W1-01:体验版/正式版不恢复假 dev-token 会话。开发版保留,供开发者工具预览脚本显式注入;
+      // 它换不来任何数据,首个 401 会走真实 wx.login 续期,失败即如实失败(假用户兜底已删除)。
+      if (!this.isDevEnv() && this.getAuthorization() === this.DEV_TOKEN) {
         this.getSession().clearSession();
       }
 
