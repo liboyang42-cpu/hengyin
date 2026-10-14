@@ -62,14 +62,10 @@
 
 ## 5. 剩余断点（不得宣称整项完成）
 
-1. **C 设计与旧断言冲突（未改断言，需 C/用户决定）**
-   - `ApiPlayProgressCompletionTruthTest` 7 条：6 条 `verifyNoInteractions/NoMoreInteractions(registrationMapper)`，C 的资格锁读每次都经同一 mapper；1 条期望扫码中途取消抛 `ServiceException`，现由更早的资格闸返回错误回包。写入均未发生，但断言形态不再成立。
-   - `JourneyFullFlowMySqlIT` 2 条（真库）：C 把 `requireCheckSession`（roll/settle）改为新使用锁读，settle 开头即 `FOR UPDATE` 锁 activity/registration。用例让后到事务停在「读到空动作」握手点等先到者，先到者被同一报名行锁挡住，5 秒握手超时。生产语义为串行化后重放原动作（更严格、不死锁），但用例要求的交错已不可能出现，摘唯一键负控也无法再变红。
-   - `CouponNotIssuableSkipContractTest` 2 条：断言漫游掉落直接调用 `grantCouponById`；C 已改为经 `RoamRewardDeliveryService` 原来源交付（停发跳过由 `RoamRewardDeliveryTest.disabledNewGrantSkips…` 覆盖）。
+1. **已按用户决定处理（2026-10-14）**：自玩通行证在本局内有效——已开局（高级玩法 `act`、已有局的 `completeGate`、有进行中路线局时的路线推进与节点打卡）通行证中途到期仍可打完；到期后不能新开局；退款/归属变化/非成功报名仍拒；活动场次与探索票仍按活动结束即止。原三组「C 设计与旧断言冲突」用例按此改写（意图不变，见提交 `e4f3fda` 说明）：CompletionTruth 改为「订单 mapper 只允许资格读」等；CouponNotIssuable 改走原来源交付；JourneyFullFlow 握手点移到首次一致性读，断言不变。注意：玩法进度控制器对「有进行中路线局」的放行比交接基线宽（基线每次打卡都要求未到期通行证），这是本次决定的直接结果。
 2. **Gitleaks 历史扫描**：B 提交 `d54cf2d` 的红日志含 6 个随机测试 `clientMessageId`（非密钥，后续提交已脱敏，HEAD 树无命中），但 CI 按 `origin/master..HEAD` 扫历史必红；需 B 改写自身历史或合入时 squash，集成者未强推、未加白名单。
 3. **`lint:ui`**：唯一剩余项 `im/list/index.js:352` 动态 setData 未登记，交接基线即如此（基线 CI 9/10 的失败门）；未擅自扩棘轮。
 4. **免费自玩真库证明缺失**：`FreeSelfPlayCreateRealDbIT` 的 schema 夹具早于 0930/1004 等迁移（交接基线 mapper 已读 `first_successful_scan_at`、`theme_runtime_config_json`），与 A 改动无关但未能运行；免费资格仅有单测证据（`CurrentPlayRegistrationTest` 11/11 含 payment=0、`ApiPlayCurrentUseBoundaryTest` 4/4、`ApiPlayRunSessionControllerTest` 4/4）。
-5. **待用户决定的范围问题**：C 在已有对局的 `act/completeGate` 也加了当前资格锁读，自玩通行证在局中途过期会阻止继续本局；探索票按已定规则合理，普通自玩是否属于「新使用」未有既定规则。集成未回退 C 设计。
-6. **既有间歇失败（交接基线已存在，未改）**：`action-ledger.test.js` 在小程序目录内建临时 `.action-ledger-history-*` 目录，与并行运行的 `skeleton-host-flex-contract.test.js` 全目录 WXML 扫描竞态，偶发 ENOENT（集成 CI 末轮出现一次）。
-7. **观察**：`ApiRoamController` 第 177 行对 Map 中 `foundAt` 的 `(Date)` 强转为交接基线既有代码，与第 2 节 #8 同类风险，未改。`RoamRewardDeliveryService` 对无意图旧掉落且券已停发时记 `SKIPPED_DISABLED`（不发券，仅标签与 UNKNOWN 不同）。
-8. **未验**：真实双方身份、微信支付/渠道回调与 UNKNOWN、AI provider、微信开发者工具与真机、生产 DDL、Quartz 启用、上传微信。测试 VPS 隧道期间多次中断，均重试后取得结果；VPS 内存紧张（约 600MB 可用），本人容器加硬上限，未影响他人容器。
+5. **既有间歇失败（交接基线已存在，未改）**：`action-ledger.test.js` 在小程序目录内建临时 `.action-ledger-history-*` 目录，与并行运行的 `skeleton-host-flex-contract.test.js` 全目录 WXML 扫描竞态，偶发 ENOENT（集成 CI 末轮出现一次）。
+6. **观察**：`ApiRoamController` 第 177 行对 Map 中 `foundAt` 的 `(Date)` 强转为交接基线既有代码，与第 2 节 #8 同类风险，未改。`RoamRewardDeliveryService` 对无意图旧掉落且券已停发时记 `SKIPPED_DISABLED`（不发券，仅标签与 UNKNOWN 不同）。
+7. **未验**：真实双方身份、微信支付/渠道回调与 UNKNOWN、AI provider、微信开发者工具与真机、生产 DDL、Quartz 启用、上传微信。测试 VPS 隧道期间多次中断，均重试后取得结果；VPS 内存紧张（约 600MB 可用），本人容器加硬上限，未影响他人容器。
