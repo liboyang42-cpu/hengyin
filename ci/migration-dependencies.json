@@ -749,6 +749,12 @@
       "20261012_app_media_asset",
       "20261012_app_media_asset_namespaces"
     ],
+    "20261013_admin_role_page_grants": [
+      "web_admin_roles_20260719",
+      "20261012_missing_business_menu",
+      "20261012_media_review_menu",
+      "role2_analytics_perm_20260918"
+    ],
     "20261013_monitor_remaining_jobs": [
       "club_session_reconciliation_job_20260807",
       "activity_designer_commission",
