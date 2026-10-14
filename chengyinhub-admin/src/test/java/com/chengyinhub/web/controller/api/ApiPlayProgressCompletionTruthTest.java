@@ -570,10 +570,12 @@ class ApiPlayProgressCompletionTruthTest
         CmsRegistration expired = scanTicket(REGISTRATION + 1);
         expired.setOwnerType(1L);
         expired.setOwnerId(TOPIC);
+        expired.setPurchaseKind(PurchaseKind.SELF_PLAY_PASS); // 自玩通行证真实品类(探索票属活动场次)
         expired.setExpiresAt(new Date(1000L));
         CmsRegistration active = scanTicket(REGISTRATION);
         active.setOwnerType(1L);
         active.setOwnerId(TOPIC);
+        active.setPurchaseKind(PurchaseKind.SELF_PLAY_PASS);
         active.setExpiresAt(new Date(System.currentTimeMillis() + 86400000L));
         when(registrationService.selectCmsRegistrationList(any()))
                 .thenReturn(java.util.Arrays.asList(expired, active));

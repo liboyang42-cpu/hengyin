@@ -1784,7 +1784,15 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             }
             if (currentRegistrations.isEmpty()) throw new IllegalStateException("自玩通行证已过期");
         } else currentRegistrations.addAll(rows);
-        if(newUse) { currentRegistrations.clear();currentRegistrations.addAll(current); }
+        if(newUse) {
+            currentRegistrations.clear();
+            // 继续本局时仍以当前未到期的原报名作候选授权；仅当全部已到期才沿用开局时的通行证把本局打完，
+            // 不让已到期通行证上的票种复活受限候选。
+            Date nowForFacts = new Date();
+            for (CmsRegistration row : current)
+                if (row.getExpiresAt() == null || row.getExpiresAt().after(nowForFacts)) currentRegistrations.add(row);
+            if (currentRegistrations.isEmpty()) currentRegistrations.addAll(current);
+        }
         boolean hasPublishedRoute = topic.getPublishedConfigVersion() != null
                 && topic.getPublishedConfigVersion() > 0L;
         if (!hasPublishedRoute
