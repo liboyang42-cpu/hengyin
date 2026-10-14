@@ -369,8 +369,10 @@ public class ApiTemplateController extends BaseController {
         }
         // R12:节点块配置叙事段(enter/outcome/deliver/unlock/revisit/brief/route/check)是创作者可写
         // 文本,与上面各字段同一道内容安全闸;命中时提示里带字段名。
-        return JourneyReviewTexts.check(wxContentSecurityService, openid,
-                JourneyReviewTexts.collectBlocks(request.getAdvancedConfigJson()));
+        // F-L5C-13:提示、揭晓、故事、拍照要求与奖励文案同样是玩家可见文字,按字段分批送检。
+        java.util.List<JourneyReviewTexts.Entry> texts = JourneyReviewTexts.collectTemplateFields(request);
+        texts.addAll(JourneyReviewTexts.collectBlocks(request.getAdvancedConfigJson()));
+        return JourneyReviewTexts.check(wxContentSecurityService, openid, texts);
     }
 
     /** 模板封面与勋章图异步送检(X02):违规经 /api/content-sec/callback 自动下架。 */

@@ -410,6 +410,46 @@ class JourneyReviewTextsTest {
         assertTrue(JourneyReviewTexts.collectBlocks("{\"qa\":null,\"album\":{\"images\":[null,1]}}").isEmpty());
     }
 
+    /** F-L5C-13:字符串数组(候选名/骰面/每日一句)、动作文案与线索名表同样是玩家可见文字。 */
+    @Test
+    void stringArraysActionsAndClueNamesAreCollected() {
+        String config = "{\"diyName\":{\"suggestions\":[\"候选甲\",\"候选乙\"]},"
+                + "\"dailySign\":{\"poems\":[[\"第一句\",\"第二句\"]]},"
+                + "\"diceRoll\":{\"faces\":[\"骰面一\",{\"action\":\"骰面动作\"}]},"
+                + "\"coinFlip\":{\"heads\":{\"action\":\"正面动作\"}},"
+                + "\"clues\":{\"clue.h_1\":\"线索名\"}}";
+        List<String> got = texts(JourneyReviewTexts.collectBlocks(config));
+        for (String expected : new String[]{"候选甲", "候选乙", "第一句", "第二句", "骰面一", "骰面动作", "正面动作", "线索名"}) {
+            assertTrue(got.contains(expected), expected + " 漏收:" + got);
+        }
+        assertFalse(got.contains("clue.h_1"), "线索 id 不是展示文字");
+    }
+
+    /** F-L5C-03:主题动作名、念头规则、宾果格子、模板散字段都进入送检清单。 */
+    @Test
+    void topicRulesBingoAndTemplateLooseFieldsAreCollected() {
+        assertEquals(Collections.singletonList("出拳"),
+                texts(JourneyReviewTexts.collectThemeRuntime("{\"actionName\":\"出拳\"}")));
+        assertEquals(Arrays.asList("念头名", "一句话"), texts(JourneyReviewTexts.collectJourneyRules(
+                "{\"thoughts\":[{\"key\":\"t1\",\"name\":\"念头名\",\"desc\":\"一句话\"}]}")));
+        assertEquals(Arrays.asList("九宫格", "连线奖", "格子名", "格子奖"), texts(JourneyReviewTexts.collectCompletionRule(
+                "{\"bingo\":{\"enabled\":true,\"title\":\"九宫格\",\"lineReward\":\"连线奖\","
+                        + "\"cells\":[{\"label\":\"格子名\",\"feedbackText\":\"格子奖\"}]}}")));
+
+        com.chengyinhub.business.domain.CmsMemberTemplate t = new com.chengyinhub.business.domain.CmsMemberTemplate();
+        t.setQuestionA("选项甲");
+        t.setHint1("提示一");
+        t.setAnswerReveal("揭晓");
+        t.setStoryJson("[{\"title\":\"分节标题\",\"text\":\"分节正文\"}]");
+        t.setRewardRulesJson("[{\"outcomeCode\":\"win\",\"feedbackText\":\"奖励文案\"}]");
+        t.setMedalName("勋章名");
+        List<String> got = texts(JourneyReviewTexts.collectTemplateFields(t));
+        for (String expected : new String[]{"选项甲", "提示一", "揭晓", "分节标题", "分节正文", "奖励文案", "勋章名"}) {
+            assertTrue(got.contains(expected), expected + " 漏收:" + got);
+        }
+        assertFalse(got.contains("win"), "结果码不是展示文字");
+    }
+
     private static List<String> texts(List<JourneyReviewTexts.Entry> entries) {
         List<String> texts = new ArrayList<String>();
         for (JourneyReviewTexts.Entry entry : entries) {
