@@ -8,22 +8,19 @@
 //   - session:     session-store 实例(setAuthorization/setUserID/.../getAuthorization/getUserID)
 //   - wxLogin():   Promise<{code}>,promisified wx.login(失败 reject)
 //   - exchangeCode(code): Promise<body>,POST /api/login/code,resolve 为响应 body({data,token,msg});网络失败 reject
-//   - isDevEnv():  bool
-//   - useDevUser():void,写入 dev mock 会话
 //
-// 返回结果结构:{ ok, authed, cached?, dev?, reason?, msg?, isCurrentSession? }
+// 返回结果结构:{ ok, authed, cached?, reason?, msg?, isCurrentSession? }
 //   - isCurrentSession:成功落地的会话是否仍有效，仅供延迟回调核验。
-//   - ok=false 表示登录未成功;authed 表示是否拿到真实(或 dev)会话。
-//   - 正式版失败返回显式失败,绝不写会话、绝不伪装已认证(配合 app.js 的假 ready 修复)。
+//   - ok=false 表示登录未成功;authed 表示是否拿到真实会话。
+//   - 任何环境(含开发版)失败都返回显式失败,绝不写会话、绝不伪装已认证(配合 app.js 的假 ready 修复)。
+//     F-W1-01:开发版曾在失败时写入假用户 id=1 / dev-token(useDevUser),401 静默重登失败后会话被
+//     整体换成假身份;项目规则禁止假用户降级,该兜底已删除,开发版与体验版/正式版走同一失败路径。
 
 function createSessionManager(deps) {
   deps = deps || {};
   var session = deps.session;
   var wxLogin = deps.wxLogin;
   var exchangeCode = deps.exchangeCode;
-  var isDevEnv = deps.isDevEnv || function () { return false; };
-  var useDevUser = deps.useDevUser || function () {};
-  var devToken = deps.devToken || '';
   var loginTimeoutMs = Number(deps.loginTimeoutMs) > 0 ? Number(deps.loginTimeoutMs) : 15000;
 
   if (!session || !wxLogin || !exchangeCode) {
@@ -92,23 +89,6 @@ function createSessionManager(deps) {
     session.setUserRole(d.role);
   }
 
-  // dev 兜底只给一次。若当前用的已经是 dev token 还被后端判 401(⇒ 走到 refresh 又失败),
-  // 说明这张假 token 换不来任何数据,再兜下去只会让**每个**请求都白跑一轮
-  // 401 → 重登 → 谎报 ok → 拿同一张假 token 重试 → 再 401。
-  // 2026-08-10 生产日志实测:近期 122 次认证失败 tokenPrefix 全是 dev-token。
-  // 如实返回失败后,request-client 直接走 fail 分支,不再二次往返。
-  function devFallback() {
-    if (devToken && session.getAuthorization() === devToken) {
-      return { ok: false, authed: false, reason: 'devTokenRejected' };
-    }
-    // 真账号续期失败必须保留身份，不能以测试身份替换玩家/商家/主理人。
-    if (session.getUserID() && session.getAuthorization()) {
-      return { ok: false, authed: false, reason: 'realSessionRefreshFailed' };
-    }
-    useDevUser();
-    return loginSucceeded({ ok: true, authed: true, dev: true });
-  }
-
   function loginSucceeded(result) {
     var owner = String(session.getUserID() || '');
     var authorization = session.getAuthorization();
@@ -149,13 +129,11 @@ function createSessionManager(deps) {
                 return { ok: false, authed: false, reason: 'invalidPayload' };
               }
               // 换 token 成功但无业务数据
-              if (isDevEnv()) return devFallback();
               return { ok: false, authed: false, reason: 'noData', msg: body && body.msg };
             },
             function () {
               if (!isCurrent()) return sessionChanged();
               // /api/login/code 网络失败
-              if (isDevEnv()) return devFallback();
               return { ok: false, authed: false, reason: 'networkFail' };
             }
           );
@@ -163,7 +141,6 @@ function createSessionManager(deps) {
         function () {
           if (!isCurrent()) return sessionChanged();
           // wx.login 本身失败
-          if (isDevEnv()) return devFallback();
           return { ok: false, authed: false, reason: 'wxLoginFail' };
         }
       );
