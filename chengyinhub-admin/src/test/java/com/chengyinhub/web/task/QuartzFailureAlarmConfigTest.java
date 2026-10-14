@@ -40,4 +40,14 @@ class QuartzFailureAlarmConfigTest {
         assertEquals(80, key.length());
         assertTrue(QuartzFailureAlarmConfig.eventKey(null).matches("[a-z][a-z0-9_.-]{0,79}"));
     }
+
+    @Test
+    void reflectionWrappedJobFailureReportsTheRealExceptionType() {
+        Throwable wrapped = new org.quartz.JobExecutionException(
+                new java.lang.reflect.InvocationTargetException(new IllegalStateException("private detail")));
+        org.junit.jupiter.api.Assertions.assertEquals(IllegalStateException.class,
+                QuartzFailureAlarmConfig.rootCause(wrapped).getClass());
+        Throwable plain = new org.quartz.JobExecutionException("no cause");
+        org.junit.jupiter.api.Assertions.assertSame(plain, QuartzFailureAlarmConfig.rootCause(plain));
+    }
 }

@@ -30,7 +30,7 @@ public class QuartzFailureAlarmConfig {
                     // 按任务限频：每分钟一跑的任务持续失败时，10 分钟内同一任务只尝试投递一次，
                     // 避免把告警通道刷成噪音；不同任务互不抑制。
                     try {
-                        Throwable cause = failure.getCause() != null ? failure.getCause() : failure;
+                        Throwable cause = rootCause(failure);
                         alarmService.alarmThrottled(eventKey(context.getJobDetail().getKey()), "定时任务失败",
                                 "job=" + context.getJobDetail().getKey()
                                 + ", errorType=" + cause.getClass().getSimpleName());
@@ -41,6 +41,21 @@ public class QuartzFailureAlarmConfig {
                 }
             }
         };
+    }
+
+    /**
+     * 任务经 JobInvokeUtil 反射调用,失败会被包成 JobExecutionException → InvocationTargetException → 真实异常;
+     * 只取 getCause() 永远得到 InvocationTargetException。逐层解包到最深一层(带环保护)。
+     */
+    static Throwable rootCause(Throwable failure) {
+        Throwable current = failure;
+        for (int depth = 0; current != null && depth < 16; depth++) {
+            Throwable next = current instanceof java.lang.reflect.InvocationTargetException
+                    ? ((java.lang.reflect.InvocationTargetException) current).getTargetException() : current.getCause();
+            if (next == null || next == current) break;
+            current = next;
+        }
+        return current == null ? failure : current;
     }
 
     /** AlarmService 的事件键只接受 [a-z0-9_.-]，任务键（含大写/中文分组）按此归一，超长截断。 */
