@@ -258,7 +258,13 @@ App({
         that.getSession().clearSession();
         r = Object.assign({}, r, { sessionCleared: true });
       }
-      if (ok) that.loadFeatureFlags();
+      if (ok) {
+        that.loadFeatureFlags();
+        // F-L5C-10:静默续期成功同样补传待记录的明确同意,不只等下一次冷启动 firstLogin。
+        that.getUsageConsent().syncPending().catch(function () {
+          console.warn('Usage consent remains pending; retry after login');
+        });
+      }
       typeof callback == 'function' && callback(ok, r);
       return r;
     });

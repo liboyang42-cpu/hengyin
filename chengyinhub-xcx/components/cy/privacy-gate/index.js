@@ -40,8 +40,15 @@ Component({
           this.triggerEvent('settled', { event: 'agree' });
         })
         .catch(() => {
-          toast('同意记录失败，请检查网络后重试');
           this.setData({ submitting: false });
+          // F-L5C-10:微信授权已结算、本机已记下明确同意时,留痕失败只是「待补传」(登录成功后自动补),
+          // 不把用户卡在不可关闭的弹窗里;本机选择也没留下(如条款已升版)才停在弹窗重试。
+          if (app.getUsageConsent && app.getUsageConsent().granted()) {
+            toast('已同意，联网后会自动补记同意记录');
+            this.triggerEvent('settled', { event: 'agree', recordPending: true });
+            return;
+          }
+          toast('同意记录失败，请检查网络后重试');
         });
     },
 

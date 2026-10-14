@@ -36,7 +36,23 @@ Page({
    */
   onLoad(options) {
     this.syncViewTheme();
+    this.syncCommunityTab();
     this.loadLikeData();
+  },
+
+  // F-L5C-06:社区读闸关(含开关拉取失败)时收藏页只留「主题」,不请求也不展示社区帖文;
+  // 开关稍后确认开放再把「帖文」页签补回来,不抢用户当前所在页签。
+  syncCommunityTab() {
+    const readable = () => typeof app.canUseCommunity === 'function' && app.canUseCommunity(false);
+    if (readable()) return;
+    this.setData({ favoriteTabs: [{ key: 'topics', label: '主题' }], activeFavoriteTab: 'topics' });
+    const owner = String(app.getUserID ? app.getUserID() || '' : '');
+    const pending = typeof app.loadFeatureFlags === 'function' ? app.loadFeatureFlags() : null;
+    if (!pending || typeof pending.then !== 'function') return;
+    pending.then(() => {
+      if (owner !== String(app.getUserID ? app.getUserID() || '' : '') || !readable()) return;
+      this.setData({ favoriteTabs: [{ key: 'posts', label: '帖文' }, { key: 'topics', label: '主题' }] });
+    });
   },
 
   /**

@@ -272,6 +272,14 @@ Page({
         fail() { wx.switchTab({ url: '/pages/index/index' }); },
       });
     }).catch(() => {
+      // F-L5C-10:同 cy-privacy-gate —— 本机已记下明确同意时,留痕待登录后自动补传,不把用户卡在本页。
+      if (app.getUsageConsent && app.getUsageConsent().granted()) {
+        toast('已同意，联网后会自动补记同意记录');
+        wx.navigateBack({
+          fail() { wx.switchTab({ url: '/pages/index/index' }); },
+        });
+        return;
+      }
       Object.assign(this.data, { failedAction: 'agree' });
       this.setData({
         submitting: false,
