@@ -350,6 +350,25 @@ class WechatPayCallbackForgedSignatureTest {
     }
 
     @Test
+    void registrationCallbackWithMissingPayloadOrFieldsAlertsInsteadOfFailingSilently() {
+        CmsRegistrationServiceImpl registration = new CmsRegistrationServiceImpl();
+        com.chengyinhub.business.mapper.CmsRegistrationMapper mapper = mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class);
+        AlarmService alarm = mock(AlarmService.class);
+        ReflectionTestUtils.setField(registration, "cmsRegistrationMapper", mapper);
+        ReflectionTestUtils.setField(registration, "alarmService", alarm);
+        assertTrue("FAIL".equals(registration.handleWechatPayCallback(null)));
+        java.util.Map<String, String> partial = new java.util.HashMap<>();
+        partial.put("out_trade_no", "REG_PARTIAL");
+        assertTrue("FAIL".equals(registration.handleWechatPayCallback(partial)));
+        verify(alarm).alarmThrottled(org.mockito.ArgumentMatchers.eq("payment.callback.registration"),
+                org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.contains("reason=payload_missing"));
+        verify(alarm).alarmThrottled(org.mockito.ArgumentMatchers.eq("payment.callback.registration"),
+                org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.contains("order=REG_PARTIAL reason=required_field_missing"));
+        verifyNoInteractions(mapper);
+    }
+
+    @Test
     void verifiedRegistrationAmountMismatchAlertsOnceAndKeepsFailWithoutPaymentEffects() throws Exception {
         RegistrationFailureFixture fixture = new RegistrationFailureFixture("REG_AMOUNT");
         assertTrue(fixture.callback("SUCCESS", 99).contains("FAIL"));

@@ -177,8 +177,9 @@ class FreeUgcActivityRegistrationGateTest {
     @Test
     void commercialTopic_notSelling_stillBlocked() {
         givenTopic(0, 1, CommercialTopicPolicy.Evaluation.commercial("paidTicket", 1L));
-        assertTrue(register().getMessage().contains("SELLING"));
-        assertTrue(quoteRejected().getMessage().contains("SELLING"), "报价不能对未开售商业主题报成功");
+        // F-W1-05:未开售对玩家说「尚未开售」，不能落成内部状态码或被前端误报为支付故障。
+        assertTrue(register().getMessage().contains("尚未开售"));
+        assertTrue(quoteRejected().getMessage().contains("尚未开售"), "报价不能对未开售商业主题报成功");
     }
 
     /** 负控:主题票免费但活动票被改成收费 —— 活动票不在 CommercialTopicPolicy 口径内,必须回到合同二闸。 */
@@ -187,7 +188,7 @@ class FreeUgcActivityRegistrationGateTest {
         givenTopic(0, 1, CommercialTopicPolicy.Evaluation.ugc());
         when(ticketMapper.selectOmsTicketList(any(OmsTicket.class)))
                 .thenReturn(Arrays.asList(ticket, ticket(11L, new BigDecimal("10"))));
-        assertTrue(register().getMessage().contains("SELLING"));
+        assertTrue(register().getMessage().contains("尚未开售"));
     }
 
     @Test
@@ -207,7 +208,7 @@ class FreeUgcActivityRegistrationGateTest {
     @Test
     void pendingReviewTopic_isNotFreeRegistrationState() {
         givenTopic(7, 1, CommercialTopicPolicy.Evaluation.ugc());
-        assertTrue(register().getMessage().contains("SELLING"));
+        assertTrue(register().getMessage().contains("尚未开售"));
     }
 
     /**

@@ -93,7 +93,7 @@ def all_required_clean(directory):
         ("PlayerRunSessionOrderingMybatisIntegrationTest", 6),
         ("RoamShareSnapshotConcurrencyMySqlIT", 3),
         ("ClubEventTransferCancellationMySqlIT", 3),
-        ("RefundRetryAndRemainderMySqlIT", 4),
+        ("RefundRetryAndRemainderMySqlIT", 5),
         ("SignupNoticeAfterCommitPersistenceMySqlIT", 5),
         ("TopicLikeDesiredStateMySqlIT", 3),
         ("MonitorMissingJobsMySqlIT", 3),

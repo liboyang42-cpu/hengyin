@@ -3,7 +3,9 @@
 AppName=chengyinhub-admin.jar
 
 # JVM参数
-JVM_OPTS="-Dname=$AppName  -Duser.timezone=Asia/Shanghai -Xms512m -Xmx1024m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDateStamps  -XX:+PrintGCDetails -XX:NewRatio=1 -XX:SurvivorRatio=30 -XX:+UseParallelGC -XX:+UseParallelOldGC"
+# Java 21:PrintGCDateStamps/PrintGCDetails/UseParallelOldGC 已移除,带上会让 JVM 直接拒绝启动(F-L4-07);
+# 需要 GC 日志时用 Java 9+ 统一日志 -Xlog(目录须先存在)。时区必须固定 Asia/Shanghai(Quartz cron/周榜/LocalDate.now 依赖 JVM 默认时区)。
+JVM_OPTS="-Dname=$AppName  -Duser.timezone=Asia/Shanghai -Xms512m -Xmx1024m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:NewRatio=1 -XX:SurvivorRatio=30 -XX:+UseParallelGC"
 APP_HOME=`pwd`
 LOG_PATH=$APP_HOME/logs/$AppName.log
 

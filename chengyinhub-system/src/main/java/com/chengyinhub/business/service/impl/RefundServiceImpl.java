@@ -698,6 +698,37 @@ public class RefundServiceImpl implements IRefundService {
         return registrationRefundHistory(registrationId);
     }
 
+    /**
+     * F-L4-02：待审核申请占着同一报名，系统发起的全额退款会被「已有退款申请待审核」拒绝，
+     * 取消活动的整段事务随之回滚。待审核单尚未审批、未派发打款，由全额退款取代后按 CAS 置驳回，
+     * 已审批/已打款的单一概不动。
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int supersedePendingRegistrationRefunds(Long registrationId, String reason) {
+        if (registrationId == null) {
+            return 0;
+        }
+        String note = "已由全额退款取代" + (StringUtils.isEmpty(reason) ? "" : ":" + reason);
+        if (note.length() > 200) {
+            note = note.substring(0, 200);
+        }
+        int superseded = 0;
+        Date now = DateUtils.getNowDate();
+        for (RefundApplication prior : registrationRefundHistory(registrationId)) {
+            if (prior.getId() == null || !Integer.valueOf(0).equals(prior.getStatus())) {
+                continue;
+            }
+            if (refundApplicationMapper.updateRefundStatusIfPending(prior.getId(), 2, SYSTEM_OPERATOR, now, note) != 1) {
+                throw new IllegalStateException("待审核退款申请状态已变化，请刷新后重试");
+            }
+            logger.warn("[退款取代] 待审核退款申请由系统全额退款取代 refundId={} registrationId={}",
+                    prior.getId(), registrationId);
+            superseded++;
+        }
+        return superseded;
+    }
+
     private List<RefundApplication> registrationRefundHistory(Long registrationId) {
         List<RefundApplication> history = refundApplicationMapper.selectRegistrationHistoryForUpdate(registrationId);
         return history == null ? java.util.Collections.emptyList() : history;

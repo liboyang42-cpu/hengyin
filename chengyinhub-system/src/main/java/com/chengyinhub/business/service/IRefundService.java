@@ -10,6 +10,12 @@ public interface IRefundService {
 
     List<RefundApplication> selectRegistrationHistoryForUpdate(Long registrationId);
 
+    /**
+     * 系统全额退款（主办方取消/玩家取消）取代该报名尚待审核的退款申请：仅 status=0 的行按 CAS 置为驳回并留痕，
+     * 未打款、不改金额。返回被取代的申请数。
+     */
+    int supersedePendingRegistrationRefunds(Long registrationId, String reason);
+
     int saveRefund(RefundApplication refund);
 
     /** 后台运营建单(RefundController.add):多票订单首单只能退同单还没退、也没核销的部分(FX-04)。 */
