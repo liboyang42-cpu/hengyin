@@ -1,6 +1,7 @@
 // 2026-10-13 小程序底层A/B/C集成:B(square/list、analytics)与C(roam)行号漂移,16条既有锚点按交接基线→集成树 difflib 映射
 //   且锚点前后各3行逐字相同等量换key;analytics.js:201→223 为B包把同一 /api/analytics/events/batch 调用包进 try(理由仍准确)人工核对。
 //   u4Dynamic 59 / u5Silent 28 条数与理由不变,两 digest 按门禁同一算法重算。im/list:352 为交接基线既有未登记项,未擅自扩棘轮。
+//   随后 analytics.js 自动幂等键加进程内序号(+3 行),同一埋点调用 223→226,前后 3 行逐字一致,u5Silent digest 重算。
 // 2026-10-05：18处既有U4/U5锚点与76a40c98f0前后各7行完全一致，仅迁移行号；理由、数量和冻结上限不变。
 // 2026-10-03：24个旧调用登记重定位；23处与ba87c0b1a0上下7行逐字一致，1处只增加已消费的feedAuthError:false。数量和冻结上限不变。
 // 2026-09-30 最终整合：88条既有调用按前后7行唯一相同定位，理由保留；合入3fab仍在源码中的8条性能登记。
@@ -958,7 +959,7 @@ module.exports = {
       // 2026-09-21 端到端收口合入上传重试与账号隔离，既有调用仅位移，理由与数量不变。
       // 2026-09-25 CU-M-183/185/186 同批:merchantinfo.js 那条 info-to-user silentError 调用点 2530→2532,
       //   逐条回读仍是「只为读章节 recruitEnabled、失败不弹全局 toast」这一处,静默理由一字未改,条数 27 不变。
-"294e39b0fc8b719a2e73e91271a2fe5ea26a84a459776ce9766c64fb407529ed"
+"97d401829b0374c33116ef0f915de4184b062f66aba55c6358598f429b140cb8"
 
     }
   },
@@ -1340,7 +1341,7 @@ module.exports = {
     "chengyinhub-xcx/subpackageMember/signup/index.js:212": "/api/team/my 只用来给票下面那一行「我的队伍 ›」找落点:拉不到就整行不出,票夹本身照常可用。弹全局 toast 会让人以为票没加载出来;owner=小程序,复核=2026-09-30",
     "chengyinhub-xcx/components/cy/scene-member-invite-history/index.js:62": "邀请历史使用本地 request wrapper 将网络/异常状态归一成空响应，列表据此展示无记录而不弹全局错误；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/subpackageP3/pages/growthcenter/index/index.js:35": "成长概览三路读取在 Promise.all 汇总后统一把 badgeLoadError 接到页内重试态，单路 fail 只返回空响应且不得自动冒充可见处理；owner=小程序，复核=2026-09-15",
-    "chengyinhub-xcx/utils/analytics.js:223": "埋点投递是纯副作用且不应打扰玩家，fail 只回报 onDone(false)；必须显式登记，禁止因非空回调自动安全；owner=小程序，复核=2026-09-15",
+    "chengyinhub-xcx/utils/analytics.js:226": "埋点投递是纯副作用且不应打扰玩家，fail 只回报 onDone(false)；必须显式登记，禁止因非空回调自动安全；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/utils/ui-state-request.js:10": "共用请求封装,静默由调用方接管:各页在 fail 分支写页内错误态与重试,禁止 request-client 再弹一次；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/roam/index.js:747": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/roam/index.js:1462": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",

@@ -3,6 +3,8 @@ const { isValidMobile } = require('./form-state.js');
 const STORAGE_KEY = 'p3_analytics_queue_v1';
 const MAX_QUEUE = 100;
 const MAX_BATCH = 50;
+// 自动幂等键的进程内序号：同一毫秒的不同事件不能因随机后缀碰撞被同键去重误吞。
+let generatedKeySeq = 0;
 const SENSITIVE_PROPERTY_KEY = /(phone|mobile|bank|card|identity|idcard|realname|name|email|address|location|latitude|longitude|openid|unionid|session|token|keyword|content|comment|message|reply|input|output|text|title|description)/i;
 const EMAIL_VALUE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const LONG_DIGITS_VALUE = /^\d{15,19}$/;
@@ -200,7 +202,8 @@ function normalizePayload(eventName, payload) {
     bizId: data.bizId || null,
     cityCode: data.cityCode || '',
     propertiesJson: sanitizePropertiesJson(data),
-    idempotencyKey: data.idempotencyKey || data.eventKey || eventName + '_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+    idempotencyKey: data.idempotencyKey || data.eventKey
+      || eventName + '_' + Date.now() + '_' + (++generatedKeySeq) + '_' + Math.floor(Math.random() * 10000),
     occurredAt: new Date().toISOString()
   };
 }
