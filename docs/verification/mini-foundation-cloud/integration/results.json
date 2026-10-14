@@ -227,5 +227,63 @@
       "before": "6/40 local failures",
       "after": "0/60"
     }
+  },
+  "passRuleDecision": {
+    "date": "2026-10-14",
+    "rule": "self-play pass valid within the game: a started session can be finished after the pass expires; no new session after expiry; refund/ownership change still blocks; activity tickets and explore tickets still stop at activity end; expired passes do not authorize restricted route candidates",
+    "commits": [
+      "4f2f61d",
+      "e4f3fda",
+      "ef489d8",
+      "c1fdd20"
+    ]
+  },
+  "finalGreenHead": {
+    "commit": "c1fdd2006851a0c32cd844692a9ce9af80391874",
+    "ciRun": 38590689384,
+    "backend": {
+      "mvnCleanTest": {
+        "testsRun": 10018,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 523
+      },
+      "namedMyBatisIts": {
+        "testsRun": 96,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "atomicMigrationIt": {
+        "executed": 41,
+        "skipped": 0
+      },
+      "conclusion": "success"
+    },
+    "miniProgramUnit": {
+      "tests": 8254,
+      "pass": 8252,
+      "fail": 0,
+      "skipped": 2
+    },
+    "lintUi": {
+      "violations": 1,
+      "item": "subpackageB/pages/im/list/index.js:352",
+      "preexistingAtHandoffBase": true
+    },
+    "fundsMysqlIt": {
+      "run": 38588837097,
+      "commit": "ebb6c32",
+      "testsRun": 562,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "note": "only JourneyFullFlowMySqlIT (named IT, covered by ci.yml) changed afterwards"
+    },
+    "gitleaks": {
+      "historyHits": 6,
+      "commit": "d54cf2d",
+      "pendingDecision": "B history rewrite or squash merge"
+    }
   }
 }

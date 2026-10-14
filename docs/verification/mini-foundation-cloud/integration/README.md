@@ -47,6 +47,14 @@
   - 独立连接回读：包内新 IT 的 scratch 库均在 CREATE 成功后自删；CI 既有 `MybatisItDatabase` 只在首用时重建、不在结束时删除，留下 24 个带本任务后缀 `_mfabcm4/_mfabcm5` 的库（无一不带后缀），随本任务容器整体删除清理；Redis 所有库 0 键。
 - 迁移安全门、迁移布局门、SBOM、Admin UI、Fast gates（含 silentError）：CI 通过。
 
+## 3b. 最终绿头（`c1fdd20`，CI run 38590689384）
+
+- 后端 `mvn clean test`：**10018 / 0 失败 / 0 错误**（523 skip 为既有门控用例）；CI 点名 MyBatis 真库 IT 首次在 CI 内全跑：**96 / 0 / 0 / skip 0**；原子迁移 IT 实际执行 41 条、skip 0。**Backend tests 作业通过。**
+- 资金真库 IT：562 / 0 / 0（`ebb6c32`，其后仅改动 ci.yml 已覆盖的点名 IT）。
+- 小程序单测 8254 / 8252 / 0 失败；`lint:ui` 仅剩交接基线既有 `im/list:352`。
+- 仍红：gitleaks 历史（B `d54cf2d`，待 B 改写历史或 squash 合入）、`lint:ui` 基线项。
+- 断言变更（通行证决定后，经用户同意改写冲突用例）：CompletionTruth 6 处「零交互」→「只允许资格读」、CAS 回读 1→2、取消改断言错误回包且不写；CouponNotIssuable 2 条改到原来源交付；JourneyFullFlow 并发用例握手点前移（断言不变），摘唯一键负控按其注释「防线换人」改为证明锁序化后仍幂等重放（方法改名）。
+
 ## 4. 需要复核的集成者改动（断言审计）
 
 `git diff b39cd30..HEAD` 中被删除的含 `assert/verify` 的测试行共 4 处：
