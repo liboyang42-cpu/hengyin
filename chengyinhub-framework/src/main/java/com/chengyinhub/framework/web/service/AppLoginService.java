@@ -69,9 +69,11 @@ public class AppLoginService {
             throw passwordFailure(username);
         }
         username = username.trim();
-        if (username.isEmpty()) throw passwordFailure(username);
-        Number failed = redisCache.getCacheObject("app_password_fail_" + username);
-        if (failed != null && failed.longValue() >= 5) {
+        if (username.isEmpty() || username.length() > 128) throw passwordFailure(username);
+        // 先原子占用一次尝试再校验口令（成功后清零），并发请求不能同时越过“读计数→比对”的窗口。
+        Long attempts = redisCache.incrementWithinWindow(
+                "app_password_fail_" + username, 10, java.util.concurrent.TimeUnit.MINUTES);
+        if (attempts == null || attempts > 5) {
             throw new ServiceException("密码错误次数过多，请10分钟后重试");
         }
         UmsMember umsMember = new UmsMember();
@@ -159,10 +161,7 @@ public class AppLoginService {
     }
 
     private ServiceException passwordFailure(String username) {
-        if (username != null && !username.trim().isEmpty() && username.length() <= 128) {
-            redisCache.incrementWithinWindow("app_password_fail_" + username.trim(), 10,
-                    java.util.concurrent.TimeUnit.MINUTES);
-        }
+        // 失败次数已在校验前原子占用（见 login），这里不再重复计数。
         return new ServiceException(AUTHENTICATION_ERROR);
     }
 
