@@ -64,7 +64,9 @@ public class RoamBadgeDeliveryService {
                 PlayerBadge badge = new PlayerBadge(); badge.setMemberId(memberId); badge.setBadgeCode(code);
                 badge.setSourceId(sourceId); badge.setSourceType(((Number) intent.get("sourceType")).intValue());
                 badge.setBadgeName((String) intent.get("badgeName")); badge.setIconUrl((String) intent.get("iconUrl"));
-                badge.setObtainTime((Date) intent.get("obtainTime")); badge.setCreateTime((Date) intent.get("obtainTime")); badge.setDelFlag(0);
+                Date obtained = dbDate(intent.get("obtainTime"));
+                if (obtained == null) throw new ServiceException("原徽章获得时间缺失");
+                badge.setObtainTime(obtained); badge.setCreateTime(obtained); badge.setDelFlag(0);
                 if (badges.insertPlayerBadge(badge) != 1) throw new ServiceException("原徽章发放未确认");
             }
             if (mapper.complete(((Number) intent.get("id")).longValue(), memberId) != 1)
@@ -111,5 +113,13 @@ public class RoamBadgeDeliveryService {
     private static long number(Object value) {
         if (!(value instanceof Number)) throw new ServiceException("原徽章身份缺失");
         return ((Number) value).longValue();
+    }
+
+    /** MySQL Connector/J 8 对 Map 结果里的 DATETIME 返回 LocalDateTime；按 JVM 默认时区还原为原 Date(与写入同口径)。 */
+    private static Date dbDate(Object value) {
+        if (value instanceof Date) return (Date) value;
+        if (value instanceof java.time.LocalDateTime)
+            return Date.from(((java.time.LocalDateTime) value).atZone(java.time.ZoneId.systemDefault()).toInstant());
+        return null;
     }
 }

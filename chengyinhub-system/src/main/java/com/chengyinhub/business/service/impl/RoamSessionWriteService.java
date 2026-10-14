@@ -43,9 +43,10 @@ public class RoamSessionWriteService {
             tiles.add(tile); times.put(tile, (Date) record.get("collectedAt"));
         }
         for (Map<String, Object> existing : recordMapper.selectOriginalRecords(memberId, sessionId, tiles)) {
-            if (!(existing.get("collectedAt") instanceof Date)
+            Date stored = dbDate(existing.get("collectedAt"));
+            if (stored == null
                     || times.get(String.valueOf(existing.get("tile"))) == null
-                    || ((Date) existing.get("collectedAt")).getTime() != times.get(String.valueOf(existing.get("tile"))).getTime())
+                    || stored.getTime() != times.get(String.valueOf(existing.get("tile"))).getTime())
                 throw new ServiceException("原采集记录不一致");
         }
         recordMapper.insertRecords(memberId, sessionId, records, new Date());
@@ -86,5 +87,13 @@ public class RoamSessionWriteService {
         if (session == null || !memberId.equals(session.getMemberId())) throw new ServiceException("会话不存在");
         if (!Integer.valueOf(0).equals(session.getStatus())) throw new ServiceException("本次漫游已结算");
         return roamMapper.insertPoiFoundIgnore(memberId, poiId, sessionId, new Date());
+    }
+
+    /** MySQL Connector/J 8 对 Map 结果里的 DATETIME 返回 LocalDateTime；按 JVM 默认时区还原为原 Date(与写入同口径)。 */
+    private static Date dbDate(Object value) {
+        if (value instanceof Date) return (Date) value;
+        if (value instanceof java.time.LocalDateTime)
+            return Date.from(((java.time.LocalDateTime) value).atZone(java.time.ZoneId.systemDefault()).toInstant());
+        return null;
     }
 }
