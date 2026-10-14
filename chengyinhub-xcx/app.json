@@ -303,7 +303,6 @@
     "chooseLocation",
     "choosePoi",
     "getLocation",
-    "getFuzzyLocation",
     "onLocationChange",
     "startLocationUpdate",
     "startLocationUpdateBackground"
@@ -311,9 +310,6 @@
   "permission": {
     "scope.userLocation": {
       "desc": "用于附近活动推荐、到点打卡判定与漫游足迹记录"
-    },
-    "scope.userFuzzyLocation": {
-      "desc": "用于按城市推荐附近活动"
     }
   },
   "darkmode": true,
