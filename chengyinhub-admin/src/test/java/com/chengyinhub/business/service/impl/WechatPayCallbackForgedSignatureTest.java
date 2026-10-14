@@ -454,7 +454,12 @@ class WechatPayCallbackForgedSignatureTest {
         signature[0] ^= 0xff;
         notification.signature = Base64.getEncoder().encodeToString(signature);
         assertTrue(fixture.service.handlePayCallback(notification.body, headersOf(notification)).contains("FAIL"));
-        verifyNoInteractions(fixture.mapper, fixture.alarm);
+        verifyNoInteractions(fixture.mapper);
+        // 验签失败只允许固定、限频、不含任何请求内容的运维事件（平台证书轮换/配置错误时所有回调都会落到这里）；
+        // 不得出现带订单号的业务告警。
+        verify(fixture.alarm).alarmThrottled("payment.callback.signature", "支付回调验签失败",
+                "type=ValidationException result=FAIL");
+        verifyNoMoreInteractions(fixture.alarm);
     }
 
     @Test
@@ -501,7 +506,10 @@ class WechatPayCallbackForgedSignatureTest {
         byte[] signature = Base64.getDecoder().decode(notification.signature); signature[0] ^= 0xff;
         notification.signature = Base64.getEncoder().encodeToString(signature);
         assertTrue(service.handlePayCallback(notification.body, headersOf(notification)).contains("FAIL"));
-        verifyNoInteractions(registration, alarm);
+        verifyNoInteractions(registration);
+        verify(alarm).alarmThrottled("payment.callback.signature", "支付回调验签失败",
+                "type=ValidationException result=FAIL");
+        verifyNoMoreInteractions(alarm);
     }
 
     private static class RegistrationFailureFixture {
