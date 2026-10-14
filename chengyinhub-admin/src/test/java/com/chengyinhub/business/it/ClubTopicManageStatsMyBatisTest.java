@@ -79,6 +79,16 @@ class ClubTopicManageStatsMyBatisTest {
             assertEquals("CANCELLED", status(mapper, SCHED_TOPIC, 915L), "已取消优先于一切");
             assertEquals("FINISHED", status(mapper, SINGLE_TOPIC, null), "主题下恰好一场 ⇒ 不带 activityId 也按那一场");
 
+            // F-W5-02:0 报名的场次 / 主题,left join 落空的那一行不能被数成 1 张待核销
+            Map<String, Object> emptySession = mapper.selectTopicManageStats(CLUB, SCHED_TOPIC, 913L, VIEWER);
+            assertEquals(0, num(emptySession, "sessionHeadcount"));
+            assertEquals(0, num(emptySession, "pendingVerifyCount"), "0 报名场次不得显示「待核销 1」");
+            assertEquals(0, num(emptySession, "verifiedByMeCount"));
+            assertEquals(0, num(mapper.selectTopicManageStats(CLUB, SCHED_TOPIC, null, VIEWER), "pendingVerifyCount"),
+                    "0 报名主题同样不得出幽灵待核销");
+            assertEquals(0, num(mapper.selectTopicManageStats(CLUB, TOPIC, FOREIGN_SESSION, VIEWER), "pendingVerifyCount"),
+                    "别的俱乐部的场次落空时也不得出幽灵待核销");
+
             // CU-C-13:承接方(主题有指向它的生效合作单)能看自己承接的场次,只数自己场次的人;主题票不算给它。
             Map<String, Object> undertaker = mapper.selectTopicManageStats(UNDERTAKER, TOPIC, null, VIEWER);
             assertEquals(3, num(undertaker, "nodeCount"));

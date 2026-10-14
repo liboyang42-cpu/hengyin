@@ -1939,6 +1939,14 @@ public class ApiTopicController extends BaseController {
                 topic.setInviteWindowOpen(open);
             }
         }
+        // F-W5-03:「我的」页项目预览读这条列表,草稿(is_draft=1)要与 /api/project/my 同一判据标出来,
+        // 否则草稿按档期被写成「进行中」。只富化本人列表,公开列表不出这个字段。
+        if (!publicList && cmsTopic.getMemberId() != null && !list.isEmpty()) {
+            Set<Long> draftIds = new java.util.HashSet<>(cmsTopicService.selectDraftTopicIds(cmsTopic.getMemberId()));
+            for (CmsTopic topic : list) {
+                topic.setIsDraft(topic.getId() != null && draftIds.contains(topic.getId()));
+            }
+        }
         TableDataInfo data = getDataTable(list);
         if (publicList) {
             List<PublicTopicListVO> publicRows = new ArrayList<>();

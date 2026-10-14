@@ -40,6 +40,12 @@ class PublicMemberFriendCountMySqlIT {
             try (InputStream stream=Resources.getResourceAsStream(resource)) {
                 new XMLMapperBuilder(stream,config,resource,config.getSqlFragments()).parse();
             }
+            // F-W5-09:本人主页 /api/user/info 走 UmsMemberFollowMapper.selectMutualFollowCount,与公开投影同一口径
+            config.getTypeAliasRegistry().registerAlias("UmsMemberFollow", com.chengyinhub.business.domain.UmsMemberFollow.class);
+            String followResource="mapper/business/UmsMemberFollowMapper.xml";
+            try (InputStream stream=Resources.getResourceAsStream(followResource)) {
+                new XMLMapperBuilder(stream,config,followResource,config.getSqlFragments()).parse();
+            }
             SqlSessionFactory factory=new SqlSessionFactoryBuilder().build(config);
             try (SqlSession session=factory.openSession()) {
                 PublicMemberMapper mapper=session.getMapper(PublicMemberMapper.class);
@@ -52,6 +58,11 @@ class PublicMemberFriendCountMySqlIT {
                 assertFalse(json.contains("followMemberId"));
                 assertFalse(json.contains("password"));
                 assertTrue(json.contains("\"friendNum\":2"));
+                com.chengyinhub.business.mapper.UmsMemberFollowMapper follows=
+                        session.getMapper(com.chengyinhub.business.mapper.UmsMemberFollowMapper.class);
+                assertEquals(2,follows.selectMutualFollowCount(1L),"本人好友数:去重互关、排除停用/已删/单向/自己");
+                assertEquals(1,follows.selectMutualFollowCount(2L));
+                assertEquals(0,follows.selectMutualFollowCount(4L),"只被关注、没回关 ⇒ 0");
             }
         } finally { source.forceCloseAll(); }
     }
