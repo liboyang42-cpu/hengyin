@@ -41,7 +41,9 @@
   - B `ImFoundationBMybatisIntegrationTest` 4/4（readTo/连续增量、原事务回滚、双 worker 迟到重放、同 key 异内容；用例内独立 JdbcTemplate 回读）
   - C `AiQuotaReservationRedisIT` 15/15、`AiQuotaRecoveryMySqlRedisIT` 7/7（修补后 Redis 运行前后 DBSIZE 0→0）
   - C `RoamSessionWriteMybatisIntegrationTest` 25/25（JVM 与 MySQL 同为 UTC，与 CI 一致）
-  - 独立连接回读：MySQL 仅剩 4 个系统库（全部 scratch 库已在 CREATE 成功后自删）；Redis 所有库 0 键。
+  - A `StoreVerifyGrowthDeliveryTransactionTest` 3/3（第 2 节 #9 修补后）
+  - CI `ci/backend-test.sh` 点名 MyBatis 真库 IT 全表 27 类：GitHub CI 因前一步 `mvn clean test` 失败未执行该步，改在测试 VPS 按同表、同 `CHENGYIN_IM_SEND_MYSQL_IT=1` 分批执行：**96 tests / 94 pass / 0 skip**，仅 `JourneyFullFlowMySqlIT` 2 条失败（第 5 节 #1）；`PredictLateBetRaceMySqlIT` 需接 C 非资格夹具后 2/2。
+  - 独立连接回读：包内新 IT 的 scratch 库均在 CREATE 成功后自删；CI 既有 `MybatisItDatabase` 只在首用时重建、不在结束时删除，留下 24 个带本任务后缀 `_mfabcm4/_mfabcm5` 的库（无一不带后缀），随本任务容器整体删除清理；Redis 所有库 0 键。
 - 迁移安全门、迁移布局门、SBOM、Admin UI、Fast gates（含 silentError）：CI 通过。
 
 ## 4. 需要复核的集成者改动（断言审计）
@@ -61,6 +63,7 @@
 
 1. **C 设计与旧断言冲突（未改断言，需 C/用户决定）**
    - `ApiPlayProgressCompletionTruthTest` 7 条：6 条 `verifyNoInteractions/NoMoreInteractions(registrationMapper)`，C 的资格锁读每次都经同一 mapper；1 条期望扫码中途取消抛 `ServiceException`，现由更早的资格闸返回错误回包。写入均未发生，但断言形态不再成立。
+   - `JourneyFullFlowMySqlIT` 2 条（真库）：C 把 `requireCheckSession`（roll/settle）改为新使用锁读，settle 开头即 `FOR UPDATE` 锁 activity/registration。用例让后到事务停在「读到空动作」握手点等先到者，先到者被同一报名行锁挡住，5 秒握手超时。生产语义为串行化后重放原动作（更严格、不死锁），但用例要求的交错已不可能出现，摘唯一键负控也无法再变红。
    - `CouponNotIssuableSkipContractTest` 2 条：断言漫游掉落直接调用 `grantCouponById`；C 已改为经 `RoamRewardDeliveryService` 原来源交付（停发跳过由 `RoamRewardDeliveryTest.disabledNewGrantSkips…` 覆盖）。
 2. **Gitleaks 历史扫描**：B 提交 `d54cf2d` 的红日志含 6 个随机测试 `clientMessageId`（非密钥，后续提交已脱敏，HEAD 树无命中），但 CI 按 `origin/master..HEAD` 扫历史必红；需 B 改写自身历史或合入时 squash，集成者未强推、未加白名单。
 3. **`lint:ui`**：唯一剩余项 `im/list/index.js:352` 动态 setData 未登记，交接基线即如此（基线 CI 9/10 的失败门）；未擅自扩棘轮。
