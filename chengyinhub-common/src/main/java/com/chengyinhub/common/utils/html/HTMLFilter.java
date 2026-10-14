@@ -212,7 +212,43 @@ public final class HTMLFilter
 
         // s = validateEntities(s);
 
-        return s.replace(marker + "left", "<").replace(marker + "right", ">");
+        return restoreTextBrackets(s, marker);
+    }
+
+    /**
+     * 把占位还原成文本尖括号。清洗会删掉标签/注释,原本隔开的文本 '<' 可能因此紧贴字母
+     * (如 {@code <<script></script>img onerror=...>}、{@code <<!-- -->script>}),
+     * 原样还原就会拼出一个新标签。这种 '<' 一律落成 {@code &lt;},不得重新组成标签。
+     */
+    private String restoreTextBrackets(String s, String marker)
+    {
+        String left = marker + "left";
+        String text = s.replace(marker + "right", ">");
+        StringBuilder out = new StringBuilder(text.length());
+        int from = 0;
+        int at;
+        while ((at = text.indexOf(left, from)) >= 0) {
+            out.append(text, from, at);
+            int next = at + left.length();
+            // 连续的文本 '<'(如 "<<10"):后面紧跟的是下一个占位,不是字母,不得被误判成标签开头。
+            char c = text.startsWith(left, next) ? '<' : next < text.length() ? text.charAt(next) : 0;
+            char afterSlash = next + 1 < text.length() ? text.charAt(next + 1) : 0;
+            out.append(startsTag(c, afterSlash) ? "&lt;" : "<");
+            from = next;
+        }
+        out.append(text, from, text.length());
+        return out.toString();
+    }
+
+    private static boolean isAsciiLetter(char c)
+    {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+    }
+
+    /** '<' 后面紧跟这些字符时浏览器会按标签/注释/处理指令解析。 */
+    private static boolean startsTag(char next, char afterSlash)
+    {
+        return isAsciiLetter(next) || (next == '/' && isAsciiLetter(afterSlash)) || next == '!' || next == '?';
     }
 
     private String protectTextBrackets(String input, String marker)
@@ -224,10 +260,7 @@ public final class HTMLFilter
             if (c == '<') {
                 char next = i + 1 < input.length() ? input.charAt(i + 1) : 0;
                 char afterSlash = i + 2 < input.length() ? input.charAt(i + 2) : 0;
-                boolean startsTag = (next >= 'a' && next <= 'z') || (next >= 'A' && next <= 'Z')
-                        || (next == '/' && ((afterSlash >= 'a' && afterSlash <= 'z')
-                        || (afterSlash >= 'A' && afterSlash <= 'Z'))) || next == '!' || next == '?';
-                if (startsTag) { tag = true; text.append(c); }
+                if (startsTag(next, afterSlash)) { tag = true; text.append(c); }
                 else text.append(marker).append("left");
             } else if (c == '>') {
                 if (tag) { tag = false; text.append(c); }

@@ -503,15 +503,20 @@ page { background: var(--cy-bg-page); }
 }
 .manage-project-cover { width: 112rpx; height: 88rpx; border-radius: var(--cy-radius-sm); background: var(--club-surface-2); flex-shrink: 0; }
 .manage-project-main { flex: 1; min-width: 0; margin-left: var(--cy-space-2-5); }
-.manage-project-name { color: var(--club-text); font-size: var(--cy-font-body); font-weight: 700; }
+.manage-project-name { color: var(--club-text); font-size: var(--cy-font-body); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .manage-project-meta { margin-top: var(--cy-space-1); color: var(--club-text-muted); font-size: var(--cy-font-caption); }
-.manage-project-director {
-  grid-column: 2;
-  justify-self: start;
+/* F-W5-11:工具按钮同处第二行(标题列起、跨到箭头列),第一行只留封面 / 标题+报名 / 箭头。 */
+.manage-project-tools {
+  grid-column: 2 / 4;
+  grid-row: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cy-space-2);
   margin-left: var(--cy-space-2-5);
+}
+.manage-project-director {
   flex: none;
   min-height: var(--cy-btn-h-xs);
-  margin-right: var(--cy-space-2);
   padding: 0 var(--cy-space-3);
   border-radius: var(--cy-radius-pill);
   background: var(--cy-color-action-secondary-bg);
@@ -519,7 +524,7 @@ page { background: var(--cy-bg-page); }
   font-size: var(--cy-font-caption);
   line-height: var(--cy-btn-h-xs);
 }
-.manage-chevron { color: var(--club-text-muted); flex-shrink: 0; }
+.manage-chevron { grid-column: 3; grid-row: 1; color: var(--club-text-muted); flex-shrink: 0; }
 /* 带票分享:卡片行内的次级动作,不抢主行动;高度取 DS 最小按钮档 --cy-btn-h-xs。 */
 .manage-project-share {
   margin: 0 var(--cy-space-2) 0 0; padding: 0 var(--cy-space-3);
@@ -528,6 +533,9 @@ page { background: var(--cy-bg-page); }
   background: var(--club-surface-2); border-radius: var(--cy-radius-pill);
 }
 .manage-project-share::after { border: none; }
+/* F-W5-11:期次行没有封面,不能套主题行的「封面 / 标题 / 箭头」三列 —— 否则标题落进 112rpx 封面列被挤成竖排。 */
+.manage-project--edition { grid-template-columns: minmax(0, 1fr) auto; }
+.manage-project--edition .manage-project-main { margin-left: 0; }
 
 .manage-tools { display: grid; grid-template-columns: 1fr 1fr; gap: var(--cy-space-2); }
 .manage-tool {
@@ -1016,6 +1024,9 @@ page { background: var(--cy-bg-page); }
    原「俱乐部简介」那行 label 已撤。 */
 .ov { padding-top: var(--cy-space-3-5); }
 .ov-intro {
+  /* F-W5-06:简介改用 <text> 保留换行后,行内元素的左右外边距只作用在首行/末行,上下外边距不生效 ——
+     必须是块级,多段简介的每一行才都对齐页边。 */
+  display: block;
   margin: 0 var(--cy-page-x) var(--cy-space-4);
   font-size: var(--cy-font-body);
   line-height: 1.4;

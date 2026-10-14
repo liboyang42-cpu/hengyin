@@ -172,6 +172,7 @@ Page({
     descNeedMore: false,
     ruleExpanded: false,
     ruleNeedMore: false,
+    ruleSteps: [],
     statusBarHeight: getApp().globalData.statusBarHeight,
     navBarHeight: getApp().globalData.navBarHeight,
     popDavid: false,
@@ -276,6 +277,7 @@ Page({
     target.capRows = buildCapRows(normalized.info, normalized.categoryText);
     target.tplTabs = buildTplTabs(hasCapabilityInfo(target.capRows));
     if (!hasCapabilityInfo(target.capRows)) target.activeTab = 'details';
+    target.ruleSteps = templateDetailUtil.splitRuleSteps(normalized.info.ruleInstructions);
     target.detailStats = detail.detailStats;
     target.materialChips = detail.materialChips;
     target.sceneChips = detail.sceneChips;
@@ -300,6 +302,7 @@ Page({
       capRows: capRows,
       tplTabs: buildTplTabs(capable),
       activeTab: capable ? this.data.activeTab : 'details',
+      ruleSteps: templateDetailUtil.splitRuleSteps(normalized.info.ruleInstructions),
       detailStats: detail.detailStats,
       materialChips: detail.materialChips,
       sceneChips: detail.sceneChips,
@@ -323,11 +326,13 @@ Page({
       var query = wx.createSelectorQuery().in(that);
       query.select('#tpl-desc').boundingClientRect();
       query.select('#tpl-rule').boundingClientRect();
+      query.select('#tpl-rule-box').boundingClientRect();
       query.exec(function (res) {
         if (!that.isDetailRequestCurrent(token, context) || !res || !res.length) return;
         var patch = {};
         if (res[0] && res[0].height > 110) patch.descNeedMore = true;
-        if (res[1] && res[1].height > 110) patch.ruleNeedMore = true;
+        // 规则卡收起态限高、内层步骤列表不限高:内层比卡片内容区高才说明有被收起的步骤。
+        if (res[1] && res[2] && res[1].height > res[2].height + 1) patch.ruleNeedMore = true;
         if (Object.keys(patch).length) that.setData(patch);
       });
     });
