@@ -796,10 +796,12 @@ class RegistrationFundsMybatisIntegrationTest {
     }
 
     @Test
-    void confirmedPaymentWithinCancellationKeepsOriginalOuterRollback() {
+    void confirmedPaymentWithinCancellationKeepsOriginalOuterRollback() throws Exception {
         new org.springframework.transaction.support.TransactionTemplate(transactionManager).execute(status -> {
             assertEquals("SUCCESS", registrationService.applyConfirmedWechatPaymentWithinTransaction(callback()));
-            assertEquals(2, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+            // 外层事务未提交：须经同一事务连接回读（JdbcTemplate 走 DataSourceUtils），独立连接看不到。
+            assertEquals(2, new JdbcTemplate(dataSource).queryForObject(
+                    "SELECT payment_status FROM cms_registration WHERE id=11", Integer.class));
             status.setRollbackOnly();
             return null;
         });
@@ -809,7 +811,7 @@ class RegistrationFundsMybatisIntegrationTest {
     }
 
     @Test
-    void channelCallbackRejectsAnUncommittedOuterTransactionWithoutClaimingInbox() {
+    void channelCallbackRejectsAnUncommittedOuterTransactionWithoutClaimingInbox() throws Exception {
         new org.springframework.transaction.support.TransactionTemplate(transactionManager).execute(status -> {
             assertThrows(IllegalStateException.class, () -> registrationService.handleWechatPayCallback(callback()));
             return null;

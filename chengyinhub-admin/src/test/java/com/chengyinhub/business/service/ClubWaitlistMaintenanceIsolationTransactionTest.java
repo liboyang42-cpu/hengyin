@@ -87,7 +87,7 @@ class ClubWaitlistMaintenanceIsolationTransactionTest {
         when(mapper.selectWaitlistMaintenancePage(eq(0), any(Date.class), anyLong(), anyLong(), anyInt()))
                 .thenAnswer(call -> jdbc.queryForList("select id as scanId, id as targetId from club_event_waitlist "
                         + "where state='OFFERED' and offer_expires_at<=? and id>? and id<=? order by id limit ?",
-                        call.getArgument(1), call.getArgument(2), call.getArgument(3), call.getArgument(4)).stream().map(row -> {
+                        new Object[] {call.getArgument(1), call.getArgument(2), call.getArgument(3), call.getArgument(4)}).stream().map(row -> {
                             java.util.Map<String, Object> normalized = new java.util.HashMap<>();
                             normalized.put("scanId", row.get("SCANID")); normalized.put("targetId", row.get("TARGETID"));
                             return normalized;
