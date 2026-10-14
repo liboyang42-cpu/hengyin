@@ -146,7 +146,26 @@ Page({
     } : {
       dangerKey: 'club.joinRequest.reject',   // 登记表 scripts/danger-action-registry.json 指向的确认层
       dangerParams: { name },
-      success(result) { if (result.confirm) that.review(memberId, approve) },
+      success(result) { if (result.confirm) that.askRejectReason(memberId) },
+    })
+  },
+
+  // F-L3-09:拒绝原因选填,随「入会申请未通过」通知发给申请人;后端同样限 500 字并做内容检查。
+  askRejectReason(memberId) {
+    const that = this
+    modal.show({
+      title: '拒绝原因（选填）',
+      editable: true,
+      maxlength: 500,
+      placeholderText: '会随未通过通知告诉对方，可不填',
+      confirmText: '确认拒绝',
+      cancelText: '取消',
+      validate(content) {
+        return String(content || '').trim().length > 500 ? '拒绝原因不能超过500字' : ''
+      },
+      success(result) {
+        if (result.confirm) that.review(memberId, false, String(result.content || '').trim())
+      },
     })
   },
 
@@ -155,7 +174,7 @@ Page({
     this.confirmReview(dataset.memberId, (this.data.actionErrorAction || dataset.action) === 'approve')
   },
 
-  review(memberId, approve) {
+  review(memberId, approve, reason) {
     if (!memberId || this.data.actingMemberId) return
     const that = this
     const action = approve ? 'approve' : 'reject'
@@ -169,7 +188,9 @@ Page({
     app.sendRequest({
       url: approve ? '/api/club/join-request/approve' : '/api/club/join-request/reject',
       method: 'POST',
-      data: jsonBody({ clubId: this.data.clubId, memberId: memberId }),
+      data: jsonBody(!approve && reason
+        ? { clubId: this.data.clubId, memberId: memberId, reviewReason: reason }
+        : { clubId: this.data.clubId, memberId: memberId }),
       header: jsonHeader(),
       success(res) {
         if (res.code != '200') {

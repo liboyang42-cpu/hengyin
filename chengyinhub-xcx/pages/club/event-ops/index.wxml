@@ -194,7 +194,7 @@
 
         <block wx:if="{{recurrenceType !== 'CUSTOM_DATES'}}">
           <text class="field-label">首次日期<text class="field-required" aria-hidden="true">*</text></text>
-          <cy-date-field mode="date" value="{{startDate}}" start="{{minDate}}" bind:change="onStartDateChange">
+          <cy-date-field mode="date" value="{{startDate}}" start="{{editingSeriesId ? futureMinDate : minDate}}" bind:change="onStartDateChange">
             <view class="field-picker">{{startDate}}<cy-icon class="field-chevron" name="back" size="24" /></view>
           </cy-date-field>
         </block>
@@ -205,7 +205,7 @@
         <view wx:if="{{recurrenceType === 'CUSTOM_DATES'}}">
           <text class="field-label">日期清单<text class="field-required" aria-hidden="true">*</text></text>
           <view class="date-row" wx:for="{{customDates}}" wx:key="index">
-            <cy-date-field class="date-picker" mode="date" value="{{item}}" start="{{minDate}}" data-index="{{index}}" bind:change="onCustomDateChange">
+            <cy-date-field class="date-picker" mode="date" value="{{item}}" start="{{editingSeriesId ? futureMinDate : minDate}}" data-index="{{index}}" bind:change="onCustomDateChange">
               <view class="field-picker">{{item}}<cy-icon class="field-chevron" name="back" size="24" /></view>
             </cy-date-field>
             <view class="remove-date {{customDates.length <= 1 ? 'disabled' : ''}}" data-index="{{index}}" bindtap="removeCustomDate" hover-class="{{submitting || customDates.length <= 1 ? 'none' : 'cy-pressed'}}" hover-stay-time="80">移除</view>

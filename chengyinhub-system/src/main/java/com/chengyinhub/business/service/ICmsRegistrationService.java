@@ -367,6 +367,15 @@ public interface ICmsRegistrationService
                                             String actorRoleCode);
 
     /**
+     * 平台后台撤销一张活动票(owner_type=2)的整单核销,用于店员扫错/核错等现场事故。
+     *
+     * <p>只清核销态并留痕(操作人/原因/时间);活动票款在支付时已按活动入账,本动作不改账本。
+     * ③ 探索票走按章撤销;主题整单票的核销会计入执行商家结算,不在此入口内;
+     * 活动已结算时拒绝。返回 true = 本次已撤销。</p>
+     */
+    boolean reverseWholeOrderVerification(Long registrationId, String reason, Long operatorUserId);
+
+    /**
      * [#22 二清闸] 对已存在的单再判一次「这笔钱平台能不能收」,不能收就抛。
      *
      * <p>建单路径的闸在 createRegistration/createSelfPlayPass 内部;这个重载是给**不走建单**的

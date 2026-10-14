@@ -10,12 +10,12 @@ const uiRoot = path.resolve(__dirname, '../..');
 const source = fs.readFileSync(path.join(uiRoot, 'src/views/business/registration/index.vue'), 'utf8');
 const ledgerSource = fs.readFileSync(path.join(uiRoot, 'src/views/business/coupon/ledger.vue'), 'utf8');
 
-function loadRegistrationPage(reverseRedemption, reverseParentOrderRedemptions) {
+function loadRegistrationPage(reverseRedemption, reverseParentOrderRedemptions, reverseWholeOrderVerification) {
   const script = source.match(/<script>([\s\S]*?)<\/script>/)[1]
-    .replace(/^import \{[^}]*\} from "@\/api\/business\/registration"$/m, 'const { reverseRedemption, reverseParentOrderRedemptions } = dependencies;')
+    .replace(/^import \{[^}]*\} from "@\/api\/business\/registration"$/m, 'const { reverseRedemption, reverseParentOrderRedemptions, reverseWholeOrderVerification } = dependencies;')
     .replace(/^import (\w+) from .+$/gm, 'const $1 = {};')
     .replace(/^import \{[^}]*\} from .+$/gm, '');
-  return new Function('dependencies', script.replace(/export\s+default\s*/, 'return '))({ reverseRedemption, reverseParentOrderRedemptions });
+  return new Function('dependencies', script.replace(/export\s+default\s*/, 'return '))({ reverseRedemption, reverseParentOrderRedemptions, reverseWholeOrderVerification });
 }
 
 function createVm(component, sent) {
@@ -23,7 +23,7 @@ function createVm(component, sent) {
   vm.$modal = { msgSuccess: (m) => vm.toasts.push(m), msgError: (m) => vm.toasts.push('ERR:' + m) };
   vm.loadRedemptions = () => { vm.reloads += 1; };
   vm.getList = () => { vm.reloads += 1; };
-  for (const name of ['handleReverseRedeem', 'handleReverseParentOrder', 'submitReverseRedeem']) vm[name] = component.methods[name].bind(vm);
+  for (const name of ['handleReverseRedeem', 'handleReverseParentOrder', 'handleReverseWholeOrder', 'submitReverseRedeem']) vm[name] = component.methods[name].bind(vm);
   return vm;
 }
 
@@ -77,4 +77,36 @@ test('父订单撤销仅发送原父单且保留原因/奖励选项，失败不�
  fail=true;vm.handleReverseParentOrder();vm.reverseForm.reason='重试';const count=vm.toasts.length;
  await vm.submitReverseRedeem();assert.equal(vm.toasts.length,count);assert.equal(vm.reverseOpen,true);assert.equal(vm.reverseSubmitting,false);
  assert.match(source,/v-hasPermi="\['business:registration:reverseRedeem'\]" @click="handleReverseParentOrder"/);
+});
+
+test('整单核销活动票:无生效按章流水时可撤销整单核销,只发 registrationId+原因,不带冲回选项', async () => {
+  const sent = [];
+  const component = loadRegistrationPage(() => { throw Error('不得调单章'); }, () => { throw Error('不得调父单'); },
+    (data) => { sent.push(data); return Promise.resolve({}); });
+  const vm = createVm(component);
+  const eligible = () => component.computed.canReverseWholeOrder.call(vm);
+  vm.redeemRegistrationId = 501;
+  vm.redeemWholeOrderRow = true;
+  vm.redeemList = [{ id: 9, status: 'ACTIVE' }];
+  assert.equal(eligible(), false, '有生效按章流水时只能逐条撤销');
+  vm.redeemList = [{ id: 9, status: 'REVERSED' }];
+  vm.redeemLoading = true;
+  assert.equal(eligible(), false, '流水没读完不放按钮');
+  vm.redeemLoading = false;
+  assert.equal(eligible(), true);
+  vm.canReverseWholeOrder = true;
+  vm.handleReverseWholeOrder();
+  assert.equal(vm.reverseOpen, true);
+  assert.equal(vm.reverseWholeOrderId, 501);
+  vm.reverseForm.reason = '  店员扫错票  ';
+  vm.reverseForm.clawbackRewards = true;
+  await vm.submitReverseRedeem();
+  assert.deepEqual(sent, [{ registrationId: 501, reason: '店员扫错票' }]);
+  assert.equal(vm.reverseOpen, false);
+  assert.equal(vm.redeemWholeOrderRow, false);
+  assert.equal(vm.reloads, 2);
+  vm.handleReverseRedeem({ id: 33 });
+  assert.equal(vm.reverseWholeOrderId, null, '切回单章撤销不得残留整单目标');
+  assert.match(source, /v-hasPermi="\['business:registration:reverseRedeem'\]" @click="handleReverseWholeOrder"/);
+  assert.match(source, /Number\(row\.purchaseKind\) !== 3/, '③ 探索票不走整单撤销');
 });

@@ -27,6 +27,8 @@ function positiveId(value) {
 // 「今天」,非上海时区的设备上表单显示的是设备日历的今天、后端比的是上海日历的今天 ——
 // 表单里明明写着今天,回包却说「场次日期不能早于今天」。
 function shanghaiToday() { return chinaDateKey(new Date()) }
+// 「仅改未来」的服务端边界是上海明日 00:00:今天的场次不在编辑范围内,表单也不能回填或选今天。
+function shanghaiTomorrow() { return chinaDateKey(new Date(Date.now() + 24 * 60 * 60 * 1000)) }
 // CU-C-35:日期=今天且集合时刻已过 —— 「今天」这一档由后端拒绝,用户看到的日期又没错,
 // 前后端都没人拦在提交之前。这里用同一个上海钟提前判出来,文案直说时刻。
 // 页面跨过上海午夜时，表单仍可能保留前一天的日期。
@@ -368,6 +370,7 @@ Page({
     // 集合时刻是场次退款钟(集合前 24h)的锚点,后端缺它会拒绝开场(5.9 起)。
     startTime: '09:00',
     minDate: shanghaiToday(),
+    futureMinDate: shanghaiTomorrow(),
     occurrenceCount: 4,
     customDates: [shanghaiToday()],
     capacity: '',
@@ -651,8 +654,11 @@ Page({
           return
         }
         that._expectedVersion = series.version
-        const dates = series.futureDates.length ? series.futureDates : [that.data.minDate]
+        const futureMinDate = shanghaiTomorrow()
+        const futureDates = series.futureDates.filter(date => date >= futureMinDate)
+        const dates = futureDates.length ? futureDates : [futureMinDate]
         that.setData({
+          futureMinDate,
           editingSeriesId: series.id,
           editingTopicId: series.topicId,
           recurrenceType: series.recurrenceType,
@@ -783,6 +789,15 @@ Page({
     if (this.data.recurrenceType === 'CUSTOM_DATES' && customDates.length === 0) {
       toast('请至少选择一个日期')
       return
+    }
+    if (editingSeriesId) {
+      const futureMinDate = shanghaiTomorrow()
+      const editedDates = this.data.recurrenceType === 'CUSTOM_DATES' ? customDates : [this.data.startDate]
+      if (editedDates.some(date => !date || date < futureMinDate)) {
+        this.setData({ futureMinDate })
+        toast('仅改未来只能编辑明天及之后的场次，今天的场次不受影响')
+        return
+      }
     }
     const startTime = String(this.data.startTime || '').trim()
     if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(startTime)) {

@@ -594,11 +594,17 @@ class GameSessionRuntimeServiceImplTest {
         when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(runningSession(9));
         when(runtimeMapper.selectStation(SESSION, NODE)).thenReturn(station(MERCHANT, "ACTIVE"));
 
+        // F-L3-01:站点暂停/恢复与核验改为按对象 CAS,旧版本不再被拒;精确版本动作(STATION_READY)
+        // 与「比服务端还新」的版本仍在回执认领前被拒。
         GameSessionException error = assertThrows(GameSessionException.class,
                 () -> service.command(GameActorContext.merchant(MERCHANT),
-                        command("stale-revision", 8, "STATION_PAUSE", mapOf("reasonCode", "WEATHER"))));
-
+                        command("stale-revision", 8, "STATION_READY", Collections.emptyMap())));
         assertEquals("GAME_STATE_CONFLICT", error.getErrorCode());
+        GameSessionException future = assertThrows(GameSessionException.class,
+                () -> service.command(GameActorContext.merchant(MERCHANT),
+                        command("future-revision", 10, "STATION_PAUSE", mapOf("reasonCode", "WEATHER"))));
+        assertEquals("GAME_STATE_CONFLICT", future.getErrorCode());
+
         verify(runtimeMapper, never()).insertReceiptClaim(any(GameCommandReceipt.class));
         verify(runtimeMapper, never()).updateStationStatusCas(any(GameStationRun.class), anyLong(), anyString(),
                 anyString(), anyInt(), any());
@@ -1918,6 +1924,61 @@ class GameSessionRuntimeServiceImplTest {
         assertEquals("APPROVED", receipt.getResult().get("decision"));
         assertEquals(GamePlayerNodeOutcome.COMPLETED, receipt.getResult().get("completionStatus"));
         assertEquals(402L, ((Number) receipt.getResult().get("completionOrder")).longValue());
+    }
+
+    /** F-L3-01:别队玩家把全局 revision 推进后,商家对某条待核验提交的决定不应被判成「版本已过期」。 */
+    @Test
+    void merchantVerifyWithOlderRevisionAppliesOnSubmissionCasButFutureRevisionStillRejects() {
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(runningSession(4));
+        when(runtimeMapper.selectStation(SESSION, NODE)).thenReturn(station(MERCHANT, GameStationRun.ACTIVE));
+        GameTaskSubmission submission = new GameTaskSubmission();
+        submission.setId(79L);
+        submission.setGameSessionId(SESSION);
+        submission.setActivityId(ACTIVITY);
+        submission.setStationRunId(5101L);
+        submission.setNodeId(NODE);
+        submission.setTeamId(TEAM);
+        submission.setMemberId(PLAYER);
+        submission.setStatus("PENDING");
+        submission.setRevision(0);
+        when(runtimeMapper.selectSubmission(79L)).thenReturn(submission);
+        when(runtimeMapper.decideSubmissionCas(submission)).thenReturn(1);
+        when(runtimeMapper.updateSessionCas(anyLong(), anyInt(), anyString(), anyString(), any(), any(), any()))
+                .thenReturn(1);
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("submissionId", 79L);
+        payload.put("decision", "REJECT");
+        payload.put("reasonCode", "BLURRY");
+
+        stubReceiptPersistence("future-verify");
+        GameSessionException future = assertThrows(GameSessionException.class, () -> service.command(
+                GameActorContext.merchant(MERCHANT), command("future-verify", 5, "VERIFY_SUBMISSION", payload)));
+        assertEquals("GAME_STATE_CONFLICT", future.getErrorCode());
+        verify(runtimeMapper, never()).decideSubmissionCas(any());
+
+        stubReceiptPersistence("stale-verify");
+        com.chengyinhub.business.domain.dto.GameCommandReceiptView receipt = service.command(
+                GameActorContext.merchant(MERCHANT), command("stale-verify", 2, "VERIFY_SUBMISSION", payload));
+        assertEquals("APPLIED", receipt.getOutcome());
+        assertEquals("REJECTED", receipt.getResult().get("decision"));
+        verify(runtimeMapper).decideSubmissionCas(submission);
+    }
+
+    /** F-L3-01:站点已被另一终端恢复时,后到的恢复返回当前站点而不是冲突;且不再要求全局 revision 精确相等。 */
+    @Test
+    void clubResumeOfAlreadyActiveStationIsIdempotentWithStaleRevision() {
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(runningSession(4));
+        when(clubMemberService.isTopicOwner(TOPIC, CLUB, DIRECTOR)).thenReturn(true);
+        when(runtimeMapper.selectStation(SESSION, NODE)).thenReturn(station(MERCHANT, GameStationRun.ACTIVE));
+        stubReceiptPersistence("resume-already-active");
+
+        com.chengyinhub.business.domain.dto.GameCommandReceiptView receipt = service.command(
+                GameActorContext.club(DIRECTOR),
+                command("resume-already-active", 3, "CLUB_STATION_RESUME", Collections.emptyMap()));
+
+        assertEquals("APPLIED", receipt.getOutcome());
+        verify(runtimeMapper, never()).updateStationStatusCas(any(), any(), anyString(), anyString(), anyInt(), any());
+        verify(runtimeMapper, never()).updateSessionCas(anyLong(), anyInt(), anyString(), anyString(), any(), any(), any());
     }
 
     @Test

@@ -97,11 +97,24 @@ public class ApiPlayJourneyActionController extends BaseController {
         if (memberId == null) return error("请先登录");
         if (topicRouteRuntimeService == null || body == null) return error("参数有误");
         try {
-            WeRunDecryptor.WeRunResult reading = hasWeRunCipher(body) ? decryptTodaySteps(body) : null;
+            WeRunDecryptor.WeRunResult reading = null;
+            boolean stepsUnavailable = false;
+            if (hasWeRunCipher(body)) {
+                // F-R2S-01:微信换 session_key 失败、读数跨日过期或密文不可解时,本次只当「没有读数」:
+                // 念头认领照常,步数基线不动,下次同步按同日增量补回。不能让步数故障变成 500 挡住游玩。
+                try {
+                    reading = decryptTodaySteps(body);
+                } catch (RuntimeException unreadable) {
+                    stepsUnavailable = true;
+                    logger.warn("thought sync WeRun reading unavailable memberId={} reason={}", memberId,
+                            unreadable.getClass().getSimpleName());
+                }
+            }
             long day = reading == null ? 0 : java.time.Instant.ofEpochSecond(reading.getTimestamp())
                     .atZone(java.time.ZoneId.of("Asia/Shanghai")).toLocalDate().toEpochDay();
-            return success(topicRouteRuntimeService.syncThoughts(memberId, longOrZero(body.get("topicId")),
-                    longOrZero(body.get("activityId")), claimOf(body), reading == null ? -1 : reading.getTodaySteps(), day));
+            Object state = topicRouteRuntimeService.syncThoughts(memberId, longOrZero(body.get("topicId")),
+                    longOrZero(body.get("activityId")), claimOf(body), reading == null ? -1 : reading.getTodaySteps(), day);
+            return stepsUnavailable ? AjaxResult.success("步数暂未同步，念头已记录", state) : success(state);
         } catch (IllegalArgumentException | IllegalStateException e) {
             return error(e.getMessage());
         }

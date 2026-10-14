@@ -184,3 +184,22 @@ test('草稿试玩开始也向打字组件确认，但不写正式请求', () =>
   assert.equal(result.startedAt, 1000);
   assert.equal(original.startConfirmed, undefined);
 });
+
+test('F-R2S-01:微信运动回调迟迟不回时,步数同步最多等 8 秒,之后照常提交玩家动作', async (t) => {
+  const originalToast = wx.showToast;
+  wx.showToast = () => {};
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  try {
+    let writes = 0;
+    const p = Object.assign({}, page, { data: {}, _routeState: { thoughtCount: 1 },
+      _syncThoughts: () => new Promise(() => {}) });
+    const waiting = p._withThoughtSync(() => { writes += 1; return 'done'; });
+    await new Promise(setImmediate);
+    t.mock.timers.tick(7999);
+    await new Promise(setImmediate);
+    assert.equal(writes, 0, '等待窗口内仍按原顺序先同步');
+    t.mock.timers.tick(1);
+    assert.equal(await waiting, 'done');
+    assert.equal(writes, 1);
+  } finally { wx.showToast = originalToast; t.mock.timers.reset(); }
+});
