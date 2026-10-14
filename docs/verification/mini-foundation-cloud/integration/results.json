@@ -191,5 +191,41 @@
     "production DDL",
     "Quartz enabling",
     "WeChat upload"
-  ]
+  ],
+  "finalCodeHead": {
+    "commit": "8eabb890a1f4fd79d2626502d3b8e00401f13845",
+    "ciRun": 38578321170,
+    "backend": {
+      "testsRun": 10014,
+      "failures": 7,
+      "errors": 2,
+      "skipped": 523,
+      "classes": [
+        "ApiPlayProgressCompletionTruthTest",
+        "CouponNotIssuableSkipContractTest"
+      ]
+    },
+    "miniProgramUnit": {
+      "tests": 8254,
+      "pass": 8252,
+      "fail": 0,
+      "skipped": 2
+    },
+    "lintUiViolations": 1,
+    "gitleaksHistoryHits": 6,
+    "sbom": "first attempt failed: GitHub release download HTTP 500 for syft; job rerun succeeded",
+    "fundsMysqlIt": {
+      "run": 38575260922,
+      "commit": "0798071",
+      "testsRun": 562,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "note": "backend/test code unchanged after 0798071 (only chengyinhub-xcx/utils/analytics.js, lint baseline and docs)"
+    },
+    "analyticsFlake": {
+      "before": "6/40 local failures",
+      "after": "0/60"
+    }
+  }
 }
