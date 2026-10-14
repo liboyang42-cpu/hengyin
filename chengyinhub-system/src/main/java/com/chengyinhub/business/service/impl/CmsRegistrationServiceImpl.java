@@ -2846,9 +2846,94 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         writeVerificationAudit("REGISTRATION", registration.getId(), verifierId,
                 actorMemberId, actorRoleCode, action, "CMS_REGISTRATION", registration.getId(),
                 activityId != null ? activityId : (station == null ? null : station.getId()),
-                "registration-redeem-" + registration.getId(),
+                verificationAuditRequestId(registration.getId()),
                 "{\"verificationStatus\":0}", "{\"verificationStatus\":1}");
         growthService.enqueueStoreVerification(registration.getId());
+        return true;
+    }
+
+    static final String WHOLE_ORDER_VERIFY_REVERSE = "REGISTRATION_VERIFY_REVERSE";
+
+    /**
+     * 核销审计幂等键:首次核销沿用原键;每被后台撤销一次,下一次核销换一代键,
+     * 否则 uk_business_audit_request 会让撤销后的重新核销永远写不进审计而整单回滚。
+     */
+    private String verificationAuditRequestId(Long registrationId) {
+        int reversals = wholeOrderReversalCount(registrationId);
+        return "registration-redeem-" + registrationId + (reversals == 0 ? "" : "-r" + reversals);
+    }
+
+    private int wholeOrderReversalCount(Long registrationId) {
+        List<BusinessAuditEvent> events = businessAuditEventMapper.selectByTarget("CMS_REGISTRATION", registrationId);
+        int count = 0;
+        if (events != null) for (BusinessAuditEvent event : events) {
+            if (event != null && "REGISTRATION".equals(event.getDomainType())
+                    && WHOLE_ORDER_VERIFY_REVERSE.equals(event.getAction())) count++;
+        }
+        return count;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean reverseWholeOrderVerification(Long registrationId, String reason, Long operatorUserId) {
+        String why = reason == null ? "" : reason.trim();
+        if (registrationId == null || registrationId <= 0 || operatorUserId == null || operatorUserId <= 0
+                || why.isEmpty() || why.length() > 255) {
+            throw new IllegalArgumentException("订单、撤销原因(1-255字)或操作人无效");
+        }
+        CmsRegistration located = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
+        if (located == null || located.getOwnerId() == null) throw new IllegalStateException("订单不存在");
+        if (located.getPurchaseKind() != null && located.getPurchaseKind() == PurchaseKind.EXPLORE_PASS) {
+            throw new IllegalStateException("探索票请在核销记录中按章撤销");
+        }
+        if (!Long.valueOf(2L).equals(located.getOwnerType())) {
+            throw new IllegalStateException("主题整单核销已计入执行商家结算，请走人工售后处理");
+        }
+        // 锁序与核销/取消一致:activity -> registration。
+        CmsActivity activity = cmsActivityMapper.selectCmsActivityByIdForUpdate(located.getOwnerId());
+        if (activity == null || activity.getMemberId() == null) throw new IllegalStateException("订单关联活动不存在");
+        if (activity.getIsSettlement() != null && activity.getIsSettlement() != 0) {
+            throw new IllegalStateException("活动已结算，不能撤销核销，请走人工售后处理");
+        }
+        CmsRegistration current = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(registrationId);
+        if (current == null || !Long.valueOf(2L).equals(current.getOwnerType())
+                || !located.getOwnerId().equals(current.getOwnerId())) {
+            throw new IllegalStateException("订单归属已变化，请刷新后重试");
+        }
+        if (!Integer.valueOf(1).equals(current.getVerificationStatus())) {
+            throw new IllegalStateException("该订单未核销或已撤销，无需重复撤销");
+        }
+        for (com.chengyinhub.business.domain.Redemption row : perkLedgerService.listRedemptions(registrationId)) {
+            if (row != null && "ACTIVE".equals(row.getStatus())) {
+                throw new IllegalStateException("该票有按章核销流水，请在核销记录中逐条撤销");
+            }
+        }
+        // 条件置位(NOT EXISTS ACTIVE redemption 在 SQL 内当前读判定),0 行 = 状态刚变化。
+        if (cmsRegistrationMapper.clearVerification(registrationId) != 1) {
+            throw new IllegalStateException("核销状态刚发生变化，请刷新后重试");
+        }
+        BusinessAuditEvent audit = new BusinessAuditEvent();
+        audit.setDomainType("REGISTRATION");
+        audit.setDomainId(registrationId);
+        audit.setOwnerMemberId(activity.getMemberId());
+        audit.setActorType(BusinessAuditEvent.ACTOR_TYPE_SYS_USER);
+        audit.setActorMemberId(operatorUserId);
+        audit.setActorRoleCode("SYS_USER");
+        audit.setAction(WHOLE_ORDER_VERIFY_REVERSE);
+        audit.setTargetType("CMS_REGISTRATION");
+        audit.setTargetId(registrationId);
+        audit.setRelationId(activity.getId());
+        audit.setBeforeJson("{\"verificationStatus\":1,\"verifierId\":"
+                + (current.getVerifierId() == null ? "null" : current.getVerifierId()) + "}");
+        audit.setAfterJson("{\"verificationStatus\":0}");
+        audit.setReason(why);
+        audit.setRequestId("registration-verify-reverse-" + registrationId + "-"
+                + (wholeOrderReversalCount(registrationId) + 1));
+        audit.setCreateTime(new Date());
+        if (businessAuditEventMapper.insertBusinessAuditEvent(audit) != 1) {
+            throw new IllegalStateException("撤销核销审计写入失败，撤销已回滚");
+        }
+        logger.info("整单核销已撤销 registrationId={} operatorUserId={}", registrationId, operatorUserId);
         return true;
     }
 
