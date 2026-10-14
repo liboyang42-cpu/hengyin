@@ -71,6 +71,8 @@ class ActivityAppUpdateTest {
         CmsActivityServiceImpl service = new CmsActivityServiceImpl();
         ReflectionTestUtils.setField(service, "memberIdentityService", org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.MemberIdentityService.class));
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activityMapper);
+        // 收费独立活动只允许平台账号发布(F-W2-01)；本用例验证的是收费票的改单锁，发布者按平台账号构造。
+        ReflectionTestUtils.setField(service, "platformMemberId", ME);
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", registrationMapper);
         ReflectionTestUtils.setField(service, "omsTicketMapper", ticketMapper);
 

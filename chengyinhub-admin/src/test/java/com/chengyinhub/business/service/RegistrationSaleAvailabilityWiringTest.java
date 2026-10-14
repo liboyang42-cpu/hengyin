@@ -18,8 +18,12 @@ class RegistrationSaleAvailabilityWiringTest {
 
         // F03:活动路径统一经 assertRegistrationSellable 分流(商业→合同二闸,免费 UGC→上架事实),
         // 该方法本身必须落回合同二闸。行为契约见 FreeUgcActivityRegistrationGateTest。
-        assertTrue(source.contains("SaleAvailabilityPolicy.assertSellable(topic,ticket,now);return;"),
-                "统一可售判定的非免费 UGC 分支必须落回合同二售卖闸");
+        // F-W1-05:非免费 UGC 分支先给出「未开售」明确提示，再落回合同二售卖闸。
+        assertTrue(source.contains("assertCommercialSaleOpen(topic,ticket,now);return;"),
+                "统一可售判定的非免费 UGC 分支必须经过商业可售闸");
+        assertTrue(source.replaceAll("(?s).*privatevoidassertCommercialSaleOpen\\(", "").startsWith("CmsTopictopic,OmsTicketticket,Datenow){")
+                        && source.contains("SaleAvailabilityPolicy.assertSellable(topic,ticket,now);}"),
+                "商业可售闸必须落回合同二售卖闸");
         assertTrue(source.contains("assertRegistrationSellable(registrationActivity,sellerTopic,ticket,newDate())"),
                 "普通下单必须经过统一可售闸");
         assertTrue(source.contains("assertRegistrationSellable(activity,sellerTopic,ticket,newDate())"),

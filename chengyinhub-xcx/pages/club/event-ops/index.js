@@ -795,7 +795,7 @@ Page({
       const editedDates = this.data.recurrenceType === 'CUSTOM_DATES' ? customDates : [this.data.startDate]
       if (editedDates.some(date => !date || date < futureMinDate)) {
         this.setData({ futureMinDate })
-        toast('仅改未来只能编辑明天及之后的场次，今天的场次不受影响')
+        toast('只能改明天及之后的场次')
         return
       }
     }
