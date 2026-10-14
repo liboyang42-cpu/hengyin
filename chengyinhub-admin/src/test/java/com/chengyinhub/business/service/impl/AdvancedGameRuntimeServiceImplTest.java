@@ -200,6 +200,27 @@ class AdvancedGameRuntimeServiceImplTest {
         assertEquals("当前自玩资格已失效", fresh.getMessage(), "到期后不能新开局");
     }
 
+    /** 普通线性路线不建玩法局：本路线已开局时，到站完成闸同样按「打完本局」放行；未开局仍拒。 */
+    @Test
+    void expiredSelfPlayPassCompleteGateFollowsRouteStarted() {
+        CmsRegistration pass = new CmsRegistration();
+        pass.setId(778L); pass.setMemberId(MEMBER_ID); pass.setOwnerType(1L); pass.setOwnerId(TOPIC_ID);
+        pass.setRegistrationStatus(2); pass.setPaymentStatus(0); pass.setPurchaseKind(2);
+        pass.setExpiresAt(new Date(NOW - 1));
+        when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class))).thenReturn(Collections.singletonList(pass));
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(778L)).thenReturn(pass);
+        ITopicRouteRuntimeService route = mock(ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", route);
+
+        when(route.hasRunningSession(MEMBER_ID, TOPIC_ID, 0L)).thenReturn(true);
+        assertNull(service.completeGate(MEMBER_ID, 0L, TOPIC_ID, NODE_ID), "本路线已开局：中途到期仍可到站完成");
+
+        when(route.hasRunningSession(MEMBER_ID, TOPIC_ID, 0L)).thenReturn(false);
+        IllegalStateException fresh = assertThrows(IllegalStateException.class,
+                () -> service.completeGate(MEMBER_ID, 0L, TOPIC_ID, NODE_ID));
+        assertEquals("当前自玩资格已失效", fresh.getMessage(), "未开局：到期后不能新开局");
+    }
+
     // ==================== M1 回执自带新世界 ====================
 
     @Test
