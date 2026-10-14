@@ -158,6 +158,22 @@ class TopicBundleReviewServiceTest {
         verify(templateMapper, never()).approveBundledDraft(any(), any());
     }
 
+    /** F-W2-02:主题层小数(费率/里程/票价)与 Double 评分在快照往返后不能被判为「内容已变化」。 */
+    @Test
+    void topicLevelDecimalsAndDoublesSurviveSnapshotRoundTrip() {
+        stubLockedRows();
+        topic.setFeePlatformRate(new java.math.BigDecimal("0.0500"));
+        topic.setTotalMileage(new java.math.BigDecimal("100.00"));
+        topic.setSelfPlayPrice(new java.math.BigDecimal("0.01"));
+        topic.setMinAmout(new java.math.BigDecimal("0.00"));
+        topic.setRating(4.0d);
+        TopicBundleReviewService.Submission submission = service.freezeForSubmission(10L, 7L);
+        service.applyDecision(10L, 7L, submission.getSnapshotJson(), false);
+        topic.setTotalMileage(new java.math.BigDecimal("100.01"));
+        assertThrows(RuntimeException.class,
+                () -> service.applyDecision(10L, 7L, submission.getSnapshotJson(), false));
+    }
+
     @Test
     void acceptsApprovedPersonalTemplateEvenWhenItsPersonalListingIsDown() {
         template.setDraftStatus(1);
