@@ -47,6 +47,7 @@ class PlaykitActionPayloadContractTest {
     private static final long MEMBER_ID = 7L;
     private static final long NODE_ID = 29L;
     private static final long SESSION_ID = 51L;
+    private static final long TOPIC_ID = 10L; // 真实局必属某主题；C包新动作按主题自玩资格锁读
 
     private final ObjectMapper mapper = new ObjectMapper();
     private GameRuntimeSessionMapper sessionMapper;
@@ -68,6 +69,7 @@ class PlaykitActionPayloadContractTest {
         com.chengyinhub.business.domain.CmsTopicNode node = new com.chengyinhub.business.domain.CmsTopicNode();
         node.setId(NODE_ID);
         node.setCheckinCode("CY-NODE-29");
+        node.setTopicId(TOPIC_ID);
         when(nodeMapper.selectCmsTopicNodeById(NODE_ID)).thenReturn(node);
         ReflectionTestUtils.setField(service, "nodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "templateMapper", mock(CmsMemberTemplateMapper.class));
@@ -258,6 +260,7 @@ class PlaykitActionPayloadContractTest {
         GameRuntimeSession session = new GameRuntimeSession();
         session.setId(SESSION_ID);
         session.setNodeId(NODE_ID);
+        session.setTopicId(TOPIC_ID);
         session.setOwnerType(GameRuntimeSession.OWNER_PLAYER);
         session.setOwnerId(MEMBER_ID);
         session.setStatus(GameRuntimeSession.STATUS_RUNNING);

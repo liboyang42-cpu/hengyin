@@ -79,12 +79,12 @@ class RoamSessionWriteMybatisIntegrationTest {
                 + "scene_key VARCHAR(48), drop_type INT, param_json TEXT, created_at DATETIME) ENGINE=InnoDB");
         String deliveryDdl = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
                 "sql/migration_20261013_roam_reward_delivery.sql")), java.nio.charset.StandardCharsets.UTF_8);
-        for (String statement : deliveryDdl.substring(0, deliveryDdl.indexOf("INSERT INTO sys_job")).split(";")) {
+        for (String statement : withoutLineComments(deliveryDdl.substring(0, deliveryDdl.indexOf("INSERT INTO sys_job"))).split(";")) {
             if (statement.trim().length() > 0) db.execute(statement);
         }
         String badgeDdl = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
                 "sql/migration_20261013_roam_badge_delivery.sql")), java.nio.charset.StandardCharsets.UTF_8);
-        for (String statement : badgeDdl.substring(0, badgeDdl.indexOf("-- readback:")).split(";")) {
+        for (String statement : withoutLineComments(badgeDdl.substring(0, badgeDdl.indexOf("-- readback:"))).split(";")) {
             if (statement.trim().length() > 0) db.execute(statement);
         }
         db.execute("CREATE TABLE player_badge(id BIGINT PRIMARY KEY AUTO_INCREMENT, member_id BIGINT, badge_code VARCHAR(64),"
@@ -478,5 +478,12 @@ class RoamSessionWriteMybatisIntegrationTest {
         rejected(owner.reveal("9", "wtw3sjq"));
         assertEquals(0, tiles());
         assertEquals(0, db.queryForObject("SELECT tiles_revealed FROM roam_session WHERE id=9", Integer.class));
+    }
+
+    /** 迁移文件头注释里可含「;」，按分号切分前先去掉整行 -- 注释(真实 MySQL 客户端同样忽略注释)。 */
+    private static String withoutLineComments(String sql) {
+        StringBuilder kept = new StringBuilder();
+        for (String line : sql.split("\n")) if (!line.trim().startsWith("--")) kept.append(line).append('\n');
+        return kept.toString();
     }
 }
