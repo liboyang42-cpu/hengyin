@@ -3006,9 +3006,13 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             throw new IllegalStateException("商家主体或核销操作人无效");
         }
         registration = requireCurrentUsableRegistration(registration);
-        CmsActivity currentActivity = cmsActivityMapper.selectCmsActivityByIdForUpdate(registration.getOwnerId());
+        // 先确认是活动场次的探索票再锁活动：自玩票 owner_id 是主题ID，不能按它去锁同号的无关活动行。
         if (!Integer.valueOf(PurchaseKind.EXPLORE_PASS).equals(registration.getPurchaseKind())
-                || currentActivity == null || !Objects.equals(topicId, currentActivity.getTopicId())) {
+                || !Long.valueOf(2L).equals(registration.getOwnerType())) {
+            throw new IllegalStateException("探索票或路线归属已变化，请重新扫码");
+        }
+        CmsActivity currentActivity = cmsActivityMapper.selectCmsActivityByIdForUpdate(registration.getOwnerId());
+        if (currentActivity == null || !Objects.equals(topicId, currentActivity.getTopicId())) {
             throw new IllegalStateException("探索票或路线归属已变化，请重新扫码");
         }
         if (cmsRegistrationMapper.hasActiveManualRefundCaseForUpdate(registration.getId())) {
