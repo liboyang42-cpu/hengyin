@@ -82,7 +82,7 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
             ClubCustomerVO.Profile profile = profiles.get(raw.getMemberId());
             ClubCustomerVO.Row row = new ClubCustomerVO.Row();
             row.setMemberId(raw.getMemberId());
-            row.setDisplayName(raw.getDisplayName());
+            row.setDisplayName(participantDisplayName(null, raw.getDisplayName(), raw.getMemberId()));
             row.setAvatar(raw.getAvatar());
             row.setVerifiedCount(nullToZero(raw.getVerifiedCount()));
             row.setPendingCount(nullToZero(raw.getPendingCount()));
@@ -116,7 +116,7 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
 
         ClubCustomerVO.Summary summary = new ClubCustomerVO.Summary();
         summary.setMemberId(raw.getMemberId());
-        summary.setDisplayName(raw.getDisplayName());
+        summary.setDisplayName(participantDisplayName(null, raw.getDisplayName(), raw.getMemberId()));
         summary.setAvatar(raw.getAvatar());
         summary.setPhoneText(phoneText(raw.getPhone(), canSeePhone));
         summary.setLastInteractionTime(raw.getLastInteractionTime());

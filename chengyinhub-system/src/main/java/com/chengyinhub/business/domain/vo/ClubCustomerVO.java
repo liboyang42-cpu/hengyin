@@ -117,7 +117,7 @@ public class ClubCustomerVO {
         public void setPaidAmount(BigDecimal paidAmount) { this.paidAmount = paidAmount; }
     }
 
-    /** 一条参与记录。statusCode ∈ VERIFIED / PENDING / REFUNDED。 */
+    /** 一条参与记录。statusCode ∈ VERIFIED / PENDING / REFUNDED / CANCELLED(免费报名取消)。 */
     public static class Record {
         private String key;
         private Long topicId;

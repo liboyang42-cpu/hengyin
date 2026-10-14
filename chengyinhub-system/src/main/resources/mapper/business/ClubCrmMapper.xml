@@ -32,7 +32,8 @@
         max(u.phone) as phone,
         sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) as verified_count,
         sum(case when r.payment_status = 2 and (r.verification_status is null or r.verification_status &lt;&gt; 1) then 1 else 0 end) as pending_count,
-        sum(case when r.payment_status = 4 then 1 else 0 end) as refunded_count,
+        <!-- F-W1-08:免费报名取消(未付现金、未用积分)是「已取消」,不计入退款。 -->
+        sum(case when r.payment_status = 4 and not (r.registration_status = 3 and r.payable_amount = 0 and r.point_used = 0) then 1 else 0 end) as refunded_count,
         coalesce(sum(case when r.payment_status = 2 then coalesce(r.payable_amount, r.total_amount, 0) else 0 end), 0) as paid_amount,
         max(coalesce(r.verification_time, r.create_time)) as last_interaction_time
     </sql>
@@ -165,7 +166,8 @@
             case when r.owner_type = 1 then r.owner_id else a.topic_id end as topic_id,
             coalesce(t.name, a.name) as title,
             date_format(coalesce(r.verification_time, r.create_time), '%Y-%m-%d') as occurred_at,
-            case when r.payment_status = 4 then 'REFUNDED'
+            case when (r.registration_status = 3 and r.payable_amount = 0 and r.point_used = 0) then 'CANCELLED'
+                 when r.payment_status = 4 then 'REFUNDED'
                  when r.verification_status = 1 then 'VERIFIED'
                  else 'PENDING' end as status_code
         from cms_registration r
