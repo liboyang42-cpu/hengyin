@@ -68,4 +68,23 @@ class ApiPlayCurrentUseBoundaryTest {
         assertEquals("该节点未配置答题",answer().get("msg"));
         verify(registrations).selectCmsRegistrationByIdForUpdate(19L);
     }
+
+    // 2026-10-14 用户已定：自玩通行证在本局内有效。普通线性路线没有路线局，以本人在该主题自玩下的节点进度判定已开局。
+    private void expiredSelfPlayPass() {
+        current=new CmsRegistration();current.setId(19L);current.setMemberId(7L);current.setOwnerType(1L);current.setOwnerId(29L);
+        current.setRegistrationStatus(2);current.setPaymentStatus(0);current.setPurchaseKind(2);current.setExpiresAt(new Date(1000L));
+        when(registrations.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(current));
+    }
+    private AjaxResult selfPlayAnswer() { return controller.answer(null,"39","answer","29"); }
+    @Test void expiredSelfPlayPassStillFinishesARouteAlreadyStarted() {
+        expiredSelfPlayPass();
+        when(progress.selectPlayerNodeProgressList(any())).thenReturn(Collections.singletonList(new PlayerNodeProgress()));
+        assertEquals("该节点未配置答题",selfPlayAnswer().get("msg"),"已开局(已有本主题自玩进度)：中途到期仍可打完");
+    }
+    @Test void expiredSelfPlayPassCannotStartANewRoute() {
+        expiredSelfPlayPass();
+        when(progress.selectPlayerNodeProgressList(any())).thenReturn(Collections.emptyList());
+        AjaxResult result=selfPlayAnswer();
+        assertEquals(402,result.get("code"),"未开局：到期后不能新开局，仍回购票态 402");
+    }
 }
