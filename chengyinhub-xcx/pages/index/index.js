@@ -296,7 +296,7 @@ Page({
     app.waitForAppReady().then(() => {
       // 登录落地后才知道真实身份:冷缓存冷启动时上面那次同步判定手里根本没有角色快照
       // (restore() 拿不到、登录是异步的),商家会停在玩家首页直到下一次 onShow ——
-      // 2026-08-10 用户真机(体验版)实测的正是这个。必须排在 loadPageData/getFuzzyLocation
+      // 2026-08-10 用户真机(体验版)实测的正是这个。必须排在 loadPageData/getHomeLocation
       // 之前,否则商家先被弹一次定位授权框再被跳走。
       // 本页已不是栈顶(用户自己切走了)就别抢导航。
       if (that._unloaded) return;
@@ -310,7 +310,7 @@ Page({
       }
       that.setData({ isAppReady: true });
       that.loadPageData();
-      that.getFuzzyLocation();
+      that.getHomeLocation();
       that.retryPendingInviter();
     }).catch(err => {
       if (that._unloaded) return;
@@ -376,7 +376,7 @@ Page({
     }
     this.setData({ _needsRedirect: false, isAppReady: true });
     this.loadPageData();
-    this.getFuzzyLocation();
+    this.getHomeLocation();
   },
 
   // A-01:登录落地后补发一次邀请关系(onLoad 时新用户还没有 currentUserId)。
@@ -1470,18 +1470,20 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     return indexFormat.processTopicDate(list);
   },
 
-  getFuzzyLocation() {
+  // F-L5C-14(用户决定:全站精确定位):漫游/游玩到点打卡需要精确定位,微信不允许 getFuzzyLocation 与
+  // getLocation 同时声明,首页改走同一条精确定位授权(scope.userLocation),用途仍是推荐附近内容。
+  getHomeLocation() {
     const that = this;
     const scope = captureLocationRequest(this);
 
     wx.getSetting({
       success(res) {
         if (!isCurrentLocationRequest(that, scope)) return;
-        const hasAuth = res.authSetting['scope.userFuzzyLocation'];
+        const hasAuth = res.authSetting['scope.userLocation'];
         if (!hasAuth) {
-          that.requestFuzzyLocationPermission(scope);
+          that.requestHomeLocationPermission(scope);
         } else {
-          that.executeGetFuzzyLocation(scope);
+          that.executeGetHomeLocation(scope);
         }
       },
       // 原为 setData({errorMsg}),但 errorMsg 全页零渲染 ⇒ 错误写进 data 就死在那里。
@@ -1493,16 +1495,16 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     });
   },
 
-  requestFuzzyLocationPermission(locationScope) {
+  requestHomeLocationPermission(locationScope) {
     const that = this;
     const scope = locationScope || captureLocationRequest(this);
     if (!isCurrentLocationRequest(this, scope)) return;
 
     wx.authorize({
-      scope: 'scope.userFuzzyLocation',
+      scope: 'scope.userLocation',
       success() {
         if (!isCurrentLocationRequest(that, scope)) return;
-        that.executeGetFuzzyLocation(scope);
+        that.executeGetHomeLocation(scope);
       },
       fail(err) {
         if (!isCurrentLocationRequest(that, scope)) return;
@@ -1517,7 +1519,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     if (!isCurrentLocationRequest(this, scope)) return;
     modal.show({
       title: '位置权限提示',
-      content: '授权模糊位置可推荐附近活动，也可以继续浏览。是否前往设置开启？',
+      content: '授权位置可推荐附近活动，也可以继续浏览。是否前往设置开启？',
       confirmText: '去设置',
       cancelText: '取消',
       success(res) {
@@ -1526,10 +1528,10 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
           wx.openSetting({
             success(settingRes) {
               if (!isCurrentLocationRequest(that, scope)) return;
-              const hasAuth = settingRes.authSetting['scope.userFuzzyLocation'];
+              const hasAuth = settingRes.authSetting['scope.userLocation'];
               if (hasAuth) {
-                // 修复:此回调内 this 非页面实例,原 this.executeGetFuzzyLocation() 会失效
-                that.executeGetFuzzyLocation(scope);
+                // 修复:此回调内 this 非页面实例,原 this.executeGetHomeLocation() 会失效
+                that.executeGetHomeLocation(scope);
               }
             }
           });
@@ -1539,20 +1541,20 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     // 原这里还 setData 一个全页零渲染的 errorMsg;上面的 showModal 已是用户可见反馈。
   },
 
-  executeGetFuzzyLocation(locationScope) {
+  executeGetHomeLocation(locationScope) {
     const that = this;
     const scope = locationScope || captureLocationRequest(this);
 
     cyLoading.show('获取位置中...');
     this._locationLoadingEpoch = scope.epoch;
 
-    if (!wx.getFuzzyLocation) {
+    if (!wx.getLocation) {
       hideLocationLoading(this, scope);
       cyToast('微信版本不支持定位，附近可能不准', { duration: 3000 });
       return;
     }
 
-    wx.getFuzzyLocation({
+    wx.getLocation({
       type: 'gcj02',
       success(res) {
         hideLocationLoading(that, scope);

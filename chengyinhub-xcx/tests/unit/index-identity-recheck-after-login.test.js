@@ -78,7 +78,7 @@ function setupPage(options) {
     if (typeof cb === 'function') cb();
   };
   // onLoad 尾部的同步副作用与 ready 回调里的数据加载,全部换成可观测的桩
-  ['_layoutChrome', 'startCountdownTimer', 'handleInviter', 'loadPageData', 'getFuzzyLocation']
+  ['_layoutChrome', 'startCountdownTimer', 'handleInviter', 'loadPageData', 'getHomeLocation']
     .forEach((name) => { page[name] = () => { calls.push(name); }; });
 
   global.getCurrentPages = () => [page];
@@ -120,7 +120,7 @@ test('复判判出商家时不许先去拉数据/弹定位授权,再把人跳走
   await flush();
 
   assert.deepStrictEqual(ctx.redirects, [MERCHANT_HOME]);
-  assert.ok(!ctx.calls.includes('getFuzzyLocation'), '商家不该先被弹一次定位授权框再被跳走');
+  assert.ok(!ctx.calls.includes('getHomeLocation'), '商家不该先被弹一次定位授权框再被跳走');
   assert.ok(!ctx.calls.includes('loadPageData'), '要跳走了就别再拉玩家首页的数据');
 });
 
@@ -135,7 +135,7 @@ test('登录落地后仍是玩家:不许乱跳,照常拉数据', async () => {
 
   assert.deepStrictEqual(ctx.redirects, [], '玩家不该被弹去商家首页');
   assert.ok(ctx.calls.includes('loadPageData'), '玩家路径的数据加载不能被复判挡掉');
-  assert.ok(ctx.calls.includes('getFuzzyLocation'), '玩家路径的定位不能被复判挡掉');
+  assert.ok(ctx.calls.includes('getHomeLocation'), '玩家路径的定位不能被复判挡掉');
 });
 
 test('热缓存:同步分支直接命中,复判不产生第二次跳转', async () => {
@@ -187,7 +187,7 @@ test('首页卸载后 appReady 迟到回调不得 setData、加载数据或触�
 
   assert.equal(postUnloadWrites, 0);
   assert.ok(!ctx.calls.includes('loadPageData'));
-  assert.ok(!ctx.calls.includes('getFuzzyLocation'));
+  assert.ok(!ctx.calls.includes('getHomeLocation'));
 });
 
 test('跳商家首页必须带 fail 回调(导航被丢时不能零信号)', () => {
