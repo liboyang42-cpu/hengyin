@@ -276,6 +276,27 @@ class RefundServiceImplTest {
         order.verify(clawback).onRegistrationRefunded(registration);
     }
 
+    /** F-L4-02:系统全额退款只取代待审核申请(CAS 0→2),已批准/已驳回的不动;CAS 落空即失败回滚。 */
+    @Test
+    void systemFullRefundSupersedesOnlyPendingApplications() {
+        RefundApplicationMapper refundMapper = mock(RefundApplicationMapper.class);
+        RefundServiceImpl service = service(refundMapper, mock(CmsRegistrationMapper.class), mock(SettlementDetailMapper.class));
+        RefundApplication pending = refund(10L, 99L, 2L); pending.setStatus(0);
+        RefundApplication approved = refund(11L, 99L, 2L); approved.setStatus(1);
+        RefundApplication rejected = refund(12L, 99L, 2L); rejected.setStatus(2);
+        when(refundMapper.selectRegistrationHistoryForUpdate(99L))
+                .thenReturn(java.util.Arrays.asList(pending, approved, rejected));
+        when(refundMapper.updateRefundStatusIfPending(eq(10L), eq(2), eq(0L), any(), anyString())).thenReturn(1);
+
+        assertEquals(1, service.supersedePendingRegistrationRefunds(99L, "主办方取消活动,全额退款"));
+        verify(refundMapper).updateRefundStatusIfPending(eq(10L), eq(2), eq(0L), any(), anyString());
+        verify(refundMapper, never()).updateRefundStatusIfPending(eq(11L), any(), any(), any(), any());
+        verify(refundMapper, never()).updateRefundStatusIfPending(eq(12L), any(), any(), any(), any());
+
+        when(refundMapper.updateRefundStatusIfPending(eq(10L), eq(2), eq(0L), any(), anyString())).thenReturn(0);
+        assertThrows(IllegalStateException.class, () -> service.supersedePendingRegistrationRefunds(99L, "x"));
+    }
+
     @Test
     void repeatedRefundApprovalDoesNotCreateAdjustment() {
         RefundApplicationMapper refundMapper = mock(RefundApplicationMapper.class);

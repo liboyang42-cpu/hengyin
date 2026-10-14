@@ -243,7 +243,7 @@ EXPECTED = {
     # 2026-09-21 CYV-P1-002:主理人转让与活动取消在 MySQL RR/RC 下的锁后权限、
     # 精确 topic/club/activity scope 和并发退款幂等。
     "ClubEventTransferCancellationMySqlIT": 3,
-    "RefundRetryAndRemainderMySqlIT": 4,
+    "RefundRetryAndRemainderMySqlIT": 5,
     "SignupNoticeAfterCommitPersistenceMySqlIT": 5,
     "TopicLikeDesiredStateMySqlIT": 3,
     "MonitorMissingJobsMySqlIT": 3,
