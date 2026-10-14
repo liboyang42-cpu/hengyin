@@ -29,6 +29,7 @@
 | 8 | C | **真库**：`RoamBadgeDeliveryService` 把 Map 中 DATETIME 强转 `Date`，Connector/J 8 返回 `LocalDateTime` → 徽章补交付必抛 `ClassCastException`；`archiveFinishedRecords` 的 `instanceof Date` 使重复补传恒报「原采集记录不一致」 | 兼容 `Date/LocalDateTime` 按 JVM 默认时区还原；真库 IT 23/25 → 25/25 |
 | 9 | A | 资金真库 IT：按章核销对非探索票先按 `owner_id`（自玩票为主题 ID）锁 `cms_activity` 同号无关行 | 先确认活动场次探索票再锁活动 |
 | 10 | 集成 | 生成台账 `action-ledger.json` 失配 | 统一重建：4432 控件集合不变；257 条仅源位置；漫游 4 个控件因 C 包恢复/结算重试会重启定位，被生成器改判 external（真机门） |
+| 12 | B | 本机复现 6/40：`analytics.test.js`「满队列…」间歇失败。自动幂等键 `事件名_毫秒_0~9999随机`，同毫秒不同事件随机后缀碰撞即被 B 新增的同键去重静默吞掉（真实埋点丢失） | 自动键加进程内序号；复跑 0/60，analytics 31/31；`lint:ui` 同一调用 223→226 等量换 key |
 | 11 | A/C | 45 个后端测试类因新锁读/新依赖未接夹具、Mockito 默认值（Long→0L、Map→空 Map）、嵌套 stub、mock 忽略 member/owner 条件而失败 | 按真实行/真实合同补夹具（控制器委托夹具、`CurrentPlayTestFixtures.installOn/delegateLocks` 等）；见第 4 节断言审计 |
 
 ## 3. 实测结果（集成头）
@@ -69,5 +70,6 @@
 3. **`lint:ui`**：唯一剩余项 `im/list/index.js:352` 动态 setData 未登记，交接基线即如此（基线 CI 9/10 的失败门）；未擅自扩棘轮。
 4. **免费自玩真库证明缺失**：`FreeSelfPlayCreateRealDbIT` 的 schema 夹具早于 0930/1004 等迁移（交接基线 mapper 已读 `first_successful_scan_at`、`theme_runtime_config_json`），与 A 改动无关但未能运行；免费资格仅有单测证据（`CurrentPlayRegistrationTest` 11/11 含 payment=0、`ApiPlayCurrentUseBoundaryTest` 4/4、`ApiPlayRunSessionControllerTest` 4/4）。
 5. **待用户决定的范围问题**：C 在已有对局的 `act/completeGate` 也加了当前资格锁读，自玩通行证在局中途过期会阻止继续本局；探索票按已定规则合理，普通自玩是否属于「新使用」未有既定规则。集成未回退 C 设计。
-6. **观察**：`ApiRoamController` 第 177 行对 Map 中 `foundAt` 的 `(Date)` 强转为交接基线既有代码，与第 2 节 #8 同类风险，未改。`RoamRewardDeliveryService` 对无意图旧掉落且券已停发时记 `SKIPPED_DISABLED`（不发券，仅标签与 UNKNOWN 不同）。
-7. **未验**：真实双方身份、微信支付/渠道回调与 UNKNOWN、AI provider、微信开发者工具与真机、生产 DDL、Quartz 启用、上传微信。测试 VPS 隧道期间多次中断，均重试后取得结果；VPS 内存紧张（约 600MB 可用），本人容器加硬上限，未影响他人容器。
+6. **既有间歇失败（交接基线已存在，未改）**：`action-ledger.test.js` 在小程序目录内建临时 `.action-ledger-history-*` 目录，与并行运行的 `skeleton-host-flex-contract.test.js` 全目录 WXML 扫描竞态，偶发 ENOENT（集成 CI 末轮出现一次）。
+7. **观察**：`ApiRoamController` 第 177 行对 Map 中 `foundAt` 的 `(Date)` 强转为交接基线既有代码，与第 2 节 #8 同类风险，未改。`RoamRewardDeliveryService` 对无意图旧掉落且券已停发时记 `SKIPPED_DISABLED`（不发券，仅标签与 UNKNOWN 不同）。
+8. **未验**：真实双方身份、微信支付/渠道回调与 UNKNOWN、AI provider、微信开发者工具与真机、生产 DDL、Quartz 启用、上传微信。测试 VPS 隧道期间多次中断，均重试后取得结果；VPS 内存紧张（约 600MB 可用），本人容器加硬上限，未影响他人容器。
