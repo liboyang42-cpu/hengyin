@@ -7,7 +7,7 @@
       :status="loading ? '同步中' : '实时队列'"
       :updated-at="updatedAt"
     >
-      <el-button icon="el-icon-refresh" :loading="loading" @click="getHomeData">刷新队列</el-button>
+      <el-button icon="el-icon-refresh" v-if="canReadSummary" :loading="loading" @click="getHomeData">刷新队列</el-button>
       <el-button v-if="hasPermission('business:audit:list')" slot="primary" type="primary" @click="goAuditWorkbench">进入审核台</el-button>
     </cy-page-header>
 
@@ -44,6 +44,7 @@
         :items="visibleReviewTasks"
         :loading="loading"
         :error="error"
+        :retryable="canReadSummary"
         @select="openTask"
         @retry="getHomeData"
       />
@@ -57,11 +58,12 @@
           <span class="workbench__source">实时</span>
         </div>
         <div class="workbench__metrics">
+          <!-- 「已接通」以本次请求结果为准：无权或读取失败时不能同时显示已接通 -->
           <cy-metric-card
             label="待审队列"
             :value="`${visibleReviewTasks.length} 类`"
             description="商家、帖文、主题、活动和模板待审计数。"
-            connected
+            :connected="summaryLoaded"
           />
           <cy-metric-card
             label="SLA 与负责人"
@@ -100,6 +102,7 @@ export default {
       loading: false,
       error: '',
       updatedAt: '',
+      summaryLoaded: false,
       actionUsage: {}
     }
   },
@@ -128,6 +131,10 @@ export default {
         task('activity', '活动审核', 'activityNum', '核对活动时间、地点与报名信息', 'business:activity:list', { path: '/business/activity', query: { check_status: 0 } }),
         task('template', '模板审核', 'memberTemplateNum', '核对模板内容与可用范围', 'business:membertemplate:list', { path: '/business/membertemplate', query: { check_status: 0 } })
       ]
+    },
+    // /business/home/data 要求 business:analytics:list（HomeController）。
+    canReadSummary() {
+      return this.hasPermission('business:analytics:list')
     },
     // 无权限的角色不该看到点不动的卡片：跳转按 route name 走之后，
     // 未授权账号那条动态路由根本不会注册，$router.push 抛的错又被
@@ -171,8 +178,10 @@ export default {
   },
   methods: {
     getHomeData() {
-      if (!this.hasPermission('business:analytics:list')) {
-        this.error = '当前账号没有查看待审摘要的权限，请使用已有权限的业务入口。'
+      if (!this.canReadSummary) {
+        // 无 business:analytics:list 不请求 /business/home/data，避免每次登录都弹「没有权限」。
+        this.summaryLoaded = false
+        this.error = '当前账号无权查看待审摘要，请从左侧有权限的业务入口进入。'
         return Promise.resolve()
       }
       this.loading = true
@@ -180,10 +189,13 @@ export default {
       return getHomeData()
         .then(response => {
           this.record = response.data || {}
+          this.summaryLoaded = true
           this.updatedAt = this.parseTime(new Date(), '{y}-{m}-{d} {h}:{i}')
         })
         .catch(() => {
-          this.error = '待审队列读取失败，请检查网络或稍后重试。'
+          // 拦截器对业务错误码（含 403）与网络错误都 reject，这里不能一律归因为网络。
+          this.summaryLoaded = false
+          this.error = '待审摘要读取失败，请稍后重试；如持续失败，请联系管理员核对账号权限或服务状态。'
         })
         .finally(() => {
           this.loading = false
