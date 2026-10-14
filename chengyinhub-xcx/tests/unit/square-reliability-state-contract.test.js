@@ -119,7 +119,7 @@ test('广场刷新失败保留旧帖并在 complete 后收起系统刷新动画'
   assert.deepEqual(h.page.data.list, previous)
   assert.equal(h.page.data.isRefreshing, true)
   assert.equal(h.requests.length, 1)
-  assert.equal(h.requests[0].data.cursor, null)
+  assert.equal(Object.hasOwn(h.requests[0].data, 'cursor'), false)
 
   h.requests[0].success({ code: 500, msg: '刷新暂时失败' })
   assert.deepEqual(h.page.data.list, previous)
@@ -218,7 +218,7 @@ test('广场发布成功关闭编辑层，并在刷新回读前保留原列表',
   assert.equal(h.page.data.valCont, '')
   assert.deepEqual(h.page.data.list, previous)
   assert.equal(h.requests.length, 5)
-  assert.equal(h.requests[4].data.cursor, null)
+  assert.equal(Object.hasOwn(h.requests[4].data, 'cursor'), false)
 })
 
 test('帖子与评论的点赞、关注微操作单飞，失败不会提前改写界面状态', async () => {

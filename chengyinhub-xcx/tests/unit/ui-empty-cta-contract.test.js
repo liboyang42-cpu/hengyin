@@ -322,7 +322,7 @@ test('收藏页只保留帖文与主题数据链，不回流退役活动与商�
   assert.equal(requests.length, 1)
   assert.equal(requests[0].url, '/api/v1/community/me/bookmarks')
   assert.equal(requests[0].method, 'GET')
-  assert.equal(requests[0].data.cursor, null)
+  assert.equal(Object.hasOwn(requests[0].data, 'cursor'), false)
 
   const source = read('pages/mylike/mylike.js')
   assert.match(source, /activeFavoriteTab/)
@@ -349,7 +349,7 @@ test('收藏页首展由 onLoad 单独请求，第一次 onShow 不制造第二�
   page.onShow()
   await flush()
   assert.equal(requests.length, 1, '首展两个生命周期合计只能发一次请求')
-  assert.equal(requests[0].data.cursor, null)
+  assert.equal(Object.hasOwn(requests[0].data, 'cursor'), false)
 })
 
 test('收藏页第二次 onShow 会从 page=1 刷新，且仍经过 loading 守卫', async () => {
@@ -363,7 +363,7 @@ test('收藏页第二次 onShow 会从 page=1 刷新，且仍经过 loading 守�
   page.onShow()
   await flush()
   assert.equal(requests.length, 2, '返回收藏页必须重新读取服务端列表')
-  assert.equal(requests[1].data.cursor, null)
+  assert.equal(Object.hasOwn(requests[1].data, 'cursor'), false)
 
   page.onShow()
   await flush()
