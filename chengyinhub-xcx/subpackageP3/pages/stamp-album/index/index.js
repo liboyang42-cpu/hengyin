@@ -68,7 +68,7 @@ Page({
     this.setData({ loading: true, error: false, readAccess: '' });
     const that = this;
     app.sendRequest({
-      url: '/api/roam/stamp/list', method: 'POST', autoErrorToast: this.data.items.length > 0,
+      url: '/api/roam/stamp/list', method: 'POST', autoErrorToast: false,
       data: { pageNum: this.data.pageNum, pageSize: 50 },
       success(res) {
         if (that._readOutcome(res, null, owner, seq)) return;

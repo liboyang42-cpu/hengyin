@@ -339,7 +339,7 @@ Page({
     app.sendRequest({
       hideLoading: true,
       url: '/api/user/info',
-      autoErrorToast: hadLoaded,   // 从未读到过 = auto-back 半屏讲原因,不叠 toast
+      autoErrorToast: false,   // F-R2U-01:读取失败(含刷新)一律不弹 toast
       data: {
         member_id: app.getUserID()
       },

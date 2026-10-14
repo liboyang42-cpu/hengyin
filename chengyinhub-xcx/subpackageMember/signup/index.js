@@ -303,13 +303,9 @@ Page({
   // 主题swiper切换
   // 活动swiper切换
 
-  // 两路落定后提示单路失败；有票继续显示，没票由 walletState 提供可重试错误态。
-  _reportHalfFailure() {
-    const t = this._topic || {}, a = this._activity || {};
-    if (t.state === 'loading' || a.state === 'loading') return;
-    const failed = [t, a].filter((x) => x.state === 'error');
-    if (failed.length === 1) toast(failed[0].err || '部分票没加载出来');
-  },
+  // F-R2U-01(用户要求):读取失败一律留白。单路失败时继续显示另一路的票,不再弹「部分票没加载出来」;
+  // 两路都失败由 walletState 留白。保留方法名供两路回调统一收口。
+  _reportHalfFailure() {},
 
   getTopicList: function () {
     var that = this;

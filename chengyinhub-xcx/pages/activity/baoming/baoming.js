@@ -402,7 +402,6 @@ Page({
         participantErrorMsg: message || '请稍后重试'
       }, () => that.refreshPaymentState());
       console.error('获取参与人信息失败');
-      toast('参与人信息加载失败，请重试');
     };
     requestContext.task = app.sendRequest({
       url: '/api/user/address/list',

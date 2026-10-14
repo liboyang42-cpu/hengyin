@@ -906,7 +906,7 @@
   <cy-sheet variant="full" show="{{postHistoryShow}}" title="编辑历史" bind:close="closePostHistory">
     <view class="post-history-sheet">
       <view class="post-history-state" wx:if="{{postHistoryState === 'loading'}}">正在读取…</view>
-      <view class="post-history-state" wx:elif="{{postHistoryState === 'error'}}">历史读取失败，请关闭后重试</view>
+      <!-- F-R2U-01:编辑历史读取失败按加载失败留白(不显示错误文案) -->
       <view class="post-history-row" wx:for="{{postHistoryRows}}" wx:key="id">
         <view class="post-history-meta">{{item.versionText}} · {{item.timeText}}</view>
         <view class="post-history-content">{{item.content || '（仅图片动态）'}}</view>

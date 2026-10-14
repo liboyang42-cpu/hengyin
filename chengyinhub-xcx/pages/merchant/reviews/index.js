@@ -239,7 +239,7 @@ Page({
     };
     if (mode === 'manage') {
       app.sendRequest({
-        hideLoading: requestOptions.hideLoading, autoErrorToast: !!append,
+        hideLoading: requestOptions.hideLoading, autoErrorToast: false,
         url: `/api/merchant/reviews/manage?pageNum=${pageNum}&pageSize=20`,
         method: requestOptions.method,
         success: requestOptions.success,
@@ -248,7 +248,7 @@ Page({
       });
     } else {
       app.sendRequest({
-        hideLoading: requestOptions.hideLoading, autoErrorToast: !!append,
+        hideLoading: requestOptions.hideLoading, autoErrorToast: false,
         url: `/api/merchant/reviews/public?merchantRowId=${encodeURIComponent(this._merchantRowId)}&pageNum=${pageNum}&pageSize=20`,
         method: requestOptions.method,
         success: requestOptions.success,

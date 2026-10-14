@@ -47,7 +47,7 @@ Page({
       errorAction: '重新加载'
     });
     app.sendRequest({
-      url: '/api/team/info', method: 'POST', hideLoading: true, autoErrorToast: hasTeam,
+      url: '/api/team/info', method: 'POST', hideLoading: true, autoErrorToast: false,
       data: JSON.stringify({ inviteCode: this.inviteCode }),
       header: { 'Content-Type': 'application/json' },
       success(res) {
