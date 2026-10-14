@@ -52,30 +52,62 @@ public class DataRetentionCleanupTask {
     @Autowired
     private IDataRetentionService dataRetentionService;
 
+    @Autowired
+    private com.chengyinhub.business.service.impl.AlarmService alarmService;
+
+    /**
+     * F-L4-12：各留存步骤互相独立，一步失败不能让后面的合规删除整段跳过；全部跑完后告警并重抛，
+     * sys_job_log 记失败而不是 SUCCESS。
+     */
     public void run() {
         long now = System.currentTimeMillis();
+        java.util.List<String> failedSteps = new java.util.ArrayList<>();
+        RuntimeException firstFailure = null;
+
+        int browse = -1, event = -1, npcChat = -1, npcChatRequest = -1, roam = -1;
         try {
-            Date browseCutoff = new Date(now - (long) browseDays * DAY_MILLIS);
-            int browse = dataRetentionService.cleanBrowseRecords(browseCutoff, batchSize, maxBatches);
-
-            Date eventCutoff = new Date(now - (long) eventDays * DAY_MILLIS);
-            int event = dataRetentionService.cleanBizEventLogs(eventCutoff, batchSize, maxBatches);
-
-            Date npcChatCutoff = new Date(now - (long) npcChatDays * DAY_MILLIS);
-            int npcChat = dataRetentionService.cleanNpcChatLogs(npcChatCutoff, batchSize, maxBatches);
-
-            Date npcChatRequestCutoff = new Date(now - (long) npcChatRequestHours * HOUR_MILLIS);
-            int npcChatRequest = dataRetentionService.cleanNpcChatRequests(npcChatRequestCutoff, batchSize, maxBatches);
-
-            int roam = dataRetentionService.cleanRoamLocations(
+            browse = dataRetentionService.cleanBrowseRecords(new Date(now - (long) browseDays * DAY_MILLIS), batchSize, maxBatches);
+        } catch (RuntimeException e) { firstFailure = record(failedSteps, "browse", e, firstFailure); }
+        try {
+            event = dataRetentionService.cleanBizEventLogs(new Date(now - (long) eventDays * DAY_MILLIS), batchSize, maxBatches);
+        } catch (RuntimeException e) { firstFailure = record(failedSteps, "event", e, firstFailure); }
+        try {
+            npcChat = dataRetentionService.cleanNpcChatLogs(new Date(now - (long) npcChatDays * DAY_MILLIS), batchSize, maxBatches);
+        } catch (RuntimeException e) { firstFailure = record(failedSteps, "npc_chat", e, firstFailure); }
+        try {
+            npcChatRequest = dataRetentionService.cleanNpcChatRequests(
+                    new Date(now - (long) npcChatRequestHours * HOUR_MILLIS), batchSize, maxBatches);
+        } catch (RuntimeException e) { firstFailure = record(failedSteps, "npc_chat_request", e, firstFailure); }
+        try {
+            roam = dataRetentionService.cleanRoamLocations(
                     new Date(now - com.chengyinhub.business.support.RoamLocationRetention.THIRTY_DAYS_MILLIS), batchSize, maxBatches);
             log.info("漫游详细位置清理完成 sessions/shares={} retentionDays=30", roam);
-            log.info("留存清理任务完成:浏览记录删 {} 行(保留{}天)、行为事件删 {} 行(保留{}天)、NPC追问删 {} 行(保留{}天)、Chat幂等终态删 {} 行(保留{}小时)",
-                    browse, browseDays, event, eventDays, npcChat, npcChatDays,
-                    npcChatRequest, npcChatRequestHours);
-        } catch (Exception e) {
-            log.error("留存清理任务异常", e);
-            throw new IllegalStateException("Data retention cleanup failed", e);
+        } catch (RuntimeException e) { firstFailure = record(failedSteps, "roam_location", e, firstFailure); }
+
+        log.info("留存清理任务结束:浏览记录删 {} 行(保留{}天)、行为事件删 {} 行(保留{}天)、NPC追问删 {} 行(保留{}天)、Chat幂等终态删 {} 行(保留{}小时) 失败步骤={}",
+                browse, browseDays, event, eventDays, npcChat, npcChatDays,
+                npcChatRequest, npcChatRequestHours, failedSteps);
+        if (firstFailure != null) {
+            IllegalStateException failure = new IllegalStateException(
+                    "Data retention cleanup failed steps=" + failedSteps, firstFailure);
+            try {
+                if (alarmService != null) {
+                    alarmService.alarmThrottled("job.data_retention.failed", "合规留存清理失败",
+                            "failedSteps=" + failedSteps + " type=" + firstFailure.getClass().getSimpleName());
+                }
+            } catch (RuntimeException alarmFailure) {
+                failure.addSuppressed(alarmFailure);
+            }
+            throw failure;
         }
+    }
+
+    private RuntimeException record(java.util.List<String> failedSteps, String step, RuntimeException e,
+                                    RuntimeException firstFailure) {
+        log.error("留存清理步骤失败 step={}", step, e);
+        failedSteps.add(step);
+        if (firstFailure == null) return e;
+        firstFailure.addSuppressed(e);
+        return firstFailure;
     }
 }

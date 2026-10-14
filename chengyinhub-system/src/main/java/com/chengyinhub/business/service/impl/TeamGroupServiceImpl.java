@@ -1296,6 +1296,10 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
                 throw new ServiceException("整单退款状态已变化,请刷新后重试", HttpStatus.CONFLICT);
             }
         }
+        // F-L4-02：同单成员上尚待审核的退款申请由本次整单退取代，否则 payer 新退款单被拒、兄弟票的旧申请永远批不了。
+        for (CmsRegistration m : claimed) {
+            refundService.supersedePendingRegistrationRefunds(m.getId(), reason);
+        }
         // 只有 claim winner 才能通过库存回补闸；后续任意异常仍由外层事务一起回滚。
         for (CmsRegistration m : claimed) {
             restoreInventory(m);
@@ -1449,6 +1453,8 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     private void refundOneAfterInventoryRestored(CmsRegistration r, BigDecimal cash, String ticketName, String reason) {
         boolean hasCash = cash != null && cash.compareTo(BigDecimal.ZERO) > 0;
         if (hasCash) {
+            // F-L4-02：待审核申请会让新退款单被拒并回滚整场取消；全额退款取代它（未打款，CAS 置驳回）。
+            refundService.supersedePendingRegistrationRefunds(r.getId(), reason);
             RefundApplication app = new RefundApplication();
             app.setSourceType("registration");
             app.setSourceId(r.getId());

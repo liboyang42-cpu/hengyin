@@ -144,7 +144,9 @@ public class MerchantCommerceService implements IMerchantCommerceService {
         grant.setMaxUsage(order.getEntitlementMaxUsage());
         grant.setUsedCount(0);
         grant.setIsActive(1);
-        if (subscriptionMapper.grantMerchantSubscription(grant) != 1) {
+        // MySQL INSERT=1，ON DUPLICATE KEY UPDATE 实际续订=2；两者都是真实成功(移植自 PR #8 mini-foundation-a)。
+        int grantRows = subscriptionMapper.grantMerchantSubscription(grant);
+        if (grantRows != 1 && grantRows != 2) {
             throw new IllegalStateException("商业化权益授予失败");
         }
         return true;
@@ -159,7 +161,18 @@ public class MerchantCommerceService implements IMerchantCommerceService {
         if (!supportsOutTradeNo(outTradeNo) || !bizMatchesPrefix(order.getBizType(), outTradeNo)) {
             throw new IllegalStateException("商业化订单类型与单号不一致");
         }
-        Map<String, String> observed = wechatPayService.queryOrderStatus(outTradeNo);
+        boolean abandoned = isAbandoned(order);
+        Map<String, String> observed;
+        try {
+            observed = wechatPayService.queryOrderStatus(outTradeNo);
+        } catch (com.chengyinhub.business.service.WechatOrderNotExistException missing) {
+            // 微信侧从未建单 = 不可能已付款。过了放弃窗口才本地关单；新单仍按异常上报。
+            if (abandoned) {
+                orderMapper.markCommerceOrderClosed(order.getId());
+                return;
+            }
+            throw new IllegalStateException("商业化订单微信侧不存在", missing);
+        }
         if (observed == null || !outTradeNo.equals(observed.get("out_trade_no"))) {
             throw new IllegalStateException("商业化查单结果无法确认");
         }
@@ -175,9 +188,24 @@ public class MerchantCommerceService implements IMerchantCommerceService {
             }
         } else if ("CLOSED".equals(state) || "REVOKED".equals(state)) {
             orderMapper.markCommerceOrderClosed(order.getId());
+        } else if (("NOTPAY".equals(state) || "PAYERROR".equals(state)) && abandoned) {
+            // 放弃的待支付单不能每 5 分钟查一辈子：先在微信侧关单(已付会被微信拒绝并抛出，
+            // 下一轮查到 SUCCESS 照常补记)，关单成功后才本地终结。
+            if (!wechatPayService.closeOrder(outTradeNo)) {
+                throw new IllegalStateException("商业化超时订单关单未确认");
+            }
+            orderMapper.markCommerceOrderClosed(order.getId());
         } else if (!"NOTPAY".equals(state) && !"USERPAYING".equals(state) && !"PAYERROR".equals(state)) {
             throw new IllegalStateException("商业化支付状态无法确认");
         }
+    }
+
+    /** 待支付超过放弃窗口(24h)的商业化订单不再等待用户回来支付。 */
+    static final long ABANDON_AFTER_MILLIS = 24L * 60 * 60 * 1000;
+
+    private boolean isAbandoned(OmsOrder order) {
+        Date created = order.getCreateTime();
+        return created != null && System.currentTimeMillis() - created.getTime() >= ABANDON_AFTER_MILLIS;
     }
 
     public Entitlement entitlement(Long memberId, String role, String entitlementType, int currentUsage) {

@@ -176,6 +176,7 @@ public class WxPayConfig {
         logger.info("apiV3KeyConfigured: {}", apiV3Key != null && !apiV3Key.trim().isEmpty());
         logger.info("appid: {}", appid);
         logger.info("notifyUrl: {}", notifyUrl);
+        logger.info("refundNotifyUrl: {}", refundNotifyUrl);
         logger.info("publicKeyPath: {}", publicKeyPath);
         logger.info("publicKeyId: {}", publicKeyId);
 

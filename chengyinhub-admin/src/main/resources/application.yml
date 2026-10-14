@@ -231,6 +231,9 @@ wx:
     api-v3-key: ${CHENGYIN_WXPAY_APIV3_KEY}   # [P0-安全] 环境变量注入
     appid: wxdf8fd71ea3c614b4
     notify-url: https://www.chengyinhub.com/prod-api/api/registration/callback
+    # 退款结果通知(F-L6-16):下单时随 out_refund_no 一并下发,不依赖商户平台默认回调;
+    # 非生产环境用 CHENGYIN_WXPAY_REFUND_NOTIFY_URL 覆盖到各自域名。
+    refund-notify-url: ${CHENGYIN_WXPAY_REFUND_NOTIFY_URL:https://www.chengyinhub.com/prod-api/api/registration/refund-callback}
 
   # 新增：微信小程序内容检查配置
   sec-check:

@@ -1624,9 +1624,27 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
      * {@link CommercialTopicPolicy} 单一真源判;免费 UGC 的可报名事实 = 主题在架 + 活动在架未结束
      * (validateAndGetActivity)+ 票种报名截止未到。商业主题或已进入售卖阶段的主题一律回合同二闸。
      */
+    /**
+     * F-W1-05:商业主题未到 SELLING 是「尚未开售」，不是支付故障。玩家侧拿到的必须是这句话，
+     * 而不是内部状态码;其余售卖时间拒绝保持原文。
+     */
+    private void assertCommercialSaleOpen(CmsTopic topic, OmsTicket ticket, Date now) {
+        boolean saleOpen;
+        try {
+            saleOpen = topic != null && com.chengyinhub.business.domain.enums.TopicLifecycleState
+                    .fromCode(topic.getLifecycle()).isDirectSaleOpen();
+        } catch (IllegalArgumentException unknownLifecycle) {
+            saleOpen = false;
+        }
+        if (topic != null && !saleOpen) {
+            throw new RuntimeException("该主题尚未开售，开售审核通过后才可报名");
+        }
+        SaleAvailabilityPolicy.assertSellable(topic, ticket, now);
+    }
+
     private void assertRegistrationSellable(CmsActivity activity, CmsTopic topic, OmsTicket ticket, Date now) {
         if (activity == null || !isFreeUgcActivityTopic(activity, topic)) {
-            SaleAvailabilityPolicy.assertSellable(topic, ticket, now);
+            assertCommercialSaleOpen(topic, ticket, now);
             return;
         }
         assertFreeTopicOnShelf(topic);
@@ -2018,7 +2036,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Transactional(rollbackFor = Exception.class)
     public String handleWechatPayCallback(Map<String, String> resultMap) {
         if (resultMap == null) {
-            return "FAIL";
+            return registrationPaymentCallbackFailure(null, "payload_missing");
         }
         String outTradeNo = resultMap.get("out_trade_no");
         String transactionId = resultMap.get("transaction_id");
@@ -2026,7 +2044,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
         if (outTradeNo == null || outTradeNo.trim().isEmpty()
                 || tradeState == null || tradeState.trim().isEmpty()) {
-            return "FAIL";
+            return registrationPaymentCallbackFailure(outTradeNo, "required_field_missing");
         }
 
         // 查询报名记录
@@ -2127,6 +2145,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     private String registrationPaymentCallbackFailure(String outTradeNo, String reason) {
         String reference = outTradeNo != null && outTradeNo.matches("[A-Za-z0-9_-]{1,64}")
                 ? outTradeNo : "INVALID_FORMAT";
+        // AlarmService 只记标题与长度;单号/原因必须自己落一行 WARN,告警未配置时事后才查得到。
+        logger.warn("Registration payment callback returned FAIL order={} reason={}", reference, reason);
         alarmService.alarmThrottled("payment.callback.registration", "支付回调报名处理失败",
                 "order=" + reference + " reason=" + reason + " result=FAIL");
         return "FAIL";
