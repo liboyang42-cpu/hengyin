@@ -15,6 +15,10 @@ REQUIRED = {
     "auditBacklogMonitorTask.run()": "0 0/30 * * * ?",
     "withdrawReconciliationTask.run()": "0 0 4 * * ?",
     "settlementReconciliationTask.run()": "0 10 3 * * ?",
+    # 与 MonitorJobRegistrationCheck.REQUIRED_MONITOR_TARGETS 同一集合(F-W3-04)。
+    "refundReconcileTask.reconcile()": "0 0/15 * * * ?",
+    "clubSessionReconciliationTask.run()": "0 20 3 * * ?",
+    "merchantCommerceReconcileTask.reconcile()": "0 0/5 * * * ?",
 }
 
 

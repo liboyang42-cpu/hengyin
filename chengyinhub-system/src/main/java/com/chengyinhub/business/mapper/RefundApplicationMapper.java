@@ -101,4 +101,10 @@ public interface RefundApplicationMapper {
      * 这批钱同样一分没退，却不在人工队列里 —— 只数 (2,3) 的积压告警对它们完全失明。
      */
     int countStuckPayoutDispatch(@Param("minutes") int minutes);
+
+    /** 与 countManualPayoutBacklog 同谓词的前 20 个退款单 id，仅作告警定位样本。 */
+    List<Long> sampleManualPayoutBacklogIds();
+
+    /** 与 countStuckPayoutDispatch 同谓词的前 20 个退款单 id，仅作告警定位样本。 */
+    List<Long> sampleStuckPayoutDispatchIds(@Param("minutes") int minutes);
 }

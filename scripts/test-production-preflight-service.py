@@ -16,7 +16,8 @@ REQUIRED = ("CHENGYIN_DB_PASSWORD", "CHENGYIN_JWT_SECRET", "CHENGYIN_WXPAY_APIV3
 @unittest.skipUnless(sys.platform == "linux", "service /proc checks run on the VPS")
 class ServiceEnvironmentTest(unittest.TestCase):
     def test_actual_service_environment_and_timezone_override(self):
-        configured = dict.fromkeys(REQUIRED, "fixture-secret-never-print")
+        # 每个变量取不同值：预检会拒绝密钥复用（F-L6-11）。
+        configured = {name: "fixture-secret-never-print-" + str(index) for index, name in enumerate(REQUIRED)}
         configured.update(CHENGYIN_WITHDRAWAL_PII_KEY="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
                           CHENGYIN_TENCENT_MAP_ENABLED="true", TZ="Asia/Shanghai")
         for changes, argument, caller_changes, expected in (

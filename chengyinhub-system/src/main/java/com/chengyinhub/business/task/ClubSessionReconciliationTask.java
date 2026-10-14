@@ -23,10 +23,11 @@ public class ClubSessionReconciliationTask {
         if (gaps == null || gaps.isEmpty()) {
             return;
         }
-        for (ClubSessionGapVO gap : gaps) {
-            alarmService.alarm("俱乐部合作主题缺少带队场次",
-                    "topicId=" + gap.getTopicId() + " clubId=" + gap.getClubId()
-                            + " hasEffectiveClubOrder=true hasClubSession=false");
-        }
+        // 逐条告警会在每次巡检时把同一批缺口重复刷屏：合并为一条按固定事件限频的告警，带前 20 个缺口定位。
+        String samples = gaps.stream().limit(20)
+                .map(gap -> "topicId=" + gap.getTopicId() + "/clubId=" + gap.getClubId())
+                .collect(java.util.stream.Collectors.joining(",", "[", "]"));
+        alarmService.alarmThrottled("monitor.club_session.missing", "俱乐部合作主题缺少带队场次",
+                "count=" + gaps.size() + " gaps=" + samples + " hasEffectiveClubOrder=true hasClubSession=false");
     }
 }

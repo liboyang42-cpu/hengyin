@@ -11,6 +11,13 @@ SPEC.loader.exec_module(MODULE)
 
 
 class RegistrationReadbackTest(unittest.TestCase):
+    def test_readback_set_matches_startup_self_check(self):
+        import re
+        java = (Path(__file__).resolve().parents[1] / "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/"
+                "MonitorJobRegistrationCheck.java").read_text(encoding="utf-8")
+        block = java.split("REQUIRED_MONITOR_TARGETS", 1)[1].split(";", 1)[0]
+        self.assertEqual(set(MODULE.REQUIRED), set(re.findall(r'"([A-Za-z]+\.[a-z]+\(\))"', block)))
+
     def rows(self, changes=None, duplicate=False):
         changes = changes or {}
         rows = []
