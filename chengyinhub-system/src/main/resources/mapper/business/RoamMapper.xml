@@ -4,6 +4,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.chengyinhub.business.mapper.RoamMapper">
 
+    <select id="lockSettlementOwner" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select id from ums_member where id = #{memberId} for update
+    </select>
+
     <select id="selectAdminRewardEvidence" resultType="java.util.HashMap">
         select l.poi_id as poiId, p.name as poiName, l.member_id as memberId,
                l.coupon_id as couponId, l.status as status, l.trigger_lat as triggerLat,
@@ -640,6 +644,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <select id="countActiveNodesByMerchant" resultType="int">
         select count(*) from roam_poi where type = 2 and merchant_id = #{merchantId} and status = 1
+    </select>
+
+    <select id="countActiveNodesByMerchantForUpdate" resultType="int" useCache="false" flushCache="true">
+        select count(*) from roam_poi where type = 2 and merchant_id = #{merchantId} and status = 1
+        for update
     </select>
 
     <update id="setNodeStatusOwned">

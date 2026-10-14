@@ -1,5 +1,6 @@
 'use strict'
 
+const { roamCacheEpoch, invalidateRoamCache } = require('./roam-cache-epoch.js')
 const PREFIX = 'roam_memory_v1'
 
 function normalizePlayerId(playerId) {
@@ -43,6 +44,7 @@ function createPlayerRoamMemory(playerId, storage) {
 
   return {
     playerId: owner,
+    cacheEpoch() { return roamCacheEpoch(owner) },
     readTiles() {
       const state = read('tiles', null)
       if (!state || typeof state !== 'object' || Array.isArray(state)) {
@@ -56,10 +58,12 @@ function createPlayerRoamMemory(playerId, storage) {
     writeTiles(tiles, serverCursor) {
       const values = tiles && typeof tiles === 'object' && !Array.isArray(tiles) ? tiles : {}
       const cursor = Number(serverCursor)
-      return write('tiles', {
-        tiles: values,
-        serverCursor: Number.isSafeInteger(cursor) && cursor > 0 ? cursor : 0,
-      })
+      try {
+        const serialized = JSON.stringify({ tiles: values, serverCursor: Number.isSafeInteger(cursor) && cursor > 0 ? cursor : 0 })
+        if (!write('tiles', JSON.parse(serialized))) return false
+        const result = readResult('tiles')
+        return result.ok && JSON.stringify(result.value) === serialized
+      } catch (_) { return false }
     },
     readReveals() {
       const value = read('reveals', [])
@@ -105,6 +109,7 @@ function createPlayerRoamMemory(playerId, storage) {
        ⚠️ recovery 必须一起清:确认框写着「会清掉本次记录」,而原来不清它 ⇒ 清完再进漫游
        仍弹「已找回本次漫游记录」,用户看到的和刚做过的操作自相矛盾。 */
     clearLocal() {
+      invalidateRoamCache(owner)
       const done = [this.writeTiles({}, 0), this.writeReveals([]), this.writeSessions([]),
         this.writeRecovery(null)]
       return done.every(Boolean)
