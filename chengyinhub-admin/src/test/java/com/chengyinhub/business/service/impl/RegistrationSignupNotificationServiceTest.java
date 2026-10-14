@@ -21,6 +21,8 @@ class RegistrationSignupNotificationServiceTest {
         activities = mock(ICmsActivityService.class); intents = mock(ISystemNotificationIntentService.class);
         ReflectionTestUtils.setField(service, "activityService", activities);
         ReflectionTestUtils.setField(service, "notificationIntentService", intents);
+        // B包 ImServiceImpl.findIntentId 合同：无原意图返回 null(Mockito 对 Long 默认回 0L 会被误当已存在)。
+        when(intents.findIntentId(org.mockito.ArgumentMatchers.anyString())).thenReturn(null);
     }
     private CmsRegistration registration(long ownerType) {
         CmsRegistration r = new CmsRegistration(); r.setId(8L); r.setMemberId(7L);
@@ -40,6 +42,7 @@ class RegistrationSignupNotificationServiceTest {
         verify(activities, never()).selectCmsActivityById(any());
     }
     @Test void failedIntentThrowsAndCannotReportSuccessfulSignupIntent() {
+        when(intents.enqueue(any(), any(), any(), any(), any())).thenReturn(null); // 意图未落库：无原 intentId
         assertThrows(IllegalStateException.class, () -> service.recordIntent(7L, registration(1L)));
     }
     @Test void differentRecipientCannotReuseOriginalRegistration() {

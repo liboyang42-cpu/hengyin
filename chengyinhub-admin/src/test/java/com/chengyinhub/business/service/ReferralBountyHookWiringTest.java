@@ -73,6 +73,9 @@ class ReferralBountyHookWiringTest {
         com.chengyinhub.business.mapper.CmsActivityMapper activities = mock(com.chengyinhub.business.mapper.CmsActivityMapper.class);
         com.chengyinhub.business.domain.CmsActivity activity = new com.chengyinhub.business.domain.CmsActivity();
         activity.setDelFlag(0);
+        activity.setTopicId(TOPIC); // 探索票活动属于本路线主题(A包按章核销锁读核对)
+        // 探店日票缺结束时间按已定规则暂禁新使用；本类验赏金钩子，给未到期的结束时间。
+        activity.setEndDate(new java.util.Date(System.currentTimeMillis() + 86_400_000L));
         when(activities.selectCmsActivityByIdForUpdate(800L)).thenReturn(activity);
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activities);
         ReflectionTestUtils.setField(service, "cmsRegistrationScanMapper", scanMapper);
@@ -96,7 +99,7 @@ class ReferralBountyHookWiringTest {
         r.setId(REG);
         r.setOwnerType(1L);
         r.setPurchaseKind(com.chengyinhub.common.constant.PurchaseKind.GUIDED_TICKET);
-        return r;
+        return current(r);
     }
 
     private CmsRegistration explorePass() {
@@ -106,6 +109,14 @@ class ReferralBountyHookWiringTest {
         r.setOwnerId(800L);
         r.setPaymentStatus(2);
         r.setPurchaseKind(com.chengyinhub.common.constant.PurchaseKind.EXPLORE_PASS);
+        return current(r);
+    }
+
+    /** A包核销在原事务内按原ID锁读当前订单；可核销的原行即已付且报名成功，锁读回同一行。 */
+    private CmsRegistration current(CmsRegistration r) {
+        r.setPaymentStatus(2);
+        r.setRegistrationStatus(2);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(r);
         return r;
     }
 

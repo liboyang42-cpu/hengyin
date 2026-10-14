@@ -43,7 +43,7 @@ class CashWithdrawFailureRecoveryTransactionTest {
                 "update original_withdraw set status=2 where id=? and status=3", ((MemberCashWithdraw)i.getArgument(0)).getId()));
         IUmsMemberService balances = mock(IUmsMemberService.class);
         when(balances.addBalance(any(), any())).thenAnswer(i -> jdbc.update(
-                "update account set balance=balance+? where id=?", i.getArgument(1), i.getArgument(0)) == 1);
+                "update account set balance=balance+? where id=?", new Object[] {i.getArgument(1), i.getArgument(0)}) == 1);
         CashWithdrawFailureRecoveryService target = new CashWithdrawFailureRecoveryService();
         ReflectionTestUtils.setField(target, "mapper", mapper); ReflectionTestUtils.setField(target, "umsMemberService", balances);
         ProxyFactory proxy = new ProxyFactory(target); proxy.setProxyTargetClass(true);
@@ -61,7 +61,7 @@ class CashWithdrawFailureRecoveryTransactionTest {
         assertLedger("100",2);
     }
     @Test void lostTerminalWriteRollsBackBothBalanceAndClaim() {
-        when(mapper.updateMemberCashWithdraw(any())).thenReturn(0);
+        org.mockito.Mockito.doReturn(0).when(mapper).updateMemberCashWithdraw(any());
         assertThrows(IllegalStateException.class,this::recover);
         assertLedger("90",0);
     }
@@ -84,7 +84,7 @@ class CashWithdrawFailureRecoveryTransactionTest {
             MemberCashWithdraw original = i.getArgument(0); original.setId(1L);
             return jdbc.update("insert into original_withdraw values(1,7,10,0)");
         });
-        when(mapper.updateMemberCashWithdraw(any())).thenReturn(0);
+        org.mockito.Mockito.doReturn(0).when(mapper).updateMemberCashWithdraw(any());
         MemberCashWithdraw original = new MemberCashWithdraw();
         original.setMemberId(7L); original.setAmount(new BigDecimal("10.00"));
         assertThrows(IllegalStateException.class, () -> service.prepare(original));

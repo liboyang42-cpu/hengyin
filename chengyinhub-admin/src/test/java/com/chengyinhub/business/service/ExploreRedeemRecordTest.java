@@ -236,7 +236,8 @@ class ExploreRedeemRecordTest {
         redeem();
 
         verify(regMapper).verifyIfNotVerified(REG, MERCHANT);
-        verify(completionAwardService).grantOnce(reg().getMemberId(), TOPIC, reg().getOwnerId(), redemption.getCreateTime());
+        CmsRegistration expected = reg(); // reg() 内含锁读 stub，不能在 verify 参数里调用
+        verify(completionAwardService).grantOnce(expected.getMemberId(), TOPIC, expected.getOwnerId(), redemption.getCreateTime());
     }
 
     @Test

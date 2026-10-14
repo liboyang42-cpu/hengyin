@@ -302,7 +302,7 @@ class CashWithdrawServiceTest {
     @Test
     void lostOriginalLedgerWriteStopsBeforeBalanceOrWechatMutation() {
         when(umsMemberService.selectUmsMemberById(900002L)).thenReturn(member("oXAbc", "100"));
-        when(mapper.insertMemberCashWithdraw(any())).thenReturn(0);
+        org.mockito.Mockito.doReturn(0).when(mapper).insertMemberCashWithdraw(any());
         assertThrows(IllegalStateException.class, () -> svc.withdraw(900002L, new BigDecimal("1.00")));
         verify(umsMemberService, never()).deductWithdrawableBalance(any(), any(), any());
         verify(wechatPayService, never()).transferToBalance(any(), any(), any(), any(), any(), any());
