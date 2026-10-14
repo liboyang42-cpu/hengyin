@@ -1,6 +1,5 @@
 const { applyHeroRecede } = require('./utils/scroll-motion.js');
 const app = getApp();
-const mockData = require('../../utils/mockData.js');
 const analytics = require('../../utils/analytics.js');
 const templateDetailUtil = require('./utils/templateDetail.js');
 const policy = require('../../utils/identity/identity-policy.js');
@@ -189,14 +188,6 @@ Page({
     tplTabs: [TAB_DETAILS, TAB_CAPABILITIES]
   },
 
-  isDevEnv() {
-    try {
-      return wx.getAccountInfoSync().miniProgram.envVersion === 'develop';
-    } catch (e) {
-      return false;
-    }
-  },
-
   onLoad(options) {
     this._disposed = false;
     var scope = options.scope === 'my' ? 'my' : 'library';
@@ -208,12 +199,6 @@ Page({
     };
     if (options.tab === 'capabilities') {
       data.activeTab = 'capabilities';
-    }
-    if (this.isDevEnv() && options.id) {
-      var mock = mockData.getTemplateById(options.id);
-      if (mock) {
-        this.patchNormalized(data, mock);
-      }
     }
     this.setData(data);
     this.getData();
