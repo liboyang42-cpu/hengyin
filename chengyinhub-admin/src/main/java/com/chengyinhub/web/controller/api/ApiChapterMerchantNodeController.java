@@ -72,9 +72,18 @@ public class ApiChapterMerchantNodeController extends BaseController {
     private NodeNpcService nodeNpcService;
     @Autowired
     private IUmsMemberService umsMemberService;
+    @Autowired
+    private com.chengyinhub.business.service.IWxContentSecurityService wxContentSecurityService;
 
     private Long uid() {
         try { return getAppUserId(); } catch (Exception e) { return 0L; }
+    }
+
+    /** F-L5C-02:点位文案经主办方准入后直接给玩家看,驳回原因发给商家;写入前送检,审不了按 fail-close 拦截。 */
+    private String textRisk(Long actorMemberId, String text) {
+        if (text == null || text.trim().isEmpty()) return null;
+        com.chengyinhub.business.domain.UmsMember actor = umsMemberService.selectUmsMemberById(actorMemberId);
+        return wxContentSecurityService.checkText(text, actor == null ? null : actor.getWxOpenId());
     }
 
     @Operation(summary = "商家提交/更新自己在章节下的点位(提交即回到待审)")
@@ -86,6 +95,9 @@ public class ApiChapterMerchantNodeController extends BaseController {
         try {
             MerchantAccessContext access = merchantAccessService.require(
                     memberId, MerchantPermission.PROJECT_MANAGE);
+            String risk = textRisk(memberId, com.chengyinhub.business.service.IWxContentSecurityService.joinText(
+                    body.getName(), body.getDescription(), body.getAddress(), body.getBusinessTime()));
+            if (risk != null) return error(risk);
             return success(chapterMerchantNodeService.submit(
                     access.getOwnerMemberId(), body.getChapterId(), body.toDraft()));
         } catch (ServiceException e) {
@@ -217,6 +229,8 @@ public class ApiChapterMerchantNodeController extends BaseController {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
         try {
+            String risk = textRisk(memberId, reason);
+            if (risk != null) return error(risk);
             return success(chapterMerchantNodeService.audit(
                     resolveProjectOwner(memberId, scope), nodeId, Boolean.TRUE.equals(approve), reason));
         } catch (ServiceException e) {

@@ -11,6 +11,7 @@ beforeEach(() => {
   sandbox = { config: null, requests: [], pullStops: 0 };
   global.getApp = () => ({
     globalData: {},
+    canUseCommunity: () => true, // Current-account server-open fixture (favorites posts tab is gated since F-L5C-06).
     getRequestErrorMessage: (_res, fallback) => fallback,
     sendRequest(options) {
       sandbox.requests.push(options);

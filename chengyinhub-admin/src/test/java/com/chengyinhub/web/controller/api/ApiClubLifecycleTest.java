@@ -72,6 +72,8 @@ class ApiClubLifecycleTest {
         ReflectionTestUtils.setField(controller, "clubMemberService", memberService);
         ReflectionTestUtils.setField(controller, "clubLifecycleCommandService", lifecycleService);
         ReflectionTestUtils.setField(controller, "capabilityService", capabilityService);
+        ReflectionTestUtils.setField(controller, "umsMemberService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IUmsMemberService.class));
+        ReflectionTestUtils.setField(controller, "wxContentSecurityService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
     }
 
     private Club activeClub() {

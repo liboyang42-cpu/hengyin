@@ -78,6 +78,7 @@ class ActivitySoldTicketEditLockTest {
         org.mockito.Mockito.doReturn(ME).when(controller).getAppUserId();
         org.mockito.Mockito.doReturn("me").when(controller).getAppUserName();
         ReflectionTestUtils.setField(controller, "cmsActivityService", service);
+        ReflectionTestUtils.setField(controller, "wxContentSecurityService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
 
         IUmsMemberService umsMemberService = org.mockito.Mockito.mock(IUmsMemberService.class);
         IRoleService roleService = org.mockito.Mockito.mock(IRoleService.class);

@@ -93,6 +93,9 @@ public class ApiLoginController extends BaseController {
     private IUmsMemberService umsMemberService;
 
     @Autowired
+    private com.chengyinhub.business.service.IWxContentSecurityService wxContentSecurityService;
+
+    @Autowired
     private ISysConfigService configService;
 
     @Autowired
@@ -493,6 +496,11 @@ public class ApiLoginController extends BaseController {
             openid = getOpenID(wxcode);
         } catch (RuntimeException e) {
             return AjaxResult.error(WECHAT_SERVICE_UNAVAILABLE);
+        }
+        // F-L5C-02:注册填的名字会出现在公开资料上,与 /user/update 同一道内容安全闸。
+        String nameSecMsg = wxContentSecurityService.checkText(name, openid);
+        if (nameSecMsg != null) {
+            return AjaxResult.error(nameSecMsg);
         }
 
         umsMember = new UmsMember();

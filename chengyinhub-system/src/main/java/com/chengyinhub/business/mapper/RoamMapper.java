@@ -208,6 +208,9 @@ public interface RoamMapper {
 
     RoamSession selectActivePresence(@Param("memberId") Long memberId, @Param("freshAfter") Date freshAfter);
 
+    /** 本人最近一次位置心跳(跨会话)。用于拒绝瞬移式的伪造坐标,不对外返回。 */
+    RoamSession selectLatestPresenceFix(@Param("memberId") Long memberId, @Param("since") Date since);
+
     int updatePresenceVisibility(@Param("id") Long id, @Param("memberId") Long memberId,
                                  @Param("visible") Boolean visible);
 

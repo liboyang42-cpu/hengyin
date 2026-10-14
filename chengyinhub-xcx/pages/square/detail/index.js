@@ -31,7 +31,7 @@ Page({
     userId: 0,
     avatar: '',
     // 详情主体的四态:无 id / 加载 / 错误 / 空数据不能再共用一张空壳。
-    detailState: 'loading', // loading | ready | error | empty | missing-param
+    detailState: 'loading', // loading | ready | error | empty | missing-param | closed
     avatarPopShow: false,   // 点头像的 T5 胶囊
     avatarPopAnchor: null,
     avatarPopItems: [],
@@ -363,8 +363,21 @@ Page({
         autoFocusComment: true
       })
     }
-    that.getData()
-    that.getList()
+    // F-L5C-06:分享卡/深链直达也要过当前账号的社区读闸;闸关(含开关拉取失败)时给「暂未开放」空态,不发详情请求。
+    const owner = String(app.getUserID() || '')
+    const proceed = () => {
+      if (owner !== String(app.getUserID() || '')) return
+      if (typeof app.canUseCommunity === 'function' && app.canUseCommunity(false)) {
+        that.getData()
+        that.getList()
+      } else {
+        that.setData({ detailState: 'closed', detailError: '' })
+      }
+    }
+    const pending = typeof app.canUseCommunity === 'function' && !app.canUseCommunity(false)
+      && typeof app.loadFeatureFlags === 'function' ? app.loadFeatureFlags() : null
+    if (pending && typeof pending.then === 'function') pending.then(proceed, proceed)
+    else proceed()
   },
 
   /**

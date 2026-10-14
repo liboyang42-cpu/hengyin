@@ -84,6 +84,7 @@ class ApiCoopControllerInviteAuthzTest {
         ReflectionTestUtils.setField(c, "clubService", clubService);
         ReflectionTestUtils.setField(c, "notifyService", notifyService);
         ReflectionTestUtils.setField(c, "merchantAccessService", merchantAccessService);
+        ReflectionTestUtils.setField(c, "wxContentSecurityService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
         ReflectionTestUtils.setField(c, "umsMemberService",
                 mock(com.chengyinhub.business.service.IUmsMemberService.class));
         ReflectionTestUtils.setField(c, "mmsMerchantService",

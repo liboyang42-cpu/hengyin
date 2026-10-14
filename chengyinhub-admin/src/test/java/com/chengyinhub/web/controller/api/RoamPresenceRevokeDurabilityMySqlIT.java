@@ -78,6 +78,8 @@ class RoamPresenceRevokeDurabilityMySqlIT {
         consents=new ConsentRecordServiceImpl(); ReflectionTestUtils.setField(consents,"consentRecordMapper",consentMapper);
         target=new SharingController(); ReflectionTestUtils.setField(target,"roamMapper",sql.getMapper(RoamMapper.class));
         ReflectionTestUtils.setField(target,"consentRecordService",consents);
+        // 开启分享前要求现行漫游定位同意(F-L5C-01);本 IT 关注撤回持久化,定位同意闸用桩放行。
+        ReflectionTestUtils.setField(target,"locationConsent",mock(com.chengyinhub.business.service.impl.RoamLocationConsentService.class));
         ReflectionTestUtils.setField(target,"presenceRevokeAuditService",audits); ReflectionTestUtils.setField(target,"alarmService",alarm);
         ProxyFactory proxy=new ProxyFactory(target); proxy.setProxyTargetClass(true);
         proxy.addAdvice(new TransactionInterceptor(manager,new AnnotationTransactionAttributeSource()));

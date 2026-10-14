@@ -51,6 +51,29 @@ class ApiChapterMerchantNodeAccessTest {
     }
 
     @Test
+    void flaggedPointTextIsRejectedBeforeSubmitService() {
+        IChapterMerchantNodeService nodes = mock(IChapterMerchantNodeService.class);
+        IMerchantAccessService access = mock(IMerchantAccessService.class);
+        when(access.require(PRINCIPAL, MerchantPermission.PROJECT_MANAGE))
+                .thenReturn(new MerchantAccessContext(PRINCIPAL, 11L, OWNER,
+                        MerchantRoleCode.MERCHANT_MANAGER));
+        ApiChapterMerchantNodeController controller = controller(nodes, access);
+        com.chengyinhub.business.service.IWxContentSecurityService sec =
+                mock(com.chengyinhub.business.service.IWxContentSecurityService.class);
+        when(sec.checkText(org.mockito.ArgumentMatchers.contains("违规店名"), any())).thenReturn("内容含违规信息");
+        ReflectionTestUtils.setField(controller, "wxContentSecurityService", sec);
+        ApiChapterMerchantNodeController.ChapterNodeRequest request =
+                new ApiChapterMerchantNodeController.ChapterNodeRequest();
+        request.setChapterId(33L);
+        request.setName("违规店名");
+
+        AjaxResult result = controller.submit(request);
+
+        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        verify(nodes, never()).submit(any(), any(), any());
+    }
+
+    @Test
     void inactiveMerchantIsRejectedBeforeSubmitService() {
         IChapterMerchantNodeService nodes = mock(IChapterMerchantNodeService.class);
         IMerchantAccessService access = mock(IMerchantAccessService.class);
@@ -143,6 +166,9 @@ class ApiChapterMerchantNodeAccessTest {
         };
         ReflectionTestUtils.setField(controller, "chapterMerchantNodeService", nodes);
         ReflectionTestUtils.setField(controller, "merchantAccessService", access);
+        ReflectionTestUtils.setField(controller, "umsMemberService", mock(com.chengyinhub.business.service.IUmsMemberService.class));
+        ReflectionTestUtils.setField(controller, "wxContentSecurityService",
+                mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
         if (topicNodes != null) {
             ReflectionTestUtils.setField(controller, "nodeService", topicNodes);
         }

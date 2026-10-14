@@ -550,6 +550,8 @@ public class ApiRoamController extends BaseController {
     private static final int RUNNER_SHOPS_MAX = 3;
     /** 附近的查询半径上限(米)。超过就按上限截 —— 不接受客户端要一个全城范围。 */
     private static final int RUNNERS_RADIUS_MAX = 3000;
+    /** 瞬移校验回看多久内的本人心跳(分钟)。超过这个间隔的旧坐标不再约束新位置。 */
+    private static final int PRESENCE_TELEPORT_WINDOW_MIN = 120;
 
     @Operation(summary = "上报我此刻的位置(漫游心跳,让附近的人看得见我)")
     @PostMapping("/presence")
@@ -566,13 +568,24 @@ public class ApiRoamController extends BaseController {
         if (!validLat(lat) || !validLng(lng)) return error("位置越界");
 
         locationConsent.requireCurrentAgreement(memberId);
+        // 附近的人只以服务端记录的本人位置为查询中心;再拒掉瞬移式的坐标,
+        // 换着坐标上报去扫别人位置就不成立(合法的乘车移动按真实时间间隔放行)。
+        Date reportAt = new Date();
+        RoamSession lastFix = roamMapper.selectLatestPresenceFix(memberId,
+                new Date(reportAt.getTime() - PRESENCE_TELEPORT_WINDOW_MIN * 60L * 1000L));
+        if (lastFix != null && lastFix.getLastReportAt() != null
+                && lastFix.getLastLat() != null && lastFix.getLastLng() != null) {
+            long dtSec = Math.max(1L, (reportAt.getTime() - lastFix.getLastReportAt().getTime()) / 1000L);
+            double moved = haversineM(lat, lng, lastFix.getLastLat().doubleValue(), lastFix.getLastLng().doubleValue());
+            if (moved > MIN_MOVE_DIST_M && moved / dtSec > MAX_MOVE_SPEED_MPS) return error("移动过快,疑似伪造定位");
+        }
         BigDecimal blat = BigDecimal.valueOf(lat).setScale(PRESENCE_SCALE, RoundingMode.HALF_UP);
         BigDecimal blng = BigDecimal.valueOf(lng).setScale(PRESENCE_SCALE, RoundingMode.HALF_UP);
         // 探索度是本机 20×20 格的口径,后端没有等价物 ⇒ 只存不算,但要 clamp:
         // 它会显示给陌生人,不能让客户端写个 9999 进去。
         int pct = explorePct == null ? 0 : Math.max(0, Math.min(99, explorePct));
 
-        int hit = roamMapper.updatePresence(sid, memberId, blat, blng, new Date(), pct);
+        int hit = roamMapper.updatePresence(sid, memberId, blat, blng, reportAt, pct);
         // 命中 0 = 这场会话不是你的,或已经结算了。不细分原因回话:
         // 分得越细,越能拿它探别人的会话 id。
         if (hit <= 0) return error("会话不存在");
@@ -597,11 +610,16 @@ public class ApiRoamController extends BaseController {
         if (memberId <= 0) return error("请先登录");
         if (visible == null) return error("请选择是否公开");
         Long sid = Convert.toLong(sessionId, 0L);
+        if (visible) {
+            if (!"roam-presence-v1".equals(consentVersion)) return error("请先单独同意附近的人位置分享");
+            // 位置分享建立在漫游定位同意之上:撤回漫游定位后不能再单独打开对他人的展示。
+            // 会员互斥锁先于偏好事实锁,与 RoamLocationConsentService 的加锁顺序一致。
+            locationConsent.requireCurrentAgreement(memberId);
+        }
         presenceRevokeAuditService.lockPreference(memberId);
         String requestId = "presence-" + java.util.UUID.randomUUID();
         Date occurredAt = new Date();
         if (visible) {
-            if (!"roam-presence-v1".equals(consentVersion)) return error("请先单独同意附近的人位置分享");
             RoamSession own = roamMapper.selectOwnedSessionForUpdate(sid, memberId);
             if (own == null || !Integer.valueOf(0).equals(own.getStatus())) return error("请先开始漫游");
         }

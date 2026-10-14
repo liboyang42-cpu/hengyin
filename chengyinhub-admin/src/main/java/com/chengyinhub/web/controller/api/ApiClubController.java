@@ -434,6 +434,10 @@ public class ApiClubController extends BaseController {
         Long memberId;
         try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
         if (body == null) return error("请填写主理人资料");
+        // F-L5C-02:主理人名展示在俱乐部列表/详情,身份与经历给成员看,写入前送检。
+        String leaderRisk = wxContentSecurityService.checkText(IWxContentSecurityService.joinText(
+                body.getLeaderName(), body.getIdentity(), body.getCoFounders(), body.getExperience()), openidOf(memberId));
+        if (leaderRisk != null) return error(leaderRisk);
         // 创建身份不代表收费；实名在收费发布入口检查。
         ClubLeader profile = leaderProfilePatch(body);
         try {
@@ -739,6 +743,9 @@ public class ApiClubController extends BaseController {
         if (club == null || club.getStatus() == null || club.getStatus() != 1L) {
             return error("俱乐部不存在或未开放");
         }
+        // F-L5C-02:入会申请留言给主理人看,写入前送检。
+        String joinRisk = wxContentSecurityService.checkText(body.getJoinMessage(), openidOf(memberId));
+        if (joinRisk != null) return error(joinRisk);
         try {
             // 稿 P3 30:2:申请人写的那句话。前端限 60 字,服务端仍按列宽 200 截断兜底。
             String state = clubMemberService.requestJoin(club.getId(), memberId, body.getJoinMessage());

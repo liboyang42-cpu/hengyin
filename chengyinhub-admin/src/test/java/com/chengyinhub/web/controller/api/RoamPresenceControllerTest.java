@@ -89,6 +89,38 @@ class RoamPresenceControllerTest {
     }
 
     @Test
+    void presence_refuses_teleporting_coordinates_so_reports_cannot_scan_the_city() {
+        RoamMapper mapper = mock(RoamMapper.class);
+        com.chengyinhub.business.domain.RoamSession last = new com.chengyinhub.business.domain.RoamSession();
+        last.setLastLat(new BigDecimal("31.230"));
+        last.setLastLng(new BigDecimal("121.474"));
+        last.setLastReportAt(new Date(System.currentTimeMillis() - 30_000L));
+        when(mapper.selectLatestPresenceFix(eq(9L), any(Date.class))).thenReturn(last);
+        when(mapper.updatePresence(anyLong(), anyLong(), any(), any(), any(), anyInt())).thenReturn(1);
+        StubController c = controller(mapper);
+
+        // 30 秒前在上海,现在报北京:拒绝,不落库
+        assertEquals(500, c.presence("77", 39.90, 116.40, 0).get("code"));
+        verify(mapper, never()).updatePresence(anyLong(), anyLong(), any(), any(), any(), anyInt());
+        // 正常步行距离照常更新
+        assertEquals(200, c.presence("77", 31.2305, 121.4745, 0).get("code"));
+        verify(mapper).updatePresence(anyLong(), anyLong(), any(), any(), any(Date.class), anyInt());
+    }
+
+    @Test
+    void enablingSharingRequiresCurrentRoamLocationAgreement() {
+        RoamMapper mapper = mock(RoamMapper.class);
+        StubController c = controller(mapper);
+        com.chengyinhub.business.service.impl.RoamLocationConsentService location =
+                (com.chengyinhub.business.service.impl.RoamLocationConsentService) ReflectionTestUtils.getField(c, "locationConsent");
+        org.mockito.Mockito.doThrow(new com.chengyinhub.common.exception.ServiceException("请先明确同意漫游定位"))
+                .when(location).requireCurrentAgreement(9L);
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> c.changePresenceVisibility("77", true, "roam-presence-v1"));
+        verify(mapper, never()).updatePresenceVisibility(any(), anyLong(), eq(true));
+    }
+
+    @Test
     void presence_reports_the_same_refusal_whether_the_session_is_someone_elses_or_already_finished() {
         RoamMapper mapper = mock(RoamMapper.class);
         // where 里带 member_id 与 status=0 ⇒ 别人的、已结算的都命中 0 行

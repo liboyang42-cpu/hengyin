@@ -273,7 +273,7 @@ compliance:
     privacy_policy: v2.1
     user_service_agreement: v2.2
     photo_model_processing: v1.0
-    voice_clone_processing: v1.0
+    voice_clone_processing: v1.1   # F-L5C-05:文案新增「非本人声音须已告知并取得声音本人单独同意」,旧同意需重新确认
     community_content_rules: v2.0
     refund_rules: v2.1
     merchant_host_rules: v2.1

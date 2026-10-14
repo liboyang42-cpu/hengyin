@@ -26,6 +26,7 @@ function loadPage(opts) {
   const app = {
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
     getUserID: () => 1,
+    canUseCommunity: () => true, // Current-account server-open fixture (detail page is gated since F-L5C-06).
     getAvatar: () => '',
     getNickname: () => '',
     getPageSize: () => 10,

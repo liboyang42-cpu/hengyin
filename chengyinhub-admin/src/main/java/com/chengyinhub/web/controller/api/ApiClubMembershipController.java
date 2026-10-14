@@ -22,6 +22,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/club/membership")
 public class ApiClubMembershipController extends BaseController {
     @Autowired private IClubMembershipService clubMembershipService;
+    @Autowired private com.chengyinhub.business.service.IWxContentSecurityService wxContentSecurityService;
+    @Autowired private com.chengyinhub.business.service.IUmsMemberService umsMemberService;
+
+    /** F-L5C-02:对他人可见的文字写入前送检;审不了按 fail-close 拦截。 */
+    private String textRisk(Long actorMemberId, String text) {
+        if (text == null || text.trim().isEmpty()) return null;
+        com.chengyinhub.business.domain.UmsMember actor = umsMemberService.selectUmsMemberById(actorMemberId);
+        return wxContentSecurityService.checkText(text, actor == null ? null : actor.getWxOpenId());
+    }
 
     @PostMapping("/overview")
     public AjaxResult overview(@RequestBody(required = false) ClubMembershipClubRequest request) {
@@ -73,6 +82,14 @@ public class ApiClubMembershipController extends BaseController {
         Long principal = principal();
         if (principal == null) return error("请先登录");
         if (request == null) return bad();
+        // 会员方案名、权益与退出/退款说明给俱乐部成员看。
+        java.util.List<String> parts = new java.util.ArrayList<String>();
+        parts.add(request.getName());
+        if (request.getBenefits() != null) parts.addAll(request.getBenefits());
+        parts.add(request.getExitPolicy());
+        parts.add(request.getRefundPolicy());
+        String risk = textRisk(principal, com.chengyinhub.business.service.IWxContentSecurityService.joinText(parts.toArray(new String[0])));
+        if (risk != null) return error(risk);
         try { return success(clubMembershipService.savePlan(principal, request)); }
         catch (ServiceException e) { return serviceError(e); }
     }
