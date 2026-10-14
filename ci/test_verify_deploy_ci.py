@@ -85,6 +85,21 @@ class ManualDeployCiTest(unittest.TestCase):
                         condition = ' '.join(line.strip() for line in (matched.group(2) or '').splitlines())
                     self.assert_private_repository_guard(condition)
 
+    def test_deploy_workflow_is_dispatch_only_and_runs_exact_sha_gate_before_classify(self):
+        source = (Path(__file__).resolve().parents[1] / '.github/workflows/deploy.yml').read_text()
+        triggers = source.split('\non:\n', 1)[1].split('\npermissions:', 1)[0]
+        self.assertEqual(['workflow_dispatch'], re.findall(r'^  ([\w-]+):', triggers, re.MULTILINE))
+        ref_input = re.search(r'^      ref:\n((?:        [^\n]*\n)*)', triggers, re.MULTILINE).group(1)
+        self.assertNotIn('default:', ref_input, 'deploy ref must not default to a branch name')
+        self.assertRegex(source, r'(?m)^  actions: read$')
+        prepare = source.split('\n  prepare:\n', 1)[1].split('\n  deploy:\n', 1)[0]
+        gate_at = prepare.find('python3 ci/verify_deploy_ci.py "$DEPLOY_REF" "$REPOSITORY"')
+        self.assertGreater(gate_at, 0, 'manual deploy must verify exact-SHA CI evidence')
+        self.assertLess(gate_at, prepare.index('bash ci/deploy-classify.sh'))
+        self.assertIn('DEPLOY_REF: ${{ inputs.ref }}', prepare)
+        self.assertIn('test "$(git rev-parse HEAD)" = "$DEPLOY_REF"', prepare)
+        self.assertNotIn('continue-on-error', prepare)
+
     def test_removed_wrong_repository_and_or_bypass_guards_are_rejected(self):
         prefix = "github.repository == 'liboyang42-cpu/chengyin' && "
         self.assert_private_repository_guard(prefix + "(github.event_name == 'workflow_dispatch' || success())")
