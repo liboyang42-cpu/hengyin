@@ -613,8 +613,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         CmsTopicNode node = nodeMapper.selectCmsTopicNodeById(nodeId);
         if (node == null || !topicId.equals(node.getTopicId())) return null;
         long actId = activityId == null ? 0L : activityId;
-        // 已有本局 = 继续打完(自玩通行证中途到期不打断)；尚未开局按新使用校验。
-        if (existingSession(memberId, actId, topicId, nodeId) != null) {
+        // 已有本局或本路线已开局 = 继续打完(自玩通行证中途到期不打断)；尚未开局按新使用校验。
+        if (existingSession(memberId, actId, topicId, nodeId) != null || routeStarted(memberId, actId, topicId)) {
             com.chengyinhub.business.service.support.CurrentPlayRegistration.requireToContinue(activityMapper,registrationMapper,
                     memberId,actId>0 ? 2L : 1L,actId>0 ? actId : topicId,null,clock.now());
         } else {
@@ -764,9 +764,13 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                     activityMapper,registrationMapper,memberId,2L,actId,null,clock.now(),true);
             requireActivityWindow(actId, topicId);
         } else {
-            if(newUse) com.chengyinhub.business.service.support.CurrentPlayRegistration.require(
+            // 本路线已开局：通行证开局时有效即可打完，站内玩法同样不因中途到期被拦。
+            boolean started = routeStarted(memberId, 0L, topicId);
+            if(newUse && started) com.chengyinhub.business.service.support.CurrentPlayRegistration.requireToContinue(
                     activityMapper,registrationMapper,memberId,1L,topicId,null,clock.now());
-            else if(!hasValidSelfPlayPass(memberId,topicId)) throw new IllegalStateException("请先购买自玩通行证");
+            else if(newUse) com.chengyinhub.business.service.support.CurrentPlayRegistration.require(
+                    activityMapper,registrationMapper,memberId,1L,topicId,null,clock.now());
+            else if(!started && !hasValidSelfPlayPass(memberId,topicId)) throw new IllegalStateException("请先购买自玩通行证");
         }
         if (topicRouteRuntimeService != null) topicRouteRuntimeService.requireOpeningAccess(memberId, topicId, actId, nodeId);
         GameRuntimeSession existing = existingSession(memberId, actId, topicId, nodeId);
@@ -794,6 +798,10 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             session = sessionMapper.selectTeamByMember(activityId, topicId, nodeId, memberId);
         }
         return session;
+    }
+
+    private boolean routeStarted(Long memberId, long actId, Long topicId) {
+        return topicRouteRuntimeService != null && topicRouteRuntimeService.hasRunningSession(memberId, topicId, actId);
     }
 
     private boolean hasValidSelfPlayPass(Long memberId, Long topicId) {

@@ -196,6 +196,46 @@ class TopicRouteRuntimeServiceImplTest {
         verify(routeMapper, never()).selectMemberTopicSessions(anyLong(), anyLong());
     }
 
+    // 2026-10-14 用户已定：自玩通行证在本局内有效。普通线性路线不建局，以本人默认实例下的节点进度判定已开局。
+    private PlayerNodeProgress expiredPassOnLinearRoute() {
+        CmsTopic topic = topicMapper.selectCmsTopicById(10L);
+        topic.setRouteMode("LINEAR"); topic.setPublishedRouteGraphJson(null);
+        registrationMapper.selectCmsRegistrationByIdForUpdate(9000001L)
+                .setExpiresAt(new java.util.Date(System.currentTimeMillis() - 60_000L));
+        PlayerNodeProgress fact = new PlayerNodeProgress(); fact.setNodeId(1L); fact.setStatus(1);
+        return fact;
+    }
+
+    @Test
+    void expiredSelfPlayPassStillFinishesLinearRouteAlreadyStarted() {
+        PlayerNodeProgress fact = expiredPassOnLinearRoute();
+        when(progressMapper.selectPlayerNodeProgressList(any(PlayerNodeProgress.class)))
+                .thenReturn(Collections.singletonList(fact));
+        assertTrue(runtime.hasRunningSession(7L, 10L, 0L));
+        assertTrue(runtime.canPlay(7L, 10L, 0L, 2L), "开局时有效、已记过进度：中途到期仍可打完");
+    }
+
+    @Test
+    void expiredSelfPlayPassCannotStartLinearRoute() {
+        expiredPassOnLinearRoute();
+        when(progressMapper.selectPlayerNodeProgressList(any(PlayerNodeProgress.class)))
+                .thenReturn(Collections.emptyList());
+        assertFalse(runtime.hasRunningSession(7L, 10L, 0L));
+        assertThrows(IllegalStateException.class, () -> runtime.canPlay(7L, 10L, 0L, 1L));
+    }
+
+    @Test
+    void expiredSelfPlayPassDoesNotReopenAFinishedRoute() {
+        PlayerNodeProgress fact = expiredPassOnLinearRoute();
+        when(progressMapper.selectPlayerNodeProgressList(any(PlayerNodeProgress.class)))
+                .thenReturn(Collections.singletonList(fact));
+        TopicRouteSession finished = new TopicRouteSession(); finished.setId(98L); finished.setMemberId(7L);
+        finished.setTopicId(10L); finished.setActivityId(0L); finished.setPlayInstanceId("default");
+        finished.setStatus(TopicRouteSession.STATUS_COMPLETED); stored[0] = finished;
+        assertFalse(runtime.hasRunningSession(7L, 10L, 0L), "已结束的局的旧进度不算在玩");
+        assertThrows(IllegalStateException.class, () -> runtime.canPlay(7L, 10L, 0L, 2L));
+    }
+
     @Test
     void textOpeningIsFrozenAndMustBeCompletedBeforeFirstStation() throws Exception {
         CmsTopic topic = topicMapper.selectCmsTopicById(10L);
