@@ -88,4 +88,14 @@ class ApiPlayCurrentUseBoundaryTest {
         AjaxResult result=selfPlayAnswer();
         assertEquals(402,result.get("code"),"未开局：到期后不能新开局，仍回购票态 402");
     }
+    @Test void expiredSelfPlayPassStillListsNodesOfARouteAlreadyStarted() {
+        expiredSelfPlayPass();
+        com.chengyinhub.business.service.ICmsRegistrationService regService=mock(com.chengyinhub.business.service.ICmsRegistrationService.class);
+        when(regService.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(current));
+        ReflectionTestUtils.setField(controller,"cmsRegistrationService",regService);
+        when(routes.hasRunningSession(7L,29L,0L)).thenReturn(true);
+        assertEquals(200,controller.nodes(null,29L).get("code"),"已开局：中途到期仍下发本局节点");
+        when(routes.hasRunningSession(7L,29L,0L)).thenReturn(false);
+        assertEquals(402,controller.nodes(null,29L).get("code"),"未开局：到期后回购票态 402");
+    }
 }
