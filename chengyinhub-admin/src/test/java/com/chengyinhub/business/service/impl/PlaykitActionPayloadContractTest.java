@@ -77,6 +77,7 @@ class PlaykitActionPayloadContractTest {
         when(sessionMapper.updateStateCas(any())).thenReturn(1);
         when(attemptMapper.selectByIdempotencyKey(any())).thenReturn(null);
         when(predictMapper.selectResult(any(), any())).thenReturn(new PlayPredictResult());
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.installOn(service);
     }
 
     @Test

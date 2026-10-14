@@ -132,6 +132,8 @@ class ApiPlayGpsGeofenceValidationTest
         CmsActivity activity = new CmsActivity();
         activity.setId(ACTIVITY);
         activity.setTopicId(TOPIC);
+        // 探店日票(EXPLORE_PASS)按已定规则缺结束时间暂禁新使用；本类验 GPS 围栏，夹具给未到期的结束时间。
+        activity.setEndDate(new java.util.Date(System.currentTimeMillis() + 86_400_000L));
         when(activityService.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
 
         CmsRegistration registration = new CmsRegistration();
@@ -168,6 +170,7 @@ class ApiPlayGpsGeofenceValidationTest
         when(progressionService.onNodeDone(PLAYER)).thenReturn(Collections.emptyList());
         when(completionAwardService.grantOnce(anyLong(), anyLong(), anyLong(), any()))
                 .thenReturn(new TopicCompletionAwardVO());
+        CurrentPlayControllerFixtures.install(controller);
     }
 
     private AjaxResult arrive(String longitude, String latitude)

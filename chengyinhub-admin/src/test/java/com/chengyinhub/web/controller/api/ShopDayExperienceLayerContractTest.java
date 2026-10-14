@@ -169,6 +169,8 @@ class ShopDayExperienceLayerContractTest
         CmsActivity activity = new CmsActivity();
         activity.setId(ACTIVITY);
         activity.setTopicId(TOPIC);
+        // 探店日票(EXPLORE_PASS)按已定规则缺结束时间暂禁新使用；本类不验到期，夹具给未到期的结束时间。
+        activity.setEndDate(new java.util.Date(System.currentTimeMillis() + 86_400_000L));
         when(activityService.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
 
         CmsRegistration registration = new CmsRegistration();
@@ -198,6 +200,7 @@ class ShopDayExperienceLayerContractTest
         when(proofService.hasArrived(PLAYER, ACTIVITY, NODE)).thenReturn(true);
         when(progressService.selectPlayerNodeProgressList(any()))
                 .thenReturn(Collections.singletonList(arrived));
+        CurrentPlayControllerFixtures.install(controller);
     }
 
     @SuppressWarnings("unchecked")

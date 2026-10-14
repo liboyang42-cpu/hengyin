@@ -111,6 +111,7 @@ class AdvancedGameChoiceHookTest {
         when(activityMapper.selectCmsActivityById(ACTIVITY_ID)).thenReturn(activity);
         when(attemptMapper.selectByIdempotencyKey(any())).thenReturn(null);
         when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.installOn(service);
     }
 
     @Test

@@ -112,6 +112,7 @@ class ApiPlaySensorResultTest {
                 .thenReturn(new TopicCompletionAwardVO());
         when(completion.grantOnce(MEMBER, TOPIC, ACTIVITY, null))
                 .thenReturn(new TopicCompletionAwardVO());
+        CurrentPlayControllerFixtures.install(controller);
     }
 
     @Test

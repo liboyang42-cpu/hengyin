@@ -22,6 +22,8 @@ class RoamRewardDeliveryTest {
     private com.chengyinhub.business.service.IGrowthService growth;
     @BeforeEach void setup() {
         mapper = mock(RoamRewardDeliveryMapper.class); coupons = mock(ISmsCouponHistoryService.class);
+        // A包 SmsCouponHistoryServiceImpl.grantCouponBySource 合同：未发出(缺意图/停发/无库存)返回 null；Mockito 对 Long 默认回 0L。
+        when(coupons.grantCouponBySource(anyLong(), anyLong(), anyString(), anyLong())).thenReturn(null);
         transactions = mock(PlatformTransactionManager.class);
         when(transactions.getTransaction(any())).thenReturn(new SimpleTransactionStatus());
         drops = mock(com.chengyinhub.business.service.IRewardDropService.class);
@@ -111,6 +113,7 @@ class RoamRewardDeliveryTest {
     @Test void legacyXpWithoutFrozenAmountIsUnknownAndNeverGuessed() {
         Map<String, Object> original = new HashMap<>(); original.put("dropType", 1); original.put("paramJson", "{\"mult\":2}");
         when(mapper.selectOriginalRewardDrop(7L, 77L)).thenReturn(original);
+        when(mapper.selectIntentForUpdate(7L)).thenReturn(null); // 旧掉落无冻结意图(Mockito 对 Map 默认回空 Map)
         assertFalse(service.deliverOriginal(77L, 7L));
         verify(mapper).prepareUnknownXp(7L, 77L); verifyNoInteractions(growth, drops, coupons);
     }
