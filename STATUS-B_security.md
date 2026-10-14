@@ -5,7 +5,7 @@
 - Work branch: fix/remaining-b-security-20261013
 
 ## Done
-(review in progress)
+none yet
 
 ## Remaining
-all listed issues pending re-verification
+F-L5S-01,02,04,05,06,07,08,09,10, F-R2F-06, F-R2SEC-01, F-L6-17, F-L6-18 (re-verifying)
