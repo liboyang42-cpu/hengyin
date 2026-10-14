@@ -134,8 +134,20 @@ class FreeSelfPlayCreateRealDbIT {
                 assertTrue(migration.exists(), "RUN-41 修复迁移必须存在且随仓库演进: " + migration);
                 ScriptUtils.executeSqlScript(db, new FileSystemResource(migration));
             }
-            ScriptUtils.executeSqlScript(db, new org.springframework.core.io.ClassPathResource(
-                    "it-schema/run41-forward-columns.sql"));
+            try (Statement ddl = db.createStatement()) {
+                for (String sql : new String[]{
+                        // cms_topic: migration_theme_runtime_20261004.sql
+                        "ALTER TABLE cms_topic ADD COLUMN theme_runtime_config_json MEDIUMTEXT NULL",
+                        "ALTER TABLE cms_topic ADD COLUMN published_theme_runtime_config_json MEDIUMTEXT NULL",
+                        // merchant_chapter_offer: migration_20261003_merchant_offer_withdrawal_columns.sql
+                        "ALTER TABLE merchant_chapter_offer ADD COLUMN replacement_of_offer_id BIGINT NULL DEFAULT NULL",
+                        "ALTER TABLE merchant_chapter_offer ADD COLUMN withdraw_reason VARCHAR(500) NULL DEFAULT NULL",
+                        "ALTER TABLE merchant_chapter_offer ADD COLUMN withdraw_required TINYINT(1) NULL DEFAULT NULL",
+                        // merchant_chapter_offer: migration_club_direct_merchant_receivable_20261004.sql
+                        "ALTER TABLE merchant_chapter_offer ADD COLUMN payer_club_id BIGINT NULL"}) {
+                    ddl.execute(sql);
+                }
+            }
             ScriptUtils.executeSqlScript(db, new org.springframework.core.io.ClassPathResource(
                     "it-schema/run41-prod-seed.sql"));
         }
