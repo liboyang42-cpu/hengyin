@@ -122,14 +122,20 @@ class FreeSelfPlayCreateRealDbIT {
                     "it-schema/run41-prod-ddl.sql"));
             // ★ 按生产的真实演进顺序叠仓库迁移:基线 DDL(今天生产的样子)→ 本次修复的迁移。
             //   这同时把「迁移必须先于 jar 落库」的发布顺序焊进了测试 —— 谁删迁移文件,本闸立刻红。
-            java.io.File migration = new java.io.File(
-                    "sql/migration_20260919_cms_registration_selfplay_ticket_columns_nullable.sql");
-            if (!migration.exists()) {
-                // surefire 工作目录是模块目录时走 ../;两种都认,别再犯 ExploreItDatabase 被 cwd 咬的错。
-                migration = new java.io.File("../" + migration.getPath());
+            // 2026-10-14 集成:快照之后仓库演进到本 IT 用到的列(mapper 已读)一并叠加，否则查询直接 Unknown column。
+            for (String name : new String[]{
+                    "migration_20260919_cms_registration_selfplay_ticket_columns_nullable.sql",
+                    "migration_20260930_registration_first_successful_scan.sql"}) {
+                java.io.File migration = new java.io.File("sql/" + name);
+                if (!migration.exists()) {
+                    // surefire 工作目录是模块目录时走 ../;两种都认,别再犯 ExploreItDatabase 被 cwd 咬的错。
+                    migration = new java.io.File("../" + migration.getPath());
+                }
+                assertTrue(migration.exists(), "RUN-41 修复迁移必须存在且随仓库演进: " + migration);
+                ScriptUtils.executeSqlScript(db, new FileSystemResource(migration));
             }
-            assertTrue(migration.exists(), "RUN-41 修复迁移必须存在且随仓库演进: " + migration);
-            ScriptUtils.executeSqlScript(db, new FileSystemResource(migration));
+            ScriptUtils.executeSqlScript(db, new org.springframework.core.io.ClassPathResource(
+                    "it-schema/run41-forward-columns.sql"));
             ScriptUtils.executeSqlScript(db, new org.springframework.core.io.ClassPathResource(
                     "it-schema/run41-prod-seed.sql"));
         }
