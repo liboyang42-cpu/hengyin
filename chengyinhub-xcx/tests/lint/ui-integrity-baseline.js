@@ -957,7 +957,7 @@ module.exports = {
       // 2026-09-21 端到端收口合入上传重试与账号隔离，既有调用仅位移，理由与数量不变。
       // 2026-09-25 CU-M-183/185/186 同批:merchantinfo.js 那条 info-to-user silentError 调用点 2530→2532,
       //   逐条回读仍是「只为读章节 recruitEnabled、失败不弹全局 toast」这一处,静默理由一字未改,条数 27 不变。
-"60f9e3b0ff22a3faedf9e9ace6f9575f6c3e127ff0c11a03909c6d11a40817aa"
+"8ac3af4c1471aeefe3bf57fa6ab5f1d0c2a55fd5cc41d9145daa47cac3aab75b"
 
     }
   },
@@ -1312,7 +1312,7 @@ module.exports = {
   // 2026-09-08 二次合 master(#1047/#1048)后再次实测:play/index.js 的 my-completed 调用点
   //   落在 4945(master 侧记 4277、本分支侧记 4968,两侧对合并树都不对)。理由一字未改,digest 重算。
   "u5Silent": {
-    "chengyinhub-xcx/utils/community-post-api.js:16": "当前17个实际社区方法共用唯一请求dispatch；业务/网络失败经当前caller可见页内错误或toast一次，取消/换号/卸载旧回包安静退出；拒绝未知命令并保留未知写入恢复，未放行未来方法；owner=小程序，复核=2026-10-13",
+    "chengyinhub-xcx/utils/community-post-api.js:22": "当前17个实际社区方法共用唯一请求dispatch；业务/网络失败经当前caller可见页内错误或toast一次，取消/换号/卸载旧回包安静退出；拒绝未知命令并保留未知写入恢复，未放行未来方法；owner=小程序，复核=2026-10-13",
     "chengyinhub-xcx/pages/roam/index.js:5321": "漫游入口地图活动层随地图中心后台刷新:失败汇总到 entryLoadError 并提供重新加载,关闭通用 toast 避免拖图时与页内错误态重复报错;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/roam/index.js:5328": "漫游入口地图队伍层随地图中心后台刷新:失败汇总到 entryLoadError 并提供重新加载,关闭通用 toast 避免拖图时与页内错误态重复报错;owner=小程序,复核=2026-12-31",
   // (本支) "chengyinhub-xcx/pages/activity/list/index.js:105": "公共活动列表读取:失败落 loadError/errorMsg,由页面 cy-error 呈现并给重试,关掉自动 toast 是避免双弹;owner=小程序,复核=2026-12-31",

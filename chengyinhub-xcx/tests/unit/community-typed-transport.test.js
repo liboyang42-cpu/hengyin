@@ -47,3 +47,30 @@ test('view preserves authority/version and keeps exact owner location out of car
 });
 test('final page cursor must still advance and cannot repeat the previous page',async()=>{const h=harness();h.client.feed({query:{cursor:59},success:r=>h.results.push(r)});await tick();h.calls[0].success({code:200,data:{items:[bundle()],hasMore:false,nextCursor:59}});await tick();assert.equal(h.results[0].code,502)});
 test('interaction with missing viewer state or count is unknown and cannot be accepted as zero',async()=>{for(const field of ['viewerLiked','likeCount']){const h=harness();h.invoke('addPostAction',{postId:59,command:{actionType:'LIKE',requestId:'synthetic-request-1'}});await tick();const data=bundle();delete data.post[field];h.calls[0].success({code:200,data});await tick();assert.equal(h.results[0].code,502);assert.equal(h.results[0].unknown,true)}});
+
+for (const method of ['feed', 'myPosts', 'bookmarks', 'comments']) {
+ test(method + ' omits absent cursor before wx GET encoding without mutating caller query', async () => {
+  for (const cursor of [null, undefined]) {
+   const h = harness(), query = Object.freeze({ limit: 10, cursor });
+   h.invoke(method, { postId: 59, query }); await tick();
+   const wire = new URLSearchParams(Object.entries(h.calls[0].data).map(([key, value]) => [key, String(value)]));
+   assert.equal(wire.has('cursor'), false, 'wx would send a present null/undefined cursor as text');
+   assert.equal(wire.get('limit'), '10');
+   assert.equal(Object.hasOwn(query, 'cursor'), true); assert.equal(query.cursor, cursor);
+   h.calls[0].success({ code: 200, data: { items: [], hasMore: false, nextCursor: null } }); await tick();
+   assert.equal(h.results[0].code, 200); assert.equal(h.complete.length, 1);
+  }
+ });
+ test(method + ' preserves supplied cursor and limit, including server-rejected values', async () => {
+  for (const query of [{ cursor: 59, limit: 10 }, { cursor: '59', limit: 10 }, { cursor: 0, limit: 10 },
+    { cursor: -1, limit: 10 }, { cursor: '', limit: 10 }, { cursor: 'null', limit: 10 }, { cursor: 59, limit: 0 }]) {
+   const h = harness(), input = Object.freeze(query);
+   h.invoke(method, { postId: 59, query: input }); await tick();
+   assert.deepEqual(h.calls[0].data, input); assert.notEqual(h.calls[0].data, input);
+   const wire = new URLSearchParams(Object.entries(h.calls[0].data).map(([key, value]) => [key, String(value)]));
+   assert.equal(wire.get('cursor'), String(input.cursor)); assert.equal(wire.get('limit'), String(input.limit));
+   h.calls[0].success({ code: 400, msg: '请求参数无效' }); await tick();
+   assert.equal(h.results[0].code, 400); assert.equal(h.results[0].msg, '请求参数无效');
+  }
+ });
+}

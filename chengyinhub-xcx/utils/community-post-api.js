@@ -2,6 +2,12 @@ const view = require('./community-post-view.js');
 const intent = require('./publish/publish-intent.js');
 /** Canonical transport for the existing community entry points. */
 function requestId() { return 'mini-community-' + Date.now() + '-' + Math.random().toString(36).slice(2); }
+// wx GET encodes present null/undefined values as text; an absent cursor must be omitted.
+function paginationQuery(query) {
+  const data = Object.assign({}, query);
+  if (data.cursor == null) delete data.cursor;
+  return data;
+}
 function createClient(app, wxApi) {
   let reporting = false, disposed = false;
   const tasks = new Set(), uploads = new Map();
@@ -85,13 +91,13 @@ function createClient(app, wxApi) {
     }
   }
   function feed(options) { return pipeline(options, async task => view.validatePostPage(await call(task, callbacks => app.sendRequest({
-    url: '/api/v1/community/feeds/LATEST', auth: Boolean(task.owner), method: 'GET', data: options.query || {}, ...callbacks
+    url: '/api/v1/community/feeds/LATEST', auth: Boolean(task.owner), method: 'GET', data: paginationQuery(options.query), ...callbacks
   })), options.query)); }
   function myPosts(options) { return pipeline(options, async task => view.validatePostPage(await call(task, callbacks => app.sendRequest({
-    url: '/api/v1/community/me/posts', method: 'GET', data: options.query || {}, ...callbacks
+    url: '/api/v1/community/me/posts', method: 'GET', data: paginationQuery(options.query), ...callbacks
   })), options.query)); }
   function bookmarks(options) { return pipeline(options, async task => view.validatePostPage(await call(task, callbacks => app.sendRequest({
-    url: '/api/v1/community/me/bookmarks', method: 'GET', data: options.query || {}, ...callbacks
+    url: '/api/v1/community/me/bookmarks', method: 'GET', data: paginationQuery(options.query), ...callbacks
   })), options.query)); }
   function detail(options) { return pipeline(options, async task => view.validateBundle(await readDetail(options.postId, task))); }
   async function readDetail(postId, task) { return view.validateBundle(await call(task, callbacks => app.sendRequest({
@@ -99,7 +105,7 @@ function createClient(app, wxApi) {
   })), postId); }
   function comments(options) { return pipeline(options, async task => {
     const page = view.validatePage(await call(task, callbacks => app.sendRequest({
-      url: '/api/v1/community/posts/' + view.id(options.postId) + '/comments', auth: Boolean(task.owner), method: 'GET', data: options.query || {}, ...callbacks
+      url: '/api/v1/community/posts/' + view.id(options.postId) + '/comments', auth: Boolean(task.owner), method: 'GET', data: paginationQuery(options.query), ...callbacks
     })), options.query);
     const roots = new Set(); let lastRoot;
     for (const row of page.items) {
