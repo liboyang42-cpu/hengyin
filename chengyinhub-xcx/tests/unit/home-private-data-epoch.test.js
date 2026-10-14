@@ -85,6 +85,17 @@ test('当前账号的用户资料响应可以正常写入', () => {
   assert.equal(page.data.userInfo.nickname, '当前账号')
 })
 
+test('未绑定手机号的账号回到首页不会被主动弹窗索取手机号(F-L5C-04)', () => {
+  const page = makePage()
+  for (let i = 0; i < 3; i += 1) {
+    sent = []
+    page.getUserData()
+    sent[0].success({ code: '200', data: { nickname: '无手机号', phone: '' } })
+    assert.equal(page.data.userInfo.nickname, '无手机号')
+    assert.equal(page.data.showPhoneModal, false)
+  }
+})
+
 test('当前账号的角色响应可以更新身份快照', () => {
   const page = makePage()
   page.fetchCityEvent = () => {}
@@ -301,12 +312,13 @@ test('推荐卡报名数读 signupCount，不读对不上后端的 enrollCount',
   assert.match(page.data.recoCards[0].metaLine, /28 人已报名/)
 })
 
-test('首页真实资料回读遵守账号稍后期限，已绑定不弹，换账号独立', () => {
+// 需求变更(F-L5C-04 / F-W1-14):首页不再主动弹窗索取手机号,原"稍后 24 小时再弹"的口径作废。
+test('首页真实资料回读不按稍后期限再弹，任何账号、任何次数都不弹', () => {
  const store = {}; wx.getStorageSync = key => store[key]; wx.setStorageSync = (key,value) => {store[key]=value};
  userId='7'; const page=makePage(); page.getUserData();sent[0].success({code:200,data:{phone:''}});
- assert.equal(page.data.showPhoneModal,true);page.closePhoneModal();
+ assert.equal(page.data.showPhoneModal,false);
+ store['phone-reminder:snooze:7']=0;
  page.getUserData();sent[1].success({code:200,data:{phone:''}});assert.equal(page.data.showPhoneModal,false);
- userId='8';page.getUserData();sent[2].success({code:200,data:{phone:''}});assert.equal(page.data.showPhoneModal,true);
- page.getUserData();sent[3].success({code:200,data:{phone:'13800000000'}});assert.equal(page.data.showPhoneModal,false);
+ userId='8';page.getUserData();sent[2].success({code:200,data:{phone:''}});assert.equal(page.data.showPhoneModal,false);
  wx.getStorageSync=()=>'';wx.setStorageSync=()=>{};
 });

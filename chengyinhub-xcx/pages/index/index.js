@@ -982,8 +982,8 @@ Page({
         if (!isCurrentPrivateRequest(that, memberId, requestEpoch)) return;
         that._getUserDataRetryCount = 0;  // 成功后重置,避免下次调用从陈旧计数开始
         if (res && res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
+          // F-L5C-04/F-W1-14:首页不再主动弹窗索取手机号,只在确需的业务动作里按需请求或由用户在个人资料页绑定。
           that.setData({ userInfo: res.data, isLoading: false });
-          that.setData({ showPhoneModal: !res.data.phone && phoneReminder.shouldPrompt(wx, memberId) });
         } else if (res && res.code == "401") {
           that.firstLogin();
         } else {
