@@ -22,8 +22,8 @@ def validate_runtime_target(host, port):
 
 def validate_password(password):
     groups = [r'[a-z]', r'[A-Z]', r'[0-9]', r'[^a-zA-Z0-9]']
-    if not isinstance(password, str) or not 12 <= len(password) <= 64 or password in DEFAULT_PASSWORDS:
-        raise ValueError('A non-default password of 12 to 64 characters is required')
+    if not isinstance(password, str) or len(password) < 12 or len(password.encode('utf-16-le')) // 2 > 20 or password in DEFAULT_PASSWORDS:
+        raise ValueError('A non-default password of 12 to 20 characters, at most 20 UTF-16 code units, is required for compatibility with current administrator login')
     if sum(bool(re.search(group, password)) for group in groups) < 3 or '\x00' in password:
         raise ValueError('The password must contain at least three character categories')
 

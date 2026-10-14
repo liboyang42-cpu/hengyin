@@ -27,8 +27,33 @@ class BootstrapAdminContract(unittest.TestCase):
 
     def test_strong_password_required_without_defaults_or_truncation(self):
         bootstrap.validate_password('Source-Check-8294')
-        for password in [None, 'admin123', '123456', 'samelettersforever', 'x'*65, 'Short-84']:
+        for password in [None, *bootstrap.DEFAULT_PASSWORDS, 'samelettersforever', 'x'*65, 'Short-84']:
             with self.assertRaises(ValueError): bootstrap.validate_password(password)
+
+    def test_password_length_matches_current_login_range(self):
+        for length in (12, 20):
+            with self.subTest(accepted_length=length):
+                bootstrap.validate_password('Aa1!' + 'x' * (length - 4))
+        for length in (11, 21, 64):
+            with self.subTest(rejected_length=length):
+                with self.assertRaisesRegex(ValueError, '12 to 20'):
+                    bootstrap.validate_password('Aa1!' + 'x' * (length - 4))
+
+    def test_unicode_password_maximum_uses_java_utf16_units(self):
+        boundary = 'Aa1!' + '\U0001f600' * 8
+        bootstrap.validate_password(boundary)
+        with self.assertRaises(ValueError):
+            bootstrap.validate_password(boundary + 'x')
+
+    def test_unicode_overlength_refuses_before_database_or_hashing(self):
+        connection = MagicMock()
+        crypto = MagicMock()
+        with self.assertRaises(ValueError):
+            bootstrap.initialize(connection, 'admin', 'Aa1!' + '\U0001f600' * 8 + 'x', UUID, crypto)
+        connection.cursor.assert_not_called()
+        crypto.crypt.assert_not_called()
+        crypto.mksalt.assert_not_called()
+        connection.commit.assert_not_called()
 
     def test_wrong_actual_uuid_refuses_all_account_writes_and_rolls_back(self):
         connection = MagicMock(); cursor = connection.cursor.return_value.__enter__.return_value
@@ -52,6 +77,9 @@ class BootstrapAdminContract(unittest.TestCase):
     def test_existing_or_used_or_deleted_accounts_are_not_rotated(self):
         admin = (1, 'admin', 'not-read-here', None, '0')
         bootstrap.validate_fresh_users([admin])
+        ry = (2, 'ry', 'not-read-here', None, '0')
+        bootstrap.validate_fresh_users([ry])
+        bootstrap.validate_fresh_users([admin, ry])
         bootstrap.validate_fresh_users([])
         for rows in [[admin, (2, 'reviewer', 'hash', None, '0')], [admin, admin], [(1, 'admin', 'hash', 'used', '0')], [(1, 'ry', 'hash', None, '2')]]:
             with self.assertRaises(ValueError): bootstrap.validate_fresh_users(rows)
