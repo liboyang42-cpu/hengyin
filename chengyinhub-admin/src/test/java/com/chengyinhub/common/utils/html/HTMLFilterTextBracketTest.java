@@ -6,7 +6,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class HTMLFilterTextBracketTest {
     @Test void plainComparisonSignsAndEmptyBracketsRemainExact() {
         HTMLFilter filter = new HTMLFilter();
-        for (String text : new String[]{"人数<10 且 >5", "< >", "a < b && c > d", "数量<10", ">5", "<你好>"}) {
+        for (String text : new String[]{"人数<10 且 >5", "< >", "a < b && c > d", "数量<10", ">5", "<你好>",
+                "a <<< b", "<<10", "<<你好>>", "<<<"}) {
             assertEquals(text, filter.filter(text));
         }
     }

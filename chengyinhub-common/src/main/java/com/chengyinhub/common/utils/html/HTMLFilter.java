@@ -230,7 +230,8 @@ public final class HTMLFilter
         while ((at = text.indexOf(left, from)) >= 0) {
             out.append(text, from, at);
             int next = at + left.length();
-            char c = next < text.length() ? text.charAt(next) : 0;
+            // 连续的文本 '<'(如 "<<10"):后面紧跟的是下一个占位,不是字母,不得被误判成标签开头。
+            char c = text.startsWith(left, next) ? '<' : next < text.length() ? text.charAt(next) : 0;
             char afterSlash = next + 1 < text.length() ? text.charAt(next + 1) : 0;
             out.append(startsTag(c, afterSlash) ? "&lt;" : "<");
             from = next;
