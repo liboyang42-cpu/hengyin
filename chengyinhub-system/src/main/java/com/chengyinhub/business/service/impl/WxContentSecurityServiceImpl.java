@@ -145,7 +145,12 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
             return null;
         }
 
-        if (!isEnabled()) return MSG_UNAVAILABLE;
+        if (!isEnabled())
+        {
+            // F-L5C-07:总开关关闭 = 机审缺位,拒写而不是放行;ERROR 让关闭状态可被发现。
+            log.error("[内容安全] 文本检测总开关已关闭(wx.sec-check.enabled=false),fail-close 拦截");
+            return MSG_UNAVAILABLE;
+        }
 
         // msgSecCheck v2 的 openid 必填:为空微信必判 40003(invalid openid)。当场 fail-close,
         // 别把调用方 bug 伪装成「服务繁忙,请稍后重试」——重试永远不会通,用户还会以为再试就好。
