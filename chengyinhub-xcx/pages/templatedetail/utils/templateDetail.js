@@ -69,7 +69,15 @@ function normalizeTemplateDetail(info) {
   };
 }
 
+// 编辑器把规则按「一行一步」存进 ruleInstructions(pages/publish/temp 的 ruleSteps ↔ join('\n')),
+// 详情页按同一规则拆回步骤,每步一个序号;空行不算一步。
+function splitRuleSteps(raw) {
+  if (raw === null || raw === undefined) return [];
+  return String(raw).split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+}
+
 module.exports = {
+  splitRuleSteps: splitRuleSteps,
   parseImgUrls: parseImgUrls,
   buildGallery: buildGallery,
   buildGalleryColumns: buildGalleryColumns,

@@ -201,6 +201,8 @@ page{ background: var(--cy-bg-page);}
   width: 66rpx;
   height: 66rpx;
   background: var(--cy-bg-page);
+  /* F-W5-10:cy-icon 取 currentColor;原生 button 默认黑字,压在深色底上就看不见返回箭头。 */
+  color: var(--cy-color-text-primary);
   border-radius: 50%;
   border: none;
   padding: 0;

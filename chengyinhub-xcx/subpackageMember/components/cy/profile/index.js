@@ -256,7 +256,22 @@ function calcTimeProgress(startDate, endDate) {
   return { percent: Math.min(100, Math.round((now - start) * 100 / (end - start))), label: label };
 }
 
+// F-W5-03:预览读 /api/topic/list?is_my=1,行上没有 /api/project/my 的归一 state。
+// 按 ApiProjectController.lifecycleState 同一优先级派生:草稿 > 未通过 > 审核中 > 已下架 > 按档期;
+// 字段缺失就不判,交给档期,不编状态。
+function previewState(item) {
+  if (item.state) return item.state;
+  if (item.isDraft === true) return 'draft';
+  if (item.status === null || item.status === undefined || item.status === '') return '';
+  var status = Number(item.status);
+  if (status === 2) return 'rejected';
+  if (status === 0) return 'pending';
+  if (item.userStatus !== null && item.userStatus !== undefined && item.userStatus !== '' && Number(item.userStatus) !== 1) return 'offline';
+  return '';
+}
+
 function normalizeProjectPreview(item) {
+  item = Object.assign({}, item, { state: previewState(item) });
   var time = calcTimeProgress(item.startDate, item.endDate);
   // 2026-09-17 用户拍板第 38 条:状态章原来把「未开始」也写成「进行中」,与商家工作台
   // 的 statusLabelOf 不一致。状态文案与「已结束」判据共用同一真源(utils/merchant-workbench.js),
@@ -911,7 +926,7 @@ Component({
         categoryList: isRecordList(res.data.sysCategoryList) ? res.data.sysCategoryList : [],
         casePicsList: pics,
         joinDate: formatJoinDate(res.data.createTime),
-        // /api/user/info 当前没有 friendNum 契约。缺字段按 UI-04(2026-09-18 用户走查)落 0,
+        // F-W5-09:/api/user/info 本人分支按 active 双向关注下发 friendNum。缺字段按 UI-04(2026-09-18 用户走查)落 0,
         // 不再落「—」。⚠️ metricNumber 缺值返回 null,而 WXML 的文本插值会把 null **原样
         // 打印成字面「null」**(2026-08-18 实测 A37/A42),所以展示层兜底必须给具体值。
         // 下面 userSignals 用的仍是数值原值,兜底只发生在展示层,不影响 ready/error 判定。
