@@ -601,6 +601,7 @@ Page({
   },
 
   openPostActions() {
+    this._postActionCurrent = this.communityCurrent();
     this.setData({ postActionShow: true });
   },
 
@@ -611,7 +612,8 @@ Page({
   // H050/H051:三合一弹层的分发。delete 走到这里时用户已过完组件内部的危险确认闸
   // (cy-danger-confirm,文案在 utils/danger-actions.js 的 club.post.delete),别再自建第二道。
   onPostAction(e) {
-    const action = ((e || {}).detail || {}).action;
+    const { action, id } = ((e || {}).detail || {});
+    if (!id || String(id) !== String(this.data.id) || !this._postActionCurrent || !this._postActionCurrent()) return;
     if (action === 'edit') { this.openPostEdit(); return; }
     if (action === 'delete') { this.deleteSquarePost(); return; }
     if (action === 'report') { this.reportSquareFromActions(); return; }

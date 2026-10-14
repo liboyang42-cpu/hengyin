@@ -885252,7 +885252,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/components/cy/post-actions/index.js:53"
+        "staticSource": "pages/square/components/cy/post-actions/index.js:54"
       }
     },
     {
@@ -885528,7 +885528,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/components/cy/post-actions/index.js:61"
+        "staticSource": "pages/square/components/cy/post-actions/index.js:63"
       }
     },
     {
@@ -903908,7 +903908,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1005"
+        "staticSource": "pages/square/detail/index.js:1007"
       }
     },
     {
@@ -904065,7 +904065,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:860"
+        "staticSource": "pages/square/detail/index.js:862"
       }
     },
     {
@@ -904360,7 +904360,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:866"
+        "staticSource": "pages/square/detail/index.js:868"
       }
     },
     {
@@ -905114,7 +905114,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:685"
+        "staticSource": "pages/square/detail/index.js:687"
       }
     },
     {
@@ -905426,7 +905426,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:738"
+        "staticSource": "pages/square/detail/index.js:740"
       }
     },
     {
@@ -905498,7 +905498,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:866"
+        "staticSource": "pages/square/detail/index.js:868"
       }
     },
     {
@@ -905652,7 +905652,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1014"
+        "staticSource": "pages/square/detail/index.js:1016"
       }
     },
     {
@@ -906411,7 +906411,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:866"
+        "staticSource": "pages/square/detail/index.js:868"
       }
     },
     {
@@ -907236,7 +907236,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:607"
+        "staticSource": "pages/square/detail/index.js:608"
       }
     },
     {
@@ -907392,7 +907392,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:613"
+        "staticSource": "pages/square/detail/index.js:614"
       }
     },
     {
@@ -907469,7 +907469,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:613"
+        "staticSource": "pages/square/detail/index.js:614"
       }
     },
     {
@@ -907700,7 +907700,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:613"
+        "staticSource": "pages/square/detail/index.js:614"
       }
     },
     {
@@ -907769,7 +907769,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:659"
+        "staticSource": "pages/square/detail/index.js:661"
       }
     },
     {
@@ -907923,7 +907923,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:663"
+        "staticSource": "pages/square/detail/index.js:665"
       }
     },
     {
@@ -908467,10 +908467,21 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [],
+        "apis": [
+          "/api/role/info"
+        ],
         "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "communityContracts": [],
         "communitySourceFile": "pages/square/detail/index.js",
         "writeApis": []
@@ -908555,7 +908566,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:866"
+        "staticSource": "pages/square/detail/index.js:868"
       }
     },
     {
@@ -908936,7 +908947,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:775"
+        "staticSource": "pages/square/detail/index.js:777"
       }
     },
     {
@@ -909215,7 +909226,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/list/index.js:312"
+        "staticSource": "pages/square/list/index.js:311"
       }
     },
     {
@@ -924920,7 +924931,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/list/index.js:256"
+        "staticSource": "pages/square/list/index.js:255"
       }
     },
     {
@@ -924973,10 +924984,21 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [],
+        "apis": [
+          "/api/role/info"
+        ],
         "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "communityContracts": [],
         "communitySourceFile": "pages/square/list/index.js",
         "writeApis": []
@@ -924989,7 +925011,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/list/index.js:339"
+        "staticSource": "pages/square/list/index.js:338"
       }
     },
     {
@@ -925352,7 +925374,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/list/index.js:221"
+        "staticSource": "pages/square/list/index.js:220"
       }
     },
     {
@@ -925570,7 +925592,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/list/index.js:213"
+        "staticSource": "pages/square/list/index.js:212"
       }
     },
     {
@@ -926257,7 +926279,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/list/index.js:315"
+        "staticSource": "pages/square/list/index.js:314"
       }
     },
     {
@@ -926337,7 +926359,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/list/index.js:318"
+        "staticSource": "pages/square/list/index.js:317"
       }
     },
     {
@@ -926475,7 +926497,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/list/index.js:352"
+        "staticSource": "pages/square/list/index.js:351"
       }
     },
     {
@@ -926631,7 +926653,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/list/index.js:363"
+        "staticSource": "pages/square/list/index.js:361"
       }
     },
     {
@@ -926708,7 +926730,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/list/index.js:363"
+        "staticSource": "pages/square/list/index.js:361"
       }
     },
     {
@@ -926936,7 +926958,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/list/index.js:363"
+        "staticSource": "pages/square/list/index.js:361"
       }
     },
     {
@@ -927627,7 +927649,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/list/index.js:413"
+        "staticSource": "pages/square/list/index.js:415"
       }
     },
     {
@@ -927697,7 +927719,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/list/index.js:412"
+        "staticSource": "pages/square/list/index.js:414"
       }
     },
     {
@@ -943506,7 +943528,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/list/index.js:303"
+        "staticSource": "pages/square/list/index.js:302"
       }
     },
     {
@@ -943647,7 +943669,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/list/index.js:333"
+        "staticSource": "pages/square/list/index.js:332"
       }
     },
     {

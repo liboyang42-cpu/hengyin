@@ -771,7 +771,7 @@ module.exports = {
 // 2026-09-25 CU-M-183/185/186(主办方抽屉台账入口作用域 + 章节控制两行的禁用条件)在 merchantinfo.js
       //   上方加了注释与两个小方法,两条 U4-DYNAMIC 登记点纯行号位移(1807→1809 / 1837→1839)。
       //   逐条回读:仍是 buildPlayerSheet 返回值那两处动态 setData,受控字段与理由一字未改,条数 53 不变。
-"73f06c98e95863caef2c1fb3f041203ab9fc952e39aea9bf290d4849735c463a",
+"79029002875f4a3b9a359be324ad9840c8d00c1698655396fb29cd1abcff4a92",
       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点
       //   行号从 2360 移到 2573(见下方 u5Silent 区块的逐条说明)。等量换 key,显式改 digest。
       // 2026-08-16 uifix-play 集成:u5Silent 条数不变(12),只是 play/index.js 的
@@ -1199,8 +1199,8 @@ module.exports = {
     "chengyinhub-xcx/pages/square/detail/index.js:278": "评论/回复共用提交分支的prefix仅comment或reply；动态字段仅Submitting/SubmitError/SubmitErrorKind/Content与canComment/canReply，回复追加popShow/replyId均有实际WXML消费；owner=小程序，复核=2026-10-13",
     "chengyinhub-xcx/pages/square/detail/index.js:283": "评论/回复共用提交分支的prefix仅comment或reply；动态字段仅Submitting/SubmitError/SubmitErrorKind/Content与canComment/canReply，回复追加popShow/replyId均有实际WXML消费；owner=小程序，复核=2026-10-13",
     "chengyinhub-xcx/pages/square/detail/index.js:284": "评论/回复共用提交分支的prefix仅comment或reply；动态字段仅Submitting/SubmitError/SubmitErrorKind/Content与canComment/canReply，回复追加popShow/replyId均有实际WXML消费；owner=小程序，复核=2026-10-13",
-    "chengyinhub-xcx/pages/square/detail/index.js:977": "当前实例分页/动作权威回读使用既有appendByIndex或精确list[index]行补丁；只更新本列表实际已渲染行，保留其它行及失败状态；owner=小程序，复核=2026-10-13",
-    "chengyinhub-xcx/pages/square/list/index.js:208": "图片加载只在合法itemIndex范围内回写list[itemIndex]的宽高展示尺寸，按具体图片行更新，不替换列表或更改帖子权限；owner=小程序，复核=2026-10-13",
+    "chengyinhub-xcx/pages/square/detail/index.js:979": "当前实例分页/动作权威回读使用既有appendByIndex或精确list[index]行补丁；只更新本列表实际已渲染行，保留其它行及失败状态；owner=小程序，复核=2026-10-13",
+    "chengyinhub-xcx/pages/square/list/index.js:207": "图片加载只在合法itemIndex范围内回写list[itemIndex]的宽高展示尺寸，按具体图片行更新，不替换列表或更改帖子权限；owner=小程序，复核=2026-10-13",
     "chengyinhub-xcx/pages/square/list/index.js:1212": "当前实例分页/动作权威回读使用既有appendByIndex或精确list[index]行补丁；只更新本列表实际已渲染行，保留其它行及失败状态；owner=小程序，复核=2026-10-13",
     "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:903": "本人资料固定profilePatch仅userInfo、balanceText、cityName、categoryList、casePicsList、joinDate、friendNum、followNum、fansNum及条件growthLevel/primaryCta，均为当前资料页已有展示字段；owner=小程序，复核=2026-10-13",
     "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:1600": "当前实例分页/动作权威回读使用既有appendByIndex或精确list[index]行补丁；只更新本列表实际已渲染行，保留其它行及失败状态；owner=小程序，复核=2026-10-13",

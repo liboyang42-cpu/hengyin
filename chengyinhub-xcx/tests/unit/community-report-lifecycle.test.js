@@ -29,7 +29,7 @@ function harness(route, comment) {
   page.data.id = 59; page.data.list = [{ id: 59 }]; page._actionIndex = 0;
   return { page, calls, tips, timers, patches, modals, navigations,
     changeOwner() { actor = 1002; }, renew() { authorization = 'synthetic-renewed'; },
-    start() { if (comment) page.reportComment({ currentTarget: { dataset: { index: 0 } } }); else page.reportSquare(); },
+    start() { if (comment) page.reportComment({ currentTarget: { dataset: { index: 0 } } }); else page.reportSquare(59); },
   };
 }
 async function confirm(h) { h.start(); h.modals[0].success({ confirm: true }); await tick(); }

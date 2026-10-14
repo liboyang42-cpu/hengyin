@@ -114,8 +114,7 @@ Page({
     userId: 0,
 
     postActionShow: false,   // H050/H051 三合一操作弹层(编辑/删除/举报)
-    // 当前点击的列表项索引 2026-09-16 起是实例属性 this._actionIndex(三合一弹层不渲染它,
-    // 只作行定位用的内部状态;setData 死数据字段门禁对 A2「只当内部状态」判红)
+    // 操作目标以稳定帖文 id 交给组件,不依赖会随刷新变化的列表索引。
     currentActionId: '', currentActionSummary: '',   // 当前操作帖的 id / 正文前段(给 cy-post-actions;摘要用于 CU-C-107 的删除确认)
     currentActionOwner: false, // 当前操作帖是不是本人的(决定编辑/删除行是否出现)
 
@@ -339,7 +338,7 @@ Page({
   showAction: function (e) {
     const index = feedIndexFromEvent(e);
     const item = this.data.list[index] || {};
-    this._actionIndex = index;
+    this._postActionCurrent = this.communityCurrent();
     this.setData({
       postActionShow: true,
       currentActionId: item.id == null ? '' : String(item.id),
@@ -350,7 +349,6 @@ Page({
 
   // 关闭操作弹层
   closePostActions: function () {
-    this._actionIndex = -1;
     this.setData({
       postActionShow: false,
       currentActionId: '',
@@ -361,19 +359,24 @@ Page({
 
   // H050/H051:三合一弹层的分发。delete 到这里时确认闸已在组件内部过完,不再自建第二道。
   onPostAction: function (e) {
-    const action = ((e || {}).detail || {}).action;
-    if (action === 'edit') { this.editCurrentSquarePost(); return; }
-    if (action === 'delete') { this.deleteCurrentSquarePost(); return; }
-    if (action === 'report') { this.reportSquare(); return; }
+    const { action, id } = ((e || {}).detail || {});
+    if (!id || !this._postActionCurrent || !this._postActionCurrent()) return;
+    if (action === 'edit') { this.editCurrentSquarePost(id); return; }
+    if (action === 'delete') { this.deleteCurrentSquarePost(id); return; }
+    if (action === 'report') { this.reportSquare(id); return; }
   },
 
   // 删除(H051):软删 + 归属校验都在后端;成功后本地摘掉这一行(与举报同一口径)。
-  deleteCurrentSquarePost: function () {
+  deleteCurrentSquarePost: function (id) {
     this.communityClient();
-    const item = this.data.list[this._actionIndex];
-    if (!item || !item.id || this._deletingPost) return;
+    const item = this.data.list.find(row => String(row.id) === String(id));
+    if (this._deletingPost) return;
     const current = this.communityCurrent();
     const pa = this.selectComponent && this.selectComponent('#post-actions');
+    if (!item || !item.id) {
+      if (pa && this._postActionCurrent && this._postActionCurrent()) pa.deleteFailed('内容已变化，请重新打开');
+      return;
+    }
     this._deletingPost = true;
     const key = 'delete:' + item.id;
     this.communityClient().deletePost({ postId: item.id, current, autoErrorToast: false,
@@ -393,9 +396,8 @@ Page({
   },
 
   // 编辑(H050):行数据直接进新建面板的编辑态,正文预填、关联带上(不发图片/地点,后端保留原值)
-  editCurrentSquarePost: function () {
-    const index = this._actionIndex;
-    const item = this.data.list[index];
+  editCurrentSquarePost: function (id) {
+    const item = this.data.list.find(row => String(row.id) === String(id));
     if (!item || !item.id) { this.closePostActions(); return; }
     this.closePostActions();
     // editPost 先落地、show 后翻:组件的 show 观察器要读到编辑数据(两次 setData 顺序确定)
@@ -412,13 +414,12 @@ Page({
   onReportReasonSelect(e) { reportSheet.select(this, e); },
   onReportReasonCancel() { reportSheet.cancel(this); },
 
-  reportSquare: function () {
+  reportSquare: function (id) {
     const that = this;
     const owner = String(app.getUserID() || '');
     const current = () => !that._unloaded && String(app.getUserID() || '') === owner;
     if (!current()) return;
-    const index = that._actionIndex;
-    const item = that.data.list[index];
+    const item = that.data.list.find(row => String(row.id) === String(id));
     if (!item || !item.id) {
       that.closePostActions();
       return;
@@ -444,8 +445,7 @@ Page({
           success(resp) {
             if (!current() || Number(resp && resp.code) === 499) return;
             if (resp.code == '200') {
-              const list = that.data.list.slice();
-              list.splice(index, 1);
+              const list = that.data.list.filter(row => String(row.id) !== String(item.id));
               that.setData({
                 list: list,
                 nodata: list.length < 1

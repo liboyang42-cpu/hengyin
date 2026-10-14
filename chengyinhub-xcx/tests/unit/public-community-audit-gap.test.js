@@ -34,7 +34,7 @@ const ledger = () => cachedLedger || (cachedLedger = require('../../scripts/uiau
 const reporting = { policyVersion: 'test-policy', reasons: [{ label: '真实服务端原因', code: 'REAL_CODE' }] };
 for (const route of ['pages/square/list', 'pages/square/detail']) {
   test(route + ' renders server taxonomy, cancel sends no report', async () => {
-    const h = reportPage(route); h.page.reportSquare(); await tick();
+    const h = reportPage(route); h.page.reportSquare(59); await tick();
     assert.equal(h.calls[0].url, '/api/v1/community/capabilities');
     h.calls[0].success({ code: 200, data: { reporting } }); await tick();
     assert.equal(h.page.data.reportReasonShow, true);
@@ -47,7 +47,7 @@ for (const route of ['pages/square/list', 'pages/square/detail']) {
     assert.equal(h.page.data.reportReasonShow, false);
   });
   test(route + ' selected reason submits canonical target, never legacy URL', async () => {
-    const h = reportPage(route); h.page.reportSquare(); await tick();
+    const h = reportPage(route); h.page.reportSquare(59); await tick();
     h.calls[0].success({ code: 200, data: { reporting } }); await tick();
     h.page.onReportReasonSelect({ detail: { index: 0 } }); await tick();
     assert.equal(h.calls.length, 2); assert.equal(h.calls[1].url, '/api/v1/community/reports');
@@ -56,14 +56,14 @@ for (const route of ['pages/square/list', 'pages/square/detail']) {
     h.calls[1].success({ code: 200, data: { id: 1 } }); await tick();
   });
   test(route + ' destroyed page cannot reopen a reason sheet from a late capability response', async () => {
-    const h = reportPage(route); h.page.reportSquare(); await tick();
+    const h = reportPage(route); h.page.reportSquare(59); await tick();
     h.page.onUnload(); h.calls[0].success({ code: 200, data: { reporting } }); await tick();
     assert.equal(h.calls.length, 1); assert.equal(h.page.data.reportReasonShow, false);
     assert.equal(h.page._reportReasonSelection, undefined);
   });
   test(route + ' missing taxonomy or owner switch never writes a report', async () => {
     for (const changeOwner of [false, true]) {
-      const h = reportPage(route); h.page.reportSquare(); await tick();
+      const h = reportPage(route); h.page.reportSquare(59); await tick();
       h.calls[0].success({ code: 200, data: changeOwner ? { reporting } : {} }); await tick();
       if (changeOwner) { h.setActor(990012); h.page.onReportReasonSelect({ detail: { index: 0 } }); }
       await tick(); assert.equal(h.calls.length, 1);
@@ -139,7 +139,7 @@ test('negative control: removing the unload guard reopens a late reason sheet', 
     const anchor = '  onUnload() {\n    this._unloaded = true;\n    if (this._community) this._community.dispose();\n    reportSheet.cancel(this);';
     assert.ok(source.includes(anchor));
     const h = reportPage(route, source.replace(anchor, '  onUnload() {\n    reportSheet.cancel(this);'));
-    h.page.reportSquare(); await tick(); h.page.onUnload();
+    h.page.reportSquare(59); await tick(); h.page.onUnload();
     h.calls[0].success({ code: 200, data: { reporting } }); await tick();
     assert.equal(h.page.data.reportReasonShow, true, 'negative control did not expose the missing guard');
     h.page.onReportReasonCancel(); await tick();
@@ -274,5 +274,32 @@ test('mapping: original growth tap and current CTA retain navigation and identit
     for (const branch of ['success', 'error', 'timeout', 'duplicate-trigger'])
       assert.ok(c.requiredBranches.includes(branch), `${c.id}:${branch}`);
     assert.doesNotMatch(c.evidence.staticSource, /:0$/);
+  }
+});
+
+test('menu session helper candidates are not network obligations or role readback authority', () => {
+  const { validateAuthorityReceipt } = require('../../scripts/uiaudit/action-evidence-store');
+  const frozen = require('../../scripts/uiaudit/action-ledger.json');
+  for (const [route, handler] of [['pages/square/list/index', 'showAction'],
+    ['pages/square/detail/index', 'openPostActions']]) {
+    const matches = frozen.controls.filter(c => c.route === route && c.control.handler === handler);
+    assert.equal(matches.length, 1);
+    const action = matches[0];
+    // The conservative dependency scan includes the session's role helper. It
+    // does not prove this menu executes that helper's network-loading method.
+    assert.equal(action.actionClass, 'state');
+    assert.deepEqual(action.effectClasses, ['state']);
+    assert.deepEqual(action.targets.primaryApis, []);
+    assert.deepEqual(action.targets.writeApis, []);
+    assert.equal(action.requiredRequests, null);
+    assert.equal(action.requiredRequestsByBranch, null);
+    assert.equal(action.evidence.status, 'pending');
+    for (const kind of ['read', 'write']) assert.throws(() => validateAuthorityReceipt(action, {
+      actionId: action.id, fixtureId: 'synthetic-menu-candidate-negative',
+      request: { method: 'POST', url: '/api/role/info', resourceId: '1', authMode: 'authenticated' },
+      expectedRequest: { urlTemplate: '/api/role/info', method: 'POST' },
+      authority: { endpoint: 'synthetic-only', resourceId: '1', before: {}, after: {} },
+      assertions: ['synthetic-negative-only'],
+    }, kind, 'success', {}), /缺少可绑定的 API 真源/);
   }
 });

@@ -164,13 +164,18 @@ function typedConfirmationConnected(entry, readFile) {
   const resolved = component.startsWith('/') ? component.slice(1) : path.posix.normalize(path.posix.join(path.posix.dirname(entry.file), component));
   if (resolved + '.js' !== entry.confirmFile) return false;
   const dispatch = (handlers.get('onPostAction') || '');
-  const expectedDispatch = new RegExp("if\\s*\\(action\\s*===\\s*['\"]delete['\"]\\)\\s*\\{\\s*this\\." + entry.handler + "\\(\\)");
+  const stableListId = entry.file === 'pages/square/list/index.js' && entry.handler === 'deleteCurrentSquarePost';
+  const originalDetail = entry.file === 'pages/square/detail/index.js' && entry.handler === 'deleteSquarePost';
+  if (!stableListId && !originalDetail) return false;
+  const eventIdBinding = /const\s+\{\s*action\s*,\s*id\s*\}\s*=\s*\(\(e\s*\|\|\s*\{\}\)\.detail\s*\|\|\s*\{\}\)/.test(dispatch);
+  const expectedDispatch = new RegExp("if\\s*\\(action\\s*===\\s*['\"]delete['\"]\\)\\s*\\{\\s*this\\." + entry.handler + "\\(" + (stableListId ? "id" : "") + "\\)");
   const componentSource = maskJavaScriptComments(readFile(entry.confirmFile) || '');
   const componentHandlers = handlerSources(componentSource);
   const constants = (componentSource.match(/(?:const|let|var)\s+\w+\s*=\s*['"][^'"]+['"];?/g) || []).join('\n');
   const confirmWxml = maskWxmlComments(readFile(entry.confirmFile.replace(/\.js$/, '.wxml')) || '');
   return /<cy-post-actions\b[^>]*bind:select="onPostAction"/.test(pageWxml)
     && expectedDispatch.test(dispatch)
+    && (!stableListId || eventIdBinding)
     && openedWithKey(constants + '\n' + (componentHandlers.get('onDelete') || ''), entry.confirmKey)
     && /<cy-danger-confirm\b[^>]*bind:confirm="onDeleteConfirmed"/.test(confirmWxml)
     && /triggerEvent\(['"]select['"],\s*\{\s*action:\s*['"]delete['"]/.test(componentHandlers.get('onDeleteConfirmed') || '');
@@ -456,6 +461,15 @@ function selftest() {
     src => src.replace("url: '/api/v1/community/posts/' + view.id(options.postId), method: 'DELETE'", "url: '/api/v1/community/retired-posts/' + view.id(options.postId), method: 'DELETE'"), error => error.includes('D1 未登记') && error.includes('retired-posts'));
   typedMutation('D2 帖文确认事件与实际 handler 断开', detail,
     src => src.replace("if (action === 'delete') { this.deleteSquarePost();", "if (action === 'delete') { this.openPostEdit();"), error => error.includes('D2 typed DELETE'));
+  const list = 'pages/square/list/index.js';
+  for (const [name, argument] of [['其他变量', 'otherId'], ['当前状态fallback', 'this.data.currentActionId'], ['任意表达式', 'id || this.data.currentActionId'], ['零参数', '']]) {
+    typedMutation('D2 列表稳定id不能替换为' + name, list,
+      src => src.replace('this.deleteCurrentSquarePost(id);', 'this.deleteCurrentSquarePost(' + argument + ');'),
+      error => error.includes('D2 typed DELETE'));
+  }
+  typedMutation('D2 列表id必须来自真实事件解构', list,
+    src => src.replace('const { action, id } = ((e || {}).detail || {});', 'const { action } = ((e || {}).detail || {}); const id = this.data.currentActionId;'),
+    error => error.includes('D2 typed DELETE'));
   typedMutation('D2 宿主确认事件解绑', detail.replace('.js', '.wxml'),
     src => src.replace('bind:select="onPostAction"', 'bind:select="closePostActions"'), error => error.includes('D2 typed DELETE'));
   typedMutation('D2 组件确认事件解绑', 'pages/square/components/cy/post-actions/index.wxml',
