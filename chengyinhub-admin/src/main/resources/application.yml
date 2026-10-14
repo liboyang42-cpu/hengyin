@@ -32,12 +32,15 @@ server:
     # tomcat的URI编码
     uri-encoding: UTF-8
     # 连接数满后的排队数，默认为100
-    accept-count: 1000
+    # F-W3-05/F-L6-13:原 800 线程 + 1000 排队对 20 个 DB 连接,高峰时线程全堵在等连接上(最长 60s),
+    # 客户端早已超时重试,表现为整站卡死。收敛到 Spring 默认量级(DB 池的 10 倍),配合 Druid maxWait
+    # 缩短实现快速失败;容量结论仍需同规格压测,可用环境变量回调而不必改包。
+    accept-count: ${CHENGYIN_TOMCAT_ACCEPT_COUNT:200}
     threads:
       # tomcat最大线程数，默认为200
-      max: 800
+      max: ${CHENGYIN_TOMCAT_MAX_THREADS:200}
       # Tomcat启动初始化的线程数，默认值10
-      min-spare: 100
+      min-spare: ${CHENGYIN_TOMCAT_MIN_SPARE:20}
 
 security:
   cors:
@@ -103,7 +106,8 @@ spring:
           # 连接池的最大数据库连接数
           max-active: 8
           # #连接池最大阻塞等待时间（使用负值表示没有限制）
-          max-wait: -1ms
+          # F-W3-05:原 -1ms 无限等待,Redis 抖动时请求线程无限阻塞;改为有限等待后快速失败并触发连接异常告警。
+          max-wait: ${CHENGYIN_REDIS_POOL_MAX_WAIT:3s}
 
 # token配置
 token:
