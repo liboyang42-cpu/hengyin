@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "dependencies": {
     "20261012_member_password_width": [],
+    "20261013_drop_member_pii_backup_tables": [],
     "20261012_roam_presence_revoke_intent": [
       "20261012_roam_presence_privacy",
       "compliance_consent_deregister_20260711",

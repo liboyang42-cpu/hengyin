@@ -8,8 +8,11 @@ import argparse, pathlib, sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 import pymysql
 
-# RuoYi 默认 admin123 的 bcrypt
+# RuoYi 默认 admin123 的 bcrypt(仅用于 e2e_* 等非 admin/ry 的夹具账号)
 ADMIN_HASH = "$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2"
+# 超管夹具口令见 chain_lib.E2E_SUPERADMIN_PASSWORD 的 bcrypt。后端登录前拒绝 admin/ry 使用
+# RuoYi 公开默认口令(F-L5S-09),所以一次性 E2E 库的超管不能再用 admin123。
+SUPERADMIN_HASH = "$2a$10$aKtf9i3QGSe4YusiaEQm3ugGsvJcyn1owBjDUAH/uzChT8CQauH1i"
 RECRUIT_JOB_TARGET = "topicRecruitDeadlineTask.run()"
 DISCOVERABLE_MERCHANTS = (
     (8001, 9002, "探店日样板咖啡", 24, "10:00-20:00", "探店日,City Walk", 0,
@@ -200,12 +203,12 @@ def main():
     print("[seed] 注册招募到期任务(topicRecruitDeadlineTask)")
     seed_recruit_deadline_job(ex)
 
-    print("[seed] 后台部门 + 超管账号 admin/admin123")
+    print("[seed] 后台部门 + 超管账号 admin(夹具口令见 chain_lib.E2E_SUPERADMIN_PASSWORD)")
     ex("INSERT INTO sys_dept(dept_id,parent_id,ancestors,dept_name,order_num,status,del_flag,create_by,create_time) "
        "VALUES(100,0,'0','城瘾总部',0,'0','0','admin',NOW())")
     ex("INSERT INTO sys_user(user_id,dept_id,user_name,nick_name,user_type,email,phonenumber,sex,password,"
        "status,del_flag,create_by,create_time) VALUES(1,100,'admin','超管','00','a@b.c','13800000000','0',%s,"
-       "'0','0','admin',NOW())", (ADMIN_HASH,))
+       "'0','0','admin',NOW())", (SUPERADMIN_HASH,))
     ex("INSERT INTO sys_user_role(user_id,role_id) VALUES(1,1)")
 
     print("[seed] 对公付款与平台审核/客服独立账号(密码 admin123)")

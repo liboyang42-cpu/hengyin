@@ -482,6 +482,18 @@ public class SysUserServiceImpl implements ISysUserService
      * @param operName 操作用户
      * @return 结果
      */
+    /** 已公开的 RuoYi 默认口令或少于 8 位的初始密码不能用于新导入的后台账号。 */
+    static boolean isWeakInitialPassword(String password)
+    {
+        if (StringUtils.isBlank(password) || password.trim().length() < 8)
+        {
+            return true;
+        }
+        String normalized = password.trim().toLowerCase(java.util.Locale.ROOT);
+        return java.util.Arrays.asList("admin123", "ry123", "123456", "12345678", "password", "admin", "ry")
+                .contains(normalized);
+    }
+
     @Override
     public String importUser(List<SysUser> userList, Boolean isUpdateSupport, String operName)
     {
@@ -504,6 +516,11 @@ public class SysUserServiceImpl implements ISysUserService
                     BeanValidators.validateWithException(validator, user);
                     deptService.checkDeptDataScope(user.getDeptId());
                     String password = configService.selectConfigByKey("sys.user.initPassword");
+                    if (isWeakInitialPassword(password))
+                    {
+                        // F-L5S-09：RuoYi 种子把初始密码设为 123456；导入账号不得落成公开默认口令。
+                        throw new ServiceException("账号初始密码未设置为安全口令，请先在参数设置中修改 sys.user.initPassword");
+                    }
                     user.setPassword(SecurityUtils.encryptPassword(password));
                     user.setCreateBy(operName);
                     userMapper.insertUser(user);

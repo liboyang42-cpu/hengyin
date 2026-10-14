@@ -104,8 +104,13 @@ def http(method, path, token=None, json_body=None, form=None, timeout=20):
     return out
 
 
+# 一次性 E2E 库专用超管夹具口令(与 seed_fixtures.SUPERADMIN_HASH 对应)。后端拒绝 admin/ry
+# 使用 RuoYi 公开默认口令(F-L5S-09),所以这里不能再是 admin123。
+E2E_SUPERADMIN_PASSWORD = "E2e-Fixture-Adm1n!"
+
+
 def admin_token():
-    r = http("POST", "/login", json_body={"username": "admin", "password": "admin123"})
+    r = http("POST", "/login", json_body={"username": "admin", "password": E2E_SUPERADMIN_PASSWORD})
     return r.get("token")
 
 

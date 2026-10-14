@@ -481,12 +481,38 @@ class AppLoginServiceSecurityTest {
         ReflectionTestUtils.setField(service, "redisCache", cache);
         assertThrows(ServiceException.class, () -> service.login("13800000000", "wrong", "openid"));
         verify(cache).incrementWithinWindow("app_password_fail_13800000000", 10, TimeUnit.MINUTES);
-        when(cache.getCacheObject("app_password_fail_13800000000")).thenReturn(5L);
+        when(cache.incrementWithinWindow("app_password_fail_13800000000", 10, TimeUnit.MINUTES)).thenReturn(6L);
         org.mockito.Mockito.clearInvocations(members);
         ServiceException locked = assertThrows(ServiceException.class,
                 () -> service.login("13800000000", "correct", "openid"));
         assertTrue(locked.getMessage().contains("10分钟"));
         verifyNoInteractions(members);
+    }
+
+    @Test
+    void concurrentPasswordGuessesReserveAttemptsAtomicallyBeforeVerification() {
+        IUmsMemberService members = mock(IUmsMemberService.class);
+        UmsMember member = new UmsMember();
+        member.setId(42L); member.setPhone("13800000000"); member.setPassword(SecurityUtils.encryptPassword("correct"));
+        when(members.selectUmsMemberList(any(UmsMember.class))).thenReturn(Collections.singletonList(member));
+        RedisCache cache = mock(RedisCache.class);
+        AtomicInteger counter = new AtomicInteger();
+        when(cache.incrementWithinWindow("app_password_fail_13800000000", 10, TimeUnit.MINUTES))
+                .thenAnswer(invocation -> (long) counter.incrementAndGet());
+        AppLoginService service = new AppLoginService();
+        ReflectionTestUtils.setField(service, "appUserSevice", members);
+        ReflectionTestUtils.setField(service, "appSessionRegistryService", stableRegistry());
+        ReflectionTestUtils.setField(service, "redisCache", cache);
+        // 计数从不经“读→比对→再写”，所以 20 次猜测里只有前 5 次会走到口令比对。
+        for (int i = 0; i < 20; i++) {
+            assertThrows(ServiceException.class, () -> service.login("13800000000", "wrong", "openid"));
+        }
+        verify(members, org.mockito.Mockito.times(10)).selectUmsMemberList(any(UmsMember.class));
+        verify(cache, never()).getCacheObject("app_password_fail_13800000000");
+        ServiceException locked = assertThrows(ServiceException.class,
+                () -> service.login("13800000000", "correct", "openid"));
+        assertTrue(locked.getMessage().contains("10分钟"));
+        verify(cache, never()).deleteObject("app_password_fail_13800000000");
     }
 
     private AppTokenService realTokenService() {
