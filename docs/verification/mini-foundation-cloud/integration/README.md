@@ -55,6 +55,15 @@
 - 仍红：gitleaks 历史（B `d54cf2d`，待 B 改写历史或 squash 合入）、`lint:ui` 基线项。
 - 断言变更（通行证决定后，经用户同意改写冲突用例）：CompletionTruth 6 处「零交互」→「只允许资格读」、CAS 回读 1→2、取消改断言错误回包且不写；CouponNotIssuable 2 条改到原来源交付；JourneyFullFlow 并发用例握手点前移（断言不变），摘唯一键负控按其注释「防线换人」改为证明锁序化后仍幂等重放（方法改名）。
 
+## 3c. 收尾修补（2026-10-14，用户「全部修好」）
+
+- `lint:ui`：交接基线唯一违规 `im/list:352` 改为静态字段整表回写（新对象替换该行），不扩棘轮；**`lint:ui` 全过**。
+- 既有并行竞态：`action-ledger.test.js` 历史负控临时目录改建在 `tests/unit/` 下（全目录扫描均跳过 tests）。
+- `lint:ui` 转绿后 CI 首次走到 `ci/xcx-check.sh`：其 U5 白名单（文件+精确调用数）IM 聊天页 3→5，同 B 包两处静默只读请求及理由。
+- 免费自玩真库 IT：快照后新增列以用例内联 DDL 按原迁移定义叠加（不新增未登记 SQL 文件）；GitHub 托管 runner 上 MySQL 8.0.45 实跑 **1/1、skip 0**，跑后独立回读仅剩系统库（临时验证分支 `verify/free-selfplay-it-20261014`，run 38596635924，验证后删除）。
+- `cd770ce` CI：除 gitleaks（历史）外全部作业通过：Backend（10018/0/0、点名真库 IT 96/0/0、原子迁移 41）、Mini program static checks（单测 8252/0、lint:ui、xcx-check 全过）、迁移安全、迁移布局、SBOM、Admin UI、Fast gates。
+- Gitleaks：完整历史分支因 B 的 `d54cf2d` 必红；另建**单提交 squash 分支** `claude/mini-foundation-abc-integration-squash-20261014`（交接分支 + 与本分支同一棵树的一个提交），历史扫描无命中，作为可合入候选；本完整历史分支保留为审计轨迹。
+
 ## 4. 需要复核的集成者改动（断言审计）
 
 `git diff b39cd30..HEAD` 中被删除的含 `assert/verify` 的测试行共 4 处：
