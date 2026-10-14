@@ -111,7 +111,8 @@ class AiQuotaRecoveryMySqlRedisIT {
             query.setString(1,receipt);try(ResultSet rs=query.executeQuery()) {assertTrue(rs.next());return rs.getString(1);}
         }
     }
-    private void forceDue() throws Exception { sql("update ai_quota_reservation set request_lease_until=date_sub(now(3),interval 1 second),next_attempt_at=now(3)"); }
+    // 只推进本用例自己的原收据：同类共用一个scratch库，无条件更新会让后续用例的runDue重处理前序行并在其清理后重建Redis收据。
+    private void forceDue() throws Exception { sql("update ai_quota_reservation set request_lease_until=date_sub(now(3),interval 1 second),next_attempt_at=now(3) where receipt_key='"+receipt+"'"); }
 
     @Test void restartAfterChargeBeforeReceiptPersistenceCancelsExactNonce() throws Exception {
         charge();forceDue();
@@ -150,7 +151,7 @@ class AiQuotaRecoveryMySqlRedisIT {
         assertEquals("1",raw.opsForValue().get(counter));assertEquals("RESOLVED_NO_ACTIVE_RESERVATION",state());
     }
     @Test void concurrentWorkersRefundOneReservationOnlyOnce() throws Exception {
-        reserve();sql("update ai_quota_reservation set state='REFUND_DUE',stage='RESULT_CLASSIFIED'");forceDue();
+        reserve();sql("update ai_quota_reservation set state='REFUND_DUE',stage='RESULT_CLASSIFIED' where receipt_key='"+receipt+"'");forceDue();
         ExecutorService workers=Executors.newFixedThreadPool(2);
         try { Future<?> one=workers.submit(service::runDue),two=workers.submit(service::runDue);one.get();two.get(); }
         finally {workers.shutdownNow();}
