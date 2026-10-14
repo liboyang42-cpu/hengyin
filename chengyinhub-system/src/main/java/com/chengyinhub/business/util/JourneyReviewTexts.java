@@ -223,7 +223,41 @@ public final class JourneyReviewTexts {
         addPlaySections(entries, root);
         com.chengyinhub.business.service.support.GameplayOutcomeRules.visit(root,
                 (path, row) -> add(entries, "blockConfig." + path + ".reply", row.get("reply")));
+        // F-L5C-03/13:上面按段列举的字段之外,其余玩法(盲盒、分支、估数、竞猜、找东西、跨日任务等)
+        // 的玩家可见文字按 key 递归兜底收集,新玩法加字段不会再悄悄漏检。已收过的正文不重复送检。
+        java.util.Set<String> seen = new java.util.HashSet<String>();
+        for (Entry entry : entries) seen.add(entry.getText());
+        collectGenericTexts(root, "blockConfig", entries, seen);
         return entries;
+    }
+
+    /** 玩法配置里给玩家看的文字字段名(取自 AdvancedGameConfigValidator 的文本字段;不含 url / 模板 id 等非展示值)。 */
+    private static final java.util.Set<String> GENERIC_TEXT_KEYS = new java.util.HashSet<String>(java.util.Arrays.asList(
+            "answerText", "body", "cardTitle", "content", "deckName", "doneText", "eyebrow", "failText", "fb",
+            "hint", "kicker", "label", "lead", "name", "outcomeLabel", "prompt", "question", "reply",
+            "requirement", "reveal", "rule", "sealText", "shotNote", "signer", "skill", "startLabel", "steps",
+            "successText", "text", "time", "title", "trackName", "unit", "unlockLabel", "unlockText", "voice",
+            "waitHint", "line", "lineIfFail", "opener", "aside", "hook", "walk", "todo", "target", "reward",
+            "q", "a", "open", "zeroMessage"));
+
+    private static void collectGenericTexts(JsonNode node, String path, List<Entry> entries, java.util.Set<String> seen) {
+        if (node == null) return;
+        if (node.isObject()) {
+            java.util.Iterator<java.util.Map.Entry<String, JsonNode>> fields = node.fields();
+            while (fields.hasNext()) {
+                java.util.Map.Entry<String, JsonNode> field = fields.next();
+                JsonNode value = field.getValue();
+                String childPath = path + "." + field.getKey();
+                if (GENERIC_TEXT_KEYS.contains(field.getKey()) && value != null && value.isTextual()) {
+                    String text = value.asText().trim();
+                    if (!text.isEmpty() && seen.add(text)) add(entries, childPath, text);
+                } else {
+                    collectGenericTexts(value, childPath, entries, seen);
+                }
+            }
+        } else if (node.isArray()) {
+            for (JsonNode child : node) collectGenericTexts(child, path + "[]", entries, seen);
+        }
     }
 
     /**
@@ -313,7 +347,8 @@ public final class JourneyReviewTexts {
      * R19:章节故事流写接口的 beat 块正文(叙事搬进故事流后的真源)。
      *
      * <p>写路径拿的是 DTO(还没有 nodeId / 物化),字段名带章序号,便于审核员与作者定位;
-     * 非 beat 的 text 块(章节旁白)不在本轮口径内,与既有 V2 保存路径一致。
+     * F-L5C-03:非 beat 块里玩家可见的文字(章节旁白、内心声音/对面名字、梦块相册名与配句)同样收进来,
+     * 简易版主题免审直发时它们和 beat 正文一样直接给玩家看。
      */
     public static List<Entry> collectChapterNarrativeBlocks(List<ChapterDTO> chapters) {
         List<Entry> entries = new ArrayList<Entry>();
@@ -332,14 +367,30 @@ public final class JourneyReviewTexts {
                 String field = storyFlowField(index + 1, block.getBeat(), block.getField(), block.getQid());
                 if (field != null) {
                     add(entries, field, block.getContent());
+                    continue;
+                }
+                String prefix = plainBlockPrefix(index + 1, block.getType());
+                add(entries, prefix + ".content", block.getContent());
+                add(entries, prefix + ".who", block.getWho());
+                add(entries, prefix + ".title", block.getTitle());
+                if (block.getImages() != null) {
+                    for (ChapterBlockDTO.DreamImageDTO image : block.getImages()) {
+                        if (image != null) add(entries, prefix + ".images[].line", image.getLine());
+                    }
                 }
             }
         }
         return entries;
     }
 
+    /** 非 beat 块的字段路径前缀:storyFlow.chapter2.text / storyFlow.chapter2.voice。 */
+    private static String plainBlockPrefix(int chapterNumber, String type) {
+        String kind = type == null || type.trim().isEmpty() ? "block" : type.trim();
+        return "storyFlow.chapter" + chapterNumber + "." + kind;
+    }
+
     /**
-     * R19:已物化章节 blocks 里 beat 块的正文(审核详情只读用)。
+     * R19:已物化章节 blocks 里 beat 块的正文与非 beat 块的玩家可见文字(审核详情只读用)。
      * 坏 JSON / 非数组按「没收」处理 —— 与读取侧对脏块只跳过同一口径。
      */
     public static List<Entry> collectChapterBlocks(String blocksJson, int chapterNumber) {
@@ -356,6 +407,14 @@ public final class JourneyReviewTexts {
                     block.path("field").asText(""), block.path("qid").asText(""));
             if (field != null) {
                 add(entries, field, block.get("content"));
+                continue;
+            }
+            String prefix = plainBlockPrefix(chapterNumber, block.path("type").asText(""));
+            add(entries, prefix + ".content", block.get("content"));
+            add(entries, prefix + ".who", block.get("who"));
+            add(entries, prefix + ".title", block.get("title"));
+            for (JsonNode image : array(block.get("images"))) {
+                add(entries, prefix + ".images[].line", image.get("line"));
             }
         }
         return entries;
