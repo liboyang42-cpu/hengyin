@@ -47,6 +47,9 @@ public class RoamLocationConsentService {
         row.setMemberId(member);row.setDocType("privacy_policy");row.setDocVersion(version);row.setScene("roam_location");
         row.setEventType(event);row.setRequestId(requestId);row.setIpAddress(ip);row.setOccurredAt(now);row.setCreateTime(now);
         if(records.insertConsentRecord(row)!=1)throw new IllegalStateException("定位授权未保存");
+        // 撤回漫游定位在服务端立即生效:同一事务里关闭本人所有未结束会话的「附近的人」展示,
+        // 不等 5 分钟心跳过期,也不依赖客户端是否还在运行。
+        if("REVOKE".equals(event)) roam.updatePresenceVisibility(null,member,false);
         ConsentRecord receipt=records.selectByRequestId(member,requestId);
         if(receipt==null)throw new IllegalStateException("定位授权回读失败");
         return receipt;
