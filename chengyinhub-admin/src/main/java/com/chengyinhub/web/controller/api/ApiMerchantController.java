@@ -650,7 +650,8 @@ public class ApiMerchantController extends BaseController {
         MmsMerchant m = mmsMerchantService.selectMmsMerchantById(access.getMerchantId());
         if (m == null) return error("商家不存在");
         // 内容安全:合作需求自由文本命中违规即拒(商家资料匿名可访问公开)
-        String secMsg = wxContentSecurityService.checkText(IWxContentSecurityService.joinText(body.getDemand()),
+        String secMsg = wxContentSecurityService.checkText(IWxContentSecurityService.joinText(body.getDemand(),
+                        body.getAvailableTime(), body.getSuitActivityTypes()),
                 merchantOpenid(access.getOwnerMemberId()));
         if (secMsg != null) return error(secMsg);
         MmsMerchant upd = new MmsMerchant();
@@ -694,7 +695,7 @@ public class ApiMerchantController extends BaseController {
         // 内容安全:slogan/故事标题/标签等展示文本命中违规即拒
         String secMsg = wxContentSecurityService.checkText(
                 IWxContentSecurityService.joinText(body.getSlogan(), body.getStoryTitle(), body.getTags(),
-                        body.getServiceTag(), body.getServiceText(), body.getAddress()),
+                        body.getServiceTag(), body.getServiceText(), body.getAddress(), body.getCityRole()),
                 merchantOpenid(access.getOwnerMemberId()));
         if (secMsg != null) return error(secMsg);
         String featuredError = validateFeaturedSelection(

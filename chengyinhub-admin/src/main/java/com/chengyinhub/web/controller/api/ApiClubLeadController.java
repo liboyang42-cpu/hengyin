@@ -246,6 +246,13 @@ public class ApiClubLeadController extends BaseController {
         String note = Convert.toStr(body.get("dayNote"), null);
         if (note != null) { upd.setDayNote(note); chg.append("当日备注"); }
         if (chg.length() == 0) return error("无可改运营字段");
+        // F-L5C-02:集合地点与当日备注给参与者看,与 /broadcast 同一道内容安全闸。
+        String opsText = com.chengyinhub.business.service.IWxContentSecurityService.joinText(addr, addrName, note);
+        if (!opsText.isEmpty()) {
+            UmsMember actor = umsMemberService.selectUmsMemberById(memberId);
+            String risk = wxContentSecurityService.checkText(opsText, actor == null ? null : actor.getWxOpenId());
+            if (risk != null) return error(risk);
+        }
         // CR-63(2026-09-15 裁决 15):已售出(有已支付报名)的场次锁集合时间与地点;
         // 当日备注是文字,按裁决仍可改。P1-2:待支付/支付中也算已售出(下单后改期同样是后门)。
         // 服务端为准,前端置灰只是体验。
