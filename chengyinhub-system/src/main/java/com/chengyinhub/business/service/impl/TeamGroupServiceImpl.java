@@ -716,6 +716,11 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
                     throw new ServiceException("有订单的钱已结算给主办或承办方，需平台人工处理后再取消主题",
                             HttpStatus.CONFLICT);
                 }
+                // F-L4-02:整单全额退款取代同单各票尚待审核的退款申请(CAS 置驳回、未打款)。必须在
+                // refundResolvingOrder 之前:整单退计算剩余现金时遇到待审单会 409,连带整场取消回滚。
+                for (CmsRegistration row : orderSnapshot.paidRows) {
+                    refundService.supersedePendingRegistrationRefunds(row.getId(), "主办方取消活动,全额退款");
+                }
                 // 上面已在锁内判过「无已核销」,不该走到转人工分支;真走到了说明快照与锁内事实不一致
                 if (!refundResolvingOrder(orderSnapshot.payer, orderSnapshot.payer.getTicketName(),
                         "主办方取消活动,全额退款", actorMemberId)) {
@@ -1295,10 +1300,6 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             if (payer != null) {
                 throw new ServiceException("整单退款状态已变化,请刷新后重试", HttpStatus.CONFLICT);
             }
-        }
-        // F-L4-02：同单成员上尚待审核的退款申请由本次整单退取代，否则 payer 新退款单被拒、兄弟票的旧申请永远批不了。
-        for (CmsRegistration m : claimed) {
-            refundService.supersedePendingRegistrationRefunds(m.getId(), reason);
         }
         // 只有 claim winner 才能通过库存回补闸；后续任意异常仍由外层事务一起回滚。
         for (CmsRegistration m : claimed) {
