@@ -1,7 +1,7 @@
 # STATUS — C_funds
 
-- State: RUNNING
-- Last update (UTC): 2026-10-14T10:02Z
+- State: DONE
+- Last update (UTC): 2026-10-14T10:08Z
 - Work branch: fix/remaining-c-funds-20261013
 
 ## Done
