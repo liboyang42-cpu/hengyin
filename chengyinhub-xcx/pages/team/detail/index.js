@@ -58,7 +58,7 @@ Page({
       errorAction: '重新加载'
     });
     app.sendRequest({
-      url: '/api/team/info', method: 'POST', hideLoading: true, autoErrorToast: hasTeam,
+      url: '/api/team/info', method: 'POST', hideLoading: true, autoErrorToast: false,
       data: JSON.stringify({ teamId: Number(this.teamId) }),
       header: { 'Content-Type': 'application/json' },
       success(res) {
@@ -80,12 +80,14 @@ Page({
             errorSub: ''
           });
         } else {
+          const authDenied = String(res && res.code) === '401' || String(res && res.code) === '403';
+          // F-W1-12:静默重登后仍 401/403 是身份问题,留可见的登录/权限说明,不按加载失败留白。
           that.setData({
             loading: false,
             refreshing: false,
-            error: hasTeam ? '队伍状态暂未更新' : '队伍暂时不可用',
-            errorKind: 'data',
-            errorSub: app.getRequestErrorMessage(res, hasTeam ? '已保留上次确认的队伍信息' : '请稍后重新加载'),
+            error: authDenied ? '登录后查看队伍' : hasTeam ? '队伍状态暂未更新' : '队伍暂时不可用',
+            errorKind: authDenied ? 'no-permission' : 'data',
+            errorSub: authDenied ? '请重新登录后再打开这支队伍' : app.getRequestErrorMessage(res, hasTeam ? '已保留上次确认的队伍信息' : '请稍后重新加载'),
             errorAction: '重新加载'
           });
         }

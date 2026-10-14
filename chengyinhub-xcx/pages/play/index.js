@@ -4140,7 +4140,8 @@ Page({
     const markLeadLoadFailure = () => {
       if (claimResponse()) that.setData({ leadLoadError: true });
     };
-    req('/api/club/lead/team-progress', 'GET', { activityId: this.data.activityId }).then((res) => {
+    // F-W1-10:4 秒轮询的读取失败只落到 leadLoadError,不再每轮弹后端 toast(如换号后的「无权查看本场队伍进度」)。
+    req('/api/club/lead/team-progress', 'GET', { activityId: this.data.activityId }, undefined, true).then((res) => {
       // 轮询、手动重试和放行后对账可能并发；旧响应不得覆盖较新的章节真相。
       if (!claimResponse()) return;
       if (!(res.code == 200 || res.code == '200') || !res.data) {

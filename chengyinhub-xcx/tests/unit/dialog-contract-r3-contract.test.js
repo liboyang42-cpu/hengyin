@@ -79,24 +79,26 @@ test('① 整页 state-shell 失败态全部接 auto-back', () => {
 test('② 失败半屏出现时首载请求不叠自动 toast', () => {
   const cases = [
     ['pages/activity/official-detail/index.js', /url: '\/api\/official\/events\/' \+ id, method: 'GET',\s*autoErrorToast: false,/],
-    ['pages/activity/official-detail/index.js', /if \(this\.data\.e\) toast\('网络没连上'\);/],
     ['subpackageMember/signup/index.js', /hideLoading: true,\s*autoErrorToast: false,[^\n]*\n\s*url: '\/api\/registration\/list'[\s\S]*hideLoading: true,\s*autoErrorToast: false,[^\n]*\n\s*url: '\/api\/registration\/list'/],
     ['pages/addressinfo/addressinfo.js', /url: '\/api\/user\/address\/info',\s*autoErrorToast: false,/],
-    ['pages/team/detail/index.js', /url: '\/api\/team\/info', method: 'POST', hideLoading: true, autoErrorToast: hasTeam,/],
-    ['pages/team/join/index.js', /url: '\/api\/team\/info', method: 'POST', hideLoading: true, autoErrorToast: hasTeam,/],
-    ['pages/gerenziliao/gerenziliao.js', /url: '\/api\/user\/info',\s*autoErrorToast: hadLoaded,/],
+    // F-R2U-01(用户要求 2026-10-11):读取失败一律留白,刷新/加载更多失败也不再自动 toast。
+    ['pages/team/detail/index.js', /url: '\/api\/team\/info', method: 'POST', hideLoading: true, autoErrorToast: false,/],
+    ['pages/team/join/index.js', /url: '\/api\/team\/info', method: 'POST', hideLoading: true, autoErrorToast: false,/],
+    ['pages/gerenziliao/gerenziliao.js', /url: '\/api\/user\/info',\s*autoErrorToast: false,/],
     ['pages/club/create/index.js', /url: '\/api\/club\/my', method: 'POST', hideLoading: true, autoErrorToast: false,/],
-    ['pages/merchant/reviews/index.js', /hideLoading: requestOptions\.hideLoading, autoErrorToast: !!append,\s*url: `\/api\/merchant\/reviews\/manage/],
-    ['pages/merchant/reviews/index.js', /hideLoading: requestOptions\.hideLoading, autoErrorToast: !!append,\s*url: `\/api\/merchant\/reviews\/public/],
-    ['pages/merchant/decor/gallery/index.js', /hideLoading: true, autoErrorToast: hasOldContent, url: '\/api\/merchant\/coop-profile'/],
+    ['pages/merchant/reviews/index.js', /hideLoading: requestOptions\.hideLoading, autoErrorToast: false,\s*url: `\/api\/merchant\/reviews\/manage/],
+    ['pages/merchant/reviews/index.js', /hideLoading: requestOptions\.hideLoading, autoErrorToast: false,\s*url: `\/api\/merchant\/reviews\/public/],
+    ['pages/merchant/decor/gallery/index.js', /hideLoading: true, autoErrorToast: false, url: '\/api\/merchant\/coop-profile'/],
     // pages/merchant/decor/story 的断言随 2026-09-19 审查 #30 退役:该子页整页零入口(从未注册进 app.json),已删。
-    ['pages/merchant/decor/coop-setting/index.js', /hideLoading: true, autoErrorToast: hasOldContent, url: '\/api\/merchant\/coop-profile'/],
-    ['pages/merchant/decor/perks/index.js', /hideLoading: true, autoErrorToast: hasOldContent, url: '\/api\/coop\/perk-template\/list'/],
-    ['subpackageP3/pages/stamp-album/index/index.js', /url: '\/api\/roam\/stamp\/list', method: 'POST', autoErrorToast: this\.data\.items\.length > 0,/],
+    ['pages/merchant/decor/coop-setting/index.js', /hideLoading: true, autoErrorToast: false, url: '\/api\/merchant\/coop-profile'/],
+    ['pages/merchant/decor/perks/index.js', /hideLoading: true, autoErrorToast: false, url: '\/api\/coop\/perk-template\/list'/],
+    ['subpackageP3/pages/stamp-album/index/index.js', /url: '\/api\/roam\/stamp\/list', method: 'POST', autoErrorToast: false,/],
     ['pages/merchant/apply/index.js', /url: '\/api\/merchant\/info',\s*method: 'POST',\s*hideLoading: true,\s*autoErrorToast: false,/],
     ['pages/merchant/profile/index.js', /hideLoading: true, autoErrorToast: false, url: '\/api\/merchant\/public-home'/],
   ]
   for (const [file, re] of cases) assert.match(read(file), re, file)
+  // F-R2U-01:已显示旧详情时的刷新失败同样不弹 toast
+  assert.doesNotMatch(read('pages/activity/official-detail/index.js'), /if \(this\.data\.e\) toast\(/)
 })
 
 test('② search2:每路请求静音,只在「有结果但部分失败」(不出面板)时报一次', () => {
@@ -168,7 +170,8 @@ test('① 审查补修:cy-error 挂上后 autoBack 才翻 true 也要开面板,�
   assert.equal(inst.data._sheet, false, '收起后不重开')
 })
 
-test('② signup 只挂一路时报一次,两路都挂(出半屏)时不报', () => {
+// F-R2U-01(用户要求 2026-10-11):读取失败留白。原契约「只挂一路时报一次」随需求改为任何组合都不 toast。
+test('② signup 读取失败任何组合都不弹 toast(加载失败留白)', () => {
   const file = path.join(ROOT, 'subpackageMember/signup/index.js')
   const toasts = []
   const toastPath = require.resolve(path.join(ROOT, 'utils/toast.js'))
@@ -181,7 +184,7 @@ test('② signup 只挂一路时报一次,两路都挂(出半屏)时不报', () 
   delete global.Page
   delete require.cache[toastPath]
   const run = (t, a) => { toasts.length = 0; def._reportHalfFailure.call({ _topic: t, _activity: a }); return toasts.slice() }
-  assert.deepEqual(run({ state: 'error', err: '路线票加载失败' }, { state: 'ready' }), ['路线票加载失败'])
+  assert.deepEqual(run({ state: 'error', err: '路线票加载失败' }, { state: 'ready' }), [])
   assert.deepEqual(run({ state: 'error', err: 'x' }, { state: 'error', err: 'y' }), [])
   assert.deepEqual(run({ state: 'error', err: 'x' }, { state: 'loading' }), [])
 })

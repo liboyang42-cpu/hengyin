@@ -3,6 +3,7 @@ const app = getApp();
 const { sendUiStateRequest } = require('./ui-state-request.js');
 const { bizFailureMessage } = require('./response-shape.js');
 const { formatRefundDeadline } = require('./order-status.js');
+const { toTimestamp } = require('./datetime.js');
 
 const STATUS_AFTER_APPLICATION = ['NORMAL', 'CANCELLED', 'FAILED'];
 
@@ -30,6 +31,18 @@ function executeAfterText(value) {
   return text || (typeof value === 'string' ? value : '');
 }
 
+// F-R2S-07:冷静期满到每日批次执行之间仍可撤销(服务端与批次行锁互斥);页面按真实 executeAfter 切换说明文案。
+function executeAfterPassed(value, now) {
+  if (value === null || value === undefined || value === '') return false;
+  const ts = toTimestamp(value);
+  return Number.isFinite(ts) && ts > 0 && ts <= (now == null ? Date.now() : now);
+}
+
+function pendingPatch(data) {
+  return { status: 'PENDING', executeAfter: executeAfterText(data.executeAfter),
+    coolingOffEnded: executeAfterPassed(data.executeAfter), verificationMethod: 'UNAVAILABLE', canApply: false };
+}
+
 function initialData() {
   return {
     status: 'LOADING',
@@ -37,6 +50,7 @@ function initialData() {
     verificationMethod: 'UNAVAILABLE',
     blockers: [],
     executeAfter: '',
+    coolingOffEnded: false,
     phone: '',
     phoneMasked: '',
     smscode: '',
@@ -111,7 +125,7 @@ const methods = {
           return;
         }
         if (data.status === 'PENDING') {
-          this.setData({ status: 'PENDING', executeAfter: executeAfterText(data.executeAfter), statusError: '', verificationMethod: 'UNAVAILABLE', canApply: false });
+          this.setData(Object.assign(pendingPatch(data), { statusError: '' }));
           return;
         }
         if (STATUS_AFTER_APPLICATION.includes(data.status)) {
@@ -251,7 +265,7 @@ const methods = {
           if (!current()) return;
           const data = isOk(res) && isRecord(res.data) ? res.data : null;
           if (data && data.status === 'PENDING') {
-            this.setData({ status: 'PENDING', verificationMethod: 'UNAVAILABLE', canApply: false, executeAfter: executeAfterText(data.executeAfter), submitting: false, applyError: '' });
+            this.setData(Object.assign(pendingPatch(data), { submitting: false, applyError: '' }));
             return;
           }
           const blockers = data && data.status === 'BLOCKED' ? blockerList(data.blockers) : null;
@@ -260,14 +274,44 @@ const methods = {
             return;
           }
           this.setData({ submitting: false, applyError: bizFailureMessage(res, '注销申请没有提交成功，请重试。') });
+          this._reconcileApply();
         },
-        fail: () => { if (current()) this.setData({ submitting: false, applyError: '网络异常，验证码和确认状态已保留，请重试。' }); },
-        successStatusAbnormal: () => { if (current()) this.setData({ submitting: false, applyError: '服务暂时不可用，验证码和确认状态已保留，请重试。' }); },
+        // F-R2S-07:回包丢失时申请可能已在服务端生效(冷静期已开始、会话已失效),先回查真实状态。
+        fail: () => { if (current()) { this.setData({ submitting: false, applyError: '网络异常，验证码和确认状态已保留，请重试。' }); this._reconcileApply(); } },
+        successStatusAbnormal: () => { if (current()) { this.setData({ submitting: false, applyError: '服务暂时不可用，验证码和确认状态已保留，请重试。' }); this._reconcileApply(); } },
       });
     }).catch(error => {
       if (current()) this.setData({ submitting: false, applyError: error && error.message === 'WECHAT_CONFIRMATION_FAILED'
         ? '微信身份确认失败，请重试。' : '同意记录失败，请重试。' });
     });
+  },
+
+  // 申请结果未知时只读回查 /status:确认为 PENDING 才切到冷静期卡片;其余情况保留当前表单与错误提示,
+  // 不走 loadStatus/loadPrecheck(它们会清空已输入的验证码与确认勾选)。
+  _reconcileApply() {
+    const memberId = String(app.getUserID && app.getUserID() || '');
+    if (!(Number(memberId) > 0) || this._hidden || this._detached || this._unloaded) return;
+    const token = (this._reconcileToken || 0) + 1;
+    this._reconcileToken = token;
+    const applyToken = this._applyToken;
+    sendUiStateRequest(app, '/api/user/deregister/status', { method: 'GET',
+      success: (res) => {
+        if (token !== this._reconcileToken || applyToken !== this._applyToken || this._hidden || this._detached || this._unloaded) return;
+        if (memberId !== String(app.getUserID && app.getUserID() || '')) return;
+        const data = isOk(res) && isRecord(res.data) ? res.data : null;
+        if (data && data.status === 'PENDING' && this.data.status === 'ELIGIBLE') {
+          this.setData(Object.assign(pendingPatch(data), { submitting: false, applyError: '', smscode: '', confirmed: false }));
+        }
+      },
+      fail: () => {},
+      successStatusAbnormal: () => {},
+    });
+  },
+
+  // F-R2S-07:阻断项处理完后可在原页重新核验,不必退出再进。
+  recheck() {
+    if (this.data.status !== 'BLOCKED') return;
+    this.loadStatus();
   },
 
   cancel() {
@@ -310,7 +354,8 @@ const methods = {
     this._smsToken = (this._smsToken || 0) + 1;
     this._applyToken = (this._applyToken || 0) + 1;
     this._cancelToken = (this._cancelToken || 0) + 1;
+    this._reconcileToken = (this._reconcileToken || 0) + 1;
   },
 };
 
-module.exports = { initialData, methods };
+module.exports = { initialData, methods, executeAfterPassed };

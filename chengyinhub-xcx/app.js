@@ -21,7 +21,7 @@ const { captureDoorScene } = require('./utils/game-door-entry.js');
 const roleGuard = require('./utils/roleGuard.js');
 const { safeUserMessage } = require('./utils/transport/safe-user-message.js');
 App({
-  // 只允许在开发版使用本地 mock 兜底，体验版/正式版必须暴露真实登录失败。
+  // 开发版判定:只用于开发调试入口(如 debug_user_view、显式预览参数);不得用于伪造登录身份(F-W1-01)。
   isDevEnv: function () {
     try {
       return wx.getAccountInfoSync().miniProgram.envVersion === 'develop';
@@ -104,6 +104,8 @@ App({
       // 同一对象,故现有「直接读 globalData.*」的代码无需改动即自动同步。
       // RBAC 角色仍作前端身份单一真源,user_type 双身份机制保持不变。
       this.getSession().restore();
+      // F-W1-01:体验版/正式版不恢复假 dev-token 会话。开发版保留,供开发者工具预览脚本显式注入;
+      // 它换不来任何数据,首个 401 会走真实 wx.login 续期,失败即如实失败(假用户兜底已删除)。
       if (!this.isDevEnv() && this.getAuthorization() === this.DEV_TOKEN) {
         this.getSession().clearSession();
       }
@@ -196,7 +198,7 @@ App({
 
   // 首登(委托单航班登录管理器)。ensureSession:已有缓存会话(openid+authorization,来自 onLaunch restore)
   // 直接成功、不发多余网络登录(过期 token 会在首个真实请求 401 时由 reLogin 静默续期)。
-  // 保留:开发版 mock 兜底、各失败路径原文案 toast。始终 resolve(初始化与认证解耦,不阻断 appReady)。
+  // 各失败路径原文案 toast(开发版同样如实提示，不再写假用户)。始终 resolve(初始化与认证解耦,不阻断 appReady)。
   firstLogin: function (e) {
     var that = this;
     var owner = String(this.getUserID() || '');
@@ -210,7 +212,7 @@ App({
       if (r && !r.ok && r.reason === 'noData') {
         that.getSession().clearSession();
       }
-      if (r && !r.ok && !that.isDevEnv()) {
+      if (r && !r.ok) {
         var msg = r.reason === 'wxLoginFail' ? '微信登录失败，请重试'
           : r.reason === 'networkFail' ? '网络异常，登录失败'
           : safeUserMessage(r, '登录失败，请稍后重试');
@@ -226,20 +228,9 @@ App({
       return r;
     });
   },
-  // 开发版本地 mock 会话的 token。它对真后端无效(必被判 401),所以只能撑起
-  // 「页面读 globalData 里的头像昵称」,换不来任何数据 —— session-manager 据此判断
-  // 「已经在用 dev 会话」,不再对 401 触发的重登二次兜底。
+  // 旧开发版假会话的 token 标记。F-W1-01 已删除写入它的开发版假用户兜底;保留常量只用于
+  // 识别并清除升级前残留在 Storage 里的假会话,以及页面侧拒绝用它发起写操作。
   DEV_TOKEN: 'dev-token',
-  useDevUser: function () {
-    const mockData = require('./utils/mockData.js');
-    const user = mockData.getDefaultUser();
-    this.setOpenID(user.wxOpenId);
-    this.setAuthorization(this.DEV_TOKEN);
-    this.setUserID(user.id);
-    this.setUserType(user.userType);
-    this.setAvatar(user.avatar);
-    this.setNickname(user.nickname);
-  },
   // 登录态失效时静默重新登录(委托单航班登录管理器,与首登共享在途锁:
   // N 个并发 401 只触发一次换 token)。完成后回调 ok=true/false,对调用方语义不变。
   reLogin: function (callback) {
@@ -337,9 +328,6 @@ App({
             });
           });
         },
-        isDevEnv: function () { return that.isDevEnv(); },
-        useDevUser: function () { that.useDevUser(); },
-        devToken: that.DEV_TOKEN
       });
     }
     return this._sessionManager;

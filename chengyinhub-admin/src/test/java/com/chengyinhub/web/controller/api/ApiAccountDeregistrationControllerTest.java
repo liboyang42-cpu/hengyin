@@ -113,6 +113,32 @@ class ApiAccountDeregistrationControllerTest {
         assertEquals(HttpStatus.ERROR, f.controller.apply(null, "wrong", "request-1", request).get(AjaxResult.CODE_TAG));
         verify(f.deregistrationService, never()).apply(1001L);
     }
+    @Test void retryAfterLostResponseReplaysExistingPendingWithoutConsumingAnotherCode() {
+        Fixture f = new Fixture(consent("v2.0", "AGREE"));
+        DeregistrationStatusVO pending = new DeregistrationStatusVO();
+        pending.setStatus("PENDING");
+        when(f.deregistrationService.status(1001L)).thenReturn(pending);
+        when(f.smsVerificationService.verify("13800138000", "123456", "198.51.100.20")).thenReturn(false);
+
+        AjaxResult result = f.apply();
+
+        assertEquals(HttpStatus.SUCCESS, result.get(AjaxResult.CODE_TAG));
+        assertEquals(pending, result.get(AjaxResult.DATA_TAG));
+        verifyNoSms(f);
+        verify(f.deregistrationService, never()).apply(1001L);
+    }
+    @Test void nonPendingStatusStillRequiresVerification() {
+        Fixture f = new Fixture(consent("v2.0", "AGREE"));
+        DeregistrationStatusVO normal = new DeregistrationStatusVO();
+        normal.setStatus("CANCELLED");
+        when(f.deregistrationService.status(1001L)).thenReturn(normal);
+        when(f.smsVerificationService.verify("13800138000", "123456", "198.51.100.20")).thenReturn(false);
+
+        AjaxResult result = f.apply();
+
+        assertEquals(HttpStatus.ERROR, result.get(AjaxResult.CODE_TAG));
+        verify(f.deregistrationService, never()).apply(1001L);
+    }
     private static void verifyNoSms(Fixture f) { verify(f.smsVerificationService, never()).verify(any(), any(), any()); }
 
     private static ConsentRecord consent(String version, String eventType) {

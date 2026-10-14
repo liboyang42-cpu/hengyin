@@ -4,7 +4,7 @@
 //  - 单航班:并发 login/refresh 只触发一次 wx.login(并发 401 共享一次换 token)
 //  - 成功:token 取响应顶层 token、其余取安全 data.*(双层 data),不接收/持久化 OpenID
 //  - 正式版失败:返回显式失败结果,绝不伪装成已认证、绝不写会话
-//  - 开发版:wx.login 失败 / 网络失败 / 无 data 时走 useDevUser 兜底
+//  - 开发版:与正式版同一失败路径,不再写入假用户(F-W1-01 删除 useDevUser 兜底)
 //  - 缓存短路:已有 user_id+authorization 直接成功,不发网络登录
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -154,12 +154,30 @@ test('换 token 请求永不回调时在 deadline 后失败并释放单航班锁
   assert.equal(mgr.isLoggingIn(), false);
 });
 
-test('开发版无 data:走 useDevUser 兜底', async () => {
-  const { deps, calls } = makeDeps({ isDevEnv: () => true, exchangeCode: async () => ({ msg: 'x' }) });
-  const mgr = createSessionManager(deps);
-  const r = await mgr.login();
-  assert.equal(r.ok, true);
-  assert.equal(calls.dev, 1);
+// F-W1-01:开发版曾在登录失败时写入假用户 id=1 / dev-token,401 静默重登失败后整个会话被换成假身份。
+// 项目规则禁止假用户降级:即便注入了旧的 isDevEnv/useDevUser 依赖,也必须如实失败、不写会话。
+for (const failure of ['wx', 'network', 'empty']) {
+  test('开发版登录失败不再写入假用户: ' + failure, async () => {
+    const { deps, calls } = makeDeps({ isDevEnv: () => true,
+      wxLogin: failure === 'wx' ? async () => { throw new Error('login failed'); } : async () => ({ code: 'CODE' }),
+      exchangeCode: failure === 'network' ? async () => { throw new Error('network failed'); } : async () => ({ msg: 'x' }) });
+    const mgr = createSessionManager(deps);
+    const r = await mgr.login();
+    assert.equal(r.ok, false);
+    assert.equal(r.authed, false);
+    assert.equal(r.dev, undefined);
+    assert.equal(r.reason, { wx: 'wxLoginFail', network: 'networkFail', empty: 'noData' }[failure]);
+    assert.equal(calls.dev, 0);
+    assert.equal(deps.session.snap.authorization, '');
+    assert.equal(deps.session.snap.user_id, undefined);
+  });
+}
+
+test('会话管理器源码不再包含假用户兜底', () => {
+  const src = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../utils/session/session-manager.js'), 'utf8');
+  assert.doesNotMatch(src, /useDevUser\s*\(|devFallback/);
+  const app = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../app.js'), 'utf8');
+  assert.doesNotMatch(app, /useDevUser|getDefaultUser/);
 });
 
 test('单航班:两个并发 login 只触发一次 wx.login', async () => {
@@ -186,36 +204,18 @@ test('单航班释放:前一轮结束后可再次登录', async () => {
   assert.equal(calls.wxLogin, 2);
 });
 
-// —— dev 兜底只给一次(2026-08-10) ——
-// 旧行为:开发版登录失败恒 useDevUser + 谎报 ok:true。401 触发 reLogin 时也照兜,
-// request-client 于是拿同一张 dev token 重试 ⇒ 每个请求都白跑 401→重登→再 401。
-// 生产日志实测:近期 122 次认证失败 tokenPrefix 全是 dev-token。
-test('dev 兜底只给一次:已经在用 dev token 还被拒,如实失败不再兜底', async () => {
+// —— 已有 dev-token 会话(升级前残留)被拒:如实失败,不再续命假会话 ——
+test('残留 dev token 被拒时如实失败,不再写假会话', async () => {
   const { deps, calls } = makeDeps({
     isDevEnv: () => true,
-    exchangeCode: async () => ({ msg: '微信服务暂时不可用' }), // 无 data ⇒ 走 devFallback 路径
-    devToken: 'dev-token',
+    exchangeCode: async () => ({ msg: '微信服务暂时不可用' }),
     session: makeSession({ authorization: 'dev-token', user_id: '7' }),
   });
   const mgr = createSessionManager(deps);
   const r = await mgr.refresh();
-  assert.equal(r.ok, false, '已在用 dev token 还被拒 ⇒ 必须如实失败,否则调用方会拿假 token 重试');
-  assert.equal(r.reason, 'devTokenRejected');
-  assert.equal(calls.dev, 0, '不该再写一次 mock 会话');
-});
-
-test('dev 兜底首次仍然生效:没在用 dev token 时照常兜底', async () => {
-  const { deps, calls } = makeDeps({
-    isDevEnv: () => true,
-    exchangeCode: async () => ({ msg: '微信服务暂时不可用' }),
-    devToken: 'dev-token',
-    session: makeSession({ authorization: '' }),   // 还没有任何会话
-  });
-  const mgr = createSessionManager(deps);
-  const r = await mgr.refresh();
-  assert.equal(r.ok, true, '首次失败仍应给 mock 会话,保住开发版页面能渲染');
-  assert.equal(r.dev, true);
-  assert.equal(calls.dev, 1);
+  assert.equal(r.ok, false);
+  assert.equal(r.reason, 'noData');
+  assert.equal(calls.dev, 0);
 });
 
 function deferredLoginFixture(stage, dev) {
@@ -451,7 +451,7 @@ for (const failure of ['wx', 'network', 'empty']) {
       exchangeCode: failure === 'network' ? async () => { throw new Error('network failed'); } : async () => ({ msg: 'no data' }) });
     const mgr = createSessionManager(deps); const result = await mgr.refresh();
     assert.equal(result.ok, false);
-    assert.equal(result.reason, 'realSessionRefreshFailed');
+    assert.equal(result.reason, { wx: 'wxLoginFail', network: 'networkFail', empty: 'noData' }[failure]);
     assert.equal(session.getUserID(), '912');
     assert.equal(session.getAuthorization(), 'real-session-token');
     assert.equal(calls.dev, 0);

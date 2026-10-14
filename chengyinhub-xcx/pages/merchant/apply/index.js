@@ -160,10 +160,12 @@ Page({
       if (!that.isBootstrapCurrent(bootstrapEpoch, identityKey)) return;
       if (!roleSnapshot || !roleGuard.hasSnapshot()) {
         that._bootstrapChecking = false;
+        // F-W1-12:未登录(游客)不是加载失败,给可见的登录说明;已登录账号读不到角色才按加载失败留白。
+        var guest = !(Number(currentIdentityKey()) > 0);
         that.setData({
           bootstrapState: 'error',
-          bootstrapError: '暂时无法确认当前账号的申请资格，请重新检查',
-          bootstrapErrorKind: 'error'
+          bootstrapError: guest ? '登录后即可提交商家入驻申请' : '暂时无法确认当前账号的申请资格，请重新检查',
+          bootstrapErrorKind: guest ? 'no-permission' : 'error'
         });
         return;
       }

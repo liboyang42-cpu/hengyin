@@ -48,6 +48,7 @@ const MATRIX = [
   // 俱乐部直付应收只读：商家岗位 FINANCE_READ 派生店主，俱乐部按当前主理人归属校验。
   ['components/cy/club-direct-ledger/index.js', "url: scope.kind === 'club'", 'required', 'merchant/club', 'owned-merchant-or-club-receivable'],
   ['utils/deregister-flow.js', "sendUiStateRequest(app, '/api/user/deregister/status'", 'required', 'member', 'self-account'],
+  ['utils/deregister-flow.js', "sendUiStateRequest(app, '/api/user/deregister/status', { method: 'GET',", 'required', 'member', 'self-account'],
   ['pages/square/list/index.js', "url: '/api/official/events'", 'optional', 'visitor/member', 'public-list+viewer-personalization'],
   ['components/cy/scene-roam-task-list/index.js', "url: '/api/official/events'", 'optional', 'visitor/member', 'public-list+viewer-personalization'],
   ['components/cy/scene-roam-task-list/index.js', "url: '/api/official/my-events'", 'required', 'member', 'self-registration'],
@@ -246,7 +247,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 客户页退役触达：移除券候选、任务列表、任务详情三处 GET，31 → 28。
   // UI 门禁固定默认适配器路径和 GET 方法；适配器与注入调用点均归原 EVENT_OPERATE 权限。
   // 2026-10-12 作者媒体审核pending查询增加1个真实sender GET，33→34。
-  assert.equal(directCount, 34, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-10-13 注销申请结果未知时只读回查本人 /api/user/deregister/status,同端点同权限档,34→35。
+  assert.equal(directCount, 35, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   assert.equal(wrapperCount, 28, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(ownMediaWrapperCount, 5, '作者媒体实际GET调用点变化需显式复核');

@@ -161,9 +161,8 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
         if (latest == null || !"PENDING".equals(latest.getStatus())) {
             throw new IllegalStateException("当前没有可撤销的注销申请");
         }
-        if (latest.getExecuteAfter() != null && !new Date().before(latest.getExecuteAfter())) {
-            throw new IllegalStateException("冷静期已结束，无法撤销");
-        }
+        // 冷静期满到批次真正执行之间仍允许撤销:executeOne 持行锁并只处理 PENDING,
+        // cancelPending 也只改 PENDING,两者互斥;已被批次执行的申请在下面返回 0 并拒绝。
         Date now = new Date();
         if (deregistrationMapper.cancelPending(memberId, now) == 0) {
             throw new IllegalStateException("注销申请状态已变化，请刷新后重试");

@@ -393,3 +393,15 @@ test('context 只有启用通用模式并匹配任务或设施才要求完成桥
     assert.equal(support.validate(matrix,original,ctx),worldMode === 'WORLD_SHARED' ? '' : matrix.constraints.WORLD_SHARED_ONLY);
   }
 });
+
+// F-R2U-01(用户要求 2026-10-11):支持范围字典读取失败属于加载失败,一律留白;保存时仍以服务端结果为准。
+test('F-R2U-01 玩法支持范围读取失败在三处编辑器均留白', () => {
+  const fsx = require('node:fs');
+  const px = require('node:path');
+  for (const rel of ['pages/publish/temp/index.wxml', 'pages/publish/fabu/topic-detail-sheet.wxml', 'pages/publish/fabu/runtime-structure-editor.wxml']) {
+    const wxml = fsx.readFileSync(px.join(__dirname, '../..', rel), 'utf8');
+    const tags = wxml.match(/<cy-inline-error[^>]*supportMatrixLoadError[^>]*>/g) || [];
+    assert.ok(tags.length > 0, rel);
+    tags.forEach(tag => assert.match(tag, /\bload-failure\b/, rel));
+  }
+});

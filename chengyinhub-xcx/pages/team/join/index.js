@@ -47,7 +47,7 @@ Page({
       errorAction: '重新加载'
     });
     app.sendRequest({
-      url: '/api/team/info', method: 'POST', hideLoading: true, autoErrorToast: hasTeam,
+      url: '/api/team/info', method: 'POST', hideLoading: true, autoErrorToast: false,
       data: JSON.stringify({ inviteCode: this.inviteCode }),
       header: { 'Content-Type': 'application/json' },
       success(res) {
@@ -62,14 +62,18 @@ Page({
             error: '',
             errorSub: ''
           });
-        } else that.setData({
-          loading: false,
-          refreshing: false,
-          error: hasTeam ? '邀请状态暂未更新' : '邀请暂时不可用',
-          errorKind: 'data',
-          errorSub: app.getRequestErrorMessage(res, hasTeam ? '已保留上次确认的邀请信息' : '请让队长重新分享后再试'),
-          errorAction: '重新加载'
-        });
+        } else {
+          const authDenied = String(res && res.code) === '401' || String(res && res.code) === '403';
+          // F-W1-12:静默重登后仍 401/403 是身份问题,留可见的登录/权限说明,不按加载失败留白。
+          that.setData({
+            loading: false,
+            refreshing: false,
+            error: authDenied ? '登录后查看队伍邀请' : hasTeam ? '邀请状态暂未更新' : '邀请暂时不可用',
+            errorKind: authDenied ? 'no-permission' : 'data',
+            errorSub: authDenied ? '请重新登录后再打开邀请' : app.getRequestErrorMessage(res, hasTeam ? '已保留上次确认的邀请信息' : '请让队长重新分享后再试'),
+            errorAction: '重新加载'
+          });
+        }
       },
       fail() {
         that._inviteLoading = false;

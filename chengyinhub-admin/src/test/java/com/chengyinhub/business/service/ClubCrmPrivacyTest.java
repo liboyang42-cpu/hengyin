@@ -310,4 +310,29 @@ class ClubCrmPrivacyTest {
         assertEquals("REFUNDED", service.topicCustomers(OWNER, CLUB, TOPIC, "all").getSessions().get(0).getRows().get(0).getStatusCode());
     }
 
+
+    /** F-W1-08:客户列表与详情不再把所有人显示成默认昵称「城瘾用户」。 */
+    @Test
+    void defaultNicknameInCustomerListAndDetailFallsBackToMemberNumber() {
+        ClubCustomerVO.RawCustomer raw = rawCustomer();
+        raw.setDisplayName("城瘾用户");
+        when(mapper.selectClubCustomers(eq(CLUB), anyString(), anyString(), anyInt()))
+                .thenReturn(Collections.singletonList(raw));
+        when(mapper.selectProfiles(CLUB)).thenReturn(Collections.<ClubCustomerVO.Profile>emptyList());
+        assertEquals("成员#" + raw.getMemberId(),
+                service.listCustomers(OWNER, CLUB, "all", "").getItems().get(0).getDisplayName());
+        when(mapper.selectClubCustomerSummary(CLUB, CUSTOMER)).thenReturn(raw);
+        assertEquals("成员#" + raw.getMemberId(),
+                service.customerDetail(OWNER, CLUB, CUSTOMER).getSummary().getDisplayName());
+    }
+
+    /** F-W1-08:mapper 把免费取消判为 CANCELLED 并排除在退款计数之外(与主题名册同一判据)。 */
+    @Test
+    void customerAggregateAndRecordsTreatFreeCancellationAsCancelled() throws Exception {
+        String xml = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
+                "../chengyinhub-system/src/main/resources/mapper/business/ClubCrmMapper.xml")), java.nio.charset.StandardCharsets.UTF_8);
+        String free = "(r.registration_status = 3 and r.payable_amount = 0 and r.point_used = 0)";
+        assertTrue(xml.contains("r.payment_status = 4 and not " + free + " then 1 else 0 end) as refunded_count"));
+        assertTrue(xml.contains("case when " + free + " then 'CANCELLED'"));
+    }
 }

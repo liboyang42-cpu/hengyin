@@ -84,6 +84,8 @@ Component({
       const retry = this._retryRequested && this._retryMessage
         && this._retryMessage.bizId === this.properties.sessionId && this._retryMessage.scope === this.properties.scope;
       this._retryRequested = false;
+      // 新消息重新计自动回查次数;同一条消息的重试沿用已用次数(F-R2S-15)。
+      if (!retry) this._retryCount = 0;
       const requestId = retry ? this._retryMessage.requestId : makeRequestId();
       const userMessage = retry ? this._retryMessage.userMessage : this._message('user', message);
       const messages = retry ? this.data.messages : this._capMessages((this.data.messages || []).concat(userMessage));

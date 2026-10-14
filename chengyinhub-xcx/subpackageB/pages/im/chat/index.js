@@ -1,5 +1,6 @@
 const { toTimestamp, chinaDateKey, chinaParts } = require('../../../../utils/datetime');
 const { isRecordList, isBizOk } = require('../../../../utils/response-shape.js');
+const { showPermissionGuide } = require('../../../../utils/location/location-manager.js');
 const app = getApp();
 
 // 服务端可见顺序含微秒：不要转 JS Date 丢精度，也不要以客户端时钟推测审批时间。
@@ -502,9 +503,9 @@ Page({
       },
       fail(e) {
         if (!current()) return;
-        // 用户取消不提示;权限被拒才引导
-        if (e && String(e.errMsg || '').indexOf('auth deny') >= 0) {
-          app.tips && app.tips('需要位置权限才能发送位置');
+        // 用户取消不提示;权限被拒才引导。F-R2S-10:给出「去设置」恢复入口,授权后回到选址。
+        if (e && /auth (deny|denied)/.test(String(e.errMsg || ''))) {
+          showPermissionGuide(null, () => { if (current()) that.onSendLocation(); });
         }
       },
     });
@@ -623,7 +624,7 @@ Page({
     if (!this._isReadContextCurrent(id, memberId)) return;
     if (this._pendingClear && this._pendingClear.submitting
         && this._isReadContextCurrent(this._pendingClear.conversationId, this._pendingClear.memberId)) return;
-    if (!id) { app.tips && app.tips('无法清空该会话'); return; }
+    if (!id) { app.tips && app.tips('无法隐藏该会话'); return; }
     this._pendingBlock = null;
     this._pendingClear = { conversationId: id, memberId };
     const dc = this.selectComponent && this.selectComponent('#dc');
@@ -752,12 +753,12 @@ Page({
         data: { conversation_id: pending.conversationId },
         success: (res) => {
           if (!current()) return;
-          if (!isBizOk(res)) { failed((res && res.msg) || '清空失败'); return; }
+          if (!isBizOk(res)) { failed((res && res.msg) || '隐藏失败'); return; }
           this._pendingClear = null;
           if (dc) dc.done();
           this._returnAfterClear(pending.conversationId, pending.memberId);
         },
-        fail() { failed('清空失败，请重试'); },
+        fail() { failed('隐藏失败，请重试'); },
       });
       return;
     }
