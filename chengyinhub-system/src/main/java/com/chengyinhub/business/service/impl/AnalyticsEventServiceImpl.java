@@ -14,6 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.Objects;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
@@ -22,6 +25,7 @@ import java.time.format.DateTimeFormatter;
  */
 @Service
 public class AnalyticsEventServiceImpl implements IAnalyticsEventService {
+    private static final ObjectMapper JSON = new ObjectMapper();
     private static final ZoneId ANALYTICS_ZONE = ZoneId.of("Asia/Shanghai");
     @Autowired
     private BizEventLogMapper bizEventLogMapper;
@@ -66,14 +70,81 @@ public class AnalyticsEventServiceImpl implements IAnalyticsEventService {
             }
             event.setActorScope(memberId == null ? "ANONYMOUS" : "MEMBER:" + memberId);
             event.setOccurredAt(occurredAt);
+            if (isRegistrationOutcome(item.getEventName())) {
+                bindRegistrationFact(memberId, event);
+            }
             event.setCreateTime(DateUtils.getNowDate());
             int inserted = bizEventLogMapper.insertBizEventLog(event);
             if (inserted == 1) {
                 recommendationService.updateProfileFromEvent(event);
             }
-            accepted += inserted;
+            if (inserted != 1) {
+                BizEventLog existing = bizEventLogMapper.selectIdempotentEventForUpdate(event);
+                if (existing == null || !sameEvent(existing, event, item.getOccurredAt() == null)) {
+                    throw new IllegalArgumentException("事件幂等键已用于不同内容或未确认落库");
+                }
+            }
+            // 持久化重复事件同样得到确认，但不重复画像副作用。
+            accepted++;
         }
         return accepted;
+    }
+
+    private boolean isRegistrationOutcome(String eventName) {
+        return "signup_submit".equals(eventName) || "payment_success".equals(eventName);
+    }
+
+    private void bindRegistrationFact(Long memberId, BizEventLog event) {
+        Long registrationId;
+        try {
+            JsonNode properties = JSON.readTree(event.getPropertiesJson() == null ? "{}" : event.getPropertiesJson());
+            JsonNode rawId = properties == null ? null : properties.get("registrationId");
+            String value = rawId == null ? "" : rawId.asText();
+            if (!value.matches("[1-9][0-9]{0,18}")) throw new IllegalArgumentException();
+            registrationId = Long.valueOf(value);
+        } catch (Exception invalidId) {
+            throw new IllegalArgumentException("成交埋点必须关联原报名事实");
+        }
+        BizEventLog fact = bizEventLogMapper.selectRegistrationEventFact(memberId, registrationId, event.getEventName());
+        if (fact == null || fact.getOccurredAt() == null
+                || !Objects.equals(fact.getBizId(), event.getBizId())
+                || !Objects.equals(fact.getBizType(), event.getBizType())) {
+            throw new IllegalArgumentException("成交埋点必须关联原报名事实");
+        }
+        // 客户端成功观察不能造订单或金额；原报名身份防止换幂等键重复计权。
+        event.setIdempotencyKey("registration-" + registrationId);
+        event.setOccurredAt(fact.getOccurredAt());
+        event.setPropertiesJson("{\"registrationId\":" + registrationId + "}");
+    }
+
+    private boolean sameEvent(BizEventLog existing, BizEventLog requested, boolean serverAssignedTime) {
+        if (!Objects.equals(existing.getMemberId(), requested.getMemberId())
+                || !Objects.equals(existing.getEventName(), requested.getEventName())
+                || !Objects.equals(existing.getBizId(), requested.getBizId())
+                || !Objects.equals(emptyToNull(existing.getBizType()), emptyToNull(requested.getBizType()))) {
+            return false;
+        }
+        // 合格阅读的已确定身份为 user/post/day，不以另一会话或阅读时刻重复计数。
+        if ("community_post_qualified_view".equals(requested.getEventName())
+                || isRegistrationOutcome(requested.getEventName())) return true;
+        return Objects.equals(emptyToNull(existing.getSessionId()), emptyToNull(requested.getSessionId()))
+                && Objects.equals(emptyToNull(existing.getSource()), emptyToNull(requested.getSource()))
+                && Objects.equals(emptyToNull(existing.getPagePath()), emptyToNull(requested.getPagePath()))
+                && Objects.equals(emptyToNull(existing.getCityCode()), emptyToNull(requested.getCityCode()))
+                && sameProperties(existing.getPropertiesJson(), requested.getPropertiesJson())
+                && (serverAssignedTime || (existing.getOccurredAt() != null && requested.getOccurredAt() != null
+                && existing.getOccurredAt().getTime() / 1000 == requested.getOccurredAt().getTime() / 1000));
+    }
+
+    private String emptyToNull(String value) { return value == null || value.isEmpty() ? null : value; }
+
+    private boolean sameProperties(String left, String right) {
+        try {
+            return Objects.equals(JSON.readTree(left == null || left.isEmpty() ? "{}" : left),
+                    JSON.readTree(right == null || right.isEmpty() ? "{}" : right));
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override

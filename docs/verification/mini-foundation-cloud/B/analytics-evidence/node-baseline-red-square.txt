@@ -1,0 +1,91 @@
+Baseline: e67e72a (isolated source fixture; production worktree untouched)
+Expected nonzero exit: 1
+✖ 真实 offset 广场追加按稳定 ID 去重，同时推进原服务端页码 (14.250257ms)
+✖ 整页重复也推进 offset 页码，下一页可继续；空尾页按 total 停止 (3.299764ms)
+✔ 刷新失败保留旧卡，重试成功替换旧卡；迟到原追加不能复活 (2.425515ms)
+✖ 账号迟到响应丢弃，回前台清上一账号私有待审及个人态缓存 (1.967893ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 1
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 115.679876
+
+✖ failing tests:
+
+test at chengyinhub-xcx/tests/unit/square-feed-pagination-b.test.js:98:1
+✖ 真实 offset 广场追加按稳定 ID 去重，同时推进原服务端页码 (14.250257ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+      3,
+      2,
+  +   2
+    ]
+  
+      at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/square-feed-pagination-b.test.js:102:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 3, 2, 2 ],
+    expected: [ 3, 2 ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/square-feed-pagination-b.test.js:112:1
+✖ 整页重复也推进 offset 页码，下一页可继续；空尾页按 total 停止 (3.299764ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+      2,
+  +   2,
+  +   '2'
+    ]
+  
+      at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/square-feed-pagination-b.test.js:117:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 2, 2, '2' ],
+    expected: [ 2 ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/square-feed-pagination-b.test.js:143:1
+✖ 账号迟到响应丢弃，回前台清上一账号私有待审及个人态缓存 (1.967893ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   7
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/square-feed-pagination-b.test.js:148:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 7 ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
