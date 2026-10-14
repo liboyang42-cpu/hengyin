@@ -79,6 +79,7 @@ class PredictBetAfterSettleGuardTest {
         ReflectionTestUtils.setField(service, "predictMapper", predictMapper);
         ReflectionTestUtils.setField(service, "clock", (AdvancedGameClock) () -> new Date(NOW));
         ReflectionTestUtils.setField(service, "random", (AdvancedGameRandom) bound -> 0);
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.installOn(service);
     }
 
     @Test

@@ -1,0 +1,37 @@
+{
+  "ordinaryOwner": "C according to OWNERSHIP.json and root-approved unlisted C domain callers/tests",
+  "singleOwnerDependencies": [
+    {
+      "upstreamCommit": "e1c8984370f680c637b7161bbd7f264c5024b08d",
+      "authorPackage": "A",
+      "paths": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IRewardDropService.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ISmsCouponHistoryService.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ExploreTicketUsePolicy.java"
+      ],
+      "use": "literal cherry-pick; no C editing"
+    },
+    {
+      "upstreamCommit": "f109faef0c593a2bb4ae3ecb1265bcf9f873decc",
+      "authorPackage": "A",
+      "use": "literal Java8 default explicit dependency failure; A real implementation not merged"
+    },
+    {
+      "upstreamCommit": "4db987a14b53cbda2d11587e89cda5a36150ee34",
+      "authorPackage": "root",
+      "paths": [
+        "ci/migration-dependencies.json"
+      ],
+      "use": "literal migration metadata registration; no CI gate/workflow edit"
+    }
+  ],
+  "forbiddenEditsAbsent": [
+    "A payment/order/registration/coupon implementation and Mapper",
+    "B app.js/analytics/IM/old NPC static contract test",
+    "shared handoff documents",
+    "pom/package dependencies",
+    "RedisConfig/JWT/RBAC",
+    "old migration rewrite"
+  ],
+  "dataPolicy": "same original identities; no payment requirement added to ordinary/free or pause persistence"
+}

@@ -18,6 +18,8 @@ import java.util.Map;
  * 迷雾格与 POI 发现均靠唯一键做幂等,XP 只在 finish 结算一次。
  */
 public interface RoamMapper {
+    /** Settlement lock order: original member row, then owned session, then reward/growth rows. */
+    Long lockSettlementOwner(@Param("memberId") Long memberId);
 
     /** C-6 后台奖励调证：据点及奖励日志只读查询。 */
     List<Map<String,Object>> selectAdminRewardEvidence(@Param("poiId") Long poiId, @Param("memberId") Long memberId,
@@ -190,6 +192,7 @@ public interface RoamMapper {
     int updateMerchantPoiTags(@Param("merchantId") Long merchantId, @Param("tags") String tags);
     /** 在架据点数(status=1),配额校验用。 */
     int countActiveNodesByMerchant(@Param("merchantId") Long merchantId);
+    int countActiveNodesByMerchantForUpdate(@Param("merchantId") Long merchantId);
     /** 上/下线自有据点(where id + merchant_id + type=2);applicant 不算 owner。 */
     int setNodeStatusOwned(@Param("poiId") Long poiId, @Param("merchantId") Long merchantId, @Param("status") Integer status);
 

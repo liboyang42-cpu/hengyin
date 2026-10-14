@@ -1,0 +1,61 @@
+{
+  "base": "e67e72a",
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java",
+      "sha256": "4f5e17b1a484545b7bbaecef936ce42813fe5b69e37a8a83bf490a74f3b77958"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/AnalyticsAggregationTask.java",
+      "sha256": "1767a344377862fdfb440bc479571f34a2148ade1caa226fca1fa33d89927a6d"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAnalyticsControllerTest.java",
+      "sha256": "d06ed2f99a1016f90948581c532a65c1a987d04caa23c05d4fc544fa054478ff"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/task/AnalyticsAggregationTaskTest.java",
+      "sha256": "66385e59ba434d83d3590f5facd800dc195a2c948e2f85797635b1ea0d6d8136"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImplTest.java",
+      "sha256": "59e4b7001f0941f8c6bd2990db1fa0c40683120063137dc5044b301ef0419998"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/BizEventLogIdempotencyMapperContractTest.java",
+      "sha256": "a6b03c565328e6ed98855f80f67474a1fd4f8f85a4b6e6066b111bec42afa7a1"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/BizEventLogMapper.java",
+      "sha256": "a238343aa7d33efb770cc0b1e016b9fff4480153bc13b362983f7656aec9d5e7"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IAnalyticsEventService.java",
+      "sha256": "bf379b3c85fe9dd38a25169b4f249ef89a924820cb29553d866686c5054eb847"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java",
+      "sha256": "bbc40f3259e2b127a46dbf2d3ed2d3a0fc25710edbbabe2da48f0494067164f2"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/BizEventLogMapper.xml",
+      "sha256": "520964f9a330b9e8bc992bf13addc67361fe15bcf617fe4191d8fd5768d06108"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/analytics.js",
+      "sha256": "b295c0dcc724aa7aaa52a7fb6dd747f1123a551ce8bc235d0f64a496a64d73df"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/analytics.test.js",
+      "sha256": "16c053a4e37eaae54b055da57cb74c01a788573297ec566fc892df3010facdfe"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/square/list/index.js",
+      "sha256": "70dcb4f830f2aa91a2dc25358e6b957074901b9454c60666374bf285f607eb51"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/square-feed-pagination-b.test.js",
+      "sha256": "9083c4f4af5fffb385dc44ec3c150dd634ef576ab9b5d58f62a15143f86cc9db"
+    }
+  ]
+}

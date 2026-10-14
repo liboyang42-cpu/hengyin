@@ -11,6 +11,7 @@ import com.chengyinhub.system.service.ISysConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.util.Date;
@@ -40,8 +41,11 @@ public class RewardDropServiceImpl implements IRewardDropService {
     private RewardDropLogMapper logMapper;
     @Autowired
     private ISysConfigService configService;
+    @Autowired
+    private com.chengyinhub.business.mapper.CouponSourceGrantMapper couponSourceGrantMapper;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> rollDrop(Long memberId, Long topicId, Long nodeId, Long activityId,
                                         String sceneKey, long nodeXp) {
         if (memberId == null || nodeId == null || sceneKey == null || sceneKey.trim().isEmpty()) {
@@ -87,6 +91,31 @@ public class RewardDropServiceImpl implements IRewardDropService {
         } catch (DuplicateKeyException e) {
             return null; // 并发已占位,不重复掉
         }
+        if (log.getId() == null) throw new IllegalStateException("掉落流水缺少原ID");
+        if (Integer.valueOf(3).equals(log.getDropType())) {
+            Long couponId = parseParam(log.getParamJson()).getLong("couponTemplateId");
+            if (couponId != null && couponId > 0) {
+                if (couponSourceGrantMapper.ensureIntent("reward_drop", log.getId(), memberId, couponId) != 1) {
+                    throw new IllegalStateException("掉落原券交付意图写入失败");
+                }
+            }
+        }
+        drop.put("dropLogId", log.getId());
+        return drop;
+    }
+
+    @Override
+    public Map<String, Object> findOriginalDrop(Long memberId, Long topicId, Long nodeId, Long activityId, String sceneKey) {
+        if (memberId == null || nodeId == null || sceneKey == null) return null;
+        RewardDropLog log = logMapper.selectByUk(memberId, topicId == null ? 0L : topicId, nodeId,
+                activityId == null ? 0L : activityId, sceneKey);
+        if (log == null || log.getId() == null || !Integer.valueOf(3).equals(log.getDropType())) return null;
+        RewardDropRule original = new RewardDropRule();
+        original.setDropType(log.getDropType());
+        original.setParamJson(log.getParamJson());
+        Map<String, Object> drop = buildDrop(original, 0L);
+        drop.put("sceneKey", log.getSceneKey());
+        drop.put("dropLogId", log.getId());
         return drop;
     }
 

@@ -358,6 +358,7 @@ class ApiVerifyControllerTest {
         reg.setId(id);
         reg.setMemberId(memberId);
         reg.setRegistrationStatus(regStatus);
+        reg.setPaymentStatus(regStatus == 2 ? 2 : 0);
         reg.setVerificationStatus(verifyStatus);
         reg.setOwnerType(ownerType);
         return reg;

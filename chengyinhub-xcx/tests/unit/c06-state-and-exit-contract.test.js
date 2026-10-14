@@ -57,9 +57,10 @@ function loadPage(rel, hostOverrides, transform) {
     getAvatar: () => '',
     sendRequest: (options) => { requests.push(options) },
   }, (hostOverrides && hostOverrides.app) || {})
+  const storage = new Map()
   global.wx = Object.assign({
-    getStorageSync: () => '',
-    setStorageSync() {},
+    getStorageSync: key => storage.get(key) || '',
+    setStorageSync(key, value) { storage.set(key, value) },
     getWindowInfo: () => ({ statusBarHeight: 20, windowWidth: 375, screenHeight: 812, safeArea: { bottom: 800 } }),
     getSystemInfoSync: () => ({ statusBarHeight: 20, windowWidth: 375, screenHeight: 812, safeArea: { bottom: 800 } }),
     getMenuButtonBoundingClientRect: () => ({ left: 300 }),
@@ -430,7 +431,7 @@ test('negative control: 去掉缺参短路 ⇒ 坏链接照样打后端且被说
 
 test('negative control: 去掉 fail 分支 ⇒ 网络失败停在 loading,永远不承认异常', () => {
   const ctx = loadPage(CHAT_JS, null, (src) => src.replace(
-    "      fail(res) {\n        if (requestEpoch !== that._messageRequestEpoch) return;\n        that._setMessageLoadError(res);\n      },\n",
+    "      fail(res) {\n        if (!current() || requestEpoch !== that._messageRequestEpoch) return;\n        that._setMessageLoadError(res);\n      },\n",
     '',
   ))
   ctx.page.onLoad({ conversationId: '11' })

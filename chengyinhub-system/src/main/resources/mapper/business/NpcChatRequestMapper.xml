@@ -46,9 +46,8 @@
 
   <update id="expireProcessingByUserAndSession">
     update npc_chat_request
-    set status = 'FAILED', safety_decision = 'NOT_RUN', error_code = 'REQUEST_TIMEOUT',
-        limit_type = null, retry_after_seconds = 0, retryable = 1, safe_text = #{safeText}, ai = 1,
-        lease_token = null, lease_until = null, active_slot = null, completed_at = now(), update_time = now()
+    set safety_decision = 'UNKNOWN', error_code = 'REQUEST_OUTCOME_UNKNOWN',
+        retryable = 0, safe_text = #{safeText}, lease_token = null, update_time = now()
     where user_id = #{userId} and session_id = #{sessionId}
       and status = 'PROCESSING' and lease_until &lt; now()
   </update>
@@ -60,14 +59,14 @@
         safe_text = #{safeText}, ai = #{ai}, lease_token = null, lease_until = null,
         active_slot = null, completed_at = now(), update_time = now()
     where user_id = #{userId} and request_id = #{requestId}
-      and status = 'PROCESSING' and lease_token = #{leaseToken}
+      and status = 'PROCESSING' and lease_token = #{leaseToken} and lease_until &gt; now()
   </update>
 
   <update id="renewLease">
     update npc_chat_request
     set lease_until = #{leaseUntil}, update_time = now()
     where user_id = #{userId} and request_id = #{requestId}
-      and status = 'PROCESSING' and lease_token = #{leaseToken}
+      and status = 'PROCESSING' and lease_token = #{leaseToken} and lease_until &gt; now()
   </update>
 
   <delete id="deleteNpcChatRequestsBefore">

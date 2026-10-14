@@ -1,0 +1,337 @@
+{
+  "branch": "claude/mini-foundation-abc-integration-20261013",
+  "handoffBase": "e67e72a722652bc016aa13b2c1129e1d78795f65",
+  "packages": {
+    "A": {
+      "head": "f99745260b24e45dbc38d1366287cbdc70e920be",
+      "pr": 8
+    },
+    "B": {
+      "head": "aaf6a7be657921c9ffaaa352ea778de096e6a320",
+      "pr": 7
+    },
+    "C": {
+      "head": "e65d5f79fbd0505716d387b4970025e99b571eb6",
+      "pr": 9
+    }
+  },
+  "mergeCommits": [
+    "8a8bed7",
+    "9f48a6d",
+    "b39cd30"
+  ],
+  "verifiedHead": "25eba23170d7ae47d64a92fc82265363a6175f5d",
+  "githubCi": {
+    "ciRun": 38559180478,
+    "fundsRun": 38559228893,
+    "event": "workflow_dispatch",
+    "backend": {
+      "testsRun": 10014,
+      "failures": 7,
+      "errors": 2,
+      "skipped": 523,
+      "remainingClasses": [
+        "ApiPlayProgressCompletionTruthTest",
+        "CouponNotIssuableSkipContractTest",
+        "JourneyFullFlowMySqlIT (named IT, VPS)"
+      ],
+      "namedMyBatisItStep": "NOT_REACHED_IN_CI (preceding mvn clean test step failed); run on test VPS instead"
+    },
+    "fundsMysqlIt": {
+      "testsRun": 562,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "conclusion": "success"
+    },
+    "miniProgramUnit": {
+      "tests": 8254,
+      "pass": 8252,
+      "fail": 0,
+      "skipped": 2
+    },
+    "miniProgramLintUi": {
+      "violations": 1,
+      "item": "subpackageB/pages/im/list/index.js:352",
+      "preexistingAtHandoffBase": true
+    },
+    "gitleaks": {
+      "historyHits": 6,
+      "commit": "d54cf2d",
+      "file": "docs/verification/mini-foundation-cloud/B/im-evidence/node-baseline-red.txt",
+      "headTreeHits": 0
+    },
+    "passedGates": [
+      "Fast gates (CWD/API existence/silentError)",
+      "Migration safety",
+      "Migration layout",
+      "SBOM + dependency scan",
+      "Admin UI build",
+      "Admin UI E2E contract"
+    ]
+  },
+  "firstIntegratedRun": {
+    "ciRun": 38519684277,
+    "head": "9fe4d0e",
+    "backend": "testCompile failed (A tests)",
+    "miniProgramUnitFail": 2,
+    "silentErrorGate": "fail",
+    "fundsSelftest": "fail"
+  },
+  "localNode": {
+    "head": "261c54e",
+    "tz": "Asia/Shanghai",
+    "tests": 8254,
+    "pass": 8252,
+    "fail": 0,
+    "skipped": 2,
+    "beforeFixes": {
+      "head": "b39cd30",
+      "tests": 8253,
+      "fail": 3
+    }
+  },
+  "testVps": {
+    "engine": "docker context chengyin-vps-sandbox (dedicated dev/test VPS, not production)",
+    "containers": [
+      "cy-mfabc-20261013-mysql",
+      "cy-mfabc-20261013-redis",
+      "cy-mfabc-20261013-runner"
+    ],
+    "mysql": {
+      "version": "8.0.45",
+      "address": "127.0.0.1:3306 in task-owned network namespace",
+      "user": "root (task container)"
+    },
+    "redis": {
+      "version": "7.4.11",
+      "address": "127.0.0.1:6379 in task-owned network namespace",
+      "db": 7,
+      "dbsizeBefore": 0
+    },
+    "suites": [
+      {
+        "class": "OfficialV1CapacityMySqlTest",
+        "pkg": "A",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0
+      },
+      {
+        "class": "ImFoundationBMybatisIntegrationTest",
+        "pkg": "B",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0
+      },
+      {
+        "class": "AiQuotaReservationRedisIT",
+        "pkg": "C",
+        "tests": 15,
+        "failures": 0,
+        "errors": 0
+      },
+      {
+        "class": "AiQuotaRecoveryMySqlRedisIT",
+        "pkg": "C",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "note": "before fix: 7/7 but 4 leaked Redis receipts; after: DBSIZE 0"
+      },
+      {
+        "class": "RoamSessionWriteMybatisIntegrationTest",
+        "pkg": "C",
+        "tests": 25,
+        "failures": 0,
+        "errors": 0,
+        "note": "before DATETIME fix: 2 errors"
+      },
+      {
+        "class": "StoreVerifyGrowthDeliveryTransactionTest",
+        "pkg": "A",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0
+      },
+      {
+        "class": "ci/backend-test.sh MYBATIS_ITS (27 classes)",
+        "tests": 96,
+        "pass": 94,
+        "failures": 1,
+        "errors": 1,
+        "skipped": 0,
+        "failing": [
+          "JourneyFullFlowMySqlIT (C lock-read vs handshake choreography)"
+        ],
+        "note": "not reached in GitHub CI because preceding mvn clean test step fails"
+      }
+    ],
+    "notRunnable": [
+      {
+        "class": "FreeSelfPlayCreateRealDbIT",
+        "reason": "schema fixture predates base mapper columns (first_successful_scan_at, theme_runtime_config_json); pre-existing"
+      }
+    ],
+    "independentReadback": {
+      "redisKeysAfter": 0,
+      "packageScratchSchemasDropped": true,
+      "leftoverSuiteSchemas": {
+        "count": 24,
+        "allTaskSuffixed": true,
+        "cleanup": "removed with task-owned containers"
+      }
+    }
+  },
+  "notVerified": [
+    "real two-party identities",
+    "WeChat pay/channel callbacks and UNKNOWN",
+    "AI provider",
+    "WeChat DevTools and real devices",
+    "production DDL",
+    "Quartz enabling",
+    "WeChat upload"
+  ],
+  "finalCodeHead": {
+    "commit": "8eabb890a1f4fd79d2626502d3b8e00401f13845",
+    "ciRun": 38578321170,
+    "backend": {
+      "testsRun": 10014,
+      "failures": 7,
+      "errors": 2,
+      "skipped": 523,
+      "classes": [
+        "ApiPlayProgressCompletionTruthTest",
+        "CouponNotIssuableSkipContractTest"
+      ]
+    },
+    "miniProgramUnit": {
+      "tests": 8254,
+      "pass": 8252,
+      "fail": 0,
+      "skipped": 2
+    },
+    "lintUiViolations": 1,
+    "gitleaksHistoryHits": 6,
+    "sbom": "first attempt failed: GitHub release download HTTP 500 for syft; job rerun succeeded",
+    "fundsMysqlIt": {
+      "run": 38575260922,
+      "commit": "0798071",
+      "testsRun": 562,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "note": "backend/test code unchanged after 0798071 (only chengyinhub-xcx/utils/analytics.js, lint baseline and docs)"
+    },
+    "analyticsFlake": {
+      "before": "6/40 local failures",
+      "after": "0/60"
+    }
+  },
+  "passRuleDecision": {
+    "date": "2026-10-14",
+    "rule": "self-play pass valid within the game: a started session can be finished after the pass expires; no new session after expiry; refund/ownership change still blocks; activity tickets and explore tickets still stop at activity end; expired passes do not authorize restricted route candidates",
+    "commits": [
+      "4f2f61d",
+      "e4f3fda",
+      "ef489d8",
+      "c1fdd20",
+      "d6b5bc1",
+      "56f008d",
+      "d93e329",
+      "eacc458",
+      "7f4f582"
+    ]
+  },
+  "finalGreenHead": {
+    "commit": "c1fdd2006851a0c32cd844692a9ce9af80391874",
+    "ciRun": 38590689384,
+    "backend": {
+      "mvnCleanTest": {
+        "testsRun": 10018,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 523
+      },
+      "namedMyBatisIts": {
+        "testsRun": 96,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "atomicMigrationIt": {
+        "executed": 41,
+        "skipped": 0
+      },
+      "conclusion": "success"
+    },
+    "miniProgramUnit": {
+      "tests": 8254,
+      "pass": 8252,
+      "fail": 0,
+      "skipped": 2
+    },
+    "lintUi": {
+      "violations": 1,
+      "item": "subpackageB/pages/im/list/index.js:352",
+      "preexistingAtHandoffBase": true
+    },
+    "fundsMysqlIt": {
+      "run": 38588837097,
+      "commit": "ebb6c32",
+      "testsRun": 562,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "note": "only JourneyFullFlowMySqlIT (named IT, covered by ci.yml) changed afterwards"
+    },
+    "gitleaks": {
+      "historyHits": 6,
+      "commit": "d54cf2d",
+      "pendingDecision": "B history rewrite or squash merge"
+    }
+  },
+  "devtoolsE2e": {
+    "date": "2026-10-14",
+    "backendJarCommit": "eacc458",
+    "database": "cy_e2e_mfabc (test VPS container, 372 tables, quartz paused)",
+    "redisDb": 9,
+    "client": "WeChat DevTools automation on a throwaway copy with API_BASE_URL hard-wired to the local test relay",
+    "member": 990005,
+    "steps": [
+      {
+        "step": "T1 valid pass, play page",
+        "result": "2 nodes"
+      },
+      {
+        "step": "T1 arrive node1",
+        "result": "200"
+      },
+      {
+        "step": "expire both passes",
+        "result": "done"
+      },
+      {
+        "step": "T1 arrive node2 (started)",
+        "result": "200"
+      },
+      {
+        "step": "T1 play page after expiry",
+        "result": "2 nodes"
+      },
+      {
+        "step": "T2 play page after expiry (not started)",
+        "result": "needPass"
+      },
+      {
+        "step": "T2 arrive node1",
+        "result": "402"
+      }
+    ],
+    "readback": {
+      "player_node_progress": "970001:972001:1,970001:972002:1",
+      "topic_route_session": null
+    },
+    "note": "first DevTools launch before the copy was hard-wired may have sent start-up requests to the production API"
+  }
+}

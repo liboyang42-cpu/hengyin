@@ -10,7 +10,12 @@ function chat() {
   const requests = [];
   let imageCallback;
   let account = 1;
-  const app = { sendRequest: r => requests.push(r), getUserID: () => account,
+  const storage = new Map();
+  global.wx = { getStorageSync: key => storage.get(key), setStorageSync: (key,value) => storage.set(key,value) };
+  const app = { sendRequest: r => {
+    if (r.url === '/api/im/send-receipt') r.success({ code: 200, data: { found: false } });
+    else requests.push(r);
+  }, getUserID: () => account,
     chooseImage: cb => { imageCallback = cb; } };
   vm.runInNewContext(fs.readFileSync(file, 'utf8'), {
     require: createRequire(file), getApp: () => app,

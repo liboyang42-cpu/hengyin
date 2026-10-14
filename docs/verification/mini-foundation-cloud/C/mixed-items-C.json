@@ -1,0 +1,117 @@
+{
+  "items": [
+    {
+      "id": "F0225",
+      "title": "上传 NPC 头像",
+      "originalGapPreserved": "头像审核回调的MERCHANT_PROFILE当前校商家logo/cover/gallery而非门店NPC avatar，字段/对象消费者不匹配；补NPC头像独立当前版本审核与失败恢复，不能保存成功称头像已审核可见。",
+      "disposition": "已有NPC/漫游下层见C3/C7/C8；新UI/音频或玩法能力后置，具体原条尚未完整验收",
+      "completeAcceptance": false
+    },
+    {
+      "id": "F0226",
+      "title": "录制 NPC 声音",
+      "originalGapPreserved": "当前样本无上传归属回执消费；写PENDING仅id/scope过滤无当前state/version CAS，并发可双调用，外部成功但结果落库丢失缺确定vendor请求恢复。补原任务/租约/样本身份，不把声称授权当已核身份证明。",
+      "disposition": "已有NPC/漫游下层见C3/C7/C8；新UI/音频或玩法能力后置，具体原条尚未完整验收",
+      "completeAcceptance": false
+    },
+    {
+      "id": "F0380",
+      "title": "漫游护照",
+      "originalGapPreserved": "具体断点：护照聚合本人本机记录，不存在此链的跨设备历史同步/权威成就认证。 后续：换设备本地缺记录、历史版本、轨迹隐私和失效记录实机核验；需要跨端先建立明确同步合同。",
+      "disposition": "已有NPC/漫游下层见C3/C7/C8；新UI/音频或玩法能力后置，具体原条尚未完整验收",
+      "completeAcceptance": false
+    },
+    {
+      "id": "F0381",
+      "title": "漫游历史",
+      "originalGapPreserved": "具体断点：本机历史可恢复，未接云端上传/版本冲突/跨设备全量下载链。 后续：补上传/下载、版本冲突与照片可访问期限；本地历史不承诺换机保留。",
+      "disposition": "已有NPC/漫游下层见C3/C7/C8；新UI/音频或玩法能力后置，具体原条尚未完整验收",
+      "completeAcceptance": false
+    },
+    {
+      "id": "F0384",
+      "title": "撤销/调整漫游分享可见性",
+      "originalGapPreserved": "若要逐条撤回/改可见性，补token归属/版本和读侧资格；已导出的图片无法靠删token召回。",
+      "disposition": "已有NPC/漫游下层见C3/C7/C8；新UI/音频或玩法能力后置，具体原条尚未完整验收",
+      "completeAcceptance": false
+    },
+    {
+      "id": "F0386",
+      "title": "清理本地漫游缓存",
+      "originalGapPreserved": "clearLocal明确也清recovery；未结算/未知首写时应先回原服务器事实再清关联键，避免本机恢复线索丢失。",
+      "disposition": "已有NPC/漫游下层见C3/C7/C8；新UI/音频或玩法能力后置，具体原条尚未完整验收",
+      "completeAcceptance": false
+    },
+    {
+      "id": "F0403",
+      "title": "漫游任务列表",
+      "originalGapPreserved": "具体断点：面板消费官方活动与本人参加事实，不是通用个人GPS任务清单；新任务类型需真实完成来源。 后续：名称区分官方活动任务与路线节点任务，后续任务来源先接可信完成事件。",
+      "disposition": "已有NPC/漫游下层见C3/C7/C8；新UI/音频或玩法能力后置，具体原条尚未完整验收",
+      "completeAcceptance": false
+    },
+    {
+      "id": "F0457",
+      "title": "测试玩法当前版本",
+      "originalGapPreserved": "具体断点：测试是本地当前配置预览，未写真实玩家资源/结果，不能替代服务端同发布版本运行验证。 后续：逐玩法对照预览与服务端支持矩阵、配置版本及正式结果；加入明确预览标记。",
+      "disposition": "已有NPC/漫游下层见C3/C7/C8；新UI/音频或玩法能力后置，具体原条尚未完整验收",
+      "completeAcceptance": false
+    },
+    {
+      "id": "F0487",
+      "title": "玩法教程列表",
+      "originalGapPreserved": "明确改进点：玩法指南包含本地玩法说明与真实路由，并读common玩法说明列表/详情；失败、空与重试分开。服务端教程列表无显式发布/有效状态筛选，详情按ID直接读取，教程不执行玩家任务规则。；若草稿/停用教程不可公开，补服务器可见性；文档需关联玩法版本并清晰跳到正确场景。",
+      "disposition": "已有NPC/漫游下层见C3/C7/C8；新UI/音频或玩法能力后置，具体原条尚未完整验收",
+      "completeAcceptance": false
+    },
+    {
+      "id": "F0488",
+      "title": "玩法教程详情",
+      "originalGapPreserved": "明确改进点：玩法指南包含本地玩法说明与真实路由，并读common玩法说明列表/详情；失败、空与重试分开。服务端教程列表无显式发布/有效状态筛选，详情按ID直接读取，教程不执行玩家任务规则。；若草稿/停用教程不可公开，补服务器可见性；文档需关联玩法版本并清晰跳到正确场景。",
+      "disposition": "已有NPC/漫游下层见C3/C7/C8；新UI/音频或玩法能力后置，具体原条尚未完整验收",
+      "completeAcceptance": false
+    },
+    {
+      "id": "F0524",
+      "title": "App 玩法指南",
+      "originalGapPreserved": "明确改进点：玩法指南包含本地玩法说明与真实路由，并读common玩法说明列表/详情；失败、空与重试分开。服务端教程列表无显式发布/有效状态筛选，详情按ID直接读取，教程不执行玩家任务规则。；若草稿/停用教程不可公开，补服务器可见性；文档需关联玩法版本并清晰跳到正确场景。",
+      "disposition": "已有NPC/漫游下层见C3/C7/C8；新UI/音频或玩法能力后置，具体原条尚未完整验收",
+      "completeAcceptance": false
+    },
+    {
+      "id": "F0227",
+      "title": "测试 NPC 对话",
+      "originalGapPreserved": "具体断点：测试接口独立开关且共用聊天请求恢复；NPC同user/requestId缺内容指纹，换问题复用ID仍回旧结果。 后续：测试应明确不替代玩家通行证资格验证；当前门店身份和额度实跑。",
+      "disposition": "已有NPC/漫游下层见C3/C7/C8；新UI/音频或玩法能力后置，具体原条尚未完整验收",
+      "completeAcceptance": false
+    },
+    {
+      "id": "F0228",
+      "title": "玩家发送 NPC 文本",
+      "originalGapPreserved": "具体断点：门店文字NPC有通行证/节点资格，全局漫游自由追问另硬关闭；请求内容指纹未形成，不能推广全NPC可用与等价回放。 后续：验证实际配置、资格与模型通道；按结果成功/安全拒绝/处理中显示。",
+      "disposition": "已有NPC/漫游下层见C3/C7/C8；新UI/音频或玩法能力后置，具体原条尚未完整验收",
+      "completeAcceptance": false
+    },
+    {
+      "id": "F0229",
+      "title": "玩家语音 NPC 对话",
+      "originalGapPreserved": "具体断点：真实ASR/文字资格已接，音频合成/回放与文字终态不是同一恢复结果；供应商开关与通道范围单列，不能转写失败补造发言。 后续：ASR供应商配置与真机麦克风实跑；没有转写成功不能补造用户发言。",
+      "disposition": "已有NPC/漫游下层见C3/C7/C8；新UI/音频或玩法能力后置，具体原条尚未完整验收",
+      "completeAcceptance": false
+    },
+    {
+      "id": "F0231",
+      "title": "NPC 回复失败重试",
+      "originalGapPreserved": "将明确重新生成和恢复原请求分开；未知结果保留原ID查询/重放，不能把新ID重答标成安全重试。",
+      "disposition": "已有NPC/漫游下层见C3/C7/C8；新UI/音频或玩法能力后置，具体原条尚未完整验收",
+      "completeAcceptance": false
+    },
+    {
+      "id": "F0382",
+      "title": "漫游回放",
+      "originalGapPreserved": "具体断点：回放消费本地保存轨迹，不是云端原始轨迹或当前公开分享；换机无本地记录无法由此恢复。 后续：换设备本地缺记录、历史版本、轨迹隐私和失效记录实机核验；需要跨端先建立明确同步合同。",
+      "disposition": "已有NPC/漫游下层见C3/C7/C8；新UI/音频或玩法能力后置，具体原条尚未完整验收",
+      "completeAcceptance": false
+    }
+  ],
+  "note": "仅从原161条待核索引筛出16条C域候选进行逐条留痕；未匹配标题不代表其他原条已排除，root汇总全255索引"
+}

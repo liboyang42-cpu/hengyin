@@ -1,0 +1,300 @@
+{
+  "base": "e67e72a",
+  "scope": "final-source-bytes; final commit id supplied in PR",
+  "files": [
+    {
+      "path": "chengyinhub-admin/sql/migration_20261013_b_im_notification_intent.sql",
+      "sha256": "9225abc336584d27262982eddbde50eef404656222afeff7032db4bcf964aec6",
+      "baseSha256": null,
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java",
+      "sha256": "4f5e17b1a484545b7bbaecef936ce42813fe5b69e37a8a83bf490a74f3b77958",
+      "baseSha256": "137830a8542d9a71c9e558075af68ad01b40e6dc01f0f65372d28dcc95a58ec7",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiImController.java",
+      "sha256": "3ee20adb0c14ecd3767a81ff8ad75ba33279495cde7b7e4ac08b03a67231b70f",
+      "baseSha256": "d07c66ea47fada69d0bdb0803811e1122a4a3f9331de8bbf439e00c65effe6ec",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/AnalyticsAggregationTask.java",
+      "sha256": "1767a344377862fdfb440bc479571f34a2148ade1caa226fca1fa33d89927a6d",
+      "baseSha256": "0a9b4bc06c6b5e5f2bd84d72d83d4e2d2b1840513f54ceaa7058bc2910c1c511",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/BizEventLogIdempotencyMapperContractTest.java",
+      "sha256": "a6b03c565328e6ed98855f80f67474a1fd4f8f85a4b6e6066b111bec42afa7a1",
+      "baseSha256": null,
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImplTest.java",
+      "sha256": "59e4b7001f0941f8c6bd2990db1fa0c40683120063137dc5044b301ef0419998",
+      "baseSha256": "d951108d040ea935596600b1d3a2af59d3e4668086f999d2f68b83fc0c4158e7",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/BusinessAuditLogQueryServiceTest.java",
+      "sha256": "5e3341ecf6aa56a0a817dfe1dbd017758c52eaf77f1cdee3f17994052684a1a2",
+      "baseSha256": "c652d068619bebd3863b308b0b33aac5619a5815411823d70d6b7eab1254abaf",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImFoundationBMybatisIntegrationTest.java",
+      "sha256": "9fe0aa5493b7328705f5b6235232e590f141a30afb337a3f073fbe63d0482738",
+      "baseSha256": null,
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImFoundationReadRecoveryTest.java",
+      "sha256": "777a2ac3465037f2deccab6c58203361171c18b360f9b19fb8ffe0b570813b81",
+      "baseSha256": null,
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImNotificationIntentTest.java",
+      "sha256": "603d50cc146e1563d40290a56f712d1a220a47adb04e71a1ec0f3368657a8301",
+      "baseSha256": null,
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImRouteProjectionTest.java",
+      "sha256": "163f155f5c274cc9a6eb36a1261b1f4f12598b275e8501157752ad6f7b48b04a",
+      "baseSha256": null,
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImServiceImplTest.java",
+      "sha256": "7218e29b2d0713230e764b287ef5fe53bc5807dfe17876b541dfd9357804b38d",
+      "baseSha256": "87269e2edf10de08b16cbfe86804be4edc27b1bcd5f9ca2a6e8cb86b4f8aa1cf",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/task/ImNotificationDeliveryTaskTest.java",
+      "sha256": "feac185acd12b11581c0128fded2eba9f3d3cd621915941d872f7aef957c9bb2",
+      "baseSha256": null,
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAnalyticsControllerTest.java",
+      "sha256": "d06ed2f99a1016f90948581c532a65c1a987d04caa23c05d4fc544fa054478ff",
+      "baseSha256": "f4826540103f4e90d5c56a14025d00a29a309c0bad6d13d8420ba3696ad76433",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/task/AnalyticsAggregationTaskTest.java",
+      "sha256": "66385e59ba434d83d3590f5facd800dc195a2c948e2f85797635b1ea0d6d8136",
+      "baseSha256": "4acd2fcfb154d6bd179088de774da4990f7e2aa9960b35a1a8fe96962c4b8aae",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/BizEventLogMapper.java",
+      "sha256": "a238343aa7d33efb770cc0b1e016b9fff4480153bc13b362983f7656aec9d5e7",
+      "baseSha256": "497e62bf33f26fcc1f5007c76daba7bef0721268cb5e132e472d62caa0866c6e",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ImConversationMemberMapper.java",
+      "sha256": "f8e2db58c0d63255f393a84895f15f7eb1ae5b94c452ce523c7ac5484db3eb70",
+      "baseSha256": "744b21a1ac4d9879bb08c69c08eee53d1ca09163af159d1366009d367f3a98be",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ImMessageMapper.java",
+      "sha256": "2db32bd23d2c4eccb7fcde2cd6a6a77721ae206b449d05ad6b50fe55c0aecb0c",
+      "baseSha256": "843601cbc290e33aeceb3b97b54211f7fd9f2dc4d8e156fa96be5ec026674232",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ImNotificationIntentMapper.java",
+      "sha256": "6912c731bc8608ed38769e2f1e75c2388eb23ef9bf74fcac84f3e918abb9d30e",
+      "baseSha256": null,
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IAnalyticsEventService.java",
+      "sha256": "bf379b3c85fe9dd38a25169b4f249ef89a924820cb29553d866686c5054eb847",
+      "baseSha256": "9497f4ddfbb30a053fe738689218a0f321915e204d88bbbf599eb4a5f39d0784",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IImService.java",
+      "sha256": "d8ce2ed5393adcbfa63e7006e9bc62d4f55d63dda4a192f53889f788f356548c",
+      "baseSha256": "2595b459d27005daf18019c3294bfda31b0358e6a5f8f81066842478a55e08f8",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ISystemNotificationIntentService.java",
+      "sha256": "efc7f6a956738131dd1eb1b70a424a6020822e790c68690f2fa3e30bba696d0c",
+      "baseSha256": null,
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java",
+      "sha256": "bbc40f3259e2b127a46dbf2d3ed2d3a0fc25710edbbabe2da48f0494067164f2",
+      "baseSha256": "a4f8207df97ea9986748c6b6685a50917d9c76bb4820147f8e365b1069c63a77",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/BusinessAuditLogQueryServiceImpl.java",
+      "sha256": "18477bef69305e6b0433dcbc8f719994067cb6c142f31c216e0f03a6ed8a7791",
+      "baseSha256": "304ddb08c0f19734c2a12902265a6707971af446c1b4d3b4dc7bbe1c1515301b",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+      "sha256": "6bac41080f3bc2d496d78d5c11b4e988b856f993e1a12f1cacbbe4d964931d92",
+      "baseSha256": "e730a926b3f793e8f7f7fc42a81bcb7213bdd464f477c3a51c3864b43635e758",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/ImNotificationDeliveryTask.java",
+      "sha256": "4b7e09df442d7311e24fbc52def8022fb0db22e98e16bbc4563c35e8304bff2d",
+      "baseSha256": null,
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/BizEventLogMapper.xml",
+      "sha256": "520964f9a330b9e8bc992bf13addc67361fe15bcf617fe4191d8fd5768d06108",
+      "baseSha256": "d87f9e420c4d0f53006c78ff30fcdb10d0c106150f1fdce2f33ced20469df1c7",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ImConversationMemberMapper.xml",
+      "sha256": "3bdc63bdc6a25b491e5d6e8163b28b0120af5e52e7d41fdb6bc1bdc3634b7ef8",
+      "baseSha256": "a9fc8c5fdb3c5b4c74778d64d9d7b4d0d174cdaddebfb2a52bc8bdb969ce872b",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ImMessageMapper.xml",
+      "sha256": "d37d3231abc5a11223f720288b840abd4f92456a90164a5ca4481604d326cb1b",
+      "baseSha256": "0557ec2949b3de1e993705a7cbd8a0b4e24aeda3b88a7399c570a1ea3d48f4a9",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ImNotificationIntentMapper.xml",
+      "sha256": "d1036113aa06903155a3a414851ca7ce212f55942c94b18f1ecde45f5eb41f53",
+      "baseSha256": null,
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/shezhi/shezhi.js",
+      "sha256": "50b03f048e5d97b6aa92de1bc29f36120f4fe5985caa99c6ffd3df90eac09adc",
+      "baseSha256": "e5d932e7b229ec6aefe21a2acc024d6bf13df4d9e9f94b646866e54de3c7e51e",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/square/list/index.js",
+      "sha256": "70dcb4f830f2aa91a2dc25358e6b957074901b9454c60666374bf285f607eb51",
+      "baseSha256": "a880d5a3b399136a4754c5f5513d9f932345c2f886483d9af024f9fd4656f243",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+      "sha256": "52fd245be27523626f9afa0230969c19a6fe9d13be8415e6cd792e94253fa4ed",
+      "baseSha256": "45c516a24bb3c54efffa0149269e0dd4b442926e0e80891504d6f00163e9aa9a",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-xcx/subpackageB/pages/im/chat/index.js",
+      "sha256": "836b16804be6c294e2074a1694b3593f4ae5ffef130c06db4f57f3f35f38fc57",
+      "baseSha256": "957e707226cd7883a70fa7f97e9ddbec73ac4303f250114f805d0f9b3c25e78f",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/analytics.test.js",
+      "sha256": "16c053a4e37eaae54b055da57cb74c01a788573297ec566fc892df3010facdfe",
+      "baseSha256": "a197a1919b0425a829248f27c7922f676675a9bfd03e0c5eea0aea9969866c59",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/c06-state-and-exit-contract.test.js",
+      "sha256": "35c43f6ed595d1ecef0a1173a1e0ff66bf7776adeac7f0a8a6dbf16daf7d1b6b",
+      "baseSha256": "36667bf354f537ce947c436de6ba29cf349dbccb1df7463476da0b72edde4d40",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/club-detail-ia-contract.test.js",
+      "sha256": "449263b65056a50e2326e15c5b62632a3ab6f5905f9676805bbc279e589dafad",
+      "baseSha256": "65331634b0f6763acdbdee68cc2adb1b0090cc40658016d04a52b50a386db5af",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/im-biz-failure-not-success.test.js",
+      "sha256": "80ed4005feefa908ab2cc0e522d7d17d7a9a5768b4ce13d7b715407b3aed6c5e",
+      "baseSha256": "4a45a23413dfec81b51c02f5a9c30ce90428e68e223c764ffa83ec861c9363c6",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/im-chat-report-and-block-state.test.js",
+      "sha256": "8e29504db995868eb57bcdeca8391211851b2d58f66f5b7c01da5640900a9751",
+      "baseSha256": "99a38d6a70d7c928097bfddd03676ede44c983fdab8727a5967551e0b6443fdc",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js",
+      "sha256": "735603ff7ff363040bbb2786d9210f0607573cb75420c3d1bc194d66c985da6d",
+      "baseSha256": null,
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/im-send-retry.test.js",
+      "sha256": "d9509b3a127b0991a33d59ce8a1037fd4e357d8975148d7321b296b1aaa40c9b",
+      "baseSha256": "c9d74ddea01cb05720ce729ca0cff7a696ed2143d6c39e3104667e5dad8fffba",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/im-uiux-recovery-contract.test.js",
+      "sha256": "543079cc201d6fc8daf5a604630c317f3e3730f810500f748df55c154afe6cfd",
+      "baseSha256": "768abd3b84879e8bb2645c6bde8a5048b9435664f00e411125d34bfdf7e3ea3e",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/malformed-list-response.test.js",
+      "sha256": "603baa99f666ca1797a456ca550cafa33ce56716a346ce1f11fe2750a572ae69",
+      "baseSha256": "7fe7aa70839f791a92e79d661e6f9241a54ed6348c2423b2fddd1a712e8759dc",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/play-free-explore-detail-contract.test.js",
+      "sha256": "bc461e99033d19f781e225b95c85649138f07c2c3004726c2894bc6dd42f1fc4",
+      "baseSha256": "47f11dacf18d2f6a57dc2114be2ac78758670ed83698b091e4ebfdd20d1ca5dc",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/square-feed-pagination-b.test.js",
+      "sha256": "9083c4f4af5fffb385dc44ec3c150dd634ef576ab9b5d58f62a15143f86cc9db",
+      "baseSha256": null,
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/analytics.js",
+      "sha256": "b295c0dcc724aa7aaa52a7fb6dd747f1123a551ce8bc235d0f64a496a64d73df",
+      "baseSha256": "b222e8c78adeadc92c077f1b16b2e55db445e3574ba457ad12635af051939017",
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/im-send-recovery.js",
+      "sha256": "d4676fa09a53012883bdc158edb7387e7fe9feb2b1ba8e394cb2905174f50cff",
+      "baseSha256": null,
+      "owner": "B domain or coordinator assigned minimal shared test fixture/interface"
+    },
+    {
+      "path": "ci/migration-dependencies.json",
+      "sha256": "c157643829835a88ef023ea9d39a5c26fb331f4c2b1e6e37c42f56886b56a2c6",
+      "baseSha256": "1cd31cdae174fb94053f7c79bcca18735276b619e72ab96ec1e87fac7cb9febe",
+      "owner": "ROOT single owner; unmodified cherry-pick of 4db987a14b53cbda2d11587e89cda5a36150ee34"
+    }
+  ],
+  "sharedMetadataDependency": {
+    "originCommit": "4db987a14b53cbda2d11587e89cda5a36150ee34",
+    "localCherryPick": "8d5882a",
+    "path": "ci/migration-dependencies.json",
+    "productionAndNodeSourceUnchanged": true
+  }
+}

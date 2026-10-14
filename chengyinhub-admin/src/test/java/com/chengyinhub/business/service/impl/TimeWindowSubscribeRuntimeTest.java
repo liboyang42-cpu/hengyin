@@ -77,6 +77,7 @@ class TimeWindowSubscribeRuntimeTest {
         when(sessionMapper.updateStateCas(any())).thenReturn(1);
         when(attemptMapper.selectByIdempotencyKey(any())).thenReturn(null);
         // playBingoService 故意不设:九宫格读不到就等于没有这一段,本类只测时段限定
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.installOn(service);
     }
 
     @Test

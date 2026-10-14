@@ -33,8 +33,10 @@ class RegistrationPaymentAtomicityContractTest {
         int reward = service.indexOf("umsMemberMapper.addPoints", method);
 
         assertTrue(method > 0, "支付回调必须保留在公开 Service interface");
-        assertTrue(service.substring(Math.max(0, method - 160), method)
-                .contains("@Transactional(rollbackFor = Exception.class)"), "支付回调整链必须在事务内");
+        assertTrue(service.contains("wxPaymentCallbackInboxService.process(notifyId"), "真实回调必须领取inbox处理权");
+        String mutation = source("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java");
+        assertTrue(mutation.contains("@Transactional") && mutation.contains("mutation.apply(row)")
+                && mutation.contains("mapper.markDone("), "业务变化与inbox DONE必须同事务");
         assertTrue(mapper.contains("int claimPaymentSuccess("), "Mapper 必须暴露条件置位 CAS");
         assertTrue(xml.contains("<update id=\"claimPaymentSuccess\">"), "MyBatis XML 必须实现支付 CAS");
         assertTrue(xml.contains("payment_status in (0, 1)"), "CAS 只能从待支付/支付中过渡");

@@ -147,6 +147,7 @@ class ApiPlayPhotoRetryAndFailureContractTest
         when(progressionService.onNodeDone(PLAYER)).thenReturn(Collections.emptyList());
         when(completionAwardService.grantOnce(anyLong(), anyLong(), anyLong(), any()))
                 .thenReturn(new TopicCompletionAwardVO());
+        CurrentPlayControllerFixtures.install(controller);
     }
 
     private void verifierRejects(AtomicBoolean called, RuntimeException failure)

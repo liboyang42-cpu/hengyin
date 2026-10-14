@@ -67,6 +67,7 @@ class AdvancedGameRuntimeServiceImplTest {
         templateMapper = mock(CmsMemberTemplateMapper.class);
         activityMapper = mock(CmsActivityMapper.class);
         registrationMapper = mock(CmsRegistrationMapper.class);
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.install(activityMapper,registrationMapper);
         teamMapper = mock(PlayTeamMapper.class);
         attemptMapper = mock(PlayAttemptLogMapper.class);
         service = new AdvancedGameRuntimeServiceImpl();
@@ -174,6 +175,50 @@ class AdvancedGameRuntimeServiceImplTest {
         assertEquals(1, state.get("version"));
         verify(sessionMapper).updateStateCas(any());
         verify(attemptMapper).insertPlayAttemptLog(any());
+    }
+
+    /** 2026-10-14 用户已定：自玩通行证在本局内有效 —— 开局后中途到期可打完本局，到期后不能新开局。 */
+    @Test
+    void expiredSelfPlayPassCanFinishRunningSessionButCannotStartNewOne() {
+        CmsRegistration pass = new CmsRegistration();
+        pass.setId(777L); pass.setMemberId(MEMBER_ID); pass.setOwnerType(1L); pass.setOwnerId(TOPIC_ID);
+        pass.setRegistrationStatus(2); pass.setPaymentStatus(0); pass.setPurchaseKind(2);
+        pass.setExpiresAt(new Date(NOW - 1));
+        when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class))).thenReturn(Collections.singletonList(pass));
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(777L)).thenReturn(pass);
+
+        GameRuntimeSession session = runningSession(randomOnlyConfig(), "{\"draws\":[]}");
+        session.setActivityId(0L);
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        when(attemptMapper.selectByIdempotencyKey("draw-expired-pass")).thenReturn(null);
+        Map<String, Object> state = service.act(MEMBER_ID, 51L, 0, "draw-expired-pass", "DRAW", Collections.emptyMap());
+        assertEquals(1, ((java.util.List<?>) state.get("draws")).size(), "已开局：通行证中途到期仍可打完本局");
+
+        IllegalStateException fresh = assertThrows(IllegalStateException.class,
+                () -> service.start(MEMBER_ID, 0L, TOPIC_ID, NODE_ID, null));
+        assertEquals("当前自玩资格已失效", fresh.getMessage(), "到期后不能新开局");
+    }
+
+    /** 普通线性路线不建玩法局：本路线已开局时，到站完成闸同样按「打完本局」放行；未开局仍拒。 */
+    @Test
+    void expiredSelfPlayPassCompleteGateFollowsRouteStarted() {
+        CmsRegistration pass = new CmsRegistration();
+        pass.setId(778L); pass.setMemberId(MEMBER_ID); pass.setOwnerType(1L); pass.setOwnerId(TOPIC_ID);
+        pass.setRegistrationStatus(2); pass.setPaymentStatus(0); pass.setPurchaseKind(2);
+        pass.setExpiresAt(new Date(NOW - 1));
+        when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class))).thenReturn(Collections.singletonList(pass));
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(778L)).thenReturn(pass);
+        ITopicRouteRuntimeService route = mock(ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", route);
+
+        when(route.hasRunningSession(MEMBER_ID, TOPIC_ID, 0L)).thenReturn(true);
+        assertNull(service.completeGate(MEMBER_ID, 0L, TOPIC_ID, NODE_ID), "本路线已开局：中途到期仍可到站完成");
+
+        when(route.hasRunningSession(MEMBER_ID, TOPIC_ID, 0L)).thenReturn(false);
+        IllegalStateException fresh = assertThrows(IllegalStateException.class,
+                () -> service.completeGate(MEMBER_ID, 0L, TOPIC_ID, NODE_ID));
+        assertEquals("当前自玩资格已失效", fresh.getMessage(), "未开局：到期后不能新开局");
     }
 
     // ==================== M1 回执自带新世界 ====================
@@ -611,6 +656,9 @@ class AdvancedGameRuntimeServiceImplTest {
         when(templateMapper.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(template(multiplayerConfig()));
         // 先让自玩通行证这一关过掉,否则测的就是通行证闸,不是队伍闸
         CmsRegistration paid = new CmsRegistration();
+        paid.setId(9000001L);paid.setMemberId(MEMBER_ID);paid.setOwnerType(1L);paid.setOwnerId(TOPIC_ID);
+        paid.setPaymentStatus(2);paid.setRegistrationStatus(2);paid.setPurchaseKind(2);
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(9000001L)).thenReturn(paid);
         paid.setExpiresAt(new Date(NOW + 86_400_000L));
         when(registrationMapper.selectCmsRegistrationList(any())).thenReturn(java.util.Arrays.asList(paid));
 
