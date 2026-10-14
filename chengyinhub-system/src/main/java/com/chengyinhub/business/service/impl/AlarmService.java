@@ -76,6 +76,10 @@ public class AlarmService {
         if (this.transport == null) {
             this.transport = new HttpWebhookTransport(connectTimeoutMs, readTimeoutMs);
         }
+        // 未注入 ALARM_WEBHOOK 时所有告警只留在日志里：启动时显著提示一次（生产预检会拦截缺失）。
+        if (StringUtils.isEmpty(webhook)) {
+            log.error("[ALARM] alarm.webhook 未配置(ALARM_WEBHOOK):告警只写 error 日志,不会推送到值班群");
+        }
     }
 
     /** 告警投递的终态,用于可观测与排查(成功/失败都是显式状态,不留「静默返回」)。 */

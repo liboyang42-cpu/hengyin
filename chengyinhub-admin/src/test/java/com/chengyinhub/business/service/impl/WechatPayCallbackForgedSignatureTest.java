@@ -207,6 +207,28 @@ class WechatPayCallbackForgedSignatureTest {
         // 核心断言:伪造回调必须在验签阶段被拦下,不能有任何一条路径先斩后奏碰到业务层。
         verifyNoInteractions(registrationService);
         verifyNoInteractions(coopInviteService);
+        // 验签失败按固定事件限频告警，不回显未验签请求内容（订单号也不可信）。
+        AlarmService alarms = (AlarmService) ReflectionTestUtils.getField(service, "alarmService");
+        verify(alarms).alarmThrottled("payment.callback.signature", "支付回调验签失败",
+                "type=ValidationException result=FAIL");
+    }
+
+    @Test
+    void handleRefundCallbackBusinessFailureAlarmsWithVerifiedRefundNumber() throws Exception {
+        KeyPair kp = generateKeyPair();
+        WechatPayServiceImpl service = new WechatPayServiceImpl();
+        IRefundService refundBizService = mock(IRefundService.class);
+        wireParser(service, buildParser(kp.getPublic()), mock(ICmsRegistrationService.class),
+                mock(ICoopInviteService.class), refundBizService);
+        when(refundBizService.handleRefundNotify("RF12345", "SUCCESS")).thenReturn(false);
+
+        Forged n = buildValidRefundNotification(kp.getPrivate(), "RF12345", "SUCCESS");
+        String resp = service.handleRefundCallback(n.body, headersOf(n));
+
+        assertTrue(resp.contains("FAIL"));
+        AlarmService alarms = (AlarmService) ReflectionTestUtils.getField(service, "alarmService");
+        verify(alarms).alarmThrottled("refund.callback.failed", "退款回调业务处理失败",
+                "refund=RF12345 result=FAIL");
     }
 
     @Test
@@ -241,6 +263,9 @@ class WechatPayCallbackForgedSignatureTest {
         assertTrue(resp.contains("FAIL"));
         assertTrue(resp.contains("签名验证失败"));
         verifyNoInteractions(refundBizService);
+        AlarmService alarms = (AlarmService) ReflectionTestUtils.getField(service, "alarmService");
+        verify(alarms).alarmThrottled("refund.callback.signature", "退款回调验签失败",
+                "type=ValidationException result=FAIL");
     }
 
     @Test

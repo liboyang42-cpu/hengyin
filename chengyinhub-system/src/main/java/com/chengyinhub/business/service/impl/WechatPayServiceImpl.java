@@ -745,6 +745,9 @@ public class WechatPayServiceImpl implements IWechatPayService {
             return "{\"code\": \"SUCCESS\",\"message\": \"成功\"}";
         } catch (ValidationException e) {
             logger.error("微信支付回调签名验证失败", e);
+            // 未验签的请求体不可信：只发固定事件，不带任何请求内容；按事件限频防止伪造请求刷屏。
+            alarmService.alarmThrottled("payment.callback.signature", "支付回调验签失败",
+                    "type=" + e.getClass().getSimpleName() + " result=FAIL");
             return "{\"code\": \"FAIL\",\"message\": \"签名验证失败: " + e.getMessage() + "\"}";
         } catch (Exception e) {
             logger.error("微信支付回调处理异常", e);
@@ -819,6 +822,8 @@ public class WechatPayServiceImpl implements IWechatPayService {
 
     @Override
     public String handleRefundCallback(String requestBody, Map<String, String> headers) {
+        boolean verifiedRefund = false;
+        String safeRefundReference = "UNKNOWN";
         try {
             RequestParam requestParam = new RequestParam.Builder()
                     .serialNumber(headers.get("wechatpay-serial"))
@@ -829,6 +834,9 @@ public class WechatPayServiceImpl implements IWechatPayService {
                     .build();
             // 解析退款结果通知(含官方验签),资源解密为 RefundNotification
             RefundNotification notif = notificationParser.parse(requestParam, RefundNotification.class);
+            verifiedRefund = true;
+            safeRefundReference = notif.getOutRefundNo() != null
+                    && notif.getOutRefundNo().matches("[A-Za-z0-9_-]{1,64}") ? notif.getOutRefundNo() : "UNKNOWN";
             Status st = notif.getRefundStatus();
             boolean ok = notif.getOutRefundNo() != null && notif.getOutRefundNo().startsWith("RDEP")
                     ? coopInviteService.handleDepositRefundResult(refundFacts(notif.getOutRefundNo(),
@@ -836,14 +844,22 @@ public class WechatPayServiceImpl implements IWechatPayService {
                     : refundBizService.handleRefundNotify(notif.getOutRefundNo(), st == null ? null : st.name());
             if (!ok) {
                 logger.error("微信退款回调业务处理失败,回 FAIL 触发重试: out_refund_no={}", notif.getOutRefundNo());
+                alarmService.alarmThrottled("refund.callback.failed", "退款回调业务处理失败",
+                        "refund=" + safeRefundReference + " result=FAIL");
                 return "{\"code\": \"FAIL\",\"message\": \"业务处理失败,请重试\"}";
             }
             return "{\"code\": \"SUCCESS\",\"message\": \"成功\"}";
         } catch (ValidationException e) {
             logger.error("微信退款回调签名验证失败", e);
+            alarmService.alarmThrottled("refund.callback.signature", "退款回调验签失败",
+                    "type=" + e.getClass().getSimpleName() + " result=FAIL");
             return "{\"code\": \"FAIL\",\"message\": \"签名验证失败: " + e.getMessage() + "\"}";
         } catch (Exception e) {
             logger.error("微信退款回调处理异常", e);
+            if (verifiedRefund) {
+                alarmService.alarmThrottled("refund.callback.exception", "退款回调业务处理异常",
+                        "refund=" + safeRefundReference + " type=" + e.getClass().getSimpleName() + " result=FAIL");
+            }
             return "{\"code\": \"FAIL\",\"message\": \"处理异常: " + e.getMessage() + "\"}";
         }
     }
