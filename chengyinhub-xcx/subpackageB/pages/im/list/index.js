@@ -346,10 +346,11 @@ Page({
           return;
         }
         that._conversationRequestEpoch = (that._conversationRequestEpoch || 0) + 1;
-        const currentIndex = that.data.list.findIndex(function (c) { return c.conversationId === id; });
-        const patch = { loading: false, refreshing: false };
-        if (currentIndex >= 0) patch['list[' + currentIndex + '].muted'] = next;
-        that.setData(patch);
+        // 按会话 ID 重新定位后整表回写(静态字段，新对象替换该行，不就地改 viewList 共享引用)。
+        const list = that.data.list.map(function (c) {
+          return c.conversationId === id ? Object.assign({}, c, { muted: next }) : c;
+        });
+        that.setData({ loading: false, refreshing: false, list: list });
         that.refreshView();
         toast(next ? '已开启免打扰' : '已关闭免打扰');
       },
