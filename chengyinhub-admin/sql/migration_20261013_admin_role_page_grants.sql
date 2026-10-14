@@ -29,6 +29,12 @@ WHERE t.role_key = 'cy_operator'
   AND m.perms NOT LIKE '%withdraw%:audit%' AND m.perms NOT LIKE '%withdraw%:viewpii%'
   AND m.perms NOT LIKE '%cashwithdraw%:manage%' AND m.perms NOT LIKE '%:pii'
   AND m.perms NOT LIKE '%settlement%:confirm%' AND m.perms NOT LIKE '%payout%'
+  -- 0719 之后新增的资金/导出类动作同样不授运营:确认、结算生成、冻结、冷静期配置、余额/提现写入、导出。
+  AND m.perms NOT LIKE '%:confirm%' AND m.perms NOT LIKE '%:settle%' AND m.perms NOT LIKE '%:generate%'
+  AND m.perms NOT LIKE '%:export%' AND m.perms NOT LIKE '%:freeze%' AND m.perms NOT LIKE '%cooldown%'
+  AND m.perms NOT LIKE '%settlementrule:%' AND m.perms NOT LIKE '%clawback%'
+  AND NOT (m.perms LIKE '%memberbalance%' AND m.perms NOT LIKE '%:list' AND m.perms NOT LIKE '%:query')
+  AND NOT (m.perms LIKE '%memberwithdrawal%' AND m.perms NOT LIKE '%:list' AND m.perms NOT LIKE '%:query')
   AND NOT EXISTS (SELECT 1 FROM sys_role_menu x WHERE x.role_id = t.role_id AND x.menu_id = m.menu_id);
 
 -- 审核：只授业务域审核相关动作及必要查询，不授系统、edit/remove 或资金动作。
@@ -92,5 +98,15 @@ WHERE NOT EXISTS (SELECT 1 FROM sys_role_menu rm JOIN sys_menu m ON m.menu_id = 
 SELECT COUNT(*) = 0 FROM sys_role_menu rm JOIN tmp_cy_fresh_admin_roles t ON t.role_id = rm.role_id
 JOIN sys_menu m ON m.menu_id = rm.menu_id
 WHERE m.menu_type IN ('C','F') AND (m.perms LIKE 'system:%' OR m.perms LIKE 'monitor:%' OR m.perms LIKE 'tool:%');
+
+-- 自检：本次补授的运营角色不得持有资金确认/结算/导出/余额与提现写入等动作。
+-- runner: assert=scalar-true
+SELECT COUNT(*) = 0 FROM sys_role_menu rm JOIN tmp_cy_fresh_admin_roles t ON t.role_id = rm.role_id AND t.role_key = 'cy_operator'
+JOIN sys_menu m ON m.menu_id = rm.menu_id
+WHERE m.perms LIKE '%:confirm%' OR m.perms LIKE '%:settle%' OR m.perms LIKE '%:generate%' OR m.perms LIKE '%:export%'
+   OR m.perms LIKE '%:freeze%' OR m.perms LIKE '%cooldown%' OR m.perms LIKE '%payout%' OR m.perms LIKE '%clawback%'
+   OR m.perms LIKE '%:pii' OR m.perms LIKE '%viewpii%'
+   OR (m.perms LIKE '%memberbalance%' AND m.perms NOT LIKE '%:list' AND m.perms NOT LIKE '%:query')
+   OR (m.perms LIKE '%memberwithdrawal%' AND m.perms NOT LIKE '%:list' AND m.perms NOT LIKE '%:query');
 
 DROP TEMPORARY TABLE tmp_cy_fresh_admin_roles;

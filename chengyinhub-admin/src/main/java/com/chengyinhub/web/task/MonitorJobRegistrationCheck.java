@@ -28,7 +28,7 @@ import com.chengyinhub.quartz.mapper.SysJobMapper;
 public class MonitorJobRegistrationCheck {
     private static final Logger log = LoggerFactory.getLogger(MonitorJobRegistrationCheck.class);
 
-    /** 巡检/对账类任务:只告警或按微信终态回补,不主动出款。 */
+    /** 巡检/对账类任务。注意 refundReconcileTask 还会发起保证金退款与审核后出款,重建环境补登记时默认暂停(暂停只记 WARN)。 */
     static final List<String> REQUIRED_MONITOR_TARGETS = Collections.unmodifiableList(Arrays.asList(
             "metricsProbeTask.run()",
             "auditBacklogMonitorTask.run()",

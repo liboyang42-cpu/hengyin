@@ -1,9 +1,9 @@
 -- F-W3-04: register the remaining scheduled jobs whose only registration SQL predates the 2026-08-18
 -- base snapshot (so a rebuilt environment never had them). Missing rows only; never update, enable or
 -- reschedule an existing row (operators may have paused or re-planned it deliberately).
--- Reconciliation jobs that only alarm or reconcile from WeChat terminal state are registered enabled,
--- matching their original migrations. Jobs that move money or message users are registered PAUSED in an
--- environment where they were missing: the funds/ops owner enables them after checking the target.
+-- The alarm-only reconciliation job is registered enabled, matching its original migration. Jobs that move
+-- money (including refundReconcileTask, which also dispatches deposit refunds and reviewed payouts) or message
+-- users are registered PAUSED where they were missing: the funds/ops owner enables them after checking the target.
 -- RuoYi loads sys_job at startup only: rows inserted here take effect after the next restart.
 -- runner: assert=scalar-true
 SELECT (SELECT COUNT(*) FROM information_schema.tables
@@ -22,8 +22,8 @@ SELECT COUNT(*)=0 FROM (
  GROUP BY CAST(invoke_target AS BINARY) HAVING COUNT(*)>1
 ) duplicate_targets;
 INSERT INTO sys_job(job_name,job_group,invoke_target,cron_expression,misfire_policy,concurrent,status,create_by,create_time,remark)
-SELECT '退款对账兜底','DEFAULT','refundReconcileTask.reconcile()','0 0/15 * * * ?','3','1','0','system',NOW(),
- '仅补缺失登记(原 seed_refund_manual_menu_20260714)；按微信终态回写卡在处理中的退款并告警积压'
+SELECT '退款对账兜底','DEFAULT','refundReconcileTask.reconcile()','0 0/15 * * * ?','3','1','1','system',NOW(),
+ '仅补缺失登记且默认暂停：除按微信终态回写外还会发起保证金退款与审核后出款，须由资金owner核对目标环境后启用'
 WHERE NOT EXISTS (SELECT 1 FROM sys_job WHERE CAST(invoke_target AS BINARY)=CAST('refundReconcileTask.reconcile()' AS BINARY));
 INSERT INTO sys_job(job_name,job_group,invoke_target,cron_expression,misfire_policy,concurrent,status,create_by,create_time,remark)
 SELECT '俱乐部带队场次对账','DEFAULT','clubSessionReconciliationTask.run()','0 20 3 * * ?','3','1','0','system',NOW(),

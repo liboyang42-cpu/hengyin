@@ -6,7 +6,7 @@ RuoYi 只在**启动时**装载 `sys_job`。从仓库重建的环境（灾备、
 
 - `migration_20261012_monitor_missing_jobs.sql`（POST_DEPLOY）：补登记指标采样、UGC 审核积压、提现日对账、结算金额巡检。
 - `migration_20261012_merchant_commerce_reconcile_job.sql`（POST_DEPLOY）：商业化支付主动查单。
-- `migration_20261013_monitor_remaining_jobs.sql`：补登记退款对账兜底、俱乐部带队场次对账（启用）；分润结算、商家结算 T+7 打款、出发前提醒（**默认暂停**，会出款或给用户发消息，须由资金/运营 owner 核对目标环境后在后台「定时任务」页启用）。
+- `migration_20261013_monitor_remaining_jobs.sql`：补登记俱乐部带队场次对账（启用）；退款对账兜底、分润结算、商家结算 T+7 打款、出发前提醒（**默认暂停**，会出款/退款或给用户发消息，须由资金/运营 owner 核对目标环境后在后台「定时任务」页启用）。
 - 以上都只补缺失行，不改已有行的状态与计划（运维可能有意暂停或改过 cron）。
 - 应用启动后 `MonitorJobRegistrationCheck` 自检一次：必需巡检任务缺失 → 告警 `巡检任务未登记`（Redis 固定事件 10 分钟限频）；已登记但暂停 → 只记 WARN（暂停可能是有意的，如结算金额巡检）。
 
