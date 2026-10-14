@@ -1754,9 +1754,10 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         CmsTopic topic = topicMapper.selectCmsTopicById(topicId);
         if (topic == null || Integer.valueOf(2).equals(topic.getDelFlag())) throw new IllegalArgumentException("主题不存在");
         long actId = activityId == null ? 0L : activityId;
-        CmsRegistration current=null;
-        if(newUse) current=com.chengyinhub.business.service.support.CurrentPlayRegistration.require(
-                activityMapper,registrationMapper,memberId,actId>0 ? 2L : 1L,actId>0 ? actId : topicId,null,new Date());
+        List<CmsRegistration> current=null;
+        // 新使用只认当前锁读仍有效的原报名；保留全部有效报名，原「任一成功报名可授权」候选策略不收窄为第一张。
+        if(newUse) current=com.chengyinhub.business.service.support.CurrentPlayRegistration.requireAll(
+                activityMapper,registrationMapper,memberId,actId>0 ? 2L : 1L,actId>0 ? actId : topicId,new Date());
         CmsRegistration probe = new CmsRegistration(); probe.setMemberId(memberId); probe.setRegistrationStatus(2);
         if (actId > 0L) {
             CmsActivity activity = activityMapper.selectCmsActivityById(actId);
@@ -1779,7 +1780,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             }
             if (currentRegistrations.isEmpty()) throw new IllegalStateException("自玩通行证已过期");
         } else currentRegistrations.addAll(rows);
-        if(newUse) { currentRegistrations.clear();currentRegistrations.add(current); }
+        if(newUse) { currentRegistrations.clear();currentRegistrations.addAll(current); }
         boolean hasPublishedRoute = topic.getPublishedConfigVersion() != null
                 && topic.getPublishedConfigVersion() > 0L;
         if (!hasPublishedRoute
