@@ -174,3 +174,17 @@ test('NPC explicit retry preserves original request identity, user bubble and ne
   assert.ok(!chat.data.messages.some(row => row.text === '迟到回答'));
   assert.equal(chat.data.retryAvailable, false);
 });
+
+test('F-R2S-15: a new message restarts the automatic PROCESSING re-poll budget', () => {
+  const requests = [];
+  const chat = createChat({ sendRequest: request => { requests.push(request); return { abort() {} }; } });
+  chat._retryCount = 3; // the previous message already used up its automatic re-polls
+  inputAndSend(chat, '新的问题');
+  assert.equal(chat._retryCount, 0);
+  chat._retryCount = 2;
+  chat.onRetrySend = definition.methods.onRetrySend;
+  requests[0].fail({ errMsg: 'response lost' });
+  chat.onRetrySend();
+  assert.equal(chat._retryCount, 2, 'retrying the same message keeps its used re-poll count');
+  chat.cancelPending();
+});

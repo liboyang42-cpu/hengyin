@@ -624,7 +624,7 @@ Page({
     if (!this._isReadContextCurrent(id, memberId)) return;
     if (this._pendingClear && this._pendingClear.submitting
         && this._isReadContextCurrent(this._pendingClear.conversationId, this._pendingClear.memberId)) return;
-    if (!id) { app.tips && app.tips('无法清空该会话'); return; }
+    if (!id) { app.tips && app.tips('无法隐藏该会话'); return; }
     this._pendingBlock = null;
     this._pendingClear = { conversationId: id, memberId };
     const dc = this.selectComponent && this.selectComponent('#dc');
@@ -753,12 +753,12 @@ Page({
         data: { conversation_id: pending.conversationId },
         success: (res) => {
           if (!current()) return;
-          if (!isBizOk(res)) { failed((res && res.msg) || '清空失败'); return; }
+          if (!isBizOk(res)) { failed((res && res.msg) || '隐藏失败'); return; }
           this._pendingClear = null;
           if (dc) dc.done();
           this._returnAfterClear(pending.conversationId, pending.memberId);
         },
-        fail() { failed('清空失败，请重试'); },
+        fail() { failed('隐藏失败，请重试'); },
       });
       return;
     }
