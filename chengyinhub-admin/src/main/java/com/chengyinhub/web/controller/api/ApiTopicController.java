@@ -307,7 +307,18 @@ public class ApiTopicController extends BaseController {
      *    与前端的取舍一致:锁态只读不清空,不替用户删图。
      */
     private java.util.List<JourneyReviewTexts.Entry> combinedThemeReviewTexts(TopicCreateDTO dto) {
-        java.util.List<JourneyReviewTexts.Entry> entries=JourneyReviewTexts.collectJourneyStory(dto.getJourneyStory());entries.addAll(JourneyReviewTexts.collectThemeRuntime(dto.getThemeRuntimeConfig()));entries.addAll(JourneyReviewTexts.collectChapters(dto.getChapters()));return entries;
+        java.util.List<JourneyReviewTexts.Entry> entries=JourneyReviewTexts.collectJourneyStory(dto.getJourneyStory());entries.addAll(JourneyReviewTexts.collectThemeRuntime(dto.getThemeRuntimeConfig()));entries.addAll(JourneyReviewTexts.collectChapters(dto.getChapters()));
+        // F-L5C-03:简易版免审直发时,完成勋章名、票种文案、念头规则、宾果格子同样直接给玩家看。
+        entries.addAll(JourneyReviewTexts.collectJourneyRules(dto.getJourneyRules()));
+        entries.addAll(JourneyReviewTexts.collectCompletionRule(dto.getCompleteRuleJson()));
+        if (StringUtils.isNotBlank(dto.getFinishMedalName())) entries.add(new JourneyReviewTexts.Entry("finishMedalName", dto.getFinishMedalName().trim()));
+        if (dto.getTickets() != null) for (com.chengyinhub.business.domain.dto.ActivityTicketRequest ticket : dto.getTickets()) {
+            if (ticket == null) continue;
+            String ticketText = IWxContentSecurityService.joinText(ticket.getName(), ticket.getDescription(),
+                    ticket.getMeetingPoint(), ticket.getMeetingPointAddress(), ticket.getRefundRule());
+            if (StringUtils.isNotBlank(ticketText)) entries.add(new JourneyReviewTexts.Entry("tickets[]", ticketText));
+        }
+        return entries;
     }
     private String checkThemeMedalCapability(Long memberId,String raw) { return checkThemeMedalCapability(memberId,raw,null); }
     private String checkThemeMedalCapability(Long memberId, String raw, String previousRaw) {
@@ -898,6 +909,11 @@ public class ApiTopicController extends BaseController {
         }
         if (actorMemberId == null || actorMemberId <= 0) {
             return error("请先登录");
+        }
+        // F-L5C-02:取消原因会展示给全部已付款玩家,写入前送检。
+        String reasonSecMsg = wxContentSecurityService.checkText(reason, resolveOpenid(actorMemberId));
+        if (reasonSecMsg != null) {
+            return error(reasonSecMsg);
         }
         try {
             Long hostMemberId = resolveProjectOwnerMemberId(actorMemberId, scope);

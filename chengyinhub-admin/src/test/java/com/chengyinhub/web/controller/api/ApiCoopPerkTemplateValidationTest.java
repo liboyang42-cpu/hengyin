@@ -37,6 +37,8 @@ class ApiCoopPerkTemplateValidationTest {
                 .thenReturn(new MerchantAccessContext(
                         201L, 11L, 201L, MerchantRoleCode.MERCHANT_OWNER));
         ReflectionTestUtils.setField(controller, "merchantAccessService", accessService);
+        ReflectionTestUtils.setField(controller, "umsMemberService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IUmsMemberService.class));
+        ReflectionTestUtils.setField(controller, "wxContentSecurityService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
     }
 
     @Test

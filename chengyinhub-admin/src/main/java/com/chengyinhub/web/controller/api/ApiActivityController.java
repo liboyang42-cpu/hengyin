@@ -571,6 +571,11 @@ public class ApiActivityController extends BaseController {
         if (memberId == null || memberId <= 0) {
             return error("请先登录");
         }
+        // F-L5C-02:取消原因会展示给全部已报名用户,写入前送检。
+        String reasonSecMsg = wxContentSecurityService.checkText(reason, resolveOpenid(memberId));
+        if (reasonSecMsg != null) {
+            return error(reasonSecMsg);
+        }
         try {
             ActivityCancelResult res;
             if (MerchantOperationScope.isMerchant(scope)) {
@@ -881,6 +886,12 @@ public class ApiActivityController extends BaseController {
             if (lockedChange != null) {
                 return error("活动已售出，" + lockedChange + "不能修改；文字、图片、音频仍可改");
             }
+        }
+        // F-L5C-02:改文案与 /publish 同一道内容安全闸,不能先发干净文本再改成违规内容。
+        String secMsg = wxContentSecurityService.checkText(
+                IWxContentSecurityService.joinText(request.getName(), request.getDescription()), resolveOpenid(memberId));
+        if (secMsg != null) {
+            return error(secMsg);
         }
 
         try {

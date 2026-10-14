@@ -414,6 +414,10 @@ public class ApiCoopController extends BaseController {
         if (body.getId() == null || body.getStatus() == null) return error("缺少参数");
         int target = body.getStatus();
         if (target != 1 && target != 2 && target != 3) return error("操作不合法");
+        // F-L5C-02:拒绝/撤回/取消的理由会发给对方(详情 + 订阅消息),与 /invite 留言同一道闸。
+        String handleRisk = textRisk(memberId, com.chengyinhub.business.service.IWxContentSecurityService.joinText(
+                body.getMessage(), body.getHandleReason()));
+        if (handleRisk != null) return error(handleRisk);
 
         CoopInvite inv = coopInviteService.selectCoopInviteById(body.getId());
         if (inv == null) return error("邀请不存在");
@@ -639,6 +643,10 @@ public class ApiCoopController extends BaseController {
         if (body.getValidEnd() != null && !body.getValidEnd().after(DateUtils.getNowDate())) {
             return error("有效期至少要到明天");
         }
+        // F-L5C-02:权益名称与核销规则会展示给俱乐部与玩家。
+        String perkRisk = textRisk(principalMemberId, com.chengyinhub.business.service.IWxContentSecurityService.joinText(
+                body.getName(), body.getRedeemRule()));
+        if (perkRisk != null) return error(perkRisk);
         body.setId(null);
         body.setMerchantId(memberId);
         Long id = coopInviteService.savePerkTemplate(body);
