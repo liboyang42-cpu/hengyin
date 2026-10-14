@@ -1783,7 +1783,11 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             for (CmsRegistration row : rows) {
                 if (row.getExpiresAt() == null || row.getExpiresAt().after(now)) currentRegistrations.add(row);
             }
-            if (currentRegistrations.isEmpty() && !started) throw new IllegalStateException("自玩通行证已过期");
+            if (currentRegistrations.isEmpty()) {
+                // 已开局的本局(含只读状态)：开局时有效即可打完，沿用原报名作事实；未开局仍按到期拒。
+                if (!started && !(!newUse && routeStarted(memberId,topicId,actId))) throw new IllegalStateException("自玩通行证已过期");
+                currentRegistrations.addAll(rows);
+            }
         } else currentRegistrations.addAll(rows);
         if(newUse) {
             currentRegistrations.clear();
