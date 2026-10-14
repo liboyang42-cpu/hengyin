@@ -1,7 +1,7 @@
 # STATUS — F2_ops_admin
 
-- State: RUNNING (taken over; final test run in progress)
-- Last update (UTC): 2026-10-14T14:28Z
+- State: DONE
+- Last update (UTC): 2026-10-14T14:34Z
 - Work branch: fix/remaining-f2-ops-admin-20261013 (head 68a083f)
 
 ## Done (code on work branch)
@@ -15,3 +15,6 @@ F-W3-05, F-L6-13
 
 ## Not code-fixable here
 F-W3-02, F-W3-07, F-L1-00e, F-L6-12
+
+## Tests
+Full admin Maven suite green except MySQL-backed ITs (no database in this VM); migration gates pass.
