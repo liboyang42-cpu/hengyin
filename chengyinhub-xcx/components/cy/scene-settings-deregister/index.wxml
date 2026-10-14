@@ -1,10 +1,10 @@
 <view class="deregister-scene">
   <view class="deregister-card" wx:if="{{status === 'PENDING'}}">
     <text class="deregister-title">注销申请已提交</text>
-    <text class="deregister-copy">账号功能已冻结。你可以在冷静期结束前撤销申请。</text>
-    <text class="deregister-time">{{executeAfter ? '预计执行时间：' + executeAfter : '执行时间待确认'}}</text>
-    <cy-error wx:if="{{cancelError}}" title="撤销没有完成" sub="{{cancelError}}" retry="重试" bind:retry="cancel" />
-    <cy-btn class="deregister-action" variant="secondary" loading="{{canceling}}" disabled="{{canceling}}" bindtap="cancel">撤销注销申请</cy-btn>
+    <text class="deregister-copy">{{coolingOffEnded ? '冷静期已结束，账号将在随后的凌晨批次中完成注销，已不能撤销。' : '账号功能已冻结。你可以在冷静期结束前撤销申请。'}}</text>
+    <text class="deregister-time">{{executeAfter ? (coolingOffEnded ? '冷静期结束时间：' : '预计执行时间：') + executeAfter : '执行时间待确认'}}</text>
+    <cy-error wx:if="{{cancelError && !coolingOffEnded}}" title="撤销没有完成" sub="{{cancelError}}" retry="重试" bind:retry="cancel" />
+    <cy-btn wx:if="{{!coolingOffEnded}}" class="deregister-action" variant="secondary" loading="{{canceling}}" disabled="{{canceling}}" bindtap="cancel">撤销注销申请</cy-btn>
   </view>
 
   <view class="deregister-card" wx:elif="{{status === 'ELIGIBLE'}}">
@@ -24,6 +24,7 @@
     <text class="deregister-title deregister-title--danger">暂时无法注销</text>
     <text class="deregister-copy">请先处理以下事项：</text>
     <text class="deregister-blocker" wx:for="{{blockers}}" wx:key="*this">· {{item}}</text>
+    <cy-btn class="deregister-action" variant="secondary" bindtap="recheck">我已处理，重新检查</cy-btn>
   </view>
 
   <cy-empty wx:elif="{{status === 'LOGIN_REQUIRED' || status === 'DENIED'}}" kind="no-permission" fill size="lg"

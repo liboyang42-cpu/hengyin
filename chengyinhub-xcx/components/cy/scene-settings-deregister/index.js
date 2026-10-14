@@ -29,6 +29,8 @@ Component({
     sendSms() { return methods.sendSms.call(this); },
     apply() { return methods.apply.call(this); },
     cancel() { return methods.cancel.call(this); },
+    recheck() { return methods.recheck.call(this); },
+    _reconcileApply() { return methods._reconcileApply.call(this); },
     dispose() { return methods.dispose.call(this); },
   },
 });

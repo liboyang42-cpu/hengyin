@@ -81,3 +81,53 @@ test('fresh login failure preserves confirmation and next attempt obtains anothe
   assert.equal(h.page.data.submitting,false); assert.equal(h.page.data.confirmed,true); assert.match(h.page.data.applyError,/微信/);
   h.page.apply(); await settle(); assert.equal(h.logins.length,2); h.logins[1].fail({}); await settle();
 });
+
+// F-R2S-07:注销流程三处恢复缺口。
+async function submitWechat(h) {
+  h.app.recordConsent = async () => {}; h.page.toggleConfirmed({detail:{value:['confirmed']}});
+  h.page.apply(); await settle(); h.logins[0].success({code:'fresh'}); await settle();
+  return h.requests.at(-1);
+}
+test('F-R2S-07 apply response lost: reads back /status and shows PENDING instead of asking to retry', async () => {
+  const h = mount(); precheck(h);
+  const submit = await submitWechat(h); assert.match(submit.url, /\/deregister\/apply$/);
+  submit.fail({errMsg:'request:fail timeout'}); if (submit.complete) submit.complete({}); await settle();
+  const readback = h.requests.at(-1); assert.match(readback.url, /\/deregister\/status$/);
+  reply(readback, 200, {code:200, data:{status:'PENDING', executeAfter: Date.now() + 86400000}}); await settle();
+  assert.equal(h.page.data.status, 'PENDING'); assert.equal(h.page.data.applyError, '');
+  assert.equal(h.page.data.coolingOffEnded, false);
+});
+test('F-R2S-07 apply failure that did not take effect keeps the form and the visible error', async () => {
+  const h = mount(); precheck(h);
+  const submit = await submitWechat(h);
+  reply(submit, 502, {msg:'bad gateway'}); await settle();
+  const readback = h.requests.at(-1); assert.match(readback.url, /\/deregister\/status$/);
+  reply(readback, 200, {code:200, data:{status:'NORMAL'}}); await settle();
+  assert.equal(h.page.data.status, 'ELIGIBLE'); assert.equal(h.page.data.confirmed, true);
+  assert.match(h.page.data.applyError, /服务暂时不可用/);
+});
+test('F-R2S-07 BLOCKED card offers an in-place recheck', () => {
+  const h = mount(); h.def.lifetimes.attached.call(h.page);
+  reply(h.requests[0],200,{code:200,data:{status:'NORMAL'}});
+  reply(h.requests[1],200,{code:200,data:{status:'BLOCKED',blockers:['存在待支付或未核销的有效报名']}});
+  assert.equal(h.page.data.status, 'BLOCKED');
+  h.page.recheck(); assert.match(h.requests.at(-1).url, /\/deregister\/status$/);
+  reply(h.requests.at(-1),200,{code:200,data:{status:'NORMAL'}});
+  reply(h.requests.at(-1),200,{code:200,data:{status:'ELIGIBLE',blockers:[],verificationMethod:'SMS'}});
+  assert.equal(h.page.data.status, 'ELIGIBLE');
+  const wxml = fs.readFileSync(path.join(root, 'components/cy/scene-settings-deregister/index.wxml'), 'utf8');
+  assert.match(wxml, /bindtap="recheck">我已处理，重新检查</);
+});
+test('F-R2S-07 after cooling-off ends the cancel action is hidden and not callable', () => {
+  const h = mount(); h.def.lifetimes.attached.call(h.page);
+  reply(h.requests[0],200,{code:200,data:{status:'PENDING', executeAfter: Date.now() - 60000}});
+  assert.equal(h.page.data.status, 'PENDING'); assert.equal(h.page.data.coolingOffEnded, true);
+  let modals = 0; h.page.data.canceling = false;
+  const before = h.requests.length; const realShow = require('../../utils/modal.js').show;
+  require('../../utils/modal.js').show = () => { modals++; };
+  try { h.page.cancel(); } finally { require('../../utils/modal.js').show = realShow; }
+  assert.equal(modals, 0); assert.equal(h.requests.length, before);
+  const wxml = fs.readFileSync(path.join(root, 'components/cy/scene-settings-deregister/index.wxml'), 'utf8');
+  assert.match(wxml, /<cy-btn wx:if="\{\{!coolingOffEnded\}\}"[^>]*bindtap="cancel">撤销注销申请/);
+  assert.match(wxml, /冷静期已结束，账号将在随后的凌晨批次中完成注销/);
+});
