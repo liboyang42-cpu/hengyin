@@ -748,6 +748,14 @@
       "npc_chat_request_20260722",
       "20261012_app_media_asset",
       "20261012_app_media_asset_namespaces"
+    ],
+    "20261013_monitor_remaining_jobs": [
+      "club_session_reconciliation_job_20260807",
+      "activity_designer_commission",
+      "coop_deadline_sysjob",
+      "c3_beforestart_job",
+      "sys_job_enable_paused_20260915",
+      "20261012_monitor_missing_jobs"
     ]
   }
 }
