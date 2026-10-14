@@ -21,12 +21,13 @@ class ApiPlayCurrentUseBoundaryTest {
     private CmsRegistration original,current;
     private CmsRegistrationMapper registrations;
     private IPlayerNodeProgressService progress;
+    private ITopicRouteRuntimeService routes;
     @BeforeEach void setup() {
         controller=spy(new ApiPlayProgressController());doReturn(7L).when(controller).getAppUserId();
         CmsActivityMapper activities=mock(CmsActivityMapper.class);registrations=mock(CmsRegistrationMapper.class);
         ICmsActivityService activityService=mock(ICmsActivityService.class);
         ICmsTopicNodeService nodes=mock(ICmsTopicNodeService.class);ICmsTopicService topics=mock(ICmsTopicService.class);
-        progress=mock(IPlayerNodeProgressService.class);ITopicRouteRuntimeService routes=mock(ITopicRouteRuntimeService.class);
+        progress=mock(IPlayerNodeProgressService.class);routes=mock(ITopicRouteRuntimeService.class);
         activity=new CmsActivity();activity.setId(9L);activity.setTopicId(29L);
         activity.setStartDate(new Date(0L));activity.setEndDate(new Date(System.currentTimeMillis()+86400000L));
         when(activities.selectCmsActivityByIdForUpdate(9L)).thenReturn(activity);
@@ -69,7 +70,7 @@ class ApiPlayCurrentUseBoundaryTest {
         verify(registrations).selectCmsRegistrationByIdForUpdate(19L);
     }
 
-    // 2026-10-14 用户已定：自玩通行证在本局内有效。普通线性路线没有路线局，以本人在该主题自玩下的节点进度判定已开局。
+    // 2026-10-14 用户已定：自玩通行证在本局内有效。已开局由路线运行时判定(含不建局的普通线性路线)。
     private void expiredSelfPlayPass() {
         current=new CmsRegistration();current.setId(19L);current.setMemberId(7L);current.setOwnerType(1L);current.setOwnerId(29L);
         current.setRegistrationStatus(2);current.setPaymentStatus(0);current.setPurchaseKind(2);current.setExpiresAt(new Date(1000L));
@@ -78,12 +79,12 @@ class ApiPlayCurrentUseBoundaryTest {
     private AjaxResult selfPlayAnswer() { return controller.answer(null,"39","answer","29"); }
     @Test void expiredSelfPlayPassStillFinishesARouteAlreadyStarted() {
         expiredSelfPlayPass();
-        when(progress.selectPlayerNodeProgressList(any())).thenReturn(Collections.singletonList(new PlayerNodeProgress()));
-        assertEquals("该节点未配置答题",selfPlayAnswer().get("msg"),"已开局(已有本主题自玩进度)：中途到期仍可打完");
+        when(routes.hasRunningSession(7L,29L,0L)).thenReturn(true);
+        assertEquals("该节点未配置答题",selfPlayAnswer().get("msg"),"已开局：中途到期仍可打完");
     }
     @Test void expiredSelfPlayPassCannotStartANewRoute() {
         expiredSelfPlayPass();
-        when(progress.selectPlayerNodeProgressList(any())).thenReturn(Collections.emptyList());
+        when(routes.hasRunningSession(7L,29L,0L)).thenReturn(false);
         AjaxResult result=selfPlayAnswer();
         assertEquals(402,result.get("code"),"未开局：到期后不能新开局，仍回购票态 402");
     }
