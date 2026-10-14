@@ -883,8 +883,19 @@ class JourneyFullFlowMySqlIT {
 
         @Override
         public TopicRouteAction selectActionByAction(Long sessionId, Long memberId, String actionId) {
-            TopicRouteAction row = real.selectActionByAction(sessionId, memberId, actionId);
-            if (armed && watchedActionId.equals(actionId) && row == null) {
+            return real.selectActionByAction(sessionId, memberId, actionId);
+        }
+
+        /*
+         * 2026-10-14 集成:C 包 settle 开头先做 activity→registration 当前锁读(FOR UPDATE)。若仍停在
+         * 「读到空动作」处,后到者已握报名行锁,先到者被挡 ⇒ 交错不可能出现(只剩握手超时)。改停在本事务
+         * 第一次一致性读(找局,无锁):RR 快照由此固定,先到者提交后后到者再拿锁,其普通读仍读不到先到者的
+         * settle 动作 —— 与原设计同一个「双方都认为还没有 settle」的并发窗口,断言不变。
+         */
+        @Override
+        public List<TopicRouteSession> selectMemberTopicSessions(Long memberId, Long topicId) {
+            List<TopicRouteSession> rows = real.selectMemberTopicSessions(memberId, topicId);
+            if (armed) {
                 armed = false;
                 readEmpty.countDown();
                 try {
@@ -894,7 +905,7 @@ class JourneyFullFlowMySqlIT {
                     throw new IllegalStateException(e);
                 }
             }
-            return row;
+            return rows;
         }
 
         @Override
@@ -914,12 +925,6 @@ class JourneyFullFlowMySqlIT {
         public TopicRouteSession selectByOwner(Long activityId, Long topicId, Long memberId, String playInstanceId) {
             return real.selectByOwner(activityId, topicId, memberId, playInstanceId);
         }
-
-        @Override
-        public List<TopicRouteSession> selectMemberTopicSessions(Long memberId, Long topicId) {
-            return real.selectMemberTopicSessions(memberId, topicId);
-        }
-
 
         @Override
         public TopicRouteSession selectAccessibleById(Long id, Long memberId) {
