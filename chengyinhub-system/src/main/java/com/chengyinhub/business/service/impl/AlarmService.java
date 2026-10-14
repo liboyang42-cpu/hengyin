@@ -60,6 +60,11 @@ public class AlarmService {
     @Autowired
     private RedisCache redisCache;
 
+    /** Redis 租约不可用时的进程内兜底限频:同一事件 10 分钟只尝试一次(event 键为固定集合,不会无限增长)。 */
+    private static final long LOCAL_THROTTLE_MS = 600_000L;
+    private final java.util.concurrent.ConcurrentHashMap<String, Long> localAttempts =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
     public AlarmService() {
         // transport 在 @PostConstruct 中根据注入的 timeout 配置创建
     }
@@ -112,13 +117,30 @@ public class AlarmService {
                 return;
             }
             if (claimed == null) {
-                log.warn("[ALARM] Attempt lease unknown event={}; falling back to delivery", event);
+                log.warn("[ALARM] Attempt lease unknown event={}; falling back to local throttle", event);
+                if (!claimLocally(event)) return;
             }
         } catch (Exception failure) {
-            log.warn("[ALARM] Attempt lease failed event={} type={}; falling back to delivery",
+            // Redis 故障时 runtime.redis.* / 5xx 事件会在每个请求上触发:不能退化为「每次都投递」,
+            // 否则请求线程排队等 webhook 超时、告警群被刷屏。改用进程内限频,每个实例每事件 10 分钟最多一次。
+            log.warn("[ALARM] Attempt lease failed event={} type={}; falling back to local throttle",
                     event, failure.getClass().getSimpleName());
+            if (!claimLocally(event)) return;
         }
         alarm(title, detail);
+    }
+
+    /** @return true = 本实例在窗口内首次尝试该事件 */
+    boolean claimLocally(String event) {
+        long now = System.currentTimeMillis();
+        boolean[] claimed = {false};
+        localAttempts.compute(event, (key, last) -> {
+            if (last != null && now - last < LOCAL_THROTTLE_MS) return last;
+            claimed[0] = true;
+            return now;
+        });
+        if (!claimed[0]) log.debug("[ALARM] Attempt locally rate limited event={}", event);
+        return claimed[0];
     }
 
     AlarmDelivery deliver(String title, String detail) {
