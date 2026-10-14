@@ -235,7 +235,12 @@
       "4f2f61d",
       "e4f3fda",
       "ef489d8",
-      "c1fdd20"
+      "c1fdd20",
+      "d6b5bc1",
+      "56f008d",
+      "d93e329",
+      "eacc458",
+      "7f4f582"
     ]
   },
   "finalGreenHead": {
@@ -285,5 +290,48 @@
       "commit": "d54cf2d",
       "pendingDecision": "B history rewrite or squash merge"
     }
+  },
+  "devtoolsE2e": {
+    "date": "2026-10-14",
+    "backendJarCommit": "eacc458",
+    "database": "cy_e2e_mfabc (test VPS container, 372 tables, quartz paused)",
+    "redisDb": 9,
+    "client": "WeChat DevTools automation on a throwaway copy with API_BASE_URL hard-wired to the local test relay",
+    "member": 990005,
+    "steps": [
+      {
+        "step": "T1 valid pass, play page",
+        "result": "2 nodes"
+      },
+      {
+        "step": "T1 arrive node1",
+        "result": "200"
+      },
+      {
+        "step": "expire both passes",
+        "result": "done"
+      },
+      {
+        "step": "T1 arrive node2 (started)",
+        "result": "200"
+      },
+      {
+        "step": "T1 play page after expiry",
+        "result": "2 nodes"
+      },
+      {
+        "step": "T2 play page after expiry (not started)",
+        "result": "needPass"
+      },
+      {
+        "step": "T2 arrive node1",
+        "result": "402"
+      }
+    ],
+    "readback": {
+      "player_node_progress": "970001:972001:1,970001:972002:1",
+      "topic_route_session": null
+    },
+    "note": "first DevTools launch before the copy was hard-wired may have sent start-up requests to the production API"
   }
 }

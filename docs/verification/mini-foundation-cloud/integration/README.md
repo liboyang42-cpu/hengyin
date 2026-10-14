@@ -64,6 +64,27 @@
 - `cd770ce` CI：除 gitleaks（历史）外全部作业通过：Backend（10018/0/0、点名真库 IT 96/0/0、原子迁移 41）、Mini program static checks（单测 8252/0、lint:ui、xcx-check 全过）、迁移安全、迁移布局、SBOM、Admin UI、Fast gates。
 - Gitleaks：完整历史分支因 B 的 `d54cf2d` 必红；另建**单提交 squash 分支** `claude/mini-foundation-abc-integration-squash-20261014`（交接分支 + 与本分支同一棵树的一个提交），历史扫描无命中，作为可合入候选；本完整历史分支保留为审计轨迹。
 
+## 3d. 微信开发者工具端到端（2026-10-14，用户「用小程序测」）
+
+- 后端：测试 VPS 上本人容器（MySQL 8.0.45 / Redis 7 DB 9，库 `cy_e2e_mfabc` 全量建表 372 张、10 个 Quartz 任务全部暂停），jar 由 `eacc458` 构建；无微信支付证书，不能支付。
+- 前端：小程序**临时副本**，`utils/config.js` 的 `API_BASE_URL` 硬改为本机 TLS 中继 `https://127.0.0.1:18461`（仅转发到 VPS 容器内 8099）；开发者工具不读 `ext.json`，未改副本时会回落生产。脚本每次先核对 `siteBaseUrl` 与测试会员，不符即中止。
+- 身份：开发者工具真实 `wx.login`，测试库生成会员 990005（player 角色）。测试库补了微信登录所需两条 `sys_config`（仅测试库）。
+- 场景（自玩通行证在本局内有效）：两条线性主题 T1/T2、两张自玩通行证。
+
+| 步骤 | 结果 |
+|---|---|
+| T1 通行证有效，打开玩法页 | 2 个节点 |
+| T1 打卡第 1 站 | 200 已到达 |
+| 两张通行证改为已过期 | — |
+| T1 打卡第 2 站（已开局） | **200 已到达**（修补前依次被控制器 402、`requireScope` 500、`completeGate` 500、路线状态只读 500 拦下） |
+| T1 过期后重开玩法页 | 2 个节点照常下发 |
+| T2 过期后打开玩法页（未开局） | needPass「请先购买自玩通行证」 |
+| T2 打卡第 1 站 | 402 当前自玩资格已失效 |
+| 独立连接回读 `player_node_progress` | `970001:972001:1, 970001:972002:1`，T2 无记录 |
+
+- 根因：普通线性路线不建路线局，原「已开局」只认路线局。修补（`d6b5bc1`、`56f008d`、`d93e329`、`eacc458`、`7f4f582`）：路线运行时 `routeStarted` 统一判定——有进行中的局；或无任何局时本人默认实例已有节点进度；已结束的局不算。控制器打卡/节点列表/重复扫码回读、`requireScope`（含只读状态）、`completeGate` 与站内玩法读取/开局均按此放行，未开局仍按到期拒。
+- 注意：首次打开开发者工具（副本尚未硬改地址时）启动请求可能到达过生产 API（缓存的生产会员身份），发现后即关闭项目；此后全部请求只到测试中继。
+
 ## 4. 需要复核的集成者改动（断言审计）
 
 `git diff b39cd30..HEAD` 中被删除的含 `assert/verify` 的测试行共 4 处：
@@ -79,10 +100,10 @@
 
 ## 5. 剩余断点（不得宣称整项完成）
 
-1. **已按用户决定处理（2026-10-14）**：自玩通行证在本局内有效——已开局（高级玩法 `act`、已有局的 `completeGate`、有进行中路线局时的路线推进与节点打卡）通行证中途到期仍可打完；到期后不能新开局；退款/归属变化/非成功报名仍拒；活动场次与探索票仍按活动结束即止。原三组「C 设计与旧断言冲突」用例按此改写（意图不变，见提交 `e4f3fda` 说明）：CompletionTruth 改为「订单 mapper 只允许资格读」等；CouponNotIssuable 改走原来源交付；JourneyFullFlow 握手点移到首次一致性读，断言不变。注意：玩法进度控制器对「有进行中路线局」的放行比交接基线宽（基线每次打卡都要求未到期通行证），这是本次决定的直接结果。
+1. **已按用户决定处理（2026-10-14）**：自玩通行证在本局内有效——已开局（高级玩法 `act`、`completeGate`、路线推进与节点打卡、节点列表；普通线性路线以本人节点进度判定已开局，见 3d）通行证中途到期仍可打完；到期后不能新开局；退款/归属变化/非成功报名仍拒；活动场次与探索票仍按活动结束即止。原三组「C 设计与旧断言冲突」用例按此改写（意图不变，见提交 `e4f3fda` 说明）：CompletionTruth 改为「订单 mapper 只允许资格读」等；CouponNotIssuable 改走原来源交付；JourneyFullFlow 握手点移到首次一致性读，断言不变。注意：玩法进度控制器对「有进行中路线局」的放行比交接基线宽（基线每次打卡都要求未到期通行证），这是本次决定的直接结果。
 2. **Gitleaks 历史扫描**：B 提交 `d54cf2d` 的红日志含 6 个随机测试 `clientMessageId`（非密钥，后续提交已脱敏，HEAD 树无命中），但 CI 按 `origin/master..HEAD` 扫历史必红；需 B 改写自身历史或合入时 squash，集成者未强推、未加白名单。
 3. **`lint:ui`**：唯一剩余项 `im/list/index.js:352` 动态 setData 未登记，交接基线即如此（基线 CI 9/10 的失败门）；未擅自扩棘轮。
 4. **免费自玩真库证明缺失**：`FreeSelfPlayCreateRealDbIT` 的 schema 夹具早于 0930/1004 等迁移（交接基线 mapper 已读 `first_successful_scan_at`、`theme_runtime_config_json`），与 A 改动无关但未能运行；免费资格仅有单测证据（`CurrentPlayRegistrationTest` 11/11 含 payment=0、`ApiPlayCurrentUseBoundaryTest` 4/4、`ApiPlayRunSessionControllerTest` 4/4）。
 5. **既有间歇失败（交接基线已存在，未改）**：`action-ledger.test.js` 在小程序目录内建临时 `.action-ledger-history-*` 目录，与并行运行的 `skeleton-host-flex-contract.test.js` 全目录 WXML 扫描竞态，偶发 ENOENT（集成 CI 末轮出现一次）。
 6. **观察**：`ApiRoamController` 第 177 行对 Map 中 `foundAt` 的 `(Date)` 强转为交接基线既有代码，与第 2 节 #8 同类风险，未改。`RoamRewardDeliveryService` 对无意图旧掉落且券已停发时记 `SKIPPED_DISABLED`（不发券，仅标签与 UNKNOWN 不同）。
-7. **未验**：真实双方身份、微信支付/渠道回调与 UNKNOWN、AI provider、微信开发者工具与真机、生产 DDL、Quartz 启用、上传微信。测试 VPS 隧道期间多次中断，均重试后取得结果；VPS 内存紧张（约 600MB 可用），本人容器加硬上限，未影响他人容器。
+7. **未验**：真实双方身份、微信支付/渠道回调与 UNKNOWN、AI provider、真机（开发者工具仅验了 3d 的自玩通行证链路）、生产 DDL、Quartz 启用、上传微信。测试 VPS 隧道期间多次中断，均重试后取得结果；VPS 内存紧张（约 600MB 可用），本人容器加硬上限，未影响他人容器。
