@@ -79,7 +79,7 @@ public class SysConfigController extends BaseController
         return success(configService.selectConfigByKey(configKey));
     }
 
-    static boolean sensitiveKey(String key) {
+    public static boolean sensitiveKey(String key) {
         String normalized = key == null ? "" : key.toLowerCase(java.util.Locale.ROOT);
         return normalized.contains("secret") || normalized.contains("token")
                 || normalized.contains("password") || normalized.contains("privatekey")
