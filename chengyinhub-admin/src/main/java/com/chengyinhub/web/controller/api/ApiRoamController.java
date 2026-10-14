@@ -610,13 +610,16 @@ public class ApiRoamController extends BaseController {
         if (memberId <= 0) return error("请先登录");
         if (visible == null) return error("请选择是否公开");
         Long sid = Convert.toLong(sessionId, 0L);
+        if (visible) {
+            if (!"roam-presence-v1".equals(consentVersion)) return error("请先单独同意附近的人位置分享");
+            // 位置分享建立在漫游定位同意之上:撤回漫游定位后不能再单独打开对他人的展示。
+            // 会员互斥锁先于偏好事实锁,与 RoamLocationConsentService 的加锁顺序一致。
+            locationConsent.requireCurrentAgreement(memberId);
+        }
         presenceRevokeAuditService.lockPreference(memberId);
         String requestId = "presence-" + java.util.UUID.randomUUID();
         Date occurredAt = new Date();
         if (visible) {
-            if (!"roam-presence-v1".equals(consentVersion)) return error("请先单独同意附近的人位置分享");
-            // 位置分享建立在漫游定位同意之上:撤回漫游定位后不能再单独打开对他人的展示。
-            locationConsent.requireCurrentAgreement(memberId);
             RoamSession own = roamMapper.selectOwnedSessionForUpdate(sid, memberId);
             if (own == null || !Integer.valueOf(0).equals(own.getStatus())) return error("请先开始漫游");
         }
