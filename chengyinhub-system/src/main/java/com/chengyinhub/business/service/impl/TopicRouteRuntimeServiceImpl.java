@@ -1756,8 +1756,12 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         long actId = activityId == null ? 0L : activityId;
         List<CmsRegistration> current=null;
         // 新使用只认当前锁读仍有效的原报名；保留全部有效报名，原「任一成功报名可授权」候选策略不收窄为第一张。
-        if(newUse) current=com.chengyinhub.business.service.support.CurrentPlayRegistration.requireAll(
-                activityMapper,registrationMapper,memberId,actId>0 ? 2L : 1L,actId>0 ? actId : topicId,new Date());
+        if(newUse) current=runningSession(memberId,topicId,actId)!=null
+                // 已开局的路线：自玩通行证开局时有效即可打完本局；活动场次/探索票仍按活动结束等原规则。
+                ? com.chengyinhub.business.service.support.CurrentPlayRegistration.requireAllToContinue(
+                        activityMapper,registrationMapper,memberId,actId>0 ? 2L : 1L,actId>0 ? actId : topicId,new Date())
+                : com.chengyinhub.business.service.support.CurrentPlayRegistration.requireAll(
+                        activityMapper,registrationMapper,memberId,actId>0 ? 2L : 1L,actId>0 ? actId : topicId,new Date());
         CmsRegistration probe = new CmsRegistration(); probe.setMemberId(memberId); probe.setRegistrationStatus(2);
         if (actId > 0L) {
             CmsActivity activity = activityMapper.selectCmsActivityById(actId);
@@ -2775,6 +2779,18 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             arrangement.put("asOf",clock.millis());
         }
         return JSON.convertValue(card,new TypeReference<Map<String,Object>>(){});
+    }
+
+    @Override
+    public boolean hasRunningSession(Long memberId, Long topicId, Long activityId) {
+        return memberId != null && topicId != null && runningSession(memberId, topicId, activityId == null ? 0L : activityId) != null;
+    }
+
+    private TopicRouteSession runningSession(Long member, Long topic, long activity) {
+        TopicRouteSession session = currentSession(member, topic, activity);
+        if (session == null || !member.equals(session.getMemberId())) return null;
+        return session.getStatus() == null || Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus())
+                ? session : null;
     }
 
     private TopicRouteSession currentSession(Long member, Long topic, Long activity) {

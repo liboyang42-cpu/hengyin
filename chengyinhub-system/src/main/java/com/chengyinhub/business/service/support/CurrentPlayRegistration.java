@@ -17,15 +17,28 @@ public final class CurrentPlayRegistration {
     }
     public static CmsRegistration require(CmsActivityMapper activities,CmsRegistrationMapper registrations,
             Long memberId,long ownerType,Long ownerId,Long requestedId,Date now,boolean originallyRequiresPaid) {
-        return collect(activities,registrations,memberId,ownerType,ownerId,requestedId,now,originallyRequiresPaid,true).get(0);
+        return collect(activities,registrations,memberId,ownerType,ownerId,requestedId,now,originallyRequiresPaid,true,false).get(0);
+    }
+    /**
+     * 继续已开局的玩法：自玩通行证在本局有效期内开局后，本局可打完(不因通行证中途到期打断)。
+     * 退款/归属变化/非成功报名仍拒绝；活动场次与探索票照原规则(活动结束即止)。
+     */
+    public static CmsRegistration requireToContinue(CmsActivityMapper activities,CmsRegistrationMapper registrations,
+            Long memberId,long ownerType,Long ownerId,Long requestedId,Date now) {
+        return collect(activities,registrations,memberId,ownerType,ownerId,requestedId,now,false,true,true).get(0);
+    }
+    public static List<CmsRegistration> requireAllToContinue(CmsActivityMapper activities,CmsRegistrationMapper registrations,
+            Long memberId,long ownerType,Long ownerId,Date now) {
+        return collect(activities,registrations,memberId,ownerType,ownerId,null,now,false,false,true);
     }
     /** 全部当前仍可用的原报名(逐行同一锁读规则)；多票/多报名原「任一成功报名可授权」的链用它，不只取第一张。 */
     public static List<CmsRegistration> requireAll(CmsActivityMapper activities,CmsRegistrationMapper registrations,
             Long memberId,long ownerType,Long ownerId,Date now) {
-        return collect(activities,registrations,memberId,ownerType,ownerId,null,now,false,false);
+        return collect(activities,registrations,memberId,ownerType,ownerId,null,now,false,false,false);
     }
     private static List<CmsRegistration> collect(CmsActivityMapper activities,CmsRegistrationMapper registrations,
-            Long memberId,long ownerType,Long ownerId,Long requestedId,Date now,boolean originallyRequiresPaid,boolean firstOnly) {
+            Long memberId,long ownerType,Long ownerId,Long requestedId,Date now,boolean originallyRequiresPaid,boolean firstOnly,
+            boolean continuing) {
         List<CmsRegistration> valid=new ArrayList<>();
         CmsActivity activity=null;
         if(ownerType==2L) {
@@ -47,7 +60,7 @@ public final class CurrentPlayRegistration {
             // 普通/免费报名沿用原status+owner资格；只有原本以支付状态为真源的链和原pk3订单要求已付。
             if((originallyRequiresPaid || Integer.valueOf(3).equals(current.getPurchaseKind()))
                     && !Integer.valueOf(2).equals(current.getPaymentStatus())) continue;
-            if(ownerType==1L && current.getExpiresAt()!=null && !current.getExpiresAt().after(now)) continue;
+            if(ownerType==1L && !continuing && current.getExpiresAt()!=null && !current.getExpiresAt().after(now)) continue;
             String deny=ExploreTicketUsePolicy.rejection(current.getPurchaseKind(),activity==null?null:activity.getEndDate(),now);
             if(deny!=null) throw new IllegalStateException(deny);
             valid.add(current);

@@ -274,7 +274,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (replay != null) return replay(replay, memberId, sessionId);
 
 
-        com.chengyinhub.business.service.support.CurrentPlayRegistration.require(activityMapper,registrationMapper,
+        // 已开局：自玩通行证在开局时有效即可打完本局；活动场次/探索票仍按活动结束等原规则。
+        com.chengyinhub.business.service.support.CurrentPlayRegistration.requireToContinue(activityMapper,registrationMapper,
                 memberId,session.getActivityId()!=null && session.getActivityId()>0 ? 2L : 1L,
                 session.getActivityId()!=null && session.getActivityId()>0 ? session.getActivityId() : session.getTopicId(),null,clock.now());
         requireActivityWindow(session.getActivityId(), session.getTopicId());
@@ -612,8 +613,14 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         CmsTopicNode node = nodeMapper.selectCmsTopicNodeById(nodeId);
         if (node == null || !topicId.equals(node.getTopicId())) return null;
         long actId = activityId == null ? 0L : activityId;
-        com.chengyinhub.business.service.support.CurrentPlayRegistration.require(activityMapper,registrationMapper,
-                memberId,actId>0 ? 2L : 1L,actId>0 ? actId : topicId,null,clock.now());
+        // 已有本局 = 继续打完(自玩通行证中途到期不打断)；尚未开局按新使用校验。
+        if (existingSession(memberId, actId, topicId, nodeId) != null) {
+            com.chengyinhub.business.service.support.CurrentPlayRegistration.requireToContinue(activityMapper,registrationMapper,
+                    memberId,actId>0 ? 2L : 1L,actId>0 ? actId : topicId,null,clock.now());
+        } else {
+            com.chengyinhub.business.service.support.CurrentPlayRegistration.require(activityMapper,registrationMapper,
+                    memberId,actId>0 ? 2L : 1L,actId>0 ? actId : topicId,null,clock.now());
+        }
         requireActivityWindow(actId, topicId);
         if (gameSessionRuntimeService != null) gameSessionRuntimeService.assertRoutePlayable(actId, nodeId);
         requireRouteNodeAccess(memberId, actId, topicId, nodeId);

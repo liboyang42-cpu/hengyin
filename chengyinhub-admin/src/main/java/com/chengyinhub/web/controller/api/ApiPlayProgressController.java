@@ -2669,8 +2669,13 @@ public class ApiPlayProgressController extends BaseController
         try { tId = Long.valueOf(topicId); } catch (Exception e) { c.error = error("参数有误"); return c; }
         if (node.getTopicId() == null || !node.getTopicId().equals(tId)) { c.error = error("该节点不属于本主题"); return c; }
         CmsRegistration pass;
-        try { pass=com.chengyinhub.business.service.support.CurrentPlayRegistration.require(
-                currentPlayActivityMapper,cmsRegistrationMapper,memberId,1L,tId,registrationId,new Date()); }
+        // 已开局的自玩路线：通行证开局时有效即可打完本局(中途到期不打断)；未开局仍需有效通行证。
+        boolean continuing = topicRouteRuntimeService != null && topicRouteRuntimeService.hasRunningSession(memberId, tId, 0L);
+        try { pass = continuing
+                ? com.chengyinhub.business.service.support.CurrentPlayRegistration.requireToContinue(
+                        currentPlayActivityMapper,cmsRegistrationMapper,memberId,1L,tId,registrationId,new Date())
+                : com.chengyinhub.business.service.support.CurrentPlayRegistration.require(
+                        currentPlayActivityMapper,cmsRegistrationMapper,memberId,1L,tId,registrationId,new Date()); }
         catch(IllegalStateException denied) { c.error=new AjaxResult(402,denied.getMessage());return c; }
         if (pass == null) { c.error = new AjaxResult(402, "请先购买自玩通行证"); return c; }
         c.registration = pass;

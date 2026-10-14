@@ -177,6 +177,29 @@ class AdvancedGameRuntimeServiceImplTest {
         verify(attemptMapper).insertPlayAttemptLog(any());
     }
 
+    /** 2026-10-14 用户已定：自玩通行证在本局内有效 —— 开局后中途到期可打完本局，到期后不能新开局。 */
+    @Test
+    void expiredSelfPlayPassCanFinishRunningSessionButCannotStartNewOne() {
+        CmsRegistration pass = new CmsRegistration();
+        pass.setId(777L); pass.setMemberId(MEMBER_ID); pass.setOwnerType(1L); pass.setOwnerId(TOPIC_ID);
+        pass.setRegistrationStatus(2); pass.setPaymentStatus(0); pass.setPurchaseKind(2);
+        pass.setExpiresAt(new Date(NOW - 1));
+        when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class))).thenReturn(Collections.singletonList(pass));
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(777L)).thenReturn(pass);
+
+        GameRuntimeSession session = runningSession(randomOnlyConfig(), "{\"draws\":[]}");
+        session.setActivityId(0L);
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        when(attemptMapper.selectByIdempotencyKey("draw-expired-pass")).thenReturn(null);
+        Map<String, Object> state = service.act(MEMBER_ID, 51L, 0, "draw-expired-pass", "DRAW", Collections.emptyMap());
+        assertEquals(1, ((java.util.List<?>) state.get("draws")).size(), "已开局：通行证中途到期仍可打完本局");
+
+        IllegalStateException fresh = assertThrows(IllegalStateException.class,
+                () -> service.start(MEMBER_ID, 0L, TOPIC_ID, NODE_ID, null));
+        assertEquals("当前自玩资格已失效", fresh.getMessage(), "到期后不能新开局");
+    }
+
     // ==================== M1 回执自带新世界 ====================
 
     @Test

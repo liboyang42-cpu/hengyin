@@ -80,4 +80,34 @@ class CurrentPlayRegistrationTest {
                 activities,registrations,7L,2L,9L,null,now,true));
     }
 
+
+    // ===== 2026-10-14 用户已定：通行证在本局内有效 —— 开局时有效即可打完本局；新开局仍需有效通行证 =====
+    private CmsRegistration selfPlayPass(Date expiresAt) {
+        CmsRegistration pass=new CmsRegistration();pass.setId(29L);pass.setMemberId(7L);pass.setOwnerType(1L);pass.setOwnerId(30L);
+        pass.setRegistrationStatus(2);pass.setPaymentStatus(0);pass.setPurchaseKind(2);pass.setExpiresAt(expiresAt);
+        when(registrations.selectCmsRegistrationList(any())).thenReturn(Arrays.asList(pass));
+        when(registrations.selectCmsRegistrationByIdForUpdate(29L)).thenReturn(pass);
+        return pass;
+    }
+    @Test void selfPlayPassExpiredMidSessionCanFinishButCannotStartNewSession() {
+        CmsRegistration pass=selfPlayPass(new Date(9000L)); // 已到期(now=10000)
+        IllegalStateException start=assertThrows(IllegalStateException.class,
+                ()->CurrentPlayRegistration.require(activities,registrations,7L,1L,30L,null,now));
+        assertEquals("当前自玩资格已失效",start.getMessage());
+        assertSame(pass,CurrentPlayRegistration.requireToContinue(activities,registrations,7L,1L,30L,null,now));
+        assertEquals(Arrays.asList(pass),CurrentPlayRegistration.requireAllToContinue(activities,registrations,7L,1L,30L,now));
+    }
+    @Test void continuingSessionStillRejectsCancelledOrTransferredPass() {
+        CmsRegistration pass=selfPlayPass(new Date(9000L));
+        pass.setRegistrationStatus(3);
+        assertThrows(IllegalStateException.class,()->CurrentPlayRegistration.requireToContinue(activities,registrations,7L,1L,30L,null,now));
+        pass.setRegistrationStatus(2);pass.setMemberId(8L);
+        assertThrows(IllegalStateException.class,()->CurrentPlayRegistration.requireToContinue(activities,registrations,7L,1L,30L,null,now));
+    }
+    @Test void exploreTicketStillStopsAtActivityEndEvenWhenContinuing() {
+        activity.setEndDate(new Date(9000L)); // 活动已结束：探索票按已定规则不再新使用
+        assertThrows(IllegalStateException.class,()->CurrentPlayRegistration.requireToContinue(activities,registrations,7L,2L,9L,null,now));
+        activity.setEndDate(new Date(11000L));
+        assertSame(current,CurrentPlayRegistration.requireToContinue(activities,registrations,7L,2L,9L,null,now));
+    }
 }
