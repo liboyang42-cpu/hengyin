@@ -34,17 +34,31 @@ const STATUS = Object.freeze({
 });
 const warnedUnconfigured = Object.create(null);
 
-// 纯:keys → 已配置模板 ID 列表(过滤未配置的 key),并截取前 3。
-// 微信 requestSubscribeMessage 单次最多 3 个模板,超出会整体失败(整条订阅链路失效);
-// 调用方按重要性排序 keys,这里取前 3 保证授权弹窗至少能弹出。抽为纯函数便于单测。
+// 未知业务 key 不得命中 Object.prototype 的继承成员。
+function configuredTemplateId(key) {
+  return Object.prototype.hasOwnProperty.call(TEMPLATES, key) ? TEMPLATES[key] : undefined;
+}
+
+// 按调用方顺序选择前 3 个不同的已配置模板；重复 key/别名不占授权名额。
+function selectTemplates(keys) {
+  var ids = [];
+  (keys || []).forEach(function (key) {
+    var id = configuredTemplateId(key);
+    if (id && ids.indexOf(id) < 0 && ids.length < 3) ids.push(id);
+  });
+  var requestedKeys = (keys || []).filter(function (key, index, all) {
+    return all.indexOf(key) === index && ids.indexOf(configuredTemplateId(key)) >= 0;
+  });
+  return { ids: ids, keys: requestedKeys };
+}
+
 function resolveTemplateIds(keys) {
-  var ids = (keys || []).map(function (k) { return TEMPLATES[k]; }).filter(Boolean);
-  return ids.length > 3 ? ids.slice(0, 3) : ids;
+  return selectTemplates(keys).ids;
 }
 
 function unconfiguredKeys(keys) {
   return (keys || []).filter(function (key, index, all) {
-    return !TEMPLATES[key] && all.indexOf(key) === index;
+    return !configuredTemplateId(key) && all.indexOf(key) === index;
   });
 }
 
@@ -74,8 +88,10 @@ function request(keys) {
     var inputKeys = keys || [];
     var missingKeys = unconfiguredKeys(inputKeys);
     warnUnconfiguredOnce(inputKeys);
-    var ids = resolveTemplateIds(inputKeys);
-    var requestedKeys = inputKeys.filter(function (key) { return !!TEMPLATES[key]; }).slice(0, 3);
+    var selected = selectTemplates(inputKeys);
+    var ids = selected.ids;
+    var requestedKeys = selected.keys;
+    var requestedIds = requestedKeys.map(function (key) { return configuredTemplateId(key); });
     if (!ids.length) {
       resolve(result(STATUS.NOT_CONFIGURED, [], [], [], missingKeys));
       return;
@@ -91,7 +107,7 @@ function request(keys) {
           var acceptedKeys = [];
           var rejectedKeys = [];
           requestedKeys.forEach(function (key, index) {
-            if (res && res[ids[index]] === 'accept') acceptedKeys.push(key);
+            if (res && res[requestedIds[index]] === 'accept') acceptedKeys.push(key);
             else rejectedKeys.push(key);
           });
           var status = acceptedKeys.length === requestedKeys.length

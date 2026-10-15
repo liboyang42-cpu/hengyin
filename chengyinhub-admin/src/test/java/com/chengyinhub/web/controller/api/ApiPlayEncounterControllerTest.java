@@ -127,6 +127,16 @@ class ApiPlayEncounterControllerTest {
         session.setVersion(3);
         givenState("{}", "[]");
         when(routeSessionMapper.selectMemberTopicSessions(MEMBER, TOPIC)).thenReturn(java.util.Collections.singletonList(session));
+        // Current lookup follows this fixture's exact scope, including activity changes in team cases.
+        // The legacy list above still controls missing/ambiguous/foreign omitted-activity gates.
+        when(routeSessionMapper.selectCurrentByOwner(any(), any(), any())).thenAnswer(invocation -> {
+            Long activity = invocation.getArgument(0);
+            Long topic = invocation.getArgument(1);
+            Long memberId = invocation.getArgument(2);
+            return session != null && java.util.Objects.equals(activity, session.getActivityId())
+                    && java.util.Objects.equals(topic, session.getTopicId())
+                    && java.util.Objects.equals(memberId, session.getMemberId()) ? session : null;
+        });
 
         when(shopDayProofService.hasArrived(MEMBER, 0L, NODE)).thenReturn(false);
         when(progressService.selectPlayerNodeProgressList(any())).thenReturn(new ArrayList<>());
