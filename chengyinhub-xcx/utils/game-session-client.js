@@ -399,7 +399,7 @@ function createGameSessionClient(options) {
             return;
           }
           var receipt = res && res.data;
-          if (!isObject(receipt) || !sameId(receipt.activityId, input.activityId)
+          if (!isObject(receipt) || !sameId(receipt.activityId, body.activityId)
             || receipt.requestId !== requestId || receipt.action !== action) {
             resolve({
               status: 'unknown',
