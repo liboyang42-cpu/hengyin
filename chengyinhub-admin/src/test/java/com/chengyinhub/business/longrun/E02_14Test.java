@@ -29,6 +29,7 @@ class E02_14Test {
         draft.setVersion(3);
         draft.setBody("synthetic retained draft");
         when(mapper.selectByIdForUpdate(7L)).thenReturn(draft);
+        when(mapper.selectCommandReceipt(11L, "synthetic-publish-after-quit")).thenReturn(null);
         when(mapper.countCommunityMember(11L, 55L)).thenReturn(0);
         CommunityPostRequests.State request = new CommunityPostRequests.State();
         request.setRequestId("synthetic-publish-after-quit");
