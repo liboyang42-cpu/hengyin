@@ -129,6 +129,12 @@ function chapterCardTitle(index, name) {
   if (CHAPTER_ORDINAL.test(raw)) return raw;
   return raw ? seq + ' ' + raw : seq;
 }
+function ticketCoordinate(ticket, formField, storedField) {
+  const current = ticket[formField];
+  if (current !== null && current !== undefined && current !== '') return current;
+  const stored = ticket[storedField];
+  return stored === null || stored === undefined ? '' : stored;
+}
 function isEditingTopicPayload(detail) {
   if (!isRecord(detail) || !isRecord(detail.topic)) return false;
   if (detail.chapters != null && !isRecordList(detail.chapters)) return false;
@@ -2408,7 +2414,9 @@ Page({
     const chapters = attached.chapters.concat(attached.legacy.map((item) => this._endingChapterFrom(item)));
     const tickets = (detail.tickets || []).map((ticket) => Object.assign({}, ticket, {
       mode: productType,
-      totalStock: ticket.totalInventory
+      totalStock: ticket.totalInventory,
+      meetingPointLongitude: ticketCoordinate(ticket, 'meetingPointLongitude', 'gatherLng'),
+      meetingPointLatitude: ticketCoordinate(ticket, 'meetingPointLatitude', 'gatherLat')
     }));
     const categoryIds = topic.categoryIds ? String(topic.categoryIds).split(',').filter(Boolean) : [];
     const completionRule = advancedGameConfig.parseTopicCompletion(topic.completeRuleJson || '');
@@ -4958,8 +4966,8 @@ Page({
           mode: this.data.formData.productType || 1,
           meetingPoint: ticket.meetingPoint || '',
           meetingPointAddress: ticket.meetingPointAddress || '',
-          meetingPointLongitude: ticket.meetingPointLongitude || '',
-          meetingPointLatitude: ticket.meetingPointLatitude || '',
+          meetingPointLongitude: ticketCoordinate(ticket, 'meetingPointLongitude', 'gatherLng'),
+          meetingPointLatitude: ticketCoordinate(ticket, 'meetingPointLatitude', 'gatherLat'),
           teamSize: ticket.teamSize || 0,
           startTime: ticket.startTime || '',
           endTime: ticket.endTime || '',
@@ -5052,8 +5060,8 @@ Page({
       meetingPointLatitude: et.meetingPointLatitude,
       // 集合点经纬度落库:后端 OmsTicket 只有 gather_lng/gather_lat(无 meeting_point_longitude 列),
       // 故 meetingPointLongitude/Latitude 发出去会丢;这里以数字形式补 gatherLng/gatherLat(空则 null)。
-      gatherLng: et.meetingPointLongitude ? Number(et.meetingPointLongitude) : null,
-      gatherLat: et.meetingPointLatitude ? Number(et.meetingPointLatitude) : null,
+      gatherLng: et.meetingPointLongitude !== '' && et.meetingPointLongitude != null ? Number(et.meetingPointLongitude) : null,
+      gatherLat: et.meetingPointLatitude !== '' && et.meetingPointLatitude != null ? Number(et.meetingPointLatitude) : null,
       // 成团已下线(2026-07-15):不再派生 minPeople / signupDeadline / refundRule。
       // teamSize 保留(恒 0)以免连锁改动 editingTicket 的多处初始化;列保留不物理删。
       teamSize: Number(et.teamSize) || 0,
