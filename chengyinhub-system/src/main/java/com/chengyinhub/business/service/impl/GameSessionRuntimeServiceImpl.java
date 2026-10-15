@@ -931,7 +931,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         GameTaskSubmission active = runtimeMapper.selectActiveSubmission(session.getId(), actor.getMemberId(),
                 station.getNodeId(), taskCode);
         if (active != null) {
-            GamePlayerNodeOutcome outcome = outcomeForSubmission(session, station, player.teamId,
+            GamePlayerNodeOutcome outcome = recoverSubmissionOutcome(session, station, player.teamId,
                     actor.getMemberId(), active, taskConfig, receiptId);
             return result(session, submissionResult(active, outcome, true));
         }
@@ -956,7 +956,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                     station.getNodeId(), taskCode);
             if (active != null) {
                 GameSession current = runtimeMapper.selectSessionByActivity(activity.getId());
-                GamePlayerNodeOutcome outcome = outcomeForSubmission(session, station, player.teamId,
+                GamePlayerNodeOutcome outcome = recoverSubmissionOutcome(session, station, player.teamId,
                         actor.getMemberId(), active, taskConfig, receiptId);
                 return result(current == null ? session : current, submissionResult(active, outcome, true));
             }
@@ -2439,10 +2439,32 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         return state;
     }
 
+    private static final class OutcomeChanges { private boolean added; }
+
+    private GamePlayerNodeOutcome recoverSubmissionOutcome(GameSession session, GameStationRun station,
+                                                            Long teamId, Long memberId,
+                                                            GameTaskSubmission submission, JsonNode taskConfig,
+                                                            Long receiptId) {
+        OutcomeChanges changes = new OutcomeChanges();
+        GamePlayerNodeOutcome outcome = outcomeForSubmission(session, station, teamId, memberId,
+                submission, taskConfig, receiptId, changes);
+        if (changes.added) {
+            bumpSession(session, session.getStatus(), session.getCurrentChapterId(), memberId, clock.now());
+        }
+        return outcome;
+    }
+
     private GamePlayerNodeOutcome outcomeForSubmission(GameSession session, GameStationRun station,
                                                        Long teamId, Long memberId,
                                                        GameTaskSubmission submission, JsonNode taskConfig,
                                                        Long receiptId) {
+        return outcomeForSubmission(session, station, teamId, memberId, submission, taskConfig, receiptId, null);
+    }
+
+    private GamePlayerNodeOutcome outcomeForSubmission(GameSession session, GameStationRun station,
+                                                       Long teamId, Long memberId,
+                                                       GameTaskSubmission submission, JsonNode taskConfig,
+                                                       Long receiptId, OutcomeChanges changes) {
         if (submission == null || "PENDING".equals(submission.getStatus())
                 || "REJECTED".equals(submission.getStatus())) {
             return null;
@@ -2459,8 +2481,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             return null;
         }
         GamePlayerNodeOutcome outcome = ensureOutcome(session, station, teamId, memberId,
-                GamePlayerNodeOutcome.COMPLETED, source, submission.getId(), receiptId, null, null);
-        ensureFallbackSourceOutcomes(session, station, teamId, memberId, receiptId);
+                GamePlayerNodeOutcome.COMPLETED, source, submission.getId(), receiptId, null, null, changes);
+        ensureFallbackSourceOutcomes(session, station, teamId, memberId, receiptId, changes);
         return outcome;
     }
 
@@ -2468,6 +2490,14 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                                                 Long memberId, String status, String completionSource,
                                                 Long submissionId, Long receiptId, String planCode,
                                                 Integer planVersion) {
+        return ensureOutcome(session, station, teamId, memberId, status, completionSource,
+                submissionId, receiptId, planCode, planVersion, null);
+    }
+
+    private GamePlayerNodeOutcome ensureOutcome(GameSession session, GameStationRun station, Long teamId,
+                                                Long memberId, String status, String completionSource,
+                                                Long submissionId, Long receiptId, String planCode,
+                                                Integer planVersion, OutcomeChanges changes) {
         GamePlayerNodeOutcome existing = runtimeMapper.selectPlayerNodeOutcome(
                 session.getId(), memberId, station.getNodeId());
         if (existing != null) return existing;
@@ -2492,11 +2522,17 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             if (existing == null) throw error("GAME_STATE_CONFLICT", "节点完成结果落库失败");
             return existing;
         }
+        if (changes != null) changes.added = true;
         return outcome;
     }
 
     private void ensureFallbackSourceOutcomes(GameSession session, GameStationRun completedTarget,
                                               Long teamId, Long memberId, Long receiptId) {
+        ensureFallbackSourceOutcomes(session, completedTarget, teamId, memberId, receiptId, null);
+    }
+
+    private void ensureFallbackSourceOutcomes(GameSession session, GameStationRun completedTarget,
+                                              Long teamId, Long memberId, Long receiptId, OutcomeChanges changes) {
         JsonNode config = sessionConfig(session);
         for (GameStationRun source : safe(runtimeMapper.selectStations(session.getId()))) {
             if (source == null || !session.getId().equals(source.getGameSessionId())
@@ -2509,7 +2545,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             }
             ensureOutcome(session, source, teamId, memberId,
                     GamePlayerNodeOutcome.FALLBACK_COMPLETED, "FALLBACK_PLAN", null, receiptId,
-                    source.getFallbackPlanCode(), source.getFallbackPlanVersion());
+                    source.getFallbackPlanCode(), source.getFallbackPlanVersion(), changes);
         }
     }
 
