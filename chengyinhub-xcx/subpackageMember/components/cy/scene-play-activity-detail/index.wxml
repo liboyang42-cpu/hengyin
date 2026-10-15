@@ -1,6 +1,8 @@
 <view class="activity-body">
   <cy-skeleton wx:if="{{state === 'loading'}}" type="detail" />
   <cy-error load-failure class="cy-fade-in" wx:elif="{{state === 'error'}}" fill title="活动详情暂时打不开" sub="{{errorMsg}}" retry="重新读取" bind:retry="retry" />
+  <!-- PR10 F-W1-12:未登录(无会话 / 401)给登录引导 -->
+  <cy-empty class="cy-fade-in" wx:elif="{{state === 'login'}}" kind="no-permission" fill size="lg" title="登录后查看活动详情" sub="登录后可查看活动票种并报名" cta="登录" bind:cta="loginRetry" />
   <cy-empty class="cy-fade-in" wx:elif="{{state === 'cancelled'}}" fill size="lg" title="活动已取消"
             sub="退款或售后进度请查看对应订单" cta="{{cancelledHasOwnOrder ? '查看我的订单' : '返回活动列表'}}" bind:cta="onCancelledAction" />
   <cy-empty class="cy-fade-in" wx:elif="{{state === 'missing'}}" fill size="lg" title="活动链接无效" sub="没有收到活动编号，无法读取详情。" cta="返回活动列表" bind:cta="close" />

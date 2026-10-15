@@ -22,6 +22,9 @@
   <!-- 不存在/加载失败 -->
   <!-- 加载失败/不存在保持空白 -->
   <cy-error wx:if="{{notFound}}" load-failure="{{true}}" />
+  <!-- PR10 F-W1-12:未登录(无会话 / 401)不是加载失败,给登录引导 -->
+  <cy-empty wx:elif="{{loginRequired}}" kind="no-permission" fill size="lg"
+    title="登录后查看俱乐部" sub="登录后可查看俱乐部的主题、动态和成员" cta="登录" bind:cta="onLoginRetry" />
 
   <cy-skeleton wx:elif="{{!detailLoaded}}" type="detail" loading-label="正在加载俱乐部详情" />
 

@@ -7,6 +7,7 @@ const analytics = require('../../../../utils/analytics.js')
 const { chinaDayStart, toTimestamp } = require('../../../../utils/datetime.js')
 const { isRecordList } = require('../../../../utils/response-shape.js')
 const { ticketWindowPassed, ticketWindowText } = require('../../../../utils/ticket-window.js')
+const { isLoginRequired, retryLogin } = require('../../../../utils/session/login-reload.js')
 
 function ok(res) { return res && (res.code === 200 || res.code === '200') }
 
@@ -93,7 +94,7 @@ const STATE_VARIANT = {
 Component({
   properties: { activityId: { type: String, value: '' } },
   data: {
-    state: 'loading', // loading | error | empty | ready | missing | gate
+    state: 'loading', // loading | error | login | empty | ready | missing | gate
     info: {},
     tickets: [],
     // M1-3 门卡:非俱乐部成员拿到的是 {gate:true, clubId, activityName, message},
@@ -313,11 +314,17 @@ Component({
           cancelledHasOwnOrder: res.canViewOwnOrders === true })
         return
       }
-      if (status == 401 || status == 2 || (res && (res.code == 401 || res.code == 2))) {
-        errorMsg = '登录已过期，请重新进入'
-      }
       this._loadingId = ''
+      // PR10 F-W1-12:未登录(无会话 / 401)不是加载失败 —— 给登录引导,其余失败仍按 load-failure 留白
+      if (isLoginRequired(app, res, status)) {
+        this.setData({ state: 'login', errorMsg: '登录已过期，请重新进入' })
+        return
+      }
       this.setData({ state: 'error', errorMsg })
+    },
+
+    loginRetry() {
+      retryLogin(this, app, function () { this.retry() })
     },
 
     retry() {

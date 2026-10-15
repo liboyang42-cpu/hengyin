@@ -277,7 +277,8 @@ test('活动详情鉴权失败保留真实原因，重试成功清除错误和�
     instance.data.tickets = [{ _id: 'old-ticket' }];
     instance.load('33');
     requests[0][callback]({ code: bodyCode, msg: '认证失败，无法访问系统资源' }, status);
-    assert.equal(instance.data.state, 'error');
+    // PR10 F-W1-12:鉴权失败不再落 load-failure 留白的 error 态,而是可见的登录引导 login 态。
+    assert.equal(instance.data.state, 'login');
     assert.match(instance.data.errorMsg, /登录/);
     assert.doesNotMatch(instance.data.errorMsg, /网络异常|服务暂时不可用/);
     assert.equal(Object.keys(instance.data.info).length, 0);

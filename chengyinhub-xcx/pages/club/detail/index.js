@@ -7,6 +7,7 @@ const cyToast = require('../../../utils/toast.js');
 const motion = require('../../../utils/motion.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const { getScene } = require('../../../utils/scene-registry.js');
+const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
 // 城瘾 · 俱乐部详情页(方案B:俱乐部=经典定向带团组织)
 // 俱乐部信息 + TA 办的经典定向团(/api/club/topics)+ 成员;团卡片点进主题报名页复用现有报名/扫码。
 const { toTimestamp, chinaParts } = require('../../../utils/datetime');
@@ -548,6 +549,8 @@ Page({
     clubStatsError: '',
     detailLoaded: false,
     notFound: false,
+    // PR10 F-W1-12:未登录(无会话 / 401)读失败给登录引导,其余加载失败仍留白(notFound)
+    loginRequired: false,
     // E-09(2026-09-16):三处「失败渲染成空」的状态位。有错误文案 = 显示错误态+重试,不显示空态。
     postsError: '',
     leaderboardError: '',
@@ -728,7 +731,18 @@ Page({
         if (owned.length === 1) { that.setData({ clubId: Number(owned[0].id) }); that.loadAll(); return; }
         that.setData({ ownerClubs: owned, ownerPickerShow: true, detailLoaded: true });
       },
-      fail() { that.setData({ detailLoaded: true, notFound: true }); }
+      fail(res, statusCode) {
+        if (isLoginRequired(app, res, statusCode)) { that.setData({ detailLoaded: true, notFound: false, loginRequired: true }); return; }
+        that.setData({ detailLoaded: true, notFound: true });
+      }
+    });
+  },
+  // 登录引导「登录」:重登成功后按原入口重读(有 clubId 读详情,owner 入口重新解析)
+  onLoginRetry() {
+    retryLogin(this, app, function () {
+      this.setData({ loginRequired: false, notFound: false, detailLoaded: false });
+      if (this.data.clubId) this.loadAll();
+      else if (this._ownerEntry) this.resolveOwnerEntry();
     });
   },
   onPickOwnerClub(e) {
@@ -1929,6 +1943,7 @@ Page({
           canUseManageTab: immediateCanUseManageTab,
           detailLoaded: true,
           notFound: !club,
+          loginRequired: false,
           activeTab: initialTab,
           clubTabs: that.tabsForClub(club, immediateCanUseManageTab),
           tabInitialized: that.data.tabInitialized || !!club,
@@ -1945,9 +1960,13 @@ Page({
           that.revokeClubAccess('idle');
         }
       },
-      fail() {
+      fail(res, statusCode) {
         if (!isCurrent()) return;
         if (opts.preserveSnapshotOnFailure && that.data.club) {
+          return;
+        }
+        if (isLoginRequired(app, res, statusCode)) {
+          that.setData({ detailLoaded: true, notFound: false, loginRequired: true });
           return;
         }
         that.setData({ detailLoaded: true, notFound: true });

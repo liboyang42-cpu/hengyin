@@ -1,4 +1,5 @@
 const cyToast = require('../../../utils/toast.js');
+const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
 const app = getApp();
 
 const STATUS_TEXT = ['招募中', '已满员', '进行中', '已结束', '已解散'];
@@ -80,7 +81,9 @@ Page({
             errorSub: ''
           });
         } else {
-          const authDenied = String(res && res.code) === '401' || String(res && res.code) === '403';
+          // PR10 F-W1-12:未登录(无会话 / 401)的按钮是「登录」(走 retryLogin),不是只会再撞一次的「重新加载」。
+          const needLogin = isLoginRequired(app, res);
+          const authDenied = needLogin || String(res && res.code) === '403';
           // F-W1-12:静默重登后仍 401/403 是身份问题,留可见的登录/权限说明,不按加载失败留白。
           that.setData({
             loading: false,
@@ -88,13 +91,25 @@ Page({
             error: authDenied ? '登录后查看队伍' : hasTeam ? '队伍状态暂未更新' : '队伍暂时不可用',
             errorKind: authDenied ? 'no-permission' : 'data',
             errorSub: authDenied ? '请重新登录后再打开这支队伍' : app.getRequestErrorMessage(res, hasTeam ? '已保留上次确认的队伍信息' : '请稍后重新加载'),
-            errorAction: '重新加载'
+            errorAction: needLogin ? '登录' : '重新加载'
           });
         }
       },
-      fail() {
+      fail(res, statusCode) {
         that._teamLoading = false;
         if (fromPull) wx.stopPullDownRefresh();
+        // PR10 F-W1-12:静默重登失败回到这里(401),或根本没有会话 ⇒ 登录引导,不按网络失败留白
+        if (isLoginRequired(app, res, statusCode)) {
+          that.setData({
+            loading: false,
+            refreshing: false,
+            error: '登录后查看队伍',
+            errorKind: 'no-permission',
+            errorSub: '请重新登录后再打开这支队伍',
+            errorAction: '登录'
+          });
+          return;
+        }
         that.setData({
           loading: false,
           refreshing: false,
@@ -112,6 +127,7 @@ Page({
       wx.navigateBack({ delta: 1, fail() { wx.switchTab({ url: '/pages/talent/list/index' }); } });
       return;
     }
+    if (this.data.errorAction === '登录') { retryLogin(this, app, function () { this.load(); }); return; }
     this.load();
   },
 
