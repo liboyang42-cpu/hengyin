@@ -14,6 +14,7 @@ import com.chengyinhub.business.service.IBadgeReadModelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -45,8 +46,15 @@ public class BadgeReadModelServiceImpl implements IBadgeReadModelService {
 
         // 2) 全集定义 -> 按 asset_type 分组 + 标 unlocked
         BadgeWallV2VO vo = new BadgeWallV2VO();
-        List<GrowthBadge> defs = growthBadgeMapper.selectAllActive();
-        if (defs != null) for (GrowthBadge d : defs) {
+        List<GrowthBadge> defs = new ArrayList<>();
+        List<GrowthBadge> platformDefs = growthBadgeMapper.selectAllActive();
+        if (platformDefs != null) defs.addAll(platformDefs);
+        // 俱乐部专属徽章不上平台墙,但本人已获得的仍要在个人墙可见
+        if (!owned.isEmpty()) {
+            List<GrowthBadge> ownedClubDefs = growthBadgeMapper.selectActiveClubByCodes(new ArrayList<>(owned.keySet()));
+            if (ownedClubDefs != null) defs.addAll(ownedClubDefs);
+        }
+        if (!defs.isEmpty()) for (GrowthBadge d : defs) {
             BadgeWallItemVO item = new BadgeWallItemVO();
             item.setBadgeCode(d.getBadgeCode());
             item.setBadgeName(d.getBadgeName());
