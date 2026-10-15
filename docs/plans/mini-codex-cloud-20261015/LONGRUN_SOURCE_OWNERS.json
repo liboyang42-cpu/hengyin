@@ -484,6 +484,46 @@
       "state": "ASSIGNED_SOURCE_ONLY",
       "base_sha": "7e5882addb7269373b2b95daa0a4ceeb4485fd10",
       "transfer_evidence": "Original shared A01 scope source stopped at public1e/4a; C00 reserved file, no other active claimant. Add opt-in findCurrent by exact extraction of currentScopedSession; keep find semantics unchanged."
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ClubEventOpsMapper.java": {
+      "owner": "EXTRA6/E01",
+      "worker": "EXTRA6/E01",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "f9e2932ca4b14e541caba356d2c1b016332f199f",
+      "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
+      "transfer_evidence": "C00 read E01-18/E04-14 packets and exact fixture impacts; no CORE active writer, all original C04/C06 stopped. Only packet minimal repair/synchronization, preserve policy/assertions; NOT_RUN."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SmsCouponRedemptionAuditTest.java": {
+      "owner": "EXTRA6/E04",
+      "worker": "EXTRA6/E04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "f9e2932ca4b14e541caba356d2c1b016332f199f",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 read E01-18/E04-14 packets and exact fixture impacts; no CORE active writer, all original C04/C06 stopped. Only packet minimal repair/synchronization, preserve policy/assertions; NOT_RUN."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SmsCouponRedemptionStartTimeTest.java": {
+      "owner": "EXTRA6/E04",
+      "worker": "EXTRA6/E04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "f9e2932ca4b14e541caba356d2c1b016332f199f",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 read E01-18/E04-14 packets and exact fixture impacts; no CORE active writer, all original C04/C06 stopped. Only packet minimal repair/synchronization, preserve policy/assertions; NOT_RUN."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SmsCouponRedemptionTransactionBoundaryTest.java": {
+      "owner": "EXTRA6/E04",
+      "worker": "EXTRA6/E04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "f9e2932ca4b14e541caba356d2c1b016332f199f",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 read E01-18/E04-14 packets and exact fixture impacts; no CORE active writer, all original C04/C06 stopped. Only packet minimal repair/synchronization, preserve policy/assertions; NOT_RUN."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CouponLifecycleMybatisIntegrationTest.java": {
+      "owner": "EXTRA6/E04",
+      "worker": "EXTRA6/E04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "f9e2932ca4b14e541caba356d2c1b016332f199f",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 read E01-18/E04-14 packets and exact fixture impacts; no CORE active writer, all original C04/C06 stopped. Only packet minimal repair/synchronization, preserve policy/assertions; NOT_RUN."
     }
   },
   "reserved_not_transferred": [

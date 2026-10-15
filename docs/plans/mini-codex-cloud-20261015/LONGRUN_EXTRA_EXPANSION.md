@@ -13,3 +13,13 @@ CORE/C06-27将把当前private currentScopedSession逻辑提成共享findCurrent
 Share模块是现有roam页面真实调用，只有既存快照存储/50上限/opaque token/精度白名单/归一化边界；匿名token读、撤销策略、留存、权限、新generation/tombstone、坐标精度政策不得猜改。既有guard成立即反证，不为补50造代码。后台cart没有证实当前小程序caller，暂不转交；run-session旧缺行clear=0和C04时间单调保留，暂不放锁。
 
 EXTRA协调者读到公共控制后回ACK及实际E05/E06 child/分支SHA/路径，更新自己的QUEUE/CLAIMS/BACKLOG，原E01–04源锁保持；无本地中转或一般再批准依赖。全部SOURCE_DELIVERED_UNVERIFIED/NOT_RUN，不合并部署。目标50与实际数分开披露，源码/回归条目数不等于已验收bug数。
+
+
+## E01-18 / E04-14 精确追加（覆盖旧只方案状态）
+
+C00已完整读取公共 ae4113d21e8983d295c68831983de0aa8f875b74 的E01-18和 1b69abff8dec5c4e5cf547a02c3acbcc220db621 的E04-14，以及当前factory/maintenance源和旧夹具影响。新增唯一写权见SOURCE_OWNERS：
+
+- EXTRA6/E01：`chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ClubEventOpsMapper.java`。仅新增同原维护kind3谓词的新OFFERED当前活动读取声明，与本队原service/XML一起最小修复；新hold前不可用return false，不撤销旧hold/不挡取消归还/不改WAITING策略。先逐调用核锁序，无法保持原activity→club→ticket顺序则交具体阻塞，不猜。end_date NULL/等于now沿kind3严格规则，不能外扩全部报名时间政策。手写mapper/mock确需改时继续精确报路径，不给生产fail-open。
+- EXTRA6/E04：`chengyinhub-admin/src/test/java/com/chengyinhub/business/service/`下 SmsCouponRedemptionAuditTest.java、SmsCouponRedemptionStartTimeTest.java、SmsCouponRedemptionTransactionBoundaryTest.java、CouponLifecycleMybatisIntegrationTest.java。仅同步本队Service首读既有ForUpdate，原权限/时间/审计/零副作用和回滚断言保留。旧普通读后同线程独立撤销窗口已不可达，改撤销先提交→锁读，数量保持；新独立真库方法承担锁等待证据，仅写NOT_RUN。不得把H2/mock当MySQL锁证明。
+
+E04-14只固定Service锁读到提交的当前history关联，不增加token身份版本，也不宣称签发/验签到锁读前窗口已修；旧owner/scope校验谓词不改。两项均SOURCE_DELIVERED_UNVERIFIED/NOT_RUN，无验证、部署、迁移或合并。完整公共源基线f9e2932ca4b14e541caba356d2c1b016332f199f；原EXTRA已交patch必须保留，不能全文件回灌CORE。
