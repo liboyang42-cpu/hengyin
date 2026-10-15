@@ -704,8 +704,9 @@ public class NpcChatService
         entry.setSafetyFlag(safetyFlag);
         entry.setModel(model);
         entry.setLatencyMs(latencyMs);
-        entry.setTokenIn(0);
-        entry.setTokenOut(0);
+        // The gateway result exposes no provider usage. Unknown usage is not a measured zero.
+        entry.setTokenIn(null);
+        entry.setTokenOut(null);
         return entry;
     }
 
