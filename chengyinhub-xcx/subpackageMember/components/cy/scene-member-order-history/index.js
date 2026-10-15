@@ -100,6 +100,8 @@ Component({
   },
   lifetimes: {
     attached() {
+      this._listDisposed = false
+      this._listGeneration = (this._listGeneration || 0) + 1
       this._cancelDisposed = false
       this._cancelGeneration = (this._cancelGeneration || 0) + 1
       this._syncCancellationAccount()
@@ -108,6 +110,11 @@ Component({
       this.getList()
     },
     detached() {
+      // Retire this instance's list request before late transport callbacks arrive.
+      this._listDisposed = true
+      this._listGeneration = (this._listGeneration || 0) + 1
+      this._listFetchInFlight = 0
+      this.setData({ loading: false })
       if (this._finishCancelPrompt) this._finishCancelPrompt()
       if (this._finishCancellation) this._finishCancellation()
       this._cancelDisposed = true
@@ -118,6 +125,7 @@ Component({
   pageLifetimes: {
     // 首次 attached/show single-flight；支付/退款回来后的后续 show 从第一页替换刷新。
     show() {
+      if (this._listDisposed) return
       this._syncCancellationAccount()
       if (this._listFetchInFlight && this._listMemberId === (app.getUserID && app.getUserID())) return
       // 返回页刷新保留已确认列表；失败时给非阻断提示，不把订单替换成整屏错误。
@@ -136,6 +144,8 @@ Component({
 
     getList(dedupe, replace) {
       const that = this
+      if (that._listDisposed) return
+      const generation = that._listGeneration
       const memberId = app.getUserID && app.getUserID()
       if (dedupe && that._listFetchInFlight && that._listMemberId === memberId) return
       if (that._listMemberId !== undefined && that._listMemberId !== memberId) {
@@ -146,7 +156,8 @@ Component({
       that._listRequestId = requestId
       that._listFetchInFlight = requestId
       const activeTab = that.data.activeTab
-      const isCurrent = () => requestId === that._listRequestId && memberId === (app.getUserID && app.getUserID())
+      const isCurrent = () => !that._listDisposed && generation === that._listGeneration
+        && requestId === that._listRequestId && memberId === (app.getUserID && app.getUserID())
       const settleFetch = function () {
         if (that._listFetchInFlight === requestId) that._listFetchInFlight = 0
       }
