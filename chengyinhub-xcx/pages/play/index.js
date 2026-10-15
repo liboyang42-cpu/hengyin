@@ -4366,15 +4366,27 @@ Page({
     this.setData({ leadLoadError: false }, () => this.loadTeamProgress());
   },
   leadArrive() {
+    if (!this._isPlayAccountCurrent() || !this.data.activityId) return;
     const that = this;
-    req('/api/club/lead/arrive', 'POST', { activityId: this.data.activityId }).then((r) => {
+    const context = this._leadOperationContext();
+    const lifecycleEpoch = this._leadLifecycleEpoch || 0;
+    const sequence = this._leadArriveSequence = (this._leadArriveSequence || 0) + 1;
+    req('/api/club/lead/arrive', 'POST', { activityId: context.activityId }).then((r) => {
+      if (!that._isLeadOperationContextCurrent(context, false)
+          || lifecycleEpoch !== (that._leadLifecycleEpoch || 0) || sequence !== that._leadArriveSequence) return;
       that.diegetic(r.msg || '已到集合点');
       that.loadTeamProgress();
     });
   },
   leadStart() {
+    if (!this._isPlayAccountCurrent() || !this.data.activityId) return;
     const that = this;
-    req('/api/club/lead/start', 'POST', { activityId: this.data.activityId }).then((r) => {
+    const context = this._leadOperationContext();
+    const lifecycleEpoch = this._leadLifecycleEpoch || 0;
+    const sequence = this._leadStartSequence = (this._leadStartSequence || 0) + 1;
+    req('/api/club/lead/start', 'POST', { activityId: context.activityId }).then((r) => {
+      if (!that._isLeadOperationContextCurrent(context, false)
+          || lifecycleEpoch !== (that._leadLifecycleEpoch || 0) || sequence !== that._leadStartSequence) return;
       that.diegetic(r.msg || '出发!');
       that.loadTeamProgress();
     });
