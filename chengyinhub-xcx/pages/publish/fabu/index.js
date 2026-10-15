@@ -824,12 +824,17 @@ Page({
 
   clearLocalDraft() {
     if (this._draftStorageUnavailable) { this._markDraftStorageUnavailable(); return; }
+    const memberId = String(app.getUserID() || '');
+    const topicId = this.data.editingTopicId;
+    const draftUuid = this.data.draftUuid;
     modal.show({
       title: '清空本地草稿？',
       content: '当前未发布的章节和待编排素材都会从本机删除。',
       confirmText: '清空',
       success: (res) => {
-        if (!res.confirm) return;
+        if (!res.confirm || this._publishPageUnloaded || this._draftStorageUnavailable
+            || memberId !== String(app.getUserID() || '')
+            || topicId !== this.data.editingTopicId || draftUuid !== this.data.draftUuid) return;
         this._draftAutosaveReady = false;
         this._clearDraftEnvelope();
         const mode = Number(this.data.formData.productType) === 2 ? 2 : 1;
