@@ -2640,6 +2640,7 @@ Page({
   // 页面销毁:让在途发布回调失效,避免 setData / redirect after unload
   onUnload() {
     this._publishPageUnloaded = true;
+    this._destroyChapterDurationAudio();
     this.destroyPreviewAudio();
     if (this._pendingUndoTimer) clearTimeout(this._pendingUndoTimer);
     this._pendingUndoTimer = null;
@@ -4594,34 +4595,65 @@ Page({
   //    (ui-integrity 把 onPreviewAudio 记成零绑定债务)。这次改挂 chapterForm ——
   //    主题级 audioUrl 已按 2026-09-15 拍板清理(小程序不再读写;后端字段保留,存量数据不受影响)。
   uploadChapterAudio() {
-    var that = this;
+    const that = this;
+    const chapterForm = this.data.chapterForm;
+    const chapterIndex = this.data.popChapterIndex;
+    const memberId = String(app.getUserID() || '');
+    const token = (this._chapterAudioToken || 0) + 1;
+    this._chapterAudioToken = token;
+    this._destroyChapterDurationAudio();
     app.chooseDocument(function (res) {
+      if (that._publishPageUnloaded || !that.data.popChapter
+          || token !== that._chapterAudioToken || chapterForm !== that.data.chapterForm
+          || chapterIndex !== that.data.popChapterIndex
+          || memberId !== String(app.getUserID() || '')) return;
       if (res && res[0] && res[0].url) {
-        var file = res[0];
+        const file = res[0];
         that.setData({
           'chapterForm.audioUrl': file.url,
-          'chapterForm.audioFileName': file.filename || ''
+          'chapterForm.audioFileName': file.filename || '',
+          'chapterForm.audioDuration': 0
         });
-        // 自动识别时长
         that.autoDetectAudioDuration(file.url);
       }
     }, 1, ['mp3', 'm4a', 'aac']);
   },
 
+  _destroyChapterDurationAudio() {
+    const audio = this._chapterDurationAudio;
+    this._chapterDurationAudio = null;
+    if (audio) audio.destroy();
+  },
+
   autoDetectAudioDuration(url) {
-    var that = this;
-    var audio = wx.createInnerAudioContext();
+    const that = this;
+    const chapterForm = this.data.chapterForm;
+    const chapterIndex = this.data.popChapterIndex;
+    const memberId = String(app.getUserID() || '');
+    const token = this._chapterAudioToken;
+    this._destroyChapterDurationAudio();
+    const audio = wx.createInnerAudioContext();
+    this._chapterDurationAudio = audio;
     audio.src = url;
     audio.obeyMuteSwitch = false;
     audio.onCanplay(function () {
-      var d = Math.round(audio.duration || 0);
-      if (d > 0) that.setData({ 'chapterForm.audioDuration': d });
-      audio.destroy();
+      if (that._chapterDurationAudio !== audio) return;
+      const current = !that._publishPageUnloaded && that.data.popChapter
+        && token === that._chapterAudioToken && chapterForm === that.data.chapterForm
+        && chapterIndex === that.data.popChapterIndex && that.data.chapterForm.audioUrl === url
+        && memberId === String(app.getUserID() || '');
+      const duration = Math.round(audio.duration || 0);
+      if (current && duration > 0) that.setData({ 'chapterForm.audioDuration': duration });
+      that._destroyChapterDurationAudio();
     });
-    audio.onError(function () { audio.destroy(); });
+    audio.onError(function () {
+      if (that._chapterDurationAudio === audio) that._destroyChapterDurationAudio();
+    });
   },
 
   clearChapterAudio() {
+    this._chapterAudioToken = (this._chapterAudioToken || 0) + 1;
+    this._destroyChapterDurationAudio();
     this.destroyPreviewAudio();
     this.setData({
       'chapterForm.audioUrl': '', 'chapterForm.audioDuration': 0,
