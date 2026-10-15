@@ -74,7 +74,8 @@ test('集邮册场景复用真实分页接口与失败/空态互斥，不用静�
   assert.equal(hostJson.usingComponents['cy-scene-roam-stamp-album'], '/components/cy/scene-roam-stamp-album/index')
   assert.match(hostWxml, /sceneCurrent && sceneCurrent\.id === 'roam-stamp-album'/)
   assert.match(hostWxml, /<cy-scene-roam-stamp-album[^>]*bind:camera="openStampCamera"[^>]*bind:close="closeScene"/)
-  assert.match(componentJs, /url: '\/api\/roam\/stamp\/list'/)
+  assert.match(componentJs, /'\/api\/roam\/stamp\/list'/)
+  assert.match(componentJs, /'\/api\/roam\/stamp\/received'/)
   assert.match(componentJs, /pageSize: 50/)
   // 2026-09-10 漫游四模式脱离小程序 DS:集邮册整屏照原型 f-sticker 重做成三列方格,
   //   「收藏夹合上/展开 + 散落票面」(Figma 220:1388)整套退场。

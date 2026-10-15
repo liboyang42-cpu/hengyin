@@ -42,6 +42,11 @@ const MATRIX = [
   ['pages/activity/list/index.js', "url: '/api/official/my-events'", 'required', 'member', 'self-registration'],
   ['pages/activity/official-mine/index.js', "url: '/api/official/my-published'", 'required', 'publisher', 'self-publisher'],
   ['pages/activity/official-detail/index.js', "url: '/api/official/events/' + id", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
+  /* 2026-10-15 任务3:官方路线只读两处(列表/详情)与创作者状态键读取。preset 接口不在 SecurityConfig permitAll,
+     走 anyRequest().authenticated();状态键读取由后端按主题归属 + scope 校验(仅创作者本人)。 */
+  ['subpackageRoam/official-routes/index.js', "url: '/api/preset/route/list'", 'required', 'member', 'global-authenticated-read'],
+  ['subpackageRoam/official-route/index.js', "url: '/api/preset/route/info'", 'required', 'member', 'global-authenticated-read'],
+  ['pages/publish/components/topic-state-keys/index.js', "url: '/api/topic/state-keys', method: 'GET'", 'required', 'publisher', 'self-publisher'],
   ['pages/searchmap/index.js', "url: '/api/city/nodes'", 'required', 'member', 'global-read+viewer-personalization'],
   ['subpackageMember/components/cy/scene-roam-poi-detail/index.js', "url: '/api/city/nodes/' + this.data.poiId", 'required', 'member', 'global-read+viewer-personalization'],
   ['utils/game-session-client.js', "url: '/api/game/session/view'", 'required', 'player/merchant/club', 'activity-perspective-access'],
@@ -223,7 +228,7 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   //   (抽屉资格预探,权限档与上一处相同:required/merchant)⇒ 30 → 31。
   // 客户页退役触达：移除券候选、任务列表、任务详情三处 GET，31 → 28。
   // C3 认领已有门店 sheet 新增 /api/merchant/claims/status GET,29 → 30。
-  assert.equal(directCount, 30, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  assert.equal(directCount, 33, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(wrapperCount, 22, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(MATRIX.length, directCount + wrapperCount);
 
