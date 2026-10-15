@@ -1752,6 +1752,17 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
 
     /** 本局适用的节点块配置:优先读建局冻结块;老局快照没有该键时回退实时模板配置。 */
     private JsonNode nodeBlockConfig(TopicRouteSession session, CmsTopicNode node) {
+        JsonNode snapshot = null;
+        if (session != null && session.getConfigSnapshotJson() != null) {
+            try { snapshot = JSON.readTree(session.getConfigSnapshotJson()); }
+            catch (Exception unusableSnapshot) { /* Preserve legacy whole-snapshot fallback. */ }
+        }
+        if (snapshot != null && snapshot.has(NodeJourneySnapshot.NODE_JOURNEY_KEY)) {
+            JsonNode blocks = snapshot.get(NodeJourneySnapshot.NODE_JOURNEY_KEY);
+            if (!blocks.isObject()) throw new IllegalStateException("节点玩法配置不可用");
+            JsonNode block = node == null || node.getId() == null ? null : blocks.get(String.valueOf(node.getId()));
+            if (block != null && !block.isObject()) throw new IllegalStateException("节点玩法配置不可用");
+        }
         JsonNode frozen = NodeJourneySnapshot.block(
                 session == null ? null : session.getConfigSnapshotJson(),
                 node == null ? null : node.getId());
