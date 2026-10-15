@@ -2,6 +2,8 @@
 
 CY-HANDOFF: CODEX；协议 `CY-COORD-20261015-v1`。本地验证方执行，Cloud C00/C99 继续负责候选和控制账。
 
+后续两组验证也已完成，三组合计 231 项的最新签收见 [SUMMARY.md](SUMMARY.md)。本页及 evidence.json 保留第一组完成时的原始快照。
+
 **PASS：7 项业务方法实际执行，0 失败、0 错误、0 跳过。** 完整候选为 `1e403b135206844a34219753a36e2dee39c7dd59`，属于 [PR #18](https://github.com/liboyang42-cpu/hengyin/pull/18)。仅修复上一轮测试夹具提取 SQL 的错误，原 7 项业务断言不变。[上一轮失败证据](../VPS_EXTERNAL_69c281af/README.md)原样保留。
 
 ## 环境与源码身份
