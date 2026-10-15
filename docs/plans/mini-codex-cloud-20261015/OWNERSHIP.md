@@ -217,4 +217,8 @@ L01–05源码已按精确路径串行提交后续候选eab62274a19f549623ad1818
 
 ## 长期源码最新checkpoint（覆盖旧状态文字）
 
-[当前恢复入口](LONGRUN_CURRENT.md)与CORE池记录公共05d307ec0466988f212187666d7f1e5c3274f434 / PR44；后续一律SOURCE_DELIVERED_UNVERIFIED、NOT_RUN。两队真实计数/文件单写者/跨队合同/未决政策和本地恢复规则均在入口，不以历史通过套用新源码。E04额外接口及三测试、C06 runtime mapper独立当前读、C04暂停投影SQL精确写权已在源表登记；其他原锁不变。
+[当前恢复入口](LONGRUN_CURRENT.md)与CORE池记录公共2b1984b59a0929a360e8095d5fc1955a1aed7964 / PR44；后续一律SOURCE_DELIVERED_UNVERIFIED、NOT_RUN。两队真实计数/文件单写者/跨队合同/未决政策和本地恢复规则均在入口，不以历史通过套用新源码。E04额外接口及三测试、C06 runtime mapper独立当前读、C04暂停投影SQL精确写权已在源表登记；其他原锁不变。
+
+## 当前恢复与三方精确接收（覆盖旧待办快照）
+
+公共源码 `2b1984b59a0929a360e8095d5fc1955a1aed7964` / PR44，SOURCE_DELIVERED_UNVERIFIED/NOT_RUN；CORE178历史=135源交付+38反证+3决策阻塞+1重复取代+1委派，实际可行动0/目标缺50。锁保留不等于有人在运行。EXTRA最后25ede658/105历史，5旧夹具及LIKE授权c79d2886已公开，尚无新ACK。Claude本轮37份PR接收与精确文件处置见CLAUDE_HANDOFF_INTAKE.json，唯一C00控制账，冲突只交原写者补丁，未移交共享核心。当前SOURCE_ONLY不是CONTRACT_FROZEN/TEST_DEPLOYED或客户端上线凭据。旧1e403b13的231PASS与69c失败历史独立保留，新源码不能继承。最新恢复入口LONGRUN_CURRENT/START_PROMPT；集中验证清单已更新2b1984，仍不运行。

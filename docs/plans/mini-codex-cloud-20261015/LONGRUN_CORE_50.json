@@ -3,12 +3,12 @@
   "team": "CORE",
   "initial_item_count": 50,
   "lane_counts": {
-    "C01": 50,
-    "C02": 26,
+    "C01": 51,
+    "C02": 27,
     "C03": 25,
-    "C04": 19,
-    "C05": 23,
-    "C06": 28
+    "C04": 21,
+    "C05": 25,
+    "C06": 29
   },
   "target_actionable_items": 50,
   "max_workers": 6,
@@ -4629,7 +4629,7 @@
       "invariant": "原正数/上限/审核/幂等/费用策略不变，不round，不新增provider限额",
       "repair_boundary": "Exact source transfer and necessary unique regression/evidence; preserve existing authorization and funds policy, no DDL/dependency/provider operations.",
       "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "publish_unknown_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -4637,7 +4637,11 @@
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OWN_C02_27Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C02-27.md",
       "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
-      "source_result": "PENDING_SOURCE_DELIVERY"
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
+      "commit_sha": "ad464eb6935bd1bc84ed578cffbae95b4498c9f9",
+      "production_paths_changed": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java"
+      ]
     },
     {
       "id": "OWN-C06-30",
@@ -4652,7 +4656,7 @@
       "invariant": "只两处偏移，不改member/change_type=1/del过滤或其余SQL",
       "repair_boundary": "Exact source transfer and necessary unique regression/evidence; preserve existing authorization and funds policy, no DDL/dependency/provider operations.",
       "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "final_review_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -4660,11 +4664,15 @@
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_30Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C06-30.md",
       "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
-      "source_result": "PENDING_SOURCE_DELIVERY",
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
       "supplemental_source_paths": [
         "chengyinhub-system/src/main/resources/mapper/business/UmsMemberPointsDetailMapper.xml"
       ],
-      "same_root_supplement": "Points-statistics sibling uses identical wrong Sunday offset; source author C06 will freeze 30-points supplement, not another bug count."
+      "same_root_supplement": "Points-statistics sibling uses identical wrong Sunday offset; source author C06 will freeze 30-points supplement, not another bug count.",
+      "commit_sha": "2c539fcdb5fd7f159278fba4a69319b240ccd93d",
+      "production_paths_changed": [
+        "chengyinhub-system/src/main/resources/mapper/business/UmsMemberBalanceDetailMapper.xml"
+      ]
     },
     {
       "id": "OWN-C01-51",
@@ -4681,7 +4689,7 @@
       "invariant": "仅消费CAS失败分支owned FOR UPDATE；原身份/同意/期限/操作/fingerprint判断完全不变",
       "repair_boundary": "Exact source transfer and necessary unique regression/evidence; preserve existing authorization and funds policy, no DDL/dependency/provider operations.",
       "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "b01_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -4689,7 +4697,13 @@
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OWN_C01_51Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C01-51.md",
       "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
-      "source_result": "PENDING_SOURCE_DELIVERY"
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
+      "commit_sha": "ab3161f9fd8d5e43e90dda8f3b35abf3ba9fe2bd",
+      "production_paths_changed": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/FundActionPreflightMapper.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/FundActionPreflightServiceImpl.java",
+        "chengyinhub-system/src/main/resources/mapper/business/FundActionPreflightMapper.xml"
+      ]
     },
     {
       "id": "OWN-C05-24",
@@ -4735,7 +4749,7 @@
       "invariant": "Preserve existing freeze periods/fees/approval/ownership policy; no ordinary RR SUM called current-read; no provider call under DB locks.",
       "repair_boundary": "Only dedicated funds-policy DB read/write/audit and commit-only cache invalidation; generic config and permissions unchanged.",
       "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "feature_coorganizer_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -4743,11 +4757,19 @@
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_25Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C05-25.md",
       "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
-      "source_result": "CONTRACT_FROZEN_SOURCE_PENDING",
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
       "old_fixture_paths": [
         "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/PlayerWithdrawalCooldownControllerTest.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CooldownConfigWriteThroughRealConfigServiceTest.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerWithdrawalCooldownServiceTest.java"
+      ],
+      "commit_sha": "b818c6c728858718cc3c6103f8f162c360e5dc75",
+      "production_paths_changed": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerWithdrawalCooldownServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/system/mapper/SysConfigMapper.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/system/service/ISysConfigService.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/system/service/impl/SysConfigServiceImpl.java",
+        "chengyinhub-system/src/main/resources/mapper/system/SysConfigMapper.xml"
       ]
     },
     {
@@ -4773,7 +4795,7 @@
       "status": "AUDIT_THEN_FIX",
       "id": "OWN-C04-21",
       "lane": "C04",
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "a02_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -4785,7 +4807,7 @@
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_20MySqlIT.java"
       ],
       "planned_real_db_cases": "2 methods: original PENDING read -> other connection same maker confirm -> payment false and independent CONFIRMED/no paid audit; distinct confirmer positive PAID. Source only NOT_RUN; explicit CHENGYIN_FUNDS_MYSQL_IT=1, isolated schema.",
-      "source_result": "CONTRACT_FROZEN_SOURCE_PENDING",
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
       "old_fixture_paths": [
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawFrozenRequeryH2Test.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/BothWithdrawalLegsRejectPlayerCooldownTest.java",
@@ -4802,7 +4824,21 @@
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WithdrawalStateMachineServiceTest.java"
       ],
       "cash_late_debit_contract": "cash current row locks first, validate exact actor/amount and original PROCESSING/not frozen; terminal/frozen returns prior receipt/existing rejection, no debit/provider/markFailed overwrite; no new API/state fields",
-      "bounty_transaction_contract": "NESTED/JDBC savepoint preserve outer own writes and original caught bonus failures. Default Boot+MyBatis static evidence; actual deployed manager/nested capability remains NOT_VERIFIED, no REQUIRED/REQUIRES_NEW fallback."
+      "bounty_transaction_contract": "NESTED/JDBC savepoint preserve outer own writes and original caught bonus failures. Default Boot+MyBatis static evidence; actual deployed manager/nested capability remains NOT_VERIFIED, no REQUIRED/REQUIRES_NEW fallback.",
+      "commit_sha": "df54dc030faa12fed4c0ff6b8e7211b257a44ffc",
+      "production_paths_changed": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MemberCashWithdrawMapper.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MerchantReferralBountyMapper.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerWithdrawalCooldownMapper.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantReferralBountyService.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalFrozenAmountResolver.java",
+        "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml",
+        "chengyinhub-system/src/main/resources/mapper/business/MerchantReferralBountyMapper.xml",
+        "chengyinhub-system/src/main/resources/mapper/business/PlayerWithdrawalCooldownMapper.xml"
+      ]
     },
     {
       "title": "提现渠道迟到观察不覆盖终态或冻结事实",
@@ -4819,7 +4855,7 @@
       "status": "AUDIT_THEN_FIX",
       "id": "OWN-C04-22",
       "lane": "C04",
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "a02_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -4831,26 +4867,33 @@
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_20MySqlIT.java"
       ],
       "planned_real_db_cases": "2 methods: original PENDING read -> other connection same maker confirm -> payment false and independent CONFIRMED/no paid audit; distinct confirmer positive PAID. Source only NOT_RUN; explicit CHENGYIN_FUNDS_MYSQL_IT=1, isolated schema.",
-      "source_result": "CONTRACT_FROZEN_SOURCE_PENDING",
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
       "old_fixture_paths": [
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawServiceTest.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawStateMachineTest.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/FundIdempotencyConcurrencyTest.java"
+      ],
+      "commit_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964",
+      "production_paths_changed": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MemberCashWithdrawMapper.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java",
+        "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml"
       ]
     }
   ],
   "refill": "Coordinator adds a concrete nonduplicate authorized task when one is delivered/refuted/blocked; no fabricated defect or empty filler. New IDs never reuse old ones. If no justified candidate remains, record EXHAUSTED rather than invent work.",
-  "total_created_items": 171,
-  "delivered_items": 167,
-  "refill_progress": "Initial 50 retained historically; actual new nonduplicate source slices appended in waves. Counts reflect delivered history and live remainder, not a claim all tasks were bugs.",
+  "total_created_items": 178,
+  "delivered_items": 173,
+  "refill_progress": "178 cumulative concrete source slices/reviews; actual actionable0, target50 shortfall50; no invented filler",
   "actual_actionable_or_in_progress_items": 0,
   "counts_note": "Initial50 and cumulative history are concrete source slices/reviews, not remaining actionable bugs or passed cases. Actual current READY/inflight0, target50 shortfall50 disclosed. Source delivered remains unverified.",
-  "current_public_source_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+  "current_public_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964",
   "actual_state_counts": {
-    "SOURCE_DELIVERED_UNVERIFIED": 129,
+    "SOURCE_DELIVERED_UNVERIFIED": 135,
     "NO_CHANGE_SOURCE_REVIEW": 38,
     "BLOCKED_DECISION": 3,
-    "SUPERSEDED_DUPLICATE": 1
+    "SUPERSEDED_DUPLICATE": 1,
+    "DELEGATED_SOURCE_IMPLEMENTATION": 1
   },
   "source_pr": "https://github.com/liboyang42-cpu/hengyin/pull/44",
   "active_claims": {
@@ -4868,5 +4911,6 @@
     "old_find": "UNCHANGED",
     "verification": "NOT_RUN"
   },
-  "source_pool_status": "EXHAUSTED_WITH_RECORDED_POLICY_BOUNDARIES"
+  "source_pool_status": "EXHAUSTED_WITH_RECORDED_POLICY_BOUNDARIES",
+  "pool_status": "EXHAUSTED_WITH_RECORDED_POLICY_BOUNDARIES"
 }

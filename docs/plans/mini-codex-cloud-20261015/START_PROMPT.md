@@ -1,3 +1,5 @@
+> 最新用户模式（2026-10-15，优先于下文历史启动要求）：两队各最多6名gpt-6.1-sol；现有bug/共享后端源码交付。手动Node/Java/Maven/DB/lint/DevTools/业务验证由用户延后，不等待/重跑自动CI；必要回归源码NOT_RUN。禁止合并、部署、迁移、生产/VPS操作。恢复先读[LONGRUN_CURRENT](LONGRUN_CURRENT.md)、[滚动协议](LONGRUN_ROLLING.md)、精确源表与两队实际队列，已完成历史不算剩余50。当前CORE/EXTRA最后实际READY均0，EXTRA新授权ACK待收；不足标EXHAUSTED，勿凑数或宣称永久运行。
+
 # Codex最终提示词
 
 协议：`CY-COORD-20261015-v1`。本文件替代此前给该角色的启动草稿；任务范围仍以同目录分工与当前证据为准。

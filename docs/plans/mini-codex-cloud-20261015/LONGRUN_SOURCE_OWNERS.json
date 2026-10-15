@@ -5,170 +5,194 @@
     "chengyinhub-xcx/pages/play/index.js": {
       "owner": "CORE/C01",
       "worker": "b01_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-xcx/pages/play/utils/player-game-module.js": {
       "owner": "CORE/C01",
       "worker": "b01_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-xcx/utils/game-session-client.js": {
       "owner": "CORE/C01",
       "worker": "b01_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-xcx/utils/publish/pro-editor-draft.js": {
       "owner": "CORE/C02",
       "worker": "publish_unknown_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-xcx/pages/publish/utils/publish/publish-workflow.js": {
       "owner": "CORE/C02",
       "worker": "publish_unknown_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-xcx/pages/publish/fabu/index.js": {
       "owner": "CORE/C02",
       "worker": "publish_unknown_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-xcx/utils/publish/publish-intent.js": {
       "owner": "CORE/C02",
       "worker": "publish_unknown_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java": {
       "owner": "CORE/C03",
       "worker": "feature_points_rules_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/TopicCreateDTO.java": {
       "owner": "CORE/C03",
       "worker": "feature_points_rules_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/TopicUpdateDTO.java": {
       "owner": "CORE/C03",
       "worker": "feature_points_rules_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java": {
       "owner": "CORE/C03",
       "worker": "feature_points_rules_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java": {
       "owner": "CORE/C04",
       "worker": "a02_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatWriteService.java": {
       "owner": "CORE/C04",
       "worker": "a02_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatDataService.java": {
       "owner": "CORE/C04",
       "worker": "a02_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiNpcController.java": {
       "owner": "CORE/C04",
       "worker": "a02_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/NpcChatRequestMapper.java": {
       "owner": "CORE/C04",
       "worker": "a02_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java": {
       "owner": "CORE/C05",
       "worker": "feature_coorganizer_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiSceneRouter.java": {
       "owner": "CORE/C05",
       "worker": "feature_coorganizer_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java": {
       "owner": "CORE/C05",
       "worker": "feature_coorganizer_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryService.java": {
       "owner": "CORE/C05",
       "worker": "feature_coorganizer_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml": {
       "owner": "CORE/C05",
       "worker": "feature_coorganizer_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java": {
       "owner": "CORE/C06",
       "worker": "final_review_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml": {
       "owner": "CORE/C06",
       "worker": "final_review_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java": {
       "owner": "CORE/C06",
       "worker": "final_review_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventScheduleMaterializer.java": {
       "owner": "EXTRA6/E01",
@@ -404,37 +428,42 @@
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiProviderResultReceivedException.java": {
       "owner": "CORE/C05",
       "worker": "feature_coorganizer_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "C00 grants internal marker for provider result received after model text; preserves existing Reason/message, no result payload; C04 consumes only after public producer commit"
+      "transfer_evidence": "C00 grants internal marker for provider result received after model text; preserves existing Reason/message, no result payload; C04 consumes only after public producer commit",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/GameSessionRuntimeMapper.java": {
       "owner": "CORE/C06",
       "worker": "final_review_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "Original shared runtime mapper owner stopped at public1e403b13/4a; XML already CORE/C06. Grant separate current-lock story read method only; existing readOnly projection method unchanged."
+      "transfer_evidence": "Original shared runtime mapper owner stopped at public1e403b13/4a; XML already CORE/C06. Grant separate current-lock story read method only; existing readOnly projection method unchanged.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/resources/mapper/business/PlayerRunSessionMapper.xml": {
       "owner": "CORE/C04",
       "worker": "a02_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "Existing baseline projection mapper no other lane/Claude active claim; single SQL writer C04. Only monotonic saved_at existing rows. No clear absent row tombstone policy change."
+      "transfer_evidence": "Existing baseline projection mapper no other lane/Claude active claim; single SQL writer C04. Only monotonic saved_at existing rows. No clear absent row tombstone policy change.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeRuntimeConfig.java": {
       "owner": "CORE/C05",
       "worker": "feature_coorganizer_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "Original A03 writer stopped at public1e/4a; no current lane claim. Existing scene JourneyStory subtree remap consumes public E03 c918 helper, no DSL expansion."
+      "transfer_evidence": "Original A03 writer stopped at public1e/4a; no current lane claim. Existing scene JourneyStory subtree remap consumes public E03 c918 helper, no DSL expansion.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantPayableServiceImpl.java": {
       "owner": "CORE/C04",
       "worker": "a02_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "Original B03 writer stopped at public1e/4a; shared payable service distinct from EXTRA clawback. Restore already CONFIRMED-only mapper/controller contract before maker-checker guard, no status policy change."
+      "transfer_evidence": "Original B03 writer stopped at public1e/4a; shared payable service distinct from EXTRA clawback. Restore already CONFIRMED-only mapper/controller contract before maker-checker guard, no status policy change.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayEncounterServiceImpl.java": {
       "owner": "EXTRA6/E05",
@@ -481,9 +510,10 @@
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicRouteSessionScope.java": {
       "owner": "CORE/C06",
       "worker": "final_review_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "7e5882addb7269373b2b95daa0a4ceeb4485fd10",
-      "transfer_evidence": "Original shared A01 scope source stopped at public1e/4a; C00 reserved file, no other active claimant. Add opt-in findCurrent by exact extraction of currentScopedSession; keep find semantics unchanged."
+      "transfer_evidence": "Original shared A01 scope source stopped at public1e/4a; C00 reserved file, no other active claimant. Add opt-in findCurrent by exact extraction of currentScopedSession; keep find semantics unchanged.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ClubEventOpsMapper.java": {
       "owner": "EXTRA6/E01",
@@ -568,310 +598,349 @@
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java": {
       "owner": "CORE/C02",
       "worker": "CORE/C02",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 original writer stopped, no other current writer; exact existing-contract repair proposal in LONGRUN_FUNDS_SOURCE_PLAN.md. No authorization/rate/policy/DDL changes. NOT_RUN."
+      "transfer_evidence": "C00 original writer stopped, no other current writer; exact existing-contract repair proposal in LONGRUN_FUNDS_SOURCE_PLAN.md. No authorization/rate/policy/DDL changes. NOT_RUN.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/resources/mapper/business/UmsMemberBalanceDetailMapper.xml": {
       "owner": "CORE/C06",
       "worker": "CORE/C06",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 original writer stopped, no other current writer; exact existing-contract repair proposal in LONGRUN_FUNDS_SOURCE_PLAN.md. No authorization/rate/policy/DDL changes. NOT_RUN."
+      "transfer_evidence": "C00 original writer stopped, no other current writer; exact existing-contract repair proposal in LONGRUN_FUNDS_SOURCE_PLAN.md. No authorization/rate/policy/DDL changes. NOT_RUN.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/FundActionPreflightServiceImpl.java": {
       "owner": "CORE/C01",
       "worker": "CORE/C01",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 original writer stopped, no other current writer; exact existing-contract repair proposal in LONGRUN_FUNDS_SOURCE_PLAN.md. No authorization/rate/policy/DDL changes. NOT_RUN."
+      "transfer_evidence": "C00 original writer stopped, no other current writer; exact existing-contract repair proposal in LONGRUN_FUNDS_SOURCE_PLAN.md. No authorization/rate/policy/DDL changes. NOT_RUN.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/FundActionPreflightMapper.java": {
       "owner": "CORE/C01",
       "worker": "CORE/C01",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 original writer stopped, no other current writer; exact existing-contract repair proposal in LONGRUN_FUNDS_SOURCE_PLAN.md. No authorization/rate/policy/DDL changes. NOT_RUN."
+      "transfer_evidence": "C00 original writer stopped, no other current writer; exact existing-contract repair proposal in LONGRUN_FUNDS_SOURCE_PLAN.md. No authorization/rate/policy/DDL changes. NOT_RUN.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/resources/mapper/business/FundActionPreflightMapper.xml": {
       "owner": "CORE/C01",
       "worker": "CORE/C01",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 original writer stopped, no other current writer; exact existing-contract repair proposal in LONGRUN_FUNDS_SOURCE_PLAN.md. No authorization/rate/policy/DDL changes. NOT_RUN."
+      "transfer_evidence": "C00 original writer stopped, no other current writer; exact existing-contract repair proposal in LONGRUN_FUNDS_SOURCE_PLAN.md. No authorization/rate/policy/DDL changes. NOT_RUN.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/FundActionPreflightServiceImplTest.java": {
       "owner": "CORE/C01",
       "worker": "b01_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
-      "transfer_evidence": "Only exactConsumedIntentCanReplayButChangedPayloadCannotReuseIt stub changes to selectOwnedByIdForUpdate; equivalent replay and mismatched fingerprint assertions unchanged. Original C00 writer stopped; no other writer."
+      "transfer_evidence": "Only exactConsumedIntentCanReplayButChangedPayloadCannotReuseIt stub changes to selectOwnedByIdForUpdate; equivalent replay and mismatched fingerprint assertions unchanged. Original C00 writer stopped; no other writer.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantReferralBountyService.java": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalFrozenAmountResolver.java": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": null,
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MerchantReferralBountyMapper.java": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerWithdrawalCooldownMapper.java": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/resources/mapper/business/MerchantReferralBountyMapper.xml": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/resources/mapper/business/PlayerWithdrawalCooldownMapper.xml": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawFrozenRequeryH2Test.java": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/BothWithdrawalLegsRejectPlayerCooldownTest.java": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawFailureRecoveryTransactionTest.java": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawStateMachineTest.java": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/FundIdempotencyConcurrencyTest.java": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerWithdrawalCooldownMybatisIntegrationTest.java": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantReferralBountyTest.java": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WithdrawalPiiStorageTest.java": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/MemberFundsStageServiceTest.java": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/BankWithdrawalIdempotencyConcurrencyTest.java": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WithdrawalPayoutStateMybatisTest.java": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawServiceTest.java": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WithdrawalStateMachineServiceTest.java": {
       "owner": "CORE/C04",
       "worker": "CORE/C04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerWithdrawalCooldownServiceImpl.java": {
       "owner": "CORE/C05",
       "worker": "CORE/C05",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/system/service/ISysConfigService.java": {
       "owner": "CORE/C05",
       "worker": "CORE/C05",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/system/service/impl/SysConfigServiceImpl.java": {
       "owner": "CORE/C05",
       "worker": "CORE/C05",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/system/mapper/SysConfigMapper.java": {
       "owner": "CORE/C05",
       "worker": "CORE/C05",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/resources/mapper/system/SysConfigMapper.xml": {
       "owner": "CORE/C05",
       "worker": "CORE/C05",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/PlayerWithdrawalCooldownControllerTest.java": {
       "owner": "CORE/C05",
       "worker": "CORE/C05",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CooldownConfigWriteThroughRealConfigServiceTest.java": {
       "owner": "CORE/C05",
       "worker": "CORE/C05",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerWithdrawalCooldownServiceTest.java": {
       "owner": "CORE/C05",
       "worker": "CORE/C05",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/resources/mapper/business/UmsMemberPointsDetailMapper.xml": {
       "owner": "CORE/C06",
       "worker": "final_review_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
-      "transfer_evidence": "Same Sunday week-window defect as C06-30 sibling production points-statistics endpoint; original C00 writer stopped. Only exact two WEEKDAY offsets, no ledger/other SQL."
+      "transfer_evidence": "Same Sunday week-window defect as C06-30 sibling production points-statistics endpoint; original C00 writer stopped. Only exact two WEEKDAY offsets, no ledger/other SQL.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MemberCashWithdrawMapper.java": {
       "owner": "CORE/C04",
       "worker": "a02_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
-      "transfer_evidence": "C04-21 precise late-debit cash current row lock before member; original C00 stopped; existing terminal/frozen row never overwritten; no new external protocol."
+      "transfer_evidence": "C04-21 precise late-debit cash current row lock before member; original C00 stopped; existing terminal/frozen row never overwritten; no new external protocol.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml": {
       "owner": "CORE/C04",
       "worker": "a02_sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
-      "transfer_evidence": "C04-21 precise late-debit cash current row lock before member; original C00 stopped; existing terminal/frozen row never overwritten; no new external protocol."
+      "transfer_evidence": "C04-21 precise late-debit cash current row lock before member; original C00 stopped; existing terminal/frozen row never overwritten; no new external protocol.",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImplTest.java": {
       "owner": "EXTRA6/E03",
@@ -916,27 +985,1476 @@
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_21MySqlIT.java": {
       "owner": "CORE/C04",
       "worker": "feature_points_rules_sol",
-      "state": "REGRESSION_SOURCE_AUTHORING_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "source_writer": "a02_sol retains all production/old fixture files",
       "verification": "NOT_RUN",
-      "dependency": "Wait frozen exact public C04-21 producer before publishing regression supplement; no test execution"
+      "dependency": "Wait frozen exact public C04-21 producer before publishing regression supplement; no test execution",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
     },
     "docs/verification/mini-longrun-20261015/CORE/OWN-C04-21-realdb.md": {
       "owner": "CORE/C04",
       "worker": "feature_points_rules_sol",
-      "state": "REGRESSION_SOURCE_AUTHORING_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "source_writer": "a02_sol retains all production/old fixture files",
       "verification": "NOT_RUN",
-      "dependency": "Wait frozen exact public C04-21 producer before publishing regression supplement; no test execution"
+      "dependency": "Wait frozen exact public C04-21 producer before publishing regression supplement; no test execution",
+      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+    },
+    "docs/plans/mini-claude-ui-20261015/BACKLOG.md": {
+      "owner": "CLAUDE/PR21",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "eadc5ef4b5da2f01bca84160aa34ee8a6f8bce92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "docs/plans/mini-claude-ui-20261015/README.md": {
+      "owner": "CLAUDE/PR21",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "eadc5ef4b5da2f01bca84160aa34ee8a6f8bce92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "docs/plans/mini-claude-ui-20261015/TASKS.md": {
+      "owner": "CLAUDE/PR21",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "eadc5ef4b5da2f01bca84160aa34ee8a6f8bce92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/badges/index.js": {
+      "owner": "CLAUDE/PR23",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "79570ed243e44b7c5534991a4bc9bccc64ebdaf1",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/badges/index.json": {
+      "owner": "CLAUDE/PR23",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "79570ed243e44b7c5534991a4bc9bccc64ebdaf1",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/badges/index.wxml": {
+      "owner": "CLAUDE/PR23",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "79570ed243e44b7c5534991a4bc9bccc64ebdaf1",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/badges/index.wxss": {
+      "owner": "CLAUDE/PR23",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "79570ed243e44b7c5534991a4bc9bccc64ebdaf1",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/utils/club-badge.js": {
+      "owner": "CLAUDE/PR23",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "79570ed243e44b7c5534991a4bc9bccc64ebdaf1",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/gerenziliao/gerenziliao.js": {
+      "owner": "CLAUDE/PR23",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "79570ed243e44b7c5534991a4bc9bccc64ebdaf1",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/gerenziliao/gerenziliao.wxss": {
+      "owner": "CLAUDE/PR23",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "79570ed243e44b7c5534991a4bc9bccc64ebdaf1",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/club-badge-manage.test.js": {
+      "owner": "CLAUDE/PR23",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "79570ed243e44b7c5534991a4bc9bccc64ebdaf1",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/profile-edit-state-contract.test.js": {
+      "owner": "CLAUDE/PR23",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "79570ed243e44b7c5534991a4bc9bccc64ebdaf1",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/profile-nickname-check.test.js": {
+      "owner": "CLAUDE/PR23",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "79570ed243e44b7c5534991a4bc9bccc64ebdaf1",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/utils/nickname-check.js": {
+      "owner": "CLAUDE/PR23",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "79570ed243e44b7c5534991a4bc9bccc64ebdaf1",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/scripts/ui-silent-error-allowlist.js": {
+      "owner": "CLAUDE/PR25",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "87c9ce5bbd02f0a9c5b45c9cdd3d424ed133026c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageB/pages/im/list/index.js": {
+      "owner": "CLAUDE/PR25",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "87c9ce5bbd02f0a9c5b45c9cdd3d424ed133026c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageB/pages/im/list/index.wxml": {
+      "owner": "CLAUDE/PR25",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "87c9ce5bbd02f0a9c5b45c9cdd3d424ed133026c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageB/pages/im/list/index.wxss": {
+      "owner": "CLAUDE/PR25",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "87c9ce5bbd02f0a9c5b45c9cdd3d424ed133026c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageB/pages/im/list/report-notices.js": {
+      "owner": "CLAUDE/PR25",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "87c9ce5bbd02f0a9c5b45c9cdd3d424ed133026c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/report-common/view.js": {
+      "owner": "CLAUDE/PR25",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "87c9ce5bbd02f0a9c5b45c9cdd3d424ed133026c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/report-detail/index.js": {
+      "owner": "CLAUDE/PR25",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "87c9ce5bbd02f0a9c5b45c9cdd3d424ed133026c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/report-detail/index.json": {
+      "owner": "CLAUDE/PR25",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "87c9ce5bbd02f0a9c5b45c9cdd3d424ed133026c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/report-detail/index.wxml": {
+      "owner": "CLAUDE/PR25",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "87c9ce5bbd02f0a9c5b45c9cdd3d424ed133026c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/report-detail/index.wxss": {
+      "owner": "CLAUDE/PR25",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "87c9ce5bbd02f0a9c5b45c9cdd3d424ed133026c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/report-mine/index.js": {
+      "owner": "CLAUDE/PR25",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "87c9ce5bbd02f0a9c5b45c9cdd3d424ed133026c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/report-mine/index.json": {
+      "owner": "CLAUDE/PR25",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "87c9ce5bbd02f0a9c5b45c9cdd3d424ed133026c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/report-mine/index.wxml": {
+      "owner": "CLAUDE/PR25",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "87c9ce5bbd02f0a9c5b45c9cdd3d424ed133026c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/report-mine/index.wxss": {
+      "owner": "CLAUDE/PR25",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "87c9ce5bbd02f0a9c5b45c9cdd3d424ed133026c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/im-list-mutation-race.test.js": {
+      "owner": "CLAUDE/PR25",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "87c9ce5bbd02f0a9c5b45c9cdd3d424ed133026c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/report-transparency-n1.test.js": {
+      "owner": "CLAUDE/PR25",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "87c9ce5bbd02f0a9c5b45c9cdd3d424ed133026c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "ci/silent-error-allowlist.txt": {
+      "owner": "CLAUDE/PR25",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "87c9ce5bbd02f0a9c5b45c9cdd3d424ed133026c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/components/cy/npc-chat/chat-export.js": {
+      "owner": "CLAUDE/PR27",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/components/cy/npc-chat/index.js": {
+      "owner": "CLAUDE/PR27",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/components/cy/npc-chat/index.wxml": {
+      "owner": "CLAUDE/PR27",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/components/cy/npc-chat/index.wxss": {
+      "owner": "CLAUDE/PR27",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/activity/official-detail/index.js": {
+      "owner": "CLAUDE/PR27",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/activity/official-detail/index.wxml": {
+      "owner": "CLAUDE/PR27",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/activity/official-detail/index.wxss": {
+      "owner": "CLAUDE/PR27",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/activity/official-mine/index.js": {
+      "owner": "CLAUDE/PR27",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/activity/official-mine/index.wxml": {
+      "owner": "CLAUDE/PR27",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/activity/official-mine/index.wxss": {
+      "owner": "CLAUDE/PR27",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/activity/official-organizer/index.js": {
+      "owner": "CLAUDE/PR27",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/activity/official-organizer/index.json": {
+      "owner": "CLAUDE/PR27",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/activity/official-organizer/index.wxml": {
+      "owner": "CLAUDE/PR27",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/activity/official-organizer/index.wxss": {
+      "owner": "CLAUDE/PR27",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/activity/official-organizer/organizer-rules.js": {
+      "owner": "CLAUDE/PR27",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/scripts/ui-theme-unit-lint.js": {
+      "owner": "CLAUDE/PR27",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/components/cy/profile/points-rules.js": {
+      "owner": "CLAUDE/PR27",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/npc-chat-export.test.js": {
+      "owner": "CLAUDE/PR27",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/official-organizer-console.test.js": {
+      "owner": "CLAUDE/PR27",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/profile-points-rules.test.js": {
+      "owner": "CLAUDE/PR27",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/components/cy/official-coorganizers/index.js": {
+      "owner": "CLAUDE/PR35",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "57db7dc0dd394a716037503d2c3dea0e90e4238c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/components/cy/official-coorganizers/index.json": {
+      "owner": "CLAUDE/PR35",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "57db7dc0dd394a716037503d2c3dea0e90e4238c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/components/cy/official-coorganizers/index.wxml": {
+      "owner": "CLAUDE/PR35",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "57db7dc0dd394a716037503d2c3dea0e90e4238c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/components/cy/official-coorganizers/index.wxss": {
+      "owner": "CLAUDE/PR35",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "57db7dc0dd394a716037503d2c3dea0e90e4238c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/official-parties.test.js": {
+      "owner": "CLAUDE/PR35",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "57db7dc0dd394a716037503d2c3dea0e90e4238c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/utils/official-parties.js": {
+      "owner": "CLAUDE/PR35",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "57db7dc0dd394a716037503d2c3dea0e90e4238c",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/roam-features-task3.test.js": {
+      "owner": "CLAUDE/PR37",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "8e5873f5c3e044614253672c2717c310cd7070cf",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/roam-poi-filter.test.js": {
+      "owner": "CLAUDE/PR37",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "8e5873f5c3e044614253672c2717c310cd7070cf",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/utils/roam-poi-filter.js": {
+      "owner": "CLAUDE/PR37",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "8e5873f5c3e044614253672c2717c310cd7070cf",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/roam-sync-status.test.js": {
+      "owner": "CLAUDE/PR38",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "e6e46fed81e086c4ab39c374fbc4468410d43970",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/utils/roam-sync-status.js": {
+      "owner": "CLAUDE/PR38",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "e6e46fed81e086c4ab39c374fbc4468410d43970",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/roam-idle.test.js": {
+      "owner": "CLAUDE/PR39",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "20144d1076fab628f19451c79ca86958cf65dd31",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/utils/roam-idle.js": {
+      "owner": "CLAUDE/PR39",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "20144d1076fab628f19451c79ca86958cf65dd31",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/points-history/index.js": {
+      "owner": "CLAUDE/PR40",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "095738b6fbeaa8950c00bb1a7af563f086cb157e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/points-history/index.json": {
+      "owner": "CLAUDE/PR40",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "095738b6fbeaa8950c00bb1a7af563f086cb157e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/points-history/index.wxml": {
+      "owner": "CLAUDE/PR40",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "095738b6fbeaa8950c00bb1a7af563f086cb157e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/points-history/index.wxss": {
+      "owner": "CLAUDE/PR40",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "095738b6fbeaa8950c00bb1a7af563f086cb157e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/points-history/rows.js": {
+      "owner": "CLAUDE/PR40",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "095738b6fbeaa8950c00bb1a7af563f086cb157e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/points-history-filter.test.js": {
+      "owner": "CLAUDE/PR40",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "095738b6fbeaa8950c00bb1a7af563f086cb157e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/components/cy/scene-roam-stamp-album/index.js": {
+      "owner": "CLAUDE/PR42",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "5957ee1eed10b2ef786da9c555f3ee7859148468",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/components/cy/scene-roam-stamp-album/index.json": {
+      "owner": "CLAUDE/PR42",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "5957ee1eed10b2ef786da9c555f3ee7859148468",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/components/cy/scene-roam-stamp-album/index.wxml": {
+      "owner": "CLAUDE/PR42",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "5957ee1eed10b2ef786da9c555f3ee7859148468",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/components/cy/scene-roam-stamp-album/index.wxss": {
+      "owner": "CLAUDE/PR42",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "5957ee1eed10b2ef786da9c555f3ee7859148468",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/stamp-received-detail.test.js": {
+      "owner": "CLAUDE/PR42",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "5957ee1eed10b2ef786da9c555f3ee7859148468",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/activity/official-inbox/index.js": {
+      "owner": "CLAUDE/PR43",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "3e56b31d4e821bbcd859ffd0616dea962292e618",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/activity/official-inbox/index.wxml": {
+      "owner": "CLAUDE/PR43",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "3e56b31d4e821bbcd859ffd0616dea962292e618",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/activity/official-inbox/index.wxss": {
+      "owner": "CLAUDE/PR43",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "3e56b31d4e821bbcd859ffd0616dea962292e618",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/activity/official-inbox/invite-card.js": {
+      "owner": "CLAUDE/PR43",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "3e56b31d4e821bbcd859ffd0616dea962292e618",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/official-inbox-invite-card.test.js": {
+      "owner": "CLAUDE/PR43",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "3e56b31d4e821bbcd859ffd0616dea962292e618",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/coupon/coupon.json": {
+      "owner": "CLAUDE/PR45",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/coupon/coupon.wxml": {
+      "owner": "CLAUDE/PR45",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/couponInfo/couponInfo.json": {
+      "owner": "CLAUDE/PR45",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/mycanyu/mycanyu.json": {
+      "owner": "CLAUDE/PR45",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/mycanyu/mycanyu.wxml": {
+      "owner": "CLAUDE/PR45",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/myinvite/myinvite.json": {
+      "owner": "CLAUDE/PR45",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/myinvite/myinvite.wxml": {
+      "owner": "CLAUDE/PR45",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/mytemplate/mytemplate.json": {
+      "owner": "CLAUDE/PR45",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/mytemplate/mytemplate.wxml": {
+      "owner": "CLAUDE/PR45",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/order/order.json": {
+      "owner": "CLAUDE/PR45",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/order/order.wxml": {
+      "owner": "CLAUDE/PR45",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/tixian/tixian.json": {
+      "owner": "CLAUDE/PR45",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/tixian/tixian.wxml": {
+      "owner": "CLAUDE/PR45",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/tixianjilu/tixianjilu.json": {
+      "owner": "CLAUDE/PR45",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/tixianjilu/tixianjilu.wxml": {
+      "owner": "CLAUDE/PR45",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/ann-d-funds-member-ui-contract.test.js": {
+      "owner": "CLAUDE/PR45",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/myinvite-load-state-contract.test.js": {
+      "owner": "CLAUDE/PR45",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/publish-editor-return-flow.test.js": {
+      "owner": "CLAUDE/PR45",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/ui-review-0831-marks-contract.test.js": {
+      "owner": "CLAUDE/PR45",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/visual-report-content-p1-contract.test.js": {
+      "owner": "CLAUDE/PR45",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/checkin-detail/index.json": {
+      "owner": "CLAUDE/PR46",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/checkin-detail/index.wxml": {
+      "owner": "CLAUDE/PR46",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/customers/index.json": {
+      "owner": "CLAUDE/PR46",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/customers/index.wxml": {
+      "owner": "CLAUDE/PR46",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/edit/index.json": {
+      "owner": "CLAUDE/PR46",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/enroll/index.json": {
+      "owner": "CLAUDE/PR46",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/enroll/index.wxml": {
+      "owner": "CLAUDE/PR46",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/event-ops/index.json": {
+      "owner": "CLAUDE/PR46",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/event-ops/index.wxml": {
+      "owner": "CLAUDE/PR46",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/governance/index.json": {
+      "owner": "CLAUDE/PR46",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/governance/index.wxml": {
+      "owner": "CLAUDE/PR46",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/join-requests/index.json": {
+      "owner": "CLAUDE/PR46",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/join-requests/index.wxml": {
+      "owner": "CLAUDE/PR46",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/notify/index.json": {
+      "owner": "CLAUDE/PR46",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/notify/index.wxml": {
+      "owner": "CLAUDE/PR46",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/settlement/index.json": {
+      "owner": "CLAUDE/PR46",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/settlement/index.wxml": {
+      "owner": "CLAUDE/PR46",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/workbench/index.json": {
+      "owner": "CLAUDE/PR46",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/workbench/index.wxml": {
+      "owner": "CLAUDE/PR46",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/club-workbench-contract.test.js": {
+      "owner": "CLAUDE/PR46",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/page-title-flush-contract.test.js": {
+      "owner": "CLAUDE/PR46",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageP3/pages/growthcenter/leaderboard/index.json": {
+      "owner": "CLAUDE/PR49",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "8200e05b4b51c4d2ce5d419f2e321dd08ecfec4a",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageP3/pages/growthcenter/leaderboard/index.wxml": {
+      "owner": "CLAUDE/PR49",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "8200e05b4b51c4d2ce5d419f2e321dd08ecfec4a",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageP3/pages/object-cards/index/index.json": {
+      "owner": "CLAUDE/PR49",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "8200e05b4b51c4d2ce5d419f2e321dd08ecfec4a",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageP3/pages/object-cards/index/index.wxml": {
+      "owner": "CLAUDE/PR49",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "8200e05b4b51c4d2ce5d419f2e321dd08ecfec4a",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageP3/pages/stamp-album/index/index.json": {
+      "owner": "CLAUDE/PR49",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "8200e05b4b51c4d2ce5d419f2e321dd08ecfec4a",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageP3/pages/stamp-album/index/index.wxml": {
+      "owner": "CLAUDE/PR49",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "8200e05b4b51c4d2ce5d419f2e321dd08ecfec4a",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageRoam/history/index.json": {
+      "owner": "CLAUDE/PR49",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "8200e05b4b51c4d2ce5d419f2e321dd08ecfec4a",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageRoam/history/index.wxml": {
+      "owner": "CLAUDE/PR49",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "8200e05b4b51c4d2ce5d419f2e321dd08ecfec4a",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/roam-scene-port-contract.test.js": {
+      "owner": "CLAUDE/PR49",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "8200e05b4b51c4d2ce5d419f2e321dd08ecfec4a",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/citynode/index.json": {
+      "owner": "CLAUDE/PR50",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "b65c94e849e7e7e20c648ee86589bfce5107bcbb",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/citynode/index.wxml": {
+      "owner": "CLAUDE/PR50",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "b65c94e849e7e7e20c648ee86589bfce5107bcbb",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/coop-center/index.wxml": {
+      "owner": "CLAUDE/PR50",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "b65c94e849e7e7e20c648ee86589bfce5107bcbb",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/coop-center/index.wxss": {
+      "owner": "CLAUDE/PR50",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "b65c94e849e7e7e20c648ee86589bfce5107bcbb",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/ledger/index.json": {
+      "owner": "CLAUDE/PR50",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "b65c94e849e7e7e20c648ee86589bfce5107bcbb",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/ledger/index.wxml": {
+      "owner": "CLAUDE/PR50",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "b65c94e849e7e7e20c648ee86589bfce5107bcbb",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/ledger/order-detail/index.json": {
+      "owner": "CLAUDE/PR50",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "b65c94e849e7e7e20c648ee86589bfce5107bcbb",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/ledger/order-detail/index.wxml": {
+      "owner": "CLAUDE/PR50",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "b65c94e849e7e7e20c648ee86589bfce5107bcbb",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/custom-nav-page-surface-contract.test.js": {
+      "owner": "CLAUDE/PR50",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "b65c94e849e7e7e20c648ee86589bfce5107bcbb",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/decor/design.wxss": {
+      "owner": "CLAUDE/PR51",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "e41ed65c4362c54168312053d3e40d6bbd022304",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/decor/index.js": {
+      "owner": "CLAUDE/PR51",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "e41ed65c4362c54168312053d3e40d6bbd022304",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/decor/index.wxml": {
+      "owner": "CLAUDE/PR51",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "e41ed65c4362c54168312053d3e40d6bbd022304",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/publish/temp/index.json": {
+      "owner": "CLAUDE/PR52",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6342022edae65217ddad21bd9a3de130e71b7421",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/publish/temp/index.wxss": {
+      "owner": "CLAUDE/PR52",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6342022edae65217ddad21bd9a3de130e71b7421",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/components/merchant-claim-sheet/index.wxss": {
+      "owner": "CLAUDE/PR54",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "39f2e2cd906362e16d17aa7d17733c913bde258a",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/predict/index.wxss": {
+      "owner": "CLAUDE/PR54",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "39f2e2cd906362e16d17aa7d17733c913bde258a",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/reviews/index.wxss": {
+      "owner": "CLAUDE/PR54",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "39f2e2cd906362e16d17aa7d17733c913bde258a",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/decor/perks/index.js": {
+      "owner": "CLAUDE/PR55",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "c393bc64e87c9fbc3ef2b53d34ce79f398655fbb",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/decor/perks/index.wxml": {
+      "owner": "CLAUDE/PR55",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "c393bc64e87c9fbc3ef2b53d34ce79f398655fbb",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/couponInfo/couponInfo.js": {
+      "owner": "CLAUDE/PR56",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "da18d2d7d5a03ac77dd48eea950d8a58853a0206",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/club-detail-ia-contract.test.js": {
+      "owner": "CLAUDE/PR57",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "435a9d8d331a14f948a9db58f74cb82d1878afb7",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/club-game-director-contract.test.js": {
+      "owner": "CLAUDE/PR57",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "435a9d8d331a14f948a9db58f74cb82d1878afb7",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/club-governance-ui-contract.test.js": {
+      "owner": "CLAUDE/PR57",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "435a9d8d331a14f948a9db58f74cb82d1878afb7",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/club-invite-feedback-contract.test.js": {
+      "owner": "CLAUDE/PR57",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "435a9d8d331a14f948a9db58f74cb82d1878afb7",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/club-journey-audit-fix-contract.test.js": {
+      "owner": "CLAUDE/PR57",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "435a9d8d331a14f948a9db58f74cb82d1878afb7",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/club-owner-entry-recovery-contract.test.js": {
+      "owner": "CLAUDE/PR57",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "435a9d8d331a14f948a9db58f74cb82d1878afb7",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/club-p1-state-contract.test.js": {
+      "owner": "CLAUDE/PR57",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "435a9d8d331a14f948a9db58f74cb82d1878afb7",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/club-role-ui-contract.test.js": {
+      "owner": "CLAUDE/PR57",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "435a9d8d331a14f948a9db58f74cb82d1878afb7",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/components/cy/club-card/index.wxml": {
+      "owner": "CLAUDE/PR58",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "96675007f241104570e30df974d1c1a15b5ccf72",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/components/cy/club-topic-onboarding/index.wxml": {
+      "owner": "CLAUDE/PR58",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "96675007f241104570e30df974d1c1a15b5ccf72",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/components/cy/merchant-card/index.wxml": {
+      "owner": "CLAUDE/PR58",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "96675007f241104570e30df974d1c1a15b5ccf72",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/components/cy/scene-roam-discover/index.wxml": {
+      "owner": "CLAUDE/PR58",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "96675007f241104570e30df974d1c1a15b5ccf72",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/components/cy/scene-roam-history/index.wxml": {
+      "owner": "CLAUDE/PR58",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "96675007f241104570e30df974d1c1a15b5ccf72",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/components/cy/spin-card/index.wxml": {
+      "owner": "CLAUDE/PR58",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "96675007f241104570e30df974d1c1a15b5ccf72",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/publish/fabu/index.wxml": {
+      "owner": "CLAUDE/PR58",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "96675007f241104570e30df974d1c1a15b5ccf72",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/publish/fabu/topic-detail-sheet.wxml": {
+      "owner": "CLAUDE/PR58",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "96675007f241104570e30df974d1c1a15b5ccf72",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/search2/result/index.wxml": {
+      "owner": "CLAUDE/PR58",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "96675007f241104570e30df974d1c1a15b5ccf72",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/components/cy/scene-play-activity-detail/index.wxml": {
+      "owner": "CLAUDE/PR58",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "96675007f241104570e30df974d1c1a15b5ccf72",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.wxml": {
+      "owner": "CLAUDE/PR58",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "96675007f241104570e30df974d1c1a15b5ccf72",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageRoam/nearby/index.wxml": {
+      "owner": "CLAUDE/PR58",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "96675007f241104570e30df974d1c1a15b5ccf72",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/club/edit/index.js": {
+      "owner": "CLAUDE/PR59",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "f55170581c905a017e76eea825457fb7c1b73cb5",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/club-edit-back-guard.test.js": {
+      "owner": "CLAUDE/PR59",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "f55170581c905a017e76eea825457fb7c1b73cb5",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/publish/utils/publish/route-map-view.js": {
+      "owner": "CLAUDE/PR60",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "3cbbd6494f85a4734329577cdfbcdc516ebeb200",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageRoam/nearby/index.js": {
+      "owner": "CLAUDE/PR60",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "3cbbd6494f85a4734329577cdfbcdc516ebeb200",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.json": {
+      "owner": "CLAUDE/PR62",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "b82447950dd3eed6bb1f9468d7aac76d12198b3d",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.wxml": {
+      "owner": "CLAUDE/PR62",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "b82447950dd3eed6bb1f9468d7aac76d12198b3d",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/components/cy/category-sheet/index.wxml": {
+      "owner": "CLAUDE/PR65",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "a86a1fd80481dc8e07ccb5f00e07d05976f824b5",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/publish/components/collaborator-picker/index.wxml": {
+      "owner": "CLAUDE/PR65",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "a86a1fd80481dc8e07ccb5f00e07d05976f824b5",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageA/pages/infomation/infomation.wxml": {
+      "owner": "CLAUDE/PR65",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "a86a1fd80481dc8e07ccb5f00e07d05976f824b5",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/aftercare/detail/index.json": {
+      "owner": "CLAUDE/PR67",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6a65324557aab652ff351aca6710f4eba292e800",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/aftercare/detail/index.wxml": {
+      "owner": "CLAUDE/PR67",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6a65324557aab652ff351aca6710f4eba292e800",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/customer/detail/index.json": {
+      "owner": "CLAUDE/PR67",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6a65324557aab652ff351aca6710f4eba292e800",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/customer/detail/index.wxml": {
+      "owner": "CLAUDE/PR67",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6a65324557aab652ff351aca6710f4eba292e800",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/decor/ai-npc/index.json": {
+      "owner": "CLAUDE/PR67",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6a65324557aab652ff351aca6710f4eba292e800",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/decor/ai-npc/index.wxml": {
+      "owner": "CLAUDE/PR67",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6a65324557aab652ff351aca6710f4eba292e800",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/game-node/index.json": {
+      "owner": "CLAUDE/PR67",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6a65324557aab652ff351aca6710f4eba292e800",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/game-node/index.wxml": {
+      "owner": "CLAUDE/PR67",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6a65324557aab652ff351aca6710f4eba292e800",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/predict/index.json": {
+      "owner": "CLAUDE/PR67",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6a65324557aab652ff351aca6710f4eba292e800",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/predict/index.wxml": {
+      "owner": "CLAUDE/PR67",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "6a65324557aab652ff351aca6710f4eba292e800",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/aftercare/detail/index.js": {
+      "owner": "CLAUDE/PR68",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "41680f1ed5eed0f0787e63183258de66c58002b0",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/merchant/reviews/index.js": {
+      "owner": "CLAUDE/PR68",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "41680f1ed5eed0f0787e63183258de66c58002b0",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/square/detail/index.js": {
+      "owner": "CLAUDE/PR68",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "41680f1ed5eed0f0787e63183258de66c58002b0",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/square/list/index.js": {
+      "owner": "CLAUDE/PR68",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "41680f1ed5eed0f0787e63183258de66c58002b0",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/templatedetail/templatedetail.js": {
+      "owner": "CLAUDE/PR68",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "41680f1ed5eed0f0787e63183258de66c58002b0",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/topic/index/index.js": {
+      "owner": "CLAUDE/PR68",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "41680f1ed5eed0f0787e63183258de66c58002b0",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js": {
+      "owner": "CLAUDE/PR68",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "41680f1ed5eed0f0787e63183258de66c58002b0",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/components/cy/scene-play-activity-detail/index.js": {
+      "owner": "CLAUDE/PR68",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "41680f1ed5eed0f0787e63183258de66c58002b0",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js": {
+      "owner": "CLAUDE/PR68",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "41680f1ed5eed0f0787e63183258de66c58002b0",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/helpers/media-preview-sandbox.js": {
+      "owner": "CLAUDE/PR68",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "41680f1ed5eed0f0787e63183258de66c58002b0",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/c01-home-search-state-contract.test.js": {
+      "owner": "CLAUDE/PR68",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "41680f1ed5eed0f0787e63183258de66c58002b0",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/citynode-validation-methods.test.js": {
+      "owner": "CLAUDE/PR68",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "41680f1ed5eed0f0787e63183258de66c58002b0",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/merchant-aftercare-page.test.js": {
+      "owner": "CLAUDE/PR68",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "41680f1ed5eed0f0787e63183258de66c58002b0",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/merchant-topic-cover-states.test.js": {
+      "owner": "CLAUDE/PR68",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "41680f1ed5eed0f0787e63183258de66c58002b0",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/templatedetail-capability-tab-contract.test.js": {
+      "owner": "CLAUDE/PR68",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "41680f1ed5eed0f0787e63183258de66c58002b0",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
+    },
+    "chengyinhub-xcx/tests/unit/wt2-player-scene-fixes-contract.test.js": {
+      "owner": "CLAUDE/PR68",
+      "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+      "base_sha": "41680f1ed5eed0f0787e63183258de66c58002b0",
+      "transfer_evidence": "C00 exact delivered path registration; UI/new-feature domain remains Claude; no CORE/EXTRA or reserved transfer",
+      "scope": "source only; no validation, merge, deployment; report actual worker ACK via PR21/PR16"
     }
   },
   "reserved_not_transferred": [
-    "chengyinhub-xcx/subpackageMember/components/cy/scene-member-order-detail/index.js",
     "chengyinhub-xcx/app.js",
     "chengyinhub-xcx/app.json",
-    "chengyinhub-xcx/utils/transport/request-client.js",
+    "chengyinhub-xcx/scripts/fixtures.json",
+    "chengyinhub-xcx/scripts/shot-matrix.js",
     "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
-    "chengyinhub-xcx/tests/lint/ui-integrity-baseline.js"
+    "chengyinhub-xcx/scripts/uiaudit/route-matrix.json",
+    "chengyinhub-xcx/subpackageMember/components/cy/scene-member-order-detail/index.js",
+    "chengyinhub-xcx/tests/lint/ui-integrity-baseline.js",
+    "chengyinhub-xcx/tests/unit/action-ledger.test.js",
+    "chengyinhub-xcx/tests/unit/all-page-back-stack-contract.test.js",
+    "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js",
+    "chengyinhub-xcx/tests/unit/nav-page-title-spacing-contract.test.js",
+    "chengyinhub-xcx/tests/unit/route-matrix-freshness.test.js",
+    "chengyinhub-xcx/tests/unit/secondary-nav-consistency.test.js",
+    "chengyinhub-xcx/tests/unit/title-system-owner-contract.test.js",
+    "chengyinhub-xcx/tests/unit/unused-component-registry.test.js",
+    "chengyinhub-xcx/utils/danger-actions.js",
+    "chengyinhub-xcx/utils/transport/request-client.js"
   ],
   "extra_coordinator_docs": [
     "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_COORDINATION/BACKLOG.md",

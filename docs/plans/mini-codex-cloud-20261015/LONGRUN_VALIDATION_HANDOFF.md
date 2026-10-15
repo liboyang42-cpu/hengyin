@@ -1,11 +1,10 @@
-# 本地回来后的集中验证交接
+# 后续集中验证交接
 
-SOURCE_DELIVERED_UNVERIFIED / NOT_RUN。此文是静态源码清单，不是已执行验证。
+精确公共源码 `2b1984b59a0929a360e8095d5fc1955a1aed7964`，PR44，NOT_RUN。逐类全名、源注解数与环境门禁在同名JSON；静态声明不是执行数。
 
-公共源码PR44完整SHA `05d307ec0466988f212187666d7f1e5c3274f434`，基线PR28 `4a943501262cb533158428d9748d8ac49aaa8950`。`LONGRUN_VALIDATION_HANDOFF.json`列本候选相对基线变动的Java测试/夹具和Node测试路径、Java类名与源码声明的环境gate；注解数不代表发现/执行/通过次数。EXTRA PR36及原分支未整体纳入，按实际最终候选另建清单，不把两队未集成快照相加验收。
+- Use exact public SHA; group source-unit, real MySQL/Redis, runtime HTTP and device acceptance separately
+- Select IT/environment gates explicitly; count fresh report files only, never inherit old231 results
+- C04 realDB3 and C05 realDB4 only source declarations; C04 does not prove full bank/provider or deployed NESTED manager, C05 mock Redis does not prove real Redis/AOP routing
+- No bare Docker or old VPS budget; verify current approved build/integration resource channel after user returns
 
-用户下次回来才由本地验证方按当时资源规则排队，先编译和普通回归，再点名真实MySQL/Redis/IT（默认Maven发现可能不含IT）。本清单不替代相关旧回归及生产者/消费者组合，也不预设构建会通过。显式环境门禁、独占任务库和新XML时间须分别核准；缺环境列缺前提，不静默skip当通过。沿当时212守卫/共享锁和适用集成通道，禁止旧裸Docker/绕预算；离线network-none构建入口不能替代真库。没有核实批准入口时继续保留集成未验证。
-
-失败交原owner，独立证据保留完整SHA/命令/环境/真实用例数/退出码/日志。修复后新SHA+聚焦差异矩阵再验，不沿用旧候选签收。B03付款真库2方法随f9e2932公共、门禁CHENGYIN_FUNDS_MYSQL_IT=1；E04积分冲回真RR2方法原fbb7b363已精确提取；仅写用例，不称已跑。
-
-原1e403b13的7+202+22=231仅其冻结候选通过，原69c夹具失败保留历史。新增源码的编译、自动化测试、真实身份HTTP、设备、迁移部署和合并一律分别签收；TEST_DEPLOYED=NO，当前不提前关闭全轮任务。
+共享UI生成文件仍待最终组合及本地验证窗口，不复制各支冻结计数。旧1e403b13的231项仅覆盖旧冻结候选；新源码、PR36和Claude交付均不继承。

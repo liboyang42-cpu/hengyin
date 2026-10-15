@@ -1,0 +1,4124 @@
+{
+  "protocol": "CY-HANDOFF-C00-INTAKE-20261015-v1",
+  "maintainer": "C00 only",
+  "verification": "NOT_RUN_USER_DEFERRED",
+  "scope": "read-only full handoff bodies and exact file lists; no implementation or UI acceptance",
+  "count": 37,
+  "pull_requests": [
+    {
+      "pr": 21,
+      "head_sha": "eadc5ef4b5da2f01bca84160aa34ee8a6f8bce92",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/21",
+      "title": "docs: Claude 小程序UI与新功能对账及任务卡（CL1–CL5）",
+      "exact_changed_files": [
+        "docs/plans/mini-claude-ui-20261015/BACKLOG.md",
+        "docs/plans/mini-claude-ui-20261015/README.md",
+        "docs/plans/mini-claude-ui-20261015/TASKS.md"
+      ],
+      "backend_dependencies": [],
+      "blocked_reasons": [],
+      "scope_notes": {
+        "handoff": "Claude coordinator, documentation-only; no worker merged into this branch.",
+        "claims": "Acknowledges C00 CL3 registration; requests CL2/CL4 precise paths, CL1 withdrawal release and master baseline merge.",
+        "visible_evidence": "Three changed files are only BACKLOG/README/TASKS. TASKS patch contains persisted narrowed product decisions. No PR21 comments returned by either PR timeline or all-pages issue-comments tools.",
+        "gaps": [
+          "Local OWNERSHIP receipt still PENDING while current PR21 body claims ACK.",
+          "Body cites old control 2f050fd7 and integration 1e403b1; these do not describe current CORE longrun source head.",
+          "PR35/37–68 are explicitly outside this audit; no ownership grant inferred."
+        ]
+      },
+      "coordinator_patches": [],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr21_27.json",
+      "file_dispositions": [
+        {
+          "path": "docs/plans/mini-claude-ui-20261015/BACKLOG.md",
+          "owner": "CLAUDE/PR21",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            21
+          ]
+        },
+        {
+          "path": "docs/plans/mini-claude-ui-20261015/README.md",
+          "owner": "CLAUDE/PR21",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            21
+          ]
+        },
+        {
+          "path": "docs/plans/mini-claude-ui-20261015/TASKS.md",
+          "owner": "CLAUDE/PR21",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            21
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 22,
+      "head_sha": "9ff0edc372fbf5c6d31e3d9115e4b7b9639e4ab4",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/22",
+      "title": "feat(xcx): CL1 漫游·跟随官方线路（G1）+ 文案/整洁（G3）",
+      "exact_changed_files": [
+        "chengyinhub-xcx/pages/roam/index.js",
+        "chengyinhub-xcx/pages/roam/index.wxml",
+        "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+        "chengyinhub-xcx/tests/lint/ui-integrity-baseline.js"
+      ],
+      "backend_dependencies": [],
+      "blocked_reasons": [],
+      "scope_notes": {
+        "handoff": "CL1 current net change is G3 only; original G1 is postponed.",
+        "claims": "Latest coordinator comment 6193965189 says G1 withdrawn, only G3 remains, no merge due ownership/CI.",
+        "visible_evidence": "Exact file list has 4 files: roam JS/WXML plus ledger/baseline. Selected JS patch only splits declarations/methods; WXML only changes official-lines label. No G1 files in current net diff.",
+        "gaps": [
+          "PR body is materially stale: it still says G1+G3 has not been withdrawn; current diff and later comments supersede that implementation description.",
+          "roam JS/WXML remain CONFLICT_HELD by PR20 in local OWNERSHIP; patch-only until C00 sorts original writer.",
+          "03f56b8 is author-claimed withdrawal evidence; absence from current net diff corroborates removal relative base, not automatic lock release.",
+          "Do not relax R2 to resolve route/line wording without product/C00 decision."
+        ]
+      },
+      "coordinator_patches": [],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr21_27.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.js",
+          "owner": "PR20 original writer",
+          "state": "PRIOR_OWNER_HELD_NO_TRANSFER",
+          "other_prs": [
+            22,
+            37,
+            38,
+            39,
+            60
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.wxml",
+          "owner": "PR20 original writer",
+          "state": "PRIOR_OWNER_HELD_NO_TRANSFER",
+          "other_prs": [
+            22,
+            37,
+            38,
+            39,
+            58
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            22,
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/lint/ui-integrity-baseline.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            22,
+            25
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 23,
+      "head_sha": "79570ed243e44b7c5534991a4bc9bccc64ebdaf1",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/23",
+      "title": "feat(xcx): CL3 俱乐部勋章管理 + 昵称校验推荐(N2+N4)",
+      "exact_changed_files": [
+        "chengyinhub-xcx/app.json",
+        "chengyinhub-xcx/pages/club/badges/index.js",
+        "chengyinhub-xcx/pages/club/badges/index.json",
+        "chengyinhub-xcx/pages/club/badges/index.wxml",
+        "chengyinhub-xcx/pages/club/badges/index.wxss",
+        "chengyinhub-xcx/pages/club/detail/index.js",
+        "chengyinhub-xcx/pages/club/detail/index.wxml",
+        "chengyinhub-xcx/pages/club/detail/index.wxss",
+        "chengyinhub-xcx/pages/club/utils/club-badge.js",
+        "chengyinhub-xcx/pages/gerenziliao/gerenziliao.js",
+        "chengyinhub-xcx/pages/gerenziliao/gerenziliao.wxml",
+        "chengyinhub-xcx/pages/gerenziliao/gerenziliao.wxss",
+        "chengyinhub-xcx/scripts/fixtures.json",
+        "chengyinhub-xcx/scripts/shot-matrix.js",
+        "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+        "chengyinhub-xcx/scripts/uiaudit/route-matrix.json",
+        "chengyinhub-xcx/tests/unit/action-ledger.test.js",
+        "chengyinhub-xcx/tests/unit/club-badge-manage.test.js",
+        "chengyinhub-xcx/tests/unit/nav-page-title-spacing-contract.test.js",
+        "chengyinhub-xcx/tests/unit/profile-edit-state-contract.test.js",
+        "chengyinhub-xcx/tests/unit/profile-nickname-check.test.js",
+        "chengyinhub-xcx/tests/unit/route-matrix-freshness.test.js",
+        "chengyinhub-xcx/tests/unit/title-system-owner-contract.test.js",
+        "chengyinhub-xcx/utils/danger-actions.js",
+        "chengyinhub-xcx/utils/nickname-check.js"
+      ],
+      "backend_dependencies": [],
+      "blocked_reasons": [],
+      "scope_notes": {
+        "handoff": "CL3 badges + nickname; no backend API change.",
+        "claims": "Latest coordinator 6195205979 accepts four fixes and says code layer unblocked, CI baseline remains blocked.",
+        "visible_evidence": "25 exact changed files, including 15 existing CLAUDE_ASSIGNED paths matched against local OWNERSHIP and 10 shared integration patches. Badge JS patch visibly has createUnknown submit guard, account generation checks and applyOwnership(false).",
+        "gaps": [
+          "Do not treat author/coordinator test pass claims as this audit validation.",
+          "Readback code checks created.length > 0 by new badgeCode + same name; this audit does not certify a unique server request receipt.",
+          "Shared generated counts/fixtures must be integrated incrementally, not copied wholesale."
+        ]
+      },
+      "coordinator_patches": [],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr21_27.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/app.json",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/badges/index.js",
+          "owner": "CLAUDE/PR23",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            23
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/badges/index.json",
+          "owner": "CLAUDE/PR23",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            23
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/badges/index.wxml",
+          "owner": "CLAUDE/PR23",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            23
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/badges/index.wxss",
+          "owner": "CLAUDE/PR23",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            23
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/detail/index.js",
+          "owner": "CLAUDE coordinator to name original single writer",
+          "state": "CLAUDE_CONFLICT_HELD_SINGLE_WRITER_ACK_REQUIRED",
+          "other_prs": [
+            23,
+            57,
+            59
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/detail/index.wxml",
+          "owner": "CLAUDE coordinator to name original single writer",
+          "state": "CLAUDE_CONFLICT_HELD_SINGLE_WRITER_ACK_REQUIRED",
+          "other_prs": [
+            23,
+            59,
+            65
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/detail/index.wxss",
+          "owner": "CLAUDE coordinator to name original single writer",
+          "state": "CLAUDE_CONFLICT_HELD_SINGLE_WRITER_ACK_REQUIRED",
+          "other_prs": [
+            23,
+            64
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/utils/club-badge.js",
+          "owner": "CLAUDE/PR23",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            23
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/gerenziliao/gerenziliao.js",
+          "owner": "CLAUDE/PR23",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            23
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/gerenziliao/gerenziliao.wxml",
+          "owner": "CLAUDE coordinator to name original single writer",
+          "state": "CLAUDE_CONFLICT_HELD_SINGLE_WRITER_ACK_REQUIRED",
+          "other_prs": [
+            23,
+            58
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/gerenziliao/gerenziliao.wxss",
+          "owner": "CLAUDE/PR23",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            23
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/scripts/fixtures.json",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/scripts/shot-matrix.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            22,
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/scripts/uiaudit/route-matrix.json",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/action-ledger.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/club-badge-manage.test.js",
+          "owner": "CLAUDE/PR23",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            23
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/nav-page-title-spacing-contract.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27,
+            46,
+            49
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/profile-edit-state-contract.test.js",
+          "owner": "CLAUDE/PR23",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            23
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/profile-nickname-check.test.js",
+          "owner": "CLAUDE/PR23",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            23
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/route-matrix-freshness.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/title-system-owner-contract.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27,
+            45,
+            46,
+            49,
+            50
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/utils/danger-actions.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/utils/nickname-check.js",
+          "owner": "CLAUDE/PR23",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            23
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 25,
+      "head_sha": "87c9ce5bbd02f0a9c5b45c9cdd3d424ed133026c",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/25",
+      "title": "feat: CL2 举报透明化（N1）——系统消息「举报进度」→举报详情＋cy-sheet 文字申诉",
+      "exact_changed_files": [
+        "chengyinhub-xcx/app.json",
+        "chengyinhub-xcx/scripts/fixtures.json",
+        "chengyinhub-xcx/scripts/shot-matrix.js",
+        "chengyinhub-xcx/scripts/ui-silent-error-allowlist.js",
+        "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+        "chengyinhub-xcx/scripts/uiaudit/route-matrix.json",
+        "chengyinhub-xcx/subpackageB/pages/im/list/index.js",
+        "chengyinhub-xcx/subpackageB/pages/im/list/index.wxml",
+        "chengyinhub-xcx/subpackageB/pages/im/list/index.wxss",
+        "chengyinhub-xcx/subpackageB/pages/im/list/report-notices.js",
+        "chengyinhub-xcx/subpackageMember/report-common/view.js",
+        "chengyinhub-xcx/subpackageMember/report-detail/index.js",
+        "chengyinhub-xcx/subpackageMember/report-detail/index.json",
+        "chengyinhub-xcx/subpackageMember/report-detail/index.wxml",
+        "chengyinhub-xcx/subpackageMember/report-detail/index.wxss",
+        "chengyinhub-xcx/subpackageMember/report-mine/index.js",
+        "chengyinhub-xcx/subpackageMember/report-mine/index.json",
+        "chengyinhub-xcx/subpackageMember/report-mine/index.wxml",
+        "chengyinhub-xcx/subpackageMember/report-mine/index.wxss",
+        "chengyinhub-xcx/tests/lint/ui-integrity-baseline.js",
+        "chengyinhub-xcx/tests/unit/action-ledger.test.js",
+        "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js",
+        "chengyinhub-xcx/tests/unit/im-list-mutation-race.test.js",
+        "chengyinhub-xcx/tests/unit/nav-page-title-spacing-contract.test.js",
+        "chengyinhub-xcx/tests/unit/report-transparency-n1.test.js",
+        "chengyinhub-xcx/tests/unit/route-matrix-freshness.test.js",
+        "chengyinhub-xcx/tests/unit/title-system-owner-contract.test.js",
+        "ci/silent-error-allowlist.txt"
+      ],
+      "backend_dependencies": [],
+      "blocked_reasons": [],
+      "scope_notes": {
+        "handoff": "CL2 system-notice entry → reporter-only detail + text appeal; NO_API_CHANGE.",
+        "claims": "Latest coordinator 6193974296 says narrowed product scope implemented and code unblocked; precise ownership still REQUESTED.",
+        "visible_evidence": "28 exact files. report-notices patch filters SYSTEM_GOVERNANCE with reportId and REPORT_* then deduplicates by reportId. report-detail patch sends only reportId/reason/requestId and reuses same key for same reason after unknown. Backend local source exposes notifications and report/appeal DTO fields.",
+        "gaps": [
+          "Actual requested CL2 business/test paths are not ASSIGNED in local OWNERSHIP (old report-sheet grant does not transfer to new pages).",
+          "Read marker write is not connected; only first 50 notifications read; report-mine remains reachable only through detail; no real community-trust submit entry claimed.",
+          "No backend notification-type filtering, read-write permission or new reporting entry is authorized by this handoff."
+        ]
+      },
+      "coordinator_patches": [],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr21_27.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/app.json",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/scripts/fixtures.json",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/scripts/shot-matrix.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/scripts/ui-silent-error-allowlist.js",
+          "owner": "CLAUDE/PR25",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            25
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            22,
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/scripts/uiaudit/route-matrix.json",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageB/pages/im/list/index.js",
+          "owner": "CLAUDE/PR25",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            25
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageB/pages/im/list/index.wxml",
+          "owner": "CLAUDE/PR25",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            25
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageB/pages/im/list/index.wxss",
+          "owner": "CLAUDE/PR25",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            25
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageB/pages/im/list/report-notices.js",
+          "owner": "CLAUDE/PR25",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            25
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/report-common/view.js",
+          "owner": "CLAUDE/PR25",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            25
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/report-detail/index.js",
+          "owner": "CLAUDE/PR25",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            25
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/report-detail/index.json",
+          "owner": "CLAUDE/PR25",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            25
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/report-detail/index.wxml",
+          "owner": "CLAUDE/PR25",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            25
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/report-detail/index.wxss",
+          "owner": "CLAUDE/PR25",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            25
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/report-mine/index.js",
+          "owner": "CLAUDE/PR25",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            25
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/report-mine/index.json",
+          "owner": "CLAUDE/PR25",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            25
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/report-mine/index.wxml",
+          "owner": "CLAUDE/PR25",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            25
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/report-mine/index.wxss",
+          "owner": "CLAUDE/PR25",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            25
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/lint/ui-integrity-baseline.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            22,
+            25
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/action-ledger.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/im-list-mutation-race.test.js",
+          "owner": "CLAUDE/PR25",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            25
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/nav-page-title-spacing-contract.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27,
+            46,
+            49
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/report-transparency-n1.test.js",
+          "owner": "CLAUDE/PR25",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            25
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/route-matrix-freshness.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/title-system-owner-contract.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27,
+            45,
+            46,
+            49,
+            50
+          ]
+        },
+        {
+          "path": "ci/silent-error-allowlist.txt",
+          "owner": "CLAUDE/PR25",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            25
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 27,
+      "head_sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/27",
+      "title": "feat: CL4 官方活动主办控制台 + NPC 对话导出 + 积分规则只读展示（N3/N5/G4）",
+      "exact_changed_files": [
+        "chengyinhub-xcx/app.json",
+        "chengyinhub-xcx/components/cy/npc-chat/chat-export.js",
+        "chengyinhub-xcx/components/cy/npc-chat/index.js",
+        "chengyinhub-xcx/components/cy/npc-chat/index.wxml",
+        "chengyinhub-xcx/components/cy/npc-chat/index.wxss",
+        "chengyinhub-xcx/pages/activity/official-detail/index.js",
+        "chengyinhub-xcx/pages/activity/official-detail/index.wxml",
+        "chengyinhub-xcx/pages/activity/official-detail/index.wxss",
+        "chengyinhub-xcx/pages/activity/official-mine/index.js",
+        "chengyinhub-xcx/pages/activity/official-mine/index.wxml",
+        "chengyinhub-xcx/pages/activity/official-mine/index.wxss",
+        "chengyinhub-xcx/pages/activity/official-organizer/index.js",
+        "chengyinhub-xcx/pages/activity/official-organizer/index.json",
+        "chengyinhub-xcx/pages/activity/official-organizer/index.wxml",
+        "chengyinhub-xcx/pages/activity/official-organizer/index.wxss",
+        "chengyinhub-xcx/pages/activity/official-organizer/organizer-rules.js",
+        "chengyinhub-xcx/scripts/fixtures.json",
+        "chengyinhub-xcx/scripts/shot-matrix.js",
+        "chengyinhub-xcx/scripts/ui-theme-unit-lint.js",
+        "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+        "chengyinhub-xcx/scripts/uiaudit/route-matrix.json",
+        "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js",
+        "chengyinhub-xcx/subpackageMember/components/cy/profile/index.wxml",
+        "chengyinhub-xcx/subpackageMember/components/cy/profile/points-rules.js",
+        "chengyinhub-xcx/tests/unit/action-ledger.test.js",
+        "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js",
+        "chengyinhub-xcx/tests/unit/nav-page-title-spacing-contract.test.js",
+        "chengyinhub-xcx/tests/unit/npc-chat-export.test.js",
+        "chengyinhub-xcx/tests/unit/official-organizer-console.test.js",
+        "chengyinhub-xcx/tests/unit/profile-points-rules.test.js",
+        "chengyinhub-xcx/tests/unit/route-matrix-freshness.test.js",
+        "chengyinhub-xcx/tests/unit/title-system-owner-contract.test.js",
+        "chengyinhub-xcx/utils/danger-actions.js"
+      ],
+      "backend_dependencies": [],
+      "blocked_reasons": [],
+      "scope_notes": {
+        "handoff": "CL4 publish/pause/resume console, text clipboard export, points rules; no invite/transfer; NO_API_CHANGE.",
+        "claims": "Latest coordinator 6195219452 accepts narrowed scope; 6195420891 acknowledges misleading organizer wording and defers fix to next code push.",
+        "visible_evidence": "33 exact files; 4 match existing CL4 ASSIGNED paths, 17 business/test paths still require exact grant, 12 shared integration patches. Organizer JS visibly calls existing publish-check/schedule/pause/resume and verifies readback; detail WXML only has CL6-SLOT comment and still says '你是这场活动的主办方'. Local OfficialEventV2.detail/eventBase does not project parties; operator view does.",
+        "gaps": [
+          "Parties display is not implemented; comment is a dependency slot, not completed UI/API capability.",
+          "No permission to restore invite/transfer or implement new coorganizer backend endpoint.",
+          "CL4 explicitly disclaims pages/publish/activity/index.js ownership in comment6193925009; original publish unknown-result finding still needs C00 owner assignment, not CL4 fix claim.",
+          "profile JS/WXML overlap with PR17 must be resolved by C00 before granting; no longrun absence implies free file.",
+          "Unknown request readback/CI claims are not device or business acceptance."
+        ]
+      },
+      "coordinator_patches": [],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr21_27.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/app.json",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/components/cy/npc-chat/chat-export.js",
+          "owner": "CLAUDE/PR27",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/components/cy/npc-chat/index.js",
+          "owner": "CLAUDE/PR27",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/components/cy/npc-chat/index.wxml",
+          "owner": "CLAUDE/PR27",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/components/cy/npc-chat/index.wxss",
+          "owner": "CLAUDE/PR27",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/activity/official-detail/index.js",
+          "owner": "CLAUDE/PR27",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/activity/official-detail/index.wxml",
+          "owner": "CLAUDE/PR27",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/activity/official-detail/index.wxss",
+          "owner": "CLAUDE/PR27",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/activity/official-mine/index.js",
+          "owner": "CLAUDE/PR27",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/activity/official-mine/index.wxml",
+          "owner": "CLAUDE/PR27",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/activity/official-mine/index.wxss",
+          "owner": "CLAUDE/PR27",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/activity/official-organizer/index.js",
+          "owner": "CLAUDE/PR27",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/activity/official-organizer/index.json",
+          "owner": "CLAUDE/PR27",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/activity/official-organizer/index.wxml",
+          "owner": "CLAUDE/PR27",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/activity/official-organizer/index.wxss",
+          "owner": "CLAUDE/PR27",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/activity/official-organizer/organizer-rules.js",
+          "owner": "CLAUDE/PR27",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/scripts/fixtures.json",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/scripts/shot-matrix.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/scripts/ui-theme-unit-lint.js",
+          "owner": "CLAUDE/PR27",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            22,
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/scripts/uiaudit/route-matrix.json",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js",
+          "owner": "PR17/CL4 prior writer reconciliation",
+          "state": "PRIOR_OWNER_HELD_NO_TRANSFER",
+          "other_prs": [
+            27,
+            68
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.wxml",
+          "owner": "PR17/CL4 prior writer reconciliation",
+          "state": "PRIOR_OWNER_HELD_NO_TRANSFER",
+          "other_prs": [
+            27,
+            58,
+            65
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/components/cy/profile/points-rules.js",
+          "owner": "CLAUDE/PR27",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/action-ledger.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/nav-page-title-spacing-contract.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27,
+            46,
+            49
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/npc-chat-export.test.js",
+          "owner": "CLAUDE/PR27",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/official-organizer-console.test.js",
+          "owner": "CLAUDE/PR27",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/profile-points-rules.test.js",
+          "owner": "CLAUDE/PR27",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/route-matrix-freshness.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/title-system-owner-contract.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27,
+            45,
+            46,
+            49,
+            50
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/utils/danger-actions.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            27
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 35,
+      "head_sha": "57db7dc0dd394a716037503d2c3dea0e90e4238c",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/35",
+      "title": "feat: CL6 联合主办展示组件与参与方视图模型（草稿，待读接口补字段）",
+      "exact_changed_files": [
+        "chengyinhub-xcx/components/cy/official-coorganizers/index.js",
+        "chengyinhub-xcx/components/cy/official-coorganizers/index.json",
+        "chengyinhub-xcx/components/cy/official-coorganizers/index.wxml",
+        "chengyinhub-xcx/components/cy/official-coorganizers/index.wxss",
+        "chengyinhub-xcx/tests/unit/official-parties.test.js",
+        "chengyinhub-xcx/tests/unit/unused-component-registry.test.js",
+        "chengyinhub-xcx/utils/official-parties.js"
+      ],
+      "backend_dependencies": [
+        {
+          "endpoint": "GET /api/official/events/{id}",
+          "kind": "REQUESTED_ADDITIVE_READ_CONTRACT_NOT_IMPLEMENTED",
+          "requested_fields": [
+            "parties[].id",
+            "parties[].partyType",
+            "parties[].partyId",
+            "parties[].role",
+            "parties[].status",
+            "parties[].statusAt",
+            "parties[].invitedAt",
+            "parties[].displayName",
+            "parties[].avatar",
+            "viewerCanManage"
+          ],
+          "visibility": "正文请求按管理者/公开状态过滤；这是待C00裁决的合同，不是现有接口保证",
+          "local_static_evidence": "OfficialEventV2ServiceImpl.detail:495-531/eventBase:2044起无parties或viewerCanManage；仅后台draftInternal等另有parties",
+          "source_files": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialEventV2ServiceImpl.java",
+            "chengyinhub-system/src/main/resources/mapper/business/OfficialEventV2Mapper.xml"
+          ],
+          "ownership": "当前精确source表未分配；共享后端归C00，不能从UI交付推定扩权"
+        },
+        {
+          "kind": "REQUESTED_INVITE_WRITE_NOT_IMPLEMENTED",
+          "reference": "正文沿用PR21邀请协办申请，本PR仅不可点占位"
+        },
+        {
+          "kind": "UNRESOLVED_TIMESTAMP_SEMANTICS",
+          "detail": "statusAt会在ACCEPTED→ACTIVE时刷新；不等价稳定接受时间。acceptedAt另字段仅请求，未实现"
+        }
+      ],
+      "blocked_reasons": [
+        "公开读接口尚无所需parties/name/avatar/viewerCanManage合同",
+        "详情宿主归另一Claude CL4，本PR未接线",
+        "公开可见性及接受时间语义需C00裁决；无上线证明"
+      ],
+      "scope_notes": [],
+      "coordinator_patches": [
+        {
+          "path": "chengyinhub-xcx/pages/activity/official-detail/index.json",
+          "actual_changed": false,
+          "action": "CL4宿主usingComponents挂载",
+          "depends_on": "CL4宿主协调交付及读字段",
+          "ownership": {
+            "source_owner": null,
+            "supplemental_test_owner": null,
+            "reserved_not_transferred": false
+          }
+        },
+        {
+          "path": "chengyinhub-xcx/pages/activity/official-detail/index.js",
+          "actual_changed": false,
+          "action": "初始化/从真实res.data读取parties、partyNames、viewerCanManageParties",
+          "ownership": {
+            "source_owner": null,
+            "supplemental_test_owner": null,
+            "reserved_not_transferred": false
+          }
+        },
+        {
+          "path": "chengyinhub-xcx/pages/activity/official-detail/index.wxml",
+          "actual_changed": false,
+          "action": "首屏row及完整section挂载，旧官方主办文案保留无数据回退",
+          "ownership": {
+            "source_owner": null,
+            "supplemental_test_owner": null,
+            "reserved_not_transferred": false
+          }
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/unused-component-registry.test.js",
+          "actual_changed": true,
+          "action": "本PR已新增3行待接线登记；宿主接线后须删除登记，需C00审共享门禁归属",
+          "ownership": {
+            "source_owner": null,
+            "supplemental_test_owner": null,
+            "reserved_not_transferred": false
+          }
+        },
+        {
+          "path": "chengyinhub-xcx/app.json",
+          "actual_changed": false,
+          "optional": true,
+          "action": "可选独立只读列表页注册；本PR未建页面，需C00统筹",
+          "ownership": {
+            "source_owner": null,
+            "supplemental_test_owner": null,
+            "reserved_not_transferred": true
+          }
+        },
+        {
+          "path": "chengyinhub-xcx/pages/activity/official-inbox/index.js",
+          "actual_changed": false,
+          "optional": true,
+          "action": "建议后续角色文案复用helper；与PR43同宿主，不能整页覆盖",
+          "ownership": {
+            "source_owner": null,
+            "supplemental_test_owner": null,
+            "reserved_not_transferred": false
+          }
+        }
+      ],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr35_43.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/components/cy/official-coorganizers/index.js",
+          "owner": "CLAUDE/PR35",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            35
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/components/cy/official-coorganizers/index.json",
+          "owner": "CLAUDE/PR35",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            35
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/components/cy/official-coorganizers/index.wxml",
+          "owner": "CLAUDE/PR35",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            35
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/components/cy/official-coorganizers/index.wxss",
+          "owner": "CLAUDE/PR35",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            35
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/official-parties.test.js",
+          "owner": "CLAUDE/PR35",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            35
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/unused-component-registry.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            35
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/utils/official-parties.js",
+          "owner": "CLAUDE/PR35",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            35
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 37,
+      "head_sha": "8e5873f5c3e044614253672c2717c310cd7070cf",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/37",
+      "title": "BL-01 漫游点位筛选（范围 1/3/5 km + 只看未到过）",
+      "exact_changed_files": [
+        "chengyinhub-xcx/pages/roam/index.js",
+        "chengyinhub-xcx/pages/roam/index.wxml",
+        "chengyinhub-xcx/pages/roam/index.wxss",
+        "chengyinhub-xcx/tests/unit/roam-features-task3.test.js",
+        "chengyinhub-xcx/tests/unit/roam-poi-filter.test.js",
+        "chengyinhub-xcx/utils/roam-poi-filter.js"
+      ],
+      "backend_dependencies": [
+        {
+          "endpoint": "GET /api/roam/pois",
+          "kind": "EXISTING_CONTRACT_NO_API_CHANGE",
+          "used_fields": [
+            "radius"
+          ],
+          "detail": "只向已有radius参数传1000/3000/5000；未交任何后端文件"
+        }
+      ],
+      "blocked_reasons": [
+        "与PR38/39同时修改roam/index.js及index.wxml，须Claude协调逐片合并",
+        "正文明确用户cy-sheet要求与旧scene-sheet-contract禁止重注册冲突，采用.psheet待C00裁决",
+        "共享台账与冻结计数未提交，等待C00统一收口"
+      ],
+      "scope_notes": [],
+      "coordinator_patches": [
+        {
+          "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+          "actual_changed": false,
+          "action": "作者申请重建；独立基线4480→4486(+6)，不可作为整合总计",
+          "ownership": {
+            "source_owner": null,
+            "supplemental_test_owner": null,
+            "reserved_not_transferred": true
+          }
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/action-ledger.test.js",
+          "actual_changed": false,
+          "action": "冻结计数按C00最终实际台账统一更新；正文4486仅该PR独立结果",
+          "ownership": {
+            "source_owner": null,
+            "supplemental_test_owner": null,
+            "reserved_not_transferred": false
+          }
+        }
+      ],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr35_43.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.js",
+          "owner": "PR20 original writer",
+          "state": "PRIOR_OWNER_HELD_NO_TRANSFER",
+          "other_prs": [
+            22,
+            37,
+            38,
+            39,
+            60
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.wxml",
+          "owner": "PR20 original writer",
+          "state": "PRIOR_OWNER_HELD_NO_TRANSFER",
+          "other_prs": [
+            22,
+            37,
+            38,
+            39,
+            58
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.wxss",
+          "owner": "PR20 original writer",
+          "state": "PRIOR_OWNER_HELD_NO_TRANSFER",
+          "other_prs": [
+            37
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/roam-features-task3.test.js",
+          "owner": "CLAUDE/PR37",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            37
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/roam-poi-filter.test.js",
+          "owner": "CLAUDE/PR37",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            37
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/utils/roam-poi-filter.js",
+          "owner": "CLAUDE/PR37",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            37
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 38,
+      "head_sha": "e6e46fed81e086c4ab39c374fbc4468410d43970",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/38",
+      "title": "BL-03 漫游位置上报断网提示",
+      "exact_changed_files": [
+        "chengyinhub-xcx/pages/roam/index.js",
+        "chengyinhub-xcx/pages/roam/index.wxml",
+        "chengyinhub-xcx/tests/unit/roam-sync-status.test.js",
+        "chengyinhub-xcx/utils/roam-sync-status.js"
+      ],
+      "backend_dependencies": [
+        {
+          "endpoint": "POST /api/roam/reveal; POST /api/roam/presence",
+          "kind": "EXISTING_CONTRACT_NO_API_CHANGE",
+          "detail": "消费现有netFail/业务响应并接wx网络事件；不改请求/重试/计时规则"
+        }
+      ],
+      "blocked_reasons": [
+        "与PR37/39共改roam JS/WXML；与PR39插入同定位/状态提示宿主，须Claude协调",
+        "共享ledger行号未提交；待C00按最终组合收口"
+      ],
+      "scope_notes": [],
+      "coordinator_patches": [
+        {
+          "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+          "actual_changed": false,
+          "action": "作者申请仅行号位移重建；独立控件4480不变，冻结计数不改",
+          "ownership": {
+            "source_owner": null,
+            "supplemental_test_owner": null,
+            "reserved_not_transferred": true
+          }
+        }
+      ],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr35_43.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.js",
+          "owner": "PR20 original writer",
+          "state": "PRIOR_OWNER_HELD_NO_TRANSFER",
+          "other_prs": [
+            22,
+            37,
+            38,
+            39,
+            60
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.wxml",
+          "owner": "PR20 original writer",
+          "state": "PRIOR_OWNER_HELD_NO_TRANSFER",
+          "other_prs": [
+            22,
+            37,
+            38,
+            39,
+            58
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/roam-sync-status.test.js",
+          "owner": "CLAUDE/PR38",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            38
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/utils/roam-sync-status.js",
+          "owner": "CLAUDE/PR38",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            38
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 39,
+      "head_sha": "20144d1076fab628f19451c79ca86958cf65dd31",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/39",
+      "title": "BL-02 漫游静止提示「原地停留中」",
+      "exact_changed_files": [
+        "chengyinhub-xcx/pages/roam/index.js",
+        "chengyinhub-xcx/pages/roam/index.wxml",
+        "chengyinhub-xcx/tests/unit/roam-idle.test.js",
+        "chengyinhub-xcx/utils/roam-idle.js"
+      ],
+      "backend_dependencies": [
+        {
+          "kind": "NO_API_CHANGE",
+          "detail": "仅现有原始前台定位回调的端上检测；静止时系统是否持续回调为作者未验收限制"
+        }
+      ],
+      "blocked_reasons": [
+        "L2与PR37/38 L1同改roam JS/WXML，存在跨Claude lane共享宿主",
+        "ledger与reserved baseline补丁未提交，仅供C00统筹，不能 worker擅改"
+      ],
+      "scope_notes": [],
+      "coordinator_patches": [
+        {
+          "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+          "actual_changed": false,
+          "action": "作者申请行号/digest重建；独立控件4480不变",
+          "ownership": {
+            "source_owner": null,
+            "supplemental_test_owner": null,
+            "reserved_not_transferred": true
+          }
+        },
+        {
+          "path": "chengyinhub-xcx/tests/lint/ui-integrity-baseline.js",
+          "actual_changed": false,
+          "action": "作者申请等量旧key行号平移并重算对应digest，保理由与数量",
+          "author_line_mapping": "746→748;1710→1712;1799→1801;2460→2462;2469→2471;3752→3772;4047→4067;4261→4281;4346→4366;4448→4468;4584→4604;4642→4662;4874→4894;5406→5426;5413→5433",
+          "warning": "此映射仅作者独立分支，不可不核最终上下文直接套用",
+          "ownership": {
+            "source_owner": null,
+            "supplemental_test_owner": null,
+            "reserved_not_transferred": true
+          }
+        }
+      ],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr35_43.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.js",
+          "owner": "PR20 original writer",
+          "state": "PRIOR_OWNER_HELD_NO_TRANSFER",
+          "other_prs": [
+            22,
+            37,
+            38,
+            39,
+            60
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.wxml",
+          "owner": "PR20 original writer",
+          "state": "PRIOR_OWNER_HELD_NO_TRANSFER",
+          "other_prs": [
+            22,
+            37,
+            38,
+            39,
+            58
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/roam-idle.test.js",
+          "owner": "CLAUDE/PR39",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            39
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/utils/roam-idle.js",
+          "owner": "CLAUDE/PR39",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            39
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 40,
+      "head_sha": "095738b6fbeaa8950c00bb1a7af563f086cb157e",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/40",
+      "title": "BL-04 积分明细全部/获得/使用筛选与月份分组",
+      "exact_changed_files": [
+        "chengyinhub-xcx/subpackageMember/points-history/index.js",
+        "chengyinhub-xcx/subpackageMember/points-history/index.json",
+        "chengyinhub-xcx/subpackageMember/points-history/index.wxml",
+        "chengyinhub-xcx/subpackageMember/points-history/index.wxss",
+        "chengyinhub-xcx/subpackageMember/points-history/rows.js",
+        "chengyinhub-xcx/tests/unit/points-history-filter.test.js"
+      ],
+      "backend_dependencies": [
+        {
+          "endpoint": "POST /api/points/list",
+          "kind": "EXISTING_CONTRACT_NO_API_CHANGE",
+          "detail": "作者使用现有全量响应端上筛选/分页；无新参数/后端补丁"
+        }
+      ],
+      "blocked_reasons": [
+        "共享ledger/计数补丁尚待C00统筹；未做本轮运行验收"
+      ],
+      "scope_notes": [],
+      "coordinator_patches": [
+        {
+          "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+          "actual_changed": false,
+          "action": "作者独立计数4480→4481(+1)，含cy-tabs和错误态empty路由登记；需C00最终重建",
+          "ownership": {
+            "source_owner": null,
+            "supplemental_test_owner": null,
+            "reserved_not_transferred": true
+          }
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/action-ledger.test.js",
+          "actual_changed": false,
+          "action": "按整合总数更新冻结计数，不能直接覆盖为4481",
+          "ownership": {
+            "source_owner": null,
+            "supplemental_test_owner": null,
+            "reserved_not_transferred": false
+          }
+        }
+      ],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr35_43.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/subpackageMember/points-history/index.js",
+          "owner": "CLAUDE/PR40",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            40
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/points-history/index.json",
+          "owner": "CLAUDE/PR40",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            40
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/points-history/index.wxml",
+          "owner": "CLAUDE/PR40",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            40
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/points-history/index.wxss",
+          "owner": "CLAUDE/PR40",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            40
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/points-history/rows.js",
+          "owner": "CLAUDE/PR40",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            40
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/points-history-filter.test.js",
+          "owner": "CLAUDE/PR40",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            40
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 41,
+      "head_sha": "bf7c63e57e77b93d6be3fa098c657e565ebe1cb0",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/41",
+      "title": "BL-07 BLOCKED: 勋章墙接口无俱乐部区分字段",
+      "exact_changed_files": [],
+      "backend_dependencies": [
+        {
+          "endpoint": "GET /api/badge/wall-v2",
+          "kind": "REQUESTED_READ_CONTRACT_NOT_IMPLEMENTED",
+          "requested_fields": [
+            "BadgeWallItemVO.clubId",
+            "BadgeWallItemVO.clubName"
+          ],
+          "source_files": [
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/BadgeWallItemVO.java",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/BadgeReadModelServiceImpl.java"
+          ],
+          "local_static_evidence": "VO无clubId/clubName；buildWallV2将已获club定义按assetType并入各层，未投影俱乐部归属字段",
+          "ownership": "这两精确源当前未转交lane；C00共享后端，不因UI feature请求自动授权"
+        }
+      ],
+      "blocked_reasons": [
+        "缺clubId/clubName，前端不能凭badgeCode猜俱乐部归属",
+        "正文提示现墙仅identity，HONOR等层俱乐部勋章显示另需UI产品范围；本PR无实现"
+      ],
+      "scope_notes": [],
+      "coordinator_patches": [],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr35_43.json",
+      "file_dispositions": [],
+      "status": "EMPTY_OR_BLOCKED_NO_SOURCE_DELIVERY"
+    },
+    {
+      "pr": 42,
+      "head_sha": "5957ee1eed10b2ef786da9c555f3ee7859148468",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/42",
+      "title": "BL-05 集邮册「收到的」邮票详情半屏",
+      "exact_changed_files": [
+        "chengyinhub-xcx/components/cy/scene-roam-stamp-album/index.js",
+        "chengyinhub-xcx/components/cy/scene-roam-stamp-album/index.json",
+        "chengyinhub-xcx/components/cy/scene-roam-stamp-album/index.wxml",
+        "chengyinhub-xcx/components/cy/scene-roam-stamp-album/index.wxss",
+        "chengyinhub-xcx/tests/unit/stamp-received-detail.test.js"
+      ],
+      "backend_dependencies": [
+        {
+          "kind": "EXISTING_CONTRACT_NO_API_CHANGE",
+          "used_fields": [
+            "RoamStampListVO.kind",
+            "createTime",
+            "caption",
+            "photo"
+          ],
+          "detail": "只展示已有匿名收件数据；线上createTime序列化未核不是新接口已部署声明"
+        }
+      ],
+      "blocked_reasons": [
+        "ledger/冻结计数待协调者收口",
+        "嵌套cy-sheet层级及时间展示为作者未验收项，未声明业务通过"
+      ],
+      "scope_notes": [],
+      "coordinator_patches": [
+        {
+          "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+          "actual_changed": false,
+          "action": "独立控件4480→4483(+3)：openDetail、closeDetail、previewDetail；冻结计数如登记需C00同步",
+          "ownership": {
+            "source_owner": null,
+            "supplemental_test_owner": null,
+            "reserved_not_transferred": true
+          }
+        }
+      ],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr35_43.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/components/cy/scene-roam-stamp-album/index.js",
+          "owner": "CLAUDE/PR42",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            42
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/components/cy/scene-roam-stamp-album/index.json",
+          "owner": "CLAUDE/PR42",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            42
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/components/cy/scene-roam-stamp-album/index.wxml",
+          "owner": "CLAUDE/PR42",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            42
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/components/cy/scene-roam-stamp-album/index.wxss",
+          "owner": "CLAUDE/PR42",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            42
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/stamp-received-detail.test.js",
+          "owner": "CLAUDE/PR42",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            42
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 43,
+      "head_sha": "3e56b31d4e821bbcd859ffd0616dea962292e618",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/43",
+      "title": "BL-06 官方活动收件箱协办/履约邀请卡片：角色说明 + 回读",
+      "exact_changed_files": [
+        "chengyinhub-xcx/pages/activity/official-inbox/index.js",
+        "chengyinhub-xcx/pages/activity/official-inbox/index.wxml",
+        "chengyinhub-xcx/pages/activity/official-inbox/index.wxss",
+        "chengyinhub-xcx/pages/activity/official-inbox/invite-card.js",
+        "chengyinhub-xcx/tests/unit/official-inbox-invite-card.test.js"
+      ],
+      "backend_dependencies": [
+        {
+          "endpoint": "GET /api/official/v2/party-inbox",
+          "kind": "EXISTING_CONTRACT_FOR_IMPLEMENTED_SCOPE",
+          "used_fields": [
+            "windowStart",
+            "windowEnd",
+            "role",
+            "capacity",
+            "controlState",
+            "status"
+          ],
+          "local_static_evidence": "OfficialEventV2Mapper.xml:226起selectPartyInboxForMember已有上述字段，筛选INVITED/ACCEPTED/ACTIVE，未给活动起止时间",
+          "detail": "当前交付仍展示服务时段；接受预期ACCEPTED/ACTIVE，拒绝/退出预期列表消失"
+        },
+        {
+          "kind": "OPTIONAL_READ_CONTRACT_REQUEST_NOT_CURRENT_BLOCKER",
+          "requested_fields": [
+            "event activity start/end time"
+          ],
+          "detail": "正文仅提出若要显示活动起止则后端另补；未写后端、不能称已实现/上线"
+        }
+      ],
+      "blocked_reasons": [
+        "ledger行号待C00收口",
+        "PR35提出后续official-inbox角色helper复用，属于同Claude页面潜在后续冲突，非35实际已改",
+        "未验收真实INVITED动作回读时机"
+      ],
+      "scope_notes": [],
+      "coordinator_patches": [
+        {
+          "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+          "actual_changed": false,
+          "action": "控件4480不变，仅作者独立±13行位移；待C00统一重建",
+          "ownership": {
+            "source_owner": null,
+            "supplemental_test_owner": null,
+            "reserved_not_transferred": true
+          }
+        }
+      ],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr35_43.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/pages/activity/official-inbox/index.js",
+          "owner": "CLAUDE/PR43",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            43
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/activity/official-inbox/index.wxml",
+          "owner": "CLAUDE/PR43",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            43
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/activity/official-inbox/index.wxss",
+          "owner": "CLAUDE/PR43",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            43
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/activity/official-inbox/invite-card.js",
+          "owner": "CLAUDE/PR43",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            43
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/official-inbox-invite-card.test.js",
+          "owner": "CLAUDE/PR43",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            43
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 45,
+      "head_sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/45",
+      "title": "BL-08 二级页导航统一·会员分包（cy-nav-bar 居中标题）",
+      "exact_changed_files": [
+        "chengyinhub-xcx/subpackageMember/coupon/coupon.json",
+        "chengyinhub-xcx/subpackageMember/coupon/coupon.wxml",
+        "chengyinhub-xcx/subpackageMember/couponInfo/couponInfo.json",
+        "chengyinhub-xcx/subpackageMember/couponInfo/couponInfo.wxml",
+        "chengyinhub-xcx/subpackageMember/mycanyu/mycanyu.json",
+        "chengyinhub-xcx/subpackageMember/mycanyu/mycanyu.wxml",
+        "chengyinhub-xcx/subpackageMember/myinvite/myinvite.json",
+        "chengyinhub-xcx/subpackageMember/myinvite/myinvite.wxml",
+        "chengyinhub-xcx/subpackageMember/mytemplate/mytemplate.json",
+        "chengyinhub-xcx/subpackageMember/mytemplate/mytemplate.wxml",
+        "chengyinhub-xcx/subpackageMember/order/order.json",
+        "chengyinhub-xcx/subpackageMember/order/order.wxml",
+        "chengyinhub-xcx/subpackageMember/tixian/tixian.json",
+        "chengyinhub-xcx/subpackageMember/tixian/tixian.wxml",
+        "chengyinhub-xcx/subpackageMember/tixianjilu/tixianjilu.json",
+        "chengyinhub-xcx/subpackageMember/tixianjilu/tixianjilu.wxml",
+        "chengyinhub-xcx/tests/unit/ann-d-funds-member-ui-contract.test.js",
+        "chengyinhub-xcx/tests/unit/myinvite-load-state-contract.test.js",
+        "chengyinhub-xcx/tests/unit/publish-editor-return-flow.test.js",
+        "chengyinhub-xcx/tests/unit/secondary-nav-consistency.test.js",
+        "chengyinhub-xcx/tests/unit/title-system-owner-contract.test.js",
+        "chengyinhub-xcx/tests/unit/ui-review-0831-marks-contract.test.js",
+        "chengyinhub-xcx/tests/unit/visual-report-content-p1-contract.test.js"
+      ],
+      "backend_dependencies": [],
+      "blocked_reasons": [
+        "mytemplate native title vs nav title requires naming confirmation",
+        "complaint subtitle placement deferred",
+        "points-history belongs BL-04; do not claim"
+      ],
+      "scope_notes": [],
+      "coordinator_patches": "Body-only nav-spacing proposal adds 8 member routes; individual 71→63. action ledger needs final consolidated inventory if line locations move; app.json unchanged.",
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr45_50.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/subpackageMember/coupon/coupon.json",
+          "owner": "CLAUDE/PR45",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            45
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/coupon/coupon.wxml",
+          "owner": "CLAUDE/PR45",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            45
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/couponInfo/couponInfo.json",
+          "owner": "CLAUDE/PR45",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            45
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/couponInfo/couponInfo.wxml",
+          "owner": "CLAUDE coordinator to name original single writer",
+          "state": "CLAUDE_CONFLICT_HELD_SINGLE_WRITER_ACK_REQUIRED",
+          "other_prs": [
+            45,
+            56
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/mycanyu/mycanyu.json",
+          "owner": "CLAUDE/PR45",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            45
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/mycanyu/mycanyu.wxml",
+          "owner": "CLAUDE/PR45",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            45
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/myinvite/myinvite.json",
+          "owner": "CLAUDE/PR45",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            45
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/myinvite/myinvite.wxml",
+          "owner": "CLAUDE/PR45",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            45
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/mytemplate/mytemplate.json",
+          "owner": "CLAUDE/PR45",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            45
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/mytemplate/mytemplate.wxml",
+          "owner": "CLAUDE/PR45",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            45
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/order/order.json",
+          "owner": "CLAUDE/PR45",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            45
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/order/order.wxml",
+          "owner": "CLAUDE/PR45",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            45
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/tixian/tixian.json",
+          "owner": "CLAUDE/PR45",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            45
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/tixian/tixian.wxml",
+          "owner": "CLAUDE/PR45",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            45
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/tixianjilu/tixianjilu.json",
+          "owner": "CLAUDE/PR45",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            45
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/tixianjilu/tixianjilu.wxml",
+          "owner": "CLAUDE/PR45",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            45
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/ann-d-funds-member-ui-contract.test.js",
+          "owner": "CLAUDE/PR45",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            45
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/myinvite-load-state-contract.test.js",
+          "owner": "CLAUDE/PR45",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            45
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/publish-editor-return-flow.test.js",
+          "owner": "CLAUDE/PR45",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            45
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/secondary-nav-consistency.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            45
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/title-system-owner-contract.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27,
+            45,
+            46,
+            49,
+            50
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/ui-review-0831-marks-contract.test.js",
+          "owner": "CLAUDE/PR45",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            45
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/visual-report-content-p1-contract.test.js",
+          "owner": "CLAUDE/PR45",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            45
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 46,
+      "head_sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/46",
+      "title": "BL-09 俱乐部二级页导航统一为 cy-nav-bar 居中标题",
+      "exact_changed_files": [
+        "chengyinhub-xcx/pages/club/checkin-detail/index.json",
+        "chengyinhub-xcx/pages/club/checkin-detail/index.wxml",
+        "chengyinhub-xcx/pages/club/customers/index.json",
+        "chengyinhub-xcx/pages/club/customers/index.wxml",
+        "chengyinhub-xcx/pages/club/edit/index.json",
+        "chengyinhub-xcx/pages/club/edit/index.wxml",
+        "chengyinhub-xcx/pages/club/enroll/index.json",
+        "chengyinhub-xcx/pages/club/enroll/index.wxml",
+        "chengyinhub-xcx/pages/club/event-ops/index.json",
+        "chengyinhub-xcx/pages/club/event-ops/index.wxml",
+        "chengyinhub-xcx/pages/club/governance/index.json",
+        "chengyinhub-xcx/pages/club/governance/index.wxml",
+        "chengyinhub-xcx/pages/club/join-requests/index.json",
+        "chengyinhub-xcx/pages/club/join-requests/index.wxml",
+        "chengyinhub-xcx/pages/club/notify/index.json",
+        "chengyinhub-xcx/pages/club/notify/index.wxml",
+        "chengyinhub-xcx/pages/club/settlement/index.json",
+        "chengyinhub-xcx/pages/club/settlement/index.wxml",
+        "chengyinhub-xcx/pages/club/workbench/index.json",
+        "chengyinhub-xcx/pages/club/workbench/index.wxml",
+        "chengyinhub-xcx/tests/unit/club-workbench-contract.test.js",
+        "chengyinhub-xcx/tests/unit/nav-page-title-spacing-contract.test.js",
+        "chengyinhub-xcx/tests/unit/page-title-flush-contract.test.js",
+        "chengyinhub-xcx/tests/unit/title-system-owner-contract.test.js"
+      ],
+      "backend_dependencies": [],
+      "blocked_reasons": [
+        "group-code three state subtitles",
+        "roles activitySubtitle",
+        "customer-detail customer-name content heading",
+        "wizard and hero exceptions remain"
+      ],
+      "scope_notes": [],
+      "coordinator_patches": "Changed nav-spacing adds 10 club routes, individual 71→61. action ledger line shifts; baseline only if required later, no execution now. app.json unchanged.",
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr45_50.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/pages/club/checkin-detail/index.json",
+          "owner": "CLAUDE/PR46",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            46
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/checkin-detail/index.wxml",
+          "owner": "CLAUDE/PR46",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            46
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/customers/index.json",
+          "owner": "CLAUDE/PR46",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            46
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/customers/index.wxml",
+          "owner": "CLAUDE/PR46",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            46
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/edit/index.json",
+          "owner": "CLAUDE/PR46",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            46
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/edit/index.wxml",
+          "owner": "CLAUDE coordinator to name original single writer",
+          "state": "CLAUDE_CONFLICT_HELD_SINGLE_WRITER_ACK_REQUIRED",
+          "other_prs": [
+            46,
+            59
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/enroll/index.json",
+          "owner": "CLAUDE/PR46",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            46
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/enroll/index.wxml",
+          "owner": "CLAUDE/PR46",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            46
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/event-ops/index.json",
+          "owner": "CLAUDE/PR46",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            46
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/event-ops/index.wxml",
+          "owner": "CLAUDE/PR46",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            46
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/governance/index.json",
+          "owner": "CLAUDE/PR46",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            46
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/governance/index.wxml",
+          "owner": "CLAUDE/PR46",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            46
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/join-requests/index.json",
+          "owner": "CLAUDE/PR46",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            46
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/join-requests/index.wxml",
+          "owner": "CLAUDE/PR46",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            46
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/notify/index.json",
+          "owner": "CLAUDE/PR46",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            46
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/notify/index.wxml",
+          "owner": "CLAUDE/PR46",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            46
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/settlement/index.json",
+          "owner": "CLAUDE/PR46",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            46
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/settlement/index.wxml",
+          "owner": "CLAUDE/PR46",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            46
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/workbench/index.json",
+          "owner": "CLAUDE/PR46",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            46
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/workbench/index.wxml",
+          "owner": "CLAUDE/PR46",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            46
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/club-workbench-contract.test.js",
+          "owner": "CLAUDE/PR46",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            46
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/nav-page-title-spacing-contract.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27,
+            46,
+            49
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/page-title-flush-contract.test.js",
+          "owner": "CLAUDE/PR46",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            46
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/title-system-owner-contract.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27,
+            45,
+            46,
+            49,
+            50
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 47,
+      "head_sha": "f3326594305e096a11913cb75204b71968c12a6d",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/47",
+      "title": "BL-08 BLOCKED: 共享标题契约锁定「返回下方大标题」旧规范，需协调者先改契约",
+      "exact_changed_files": [],
+      "backend_dependencies": [],
+      "blocked_reasons": [
+        "Duplicate BL-08 claims overlap PR45 eight pages; do not assign another writer",
+        "Additional mycanyuinfo proposal is not delivered; requires explicit separate scope decision, current components untouched",
+        "complaint subtitle placement deferred"
+      ],
+      "scope_notes": [],
+      "coordinator_patches": "No changed files; body-only requests global title/spacing/negative-control reconciliation and action ledger.",
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr45_50.json",
+      "file_dispositions": [],
+      "status": "EMPTY_OR_BLOCKED_NO_SOURCE_DELIVERY"
+    },
+    {
+      "pr": 48,
+      "head_sha": "0804977273f608e2a34b0614638f95eab867f197",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/48",
+      "title": "BL-12 BLOCKED: 已完成——pages/club 无自绘弹层",
+      "exact_changed_files": [],
+      "backend_dependencies": [],
+      "blocked_reasons": [
+        "Whether existing cy-scene-sheet qualifies under cy-sheet wording is coordinator interpretation; no component rewrite authorized",
+        "club-director-*-sheet broad future scope is not an exact current claim"
+      ],
+      "scope_notes": [],
+      "coordinator_patches": "No changed files or proposed control patch.",
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr45_50.json",
+      "file_dispositions": [],
+      "status": "EMPTY_OR_BLOCKED_NO_SOURCE_DELIVERY"
+    },
+    {
+      "pr": 49,
+      "head_sha": "8200e05b4b51c4d2ce5d419f2e321dd08ecfec4a",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/49",
+      "title": "BL-11 漫游/P3 分包二级页导航统一为 cy-nav-bar 居中标题",
+      "exact_changed_files": [
+        "chengyinhub-xcx/subpackageP3/pages/growthcenter/leaderboard/index.json",
+        "chengyinhub-xcx/subpackageP3/pages/growthcenter/leaderboard/index.wxml",
+        "chengyinhub-xcx/subpackageP3/pages/object-cards/index/index.json",
+        "chengyinhub-xcx/subpackageP3/pages/object-cards/index/index.wxml",
+        "chengyinhub-xcx/subpackageP3/pages/stamp-album/index/index.json",
+        "chengyinhub-xcx/subpackageP3/pages/stamp-album/index/index.wxml",
+        "chengyinhub-xcx/subpackageRoam/history/index.json",
+        "chengyinhub-xcx/subpackageRoam/history/index.wxml",
+        "chengyinhub-xcx/tests/unit/nav-page-title-spacing-contract.test.js",
+        "chengyinhub-xcx/tests/unit/roam-scene-port-contract.test.js",
+        "chengyinhub-xcx/tests/unit/title-system-owner-contract.test.js"
+      ],
+      "backend_dependencies": [],
+      "blocked_reasons": [
+        "growthcenter main subtitle",
+        "official-routes/official-route route subtitles",
+        "session date subtitle",
+        "BL-04 points-history separate ownership"
+      ],
+      "scope_notes": [],
+      "coordinator_patches": "Changed nav-spacing adds 4 roam/P3 routes, individual 71→67. Body 46+49 subtotal57; must not overwrite other PR additions. action ledger line shifts; app.json unchanged.",
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr45_50.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/subpackageP3/pages/growthcenter/leaderboard/index.json",
+          "owner": "CLAUDE/PR49",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            49
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageP3/pages/growthcenter/leaderboard/index.wxml",
+          "owner": "CLAUDE/PR49",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            49
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageP3/pages/object-cards/index/index.json",
+          "owner": "CLAUDE/PR49",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            49
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageP3/pages/object-cards/index/index.wxml",
+          "owner": "CLAUDE/PR49",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            49
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageP3/pages/stamp-album/index/index.json",
+          "owner": "CLAUDE/PR49",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            49
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageP3/pages/stamp-album/index/index.wxml",
+          "owner": "CLAUDE/PR49",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            49
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageRoam/history/index.json",
+          "owner": "CLAUDE/PR49",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            49
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageRoam/history/index.wxml",
+          "owner": "CLAUDE/PR49",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            49
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/nav-page-title-spacing-contract.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27,
+            46,
+            49
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/roam-scene-port-contract.test.js",
+          "owner": "CLAUDE/PR49",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            49
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/title-system-owner-contract.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27,
+            45,
+            46,
+            49,
+            50
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 50,
+      "head_sha": "b65c94e849e7e7e20c648ee86589bfce5107bcbb",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/50",
+      "title": "BL-10 二级页导航统一·商家（cy-nav-bar 居中标题）",
+      "exact_changed_files": [
+        "chengyinhub-xcx/pages/merchant/citynode/index.json",
+        "chengyinhub-xcx/pages/merchant/citynode/index.wxml",
+        "chengyinhub-xcx/pages/merchant/coop-center/index.wxml",
+        "chengyinhub-xcx/pages/merchant/coop-center/index.wxss",
+        "chengyinhub-xcx/pages/merchant/ledger/index.json",
+        "chengyinhub-xcx/pages/merchant/ledger/index.wxml",
+        "chengyinhub-xcx/pages/merchant/ledger/order-detail/index.json",
+        "chengyinhub-xcx/pages/merchant/ledger/order-detail/index.wxml",
+        "chengyinhub-xcx/pages/merchant/team/index.json",
+        "chengyinhub-xcx/pages/merchant/team/index.wxml",
+        "chengyinhub-xcx/tests/unit/custom-nav-page-surface-contract.test.js",
+        "chengyinhub-xcx/tests/unit/title-system-owner-contract.test.js"
+      ],
+      "backend_dependencies": [],
+      "blocked_reasons": [
+        "aftercare list/detail retain explicit 2026-09-17 Revolut ruling pending coordinator/user resolution against newer nav decision",
+        "customer list/detail hero/name content title retained"
+      ],
+      "scope_notes": [],
+      "coordinator_patches": "Body-only nav-spacing proposal adds 4 merchant routes, individual71→67 (45+50 subtotal59). action ledger final inventory requested, app.json/baseline unchanged.",
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr45_50.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/pages/merchant/citynode/index.json",
+          "owner": "CLAUDE/PR50",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            50
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/citynode/index.wxml",
+          "owner": "CLAUDE/PR50",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            50
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/coop-center/index.wxml",
+          "owner": "CLAUDE/PR50",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            50
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/coop-center/index.wxss",
+          "owner": "CLAUDE/PR50",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            50
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/ledger/index.json",
+          "owner": "CLAUDE/PR50",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            50
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/ledger/index.wxml",
+          "owner": "CLAUDE/PR50",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            50
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/ledger/order-detail/index.json",
+          "owner": "CLAUDE/PR50",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            50
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/ledger/order-detail/index.wxml",
+          "owner": "CLAUDE/PR50",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            50
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/team/index.json",
+          "owner": "CLAUDE coordinator to name original single writer",
+          "state": "CLAUDE_CONFLICT_HELD_SINGLE_WRITER_ACK_REQUIRED",
+          "other_prs": [
+            50,
+            67
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/team/index.wxml",
+          "owner": "CLAUDE coordinator to name original single writer",
+          "state": "CLAUDE_CONFLICT_HELD_SINGLE_WRITER_ACK_REQUIRED",
+          "other_prs": [
+            50,
+            67
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/custom-nav-page-surface-contract.test.js",
+          "owner": "CLAUDE/PR50",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            50
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/title-system-owner-contract.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            23,
+            25,
+            27,
+            45,
+            46,
+            49,
+            50
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 51,
+      "head_sha": "e41ed65c4362c54168312053d3e40d6bbd022304",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/51",
+      "title": "BL-13 商家装修图片编辑弹层改用 cy-sheet",
+      "exact_changed_files": [
+        "chengyinhub-xcx/pages/merchant/decor/design.wxss",
+        "chengyinhub-xcx/pages/merchant/decor/index.js",
+        "chengyinhub-xcx/pages/merchant/decor/index.wxml"
+      ],
+      "backend_dependencies": [
+        "None claimed in body and no backend files changed; NO_API_CHANGE scope only, not runtime compatibility validation"
+      ],
+      "blocked_reasons": [
+        "C00-only ledger reconciliation remains outstanding; user deferred all new execution"
+      ],
+      "scope_notes": [
+        "Three merchant decor source files do not exactly match CORE/EXTRA files or reserved entries. Remain original CLAUDE author scope, not transferred to Codex.",
+        "Reported 4480→4479 control count and non-tap denominator are claims from author's own base; C00 must not transplant counts into current public ledger. Shared theme/cy-sheet sources are unchanged."
+      ],
+      "coordinator_patches": [
+        "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+        "chengyinhub-xcx/tests/unit/action-ledger.test.js"
+      ],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr51_56.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/pages/merchant/decor/design.wxss",
+          "owner": "CLAUDE/PR51",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            51
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/decor/index.js",
+          "owner": "CLAUDE/PR51",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            51
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/decor/index.wxml",
+          "owner": "CLAUDE/PR51",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            51
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 52,
+      "head_sha": "6342022edae65217ddad21bd9a3de130e71b7421",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/52",
+      "title": "BL-14 弹层统一·发布（玩法编辑页两个自绘 sheet 改 cy-sheet）",
+      "exact_changed_files": [
+        "chengyinhub-xcx/pages/publish/temp/index.json",
+        "chengyinhub-xcx/pages/publish/temp/index.wxml",
+        "chengyinhub-xcx/pages/publish/temp/index.wxss"
+      ],
+      "backend_dependencies": [
+        "None claimed in body and no backend files changed; NO_API_CHANGE scope only, not runtime compatibility validation"
+      ],
+      "blocked_reasons": [
+        "C00-only ledger reconciliation remains outstanding; user deferred all new execution"
+      ],
+      "scope_notes": [
+        "Three temp template/style/registration files have no exact CORE/EXTRA lock match. No fabu file changed; body only mentions dead fabu multi-select. That mention grants no deletion or modification right.",
+        "Original CORE/C02 fabu/index.js remains exclusive; no pages/publish/** directory-wide transfer inferred.",
+        "theme-topic-editor color parity is explicitly not verified; body leaves choice-game sheet unchanged. No shared theme/component source claim."
+      ],
+      "coordinator_patches": [
+        "chengyinhub-xcx/scripts/uiaudit/action-ledger.json"
+      ],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr51_56.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/pages/publish/temp/index.json",
+          "owner": "CLAUDE/PR52",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            52
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/publish/temp/index.wxml",
+          "owner": "CLAUDE coordinator to name original single writer",
+          "state": "CLAUDE_CONFLICT_HELD_SINGLE_WRITER_ACK_REQUIRED",
+          "other_prs": [
+            52,
+            58
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/publish/temp/index.wxss",
+          "owner": "CLAUDE/PR52",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            52
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 53,
+      "head_sha": "25fdcb1b2d9fca756f8905bff1bc846f6f089b22",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/53",
+      "title": "BL-16 BLOCKED: 收件箱/我的已无描边，详情页等 CL4 合并",
+      "exact_changed_files": [],
+      "backend_dependencies": [
+        "CL4 original official-detail work must merge first; no new backend interface requested"
+      ],
+      "blocked_reasons": [
+        "Author explicit BLOCKED: CL4 not merged on author's base; empty delivery"
+      ],
+      "scope_notes": [
+        "Empty changed-files list: no delivered source. Explicit BLOCKED until CL4 official-detail work merges, then only original Claude owner can resume the four stylesheet selectors.",
+        "Current OWNERSHIP.md independently records official-detail/index.wxss as CLAUDE CL4 / PR21; no Codex takeover."
+      ],
+      "coordinator_patches": [],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr51_56.json",
+      "file_dispositions": [],
+      "status": "EMPTY_OR_BLOCKED_NO_SOURCE_DELIVERY"
+    },
+    {
+      "pr": 54,
+      "head_sha": "39f2e2cd906362e16d17aa7d17733c913bde258a",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/54",
+      "title": "BL-15 商家页卡片/输入框去描边",
+      "exact_changed_files": [
+        "chengyinhub-xcx/pages/merchant/components/merchant-claim-sheet/index.wxss",
+        "chengyinhub-xcx/pages/merchant/predict/index.wxss",
+        "chengyinhub-xcx/pages/merchant/reviews/index.wxss"
+      ],
+      "backend_dependencies": [
+        "None claimed in body and no backend files changed; NO_API_CHANGE scope only, not runtime compatibility validation"
+      ],
+      "blocked_reasons": [],
+      "scope_notes": [
+        "Only three merchant WXSS files, no exact CORE/EXTRA or reserved-file overlap. No shared theme token source or backend change.",
+        "Author's kept borders/new future task suggestions are not accepted new scope."
+      ],
+      "coordinator_patches": [],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr51_56.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/pages/merchant/components/merchant-claim-sheet/index.wxss",
+          "owner": "CLAUDE/PR54",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            54
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/predict/index.wxss",
+          "owner": "CLAUDE/PR54",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            54
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/reviews/index.wxss",
+          "owner": "CLAUDE/PR54",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            54
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 55,
+      "head_sha": "c393bc64e87c9fbc3ef2b53d34ce79f398655fbb",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/55",
+      "title": "BL-17 返回守卫·常备权益编辑",
+      "exact_changed_files": [
+        "chengyinhub-xcx/pages/merchant/decor/perks/index.js",
+        "chengyinhub-xcx/pages/merchant/decor/perks/index.wxml"
+      ],
+      "backend_dependencies": [
+        "None claimed in body and no backend files changed; NO_API_CHANGE scope only, not runtime compatibility validation"
+      ],
+      "blocked_reasons": [
+        "C00-only ledger reconciliation remains outstanding; user deferred all new execution"
+      ],
+      "scope_notes": [
+        "Two perks page files, no exact CORE/EXTRA or reserved match. Callback/unload edits remain original Claude owner scope.",
+        "Adds page-container event so ledger is C00-only patch dependency; no backend dependency or fabu access."
+      ],
+      "coordinator_patches": [
+        "chengyinhub-xcx/scripts/uiaudit/action-ledger.json"
+      ],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr51_56.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/pages/merchant/decor/perks/index.js",
+          "owner": "CLAUDE/PR55",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            55
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/decor/perks/index.wxml",
+          "owner": "CLAUDE/PR55",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            55
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 56,
+      "head_sha": "da18d2d7d5a03ac77dd48eea950d8a58853a0206",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/56",
+      "title": "BL-19 返回守卫·优惠券设置",
+      "exact_changed_files": [
+        "chengyinhub-xcx/subpackageMember/couponInfo/couponInfo.js",
+        "chengyinhub-xcx/subpackageMember/couponInfo/couponInfo.wxml",
+        "chengyinhub-xcx/tests/unit/all-page-back-stack-contract.test.js"
+      ],
+      "backend_dependencies": [
+        "None claimed in body and no backend files changed; NO_API_CHANGE scope only, not runtime compatibility validation"
+      ],
+      "blocked_reasons": [
+        "C00 serial integration of PR45 same WXML and shared fixture/ledger required; no automatic owner takeover"
+      ],
+      "scope_notes": [
+        "couponInfo WXML exact overlaps PR45. Read PR45 single-file patch: top nav title/spacer lines2–8; PR56 append guard at tail. Non-overlapping hunks are static evidence only, not merge approval.",
+        "all-page-back-stack-contract.test.js is a shared cross-page fixture changed by this PR. It is not listed in current longrun supplemental owners/reserved, but C00 must classify and serially stage its tiny fixture callback patch; no whole-file replacement from CLAUDE base.",
+        "No backend coupon/refund/stock source changes. Existing E04 financial policies/interfaces are not reassigned."
+      ],
+      "coordinator_patches": [
+        "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+        "chengyinhub-xcx/tests/unit/all-page-back-stack-contract.test.js"
+      ],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr51_56.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/subpackageMember/couponInfo/couponInfo.js",
+          "owner": "CLAUDE/PR56",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            56
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/couponInfo/couponInfo.wxml",
+          "owner": "CLAUDE coordinator to name original single writer",
+          "state": "CLAUDE_CONFLICT_HELD_SINGLE_WRITER_ACK_REQUIRED",
+          "other_prs": [
+            45,
+            56
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/all-page-back-stack-contract.test.js",
+          "owner": "C00",
+          "state": "PATCH_ONLY_C00_SERIAL_INTAKE",
+          "other_prs": [
+            56
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 57,
+      "head_sha": "435a9d8d331a14f948a9db58f74cb82d1878afb7",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/57",
+      "title": "BL-20 图片预览收口·俱乐部",
+      "exact_changed_files": [
+        "chengyinhub-xcx/pages/club/detail/index.js",
+        "chengyinhub-xcx/tests/unit/club-detail-ia-contract.test.js",
+        "chengyinhub-xcx/tests/unit/club-game-director-contract.test.js",
+        "chengyinhub-xcx/tests/unit/club-governance-ui-contract.test.js",
+        "chengyinhub-xcx/tests/unit/club-invite-feedback-contract.test.js",
+        "chengyinhub-xcx/tests/unit/club-journey-audit-fix-contract.test.js",
+        "chengyinhub-xcx/tests/unit/club-owner-entry-recovery-contract.test.js",
+        "chengyinhub-xcx/tests/unit/club-p1-state-contract.test.js",
+        "chengyinhub-xcx/tests/unit/club-role-ui-contract.test.js"
+      ],
+      "backend_dependencies": [],
+      "blocked_reasons": [],
+      "scope_notes": [],
+      "coordinator_patches": [
+        {
+          "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+          "requested_action": "Coordinator rebuild inventory digest; no control/handler names added",
+          "in_changed_files": false,
+          "reserved": true
+        }
+      ],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr57_62.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/pages/club/detail/index.js",
+          "owner": "CLAUDE coordinator to name original single writer",
+          "state": "CLAUDE_CONFLICT_HELD_SINGLE_WRITER_ACK_REQUIRED",
+          "other_prs": [
+            23,
+            57,
+            59
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/club-detail-ia-contract.test.js",
+          "owner": "CLAUDE/PR57",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            57
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/club-game-director-contract.test.js",
+          "owner": "CLAUDE/PR57",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            57
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/club-governance-ui-contract.test.js",
+          "owner": "CLAUDE/PR57",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            57
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/club-invite-feedback-contract.test.js",
+          "owner": "CLAUDE/PR57",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            57
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/club-journey-audit-fix-contract.test.js",
+          "owner": "CLAUDE/PR57",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            57
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/club-owner-entry-recovery-contract.test.js",
+          "owner": "CLAUDE/PR57",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            57
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/club-p1-state-contract.test.js",
+          "owner": "CLAUDE/PR57",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            57
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/club-role-ui-contract.test.js",
+          "owner": "CLAUDE/PR57",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            57
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 58,
+      "head_sha": "96675007f241104570e30df974d1c1a15b5ccf72",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/58",
+      "title": "BL-22 列表 key 修正（剩余图片/标签/头像列表）",
+      "exact_changed_files": [
+        "chengyinhub-xcx/components/cy/club-card/index.wxml",
+        "chengyinhub-xcx/components/cy/club-topic-onboarding/index.wxml",
+        "chengyinhub-xcx/components/cy/merchant-card/index.wxml",
+        "chengyinhub-xcx/components/cy/scene-roam-discover/index.wxml",
+        "chengyinhub-xcx/components/cy/scene-roam-history/index.wxml",
+        "chengyinhub-xcx/components/cy/spin-card/index.wxml",
+        "chengyinhub-xcx/pages/gerenziliao/gerenziliao.wxml",
+        "chengyinhub-xcx/pages/publish/fabu/index.wxml",
+        "chengyinhub-xcx/pages/publish/fabu/topic-detail-sheet.wxml",
+        "chengyinhub-xcx/pages/publish/temp/index.wxml",
+        "chengyinhub-xcx/pages/roam/index.wxml",
+        "chengyinhub-xcx/pages/search2/result/index.wxml",
+        "chengyinhub-xcx/subpackageMember/components/cy/profile/index.wxml",
+        "chengyinhub-xcx/subpackageMember/components/cy/scene-play-activity-detail/index.wxml",
+        "chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.wxml",
+        "chengyinhub-xcx/subpackageRoam/nearby/index.wxml"
+      ],
+      "backend_dependencies": [],
+      "blocked_reasons": [],
+      "scope_notes": [],
+      "coordinator_patches": [
+        {
+          "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+          "requested_action": "Conditional inventory digest rebuild if these WXML sources are indexed; no controls added/removed",
+          "in_changed_files": false,
+          "reserved": true
+        }
+      ],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr57_62.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/components/cy/club-card/index.wxml",
+          "owner": "CLAUDE/PR58",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            58
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/components/cy/club-topic-onboarding/index.wxml",
+          "owner": "CLAUDE/PR58",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            58
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/components/cy/merchant-card/index.wxml",
+          "owner": "CLAUDE/PR58",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            58
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/components/cy/scene-roam-discover/index.wxml",
+          "owner": "CLAUDE/PR58",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            58
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/components/cy/scene-roam-history/index.wxml",
+          "owner": "CLAUDE/PR58",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            58
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/components/cy/spin-card/index.wxml",
+          "owner": "CLAUDE/PR58",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            58
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/gerenziliao/gerenziliao.wxml",
+          "owner": "CLAUDE coordinator to name original single writer",
+          "state": "CLAUDE_CONFLICT_HELD_SINGLE_WRITER_ACK_REQUIRED",
+          "other_prs": [
+            23,
+            58
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/publish/fabu/index.wxml",
+          "owner": "CLAUDE/PR58",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            58
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/publish/fabu/topic-detail-sheet.wxml",
+          "owner": "CLAUDE/PR58",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            58
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/publish/temp/index.wxml",
+          "owner": "CLAUDE coordinator to name original single writer",
+          "state": "CLAUDE_CONFLICT_HELD_SINGLE_WRITER_ACK_REQUIRED",
+          "other_prs": [
+            52,
+            58
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.wxml",
+          "owner": "PR20 original writer",
+          "state": "PRIOR_OWNER_HELD_NO_TRANSFER",
+          "other_prs": [
+            22,
+            37,
+            38,
+            39,
+            58
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/search2/result/index.wxml",
+          "owner": "CLAUDE/PR58",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            58
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.wxml",
+          "owner": "PR17/CL4 prior writer reconciliation",
+          "state": "PRIOR_OWNER_HELD_NO_TRANSFER",
+          "other_prs": [
+            27,
+            58,
+            65
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/components/cy/scene-play-activity-detail/index.wxml",
+          "owner": "CLAUDE/PR58",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            58
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.wxml",
+          "owner": "CLAUDE/PR58",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            58
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageRoam/nearby/index.wxml",
+          "owner": "CLAUDE/PR58",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            58
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 59,
+      "head_sha": "f55170581c905a017e76eea825457fb7c1b73cb5",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/59",
+      "title": "BL-18 俱乐部资料编辑物理返回守卫",
+      "exact_changed_files": [
+        "chengyinhub-xcx/pages/club/detail/index.js",
+        "chengyinhub-xcx/pages/club/detail/index.wxml",
+        "chengyinhub-xcx/pages/club/edit/index.js",
+        "chengyinhub-xcx/pages/club/edit/index.wxml",
+        "chengyinhub-xcx/tests/unit/club-edit-back-guard.test.js"
+      ],
+      "backend_dependencies": [],
+      "blocked_reasons": [],
+      "scope_notes": [],
+      "coordinator_patches": [
+        {
+          "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+          "requested_action": "Coordinator inventory regeneration; author reports +2 bind:afterleave controls",
+          "in_changed_files": false,
+          "reserved": true
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/action-ledger.test.js",
+          "requested_action": "Coordinator combine frozen count deltas: controls 4480→4482; non-tap component events 2348→2350; aggregate other PR deltas before editing",
+          "in_changed_files": false,
+          "reserved": false,
+          "ownership_note": "Coordinator-maintained patch requested in full handoff; not explicitly listed in this JSON reserved array."
+        }
+      ],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr57_62.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/pages/club/detail/index.js",
+          "owner": "CLAUDE coordinator to name original single writer",
+          "state": "CLAUDE_CONFLICT_HELD_SINGLE_WRITER_ACK_REQUIRED",
+          "other_prs": [
+            23,
+            57,
+            59
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/detail/index.wxml",
+          "owner": "CLAUDE coordinator to name original single writer",
+          "state": "CLAUDE_CONFLICT_HELD_SINGLE_WRITER_ACK_REQUIRED",
+          "other_prs": [
+            23,
+            59,
+            65
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/edit/index.js",
+          "owner": "CLAUDE/PR59",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            59
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/edit/index.wxml",
+          "owner": "CLAUDE coordinator to name original single writer",
+          "state": "CLAUDE_CONFLICT_HELD_SINGLE_WRITER_ACK_REQUIRED",
+          "other_prs": [
+            46,
+            59
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/club-edit-back-guard.test.js",
+          "owner": "CLAUDE/PR59",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            59
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 60,
+      "head_sha": "3cbbd6494f85a4734329577cdfbcdc516ebeb200",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/60",
+      "title": "BL-23 定位兜底·其余地图页改用 last-location",
+      "exact_changed_files": [
+        "chengyinhub-xcx/pages/publish/fabu/index.js",
+        "chengyinhub-xcx/pages/publish/utils/publish/route-map-view.js",
+        "chengyinhub-xcx/pages/roam/index.js",
+        "chengyinhub-xcx/subpackageRoam/nearby/index.js"
+      ],
+      "backend_dependencies": [],
+      "blocked_reasons": [
+        {
+          "kind": "EXACT_SOURCE_OWNER_CONFLICT",
+          "path": "chengyinhub-xcx/pages/publish/fabu/index.js",
+          "owner": "CORE/C02",
+          "worker": "publish_unknown_sol",
+          "resolution": "C00 request original C02 writer to incorporate the one MAP_DEFAULT_CENTER assignment/comment hunk; no blanket file overwrite or authorization inferred."
+        }
+      ],
+      "scope_notes": [],
+      "coordinator_patches": [
+        {
+          "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+          "requested_action": "Conditional inventory digest rebuild for modified JS; no controls added",
+          "in_changed_files": false,
+          "reserved": true
+        }
+      ],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr57_62.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/pages/publish/fabu/index.js",
+          "owner": "CORE/C02",
+          "state": "ORIGINAL_OWNER_RETAINED_PATCH_ONLY",
+          "other_prs": [
+            60
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/publish/utils/publish/route-map-view.js",
+          "owner": "CLAUDE/PR60",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            60
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.js",
+          "owner": "PR20 original writer",
+          "state": "PRIOR_OWNER_HELD_NO_TRANSFER",
+          "other_prs": [
+            22,
+            37,
+            38,
+            39,
+            60
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageRoam/nearby/index.js",
+          "owner": "CLAUDE/PR60",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            60
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 61,
+      "head_sha": "6c3bb33c7f720a64d175d1b6a552ebf0289507ad",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/61",
+      "title": "BL-25 BLOCKED: 俱乐部「无权限」态行为与 cy-state-shell 冲突，需产品决定",
+      "exact_changed_files": [],
+      "backend_dependencies": [],
+      "blocked_reasons": [
+        {
+          "kind": "AUTHOR_DECLARED_PRODUCT_BEHAVIOR_DECISION",
+          "reason": "Existing shell no-permission intentionally stays on page with empty/exit affordance; seven club pages auto-return. Choosing shell behavior or changing shared auto-back behavior requires product decision. No source currently delivered."
+        }
+      ],
+      "scope_notes": [],
+      "coordinator_patches": [],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr57_62.json",
+      "file_dispositions": [],
+      "status": "EMPTY_OR_BLOCKED_NO_SOURCE_DELIVERY"
+    },
+    {
+      "pr": 62,
+      "head_sha": "b82447950dd3eed6bb1f9468d7aac76d12198b3d",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/62",
+      "title": "BL-26 骨架屏补齐：勋章墙列表模式",
+      "exact_changed_files": [
+        "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.json",
+        "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.wxml"
+      ],
+      "backend_dependencies": [],
+      "blocked_reasons": [],
+      "scope_notes": [],
+      "coordinator_patches": [],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr57_62.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.json",
+          "owner": "CLAUDE/PR62",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            62
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.wxml",
+          "owner": "CLAUDE/PR62",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            62
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 63,
+      "head_sha": "4646683a7f905f45023d8f65bf2822600b5be610",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/63",
+      "title": "BL-28 BLOCKED: 漫游历史已无 .hs-fp 筛选药丸，无可收编目标",
+      "exact_changed_files": [],
+      "backend_dependencies": [],
+      "blocked_reasons": [],
+      "scope_notes": {
+        "status": "BLOCKED_NO_EXISTING_TARGET",
+        "reason": "漫游历史当前无 hs-fp/筛选 UI 可收编；新增筛选维度需要产品决定。零 changed files，不是可交付代码。",
+        "patches": [],
+        "dependencies": [],
+        "scope": []
+      },
+      "coordinator_patches": [],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr63_68.json",
+      "file_dispositions": [],
+      "status": "EMPTY_OR_BLOCKED_NO_SOURCE_DELIVERY"
+    },
+    {
+      "pr": 64,
+      "head_sha": "4f1462dd6b7703f5031124fff5417cbb456602b6",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/64",
+      "title": "BL-29 设计 token 回收·俱乐部",
+      "exact_changed_files": [
+        "chengyinhub-xcx/pages/club/detail/index.wxss"
+      ],
+      "backend_dependencies": [],
+      "blocked_reasons": [],
+      "scope_notes": {
+        "status": "SOURCE_DELIVERED_UNVERIFIED_BY_AUDITOR",
+        "reason": null,
+        "patches": [],
+        "dependencies": [
+          "既有 CSS design tokens（text-tertiary/bg-surface/text-inverse），无后端/API依赖"
+        ],
+        "scope": [
+          "chengyinhub-xcx/pages/club/detail/index.wxss"
+        ]
+      },
+      "coordinator_patches": [],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr63_68.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/pages/club/detail/index.wxss",
+          "owner": "CLAUDE coordinator to name original single writer",
+          "state": "CLAUDE_CONFLICT_HELD_SINGLE_WRITER_ACK_REQUIRED",
+          "other_prs": [
+            23,
+            64
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 65,
+      "head_sha": "a86a1fd80481dc8e07ccb5f00e07d05976f824b5",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/65",
+      "title": "BL-27 空态文案诚实化",
+      "exact_changed_files": [
+        "chengyinhub-xcx/components/cy/category-sheet/index.wxml",
+        "chengyinhub-xcx/pages/club/detail/index.wxml",
+        "chengyinhub-xcx/pages/publish/components/collaborator-picker/index.wxml",
+        "chengyinhub-xcx/subpackageA/pages/infomation/infomation.wxml",
+        "chengyinhub-xcx/subpackageMember/components/cy/profile/index.wxml"
+      ],
+      "backend_dependencies": [],
+      "blocked_reasons": [],
+      "scope_notes": {
+        "status": "SOURCE_DELIVERED_UNVERIFIED_BY_AUDITOR",
+        "reason": null,
+        "patches": [],
+        "dependencies": [
+          "仅既有空态文案；正文引用 /api/common/infomation_list、/api/points/result_list、/api/user/list、CmsTopicServiceImpl 作为文案依据，未申请更改后端接口或行为"
+        ],
+        "scope": [
+          "chengyinhub-xcx/components/cy/category-sheet/index.wxml",
+          "chengyinhub-xcx/pages/club/detail/index.wxml",
+          "chengyinhub-xcx/pages/publish/components/collaborator-picker/index.wxml",
+          "chengyinhub-xcx/subpackageA/pages/infomation/infomation.wxml",
+          "chengyinhub-xcx/subpackageMember/components/cy/profile/index.wxml"
+        ]
+      },
+      "coordinator_patches": [],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr63_68.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/components/cy/category-sheet/index.wxml",
+          "owner": "CLAUDE/PR65",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            65
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/detail/index.wxml",
+          "owner": "CLAUDE coordinator to name original single writer",
+          "state": "CLAUDE_CONFLICT_HELD_SINGLE_WRITER_ACK_REQUIRED",
+          "other_prs": [
+            23,
+            59,
+            65
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/publish/components/collaborator-picker/index.wxml",
+          "owner": "CLAUDE/PR65",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            65
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageA/pages/infomation/infomation.wxml",
+          "owner": "CLAUDE/PR65",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            65
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.wxml",
+          "owner": "PR17/CL4 prior writer reconciliation",
+          "state": "PRIOR_OWNER_HELD_NO_TRANSFER",
+          "other_prs": [
+            27,
+            58,
+            65
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 66,
+      "head_sha": "5af31c9ad8ed57c35555e31f5e912744df3ef7f9",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/66",
+      "title": "BL-30 BLOCKED: 漫游剩余硬编码均为离刻度原型圆角，吸附需设计决定",
+      "exact_changed_files": [],
+      "backend_dependencies": [],
+      "blocked_reasons": [],
+      "scope_notes": {
+        "status": "BLOCKED_DESIGN_DECISION",
+        "reason": "剩余圆角没有精确 token；吸附刻度、ds-ok例外或新增radius token均需设计/协调者选择，原生map/canvas颜色不属于wxss token范围。零 changed files。",
+        "patches": [],
+        "dependencies": [],
+        "scope": []
+      },
+      "coordinator_patches": [],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr63_68.json",
+      "file_dispositions": [],
+      "status": "EMPTY_OR_BLOCKED_NO_SOURCE_DELIVERY"
+    },
+    {
+      "pr": 67,
+      "head_sha": "6a65324557aab652ff351aca6710f4eba292e800",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/67",
+      "title": "BL-24 四态统一·商家（第一批 6 页 → cy-state-shell）",
+      "exact_changed_files": [
+        "chengyinhub-xcx/pages/merchant/aftercare/detail/index.json",
+        "chengyinhub-xcx/pages/merchant/aftercare/detail/index.wxml",
+        "chengyinhub-xcx/pages/merchant/customer/detail/index.json",
+        "chengyinhub-xcx/pages/merchant/customer/detail/index.wxml",
+        "chengyinhub-xcx/pages/merchant/decor/ai-npc/index.json",
+        "chengyinhub-xcx/pages/merchant/decor/ai-npc/index.wxml",
+        "chengyinhub-xcx/pages/merchant/game-node/index.json",
+        "chengyinhub-xcx/pages/merchant/game-node/index.wxml",
+        "chengyinhub-xcx/pages/merchant/predict/index.json",
+        "chengyinhub-xcx/pages/merchant/predict/index.wxml",
+        "chengyinhub-xcx/pages/merchant/team/index.json",
+        "chengyinhub-xcx/pages/merchant/team/index.wxml"
+      ],
+      "backend_dependencies": [],
+      "blocked_reasons": [],
+      "scope_notes": {
+        "status": "PARTIAL_SOURCE_DELIVERY",
+        "reason": "其余17页50处转换会牵动20个既有契约中的31条逐字断言，正文明确留待下一批，不应记为全部完成或后端阻塞。",
+        "patches": [
+          {
+            "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+            "kind": "COORDINATOR_RESERVED_FOLLOWUP",
+            "instruction": "重建 inventory；正文报告 action-ledger.test.js #35 漂移。本审阅不执行、不自动授予修改权。"
+          }
+        ],
+        "dependencies": [
+          "既有 components/cy/state-shell 及其 kind/primary/back/auto-back/custom-back 透传合同；无后端接口变更"
+        ],
+        "scope": [
+          "chengyinhub-xcx/pages/merchant/aftercare/detail/index.json",
+          "chengyinhub-xcx/pages/merchant/aftercare/detail/index.wxml",
+          "chengyinhub-xcx/pages/merchant/customer/detail/index.json",
+          "chengyinhub-xcx/pages/merchant/customer/detail/index.wxml",
+          "chengyinhub-xcx/pages/merchant/decor/ai-npc/index.json",
+          "chengyinhub-xcx/pages/merchant/decor/ai-npc/index.wxml",
+          "chengyinhub-xcx/pages/merchant/game-node/index.json",
+          "chengyinhub-xcx/pages/merchant/game-node/index.wxml",
+          "chengyinhub-xcx/pages/merchant/predict/index.json",
+          "chengyinhub-xcx/pages/merchant/predict/index.wxml",
+          "chengyinhub-xcx/pages/merchant/team/index.json",
+          "chengyinhub-xcx/pages/merchant/team/index.wxml"
+        ]
+      },
+      "coordinator_patches": [],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr63_68.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/pages/merchant/aftercare/detail/index.json",
+          "owner": "CLAUDE/PR67",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            67
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/aftercare/detail/index.wxml",
+          "owner": "CLAUDE/PR67",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            67
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/customer/detail/index.json",
+          "owner": "CLAUDE/PR67",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            67
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/customer/detail/index.wxml",
+          "owner": "CLAUDE/PR67",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            67
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/decor/ai-npc/index.json",
+          "owner": "CLAUDE/PR67",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            67
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/decor/ai-npc/index.wxml",
+          "owner": "CLAUDE/PR67",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            67
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/game-node/index.json",
+          "owner": "CLAUDE/PR67",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            67
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/game-node/index.wxml",
+          "owner": "CLAUDE/PR67",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            67
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/predict/index.json",
+          "owner": "CLAUDE/PR67",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            67
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/predict/index.wxml",
+          "owner": "CLAUDE/PR67",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            67
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/team/index.json",
+          "owner": "CLAUDE coordinator to name original single writer",
+          "state": "CLAUDE_CONFLICT_HELD_SINGLE_WRITER_ACK_REQUIRED",
+          "other_prs": [
+            50,
+            67
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/team/index.wxml",
+          "owner": "CLAUDE coordinator to name original single writer",
+          "state": "CLAUDE_CONFLICT_HELD_SINGLE_WRITER_ACK_REQUIRED",
+          "other_prs": [
+            50,
+            67
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    },
+    {
+      "pr": 68,
+      "head_sha": "41680f1ed5eed0f0787e63183258de66c58002b0",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/68",
+      "title": "BL-21 图片预览收口·其余非 Codex 文件",
+      "exact_changed_files": [
+        "chengyinhub-xcx/pages/merchant/aftercare/detail/index.js",
+        "chengyinhub-xcx/pages/merchant/reviews/index.js",
+        "chengyinhub-xcx/pages/square/detail/index.js",
+        "chengyinhub-xcx/pages/square/list/index.js",
+        "chengyinhub-xcx/pages/templatedetail/templatedetail.js",
+        "chengyinhub-xcx/pages/topic/index/index.js",
+        "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js",
+        "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js",
+        "chengyinhub-xcx/subpackageMember/components/cy/scene-play-activity-detail/index.js",
+        "chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js",
+        "chengyinhub-xcx/tests/helpers/media-preview-sandbox.js",
+        "chengyinhub-xcx/tests/unit/c01-home-search-state-contract.test.js",
+        "chengyinhub-xcx/tests/unit/citynode-validation-methods.test.js",
+        "chengyinhub-xcx/tests/unit/merchant-aftercare-page.test.js",
+        "chengyinhub-xcx/tests/unit/merchant-topic-cover-states.test.js",
+        "chengyinhub-xcx/tests/unit/templatedetail-capability-tab-contract.test.js",
+        "chengyinhub-xcx/tests/unit/wt2-player-scene-fixes-contract.test.js"
+      ],
+      "backend_dependencies": [],
+      "blocked_reasons": [],
+      "scope_notes": {
+        "status": "SOURCE_DELIVERED_UNVERIFIED_BY_AUDITOR",
+        "reason": null,
+        "patches": [
+          {
+            "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+            "kind": "COORDINATOR_RESERVED_FOLLOWUP",
+            "instruction": "正文报告 staticSource 行号漂移379行，要求整合后重建；本审阅不执行、不自动授予修改权。"
+          }
+        ],
+        "dependencies": [
+          "既有 chengyinhub-xcx/utils/media-preview.js 的 open(urls,current)；新增 sandbox helper 只供测试；无后端/API依赖"
+        ],
+        "scope": [
+          "chengyinhub-xcx/pages/merchant/aftercare/detail/index.js",
+          "chengyinhub-xcx/pages/merchant/reviews/index.js",
+          "chengyinhub-xcx/pages/square/detail/index.js",
+          "chengyinhub-xcx/pages/square/list/index.js",
+          "chengyinhub-xcx/pages/templatedetail/templatedetail.js",
+          "chengyinhub-xcx/pages/topic/index/index.js",
+          "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js",
+          "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js",
+          "chengyinhub-xcx/subpackageMember/components/cy/scene-play-activity-detail/index.js",
+          "chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js",
+          "chengyinhub-xcx/tests/helpers/media-preview-sandbox.js",
+          "chengyinhub-xcx/tests/unit/c01-home-search-state-contract.test.js",
+          "chengyinhub-xcx/tests/unit/citynode-validation-methods.test.js",
+          "chengyinhub-xcx/tests/unit/merchant-aftercare-page.test.js",
+          "chengyinhub-xcx/tests/unit/merchant-topic-cover-states.test.js",
+          "chengyinhub-xcx/tests/unit/templatedetail-capability-tab-contract.test.js",
+          "chengyinhub-xcx/tests/unit/wt2-player-scene-fixes-contract.test.js"
+        ]
+      },
+      "coordinator_patches": [],
+      "author_validation": "AUTHOR_CLAIM_ONLY_NOT_REEXECUTED",
+      "verification": "NOT_RUN",
+      "source_review_file": "pr63_68.json",
+      "file_dispositions": [
+        {
+          "path": "chengyinhub-xcx/pages/merchant/aftercare/detail/index.js",
+          "owner": "CLAUDE/PR68",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            68
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/reviews/index.js",
+          "owner": "CLAUDE/PR68",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            68
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/square/detail/index.js",
+          "owner": "CLAUDE/PR68",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            68
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/square/list/index.js",
+          "owner": "CLAUDE/PR68",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            68
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/templatedetail/templatedetail.js",
+          "owner": "CLAUDE/PR68",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            68
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/topic/index/index.js",
+          "owner": "CLAUDE/PR68",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            68
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js",
+          "owner": "CLAUDE/PR68",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            68
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js",
+          "owner": "PR17/CL4 prior writer reconciliation",
+          "state": "PRIOR_OWNER_HELD_NO_TRANSFER",
+          "other_prs": [
+            27,
+            68
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/components/cy/scene-play-activity-detail/index.js",
+          "owner": "CLAUDE/PR68",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            68
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js",
+          "owner": "CLAUDE/PR68",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            68
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/helpers/media-preview-sandbox.js",
+          "owner": "CLAUDE/PR68",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            68
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/c01-home-search-state-contract.test.js",
+          "owner": "CLAUDE/PR68",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            68
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/citynode-validation-methods.test.js",
+          "owner": "CLAUDE/PR68",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            68
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/merchant-aftercare-page.test.js",
+          "owner": "CLAUDE/PR68",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            68
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/merchant-topic-cover-states.test.js",
+          "owner": "CLAUDE/PR68",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            68
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/templatedetail-capability-tab-contract.test.js",
+          "owner": "CLAUDE/PR68",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            68
+          ]
+        },
+        {
+          "path": "chengyinhub-xcx/tests/unit/wt2-player-scene-fixes-contract.test.js",
+          "owner": "CLAUDE/PR68",
+          "state": "ASSIGNED_SOURCE_ONLY_ACK_PENDING",
+          "other_prs": [
+            68
+          ]
+        }
+      ],
+      "status": "SOURCE_HANDOFF_RECEIVED_UNVERIFIED_NOT_INTEGRATED"
+    }
+  ],
+  "overlaps": {
+    "chengyinhub-xcx/pages/roam/index.js": [
+      22,
+      37,
+      38,
+      39,
+      60
+    ],
+    "chengyinhub-xcx/pages/roam/index.wxml": [
+      22,
+      37,
+      38,
+      39,
+      58
+    ],
+    "chengyinhub-xcx/scripts/uiaudit/action-ledger.json": [
+      22,
+      23,
+      25,
+      27
+    ],
+    "chengyinhub-xcx/tests/lint/ui-integrity-baseline.js": [
+      22,
+      25
+    ],
+    "chengyinhub-xcx/app.json": [
+      23,
+      25,
+      27
+    ],
+    "chengyinhub-xcx/pages/club/detail/index.js": [
+      23,
+      57,
+      59
+    ],
+    "chengyinhub-xcx/pages/club/detail/index.wxml": [
+      23,
+      59,
+      65
+    ],
+    "chengyinhub-xcx/pages/club/detail/index.wxss": [
+      23,
+      64
+    ],
+    "chengyinhub-xcx/pages/gerenziliao/gerenziliao.wxml": [
+      23,
+      58
+    ],
+    "chengyinhub-xcx/scripts/fixtures.json": [
+      23,
+      25,
+      27
+    ],
+    "chengyinhub-xcx/scripts/shot-matrix.js": [
+      23,
+      25,
+      27
+    ],
+    "chengyinhub-xcx/scripts/uiaudit/route-matrix.json": [
+      23,
+      25,
+      27
+    ],
+    "chengyinhub-xcx/tests/unit/action-ledger.test.js": [
+      23,
+      25,
+      27
+    ],
+    "chengyinhub-xcx/tests/unit/nav-page-title-spacing-contract.test.js": [
+      23,
+      25,
+      27,
+      46,
+      49
+    ],
+    "chengyinhub-xcx/tests/unit/route-matrix-freshness.test.js": [
+      23,
+      25,
+      27
+    ],
+    "chengyinhub-xcx/tests/unit/title-system-owner-contract.test.js": [
+      23,
+      25,
+      27,
+      45,
+      46,
+      49,
+      50
+    ],
+    "chengyinhub-xcx/utils/danger-actions.js": [
+      23,
+      27
+    ],
+    "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js": [
+      25,
+      27
+    ],
+    "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js": [
+      27,
+      68
+    ],
+    "chengyinhub-xcx/subpackageMember/components/cy/profile/index.wxml": [
+      27,
+      58,
+      65
+    ],
+    "chengyinhub-xcx/subpackageMember/couponInfo/couponInfo.wxml": [
+      45,
+      56
+    ],
+    "chengyinhub-xcx/pages/club/edit/index.wxml": [
+      46,
+      59
+    ],
+    "chengyinhub-xcx/pages/merchant/team/index.json": [
+      50,
+      67
+    ],
+    "chengyinhub-xcx/pages/merchant/team/index.wxml": [
+      50,
+      67
+    ],
+    "chengyinhub-xcx/pages/publish/temp/index.wxml": [
+      52,
+      58
+    ]
+  },
+  "original_owner_holds": {
+    "chengyinhub-xcx/pages/roam/index.js": "PR20 original writer",
+    "chengyinhub-xcx/pages/roam/index.wxml": "PR20 original writer",
+    "chengyinhub-xcx/pages/roam/index.wxss": "PR20 original writer",
+    "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js": "PR17/CL4 prior writer reconciliation",
+    "chengyinhub-xcx/subpackageMember/components/cy/profile/index.wxml": "PR17/CL4 prior writer reconciliation"
+  },
+  "baseline_request": {
+    "requested_by": "Claude PR21",
+    "claimed_master": "cbcc4426",
+    "status": "BASE_SYNC_REVIEW_REQUIRED_NOT_AUTHORIZED_FOR_MERGE",
+    "evidence": "Claude baseline-only CI diagnosis is an author claim, not independently executed or proved here",
+    "action": "Do not merge master, rerun CI, weaken gates or copy stale generated counts. Plan an exact baseline/source integration separately when authorized."
+  },
+  "backend_contract_holds": [
+    "PR35 public parties/name/avatar/viewerCanManage not frozen/deployed; display slot is not implemented backend",
+    "PR41 badge club identity missing; no guessed badgeCode mapping",
+    "CL5 claim materials remains DRAFT"
+  ],
+  "coordination": "Shared source/test contracts remain C00; overlapping UI files need named original writer and stop/patch ACK before further edits; not an authorization for simultaneous writes."
+}

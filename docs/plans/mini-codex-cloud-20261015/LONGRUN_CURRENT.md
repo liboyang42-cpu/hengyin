@@ -2,10 +2,10 @@
 
 CY-HANDOFF: CODEX。此页及LONGRUN_CORE_50.json覆盖本目录较早checkpoint文字。
 
-- CORE公共源码：`05d307ec0466988f212187666d7f1e5c3274f434`，PR44，分支`codex/mini-longrun-core-20261015`；基线PR28/4a943501。每项保留小提交，当前所有新增回归NOT_RUN，SOURCE_DELIVERED_UNVERIFIED。
-- CORE初始50项保留历史，累计171具体源切片；当前状态计数：`{"SOURCE_DELIVERED_UNVERIFIED": 129, "NO_CHANGE_SOURCE_REVIEW": 38, "BLOCKED_DECISION": 3, "SUPERSEDED_DUPLICATE": 1}`。目标维持50可行动项，实际不足50时如实披露；不能把完成历史当剩余数，也不能把审查数当bug修复数。
+- CORE公共源码：`2b1984b59a0929a360e8095d5fc1955a1aed7964`，PR44，分支`codex/mini-longrun-core-20261015`；基线PR28/4a943501。每项保留小提交，当前所有新增回归NOT_RUN，SOURCE_DELIVERED_UNVERIFIED。
+- CORE初始50项保留历史，累计178具体源切片；当前状态计数：`{"SOURCE_DELIVERED_UNVERIFIED": 135, "NO_CHANGE_SOURCE_REVIEW": 38, "BLOCKED_DECISION": 3, "SUPERSEDED_DUPLICATE": 1, "DELEGATED_SOURCE_IMPLEMENTATION": 1}`。目标维持50可行动项，实际不足50时如实披露；不能把完成历史当剩余数，也不能把审查数当bug修复数。
 - 必要回归源码修正单独保留：C06-25 domain imports补齐已公共（精确SHA见该项source_corrections），C05-23夹具schemaVersion在首次公共交付前由原作者修正，NOT_RUN，不称编译/测试通过。
-- EXTRA6独立PR36，最后实际读回e43477b7的持久队列仍87历史项=36源码或回归交付/29反证/7阻塞/9READY+6在途；其中若干claim已在后续源码提交交付，队列尚待原协调者刷新，不能把该checkpoint称当前实时运行数。独立队列仍其唯一维护者；不能假称全已集成CORE。
+- EXTRA6独立PR36，最后实际读回25ede658的持久队列105历史项=52源码或回归交付/40反证/10阻塞/3委派或他队解决，READY0/实际执行0。后来五旧fixture及LIKE合同已公开授权，尚未读到恢复ACK，不能假称六路在跑。独立队列仍其唯一维护者；不能假称全已集成CORE。
 - 两队各最多6 worker、gpt-6.1-sol；完成或阻塞后取本lane下一具体项，现域耗尽如实记录并等待明确新线索，不能以测试/泛审计凑修复任务。
 
 ## 精确依赖与剩余边界
@@ -30,12 +30,10 @@ B03新静态真实线索：CORE/C04-20服务前置CONFIRMED状态，沿原SQL/co
 
 Git CLI写凭据失效时使用已连接GitHub Git Data接口发布相同文件树/小提交，公开SHA以实际ref为准；不提取/打印凭据。源码及队列定期公共checkpoint，两队直接PR16对账不依赖Mac。平台时长/额度终止时留下SHA/未发布快照/依赖/下一项；不承诺永久运行。
 
-## 本checkpoint实际后续与跨队ACK
+## 本次恢复收口
 
-此前168项耗尽后，新收到并已交付CORE/C06-28/29两项坏冻结存储防御隔离、CORE/C03-25确定废弃结局源选择修复。正常freeze不产所述坏值，不夸大为常态业务故障。当前CORE累计171：129源码切片、38反证、3政策阻塞、1重复替代；当前0个已证明可立即行动项，目标50不足如实记录。不是171个通过或129个已验收bug，也不假称六线持续满载。新真实反馈仍派原owner，遇阻取其他已证实项，没依据不造任务。
+CORE六个源码作者均已交付并停止写入，锁保留；本次六路仅做Claude交付只读接收，不算额外bug、测试或持续运行的源码工位。CORE实际可行动0、目标50缺50；EXTRA最后实际队列105/READY0，5夹具和LIKE授权后尚未ACK，不声称恢复运行。按新具体线索补位，实质政策阻塞换项；没有可行动项时标EXHAUSTED，不制造任务。
 
-已正式读到EXTRA ACK6195023061，真实child/worktree/分支及findCurrent提取42cd374d登记LONGRUN_EXTRA_EXPANSION.json；E05已处理Encounter，新域E06源码审阅和其他slot不重叠支援已实际开始。E01旧fixture与E02 PATCH接口/旧测试精确转交已公开d3d38ccd70d25727ae6f972f1698254e935fce47，E04旧4fixture/Mapper追加早在2f050fd7生效，无需Mac中转或重复批准。直接PR16 comments6195105232已通知。扩权文件SOURCE_OWNERS只允许指定原source writer；支援slot只写自己的测试/证据，不写相同生产文件。
+Claude新接收37份精确PR快照见CLAUDE_HANDOFF_INTAKE.json/.md，保留原所有者与共享文件锁。PR21/23/25/27当前来源已更新，原测试声称不当本队验证。master同步仅待评审，无合并。
 
-E02-19/22旧LIKE身份兼容仍须真实公共packet与准确路径，已请求，不能猜升级前已删身份或新保留政策。E03-15真实保存替换旧结局packet已由原CORE/C03消费为05d307ec0466988f212187666d7f1e5c3274f434；只剔除确定整体替换的旧ending.endings，其他stage/exhibit/disposition严格，E03 helper无改。当前局producer5162ef45、scene冻结fb55e39e都已公共，消费者不得继续按旧adc树重报。EXTRA队列仍只读其自身公共版本，等待其刷新QUEUE/CLAIMS，不把旧6个claim当实时人数。
-
-下一步C00主动读PR16新的CY-HANDOFF、EXTRA队列/CLAIMS，处理精确文件申领和新真实源码反馈，不重复已交付实现。本地回来后的静态交接在LONGRUN_VALIDATION_HANDOFF.md/json，当前不执行任何验证。平台时长/额度停止时以本页公共SHA、唯一文件owner、逐项commit和各自队列恢复；不能承诺无限时自主运行。
+恢复：读取本页→START_PROMPT最新模式→ROLLING/源表→两队真实队列→PR16/21新CY-HANDOFF。优先收EXTRA对c79d2886授权ACK及E03-16/E05-17/E02-22公共小提交；只能原作者应用prepared_patch，先核新base，不重复写。集中验证用LONGRUN_VALIDATION_HANDOFF当前2b1984 SHA清单，仍NOT_RUN。CI自然结束不等待，禁止手动重跑。平台停止时以GitHub公共进度恢复，不承诺永久运行。
