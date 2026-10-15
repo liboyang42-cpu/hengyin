@@ -366,6 +366,35 @@ class CommunityPostMapperMyBatisTest {
                 "select audience from community_post where id=1", String.class));
     }
 
+    @Test
+    void b05DeletedPostOldLinkIsUnavailableToAuthorAndOtherViewer() throws Exception {
+        DriverManagerDataSource dataSource = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        schema(jdbc);
+        post(jdbc, 1, 11, "PUBLISHED", "PUBLIC", "SH", 1, 1, "old body");
+        try (SqlSession session = factory(dataSource).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            assertEquals("old body", mapper.selectById(1L, 11L).getBody());
+            assertEquals("old body", mapper.selectById(1L, 8L).getBody());
+        }
+        // Reproduce the persisted delete result; separate sessions force a fresh visibility read.
+        jdbc.update("update community_post set lifecycle='DELETED', interaction_enabled=0 where id=1");
+        try (SqlSession session = factory(dataSource).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            assertNull(mapper.selectById(1L, 11L), "deleted owner link must follow canView policy");
+            assertNull(mapper.selectById(1L, 8L));
+        }
+        // Non-deleted owner workspace states retain their existing visibility.
+        for (String state : new String[]{"DRAFT", "CHECKING", "LIMITED", "HIDDEN", "REMOVED"}) {
+            jdbc.update("update community_post set lifecycle=? where id=1", state);
+            try (SqlSession session = factory(dataSource).openSession(true)) {
+                CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+                assertEquals(state, mapper.selectById(1L, 11L).getLifecycle());
+                assertNull(mapper.selectById(1L, 8L));
+            }
+        }
+    }
+
     private CommunityPostFeedQuery query(String mode) {
         CommunityPostFeedQuery query = new CommunityPostFeedQuery();
         query.setViewerId(8L);
