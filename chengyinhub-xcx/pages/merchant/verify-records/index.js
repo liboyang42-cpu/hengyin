@@ -18,7 +18,6 @@ Page({
     bucket: 'VERIFIED',
     pageState: 'loading',
     errorMessage: '',
-    items: [],
     groups: [],
   },
 
@@ -56,7 +55,8 @@ Page({
         const access = normalizeMerchantAccess(res.data);
         this._merchantAccess = access;
         if (!access.active || !access.canReadVerifyRecords) {
-          this.setData({ pageState: 'no-permission', items: [], groups: [] });
+          this._items = [];
+          this.setData({ pageState: 'no-permission', groups: [] });
           return;
         }
         this.loadList();
@@ -93,14 +93,15 @@ Page({
   switchBucket(event) {
     const bucket = event && event.detail && event.detail.key;
     if (!STATUS_TABS.some(item => item.key === bucket) || bucket === this.data.bucket) return;
-    this.applyItems(this.data.items, bucket);
+    this.applyItems(this._items || [], bucket);
   },
 
   applyItems(items, bucket) {
     const counts = countByStatus(items);
     const groups = groupRecords(items, bucket);
+    // 全量行只给分段切换用,不上屏,不走 setData(U4)
+    this._items = items;
     this.setData({
-      items,
       bucket,
       tabs: STATUS_TABS.map(tab => ({ key: tab.key, label: `${tab.label} ${counts[tab.key] || 0}` })),
       groups,

@@ -714293,7 +714293,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/verify-records/index.js:39"
+        "staticSource": "pages/merchant/verify-records/index.js:38"
       }
     },
     {
@@ -714497,7 +714497,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/verify-records/index.js:39"
+        "staticSource": "pages/merchant/verify-records/index.js:38"
       }
     },
     {
