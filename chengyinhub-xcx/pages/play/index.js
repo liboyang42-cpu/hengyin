@@ -6494,6 +6494,7 @@ Page({
   },
 
   _submitKitPhoto(detail, cfg) {
+    if (!this._isPlayAccountCurrent()) return;
     const path = (detail && detail.tempFilePath) || '';
     if (!path) return;
     const option = cfg || {};
@@ -6520,27 +6521,37 @@ Page({
     /* ★ 业务身份 + 题目版本隔离:照片是异步上传的,回来时必须仍是**同一 session、同一版本**
        (页面 kit 与 advanced-game 权威 state 都要对得上)。否则玩家在同一页面切到别的节点/会话后,
        旧回包会经 game.action 把上一题的照片提交到下一题/下一个会话。 */
+    const intent = { owner: this._playOwner, sessionKey: JSON.stringify(this._sessionParams()),
+      epoch: this._playLoadEpoch, active: this.data.advancedPlay, game, settled: false, loading: false };
+    this._kitPhotoIntent = intent;
+    const contextCurrent = () => this._isPlayAccountCurrent() && intent.owner === this._playOwner
+      && intent.sessionKey === JSON.stringify(this._sessionParams()) && intent.epoch === this._playLoadEpoch
+      && this.data.advancedPlay === intent.active && this.selectComponent('#advancedGame') === game;
+    const settle = () => {
+      if (intent.settled) return false;
+      intent.settled = true;
+      if (this._kitPhotoIntent === intent) { this._kitPhotoIntent = null; this._kitPhotoUploading = false; }
+      if (intent.loading) { intent.loading = false; cyLoading.hide(); }
+      return true;
+    };
     this._kitPhotoUploading = true;
     /* ★ 绑页面生命周期:上传中途玩家返回的话,不绑会留下三样东西 ——
        转不掉的遮罩、取消不了的请求、对着已销毁组件调的 game.action。
        写法与 app.js 里既有的两处上传一致(attach + isAborted 双守卫)。 */
     const operation = app.createPageBoundOperation();
-    operation.onAbort(() => { this._kitPhotoUploading = false; if (!cardMode) cyLoading.hide(); });
-    if (!cardMode) cyLoading.show('正在上传');
+    operation.onAbort(() => { settle(); });
+    if (!cardMode) { cyLoading.show('正在上传'); intent.loading = true; }
     operation.attach(app.getUploadClient().uploadAll([path], {
       // 组件拍照回调带了真实 size 就交给共享入口按生产 10MB 预检:超限不发起 wxUploadFile,
       // 直接给「压缩/换文件」可操作文案;size 未知(旧组件/拿不到)按 undefined 放行,由服务端拦截。
       fileSizes: [detail && detail.size],
       onDone: (r) => {
-        this._kitPhotoUploading = false;
+        const owned = this._kitPhotoIntent === intent && contextCurrent();
+        if (!settle()) return;
         if (operation.isAborted()) return;
         operation.finish();
-        if (!cardMode) cyLoading.hide();
+        if (!owned) return;
         const url = r && r.ok && r.results && r.results[0];
-        if (!url) {
-          fail((r && r.failures && r.failures[0] && r.failures[0].msg) || '照片没传上去');
-          return;
-        }
         const currentGame = this.selectComponent('#advancedGame');
         const currentState = currentGame && currentGame.data && currentGame.data.state;
         const currentKit = this._kit();
@@ -6549,7 +6560,10 @@ Page({
           && currentKit.sessionId === state.sessionId
           && sameVersion(currentKit.version, state.version);
         if (!sameQuestion) {
-          fail('题目已变化，上一张照片未提交');
+          return;
+        }
+        if (!url) {
+          fail((r && r.failures && r.failures[0] && r.failures[0].msg) || '照片没传上去');
           return;
         }
         // advanced-game 正在 acting/unknown 时会静默 no-op:这里不装成功,给一句可恢复的实话。
