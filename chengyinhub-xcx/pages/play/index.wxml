@@ -152,7 +152,7 @@
               aria-role="button" aria-label="{{runState === 'running' ? '暂停这一局' : '开始这一局'}}{{runState === 'idle' ? '' : '，长按结束本次'}}" hover-class="cy-pressed" hover-stay-time="80">
           <view class="drow__hold" wx:if="{{runHoldPct > 0}}" style="width:{{runHoldPct}}%"></view>
           <view class="dic pic pic--route"></view>
-          <view class="dcopy"><text class="dt">{{runState === 'running' ? '暂停这一局' : '开始这一局'}}</text><text class="ds" wx:if="{{runState !== 'idle'}}">{{runHoldPct > 0 ? '松开取消' : '长按结束这一局'}}</text></view>
+          <view class="dcopy"><text class="dt">{{runState === 'running' ? '暂停这一局' : '开始这一局'}}</text><text class="ds" wx:if="{{runState !== 'idle'}}">{{runHoldPct > 0 ? (runHoldLeft > 0 ? '还有 ' + runHoldLeft + ' 站未完成 · 松开取消' : '松开取消') : '长按结束这一局'}}</text></view>
           <view class="darr"></view>
         </view>
         <!-- 自由探索在地图模式下的切章节:原来挂在底栏左键上,底栏没了就收到这里。 -->
@@ -229,7 +229,7 @@
              节点半屏的 onSheetGoTap 承担,是它唯一该在的地方,这里只留提醒本身。 -->
         <view class="drow {{gpsOk ? '' : 'is-off'}}" bindtap="onLocationRowTap" aria-role="button" aria-label="到点提醒{{gpsOk ? '，已开启' : '，定位未开启'}}" hover-class="cy-pressed" hover-stay-time="80">
           <view class="dic pic pic--bell"></view>
-          <view class="dcopy"><text class="dt">到点提醒</text><text class="ds">{{gpsOk ? '走到站点自动提示' : '定位没开，到站提不了醒'}}</text></view>
+          <view class="dcopy"><text class="dt">到点提醒</text><text class="ds">{{gpsOk ? (gpsLowAcc ? '定位精度不足 · 可扫码完成' : '走到站点自动提示') : '定位没开，到站提不了醒'}}</text></view>
           <view class="dsw {{gpsOk ? 'is-on' : ''}}" aria-role="switch" aria-checked="{{gpsOk}}" aria-label="到点提醒"><view class="dsw-i"></view></view>
         </view>
         <!-- 稿「添加传感器 ›」→ 入场码 -->
