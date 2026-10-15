@@ -1,4 +1,4 @@
-const { exactSessionId, validRecovery, newSessionKey } = require('../../utils/roam-recovery.js');
+const { exactSessionId, validRecovery, newSessionKey, archiveRecords } = require('../../utils/roam-recovery.js');
 const pixelAvatar = require('../../utils/pixel-avatar.js');
 // 城瘾 · 完全自由漫游模式(City Fog Explore)
 // 真实腾讯地图 + 地图外屏幕雾;行动揭开城市
@@ -34,6 +34,7 @@ const {
   readSharePrivacy,
 } = require('../../utils/roam-route-privacy.js');
 const { readNonNegative } = require('../../utils/roam-history-metrics.js');
+const { acceptRoamLocation } = require('../../utils/roam-track-filter.js');
 const { simplifyTrack, limitTrack } = require('../../utils/roam-track-simplify.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const { fromHttpStatusAbnormal } = require('../../utils/transport/failure-envelope.js');
@@ -42,8 +43,15 @@ const { bindPlayerRoamMemory } = require('../../utils/roam-player-memory.js');
 const { syncRoamTileMemory } = require('../../utils/roam-tile-memory-sync.js');
 const MOCK_IMG = '/images/index-figma/nearby-card.jpg';
 
+const { onRoamCacheInvalidated } = require('../../utils/roam-cache-epoch.js');
 function roamMemory(page) {
-  return bindPlayerRoamMemory(page, getApp(), wx);
+  const memory = bindPlayerRoamMemory(page, getApp(), wx);
+  if (page._roamCacheOwner !== memory.playerId || !page._roamCacheUnsubscribe) {
+    if (page._roamCacheUnsubscribe) page._roamCacheUnsubscribe();
+    page._roamCacheOwner = memory.playerId;
+    page._roamCacheUnsubscribe = onRoamCacheInvalidated(memory.playerId, () => page._discardRoamLocal());
+  }
+  return memory;
 }
 
 // P2 接真:标准 geohash 编码(7 字符 ≈153m 格),与后端 roam_fog_tile.geohash7 对齐,可互通
@@ -904,6 +912,8 @@ Page({
     if (this._cancelEndHold) this._cancelEndHold();
     if (this._shareUploadOperation) this._shareUploadOperation.abort();
     this._roamWriteGeneration = (this._roamWriteGeneration || 0) + 1;
+    if (this._roamCacheUnsubscribe) this._roamCacheUnsubscribe();
+    this._roamCacheUnsubscribe = null;
   },
   onHide() {
     if (this._sessionClock) this._saveRoamRecovery();
@@ -965,6 +975,7 @@ Page({
     if (av !== this.data.avatar) this.setData({ avatar: av || '' }); if (this.data.screen === 'entry-map' && this._entryShownOnce && typeof getApp().sendRequest === 'function') this._loadEntryMap(this.data.center); this._entryShownOnce = true;
     // 漫游不自动补造路径；定位恢复后由用户再次主动开启。
     // switchTab 不带 query 参数,official-detail 经 globalData 暂存 eventId,此处消费后即清
+    if (this._roamBadgePending && !this._recoveryPromise) this.recoverRoam();
     const pendingEventId = getApp().globalData.roamEventId;
     const pendingMissionCode = getApp().globalData.roamEventMissionCode;
     if (pendingEventId) {
@@ -1206,7 +1217,7 @@ Page({
     const current = this._roamReadScope();
     const memory = roamMemory(this);
     return syncRoamTileMemory({
-      memory,
+      memory, isCurrent: current,
       pageSize: 1000,
       fetchPage: (afterId, limit) => req('/api/roam/tiles/page', 'GET', {
         afterId: String(afterId), limit: String(limit),
@@ -1393,6 +1404,7 @@ Page({
     if (!this._localTiles) this._localTiles = {};
     if (!this._localTiles[key]) {
       this._localTiles[key] = 1;
+      this._tilesRevision = (this._tilesRevision || 0) + 1;
       this._tilesDirty = (this._tilesDirty || 0) + 1;
       this._scheduleTilePersist();
     }
@@ -1401,6 +1413,9 @@ Page({
     if (this._npc) {
       this._npc.dispatch({ type: 'UNIQUE_TILE_COUNT_CHANGED', count: this._sessionTileCount });
     }
+    this._roamRecoveryAbandoned = false;
+    this._pendingCollectedAt = this._pendingCollectedAt || {};
+    this._pendingCollectedAt[key] = Date.now();
     this._pendingTiles.push(key);
     this._ensureRoamRecovery();
     if (this._pendingTiles.length >= 50) { this._flushReveal(); return; }
@@ -1416,10 +1431,33 @@ Page({
   _persistTiles() {
     if (this._tilePersistTimer) { clearTimeout(this._tilePersistTimer); this._tilePersistTimer = null; }
     if (!this._tilesDirty) return;
-    this._tilesDirty = 0;
+    const revision = this._tilesRevision || 0;
+    const generation = this._roamWriteGeneration;
     try {
-      roamMemory(this).writeTiles(this._localTiles || {}, this._tileServerCursor || 0);
-    } catch (e) { /* noop */ }
+      const ok = roamMemory(this).writeTiles({ ...(this._localTiles || {}) }, this._tileServerCursor || 0);
+      if (ok && revision === (this._tilesRevision || 0) && generation === this._roamWriteGeneration) this._tilesDirty = 0;
+      return ok;
+    } catch (e) { return false; }
+  },
+
+  _discardRoamLocal() {
+    this._roamWriteGeneration = (this._roamWriteGeneration || 0) + 1;
+    this._recoveryKeyPromise = this._recoveryPromise = this._revealPromise = this._finishPromise = null;
+    if (this._revealTimer) clearTimeout(this._revealTimer);
+    if (this._tilePersistTimer) clearTimeout(this._tilePersistTimer);
+    this._revealTimer = this._tilePersistTimer = null;
+    this._pendingTiles = []; this._pendingCollectedAt = {};
+    if (!exactSessionId(this._roamSid)) this._clientSessionKey = '';
+    this._pois = (this._pois || []).filter(p => p.state !== 'done');
+    this._localTiles = {}; this._tileServerCursor = 0; this._tilesDirty = 0;
+    this._tilesRevision = (this._tilesRevision || 0) + 1;
+    this._sessionTiles = {}; this._sessionTileCount = 0;
+    this._track = []; this._reveals = []; this._historyReveals = []; this._footprintSessions = [];
+    this._sessionPhotos = []; this._foundRoamPois = {}; this._recoveryArchiveTs = 0;
+    this._roamRecoveryAbandoned = true; this._roamBadgePending = false; this._shopMedalFromServer = false;
+    this._recoveryNeedsLookup = this._revealBootstrapUnknown = this._recoveryReadFailed = false;
+    this._finishRequested = false; this._revealInFlight = false;
+    this.setData({ recoveryError: '', recoveryAvailable: false, recoveryCanContinue: false, revealWriteUnknown: false });
   },
 
   _resetRoamRecoverySession() {
@@ -1438,7 +1476,8 @@ Page({
     this._roamPoiFinishBlocked = this._revealInFlight = false;
     if (this._revealTimer) { clearTimeout(this._revealTimer); this._revealTimer = null; }
     this._clientSessionKey = ''; this._roamSid = 0;
-    this._pendingTiles = []; this._sessionTiles = {}; this._sessionTileCount = 0;
+    this._pendingTiles = []; this._pendingCollectedAt = {}; this._roamRecoveryAbandoned = false; this._roamBadgePending = false; this._shopMedalFromServer = false;
+    this._sessionTiles = {}; this._sessionTileCount = 0;
     this._track = []; this._sessionPhotos = []; this._foundRoamPois = {}; this._pois = [];
     this._stats = { time: '00:00', shops: 0, explorePct: 0, distance: '0.0' };
     this._elapsedSeconds = 0;
@@ -1480,9 +1519,11 @@ Page({
   },
 
   _saveRoamRecovery() {
+    if (this._roamRecoveryAbandoned) return true;
     if (!this._recoveryOwnerCurrent()) return this._recoveryFailure('登录账号已变化，请回到漫游页核对');
     const record = {
       clientSessionKey: this._clientSessionKey || '', sessionId: exactSessionId(this._roamSid),
+      collectedAt: { ...(this._pendingCollectedAt || {}) },
       pendingTiles: (this._pendingTiles || []).slice(), allTiles: Object.keys(this._sessionTiles || {}),
       finishRequested: !!this._finishRequested, distanceM: this._finishRequested ? this._lastDistanceM : (this._dist || 0),
       archiveTs: this._recoveryArchiveTs || 0, finish: this.data.finish || {}, stats: this._stats, track: this._track || [],
@@ -1504,7 +1545,7 @@ Page({
       if (generation !== this._roamWriteGeneration || !this._recoveryOwnerCurrent()) return false;
       this._clientSessionKey = key;
       return this._saveRoamRecovery();
-    }).catch(error => this._recoveryFailure(error.message));
+    }).catch(error => generation === this._roamWriteGeneration && this._recoveryOwnerCurrent() ? this._recoveryFailure(error.message) : false);
     this._recoveryKeyPromise = pending;
     pending.then(() => { if (this._recoveryKeyPromise === pending) this._recoveryKeyPromise = null; });
     return pending;
@@ -1522,6 +1563,7 @@ Page({
     this._clientSessionKey = r.clientSessionKey || '';
     this._roamSid = exactSessionId(r.sessionId) || 0;
     this._pendingTiles = r.pendingTiles.slice();
+    this._pendingCollectedAt = r.collectedAt || {};
     this._sessionTiles = Object.fromEntries((r.allTiles || []).map(t => [t, 1]));
     this._sessionTileCount = Object.keys(this._sessionTiles).length;
     this._finishRequested = r.finishRequested;
@@ -1558,7 +1600,7 @@ Page({
         return this._recoveryFailure('漫游状态暂时无法核对，请稍后重试；待确认记录仍保留');
       if (fact.state !== 'NOT_FOUND') {
         const sid = exactSessionId(fact.sessionId);
-        if (!sid || (this._clientSessionKey && fact.clientSessionKey !== this._clientSessionKey))
+        if (!sid || (exactSessionId(this._roamSid) && sid !== exactSessionId(this._roamSid)) || (this._clientSessionKey && fact.clientSessionKey !== this._clientSessionKey))
           return this._recoveryFailure('漫游关联响应不完整，请重新核对');
         this._roamSid = sid;
       } else if (!this._clientSessionKey || exactSessionId(this._roamSid)) {
@@ -1570,11 +1612,12 @@ Page({
       }
       this.setData({ recoveryCanContinue: false });
       if (fact.state === 'FINISHED') {
+        this._stopReal(); this._stopClock();
+        this._finishRequested = true;
         const result = fact.result;
         if (!result || typeof result.totalXp !== 'number' || !Number.isFinite(result.totalXp))
           return this._recoveryFailure('结算事实暂时无法读取，请重新核对');
-        if (this._pendingTiles.length) return this._recoveryFailure('会话已结束，仍有待确认格子，请保留记录并联系支持核对');
-        return this._applyRoamFinishResult(result, fact.resultComplete === true);
+        return this._archiveFinishedRecords().then(ok => ok && this._applyRoamFinishResult(result, fact.resultComplete === true, fact.badgeDelivery));
       }
       this._recoveryNeedsLookup = false; this._revealBootstrapUnknown = false;
       this.setData({ revealWriteUnknown: false, recoveryError: '', roamSessionReady: !!this._roamSid, 'finish.settleErr': '' });
@@ -1584,6 +1627,26 @@ Page({
     this._recoveryPromise = pending;
     pending.then(() => { if (this._recoveryPromise === pending) this._recoveryPromise = null; });
     return pending;
+  },
+
+  async _archiveFinishedRecords() {
+    const current = this._roamReadScope();
+    while (this._pendingTiles.length) {
+      const batch = this._pendingTiles.slice(0, 200);
+      let records;
+      try { records = archiveRecords(batch, this._pendingCollectedAt); }
+      catch (error) { return this._recoveryFailure(error.message); }
+      const res = await req('/api/roam/session/records', 'POST', { sessionId: exactSessionId(this._roamSid),
+        ...(this._clientSessionKey ? { clientSessionKey: this._clientSessionKey } : {}), records: JSON.stringify(records) });
+      if (!current() || !this._recoveryOwnerCurrent()) return false;
+      if (!apiOk(res) || !res.data || String(res.data.sessionId) !== exactSessionId(this._roamSid)
+          || res.data.evidenceType !== 'CLIENT_REPORTED' || res.data.acceptedRecords !== new Set(batch).size)
+        return this._recoveryFailure('原行程补传暂未确认，待核记录仍保留');
+      const old = this._pendingTiles;
+      this._pendingTiles = old.slice(batch.length);
+      if (!this._saveRoamRecovery()) { this._pendingTiles = old; return false; }
+    }
+    return true;
   },
 
   _flushReveal() {
@@ -1616,8 +1679,9 @@ Page({
           this.setData({ roamSessionReady: true });
           if (this._npc) this._npc.setSessionId(this._roamSid);   // 埋点 bizId 只放 Long
         }
-        this._pendingTiles = this._pendingTiles.slice(batch.length);
-        if (!this._saveRoamRecovery()) return false; // 成功才出队,失败下轮重试
+        const beforeAck = this._pendingTiles;
+        this._pendingTiles = beforeAck.slice(batch.length);
+        if (!this._saveRoamRecovery()) { this._pendingTiles = beforeAck; return false; } // 成功才出队,失败下轮重试
         if (this._pendingTiles.length >= 50 && !this._finishPromise) this._flushReveal();
         return true;
       } else if ((httpFail(res) || netFail(res)) && !requestSessionId) {
@@ -1841,11 +1905,14 @@ Page({
     return true;
   },
 
-  _applyRoamFinishResult(result, complete) {
+  _applyRoamFinishResult(result, complete, badgeDelivery) {
     if (typeof result.totalXp !== 'number' || !Number.isFinite(result.totalXp))
       return this._recoveryFailure('结算事实暂时无法读取，请重新核对');
-    const shopMedal = result.shopMedal || null;
-    this.setData({ screen: 'arrive', 'finish.xpAwarded': result.totalXp, 'finish.medal': result.medal || '',
+    const statuses = Array.isArray(badgeDelivery) ? badgeDelivery : result.badgeDelivery;
+    const delivered = code => Array.isArray(statuses) && statuses.some(row => row.badgeCode === code && row.state === 'DELIVERED');
+    const medal = result.medal && (Array.isArray(statuses) && statuses.some(row => /^ROAM_TILES_/.test(row.badgeCode) && row.state === 'DELIVERED')) ? result.medal : '';
+    const shopMedal = result.shopMedal && delivered(result.shopMedal.code) ? result.shopMedal : null;
+    this.setData({ screen: 'arrive', 'finish.xpAwarded': result.totalXp, 'finish.medal': medal,
       'finish.shopMedal': shopMedal, 'finish.routeStory': result.routeStory || '',
       'finish.resultIncomplete': !complete, 'finish.settleErr': '', recoveryError: '', recoveryAvailable: false });
     this._shopMedalFromServer = !!shopMedal;
@@ -1860,14 +1927,17 @@ Page({
     if (archived) {
       archived.sessionId = exactSessionId(this._roamSid);
       archived.xpAwarded = result.totalXp;
-      archived.medal = result.medal || ''; archived.shopMedalName = shopMedal ? shopMedal.name : '';
+      archived.medal = medal; archived.shopMedalName = shopMedal ? shopMedal.name : '';
       if (!memory.writeSessions(arr)) return this._recoveryFailure('结算已确认，足迹存档更新失败，请重试核对');
     }
-    if (!memory.writeRecovery(null)) return this._recoveryFailure('结算已确认，本机恢复记录更新失败，请重试核对');
+    this._roamBadgePending = Array.isArray(statuses) && statuses.some(row => row.state === 'DUE');
+    if (this._roamBadgePending) {
+      if (!this._saveRoamRecovery()) return false; // Preserve original SID solely for a later read of its badge receipt.
+    } else if (!memory.writeRecovery(null)) return this._recoveryFailure('结算已确认，本机恢复记录更新失败，请重试核对');
     if (!this._roamCompleted) {
-      if (result.medal || shopMedal) this._triggerCelebration('medal-earned');
+      if (medal || shopMedal) this._triggerCelebration('medal-earned');
       if (result.routeStory) analytics.track('roam_route_story_shown', { bizType: 'roam' });
-      if (result.medal) cyToast('获得勋章:' + result.medal);
+      if (medal) cyToast('获得勋章:' + medal);
     }
     this._roamCompleted = true; this._finishRequested = false;
     this._recoveryNeedsLookup = false; this._revealBootstrapUnknown = false;
@@ -3568,10 +3638,17 @@ Page({
     if (act === 'event') { this.setData({ 'eventOverlay.show': true }, () => this._syncSparkCircles()); }
   },
   _startReal(consentAlreadyRecorded) {
+    if (this._realOn || this._realStartPending) return;
     const that = this;
+    const generation = (this._realGeneration || 0) + 1;
+    this._realGeneration = generation; this._realStartPending = true;
+    const owner = String(getApp().getUserID() || '');
+    const current = () => generation === that._realGeneration && owner === String(getApp().getUserID() || '');
     const onOk = () => {
+      if (!current()) return;
+      that._realStartPending = false; that._realAnchor = null;
       that._realOn = true;
-      wx.onLocationChange(that._onRealLoc = (loc) => that._realTick(loc));
+      wx.onLocationChange(that._onRealLoc = (loc) => { if (current()) that._realTick(loc); });
       that.setData({ locErr: false });
       that._syncGoal();
       wx.setKeepScreenOn && wx.setKeepScreenOn({ keepScreenOn: true });
@@ -3580,17 +3657,22 @@ Page({
     // 漫游只在玩家主动开启后的前台使用定位，绝不升级为后台持续采集。
     // 后台定位:漫游是边走边点亮,玩家锁屏塞兜是常态;前台版一锁屏就断,轨迹丢段。
     // 拿不到后台权限自动降级前台(功能仍可用,只是锁屏会断)。停的时机只有 _stopReal。
-    const startLocation = () => bgTracker.acquire('roam', {
+    const startLocation = () => {
+      if (!current()) return;
+      bgTracker.acquire('roam', {
       success: onOk,
       fail() {
+        if (!current()) return;
+        that._realStartPending = false;
         that.setData({ locErr: true });
         that._syncGoal();
         cyToast('未授权定位，无法开启实时漫游');
       },
-    });
+      });
+    };
     const recordAndStart = () => getApp().recordConsent({ docType: 'privacy_policy', scene: 'roam_location', eventType: 'AGREE' })
       .then(startLocation)
-      .catch(() => cyToast('同意记录失败，请检查网络后重试'));
+      .catch(() => { if (current()) { that._realStartPending = false; cyToast('同意记录失败，请检查网络后重试'); } });
     if (consentAlreadyRecorded) { startLocation(); return; }
     cyModal.show({
       title: '开启实时定位',
@@ -3598,12 +3680,15 @@ Page({
       confirmText: '同意并开启',
       cancelText: '暂不开启',
       success(result) {
-        if (!result.confirm) return;
+        if (!current()) return;
+        if (!result.confirm) { that._realStartPending = false; return; }
         recordAndStart();
       },
     });
   },
   _stopReal() {
+    this._realGeneration = (this._realGeneration || 0) + 1;
+    this._realStartPending = false; this._realAnchor = null;
     bgTracker.release('roam');
     const onLocationChange = this._onRealLoc;
     this._realOn = false;
@@ -3614,15 +3699,14 @@ Page({
     wx.setKeepScreenOn && wx.setKeepScreenOn({ keepScreenOn: false });
   },
   _realTick(loc) {
-    if (this._blocked()) return;
-    const p = { lat: loc.latitude, lng: loc.longitude };
-    if (loc.accuracy != null && loc.accuracy > 80) return;
-    const prev = this._player;
-    const d = prev ? distM(prev, p) : 999;
-    if (prev && d < 3) return;
-    if (prev && d > 120) { this._player = p; return; }
-    this._player = p;
-    if (prev) { this._dist = (this._dist || 0) + d; this._track.push({ ...p }); }
+    if (!this._realOn || this._blocked()) return;
+    const accepted = acceptRoamLocation(loc, this._realAnchor, Date.now());
+    if (!accepted) return;
+    const prev = this._realAnchor;
+    const p = accepted.point;
+    this._realAnchor = p; this._player = p;
+    this._dist = (this._dist || 0) + accepted.distance;
+    this._track.push({ lat: p.lat, lng: p.lng });
     const last = this._reveals[this._reveals.length - 1];
     if (!last || distM(last, p) > 15) this._addReveal(p);
     this._applyMovePatch(p, prev);
@@ -4130,7 +4214,7 @@ Page({
     cyToast('+' + (poiRef.points || 30) + ' 探索值');  // 奖励文案统一:全程「探索值」,不再混用「分」
     // 首次发现商家 → 券/任务二选一仪式卡;park/landmark 只 +分
     // #23:阈值读配置(_shopBadgeThreshold),不再写死 3。用 === 而非 >= 保持"只在跨过那一刻弹一次"。
-    const hitStreak = shops === this._shopBadgeThreshold();
+    const hitStreak = shops === this._shopBadgeThreshold() && this._shopMedalFromServer === true && !!(this.data.finish && this.data.finish.shopMedal);
     if (wasFirst && poi && poi.cat === 'merchant') {
       // 商家二选一卡是高优先级仪式，旧足迹提示不能在关闭后重新浮出抢走收尾注意力。
       this._clearFootprintHintForPriority();
@@ -4342,11 +4426,11 @@ Page({
   /**
    * #23:三店连亮弹层。阈值/文案不再硬编码,读 /api/roam/badge/shop-streak 的 def
    * (真源 = growth_badge.unlock_rule_json,改配置 = UPDATE 一行 SQL,不发版)。
-   * 这里是**乐观 UI**(仪式感要即时);真正的发章在 /api/roam/finish 服务端判定并落 player_badge,
-   * 结算屏显示的是后端返回的那枚 —— 后端始终是权威。
+   * 原服务端交付收据为 DELIVERED 后才使用已有获得语义；阈值不充当交付证明。
    */
   _popMedal() {
-    const cfg = this._shopBadgeCfg || {};
+    if (!this._shopMedalFromServer || !(this.data.finish && this.data.finish.shopMedal)) return false;
+    const cfg = this.data.finish.shopMedal;
     this.setData({
       medal: {
         show: true,
@@ -4356,6 +4440,7 @@ Page({
       },
     });
     this._triggerCelebration('medal-earned');
+    return true;
   },
 
   /** 拉勋章配置(阈值+文案)。拿不到就用兜底常量,fail-open:不比改动前差。 */

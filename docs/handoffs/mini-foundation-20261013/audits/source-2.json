@@ -1,0 +1,2534 @@
+[
+  {
+    "id": "M0116",
+    "title": "漫游结算一致性",
+    "priority": "第2级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "小程序漫游结算本体仍调用；已下线hangout结伴与此不同，结伴不纳入。",
+    "publicStatus": "部分缺口",
+    "executionClass": "当前修补",
+    "actualChain": "pages/roam/index.js finish 请求→ApiRoamController.finish→updateSessionFinish CAS→growthService.addExp→insertPlayerBadge",
+    "remainingBreakpoint": "徽章异常仅日志“需人工补发”；主结算成功不能证明徽章已交付。漫游本体仍有调用，不属于已下线 hangout。",
+    "codeStillNeeded": "在既有奖励链补原session/里程碑唯一补发意图和消费者；先核现有奖励outbox可否复用，避免另建奖励政策。",
+    "verificationStillNeeded": "模拟徽章写失败；独立读结算、XP、徽章及补偿；重试不得重发XP。",
+    "newCapabilityDeferred": false,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+        "exists": true,
+        "sha256": "d2c0f7b763d63e8f38d4dc09860b0a2d0f576cb43d10127910ab89bad2185455",
+        "evidence": [
+          {
+            "line": 648,
+            "code": "if (roamMapper.updateSessionFinish(session) == 0) return error(\"本次漫游已结算\");"
+          },
+          {
+            "line": 652,
+            "code": "if (totalXp > 0) growthService.addExp(memberId, totalXp, \"城市漫游\");"
+          },
+          {
+            "line": 671,
+            "code": "catch (Exception e) { logger.error(\"漫游里程碑勋章发放失败 member={} tiles={},需人工补发\", memberId, crossed, e); }"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-xcx/pages/roam/index.js",
+        "exists": true,
+        "sha256": "d8ebb032078273de42f35b7aad0f8338600823a64983fc59aed1314f93056934",
+        "evidence": [
+          {
+            "line": 1815,
+            "code": "return req('/api/roam/finish', 'POST', {"
+          }
+        ]
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "M0126",
+    "title": "消息增量同步",
+    "priority": "第2级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "仅现有小程序私信/系统通知与共用后端；用户明确排除小程序群聊。保留源码残留不视为群聊实施授权。",
+    "publicStatus": "部分缺口",
+    "executionClass": "当前修补",
+    "actualChain": "小程序 im/chat.pollNew→POST /api/im/messages(cursor_id=0,size=15)→filter id>maxLocalId",
+    "remainingBreakpoint": "公开代码仍只取最新15条；两个轮询间40条会缺中间段；没有找到该入口稳定向后补齐水位。只核私信/系统消息，群聊排除。",
+    "codeStillNeeded": "为既有私信补固定水位增量协议和原游标恢复；不扩建群聊。",
+    "verificationStillNeeded": "双身份私信40/100条、断网重进、切账号验证不漏、不重复、不越权。",
+    "newCapabilityDeferred": false,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-xcx/subpackageB/pages/im/chat/index.js",
+        "exists": true,
+        "sha256": "957e707226cd7883a70fa7f97e9ddbec73ac4303f250114f805d0f9b3c25e78f",
+        "evidence": [
+          {
+            "line": 160,
+            "code": "data: { conversation_id: this.data.conversationId, cursor_id: 0, size: 30 },"
+          },
+          {
+            "line": 663,
+            "code": "this._poll = setInterval(function () { that.pollNew(); }, 8000);"
+          },
+          {
+            "line": 670,
+            "code": "if (!isNaN(id) && id > mx) mx = id;"
+          },
+          {
+            "line": 674,
+            "code": "pollNew() {"
+          },
+          {
+            "line": 679,
+            "code": "data: { conversation_id: this.data.conversationId, cursor_id: 0, size: 15 },"
+          },
+          {
+            "line": 688,
+            "code": "return !isNaN(id) && id > mx;"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+        "exists": true,
+        "sha256": "e730a926b3f793e8f7f7fc42a81bcb7213bdd464f477c3a51c3864b43635e758",
+        "evidence": []
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "M0125",
+    "title": "消息发送去重",
+    "priority": "第2级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "仅现有小程序私信/系统通知与共用后端；用户明确排除小程序群聊。保留源码残留不视为群聊实施授权。",
+    "publicStatus": "部分缺口",
+    "executionClass": "当前修补",
+    "actualChain": "im/chat._sendMessage保存sendPayload/client_message_id→ImServiceImpl.send→selectByClientMessageIdForUpdate→requestHash比对→insertImMessage",
+    "remainingBreakpoint": "当前页失败重试保留原ID；sendPayload仅页内msgs，杀进程持久恢复未接通；服务仍允许null兼容。",
+    "codeStillNeeded": "只补已有私信发送的原ID/内容持久保存及精确本人查回，保留旧null路径的证据边界。",
+    "verificationStillNeeded": "成功丢响应、杀进程、同ID异参、图片审核后重试；检查DB只有一条。",
+    "newCapabilityDeferred": false,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+        "exists": true,
+        "sha256": "e730a926b3f793e8f7f7fc42a81bcb7213bdd464f477c3a51c3864b43635e758",
+        "evidence": [
+          {
+            "line": 748,
+            "code": "ImMessage previous = messageMapper.selectByClientMessageIdForUpdate(convId, memberId, clientMessageId);"
+          },
+          {
+            "line": 753,
+            "code": "throw new ServiceException(\"消息标识已用于其他内容\", 409);"
+          },
+          {
+            "line": 835,
+            "code": "messageMapper.insertImMessage(msg);"
+          },
+          {
+            "line": 1137,
+            "code": "messageMapper.insertImMessage(msg);"
+          },
+          {
+            "line": 1259,
+            "code": "messageMapper.insertImMessage(msg);"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-xcx/subpackageB/pages/im/chat/index.js",
+        "exists": true,
+        "sha256": "957e707226cd7883a70fa7f97e9ddbec73ac4303f250114f805d0f9b3c25e78f",
+        "evidence": [
+          {
+            "line": 311,
+            "code": "this._sendMessage({ msg_type: 1, content });"
+          },
+          {
+            "line": 314,
+            "code": "_sendMessage(message, retryId) {"
+          },
+          {
+            "line": 322,
+            "code": "payload.client_message_id = 'im_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2) + '_' + this._sendSequence;"
+          },
+          {
+            "line": 384,
+            "code": "this._sendMessage(m.sendPayload, m.id);"
+          },
+          {
+            "line": 428,
+            "code": "this._sendMessage({ msg_type: 3, content: '[卡片]', extra_json: JSON.stringify(card) });"
+          },
+          {
+            "line": 495,
+            "code": "that._sendMessage({ msg_type: 2, content: urls[0] });"
+          }
+        ]
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "M0127",
+    "title": "未读计数一致",
+    "priority": "第2级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "仅现有小程序私信/系统通知与共用后端；用户明确排除小程序群聊。保留源码残留不视为群聊实施授权。",
+    "publicStatus": "部分缺口",
+    "executionClass": "当前修补",
+    "actualChain": "ImServiceImpl.markRead→lockReadAccess会话/成员当前锁→selectLatestVisibleIdForUpdate→Math.max→memberMapper.markRead",
+    "remainingBreakpoint": "当前代码有锁序和单调指针，但接口未接客户端已渲染readTo；仍将服务端最新可见ID全部标读。",
+    "codeStillNeeded": "在既有私信/系统通知链传入实际消费水位并校验，保留当前锁与退出/关闭条件；不做小程序群聊。",
+    "verificationStillNeeded": "读10并发来11，11仍未读；旧设备5不回退；未加载内容不能被清零。",
+    "newCapabilityDeferred": false,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+        "exists": true,
+        "sha256": "e730a926b3f793e8f7f7fc42a81bcb7213bdd464f477c3a51c3864b43635e758",
+        "evidence": [
+          {
+            "line": 1021,
+            "code": "public void markRead(Long memberId, Long conversationId)"
+          },
+          {
+            "line": 1023,
+            "code": "ImConversationMember mine = lockReadAccess(memberId, conversationId);"
+          },
+          {
+            "line": 1028,
+            "code": "Long latestId = messageMapper.selectLatestVisibleIdForUpdate(conversationId);"
+          },
+          {
+            "line": 1029,
+            "code": "long lastId = Math.max(mine.getLastReadMsgId() == null ? 0L : mine.getLastReadMsgId(),"
+          },
+          {
+            "line": 1034,
+            "code": "private ImConversationMember lockReadAccess(Long memberId, Long conversationId)"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/resources/mapper/business/ImConversationMemberMapper.xml",
+        "exists": true,
+        "sha256": "a9fc8c5fdb3c5b4c74778d64d9d7b4d0d174cdaddebfb2a52bc8bdb969ce872b",
+        "evidence": [
+          {
+            "line": 73,
+            "code": "set unread_count = 0, last_read_msg_id = #{lastReadMsgId}"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-xcx/subpackageB/pages/im/chat/index.js",
+        "exists": true,
+        "sha256": "957e707226cd7883a70fa7f97e9ddbec73ac4303f250114f805d0f9b3c25e78f",
+        "evidence": []
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "M0121",
+    "title": "审核证据最小权限",
+    "priority": "第2级",
+    "endpointOwnership": "待核",
+    "scopeNote": "后端Community治理能力存在，本次未定位该套API的小程序实际入口；待核调用归属，不因缺调用就归App。",
+    "publicStatus": "部分缺口",
+    "executionClass": "后置新能力",
+    "actualChain": "CommunityTrustServiceImpl.submitReport等→normalizeEvidence拒绝非空附件；CommunityTrustPlatformController审查权限存在",
+    "remainingBreakpoint": "附件归属/脱敏/短效授权读取明确未接；未找到当前小程序调用该套CommunityTrust API的直接链，不能冒充已上线附件。",
+    "codeStillNeeded": "本轮维持安全拒绝；受控附件是新增能力后置，先核小程序现用举报入口。",
+    "verificationStillNeeded": "本轮验证非空附件拒绝和纯文字仍可提交；未来单独验跨案/跨人读取与撤权。",
+    "newCapabilityDeferred": true,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityTrustServiceImpl.java",
+        "exists": true,
+        "sha256": "d4b614db03576aa7e4d23e8dbb70263b094fad63d0d7529bb24715a48b940190",
+        "evidence": [
+          {
+            "line": 104,
+            "code": "List<Long> evidence = normalizeEvidence(request.getEvidenceAssetIds());"
+          },
+          {
+            "line": 374,
+            "code": "List<Long> evidence = normalizeEvidence(request.getEvidenceAssetIds());"
+          },
+          {
+            "line": 446,
+            "code": "List<Long> evidence = normalizeEvidence(request.getEvidenceAssetIds());"
+          },
+          {
+            "line": 821,
+            "code": "private List<Long> normalizeEvidence(List<Long> source) {"
+          },
+          {
+            "line": 823,
+            "code": "throw conflict(\"证据附件归属与脱敏链路尚未接通，本批拒绝附件并保留纯文字提交\");"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CommunityTrustPlatformController.java",
+        "exists": true,
+        "sha256": "e439d01e085a5d7dacb38bc4454c86780e10463a02475ee8103e9a0384dfa0ec",
+        "evidence": [
+          {
+            "line": 17,
+            "code": "import org.springframework.security.access.prepost.PreAuthorize;"
+          },
+          {
+            "line": 33,
+            "code": "@PreAuthorize(\"@ss.hasPermi('business:audit:list')\")"
+          },
+          {
+            "line": 44,
+            "code": "@PreAuthorize(\"@ss.hasPermi('business:audit:review')\")"
+          },
+          {
+            "line": 57,
+            "code": "@PreAuthorize(\"@ss.hasPermi('business:audit:list')\")"
+          },
+          {
+            "line": 72,
+            "code": "@PreAuthorize(\"@ss.hasPermi('business:audit:review')\")"
+          }
+        ]
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "M0122",
+    "title": "审核及处罚申诉",
+    "priority": "第2级",
+    "endpointOwnership": "待核",
+    "scopeNote": "后端Community治理能力存在，本次未定位该套API的小程序实际入口；待核调用归属，不因缺调用就归App。",
+    "publicStatus": "部分缺口",
+    "executionClass": "当前修补",
+    "actualChain": "CommunityPostServiceImpl.appeal→owner检查/拒附件/insertAppeal；reviewAppeal→reviewAppealCas→reverseEnforcement→reconcileEnforcements→通知/outbox",
+    "remainingBreakpoint": "文字裁决恢复已有代码，附件为新增能力；前端实际接入本套需核，且恢复失败事务/通知未执行验收。",
+    "codeStillNeeded": "先核现用文字申诉的裁决与恢复原状态；未证实bug不重写；附件后置。",
+    "verificationStillNeeded": "重复申诉、并发裁决、回滚失败、对象投影/通知独立读回；不能只看受理成功。",
+    "newCapabilityDeferred": true,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
+        "exists": true,
+        "sha256": "1d11733f79b93acbec347600eb67cc5084cf5b173577d268bdd091fc308f474c",
+        "evidence": [
+          {
+            "line": 743,
+            "code": "if (!memberId.equals(targetMember)) throw error(\"只能申诉自己的处置\", 403);"
+          },
+          {
+            "line": 746,
+            "code": "throw error(\"证据附件归属与脱敏链路尚未接通，请先提交文字申诉\", 409);"
+          },
+          {
+            "line": 898,
+            "code": "if (!startsAt.after(now)) reconcileEnforcements(postId, now);"
+          },
+          {
+            "line": 909,
+            "code": "public void reviewAppeal(Long operatorUserId, Long appealId, CommunityPostRequests.AppealReview request) {"
+          },
+          {
+            "line": 921,
+            "code": "if (mapper.reviewAppealCas(appealId, decision, request.getReason().trim(), operatorUserId, version, now) != 1) stale();"
+          },
+          {
+            "line": 924,
+            "code": "if (mapper.reverseEnforcement(enforcementId, enforcementVersion == null ? 0 : enforcementVersion, now) != 1) stale();"
+          },
+          {
+            "line": 925,
+            "code": "if (postId != null) reconcileEnforcements(postId, now);"
+          },
+          {
+            "line": 1008,
+            "code": "reconcileEnforcements(postId, now);"
+          }
+        ]
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "M0120",
+    "title": "举报汇聚",
+    "priority": "第2级",
+    "endpointOwnership": "待核",
+    "scopeNote": "后端Community治理能力存在，本次未定位该套API的小程序实际入口；待核调用归属，不因缺调用就归App。",
+    "publicStatus": "部分缺口",
+    "executionClass": "后置新能力",
+    "actualChain": "CommunityTrustServiceImpl提交独立report→platformQueue按reportPriorityRank排序→selectReportForUpdate处理",
+    "remainingBreakpoint": "已有队列不等于多人同对象聚案；本次未发现聚合案引用消费者，小程序实际调用亦待核。",
+    "codeStillNeeded": "先保留现举报安全链；多人聚案属于增强能力后置，不自动处罚。",
+    "verificationStillNeeded": "现有独立举报去重/处理权限；聚案上线前另验独立理由不丢、无重复处罚。",
+    "newCapabilityDeferred": true,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityTrustServiceImpl.java",
+        "exists": true,
+        "sha256": "d4b614db03576aa7e4d23e8dbb70263b094fad63d0d7529bb24715a48b940190",
+        "evidence": [
+          {
+            "line": 104,
+            "code": "List<Long> evidence = normalizeEvidence(request.getEvidenceAssetIds());"
+          },
+          {
+            "line": 278,
+            "code": "int priority = Integer.compare(reportPriorityRank(left), reportPriorityRank(right));"
+          },
+          {
+            "line": 290,
+            "code": "private static int reportPriorityRank(CommunityReportPlatformVO row) {"
+          },
+          {
+            "line": 324,
+            "code": "CommunityReportCase row = communityTrustMapper.selectReportForUpdate(request.getReportId());"
+          },
+          {
+            "line": 374,
+            "code": "List<Long> evidence = normalizeEvidence(request.getEvidenceAssetIds());"
+          },
+          {
+            "line": 446,
+            "code": "List<Long> evidence = normalizeEvidence(request.getEvidenceAssetIds());"
+          },
+          {
+            "line": 821,
+            "code": "private List<Long> normalizeEvidence(List<Long> source) {"
+          }
+        ]
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "M0124",
+    "title": "删除内容与证据留存",
+    "priority": "第2级",
+    "endpointOwnership": "待核",
+    "scopeNote": "后端Community治理能力存在，本次未定位该套API的小程序实际入口；待核调用归属，不因缺调用就归App。",
+    "publicStatus": "部分缺口",
+    "executionClass": "当前修补",
+    "actualChain": "CommunityPostServiceImpl清理循环→selectDueMediaForErasure→countLiveMediaObjectRefs→deleteOwnedObjectIfPresent→eraseDueMedia→completeErasureJob；异常retryErasureJob",
+    "remainingBreakpoint": "共享引用与保留期判断有代码；实际调度和OSS删除待验；外部删除与数据库重试的失配需要真实异常验证。",
+    "codeStillNeeded": "优先验证已有清理消费者、失败补偿和原保留时间，不增加新留存政策。",
+    "verificationStillNeeded": "真实任务专属对象删除/共享引用不删/删除成功DB失败重入/长期失败待办及到期边界。",
+    "newCapabilityDeferred": false,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
+        "exists": true,
+        "sha256": "1d11733f79b93acbec347600eb67cc5084cf5b173577d268bdd091fc308f474c",
+        "evidence": [
+          {
+            "line": 1055,
+            "code": "mapper.retryErasureJob(id, \"BLOCKED_LEGAL_HOLD\", \"LEGAL_HOLD\", now, now);"
+          },
+          {
+            "line": 1075,
+            "code": "mapper.retryErasureJob(id, \"RETRY\", \"MEDIA_RETENTION_WINDOW\", deleteAfter, now);"
+          },
+          {
+            "line": 1078,
+            "code": "for (Map<String, Object> media : mapper.selectDueMediaForErasure(postId, now)) {"
+          },
+          {
+            "line": 1081,
+            "code": "if (mapper.countLiveMediaObjectRefs(objectKey, mediaId) == 0) {"
+          },
+          {
+            "line": 1082,
+            "code": "FileOssUploadUtils.deleteOwnedObjectIfPresent(objectKey);"
+          },
+          {
+            "line": 1085,
+            "code": "mapper.eraseDueMedia(postId, now);"
+          },
+          {
+            "line": 1089,
+            "code": "mapper.retryErasureJob(id, \"RETRY\", e.getClass().getSimpleName(),"
+          }
+        ]
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "F0515",
+    "title": "官方集体目标指标",
+    "priority": "第5级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "部分缺口",
+    "executionClass": "当前修补",
+    "actualChain": "official-detail/roam→ApiOfficialEventController→OfficialEventServiceImpl按contractVersion分流；V2 collectiveProgress用activeParticipation/validEvidence/completedParticipantCount",
+    "remainingBreakpoint": "V2有有效证据和撤证链；V1 light_count仍sumProgressByEvent，旧completeTask可增加进度。不能把V2正确外推旧入口。",
+    "codeStillNeeded": "核活动版本和存量V1真实使用；仅修仍在用的旧完成事实绕过，不自创指标算法。",
+    "verificationStillNeeded": "真实有效/撤销证据影响集体指标；重复完成、迟到撤证、结算竞争，不沿用私库结果。",
+    "newCapabilityDeferred": false,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialEventServiceImpl.java",
+        "exists": true,
+        "sha256": "8aa2843554a283097a5b6a9d2dbd0000fb7348a35558d84119c77b31a82ea9b3",
+        "evidence": [
+          {
+            "line": 123,
+            "code": "public String completeTask(Long eventId, Long memberId) {"
+          },
+          {
+            "line": 367,
+            "code": "else if (\"light_count\".equals(metric)) current = signupMapper.sumProgressByEvent(e.getId());"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialEventV2ServiceImpl.java",
+        "exists": true,
+        "sha256": "5781643cf33be169be151bc24b03544dd0e498bd16afc0f5a4f396fd722cf277",
+        "evidence": [
+          {
+            "line": 592,
+            "code": "data.put(\"validEvidence\", v2Mapper.countValidEvidenceByEvent(eventId));"
+          },
+          {
+            "line": 647,
+            "code": "data.put(\"collective\", collectiveProgress(event));"
+          },
+          {
+            "line": 659,
+            "code": "row.put(\"collective\", collectiveProgress(event));"
+          },
+          {
+            "line": 678,
+            "code": "row.put(\"collective\", collectiveProgress(event));"
+          },
+          {
+            "line": 944,
+            "code": "public String invalidateParticipation(Long eventId, Long memberId, String state, Long operatorId, String reason) {"
+          },
+          {
+            "line": 2066,
+            "code": "data.put(\"collective\", collectiveProgress(event));"
+          },
+          {
+            "line": 2131,
+            "code": "else if (\"light_count\".equals(metric)) current = v2Mapper.countValidEvidenceByEvent(event.getId());"
+          },
+          {
+            "line": 2136,
+            "code": "private Map<String, Object> collectiveProgress(OfficialEvent event) {"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-xcx/pages/activity/official-detail/index.js",
+        "exists": true,
+        "sha256": "208bff4055fd13fb210dcfb219d7688c0bc993710d98a87435e550354c12ebf4",
+        "evidence": []
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "F0459",
+    "title": "官方活动报名",
+    "priority": "第3级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "部分缺口",
+    "executionClass": "当前修补",
+    "actualChain": "official-detail.doSignup→/api/official/events/{id}/signup→OfficialEventService.signup；V2→requireV2EventForUpdate+暂停/容量+参与资格",
+    "remainingBreakpoint": "V2活动行锁已有；V1仍普通select活动+count软容量，两个报名可同过上限。",
+    "codeStillNeeded": "确认存量V1使用后最小统一锁行容量检查；不改名额/收费规则。",
+    "verificationStillNeeded": "容量1并发两人仅一成功；重复报名、暂停、失效参与、旧/新版本各跑。",
+    "newCapabilityDeferred": false,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiOfficialEventController.java",
+        "exists": true,
+        "sha256": "ac9c1acbc07dd21a5ef9707aaddf6643a049ab1cd32933db257cf6d396c453d3",
+        "evidence": [
+          {
+            "line": 98,
+            "code": "@PostMapping(\"/events/{id}/signup\")"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialEventServiceImpl.java",
+        "exists": true,
+        "sha256": "8aa2843554a283097a5b6a9d2dbd0000fb7348a35558d84119c77b31a82ea9b3",
+        "evidence": [
+          {
+            "line": 97,
+            "code": "public String signup(Long eventId, Long memberId) {"
+          },
+          {
+            "line": 98,
+            "code": "OfficialEvent e = eventMapper.selectOfficialEventById(eventId);"
+          },
+          {
+            "line": 109,
+            "code": "return \"报名人数已满\";"
+          },
+          {
+            "line": 124,
+            "code": "OfficialEvent e = eventMapper.selectOfficialEventById(eventId);"
+          },
+          {
+            "line": 156,
+            "code": "OfficialEvent e = eventMapper.selectOfficialEventById(eventId);"
+          },
+          {
+            "line": 318,
+            "code": "OfficialEvent e = eventMapper.selectOfficialEventById(eventId);"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialEventV2ServiceImpl.java",
+        "exists": true,
+        "sha256": "5781643cf33be169be151bc24b03544dd0e498bd16afc0f5a4f396fd722cf277",
+        "evidence": [
+          {
+            "line": 291,
+            "code": "return eventMapper.selectOfficialEventById(eventId);"
+          },
+          {
+            "line": 296,
+            "code": "OfficialEvent event = eventMapper.selectOfficialEventById(eventId);"
+          },
+          {
+            "line": 352,
+            "code": "OfficialEvent event = eventMapper.selectOfficialEventById(eventId);"
+          },
+          {
+            "line": 367,
+            "code": "OfficialEvent event = eventMapper.selectOfficialEventById(eventId);"
+          },
+          {
+            "line": 384,
+            "code": "if (!isEffectiveOfficialMember(memberId) || !isV2(eventMapper.selectOfficialEventById(eventId))) return false;"
+          },
+          {
+            "line": 421,
+            "code": "OfficialEvent event = requireV2EventForUpdate(eventId);"
+          },
+          {
+            "line": 455,
+            "code": "public String signup(Long eventId, Long memberId) {"
+          },
+          {
+            "line": 457,
+            "code": "OfficialEvent event = requireV2EventForUpdate(eventId);"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-xcx/pages/activity/official-detail/index.js",
+        "exists": true,
+        "sha256": "208bff4055fd13fb210dcfb219d7688c0bc993710d98a87435e550354c12ebf4",
+        "evidence": [
+          {
+            "line": 452,
+            "code": "url: '/api/official/events/' + this.data.id + '/signup', method: 'POST',"
+          }
+        ]
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "M0146",
+    "title": "AI 请求防重复计费",
+    "priority": "第2级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "部分缺口",
+    "executionClass": "当前修补",
+    "actualChain": "小程序npc-chat/shop-chat requestId→NpcChatService.chat/shopChat→selectByUserAndRequestId→existing直接fromStored→新请求插PROCESSING→gateway",
+    "remainingBreakpoint": "当前用户+requestId回放在会话资格检查之前；未见内容/NPC/场景意图指纹，对同键异参没有同等防线。",
+    "codeStillNeeded": "给既有请求冻结意图指纹、回放前按当前范围核资格；保持原请求恢复，不新增NPC功能。",
+    "verificationStillNeeded": "同键换内容/场景/节点拒绝；同请求断线回原答案；已失效场景不能借旧键读取。",
+    "newCapabilityDeferred": false,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java",
+        "exists": true,
+        "sha256": "e6f9d8606f83dde763da0fc55e7158bfb3e257b3239c2de1f45510ed3586fe68",
+        "evidence": [
+          {
+            "line": 38,
+            "code": "* 漫游 NPC Chat 编排：普通 POST、服务端 requestId 幂等、一次只允许一个会话内调用。"
+          },
+          {
+            "line": 95,
+            "code": "String requestId = requestIdOf(req);"
+          },
+          {
+            "line": 98,
+            "code": "return response(requestId, NpcChatRequest.STATUS_FAILED, \"NOT_RUN\", \"UNAUTHENTICATED\", null,"
+          },
+          {
+            "line": 101,
+            "code": "if (!isRequestEnvelopeValid(req, requestId))"
+          },
+          {
+            "line": 103,
+            "code": "return response(requestId, NpcChatRequest.STATUS_REJECTED, \"NOT_RUN\", \"INVALID_REQUEST\", null,"
+          },
+          {
+            "line": 110,
+            "code": "existing = npcChatRequestMapper.selectByUserAndRequestId(userId, requestId);"
+          },
+          {
+            "line": 114,
+            "code": "log.error(\"[NpcChat] request state lookup failed userId={} requestId={}\", userId, requestId, e);"
+          },
+          {
+            "line": 115,
+            "code": "return requestStateUnavailable(requestId);"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/resources/mapper/business/NpcChatRequestMapper.xml",
+        "exists": true,
+        "sha256": "f96af7e5734272e4cb592c793a2099091f73b91140f84f61f749ee92087bdd5f",
+        "evidence": [
+          {
+            "line": 8,
+            "code": "<result property=\"requestId\" column=\"request_id\" />"
+          },
+          {
+            "line": 26,
+            "code": "<select id=\"selectByUserAndRequestId\" resultMap=\"NpcChatRequestResult\">"
+          },
+          {
+            "line": 31,
+            "code": "where user_id = #{userId} and request_id = #{requestId}"
+          },
+          {
+            "line": 41,
+            "code": "#{userId}, #{requestId}, #{sessionId}, #{status}, #{safetyDecision}, #{errorCode}, #{limitType},"
+          },
+          {
+            "line": 62,
+            "code": "where user_id = #{userId} and request_id = #{requestId}"
+          },
+          {
+            "line": 69,
+            "code": "where user_id = #{userId} and request_id = #{requestId}"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-xcx/pages/play/index.js",
+        "exists": true,
+        "sha256": "6fef742d00bdea90584014730777ce8be33b0a586e23dbc2b56fd15210092dd6",
+        "evidence": [
+          {
+            "line": 238,
+            "code": "|| !pending.requestId || (command && command.requestId !== pending.requestId)"
+          },
+          {
+            "line": 239,
+            "code": "|| receipt.requestId !== pending.requestId"
+          },
+          {
+            "line": 245,
+            "code": "if (result.requestId != null && result.requestId !== pending.requestId) return null;"
+          },
+          {
+            "line": 403,
+            "code": "write: { status: 'idle', requestId: '', message: '', canRetry: false },"
+          },
+          {
+            "line": 1775,
+            "code": "formData: { nodeId: s.nodeId, requestId: uuid4() },"
+          },
+          {
+            "line": 1793,
+            "code": "/** 问一句。requestId 由本端生成,后端按 (user, requestId) 幂等 ——"
+          },
+          {
+            "line": 1809,
+            "code": "const requestId = uuid4();"
+          },
+          {
+            "line": 1810,
+            "code": "req('/api/ai/npc/shop-chat', 'POST', { requestId, nodeId: this.data.shopNpc.nodeId, message: text }).then((r) => {"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-xcx/components/cy/npc-chat/index.js",
+        "exists": true,
+        "sha256": "2f2200ec5a13abfb6d40549eb5807f0105f95f9c457e07efeeeed3c0a0880356",
+        "evidence": [
+          {
+            "line": 6,
+            "code": "//   共用的是「幂等 requestId + generation 隔离迟到响应 + 只显示已审核全文」这套壳,"
+          },
+          {
+            "line": 21,
+            "code": "// 与服务端的 UUID 契约一致；requestId 只做幂等键，不承载用户或业务信息。"
+          },
+          {
+            "line": 83,
+            "code": "const requestId = makeRequestId();"
+          },
+          {
+            "line": 105,
+            "code": "data: { requestId: requestId, bizId: this.properties.sessionId, message: message },"
+          },
+          {
+            "line": 109,
+            "code": "success: (res) => this._onResponse(generation, requestId, res),"
+          },
+          {
+            "line": 127,
+            "code": "_onResponse: function (generation, requestId, res) {"
+          },
+          {
+            "line": 131,
+            "code": "// requestId 不匹配按迟到/串线处理，绝不把另一条请求的文本写进当前对话。"
+          },
+          {
+            "line": 132,
+            "code": "if (!payload || payload.requestId !== requestId) {"
+          }
+        ]
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "M0149",
+    "title": "AI 内容安全后展示",
+    "priority": "第2级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "部分缺口",
+    "executionClass": "当前修补",
+    "actualChain": "AiGatewayService.generate→checkText(truncate(userPrompt,2000))→模型完整输入→checkText(modelText)→Npc安全文本落库",
+    "remainingBreakpoint": "输入仅审核截断2000字，真正模型输入可能更长；审核故障与违规仍混成非空字符串。",
+    "codeStillNeeded": "覆盖真正发送输入的审核边界，落实已批准故障退次数/违规不退；不另问规则。",
+    "verificationStillNeeded": "违规位于2000字之后、审核超时、输出违规、落库失败；确认模型是否被调用及额度原账。",
+    "newCapabilityDeferred": false,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+        "exists": true,
+        "sha256": "e02e5fe4f5e917e3de031d1138860715f9b4ec3ed1ab441bd2eb72f063b1f7c7",
+        "evidence": [
+          {
+            "line": 130,
+            "code": "String secIn = wxContentSecurityService.checkText(truncate(userPrompt, 2000), openid);"
+          },
+          {
+            "line": 189,
+            "code": "String secOut = wxContentSecurityService.checkText(modelText, openid);"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java",
+        "exists": true,
+        "sha256": "e6f9d8606f83dde763da0fc55e7158bfb3e257b3239c2de1f45510ed3586fe68",
+        "evidence": [
+          {
+            "line": 334,
+            "code": "AiGatewayResult result = aiGatewayService.generate(processing.getUserId(), \"player\", bizType,"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-xcx/pages/play/index.js",
+        "exists": true,
+        "sha256": "6fef742d00bdea90584014730777ce8be33b0a586e23dbc2b56fd15210092dd6",
+        "evidence": []
+      },
+      {
+        "path": "chengyinhub-xcx/components/cy/npc-chat/index.js",
+        "exists": true,
+        "sha256": "2f2200ec5a13abfb6d40549eb5807f0105f95f9c457e07efeeeed3c0a0880356",
+        "evidence": []
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "M0150",
+    "title": "AI 超时与保底",
+    "priority": "第2级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "部分缺口",
+    "executionClass": "当前修补",
+    "actualChain": "NPC PROCESSING+请求表→gateway.generate→finishIfLeaseOwned/fromStored；普通Gateway异常直接退额度",
+    "remainingBreakpoint": "NPC能恢复保存终态；供应商已接收但响应未知时没有持久原provider任务对账链，不能等同安全重调。",
+    "codeStillNeeded": "先按既有provider能力区分未调用/明确失败/未知；未知抑制盲重试，原请求可查。",
+    "verificationStillNeeded": "调用前失败、调用后断网、结果存储失败、延迟回包；核原ID/次数不重复。",
+    "newCapabilityDeferred": false,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+        "exists": true,
+        "sha256": "e02e5fe4f5e917e3de031d1138860715f9b4ec3ed1ab441bd2eb72f063b1f7c7",
+        "evidence": [
+          {
+            "line": 103,
+            "code": "//    退不退(refundQuota 的 javadoc 列了当前判定)。现在是**逐点**退(选模型/调模型两处"
+          },
+          {
+            "line": 106,
+            "code": "//    而那条边界恰恰未决(见 refundQuota javadoc)。等那单落地,这里应改成区域守卫。"
+          },
+          {
+            "line": 150,
+            "code": "if (!playerThemeDraft) refundQuota(traceId, memberId, rateKey, used);"
+          },
+          {
+            "line": 174,
+            "code": "if (!playerThemeDraft) refundQuota(traceId, memberId, rateKey, used);"
+          },
+          {
+            "line": 239,
+            "code": "catch (Exception e)"
+          },
+          {
+            "line": 273,
+            "code": "* 「用户有没有拿到结论」决定(refundQuota 对应本方法)。"
+          },
+          {
+            "line": 297,
+            "code": "public void refundQuota(Long memberId, String bizType)"
+          },
+          {
+            "line": 301,
+            "code": "refundQuota(\"non-text:\" + bizType, memberId, rateKey, 1L);"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java",
+        "exists": true,
+        "sha256": "e6f9d8606f83dde763da0fc55e7158bfb3e257b3239c2de1f45510ed3586fe68",
+        "evidence": [
+          {
+            "line": 112,
+            "code": "catch (Exception e)"
+          },
+          {
+            "line": 119,
+            "code": "return fromStored(existing);"
+          },
+          {
+            "line": 140,
+            "code": "npcChatRequestMapper.expireProcessingByUserAndSession(userId, session.getId(), SAFE_REQUEST_TIMEOUT);"
+          },
+          {
+            "line": 142,
+            "code": "catch (Exception e)"
+          },
+          {
+            "line": 158,
+            "code": "catch (Exception e)"
+          },
+          {
+            "line": 232,
+            "code": "catch (Exception e)"
+          },
+          {
+            "line": 239,
+            "code": "return fromStored(existing);"
+          },
+          {
+            "line": 262,
+            "code": "npcChatRequestMapper.expireProcessingByUserAndSession(userId, sessionKey, SAFE_REQUEST_TIMEOUT);"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-xcx/pages/play/index.js",
+        "exists": true,
+        "sha256": "6fef742d00bdea90584014730777ce8be33b0a586e23dbc2b56fd15210092dd6",
+        "evidence": []
+      },
+      {
+        "path": "chengyinhub-xcx/components/cy/npc-chat/index.js",
+        "exists": true,
+        "sha256": "2f2200ec5a13abfb6d40549eb5807f0105f95f9c457e07efeeeed3c0a0880356",
+        "evidence": []
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "M0152",
+    "title": "额度消耗与恢复",
+    "priority": "第2级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "部分缺口",
+    "executionClass": "当前修补",
+    "actualChain": "普通Gateway按日期rateKey increment→特定失败refundQuota decrement；非文本refundQuota(member,biz)重新取today",
+    "remainingBreakpoint": "公开读取版本未见nonce预留凭据；重复退与跨日非文本退当前日存在边界；不能继承私有reservation通过。",
+    "codeStillNeeded": "最小原请求/原日期的防重恢复与错误分类，按已定服务故障退/违规不退实施。",
+    "verificationStillNeeded": "真实Redis重复退、并发退、跨日、TTL到期、异常后原请求恢复及余额独立回读。",
+    "newCapabilityDeferred": false,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+        "exists": true,
+        "sha256": "e02e5fe4f5e917e3de031d1138860715f9b4ec3ed1ab441bd2eb72f063b1f7c7",
+        "evidence": [
+          {
+            "line": 108,
+            "code": "String rateKey = null;"
+          },
+          {
+            "line": 115,
+            "code": "used = redisTemplate.opsForValue().increment(rateKey);"
+          },
+          {
+            "line": 150,
+            "code": "if (!playerThemeDraft) refundQuota(traceId, memberId, rateKey, used);"
+          },
+          {
+            "line": 174,
+            "code": "if (!playerThemeDraft) refundQuota(traceId, memberId, rateKey, used);"
+          },
+          {
+            "line": 280,
+            "code": "String rateKey = RATE_KEY_PREFIX + rateGroup + \":\" + memberId + \":\" + today;"
+          },
+          {
+            "line": 281,
+            "code": "Long used = redisTemplate.opsForValue().increment(rateKey);"
+          },
+          {
+            "line": 297,
+            "code": "public void refundQuota(Long memberId, String bizType)"
+          },
+          {
+            "line": 300,
+            "code": "String rateKey = RATE_KEY_PREFIX + rateGroupOf(bizType) + \":\" + memberId + \":\" + today;"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java",
+        "exists": true,
+        "sha256": "e6f9d8606f83dde763da0fc55e7158bfb3e257b3239c2de1f45510ed3586fe68",
+        "evidence": []
+      },
+      {
+        "path": "chengyinhub-xcx/pages/play/index.js",
+        "exists": true,
+        "sha256": "6fef742d00bdea90584014730777ce8be33b0a586e23dbc2b56fd15210092dd6",
+        "evidence": []
+      },
+      {
+        "path": "chengyinhub-xcx/components/cy/npc-chat/index.js",
+        "exists": true,
+        "sha256": "2f2200ec5a13abfb6d40549eb5807f0105f95f9c457e07efeeeed3c0a0880356",
+        "evidence": []
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "X001",
+    "title": "通用玩法支持矩阵与发布门禁",
+    "priority": "第2级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "待核",
+    "executionClass": "后置新能力",
+    "actualChain": "公开有TopicRouteRuntimeServiceImpl与AdvancedGameRuntimeServiceImpl既有玩法；原GameplaySupportMatrix及小程序同名矩阵路径不存在",
+    "remainingBreakpoint": "缺原表矩阵不等于所有旧玩法不运行；检定/竞猜/拍物接桥属于新增扩展，当前发布门具体兼容表需重建证据。",
+    "codeStillNeeded": "现有玩法发布/运行逐对核；新增C类桥接后置，不迁私库整引擎。",
+    "verificationStillNeeded": "现有配置发布后真实入口可运行；不支持配置服务端拒绝；新增类型另立验收。",
+    "newCapabilityDeferred": true,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplaySupportMatrix.java",
+        "exists": false,
+        "sha256": null,
+        "finding": "当前公开路径不存在；不得沿用原私库源码/测试结论"
+      },
+      {
+        "path": "chengyinhub-xcx/pages/publish/utils/publish/gameplay-support-matrix.js",
+        "exists": false,
+        "sha256": null,
+        "finding": "当前公开路径不存在；不得沿用原私库源码/测试结论"
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+        "exists": true,
+        "sha256": "9738b481a05368151be8d8a58ba9fb05a300969009d90f4f68ec7642f4114006",
+        "evidence": [
+          {
+            "line": 86,
+            "code": "public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {"
+          },
+          {
+            "line": 1136,
+            "code": "Map<Long, String> configByTemplate = probe.configs();"
+          },
+          {
+            "line": 1138,
+            "code": "if (blockNeedsJourneyState(configByTemplate.get(node.getTemplateId()))) return true;"
+          },
+          {
+            "line": 1147,
+            "code": "private final class JourneyTemplateProbe {"
+          },
+          {
+            "line": 1150,
+            "code": "private Map<Long, String> configByTemplate;"
+          },
+          {
+            "line": 1156,
+            "code": "private Map<Long, String> configs() {"
+          },
+          {
+            "line": 1157,
+            "code": "if (configByTemplate == null) {"
+          },
+          {
+            "line": 1158,
+            "code": "configByTemplate = new LinkedHashMap<Long, String>();"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java",
+        "exists": true,
+        "sha256": "09e413c89de6afc94e08ffb65a1e443306802936059d5dd84b7bd1e6826936ba",
+        "evidence": [
+          {
+            "line": 68,
+            "code": "public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeService {"
+          },
+          {
+            "line": 162,
+            "code": "private final AdvancedGameConfigValidator configValidator = new AdvancedGameConfigValidator();"
+          },
+          {
+            "line": 171,
+            "code": "JsonNode config = readJson(input.configJson, \"高级玩法配置不可用\");"
+          },
+          {
+            "line": 172,
+            "code": "boolean multiplayer = enabled(config.get(\"multiplayer\"));"
+          },
+          {
+            "line": 188,
+            "code": "validateTeamSize(config.get(\"multiplayer\"), teamMembers);"
+          },
+          {
+            "line": 203,
+            "code": "requireWithinTimeWindow(config.get(\"timeWindow\"));"
+          },
+          {
+            "line": 205,
+            "code": "ObjectNode state = initialState(config, team, teamMembers);"
+          },
+          {
+            "line": 214,
+            "code": "session.setConfigSnapshotJson(input.configJson);"
+          }
+        ]
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "X002",
+    "title": "局类型与归属（个人/独立队伍/队伍共用现场/共享世界）",
+    "priority": "第2级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "部分缺口",
+    "executionClass": "当前修补",
+    "actualChain": "GameSessionRuntimeServiceImpl.command/view→活动session锁、actor/team范围、TEAM story state；小程序玩法已有调用",
+    "remainingBreakpoint": "原四类ownership矩阵/theme-ownership文件不在公开；已存在队伍角色链，不能断言共享世界四模式全有。",
+    "codeStillNeeded": "先核既有队伍/局读写隔离和掉线恢复；扩展局类型/物资新规则后置。",
+    "verificationStillNeeded": "同会员跨队/跨局命令与回执、角色转移前后拒绝；不沿用旧HTTP结果。",
+    "newCapabilityDeferred": true,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplaySupportMatrix.java",
+        "exists": false,
+        "sha256": null,
+        "finding": "当前公开路径不存在；不得沿用原私库源码/测试结论"
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+        "exists": true,
+        "sha256": "6e52c74d1d6e225a842080d73b15b6c559d123a08cd43c4af17d30ce1800e9bb",
+        "evidence": [
+          {
+            "line": 219,
+            "code": "public GameSessionView view(GameActorContext actor, Long activityId) {"
+          },
+          {
+            "line": 261,
+            "code": "public GameCommandReceiptView command(GameActorContext actor, GameSessionCommand command) {"
+          },
+          {
+            "line": 845,
+            "code": "GameStoryState concurrent = runtimeMapper.selectStoryState(session.getId(), \"TEAM\", player.teamId);"
+          },
+          {
+            "line": 1035,
+            "code": "if (!(\"ALL\".equals(targetType) || \"TEAM\".equals(targetType) || \"ROLE\".equals(targetType))"
+          },
+          {
+            "line": 1039,
+            "code": "if (\"TEAM\".equals(targetType)"
+          },
+          {
+            "line": 1185,
+            "code": "GameSessionView view = baseView(session, activity.getId(), \"PLAYER\", session.getStatus(),"
+          },
+          {
+            "line": 1307,
+            "code": "GameSessionView view = baseView(session, activity.getId(), \"MERCHANT\", session.getStatus(),"
+          },
+          {
+            "line": 1450,
+            "code": "GameSessionView view = baseView(session, activity.getId(), \"CLUB\", session.getStatus(),"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-xcx/pages/publish/fabu/theme-ownership.js",
+        "exists": false,
+        "sha256": null,
+        "finding": "当前公开路径不存在；不得沿用原私库源码/测试结论"
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "X004",
+    "title": "成功次数与同场共用范围（limitsScope）",
+    "priority": "第2级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "待核",
+    "executionClass": "待核",
+    "actualChain": "原GameplaySupportMatrix及limitsScope在公开业务检索未命中；存在GameSession命令回执和运行状态基础",
+    "remainingBreakpoint": "缺同场成功次数范围真源证据；不能仅凭幂等回执写次数限制已实现。",
+    "codeStillNeeded": "先追现玩法配置→校验→成功计数→回滚；若原能力未迁是新增迁移包后置，禁止猜次数政策。",
+    "verificationStillNeeded": "同场两途径竞争、失败不耗次数、当前剩余值；找到实际实现后再定测试。",
+    "newCapabilityDeferred": true,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplaySupportMatrix.java",
+        "exists": false,
+        "sha256": null,
+        "finding": "当前公开路径不存在；不得沿用原私库源码/测试结论"
+      },
+      {
+        "path": "chengyinhub-xcx/pages/publish/utils/publish/gameplay-support-matrix.js",
+        "exists": false,
+        "sha256": null,
+        "finding": "当前公开路径不存在；不得沿用原私库源码/测试结论"
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+        "exists": true,
+        "sha256": "6e52c74d1d6e225a842080d73b15b6c559d123a08cd43c4af17d30ce1800e9bb",
+        "evidence": [
+          {
+            "line": 261,
+            "code": "public GameCommandReceiptView command(GameActorContext actor, GameSessionCommand command) {"
+          },
+          {
+            "line": 282,
+            "code": "GameCommandReceipt concurrent = runtimeMapper.selectReceiptForUpdate(command.getActivityId(), actor.getMemberId(),"
+          }
+        ]
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "X011",
+    "title": "收场判定：最终章、冻结局沿用冻结收场、共享世界唯一结局",
+    "priority": "第2级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "部分缺口",
+    "executionClass": "待核",
+    "actualChain": "ThemeRuntimeEngine.endings选择优先级/兜底→TopicRouteRuntimeServiceImpl.themeAction END回执/已有result返回",
+    "remainingBreakpoint": "存在个人主题收场；原GameplayTemplateRules/CooperationEngine不存在，不能称共享世界唯一结局及冻结收场完整。",
+    "codeStillNeeded": "先核现END冻结版本、重复动作和中止区分；共享世界新能力后置。",
+    "verificationStillNeeded": "同原局END重放不二次奖励、规则修改后旧局结果稳定；多队唯一结局需先证实调用。",
+    "newCapabilityDeferred": true,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayTemplateRules.java",
+        "exists": false,
+        "sha256": null,
+        "finding": "当前公开路径不存在；不得沿用原私库源码/测试结论"
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayCooperationEngine.java",
+        "exists": false,
+        "sha256": null,
+        "finding": "当前公开路径不存在；不得沿用原私库源码/测试结论"
+      },
+      {
+        "path": "chengyinhub-xcx/pages/publish/fabu/theme-ownership.js",
+        "exists": false,
+        "sha256": null,
+        "finding": "当前公开路径不存在；不得沿用原私库源码/测试结论"
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeRuntimeEngine.java",
+        "exists": true,
+        "sha256": "3599c77db5a23a2f176ede66e9721ac0e051d9abd18b0affc19b1565cf4b5e14",
+        "evidence": [
+          {
+            "line": 17,
+            "code": "t.putObject(\"inventory\"); t.putObject(\"acquired\"); t.putObject(\"sources\"); t.putObject(\"pending\");"
+          },
+          {
+            "line": 63,
+            "code": "ObjectNode pending = t.with(\"pending\").putObject(source); pending.put(\"itemId\",id); pending.put(\"quantity\",qty);"
+          },
+          {
+            "line": 67,
+            "code": "ObjectNode t = state.getThemeRuntime(); JsonNode pending = t.with(\"pending\").get(source);"
+          },
+          {
+            "line": 68,
+            "code": "if (pending == null) throw new IllegalStateException(\"没有待领取内容\");"
+          },
+          {
+            "line": 69,
+            "code": "String id = pending.path(\"itemId\").asText(); int qty = pending.path(\"quantity\").asInt(); JsonNode item = item(config,id);"
+          },
+          {
+            "line": 76,
+            "code": "t.with(\"pending\").remove(source); project(config,state);"
+          },
+          {
+            "line": 134,
+            "code": "if(config==null || !config.isObject() || state.getThemeRuntime().has(\"result\"))return;"
+          },
+          {
+            "line": 137,
+            "code": "for(JsonNode ending:config.path(\"endings\")) {"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+        "exists": true,
+        "sha256": "9738b481a05368151be8d8a58ba9fb05a300969009d90f4f68ec7642f4114006",
+        "evidence": [
+          {
+            "line": 382,
+            "code": "boolean openingPending = root.has(\"openingChapter\") && !state.getTags().contains(\"sys.opening.done\");"
+          },
+          {
+            "line": 384,
+            "code": "if (openingPending && !chapter.path(\"opening\").asBoolean(false)) continue;"
+          },
+          {
+            "line": 498,
+            "code": "if (!state.getThemeRuntime().has(\"result\") && openingSnapshot(session) != null && !state.getTags().contains(\"sys.opening.done\")) {"
+          },
+          {
+            "line": 1330,
+            "code": "Set<Long> endingIds = JourneyStory.endingChapterIds(topic.getJourneyStoryJson());"
+          },
+          {
+            "line": 1335,
+            "code": "if (chapter.getId() == null || endingIds.contains(chapter.getId())) continue;"
+          },
+          {
+            "line": 2700,
+            "code": "if(themeStoryService==null || !state.getThemeRuntime().has(\"result\"))return;"
+          },
+          {
+            "line": 2706,
+            "code": "if(!themeConfig(session).path(\"endings\").isArray() || themeConfig(session).path(\"endings\").isEmpty()) {"
+          },
+          {
+            "line": 2707,
+            "code": "if(story.get(\"code\")!=null)result.put(\"endingId\",String.valueOf(story.get(\"code\")));"
+          }
+        ]
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "X013",
+    "title": "微信运动加密步数同步（服务端解密、appid 水印、同键重试）",
+    "priority": "第2级",
+    "endpointOwnership": "小程序专属",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "部分缺口",
+    "executionClass": "当前修补",
+    "actualChain": "play._submitSteps wx.login/getWeRunData→AdvancedGameRuntimeServiceImpl.submitSteps→exchange session_key→WeRunDecryptor→reached首次加分",
+    "remainingBreakpoint": "appid/非负步数检查存在；decrypt将最后记录timestamp返回但未校验当日/未来；原Survival恢复引擎不在公开。",
+    "codeStillNeeded": "校当前既有计步挑战日期与重放边界；微信步数驱动HP恢复属于缺失扩展后置。",
+    "verificationStillNeeded": "真实微信授权/拒绝、跨日和过期密文、异appid、重复同步只加一次分。",
+    "newCapabilityDeferred": true,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WeRunDecryptor.java",
+        "exists": true,
+        "sha256": "9570bd99f51d1266a2f935b0acee4d77ad9dd874338aedd81a9d1670c89979b4",
+        "evidence": [
+          {
+            "line": 13,
+            "code": "* 微信运动(wx.getWeRunData)加密数据的解密与校验。"
+          },
+          {
+            "line": 20,
+            "code": "*  因为存下来就要管过期与失效,而微信本来就要求「先 wx.login 再 getWeRunData」)。"
+          },
+          {
+            "line": 23,
+            "code": "*   ① watermark.appid 必须等于本小程序的 appid —— 否则拿别家小程序的合法密文来就能过;"
+          },
+          {
+            "line": 39,
+            "code": "private final long timestamp;"
+          },
+          {
+            "line": 41,
+            "code": "public WeRunResult(int todaySteps, long timestamp) {"
+          },
+          {
+            "line": 43,
+            "code": "this.timestamp = timestamp;"
+          },
+          {
+            "line": 51,
+            "code": "return timestamp;"
+          },
+          {
+            "line": 57,
+            "code": "* @param encryptedDataBase64 wx.getWeRunData 返回的密文(base64)"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplaySurvivalEngine.java",
+        "exists": false,
+        "sha256": null,
+        "finding": "当前公开路径不存在；不得沿用原私库源码/测试结论"
+      },
+      {
+        "path": "chengyinhub-xcx/pages/play/index.js",
+        "exists": true,
+        "sha256": "6fef742d00bdea90584014730777ce8be33b0a586e23dbc2b56fd15210092dd6",
+        "evidence": [
+          {
+            "line": 2902,
+            "code": "// 必须先 wx.login 再 getWeRunData(session_key 要新鲜,否则服务端解不开)"
+          },
+          {
+            "line": 2904,
+            "code": "success: (login) => wx.getWeRunData({"
+          },
+          {
+            "line": 5662,
+            "code": "wx.login → getWeRunData 拿密文这条路,不能直接 action 空手发。"
+          },
+          {
+            "line": 5665,
+            "code": "if (kit.type === 'walk' || action === 'refresh') { this._submitSteps(); return; }"
+          },
+          {
+            "line": 5896,
+            "code": "* 计步提交。微信运动只给密文,而且**必须先 wx.login 再 getWeRunData**"
+          },
+          {
+            "line": 5900,
+            "code": "_submitSteps() {"
+          },
+          {
+            "line": 5906,
+            "code": "wx.getWeRunData({"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java",
+        "exists": true,
+        "sha256": "09e413c89de6afc94e08ffb65a1e443306802936059d5dd84b7bd1e6826936ba",
+        "evidence": [
+          {
+            "line": 319,
+            "code": "submitSteps(config, state, safePayload, session);"
+          },
+          {
+            "line": 1002,
+            "code": "&& !state.path(\"steps\").path(\"reached\").asBoolean(false)) return false;"
+          },
+          {
+            "line": 1179,
+            "code": "case \"SUBMIT_STEPS\": return state.path(\"steps\").path(\"reached\").asBoolean(false) ? Boolean.TRUE : null;"
+          },
+          {
+            "line": 1369,
+            "code": "* 当场换 session_key 当场解密,不做存储(微信本来就要求先 login 再 getWeRunData)。"
+          },
+          {
+            "line": 1371,
+            "code": "private void submitSteps(JsonNode config, ObjectNode state, Map<String, Object> payload,"
+          },
+          {
+            "line": 1377,
+            "code": "WeRunDecryptor.WeRunResult run = WeRunDecryptor.decrypt(wx.getSessionKey(),"
+          },
+          {
+            "line": 1386,
+            "code": "if (run.getTodaySteps() >= goal && !node.path(\"reached\").asBoolean(false)) {"
+          },
+          {
+            "line": 1387,
+            "code": "node.put(\"reached\", true);"
+          }
+        ]
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "X015",
+    "title": "幕末配给与缺粮封底（不欠负 HP、重进不重复）",
+    "priority": "第2级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "部分缺口",
+    "executionClass": "后置新能力",
+    "actualChain": "ThemeRuntimeEngine.chapterEnd→ended防重→HP Math.max(0,hp-cost)→chapterGrants；TopicRoute themeAction调用",
+    "remainingBreakpoint": "公开有章末成本封底，但原GameplaySurvivalEngine.ration不存在；不能把HP成本等同粮食不足配给。",
+    "codeStillNeeded": "当前章末扣费封底可补回归；粮食配给作为缺失能力后置，不搬寒冬专用规则。",
+    "verificationStillNeeded": "H1成本2为0、同章重进不再扣；粮食分支未实现不得写已验。",
+    "newCapabilityDeferred": true,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplaySurvivalEngine.java",
+        "exists": false,
+        "sha256": null,
+        "finding": "当前公开路径不存在；不得沿用原私库源码/测试结论"
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeRuntimeEngine.java",
+        "exists": true,
+        "sha256": "3599c77db5a23a2f176ede66e9721ac0e051d9abd18b0affc19b1565cf4b5e14",
+        "evidence": [
+          {
+            "line": 163,
+            "code": "return (int)Math.max(0,cost-reduction);"
+          },
+          {
+            "line": 171,
+            "code": "public void chapterEnd(JsonNode config,TopicRouteEngine.State state,JourneyRules rules,JsonNode ch,long now) {"
+          },
+          {
+            "line": 174,
+            "code": "if(progress.path(\"ended\").asBoolean())return;"
+          },
+          {
+            "line": 177,
+            "code": "if(rules.isCheckEnabled() && rules.getHp().isEnabled())state.getVariables().put(\"sys.hp\",Math.max(0,number(state,\"sys.hp\")-reduceHpCost(config,state,ch.path(\"hpCost\").asInt())));"
+          },
+          {
+            "line": 178,
+            "code": "if(rules.isCheckEnabled() && rules.getLuck().isEnabled())state.getVariables().put(\"sys.luck\",Math.max(0,number(state,\"sys.luck\")-ch.path(\"luckCost\").asInt()));"
+          },
+          {
+            "line": 194,
+            "code": "long progress=\"TIME\".equals(egg.path(\"trigger\").asText())?Math.max(0,now-p.path(\"startedAt\").asLong())/60000:p.path(\"steps\").asInt();"
+          },
+          {
+            "line": 243,
+            "code": "private int clamp(long value,int max){return (int)Math.max(0,Math.min(max,value));}"
+          }
+        ]
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "X016",
+    "title": "行动额度与 HP 成本（付 HP 至 0 仍成功、上限后拒绝、战术休整次数）",
+    "priority": "第2级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "部分缺口",
+    "executionClass": "当前修补",
+    "actualChain": "ThemeRuntimeEngine记录sys.actions/章末HP；TopicRouteRuntimeServiceImpl预算结束reason BUDGET；作者theme-runtime.js已有配置",
+    "remainingBreakpoint": "原GameplayRuntimeConfig缺失；当前actionLimit存在但第9次拒绝与仅指定actionSources计数需核，战术休整语义没有同等证据。",
+    "codeStillNeeded": "先核现行动计数、预算与HP封底，补现有规则回归；战术休整新增分支后置。",
+    "verificationStillNeeded": "现额度边界前后、扫码/重试是否计数、原动作回放不重复消耗；满HP休整先找实现。",
+    "newCapabilityDeferred": true,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+        "exists": true,
+        "sha256": "9738b481a05368151be8d8a58ba9fb05a300969009d90f4f68ec7642f4114006",
+        "evidence": [
+          {
+            "line": 2807,
+            "code": "if(reason==null && config.has(\"actionLimit\") && state.getVariables().get(\"sys.actions\").intValue()>=config.path(\"actionLimit\").asInt())reason=\"BUDGET\";"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayRuntimeConfig.java",
+        "exists": false,
+        "sha256": null,
+        "finding": "当前公开路径不存在；不得沿用原私库源码/测试结论"
+      },
+      {
+        "path": "chengyinhub-xcx/pages/publish/fabu/theme-runtime.js",
+        "exists": true,
+        "sha256": "9d14fa5a8c7879e09f1c8a459718c9ba3e1801f4d0cddbeb4e46ba04be661667",
+        "evidence": [
+          {
+            "line": 14,
+            "code": "if (!row) { row = { index, hpCost: 0, luckCost: 0, grants: [], eggs: [] }; c.chapters.push(row); }"
+          },
+          {
+            "line": 53,
+            "code": "runtimeRewardOpen: false, subtitleEditing: false, runtimeBingoIndex: 0, runtimeCompletionIndex: -1, runtimeChapterCosts: { hpCost: 0, luckCost: 0 },"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeRuntimeEngine.java",
+        "exists": true,
+        "sha256": "3599c77db5a23a2f176ede66e9721ac0e051d9abd18b0affc19b1565cf4b5e14",
+        "evidence": [
+          {
+            "line": 19,
+            "code": "state.getVariables().put(\"sys.actions\", 0);"
+          },
+          {
+            "line": 28,
+            "code": "if(!config.has(\"actionSources\") || contains(config.path(\"actionSources\"),source))state.getVariables().put(\"sys.actions\", number(state, \"sys.actions\") + 1);"
+          },
+          {
+            "line": 154,
+            "code": "result.put(\"hp\",number(state,\"sys.hp\"));result.put(\"luck\",number(state,\"sys.luck\"));result.put(\"actions\",number(state,\"sys.actions\"));"
+          },
+          {
+            "line": 177,
+            "code": "if(rules.isCheckEnabled() && rules.getHp().isEnabled())state.getVariables().put(\"sys.hp\",Math.max(0,number(state,\"sys.hp\")-reduceHpCost(config,state,ch.path(\"hpCost\").asInt())));"
+          },
+          {
+            "line": 209,
+            "code": "view.put(\"awaitingRescue\",state.getThemeRuntime().path(\"awaitingRescue\").asBoolean());view.put(\"rescues\",state.getThemeRuntime().path(\"rescues\").asInt());view.put(\"actions\",number(state,\"sys.actions\"));view.put(\"actionLimit\",config.path(\"ac"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeRuntimeConfig.java",
+        "exists": true,
+        "sha256": "f2234d2bbe5e32c60ae62d1ce1f1e923814b6a6157335c309815fd838be4dfc1",
+        "evidence": [
+          {
+            "line": 11,
+            "code": "private static final Set<String> ROOT = set(\"schemaVersion\", \"capacity\", \"hpName\", \"luckName\", \"items\", \"grants\", \"events\", \"scenes\", \"rotation\", \"currentScene\", \"replayEnabled\", \"endings\", \"card\", \"rotationAnchor\", \"actionLimit\", \"actionSo"
+          },
+          {
+            "line": 23,
+            "code": "if(config.has(\"actionLimit\"))integer(config,\"actionLimit\",1,99999);"
+          },
+          {
+            "line": 89,
+            "code": "fields(ch,set(\"index\",\"hpCost\",\"luckCost\",\"grants\",\"eggs\")); integer(ch,\"index\",0,199);"
+          },
+          {
+            "line": 91,
+            "code": "integer(ch,\"hpCost\",0,999);integer(ch,\"luckCost\",0,999);"
+          },
+          {
+            "line": 160,
+            "code": "if (!var.matches(\"(clue|relation|counter)\\\\.[a-z][a-z0-9_]{0,47}\") && !set(\"sys.hp\", \"sys.luck\", \"sys.actions\").contains(var)) fail(\"条件状态不受支持\");"
+          }
+        ]
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "X017",
+    "title": "全场一次设施竞争（并发仅一队结算、后到者免费改选）",
+    "priority": "第2级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "待核",
+    "executionClass": "后置新能力",
+    "actualChain": "GameSessionRuntimeServiceImpl已有活动锁及命令回执；原GameplayCooperationEngine/competitionLost公开未检出",
+    "remainingBreakpoint": "活动锁本身不能证明一次设施赢家/败者免费改选，原引用缺失。",
+    "codeStillNeeded": "先确认是否有其他现用设施实现；若无则新增合作玩法后置，本轮不造改选交互。",
+    "verificationStillNeeded": "三队同时领取、唯一胜者资源、败者无扣与改选仅新动作成本；当前无执行证据。",
+    "newCapabilityDeferred": true,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayCooperationEngine.java",
+        "exists": false,
+        "sha256": null,
+        "finding": "当前公开路径不存在；不得沿用原私库源码/测试结论"
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+        "exists": true,
+        "sha256": "6e52c74d1d6e225a842080d73b15b6c559d123a08cd43c4af17d30ce1800e9bb",
+        "evidence": [
+          {
+            "line": 176,
+            "code": "GameSession session = runtimeMapper.selectSessionByActivityForUpdate(activityId);"
+          },
+          {
+            "line": 191,
+            "code": "GameSession session = runtimeMapper.selectSessionByActivityForUpdate(activityId);"
+          },
+          {
+            "line": 261,
+            "code": "public GameCommandReceiptView command(GameActorContext actor, GameSessionCommand command) {"
+          },
+          {
+            "line": 282,
+            "code": "GameCommandReceipt concurrent = runtimeMapper.selectReceiptForUpdate(command.getActivityId(), actor.getMemberId(),"
+          }
+        ]
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "X018",
+    "title": "章节运行约束（互斥组、任选N、额外节点、机动额度）",
+    "priority": "第2级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "待核",
+    "executionClass": "后置新能力",
+    "actualChain": "公开ThemeRuntimeConfig有chapters及ThemeRuntimeEngine章节状态，原GameplayCooperationEngine缺失",
+    "remainingBreakpoint": "互斥组/任选N/openExtraFacility/actPassed的原消费者未找到；普通章节状态不等于完整约束。",
+    "codeStillNeeded": "核当前已配置规则真源和发布回读；缺失约束作为新能力后置，不依据私库G01结论重写。",
+    "verificationStillNeeded": "同队互斥二次拒绝/任选额满拒绝/额外节点权限与重进；先找到消费者再定验收。",
+    "newCapabilityDeferred": true,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayCooperationEngine.java",
+        "exists": false,
+        "sha256": null,
+        "finding": "当前公开路径不存在；不得沿用原私库源码/测试结论"
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeRuntimeConfig.java",
+        "exists": true,
+        "sha256": "f2234d2bbe5e32c60ae62d1ce1f1e923814b6a6157335c309815fd838be4dfc1",
+        "evidence": [
+          {
+            "line": 11,
+            "code": "private static final Set<String> ROOT = set(\"schemaVersion\", \"capacity\", \"hpName\", \"luckName\", \"items\", \"grants\", \"events\", \"scenes\", \"rotation\", \"currentScene\", \"replayEnabled\", \"endings\", \"card\", \"rotationAnchor\", \"actionLimit\", \"actionSo"
+          },
+          {
+            "line": 45,
+            "code": "chapters(config, items); grants(config, items); events(config, items); endings(config, items); card(config.path(\"card\"));"
+          },
+          {
+            "line": 86,
+            "code": "private static void chapters(JsonNode root, Set<String> items) {"
+          },
+          {
+            "line": 88,
+            "code": "for(JsonNode ch:rows(root,\"chapters\",200)) {"
+          },
+          {
+            "line": 186,
+            "code": "public static String remapAll(String raw, Map<Long,Long> nodes, Map<Long,Long> chapters, Map<Long,Long> npcs) {"
+          },
+          {
+            "line": 190,
+            "code": "String mapped=com.chengyinhub.business.domain.JourneyStory.remapChapterIds(scene.path(\"journeyStory\").toString(),chapters);"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeRuntimeEngine.java",
+        "exists": true,
+        "sha256": "3599c77db5a23a2f176ede66e9721ac0e051d9abd18b0affc19b1565cf4b5e14",
+        "evidence": [
+          {
+            "line": 165,
+            "code": "public void chapterStart(JsonNode config,TopicRouteEngine.State state,JourneyRules rules,JsonNode ch,long now) {"
+          },
+          {
+            "line": 166,
+            "code": "ObjectNode states=state.getThemeRuntime().with(\"chapters\");String key=String.valueOf(ch.path(\"index\").asInt());"
+          },
+          {
+            "line": 171,
+            "code": "public void chapterEnd(JsonNode config,TopicRouteEngine.State state,JourneyRules rules,JsonNode ch,long now) {"
+          },
+          {
+            "line": 172,
+            "code": "chapterStart(config,state,rules,ch,now);"
+          },
+          {
+            "line": 173,
+            "code": "ObjectNode progress=state.getThemeRuntime().with(\"chapters\").with(String.valueOf(ch.path(\"index\").asInt()));"
+          },
+          {
+            "line": 187,
+            "code": "for(JsonNode p:state.getThemeRuntime().with(\"chapters\"))if(!p.path(\"ended\").asBoolean())((ObjectNode)p).put(\"steps\",Math.min(999999,p.path(\"steps\").asInt()+delta));"
+          },
+          {
+            "line": 190,
+            "code": "for(JsonNode ch:config.path(\"chapters\")) {"
+          },
+          {
+            "line": 191,
+            "code": "JsonNode p=state.getThemeRuntime().path(\"chapters\").path(String.valueOf(ch.path(\"index\").asInt()));"
+          }
+        ]
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "M0141",
+    "title": "NPC 人设和事实边界",
+    "priority": "第3级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "部分缺口",
+    "executionClass": "后置新能力",
+    "actualChain": "shop-chat/roam chat→NpcChatService persona+memory/merchantFacts→AiGatewayService.generate→safeText持久化",
+    "remainingBreakpoint": "人设和聚合事实已有，未见逐事实来源ID/时间/版本；生成文字不是付款/领奖权威结果。",
+    "codeStillNeeded": "本轮防越权与安全输出；逐事实引用/工具核验为新增增强后置。",
+    "verificationStillNeeded": "当前prompt不得混其他用户/场景，业务结果只查权威接口；模型事实准确性不能凭单测保证。",
+    "newCapabilityDeferred": true,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java",
+        "exists": true,
+        "sha256": "e6f9d8606f83dde763da0fc55e7158bfb3e257b3239c2de1f45510ed3586fe68",
+        "evidence": [
+          {
+            "line": 79,
+            "code": "private MerchantNpcFactsBuilder merchantFactsBuilder;"
+          },
+          {
+            "line": 206,
+            "code": "profile -> merchantFactsBuilder.build(profile, merchantId),"
+          },
+          {
+            "line": 332,
+            "code": "String mem = memory.apply(profile);"
+          },
+          {
+            "line": 333,
+            "code": "String system = profile.getPersona() + \"\\n\" + (mem == null ? \"\" : mem);"
+          },
+          {
+            "line": 334,
+            "code": "AiGatewayResult result = aiGatewayService.generate(processing.getUserId(), \"player\", bizType,"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-xcx/pages/play/index.js",
+        "exists": true,
+        "sha256": "6fef742d00bdea90584014730777ce8be33b0a586e23dbc2b56fd15210092dd6",
+        "evidence": []
+      },
+      {
+        "path": "chengyinhub-xcx/components/cy/npc-chat/index.js",
+        "exists": true,
+        "sha256": "2f2200ec5a13abfb6d40549eb5807f0105f95f9c457e07efeeeed3c0a0880356",
+        "evidence": []
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "M0142",
+    "title": "NPC 记忆范围",
+    "priority": "第3级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "部分缺口",
+    "executionClass": "后置新能力",
+    "actualChain": "NpcMemoryBuilder.buildRoam仅当前session格子/POI聚合→NpcChatService注入；shop独立MerchantNpcFactsBuilder",
+    "remainingBreakpoint": "没有持久逐NPC事实摘要/查看删除消费者；saveLog不是记忆。",
+    "codeStillNeeded": "保持当前最小聚合范围；跨会话长期记忆和删除管理属于新能力后置。",
+    "verificationStillNeeded": "既有同人换场/不同人同NPC事实隔离；长期记忆不得标已实现。",
+    "newCapabilityDeferred": true,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcMemoryBuilder.java",
+        "exists": true,
+        "sha256": "9f4943a015c1c6ea12e59d7f0f88f56900245672e940f507f8fc02acbadfe89e",
+        "evidence": [
+          {
+            "line": 34,
+            "code": "public String build(Long userId, Long activityId)"
+          },
+          {
+            "line": 73,
+            "code": "public String buildRoam(RoamSession session)"
+          },
+          {
+            "line": 88,
+            "code": "log.debug(\"[NpcMemory] buildRoam failed, silent degrade\", e);"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java",
+        "exists": true,
+        "sha256": "e6f9d8606f83dde763da0fc55e7158bfb3e257b3239c2de1f45510ed3586fe68",
+        "evidence": [
+          {
+            "line": 79,
+            "code": "private MerchantNpcFactsBuilder merchantFactsBuilder;"
+          },
+          {
+            "line": 165,
+            "code": "profile -> memoryBuilder.buildRoam(session), \"npc_chat\", message);"
+          },
+          {
+            "line": 206,
+            "code": "profile -> merchantFactsBuilder.build(profile, merchantId),"
+          },
+          {
+            "line": 343,
+            "code": "saveLog(processing.getUserId(), processing.getSessionId(), profileId, message, result.getText(), 0,"
+          },
+          {
+            "line": 351,
+            "code": "saveLog(processing.getUserId(), processing.getSessionId(), profile.getId(), message, null,"
+          },
+          {
+            "line": 362,
+            "code": "saveLog(processing.getUserId(), processing.getSessionId(), profile == null ? null : profile.getId(),"
+          },
+          {
+            "line": 623,
+            "code": "private void saveLog(Long userId, Long sessionId, Long profileId, String message, String reply,"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-xcx/pages/play/index.js",
+        "exists": true,
+        "sha256": "6fef742d00bdea90584014730777ce8be33b0a586e23dbc2b56fd15210092dd6",
+        "evidence": [
+          {
+            "line": 676,
+            "code": "this.rebuild();"
+          },
+          {
+            "line": 2398,
+            "code": "this.rebuild();"
+          },
+          {
+            "line": 3500,
+            "code": "that.rebuild();"
+          },
+          {
+            "line": 3557,
+            "code": "that.rebuild();"
+          },
+          {
+            "line": 3720,
+            "code": "rebuild() {"
+          },
+          {
+            "line": 3800,
+            "code": "// ⚠️ rebuild() 在发牌那 2.5s 内是可达的(定位成功回调 / 前往 / 结束前往 / 完成任务"
+          },
+          {
+            "line": 3970,
+            "code": "that.rebuild();"
+          },
+          {
+            "line": 3997,
+            "code": "// 性能:回灌地图会触发 free-map 全量 _rebuild(重画节点+circles+箭头),GPS 每 1-3s 一次太频繁,"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-xcx/components/cy/npc-chat/index.js",
+        "exists": true,
+        "sha256": "2f2200ec5a13abfb6d40549eb5807f0105f95f9c457e07efeeeed3c0a0880356",
+        "evidence": []
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "M0143",
+    "title": "NPC 已知剧情限制",
+    "priority": "第3级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "部分缺口",
+    "executionClass": "当前修补",
+    "actualChain": "当前NpcChatService只见memoryBuilder.buildRoam；NpcMemoryBuilder.build含status>=2旧判据；实际玩法完成按status==1",
+    "remainingBreakpoint": "旧build未检到实际消费者，不能称当前已泄剧情；新增活动NPC揭露投影未接。",
+    "codeStillNeeded": "先确认所有build调用；若未用不接入，维护当前事实范围；活动剧情NPC扩展后置。",
+    "verificationStillNeeded": "当前prompt快照无他人/未揭露内容；未使用旧方法不当已上线安全漏洞。",
+    "newCapabilityDeferred": true,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcMemoryBuilder.java",
+        "exists": true,
+        "sha256": "9f4943a015c1c6ea12e59d7f0f88f56900245672e940f507f8fc02acbadfe89e",
+        "evidence": [
+          {
+            "line": 56,
+            "code": "if (status != null && status >= 2)"
+          },
+          {
+            "line": 58,
+            "code": "completed++; // status >= 2 视为已完成"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+        "exists": true,
+        "sha256": "41cc9717d9811eb394b83649a79446c94963bd5efc93bd3f12ec80f0972979c7",
+        "evidence": [
+          {
+            "line": 2314,
+            "code": "if (p.getStatus() != null && p.getStatus() == 1) doneIds.add(p.getNodeId());"
+          },
+          {
+            "line": 2357,
+            "code": "if (p.getStatus() != null && p.getStatus() == 1) return null;"
+          },
+          {
+            "line": 3262,
+            "code": "if (p.getStatus() != null && p.getStatus() == 1) myDone++; // 探针无 status 过滤,Java 侧只数完成行"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java",
+        "exists": true,
+        "sha256": "e6f9d8606f83dde763da0fc55e7158bfb3e257b3239c2de1f45510ed3586fe68",
+        "evidence": [
+          {
+            "line": 165,
+            "code": "profile -> memoryBuilder.buildRoam(session), \"npc_chat\", message);"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-xcx/pages/play/index.js",
+        "exists": true,
+        "sha256": "6fef742d00bdea90584014730777ce8be33b0a586e23dbc2b56fd15210092dd6",
+        "evidence": []
+      },
+      {
+        "path": "chengyinhub-xcx/components/cy/npc-chat/index.js",
+        "exists": true,
+        "sha256": "2f2200ec5a13abfb6d40549eb5807f0105f95f9c457e07efeeeed3c0a0880356",
+        "evidence": []
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "M0144",
+    "title": "NPC 上下文恢复",
+    "priority": "第3级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "部分缺口",
+    "executionClass": "后置新能力",
+    "actualChain": "NpcChatService查原requestId→fromStored安全文字；新请求重建当前buildRoam聚合",
+    "remainingBreakpoint": "原答案恢复已有；持久摘要恢复/版本迁移/删除后不注入不存在同等消费者。",
+    "codeStillNeeded": "本轮只修现有原答案恢复与请求防重；新增长期上下文恢复后置。",
+    "verificationStillNeeded": "丢响应原请求回原答案不调模型；跨场景不注入旧记录；摘要删除能力不宣称存在。",
+    "newCapabilityDeferred": true,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcMemoryBuilder.java",
+        "exists": true,
+        "sha256": "9f4943a015c1c6ea12e59d7f0f88f56900245672e940f507f8fc02acbadfe89e",
+        "evidence": [
+          {
+            "line": 73,
+            "code": "public String buildRoam(RoamSession session)"
+          },
+          {
+            "line": 84,
+            "code": "+ \" 个地点，当前处于第一里程碑。\";"
+          },
+          {
+            "line": 88,
+            "code": "log.debug(\"[NpcMemory] buildRoam failed, silent degrade\", e);"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java",
+        "exists": true,
+        "sha256": "e6f9d8606f83dde763da0fc55e7158bfb3e257b3239c2de1f45510ed3586fe68",
+        "evidence": [
+          {
+            "line": 119,
+            "code": "return fromStored(existing);"
+          },
+          {
+            "line": 165,
+            "code": "profile -> memoryBuilder.buildRoam(session), \"npc_chat\", message);"
+          },
+          {
+            "line": 239,
+            "code": "return fromStored(existing);"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-xcx/pages/play/index.js",
+        "exists": true,
+        "sha256": "6fef742d00bdea90584014730777ce8be33b0a586e23dbc2b56fd15210092dd6",
+        "evidence": []
+      },
+      {
+        "path": "chengyinhub-xcx/components/cy/npc-chat/index.js",
+        "exists": true,
+        "sha256": "2f2200ec5a13abfb6d40549eb5807f0105f95f9c457e07efeeeed3c0a0880356",
+        "evidence": []
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "M0147",
+    "title": "AI 并发租约",
+    "priority": "第3级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "部分缺口",
+    "executionClass": "当前修补",
+    "actualChain": "NpcChatService.startLeaseHeartbeat→renewLease；finish→finishIfLeaseOwned；Mapper条件status+token",
+    "remainingBreakpoint": "当前公开SQL未带lease_until>now，到期但token未变仍可续租/写终态；心跳失权仅日志。",
+    "codeStillNeeded": "补既有租约到期条件与调用前失权阻断，未知上游不盲重调；远端取消新能力后置。",
+    "verificationStillNeeded": "真实MySQL到期续租/晚到结果0行、心跳丢失不新调provider；真实长调用边界独立记录。",
+    "newCapabilityDeferred": true,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java",
+        "exists": true,
+        "sha256": "e6f9d8606f83dde763da0fc55e7158bfb3e257b3239c2de1f45510ed3586fe68",
+        "evidence": [
+          {
+            "line": 407,
+            "code": "int updated = npcChatRequestMapper.renewLease(processing.getUserId(),"
+          },
+          {
+            "line": 412,
+            "code": "log.warn(\"[NpcChat] lease heartbeat lost userId={} requestId={}\","
+          },
+          {
+            "line": 461,
+            "code": "if (npcChatRequestMapper.finishIfLeaseOwned(terminal) == 1)"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/resources/mapper/business/NpcChatRequestMapper.xml",
+        "exists": true,
+        "sha256": "f96af7e5734272e4cb592c793a2099091f73b91140f84f61f749ee92087bdd5f",
+        "evidence": [
+          {
+            "line": 51,
+            "code": "lease_token = null, lease_until = null, active_slot = null, completed_at = now(), update_time = now()"
+          },
+          {
+            "line": 53,
+            "code": "and status = 'PROCESSING' and lease_until &lt; now()"
+          },
+          {
+            "line": 56,
+            "code": "<update id=\"finishIfLeaseOwned\" parameterType=\"com.chengyinhub.business.domain.NpcChatRequest\">"
+          },
+          {
+            "line": 63,
+            "code": "and status = 'PROCESSING' and lease_token = #{leaseToken}"
+          },
+          {
+            "line": 66,
+            "code": "<update id=\"renewLease\">"
+          },
+          {
+            "line": 68,
+            "code": "set lease_until = #{leaseUntil}, update_time = now()"
+          },
+          {
+            "line": 70,
+            "code": "and status = 'PROCESSING' and lease_token = #{leaseToken}"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-xcx/pages/play/index.js",
+        "exists": true,
+        "sha256": "6fef742d00bdea90584014730777ce8be33b0a586e23dbc2b56fd15210092dd6",
+        "evidence": []
+      },
+      {
+        "path": "chengyinhub-xcx/components/cy/npc-chat/index.js",
+        "exists": true,
+        "sha256": "2f2200ec5a13abfb6d40549eb5807f0105f95f9c457e07efeeeed3c0a0880356",
+        "evidence": []
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "M0148",
+    "title": "AI 配额与预算",
+    "priority": "第3级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "部分缺口",
+    "executionClass": "后置新能力",
+    "actualChain": "AiGatewayService rateGroup→日rateKey计数→estimateSingle记录token估算",
+    "remainingBreakpoint": "日次数不是token/货币预算；无真实成本预留/账单对账消费者证据。",
+    "codeStillNeeded": "日次数恢复缺陷归M0152当前修补；新增金额预算/供应商账单平台后置。",
+    "verificationStillNeeded": "现计数限额和分池先验；将来成本必须供应商账单回读，估算不能当实际支出。",
+    "newCapabilityDeferred": true,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+        "exists": true,
+        "sha256": "e02e5fe4f5e917e3de031d1138860715f9b4ec3ed1ab441bd2eb72f063b1f7c7",
+        "evidence": [
+          {
+            "line": 113,
+            "code": "String rateGroup = rateGroupOf(bizType);"
+          },
+          {
+            "line": 115,
+            "code": "used = redisTemplate.opsForValue().increment(rateKey);"
+          },
+          {
+            "line": 170,
+            "code": "int tokenIn = estimateSingle(systemPrompt) + estimateSingle(userPrompt);"
+          },
+          {
+            "line": 185,
+            "code": "int tokenIn = estimateSingle(systemPrompt) + estimateSingle(userPrompt);"
+          },
+          {
+            "line": 186,
+            "code": "int tokenOut = estimateSingle(modelText);"
+          },
+          {
+            "line": 231,
+            "code": "String rateGroup = rateGroupOf(bizType);"
+          },
+          {
+            "line": 267,
+            "code": "return dailyLimitOf(rateGroupOf(bizType));"
+          },
+          {
+            "line": 279,
+            "code": "String rateGroup = rateGroupOf(bizType);"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-xcx/pages/play/index.js",
+        "exists": true,
+        "sha256": "6fef742d00bdea90584014730777ce8be33b0a586e23dbc2b56fd15210092dd6",
+        "evidence": []
+      },
+      {
+        "path": "chengyinhub-xcx/components/cy/npc-chat/index.js",
+        "exists": true,
+        "sha256": "2f2200ec5a13abfb6d40549eb5807f0105f95f9c457e07efeeeed3c0a0880356",
+        "evidence": []
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  },
+  {
+    "id": "M0145",
+    "title": "语音识别与回复状态",
+    "priority": "第3级",
+    "endpointOwnership": "共用backend",
+    "scopeNote": "已找到小程序实际调用或共用玩法后端；不属于App专属。",
+    "publicStatus": "部分缺口",
+    "executionClass": "当前修补",
+    "actualChain": "小程序play voice-chat/shop-chat→NPC文字终态finish→attachVoice synthesize；fromStored只恢复文字字段",
+    "remainingBreakpoint": "TTS错误只日志，audioUrl不在request终态；重放无已保存音频任务/过期恢复。ASR链具体状态尚需继续核。",
+    "codeStillNeeded": "先明确现文字成功/语音失败的返回和不重复对话；新增音频任务恢复系统后置。",
+    "verificationStillNeeded": "文字成功TTS失败时原文字可恢复、不重复扣模型次数；真实录音/音频URL过期另验。",
+    "newCapabilityDeferred": true,
+    "sourceEvidence": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java",
+        "exists": true,
+        "sha256": "e6f9d8606f83dde763da0fc55e7158bfb3e257b3239c2de1f45510ed3586fe68",
+        "evidence": [
+          {
+            "line": 341,
+            "code": "attachVoice(profile, response);"
+          },
+          {
+            "line": 373,
+            "code": "private void attachVoice(NpcProfile profile, NpcChatResp response)"
+          },
+          {
+            "line": 382,
+            "code": "response.setAudioUrl(voiceCloneClient.synthesize(profile.getVoiceId(), response.getSafeText()));"
+          },
+          {
+            "line": 386,
+            "code": "log.warn(\"[NpcChat] voice synthesis failed profileId={}\", profile.getId(), e);"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/resources/mapper/business/NpcChatRequestMapper.xml",
+        "exists": true,
+        "sha256": "f96af7e5734272e4cb592c793a2099091f73b91140f84f61f749ee92087bdd5f",
+        "evidence": [
+          {
+            "line": 50,
+            "code": "limit_type = null, retry_after_seconds = 0, retryable = 1, safe_text = #{safeText}, ai = 1,"
+          },
+          {
+            "line": 60,
+            "code": "safe_text = #{safeText}, ai = #{ai}, lease_token = null, lease_until = null,"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-xcx/pages/play/index.js",
+        "exists": true,
+        "sha256": "6fef742d00bdea90584014730777ce8be33b0a586e23dbc2b56fd15210092dd6",
+        "evidence": [
+          {
+            "line": 1368,
+            "code": "*  只有作者真配了 audioUrl 才渲染这颗按钮 —— 没有音频就不留一个点了没反应的壳。 */"
+          },
+          {
+            "line": 1774,
+            "code": "path: '/api/ai/npc/voice-chat',"
+          },
+          {
+            "line": 1785,
+            "code": "d.data && d.data.audioUrl);"
+          },
+          {
+            "line": 1826,
+            "code": "replaceIdx, d.audioUrl);"
+          },
+          {
+            "line": 1831,
+            "code": "_pushShopNpcReply(text, replaceIdx, audioUrl) {"
+          },
+          {
+            "line": 1841,
+            "code": "this._playShopNpcVoice(audioUrl);"
+          },
+          {
+            "line": 1844,
+            "code": "_playShopNpcVoice(audioUrl) {"
+          },
+          {
+            "line": 1845,
+            "code": "if (!audioUrl) return;"
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-xcx/components/cy/npc-chat/index.js",
+        "exists": true,
+        "sha256": "2f2200ec5a13abfb6d40549eb5807f0105f95f9c457e07efeeeed3c0a0880356",
+        "evidence": [
+          {
+            "line": 143,
+            "code": "this._startTypewriter(generation, payload.safeText || '', payload.audioUrl);"
+          },
+          {
+            "line": 155,
+            "code": "_startTypewriter: function (generation, text, audioUrl) {"
+          },
+          {
+            "line": 156,
+            "code": "this._playVoice(audioUrl);"
+          },
+          {
+            "line": 222,
+            "code": "_playVoice: function (audioUrl) {"
+          },
+          {
+            "line": 223,
+            "code": "if (this.properties.scope !== 'merchant' || !audioUrl) return;"
+          },
+          {
+            "line": 227,
+            "code": "audio.src = audioUrl;"
+          }
+        ]
+      }
+    ],
+    "readHead": "0f0c32f1edc955f6117108daecbb492652212931",
+    "auditDate": "2026-10-13",
+    "evidenceLevel": "当前公开源码静态核对；0业务改动；0执行测试；不继承private测试通过",
+    "userDecisionRequired": false,
+    "questionNote": "本次未确认必须向用户询问的新产品问题；已有规则不再问。调用/实现未知由工程继续核实。"
+  }
+]

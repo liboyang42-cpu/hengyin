@@ -116,7 +116,8 @@ EXPECTED = {
     # 2026-09-19 RUN-01:88 → 89,+1 = autoVerifyExpiredSessions_scansOnlyEligibleAndCasGuardsRace。
     # 2026-09-21 CYV-P1-003:+2 人工退款冻结/解冻与 RR 旧快照并发负控；+1 服务端版本锁定 8.0.45。
     # 2026-10-03:92 → 93，新增已取消活动在 RR 旧快照下仍拒核销的真库用例。
-    "RegistrationFundsMybatisIntegrationTest": 92,
+    # 2026-10-13 小程序底层A包:92 → 94,+2 = 取消内已确认支付保原外层回滚 / 未提交外层事务回调不认领inbox。
+    "RegistrationFundsMybatisIntegrationTest": 94,
     # 2026-09-15:9 → 10,+1 = cityNodeFrozenCouponSurvivesStockFailureAndConcurrentRetry
     # (f178b58ae 有意新增:据点冻结券在库存失败后保留权益、并发重试只发一张)。
     # 2026-09-17 release-0917 集成:fix-club-0917 拍板6 停用 verify_answer,删掉 5 条答题验票真库 IT
@@ -223,7 +224,8 @@ EXPECTED = {
     "PhotoReviewProgressMybatisIntegrationTest": 6,
     "SpoilerAccessMybatisIntegrationTest": 7,
     "SquareEditFollowMybatisIntegrationTest": 7,
-    "RoamSessionWriteMybatisIntegrationTest": 10,
+    # 2026-10-13 小程序底层C包:10 → 13,+3 = 结束后档案幂等 / 徽章失败不撤原结算 / 原XP快照并发只发一次。
+    "RoamSessionWriteMybatisIntegrationTest": 13,
     # 2026-09-17 客诉期提现闸(9-16 晚拍板 1-5):到期前不可提现 / 到期后可提现 / 涉诉只冻结部分
     # (含结案补结与退款作废)/ 超期退款欠款从后续结算抵扣,共 5 条。
     # 2026-09-17 总控裁定补做:+2 平台人工倒扣余额不足扣到 0 + 差额记欠款 / 按加锁读的当前余额算(非事务快照)且重复复核空转。

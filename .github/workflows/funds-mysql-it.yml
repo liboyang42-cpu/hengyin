@@ -1,6 +1,6 @@
 name: Funds MySQL IT
 
-# 资金真实 MySQL 集成测试门禁。GitHub-hosted ubuntu-latest 跑(本机 runner 只留给部署)。
+# 资金真实 MySQL 集成测试门禁：公开仓库使用标准 GitHub-hosted Ubuntu，不依赖 VPS 或仓库密钥。
 #
 # 为什么单独一个 workflow:这几套必须连真 MySQL 才有意义。它们用
 # @EnabledIfEnvironmentVariable 门控,普通 CI 会静默跳过并仍"绿"——等于没验证。

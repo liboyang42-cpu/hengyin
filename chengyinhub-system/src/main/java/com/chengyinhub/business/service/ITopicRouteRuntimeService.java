@@ -24,6 +24,8 @@ public interface ITopicRouteRuntimeService {
     default List<Map<String, Object>> themeHistory(Long memberId, Long topicId) { throw new UnsupportedOperationException(); }
     default JsonNode nodeRuntimeConfig(Long memberId, Long topicId, Long nodeId) { return null; }
     default String playInstance(Long memberId, Long topicId, Long activityId) { return "default"; }
+    /** 本人在该主题/场次是否有进行中的局(用于「已开局可打完」)；默认无。 */
+    default boolean hasRunningSession(Long memberId, Long topicId, Long activityId) { return false; }
     TopicRouteState state(Long memberId, Long topicId, Long activityId);
     TopicRouteState completeOpening(Long memberId, Long topicId, Long activityId, Long chapterId, Integer expectedVersion);
     void requireOpeningAccess(Long memberId, Long topicId, Long activityId, Long nodeId);

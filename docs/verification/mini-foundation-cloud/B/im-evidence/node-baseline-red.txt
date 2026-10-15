@@ -1,0 +1,231 @@
+✖ storage failure blocks sending and preserves current draft (7.412322ms)
+✖ unknown resend first reads original receipt; missing/failed response never blindly resends (2.158387ms)
+✖ found receipt reconciles original bubble without a second write (1.889162ms)
+✖ authoritative not-found retries only the original immutable payload (1.692194ms)
+✖ reentry persists only original IDs and recovers found receipts without chat plaintext (4.683563ms)
+✖ cleared recovery records make late send success unable to rebuild local state (2.17323ms)
+✖ delete success invalidates outstanding message/send callbacks (2.306381ms)
+✖ switched account cannot apply old history, current load, polling or route results (1.808113ms)
+✖ incremental pagination drains every missing segment and preserves displayed readTo (1.500876ms)
+✖ private history route uses safe projection, never privileged normal details, and replaces old cached name (1.759704ms)
+✖ historical route revalidation hides cached names and drops older public response after private result (1.68715ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 0
+ℹ fail 11
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 114.780251
+
+✖ failing tests:
+
+test at chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:28:1
+✖ storage failure blocks sending and preserves current draft (7.412322ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (<workspace>/chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:30:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:34:1
+✖ unknown resend first reads original receipt; missing/failed response never blindly resends (2.158387ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '/api/im/send'
+  - '/api/im/send-receipt'
+                 ^
+  
+      at TestContext.<anonymous> (<workspace>/chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:37:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/api/im/send',
+    expected: '/api/im/send-receipt',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:43:1
+✖ found receipt reconciles original bubble without a second write (1.889162ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'tmp_<generated-original-client-id>'
+  - 61
+  
+      at TestContext.<anonymous> (<workspace>/chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:48:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'tmp_<generated-original-client-id>',
+    expected: 61,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:51:1
+✖ authoritative not-found retries only the original immutable payload (1.692194ms)
+  TypeError: Cannot read properties of undefined (reading 'url')
+      at TestContext.<anonymous> (<workspace>/chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:55:30)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:60:1
+✖ reentry persists only original IDs and recovers found receipts without chat plaintext (4.683563ms)
+  TypeError: next.page.recoverPending is not a function
+      at TestContext.<anonymous> (<workspace>/chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:63:50)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:70:1
+✖ cleared recovery records make late send success unable to rebuild local state (2.17323ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '{"plusSheetShow":false,"plusSheetItems":["图片","位置","路线"],"moreSheetShow":false,"moreSheetItems":["举报","拉黑","清空聊天"],"readOnly":false,"readOnlyTip":"系统通知，不能回复","statusBarHeight":20,"navBarHeight":44,"headerH":64,"heroH":0,"inputH":60,"safeBottom":0,"conversationId":26,"name":"","heroName":"","avatar":"","loadState":"ready","loadErrorText":"","type":1,"myId":1,"myAvatar":"","msgs":[{"id":61,"senderId":1,"msgType":1,"content":"original draft","clientMessageId":"<generated-original-client-id>","timeDivider":"","card":null,"cardTarget":false,"displayName":""}],"reviewResult":null,"text":"","sending":false,"hasMore":false,"cursor":0,"loadingMore":false,"loadMoreError":"","toView":"","disabled":false,"disabledText":"","sendBlockedMap":{"loading":"消息加载中…","missing":"链接已失效，回消息列表重新进入","closed":"组局已结束，不能继续聊天","error":"消息没加载出来，点上方「重试」再试"},"topicCache":{},"routePickerOpen":false,"routeKeyword":"","routeList":[],"routeLoading":false,"routeError":""}'
+  - '{"plusSheetShow":false,"plusSheetItems":["图片","位置","路线"],"moreSheetShow":false,"moreSheetItems":["举报","拉黑","清空聊天"],"readOnly":false,"readOnlyTip":"系统通知，不能回复","statusBarHeight":20,"navBarHeight":44,"headerH":64,"heroH":0,"inputH":60,"safeBottom":0,"conversationId":26,"name":"","heroName":"","avatar":"","loadState":"ready","loadErrorText":"","type":1,"myId":1,"myAvatar":"","msgs":[{"id":"tmp_<generated-original-client-id>","senderId":1,"msgType":1,"content":"original draft","card":null,"clientMessageId":"<generated-original-client-id>","sendPayload":{"msg_type":1,"content":"original draft","conversation_id":26,"client_message_id":"<generated-original-client-id>"},"sending":true,"failed":false,"timeDivider":""}],"reviewResult":null,"text":"","sending":true,"hasMore":false,"cursor":0,"loadingMore":false,"loadMoreError":"","toView":"","disabled":false,"disabledText":"","sendBlockedMap":{"loading":"消息加载中…","missing":"链接已失效，回消息列表重新进入","closed":"组局已结束，不能继续聊天","error":"消息没加载出来，点上方「重试」再试"},"topicCache":{},"routePickerOpen":false,"routeKeyword":"","routeList":[],"routeLoading":false,"routeError":""}'
+  
+      at TestContext.<anonymous> (<workspace>/chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:73:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '{"plusSheetShow":false,"plusSheetItems":["图片","位置","路线"],"moreSheetShow":false,"moreSheetItems":["举报","拉黑","清空聊天"],"readOnly":false,"readOnlyTip":"系统通知，不能回复","statusBarHeight":20,"navBarHeight":44,"headerH":64,"heroH":0,"inputH":60,"safeBottom":0,"conversationId":26,"name":"","heroName":"","avatar":"","loadState":"ready","loadErrorText":"","type":1,"myId":1,"myAvatar":"","msgs":[{"id":61,"senderId":1,"msgType":1,"content":"original draft","clientMessageId":"<generated-original-client-id>","timeDivider":"","card":null,"cardTarget":false,"displayName":""}],"reviewResult":null,"text":"","sending":false,"hasMore":false,"cursor":0,"loadingMore":false,"loadMoreError":"","toView":"","disabled":false,"disabledText":"","sendBlockedMap":{"loading":"消息加载中…","missing":"链接已失效，回消息列表重新进入","closed":"组局已结束，不能继续聊天","error":"消息没加载出来，点上方「重试」再试"},"topicCache":{},"routePickerOpen":false,"routeKeyword":"","routeList":[],"routeLoading":false,"routeError":""}',
+    expected: '{"plusSheetShow":false,"plusSheetItems":["图片","位置","路线"],"moreSheetShow":false,"moreSheetItems":["举报","拉黑","清空聊天"],"readOnly":false,"readOnlyTip":"系统通知，不能回复","statusBarHeight":20,"navBarHeight":44,"headerH":64,"heroH":0,"inputH":60,"safeBottom":0,"conversationId":26,"name":"","heroName":"","avatar":"","loadState":"ready","loadErrorText":"","type":1,"myId":1,"myAvatar":"","msgs":[{"id":"tmp_<generated-original-client-id>","senderId":1,"msgType":1,"content":"original draft","card":null,"clientMessageId":"<generated-original-client-id>","sendPayload":{"msg_type":1,"content":"original draft","conversation_id":26,"client_message_id":"<generated-original-client-id>"},"sending":true,"failed":false,"timeDivider":""}],"reviewResult":null,"text":"","sending":true,"hasMore":false,"cursor":0,"loadingMore":false,"loadMoreError":"","toView":"","disabled":false,"disabledText":"","sendBlockedMap":{"loading":"消息加载中…","missing":"链接已失效，回消息列表重新进入","closed":"组局已结束，不能继续聊天","error":"消息没加载出来，点上方「重试」再试"},"topicCache":{},"routePickerOpen":false,"routeKeyword":"","routeList":[],"routeLoading":false,"routeError":""}',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:76:1
+✖ delete success invalidates outstanding message/send callbacks (2.306381ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 0
+  
+      at TestContext.<anonymous> (<workspace>/chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:83:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:86:1
+✖ switched account cannot apply old history, current load, polling or route results (1.808113ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '{"plusSheetShow":false,"plusSheetItems":["图片","位置","路线"],"moreSheetShow":false,"moreSheetItems":["举报","拉黑","清空聊天"],"readOnly":false,"readOnlyTip":"系统通知，不能回复","statusBarHeight":20,"navBarHeight":44,"headerH":64,"heroH":0,"inputH":60,"safeBottom":0,"conversationId":26,"name":"","heroName":"","avatar":"","loadState":"ready","loadErrorText":"","type":1,"myId":1,"myAvatar":"","msgs":[{"id":99,"senderId":1,"msgType":1,"content":"original draft","clientMessageId":"other","timeDivider":"","card":null,"cardTarget":false,"displayName":""}],"reviewResult":null,"text":"original draft","sending":false,"hasMore":false,"cursor":0,"loadingMore":false,"loadMoreError":"","toView":"","disabled":false,"disabledText":"","sendBlockedMap":{"loading":"消息加载中…","missing":"链接已失效，回消息列表重新进入","closed":"组局已结束，不能继续聊天","error":"消息没加载出来，点上方「重试」再试"},"topicCache":{},"routePickerOpen":false,"routeKeyword":"","routeList":[],"routeLoading":false,"routeError":""}'
+  - '{"plusSheetShow":false,"plusSheetItems":["图片","位置","路线"],"moreSheetShow":false,"moreSheetItems":["举报","拉黑","清空聊天"],"readOnly":false,"readOnlyTip":"系统通知，不能回复","statusBarHeight":20,"navBarHeight":44,"headerH":64,"heroH":0,"inputH":60,"safeBottom":0,"conversationId":26,"name":"","heroName":"","avatar":"","loadState":"ready","loadErrorText":"","type":1,"myId":1,"myAvatar":"","msgs":[],"reviewResult":null,"text":"original draft","sending":false,"hasMore":true,"cursor":80,"loadingMore":true,"loadMoreError":"","toView":"","disabled":false,"disabledText":"","sendBlockedMap":{"loading":"消息加载中…","missing":"链接已失效，回消息列表重新进入","closed":"组局已结束，不能继续聊天","error":"消息没加载出来，点上方「重试」再试"},"topicCache":{},"routePickerOpen":false,"routeKeyword":"","routeList":[],"routeLoading":false,"routeError":""}'
+  
+      at TestContext.<anonymous> (<workspace>/chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:90:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '{"plusSheetShow":false,"plusSheetItems":["图片","位置","路线"],"moreSheetShow":false,"moreSheetItems":["举报","拉黑","清空聊天"],"readOnly":false,"readOnlyTip":"系统通知，不能回复","statusBarHeight":20,"navBarHeight":44,"headerH":64,"heroH":0,"inputH":60,"safeBottom":0,"conversationId":26,"name":"","heroName":"","avatar":"","loadState":"ready","loadErrorText":"","type":1,"myId":1,"myAvatar":"","msgs":[{"id":99,"senderId":1,"msgType":1,"content":"original draft","clientMessageId":"other","timeDivider":"","card":null,"cardTarget":false,"displayName":""}],"reviewResult":null,"text":"original draft","sending":false,"hasMore":false,"cursor":0,"loadingMore":false,"loadMoreError":"","toView":"","disabled":false,"disabledText":"","sendBlockedMap":{"loading":"消息加载中…","missing":"链接已失效，回消息列表重新进入","closed":"组局已结束，不能继续聊天","error":"消息没加载出来，点上方「重试」再试"},"topicCache":{},"routePickerOpen":false,"routeKeyword":"","routeList":[],"routeLoading":false,"routeError":""}',
+    expected: '{"plusSheetShow":false,"plusSheetItems":["图片","位置","路线"],"moreSheetShow":false,"moreSheetItems":["举报","拉黑","清空聊天"],"readOnly":false,"readOnlyTip":"系统通知，不能回复","statusBarHeight":20,"navBarHeight":44,"headerH":64,"heroH":0,"inputH":60,"safeBottom":0,"conversationId":26,"name":"","heroName":"","avatar":"","loadState":"ready","loadErrorText":"","type":1,"myId":1,"myAvatar":"","msgs":[],"reviewResult":null,"text":"original draft","sending":false,"hasMore":true,"cursor":80,"loadingMore":true,"loadMoreError":"","toView":"","disabled":false,"disabledText":"","sendBlockedMap":{"loading":"消息加载中…","missing":"链接已失效，回消息列表重新进入","closed":"组局已结束，不能继续聊天","error":"消息没加载出来，点上方「重试」再试"},"topicCache":{},"routePickerOpen":false,"routeKeyword":"","routeList":[],"routeLoading":false,"routeError":""}',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:93:1
+✖ incremental pagination drains every missing segment and preserves displayed readTo (1.500876ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  undefined !== 1
+  
+      at TestContext.<anonymous> (<workspace>/chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:95:28)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:105:1
+✖ private history route uses safe projection, never privileged normal details, and replaces old cached name (1.759704ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'old secret'
+  - '路线已不可用'
+  
+      at TestContext.<anonymous> (<workspace>/chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:108:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'old secret',
+    expected: '路线已不可用',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:112:1
+✖ historical route revalidation hides cached names and drops older public response after private result (1.68715ms)
+  TypeError: h.page.refreshRouteProjections is not a function
+      at TestContext.<anonymous> (<workspace>/chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js:114:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)

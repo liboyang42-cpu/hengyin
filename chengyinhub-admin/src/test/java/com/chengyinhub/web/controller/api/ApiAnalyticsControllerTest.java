@@ -40,6 +40,24 @@ class ApiAnalyticsControllerTest {
     }
 
     @Test
+    void recordBatchRejectsUnkeyedGeneralEventBeforePersistence() {
+        AjaxResult result = controller.recordBatch(batch(event("content_view", null)));
+        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        assertEquals("埋点必须携带幂等键", result.get(AjaxResult.MSG_TAG));
+        verifyNoInteractions(analyticsEventService);
+    }
+
+    @Test
+    void conflictingIdentityReturnsFailureRatherThanSuccessAcceptedZero() {
+        AnalyticsBatchDTO request = batch(event("content_view", "conflict"));
+        when(analyticsEventService.recordBatch(1001L, request))
+                .thenThrow(new IllegalArgumentException("private event details"));
+        AjaxResult result = controller.recordBatch(request);
+        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        assertEquals("事件幂等键已用于不同内容或未确认落库", result.get(AjaxResult.MSG_TAG));
+    }
+
+    @Test
     void recordBatchRejectsUnknownEventName() {
         AnalyticsBatchDTO batch = batch(event("unknown_event", "id-1"));
 

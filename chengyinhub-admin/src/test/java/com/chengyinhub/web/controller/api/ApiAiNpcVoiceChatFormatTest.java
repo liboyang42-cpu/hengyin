@@ -61,7 +61,7 @@ class ApiAiNpcVoiceChatFormatTest
         when(nodeService.selectCmsTopicNodeById(21L)).thenReturn(node);
 
         PlayTeamMapper playTeamMapper = mock(PlayTeamMapper.class);
-        when(playTeamMapper.hasPaidRegistration(1001L, 1, 31L)).thenReturn(1);
+        when(playTeamMapper.hasCurrentNpcRegistration(1001L, 31L)).thenReturn(1);
 
         npcChatService = mock(NpcChatService.class);
         NpcChatResp response = new NpcChatResp();

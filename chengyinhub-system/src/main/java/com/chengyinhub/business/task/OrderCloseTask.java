@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -44,6 +45,7 @@ public class OrderCloseTask {
      * 与今天的行为相同、不丢单;要跨重启接着扫再落库(sys_config 或专表)。
      */
     private volatile long reconcileCursor = 0L;
+    private long unpaidCursor = 0L;
 
     @Autowired
     private ICmsRegistrationService cmsRegistrationService;
@@ -55,21 +57,31 @@ public class OrderCloseTask {
     private AlarmService alarmService;
 
     /** 扫描 pay_expire_time 已过仍待支付的报名单:关单 + 回补库存 + 退还预扣积分 */
-    public void closeExpired() {
-        List<Long> ids = cmsRegistrationService.listExpiredUnpaidIds();
+    public synchronized void closeExpired() {
+        Date now = new Date();
+        Long maxId = cmsRegistrationService.getExpiredUnpaidScanUpperBound(now);
+        if (maxId == null) { unpaidCursor = 0L; return; }
+        int scanned = 0;
         int closed = 0;
-        for (Long id : ids) {
-            try {
-                if (cmsRegistrationService.closeExpiredOne(id)) {
-                    closed++;
+        boolean reachedEnd = false;
+        while (scanned < RECONCILE_SCAN_LIMIT) {
+            List<Long> ids = cmsRegistrationService.listExpiredUnpaidIdsAfter(
+                    now, unpaidCursor, maxId, Math.min(200, RECONCILE_SCAN_LIMIT - scanned));
+            if (ids.isEmpty()) { reachedEnd = true; break; }
+            for (Long id : ids) {
+                scanned++;
+                try {
+                    if (cmsRegistrationService.closeExpiredOne(id)) closed++;
+                } catch (Exception e) {
+                    log.error("过期关单失败 registrationId={}", id, e);
+                } finally {
+                    unpaidCursor = id;
                 }
-            } catch (Exception e) {
-                log.error("过期关单失败 registrationId={}", id, e);
             }
+            if (unpaidCursor >= maxId) { reachedEnd = true; break; }
         }
-        if (!ids.isEmpty()) {
-            log.info("过期关单完成:扫描 {} 单,关闭 {} 单", ids.size(), closed);
-        }
+        if (reachedEnd) unpaidCursor = 0L;
+        log.info("过期关单完成:扫描 {} 单,关闭 {} 单,下轮起点 id={}", scanned, closed, unpaidCursor);
     }
 
     /**
@@ -215,6 +227,9 @@ public class OrderCloseTask {
                         firstFailure = "registrationId=" + id + " " + e.getMessage();
                     }
                     log.error("支付中过期订单对账失败 registrationId={}", id, e);
+                } finally {
+                    // 含 continue 分支的已尝试行都保留进度，后页查询异常不重扫整个前缀。
+                    reconcileCursor = afterId;
                 }
             }
         }

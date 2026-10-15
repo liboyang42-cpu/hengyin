@@ -137,13 +137,18 @@ class PhotoOwnerBindingContractTest
         activity.setTopicId(TOPIC);
         when(activityService.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
 
-        CmsRegistration registration = new CmsRegistration();
-        registration.setMemberId(PLAYER);
-        registration.setOwnerType(2L);
-        registration.setOwnerId(ACTIVITY);
-        registration.setRegistrationStatus(2);
-        when(registrationService.selectCmsRegistrationList(any()))
-                .thenReturn(Collections.singletonList(registration));
+        // PLAYER 与 OTHER 都是本场报名者：按查询人返回其本人的报名行(与 member_id 过滤的真实查询一致)，
+        // 让「B 用 A 的照片」由照片归属闸判定，而不是借 mock 忽略 member 条件。
+        when(registrationService.selectCmsRegistrationList(any())).thenAnswer(call -> {
+            CmsRegistration probe = call.getArgument(0);
+            CmsRegistration registration = new CmsRegistration();
+            registration.setId(probe.getMemberId() == null ? null : 9_100_000L + probe.getMemberId());
+            registration.setMemberId(probe.getMemberId() == null ? PLAYER : probe.getMemberId());
+            registration.setOwnerType(2L);
+            registration.setOwnerId(ACTIVITY);
+            registration.setRegistrationStatus(2);
+            return Collections.singletonList(registration);
+        });
 
         CmsTopic topic = new CmsTopic();
         topic.setId(TOPIC);
@@ -161,6 +166,7 @@ class PhotoOwnerBindingContractTest
         doReturn(true).when(ossClient).doesObjectExist(BUCKET, objectKey());
         doReturn(new java.net.URL(PIC_URL)).when(ossClient)
                 .generatePresignedUrl(any(com.aliyun.oss.model.GeneratePresignedUrlRequest.class));
+        CurrentPlayControllerFixtures.install(controller);
     }
 
     private static String objectKey()

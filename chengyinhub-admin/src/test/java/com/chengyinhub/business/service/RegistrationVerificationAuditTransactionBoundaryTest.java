@@ -84,6 +84,7 @@ class RegistrationVerificationAuditTransactionBoundaryTest {
         ISettlementEntryService settlements = mock(ISettlementEntryService.class);
         BusinessAuditEventMapper audits = mock(BusinessAuditEventMapper.class);
 
+        when(registrations.selectCmsRegistrationByIdForUpdate(5001L)).thenReturn(registration());
         when(registrations.verifyIfNotVerified(5001L, 9001L)).thenAnswer(call -> jdbc.update(
                 "update registration set verification_status=1 where id=5001 and verification_status=0"));
         when(scans.selectCmsRegistrationScanList(any())).thenReturn(Collections.emptyList());
@@ -131,6 +132,7 @@ class RegistrationVerificationAuditTransactionBoundaryTest {
         row.setOwnerType(1L);
         row.setOwnerId(300L);
         row.setPaymentStatus(2);
+        row.setRegistrationStatus(2);
         return row;
     }
 

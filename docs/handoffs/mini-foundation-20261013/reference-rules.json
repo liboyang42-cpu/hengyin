@@ -1,0 +1,839 @@
+[
+  {
+    "repo": "pretix/pretix",
+    "path": "src/pretix/base/models/items.py",
+    "commit": "6b7f2ad6846af875d14ec0995572e61a48dd56aa",
+    "url": "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/src/pretix/base/models/items.py#L1986",
+    "sha256": "7a16cc11ea2c2f7d46595c1e1d03a19077996768fc26b28d1e61e59f10964b59",
+    "lines": 2322,
+    "key": "quota",
+    "line": 1986,
+    "anchor": "class Quota(",
+    "part": "共同票池与票种/变体配额、可售/占用状态",
+    "missing": "仍需城瘾原子联扣、原单释放、身份限购及并发验收",
+    "stack": "Python/Django；规则移植到现Java/MyBatis，非可直接装入的模块",
+    "license": "AGPLv3及附加条款；多许可目录需逐文件核对",
+    "licenseUrls": [
+      "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "pretix/pretix",
+    "path": "src/pretix/base/services/orders.py",
+    "commit": "6b7f2ad6846af875d14ec0995572e61a48dd56aa",
+    "url": "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/src/pretix/base/services/orders.py#L3145",
+    "sha256": "a101e48fe7f410fe212911815004bd21c68f2b650d4cc864590d4f3767dfcd0b",
+    "lines": 3634,
+    "key": "order",
+    "line": 3145,
+    "anchor": "def commit(self, check_quotas=True):",
+    "part": "原订单修改、事务锁及配额重校",
+    "missing": "没有城瘾积分拆单原请求hash/回放；不能拿现金票订单直接替积分订单",
+    "stack": "Python/Django；只参考订单事务/状态原语",
+    "license": "AGPLv3及附加条款；多许可目录需逐文件核对",
+    "licenseUrls": [
+      "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "pretix/pretix",
+    "path": "src/pretix/base/models/orders.py",
+    "commit": "6b7f2ad6846af875d14ec0995572e61a48dd56aa",
+    "url": "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/src/pretix/base/models/orders.py#L1909",
+    "sha256": "ea8bb447feab2af201d85d87cc88bb23a8eb65e47b5e57a37bd4439aebe14485",
+    "lines": 3743,
+    "key": "pay",
+    "line": 1909,
+    "anchor": "def confirm(self, count_waitinglist=True",
+    "part": "付款行锁、防重复确认与当前原单状态",
+    "missing": "城瘾微信验签、冻结金额/inbox消费者与迟到人工归因需自行接",
+    "stack": "Python/Django；付款规则对照，非微信支付SDK",
+    "license": "AGPLv3及附加条款；多许可目录需逐文件核对",
+    "licenseUrls": [
+      "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "pretix/pretix",
+    "path": "src/pretix/base/models/orders.py",
+    "commit": "6b7f2ad6846af875d14ec0995572e61a48dd56aa",
+    "url": "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/src/pretix/base/models/orders.py#L2259",
+    "sha256": "ea8bb447feab2af201d85d87cc88bb23a8eb65e47b5e57a37bd4439aebe14485",
+    "lines": 3743,
+    "key": "refund",
+    "line": 2259,
+    "anchor": "def done(self, user=None, auth=None):",
+    "part": "退款实体完成及原单关联",
+    "missing": "银行到账、多方冲回、城瘾退款政策和真实调度未由该方法解决",
+    "stack": "Python/Django；不能直接替城瘾退款服务",
+    "license": "AGPLv3及附加条款；多许可目录需逐文件核对",
+    "licenseUrls": [
+      "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "pretix/pretix",
+    "path": "src/pretix/base/services/orders.py",
+    "commit": "6b7f2ad6846af875d14ec0995572e61a48dd56aa",
+    "url": "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/src/pretix/base/services/orders.py#L1437",
+    "sha256": "a101e48fe7f410fe212911815004bd21c68f2b650d4cc864590d4f3767dfcd0b",
+    "lines": 3634,
+    "key": "expire",
+    "line": 1437,
+    "anchor": "def expire_orders(sender, **kwargs):",
+    "part": "过期订单维护入口",
+    "missing": "支付中未知保占用及城瘾调度活性/积压需原链补齐",
+    "stack": "Python/Django；参考维护扫描",
+    "license": "AGPLv3及附加条款；多许可目录需逐文件核对",
+    "licenseUrls": [
+      "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "pretix/pretix",
+    "path": "src/pretix/base/services/waitinglist.py",
+    "commit": "6b7f2ad6846af875d14ec0995572e61a48dd56aa",
+    "url": "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/src/pretix/base/services/waitinglist.py#L45",
+    "sha256": "508a19e1361e1b0ffff8ef272e11d471259271bddbae5f3fb4bb4615b0a993c3",
+    "lines": 186,
+    "key": "wait",
+    "line": 45,
+    "anchor": "def assign_automatically(",
+    "part": "候补自动分配、可用席位检查与事务",
+    "missing": "城瘾OFFERED占位/期限/队首公平和单项故障隔离仍需本地合同",
+    "stack": "Python/Django；候补规则对照",
+    "license": "AGPLv3及附加条款；多许可目录需逐文件核对",
+    "licenseUrls": [
+      "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "pretix/pretix",
+    "path": "src/pretix/base/models/vouchers.py",
+    "commit": "6b7f2ad6846af875d14ec0995572e61a48dd56aa",
+    "url": "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/src/pretix/base/models/vouchers.py#L369",
+    "sha256": "9be3c2cf01f8ea19cb14a3d85a2f7a0c83cae538255a647dc10faad46261c2af",
+    "lines": 653,
+    "key": "voucher",
+    "line": 369,
+    "anchor": "def clean_max_usages(data, redeemed):",
+    "part": "券可用次数不得低于已兑换数量；适用对象/价格计算",
+    "missing": "未证明已领规则版本冻结、城瘾来源ID回放或票价券退款全链",
+    "stack": "Python/Django；现积分/券字段要单独适配",
+    "license": "AGPLv3及附加条款；多许可目录需逐文件核对",
+    "licenseUrls": [
+      "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "pretix/pretix",
+    "path": "src/pretix/base/services/checkin.py",
+    "commit": "6b7f2ad6846af875d14ec0995572e61a48dd56aa",
+    "url": "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/src/pretix/base/services/checkin.py#L1149",
+    "sha256": "cfbc198d38d68c914d12f74714af9c2715f55ad5eafe16d81ca0d5f1dde8ceeb",
+    "lines": 1214,
+    "key": "checkin",
+    "line": 1149,
+    "anchor": "if nonce and ((last_cis",
+    "part": "对应票/检查表/设备的重复扫描nonce与实际核验记录",
+    "missing": "离线多设备冲突/可信到场/领奖要另接；不复制force绕资格",
+    "stack": "Python/Django；核销规则可移植",
+    "license": "AGPLv3及附加条款；多许可目录需逐文件核对",
+    "licenseUrls": [
+      "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "pretix/pretix",
+    "path": "src/pretix/base/models/giftcards.py",
+    "commit": "6b7f2ad6846af875d14ec0995572e61a48dd56aa",
+    "url": "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/src/pretix/base/models/giftcards.py#L144",
+    "sha256": "946333e7e36615401476483c9c2fe4eaa0ac61b3e1bf9a6f4018e8c5afec3e3d",
+    "lines": 237,
+    "key": "gift",
+    "line": 144,
+    "anchor": "class GiftCardTransaction(",
+    "part": "礼品卡及独立消费交易账",
+    "missing": "不是城瘾体验持有人、领取前后退款/转移规则；原请求和资格需自定",
+    "stack": "Python/Django；只借赠礼/消费分账原语",
+    "license": "AGPLv3及附加条款；多许可目录需逐文件核对",
+    "licenseUrls": [
+      "https://github.com/pretix/pretix/blob/6b7f2ad6846af875d14ec0995572e61a48dd56aa/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "gruelbox/transaction-outbox",
+    "path": "transactionoutbox-core/src/main/java/com/gruelbox/transactionoutbox/TransactionOutboxImpl.java",
+    "commit": "7799866575eac6e47343bd2a33712b4a34097b15",
+    "url": "https://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/transactionoutbox-core/src/main/java/com/gruelbox/transactionoutbox/TransactionOutboxImpl.java#L323",
+    "sha256": "639999255ef6cc9e80deed027e4582f93fceca70d5b319b42eec5c9c5f45d2f7",
+    "lines": 505,
+    "key": "outbox",
+    "line": 323,
+    "anchor": "private void processNowInternal(",
+    "part": "同事务持久事件、处理锁、成功保留和失败尝试",
+    "missing": "需要城瘾消费者/业务键/当前权限；不自带供应商恰好一次或当前微信送达回执",
+    "stack": "所读pom要求Java17；当前城瘾Java8不能直接引入该HEAD",
+    "license": "Apache-2.0",
+    "licenseUrls": [
+      "https://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "gruelbox/transaction-outbox",
+    "path": "transactionoutbox-core/src/main/java/com/gruelbox/transactionoutbox/TransactionOutbox.java",
+    "commit": "7799866575eac6e47343bd2a33712b4a34097b15",
+    "url": "https://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/transactionoutbox-core/src/main/java/com/gruelbox/transactionoutbox/TransactionOutbox.java#L349",
+    "sha256": "85fb5f70cd6a8339da0920fb079790987b5e54d8ea7395d314f2debc26290a12",
+    "lines": 438,
+    "key": "unique",
+    "line": 349,
+    "anchor": "ParameterizedScheduleBuilder uniqueRequestId(",
+    "part": "任务稳定uniqueRequestId和保留期限",
+    "missing": "重复调度会拒绝，不等于返回原业务结果；未自带同键参数hash比较",
+    "stack": "所读版本Java17；仅抽取规则，不能直接接Java8",
+    "license": "Apache-2.0",
+    "licenseUrls": [
+      "https://github.com/gruelbox/transaction-outbox/blob/7799866575eac6e47343bd2a33712b4a34097b15/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "kagkarlsson/db-scheduler",
+    "path": "db-scheduler/src/main/java/com/github/kagkarlsson/scheduler/Scheduler.java",
+    "commit": "466ff4b458b971470b16cfaf4fb840b60d0266fa",
+    "url": "https://github.com/kagkarlsson/db-scheduler/blob/466ff4b458b971470b16cfaf4fb840b60d0266fa/db-scheduler/src/main/java/com/github/kagkarlsson/scheduler/Scheduler.java#L370",
+    "sha256": "523a6380387194260c3fa55e71bf040164f6e501b52c26faae9396d94f06680a",
+    "lines": 484,
+    "key": "scheduler",
+    "line": 370,
+    "anchor": "protected void detectDeadExecutions()",
+    "part": "持久任务/心跳/死执行检测与恢复原语",
+    "missing": "运行环境配置、积压年龄/告警、外部请求取消和城瘾业务幂等另接",
+    "stack": "所读pom要求Java17；现Java8不直接引入",
+    "license": "Apache-2.0",
+    "licenseUrls": [
+      "https://github.com/kagkarlsson/db-scheduler/blob/466ff4b458b971470b16cfaf4fb840b60d0266fa/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "matrix-org/matrix-js-sdk",
+    "path": "src/sync.ts",
+    "commit": "9264875705b75f8013cb39592490a1974e9d1c90",
+    "url": "https://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/src/sync.ts#L150",
+    "sha256": "19b79aa8a268472f7ce56865ca33ed22b664a8aba29ee3553747957c28255de6",
+    "lines": 2104,
+    "key": "sync",
+    "line": 150,
+    "anchor": "next_batch",
+    "part": "同步水位、受限时间线及重连处理",
+    "missing": "不能只拷SDK；城瘾服务端需增量游标/缺段分页与当前成员范围",
+    "stack": "TypeScript/Matrix协议；现小程序/App API需适配",
+    "license": "Apache-2.0",
+    "licenseUrls": [
+      "https://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "matrix-org/matrix-js-sdk",
+    "path": "src/client.ts",
+    "commit": "9264875705b75f8013cb39592490a1974e9d1c90",
+    "url": "https://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/src/client.ts#L2752",
+    "sha256": "2a4cdfe0c59d3846f3d70dffe450685c5ec9ce2ca0c82f9382251f1fbee2ccd8",
+    "lines": 9257,
+    "key": "send",
+    "line": 2752,
+    "anchor": "public sendEvent(",
+    "part": "显式发送事务ID、原事件发送与结果",
+    "missing": "不能把自动生成新ID当重试；城瘾历史null客户端/持久原ID要补",
+    "stack": "TypeScript；代码模式可读，非现Java/Flutter的直接模块",
+    "license": "Apache-2.0",
+    "licenseUrls": [
+      "https://github.com/matrix-org/matrix-js-sdk/blob/9264875705b75f8013cb39592490a1974e9d1c90/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "element-hq/synapse",
+    "path": "synapse/storage/databases/main/receipts.py",
+    "commit": "c0805eabb1bda3b1ffc370fec35a73d524674d60",
+    "url": "https://github.com/element-hq/synapse/blob/c0805eabb1bda3b1ffc370fec35a73d524674d60/synapse/storage/databases/main/receipts.py#L910",
+    "sha256": "d016b19cf3b627f89130a3827772918444d1cd1190e13f60842a65bce642081f",
+    "lines": 1372,
+    "key": "receipt",
+    "line": 910,
+    "anchor": "def _insert_linearized_receipt_txn(",
+    "part": "比较event_stream_ordering，旧/相同已读不覆盖更新记录",
+    "missing": "客户端实际看到消息以及城瘾未读重算/并发新增仍需落实",
+    "stack": "Python/Matrix；AGPL源码规则对照，非直接替换IM",
+    "license": "AGPL-3.0",
+    "licenseUrls": [
+      "https://github.com/element-hq/synapse/blob/c0805eabb1bda3b1ffc370fec35a73d524674d60/LICENSE-AGPL-3.0",
+      "https://github.com/element-hq/synapse/blob/c0805eabb1bda3b1ffc370fec35a73d524674d60/LICENSE-COMMERCIAL"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "discourse/discourse",
+    "path": "lib/guardian/post_guardian.rb",
+    "commit": "fe97c2951fdcce6048bf5a5ca2b4436439f8d486",
+    "url": "https://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/lib/guardian/post_guardian.rb#L313",
+    "sha256": "c2e327537462fd3caa2b80675b7d0d870cca5f9cd10b2a93469accb4984b9f33",
+    "lines": 483,
+    "key": "guardian",
+    "line": 313,
+    "anchor": "def can_see_post?(post)",
+    "part": "当前帖文/主题/删除/隐藏状态和角色权限",
+    "missing": "城瘾路线、商品、团/门店对象规则不能照抄论坛角色；所有引用出口要接",
+    "stack": "Ruby/Rails；对象可见性规则移植",
+    "license": "GPL-2.0",
+    "licenseUrls": [
+      "https://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/LICENSE.txt"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "discourse/discourse",
+    "path": "lib/guardian/post_guardian.rb",
+    "commit": "fe97c2951fdcce6048bf5a5ca2b4436439f8d486",
+    "url": "https://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/lib/guardian/post_guardian.rb#L382",
+    "sha256": "c2e327537462fd3caa2b80675b7d0d870cca5f9cd10b2a93469accb4984b9f33",
+    "lines": 483,
+    "key": "history",
+    "line": 382,
+    "anchor": "def can_view_edit_history?(post)",
+    "part": "编辑历史有独立权限检查",
+    "missing": "源码还允许wiki/公共历史配置；不能照抄即认为私密范围已安全，需城瘾当前可见性门槛",
+    "stack": "Ruby/Rails；只借权限层次，具体公开策略自定",
+    "license": "GPL-2.0",
+    "licenseUrls": [
+      "https://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/LICENSE.txt"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "discourse/discourse",
+    "path": "app/controllers/uploads_controller.rb",
+    "commit": "fe97c2951fdcce6048bf5a5ca2b4436439f8d486",
+    "url": "https://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/app/controllers/uploads_controller.rb#L220",
+    "sha256": "1764d87bf8b6b84a8ad198d0826055b129e5bab9314f8aa484b0b1376991dadf",
+    "lines": 420,
+    "key": "upload",
+    "line": 220,
+    "anchor": "def handle_secure_upload_request(",
+    "part": "受控媒体请求先检查权限后发送",
+    "missing": "城瘾归属回执、当前媒体版本、头像/二维码送审和脱敏/留置不自动提供",
+    "stack": "Ruby/Rails；安全资源读取原语",
+    "license": "GPL-2.0",
+    "licenseUrls": [
+      "https://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/LICENSE.txt"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "discourse/discourse",
+    "path": "app/models/reviewable.rb",
+    "commit": "fe97c2951fdcce6048bf5a5ca2b4436439f8d486",
+    "url": "https://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/app/models/reviewable.rb#L418",
+    "sha256": "029d5dc5f8a44b8245a0d6933f7fb27c234abe83ae5e3d523abca236e4124ec3",
+    "lines": 1115,
+    "key": "review",
+    "line": 418,
+    "anchor": "def perform(performed_by, action_id, args = nil)",
+    "part": "审核动作验证、状态推进及记录",
+    "missing": "城瘾实际bizType处置/独立申诉/迟到回调必须落到真实对象",
+    "stack": "Ruby/Rails；审核状态与权限规则对照",
+    "license": "GPL-2.0",
+    "licenseUrls": [
+      "https://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/LICENSE.txt"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "discourse/discourse",
+    "path": "app/models/reviewable_flagged_post.rb",
+    "commit": "fe97c2951fdcce6048bf5a5ca2b4436439f8d486",
+    "url": "https://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/app/models/reviewable_flagged_post.rb#L50",
+    "sha256": "2debcb341630695a11bfe5f288a02b1ed0e9dee35beb7e5fe77d16356852c892",
+    "lines": 454,
+    "key": "flags",
+    "line": 50,
+    "anchor": "def build_actions(actions, guardian, args)",
+    "part": "按审核身份和被举报对象构造可用处置",
+    "missing": "不自动构成城瘾多原因合案、附件独立证据或误报/处罚政策",
+    "stack": "Ruby/Rails；举报处理规则对照",
+    "license": "GPL-2.0",
+    "licenseUrls": [
+      "https://github.com/discourse/discourse/blob/fe97c2951fdcce6048bf5a5ca2b4436439f8d486/LICENSE.txt"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "langchain4j/langchain4j",
+    "path": "langchain4j-core/src/main/java/dev/langchain4j/store/memory/chat/ChatMemoryStore.java",
+    "commit": "872eca4b97b85a42f8409d0437ed4fc1994157b5",
+    "url": "https://github.com/langchain4j/langchain4j/blob/872eca4b97b85a42f8409d0437ed4fc1994157b5/langchain4j-core/src/main/java/dev/langchain4j/store/memory/chat/ChatMemoryStore.java#L44",
+    "sha256": "56d7b2343a46d6acc04246462ee5c5bac9801733392e6015326ebab82a9f17fc",
+    "lines": 107,
+    "key": "memory",
+    "line": 44,
+    "anchor": "void updateMessages(Object memoryId",
+    "part": "按memoryId读取、更新、删除持久对话的接口",
+    "missing": "默认内存存储不等于持久DB；用户/NPC/场景键、删除消费者和已知事实要自行接",
+    "stack": "所读版本Java17；现Java8只参考契约，不直接引依赖",
+    "license": "Apache-2.0",
+    "licenseUrls": [
+      "https://github.com/langchain4j/langchain4j/blob/872eca4b97b85a42f8409d0437ed4fc1994157b5/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "langchain4j/langchain4j",
+    "path": "langchain4j/src/main/java/dev/langchain4j/memory/chat/MessageWindowChatMemory.java",
+    "commit": "872eca4b97b85a42f8409d0437ed4fc1994157b5",
+    "url": "https://github.com/langchain4j/langchain4j/blob/872eca4b97b85a42f8409d0437ed4fc1994157b5/langchain4j/src/main/java/dev/langchain4j/memory/chat/MessageWindowChatMemory.java#L133",
+    "sha256": "33b0dfead0402f3875b236629284ec8025b9529f28863ab0978124fd5d7039c9",
+    "lines": 272,
+    "key": "window",
+    "line": 133,
+    "anchor": "private void set(List<ChatMessage> messages)",
+    "part": "限制窗口后写指定memoryId的store",
+    "missing": "窗口只限上下文，不证明事实正确/不剧透或长期授权；不是NPC整链",
+    "stack": "Java17；当前Java8需抽取原语",
+    "license": "Apache-2.0",
+    "licenseUrls": [
+      "https://github.com/langchain4j/langchain4j/blob/872eca4b97b85a42f8409d0437ed4fc1994157b5/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "langchain4j/langchain4j",
+    "path": "langchain4j-core/src/main/java/dev/langchain4j/model/output/TokenUsage.java",
+    "commit": "872eca4b97b85a42f8409d0437ed4fc1994157b5",
+    "url": "https://github.com/langchain4j/langchain4j/blob/872eca4b97b85a42f8409d0437ed4fc1994157b5/langchain4j-core/src/main/java/dev/langchain4j/model/output/TokenUsage.java#L12",
+    "sha256": "4f51fc1a93c63aec9f90d47cbd4146a9107f6ab6983f65b07a349b96a6b6da3f",
+    "lines": 188,
+    "key": "tokens",
+    "line": 12,
+    "anchor": "private final Integer inputTokenCount",
+    "part": "分别表示输入/输出token数量及未知值",
+    "missing": "不是价格/货币预留、账单对账、并发预算或次数退款系统",
+    "stack": "Java17数据模型；不能据此称真实成本已算出",
+    "license": "Apache-2.0",
+    "licenseUrls": [
+      "https://github.com/langchain4j/langchain4j/blob/872eca4b97b85a42f8409d0437ed4fc1994157b5/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "langchain4j/langchain4j",
+    "path": "langchain4j-core/src/main/java/dev/langchain4j/model/moderation/Moderation.java",
+    "commit": "872eca4b97b85a42f8409d0437ed4fc1994157b5",
+    "url": "https://github.com/langchain4j/langchain4j/blob/872eca4b97b85a42f8409d0437ed4fc1994157b5/langchain4j-core/src/main/java/dev/langchain4j/model/moderation/Moderation.java#L12",
+    "sha256": "02c77384ccdb04b160c67cbd4640f7dc718e4e3afcb2addd21d2086cb35e76b5",
+    "lines": 87,
+    "key": "moderation",
+    "line": 12,
+    "anchor": "public class Moderation",
+    "part": "生成/安全分类结果对象",
+    "missing": "结果模型不是完整prompt覆盖检查、供应商审核或城瘾展示闸门",
+    "stack": "Java17；仅安全结果表示组件",
+    "license": "Apache-2.0",
+    "licenseUrls": [
+      "https://github.com/langchain4j/langchain4j/blob/872eca4b97b85a42f8409d0437ed4fc1994157b5/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "inkle/ink",
+    "path": "ink-engine-runtime/Story.cs",
+    "commit": "35c63e52f1d36060930dc7ed3cfba38ea224b528",
+    "url": "https://github.com/inkle/ink/blob/35c63e52f1d36060930dc7ed3cfba38ea224b528/ink-engine-runtime/Story.cs#L424",
+    "sha256": "10a150e6438360f346bfad4ffd17749bcdc5ae851fd11e4bb957ed27e0604340",
+    "lines": 2961,
+    "key": "ink",
+    "line": 424,
+    "anchor": "void ContinueInternal (",
+    "part": "叙事运行、条件/变量/选择推进",
+    "missing": "不是城瘾资源/地图/资金规则；不证明所有组合可达或真实完成",
+    "stack": "C#；语言/叙事模式参考，需现服务器合同适配",
+    "license": "MIT",
+    "licenseUrls": [
+      "https://github.com/inkle/ink/blob/35c63e52f1d36060930dc7ed3cfba38ea224b528/LICENSE.txt"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "inkle/ink",
+    "path": "ink-engine-runtime/StoryState.cs",
+    "commit": "35c63e52f1d36060930dc7ed3cfba38ea224b528",
+    "url": "https://github.com/inkle/ink/blob/35c63e52f1d36060930dc7ed3cfba38ea224b528/ink-engine-runtime/StoryState.cs#L37",
+    "sha256": "a44bf0bbc26b6a6a9b3a34b658330f97b742ebde63578c11125873d69c4a5d7a",
+    "lines": 1367,
+    "key": "save",
+    "line": 37,
+    "anchor": "public string ToJson()",
+    "part": "故事状态JSON保存/加载及版本化运行状态",
+    "missing": "写盘失败/账号隔离/跨端冲突必须由宿主处理；本地完结不等于真实领奖",
+    "stack": "C#；保存格式原语，不直接迁现本地故事",
+    "license": "MIT",
+    "licenseUrls": [
+      "https://github.com/inkle/ink/blob/35c63e52f1d36060930dc7ed3cfba38ea224b528/LICENSE.txt"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "boardgameio/boardgame.io",
+    "path": "src/core/player-view.ts",
+    "commit": "5e9a2c94bde803fae8b081958c406c4d0a7be8ae",
+    "url": "https://github.com/boardgameio/boardgame.io/blob/5e9a2c94bde803fae8b081958c406c4d0a7be8ae/src/core/player-view.ts#L14",
+    "sha256": "9ea9b3940ea914b8f7231f5f1b6e0451bd041706d1ba8d79d739037132898f7b",
+    "lines": 39,
+    "key": "secrets",
+    "line": 14,
+    "anchor": "STRIP_SECRETS:",
+    "part": "剔除secret及非本玩家players字段的服务端投影函数",
+    "missing": "城瘾TEAM/PUBLIC、媒体URL/NPC出口和角色范围要扩展；不能只前端隐藏",
+    "stack": "TypeScript；显式playerView规则可移植",
+    "license": "MIT",
+    "licenseUrls": [
+      "https://github.com/boardgameio/boardgame.io/blob/5e9a2c94bde803fae8b081958c406c4d0a7be8ae/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "boardgameio/boardgame.io",
+    "path": "src/core/flow.ts",
+    "commit": "5e9a2c94bde803fae8b081958c406c4d0a7be8ae",
+    "url": "https://github.com/boardgameio/boardgame.io/blob/5e9a2c94bde803fae8b081958c406c4d0a7be8ae/src/core/flow.ts#L320",
+    "sha256": "045149a593f612dd5d77b88f93ff2274e7e035dd2b86db062d490d5e738540f5",
+    "lines": 921,
+    "key": "flow",
+    "line": 320,
+    "anchor": "function StartTurn(",
+    "part": "回合/阶段及游戏运行状态推进",
+    "missing": "不是城瘾真实任务证据、停表/退出退款或资源预留合同",
+    "stack": "TypeScript；游戏状态机组件",
+    "license": "MIT",
+    "licenseUrls": [
+      "https://github.com/boardgameio/boardgame.io/blob/5e9a2c94bde803fae8b081958c406c4d0a7be8ae/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "Baseflow/flutter-geolocator",
+    "path": "geolocator/lib/geolocator.dart",
+    "commit": "b5b6fa080242437b217124db8c69460ad3e4f05b",
+    "url": "https://github.com/Baseflow/flutter-geolocator/blob/b5b6fa080242437b217124db8c69460ad3e4f05b/geolocator/lib/geolocator.dart#L188",
+    "sha256": "286e445c9ef79c3eade746a2d16e542d494032b7937302ca90d4347037d2b58c",
+    "lines": 280,
+    "key": "position",
+    "line": 188,
+    "anchor": "static Stream<Position> getPositionStream(",
+    "part": "Flutter位置流/授权生命周期调用",
+    "missing": "坐标仍非硬件到场证明；微信另用自身API。现App已用13.x，HEAD不是已验兼容版",
+    "stack": "Dart/Flutter，MIT；已有同技术栈组件，但需按13.x验证",
+    "license": "MIT",
+    "licenseUrls": [
+      "https://github.com/Baseflow/flutter-geolocator/blob/b5b6fa080242437b217124db8c69460ad3e4f05b/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "Baseflow/flutter-geolocator",
+    "path": "geolocator_android/android/src/main/java/com/baseflow/geolocator/location/FusedLocationClient.java",
+    "commit": "b5b6fa080242437b217124db8c69460ad3e4f05b",
+    "url": "https://github.com/Baseflow/flutter-geolocator/blob/b5b6fa080242437b217124db8c69460ad3e4f05b/geolocator_android/android/src/main/java/com/baseflow/geolocator/location/FusedLocationClient.java#L106",
+    "sha256": "a59a3cfb36cd3b081d2e33edf39d5d82337dad710810072d15e35a2ee9a68acf",
+    "lines": 282,
+    "key": "sampling",
+    "line": 106,
+    "anchor": "builder.setIntervalMillis(",
+    "part": "Android定位精度/间隔/移动距离参数与启动停止",
+    "missing": "自适应策略、真实耗电/锁屏可达以及同意消费者由城瘾实现",
+    "stack": "Android Java/Flutter桥；不能代微信定位API",
+    "license": "MIT",
+    "licenseUrls": [
+      "https://github.com/Baseflow/flutter-geolocator/blob/b5b6fa080242437b217124db8c69460ad3e4f05b/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "Turfjs/turf",
+    "path": "packages/turf-boolean-point-in-polygon/index.ts",
+    "commit": "0c20329dfc2b63555ddd5d5388c4858669df6037",
+    "url": "https://github.com/Turfjs/turf/blob/0c20329dfc2b63555ddd5d5388c4858669df6037/packages/turf-boolean-point-in-polygon/index.ts#L39",
+    "sha256": "1b28ae3452003058bfc3b7c05834dfa8efde551fe7be40f4ae0d174e9cce7d2d",
+    "lines": 99,
+    "key": "polygon",
+    "line": 39,
+    "anchor": "function booleanPointInPolygon<",
+    "part": "点在多边形内的判断原语",
+    "missing": "不是完整住宅不可反推保护、线段裁剪或服务端字段白名单/分享撤销",
+    "stack": "TypeScript/GeoJSON；坐标体系/边界需统一",
+    "license": "MIT",
+    "licenseUrls": [
+      "https://github.com/Turfjs/turf/blob/0c20329dfc2b63555ddd5d5388c4858669df6037/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "Turfjs/turf",
+    "path": "packages/turf-distance/index.ts",
+    "commit": "0c20329dfc2b63555ddd5d5388c4858669df6037",
+    "url": "https://github.com/Turfjs/turf/blob/0c20329dfc2b63555ddd5d5388c4858669df6037/packages/turf-distance/index.ts#L29",
+    "sha256": "a6f8ed25a9e2ca6be0f4b7a806bfccabf693561b0a51f54aa8ef350ef06253d8",
+    "lines": 54,
+    "key": "distance",
+    "line": 29,
+    "anchor": "function distance(",
+    "part": "球面距离计算",
+    "missing": "距离公式不能证坐标真伪/完整轨迹；GCJ02/WGS84使用条件要明确",
+    "stack": "TypeScript；可抽取算法，现服务端/Flutter各自适配",
+    "license": "MIT",
+    "licenseUrls": [
+      "https://github.com/Turfjs/turf/blob/0c20329dfc2b63555ddd5d5388c4858669df6037/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "localForage/localForage",
+    "path": "src/drivers/indexeddb.js",
+    "commit": "fb78c77ee583fb727a558c439b5174aca38c5924",
+    "url": "https://github.com/localForage/localForage/blob/fb78c77ee583fb727a558c439b5174aca38c5924/src/drivers/indexeddb.js#L616",
+    "sha256": "d7399dfef69905e99594dd4465c2fd5ca9151051f6871b0a0f4c3c66ba7567a4",
+    "lines": 1116,
+    "key": "storage",
+    "line": 616,
+    "anchor": "function setItem(key, value, callback)",
+    "part": "IndexedDB写入Promise成功/失败接口",
+    "missing": "城瘾小程序不是IndexedDB；dirty/recovery清理与云同步仍在宿主",
+    "stack": "JavaScript浏览器组件；读规则，不替换微信/App存储",
+    "license": "Apache-2.0",
+    "licenseUrls": [
+      "https://github.com/localForage/localForage/blob/fb78c77ee583fb727a558c439b5174aca38c5924/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "gorse-io/gorse",
+    "path": "logics/recommend.go",
+    "commit": "3d664dff4bc2af4b796da63b4d69d6d83b1406dc",
+    "url": "https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/recommend.go#L107",
+    "sha256": "e6c055bd7e68101f0d75ce3ec95e8ed8bccb3e6c55eb79147e42f9dceadb87ed",
+    "lines": 384,
+    "key": "recommend",
+    "line": 107,
+    "anchor": "func (r *Recommender) Recommend(",
+    "part": "候选反馈排除、去重及不足时fallback拼接",
+    "missing": "不是城瘾当前资格/固定评分版本游标/本次意图/作者公平份额；需领域规则",
+    "stack": "Go推荐服务；参考原语，不新开整套生产推荐部署",
+    "license": "Apache-2.0",
+    "licenseUrls": [
+      "https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "gorse-io/gorse",
+    "path": "logics/recommend.go",
+    "commit": "3d664dff4bc2af4b796da63b4d69d6d83b1406dc",
+    "url": "https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/recommend.go#L70",
+    "sha256": "e6c055bd7e68101f0d75ce3ec95e8ed8bccb3e6c55eb79147e42f9dceadb87ed",
+    "lines": 384,
+    "key": "negative",
+    "line": 70,
+    "anchor": "// Negative feedback items",
+    "part": "负反馈优先入excludeSet；正反馈影响coldstart",
+    "missing": "作者/题材/时间范围、撤销重算和解释词典由城瘾补；排除不等于删业务账",
+    "stack": "Go；可读负反馈实际消费者",
+    "license": "Apache-2.0",
+    "licenseUrls": [
+      "https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "gorse-io/gorse",
+    "path": "worker/pipeline.go",
+    "commit": "3d664dff4bc2af4b796da63b4d69d6d83b1406dc",
+    "url": "https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/worker/pipeline.go#L124",
+    "sha256": "c630f8b8b92dd8ddd058608f2fbc72fb80622efa7a712259c55e1277ca86d36c",
+    "lines": 696,
+    "key": "pipeline",
+    "line": 124,
+    "anchor": "func (p *Pipeline) Recommend(",
+    "part": "画像/候选到推荐生成worker及缓存生产",
+    "missing": "城瘾类别画像的字段映射、版本run/TTL及现有SQL消费者需要接入",
+    "stack": "Go；生成链规则对照，不直接接Java进程",
+    "license": "Apache-2.0",
+    "licenseUrls": [
+      "https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "gorse-io/gorse",
+    "path": "logics/non_personalized.go",
+    "commit": "3d664dff4bc2af4b796da63b4d69d6d83b1406dc",
+    "url": "https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/logics/non_personalized.go#L45",
+    "sha256": "1b444749cd4156b09832bd1167d05fe9e82bca9d405e94894b741c6f1f016571",
+    "lines": 178,
+    "key": "latest",
+    "line": 45,
+    "anchor": "func ",
+    "part": "非个性化推荐/回退配置的代码入口",
+    "missing": "当前文件只是该推荐器范围；不保证新作者曝光、多类型可比或探索预算",
+    "stack": "Go；只可借冷启动/回退组件，非已验证公平机制",
+    "license": "Apache-2.0",
+    "licenseUrls": [
+      "https://github.com/gorse-io/gorse/blob/3d664dff4bc2af4b796da63b4d69d6d83b1406dc/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "PostHog/posthog",
+    "path": "products/product_analytics/backend/hogql_queries/funnels/funnel.py",
+    "commit": "34a467e9862fd10cc7dc9ee8806bf53fdd54b660",
+    "url": "https://github.com/PostHog/posthog/blob/34a467e9862fd10cc7dc9ee8806bf53fdd54b660/products/product_analytics/backend/hogql_queries/funnels/funnel.py#L81",
+    "sha256": "44f1aaf99d350a1f714e508ab15012dd2bd0fca2b955ddcf78b8026c81384b27",
+    "lines": 527,
+    "key": "funnel",
+    "line": 81,
+    "anchor": "def conversion_window_limit",
+    "part": "漏斗查询按事件分组与转换窗口构造聚合调用",
+    "missing": "本轮未读取底层aggregate_funnel UDF；城瘾原单/真实付款与作业仍需接，不宣称整算法已核",
+    "stack": "Python/HogQL/ClickHouse；所选路径按根MIT范围，非Java/MySQL即插即用",
+    "license": "所选products查询文件：根LICENSE的MIT范围；ee另有许可",
+    "licenseUrls": [
+      "https://github.com/PostHog/posthog/blob/34a467e9862fd10cc7dc9ee8806bf53fdd54b660/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "Unleash/unleash-java-sdk",
+    "path": "src/main/java/io/getunleash/DefaultUnleash.java",
+    "commit": "20ff5c098a82e7f88482b05e9a88635706b45c91",
+    "url": "https://github.com/Unleash/unleash-java-sdk/blob/20ff5c098a82e7f88482b05e9a88635706b45c91/src/main/java/io/getunleash/DefaultUnleash.java#L107",
+    "sha256": "d850ada852bc3fcf88fd5252a14ae599a36161464eed1f766538e1c32c7a6a59",
+    "lines": 240,
+    "key": "flagsdk",
+    "line": 107,
+    "anchor": "String toggleName,",
+    "part": "按上下文评估开关、fallback与变体接口",
+    "missing": "当前SDK委托featureRepository/引擎；本轮没核底层分桶，不证明稳定分组算法/护栏回滚全链",
+    "stack": "Java SDK/含引擎依赖；需另核JDK/部署适配，未引入",
+    "license": "Apache-2.0",
+    "licenseUrls": [
+      "https://github.com/Unleash/unleash-java-sdk/blob/20ff5c098a82e7f88482b05e9a88635706b45c91/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "fullcalendar/fullcalendar",
+    "path": "packages/preact/src/event-sources/json-feed-event-source.ts",
+    "commit": "786d1b27673deef84bc550f936f61b4d4a03a7a0",
+    "url": "https://github.com/fullcalendar/fullcalendar/blob/786d1b27673deef84bc550f936f61b4d4a03a7a0/packages/preact/src/event-sources/json-feed-event-source.ts#L59",
+    "sha256": "c0cd50e59d7544a06366040558f21019b792415436f7eae8069a41b12a59b2ca",
+    "lines": 101,
+    "key": "calendar",
+    "line": 59,
+    "anchor": "function buildRequestParams(",
+    "part": "获取视图起止范围及timeZone参数，加载成功/失败分别回调",
+    "missing": "服务器仍需真正取当月全场次；不提供城瘾报名开放闸门/系列成员资格",
+    "stack": "TypeScript/Preact标准包MIT；不直接替Flutter/小程序UI，premium不纳本次",
+    "license": "MIT",
+    "licenseUrls": [
+      "https://github.com/fullcalendar/fullcalendar/blob/786d1b27673deef84bc550f936f61b4d4a03a7a0/LICENSE.md"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "dequelabs/axe-core",
+    "path": "lib/checks/shared/aria-label-evaluate.js",
+    "commit": "44f5b6c5ef14bb02659bf3a47f6ef04d83dd2faa",
+    "url": "https://github.com/dequelabs/axe-core/blob/44f5b6c5ef14bb02659bf3a47f6ef04d83dd2faa/lib/checks/shared/aria-label-evaluate.js#L4",
+    "sha256": "ec7b3e83f80519b330bdb1ddba18772cb4d5367ecbd4062c49b96099f54d50e6",
+    "lines": 8,
+    "key": "aria",
+    "line": 4,
+    "anchor": "function ariaLabelEvaluate(",
+    "part": "自动检查aria-label等网页语义",
+    "missing": "只作Web/后台自动检查；不修原生读屏/字号/触达，不代真机验收",
+    "stack": "JavaScript网页检测，MPL2.0",
+    "license": "MPL-2.0",
+    "licenseUrls": [
+      "https://github.com/dequelabs/axe-core/blob/44f5b6c5ef14bb02659bf3a47f6ef04d83dd2faa/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "dequelabs/axe-core",
+    "path": "lib/checks/color/color-contrast-evaluate.js",
+    "commit": "44f5b6c5ef14bb02659bf3a47f6ef04d83dd2faa",
+    "url": "https://github.com/dequelabs/axe-core/blob/44f5b6c5ef14bb02659bf3a47f6ef04d83dd2faa/lib/checks/color/color-contrast-evaluate.js#L20",
+    "sha256": "c9629c37909694b440cde8a5e6c651cdac8e2d68d985f45af1c0d06b970a67fb",
+    "lines": 271,
+    "key": "contrast",
+    "line": 20,
+    "anchor": "export default",
+    "part": "网页颜色对比检查",
+    "missing": "不是大字布局/媒体替代/减少动效的实现，不能自动证明核心旅程可完成",
+    "stack": "JavaScript网页检测，MPL2.0",
+    "license": "MPL-2.0",
+    "licenseUrls": [
+      "https://github.com/dequelabs/axe-core/blob/44f5b6c5ef14bb02659bf3a47f6ef04d83dd2faa/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "FFmpeg/FFmpeg",
+    "path": "libavfilter/vf_overlay.c",
+    "commit": "f2bf7a2440d1e49023e4b3ed0e224a8806d388b8",
+    "url": "https://github.com/FFmpeg/FFmpeg/blob/f2bf7a2440d1e49023e4b3ed0e224a8806d388b8/libavfilter/vf_overlay.c#L371",
+    "sha256": "f6fa1bd7a1834d40244b25f07dcef94bdd22fe7c4b970045354dec5ec97ec035",
+    "lines": 981,
+    "key": "video",
+    "line": 371,
+    "anchor": "static av_always_inline void blend_slice_packed_rgb(",
+    "part": "合成画面/叠加的媒体滤镜",
+    "missing": "路线动画、GPS/照片时间真实来源、去敏、任务队列与授权发布均需城瘾实现",
+    "stack": "C/FFmpeg媒体后端；许可依实际滤镜/构建配置",
+    "license": "LGPL2.1+ / 部分GPL及第三方许可；按实际构建组件核对",
+    "licenseUrls": [
+      "https://github.com/FFmpeg/FFmpeg/blob/f2bf7a2440d1e49023e4b3ed0e224a8806d388b8/LICENSE.md"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  },
+  {
+    "repo": "GoogleChrome/workbox",
+    "path": "packages/workbox-precaching/src/PrecacheController.ts",
+    "commit": "4ea3138a120fd2c87389b54130e25f47e0fd7089",
+    "url": "https://github.com/GoogleChrome/workbox/blob/4ea3138a120fd2c87389b54130e25f47e0fd7089/packages/workbox-precaching/src/PrecacheController.ts#L125",
+    "sha256": "2d31378456dc2b2adc805ee8a2a430eab0c791f691e3c73384bd3e8a96af718f",
+    "lines": 366,
+    "key": "offline",
+    "line": 125,
+    "anchor": "addToCacheList(entries:",
+    "part": "资源清单、revision和缓存key管理",
+    "missing": "不是付费权限/答案保密/自然TTL/跨端资格复核；小程序/App需各自离线存储适配",
+    "stack": "TypeScript/浏览器Service Worker；只用于Web或借manifest模式",
+    "license": "MIT",
+    "licenseUrls": [
+      "https://github.com/GoogleChrome/workbox/blob/4ea3138a120fd2c87389b54130e25f47e0fd7089/LICENSE"
+    ],
+    "evidence": "已读取固定commit源码锚点；未构建/运行/接入城瘾"
+  }
+]

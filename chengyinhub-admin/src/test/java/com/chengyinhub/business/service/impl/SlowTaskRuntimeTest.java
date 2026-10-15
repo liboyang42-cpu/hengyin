@@ -100,6 +100,7 @@ class SlowTaskRuntimeTest {
         template.setId(TEMPLATE_ID);
         template.setAdvancedConfigJson(CONFIG);
         when(templateMapper.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(template);
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.installOn(service);
     }
 
     @Test

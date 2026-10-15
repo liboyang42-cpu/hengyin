@@ -92,6 +92,7 @@ class JourneyRuntimeActionsTest {
         topic.setPublishedConfigVersion(1L);
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
         CmsRegistration pass = new CmsRegistration();
+        pass.setId(9_000_001L); // 真实报名行必有主键；C包当前资格按原ID锁读
         pass.setExpiresAt(null);
         when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class)))
                 .thenReturn(Collections.singletonList(pass));
@@ -122,6 +123,7 @@ class JourneyRuntimeActionsTest {
                 .thenReturn(Collections.emptyList());
         when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class))).thenAnswer(inv -> liveNodes);
         when(shopDayProofService.hasArrived(anyLong(), anyLong(), anyLong())).thenReturn(true);
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.delegateLocks(activityMapper, registrationMapper);
     }
 
     // ==================== 1. 答错扣血 ====================

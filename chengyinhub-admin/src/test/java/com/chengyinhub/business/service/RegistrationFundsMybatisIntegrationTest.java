@@ -73,6 +73,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -90,6 +93,8 @@ class RegistrationFundsMybatisIntegrationTest {
     private static final String TEST_PII_KEY = Base64.getEncoder().encodeToString(new byte[32]);
     private static final MysqlIntegrationTestConfig MYSQL =
             MysqlIntegrationTestConfig.fromEnvironment("funds_core_it");
+    private static final String SCRATCH_DATABASE = "chengyin_a_funds_" + java.util.UUID.randomUUID().toString().replace("-", "");
+    private boolean createdDatabase;
 
     private DataSource dataSource;
     private ICmsRegistrationService registrationService;
@@ -106,16 +111,10 @@ class RegistrationFundsMybatisIntegrationTest {
         new PiiCryptoService(TEST_PII_KEY, "funds-it-hmac").register();
         DriverManagerDataSource admin = dataSource(MYSQL.adminUrl());
         try (Connection c = admin.getConnection(); Statement s = c.createStatement()) {
-            // ★ 2026-08-19:先 DROP 再 CREATE,不接受"环境里恰好剩下一个同名库"。
-            // 原来是 CREATE DATABASE IF NOT EXISTS ⇒ 本类默默继承上一次(可能是崩在半路的那次)留下的表,
-            // 于是 @BeforeEach 建表撞 "Table 'xxx' already exists" —— #741 的资金闸就是这么连红的:
-            // 本地怎么跑都绿,只有 runner 上那个库有残留。库名本来就一类一个(见 MysqlIntegrationTestConfig),
-            // 这里补的是另一半:**每次开跑都从零建**,隔离才是完整的。
-            // 同一条规矩在 business/it/ExploreItDatabase 已经这么写了,这里对齐。
-            s.execute("DROP DATABASE IF EXISTS " + MYSQL.databaseName());
-            s.execute("CREATE DATABASE " + MYSQL.databaseName() + " CHARACTER SET utf8mb4");
+            s.execute("CREATE DATABASE " + SCRATCH_DATABASE + " CHARACTER SET utf8mb4");
+            createdDatabase = true;
         }
-        dataSource = dataSource(MYSQL.databaseUrl());
+        dataSource = dataSource(MYSQL.databaseUrl().replace("/" + MYSQL.databaseName() + "?", "/" + SCRATCH_DATABASE + "?"));
         template = new SqlSessionTemplate(buildFactory(dataSource));
         registrationMapper = template.getMapper(CmsRegistrationMapper.class);
 
@@ -143,8 +142,25 @@ class RegistrationFundsMybatisIntegrationTest {
         ReflectionTestUtils.setField(target, "perkLedgerService", perkLedgerService);
         // 2026-09-16: 回调 inbox 去重(cc36b4552)是支付/退款回调的必经一步,本套手工装配漏注入即 NPE。
         // inbox 自身语义由 WxPaymentCallbackInboxServiceImplTest 覆盖,这里桩掉。
-        ReflectionTestUtils.setField(target, "wxPaymentCallbackInboxService",
-                mock(IWxPaymentCallbackInboxService.class));
+        IWxPaymentCallbackInboxService paymentInbox = mock(IWxPaymentCallbackInboxService.class);
+        java.util.Map<String, com.chengyinhub.business.domain.WxPaymentCallbackInbox> callbacks = new java.util.HashMap<>();
+        when(paymentInbox.register(anyString(), anyInt(), anyLong(), anyString())).thenAnswer(call -> {
+            com.chengyinhub.business.domain.WxPaymentCallbackInbox row = new com.chengyinhub.business.domain.WxPaymentCallbackInbox();
+            row.setBizType(call.getArgument(1)); row.setBizId(call.getArgument(2)); row.setEventType(call.getArgument(3));
+            callbacks.put(call.getArgument(0), row); return true;
+        });
+        when(paymentInbox.process(anyString(), any(IWxPaymentCallbackInboxService.Mutation.class))).thenAnswer(call -> {
+            IWxPaymentCallbackInboxService.Mutation mutation = call.getArgument(1);
+            return new org.springframework.transaction.support.TransactionTemplate(transactionManager).execute(status -> {
+                com.chengyinhub.business.domain.WxPaymentCallbackInbox row = callbacks.get(call.getArgument(0));
+                boolean applied = mutation.isCurrent(row) && mutation.apply(row);
+                if (!applied) status.setRollbackOnly();
+                return applied;
+            });
+        });
+        ReflectionTestUtils.setField(target, "wxPaymentCallbackInboxService", paymentInbox);
+        ReflectionTestUtils.setField(target, "registrationSignupNotificationService",
+                mock(com.chengyinhub.business.service.impl.RegistrationSignupNotificationService.class));
 
         CmsPointsSettingServiceImpl pointsSettingService = new CmsPointsSettingServiceImpl();
         ReflectionTestUtils.setField(pointsSettingService, "cmsPointsSettingMapper", template.getMapper(CmsPointsSettingMapper.class));
@@ -161,6 +177,7 @@ class RegistrationFundsMybatisIntegrationTest {
         proxyFactory.addAdvice(interceptor);
         Object registrationProxy = proxyFactory.getProxy();
         registrationService = (ICmsRegistrationService) registrationProxy;
+        ReflectionTestUtils.setField(target, "registrationSelf", registrationService);
 
         RegistrationOrderServiceImpl orderTarget = new RegistrationOrderServiceImpl();
         ReflectionTestUtils.setField(orderTarget, "registrationService", registrationService);
@@ -302,9 +319,12 @@ class RegistrationFundsMybatisIntegrationTest {
     @AfterAll
     void dropDatabase() throws Exception {
         try {
-            DriverManagerDataSource admin = dataSource(MYSQL.adminUrl());
-            try (Connection c = admin.getConnection(); Statement s = c.createStatement()) {
-                s.execute("DROP DATABASE IF EXISTS " + MYSQL.databaseName());
+            if (createdDatabase) {
+                DriverManagerDataSource admin = dataSource(MYSQL.adminUrl());
+                try (Connection c = admin.getConnection(); Statement s = c.createStatement()) {
+                    s.execute("DROP DATABASE " + SCRATCH_DATABASE);
+                    createdDatabase = false;
+                }
             }
         } finally {
             ReflectionTestUtils.setField(PiiCryptoService.class, "instance", null);
@@ -776,13 +796,35 @@ class RegistrationFundsMybatisIntegrationTest {
     }
 
     @Test
+    void confirmedPaymentWithinCancellationKeepsOriginalOuterRollback() throws Exception {
+        new org.springframework.transaction.support.TransactionTemplate(transactionManager).execute(status -> {
+            assertEquals("SUCCESS", registrationService.applyConfirmedWechatPaymentWithinTransaction(callback()));
+            // 外层事务未提交：须经同一事务连接回读（JdbcTemplate 走 DataSourceUtils），独立连接看不到。
+            assertEquals(2, new JdbcTemplate(dataSource).queryForObject(
+                    "SELECT payment_status FROM cms_registration WHERE id=11", Integer.class));
+            status.setRollbackOnly();
+            return null;
+        });
+        assertEquals(0, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(0, number("SELECT COUNT(*) FROM ums_member_points_detail"));
+    }
+
+    @Test
+    void channelCallbackRejectsAnUncommittedOuterTransactionWithoutClaimingInbox() throws Exception {
+        new org.springframework.transaction.support.TransactionTemplate(transactionManager).execute(status -> {
+            assertThrows(IllegalStateException.class, () -> registrationService.handleWechatPayCallback(callback()));
+            return null;
+        });
+        assertEquals(0, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+    }
+
+    @Test
     void downstreamDatabaseFailureRollsBackClaimAndRewards() throws Exception {
         execute("ALTER TABLE ums_member_points_detail ADD CONSTRAINT ck_reject_participation CHECK (change_reason <> '参与活动')");
         Map<String, String> callback = callback();
 
-        RuntimeException error = assertThrows(RuntimeException.class,
-                () -> registrationService.handleWechatPayCallback(callback));
-        assertTrue(error.getMessage() != null || error.getCause() != null);
+        assertEquals("FAIL", registrationService.handleWechatPayCallback(callback));
         assertEquals(0, number("SELECT payment_status FROM cms_registration WHERE id=11"));
         assertEquals(1, number("SELECT registration_status FROM cms_registration WHERE id=11"));
         assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
@@ -1926,8 +1968,7 @@ class RegistrationFundsMybatisIntegrationTest {
         execute("INSERT INTO ums_member_points_detail(member_id,current_points,after_points,change_points,change_reason,event_type,event_id,reward_business_key,change_type,del_flag)"
                 + " VALUES (7,100,1099,999,'冲突奖励',3,11,'registration:3:11',1,0)");
 
-        assertThrows(org.springframework.dao.DuplicateKeyException.class,
-                () -> registrationService.handleWechatPayCallback(callback()));
+        assertEquals("FAIL", registrationService.handleWechatPayCallback(callback()));
 
         assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
         assertEquals(0, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=7 "

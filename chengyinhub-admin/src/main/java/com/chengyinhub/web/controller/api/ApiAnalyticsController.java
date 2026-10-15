@@ -176,7 +176,15 @@ public class ApiAnalyticsController extends BaseController {
             }
         }
 
-        int accepted = analyticsEventService.recordBatch(memberId, request);
+        int accepted;
+        try {
+            accepted = analyticsEventService.recordBatch(memberId, request);
+        } catch (IllegalArgumentException conflict) {
+            if ("成交埋点必须关联原报名事实".equals(conflict.getMessage())) {
+                return error("成交埋点必须关联原报名事实");
+            }
+            return error("事件幂等键已用于不同内容或未确认落库");
+        }
         Map<String, Object> data = new HashMap<>();
         data.put("accepted", accepted);
         return success(data);
@@ -195,6 +203,10 @@ public class ApiAnalyticsController extends BaseController {
             }
             if (!ALLOWED_EVENTS.contains(item.getEventName())) {
                 return "不支持的埋点事件：" + item.getEventName();
+            }
+            if (StringUtils.isBlank(item.getIdempotencyKey())) {
+                return item.getEventName().startsWith("community_post_")
+                        ? "社区埋点必须携带幂等键" : "埋点必须携带幂等键";
             }
             if (item.getBizType() != null) {
                 String normalizedBizType = item.getBizType().trim().toLowerCase(Locale.ROOT);

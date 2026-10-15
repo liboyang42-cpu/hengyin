@@ -49,6 +49,7 @@ import static org.mockito.Mockito.when;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class StoreVerifyGrowthDeliveryTransactionTest {
     private String database;
+    private boolean createdDatabase;
     private JdbcTemplate admin;
     private JdbcTemplate db;
     private ICmsRegistrationService registrationService;
@@ -64,12 +65,14 @@ class StoreVerifyGrowthDeliveryTransactionTest {
         database = "chengyin_growth_tx_" + UUID.randomUUID().toString().replace("-", "");
         admin = new JdbcTemplate(new DriverManagerDataSource(config.adminUrl(), config.user(), config.password()));
         admin.execute("CREATE DATABASE " + database + " CHARACTER SET utf8mb4");
+        createdDatabase = true;
         DriverManagerDataSource source = new DriverManagerDataSource(
                 config.databaseUrl().replace("/" + config.databaseName() + "?", "/" + database + "?"),
                 config.user(), config.password());
         db = new JdbcTemplate(source);
         db.execute("CREATE TABLE cms_registration(id BIGINT PRIMARY KEY,parent_order_no VARCHAR(64),member_id BIGINT NOT NULL,owner_type BIGINT,"
                 + "owner_id BIGINT,payment_status INT,registration_status INT,verification_status INT,verifier_id BIGINT,verification_time DATETIME) ENGINE=InnoDB");
+        db.execute("ALTER TABLE cms_registration ADD COLUMN registration_no VARCHAR(512), ADD COLUMN request_id VARCHAR(512), ADD COLUMN request_fingerprint VARCHAR(512), ADD COLUMN activity_title VARCHAR(512), ADD COLUMN ticket_id BIGINT, ADD COLUMN ticket_name VARCHAR(512), ADD COLUMN ticket_price DECIMAL(20,4), ADD COLUMN real_name VARCHAR(512), ADD COLUMN phone VARCHAR(512), ADD COLUMN email VARCHAR(512), ADD COLUMN address VARCHAR(512), ADD COLUMN address_id BIGINT, ADD COLUMN participate_date VARCHAR(512), ADD COLUMN order_num BIGINT, ADD COLUMN original_amount DECIMAL(20,4), ADD COLUMN discount_amount DECIMAL(20,4), ADD COLUMN total_amount DECIMAL(20,4), ADD COLUMN point_used BIGINT, ADD COLUMN point_deduct_amount DECIMAL(20,4), ADD COLUMN point_deduct_rate DECIMAL(20,4), ADD COLUMN max_point_deduct DECIMAL(20,4), ADD COLUMN payable_amount DECIMAL(20,4), ADD COLUMN payment_type BIGINT, ADD COLUMN payment_time DATETIME, ADD COLUMN transaction_id VARCHAR(512), ADD COLUMN point_payment_amount DECIMAL(20,4), ADD COLUMN wechat_payment_amount DECIMAL(20,4), ADD COLUMN fee_platform_rate DECIMAL(20,4), ADD COLUMN pay_expire_time DATETIME, ADD COLUMN topic_id BIGINT, ADD COLUMN purchase_kind BIGINT, ADD COLUMN refund_policy_code VARCHAR(512), ADD COLUMN refund_policy_version BIGINT, ADD COLUMN refund_deadline DATETIME, ADD COLUMN expires_at DATETIME, ADD COLUMN create_by VARCHAR(512), ADD COLUMN create_time DATETIME, ADD COLUMN update_by VARCHAR(512), ADD COLUMN update_time DATETIME, ADD COLUMN verification_code VARCHAR(512), ADD COLUMN qrcode_url VARCHAR(512), ADD COLUMN first_successful_scan_at DATETIME, ADD COLUMN points_returned BIGINT");
         db.execute("CREATE TABLE activity_cancel_manual_refund_case(id BIGINT PRIMARY KEY AUTO_INCREMENT,"
                 + "activity_id BIGINT,topic_id BIGINT,parent_order_no VARCHAR(64),payer_member_id BIGINT,"
                 + "payer_registration_id BIGINT,case_type VARCHAR(32) NOT NULL DEFAULT 'MIXED_TICKETS',"
@@ -130,7 +133,7 @@ class StoreVerifyGrowthDeliveryTransactionTest {
     @AfterAll
     void cleanup() {
         if (database == null || admin == null) return;
-        admin.execute("DROP DATABASE " + database);
+        if (createdDatabase) { admin.execute("DROP DATABASE " + database); createdDatabase = false; }
         assertEquals(0, admin.queryForObject(
                 "SELECT count(*) FROM information_schema.schemata WHERE schema_name=?", Integer.class, database));
     }
@@ -176,6 +179,7 @@ class StoreVerifyGrowthDeliveryTransactionTest {
         registration.setOwnerType(1L);
         registration.setOwnerId(300L);
         registration.setPaymentStatus(2);
+        registration.setRegistrationStatus(2);
         return registration;
     }
 

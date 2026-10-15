@@ -32,12 +32,14 @@ final class WeRunFixtures {
     }
 
     /** 造一份"今天走了 steps 步"的密文;前面还塞了两天历史,好验证取的是最后一条 */
-    static String encryptSteps(int steps) {
+    static String encryptSteps(int steps) { return encryptSteps(steps,1756200000L); }
+
+    static String encryptSteps(int steps,long timestamp) {
         String plain = "{\"stepInfoList\":["
                 + "{\"timestamp\":1756000000,\"step\":1},"
                 + "{\"timestamp\":1756100000,\"step\":2},"
-                + "{\"timestamp\":1756200000,\"step\":" + steps + "}],"
-                + "\"watermark\":{\"appid\":\"" + APP_ID + "\",\"timestamp\":1756200000}}";
+                + "{\"timestamp\":" + timestamp + ",\"step\":" + steps + "}],"
+                + "\"watermark\":{\"appid\":\"" + APP_ID + "\",\"timestamp\":" + timestamp + "}}";
         try {
             byte[] raw = plain.getBytes(StandardCharsets.UTF_8);
             int pad = 16 - (raw.length % 16);

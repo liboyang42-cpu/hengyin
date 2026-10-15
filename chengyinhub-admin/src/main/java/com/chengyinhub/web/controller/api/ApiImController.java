@@ -45,16 +45,22 @@ public class ApiImController extends BaseController
         }
     }
 
+    public AjaxResult messages(String conversation_id, String cursor_id, String size)
+    {
+        return messages(conversation_id, cursor_id, size, null);
+    }
+
     @Operation(summary = "会话消息分页")
     @PostMapping("/messages")
-    public AjaxResult messages(String conversation_id, String cursor_id, String size)
+    public AjaxResult messages(String conversation_id, String cursor_id, String size, String after_id)
     {
         try
         {
             Long cid = Convert.toLong(conversation_id, 0L);
             Long cursor = Convert.toLong(cursor_id, 0L);
             int sz = Convert.toInt(size, 20);
-            return AjaxResult.success(imService.listMessages(getAppUserId(), cid, cursor, sz));
+            return AjaxResult.success(after_id == null ? imService.listMessages(getAppUserId(), cid, cursor, sz)
+                    : imService.listMessages(getAppUserId(), cid, cursor, sz, Convert.toLong(after_id, -1L)));
         }
         catch (ServiceException e)
         {
@@ -107,13 +113,34 @@ public class ApiImController extends BaseController
         }
     }
 
+    @Operation(summary = "回读原消息发送收据")
+    @PostMapping("/send-receipt")
+    public AjaxResult sendReceipt(String conversation_id, String client_message_id)
+    {
+        try {
+            ImMessage receipt = imService.readSentMessage(getAppUserId(),
+                    Convert.toLong(conversation_id, 0L), client_message_id);
+            Map<String, Object> result = new HashMap<>();
+            result.put("found", receipt != null);
+            result.put("message", receipt);
+            return AjaxResult.success(result);
+        } catch (ServiceException e) { return bizError(e); }
+        catch (Exception e) { logger.error("IM 原消息回读异常", e); return AjaxResult.error("原消息结果待确认"); }
+    }
+
+    public AjaxResult read(String conversation_id)
+    {
+        return read(conversation_id, null);
+    }
+
     @Operation(summary = "标记已读")
     @PostMapping("/read")
-    public AjaxResult read(String conversation_id)
+    public AjaxResult read(String conversation_id, String read_to)
     {
         try
         {
-            imService.markRead(getAppUserId(), Convert.toLong(conversation_id, 0L));
+            if (read_to == null) imService.markRead(getAppUserId(), Convert.toLong(conversation_id, 0L));
+            else imService.markRead(getAppUserId(), Convert.toLong(conversation_id, 0L), Convert.toLong(read_to, -1L));
             return AjaxResult.success();
         }
         catch (Exception e)

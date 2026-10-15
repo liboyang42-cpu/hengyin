@@ -21,6 +21,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -80,12 +82,16 @@ class ClubWaitlistMaintenanceIsolationTransactionTest {
 
     private ClubEventOpsMapper dataBackedMapper() {
         ClubEventOpsMapper mapper = mock(ClubEventOpsMapper.class);
-        when(mapper.selectExpiredOfferedIds(any(Date.class), anyInt())).thenAnswer(call -> jdbc.queryForList(
-                "select id from club_event_waitlist where state='OFFERED' and offer_expires_at<=? order by id",
-                Long.class, (Object) call.getArgument(0, Date.class)));
-        when(mapper.selectClaimedPaidRegistrationIds(anyInt())).thenReturn(Collections.emptyList());
-        when(mapper.selectClaimedTerminalRegistrationIds(anyInt())).thenReturn(Collections.emptyList());
-        when(mapper.selectPromotableWaitlistScopes(any(Date.class), anyInt())).thenReturn(Collections.emptyList());
+        when(mapper.selectWaitlistMaintenanceMaxId()).thenAnswer(call ->
+                jdbc.queryForObject("select max(id) from club_event_waitlist", Long.class));
+        when(mapper.selectWaitlistMaintenancePage(eq(0), any(Date.class), anyLong(), anyLong(), anyInt()))
+                .thenAnswer(call -> jdbc.queryForList("select id as scanId, id as targetId from club_event_waitlist "
+                        + "where state='OFFERED' and offer_expires_at<=? and id>? and id<=? order by id limit ?",
+                        new Object[] {call.getArgument(1), call.getArgument(2), call.getArgument(3), call.getArgument(4)}).stream().map(row -> {
+                            java.util.Map<String, Object> normalized = new java.util.HashMap<>();
+                            normalized.put("scanId", row.get("SCANID")); normalized.put("targetId", row.get("TARGETID"));
+                            return normalized;
+                        }).collect(java.util.stream.Collectors.toList()));
         when(mapper.selectSeriesByActivityAnyStatusForUpdate(any(Long.class))).thenAnswer(call -> policy());
         when(mapper.selectSeriesPolicyByActivity(any(Long.class))).thenReturn(null);
         when(mapper.selectWaitlistById(any(Long.class))).thenAnswer(call -> selectWaitlist(call.getArgument(0), false));

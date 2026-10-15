@@ -13,6 +13,11 @@ public interface ImMessageMapper
 
     public ImMessage selectImMessageById(Long id);
 
+    /** 仅摘要投影，保留最新消息的审核终态，不扩大历史消息查询。 */
+    ImMessage selectLatestForProjection(@Param("conversationId") Long conversationId);
+
+    Long selectLatestVisibleIdForUpdate(@Param("conversationId") Long conversationId);
+
     ImMessage selectByClientMessageIdForUpdate(@Param("conversationId") Long conversationId,
             @Param("senderId") Long senderId, @Param("clientMessageId") String clientMessageId);
 
@@ -26,6 +31,12 @@ public interface ImMessageMapper
     /** 会话消息分页(cursorId>0 时取该id之前的更早消息, 倒序) */
     public List<ImMessage> selectPage(@Param("conversationId") Long conversationId,
                                       @Param("cursorId") Long cursorId, @Param("size") Integer size);
+
+    List<ImMessage> selectAfter(@Param("conversationId") Long conversationId,
+                                @Param("afterId") Long afterId, @Param("size") Integer size);
+
+    int countUnreadAfter(@Param("conversationId") Long conversationId,
+                         @Param("memberId") Long memberId, @Param("readTo") Long readTo);
 
     public int updateStatus(@Param("id") Long id, @Param("status") Integer status);
 }

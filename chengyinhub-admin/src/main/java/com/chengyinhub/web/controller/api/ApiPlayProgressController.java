@@ -223,6 +223,9 @@ public class ApiPlayProgressController extends BaseController
     @Autowired
     private com.chengyinhub.business.mapper.CmsRegistrationMapper cmsRegistrationMapper;
 
+    @Autowired
+    private com.chengyinhub.business.mapper.CmsActivityMapper currentPlayActivityMapper;
+
     /** [P0-17] ③ 通关口径:认核销不认打卡。 */
     @Autowired
     private com.chengyinhub.business.service.IPerkLedgerService perkLedgerService;
@@ -359,6 +362,12 @@ public class ApiPlayProgressController extends BaseController
             tId = topicId;
             progActId = 0L;
             CmsRegistration pass = validSelfPlayPass(memberId, tId);
+            // 已开局的本局：通行证开局时有效即可打完，节点列表照常下发。
+            if (pass == null && topicRouteRuntimeService != null && topicRouteRuntimeService.hasRunningSession(memberId, tId, 0L)) {
+                try { pass = com.chengyinhub.business.service.support.CurrentPlayRegistration.requireToContinue(
+                        currentPlayActivityMapper,cmsRegistrationMapper,memberId,1L,tId,null,new Date()); }
+                catch (IllegalStateException denied) { pass = null; }
+            }
             // C-26:没有(或过期的)自玩通行证不是「未报名」——自玩本来就没有报名这个动作。
             // 回 402 让前端落 needPass 空态并给出获取通行证的出路(与 /api/play 下各写入口同一语义),
             // 不再落到 registered=false 的「你还没有报名这个场次」+「去报名」错误指引。
@@ -1410,7 +1419,7 @@ public class ApiPlayProgressController extends BaseController
                 || !ownerType.equals(current.getOwnerType()) || !ownerId.equals(current.getOwnerId())
                 || !Integer.valueOf(2).equals(current.getRegistrationStatus())
                 || !Integer.valueOf(2).equals(current.getPaymentStatus())
-                || (ctx.selfPlay && current.getExpiresAt() != null && !current.getExpiresAt().after(scanTime))
+                || (ctx.selfPlay && !ctx.continuing && current.getExpiresAt() != null && !current.getExpiresAt().after(scanTime))
                 || current.getFirstSuccessfulScanAt() == null) {
             throw new com.chengyinhub.common.exception.ServiceException("订单资格已变化，请刷新票夹后重试");
         }
@@ -2618,6 +2627,7 @@ public class ApiPlayProgressController extends BaseController
         Long topicId;
         boolean selfPlay;
         boolean nightWarning;
+        boolean continuing; // 自玩本局已开局：通行证中途到期不打断
         CmsRegistration registration;
         AjaxResult error;
     }
@@ -2643,9 +2653,16 @@ public class ApiPlayProgressController extends BaseController
             CmsActivity activity = cmsActivityService.selectCmsActivityById(actId);
             if (activity == null || activity.getTopicId() == null) { c.error = error("活动不存在"); return c; }
             if (!activity.getTopicId().equals(node.getTopicId())) { c.error = error("该节点不属于本次活动"); return c; }
-            CmsRegistration ticket = activityRegistration(memberId, actId, registrationId);
+            CmsRegistration ticket;
+            try { ticket=com.chengyinhub.business.service.support.CurrentPlayRegistration.require(
+                    currentPlayActivityMapper,cmsRegistrationMapper,memberId,2L,actId,registrationId,new Date()); }
+            catch(IllegalStateException denied) { c.error=error(denied.getMessage());return c; }
             if (ticket == null) { c.error = error("请先报名并完成支付"); return c; }
             c.registration = ticket;
+            activity=currentPlayActivityMapper.selectCmsActivityByIdForUpdate(actId);
+            if(activity==null || !node.getTopicId().equals(activity.getTopicId())) {
+                c.error=error("该节点不属于本次活动");return c;
+            }
             String timeErr = activityTimeError(activity);
             if (timeErr != null) { c.error = error(timeErr); return c; }
             c.actId = actId;
@@ -2658,12 +2675,22 @@ public class ApiPlayProgressController extends BaseController
         Long tId;
         try { tId = Long.valueOf(topicId); } catch (Exception e) { c.error = error("参数有误"); return c; }
         if (node.getTopicId() == null || !node.getTopicId().equals(tId)) { c.error = error("该节点不属于本主题"); return c; }
-        CmsRegistration pass = validSelfPlayPass(memberId, tId, registrationId);
+        CmsRegistration pass;
+        // 已开局的自玩路线：通行证开局时有效即可打完本局(中途到期不打断)；未开局仍需有效通行证。
+        // 「已开局」由路线运行时判定：有进行中的路线局，或不建局的普通线性路线已记过节点进度。
+        boolean continuing = topicRouteRuntimeService != null && topicRouteRuntimeService.hasRunningSession(memberId, tId, 0L);
+        try { pass = continuing
+                ? com.chengyinhub.business.service.support.CurrentPlayRegistration.requireToContinue(
+                        currentPlayActivityMapper,cmsRegistrationMapper,memberId,1L,tId,registrationId,new Date())
+                : com.chengyinhub.business.service.support.CurrentPlayRegistration.require(
+                        currentPlayActivityMapper,cmsRegistrationMapper,memberId,1L,tId,registrationId,new Date()); }
+        catch(IllegalStateException denied) { c.error=new AjaxResult(402,denied.getMessage());return c; }
         if (pass == null) { c.error = new AjaxResult(402, "请先购买自玩通行证"); return c; }
         c.registration = pass;
         c.actId = 0L;
         c.topicId = tId;
         c.selfPlay = true;
+        c.continuing = continuing;
         c.nightWarning = isNightNow();
         return c;
     }

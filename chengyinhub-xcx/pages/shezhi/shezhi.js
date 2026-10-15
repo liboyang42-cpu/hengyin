@@ -1,3 +1,5 @@
+const sendRecovery = require('../../utils/im-send-recovery.js');
+const { invalidateRoamCache } = require('../../utils/roam-cache-epoch.js');
 const loading = require('../../utils/loading.js');
 const toast = require('../../utils/toast.js');
 const app = getApp();
@@ -279,6 +281,7 @@ Page({
     const dc = this.selectComponent && this.selectComponent('#dc');
     if (dc) dc.busyOn();
     const clearLocalLogin = function () {
+      const roamOwner = typeof app.getUserID === 'function' ? app.getUserID() : app.globalData.user_id;
       app.globalData.authorization = '';
       app.globalData.open_id = '';
       app.globalData.user_id = '';
@@ -287,6 +290,8 @@ Page({
       app.globalData.nickname = '';
       app.globalData.role = ''; // 退出时一并清角色,避免内存残留导致身份错乱
       roleGuard.clear(); // 清 roleGuard 模块级权限缓存(clearStorageSync 清不掉内存 _cache,reLaunch 不重启模块)
+      sendRecovery.invalidate(); // 使登出前的未知发送回包不能重建恢复记录。
+      invalidateRoamCache(roamOwner); // 漫游页放弃本范围未同步记录,卸载/迟到回包不重建。
       wx.clearStorageSync();
       wx.reLaunch({ url: '/pages/index/index' });
     };

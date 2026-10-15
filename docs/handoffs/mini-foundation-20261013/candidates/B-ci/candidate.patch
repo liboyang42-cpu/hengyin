@@ -1,0 +1,34 @@
+diff --git a/chengyinhub-xcx/tests/unit/play-free-explore-detail-contract.test.js b/chengyinhub-xcx/tests/unit/play-free-explore-detail-contract.test.js
+index 2bca2c4..8d70688 100644
+--- a/chengyinhub-xcx/tests/unit/play-free-explore-detail-contract.test.js
++++ b/chengyinhub-xcx/tests/unit/play-free-explore-detail-contract.test.js
+@@ -159,8 +159,18 @@ test('门店分身对话:归属校验必须在进模型之前', () => {
+   // 归属判定只有一份(gateShopChat),打字与语音都必须先过它再进模型 ——
+   // 各写一遍的话规则一改总会漏掉一边,而漏掉的那一边就是越权面。
+   const gateBody = between(ctrl, 'private ShopGate gateShopChat(', 'private static final class ShopGate', '闸门实现')
+-  assert.match(gateBody, /hasPaidRegistration\(userId, 1, node\.getTopicId\(\)\)/,
+-    '没有归属校验的话,任何登录用户都能拿任意 nodeId 把别人家的分身当免费模型用')
++  assert.match(gateBody, /if \(playTeamMapper\.hasCurrentNpcRegistration\(userId, node\.getTopicId\(\)\) <= 0\)\s*\{\s*return ShopGate\.deny/,
++    '必须按当前本人和节点主题查通行资格,无资格时拒绝,不能只保留一个未消费的 hasXX 调用')
++  const mapper = fs.readFileSync(path.join(REPO,
++    'chengyinhub-system/src/main/resources/mapper/business/PlayTeamMapper.xml'), 'utf8')
++  const registration = between(mapper, '<select id="hasCurrentNpcRegistration"', '<select id="selectMyTeams"', '当前 NPC 通行资格')
++  assert.match(registration, /r\.member_id = #\{memberId\}/, '只查当前本人')
++  assert.match(registration, /r\.payment_status = 2/, '未付款不能拿到对话资格')
++  assert.match(registration, /r\.registration_status = 2/, '取消或退款后的报名不能沿用旧资格')
++  assert.match(registration, /r\.owner_type = 1 and r\.owner_id = #\{topicId\}/, '主题票必须归当前节点主题')
++  assert.match(registration, /r\.owner_type = 2 and a\.topic_id = #\{topicId\}/, '活动票必须回到当前节点主题')
++  assert.match(registration, /r\.expires_at is null or r\.expires_at &gt; now\(\)/, '主题票仍按现有有效期')
++  assert.match(registration, /a\.end_date is not null and a\.end_date &gt; now\(\)/, '探索活动缺期限或已结束不能放行')
+ 
+   for (const [name, endAnchor] of [
+     ['public AjaxResult shopChat(', 'private ShopGate gateShopChat('],
+@@ -170,6 +180,8 @@ test('门店分身对话:归属校验必须在进模型之前', () => {
+     const gate = method.indexOf('gateShopChat')
+     const call = method.indexOf('chatWithShop')
+     assert.ok(gate > 0 && call > gate, name + ':必须先过闸再进模型')
++    assert.match(method.slice(0, call), /Long userId = getAppUserId\(\)/, '资格主体必须来自登录身份')
++    assert.match(method.slice(gate, call), /if \(gate\.deny != null\) return gate\.deny;/, '被拒必须在模型调用前退出')
+     assert.match(method, /npcFeatureFlags\.shopChatOn\(\)/, '功能闸必须在最前面')
+   }
+   const method = between(ctrl, 'public AjaxResult shopChat(', 'private ShopGate gateShopChat(', 'shopChat')

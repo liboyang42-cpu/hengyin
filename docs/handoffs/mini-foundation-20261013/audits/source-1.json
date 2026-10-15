@@ -1,0 +1,1544 @@
+[
+  {
+    "id": "M0137",
+    "title": "弱网写操作恢复",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第1级",
+    "existingStatus": "已有基础",
+    "gap": "断点：这只提供页面内锁，不自己生成稳定请求ID、持久化或后端防重；每个宿主必须接原请求/原单回读，不能工具存在就标全站写操作可恢复。",
+    "needed": "把付款/兑换/领奖/退出等活跃写入列宿主表；提交前持久保存业务ID和内容指纹，未知时用原ID查状态再决定是否重试。",
+    "dependencies": "无清单内阻塞前置；复用所列已有能力",
+    "acceptance": "提交后丢响应、杀进程再进入同宿主；只找回同一原对象，资源只变化一次；已过期/无权限不得假成功。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-xcx/utils/write-action-workflow.js:31\nif (finalResult.status !== 'unknown') delete active[key];\n未知保持锁：chengyinhub-xcx/utils/write-action-workflow.js:31\nif (finalResult.status !== 'unknown') delete active[key];\n恢复占锁：chengyinhub-xcx/utils/write-action-workflow.js:56\nhold: function (key) {\n权威后释放：chengyinhub-xcx/utils/write-action-workflow.js:63\nreset: function (key) {",
+    "historicalChain": "本项原证据锚点 → 未知保持锁 → 恢复占锁 → 权威后释放",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "小程序报名页提交requestId并按原registrationId查支付；game-node持久请求索引→readReceipt核对activity/request/action→解除unknown。公共write-action-workflow只保页面内锁。",
+      "remainingCode": "缺逐宿主覆盖清单与所有宿主的持久意图/内容指纹/原结果恢复；不能把报名和游戏的实现外推付款、兑换、领奖、退出全站。",
+      "acceptanceBreakpoints": "本轮未运行；每宿主丢响应、杀进程、账号切换、原单终态/无权回读需公开版本实测。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-xcx/utils/write-action-workflow.js",
+          "symbolOrRule": "function run(",
+          "line": 17,
+          "sha256": "6f4b327446df18ed4debc744ddf3378fd4b66a6b12712d0538433a274506e8bb"
+        },
+        {
+          "path": "chengyinhub-xcx/pages/merchant/game-node/index.js",
+          "symbolOrRule": "this._client.readReceipt",
+          "line": 717,
+          "sha256": "4f37a7ec961ff25dff4e8cb5c5df5ae2fed7f8ecb1b54a77e07e27e1bb7b249c"
+        },
+        {
+          "path": "chengyinhub-xcx/utils/checkout/registration-payment-verifier.js",
+          "symbolOrRule": "requestStatus(ref",
+          "line": 15,
+          "sha256": "9a6f5361217c8532ab1a91832aa245daa4a8b9befa8e48789859fa0d7a088f0f"
+        },
+        {
+          "path": "chengyinhub-xcx/pages/activity/baoming/baoming.js",
+          "symbolOrRule": "requestId: requestId",
+          "line": 1393,
+          "sha256": "3b097e0d26e7f99ebab5ee255edfc4e59ae9c3574d1bd48876a20b9c0c3894ba"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.956448+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "当前范围",
+      "currentScopeReason": "已有报名/游戏宿主原请求恢复的确定断点",
+      "countsAsCurrentRemainingItem": true,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0139",
+    "title": "重复点击与并发操作",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第1级",
+    "existingStatus": "已有基础",
+    "gap": "断点：这只提供页面内锁，不自己生成稳定请求ID、持久化或后端防重；每个宿主必须接原请求/原单回读，不能工具存在就标全站写操作可恢复。",
+    "needed": "后端逐宿主用唯一业务键及事务/CAS约束，并校同键内容；页面锁继续只负责点击反馈。",
+    "dependencies": "无清单内阻塞前置；复用所列已有能力",
+    "acceptance": "双端同时提交相同请求得到同一结果；同键换金额/数量拒绝；不同合法请求按真实容量处理，页面锁失效也不重复扣账。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-xcx/utils/write-action-workflow.js:31\nif (finalResult.status !== 'unknown') delete active[key];\n未知保持锁：chengyinhub-xcx/utils/write-action-workflow.js:31\nif (finalResult.status !== 'unknown') delete active[key];\n恢复占锁：chengyinhub-xcx/utils/write-action-workflow.js:56\nhold: function (key) {\n权威后释放：chengyinhub-xcx/utils/write-action-workflow.js:63\nreset: function (key) {",
+    "historicalChain": "本项原证据锚点 → 未知保持锁 → 恢复占锁 → 权威后释放",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "游戏command计算requestHash，actor+activity+requestId查原回执，同键不同内容replay拒绝；报名自玩在主题锁内检查requestId+fingerprint，库存用条件扣减。页面锁不是服务器防重。",
+      "remainingCode": "仍需逐宿主唯一键/同键内容/资源事务矩阵；商城settleCart当前无requestId只返回首单，不代表共用底层已覆盖。",
+      "acceptanceBreakpoints": "公开版本双连接同键/换内容/最后容量竞争及资源独立回读；历史私库测试不沿用。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+          "symbolOrRule": "public GameCommandReceiptView command(",
+          "line": 261,
+          "sha256": "6e52c74d1d6e225a842080d73b15b6c559d123a08cd43c4af17d30ce1800e9bb"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+          "symbolOrRule": "private GameCommandReceiptView replay(",
+          "line": 2943,
+          "sha256": "6e52c74d1d6e225a842080d73b15b6c559d123a08cd43c4af17d30ce1800e9bb"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "private CmsRegistration createSelfPlayPassInternal(",
+          "line": 762,
+          "sha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java",
+          "symbolOrRule": "public Long settleCart(",
+          "line": 263,
+          "sha256": "b7fcc37e585a3541331f4bccf39f01e030077bc037740345751d6346afb0d3c7"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.959114+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "当前范围",
+      "currentScopeReason": "已有小程序写入同键内容和资源防重确定断点",
+      "countsAsCurrentRemainingItem": true,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "F0510",
+    "title": "商城订单支付恢复",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第1级",
+    "existingStatus": "可改进",
+    "gap": "补固定兑换请求ID、内容指纹、原订单回读及多商家全部订单映射；先解决结果未知，不套现金支付页。",
+    "needed": "建兑换请求ID+商品/数量/商家内容hash，存全部子订单映射，双端提供原兑换结果恢复。",
+    "dependencies": "M0137, M0139",
+    "acceptance": "多商家兑换成功后断网；重启回同一批子单，积分及各商品库存只扣一次；同ID换购物车拒绝。",
+    "sourceAnchors": "兑换请求：chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCartController.java:134\nreturn success(umsMemberCartService.settleCart(loginUser.getUserId(), loginUser.getUsername(),\n本人锁：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java:266\nlockCartsForSettlement(memberId, cartIds);\n积分事务：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java:291\nif (!umsMemberService.deductPoints(memberId, pointsCost)) {\n库存事务：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java:345\nif (pmsSkuService.deductStockForProduct(cart.getSkuId(), cart.getProductId(), cart.getQuantity()) == 0) {\n客户端结果边界：城瘾app/app/lib/feature/mall/cart_checkout_sheet.dart:95\n_completedOrderId = orderId;",
+    "historicalChain": "兑换请求 → 本人锁 → 积分事务 → 库存事务 → 客户端结果边界",
+    "publicAudit": {
+      "scope": "App专属",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "公开Cart结算按本人锁购物车和地址，扣积分，按商家建订单/明细并条件扣库存、删购物车；最终只返回firstOrderId。当前小程序源码未检出/api/cart或settleCart/settleOrder消费。",
+      "remainingCode": "按原目标缺requestId+内容hash+全子订单映射/原批次恢复；本轮App暂停，不实施。",
+      "acceptanceBreakpoints": "App源码未包含在当前公开树中，端上恢复待核；公开后端也不能继承旧私库MySQL结果。",
+      "uncertainty": "App范围依据原条目及小程序无调用搜索；不声称公开App端已实现。",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java",
+          "symbolOrRule": "public Long settleCart(",
+          "line": 263,
+          "sha256": "b7fcc37e585a3541331f4bccf39f01e030077bc037740345751d6346afb0d3c7"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java",
+          "symbolOrRule": "return firstOrderId;",
+          "line": 353,
+          "sha256": "b7fcc37e585a3541331f4bccf39f01e030077bc037740345751d6346afb0d3c7"
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCartController.java",
+          "symbolOrRule": "settleCart(",
+          "line": 134,
+          "sha256": "539e6fb035f30f290183e8ca293f95452bf3b42a1fa9746fce3078a3ba2a215d"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.959478+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "后置",
+      "currentScopeReason": "App专属，本轮暂停",
+      "countsAsCurrentRemainingItem": false,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "F0511",
+    "title": "兑换商品权益",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第1级",
+    "existingStatus": "可改进",
+    "gap": "补原兑换请求/原订单回读，区分实物待履约和具体数字权益交付；弱网重提不再扣积分/造新单。",
+    "needed": "逐商品定义交付类型、持有人、交付动作和失败补偿；数字权益用原订单行去重发放，实物展示待履约。",
+    "dependencies": "M0137, M0139, F0510",
+    "acceptance": "同订单行重试数字交付不重复发权益；实物订单没有发货仍为待履约；部分交付失败可查原行并补发。",
+    "sourceAnchors": "本项实际处理器：城瘾app/app/lib/feature/mall/cart_checkout_sheet.dart:87\n.settleOrder(\n兑换事务：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java:263\npublic Long settleCart(Long memberId, String username, String rawCartIds, String remark, String rawAddressId)\n积分扣减：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java:291\nif (!umsMemberService.deductPoints(memberId, pointsCost)) {\n条件库存：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java:346\nthrow new ServiceException(\"[\" + cart.getProductName() + \"]商品库存不足,请重试\");",
+    "historicalChain": "本项实际处理器 → 兑换事务 → 积分扣减 → 条件库存",
+    "publicAudit": {
+      "scope": "App专属",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "同Cart结算创建order/item并扣积分库存，状态设1；所查结算方法没有按订单行分支发放数字权益。",
+      "remainingCode": "缺交付类型、订单行幂等发放/失败补偿与部分履约回读；App暂停不改。",
+      "acceptanceBreakpoints": "实物履约与数字权益真实发放分别验；不能把建订单作为交付成功。",
+      "uncertainty": "未全量追订单履约扩展模块，数字权益完整缺失范围待核；此处确定settleCart本身未承载该规则。",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java",
+          "symbolOrRule": "order.setStatus(1L);",
+          "line": 320,
+          "sha256": "b7fcc37e585a3541331f4bccf39f01e030077bc037740345751d6346afb0d3c7"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberCartServiceImpl.java",
+          "symbolOrRule": "omsOrderItemService.insertOmsOrderItem(item);",
+          "line": 344,
+          "sha256": "b7fcc37e585a3541331f4bccf39f01e030077bc037740345751d6346afb0d3c7"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.959558+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "后置",
+      "currentScopeReason": "App专属，本轮暂停",
+      "countsAsCurrentRemainingItem": false,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0035",
+    "title": "多票种共享容量",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第1级",
+    "existingStatus": "已有基础",
+    "gap": "具体断点：活动各票种库存与主题自玩总配额已实现，但所查普通活动没有票种共同容量池与联扣消费者。 后续：自玩现有总配额保留；如普通/会员/渠道票共享场地容量，需共同容量池与每票种原子联扣，不能各库存相加代替。",
+    "needed": "给普通活动建立显式共享容量池；占票同时扣票种配额与共池，取消/超时只释放原占位一次。",
+    "dependencies": "M0139",
+    "acceptance": "普通票/会员票/渠道票并发争最后一席，只一单占到；各资源一致；重复取消和迟到付款不使共池变负或超卖。",
+    "sourceAnchors": "自玩锁：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:767\nCmsTopic lockedTopic = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);\n共同配额：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:807\nint occupied = cmsRegistrationMapper.countActiveSelfPlayPasses(topicId);\n票种扣减：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:560\n: omsTicketMapper.deductInventory(ticket.getId(), (long) qty);",
+    "historicalChain": "自玩锁 → 共同配额 → 票种扣减",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "尚未实现",
+      "verifiedCodeChain": "自玩有主题FOR UPDATE→countActiveSelfPlayPasses→总quota；普通活动按ticketId条件扣inventory，候补保留量也在票种扣减。",
+      "remainingCode": "目标是普通活动跨票种共池联扣；所查报名建单/库存路径未发现该共池或原共池占位释放身份。需先冻结适用活动及容量规则，不能用自玩额度替代。",
+      "acceptanceBreakpoints": "多票种最后一席、重复释放、晚付款真库验收未做。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "int occupied = cmsRegistrationMapper.countActiveSelfPlayPasses",
+          "line": 807,
+          "sha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "omsTicketMapper.deductInventory(ticket.getId()",
+          "line": 560,
+          "sha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/OmsTicketMapper.xml",
+          "symbolOrRule": "id=\"deductInventory\"",
+          "line": 334,
+          "sha256": "db3adf83a89ffca7849715f81fa0a3ba519c12075144bdd54107d8cfdba34581"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.960446+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "后置",
+      "currentScopeReason": "普通活动跨票种共池是新增底层能力及容量政策，后置",
+      "countsAsCurrentRemainingItem": false,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0043",
+    "title": "同用户购票限额",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第1级",
+    "existingStatus": "已有基础",
+    "gap": "断点：这些特定产品限购已实现，不能推广为所有活动同用户统一数量上限；普通多票/代买人数、取消后再购需独立政策和消费者。",
+    "needed": "逐购买对象定义限购键和有效占位/已购计数，统一代买与取消后重购条件；不把特定产品规则推广全站。",
+    "dependencies": "M0139",
+    "acceptance": "同会员双端并发超限被拒；同原请求回放不占新名额；取消后重购符合冻结政策，换票种不能绕过共同上限。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:435\nthrow new RuntimeException(\"探索票每单限购 1 张\");\n单次规则：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:435\nthrow new RuntimeException(\"探索票每单限购 1 张\");\n一期一票消费者：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:748\nExploreAccountTicketGate.assertAvailable(\n原单复用边界：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:798\nthrow new RegistrationRequestConflictException(\"该主题已有待支付自玩通行证，请继续原订单或取消后重新提交\");",
+    "historicalChain": "本项原证据锚点 → 单次规则 → 一期一票消费者 → 原单复用边界",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "探索qty>1拒绝，一期一票走ExploreAccountTicketGate；自玩找live原票且新请求要求原ID+fingerprint。",
+      "remainingCode": "普通多票/代买跨票种统一用户上限未见同一消费闸；有效占位、取消重购政策仍需产品对象矩阵，不能擅定统一上限。",
+      "acceptanceBreakpoints": "双端并发/原键回放/换票种及取消后重购需按各已确认政策实跑。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "探索票每单限购 1 张",
+          "line": 435,
+          "sha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "ExploreAccountTicketGate.assertAvailable(",
+          "line": 748,
+          "sha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "CmsRegistration reusable = findLiveSelfPlayPass",
+          "line": 794,
+          "sha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.961163+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "后置",
+      "currentScopeReason": "跨产品统一用户限购/代买重购规则未定，新增规则后置",
+      "countsAsCurrentRemainingItem": false,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0055",
+    "title": "支付回调重复处理",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第1级",
+    "existingStatus": "已有基础",
+    "gap": "断点：业务防重已有，inbox统一认领/终态处理未接实际回调，不能以辅助process存在称整条回调都受fence保护；需明确其接入/运维消费者。",
+    "needed": "把实际支付/退款入口接到已存在inbox认领和终态处理；明确异步消费者、重试和死信，沿用业务CAS防重。",
+    "dependencies": "无清单内阻塞前置；复用所列已有能力",
+    "acceptance": "同回调10次、两个处理者并发及认领后崩溃；只一笔业务推进，失权处理者不能写终态，重启原事件可完成。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java:75\nWxPaymentCallbackClaim claim = claimService.claim(notifyHash);\n实际回调登记：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2033\nwxPaymentCallbackInboxService.register(\n报名条件结果：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2145\nboolean paymentTransitioned = cmsRegistrationMapper.claimPaymentSuccess(\n未接通的独立工具：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java:68\npublic boolean process(String notifyId, Mutation mutation)\n工具终态规则：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java:49\nif (mapper.markDone(claim.getNotifyHash(), claim.getOwnerToken(), claim.getFenceToken()) != 1)",
+    "historicalChain": "本项原证据锚点 → 实际回调登记 → 报名条件结果 → 未接通的独立工具 → 工具终态规则",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "付款与退款真实回调均调用inbox.register；付款由claimPaymentSuccess/current-read+交易身份推进，独立inbox.process再claim/fence/markDone未见真实回调调用。",
+      "remainingCode": "将实际入口接inbox处理权/终态/重试消费者仍未完成；现业务CAS保留，不能以register去重当整链fence。",
+      "acceptanceBreakpoints": "同回调十次、双处理者、认领后崩溃、失权终态写与重启恢复均须当前源真库验证。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "wxPaymentCallbackInboxService.register(",
+          "line": 2033,
+          "sha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java",
+          "symbolOrRule": "wxPaymentCallbackInboxService.register(",
+          "line": 385,
+          "sha256": "1da9211add78cb852a5b3028e4ad88e244e985f4d0cebe025809a42f2bb3d8bb"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java",
+          "symbolOrRule": "public boolean process(",
+          "line": 68,
+          "sha256": "b9b8ba3fd939d3c1af00b6b4c09d426eb1491ba0cc033cd684dee25db61ef76a"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java",
+          "symbolOrRule": "mapper.markDone(",
+          "line": 49,
+          "sha256": "a235e1b3984f4d72998c338af4f4abd2e241bf404bd394f618395d7dc7bf0c32"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.962345+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "后置",
+      "currentScopeReason": "统一inbox接管/消费者为新增处理链；保留已有CAS，后置全链接入",
+      "countsAsCurrentRemainingItem": false,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0056",
+    "title": "支付回调乱序",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第1级",
+    "existingStatus": "已有基础",
+    "gap": "断点：各业务防回退不等于完整事件版本/迟到归因消费者；旧SUCCESS落已取消需明确FAIL/人工恢复，统一inbox stale路径未接，真实乱序链实跑。",
+    "needed": "为事件→业务状态列可推进/已处理/迟到冲突矩阵；以当前渠道及原单事实决定，不用消息到达顺序回退。",
+    "dependencies": "无清单内阻塞前置；复用所列已有能力",
+    "acceptance": "失败/成功乱序、取消后迟到SUCCESS及旧退款事件重送；状态不回退，资源不重复释放，冲突有可追溯待办。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java:75\nWxPaymentCallbackClaim claim = claimService.claim(notifyHash);\n当前状态许可：chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml:504\n<update id=\"claimPaymentSuccess\">\n退款终态回读：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java:410\nprivate boolean updatePayoutTerminal(RefundApplication refund, int expectedStatus, String message) {\n独立迟到工具边界：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java:36\nif (!mutation.isCurrent(row))",
+    "historicalChain": "本项原证据锚点 → 当前状态许可 → 退款终态回读 → 独立迟到工具边界",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "支付成功CAS失败后锁读原单并核相同交易，冲突返回FAIL；退款更新终态有当前状态约束；inbox迟到mutation分支仍独立。",
+      "remainingCode": "缺各真实业务事件乱序矩阵及迟到SUCCESS的持久冲突处置消费者；不能把返回FAIL等同有人处理。",
+      "acceptanceBreakpoints": "失败→成功/成功→失败/取消后迟到/退款旧事件重送的原单资源及待办回读待验。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "private String completePaymentSuccess(",
+          "line": 2143,
+          "sha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "if (!isSameCompletedPayment(current, transactionId))",
+          "line": 2153,
+          "sha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java",
+          "symbolOrRule": "private boolean updatePayoutTerminal(",
+          "line": 410,
+          "sha256": "1da9211add78cb852a5b3028e4ad88e244e985f4d0cebe025809a42f2bb3d8bb"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java",
+          "symbolOrRule": "mutation.isCurrent(",
+          "line": 36,
+          "sha256": "a235e1b3984f4d72998c338af4f4abd2e241bf404bd394f618395d7dc7bf0c32"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.963009+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "待核",
+      "currentScopeReason": "已有基础可修，但本条扩大目标的具体已确认规则/真实缺陷尚需收敛；不据建议自行新建机制。",
+      "countsAsCurrentRemainingItem": false,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0131",
+    "title": "补偿任务可恢复",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第3级",
+    "existingStatus": "已有基础",
+    "gap": "断点：补偿消费者存在，但生产调度/执行成功、新鲜度与告警送达未核；有限批次与反复失败不可因更新时间刷新而消失，需原业务终态读回。",
+    "needed": "逐维护任务补实际消费者清单、调度频率、最老积压年龄和重试状态；分页按未解决年龄扫描，失败不刷新成新项。",
+    "dependencies": "M0055",
+    "acceptance": "一项持续失败与后续正常项混在队列，正常项仍处理；重启后原项可恢复；失败年龄不归零且告警有实际接收结果。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java:50\npublic void reconcile() {\n先计积压：chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java:65\nstuckAtScan = refundApplicationMapper.countStuckPayoutDispatch(STALE_MINUTES);\n真实补派：chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java:81\nrefundPayoutService.payoutAfterReview(r.getId());\n原渠道回查：chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java:95\nwechatPayService.refreshPayoutFromWx(refundNo);\n队列隔离：chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java:56\ndepositFailure = new IllegalStateException(\"保证金退款对账失败，报名退款已继续处理\", e);",
+    "historicalChain": "本项原证据锚点 → 先计积压 → 真实补派 → 原渠道回查 → 队列隔离",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "RefundReconcileTask先计卡滞，再补派5/6或按原退款号查渠道；每单捕获异常，保证金失败不阻报名退款。SQL按id限200且以update_time/create_time判陈旧。",
+      "remainingCode": "公开当前未有历史报告所述稳定窗口游标；毒项前缀/最老未解决年龄、实际消费者调度和告警送达仍缺。",
+      "acceptanceBreakpoints": "真实失败前缀超过批上限时后项进度、重启与未解决年龄保持、任务运行/告警接收待验。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java",
+          "symbolOrRule": "public void reconcile()",
+          "line": 50,
+          "sha256": "184d39185cbfb3b640970dd38d3ab06465f9437e93d75939ca50ca83fcb181c4"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+          "symbolOrRule": "id=\"selectStalePayoutProcessing\"",
+          "line": 281,
+          "sha256": "7ccaa1a08ba279508703bbe487cb092c8b2b81b91dffa152741d4ff07b83f0bf"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.963534+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "当前范围",
+      "currentScopeReason": "现有退款补偿限批毒项与年龄保持",
+      "countsAsCurrentRemainingItem": true,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0033",
+    "title": "占票超时释放",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第1级",
+    "existingStatus": "已有基础",
+    "gap": "断点：代码与补偿任务入口存在，实际定时配置、近期执行及积压未生产回读；渠道未知必须保留原单占用待核，不能只用超时释放。",
+    "needed": "确认未支付/支付中两种超时任务的真实调度；未知支付保留原占位，已确认未付才调用相应关闭释放。",
+    "dependencies": "M0055, M0131",
+    "acceptance": "到期与渠道成功并发、关闭事务失败、同项两轮扫描；最多释放一次，未知仍占用且有待办，随后渠道确认可收场。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2561\npublic boolean closeExpiredOne(Long registrationId) {\n未付关闭：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2561\npublic boolean closeExpiredOne(Long registrationId) {\n原资源释放：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2569\nreleaseHeldResources(r, EntitlementInvalidReason.ORGANIZER_CANCEL, \"order-close-task\");\n支付中独立收口：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2581\npublic boolean settlePayingOne(Long registrationId, String releaseReason, String updateBy, int finalStatus) {",
+    "historicalChain": "本项原证据锚点 → 未付关闭 → 原资源释放 → 支付中独立收口",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "已实现待验",
+      "verifiedCodeChain": "OrderCloseTask分别扫描未付/支付中；支付中查原渠道，NOTPAY等先关微信再本地settlePayingOne，未知不释放；closeExpiredOne/settlePayingOne条件更新成功才同事务releaseHeldResources。",
+      "remainingCode": "就本项目标未确认新增代码缺口；实际调度启用、数据库与渠道配置须核对，不能凭任务类/seed认定在跑。",
+      "acceptanceBreakpoints": "公开当前真实未付/PAYING查单未知/迟到支付/多子单和重复关闭须验CAS及库存积分权益原账；新候选可能正在变更，聚合前重核SHA。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java",
+          "symbolOrRule": "public void",
+          "line": 58,
+          "sha256": "e810046c1cb0d7e685030bbf5d016813e7c175bbc9afc0849fdda72d6f44696f"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java",
+          "symbolOrRule": "\"NOTPAY\".equalsIgnoreCase(tradeState)",
+          "line": 182,
+          "sha256": "e810046c1cb0d7e685030bbf5d016813e7c175bbc9afc0849fdda72d6f44696f"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "public boolean closeExpiredOne(",
+          "line": 2561,
+          "sha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "public boolean settlePayingOne(",
+          "line": 2581,
+          "sha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "private void releaseHeldResources(",
+          "line": 2609,
+          "sha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.964421+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "当前范围",
+      "currentScopeReason": "已有占位释放链当前公开版本验收及确定失败修复",
+      "countsAsCurrentRemainingItem": true,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0066",
+    "title": "退款对账",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第1级",
+    "existingStatus": "已有基础",
+    "gap": "断点：补偿消费者存在，但生产调度/执行成功、新鲜度与告警送达未核；有限批次与反复失败不可因更新时间刷新而消失，需原业务终态读回。",
+    "needed": "为退款意图接已运行的查询/补偿任务、渠道失败分类和积压告警；退款账以原退款事务核对。",
+    "dependencies": "M0055, M0131",
+    "acceptance": "申请成功但响应丢失、pending转成功、渠道失败重试及一项长期失败；资金不重复退，失败不会被统计为完成。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java:50\npublic void reconcile() {\n先计积压：chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java:65\nstuckAtScan = refundApplicationMapper.countStuckPayoutDispatch(STALE_MINUTES);\n真实补派：chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java:81\nrefundPayoutService.payoutAfterReview(r.getId());\n原渠道回查：chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java:95\nwechatPayService.refreshPayoutFromWx(refundNo);\n队列隔离：chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java:56\ndepositFailure = new IllegalStateException(\"保证金退款对账失败，报名退款已继续处理\", e);",
+    "historicalChain": "本项原证据锚点 → 先计积压 → 真实补派 → 原渠道回查 → 队列隔离",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "对账按原refundNo（缺失报名号用RF+registrationId并持久）拉微信事实，或重新派发原退款；退款终态处理与人工/卡滞报警存在。",
+      "remainingCode": "稳定扫描/持续失败年龄与告警实际投递未闭合；原退款号/渠道终态的所有来源仍需列明，不能复用旧结果宣告达成。",
+      "acceptanceBreakpoints": "当前版本原退款真实或受控渠道回读、故障恢复、对账任务运行与独立数据库终态待验。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java",
+          "symbolOrRule": "wechatPayService.refreshPayoutFromWx(refundNo);",
+          "line": 95,
+          "sha256": "184d39185cbfb3b640970dd38d3ab06465f9437e93d75939ca50ca83fcb181c4"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java",
+          "symbolOrRule": "refreshPayoutFromWx(",
+          "line": 780,
+          "sha256": "19a61c32a207f82ee68d9efd73a1a59bd36dca3154cf2a99cef604d27bc78a8c"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java",
+          "symbolOrRule": "private boolean updatePayoutTerminal(",
+          "line": 410,
+          "sha256": "1da9211add78cb852a5b3028e4ad88e244e985f4d0cebe025809a42f2bb3d8bb"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+          "symbolOrRule": "id=\"selectStalePayoutProcessing\"",
+          "line": 281,
+          "sha256": "7ccaa1a08ba279508703bbe487cb092c8b2b81b91dffa152741d4ff07b83f0bf"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.965000+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "当前范围",
+      "currentScopeReason": "已有退款原单对账和扫描故障恢复",
+      "countsAsCurrentRemainingItem": true,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0049",
+    "title": "候补维护故障隔离",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第1级",
+    "existingStatus": "已有基础",
+    "gap": "断点：有限批处理存在，持续积压、公平扫描与实际定时频率未生产核实；维护日志和最终参与/库存独立回读。",
+    "needed": "候补维护按公平稳定位置扫过期offer，单项失败隔离；补积压最老时间、任务活性与库存一致读回。",
+    "dependencies": "M0055, M0131",
+    "acceptance": "队首异常、后续offer过期和任务中断重启；正常项不饿死，不跳过有资格队首抢票，预留和回收只一次。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java:300\npublic int maintain(Date now) {\n单项事务：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java:305\nif (maintenanceRequiresNew(() -> expireOffered(entryId, now))) changed++;\n失败隔离：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java:307\nlogger.error(\"候补维护单项失败，已隔离并继续: kind=EXPIRE_OFFERED entryId={}\",\n真实后续批次：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java:311\nfor (Long registrationId : safe(mapper.selectClaimedPaidRegistrationIds(100))) {",
+    "historicalChain": "本项原证据锚点 → 单项事务 → 失败隔离 → 真实后续批次",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "maintain四类循环每项maintenanceRequiresNew，异常记录后继续；offer按expires_at,id取前100，CAS版本过期；claimed查询按id前100。",
+      "remainingCode": "单项隔离已接；稳定推进越过持续失败前缀及最老积压/活性读回仍缺，不能把同批继续当跨批公平。",
+      "acceptanceBreakpoints": "真实多事务毒项+后项库存/offer/registration一致性和调度待验。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java",
+          "symbolOrRule": "public int maintain(",
+          "line": 300,
+          "sha256": "06acfbe04688fb84eb7ff9e7269b149e15648b5f6f1d737ef812221c9c1d22fb"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java",
+          "symbolOrRule": "maintenanceRequiresNew(",
+          "line": 305,
+          "sha256": "06acfbe04688fb84eb7ff9e7269b149e15648b5f6f1d737ef812221c9c1d22fb"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml",
+          "symbolOrRule": "id=\"selectExpiredOfferedIds\"",
+          "line": 439,
+          "sha256": "559186e663080b314377efff3013e7e07b6ec4caa015c6d8295c76f3f8e25897"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml",
+          "symbolOrRule": "id=\"selectClaimedPaidRegistrationIds\"",
+          "line": 452,
+          "sha256": "559186e663080b314377efff3013e7e07b6ec4caa015c6d8295c76f3f8e25897"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.965814+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "当前范围",
+      "currentScopeReason": "已有候补维护跨批公平/毒项隔离",
+      "countsAsCurrentRemainingItem": true,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0061",
+    "title": "已支付未出票补偿",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第1级",
+    "existingStatus": "已有基础",
+    "gap": "断点：补码窗口/批量受限且真实任务配置执行未回读；出票、结算、权益发放及通知是独立下游，不能补出二维码就认定全部交付完成。",
+    "needed": "对已支付未出票列二维码、权益、结算、通知分别交付状态；超出旧补码窗口的项进人工待办而非静默消失。",
+    "dependencies": "M0055, M0131",
+    "acceptance": "付成功后每个交付阶段分别失败，原单重试只补缺项；生成二维码不把权益/通知状态自动标成功。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java:717\nif (!\"SUCCESS\".equalsIgnoreCase(result)) {\n原半状态恢复：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2151\ncurrent = repairHistoricalPaidHalfState(current, transactionId,\n下游账事实：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2168\nsettlementEntryService.recordOnPayment(registration);\n真实补码消费者：chengyinhub-system/src/main/java/com/chengyinhub/business/task/VerificationQrcodeRepairTask.java:34\ncmsRegistrationService.generateVerificationQrcode(id);\n积压边界：chengyinhub-system/src/main/java/com/chengyinhub/business/task/VerificationQrcodeRepairTask.java:43\nif (ids.size() >= 100) {",
+    "historicalChain": "本项原证据锚点 → 原半状态恢复 → 下游账事实 → 真实补码消费者 → 积压边界",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "completePaymentSuccess统一修历史paid半态并对从单与recordOnPayment补齐；补码任务逐单生成，SQL只取近7天、付款10分钟后、最多100。",
+      "remainingCode": "未见二维码/权益/账/通知各交付状态统一消费者及超窗人工待办；持续补码失败可能占住限批前列。",
+      "acceptanceBreakpoints": "丢回调/已付部分交付/超过7天/补码服务失败后原单资源与通知分别回读，不能以已paid即已出票。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "private String completePaymentSuccess(",
+          "line": 2143,
+          "sha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/VerificationQrcodeRepairTask.java",
+          "symbolOrRule": "public void repairMissing()",
+          "line": 29,
+          "sha256": "cbaeced85d0720a14734907ebe909601e42a018a57c444cf6897b5597f9bb54b"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+          "symbolOrRule": "id=\"selectPaidMissingQrcodeIds\"",
+          "line": 859,
+          "sha256": "c20813382430f1f6faff9fee207784f764c81e5460483b9313e3fa4a3c88d757"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.966730+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "当前范围",
+      "currentScopeReason": "已支付原单的既有交付补偿断点；新交付中心后置",
+      "countsAsCurrentRemainingItem": true,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0153",
+    "title": "订阅/权益到期",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第1级",
+    "existingStatus": "可改进",
+    "gap": "未来起效记录可能提前进入额度；补开始/结束时刻、到期保已有资源与新增阻断合同。不要把容量包当按次AI预算或真实余额；不同日期/旧资源和人工配置实跑。",
+    "needed": "所有权益投影及扣额消费者增加start<=当前<end一致闸门，定义到期新增阻断与已建资源保留/只读策略。",
+    "dependencies": "无清单内阻塞前置；复用所列已有能力",
+    "acceptance": "未来起效前一秒/边界/结束后，各端额度与创建一致；时间变更不提前授予，已建对象按明确政策仍可回读。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-system/src/main/resources/mapper/business/MerchantSubscriptionMapper.xml:31\n<if test=\"isActive != null and isActive == 1\"> and (end_date is null or end_date &gt;= now())</if>\n当前期限条件：chengyinhub-system/src/main/resources/mapper/business/MerchantSubscriptionMapper.xml:31\n<if test=\"isActive != null and isActive == 1\"> and (end_date is null or end_date &gt;= now())</if>\n真实容量加总：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java:172\nextra += subscription.getMaxUsage();\n实际消费者：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java:175\nreturn new Entitlement(base + extra, Math.max(0, currentUsage));",
+    "historicalChain": "本项原证据锚点 → 当前期限条件 → 真实容量加总 → 实际消费者",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "付商业单按CAS到账授subscription；entitlement累加isActive订阅，XML仅end>=now无start条件；cityNode有ApiMerchantNode/RoamPoiApplication写入消费者，premiumTemplate目前查到权益展示。",
+      "remainingCode": "当前公开边界仍缺start<=now和end严格排除，premium实际模板扣额/新增闸未证实；到期既有资源处置不能猜规则。NPC独立已批准候选不等于本项全权益覆盖。",
+      "acceptanceBreakpoints": "未来开始/恰好到期/已过期/NULL兼容及真实cityNode新增写入应以public SQL验证；未运行历史私库测试。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/MerchantSubscriptionMapper.xml",
+          "symbolOrRule": "id=\"selectMerchantSubscriptionList\"",
+          "line": 25,
+          "sha256": "7beb98a72dbb66ef398d64283ea7dba30ba30d54b749f5521838419e53e4fd6b"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java",
+          "symbolOrRule": "public Entitlement entitlement(",
+          "line": 153,
+          "sha256": "074736afc7a88bb7225ce9da78021a2ae3b51cb9c596734960dfa653608e9b73"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamPoiApplicationServiceImpl.java",
+          "symbolOrRule": "int max = merchantCommerceService.entitlement",
+          "line": 215,
+          "sha256": "d0665aa61be20c4abe6373221ca6165137a72c0ed2abc240f69b91daf1ee9dd1"
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantCommerceController.java",
+          "symbolOrRule": "result.put(\"premiumTemplate\"",
+          "line": 42,
+          "sha256": "0714d0ce9ce9b69b35dc8d459e6ee2df49a66926b44402a34cd5ace2eb8e9c1d"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.967609+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "当前范围",
+      "currentScopeReason": "已有cityNode订阅start/end日期边界；premium新消费场景后置",
+      "countsAsCurrentRemainingItem": true,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0053",
+    "title": "优惠券领取/核销幂等",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第1级",
+    "existingStatus": "已有基础",
+    "gap": "断点：通用发券无稳定sourceRequestId/同业务键回放，防超发不是防同一次奖励重复领取；citynode等宿主另以完成CAS保证一次，须逐宿主定义稳定发放来源。",
+    "needed": "通用发券增加宿主+原业务ID+奖励项唯一来源及内容hash；同来源返回原券，核销另用原消费身份。",
+    "dependencies": "M0139",
+    "acceptance": "同奖励源并发发券、断网重试及同源换券模板；原持有人只一张券/一次额度；不同合格奖励仍各可领取。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java:112\nif (smsCouponHistoryMapper.claimUnusedCoupon(historyId, now) == 0) {\n真实发行边界：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java:258\npublic Long grantCouponWithReceipt(Long memberId, com.chengyinhub.business.domain.SmsCoupon coupon) {\n总量占位：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java:270\nif (smsCouponMapper.tryIncrementReceiveCount(coupon.getId()) == 0) {\n核销账消费：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java:127\nsettlementEntryService.recordCouponVerification(history, coupon);",
+    "historicalChain": "本项原证据锚点 → 真实发行边界 → 总量占位 → 核销账消费",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "通用grantCouponWithReceipt检查停发/库存，计数后创建新随机券码和history；核销claimUnusedCoupon后同事务账本/次数/审计。漫游掉落直接调用grantCouponById。",
+      "remainingCode": "通用发券缺host+原业务ID+reward项+内容hash的幂等入参/原券回读；特定通关发券有自己的去重不能外推所有发券。",
+      "acceptanceBreakpoints": "同原奖励重放/并发库存/原消费核销身份及发放后丢响应需真实回读；券库存不等于发放幂等。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
+          "symbolOrRule": "public Long grantCouponWithReceipt(",
+          "line": 258,
+          "sha256": "6e74a14072ceea933f23731b6474303c11ecf31a33686e2c02ec895f848641a3"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
+          "symbolOrRule": "smsCouponHistoryMapper.claimUnusedCoupon(",
+          "line": 112,
+          "sha256": "6e74a14072ceea933f23731b6474303c11ecf31a33686e2c02ec895f848641a3"
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+          "symbolOrRule": "smsCouponHistoryService.grantCouponById(",
+          "line": 231,
+          "sha256": "d2c0f7b763d63e8f38d4dc09860b0a2d0f576cb43d10127910ab89bad2185455"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImpl.java",
+          "symbolOrRule": "public",
+          "line": 13,
+          "sha256": "17722adbb0e2fd98aa50e1a51399cd84a3dfff24358b6503fc536d11879f528a"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.968441+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "当前范围",
+      "currentScopeReason": "现有小程序发券真实宿主的重复领取；新通用框架后置",
+      "countsAsCurrentRemainingItem": true,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0072",
+    "title": "多方分账规则快照",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第1级",
+    "existingStatus": "已有基础",
+    "gap": "断点：部分费率/合作合同有快照，不是所有资金路径全部版本冻结；需明确券/普通活动规则生效时刻和已成交保持，不能笼统称多方分账永远按旧合同。",
+    "needed": "列每个资金路径实际冻结字段；缺项补收款人/来源/费率/券规则版本的生效快照，已成交不得套最新模板。",
+    "dependencies": "M0055, M0131",
+    "acceptance": "成交后改费率和券规则，退款及分账重算仍用原版本；未成交新单用新规则；所有金额可从原明细重算。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java:154\nBigDecimal platformRate = registration.getFeePlatformRate();\n报名费率快照：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java:154\nBigDecimal platformRate = registration.getFeePlatformRate();\n券当前规则边界：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java:194\nSettlementRule rule = settlementRuleService.getActiveRule(merchantId, \"coupon\");\n真实规则拒绝：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java:254\nthrow new IllegalStateException(\"H8 已取消发布者分润,creatorRate 必须为 0(份额全并商家),拒绝入账\"",
+    "historicalChain": "本项原证据锚点 → 报名费率快照 → 券当前规则边界 → 真实规则拒绝",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "报名账本优先registration.feePlatformRate冻结费率；票源付款时freezeTicketSourceOnPayment；券核销仍取当前coupon.amount和当前active coupon rule。",
+      "remainingCode": "缺各资金链收款人/来源/规则版本快照覆盖表；券当前规则是否允许追溯改价须冻结政策并补真实快照，不宣布全分账冻结。",
+      "acceptanceBreakpoints": "成交后改规则/归属，重放旧账金额和收款主体不变；不同资金路径独立验。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java",
+          "symbolOrRule": "BigDecimal platformRate = registration.getFeePlatformRate();",
+          "line": 154,
+          "sha256": "090e42d3d3c9b30bf079c5b7097d4f3ff404044b71e5c047091c22920d4b2546"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java",
+          "symbolOrRule": "public int recordCouponVerification(",
+          "line": 183,
+          "sha256": "090e42d3d3c9b30bf079c5b7097d4f3ff404044b71e5c047091c22920d4b2546"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "registration = freezeTicketSourceOnPayment(registration);",
+          "line": 2167,
+          "sha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.968865+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "待核",
+      "currentScopeReason": "已有基础可修，但本条扩大目标的具体已确认规则/真实缺陷尚需收敛；不据建议自行新建机制。",
+      "countsAsCurrentRemainingItem": false,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0073",
+    "title": "待结算与可提现分离",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第1级",
+    "existingStatus": "已有基础",
+    "gap": "断点：账本待结/已确认不是可提现余额投影；需对账系统1真实入余额、系统2纯账本、留置与提现可用量，不能两套各打一次款。实际结算作业/余额独立回读未实跑。",
+    "needed": "给系统1实际入余额、系统2纯账本及提现可用量建立对账投影与差异待办，明确唯一资金推进入口。",
+    "dependencies": "M0055, M0131, M0072",
+    "acceptance": "同合作批次两套确认重复执行；只有一笔真实入余额，待结、已结、留置、提现占用相互可解释，差额有待办。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementServiceImpl.java:93\npublic int confirmBatch(Long batchId, Long operatorId) {\n纯账本结果：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementServiceImpl.java:106\nsettlementDetailMapper.markBatchSettled(batchId);\n真实结算权：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsActivityServiceImpl.java:244\nif (cmsActivityMapper.claimActivityForSettlement(activity.getId()) == 0) {\n可提现消费者：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java:144\ndeducted = umsMemberService.deductWithdrawableBalance(memberId, amount, frozen);",
+    "historicalChain": "本项原证据锚点 → 纯账本结果 → 真实结算权 → 可提现消费者",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "系统1活动claimActivityForSettlement后余额/债务处理；系统2confirmBatch只改批次/明细不加余额；提现原子deductWithdrawableBalance保留冻结额。",
+      "remainingCode": "基础资金分离存在；缺两套账与可提现统一差异投影、差异待办及全部入账入口核对。",
+      "acceptanceBreakpoints": "同业务重复系统1/2处理不得双加，冻结/债务/退款与提现余额独立回读；此轮仅静态。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementServiceImpl.java",
+          "symbolOrRule": "public int confirmBatch(",
+          "line": 93,
+          "sha256": "f000985be141dde313133ad6643c167f7a53cdce715297240121169a2585db9a"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsActivityServiceImpl.java",
+          "symbolOrRule": "cmsActivityMapper.claimActivityForSettlement(",
+          "line": 244,
+          "sha256": "4200fb4f75b62a677e0efb2079a24813fa05aaa18be2752b30d1766ca1cdac5e"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java",
+          "symbolOrRule": "umsMemberService.deductWithdrawableBalance(",
+          "line": 144,
+          "sha256": "f4f711e68ba9c5c17c1fa2a424b56bca356735bece3665605a14198d0675a42b"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.969691+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "待核",
+      "currentScopeReason": "已有基础可修，但本条扩大目标的具体已确认规则/真实缺陷尚需收敛；不据建议自行新建机制。",
+      "countsAsCurrentRemainingItem": false,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0076",
+    "title": "对公付款凭证核对",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第1级",
+    "existingStatus": "已有基础",
+    "gap": "断点：凭证与状态已有，真实银行流水/收款人/金额独立核对消费者未在此链；不能记付成功或双人确认就称银行到账。",
+    "needed": "付款凭证只表示人工声明；接独立银行/受控核对记录，校收款人、金额、交易身份并记录未核/匹配/差异。",
+    "dependencies": "M0055, M0131",
+    "acceptance": "传重复/他人/错金额凭证与真实同笔结果核对；不匹配不能结为银行到账，同银行事务不得给两条应付核销。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantPayableServiceImpl.java:318\nMakerCheckerGuard.requireDistinct(batch.getConfirmedBy(), operator);\n凭证命令：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantPayableServiceImpl.java:305\npublic boolean markBatchPaid(Long batchId, String operator, String payVoucherNo) {\n双人纪律：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantPayableServiceImpl.java:318\nMakerCheckerGuard.requireDistinct(batch.getConfirmedBy(), operator);\n仅记状态：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantPayableServiceImpl.java:320\nreturn batchMapper.markPaid(batchId, operator, payVoucherNo) > 0;",
+    "historicalChain": "本项原证据锚点 → 凭证命令 → 双人纪律 → 仅记状态",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "尚未实现",
+      "verifiedCodeChain": "markBatchPaid验证非空凭证号、CONFIRMED时双人身份、状态CAS；其语义是人工声明，代码明确不转账。",
+      "remainingCode": "目标独立银行/受控交易核对记录未见：没有实际收款人/金额/交易身份匹配消费者；不能把凭证号/双人点击当银行核实。",
+      "acceptanceBreakpoints": "银行或受控对账源需另获明确接入/规则；伪凭证、金额/收款人差异、重复交易当前未有目标验收。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantPayableServiceImpl.java",
+          "symbolOrRule": "public boolean markBatchPaid(",
+          "line": 305,
+          "sha256": "19f8c7723a2d00da0ac4a9e2f57f66b54c498627a691c9f1a507546cfb2ebc13"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/MerchantPayableBatchMapper.xml",
+          "symbolOrRule": "id=\"markPaid\"",
+          "line": 106,
+          "sha256": "c336b2ba183c7b960d61562f48cfa6ac57f28f165558b74262e80cb154c2ce35"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.970131+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "后置",
+      "currentScopeReason": "独立银行核对为新增外部能力与运营交互，后置",
+      "countsAsCurrentRemainingItem": false,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0085",
+    "title": "合作退出补偿",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第1级",
+    "existingStatus": "已有基础",
+    "gap": "断点：退出/信用/保证金链存在，不能推广为自动违约金或所有运行中供给都可退出；锁价后替换/玩家退款及合同补偿另走明确链，所查函数拒绝后不完成其后果。",
+    "needed": "列退出前/已锁价/运行中矩阵，给可退出场景串供给作废或替换、受影响订单处理与合同补偿；拒绝需明确后续处理人。",
+    "dependencies": "M0072, M0073",
+    "acceptance": "锁价后退出被拒不显示已退出；允许退出后原供给不可再卖，玩家原订单有替换/退款选择，未知原款能恢复不重复补偿。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java:1109\ndepositRefundService.requestLocked(inv);\n当前双方资格：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java:1059\npublic void cancelAcceptedInvite(Long inviteId, Long operatorMemberId, String reason, int creditEvent) {\n锁价断点：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java:1086\nthrow new IllegalStateException(\"阵容已锁定,联系客服协商\");\n作废生效合同：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java:1106\ncoopOrderMapper.voidOrderByInviteId(inv.getId());\n原保证金恢复：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java:1109\ndepositRefundService.requestLocked(inv);",
+    "historicalChain": "本项原证据锚点 → 当前双方资格 → 锁价断点 → 作废生效合同 → 原保证金恢复",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "cancelAcceptedInvite锁主题/邀约并核双方当前商家身份；商约锁定拒绝；允许时作废邀约与coop_order、留信用记录，保证金2/4态走requestLocked。",
+      "remainingCode": "缺完整退出阶段/供给作废或替换/受影响已售订单/运行中补偿和拒绝后处理人矩阵。代码拒绝不等于补偿闭合。",
+      "acceptanceBreakpoints": "可退出退款原号与供给实际不可用、锁价/运行中人工处置链、复入和重复退出独立验。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java",
+          "symbolOrRule": "public void cancelAcceptedInvite(",
+          "line": 1059,
+          "sha256": "bfccf95cadb66a571f8b7fc4e881c71c1bd3aa8fc637b2c65540d93ecc49d48b"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java",
+          "symbolOrRule": "coopOrderMapper.voidOrderByInviteId(",
+          "line": 1106,
+          "sha256": "bfccf95cadb66a571f8b7fc4e881c71c1bd3aa8fc637b2c65540d93ecc49d48b"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java",
+          "symbolOrRule": "depositRefundService.requestLocked(inv);",
+          "line": 1109,
+          "sha256": "bfccf95cadb66a571f8b7fc4e881c71c1bd3aa8fc637b2c65540d93ecc49d48b"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.970960+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "后置",
+      "currentScopeReason": "运行中退出/替换/补偿为新增业务流程，后置",
+      "countsAsCurrentRemainingItem": false,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0136",
+    "title": "操作审计",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第2级",
+    "existingStatus": "已有基础",
+    "gap": "断点：查询保护不证明所有写路径已覆盖；reason等非结构化文本不是JSON字段脱敏覆盖，审计不可用/写失败是否回滚随业务合同。逐动作覆盖与敏感读记录另实跑。",
+    "needed": "给活跃高风险写入列审计覆盖矩阵，结构化原因及敏感字段遮敏，记录结果失败/未知；敏感证据读取亦可追踪。",
+    "dependencies": "无清单内阻塞前置；复用所列已有能力",
+    "acceptance": "付款/退出/审核各一次成功、拒绝、未知；均可定位原请求且不露银行卡/正文；模拟审计写失败符合明确阻断策略。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/BusinessAuditLogQueryServiceImpl.java:56\nprivate BusinessAuditEvent safeProjection(BusinessAuditEvent source) {\n平台许可：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/BusinessAuditLogQueryServiceImpl.java:33\nif (!platformAdmin) {\n真实JSON投影：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/BusinessAuditLogQueryServiceImpl.java:69\nsafe.setBeforeJson(redactJson(source.getBeforeJson()));\n文本边界：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/BusinessAuditLogQueryServiceImpl.java:71\nsafe.setReason(source.getReason());",
+    "historicalChain": "本项原证据锚点 → 平台许可 → 真实JSON投影 → 文本边界",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "核销/券写入有BusinessAuditEvent；查询platformAdmin闸+分页后递归遮敏before/after JSON。reason/requestId原样投影。",
+      "remainingCode": "缺活跃高危操作覆盖矩阵、失败/未知和敏感读取审计；自由reason不能仅靠JSON键黑名单保证敏感数据不出。",
+      "acceptanceBreakpoints": "跨身份拒绝、嵌套敏感字段与自由原因、失败/未知和审计写失败回滚需public版本验。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/BusinessAuditLogQueryServiceImpl.java",
+          "symbolOrRule": "public BusinessAuditLogPageVO query(",
+          "line": 32,
+          "sha256": "304ddb08c0f19734c2a12902265a6707971af446c1b4d3b4dc7bbe1c1515301b"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/BusinessAuditLogQueryServiceImpl.java",
+          "symbolOrRule": "private BusinessAuditEvent safeProjection(",
+          "line": 56,
+          "sha256": "304ddb08c0f19734c2a12902265a6707971af446c1b4d3b4dc7bbe1c1515301b"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "symbolOrRule": "private void writeVerificationAudit(",
+          "line": 2972,
+          "sha256": "9172aab7fd7136216f5afcb8f6f2cd5d6e20348517fa00e3da33ff82c0228c36"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
+          "symbolOrRule": "audit.setAction(\"COUPON_REDEEM\")",
+          "line": 139,
+          "sha256": "6e74a14072ceea933f23731b6474303c11ecf31a33686e2c02ec895f848641a3"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.971449+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "当前范围",
+      "currentScopeReason": "已有核销审计的具体遗漏/投影敏感泄露",
+      "countsAsCurrentRemainingItem": true,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0134",
+    "title": "敏感数据最小化",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第2级",
+    "existingStatus": "已有基础",
+    "gap": "断点：认证归因≠数据匿名化；业务ID/会话/页面路径和文本值仍可能关联人，按用途最小化及保留期限独立处理。不能凭anonymousId空称全埋点无敏感信息。",
+    "needed": "事件字段采用用途白名单与类型/长度限制，删除无用途正文/精确位置，定义保留和删除消费者；认证ID仍承认可关联。",
+    "dependencies": "无清单内阻塞前置；复用所列已有能力",
+    "acceptance": "采集敏感正文、长URL、位置时被拒或按白名单裁剪；删除请求后事件不再供画像消费，必要业务账保留范围可解释。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java:51\nevent.setAnonymousId(\"\");\n实际归因边界：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java:51\nevent.setAnonymousId(\"\");\n当前账号：chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java:151\nreturn error(\"登录状态已变化，请丢弃旧埋点\");\n审计字段最小化：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/BusinessAuditLogQueryServiceImpl.java:88\nprivate void redactNode(JsonNode node) {",
+    "historicalChain": "本项原证据锚点 → 实际归因边界 → 当前账号 → 审计字段最小化",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "AnalyticsController有事件名白名单、批量/长度/时间/敏感键和值校验，4个roamAI事件只空属性；Service用认证memberId清anonymousId，原properties持久化并更新推荐画像。",
+      "remainingCode": "通用属性仍是黑名单而非每用途typed字段白名单；缺保留期限/清除消费者的完整证据。认证memberId仍可关联，不能称匿名。",
+      "acceptanceBreakpoints": "正文/精确位置异名绕过、类型长度、账号切换与原事件/画像删除链需验；不存在证据不硬称已实现。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java",
+          "symbolOrRule": "private String validateBatch(",
+          "line": 185,
+          "sha256": "137830a8542d9a71c9e558075af68ad01b40e6dc01f0f65372d28dcc95a58ec7"
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java",
+          "symbolOrRule": "private boolean containsSensitiveNode(",
+          "line": 256,
+          "sha256": "137830a8542d9a71c9e558075af68ad01b40e6dc01f0f65372d28dcc95a58ec7"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java",
+          "symbolOrRule": "event.setPropertiesJson(item.getPropertiesJson());",
+          "line": 58,
+          "sha256": "a4f8207df97ea9986748c6b6685a50917d9c76bb4820147f8e365b1069c63a77"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java",
+          "symbolOrRule": "recommendationService.updateProfileFromEvent(event);",
+          "line": 72,
+          "sha256": "a4f8207df97ea9986748c6b6685a50917d9c76bb4820147f8e365b1069c63a77"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.971883+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "当前范围",
+      "currentScopeReason": "已有埋点输入用途/类型与隐私泄露修补",
+      "countsAsCurrentRemainingItem": true,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "X029",
+    "title": "人工账与离线记录、恢复在线权威（高水位/epoch）",
+    "batch": "第一批｜资金、资格、隐私及原请求恢复",
+    "priority": "第1级",
+    "existingStatus": "已有基础",
+    "gap": "断点：N23 切人工暂停、确认高水位、锁旧端、epoch 去重再回写、冲突不得余额相加——无本版 HTTP/断网/双设备证据。",
+    "needed": "断网/双设备场景 HTTP 验收；旧端锁定与 epoch 去重断言。",
+    "dependencies": "X028",
+    "acceptance": "切人工后旧端写入被拒；已签事件导入一次；同一请求在线与人工都有时按冲突复核且余额不相加；恢复在线后 epoch+1。",
+    "sourceAnchors": "本项源码锚点：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:439（MANUAL_BEGIN）\n本项源码锚点：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:767（offlineAnchor）\n本项源码锚点：chengyinhub-xcx/pages/club/topic-detail/director.js:637（离线锚点）",
+    "historicalChain": "断网 → MANUAL_BEGIN → 签署 → 导入 → 冲突复核 → AUTHORITY_RESUME",
+    "publicAudit": {
+      "scope": "小程序专属",
+      "publicStatus": "尚未实现",
+      "verifiedCodeChain": "public有通用游戏command/receipt及导演页面控制；全system/admin/xcx Java/JS/XML未检出MANUAL_BEGIN、AUTHORITY_RESUME、offlineAnchor、manualEpoch/manual_epoch、manualImport协议标识。",
+      "remainingCode": "本项目标的离线账签署、epoch/高水位、导入幂等及在线权威恢复在public当前未找到，旧私库实现/测试不能继承；需审核差分后再迁移。",
+      "acceptanceBreakpoints": "无公开目标代码则不开始声称HTTP/真机验收；迁入后同原签名跨epoch、双设备、丢回执、整笔回滚均另验。",
+      "uncertainty": "本结论针对已知协议与完整目标；若另命名实现存在需出实际调用链后再改状态。",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+          "symbolOrRule": "public GameCommandReceiptView command(",
+          "line": 261,
+          "sha256": "6e52c74d1d6e225a842080d73b15b6c559d123a08cd43c4af17d30ce1800e9bb"
+        },
+        {
+          "path": "chengyinhub-xcx/pages/club/topic-detail/director.js",
+          "symbolOrRule": "wx.setStorageSync(",
+          "line": 339,
+          "sha256": "ac0086be8ebd87920a1700e0ad589cbc35f39de3a0718f25b0f4fbf4a77af69e"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.972720+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "后置",
+      "currentScopeReason": "公开基线未有离线人工账完整协议，属于新能力与导演交互，后置",
+      "countsAsCurrentRemainingItem": false,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0090",
+    "title": "条件叙事与隐藏信息",
+    "batch": "第二批｜核心游玩、可信完成、记录和消息闭合",
+    "priority": "第2级",
+    "existingStatus": "已有基础",
+    "gap": "断点：隐藏属性/主题/模板有明确消费者，不能覆盖推断为所有旧玩法、音频图片、NPC上下文均同一秘密投影；NPC进度判据目前不同另列M0143，需要各出口按已知剧情核对。",
+    "needed": "把旧玩法、模板、图片音频及NPC出口列秘密投影矩阵，统一用实际已得/可揭露事实，不靠前端隐藏。",
+    "dependencies": "无清单内阻塞前置；复用所列已有能力",
+    "acceptance": "未得/已得线索、他队、退队与旧版本逐出口读取；正文、图片URL和NPC事实均不泄露无资格内容。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/JourneyInitialState.java:40\npublic static void redactHidden(JourneyRules rules, JsonNode projection) {\n真实数值投影：chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/JourneyInitialState.java:40\npublic static void redactHidden(JourneyRules rules, JsonNode projection) {\n变化细节遮挡：chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/JourneyInitialState.java:52\nobject.put(\"sourceHidden\", true);\n模板答案剥离：chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java:1521\nnodeVO.setCmsMemberTemplate(com.chengyinhub.business.util.TemplateSecrets.strip(memberTemplate));\n当前线索正文冻结：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:1843\nprivate void freezeClueContent(ObjectNode root,List<CmsTopicNode> liveNodes,Map<Long,CmsMemberTemplate> templatesById) {\n当前来源与范围投影：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:2368\nprivate ArrayNode clueSources(JsonNode snapshot,String key,String scope,TopicRouteEngine.State team,TopicRouteEngine.State world) {\n实际正文图片消费者：chengyinhub-xcx/pages/play/utils/theme-backpack.js:40\n(Array.isArray(c.sources) ? c.sources : []).forEach(source => (Array.isArray(source.blocks) ? source.blocks : []).forEach(block => blocks.push({",
+    "historicalChain": "本项原证据锚点 → 真实数值投影 → 变化细节遮挡 → 模板答案剥离 → 当前线索正文冻结 → 当前来源与范围投影 → 实际正文图片消费者",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "JourneyInitialState.playerView过滤visible=false，路线回执/状态调用playerView；玩家Topic/Template出口使用TemplateSecrets.strip。公开未找到旧redactHidden、freezeClueContent、clueSources增强。",
+      "remainingCode": "缺旧玩法/完整状态与变化明细、媒体URL、各NPC上下文的统一已得事实投影矩阵；不能由属性列表过滤推所有秘密安全。",
+      "acceptanceBreakpoints": "他队/退队/未得/已得/旧版本跨出口HTTP与媒体真实访问尚未核；NPC具体剧情链仍待核。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/JourneyInitialState.java",
+          "symbolOrRule": "public static List<Map<String, Object>> playerView(",
+          "line": 79,
+          "sha256": "6d5f0f4887856b7ae932b0a4995dd34be40746eaf8971f15777c7623d0cdde2f"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+          "symbolOrRule": "receipt.put(\"attributes\", JourneyInitialState.playerView",
+          "line": 1022,
+          "sha256": "9738b481a05368151be8d8a58ba9fb05a300969009d90f4f68ec7642f4114006"
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+          "symbolOrRule": "TemplateSecrets.strip(memberTemplate)",
+          "line": 1592,
+          "sha256": "f796eddd230923fca8b70faa2347d640c6a0ab2265b009668bf3e190f8a2669c"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.974237+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "当前范围",
+      "currentScopeReason": "已有玩家接口的确定秘密投影泄露；新增叙事功能后置",
+      "countsAsCurrentRemainingItem": true,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0091",
+    "title": "不可达结局检测",
+    "batch": "第二批｜核心游玩、可信完成、记录和消息闭合",
+    "priority": "第2级",
+    "existingStatus": "已有基础",
+    "gap": "断点：已有结构与条件语法检查，不证明所有数值/消耗/互斥组合都有可达结局，也无完整可审阅运行模拟器；先加入规则样例和失败路径预演，不把图合法当可玩保证。",
+    "needed": "补零资源/消耗/互斥条件/循环的可达性样例与运行推演，输出阻断节点及原因，结构合法与规则可完成分列。",
+    "dependencies": "无清单内阻塞前置；复用所列已有能力",
+    "acceptance": "图连通但钥匙被先耗光、互斥条件、无结局循环样例均提示具体阻断；可达样例实际按同版本走到结局。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicRouteConfigValidator.java:107\nSet<Long> canReachTerminal = reverseReachable(terminals, graph);\n终点结构校验：chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicRouteConfigValidator.java:107\nSet<Long> canReachTerminal = reverseReachable(terminals, graph);\n失败原因：chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicRouteConfigValidator.java:109\nthrow fail(String.valueOf(node), \"节点不能到达任何终点\");\n发布二次校验：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:1580\nvalidateGameplayRuntime(frozen);",
+    "historicalChain": "本项原证据锚点 → 终点结构校验 → 失败原因 → 发布二次校验",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "TopicRouteConfigValidator做起点/终点连通、节点可达终点、循环/fallback与条件语法；运行冻结路线使用validator。",
+      "remainingCode": "尚未见联合资源消耗、条件互斥和动态状态的可达解搜索/失败路径预演；图合法不能证明可通关。",
+      "acceptanceBreakpoints": "结构通而钥匙提前耗尽/互斥/无终结循环等例需同版本引擎执行及阻断原因；现测试未跑。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicRouteConfigValidator.java",
+          "symbolOrRule": "Set<Long> canReachTerminal = reverseReachable",
+          "line": 107,
+          "sha256": "24c19cb9da6e7730814cfe317bebc02d62809c226e86afcb4784a4f0aeeddabd"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+          "symbolOrRule": "validator.validateAndNormalize(",
+          "line": 1092,
+          "sha256": "9738b481a05368151be8d8a58ba9fb05a300969009d90f4f68ec7642f4114006"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.974870+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "后置",
+      "currentScopeReason": "可达性模拟器/预演与诊断为新增能力，后置",
+      "countsAsCurrentRemainingItem": false,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0113",
+    "title": "个人迷雾持久化",
+    "batch": "第二批｜核心游玩、可信完成、记录和消息闭合",
+    "priority": "第2级",
+    "existingStatus": "可改进",
+    "gap": "补实时持久化失败提示/保dirty/重试，与分页写失败保持一致；服务端已确认格子可重同步，本地未同步点不能因页面回收丢失。会员切换和储存配额实跑。",
+    "needed": "实时_persistTiles检查写盘结果，成功才清dirty；失败保留待写并提示/重试，与分页同步同一合同。",
+    "dependencies": "M0137",
+    "acceptance": "储存满/写盘返回false再退出重进；未确认格子不丢，恢复后成功写盘才清dirty；切账号不读他人雾格。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-xcx/utils/roam-tile-memory-sync.js:3\nasync function syncRoamTileMemory(options) {\n同步保存确认：chengyinhub-xcx/utils/roam-tile-memory-sync.js:40\nif (!memory.writeTiles(tiles, cursor)) throw new Error('迷雾记忆本地持久化失败')\n本人服务器分页：chengyinhub-system/src/main/resources/mapper/business/RoamMapper.xml:310\n<select id=\"selectTilePageByMember\" resultType=\"java.util.HashMap\">\n实时先清标记：chengyinhub-xcx/pages/roam/index.js:1419\nthis._tilesDirty = 0;\n未检查写返回值：chengyinhub-xcx/pages/roam/index.js:1421\nroamMemory(this).writeTiles(this._localTiles || {}, this._tileServerCursor || 0);",
+    "historicalChain": "本项原证据锚点 → 同步保存确认 → 本人服务器分页 → 实时先清标记 → 未检查写返回值",
+    "publicAudit": {
+      "scope": "小程序专属",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "分页syncRoamTileMemory在writeTiles返回true后调用onPage；实时_persistTiles仍先_tilesDirty=0，忽略writeTiles返回值并吞异常。",
+      "remainingCode": "确定代码缺口：实时失败保持dirty/可重试及保存成功回读；分页readTiles失败/账号隔离还需严格同一合同。旧私库已修说明未进public。",
+      "acceptanceBreakpoints": "真实存储满/读异常/写返回false、退出重进、分页HTTP和账号切换待验，不沿用历史VM结果。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.js",
+          "symbolOrRule": "_persistTiles() {",
+          "line": 1416,
+          "sha256": "d8ebb032078273de42f35b7aad0f8338600823a64983fc59aed1314f93056934"
+        },
+        {
+          "path": "chengyinhub-xcx/utils/roam-tile-memory-sync.js",
+          "symbolOrRule": "if (!memory.writeTiles(tiles, cursor))",
+          "line": 40,
+          "sha256": "c10e940ab4958a6939c2a6959ca0d64980ca2854f7a1f4ee324bef279045be1c"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RoamMapper.xml",
+          "symbolOrRule": "id=\"selectTilePageByMember\"",
+          "line": 310,
+          "sha256": "29f45b53b67eb406799d23feb64136a6aebde1a887a00bf8e4cfb4d2371495aa"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.976828+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "当前范围",
+      "currentScopeReason": "实时迷雾写盘失败保留dirty与重试",
+      "countsAsCurrentRemainingItem": true,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0114",
+    "title": "本地未同步轨迹",
+    "batch": "第二批｜核心游玩、可信完成、记录和消息闭合",
+    "priority": "第2级",
+    "existingStatus": "已有基础",
+    "gap": "断点：本地恢复真实存在，非轨迹云同步/换设备完整恢复；未知结算前不可清缓存（会清recovery），写失败明确阻断，终结会话还有未确认格子须保留核对。",
+    "needed": "未同步点/recovery按会员+原session持久保留；终结会话尚有待确认点亦可续传，清理先查原结果。",
+    "dependencies": "M0137",
+    "acceptance": "断网、系统杀进程、未知结算和账号切换；各自恢复同session，不重复XP；未确认点仍可恢复或明确选择删除。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-xcx/utils/roam-tile-memory-sync.js:3\nasync function syncRoamTileMemory(options) {\n真实恢复写失败：chengyinhub-xcx/pages/roam/index.js:1494\nif (!validRecovery(record) || !roamMemory(this).writeRecovery(record))\n原待同步恢复：chengyinhub-xcx/pages/roam/index.js:1524\nthis._pendingTiles = r.pendingTiles.slice();\n断点收场：chengyinhub-xcx/pages/roam/index.js:1576\nif (this._pendingTiles.length) return this._recoveryFailure('会话已结束，仍有待确认格子，请保留记录并联系支持核对');\n云端仅分享快照：chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamShareController.java:49\npublic AjaxResult publish(Long clientTs, String snapshot) {",
+    "historicalChain": "本项原证据锚点 → 真实恢复写失败 → 原待同步恢复 → 断点收场 → 云端仅分享快照",
+    "publicAudit": {
+      "scope": "小程序专属",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "_saveRoamRecovery按当前会员写原clientSessionKey/sessionId/pending；validRecovery或writeRecovery失败阻断，恢复时terminal且pending仍留记录并提示人工核对，成功存档后才清recovery。",
+      "remainingCode": "目标中终结后未确认点可续传尚未完成：当前明确阻断并保留；清缓存/主动删除规则未确认，不能自作主张补。可选字段严格结构校验与原SID回读完整性需当前复核。",
+      "acceptanceBreakpoints": "设备杀进程、同会员/换账号、原session HTTP、结算未知/终结有点、存档失败需逐步读回。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.js",
+          "symbolOrRule": "_saveRoamRecovery() {",
+          "line": 1482,
+          "sha256": "d8ebb032078273de42f35b7aad0f8338600823a64983fc59aed1314f93056934"
+        },
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.js",
+          "symbolOrRule": "会话已结束，仍有待确认格子",
+          "line": 1576,
+          "sha256": "d8ebb032078273de42f35b7aad0f8338600823a64983fc59aed1314f93056934"
+        },
+        {
+          "path": "chengyinhub-xcx/utils/roam-recovery.js",
+          "symbolOrRule": "function validRecovery(",
+          "line": 10,
+          "sha256": "4dcb0444501c4950ec54fafb91faab2e2c593ba2b5e45529ea02ec587cee3b28"
+        },
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.js",
+          "symbolOrRule": "if (!memory.writeRecovery(null))",
+          "line": 1866,
+          "sha256": "d8ebb032078273de42f35b7aad0f8338600823a64983fc59aed1314f93056934"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.978476+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "当前范围",
+      "currentScopeReason": "已有原session恢复/存储异常丢数据修补；终结续传新规则待核",
+      "countsAsCurrentRemainingItem": true,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0107",
+    "title": "定位漂移处理",
+    "batch": "第二批｜核心游玩、可信完成、记录和消息闭合",
+    "priority": "第2级",
+    "existingStatus": "已有基础",
+    "gap": "断点：滤点是本地里程质量规则，非完整真实轨迹证明；finish distanceM仍客户端值，不能将它用于现金/可信运动奖励。城市峡谷、后台恢复和权限变化设备验收。",
+    "needed": "过滤质量状态、累计里程来源和坐标体系显式化；低精度/跳点不累计，结束里程标为客户端估计。",
+    "dependencies": "无清单内阻塞前置；复用所列已有能力",
+    "acceptance": "城市峡谷、120m跳点、锁屏恢复、WGS84/GCJ02混入；异常不积里程，合法缓慢移动可恢复，不作现金证据。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-xcx/pages/roam/index.js:3619\nif (loc.accuracy != null && loc.accuracy > 80) return;\n精度门槛：chengyinhub-xcx/pages/roam/index.js:3619\nif (loc.accuracy != null && loc.accuracy > 80) return;\n跳点行为：chengyinhub-xcx/pages/roam/index.js:3623\nif (prev && d > 120) { this._player = p; return; }\n距离真源边界：chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java:644\nsession.setDistanceM(distanceM != null && distanceM > 0 ? distanceM : 0);",
+    "historicalChain": "本项原证据锚点 → 精度门槛 → 跳点行为 → 距离真源边界",
+    "publicAudit": {
+      "scope": "小程序专属",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "_realTick拒accuracy>80、忽略<3m、小于等于120m合法移动才累计，>120只改当前基点不加距；finish由客户端distanceM非负保存。",
+      "remainingCode": "缺明确定位质量状态/坐标体系/客户端估计标签；这不是硬件位置证明，也没有服务端完整轨迹验真。",
+      "acceptanceBreakpoints": "城市峡谷/锁屏恢复/坐标混用/低速合法移动真机未验；不能作为现金运动凭证。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.js",
+          "symbolOrRule": "_realTick(loc) {",
+          "line": 3616,
+          "sha256": "d8ebb032078273de42f35b7aad0f8338600823a64983fc59aed1314f93056934"
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+          "symbolOrRule": "session.setDistanceM(",
+          "line": 644,
+          "sha256": "d2c0f7b763d63e8f38d4dc09860b0a2d0f576cb43d10127910ab89bad2185455"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.979134+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "当前范围",
+      "currentScopeReason": "已有定位过滤质量/恢复确定错误；新档位后置",
+      "countsAsCurrentRemainingItem": true,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0108",
+    "title": "到店验证半径",
+    "batch": "第二批｜核心游玩、可信完成、记录和消息闭合",
+    "priority": "第2级",
+    "existingStatus": "已有基础",
+    "gap": "断点：服务器校空间范围/速度，但坐标仍客户端自报，且速度依据离散POI而非完整轨迹；无硬件位置证明，不能宣称完全防定位伪造。地点/速度与真正到店核验分开。",
+    "needed": "到点结果分空间条件通过与真正到店核验；高价值权益接商家/可信凭证，客户端自报不能独立授予。",
+    "dependencies": "无清单内阻塞前置；复用所列已有能力",
+    "acceptance": "边界内/外、门店停用、伪造坐标；无真实核验不授受控权益，空间失败原因可解释，正常到店可走完整链。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java:176\nif (prevDist > MIN_MOVE_DIST_M && prevDist / dtSec > MAX_MOVE_SPEED_MPS) {\n异常速度合同：chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java:138\nprivate static final double MAX_MOVE_SPEED_MPS = 35.0;\n实际拒绝：chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java:177\nreturn error(\"移动过快,疑似伪造定位\");\n当前会话锁：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamSessionWriteService.java:20\nRoamSession session = roamMapper.selectOwnedSessionForUpdate(sessionId, memberId);\n真实发现写入：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamSessionWriteService.java:23\nreturn roamMapper.insertPoiFoundIgnore(memberId, poiId, sessionId, new Date());",
+    "historicalChain": "本项原证据锚点 → 异常速度合同 → 实际拒绝 → 当前会话锁 → 真实发现写入",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "discoverPoi核会员原会话、有效POI、半径+30米及上次离散POI速度，RoamSessionWriteService锁本人会话写发现；商户POI还可触发drop及grantCouponById。",
+      "remainingCode": "当前空间条件仍是自报坐标，不能称真实到店；高价值权益必须逐个核准可信凭证，当前roam掉落券未见商家核验前置，价值/适用政策待确认。",
+      "acceptanceBreakpoints": "范围内外/下线/假坐标/重复发现与受控权益不误发真实HTTP待验；不把所有探索XP和券擅改为现金风控。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+          "symbolOrRule": "public AjaxResult discoverPoi(",
+          "line": 150,
+          "sha256": "d2c0f7b763d63e8f38d4dc09860b0a2d0f576cb43d10127910ab89bad2185455"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamSessionWriteService.java",
+          "symbolOrRule": "recordPoiFound(",
+          "line": 19,
+          "sha256": "10900aa593658e0f0f698c789e4a615c89e2b4b5b4723324d76d8a90ba2e24fb"
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+          "symbolOrRule": "private void applyRoamDrop(",
+          "line": 220,
+          "sha256": "d2c0f7b763d63e8f38d4dc09860b0a2d0f576cb43d10127910ab89bad2185455"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.979491+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "待核",
+      "currentScopeReason": "已有基础可修，但本条扩大目标的具体已确认规则/真实缺陷尚需收敛；不据建议自行新建机制。",
+      "countsAsCurrentRemainingItem": false,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0109",
+    "title": "异常轨迹过滤",
+    "batch": "第二批｜核心游玩、可信完成、记录和消息闭合",
+    "priority": "第2级",
+    "existingStatus": "已有基础",
+    "gap": "断点：服务器校空间范围/速度，但坐标仍客户端自报，且速度依据离散POI而非完整轨迹；无硬件位置证明，不能宣称完全防定位伪造。地点/速度与真正到店核验分开。",
+    "needed": "保存异常移动原因与相关POI时间，异常不当真实里程；申诉/人工替代有原尝试关联。",
+    "dependencies": "无清单内阻塞前置；复用所列已有能力",
+    "acceptance": "大距离短间隔、系统时间异常、离散POI间无轨迹；按规则拒绝/待核且不编造完整轨迹，合法后续点仍可处理。",
+    "sourceAnchors": "本项原证据锚点：chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java:176\nif (prevDist > MIN_MOVE_DIST_M && prevDist / dtSec > MAX_MOVE_SPEED_MPS) {\n异常速度合同：chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java:138\nprivate static final double MAX_MOVE_SPEED_MPS = 35.0;\n实际拒绝：chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java:177\nreturn error(\"移动过快,疑似伪造定位\");\n当前会话锁：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamSessionWriteService.java:20\nRoamSession session = roamMapper.selectOwnedSessionForUpdate(sessionId, memberId);\n真实发现写入：chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamSessionWriteService.java:23\nreturn roamMapper.insertPoiFoundIgnore(memberId, poiId, sessionId, new Date());",
+    "historicalChain": "本项原证据锚点 → 异常速度合同 → 实际拒绝 → 当前会话锁 → 真实发现写入",
+    "publicAudit": {
+      "scope": "共用backend",
+      "publicStatus": "部分缺口",
+      "verifiedCodeChain": "服务端用上次成功POI时间和目标POI距离，位移>300且速度>35拒绝；没有完整轨迹输入，session finish距离仍客户端值。",
+      "remainingCode": "所查拒绝分支仅返回错误，未见异常尝试原因/关联POI时间的持久审计与申诉原尝试链；不补造轨迹。",
+      "acceptanceBreakpoints": "大距离短间隔、时钟异常、合法后续点与拒绝记录/申诉来源待验。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+          "symbolOrRule": "MAX_MOVE_SPEED_MPS = 35.0",
+          "line": 138,
+          "sha256": "d2c0f7b763d63e8f38d4dc09860b0a2d0f576cb43d10127910ab89bad2185455"
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+          "symbolOrRule": "移动过快,疑似伪造定位",
+          "line": 177,
+          "sha256": "d2c0f7b763d63e8f38d4dc09860b0a2d0f576cb43d10127910ab89bad2185455"
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/RoamMapper.xml",
+          "symbolOrRule": "id=\"selectLastPoiFoundLoc\"",
+          "line": 132,
+          "sha256": "29f45b53b67eb406799d23feb64136a6aebde1a887a00bf8e4cfb4d2371495aa"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.979697+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "当前范围",
+      "currentScopeReason": "已有异常点拒绝/合法恢复错误；新申诉交互后置",
+      "countsAsCurrentRemainingItem": true,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  },
+  {
+    "id": "M0111",
+    "title": "轨迹记录省电",
+    "batch": "第二批｜核心游玩、可信完成、记录和消息闭合",
+    "priority": "第2级",
+    "existingStatus": "已有基础",
+    "gap": "具体断点：定位生命周期管理已接，尚无已核的低电量/精度自适应采样与耗电反馈消费者；不能以启动/停止规则外推省电效果。 后续：真机测锁屏耗电、系统杀进程与低电量策略；可参考距离/精度自适应采样。",
+    "needed": "按前后台/移动距离/精度提供少量采样档和低电量策略；保持任务所需范围，不以启动停止就称省电。",
+    "dependencies": "M0107",
+    "acceptance": "相同路线真机测前后台耗电和定位漏点；省电档满足明定到点条件，系统杀进程能解释记录缺段，不填假轨迹。",
+    "sourceAnchors": "共享持有：chengyinhub-xcx/utils/location/bg-tracker.js:107\nif (owners[key]) return; // owner key 即幂等键，重复 acquire 不能重复回调/注册监听。\n权限降级：chengyinhub-xcx/utils/location/bg-tracker.js:96\nfail: toForeground,\n停止规则：chengyinhub-xcx/utils/location/bg-tracker.js:118\nif (!force && count() > 0) return;",
+    "historicalChain": "共享持有 → 权限降级 → 停止规则",
+    "publicAudit": {
+      "scope": "小程序专属",
+      "publicStatus": "尚未实现",
+      "verifiedCodeChain": "roam _startReal使用bgTracker.acquire；tracker按owner复用后台定位，失败降前台，release最后持有者才停止。",
+      "remainingCode": "目标低电量/距离/精度自适应采样档与耗电反馈在所查tracker/roam未见；生命周期管理是基础，不能称省电策略实现。",
+      "acceptanceBreakpoints": "真实同路线前后台耗电、漏点、低电量及杀进程缺段解释均未验。",
+      "uncertainty": "",
+      "sourceEvidence": [
+        {
+          "path": "chengyinhub-xcx/utils/location/bg-tracker.js",
+          "symbolOrRule": "function acquire(",
+          "line": 105,
+          "sha256": "564f79b1f43dc1ba84a4a43456ca1ff8bfc55e23d05402b5c15e3572a2f532ca"
+        },
+        {
+          "path": "chengyinhub-xcx/utils/location/bg-tracker.js",
+          "symbolOrRule": "function release(",
+          "line": 115,
+          "sha256": "564f79b1f43dc1ba84a4a43456ca1ff8bfc55e23d05402b5c15e3572a2f532ca"
+        },
+        {
+          "path": "chengyinhub-xcx/pages/roam/index.js",
+          "symbolOrRule": "bgTracker.acquire('roam'",
+          "line": 3583,
+          "sha256": "d8ebb032078273de42f35b7aad0f8338600823a64983fc59aed1314f93056934"
+        }
+      ],
+      "reviewedAt": "2026-10-13T17:03:50.980468+00:00",
+      "evidenceLevel": "只读源码/真实调用与SQL核对；未执行测试，未继承private测试结果",
+      "checked": false,
+      "classificationBasis": "对照本条needed具体目标，不以文件存在判断完成；App专属本轮暂停",
+      "concurrentReadNote": "公开工作树可能被根聚合修改；以各sourceEvidence SHA为审查版本，提交前须回核变化",
+      "currentScopeDisposition": "后置",
+      "currentScopeReason": "低电量自适应采样/档位为新增能力，后置",
+      "countsAsCurrentRemainingItem": false,
+      "countingNote": "仅计已存在小程序底层链的修补/验收；不等于整条研究目标全部获准实施。"
+    }
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "base": "0f0c32f1edc955f6117108daecbb492652212931",
+  "path": "chengyinhub-xcx/tests/unit/play-free-explore-detail-contract.test.js",
+  "sha256": "bc461e99033d19f781e225b95c85649138f07c2c3004726c2894bc6dd42f1fc4",
+  "node": "24.15.0",
+  "red": "25/26; obsolete hasPaidRegistration assertion",
+  "green": {
+    "exit": 0,
+    "tests": 26,
+    "passed": 26
+  },
+  "scope": "test fixture only; exact current gate + SQL identity/payment/topic ownership; deny-before-provider retained.",
+  "CI_Node22": "root to rerun"
+}
