@@ -896,3 +896,6 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
 
 /* 2026-09-15 地图组队 P 方案:原型 f-hangout 的 .hn-* 底行样式随整卡退场删除 ——
    搭子局已下线,那张「加入这个局」卡不再有数据源与入口。 */
+/* BL-01 点位筛选(.psheet 内容) */
+.poi-filter{ display:flex; flex-direction:column; gap:var(--cy-space-3); margin-top:var(--cy-space-3); }
+.poi-filter__label{ font-size:var(--cy-type-caption); color:var(--cy-color-text-secondary); }

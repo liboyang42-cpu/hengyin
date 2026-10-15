@@ -638,6 +638,11 @@
     <view class="dcopy"><text class="dt">查找附近好玩的</text><text class="ds">{{more.funText}}</text></view>
     <view class="darr"></view>
   </view>
+  <view class="drow" bindtap="openPoiFilter" aria-role="button" aria-label="筛选地图点位，{{more.filterText}}" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="dic pic pic--route"></view>
+    <view class="dcopy"><text class="dt">筛选点位</text><text class="ds">{{more.filterText}}</text></view>
+    <view class="darr"></view>
+  </view>
   <view class="drow" bindtap="openNearestRunner" aria-role="button" aria-label="附近正在走的人" hover-class="cy-pressed" hover-stay-time="80">
     <view class="dic pic pic--people2"></view>
     <view class="dcopy"><text class="dt">附近正在走的人</text><text class="ds">{{more.runnerText}}</text></view>
@@ -1072,6 +1077,27 @@
 	<tabBar wx:if="{{screen=='intro'}}" dark="{{true}}" monochrome="{{true}}" immersive="{{true}}" reduced-motion="{{reducedMotion}}"/>
 <cy-celebrate event-key="{{celebrationEvent}}" reduced-motion="{{reducedMotion}}" />
 </view>
+
+<!-- BL-01 点位筛选:本页半屏统一用原型 .psheet(scene-sheet-contract 钉死不回 cy-sheet),标题 + 右上 ✕。
+     范围走 /api/roam/pois 的 radius;只看未到过只藏地图点,不改进度。 -->
+<block wx:if="{{poiFilterShow}}">
+<view class="pdim is-in {{reducedMotion ? 'is-reduced' : ''}}" bindtap="closePoiFilter" aria-role="button" aria-label="关闭筛选点位" hover-class="cy-pressed" hover-stay-time="80"></view>
+<view class="psheet psheet--half is-in {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
+  <view class="psheet__grab"></view>
+  <view class="psheet__x" catchtap="closePoiFilter" aria-role="button" aria-label="关闭筛选点位" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
+  <text class="ph1">筛选点位</text>
+  <view class="poi-filter">
+    <text class="poi-filter__label">搜索范围</text>
+    <cy-tabs variant="chip" tabs="{{poiFilterTabs}}" active="{{poiFilter.radiusM + ''}}" bind:change="onPoiFilterRadius" />
+    <view class="drow">
+      <view class="dic pic pic--route"></view>
+      <view class="dcopy"><text class="dt">只看未到过</text><text class="ds">已到过、已打卡的点位先不显示</text></view>
+      <view class="dsw {{poiFilter.unvisitedOnly ? 'is-on' : ''}}" catchtap="togglePoiFilterUnvisited" aria-role="switch" aria-checked="{{poiFilter.unvisitedOnly}}" aria-label="只看未到过" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
+    </view>
+    <text class="roam-rules__lede">范围只影响漫游点位；筛选按账号保存在本机。</text>
+  </view>
+</view>
+</block>
 
 <!-- 隐私授权闸(真弹窗):页内组件,不压页面栈。app.js 在需要授权时调本页 showPrivacyGate()。 -->
 <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
