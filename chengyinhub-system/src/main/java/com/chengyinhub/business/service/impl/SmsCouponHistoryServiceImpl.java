@@ -60,7 +60,8 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
         if (merchantId == null ? !clubActor : merchantId <= 0 || !merchantActor) {
             throw new IllegalArgumentException("优惠券核销作用域与操作者角色不匹配");
         }
-        SmsCouponHistory history = smsCouponHistoryMapper.selectSmsCouponHistoryById(historyId);
+        // 固定本事务核销的当前历史身份，防后台编辑关联后沿旧模板校验权限/记账。
+        SmsCouponHistory history = smsCouponHistoryMapper.selectSmsCouponHistoryByIdForUpdate(historyId);
         if (history == null || (history.getDelFlag() != null && history.getDelFlag() != 0)) {
             return RedemptionResult.NOT_FOUND;
         }
