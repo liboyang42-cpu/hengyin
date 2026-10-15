@@ -1,6 +1,8 @@
 :host { display: block; }
 .npc-chat { display: flex; flex-direction: column; height: 100%; min-height: 0; color: var(--cy-color-text-primary); }
 .npc-chat__notice { display: flex; align-items: center; gap: var(--cy-space-1); padding: var(--cy-space-2) 0 var(--cy-space-3); color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); }
+.npc-chat__notice-text { flex: 1; min-width: 0; }
+.npc-chat__clear { flex: none; padding: var(--cy-space-2); margin: calc(var(--cy-space-2) * -1) 0; color: var(--cy-color-text-secondary); text-decoration: underline; }
 .npc-chat__notice .cyi { color: var(--cy-color-text-secondary); flex: none; }
 .npc-chat__messages { flex: 1; min-height: 0; padding: var(--cy-space-2) 0; box-sizing: border-box; }
 .npc-chat__row { display: flex; margin-bottom: var(--cy-space-3); }

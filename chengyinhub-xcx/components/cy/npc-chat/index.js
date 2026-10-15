@@ -114,6 +114,39 @@ Component({
       if (this._isCurrent(generation)) this._requestControl = control;
     },
 
+    /** 「清除我的对话记录」:先弹危险确认(见 utils/danger-actions.js 'ai.npc.chatData.delete')。 */
+    onAskClearData: function () {
+      const dc = this.selectComponent && this.selectComponent('#npc-dc');
+      if (dc) dc.open('ai.npc.chatData.delete', {});
+    },
+
+    onConfirmClearData: function () {
+      const dc = this.selectComponent && this.selectComponent('#npc-dc');
+      if (!dc || this._clearing) return;
+      this._clearing = true;
+      // 删除期间不能再有在途提问:迟到的回答会在服务端重新写出一条刚删掉的记录
+      this._invalidate(false);
+      dc.busyOn();
+      const fail = () => { this._clearing = false; dc.failed('网络异常，对话记录还在，请重试'); };
+      getApp().sendRequest({
+        url: '/api/ai/npc/chat/data/delete',
+        method: 'POST',
+        data: {},
+        hideLoading: true,
+        silentError: true,
+        success: (res) => {
+          if (!res || (res.code != 200 && res.code != '200')) { fail(); return; }
+          this._clearing = false;
+          // 本地列表只是服务端记录的镜像,服务端删成功后同步清空
+          this.setData({ messages: [], state: 'IDLE', isThinking: false, scrollIntoView: '' });
+          const deleted = res.data && Number(res.data.deleted);
+          dc.done(Number.isFinite(deleted) && deleted > 0 ? '已删除 ' + deleted + ' 条服务器上的对话记录，当前对话也已清空。' : '');
+        },
+        fail: fail,
+        successStatusAbnormal: fail,
+      });
+    },
+
     onSheetClose: function () {
       this.cancelPending();
       this.triggerEvent('close');
