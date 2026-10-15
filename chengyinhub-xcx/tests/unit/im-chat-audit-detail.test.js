@@ -1,7 +1,7 @@
 // BL-87 审核结果详情:系统审核卡片打开「处理结果」时回读 GET /api/audit/{taskId}/detail。
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
-const { auditDetailUrl, shapeAuditDetail } = require('../../utils/audit-detail.js')
+const { auditDetailUrl, shapeAuditDetail, shouldLoadAuditDetail, isRetryableAuditError } = require('../../utils/audit-detail.js')
 
 function loadChat() {
   let def
@@ -61,8 +61,33 @@ test('403 如实回显后端文案;关闭后迟到回包不再写入', () => {
   requests[0].success({ code: 403, msg: '无权查看该审批记录' })
   assert.equal(page.data.reviewDetail.state, 'error')
   assert.equal(page.data.reviewDetail.error, '无权查看该审批记录')
+  assert.equal(page.data.reviewDetail.retryable, false)
   page.retryReviewDetail()
+  assert.equal(requests.length, 1, '403 不给重试,重试入口也不再发请求')
+})
+
+test('网络失败可重试;关闭后迟到回包不再写入', () => {
+  const { page, requests } = loadChat()
+  page.onCardTap({ currentTarget: { dataset: { msg: 5 } } })
+  requests[0].fail({ errMsg: 'request:fail' })
+  assert.equal(page.data.reviewDetail.state, 'error')
+  assert.equal(page.data.reviewDetail.retryable, true)
+  page.retryReviewDetail()
+  assert.equal(requests.length, 2)
   page.closeReviewResult()
   requests[1].success({ code: 200, data: { task: { id: 77, status: 1 }, timeline: [] } })
   assert.equal(page.data.reviewDetail, null)
+})
+
+test('被关组局的组局者/成员卡片不请求详情(被举报方必 403);403/404 不可重试', () => {
+  const { page, requests } = loadChat()
+  page.data.msgs[0].card.title = '你参与的组局已关闭'
+  page.onCardTap({ currentTarget: { dataset: { msg: 5 } } })
+  assert.equal(page.data.reviewResult.taskId, 77)
+  assert.equal(requests.length, 0)
+  assert.equal(page.data.reviewDetail, null)
+  assert.equal(shouldLoadAuditDetail({ title: '你的组局已关闭' }), false)
+  assert.equal(shouldLoadAuditDetail({ title: '举报已处理' }), true)
+  assert.equal(isRetryableAuditError({ code: 404 }), false)
+  assert.equal(isRetryableAuditError({ code: 500 }), true)
 })

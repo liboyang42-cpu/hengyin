@@ -35,4 +35,22 @@ function shapeAuditDetail(data) {
   };
 }
 
-module.exports = { auditDetailUrl, shapeAuditDetail, STATUS_LABELS, ACTION_LABELS };
+// AuditTaskServiceImpl.notifyReviewResult 给被关组局的组局者/成员也发同一 taskId 的卡片(卡片标题如下),
+// 他们是被举报方,detail 必然 403 ⇒ 不发请求(用户决定:不做被举报方视图)。
+const NO_DETAIL_CARD_TITLES = ['你的组局已关闭', '你参与的组局已关闭'];
+
+function shouldLoadAuditDetail(card) {
+  const title = card && typeof card.title === 'string' ? card.title.trim() : '';
+  return NO_DETAIL_CARD_TITLES.indexOf(title) < 0;
+}
+
+// 403(非提交人,如其他举报人/主题主办方)/404 重试也不会变 ⇒ 只回显文案,不给重试。
+function isRetryableAuditError(res) {
+  const code = Number(res && res.code);
+  return code !== 403 && code !== 404;
+}
+
+module.exports = {
+  auditDetailUrl, shapeAuditDetail, shouldLoadAuditDetail, isRetryableAuditError,
+  STATUS_LABELS, ACTION_LABELS, NO_DETAIL_CARD_TITLES,
+};
