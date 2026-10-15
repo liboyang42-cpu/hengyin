@@ -43,3 +43,11 @@ E03-01已静态报告freezeEnding传session=null导致结束存档绕过endingCh
 CORE已有13个独立小提交公开（截至b09d9c45），逐项SHA写回CORE池，全部SOURCE_DELIVERED_UNVERIFIED/NOT_RUN；新增9个来源于当前源码实际调用切片的补位条目，累计创建59，后续持续补。仅新增独立证据/回归且未改业务源的任务冻结后可直接取下一项；改业务源仍等协调者精确提交后再叠写同文件，不能混提交。新增4个旧测试精确写权见源表supplemental_test_owners，仅必要fixture/新合同兼容，保留业务断言，不运行。
 
 EXTRA6已在PR16 comment6192852909明确ACK_LONGRUN_SOURCE并确认29源码文件。E05旧policy_blocker文字已清：history/participation已转交，仅detail保留PR20；以最新源表/专项转交为准。C05-07任务草案要求旧代次一律UNCERTAIN与既有RESOLVED_NO_ACTIVE_RESERVATION实际合同冲突；不改现有额度政策，作为任务文字错误/已有反证处理，不能因本轮草案制造新产品决策。
+
+## 冻结完整快照消除提交等待（最新）
+
+每任务worker将精确changed files完整复制到不可变/tmp/longrun-snapshots/<任务ID>/<repo相对路径>并列manifest；交ID/目录/结论后立即继续下一项，允许同lane同源连续写。C00先核精确所有者，再按该冻结文件hash-object/update-index串行小提交；不读取后来WIP代替先前源码，保留每lane任务依赖顺序。worker仍不能Git暂存/提交，只有它写业务文件。仅文件复制/源码提交，不是验证。快照或manifest一旦交付不可改；补点用新任务或明确新revision，不覆盖已收快照。
+
+CORE首批和补位公共源码截至9c55cda0，已留每项可回退提交；追加具体源切片并如实更新delivered游标。C03-09与05重因已标SUPERSEDED_DUPLICATE，不凑独立项；C06 routeActionId旧键异payload原回放是既定兼容，不另立相反新指纹修复任务。每项源码/反证都未跑新增验证，不能当验收关闭。
+
+EXTRA6/E04申请6193059698的SmsCouponMapper.java及3既有测试已按源表精确转交，可新增tryReserveIssuableCoupon专用库存CAS：沿原NULL兼容status非3/4与原库存条件，0行原路径拒发，异常不吞，旧incrementReceiveCount统计语义不变；只同步fixture/原合同断言，不运行。无业务DDL/新API/费用政策。CORE/C04追加原NpcChatServiceTest仅10项已调用provider却读不到持久结果的错误分类修正，原不泄露答案/无日志/无audio断言保持。

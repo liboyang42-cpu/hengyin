@@ -372,6 +372,34 @@
       "state": "ASSIGNED_SOURCE_ONLY",
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/SmsCouponMapper.java": {
+      "owner": "EXTRA6/E04",
+      "worker": "EXTRA6/E04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+      "transfer_evidence": "C00 reserved public frozen baseline, no active claimant in current CY-HANDOFF/PR20 changed files; explicit E04-03 request6193059698; no modifications by current CORE lanes"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SmsCouponDisabledTest.java": {
+      "owner": "EXTRA6/E04",
+      "worker": "EXTRA6/E04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+      "transfer_evidence": "C00 reserved public frozen baseline, no active claimant in current CY-HANDOFF/PR20 changed files; explicit E04-03 request6193059698; no modifications by current CORE lanes"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CouponSourceGrantTest.java": {
+      "owner": "EXTRA6/E04",
+      "worker": "EXTRA6/E04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+      "transfer_evidence": "C00 reserved public frozen baseline, no active claimant in current CY-HANDOFF/PR20 changed files; explicit E04-03 request6193059698; no modifications by current CORE lanes"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationEquityAtomicityContractTest.java": {
+      "owner": "EXTRA6/E04",
+      "worker": "EXTRA6/E04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+      "transfer_evidence": "C00 reserved public frozen baseline, no active claimant in current CY-HANDOFF/PR20 changed files; explicit E04-03 request6193059698; no modifications by current CORE lanes"
     }
   },
   "reserved_not_transferred": [
@@ -391,6 +419,7 @@
     "chengyinhub-xcx/tests/unit/pro-editor-draft.test.js": "CORE/C02",
     "chengyinhub-xcx/tests/unit/pro-editor-fabu-flow.test.js": "CORE/C02",
     "chengyinhub-xcx/tests/unit/pro-editor-story-flow.test.js": "CORE/C02",
-    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java": "CORE/C06"
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java": "CORE/C06",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NpcChatServiceTest.java": "CORE/C04"
   }
 }

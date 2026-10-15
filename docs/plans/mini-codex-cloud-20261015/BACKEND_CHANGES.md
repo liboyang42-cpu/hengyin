@@ -308,3 +308,5 @@ BK-ASSET源码修复为SOURCE_READY，新增VPS套件已通过；**TEST_DEPLOYED
 [LONGRUN_ROLLING](LONGRUN_ROLLING.md)覆盖等待验证时序。两队各50具体任务已落地，6.1-sol各最多6线，源码精确写权见LONGRUN_SOURCE_OWNERS.json，正式原写者停止/候选证据及跨队契约在协议中。EXTRA6不再只测试文件：已授排期/社区/叙事读/券/订阅收藏/平台工具独占源码；history和participation两退款JS可转，PR20重叠detail仍保留锁。仅静态源码/写必要回归，不手动运行Node/Java/Maven/DB/lint/DevTools/业务验证；原AGENTS编译测试由用户本次明确推迟。现有自动CI保留自然结束、不手动重跑、不等结果派工。新交付SOURCE_DELIVERED_UNVERIFIED/NOT_RUN，合并/迁移/部署/设备仍NO。
 
 长期首批公共源码分支codex/mini-longrun-core-20261015：邀请回包上下文、草稿member桶/本人删除、AI未发送stage异常补偿及action Locale.ROOT已有小提交，均未运行验证，不沿用4a/1e结论。精确SHA/新增回归与反证见CORE池。后续未验证源码会使旧生成摘要/门禁行号陈旧，登记待本地统一重建/验证，不能声称旧UI PASS覆盖新提交。
+
+滚动跨队依赖：EXTRA/E03已交公开7cef70bf320c249b966f34cc3908f77912f06780兼容4参freezeEnding及禁止freeze触发额外archive；C00将按原提交集成后由CORE/C06接runtime调用点。CORE/C03-05发现旧plain JourneyStory node引用仅章映射遗漏，需EXTRA/E03域helper兼容重载，先交具体内部合同，不在service复制DSL。C04-14/15与C05-17/18分别是现有RATE_LIMITED原因和模型已调用阶段事实的生产/消费依赖，无新HTTP字段/收费政策，尚未源码签收。全部NOT_RUN。
