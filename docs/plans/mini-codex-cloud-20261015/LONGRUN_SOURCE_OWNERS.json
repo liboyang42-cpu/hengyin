@@ -407,6 +407,13 @@
       "state": "ASSIGNED_SOURCE_ONLY",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "C00 grants internal marker for provider result received after model text; preserves existing Reason/message, no result payload; C04 consumes only after public producer commit"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/GameSessionRuntimeMapper.java": {
+      "owner": "CORE/C06",
+      "worker": "final_review_sol",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
+      "transfer_evidence": "Original shared runtime mapper owner stopped at public1e403b13/4a; XML already CORE/C06. Grant separate current-lock story read method only; existing readOnly projection method unchanged."
     }
   },
   "reserved_not_transferred": [
