@@ -76,7 +76,10 @@ class B03AssetMybatisIntegrationTest {
         for (String table : new String[]{"ums_member", "ums_member_points_detail", "merchant_payable_batch"}) {
             int start = base.indexOf("CREATE TABLE `" + table + "` (");
             assertTrue(start >= 0, "Missing fixture table " + table);
-            jdbc.execute(base.substring(start, base.indexOf(';', start)));
+            // Match the existing IT line-ending delimiter: COMMENT strings can contain semicolons.
+            java.util.regex.Matcher end = java.util.regex.Pattern.compile(";\\s*\\n").matcher(base);
+            assertTrue(end.find(start), "Missing fixture table terminator " + table);
+            jdbc.execute(base.substring(start, end.start()));
         }
         // The runtime member reader also consumes this post-base-schema column.
         jdbc.execute("ALTER TABLE ums_member ADD COLUMN app_open_id VARCHAR(128) NULL");
