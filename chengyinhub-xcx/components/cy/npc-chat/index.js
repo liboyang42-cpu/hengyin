@@ -132,8 +132,7 @@ Component({
     /** 「导出我的对话记录」:拉服务端全量记录,给预览 + 复制文本/JSON;不写任何本地存储。 */
     onExportData: function () {
       if (this._clearing || this.data.exportState === 'loading') return;
-      // 导出读的是服务端已落库的记录;在途提问会在导出之后才落库,先停掉以免导出与界面对不上
-      this._invalidate(false);
+      // 不打断在途提问:导出是只读快照,只含已落库的记录;回答照常在后台逐字呈现,返回对话即可看到
       const seq = (this._exportSeq || 0) + 1;
       this._exportSeq = seq;
       this._exportReadable = '';

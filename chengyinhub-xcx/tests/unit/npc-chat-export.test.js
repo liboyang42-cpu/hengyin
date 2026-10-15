@@ -148,3 +148,17 @@ test('模板:导出与清除并排;导出面板打开时隐藏输入区', () => 
   assert.match(wxml, /wx:if="\{\{!exportState\}\}" class="npc-chat__composer"/);
   assert.match(wxml, /data-format="json" bindtap="onCopyExport"/);
 });
+
+test('组件:导出不打断在途提问,返回对话后回答照常呈现', () => {
+  const requests = [];
+  let aborts = 0;
+  global.wx = { setClipboardData: () => {} };
+  const chat = createChat({ sendRequest: (o) => { requests.push(o); return { abort() { aborts++; } }; } });
+  chat.onInput({ detail: { value: '下一站?' } });
+  chat.onSend();
+  assert.equal(chat.data.isThinking, true);
+  chat.onExportData();
+  assert.equal(aborts, 0, '导出不能 abort 在途提问');
+  assert.equal(chat.data.isThinking, true);
+  assert.equal(requests[1].url, '/api/ai/npc/chat/data/export');
+});
