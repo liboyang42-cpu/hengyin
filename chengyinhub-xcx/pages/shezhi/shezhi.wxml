@@ -18,7 +18,7 @@
     <cy-cell id="settings-club-apply" wx:if="{{!isMerchantView && !isClubView}}" tint="{{isMerchantView ? '' : 'mono'}}" icon="/pages/shezhi/images/icon_flag_blue.svg" title="成为俱乐部主理人" bind:tap="pickClub" />
     <cy-cell id="settings-merchant-apply" wx:if="{{!isMerchantView && !isClubView}}" tint="{{isMerchantView ? '' : 'mono'}}" icon="/images/icon_shop.svg" title="成为商家" bind:tap="pickMerchant" />
     <cy-cell id="settings-how-to-play" tint="{{isMerchantView ? '' : 'mono'}}" icon="/pages/shezhi/images/icon_globe.svg" title="城瘾玩法" bind:tap="goInfomation" />
-    <cy-cell id="settings-likes" tint="{{isMerchantView ? '' : 'mono'}}" icon="/pages/shezhi/images/icon_heart.svg" title="我的收藏" description="收藏的帖文与主题" bind:tap="goMylike" />
+    <cy-cell id="settings-likes" tint="{{isMerchantView ? '' : 'mono'}}" icon="/pages/shezhi/images/icon_heart.svg" title="我的收藏" description="{{communityPostRead ? '收藏的帖文与主题' : '收藏的主题'}}" bind:tap="goMylike" />
     <cy-cell id="settings-privacy" tint="{{isMerchantView ? '' : 'mono'}}" icon="/pages/shezhi/images/icon_privacy.svg" title="隐私与定位" bind:tap="goPrivacy" />
     <cy-cell id="settings-marketing-consent" tint="{{isMerchantView ? '' : 'mono'}}" icon="/pages/shezhi/images/icon_privacy.svg"
              title="营销消息与优惠券" bind:tap="openMarketingConsent" />
