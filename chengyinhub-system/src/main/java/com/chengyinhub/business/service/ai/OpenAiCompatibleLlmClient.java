@@ -156,13 +156,7 @@ public class OpenAiCompatibleLlmClient implements LlmClient
                 log.error("[LlmClient:{}] HTTP {} resp={}", name, resp.getStatus(), truncate(result, 500));
                 throw new RuntimeException("AI 模型调用失败(" + resp.getStatus() + ")");
             }
-            JSONObject json = JSON.parseObject(result);
-            JSONArray choices = json.getJSONArray("choices");
-            if (choices == null || choices.isEmpty())
-            {
-                throw new RuntimeException("AI 模型返回为空");
-            }
-            return choices.getJSONObject(0).getJSONObject("message").getString("content");
+            return responseText(result);
         }
         catch (RuntimeException e)
         {
@@ -173,6 +167,25 @@ public class OpenAiCompatibleLlmClient implements LlmClient
             log.error("[LlmClient:{}] 调用异常", name, e);
             throw new RuntimeException("AI 模型调用异常:" + e.getMessage());
         }
+    }
+
+    /** The existing reply contract is plain text, never a coerced JSON value. */
+    private String responseText(String result)
+    {
+        JSONObject json = JSON.parseObject(result);
+        Object choicesValue = json == null ? null : json.get("choices");
+        if (!(choicesValue instanceof JSONArray) || ((JSONArray) choicesValue).isEmpty())
+        {
+            throw new IllegalStateException("AI 模型返回为空");
+        }
+        Object choice = ((JSONArray) choicesValue).get(0);
+        Object message = choice instanceof JSONObject ? ((JSONObject) choice).get("message") : null;
+        Object content = message instanceof JSONObject ? ((JSONObject) message).get("content") : null;
+        if (!(content instanceof String) || ((String) content).trim().isEmpty())
+        {
+            throw new IllegalStateException("AI 模型返回文本无效");
+        }
+        return (String) content;
     }
 
     private String truncate(String s, int max)
