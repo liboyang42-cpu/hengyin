@@ -213,6 +213,8 @@ public interface CommunityPostMapper {
                       @Param("now") Date now);
     Map<String, Object> selectCommentByAuthorRequest(@Param("authorId") Long authorId,
                                                      @Param("clientRequestId") String clientRequestId);
+    Map<String, Object> selectCommentByAuthorRequestForUpdate(@Param("authorId") Long authorId,
+                                                              @Param("clientRequestId") String clientRequestId);
     Map<String, Object> selectCommentForReply(@Param("commentId") Long commentId,
                                               @Param("postId") Long postId,
                                               @Param("viewerId") Long viewerId);

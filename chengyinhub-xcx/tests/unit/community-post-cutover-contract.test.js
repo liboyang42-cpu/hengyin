@@ -1,19 +1,24 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createClient, normalizePost } = require('../../utils/community-post-api');
-function bundle(id = 56, extra = {}) { return { post: Object.assign({ id, authorId: 990005, authorNickname: '本地测试', body: '内容', version: 1, lifecycle: 'PUBLISHED', viewerLiked: 0, viewerBookmarked: 0, likeCount: 0 }, extra), media: [], references: [], viewerFollowing: false }; }
+function bundle(id = 56, extra = {}) { return { post: Object.assign({ id, authorId: 990005, authorNickname: '本地测试', body: '内容', audience: 'PUBLIC', postType: 'MOMENT', commentPolicy: 'EVERYONE', locationPrecision: 'NONE', version: 1, lifecycle: 'PUBLISHED', viewerLiked: 0, viewerBookmarked: 0, likeCount: 0 }, extra), media: [], references: [], viewerFollowing: false, viewerIsAuthor: true, topicCodes: [], mentions: [] }; }
 function harness(replies = []) {
-  const calls = [], modals = [], sheets = [];
+  const calls = [], modals = [], sheets = [], store = new Map();
+  let state = null;
   let actor = 990005;
   const app = { globalData: {}, getUserID: () => actor, sendRequest(options) {
     calls.push(options);
-    if (replies.length) { const next = replies.shift(); queueMicrotask(() => {
+    if ((options.method === 'GET' && /\/posts\/[0-9]+$/.test(options.url) && state) || replies.length) {
+      let next = options.method === 'GET' && /\/posts\/[0-9]+$/.test(options.url) && state ? JSON.parse(JSON.stringify(state)) : replies.shift();
+      if (typeof next === 'function') next = next(options, state);
+      if (next.post && (options.method === 'PATCH' || (options.method === 'POST' && /\/posts(?:\/[0-9]+\/publish)?$/.test(options.url)))) state = next;
+      queueMicrotask(() => {
       if (next.network) options.fail(next); else options.success(next.code ? next : { code: 200, data: next });
       if (options.complete) options.complete();
     }); }
     return { abort() { this.aborted = true; } };
   } };
-  const wx = { showModal(o) { modals.push(o); queueMicrotask(() => {
+  const wx = { getStorageSync: key => store.get(key), setStorageSync: (key, value) => store.set(key, JSON.parse(JSON.stringify(value))), removeStorageSync: key => store.delete(key), showModal(o) { modals.push(o); queueMicrotask(() => {
     if (Array.from(o.confirmText || '').length > 4) o.fail({ errMsg: 'showModal:fail confirmText length should not larger than 4 Chinese characters' });
     else o.success({ confirm: h.confirm });
   }); },
@@ -62,15 +67,28 @@ test('delete uses actual canonical version and comment post scope', async () => 
   assert.equal(h.calls[1].data.expectedVersion, 7); assert.equal(h.calls[3].data.expectedVersion, 4); assert.equal(h.calls[3].url, '/api/v1/community/posts/56/comments/9');
 });
 const guideline = { id: 3, title: '规范', summary: '请阅读', content_json: '{"rules":[{"code":"LOCAL","title":"本地规则"}]}' };
+const created = (options) => {
+  const b = bundle(70, { ...options.data, lifecycle: 'DRAFT', version: 0 });
+  b.media = options.data.mediaIds.map(id => ({ id })); b.references = options.data.references;
+  b.topicCodes = options.data.topicCodes || []; b.mentions = options.data.mentionedMemberIds || [];
+  return b;
+};
+const checked = (_options, state) => ({ ...state, post: { ...state.post, lifecycle: 'CHECKING', version: state.post.version + 1 } });
+const patched = (options) => {
+  const b = bundle(56, { ...options.data, lifecycle: 'CHECKING', version: options.data.expectedVersion + 1, safetyLabelsJson: JSON.stringify(options.data.safetyLabels || []) });
+  b.media = options.data.mediaIds.map(id => ({ id })); b.references = options.data.references; b.topicCodes = options.data.topicCodes; b.mentions = options.data.mentionedMemberIds;
+  return b;
+};
+
 test('guideline cancellation stops before ack/draft/publish', async () => {
   const h = harness([guideline]); h.confirm = false; const res = await h.request('/api/creativesquare/action', { contents: '本地文案', request_id: 'intent-1' });
   assert.equal(res.code, 499); assert.equal(h.calls.length, 1); assert.match(h.modals[0].content, /本地规则/);
 });
 test('new draft then publish use real version; checking is not reported as published', async () => {
-  const h = harness([guideline, {}, bundle(70, { lifecycle: 'DRAFT', version: 0 }), bundle(70, { lifecycle: 'CHECKING', version: 1 })]);
+  const h = harness([guideline, {}, created, checked]);
   const res = await h.request('/api/creativesquare/action', { contents: '本地文案', request_id: 'intent-1' });
-  assert.deepEqual(h.calls.map(c => c.url), ['/api/v1/community/guidelines/active', '/api/v1/community/guidelines/ack', '/api/v1/community/posts', '/api/v1/community/posts/70/publish']);
-  assert.equal(h.calls[2].data.clientRequestId, 'intent-1'); assert.equal(h.calls[3].data.expectedVersion, 0); assert.equal(res.data.lifecycle, 'CHECKING'); assert.equal(res.data.status, 0);
+  assert.deepEqual(h.calls.map(c => c.url), ['/api/v1/community/guidelines/active', '/api/v1/community/guidelines/ack', '/api/v1/community/posts', '/api/v1/community/posts/70', '/api/v1/community/posts/70/publish', '/api/v1/community/posts/70']);
+  assert.equal(h.calls[2].data.clientRequestId, 'intent-1'); assert.equal(h.calls[4].data.expectedVersion, 0); assert.equal(res.data.lifecycle, 'CHECKING'); assert.equal(res.data.status, 0);
 });
 test('unreceipted media and unresolved geo refuse rather than fabricate metadata', async () => {
   const h = harness([guideline, {}]); const res = await h.request('/api/creativesquare/action', { contents: '图片', pics: 'https://local/image' });
@@ -78,7 +96,7 @@ test('unreceipted media and unresolved geo refuse rather than fabricate metadata
   const geo = harness(); const failed = await geo.request('/api/creativesquare/action', { contents: '地点', address: '地点' }); assert.equal(failed.code, 409); assert.equal(geo.calls.length, 0);
 });
 test('real upload receipt registers media ID; ended own roam source uses existing ROUTE', async () => {
-  const h = harness([guideline, {}, { id: 12 }, bundle(70, { lifecycle: 'DRAFT', version: 0 }), bundle(70)]);
+  const h = harness([guideline, {}, { id: 12 }, created, checked]);
   h.client.captureUpload({ url: '/profile/local.png', mimeType: 'image/png', byteSize: 123, uploadReceipt: 'private-in-memory' });
   await h.request('/api/creativesquare/action', { contents: '分享', pics: '/profile/local.png', data_id: 38, data_type: 3, request_id: 'intent-route' });
   assert.equal(h.calls[2].url, '/api/v1/community/media/register'); assert.equal(h.calls[2].data.uploadReceipt, 'private-in-memory');
@@ -86,14 +104,14 @@ test('real upload receipt registers media ID; ended own roam source uses existin
 });
 test('editing a published post preserves media/geo/relationships and stops at real CHECKING review', async () => {
   const existing = bundle(56, { locationPrecision: 'APPROXIMATE', cityCode: '110100', approximateGeohash: 'wx4g', audience: 'PUBLIC', commentPolicy: 'EVERYONE', postType: 'MOMENT', safetyLabelsJson: '[]' }); existing.media = [{ id: 12 }]; existing.topicCodes = ['LOCAL']; existing.mentions = [990011];
-  const h = harness([guideline, {}, existing, bundle(56, { lifecycle: 'CHECKING', version: 2 })]);
+  const h = harness([guideline, {}, existing, patched]);
   const res = await h.request('/api/creativesquare/action', { id: 56, contents: '改正文' });
-  assert.equal(h.calls.length, 4); assert.equal(h.calls[3].method, 'PATCH'); assert.equal(h.calls[3].data.expectedVersion, 1);
+  assert.equal(h.calls.length, 5); assert.equal(h.calls[3].method, 'PATCH'); assert.equal(h.calls[3].data.expectedVersion, 1);
   assert.equal(h.calls[3].data.approximateGeohash, 'wx4g'); assert.deepEqual(h.calls[3].data.mediaIds, [12]); assert.deepEqual(h.calls[3].data.topicCodes, ['LOCAL']); assert.equal(res.data.lifecycle, 'CHECKING');
 });
 test('report uses capability reason chosen by human, cancelling sends no report', async () => {
   const cap = { reporting: { policyVersion: 'actual-v1', reasons: [{ code: 'ACTUAL', label: '真实原因' }] } };
-  const h = harness([cap, { id: 1 }]); await h.request('/api/comment/report', { id: 9 }); assert.equal(h.calls[1].data.reasonCode, 'ACTUAL'); assert.equal(h.calls[1].data.targetType, 'COMMENT');
+  const h = harness([cap, o => ({id:1,...o.data})]); await h.request('/api/comment/report', { id: 9 }); assert.equal(h.calls[1].data.reasonCode, 'ACTUAL'); assert.equal(h.calls[1].data.targetType, 'COMMENT');
   const cancel = harness([cap]); cancel.select = null; const res = await cancel.request('/api/creativesquare/report', { id: 56 }); assert.equal(res.code, 499); assert.equal(cancel.calls.length, 1);
 });
 test('malformed envelope is a failure, never an empty successful collection', async () => {
@@ -104,13 +122,14 @@ test('safe reference projection uses server snapshot; old shared ID remains cano
   const row = normalizePost(b); assert.equal(row.dataType, 3); assert.equal(row.dataId, 38); assert.equal(row.sportName, '已结束漫游'); assert.equal(row.id, 56);
 });
 test('unknown create retry reuses intent and real registration ID instead of inventing another payload', async () => {
-  const h = harness([guideline, {}, { id: 12 }, { network: true, msg: '未知' }, guideline, {}, { id: 12 }, bundle(70,{lifecycle:'DRAFT',version:0}),bundle(70)]);
+  const h = harness([guideline, {}, { id: 12 }, { network: true, msg: '未知' }, {items:[],hasMore:false,nextCursor:null}, created, checked]);
   h.client.captureUpload({url:'/profile/owned.png',uploadReceipt:'in-memory',byteSize:123,mimeType:'image/png'});
   const form={contents:'同一意图',pics:'/profile/owned.png',request_id:'stable-intent'};
   await h.request('/api/creativesquare/action',form);await h.request('/api/creativesquare/action',form);
-  assert.equal(h.calls[2].data.uploadRequestId,h.calls[6].data.uploadRequestId);
-  assert.equal(h.calls[3].data.clientRequestId,h.calls[7].data.clientRequestId);
-  assert.deepEqual(h.calls[3].data.mediaIds,h.calls[7].data.mediaIds);
+  assert.equal(h.calls.filter(c=>c.url.endsWith('/media/register')).length,1);
+  const creates=h.calls.filter(c=>c.url==='/api/v1/community/posts');
+  assert.equal(creates.length,2);assert.deepEqual(creates[0].data,creates[1].data);
+  assert.equal(h.calls[4].url,'/api/v1/community/drafts');assert.equal(h.modals.at(-1).confirmText,'原样重试');
 });
 test('unknown bookmark retry keeps request identity while success clears the pending command', async () => {
   const h=harness([{code:500,msg:'结果待核对'},bundle(56,{viewerBookmarked:1})]);
@@ -120,7 +139,7 @@ test('unknown bookmark retry keeps request identity while success clears the pen
 });
 test('editing preserves secondary references and owner mentions without inventing snapshots', async () => {
   const previous=bundle();previous.references=[{reference_type:'ACTIVITY',reference_id:27},{reference_type:'TOPIC',reference_id:990044}];previous.topicCodes=['LOCAL'];previous.mentions=[990011];previous.post.safetyLabelsJson='[]';
-  const h=harness([guideline,{},previous,bundle(56,{lifecycle:'CHECKING'})]);
+  const h=harness([guideline,{},previous,patched]);
   await h.request('/api/creativesquare/action',{id:56,contents:'改正文',data_id:27,data_type:1});
   assert.deepEqual(h.calls[3].data.references,[{referenceType:'ACTIVITY',referenceId:27},{referenceType:'TOPIC',referenceId:990044}]);
   assert.deepEqual(h.calls[3].data.mentionedMemberIds,[990011]);assert.deepEqual(h.calls[3].data.topicCodes,['LOCAL']);
@@ -130,8 +149,8 @@ test('cold media intent without receipt stays blocked and instructs own-post rea
   assert.equal(result.code,409);assert.match(result.msg,/我的推文查看发布结果/);assert.equal(h.calls.some(c=>c.url.endsWith('/posts')),false);
 });
 test('actor switch during publish preflight cannot acknowledge or publish as another member', async () => {
-  const h=harness([guideline]);const promise=h.request('/api/creativesquare/action',{contents:'文案'});
-  await Promise.resolve();h.setActor(990011);const result=await promise;assert.equal(result.code,409);assert.equal(h.calls.length,1);
+  const h=harness([guideline]);let delivered=0;h.client.request({url:'/api/creativesquare/action',data:{contents:'文案'},success(){delivered++},fail(){delivered++}});
+  await Promise.resolve();h.setActor(990011);await new Promise(resolve=>setImmediate(resolve));assert.equal(delivered,0);assert.equal(h.calls.length,1);
 });
 test('abort of an in-flight publish finishes once without reporting success', async () => {
   const h=harness();let completed=0,succeeded=0;
@@ -241,10 +260,10 @@ test('acknowledged community writes invalidate all cached feeds; reads and failu
   assert.equal(h.app.globalData.squareListDirtyVersion, 3);
 });
 test('publish/edit invalidate after committed draft even if publishing later fails', async () => {
-  const h = harness([guideline, {}, bundle(70, { lifecycle: 'DRAFT', version: 0 }), { code: 500 }]);
+  const h = harness([guideline, {}, created, { code: 500 }]);
   assert.equal((await h.request('/api/creativesquare/action', { contents: '文案' })).code, 500);
   assert.equal(h.app.globalData.squareListDirtyVersion, 1);
-  const edit = harness([guideline, {}, bundle(70, { lifecycle: 'CHECKING' }), bundle(70, { lifecycle: 'CHECKING', version: 2 })]);
+  const edit = harness([guideline, {}, bundle(70, { lifecycle: 'CHECKING' }), patched]);
   await edit.request('/api/creativesquare/action', { id: 70, contents: '新文案' });
   assert.equal(edit.app.globalData.squareListDirtyVersion, 1);
 });

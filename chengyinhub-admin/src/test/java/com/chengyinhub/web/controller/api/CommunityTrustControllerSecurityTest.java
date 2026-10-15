@@ -12,6 +12,21 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CommunityTrustControllerSecurityTest {
+    @Test
+    void recoveryFilterUsesTheLoginPrincipalAndAnonymousRequestsDoNotReachTheService() {
+        var service = org.mockito.Mockito.mock(com.chengyinhub.business.service.CommunityTrustService.class);
+        var controller = org.mockito.Mockito.spy(new ApiCommunityTrustController());
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "communityTrustService", service);
+        org.mockito.Mockito.doReturn(null).when(controller).getAppUserId();
+        org.junit.jupiter.api.Assertions.assertEquals(401, controller.myReports(null, "report-key-123").get("code"));
+        org.mockito.Mockito.verifyNoInteractions(service);
+        org.mockito.Mockito.doReturn(101L).when(controller).getAppUserId();
+        org.mockito.Mockito.when(service.listMyReports(101L, null, "report-key-123"))
+                .thenReturn(java.util.Collections.emptyList());
+        org.junit.jupiter.api.Assertions.assertEquals(200, controller.myReports(null, "report-key-123").get("code"));
+        org.mockito.Mockito.verify(service).listMyReports(101L, null, "report-key-123");
+    }
+
     private static final String REVIEW_PERMISSION = "business:audit:review";
     private static final String LIST_PERMISSION = "business:audit:list";
 

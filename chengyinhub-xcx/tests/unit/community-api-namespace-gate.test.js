@@ -47,7 +47,7 @@ test('non-url concatenations do not exempt namespace constants', () => {
 const closure = [
  ['GET','/guidelines/active'],['POST','/guidelines/ack'],['GET','/capabilities'],['POST','/media/register'],
  ['POST','/posts'],['GET','/posts/17'],['PATCH','/posts/17'],['DELETE','/posts/17'],['POST','/posts/17/publish'],
- ['GET','/me/bookmarks'],['GET','/me/posts'],['GET','/feeds/LATEST'],['POST','/posts/17/actions'],['DELETE','/posts/17/actions/LIKE'],['DELETE','/posts/17/actions/BOOKMARK'],
+ ['GET','/drafts'],['GET','/me/bookmarks'],['GET','/me/posts'],['GET','/feeds/LATEST'],['POST','/posts/17/actions'],['DELETE','/posts/17/actions/LIKE'],['DELETE','/posts/17/actions/BOOKMARK'],
  ['GET','/posts/17/comments'],['POST','/posts/17/comments'],['DELETE','/posts/17/comments/19'],['POST','/comments/19/actions'],['DELETE','/comments/19/actions/LIKE'],['POST','/reports']
 ];
 test('canonical adapter closure matches actual Controller methods; unknown route and wrong method are RED', () => {
@@ -72,16 +72,19 @@ test('strict U1 recognizes only the explicitly bound canonical receiver and reta
 
 test('actual private call literals match verbs, and reviewed dynamic suffix inventory cannot silently grow', () => {
  const root=path.resolve(__dirname,'../../..');
- const source=fs.readFileSync(path.join(root,'chengyinhub-xcx/utils/community-post-api.js'),'utf8');
+ const adapter=fs.readFileSync(path.join(root,'chengyinhub-xcx/utils/community-post-api.js'),'utf8');
+ const progress=fs.readFileSync(path.join(root,'chengyinhub-xcx/utils/community-submit-progress.js'),'utf8');
+ const source=adapter+'\n'+progress;
+ assert.match(adapter,/if \(ownReportLookup === true\) request\.url = '\/api\/community-trust\/reports\/mine'/);
  const mappings=gate.collectBackendMappings(root).mappings;
  const accepts=(method,route)=>mappings.some(m=>m.verb.toUpperCase()===method && gate.patternToRegex(m.pattern).test('/api/v1/community'+route));
- const directCalls=src=>[...src.matchAll(/\bcall\(\s*'([^']+)'\s*,\s*'([^']+)'/g)];
+ const directCalls=src=>[...src.matchAll(/\b(?:call\(|write\(\s*'[^']+'\s*,)\s*'([^']+)'\s*,\s*'([^']+)'/g)];
  assert.ok(directCalls(source).length>=5);
  for(const m of directCalls(source)) assert.equal(accepts(m[2],m[1]),true,m[2]+' '+m[1]);
  const wrong=source.replace("call('/capabilities', 'GET'", "call('/capabilities', 'DELETE'");
  assert.equal(directCalls(wrong).some(m=>!accepts(m[2],m[1])),true);
  const suffixes=src=>[...new Set(gate.scanJsStringLiterals(src).map(x=>x.value).filter(x=>x.startsWith('/')&&!x.startsWith('/api/')))].sort();
- const reviewed=['/','/LIKE','/actions','/bookmark','/capabilities','/comments','/comments/','/feeds/LATEST','/guidelines/ack','/guidelines/active','/me/bookmarks','/me/posts','/media/register','/posts','/posts/','/publish','/reports'];
+ const reviewed=['/','/LIKE','/actions','/bookmark','/capabilities','/comments','/comments/','/drafts','/feeds/LATEST','/guidelines/ack','/guidelines/active','/me/bookmarks','/me/posts','/media/register','/posts','/posts/','/publish','/reports'];
  assert.deepEqual(suffixes(source),reviewed);
  assert.notDeepEqual(suffixes(source+";const unknown='/unreviewed';"),reviewed);
 });

@@ -229,14 +229,20 @@ public class CommunityTrustServiceImpl implements CommunityTrustService {
 
     @Override
     public List<CommunityReportVO> listMyReports(Long principalMemberId, String stage) {
+        return listMyReports(principalMemberId, stage, null);
+    }
+
+    @Override
+    public List<CommunityReportVO> listMyReports(Long principalMemberId, String stage, String requestId) {
         requirePrincipal(principalMemberId);
         String normalizedStage = optionalUpper(stage);
         if (normalizedStage != null && !REPORT_STAGES.contains(normalizedStage)) {
             throw badRequest("举报阶段筛选不合法");
         }
         List<CommunityReportVO> result = new ArrayList<>();
+        String normalizedRequestId = requestId == null ? null : requireKey(requestId, "举报幂等键无效");
         for (CommunityReportCase row : communityTrustMapper.selectReportsForOwner(
-                principalMemberId, normalizedStage)) {
+                principalMemberId, normalizedStage, normalizedRequestId)) {
             result.add(CommunityReportVO.from(row));
         }
         return result;

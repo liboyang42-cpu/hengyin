@@ -193,6 +193,72 @@ class CommunityPostMapperMyBatisTest {
     }
 
     @Test
+    void deletedRootsKeepVisibleDescendantsWithRedactedAncestorsAndStableRootPaging() throws Exception {
+        DriverManagerDataSource dataSource = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        schema(jdbc);
+        post(jdbc, 1, 11, "PUBLISHED", "PUBLIC", "SH", 1, 1, "owned");
+        jdbc.update("insert into community_post_comment(id,post_id,author_id,root_id,parent_id,body,lifecycle,author_approval_state,version,like_count,create_time) values "
+                + "(10,1,11,null,null,'old normal root','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(20,1,12,null,null,'private deleted root','DELETED','VISIBLE',1,0,now()),"
+                + "(21,1,13,20,20,'private deleted middle','DELETED','VISIBLE',1,0,now()),"
+                + "(22,1,14,20,21,'visible grandchild','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(23,1,12,20,20,'private deleted leaf','DELETED','VISIBLE',1,0,now()),"
+                + "(24,2,14,20,20,'foreign post reply','PUBLISHED','VISIBLE',0,0,now())");
+        try (SqlSession session = factory(dataSource).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            List<Map<String, Object>> first = mapper.selectComments(1L, 8L, null, 1);
+            assertEquals(List.of(20L, 21L, 22L, 23L), first.stream()
+                    .map(row -> ((Number) row.get("id")).longValue()).toList());
+            assertEquals("", first.get(0).get("body"));
+            assertEquals("", first.get(1).get("body"));
+            assertEquals("visible grandchild", first.get(2).get("body"));
+            assertEquals("", first.get(3).get("body"), "even pruned deleted leaves must never load original text");
+            List<Map<String, Object>> second = mapper.selectComments(1L, 8L, 20L, 1);
+            assertEquals(List.of(10L), second.stream().map(row -> ((Number) row.get("id")).longValue()).toList());
+            assertEquals(List.of(), mapper.selectComments(1L, 8L, 10L, 1));
+            assertNull(mapper.selectCommentForReply(20L, 1L, 8L));
+            assertNull(mapper.selectCommentForReply(21L, 1L, 8L));
+            assertEquals(0, mapper.insertCommentAction(20L, 8L, "like-deleted-root", new java.util.Date()));
+            assertEquals(0, mapper.insertCommentAction(21L, 8L, "like-deleted-middle", new java.util.Date()));
+            assertEquals(0, jdbc.queryForObject("select count(*) from community_post_comment_action", Integer.class));
+        }
+    }
+
+    @Test
+    void deletedRootsWithoutLegallyVisibleRepliesDoNotConsumePageSlots() throws Exception {
+        DriverManagerDataSource dataSource = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        schema(jdbc);
+        post(jdbc, 1, 11, "PUBLISHED", "PUBLIC", "SH", 1, 1, "owned");
+        jdbc.update("insert into community_post_comment(id,post_id,author_id,root_id,parent_id,body,lifecycle,author_approval_state,version,like_count,create_time) values "
+                + "(10,1,11,null,null,'normal root','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(20,1,11,null,null,'no replies','DELETED','VISIBLE',1,0,now()),"
+                + "(30,1,11,null,null,'pending replies','DELETED','VISIBLE',1,0,now()),"
+                + "(31,1,12,30,30,'pending','PUBLISHED','PENDING',0,0,now()),"
+                + "(40,1,11,null,null,'checking replies','DELETED','VISIBLE',1,0,now()),"
+                + "(41,1,12,40,40,'checking','CHECKING','VISIBLE',0,0,now()),"
+                + "(50,1,11,null,null,'muted replies','DELETED','VISIBLE',1,0,now()),"
+                + "(51,1,13,50,50,'muted','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(60,1,11,null,null,'blocked replies','DELETED','VISIBLE',1,0,now()),"
+                + "(61,1,14,60,60,'blocked','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(70,1,14,null,null,'blocked root','DELETED','VISIBLE',1,0,now()),"
+                + "(71,1,11,70,70,'visible reply','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(80,1,11,null,null,'foreign replies','DELETED','VISIBLE',1,0,now()),"
+                + "(81,2,11,80,80,'foreign','PUBLISHED','VISIBLE',0,0,now())");
+        jdbc.update("insert into community_member_mute(member_id,muted_member_id) values (8,13)");
+        jdbc.update("insert into im_block(member_id,blocked_member_id) values (14,8)");
+        try (SqlSession session = factory(dataSource).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            List<Map<String, Object>> rows = mapper.selectComments(1L, 8L, null, 1);
+            assertEquals(List.of(10L), rows.stream().map(row -> ((Number) row.get("id")).longValue()).toList());
+            List<Map<String, Object>> ownerRows = mapper.selectComments(1L, 12L, 50L, 1);
+            assertEquals(List.of(40L, 41L), ownerRows.stream()
+                    .map(row -> ((Number) row.get("id")).longValue()).toList(), "existing own CHECKING visibility remains unchanged");
+        }
+    }
+
+    @Test
     void mutedAuthorsAreRemovedFromCommentThreads() throws Exception {
         DriverManagerDataSource dataSource = dataSource();
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);

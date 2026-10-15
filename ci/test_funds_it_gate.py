@@ -49,7 +49,8 @@ def all_required_clean(directory):
     write_report(directory, "ClubEditionCompensationMybatisIntegrationTest", 21)
     write_report(directory, "PlayerWithdrawalCooldownMybatisIntegrationTest", 16)
     write_report(directory, "ClubPayableMybatisIntegrationTest", 20)
-    write_report(directory, "CouponLifecycleMybatisIntegrationTest", 12)
+    write_report(directory, "CouponLifecycleMybatisIntegrationTest", 16)
+    write_report(directory, "CommunityPostCommentIdempotencyMySqlIT", 2)
     write_report(directory, "MysqlItSchemaIsolationTest", 3)
     # 2026-09-15 起登记:R9-16 免费单主办取消真库复现 IT(8 条)。
     write_report(directory, "ActivityCancelFreeOrderMybatisIT", 8)

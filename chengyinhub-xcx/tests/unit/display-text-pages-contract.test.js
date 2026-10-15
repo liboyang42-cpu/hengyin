@@ -66,7 +66,7 @@ function load(file, routes) {
 }
 
 function bundle(id, body) {
-  return { post: { id, authorId: 990005, authorNickname: '测试', body, version: 1, lifecycle: 'PUBLISHED', viewerLiked: 0, viewerBookmarked: 0, likeCount: 0 }, media: [], references: [], viewerFollowing: false };
+  return { post: { id, authorId: 990005, authorNickname: '测试', body, audience:'PUBLIC',postType:'MOMENT',commentPolicy:'EVERYONE',locationPrecision:'NONE',version: 1, lifecycle: 'PUBLISHED', viewerLiked: 0, viewerBookmarked: 0, likeCount: 0 }, media: [], references: [], viewerFollowing: false,viewerIsAuthor:true,topicCodes:[],mentions:[] };
 }
 const ok = data => ({ code: 200, data });
 
@@ -76,7 +76,7 @@ test('广场列表 / 帖文详情 / 评论:帖文正文与评论按解码后的�
   assert.equal(list.page.data.list[0].contents, SHOWN);
   // 编辑入口回填的是解码值
   list.page._actionIndex = 0; list.page.closePostActions = () => {};
-  list.page.editCurrentSquarePost();
+  list.page.editCurrentSquarePost(56);
   assert.equal(list.page.data.composeEdit.contents, SHOWN);
 
   const detail = load('pages/square/detail/index.js', {
@@ -93,14 +93,15 @@ test('广场列表 / 帖文详情 / 评论:帖文正文与评论按解码后的�
 test('广场帖文编辑:提交的是解码后的原文,不带回 &lt;(不会越存越长)', async () => {
   const replies = [
     { id: 3, title: '规范', content_json: '{"rules":[{"code":"A","title":"真实体验"}]}' }, {},
-    bundle(56, RAW), bundle(56, SHOWN.replace('<', '&lt;')),
+    bundle(56, RAW), {...bundle(56,SHOWN.replace('<','&lt;')),post:{...bundle(56,SHOWN.replace('<','&lt;')).post,version:2}}, {...bundle(56,SHOWN.replace('<','&lt;')),post:{...bundle(56,SHOWN.replace('<','&lt;')).post,version:2}},
   ];
   const calls = [];
   const app = {
     globalData: {}, getUserID: () => 990005,
     sendRequest(o) { calls.push(o); const r = replies.shift(); queueMicrotask(() => o.success({ code: 200, data: r })); return { abort() {} }; },
   };
-  const wxApi = { showModal: o => queueMicrotask(() => o.success({ confirm: true })) };
+  const storage=new Map();
+  const wxApi = {getStorageSync:key=>storage.get(key),setStorageSync:(key,value)=>storage.set(key,JSON.parse(JSON.stringify(value))),removeStorageSync:key=>storage.delete(key), showModal: o => queueMicrotask(() => o.success({ confirm: true })) };
   const client = require('../../utils/community-post-api.js').createClient(app, wxApi);
   const prefill = client.normalizePost(bundle(56, RAW)).contents;
   assert.equal(prefill, SHOWN);

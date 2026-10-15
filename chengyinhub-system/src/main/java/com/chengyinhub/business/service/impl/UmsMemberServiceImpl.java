@@ -1,6 +1,18 @@
 package com.chengyinhub.business.service.impl;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.util.regex.Pattern;
+import com.chengyinhub.business.domain.CmsPointsSetting;
+import com.chengyinhub.business.domain.UmsMemberPointsDetail;
+import com.chengyinhub.business.service.ICmsPointsSettingService;
+import com.chengyinhub.common.exception.ServiceException;
+import com.chengyinhub.common.utils.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +52,18 @@ public class UmsMemberServiceImpl implements IUmsMemberService
 
     @Autowired
     private IAppSessionRegistryService appSessionRegistryService;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+
+    @Autowired
+    private ICmsPointsSettingService cmsPointsSettingService;
+
+    @Value("${chengyin.default-avatar-url:}")
+    private String defaultAvatarUrl;
+
+    private static final Pattern WECHAT_DUPLICATE_KEY = Pattern.compile(
+            "for key ['`](?:[^'`]*\\.)?uk_ums_member_wx_open_id_nonblank['`]");
 
     /**
      * 获取用户积分统计信息
@@ -214,7 +238,138 @@ public class UmsMemberServiceImpl implements IUmsMemberService
         umsMember.setRole(com.chengyinhub.business.service.IRoleService.ROLE_PLAYER);
         umsMember.setUserType(1L);
         umsMember.setCreateTime(DateUtils.getNowDate());
-        return umsMemberMapper.insertUmsMember(umsMember);
+        try
+        {
+            return umsMemberMapper.insertUmsMember(umsMember);
+        }
+        catch (DuplicateKeyException failure)
+        {
+            if (isWechatIdentityDuplicate(failure))
+            {
+                throw new ServiceException("微信身份已绑定其他账号");
+            }
+            throw failure;
+        }
+    }
+
+    @Override
+    public UmsMember getOrCreateWechatMember(String openid)
+    {
+        if (StringUtils.isEmpty(openid))
+        {
+            throw new ServiceException("身份凭证无效");
+        }
+        TransactionTemplate transaction = new TransactionTemplate(transactionManager);
+        transaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        try
+        {
+            return transaction.execute(status -> {
+                UmsMember existing = findUniqueWechatMember(openid);
+                if (existing != null)
+                {
+                    return existing;
+                }
+                UmsMember member = new UmsMember();
+                member.setNickname("城瘾用户");
+                member.setName("城瘾用户");
+                member.setUserType(1L);
+                member.setRole("player");
+                member.setPhone("");
+                member.setPassword("");
+                member.setAvatar(defaultAvatarUrl);
+                member.setWxOpenId(openid);
+                member.setStatus(1L);
+                member.setDelFlag(0);
+                // 保留原规则：会员余额 50，赠送流水取注册配置。
+                member.setPoint(50L);
+                member.setCreateTime(DateUtils.getNowDate());
+                int rows;
+                try
+                {
+                    rows = umsMemberMapper.insertUmsMember(member);
+                }
+                catch (DuplicateKeyException failure)
+                {
+                    if (isWechatIdentityDuplicate(failure))
+                    {
+                        throw new WechatMemberInsertConflict(failure);
+                    }
+                    throw failure;
+                }
+                if (rows != 1 || member.getId() == null)
+                {
+                    throw new ServiceException("注册失败");
+                }
+                CmsPointsSetting setting = cmsPointsSettingService.selectCmsPointsSettingById(1L);
+                long points = setting == null ? 0L : setting.getValue().intValue();
+                UmsMemberPointsDetail detail = new UmsMemberPointsDetail();
+                detail.setMemberId(member.getId());
+                detail.setCurrentPoints(points);
+                detail.setAfterPoints(points);
+                detail.setChangePoints(points);
+                detail.setChangeReason("注册赠送");
+                detail.setEventType(1L);
+                detail.setEventId(0L);
+                detail.setChangeType(1L);
+                detail.setDelFlag(0);
+                detail.setCreateTime(DateUtils.getNowDate());
+                if (pointsDetailService.insertUmsMemberPointsDetail(detail) != 1)
+                {
+                    throw new ServiceException("注册赠送失败");
+                }
+                return member;
+            });
+        }
+        catch (WechatMemberInsertConflict conflict)
+        {
+            DuplicateKeyException failure = conflict.duplicate;
+            // 新事务读取已提交的赢家，避免复用失败事务的 REPEATABLE READ 快照。
+            return transaction.execute(status -> {
+                UmsMember member = findUniqueWechatMember(openid);
+                if (member == null)
+                {
+                    throw failure;
+                }
+                return member;
+            });
+        }
+    }
+
+    private UmsMember findUniqueWechatMember(String openid)
+    {
+        UmsMember query = new UmsMember();
+        query.setWxOpenId(openid);
+        List<UmsMember> members = umsMemberMapper.selectUmsMemberList(query);
+        if (members.size() > 1)
+        {
+            throw new ServiceException("身份凭证无效");
+        }
+        return members.isEmpty() ? null : members.get(0);
+    }
+
+    private boolean isWechatIdentityDuplicate(DuplicateKeyException failure)
+    {
+        for (Throwable cause = failure; cause != null; cause = cause.getCause())
+        {
+            if (cause instanceof SQLException && ((SQLException) cause).getErrorCode() == 1062
+                    && cause.getMessage() != null
+                    && WECHAT_DUPLICATE_KEY.matcher(cause.getMessage()).find())
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static class WechatMemberInsertConflict extends RuntimeException
+    {
+        private final DuplicateKeyException duplicate;
+
+        private WechatMemberInsertConflict(DuplicateKeyException duplicate)
+        {
+            super(duplicate);
+            this.duplicate = duplicate;
+        }
     }
 
     /**
@@ -254,6 +409,10 @@ public class UmsMemberServiceImpl implements IUmsMemberService
         catch (RuntimeException e)
         {
             finishFailedMutation(umsMember.getId(), mutationId, e);
+            if (e instanceof DuplicateKeyException && isWechatIdentityDuplicate((DuplicateKeyException) e))
+            {
+                throw new ServiceException("微信身份已绑定其他账号");
+            }
             throw e;
         }
     }

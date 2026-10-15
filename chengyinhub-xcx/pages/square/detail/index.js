@@ -259,6 +259,7 @@ Page({
   addReplyComment: function () {
     var that = this;
     const content = String(that.data.replyContent || '').trim();
+    if (!that.data.replyId || that.data.list.some(row => String(row.id) === String(that.data.replyId) && (row.deletedPlaceholder === true || row.lifecycle === 'DELETED'))) { toast('回复目标已变化，请重新选择'); return; }
     
     if (!content) {
       toast('回复内容不能为空');
@@ -323,6 +324,7 @@ Page({
   // 修改回复按钮点击事件
   msgClick(e) {
     const item = e.currentTarget.dataset.item;
+    if (!item || item.deletedPlaceholder === true || item.lifecycle === 'DELETED') return;
     this.setData({
       popShow: true,
       replyId: item.id || 0,
@@ -584,6 +586,7 @@ Page({
   commentFollowClick(e) {
     const index = Number(e.currentTarget.dataset.index);
     const item = this.data.list[index];
+    if (item && (item.deletedPlaceholder === true || item.lifecycle === 'DELETED')) return;
     if (!item || !item.memberId) {
       toast('用户信息不完整，请刷新后重试');
       return;
@@ -657,7 +660,7 @@ Page({
     var that = this
     let index = e.currentTarget.dataset.index;
     let item = that.data.list[index]
-    if (!item || !item.id) return;
+    if (!item || !item.id || item.deletedPlaceholder === true || item.lifecycle === 'DELETED') return;
     let id = item['id']
     const requestKey = String(id);
     that._commentLikeRequests = that._commentLikeRequests || Object.create(null);
@@ -704,31 +707,35 @@ Page({
 
   reportSquare() {
     const that = this;
+    const id = that.data.id, owner = String(app.getUserID() || ''), current = () => !that._unloaded && String(that.data.id) === String(id) && owner === String(app.getUserID() || '');
     modal.show({
       title: '举报内容',
       content: '确认举报这条内容？举报后将提交平台审核。',
       confirmText: '举报',
       success(res) {
-        if (!res.confirm) {
+        if (!res.confirm || !current()) {
           return;
         }
         community.request({
           hideLoading: true,
           url: '/api/creativesquare/report',
+          current,
           selectReportReason: (items, task) => reportSheet.open(that, items, task),
           method: 'POST',
           data: {
-            id: that.data.id
+            id
           },
           success(resp) {
+            if (!current() || Number(resp && resp.code) === 499) return;
             if (resp.code == '200') {
               toast('已提交举报');
-              setTimeout(() => { that.goBack(); }, 800);
+              setTimeout(() => { if (current()) that.goBack(); }, 800);
             } else {
               toast(resp.msg || '举报失败');
             }
           },
           fail() {
+            if (!current()) return;
             toast('网络异常，请重试');
           }
         });
@@ -737,6 +744,7 @@ Page({
   },
 
   openPostActions() {
+    this._actionContext = { id: String(this.data.id || ''), owner: String(app.getUserID() || '') };
     this.setData({ postActionShow: true });
   },
 
@@ -747,10 +755,12 @@ Page({
   // H050/H051:三合一弹层的分发。delete 走到这里时用户已过完组件内部的危险确认闸
   // (cy-danger-confirm,文案在 utils/danger-actions.js 的 club.post.delete),别再自建第二道。
   onPostAction(e) {
-    const action = ((e || {}).detail || {}).action;
-    if (action === 'edit') { this.openPostEdit(); return; }
-    if (action === 'delete') { this.deleteSquarePost(); return; }
-    if (action === 'report') { this.reportSquareFromActions(); return; }
+    const detail = ((e || {}).detail || {}), context = this._actionContext;
+    if (!context || !detail.id || String(detail.id) !== context.id || context.id !== String(this.data.id)
+      || context.owner !== String(app.getUserID() || '') || this._unloaded) return;
+    if (detail.action === 'edit') { this.openPostEdit(); return; }
+    if (detail.action === 'delete') { this.deleteSquarePost(); return; }
+    if (detail.action === 'report') { this.reportSquareFromActions(); return; }
   },
 
   reportSquareFromActions() {
@@ -762,7 +772,8 @@ Page({
   // 「这条动态暂不可用」态 —— 用户关掉「动态已删除」回执卡,还能从空态 CTA 回列表。
   deleteSquarePost() {
     const id = this.data.id;
-    if (!id || this._deleting) return;
+    if (!id || this._deleting || String((this.data.info || {}).memberId) !== String(app.getUserID() || '')) return;
+    const owner = String(app.getUserID() || ''), current = () => !this._unloaded && String(this.data.id) === String(id) && owner === String(app.getUserID() || '');
     this._deleting = true;
     const pa = this.selectComponent && this.selectComponent('#post-actions');
     community.request({
@@ -771,6 +782,7 @@ Page({
       method: 'POST',
       data: { id: id },
       success: (res) => {
+        if (!current()) return;
         this._deleting = false;
         if (res && res.code == '200') {
           if (pa) pa.deleteDone();
@@ -781,6 +793,7 @@ Page({
         }
       },
       fail: () => {
+        if (!current()) return;
         this._deleting = false;
         if (pa) pa.deleteFailed('网络异常，请重试');
       },
@@ -791,7 +804,7 @@ Page({
   // 后端 R10-06「未提交字段不清空」会保留原值,所以不会把配图改没。
   openPostEdit() {
     const info = this.data.info || {};
-    if (!this.data.id) return;
+    if (!this.data.id || String(info.memberId) !== String(app.getUserID() || '')) return;
     this.closePostActions();
     // editPost 必须先于 show 落地:组件的 show 观察器要在翻转的同一拍读到它(两次 setData 顺序确定)。
     this.setData({ composeEdit: {
@@ -835,9 +848,10 @@ Page({
 
   reportComment(e) {
     const that = this;
+    const owner = String(app.getUserID() || ''), postId = String(that.data.id), current = () => !that._unloaded && String(that.data.id) === postId && owner === String(app.getUserID() || '');
     const index = e.currentTarget.dataset.index;
     const item = that.data.list[index];
-    if (!item || !item.id) {
+    if (!item || !item.id || item.deletedPlaceholder === true || item.lifecycle === 'DELETED') {
       return;
     }
     modal.show({
@@ -845,25 +859,30 @@ Page({
       content: '确认举报这条评论？举报后将提交平台审核。',
       confirmText: '举报',
       success(res) {
-        if (!res.confirm) {
+        if (!res.confirm || !current()) {
           return;
         }
         community.request({
           hideLoading: true,
           url: '/api/comment/report',
+          current,
           selectReportReason: (items, task) => reportSheet.open(that, items, task),
           method: 'POST',
           data: {
             id: item.id
           },
           success(resp) {
+            if (!current() || Number(resp && resp.code) === 499) return;
             if (resp.code == '200') {
+              const list = that.data.list.filter(row => String(row.id) !== String(item.id));
+              that.setData({ list, nodata: list.length < 1 });
               toast('已提交举报');
             } else {
               toast(resp.msg || '举报失败');
             }
           },
           fail() {
+            if (!current()) return;
             toast('网络异常，请重试');
           }
         });
@@ -877,7 +896,7 @@ Page({
     const that = this;
     const index = e.currentTarget.dataset.index;
     const item = that.data.list[index];
-    if (!item || !item.id) return;
+    if (!item || !item.id || item.deletedPlaceholder === true || item.lifecycle === 'DELETED') return;
     if (String(item.memberId) !== String(that.data.userId)) return; // 入口只给自己的评论;后端仍会再校验一次
     const requestKey = String(item.id);
     that._commentDeleteRequests = that._commentDeleteRequests || Object.create(null);

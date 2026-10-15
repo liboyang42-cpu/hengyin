@@ -211,7 +211,7 @@ def validate(source: str, backend_script: str | None = None, production_workflow
 
 def workflow_sources() -> dict:
     return {name: Path('.github/workflows', name).read_text(encoding='utf-8')
-            for name in ('deploy.yml', 'deploy-ui.yml', 'codeup-mirror.yml', 'drift-audit.yml')}
+            for name in ('deploy.yml', 'deploy-ui.yml', 'codeup-mirror.yml', 'drift-audit.yml', 'upload-template-cover-preview.yml')}
 
 
 def remove_from_job(source: str, job: str, needle: str) -> str:

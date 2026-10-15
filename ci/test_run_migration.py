@@ -1137,6 +1137,7 @@ class CommunityLegacyOwnerPreflightTest(unittest.TestCase):
                 runner.assert_community_legacy_owner_preflight(cursor, "scratch")
         cursor = mock.Mock()
         cursor.fetchall.return_value = [("community_post",)]
+        cursor.fetchone.return_value = (1,)
         with self.assertRaisesRegex(ValueError, "missing source"):
             runner.assert_community_legacy_owner_preflight(cursor, "scratch")
 

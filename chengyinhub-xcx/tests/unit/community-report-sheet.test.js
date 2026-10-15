@@ -25,7 +25,7 @@ test('render failure returns an accurate error and never POSTs a report', async 
   const app = { getUserID: () => 990005, tips: message => tips.push(message), sendRequest(o) {
     calls.push(o); queueMicrotask(() => o.success({ code: 200, data: { reporting: { policyVersion: 'server-v1', reasons: items.map((label, i) => ({ label, code: 'R' + i })) } } }));
   } };
-  const client = createClient(app, { showActionSheet() { throw new Error('native sheet must never be used'); } });
+  const client = createClient(app, { getStorageSync() {}, showActionSheet() { throw new Error('native sheet must never be used'); } });
   const result = await new Promise(resolve => client.request({ url: '/api/comment/report', data: { id: 3 },
     selectReportReason: (labels, task) => sheet.open(p, labels, task), success: resolve }));
   assert.equal(result.code, 500); assert.equal(result.msg, '举报原因选择失败，请重试');
@@ -33,7 +33,7 @@ test('render failure returns an accurate error and never POSTs a report', async 
   assert.equal(p._reportReasonSelection, null);
 });
 test('missing selector refuses with accurate failure instead of native fallback', async () => {
-  const app = { getUserID: () => 990005, sendRequest(o) { queueMicrotask(() => o.success({ code: 200, data: { reporting: { reasons: [{ label: '原因', code: 'R1' }] } } })); } };
-  const result = await new Promise(resolve => createClient(app, {}).request({ url: '/api/creativesquare/report', data: { id: 59 }, success: resolve }));
+  const app = { getUserID: () => 990005, sendRequest(o) { queueMicrotask(() => o.success({ code: 200, data: { reporting: { policyVersion: 'server-v1', reasons: [{ label: '原因', code: 'R1' }] } } })); } };
+  const result = await new Promise(resolve => createClient(app, { getStorageSync() {} }).request({ url: '/api/creativesquare/report', data: { id: 59 }, success: resolve }));
   assert.equal(result.code, 503); assert.equal(result.msg, '举报原因选择暂不可用，请重试');
 });
