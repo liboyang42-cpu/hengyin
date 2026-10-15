@@ -192,3 +192,16 @@
 | 129 | 监督未决意见汇总 | 新建 `REVIEW-OPEN.md`：列出最新一条 `supervisor sha=` 结论为 CHANGES NEEDED、或 head 已变但仍有未处理 nit 的 PR，逐条写 file:line 与状态；只汇总不改代码 | docs |
 | 130 | 单测与合同测试·第十一批 | BL-124–125 若有代码改动，补纯函数单测 + 接口合同测试（路径/方法/字段对照 Java 源码）；均 BLOCKED 则 BLOCKED | tests |
 | 131 | 验收清单更新·第十一批 | 把 BL-124–129 已开 PR 的本地验收清单补进 `ACCEPTANCE-BATCH11.md`（依赖 BL-123 #167） | docs |
+
+## 第十二批（132–139）：监督线补充（剩余零调用接口均已被 CL PR 覆盖、属用户排除项（会费/群聊/投票/资金/官方路线）或无现成宿主；本批以整合与核对文档为主，只写 `docs/plans/mini-claude-ui-20261015/` 下新文件，不改代码与统筹文件）
+
+| # | 名称 | 内容 | 范围提示 |
+|---|---|---|---|
+| 132 | 后端风险待办汇总 | 新建 `BACKEND-FINDINGS.md`：汇总评审中发现、本线不改的后端问题，每条写接口、源码 file:line、风险、建议修法、归属（协调者/Codex）。至少含：`/api/template/groupByCategory` 未剥离答案字段且未过滤 `status=1`（登录用户可见，见 #169 评审）；`GET /api/merchant/ops/public-detail` 匿名放出原始电话、可见性用 `delFlag != 2`（见 #168）；以及 #127/#131/#157 等 BLOCKED 说明里提到的后端口径问题 | docs；只描述不改后端 |
+| 133 | 零调用接口终表 | 新建 `ZERO-CALL.md`：扫描 `controller/api/*.java` 全部映射，列出 base 分支小程序（排除 tests/scripts）从未调用的接口，每条归类：已由某 open PR 接线（写 PR 号）/ 用户决定排除 / 资金或支付回调 / Codex 宿主 / 无现成宿主需产品决定；附扫描命令便于复跑 | docs |
+| 134 | 可关闭 PR 建议清单 | 新建 `CLOSE-CANDIDATES.md`：列出 diff 为空的 BLOCKED 说明型 PR 和重复认领分支（如 `claude/bl-107-acceptance-batch58`、`bl-22-list-key-fix`、`bl-27-honest-empty`），每条一行结论 + 是否已写入 `DECISIONS-NEEDED.md`（BL-128），供用户拍板后批量关闭；**本卡不关 PR、不删分支** | docs |
+| 135 | 合并冲突预检 | 新建 `CONFLICTS.md`：对每个有代码改动的 open `claude/bl-*`/`claude/cl*` PR，用 `git merge-tree` 对当前 base 及两两之间预检，列出冲突文件与建议处理顺序（与 BL-127 `MERGE-ORDER.md` 互相引用）；不推送任何分支 | docs |
+| 136 | 单测缺口核对 | 新建 `TEST-GAPS.md`：逐个有代码改动的 open PR，列出新增纯函数/页面处理器及是否有对应 `tests/unit/*` 覆盖，缺口写函数名与建议用例；只写文档 | docs |
+| 137 | 评审规则静态复核 | 新建 `LINT-AUDIT.md`：对 open PR 的新增代码复核监督规则——新可点元素是否有 `hover-class`、传给 `app.sendRequest` 的回调是否在方法简写里依赖 `this`、宿主页场景半屏是否经单一 `sceneCurrent`、是否有裸错误文案/假成功文案；逐条写 PR 号 + file:line；只汇总不改代码 | docs |
+| 138 | 验收总索引 | 新建 `ACCEPTANCE-INDEX.md`：把 `ACCEPTANCE*.md` 与各 PR 正文「本地验收清单」按页面/入口归并成一张总表（入口路径、需要的身份、依赖的协调者补丁、对应 PR），供用户统一验证日按页走查 | docs；依赖 BL-123 #167、BL-131 |
+| 139 | 协调者补丁累计校验 | 依据 BL-126 `COORDINATOR-PATCHES.md`，在本地临时 worktree 把各 PR 交协调者的补丁按 BL-127 顺序叠加，跑 TASKS.md 公共规则里的 node 检查（**不跑 `ci/xcx-check.sh`**），把每步计数与失败项记入 `COORDINATOR-PATCHES-CHECK.md`；只提交该文档，不提交叠加后的统筹文件 | docs；依赖 BL-126、BL-127 |
