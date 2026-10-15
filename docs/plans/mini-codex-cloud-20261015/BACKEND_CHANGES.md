@@ -1,3 +1,9 @@
+## E06修复新候选交付／裸SQL疑点裁定
+
+EXTRA原E06已交修复 `b45664de6136eb97c46ed0c86e95fc25686dc1b7`（直接父ed598，原child a9d1dcda7d9944ace6c89000fc2aa5696018fdff），C00实际核对公共compare仅2路径：E06_17Test.java和E06-17.md，生产/依赖0改。夹具增加既有Error querying database标记、保留原裸SQL子串，原generic/HTTP200/no-mapper及Share503与全部负控不变，额外加2条响应不含SQL断言。SOURCE_DELIVERED_UNVERIFIED/修后NOT_RUN，不能把旧75PASS或旧56PASS继承到此SHA。已交本地PR24#6202107770，仅E06_17Test聚焦复测（5是源码声明、实际以fresh XML计），不再全76，无新DB/Redis前提；Cloud不运行。
+
+裸SQL裁定：**NEEDS_REACHABILITY / NO_SOURCE_CHANGE；不计新增已确认BUG。** C00只读核GlobalAdvice→UserSafeMessage与AjaxResult重复脱敏链，及原sqlLeak_isMaskedToGeneric使用的框架异常形状；定向main源码查找没有证明真实业务会抛出该人工短裸SQL形状。仅有合成Controller/MVC证据不能扩成生产可利用结论，不自动扩regex/屏蔽业务文案、不转写共享源；独立疑点保留，夹具修复不等于修掉它。
+
 ## 当前EXTRA影响面失败与唯一原作者修复线
 
 EXTRA候选 `ed598258c0f614385940f326099b9626531fab02` 已据[PR24@77cb3320fbbf47ef061db811fdc51a0a07c462f8](https://github.com/liboyang42-cpu/hengyin/blob/77cb3320fbbf47ef061db811fdc51a0a07c462f8/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_ed598258/README.md)完整读回：编译PASS，11类76实际项=75PASS/1FAIL/0ERROR/0skip，exact fresh XML，guard1/child_command_failed。75源码声明不能当实际执行数；PlayJourneyStoryServiceImplTest实际26，合计76。唯一失败为E06_17Test无关Controller脱敏隔离负控:111，预期generic、实际裸SQL。E03_18新5项通过；E06 Share503/GONE/隐私/成功4项通过，不得说Share503失效或整组通过。

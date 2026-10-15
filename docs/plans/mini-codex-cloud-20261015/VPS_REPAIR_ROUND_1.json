@@ -860,7 +860,7 @@
     "evidence_directory": "docs/verification/mini-bug-arch-20261015/VPS_EXTRA_ed598258/",
     "C00_read_public_evidence": true,
     "repair_owner": "EXTRA6/E06 external_e06",
-    "repair_status": "ORIGINAL_AUTHOR_ACK_RECEIVED_ONE_REPAIR_SLOT",
+    "repair_status": "SOURCE_FIX_DELIVERED_NOT_RUN",
     "repair_ack": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6202056607",
     "authorized_repair_paths": [
       "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E06_17Test.java",
@@ -884,11 +884,12 @@
       "local_only": true,
       "command_template_for_local_only": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E06_17Test test",
       "executed_by_Cloud": false
-    }
+    },
+    "source_repair_candidate": "b45664de6136eb97c46ed0c86e95fc25686dc1b7"
   },
   "shared_safe_message_observation": {
     "id": "SHARED-SAFE-MESSAGE-BARE-SQL",
-    "status": "OPEN_BASELINE_SANITIZER_GAP_OBSERVATION_NOT_CLOSED_BY_FIXTURE_REPAIR",
+    "status": "NEEDS_REACHABILITY",
     "severity_not_inferred_from_synthetic_endpoint": true,
     "paths": [
       "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/UserSafeMessage.java",
@@ -913,6 +914,44 @@
     "write_authorized_to_E06": false,
     "original_writer_identification": "Not recorded in current exact source-owner entries; unresolved, no transfer performed",
     "coordination_owner": "C00",
-    "followup_rule": "Keep independently open even if E06 fixes isolation fixture. Determine exact original owner/caller and minimal shared contract; no regex/global-handler edits by E06, no weakened security assertions or blanket business-message masking."
+    "followup_rule": "Keep independently open even if E06 fixes isolation fixture. Determine exact original owner/caller and minimal shared contract; no regex/global-handler edits by E06, no weakened security assertions or blanket business-message masking.",
+    "state": "NEEDS_REACHABILITY",
+    "source_action": "NO_SOURCE_CHANGE",
+    "confirmed_new_bug": false,
+    "production_reachability_proven": false,
+    "read_only_check": {
+      "checkout": "CORE0d63043a (common/advice verified identical ed598/e72 by exact public readbacks)",
+      "production_chain": "GlobalExceptionHandler RuntimeException/Exception -> UserSafeMessage.of; AjaxResult non-success safeMessage -> same helper",
+      "existing_fixture": "GlobalExceptionHandlerErrorMappingTest.sqlLeak_isMaskedToGeneric already uses Error querying database/java.sql shape",
+      "targeted_production_search": "No literal synthetic SQL SELECT private unrelated table or direct bare SQL exception literal in searched admin/system/framework/common main Java. This is bounded static search, not proof of all dynamic message shapes.",
+      "conclusion": "No actual business endpoint/exception chain proven to emit the unmarked short SQL shape; retain NEEDS_REACHABILITY, no source changes or new write grant."
+    }
+  },
+  "extra_e06_repair_candidate": {
+    "candidate_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
+    "direct_parent_sha": "ed598258c0f614385940f326099b9626531fab02",
+    "source_owner": "EXTRA6/E06 external_e06",
+    "child_sha": "a9d1dcda7d9944ace6c89000fc2aa5696018fdff",
+    "ack_and_delivery_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6202097241",
+    "status": "SOURCE_DELIVERED_UNVERIFIED",
+    "verification": "NOT_RUN_AFTER_FIX",
+    "C00_compared_public_diff": true,
+    "changed_paths": [
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E06_17Test.java",
+      "docs/verification/mini-longrun-20261015/EXTRA6/E06-17.md"
+    ],
+    "changed_production_paths": [],
+    "dependencies_changed": false,
+    "change": "Use existing supported Error querying database marker in synthetic unrelated-controller fixture; keep original SQL substring and original generic/HTTP200/no-mapper/503 assertions, add2 explicit no-SQL-response assertions.",
+    "scope": "Fixture premise repair only, not sanitizer or Share contract change",
+    "retest_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "retest_class": "com.chengyinhub.business.longrun.E06_17Test",
+    "source_declarations": 5,
+    "executed_tests": null,
+    "result": null,
+    "full76_rerun_required": false,
+    "no_inherited_results": true,
+    "local_handoff": "PR24 comment6202107770; approved212 only, no new DB/Redis dependency",
+    "cloud_manual_runs": 0
   }
 }

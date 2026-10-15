@@ -1,3 +1,9 @@
+## E06修复新候选交付／裸SQL疑点裁定
+
+EXTRA原E06已交修复 `b45664de6136eb97c46ed0c86e95fc25686dc1b7`（直接父ed598，原child a9d1dcda7d9944ace6c89000fc2aa5696018fdff），C00实际核对公共compare仅2路径：E06_17Test.java和E06-17.md，生产/依赖0改。夹具增加既有Error querying database标记、保留原裸SQL子串，原generic/HTTP200/no-mapper及Share503与全部负控不变，额外加2条响应不含SQL断言。SOURCE_DELIVERED_UNVERIFIED/修后NOT_RUN，不能把旧75PASS或旧56PASS继承到此SHA。已交本地PR24#6202107770，仅E06_17Test聚焦复测（5是源码声明、实际以fresh XML计），不再全76，无新DB/Redis前提；Cloud不运行。
+
+裸SQL裁定：**NEEDS_REACHABILITY / NO_SOURCE_CHANGE；不计新增已确认BUG。** C00只读核GlobalAdvice→UserSafeMessage与AjaxResult重复脱敏链，及原sqlLeak_isMaskedToGeneric使用的框架异常形状；定向main源码查找没有证明真实业务会抛出该人工短裸SQL形状。仅有合成Controller/MVC证据不能扩成生产可利用结论，不自动扩regex/屏蔽业务文案、不转写共享源；独立疑点保留，夹具修复不等于修掉它。
+
 修复后复测选择：若仅E06_17Test与说明变化，交本地在批准212入口显式跑E06_17Test（5是源码声明，实际以fresh XML计）；生产/依赖未变不再重跑全76。若真有生产变化，按精确变更补直接影响类，不继承旧结果。Cloud不执行。
 
 ## 当前EXTRA影响面失败与唯一原作者修复线

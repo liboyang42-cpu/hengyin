@@ -2787,7 +2787,7 @@
   "shared_core_read_only_observations": {
     "SHARED-SAFE-MESSAGE-BARE-SQL": {
       "id": "SHARED-SAFE-MESSAGE-BARE-SQL",
-      "status": "OPEN_BASELINE_SANITIZER_GAP_OBSERVATION_NOT_CLOSED_BY_FIXTURE_REPAIR",
+      "status": "NEEDS_REACHABILITY",
       "severity_not_inferred_from_synthetic_endpoint": true,
       "paths": [
         "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/UserSafeMessage.java",
@@ -2812,7 +2812,18 @@
       "write_authorized_to_E06": false,
       "original_writer_identification": "Not recorded in current exact source-owner entries; unresolved, no transfer performed",
       "coordination_owner": "C00",
-      "followup_rule": "Keep independently open even if E06 fixes isolation fixture. Determine exact original owner/caller and minimal shared contract; no regex/global-handler edits by E06, no weakened security assertions or blanket business-message masking."
+      "followup_rule": "Keep independently open even if E06 fixes isolation fixture. Determine exact original owner/caller and minimal shared contract; no regex/global-handler edits by E06, no weakened security assertions or blanket business-message masking.",
+      "state": "NEEDS_REACHABILITY",
+      "source_action": "NO_SOURCE_CHANGE",
+      "confirmed_new_bug": false,
+      "production_reachability_proven": false,
+      "read_only_check": {
+        "checkout": "CORE0d63043a (common/advice verified identical ed598/e72 by exact public readbacks)",
+        "production_chain": "GlobalExceptionHandler RuntimeException/Exception -> UserSafeMessage.of; AjaxResult non-success safeMessage -> same helper",
+        "existing_fixture": "GlobalExceptionHandlerErrorMappingTest.sqlLeak_isMaskedToGeneric already uses Error querying database/java.sql shape",
+        "targeted_production_search": "No literal synthetic SQL SELECT private unrelated table or direct bare SQL exception literal in searched admin/system/framework/common main Java. This is bounded static search, not proof of all dynamic message shapes.",
+        "conclusion": "No actual business endpoint/exception chain proven to emit the unmarked short SQL shape; retain NEEDS_REACHABILITY, no source changes or new write grant."
+      }
     }
   },
   "extra_e06_repair_receipt": {
@@ -2824,6 +2835,9 @@
       "docs/verification/mini-longrun-20261015/EXTRA6/E06-17.md"
     ],
     "shared_production_write_authorized": false,
-    "no_global_source_transfer_performed": true
+    "no_global_source_transfer_performed": true,
+    "status": "SOURCE_DELIVERED_ORIGINAL_AUTHOR_FROZEN",
+    "candidate_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
+    "verification": "NOT_RUN_AFTER_FIX"
   }
 }
