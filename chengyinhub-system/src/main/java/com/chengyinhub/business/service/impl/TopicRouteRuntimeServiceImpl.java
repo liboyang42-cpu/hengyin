@@ -2909,20 +2909,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
 
     /** Resolve old omitted-activity requests by their original unique scope, then select that scope's current run. */
     private TopicRouteSession currentScopedSession(Long memberId, Long topicId, Long activityId) {
-        if (memberId == null || memberId <= 0 || topicId == null || topicId <= 0
-                || (activityId != null && activityId < 0)) throw new IllegalArgumentException("场次参数有误");
-        Long resolvedActivity = activityId;
-        if (resolvedActivity == null) {
-            TopicRouteSession legacy = TopicRouteSessionScope.find(routeMapper, memberId, topicId, null);
-            if (legacy == null) return null;
-            resolvedActivity = legacy.getActivityId();
-        }
-        TopicRouteSession session = currentSession(memberId, topicId, resolvedActivity);
-        if (session != null && (!memberId.equals(session.getMemberId()) || !topicId.equals(session.getTopicId())
-                || !java.util.Objects.equals(resolvedActivity, session.getActivityId()))) {
-            throw new ServiceException("无权访问这一局");
-        }
-        return session;
+        return TopicRouteSessionScope.findCurrent(routeMapper, memberId, topicId, activityId);
     }
 
     private TopicRouteSession currentSession(Long member, Long topic, Long activity) {
