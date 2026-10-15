@@ -1,7 +1,9 @@
 package com.chengyinhub.business.longrun;
 
 import com.chengyinhub.business.domain.UmsMemberBalanceDetail;
+import com.chengyinhub.business.domain.UmsMemberPointsDetail;
 import com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper;
+import com.chengyinhub.business.mapper.UmsMemberPointsDetailMapper;
 import com.chengyinhub.business.service.MysqlIntegrationTestConfig;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.io.Resources;
@@ -36,11 +38,15 @@ class OWN_C06_30Test {
         JdbcTemplate jdbc=new JdbcTemplate(source);
         jdbc.execute("CREATE TABLE ums_member_balance_detail(id BIGINT PRIMARY KEY,member_id BIGINT,change_balance DECIMAL(18,2),change_type INT,del_flag INT,create_time DATETIME) ENGINE=InnoDB");
         jdbc.execute("INSERT INTO ums_member_balance_detail VALUES (1,7,99,1,0,'2026-10-11 23:59:59'),(2,7,10,1,0,'2026-10-12 00:00:00'),(3,7,20,1,0,'2026-10-18 23:59:58'),(4,7,1000,1,0,'2026-10-19 00:00:00'),(5,7,500,2,0,'2026-10-14 12:00:00'),(6,7,600,1,2,'2026-10-14 12:00:00'),(7,8,700,1,0,'2026-10-14 12:00:00')");
+        jdbc.execute("CREATE TABLE ums_member_points_detail(id BIGINT PRIMARY KEY,member_id BIGINT,change_points BIGINT,change_type INT,del_flag INT,create_time DATETIME) ENGINE=InnoDB");
+        jdbc.execute("INSERT INTO ums_member_points_detail VALUES (1,7,99,1,0,'2026-10-11 23:59:59'),(2,7,4,1,0,'2026-10-12 00:00:00'),(3,7,6,1,0,'2026-10-18 23:59:58'),(4,7,500,1,0,'2026-10-19 00:00:00'),(5,7,700,2,0,'2026-10-14 12:00:00'),(6,7,800,1,2,'2026-10-14 12:00:00'),(7,8,900,1,0,'2026-10-14 12:00:00')");
         Configuration configuration=new Configuration(new Environment("c06-week",new JdbcTransactionFactory(),source));
         configuration.getTypeAliasRegistry().registerAlias("UmsMemberBalanceDetail",UmsMemberBalanceDetail.class);
-        String resource="mapper/business/UmsMemberBalanceDetailMapper.xml";
-        try(InputStream input=Resources.getResourceAsStream(resource)) {
-            new XMLMapperBuilder(input,configuration,resource,configuration.getSqlFragments()).parse();
+        configuration.getTypeAliasRegistry().registerAlias("UmsMemberPointsDetail",UmsMemberPointsDetail.class);
+        for(String resource:new String[]{"mapper/business/UmsMemberBalanceDetailMapper.xml","mapper/business/UmsMemberPointsDetailMapper.xml"}) {
+            try(InputStream input=Resources.getResourceAsStream(resource)) {
+                new XMLMapperBuilder(input,configuration,resource,configuration.getSqlFragments()).parse();
+            }
         }
         factory=new SqlSessionFactoryBuilder().build(configuration);
     }
@@ -63,6 +69,18 @@ class OWN_C06_30Test {
         try(Connection connection=source.getConnection();SqlSession session=factory.openSession(connection)) {
             pin(connection,"2026-10-19 00:00:00");
             assertEquals(0,new BigDecimal("1000.00").compareTo(session.getMapper(UmsMemberBalanceDetailMapper.class).selectWeekBalanceIncome(7L)));
+        }
+    }
+    @Test void sundayPointsUseSameMondayBoundaryAndOriginalFilters() throws Exception {
+        try(Connection connection=source.getConnection();SqlSession session=factory.openSession(connection)) {
+            pin(connection,"2026-10-18 23:59:59");
+            assertEquals(0,new BigDecimal("10").compareTo(session.getMapper(UmsMemberPointsDetailMapper.class).selectWeekPointsIncome(7L)));
+        }
+    }
+    @Test void nextMondayPointsStartNewWeekAtMidnight() throws Exception {
+        try(Connection connection=source.getConnection();SqlSession session=factory.openSession(connection)) {
+            pin(connection,"2026-10-19 00:00:00");
+            assertEquals(0,new BigDecimal("500").compareTo(session.getMapper(UmsMemberPointsDetailMapper.class).selectWeekPointsIncome(7L)));
         }
     }
     @Test void negativeControlOldSundayExpressionSelectsFutureWeekFixture() throws Exception {
