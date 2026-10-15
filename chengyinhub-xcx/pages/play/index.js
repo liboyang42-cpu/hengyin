@@ -680,24 +680,29 @@ Page({
     const source = this._routeNodeCatalog || this.data.nodes || [];
     return source.map((node) => Object.assign({}, node, current[String(node.nodeId)] || {}));
   },
-  _applyRouteState(routeStateInput, callback) {
-    const routeState = normalizeRouteState(routeStateInput);
-    let source = routeStateInput;
+  _routeStateVersionKnown(input) {
+    let source = input;
     if (typeof source === 'string') {
       try { source = JSON.parse(source); } catch (e) { source = null; }
     }
-    const rawVersion = source && typeof source === 'object' && !Array.isArray(source) ? source.version : null;
-    const versionKnown = (typeof rawVersion === 'number' || typeof rawVersion === 'string' && rawVersion.trim() !== '')
-      && Number.isFinite(Number(rawVersion));
-    const previous = this._routeState || {};
-    // Normalization maps legacy null/empty versions to zero; only explicit versions establish a floor.
+    const value = source && typeof source === 'object' && !Array.isArray(source) ? source.version : null;
+    return (typeof value === 'number' || typeof value === 'string' && value.trim() !== '')
+      && Number.isFinite(Number(value));
+  },
+  _acceptRouteStateProjection(input) {
+    const next = normalizeRouteState(input), previous = this._routeState || {};
     const previousKnown = Number.isFinite(previous.version)
       && (previous.version > 0 || this._versionedRouteState === previous);
-    if (routeState.sessionId && routeState.sessionId === previous.sessionId && previousKnown
-        && (!versionKnown || routeState.version < previous.version)) {
+    return !(next.sessionId && next.sessionId === previous.sessionId && previousKnown
+      && (!this._routeStateVersionKnown(input) || next.version < previous.version));
+  },
+  _applyRouteState(routeStateInput, callback) {
+    if (!this._acceptRouteStateProjection(routeStateInput)) {
       if (callback) callback(false);
       return false;
     }
+    const routeState = normalizeRouteState(routeStateInput);
+    const versionKnown = this._routeStateVersionKnown(routeStateInput);
     if (this._routeState.routeMode === 'BRANCH_GRAPH' && routeState.routeMode !== 'BRANCH_GRAPH') {
       this._failClosedRouteState('路线状态暂未同步，请稍后重试', false);
       if (callback) callback(false);
@@ -3802,9 +3807,12 @@ Page({
       // 只喂 buildJournal / _historyNodeById 的内部状态,不渲染、不进 setData(UI-GATE-0 死数据字段口径)。
       that._historyNodes = historyNodes;
       const catalog = raw.map((n, i) => that.normNode(n, i, mode));
-      const routeState = normalizeRouteState(d.routeState || { routeMode: d.routeMode });
+      const routeInput = d.routeState || { routeMode: d.routeMode };
+      const acceptProjection = that._acceptRouteStateProjection(routeInput);
+      const routeState = acceptProjection ? normalizeRouteState(routeInput) : that._routeState;
       const nodes = applyRouteStateToNodes(catalog, routeState);
       that._routeState = routeState;
+      if (acceptProjection) that._versionedRouteState = that._routeStateVersionKnown(routeInput) ? routeState : null;
       that._routeNodeCatalog = catalog;
       if (routeState.thoughtCount > 0) that._askWeRunOnce();
       if (that._routeActions) that._routeActions.clear();
@@ -3887,6 +3895,7 @@ Page({
     const routeState = normalizeRouteState(d.routeState || { routeMode: d.routeMode });
     const nodes = applyRouteStateToNodes(catalog, routeState);
     that._routeState = routeState;
+    that._versionedRouteState = that._routeStateVersionKnown(d.routeState) ? routeState : null;
     that._routeNodeCatalog = catalog;
     const chapter = that.buildChapter(d, nodes);
     this._historyNodes = [];
@@ -5643,9 +5652,11 @@ Page({
     }) : n;
     const catalog = (this._routeNodeCatalog || this.data.nodes).map(patchCompleted);
     this._routeNodeCatalog = catalog;
-    const returnedRouteState = data && data.routeState ? normalizeRouteState(data.routeState) : null;
+    const hasRouteProjection = !!(data && data.routeState);
+    const acceptedProjection = hasRouteProjection && this._acceptRouteStateProjection(data.routeState);
+    const returnedRouteState = acceptedProjection ? normalizeRouteState(data.routeState) : null;
     const routeState = returnedRouteState || this._routeState;
-    const nodes = returnedRouteState
+    const nodes = hasRouteProjection
       ? applyRouteStateToNodes(catalog, routeState)
       : this.data.nodes.map(patchCompleted);
     if (data && data.puzzlePersonalBest != null) {
@@ -5663,6 +5674,7 @@ Page({
     // 标记 just-wrote(手记写入)
     const justId = nodeId;
     this._routeState = routeState;
+    if (acceptedProjection) this._versionedRouteState = this._routeStateVersionKnown(data.routeState) ? routeState : null;
     this.setData({
       nodes,
       routeNotice: returnedRouteState ? this._routeNoticeForState(returnedRouteState) : this.data.routeNotice,
