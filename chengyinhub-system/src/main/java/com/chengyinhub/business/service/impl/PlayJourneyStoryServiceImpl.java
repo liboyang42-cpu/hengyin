@@ -174,16 +174,23 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         }
         TopicRouteEngine.State state = readState(session);
 
-        return evaluateEnding(topicId,story,state,topic,session,memberId);
+        return evaluateEnding(topicId,story,state,topic,session,memberId,true);
     }
 
     /** 同一结局求值用于结束事务的不可变存档；不要求已落库为完成状态。 */
     public Map<String,Object> freezeEnding(Long topicId,String raw,TopicRouteEngine.State state) {
+        return freezeEnding(topicId, raw, state, null);
+    }
+
+    /** 终态归档沿用本局正文及数值快照；三参旧入口仍保留实时兼容读取。 */
+    public Map<String,Object> freezeEnding(Long topicId,String raw,TopicRouteEngine.State state,
+                                           TopicRouteSession session) {
         JourneyStory story=JourneyStory.parse(raw);
         if(story==null || story.getEnding()==null)return java.util.Collections.emptyMap();
-        return evaluateEnding(topicId,story,state,topicMapper.selectCmsTopicById(topicId),null,null);
+        return evaluateEnding(topicId,story,state,topicMapper.selectCmsTopicById(topicId),session,
+                session == null ? null : session.getMemberId(),false);
     }
-    private Map<String,Object> evaluateEnding(Long topicId,JourneyStory story,TopicRouteEngine.State state,CmsTopic topic,TopicRouteSession session,Long memberId) {
+    private Map<String,Object> evaluateEnding(Long topicId,JourneyStory story,TopicRouteEngine.State state,CmsTopic topic,TopicRouteSession session,Long memberId,boolean includeArchive) {
         JourneyStory.Ending ending=story.getEnding();
         JourneyStory.EndingCase chosen = pickEnding(ending.getEndings(), state);
         Map<String, Object> view = new LinkedHashMap<String, Object>();
@@ -197,7 +204,7 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         int[] found = foundClues(ending.getOptionalClues(), state);
         view.put("found", found[0]);
         view.put("total", found[1]);
-        if(session != null) view.put("archive", archive(memberId, topicId, session));
+        if(includeArchive && session != null) view.put("archive", archive(memberId, topicId, session));
         view.put("chapter", endingChapter(topicId, chosen, state, session));
         return view;
     }
