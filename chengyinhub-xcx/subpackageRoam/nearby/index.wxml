@@ -1,5 +1,5 @@
 <!-- 漫游地图 · 附近的队伍(地图组队 P 方案,Figma txQoyVyKb3aQdFCnc8qmhj 590:1014 · P1–P6)
-     地图只做展示层:没有开局入口;顶部白条「附近的队伍 · N 支在招募」;
+     地图只做展示层:没有开局入口;顶部深色计数条「附近的队伍 · N 支在招募」 + 地图/列表切换;
      底部只剩「范围」「我的队伍」两枚角控件,开任何半屏时收起(9-08 裁决)。 -->
 <view class="nb theme-dark">
   <cy-toast id="cy-toast" />
@@ -18,18 +18,38 @@
        2026-09-15 合拢收尾:稿 591:1019 画了个「筛选」,但整份稿没有任何筛选维度(玩法/时间/有票)
        的定义,接过来时只能把它接到 openRange 上 —— 那就是底部「范围」角控件已经在做的事,
        一个动作两个入口、名字还不一样。要么等产品定筛选维度再做真的,要么现在不留半成品。删。 -->
+  <!-- 2026-10-14 地图优化(用户确认原型):深色计数条 + 地图/列表切换;位置仍在胶囊下 10px(hudTop) -->
   <view class="mt-top" style="top:{{hudTop}}px;">
-    <text class="mt-top__t" aria-role="text">{{headerText}}</text>
+    <view class="mt-top__pill"><view class="mt-top__dot"></view><text class="mt-top__t" aria-role="text">{{headerText}}</text></view>
+    <view class="mt-mode">
+      <view class="mt-mode__i {{viewMode === 'map' ? 'is-on' : ''}}" data-mode="map" bindtap="setViewMode" aria-role="tab" aria-selected="{{viewMode === 'map'}}" aria-label="地图" hover-class="cy-pressed" hover-stay-time="80">地图</view>
+      <view class="mt-mode__i {{viewMode === 'list' ? 'is-on' : ''}}" data-mode="list" bindtap="setViewMode" aria-role="tab" aria-selected="{{viewMode === 'list'}}" aria-label="列表" hover-class="cy-pressed" hover-stay-time="80">列表</view>
+    </view>
   </view>
+
+  <!-- 列表模式:范围内全部队伍,点一行 = 点地图上的那支(同一张队伍卡) -->
+  <scroll-view class="mt-list" scroll-y wx:if="{{viewMode === 'list'}}" style="top:{{hudTop + 56}}px;">
+    <view class="mt-list__sec">{{rangeText}} 内 · {{listRows.length}} 支</view>
+    <view class="mt-row mt-row--list" wx:for="{{listRows}}" wx:key="teamId" data-id="{{item.teamId}}" bindtap="onListRowTap"
+          aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="mt-row__body">
+        <text class="mt-row__n">{{item.name}}</text>
+        <view class="mt-row__meta"><text class="mt-row__s">{{item.sub}}</text><text class="mt-badge mt-badge--{{item.tone}}">{{item.badge}}</text></view>
+      </view>
+      <text class="mt-row__s">{{item.count}}</text>
+    </view>
+    <view class="mt-foot" wx:if="{{!listRows.length}}">这个范围内暂时没有队伍,放大范围再看看</view>
+  </scroll-view>
 
   <view class="nb-load-error" wx:if="{{loadError}}" style="top:{{hudTop + 56}}px;">
     <cy-error title="附近的队伍没能读到" sub="地图还在，队伍这次没读到" retry="重试" bind:retry="retryNearby" />
   </view>
 
   <!-- P1 角控件(稿 591:1020 / 591:1022)。开卡片时收起。 -->
+  <!-- 底栏:范围 · 我的队伍。开任何半屏时收起(9-08 裁决沿用) -->
   <view class="mt-corners" wx:if="{{!sheet}}" style="bottom:{{safeBottom + 26}}px;">
     <view class="mt-corner" bindtap="openRange" aria-role="button" aria-label="{{rangeText}}" hover-class="cy-pressed" hover-stay-time="80">{{rangeText}}</view>
-    <view class="mt-corner" bindtap="openMyTeams" aria-role="button" aria-label="{{myTeamsText}}" hover-class="cy-pressed" hover-stay-time="80">{{myTeamsText}}</view>
+    <view class="mt-corner" bindtap="openMyTeamsPage" aria-role="button" aria-label="{{myTeamsText}}" hover-class="cy-pressed" hover-stay-time="80">{{myTeamsText}}</view>
   </view>
 
   <!-- P2 / P3 / P4 / 被拒 / 已加入:队伍卡(稿 593:1017 · 594:1030 · 594:1060) -->

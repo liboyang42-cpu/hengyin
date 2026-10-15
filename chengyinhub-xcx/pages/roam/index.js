@@ -64,11 +64,6 @@ const { currentScene, exitDecision, popScene, pushScene } = require('../../utils
 const { MAP_STYLE } = require('../../utils/map-style.js');
 const { getScene } = require('../../utils/scene-registry.js');
 const { getNodeLevelStyle, buildNodeLevelMarkerStyle } = require('./node-level-style.js'); const entryMap = require('../../utils/roam-entry-map.js');
-// 漫游首屏固定入口卡:附近的队伍(9-15 地图组队 P 方案,地图不再能开局)。永远排在已报名章节卡之后;不发轻查、不编数字。
-const HANGOUT_INTRO_CARD = Object.freeze({
-  key: 'hangout', nav: '/subpackageRoam/nearby/index', icon: 'pin-solid',
-  title: '附近的队伍', sub: '看看附近在招募的队伍',
-});
 // 后台定位开关(与 play 页共用,引用计数收口)。★必须在模块顶层:#750 曾把这行插进 req() 函数体,
 // bgTracker 变成 req 的局部变量,_startReal 一调就 ReferenceError —— 漫游实时定位整条静默死掉。
 const bgTracker = require('../../utils/location/bg-tracker.js');
@@ -280,18 +275,16 @@ Page({
     // 起始页(Figma 3956:12602/12809)。modeTitle 是模式名:本页恒为自由漫游,
     // 城市定向/自由探索复用同一版式时只换这三项(标题 / 卡片 / 主行动文案)。
     modeTitle: '自由漫游',
-    introTab: 'start',            // start=开始主题 | passport=漫游护照
+    introTab: 'start',            // start=开始漫游 | passport=漫游护照
     introTabs: [{ key: 'start', label: '开始漫游' }, { key: 'passport', label: '漫游护照' }],
     avatar: '',
     // 护照 tab 的读数全部来自本机 roam_sessions,拿不到就是空态,不摆假卡
     passport: { tiles: [], trips: [] },
     introCardIdx: 0,
-    // 「开始主题」横滑卡:优先展示我已报名的城市定向/自由探索章节(接 /api/registration/list),
-    // 一张没有(未登录/没报名/接口挂)时回落到漫游自己的两张入口卡 —— 不留空 swiper。
     introCards: [
-      { key: 'rules', icon: 'info', title: '自由漫游', sub: '走到哪，雾散到哪。没有固定路线。' },
-      { key: 'history', icon: 'route', title: '足迹记录', sub: '回看每一次走过的城市片段。记录只保存在这台手机上。' },
-      HANGOUT_INTRO_CARD,
+      { key: 'start', icon: 'route', title: '开始漫游', sub: '走到哪，雾散到哪' },
+      { key: 'map', nav: '/subpackageRoam/nearby/index', icon: 'map', title: '打开地图', sub: '寻找组队' },
+      { key: 'my-teams', nav: '/subpackageRoam/nearby/index?sheet=mine', icon: 'tab-club', title: '我的队伍', sub: '查看已加入和申请中的队伍' },
     ],
     boundEvent: null, // 官方活动绑定横幅(带 eventId 进入时显示)
     // V2 活动叠层只在玩家显式从活动进入或重新打开时显示；关闭后不影响日常漫游。
@@ -694,9 +687,13 @@ Page({
           { key: 'history', icon: 'route', title: '漫游记录', value: sessions.length + ' 次旅程' },
           { key: 'stamp', icon: 'image', title: '集邮册', value: stamps + ' 张邮票' },
           { key: 'badge', icon: 'star', title: '勋章墙', value: '我的徽章' },
+          // 2026-10-14 随漫游上线的两项(读数在各自页面现读,方卡不摆数字)
+          { key: 'goals', icon: 'flag', title: '探索目标', value: '给自己定个小目标', isNew: true },
+          { key: 'capsule', icon: 'clock', title: '时光胶囊', value: '写给以后的自己', isNew: true },
         ],
         plays: [
-          { key: 'event', icon: 'calendar', title: '官方活动', sub: '限时任务与奖励', cover: '' },
+          // 官方活动暂未开放(用户裁决):卡片留位、点按只提示,不进列表
+          { key: 'event', icon: 'calendar', title: '官方活动', sub: '限时任务与奖励', cover: '', closed: true },
           { key: 'discover', icon: 'discover-shop', title: '发现附近店铺', sub: '现在能去哪', cover: '' },
         ],
       },
@@ -709,54 +706,30 @@ Page({
     // ⚠️ 勋章墙只能走页面:它是 <canvas type="webgl">,旧式原生组件不支持同层渲染,
     //    塞进场景弹窗会盖在遮罩和关闭钮之上(页面里那层 cover-view 就是为此存在的)
     else if (key === 'badge') wx.navigateTo({ url: '/subpackageP3/pages/badge-wall/index/index' });
+    else if (key === 'goals') wx.navigateTo({ url: '/subpackageTools/exploration-goals/index' });
+    else if (key === 'capsule') wx.navigateTo({ url: '/subpackageTools/capsule/index' });
     else this.openPassport();
   },
   onPassportPlayTap(e) {
     const key = e.currentTarget.dataset.key;
-    if (key === 'event') this.openRoamTasks();   // 官方活动 = roam-task-list 场景(route 同为 activity/list)
-    else this.goDiscover();
+    if (key === 'event') return;   // 官方活动暂未开放:卡上已标状态,点按不进列表
+    // 发现附近店铺:漫游开始前 _pois 为空、横滑条只在 map 态渲染,原 goDiscover 在这里只会弹「没有合作商家」→ 改去地图
+    this.openNearbyMap();
   },
   onIntroCardSwipe(e) { this.setData({ introCardIdx: e.detail.current || 0 }); },
   /** B:出示当前选中主题的码(A 扫码进入已按用户裁决移除)。
    *  码图需后端小程序码接口(getWXACodeUnlimit),接上前弹窗如实显示待生成,不摆假码。 */
   // 主题码已移到自由探索(play intro):漫游不需要码(用户裁决)
 
-  onIntroCardTap(e) {
-    const idx = e.currentTarget.dataset.idx;
-    const card = this.data.introCards[idx] || {};
-    // 附近的局写成字面量跳转:孤儿页门禁只认静态可读的 url,card.nav 那条它看不见
-    if (card.key === 'hangout') { wx.navigateTo({ url: '/subpackageRoam/nearby/index' }); return; }
-    if (card.nav) { wx.navigateTo({ url: card.nav }); return; }   // 真章节卡 → 进对应游玩
-    if (card.key === 'history') this.openRoamHistory();
-    else this.openRoamRules();
+  // 漫游记录里的那年今日 / 月度回顾 / 导出(2026-10-14 随漫游上线):弹窗组件只发事件,跳转在宿主页
+  openRoamTool(e) {
+    const key = e && e.detail && e.detail.key;
+    if (key === 'anniversary') wx.navigateTo({ url: '/subpackageTools/anniversary/index' });
+    else if (key === 'recap') wx.navigateTo({ url: '/subpackageTools/monthly-recap/index' });
+    else if (key === 'export') wx.navigateTo({ url: '/subpackageTools/exploration-export/index' });
   },
-  /** 拉我已报名的主题章节,填进「开始主题」横滑卡(与 member/signup 同一数据源同一跳转口径)。
-   *  失败/为空静默保留默认两张 —— 起始页不该因为这一条接口挂掉而报错。 */
-  _loadIntroTopics() {
-    const that = this;
-    getApp().sendRequest({
-      url: '/api/registration/list', method: 'POST', hideLoading: true, silentError: true,
-      data: { owner_type: 1, pageNum: 1, pageSize: 10 },
-      success(res) {
-        const rows = res && res.code == '200' && res.data && isRecordList(res.data.rows)
-          ? res.data.rows : [];
-        const cards = rows.map((r) => {
-          const topic = r.cmsTopic || {};
-          const isFree = Number(topic.mode) === 2;
-          const nav = r.activityId
-            ? ('/pages/play/index?activityId=' + r.activityId + '&registrationId=' + r.id)
-            : ('/pages/play/index?topicId=' + (r.topicId || topic.id) + '&registrationId=' + r.id);
-          return {
-            key: 'reg-' + r.id, nav,
-            icon: isFree ? 'discover-shop' : 'route',
-            title: topic.name || (isFree ? '自由探索' : '城市定向'),
-            sub: (topic.description || '').slice(0, 24) || (isFree ? '任选一处开始探索' : '按顺序走完整条路线'),
-          };
-        });
-        if (cards.length) that.setData({ introCards: cards.concat([HANGOUT_INTRO_CARD]) });
-      },
-    });
-  },
+  openNearbyMap() { wx.navigateTo({ url: '/subpackageRoam/nearby/index' }); },
+  openMyTeams() { wx.navigateTo({ url: '/subpackageRoam/my-teams/index' }); },
   /** 护照 tab 的三格读数 + 旅程卡:唯一数据源是本机 roam_sessions(与 passport/history 两页同源)。
    *  storage 读不出来 = 真的没有记录 ⇒ trips 空、三格全 0,由 wxml 出空态文案;不编数字。 */
   /* 设置页的权限状态:位置权限(scope.userLocation)与后台持续定位(scope.userLocationBackground)
@@ -838,6 +811,7 @@ Page({
       reducedMotion: readReducedMotion(),
     });
     this._entryItems = []; this._entryTeams = []; this._loadEntryMap(this.data.center);
+    this._loadIntroPassport();
     this._reveals = [];
     this._track = [];
     this._sessionPhotos = [];
@@ -962,7 +936,8 @@ Page({
       this._roamZoomTimer = null;
     }
     const av = getApp().globalData.avatar;
-    if (av !== this.data.avatar) this.setData({ avatar: av || '' }); if (this.data.screen === 'entry-map' && this._entryShownOnce && typeof getApp().sendRequest === 'function') this._loadEntryMap(this.data.center); this._entryShownOnce = true;
+    if (av !== this.data.avatar) this.setData({ avatar: av || '' });
+    this._loadIntroPassport(); if (this.data.screen === 'entry-map' && this._entryShownOnce && typeof getApp().sendRequest === 'function') this._loadEntryMap(this.data.center); this._entryShownOnce = true;
     // 漫游不自动补造路径；定位恢复后由用户再次主动开启。
     // switchTab 不带 query 参数,official-detail 经 globalData 暂存 eventId,此处消费后即清
     const pendingEventId = getApp().globalData.roamEventId;
@@ -2509,17 +2484,8 @@ Page({
 
   _buildOpeningEmojis(rand) { return buildOpeningEmojis(rand); },
 
-  /** 起始页右侧「拍照」= 直接开始漫游并立刻开相机。
-   *  照片是绑在 session 上的(roam_sessions[].photos → 邮票),所以必须先真的开起来,
-   *  不能在没有 session 的起始页单独拍 —— 那张照片会无处安放。 */
-  goStartAndShoot() { this._shootAfterStart = true; this.goStart(); },
   goStart() {
     if (this.data.entrySheet) this.closeEntrySheet();
-    const { introCards, introCardIdx } = this.data;
-    const card = introCards[introCardIdx] || {};
-    // 附近的局写成字面量跳转:孤儿页门禁只认静态可读的 url,card.nav 那条它看不见
-    if (card.key === 'hangout') { wx.navigateTo({ url: '/subpackageRoam/nearby/index' }); return; }
-    if (card.nav) { wx.navigateTo({ url: card.nav }); return; }
     if (this._roamStartPending) return;
     // 未登录不开漫游:没有会话时 /api/roam/* 全被后端 401 挡下 —— 据点层永远「没加载出来」、
     // 每次揭雾上报弹一次「请先登录」、结算永远失败,而页面自己没有任何出路。

@@ -7,6 +7,12 @@
     <text>{{summary.km || 0}}公里</text>
     <text>探{{summary.shopsText || 0}}家</text>
   </view>
+  <!-- 2026-10-14 随漫游上线:那年今日 / 月度回顾 / 导出(各自独立页面,读服务端本人完成记录;弹窗内不直接导航,由宿主页跳转) -->
+  <view class="hs-tools" wx:if="{{tools}}">
+    <view class="hs-tool" data-key="anniversary" bindtap="openTool" aria-role="button" aria-label="那年今日" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="calendar" size="31" /><text>那年今日</text></view>
+    <view class="hs-tool" data-key="recap" bindtap="openTool" aria-role="button" aria-label="月度回顾" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="list" size="31" /><text>月度回顾</text></view>
+    <view class="hs-tool" data-key="export" bindtap="openTool" aria-role="button" aria-label="导出探索记录" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="download" size="31" /><text>导出</text></view>
+  </view>
 
   <view class="hs-scroll">
     <view class="rc" wx:for="{{list}}" wx:key="ts" bindtap="openSession" data-ts="{{item.ts}}"
@@ -37,7 +43,7 @@
     <!-- CU-M-55:正在漫游时 sessions 必然为空(记录要结算才写),此时说「你还没有开始过」
          与事实相反,CTA 也不该是「出发第一次漫游」。判据在组件:本机 recovery 记录仍在。 -->
     <cy-empty wx:if="{{!list.length && inProgress}}" fill size="lg" class="fill-slot" kind="not-started" title="正在漫游中" sub="这次漫游还没结束，历史只收录结算过的记录；回到地图可以接着走" cta="回到地图" bind:cta="closeToRoam" />
-    <cy-empty wx:elif="{{!list.length}}" fill size="lg" class="fill-slot" kind="empty" title="还没有漫游记录" sub="你还没有开始过城市漫游，出发一次就会在这里留下记录。记录只保存在这台手机上，换机或清缓存后不会保留" cta="出发第一次漫游" bind:cta="closeToRoam" />
+    <cy-empty wx:elif="{{!list.length}}" fill size="lg" class="fill-slot" kind="empty" title="还没有漫游记录" sub="{{tools ? '出发一次，这里就会留下记录。' : '你还没有开始过城市漫游，出发一次就会在这里留下记录。记录只保存在这台手机上，换机或清缓存后不会保留'}}" cta="出发第一次漫游" bind:cta="closeToRoam" />
     <view wx:if="{{list.length}}" style="height:80rpx"></view>
   </view>
 </view>

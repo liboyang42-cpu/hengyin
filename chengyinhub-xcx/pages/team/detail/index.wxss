@@ -2,3 +2,4 @@
 
 button.team-action { margin: 0; padding: 0; line-height: normal; }
 button.team-action::after { border: 0; }
+.team-actions + .team-card { margin-top: var(--cy-space-4); } /* 邀请队友与「公开招募」卡之间留白 */

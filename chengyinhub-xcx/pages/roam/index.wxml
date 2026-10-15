@@ -16,40 +16,6 @@
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 
-<!-- 进入漫游 tab 的默认态：真实地图浏览，不建会话、不记轨迹、不自动申请定位。 -->
-<view class="entry-map" wx:if="{{screen=='entry-map'}}">
-  <free-map id="entryMap" class="entry-map__map" scene="explore"
-       center="{{center}}" scale="14" show-controls="{{false}}"
-       subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}"
-       map-markers="{{entryMarkers}}" accessibility-label="城市活动与招募队伍地图"
-       reduced-motion="{{reducedMotion}}" bind:markertap="onEntryMarkerTap" bind:regionchange="onRegionChange" />
-  <text class="entry-map__title" style="top:{{topSafe}}px">漫游</text>
-  <cy-map-address-search class="entry-map__search" top="{{searchTop}}" places="{{searchPlaces}}"
-                         entry="{{true}}" placeholder="搜索活动或地点" bind:pick="onSearchPick" />
-  <view class="entry-map__layers" style="top:{{searchTop}}px" bindtap="openEntryLayers" aria-role="button" aria-label="选择地图图层" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="map" size="40" /></view>
-  <view class="entry-map__actions">
-    <view class="entry-map__roam" bindtap="openRoamHistory" aria-role="button" aria-label="记录" hover-class="cy-pressed" hover-stay-time="80"><text>记录</text></view>
-    <view class="entry-map__roam" bindtap="openEntryRoamSheet" aria-role="button" aria-label="打开开始漫游弹窗" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="route" size="32" /><text>开始漫游</text></view>
-  </view>
-  <cy-state-shell class="entry-map__permission" wx:if="{{introError}}" kind="no-permission"
-                  title="需要定位才能开始漫游" sub="{{introError}}"
-                  primary="去设置" bind:primary="openRoamLocationSetting" />
-  <view class="entry-peek">
-    <view class="entry-peek__head"><text>附近活动</text></view>
-    <view class="entry-peek__state" wx:if="{{entryLoadError}}" bindtap="retryEntryMap" aria-role="button" aria-label="附近内容加载失败，点击重试" hover-class="cy-pressed" hover-stay-time="80"><text>附近内容加载失败</text><text>点击重试</text></view>
-    <scroll-view wx:elif="{{entryCards.length}}" class="entry-peek__cards" scroll-x enhanced show-scrollbar="{{false}}">
-      <view class="entry-card" wx:for="{{entryCards}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}"
-            bindtap="onEntryCardTap" aria-role="button" aria-label="打开活动 {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
-        <image wx:if="{{item.cover}}" class="entry-card__cover" src="{{item.cover}}" mode="aspectFill" />
-        <view wx:else class="entry-card__cover entry-card__cover--empty"><cy-icon name="image" size="48" /></view>
-        <view class="entry-card__shade"></view>
-        <view class="entry-card__copy"><text class="entry-card__tag">{{item.tag}}</text><text class="entry-card__title">{{item.title}}</text><text class="entry-card__meta">{{item.meta || item.address || '查看活动详情'}}</text></view>
-      </view>
-    </scroll-view>
-    <view wx:else class="entry-peek__state"><text>附近暂无活动</text><text>移动地图看看其他区域</text></view>
-  </view>
-</view>
-
 <!-- 地图入口弹层只服务开始前浏览态；开始后的 psheet 与 HUD 保持原样。 -->
 <view class="roam-scene-host" wx:if="{{screen=='entry-map' && entrySheet}}" catchtouchmove="blockSceneTouch">
   <view class="pdim {{entrySheetIn?'is-in':''}} entry-sheet__mask" bindtap="closeEntrySheet" aria-role="button" aria-label="关闭弹窗" hover-class="cy-pressed" hover-stay-time="80"></view>
@@ -113,53 +79,66 @@
   </view>
 </view>
 
-<!-- ===================== A4 起始过场 · 深色 NRC 布局 ===================== -->
-<!-- §8 权限:底图仅展示默认中心,不请求定位。定位说明+授权在点 GO 之后(见 js goStart) -->
-<!-- 出发按钮浮在预览地图上；free-map 关闭交互并禁用 pointer events，点击由按钮层承接。 -->
-<view class="intro" wx:if="{{screen=='intro'}}">
+<!-- 已确认的漫游 / 漫游护照首页；运行态地图和详情场景沿用原实现。 -->
+<view class="intro" wx:if="{{screen=='entry-map'||screen=='intro'}}">
   <view class="intro-head" style="padding-top:{{chrome.actionTop}}px;">
     <view class="intro-ava-hit" bindtap="goProfile" aria-role="button" aria-label="打开我的" hover-class="cy-pressed" hover-stay-time="80"><image class="intro-ava" src="{{avatar || '/images/d_profile.png'}}" mode="aspectFill" /></view>
   </view>
-  <view class="intro-top">
-    <view class="intro-title">漫游</view>
-  </view>
+  <view class="intro-top"><view class="intro-title">漫游</view></view>
   <view class="intro-nav"><cy-tabs plain tabs="{{introTabs}}" active="{{introTab}}" bind:change="switchIntroTab" /></view>
   <cy-state-shell class="intro-permission" wx:if="{{introError}}" kind="no-permission"
                   title="需要定位才能开始漫游" sub="{{introError}}"
                   primary="去设置" bind:primary="openRoamLocationSetting" />
-
   <cy-error wx:if="{{recoveryError}}" title="上次漫游需要核对" sub="{{recoveryError}}"
             retry="核对漫游记录" bind:retry="recoverRoam" />
-  <view wx:elif="{{recoveryAvailable}}" class="intro-permission">已找回本次漫游记录，点击 GO 继续探索。</view>
-
-  <!-- ① 开始主题:我已报名的章节横滑卡(_loadIntroTopics);一张都没有时回落漫游自己的两张入口卡 -->
-  <block wx:if="{{introTab=='start'}}">
-    <swiper class="intro-cards" next-margin="96rpx" bindchange="onIntroCardSwipe">
-      <swiper-item wx:for="{{introCards}}" wx:key="key">
-        <view class="intro-card" data-idx="{{index}}" bindtap="onIntroCardTap" aria-role="button" aria-label="{{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="intro-card__ic"><cy-icon name="{{item.icon}}" size="48" /></view>
-          <view class="intro-card__copy">
-            <text class="intro-card__title">{{item.title}}</text>
-            <text class="intro-card__sub">{{item.sub}}</text>
-          </view>
+  <view wx:elif="{{recoveryAvailable}}" class="intro-permission">已找回本次漫游记录，点击开始漫游继续探索。</view>
+  <view wx:if="{{introTab=='start'}}" class="intro-start">
+    <view class="intro-stage">
+      <free-map id="entryMap" class="intro-map__el" scene="explore" center="{{center}}" scale="14"
+                show-controls="{{false}}" interactive="{{false}}" map-markers="{{entryMarkers}}"
+                subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}"
+                bind:markertap="onEntryMarkerTap" accessibility-label="漫游出发地图预览" reduced-motion="{{reducedMotion}}" />
+      <view class="intro-stage__shade"></view>
+    </view>
+    <swiper class="intro-cards" previous-margin="46rpx" next-margin="85rpx" current="{{introCardIdx}}" bindchange="onIntroCardSwipe">
+      <swiper-item>
+        <view class="intro-card" bindtap="goStart" aria-role="button" aria-label="开始漫游" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="intro-card__ic"><image class="intro-card__img" src="/images/roam/intro-roam.svg" mode="aspectFill" /></view>
+          <view class="intro-card__copy"><text class="intro-card__title">{{introCards[0].title}}</text><text class="intro-card__sub">{{introCards[0].sub}}</text></view>
+        </view>
+      </swiper-item>
+      <swiper-item>
+        <view class="intro-card" bindtap="openNearbyMap" aria-role="button" aria-label="打开地图，寻找组队" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="intro-card__ic"><image class="intro-card__img" src="/images/roam/intro-map.svg" mode="aspectFill" /></view>
+          <view class="intro-card__copy"><text class="intro-card__title">{{introCards[1].title}}</text><text class="intro-card__sub">{{introCards[1].sub}}</text></view>
+        </view>
+      </swiper-item>
+      <swiper-item>
+        <view class="intro-card" bindtap="openMyTeams" aria-role="button" aria-label="我的队伍" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="intro-card__ic"><image class="intro-card__img" src="/images/roam/intro-team.svg" mode="aspectFill" /></view>
+          <view class="intro-card__copy"><text class="intro-card__title">{{introCards[2].title}}</text><text class="intro-card__sub">{{introCards[2].sub}}</text></view>
         </view>
       </swiper-item>
     </swiper>
-    <view class="intro-dots" wx:if="{{introCards.length > 1}}">
-      <view class="intro-dot {{index==introCardIdx?'is-on':''}}" wx:for="{{introCards}}" wx:key="key"></view>
-    </view>
-    <!-- 出发底图只属于「开始主题」:护照是回看信息,不出地图(用户裁决) -->
-    <view class="intro-stage">
-      <free-map class="intro-map__el" scene="explore" center="{{center}}" scale="14"
-                show-controls="{{false}}" interactive="{{false}}"
-                subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}"
-                accessibility-label="漫游出发地图预览" reduced-motion="{{reducedMotion}}" />
-      <view class="intro-stage__shade"></view>
-    </view>
-  </block>
-
+    <view class="intro-dots"><view class="intro-dot {{index==introCardIdx?'is-on':''}}" wx:for="{{introCards}}" wx:key="key"></view></view>
+    <view class="intro-map-space"></view>
+  <view class="entry-peek">
+    <view class="entry-peek__head"><text>附近活动</text></view>
+    <view class="entry-peek__state" wx:if="{{entryLoadError}}" bindtap="retryEntryMap" aria-role="button" aria-label="附近内容加载失败，点击重试" hover-class="cy-pressed" hover-stay-time="80"><text>附近内容加载失败</text><text>点击重试</text></view>
+    <scroll-view wx:elif="{{entryCards.length}}" class="entry-peek__cards" scroll-x enhanced show-scrollbar="{{false}}"><view class="entry-peek__track">
+      <view class="entry-card" wx:for="{{entryCards}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}"
+            bindtap="onEntryCardTap" aria-role="button" aria-label="打开活动 {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
+        <image wx:if="{{item.cover}}" class="entry-card__cover" src="{{item.cover}}" mode="aspectFill" />
+        <view wx:else class="entry-card__cover entry-card__cover--empty"><cy-icon name="image" size="48" /></view>
+        <view class="entry-card__shade"></view>
+        <view class="entry-card__copy"><text class="entry-card__tag">{{item.tag}}</text><text class="entry-card__title">{{item.title}}</text><text class="entry-card__meta">{{item.meta || item.address || '查看活动详情'}}</text></view>
+      </view>
+    </view></scroll-view>
+    <view wx:else class="entry-peek__state"><text>附近暂无活动</text><text>打开地图寻找附近活动</text></view>
+  </view>
+  </view>
   <!-- ② 漫游护照:顶部四项读数 + 上排方卡(功能) + 下排大卡(玩法)。版式与 play 第二 tab 同一套 .pp-* -->
-  <scroll-view wx:else class="intro-passport" scroll-y enhanced show-scrollbar="{{false}}">
+  <view wx:else class="intro-passport">
     <view class="pp-stats">
       <view class="pp-stat" wx:for="{{passport.stats}}" wx:key="k">
         <text class="pp-stat__v">{{item.v}}</text>
@@ -169,7 +148,7 @@
     <scroll-view class="pp-row" scroll-x enhanced show-scrollbar="{{false}}">
       <view class="pp-tile" wx:for="{{passport.tiles}}" wx:key="key" data-key="{{item.key}}" bindtap="onPassportTileTap"
             aria-role="button" aria-label="{{item.title}} {{item.value}}" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="pp-tile__box"><cy-icon name="{{item.icon}}" size="48" /></view>
+        <view class="pp-tile__box"><cy-icon name="{{item.icon}}" size="154" /><text wx:if="{{item.isNew}}" class="pp-new">NEW</text></view>
         <text class="pp-tile__t">{{item.title}}</text>
         <text class="pp-tile__s">{{item.value}}</text>
       </view>
@@ -178,7 +157,7 @@
     <scroll-view class="pp-trips" scroll-x enhanced show-scrollbar="{{false}}">
       <view class="pp-trip" wx:for="{{passport.plays}}" wx:key="key" data-key="{{item.key}}" bindtap="onPassportPlayTap"
             aria-role="button" aria-label="{{item.title}} {{item.sub}}" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="pp-trip__card">
+        <view class="pp-trip__card {{item.closed ? 'is-closed' : ''}}"><text wx:if="{{item.closed}}" class="pp-closed">暂未开放</text>
           <image wx:if="{{item.cover}}" class="pp-trip__img" src="{{item.cover}}" mode="aspectFill" />
           <cy-icon wx:else class="pp-trip__ic" name="{{item.icon}}" size="64" />
           <view class="pp-trip__shade"></view>
@@ -187,25 +166,8 @@
         <text class="pp-trip__cap">{{item.sub}}</text>
       </view>
     </scroll-view>
-  </scroll-view>
-
-  <!-- GO 区只属于「开始主题」:护照是回看,不该摆出发钮 -->
-  <view class="go-wrap" wx:if="{{introTab=='start'}}">
-    <view class="go-row">
-      <view class="go-side" bindtap="openRoamRules" aria-role="button" aria-label="查看自由漫游玩法说明" hover-class="cy-pressed" hover-stay-time="80">
-        <cy-icon class="go-side__icon" name="info" size="40" />
-      </view>
-      <view class="go-main">
-        <view class="go-ring"></view>
-        <view class="go-btn" bindtap="goStart" aria-role="button" aria-label="开启定位并开始自由漫游" hover-class="cy-pressed" hover-stay-time="80">
-          <text class="go-txt">GO</text>
-        </view>
-      </view>
-      <view class="go-side" bindtap="goStartAndShoot" aria-role="button" aria-label="开始漫游并拍照" hover-class="cy-pressed" hover-stay-time="80">
-        <cy-icon class="go-side__icon" name="camera" size="40" />
-      </view>
-    </view>
   </view>
+
 </view>
 
 <!-- ===================== B1 实时漫游地图 ===================== -->
@@ -811,7 +773,7 @@
   <view class="psheet__grab"></view>
   <view class="psheet__x" catchtap="onProtoSheetClose" aria-role="button" aria-label="关闭{{sceneCurrent.title}}" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
   <text class="ph1">{{sceneCurrent.title}}</text>
-  <cy-scene-roam-history bind:open="openChildScene" bind:close="closeScene" />
+  <cy-scene-roam-history tools bind:tool="openRoamTool" bind:open="openChildScene" bind:close="closeScene" />
 </view>
 </view>
 
@@ -1068,7 +1030,7 @@
 <canvas type="2d" id="fogcv" class="fogcv"></canvas>
 <canvas type="2d" id="sharecv" class="sharecv"></canvas>
 	<!-- tabBar 只在起始页出现:地图入口与运行态保持沉浸，原有 intro 流程不变 -->
-	<tabBar wx:if="{{screen=='intro'}}" dark="{{true}}" monochrome="{{true}}" immersive="{{true}}" reduced-motion="{{reducedMotion}}"/>
+	<tabBar wx:if="{{screen=='entry-map'||screen=='intro'}}" dark="{{true}}" monochrome="{{true}}" reduced-motion="{{reducedMotion}}"/>
 <cy-celebrate event-key="{{celebrationEvent}}" reduced-motion="{{reducedMotion}}" />
 </view>
 

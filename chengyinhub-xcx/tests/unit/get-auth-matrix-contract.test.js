@@ -22,7 +22,7 @@ const PLAY_PROGRESS_CONTROLLER = path.resolve(
   '../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java'
 );
 
-// 当前源码50个GET调用点的显式权限清单（直接29 + req包装21）。
+// 当前源码GET调用点的显式权限清单（直接32 + req包装22）。
 // optional = 后端允许匿名，但登录时会按 uid 返回个人态，所以仍使用默认认证；
 // required = 后端 anyRequest().authenticated()，绝不能 auth:false。
 const MATRIX = [
@@ -86,6 +86,10 @@ const MATRIX = [
   // (同日下线组局的 /api/roam/pois 与 /api/roam/hangout/detail 两条 GET:地图上不再有局卡与打卡点列表。
   //  同日撤掉漫游地图 f-hangout 一档:roam 不再调 /api/roam/hangout/nearby,搭子局已下线,该卡整卡退场。)
   ['subpackageRoam/nearby/index.js', "url: '/api/team/nearby'", 'required', 'member', 'global-authenticated-read'],
+  // 2026-10-14 漫游上线:我的队伍页「附近招募」读同一端点(同一权限档);那年今日 / 月度回顾只读本人完成记录(归档已审分类)。
+  ['subpackageRoam/my-teams/index.js', "url: '/api/team/nearby'", 'required', 'member', 'global-authenticated-read'],
+  ['utils/features/exploration-anniversary.js', "url: '/api/exploration-anniversary'", 'required', 'member', 'self-member-history'],
+  ['utils/features/monthly-recap-client.js', "url: '/api/monthly-recap'", 'required', 'member', 'self-member-history'],
   ['pages/roam/index.js', "req('/api/ai/npc/profile'", 'required', 'member', 'global-authenticated-read'],
   ['pages/roam/index.js', "req('/api/ai/npc/event'", 'required', 'member', 'global-authenticated-read'],
   ['pages/roam/index.js', "req('/api/roam/tiles/page'", 'required', 'member', 'self-member-history'],
@@ -220,7 +224,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-09-24 CU-C-68:merchantinfo 新增第二处 /api/game/session/merchant/entries GET
   //   (抽屉资格预探,权限档与上一处相同:required/merchant)⇒ 30 → 31。
   // 客户页退役触达：移除券候选、任务列表、任务详情三处 GET，31 → 28。
-  assert.equal(directCount, 29, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-10-14 漫游上线:我的队伍附近招募 + 那年今日 + 月度回顾三处 GET,29 → 32(权限档见 MATRIX 同日注释)。
+  assert.equal(directCount, 32, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(wrapperCount, 22, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(MATRIX.length, directCount + wrapperCount);
 

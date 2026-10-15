@@ -1,0 +1,47 @@
+<!-- 导出探索记录:漫游记录标题右侧「导出」进入。准备范围、逐块读取、全部读完才可保存/分享;沿用归档 exploration-export(index.js)。 -->
+<view class="tu theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}">
+  <cy-toast id="cy-toast" />
+  <cy-modal-host id="cy-modal-host" />
+  <cy-nav-bar plain />
+  <cy-page-title title="导出探索记录" />
+  <view class="tu-msg tu-msg--err tu-msg--row" wx:if="{{error}}" aria-role="alert"><text>{{error}}</text><view class="tu-retry" wx:if="{{prepared}}" bindtap="readNext" aria-role="button" aria-label="重试" hover-class="cy-pressed" hover-stay-time="80">重试</view><view class="tu-retry" wx:else bindtap="prepare" aria-role="button" aria-label="重试" hover-class="cy-pressed" hover-stay-time="80">重试</view></view>
+  <view class="tu-btns" wx:if="{{pending}}"><view class="tu-btn tu-btn--w" bindtap="retryOriginal" aria-role="button" aria-label="以原操作重试" hover-class="cy-pressed" hover-stay-time="80">以原操作重试</view></view>
+
+  <block wx:if="{{!prepared}}">
+    <view class="tu-chips">
+      <view wx:for="{{ranges}}" wx:key="label" class="tu-chip {{rangeIndex === index ? 'is-on' : ''}}" data-index="{{index}}" bindtap="pickRange" aria-role="button" aria-label="导出范围 {{item.label}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+    </view>
+    <view class="tu-group" style="margin-top:27rpx">
+      <cy-date-field mode="date" value="{{startDate}}" data-field="startDate" bind:change="onField">
+        <view class="tu-row" aria-role="button" aria-label="开始日期 {{startDate}}" hover-class="cy-pressed" hover-stay-time="80"><view class="tu-row__body"><text class="tu-row__s">开始</text></view><text class="tu-row__v">{{startDate}}</text></view>
+      </cy-date-field>
+      <cy-date-field mode="date" value="{{endDate}}" start="{{startDate}}" data-field="endDate" bind:change="onField">
+        <view class="tu-row" aria-role="button" aria-label="结束日期 {{endDate}}，不含当天" hover-class="cy-pressed" hover-stay-time="80"><view class="tu-row__body"><text class="tu-row__s">结束（不含）</text></view><text class="tu-row__v">{{endDate}}</text></view>
+      </cy-date-field>
+      <view class="tu-row"><view class="tu-row__body"><text class="tu-row__s">格式</text></view><text class="tu-row__v">JSONL</text></view>
+    </view>
+    <view class="tu-btns"><view class="tu-btn tu-btn--w {{busy ? 'is-off' : ''}}" bindtap="prepare" aria-role="button" aria-label="准备导出" hover-class="cy-pressed" hover-stay-time="80">准备导出</view></view>
+  </block>
+
+  <block wx:else>
+    <view class="tu-card ex-prog">
+      <view class="ex-top"><text class="ex-pct">{{pct}}%</text><text class="ex-n">已读取 {{count}} / {{expected}} 条</text></view>
+      <view class="tu-bar"><view class="tu-bar__f" style="width:{{pct}}%"></view></view>
+    </view>
+    <!-- 0 条:不给一个空文件去分享/保存,直接说这个范围没有记录 -->
+    <view class="tu-note" wx:if="{{fileReady && !expected}}"><text>这个范围内没有记录</text></view>
+    <view class="tu-card ex-file" wx:if="{{fileReady && expected}}">
+      <view class="ex-file__ic">JSONL</view>
+      <view class="tu-row__body"><text class="tu-row__t">{{fileName}}</text><text class="tu-row__s">{{expected}} 条</text></view>
+    </view>
+    <view class="tu-btns">
+      <block wx:if="{{fileReady && expected}}">
+        <view class="tu-btn tu-btn--w" bindtap="shareFile" aria-role="button" aria-label="分享完整文件" hover-class="cy-pressed" hover-stay-time="80">分享</view>
+        <view class="tu-btn tu-btn--s" bindtap="saveFile" aria-role="button" aria-label="保存完整文件" hover-class="cy-pressed" hover-stay-time="80">保存到手机</view>
+      </block>
+      <view wx:elif="{{busy}}" class="tu-loading">正在读取下一块…</view>
+      <view wx:elif="{{!fileReady}}" class="tu-btn tu-btn--w" bindtap="readNext" aria-role="button" aria-label="读取下一块" hover-class="cy-pressed" hover-stay-time="80">{{count ? '读取下一块' : '开始读取'}}</view>
+      <view class="tu-btn tu-btn--s" bindtap="restart" aria-role="button" aria-label="重新选择范围" hover-class="cy-pressed" hover-stay-time="80">重新选择范围</view>
+    </view>
+  </block>
+</view>

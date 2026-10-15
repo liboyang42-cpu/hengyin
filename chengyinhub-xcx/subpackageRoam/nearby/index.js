@@ -55,6 +55,8 @@ Page({
     headerText: T.headerText(0),
     rangeText: T.rangeText(DEFAULT_RADIUS),
     myTeamsText: T.myTeamsText(0),
+    viewMode: 'map',        // map | list(2026-10-14 地图优化)
+    listRows: [],
     rangeItems: RANGE_ITEMS,
     rangeIndex: T.RADII.indexOf(DEFAULT_RADIUS),
     rangeSheetShow: false,
@@ -74,6 +76,7 @@ Page({
   },
 
   onLoad(options) {
+    this._openMineOnShow = options && options.sheet === 'mine';
     const requestedRadius = Number(options && options.radius); this._radius = T.RADII.indexOf(requestedRadius) >= 0 ? requestedRadius : DEFAULT_RADIUS; this._requestedTeamId = options && options.teamId;
     this._teams = [];        // /api/team/nearby 原始行(只在内存,视图走 T.decorateTeam 白名单)
     this._items = [];        // 主题 / 活动点位
@@ -97,7 +100,11 @@ Page({
   },
 
   /* 买完票回到地图,卡片要从「去买这场的票」变成「申请加入」(P2 底注):回前台重拉一次。 */
-  onShow() { if (this._shownOnce) this.refresh(this.data.center); this._shownOnce = true; },
+  onShow() {
+    if (this._shownOnce) this.refresh(this.data.center);
+    this._shownOnce = true;
+    if (this._openMineOnShow) { this._openMineOnShow = false; this.openMyTeams(); }
+  },
 
   onUnload() { if (this._regionTimer) clearTimeout(this._regionTimer); },
 
@@ -155,7 +162,10 @@ Page({
     const cur = this.data.current;
     const row = cur && teams.find((t) => String(t.teamId) === String(cur.teamId));
     const next = row ? T.decorateTeam(row) : cur;
-    this.setData({ loadError: false, headerText: T.headerText(teams.length), current: next,
+    const BADGE = { buy: ['需购票', 'plain'], apply: ['可申请', 'plain'], pending: ['审核中', 'wait'], joined: ['已通过', 'ok'], rejected: ['未通过', 'bad'], leader: ['我带队', 'lead'] };
+    const listRows = teams.map((t) => { const d = T.decorateTeam(t); const b = BADGE[d.card && d.card.mode] || ['可申请', 'plain'];
+      return { teamId: d.teamId, name: d.heading || d.name, sub: d.sub, badge: b[0], tone: b[1], count: d.joinedCount + '/' + d.maxMembers }; });
+    this.setData({ loadError: false, headerText: T.headerText(teams.length), listRows, current: next,
       leaderSub: next ? T.leaderSub(next) : '', leaderFoot: next ? T.leaderFoot(next) : '' });
     // 卡片开着的那支队伍刷新后不在了(满员 / 开场 / 审核中,服务端已过滤):卡上的「申请加入」已经不成立,收掉
     if (cur && !row && this.data.sheet === 'team') this.closeSheet();
@@ -290,6 +300,10 @@ Page({
   /* ---------- 角控件:范围 / 我的队伍 ---------- */
 
   openRange() { this.setData({ rangeSheetShow: true }); },
+  setViewMode(e) { const mode = e.currentTarget.dataset.mode === 'list' ? 'list' : 'map'; if (mode !== this.data.viewMode) this.setData({ viewMode: mode }); },
+  onListRowTap(e) { this.openTeam(e.currentTarget.dataset.id); },
+  // 我的队伍改为独立页面(带队 / 已通过 / 审核中 / 未通过 + 附近招募);P6 半屏保留给 sheet=mine 旧链接
+  openMyTeamsPage() { wx.navigateTo({ url: '/subpackageRoam/my-teams/index' }); },
   closeRange() { this.setData({ rangeSheetShow: false }); },
   onRangePick(e) {
     const idx = Number(e.detail && e.detail.index);
@@ -451,13 +465,26 @@ Page({
     const memberId = Number(ds.id);
     const approved = ds.ok === true || ds.ok === 'true';
     const drop = () => this.setData({ applicants: this.data.applicants.filter((a) => Number(a.memberId) !== memberId) });
-    this._post('/api/team/handle', { teamId: Number(cur.teamId), memberId, approved }, 'handle',
+    const submit = () => this._post('/api/team/handle', { teamId: Number(cur.teamId), memberId, approved }, 'handle',
       () => {
         drop();
         // 同意会让人数变、满员会让队伍从地图消失 —— 以服务端为准重拉
         if (approved) this.refresh(this.data.center);
       },
       (r) => { if (r.dropApplicant) drop(); if (r.refresh) this.refresh(this.data.center); });
+    if (approved) { submit(); return; }
+    // 拒绝 = 对方再也不能申请这支队伍,走危险确认(team.reject);同意照旧一点即成
+    const who = (this.data.applicants || []).find((a) => Number(a.memberId) === memberId);
+    modal.show({
+      dangerKey: 'team.reject',
+      dangerParams: { name: (who && who.name) || '这位玩家' },
+      // 危险确认组件不认 key 时会退回普通确认框,这里给足兜底文案,别让队长面对一个空白框
+      title: '拒绝这条申请?',
+      content: '拒绝后对方不能再申请加入这支队伍。此操作不可撤销。',
+      confirmText: '拒绝申请',
+      danger: true,
+      success: (r) => { if (r.confirm) submit(); },
+    });
   },
 
   /* ---------- P6 我的队伍 ---------- */

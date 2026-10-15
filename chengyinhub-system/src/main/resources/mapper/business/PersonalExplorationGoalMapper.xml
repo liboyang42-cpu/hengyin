@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PersonalExplorationGoalMapper">
+  <resultMap id="goal" type="com.chengyinhub.business.domain.PersonalExplorationGoal">
+    <id column="id" property="id"/><result column="member_id" property="memberId"/>
+    <result column="request_id" property="requestId"/><result column="metric" property="metric"/>
+    <result column="target" property="target"/><result column="start_date" property="startDate"/>
+    <result column="end_date_exclusive" property="endDateExclusive"/>
+    <result column="created_at_ms" property="createdAtMs"/><result column="cancelled" property="cancelled"/>
+  </resultMap>
+  <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    insert into personal_exploration_goal(member_id,request_id,metric,target,start_date,end_date_exclusive,created_at_ms,cancelled)
+    values(#{memberId},#{requestId},#{metric},#{target},#{startDate},#{endDateExclusive},#{createdAtMs},0)
+  </insert>
+  <select id="byRequest" resultMap="goal">select * from personal_exploration_goal where member_id=#{owner} and request_id=#{requestId}</select>
+  <select id="byId" resultMap="goal">select * from personal_exploration_goal where member_id=#{owner} and id=#{id}</select>
+  <select id="page" resultMap="goal">
+    select * from personal_exploration_goal where member_id=#{owner}
+    <if test="beforeId != null">and id &lt; #{beforeId}</if> order by id desc limit #{limit}
+  </select>
+  <update id="cancel">update personal_exploration_goal set cancelled=1 where member_id=#{owner} and id=#{id} and cancelled=0</update>
+  <!-- Historical private aggregate only: no current or former title, route ID, coordinates, version or media leaves this query.
+       Existing completed_at is Asia/Shanghai DATETIME. String bounds avoid JVM/JDBC timezone conversion. -->
+  <select id="progress" resultType="long">
+    select count(distinct <choose><when test="metric == 'DISTINCT_ROUTES'">s.topic_id</when><otherwise>date(s.completed_at)</otherwise></choose>)
+    from topic_route_session s where s.member_id=#{owner} and s.status=1 and s.topic_id &gt; 0
+      and s.completed_at &gt;= #{start} and s.completed_at &lt; #{end} and s.completed_at &lt;= #{asOf}
+  </select>
+</mapper>

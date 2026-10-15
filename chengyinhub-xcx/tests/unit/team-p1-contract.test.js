@@ -44,7 +44,7 @@ function assertTeamCompliance(sources) {
   const signupWxml = sources['pages/activity/baoming/baoming.wxml']
   const orderWxml = sources['subpackageMember/components/cy/scene-member-order-detail/index.wxml']
   assert.doesNotMatch(signupWxml, /class="team-signup"|组队报名|单独报名/)
-  assert.match(orderWxml, /info\.cmsActivity\.teamMode\s*==\s*2[\s\S]{0,600}组队与否不影响活动举行/)
+  assert.match(orderWxml, /info\.teamOpen[\s\S]{0,600}组队与否不影响活动举行/)
 
   const signupJs = sanitized['pages/activity/baoming/baoming.js']
   /* 2026-09-06 用户裁决:买完直接跳,成功面板不放按钮 ⇒ B 模式那三样东西
@@ -238,8 +238,9 @@ function assertTopicTeamModel(editorJs, editorWxml, signupJs, signupWxml, orderW
   assert.doesNotMatch(signupWxml, /凑齐才开场|不成团退款|等待成团/)
   assert.doesNotMatch(signupJs, /凑齐才开场|不成团退款|等待成团/)
 
-  /* 2026-09-06:B 模式的判定与建队入口都落在订单详情页,报名页不再有 */
-  assert.match(orderWxml, /info\.cmsActivity\.teamMode\s*==\s*2/)
+  /* 2026-09-06:B 模式的判定与建队入口都落在订单详情页,报名页不再有。
+     2026-10-15:A 模式同样在这里建队(报名页入口删掉后 A 无处建队);卡片只认组件算好的 info.teamOpen */
+  assert.match(orderWxml, /wx:if="\{\{info\.teamOpen\}\}"/)
   assert.match(orderWxml, /叫上队友/)
 }
 
@@ -268,7 +269,7 @@ test('负控:删掉 A 模式免责声明或把 B 模式卡片误放到任意订�
   assert.throws(() => assertTopicTeamModel(...missingDisclaimer), assert.AssertionError)
 
   const leakedCard = args.slice()
-  leakedCard[4] = leakedCard[4].replace('info.cmsActivity.teamMode == 2', 'info.cmsActivity')
+  leakedCard[4] = leakedCard[4].replace('wx:if="{{info.teamOpen}}"', 'wx:if="{{info.cmsActivity}}"')
   assert.throws(() => assertTopicTeamModel(...leakedCard), assert.AssertionError)
 })
 
@@ -390,4 +391,14 @@ test('负控:退回纯文字 loading 或移除加入局部错误时，状态契�
   const missingJoinRecovery = join.replace(/<cy-inline-error\b[^>]*joinError[^>]*\/>/, '')
   assert.notEqual(missingJoinRecovery, join, '加入错误负控锚点失效')
   assert.throws(() => assertTeamStateUx(detail, missingJoinRecovery, ...args.slice(2)), /加入失败/)
+})
+
+// 2026-10-15:A/B 两种组队模式都能在订单详情建队;场次开始后只建仅邀请队伍(地图不再列出)
+test('订单详情建队入口覆盖 A/B 模式,场次开始后强制仅邀请', () => {
+  const orderJs = read('subpackageMember/components/cy/scene-member-order-detail/index.js')
+  const orderWxml = read('subpackageMember/components/cy/scene-member-order-detail/index.wxml')
+  assert.match(orderJs, /teamModeValue === 1 \|\| teamModeValue === 2/)
+  assert.match(orderJs, /info\.teamStarted = info\.teamOpen && !\(startMs > Date\.now\(\)\)/)
+  assert.match(orderJs, /that\.data\.teamInviteOnly \|\| info\.teamStarted \? 1 : null/)
+  assert.match(orderWxml, /<view class="link-row" wx:if="\{\{!info\.teamStarted\}\}">\s*<text class="link-label">仅邀请可加入/)
 })

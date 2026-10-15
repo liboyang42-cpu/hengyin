@@ -158,7 +158,9 @@ Page({
 
   formatTime(value) {
     if (!value) return '';
-    const date = new Date(String(value).replace(/-/g, '/'));
+    // ISO(带 T 与时区)直接解析;只有「yyyy-MM-dd HH:mm」才换成斜杠给 iOS。原先一律换斜杠,ISO 会解析失败、原样露出
+    const raw = String(value);
+    const date = new Date(raw.indexOf('T') > 0 ? raw : raw.replace(/-/g, '/'));
     if (isNaN(date.getTime())) return String(value);
     const pad = n => n < 10 ? '0' + n : String(n);
     return (date.getMonth() + 1) + '月' + date.getDate() + '日 ' + pad(date.getHours()) + ':' + pad(date.getMinutes());

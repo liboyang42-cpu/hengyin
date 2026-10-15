@@ -264,7 +264,19 @@
         "poi-detail/index",
         "session/index",
         "nearby/index",
-        "citystamp/index"
+        "citystamp/index",
+        "my-teams/index"
+      ]
+    },
+    {
+      "root": "subpackageTools",
+      "name": "subpackageTools",
+      "pages": [
+        "capsule/index",
+        "monthly-recap/index",
+        "exploration-goals/index",
+        "anniversary/index",
+        "exploration-export/index"
       ]
     }
   ],

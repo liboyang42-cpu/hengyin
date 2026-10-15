@@ -63,7 +63,8 @@ module.exports = [
   //   _fetchRunners 45 s 下行)。两条都必须静默 —— 它们每分钟各跑一两次、不承载任何用户
   //   动作,也没有「重试」可给(下一次心跳就是重试);真失效的表现是自己从别人地图上消失、
   //   或附近显示没人,不是弹一个框。逐项理由同时登记在 tests/lint/ui-integrity-baseline.js。
-  { file: 'pages/roam/index.js', count: 12, reason: '漫游主流程在每个调用分支设置 eventFeedback、场景错误或显式 toast；徽章配置与探店日候选均为非阻断增强，失败不占位；位置心跳静默；入口地图的活动层与队伍层失败落 entryLoadError 并提供重试，关闭通用 toast 避免拖图刷新时重复报错。' },
+  { file: 'pages/roam/index.js', count: 11, reason: '2026-10-15 漫游两栏改版删掉报名列表静默读取(12→11)；漫游主流程在每个调用分支设置 eventFeedback、场景错误或显式 toast；徽章配置与探店日候选均为非阻断增强，失败不占位；位置心跳静默；入口地图的活动层与队伍层失败落 entryLoadError 并提供重试，关闭通用 toast 避免拖图刷新时重复报错。' },
+  { file: 'subpackageRoam/my-teams/index.js', count: 4, reason: '2026-10-14 我的队伍页:/api/team/my 与 my-applications 读取失败落页内 mt-err「点按重试」(两条都失败才显示);附近招募 /api/team/nearby 失败同样落页内重试;撤回申请失败按 resolveTeamError 文案提示一次 —— 不关通道 toast 就是双弹。逐项理由同时登记在 ci/silent-error-allowlist.txt。' },
   { file: 'subpackageRoam/nearby/index.js', count: 6, reason: '2026-09-15 地图组队 P 方案:附近队伍读取失败落 loadError + cy-error 重试;申请/撤回/同意拒绝/申请列表/我的队伍失败一律按 errorCode 落 cy-result-sheet 失败半屏(不要底层 toast 再弹一次后端文案);主题点位层是跟地图中心走的背景读取,读不到只少一层点,逐项理由登记在 tests/lint/ui-integrity-baseline.js。' },
   // 2026-09-16 整体检查 A 组 A-08:两处「失败长成空列表/静默降级」补了页内可见错误态 + 重试,
   //   关掉通道统一 toast 防双弹。逐项理由同时登记在 tests/lint/ui-integrity-baseline.js 与 ci/silent-error-allowlist.txt。

@@ -125,13 +125,8 @@ test('漫游结算接口遇到携带 200 业务码的 HTTP 异常时不能误报
   assert.equal(page.data.finish.xpAwarded, undefined)
 })
 
-test('漫游报名卡和地图 POI 列表拒绝非数组及空元素', async () => {
+test('漫游地图 POI 列表拒绝非数组及空元素', async () => {
   const page = loadPage(ROAM_PAGE)
-  page._loadIntroTopics()
-  requests[0].success({ code: '200', data: { rows: [null] } })
-  assert.equal(page.data.introCards.some((card) => String(card.key).startsWith('reg-')), false)
-
-  requests = []
   page._nearbyReady = Promise.resolve()
   page._pois = []
   page._seenSweepHistory = () => {}

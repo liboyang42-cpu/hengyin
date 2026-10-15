@@ -1,0 +1,50 @@
+<!-- 月度回顾:漫游记录月份标题右侧进入。读数与分页沿用归档 monthly-recap(index.js);周柱只由已读完的当月记录算,不补造。 -->
+<view class="tu theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}">
+  <cy-nav-bar plain />
+  <cy-page-title title="月度回顾" />
+
+  <view class="mr-nav">
+    <view class="mr-arrow" bindtap="prevMonth" aria-role="button" aria-label="上个月" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="40" /></view>
+    <text class="mr-month">{{monthLabel}}</text>
+    <view class="mr-arrow {{isCurrentMonth ? 'is-off' : ''}}" bindtap="nextMonth" aria-role="button" aria-label="下个月" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="chevron-right" size="40" /></view>
+  </view>
+
+  <view class="tu-msg tu-msg--err tu-msg--row" wx:if="{{status === 'error' || status === 'conflict' || status === 'no-permission'}}"><text>{{message || '暂时没读到，请重试'}}</text><view class="tu-retry" bindtap="onRetry" aria-role="button" aria-label="重试" hover-class="cy-pressed" hover-stay-time="80">重试</view></view>
+  <view class="tu-loading" wx:if="{{busy && !counts}}">正在读取当月记录…</view>
+
+  <block wx:if="{{counts}}">
+    <text class="tu-hero">{{counts.routes}}</text>
+    <text class="tu-hero__l">次路线完成</text>
+    <view class="tu-stats">
+      <view class="tu-stat"><text class="tu-stat__v">{{counts.places}}</text><text class="tu-stat__l">首次地点</text></view>
+      <view class="tu-stat"><text class="tu-stat__v">{{counts.stamps}}</text><text class="tu-stat__l">城市签</text></view>
+    </view>
+  </block>
+
+  <view class="tu-chips">
+    <view wx:for="{{kinds}}" wx:key="*this" class="tu-chip {{kindIndex === index ? 'is-on' : ''}}" data-index="{{index}}" bindtap="pickKind"
+          aria-role="button" aria-label="只看{{item}}" hover-class="cy-pressed" hover-stay-time="80">{{item}}</view>
+  </view>
+
+  <!-- 单系列周柱:细柱 + 顶部圆角,最高一根标数,其余点按显示;一个系列不画图例 -->
+  <block wx:if="{{weeks.length}}">
+    <view class="tu-sec">每周{{kinds[kindIndex]}}<text class="tu-sec__aside">次</text></view>
+    <view class="mr-chart" aria-role="img" aria-label="{{weeksLabel}}">
+      <view class="mr-col" wx:for="{{weeks}}" wx:key="label" data-index="{{index}}" bindtap="pickWeek" aria-role="button" aria-label="{{item.label}} {{item.count}} 次" hover-class="cy-pressed" hover-stay-time="80">
+        <text class="mr-val {{item.isMax || weekPicked === index ? 'is-on' : ''}}">{{item.count}}</text>
+        <view class="mr-bar {{item.isMax ? 'is-max' : ''}}" style="height:{{item.height}}rpx"></view>
+        <text class="mr-lab">{{item.label}}</text>
+      </view>
+    </view>
+  </block>
+
+  <view class="tu-sec">记录</view>
+  <view class="tu-group" wx:if="{{items.length}}">
+    <view class="tu-row cy-rise-in" style="animation-delay: {{index * 60}}ms" wx:for="{{items}}" wx:key="id">
+      <view class="tu-row__body"><text class="tu-row__t">{{item.title}}</text><text class="tu-row__s">{{item.dateText}} · {{kinds[kindIndex]}}</text></view>
+    </view>
+  </view>
+  <view class="tu-empty" wx:elif="{{!busy && status !== 'error'}}"><text class="tu-empty__t">这一类本月没有记录</text></view>
+  <view class="tu-more" wx:if="{{hasMore && !busy}}" bindtap="next" aria-role="button" aria-label="读取下一页记录" hover-class="cy-pressed" hover-stay-time="80">读取下一页</view>
+
+</view>
