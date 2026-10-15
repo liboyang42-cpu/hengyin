@@ -197,3 +197,9 @@ L03额外直接构造测试NpcChatUserDataMyBatisIT.java已追加给原A02_sol�
 ## 六路外部Cloud精确委派
 
 以[EXTERNAL_SIX_HANDOFF.md](EXTERNAL_SIX_HANDOFF.md)及tasks.external_followup_lanes为唯一精确新文件白名单，E01–E04承接原L06–09；E05/E06只定向回归。全部PENDING_CLOUD_CREATION_AND_ACK，现有业务源码及L01–05/L10不释放。L05追加原fabu-edit-existing-topic.test.js夹具写权给publish_unknown_sol，保留断言。
+
+## 新Cloud回执已核，授权六路启动
+
+C00已实际读取PR16 comment6192515205；新Cloud thread01a13f9c-e8ba-753e-9c39-03840bb4900b/host durable。12路径与EXTERNAL_SIX_HANDOFF逐字一致，和当前源码锁无交集；原6 worktree基线均1e403b13。E01–E06状态ACK_RECEIVED_START_AUTHORIZED，按原白名单现在启动，不夺L01–05/L10/Claude/iOS/公共文件。实际启动数尚未回报。
+
+L01–05源码已按精确路径串行提交后续候选eab62274a19f549623ad1818088ba51f23b6ca8e，原写者已停止；不是新已验证候选。L05三份旧测试fabu-route-editor、publish-step3-switches、publish-ticket-sale-fields-wire-contract已精确追加给publish_unknown_sol，仅补真实身份/UUID/存储夹具，未降业务断言；其补丁86524454。

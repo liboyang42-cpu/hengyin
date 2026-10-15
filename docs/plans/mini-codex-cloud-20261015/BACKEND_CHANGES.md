@@ -290,3 +290,9 @@ BK-ASSET源码修复为SOURCE_READY，新增VPS套件已通过；**TEST_DEPLOYED
 ## 外部六路补完验证授权
 
 [六路精确白名单](EXTERNAL_SIX_HANDOFF.md)：E01–E04仅真实集成测试/审计，E05/E06仅小程序行为回归；PENDING_CLOUD_CREATION_AND_ACK。NO_API_CHANGE，未授权新业务源码/权限/资金政策。发现源码问题交C00和原写者；冻结231签收不沿用到新测试/源码。
+
+## 后续公共源码候选eab62274（待新执行证据）
+
+[新交付/39项矩阵](https://github.com/liboyang42-cpu/hengyin/blob/eab62274a19f549623ad1818088ba51f23b6ca8e/docs/verification/mini-bug-arch-followups-20261015/C00_HANDOFF.md)：BK-TOPIC edit-detail只读RR聚合快照；BK-AI本人短事务删除屏障、回执擦除/lease撤销、finish与日志原子提交，provider期间不持锁，保留唯一请求/收费事实。HTTP/DTO/权限/分页/单位/ID合同NO_API_CHANGE，无DDL/新依赖。后台unknown token显示与客户端旧回执/发布UNKNOWN沿既有入口，非新增产品。合同CONTRACT_FROZEN，源码已提交但Java/真实MySQL39项尚未跑，不能升级全批SOURCE_READY；TEST_DEPLOYED=NO，运行时HTTP/设备/合并/迁移/部署另列。
+
+本地报告VPS资源规则更新，旧1152MiB裸Docker驱动废止；仅可按已核准守卫/锁运行，离线build入口不支持真库。当前未核到可用新VPS集成入口；新增GitHub-hosted精确39项门禁可独立执行，CI不冒充VPS。六路外部回执已核、授权按原新测试/证据白名单启动，无新API授权。

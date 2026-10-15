@@ -687,36 +687,52 @@
     "followup_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
     "followup_checkout": "/workspace/hengyin-followups",
     "followup_scope": "unfinished existing bugs/shared backend only; no new product feature",
-    "external_cloud_status": "PENDING_CORRECT_HENGYIN_ENVIRONMENT_CREATION; no local replacement; not started"
+    "external_cloud_status": "ACK_RECEIVED_START_AUTHORIZED; actual active worker count awaiting new coordinator report",
+    "external_cloud_thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
+    "followup_candidate_sha": "eab62274a19f549623ad1818088ba51f23b6ca8e",
+    "followup_selected_backend_tests": {
+      "status": "planned_not_passed",
+      "expected_total": 39,
+      "suites": {
+        "NpcChatServiceTest": 22,
+        "ApiAiNpcChatDataTest": 2,
+        "NpcChatUserDataMyBatisIT": 3,
+        "A02NpcDeleteBarrierMySqlIT": 8,
+        "B02TopicEditDetailSnapshotMyBatisTest": 4
+      }
+    },
+    "vps_new_resource_rule": "Local coordinator reported shared budget-212 guard/lock; no legacy bare Docker; offline build cannot stand in for MySQL/Redis IT; applicable integration entry unverified; GitHub-hosted selected CI planned"
   },
   "followup_lanes": [
     {
       "id": "L01",
       "title": "现有UNKNOWN恢复：旧回执/投影单调与请求身份",
       "owner": "B01_sol原写者",
-      "state": "ASSIGNED",
+      "state": "SOURCE_COMMITTED_PENDING_EXECUTION",
       "files": [
         "chengyinhub-xcx/pages/play/index.js",
         "chengyinhub-xcx/pages/play/utils/player-game-module.js",
         "chengyinhub-xcx/tests/unit/player-game-session-entry-contract.test.js",
         "chengyinhub-xcx/tests/unit/player-game-module.test.js"
-      ]
+      ],
+      "candidate_sha": "eab62274a19f549623ad1818088ba51f23b6ca8e"
     },
     {
       "id": "L02",
       "title": "作者edit-detail完整聚合快照读",
       "owner": "B02补完Sol（feature_points_rules_sol）",
-      "state": "ASSIGNED",
+      "state": "SOURCE_COMMITTED_PENDING_EXECUTION",
       "files": [
         "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/B02TopicEditDetailSnapshotMyBatisTest.java"
-      ]
+      ],
+      "candidate_sha": "eab62274a19f549623ad1818088ba51f23b6ca8e"
     },
     {
       "id": "L03",
       "title": "NPC本人删除即时屏障/旧回执擦除/防晚到重建",
       "owner": "A02_sol原写者",
-      "state": "ASSIGNED",
+      "state": "SOURCE_COMMITTED_PENDING_EXECUTION",
       "files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatDataService.java",
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java",
@@ -727,23 +743,25 @@
         "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAiNpcChatDataTest.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/A02NpcDeleteBarrierMySqlIT.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/NpcChatUserDataMyBatisIT.java"
-      ]
+      ],
+      "candidate_sha": "eab62274a19f549623ad1818088ba51f23b6ca8e"
     },
     {
       "id": "L04",
       "title": "AI日志未知token不显示为0并标估算",
       "owner": "旧bug显示Sol（feature_coorganizer_sol）",
-      "state": "ASSIGNED",
+      "state": "SOURCE_COMMITTED_PENDING_EXECUTION",
       "files": [
         "chengyinhub-ui/src/views/business/ailog/index.vue",
         "chengyinhub-ui/tests/unit/a02-ailog-usage.test.js"
-      ]
+      ],
+      "candidate_sha": "eab62274a19f549623ad1818088ba51f23b6ca8e"
     },
     {
       "id": "L05",
       "title": "作者create/update丢响应与账号晚响应现有流程修复",
       "owner": "publish_unknown_sol",
-      "state": "ASSIGNED",
+      "state": "SOURCE_COMMITTED_PENDING_EXECUTION",
       "files": [
         "chengyinhub-xcx/pages/publish/utils/publish/publish-workflow.js",
         "chengyinhub-xcx/pages/publish/fabu/index.js",
@@ -751,14 +769,18 @@
         "chengyinhub-xcx/tests/unit/publish-workflow.test.js",
         "chengyinhub-xcx/tests/unit/pro-editor-draft.test.js",
         "chengyinhub-xcx/tests/unit/b02-publish-write-unknown.test.js",
-        "chengyinhub-xcx/tests/unit/fabu-edit-existing-topic.test.js"
-      ]
+        "chengyinhub-xcx/tests/unit/fabu-edit-existing-topic.test.js",
+        "chengyinhub-xcx/tests/unit/fabu-route-editor.test.js",
+        "chengyinhub-xcx/tests/unit/publish-step3-switches.test.js",
+        "chengyinhub-xcx/tests/unit/publish-ticket-sale-fields-wire-contract.test.js"
+      ],
+      "candidate_sha": "eab62274a19f549623ad1818088ba51f23b6ca8e"
     },
     {
       "id": "L06",
       "title": "排期/候补真实MySQL读回与竞态缺口",
-      "owner": "external_E01（待新Cloud创建及接收）",
-      "state": "PENDING_EXTERNAL_CLOUD",
+      "owner": "external_E01 / 新Cloud协调者01a13f9c-e8ba-753e-9c39-03840bb4900b",
+      "state": "ACK_RECEIVED_START_AUTHORIZED",
       "files": [
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B04ScheduleReadbackMySqlIT.java",
         "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_E01_SCHEDULE/README.md"
@@ -767,8 +789,8 @@
     {
       "id": "L07",
       "title": "隐私/旧详情/退出社区真实MySQL隔离验收",
-      "owner": "external_E02（待新Cloud创建及接收）",
-      "state": "PENDING_EXTERNAL_CLOUD",
+      "owner": "external_E02 / 新Cloud协调者01a13f9c-e8ba-753e-9c39-03840bb4900b",
+      "state": "ACK_RECEIVED_START_AUTHORIZED",
       "files": [
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
         "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_E02_PRIVACY/README.md"
@@ -777,8 +799,8 @@
     {
       "id": "L08",
       "title": "结局/版本/历史快照兼容未闭合链复核",
-      "owner": "external_E03（待新Cloud创建及接收）",
-      "state": "PENDING_EXTERNAL_CLOUD",
+      "owner": "external_E03 / 新Cloud协调者01a13f9c-e8ba-753e-9c39-03840bb4900b",
+      "state": "ACK_RECEIVED_START_AUTHORIZED",
       "files": [
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/A03EndingSnapshotMySqlIT.java",
         "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_E03_ENDING/README.md"
@@ -787,8 +809,8 @@
     {
       "id": "L09",
       "title": "B03券库存/限领/退款冲正剩余实际缺口",
-      "owner": "external_E04（待新Cloud创建及接收）",
-      "state": "PENDING_EXTERNAL_CLOUD",
+      "owner": "external_E04 / 新Cloud协调者01a13f9c-e8ba-753e-9c39-03840bb4900b",
+      "state": "ACK_RECEIVED_START_AUTHORIZED",
       "files": [
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B03CouponLifecycleMySqlIT.java",
         "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_E04_COUPON/README.md"
@@ -808,84 +830,102 @@
       "linked_lane": "L06",
       "title": "排期/候补真实MySQL读回",
       "owner": "external_E01",
-      "state": "PENDING_CLOUD_CREATION_AND_ACK",
+      "state": "ACK_RECEIVED_START_AUTHORIZED",
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "files": [
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B04ScheduleReadbackMySqlIT.java",
         "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_E01_SCHEDULE/README.md"
       ],
       "source_write_authorized": false,
-      "scope": "核已有B04ClubEventScheduleReadbackTest和ClubEventOps真库覆盖；只补真实Mapper/Service跨时区时刻、null混排、报名/候补/结算保护缺口，不以mock称真库。"
+      "scope": "核已有B04ClubEventScheduleReadbackTest和ClubEventOps真库覆盖；只补真实Mapper/Service跨时区时刻、null混排、报名/候补/结算保护缺口，不以mock称真库。",
+      "coordinator_thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
+      "host_id": "durable",
+      "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6192515205"
     },
     {
       "id": "E02",
       "linked_lane": "L07",
       "title": "隐私/旧详情/退出社区隔离",
       "owner": "external_E02",
-      "state": "PENDING_CLOUD_CREATION_AND_ACK",
+      "state": "ACK_RECEIVED_START_AUTHORIZED",
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "files": [
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
         "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_E02_PRIVACY/README.md"
       ],
       "source_write_authorized": false,
-      "scope": "先复用CommunityPostMapperMyBatisTest；仅验证既定已删除作者不可见/非作者状态/历史编辑及退出社区边界，不静默改变RBAC/隐私政策。"
+      "scope": "先复用CommunityPostMapperMyBatisTest；仅验证既定已删除作者不可见/非作者状态/历史编辑及退出社区边界，不静默改变RBAC/隐私政策。",
+      "coordinator_thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
+      "host_id": "durable",
+      "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6192515205"
     },
     {
       "id": "E03",
       "linked_lane": "L08",
       "title": "结局/版本/历史快照兼容",
       "owner": "external_E03",
-      "state": "PENDING_CLOUD_CREATION_AND_ACK",
+      "state": "ACK_RECEIVED_START_AUTHORIZED",
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "files": [
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/A03EndingSnapshotMySqlIT.java",
         "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_E03_ENDING/README.md"
       ],
       "source_write_authorized": false,
-      "scope": "先核JourneyFullFlowMySqlIT/AdvancedGameRuntime等真实覆盖；冻结正文/只投影选中章/缺键兼容/布尔fallback，保持首末命中及priority，不再造会话真源。"
+      "scope": "先核JourneyFullFlowMySqlIT/AdvancedGameRuntime等真实覆盖；冻结正文/只投影选中章/缺键兼容/布尔fallback，保持首末命中及priority，不再造会话真源。",
+      "coordinator_thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
+      "host_id": "durable",
+      "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6192515205"
     },
     {
       "id": "E04",
       "linked_lane": "L09",
       "title": "券库存/限领/退款冲正",
       "owner": "external_E04",
-      "state": "PENDING_CLOUD_CREATION_AND_ACK",
+      "state": "ACK_RECEIVED_START_AUTHORIZED",
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "files": [
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B03CouponLifecycleMySqlIT.java",
         "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_E04_COUPON/README.md"
       ],
       "source_write_authorized": false,
-      "scope": "先审已有券并发、库存/限领、RedemptionRewardClawback真库测试；仅补未覆盖实际调用/数据库约束缺口，缺requestId本身不是bug，不定新退款政策。"
+      "scope": "先审已有券并发、库存/限领、RedemptionRewardClawback真库测试；仅补未覆盖实际调用/数据库约束缺口，缺requestId本身不是bug，不定新退款政策。",
+      "coordinator_thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
+      "host_id": "durable",
+      "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6192515205"
     },
     {
       "id": "E05",
       "linked_lane": null,
       "title": "退款订阅/列表账号隔离剩余bug",
       "owner": "external_E05",
-      "state": "PENDING_CLOUD_CREATION_AND_ACK",
+      "state": "ACK_RECEIVED_START_AUTHORIZED",
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "files": [
         "chengyinhub-xcx/tests/unit/b01-refund-account-regression.test.js",
         "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_E05_REFUND_ACCOUNT/README.md"
       ],
       "source_write_authorized": false,
-      "scope": "只读utils/subscribe.js、pages/mylike/mylike.js及三个已集成退款组件真实手势/晚回调，VM行为验证允许/拒绝订阅均不阻断退款、稳定ID/换号隔离；不重复L01/L05、不写Claude UI。"
+      "scope": "只读utils/subscribe.js、pages/mylike/mylike.js及三个已集成退款组件真实手势/晚回调，VM行为验证允许/拒绝订阅均不阻断退款、稳定ID/换号隔离；不重复L01/L05、不写Claude UI。",
+      "coordinator_thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
+      "host_id": "durable",
+      "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6192515205"
     },
     {
       "id": "E06",
       "linked_lane": null,
       "title": "音频/轮询/GPS基础模块剩余bug",
       "owner": "external_E06",
-      "state": "PENDING_CLOUD_CREATION_AND_ACK",
+      "state": "ACK_RECEIVED_START_AUTHORIZED",
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "files": [
         "chengyinhub-xcx/tests/unit/b01-platform-lifecycle-regression.test.js",
         "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_E06_PLATFORM/README.md"
       ],
       "source_write_authorized": false,
-      "scope": "只读utils/audio-session.js、utils/poller.js、utils/location/{location-manager,bg-tracker,last-location}.js及既有测试；针对stop/dispose后迟到回调与共享消费者释放做可复现行为验证，不扩大GPS用途/权限、不写play/publish/roam/Claude页面。"
+      "scope": "只读utils/audio-session.js、utils/poller.js、utils/location/{location-manager,bg-tracker,last-location}.js及既有测试；针对stop/dispose后迟到回调与共享消费者释放做可复现行为验证，不扩大GPS用途/权限、不写play/publish/roam/Claude页面。",
+      "coordinator_thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
+      "host_id": "durable",
+      "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6192515205"
     }
   ]
 }

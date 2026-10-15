@@ -109,3 +109,5 @@ L05准许在既有按member/draftUuid隔离的本地草稿信封增加可选 `pu
 L06–L09改为PENDING_EXTERNAL_CLOUD，承接E01–E04；E05/E06独立定向复核。精确白名单与限制以[EXTERNAL_SIX_HANDOFF.md](EXTERNAL_SIX_HANDOFF.md)为准；仅新测试/专属证据文件写权，业务源码原锁保持。创建及接收前不算运行，不能启动本地替代。
 
 L05追加`chengyinhub-xcx/tests/unit/fabu-edit-existing-topic.test.js`，仅修原匿名0/无UUID旧夹具为真实账号42与既有草稿身份，保留原API/行为断言，不放宽写前存储门禁。
+
+正式回执已读并授权E01–E06启动，见EXTERNAL_SIX_HANDOFF最新节。L01–05已源码提交/原写者停止，候选eab62274，聚焦后端39项未运行；Node实际与公共候选验收待C00签收。L05追加三份旧夹具测试精确路径见tasks.json，不能据此改其他文件。

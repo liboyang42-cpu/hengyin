@@ -73,3 +73,7 @@ CY-HANDOFF: CODEX；C00唯一源码/控制账协调者。此表为明确委派�
 - 每路独立分支交公共完整SHA＋专属PR（CY-HANDOFF: CODEX，标E编号）＋精确变更/测试命令/预期方法数及必要环境；尚未运行写未运行。C00先复核再形成统一候选；不得拿冻结231结果套用新SHA。
 - OWNERSHIP、BACKEND_CHANGES、tasks以及全部docs/plans控制目录仅C00写；共享核心、旧文件、其他业务/测试/文档无写权。TEST_DEPLOYED/合并/部署/微信设备/运行时真实业务分开，均不由单测推定。
 - 原4路未启动队列由E01–E04承接，C00不再并行派原B04/B05/A03/B03编辑同名新测试。E05/E06属于定向复核，不宣称已经找到新bug。
+
+## 已收到正式回执，C00授权启动（覆盖待创建状态）
+
+已主动读取[正式回执6192515205](https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6192515205)，核12个路径与白名单逐字一致、与L01–L05/L10无交集。新Cloud真实threadId `01a13f9c-e8ba-753e-9c39-03840bb4900b`，host durable；六独立worktree均基于1e403b135206844a34219753a36e2dee39c7dd59。**现确认接收并允许E01–E06按原白名单启动，ACK_RECEIVED_START_AUTHORIZED**；无新增源码/旧测试/控制表写权。启动前0运行/6待启动为回执观测，实际启动数待对方回报，不伪记6运行。必须gpt-6.1-sol；独立分支/串行提交，VPS与新资源守卫由本地协调者统一。无需再等C00一般性确认，具体额外文件仍申请。
