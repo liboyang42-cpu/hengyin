@@ -392,6 +392,54 @@ class AppLoginServiceSecurityTest {
         verify(tokenService, never()).createAppToken(any());
     }
 
+    /**
+     * PR10 复审:登录拿到明文、批量哈希任务同时把同一明文改写成 BCrypt —— CAS 落空,但重读后的哈希
+     * 仍能验过本次输入,必须照常登录、不吊销会话;重读到的是别的口令则仍按密码错误失败。
+     */
+    @Test
+    void legacyUpgradeLosingRaceToBatchRehashStillLogsInWithSamePassword() {
+        IUmsMemberService memberService = mock(IUmsMemberService.class);
+        UmsMemberMapper memberMapper = mock(UmsMemberMapper.class);
+        IAppSessionRegistryService registry = mock(IAppSessionRegistryService.class);
+        when(registry.beginMemberMutation(42L)).thenReturn("mutation-id");
+        when(registry.currentOrCreateEpoch(42L)).thenReturn(1L);
+        AppTokenService tokenService = realTokenService();
+        UmsMember member = new UmsMember();
+        member.setId(42L);
+        member.setPhone("13800000000");
+        member.setPassword("legacy-password");
+        member.setWxOpenId("existing-openid");
+        when(memberService.selectUmsMemberList(any(UmsMember.class)))
+                .thenReturn(Collections.singletonList(member));
+        when(memberMapper.upgradePasswordIfMatches(eq(42L), eq("legacy-password"), anyString())).thenReturn(0);
+        UmsMember rehashed = new UmsMember();
+        rehashed.setId(42L);
+        rehashed.setPhone("13800000000");
+        rehashed.setPassword(SecurityUtils.encryptPassword("legacy-password"));
+        when(memberService.selectUmsMemberById(42L)).thenReturn(rehashed);
+        RedisCache redis = mock(RedisCache.class);
+        when(redis.incrementWithinWindow(anyString(), org.mockito.ArgumentMatchers.anyInt(), any())).thenReturn(1L);
+        AppLoginService loginService = new AppLoginService();
+        ReflectionTestUtils.setField(loginService, "redisCache", redis);
+        ReflectionTestUtils.setField(loginService, "appUserSevice", memberService);
+        ReflectionTestUtils.setField(loginService, "umsMemberMapper", memberMapper);
+        ReflectionTestUtils.setField(loginService, "appSessionRegistryService", registry);
+        ReflectionTestUtils.setField(loginService, "appTokenService", tokenService);
+
+        String token = loginService.login("13800000000", "legacy-password", "existing-openid");
+
+        assertFalse(token.isEmpty());
+        verify(registry, never()).revokeAll(42L);
+        verify(registry).finishMemberMutation(42L, "mutation-id");
+        verify(redis).deleteObject("app_password_fail_13800000000");
+
+        // 负控:登录读到的仍是旧明文,但重读到的是另一个口令的哈希(真被改密)⇒ 仍然失败
+        member.setPassword("legacy-password");
+        rehashed.setPassword(SecurityUtils.encryptPassword("changed-password"));
+        assertEquals("账号或者密码错误", assertThrows(ServiceException.class,
+                () -> loginService.login("13800000000", "legacy-password", "existing-openid")).getMessage());
+    }
+
     @Test
     void passwordLoginRejectsAmbiguousMemberResults() {
         IUmsMemberService memberService = mock(IUmsMemberService.class);
