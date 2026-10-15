@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-15-codex-cloud-v1",
+  "version": "2026-10-15-codex-cloud-v2-ios-handoff",
   "repository": "liboyang42-cpu/hengyin",
   "plan_branch": "codex/mini-bugs-backend-cloud-plan-20261015",
   "integration_branch": "codex/mini-bug-arch-integration-20261015",
@@ -17,7 +17,7 @@
       "消费Codex稳定合同"
     ],
     "excluded": [
-      "原生iOS代码/测试/发布",
+      "本任务包的原生iOS代码/测试/发布（独立agent另管）",
       "Flutter代码/测试/发布",
       "会费/群聊/群投票的小程序恢复",
       "新依赖、Boot3升级、大范围架构重写",
@@ -48,7 +48,8 @@
         "在公共历史上创建codex/mini-bug-arch-integration-20261015候选分支，保留本任务文档；评审并按父链组合必要提交，不能直接把PR11或任一子PR当master已包含",
         "先复核PR12的GPS/显式点赞方向/徽章查询范围及PR13音频/退避，已成立修复复用；PR14/15只做既有变更的兼容集成及限制登记，不继续新功能开发",
         "冻结候选SHA与现有API/DTO/状态/请求身份合同，列文件所有权；把每条历史线索标记复现/已修/误报/裁决不做/待证据，不直接照509个旧编号编码",
-        "核Cloud到专用VPS的实际可用路径、测试版本/库和必要身份；只把凭据放环境安全配置。没有路径时继续源码与GitHub托管CI，VPS/真机验收保持待验证"
+        "核Cloud到专用VPS的实际可用路径、测试版本/库和必要身份；只把凭据放环境安全配置。没有路径时继续源码与GitHub托管CI，VPS/真机验收保持待验证",
+        "读取IOS_HANDOFF.md，在BACKEND_CHANGES.md登记共享合同基线与独立iOS影响；不改iOS源码"
       ],
       "acceptance": [
         "已有修复未重复实现，PR12/13成对验证；清楚记录PR14退款授权跳过、官方路线只读、认领材料待确认及动作清单失败项",
@@ -414,13 +415,14 @@
       "steps": [
         "按文件归属评审各lane结果，在单一候选整合；只由集成人处理公共DTO/迁移目录/请求封装/动作和路由清单/基线",
         "先跑相关测试，再在候选上集中跑必要门禁和GitHub托管CI；VPS测试串行、隔离资源和限制内存，完整前端套件不由各worker重复跑",
-        "给Claude交接口/方法/DTO/错误/版本/权限/幂等/状态与fixture；有新UI或新功能的需求保留Claude责任",
+        "给Claude和独立iOS agent交接口/方法/DTO/错误/版本/权限/幂等/状态与fixture，协调者集中更新BACKEND_CHANGES.md；有新UI或新功能的需求保留Claude责任",
         "独立VPS业务读回可自动化部分尽量完成；微信真机、设备权限、现场核销、上传和生产发布明确单列待验收，不伪称Cloud已完成"
       ],
       "acceptance": [
         "每项有改动或无需改动的证据，候选SHA/测试输出/PR/CI与环境目标可对应",
         "至少覆盖实际启用的保存发布、GPS/扫码、退出恢复、积分资产、隐私隔离及AI失败边界；未触达层级标未验证",
-        "每个修复小PR或有清晰提交边界的候选草稿PR，发布/合并生产保持待批准；文档只有阶段性完成不得标业务READY"
+        "每个修复小PR或有清晰提交边界的候选草稿PR，发布/合并生产保持待批准；文档只有阶段性完成不得标业务READY",
+        "所有共享后端变化有iOS影响、兼容/fixture及合并/部署状态，未验证层不能写通过"
       ],
       "claude_boundary": "输出Claude可读的稳定后端合同，不接手其UI/新功能，不做iOS/Flutter。",
       "hold_if": "",
@@ -432,7 +434,8 @@
     "stage_barrier": "已确认bug优先，包括A02前半段；B01–B05及A02已确认bug有修复或明确证据处置后再做架构后半段；需批准项保持阻塞，不冒充完成",
     "integration_owner": "C00/C99同一协调者",
     "ci_matrix_max_parallel": 20,
-    "vps_java_tests": "serial task-owned resources only"
+    "vps_java_tests": "serial task-owned resources only",
+    "backend_change_log_owner": "C00/C99协调者独占，各worker提交变化片段"
   },
   "estimate": {
     "base_person_days": [
@@ -509,5 +512,28 @@
       "checks_returned": 0
     }
   ],
-  "as_of": "2026-10-15 America/Los_Angeles"
+  "as_of": "2026-10-15 America/Los_Angeles",
+  "independent_ios_handoff": {
+    "repository": "liboyang42-cpu/chengyin-ios",
+    "source_main_sha": "a8d387e206ed3994b6d265b3618db0c293f6ec15",
+    "source_migration_sha": "f0df08598adbd73cdd85089ce4d1e0965e0e070c",
+    "entry": "IOS_HANDOFF.md",
+    "start_prompt": "IOS_START_PROMPT.md",
+    "backend_change_log": "BACKEND_CHANGES.md",
+    "rule": "Codex/小程序Claude不改iOS；共用后端需兼容并向独立iOS agent交付变化与部署证据",
+    "task_count": 12,
+    "watch_items": [
+      "BK-GPS",
+      "BK-LIKE",
+      "BK-BADGE",
+      "BK-AUTHOR",
+      "BK-ASSET",
+      "BK-SCHEDULE",
+      "BK-PRIVACY",
+      "BK-SESSION",
+      "BK-AI",
+      "BK-NARRATIVE",
+      "BK-EXISTING"
+    ]
+  }
 }

@@ -1,12 +1,12 @@
 # Codex Cloud 任务卡
 
-2026年10月15日。先读 [README.md](README.md) 和 [CLAUDE.md](CLAUDE.md)。整体排除原生iOS、Flutter；所有后端修改保持现有客户端合同兼容，但不因此补做两端代码或测试。
+2026年10月15日。先读 [README.md](README.md) 和 [CLAUDE.md](CLAUDE.md)。本任务不改原生iOS、Flutter；独立iOS agent另管；所有后端修改保持现有客户端合同兼容，但不因此补做两端代码或测试。
 
 ## 文件所有权规则
 
 每个worker只改本单owned_files及专属新增/既有相关测试，开始前把实际文件清单报协调者。`existing_test_files`是已存在的入口，不表示只跑这些就足够。新增测试用本单前缀或已有明确专属套件。共享DTO/响应封装/Controller/Mapper若未在本单列表，须先向C00申领；其他worker不得同时编辑。
 
-以下由协调者独占：根及小程序AGENTS、app.json、请求公共封装、公共DTO/接口、workflow/pom/lockfile、sql及迁移索引、动作/路由清单、门禁基线、共享golden fixtures。默认只读；确需改动先核授权。无worker可以为通过测试自行改分母、关闭规则或删基线。
+以下由协调者独占：根及小程序AGENTS、app.json、请求公共封装、公共DTO/接口、workflow/pom/lockfile、sql及迁移索引、动作/路由清单、门禁基线、共享golden fixtures。[BACKEND_CHANGES.md](BACKEND_CHANGES.md)及IOS_HANDOFF.md由C00/C99协调者独占维护，各worker只提交变化片段；不要并发改同一日志。默认只读；确需改动先核授权。无worker可以为通过测试自行改分母、关闭规则或删基线。
 
 | 任务 | 级别/阶段 | 依赖 | 基础人日 | 原OPT归属 |
 |---|---|---|---|---|
@@ -346,7 +346,7 @@ AI创作入口、新对话UI、模型新场景和新功能后端交Claude；共�
 
 1. 按文件归属评审各lane结果，在单一候选整合；只由集成人处理公共DTO/迁移目录/请求封装/动作和路由清单/基线。
 2. 先跑相关测试，再在候选上集中跑必要门禁和GitHub托管CI；VPS测试串行、隔离资源和限制内存，完整前端套件不由各worker重复跑。
-3. 给Claude交接口/方法/DTO/错误/版本/权限/幂等/状态与fixture；有新UI或新功能的需求保留Claude责任。
+3. 给Claude和独立iOS agent交接口/方法/DTO/错误/版本/权限/幂等/状态与fixture，更新BACKEND_CHANGES.md的实现/合并/部署状态；有新UI或新功能的需求保留Claude责任。
 4. 独立VPS业务读回可自动化部分尽量完成；微信真机、设备权限、现场核销、上传和生产发布明确单列待验收，不伪称Cloud已完成。
 
 ### 验收

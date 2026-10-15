@@ -1,6 +1,8 @@
 # 小程序bug与共用后端架构 Cloud 开工清单
 
-2026年10月15日。**只做小程序相关的既有bug与共用后端底层；整体不做原生iOS、Flutter。** Codex Cloud负责修bug和后端架构，Claude负责UI设计、新功能及其专属后端。共用后端只维护一套合同和业务真源。
+2026年10月15日。**只做小程序相关的既有bug与共用后端底层；本Codex/小程序Claude任务不改原生iOS、Flutter。原生iOS由独立agent负责。** Codex Cloud负责修bug和后端架构，Claude负责UI设计、新功能及其专属后端。共用后端只维护一套合同和业务真源。
+
+iOS独立agent入口：[IOS_HANDOFF.md](IOS_HANDOFF.md)、[后端变化记录](BACKEND_CHANGES.md)、[给iOS的提示词](IOS_START_PROMPT.md)。共用后端所有者需向该agent提供兼容变化，原有Codex任务数量和工期不因此增加iOS工作。
 
 本分支只增加任务文档，业务代码尚未在本次任务中修改。它不是已集成的运行候选。
 
