@@ -2,6 +2,7 @@
   "navigationStyle": "custom",
   "usingComponents": {
     "cy-btn": "/components/cy/btn/index",
+    "cy-club-pinned-notice": "/pages/club/components/club-pinned-notice/index",
     "cy-avatar": "/components/cy/avatar/index",
     "cy-danger-confirm": "/components/cy/danger-confirm/index",
     "cy-date-field": "/components/cy/date-field/index",

@@ -108,6 +108,7 @@ function loadClubDetail(activityList) {
         '../../../utils/danger-actions.js': require('../../utils/danger-actions.js'),
       }
       if (modules[request]) return modules[request]
+      if (request === '../../../utils/club-pinned-notice.js') return require('../../utils/club-pinned-notice.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Date,
@@ -148,6 +149,7 @@ function loadDirector(adapter, initialStorage, options) {
       if (request === '../utils/club-game-director-adapter.js') {
         return { createClubGameDirectorAdapter() { throw new Error('测试必须注入 adapter') } }
       }
+      if (request === '../../../utils/club-pinned-notice.js') return require('../../utils/club-pinned-notice.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Date,

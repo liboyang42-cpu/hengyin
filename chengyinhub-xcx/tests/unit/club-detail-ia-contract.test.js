@@ -52,6 +52,7 @@ function loadDetail() {
         '../../../utils/danger-actions.js': require('../../utils/danger-actions.js'),
       }
       if (modules[request]) return modules[request]
+      if (request === '../../../utils/club-pinned-notice.js') return require('../../utils/club-pinned-notice.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Set,
@@ -116,6 +117,7 @@ function loadSettings() {
         },
       }
       if (modules[request]) return modules[request]
+      if (request === '../../../utils/club-pinned-notice.js') return require('../../utils/club-pinned-notice.js')
       throw new Error(`unexpected require: ${request}`)
     },
     wx: {

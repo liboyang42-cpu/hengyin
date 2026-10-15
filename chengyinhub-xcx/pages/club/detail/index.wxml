@@ -97,6 +97,7 @@
 
     <!-- 帖子流(默认展示) -->
     <view class="feed feed--plain" wx:if="{{activeTab === 'posts'}}">
+      <cy-club-pinned-notice notices="{{pinnedNotices}}" bind:open="onPinnedNoticeOpen" />
       <!-- 收起态:一条 pill,点开才展开输入区。原来 textarea + 图片行常驻,
            没发帖的人也要为它让出约 340rpx —— 首屏第一条帖子被挤到折线以下。 -->
       <view class="post-composer-collapsed" wx:if="{{canSeeMembers && (club.memberPostAllowed != 0 || club.isOwner || club.viewerIsAdmin || canModerateContent) && !composerOpen}}" bindtap="openComposer"
