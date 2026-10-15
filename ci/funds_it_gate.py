@@ -202,7 +202,8 @@ EXPECTED = {
     "MerchantIdentityMybatisIntegrationTest": 21,
     # 2026-09-24 CU-M-78 +1 条(解除招牌主推显式清空 featured_id,真 XML + 真库回读),8 → 9。
     "MerchantProfilePersistenceMybatisIntegrationTest": 9,
-    "StoreVerifyGrowthDeliveryTransactionTest": 3,
+    # 2026-10-15 PR10 复审 +1 条(整单核销撤销:真库标记核销台账已撤销、作废未发放成长待办),3 → 4。
+    "StoreVerifyGrowthDeliveryTransactionTest": 4,
     "RefundNotificationMybatisIntegrationTest": 9,
     "SessionRefundClockMybatisIntegrationTest": 3,
     "SettlementGenerateBatchMybatisIntegrationTest": 3,

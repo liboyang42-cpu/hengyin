@@ -260,7 +260,7 @@
       </div>
       <el-button v-if="canReverseWholeOrder" type="danger" size="mini" :disabled="reverseSubmitting"
         v-hasPermi="['business:registration:reverseRedeem']" @click="handleReverseWholeOrder">撤销整单核销</el-button>
-      <el-button v-if="redeemParentOrderNo" type="danger" size="mini" :disabled="reverseSubmitting"
+      <el-button v-if="canReverseParentOrder" type="danger" size="mini" :disabled="reverseSubmitting"
         v-hasPermi="['business:registration:reverseRedeem']" @click="handleReverseParentOrder">撤销本父订单全部生效核销</el-button>
       <el-table v-loading="redeemLoading" :data="redeemList" size="mini" empty-text="该票没有按章核销流水">
         <el-table-column label="流水ID" prop="id" width="80" />
@@ -312,7 +312,7 @@
         show-word-limit
         placeholder="撤销原因(必填,会留痕:操作人/原因/时间),如:店员扫错票 / 核错项目"
       />
-      <div v-if="!reverseWholeOrderId" class="reverse-clawback">
+      <div class="reverse-clawback">
         <el-checkbox v-model="reverseForm.clawbackRewards">同时冲回因这次核销发的积分和经验</el-checkbox>
         <div class="redeem-hint">勋章不收回;连带发的通关券未使用则作废,已使用只记审计不追回。积分/经验不够扣到 0,差额记进审计。</div>
       </div>
@@ -607,6 +607,11 @@ export default {
     canReverseWholeOrder() {
       return this.redeemWholeOrderRow && !this.redeemLoading
         && !(this.redeemList || []).some(row => row && row.status === 'ACTIVE')
+    },
+    // 父订单批量撤销只撤按章流水:本票没有生效的按章核销(整单核销票)时不出现,与整单撤销互斥。
+    canReverseParentOrder() {
+      return !!this.redeemParentOrderNo && !this.redeemLoading
+        && (this.redeemList || []).some(row => row && row.status === 'ACTIVE')
     }
   },
   created() {
@@ -763,7 +768,7 @@ export default {
       this.reverseOpen = true
     },
     handleReverseParentOrder() {
-      if (this.reverseSubmitting || !this.redeemParentOrderNo) return
+      if (this.reverseSubmitting || !this.canReverseParentOrder) return
       this.reverseParentOrderNo = this.redeemParentOrderNo
       this.reverseWholeOrderId = null
       this.reverseForm = { redemptionId: null, reason: '', clawbackRewards: false }
@@ -785,10 +790,11 @@ export default {
       }
       this.reverseSubmitting = true
       if (this.reverseWholeOrderId) {
-        return reverseWholeOrderVerification({ registrationId: this.reverseWholeOrderId, reason }).then(() => {
+        const clawbackRewards = this.reverseForm.clawbackRewards === true
+        return reverseWholeOrderVerification({ registrationId: this.reverseWholeOrderId, reason, clawbackRewards }).then(() => {
           this.reverseOpen = false
           this.redeemWholeOrderRow = false
-          this.$modal.msgSuccess("已撤销整单核销")
+          this.$modal.msgSuccess(clawbackRewards ? "已撤销整单核销,到店积分和经验已冲回(明细见审计)" : "已撤销整单核销")
           this.loadRedemptions()
           this.getList()
         }).catch(() => {}).finally(() => {

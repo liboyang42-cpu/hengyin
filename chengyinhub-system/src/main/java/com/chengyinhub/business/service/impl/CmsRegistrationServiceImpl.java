@@ -157,6 +157,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Autowired
     private CmsRegistrationScanMapper cmsRegistrationScanMapper;
 
+    @Autowired
+    private com.chengyinhub.business.mapper.StoreVerifyGrowthDeliveryMapper storeVerifyGrowthDeliveryMapper;
+
+    @Autowired
+    private RedemptionRewardClawbackService redemptionRewardClawbackService;
+
     /** 核销与资金/权益写入同事务的不可变 actor 审计；写失败必须让核销整体回滚。 */
     @Autowired
     private BusinessAuditEventMapper businessAuditEventMapper;
@@ -2902,6 +2908,13 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean reverseWholeOrderVerification(Long registrationId, String reason, Long operatorUserId) {
+        return reverseWholeOrderVerification(registrationId, reason, operatorUserId, false);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean reverseWholeOrderVerification(Long registrationId, String reason, Long operatorUserId,
+                                                 boolean clawbackRewards) {
         String why = reason == null ? "" : reason.trim();
         if (registrationId == null || registrationId <= 0 || operatorUserId == null || operatorUserId <= 0
                 || why.isEmpty() || why.length() > 255) {
@@ -2953,11 +2966,26 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 + (current.getVerifierId() == null ? "null" : current.getVerifierId()) + "}");
         audit.setAfterJson("{\"verificationStatus\":0}");
         audit.setReason(why);
-        audit.setRequestId("registration-verify-reverse-" + registrationId + "-"
-                + (wholeOrderReversalCount(registrationId) + 1));
+        int generation = wholeOrderReversalCount(registrationId) + 1;
+        audit.setRequestId("registration-verify-reverse-" + registrationId + "-" + generation);
         audit.setCreateTime(new Date());
         if (businessAuditEventMapper.insertBusinessAuditEvent(audit) != 1) {
             throw new IllegalStateException("撤销核销审计写入失败，撤销已回滚");
+        }
+        // PR10 复审:与按章撤销(redemption→REVERSED)对齐 —— 整单票的核销台账行就是 cms_registration_scan,
+        // 标成已撤销,商家赏金/合作结算证据/核销风控/商家人头都不再把这次扫码算作核销;
+        // 存量无台账行的老单 0 行也不算失败。重新核销时 writeScanLedger 会另落一行新台账。
+        cmsRegistrationScanMapper.markWholeOrderScansReversed(registrationId);
+        if (clawbackRewards) {
+            CmsRegistration owner = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
+            if (owner == null || owner.getMemberId() == null) {
+                throw new IllegalStateException("冲回奖励找不到报名单 registrationId=" + registrationId);
+            }
+            redemptionRewardClawbackService.clawbackWholeOrderVerification(owner, activity.getMemberId(), why,
+                    operatorUserId, "registration-verify-clawback-" + registrationId + "-" + generation);
+        } else {
+            // 未勾冲回:已发的奖励按按章撤销同口径保留;但还在队列里没发的到店成长不能为已撤销的核销迟到补发。
+            storeVerifyGrowthDeliveryMapper.deletePendingByRegistration(registrationId);
         }
         logger.info("整单核销已撤销 registrationId={} operatorUserId={}", registrationId, operatorUserId);
         return true;

@@ -202,7 +202,7 @@ public class CmsRegistrationController extends BaseController
         }
         try {
             cmsRegistrationService.reverseWholeOrderVerification(request.getRegistrationId(),
-                    request.getReason(), SecurityUtils.getUserId());
+                    request.getReason(), SecurityUtils.getUserId(), Boolean.TRUE.equals(request.getClawbackRewards()));
         } catch (IllegalArgumentException | IllegalStateException e) {
             return error(e.getMessage());
         }
