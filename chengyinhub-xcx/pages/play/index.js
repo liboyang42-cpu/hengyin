@@ -5217,13 +5217,30 @@ Page({
     const p = this.data.preference;
     this.onComplete(this.data.game.nodeId, p.progress || {});
   },
+  _legacyGameContext() {
+    return { owner: this._playOwner, sessionKey: JSON.stringify(this._sessionParams()),
+      epoch: this._playLoadEpoch, game: this.data.game };
+  },
+  _isLegacyGameCurrent(context) {
+    return this._isPlayAccountCurrent() && context.owner === this._playOwner
+      && context.sessionKey === JSON.stringify(this._sessionParams())
+      && context.epoch === this._playLoadEpoch && context.game === this.data.game;
+  },
   scanGame() {
     if (this._gameWriteUnknown) return;
-    const that = this; this.setData({ scanning: true });
+    const that = this, context = this._legacyGameContext();
+    if (!this._isLegacyGameCurrent(context)) return;
+    let settled = false;
+    this.setData({ scanning: true });
     wx.scanCode({
       onlyFromCamera: true,
-      success(r) { that.setData({ scanning: false }); that.checkin(that.data.game.nodeId, r.result, 'game'); },
+      success(r) {
+        if (settled || !that._isLegacyGameCurrent(context)) return;
+        settled = true; that.setData({ scanning: false }); that.checkin(context.game.nodeId, r.result, 'game');
+      },
       fail(error) {
+        if (settled || !that._isLegacyGameCurrent(context)) return;
+        settled = true;
         that.setData({ scanning: false });
         if (!isScanCancelled(error)) that.recordGameNetworkFailure('未能打开扫码，请检查相机权限后重试', { type: 'gameScan' });
       }
@@ -5231,9 +5248,13 @@ Page({
   },
   photoGame() {
     if (this._gameWriteUnknown) return;
-    const that = this, g = this.data.game;
+    const that = this, g = this.data.game, context = this._legacyGameContext();
+    if (!this._isLegacyGameCurrent(context)) return;
     if (this.data.isPreview || this.data.isMock) { this.onComplete(g.nodeId, {}); return; }
+    let picked = false;
     app.chooseImage(function (urls) {
+      if (picked || !that._isLegacyGameCurrent(context)) return;
+      picked = true;
       const pic = (urls && urls[0]) || '';
       if (!pic) return;
       that.setData({ photoTaken: true, gNetErr: '', gNetRetryable: false });
@@ -5241,13 +5262,20 @@ Page({
     }, 1);
   },
   submitPhoto(nodeId, pic) {
+    const viewContext = this._legacyGameContext();
+    if (!this._isLegacyGameCurrent(viewContext)) return;
     if (!this.beginGameWrite()) return;
+    const context = this._beginRouteWriteContext('_gameWrite');
+    const isCurrent = () => this._isRouteWriteContextCurrent(context) && this._isLegacyGameCurrent(viewContext);
+    const payload = this._routeWritePayload('photo', nodeId, { nodeId, picUrl: pic });
     const that = this;
     const attempt = { type: 'photo', nodeId, pic };
     this._lastGameAttempt = attempt;
-    this._withThoughtSync(() => req('/api/play/photo', 'POST', this._routeWritePayload('photo', nodeId, { nodeId, picUrl: pic })))
+    this._withThoughtSync(() => req('/api/play/photo', 'POST', Object.assign({}, payload, { expectedRouteVersion: normalizeRouteState(this._routeState).version })), isCurrent)
       .then((r) => {
-        that._gameWriteInFlight = false;
+        const current = isCurrent();
+        that._finishRouteWriteContext(context);
+        if (!current) return;
         if (r.code == 200 || r.code == '200') {
           that._resolveRouteAction('photo', nodeId);
           that.clearGameNetworkError();
@@ -5264,7 +5292,9 @@ Page({
           that.setData({ gNetErr: r.msg || '照片未上传成功，请重新选择', gNetRetryable: false });
         }
       }).catch(() => {
-        that._gameWriteInFlight = false;
+        const current = isCurrent();
+        that._finishRouteWriteContext(context);
+        if (!current) return;
         that.recordGameNetworkFailure('照片上传没有送达', attempt);
       });
   },
@@ -5274,11 +5304,18 @@ Page({
     const answer = g.vm == 3 ? this.data.answerSel : this.data.answerInput;
     if (!answer) return this.setData({ gWrong: true, 'game.feedback': '先把答案填上再提交。' });
     if (this.data.isPreview || this.data.isMock) { this.onComplete(g.nodeId, {}); return; }   // 路线级预览只跳过服务端判题,不跳过空值校验
+    const viewContext = this._legacyGameContext();
+    if (!this._isLegacyGameCurrent(viewContext)) return;
     if (!this.beginGameWrite()) return;
+    const context = this._beginRouteWriteContext('_gameWrite');
+    const isCurrent = () => this._isRouteWriteContextCurrent(context) && this._isLegacyGameCurrent(viewContext);
+    const payload = this._routeWritePayload('answer', g.nodeId, { nodeId: g.nodeId, answer });
     const that = this;
-    this._withThoughtSync(() => req('/api/play/answer', 'POST', this._routeWritePayload('answer', g.nodeId, { nodeId: g.nodeId, answer })))
+    this._withThoughtSync(() => req('/api/play/answer', 'POST', Object.assign({}, payload, { expectedRouteVersion: normalizeRouteState(this._routeState).version })), isCurrent)
       .then((r) => {
-        that._gameWriteInFlight = false;
+        const current = isCurrent();
+        that._finishRouteWriteContext(context);
+        if (!current) return;
         if (r.code == 200 || r.code == '200') { that._resolveRouteAction('answer', g.nodeId); that.clearGameNetworkError(); that.onComplete(g.nodeId, r.data); }
         else if (that._handleRouteConflict(r, 'answer', g.nodeId)) return;
         // 请求没送到 ≠ 服务端判你答错。原码把 code!=200 一律记 wrongCount++,断网提交两次
@@ -5296,7 +5333,9 @@ Page({
           that.setData({ gWrong: true, gNetErr: '', gNetRetryable: false, wrongCount: wc, 'game.feedback': r.msg || g.feedback, canReveal: wc >= 2 && (!!g.reveal || !!g.puzzleScoring) });
         }
       }).catch(() => {
-        that._gameWriteInFlight = false;
+        const current = isCurrent();
+        that._finishRouteWriteContext(context);
+        if (!current) return;
         that.recordGameNetworkFailure('提交没送出去，检查网络后重试', { type: 'answer' });
       });
   },
@@ -5392,12 +5431,19 @@ Page({
       this.setData({ revealed: true, canReveal: false });
       return;
     }
+    const viewContext = this._legacyGameContext();
+    if (!this._isLegacyGameCurrent(viewContext)) return;
     if (!this.beginGameWrite()) return;
+    const context = this._beginRouteWriteContext('_gameWrite');
+    const isCurrent = () => this._isRouteWriteContextCurrent(context) && this._isLegacyGameCurrent(viewContext);
+    const payload = this._routeWritePayload('puzzleReveal', g.nodeId, { nodeId: g.nodeId });
     const attempt = { type: 'puzzleReveal', nodeId: g.nodeId };
     this._lastGameAttempt = attempt;
-    this._withThoughtSync(() => req('/api/play/puzzle/reveal', 'POST', this._routeWritePayload('puzzleReveal', g.nodeId, { nodeId: g.nodeId })))
+    this._withThoughtSync(() => req('/api/play/puzzle/reveal', 'POST', Object.assign({}, payload, { expectedRouteVersion: normalizeRouteState(this._routeState).version })), isCurrent)
       .then((r) => {
-        this._gameWriteInFlight = false;
+        const current = isCurrent();
+        this._finishRouteWriteContext(context);
+        if (!current) return;
         if (r.code == 200 || r.code == '200') {
           this._resolveRouteAction('puzzleReveal', g.nodeId);
           this.clearGameNetworkError();
@@ -5405,7 +5451,7 @@ Page({
           this.setData({ revealed: true, canReveal: false, puzzleScoreCap: 0, 'game.reveal': answer });
           cyModal.show({
             title: '答案', content: answer, showCancel: false, confirmText: '继续',
-            success: () => this.onComplete(g.nodeId, r.data || {}),
+            success: () => { if (this._isLegacyGameCurrent(viewContext)) this.onComplete(g.nodeId, r.data || {}); },
           });
         } else if (this._handleRouteConflict(r, 'puzzleReveal', g.nodeId)) return;
         else if (r.httpFail) this.recordGameHttpUnknown(r.msg);
@@ -5417,7 +5463,9 @@ Page({
         }
       })
       .catch(() => {
-        this._gameWriteInFlight = false;
+        const current = isCurrent();
+        this._finishRouteWriteContext(context);
+        if (!current) return;
         this.recordGameNetworkFailure('查看答案请求没有送达', attempt);
       });
   },
