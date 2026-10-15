@@ -3585,11 +3585,18 @@ Page({
       cyToast('请先完成开局玩法');
       return Promise.resolve();
     }
-    if (this._openingSubmitting) return Promise.resolve();
+    if (!this._isPlayAccountCurrent() || this._openingSubmitting) return Promise.resolve();
+    const context = this._beginRouteWriteContext('_openingWrite');
+    const chapter = this.data.chapter;
+    const current = () => this._isRouteWriteContextCurrent(context)
+      && this.data.chapter === chapter && (this._routeState || {}).opening
+      && String(this._routeState.opening.chapterId) === String(opening.chapterId);
+    const payload = Object.assign({}, this._sessionParams(), { topicId: this.data.topicId, chapterId: opening.chapterId });
     this._openingSubmitting = true;
-    return this._withThoughtSync(() => req('/api/play/journey/opening/complete', 'POST', Object.assign({}, this._sessionParams(), {
-      topicId: this.data.topicId, chapterId: opening.chapterId, expectedVersion: this._routeState.version,
-    }), { 'content-type': 'application/json' })).then(res => {
+    return this._withThoughtSync(() => req('/api/play/journey/opening/complete', 'POST', Object.assign({}, payload, {
+      expectedVersion: this._routeState.version,
+    }), { 'content-type': 'application/json' }), current).then(res => {
+      if (!current() || res && res.obsolete) return;
       if (Number(res.code) !== 200) {
         cyToast(res.msg || '保存失败，请重试');
         if (isRouteConflict(res)) this.loadData(false);
@@ -3597,7 +3604,11 @@ Page({
       }
       this.closeChapterFull();
       this.loadData(false);
-    }).catch(() => cyToast('保存失败，请重试')).finally(() => { this._openingSubmitting = false; });
+    }).catch(() => { if (current()) cyToast('保存失败，请重试'); }).finally(() => {
+      if (this._openingWriteIntent !== context) return;
+      this._finishRouteWriteContext(context);
+      this._openingSubmitting = false;
+    });
   },
 
   /** 章节背景旁白。2026-09-04 起音频是章节属性(chapter.audioUrl)、一章一段,
