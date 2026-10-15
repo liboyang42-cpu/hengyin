@@ -114,3 +114,16 @@
 | 81 | 单测补齐·第四批 | BL-76–80 新增纯函数/页面处理器单测（不改 UI） | tests |
 | 82 | 接口合同测试·第四批 | BL-76–80 新调用接口的合同测试（路径/方法/字段对照 Java 源码） | tests |
 | 83 | 验收清单更新·第三四批 | 把 BL-61–80 已开 PR 的本地验收清单补进 `ACCEPTANCE.md`（依赖 BL-59 #101） | docs |
+
+## 第六批（84–91）：监督线补充（后端已有、小程序零调用；不改现有样式、无迁移/新接口）
+
+| # | 名称 | 内容 | 范围提示 |
+|---|---|---|---|
+| 84 | 剧透保护偏好 | 设置页现有列表加一行开关「全部揭晓剧情」：`POST /api/spoiler/state` 读 `revealAll`，切换调 `POST /api/spoiler/preference`（body `{revealAll: boolean}`），成功后再读 state 回读；失败回滚开关并如实提示。不做单节点 `reveal` | 照现有设置开关行；不碰 `pages/play/index.js`（Codex） |
+| 85 | 商家开通前置检查（只读） | 商家工作台现有入口区读 `GET /api/merchant/ops/prerequisites`（`IMerchantPrerequisiteService.calculate` 返回为准），列出未完成项及去处；全部完成或无数据时不展示；没有现成位置就 BLOCKED | `pages/merchant/**`；照现有工作台信息块 |
+| 86 | 商家转化漏斗（只读） | 商家现有数据/经营页读 `POST /api/merchant/funnel`（`windowDays` 仅 7/30，需 `MARKETING_READ`），照现有分段切 7/30 天；无权限/无数据诚实空态，不展示金额 | 不碰积分/券/应付服务（Codex） |
+| 87 | 审核结果详情 | 系统消息里带审核任务 id 的通知可点进 `GET /api/audit/{taskId}/detail`（仅提交人本人，403/404 如实提示），展示审核结论与原因；先核实通知 payload 是否带 `taskId`，没有就 BLOCKED，不加独立入口 | 照 CL2 举报详情页结构 |
+| 88 | 协议版本显示（只读） | 现有「关于/协议」页读 `GET /api/agreement/versions`，在现有文字行展示当前生效版本；接口失败时不展示。**不改** `agreement-sheet` 的同意流程、不调 `/consent` | `pages/shezhi/about/**`、`pages/agreement/**` |
+| 89 | 到访安全感受评价 | 只在已有「核销/到访完成」结果处照现有按钮样式加「评价安全感受」：`GET /api/community-trust/safety/taxonomy` 取选项，`cy-sheet` 内单选，`POST /safety/ratings` 提交，资格以后端报错为准如实回显；没有现成位置就 BLOCKED | 与 BL-66 配套；不展示他人评价 |
+| 90 | 单测补齐·第五批 | BL-84–89 新增纯函数/页面处理器单测（不改 UI） | tests |
+| 91 | 接口合同测试·第五批 | BL-84–89 新调用接口的合同测试（路径/方法/字段对照 Java 源码） | tests |
