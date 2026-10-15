@@ -6480,6 +6480,13 @@ Page({
     const detail = (e && e.detail) || {};
     const action = detail.action;
     const kit = this._kit();
+    if (!this._isPlayAccountCurrent() || !this.data.advancedPlay || !this.data.advancedPlay.show) return;
+    if (action !== 'START_CHALLENGE' && action !== 'SUBMIT_PHOTO_CHECK') return;
+    const currentGame = this.selectComponent('#advancedGame');
+    const state = currentGame && currentGame.data && currentGame.data.state;
+    // Existing producer emits sessionId for both action failure and unknown-result readback failure.
+    if (detail.sessionId == null || kit.sessionId == null || !state || state.sessionId == null
+        || String(detail.sessionId) !== String(kit.sessionId) || String(detail.sessionId) !== String(state.sessionId)) return;
     if (action === 'START_CHALLENGE' && kit.type === 'typein') {
       if (detail.sessionId != null && String(detail.sessionId) !== String(kit.sessionId)) return;
       const game = this.selectComponent('#advancedGame');
