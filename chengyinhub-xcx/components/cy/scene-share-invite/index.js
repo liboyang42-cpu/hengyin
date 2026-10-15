@@ -31,16 +31,20 @@ Component({
     },
     detached() {
       this._codeEpoch = (this._codeEpoch || 0) + 1
+      this._codeLoading = false
     },
   },
 
   methods: {
     syncQr() {
+      // observer 与 attached 首开可能各调一次:个人码请求进行中就不再连发,避免后端生成锁回「服务繁忙」。
+      if (!this.data.qrUrl && this.data.playerCode && this._codeLoading) return
       this._codeEpoch = (this._codeEpoch || 0) + 1
       if (!this.data.qrUrl && this.data.playerCode) {
         this.loadPlayerCode()
         return
       }
+      this._codeLoading = false
       let canPreview = false
       try {
         const app = getApp()
@@ -54,9 +58,11 @@ Component({
     loadPlayerCode() {
       const that = this
       const epoch = this._codeEpoch
+      this._codeLoading = true
       this.setData({ qrSrc: '', qrState: 'loading', qrErrorText: '' })
       const settle = (src, errorText) => {
         if (epoch !== that._codeEpoch) return
+        that._codeLoading = false
         if (src) that.setData({ qrSrc: src, qrState: 'loading', qrErrorText: '' })
         else that.setData({ qrSrc: '', qrState: 'code-error', qrErrorText: errorText })
       }

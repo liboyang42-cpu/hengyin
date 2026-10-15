@@ -88,3 +88,19 @@ test('模板:沿用现有二维码位与 cy-error,个人主页本人视角开启
   assert.match(COMP_WXML, /show-menu-by-longpress="\{\{playerCode\}\}"/)
   assert.match(PROFILE_WXML, /<cy-scene-share-invite theme="\{\{sceneCurrent\.theme\}\}" player-code="\{\{isSelf\}\}" \/>/)
 })
+
+test('首开 observer 与 attached 连调 syncQr 只发一次个人码请求;回包后可再次请求', () => {
+  const requests = []
+  const c = load(requests, [])
+  c.syncQr()
+  c.syncQr()
+  assert.equal(requests.length, 1, '进行中不连发')
+  requests[0].success({ code: 500, msg: '个人码生成服务繁忙，请稍后重试' })
+  c.retryQr()
+  assert.equal(requests.length, 2, '回包后重试照常请求')
+})
+
+test('模板:预览点击挂在带条件按压态的二维码框上,图片本身不再绑 tap', () => {
+  assert.match(COMP_WXML, /class="siv__qr-frame"\s+hover-class="\{\{playerCode && qrState === 'ready' \? 'cy-pressed' : 'none'\}\}" hover-stay-time="80" bindtap="previewQr">/)
+  assert.doesNotMatch(COMP_WXML, /<image[^>]*bindtap=/)
+})
