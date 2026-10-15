@@ -34,7 +34,7 @@
 ## 已知坑（别再犯 / 别误删）
 - IDOR 已修：`/api/activity/delete`、`/api/activity/update_publish_status` 已有创建者归属校验（`ApiActivityController.java:415-421 / 461-463`）——任何**新增**写接口都要 WHERE 带 owner
 - 手机号绑定根因已修：空号保护 + 稳定版 token（commit c5e491e）；`getPhoneNumber` 付费、只能真机测、错误码 80058
-- 行为校验：`useDevUser()` 已被 `isDevEnv()` 网住——这是**正确状态**，别当成需要清理的 mock
+- 登录兜底：小程序开发版「登录失败就注入假用户/dev-token」的 `useDevUser()` 兜底已删除（F-W1-01）；`isDevEnv()` 只用于开发调试入口，并在体验版/正式版清掉残留的 dev-token 会话。登录失败必须如实失败，**不得重新引入**任何假用户降级
 
 ## 工作方式（对所有任务）
 - 不确定方案/改多文件时：先探索→给计划→再编码（explore→plan→code→commit）
