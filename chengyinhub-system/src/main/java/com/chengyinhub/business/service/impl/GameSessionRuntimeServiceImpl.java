@@ -367,7 +367,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     }
 
     private ActionResult prepare(GameActorContext actor, CmsActivity activity) {
-        CmsTopic topic = topicMapper.selectCmsTopicById(activity.getTopicId());
+        // Serialize configuration and INSERT ... SELECT node capture with content replacement.
+        CmsTopic topic = topicMapper.selectCmsTopicByIdForUpdate(activity.getTopicId());
         String configJson = topic == null ? null : topic.getGameModuleConfigJson();
         boolean route = isRouteTopic(topic);
         JsonNode config = route ? objectMapper.createObjectNode().put("schemaVersion", 1).put("playMode", "ROUTE")

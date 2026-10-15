@@ -107,7 +107,7 @@ class GameSessionRuntimeServiceImplTest {
         verifiedPhotos.clear();
         usePhotoVerifier((url, memberId) -> verifiedPhotos.add(url + "|" + memberId));
         when(activityMapper.selectCmsActivityById(ACTIVITY)).thenReturn(activeActivity());
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(configuredTopic());
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(configuredTopic());
         when(runtimeMapper.insertPlayerNodeOutcome(any())).thenReturn(1);
         when(runtimeMapper.selectRole(SESSION, PLAYER)).thenReturn(role("DETECTIVE", "侦探"));
     }
@@ -714,7 +714,7 @@ class GameSessionRuntimeServiceImplTest {
     void prepareRejectsUnmappedOrMerchantlessRuntimeStation() {
         CmsTopic topic = configuredTopic();
         topic.setGameModuleConfigJson(runtimeConfigJson());
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
         when(runtimeMapper.insertReceiptClaim(any())).thenReturn(1);
         when(runtimeMapper.insertSession(any())).thenAnswer(invocation -> {
@@ -738,7 +738,7 @@ class GameSessionRuntimeServiceImplTest {
         CmsTopic topic = configuredTopic();
         topic.setGameModuleConfigJson(choiceConfigJson().replace("\"id\":\"ASK_CLERK\"",
                 "\"id\":\"FOLLOW_NOTE\""));
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
         when(runtimeMapper.insertReceiptClaim(any())).thenReturn(1);
 
@@ -1609,7 +1609,7 @@ class GameSessionRuntimeServiceImplTest {
     void prepareRejectsUnsupportedTaskInputType() {
         CmsTopic topic = configuredTopic();
         topic.setGameModuleConfigJson(configWithInputType("BUTTON"));
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
         when(runtimeMapper.insertReceiptClaim(any())).thenReturn(1);
 
@@ -1628,7 +1628,7 @@ class GameSessionRuntimeServiceImplTest {
         CmsTopic topic = configuredTopic();
         topic.setGameModuleConfigJson(configWithInputType("TEXT").replace("\"verificationRequired\":true",
                 "\"verificationRequired\":false"));
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
 
         GameSessionException missingHash = assertThrows(GameSessionException.class, () -> service.command(
                 GameActorContext.club(PLAYER), command("prepare-missing-hash", 0, "PREPARE",
@@ -2408,7 +2408,7 @@ class GameSessionRuntimeServiceImplTest {
         CmsTopic topic = configuredTopic();
         topic.setGameModuleConfigJson(routeStyleStoryConfigJson().replace(
                 "{\"op\":\"INC\",\"var\":\"trust\",\"value\":2}", "{\"op\":\"ADD\",\"var\":\"trust\",\"value\":2}"));
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
         when(runtimeMapper.insertReceiptClaim(any())).thenReturn(1);
 
@@ -2440,7 +2440,7 @@ class GameSessionRuntimeServiceImplTest {
         topic.setGameModuleConfigJson(routeStyleStoryConfigJson().replace(
                 "\"conditions\":[{\"var\":\"trust\",\"op\":\"GTE\",\"value\":2},"
                         + "{\"op\":\"HAS_TAG\",\"value\":\"tag.hurried\"}]", "\"conditions\":[]"));
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
         when(runtimeMapper.insertReceiptClaim(any())).thenReturn(1);
 
@@ -3236,7 +3236,7 @@ class GameSessionRuntimeServiceImplTest {
         CmsTopic topic = configuredTopic();
         topic.setProductType(com.chengyinhub.common.constant.ProductType.ORIENTEERING);
         topic.setGameModuleConfigJson(null);
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
         assertTrue(service.isGameSessionEnabled(topic));
         topic.setGameModuleConfigJson("{broken");
         assertFalse(service.isGameSessionEnabled(topic));
