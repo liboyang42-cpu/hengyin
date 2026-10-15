@@ -70,6 +70,7 @@ chengyinhub-xcx/pages/merchant/coop-center/index.js 2  # UNREVIEWED_BASELINE_202
 chengyinhub-xcx/pages/merchant/customer/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
 chengyinhub-xcx/pages/merchant/decor/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
 chengyinhub-xcx/pages/merchant/decor/index.js 1  # 订单状态轮询失败由 checkout unknown 状态承接并禁止重复支付；关闭自动 toast 避免轮询期间重复打扰
+chengyinhub-xcx/pages/merchant/decor/index.js 1  # BL-108 已生效权益是升级权益面板里的辅助只读信息，读取失败就不展示，不挡面板，也不弹 toast
 chengyinhub-xcx/pages/merchant/index/index.js 0  # UNREVIEWED_BASELINE_20260818:3 存量已清零(2026-08-21:本轮整改删除全部静默调用，保留冻结收据)
 chengyinhub-xcx/pages/merchant/marketing/ai-insight/index.js 1  # AI 参谋整页失败落 error 状态,由 cy-error 带 retry 渲染;关闭全局 toast 避免与页内错误双提示(2026-08-20 新增,已逐条审查)
 chengyinhub-xcx/pages/merchant/marketing/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
