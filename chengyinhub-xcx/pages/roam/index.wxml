@@ -1079,12 +1079,13 @@
 </view>
 
 <!-- BL-01 点位筛选:本页半屏统一用原型 .psheet(scene-sheet-contract 钉死不回 cy-sheet),标题 + 右上 ✕。
+     显隐走 sceneCurrent 单宿主(scene-sheet-single-host-contract),从抽屉进、关闭回抽屉。
      范围走 /api/roam/pois 的 radius;只看未到过只藏地图点,不改进度。 -->
-<block wx:if="{{poiFilterShow}}">
-<view class="pdim is-in {{reducedMotion ? 'is-reduced' : ''}}" bindtap="closePoiFilter" aria-role="button" aria-label="关闭筛选点位" hover-class="cy-pressed" hover-stay-time="80"></view>
-<view class="psheet psheet--half is-in {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
-  <view class="psheet__grab"></view>
-  <view class="psheet__x" catchtap="closePoiFilter" aria-role="button" aria-label="关闭筛选点位" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
+<view class="roam-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'roam-poi-filter'}}" catchtouchmove="blockSceneTouch">
+<view class="pdim {{sceneIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="onProtoSheetClose" aria-role="button" aria-label="返回更多" hover-class="cy-pressed" hover-stay-time="80"></view>
+<view class="psheet psheet--half {{sceneIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
+  <view class="psheet__grab" catchtap="onProtoSheetClose" aria-role="button" aria-label="返回更多" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="psheet__x" catchtap="onProtoSheetClose" aria-role="button" aria-label="返回更多" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
   <text class="ph1">筛选点位</text>
   <view class="poi-filter">
     <text class="poi-filter__label">搜索范围</text>
@@ -1097,7 +1098,7 @@
     <text class="roam-rules__lede">范围只影响漫游点位；筛选按账号保存在本机。</text>
   </view>
 </view>
-</block>
+</view>
 
 <!-- 隐私授权闸(真弹窗):页内组件,不压页面栈。app.js 在需要授权时调本页 showPrivacyGate()。 -->
 <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />

@@ -281,7 +281,7 @@ Page({
   data: {
     privacyGateShow: false,
     // BL-01 漫游点位筛选(范围 + 只看未到过),值在 utils/roam-poi-filter.js。
-    poiFilterShow: false, poiFilter: { radiusM: 3000, unvisitedOnly: false }, poiFilterTabs: roamPoiFilter.radiusTabs(),
+    poiFilter: { radiusM: 3000, unvisitedOnly: false }, poiFilterTabs: roamPoiFilter.radiusTabs(),
     screen: 'entry-map', entryMarkers: [], entryCards: [], entryActivity: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true }, entryLoadError: false,
     introError: '',
     // 个性化地图透传给本页三个 <free-map>(起始预览 / 主漫游图 / 结算图),三处必须同源,
@@ -5348,11 +5348,9 @@ Page({
     this.setData({ poiFilter: this._roamPoiFilter });
   },
   openPoiFilter() {
-    const filter = this._poiFilterState();
-    this.closeScene();
-    this.setData({ poiFilterShow: true, poiFilter: filter });
+    this.setData({ poiFilter: this._poiFilterState() });
+    this.openScene('roam-poi-filter');
   },
-  closePoiFilter() { this.setData({ poiFilterShow: false }); },
   onPoiFilterRadius(e) {
     const radiusM = Number(e && e.detail && e.detail.key);
     const prev = this._poiFilterState();

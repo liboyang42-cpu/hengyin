@@ -13,6 +13,8 @@ const SCENES = {
   //    抽屉的「从 330px 起」由宿主那层壳直接挂 .psheet--drw 表达,不新造档位。
   'roam-more': { route: '/pages/roam/index', title: '更多', theme: 'player', variant: 'half', maskClosable: true },
   'roam-settings': { route: '/pages/roam/index', title: '设置', theme: 'player', variant: 'half', maskClosable: true, canBack: true },
+  // BL-01 点位筛选:从抽屉进,同设置页一样 canBack 回抽屉;正文写在宿主 wxml,数据在 data.poiFilter。
+  'roam-poi-filter': { route: '/pages/roam/index', title: '筛选点位', theme: 'player', variant: 'half', maskClosable: true, canBack: true },
   // 点地图上别人的头像(原型 f-other-a / f-other-b 的 otherSheet)。正文写在宿主 wxml 里,
   // 数据在 data.runnerView —— 和 roam-rules 一样,注册表只承载弹层契约。
   'roam-runner': { route: '/pages/roam/index', title: 'TA 的漫游', theme: 'player', variant: 'half', maskClosable: true },
