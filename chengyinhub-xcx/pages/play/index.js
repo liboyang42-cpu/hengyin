@@ -3139,17 +3139,22 @@ Page({
       },
     });
   },
-  _weRunCipher() {
+  _weRunCipher(isCurrent) {
+    const current = () => typeof isCurrent !== 'function' || isCurrent();
     return new Promise((resolve) => {
       wx.getSetting({
         success: (res) => {
+          if (!current()) { resolve(false); return; }
           if (!(res && res.authSetting && res.authSetting['scope.werun'])) { resolve(null); return; }
           // 必须先 wx.login 再 getWeRunData(session_key 要新鲜,否则服务端解不开)
           wx.login({
-            success: (login) => wx.getWeRunData({
-              success: (run) => resolve(login && login.code ? { code: login.code, encryptedData: run.encryptedData, iv: run.iv } : false),
+            success: (login) => {
+              if (!current()) { resolve(false); return; }
+              wx.getWeRunData({
+              success: (run) => resolve(current() && login && login.code ? { code: login.code, encryptedData: run.encryptedData, iv: run.iv } : false),
               fail: () => resolve(false),
-            }),
+            });
+            },
             fail: () => resolve(false),
           });
         },
@@ -3159,6 +3164,9 @@ Page({
   },
   _claimThoughts(keys) {
     if (this.data.isPreview || this.data.isMock) return;
+    if (!this._isPlayAccountCurrent()) return;
+    const scope = JSON.stringify([this._playOwner, this._sessionParams(), (this._routeState || {}).sessionId || '']);
+    if (scope !== this._thoughtClaimScope) { this._thoughtClaimScope = scope; this._thoughtClaimed = {}; }
     this._thoughtClaimed = this._thoughtClaimed || {};
     const fresh = keys.filter((k) => !this._thoughtClaimed[k]);
     if (!fresh.length) return;
@@ -3167,19 +3175,27 @@ Page({
   },
   _syncThoughts(claim, isCurrent) {
     if (this.data.isPreview || this.data.isMock) return Promise.resolve(true);
-    const current = () => typeof isCurrent !== 'function' || isCurrent();
-    const releaseClaims = () => { if (current()) claim.forEach((k) => { if (this._thoughtClaimed) delete this._thoughtClaimed[k]; }); };
+    const owner = this._playOwner, params = Object.assign({}, this._sessionParams());
+    const topicId = this.data.topicId, sessionKey = JSON.stringify(params);
+    const routeSessionId = String((this._routeState || {}).sessionId || '');
+    const claimed = this._thoughtClaimed;
+    const current = () => this._isPlayAccountCurrent() && owner === this._playOwner
+      && sessionKey === JSON.stringify(this._sessionParams())
+      && routeSessionId === String((this._routeState || {}).sessionId || '')
+      && (typeof isCurrent !== 'function' || isCurrent());
+    const releaseClaims = () => { if (current()) claim.forEach((k) => { if (claimed && this._thoughtClaimed === claimed) delete claimed[k]; }); };
     const sync = () => {
       if (!current()) return Promise.resolve(false);
-      return this._weRunCipher().then((cipher) => {
+      return this._weRunCipher(current).then((cipher) => {
       if (!current()) return false;
       if (cipher === false) { releaseClaims(); return false; }
       if (!claim.length && !cipher) return true;       // 未授权运动:继续正常游玩,使用未应验结局
-      return req('/api/play/journey/thought/sync', 'POST', Object.assign({ topicId: this.data.topicId },
-        this._sessionParams(), { claim }, cipher || {}), { 'content-type': 'application/json' }).then((res) => {
+      return req('/api/play/journey/thought/sync', 'POST', Object.assign({ topicId },
+        params, { claim }, cipher || {}), { 'content-type': 'application/json' }).then((res) => {
         if (!current()) return false;
         if ((res.code == 200 || res.code == '200') && res.data) {
           this._applyRouteState(res.data, () => {
+            if (!current()) return;
             if (this.data.chapterFull) this.openChapterFull();
             if (this.data.chapStory.show) this._refreshChapStoryThoughts();
           });
