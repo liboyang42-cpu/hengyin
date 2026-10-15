@@ -130,6 +130,7 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
         }
 
         settlementEntryService.recordCouponVerification(history, coupon);
+        // 延续 history→coupon 锁序；当前模板已失效时零行抛错，连同历史CAS和事务内结算全部回滚。
         if (smsCouponMapper.incrementUseCount(coupon.getId()) != 1) {
             throw new IllegalStateException("优惠券核销计数更新失败");
         }
