@@ -4566,9 +4566,18 @@ Page({
     else if (ratio >= 0.5 && !this.data.nav.hit50) { this.setData({ 'nav.hit50': true }); this._fetchCompanionLine(); }
   },
   _fetchCompanionLine() {
-    if (this.data.isPreview || this.data.isMock) return;
+    if (!this._isPlayAccountCurrent() || this.data.isPreview || this.data.isMock) return;
     const that = this;
-    req('/api/play/companionLine', 'GET', this._sessionParams()).then((r) => {
+    const nav = this.data.nav;
+    if (!nav || !nav.active) return;
+    const targetNodeId = nav.targetNodeId;
+    const params = this._sessionParams();
+    const sessionKey = JSON.stringify(params);
+    const sequence = this._companionReadSequence = (this._companionReadSequence || 0) + 1;
+    req('/api/play/companionLine', 'GET', params).then((r) => {
+      if (!that._isPlayAccountCurrent() || sequence !== that._companionReadSequence
+          || sessionKey !== JSON.stringify(that._sessionParams()) || that.data.nav !== nav
+          || !nav.active || nav.targetNodeId !== targetNodeId) return;
       if (!(r.code == 200 || r.code == '200') || !r.data || !r.data.line) return;
       that.showNavBubble(r.data.line);
     });
