@@ -65,7 +65,7 @@ test('C5: 官方路线入口与分包页面已注册；未接「按这条路线�
 
 test('C6: 集邮册「收到的」走 /api/roam/stamp/received，且两个 tab 分页互不串', () => {
   const src = read('components/cy/scene-roam-stamp-album/index.js')
-  assert.match(src, /received: '\/api\/roam\/stamp\/received'/)
+  assert.match(src, /'\/api\/roam\/stamp\/received'/)
   assert.match(src, /_tabCache/)
 })
 

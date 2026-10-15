@@ -4,7 +4,7 @@ const app = getApp()
 const { isRecord, isRecordList } = require('../../../utils/response-shape.js')
 const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js')
 
-const URLS = { mine: '/api/roam/stamp/list', received: '/api/roam/stamp/received' }
+const TABS = ['mine', 'received']
 
 function isNonNegativeInteger(value) {
   return typeof value === 'number' && Number.isInteger(value) && value >= 0
@@ -41,7 +41,7 @@ Component({
     // 两个 tab 各留一份分页状态,来回切不重复拉、也不串页
     onTabChange(e) {
       const next = e.detail && e.detail.key
-      if (!next || next === this.data.tab || !URLS[next]) return
+      if (!next || next === this.data.tab || TABS.indexOf(next) < 0) return
       this._loadToken = (this._loadToken || 0) + 1 // 作废在途的另一边请求
       const cache = this._tabCache = this._tabCache || {}
       const d = this.data
@@ -57,7 +57,8 @@ Component({
       this._loadToken = token
       this.setData({ loading: true, error: false })
       app.sendRequest({
-        url: URLS[this.data.tab],
+        // 两个字面量直接写在这里(UI-GATE 要求请求路径可枚举)
+        url: this.data.tab === 'received' ? '/api/roam/stamp/received' : '/api/roam/stamp/list',
         method: 'POST',
         data: { pageNum: this.data.pageNum, pageSize: 50 },
         hideLoading: true,
