@@ -267,7 +267,8 @@
         <block wx:if="{{isSelf}}">
         <view class="pc-achievement-metrics" wx:if="{{profileMetricState === 'ready'}}">
         <view class="pc-gs-row">
-          <view class="pc-gs-main" aria-label="城瘾积分 {{profilePoint}}">
+          <view class="pc-gs-main" bindtap="goPointsHistory" hover-class="pc-tap-text" hover-stay-time="80"
+                aria-role="button" aria-label="城瘾积分 {{profilePoint}}，查看积分明细">
             <text class="pc-gs-icon" aria-hidden="true">G</text>
             <text class="pc-gs-num">{{profilePoint}}</text>
           </view>

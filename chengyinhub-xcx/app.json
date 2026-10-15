@@ -250,6 +250,7 @@
         "mytemplate/mytemplate",
         "order/order",
         "orderinfo/orderinfo",
+        "points-history/index",
         "signup/index",
         "tixian/tixian",
         "tixianjilu/tixianjilu"

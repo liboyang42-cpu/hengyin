@@ -1187,6 +1187,9 @@ Component({
     this.openScene('points-tasks');
     this.loadPointsTasks();
   },
+  goPointsHistory: function () {
+    wx.navigateTo({ url: '/subpackageMember/points-history/index' });
+  },
   onPointsSheetClose: function () {
     this.closeScene();
   },
