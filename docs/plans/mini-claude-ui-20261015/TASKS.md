@@ -5,7 +5,8 @@
 - 不改 Codex 独占文件（PR #16 `tasks.json` 的 `owned_files`）：`pages/play/index.js`、`utils/subscribe.js`、`pages/mylike/mylike.js`、`subpackageMember` 订单/参与详情组件、`ApiTopicController`、`TopicCreateDTO`、积分/券/应付/冲正服务与 mapper、排期与 `ApiClubEventOpsController`、`CommunityPostServiceImpl` 及其 policy/mapper、会话/路线运行时服务、AI 网关、剧情编译与校验。需要碰时停下并在 PR 里写明，由协调者排序。
 - 只用已有组件（`components/cy/*`）与设计 token；新页面四态用 `cy-state-shell` / `cy-inline-error`；错误不得裸文案（U6）；命中区 ≥ 44px；数字后单位要有 `||` 兜底。
 - 不得编造接口字段、状态值或成功态；先读控制器/DTO/Service，字段语义不清时只做只读并在 PR 写清。
-- 新增页面只在 `app.json` 追加自己的条目；动作台账用 `node scripts/uiaudit/build-action-ledger.js --write` 重建，冻结计数按实测更新并写注释。
+- **协调者统筹文件（CY-COORD-20261015-v1）**：`app.json`、`scripts/uiaudit/action-ledger.json`、`tests/lint/ui-integrity-baseline.js`、`tests/unit/action-ledger.test.js` / `get-auth-matrix-contract.test.js` 的冻结计数、共享 fixture、请求封装、workflow/pom 不归 Claude。卡内可以在自己分支上生成这些文件的变更用于本地验证，但在 PR 正文里必须作为「交协调者整合的最小补丁」单列，不得声称已拥有。
+- 新文件与冲突文件先在 PR #21 的 `CY-HANDOFF: CLAUDE` 记录里申请；每次接 API 或联调前重读控制分支 `docs/plans/mini-codex-cloud-20261015/BACKEND_CHANGES.md`，只按 CONTRACT_FROZEN 及以上状态接线。本批 CL1–CL4 只消费已有接口（NO_API_CHANGE），`POST /api/points/list` 为一次全量（非分页）。
 - 跑：`node --test "tests/unit/**/*.test.js"`、`node tests/lint/ui-integrity.js --warn-as-error`、`node scripts/uiaudit/build-action-ledger.js --check`、`bash scripts/ds-hardcode-gate.sh --ci`（需先 commit）、`node scripts/ui-theme-unit-lint.js --units`、`node scripts/a11y-tap-target-lint.js`、`node scripts/ui-validity-gates.js`。**禁止运行 `ci/xcx-check.sh`**（自证会写夹具并提交）。推送后 `gh workflow run ci.yml --ref <分支>`。
 - PR 描述必须有：改了什么、实际验证了什么（命令+计数+CI run）、**本地验收清单**、未完成项。接口 200 不等于业务验收。
 
