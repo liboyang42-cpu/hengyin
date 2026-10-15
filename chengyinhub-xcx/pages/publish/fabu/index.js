@@ -4954,7 +4954,7 @@ Page({
           id: ticket.id,
           name: ticket.name || '',
           price: ticket.price || 0,
-          totalStock: ticket.totalStock || 100,
+          totalStock: ticket.totalStock == null || ticket.totalStock === '' ? 100 : ticket.totalStock,
           mode: this.data.formData.productType || 1,
           meetingPoint: ticket.meetingPoint || '',
           meetingPointAddress: ticket.meetingPointAddress || '',
@@ -5040,10 +5040,11 @@ Page({
       cyToast(blocked);
       return;
     }
+    const stock = et.totalStock == null || et.totalStock === '' ? NaN : Number(et.totalStock);
     const ticketData = {
       name: et.name,
       price: Number(et.price) || 0,
-      totalStock: Number(et.totalStock) || 100,
+      totalStock: Number.isFinite(stock) ? stock : 100,
       mode: this.data.formData.productType || 1,
       meetingPoint: et.meetingPoint,
       meetingPointAddress: et.meetingPointAddress,
