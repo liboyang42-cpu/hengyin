@@ -541,7 +541,7 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         }
         int found = 0;
         for (String key : optionalClues) {
-            Number value = state.getVariables() == null ? null : state.getVariables().get(key);
+            Number value = state.getVariables() == null ? null : state.getVariables().get(key.trim());
             if (value != null && value.doubleValue() >= 1d) {
                 found++;
             }
