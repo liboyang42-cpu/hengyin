@@ -551,7 +551,25 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-06 合并弹窗/模板分支与最新主线后按最终源码重建，数值待生成台账后校准。
   // 2026-10-13 小程序底层A/B/C集成重建实测:C包漫游恢复/雾层重试会重启定位采样,生成器把 recoverRoam、
   //   retryScreenFog 两颗 tap 由 local write 改判 external(real-device-required),不进 local 分母。1781 → 1779。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1796)  /* 2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  // B01 的三个退款处理器共四颗控件新增真实订阅授权，转入 external；控件总分母不变。
+  // 它们仍须核退款 POST 和服务端读回，不能借微信能力分类免除业务验收。
+  const refundSubscriptionIds = [
+    'subpackageMember/components/cy/scene-member-order-detail/index.wxml:276:bindtap:cancelRegistration:9',
+    'subpackageMember/components/cy/scene-member-order-history/index.wxml:73:catchtap:cancelOrder:5',
+    'subpackageMember/components/cy/scene-member-order-history/index.wxml:77:catchtap:cancelOrder:7',
+    'subpackageMember/components/scene-member-participation-detail/index.wxml:123:bindtap:cancelParticipation:5',
+  ];
+  for (const id of refundSubscriptionIds) {
+    const control = ledger.controls.find((item) => item.id === id);
+    assert.ok(control, id);
+    assert.equal(control.actionClass, 'external');
+    assert.ok(control.externalCapabilities.includes('requestSubscribeMessage'));
+    assert.ok(control.targets.apiContracts.some((api) => api.url === '/api/registration/cancel-refund' && api.method === 'POST'));
+    assert.ok(control.requiredBranches.includes('duplicate-trigger'));
+    assert.match(control.expectedReadback, /服务端权威资源/);
+    assert.match(control.expectedReadback, /真机回读/);
+  }
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1792)  /* 2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
