@@ -48,7 +48,31 @@ function rememberActiveNewDraft(storage, memberId, draftUuid) {
 function readActiveNewDraft(storage, memberId) {
   var key = activeKeyFor(memberId);
   if (!key || !storage || typeof storage.getStorageSync !== 'function') return '';
-  return value(storage.getStorageSync(key));
+  var uuid = value(storage.getStorageSync(key));
+  function ownedDraft(candidate) {
+    if (!candidate) return null;
+    var result = loadDraft(storage, { draftUuid: candidate }, { memberId: memberId });
+    return result.status === 'ready' && value(result.envelope.draftUuid) === candidate
+      ? result.envelope : null;
+  }
+  var best = ownedDraft(uuid);
+  // The pointer is only an index. Recover from existing envelopes after an index write failure.
+  if (typeof storage.getStorageInfoSync === 'function') {
+    var keys = storage.getStorageInfoSync().keys || [];
+    var scopedPrefix = DRAFT_PREFIX + 'member_' + encodeURIComponent(value(memberId)) + '_new_';
+    keys.forEach(function (draftKey) {
+      if (draftKey.indexOf(scopedPrefix) !== 0 && draftKey.indexOf(DRAFT_PREFIX + 'new_') !== 0) return;
+      var envelope = storage.getStorageSync(draftKey);
+      if (!envelope || value(envelope.memberId) !== value(memberId) || !value(envelope.draftUuid)) return;
+      if (!best || Number(envelope.savedAt || 0) > Number(best.savedAt || 0)) best = envelope;
+    });
+  }
+  var recovered = best ? value(best.draftUuid) : '';
+  try {
+    if (recovered) rememberActiveNewDraft(storage, memberId, recovered);
+    else if (uuid && typeof storage.removeStorageSync === 'function') storage.removeStorageSync(key);
+  } catch (error) {} // Index maintenance cannot invalidate an already durable envelope.
+  return recovered;
 }
 
 function saveDraft(storage, input) {
@@ -79,7 +103,9 @@ function saveDraft(storage, input) {
 
   // 唯一一次写入：章节和待编排素材来自同一个页面快照。
   storage.setStorageSync(key, clone(envelope));
-  if (envelope.draftUuid) rememberActiveNewDraft(storage, memberId, envelope.draftUuid);
+  if (envelope.draftUuid) {
+    try { rememberActiveNewDraft(storage, memberId, envelope.draftUuid); } catch (error) {}
+  }
   return key;
 }
 
