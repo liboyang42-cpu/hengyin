@@ -46,7 +46,7 @@
 
 ### L05 作者create/update丢响应与账号晚响应现有流程修复
 
-唯一写者：待启动publish_unknown_sol；状态：ASSIGNED。
+唯一写者：publish_unknown_sol；状态：ASSIGNED。
 
 - `chengyinhub-xcx/pages/publish/utils/publish/publish-workflow.js`
 - `chengyinhub-xcx/pages/publish/fabu/index.js`
@@ -103,3 +103,9 @@
 L03追加唯一测试文件 `chengyinhub-admin/src/test/java/com/chengyinhub/business/it/NpcChatUserDataMyBatisIT.java` 给A02_sol：原夹具直接构造NpcChatDataService，必须注入真实事务helper及本人行fixture，不以null fallback绕屏障；原断言和门控保留。
 
 L05准许在既有按member/draftUuid隔离的本地草稿信封增加可选 `publishAttempt:{status:'UNKNOWN',topicId:''|原主题ID}`，无payload/token/新敏感信息。旧信封无此字段沿既有行为。完成本地校验且马上发write前同步持久；存储失败不得发送；能证明未发出则清除，明确业务失败可回idle，成功按旧流程清草稿；网络/卸载等结果未知保留。首次create无ID时不可自动重发/按名称认领，现UI仅提示去项目列表核对，本地草稿不丢，不造后端幂等承诺。已有ID的UNKNOWN按原ID读取只说明服务器事实，不证明原写成功；不得自动把读回覆盖本地编辑或自动解锁。只可复用已有服务端版本/本地草稿冲突确认：用户明确采用服务器版本后清未知并更新真实ID/基线；若保留本地草稿则仍未知，任何继续覆写须明确用户确认及刷新基线，不能仅因HTTP200解锁。复用既有入口/对话框，不新增页面/按钮/产品步骤；现阶段无此确认路径时保留未知限制并如实交付，不偷偷放开重试。
+
+## 六路独立Cloud委派（最新）
+
+L06–L09改为PENDING_EXTERNAL_CLOUD，承接E01–E04；E05/E06独立定向复核。精确白名单与限制以[EXTERNAL_SIX_HANDOFF.md](EXTERNAL_SIX_HANDOFF.md)为准；仅新测试/专属证据文件写权，业务源码原锁保持。创建及接收前不算运行，不能启动本地替代。
+
+L05追加`chengyinhub-xcx/tests/unit/fabu-edit-existing-topic.test.js`，仅修原匿名0/无UUID旧夹具为真实账号42与既有草稿身份，保留原API/行为断言，不放宽写前存储门禁。

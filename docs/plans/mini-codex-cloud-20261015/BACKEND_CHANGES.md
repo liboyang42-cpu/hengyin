@@ -286,3 +286,7 @@ BK-ASSET源码修复为SOURCE_READY，新增VPS套件已通过；**TEST_DEPLOYED
 ## 后续旧bug/架构补完（不沿用冻结231签收）
 
 用户澄清并提高并行：逻辑10路，平台最多6 worker（含回归预留槽）；实际路径/合同见[FOLLOWUP_BUG_LANES.md](FOLLOWUP_BUG_LANES.md)。L01客户端旧回执导致版本倒退、L02编辑详情混版本读、L03删除后回执/迟到写复现、L04未知usage显示0、L05发布丢响应重复create/账号晚响应为当前范围。N01已有积分接口复用、N02协办新接口只读结论保留，不实施新产品。后续任何源提交要新SHA/聚焦测试；既有冻结1e403b13的231通过事实保留，仍无应用部署/设备/运行时业务签收。
+
+## 外部六路补完验证授权
+
+[六路精确白名单](EXTERNAL_SIX_HANDOFF.md)：E01–E04仅真实集成测试/审计，E05/E06仅小程序行为回归；PENDING_CLOUD_CREATION_AND_ACK。NO_API_CHANGE，未授权新业务源码/权限/资金政策。发现源码问题交C00和原写者；冻结231签收不沿用到新测试/源码。
