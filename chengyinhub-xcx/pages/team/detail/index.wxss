@@ -2,3 +2,4 @@
 
 button.team-action { margin: 0; padding: 0; line-height: normal; }
 button.team-action::after { border: 0; }
+.team-report { text-align: center; text-decoration: underline; padding: var(--cy-space-3) 0; }

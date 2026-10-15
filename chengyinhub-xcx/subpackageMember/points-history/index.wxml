@@ -1,0 +1,27 @@
+<view class="theme-dark ph">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <view style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar plain custom-back bind:back="goBack" />
+    <cy-page-title title="积分明细" safe-top="{{false}}" />
+    <view class="ph__body">
+      <cy-skeleton wx:if="{{state === 'loading'}}" type="feed-card" count="3" />
+      <cy-error wx:elif="{{state === 'error'}}" title="积分明细没能加载出来" sub="你的积分没有变化，只是这次没读到" retry="重试" bind:retry="load" />
+      <cy-empty wx:elif="{{state === 'empty'}}" kind="empty" title="还没有积分记录" sub="完成任务获得积分后会出现在这里" />
+      <block wx:else>
+        <view class="ph-row" wx:for="{{rows}}" wx:key="id">
+          <view class="ph-row__main">
+            <text class="ph-row__reason">{{item.reason}}</text>
+            <text class="ph-row__sub">{{item.timeText}}{{item.afterText ? ' · ' + item.afterText : ''}}</text>
+          </view>
+          <text class="ph-row__delta {{item.income ? 'is-income' : 'is-expense'}}"
+                aria-label="{{item.income ? '获得' : '消耗'}} {{item.delta < 0 ? -item.delta : item.delta}} 积分">{{item.deltaText}}</text>
+        </view>
+        <view class="ph__more" wx:if="{{hasMore}}" bindtap="loadMore" aria-role="button" aria-label="加载更多积分记录"
+              hover-class="cy-pressed" hover-stay-time="80">加载更多</view>
+        <view class="ph__more ph__more--end" wx:else>已经到底了</view>
+      </block>
+    </view>
+  </view>
+</view>

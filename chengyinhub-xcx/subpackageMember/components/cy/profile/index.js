@@ -1187,7 +1187,7 @@ Component({
     this.openScene('points-tasks');
     this.loadPointsTasks();
   },
-  onPointsSheetClose: function () {
+  goPointsHistory: function () { wx.navigateTo({ url: '/subpackageMember/points-history/index' }); }, onPointsSheetClose: function () {
     this.closeScene();
   },
   // 出参口径:value=每次得分;pointsNum 被后端复写为「我已获得次数」(见 ApiPointsController.resultList)

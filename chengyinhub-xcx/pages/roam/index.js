@@ -104,7 +104,7 @@ const RUNNER_MK_BASE = 800000;
    走不满一格的上报是同一个值。 */
 const PRESENCE_MS = 30000;
 /* 拉别人的位置:45 s 一次。别人也是 30 s 一报,拉得更勤只会拿到同一批。 */
-const RUNNERS_MS = 45000;
+const RUNNERS_MS = 45000; const ROAM_POI_RADIUS_M = 3000; // 后者:/api/roam/pois 与 nearby-runners 共用查询半径(米)
 const NEAR_M = 80;       // 略放宽,GPS 不准时仍能提示
 /* 用户拍板(9-16)「漫游打卡不存在失败态:距离不够就是不能打卡(只提示)」:
    打卡按钮的可用半径必须与后端 /api/roam/shop/visit 的判定同一口径 ——
@@ -1341,7 +1341,7 @@ Page({
     const nearbyDone = this._nearbyReady || Promise.resolve();
     return nearbyDone.then(() => {
     if (!current()) return;
-    return req('/api/roam/pois', 'GET', { lat: String(c.lat), lng: String(c.lng), radius: '3000' }).then((res) => {
+    return req('/api/roam/pois', 'GET', { lat: String(c.lat), lng: String(c.lng), radius: String(ROAM_POI_RADIUS_M) }).then((res) => {
       if (!current()) return;
       if (netFail(res)) {
         // req 的 fail 哨兵 = 网络故障。此时"地图上这些点"既没被证实也没被证伪。
@@ -2465,7 +2465,7 @@ Page({
     const now = Date.now();
     if (this._runnersAt && now - this._runnersAt < RUNNERS_MS) return;
     this._runnersAt = now;
-    req('/api/roam/nearby-runners', 'POST', { lat: p.lat, lng: p.lng, radius: 3000 },
+    req('/api/roam/nearby-runners', 'POST', { lat: p.lat, lng: p.lng, radius: ROAM_POI_RADIUS_M },
       { silentError: true }).then((res) => {
       if (!res || res.code != '200') return;   // 拉不到就保持上一批,不清空 —— 闪掉再回来更难看
       const rows = normalizeRunners(res.data);
@@ -2582,7 +2582,7 @@ Page({
   /** 起始页右侧「拍照」= 直接开始漫游并立刻开相机。
    *  照片是绑在 session 上的(roam_sessions[].photos → 邮票),所以必须先真的开起来,
    *  不能在没有 session 的起始页单独拍 —— 那张照片会无处安放。 */
-  goStartAndShoot() { this._shootAfterStart = true; this.goStart(); },
+  openOfficialRoutes() { wx.navigateTo({ url: '/subpackageRoam/official-routes/index' }); }, goStartAndShoot() { this._shootAfterStart = true; this.goStart(); },
   goStart() {
     if (this.data.entrySheet) this.closeEntrySheet();
     const { introCards, introCardIdx } = this.data;

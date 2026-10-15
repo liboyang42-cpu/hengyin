@@ -3,8 +3,8 @@
   "generatedFrom": "app.json + scene-* 组件扫描",
   "previousBatch": null,
   "counts": {
-    "routes": 130,
-    "scenes": 26,
+    "routes": 133,
+    "scenes": 27,
     "added": 0,
     "removed": 0
   },
@@ -1520,6 +1520,17 @@
       "hasWxml": true
     },
     {
+      "pagePath": "subpackageMember/points-history/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
       "pagePath": "subpackageMember/signup/index",
       "pkg": "subpackageMember",
       "tabBar": false,
@@ -1625,6 +1636,30 @@
       "dataKeys": [],
       "hasJs": true,
       "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageRoam/official-routes/index",
+      "pkg": "subpackageRoam",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageRoam/official-route/index",
+      "pkg": "subpackageRoam",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
     }
   ],
   "scenes": [
@@ -1672,8 +1707,8 @@
       "component": "scene-member-invite-history",
       "dir": "components/cy/scene-member-invite-history",
       "twin": {
-        "route": "subpackageMember/myinvite/myinvite",
-        "score": 12
+        "route": "subpackageMember/points-history/index",
+        "score": 13
       }
     },
     {
@@ -1688,8 +1723,8 @@
       "component": "scene-member-order-history",
       "dir": "subpackageMember/components/cy/scene-member-order-history",
       "twin": {
-        "route": "subpackageMember/order/order",
-        "score": 11
+        "route": "subpackageMember/points-history/index",
+        "score": 13
       }
     },
     {
@@ -1701,8 +1736,8 @@
       "component": "scene-member-withdraw-history",
       "dir": "components/cy/scene-member-withdraw-history",
       "twin": {
-        "route": "pages/coop/withdraw/index",
-        "score": 8
+        "route": "subpackageMember/points-history/index",
+        "score": 13
       }
     },
     {
@@ -1770,6 +1805,11 @@
         "route": "subpackageRoam/poi-detail/index",
         "score": 13
       }
+    },
+    {
+      "component": "scene-roam-resume-bar",
+      "dir": "components/cy/scene-roam-resume-bar",
+      "twin": null
     },
     {
       "component": "scene-roam-session",

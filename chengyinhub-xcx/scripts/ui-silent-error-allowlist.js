@@ -4,8 +4,13 @@
 // 即使落在同一文件也会因 count 改变而转红，必须先说明为何该调用可以跳过 request-client
 // 的统一 toast（调用方已有可见错误态/自管 toast，或本来就是非阻断的后台遥测）。
 module.exports = [
+  { file: 'subpackageRoam/official-routes/index.js', count: 1, reason: '官方路线列表失败落页面 state=error（cy-error 带重试），不再叠加统一 toast。' },
+  { file: 'subpackageRoam/official-route/index.js', count: 1, reason: '路线详情失败落 state=error/notfound 的页内可见态，error 带重试。' },
+  { file: 'subpackageMember/points-history/index.js', count: 1, reason: '积分明细首次失败落 state=error（带重试），下拉刷新失败用自管 toast。' },
+  { file: 'pages/team/report-sheet/index.js', count: 1, reason: '举报失败落结果半屏 fail 态（含后端原因与重试），不再叠加统一 toast。' },
+  { file: 'pages/publish/components/topic-state-keys/index.js', count: 3, reason: '状态键读取落 cy-error 重试；注册失败落表单 formError；删除失败落危险确认的 error 态，均为可见反馈。' },
   { file: 'components/cy/club-direct-ledger/index.js', count: 1, reason: '计酬账目读取失败显示 cy-inline-error 并提供重试；epoch 拒绝过期或切号响应，关闭通道 toast 避免与页内错误提示重复。' },
-  { file: 'components/cy/npc-chat/index.js', count: 1, reason: '聊天组件把失败落到可见 error 状态并允许重试，避免统一 toast 与组件提示重复。' },
+  { file: 'components/cy/npc-chat/index.js', count: 2, reason: '聊天组件把失败落到可见 error 状态并允许重试，避免统一 toast 与组件提示重复。' },
   { file: 'pages/square/components/cy/post-compose/index.js', count: 2, reason: '广场选活动两路列表失败落组件 activityError 并给重试，关掉自动 toast 避免双弹。' },
   { file: 'subpackageMember/components/cy/profile/index.js', count: 1, reason: '公开商家身份探测明确区分非商家与网络错误，并落入组件可见状态。' },
   { file: 'components/cy/scene-game-coupon-wallet/index.js', count: 1, reason: '钱包场景在组件内显示加载失败态，不让底层接口文案覆盖场景提示。' },

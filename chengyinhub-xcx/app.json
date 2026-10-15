@@ -250,6 +250,7 @@
         "mytemplate/mytemplate",
         "order/order",
         "orderinfo/orderinfo",
+        "points-history/index",
         "signup/index",
         "tixian/tixian",
         "tixianjilu/tixianjilu"
@@ -264,7 +265,9 @@
         "poi-detail/index",
         "session/index",
         "nearby/index",
-        "citystamp/index"
+        "citystamp/index",
+        "official-routes/index",
+        "official-route/index"
       ]
     }
   ],
