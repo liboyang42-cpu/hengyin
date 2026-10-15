@@ -1,4 +1,4 @@
-> 最新用户模式（2026-10-15，优先于下文历史启动要求）：两队各最多6名gpt-6.1-sol；现有bug/共享后端源码交付。手动Node/Java/Maven/DB/lint/DevTools/业务验证由用户延后，不等待/重跑自动CI；必要回归源码NOT_RUN。禁止合并、部署、迁移、生产/VPS操作。恢复先读[LONGRUN_CURRENT](LONGRUN_CURRENT.md)、[滚动协议](LONGRUN_ROLLING.md)、精确源表与两队实际队列，已完成历史不算剩余50。当前CORE/EXTRA最后实际READY均0，EXTRA新授权ACK待收；不足标EXHAUSTED，勿凑数或宣称永久运行。
+> 最新用户分工：两队各最多6名gpt-6.1-sol，按“1条失败修复线＋5条独立开发线”滚动；多个失败串行给原写者，其余源码完成即push，不等验证/CI，不重复开发。真实后端验证仅由本地协调者执行VPS212/批准真库入口；C00及Cloud worker不得新增手动编译/测试/CI触发或专门验证配置，原有自动CI自然运行。NOT_RUN不称通过；无合并/部署/迁移。恢复先读[LONGRUN_CURRENT](LONGRUN_CURRENT.md)、[后端移交](BACKEND_VALIDATION_VPS_HANDOFF.md)、精确源表和两队实际队列。真实池不足如实EXHAUSTED，不凑50或冒称满载。
 
 # Codex最终提示词
 

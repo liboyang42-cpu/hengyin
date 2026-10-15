@@ -47,3 +47,7 @@ E04原4fixture及E01 Mapper.java已在2f050fd7389f36653a07f742ec7f698687a959ac�
 legacy碰撞明确：旧r1若已有异command/aggregate的不可变回执，不覆盖、不伪造等价成功；保持现有回执并继续合法UNLIKE，未来LIKE r1按原公共绑定冲突409，避免复活。若迁移插入碰撞须当前读核实际赢者、按上述精确分类；不能捕所有异常成功，真实死锁/未知写失败回滚。锁序需原action→receipt一致，必要先给具体反序再调，不在另表外猜锁。升级前已删除且无receipt的旧r1不可恢复，明确留历史能力限制，不补身份、不改留存TTL/DDL。
 
 E02源码原写者可据此继续，无需Mac或general批准；跨队新公开SHA小提交+测试前提如实NOT_RUN，当前不验证/合并/部署。
+
+## 最新1修复+5开发与本地验证交接
+
+CORE `f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c`、EXTRA `a37ce191756ab11896faf4e61e8a06b4279f0303`，均SOURCE_DELIVERED_UNVERIFIED/NOT_RUN。每队只占1条失败修复线，优先原文件作者；多失败串行，移交写者必须先停止和逐路径登记。其他5条做真正独立的现有bug/后端源码，完成即push，不等待测试/CI；耗尽不凑数或假称运行。实际VPS复测由本地`01a13eed-e4d9-77f3-b875-c72d26ea7d59`独占，Cloud不再新增手动编译/测试/CI触发/专门配置，不尝试VPS或Cloud替代，既有CI自然运行。CORE15测试fixture修复未复编译，不改生产/断言；EXTRA五fixture及E02合同已解除授权阻塞、实际ACK6198215180已收到，E03/E05新小提交已公共，E02后续另SHA。完整候选依赖、矩阵、门禁、预期源码声明数和原Cloud诊断路径见BACKEND_VALIDATION_VPS_HANDOFF.json/md。未获实际VPS结果不签收，旧231不继承，未合并/部署/业务迁移。

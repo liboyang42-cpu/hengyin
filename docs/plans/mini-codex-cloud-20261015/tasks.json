@@ -695,7 +695,7 @@
     "followup_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
     "followup_checkout": "/workspace/hengyin-followups",
     "followup_scope": "unfinished existing bugs/shared backend only; no new product feature",
-    "external_cloud_status": "LAST_OBSERVED_FROZEN_0_RUNNING_NEW_FIXTURE_AND_LIKE_GRANTS_ACK_PENDING",
+    "external_cloud_status": "ACTUAL_3_DISPATCHED_E03_E05_ACK_NEW_SOURCE_DELIVERED_E02_RECEIPT_PENDING",
     "external_cloud_thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
     "followup_candidate_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
     "followup_selected_backend_tests": {
@@ -816,30 +816,54 @@
         "SUPERSEDED_DUPLICATE": 1,
         "DELEGATED_SOURCE_IMPLEMENTATION": 1
       },
-      "core_current_public_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964",
+      "core_current_public_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
       "core_source_pr": "https://github.com/liboyang42-cpu/hengyin/pull/44",
       "core_actionable_actual": 0,
       "target_actionable_per_team": 50,
-      "extra_last_read_control_sha": "25ede65815d26d1514d3b6c3b92b26d2898a3e45",
+      "extra_last_read_control_sha": "a37ce191756ab11896faf4e61e8a06b4279f0303",
       "extra_last_read_counts": {
-        "history": 105,
-        "source": 52,
-        "no_change": 40,
-        "blocked": 10,
+        "queue_history": 105,
+        "queue_source_delivered": 52,
+        "queue_claimed": 3,
+        "effective_known_undelivered": 1,
+        "already_public": [
+          "E03-16",
+          "E05-17"
+        ],
+        "blocked": 6,
         "ready": 0,
-        "claimed": 0,
-        "delegated_or_resolved_by_other_team": 3
+        "note": "a37 source delivery newer than queue snapshot; EXTRA coordinator updating canonical queue"
       },
       "auto_refill": "Use source-backed concrete findings; actual smaller pool and EXHAUSTED disclosed, never fabricate defects or idle test jobs",
       "manual_validation": "NOT_RUN_USER_DEFERRED",
       "test_deployed": false,
       "merged": false,
-      "count_semantics": "initial reserved50 each; current remaining actual0 each at last observed checkpoint; target shortfall disclosed"
+      "count_semantics": "initial reserved50 each; current remaining actual0 each at last observed checkpoint; target shortfall disclosed",
+      "scheduling_rule": {
+        "mode": "ONE_REPAIR_PLUS_FIVE_INDEPENDENT_DEVELOPMENT",
+        "max_workers_per_team": 6,
+        "model": "gpt-6.1-sol",
+        "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+        "cloud_manual_validation": "PROHIBITED_BY_LATEST_USER_SPLIT",
+        "repair_slot_limit": 1,
+        "repair_policy": "Prioritize original exact file owner; transfer repair role after prior repair worker stops; multiple failures serial queue. Others do independent authorized source tasks and push without waiting for tests/CI. No fabricated tasks or simultaneous writers.",
+        "core_actual_source_writers_now": 0,
+        "core_repair_slot": "IDLE_FIXTURE_SOURCE_DELIVERED_LOCAL_RECOMPILE_PENDING",
+        "extra_last_actual_ack": {
+          "comment": 6198215180,
+          "dispatched": 3,
+          "e03": "ACK",
+          "e05": "ACK",
+          "e02": "DISPATCHED_CHILD_ACK_PENDING_AT_THAT_RECEIPT",
+          "new_public_source": "a37ce191756ab11896faf4e61e8a06b4279f0303",
+          "not_claimed": "6 workers running"
+        }
+      }
     },
     "current_source_delivery": {
-      "core_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964",
+      "core_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
       "core_pr": 44,
-      "extra_last_read_sha": "25ede65815d26d1514d3b6c3b92b26d2898a3e45",
+      "extra_last_read_sha": "a37ce191756ab11896faf4e61e8a06b4279f0303",
       "extra_pr": 36,
       "status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN_USER_DEFERRED",
@@ -851,12 +875,15 @@
       "extra_source_authorization": "c79d2886b9f66e002754f8f9676527c6f0232e85",
       "formal_extra_ack_comment": 6195023061,
       "validation_handoff": "LONGRUN_VALIDATION_HANDOFF.json",
-      "extra_latest_grant_ack": "PENDING_NOT_ASSUMED"
+      "extra_latest_grant_ack": "RECEIVED_6198215180_NEW_SOURCE_a37ce191"
     },
-    "manual_validation_current_mode": "DEFERRED_BY_USER_UNTIL_LOCAL_RETURN; no manual build/test/lint/DB/DevTools/CI rerun; automatic CI natural only",
-    "active_source_candidate_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964",
+    "manual_validation_current_mode": "LOCAL_VPS_ONLY; C00/two Cloud teams source-only; no new manual compile/test/CI/setup; automatic CI natural",
+    "active_source_candidate_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
     "active_source_record_kind": "SOURCE_DELIVERED_UNVERIFIED_NOT_THE_HISTORICAL_VALIDATED_CANDIDATE",
-    "claude_handoff_intake": "CLAUDE_HANDOFF_INTAKE.json"
+    "claude_handoff_intake": "CLAUDE_HANDOFF_INTAKE.json",
+    "backend_validation_handoff": "BACKEND_VALIDATION_VPS_HANDOFF.json",
+    "backend_validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+    "remaining_development": "LONGRUN_REMAINING.json"
   },
   "followup_lanes": [
     {

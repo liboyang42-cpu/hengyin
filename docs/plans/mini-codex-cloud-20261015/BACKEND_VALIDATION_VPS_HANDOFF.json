@@ -1,0 +1,130 @@
+{
+  "protocol": "CY-BACKEND-VPS-HANDOFF-20261015-v1",
+  "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+  "source_coordinator": "C00 only",
+  "execution_status": "NOT_RUN_VPS_PENDING",
+  "candidates": {
+    "CORE": {
+      "pr": 44,
+      "branch": "codex/mini-longrun-core-20261015",
+      "sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+      "parent": "2b1984b59a0929a360e8095d5fc1955a1aed7964",
+      "integration_order": [
+        "2b1984b59a0929a360e8095d5fc1955a1aed7964",
+        "b810b5056c9d12abdb939df648e2435f7f63d029",
+        "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
+      ],
+      "known_original_compile_failures": "18 fixture diagnostics in old2b, all addressed by source only; no other confirmed compile blockers; new f7 NOT_RUN",
+      "matrix": "BACKEND_VALIDATION_CORE_MATRIX.json",
+      "source_classes": 91,
+      "source_test_annotations": 510
+    },
+    "EXTRA": {
+      "pr": 36,
+      "branch": "codex/extra-six-rolling-20261015",
+      "sha": "a37ce191756ab11896faf4e61e8a06b4279f0303",
+      "parent": "25ede65815d26d1514d3b6c3b92b26d2898a3e45",
+      "integration_order": [
+        "25ede65815d26d1514d3b6c3b92b26d2898a3e45",
+        "767c37bb23468a2b4d8fdfa8af4d3ee58b4c45e9",
+        "3e1349fff18ea9935249635170bf998c6ceb3187",
+        "a37ce191756ab11896faf4e61e8a06b4279f0303"
+      ],
+      "known_compile_failures": "none confirmed; Cloud25ede intentionally stopped143, not an accepted compile",
+      "matrix": "BACKEND_VALIDATION_EXTRA_MATRIX.json",
+      "counts": {
+        "primary": {
+          "unit": {
+            "classes": 3,
+            "source_declared_test_methods": 15
+          },
+          "mock": {
+            "classes": 23,
+            "source_declared_test_methods": 270
+          },
+          "h2": {
+            "classes": 8,
+            "source_declared_test_methods": 19
+          },
+          "real_mysql": {
+            "classes": 22,
+            "source_declared_test_methods": 71
+          }
+        },
+        "evidence_adjacent": {
+          "unit": {
+            "classes": 9,
+            "source_declared_test_methods": 65
+          },
+          "mock": {
+            "classes": 13,
+            "source_declared_test_methods": 175
+          },
+          "h2": {
+            "classes": 6,
+            "source_declared_test_methods": 24
+          },
+          "real_mysql": {
+            "classes": 6,
+            "source_declared_test_methods": 28
+          }
+        }
+      },
+      "new_regression_declared_methods": 9
+    }
+  },
+  "integration_rule": "Verify each complete SHA independently. They share exact public producers; do not overlay whole branches, double-apply helpers, or mix reports. Subsequent E02-22/new SHA separate. No merge/deploy/migration authorized.",
+  "preparation_command_template": "mvn -o -B -ntp -pl chengyinhub-admin -am test-compile",
+  "commands_are": "Documentation inside approved runner only, not a replacement for resource guard; no commands in this packet were executed on VPS by C00",
+  "resources": [
+    "Use latest user AGENTS212 helper and shared build lock for offline compilation; no Mac/Cloud Java fallback",
+    "Offline helper network none cannot stand in for real MySQL/Redis. Local coordinator must verify approved true-integration entry; if absent mark BLOCKED_RESOURCE_CHANNEL",
+    "Single build/test executor, scratch schemas and DB credentials only; no production, no broadened network, no bypass denied lock/budget",
+    "Fresh report mtime after run start, exact class discovery incl IT/nested/env gates, no skipped-as-pass or stale XML accumulation"
+  ],
+  "report_paths": [
+    "CORE/EXTRA actual Surefire: chengyinhub-admin/target/surefire-reports/TEST-<fully-qualified-class>.xml",
+    "Real C01_51 nested also OWN_C01_51Test$RealMysqlRepeatableRead XML; outer4 + nested1 separate",
+    "Original Cloud only docs/verification/mini-backend-validation-20261015/{environment.json,core-compile.log,extra-compile.log,core-compile-errors.json}"
+  ],
+  "original_author_repairs": [
+    {
+      "owner": "CORE/C03 feature_points_rules_sol",
+      "sha": "b810b5056c9d12abdb939df648e2435f7f63d029",
+      "paths": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_20Test.java"
+      ],
+      "change": "setSortId(1)→1L twice; assertions unchanged; NOT_RUN"
+    },
+    {
+      "owner": "CORE/C06 final_review_sol",
+      "sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+      "paths": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_07Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_11Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_13Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_16Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_17Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_18Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_21Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_22Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_23Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_24Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_25Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_26Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_28Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_29Test.java"
+      ],
+      "change": "16 nonexistent noarg fixture calls→existing real13arg constructor; production unchanged; NOT_RUN"
+    }
+  ],
+  "not_accepted": [
+    "new candidate compilation",
+    "VPS suites",
+    "runtime HTTP real identities",
+    "WeChat/iOS devices",
+    "deployment",
+    "merge",
+    "business migration"
+  ]
+}

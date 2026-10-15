@@ -1,8 +1,18 @@
+# 当前最高优先执行状态
+
+- CORE最新公共源码 `f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c`（15测试fixture最小修复，NOT_RUN）；EXTRA最新 `a37ce191756ab11896faf4e61e8a06b4279f0303`（E03/E05及5旧fixture已公共，NOT_RUN）。原2b/25ede验证冻结记录保留历史，不覆盖旧结果。
+- 后端实际复测仅由本地 `01a13eed-e4d9-77f3-b875-c72d26ea7d59` 按最新212/批准真库入口执行；C00与两队不再手动编译、测试、触发CI或新增专用验证配置，不尝试VPS/Cloud替代。
+- 每队最多6名6.1-sol，1条修复线串行接失败，另5条继续独立源码、完成即push、不等CI/本地签收；原写者优先，换人先精确移交。无真实任务不凑数，实际运行数照实。
+- EXTRA恢复ACK6198215180已收到，之前“五fixture待授权”阻塞已解除；E03/E05已有新公共小提交，不再列未ACK。E02当时已派，后续独立交付另SHA。CORE池仍178历史/实际可行动0，fixture补丁不另算新bug。
+- 立即交本地：[后端移交包](BACKEND_VALIDATION_VPS_HANDOFF.md) / 同名JSON，以及CORE/EXTRA逐类矩阵。原Cloud诊断不作VPS验收；新f7/a37未编译、未执行测试。
+
+以下旧checkpoint是历史，不覆盖上述状态。
+
 # 长期源码滚动：当前恢复入口
 
 CY-HANDOFF: CODEX。此页及LONGRUN_CORE_50.json覆盖本目录较早checkpoint文字。
 
-- CORE公共源码：`2b1984b59a0929a360e8095d5fc1955a1aed7964`，PR44，分支`codex/mini-longrun-core-20261015`；基线PR28/4a943501。每项保留小提交，当前所有新增回归NOT_RUN，SOURCE_DELIVERED_UNVERIFIED。
+- CORE公共源码：`f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c`，PR44，分支`codex/mini-longrun-core-20261015`；基线PR28/4a943501。每项保留小提交，当前所有新增回归NOT_RUN，SOURCE_DELIVERED_UNVERIFIED。
 - CORE初始50项保留历史，累计178具体源切片；当前状态计数：`{"SOURCE_DELIVERED_UNVERIFIED": 135, "NO_CHANGE_SOURCE_REVIEW": 38, "BLOCKED_DECISION": 3, "SUPERSEDED_DUPLICATE": 1, "DELEGATED_SOURCE_IMPLEMENTATION": 1}`。目标维持50可行动项，实际不足50时如实披露；不能把完成历史当剩余数，也不能把审查数当bug修复数。
 - 必要回归源码修正单独保留：C06-25 domain imports补齐已公共（精确SHA见该项source_corrections），C05-23夹具schemaVersion在首次公共交付前由原作者修正，NOT_RUN，不称编译/测试通过。
 - EXTRA6独立PR36，最后实际读回25ede658的持久队列105历史项=52源码或回归交付/40反证/10阻塞/3委派或他队解决，READY0/实际执行0。后来五旧fixture及LIKE合同已公开授权，尚未读到恢复ACK，不能假称六路在跑。独立队列仍其唯一维护者；不能假称全已集成CORE。

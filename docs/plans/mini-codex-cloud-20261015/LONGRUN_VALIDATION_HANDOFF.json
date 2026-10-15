@@ -1,9 +1,9 @@
 {
   "protocol": "CY-LONGRUN-VALIDATION-HANDOFF-20261015-v1",
-  "source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964",
+  "source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
   "source_pr": 44,
   "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-  "status": "NOT_RUN_USER_DEFERRED",
+  "status": "NOT_RUN_LOCAL_VPS_HANDOFF",
   "generation": "static filename/content inventory only; no compiler/parser/test/lint/DB execution",
   "entries": [
     {
@@ -1248,5 +1248,10 @@
     "business migration",
     "real-identity runtime HTTP",
     "WeChat/iOS devices"
-  ]
+  ],
+  "backend_handoff": "BACKEND_VALIDATION_VPS_HANDOFF.json",
+  "backend_core_matrix": "BACKEND_VALIDATION_CORE_MATRIX.json",
+  "backend_extra_matrix": "BACKEND_VALIDATION_EXTRA_MATRIX.json",
+  "backend_validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+  "frontend_validation": "STILL_DEFERRED_NOT_AUTHORIZED_THIS_BACKEND_ROUND"
 }

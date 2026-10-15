@@ -1274,6 +1274,13 @@
       "source_result": "SOURCE_DELIVERED_UNVERIFIED",
       "production_paths_changed": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java"
+      ],
+      "source_corrections": [
+        {
+          "sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+          "type": "real constructor fixture initialization",
+          "verification": "NOT_RUN"
+        }
       ]
     },
     {
@@ -2373,6 +2380,13 @@
       "source_result": "SOURCE_DELIVERED_UNVERIFIED",
       "production_paths_changed": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java"
+      ],
+      "source_corrections": [
+        {
+          "sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+          "type": "real constructor fixture initialization",
+          "verification": "NOT_RUN"
+        }
       ]
     },
     {
@@ -2400,6 +2414,13 @@
       "source_result": "SOURCE_DELIVERED_UNVERIFIED",
       "production_paths_changed": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java"
+      ],
+      "source_corrections": [
+        {
+          "sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+          "type": "real constructor fixture initialization",
+          "verification": "NOT_RUN"
+        }
       ]
     },
     {
@@ -2919,6 +2940,13 @@
       "source_result": "SOURCE_DELIVERED_UNVERIFIED",
       "production_paths_changed": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java"
+      ],
+      "source_corrections": [
+        {
+          "sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+          "type": "real constructor fixture initialization",
+          "verification": "NOT_RUN"
+        }
       ]
     },
     {
@@ -2947,6 +2975,13 @@
       "source_result": "SOURCE_DELIVERED_UNVERIFIED",
       "production_paths_changed": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java"
+      ],
+      "source_corrections": [
+        {
+          "sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+          "type": "real constructor fixture initialization",
+          "verification": "NOT_RUN"
+        }
       ]
     },
     {
@@ -2975,6 +3010,13 @@
       "source_result": "SOURCE_DELIVERED_UNVERIFIED",
       "production_paths_changed": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java"
+      ],
+      "source_corrections": [
+        {
+          "sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+          "type": "real constructor fixture initialization",
+          "verification": "NOT_RUN"
+        }
       ]
     },
     {
@@ -3341,6 +3383,13 @@
       "source_result": "SOURCE_DELIVERED_UNVERIFIED",
       "production_paths_changed": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java"
+      ],
+      "source_corrections": [
+        {
+          "sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+          "type": "real constructor fixture initialization",
+          "verification": "NOT_RUN"
+        }
       ]
     },
     {
@@ -3593,6 +3642,13 @@
       "source_result": "SOURCE_DELIVERED_UNVERIFIED",
       "production_paths_changed": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java"
+      ],
+      "source_corrections": [
+        {
+          "sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+          "type": "real constructor fixture initialization",
+          "verification": "NOT_RUN"
+        }
       ]
     },
     {
@@ -3644,6 +3700,13 @@
       "source_result": "SOURCE_DELIVERED_UNVERIFIED",
       "production_paths_changed": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java"
+      ],
+      "source_corrections": [
+        {
+          "sha": "b810b5056c9d12abdb939df648e2435f7f63d029",
+          "type": "fixture Long types",
+          "verification": "NOT_RUN"
+        }
       ]
     },
     {
@@ -3698,6 +3761,13 @@
       "source_result": "SOURCE_DELIVERED_UNVERIFIED",
       "production_paths_changed": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java"
+      ],
+      "source_corrections": [
+        {
+          "sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+          "type": "real constructor fixture initialization",
+          "verification": "NOT_RUN"
+        }
       ]
     },
     {
@@ -3752,6 +3822,13 @@
       "source_result": "SOURCE_DELIVERED_UNVERIFIED",
       "production_paths_changed": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java"
+      ],
+      "source_corrections": [
+        {
+          "sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+          "type": "real constructor fixture initialization",
+          "verification": "NOT_RUN"
+        }
       ]
     },
     {
@@ -3910,14 +3987,21 @@
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_25Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C06-25.md",
       "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
-      "source_corrections": {
-        "C06-25-import-fix": {
-          "local_sha": "3ba00bc5f5ee823ea0121a323d0554aec437aba3",
-          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_25Test.java",
-          "verification": "NOT_RUN",
-          "public_sha": "31ebcaaacc12abdd722e1b6855528ecaacfee5b8"
+      "source_corrections": [
+        {
+          "C06-25-import-fix": {
+            "local_sha": "3ba00bc5f5ee823ea0121a323d0554aec437aba3",
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_25Test.java",
+            "verification": "NOT_RUN",
+            "public_sha": "31ebcaaacc12abdd722e1b6855528ecaacfee5b8"
+          }
+        },
+        {
+          "sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+          "type": "real constructor fixture initialization",
+          "verification": "NOT_RUN"
         }
-      },
+      ],
       "commit_sha": "eff896bdd51da9dae2b8b9e50e96d12ccf9aace2",
       "source_result": "SOURCE_DELIVERED_UNVERIFIED",
       "production_paths_changed": [
@@ -4138,6 +4222,13 @@
       "source_result": "SOURCE_DELIVERED_UNVERIFIED",
       "production_paths_changed": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java"
+      ],
+      "source_corrections": [
+        {
+          "sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+          "type": "real constructor fixture initialization",
+          "verification": "NOT_RUN"
+        }
       ]
     },
     {
@@ -4559,6 +4650,13 @@
       "commit_sha": "0429e6f5bd90af6ca0648734aae2e6af99778213",
       "production_paths_changed": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java"
+      ],
+      "source_corrections": [
+        {
+          "sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+          "type": "real constructor fixture initialization",
+          "verification": "NOT_RUN"
+        }
       ]
     },
     {
@@ -4586,6 +4684,13 @@
       "commit_sha": "e89ebf2ba79e809d059d8cf2c9f6812506307baa",
       "production_paths_changed": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java"
+      ],
+      "source_corrections": [
+        {
+          "sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+          "type": "real constructor fixture initialization",
+          "verification": "NOT_RUN"
+        }
       ]
     },
     {
@@ -4887,7 +4992,7 @@
   "refill_progress": "178 cumulative concrete source slices/reviews; actual actionable0, target50 shortfall50; no invented filler",
   "actual_actionable_or_in_progress_items": 0,
   "counts_note": "Initial50 and cumulative history are concrete source slices/reviews, not remaining actionable bugs or passed cases. Actual current READY/inflight0, target50 shortfall50 disclosed. Source delivered remains unverified.",
-  "current_public_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964",
+  "current_public_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
   "actual_state_counts": {
     "SOURCE_DELIVERED_UNVERIFIED": 135,
     "NO_CHANGE_SOURCE_REVIEW": 38,
@@ -4912,5 +5017,25 @@
     "verification": "NOT_RUN"
   },
   "source_pool_status": "EXHAUSTED_WITH_RECORDED_POLICY_BOUNDARIES",
-  "pool_status": "EXHAUSTED_WITH_RECORDED_POLICY_BOUNDARIES"
+  "pool_status": "EXHAUSTED_WITH_RECORDED_POLICY_BOUNDARIES",
+  "scheduling_rule": {
+    "mode": "ONE_REPAIR_PLUS_FIVE_INDEPENDENT_DEVELOPMENT",
+    "max_workers_per_team": 6,
+    "model": "gpt-6.1-sol",
+    "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+    "cloud_manual_validation": "PROHIBITED_BY_LATEST_USER_SPLIT",
+    "repair_slot_limit": 1,
+    "repair_policy": "Prioritize original exact file owner; transfer repair role after prior repair worker stops; multiple failures serial queue. Others do independent authorized source tasks and push without waiting for tests/CI. No fabricated tasks or simultaneous writers.",
+    "core_actual_source_writers_now": 0,
+    "core_repair_slot": "IDLE_FIXTURE_SOURCE_DELIVERED_LOCAL_RECOMPILE_PENDING",
+    "extra_last_actual_ack": {
+      "comment": 6198215180,
+      "dispatched": 3,
+      "e03": "ACK",
+      "e05": "ACK",
+      "e02": "DISPATCHED_CHILD_ACK_PENDING_AT_THAT_RECEIPT",
+      "new_public_source": "a37ce191756ab11896faf4e61e8a06b4279f0303",
+      "not_claimed": "6 workers running"
+    }
+  }
 }

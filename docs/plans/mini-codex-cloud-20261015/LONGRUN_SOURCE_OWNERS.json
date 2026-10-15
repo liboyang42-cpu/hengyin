@@ -8,7 +8,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-xcx/pages/play/utils/player-game-module.js": {
       "owner": "CORE/C01",
@@ -16,7 +16,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-xcx/utils/game-session-client.js": {
       "owner": "CORE/C01",
@@ -24,7 +24,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-xcx/utils/publish/pro-editor-draft.js": {
       "owner": "CORE/C02",
@@ -32,7 +32,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-xcx/pages/publish/utils/publish/publish-workflow.js": {
       "owner": "CORE/C02",
@@ -40,7 +40,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-xcx/pages/publish/fabu/index.js": {
       "owner": "CORE/C02",
@@ -48,7 +48,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-xcx/utils/publish/publish-intent.js": {
       "owner": "CORE/C02",
@@ -56,7 +56,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java": {
       "owner": "CORE/C03",
@@ -64,7 +64,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/TopicCreateDTO.java": {
       "owner": "CORE/C03",
@@ -72,7 +72,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/TopicUpdateDTO.java": {
       "owner": "CORE/C03",
@@ -80,7 +80,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java": {
       "owner": "CORE/C03",
@@ -88,7 +88,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java": {
       "owner": "CORE/C04",
@@ -96,7 +96,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatWriteService.java": {
       "owner": "CORE/C04",
@@ -104,7 +104,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatDataService.java": {
       "owner": "CORE/C04",
@@ -112,7 +112,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiNpcController.java": {
       "owner": "CORE/C04",
@@ -120,7 +120,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/NpcChatRequestMapper.java": {
       "owner": "CORE/C04",
@@ -128,7 +128,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java": {
       "owner": "CORE/C05",
@@ -136,7 +136,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiSceneRouter.java": {
       "owner": "CORE/C05",
@@ -144,7 +144,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java": {
       "owner": "CORE/C05",
@@ -152,7 +152,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryService.java": {
       "owner": "CORE/C05",
@@ -160,7 +160,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml": {
       "owner": "CORE/C05",
@@ -168,7 +168,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java": {
       "owner": "CORE/C06",
@@ -176,7 +176,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml": {
       "owner": "CORE/C06",
@@ -184,7 +184,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java": {
       "owner": "CORE/C06",
@@ -192,7 +192,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventScheduleMaterializer.java": {
       "owner": "EXTRA6/E01",
@@ -431,7 +431,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "C00 grants internal marker for provider result received after model text; preserves existing Reason/message, no result payload; C04 consumes only after public producer commit",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/GameSessionRuntimeMapper.java": {
       "owner": "CORE/C06",
@@ -439,7 +439,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "Original shared runtime mapper owner stopped at public1e403b13/4a; XML already CORE/C06. Grant separate current-lock story read method only; existing readOnly projection method unchanged.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/resources/mapper/business/PlayerRunSessionMapper.xml": {
       "owner": "CORE/C04",
@@ -447,7 +447,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "Existing baseline projection mapper no other lane/Claude active claim; single SQL writer C04. Only monotonic saved_at existing rows. No clear absent row tombstone policy change.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeRuntimeConfig.java": {
       "owner": "CORE/C05",
@@ -455,7 +455,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "Original A03 writer stopped at public1e/4a; no current lane claim. Existing scene JourneyStory subtree remap consumes public E03 c918 helper, no DSL expansion.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantPayableServiceImpl.java": {
       "owner": "CORE/C04",
@@ -463,7 +463,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "Original B03 writer stopped at public1e/4a; shared payable service distinct from EXTRA clawback. Restore already CONFIRMED-only mapper/controller contract before maker-checker guard, no status policy change.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayEncounterServiceImpl.java": {
       "owner": "EXTRA6/E05",
@@ -513,7 +513,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "7e5882addb7269373b2b95daa0a4ceeb4485fd10",
       "transfer_evidence": "Original shared A01 scope source stopped at public1e/4a; C00 reserved file, no other active claimant. Add opt-in findCurrent by exact extraction of currentScopedSession; keep find semantics unchanged.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ClubEventOpsMapper.java": {
       "owner": "EXTRA6/E01",
@@ -602,7 +602,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 original writer stopped, no other current writer; exact existing-contract repair proposal in LONGRUN_FUNDS_SOURCE_PLAN.md. No authorization/rate/policy/DDL changes. NOT_RUN.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/resources/mapper/business/UmsMemberBalanceDetailMapper.xml": {
       "owner": "CORE/C06",
@@ -611,7 +611,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 original writer stopped, no other current writer; exact existing-contract repair proposal in LONGRUN_FUNDS_SOURCE_PLAN.md. No authorization/rate/policy/DDL changes. NOT_RUN.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/FundActionPreflightServiceImpl.java": {
       "owner": "CORE/C01",
@@ -620,7 +620,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 original writer stopped, no other current writer; exact existing-contract repair proposal in LONGRUN_FUNDS_SOURCE_PLAN.md. No authorization/rate/policy/DDL changes. NOT_RUN.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/FundActionPreflightMapper.java": {
       "owner": "CORE/C01",
@@ -629,7 +629,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 original writer stopped, no other current writer; exact existing-contract repair proposal in LONGRUN_FUNDS_SOURCE_PLAN.md. No authorization/rate/policy/DDL changes. NOT_RUN.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/resources/mapper/business/FundActionPreflightMapper.xml": {
       "owner": "CORE/C01",
@@ -638,7 +638,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 original writer stopped, no other current writer; exact existing-contract repair proposal in LONGRUN_FUNDS_SOURCE_PLAN.md. No authorization/rate/policy/DDL changes. NOT_RUN.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/FundActionPreflightServiceImplTest.java": {
       "owner": "CORE/C01",
@@ -646,7 +646,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "transfer_evidence": "Only exactConsumedIntentCanReplayButChangedPayloadCannotReuseIt stub changes to selectOwnedByIdForUpdate; equivalent replay and mismatched fingerprint assertions unchanged. Original C00 writer stopped; no other writer.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java": {
       "owner": "CORE/C04",
@@ -655,7 +655,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java": {
       "owner": "CORE/C04",
@@ -664,7 +664,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantReferralBountyService.java": {
       "owner": "CORE/C04",
@@ -673,7 +673,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalFrozenAmountResolver.java": {
       "owner": "CORE/C04",
@@ -682,7 +682,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java": {
       "owner": "CORE/C04",
@@ -691,7 +691,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": null,
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MerchantReferralBountyMapper.java": {
       "owner": "CORE/C04",
@@ -700,7 +700,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerWithdrawalCooldownMapper.java": {
       "owner": "CORE/C04",
@@ -709,7 +709,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/resources/mapper/business/MerchantReferralBountyMapper.xml": {
       "owner": "CORE/C04",
@@ -718,7 +718,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/resources/mapper/business/PlayerWithdrawalCooldownMapper.xml": {
       "owner": "CORE/C04",
@@ -727,7 +727,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawFrozenRequeryH2Test.java": {
       "owner": "CORE/C04",
@@ -736,7 +736,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/BothWithdrawalLegsRejectPlayerCooldownTest.java": {
       "owner": "CORE/C04",
@@ -745,7 +745,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawFailureRecoveryTransactionTest.java": {
       "owner": "CORE/C04",
@@ -754,7 +754,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawStateMachineTest.java": {
       "owner": "CORE/C04",
@@ -763,7 +763,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/FundIdempotencyConcurrencyTest.java": {
       "owner": "CORE/C04",
@@ -772,7 +772,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerWithdrawalCooldownMybatisIntegrationTest.java": {
       "owner": "CORE/C04",
@@ -781,7 +781,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantReferralBountyTest.java": {
       "owner": "CORE/C04",
@@ -790,7 +790,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WithdrawalPiiStorageTest.java": {
       "owner": "CORE/C04",
@@ -799,7 +799,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/MemberFundsStageServiceTest.java": {
       "owner": "CORE/C04",
@@ -808,7 +808,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/BankWithdrawalIdempotencyConcurrencyTest.java": {
       "owner": "CORE/C04",
@@ -817,7 +817,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WithdrawalPayoutStateMybatisTest.java": {
       "owner": "CORE/C04",
@@ -826,7 +826,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawServiceTest.java": {
       "owner": "CORE/C04",
@@ -835,7 +835,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WithdrawalStateMachineServiceTest.java": {
       "owner": "CORE/C04",
@@ -844,7 +844,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerWithdrawalCooldownServiceImpl.java": {
       "owner": "CORE/C05",
@@ -853,7 +853,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/system/service/ISysConfigService.java": {
       "owner": "CORE/C05",
@@ -862,7 +862,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/system/service/impl/SysConfigServiceImpl.java": {
       "owner": "CORE/C05",
@@ -871,7 +871,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/system/mapper/SysConfigMapper.java": {
       "owner": "CORE/C05",
@@ -880,7 +880,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/resources/mapper/system/SysConfigMapper.xml": {
       "owner": "CORE/C05",
@@ -889,7 +889,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/PlayerWithdrawalCooldownControllerTest.java": {
       "owner": "CORE/C05",
@@ -898,7 +898,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CooldownConfigWriteThroughRealConfigServiceTest.java": {
       "owner": "CORE/C05",
@@ -907,7 +907,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerWithdrawalCooldownServiceTest.java": {
       "owner": "CORE/C05",
@@ -916,7 +916,7 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/resources/mapper/business/UmsMemberPointsDetailMapper.xml": {
       "owner": "CORE/C06",
@@ -924,7 +924,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "transfer_evidence": "Same Sunday week-window defect as C06-30 sibling production points-statistics endpoint; original C00 writer stopped. Only exact two WEEKDAY offsets, no ledger/other SQL.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MemberCashWithdrawMapper.java": {
       "owner": "CORE/C04",
@@ -932,7 +932,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "transfer_evidence": "C04-21 precise late-debit cash current row lock before member; original C00 stopped; existing terminal/frozen row never overwritten; no new external protocol.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml": {
       "owner": "CORE/C04",
@@ -940,7 +940,7 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "transfer_evidence": "C04-21 precise late-debit cash current row lock before member; original C00 stopped; existing terminal/frozen row never overwritten; no new external protocol.",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImplTest.java": {
       "owner": "EXTRA6/E03",
@@ -989,7 +989,7 @@
       "source_writer": "a02_sol retains all production/old fixture files",
       "verification": "NOT_RUN",
       "dependency": "Wait frozen exact public C04-21 producer before publishing regression supplement; no test execution",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "docs/verification/mini-longrun-20261015/CORE/OWN-C04-21-realdb.md": {
       "owner": "CORE/C04",
@@ -998,7 +998,7 @@
       "source_writer": "a02_sol retains all production/old fixture files",
       "verification": "NOT_RUN",
       "dependency": "Wait frozen exact public C04-21 producer before publishing regression supplement; no test execution",
-      "frozen_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964"
+      "frozen_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
     },
     "docs/plans/mini-claude-ui-20261015/BACKLOG.md": {
       "owner": "CLAUDE/PR21",

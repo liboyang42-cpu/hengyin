@@ -1,0 +1,110 @@
+[
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_22Test.java",
+    "line": 25,
+    "column": 17,
+    "error": "no suitable constructor found for TopicRouteRuntimeServiceImpl(no arguments)"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_18Test.java",
+    "line": 19,
+    "column": 17,
+    "error": "no suitable constructor found for TopicRouteRuntimeServiceImpl(no arguments)"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_29Test.java",
+    "line": 20,
+    "column": 17,
+    "error": "no suitable constructor found for TopicRouteRuntimeServiceImpl(no arguments)"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_13Test.java",
+    "line": 23,
+    "column": 19,
+    "error": "no suitable constructor found for TopicRouteRuntimeServiceImpl(no arguments)"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_17Test.java",
+    "line": 20,
+    "column": 19,
+    "error": "no suitable constructor found for TopicRouteRuntimeServiceImpl(no arguments)"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_11Test.java",
+    "line": 16,
+    "column": 48,
+    "error": "no suitable constructor found for TopicRouteRuntimeServiceImpl(no arguments)"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_11Test.java",
+    "line": 36,
+    "column": 48,
+    "error": "no suitable constructor found for TopicRouteRuntimeServiceImpl(no arguments)"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_24Test.java",
+    "line": 21,
+    "column": 17,
+    "error": "no suitable constructor found for TopicRouteRuntimeServiceImpl(no arguments)"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_07Test.java",
+    "line": 15,
+    "column": 48,
+    "error": "no suitable constructor found for TopicRouteRuntimeServiceImpl(no arguments)"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_07Test.java",
+    "line": 28,
+    "column": 48,
+    "error": "no suitable constructor found for TopicRouteRuntimeServiceImpl(no arguments)"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_21Test.java",
+    "line": 25,
+    "column": 17,
+    "error": "no suitable constructor found for TopicRouteRuntimeServiceImpl(no arguments)"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_23Test.java",
+    "line": 25,
+    "column": 17,
+    "error": "no suitable constructor found for TopicRouteRuntimeServiceImpl(no arguments)"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_16Test.java",
+    "line": 22,
+    "column": 19,
+    "error": "no suitable constructor found for TopicRouteRuntimeServiceImpl(no arguments)"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_26Test.java",
+    "line": 21,
+    "column": 17,
+    "error": "no suitable constructor found for TopicRouteRuntimeServiceImpl(no arguments)"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_20Test.java",
+    "line": 60,
+    "column": 27,
+    "error": "incompatible types: int cannot be converted to java.lang.Long"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_20Test.java",
+    "line": 63,
+    "column": 25,
+    "error": "incompatible types: int cannot be converted to java.lang.Long"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_28Test.java",
+    "line": 19,
+    "column": 17,
+    "error": "no suitable constructor found for TopicRouteRuntimeServiceImpl(no arguments)"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_25Test.java",
+    "line": 28,
+    "column": 17,
+    "error": "no suitable constructor found for TopicRouteRuntimeServiceImpl(no arguments)"
+  }
+]

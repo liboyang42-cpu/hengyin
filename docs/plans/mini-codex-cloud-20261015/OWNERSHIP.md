@@ -222,3 +222,7 @@ L01–05源码已按精确路径串行提交后续候选eab62274a19f549623ad1818
 ## 当前恢复与三方精确接收（覆盖旧待办快照）
 
 公共源码 `2b1984b59a0929a360e8095d5fc1955a1aed7964` / PR44，SOURCE_DELIVERED_UNVERIFIED/NOT_RUN；CORE178历史=135源交付+38反证+3决策阻塞+1重复取代+1委派，实际可行动0/目标缺50。锁保留不等于有人在运行。EXTRA最后25ede658/105历史，5旧夹具及LIKE授权c79d2886已公开，尚无新ACK。Claude本轮37份PR接收与精确文件处置见CLAUDE_HANDOFF_INTAKE.json，唯一C00控制账，冲突只交原写者补丁，未移交共享核心。当前SOURCE_ONLY不是CONTRACT_FROZEN/TEST_DEPLOYED或客户端上线凭据。旧1e403b13的231PASS与69c失败历史独立保留，新源码不能继承。最新恢复入口LONGRUN_CURRENT/START_PROMPT；集中验证清单已更新2b1984，仍不运行。
+
+## 最新1修复+5开发与本地验证交接
+
+CORE `f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c`、EXTRA `a37ce191756ab11896faf4e61e8a06b4279f0303`，均SOURCE_DELIVERED_UNVERIFIED/NOT_RUN。每队只占1条失败修复线，优先原文件作者；多失败串行，移交写者必须先停止和逐路径登记。其他5条做真正独立的现有bug/后端源码，完成即push，不等待测试/CI；耗尽不凑数或假称运行。实际VPS复测由本地`01a13eed-e4d9-77f3-b875-c72d26ea7d59`独占，Cloud不再新增手动编译/测试/CI触发/专门配置，不尝试VPS或Cloud替代，既有CI自然运行。CORE15测试fixture修复未复编译，不改生产/断言；EXTRA五fixture及E02合同已解除授权阻塞、实际ACK6198215180已收到，E03/E05新小提交已公共，E02后续另SHA。完整候选依赖、矩阵、门禁、预期源码声明数和原Cloud诊断路径见BACKEND_VALIDATION_VPS_HANDOFF.json/md。未获实际VPS结果不签收，旧231不继承，未合并/部署/业务迁移。
