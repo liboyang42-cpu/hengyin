@@ -74,3 +74,25 @@ IT 必须由本地在批准的临时 MySQL 8+ 环境执行：`CHENGYIN_FUNDS_MYS
 两项已交付，两个 child 均冻结，实际源码 writer 0，READY 0。没有新增授权范围，未凑六条或额外任务。总控按冻结源码候选 `2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd` 验证；后续仅账本文档提交不替换该源码 SHA。
 
 后续可读线索仅作为总控待裁定事项，不领取新路径：全历史漏斗规模保护需要产品/API合同；`ApiPlayProgressController.java` 与 `TopicCompletionAwardServiceImpl.java` 的既有会员/成长锁顺序需要完整奖励路径证据及原所有者精确移交。没有把这些线索命名成已复现缺陷。验证失败只占对应原作者一条修复线，其他已授权独立任务可继续。PR 不合并、不部署，所有执行由本地总控统一完成。
+
+## 总控接收补充：EXHAUSTED 与待执行命令
+
+总控已实际读取 PR72、确认源码冻结 `2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd` 与此前文档 head `8ea63a07498d3d7fa5d389211ca9c918dc93c3a8` 的区别，并已将 PR 补挂本地任务。本次仅更新本队 QUEUE/DELIVERY，业务源码仍完全冻结，不产生新的验证候选。
+
+当前授权范围为 `EXHAUSTED`：两项已交付，实际 writer=0、READY=0，没有已核实的下一具体独占项。保留原作者 `/root/stat`、`/root/grow` 的恢复身份与精确 claim；不主动验证，不擅扩模块或凑50。总控反馈真实失败时仅唤醒对应原作者一条修复线，其他获得独立授权的工作可继续。
+
+下列只是供本地总控按已批准入口取用的命令文本；Cloud 从未执行。普通套件预期24个静态声明，真库套件11个静态声明，合计35；实际执行/跳过/错误必须以冻结源码的新鲜报告确认，不能用声明数量签收。
+
+普通回归（从仓库根目录；离线依赖与资源限制仍由本地批准入口统一管理）：
+
+```bash
+mvn -o -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=AnalyticsControllerTest,PlayerProgressionServiceImplTest test
+```
+
+真实 MySQL 回归（仍由本地批准入口；先显式提供 `CHENGYIN_FUNDS_MYSQL_IT=1` 与上述六个测试连接变量，不在文档填写凭据，不指向生产）：
+
+```bash
+mvn -o -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=PlayerGrowthConcurrencyMySqlIT test
+```
+
+真实 MySQL 门禁前提、独占建删库及线程清理要求见上节。条件跳过不是通过；普通24与真库11只计算各自声明，不把60个非法日期断言组合计作额外测试。未运行编译、测试、业务 HTTP、DB、lint 或手动 CI，状态继续 `SOURCE_DELIVERED_UNVERIFIED / NOT_RUN`。

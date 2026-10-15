@@ -51,7 +51,7 @@
   "verification_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
   "pull_request": "https://github.com/liboyang42-cpu/hengyin/pull/72",
   "ready_source_items": 0,
-  "scope_state": "INITIAL_SCOPE_DELIVERED_AWAITING_LOCAL_VALIDATION",
+  "scope_state": "EXHAUSTED",
   "source_candidate_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
   "declarations": {
     "total": 35,
@@ -60,5 +60,7 @@
     "status": "NOT_RUN",
     "note": "Static @Test declarations only; counts do not establish execution or pass."
   },
-  "next_action": "Local coordinator validates frozen source candidate; any failure uses only original author repair lane. No new authorized source item remains."
+  "next_action": "Retain frozen source 2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd for local-only validation. On a real failure, wake its original author as the only repair lane. New source scope needs an exact coordinator transfer.",
+  "delivery_state": "SOURCE_DELIVERED_UNVERIFIED",
+  "exhausted_reason": "Both authorized initial tasks are frozen and delivered. No concrete unclaimed next item is established inside the current whitelist; do not expand scope or fabricate tasks."
 }
