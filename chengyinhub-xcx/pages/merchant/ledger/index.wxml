@@ -2,9 +2,8 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-  <cy-nav-bar custom-back bind:back="onNavBack" />
+  <cy-nav-bar title="{{pageTitle}}" custom-back bind:back="onNavBack" />
   <view class="ledger-nav-spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>
-  <cy-page-title title="{{pageTitle}}" safe-top="{{false}}" flush="{{true}}" />
   <cy-club-direct-ledger wx:if="{{!routeError && view === 'settlement' && merchantAccess.canReadFinance}}" kind="merchant" />
   <cy-state-shell class="fill-slot" wx:if="{{routeError}}" kind="missing-param" fill size="lg"
                   title="链接已失效" sub="请从商家工作台重新进入"

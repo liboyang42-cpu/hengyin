@@ -2,8 +2,7 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-  <cy-nav-bar />
-  <cy-page-title title="经营团队" safe-top="{{false}}" />
+  <cy-nav-bar title="经营团队" />
 
   <view class="tm-state" wx:if="{{accessState === 'loading'}}">
     <view class="tm-skeleton-card"><cy-skeleton type="list" count="3" /></view>

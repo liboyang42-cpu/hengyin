@@ -14,7 +14,6 @@
     "cy-icon": "/components/cy/icon/index",
     "cy-info-pop": "/pages/merchant/components/cy/info-pop/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",
-    "cy-page-title": "/components/cy/page-title/index",
     "cy-skeleton": "/components/cy/skeleton/index",
     "cy-sheet": "/components/cy/sheet/index",
     "cy-privacy-gate": "/components/cy/privacy-gate/index",

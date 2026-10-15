@@ -3,9 +3,8 @@
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
   <cy-access-gate id="cy-access-gate" kind="merchant" need="canReadVerifyRecords" />
-  <cy-nav-bar custom-back bind:back="onNavBack" />
+  <cy-nav-bar title="核销详情" custom-back bind:back="onNavBack" />
   <view class="order-detail__spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>
-  <cy-page-title title="核销详情" safe-top="{{false}}" flush="{{true}}" />
   <block wx:if="{{detail}}">
     <cy-progress-status class="order-detail__refresh" wx:if="{{loadState === 'refreshing'}}"
       title="正在更新核销详情" sub="现有详情仍可查看" />

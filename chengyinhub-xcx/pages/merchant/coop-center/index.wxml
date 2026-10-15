@@ -3,10 +3,9 @@
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
   <cy-access-gate id="cy-access-gate" kind="merchant" need="" />
-  <!-- 稿 234:276:返回箭头右侧 gap10 接左对齐标题 19px Bold(不是 N3 居中)。cy-nav-bar 只支持居中标题,
-       plain 模式只留返回行,标题由页面贴在同一行(left = 返回钮 88rpx 宽),全页只出现一次。 -->
-  <cy-nav-bar plain custom-back bind:back="onNavBack" />
-  <view class="cc-nav-title" style="top: {{statusBarHeight}}px; height: {{navBarHeight}}px;" aria-role="heading">合作中心</view>
+  <!-- BL-10(2026-10-15 用户决定):二级页统一 cy-nav-bar 返回 + 居中标题 + 胶囊,
+       原稿 234:276 左对齐自绘 .cc-nav-title 收回到 nav 的 title,全页只出现一次。 -->
+  <cy-nav-bar plain title="合作中心" custom-back bind:back="onNavBack" />
   <!-- 稿 234:276:tab 左对齐(官方活动 / 广场),同一行右侧铃铛进协作邀请(收到的 / 我发出的) -->
   <view class="cc-tabbar">
     <cy-tabs class="cc-tabs" tabs="{{tabs}}" active="{{activeTab}}" bind:change="onTabChange" />

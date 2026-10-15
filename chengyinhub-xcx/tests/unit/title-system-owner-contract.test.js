@@ -118,8 +118,9 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'pages/topic/pricing/index',
   'pages/team/detail/index', 'pages/team/join/index',
   // 2026-08-30 用户裁决：这 5 个任务页使用「返回独立行 + L1 大标题」。
-  'pages/merchant/ledger/index', 'pages/merchant/ledger/order-detail/index',
-  'pages/merchant/citynode/index', 'pages/merchant/aftercare/detail/index', 'pages/merchant/team/index',
+  // BL-10（2026-10-15 用户决定）：ledger / ledger 核销详情 / citynode / team 标题改挂 cy-nav-bar 居中,移出本盘点;
+  // aftercare/detail 的标题是退款金额 hero(Revolut 313),保留。
+  'pages/merchant/aftercare/detail/index',
   // 2026-09-17 用户裁决:退款售后列表照 Revolut Business 316-318,改为返回 + 左对齐 L1 大标题。
   'pages/merchant/aftercare/index',
   // 其余商家页继续使用居中 nav 标题，仍只保留在 nav inventory。

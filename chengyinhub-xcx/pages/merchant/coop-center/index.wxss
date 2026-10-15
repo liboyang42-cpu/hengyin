@@ -98,17 +98,6 @@
 }
 
 /* 稿 234:276 tab 行:左对齐两项 + 右侧铃铛 */
-.cc-nav-title {
-  align-items: center;
-  color: var(--cy-color-text-primary);
-  display: flex;
-  font-size: 38rpx; /* ds-ok 稿 234:276 导航标题 19px Bold,type 阶无 19 */
-  font-weight: 700;
-  left: 88rpx;
-  position: fixed;
-  z-index: calc(var(--cy-z-nav) + 1);
-}
-
 /* 分隔线由 cy-tabs 自带底边给(只留一条);铃铛不在 tab 组件内,底线止于铃铛左侧 */
 .cc-tabbar {
   align-items: center;

@@ -19,7 +19,6 @@
     "cy-stat-card": "/components/cy/stat-card/index",
     "cy-tabs": "/components/cy/tabs/index",
     "cy-switch": "/components/cy/switch/index",
-    "cy-page-title": "/components/cy/page-title/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index"

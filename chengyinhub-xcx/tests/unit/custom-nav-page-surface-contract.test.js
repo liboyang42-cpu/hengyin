@@ -136,7 +136,6 @@ const TITLELESS_SOLID_NAV = new Set([
   'pages/club/apply/index',                 // 同上:2026-09-02 改成同形态的问句式向导
   'pages/topic/merchantinfo/merchantinfo',  // 页内 .page-title 是动态主题名
   'pages/merchant/customer/index',          // Figma 25:124 页内 .cu-hero-title 承接「客户」标题
-  'pages/merchant/coop-center/index',       // Figma 234:276 返回箭头右侧左对齐 .cc-nav-title「合作中心」,顶栏只留返回(2026-09-15 总控裁决听稿)
   'pages/merchant/customer/detail/index',   // Figma 71:279 标题就是客户名(.cd-name 28px),与头像同排;顶栏只留返回
   'pages/club/detail/index',                // 页内 .profile-name 大标题承接俱乐部名
   'pages/publish/simple/index',             // 页内自带「简单 AI · 路线共创」品牌头,不叠 page-title

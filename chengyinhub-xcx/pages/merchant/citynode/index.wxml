@@ -2,9 +2,8 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-  <cy-nav-bar custom-back bind:back="onNavBack" />
+  <cy-nav-bar title="成为节点" custom-back bind:back="onNavBack" />
   <view class="cn-nav-spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>
-  <cy-page-title title="成为节点" safe-top="{{false}}" />
 <view class="cn-intro" wx:if="{{accessState === 'ready'}}">
     <view class="cn-intro-row">
       <text class="cn-intro-t">把门店变成漫游地图上的互动据点</text>
