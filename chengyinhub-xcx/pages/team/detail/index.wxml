@@ -62,6 +62,8 @@
       <view wx:if="{{leader}}" class="team-action danger" bindtap="disband"
             aria-role="button" aria-label="解散队伍" hover-class="team-action--pressed">解散队伍</view>
     </view>
+    <view class="team-note team-report" wx:if="{{!leader}}" bindtap="openReport" aria-role="button" aria-label="举报这支队伍"
+          hover-class="cy-pressed" hover-stay-time="80">举报队伍</view>
     <view class="team-note" wx:if="{{joined}}">退队不会退款；如需退票，请在订单中单独处理。</view>
   </block>
   </block>
@@ -71,3 +73,4 @@
 <cy-danger-confirm id="dcQuit" bind:confirm="onConfirmQuit" />
 <cy-danger-confirm id="dcKick" bind:confirm="onConfirmKick" />
 <cy-danger-confirm id="dcDisband" bind:confirm="onConfirmDisband" bind:alt="onDisbandAlt" />
+<team-report-sheet show="{{reportShow}}" team-id="{{reportTeamId}}" bind:close="closeReport" />
