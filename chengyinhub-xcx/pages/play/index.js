@@ -7016,6 +7016,7 @@ Page({
     const earnedXp = (this.data.nodes || []).reduce(function (sum, node) {
       return sum + (node && node.done ? (Number(node.earnedXp) || 0) : 0);
     }, 0);
+    this._finishArtworkEpoch = (this._finishArtworkEpoch || 0) + 1;
     this.setData({
       showFinish: true,
       finishScore: earnedXp,
@@ -7044,6 +7045,7 @@ Page({
     });
   },
   _hideFinish(callback) {
+    this._finishArtworkEpoch = (this._finishArtworkEpoch || 0) + 1;
     this._milestoneReadSequence = (this._milestoneReadSequence || 0) + 1;
     if (this._reviewTimer) { clearTimeout(this._reviewTimer); this._reviewTimer = null; }
     this._finishRecommendationEpoch = (this._finishRecommendationEpoch || 0) + 1;
@@ -7333,13 +7335,15 @@ Page({
 
   // ---------- P1 足迹卡:盒内路线缩略图 + 保存用全卡(AD 风格) ----------
   // 共享的路线绘制:把节点(lat/lng)归一化画进 (bx,by,bw,bh) 框(线 + done 实心/未完成描边)
-  _drawRoute(g, nodes, bx, by, bw, bh) {
+  _drawRoute(g, nodes, bx, by, bw, bh, artwork) {
     // P1 自由定向分享卡:按"我的完成顺序"连线+标序号(每个人路径不同=个性化传播点);mode1 保持 sortId 序
-    const free = this.data.mode === 2;
+    const mode = artwork ? artwork.mode : this.data.mode;
+    const routeState = artwork ? artwork.routeState : this._routeState;
+    const free = mode === 2;
     const src = (nodes || []).filter((n) => n.lat && n.lng);
-    const branch = this._routeState.routeMode === 'BRANCH_GRAPH';
+    const branch = routeState.routeMode === 'BRANCH_GRAPH';
     const ordered = branch
-      ? orderedJourneyNodes(src, this._routeState)
+      ? orderedJourneyNodes(src, routeState)
       : free
       ? src.slice().sort((a, b) => (a.doneAt || 9e15) - (b.doneAt || 9e15))
       : src.slice().sort((a, b) => (a.sortId || 0) - (b.sortId || 0));
@@ -7376,50 +7380,97 @@ Page({
     g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
     g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
   },
+  _captureFinishArtwork(channel) {
+    const sequenceKey = channel + 'ArtworkSequence';
+    const sequence = this[sequenceKey] = (this[sequenceKey] || 0) + 1;
+    return { owner: this._playOwner, sessionKey: JSON.stringify(this._sessionParams()),
+      routeSessionId: String((this._routeState || {}).sessionId || ''), epoch: this._finishArtworkEpoch,
+      sequenceKey, sequence, mode: this.data.mode, chapter: Object.assign({}, this.data.chapter),
+      nodes: (this.data.nodes || []).map(node => Object.assign({}, node)),
+      routeState: JSON.parse(JSON.stringify(this._routeState || {})), doneCount: this.data.doneCount,
+      finishScore: this.data.finishScore, medals: this._finishMedals,
+      lead: Object.assign({}, this.data.lead), milestone: this.data.milestone ? JSON.parse(JSON.stringify(this.data.milestone)) : null };
+  },
+  _isFinishArtworkCurrent(artwork) {
+    return !!artwork && this._isPlayAccountCurrent() && this.data.showFinish
+      && artwork.owner === this._playOwner && artwork.epoch === this._finishArtworkEpoch
+      && artwork.sequence === this[artwork.sequenceKey] && artwork.sessionKey === JSON.stringify(this._sessionParams())
+      && artwork.routeSessionId === String((this._routeState || {}).sessionId || '');
+  },
+  _queueFinishCanvas(current, draw, onError) {
+    this._finishCanvasQueue = this._finishCanvasQueue || [];
+    this._finishCanvasQueue.push({ current, draw, onError });
+    this._drainFinishCanvas();
+  },
+  _drainFinishCanvas() {
+    if (this._finishCanvasBusy) return;
+    const queue = this._finishCanvasQueue || [];
+    let task;
+    while (queue.length) { const next = queue.shift(); if (next.current()) { task = next; break; } }
+    if (!task) return;
+    this._finishCanvasBusy = true;
+    let released = false;
+    const release = () => {
+      if (released) return;
+      released = true; this._finishCanvasBusy = false; this._drainFinishCanvas();
+    };
+    try { task.draw(release); } catch (e) { release(); if (task.current() && task.onError) task.onError(); }
+  },
   // 盒内路线缩略图 → finishSnap(仅路线,数字由 HTML finish-stat 负责,不重复)
   paintRouteThumb() {
-    const that = this;
-    wx.createSelectorQuery().select('#snapcv').fields({ node: true }).exec((res) => {
-      if (!res || !res[0] || !res[0].node) { that.setData({ finishSnapError: true }); return; }
-      const cv = res[0].node;
-      const W = 690, H = 320, dpr = 2;
-      cv.width = W * dpr; cv.height = H * dpr;
-      const g = cv.getContext('2d'); g.scale(dpr, dpr);
-      g.fillStyle = PLAY_STORY_CARD.surface; that._rr(g, 0, 0, W, H, 24); g.fill();
-      that._drawRoute(g, that.data.nodes || [], 0, 0, W, H);
-      wx.canvasToTempFilePath({
-        canvas: cv, destWidth: W * dpr, destHeight: H * dpr,
-        success(r) { that.setData({ finishSnap: r.tempFilePath, finishSnapError: false }); },
-        fail() { that.setData({ finishSnapError: true }); }
+    const artwork = this._captureFinishArtwork('_thumb');
+    const current = () => this._isFinishArtworkCurrent(artwork);
+    if (!current()) return;
+    this._queueFinishCanvas(current, release => {
+      wx.createSelectorQuery().select('#snapcv').fields({ node: true }).exec((res) => {
+        if (!current()) { release(); return; }
+        if (!res || !res[0] || !res[0].node) { release(); this.setData({ finishSnapError: true }); return; }
+        const cv = res[0].node;
+        const W = 690, H = 320, dpr = 2;
+        cv.width = W * dpr; cv.height = H * dpr;
+        const g = cv.getContext('2d'); g.scale(dpr, dpr);
+        g.fillStyle = PLAY_STORY_CARD.surface; this._rr(g, 0, 0, W, H, 24); g.fill();
+        this._drawRoute(g, artwork.nodes, 0, 0, W, H, artwork);
+        wx.canvasToTempFilePath({
+          canvas: cv, destWidth: W * dpr, destHeight: H * dpr,
+          success: r => { release(); if (current()) this.setData({ finishSnap: r.tempFilePath, finishSnapError: false }); },
+          fail: () => { release(); if (current()) this.setData({ finishSnapError: true }); }
+        });
       });
-    });
+    }, () => { if (current()) this.setData({ finishSnapError: true }); });
   },
   retryRouteThumb() {
     this.setData({ finishSnapError: false }, () => this.paintRouteThumb());
   },
   // 保存/分享用全卡(眉标+衬线题+路线+三列大数字+带领行+品牌脚);回调拿临时路径,不占 finishSnap
   paintFinishCard(cb) {
-    const that = this;
+    const that = this, artwork = this._captureFinishArtwork('_card');
+    const current = () => this._isFinishArtworkCurrent(artwork);
+    if (!current()) return;
+    this._queueFinishCanvas(current, release => {
+    let delivered = false;
+    const deliver = path => { if (delivered) return; delivered = true; release(); if (current() && cb) cb(path); };
     wx.createSelectorQuery().select('#snapcv').fields({ node: true }).exec((res) => {
-      if (!res || !res[0] || !res[0].node) { cb && cb(''); return; }
+      if (!current()) { release(); return; }
+      if (!res || !res[0] || !res[0].node) { deliver(''); return; }
       const cv = res[0].node;
       const W = 750, H = 1000, dpr = 2;
       cv.width = W * dpr; cv.height = H * dpr;
       const g = cv.getContext('2d'); g.scale(dpr, dpr);
       g.fillStyle = PLAY_STORY_CARD.page; g.fillRect(0, 0, W, H);
       g.fillStyle = PLAY_STORY_CARD.muted; g.font = '600 22px Menlo, monospace'; g.textAlign = 'left';
-      g.fillText(that.data.mode === 2 ? 'C H E N G Y I N · 我 的 探 索 顺 序' : 'C H E N G Y I N · 主 题 通 关', 56, 88);
+      g.fillText(artwork.mode === 2 ? 'C H E N G Y I N · 我 的 探 索 顺 序' : 'C H E N G Y I N · 主 题 通 关', 56, 88);
       g.fillStyle = PLAY_STORY_CARD.text; g.font = '500 52px Georgia, serif';
-      g.fillText(String(that.data.chapter.name || '城市探索').slice(0, 12), 56, 160);
+      g.fillText(String(artwork.chapter.name || '城市探索').slice(0, 12), 56, 160);
       const bx = 56, by = 210, bw = W - 112, bh = 380;
       g.fillStyle = PLAY_STORY_CARD.surface; that._rr(g, bx, by, bw, bh, 24); g.fill();
-      that._drawRoute(g, that.data.nodes || [], bx, by, bw, bh);
+      that._drawRoute(g, artwork.nodes || [], bx, by, bw, bh, artwork);
       const stats = [
         // 与通关卡同一处修正:标签是"点亮坐标"就得给已点亮数,不是总数。
         // 这份是**分享卡**,错数字会被烤进图片传播出去,比页面上错得更久。
-        [String(that.data.doneCount || 0), '点亮坐标'],
-        [String(that.data.finishScore || 0), '探索值'],
-        [String(that._finishMedals || 0), '获得徽章']
+        [String(artwork.doneCount || 0), '点亮坐标'],
+        [String(artwork.finishScore || 0), '探索值'],
+        [String(artwork.medals || 0), '获得徽章']
       ];
       stats.forEach((st, i) => {
         const cx = 56 + i * ((W - 112) / 3) + ((W - 112) / 6);
@@ -7430,13 +7481,13 @@ Page({
         g.fillText(st[1], cx, by + bh + 170);
       });
       g.textAlign = 'center'; g.fillStyle = PLAY_STORY_CARD.muted; g.font = '400 24px -apple-system, sans-serif';
-      if (that.data.lead && that.data.lead.exists) {
-        g.fillText('全队 ' + that.data.lead.total + ' 人同行', W / 2, by + bh + 230);
+      if (artwork.lead && artwork.lead.exists) {
+        g.fillText('全队 ' + artwork.lead.total + ' 人同行', W / 2, by + bh + 230);
       }
       const footerY = H - 24;
       // 里程碑轴:海报要和屏幕上那张卡是同一件东西,所以这里也画一条。
       // milestone 为 null(累计数没取到)时整条不画 —— 与页面同一条口径,不在海报上补假数字。
-      const ms = that.data.milestone;
+      const ms = artwork.milestone;
       if (ms && ms.tiers && ms.tiers.length) {
         const my = by + bh + 290;
         const r = 30, gap = (W - 112 - r * 2) / (ms.tiers.length - 1);
@@ -7459,19 +7510,24 @@ Page({
       g.fillText('城 瘾 · 走 进 城 市 的 瘾', W / 2, footerY);
       wx.canvasToTempFilePath({
         canvas: cv, destWidth: W * dpr, destHeight: H * dpr,
-        success(r) { cb && cb(r.tempFilePath); }, fail() { cb && cb(''); }
+        success(r) { deliver(r.tempFilePath); }, fail() { deliver(''); }
       });
     });
+    }, () => { if (current() && cb) cb(''); });
   },
   saveFinishCard() {
-    const that = this;
+    const that = this, intent = this._captureFinishArtwork('_album');
+    const current = () => this._isFinishArtworkCurrent(intent);
+    if (!current()) return;
     that.diegetic('生成足迹卡…');
     that.paintFinishCard((path) => {
+      if (!current()) return;
       if (!path) { that.diegetic('足迹卡生成失败,再试一次'); return; }
       wx.saveImageToPhotosAlbum({
         filePath: path,
-        success() { that.diegetic('已保存到相册'); },
+        success() { if (current()) that.diegetic('已保存到相册'); },
         fail(e) {
+          if (!current()) return;
           if (e.errMsg && e.errMsg.indexOf('auth') >= 0) { wx.openSetting({}); }
           else if (e.errMsg && e.errMsg.indexOf('cancel') >= 0) { /* 用户取消 */ }
           else { that.diegetic('保存失败,再试一次'); }
