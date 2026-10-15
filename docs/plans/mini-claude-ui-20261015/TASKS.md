@@ -17,3 +17,12 @@
 | CL3 俱乐部勋章 + 昵称 | N2 + N4 | `pages/club/**`（勋章管理）、资料编辑页（`pages/gerenziliao` 或 `pages/userinfo`） | 无 | 主理人可创建/列表/授予，非主理人不可见；昵称输入有校验与推荐，失败可恢复 |
 | CL4 官方活动主办方 + 数据导出 | N3 + N5 + G4 | `pages/activity/official-*`、`components/cy/npc-chat`（只加导出）、积分规则展示所在的 `subpackageMember/components/cy/profile` 积分区 | 无 | 邀请/转交/排期/暂停/恢复各有二次确认与回读；导出可复制/保存；积分规则从既有接口读取，缺失时诚实空态 |
 | CL5 门店认领证明材料 | G2 | `pages/merchant/components/merchant-claim-sheet`、`utils/merchant-claim.js` | **Codex C00 给出合同后才启动** | 按合同上传对象存储标识；不再提交任意 URL |
+
+## 用户决定（2026-10-15，覆盖上方卡片中与之冲突的描述）
+| 卡 | 决定 |
+|---|---|
+| 全部 | 弹层一律用现有 `cy-sheet`（标题 + 关闭按钮），不自造弹层；商家/浅色页灰底（`--cy-color-bg-page`）、卡片与输入框**无描边**。 |
+| CL1 | 官方路线「按这条路线开始」**暂缓**，撤掉 G1 全部改动，只保留 G3（入口文案「官方路线」+ 拆分一行两语句）。漫游=自由探索不限顺序；城市定向（`pages/play` mode=1）本来就按顺序，不另做。 |
+| CL2 | 阶段名确认：已提交/已受理/调查中/已处理/已关闭/申诉中。申诉**只支持文字**（后端 `normalizeEvidence` 本批也拒绝附件）。**不做被举报方入口与视图。** 「我的举报」**不单独放入口**，从系统消息进入：后端举报进度通知 `notificationType=SYSTEM_GOVERNANCE`、payload 含 `reportId`/`publicStage`（`CommunityTrustServiceImpl.enqueueReportProgress`），在现有系统消息/通知渲染处让这类消息可点进举报详情（含申诉）。如需改 Codex 或协调者文件，只交补丁。 |
+| CL3 | 勋章图标**不改**，沿用现有勋章图标/样式渲染；昵称被占用时列出推荐供点选，不自动填。 |
+| CL4 | 对话导出 = 复制文本。暂停表单用「预设选项 + 补充文字」（四项后端字段仍为文本）。「提交排期」改用户能懂的名称：后端语义是草稿通过发布检查后进入 SCHEDULED（`OfficialEventV2ServiceImpl.schedule`），建议文案「发布活动」+ 副文案「通过发布检查后对报名可见」。**邀请候任主办/转交暂不做。** 重点改为**联合主办**：后端 `official_event_party.role` 已有 `CO_ORGANIZER`（另有 ORGANIZER/FULFILLMENT_*/SPONSOR/PROMOTION_PARTNER），协办方在 `official-inbox` 接受；本卡先在活动详情展示主办方+全部协办方（读接口已有字段才展示，不编造）。**新增协办方**目前只能经草稿 `/v2/drafts` 的 parties 全量覆盖，已排期活动无接口——若要在小程序里加协办方，需要 Claude 专属新接口，先在 PR #21 以 `CY-HANDOFF: CLAUDE` 提合同申请，获批前不写后端。 |
