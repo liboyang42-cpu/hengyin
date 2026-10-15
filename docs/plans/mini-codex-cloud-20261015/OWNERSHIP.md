@@ -5,8 +5,8 @@
 ## 当前事实与状态
 
 - 控制仓库/分支：`liboyang42-cpu/hengyin@codex/mini-bugs-backend-cloud-plan-20261015`，复用文档PR16。
-- 业务候选：`codex/mini-bug-arch-integration-20261015@c24202f659e8709a00b513b8e456d101a6b99daf`，[PR18](https://github.com/liboyang42-cpu/hengyin/pull/18)，未合并。共同worker基线 `d551c6babd018d41aec90dad2c0acaf1c534644d`。
-- 后端整体仅 CONTRACT_FROZEN：两个补偿用例前提已修正，当前SHA的Java CI待重验，不能标SOURCE_READY或TEST_DEPLOYED；任何测试服务/数据库/设备均无部署证据。
+- 业务候选：`codex/mini-bug-arch-integration-20261015@69c281af1ecc3493db5614b74e494b91c7bb0656`，[PR18](https://github.com/liboyang42-cpu/hengyin/pull/18)，未合并。共同worker基线 `d551c6babd018d41aec90dad2c0acaf1c534644d`。
+- 已测修复在69c281af达到SOURCE_READY：GitHub CI run38730430052与Funds run38730430072均成功，跳过/未覆盖项见VALIDATION_69c281af.json。任何测试服务/数据库/设备均无部署证据，不能标TEST_DEPLOYED；ASSET新增真库竞态仍待点名。
 - worker最多4路；用户指定模型后，后续worker均显式 `gpt-6.1-sol`。历史所有者已冻结并交补丁后才交接，非因超时释放。
 - 唯一控制写者C00独占本目录全部控制文档，尤其OWNERSHIP.md、BACKEND_CHANGES.md、tasks.json；其他人只能在自己的PR/交付目录交请求。
 
@@ -16,7 +16,7 @@
 
 | 角色/来源 | 实际公共分支与SHA | 处置 |
 |---|---|---|
-| CODEX | 候选c24202f659e8709a00b513b8e456d101a6b99daf，PR18 | 本协调者实际已启动；将维护CY-HANDOFF: CODEX正文 |
+| CODEX | 候选69c281af1ecc3493db5614b74e494b91c7bb0656，PR18 | 本协调者实际已启动；将维护CY-HANDOFF: CODEX正文 |
 | CLAUDE | `claude/mini-ui-features-20261015@c6bc2200daefec1f31c00962ab494b0e1b504c00`，PR21 | 已主动读到CY-HANDOFF: CLAUDE更新及两份文档，CL1–5实际申领见下表/CL1审阅；对本次分配的接收回执仍PENDING。认领材料合同DRAFT |
 | 额外新功能PR20 | `feature/roam-launch-20261015@49182b74e5fd515f30a09442338b8f5ed4c9b91e` | 含两条新DDL及订单/漫游文件重叠，非本轮自动集成；原所有者未明确停止，不能抢写 |
 | 额外隐私PR17 | `feature/prelaunch-acceptance-20261015@b1f66dbf95dcb172f4c1255e079ba19f35a988e5` | 已读正文；父链不同，作者测试/部署声明未在本候选独立复核，不合并、不夺其文件 |
@@ -113,7 +113,7 @@
 | CL4 | `hengyin:chengyinhub-xcx/subpackageMember/components/cy/profile/index.wxss` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
 
 - CL1全roam与roam-*通配：REQUESTED，不整批批准。PR20已占用pages/roam/index.{js,wxml,wxss}、history/index.{js,wxml}、nearby/index.{js,wxml,wxss}、my-teams四文件，保留该PR原写者，须停止/补丁/基线记录后才可转交；其他实际需要路径请在CY-HANDOFF精确申请。
-- CL2新report-*页、CL3新徽章页及其测试：REQUESTED，未给精确命名，不凭猜测登记新目录。昵称资料页两套入口请给实际调用及拟改的一套；PR17资料/隐私重叠保留原写者。
+- CL2新report-*页、CL3新徽章页及其测试：REQUESTED，未给精确命名，不凭猜测登记新目录。昵称资料页两套入口请给实际调用及拟改的一套；初始保守保留，后按真实base三点diff已确认PR23 gerenziliao资料文件无PR17增量冲突，以下CL3精确登记优先。
 - CL3 pages/club/**：REQUESTED，明确排除已锁 `chengyinhub-xcx/pages/club/event-ops/index.js`；需其变更交B01/B04原所有者，WXML/WXSS另列精确事件合同后领取。
 - CL4 `chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java`：A02保留锁；UI领取不含后端核心或后台全目录。profile若与PR17重叠未授予。未知usage不能用0显示，具体后台Vue页面请精确申领。
 - CL5 claim-sheet四文件与utils/merchant-claim.js：REQUESTED，材料合同DRAFT；不得先固定PHOTO、截URL猜assetId或把缺归属校验当业务批准。认领专属后端可在合同/精确文件确认后委派，当前无新增后端写授权。
@@ -135,3 +135,31 @@
 | hengyin | `chengyinhub-xcx/tests/unit/roam-follow-route.test.js` | Claude CL1 / PR22原写者 | ASSIGNED，原交付64b485a；更新候选69c281af需保留现有锁 | 仅本机地图辅助；按审阅修复，非后端权威完成；不得扩写父目录 |
 
 PR22中的roam入口JS/WXML为CONFLICT_HELD（PR20原写者未停止）；index.json及四项全局测试/账本为PATCH_PROPOSED给C00串行，均未转交写权。具体名单见审阅文档。PR21新增CL2/3/4仍REQUESTED精确名；CL5保持DRAFT。
+
+## 集中测试与VPS连接复核
+
+当前精确候选69c281af的两条既有GitHub工作流均SUCCESS，详见[脱敏测试证据](VALIDATION_69c281af.json)。本轮没有合并/部署。用户要求由协调者接VPS集中测试：已校验用户提供的临时身份可加载，标准SSH在认证前Connection refused；Cloud当前TCP允许目标为空、无VPN/外联身份，连接问题已向用户报告，等待正确端口/网络配置。身份仅存权限受限临时文件，绝不进入控制文档/Git/CI。已有CI不是VPS验收。
+
+## CL3实际交付PR23 a7246947
+
+详见[CL3审阅](HANDOFF_REVIEW_CL3.md)。以下15项实际业务/专属测试给原Claude CL3 / PR23独占；不是整页目录通配，新页只限badges/四文件。原作者持续写入、未转交Codex；接收本控制分配回执PENDING。主候选仍69c281af，PR23未集成。
+
+| 仓库 | 精确路径 | 唯一写者 | 状态/基线 | 限制 |
+|---|---|---|---|---|
+| hengyin | `chengyinhub-xcx/pages/club/badges/index.js` | Claude CL3 / PR23 | ASSIGNED；交付a7246947，候选69c281af | 原写者按审阅修复；未授权改后端/共享文件 |
+| hengyin | `chengyinhub-xcx/pages/club/badges/index.json` | Claude CL3 / PR23 | ASSIGNED；交付a7246947，候选69c281af | 原写者按审阅修复；未授权改后端/共享文件 |
+| hengyin | `chengyinhub-xcx/pages/club/badges/index.wxml` | Claude CL3 / PR23 | ASSIGNED；交付a7246947，候选69c281af | 原写者按审阅修复；未授权改后端/共享文件 |
+| hengyin | `chengyinhub-xcx/pages/club/badges/index.wxss` | Claude CL3 / PR23 | ASSIGNED；交付a7246947，候选69c281af | 原写者按审阅修复；未授权改后端/共享文件 |
+| hengyin | `chengyinhub-xcx/pages/club/utils/club-badge.js` | Claude CL3 / PR23 | ASSIGNED；交付a7246947，候选69c281af | 原写者按审阅修复；未授权改后端/共享文件 |
+| hengyin | `chengyinhub-xcx/utils/nickname-check.js` | Claude CL3 / PR23 | ASSIGNED；交付a7246947，候选69c281af | 原写者按审阅修复；未授权改后端/共享文件 |
+| hengyin | `chengyinhub-xcx/tests/unit/club-badge-manage.test.js` | Claude CL3 / PR23 | ASSIGNED；交付a7246947，候选69c281af | 原写者按审阅修复；未授权改后端/共享文件 |
+| hengyin | `chengyinhub-xcx/tests/unit/profile-nickname-check.test.js` | Claude CL3 / PR23 | ASSIGNED；交付a7246947，候选69c281af | 原写者按审阅修复；未授权改后端/共享文件 |
+| hengyin | `chengyinhub-xcx/pages/club/detail/index.js` | Claude CL3 / PR23 | ASSIGNED；交付a7246947，候选69c281af | 原写者按审阅修复；未授权改后端/共享文件 |
+| hengyin | `chengyinhub-xcx/pages/club/detail/index.wxml` | Claude CL3 / PR23 | ASSIGNED；交付a7246947，候选69c281af | 原写者按审阅修复；未授权改后端/共享文件 |
+| hengyin | `chengyinhub-xcx/pages/club/detail/index.wxss` | Claude CL3 / PR23 | ASSIGNED；交付a7246947，候选69c281af | 原写者按审阅修复；未授权改后端/共享文件 |
+| hengyin | `chengyinhub-xcx/pages/gerenziliao/gerenziliao.js` | Claude CL3 / PR23 | ASSIGNED；交付a7246947，候选69c281af | 原写者按审阅修复；未授权改后端/共享文件 |
+| hengyin | `chengyinhub-xcx/pages/gerenziliao/gerenziliao.wxml` | Claude CL3 / PR23 | ASSIGNED；交付a7246947，候选69c281af | 原写者按审阅修复；未授权改后端/共享文件 |
+| hengyin | `chengyinhub-xcx/pages/gerenziliao/gerenziliao.wxss` | Claude CL3 / PR23 | ASSIGNED；交付a7246947，候选69c281af | 原写者按审阅修复；未授权改后端/共享文件 |
+| hengyin | `chengyinhub-xcx/tests/unit/profile-edit-state-contract.test.js` | Claude CL3 / PR23 | ASSIGNED；交付a7246947，候选69c281af | 原写者按审阅修复；未授权改后端/共享文件 |
+
+PR23共享PATCH_PROPOSED给C00（尚未合入）：`chengyinhub-xcx/app.json`、`scripts/uiaudit/action-ledger.json`、`scripts/uiaudit/route-matrix.json`、`tests/unit/action-ledger.test.js`、`tests/unit/nav-page-title-spacing-contract.test.js`、`tests/unit/route-matrix-freshness.test.js`、`tests/unit/title-system-owner-contract.test.js`、`utils/danger-actions.js`（后七同chengyinhub-xcx前缀）。它们与PR20真实增量交叉，不由Claude覆盖候选，不按旧1796计数覆盖本候选1792退款范围。原所有者停止/交付记录未取得，未转交。

@@ -30,3 +30,5 @@ OWNERSHIP新增七个实际独立新文件给Claude CL1/PR22，详情页四文�
 已读PR21新文档的REQUESTED清单。CL2新report-*、CL3 badges、CL4主办方面板及专属测试仍缺实际精确名，需在其交付PR补齐后登记；无冲突已领设计继续。PR21 README把积分写成“分页+四态”，TASKS已写全量，应同步README为POST /api/points/list一次全量；根权限、发布状态及iOS独立分工用最新控制协议，不能沿旧文档“均CI绿”推断当前候选/设备验收。
 
 处置结果：PR22保持草稿/未集成，独立修复由原Claude CL1继续，不启动第二个Codex UI实现。等待实际原写者交付与接收回执，其余bug/架构CI继续。
+
+校准：主漫游onShow本身有owner变化清理，PR22已插exit，应承认正常A→B清理与定位generation保护有效；上述消费helper有owner→空owner问题仍需修，不能据此断言正常onShow下A→B一定残留。PR22 a5cb35ed只改事件合同计数，不是七项审阅修复的交付。

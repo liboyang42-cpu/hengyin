@@ -59,7 +59,7 @@
       ],
       "claude_boundary": "不会费/群聊/群投票，不启动原四任务；UI/new-feature增量仍归Claude。",
       "hold_if": "父PR含无法审查的变更则该依赖保持待处理；无网络不做假的合并/CI成功。",
-      "state": "基线与三方公共PR已核，控制账已发布；Claude/iOS接收回执待交"
+      "state": "公共基线与三方交付已核，唯一控制账已发布；接收回执另列"
     },
     {
       "id": "B01",
@@ -103,7 +103,7 @@
       ],
       "claude_boundary": "只改既有JS行为与必要测试；新提示、布局、页面、WXML/WXSS由Claude。pages/play交叉变更需C00串行整合。",
       "hold_if": "",
-      "state": "源码与相关Node回归通过，候选CI及设备待验"
+      "state": "源码与相关Node/候选CI通过，VPS与微信设备待验"
     },
     {
       "id": "B02",
@@ -139,7 +139,7 @@
       ],
       "claude_boundary": "作者页面、保存反馈、状态键UI与预演交Claude；Codex只修后端既有行为，不新增产品规则。",
       "hold_if": "新增字段/DDL或变更发布政策先出具体方案，不能以新表补洞。",
-      "state": "配置保真已修，Java回归交候选CI；首次create丢响应限制保留"
+      "state": "配置保真修复随候选CI通过；首次create丢响应仍未知"
     },
     {
       "id": "B03",
@@ -183,7 +183,7 @@
       ],
       "claude_boundary": "积分明细/资金中心UI、新领券/储值/提现或支付产品交Claude另行范围；本单不新增业务。",
       "hold_if": "政策单位未定则先证据/方案；需要新唯一索引/DDL或改变鉴权/RBAC另行确认，不改历史迁移。",
-      "state": "积分锁读与应付CAS已修，真库独立读回待验"
+      "state": "锁读与应付CAS单测/既有资金门禁通过；新增B03真库竞态未跑"
     },
     {
       "id": "B04",
@@ -219,7 +219,7 @@
       ],
       "claude_boundary": "官方草稿/邀请转交/暂停恢复等新入口及排期UI归Claude；本单仅既有bug。",
       "hold_if": "",
-      "state": "时刻读回与既有JS消费、候补保护已修，Java/设备待验"
+      "state": "时刻/候补修复及JS消费随候选CI通过，VPS与设备待验"
     },
     {
       "id": "B05",
@@ -256,7 +256,7 @@
       ],
       "claude_boundary": "举报/申诉新页面、媒体审核工作台、新内容链切换均归Claude；本单只恢复现有政策。",
       "hold_if": "AGENTS规定的鉴权/RBAC逻辑改变必须另批；可先完成取证、回归和方案，不擅自落授权变更。",
-      "state": "最小读取修复已获用户批准并应用，候选CI/读回待验"
+      "state": "用户批准的已删帖读取修复随CI通过，真实旧链接/媒体待验"
     },
     {
       "id": "A01",
@@ -300,7 +300,7 @@
       ],
       "claude_boundary": "待核对/恢复/人工协助等新UI交Claude；已有必要JS bug修复由B01所有者整合，A01不写页面文件。",
       "hold_if": "如必须新增持久化字段/索引，先提交合同与兼容方案；本批不执行DDL。",
-      "state": "结局正文新局快照与既有请求合同已交，候选CI/读回待验"
+      "state": "新局结局正文快照与既有请求合同随候选CI通过，跨设备待验"
     },
     {
       "id": "A02",
@@ -341,7 +341,7 @@
       ],
       "claude_boundary": "AI创作入口、新对话UI、模型新场景和新功能后端交Claude；共用网关合同由本单维护。",
       "hold_if": "价格/留存/付费行为与新依赖须明确决策；无真实usage字段能力就标估算，不伪造。",
-      "state": "配置/审核/未知额度修复已交；删除屏障、语音池政策与后台未知展示未闭合",
+      "state": "配置/完整审核/未知额度修复随CI通过；删除屏障/语音政策/后台未知展示未闭合",
       "phase_split": {
         "bugfix": "C00后即复核/修缺配置mock成功和完整输入审核缺口，不等其他架构",
         "architecture": "B01–B05有修复或明确证据处置后，再整理用量/额度/留存合同；同一A02所有者串行继续"
@@ -390,7 +390,7 @@
       ],
       "claude_boundary": "状态键面板、条件编辑器、结果卡、预演和新玩法归Claude；本单仅后端兼容底层。",
       "hold_if": "新结局选择语义、旧内容迁移或新表字段须先确认；不自动采用新策略。",
-      "state": "结局写校验与快照读侧已交，历史缺键兼容限制保留"
+      "state": "结局写校验与冻结正文读侧随CI通过，历史缺键限制保留"
     },
     {
       "id": "C99",
@@ -428,7 +428,7 @@
       ],
       "claude_boundary": "输出Claude可读的稳定后端合同，不接手其UI/新功能，不做iOS/Flutter。",
       "hold_if": "",
-      "state": "PR18；c24202f6补偿用例已修待CI；三方文件/合同已发布，VPS与两端设备未验证"
+      "state": "69c281af两条CI全成功；三方归属合同已发布；VPS SSH认证前拒连，等待网络/端口，两端设备未验"
     }
   ],
   "parallel_policy": {
@@ -580,13 +580,17 @@
     "worker_limit": 4,
     "worker_model_after_user_selection": "gpt-6.1-sol",
     "readiness": "SOURCE_CANDIDATE_NOT_BUSINESS_READY",
-    "backend_status": "CONTRACT_FROZEN",
+    "backend_status": "SOURCE_READY_WITH_DOCUMENTED_LIMITS",
     "test_deployed": false,
     "merge_status": "UNMERGED",
     "coordination_protocol": "CY-COORD-20261015-v1",
     "control_writer": "C00/C99",
     "claude_handoff_pr": 21,
     "claude_ack": "PENDING",
-    "ios_handoff": "NO_OPEN_PR_OBSERVED_NOT_UNASSIGNED"
+    "ios_handoff": "NO_OPEN_PR_OBSERVED_NOT_UNASSIGNED",
+    "validated_candidate_sha": "69c281af1ecc3493db5614b74e494b91c7bb0656",
+    "github_ci_run": 38730430052,
+    "funds_ci_run": 38730430072,
+    "vps_test_status": "SSH_REFUSED_BEFORE_AUTH_WAITING_CONNECTION_CONFIGURATION"
   }
 }

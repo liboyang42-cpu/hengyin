@@ -4,27 +4,36 @@
 
 ## 执行发布记录（2026-10-15，优先于后面的初始规划）
 
-CY-HANDOFF: CODEX。控制协议 `CY-COORD-20261015-v1`；唯一协调者C00/C99。业务草稿 [PR18](https://github.com/liboyang42-cpu/hengyin/pull/18)，worker公共基线 `d551c6babd018d41aec90dad2c0acaf1c534644d`，本次源码候选 `c24202f6`（原 `c236f131` 加两个既有补偿测试的调用前失败前提修正）。精确锁见OWNERSHIP.md；后续纯文档提交不代表新部署。
+CY-HANDOFF: CODEX。控制协议 `CY-COORD-20261015-v1`；唯一协调者C00/C99。业务草稿 [PR18](https://github.com/liboyang42-cpu/hengyin/pull/18)，worker公共基线 `d551c6babd018d41aec90dad2c0acaf1c534644d`，本次已测PR候选 `69c281af1ecc3493db5614b74e494b91c7bb0656`，源码/测试提交 `c24202f6`（原 `c236f131` 加两个既有补偿测试的调用前失败前提修正）。精确锁见OWNERSHIP.md；后续纯文档提交不代表新部署。
 
 **本轮没有合并GitHub PR、执行DDL、部署、上传或生产变更。所有 TEST_DEPLOYED 均为 NO，iOS适配/微信设备/独立业务读回均未签收。** 本Cloud没有配置可核实的授权VPS路径和必要身份，未回落生产或自行搭建Java/MySQL。各项fixture是虚构输入，只准源码/fixture适配，不得当服务器已上线。
+
+### 当前精确候选CI签收
+
+69c281af：[GitHub CI run38730430052](https://github.com/liboyang42-cpu/hengyin/actions/runs/38730430052) 10个job均成功；[Funds MySQL IT run38730430072](https://github.com/liboyang42-cpu/hengyin/actions/runs/38730430072) 两个job成功。脱敏机器证据见[VALIDATION_69c281af.json](VALIDATION_69c281af.json)。
+
+- 后端主要Java套件10095项，0失败/0错误/530跳过；跳过不当通过。新增普通回归类无条件跳过标记，由现有Maven默认发现；新B03 opt-in真库套件不在当前显式清单，仍未运行。
+- 另点名27套MyBatis真库：96项，0失败/0错误/0跳过，并由assert_it_ran回读。资金真库562项，0失败/0错误/0跳过。它们不代替专用VPS独立业务验收。
+- 小程序全量Node8327项，8325通过/0失败/2跳过/0todo；UI-GATE-0及自证、JS/JSON、RequestBody、危险操作确认、路由/动作账门禁成功。控件4480、local tap1792的退款真实授权范围保持。
+- 下表SOURCE_READY仅对应上述候选源码/测试范围。CLAIM-MATERIAL/AI-DELETE/AI-VOICE仍DRAFT；测试部署、合并和两端设备继续未验证。2026-10-15用户要求协调者接VPS集中测，身份成功加载但SSH认证前拒绝连接，Cloud当前TCP允许目标为空，正等待目标端口/网络配置，不把连接受阻写为测试通过。
 
 ### 发布层级与证据
 
 | BK | 状态 | 源码及相关责任 | 当前测试/限制 |
 |---|---|---|---|
-| GPS / LIKE / BADGE | CONTRACT_FROZEN | 已评审复用PR12，收入PR18；C00保留核心锁 | 原有方法/合同见下方初始基线；同候选CI正在重验，无真实GPS/两账号读回 |
-| AUTHOR | CONTRACT_FROZEN | B02 `cc9e99c`，配置缺席保真 | 专属5项Java测试交现有CI；首次create丢响应仍UNKNOWN |
-| ASSET | CONTRACT_FROZEN | B03 `cc6a8b9`，锁读及应付CAS | c236f131 Funds MySQL IT run38728912034成功；B03额外opt-in真库用例不在该门禁，未运行，不能推导并发业务已验 |
-| SCHEDULE | CONTRACT_FROZEN | B04/B01 `1352b6a`、`38513c9` | 6项Java用例交CI；既有JS消费8/8；VPS/设备待验 |
-| PRIVACY | CONTRACT_FROZEN | B05 用户批准 `e437a52` | 已删旧详情及编辑历史最小读取修复；两身份mapper用例交CI，无真实旧媒体URL验收 |
-| SESSION | CONTRACT_FROZEN | A01 `38513c9`，内部结局快照 | 客户端game-session回归16/16；命令/回执现有合同，不虚构统一恢复API |
-| AI | CONTRACT_FROZEN（仅下述已固定部分） | A02 `f72ddb1`、`3b53769`，补偿测试 `c24202f6` | c236f131总10095项、失败2、错误0、跳过530；两个失败为旧用例仍按调用后异常退额，已修调用前触发，待新CI |
-| NARRATIVE | CONTRACT_FROZEN | A03 `38513c9`，构造测试修正 `3ee0fd0` | 旧选择策略与快照读侧测试交CI；历史缺快照正文不可追溯 |
+| GPS / LIKE / BADGE | SOURCE_READY（当前CI范围） | 已评审复用PR12，收入PR18；C00保留核心锁 | 原有方法/合同见下方基线；同候选CI成功，无真实GPS/两账号读回 |
+| AUTHOR | SOURCE_READY | B02 `cc9e99c`，配置缺席保真 | 专属普通Java回归随现有CI成功；首次create丢响应仍UNKNOWN |
+| ASSET | SOURCE_READY（单测/既有门禁范围） | B03 `cc6a8b9`，锁读及应付CAS | c236f131 Funds MySQL IT run38728912034成功；B03额外opt-in真库用例不在该门禁，未运行，不能推导并发业务已验 |
+| SCHEDULE | SOURCE_READY | B04/B01 `1352b6a`、`38513c9` | 普通Java回归随现有CI成功；既有JS消费8/8；VPS/设备待验 |
+| PRIVACY | SOURCE_READY | B05 用户批准 `e437a52` | 已删旧详情及编辑历史最小读取修复；两身份mapper普通回归随现有CI成功，无真实旧媒体URL验收 |
+| SESSION | SOURCE_READY | A01 `38513c9`，内部结局快照 | 客户端game-session回归16/16；命令/回执现有合同，不虚构统一恢复API |
+| AI | SOURCE_READY（仅下述已固定部分） | A02 `f72ddb1`、`3b53769`，补偿测试 `c24202f6` | 69c281af总10095项、失败0、错误0、跳过530；前版两个失败已修调用前触发，未知不退额断言保留 |
+| NARRATIVE | SOURCE_READY | A03 `38513c9`，构造测试修正 `3ee0fd0` | 旧选择策略与快照读侧普通回归随CI成功；历史缺快照正文不可追溯 |
 | XCX | SOURCE_READY（仅已运行Node范围） | B01 `0171a6c`、`8a83c83`、`38513c9` | 生命周期/账号/退款/排期相关Node输出在B01；C99 ledger40/40，GET/route31通过，UI-GATE-0 PASS；不是整端真机验收 |
-| EXISTING | CONTRACT_FROZEN（列明原接口部分） | PR14/15兼容集成，C00 | 官方路线只读、积分全量等边界保留；认领材料另列DRAFT |
+| EXISTING | SOURCE_READY（列明原接口/CI范围） | PR14/15兼容集成，C00 | 官方路线只读、积分全量等边界保留；认领材料另列DRAFT |
 | CLAIM-MATERIAL / AI-DELETE / AI-VOICE | DRAFT | 见下方具体待决策项，尚未委派共享核心 | 不启动猜测协议的写接线；不因其他任务阻塞停止独立工作 |
 
-所有行的GitHub合并状态均为 UNMERGED，测试部署 NOT_VERIFIED。相关测试通过后由协调者逐项更新SOURCE_READY；530项跳过不计通过。c236f131后端日志通过现有ci/backend-test.sh保留原 `mvn -B clean test` 和退出码、仅收敛控制台噪声以显露失败；未改workflow/pom/门禁测试列表。动作ID总数4480保持，4项退款控件新增真实订阅授权后改分类，保留原退款POST、重复触发及服务端/设备读回要求。
+所有行的GitHub合并状态均为 UNMERGED，测试部署 NOT_VERIFIED。已按69c281af相关测试逐项发布SOURCE_READY；530项跳过不计通过。c236f131后端日志通过现有ci/backend-test.sh保留原 `mvn -B clean test` 和退出码、仅收敛控制台噪声以显露失败；未改workflow/pom/门禁测试列表。动作ID总数4480保持，4项退款控件新增真实订阅授权后改分类，保留原退款POST、重复触发及服务端/设备读回要求。
 
 ### 已冻结差异及两端共用fixture
 
@@ -228,3 +237,11 @@ iOS影响：原生WalletCommerce已区别assetPoints非分页与另一个分页p
 | 回退 | 兼容窗口、停止条件和回退操作；不删既有迁移或重置未决锁 |
 
 没有新消息或没有部署证据时保持原状态，不把“后端统一”推导成iOS自动开通。测试数据使用明确synthetic fixture，凭据只进获准环境，不进GitHub。
+
+## 新到交付PR23（CL3）
+
+已读PR23 a7246947完整正文及23文件差异，正在只读核badge/nickname真实合同与精确冲突；当前未集成，不将作者静态/CI报告当本候选结果。报告的私团badge list登录即可读、创建未送审、grant缺独立受领名单读回、source_type=6展示待核，先证据/方案，不能静默改鉴权或产品政策。新页路径已具体化后由C00登记，公共app.json/路由/动作/危险操作登记及冻结计数仍只收最小补丁。PR22更新a5cb35ed仅计数修正，未证明已修本控制分支CL1审阅项。接收回执继续PENDING。
+
+### BK-CLUB-UI既有合同与新发现（CL3）
+
+[PR23审阅](HANDOFF_REVIEW_CL3.md)已核方法/JSON与表单绑定、权限、幂等范围、URL/来源语义及失败/未知fixture。NO_API_CHANGE；已有list/create/grant/nickname合同CONTRACT_FROZEN，PR23前端仍待账号隔离/创建未知状态等修复，不是SOURCE_READY。私团badge list仅登录可读、create无内容安全审核、grant无独立受领读面或并发冲突回执，这些新增共享后端线索DRAFT，不在本轮静默改鉴权/审核/产品政策。iconUrl是现有URL合同，不能套CL5 assetId规则；保留超长可恢复错误。15项独立文件给Claude CL3，八项共享补丁由C00统筹并保留PR20原写者。
