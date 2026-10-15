@@ -384,6 +384,14 @@
       "irreversible": true,
       "confirmKey": "ai.npc.chatData.delete",
       "reason": "服务端硬删该账号全部 NPC 对话记录,无法恢复"
+    },
+    {
+      "endpoint": "/api/topic/state-keys",
+      "file": "pages/publish/components/topic-state-keys/index.js",
+      "irreversible": true,
+      "confirmKey": "topic.stateKey.delete",
+      "trigger": "payload",
+      "reason": "DELETE 动词在 method 上而不在 URL 上,扫描看不见,手工登记;键的显示名/初始值删后无法找回"
     }
   ]
 }
