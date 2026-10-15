@@ -75,7 +75,8 @@ test('一次同步写入完整草稿信封，章节与待编排素材来自同�
 
 test('恢复前校验 memberId，绝不把 A 的草稿恢复给 B', () => {
   const storage = makeStorage()
-  saveDraft(storage, input({ memberId: 7 }))
+  const legacySource = saveDraft(storage, input({ memberId: 7 }))
+  storage.values[draftKeyFor({ draftUuid: 'draft-a' })] = storage.values[legacySource]
 
   const result = loadDraft(storage, { draftUuid: 'draft-a' }, { memberId: 8 })
   assert.equal(result.status, 'member_mismatch')
@@ -113,6 +114,7 @@ test('UNKNOWN marker roundtrips without extra payload fields and remains account
   saveDraft(storage, input({ publishAttempt: { status: 'UNKNOWN', topicId: 77, token: 'discard' } }))
   const restored = loadDraft(storage, { draftUuid: 'draft-a' }, { memberId: 42 })
   assert.deepEqual(restored.envelope.publishAttempt, { status: 'UNKNOWN', topicId: '77' })
+  storage.values[draftKeyFor({ draftUuid: 'draft-a' })] = restored.envelope
   assert.equal(loadDraft(storage, { draftUuid: 'draft-a' }, { memberId: 43 }).status, 'member_mismatch')
   saveDraft(storage, input())
   assert.equal(loadDraft(storage, { draftUuid: 'draft-a' }, { memberId: 42 }).envelope.publishAttempt, undefined)

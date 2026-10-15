@@ -460,7 +460,7 @@ test('A13：删除节点后一次 storage 写入,且删掉的节点不在信封�
 
   page.removeStoryNode({ currentTarget: { dataset: { blockkey: 'node-block' } } })
 
-  const envelope = storage[draftStore.draftKeyFor({ topicId: '77' })]
+  const envelope = storage[draftStore.draftKeyFor({ topicId: '77' }, 42)]
   assert.equal(envelope.baseRevision, 'server-v1')
   assert.deepEqual(envelope.chapters, page.data.formData.chapters)
   assert.deepEqual(envelope.pendingMaterials, page.data.pendingMaterials)

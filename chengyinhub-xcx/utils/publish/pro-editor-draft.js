@@ -106,14 +106,23 @@ function loadDraft(storage, identity, options) {
 
 function removeDraft(storage, identity, options) {
   options = options || {};
-  if (!storage || typeof storage.removeStorageSync !== 'function') return false;
-  storage.removeStorageSync(draftKeyFor(identity));
+  if (!storage || typeof storage.removeStorageSync !== 'function'
+      || typeof storage.getStorageSync !== 'function' || !value(options.memberId)) return false;
+  var removed = false;
+  var keys = [draftKeyFor(identity, options.memberId), draftKeyFor(identity)];
+  keys.forEach(function (key) {
+    var envelope = storage.getStorageSync(key);
+    if (envelope && value(envelope.memberId) === value(options.memberId)) {
+      storage.removeStorageSync(key);
+      removed = true;
+    }
+  });
   var uuid = value(identity && identity.draftUuid);
-  if (uuid && readActiveNewDraft(storage, options.memberId) === uuid) {
+  if (removed && uuid && readActiveNewDraft(storage, options.memberId) === uuid) {
     var activeKey = activeKeyFor(options.memberId);
     if (activeKey) storage.removeStorageSync(activeKey);
   }
-  return true;
+  return removed;
 }
 
 module.exports = {
