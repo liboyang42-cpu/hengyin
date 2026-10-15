@@ -5183,6 +5183,7 @@ Page({
       opts.push({ k, v: node.options[k], img: media.img || '', audio: media.audio || '' });
     });
     this.setData({
+      hintUnlocking: this._isLegacyHintPending(node.nodeId), scanning: false,
       screen: 'gamePlay', 'sheet.show': false,   // 启动页(p02)已删:详情卡直接进任务
       game: {
         nodeId: node.nodeId, num: node.num, vm: node.vm, title: node.gameTitle || '本站任务',
@@ -5249,7 +5250,7 @@ Page({
       if (n && !n.done) analytics.track('node_abandon', { bizType: 'topic', bizId: this.data.topicId, properties: { nodeId: g.nodeId, via: 'game' } });
     }
     this._preferenceEpoch = (this._preferenceEpoch || 0) + 1;
-    this.stopAudio(); this.clearGameNetworkError(); this.setData({ screen: '', scanning: false, gNetRetryable: false });
+    this.stopAudio(); this.clearGameNetworkError(); this.setData({ screen: '', scanning: false, hintUnlocking: false, gNetRetryable: false });
   },
   onInput(e) { this.setData({ answerInput: e.detail.value }); },
   selOpt(e) { this.setData({ answerSel: e.currentTarget.dataset.k }); },
@@ -5553,18 +5554,30 @@ Page({
         that.recordGameNetworkFailure('提交没送出去，检查网络后重试', attempt);
       });
   },
+  _legacyHintBusinessKey(nodeId) {
+    return JSON.stringify([this._playOwner, this._sessionParams(), (this._routeState || {}).sessionId || '', String(nodeId)]);
+  },
+  _isLegacyHintPending(nodeId) {
+    return !!(this._legacyHintPending && this._legacyHintPending[this._legacyHintBusinessKey(nodeId)]);
+  },
   _beginLegacyHint() {
-    const intent = { context: this._legacyGameContext() };
-    this._legacyHintIntent = intent;
+    const context = this._legacyGameContext(), key = this._legacyHintBusinessKey(context.game.nodeId);
+    const pending = this._legacyHintPending = this._legacyHintPending || {};
+    if (pending[key]) return null;
+    const intent = { context, key, pending };
+    pending[key] = intent; this._legacyHintIntent = intent;
     return intent;
   },
   _isLegacyHintCurrent(intent) {
-    return this._legacyHintIntent === intent && this._isLegacyGameCurrent(intent.context);
+    return !!intent && this._legacyHintIntent === intent && this._isLegacyGameCurrent(intent.context);
   },
   _finishLegacyHint(intent) {
-    if (this._legacyHintIntent !== intent) return;
-    this._legacyHintIntent = null;
-    if (this._isLegacyGameCurrent(intent.context)) this.setData({ hintUnlocking: false });
+    if (!intent) return;
+    if (intent.pending[intent.key] === intent) delete intent.pending[intent.key];
+    if (this._legacyHintIntent === intent) this._legacyHintIntent = null;
+    const game = this.data.game;
+    if (this._isPlayAccountCurrent() && game && this._legacyHintBusinessKey(game.nodeId) === intent.key
+        && !this._isLegacyHintPending(game.nodeId)) this.setData({ hintUnlocking: false });
   },
   useHint() {
     const g = this.data.game;
@@ -5573,6 +5586,7 @@ Page({
       if (this.data.hintUnlocking) return;
       const level = this.data.shownHints.length + 1;
       const intent = this._beginLegacyHint();
+      if (!intent) return;
       this.setData({ hintUnlocking: true });
       req('/api/play/puzzle/hint', 'POST', Object.assign(this._sessionParams(), { nodeId: g.nodeId, level }))
         .then((r) => {
@@ -5625,6 +5639,7 @@ Page({
     if (!this._isPlayAccountCurrent()) return;
     if (this.data.hintUnlocking) return;
     const intent = this._beginLegacyHint();
+    if (!intent) return;
     const payload = Object.assign({ nodeId: g.nodeId }, this._sessionParams());
     let confirmed = false;
     this.setData({ hintUnlocking: true }); // 弹窗期间即占位:连点不再叠出第二个弹窗
