@@ -20,6 +20,7 @@ import com.chengyinhub.common.utils.file.FileOssUploadUtils;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -319,6 +320,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public Map<String, Object> detail(Long viewerId, Long postId) {
         viewerId = viewerId == null || viewerId < 0 ? 0L : viewerId;
         CommunityPost post = mapper.selectById(postId, viewerId);
