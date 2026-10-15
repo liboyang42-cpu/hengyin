@@ -51,9 +51,9 @@ Component({
     },
     onClose() { this.triggerEvent('close') },
     onKeyword(e) { this.setData({ keyword: e.detail.value }) },
-    onContactName(e) { this.setData({ contactName: e.detail.value, formError: '' }) },
-    onContactPhone(e) { this.setData({ contactPhone: e.detail.value, formError: '' }) },
-    onStatement(e) { this.setData({ statement: e.detail.value, formError: '' }) },
+    onContactName(e) { this._requestId = ''; this.setData({ contactName: e.detail.value, formError: '' }) },
+    onContactPhone(e) { this._requestId = ''; this.setData({ contactPhone: e.detail.value, formError: '' }) },
+    onStatement(e) { this._requestId = ''; this.setData({ statement: e.detail.value, formError: '' }) },
 
     // 公开门店搜索(与发现页同一接口,只返回已审核通过的门店)
     search() {
@@ -88,10 +88,12 @@ Component({
       const left = claim.MAX_PROOFS - this.data.proofUrls.length
       if (left <= 0) return
       getApp().chooseImage((urls) => {
+        if (urls && urls.length) this._requestId = ''
         if (urls && urls.length) this.setData({ proofUrls: this.data.proofUrls.concat(urls).slice(0, claim.MAX_PROOFS), formError: '' })
       }, Math.min(left, 6))
     },
     removeProof(e) {
+      this._requestId = ''
       const arr = this.data.proofUrls.slice()
       arr.splice(e.currentTarget.dataset.i, 1)
       this.setData({ proofUrls: arr })
@@ -99,6 +101,7 @@ Component({
     restart() { this.setData({ view: Object.assign({}, this.data.view, { state: 'none' }) }) },
     retry() { this.loadStatus() },
 
+    // 表单内容变化即换 requestId:同一 requestId + 不同内容会被后端判 IDEMPOTENCY_CONFLICT(409);内容不变的重试沿用原 id 保证幂等
     submit() {
       if (this.data.submitting) return
       const d = this.data
