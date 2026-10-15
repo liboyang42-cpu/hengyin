@@ -1,0 +1,55 @@
+<cy-sheet show="{{show}}" title="认领已有门店" bind:close="onClose">
+  <view class="mcs">
+    <view wx:if="{{phase === 'loading'}}" class="mcs__note" aria-role="status" aria-live="polite">正在读取认领状态…</view>
+
+    <view wx:elif="{{phase === 'error'}}" class="mcs__block">
+      <text class="mcs__note">{{loadError}}</text>
+      <cy-btn variant="secondary" bindtap="retry">重试</cy-btn>
+    </view>
+
+    <block wx:elif="{{view.state !== 'none'}}">
+      <view class="mcs__status mcs__status--{{view.state}}">
+        <text class="mcs__status-title">{{view.title}}</text>
+        <text class="mcs__note">{{view.desc}}</text>
+        <view wx:if="{{view.state === 'rejected'}}" class="mcs__reason">驳回原因：{{view.reason}}</view>
+      </view>
+      <cy-btn wx:if="{{view.state === 'rejected'}}" bindtap="restart">补充材料重新提交</cy-btn>
+      <cy-btn wx:else variant="secondary" bindtap="onClose">知道了</cy-btn>
+    </block>
+
+    <block wx:else>
+      <view class="mcs__note">门店已在城瘾上线、但还没有所有者时，可提交认领，审核通过后归到你的账号。</view>
+
+      <view wx:if="{{!picked}}" class="mcs__block">
+        <view class="mcs__search">
+          <input class="mcs__input" value="{{keyword}}" placeholder="输入门店名称搜索" confirm-type="search"
+                 bindinput="onKeyword" bindconfirm="search" />
+          <cy-btn variant="secondary" bindtap="search">{{searching ? '搜索中' : '搜索'}}</cy-btn>
+        </view>
+        <view wx:for="{{candidates}}" wx:key="id" class="mcs__cand" data-id="{{item.id}}" bindtap="pick"
+              aria-role="button" aria-label="选择{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">{{item.name}}</view>
+        <view wx:if="{{searched && !candidates.length}}" class="mcs__note">没有找到这家门店。若尚未上线，请走“商家入驻”。</view>
+      </view>
+
+      <block wx:else>
+        <view class="mcs__picked"><text>已选：{{picked.name}}</text><text class="mcs__link" bindtap="clearPick">换一家</text></view>
+        <input class="mcs__input" value="{{contactName}}" placeholder="联系人" maxlength="64" bindinput="onContactName" />
+        <input class="mcs__input" value="{{contactPhone}}" placeholder="联系电话" type="number" maxlength="32" bindinput="onContactPhone" />
+        <textarea class="mcs__area" value="{{statement}}" placeholder="补充说明（选填，说明你与这家门店的关系）" maxlength="1000" bindinput="onStatement" />
+        <view class="mcs__note">证明材料（营业执照或门店实拍，1-10 张）</view>
+        <view class="mcs__proofs">
+          <view wx:for="{{proofUrls}}" wx:key="index" class="mcs__proof">
+            <image class="mcs__proof-img" src="{{item}}" mode="aspectFill" />
+            <view class="mcs__proof-x" data-i="{{index}}" bindtap="removeProof" aria-role="button" aria-label="删除第{{index + 1}}张">×</view>
+          </view>
+          <view wx:if="{{proofUrls.length < 10}}" class="mcs__proof mcs__proof--add" bindtap="addProof" aria-role="button" aria-label="添加证明图片">＋</view>
+        </view>
+        <view wx:if="{{formError}}" class="mcs__error" aria-role="alert">{{formError}}</view>
+        <cy-btn disabled="{{submitting}}" bindtap="submit">{{submitting ? '提交中…' : '提交认领'}}</cy-btn>
+      </block>
+    </block>
+  </view>
+</cy-sheet>
+<!-- 物理返回守卫:sheet 开着时返回键只关 sheet,不退出入驻页 -->
+<page-container show="{{show}}" duration="{{0}}" overlay="{{false}}"
+  custom-style="width:0;height:0;background:transparent;pointer-events:none" bind:afterleave="onClose" />

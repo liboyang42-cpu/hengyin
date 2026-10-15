@@ -33,6 +33,7 @@
     </view>
     <view class="intro-cta"><cy-btn variant="primary" accessibilityLabel="开始入驻" bindtap="startForm">开始入驻</cy-btn></view>
     <view class="intro__fine">审核团队会用你填的联系电话与你确认。</view>
+    <view class="intro__fine intro__claim" bindtap="openClaim" aria-role="button" aria-label="认领已有门店" hover-class="cy-pressed" hover-stay-time="80">门店已在城瘾上线？认领已有门店</view>
   </view>
 
   <!-- 开场胶囊 → 进度条:共享元素形变,几何与约束见 utils/wizard-morph.js -->
@@ -295,6 +296,7 @@
   <view class="bottom" wx:if="{{bootstrapState === 'ready' && mode==='form' && step===5}}">
     <cy-btn variant="primary" bindtap="onHome">返回首页</cy-btn>
   </view>
+  <cy-merchant-claim-sheet show="{{claimShow}}" bind:close="closeClaim" />
   <view class="bottom" wx:if="{{bootstrapState === 'ready' && mode==='status'}}">
     <cy-btn variant="primary" bindtap="onStatusAction">{{apply.canReapply ? '重新申请' : '返回'}}</cy-btn>
   </view>
