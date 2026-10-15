@@ -43,5 +43,6 @@
     "docs/verification/mini-forward-cloud-20261015/DELIVERY.md"
   ],
   "source_candidate_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
-  "active_source_writers": 0
+  "active_source_writers": 0,
+  "verification_scope": "NOT_RUN records Cloud execution only; local VPS ordinary24 PASS and MySQL11 NOT_RUN are recorded in QUEUE.json. Source remains frozen; active writers=0."
 }

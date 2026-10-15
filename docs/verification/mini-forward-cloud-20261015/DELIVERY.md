@@ -10,7 +10,17 @@
 STAT 唯一写者 `/root/stat`；GROW 唯一写者 `/root/grow`。父协调者唯一维护本目录三文档。
 只在现有授权内源码修复、回归编写和 Git 交付。验证全部 `NOT_RUN`；不编译、测试、lint、业务 HTTP、数据库、设备、手动 CI、VPS、合并或部署，不改门禁/hook。用户当前分工覆盖根 AGENTS 的默认测试及 master 分支要求。
 
-## 当前进度
+## 最新外部验证：普通24项通过，真实MySQL仍未运行
+
+本节覆盖下文源码首次交付时的“全部 NOT_RUN”历史表述；Cloud 自己仍未运行任何编译或验证。冻结业务源码继续为 `2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd`，当前仍 `EXHAUSTED`（writer=0、READY=0），总体保留 `SOURCE_DELIVERED_UNVERIFIED`，不作完整业务验收。
+
+本地总控实际 VPS212 完成编译及精确两个普通类：`com.chengyinhub.web.controller.business.AnalyticsControllerTest` 与 `com.chengyinhub.business.service.PlayerProgressionServiceImplTest` 各12项，合计24实际测试=24pass/0failure/0error/0skip；2份fresh XML类集合与选择精确相等，guard exit0/completed。原始结束时间字段为 `2026-10-15T20:47:21.589299Z`。
+
+已只读核对公共证据提交 `fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f` 的 [README](https://github.com/liboyang42-cpu/hengyin/blob/fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_2babbe28/README.md)、[summary.json](https://github.com/liboyang42-cpu/hengyin/blob/fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_2babbe28/summary.json) 与 [早先准入拒绝](https://github.com/liboyang42-cpu/hengyin/blob/fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_2babbe28/admission-refused.json)，其中包含实际212命令、源包/日志/XML哈希和精确类结果。Cloud 未直接取得或独立重解析 VPS 原始XML/日志，不把公开摘要读取当成再次执行。早先 another_build_holds_lock（exit75、containerId null、执行0项）是资源准入事件而非源码失败；正常释放后才完成本次执行，历史证据保留。
+
+`com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT` 的11项仍 NOT_RUN。212离线入口network none；既有资金CI固定类清单也不覆盖本套，真实MySQL的批准执行入口由本地另确认。下文MySQL命令仅为测试选择示例，不能视为入口已获批准或已执行。真实并发、运行中后端HTTP、真实DB/Redis、设备/业务验收、合并部署均未签收。Cloud不补跑替代，未来真实失败仅恢复对应原作者一条修复线。
+
+## 当前进度（源码交付记录）
 
 - F3-STAT-01：已公共交付并冻结，`add1534cd63c6ffd95467795126246c8d3581594`，SOURCE_DELIVERED_UNVERIFIED / NOT_RUN。
 - F3-GROW-01：已公共交付并冻结，`2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd`，SOURCE_DELIVERED_UNVERIFIED / NOT_RUN。

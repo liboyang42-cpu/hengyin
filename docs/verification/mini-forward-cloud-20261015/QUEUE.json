@@ -4,7 +4,7 @@
   "source_base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
   "plan_parent_sha": "9f96f7a858866dd2a09cd244f90c6f0ecbac5e88",
   "branch": "codex/mini-forward-source-20261015",
-  "verification": "NOT_RUN",
+  "verification": "LOCAL_VPS_UNIT_PASS_MYSQL_NOT_RUN",
   "mode": "SOURCE_ONLY_NO_MANUAL_VALIDATION",
   "active_source_writers": 0,
   "initial_independent_lanes": 2,
@@ -15,7 +15,7 @@
       "writer": "/root/stat",
       "state": "SOURCE_DELIVERED_UNVERIFIED",
       "commit_sha": "add1534cd63c6ffd95467795126246c8d3581594",
-      "verification": "NOT_RUN",
+      "verification": "LOCAL_VPS_UNIT_PASS",
       "test_class": "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
       "test_declarations": 12,
       "new_test_declarations": 10
@@ -26,7 +26,7 @@
       "writer": "/root/grow",
       "state": "SOURCE_DELIVERED_UNVERIFIED",
       "commit_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
-      "verification": "NOT_RUN",
+      "verification": "LOCAL_VPS_UNIT_PASS_MYSQL_NOT_RUN",
       "test_classes": [
         {
           "class": "com.chengyinhub.business.service.PlayerProgressionServiceImplTest",
@@ -56,11 +56,71 @@
   "declarations": {
     "total": 35,
     "new": 30,
-    "executed": null,
-    "status": "NOT_RUN",
-    "note": "Static @Test declarations only; counts do not establish execution or pass."
+    "executed": 24,
+    "status": "PARTIAL_LOCAL_VPS_EXECUTION",
+    "note": "35 static declarations; local coordinator executed exactly the two ordinary classes (24 actual/pass). Eleven real MySQL cases remain NOT_RUN. Cloud executed none."
   },
-  "next_action": "Retain frozen source 2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd for local-only validation. On a real failure, wake its original author as the only repair lane. New source scope needs an exact coordinator transfer.",
+  "next_action": "Keep EXHAUSTED and frozen source. Local coordinator chooses an approved real-MySQL execution entry; Cloud does not run substitutes. Wake only the original author repair lane for an actual failure.",
   "delivery_state": "SOURCE_DELIVERED_UNVERIFIED",
-  "exhausted_reason": "Both authorized initial tasks are frozen and delivered. No concrete unclaimed next item is established inside the current whitelist; do not expand scope or fabricate tasks."
+  "exhausted_reason": "Both authorized initial tasks are frozen and delivered. No concrete unclaimed next item is established inside the current whitelist; do not expand scope or fabricate tasks.",
+  "cloud_execution": "NOT_RUN",
+  "external_verification": {
+    "source_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+    "runner_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "environment": "DEDICATED_TEST_VPS_OFFLINE_GUARD_212",
+    "compilation": "LOCAL_VPS_COMPILE_PASS",
+    "ordinary_result": {
+      "tests": 24,
+      "passed": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "fresh_reports": 2,
+      "exact_classes_match": true,
+      "guard_exit": 0,
+      "guard_reason": "completed",
+      "finished_at": "2026-10-15T20:47:21.589299Z"
+    },
+    "classes": [
+      {
+        "class": "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.service.PlayerProgressionServiceImplTest",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "mysql_it": {
+      "class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT",
+      "declarations": 11,
+      "status": "NOT_RUN",
+      "approved_execution_entry": "NOT_YET_CONFIRMED_BY_LOCAL_COORDINATOR"
+    },
+    "evidence_commit": "fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f",
+    "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_2babbe28/summary.json",
+    "admission_refused_history_url": "https://github.com/liboyang42-cpu/hengyin/blob/fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_2babbe28/admission-refused.json",
+    "evidence_read_scope": "Cloud read public README, summary.json and admission-refused.json; raw XML/log files not independently fetched. No Cloud verification execution.",
+    "admission_refused_history": {
+      "guard_exit": 75,
+      "reason": "another_build_holds_lock",
+      "container_id": null,
+      "tests_executed": 0,
+      "source_failure": false
+    },
+    "acceptance_exclusions": [
+      "real MySQL concurrency",
+      "live backend HTTP",
+      "real database/Redis integration",
+      "device/business acceptance",
+      "merge",
+      "deployment"
+    ]
+  }
 }
