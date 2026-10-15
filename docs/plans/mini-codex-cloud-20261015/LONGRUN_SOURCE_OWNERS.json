@@ -564,6 +564,53 @@
       "base_sha": "bda1c4e8db08210b573cac1ee02b0d18c19962b7",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 complete read E01-18@a838241b and E02-20@76bfabcb; original source writers stopped/no WIP; preserve assertions/policy. Mapper CommunityPost only existing nullable notification-preference signature at this grant."
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java": {
+      "owner": "CORE/C02",
+      "worker": "CORE/C02",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 original writer stopped, no other current writer; exact existing-contract repair proposal in LONGRUN_FUNDS_SOURCE_PLAN.md. No authorization/rate/policy/DDL changes. NOT_RUN."
+    },
+    "chengyinhub-system/src/main/resources/mapper/business/UmsMemberBalanceDetailMapper.xml": {
+      "owner": "CORE/C06",
+      "worker": "CORE/C06",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 original writer stopped, no other current writer; exact existing-contract repair proposal in LONGRUN_FUNDS_SOURCE_PLAN.md. No authorization/rate/policy/DDL changes. NOT_RUN."
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/FundActionPreflightServiceImpl.java": {
+      "owner": "CORE/C01",
+      "worker": "CORE/C01",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 original writer stopped, no other current writer; exact existing-contract repair proposal in LONGRUN_FUNDS_SOURCE_PLAN.md. No authorization/rate/policy/DDL changes. NOT_RUN."
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/FundActionPreflightMapper.java": {
+      "owner": "CORE/C01",
+      "worker": "CORE/C01",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 original writer stopped, no other current writer; exact existing-contract repair proposal in LONGRUN_FUNDS_SOURCE_PLAN.md. No authorization/rate/policy/DDL changes. NOT_RUN."
+    },
+    "chengyinhub-system/src/main/resources/mapper/business/FundActionPreflightMapper.xml": {
+      "owner": "CORE/C01",
+      "worker": "CORE/C01",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 original writer stopped, no other current writer; exact existing-contract repair proposal in LONGRUN_FUNDS_SOURCE_PLAN.md. No authorization/rate/policy/DDL changes. NOT_RUN."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/FundActionPreflightServiceImplTest.java": {
+      "owner": "CORE/C01",
+      "worker": "b01_sol",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "transfer_evidence": "Only exactConsumedIntentCanReplayButChangedPayloadCannotReuseIt stub changes to selectOwnedByIdForUpdate; equivalent replay and mismatched fingerprint assertions unchanged. Original C00 writer stopped; no other writer."
     }
   },
   "reserved_not_transferred": [
@@ -590,6 +637,8 @@
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImplTest.java": "CORE/C06",
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_20Test.java": "CORE/C03",
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantPayableServiceTest.java": "CORE/C04",
-    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_20MySqlIT.java": "CORE/C04"
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_20MySqlIT.java": "CORE/C04",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OWN_C02_27Test.java": "CORE/C02",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OWN_C01_51Test.java": "CORE/C01"
   }
 }

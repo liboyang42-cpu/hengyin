@@ -4615,6 +4615,126 @@
       "production_paths_changed": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java"
       ]
+    },
+    {
+      "id": "OWN-C02-27",
+      "lane": "C02",
+      "status": "AUDIT_THEN_FIX",
+      "title": "退款入库前整数分精度防止0元卡滞",
+      "source_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java"
+      ],
+      "source_anchor": "RefundController.add→saveBackOfficeRefund→saveRefund→DECIMAL(18,2)→reviewRefund→Payout",
+      "trigger": "0.001原Java正数通过但DB存0.00，批准后doPayout amount<=0直接return；同等UNNECESSARY整数分guard在存库前拒绝",
+      "invariant": "原正数/上限/审核/幂等/费用策略不变，不round，不新增provider限额",
+      "repair_boundary": "Exact source transfer and necessary unique regression/evidence; preserve existing authorization and funds policy, no DDL/dependency/provider operations.",
+      "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
+      "state": "READY_SOURCE_ONLY",
+      "owner": "publish_unknown_sol",
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OWN_C02_27Test.java",
+      "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C02-27.md",
+      "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
+      "source_result": "PENDING_SOURCE_DELIVERY"
+    },
+    {
+      "id": "OWN-C06-30",
+      "lane": "C06",
+      "status": "AUDIT_THEN_FIX",
+      "title": "周日用户本周收入窗口保持既定周一边界",
+      "source_files": [
+        "chengyinhub-system/src/main/resources/mapper/business/UmsMemberBalanceDetailMapper.xml"
+      ],
+      "source_anchor": "ApiUmsMemberController.getBalanceStatistics→getWeekBalanceIncome→selectWeekBalanceIncome",
+      "trigger": "DAYOFWEEK-2在周日=-1，窗口误到未来周；原本周一边界使用WEEKDAY修正两处偏移",
+      "invariant": "只两处偏移，不改member/change_type=1/del过滤或其余SQL",
+      "repair_boundary": "Exact source transfer and necessary unique regression/evidence; preserve existing authorization and funds policy, no DDL/dependency/provider operations.",
+      "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
+      "state": "READY_SOURCE_ONLY",
+      "owner": "final_review_sol",
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_30Test.java",
+      "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C06-30.md",
+      "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
+      "source_result": "PENDING_SOURCE_DELIVERY"
+    },
+    {
+      "id": "OWN-C01-51",
+      "lane": "C01",
+      "status": "AUDIT_THEN_FIX",
+      "title": "提现preflight等价回放读取CAS赢家当前状态",
+      "source_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/FundActionPreflightServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/FundActionPreflightMapper.java",
+        "chengyinhub-system/src/main/resources/mapper/business/FundActionPreflightMapper.xml"
+      ],
+      "source_anchor": "BankWithdrawalCommand.submit→consent普通读RR snapshot→consumeBankWithdrawal",
+      "trigger": "同challenge/request/fingerprint竞争CAS输家普通SELECT仍CONFIRMED，误拒既有CONSUMED回放",
+      "invariant": "仅消费CAS失败分支owned FOR UPDATE；原身份/同意/期限/操作/fingerprint判断完全不变",
+      "repair_boundary": "Exact source transfer and necessary unique regression/evidence; preserve existing authorization and funds policy, no DDL/dependency/provider operations.",
+      "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
+      "state": "READY_SOURCE_ONLY",
+      "owner": "b01_sol",
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OWN_C01_51Test.java",
+      "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C01-51.md",
+      "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
+      "source_result": "PENDING_SOURCE_DELIVERY"
+    },
+    {
+      "id": "OWN-C05-24",
+      "lane": "C05",
+      "status": "AUDIT_THEN_FIX",
+      "title": "提现余额冻结与流水原子准入方案",
+      "source_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalFrozenAmountResolver.java"
+      ],
+      "source_anchor": "Read-only proposal only; final exact file boundary pending current writer review",
+      "trigger": "card/cash提前冻结快照与实际扣款非同一状态；真实投诉/赏金并发入账可提走新冻结金额，流水也来自旧balance",
+      "invariant": "Preserve existing freeze periods/fees/approval/ownership policy; no ordinary RR SUM called current-read; no provider call under DB locks.",
+      "repair_boundary": "DRAFT only: source remains C00 original owner, no code or old fixtures transfer yet; produce exact lock order/current read/transaction and fixture proposal before source writing.",
+      "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
+      "state": "CONTRACT_DRAFT",
+      "owner": "feature_coorganizer_sol",
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "regression_file": null,
+      "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C05-24-PLAN.md",
+      "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
+      "source_result": "DRAFT_NOT_SOURCE_DELIVERED"
+    },
+    {
+      "id": "OWN-C05-25",
+      "lane": "C05",
+      "status": "AUDIT_THEN_FIX",
+      "title": "冷却配置并发审计前值与提交后缓存方案",
+      "source_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerWithdrawalCooldownServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/system/service/impl/SysConfigServiceImpl.java"
+      ],
+      "source_anchor": "Read-only proposal only; final exact file boundary pending current writer review",
+      "trigger": "rewrite从Redis读before，两个并发重写会漏真实前次值；专用配置出口提交前缓存可露未提交时长",
+      "invariant": "Preserve existing freeze periods/fees/approval/ownership policy; no ordinary RR SUM called current-read; no provider call under DB locks.",
+      "repair_boundary": "DRAFT only: source remains C00 original owner, no code or old fixtures transfer yet; produce exact lock order/current read/transaction and fixture proposal before source writing.",
+      "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
+      "state": "CONTRACT_DRAFT",
+      "owner": "feature_coorganizer_sol",
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "regression_file": null,
+      "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C05-25-PLAN.md",
+      "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
+      "source_result": "DRAFT_NOT_SOURCE_DELIVERED"
     }
   ],
   "refill": "Coordinator adds a concrete nonduplicate authorized task when one is delivered/refuted/blocked; no fabricated defect or empty filler. New IDs never reuse old ones. If no justified candidate remains, record EXHAUSTED rather than invent work.",
