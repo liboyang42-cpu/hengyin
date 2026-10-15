@@ -3205,10 +3205,19 @@ Page({
      ② 读到正文里的伏笔块就认领 —— 不依赖微信运动:没授权也照样得到,只是步数不涨。
      ③ 到站同步一次步数。步数只交密文,解密在服务端。 */
   _askWeRunOnce() {
-    if (this.data.isPreview || this.data.isMock || this._weRunAsked) return;
+    if (!this._isPlayAccountCurrent() || this.data.isPreview || this.data.isMock || this._weRunAsked) return;
+    const owner = this._playOwner, sessionKey = JSON.stringify(this._sessionParams());
+    const routeSessionId = String((this._routeState || {}).sessionId || '');
+    const current = () => this._isPlayAccountCurrent() && owner === this._playOwner
+      && !this.data.isPreview && !this.data.isMock && sessionKey === JSON.stringify(this._sessionParams())
+      && routeSessionId === String((this._routeState || {}).sessionId || '');
     this._weRunAsked = true;
+    let settled = false;
     wx.getSetting({
       success: (res) => {
+        if (settled) return;
+        settled = true;
+        if (!current()) return;
         const granted = res && res.authSetting ? res.authSetting['scope.werun'] : undefined;
         if (granted !== undefined) return;            // 允许过或拒过:不再打扰
         wx.authorize({ scope: 'scope.werun', fail: () => {} });   // 拒了 = 伏笔只靠选项与剧情,不影响游玩

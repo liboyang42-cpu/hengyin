@@ -1,0 +1,7 @@
+'use strict';
+// NOT_RUN: source-only authored regression.
+const {test}=require('node:test');const assert=require('node:assert/strict');const path=require('node:path');
+function load(){let definition,setting;const authorizations=[];global.getApp=()=>({globalData:{},getUserID:()=> '11'});global.Page=p=>{definition=p;};global.wx={getSetting:o=>{setting=o;},authorize:o=>authorizations.push(o)};const file=path.resolve(__dirname,'../../pages/play/index.js');delete require.cache[file];require(file);return{page:Object.assign({},definition,{data:{activityId:9,topicId:8},_routeState:{sessionId:'s9'}}),setting:()=>setting,authorizations};}
+test('old settings callback cannot open authorization for a new session',()=>{const h=load();h.page._askWeRunOnce();h.page.data.activityId=10;h.setting().success({authSetting:{}});assert.deepEqual(h.authorizations,[]);});
+test('current unasked permission prompts once even if native callback repeats',()=>{const h=load();h.page._askWeRunOnce();h.setting().success({authSetting:{}});h.setting().success({authSetting:{}});h.page._askWeRunOnce();assert.equal(h.authorizations.length,1);assert.equal(h.authorizations[0].scope,'scope.werun');});
+for(const granted of [true,false])test('previous permission decision stays undisturbed: '+granted,()=>{const h=load();h.page._askWeRunOnce();h.setting().success({authSetting:{'scope.werun':granted}});assert.deepEqual(h.authorizations,[]);});
