@@ -1,0 +1,79 @@
+{
+  "source_sha": "ed598258c0f614385940f326099b9626531fab02",
+  "previous_source_sha": "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0",
+  "basis": "Direct test references to either changed production class; gated real database classes deferred",
+  "selected": [
+    {
+      "class": "com.chengyinhub.business.longrun.E03_01Test",
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_01Test.java",
+      "declared_tests": 4
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.E03_02Test",
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_02Test.java",
+      "declared_tests": 4
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.E03_16Test",
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_16Test.java",
+      "declared_tests": 4
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.E03_17Test",
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_17Test.java",
+      "declared_tests": 3
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.E03_18Test",
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_18Test.java",
+      "declared_tests": 5
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.E06_17Test",
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E06_17Test.java",
+      "declared_tests": 5
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.A03EndingSnapshotReadTest",
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/A03EndingSnapshotReadTest.java",
+      "declared_tests": 3
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest",
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImplTest.java",
+      "declared_tests": 25
+    },
+    {
+      "class": "com.chengyinhub.business.service.support.SeventhPierFixtureTest",
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/SeventhPierFixtureTest.java",
+      "declared_tests": 9
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiRoamShareControllerTest",
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRoamShareControllerTest.java",
+      "declared_tests": 6
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.JourneyPublishFreezeTest",
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/JourneyPublishFreezeTest.java",
+      "declared_tests": 7
+    }
+  ],
+  "gated_not_run": [
+    {
+      "class": "com.chengyinhub.business.it.JourneyFullFlowMySqlIT",
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/JourneyFullFlowMySqlIT.java",
+      "declared_tests": 4
+    },
+    {
+      "class": "com.chengyinhub.business.service.A03EndingSnapshotMySqlIT",
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/A03EndingSnapshotMySqlIT.java",
+      "declared_tests": 3
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.RoamShareSnapshotConcurrencyMySqlIT",
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamShareSnapshotConcurrencyMySqlIT.java",
+      "declared_tests": 2
+    }
+  ]
+}
