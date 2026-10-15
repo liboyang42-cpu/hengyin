@@ -45,6 +45,8 @@ Page({
     toView: '',
     disabled: false,
     disabledText: '',
+    // BL-61:我方是否拉黑了对方(只信服务端 /api/im/messages 回读的 blockedByMe)
+    blockedByMe: false,
     // 非 ready 时输入栏为什么点不动,按真实原因给一句话。做成静态映射(而不是每个 setData
     // 站点各写一次)是为了不漏:loadState 的落点很多,漏一处就又变成"没有原因的死输入栏"。
     sendBlockedMap: {
@@ -182,7 +184,12 @@ Page({
           if (that._syncAfter === undefined) that._syncAfter = that.maxLocalId();
           // 拉黑只存服务端:重进会话按回包禁用输入框,不然能打字、一发就失败(3-22)
           if (res.data.blocked === true) {
-            that.setData({ disabled: true, disabledText: res.data.blockedByMe === true ? '你已拉黑对方，无法发送消息' : '对方暂不可联系，无法发送消息' });
+            const byMe = res.data.blockedByMe === true;
+            that.setData({ disabled: true, disabledText: byMe ? '你已拉黑对方，无法发送消息' : '对方暂不可联系，无法发送消息',
+              blockedByMe: byMe, moreSheetItems: that._blockMenuItems(byMe) });
+          } else if (res.data.blocked === false && that.data.blockedByMe) {
+            // BL-61:解除拉黑后按回读恢复可发送;只在此前因「我拉黑对方」禁用时才解禁
+            that.setData({ disabled: false, disabledText: '', blockedByMe: false, moreSheetItems: that._blockMenuItems(false) });
           }
           if (toBottom) that.scrollBottom();
           that.markRead();
@@ -583,6 +590,7 @@ Page({
     this.setData({ moreSheetShow: false });
     if (label === '举报') this.doReport();
     else if (label === '拉黑') this.doBlock();
+    else if (label === '解除拉黑') this.doUnblock();
     else if (label === '清空聊天') this.clearConversation();
   },
 
@@ -596,6 +604,16 @@ Page({
 
   onDangerCancel(e) {
     if (e.detail.key === 'im.conversation.delete') this._pendingClearId = null;
+    if (e.detail.key === 'im.unblock') this._pendingUnblockId = 0;
+  },
+
+  // BL-61:「更多」里拉黑/解除拉黑二选一,其余项原样保留
+  _blockMenuItems(byMe) {
+    return (this.data.moreSheetItems || []).map((label) => {
+      if (byMe && label === '拉黑') return '解除拉黑';
+      if (!byMe && label === '解除拉黑') return '拉黑';
+      return label;
+    });
   },
 
   onMoreCancel() { this.setData({ moreSheetShow: false }); },
@@ -623,7 +641,38 @@ Page({
     if (dc) dc.open('im.block');
   },
 
+  doUnblock() {
+    // 与拉黑同口径:对方 id 取最近一条对方消息的 senderId
+    let otherId = 0;
+    for (let i = this.data.msgs.length - 1; i >= 0; i--) { if (this.data.msgs[i].senderId && this.data.msgs[i].senderId != this.data.myId) { otherId = this.data.msgs[i].senderId; break; } }
+    if (!otherId) { app.tips && app.tips('暂时无法在本会话解除拉黑'); return; }
+    this._pendingUnblockId = otherId;
+    const dc = this.selectComponent && this.selectComponent('#dc');
+    if (dc) dc.open('im.unblock');
+  },
+
+  _confirmUnblock() {
+    const otherId = this._pendingUnblockId;
+    if (!otherId) return;
+    const that = this;
+    const current = this._viewGuard();
+    const dc = this.selectComponent && this.selectComponent('#dc');
+    if (dc) dc.busyOn();
+    app.sendRequest({
+      url: '/api/im/unblock', method: 'POST', hideLoading: true, data: { target_member_id: otherId },
+      // 业务 code!=200 不算解除;成功后不本地解禁,以 /api/im/messages 回读为准
+      success(res) {
+        if (!isBizOk(res)) { if (dc) dc.failed((res && res.msg) || '解除拉黑失败，请重试'); return; }
+        that._pendingUnblockId = 0;
+        if (dc) dc.done();
+        if (current()) that.loadMessages(false);
+      },
+      fail() { if (dc) dc.failed('解除拉黑失败，请重试'); },
+    });
+  },
+
   onDangerConfirm(e) {
+    if (e.detail.key === 'im.unblock') { this._confirmUnblock(); return; }
     if (e.detail.key === 'im.conversation.delete') {
       const id = this._pendingClearId;
       if (!id || id !== this.data.conversationId) return;
@@ -669,7 +718,8 @@ Page({
       // 不判 code 就禁用输入框并弹「已拉黑」,用户会以为对方发不进来了,实际没有。
       success(res) {
         if (!isBizOk(res)) { if (dc) dc.failed((res && res.msg) || '拉黑失败，请重试'); return; }
-        that.setData({ disabled: true, disabledText: '你已拉黑对方，无法发送消息' });
+        that.setData({ disabled: true, disabledText: '你已拉黑对方，无法发送消息',
+          blockedByMe: true, moreSheetItems: that._blockMenuItems(true) });
         that._pendingBlockId = 0;
         if (dc) dc.done();
       },
