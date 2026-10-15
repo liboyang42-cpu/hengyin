@@ -545,17 +545,26 @@ Page({
       return;
     }
     this._pendingInviteCode = String((options.inviteCode) || '').trim();
-    if (this._pendingInviteCode) this._consumeInviteCode().then(() => this.loadData(true));
+    if (this._pendingInviteCode) this._consumeInviteCode().then((current) => { if (current) this.loadData(true); });
     else this.loadData(true);
   },
 
   _consumeInviteCode() {
-    if (!this._isPlayAccountCurrent()) return Promise.resolve();
+    if (!this._isPlayAccountCurrent()) return Promise.resolve(false);
     const code = this._pendingInviteCode;
-    if (!code) return Promise.resolve();
+    if (!code) return Promise.resolve(false);
     this._pendingInviteCode = '';
     const that = this;
+    const activityId = String(this.data.activityId || '');
+    const topicId = String(this.data.topicId || '');
+    const sequence = this._inviteJoinSequence = (this._inviteJoinSequence || 0) + 1;
     return new Promise((resolve) => {
+      let settled = false;
+      const isCurrent = () => !settled && that._isPlayAccountCurrent()
+        && sequence === that._inviteJoinSequence
+        && activityId === String(that.data.activityId || '')
+        && topicId === String(that.data.topicId || '');
+      const finish = () => { const current = isCurrent(); settled = true; resolve(current); };
       app.sendRequest({
         hideLoading: true,
         url: '/api/circle-theme/session/join',
@@ -563,25 +572,25 @@ Page({
         data: JSON.stringify({ inviteCode: code }),
         header: { 'Content-Type': 'application/json' },
         success(res) {
-          if (!that._isPlayAccountCurrent()) { resolve(); return; }
+          if (!isCurrent()) { finish(); return; }
           if (res && (res.code == 200 || res.code == '200')) {
             const sessionId = res.data && res.data.id;
-            if (sessionId && that.data.topicId) {
+            if (sessionId && topicId) {
               const memberId = that._playOwner;
               const key = memberId === null || memberId === undefined || memberId === ''
-                ? '' : 'circle_session_m' + memberId + '_t' + that.data.topicId;
+                ? '' : 'circle_session_m' + memberId + '_t' + topicId;
               try {
-                wx.removeStorageSync('circle_session_' + that.data.topicId);
+                wx.removeStorageSync('circle_session_' + topicId);
                 if (key) wx.setStorageSync(key, sessionId);
               } catch (e) {}
             }
           } else {
             cyToast((res && res.msg) || '无法加入同行探索');
           }
-          resolve();
+          finish();
         },
-        successStatusAbnormal(res) { if (that._isPlayAccountCurrent()) cyToast((res && res.msg) || '无法加入同行探索'); resolve(); },
-        fail() { if (that._isPlayAccountCurrent()) cyToast('无法加入同行探索'); resolve(); },
+        successStatusAbnormal(res) { if (isCurrent()) cyToast((res && res.msg) || '无法加入同行探索'); finish(); },
+        fail() { if (isCurrent()) cyToast('无法加入同行探索'); finish(); },
       });
     });
   },
@@ -3522,7 +3531,9 @@ Page({
   loadData(first) {
     if (!this._isPlayAccountCurrent() || this._themeHidden) return;
     const loadEpoch = this._playLoadEpoch = (this._playLoadEpoch || 0) + 1;
-    const isCurrent = () => this._isPlayAccountCurrent() && loadEpoch === this._playLoadEpoch;
+    const sessionKey = JSON.stringify(this._sessionParams());
+    const isCurrent = () => this._isPlayAccountCurrent() && loadEpoch === this._playLoadEpoch
+      && sessionKey === JSON.stringify(this._sessionParams());
     const that = this;
     if (this.data.isPreview || this.data.isMock) { this.setData({ loading: false }); return; }
     this._loadCommitted = false;   // 每轮加载重新武装:上一轮的成功不能替这一轮的失败背书
