@@ -6616,7 +6616,7 @@ Page({
       }
     });
     // submit 在途会返回 false(防重),仅真正发起时点亮 loading
-    if (started) {
+    if (started && workflow.isBusy()) {
       that.setData({ submitting: true, submitError: '' });
     }
   },
