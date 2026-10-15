@@ -4,6 +4,8 @@ const app = getApp()
 const { isRecord, isRecordList } = require('../../../utils/response-shape.js')
 const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js')
 
+const URLS = { mine: '/api/roam/stamp/list', received: '/api/roam/stamp/received' }
+
 function isNonNegativeInteger(value) {
   return typeof value === 'number' && Number.isInteger(value) && value >= 0
 }
@@ -17,6 +19,8 @@ function isStamp(row) {
 Component({
   behaviors: [reducedMotionBehavior],
   data: {
+    tab: 'mine', // mine=我的集邮册(/list) | received=收到的(/received,投一张换回来的)
+    tabs: [{ key: 'mine', label: '我的' }, { key: 'received', label: '收到的' }],
     items: [],
     total: 0,
     pageNum: 1,
@@ -34,13 +38,26 @@ Component({
     detached() { this._loadToken = (this._loadToken || 0) + 1 },
   },
   methods: {
+    // 两个 tab 各留一份分页状态,来回切不重复拉、也不串页
+    onTabChange(e) {
+      const next = e.detail && e.detail.key
+      if (!next || next === this.data.tab || !URLS[next]) return
+      this._loadToken = (this._loadToken || 0) + 1 // 作废在途的另一边请求
+      const cache = this._tabCache = this._tabCache || {}
+      const d = this.data
+      cache[d.tab] = { items: d.items, total: d.total, pageNum: d.pageNum, loaded: d.loaded, error: d.error, noMore: d.noMore }
+      const restored = cache[next] || { items: [], total: 0, pageNum: 1, loaded: false, error: false, noMore: false }
+      this.setData(Object.assign({ tab: next, loading: false }, restored), () => {
+        if (!restored.loaded) this.load()
+      })
+    },
     load() {
       if (this.data.loading || this.data.noMore) return
       const token = (this._loadToken || 0) + 1
       this._loadToken = token
       this.setData({ loading: true, error: false })
       app.sendRequest({
-        url: '/api/roam/stamp/list',
+        url: URLS[this.data.tab],
         method: 'POST',
         data: { pageNum: this.data.pageNum, pageSize: 50 },
         hideLoading: true,
