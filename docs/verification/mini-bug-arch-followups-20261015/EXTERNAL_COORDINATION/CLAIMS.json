@@ -778,7 +778,7 @@
         "exit_reason": "child_command_failed",
         "compile": "PASS_REPORTED_BY_LOCAL"
       },
-      "evidence_status": "LOCAL_DIRECT_REPORT; public PR24 artifact pending; do not claim logs independently read",
+      "evidence_status": "PUBLIC_README_AND_SUMMARY_READ",
       "writer": "/root/external_e02",
       "failure_cases": [
         "CommunityPostServiceImplTest.concurrentCommentLikeReplayDoesNotEmitDuplicateOutbox",
@@ -807,7 +807,45 @@
         "PR24": 6198811642
       },
       "actual_retest_count": null,
-      "dependencies": "Rolling parent aa36698e39e2e31bb16e4c6807dd30e14230c84a; existing E02-22/E03-16/E05-17 and findCurrent producer already present; CORE later repair chain not imported"
+      "dependencies": "Rolling parent aa36698e39e2e31bb16e4c6807dd30e14230c84a; existing E02-22/E03-16/E05-17 and findCurrent producer already present; CORE later repair chain not imported",
+      "published_evidence": {
+        "public_commit": "514afe3b26d8c0909c46f5b724dcd0d9795e65c9",
+        "readme": "docs/verification/mini-bug-arch-20261015/VPS_EXTRA_474e54ae/README.md",
+        "summary": "docs/verification/mini-bug-arch-20261015/VPS_EXTRA_474e54ae/summary.json",
+        "read_scope": "Full public README and summary including34 fresh XML manifest hashes/class-set match and3 failure project stacks; original VPS logs/XML not independently fetched",
+        "source_archive_sha256": "db9713c0d95b5b0caf29ed023fd75fbafc58d2c875a7837ec46dd3143a508f31",
+        "log_sha256": "4f6be5a1c6751fafd47aa090aad4bbb2a4d7ce93b2087ac82e04fae6e025c60b",
+        "exact_class_set_match": true,
+        "all_reports_fresh": true,
+        "xml_classes": 34,
+        "deferred_gated_or_jdbc_classes": 23,
+        "admin_test_sources_compile": 1352,
+        "unit_status": "FAIL",
+        "actual_tests": 305,
+        "actual_passed": 302,
+        "actual_failures": 1,
+        "actual_errors": 2,
+        "actual_skipped": 0,
+        "count_note": "Static304 is not actual305; StoryServiceImplTest public XML reports26, old static plan25 is not execution evidence"
+      },
+      "local_targeted_retest": {
+        "status": "PLANNED_BY_LOCAL_NOT_EXECUTED_RESULT",
+        "candidate_sha": "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0",
+        "classes": [
+          "com.chengyinhub.business.community.CommunityPostServiceImplTest",
+          "com.chengyinhub.business.longrun.E02_14Test"
+        ],
+        "planned_tests": 56,
+        "actual_tests": null,
+        "verification": "NOT_RUN_NO_LOCAL_RESULT_YET",
+        "executor": "local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+        "later_changes_excluded": [
+          "E03-18",
+          "E06-17"
+        ],
+        "same_affected_files_as_current_source": true,
+        "no_result_inheritance": "No candidate other than frozen e72 receives this future result automatically; E03/E06 candidate129d remains separately NOT_RUN"
+      }
     }
   ],
   "external_dependency_requests": {
@@ -877,5 +915,14 @@
     "evidence": "E03_11Test explicitly accepts string NODE_COMPLETED id; E03-07/11 preserve field-specific asLong coercion; validator/runtime/remap agree for1.5→1",
     "decision_boundary": "Do not tighten float/bool/large-value parsing without C00 compatibility decision; no source edit or new bug count",
     "verification": "NOT_RUN"
+  },
+  "third_team_delivery_observation": {
+    "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
+    "pr": "https://github.com/liboyang42-cpu/hengyin/pull/72",
+    "reported_source_candidate": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+    "actual_public_head_read": "8ea63a07498d3d7fa5d389211ca9c918dc93c3a8",
+    "status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RUN; reported by third team, no EXTRA validation or integration",
+    "source_comment": 6199241183,
+    "scope": "Existing EXTRA read-only reservation retained; observation does not grant or adjudicate extra third-team files"
   }
 }
