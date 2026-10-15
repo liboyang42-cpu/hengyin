@@ -76,3 +76,16 @@
 | 60 | 读合同请求整理 | 把 CL6/BL-07/BL-40 等需要后端补字段的请求整理成一份给 Codex 的合同申请（只写文档） | docs |
 
 清单耗尽后：不要停。由监督线按同样规则从后端已有、小程序零调用的接口中补充新任务（写入本文件末尾），开发线继续领取；如果暂时没有，就处理评审意见与 CI 失败。
+
+## 第三批（61–68）：监督线补充（后端已有、小程序零调用；不改现有样式、无迁移/新接口）
+
+| # | 名称 | 内容 | 范围提示 |
+|---|---|---|---|
+| 61 | 私信解除拉黑 | 会话处于「你已拉黑对方」（`/api/im/...` 回读 `blockedByMe=true`）时，在现有会话菜单加「解除拉黑」，调 `POST /api/im/unblock`（`target_member_id`），二次确认后回读会话状态恢复可发送；失败如实提示 | `subpackageB/pages/im/chat/**`；与 BL-36 同文件，先看 #77 |
+| 62 | 我的处罚记录（只读） | `GET /api/v1/community/me/enforcements`（cursor/limit）只读列表；入口只从系统消息里的处罚类通知进入（与举报详情同一路径），无对应通知类型就 BLOCKED，不加独立入口 | 照 CL2 举报详情页结构 |
+| 63 | 社区规范确认 | 发帖时后端若要求先确认规范：用 `GET /api/v1/community/guidelines/active` 在 `cy-sheet` 里展示，确认调 `POST /api/v1/community/guidelines/ack` 后重试原操作；先核实后端是否强制，不强制就 BLOCKED | 不碰 `CommunityPostServiceImpl`（Codex） |
+| 64 | 社区通知偏好 | 设置页现有列表里加一行进入偏好页：`GET/PATCH /api/v1/community/notification-preferences`，字段只用 DTO 已有项，保存后回读 | 照现有设置二级页 |
+| 65 | 官方活动集体进度 | 官方活动详情读 `GET /api/official/events/{id}/progress`，展示集体进度（字段以 `officialEventService.progress` 返回为准），无数据诚实空态 | 等 CL4（#27）合并后再改 detail |
+| 66 | 商家安全评价摘要（只读） | 商家公开页读 `GET /api/community-trust/safety/merchants/{merchantId}`，样本不足/无数据时不展示；不做评分提交 | 照商家页现有信息块 |
+| 67 | 商家信息纠错 | 商家公开页「…」加「信息纠错」：`GET /api/community-trust/contributions/taxonomy` 取类型，`POST /contributions/submit` 纯文字提交，成功展示回执；「我的纠错」从系统消息进入，`GET /contributions/{id}` 详情 + `/contributions/supplement` 补充 | 复用举报半屏的结构；请求体按 `MerchantContributionSubmitRequest` |
+| 68 | 俱乐部申请状态回读 | 现有俱乐部申请页提交后/再次进入时用 `POST /api/club/my-apply` 回读申请状态（审核中/已通过/被拒，字段以 `Club` 实体真值为准），不改现有表单样式 | `pages/club/**` |
