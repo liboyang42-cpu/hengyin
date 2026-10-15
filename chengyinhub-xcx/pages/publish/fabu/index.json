@@ -21,7 +21,8 @@
     "cy-modal-host": "/components/cy/modal-host/index",
     "cy-page-title": "/components/cy/page-title/index",
     "cy-result-sheet": "/components/cy/result-sheet/index",
-    "cy-chapter-gate": "/components/cy/chapter-gate/index"
+    "cy-chapter-gate": "/components/cy/chapter-gate/index",
+    "topic-state-keys": "/pages/publish/components/topic-state-keys/index"
   },
   "navigationStyle": "custom",
   "navigationBarTextStyle": "black"

@@ -28,6 +28,7 @@ const WEBGL_EXCEPTION = 'subpackageP3/pages/badge-wall/index/index'
 const EXPECTED_NAV_ROUTES = [
   'subpackageRoam/nearby/index',
   // 2026-08-04 收口:漫游历史从手写 .hs-back/.hs-title 换成 cy-nav-bar plain + cy-page-title
+  'subpackageRoam/official-routes/index', 'subpackageRoam/official-route/index', 'subpackageMember/points-history/index',
   'subpackageRoam/history/index', 'subpackageRoam/session/index',
   'pages/square/list/index', 'pages/square/detail/index',
   'pages/search2/index', 'pages/search2/result/index', 'subpackageMember/signup/index',
@@ -90,6 +91,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   /* 2026-09-06 本分支曾把 coop-center 按稿 234:278 迁进这份盘点(返回箭头 + 左对齐大标题)。
      2026-09-11 那一页整块摘回 master 的 #1058 ⇒ 它的标题形态也回到 master 的居中 nav 标题,
      这里跟着摘除;上面 EXPECTED_NAV_ROUTES 里那一条仍然在,两份盘点不重复登记。 */
+  'subpackageRoam/official-routes/index', 'subpackageRoam/official-route/index', 'subpackageMember/points-history/index',
   'subpackageRoam/history/index',   // 同上:收口后大标题由 cy-page-title 出
   'pages/activity/detail/index',    // 活动详情正文收进 scene，深链壳改用统一 L1 标题
   // 2026-08-07 用户裁决:广场帖文流不设大标题,从 EXPECTED_PAGE_TITLE_ROUTES 摘除
@@ -245,8 +247,9 @@ function assertTitleInventory(readSource = read) {
   /* 2026-09-22 +1:Phase 3 藏品册页(object-cards/index),同为 custom 导航 + cy-nav-bar +
      cy-page-title 的普通玩家二级页 ⇒ 131+1 = 132;custom 计数同步 132(按实测重取)。 */
   /* 2026-09-24 −1:Phase 0 实验室页随正式页接进玩法删除 ⇒ 132−1 = 131;custom 同步 131(按实测重取)。 */
-  assert.equal(rows.length, 130, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 130)
+    /* 2026-10-15 +3:官方路线列表/详情、积分明细三页,均为 custom 导航 + cy-nav-bar + cy-page-title ⇒ 130+3 = 133(按实测重取)。 */
+  assert.equal(rows.length, 133, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 133)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

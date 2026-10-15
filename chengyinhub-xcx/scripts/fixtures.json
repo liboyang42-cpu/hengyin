@@ -6797,21 +6797,10 @@
    "step": "write",
    "photo": "/images/roam-pushpin.png",
    "note": "巷口那家豆浆七点才开",
-   "place": "莘城公园 · 老门柱",
-   "bars": [
-    {
-     "w": "示例w",
-     "g": "示例g",
-     "id": 1
-    }
-   ],
-   "paperRot": false
+   "place": "莘城公园 · 老门柱"
   },
   "dropped": [],
-  "switchKeys": [
-   "bars",
-   "paperRot"
-  ]
+  "switchKeys": []
  },
  "B65c": {
   "data": {
@@ -6836,14 +6825,10 @@
      "w": 3,
      "g": 1
     }
-   ],
-   "paperRot": false
+   ]
   },
   "dropped": [],
-  "switchKeys": [
-   "bars",
-   "paperRot"
-  ]
+  "switchKeys": []
  },
  "B66": {
   "data": {
@@ -10392,34 +10377,26 @@
      "tone": "muted"
     }
    ],
-   "errorText": "",
-   "refundErrorText": "",
-   "refundErrorUnknown": false
+   "errorText": ""
   },
   "dropped": [],
   "switchKeys": [
    "state",
    "errorText",
-   "rail",
-   "refundErrorText",
-   "refundErrorUnknown"
+   "rail"
   ]
  },
  "F62": {
   "data": {
    "state": "denied",
    "errorText": "",
-   "rail": [],
-   "refundErrorText": "",
-   "refundErrorUnknown": false
+   "rail": []
   },
   "dropped": [],
   "switchKeys": [
    "state",
    "errorText",
-   "rail",
-   "refundErrorText",
-   "refundErrorUnknown"
+   "rail"
   ]
  },
  "C52a": {
@@ -13080,16 +13057,22 @@
  },
  "F59": {
   "data": {
+   "loaded": true,
+   "hangoutCount": 3,
    "sheet": "list",
-   "loadError": false,
-   "applicants": [
+   "items": [
     {
      "key": "h5",
      "kind": "hangout",
      "id": 5,
      "label": "打 UNO 找搭子",
      "pic": "",
-     "sub": "人民广场 · 09-06 20:00",
+     "initial": "阿",
+     "shape": "circle",
+     "ring": "cream",
+     "chip": "",
+     "chipTone": "dim",
+     "sub": "今晚 8:00 · 人民广场 · 350m",
      "meta": "3 人"
     },
     {
@@ -13098,8 +13081,27 @@
      "id": 6,
      "label": "周日晨跑 5 公里",
      "pic": "",
-     "sub": "世纪公园",
+     "initial": "林",
+     "shape": "circle",
+     "ring": "me",
+     "chip": "已加入",
+     "chipTone": "me",
+     "sub": "世纪公园 · 1.1km",
      "meta": "12 人"
+    },
+    {
+     "key": "h7",
+     "kind": "hangout",
+     "id": 7,
+     "label": "店里桌游夜 · 免费茶水",
+     "pic": "",
+     "initial": "猫",
+     "shape": "square",
+     "ring": "merchant",
+     "chip": "商家局",
+     "chipTone": "merchant",
+     "sub": "今晚 7:30 · 猫窝桌游吧 · 800m",
+     "meta": "8 人"
     },
     {
      "key": "a9",
@@ -13107,35 +13109,56 @@
      "id": 9,
      "label": "周末飞盘局",
      "pic": "",
-     "sub": "活动 · 徐汇滨江",
-     "meta": "1.2km"
+     "initial": "周",
+     "shape": "poster",
+     "ring": "event",
+     "chip": "02:14",
+     "chipTone": "event",
+     "sub": "活动 · 徐汇滨江 · 1.2km",
+     "meta": "活动"
     }
    ],
-   "myRows": [
+   "peekItems": [
     {
-     "avatar": "/images/route_city_cover.png",
-     "name": "示例name",
-     "sub": "示例sub",
-     "messageText": "示例messageText",
-     "memberId": "示例memberId",
-     "tone": "示例tone",
-     "badge": "示例badge",
-     "action": "示例action",
-     "id": 1
+     "key": "h5",
+     "kind": "hangout",
+     "id": 5,
+     "label": "打 UNO 找搭子",
+     "pic": "",
+     "initial": "阿",
+     "shape": "circle",
+     "ring": "cream",
+     "chip": "",
+     "chipTone": "dim",
+     "sub": "今晚 8:00 · 人民广场 · 350m",
+     "meta": "3 人"
+    },
+    {
+     "key": "h6",
+     "kind": "hangout",
+     "id": 6,
+     "label": "周日晨跑 5 公里",
+     "pic": "",
+     "initial": "林",
+     "shape": "circle",
+     "ring": "me",
+     "chip": "已加入",
+     "chipTone": "me",
+     "sub": "世纪公园 · 1.1km",
+     "meta": "12 人"
     }
    ],
-   "myLoading": false
+   "peekSub": "最近的一局 350m · 3 人已加入",
+   "formError": ""
   },
-  "dropped": [
-   "loaded",
-   "hangoutCount",
-   "items"
-  ],
+  "dropped": [],
   "switchKeys": [
-   "loadError",
-   "applicants",
-   "myRows",
-   "myLoading"
+   "items",
+   "peekItems",
+   "peekSub",
+   "hangoutCount",
+   "loaded",
+   "formError"
   ]
  },
  "F12": {
@@ -14541,10 +14564,12 @@
       "t": "丰收"
      },
      {
-      "t": "远航"
+      "t": "远航",
+      "img": true
      },
      {
-      "t": "守护"
+      "t": "守护",
+      "audio": true
      }
     ],
     "limitSeconds": 30,
@@ -14894,6 +14919,8 @@
     "unit": "年",
     "min": 0,
     "max": 400,
+    "revealAt": "明天",
+    "revealHour": "18:00",
     "limitSeconds": 0,
     "maxTries": 3
    }
@@ -14986,9 +15013,7 @@
       "meta": "昨天卖了 18 杯"
      }
     ],
-    "closeAtHour": 20,
-    "revealDays": 1,
-    "revealHour": 20
+    "closeAtHour": 20
    }
   },
   "target": "cy-playkit",
@@ -15090,8 +15115,7 @@
     "type": "walk",
     "goal": 6000,
     "steps": 4286,
-    "syncing": false,
-    "goalLocked": true
+    "syncing": false
    }
   },
   "target": "cy-playkit",
@@ -15647,455 +15671,6 @@
    "roleError"
   ]
  },
- "F61": {
-  "data": {
-   "state": "ready",
-   "detail": {
-    "displayName": "Aiden",
-    "avatar": "",
-    "phoneText": "由俱乐部带团，请联系领队",
-    "phoneVisible": false,
-    "sessionTimeText": "2026-08-31 14:00",
-    "statusCode": "REFUNDED",
-    "statusText": "已退款",
-    "statusTimeText": "",
-    "topicName": "外滩夜行 · 霓虹拾光",
-    "topicCover": "",
-    "orderNo": "CY083104",
-    "ticketText": "标准单人票 ×1",
-    "orderTimeText": "08-27 18:05",
-    "paidAmountText": "¥128.00",
-    "verifyTimeText": "—",
-    "storeName": "—",
-    "operatorName": "—",
-    "railStep": -1
-   },
-   "rail": [
-    {
-     "key": "signed",
-     "label": "已报名",
-     "tone": "muted"
-    },
-    {
-     "key": "contacted",
-     "label": "已接洽",
-     "tone": "muted"
-    },
-    {
-     "key": "verified",
-     "label": "已核销",
-     "tone": "muted"
-    },
-    {
-     "key": "reviewed",
-     "label": "待评价",
-     "tone": "muted"
-    }
-   ],
-   "errorText": ""
-  },
-  "dropped": [],
-  "switchKeys": [
-   "state",
-   "errorText",
-   "rail"
-  ]
- },
- "F62": {
-  "data": {
-   "state": "denied",
-   "errorText": "",
-   "rail": []
-  },
-  "dropped": [],
-  "switchKeys": [
-   "state",
-   "errorText",
-   "rail"
-  ]
- },
- "B65b": {
-  "data": {
-   "step": "write",
-   "photo": "/images/roam-pushpin.png",
-   "note": "巷口那家豆浆七点才开",
-   "place": "莘城公园 · 老门柱"
-  },
-  "dropped": [],
-  "switchKeys": []
- },
- "B65c": {
-  "data": {
-   "step": "print",
-   "got": true,
-   "torn": true,
-   "revealed": false,
-   "gotPic": "/images/roam-pushpin.png",
-   "gotCaption": "雨天走后门，屋檐能躲雨",
-   "serial": "NO. 0012",
-   "place": "莘城公园 · 老门柱",
-   "bars": [
-    {
-     "w": 2,
-     "g": 1
-    },
-    {
-     "w": 1,
-     "g": 2
-    },
-    {
-     "w": 3,
-     "g": 1
-    }
-   ]
-  },
-  "dropped": [],
-  "switchKeys": []
- },
- "F59": {
-  "data": {
-   "loaded": true,
-   "hangoutCount": 3,
-   "sheet": "list",
-   "items": [
-    {
-     "key": "h5",
-     "kind": "hangout",
-     "id": 5,
-     "label": "打 UNO 找搭子",
-     "pic": "",
-     "initial": "阿",
-     "shape": "circle",
-     "ring": "cream",
-     "chip": "",
-     "chipTone": "dim",
-     "sub": "今晚 8:00 · 人民广场 · 350m",
-     "meta": "3 人"
-    },
-    {
-     "key": "h6",
-     "kind": "hangout",
-     "id": 6,
-     "label": "周日晨跑 5 公里",
-     "pic": "",
-     "initial": "林",
-     "shape": "circle",
-     "ring": "me",
-     "chip": "已加入",
-     "chipTone": "me",
-     "sub": "世纪公园 · 1.1km",
-     "meta": "12 人"
-    },
-    {
-     "key": "h7",
-     "kind": "hangout",
-     "id": 7,
-     "label": "店里桌游夜 · 免费茶水",
-     "pic": "",
-     "initial": "猫",
-     "shape": "square",
-     "ring": "merchant",
-     "chip": "商家局",
-     "chipTone": "merchant",
-     "sub": "今晚 7:30 · 猫窝桌游吧 · 800m",
-     "meta": "8 人"
-    },
-    {
-     "key": "a9",
-     "kind": "activity",
-     "id": 9,
-     "label": "周末飞盘局",
-     "pic": "",
-     "initial": "周",
-     "shape": "poster",
-     "ring": "event",
-     "chip": "02:14",
-     "chipTone": "event",
-     "sub": "活动 · 徐汇滨江 · 1.2km",
-     "meta": "活动"
-    }
-   ],
-   "peekItems": [
-    {
-     "key": "h5",
-     "kind": "hangout",
-     "id": 5,
-     "label": "打 UNO 找搭子",
-     "pic": "",
-     "initial": "阿",
-     "shape": "circle",
-     "ring": "cream",
-     "chip": "",
-     "chipTone": "dim",
-     "sub": "今晚 8:00 · 人民广场 · 350m",
-     "meta": "3 人"
-    },
-    {
-     "key": "h6",
-     "kind": "hangout",
-     "id": 6,
-     "label": "周日晨跑 5 公里",
-     "pic": "",
-     "initial": "林",
-     "shape": "circle",
-     "ring": "me",
-     "chip": "已加入",
-     "chipTone": "me",
-     "sub": "世纪公园 · 1.1km",
-     "meta": "12 人"
-    }
-   ],
-   "peekSub": "最近的一局 350m · 3 人已加入",
-   "formError": ""
-  },
-  "dropped": [],
-  "switchKeys": [
-   "items",
-   "peekItems",
-   "peekSub",
-   "hangoutCount",
-   "loaded",
-   "formError"
-  ]
- },
- "F55": {
-  "data": {
-   "show": true,
-   "kit": {
-    "type": "reaction",
-    "kicker": "变绿就点",
-    "rounds": 3,
-    "goalMs": 320
-   }
-  },
-  "target": "cy-playkit",
-  "dropped": [],
-  "switchKeys": []
- },
- "F63": {
-  "data": {
-   "show": true,
-   "kit": {
-    "type": "branch",
-    "title": "钟楼下的岔路",
-    "body": "雨停了。左边巷子传来烤面包的味道,右边是往河堤去的石阶。",
-    "options": [
-     {
-      "t": "拐进巷子",
-      "fb": "面包房还亮着灯。",
-      "next": 2
-     },
-     {
-      "t": "走上石阶",
-      "fb": "河风比想象中大。",
-      "next": 3
-     }
-    ],
-    "limitSeconds": 0
-   }
-  },
-  "target": "cy-playkit",
-  "dropped": [],
-  "switchKeys": []
- },
- "F64": {
-  "data": {
-   "show": true,
-   "kit": {
-    "type": "estimate",
-    "title": "这棵树有多少岁?",
-    "unit": "年",
-    "min": 0,
-    "max": 400,
-    "revealAt": "明天",
-    "revealHour": "18:00",
-    "limitSeconds": 0,
-    "maxTries": 3
-   }
-  },
-  "target": "cy-playkit",
-  "dropped": [],
-  "switchKeys": []
- },
- "F65": {
-  "data": {
-   "show": true,
-   "kit": {
-    "type": "pricepair",
-    "title": "哪一张是这家店的招牌?",
-    "items": [
-     {
-      "id": "a",
-      "name": "冰美式"
-     },
-     {
-      "id": "b",
-      "name": "燕麦拿铁"
-     },
-     {
-      "id": "c",
-      "name": "单一产地手冲"
-     },
-     {
-      "id": "d",
-      "name": "海盐芝士奶盖"
-     }
-    ],
-    "maxTries": 3
-   }
-  },
-  "target": "cy-playkit",
-  "dropped": [],
-  "switchKeys": []
- },
- "F66": {
-  "data": {
-   "show": true,
-   "kit": {
-    "type": "hidden",
-    "title": "找出画面里的三只猫",
-    "imageUrl": "/images/route_city_cover.png",
-    "targets": [
-     {
-      "id": "t1",
-      "label": "窗台上的"
-     },
-     {
-      "id": "t2",
-      "label": "柜子后的"
-     },
-     {
-      "id": "t3",
-      "label": "门口的"
-     }
-    ],
-    "total": 3,
-    "maxTries": 3
-   }
-  },
-  "target": "cy-playkit",
-  "dropped": [],
-  "switchKeys": []
- },
- "F67": {
-  "data": {
-   "show": true,
-   "kit": {
-    "type": "predict",
-    "question": "明天哪款会卖得最好?",
-    "hint": "押一个,商家给答案时揭晓。",
-    "options": [
-     {
-      "key": "A",
-      "label": "冰美式",
-      "meta": "昨天卖了 31 杯"
-     },
-     {
-      "key": "B",
-      "label": "燕麦拿铁",
-      "meta": "昨天卖了 24 杯"
-     },
-     {
-      "key": "C",
-      "label": "桂花冷萃",
-      "meta": "昨天卖了 18 杯"
-     }
-    ],
-    "closeAtHour": 20
-   }
-  },
-  "target": "cy-playkit",
-  "dropped": [],
-  "switchKeys": []
- },
- "F68": {
-  "data": {
-   "show": true,
-   "kit": {
-    "type": "random",
-    "deckName": "老城卡池",
-    "cards": [
-     {
-      "id": "c1",
-      "title": "找一扇有年份的门",
-      "body": "门牌、砖缝、信箱,哪一样都行。拍下来,不用发给谁。"
-     },
-     {
-      "id": "c2",
-      "title": "数一数这条街有几棵梧桐",
-      "body": "从路口数到下一个路口就行。"
-     },
-     {
-      "id": "c3",
-      "title": "跟店员打听一件旧事",
-      "body": "这条街上最早的那家店是哪一家。"
-     }
-    ]
-   }
-  },
-  "target": "cy-playkit",
-  "dropped": [],
-  "switchKeys": []
- },
- "F69": {
-  "data": {
-   "show": true,
-   "kit": {
-    "type": "bingo",
-    "title": "这周的九宫格",
-    "cellSpecs": [
-     {
-      "t": "老张咖啡",
-      "how": "扫码到店"
-     },
-     {
-      "t": "猜豆子数量",
-      "how": "估数题"
-     },
-     {
-      "t": "巷口书店",
-      "how": "扫码到店"
-     },
-     {
-      "t": "哪杯最贵",
-      "how": "比价连击"
-     },
-     {
-      "t": "找三只猫",
-      "how": "找东西"
-     },
-     {
-      "t": "今日销冠",
-      "how": "竞猜转盘"
-     },
-     {
-      "t": "深夜面馆",
-      "how": "扫码到店"
-     },
-     {
-      "t": "开一张卡",
-      "how": "抽卡"
-     },
-     {
-      "t": "街角花店",
-      "how": "扫码到店"
-     }
-    ],
-    "filledPositions": [
-     0,
-     1,
-     2,
-     4
-    ],
-    "lineReward": "第二杯半价",
-    "fullReward": "一杯手冲免单",
-    "limitSeconds": 0
-   }
-  },
-  "target": "cy-playkit",
-  "dropped": [],
-  "switchKeys": []
- },
  "F89": {
   "data": {
    "cardStyle": "foil",
@@ -16181,104 +15756,6 @@
   "dropped": [],
   "switchKeys": []
  },
- "F70": {
-  "data": {
-   "show": true,
-   "kit": {
-    "type": "scan",
-    "title": "扫一扫",
-    "kind": "文字",
-    "reply": "欢迎来到这家店,今天的手冲是耶加雪菲。"
-   }
-  },
-  "target": "cy-playkit",
-  "dropped": [],
-  "switchKeys": []
- },
- "F71": {
-  "data": {
-   "show": true,
-   "kit": {
-    "type": "walk",
-    "goal": 6000,
-    "steps": 4286,
-    "syncing": false
-   }
-  },
-  "target": "cy-playkit",
-  "dropped": [],
-  "switchKeys": []
- },
- "F72": {
-  "data": {
-   "show": true,
-   "kit": {
-    "type": "coinflip",
-    "kicker": "抛一次,认结果",
-    "headsLabel": "正面",
-    "headsAction": "这杯店家请",
-    "tailsLabel": "反面",
-    "tailsAction": "这杯你请",
-    "face": "HEADS"
-   }
-  },
-  "target": "cy-playkit",
-  "dropped": [],
-  "switchKeys": []
- },
- "F73": {
-  "data": {
-   "show": true,
-   "kit": {
-    "type": "diceroll",
-    "kicker": "掷到几就做第几件事",
-    "faces": [
-     "跟店员说一句今天的天气",
-     "把桌上的花挪个位置",
-     "给同行的人读一段菜单",
-     "找出店里最旧的那件东西",
-     "换一个座位坐下",
-     "替下一位客人点一杯"
-    ],
-    "values": [
-     5,
-     4
-    ]
-   }
-  },
-  "target": "cy-playkit",
-  "dropped": [],
-  "switchKeys": []
- },
- "F74": {
-  "data": {
-   "show": true,
-   "kit": {
-    "type": "ballshake",
-    "kicker": "撞够 30 次",
-    "goal": 30,
-    "timed": true,
-    "seconds": 12
-   }
-  },
-  "target": "cy-playkit",
-  "dropped": [],
-  "switchKeys": []
- },
- "F75": {
-  "data": {
-   "show": true,
-   "kit": {
-    "type": "quiethold",
-    "kicker": "别出声",
-    "sub": "声音过线就从头再来。",
-    "seconds": 15
-   }
-  },
-  "target": "cy-playkit",
-  "dropped": [],
-  "switchKeys": []
- },
  "F93": {
   "data": {
    "show": true,
@@ -16332,97 +15809,6 @@
    "error": false,
    "active": null
   },
-  "dropped": [],
-  "switchKeys": []
- },
- "F76": {
-  "data": {
-   "show": true,
-   "kit": {
-    "type": "countdown",
-    "kicker": "倒计时",
-    "seconds": 90,
-    "doneText": "时间到。"
-   }
-  },
-  "target": "cy-playkit",
-  "dropped": [],
-  "switchKeys": []
- },
- "F77": {
-  "data": {
-   "show": true,
-   "kit": {
-    "type": "stopwatch",
-    "kicker": "盲停",
-    "targetSeconds": 10,
-    "toleranceMs": 300,
-    "tries": 3
-   }
-  },
-  "target": "cy-playkit",
-  "dropped": [],
-  "switchKeys": []
- },
- "F78": {
-  "data": {
-   "show": true,
-   "kit": {
-    "type": "qa",
-    "mode": "pick",
-    "theme": "dark",
-    "title": "石碑上的图案象征什么?",
-    "lead": "向店员领一份盲品小样,闭眼尝一口",
-    "options": [
-     {
-      "t": "丰收"
-     },
-     {
-      "t": "远航",
-      "img": true
-     },
-     {
-      "t": "守护",
-      "audio": true
-     }
-    ],
-    "limitSeconds": 30,
-    "maxTries": 3
-   }
-  },
-  "target": "cy-playkit",
-  "dropped": [],
-  "switchKeys": []
- },
- "F79": {
-  "data": {
-   "show": true,
-   "kit": {
-    "type": "qa",
-    "mode": "type",
-    "theme": "light",
-    "title": "这座桥建于哪一年?",
-    "limitSeconds": 60,
-    "maxTries": 3
-   }
-  },
-  "target": "cy-playkit",
-  "dropped": [],
-  "switchKeys": []
- },
- "F80": {
-  "data": {
-   "show": true,
-   "kit": {
-    "type": "qa",
-    "mode": "shot",
-    "theme": "dark",
-    "title": "在这棵树下拍一张",
-    "shotLead": "和这棵古树合个影",
-    "shotNote": "站在树的左边,把整棵树都框进去。"
-   }
-  },
-  "target": "cy-playkit",
   "dropped": [],
   "switchKeys": []
  },
@@ -16483,5 +15869,72 @@
   "target": "cy-playkit",
   "dropped": [],
   "switchKeys": []
+ },
+ "B90": {
+  "data": {
+   "state": "ready",
+   "routes": [
+    {
+     "id": "1",
+     "name": "老城慢行",
+     "city": "上海",
+     "cover": "",
+     "metaText": "上海 · 4 km · 1 小时 30 分"
+    }
+   ]
+  },
+  "dropped": [],
+  "switchKeys": [
+   "state",
+   "routes"
+  ]
+ },
+ "B91": {
+  "data": {
+   "state": "ready",
+   "route": {
+    "name": "老城慢行",
+    "metaText": "上海 · 4 km",
+    "cover": "",
+    "nodes": [
+     {
+      "key": "n1",
+      "order": 1,
+      "name": "第一站",
+      "address": "示例路 1 号",
+      "stayText": "20 分钟",
+      "lat": null,
+      "lng": null,
+      "img": ""
+     }
+    ]
+   }
+  },
+  "dropped": [],
+  "switchKeys": [
+   "state"
+  ]
+ },
+ "D90": {
+  "data": {
+   "state": "ready",
+   "rows": [
+    {
+     "id": "1",
+     "reason": "每日签到",
+     "delta": 5,
+     "deltaText": "+5",
+     "income": true,
+     "afterText": "余额 15",
+     "timeText": "2026-10-01 08:30"
+    }
+   ],
+   "hasMore": false
+  },
+  "dropped": [],
+  "switchKeys": [
+   "state",
+   "rows"
+  ]
  }
 }
