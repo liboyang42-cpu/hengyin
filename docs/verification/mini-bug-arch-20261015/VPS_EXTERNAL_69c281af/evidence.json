@@ -1,0 +1,41 @@
+{
+  "protocol": "CY-COORD-20261015-v1",
+  "handoff": "CY-HANDOFF: CODEX",
+  "verified_at_utc": "2026-10-15T12:09:45.652793+00:00",
+  "candidate_sha": "69c281af1ecc3493db5614b74e494b91c7bb0656",
+  "source_archive_sha256": "d1bb77c5674b2d633c46bae8e15f3e1bde468bc2de63089b470a858a476b4ecc",
+  "target": "authorized development/test VPS, task-owned isolated MySQL container, no published ports",
+  "mysql_version": "8.0.45",
+  "java": "Eclipse Temurin 21",
+  "maven": "3.9.11",
+  "compile": "all reactor main sources and admin test sources compiled",
+  "suite": "com.chengyinhub.business.service.B03AssetMybatisIntegrationTest",
+  "surefire": {
+    "tests": "1",
+    "failures": "0",
+    "errors": "1",
+    "skipped": "0",
+    "time": "1.523"
+  },
+  "container_exit_code": 1,
+  "oom_killed": false,
+  "business_test_methods_executed": 0,
+  "expected_business_test_methods": 7,
+  "cases": [
+    {
+      "name": "",
+      "classname": "com.chengyinhub.business.service.B03AssetMybatisIntegrationTest",
+      "error_type": "org.springframework.jdbc.BadSqlGrammarException",
+      "diagnostic": "setup:79 splits CREATE TABLE at first semicolon; merchant_payable_batch COMMENT contains a semicolon inside a quoted string"
+    }
+  ],
+  "result": "FAIL_SETUP_SQL_FIXTURE",
+  "candidate_modified": false,
+  "business_source_modified": false,
+  "not_verified": [
+    "Seven B03 MySQL business assertions",
+    "VPS application deployment and runtime/database binding",
+    "WeChat and iOS device acceptance",
+    "Migration, merge and release"
+  ]
+}
