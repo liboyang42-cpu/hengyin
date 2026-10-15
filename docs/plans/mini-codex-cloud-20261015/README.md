@@ -1,15 +1,19 @@
 # 小程序bug与共用后端架构 Cloud 开工清单
 
-2026年10月15日。**只做小程序相关的既有bug与共用后端底层；整体不做原生iOS、Flutter。** Codex Cloud负责修bug和后端架构，Claude负责UI设计、新功能及其专属后端。共用后端只维护一套合同和业务真源。
+> 三方统一协作规则：[CY-COORD-20261015-v1](COORDINATION.md)。当前文件归属与候选见[OWNERSHIP.md](OWNERSHIP.md)；初始规划不等于已领单。最终提示词：[Codex](START_PROMPT.md)、[Claude](CLAUDE_START_PROMPT.md)、[iOS](IOS_START_PROMPT.md)。
 
-计划PR #16仍只包含文档。执行候选已在 [草稿PR #18](https://github.com/liboyang42-cpu/hengyin/pull/18) 组合公共PR并提交最小修复；共同worker基线 `d551c6b`，源码候选 `3ee0fd0`。最新逐层证据与未闭合项见 [C99](../../verification/mini-bug-arch-20261015/C99/README.md)。源码候选不代表业务READY。
+2026年10月15日。**只做小程序相关的既有bug与共用后端底层；本Codex/小程序Claude任务不改原生iOS、Flutter。原生iOS由独立agent负责。** Codex Cloud负责修bug和后端架构，Claude负责UI设计、新功能及其专属后端。共用后端只维护一套合同和业务真源。
+
+iOS独立agent入口：[IOS_HANDOFF.md](IOS_HANDOFF.md)、[后端变化记录](BACKEND_CHANGES.md)、[给iOS的提示词](IOS_START_PROMPT.md)。共用后端所有者需向该agent提供兼容变化，原有Codex任务数量和工期不因此增加iOS工作。
+
+本控制分支只维护计划/协调文档；业务已在独立草稿PR18形成候选，实际SHA/文件锁见OWNERSHIP，发布层级及CI见BACKEND_CHANGES。控制分支不是运行包，也没有测试部署证据。
 
 ## 启动方式
 
 1. 在Codex Cloud选择公共仓库 `liboyang42-cpu/hengyin`，任务基线选择 `codex/mini-bugs-backend-cloud-plan-20261015`；若界面不提供分支选择，在启动提示词中明确先取该分支并保留已有工作。
 2. 粘贴 [START_PROMPT.md](START_PROMPT.md) 中的完整提示词。一个协调者先做C00；支持子代理时按 [TASKS.md](TASKS.md) 的文件所有权并行，默认最多4个worker。没有并行工具则如实执行并给出独立lane提示词，不声称已经并行。
 3. 已有PR先复用和评审。固定共同候选SHA后，再派B01–B05及A02的已确认AI bug修复；bug优先级批次收口后派A01/A03并继续A02架构部分；最后C99集中验收。
-4. 产出草稿PR及证据，不自动合并GitHub PR、部署或上传。用户会自行启动新的Cloud任务，本次没有代为启动。
+4. 产出草稿PR及证据，不自动合并GitHub PR、部署或上传。本轮已由当前协调聊天执行并发布PR18；不假定Claude/iOS收到通知，接收回执另列。
 
 机器可读任务源是 [tasks.json](tasks.json)；逐单步骤/验收是 [TASKS.md](TASKS.md)；双方边界见 [CLAUDE.md](CLAUDE.md)。变更任务时同步三份，不把旧研究ID当已确认缺陷。
 
@@ -61,4 +65,4 @@ C00先复核当前GitHub workflow的触发条件；需要远程后端检查时�
 
 每单关闭必须有：当前源码/环境与复现或反证、相关测试实际输出、独立业务读回、修改及兼容说明。已修/误报/裁决不做可以凭证据关闭调查，不能伪造一次代码改动。源码与测试、PR/CI、合并、迁移、部署、上传、设备和业务验收分层记录；未完成层保持待验证。
 
-本批不改鉴权/RBAC模型、Redis/JWT配置，不加依赖，不执行DDL或恢复小程序会费/群聊/群投票，不引入Boot3/新引擎/大规模重写。若具体修复撞到AGENTS要求的批准边界，先完成最小失败用例、影响范围、可审阅方案和回退说明，保持该变更待确认，继续其他独立工作。
+B05仅有用户明确批准的已删帖读取最小限制；不扩大鉴权/RBAC模型，不改Redis/JWT配置，不加依赖，不执行DDL或恢复小程序会费/群聊/群投票，不引入Boot3/新引擎/大规模重写。若具体修复撞到AGENTS要求的批准边界，先完成最小失败用例、影响范围、可审阅方案和回退说明，保持该变更待确认，继续其他独立工作。

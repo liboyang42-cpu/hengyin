@@ -1,21 +1,25 @@
-# Codex Cloud 启动提示词
+# Codex最终提示词
 
-选择公共仓库 `liboyang42-cpu/hengyin`；优先以 `codex/mini-bugs-backend-cloud-plan-20261015` 分支启动。粘贴以下完整内容：
+协议：`CY-COORD-20261015-v1`。本文件替代此前给该角色的启动草稿；任务范围仍以同目录分工与当前证据为准。
 
 ```text
-请在公共仓库 liboyang42-cpu/hengyin 中执行 docs/plans/mini-codex-cloud-20261015 的任务。先读取 README.md、TASKS.md、CLAUDE.md、tasks.json，以及根目录和小程序 AGENTS.md。若当前检出不含这些文件，从公共远端取 codex/mini-bugs-backend-cloud-plan-20261015；不要覆盖已有未提交工作，不取旧私有仓库历史。
+你负责城瘾小程序现有bug和共用后端架构，并担任本轮唯一协调者。Claude负责小程序UI、新功能及明确委派的专属后端；另一个agent负责原生iOS；Flutter不做。后端保持一套业务真源，不另造iOS后端。
 
-本轮整体不做原生 iOS 和 Flutter。我的优先级是：先修已经发现且仍成立的 bug，再做服务现有小程序业务的共用后端架构。UI设计、布局和新功能及其专属后端交给 Claude；不要把所有后端需求都塞进 Codex，也不要新造页面/引擎/框架。
+公共仓库：liboyang42-cpu/hengyin
+任务文档分支：codex/mini-bugs-backend-cloud-plan-20261015
+目录：docs/plans/mini-codex-cloud-20261015/
+统一协议：CY-COORD-20261015-v1
+先读取COORDINATION.md、OWNERSHIP.md、README.md、TASKS.md、tasks.json、CLAUDE.md、IOS_HANDOFF.md、BACKEND_CHANGES.md，以及相关AGENTS.md。
 
-你是协调者。先完成 C00，核实公共 master、PR11 的父链和 PR12–15 当前状态；已有GPS、点赞方向、徽章、音频、轮询等修复先复用与验收，不重做，不直接把草稿/标题/作者测试声明当已合并或通过。基于公共提交准备 codex/mini-bug-arch-integration-20261015 候选分支，保留任务文档，固定同一 SHA、文件所有权和 API 合同。你可以在自己的候选分支组合经评审的公共提交，但不要自动合并 GitHub PR。
+先完成C00：复核master、PR11父链及PR12–15当前实现，已有修复复用，不重做。核实三方实际分支/SHA和已有工作，固定公共候选SHA。由你独占维护文档分支上的OWNERSHIP.md、BACKEND_CHANGES.md和任务主账，先发布具体文件/测试归属和接口合同；初始归属表只是规划，不代表任务已经认领。每个文件同一时刻只能有一个写入者，未知/冲突文件先分配，不能让Claude与bug worker同时改同一JS、Controller、DTO或Mapper。
 
-然后按 TASKS.md 启动 B01–B05 以及A02前半段已确认AI bug的并行工作，最多4个worker；BUG批次修复或明确证据处置后再并行 A01/A03，A02同一所有者继续后半段用量/额度底层，最后 C99。若当前环境有子代理/并行能力请使用；每个worker只能改自己的文件和相关测试，明确告诉他们不是独自在仓库工作，不得覆盖其他人的改动。没有该能力就如实执行并给出独立lane提示词，不声称已并行。不得让多个worker共享可写构建目录、同时改公共文件或各跑一遍全量测试。
+然后按任务卡先修B01–B05及A02前半已确认AI bug，之后做A01/A03及A02后半架构，最后C99。使用环境实际支持的并行能力，最多4个worker。独立checkout可各自提交；共享工作区的worker不得并发切分支、暂存或提交，由你按明确路径串行收口。每个worker都要知道他不是独自在仓库工作，不得覆盖别人改动。
 
-Cloud编辑代码和运行必要轻量Node测试；后端Java构建/开发集成测试及MySQL/Redis在已经授权的专用VPS，附加CI用既有GitHub托管runner。不要把Cloud的localhost当Mac隧道。先验证实际测试后端/库与候选对应，使用环境安全配置中的必要凭据且不打印、不提交。VPS不可达时继续其他独立源码工作与GitHub CI，并将VPS/真机层明确标未验证；不回落生产、不在Mac或Cloud另起替代Java/数据库基础设施，不改网络策略。
+三方通过各自草稿PR正文/专属交付文档同步，标记CY-HANDOFF: CODEX、CLAUDE或IOS。你在分派、集成或接口变动前，读取hengyin及chengyin-ios中这些交付记录，处理文件申领与依赖。新功能专属后端可以明确委派Claude；共用核心及其他已锁文件仍由原所有者修改。转交文件必须先取得原所有者停止编辑及提交/补丁证据，再登记新基线和新所有者；超时不等于释放。
 
-不做本批DDL/新依赖/生产配置/部署，不恢复小程序会费、群聊、群投票，不改既有环境回落裁决。AGENTS要求批准的鉴权/RBAC、Redis/JWT、资金/产品政策或迁移改变，先完成失败用例与具体可审阅方案，再保持该变更待确认，继续独立任务。
+任何后端变化由你汇总到BACKEND_CHANGES.md，记录BK编号、实现者、方法/路径/DTO/单位/错误/权限/分页/requestId/version差异、两端影响、兼容fixture、源码SHA/PR、测试、合并和部署状态。按DRAFT→CONTRACT_FROZEN→SOURCE_READY→TEST_DEPLOYED分层，客户端验收另列；即使不改API也写NO_API_CHANGE。合同未冻结不让客户端猜协议，未核测试部署不宣称可真实联调。没有自动消息总线，你需要主动读取交付记录，不能假定其他agent已收到通知。
 
-所有历史线索先复核：已修、误报、已有裁决不做的条目记录证据，不为凑数造改动。保留requestId异命令冲突、旧结局顺序、旧局快照和原资金政策；不能加action放宽唯一键、按坐标建POI唯一键、缺照片也发奖、给榜外用户造0分、吞关键支付失败或mock成功。
+代码编辑和轻量Node检查在Cloud；Java开发/集成测试、数据库及测试服务用已授权VPS，附加CI用GitHub托管runner。Cloud localhost不是Mac隧道。VPS不可达则继续独立源码工作并保留运行层待验，不回落生产或另起本地Java/数据库。不做本批DDL、新依赖、生产配置、部署/上传；鉴权、资金或产品政策改变先给可审阅方案。保留既有幂等、旧局快照和旧结局顺序，不用假成功或放宽门禁收口。
 
-每个任务产出精确文件、复现/反证、相关测试实际输出与未跑项。相关测试通过后由集成人集中跑必要候选门禁；不要改分母、放宽基线或屏蔽错误制造全绿。为 Claude 提供稳定的接口/状态/权限/requestId/version及fixture。产出按lane分明的草稿PR或候选PR，不部署、不上传；源码、PR/CI、合并、部署、设备和真实业务读回分层报告。继续执行已授权独立工作，不只返回计划。
+交付精确文件、复现或反证、相关测试实际输出、候选SHA和两端合同，分清源码、PR/CI、合并、部署、设备及业务验收。只对实际通过层级签收，继续推进已授权独立工作，不只返回计划。
 ```

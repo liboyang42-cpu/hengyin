@@ -1,14 +1,14 @@
 # Codex Cloud 任务卡
 
-当前执行证据与未闭合项见 [C99](../../verification/mini-bug-arch-20261015/C99/README.md)，状态与 tasks.json 同步；本表验收勾选不因源码提交自动通过。
+> 三方统一协作规则：[CY-COORD-20261015-v1](COORDINATION.md)。当前文件归属与候选见[OWNERSHIP.md](OWNERSHIP.md)；初始规划不等于已领单。最终提示词：[Codex](START_PROMPT.md)、[Claude](CLAUDE_START_PROMPT.md)、[iOS](IOS_START_PROMPT.md)。
 
-2026年10月15日。先读 [README.md](README.md) 和 [CLAUDE.md](CLAUDE.md)。整体排除原生iOS、Flutter；所有后端修改保持现有客户端合同兼容，但不因此补做两端代码或测试。
+2026年10月15日。先读 [README.md](README.md) 和 [CLAUDE.md](CLAUDE.md)。本任务不改原生iOS、Flutter；独立iOS agent另管；所有后端修改保持现有客户端合同兼容，但不因此补做两端代码或测试。
 
 ## 文件所有权规则
 
 每个worker只改本单owned_files及专属新增/既有相关测试，开始前把实际文件清单报协调者。`existing_test_files`是已存在的入口，不表示只跑这些就足够。新增测试用本单前缀或已有明确专属套件。共享DTO/响应封装/Controller/Mapper若未在本单列表，须先向C00申领；其他worker不得同时编辑。
 
-以下由协调者独占：根及小程序AGENTS、app.json、请求公共封装、公共DTO/接口、workflow/pom/lockfile、sql及迁移索引、动作/路由清单、门禁基线、共享golden fixtures。默认只读；确需改动先核授权。无worker可以为通过测试自行改分母、关闭规则或删基线。
+以下由协调者独占：根及小程序AGENTS、app.json、请求公共封装、公共DTO/接口、workflow/pom/lockfile、sql及迁移索引、动作/路由清单、门禁基线、共享golden fixtures。[BACKEND_CHANGES.md](BACKEND_CHANGES.md)及IOS_HANDOFF.md由C00/C99协调者独占维护，各worker只提交变化片段；不要并发改同一日志。默认只读；确需改动先核授权。无worker可以为通过测试自行改分母、关闭规则或删基线。
 
 | 任务 | 级别/阶段 | 依赖 | 基础人日 | 原OPT归属 |
 |---|---|---|---|---|
@@ -25,7 +25,7 @@
 
 ## C00 核公共基线并审查已有PR
 
-主责：集成协调者；依赖：无；基础预算：2—3人日；状态：公共候选已冻结，PR11–15复用与来源已核。
+主责：集成协调者；依赖：无；基础预算：2—3人日；状态：基线与三方公共PR已核，控制账已发布；Claude/iOS接收回执待交。
 
 ### 独占源码入口
 
@@ -338,7 +338,7 @@ AI创作入口、新对话UI、模型新场景和新功能后端交Claude；共�
 
 ## C99 集中集成验证与Claude接口交接
 
-主责：集成协调者；依赖：A01、A02、A03；基础预算：3—5人日；状态：候选PR18与逐层证据已交，CI见PR当前Checks；VPS/设备未验证。
+主责：集成协调者；依赖：A01、A02、A03；基础预算：3—5人日；状态：PR18；c24202f6补偿用例已修待CI；三方文件/合同已发布，VPS与两端设备未验证。
 
 ### 独占源码入口
 
@@ -348,7 +348,7 @@ AI创作入口、新对话UI、模型新场景和新功能后端交Claude；共�
 
 1. 按文件归属评审各lane结果，在单一候选整合；只由集成人处理公共DTO/迁移目录/请求封装/动作和路由清单/基线。
 2. 先跑相关测试，再在候选上集中跑必要门禁和GitHub托管CI；VPS测试串行、隔离资源和限制内存，完整前端套件不由各worker重复跑。
-3. 给Claude交接口/方法/DTO/错误/版本/权限/幂等/状态与fixture；有新UI或新功能的需求保留Claude责任。
+3. 给Claude和独立iOS agent交接口/方法/DTO/错误/版本/权限/幂等/状态与fixture，更新BACKEND_CHANGES.md的实现/合并/部署状态；有新UI或新功能的需求保留Claude责任。
 4. 独立VPS业务读回可自动化部分尽量完成；微信真机、设备权限、现场核销、上传和生产发布明确单列待验收，不伪称Cloud已完成。
 
 ### 验收

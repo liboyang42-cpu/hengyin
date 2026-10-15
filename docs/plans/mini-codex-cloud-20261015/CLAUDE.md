@@ -1,6 +1,8 @@
 # Codex 与 Claude 的任务边界
 
-2026年10月15日用户确定：先做小程序，后端统一；整体不做原生iOS和Flutter。Codex做已发现的bug和共用后端架构，Claude做UI及新功能。**是否后端文件不是分工依据；新功能专属后端仍归Claude，共用底层合同归Codex。**
+> 三方统一协作规则：[CY-COORD-20261015-v1](COORDINATION.md)。当前文件归属与候选见[OWNERSHIP.md](OWNERSHIP.md)；初始规划不等于已领单。最终提示词：[Codex](START_PROMPT.md)、[Claude](CLAUDE_START_PROMPT.md)、[iOS](IOS_START_PROMPT.md)。
+
+2026年10月15日用户确定：先做小程序，后端统一；本任务包不改原生iOS和Flutter，iOS由独立agent继续负责。Codex做已发现的bug和共用后端架构，Claude做UI及新功能。**是否后端文件不是分工依据；新功能专属后端仍归Claude，共用底层合同归Codex。**
 
 ## 现有36包如何拆责
 
@@ -53,4 +55,8 @@ Claude可先做不依赖API变更的设计与只读布局工作。依赖修复�
 
 后端给Claude的每份合同应包括：真实HTTP方法/路径、DTO/字段约束、错误/业务状态、归属与权限范围、requestId/version语义、读取/分页/缓存、兼容策略、正常/失败/未知fixture和可观察验收。样例身份与金额必须是明确测试fixture，不能放真实账号、凭据或生产目标。
 
-以下保持排除：小程序会费、群聊与群投票恢复；原生iOS/Flutter全部实现、测试和发布；本批新迁移、新依赖、Boot3升级、渲染器/引擎替换；未经批准的新资金、权限、留存和结局政策。
+以下保持排除：小程序会费、群聊与群投票恢复；本任务包的原生iOS/Flutter实现、测试和发布；本批新迁移、新依赖、Boot3升级、渲染器/引擎替换；未经批准的新资金、权限、留存和结局政策。
+
+## 与独立iOS agent共享后端
+
+iOS agent的入口是[IOS_HANDOFF.md](IOS_HANDOFF.md)。小程序新功能若改变共用后端合同，交协调者同步[BACKEND_CHANGES.md](BACKEND_CHANGES.md)，包括旧原生调用兼容与部署状态；不能只通知小程序。不得将小程序会费/群聊/投票裁决自动套到原生，也不因此授权原生开新收费。

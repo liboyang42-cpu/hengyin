@@ -1,0 +1,121 @@
+# 文件归属与候选登记
+
+协议：`CY-COORD-20261015-v1`。唯一维护者：本聊天 Codex C00/C99。控制文档使用独立checkout `/workspace/hengyin-coordination`，业务候选在另一checkout；不在worker共享目录切换分支。
+
+## 当前事实与状态
+
+- 控制仓库/分支：`liboyang42-cpu/hengyin@codex/mini-bugs-backend-cloud-plan-20261015`，复用文档PR16。
+- 业务候选：`codex/mini-bug-arch-integration-20261015@c24202f659e8709a00b513b8e456d101a6b99daf`，[PR18](https://github.com/liboyang42-cpu/hengyin/pull/18)，未合并。共同worker基线 `d551c6babd018d41aec90dad2c0acaf1c534644d`。
+- 后端整体仅 CONTRACT_FROZEN：两个补偿用例前提已修正，当前SHA的Java CI待重验，不能标SOURCE_READY或TEST_DEPLOYED；任何测试服务/数据库/设备均无部署证据。
+- worker最多4路；用户指定模型后，后续worker均显式 `gpt-6.1-sol`。历史所有者已冻结并交补丁后才交接，非因超时释放。
+- 唯一控制写者C00独占本目录全部控制文档，尤其OWNERSHIP.md、BACKEND_CHANGES.md、tasks.json；其他人只能在自己的PR/交付目录交请求。
+
+## 主动交付读取记录
+
+已查询两个公共仓库的CY-HANDOFF PR搜索及默认分支代码搜索，结果均为空；同时用公开pulls列表逐条核开放PR正文（避免仅依赖搜索索引）。此结果不等于其他agent未启动。
+
+| 角色/来源 | 实际公共分支与SHA | 处置 |
+|---|---|---|
+| CODEX | 候选c24202f659e8709a00b513b8e456d101a6b99daf，PR18 | 本协调者实际已启动；将维护CY-HANDOFF: CODEX正文 |
+| CLAUDE | `claude/mini-ui-features-20261015@d9dc65ad4548f75562cebcd318265114c3218b20`，PR21 | 已读全部文档并逐项处置，见下表；尚无CY标记/接收回执，不声称已通知。认领材料合同保持DRAFT |
+| 额外新功能PR20 | `feature/roam-launch-20261015@49182b74e5fd515f30a09442338b8f5ed4c9b91e` | 含两条新DDL及订单/漫游文件重叠，非本轮自动集成；原所有者未明确停止，不能抢写 |
+| 额外隐私PR17 | `feature/prelaunch-acceptance-20261015@b1f66dbf95dcb172f4c1255e079ba19f35a988e5` | 已读正文；父链不同，作者测试/部署声明未在本候选独立复核，不合并、不夺其文件 |
+| IOS | 当前没有开放PR/带标记交付；远端main=`a8d387e`、migration/native-ios=`f0df085`，另存在work/native-73e-file-transfer=`03facd8`等分支 | 实际活动分支/写入者/未提交工作 UNKNOWN；保留既有iOS所有权，不选择分支、不改源码、不将静态快照当已领取 |
+
+## 精确文件锁
+
+状态INTEGRATED仅表示补丁已收入候选；原所有者已明确停止/冻结且由C00串行提交。锁仍保留，未标RELEASED，Claude/iOS不得直接编辑。ASSIGNED表示当前唯一允许写入者；提交由协调者统一进行。相同文件需要新功能变更时，交此所有者或先完整履行转交协议。
+
+| 仓库 | 精确路径 | 所有者/原实现者 | 状态 | 基线 | 证据/限制 |
+|---|---|---|---|---|---|
+| hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostMapperMyBatisTest.java` | C00（B05已获用户批准） | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java` | B03_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B03AssetMybatisIntegrationTest.java` | B03_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B03PointsAwardServiceTest.java` | B03_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B04ClubEventScheduleReadbackTest.java` | B04_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PublisherSettlementPointsAwardServiceTest.java` | B03_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDraftLegacyFieldPreservationTest.java` | B02（已交接冻结） | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiSceneRouterContractTest.java` | A02_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImplTest.java` | A02_sol | INTEGRATED | `c24202f` | c24202f6已交付并停止；仅修两项调用前触发，断言保留，CI待验 |
+| hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/A03EndingSnapshotReadTest.java` | A03_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/A03EndingWriteCompatibilityTest.java` | A03_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NpcChatServiceTest.java` | A02_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImplTest.java` | A01_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/A03RuntimeEndingCompatibilityTest.java` | A03_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/TopicCreateDTO.java` | B02（已交接冻结） | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/ClubEventSeriesView.java` | B04_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/UmsMemberMapper.java` | B03_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiProviderOutcomeUnknownException.java` | A02_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiSceneRouter.java` | A02_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java` | A02_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java` | A02_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ChapterFlowCompiler.java` | A03_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java` | B04_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java` | B02（已交接冻结） | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java` | A02_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImpl.java` | A03_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PointsAwardServiceImpl.java` | B03_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java` | A01_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml` | C00（B05已获用户批准） | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-system/src/main/resources/mapper/business/MerchantPayableBatchMapper.xml` | B03_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-system/src/main/resources/mapper/business/UmsMemberMapper.xml` | B03_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-xcx/pages/club/event-ops/index.js` | B01_sol（此前B01已交接） | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-xcx/pages/mylike/mylike.js` | B01_sol（此前B01已交接） | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-xcx/pages/play/index.js` | B01_sol（此前B01已交接） | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-xcx/scripts/uiaudit/action-ledger.json` | C00/C99 | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-xcx/subpackageMember/components/cy/scene-member-order-detail/index.js` | B01_sol（此前B01已交接） | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-xcx/subpackageMember/components/cy/scene-member-order-history/index.js` | B01_sol（此前B01已交接） | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js` | B01_sol（此前B01已交接） | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-xcx/tests/lint/ui-integrity-baseline.js` | C00/C99 | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-xcx/tests/unit/action-ledger.test.js` | C00/C99 | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js` | B01_sol（此前B01已交接） | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-xcx/tests/unit/b01-series-start-time.test.js` | B01_sol（此前B01已交接） | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-xcx/utils/audio-session.js` | B01_sol（此前B01已交接） | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `ci/backend-test.sh` | C00/C99 | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+
+## 专属文档、共享文件与转交
+
+- `hengyin:docs/plans/mini-codex-cloud-20261015/`（仅本控制目录新文件/既有文件）：C00 ASSIGNED；根/小程序AGENTS、app.json、公共请求封装/DTO、workflow/pom/lockfile、迁移索引及共享fixture仍由C00统筹，默认只读，不因本表授权修改政策或DDL。
+- `hengyin:docs/verification/mini-bug-arch-20261015/COORDINATION/CLAUDE_AUDIT.md`：C00 INTEGRATED；claude_coord_sol已停止并交只读审计，文档由C00串行收入候选，不改控制表。
+- 其余原tasks.json预留但本轮未改的文件只是REQUESTED/只读，不把规划当已认领；任何新增/冲突文件须由C00登记精确路径。
+- Claude/iOS的专属源码由其实际分支现有所有者保留，待其CY-HANDOFF给出精确路径后登记；空表或未响应不收回其原任务。
+- B01、B02、B03、B04、A01、A02、A03均已在本聊天提交停止/冻结说明及精确补丁；C00按路径提交到PR18。B05最小授权修复由用户明确批准后提交`e437a52`。
+- 后续交接必须写原所有者停止证据、最后补丁/commit、新基线、新写者；当前没有把任何后端核心或已锁文件转交Claude/iOS。
+
+## PR21逐项申领处置（协调者发布，尚待Claude读取确认）
+
+已核PR21 `d9dc65a` 文档申请、PR17/20精确差异与本候选锁。以下ASSIGNED仅授予Claude在其 `claude/mini-ui-features-20261015` 分支的唯一文件写权，允许既有UI设计/布局/fixture适配；不代表已开始、已通知或已签收，也不代表新接口获批或部署。事件名/参数和既有请求保持，接入未核合同的写能力继续OFF；新增测试文件先列精确路径。无其他agent与这些文件并写。
+
+| 任务 | 仓库及精确路径 | 唯一写者 | 状态/基线 | 依赖及处置 |
+|---|---|---|---|---|
+| CL1 | `hengyin:chengyinhub-xcx/subpackageRoam/official-route/index.js` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL1 | `hengyin:chengyinhub-xcx/subpackageRoam/official-route/index.json` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL1 | `hengyin:chengyinhub-xcx/subpackageRoam/official-route/index.wxml` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL1 | `hengyin:chengyinhub-xcx/subpackageRoam/official-route/index.wxss` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL1 | `hengyin:chengyinhub-xcx/subpackageRoam/official-routes/index.js` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL1 | `hengyin:chengyinhub-xcx/subpackageRoam/official-routes/index.json` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL1 | `hengyin:chengyinhub-xcx/subpackageRoam/official-routes/index.wxml` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL1 | `hengyin:chengyinhub-xcx/subpackageRoam/official-routes/index.wxss` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL2 | `hengyin:chengyinhub-xcx/pages/team/report-sheet/index.js` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL2 | `hengyin:chengyinhub-xcx/pages/team/report-sheet/index.json` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL2 | `hengyin:chengyinhub-xcx/pages/team/report-sheet/index.wxml` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL4 | `hengyin:chengyinhub-xcx/components/cy/npc-chat/index.json` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL4 | `hengyin:chengyinhub-xcx/components/cy/npc-chat/index.wxss` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL4 | `hengyin:chengyinhub-xcx/pages/activity/official-detail/index.json` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL4 | `hengyin:chengyinhub-xcx/pages/activity/official-detail/index.wxss` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL4 | `hengyin:chengyinhub-xcx/pages/activity/official-inbox/index.js` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL4 | `hengyin:chengyinhub-xcx/pages/activity/official-inbox/index.json` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL4 | `hengyin:chengyinhub-xcx/pages/activity/official-inbox/index.wxss` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL4 | `hengyin:chengyinhub-xcx/pages/activity/official-mine/index.js` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL4 | `hengyin:chengyinhub-xcx/pages/activity/official-mine/index.json` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL4 | `hengyin:chengyinhub-xcx/pages/activity/official-mine/index.wxss` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL4 | `hengyin:chengyinhub-xcx/subpackageMember/components/cy/profile/index.json` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL4 | `hengyin:chengyinhub-xcx/subpackageMember/components/cy/profile/index.wxss` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+
+- CL1全roam与roam-*通配：REQUESTED，不整批批准。PR20已占用pages/roam/index.{js,wxml,wxss}、history/index.{js,wxml}、nearby/index.{js,wxml,wxss}、my-teams四文件，保留该PR原写者，须停止/补丁/基线记录后才可转交；其他实际需要路径请在CY-HANDOFF精确申请。
+- CL2新report-*页、CL3新徽章页及其测试：REQUESTED，未给精确命名，不凭猜测登记新目录。昵称资料页两套入口请给实际调用及拟改的一套；PR17资料/隐私重叠保留原写者。
+- CL3 pages/club/**：REQUESTED，明确排除已锁 `chengyinhub-xcx/pages/club/event-ops/index.js`；需其变更交B01/B04原所有者，WXML/WXSS另列精确事件合同后领取。
+- CL4 `chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java`：A02保留锁；UI领取不含后端核心或后台全目录。profile若与PR17重叠未授予。未知usage不能用0显示，具体后台Vue页面请精确申领。
+- CL5 claim-sheet四文件与utils/merchant-claim.js：REQUESTED，材料合同DRAFT；不得先固定PHOTO、截URL猜assetId或把缺归属校验当业务批准。认领专属后端可在合同/精确文件确认后委派，当前无新增后端写授权。
+- 公共app.json、请求封装、DTO、动作账、门禁基线、共享fixture、workflow/pom/迁移仍C00统筹；PR20原订单JS和本候选B01重叠由原所有者处理，禁止覆盖整包。
+- 后续读取点：各方开始依赖接线/更新基线/联调前读取本控制分支；本表发布只证明协调者已处理申请，不能代替Claude/iOS的CY-HANDOFF接收回执。独立已领文件继续，不等待CL5。

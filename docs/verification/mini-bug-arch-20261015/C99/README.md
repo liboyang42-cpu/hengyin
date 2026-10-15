@@ -37,3 +37,10 @@ PR14认领PHOTO+URL仍缺资产归属/审核完整fixture；clubInterest/roamRec
 回退时按本候选lane提交撤销源码，保留原账本、历史migration、旧局JSON和其他lane改动；不得通过删除事实/重写旧数据换取测试通过。发布、任务启用、DDL和微信上传均留待用户后续明确操作。
 
 CI修补记录：b8e94fd的backend真实testCompile失败，A03专属测试误用无参构造；3ee0fd0按真实六参数依赖注入修正，业务断言未减。同期本地71项分类失败已按四个具体退款控件逐项核实。新SHA由既有CI重新验证，未把前一轮结果标通过。
+
+
+## 三方协议同步及CI补偿用例修正
+
+控制分支 `codex/mini-bugs-backend-cloud-plan-20261015@b191d560` 独立checkout由C00唯一维护，本候选同步其三方提示词、OWNERSHIP、BACKEND_CHANGES和十任务执行状态。已读Claude PR21 d9dc65a并核PR17/20冲突；23个无冲突既有UI文件精确分配，接收回执PENDING。iOS仓库暂无开放交付PR，活动所有者未知，不释放原任务。认领材料/AI删除屏障/语音政策继续DRAFT；没有测试部署证据。
+
+c236f131的GitHub CI run38728912026后端实际10095测试、2失败、0错误、530跳过；失败为两个旧补偿测试模拟provider开始后异常却期望退款。c24202f6仅将触发改为本地缺key且chat从未调用，保留原日/代次/nonce及原子补偿/禁止独立delete/decrement断言，不改调用后UNKNOWN政策。新候选待现有CI验证。c236f131 Funds MySQL IT run38728912034全部job成功；不包含新B03 opt-in真库用例，不代替VPS/设备验收。ci/backend-test.sh仅改日志展示，保留mvn -B clean test及原退出码，已用shell桩核成功0/失败7均原样返回，未在Cloud运行Java。
