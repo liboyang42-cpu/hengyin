@@ -98,6 +98,19 @@ public class MerchantCrmRecipientDeliveryServiceImpl implements IMerchantCrmReci
                 messageReceipt = notificationAdapter.send(recipient.getMemberId(), campaign);
             }
             deliveryGuardService.markDelivered(dispatching, messageReceipt, couponReceipt);
+        } catch (MerchantCrmCouponGrantAdapter.GrantRejectedException e) {
+            try {
+                deliveryGuardService.releaseForRetry(dispatching);
+            } catch (RuntimeException releaseError) {
+                e.addSuppressed(releaseError);
+                try {
+                    deliveryGuardService.markOutcomeUnknown(dispatching, "DELIVERY_OUTCOME_UNKNOWN");
+                } catch (RuntimeException guardError) {
+                    e.addSuppressed(guardError);
+                }
+                throw new MerchantCrmDeliveryOutcomeUnknownException(e);
+            }
+            throw e;
         } catch (RuntimeException e) {
             try {
                 deliveryGuardService.markOutcomeUnknown(dispatching, "DELIVERY_OUTCOME_UNKNOWN");
@@ -125,11 +138,18 @@ public class MerchantCrmRecipientDeliveryServiceImpl implements IMerchantCrmReci
         MerchantCrmCampaign campaign = campaignMapper.selectOwnedCampaign(merchantId, campaignId);
         if (campaign == null) return;
         boolean unknown = cause instanceof MerchantCrmDeliveryOutcomeUnknownException;
+        MerchantCrmCouponGrantAdapter.GrantRejectedException rejected =
+                cause instanceof MerchantCrmCouponGrantAdapter.GrantRejectedException
+                        ? (MerchantCrmCouponGrantAdapter.GrantRejectedException) cause : null;
         String code = unknown ? "DELIVERY_OUTCOME_UNKNOWN"
+                : rejected != null ? rejected.getFailureCode()
                 : cause instanceof ServiceException && Integer.valueOf(404).equals(((ServiceException) cause).getCode())
                 ? "ASSET_INVALID" : "DELIVERY_FAILED";
-        requireOne(campaignMapper.markRecipientFailed(merchantId, campaignId, recipientId,
-                code, unknown ? "投递结果未知，已阻止自动重发" : "投递失败，可重试"));
+        String message = unknown ? "投递结果未知，已阻止自动重发"
+                : "COUPON_NOT_ISSUED".equals(code)
+                ? "优惠券未发出，恢复可发条件后可重试"
+                : "投递失败，可重试";
+        requireOne(campaignMapper.markRecipientFailed(merchantId, campaignId, recipientId, code, message));
         appendAudit(campaign, recipient, "CRM_CAMPAIGN_DELIVERY_FAILED", null, null);
     }
 

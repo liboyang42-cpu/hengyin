@@ -105,7 +105,7 @@
         inner join club_event_series s on s.id = o.series_id and s.club_id = #{clubId}
           and s.status = 'ACTIVE'
         inner join cms_activity a on a.id = o.activity_id and a.club_id = #{clubId}
-          and a.del_flag = 0 and a.start_date &gt; #{now}
+          and a.del_flag = 0 and a.start_date &gt;= #{now} and o.occurrence_at &gt;= #{now}
         where o.series_id = #{seriesId} and o.status = 'ACTIVE'
         order by o.occurrence_at asc, o.id asc
     </select>
@@ -175,13 +175,13 @@
         from club_event_series where id = #{seriesId} for update
     </select>
 
-    <!-- 半开未来窗：仅 start_date > now；已开始场次永远不进入可编辑集合。 -->
+    <!-- now入参是上海明日00:00；今天的场次永远不进入未来可编辑集合。 -->
     <select id="selectFutureOccurrencesForUpdate" resultMap="occurrenceResult">
         select o.id, o.series_id, o.activity_id, o.occurrence_at,
                o.default_lead_member_id, o.status, o.version, o.create_time
         from club_event_occurrence o
         inner join cms_activity a on a.id = o.activity_id and a.del_flag = 0
-        where o.series_id = #{seriesId} and o.status = 'ACTIVE' and a.start_date &gt; #{now}
+        where o.series_id = #{seriesId} and o.status = 'ACTIVE' and a.start_date &gt;= #{now} and o.occurrence_at &gt;= #{now}
         order by o.occurrence_at asc, o.id asc
         for update
     </select>
@@ -502,18 +502,28 @@
     <select id="selectPaidRoster" resultMap="attendanceRowResult">
         select paid.member_id as memberId,
                coalesce(nullif(m.nickname, ''), nullif(m.name, ''), concat('成员#', paid.member_id)) as nickname,
-               ck.arrived_at as baseArrivedAt,
+               coalesce(ck.arrived_at, paid.verified_at, progress.arrived_at) as baseArrivedAt,
+               case when ck.arrived_at is not null or paid.verified_count &gt; 0
+                      or progress.arrived_count &gt; 0 then 1 else 0 end as baseArrived,
                corr.new_arrived as correctedArrived,
                corr.new_arrived_at as correctedArrivedAt,
                coalesce(corr.version, 0) as correctionVersion
         from (
-          select distinct member_id
+          select member_id, sum(verification_status = 1) as verified_count,
+                 min(case when verification_status = 1 then verification_time else null end) as verified_at
           from cms_registration
           where owner_type = 2 and owner_id = #{activityId}
             and payment_status = 2 and registration_status = 2
+          group by member_id
         ) paid
         left join ums_member m on m.id = paid.member_id and m.del_flag = 0
         left join club_lead_checkin ck on ck.activity_id = #{activityId} and ck.member_id = paid.member_id
+        left join (
+          select member_id, min(checkin_time) as arrived_at, count(*) as arrived_count
+          from player_node_progress
+          where activity_id = #{activityId} and status = 1 and del_flag = 0
+          group by member_id
+        ) progress on progress.member_id = paid.member_id
         left join club_event_attendance_correction corr on corr.id = (
           select max(c2.id) from club_event_attendance_correction c2
           where c2.activity_id = #{activityId} and c2.member_id = paid.member_id
@@ -533,7 +543,21 @@
     </select>
 
     <select id="selectAttendanceTargetForUpdate" resultMap="attendanceRowResult">
-        select r.member_id as memberId, 1 as paidCount, ck.arrived_at as baseArrivedAt
+        select r.member_id as memberId, 1 as paidCount,
+               coalesce(ck.arrived_at,
+                 (select min(v.verification_time) from cms_registration v
+                  where v.owner_type = 2 and v.owner_id = #{activityId} and v.member_id = #{memberId}
+                    and v.payment_status = 2 and v.registration_status = 2 and v.verification_status = 1),
+                 (select min(p.checkin_time) from player_node_progress p
+                  where p.activity_id = #{activityId} and p.member_id = #{memberId}
+                    and p.status = 1 and p.del_flag = 0)) as baseArrivedAt,
+               case when ck.arrived_at is not null
+                 or exists (select 1 from cms_registration v
+                   where v.owner_type = 2 and v.owner_id = #{activityId} and v.member_id = #{memberId}
+                     and v.payment_status = 2 and v.registration_status = 2 and v.verification_status = 1)
+                 or exists (select 1 from player_node_progress p
+                   where p.activity_id = #{activityId} and p.member_id = #{memberId}
+                     and p.status = 1 and p.del_flag = 0) then 1 else 0 end as baseArrived
         from cms_registration r
         left join club_lead_checkin ck on ck.activity_id = r.owner_id and ck.member_id = r.member_id
         where r.owner_type = 2 and r.owner_id = #{activityId} and r.member_id = #{memberId}

@@ -339,7 +339,7 @@ Page({
     app.sendRequest({
       hideLoading: true,
       url: '/api/user/info',
-      autoErrorToast: hadLoaded,   // 从未读到过 = auto-back 半屏讲原因,不叠 toast
+      autoErrorToast: false,   // F-R2U-01:读取失败(含刷新)一律不弹 toast
       data: {
         member_id: app.getUserID()
       },
@@ -348,6 +348,7 @@ Page({
         if (that._unloaded) return;
         that._profileLoading = false;
         if (res && res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
+          that._loadedProfileName = res.data.name;
           // 处理个人项目图片字符串转数组
           let casePicsList = [];
           if (typeof res.data.casePics === 'string' && res.data.casePics.trim() !== '') {
@@ -419,7 +420,7 @@ Page({
     }
 
     const data = {
-      name: userInfo.name,
+      name: userInfo.name === this._loadedProfileName ? undefined : userInfo.name,
       avatar: userInfo.avatar,
       introduction: userInfo.introduction,
       website: userInfo.website,
@@ -441,6 +442,9 @@ Page({
       success: function (res) {
         if (that._unloaded) return;
         if (res.code == "200") {
+          // 只回写本次真正提交的字段:昵称未改时 data.name 是 undefined,写进会话会把现有昵称清空。
+          if (typeof data.name === 'string' && data.name.trim()) app.setNickname(data.name);
+          if (typeof data.avatar === 'string' && data.avatar) app.setAvatar(data.avatar);
           that.setData({ saving: false, saveError: '', saveSucceeded: true });
           toast.success('资料已保存', { duration: 2000 });
           that._profileReturnTimer = setTimeout(() => {

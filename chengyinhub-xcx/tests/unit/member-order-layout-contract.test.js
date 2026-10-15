@@ -14,6 +14,7 @@ function loadOrderPage(storage) {
   const snapshot = storage || {}
   const sandbox = { requests: [], switchTabs: [] }
   global.getApp = () => ({
+    getUserID: () => 7, // Explicit authenticated order reader fixture.
     getPageSize: () => 10,
     getRequestErrorMessage: (response, fallback) => (response && response.msg) || fallback,
     sendRequest: request => sandbox.requests.push(request),

@@ -94,6 +94,16 @@ test('游戏模板点「配置」直接进节点配置页，不再绕详情页�
   assert.deepEqual(h.navigations, ['/pages/publish/temp/index?id=307']);
 });
 
+test('商家货架查看与配置游戏都保留显式商家作用域', () => {
+  const h = loadPage({ operationScope: 'MERCHANT', canManageMerchantProjects: true });
+  h.page.jumpDetail(fire({ _kind: 'game', id: 62 }));
+  h.page.goGameConfig(fire({ _kind: 'game', id: 62 }));
+  assert.deepEqual(h.navigations, [
+    '/pages/templatedetail/templatedetail?id=62&operationScope=MERCHANT',
+    '/pages/publish/temp/index?id=62&scope=MERCHANT',
+  ]);
+});
+
 test('实验预览的游戏模板不许进配置页 —— 它还没落库，配了也存不进去', () => {
   const h = loadPage();
   h.page.primaryAction(fire({ _kind: 'game', id: 'dev-1', _title: '预览', previewOnly: true }));

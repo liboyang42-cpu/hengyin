@@ -41,6 +41,7 @@ class MoneyPathContractTest {
 
         CmsActivity activity = new CmsActivity();
         activity.setId(ACTIVITY_ID);
+        activity.setMemberId(MEMBER_ID);
         activity.setStatus(1L);
         activity.setPublishStatus(1L);
         activity.setDelFlag(0);
@@ -64,6 +65,7 @@ class MoneyPathContractTest {
 
         CmsRegistrationServiceImpl service = new CmsRegistrationServiceImpl();
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activityMapper);
+        ReflectionTestUtils.setField(service, "platformMemberId", MEMBER_ID);
         ReflectionTestUtils.setField(service, "umsMemberMapper", memberMapper);
         ReflectionTestUtils.setField(service, "omsTicketMapper", ticketMapper);
         return service;

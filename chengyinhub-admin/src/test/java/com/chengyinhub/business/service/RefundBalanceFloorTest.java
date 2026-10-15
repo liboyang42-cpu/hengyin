@@ -79,6 +79,8 @@ class RefundBalanceFloorTest {
         ReflectionTestUtils.setField(svc, "merchantReferralBountyService",
                 mock(com.chengyinhub.business.service.impl.MerchantReferralBountyService.class));
         ReflectionTestUtils.setField(svc, "cmsRegistrationMapper", cmsRegistrationMapper);
+        org.mockito.Mockito.when(cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(org.mockito.ArgumentMatchers.any()))
+                .thenAnswer(call -> cmsRegistrationMapper.selectCmsRegistrationById(call.getArgument(0)));
         // [P0-1] 本类测的是「扣多少」,前提是**该扣** —— 即系统1 已真打过款。
         //        该前提现在必须显式给(见 RefundSingleSidedDebitGuardTest):退款冲销前会问父级
         //        cms_activity.is_settlement,不给就判定「没打过款」→ 一分不扣 → 本类断言全落空。
@@ -128,6 +130,8 @@ class RefundBalanceFloorTest {
         when(refundApplicationMapper.selectRefundApplicationById(1L)).thenReturn(refund);
 
         CmsRegistration reg = new CmsRegistration();
+        reg.setPaymentStatus(2);
+        reg.setPayableAmount(new BigDecimal("90"));
         reg.setId(10L);
         reg.setOwnerType(2L);   // 活动报名
         reg.setOwnerId(77L);

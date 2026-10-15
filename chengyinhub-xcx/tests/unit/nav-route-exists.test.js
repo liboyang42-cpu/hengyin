@@ -62,8 +62,11 @@ function collect(sources) {
         const raw = m[3]
         const route = raw.split('?')[0]
         const concatenated = /['"`]\s*\+/.test(line.slice(m.index))
+        const afterLiteral = line.slice(m.index + m[0].length + 1)
+        // 仅认“字面查询串或空串”，未知后缀及继续拼接仍按动态路径处理。
+        const optionalQuery = /^\s*\+\s*\([^?]+\?\s*(['"])\?[^'"]*\1\s*:\s*(['"])\2\s*\)\s*[,}]/.test(afterLiteral)
         // 查询参数可以动态,但路由 path 必须能静态回读；只把 path 本身拼接的列入盘点。
-        if (route.includes('${') || (!raw.includes('?') && concatenated)) {
+        if (route.includes('${') || (!raw.includes('?') && concatenated && !optionalQuery)) {
           dynamic.push({ rel, line: i + 1, field, raw })
           continue
         }
@@ -132,6 +135,21 @@ test('negative control：未盘点的模板串导航必须判红', () => {
     name: 'AssertionError',
     message: /动态导航清单发生漂移/,
   })
+})
+
+test('固定路径的可选查询串仍查路由，路径后缀和追加拼接仍须盘点', () => {
+  const route = '/subpackageMember/mytemplate/mytemplate'
+  const source = (suffix) => [{ rel: 'fixtures/scope.js', source: `wx.redirectTo({ url: '${route}' + ${suffix} });` }]
+  const fixed = collect(source("(scope === 'MERCHANT' ? '?scope=MERCHANT' : '')"))
+  assert.deepEqual(fixed.dynamic, [])
+  assert.equal(fixed.hits[0].route, route)
+  assertRoutesExist(knownRoutes(), fixed.hits)
+  assert.throws(() => assertRoutesExist(new Set(), fixed.hits), /导航指向了/)
+  for (const suffix of ["(scope ? '/detail' : '')", "(scope ? '?scope=MERCHANT' : '') + extra", "unknownSuffix"]) {
+    const actual = collect(source(suffix))
+    assert.equal(actual.hits.length, 0)
+    assert.throws(() => assertDynamicInventory(actual.dynamic, []), /动态导航清单发生漂移/)
+  }
 })
 
 test('negative control：搬迁前的旧路径必须判红', () => {

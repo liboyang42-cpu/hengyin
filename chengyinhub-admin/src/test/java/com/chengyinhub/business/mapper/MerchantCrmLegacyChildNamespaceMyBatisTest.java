@@ -124,7 +124,9 @@ class MerchantCrmLegacyChildNamespaceMyBatisTest {
     private SqlSessionFactory factory() throws Exception {
         Configuration configuration = new Configuration();
         UnpooledDataSource dataSource = new UnpooledDataSource("org.h2.Driver",
-                "jdbc:h2:mem:merchant_crm_child_namespace;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE",
+                // H2 2.4 reuses this nested NOT EXISTS result across direct DELETEs.
+                // Disable only its result reuse in this fixture; preserve the unchanged migration SQL/assertions.
+                "jdbc:h2:mem:merchant_crm_child_namespace;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE;OPTIMIZE_REUSE_RESULTS=FALSE",
                 "sa", "");
         configuration.setEnvironment(new Environment("test", new JdbcTransactionFactory(), dataSource));
         try (InputStream input = Resources.getResourceAsStream(APP_XML)) {

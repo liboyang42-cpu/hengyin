@@ -1,0 +1,33 @@
+{
+  "zeroHp" : {
+    "episodeId" : "42b3b5b7-b2a4-46aa-b0df-fb7144de2c1e",
+    "policy" : "THEME_FAIL",
+    "effectivePolicy" : "THEME_FAIL",
+    "phase" : "BLOCKED",
+    "zeroAt" : 1791654076852,
+    "used" : 0,
+    "limit" : 0,
+    "restoreTo" : 0,
+    "message" : "",
+    "serverNow" : 1791654076971,
+    "thenPolicy" : "THEME_FAIL",
+    "recoveryMemberId" : null,
+    "recoveryMemberName" : "",
+    "allowedActions" : [ ],
+    "disabledReason" : "本局已结束"
+  },
+  "resultCard" : {
+    "reason" : "HP_ZERO",
+    "success" : false,
+    "endedAt" : 1791654076852,
+    "title" : "本局结束",
+    "summary" : ""
+  },
+  "hp" : 0,
+  "status" : "ENDED",
+  "teamId" : 90,
+  "isCaptain" : true,
+  "scope" : "TEAM",
+  "authorityEpoch" : 1,
+  "ownerRevision" : 2
+}

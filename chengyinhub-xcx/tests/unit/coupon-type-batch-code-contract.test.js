@@ -15,9 +15,11 @@ const { COUPON_TYPE_LABELS } = require(path.join(ROOT, 'utils/coupon-form.js'))
 function loadCouponPage(source) {
   const pagePath = path.join(ROOT, 'subpackageMember/coupon/coupon.js')
   const previous = { Page: global.Page, getApp: global.getApp, wx: global.wx }
+  let owner = 1
+  const modals = []
   const requests = []
-  global.getApp = () => ({ sendRequest(options) { requests.push(options) } })
-  global.wx = {}
+  global.getApp = () => ({ getUserID: () => owner, sendRequest(options) { requests.push(options) } })
+  global.wx = { setNavigationBarColor() {}, showModal: options => modals.push(options) }
   let definition
   global.Page = (config) => { definition = config }
   if (source) {
@@ -41,7 +43,7 @@ function loadCouponPage(source) {
     }
     delete require.cache[require.resolve(pagePath)]
   }
-  return { page, requests, restore }
+  return { page, requests, modals, setOwner: id => { owner = id }, restore }
 }
 
 test('C-38 券类型真源含体验卡,下标 = 后端 couponType + 1', () => {
@@ -128,4 +130,72 @@ test('RUN-017 同日不同小时的券保留中国时间起止时刻', () => {
     assert.equal(env.page.data.list[0].startDay, '2026.09.25 09:00')
     assert.equal(env.page.data.list[0].endDay, '2026.09.25 18:00')
   } finally { env.restore() }
+})
+
+function couponReply(request, id, status = 1) {
+  request.success({ code: 200, data: [{ id, name: 'owned coupon', status, couponType: 0 }] })
+}
+test('published coupon list rejects old-account success and failure after the new owner has loaded', () => {
+  const h = loadCouponPage()
+  try {
+    h.page.getList(); h.setOwner(2); h.page.getList()
+    couponReply(h.requests[1], 2); couponReply(h.requests[0], 1)
+    assert.deepEqual(h.page.data.list.map(item => item.id), [2])
+    h.requests[0].fail()
+    assert.equal(h.page.data.loadState, 'ready')
+  } finally { h.restore() }
+})
+test('coupon owner change clears existing private list and popup even if the new load fails', () => {
+  const h = loadCouponPage()
+  try {
+    h.page.getList(); couponReply(h.requests[0], 1)
+    h.page.tpClick({ currentTarget: { dataset: { item: h.page.data.list[0] } } })
+    h.setOwner(2); h.page.onShow()
+    assert.deepEqual(h.page.data.list, [])
+    assert.equal(h.page.data.tpShow, false)
+    assert.deepEqual(h.page.data.currentCoupon, {})
+    h.requests[1].fail(); assert.deepEqual(h.page.data.list, [])
+  } finally { h.restore() }
+})
+for (const lifecycle of ['onHide', 'onUnload']) {
+  test(`coupon list ${lifecycle} rejects late responses`, () => {
+    const h = loadCouponPage()
+    try {
+      h.page.getList(); h.page[lifecycle](); const before = JSON.stringify(h.page.data)
+      couponReply(h.requests[0], 1); h.requests[0].fail()
+      assert.equal(JSON.stringify(h.page.data), before)
+    } finally { h.restore() }
+  })
+}
+test('same-owner show after hide takes authoritative expired status and rejects the pre-hide reply', () => {
+  const h = loadCouponPage()
+  try {
+    h.page.getList(); h.page.onHide(); h.page.onShow()
+    couponReply(h.requests[1], 1, 2); couponReply(h.requests[0], 1, 1)
+    assert.equal(h.page.data.list[0].status, 2)
+    assert.equal(h.page.data.list[0].canStop, false)
+  } finally { h.restore() }
+})
+test('stop confirmation cannot submit after the actor changes', () => {
+  const h = loadCouponPage()
+  try {
+    h.page.getList(); couponReply(h.requests[0], 1)
+    h.page.stopCoupon({ currentTarget: { dataset: { item: h.page.data.list[0] } } })
+    assert.equal(h.modals.length, 1)
+    h.setOwner(2); h.modals[0].success({ confirm: true })
+    assert.equal(h.requests.length, 1)
+  } finally { h.restore() }
+})
+
+test('coupon list accepts existing high string owner and rejects empty owner without private data', () => {
+  const h=loadCouponPage()
+  try {
+    h.setOwner('9223372036854775807'); h.page.getList()
+    assert.equal(h.requests.length,1)
+    h.requests[0].success({code:200,data:[{id:7,name:'owned'}]})
+    h.setOwner(''); h.page.getList()
+    assert.equal(h.requests.length,1); assert.deepEqual(h.page.data.list,[])
+    h.requests[0].success({code:200,data:[{id:8,name:'late'}]})
+    assert.deepEqual(h.page.data.list,[])
+  } finally {h.restore()}
 })

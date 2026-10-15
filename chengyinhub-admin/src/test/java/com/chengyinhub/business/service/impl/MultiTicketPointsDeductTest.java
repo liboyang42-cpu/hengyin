@@ -58,6 +58,7 @@ class MultiTicketPointsDeductTest {
 
         CmsActivity activity = new CmsActivity();
         activity.setId(ACTIVITY_ID);
+        activity.setMemberId(MEMBER_ID);
         activity.setStatus(1L);
         activity.setPublishStatus(1L);
         activity.setDelFlag(0);
@@ -75,6 +76,7 @@ class MultiTicketPointsDeductTest {
 
         CmsRegistrationServiceImpl s = new CmsRegistrationServiceImpl();
         ReflectionTestUtils.setField(s, "cmsActivityMapper", activityMapper);
+        ReflectionTestUtils.setField(s, "platformMemberId", MEMBER_ID);
         ReflectionTestUtils.setField(s, "umsMemberMapper", memberMapper);
         ReflectionTestUtils.setField(s, "omsTicketMapper", ticketMapper);
         return s;
@@ -152,6 +154,7 @@ class MultiTicketPointsDeductTest {
         CmsActivityMapper activityMapper = mock(CmsActivityMapper.class);
         CmsActivity activity = new CmsActivity();
         activity.setId(ACTIVITY_ID);
+        activity.setMemberId(MEMBER_ID);
         activity.setName("测试活动");
         activity.setStatus(1L);
         activity.setPublishStatus(1L);
@@ -160,6 +163,7 @@ class MultiTicketPointsDeductTest {
 
         CmsRegistrationServiceImpl s = new CmsRegistrationServiceImpl();
         ReflectionTestUtils.setField(s, "cmsActivityMapper", activityMapper);
+        ReflectionTestUtils.setField(s, "platformMemberId", MEMBER_ID);
         ReflectionTestUtils.setField(s, "umsMemberMapper", memberMapper);
         ReflectionTestUtils.setField(s, "omsTicketMapper", ticketMapper);
         ReflectionTestUtils.setField(s, "cmsRegistrationMapper", regMapper);

@@ -19,7 +19,7 @@
     />
   </view>
   <view class="cs-state cy-fade-in" wx:elif="{{loadState === 'error'}}">
-    <cy-error
+    <cy-error load-failure
       size="lg"
       style="display: flex; flex-direction: column; flex: 1; min-height: 0"
       icon="/images/no_data.svg"

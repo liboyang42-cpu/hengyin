@@ -114,6 +114,7 @@ public class ApiCouponController extends BaseController {
         if (isSelect == 1) {
             //状态：0->未开始；1->进行中；2->已结束；3->手动失效   用户发布优惠券状态就直接显示进行中
             smsCoupon.setStatus(1);
+            smsCoupon.getParams().put("issuableOnly", true);
         }
         smsCoupon.setDelFlag(0);
 

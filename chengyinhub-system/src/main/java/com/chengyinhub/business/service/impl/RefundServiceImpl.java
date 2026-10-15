@@ -33,7 +33,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
@@ -438,7 +438,7 @@ public class RefundServiceImpl implements IRefundService {
             notify.run();
             return;
         }
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
                 notify.run();
@@ -447,6 +447,7 @@ public class RefundServiceImpl implements IRefundService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int saveRefund(RefundApplication refund) {
         if (refund == null || refund.getSourceType() == null || refund.getSourceId() == null
                 || refund.getRefundAmount() == null || refund.getRefundAmount().compareTo(BigDecimal.ZERO) <= 0) {
@@ -490,6 +491,7 @@ public class RefundServiceImpl implements IRefundService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int saveBackOfficeRefund(RefundApplication refund) {
         ensureWithinOrderCash(refund);
         return saveRefund(refund);
@@ -507,12 +509,12 @@ public class RefundServiceImpl implements IRefundService {
                 || refund.getSourceId() == null || refund.getRefundAmount() == null) {
             return;   // 入参合同由 saveRefund 统一拒
         }
-        CmsRegistration payer = cmsRegistrationMapper.selectCmsRegistrationById(refund.getSourceId());
+        CmsRegistration payer = lockRefundRegistration(refund.getSourceId());
         if (payer == null || StringUtils.isEmpty(payer.getParentOrderNo())
                 || payer.getPayableAmount() == null || payer.getPayableAmount().signum() <= 0) {
             return;
         }
-        List<CmsRegistration> order = cmsRegistrationMapper.selectByParentOrderNo(payer.getParentOrderNo());
+        List<CmsRegistration> order = cmsRegistrationMapper.selectByParentOrderNoForUpdate(payer.getParentOrderNo(), Long.valueOf(2L).equals(payer.getOwnerType()) ? payer.getOwnerId() : null);
         if (order == null || order.isEmpty()) {
             throw new ServiceException("父订单报名快照为空,请人工核对", HttpStatus.CONFLICT);
         }
@@ -521,7 +523,7 @@ public class RefundServiceImpl implements IRefundService {
                 throw new ServiceException("同单有票已核销,不能按整单退款,请走人工退款工单", HttpStatus.CONFLICT);
             }
         }
-        BigDecimal remaining = OrderRefundCash.remaining(order, payer, this);
+        BigDecimal remaining = OrderRefundCash.remaining(order, payer, this, refund.getId());
         if (refund.getRefundAmount().compareTo(remaining) > 0) {
             throw new ServiceException("退款金额超过同单尚未退款的金额(剩余 " + remaining.max(BigDecimal.ZERO).toPlainString() + ")",
                     HttpStatus.CONFLICT);
@@ -549,7 +551,32 @@ public class RefundServiceImpl implements IRefundService {
             throw new IllegalStateException("审批人不能与申请人为同一人(退款双人复核)");
         }
         CmsRegistration registration = loadRegistration(refund);
+        if (registration != null) {
+            for (RefundApplication persisted : registrationRefundHistory(registration.getId())) {
+                if (refund.getId().equals(persisted.getId())) {
+                    if (!Integer.valueOf(0).equals(persisted.getStatus())) {
+                        if (request.getStatus().equals(persisted.getStatus())) return 0;
+                        throw new IllegalStateException("退款申请已处理，不能改变审核结果");
+                    }
+                    refund = persisted;
+                    break;
+                }
+            }
+        } else if (refund.getStatus() != null && !Integer.valueOf(0).equals(refund.getStatus())) {
+            if (request.getStatus().equals(refund.getStatus())) return 0;
+            throw new IllegalStateException("退款申请已处理，不能改变审核结果");
+        }
         if (Integer.valueOf(1).equals(request.getStatus())) {
+            if (registration != null) {
+                List<RefundApplication> history = registrationRefundHistory(registration.getId());
+                if (Integer.valueOf(4).equals(registration.getPaymentStatus())
+                        && approvedRefundCash(history, refund.getId()).signum() == 0) {
+                    throw new IllegalStateException("该报名已退款且缺少剩余额凭证，请人工核实");
+                }
+                BigDecimal paid = firstNonNull(registration.getPayableAmount(), registration.getTotalAmount(), registration.getOriginalAmount());
+                if (paid == null || paid.signum() < 0) throw new IllegalStateException("报名实付快照缺失，请人工核实");
+                assertRemainingRefundCash(refund, paid, history, false);
+            }
             ensureRefundable(registration);
             // FX-04:人工批准的单(含 A1-1 之前建、created_by 为空的旧后台单),建单到审批之间同单别的票
             // 可能被退/被核销 ⇒ 批准(真打款)前按同一口径再核一次。
@@ -601,24 +628,33 @@ public class RefundServiceImpl implements IRefundService {
         if (!"registration".equals(refund.getSourceType())) {
             return null;
         }
-        CmsRegistration registration = cmsRegistrationMapper.selectCmsRegistrationById(refund.getSourceId());
+        CmsRegistration registration = lockRefundRegistration(refund.getSourceId());
         if (registration == null) {
             throw new IllegalArgumentException("registration not found");
         }
         return registration;
     }
 
+    private CmsRegistration lockRefundRegistration(Long registrationId) {
+        CmsRegistration observed = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
+        if (observed != null && StringUtils.isNotEmpty(observed.getParentOrderNo())) {
+            List<CmsRegistration> order = cmsRegistrationMapper.selectByParentOrderNoForUpdate(observed.getParentOrderNo(), Long.valueOf(2L).equals(observed.getOwnerType()) ? observed.getOwnerId() : null);
+            OrderRefundCash.assertOrderScope(order, observed);
+            for (CmsRegistration registration : order) {
+                if (registrationId.equals(registration.getId())) return registration;
+            }
+            throw new IllegalStateException("报名不在原父订单中");
+        }
+        return cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(registrationId);
+    }
+
     private void enrichRegistrationRefund(RefundApplication refund) {
         if (!"registration".equals(refund.getSourceType()) || refund.getSourceId() == null) {
             return;
         }
-        CmsRegistration registration = cmsRegistrationMapper.selectCmsRegistrationById(refund.getSourceId());
+        CmsRegistration registration = lockRefundRegistration(refund.getSourceId());
         if (registration == null) {
             throw new IllegalArgumentException("registration not found");
-        }
-        // 后端硬校验：仅已支付报名可发起退款，不依赖前端按钮控制
-        if (!Integer.valueOf(2).equals(registration.getPaymentStatus())) {
-            throw new IllegalStateException("仅已支付报名可发起退款");
         }
         if (refund.getOwnerType() == null) {
             refund.setOwnerType(registration.getOwnerType());
@@ -636,11 +672,99 @@ public class RefundServiceImpl implements IRefundService {
         if (refund.getMerchantId() == null) {
             refund.setMerchantId(resolveRegistrationMerchantId(registration));
         }
-        if (refund.getIdempotencyKey() == null || refund.getIdempotencyKey().trim().isEmpty()) {
-            refund.setIdempotencyKey("registration:" + registration.getId());
+        List<RefundApplication> history = registrationRefundHistory(registration.getId());
+        BigDecimal approved = approvedRefundCash(history, null);
+        BigDecimal paid = refund.getPaidAmount();
+        if (paid == null || paid.signum() < 0) throw new IllegalStateException("报名实付快照缺失，请人工核实");
+        boolean paidRegistration = Integer.valueOf(2).equals(registration.getPaymentStatus());
+        boolean partiallyRefunded = Integer.valueOf(4).equals(registration.getPaymentStatus())
+                && approved.signum() > 0 && approved.compareTo(paid) < 0;
+        if (!paidRegistration && !partiallyRefunded) throw new IllegalStateException("仅已支付或尚未退足的报名可发起退款");
+        assertRemainingRefundCash(refund, paid, history);
+        long previousId = 0L;
+        for (RefundApplication prior : history) {
+            if (prior.getId() != null) previousId = Math.max(previousId, prior.getId());
         }
-        // 渠道 out_refund_no 与本地唯一查询键必须完全同源；客户端值一律覆盖。
-        refund.setRefundNo("RF" + registration.getId());
+        String suffix = previousId == 0L ? "" : ":" + previousId;
+        if (refund.getIdempotencyKey() == null || refund.getIdempotencyKey().trim().isEmpty()) {
+            refund.setIdempotencyKey("registration:" + registration.getId() + suffix);
+        }
+        // 首次保留旧退款号；后续申请用已持久化前序单号区分，重试仍命中同一退款号。
+        refund.setRefundNo("RF" + registration.getId() + (previousId == 0L ? "" : "-" + previousId));
+    }
+
+    @Override
+    public List<RefundApplication> selectRegistrationHistoryForUpdate(Long registrationId) {
+        return registrationRefundHistory(registrationId);
+    }
+
+    /**
+     * F-L4-02：待审核申请占着同一报名，系统发起的全额退款会被「已有退款申请待审核」拒绝，
+     * 取消活动的整段事务随之回滚。待审核单尚未审批、未派发打款，由全额退款取代后按 CAS 置驳回，
+     * 已审批/已打款的单一概不动。
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int supersedePendingRegistrationRefunds(Long registrationId, String reason) {
+        if (registrationId == null) {
+            return 0;
+        }
+        String note = "已由全额退款取代" + (StringUtils.isEmpty(reason) ? "" : ":" + reason);
+        if (note.length() > 200) {
+            note = note.substring(0, 200);
+        }
+        int superseded = 0;
+        Date now = DateUtils.getNowDate();
+        for (RefundApplication prior : registrationRefundHistory(registrationId)) {
+            if (prior.getId() == null || !Integer.valueOf(0).equals(prior.getStatus())) {
+                continue;
+            }
+            if (refundApplicationMapper.updateRefundStatusIfPending(prior.getId(), 2, SYSTEM_OPERATOR, now, note) != 1) {
+                throw new IllegalStateException("待审核退款申请状态已变化，请刷新后重试");
+            }
+            logger.warn("[退款取代] 待审核退款申请由系统全额退款取代 refundId={} registrationId={}",
+                    prior.getId(), registrationId);
+            superseded++;
+        }
+        return superseded;
+    }
+
+    private List<RefundApplication> registrationRefundHistory(Long registrationId) {
+        List<RefundApplication> history = refundApplicationMapper.selectRegistrationHistoryForUpdate(registrationId);
+        return history == null ? java.util.Collections.emptyList() : history;
+    }
+
+    private BigDecimal approvedRefundCash(List<RefundApplication> history, Long excludeId) {
+        BigDecimal approved = BigDecimal.ZERO;
+        for (RefundApplication prior : history) {
+            if (excludeId != null && excludeId.equals(prior.getId())) continue;
+            if (Integer.valueOf(1).equals(prior.getStatus())) {
+                if (prior.getRefundAmount() == null || prior.getRefundAmount().signum() <= 0) {
+                    throw new IllegalStateException("历史退款金额缺失，请人工核实");
+                }
+                approved = approved.add(prior.getRefundAmount());
+            }
+        }
+        return approved;
+    }
+
+    private void assertRemainingRefundCash(RefundApplication refund, BigDecimal paid,
+                                          List<RefundApplication> history) {
+        assertRemainingRefundCash(refund, paid, history, true);
+    }
+
+    private void assertRemainingRefundCash(RefundApplication refund, BigDecimal paid,
+                                          List<RefundApplication> history, boolean requireNoPending) {
+        for (RefundApplication prior : history) {
+            if (refund.getId() != null && refund.getId().equals(prior.getId())) continue;
+            if (requireNoPending && Integer.valueOf(0).equals(prior.getStatus())) {
+                throw new IllegalStateException("该报名已有退款申请待审核，请先处理原申请");
+            }
+        }
+        BigDecimal remaining = paid.subtract(approvedRefundCash(history, refund.getId()));
+        if (refund.getRefundAmount().compareTo(remaining) > 0) {
+            throw new IllegalArgumentException("累计退款金额不得超过实付金额");
+        }
     }
 
     private Long resolveRegistrationMerchantId(CmsRegistration registration) {
@@ -665,7 +789,7 @@ public class RefundServiceImpl implements IRefundService {
         if (second != null) {
             return second;
         }
-        return third == null ? BigDecimal.ZERO : third;
+        return third;
     }
 
     /**
@@ -708,6 +832,8 @@ public class RefundServiceImpl implements IRefundService {
         if (registration == null) {
             return;
         }
+        if (Integer.valueOf(4).equals(registration.getPaymentStatus())
+                && Integer.valueOf(3).equals(registration.getRegistrationStatus())) return;
         Date refundedAt = DateUtils.getNowDate();
         if (cmsRegistrationMapper.claimRegistrationRefunded(
                 registration.getId(), "refund-review", refundedAt) == 0) {

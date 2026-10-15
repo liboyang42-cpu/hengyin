@@ -14,8 +14,15 @@ public final class TopicRouteModePolicy {
     }
 
     public static String publishedMode(String snapshot) {
-        return snapshot == null || snapshot.trim().isEmpty()
-                ? TopicRouteState.LINEAR : TopicRouteState.BRANCH_GRAPH;
+        if (snapshot == null || snapshot.trim().isEmpty()) return TopicRouteState.LINEAR;
+        try {
+            com.fasterxml.jackson.databind.JsonNode frozen = new com.fasterxml.jackson.databind.ObjectMapper().readTree(snapshot);
+            if (frozen.path("runtimeSnapshotVersion").asInt() == 1) {
+                String mode = frozen.path("routeMode").asText();
+                if (TopicRouteState.LINEAR.equals(mode) || TopicRouteState.BRANCH_GRAPH.equals(mode)) return mode;
+            }
+        } catch (java.io.IOException invalid) { /* 无完整标记的历史快照维持原分支语义。 */ }
+        return TopicRouteState.BRANCH_GRAPH;
     }
 
     public static boolean isPublishedBranchGraph(String snapshot) {

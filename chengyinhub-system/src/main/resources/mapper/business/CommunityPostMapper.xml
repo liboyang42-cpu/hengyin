@@ -37,6 +37,7 @@
         <result property="locationPrecision" column="location_precision"/>
         <result property="cityCode" column="city_code"/>
         <result property="poiName" column="poi_name"/>
+        <result property="approximateGeohash" column="approximate_geohash"/>
         <result property="recommendationEligible" column="recommendation_eligible"/>
         <result property="searchEligible" column="search_eligible"/>
         <result property="interactionEnabled" column="interaction_enabled"/>
@@ -165,6 +166,32 @@
         LIMIT #{limit}
     </select>
 
+    <select id="selectBookmarkedFeed" parameterType="com.chengyinhub.business.domain.community.CommunityPostFeedQuery" resultMap="CommunityPostResult">
+        SELECT <include refid="publicColumns"/>, <include refid="personalColumns"/>,
+               'BOOKMARKS' feed_source, 'PERSONAL_BOOKMARK' reason_code
+        FROM community_post p LEFT JOIN ums_member m ON m.id=p.author_id
+        WHERE p.lifecycle='PUBLISHED'
+          AND EXISTS(SELECT 1 FROM community_post_member_action ba
+                     WHERE ba.post_id=p.id AND ba.member_id=#{viewerId} AND ba.action_type='BOOKMARK')
+        <include refid="visibilityPolicy"/>
+        <if test="cursor != null and cursor &gt; 0">AND p.id &lt; #{cursor}</if>
+        ORDER BY p.id DESC LIMIT #{limit}
+    </select>
+
+    <select id="selectOwnPosts" parameterType="com.chengyinhub.business.domain.community.CommunityPostFeedQuery" resultMap="CommunityPostResult">
+        SELECT <include refid="publicColumns"/>, <include refid="ownerColumns"/>, <include refid="personalColumns"/>,
+               'OWN_POSTS' feed_source, 'AUTHOR_WORKSPACE' reason_code
+        FROM community_post p LEFT JOIN ums_member m ON m.id=p.author_id
+        WHERE p.author_id=#{viewerId}
+          AND p.lifecycle IN ('DRAFT','CHECKING','PUBLISHED','LIMITED','HIDDEN','REMOVED')
+        <if test="cursor != null and cursor &gt; 0">AND p.id &lt; #{cursor}</if>
+        ORDER BY p.id DESC LIMIT #{limit}
+    </select>
+
+    <select id="selectTopicCodes" resultType="string">
+        SELECT topic_code FROM community_post_topic WHERE post_id=#{postId} ORDER BY topic_code
+    </select>
+
     <select id="selectAuthorDrafts" resultMap="CommunityPostResult">
       <bind name="viewerId" value="authorId"/>
       SELECT <include refid="publicColumns"/>,<include refid="ownerColumns"/>,
@@ -223,7 +250,7 @@
         safety_labels_json=#{post.safetyLabelsJson},guideline_version_id=#{post.guidelineVersionId},
         lifecycle=#{targetLifecycle},edited_at=#{now},update_time=#{now},version=version+1
       WHERE id=#{post.id} AND author_id=#{post.authorId} AND version=#{expectedVersion}
-        AND lifecycle IN ('DRAFT','PUBLISHED','LIMITED','HIDDEN')
+        AND lifecycle IN ('DRAFT','CHECKING','PUBLISHED','LIMITED','HIDDEN')
     </update>
     <update id="transitionCas">
       UPDATE community_post SET lifecycle=#{targetLifecycle},published_at=COALESCE(#{publishedAt},published_at),
@@ -245,12 +272,17 @@
     </select>
     <update id="attachMedia">
       UPDATE community_post_media SET post_id=#{postId},sort_order=#{sortOrder},upload_state='ATTACHED',update_time=#{now}
-      WHERE id=#{mediaId} AND owner_member_id=#{ownerMemberId} AND post_id IS NULL
-        AND upload_state='COMMITTED' AND review_state IN ('PENDING','PASS') AND retention_state='ACTIVE'
+      WHERE id=#{mediaId} AND owner_member_id=#{ownerMemberId} AND retention_state='ACTIVE'
+        AND ((post_id IS NULL AND upload_state='COMMITTED' AND review_state IN ('PENDING','PASS'))
+          OR (post_id=#{postId} AND upload_state='ATTACHED' AND review_state IN ('PENDING','PASS','HOLD')))
     </update>
     <update id="detachMedia">
       UPDATE community_post_media SET post_id=NULL,sort_order=0,upload_state='COMMITTED',update_time=#{now}
       WHERE post_id=#{postId} AND owner_member_id=#{ownerMemberId}
+      <if test="retainedMediaIds != null and retainedMediaIds.size() > 0">
+        AND id NOT IN
+        <foreach collection="retainedMediaIds" item="mediaId" open="(" separator="," close=")">#{mediaId}</foreach>
+      </if>
     </update>
     <update id="orphanMedia">
       UPDATE community_post_media SET retention_state='ORPHANED',delete_after=#{deleteAfter},update_time=#{now}
@@ -314,7 +346,7 @@
             AND (a.member_id=#{memberId} OR EXISTS(
               SELECT 1 FROM cms_registration r
               WHERE r.owner_type=2 AND r.owner_id=a.id AND r.member_id=#{memberId}
-                AND COALESCE(r.del_flag,0)=0 AND r.payment_status=2 AND r.registration_status=2))
+                AND r.payment_status=2 AND r.registration_status=2))
         </when>
         <when test="referenceType == 'TOPIC'">
           SELECT t.id reference_id,'TOPIC' reference_type,t.name title,t.img_url cover_url,
@@ -348,7 +380,7 @@
           SELECT DISTINCT a.id,a.name,COALESCE(a.address_name,'') subtitle
           FROM cms_activity a LEFT JOIN cms_registration r
             ON r.owner_type=2 AND r.owner_id=a.id AND r.member_id=#{memberId}
-              AND COALESCE(r.del_flag,0)=0 AND r.payment_status=2 AND r.registration_status=2
+              AND r.payment_status=2 AND r.registration_status=2
           WHERE a.status=1 AND a.publish_status=1 AND COALESCE(a.del_flag,0)=0 AND a.cancel_time IS NULL
             AND (a.member_id=#{memberId} OR r.id IS NOT NULL)
           ORDER BY a.id DESC LIMIT #{limit}
@@ -381,8 +413,13 @@
     </select>
     <delete id="deleteReferences">DELETE FROM community_post_reference WHERE post_id=#{postId}</delete>
     <select id="selectReferences" resultType="map">
-      SELECT id,reference_type,reference_id,snapshot_json,privacy_snapshot
-      FROM community_post_reference WHERE post_id=#{postId} AND invalidated_at IS NULL ORDER BY id
+      SELECT r.id,r.reference_type,r.reference_id,r.snapshot_json,r.privacy_snapshot,t.id topic_id
+      FROM community_post_reference r
+      LEFT JOIN cms_activity a ON r.reference_type='ACTIVITY' AND a.id=r.reference_id
+        AND COALESCE(a.del_flag,0)=0
+      LEFT JOIN cms_topic t ON t.id=a.topic_id AND t.status=1 AND t.user_status=1
+        AND COALESCE(t.del_flag,0)=0 AND COALESCE(t.is_template,0)=0
+      WHERE r.post_id=#{postId} AND r.invalidated_at IS NULL ORDER BY r.id
     </select>
     <insert id="insertMemberAction">
       INSERT INTO community_post_member_action(post_id,member_id,action_type,request_id,source,create_time,update_time)
@@ -873,7 +910,9 @@
              c.author_approval_state,c.version,c.like_count,c.create_time,
              m.nickname author_nickname,m.avatar author_avatar,
              CASE WHEN EXISTS(SELECT 1 FROM community_post_comment_action ca
-               WHERE ca.comment_id=c.id AND ca.member_id=#{viewerId} AND ca.action_type='LIKE') THEN 1 ELSE 0 END viewer_liked
+               WHERE ca.comment_id=c.id AND ca.member_id=#{viewerId} AND ca.action_type='LIKE') THEN 1 ELSE 0 END viewer_liked,
+             CASE WHEN EXISTS(SELECT 1 FROM ums_member_follow cf
+               WHERE cf.member_id=#{viewerId} AND cf.follow_member_id=c.author_id) THEN 1 ELSE 0 END viewer_following
       FROM root_page rp
       JOIN community_post_comment c ON c.id=rp.id OR c.root_id=rp.id
       LEFT JOIN ums_member m ON m.id=c.author_id

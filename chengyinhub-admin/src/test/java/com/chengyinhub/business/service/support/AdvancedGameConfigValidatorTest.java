@@ -20,9 +20,40 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AdvancedGameConfigValidatorTest {
+    @org.junit.jupiter.api.Test
+    void legacyMissingBranchCodesAreStableAndExplicitDuplicatesStillFail() throws Exception {
+        AdvancedGameConfigValidator validator = new AdvancedGameConfigValidator();
+        String raw = "{\"schemaVersion\":1,\"branch\":{\"enabled\":true,\"startStepId\":\"start\",\"steps\":["
+                + "{\"id\":\"start\",\"terminal\":false,\"options\":[{\"id\":\"a\",\"label\":\"左\",\"nextStepId\":\"left\"},{\"id\":\"b\",\"label\":\"右\",\"nextStepId\":\"right\"}]},"
+                + "{\"id\":\"left\",\"terminal\":true,\"options\":[]},{\"id\":\"right\",\"terminal\":true,\"options\":[]}]}}";
+        com.fasterxml.jackson.databind.JsonNode saved = new com.fasterxml.jackson.databind.ObjectMapper().readTree(validator.validateAndNormalize(raw));
+        assertEquals("left", saved.path("branch").path("steps").get(1).path("outcomeCode").asText());
+        assertEquals("right", saved.path("branch").path("steps").get(2).path("outcomeCode").asText());
+        assertEquals(saved.toString(), validator.validateAndNormalize(saved.toString()));
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(saved.toString().replace("\"outcomeCode\":\"right\"", "\"outcomeCode\":\"left\"")));
+    }
 
     private final AdvancedGameConfigValidator validator = new AdvancedGameConfigValidator();
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Test
+    void interactionPolicyPersistsAlongExistingAdvancedConfigAndNormalizesOnce() throws Exception {
+        String raw = "{\"schemaVersion\":1,\"interactionRules\":{\"hpCost\":2},\"futurePresentation\":{\"note\":\"keep\"}}";
+        JsonNode stored = objectMapper.readTree(validator.validateAndNormalize(raw));
+        assertEquals(1, stored.path("interactionRules").path("limit").asInt());
+        assertEquals("OWNER", stored.path("interactionRules").path("scope").asText());
+        assertEquals("OWNER", stored.path("interactionRules").path("targetScope").asText());
+        assertEquals("keep", stored.path("futurePresentation").path("note").asText());
+        assertEquals(stored.toString(), validator.validateAndNormalize(stored.toString()));
+    }
+
+    @Test
+    void interactionPolicyRejectsMalformedPayloadInsteadOfSavingUnexecutedRules() {
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize("{\"schemaVersion\":1,\"interactionRules\":null}"));
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize("{\"schemaVersion\":1,\"interactionRules\":{\"successCount\":0}}"));
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize("{\"schemaVersion\":1,\"interactionRules\":{\"hpCost\":\"2\"}}"));
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize("{\"schemaVersion\":1,\"interactionRules\":{\"scope\":\"MEMBER\"}}"));
+    }
 
     @Test
     void profileQuestionsNormalizeToRequiredWhileAvatarKeepsItsOwnSetting() throws Exception {
@@ -1265,6 +1296,16 @@ class AdvancedGameConfigValidatorTest {
 
     // ==================== 扫码第四档 OVERLAY(AR 契约 §4.1) ====================
 
+    @Test void scanOnlyLegacyPresentationStillRequiresFullscreen() throws Exception {
+        String scan=scanConfig("\"kind\":\"TEXT\",\"reply\":\"欢迎\"");
+        assertEquals("fullscreen",AdvancedGameConfigValidator.resolvePresent(objectMapper.readTree(scan)));
+        assertThrows(IllegalArgumentException.class,()->validator.validateAndNormalize(scan.replace("\"schemaVersion\":1","\"schemaVersion\":1,\"present\":\"inline\"")));
+    }
+    @Test void scanPlusMainGameplayUsesMainDefaultPresentation() throws Exception {
+        JsonNode config=objectMapper.readTree("{\"scan\":{\"enabled\":true},\"qa\":{\"enabled\":true}}");
+        assertEquals("inline",AdvancedGameConfigValidator.resolvePresent(config));
+    }
+
     private static String scanConfig(String body) {
         return "{\"schemaVersion\":1,\"scan\":{\"enabled\":true," + body + "}}";
     }
@@ -1408,5 +1449,33 @@ class AdvancedGameConfigValidatorTest {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> validator.validateAndNormalize(scanConfig("\"kind\":\"AR\"")));
         assertEquals("扫码回复只能是文字、语音、图片或显形", error.getMessage());
+    }
+
+    // ===== 2026-10-11 选项问答:判断答案对错开关与选项反馈图片 =====
+    private static String qaWith(String judge, String fbImgsA, boolean anyCorrect) {
+        return "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"PICK\"," + judge + "\"title\":\"题\",\"options\":["
+                + "{\"id\":\"a\",\"label\":\"甲\",\"correct\":" + anyCorrect + (fbImgsA == null ? "" : ",\"fbImgs\":" + fbImgsA) + "},"
+                + "{\"id\":\"b\",\"label\":\"乙\",\"correct\":false}]}}";
+    }
+
+    @Test
+    void qaJudgeOffNeedsNoCorrectAnswerAndKeepsJudgingSettings() throws Exception {
+        AdvancedGameConfigValidator validator = new AdvancedGameConfigValidator();
+        String saved = validator.validateAndNormalize(qaWith("\"judge\":false,\"maxTries\":2,\"reveal\":true,", null, false));
+        com.fasterxml.jackson.databind.JsonNode qa = new com.fasterxml.jackson.databind.ObjectMapper().readTree(saved).path("qa");
+        assertEquals(false, qa.path("judge").asBoolean(true));
+        assertEquals(2, qa.path("maxTries").asInt());
+        assertEquals(true, qa.path("reveal").asBoolean());
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(qaWith("", null, false)), "缺省判断开启:仍要正确答案");
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(qaWith("\"judge\":\"no\",", null, true)));
+    }
+
+    @Test
+    void qaOptionFeedbackImagesAreLimitedToThreeValidUrls() {
+        AdvancedGameConfigValidator validator = new AdvancedGameConfigValidator();
+        validator.validateAndNormalize(qaWith("", "[\"https://a/1.jpg\",\"/profile/2.jpg\",\"https://a/3.jpg\"]", true));
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(qaWith("", "[\"https://a/1.jpg\",\"https://a/2.jpg\",\"https://a/3.jpg\",\"https://a/4.jpg\"]", true)));
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(qaWith("", "[\"http://insecure/1.jpg\"]", true)));
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(qaWith("", "\"https://a/1.jpg\"", true)));
     }
 }

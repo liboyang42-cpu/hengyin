@@ -84,7 +84,7 @@ class RefundReconcileTaskTest {
 
         task.reconcile();
 
-        verify(alarmService).alarm(eq("退款派发卡滞"), contains("3"));
+        verify(alarmService).alarmThrottled(eq("monitor.refund.dispatch_stuck"), eq("退款派发卡滞"), contains("3"));
     }
 
     @Test
@@ -121,7 +121,7 @@ class RefundReconcileTaskTest {
         task.reconcile();
 
         verify(payoutService).payoutAfterReview(9L);
-        verify(alarmService).alarm(eq("退款派发卡滞"), contains("退款单=1"));
+        verify(alarmService).alarmThrottled(eq("monitor.refund.dispatch_stuck"), eq("退款派发卡滞"), contains("退款单=1"));
     }
 
     @Test
@@ -144,6 +144,7 @@ class RefundReconcileTaskTest {
         task.reconcile();
 
         verify(alarmService, never()).alarm(anyString(), anyString());
+        verify(alarmService, never()).alarmThrottled(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -156,7 +157,7 @@ class RefundReconcileTaskTest {
         when(mapper.countManualPayoutBacklog()).thenReturn(4);
         when(mapper.countStuckPayoutDispatch(anyInt())).thenReturn(0);
         doThrow(new IllegalStateException("backlog alarm failed"))
-                .when(alarmService).alarm(eq("退款待人工积压"), anyString());
+                .when(alarmService).alarmThrottled(eq("monitor.refund.manual"), eq("退款待人工积压"), anyString());
 
         RefundReconcileTask task = new RefundReconcileTask();
         ReflectionTestUtils.setField(task, "coopInviteService", mock(com.chengyinhub.business.service.ICoopInviteService.class));
@@ -172,7 +173,7 @@ class RefundReconcileTaskTest {
             detachAppender(logs);
         }
 
-        verify(alarmService).alarm(eq("退款待人工积压"), contains("4"));
+        verify(alarmService).alarmThrottled(eq("monitor.refund.manual"), eq("退款待人工积压"), contains("4"));
         assertTrue(logs.list.stream().anyMatch(event -> event.getLevel() == Level.ERROR
                         && event.getFormattedMessage().contains("退款待人工积压巡检失败")
                         && event.getThrowableProxy() != null
@@ -190,7 +191,7 @@ class RefundReconcileTaskTest {
         when(mapper.countManualPayoutBacklog()).thenReturn(0);
         when(mapper.countStuckPayoutDispatch(anyInt())).thenReturn(2);
         doThrow(new IllegalStateException("stuck alarm failed"))
-                .when(alarmService).alarm(eq("退款派发卡滞"), anyString());
+                .when(alarmService).alarmThrottled(eq("monitor.refund.dispatch_stuck"), eq("退款派发卡滞"), anyString());
 
         RefundReconcileTask task = new RefundReconcileTask();
         ReflectionTestUtils.setField(task, "coopInviteService", mock(com.chengyinhub.business.service.ICoopInviteService.class));
@@ -206,7 +207,7 @@ class RefundReconcileTaskTest {
             detachAppender(logs);
         }
 
-        verify(alarmService).alarm(eq("退款派发卡滞"), contains("退款单=2"));
+        verify(alarmService).alarmThrottled(eq("monitor.refund.dispatch_stuck"), eq("退款派发卡滞"), contains("退款单=2"));
         assertTrue(logs.list.stream().anyMatch(event -> event.getLevel() == Level.ERROR
                         && event.getFormattedMessage().contains("退款派发卡滞告警发送失败")
                         && event.getThrowableProxy() != null
@@ -252,7 +253,7 @@ class RefundReconcileTaskTest {
         when(mapper.selectStalePayoutProcessing(anyInt())).thenReturn(Collections.emptyList());
         when(mapper.countManualPayoutBacklog()).thenReturn(0);
         doThrow(new IllegalStateException("alarm failed"))
-                .when(alarmService).alarm(eq("退款派发卡滞计数失败"), anyString());
+                .when(alarmService).alarmThrottled(eq("monitor.refund.dispatch_count_failed"), eq("退款派发卡滞计数失败"), anyString());
 
         RefundReconcileTask task = new RefundReconcileTask();
         ReflectionTestUtils.setField(task, "coopInviteService", mock(com.chengyinhub.business.service.ICoopInviteService.class));
@@ -271,11 +272,35 @@ class RefundReconcileTaskTest {
             logger.detachAppender(logs);
         }
 
-        verify(alarmService).alarm(eq("退款派发卡滞计数失败"), anyString());
+        verify(alarmService).alarmThrottled(eq("monitor.refund.dispatch_count_failed"), eq("退款派发卡滞计数失败"), anyString());
         assertTrue(logs.list.stream().anyMatch(event -> event.getLevel() == Level.ERROR
                         && event.getFormattedMessage().contains("退款派发卡滞计数失败")
                         && event.getThrowableProxy() != null
                         && "count failed".equals(event.getThrowableProxy().getMessage())),
                 "计数异常必须先被 ERROR 记录；告警服务自身异常不能覆盖原始计数异常");
+    }
+
+    @Test
+    void inspectionAlarmsCarryRefundIdSamplesAndSampleFailureKeepsCountAlarm() {
+        RefundApplicationMapper mapper = mock(RefundApplicationMapper.class);
+        AlarmService alarmService = mock(AlarmService.class);
+        when(mapper.selectStalePayoutProcessing(anyInt())).thenReturn(Collections.emptyList());
+        when(mapper.countManualPayoutBacklog()).thenReturn(2);
+        when(mapper.sampleManualPayoutBacklogIds()).thenReturn(Arrays.asList(11L, 12L));
+        when(mapper.countStuckPayoutDispatch(anyInt())).thenReturn(1);
+        when(mapper.sampleStuckPayoutDispatchIds(anyInt())).thenThrow(new IllegalStateException("sample failed"));
+
+        RefundReconcileTask task = new RefundReconcileTask();
+        ReflectionTestUtils.setField(task, "coopInviteService", mock(com.chengyinhub.business.service.ICoopInviteService.class));
+        ReflectionTestUtils.setField(task, "refundApplicationMapper", mapper);
+        ReflectionTestUtils.setField(task, "refundPayoutService", mock(IRefundPayoutService.class));
+        ReflectionTestUtils.setField(task, "wechatPayService", mock(IWechatPayService.class));
+        ReflectionTestUtils.setField(task, "alarmService", alarmService);
+
+        task.reconcile();
+
+        verify(alarmService).alarmThrottled(eq("monitor.refund.manual"), eq("退款待人工积压"), contains("refundIds=[11,12]"));
+        verify(alarmService).alarmThrottled(eq("monitor.refund.dispatch_stuck"), eq("退款派发卡滞"), contains("refundIds=UNKNOWN"));
+        verify(alarmService, never()).alarm(anyString(), anyString());
     }
 }

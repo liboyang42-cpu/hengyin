@@ -28,6 +28,13 @@ mvn -B clean test
 # ⚠️ 不在此清单里的两套 Explore*RealDbIT 连的是 chengyin_explore_it,
 #   由自托管的 ci/funds-mysql-it-gate.sh 负责;CoopServiceRealDbIT 已烂透,见其类注释。
 MYBATIS_ITS=(
+  # 合成账号/内容：真实HTTP角色幂等与撤权、公开节点计数一致性及分页SQL预算。
+  ClubRoleHttpMySqlIT
+  PublicTopicStationCountMySqlIT
+  PublicMemberFriendCountMySqlIT
+  CommunityActivityReferenceMySqlIT
+  CommunityMediaEditMySqlIT
+  AppMediaAssetMySqlIT
   # 2026-08-19:类间隔离契约本身也点名跑 —— 它有三条负控(共用必撞 / 真查 information_schema /
   # ★A 的遗留数据不许喂饱 B 的 fail-closed 前置)。不点名 = 没人看着隔离,那这批又会慢慢滑回共用。
   MybatisItSchemaIsolationIT
@@ -38,6 +45,7 @@ MYBATIS_ITS=(
   MerchantGeoSortMyBatisIT
   NpcChatRetentionMyBatisIT
   NpcChatUserDataMyBatisIT
+  NpcGeneratedAudioMySqlIT
   NpcGovernanceMapperMyBatisIT
   # 2026-09-15 CR-927 节点NPC:npc_profile scope_type=4 的读闸(未审/停用不下发)、
   #   一节点一条的 uk_active_scope 唯一键、以及三条写语句的 scope 隔离 —— 全要真库才验得动。
@@ -55,6 +63,8 @@ MYBATIS_ITS=(
   TemplateMarketLifecycleMySqlIT
   AdvancedGameRuntimeMySqlIT
   ThemeRuntimeMySqlIT
+  GenericRouteRuntimeMySqlIT
+  GameSessionIndependentRevisionMySqlIT
   ImSendIdempotencyMybatisIntegrationTest
   # R9-02 迟到下注竞态:两个真事务交错(结算等锁定读、锁定读拒已结算),Mock 单测测不到
   PredictLateBetRaceMySqlIT
@@ -66,6 +76,12 @@ MYBATIS_ITS=(
   # 2026-09-15 R9-41 假绿修复后登记:待审/驳回/下线的 *在线* 投放(status=1)只有
   # RoamMapper.xml 的 cityNodeContentApproved 能挡,删闸即红。不点名 = CI 永远跑不到这条边界。
   CityNodePendingVisibilityMySqlIT
+  # MySQL leader session, failover fence, strict Druid wall and transactional duplicate definitions.
+  SchedulerSessionLockMySqlIT
+  ClubGatherArrivalMySqlIT
+  ClubAttendanceTimeMappingMyBatisIT
+  VerificationRiskQueueMySqlIT
+  AccountDeregistrationRaceMySqlIT
   # R12-E2E 旅程全链路:建局→到店→问问题→判错→检定→推进→阶段结算→结局全走真库真 mapper;
   #   并发 settle 幂等另有一条负控(测试内临时摘掉动作/回执两把唯一键,断言并发重放消失后再还原)。
   JourneyFullFlowMySqlIT
@@ -80,7 +96,7 @@ IFS=, ; IT_LIST="${MYBATIS_ITS[*]}" ; unset IFS
 #   surefire 3.x 还要 -Dsurefire.failIfNoSpecifiedTests=false(与 -DfailIfNoTests 是两个开关,
 #   少一个上游模块照样以「No tests matching pattern」失败)。
 #   「到底跑没跑」的保证**不靠这两个开关**,靠下面 assert_it_ran.py 的回读。
-CHENGYIN_IM_SEND_MYSQL_IT=1 mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false \
+CHENGYIN_IM_SEND_MYSQL_IT=1 CHENGYIN_FUNDS_MYSQL_IT=1 mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false \
   -Dsurefire.failIfNoSpecifiedTests=false -Dtest="$IT_LIST"
 
 # 回读观测:surefire 绿不够。skipped != 0 说明又有人把「连不上就跳过」放回来了,

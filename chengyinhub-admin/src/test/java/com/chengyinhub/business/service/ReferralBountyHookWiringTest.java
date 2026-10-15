@@ -63,6 +63,7 @@ class ReferralBountyHookWiringTest {
         regMapper = mock(CmsRegistrationMapper.class);
         scanMapper = mock(CmsRegistrationScanMapper.class);
         perkSvc = mock(IPerkLedgerService.class);
+        when(perkSvc.findReplayableChapterRedemptionIdForUpdate(any(), any(), any(), any())).thenReturn(null);
         settlementSvc = mock(ISettlementEntryService.class);
         bountySvc = mock(MerchantReferralBountyService.class);
 
@@ -73,6 +74,8 @@ class ReferralBountyHookWiringTest {
         com.chengyinhub.business.mapper.CmsActivityMapper activities = mock(com.chengyinhub.business.mapper.CmsActivityMapper.class);
         com.chengyinhub.business.domain.CmsActivity activity = new com.chengyinhub.business.domain.CmsActivity();
         activity.setDelFlag(0);
+        activity.setId(800L);
+        activity.setTopicId(TOPIC);
         when(activities.selectCmsActivityByIdForUpdate(800L)).thenReturn(activity);
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activities);
         ReflectionTestUtils.setField(service, "cmsRegistrationScanMapper", scanMapper);
@@ -105,6 +108,8 @@ class ReferralBountyHookWiringTest {
         r.setOwnerType(2L);
         r.setOwnerId(800L);
         r.setPaymentStatus(2);
+        r.setRegistrationStatus(2);
+        r.setMemberId(901L);
         r.setPurchaseKind(com.chengyinhub.common.constant.PurchaseKind.EXPLORE_PASS);
         return r;
     }
@@ -126,6 +131,7 @@ class ReferralBountyHookWiringTest {
      */
     @Test
     void exploreChapterRedeem_notifiesBounty() {
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenAnswer(invocation -> explorePass());
         when(perkSvc.resolveRedeemableChapters(REG, TOPIC, MERCHANT))
                 .thenReturn(Collections.singletonList(CH1));
         when(perkSvc.redeemChapter(REG, CH1, MERCHANT, MERCHANT)).thenReturn(5L);
@@ -144,6 +150,11 @@ class ReferralBountyHookWiringTest {
     @Test
     void wholeOrderVerify_casLost_doesNotNotifyBounty() {
         when(regMapper.verifyIfNotVerified(REG, MERCHANT)).thenReturn(0);
+        CmsRegistration verified = guidedTicket();
+        verified.setPaymentStatus(2);
+        verified.setRegistrationStatus(2);
+        verified.setVerificationStatus(1);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(verified);
 
         service.verifyAndSettle(guidedTicket(), MERCHANT, PAYEE, 1);
 

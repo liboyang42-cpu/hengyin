@@ -408,6 +408,28 @@ page {
   background: var(--cy-color-bg-surface-subtle);
 }
 
+/* 收起态:与原来整段规则夹 5 行同高(5 × 44rpx);「更多」由内层实际高度是否超出决定。 */
+.xb-rule-box {
+  flex: 1;
+  min-width: 0;
+}
+
+.xb-rule-box--clamp {
+  max-height: 220rpx;
+  overflow: hidden;
+}
+
+.xb-rule-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cy-space-2);
+}
+
+.xb-rule-step {
+  display: flex;
+  gap: var(--cy-space-3);
+}
+
 .xb-rule-mark {
   flex: none;
   width: 44rpx;

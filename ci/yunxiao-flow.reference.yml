@@ -86,6 +86,6 @@ stages:
             mv -f "$JAR.new" "$JAR"
             OLD=$(pgrep -f '[-]jar .*chengyinhub-admin\.jar' || true)
             [ -n "$OLD" ] && { kill $OLD || true; sleep 8; kill -9 $OLD 2>/dev/null || true; }
-            su -s /bin/bash www -c "nohup $JAVA -jar -Xmx1024M -Xms256M $JAR --server.port=$PORT > $LOG 2>&1 &"
+            su -s /bin/bash www -c "nohup $JAVA -Duser.timezone=Asia/Shanghai -jar -Xmx1024M -Xms256M $JAR --server.port=$PORT > $LOG 2>&1 &"
             for _ in $(seq 1 30); do curl -s -o /dev/null -m 3 http://127.0.0.1:$PORT/ && { echo OK; exit 0; }; sleep 2; done
             echo "health check failed, see $LOG"; exit 1

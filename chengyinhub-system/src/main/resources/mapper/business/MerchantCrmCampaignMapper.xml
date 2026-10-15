@@ -133,6 +133,13 @@
         limit 1
     </select>
 
+    <select id="selectByRequestIdForShare" resultMap="Campaign">
+        select <include refid="CampaignColumns"/>
+        from merchant_crm_campaign c
+        where c.merchant_id = #{merchantId} and c.request_id = #{requestId}
+        limit 1 lock in share mode
+    </select>
+
     <select id="selectOwnedCampaign" resultMap="Campaign">
         select <include refid="CampaignColumns"/>
         from merchant_crm_campaign c
@@ -334,6 +341,14 @@
         update merchant_crm_delivery_guard
         set status = 'DELIVERED', lease_token = null, lease_until = null,
             message_receipt_id = #{messageReceiptId}, coupon_history_id = #{couponHistoryId},
+            failure_code = null, version = version + 1, update_time = now(3)
+        where id = #{guardId} and status = 'DISPATCHING' and lease_token = #{leaseToken}
+          and version = #{expectedVersion}
+    </update>
+
+    <update id="releaseDeliveryGuardForRetry">
+        update merchant_crm_delivery_guard
+        set status = 'RESERVED', lease_until = date_sub(now(3), interval 1 second),
             failure_code = null, version = version + 1, update_time = now(3)
         where id = #{guardId} and status = 'DISPATCHING' and lease_token = #{leaseToken}
           and version = #{expectedVersion}

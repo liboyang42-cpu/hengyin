@@ -14,11 +14,7 @@
  * ⚠️ 未知**不等于失败**:失败可以直接报错让人重试,未知必须去回读对端事实,
  * 否则重试就是重复退款。
  */
-function isUnknownHttpStatus(statusCode) {
-  if (statusCode == null || statusCode === '') return true;
-  const code = Number(statusCode);
-  return !Number.isFinite(code) || code === 408 || code >= 500;
-}
+const { isUnknownHttpStatus } = require('../../../utils/transport/failure-envelope.js');
 
 /** 业务码优先于 HTTP 码:后端惯用 200 包一个 code=403 的体。 */
 function permissionFailureCode(value, statusCode) {

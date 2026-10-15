@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import pathlib
+import re
 import subprocess
 import tempfile
 import unittest
@@ -11,6 +12,23 @@ GATE = ROOT / "ci" / "dependency-audit-gate.py"
 
 
 class DependencyAuditGateTest(unittest.TestCase):
+    def test_scan_includes_packaged_backend_dependencies(self):
+        workflow = (ROOT / ".github/workflows/ci.yml").read_text()
+        job = workflow.split("  dependency_audit:\n", 1)[1].split("\n  migration_layout:", 1)[0]
+        build = job.index("mvn -B -q -pl chengyinhub-admin -am -DskipTests package")
+        artifact = job.index("test -s chengyinhub-admin/target/chengyinhub-admin.jar")
+        scan = job.index("- name: Generate SBOM (syft)")
+        self.assertLess(build, artifact)
+        self.assertLess(artifact, scan)
+        self.assertIn("path: .", job[scan:])
+
+    def test_backend_workflow_jdks_match_java21_target(self):
+        for filename in ("ci.yml", "funds-mysql-it.yml", "deploy.yml"):
+            workflow = (ROOT / ".github/workflows" / filename).read_text()
+            versions = re.findall(r"java-version:\s*['\"]?(\d+)", workflow)
+            self.assertTrue(versions, filename)
+            self.assertEqual({"21"}, set(versions), filename)
+
     def run_gate(self, report):
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8") as output:
             json.dump(report, output)

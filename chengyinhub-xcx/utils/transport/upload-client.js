@@ -2,6 +2,7 @@
 'use strict';
 
 var safeUserMessage = require('./safe-user-message.js').safeUserMessage;
+var normalizeClientVersion = require('../client-version.js').normalizeClientVersion;
 
 // 服务端真实单文件限额,与 application.yml 的 spring.servlet.multipart.max-file-size=10MB 同源。
 // 只用于在**共享上传入口**按调用方已经拿到的文件大小提前拒绝,不放宽也不替代服务端拦截:
@@ -27,7 +28,10 @@ function createUploadClient(deps) {
   var wxUploadFile = deps.wxUploadFile;
   var getBaseUrl = deps.getBaseUrl;
   var getAuthorization = deps.getAuthorization;
+  var getClientVersion = deps.getClientVersion || function () { return ''; };
+  var getUserID = deps.getUserID || function () { return ''; };
   var uploadPath = deps.uploadPath || '/api/common/uploadOSS';
+  var pendingMedia = {}; // Scope by real member and local file; retry checks the original asset, never reuploads it.
   var setTimer = deps.setTimer || setTimeout;
   var clearTimer = deps.clearTimer || clearTimeout;
 
@@ -38,7 +42,11 @@ function createUploadClient(deps) {
   /** multipart 的认证头。两条上传通道必须用同一份构造,手拼的那份将来换 token 方案会漏改。 */
   function authHeader() {
     var authorization = getAuthorization();
-    return authorization ? { Authorization: 'Bearer ' + authorization } : undefined;
+    var header = authorization ? { Authorization: 'Bearer ' + authorization } : {};
+    var version = '';
+    try { version = normalizeClientVersion(getClientVersion()); } catch (unavailable) {}
+    if (version) header['X-Mini-Program-Version'] = version;
+    return Object.keys(header).length ? header : undefined;
   }
 
   function schedule(fn, ms) {
@@ -49,6 +57,7 @@ function createUploadClient(deps) {
 
   function uploadAll(filePaths, opts) {
     opts = opts || {};
+    var member = String(getUserID() || '');
     filePaths = Array.isArray(filePaths) ? filePaths.slice() : [];
     var total = filePaths.length;
     var concurrency = Math.max(1, Math.min(3, Number(opts.concurrency) || 3));
@@ -87,11 +96,18 @@ function createUploadClient(deps) {
       if (finished) return;
       finished = true;
       cleanup();
-      if (!cancelled) onDone({ ok: failures.length === 0, results: results, failures: failures });
+      if (!cancelled && String(getUserID() || '') === member) onDone({ ok: failures.length === 0, results: results, failures: failures });
+    }
+
+    function isCurrentOwner() {
+      if (finished) return false;
+      if (String(getUserID() || '') === member) return true;
+      finish(true);
+      return false;
     }
 
     function settle(index, failure) {
-      if (finished || settled[index]) return;
+      if (!isCurrentOwner() || settled[index]) return;
       settled[index] = true;
       var record = active[index];
       if (record && record.watchdog !== null) clearTimer(record.watchdog);
@@ -112,6 +128,7 @@ function createUploadClient(deps) {
       }
       var formData = (opts.formData && opts.formData(index)) || {};
       if (opts.bizType) formData.bizType = typeof opts.bizType === 'function' ? opts.bizType(index) : opts.bizType;
+      if (!isCurrentOwner()) return;
       var record = { task: null, watchdog: null };
       active[index] = record;
       record.watchdog = schedule(function () {
@@ -121,20 +138,20 @@ function createUploadClient(deps) {
         try { if (task && typeof task.abort === 'function') task.abort(); } catch (e) {}
       }, perFileTimeoutMs);
 
-      var task = wxUploadFile({
-        url: getBaseUrl() + uploadPath,
-        filePath: filePath,
-        name: 'file',
-        header: authHeader(),
-        formData: Object.keys(formData).length ? formData : undefined,
-        success: function (res) {
-          var data;
-          try { data = JSON.parse(res.data); }
-          catch (e) { settle(index, { status: 'failed', msg: '上传结果解析失败' }); return; }
+      function accept(data) {
+        if (!isCurrentOwner()) return;
           if (!data || data.code != 200) {
             settle(index, { status: 'failed', msg: safeUserMessage(data, '上传失败') });
             return;
           }
+          var assetId = String(data.assetId || '');
+          if (data.reviewState && data.reviewState !== 'APPROVED') {
+            if (/^[1-9][0-9]{0,18}$/.test(assetId)) pendingMedia[member + '|' + filePath] = assetId;
+            settle(index, { status: 'review_pending', assetId: assetId,
+              msg: data.reviewState === 'REJECTED' ? (data.reviewReason || '媒体审核未通过，可重新提交审核') : '文件已提交审核，通过后请重试此文件' });
+            return;
+          }
+          delete pendingMedia[member + '|' + filePath];
           var mapped;
           try { mapped = mapResult(data, index, filePath); }
           catch (e) { settle(index, { status: 'failed', msg: '上传结果解析失败' }); return; }
@@ -147,6 +164,39 @@ function createUploadClient(deps) {
           var secureUrl = resultUrl.replace(/^http:\/\/([a-z0-9-]+\.oss-[a-z0-9-]+\.aliyuncs\.com)(\/)/i, 'https://$1$2');
           results[index] = typeof mapped === 'string' ? secureUrl : Object.assign({}, mapped, { url: secureUrl });
           settle(index);
+      }
+      var pendingId = pendingMedia[member + '|' + filePath];
+      if (pendingId) {
+        var sender = deps.sendRequest || (typeof getApp === 'function' && getApp().sendRequest.bind(getApp()));
+        if (!sender) { settle(index, { status: 'failed', msg: '媒体审核状态暂时无法读取，请重试' }); return; }
+        sender({ url: '/api/media/asset/' + pendingId, method: 'GET', hideLoading: true,
+          success: function (reply) {
+            if (!isCurrentOwner()) return;
+            if (reply && reply.code == 200 && reply.data && ['REJECTED', 'UNAVAILABLE'].indexOf(reply.data.reviewState) !== -1) {
+              sender({ url: '/api/media/asset/' + pendingId + '/retry', method: 'POST', hideLoading: true,
+                success: function (retry) { accept(retry && retry.code == 200 ? Object.assign({ code: 200 }, retry.data) : retry); },
+                fail: function (error) { settle(index, { status: 'failed', msg: safeUserMessage(error, '媒体重新提审失败，请重试') }); } });
+            } else accept(reply && reply.code == 200 ? Object.assign({ code: 200 }, reply.data) : reply);
+          },
+          fail: function (error) { settle(index, { status: 'failed', msg: safeUserMessage(error, '媒体审核状态暂时无法读取，请重试') }); }
+        });
+        return;
+      }
+
+      var task = wxUploadFile({
+        url: getBaseUrl() + uploadPath,
+        filePath: filePath,
+        name: 'file',
+        header: authHeader(),
+        formData: Object.keys(formData).length ? formData : undefined,
+        success: function (res) {
+          if (!isCurrentOwner()) return;
+          if (res.statusCode == 426) { settle(index, { status: 'failed', reason: 'upgradeRequired', msg: '当前版本需要更新，请先保存内容并重新打开小程序' }); return; }
+          var data;
+          try { data = JSON.parse(res.data); }
+          catch (e) { settle(index, { status: 'failed', msg: '上传结果解析失败' }); return; }
+          if (data && data.code == 426) { settle(index, { status: 'failed', reason: 'upgradeRequired', msg: '当前版本需要更新，请先保存内容并重新打开小程序' }); return; }
+          accept(data);
         },
         fail: function (res) {
           settle(index, { status: 'failed', msg: safeUserMessage(res, '上传失败') });
@@ -156,8 +206,8 @@ function createUploadClient(deps) {
     }
 
     function launch() {
-      if (finished) return;
-      while (Object.keys(active).length < concurrency && nextIndex < total) start(nextIndex++);
+      if (!isCurrentOwner()) return;
+      while (!finished && Object.keys(active).length < concurrency && nextIndex < total) start(nextIndex++);
     }
 
     var control = {
@@ -169,6 +219,7 @@ function createUploadClient(deps) {
       return control;
     }
     deadlineTimer = schedule(function () {
+      if (!isCurrentOwner()) return;
       for (var i = 0; i < total; i++) {
         if (!settled[i]) {
           settled[i] = true;
@@ -197,6 +248,7 @@ function createUploadClient(deps) {
    */
   function uploadOne(filePath, opts) {
     opts = opts || {};
+    var member = String(getUserID() || '');
     var path = opts.path || uploadPath;
     var onDone = opts.onDone || function () {};
     var timeoutMs = Math.max(1000, Number(opts.timeoutMs) || 20000);
@@ -210,7 +262,7 @@ function createUploadClient(deps) {
       done = true;
       if (watchdog !== null) clearTimer(watchdog);
       watchdog = null;
-      if (payload) onDone(payload);
+      if (payload && String(getUserID() || '') === member) onDone(payload);
     }
 
     // 已知超限:同 uploadAll,在共享入口拒绝,不发起注定被容器截断的连接。
@@ -233,9 +285,11 @@ function createUploadClient(deps) {
       header: authHeader(),
       formData: opts.formData,
       success: function (res) {
+        if (res.statusCode == 426) { settle({ ok: false, reason: 'upgradeRequired', msg: '当前版本需要更新，请先保存内容并重新打开小程序' }); return; }
         var data;
         try { data = JSON.parse(res.data); }
         catch (e) { settle({ ok: false, msg: '上传结果解析失败' }); return; }
+        if (data && data.code == 426) { settle({ ok: false, reason: 'upgradeRequired', msg: '当前版本需要更新，请先保存内容并重新打开小程序' }); return; }
         if (!data || data.code != 200) { settle({ ok: false, msg: safeUserMessage(data, '上传失败') }); return; }
         settle({ ok: true, data: data });
       },

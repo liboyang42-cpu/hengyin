@@ -62,10 +62,10 @@ def all_required_clean(directory):
     # 2026-09-16 晚:暗测试 23 套(197 条)首跑判绿后入闸;计数与 EXPECTED/SOURCE_FILES 同源。
     for short, tests in (
         ("CoopDepositRefundMybatisIntegrationTest", 27),
-        ("GrowthMissionProofMybatisIntegrationTest", 15),
+        ("GrowthMissionProofMybatisIntegrationTest", 25),
         ("MerchantIdentityMybatisIntegrationTest", 21),
         ("MerchantProfilePersistenceMybatisIntegrationTest", 9),
-        ("StoreVerifyGrowthDeliveryTransactionTest", 3),
+        ("StoreVerifyGrowthDeliveryTransactionTest", 4),
         ("RefundNotificationMybatisIntegrationTest", 9),
         ("SessionRefundClockMybatisIntegrationTest", 3),
         ("SettlementGenerateBatchMybatisIntegrationTest", 3),
@@ -80,17 +80,28 @@ def all_required_clean(directory):
         ("CreativeSquarePublishIdempotencyMybatisIntegrationTest", 7),
         ("FollowConcurrencyMybatisIntegrationTest", 4),
         ("FollowEditRaceMybatisIntegrationTest", 7),
-        ("NearbyRunnerShopsMybatisIntegrationTest", 5),
+        ("NearbyRunnerShopsMybatisIntegrationTest", 7),
         # 2026-09-17 release-0917 集成:rule-play-0917 把 funds_it_gate.EXPECTED 5→6(新增存量待审转正真库用例),
         #   自测夹具未同步 → test_green_when_all_required_ran_fully 红;按同源口径同步为 6。
         ("PhotoReviewProgressMybatisIntegrationTest", 6),
         ("SpoilerAccessMybatisIntegrationTest", 7),
         ("SquareEditFollowMybatisIntegrationTest", 7),
-        ("RoamSessionWriteMybatisIntegrationTest", 10),
+        ("RoamSessionWriteMybatisIntegrationTest", 12),
+        ("RoamLocationRetentionMySqlIT", 20),
         ("ComplaintPeriodWithdrawalGateMybatisIntegrationTest", 7),
-        ("ShareSnapshotRunSessionMybatisIntegrationTest", 4),
-        ("RoamShareSnapshotConcurrencyMySqlIT", 2),
+        ("ShareSnapshotRunSessionMybatisIntegrationTest", 5),
+        ("PlayerRunSessionOrderingMybatisIntegrationTest", 6),
+        ("RoamShareSnapshotConcurrencyMySqlIT", 3),
         ("ClubEventTransferCancellationMySqlIT", 3),
+        ("RefundRetryAndRemainderMySqlIT", 5),
+        ("SignupNoticeAfterCommitPersistenceMySqlIT", 5),
+        ("TopicLikeDesiredStateMySqlIT", 3),
+        ("MonitorMissingJobsMySqlIT", 3),
+        ("MemberPasswordWidthMySqlIT", 3),
+        ("LegacyCategoryForwardGuardMySqlIT", 4),
+        ("MissingBusinessSeedsMySqlIT", 4),
+        ("RoamPresenceRevokeDurabilityMySqlIT", 10),
+        ("RoamPresenceRevokeJobMySqlIT", 4),
     ):
         write_report(directory, short, tests)
 
@@ -112,6 +123,40 @@ class FundsItGateTest(unittest.TestCase):
         problems = funds_it_gate.enforce(self.dir)
         self.assertTrue(any("ExploreAllianceMvpRealDbIT" in p and "skipped" in p for p in problems),
                         "Explore IT 被 skip 必须判红,否则等于把假绿放回来了:%s" % problems)
+
+    def test_red_when_run_ordering_suite_is_missing(self):
+        all_required_clean(self.dir)
+        for report in pathlib.Path(self.dir).glob("TEST-*PlayerRunSessionOrderingMybatisIntegrationTest.xml"):
+            report.unlink()
+        problems = funds_it_gate.enforce(self.dir)
+        self.assertTrue(any("PlayerRunSessionOrderingMybatisIntegrationTest" in p
+                            and "无 surefire 报告" in p for p in problems), problems)
+
+    def test_red_when_run_ordering_suite_is_skipped(self):
+        all_required_clean(self.dir)
+        write_report(self.dir, "PlayerRunSessionOrderingMybatisIntegrationTest", 6, skipped=6)
+        problems = funds_it_gate.enforce(self.dir)
+        self.assertTrue(any("PlayerRunSessionOrderingMybatisIntegrationTest" in p
+                            and "skipped" in p for p in problems), problems)
+
+    def test_retention_suite_rejects_missing_skipped_errors_failures_and_short_runs(self):
+        short = "RoamLocationRetentionMySqlIT"
+        for defect, counts, expected in (
+            ("missing", None, "无 surefire 报告"),
+            ("skipped", dict(tests=20, skipped=1), "skipped"),
+            ("error", dict(tests=20, errors=1), "errors"),
+            ("failure", dict(tests=20, failures=1), "failures"),
+            ("short", dict(tests=19), "实跑用例"),
+        ):
+            with self.subTest(defect=defect):
+                all_required_clean(self.dir)
+                if counts is None:
+                    for report in pathlib.Path(self.dir).glob("TEST-*" + short + ".xml"):
+                        report.unlink()
+                else:
+                    write_report(self.dir, short, **counts)
+                problems = funds_it_gate.enforce(self.dir)
+                self.assertTrue(any(short in problem and expected in problem for problem in problems), problems)
 
     def test_red_when_a_suite_is_skipped(self):
         # 负控①:环境变量缺失 → @EnabledIf 把整套标 skipped,构建仍绿,门禁必须变红。
@@ -177,6 +222,15 @@ class FundsItExpectedCountTest(unittest.TestCase):
         self.assertIn(short, funds_it_gate.EXPECTED)
         self.assertIn(short, funds_it_gate.SOURCE_FILES)
         self.assertIn(short, _GATE_SCRIPT.read_text(encoding="utf-8"))
+
+    def test_roam_retention_suite_is_registered_with_exact_source_count_and_execution_selector(self):
+        short = "RoamLocationRetentionMySqlIT"
+        self.assertEqual(20, funds_it_gate.EXPECTED[short])
+        source = _REPO_ROOT / funds_it_gate.SOURCE_FILES[short]
+        self.assertEqual(20, funds_it_gate.count_test_methods(source.read_text(encoding="utf-8")))
+        import re
+        selector = re.search(r"-Dtest=([^\s]+)", _GATE_SCRIPT.read_text(encoding="utf-8")).group(1).split(",")
+        self.assertEqual(1, selector.count(short))
 
     def test_roam_share_cap_suite_is_registered_on_both_execution_and_readback_sides(self):
         short = "RoamShareSnapshotConcurrencyMySqlIT"

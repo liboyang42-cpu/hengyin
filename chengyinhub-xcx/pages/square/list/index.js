@@ -1,7 +1,9 @@
+const reportSheet = require('../../../utils/community-report-sheet.js');
 const modal = require('../../../utils/modal.js');
 const toast = require('../../../utils/toast.js');
 const { toTimestamp } = require('../../../utils/datetime');
 const app = getApp();
+const community = require('../../../utils/community-post-api.js').createClient(app, wx);
 /* 结果面板终态停留时长。发帖不跳页,收掉就留在广场。 */
 const RESULT_SHEET_MS = 2000;
 const analytics = require('../../../utils/analytics.js');
@@ -42,6 +44,8 @@ function feedIndexFromEvent(e) {
 
 Page({
   data: {
+    reportReasonShow: false,
+    reportReasonItems: [],
     resultSheet: { show: false, kind: 'success', title: '', sub: '', meta: '', pill: '',
       why: '', duration: RESULT_SHEET_MS },
     list: [],//列表数组
@@ -69,6 +73,8 @@ Page({
     longitude: '',
     latitude: '',
     valCont: '',
+    communityPostRead: false,
+    communityPostWrite: false,
     composeShow: false,      // 新建帖文弹窗
     avatarPopShow: false,    // 点头像的 T5 胶囊
     avatarPopAnchor: null,
@@ -164,7 +170,7 @@ Page({
     if (that._likeRequests[requestKey]) return;
     that._likeRequests[requestKey] = true;
     
-    app.sendRequest({
+    community.request({
       hideLoading: true,
       silentError: true,
       url: '/api/creativesquare/like',
@@ -181,28 +187,8 @@ Page({
         let newlist = that.data.list
         let currentItem = newlist[index]
         
-        if (type == 1) { // 点赞
-          if (currentItem['isLiked'] == 0) {
-            currentItem['likeCount'] = (currentItem['likeCount'] || 0) + 1
-            currentItem['isLiked'] = 1
-          } else if (currentItem['isLiked'] == 1) {
-            currentItem['likeCount'] = (currentItem['likeCount'] || 1) - 1
-            currentItem['isLiked'] = 0
-          } else if (currentItem['isLiked'] == 2) {
-            currentItem['likeCount'] = (currentItem['likeCount'] || 0) + 1
-            currentItem['isLiked'] = 1
-          }
-        } else { // 踩一踩
-          if (currentItem['isLiked'] == 0) {
-            currentItem['isLiked'] = 2
-          } else if (currentItem['isLiked'] == 1) {
-            currentItem['likeCount'] = (currentItem['likeCount'] || 1) - 1
-            currentItem['isLiked'] = 2
-          } else if (currentItem['isLiked'] == 2) {
-            currentItem['isLiked'] = 0
-          }
-        }
-        
+        currentItem = Object.assign({}, currentItem, { isLiked: res.data.isLiked, likeCount: res.data.likeCount, version: res.data.version });
+
         // 更新列表数据
         const key = `list[${index}]`;
         that.setData({
@@ -235,7 +221,7 @@ Page({
     if (this._favoriteRequests[requestKey]) return;
     this._favoriteRequests[requestKey] = true;
     const next = item.isBookmarked == 1 ? 0 : 1;
-    app.sendRequest({
+    community.request({
       hideLoading: true,
       silentError: true,
       url: '/api/creativesquare/bookmark',
@@ -253,7 +239,7 @@ Page({
         const current = this.data.list[index];
         if (!current || String(current.id) !== String(item.id)) return;
         const list = this.data.list.slice();
-        current.isBookmarked = next;
+        current.isBookmarked = res.data.isBookmarked;
         list[index] = current;
         this.setData({ list: list });
       },
@@ -373,7 +359,7 @@ Page({
     const that = this;
     const pa = this.selectComponent && this.selectComponent('#post-actions');
     this._deletingPost = true;
-    app.sendRequest({
+    community.request({
       hideLoading: true,
       url: '/api/creativesquare/delete',
       method: 'POST',
@@ -399,6 +385,7 @@ Page({
 
   // 编辑(H050):行数据直接进新建面板的编辑态,正文预填、关联带上(不发图片/地点,后端保留原值)
   editCurrentSquarePost: function () {
+    if (typeof app.canUseCommunity !== 'function' || !app.canUseCommunity(true)) return;
     const index = this._actionIndex;
     const item = this.data.list[index];
     if (!item || !item.id) { this.closePostActions(); return; }
@@ -412,6 +399,9 @@ Page({
     } });
     this.setData({ composeShow: true });
   },
+
+  onReportReasonSelect(e) { reportSheet.select(this, e); },
+  onReportReasonCancel() { reportSheet.cancel(this); },
 
   reportSquare: function () {
     const that = this;
@@ -429,9 +419,10 @@ Page({
         if (!res.confirm) {
           return;
         }
-        app.sendRequest({
+        community.request({
           hideLoading: true,
           url: '/api/creativesquare/report',
+          selectReportReason: (items, task) => reportSheet.open(that, items, task),
           method: 'POST',
           data: {
             id: item.id
@@ -573,6 +564,8 @@ Page({
   },
 
   onUnload() {
+    this._unloaded = true;
+    reportSheet.cancel(this);
     this._feedRequestId = (this._feedRequestId || 0) + 1;
     if (this._feedRequestTask && typeof this._feedRequestTask.abort === 'function') {
       this._feedRequestTask.abort();
@@ -731,7 +724,7 @@ Page({
       drawerH: expandedPx,
       drawerCollapsed: false
     });
-    that.getList()
+    that._syncCommunityAccess()
     that.getUpcoming()
   },
 
@@ -861,6 +854,10 @@ Page({
   // 提交表单数据
   submitFormData() {
     const that = this;
+    if (typeof app.canUseCommunity !== 'function' || !app.canUseCommunity(true)) {
+      toast('当前账号未开放广场发布');
+      return;
+    }
 
     // 验证必填字段
     const content = String(that.data.valCont || '').trim();
@@ -907,7 +904,7 @@ Page({
     data.request_id = intent.key;
     if (intent.previousUnknown) toast('上次结果未确认，重试不重复发');
 
-    app.sendRequest({
+    community.request({
       hideLoading: true,
       silentError: true,
       url: '/api/creativesquare/action',
@@ -916,15 +913,12 @@ Page({
       success: function (res) {
         if (res.code == "200") {
           publishIntent.settle(wx, 'square:list', publishMemberId, intent.key, 'success');
-          // 先发后审:发布即可见(status=1)。图片是异步送检,命中违规由后端回调下架成
-          // status=2,作者在卡片上见「未通过审核」徽章 —— 那是**状态**不是动作结果,
-          // 不归结果面板(见 cy-state-shell 那条分界)。pill 把这条规则当场说清楚,
-          // 免得之后被下架时觉得是平台出尔反尔。
+          // 草稿创建不代表公开；以正常发布响应的实际lifecycle给出回执。
           that.setData({
             resultSheet: {
-              show: true, kind: 'success', title: '发布成功',
-              sub: '帖文已发布,现在广场里就能看到。',
-              meta: '', pill: '先发后审 · 命中违规会自动下架',
+              show: true, kind: 'success', title: res.data.lifecycle === 'PUBLISHED' ? '发布成功' : '已提交审核',
+              sub: res.data.lifecycle === 'PUBLISHED' ? '帖文已发布,现在广场里就能看到。' : '内容已保存，审核通过后公开显示。',
+              meta: '', pill: res.data.lifecycle === 'PUBLISHED' ? '' : '以实际审核状态为准',
               why: '', duration: RESULT_SHEET_MS,
             },
           });
@@ -980,7 +974,7 @@ Page({
       that.setData({
         'picList': ll
       })
-    }, 6);
+    }, 6, { bizType: 'COMMUNITY_POST', mapResult: community.captureUpload });
   },
 
   // 删除图片
@@ -1002,13 +996,16 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
+    this._syncCommunityAccess();
     wx.hideTabBar(); // 重试一次
     // 广场属于玩家内容域：身份只影响能力，不改变页面/原生 chrome 的深色归属。
     merchantTheme.merchantPageRestore();
     // A-05:从详情返回且详情删/改过 → 刷一次首屏,别让用户看到旧卡;没脏标就不动,不每次 onShow 重拉。
     // A-RPT-5:分享直开详情时,栈里没有列表实例、实例置脏落空,详情侧同时写了 app 级脏标,这里一并消费。
     const globalDirty = !!(app.globalData && app.globalData.squareListDirty);
-    if (this._squareListDirty || globalDirty) {
+    const feedVersion = app.globalData && app.globalData.squareListDirtyVersion || 0;
+    if ((this._squareListDirty || globalDirty || feedVersion > (this._communityFeedVersion || 0)) && !this.data.isRefreshing) {
+      this._communityFeedVersion = feedVersion;
       this._squareListDirty = false;
       if (app.globalData) app.globalData.squareListDirty = false;
       this.refreshList();
@@ -1016,6 +1013,30 @@ Page({
     // 倒计时不挂定时器,靠回前台重算:否则后台放一晚回来还写着「3 小时后开始」。
     if (this._skipInitialShow) this._skipInitialShow = false;
     else this.getUpcoming();
+  },
+
+  _syncCommunityAccess() {
+    const owner = String(app.getUserID() || '');
+    const epoch = (this._communityAccessEpoch || 0) + 1;
+    this._communityAccessEpoch = epoch;
+    const settle = () => {
+      if (this._unloaded || epoch !== this._communityAccessEpoch || owner !== String(app.getUserID() || '')) return;
+      const read = typeof app.canUseCommunity === 'function' && app.canUseCommunity(false);
+      const write = typeof app.canUseCommunity === 'function' && app.canUseCommunity(true);
+      const wasReadable = this.data.communityPostRead;
+      this.setData({ communityPostRead: read, communityPostWrite: write });
+      if (!write) this.setData({ composeShow: false, composeEdit: null });
+      if (!read) {
+        this._feedRequestId = (this._feedRequestId || 0) + 1;
+        this._feedRequestInFlight = false;
+        if (this._feedRequestTask && typeof this._feedRequestTask.abort === 'function') this._feedRequestTask.abort();
+        this.setData({ list: [], hasMore: false, nodata: false, listLoading: false, loadError: false,
+          isRefreshing: false, isLoadingMore: false, loadMoreError: '', composeShow: false });
+      } else if (!wasReadable || this.data.listLoading && !this.data.list.length) this.getList(true, 1);
+    };
+    const pending = typeof app.loadFeatureFlags === 'function' ? app.loadFeatureFlags() : null;
+    if (pending && typeof pending.then === 'function') pending.then(settle);
+    else settle();
   },
 
   onHide() { merchantTheme.merchantPageRestore(); },
@@ -1061,8 +1082,10 @@ Page({
   },
 
   // 弹窗发布/保存成功 —— 同页,直接刷,不必再靠 onShow 猜。
-  onComposePublished: function () {
-    this.setData({ valCont: '', canSubmit: false, composePrefill: '', composeEdit: null });
+  onComposePublished: function (e) {
+    if (!(e && e.detail && e.detail.keepOpen)) {
+      this.setData({ valCont: '', canSubmit: false, composePrefill: '', composeEdit: null });
+    }
     this.refreshList();
   },
 
@@ -1136,6 +1159,10 @@ Page({
   // 修改：获取列表数据，增加isRefresh参数区分刷新还是加载更多
   getList: function (isRefresh = false, requestedPage) {
     var that = this;
+    if (typeof app.canUseCommunity !== 'function' || !app.canUseCommunity(false)) {
+      that.setData({ listLoading: false, isRefreshing: false, nodata: false });
+      return;
+    }
     const pageNum = requestedPage || (isRefresh ? 1 : that.data.page_no || 1);
     const isLoadMore = pageNum > 1 && !isRefresh;
     if (isLoadMore && that.data.isLoadingMore) return;
@@ -1162,7 +1189,7 @@ Page({
         that.setData({ loadError: true });
       }
     };
-    that._feedRequestTask = app.sendRequest({
+    that._feedRequestTask = community.request({
       hideLoading: true,
       silentError: true,
       url: '/api/creativesquare/list',
@@ -1202,7 +1229,7 @@ Page({
             // 可玩卡副标题:把原来单独一行 cy-metric 三联(完成节点/状态/时间)收进封面卡一句话。
             // sportName 非空 = 该贴关联了活动(data_type=1)或主题(data_type=2),后端 enrichSportFeedBatch 回填。
             if (newlist[i]['sportName']) {
-              newlist[i]['playSubtitle'] = buildFeedPlaySubtitle(newlist[i]);
+              newlist[i]['playSubtitle'] = newlist[i].sportSubtitle || buildFeedPlaySubtitle(newlist[i]);
             }
           }
 
@@ -1210,7 +1237,7 @@ Page({
             that.setData({
               list: newlist,
               page_no: pageNum,
-              hasMore: (app.getTotalPage(res.data.total, app.getPageSize()) > pageNum),
+              hasMore: res.data.hasMore === true,
               loadError: false,
               loadMoreError: '',
               nodata: newlist.length < 1
@@ -1221,7 +1248,7 @@ Page({
             that.setData(Object.assign(
               {
                 page_no: pageNum,
-                hasMore: (app.getTotalPage(res.data.total, app.getPageSize()) > pageNum),
+                hasMore: res.data.hasMore === true,
                 loadError: false,
                 loadMoreError: '',
                 nodata: oldLen + newlist.length < 1

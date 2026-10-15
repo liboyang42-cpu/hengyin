@@ -52,6 +52,10 @@ public final class RegistrationDetailDisplay {
         }
         if (verdict.refundable && verdict.deadline != null) {
             String deadlineText = "可免费取消至 " + formatCnDeadline(verdict.deadline);
+            // F-W5-07:¥0 免费单没有「全额退/不退」可言,不能挂收费票的退款规则句。
+            if (isFreeOrder(registration)) {
+                return "免费报名，" + deadlineText;
+            }
             // 5.9:带队场次单的退款卡要把规则本身说全(玩家在订单页也要看得到「未到场不退」);
             // ③ 快照单与主题单的展示保持原样。
             if (registration != null && RefundPolicy.isGuidedSessionOrder(
@@ -61,6 +65,16 @@ public final class RegistrationDetailDisplay {
             return deadlineText;
         }
         return verdict.reason;
+    }
+
+    /** 实付 0 元且没有用积分抵扣 = 免费单;金额缺失(存量/未回填)按收费单展示,不擅自改口径。 */
+    static boolean isFreeOrder(CmsRegistration registration) {
+        if (registration == null || registration.getPayableAmount() == null
+                || registration.getPayableAmount().signum() != 0) {
+            return false;
+        }
+        Long points = registration.getPointUsed();
+        return points == null || points <= 0L;
     }
 
     private static String formatCnDeadline(Date deadline) {

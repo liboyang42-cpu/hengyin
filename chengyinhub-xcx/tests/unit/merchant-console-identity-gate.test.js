@@ -584,8 +584,8 @@ test('负控:恢复「未登录直接落整屏登录态并 return」必须让静
 test('负控:把整屏身份闸加回 wxml 必须判红', () => {
   const wxml = fs.readFileSync(WXML_PATH, 'utf8')
   const mutated = wxml.replace(
-    '<cy-inline-error class="rv-console-error"',
-    '<view class="rv-gate" wx:if="{{consoleState}}"><cy-empty cta="去登录" /></view>\n    <cy-inline-error class="rv-console-error"',
+    '<cy-inline-error load-failure class="rv-console-error"',
+    '<view class="rv-gate" wx:if="{{consoleState}}"><cy-empty cta="去登录" /></view>\n    <cy-inline-error load-failure class="rv-console-error"',
   )
   assert.notEqual(mutated, wxml, '负控锚点失效')
   assert.throws(() => assertNoConsoleGate(mutated), /整屏闸容器必须删除/)

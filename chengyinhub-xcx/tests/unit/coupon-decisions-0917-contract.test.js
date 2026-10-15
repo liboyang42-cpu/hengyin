@@ -59,9 +59,10 @@ function loadCouponPage(source) {
   const toasts = []
   let definition
   vm.runInNewContext(source || read(COUPON_PAGE), {
-    getApp: () => ({ sendRequest: (options) => requests.push(options) }),
+    getApp: () => ({ getUserID: () => 1, sendRequest: (options) => requests.push(options) }),
     Page: (value) => { definition = value },
     require: (id) => {
+      if (/coupon-credential\.js$/.test(id)) return require(path.join(ROOT, 'utils/coupon-credential.js'))
       if (/coupon-form\.js$/.test(id)) return require(path.join(ROOT, 'utils/coupon-form.js'))
       if (/datetime\.js$/.test(id)) return require(path.join(ROOT, 'utils/datetime.js'))
       if (/\/modal\.js$/.test(id)) return { show: (opts) => modals.push(opts) }

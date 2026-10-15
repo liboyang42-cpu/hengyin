@@ -103,6 +103,8 @@ class RegistrationVerifyAndSettleTest {
         r.setOwnerType(1L);
         r.setOwnerId(300L);
         r.setPaymentStatus(2);
+        r.setRegistrationStatus(2);
+        r.setVerificationStatus(0);
         return r;
     }
 
@@ -184,12 +186,65 @@ class RegistrationVerifyAndSettleTest {
         o.verify(scanMapper).insertCmsRegistrationScan(any());
     }
 
-    /** CAS 返 0(已被别家核销)⇒ 返 false,且**入账/台账一步都不能走**。 */
+    /** CAS 返 0 后锁内读回真实已核销态 ⇒ 返 false,且**入账/台账一步都不能走**。 */
     @Test
     void alreadyVerified_noSideEffects() {
+        CmsRegistration verified = reg();
+        verified.setVerificationStatus(1);
         when(regMapper.verifyIfNotVerified(REG, MERCHANT)).thenReturn(0);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(verified);
 
         assertFalse(verifyAndSettle());
+
+        verify(regMapper).selectCmsRegistrationByIdForUpdate(REG);
+        verify(settlementSvc, never()).recordPaidRegistration(any(), anyLong());
+        verify(scanMapper, never()).insertCmsRegistrationScan(any());
+    }
+
+    /** 退款或取消赢得 CAS 时必须返回既有业务错误，不能伪报「已核销」。 */
+    @Test
+    void refundOrCancellationWinsCas_reportsRefundedInsteadOfVerified() {
+        CmsRegistration refunded = reg();
+        refunded.setPaymentStatus(4);
+        refunded.setRegistrationStatus(3);
+        refunded.setVerificationStatus(1);
+        CmsRegistration cancelled = reg();
+        cancelled.setRegistrationStatus(3);
+        when(regMapper.verifyIfNotVerified(REG, MERCHANT)).thenReturn(0);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(refunded, cancelled);
+
+        for (int attempt = 0; attempt < 2; attempt++) {
+            IllegalStateException error = assertThrows(IllegalStateException.class, this::verifyAndSettle);
+            assertEquals("订单未完成支付或已退款,无法核销", error.getMessage());
+        }
+
+        verify(settlementSvc, never()).recordPaidRegistration(any(), anyLong());
+        verify(scanMapper, never()).insertCmsRegistrationScan(any());
+    }
+
+    /** 人工退款冻结语义优先于终态解释，CAS 返 0 后仍先报告冻结。 */
+    @Test
+    void activeManualRefundFreeze_keepsPriorityOverTerminalReadback() {
+        when(regMapper.verifyIfNotVerified(REG, MERCHANT)).thenReturn(0);
+        when(regMapper.hasActiveManualRefundCaseForUpdate(REG)).thenReturn(true);
+
+        IllegalStateException error = assertThrows(IllegalStateException.class, this::verifyAndSettle);
+
+        assertEquals("订单正在人工退款处理中，暂不可核销", error.getMessage());
+        verify(regMapper, never()).selectCmsRegistrationByIdForUpdate(anyLong());
+        verify(settlementSvc, never()).recordPaidRegistration(any(), anyLong());
+    }
+
+    /** CAS 返 0 却缺失或仍未核销时 fail-closed，不能把未知状态授权成重复核销。 */
+    @Test
+    void casLostWithoutKnownTerminalState_failsClosed() {
+        when(regMapper.verifyIfNotVerified(REG, MERCHANT)).thenReturn(0);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(null, reg());
+
+        for (int attempt = 0; attempt < 2; attempt++) {
+            IllegalStateException error = assertThrows(IllegalStateException.class, this::verifyAndSettle);
+            assertEquals("订单数据异常,无法核销", error.getMessage());
+        }
 
         verify(settlementSvc, never()).recordPaidRegistration(any(), anyLong());
         verify(scanMapper, never()).insertCmsRegistrationScan(any());
@@ -404,7 +459,9 @@ class RegistrationVerifyAndSettleTest {
     /** 同一码并发/重复选择仍共用报名单 CAS,只有第一次能入账与写流水。 */
     @Test
     void repeatedStationChoiceOnlySettlesOnce() {
-        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(reg());
+        CmsRegistration verified = reg();
+        verified.setVerificationStatus(1);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(reg(), reg(), verified);
         when(registrationMerchantMapper.selectCmsRegistrationMerchantByIdForUpdate(701L))
                 .thenReturn(station(MERCHANT, 300L, 3));
         when(regMapper.verifyIfNotVerified(REG, MERCHANT)).thenReturn(1, 0);

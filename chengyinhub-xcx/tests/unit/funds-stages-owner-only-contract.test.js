@@ -20,8 +20,8 @@ function loadMerchantProfit(mutate) {
   const requests = []
   let definition
   vm.runInNewContext(source, {
-    getApp: () => ({ sendRequest: (o) => requests.push(o) }),
-    require: () => ({}),
+    getApp: () => ({ getUserID:()=>7, sendRequest: (o) => requests.push(o) }),
+    require: p => p.includes('login-reload') ? require('../../utils/session/login-reload.js') : ({}),
     Component: (v) => { definition = v },
     wx: { navigateTo() {} },
   })

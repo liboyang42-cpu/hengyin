@@ -4,6 +4,7 @@
     "migration_business_audit_event_20260823.sql": "migration_approval_governance_request_id_repair_20260830.sql",
     "migration_approval_governance_20260828.sql": "migration_approval_governance_request_id_repair_20260830.sql",
     "migration_club_role_event_ops_20260823.sql": "migration_club_waitlist_offer_window_20260911.sql",
-    "migration_event_cancel_manual_refund_case_20260826.sql": "migration_manual_refund_case_topic_20260918.sql"
+    "migration_event_cancel_manual_refund_case_20260826.sql": "migration_manual_refund_case_topic_20260918.sql",
+    "migration_seed_merchant_game_a8_20260823.sql": "migration_20261009_merchant_game_a8_cdn_guard.sql"
   }
 }

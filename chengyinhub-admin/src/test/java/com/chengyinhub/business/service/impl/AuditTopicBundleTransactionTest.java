@@ -101,6 +101,18 @@ class AuditTopicBundleTransactionTest {
                     update.getStatus(), update.getUserStatus());
         });
         ReflectionTestUtils.setField(target, "cmsTopicMapper", topics);
+        com.chengyinhub.business.service.support.AppMediaPublicationGuard mediaGuard =
+                com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(5L);
+        com.chengyinhub.business.mapper.CmsTopicChapterMapper mediaChapters =
+                mock(com.chengyinhub.business.mapper.CmsTopicChapterMapper.class);
+        com.chengyinhub.business.mapper.CmsTopicNodeMapper mediaNodes =
+                mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class);
+        when(mediaChapters.selectCmsTopicChapterList(any())).thenReturn(java.util.Collections.emptyList());
+        when(mediaNodes.selectCmsTopicNodeList(any())).thenReturn(java.util.Collections.emptyList());
+        ReflectionTestUtils.setField(mediaGuard, "topics", topics);
+        ReflectionTestUtils.setField(mediaGuard, "chapters", mediaChapters);
+        ReflectionTestUtils.setField(mediaGuard, "nodes", mediaNodes);
+        ReflectionTestUtils.setField(target, "mediaPublicationGuard", mediaGuard);
         IQuotaService quota = mock(IQuotaService.class);
         when(quota.lockAndCheckThemeOnline(5L, 77L)).thenReturn(null);
         ReflectionTestUtils.setField(target, "quotaService", quota);

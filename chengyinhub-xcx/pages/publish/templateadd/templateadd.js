@@ -1,3 +1,4 @@
+const { applyTheme } = require('../../../utils/theme.js');
 const modal = require('../../../utils/modal.js');
 const app = getApp();
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
@@ -64,6 +65,7 @@ Page({
         + (this.data.operationScope ? '&scope=MERCHANT' : ''),
       success: () => {
         this.data.dirty = false;
+        this.setData({ navigating: false });
       },
       fail: () => {
         this.setData({ navigating: false, navigationError: '跳转失败，请重试' });
@@ -91,6 +93,7 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
+    applyTheme('light');
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
   },

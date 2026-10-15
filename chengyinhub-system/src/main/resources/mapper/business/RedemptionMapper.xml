@@ -89,11 +89,24 @@
         where active_idem_key = #{key}
     </select>
 
+    <select id="selectActiveByIdempotencyKeyForUpdate" resultMap="RedemptionResult">
+        <include refid="selectRedemptionVo"/>
+        where active_idem_key = #{key}
+        for update
+    </select>
+
     <!-- 已撤销的核销不算数,不返 -->
     <select id="selectActiveByRegistration" parameterType="Long" resultMap="RedemptionResult">
         <include refid="selectRedemptionVo"/>
         where registration_id = #{registrationId} and status = 'ACTIVE'
         order by create_time asc
+    </select>
+
+    <select id="selectActiveByRegistrationForUpdate" resultMap="RedemptionResult">
+        <include refid="selectRedemptionVo"/>
+        where registration_id = #{registrationId} and status = 'ACTIVE'
+        order by id
+        for update
     </select>
 
     <!-- 含已撤销(后台撤销入口读回用):按流水倒序,最近的事件在最上面 -->

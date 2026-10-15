@@ -1,12 +1,14 @@
 // 集邮册:散落 collage(参考 STAMPA 的月份视图)。【乱才是魅力,不是网格】。
 // 数百枚必须分页 + 懒加载,不能一次拉光(接口上限 50/页)。
 const app = getApp();
+const session = require('../../../../utils/session/login-reload.js');
 const LAYOUT = require('./layout.js');
 
 const COLS = 4;
 
 Page({
   data: {
+    readAccess: '',
     items: [], total: 0, stageH: 0,
     cellImgW: 0, cellImgH: 0,
     // loaded = 「真的读到了后端的答复」;error = 「没读到」。两者不是一回事:
@@ -15,6 +17,7 @@ Page({
   },
 
   onLoad() {
+    this._destroyed = false;
     const win = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
     const usable = win.windowWidth - 24;          // 减去 padding
     this._cellW = usable / COLS;
@@ -22,16 +25,53 @@ Page({
     this.setData({ cellImgW: Math.round(this._cellW * 0.86), cellImgH: Math.round(this._cellH * 0.86) });
     this.load();
   },
+  onShow() {
+    this._hidden = false;
+    if (this._readOwner !== this._readIdentity()) { this._resetRead(); this.load(); }
+  },
+  onHide() { this._hidden = true; },
+  onUnload() { this._destroyed = true; this._unloaded = true; },
+  _readIdentity() { return [session.memberId(app), (app.globalData || {}).authorization || ''].join('|'); },
+  _resetRead() {
+    this._readOwner = this._readIdentity();
+    this._loadSeq = (this._loadSeq || 0) + 1;
+    this.setData({ items: [], total: 0, stageH: 0, pageNum: 1, loading: false, loaded: false, error: false, noMore: false, readAccess: '' });
+  },
+  _readOutcome(res, statusCode, owner, seq) {
+    if (this._destroyed || seq !== this._loadSeq) return true;
+    if (owner !== this._readIdentity() || res && res.reason === 'sessionChanged') {
+      this._resetRead();
+      if (!session.memberId(app)) this.setData({ readAccess: 'login' });
+      else if (!this._hidden) this.load();
+      return true;
+    }
+    const code = session.failureStatus(res, statusCode);
+    if (code !== 401 && code !== 403) return false;
+    this._resetRead();
+    this.setData({ readAccess: code === 401 ? 'login' : 'denied' });
+    return true;
+  },
+  loginToRead() {
+    if (this.data.readAccess === 'denied') return;
+    return session.retryLogin(this, app, function () { this._resetRead(); this.load(); });
+  },
+
   onReachBottom() { if (!this.data.noMore) this.load(); },
 
   load() {
+    const owner = this._readIdentity();
+    if (!session.memberId(app)) { this._resetRead(); this.setData({ readAccess: 'login' }); return; }
+    if (this._readOwner && this._readOwner !== owner) this._resetRead();
+    this._readOwner = owner;
     if (this.data.loading || this.data.noMore) return;
-    this.setData({ loading: true, error: false });
+    const seq = this._loadSeq = (this._loadSeq || 0) + 1;
+    this.setData({ loading: true, error: false, readAccess: '' });
     const that = this;
     app.sendRequest({
-      url: '/api/roam/stamp/list', method: 'POST', autoErrorToast: this.data.items.length > 0,
+      url: '/api/roam/stamp/list', method: 'POST', autoErrorToast: false,
       data: { pageNum: this.data.pageNum, pageSize: 50 },
       success(res) {
+        if (that._readOutcome(res, null, owner, seq)) return;
         const d = (res && res.code == '200' && res.data) ? res.data : null;
         // 非 200 / 没有 data = 没接通,不是「一枚都没有」:落 error,loaded 保持原值。
         const validRows = d && Array.isArray(d.list) && d.list.every(function (row) {
@@ -60,10 +100,10 @@ Page({
           loading: false, loaded: true, error: false
         });
       },
-      fail() { that.setData({ loading: false, error: true }); },
+      fail(res, statusCode) { if (!that._readOutcome(res, statusCode, owner, seq)) that.setData({ loading: false, error: true }); },
       // HTTP 层非 200 走的是这一条:不挂它的话 success/fail 都不会跑,
       // loading 永远为真 ⇒ 骨架转到底、还把 load() 的 if (loading) return 锁死后续分页。
-      successStatusAbnormal() { that.setData({ loading: false, error: true }); }
+      successStatusAbnormal(res, statusCode) { if (!that._readOutcome(res, statusCode, owner, seq)) that.setData({ loading: false, error: true }); }
     });
   },
 

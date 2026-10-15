@@ -104,10 +104,16 @@ public class ApiRoamStampController extends BaseController {
         String idemKey = normalizeIdemKey(idempotencyKey);
         if (idemKey != null && idemKey.length() > IDEM_KEY_MAX) return error("幂等键过长");
 
+        String checkedCaption = normalizeCaption(caption);
+        if (checkedCaption != null && !checkedCaption.isEmpty()) {
+            UmsMember author = umsMemberService.selectUmsMemberById(memberId);
+            String risk = wxContentSecurityService.checkText(checkedCaption, author == null ? null : author.getWxOpenId());
+            if (risk != null) return error(risk);
+        }
         RoamStamp s = new RoamStamp();
         s.setMemberId(memberId);
         s.setPicUrl(picUrl.trim());
-        s.setCaption(normalizeCaption(caption));
+        s.setCaption(checkedCaption);
         s.setKind(0);            // P0 只有自由拍
         s.setGeohash7(null);     // 普通票不占格,uk 允许多行 NULL
         s.setCheckState(0);      // 0=未送检;送检成功后由回调迁到 1/2

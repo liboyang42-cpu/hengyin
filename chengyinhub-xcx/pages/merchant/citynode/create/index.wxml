@@ -4,12 +4,13 @@
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar title="报名成为节点" custom-back bind:back="onNavBack" />
   <view style="height: {{statusBarHeight + navBarHeight}}px; flex-shrink: 0;"></view>
-  <view class="cnc-state" wx:if="{{accessState === 'loading'}}">正在核对经营团队权限…</view>
+  <cy-empty wx:if="{{accessState === 'login'}}" title="登录后配置据点" cta="去登录" bind:cta="onLogin" />
+  <view class="cnc-state" wx:elif="{{accessState === 'loading'}}">正在核对经营团队权限…</view>
   <view class="cnc-state" wx:elif="{{accessState === 'no-permission'}}">
-    <cy-error title="当前岗位不能管理据点" sub="请联系店主或店长调整经营团队岗位" retry="" auto-back />
+    <cy-error title="当前岗位不能管理据点" sub="{{accessErrorText || '请联系店主或店长调整经营团队岗位'}}" retry="" auto-back />
   </view>
   <view class="cnc-state" wx:elif="{{accessState === 'error'}}">
-    <cy-inline-error kind="network" title="商家权限加载失败" sub="{{accessErrorText}}"
+    <cy-inline-error load-failure="{{!accessErrorIsDenied}}" kind="network" title="商家权限加载失败" sub="{{accessErrorText}}"
       action="重试" bind:action="retryAccess" />
   </view>
   <block wx:if="{{accessState === 'ready'}}">
@@ -47,7 +48,7 @@
       </view>
 
       <cy-skeleton type="detail" wx:if="{{!shopLoaded}}" />
-      <cy-inline-error wx:elif="{{shopLoadError}}" kind="network" title="店铺资料没读出来"
+      <cy-inline-error load-failure wx:elif="{{shopLoadError}}" kind="network" title="店铺资料没读出来"
         sub="{{shopLoadError}}" action="重试" bind:action="loadShop" />
       <block wx:elif="{{picked}}">
         <view class="cnc-addr">{{picked.name || '我的店'}}</view>
@@ -71,7 +72,7 @@
 
     <cy-inline-error class="cnc-page-error" wx:if="{{submitError}}" kind="network"
       title="投放申请未提交" sub="{{submitError}}" action="重试提交" bind:action="retrySubmit" />
-    <cy-inline-error class="cnc-page-error" wx:if="{{readbackError}}" kind="data"
+    <cy-inline-error load-failure class="cnc-page-error" wx:if="{{readbackError}}" kind="data"
       title="申请状态暂未同步" sub="{{readbackError}}" action="重新读取" bind:action="retryReadback" />
     <view class="cnc-pad"></view>
   </scroll-view>

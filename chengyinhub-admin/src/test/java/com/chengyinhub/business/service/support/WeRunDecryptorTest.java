@@ -136,4 +136,47 @@ class WeRunDecryptorTest {
         assertThrows(IllegalArgumentException.class,
                 () -> WeRunDecryptor.decrypt(key(), cipherText, iv(), APP_ID));
     }
+    private static final long STRICT_NOW=java.time.Instant.parse("2026-10-10T10:00:00Z").toEpochMilli();
+    private static com.fasterxml.jackson.databind.node.ObjectNode verifiedRoot(long now,String[] days,int[] steps) {
+        com.fasterxml.jackson.databind.node.ObjectNode root=new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();root.putObject("watermark").put("appid",APP_ID).put("timestamp",now/1000);
+        com.fasterxml.jackson.databind.node.ArrayNode list=root.putArray("stepInfoList");for(int i=0;i<days.length;i++)list.addObject().put("timestamp",java.time.LocalDate.parse(days[i]).atStartOfDay(java.time.ZoneId.of("Asia/Shanghai")).toEpochSecond()).put("step",steps[i]);return root;
+    }
+    private static WeRunDecryptor.VerifiedWeRunReading verified(long now,String[] days,int[] steps) throws Exception {
+        return WeRunDecryptor.decryptVerified(key(),encrypt(verifiedRoot(now,days,steps).toString()),iv(),APP_ID,now);
+    }
+    @Test void strictReadingUsesFreshWatermarkAndRejectsMalformedNumbersOrDates() throws Exception {
+        com.fasterxml.jackson.databind.node.ObjectNode root=verifiedRoot(STRICT_NOW,new String[]{"2026-10-09","2026-10-10"},new int[]{100,200});
+        assertEquals(Integer.valueOf(200),verified(STRICT_NOW,new String[]{"2026-10-09","2026-10-10"},new int[]{100,200}).getDays().get("2026-10-10"));
+        for(String bad:new String[]{"stale","future","fraction","string","overflow","order","duplicate","wrongApp"}) {
+            com.fasterxml.jackson.databind.node.ObjectNode copy=root.deepCopy();com.fasterxml.jackson.databind.node.ObjectNode first=(com.fasterxml.jackson.databind.node.ObjectNode)copy.path("stepInfoList").get(0);
+            if("stale".equals(bad))copy.with("watermark").put("timestamp",STRICT_NOW/1000-301);
+            if("future".equals(bad))copy.with("watermark").put("timestamp",STRICT_NOW/1000+31);
+            if("fraction".equals(bad))first.put("step",1.5);if("string".equals(bad))first.put("step","2");if("overflow".equals(bad))first.put("step",Long.MAX_VALUE);
+            if("order".equals(bad))first.put("timestamp",STRICT_NOW/1000);if("duplicate".equals(bad))first.set("timestamp",copy.path("stepInfoList").get(1).path("timestamp"));if("wrongApp".equals(bad))copy.with("watermark").put("appid",OTHER_APP_ID);
+            String cipher=encrypt(copy.toString());assertThrows(IllegalArgumentException.class,()->WeRunDecryptor.decryptVerified(key(),cipher,iv(),APP_ID,STRICT_NOW),bad);
+        }
+    }
+    @Test void strictPaddingChecksEveryByteWhileLegacyValidReadingRemainsCompatible() throws Exception {
+        String plain=verifiedRoot(STRICT_NOW,new String[]{"2026-10-10"},new int[]{20}).toString();while(plain.getBytes(StandardCharsets.UTF_8).length%16==15)plain+=" ";
+        byte[] raw=plain.getBytes(StandardCharsets.UTF_8);int pad=16-raw.length%16;byte[] padded=java.util.Arrays.copyOf(raw,raw.length+pad);java.util.Arrays.fill(padded,raw.length,padded.length,(byte)pad);padded[padded.length-2]=(byte)(pad+1);
+        Cipher aes=Cipher.getInstance("AES/CBC/NoPadding");aes.init(Cipher.ENCRYPT_MODE,new SecretKeySpec(AES_BLOCK,"AES"),new IvParameterSpec(AES_IV));String cipher=Base64.getEncoder().encodeToString(aes.doFinal(padded));
+        assertEquals(20,WeRunDecryptor.decrypt(key(),cipher,iv(),APP_ID).getTodaySteps());assertThrows(IllegalArgumentException.class,()->WeRunDecryptor.decryptVerified(key(),cipher,iv(),APP_ID,STRICT_NOW));
+    }
+    @Test void strictServiceBindsExchangeIdentityAndRejectsPlainSteps() throws Exception {
+        VerifiedWeRunService service=new VerifiedWeRunService();com.chengyinhub.business.mapper.UmsMemberMapper members=org.mockito.Mockito.mock(com.chengyinhub.business.mapper.UmsMemberMapper.class);com.chengyinhub.business.service.IWeChatMiniSessionService wx=org.mockito.Mockito.mock(com.chengyinhub.business.service.IWeChatMiniSessionService.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(service,"umsMemberMapper",members);org.springframework.test.util.ReflectionTestUtils.setField(service,"weChatMiniSessionService",wx);com.chengyinhub.business.domain.UmsMember member=new com.chengyinhub.business.domain.UmsMember();member.setWxOpenId("fixture-player");org.mockito.Mockito.when(members.selectUmsMemberById(7L)).thenReturn(member);org.mockito.Mockito.when(wx.miniAppId()).thenReturn(APP_ID);
+        com.fasterxml.jackson.databind.node.ObjectNode cipher=new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode().put("code","fixture-code").put("encryptedData",encrypt(verifiedRoot(STRICT_NOW,new String[]{"2026-10-10"},new int[]{20}).toString())).put("iv",iv());
+        org.mockito.Mockito.when(wx.exchange("fixture-code")).thenReturn(new com.chengyinhub.business.service.IWeChatMiniSessionService.WeChatMiniSession("other-player",key()));assertThrows(IllegalArgumentException.class,()->service.verify(7L,cipher,STRICT_NOW));
+        org.mockito.Mockito.when(wx.exchange("fixture-code")).thenReturn(new com.chengyinhub.business.service.IWeChatMiniSessionService.WeChatMiniSession("fixture-player",key()));assertEquals(Integer.valueOf(20),service.verify(7L,cipher,STRICT_NOW).getDays().get("2026-10-10"));cipher.put("steps",10000);assertThrows(IllegalArgumentException.class,()->service.verify(7L,cipher,STRICT_NOW));
+    }
+    @Test void zeroStepsBaselinesHighWaterCrossDayAndRestoresExactlyOnce() throws Exception {
+        com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();com.fasterxml.jackson.databind.node.ObjectNode snapshot=json.createObjectNode();com.fasterxml.jackson.databind.node.ObjectNode theme=snapshot.putObject("themeConfig").put("schemaVersion",1).put("capacity",0);theme.putArray("items");theme.putObject("gameplayRuntime").put("runtimeScope","TEAM").putObject("survival").put("zeroHpPolicy","STEPS").putObject("zeroSteps").put("version",1).put("steps",100).put("restoreTo",4).put("limit",1).put("thenPolicy","THEME_FAIL");
+        com.chengyinhub.business.domain.JourneyRules rules=new com.chengyinhub.business.domain.JourneyRules();rules.setCheckEnabled(true);rules.getHp().setMax(12);TopicRouteEngine.State state=new TopicRouteEngine.State();state.getVariables().put("sys.hp",0);GameplaySurvivalEngine engine=new GameplaySurvivalEngine();engine.syncZeroHp(snapshot,rules,state,STRICT_NOW);String episode=state.getThemeRuntime().path("zeroHp").path("episodeId").asText();
+        WeRunDecryptor.VerifiedWeRunReading base=verified(STRICT_NOW,new String[]{"2026-10-10"},new int[]{1000});assertThrows(IllegalStateException.class,()->engine.syncZeroHpSteps(snapshot,rules,state,episode,8L,base,false,true,STRICT_NOW));
+        engine.syncZeroHpSteps(snapshot,rules,state,episode,7L,base,true,true,STRICT_NOW);assertEquals(0,state.getThemeRuntime().path("zeroHp").path("progress").asInt());engine.syncZeroHpSteps(snapshot,rules,state,episode,7L,base,false,true,STRICT_NOW);assertEquals(0,state.getThemeRuntime().path("zeroHp").path("progress").asInt());
+        WeRunDecryptor.VerifiedWeRunReading raised=verified(STRICT_NOW,new String[]{"2026-10-10"},new int[]{1040});engine.syncZeroHpSteps(snapshot,rules,state,episode,7L,raised,false,true,STRICT_NOW);engine.syncZeroHpSteps(snapshot,rules,state,episode,7L,base,false,true,STRICT_NOW);assertEquals(40,state.getThemeRuntime().path("zeroHp").path("progress").asInt());
+        long nextDay=STRICT_NOW+86400000;WeRunDecryptor.VerifiedWeRunReading missing=verified(nextDay,new String[]{"2026-10-11"},new int[]{60});String before=state.getThemeRuntime().toString();assertThrows(IllegalArgumentException.class,()->engine.syncZeroHpSteps(snapshot,rules,state,episode,7L,missing,false,true,nextDay));assertEquals(before,state.getThemeRuntime().toString());
+        WeRunDecryptor.VerifiedWeRunReading across=verified(nextDay,new String[]{"2026-10-10","2026-10-11"},new int[]{1040,60});engine.syncZeroHpSteps(snapshot,rules,state,episode,7L,across,false,true,nextDay);assertEquals(Integer.valueOf(4),state.getVariables().get("sys.hp"));assertEquals(1,state.getThemeRuntime().path("zeroHp").path("used").asInt());engine.syncZeroHpSteps(snapshot,rules,state,episode,7L,across,false,true,nextDay);assertEquals(1,state.getThemeRuntime().path("zeroHp").path("used").asInt());
+    }
+
 }

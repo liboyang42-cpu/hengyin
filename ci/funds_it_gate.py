@@ -28,11 +28,15 @@ REQUIRED_TRIGGER_PATHS = (
     # service/impl/ActivityCancelFreeOrderMybatisIT 不触发真库 job,零告警。两条都钉死。
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/**",
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/*MybatisIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/*MySqlIT.java",
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/*MySqlIT.java",
     # 2026-09-16 暗测试 23 套里 2 套落在这两个目录(mapper/RegistrationReadContract、
     # web/controller/api/RoamSessionWrite),原来的 test 侧 glob 都覆盖不到 —— 单改不触发复验。
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/**",
     "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/**",
+    "chengyinhub-admin/sql/migration_20261012_member_password_width.sql",
+    "chengyinhub-admin/sql/migration_20261012_roam_presence_revoke_intent.sql",
+    "chengyinhub-admin/sql/migration_20261012_roam_presence_revoke_job.sql",
 )
 
 
@@ -194,11 +198,12 @@ EXPECTED = {
     # C 组 18 套原用标准变量但三处均未登记。每套首跑证据与红绿分类见
     # ~/Documents/城瘾/小程序/修复交接材料/worktree收口_0915/暗测试真跑_报告.md。
     "CoopDepositRefundMybatisIntegrationTest": 27,
-    "GrowthMissionProofMybatisIntegrationTest": 15,
+    "GrowthMissionProofMybatisIntegrationTest": 25,
     "MerchantIdentityMybatisIntegrationTest": 21,
     # 2026-09-24 CU-M-78 +1 条(解除招牌主推显式清空 featured_id,真 XML + 真库回读),8 → 9。
     "MerchantProfilePersistenceMybatisIntegrationTest": 9,
-    "StoreVerifyGrowthDeliveryTransactionTest": 3,
+    # 2026-10-15 PR10 复审 +1 条(整单核销撤销:真库标记核销台账已撤销、作废未发放成长待办),3 → 4。
+    "StoreVerifyGrowthDeliveryTransactionTest": 4,
     "RefundNotificationMybatisIntegrationTest": 9,
     "SessionRefundClockMybatisIntegrationTest": 3,
     "SettlementGenerateBatchMybatisIntegrationTest": 3,
@@ -216,30 +221,52 @@ EXPECTED = {
     "CreativeSquarePublishIdempotencyMybatisIntegrationTest": 7,
     "FollowConcurrencyMybatisIntegrationTest": 4,
     "FollowEditRaceMybatisIntegrationTest": 7,
-    "NearbyRunnerShopsMybatisIntegrationTest": 5,
+    # 2026-10-15 PR10 复审 +1 条(瞬移基线按会话取,真库回读),6 → 7。
+    "NearbyRunnerShopsMybatisIntegrationTest": 7,
     # 2026-09-17 拍照一律机审:原 5 条(人工审核三条 CAS)→ 6 条:
     # 通过 CAS 恰好一次 / 存量驳回态同 CAS 转正 / 已完成行永不再通过 /
     # 按 id 取行 / 待审重复插入撞唯一键 / 存量待审行读侧不算完成。
     "PhotoReviewProgressMybatisIntegrationTest": 6,
     "SpoilerAccessMybatisIntegrationTest": 7,
     "SquareEditFollowMybatisIntegrationTest": 7,
-    "RoamSessionWriteMybatisIntegrationTest": 10,
+    "RoamSessionWriteMybatisIntegrationTest": 12,
+    # Actual retention/claim dedupe, rollback, owner races, anonymous totals and consent revocation SQL.
+    "RoamLocationRetentionMySqlIT": 20,
     # 2026-09-17 客诉期提现闸(9-16 晚拍板 1-5):到期前不可提现 / 到期后可提现 / 涉诉只冻结部分
     # (含结案补结与退款作废)/ 超期退款欠款从后续结算抵扣,共 5 条。
     # 2026-09-17 总控裁定补做:+2 平台人工倒扣余额不足扣到 0 + 差额记欠款 / 按加锁读的当前余额算(非事务快照)且重复复核空转。
     "ComplaintPeriodWithdrawalGateMybatisIntegrationTest": 7,
     # 2026-09-17 第二轮拍板 17/22:足迹分享快照 + 进行中游戏会话的真迁移/真 XML IT(4 条 @Test)。
-    "ShareSnapshotRunSessionMybatisIntegrationTest": 4,
+    "ShareSnapshotRunSessionMybatisIntegrationTest": 5,
+    "PlayerRunSessionOrderingMybatisIntegrationTest": 6,
     # 2026-09-21 CYV-P2-002:49 条时两个并发首次发布必须被会员行锁串行化；
     # 达到上限后更新既有 token 不得误删其他分享。
-    "RoamShareSnapshotConcurrencyMySqlIT": 2,
+    "RoamShareSnapshotConcurrencyMySqlIT": 3,
     # 2026-09-21 CYV-P1-002:主理人转让与活动取消在 MySQL RR/RC 下的锁后权限、
     # 精确 topic/club/activity scope 和并发退款幂等。
     "ClubEventTransferCancellationMySqlIT": 3,
+    "RefundRetryAndRemainderMySqlIT": 5,
+    "SignupNoticeAfterCommitPersistenceMySqlIT": 5,
+    "TopicLikeDesiredStateMySqlIT": 3,
+    "MonitorMissingJobsMySqlIT": 3,
+    "MemberPasswordWidthMySqlIT": 3,
+    "LegacyCategoryForwardGuardMySqlIT": 4,
+    "MissingBusinessSeedsMySqlIT": 4,
+    "RoamPresenceRevokeDurabilityMySqlIT": 10,
+    "RoamPresenceRevokeJobMySqlIT": 4,
 }
 
 # class 短名 -> 该测试类所在源文件(相对仓库根),供 count_test_methods() 自测用。
 SOURCE_FILES = {
+    "MissingBusinessSeedsMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MissingBusinessSeedsMySqlIT.java",
+    "RefundRetryAndRemainderMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundRetryAndRemainderMySqlIT.java",
+    "SignupNoticeAfterCommitPersistenceMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SignupNoticeAfterCommitPersistenceMySqlIT.java",
+    "TopicLikeDesiredStateMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicLikeDesiredStateMySqlIT.java",
+    "MonitorMissingJobsMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MonitorMissingJobsMySqlIT.java",
+    "MemberPasswordWidthMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MemberPasswordWidthMySqlIT.java",
+    "LegacyCategoryForwardGuardMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/LegacyCategoryForwardGuardMySqlIT.java",
+    "RoamPresenceRevokeDurabilityMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamPresenceRevokeDurabilityMySqlIT.java",
+    "RoamPresenceRevokeJobMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RoamPresenceRevokeJobMySqlIT.java",
     "CoopListReadOnlyMybatisIntegrationTest":
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/"
         "CoopListReadOnlyMybatisIntegrationTest.java",
@@ -370,6 +397,9 @@ SOURCE_FILES = {
     "SquareEditFollowMybatisIntegrationTest":
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/"
         "SquareEditFollowMybatisIntegrationTest.java",
+    "RoamLocationRetentionMySqlIT":
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/"
+        "RoamLocationRetentionMySqlIT.java",
     "RoamSessionWriteMybatisIntegrationTest":
         "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/"
         "RoamSessionWriteMybatisIntegrationTest.java",
@@ -379,6 +409,9 @@ SOURCE_FILES = {
     "ShareSnapshotRunSessionMybatisIntegrationTest":
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/"
         "ShareSnapshotRunSessionMybatisIntegrationTest.java",
+    "PlayerRunSessionOrderingMybatisIntegrationTest":
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/"
+        "PlayerRunSessionOrderingMybatisIntegrationTest.java",
     "RoamShareSnapshotConcurrencyMySqlIT":
         "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/"
         "RoamShareSnapshotConcurrencyMySqlIT.java",

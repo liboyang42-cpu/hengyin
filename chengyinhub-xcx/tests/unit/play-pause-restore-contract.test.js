@@ -450,3 +450,49 @@ test('高级玩法完成后先刷新权威路线；读取失败或切到其他�
   await page.onAdvancedReady({ detail: { nodeId: 8 } })
   assert.equal(calls.length, 2)
 })
+
+for (const code of [200, 500, 'network']) {
+  test(`高级玩法继续的路线回包${code}在真实卸载后不更新或继续旧页`, async () => {
+    const page = loadPage()
+    const node = { nodeId: 8, vm: 8 }
+    page.data.topicId = '31'
+    page.data.advancedPlay = { show: true, node }
+    page._routeState = { routeMode: 'BRANCH_GRAPH', status: 'ACTIVE', version: 1 }
+    const calls = []
+    page._applyRouteState = () => { calls.push('apply'); return true }
+    page.onSheetGoTap = () => calls.push('continue')
+    const pending = page.onAdvancedReady({ detail: { nodeId: 8 } })
+    const request = requests[0]
+    assert.equal(request.url, '/api/play/route-state')
+    assert.equal(request.method, 'GET')
+    page.onUnload()
+    let writes = 0
+    const setData = page.setData
+    page.setData = (...args) => { writes++; return setData(...args) }
+    if (code === 'network') request.fail({ errMsg: 'request:fail' })
+    else request.success({ code, data: { routeMode: 'BRANCH_GRAPH', version: 2 } })
+    await pending
+    assert.deepEqual(calls, [])
+    assert.equal(writes, 0)
+    assert.equal(requests.filter(r => r.method === 'POST').length, 0)
+    assert.equal(page.data.advancedPlay.node, node)
+  })
+}
+
+test('路线读取结束与setData完成之间卸载也不触发节点继续', async () => {
+  const page = loadPage()
+  const node = { nodeId: 8, vm: 8 }
+  page.data.advancedPlay = { show: true, node }
+  page._routeState = { routeMode: 'BRANCH_GRAPH', version: 1 }
+  page.refreshRouteState = async () => true
+  const callbacks = []
+  const setData = page.setData
+  page.setData = (patch, callback) => { setData(patch); if (callback) callbacks.push(callback) }
+  let continued = 0
+  page.onSheetGoTap = () => { continued++ }
+  await page.onAdvancedReady({ detail: { nodeId: 8 } })
+  assert.equal(callbacks.length, 1)
+  page.onUnload()
+  callbacks[0]()
+  assert.equal(continued, 0)
+})

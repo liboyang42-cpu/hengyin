@@ -15,8 +15,11 @@ public class RoamSessionWriteService {
     @Autowired
     private RoamMapper roamMapper;
 
+    @Autowired private RoamLocationConsentService locationConsent;
+
     @Transactional(rollbackFor = Exception.class)
     public int recordPoiFound(Long memberId, Long sessionId, Long poiId) {
+        locationConsent.requireCurrentAgreement(memberId);
         RoamSession session = roamMapper.selectOwnedSessionForUpdate(sessionId, memberId);
         if (session == null || !memberId.equals(session.getMemberId())) throw new ServiceException("会话不存在");
         if (!Integer.valueOf(0).equals(session.getStatus())) throw new ServiceException("本次漫游已结算");

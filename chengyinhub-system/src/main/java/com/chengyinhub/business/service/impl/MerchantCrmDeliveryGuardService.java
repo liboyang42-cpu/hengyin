@@ -106,6 +106,15 @@ public class MerchantCrmDeliveryGuardService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    public void releaseForRetry(Claim dispatching) {
+        requireDispatching(dispatching);
+        if (campaignMapper.releaseDeliveryGuardForRetry(dispatching.getGuardId(), dispatching.getLeaseToken(),
+                dispatching.getVersion()) != 1) {
+            throw new ServiceException("投递额度释放失败，已阻止自动重发", 409);
+        }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void markOutcomeUnknown(Claim dispatching, String failureCode) {
         requireDispatching(dispatching);
         if (campaignMapper.markDeliveryGuardOutcomeUnknown(dispatching.getGuardId(), dispatching.getLeaseToken(),

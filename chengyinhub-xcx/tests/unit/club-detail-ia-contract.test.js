@@ -52,6 +52,8 @@ function loadDetail() {
         '../../../utils/danger-actions.js': require('../../utils/danger-actions.js'),
       }
       if (modules[request]) return modules[request]
+      // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
+      if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Set,
@@ -106,6 +108,7 @@ function loadSettings() {
         '../../utils/roleGuard.js': { isClubLeader: () => true, clear() {} },
         '../../utils/merchant-theme.js': { merchantPageShow() {}, merchantPageRestore() {} },
         '../../utils/scene-registry.js': { getScene: () => ({}) },
+        '../../utils/roam-player-memory.js': require('../../utils/roam-player-memory.js'),
         '../../utils/scene-stack.js': {
           pushScene: (_stack, next) => [next],
           popScene: () => [],
@@ -114,6 +117,8 @@ function loadSettings() {
         },
       }
       if (modules[request]) return modules[request]
+      // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
+      if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
       throw new Error(`unexpected require: ${request}`)
     },
     wx: {
@@ -430,6 +435,174 @@ test('从发布/邀请/主办视图返回会重拉 owner 数据，首展不与 o
   assert.equal(reloads, 0, '首次 onShow 应交给 onLoad 请求')
   page.onShow()
   assert.equal(reloads, 1, '返页必须重拉 loadAll，进而刷新 topics/project/my/coop/list')
+})
+
+test('普通成员首展仍由 onLoad 单飞，返页只先回读详情关系，失权后清掉旧名单', () => {
+  const { page, requests } = loadDetail()
+  page.refreshCoopPublisherAccess = () => {}
+  Object.assign(page.data, {
+    clubId: 9,
+    club: { id: 9, isOwner: false, isJoined: true, viewerIsAdmin: false },
+    canSeeMembers: true,
+    canUseManageTab: false,
+    members: [{ memberId: 41 }, { memberId: 42 }],
+    memberStrip: [{ key: 'member:41', memberId: 41 }],
+    membersState: 'ready',
+    membersExpanded: true,
+  })
+
+  page.onShow()
+  assert.equal(requests.filter(request => request.url === '/api/club/detail').length, 0,
+    '首次 onShow 仍交给 onLoad，不重复读取详情')
+
+  page.onShow()
+  const detail = requests.find(request => request.url === '/api/club/detail')
+  assert.ok(detail, '普通成员返回必须回读现有详情关系')
+  assert.equal(requests.some(request => request.url === '/api/club/members'), false,
+    '关系确认前不得先拉新名单')
+
+  detail.success({ code: '200', data: { id: 9, isOwner: false, isJoined: false, viewerIsAdmin: false } })
+  assert.equal(page.data.canSeeMembers, false)
+  assert.deepEqual(Array.from(page.data.members), [])
+  assert.deepEqual(Array.from(page.data.memberStrip), [])
+  assert.equal(page.data.membersState, 'idle')
+  assert.equal(page.data.membersExpanded, false)
+  assert.equal(requests.some(request => request.url === '/api/club/members'), false,
+    '失权结果不得继续读取成员名单')
+})
+
+test('普通成员关系成功回读时保留已有名单，直到新名单请求接管', () => {
+  const { page, requests } = loadDetail()
+  page.refreshCoopPublisherAccess = () => {}
+  const members = [{ memberId: 41 }, { memberId: 42 }]
+  const memberStrip = [{ key: 'member:41', memberId: 41 }]
+  Object.assign(page.data, {
+    clubId: 9,
+    club: { id: 9, isOwner: false, isJoined: true, viewerIsAdmin: false },
+    canSeeMembers: true,
+    members,
+    memberStrip,
+    membersState: 'ready',
+    membersExpanded: true,
+  })
+  let preserved
+  page.loadMembers = () => {
+    preserved = {
+      members: page.data.members,
+      memberStrip: page.data.memberStrip,
+      membersState: page.data.membersState,
+      membersExpanded: page.data.membersExpanded,
+    }
+  }
+  page.loadClubAccess = () => {}
+
+  page.refreshMemberRelationship()
+  const detail = requests.find(request => request.url === '/api/club/detail')
+  detail.success({ code: '200', data: { id: 9, isOwner: false, isJoined: true, viewerIsAdmin: false } })
+
+  assert.equal(page.data.canSeeMembers, true)
+  assert.equal(preserved.members, members, '仍有成员权限时不得先清掉已知名单')
+  assert.equal(preserved.memberStrip, memberStrip, '仍有成员权限时不得先清掉成员头像条')
+  assert.equal(preserved.membersState, 'ready')
+  assert.equal(preserved.membersExpanded, true)
+})
+
+test('普通成员返页关系刷新失败保留已知状态，且不接收刷新前的迟到名单', () => {
+  const { page, requests } = loadDetail()
+  page.refreshCoopPublisherAccess = () => {}
+  Object.assign(page.data, {
+    clubId: 9,
+    club: { id: 9, isOwner: false, isJoined: true, viewerIsAdmin: false },
+    canSeeMembers: true,
+    canUseManageTab: false,
+  })
+
+  page.loadMembers()
+  const staleMembers = requests.find(request => request.url === '/api/club/members')
+  Object.assign(page.data, {
+    members: [{ memberId: 41 }],
+    memberStrip: [{ key: 'member:41', memberId: 41 }],
+    membersState: 'ready',
+  })
+  page._hasShown = true
+  page.onShow()
+  const detail = requests.find(request => request.url === '/api/club/detail')
+  detail.fail({ errMsg: 'request:fail offline' })
+
+  assert.equal(page.data.canSeeMembers, true, '网络未知不能伪装成成员失权')
+  assert.equal(page.data.notFound, false, '后台刷新失败不能把已打开详情改成不存在')
+  assert.deepEqual(Array.from(page.data.members, member => member.memberId), [41])
+
+  staleMembers.success({ code: '200', data: [{ memberId: 99 }] })
+  assert.deepEqual(Array.from(page.data.members, member => member.memberId), [41],
+    '关系刷新开始前的迟到名单不得补进页面')
+})
+
+test('普通成员返页收到仅成员可见业务拒绝时立即清旧名单并撤销 access', () => {
+  const { page, requests } = loadDetail()
+  page.refreshCoopPublisherAccess = () => {}
+  Object.assign(page.data, {
+    clubId: 9,
+    club: { id: 9, isOwner: false, isJoined: true, viewerIsAdmin: false },
+    canSeeMembers: true,
+    canReadMembers: true,
+    canApproveMembers: true,
+    canManageMembers: true,
+    clubAccessState: 'ready',
+  })
+
+  page.loadMembers()
+  const staleMembers = requests.find(request => request.url === '/api/club/members')
+  Object.assign(page.data, {
+    members: [{ memberId: 41 }],
+    memberStrip: [{ key: 'member:41', memberId: 41 }],
+    membersState: 'ready',
+  })
+  page._hasShown = true
+  page.onShow()
+  const detail = requests.find(request => request.url === '/api/club/detail')
+  detail.success({ code: 500, msg: '这个俱乐部只对成员开放' })
+
+  assert.equal(page.data.club, null)
+  assert.equal(page.data.canSeeMembers, false)
+  assert.deepEqual(Array.from(page.data.members), [])
+  assert.deepEqual(Array.from(page.data.memberStrip), [])
+  assert.equal(page.data.membersState, 'idle')
+  assert.equal(page._clubAccessState, 'idle')
+  assert.equal(page.data.canReadMembers, false)
+  assert.equal(page.data.canApproveMembers, false)
+  assert.equal(page.data.canManageMembers, false)
+  assert.equal(requests.filter(request => request.url === '/api/club/members').length, 1,
+    '业务拒绝不得再发成员名单请求')
+
+  staleMembers.success({ code: '200', data: [{ memberId: 99 }] })
+  assert.deepEqual(Array.from(page.data.members), [],
+    '业务拒绝后，关系刷新前的迟到名单不得补回')
+})
+
+test('较早的详情关系响应迟到时不能覆盖较新的失权结果', () => {
+  const { page, requests } = loadDetail()
+  page.refreshCoopPublisherAccess = () => {}
+  Object.assign(page.data, {
+    clubId: 9,
+    club: { id: 9, isOwner: false, isJoined: true, viewerIsAdmin: false },
+    canSeeMembers: true,
+    members: [{ memberId: 41 }],
+    memberStrip: [{ key: 'member:41', memberId: 41 }],
+    membersState: 'ready',
+  })
+
+  page.refreshMemberRelationship()
+  page.refreshMemberRelationship()
+  const details = requests.filter(request => request.url === '/api/club/detail')
+  details[1].success({ code: '200', data: { id: 9, isOwner: false, isJoined: false, viewerIsAdmin: false } })
+  details[0].success({ code: '200', data: { id: 9, isOwner: false, isJoined: true, viewerIsAdmin: false } })
+
+  assert.equal(page.data.canSeeMembers, false)
+  assert.equal(page.data.club.isJoined, false)
+  assert.deepEqual(Array.from(page.data.members), [])
+  assert.equal(requests.some(request => request.url === '/api/club/members'), false,
+    '迟到的旧关系成功响应不得重新触发名单读取')
 })
 
 test('公开帖子的游客空态只限制发布，不得误写为不可查看', () => {

@@ -185,6 +185,15 @@ public class ApiClubController extends BaseController {
     private IWxContentSecurityService wxContentSecurityService;
 
     @Autowired
+    private com.chengyinhub.business.service.support.AppMediaReferenceGuard mediaReferences;
+
+    private String reviewedMedia(Long memberId, String reference, boolean multiple) {
+        if (reference == null || reference.trim().isEmpty()) return reference;
+        return multiple ? mediaReferences.requireAttachments(memberId, reference, true)
+                : mediaReferences.requireAttachment(memberId, reference, true);
+    }
+
+    @Autowired
     private IImService imService;
 
     @Autowired
@@ -342,8 +351,8 @@ public class ApiClubController extends BaseController {
         Club club = new Club();
         club.setMemberId(memberId);
         club.setName(body.getName());
-        club.setLogo(body.getLogo());
-        club.setCover(body.getCover());
+        club.setLogo(reviewedMedia(memberId, body.getLogo(), false));
+        club.setCover(reviewedMedia(memberId, body.getCover(), false));
         club.setDescription(body.getDescription());
         club.setClubType(body.getClubType());
         club.setClubTypes(body.getClubTypes());
@@ -352,7 +361,7 @@ public class ApiClubController extends BaseController {
         club.setKeywords(body.getKeywords());
         club.setStyle(body.getStyle());
         club.setJoinReason(body.getJoinReason());
-        club.setCaseImages(body.getCaseImages());
+        club.setCaseImages(reviewedMedia(memberId, body.getCaseImages(), true));
         club.setCategoryId(body.getCategoryId());
         club.setAddress(body.getAddress());
         club.setLeaderName(body.getLeaderName());
@@ -425,6 +434,10 @@ public class ApiClubController extends BaseController {
         Long memberId;
         try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
         if (body == null) return error("请填写主理人资料");
+        // F-L5C-02:主理人名展示在俱乐部列表/详情,身份与经历给成员看,写入前送检。
+        String leaderRisk = wxContentSecurityService.checkText(IWxContentSecurityService.joinText(
+                body.getLeaderName(), body.getIdentity(), body.getCoFounders(), body.getExperience()), openidOf(memberId));
+        if (leaderRisk != null) return error(leaderRisk);
         // 创建身份不代表收费；实名在收费发布入口检查。
         ClubLeader profile = leaderProfilePatch(body);
         try {
@@ -494,8 +507,8 @@ public class ApiClubController extends BaseController {
         if (secMsg != null) return error(secMsg);
         // 仅白名单字段可改;status / memberId / memberCount / level 不允许前端篡改
         club.setName(body.getName());
-        club.setLogo(body.getLogo());
-        club.setCover(body.getCover());
+        club.setLogo(reviewedMedia(memberId, body.getLogo(), false));
+        club.setCover(reviewedMedia(memberId, body.getCover(), false));
         club.setDescription(body.getDescription());
         club.setClubType(body.getClubType());
         club.setClubTypes(body.getClubTypes());
@@ -594,6 +607,7 @@ public class ApiClubController extends BaseController {
         club.setViewerIsAdmin(false);
         club.setViewerIdentityUnavailable(false);
         club.setIsOwner(false);
+        club.setMyJoinReviewReason("");
         try {
             Long memberId = currentMemberId();
             boolean owner = OwnershipUtils.isOwner(club.getMemberId(), memberId);
@@ -603,6 +617,8 @@ public class ApiClubController extends BaseController {
                 boolean activeMember = membership != null && Integer.valueOf(1).equals(membership.getStatus());
                 club.setIsJoined(activeMember);
                 club.setMyJoinStatus(membership == null ? null : membership.getStatus());
+                club.setMyJoinReviewReason(membership != null && Integer.valueOf(2).equals(membership.getStatus())
+                        ? membership.getReviewReason() : "");
                 club.setViewerIsAdmin(activeMember && Integer.valueOf(1).equals(membership.getRole()));
                 // 待审条数跟着「谁能审」走,不是跟着「谁是主理人」走:管理员点进去办得了,
                 // 却永远看到 0 条,等于这个红点对他不存在。
@@ -727,6 +743,9 @@ public class ApiClubController extends BaseController {
         if (club == null || club.getStatus() == null || club.getStatus() != 1L) {
             return error("俱乐部不存在或未开放");
         }
+        // F-L5C-02:入会申请留言给主理人看,写入前送检。
+        String joinRisk = wxContentSecurityService.checkText(body.getJoinMessage(), openidOf(memberId));
+        if (joinRisk != null) return error(joinRisk);
         try {
             // 稿 P3 30:2:申请人写的那句话。前端限 60 字,服务端仍按列宽 200 截断兜底。
             String state = clubMemberService.requestJoin(club.getId(), memberId, body.getJoinMessage());
@@ -853,9 +872,15 @@ public class ApiClubController extends BaseController {
     private AjaxResult reviewJoinRequest(ClubMember body, boolean approve) {
         Long ownerId;
         try { ownerId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body.getClubId() == null || body.getMemberId() == null) return error("缺少俱乐部或申请人ID");
+        if (body == null || body.getClubId() == null || body.getMemberId() == null) return error("缺少俱乐部或申请人ID");
+        String why = body.getReviewReason() == null ? "" : body.getReviewReason().trim();
+        if (why.length() > 500) return error("审核理由不能超过500字");
+        if (!why.isEmpty()) {
+            String risk = wxContentSecurityService.checkText(why, openidOf(ownerId));
+            if (risk != null) return error(risk);
+        }
         try {
-            clubMemberService.reviewJoinRequest(body.getClubId(), body.getMemberId(), ownerId, approve);
+            clubMemberService.reviewJoinRequest(body.getClubId(), body.getMemberId(), ownerId, approve, why);
             return success(approve ? "已通过入会申请" : "已拒绝入会申请");
         } catch (IllegalArgumentException e) {
             return error(e.getMessage());
@@ -1095,7 +1120,7 @@ public class ApiClubController extends BaseController {
 
         // 主理人态(身份互斥):商家不可创建;玩家/主理人可建至上限
         ClubLeader leader = clubLeaderService.selectClubLeaderByMemberId(memberId);
-        boolean isClubLeader = leader != null && (leader.getStatus() == null || leader.getStatus() == 1);
+        boolean isClubLeader = capabilityService.hasCapability(memberId, MemberCapability.CAP_CLUB_LEADER);
         boolean merchant = isMerchant(memberId);
         Map<String, Object> leaderStatus = new HashMap<>();
         leaderStatus.put("isClubLeader", isClubLeader);
@@ -1132,7 +1157,7 @@ public class ApiClubController extends BaseController {
         if (club == null) return error("俱乐部不存在");
         boolean isOwner = OwnershipUtils.isOwner(club.getMemberId(), memberId);
         boolean isMember = clubMemberService.selectByClubAndMember(club.getId(), memberId) != null;
-        if (!isOwner && !isMember) return error("加入俱乐部后才能进群聊");
+        if (!isOwner && !isMember) return new AjaxResult(403, "加入俱乐部后才能进群聊");
         // Service 锁住 club 后重查正常成员并自愈群成员，不能信任锁外收集的旧名单。
         Long convId = imService.getOrCreateClubGroup(club.getId(), memberId);
         Map<String, Object> d = new HashMap<>();
@@ -1155,11 +1180,14 @@ public class ApiClubController extends BaseController {
         // 前者判「是不是这个俱乐部的主人」,后者判「这个身份解锁了勋章设计没有」。
         String medalCapErr = capabilityGuard.checkDesignMedal(memberId);
         if (medalCapErr != null) return error(medalCapErr);
+        String badgeDesc = badgeStr(body.get("badgeDesc"));
+        String risk = wxContentSecurityService.checkText(name + "\n" + (badgeDesc == null ? "" : badgeDesc), openidOf(memberId));
+        if (risk != null) return error(risk);
         GrowthBadge gb = new GrowthBadge();
         gb.setClubId(clubId);
         gb.setBadgeCode("CLUB" + clubId + "_" + System.currentTimeMillis());
         gb.setBadgeName(name.length() > 120 ? name.substring(0, 120) : name);
-        gb.setIconUrl(badgeStr(body.get("iconUrl")));
+        gb.setIconUrl(reviewedMedia(memberId, badgeStr(body.get("iconUrl")), false));
         gb.setBadgeDesc(badgeStr(body.get("badgeDesc")));
         gb.setStatus("0");
         gb.setSortNo(0);
@@ -1214,7 +1242,9 @@ public class ApiClubController extends BaseController {
     @PostMapping("/topics")
     public AjaxResult topics(@RequestBody Club body) {
         if (body.getId() == null) return error("缺少俱乐部ID");
-        if (clubService.selectClubById(body.getId()) == null) return error("俱乐部不存在");
+        Club club = clubService.selectClubById(body.getId());
+        if (club == null) return error("俱乐部不存在");
+        if (!canViewClub(club)) return error("这个俱乐部只对成员开放");
         CmsTopic probe = new CmsTopic();
         probe.setClubId(body.getId());
         // 这个端点不要求登录(游客也能看俱乐部主页),拿不到人就当非成员 —— fail-closed。
@@ -1496,20 +1526,19 @@ public class ApiClubController extends BaseController {
     private String sessionLabel(CmsActivity session) {
         java.util.Date start = session.getStartDate();
         if (start == null) return null;
-        String date = new java.text.SimpleDateFormat("M月d日").format(start);
-        java.util.Calendar cal = java.util.Calendar.getInstance();
-        cal.setTime(start);
-        int hour = cal.get(java.util.Calendar.HOUR_OF_DAY);
-        int minute = cal.get(java.util.Calendar.MINUTE);
-        if (hour == 0 && minute == 0) return date;
-        return date + " " + new java.text.SimpleDateFormat("HH:mm").format(start);
+        java.time.ZonedDateTime local = java.time.Instant.ofEpochMilli(start.getTime())
+                .atZone(java.time.ZoneId.of("Asia/Shanghai"));
+        String pattern = local.getHour() == 0 && local.getMinute() == 0 ? "M月d日" : "M月d日 HH:mm";
+        return local.format(java.time.format.DateTimeFormatter.ofPattern(pattern));
     }
 
     @Operation(summary = "俱乐部动态列表(公开)")
     @PostMapping("/post/list")
     public AjaxResult postList(@RequestBody ClubPost body) {
         if (body.getClubId() == null) return error("缺少俱乐部ID");
-        if (clubService.selectClubById(body.getClubId()) == null) return error("俱乐部不存在");
+        Club club = clubService.selectClubById(body.getClubId());
+        if (club == null) return error("俱乐部不存在");
+        if (!canViewClub(club)) return error("这个俱乐部只对成员开放");
         ClubPost q = new ClubPost();
         q.setClubId(body.getClubId());
         List<ClubPost> posts = clubPostService.selectClubPostList(q);
@@ -1643,7 +1672,12 @@ public class ApiClubController extends BaseController {
         try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
         if (body.getPostId() == null) return error("缺少动态ID");
         ClubPost targetPost = clubPostService.selectClubPostById(body.getPostId());
-        if (targetPost == null || clubService.selectClubByIdForUpdate(targetPost.getClubId()) == null) {
+        if (targetPost == null || Integer.valueOf(2).equals(targetPost.getDelFlag())
+                || clubService.selectClubByIdForUpdate(targetPost.getClubId()) == null) {
+            return error("动态不存在");
+        }
+        targetPost = clubPostService.selectClubPostByIdForUpdate(body.getPostId());
+        if (targetPost == null || Integer.valueOf(2).equals(targetPost.getDelFlag())) {
             return error("动态不存在");
         }
         boolean liked;
@@ -1765,7 +1799,7 @@ public class ApiClubController extends BaseController {
         post.setClubId(body.getClubId());
         post.setAuthorMemberId(memberId);
         post.setContent(body.getContent());
-        post.setImages(body.getImages());
+        post.setImages(reviewedMedia(memberId, body.getImages(), true));
         post.setRefType(refType);
         post.setRefId(refId);
         post.setType(body.getType() != null ? body.getType() : 0);
@@ -1792,7 +1826,7 @@ public class ApiClubController extends BaseController {
         if (secMsg != null) return error(secMsg);
         try {
             ClubPostUpdateResult result = clubPostService.updatePost(memberId, body.getId(), body.getContent(),
-                    body.getImages(), body.getVersion(), body.getRequestId());
+                    reviewedMedia(memberId, body.getImages(), true), body.getVersion(), body.getRequestId());
             ClubPost updated = result.getPost();
             return AjaxResult.success("已更新", updated);
         } catch (ServiceException e) {
@@ -1846,7 +1880,7 @@ public class ApiClubController extends BaseController {
         if (body.getPostId() == null) return error("缺少动态ID");
         if (StringUtils.isEmpty(body.getContent())) return error("评论内容不能为空");
         ClubPost post = clubPostService.selectClubPostById(body.getPostId());
-        if (post == null) return error("动态不存在");
+        if (post == null || Integer.valueOf(2).equals(post.getDelFlag())) return error("动态不存在");
         try {
             clubParticipationGuard.requireAllowed(post.getClubId(), memberId);
         } catch (ServiceException e) {
@@ -1856,6 +1890,8 @@ public class ApiClubController extends BaseController {
         if (secMsg != null) return error(secMsg);
         Club club = clubService.selectClubByIdForUpdate(post.getClubId());
         if (club == null) return error("俱乐部不存在或已解散");
+        post = clubPostService.selectClubPostByIdForUpdate(body.getPostId());
+        if (post == null || Integer.valueOf(2).equals(post.getDelFlag())) return error("动态不存在");
         boolean isOwner = OwnershipUtils.isOwner(club.getMemberId(), memberId);
         boolean isMember = clubMemberService.selectByClubAndMember(post.getClubId(), memberId) != null;
         if (!isOwner && !isMember) return error("加入俱乐部后才能评论");

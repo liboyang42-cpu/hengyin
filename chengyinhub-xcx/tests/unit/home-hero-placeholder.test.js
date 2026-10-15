@@ -30,9 +30,10 @@ test('首页行动 Banner 使用真实本地位图海报，不回退到旧随机
   });
 });
 
-test('首页开发预览 mock 列表不再把旧路线封面喂给下方卡片', () => {
-  const mockBlock = source.match(/function buildIndexUiMock\(\) \{([\s\S]*?)\n\}\n\nPage\(/);
-  assert.ok(mockBlock, 'buildIndexUiMock must remain the preview data source');
+test('首页设计fixture封面保留为占位资产，生产首页没有自动mock链', () => {
+  assert.doesNotMatch(source, /buildIndexUiMock|_applyIndexUiMock/);
+  const mockBlock = fs.readFileSync(path.join(__dirname, '../fixtures/home-design-preview-source.txt'), 'utf8').match(/function buildIndexUiMock\(\) \{([\s\S]*?)\n\}\n\nPage\(/);
+  assert.ok(mockBlock, 'Retained design fixture must remain separate from the runtime page');
   assert.doesNotMatch(mockBlock[1], /route_city_cover\.png|route_free_cover\.png/);
   assert.match(mockBlock[1], /home-route-city-placeholder\.jpg/);
   assert.match(mockBlock[1], /home-route-free-placeholder\.jpg/);

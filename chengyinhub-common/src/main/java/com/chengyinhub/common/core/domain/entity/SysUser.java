@@ -2,7 +2,7 @@ package com.chengyinhub.common.core.domain.entity;
 
 import java.util.Date;
 import java.util.List;
-import javax.validation.constraints.*;
+import jakarta.validation.constraints.*;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import com.chengyinhub.common.annotation.Excel;
@@ -53,6 +53,7 @@ public class SysUser extends BaseEntity
     private String avatar;
 
     /** 密码 */
+    @com.alibaba.fastjson2.annotation.JSONField(serializeFeatures = com.alibaba.fastjson2.JSONWriter.Feature.FieldBased)
     private String password;
 
     /** 账号状态（0正常 1停用） */
@@ -200,6 +201,7 @@ public class SysUser extends BaseEntity
         this.avatar = avatar;
     }
 
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
     public String getPassword()
     {
         return password;
@@ -321,7 +323,6 @@ public class SysUser extends BaseEntity
             .append("phonenumber", getPhonenumber())
             .append("sex", getSex())
             .append("avatar", getAvatar())
-            .append("password", getPassword())
             .append("status", getStatus())
             .append("delFlag", getDelFlag())
             .append("loginIp", getLoginIp())

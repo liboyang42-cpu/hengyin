@@ -40,7 +40,7 @@ function assertMyCanyuInfoStates(rawWxml) {
   // 整屏无按钮(受控截图 05)。现在钉「动作槽由状态驱动」,具体分档行为由
   // c04-r2-recovery-path-contract.test.js 行为级断言。
   // 总控根因修复轮:补了 fill(整屏居中吃满剩余空间),标签末尾跟在 bind:retry 后面
-  assert.match(wxml, /<cy-error\s+wx:elif="\{\{loadState === 'error'\}\}"[^>]*retry="\{\{errorActionText\}\}"[^>]*bind:retry="onErrorAction"[^>]*\/>/)
+  assert.match(wxml, /<cy-error load-failure\s+wx:elif="\{\{loadState === 'error'\}\}"[^>]*retry="\{\{errorActionText\}\}"[^>]*bind:retry="onErrorAction"[^>]*\/>/)
   assert.doesNotMatch(wxml, /retry="\{\{id \? '重试' : ''\}\}"/, '缺参数时不得退回空动作槽')
   assert.match(wxml, /<block\s+wx:else>/, 'ready 态必须与 loading/error 互斥')
 }

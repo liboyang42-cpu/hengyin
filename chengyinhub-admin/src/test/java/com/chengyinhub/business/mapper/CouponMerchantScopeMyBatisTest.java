@@ -60,6 +60,34 @@ class CouponMerchantScopeMyBatisTest {
                     "A 店员工不能选择同 owner 的 B 店券");
             assertEquals(otherMerchant.getId(),
                     mapper.selectOwnedActiveCoupon(9001L, 12L, otherMerchant.getId()).getId());
+
+            SmsCoupon query = new SmsCoupon();
+            query.setMemberId(9001L);
+            query.setScopeType(1);
+            query.setMerchantId(11L);
+            query.setDelFlag(0);
+            query.getParams().put("issuableOnly", true);
+            assertEquals(merchant.getId(), mapper.selectSmsCouponList(query).get(0).getId());
+            for (String unavailable : new String[] {
+                    "receive_count=10", "receive_count=11", "status=4", "del_flag=1",
+                    "start_time=DATEADD('DAY',1,CURRENT_TIMESTAMP)",
+                    "enable_time=DATEADD('DAY',1,CURRENT_TIMESTAMP)",
+                    "end_time=DATEADD('DAY',-1,CURRENT_TIMESTAMP)"}) {
+                jdbc.update("update sms_coupon set receive_count=0,status=1,del_flag=0,"
+                        + "start_time=null,enable_time=null,end_time=null where id=?", merchant.getId());
+                jdbc.update("update sms_coupon set " + unavailable + " where id=?", merchant.getId());
+                session.clearCache();
+                assertEquals(0, mapper.selectSmsCouponList(query).size(), unavailable);
+                assertEquals(0, mapper.selectOwnedActiveCoupons(9001L, 11L, 20).size(), unavailable);
+            }
+            jdbc.update("update sms_coupon set end_time=null,receive_count=10 where id=?", merchant.getId());
+            session.clearCache();
+            query.getParams().clear();
+            assertEquals(1, mapper.selectSmsCouponList(query).size(), "管理列表仍保留耗尽券");
+            query.getParams().put("issuableOnly", true);
+            jdbc.update("update sms_coupon set publish_count=0 where id=?", merchant.getId());
+            session.clearCache();
+            assertEquals(1, mapper.selectSmsCouponList(query).size(), "既有无限库存语义不变");
         }
     }
 

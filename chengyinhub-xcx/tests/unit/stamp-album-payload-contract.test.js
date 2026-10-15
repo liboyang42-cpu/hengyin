@@ -8,7 +8,7 @@ const MODULE = path.join(ROOT, 'subpackageP3/pages/stamp-album/index/index.js')
 
 function loadPage() {
   const sandbox = { requests: [] }
-  global.getApp = () => ({ sendRequest: (options) => sandbox.requests.push(options) })
+  global.getApp = () => ({ getUserID: () => 7, sendRequest: (options) => sandbox.requests.push(options) })
   global.wx = { navigateTo() {} }
   global.Page = (config) => { sandbox.def = config }
   delete require.cache[require.resolve(MODULE)]

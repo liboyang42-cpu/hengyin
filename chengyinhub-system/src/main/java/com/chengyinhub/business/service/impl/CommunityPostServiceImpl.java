@@ -141,7 +141,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     @Transactional
     public Map<String, Object> createDraft(Long memberId, CommunityPostRequests.Upsert request) {
         requirePrincipal(memberId);
-        validateUpsert(memberId, request, false);
+        validateUpsert(memberId, request, false, false);
         CommunityPost post = mapPost(memberId, request);
         String fingerprint = upsertFingerprint(post, request);
         Map<String, Object> receipt = mapper.selectCommandReceipt(memberId, request.getClientRequestId());
@@ -176,8 +176,9 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     @Transactional
     public Map<String, Object> edit(Long memberId, Long postId, CommunityPostRequests.Upsert request) {
         requirePrincipal(memberId);
-        validateUpsert(memberId, request, true);
         CommunityPost current = locked(postId);
+        boolean preserveLegacyLabel = memberId.equals(current.getAuthorId()) && hasLegacyMigrationLabel(current);
+        validateUpsert(memberId, request, true, preserveLegacyLabel);
         if (!CommunityPost.LIFECYCLE_DRAFT.equals(current.getLifecycle())) {
             requireGuidelineAck(memberId, request.getGuidelineVersionId());
         }
@@ -193,6 +194,8 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         replaceRelations(replacement, request, now);
         mapper.upsertSearchDocument(postId, "HIDDEN", now);
         if (CommunityPost.LIFECYCLE_CHECKING.equals(decision.getLifecycle())) {
+            replacement.setVersion(decision.getVersion());
+            replacement.setLifecycle(decision.getLifecycle());
             auditTaskService.submitSafetyHold(AuditTask.BIZ_COMMUNITY_POST, postId, memberId,
                     "EDIT_REVIEW", json(replacement));
         }
@@ -336,6 +339,26 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     }
 
     @Override
+    public List<Map<String, Object>> filterPublicCompletedReferences(Long memberId,
+            List<Map<String, Object>> completed) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        if (memberId == null || memberId <= 0 || completed == null) return result;
+        for (Map<String, Object> row : completed) {
+            if (row == null || !(row.get("dataType") instanceof Number)
+                    || !(row.get("dataId") instanceof Number)) continue;
+            Long type = number(row.get("dataType"));
+            String referenceType = Long.valueOf(1L).equals(type) ? "ACTIVITY"
+                    : Long.valueOf(2L).equals(type) ? "TOPIC" : null;
+            if (referenceType == null) continue;
+            Long referenceId = number(row.get("dataId"));
+            if (referenceId == null || referenceId <= 0) continue;
+            Map<String, Object> snapshot = mapper.selectReferenceSnapshot(referenceType, referenceId, memberId);
+            if (snapshot != null && !snapshot.isEmpty()) result.add(row);
+        }
+        return result;
+    }
+
+    @Override
     public List<Map<String, Object>> referenceOptions(Long memberId, String referenceType, Integer limit) {
         requirePrincipal(memberId);
         String type = upper(referenceType);
@@ -371,6 +394,37 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         result.put("nextCursor", rows.isEmpty() ? null : rows.get(rows.size() - 1).getId());
         result.put("nextCursorScore", rows.isEmpty() ? null : rows.get(rows.size() - 1).getTrendingScore());
         result.put("mode", mode);
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> bookmarks(Long memberId, Long cursor, Integer limit) {
+        return personalPosts(memberId, cursor, limit, true);
+    }
+
+    @Override
+    public Map<String, Object> ownPosts(Long memberId, Long cursor, Integer limit) {
+        return personalPosts(memberId, cursor, limit, false);
+    }
+
+    private Map<String, Object> personalPosts(Long memberId, Long cursor, Integer requestedLimit, boolean bookmarks) {
+        requirePrincipal(memberId);
+        int limit = boundedLimit(requestedLimit);
+        CommunityPostFeedQuery query = new CommunityPostFeedQuery();
+        query.setViewerId(memberId);
+        query.setCursor(cursor);
+        query.setLimit(limit + 1);
+        query.setMode(bookmarks ? "BOOKMARKS" : "OWN_POSTS");
+        List<CommunityPost> rows = bookmarks ? mapper.selectBookmarkedFeed(query) : mapper.selectOwnPosts(query);
+        boolean hasMore = rows.size() > limit;
+        if (hasMore) rows = new ArrayList<>(rows.subList(0, limit));
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (CommunityPost post : rows) items.add(hydrate(post, memberId));
+        Map<String, Object> result = new HashMap<>();
+        result.put("items", items);
+        result.put("hasMore", hasMore);
+        result.put("nextCursor", rows.isEmpty() ? null : rows.get(rows.size() - 1).getId());
+        result.put("mode", query.getMode());
         return result;
     }
 
@@ -529,13 +583,25 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     public Map<String, Object> comments(Long viewerId, Long postId, Long cursor, Integer limit) {
         viewerId = viewerId == null || viewerId < 0 ? 0L : viewerId;
         detail(viewerId, postId);
-        List<Map<String, Object>> rows = mapper.selectComments(postId, viewerId, cursor, boundedLimit(limit));
+        int rootLimit = boundedLimit(limit);
+        List<Map<String, Object>> rows = mapper.selectComments(postId, viewerId, cursor, rootLimit + 1);
+        Long nextCursor = null;
+        int roots = 0;
+        boolean hasMore = false;
+        for (int i = 0; i < rows.size(); i++) {
+            Map<String, Object> row = rows.get(i);
+            if (value(row, "parent_id") == null) {
+                if (++roots > rootLimit) {
+                    rows = new ArrayList<>(rows.subList(0, i));
+                    hasMore = true;
+                    break;
+                }
+                nextCursor = number(value(row, "id"));
+            }
+        }
         Map<String, Object> result = new HashMap<>();
         result.put("items", rows);
-        Long nextCursor = null;
-        for (Map<String, Object> row : rows) {
-            if (value(row, "parent_id") == null) nextCursor = number(value(row, "id"));
-        }
+        result.put("hasMore", hasMore);
         result.put("nextCursor", nextCursor);
         return result;
     }
@@ -1148,7 +1214,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
 
     private void replaceRelations(CommunityPost post, CommunityPostRequests.Upsert request, Date now) {
         List<Long> mediaIds = safe(request.getMediaIds());
-        mapper.detachMedia(post.getId(), post.getAuthorId(), now);
+        mapper.detachMedia(post.getId(), post.getAuthorId(), mediaIds, now);
         for (int i = 0; i < mediaIds.size(); i++) {
             if (mapper.attachMedia(post.getId(), post.getAuthorId(), mediaIds.get(i), i, now) != 1) {
                 throw error("媒体不存在、尚未上传完成或不属于当前用户", 409);
@@ -1255,7 +1321,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         return post;
     }
 
-    private void validateUpsert(Long memberId, CommunityPostRequests.Upsert request, boolean edit) {
+    private void validateUpsert(Long memberId, CommunityPostRequests.Upsert request, boolean edit, boolean preserveLegacyLabel) {
         if (request == null) throw error("缺少帖文参数", 400);
         if (!edit) requireRequestId(request.getClientRequestId());
         else if (blank(request.getClientRequestId())) request.setClientRequestId("edit-not-used");
@@ -1311,9 +1377,17 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         Set<String> uniqueSafetyLabels = new HashSet<>();
         for (String label : safe(request.getSafetyLabels())) {
             String normalized = upper(label);
-            if (!AUTHOR_SAFETY_LABELS.contains(normalized) || !uniqueSafetyLabels.add(normalized)) {
+            if ((!AUTHOR_SAFETY_LABELS.contains(normalized)
+                    && !(preserveLegacyLabel && "LEGACY_MIGRATED".equals(normalized)))
+                    || !uniqueSafetyLabels.add(normalized)) {
                 throw error("帖文安全提示无效", 400);
             }
+        }
+        if (preserveLegacyLabel && !uniqueSafetyLabels.contains("LEGACY_MIGRATED")) {
+            if (uniqueSafetyLabels.size() >= 5) throw error("单帖最多 5 个安全提示", 400);
+            List<String> labels = new ArrayList<>(safe(request.getSafetyLabels()));
+            labels.add("LEGACY_MIGRATED");
+            request.setSafetyLabels(labels);
         }
         if (request.getSlowModeSeconds() != null && (request.getSlowModeSeconds() < 0 || request.getSlowModeSeconds() > 86400)) {
             throw error("慢速模式应为 0-86400 秒", 400);
@@ -1341,6 +1415,9 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         result.put("mentions", viewerIsAuthor
                 ? mapper.selectMentionedMemberIds(post.getId()) : Collections.emptyList());
         result.put("viewerIsAuthor", viewerIsAuthor);
+        result.put("topicCodes", viewerIsAuthor ? mapper.selectTopicCodes(post.getId()) : Collections.emptyList());
+        result.put("viewerFollowing", positive(viewerId) && !viewerIsAuthor
+                && mapper.countFollow(viewerId, post.getAuthorId()) > 0);
         boolean viewerCanComment = false;
         if (positive(viewerId)) {
             boolean follows = false;
@@ -1543,6 +1620,18 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         String normalized = value.trim().toLowerCase();
         return normalized.startsWith("https://") || normalized.startsWith("/");
     }
+    private boolean hasLegacyMigrationLabel(CommunityPost post) {
+        if (blank(post.getSafetyLabelsJson())) return false;
+        try {
+            for (String label : JsonUtils.getObjectMapper().readValue(post.getSafetyLabelsJson(), String[].class)) {
+                if ("LEGACY_MIGRATED".equals(label)) return true;
+            }
+            return false;
+        } catch (Exception ignored) {
+            throw error("原帖安全标签无法读取，请刷新后重试", 409);
+        }
+    }
+
     private static boolean jsonObject(String value) {
         try {
             return JsonUtils.getObjectMapper().readTree(value).isObject();

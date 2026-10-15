@@ -314,7 +314,7 @@ function loadCouponPage() {
   const pagePath = path.join(ROOT, 'subpackageMember/coupon/coupon.js');
   const previous = { Page: global.Page, getApp: global.getApp, wx: global.wx };
   const requests = [];
-  global.getApp = () => ({ sendRequest(options) { requests.push(options); } });
+  global.getApp = () => ({ getUserID: () => 42, sendRequest(options) { requests.push(options); } });
   global.wx = {};
   let definition;
   global.Page = (config) => { definition = config; };

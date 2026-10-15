@@ -176,6 +176,10 @@ class DoublePaymentReproductionTest {
         when(transactionManager.getTransaction(any())).thenReturn(mock(TransactionStatus.class));
         CoopComplaintMapper complaintMapper = mock(CoopComplaintMapper.class);
         topicService = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(topicService, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(topicService, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(topicService, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(topicService, "cmsRegistrationMapper", registrationMapper);
         ReflectionTestUtils.setField(topicService, "settlementRuleService", ruleService);

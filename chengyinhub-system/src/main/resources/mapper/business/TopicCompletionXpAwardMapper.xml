@@ -28,4 +28,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         delete from topic_completion_xp_award where member_id = #{memberId} and topic_id = #{topicId}
     </delete>
 
+    <update id="linkEarnedExp">
+        update topic_completion_xp_award set earned_exp_id = #{earnedExpId}
+        where member_id = #{memberId} and topic_id = #{topicId} and earned_exp_id is null
+    </update>
+    <select id="selectEarnedExpId" resultType="java.lang.Long">
+        select earned_exp_id from topic_completion_xp_award
+        where member_id = #{memberId} and topic_id = #{topicId}
+    </select>
+
 </mapper>

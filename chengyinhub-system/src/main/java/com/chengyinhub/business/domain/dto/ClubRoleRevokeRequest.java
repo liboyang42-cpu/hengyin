@@ -1,6 +1,11 @@
 package com.chengyinhub.business.domain.dto;
 
 public class ClubRoleRevokeRequest {
+    @com.fasterxml.jackson.annotation.JsonAnySetter
+    public void rejectUnknownField(String name, Object value) {
+        throw new IllegalArgumentException("角色请求包含不支持的字段");
+    }
+
     private Long clubId;
     private Long activityId;
     private Long assignmentId;

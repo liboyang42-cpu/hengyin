@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.RoamOrphanLocationRetentionMapper">
+ <select id="tiles" resultType="java.util.HashMap" useCache="false">
+  select f.id,f.member_id as memberId,f.session_id as sessionId,f.geohash7 as location from roam_fog_tile f
+  where f.geohash7 is not null
+   and ((f.revealed_at is null and not exists(select 1 from roam_session s where s.id=f.session_id and s.member_id=f.member_id and s.status=0))
+     or (f.revealed_at &lt;= #{cutoff} and not exists(select 1 from roam_session s where s.id=f.session_id and s.member_id=f.member_id)))
+  order by f.id limit #{limit}
+ </select>
+ <select id="pois" resultType="java.util.HashMap" useCache="false">
+  select f.id,f.member_id as memberId,f.session_id as sessionId,f.poi_id as location from roam_poi_found f
+  where f.poi_id is not null
+   and ((f.found_at is null and not exists(select 1 from roam_session s where s.id=f.session_id and s.member_id=f.member_id and s.status=0))
+     or (f.found_at &lt;= #{cutoff} and not exists(select 1 from roam_session s where s.id=f.session_id and s.member_id=f.member_id)))
+  order by f.id limit #{limit}
+ </select>
+ <select id="shops" resultType="java.util.HashMap" useCache="false">
+  select f.id,f.member_id as memberId,f.session_id as sessionId,f.source_type as sourceType,f.source_id as sourceId,concat(f.source_type,':',f.source_id) as location from roam_shop_visit f
+  where f.source_id is not null
+   and ((f.visited_at is null and not exists(select 1 from roam_session s where s.id=f.session_id and s.member_id=f.member_id and s.status=0))
+     or (f.visited_at &lt;= #{cutoff} and not exists(select 1 from roam_session s where s.id=f.session_id and s.member_id=f.member_id)))
+  order by f.source_type,f.source_id,f.member_id,f.id limit #{limit}
+ </select>
+</mapper>

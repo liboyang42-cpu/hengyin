@@ -321,6 +321,31 @@ class AlarmServiceDeliveryTest {
                 "failure webhook 连接失败也应记录日志,不抛异常");
     }
 
+    @Test
+    void failureWebhookBusinessRejection_isNotReportedAsDelivered() {
+        for (String body : List.of("{\"errcode\":93000}", "{\"errcode\":\"93000\"}")) {
+            TransportStub stub = new TransportStub(new int[]{500, 200}, new String[]{"err", body});
+            List<ILoggingEvent> logs = capture(() -> assertEquals(AlarmDelivery.FAILED,
+                    serviceWith(WEBHOOK, FAILURE_WEBHOOK, stub).deliver("t", "d")));
+            assertEquals(2, stub.calls.get(), "备出口拒绝不能递归重发");
+            assertTrue(logs.stream().anyMatch(e -> e.getLevel() == Level.ERROR
+                    && e.getFormattedMessage().contains("独立出口被第三方拒绝")
+                    && e.getFormattedMessage().contains("93000")));
+            assertFalse(logs.stream().anyMatch(e -> e.getFormattedMessage().contains("失败事件已投递")));
+        }
+    }
+
+    @Test
+    void failureWebhookAcceptedBodyRules_matchMainWebhook() {
+        for (String body : new String[]{null, "", "<html>ok</html>", "{\"ok\":true}", "{\"errcode\":0}"}) {
+            TransportStub stub = new TransportStub(new int[]{500, 200}, new String[]{"err", body});
+            List<ILoggingEvent> logs = capture(() -> assertEquals(AlarmDelivery.FAILED,
+                    serviceWith(WEBHOOK, FAILURE_WEBHOOK, stub).deliver("t", "d")));
+            assertEquals(2, stub.calls.get());
+            assertTrue(logs.stream().anyMatch(e -> e.getFormattedMessage().contains("失败事件已投递到独立出口")));
+        }
+    }
+
     // ============================================================
     // 7) 无 failure webhook → 仅主失败日志,不额外调用
     // ============================================================
@@ -613,5 +638,24 @@ class AlarmServiceDeliveryTest {
         assertTrue(content.contains("发\"奖\"失败"), "标题引号必须被正确转义: " + content);
         assertTrue(content.contains("member=1\nnode=2\\x"), "明细换行/反斜杠必须保真: " + content);
         assertEquals("text", payload.getString("msgtype"));
+    }
+
+    @Test
+    void mainAndFailurePayloads_escapeEveryJsonControlCharacter() {
+        StringBuilder controls = new StringBuilder();
+        for (char character = 0; character < 32; character++) controls.append(character);
+        String title = "异常\"\\" + controls;
+        String detail = "明细\"\\" + controls;
+        TransportStub stub = new TransportStub(new int[]{500, 200}, new String[]{"err", "{\"errcode\":0}"});
+        assertEquals(AlarmDelivery.FAILED, serviceWith(WEBHOOK, FAILURE_WEBHOOK, stub).deliver(title, detail));
+        assertEquals(2, stub.calls.get());
+        for (String body : stub.bodies) {
+            assertFalse(body.chars().anyMatch(character -> character < 32), "JSON 字符串内不能含原始控制字符");
+            assertEquals("text", JSON.parseObject(body).getString("msgtype"));
+        }
+        assertEquals("[城瘾告警] " + title + "\n" + detail,
+                JSON.parseObject(stub.bodies.get(0)).getJSONObject("text").getString("content"));
+        assertEquals("[城瘾告警投递失败] " + title + "\n主 webhook 投递失败,请检查告警通道",
+                JSON.parseObject(stub.bodies.get(1)).getJSONObject("text").getString("content"));
     }
 }

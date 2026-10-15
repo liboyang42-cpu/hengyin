@@ -255,9 +255,13 @@
     <!-- 核销流水对话框:含已撤销行(何时/因何被撤读得回来);撤销按钮是平台侧唯一纠错入口 -->
     <el-dialog title="核销记录" :visible.sync="redeemOpen" width="760px" append-to-body>
       <div class="redeem-hint">
-        本票的核销流水(探索票按章核销)。整单核销的活动票不会出现在这里 —— 它走退款/取消流程。
+        本票的核销流水(探索票按章核销)。整单核销的活动票没有按章流水,可用下方「撤销整单核销」恢复为未核销。
         撤销会回补商家配额、退回玩家权益、冲正平台应付,并留痕(操作人/原因/时间)。
       </div>
+      <el-button v-if="canReverseWholeOrder" type="danger" size="mini" :disabled="reverseSubmitting"
+        v-hasPermi="['business:registration:reverseRedeem']" @click="handleReverseWholeOrder">撤销整单核销</el-button>
+      <el-button v-if="canReverseParentOrder" type="danger" size="mini" :disabled="reverseSubmitting"
+        v-hasPermi="['business:registration:reverseRedeem']" @click="handleReverseParentOrder">撤销本父订单全部生效核销</el-button>
       <el-table v-loading="redeemLoading" :data="redeemList" size="mini" empty-text="该票没有按章核销流水">
         <el-table-column label="流水ID" prop="id" width="80" />
         <el-table-column label="章节ID" width="80">
@@ -297,7 +301,9 @@
     </el-dialog>
 
     <!-- 撤销核销确认:原因必填留痕。第二轮拍板第 4 条:可勾选同时冲回这次核销发出的积分和经验 -->
-    <el-dialog title="撤销核销" :visible.sync="reverseOpen" width="480px" append-to-body :close-on-click-modal="false">
+    <el-dialog :title="reverseWholeOrderId ? '撤销整单核销' : (reverseParentOrderNo ? '撤销父订单全部核销' : '撤销核销')" :visible.sync="reverseOpen" width="480px" append-to-body :close-on-click-modal="false">
+      <p v-if="reverseParentOrderNo">逐章撤销此父订单全部生效核销；任一失败都不会提交。请核对原订单及撤销原因。</p>
+      <p v-if="reverseWholeOrderId">把这张活动票恢复为未核销(票款入账不变);活动已结算或主题票请走人工售后。</p>
       <el-input
         v-model="reverseForm.reason"
         type="textarea"
@@ -434,7 +440,7 @@
 </template>
 
 <script>
-import { listRegistration, getRegistration, delRegistration, addRegistration, updateRegistration, listRegistrationRedemptions, reverseRedemption } from "@/api/business/registration"
+import { listRegistration, getRegistration, delRegistration, addRegistration, updateRegistration, listRegistrationRedemptions, reverseRedemption, reverseParentOrderRedemptions, reverseWholeOrderVerification } from "@/api/business/registration"
 import { addRefund } from "@/api/business/refund"
 import auth from '@/plugins/auth'
 import CyPageHeader from '@/components/CyPageHeader'
@@ -501,6 +507,11 @@ export default {
       redeemOpen: false,
       redeemLoading: false,
       redeemRegistrationId: null,
+      redeemParentOrderNo: '',
+      reverseParentOrderNo: '',
+      // 当前打开的行是否为可撤销的整单核销活动票(owner_type=2、已核销、非③)
+      redeemWholeOrderRow: false,
+      reverseWholeOrderId: null,
       redeemList: [],
       // 撤销核销提交中
       reverseSubmitting: false,
@@ -591,6 +602,16 @@ export default {
   computed: {
     canViewPii() {
       return auth.hasRole('admin')
+    },
+    // 整单核销的活动票只有在流水读完且没有生效的按章核销时才走整单撤销;有按章流水的逐条撤销。
+    canReverseWholeOrder() {
+      return this.redeemWholeOrderRow && !this.redeemLoading
+        && !(this.redeemList || []).some(row => row && row.status === 'ACTIVE')
+    },
+    // 父订单批量撤销只撤按章流水:本票没有生效的按章核销(整单核销票)时不出现,与整单撤销互斥。
+    canReverseParentOrder() {
+      return !!this.redeemParentOrderNo && !this.redeemLoading
+        && (this.redeemList || []).some(row => row && row.status === 'ACTIVE')
     }
   },
   created() {
@@ -718,6 +739,9 @@ export default {
     /** 打开核销流水弹窗(含已撤销行,撤销留痕读得回来) */
     handleRedeemRecords(row) {
       this.redeemRegistrationId = row.id
+      this.redeemParentOrderNo = row.parentOrderNo || ''
+      this.redeemWholeOrderRow = Number(row.ownerType) === 2 && Number(row.verificationStatus) === 1
+        && Number(row.purchaseKind) !== 3
       this.redeemList = []
       this.redeemOpen = true
       this.loadRedemptions()
@@ -738,7 +762,23 @@ export default {
      */
     handleReverseRedeem(row) {
       if (this.reverseSubmitting) return
+      this.reverseParentOrderNo = ''
+      this.reverseWholeOrderId = null
       this.reverseForm = { redemptionId: row.id, reason: '', clawbackRewards: false }
+      this.reverseOpen = true
+    },
+    handleReverseParentOrder() {
+      if (this.reverseSubmitting || !this.canReverseParentOrder) return
+      this.reverseParentOrderNo = this.redeemParentOrderNo
+      this.reverseWholeOrderId = null
+      this.reverseForm = { redemptionId: null, reason: '', clawbackRewards: false }
+      this.reverseOpen = true
+    },
+    handleReverseWholeOrder() {
+      if (this.reverseSubmitting || !this.canReverseWholeOrder) return
+      this.reverseParentOrderNo = ''
+      this.reverseWholeOrderId = this.redeemRegistrationId
+      this.reverseForm = { redemptionId: null, reason: '', clawbackRewards: false }
       this.reverseOpen = true
     },
     submitReverseRedeem() {
@@ -749,11 +789,23 @@ export default {
         return Promise.resolve()
       }
       this.reverseSubmitting = true
-      return reverseRedemption({
-        redemptionId: this.reverseForm.redemptionId,
-        reason,
-        clawbackRewards: this.reverseForm.clawbackRewards === true
-      }).then(() => {
+      if (this.reverseWholeOrderId) {
+        const clawbackRewards = this.reverseForm.clawbackRewards === true
+        return reverseWholeOrderVerification({ registrationId: this.reverseWholeOrderId, reason, clawbackRewards }).then(() => {
+          this.reverseOpen = false
+          this.redeemWholeOrderRow = false
+          this.$modal.msgSuccess(clawbackRewards ? "已撤销整单核销,到店积分和经验已冲回(明细见审计)" : "已撤销整单核销")
+          this.loadRedemptions()
+          this.getList()
+        }).catch(() => {}).finally(() => {
+          this.reverseSubmitting = false
+        })
+      }
+      const payload = { reason, clawbackRewards: this.reverseForm.clawbackRewards === true }
+      const reverse = this.reverseParentOrderNo ? reverseParentOrderRedemptions : reverseRedemption
+      if (this.reverseParentOrderNo) payload.parentOrderNo = this.reverseParentOrderNo
+      else payload.redemptionId = this.reverseForm.redemptionId
+      return reverse(payload).then(() => {
         this.reverseOpen = false
         // 票上还有其他生效核销/主题仍通关时服务端不冲回,不能笼统说「已冲回」;明细在审计里
         this.$modal.msgSuccess(this.reverseForm.clawbackRewards ? "已撤销,符合条件的积分和经验已冲回(明细见审计)" : "已撤销")

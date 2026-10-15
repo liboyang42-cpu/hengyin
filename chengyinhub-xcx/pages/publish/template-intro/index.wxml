@@ -26,7 +26,7 @@
     <cy-skeleton type="card" count="3" />
   </view>
   <view class="ti-stage ti-stage--state" wx:elif="{{cardsError}}">
-    <cy-inline-error title="精选示例暂未加载" sub="{{cardsError}}" action="重试" bind:action="loadCards" />
+    <cy-inline-error load-failure title="精选示例暂未加载" sub="{{cardsError}}" action="重试" bind:action="loadCards" />
   </view>
   <view class="ti-stage ti-stage--state ti-stage--empty" wx:else>
     暂时没有精选示例，你仍可直接创建自己的节点玩法。
@@ -38,7 +38,7 @@
   </view>
 
   <view class="ti-cta">
-    <cy-inline-error wx:if="{{navigationError}}" title="创建页面没有打开" sub="{{navigationError}}" action="重试" bind:action="goCreate" />
+    <cy-inline-error load-failure wx:if="{{navigationError}}" title="创建页面没有打开" sub="{{navigationError}}" action="重试" bind:action="goCreate" />
     <cy-btn variant="primary" style="width:100%" loading="{{navigating}}" disabled="{{navigating}}" bindtap="goCreate">开始创建</cy-btn>
   </view>
 </view>

@@ -25,6 +25,8 @@ class ApiCoopRefundAlertTest {
             when(service.selectCoopInviteById(8L)).thenReturn(invite);
             doReturn(200L).when(controller).getAppUserId();
             ReflectionTestUtils.setField(controller,"coopInviteService",service);
+        ReflectionTestUtils.setField(controller, "umsMemberService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IUmsMemberService.class));
+        ReflectionTestUtils.setField(controller, "wxContentSecurityService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
             ReflectionTestUtils.setField(controller,"wechatPayService",wx);
         }
         AjaxResult retry(){Map<String,Object> body=new HashMap<>();body.put("inviteId",8L);return controller.retryDepositRefund(body);}

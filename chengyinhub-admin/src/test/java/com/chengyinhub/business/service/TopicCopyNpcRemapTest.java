@@ -96,6 +96,11 @@ class TopicCopyNpcRemapTest {
         npcMapper = mock(NpcProfileMapper.class);
 
         service = new CmsTopicServiceImpl();
+
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
@@ -332,4 +337,18 @@ class TopicCopyNpcRemapTest {
         npc.setEnabled(1);
         return npc;
     }
+    @Test void copySameOwnerTemplateWithOnlySysNodeConditionsGetsIndependentRemappedRow() throws Exception {
+        CmsMemberTemplate source=templateMapper.selectCmsMemberTemplateById(SOURCE_TEMPLATE);
+        String original="{\"schemaVersion\":1,\"requires\":[{\"var\":\"sys.passed.101\",\"op\":\"EQ\",\"value\":1}],\"interactionRules\":{\"when\":[{\"var\":\"sys.asked.102.question\",\"op\":\"EQ\",\"value\":1}]}}";
+        source.setAdvancedConfigJson(original);service.copyCmsTopic(SOURCE_TOPIC,copyParams());
+        assertEquals(original,source.getAdvancedConfigJson());assertEquals(COPIED_TEMPLATE,insertedNodes.get(0).getTemplateId());assertEquals(1,updatedTemplates.size());
+        JsonNode copied=JSON.readTree(updatedTemplates.get(0).getAdvancedConfigJson());assertEquals("sys.passed.1101",copied.path("requires").path(0).path("var").asText());assertEquals("sys.asked.1102.question",copied.path("interactionRules").path("when").path(0).path("var").asText());
+    }
+
+    @Test void copyGeneratedVoteToolRemapsItsActualPlanAndProvenanceIdentity() throws Exception {
+        com.fasterxml.jackson.databind.node.ObjectNode theme=(com.fasterxml.jackson.databind.node.ObjectNode)JSON.readTree("{\"schemaVersion\":1,\"gameplayRuntime\":{\"runtimeScope\":\"TEAM\",\"worldMode\":\"WORLD_SHARED\",\"acts\":[{\"actKey\":\"a\",\"questKeys\":[\"one\",\"two\"],\"completionRule\":{\"type\":\"ALL\"}}],\"quests\":[{\"questKey\":\"one\",\"actKey\":\"a\",\"nodeId\":101,\"locationKey\":\"one\",\"settlementSlot\":\"one\"},{\"questKey\":\"two\",\"actKey\":\"a\",\"nodeId\":102,\"locationKey\":\"two\",\"settlementSlot\":\"two\"}]}}");
+        JsonNode config=JSON.readTree("{\"101\":{\"interactionTools\":{\"votePolicy\":\"MAJORITY\",\"plans\":[{\"title\":\"共同行动\",\"materialCost\":[]}]}}}");Map<Long,String> acts=new HashMap<>();acts.put(101L,"a");acts.put(102L,"a");CmsTopic original=topicMapper.selectCmsTopicById(SOURCE_TOPIC);original.setThemeRuntimeConfigJson(com.chengyinhub.business.service.support.GameplayTemplateRules.merge(theme,config,acts).toString());
+        service.copyCmsTopic(SOURCE_TOPIC,copyParams());JsonNode copied=null;for(CmsTopic patch:topicUpdates)if(patch.getThemeRuntimeConfigJson()!=null)copied=JSON.readTree(patch.getThemeRuntimeConfigJson());assertTrue(copied!=null);assertEquals("tpl_vote_1101_1",copied.path("gameplayRuntime").path("plans").path(0).path("endingKey").asText());assertEquals(1101,copied.path("gameplayRuntime").path("plans").path(0).path("operationNodeId").asInt());assertEquals(1101,copied.path("gameplayRuntime").path("templateTools").path("nodes").path(0).path("nodeId").asInt());assertEquals("tpl_vote_1101_1",copied.path("gameplayRuntime").path("templateTools").path("nodes").path(0).path("planKeys").path(0).asText());
+    }
+
 }

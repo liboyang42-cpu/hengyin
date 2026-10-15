@@ -125,7 +125,7 @@ class GlobalExceptionHandlerErrorMappingTest {
     @Test
     void methodNotSupported_leaksNothingTechnical() {
         org.springframework.web.HttpRequestMethodNotSupportedException e =
-                new org.springframework.web.HttpRequestMethodNotSupportedException("GET", new String[]{"POST"});
+                new org.springframework.web.HttpRequestMethodNotSupportedException("GET", java.util.Collections.singletonList("POST"));
         AjaxResult res = handler.handleHttpRequestMethodNotSupported(e, request());
         String msg = msgOf(res);
         assertEquals(false, msg.contains("/api/"), "不得包含请求路径,实际:" + msg);
@@ -153,17 +153,21 @@ class GlobalExceptionHandlerErrorMappingTest {
     }
 
     @Test
-    void negativeControl_withoutDedicatedBranchUploadSizeIsMaskedAsSystemBusy() {
+    void negativeControl_withoutDedicatedBranchUploadSizeLosesActionableContract() {
         org.springframework.web.multipart.MaxUploadSizeExceededException e =
                 new org.springframework.web.multipart.MaxUploadSizeExceededException(10 * 1024 * 1024,
                         new IllegalStateException(
                                 "org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException:"
                                         + " The field file exceeds its maximum permitted size of 10485760 bytes."));
 
-        // 负控:走通用运行时分支(修复前正是这条),大小超限确实会被遮蔽成系统繁忙 —— 证明专用分支才是修复点。
+        // 负控:绕过专用分支仍然丢失 400/10MB/20MB 的可操作契约。
+        // Spring 7 的异常 message 不再拼接 cause；不能用旧框架的偶然文案判断是否走对分支。
         AjaxResult res = handler.handleRuntimeException(e, request());
 
-        assertEquals("系统繁忙，请稍后重试", msgOf(res));
+        assertEquals(Integer.valueOf(HttpStatus.ERROR), res.get("code"));
+        assertFalse(msgOf(res).contains("10MB"));
+        assertFalse(msgOf(res).contains("20MB"));
+        assertFalse(msgOf(res).contains("Exception"));
     }
 
     @Test

@@ -2,12 +2,15 @@ package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.AccountDeregistration;
 import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.domain.MmsMerchant;
 import com.chengyinhub.business.domain.OmsOrder;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.vo.DeregistrationStatusVO;
 import com.chengyinhub.business.mapper.AccountDeregistrationMapper;
 import com.chengyinhub.business.mapper.CmsRegistrationMapper;
 import com.chengyinhub.business.mapper.CommunityPostMapper;
+import com.chengyinhub.business.mapper.ClubMapper;
+import com.chengyinhub.business.mapper.MmsMerchantMapper;
 import com.chengyinhub.business.mapper.OmsOrderMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.service.IAccountDeregistrationService;
@@ -40,6 +43,10 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
     @Autowired
     private UmsMemberMapper memberMapper;
     @Autowired
+    private ClubMapper clubMapper;
+    @Autowired
+    private MmsMerchantMapper merchantMapper;
+    @Autowired
     private OmsOrderMapper orderMapper;
     @Autowired
     private CmsRegistrationMapper registrationMapper;
@@ -65,7 +72,13 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
             return result("BLOCKED", null, Collections.singletonList("账号不存在或已注销"));
         }
         List<String> blockers = collectBlockers(member, memberId);
-        return result(blockers.isEmpty() ? "ELIGIBLE" : "BLOCKED", null, blockers);
+        DeregistrationStatusVO precheck = result(blockers.isEmpty() ? "ELIGIBLE" : "BLOCKED", null, blockers);
+        if ("ELIGIBLE".equals(precheck.getStatus())) {
+            precheck.setVerificationMethod(member.getPhone() != null && !member.getPhone().trim().isEmpty()
+                    ? "SMS" : member.getWxOpenId() != null && !member.getWxOpenId().trim().isEmpty()
+                    ? "WECHAT" : "UNAVAILABLE");
+        }
+        return precheck;
     }
 
     /**
@@ -85,11 +98,20 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
         if (memberWithdrawalService.hasPendingWithdrawal(memberId)) {
             blockers.add("存在待审核的银行提现，请等到账后再申请注销");
         }
-        if ("merchant".equals(member.getRole())) {
+        MmsMerchant ownedMerchant = new MmsMerchant();
+        ownedMerchant.setMemberId(memberId);
+        ownedMerchant.setDelFlag(0);
+        // 默认角色只是当前视角；仍持有经营主体的账号不能注销。
+        if ("merchant".equals(member.getRole())
+                || !merchantMapper.selectMmsMerchantList(ownedMerchant).isEmpty()) {
             blockers.add("持有商家身份，请先处理商家业务");
         }
-        if ("club".equals(member.getRole())) {
+        if ("club".equals(member.getRole())
+                || !clubMapper.selectClubsByMemberId(memberId).isEmpty()) {
             blockers.add("持有俱乐部身份，请先处理俱乐部业务");
+        }
+        if (deregistrationMapper.countUnsettledRefunds(memberId) > 0) {
+            blockers.add("存在处理中的退款，请等到账后再申请注销");
         }
         if (hasActiveOrder(memberId)) {
             blockers.add("存在进行中订单或退款");
@@ -139,11 +161,12 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
         if (latest == null || !"PENDING".equals(latest.getStatus())) {
             throw new IllegalStateException("当前没有可撤销的注销申请");
         }
-        if (latest.getExecuteAfter() != null && !new Date().before(latest.getExecuteAfter())) {
-            throw new IllegalStateException("冷静期已结束，无法撤销");
-        }
+        // 冷静期满到批次真正执行之间仍允许撤销:executeOne 持行锁并只处理 PENDING,
+        // cancelPending 也只改 PENDING,两者互斥;已被批次执行的申请在下面返回 0 并拒绝。
         Date now = new Date();
-        deregistrationMapper.cancelPending(memberId, now);
+        if (deregistrationMapper.cancelPending(memberId, now) == 0) {
+            throw new IllegalStateException("注销申请状态已变化，请刷新后重试");
+        }
         deregistrationMapper.markMemberNormal(memberId);
         return result("CANCELLED", null, new ArrayList<String>());
     }
@@ -178,6 +201,22 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
                     completed++;
                 }
             } catch (Exception e) {
+                try {
+                    tx.execute(status -> {
+                        AccountDeregistration current = deregistrationMapper.selectByIdForUpdate(deregistration.getId());
+                        if (current != null && "PENDING".equals(current.getStatus())) {
+                            if (deregistrationMapper.markFailed(current.getId(),
+                                    "执行异常:" + e.getClass().getSimpleName(), now) != 1) {
+                                throw new IllegalStateException("注销失败状态未确认");
+                            }
+                            deregistrationMapper.markMemberNormal(current.getMemberId());
+                        }
+                        return null;
+                    });
+                } catch (RuntimeException recoveryFailure) {
+                    alarmService.alarm("注销异常解冻失败", "id=" + deregistration.getId()
+                            + " cause=" + recoveryFailure.getClass().getSimpleName());
+                }
                 alarmService.alarm("注销执行异常", "id=" + deregistration.getId() + " member=" + deregistration.getMemberId() + " err=" + safe(e.getMessage()));
             }
         }
@@ -186,16 +225,20 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
 
     /** 单账号注销执行(在独立事务内)。返回 true=已匿名化完成,false=阻断/跳过。 */
     private boolean executeOne(AccountDeregistration deregistration, Date now) {
+        // 批次查询不持锁；进入独立事务后重新确认，避免撤销成功后仍按旧快照匿名化。
+        deregistration = deregistrationMapper.selectByIdForUpdate(deregistration.getId());
+        if (deregistration == null || !"PENDING".equals(deregistration.getStatus())
+                || deregistration.getExecuteAfter() == null || deregistration.getExecuteAfter().after(now)) {
+            return false;
+        }
         Long memberId = deregistration.getMemberId();
         UmsMember member = memberMapper.selectUmsMemberById(memberId);
         if (member == null) {
-            deregistrationMapper.complete(deregistration.getId(), now); // 账号已不存在,直接结案
-            return true;
+            return completeDeregistration(deregistration.getId(), now); // 账号已不存在,直接结案
         }
         // 已注销过(幂等):直接结案
         if (Integer.valueOf(2).equals(member.getDelFlag())) {
-            deregistrationMapper.complete(deregistration.getId(), now);
-            return true;
+            return completeDeregistration(deregistration.getId(), now);
         }
         // ★执行期重校验:冷静期内可能有资金/订单变化
         List<String> blockers = collectBlockers(member, memberId);
@@ -240,14 +283,22 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
             communityPostMapper.deleteAccountMentions(memberId);
             // ★清发布者实名登记(姓名+身份证号):注销后人已经不是人了,这行密文没有留存理由
             deregistrationMapper.deleteMemberIdentity(memberId);
+            deregistrationMapper.deleteMemberAddresses(memberId);
             roamHangoutService.closeAllByMember(memberId);   // 附近的局:局主没了,局转关、群转关
             appSessionRegistryService.revokeAll(memberId);
             appSessionRegistryService.finishMemberMutationAfterTransaction(memberId, mutationId);
-            return deregistrationMapper.complete(deregistration.getId(), now) > 0;
+            return completeDeregistration(deregistration.getId(), now);
         } catch (RuntimeException e) {
             finishFailedMutation(memberId, mutationId, e);
             throw e;
         }
+    }
+
+    private boolean completeDeregistration(Long id, Date now) {
+        if (deregistrationMapper.complete(id, now) != 1) {
+            throw new IllegalStateException("注销完成状态未保存");
+        }
+        return true;
     }
 
     private void finishFailedMutation(Long memberId, String mutationId, RuntimeException failure) {

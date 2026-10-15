@@ -43,6 +43,15 @@ import static org.mockito.Mockito.when;
  * 以及「整个序列化结果里搜不到答案字段」。
  */
 class ApiPlayEncounterControllerTest {
+    @Test void r5CheckRoutingMarkerUsesFrozenNodeAndNeverLiveDraft() throws Exception {
+        ObjectMapper json=new ObjectMapper();
+        com.fasterxml.jackson.databind.node.ObjectNode frozen=json.createObjectNode();frozen.putObject("themeConfig");
+        com.fasterxml.jackson.databind.node.ObjectNode cfg=(com.fasterxml.jackson.databind.node.ObjectNode)json.readTree(CONFIG);cfg.putObject("outcomeRules").put("version",1);
+        frozen.putObject("nodeConfigs").set(String.valueOf(NODE),cfg);session.setConfigSnapshotJson(frozen.toString());
+        assertEquals(1,json.valueToTree(data(controller.encounter(TOPIC,null,NODE))).path("config").path("outcomeRulesVersion").asInt());
+        cfg.remove("outcomeRules");session.setConfigSnapshotJson(frozen.toString());template.setAdvancedConfigJson(CONFIG.replace("\"schemaVersion\":1","\"schemaVersion\":1,\"outcomeRules\":{\"version\":1}"));
+        assertFalse(json.valueToTree(data(controller.encounter(TOPIC,null,NODE))).has("config"));
+    }
 
     private static final Long MEMBER = 71L;
     private static final Long TOPIC = 73L;

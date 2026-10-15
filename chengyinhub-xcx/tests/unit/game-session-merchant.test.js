@@ -516,3 +516,9 @@ test('路线运行态空清单可接待；缺失或未知模式仍保留剧情�
     serviceStartAt: '2026-08-23 10:00', serviceEndAt: '2026-08-23 18:00',
   }, 'route_ready_unchecked'), /STATION_READY_INPUT_INVALID/)
 })
+
+test('商家重试清洗保留原命令纪元，不能拿新投影纪元替换', () => {
+  const raw = { activityId: 71, nodeId: 8, requestId: 'merchant-retry-epoch', expectedRevision: 4,
+    authorityEpoch: 3, action: 'STATION_ACCEPT', payload: {} }
+  assert.deepEqual(sanitizeMerchantCommandForRetry(raw, { authorityEpoch: 5 }), raw)
+})

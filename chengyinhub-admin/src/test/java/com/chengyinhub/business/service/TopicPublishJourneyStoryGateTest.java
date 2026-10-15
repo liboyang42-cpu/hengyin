@@ -58,6 +58,10 @@ class TopicPublishJourneyStoryGateTest {
         keyMapper = mock(ThemeStateKeyMapper.class);
         npcProfileMapper = mock(NpcProfileMapper.class);
         service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "settlementDebtLedger",
                 mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
@@ -90,6 +94,7 @@ class TopicPublishJourneyStoryGateTest {
                 + "{\"when\":{\"var\":\"clue.page\",\"op\":\"GTE\",\"value\":1},\"text\":\"a\"}]}}]}");
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("clue.page"), error.getMessage());
@@ -104,6 +109,7 @@ class TopicPublishJourneyStoryGateTest {
                 + "\"optionalClues\":[\"clue.voice\"]}}");
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("clue.voice"), error.getMessage());
@@ -120,6 +126,7 @@ class TopicPublishJourneyStoryGateTest {
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Arrays.asList(
                 registered("clue.page"), registered("tag.hurried"), registered("clue.voice")));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         assertTrue(service.publishDraft(TOPIC_ID));
 
         verify(topicMapper).publishRouteSnapshot(anyLong(), any(), any());
@@ -135,6 +142,7 @@ class TopicPublishJourneyStoryGateTest {
         npc.setId(7L);
         when(npcProfileMapper.selectEnabledByScope(4, 501L)).thenReturn(Collections.singletonList(npc));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         assertTrue(service.publishDraft(TOPIC_ID));
 
         verify(keyMapper, never()).selectByTopicId(anyLong());
@@ -146,6 +154,7 @@ class TopicPublishJourneyStoryGateTest {
         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
                 .thenReturn(Collections.singletonList(chapter(CHAPTER)));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("引用无效"), error.getMessage());
@@ -165,6 +174,7 @@ class TopicPublishJourneyStoryGateTest {
         available.setId(9L);
         when(npcProfileMapper.selectEnabledByScope(4, 501L)).thenReturn(Collections.singletonList(available));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("引用无效"), error.getMessage());
@@ -179,6 +189,7 @@ class TopicPublishJourneyStoryGateTest {
                 + "\"ally\":\"a\",\"neutral\":\"b\",\"guarded\":\"c\"}]}}");
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("relation.arong"), error.getMessage());
@@ -195,6 +206,7 @@ class TopicPublishJourneyStoryGateTest {
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.singletonList(
                 registered("relation.arong", ThemeStateKey.TYPE_FLAG)));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("relation.arong"), error.getMessage());
@@ -216,6 +228,7 @@ class TopicPublishJourneyStoryGateTest {
         available.setId(7L);
         when(npcProfileMapper.selectEnabledByScope(4, 501L)).thenReturn(Collections.singletonList(available));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         assertTrue(service.publishDraft(TOPIC_ID));
 
         verify(topicMapper).publishRouteSnapshot(anyLong(), any(), any());
@@ -223,6 +236,7 @@ class TopicPublishJourneyStoryGateTest {
 
     @Test
     void legacyTopicWithoutStoryPublishesUntouched() {
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         assertTrue(service.publishDraft(TOPIC_ID));
 
         verify(keyMapper, never()).selectByTopicId(anyLong());
@@ -248,6 +262,7 @@ class TopicPublishJourneyStoryGateTest {
         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
                 .thenReturn(Collections.singletonList(withThought));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
         assertTrue(error.getMessage().contains("念头"), error.getMessage());
         assertTrue(error.getMessage().contains("nosuch"), "要报出是哪个 key 对不上:" + error.getMessage());
@@ -264,6 +279,7 @@ class TopicPublishJourneyStoryGateTest {
         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
                 .thenReturn(Collections.singletonList(withThought));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         assertTrue(service.publishDraft(TOPIC_ID));
     }
 

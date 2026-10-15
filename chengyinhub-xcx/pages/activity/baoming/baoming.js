@@ -402,7 +402,6 @@ Page({
         participantErrorMsg: message || '请稍后重试'
       }, () => that.refreshPaymentState());
       console.error('获取参与人信息失败');
-      toast('参与人信息加载失败，请重试');
     };
     requestContext.task = app.sendRequest({
       url: '/api/user/address/list',
@@ -1160,6 +1159,12 @@ Page({
             toast(noPoints ? '暂无可用积分' : '该票不支持积分抵扣');   // T32:0 积分用户的真实原因是没积分
           }
           if (pay > 0) that.checkPaymentReadiness();
+        } else if (res && res.msg) {
+          // F-W1-05:报价被拒(如主题尚未开售)要说出真实原因,不能停在「重新检查支付服务」。
+          that.setData({ submitError: String(res.msg) });
+          if (Number(that.data.totalAmount || 0) > 0 && !that.data.paymentReadinessChecking) {
+            that.checkPaymentReadiness();
+          }
         }
       }
     });

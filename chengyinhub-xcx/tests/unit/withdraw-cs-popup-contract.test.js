@@ -93,15 +93,26 @@ const ENTRIES = [
     id: '俱乐部结算页「提现到银行卡」',
     file: 'pages/club/settlement/index.js',
     signature: /^  goWithdraw\(\)/m,
+    prepare(runtime) {
+      runtime.page.onLoad({ clubId: 21 })
+      runtime.requests[0].success({ code: 200, data: { settledAmountText: '¥10.00',
+        settledAmountStatus: 'verified', unverifiedSettledCount: 0, topics: [], isOwner: true } })
+      runtime.page.onStages({ detail: { known: true, positive: true } })
+    },
     // CU-C-92:可提现 >0 才放行(余额由 cy-funds-stages 经 bind:stages 回报);零余额不弹见 club-settlement 自己的用例
-    drive(page) { page.data.withdrawState = 'positive'; page.goWithdraw() },
+    drive(page) { page.goWithdraw() },
     forbidden: [/\/api\/withdrawal\/create/, /submitBankWithdrawal/, /pages\/coop\/withdraw/],
   },
   {
     id: '商家分润明细「提现到银行卡」',
     file: 'components/cy/scene-merchant-profit/index.js',
     signature: /^    goWithdraw\(\)/m,
-    drive(page) { page.data.canWithdraw = true; page.goWithdraw() },
+    prepare(runtime) {
+      runtime.page.load()
+      runtime.requests[0].success({ code: 200, data: { topics: [{ topicId: 7,
+        settled: true, myIncome: 10, myIncomeArrived: true, merchantTotal: 0, merchantPaid: 0 }], isOwner: true } })
+    },
+    drive(page) { page.goWithdraw() },
     forbidden: [/\/api\/withdrawal\/create/, /submitBankWithdrawal/, /subpackageMember\/tixian/],
   },
   {
@@ -122,17 +133,21 @@ const ENTRIES = [
   },
 ]
 
-function loadEntry(relPath, source = read(relPath)) {
+function loadEntry(relPath, source = read(relPath), fixture = {}) {
   const absolutePath = path.join(ROOT, relPath)
   const popups = []
   const requests = []
   const navigations = []
   const modals = []
   let definition = null
+  const identity = { memberId: 1, role: 'player', type: 1 }
+  const guardCallbacks = []
   const app = {
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
     getPageSize: () => 20,
-    getUserID: () => 1,
+    getUserID: () => identity.memberId,
+    getUserRole: () => identity.role,
+    getUserType: () => identity.type,
     getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
     sendRequest(options) { requests.push(options) },
     tips() {},
@@ -165,7 +180,7 @@ function loadEntry(relPath, source = read(relPath)) {
         return { showWithdrawCsPopup() { popups.push(true) }, WITHDRAW_CS_WECHAT_ID: 'stub-not-real' }
       }
       if (request.endsWith('utils/analytics.js')) return { track() {} }
-      if (request.endsWith('utils/roleGuard.js')) return { can: () => true, load(callback) { callback() } }
+      if (request.endsWith('utils/roleGuard.js')) return { can: () => true, load(callback) { if (fixture.deferGuard) guardCallbacks.push(callback); else callback() } }
       if (request.endsWith('utils/merchant-theme.js')) return { merchantPageShow() {}, merchantPageRestore() {} }
       if (request.endsWith('subpackageA/utils/withdrawal-preflight.js')) {
         return {
@@ -200,7 +215,7 @@ function loadEntry(relPath, source = read(relPath)) {
   }
   page.triggerEvent = () => {}
   page.selectComponent = () => null
-  return { page, popups, requests, navigations, modals }
+  return { page, popups, requests, navigations, modals, identity, guardCallbacks }
 }
 
 function assertEntryOpensPopup(entry, source = read(entry.file)) {
@@ -269,9 +284,11 @@ ENTRIES.forEach((entry) => {
   test(`${entry.id}: 点击只弹客服微信,不发提现请求、不再进银行卡链路`, () => {
     assertEntryOpensPopup(entry)
     const runtime = loadEntry(entry.file)
+    if (entry.prepare) entry.prepare(runtime)
+    const before = runtime.requests.slice()
     entry.drive(runtime.page)
     assert.equal(runtime.popups.length, 1, '必须打开客服弹窗')
-    assert.deepEqual(runtime.requests, [], '不得再发 /api/withdrawal/create 或任何请求')
+    assert.deepEqual(runtime.requests, before, '联系客服动作不得新增资金或其他请求')
     assert.deepEqual(runtime.navigations, [], '不得再跳银行卡表单/独立提现页')
     // ⚠️ 这里**不能**断言 runtime.modals 为空:loadEntry 把 utils/withdraw-cs.js 整体替成了桩,
     //    唯一可能调 wx.showModal 的 modal.js 回落压根不进沙箱,那样的断言恒真、永远不会红。
@@ -292,4 +309,55 @@ ENTRIES.forEach((entry) => {
     assert.notEqual(broken, source, `负控锚点失效:${entry.id} 没有走客服弹窗`)
     assert.throws(() => assertEntryOpensPopup(entry, broken), assert.AssertionError)
   })
+})
+
+for (const change of ['account', 'role', 'type', 'hide', 'unload']) {
+  test(`账户收益宿主页提现权限回调遇到${change}变化不能弹客服`, () => {
+    const h = loadEntry('subpackageA/pages/assetcenter/earnings/index.js', undefined, { deferGuard: true })
+    h.page.onLoad({})
+    h.page.onShow()
+    h.page.openWithdrawSheet()
+    assert.equal(h.guardCallbacks.length, 1)
+    if (change === 'account') h.identity.memberId = 2
+    if (change === 'role') h.identity.role = 'merchant'
+    if (change === 'type') h.identity.type = 2
+    if (change === 'hide') h.page.onHide()
+    if (change === 'unload') h.page.onUnload()
+    h.guardCallbacks[0]()
+    assert.deepEqual(h.popups, [])
+    assert.deepEqual(h.requests, [])
+  })
+}
+
+test('账户收益宿主页仅接纳最近一次提现动作的权限回调', () => {
+  const h = loadEntry('subpackageA/pages/assetcenter/earnings/index.js', undefined, { deferGuard: true })
+  h.page.onLoad({})
+  h.page.openWithdrawSheet()
+  h.page.openWithdrawSheet()
+  h.guardCallbacks[0]()
+  assert.deepEqual(h.popups, [])
+  h.guardCallbacks[1]()
+  assert.equal(h.popups.length, 1)
+  assert.deepEqual(h.requests, [])
+})
+
+test('宿主页隐藏再显示后旧权限回调仍失效，当前动作正常弹客服', () => {
+  const h = loadEntry('subpackageA/pages/assetcenter/earnings/index.js', undefined, { deferGuard: true })
+  h.page.onLoad({})
+  h.page.openWithdrawSheet()
+  h.page.onHide()
+  h.page.onShow()
+  h.guardCallbacks[0]()
+  assert.deepEqual(h.popups, [])
+  h.page.openWithdrawSheet()
+  h.guardCallbacks[1]()
+  assert.equal(h.popups.length, 1)
+})
+
+test('宿主页卸载后直接触发提现不再查询能力或弹客服', () => {
+  const h = loadEntry('subpackageA/pages/assetcenter/earnings/index.js')
+  h.page.onLoad({})
+  h.page.onUnload()
+  h.page.openWithdrawSheet()
+  assert.deepEqual(h.popups, [])
 })

@@ -67,11 +67,11 @@ test('旧 role 数字不能绕过后端，但 detail 权威管理员与新权限
     '后端 detail 已确认的 viewerIsAdmin=true 必须保留治理 UI')
   assert.match(wxml, /club\.viewerIsAdmin[\s\S]*管理员工具暂不可用/)
   assert.match(wxml, /club\.viewerIdentityUnavailable[\s\S]*成员身份暂时无法确认/)
-  assert.match(js, /revokeClubAccess\(state(?:,\s*keepRequest)?\)[\s\S]*clubAccessState:\s*state \|\| 'error',[\s\S]*canModerateContent:\s*false/)
+  assert.match(js, /revokeClubAccess\(state(?:,\s*keepRequest)?\)[\s\S]*this\._clubAccessState = state \|\| 'error';[\s\S]*canModerateContent:\s*false/)
   assert.match(js, /this\.revokeClubAccess\('loading'(?:,\s*true)?\)/)
   assert.match(js, /that\.revokeClubAccess\('error'(?:,\s*true)?\)/)
   assert.match(js, /const canManageClub = has\('club:write'\)/)
-  assert.match(wxml, /clubAccessState === 'error'[\s\S]*内容治理入口已安全关闭/)
+  assert.doesNotMatch(wxml, /内容治理入口已安全关闭/, '权限读取失败留白，动作仍由canModerateContent=false关闭')
   assert.doesNotMatch(wxml, /myIsAdmin \|\| item\.authorMemberId/)
 })
 

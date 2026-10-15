@@ -82,7 +82,7 @@ public class JobInvokeUtil
     public static String getBeanName(String invokeTarget)
     {
         String beanName = StringUtils.substringBefore(invokeTarget, "(");
-        return StringUtils.substringBeforeLast(beanName, ".");
+        return StringUtils.substringBeforeLast(beanName, ".").trim();
     }
 
     /**
@@ -94,7 +94,7 @@ public class JobInvokeUtil
     public static String getMethodName(String invokeTarget)
     {
         String methodName = StringUtils.substringBefore(invokeTarget, "(");
-        return StringUtils.substringAfterLast(methodName, ".");
+        return StringUtils.substringAfterLast(methodName, ".").trim();
     }
 
     /**

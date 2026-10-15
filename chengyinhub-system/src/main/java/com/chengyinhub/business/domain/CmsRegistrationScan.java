@@ -15,6 +15,9 @@ public class CmsRegistrationScan extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
 
+    /** 核销台账行已随整单核销撤销(PR10 复审);默认列表与各计数口径都排除它。 */
+    public static final long STATUS_REVERSED = 2L;
+
     /** ID */
     private String id;
 

@@ -59,3 +59,13 @@ export function reverseRedemption(data) {
     data: data
   })
 }
+
+// 原父订单按章批量撤销；服务端仅按真实父单查找流水且整批事务回滚。
+export function reverseParentOrderRedemptions(data) {
+  return request({ url: '/business/registration/redemption/reverse-parent', method: 'post', data })
+}
+
+// 撤销活动票整单核销(无按章流水);原因必填,服务端锁单校验并留痕。
+export function reverseWholeOrderVerification(data) {
+  return request({ url: '/business/registration/verification/reverse', method: 'post', data })
+}

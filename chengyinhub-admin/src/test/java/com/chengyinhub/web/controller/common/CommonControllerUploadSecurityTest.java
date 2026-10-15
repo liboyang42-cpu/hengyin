@@ -602,9 +602,15 @@ class CommonControllerUploadSecurityTest
 
     private CommonController controller()
     {
-        CommonController controller = new CommonController();
+        CommonController controller = new CommonController() { @Override protected Long currentSystemUserId() {return 99L;} };
+        com.chengyinhub.business.service.impl.AppMediaAssetService registry=org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.AppMediaAssetService.class);
+        org.mockito.Mockito.when(registry.registerApprovedSystemImage(org.mockito.ArgumentMatchers.anyLong(),org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.anyString()))
+                .thenAnswer(call->call.getArgument(2));
+        ReflectionTestUtils.setField(controller,"appMediaAssetService",registry);
         ReflectionTestUtils.setField(controller, "serverConfig", new ServerConfig());
-        ReflectionTestUtils.setField(controller, "adminFileUploadService", new com.chengyinhub.web.controller.api.AdminFileUploadService());
+        com.chengyinhub.web.controller.api.AdminFileUploadService upload=new com.chengyinhub.web.controller.api.AdminFileUploadService();
+        ReflectionTestUtils.setField(upload,"imageSecurity",org.mockito.Mockito.mock(com.chengyinhub.web.controller.api.AppUploadService.class));
+        ReflectionTestUtils.setField(controller, "adminFileUploadService", upload);
         return controller;
     }
 }

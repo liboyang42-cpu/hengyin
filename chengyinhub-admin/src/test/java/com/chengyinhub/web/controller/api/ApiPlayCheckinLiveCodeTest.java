@@ -55,6 +55,27 @@ class ApiPlayCheckinLiveCodeTest {
         ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
     }
 
+    @Test void sharedRouteScanOnlyRecordsArrivalAndNeverRunsPersonalAwardChain() {
+        com.chengyinhub.business.service.IGameSessionRuntimeService runtime=mock(com.chengyinhub.business.service.IGameSessionRuntimeService.class);
+        com.chengyinhub.business.service.IShopDayProofService proofs=mock(com.chengyinhub.business.service.IShopDayProofService.class);
+        com.chengyinhub.business.service.ICmsTopicService topics=mock(com.chengyinhub.business.service.ICmsTopicService.class);
+        com.chengyinhub.business.service.ITopicRouteRuntimeService routes=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        ICmsRegistrationService registrations=mock(ICmsRegistrationService.class);IPlayerNodeProgressService progress=mock(IPlayerNodeProgressService.class);ISmsCouponHistoryService coupons=mock(ISmsCouponHistoryService.class);
+        for(Object[] binding:new Object[][]{{"gameSessionRuntimeService",runtime},{"shopDayProofService",proofs},{"cmsTopicService",topics},{"topicRouteRuntimeService",routes},{"cmsRegistrationService",registrations},{"playerNodeProgressService",progress},{"smsCouponHistoryService",coupons}})ReflectionTestUtils.setField(controller,(String)binding[0],binding[1]);
+        CmsTopicNode node=new CmsTopicNode();node.setId(NODE);node.setTopicId(44L);node.setStatus(1L);node.setMerchantMemberId(310L);node.setNodeAuditStatus(1);when(nodeService.selectCmsTopicNodeById(NODE)).thenReturn(node);
+        CmsActivity activity=new CmsActivity();activity.setId(43L);activity.setTopicId(44L);activity.setStartDate(new Date(System.currentTimeMillis()-60000));activity.setEndDate(new Date(System.currentTimeMillis()+60000));when(activityService.selectCmsActivityById(43L)).thenReturn(activity);
+        CmsRegistration registration=new CmsRegistration();registration.setId(91L);when(registrations.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(registration));
+        com.chengyinhub.business.mapper.CmsRegistrationMapper registrationMapper=mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class);ReflectionTestUtils.setField(controller,"cmsRegistrationMapper",registrationMapper);
+        when(registrationMapper.markFirstSuccessfulScan(any(),any(),any(),any(),any())).thenReturn(1);
+        com.chengyinhub.business.domain.CmsTopic topic=new com.chengyinhub.business.domain.CmsTopic();topic.setId(44L);topic.setProductType(1);when(topics.selectCmsTopicById(44L)).thenReturn(topic);
+        when(runtime.routeSessionStatus(43L)).thenReturn("RUNNING");when(routes.canPlay(any(),any(),any(),any(),any())).thenReturn(true);
+        when(runtime.sharedRouteSnapshot(PLAYER,44L,43L,NODE)).thenReturn(new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode().put("teamId",88));
+        when(liveCodes.inspect(LIVE)).thenReturn(ConsumeResult.ok(NODE));when(liveCodes.consume(LIVE)).thenReturn(ConsumeResult.ok(NODE));
+        com.chengyinhub.business.domain.PlayerNodeProgress proof=new com.chengyinhub.business.domain.PlayerNodeProgress();proof.setStatus(0);proof.setCheckinTime(new Date());when(proofs.markArrived(PLAYER,43L,node)).thenReturn(proof);
+        AjaxResult response=controller.checkin("43",LIVE,null,null,null,91L);assertEquals(200,response.get(AjaxResult.CODE_TAG));assertEquals(Boolean.TRUE,((java.util.Map<?,?>)response.get("data")).get("arrived"));assertEquals(Boolean.FALSE,((java.util.Map<?,?>)response.get("data")).get("done"));
+        verify(liveCodes).consume(LIVE);verify(proofs).markArrived(PLAYER,43L,node);verifyNoInteractions(progress,coupons);
+    }
+
     @Test
     void usedLiveCodeDoesNotFallBackToStaticLookup() {
         when(liveCodes.inspect(LIVE)).thenReturn(ConsumeResult.used());

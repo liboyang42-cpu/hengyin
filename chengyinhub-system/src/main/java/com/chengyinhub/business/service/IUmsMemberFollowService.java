@@ -122,4 +122,6 @@ public interface IUmsMemberFollowService
      * @return 结果
      */
     public int selectUmsMemberFansNumByMemberId(Long member_id);
+
+    int selectMutualFollowCount(Long memberId);
 }

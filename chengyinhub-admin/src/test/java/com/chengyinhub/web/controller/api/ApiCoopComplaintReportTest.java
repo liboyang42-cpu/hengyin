@@ -40,6 +40,22 @@ class ApiCoopComplaintReportTest {
     private static final Long TOPIC_ID = 91L;
     private static final Long REGISTRATION_ID = 291L;
 
+    @Test
+    void complaintMineLoginFailureIsExplicitAndCannotLookLikeAnEmptyRead() {
+        Fixture fixture = fixture();
+        org.mockito.Mockito.doThrow(new IllegalStateException("no login")).when(fixture.controller).getAppUserId();
+        assertEquals(401, fixture.controller.complaintMine().get("code"));
+        verify(fixture.complaintService, never()).listMine(any());
+    }
+
+    @Test
+    void complaintMineReadsOnlyCurrentMemberAndContainsNoClientIdentityInput() {
+        Fixture fixture = fixture();
+        when(fixture.complaintService.listMine(MEMBER_ID)).thenReturn(Collections.emptyList());
+        assertEquals(200, fixture.controller.complaintMine().get("code"));
+        verify(fixture.complaintService).listMine(MEMBER_ID);
+    }
+
     /** 在可投诉集合里 ⇒ 放行,且客户端塞的处置字段一个都不许落库。 */
     @Test
     void complainableTopicIsAcceptedAndEveryClientSuppliedVerdictFieldIsDropped() {

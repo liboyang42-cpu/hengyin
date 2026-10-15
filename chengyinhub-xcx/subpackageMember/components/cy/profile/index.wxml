@@ -154,7 +154,7 @@
             </view>
           </view>
         </scroll-view>
-        <cy-error wx:elif="{{orderErr}}"
+        <cy-error load-failure wx:elif="{{orderErr}}"
           title="{{orderAuthError ? '登录未成功' : '订单暂时没加载出来'}}"
           sub="{{orderAuthError ? '请重新进入小程序，再查看本人订单' : '已加载的订单仍为你保留，点重试即可'}}"
           retry="重试" bind:retry="reloadOrders" />
@@ -169,7 +169,7 @@
           </view>
           <view class="pc-sec-link" bindtap="goProject" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="管理全部项目"><text>管理全部</text><cy-icon name="arrow-right" size="26" /></view>
         </view>
-        <cy-error wx:if="{{projectErr}}"
+        <cy-error load-failure wx:if="{{projectErr}}"
           title="{{projectAuthError ? '登录未成功' : '项目暂时没加载出来'}}"
           sub="{{projectAuthError ? '请重新进入小程序，再查看本人项目' : '已加载的项目仍为你保留，点重试即可'}}"
           retry="重试" bind:retry="reloadProjects" />
@@ -229,7 +229,7 @@
       <!-- ===== TAB · 推文 ===== -->
       <block wx:if="{{activeTab === 'posts'}}">
         <view class="pc-feed">
-          <cy-error wx:if="{{feedErr}}" title="{{feedAuthError ? '登录未成功' : '动态没加载出来'}}" sub="{{feedAuthError ? '请重新进入小程序，再查看本人数据' : '已发布的动态都还在，只是这次没取到'}}" retry="重试" bind:retry="reloadFeed" />
+          <cy-error load-failure wx:if="{{feedErr}}" title="{{feedAuthError ? '登录未成功' : '动态没加载出来'}}" sub="{{feedAuthError ? '请重新进入小程序，再查看本人数据' : '已发布的动态都还在，只是这次没取到'}}" retry="重试" bind:retry="reloadFeed" />
           <cy-empty wx:elif="{{nodata}}" title="还没有推文" sub="{{isSelf ? '你还没有发布过推文' : 'TA 还没有发布推文'}}" />
           <view class="pc-post" wx:for="{{list}}" wx:key="id">
             <view class="pc-post-head">
@@ -278,10 +278,10 @@
         </view>
 
         <view class="pc-rank" bindtap="goGrowthCenter" hover-class="pc-tap" hover-stay-time="80"
-              aria-role="button" aria-label="本月排名 {{rankDisplay.no}},查看成长中心详情">
-          <!-- 只有城市榜。后端 /api/user/points/statistics 无 scope 入参,
-               拿不到全国/好友/俱乐部榜 —— 有了再加回选择器,别先摆控件后补数据。 -->
-          <text class="pc-rank-title">本月排名 · {{cityName}}</text>
+              aria-role="button" aria-label="总积分排名 {{rankDisplay.no}},查看成长中心详情">
+          <!-- 后端 /api/user/points/statistics 按总积分排序,没有月份或城市筛选,
+               展示口径必须与接口一致。 -->
+          <text class="pc-rank-title">总积分排名</text>
           <view class="pc-rank-body">
             <view class="pc-rank-left">
               <text class="pc-rank-no">{{rankDisplay.no}}</text>
@@ -331,7 +331,7 @@
         <view class="pc-sec-tit">城市勋章 · {{medalCount}}</view>
         <!-- 未收编 cy-card:同上,cy-card 读 --cy-comp-card-bg ⇒ 商家视角会渲成夜间深卡 -->
         <view class="pc-card pc-achv-list">
-          <cy-error wx:if="{{medalErr}}" title="{{medalAuthError ? '登录未成功' : '勋章没加载出来'}}" sub="{{medalAuthError ? '请重新进入小程序，再查看本人数据' : '已点亮的勋章都还在，只是这次没取到'}}" retry="重试" bind:retry="reloadMedals" />
+          <cy-error load-failure wx:if="{{medalErr}}" title="{{medalAuthError ? '登录未成功' : '勋章没加载出来'}}" sub="{{medalAuthError ? '请重新进入小程序，再查看本人数据' : '已点亮的勋章都还在，只是这次没取到'}}" retry="重试" bind:retry="reloadMedals" />
           <cy-empty wx:elif="{{medals.length === 0}}" title="还没有点亮的勋章" sub="完成城市节点即可点亮" />
           <!-- medals 里只有【已点亮】的勋章,未点亮的不在列表里 —— 故此处没有进度可言,
                「已获得」由右侧 ✓ 表达。别再加进度条:它只会恒满。 -->
@@ -352,7 +352,7 @@
         <cy-empty wx:elif="{{profileMetricState === 'empty'}}" kind="empty" title="成长记录从第一次探索开始"
           sub="去完成一次城市探索，积分、排名与勋章会在这里出现" />
         <view wx:elif="{{profileMetricState === 'error'}}" class="pc-metric-error">
-          <cy-error title="{{profileMetricAuthError ? '登录未成功' : '成长记录没加载出来'}}" sub="{{profileMetricAuthError ? '请重新进入小程序，再查看本人数据' : '记录都还在，只是这次没取到'}}"
+          <cy-error load-failure title="{{profileMetricAuthError ? '登录未成功' : '成长记录没加载出来'}}" sub="{{profileMetricAuthError ? '请重新进入小程序，再查看本人数据' : '记录都还在，只是这次没取到'}}"
             retry="重新加载" bind:retry="reloadProfileMetrics" />
         </view>
         <cy-skeleton wx:else type="list" count="{{2}}" />
@@ -477,7 +477,7 @@
 
         <!-- 网络失败:绝不回退成玩家 About 或「商家未完善」——那是拿「没查到」冒充业务事实 -->
         <view wx:elif="{{merchantState === 'network-error'}}" class="pc-metric-error">
-          <cy-error title="资料没加载出来" sub="这次没取到，重试一下"
+          <cy-error load-failure title="资料没加载出来" sub="这次没取到，重试一下"
             retry="重新加载" bind:retry="retryMerchantProbe" />
         </view>
 
@@ -604,7 +604,7 @@
     <view class="chpick__hint">你在本路线承接了多个章节,请选择本次要核销的那一个</view>
     <view class="chpick__item" wx:for="{{chapterSheet.items}}" wx:key="id"
           data-id="{{item.id}}" bindtap="onChapterPick" hover-class="cy-pressed" hover-stay-time="80">
-      <text class="chpick__name">{{item.name}}</text>
+      <text class="chpick__name">{{item.name}}{{item.replayed ? '（已核销，请勿重复提供权益）' : ''}}</text>
       <cy-icon class="chpick__chev" name="arrow-right" size="32" />
     </view>
   </view>
@@ -639,7 +639,7 @@
     </view>
   </view>
   <cy-skeleton wx:if="{{pointsSheet.loading}}" type="list" count="{{3}}" />
-  <view wx:elif="{{pointsSheet.failed}}" class="pts-loading cy-fade-in" bindtap="loadPointsTasks" hover-class="cy-pressed" hover-stay-time="80">加载失败,点此重试</view>
+  <view wx:elif="{{pointsSheet.failed}}" class="pts-loading" aria-hidden="true"></view>
   <cy-empty wx:elif="{{pointsSheet.loaded && !pointsSheet.tasks.length}}" title="暂无积分任务" sub="积分规则上线后会出现在这里" />
   <view wx:else class="pts-list">
     <view class="pts-row" wx:for="{{pointsSheet.tasks}}" wx:key="id">

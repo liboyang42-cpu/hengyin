@@ -113,6 +113,8 @@ public class ApiCoopController extends BaseController {
 
     @Autowired
     private IUmsMemberService umsMemberService;
+    @Autowired
+    private com.chengyinhub.business.service.IWxContentSecurityService wxContentSecurityService;
 
     @Autowired
     private com.chengyinhub.business.service.IMmsMerchantService mmsMerchantService;
@@ -374,6 +376,8 @@ public class ApiCoopController extends BaseController {
         body.setHandleTime(null);
         body.setDelFlag(0);
         try {
+            String risk = textRisk(principalMemberId, body.getMessage());
+            if (risk != null) return error(risk);
             coopInviteService.insertCoopInvite(body);
         } catch (IllegalStateException e) {
             return error(e.getMessage());
@@ -391,6 +395,12 @@ public class ApiCoopController extends BaseController {
         return AjaxResult.success("已发起", d);
     }
 
+    private String textRisk(Long principalMemberId, String content) {
+        if (content == null || content.trim().isEmpty()) return null;
+        return com.chengyinhub.business.service.IWxContentSecurityService.checkTextAsMember(wxContentSecurityService, umsMemberService,
+                principalMemberId, content);
+    }
+
     /**
      * 处理邀请:status 1已接受 / 2已拒绝 / 3已取消。
      * 接受/拒绝须受邀方本人;取消须发起方本人。自审核:接受即通过。
@@ -404,6 +414,10 @@ public class ApiCoopController extends BaseController {
         if (body.getId() == null || body.getStatus() == null) return error("缺少参数");
         int target = body.getStatus();
         if (target != 1 && target != 2 && target != 3) return error("操作不合法");
+        // F-L5C-02:拒绝/撤回/取消的理由会发给对方(详情 + 订阅消息),与 /invite 留言同一道闸。
+        String handleRisk = textRisk(memberId, com.chengyinhub.business.service.IWxContentSecurityService.joinText(
+                body.getMessage(), body.getHandleReason()));
+        if (handleRisk != null) return error(handleRisk);
 
         CoopInvite inv = coopInviteService.selectCoopInviteById(body.getId());
         if (inv == null) return error("邀请不存在");
@@ -629,6 +643,10 @@ public class ApiCoopController extends BaseController {
         if (body.getValidEnd() != null && !body.getValidEnd().after(DateUtils.getNowDate())) {
             return error("有效期至少要到明天");
         }
+        // F-L5C-02:权益名称与核销规则会展示给俱乐部与玩家。
+        String perkRisk = textRisk(principalMemberId, com.chengyinhub.business.service.IWxContentSecurityService.joinText(
+                body.getName(), body.getRedeemRule()));
+        if (perkRisk != null) return error(perkRisk);
         body.setId(null);
         body.setMerchantId(memberId);
         Long id = coopInviteService.savePerkTemplate(body);
@@ -858,6 +876,8 @@ public class ApiCoopController extends BaseController {
         if (memberId.equals(body.getToId())) return error("不能评价自己");
         body.setId(null);
         body.setFromId(memberId);
+        String risk = textRisk(memberId, body.getComment());
+        if (risk != null) return error(risk);
         try {
             coopInviteService.saveReview(body);
         } catch (IllegalStateException e) {
@@ -912,6 +932,16 @@ public class ApiCoopController extends BaseController {
         //      registration.topic_id ⇒ 前端两个取 id 的来源全空,③ 自由探索玩家整条选不到。
         //      主题该由服务端反查出来,不该让前端从挂载对象里猜。
         return AjaxResult.success(cmsRegistrationService.selectComplainableTopics(memberId));
+    }
+
+    @Operation(summary = "本人投诉处理进展")
+    @PostMapping("/complaint/mine")
+    public AjaxResult complaintMine() {
+        Long memberId;
+        try { memberId = currentMemberId(); } catch (Exception e) {
+            return AjaxResult.error(com.chengyinhub.common.constant.HttpStatus.UNAUTHORIZED, "请先登录");
+        }
+        return AjaxResult.success(coopComplaintService.listMine(memberId));
     }
 
     @Operation(summary = "玩家投诉(建客诉工单;平台受理即冻结该主题结算放款)")
@@ -1392,7 +1422,7 @@ public class ApiCoopController extends BaseController {
         //    mapper 的 fromType 只支持正向等值过滤,拿不到「排除某个值」,故在此按域剔除。
         List<CoopInvite> sent = new ArrayList<>();
         for (CoopInvite it : coopInviteService.selectCoopInviteListReadOnly(sentQ)) {
-            if (CoopInvite.FROM_OFFICIAL.equals(it.getFromType())) continue;
+            if (CoopInvite.FROM_OFFICIAL.equals(it.getFromType()) || "club".equals(it.getFromType())) continue;
             // 解散后保留邀约行做审计，但普通合作列表不能继续展示一个已不存在的俱乐部。
             if (!isInviteVisible(it)) continue;
             sent.add(it);

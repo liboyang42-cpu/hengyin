@@ -26,14 +26,20 @@ class TopicSaleCanonicalDraftServiceImplTest {
     private CmsTopicMapper topicMapper;
     private TopicSaleSnapshotMapper snapshotMapper;
     private TopicSaleCanonicalDraftServiceImpl service;
+    private ITopicCommercialReviewService reviewService;
 
     @BeforeEach
     void setUp() {
         topicMapper = mock(CmsTopicMapper.class);
         snapshotMapper = mock(TopicSaleSnapshotMapper.class);
         service = new TopicSaleCanonicalDraftServiceImpl(topicMapper, snapshotMapper);
+        reviewService = mock(ITopicCommercialReviewService.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "commercialReviewService", reviewService);
+        when(reviewService.submitSaleReviewIfReady(TOPIC, 3L)).thenReturn(
+                new com.chengyinhub.business.domain.vo.TopicSaleReviewProgress(17L, "已提交开售审核"));
         CmsTopic topic = new CmsTopic();
         topic.setId(TOPIC);
+        topic.setMemberId(3L);
         topic.setLifecycle(TopicLifecycleState.PRICING.getCode());
         topic.setDelFlag(0);
         when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
@@ -57,6 +63,8 @@ class TopicSaleCanonicalDraftServiceImplTest {
         assertEquals(Long.valueOf(1L), saved.getParameterVersion());
         verify(snapshotMapper).insertDraft(any(TopicSaleCanonicalDraft.class));
         verify(snapshotMapper).selectDraftByTopicId(TOPIC);
+        assertEquals(Long.valueOf(17L), saved.getSaleReviewProgress().getTaskId());
+        verify(reviewService).submitSaleReviewIfReady(TOPIC, 3L);
     }
 
     @Test
@@ -72,6 +80,7 @@ class TopicSaleCanonicalDraftServiceImplTest {
 
         assertEquals("canonical 草稿版本冲突", error.getMessage());
         verify(snapshotMapper, never()).updateDraftVersioned(any(TopicSaleCanonicalDraft.class), eq(1L));
+        verify(reviewService, never()).submitSaleReviewIfReady(any(), any());
     }
 
     private static TopicSaleCanonicalDraftDTO request(Long expectedVersion) {

@@ -44,6 +44,17 @@ import static org.mockito.Mockito.when;
 
 class ApiCouponControllerMerchantAccessTest {
 
+    @Test
+    void publishCountMustBePositiveAtRequestBoundary() {
+        try (jakarta.validation.ValidatorFactory factory = jakarta.validation.Validation.buildDefaultValidatorFactory()) {
+            jakarta.validation.Validator validator = factory.getValidator();
+            for (Long count : new Long[] {null, -1L, 0L}) {
+                assertFalse(validator.validateValue(CouponPublisDTO.class, "publishCount", count).isEmpty());
+            }
+            assertEquals(0, validator.validateValue(CouponPublisDTO.class, "publishCount", 1L).size());
+        }
+    }
+
     private static final Long PRINCIPAL_MEMBER_ID = 7002L;
     private static final Long OWNER_MEMBER_ID = 9001L;
     private static final Long MERCHANT_ROW_ID = 11L;
@@ -86,6 +97,15 @@ class ApiCouponControllerMerchantAccessTest {
                 .thenReturn(access(MerchantRoleCode.MERCHANT_MARKETING));
         when(merchantAccessService.require(PRINCIPAL_MEMBER_ID, MerchantPermission.VERIFY))
                 .thenReturn(access(MerchantRoleCode.MERCHANT_CHECKIN));
+    }
+
+    @Test
+    void rewardSelectionRequestsIssuableCouponsOnly() {
+        when(couponService.selectSmsCouponList(any())).thenReturn(Collections.emptyList());
+        controller.myPublishCouponList(null, "1", "MERCHANT");
+        ArgumentCaptor<SmsCoupon> query = ArgumentCaptor.forClass(SmsCoupon.class);
+        verify(couponService).selectSmsCouponList(query.capture());
+        assertEquals(Boolean.TRUE, query.getValue().getParams().get("issuableOnly"));
     }
 
     @Test

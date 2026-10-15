@@ -1,5 +1,8 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.annotation.RateLimiter;
+import com.chengyinhub.common.enums.LimitType;
+
 import com.chengyinhub.business.domain.vo.LeaderboardItemVO;
 import com.chengyinhub.business.domain.vo.SpoilerAccessSnapshot;
 import java.util.ArrayList;
@@ -61,6 +64,7 @@ import com.chengyinhub.business.domain.dto.PreferenceTagCorrectionRequest;
 import com.chengyinhub.business.service.support.SensorChallengePolicy;
 import com.chengyinhub.business.service.support.TopicCompletionRulePolicy;
 import com.chengyinhub.business.service.ICmsActivityService;
+import com.chengyinhub.business.service.ICommunityPostService;
 import com.chengyinhub.business.service.ICmsMemberTemplateService;
 import com.chengyinhub.business.service.ICmsRegistrationService;
 import com.chengyinhub.business.service.ICmsTopicChapterService;
@@ -133,6 +137,9 @@ public class ApiPlayProgressController extends BaseController
 
     @Autowired
     private ICmsActivityService cmsActivityService;
+
+    @Autowired
+    private ICommunityPostService communityPostService;
 
     // M9 埋点:节点级尝试日志(服务端,不依赖客户端)
     @Autowired(required = false)
@@ -325,6 +332,7 @@ public class ApiPlayProgressController extends BaseController
      * 某活动对应主题的节点列表 + 玩家每节点打卡状态
      */
     @Operation(summary = "游玩节点列表+进度")
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @GetMapping("/nodes")
     public AjaxResult nodes(Long activityId, Long topicId)
     {
@@ -1004,6 +1012,7 @@ public class ApiPlayProgressController extends BaseController
 
     /** 幂等只读恢复 seam；不接受 targetNodeId 或 outcomeCode。 */
     @Operation(summary = "读取主题地点路线状态")
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @GetMapping("/route-state")
     public AjaxResult routeState(@RequestParam(name = "topicId", required = false) Long topicId,
             @RequestParam(name = "activityId", required = false) Long activityId,
@@ -1304,6 +1313,7 @@ public class ApiPlayProgressController extends BaseController
      * 扫码打卡：扫节点二维码(内容=checkin_code)推进进度
      */
     @Operation(summary = "扫码打卡")
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/checkin")
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult checkin(String activityId, String code, String topicId,
@@ -1371,9 +1381,20 @@ public class ApiPlayProgressController extends BaseController
         String unlockErr = routeAccessError(memberId, actId, ctx.topicId, node, routeActionId);
         if (unlockErr != null) return error(unlockErr);
 
+        com.fasterxml.jackson.databind.JsonNode sharedRoute = gameSessionRuntimeService == null ? null
+                : gameSessionRuntimeService.sharedRouteSnapshot(memberId, ctx.topicId, actId, node.getId());
         if (liveCode) {
             IPlayCheckinCodeService.ConsumeResult consumed = playCheckinCodeService.consume(trimmedCode);
             if (consumed.kind != IPlayCheckinCodeService.ConsumeResult.Kind.OK) return error(consumed.message);
+        }
+        boolean personalGameplay=topicRouteRuntimeService!=null && topicRouteRuntimeService.genericPlayer(memberId,ctx.topicId,actId);
+        if (sharedRoute != null || personalGameplay) {
+            PlayerNodeProgress proof = shopDayProofService.markArrived(memberId, actId, node);
+            Map<String,Object> arrivalData=shopDayProofData(node,proof);
+            if(personalGameplay)arrivalData.put("themeRuntime",topicRouteRuntimeService.recordPlayerArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,expectedRouteVersion));
+            if(sharedRoute!=null)arrivalData.put("sharedRuntime",gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId==null?"scan:"+java.util.UUID.randomUUID().toString():routeActionId,"SCAN",sharedRoute.path("runtimeInstance").asText("game:"+sharedRoute.path("gameSessionId").asLong()),sharedRoute.path("authorityEpoch").asInt()));
+            recordFirstSuccessfulScan(memberId, ctx);
+            return AjaxResult.success(personalGameplay?"已记录到达，请继续当前任务":"已记录到达，请继续本队任务", arrivalData);
         }
         // 4-5) 记录进度 + 发分 + 通关判定（与答题完成共用）
         logAttempt(memberId, node, actId, 2, 1, null); // M9 扫码打卡成功
@@ -1420,6 +1441,7 @@ public class ApiPlayProgressController extends BaseController
      * 门口游戏码冷启动：未报名去主题购买页，已报名进游玩。不写打卡进度。
      */
     @Operation(summary = "门口游戏码落地")
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/scan-entry")
     public AjaxResult scanEntry(String code)
     {
@@ -1443,6 +1465,7 @@ public class ApiPlayProgressController extends BaseController
      * 复用现有模板引擎（questionAnswer / correctAnswer / feedbackText），不另建节点类型表。
      */
     @Operation(summary = "答题完成(文字/选项)")
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/answer")
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult answer(String activityId, String nodeId, String answer, String topicId,
@@ -1486,7 +1509,9 @@ public class ApiPlayProgressController extends BaseController
         // 读节点绑定模板的验证方式 + 校验答案(R18-FREEZE:对错判定按开局快照,新发布不改写
         // 进行中的一局;老局快照没有 nodeAnswers 键时回退实时模板)
         if (node.getTemplateId() == null) return error("该节点未配置答题");
-        com.fasterxml.jackson.databind.JsonNode frozenAnswer = frozenAnswer(memberId, ctx.topicId, ctx.actId, node.getId());
+        com.fasterxml.jackson.databind.JsonNode sharedAnswerRoute = gameSessionRuntimeService == null ? null
+                : gameSessionRuntimeService.sharedRouteSnapshot(memberId, ctx.topicId, actId, node.getId());
+        com.fasterxml.jackson.databind.JsonNode frozenAnswer = sharedAnswerRoute == null ? frozenAnswer(memberId, ctx.topicId, ctx.actId, node.getId()) : sharedAnswerRoute.path("nodeAnswers").path(String.valueOf(node.getId()));
         int vm;
         String questionAnswer;
         String correctAnswer;
@@ -1518,16 +1543,20 @@ public class ApiPlayProgressController extends BaseController
         }
         if (!ok) {
             logAttempt(memberId, node, actId, 1, 0, ans); // M9 答错(带用户答案供AI评估)
-            // 反馈话术也归承接方 —— 玩家是站在他店里听这句话的;展示类不冻结,仍读实时模板
-            CmsMemberTemplate feedbackTpl = cmsMemberTemplateService.selectCmsMemberTemplateById(node.getTemplateId());
-            String feedback = nodeMerchantOverrideService.forNode(node.getId())
-                    .feedbackTextOr(feedbackTpl == null ? null : feedbackTpl.getFeedbackText());
             // 明确标记「这是答案错」:前端据此才计一次错 / 才可能解锁揭示。业务拒绝
             // (活动已结束/未报名/先扫码进店/本章未放行…)不带这个标记,不得被当成答错。
-            return AjaxResult.error(StringUtils.isNotBlank(feedback) ? feedback : "答案不正确",
+            return AjaxResult.error("答案不正确",
                     java.util.Collections.singletonMap("answerWrong", true));
         }
 
+        boolean personalAnswerGameplay = topicRouteRuntimeService != null && topicRouteRuntimeService.genericPlayer(memberId, ctx.topicId, actId);
+        if (personalAnswerGameplay || sharedAnswerRoute != null) {
+            PlayerNodeProgress proof = shopDayProofService.markArrived(memberId, actId, node);
+            Map<String,Object> completion = shopDayProofData(node, proof);
+            if (personalAnswerGameplay) completion.put("themeRuntime", topicRouteRuntimeService.recordPlayerArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,expectedRouteVersion,"ANSWER"));
+            if (sharedAnswerRoute != null) completion.put("sharedRuntime", gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId==null?"answer:"+java.util.UUID.randomUUID().toString():routeActionId,"ANSWER",sharedAnswerRoute.path("runtimeInstance").asText("game:"+sharedAnswerRoute.path("gameSessionId").asLong()),sharedAnswerRoute.path("authorityEpoch").asInt()));
+            return AjaxResult.success("答案已验证，请继续当前任务", completion);
+        }
         logAttempt(memberId, node, actId, 1, 1, null); // M9 答对
         Map<String, Object> data;
         if (playMode == PlayMode.LINEAR_ORIENTEERING) {
@@ -1555,6 +1584,7 @@ public class ApiPlayProgressController extends BaseController
 
     /** 查看答案以 0 解谜分辅助完成；仅适用于城市定向文字/单选谜题。 */
     @Operation(summary = "城市定向谜题查看答案并辅助完成")
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/puzzle/reveal")
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult revealPuzzle(String activityId, String nodeId, String topicId,
@@ -1615,6 +1645,7 @@ public class ApiPlayProgressController extends BaseController
      * 解谜分据这份服务端事实计算，不能由客户端自报。
      */
     @Operation(summary = "城市定向谜题逐级提示")
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/puzzle/hint")
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult puzzleHint(String activityId, String nodeId, String topicId, Integer level)
@@ -1670,6 +1701,7 @@ public class ApiPlayProgressController extends BaseController
     }
 
     @Operation(summary = "提交偏好题组")
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/preference/{nodeId}/submit")
     public AjaxResult submitPreference(@PathVariable Long nodeId, @RequestBody PreferenceSubmitRequest request)
     {
@@ -1698,6 +1730,7 @@ public class ApiPlayProgressController extends BaseController
     }
 
     @Operation(summary = "确认偏好标签")
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/tag/{tagId}/confirm")
     public AjaxResult confirmPreferenceTag(@PathVariable Long tagId)
     {
@@ -1708,6 +1741,7 @@ public class ApiPlayProgressController extends BaseController
     }
 
     @Operation(summary = "撤回偏好标签")
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/tag/{tagId}/revoke")
     public AjaxResult revokePreferenceTag(@PathVariable Long tagId)
     {
@@ -1718,6 +1752,7 @@ public class ApiPlayProgressController extends BaseController
     }
 
     @Operation(summary = "确认前修正偏好标签档位")
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/tag/{tagId}/correct")
     public AjaxResult correctPreferenceTag(@PathVariable Long tagId,
                                            @RequestBody PreferenceTagCorrectionRequest request)
@@ -1849,6 +1884,7 @@ public class ApiPlayProgressController extends BaseController
     }
 
     @Operation(summary = "App 传感器挑战完成上报")
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/sensor-result")
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult sensorResult(@RequestBody SensorResultRequest request)
@@ -1903,6 +1939,7 @@ public class ApiPlayProgressController extends BaseController
      * 修「到点即完成」节点此前无完成路径的阻断 bug。
      */
     @Operation(summary = "GPS到达/到点即完成")
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/arrive")
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult arrive(String activityId, String nodeId, String longitude, String latitude, String topicId,
@@ -1983,7 +2020,11 @@ public class ApiPlayProgressController extends BaseController
         // GPS 围栏：节点有坐标才校验（gcj02，Haversine 50m）；无坐标则按到点即完成放行（前端引导走扫码）。
         // ⚠️ GPS(vm=5)节点是例外:它必须靠站点坐标才能判定"到没到",缺经或缺纬不能退化成
         //    普通无验证线上节点直接放行(否则漏配坐标 = 任意地点都算到达,发进度发奖)。
-        boolean hasNodeCoord = StringUtils.isNotBlank(node.getLongitude()) && StringUtils.isNotBlank(node.getLatitude());
+        com.fasterxml.jackson.databind.JsonNode sharedArrival=gameSessionRuntimeService==null?null:gameSessionRuntimeService.sharedRouteSnapshot(memberId,ctx.topicId,actId,node.getId());
+        boolean personalArrival=topicRouteRuntimeService!=null && topicRouteRuntimeService.genericPlayer(memberId,ctx.topicId,actId);
+        String targetLongitude=node.getLongitude(),targetLatitude=node.getLatitude();
+        if((personalArrival || sharedArrival!=null) && topicRouteRuntimeService!=null) {com.fasterxml.jackson.databind.JsonNode target=topicRouteRuntimeService.nodeArrivalConfig(memberId,ctx.topicId,actId,node.getId());if(target==null)return error("本局缺少冻结到达配置");targetLongitude=target.path("longitude").asText(null);targetLatitude=target.path("latitude").asText(null);}
+        boolean hasNodeCoord = StringUtils.isNotBlank(targetLongitude) && StringUtils.isNotBlank(targetLatitude);
         boolean gpsNode = Integer.valueOf(5).equals(arriveValidationMethod);
         if (gpsNode && !hasNodeCoord) return error("站点未设坐标，暂时无法打卡");
         if (hasNodeCoord) {
@@ -1993,14 +2034,18 @@ public class ApiPlayProgressController extends BaseController
             // 都必须有限且在经纬范围内;距离本身也要有限,任一不满足一律失败关闭。
             Double playerLat = parseGeoCoordinate(latitude, -90d, 90d);
             Double playerLng = parseGeoCoordinate(longitude, -180d, 180d);
-            Double nodeLat = parseGeoCoordinate(node.getLatitude(), -90d, 90d);
-            Double nodeLng = parseGeoCoordinate(node.getLongitude(), -180d, 180d);
+            Double nodeLat = parseGeoCoordinate(targetLatitude, -90d, 90d);
+            Double nodeLng = parseGeoCoordinate(targetLongitude, -180d, 180d);
             if (playerLat == null || playerLng == null || nodeLat == null || nodeLng == null) return error("定位无效");
             double dist = haversine(playerLat, playerLng, nodeLat, nodeLng);
             if (!Double.isFinite(dist)) return error("定位无效");
             if (dist > GEOFENCE_METERS) return error("还没到这一站附近");
         }
 
+        if(personalArrival || sharedArrival!=null) {PlayerNodeProgress proof=shopDayProofService.markArrived(memberId,actId,node);Map<String,Object> data=shopDayProofData(node,proof);
+            if(personalArrival)data.put("themeRuntime",topicRouteRuntimeService.recordPlayerArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,expectedRouteVersion,"GPS"));
+            if(sharedArrival!=null)data.put("sharedRuntime",gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId==null?"gps:"+java.util.UUID.randomUUID().toString():routeActionId,"GPS",sharedArrival.path("runtimeInstance").asText("game:"+sharedArrival.path("gameSessionId").asLong()),sharedArrival.path("authorityEpoch").asInt()));
+            recordFirstSuccessfulScan(memberId,ctx);return AjaxResult.success("已记录本局到达，请继续当前任务或操作",data);}
         logAttempt(memberId, node, actId, 3, 1, null); // M9 GPS到达成功
         Map<String, Object> data = advanceProgress(memberId, node, actId, null, null, null,
                 RewardPolicy.FULL, routeActionId, expectedRouteVersion, null);
@@ -2062,6 +2107,7 @@ public class ApiPlayProgressController extends BaseController
      * 提交即完成 + 存照片 + 置 reviewStatus(自动过=1，留人工审核位)。
      */
     @Operation(summary = "拍照打卡(提交即完成,审核后置)")
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/photo")
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult photo(String activityId, String nodeId, String picUrl, String topicId,
@@ -2858,6 +2904,7 @@ public class ApiPlayProgressController extends BaseController
         // 高级玩法是节点原验证方式的前置闸。只有这里通过后才进入既有幂等、发奖和通关链，
         // 避免六类玩法各自复制一份积分/券/勋章逻辑。
         // Spring 运行态该依赖是 required；null 仅兼容直接 new Controller 的存量纯单测。
+        if(topicRouteRuntimeService!=null && topicRouteRuntimeService.genericPlayer(memberId,node.getTopicId(),actId))throw new ServiceException("通用个人任务请使用任务结算，不能领取旧节点奖励",409);
         String advancedOutcomeCode = advancedGameRuntimeService == null ? null
                 : advancedGameRuntimeService.completeGate(memberId, actId, node.getTopicId(), node.getId());
         Map<String, Object> conditionalReward = null;
@@ -3074,6 +3121,18 @@ public class ApiPlayProgressController extends BaseController
      */
     @Operation(summary = "我已通关的活动列表(广场发布选择)")
     @PostMapping("/my-completed")
+    public AjaxResult myCompleted(@RequestParam(value = "for_public_reference", defaultValue = "false")
+            boolean forPublicReference)
+    {
+        AjaxResult result = myCompleted();
+        if (!forPublicReference || !result.isSuccess()) return result;
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> completed = (List<Map<String, Object>>) result.get(AjaxResult.DATA_TAG);
+        result.put(AjaxResult.DATA_TAG, communityPostService.filterPublicCompletedReferences(currentMemberId(), completed));
+        return result;
+    }
+
+    // Preserve the historical completion view and existing Java callers.
     public AjaxResult myCompleted()
     {
         Long memberId = currentMemberId();
@@ -3324,6 +3383,7 @@ public class ApiPlayProgressController extends BaseController
      * 解锁记录=消费流水本身 (memberId, eventType=14, eventId=nodeId)。
      */
     @Operation(summary = "积分解锁节点提示")
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/hint/unlock")
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AjaxResult unlockHint(Long nodeId, String activityId, String topicId)

@@ -26,6 +26,7 @@ function loadPrivacyPage(source = fs.readFileSync(PAGE, 'utf8')) {
       sandbox.resolved.push(result)
     },
     recordConsent: () => Promise.resolve(),
+    declineUsageConsent() {},
   }
   const wx = {
     navigateBack() {}, switchTab() {}, redirectTo() {}, showToast() {},
@@ -34,6 +35,8 @@ function loadPrivacyPage(source = fs.readFileSync(PAGE, 'utf8')) {
   // 页面顶层 require utils/toast.js:真模块在只带本沙箱 wx 的上下文里求值,其它 require 一律意外
   const requireStub = (p) => {
     if (vm.isUiModule(p)) return vm.loadUiModule(p, vm.createContext({ wx }))
+    if (p === '../../utils/roam-presence-privacy.js') return require('../../utils/roam-presence-privacy.js')
+    if (p === '../../utils/location/bg-tracker.js') return require('../../utils/location/bg-tracker.js')
     throw new Error('unexpected require: ' + p)
   }
   const fn = new Function('Page', 'getApp', 'wx', 'console', 'require', source)

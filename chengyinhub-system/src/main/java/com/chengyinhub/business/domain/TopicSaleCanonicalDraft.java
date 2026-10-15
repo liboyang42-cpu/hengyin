@@ -10,7 +10,10 @@ public class TopicSaleCanonicalDraft {
     private String canonicalJson;
     private Long updatedBy;
     private Date updateTime;
+    private com.chengyinhub.business.domain.vo.TopicSaleReviewProgress saleReviewProgress;
 
+    public com.chengyinhub.business.domain.vo.TopicSaleReviewProgress getSaleReviewProgress() { return saleReviewProgress; }
+    public void setSaleReviewProgress(com.chengyinhub.business.domain.vo.TopicSaleReviewProgress value) { this.saleReviewProgress = value; }
     public Long getTopicId() { return topicId; }
     public void setTopicId(Long topicId) { this.topicId = topicId; }
     public String getSchemaVersion() { return schemaVersion; }

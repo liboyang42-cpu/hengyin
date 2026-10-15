@@ -33,6 +33,12 @@ public interface OmsOrderMapper
     public int markCommerceOrderPaid(@org.apache.ibatis.annotations.Param("id") Long id,
                                      @org.apache.ibatis.annotations.Param("transactionId") String transactionId);
 
+    List<OmsOrder> selectPendingCommerceOrders(@Param("afterId") long afterId,
+                                              @Param("before") Date before,
+                                              @Param("limit") int limit);
+
+    int markCommerceOrderClosed(@Param("id") Long id);
+
     /**
      * 查询订单列表
      * 

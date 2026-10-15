@@ -68,6 +68,8 @@ class CoopPerksSnapshotTest {
         perkMapper = mock(CoopPerkMapper.class);
         orderMapper = mock(CoopOrderMapper.class);
         service = new CoopInviteServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "commercialReviewService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.ITopicCommercialReviewService.class));
         ReflectionTestUtils.setField(service, "coopPerkMapper", perkMapper);
         ReflectionTestUtils.setField(service, "coopOrderMapper", orderMapper);
         // A-13 幂等复用探针:默认无既有单

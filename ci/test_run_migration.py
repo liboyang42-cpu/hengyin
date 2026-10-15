@@ -1091,5 +1091,55 @@ class ExplicitConfigCliTest(unittest.TestCase):
                 connect.assert_called_once_with(runner.DEFAULT_CONFIG)
 
 
+class CommunityLegacyOwnerPreflightTest(unittest.TestCase):
+    def test_actual_write_shapes_cover_renamed_sql_and_inline_extracts(self):
+        runner = load_runner()
+        for statement in (
+            "INSERT IGNORE INTO community_post SELECT * FROM ums_creative_square",
+            "INSERT IGNORE INTO community_post_media SELECT * FROM ums_creative_square",
+            "INSERT IGNORE INTO community_post_comment SELECT * FROM ums_comment",
+            "INSERT IGNORE INTO community_post_comment_action SELECT * FROM ums_comment_like",
+            "INSERT IGNORE INTO scratch.community_post_media SELECT * FROM scratch.ums_creative_square",
+            "INSERT IGNORE INTO `scratch`.`community_post_media` SELECT * FROM `scratch`.`ums_creative_square`",
+            "INSERT IGNORE INTO `scratch` . `community_post_media` SELECT * FROM `scratch` . `ums_creative_square`",
+        ):
+            self.assertTrue(runner.requires_community_legacy_owner_guard([statement]))
+        self.assertFalse(runner.requires_community_legacy_owner_guard(["SELECT 1"]))
+        runner.assert_community_legacy_statement_scope([
+            "INSERT INTO scratch.community_post SELECT * FROM scratch.ums_creative_square"], "scratch")
+        with self.assertRaisesRegex(ValueError, "cross-schema"):
+            runner.assert_community_legacy_statement_scope([
+                "INSERT INTO other.community_post SELECT * FROM scratch.ums_creative_square"], "scratch")
+
+    def test_guard_failure_precedes_every_statement_and_transaction_probe(self):
+        runner = load_runner()
+        connection = FakeConnection()
+        args = types.SimpleNamespace(transaction=True, check=False, describe=None)
+        statements = ["CREATE TABLE marker(id INT)",
+                      "INSERT INTO community_post_media SELECT * FROM ums_creative_square"]
+        with mock.patch.object(runner, "assert_community_legacy_owner_preflight",
+                               side_effect=ValueError("conflict")) as guard:
+            with self.assertRaises(SystemExit) as error:
+                runner.run_connected(args, statements, None, connection, "scratch")
+        self.assertEqual(1, error.exception.code)
+        guard.assert_called_once()
+        self.assertFalse(any(sql in statements or sql.startswith("CREATE")
+                             for sql, _ in connection.cursor_instance.executed))
+
+    def test_false_missing_or_ambiguous_observation_never_passes(self):
+        runner = load_runner()
+        for observed in ((0,), None, (1, 1)):
+            cursor = mock.Mock()
+            cursor.fetchall.return_value = [("ums_creative_square",), ("ums_comment",),
+                                           ("ums_creative_square_like",), ("community_post",)]
+            cursor.fetchone.return_value = observed
+            with self.assertRaisesRegex(ValueError, "preflight conflict"):
+                runner.assert_community_legacy_owner_preflight(cursor, "scratch")
+        cursor = mock.Mock()
+        cursor.fetchall.return_value = [("community_post",)]
+        with self.assertRaisesRegex(ValueError, "missing source"):
+            runner.assert_community_legacy_owner_preflight(cursor, "scratch")
+
+
 if __name__ == "__main__":
     unittest.main()

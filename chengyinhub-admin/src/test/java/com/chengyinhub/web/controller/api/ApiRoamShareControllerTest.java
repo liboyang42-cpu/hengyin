@@ -14,6 +14,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -38,7 +39,17 @@ class ApiRoamShareControllerTest {
         when(members.lockMemberById(memberId)).thenReturn(memberId);
         ReflectionTestUtils.setField(c, "snapshotMapper", mapper);
         ReflectionTestUtils.setField(c, "privacyService", new RoamSharePrivacyService());
-        ReflectionTestUtils.setField(c, "snapshotService", new RoamShareSnapshotService(mapper, members));
+        RoamShareSnapshotService service = new RoamShareSnapshotService(mapper, members);
+        ReflectionTestUtils.setField(service,"locationConsent",mock(com.chengyinhub.business.service.impl.RoamLocationConsentService.class));
+        com.chengyinhub.business.mapper.RoamMapper roam = mock(com.chengyinhub.business.mapper.RoamMapper.class);
+        com.chengyinhub.business.domain.RoamSession session = new com.chengyinhub.business.domain.RoamSession();
+        session.setId(12L); session.setMemberId(memberId); session.setStatus(1); session.setFinishedAt(new java.util.Date());
+        when(roam.selectOwnedSessionForUpdate(12L,memberId)).thenReturn(session);
+        ReflectionTestUtils.setField(service, "roamMapper", roam);
+        ReflectionTestUtils.setField(c, "snapshotService", service);
+        ReflectionTestUtils.setField(c, "wxContentSecurityService",
+                mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
+        ReflectionTestUtils.setField(c, "umsMemberService", mock(com.chengyinhub.business.service.IUmsMemberService.class));
         return c;
     }
 
@@ -48,16 +59,34 @@ class ApiRoamShareControllerTest {
             + "\"pois\":[{\"name\":\"外滩\",\"cat\":\"landmark\",\"catLabel\":\"地标\",\"lat\":90,\"lng\":180,\"id\":77}]}";
 
     @Test
+    void publish_rejects_flagged_share_text_before_anything_is_stored() {
+        RoamShareSnapshotMapper mapper = mock(RoamShareSnapshotMapper.class);
+        ApiRoamShareController c = controller(9, mapper);
+        com.chengyinhub.business.service.IWxContentSecurityService sec =
+                mock(com.chengyinhub.business.service.IWxContentSecurityService.class);
+        when(sec.checkText(anyString(), any())).thenReturn("内容含违规信息");
+        ReflectionTestUtils.setField(c, "wxContentSecurityService", sec);
+
+        AjaxResult r = c.publish(1700000000000L, 12L, SNAPSHOT);
+        assertEquals(500, r.get("code"));
+        ArgumentCaptor<String> text = ArgumentCaptor.forClass(String.class);
+        verify(sec).checkText(text.capture(), any());
+        assertTrue(text.getValue().contains("外滩等3处足迹回看") && text.getValue().contains("城市点亮 50 格")
+                && text.getValue().contains("地标"), text.getValue());
+        verify(mapper, never()).upsertOwnedSnapshot(anyString(), anyLong(), anyLong(), any(), anyString());
+    }
+
+    @Test
     void publish_normalizes_whitelisted_fields_and_rounds_coordinates() {
         RoamShareSnapshotMapper mapper = mock(RoamShareSnapshotMapper.class);
         when(mapper.selectTokenByMemberTs(9L, 1700000000000L)).thenReturn(null, "0123456789abcdef0123456789abcdef");
-        AjaxResult r = controller(9, mapper).publish(1700000000000L, SNAPSHOT);
+        AjaxResult r = controller(9, mapper).publish(1700000000000L, 12L, SNAPSHOT);
         assertEquals(200, r.get("code"));
         assertEquals("0123456789abcdef0123456789abcdef", ((Map<?, ?>) r.get("data")).get("token"));
 
         ArgumentCaptor<String> token = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> json = ArgumentCaptor.forClass(String.class);
-        verify(mapper).upsertSnapshot(token.capture(), eq(9L), eq(1700000000000L), json.capture());
+        verify(mapper).upsertOwnedSnapshot(token.capture(), eq(9L), eq(1700000000000L), eq(12L), json.capture());
         assertTrue(token.getValue().matches("[a-f0-9]{32}"), "令牌必须是随机 32 位十六进制");
         JSONObject stored = JSON.parseObject(json.getValue());
         assertFalse(stored.containsKey("secretHome"), "白名单外字段不能进匿名可读的快照");
@@ -80,13 +109,13 @@ class ApiRoamShareControllerTest {
                 .thenReturn(null, stableToken, stableToken, stableToken);
         ApiRoamShareController c = controller(9, mapper);
 
-        AjaxResult first = c.publish(1700000000000L, SNAPSHOT);
-        AjaxResult second = c.publish(1700000000000L, SNAPSHOT);
+        AjaxResult first = c.publish(1700000000000L, 12L, SNAPSHOT);
+        AjaxResult second = c.publish(1700000000000L, 12L, SNAPSHOT);
 
         assertEquals(stableToken, ((Map<?, ?>) first.get("data")).get("token"));
         assertEquals(stableToken, ((Map<?, ?>) second.get("data")).get("token"));
         ArgumentCaptor<String> snapshots = ArgumentCaptor.forClass(String.class);
-        verify(mapper, times(2)).upsertSnapshot(anyString(), eq(9L), eq(1700000000000L), snapshots.capture());
+        verify(mapper, times(2)).upsertOwnedSnapshot(anyString(), eq(9L), eq(1700000000000L), eq(12L), snapshots.capture());
         assertEquals(snapshots.getAllValues().get(0), snapshots.getAllValues().get(1));
         verify(mapper, times(1)).countByMember(9L);
     }
@@ -95,17 +124,17 @@ class ApiRoamShareControllerTest {
     void publish_rejects_bad_shapes_without_writing() {
         RoamShareSnapshotMapper mapper = mock(RoamShareSnapshotMapper.class);
         ApiRoamShareController c = controller(9, mapper);
-        assertEquals(500, c.publish(1L, "{\"track\":[{\"lat\":91,\"lng\":1}]}").get("code"), "越界坐标");
-        assertEquals(500, c.publish(1L, "{\"track\":[{\"lat\":{\"x\":1},\"lng\":1}]}").get("code"), "嵌套对象冒充坐标");
-        assertEquals(500, c.publish(1L, "{\"routeName\":{\"a\":1}}").get("code"), "非字符串文本");
-        assertEquals(500, c.publish(1L, "{\"distance\":-1}").get("code"), "负距离");
-        assertEquals(500, c.publish(1L, "not json").get("code"));
-        assertEquals(500, c.publish(0L, SNAPSHOT).get("code"), "没有足迹 ts");
+        assertEquals(500, c.publish(1L, 12L, "{\"track\":[{\"lat\":91,\"lng\":1}]}").get("code"), "越界坐标");
+        assertEquals(500, c.publish(1L, 12L, "{\"track\":[{\"lat\":{\"x\":1},\"lng\":1}]}").get("code"), "嵌套对象冒充坐标");
+        assertEquals(500, c.publish(1L, 12L, "{\"routeName\":{\"a\":1}}").get("code"), "非字符串文本");
+        assertEquals(500, c.publish(1L, 12L, "{\"distance\":-1}").get("code"), "负距离");
+        assertEquals(500, c.publish(1L, 12L, "not json").get("code"));
+        assertEquals(500, c.publish(0L, 12L, SNAPSHOT).get("code"), "没有足迹 ts");
         StringBuilder big = new StringBuilder("{\"track\":[");
         for (int i = 0; i <= ApiRoamShareController.MAX_TRACK_POINTS; i++) big.append(i == 0 ? "" : ",").append("{\"lat\":1,\"lng\":1}");
-        assertEquals(500, c.publish(1L, big.append("]}").toString()).get("code"), "轨迹点数上限");
-        assertEquals(500, controller(0, mapper).publish(1L, SNAPSHOT).get("code"), "未登录不能发布");
-        verify(mapper, never()).upsertSnapshot(anyString(), anyLong(), anyLong(), anyString());
+        assertEquals(500, c.publish(1L, 12L, big.append("]}").toString()).get("code"), "轨迹点数上限");
+        assertEquals(500, controller(0, mapper).publish(1L, 12L, SNAPSHOT).get("code"), "未登录不能发布");
+        verify(mapper, never()).upsertOwnedSnapshot(anyString(), anyLong(), anyLong(), anyLong(), anyString());
     }
 
     @Test
@@ -113,13 +142,13 @@ class ApiRoamShareControllerTest {
         RoamShareSnapshotMapper mapper = mock(RoamShareSnapshotMapper.class);
         when(mapper.selectTokenByMemberTs(9L, 5L)).thenReturn(null, "0123456789abcdef0123456789abcdef");
         when(mapper.countByMember(9L)).thenReturn(RoamShareSnapshotService.MAX_SNAPSHOTS_PER_MEMBER);
-        controller(9, mapper).publish(5L, SNAPSHOT);
+        controller(9, mapper).publish(5L, 12L, SNAPSHOT);
         verify(mapper).deleteOldestByMember(9L, 1);
 
         RoamShareSnapshotMapper existing = mock(RoamShareSnapshotMapper.class);
         when(existing.selectTokenByMemberTs(9L, 5L)).thenReturn("0123456789abcdef0123456789abcdef");
         when(existing.countByMember(9L)).thenReturn(RoamShareSnapshotService.MAX_SNAPSHOTS_PER_MEMBER);
-        controller(9, existing).publish(5L, SNAPSHOT);
+        controller(9, existing).publish(5L, 12L, SNAPSHOT);
         verify(existing, never()).deleteOldestByMember(anyLong(), anyInt());
     }
 

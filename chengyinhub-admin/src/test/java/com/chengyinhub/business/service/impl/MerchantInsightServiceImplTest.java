@@ -333,6 +333,53 @@ class MerchantInsightServiceImplTest {
         assertFalse(resp.getFacts().getJSONObject("candidates").toJSONString().contains("自己的主题"));
     }
 
+    @Test
+    void expiredMerchantSignupTopicsAreExcludedByCooperationDeadlineOnly() {
+        long now = System.currentTimeMillis();
+        com.chengyinhub.business.domain.CmsTopic expired = topic(103L, "已截止但活动未开始");
+        expired.setMerchantSignUpEndDate(new Date(now - 60_000L));
+        expired.setStartDate(new Date(now + 86_400_000L));
+        expired.setEndDate(new Date(now + 172_800_000L));
+
+        com.chengyinhub.business.domain.CmsTopic open = topic(104L, "商家报名仍开放");
+        open.setMerchantSignUpEndDate(new Date(now + 86_400_000L));
+        open.setStartDate(new Date(now - 172_800_000L));
+        open.setEndDate(new Date(now - 86_400_000L));
+        open.setRecruitDeadline(new Date(now - 60_000L));
+
+        when(cmsTopicService.selectCmsTopicList(any())).thenReturn(Arrays.asList(expired, open));
+
+        MerchantInsightResp resp = service.insight(MERCHANT_ID);
+
+        assertEquals(1, resp.getRecommendedTopics().size());
+        assertEquals(104L, resp.getRecommendedTopics().get(0).getLongValue("topicId"));
+        String candidates = resp.getFacts().getJSONObject("candidates").toJSONString();
+        assertFalse(candidates.contains("已截止但活动未开始"));
+        assertTrue(candidates.contains("商家报名仍开放"));
+    }
+
+    @Test
+    void cachedRecommendationsAreRevalidatedWhenSignupDeadlinePasses() {
+        com.chengyinhub.business.domain.CmsTopic candidate = topic(105L, "当天截止主题");
+        candidate.setMerchantSignUpEndDate(new Date(System.currentTimeMillis() + 86_400_000L));
+        when(cmsTopicService.selectCmsTopicList(any()))
+                .thenReturn(new ArrayList<>(Arrays.asList(candidate)));
+
+        MerchantInsightResp first = service.insight(MERCHANT_ID);
+        assertEquals(1, first.getRecommendedTopics().size());
+
+        ArgumentCaptor<Object> valueCap = ArgumentCaptor.forClass(Object.class);
+        verify(valueOperations).set(anyString(), valueCap.capture(), anyLong(), eq(TimeUnit.SECONDS));
+        candidate.setMerchantSignUpEndDate(new Date(System.currentTimeMillis() - 60_000L));
+        when(valueOperations.get(anyString())).thenReturn(valueCap.getValue());
+
+        MerchantInsightResp second = service.insight(MERCHANT_ID);
+
+        assertTrue(second.getRecommendedTopics().isEmpty());
+        verify(aiCreatorService, org.mockito.Mockito.times(1)).merchantInsight(anyString(), anyLong());
+        verify(cmsTopicService, org.mockito.Mockito.times(2)).selectCmsTopicList(any());
+    }
+
     private static com.chengyinhub.business.domain.CmsTopic topic(long id, String name) {
         com.chengyinhub.business.domain.CmsTopic t = new com.chengyinhub.business.domain.CmsTopic();
         t.setId(id);

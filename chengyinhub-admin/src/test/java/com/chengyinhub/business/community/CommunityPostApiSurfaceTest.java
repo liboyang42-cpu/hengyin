@@ -31,6 +31,8 @@ class CommunityPostApiSurfaceTest {
         assertTrue(routes.contains("DELETE /posts/{id}"));
         assertTrue(routes.contains("GET /posts/{id}"));
         assertTrue(routes.contains("GET /drafts"));
+        assertTrue(routes.contains("GET /me/bookmarks"));
+        assertTrue(routes.contains("GET /me/posts"));
         assertTrue(routes.contains("GET /posts/{id}/revisions"));
         assertTrue(routes.contains("GET /feeds/{mode}"));
         assertTrue(routes.contains("POST /posts/{id}/actions"));
@@ -59,6 +61,27 @@ class CommunityPostApiSurfaceTest {
                 String.class, Long.class, String.class, String.class, String.class, Long.class);
         assertAnonymous(ApiCommunityPostController.class, "comments", Long.class, Long.class, Integer.class);
         assertAnonymous(ApiCommunityPostController.class, "guideline");
+    }
+
+    @Test
+    void personalReadRoutesRequirePrincipalAndKeepExistingIncidentGateSemantics() {
+        com.chengyinhub.business.service.ICommunityPostService service =
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.ICommunityPostService.class);
+        com.chengyinhub.web.controller.api.CommunityPostFeatureGate gate =
+                org.mockito.Mockito.mock(com.chengyinhub.web.controller.api.CommunityPostFeatureGate.class);
+        ApiCommunityPostController controller = org.mockito.Mockito.spy(new ApiCommunityPostController(service, gate));
+        org.mockito.Mockito.doReturn(0L).when(controller).getAppUserId();
+        assertEquals(401, controller.bookmarks(null, 20).get("code"));
+        assertEquals(401, controller.ownPosts(null, 20).get("code"));
+        org.mockito.Mockito.verifyNoInteractions(service);
+        org.mockito.Mockito.doReturn(8L).when(controller).getAppUserId();
+        assertEquals(404, controller.bookmarks(null, 20).get("code"));
+        org.mockito.Mockito.verify(service, org.mockito.Mockito.never()).bookmarks(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+        assertEquals(200, controller.ownPosts(10L, 20).get("code"));
+        org.mockito.Mockito.verify(service).ownPosts(8L, 10L, 20);
+        org.mockito.Mockito.when(gate.canRead(8L)).thenReturn(true);
+        assertEquals(200, controller.bookmarks(10L, 20).get("code"));
+        org.mockito.Mockito.verify(service).bookmarks(8L, 10L, 20);
     }
 
     @Test

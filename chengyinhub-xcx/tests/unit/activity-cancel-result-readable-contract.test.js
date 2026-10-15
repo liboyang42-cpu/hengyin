@@ -204,3 +204,12 @@ test('⑩ 预检被拒:收起原因表单,不发取消、不弹确认', () => {
   m.requests[m.requests.length - 1].success({ code: '200', data: { paidPlayers: 2 } })
   assert.equal(m.inst.data.cancelBlocked, false)
 })
+
+
+test('取消状态提示不承诺未确认的全额退款或到账时间', () => {
+  const wxml = read('subpackageMember/components/cy/scene-play-activity-detail/index.wxml');
+  const banner = wxml.slice(wxml.indexOf('class="activity-cancelled"'), wxml.indexOf('class="activity-section activity-meta"'));
+  assert.doesNotMatch(banner, /原路全额退回|[1１].*[3３].*工作日到账/);
+  assert.match(banner, /退款或售后处理结果/);
+  assert.match(banner, /对应订单详情/);
+});

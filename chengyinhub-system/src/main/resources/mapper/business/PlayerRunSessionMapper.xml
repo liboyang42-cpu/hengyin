@@ -7,8 +7,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="upsertPaused">
         insert into player_run_session (member_id, activity_id, topic_id, run_state, elapsed_seconds, saved_at, create_time, update_time)
         values (#{memberId}, #{activityId}, #{topicId}, 'PAUSED', #{elapsedSeconds}, #{savedAt}, now(), now())
-        on duplicate key update run_state = values(run_state), elapsed_seconds = values(elapsed_seconds),
-                                saved_at = values(saved_at), update_time = values(update_time)
+        on duplicate key update
+            run_state = if(values(saved_at) &gt;= saved_at, values(run_state), run_state),
+            elapsed_seconds = if(values(saved_at) &gt;= saved_at, values(elapsed_seconds), elapsed_seconds),
+            update_time = if(values(saved_at) &gt;= saved_at, values(update_time), update_time),
+            saved_at = if(values(saved_at) &gt;= saved_at, values(saved_at), saved_at)
     </insert>
 
     <sql id="scopeWhere">
@@ -26,6 +29,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <update id="markEnded">
         update player_run_session set run_state = 'ENDED', elapsed_seconds = 0, saved_at = #{savedAt}, update_time = now()
         <include refid="scopeWhere"/>
+        and saved_at &lt;= #{savedAt}
     </update>
 
     <select id="selectContinuableByMember" resultType="java.util.LinkedHashMap">

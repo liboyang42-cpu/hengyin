@@ -25,6 +25,7 @@
       <view wx:if="{{!messages.length && !isThinking}}" class="npc-chat__empty">{{scope === 'merchant' ? (greeting || '想吃点什么？问问我。') : '想知道下一步怎么走？问问我。'}}</view>
     </scroll-view>
 
+    <view wx:if="{{retryAvailable}}" class="npc-chat__send" bindtap="onRetrySend" aria-role="button" aria-label="重试这条消息" hover-class="cy-pressed" hover-stay-time="80">{{state === 'CHECKING' ? '查询处理结果' : '重试这条消息'}}</view>
     <view class="npc-chat__composer">
       <textarea class="npc-chat__input" value="{{input}}" maxlength="300" auto-height fixed="true"
         placeholder="{{scope === 'merchant' ? '问问这家店，比如「有什么推荐」' : '问问这段漫游…'}}" placeholder-class="npc-chat__placeholder"

@@ -107,6 +107,9 @@ public class CmsTopic extends BaseEntity
     /** 非持久：该团已报名人数(/api/club/topics 富化) */
     private Integer signupCount;
 
+    /** 非持久：服务端草稿(is_draft=1)。仅 /api/topic/list?is_my=1 富化,供「我的」项目预览与 /api/project/my 同口径标草稿 */
+    private Boolean isDraft;
+
     /** 非持久化:我的主题列表带 invite_target 时回填 —— 此刻能否以该主题发起协作邀约(与写闸同一判据)。 */
     private Boolean inviteWindowOpen;
 
@@ -824,6 +827,8 @@ public class CmsTopic extends BaseEntity
     public void setInviteWindowOpen(Boolean inviteWindowOpen) { this.inviteWindowOpen = inviteWindowOpen; }
     public Integer getSignupCount() { return signupCount; }
     public void setSignupCount(Integer signupCount) { this.signupCount = signupCount; }
+    public Boolean getIsDraft() { return isDraft; }
+    public void setIsDraft(Boolean isDraft) { this.isDraft = isDraft; }
     public Integer getTeamStatus() { return teamStatus; }
     public void setTeamStatus(Integer teamStatus) { this.teamStatus = teamStatus; }
 

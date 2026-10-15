@@ -1,14 +1,10 @@
 package com.chengyinhub.business.service.impl;
 
-import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsRegistration;
-import com.chengyinhub.business.domain.ImMessage;
 import com.chengyinhub.business.domain.dto.RegistrationOrderResult;
 import com.chengyinhub.business.domain.dto.RegistrationQuoteResult;
 import com.chengyinhub.business.domain.dto.RegistrationRequest;
-import com.chengyinhub.business.service.ICmsActivityService;
 import com.chengyinhub.business.service.ICmsRegistrationService;
-import com.chengyinhub.business.service.IImService;
 import com.chengyinhub.business.service.IRegistrationCheckoutService;
 import com.chengyinhub.business.service.IRegistrationOrderService;
 import com.chengyinhub.business.service.IWechatPayService;
@@ -38,10 +34,6 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
     private IRegistrationOrderService registrationOrderService;
     @Autowired
     private IWechatPayService wechatPayService;
-    @Autowired
-    private ICmsActivityService activityService;
-    @Autowired
-    private IImService imService;
 
     @Override
     public RegistrationQuoteResult quote(Long memberId, RegistrationRequest request) {
@@ -71,7 +63,7 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
         } catch (RegistrationRequestConflictException conflict) {
             throw new RegistrationCheckoutException(409, conflict.getMessage());
         }
-        return finishOrder(memberId, order, !order.isReplayed(), isAppChannel(request));
+        return finishOrder(memberId, order, isAppChannel(request));
     }
 
     @Override
@@ -96,7 +88,7 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
     }
 
     private RegistrationCheckoutResult finishOrder(Long memberId, RegistrationOrderResult order,
-                                                    boolean notify, boolean appChannel) {
+                                                    boolean appChannel) {
         CmsRegistration primary = order == null ? null : order.getPrimary();
         if (primary == null) {
             throw new RegistrationCheckoutException(500, "报名记录不存在");
@@ -119,9 +111,6 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
                     primary.getRegistrationNo()))) {
                 throw new RegistrationCheckoutException(500, "零元报名支付状态确认失败");
             }
-        }
-        if (notify) {
-            notifySignup(memberId, primary);
         }
         String message = Integer.valueOf(1).equals(primary.getOwnerType())
                 ? "自玩通行证创建成功" : "报名创建成功";
@@ -176,18 +165,6 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
         return amount != null && amount.compareTo(BigDecimal.ZERO) > 0;
     }
 
-    private void notifySignup(Long memberId, CmsRegistration registration) {
-        try {
-            Long topicId = null;
-            if (Long.valueOf(2L).equals(registration.getOwnerType())) {
-                CmsActivity activity = activityService.selectCmsActivityById(registration.getOwnerId());
-                topicId = activity == null ? null : activity.getTopicId();
-            }
-            imService.sendSystem(memberId, ImMessage.MSG_CARD, "报名成功", signupNoticeExtra(topicId));
-        } catch (Exception ignored) {
-            // 通知为 best-effort，不得改变建单与支付状态。
-        }
-    }
 
     /**
      * CU-M-124：报名没挂主题时下发的是通用卡，前端 onCardTap 只认 action，实点停在系统通知详情。

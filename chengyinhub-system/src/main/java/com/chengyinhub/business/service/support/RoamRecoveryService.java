@@ -52,6 +52,10 @@ public class RoamRecoveryService {
                 result.put("newTiles", row.getTilesRevealed());
                 result.put("newPois", row.getPoisFound());
             }
+            boolean expired = row.getFinishedAt()==null || com.chengyinhub.business.support.RoamLocationRetention.expired(row.getFinishedAt(), new java.util.Date());
+            if (expired) com.chengyinhub.business.support.RoamLocationRetention.strip(result);
+            data.put("finishedAt", row.getFinishedAt() == null ? null : row.getFinishedAt().getTime());
+            data.put("locationExpired", expired);
             data.put("result", result);
             data.put("resultComplete", complete);
         } else {

@@ -5,6 +5,7 @@
 // 物理在 utils/object-pile.js;这里只管拉数据、加载图、逐帧画,全停住以后停掉逐帧重画(省电)。
 // ponytail: 只画最近 40 件,更早的不进堆;真有人收到上百件再加「往前翻」。
 const app = getApp();
+const session = require('../../../../utils/session/login-reload.js');
 const { toCard } = require('../../../../utils/object-card.js');
 const pile = require('../../../../utils/object-pile.js');
 const motionPreference = require('../../../../utils/motion-preference.js');
@@ -18,6 +19,7 @@ const FLOOR_GAP = 56;
 
 Page({
   data: {
+    readAccess: '',
     cats: [ALL].concat(CATEGORIES).map((c) => ({ key: c, label: c })),
     filter: ALL,
     cards: [],
@@ -35,6 +37,8 @@ Page({
     this._reduced = motionPreference.readReducedMotion();
     this._images = {};
     this._bodies = [];
+    this._destroyed = false;
+    this._loadSeq = 0;
     this.load(ALL);
   },
 
@@ -60,20 +64,63 @@ Page({
 
   // 页面藏起来就停画(聚成一团时逐帧重画永远不会自己停),回来接着画
   onHide() { this._hidden = true; this._stop(); },
-  onShow() { this._hidden = false; if (this._bodies && this._bodies.length) this._run(); },
-  onUnload() { this._destroyed = true; this._stop(); },
+  onShow() {
+    this._hidden = false;
+    if (this._readOwner && this._readOwner !== this._readIdentity()) { this._resetRead(); this.load(ALL); }
+    if (this._bodies && this._bodies.length) this._run();
+  },
+  onUnload() {
+    this._destroyed = true;
+    this._unloaded = true;
+    this._loadSeq = (this._loadSeq || 0) + 1;
+    this._stop();
+  },
+
+
+  _readIdentity() { return [session.memberId(app), (app.globalData || {}).authorization || ''].join('|'); },
+  _resetRead() {
+    this._readOwner = this._readIdentity();
+    this._loadSeq = (this._loadSeq || 0) + 1;
+    this._stop(); this._bodies = []; this._images = {}; this._total = undefined;
+    this.setData({ cards: [], active: null, ball: false, filter: ALL, loading: false, loaded: false, error: false, readAccess: '' });
+    if (this._ctx && this._world) this._draw();
+  },
+  _readOutcome(res, statusCode, owner, seq) {
+    if (this._destroyed || seq !== this._loadSeq) return true;
+    if (owner !== this._readIdentity() || res && res.reason === 'sessionChanged') {
+      this._resetRead();
+      if (!session.memberId(app)) this.setData({ readAccess: 'login' });
+      else if (!this._hidden) this.load(ALL);
+      return true;
+    }
+    const code = session.failureStatus(res, statusCode);
+    if (code !== 401 && code !== 403) return false;
+    this._resetRead();
+    this.setData({ readAccess: code === 401 ? 'login' : 'denied' });
+    return true;
+  },
+  loginToRead() {
+    if (this.data.readAccess === 'denied') return;
+    return session.retryLogin(this, app, function () { this._resetRead(); this.load(ALL); });
+  },
 
   load(category) {
+    const owner = this._readIdentity();
+    if (!session.memberId(app)) { this._resetRead(); this.setData({ readAccess: 'login' }); return; }
+    if (this._readOwner && this._readOwner !== owner) this._resetRead();
+    this._readOwner = owner;
     const that = this;
     const previous = this.data.filter;
-    this.setData({ loading: true, filter: category });
+    const loadSeq = (this._loadSeq || 0) + 1;
+    this._loadSeq = loadSeq;
+    this.setData({ loading: true, filter: category, readAccess: '' });
     app.sendRequest({
       url: '/api/object-card/list',
       method: 'POST',
       autoErrorToast: false,
       data: { pageNum: 1, pageSize: PAGE_SIZE, category: category === ALL ? '' : category },
       success(res) {
-        if (that._destroyed) return;
+        if (that._readOutcome(res, null, owner, loadSeq)) return;
         const d = res && res.code == '200' && res.data ? res.data : null;
         // 非 200 / 没有 data / 行形状不对 = 没接通,不是「一张都没有」
         const okRows = d && Array.isArray(d.list) && d.list.every(function (row) {
@@ -81,22 +128,22 @@ Page({
             && row.id !== null && row.id !== undefined && typeof row.title === 'string';
         });
         const okTotal = d && typeof d.total === 'number' && Number.isInteger(d.total) && d.total >= 0;
-        if (!okRows || !okTotal) { that._failed(previous); return; }
+        if (!okRows || !okTotal) { that._failed(previous, loadSeq); return; }
         const cards = d.list.map(toCard);
         const firstTime = !that.data.loaded;
         that._total = d.total;   // 只给自证探针读,不进 setData(界面不渲染它)
         that.setData({ cards, loading: false, loaded: true, error: false, ball: false });
         that._build(!firstTime);
       },
-      fail() { that._failed(previous); },
+      fail(res, statusCode) { if (!that._readOutcome(res, statusCode, owner, loadSeq)) that._failed(previous, loadSeq); },
       // HTTP 层非 200 走这一条:不挂它 success/fail 都不跑,骨架转到底
-      successStatusAbnormal() { that._failed(previous); },
+      successStatusAbnormal(res, statusCode) { if (!that._readOutcome(res, statusCode, owner, loadSeq)) that._failed(previous, loadSeq); },
     });
   },
 
   /** 首屏没读到 = 整页失败(自动返回);切分类没读到 = 提示一句,退回原来那一类,堆不动。 */
-  _failed(previous) {
-    if (this._destroyed) return;
+  _failed(previous, loadSeq) {
+    if (this._destroyed || loadSeq !== this._loadSeq) return;
     if (!this.data.loaded) { this.setData({ loading: false, error: true }); return; }
     this.setData({ loading: false, filter: previous });
     cyToast('这一类没读到，再点一次试试');

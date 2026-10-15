@@ -1,8 +1,8 @@
 <!-- 限时打字。目标文本是明牌 —— 这玩法考的是手速不是猜谜。
      限时条与超时判负由 cy-play-stage 出(它的截止时刻是钉死的,切后台也会到点)。 -->
 <cy-play-stage id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出"
-               limit-seconds="{{seconds}}" count-in
-               bind:back="onClose" bind:run="onRun" bind:verdict="onVerdict">
+               limit-seconds="{{r5 ? 0 : seconds}}" deadline-at="{{r5 ? deadlineAt : 0}}" count-in
+               bind:back="onClose" bind:run="onRun" bind:verdict="onVerdict" bind:deadline="onDeadline">
   <view wx:if="{{terminalSkin}}" class="terminal {{off ? 'ti--' + off : ''}} {{reducedMotion ? 'pk--reduced' : ''}}">
     <view class="terminal__screen">
       <text class="terminal__log">{{title || 'SYSTEM BIOS v1.0'}}
@@ -30,7 +30,7 @@
     <view class="ti__target pk-in">{{target}}</view>
 
     <block wx:if="{{phase === 'intro'}}">
-      <view class="ti__hint">{{seconds}} 秒内一字不差地打完它</view>
+      <view class="ti__hint">{{r5 ? (deadlineAt ? '在限时挑战结束前完成输入' : '不限时，一字不差地打完它') : seconds + ' 秒内一字不差地打完它'}}</view>
     </block>
     <block wx:else>
       <input class="ti__input" value="{{typed}}" disabled="{{locked || phase !== 'run'}}"

@@ -3,11 +3,10 @@ const modal = require('../../utils/modal.js');
 const cyToast = require('../../utils/toast.js');
 const { readPageStyle } = require('../../utils/font-scale.js');
 const app = getApp();
-const mockData = require('../../utils/mockData.js');
 const policy = require('../../utils/identity/identity-policy.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
 const merchantAccessPolicy = require('../../utils/merchant-access-policy.js');
-const { formatDurationMinutes } = require('../../utils/template-display.js');
+const { formatDurationMinutes, gameTemplateCover } = require('../../utils/template-display.js');
 const { isRecord, isRecordList } = require('../../utils/response-shape.js');
 const analytics = require('../../utils/analytics.js');
 
@@ -117,14 +116,6 @@ Page({
     headerRightInset: 0
   },
 
-  isDevEnv() {
-    try {
-      return wx.getAccountInfoSync().miniProgram.envVersion === 'develop';
-    } catch (e) {
-      return false;
-    }
-  },
-
   onLoad(options) {
     options = options || {};
     const mi = getApp().globalData.menuButtonInfo || {};
@@ -144,10 +135,6 @@ Page({
       titBarHeight: safeTop - sh,     // titBar = 胶囊底到状态栏底的距离
       headerRightInset: headerRightInset
     });
-    if (this.isDevEnv()) {
-      const mock = mockData.getHomeData() || {};
-      this.applyCategoryList(mock.categoryList);
-    }
   },
 
   onShow() {
@@ -413,10 +400,11 @@ Page({
       if (dur) meta.push(dur);
       return Object.assign({}, item, {
         _kind: 'game',
+        imgUrl: gameTemplateCover(item),
         _title: item.title || '',
         _subText: item.description || '',
         _metaText: meta.join(' · '),
-        _iconUrl: INTERACTION_ICON_BY_TITLE[item.title || ''] || '',
+        _iconUrl: INTERACTION_ICON_BY_TITLE[item.title || ''] || (!item.imgUrl ? gameTemplateCover(item) : ''),
         // 后端按 FIND_IN_SET(activity_categoryids) 过滤,前端置顶排序照抄同一个字段;
         // 不要拿 categoryId —— 那是另一列,两者并不同步。
         _cats: String(item.activityCategoryids == null ? '' : item.activityCategoryids)
@@ -540,11 +528,6 @@ Page({
     const that = this;
     const seq = (this._homeSeq || 0) + 1;
     this._homeSeq = seq;
-    const fallback = function () {
-      if (!that.isDevEnv()) return;
-      const mock = mockData.getHomeData() || {};
-      that.applyCategoryList(mock.categoryList);
-    };
     app.sendRequest({
       hideLoading: true,
       silentError: true,
@@ -558,12 +541,12 @@ Page({
           that._categoryCacheReady = isRecordList(res.data.categoryList) && res.data.categoryList.length > 0;
         } else {
           // 品类拉不到不阻断:列表来自另外两个接口,没有分类行页面照常可用。
-          fallback();
+          // 保留已读分类；读取失败不能替换为演示分类。
         }
       },
       fail() {
         if (that._homeSeq !== seq) return;
-        fallback();
+        // 保留已读分类。
       },
       complete() {
         if (that._homeSeq === seq) that._homeRequestPending = false;
@@ -637,19 +620,11 @@ Page({
     // 主题与玩法是两种实体:主题直接进入既有配置入口；玩法进入既有详情页。
     if (item._kind === 'topic') { this.goTopicConfig(e); return; }
     if (!item.id) return;
-    wx.navigateTo({ url: '/pages/templatedetail/templatedetail?id=' + item.id });
+    wx.navigateTo({ url: '/pages/templatedetail/templatedetail?id=' + item.id +
+      (this.data.operationScope === 'MERCHANT' ? '&operationScope=MERCHANT' : '') });
   },
 
   // ===== 主题模板货架(/api/template/topic-template) =====
-  applyDevTopicPreview() {
-    if (!this.isDevEnv()) return;
-    this._topicRows = this.decorateTopic(mockData.getTopicTemplates());
-    this._topicLoaded = true;
-    if (this.data.tab !== 'topic') return;
-    this.setData({ listLoaded: true, errorMsg: '' });
-    this.rebuildLists();
-  },
-
   getTopicTemplates() {
     const that = this;
     const seq = (this._topicTemplateSeq || 0) + 1;
@@ -664,20 +639,14 @@ Page({
       success(res) {
         if (that._topicTemplateSeq !== seq) return;
         if (res.code == '200' && isRecordList(res.data)) {
-          if (res.data.length || !that.isDevEnv()) {
-            that._topicRows = that.decorateTopic(res.data);
-            that._topicLoaded = true;
-            // 同 getGameRows:缓存照收,屏幕状态只归当前 tab 管
-            if (that.data.tab === 'topic') {
-              that.setData({ listLoaded: true, errorMsg: '' });
-              that.rebuildLists();
-            }
-          } else {
-            that.applyDevTopicPreview();
+          that._topicRows = that.decorateTopic(res.data);
+          that._topicLoaded = true;
+          if (that.data.tab === 'topic') {
+            that.setData({ listLoaded: true, errorMsg: '' });
+            that.rebuildLists();
           }
         } else {
-          if (that.isDevEnv()) that.applyDevTopicPreview();
-          else if (that.data.tab === 'topic') {
+          if (that.data.tab === 'topic') {
             // 同 getGameRows:失败半边只归当前 tab 管,迟到失败不画到别的 tab 上
             that.setData({ errorMsg: app.getRequestErrorMessage(res, '主题模板加载失败') });
           }
@@ -685,8 +654,7 @@ Page({
       },
       fail(res) {
         if (that._topicTemplateSeq !== seq) return;
-        if (that.isDevEnv()) that.applyDevTopicPreview();
-        else if (that.data.tab === 'topic') {
+        if (that.data.tab === 'topic') {
           that.setData({ errorMsg: app.getRequestErrorMessage(res, '主题模板加载失败') });
         }
       },
@@ -762,7 +730,8 @@ Page({
     }
     if (!item.id) return;
     analytics.track('template_reuse', { bizType: 'template', bizId: item.id });
-    wx.navigateTo({ url: '/pages/publish/temp/index?id=' + item.id });
+    wx.navigateTo({ url: '/pages/publish/temp/index?id=' + item.id +
+      (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : '') });
   },
 
   // 整包复制成我的草稿,章节/节点/玩法在「我的项目 → 编辑」里看和配。

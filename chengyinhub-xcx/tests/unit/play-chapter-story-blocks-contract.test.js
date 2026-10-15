@@ -1481,3 +1481,36 @@ test('正文打开时切到下一章，标题与正文一起更新，同章重�
     assert.equal(rendered, 1, '同章定位/状态更新不能重新滚动正文')
   } finally { wx.nextTick = previousNextTick }
 })
+
+test('归零挑战呈现题组/弹球组件，章节已打开也不推进普通故事', () => {
+  const node = { nodeId: 51, name: '挑战', hasAdvanced: true };
+  for (const playKit of [{ qa: { mode: 'PICK', title: '题目', options: [] } }, { ballShake: { goal: 10, timed: false, seconds: 0 } }]) {
+    const page = makePage({ blocks: [] }, [node]);
+    page.data.advancedPlay = { show: true, node };
+    page.data.chapterFull = true;
+    page._themeChallengeNodeId = 51;
+    page._mergeStoryVars = () => { throw new Error('挑战不可推进普通路线'); };
+    let reads = 0; page.refreshThemeBackpack = () => { reads++; return Promise.resolve(true); };
+    const challenge = { instanceId: 'one', progress: 6, goal: 10, success: false };
+    page.onAdvancedSession({ detail: { sessionId: 51, nodeId: 51, ownerType: 2, version: 1, present: 'inline', readyForBase: true, playKit, challenge } });
+    assert.equal(page.data.playKit.show, true);
+    assert.equal(page.data.playKit.kit.type, playKit.qa ? 'qa' : 'ballshake');
+    assert.deepEqual(page.data.playKit.kit.challenge, challenge);
+    assert.equal(page.data.playKit.kit.challengeShared, true);
+    assert.equal(page.data.playKit.readyForBase, false);
+    assert.equal(reads, 1);
+  }
+});
+
+test('挑战失败只显示服务端许可的明确重试；次数用完仍不自动重开', () => {
+  for (const disabledReason of [null,'CHALLENGE_LIMIT']) {
+    const node={nodeId:51,name:'挑战'};const page=makePage({blocks:[]},[node]);
+    page.data.advancedPlay={show:true,node};page._themeChallengeNodeId=51;page.refreshThemeBackpack=()=>Promise.resolve(true);
+    let starts=0;page.selectComponent=()=>({start(){starts++;}});
+    page.onAdvancedSession({detail:{nodeId:51,sessionId:51,ownerType:2,status:'FAILED',canRetry:!disabledReason,version:1,challenge:{instanceId:'one',progress:6,goal:10,retry:true,disabledReason},playKit:{ballShake:{goal:10,timed:true,seconds:12}}}});
+    assert.equal(starts,0);
+    assert.equal(page.data.playKit.kit.terminal,true);
+    assert.equal(page.data.playKit.kit.canRetry,!disabledReason);
+    assert.equal(page.data.playKit.readyForBase,false);
+  }
+});

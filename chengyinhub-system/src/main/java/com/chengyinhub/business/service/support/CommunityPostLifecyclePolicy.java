@@ -26,8 +26,8 @@ public class CommunityPostLifecyclePolicy {
         String current = post.getLifecycle();
         String target;
         if (ACTION_EDIT.equals(action)) {
-            requireOneOf(current, CommunityPost.LIFECYCLE_DRAFT, CommunityPost.LIFECYCLE_PUBLISHED,
-                    CommunityPost.LIFECYCLE_LIMITED, CommunityPost.LIFECYCLE_HIDDEN);
+            requireOneOf(current, CommunityPost.LIFECYCLE_DRAFT, CommunityPost.LIFECYCLE_CHECKING,
+                    CommunityPost.LIFECYCLE_PUBLISHED, CommunityPost.LIFECYCLE_LIMITED, CommunityPost.LIFECYCLE_HIDDEN);
             target = CommunityPost.LIFECYCLE_DRAFT.equals(current)
                     ? CommunityPost.LIFECYCLE_DRAFT : CommunityPost.LIFECYCLE_CHECKING;
         } else if (ACTION_PUBLISH.equals(action)) {

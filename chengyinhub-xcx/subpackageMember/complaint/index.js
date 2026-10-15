@@ -20,10 +20,19 @@ Page({
     submitError: '',
     submitErrorKind: 'data',
     canSubmit: false,
+    history: [],
+    historyLoading: false,
+    historyAccessError: '',
   },
 
   onLoad() {
     this.loadTopics();
+    this.loadHistory();
+  },
+
+  onShow() {
+    const owner = typeof app.getUserID === 'function' ? String(app.getUserID() || '') : '';
+    if (owner !== this._historyOwner) this.loadHistory();
   },
 
   onRetry() {
@@ -84,6 +93,50 @@ Page({
         finishLoadError(res, '网络异常，请重试');
       },
     });
+  },
+
+  loadHistory() {
+    const owner = typeof app.getUserID === 'function' ? String(app.getUserID() || '') : '';
+    if (this._unloaded) return;
+    if (owner !== this._historyOwner) this.setData({ history: [] });
+    this._historyOwner = owner;
+    if (!owner) { this.setData({ history: [], historyLoading: false, historyAccessError: '请登录后查看处理进展' }); return; }
+    const epoch = (this._historyEpoch || 0) + 1;
+    this._historyEpoch = epoch;
+    if (this._historyTask && typeof this._historyTask.abort === 'function') this._historyTask.abort();
+    const current = () => !this._unloaded && epoch === this._historyEpoch
+      && owner === String(app.getUserID() || '');
+    this.setData({ historyLoading: true, historyAccessError: '' });
+    const denied = (res, statusCode) => {
+      const code = Number(statusCode || res && (res.code || res.statusCode));
+      if (current() && [400, 401, 403, 422].indexOf(code) >= 0) {
+        this.setData({ history: [], historyAccessError: res.msg || (code === 401 ? '请登录后查看处理进展' : '当前账号无法查看处理进展') });
+      }
+    };
+    this._historyTask = app.sendRequest({
+      hideLoading: true,
+      silentError: true,
+      url: '/api/coop/complaint/mine',
+      method: 'POST',
+      success: res => {
+        denied(res);
+        if (!current() || !res || Number(res.code) !== 200 || !Array.isArray(res.data)
+            || res.data.some(row => !row || typeof row !== 'object' || !row.id)) return;
+        // 服务端只返回本人进展字段；不推算责任、内部扣款或最终退款。
+        const history = res.data.map(row => ({ id: row.id, topicName: row.topicName || '',
+          statusText: row.statusText || '', reason: row.reason || '', handleNote: row.handleNote || '' }));
+        this.setData({ history });
+      },
+      successStatusAbnormal: (res, statusCode) => { denied(res, statusCode); },
+      fail: denied,
+      complete: () => { if (current()) this.setData({ historyLoading: false }); },
+    });
+  },
+
+  onUnload() {
+    this._unloaded = true;
+    this._historyEpoch = (this._historyEpoch || 0) + 1;
+    if (this._historyTask && typeof this._historyTask.abort === 'function') this._historyTask.abort();
   },
 
   openPickerSheet(e) {

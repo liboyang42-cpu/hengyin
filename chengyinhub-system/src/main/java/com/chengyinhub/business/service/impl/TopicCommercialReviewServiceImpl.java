@@ -99,6 +99,28 @@ public class TopicCommercialReviewServiceImpl implements ITopicCommercialReviewS
                 snapshot("SALE", TopicLifecycleState.SELLING.name(), evaluation, topic, draft, canonical));
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public com.chengyinhub.business.domain.vo.TopicSaleReviewProgress submitSaleReviewIfReady(
+            Long topicId, Long submitterId) {
+        CmsTopic topic = lockedTopic(topicId);
+        TopicLifecycleState state = TopicLifecycleState.fromCode(topic.getLifecycle());
+        if (state != TopicLifecycleState.PRICING) {
+            return new com.chengyinhub.business.domain.vo.TopicSaleReviewProgress(null,
+                    state == TopicLifecycleState.RECRUITING ? "招募完成后进入定价，完成开售参数后自动提审"
+                            : "请先完成立项审核和定价，审核通过前尚未开售");
+        }
+        String transferStep = transferGate.pendingTransferStep(topic);
+        if (transferStep != null) return new com.chengyinhub.business.domain.vo.TopicSaleReviewProgress(null, transferStep);
+        if (saleSnapshotMapper.selectDraftByTopicIdForUpdate(topicId) == null) {
+            return new com.chengyinhub.business.domain.vo.TopicSaleReviewProgress(null,
+                    "请在定价工作台保存完整开售参数，保存成功后自动提交开售审核");
+        }
+        Long taskId = submitSaleReview(topicId, submitterId);
+        return new com.chengyinhub.business.domain.vo.TopicSaleReviewProgress(taskId,
+                taskId == null ? "请完成开售确认" : "已提交开售审核，审核通过前尚未开售");
+    }
+
     private CmsTopic lockedTopic(Long topicId) {
         if (topicId == null) throw new IllegalArgumentException("topicId 不能为空");
         CmsTopic topic = topicMapper.selectCmsTopicByIdForUpdate(topicId);

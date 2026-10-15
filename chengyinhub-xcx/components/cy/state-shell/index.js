@@ -16,6 +16,8 @@ const STATE_DEFAULTS = {
 // 空态 / 加载中 / 无权限(常带「去登录」真出路)不在此列。
 const AUTO_BACK_KINDS = { error: 1, data: 1, network: 1, offline: 1, 'missing-param': 1 };
 const wantsAutoBack = (autoBack, kind) => !!autoBack && !!AUTO_BACK_KINDS[kind];
+// 加载没成功类状态一律留白:不展示错误文案、重试或返回半屏。缺参、无权限、空态不在此列。
+const LOAD_FAILURE_KINDS = { error: 1, data: 1, network: 1, offline: 1 };
 
 Component({
   properties: {
@@ -40,6 +42,7 @@ Component({
     _sub: '这里还没有内容',
     _primary: '',
     _autoBack: false,
+    _loadFailure: false,
   },
   observers: {
     'kind, title, sub, aria, primary': function (kind, title, sub, aria, primary) {
@@ -56,12 +59,13 @@ Component({
         _title: resolvedTitle,
         _sub: resolvedSub,
         _primary: action,
-        _autoBack: wantsAutoBack(this.data.autoBack, kind),
+        _autoBack: !LOAD_FAILURE_KINDS[kind] && wantsAutoBack(this.data.autoBack, kind),
+        _loadFailure: !!LOAD_FAILURE_KINDS[kind],
       });
     },
     // 与上面分开监听:不赌两组属性在初始化时的赋值先后
     'autoBack': function (autoBack) {
-      this.setData({ _autoBack: wantsAutoBack(autoBack, this.data.kind) });
+      this.setData({ _autoBack: !LOAD_FAILURE_KINDS[this.data.kind] && wantsAutoBack(autoBack, this.data.kind) });
     },
   },
   methods: {

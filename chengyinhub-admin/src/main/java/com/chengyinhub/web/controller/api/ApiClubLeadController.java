@@ -10,6 +10,8 @@ import com.chengyinhub.business.domain.CmsRegistrationScan;
 import com.chengyinhub.business.domain.PlayerNodeProgress;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.mapper.ClubLeadMapper;
+import com.chengyinhub.business.mapper.CmsActivityMapper;
+import com.chengyinhub.business.service.support.ClubGatherArrivalPolicy;
 import com.chengyinhub.business.mapper.ClubEventOpsMapper;
 import com.chengyinhub.business.mapper.ClubRoleAssignmentMapper;
 import com.chengyinhub.business.access.club.ClubRoleCode;
@@ -29,6 +31,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -60,6 +63,10 @@ public class ApiClubLeadController extends BaseController {
     @Autowired
     private ClubLeadMapper clubLeadMapper;
     @Autowired
+    private CmsActivityMapper cmsActivityMapper;
+    @Autowired
+    private ClubGatherArrivalPolicy clubGatherArrivalPolicy;
+    @Autowired
     private ClubEventOpsMapper clubEventOpsMapper;
     @Autowired
     private com.chengyinhub.business.service.IGameSessionRuntimeService gameSessionRuntimeService;
@@ -79,6 +86,8 @@ public class ApiClubLeadController extends BaseController {
     private IPlayerNodeProgressService playerNodeProgressService;
     @Autowired
     private IUmsMemberService umsMemberService;
+    @Autowired
+    private com.chengyinhub.business.service.IWxContentSecurityService wxContentSecurityService;
     @Autowired
     private ISettlementEntryService settlementEntryService;
     @Autowired
@@ -137,22 +146,30 @@ public class ApiClubLeadController extends BaseController {
 
     @Operation(summary = "成员集合签到(幂等)")
     @PostMapping("/arrive")
-    public AjaxResult arrive(String activityId) {
+    @Transactional(rollbackFor = Exception.class)
+    public AjaxResult arrive(String activityId, Double latitude, Double longitude) {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
         Long actId = Convert.toLong(activityId, 0L);
         if (actId <= 0) return error("参数有误");
+        CmsActivity activity = cmsActivityMapper.selectCmsActivityByIdForUpdate(actId);
+        String invalid = clubGatherArrivalPolicy.validate(activity, latitude, longitude, new Date());
+        if (invalid != null) return error(invalid);
         ClubLeadState st = ensureState(actId);
         if (st == null) return error("该场次不是带领场");
+        if (!Integer.valueOf(1).equals(st.getStatus()) && !Integer.valueOf(2).equals(st.getStatus())) return error("该场次已结束");
         if (!canAccessLeadActivity(actId, memberId, st)) {
             return error("仅本场已支付成员或领队可签到");
         }
+        Date arrivedAt = new Date();
+        invalid = clubGatherArrivalPolicy.validate(activity, latitude, longitude, arrivedAt);
+        if (invalid != null) return error(invalid);
         ClubLeadCheckin c = new ClubLeadCheckin();
         c.setActivityId(actId);
         c.setMemberId(memberId);
-        c.setArrivedAt(new Date());
+        c.setArrivedAt(arrivedAt);
         try {
-            clubLeadMapper.insertCheckin(c);
+            if (clubLeadMapper.insertCheckin(c) != 1) return error("签到未完成，请重试");
         } catch (DuplicateKeyException e) {
             // 已签到,幂等成功
         }
@@ -229,6 +246,13 @@ public class ApiClubLeadController extends BaseController {
         String note = Convert.toStr(body.get("dayNote"), null);
         if (note != null) { upd.setDayNote(note); chg.append("当日备注"); }
         if (chg.length() == 0) return error("无可改运营字段");
+        // F-L5C-02:集合地点与当日备注给参与者看,与 /broadcast 同一道内容安全闸。
+        String opsText = com.chengyinhub.business.service.IWxContentSecurityService.joinText(addr, addrName, note);
+        if (!opsText.isEmpty()) {
+            String risk = com.chengyinhub.business.service.IWxContentSecurityService.checkTextAsMember(wxContentSecurityService, umsMemberService,
+                    memberId, opsText);
+            if (risk != null) return error(risk);
+        }
         // CR-63(2026-09-15 裁决 15):已售出(有已支付报名)的场次锁集合时间与地点;
         // 当日备注是文字,按裁决仍可改。P1-2:待支付/支付中也算已售出(下单后改期同样是后门)。
         // 服务端为准,前端置灰只是体验。
@@ -261,6 +285,9 @@ public class ApiClubLeadController extends BaseController {
         if (!memberId.equals(st.getLeaderMemberId())) return error("只有队长可以广播");
         if (text == null || text.trim().isEmpty()) return error("广播内容为空");
         String t = text.trim();
+        String risk = com.chengyinhub.business.service.IWxContentSecurityService.checkTextAsMember(wxContentSecurityService, umsMemberService,
+                memberId, t);
+        if (risk != null) return error(risk);
         ClubLeadState upd = new ClubLeadState();
         upd.setId(st.getId());
         upd.setBroadcastText(t.length() > 200 ? t.substring(0, 200) : t);

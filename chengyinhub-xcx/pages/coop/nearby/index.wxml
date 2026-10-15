@@ -47,9 +47,9 @@
 
   <cy-empty size="lg" style="flex:1;min-height:0;" kind="missing-param" wx:elif="{{pageState === 'missing-param'}}" fill title="主题参数无效" sub="{{errorText}}" cta="返回上一页" bind:cta="goBack"></cy-empty>
 
-  <cy-error class="retry-lg error-kind--{{errorKind}}" size="lg" style="flex:1;min-height:0;" wx:elif="{{pageState === 'error'}}" fill title="附近商家没加载出来" sub="{{errorText || '服务暂时不可用,请稍后重试'}}" auto-back custom-back bind:back="goBack" bind:retry="retry"></cy-error>
+  <cy-error load-failure class="retry-lg error-kind--{{errorKind}}" size="lg" style="flex:1;min-height:0;" wx:elif="{{pageState === 'error'}}" fill title="附近商家没加载出来" sub="{{errorText || '服务暂时不可用,请稍后重试'}}" auto-back custom-back bind:back="goBack" bind:retry="retry"></cy-error>
 
-  <cy-error class="retry-lg" size="lg" style="flex:1;min-height:0;" wx:else fill title="附近商家暂不可用" sub="请返回后重试" auto-back custom-back bind:back="goBack" bind:retry="retry"></cy-error>
+  <cy-error load-failure class="retry-lg" size="lg" style="flex:1;min-height:0;" wx:else fill title="附近商家暂不可用" sub="请返回后重试" auto-back custom-back bind:back="goBack" bind:retry="retry"></cy-error>
 </view>
 </view>
 <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />

@@ -290,6 +290,14 @@ class ClubSessionServiceImplTest {
         assertEquals(cal.getTime(), captor.getValue().getStartDate());
     }
 
+    @Test
+    void pastAssemblyMomentIsRejectedBeforeAnyWrite() {
+        ClubSessionOpenRequest request = request();
+        request.setSessionDate(new Date(0L));
+        assertThrows(IllegalArgumentException.class, () -> service.open(request, OWNER_ID, "主理人"));
+        verify(activityService, org.mockito.Mockito.never()).insertCmsActivity(org.mockito.ArgumentMatchers.any());
+    }
+
     private ClubSessionOpenRequest request() {
         ClubSessionOpenRequest request = new ClubSessionOpenRequest();
         request.setClubId(CLUB_ID);

@@ -17,6 +17,7 @@ let modals
 
 global.getApp = () => ({
   globalData: {},
+  getUserID: () => 7,
   sendRequest(options) {
     requests.push(options)
     return { abort() { aborts += 1 } }

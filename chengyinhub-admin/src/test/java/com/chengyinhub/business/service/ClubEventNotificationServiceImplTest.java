@@ -17,6 +17,7 @@ import com.chengyinhub.common.exception.ServiceException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.inOrder;
@@ -54,11 +56,56 @@ class ClubEventNotificationServiceImplTest {
         im = mock(IImService.class);
         service = new ClubEventNotificationServiceImpl(access, mapper,
                 new ClubEventNotificationTransactionService(mapper, im, access, clubs));
+        ReflectionTestUtils.setField(service, "wxContentSecurityService", mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
+        ReflectionTestUtils.setField(service, "umsMemberService", mock(com.chengyinhub.business.service.IUmsMemberService.class));
         when(mapper.isEligibleNotificationRecipient(any(), any(), any(), any(), any())).thenReturn(1);
         when(mapper.claimNotificationOutbox(any(), any())).thenReturn(1);
         when(access.require(ACTOR, CLUB, ACTIVITY, ClubPermission.EVENT_OPERATE))
                 .thenReturn(eventAccess());
         when(clubs.selectClubByIdForUpdate(CLUB)).thenReturn(activeClub());
+    }
+
+    @Test
+    void audienceCountsIncludesSixGroupsAndLeavesUnscopedEventCountsUnknown() {
+        when(access.require(ACTOR, CLUB, null, ClubPermission.NOTIFY_SEND))
+                .thenReturn(new ClubAccessContext(ACTOR, CLUB, 99L, null,
+                        Collections.singleton(ClubRoleCode.CLUB_OPERATOR)));
+        when(mapper.selectAllMemberRecipients(CLUB)).thenReturn(Arrays.asList(51L, 52L));
+        when(mapper.selectAdminRecipients(CLUB)).thenReturn(Arrays.asList(51L, 51L));
+        when(mapper.selectInactiveRecipients(CLUB)).thenReturn(Collections.emptyList());
+
+        Map<?, ?> counts = (Map<?, ?>) service.audienceCounts(ACTOR, CLUB, null).get("counts");
+        assertEquals(6, counts.size());
+        assertEquals(2, counts.get("ALL_MEMBERS"));
+        assertEquals(1, counts.get("ADMINS"));
+        assertEquals(0, counts.get("INACTIVE"));
+        for (String group : Arrays.asList("REGISTERED", "WAITLIST", "NO_SHOW")) {
+            assertEquals(true, counts.containsKey(group));
+            assertEquals(null, counts.get(group));
+        }
+        verify(mapper, never()).selectRegisteredRecipients(any(), any());
+    }
+
+    @Test
+    void scopedAudienceCountsKeepsActivityPermissionAndSameRecipientLimits() {
+        when(mapper.selectAdminRecipients(CLUB)).thenReturn(Collections.emptyList());
+        when(mapper.selectInactiveRecipients(CLUB)).thenReturn(Arrays.asList(51L, 52L));
+        when(mapper.selectRegisteredRecipients(CLUB, ACTIVITY)).thenReturn(Collections.singletonList(51L));
+        Map<?, ?> counts = (Map<?, ?>) service.audienceCounts(ACTOR, CLUB, ACTIVITY).get("counts");
+        assertEquals(6, counts.size());
+        assertEquals(0, counts.get("ADMINS"));
+        assertEquals(2, counts.get("INACTIVE"));
+        assertEquals(1, counts.get("REGISTERED"));
+        assertEquals(0, counts.get("WAITLIST"));
+        assertEquals(0, counts.get("NO_SHOW"));
+        verify(access).require(ACTOR, CLUB, ACTIVITY, ClubPermission.EVENT_OPERATE);
+
+        when(mapper.selectInactiveRecipients(CLUB)).thenReturn(
+                java.util.stream.LongStream.rangeClosed(1, 501).boxed().collect(java.util.stream.Collectors.toList()));
+        assertThrows(ServiceException.class, () -> service.audienceCounts(ACTOR, CLUB, ACTIVITY));
+        when(access.require(ACTOR, CLUB, ACTIVITY, ClubPermission.EVENT_OPERATE))
+                .thenThrow(new ServiceException("无权限", HttpStatus.FORBIDDEN));
+        assertThrows(ServiceException.class, () -> service.audienceCounts(ACTOR, CLUB, ACTIVITY));
     }
 
     @Test
@@ -200,6 +247,17 @@ class ClubEventNotificationServiceImplTest {
 
         assertEquals(HttpStatus.CONFLICT, wrongScopeError.getCode());
         assertEquals(HttpStatus.CONFLICT, impossibleCountError.getCode());
+    }
+
+    @Test
+    void uncheckedNotificationCannotCreateCampaignOrContactRecipients() {
+        com.chengyinhub.business.service.IWxContentSecurityService safety =
+                mock(com.chengyinhub.business.service.IWxContentSecurityService.class);
+        when(safety.checkText(anyString(), any())).thenReturn("安全检测不可用");
+        ReflectionTestUtils.setField(service, "wxContentSecurityService", safety);
+        assertThrows(ServiceException.class, () -> service.send(ACTOR, request("unsafe-notification")));
+        verify(mapper, never()).insertCampaign(any());
+        verify(im, never()).sendSystem(any(), any(), any(), any());
     }
 
     @Test

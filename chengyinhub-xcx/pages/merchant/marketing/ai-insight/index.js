@@ -2,6 +2,7 @@ const app = getApp();
 const merchantTheme = require('../../../../utils/merchant-theme.js');
 const { merchantHomeUrl } = require('../../../../utils/merchant-home-link.js');
 const { toTimestamp, chinaParts } = require('../../../../utils/datetime.js');
+const { failureStatus, retryLogin, recoverReadSession } = require('../../../../utils/session/login-reload.js');
 
 // 推荐主题 / 空态引导都去合作中心申请承接。
 // 2026-09-18 UI-11:按用户稿删掉「建议活动」区块后,suggestion.type 路由表随之退场。
@@ -34,6 +35,8 @@ Page({
     navBarHeight: 44,
     loading: false,
     error: '',
+    errorIsDenied: false,
+    errorNeedsLogin: false,
     facts: null,          // 后端聚合事实包(必出层)
     ai: null,             // AI 解读(可为 null 的降级层)
     aiError: '',
@@ -61,9 +64,8 @@ Page({
   },
 
   onShow() {
+    this._hidden = false;
     merchantTheme.merchantPageShow();
-    this._statusBarOnHero = false; // merchantPageShow 刚把状态栏刷回浅色
-    this._syncStatusBar();
     // 首次 onShow 紧跟 onLoad，不重复请求；以后每次返回都让服务端重新确认商家资格。
     const memberId = String(typeof app.getUserID === 'function' ? (app.getUserID() || '') : '');
     const scopeChanged = this._dataMemberId !== undefined && this._dataMemberId !== memberId;
@@ -78,8 +80,9 @@ Page({
     }
     this.load();
   },
-  onHide() { merchantTheme.merchantPageRestore(); },
+  onHide() { this._hidden = true; this._requestEpoch = (this._requestEpoch || 0) + 1; merchantTheme.merchantPageRestore(); },
   onUnload() {
+    this._unloaded = true;
     this._requestEpoch = (this._requestEpoch || 0) + 1;
     merchantTheme.merchantPageRestore();
   },
@@ -87,6 +90,7 @@ Page({
   onNavBack() { if (getCurrentPages().length > 1) wx.navigateBack(); else wx.reLaunch({ url: '/pages/merchant/marketing/index' }); },
 
   load() {
+    if (this._hidden || this._unloaded) return;
     const that = this;
     const requestEpoch = (this._requestEpoch || 0) + 1;
     this._requestEpoch = requestEpoch;
@@ -95,10 +99,30 @@ Page({
     this._dataMemberId = memberId;
     const isCurrent = function () {
       const currentMemberId = String(typeof app.getUserID === 'function' ? (app.getUserID() || '') : '');
-      return requestEpoch === that._requestEpoch && memberId === currentMemberId;
+      return !that._hidden && !that._unloaded && requestEpoch === that._requestEpoch && memberId === currentMemberId;
     };
     if (scopeChanged) that._clearSensitiveState('');
-    that.setData({ loading: true, error: '' });
+    if (!memberId) {
+      that._clearSensitiveState('请先登录后查看店铺数据');
+      that.setData({ loading: false, errorIsDenied: true, errorNeedsLogin: true });
+      return;
+    }
+    that.setData({ loading: true, error: '', errorIsDenied: false, errorNeedsLogin: false });
+    const handleFailure = (res, status) => {
+      if (that._hidden || that._unloaded || requestEpoch !== that._requestEpoch) return;
+      if (recoverReadSession(that, app, res, function (anonymous) {
+        this._requestEpoch++;
+        this._clearSensitiveState(anonymous ? '请重新登录后查看店铺数据' : '');
+        this.setData({ loading: false, errorIsDenied: anonymous, errorNeedsLogin: anonymous });
+      }, that.load, status)) return;
+      if (!isCurrent()) return;
+      const code = failureStatus(res, status);
+      if (code === 401 || code === 403) {
+        that._clearSensitiveState(app.getRequestErrorMessage(res,
+          code === 401 ? '请重新登录后查看店铺数据' : '当前账号没有店铺数据查看权限'));
+        that.setData({ loading: false, errorIsDenied: true, errorNeedsLogin: code === 401 });
+      } else that.setData({ error: app.getRequestErrorMessage(res, '店铺数据加载失败') });
+    };
     app.sendRequest({
       hideLoading: true,
       silentError: true,
@@ -106,6 +130,7 @@ Page({
       method: 'POST',
       success(res) {
         if (!isCurrent()) return;
+        if (isAccessDenied(res)) { handleFailure(res); return; }
         const listsValid = res && res.data && ['recentVisitors', 'recommendedTopics', 'recommendedPartners']
           .every(function (key) {
             return res.data[key] == null || (Array.isArray(res.data[key])
@@ -146,21 +171,14 @@ Page({
               });
             }),
           });
-          that._syncStatusBar();
         } else if (res && res.code !== '200' && res.code !== 200) {
           that._clearSensitiveState(app.getRequestErrorMessage(res, '商家资格已失效'));
         } else {
           that.setData({ error: app.getRequestErrorMessage(res, '店铺数据加载失败') });
         }
       },
-      fail(res) {
-        if (!isCurrent()) return;
-        if (isAccessDenied(res)) {
-          that._clearSensitiveState(app.getRequestErrorMessage(res, '商家资格已失效'));
-        } else {
-          that.setData({ error: app.getRequestErrorMessage(res, '店铺数据加载失败') });
-        }
-      },
+      fail(res, status) { handleFailure(res, status); },
+      successStatusAbnormal: handleFailure,
       complete() { if (isCurrent()) that.setData({ loading: false }); },
     });
   },
@@ -182,10 +200,16 @@ Page({
       recTopics: [],
       recPartners: [],
     });
-    this._syncStatusBar();
   },
 
-  retry() { this.load(); },
+  retry() {
+    if (!this.data.errorNeedsLogin) { this.load(); return; }
+    const epoch = this._requestEpoch;
+    const owner = String(app.getUserID() || '');
+    return retryLogin(this, app, function () {
+      if (epoch === this._requestEpoch && (!owner || owner === String(app.getUserID() || ''))) this.load();
+    });
+  },
 
   // 2026-09-19 用户裁决(与营销页同口径):商家侧数字位一律是数,没有值就写 0,不放横杠。
   // 「算不出」这句实话由样本不足提示(facts.lowSample →「数据还少，以下解读仅供参考」)
@@ -307,21 +331,4 @@ Page({
 
   goCoopCenter() { wx.navigateTo({ url: COOP_CENTER_ROUTE }); },
 
-  // 透明 nav 只在黑 Hero 上成立;滚过 Hero 顶部这一段就转实底。只在跨阈值时同步状态栏。
-  onPageScroll(e) {
-    const solid = e.scrollTop > 120;
-    if (solid === !!this._navSolid) return;
-    this._navSolid = solid;
-    this._syncStatusBar();
-  },
-
-  // 状态栏字色跟着顶部走:黑 Hero 露出时白字,否则回商家浅色(merchantPageShow 的口径)。
-  _syncStatusBar() {
-    if (typeof wx.setNavigationBarColor !== 'function') return;
-    const onHero = !!this.data.facts && !this._navSolid;
-    if (onHero === this._statusBarOnHero) return;
-    this._statusBarOnHero = onHero;
-    if (onHero) wx.setNavigationBarColor({ frontColor: '#ffffff', backgroundColor: '#000000' }); /* ds-ok 原生状态栏只收 #fff/#000,黑 Hero 上要白字 */
-    else merchantTheme.merchantPageShow();
-  },
 });

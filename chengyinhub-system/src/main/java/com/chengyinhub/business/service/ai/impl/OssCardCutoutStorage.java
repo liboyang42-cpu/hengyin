@@ -55,6 +55,8 @@ import cn.hutool.http.HttpResponse;
 public class OssCardCutoutStorage implements CardCutoutStorage {
 
     private static final Logger log = LoggerFactory.getLogger(OssCardCutoutStorage.class);
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.impl.AppMediaAssetService mediaAssets;
 
     /** 抠图对象的业务类型标记(与 photo 上传同一条 metadata 通道)。 */
     static final String BIZ_TYPE = "object_card_cutout";
@@ -347,14 +349,53 @@ public class OssCardCutoutStorage implements CardCutoutStorage {
      */
     String storeObject(byte[] bytes, String fileName, String contentType, long ownerId, String bizType) {
         try {
-            JSONObject uploaded = FileOssUploadUtils.uploadWithOwner(
+            if(!SEG_INPUT_BIZ_TYPE.equals(bizType) && mediaAssets==null)return null;
+            JSONObject uploaded = FileOssUploadUtils.uploadPendingWithOwner(
                     new ServerMultipartFile(bytes, fileName, contentType), String.valueOf(ownerId), bizType);
-            return uploaded == null ? null : uploaded.getString("url");
+            if(uploaded==null)return null;
+            String key=uploaded.getString("fileName");
+            if(SEG_INPUT_BIZ_TYPE.equals(bizType))return FileOssUploadUtils.generateShortLivedPresignedUrl(key,300);
+            java.util.Map<String,Object> status=mediaAssets.stage(ownerId,key);
+            if(status==null || !(status.get("assetId") instanceof Number))return null;
+            return "media-asset:"+status.get("assetId");
         } catch (IOException | RuntimeException e) {
-            // 调用方按 fail-open 处理:存不下就不带抠图,卡照样铸。
+            // 无法保存审核事实时不发布生成图；调用方可继续使用已审核原照片。
             log.error("[藏品卡] {} 入桶失败, exceptionType={}", bizType, e.getClass().getSimpleName());
             return null;
         }
+    }
+
+    /** Vendor audio becomes a private immutable object and a real HOLD receipt, never the vendor URL. */
+    public java.util.Map<String,Object> stageGeneratedAudio(Long ownerId, String vendorUrl) {
+        if(ownerId==null || ownerId<=0 || mediaAssets==null || !isAliyunResultAddress(vendorUrl))
+            throw new com.chengyinhub.common.exception.ServiceException("语音媒体来源暂不可用");
+        try {
+            URI uri=new URI(vendorUrl);
+            if(uri.getPort()!=-1 && uri.getPort()!=443 || uri.getFragment()!=null)throw new IOException("invalid origin");
+            java.net.InetAddress[] addresses=resolveMediaHost(uri.getHost());
+            if(addresses.length==0)throw new IOException("missing origin");
+            for(java.net.InetAddress address:addresses) {
+                if(!publicMediaAddress(address))throw new IOException("invalid origin");
+            }
+            byte[] bytes=download(vendorUrl,10*1024*1024);
+            if(bytes==null || bytes.length<3 || bytes.length>10*1024*1024
+                    || !(bytes[0]=='I' && bytes[1]=='D' && bytes[2]=='3'
+                        || (bytes[0]&255)==255 && (bytes[1]&224)==224))throw new IOException("invalid audio");
+            JSONObject uploaded=FileOssUploadUtils.uploadPendingWithOwner(
+                    new ServerMultipartFile(bytes,"npc-reply.mp3","audio/mpeg"),String.valueOf(ownerId),"npc_reply_audio");
+            if(uploaded==null)throw new IOException("missing receipt");
+            return mediaAssets.stage(ownerId,uploaded.getString("fileName"));
+        } catch(Exception e) {
+            throw new com.chengyinhub.common.exception.ServiceException("语音媒体暂不可用，文字回答仍可查看");
+        }
+    }
+    java.net.InetAddress[] resolveMediaHost(String host) throws java.net.UnknownHostException {return java.net.InetAddress.getAllByName(host);}
+    static boolean publicMediaAddress(java.net.InetAddress address) {
+        if(address==null || address.isAnyLocalAddress() || address.isLoopbackAddress() || address.isLinkLocalAddress()
+                || address.isSiteLocalAddress() || address.isMulticastAddress())return false;
+        byte[] bytes=address.getAddress();
+        if(bytes.length==16 && (bytes[0]&254)==252)return false;
+        return !(bytes.length==4 && ((bytes[0]&255)==0 || ((bytes[0]&255)==100 && (bytes[1]&192)==64)));
     }
 
     static boolean isPng(byte[] bytes) {
@@ -412,7 +453,9 @@ public class OssCardCutoutStorage implements CardCutoutStorage {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         byte[] buffer = new byte[8192];
         int total = 0;
+        long deadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(15);
         while (total < max) {
+            if(System.nanoTime()>deadline)throw new IOException("download deadline exceeded");
             int read = in.read(buffer, 0, Math.min(buffer.length, max - total));
             if (read < 0) {
                 break;

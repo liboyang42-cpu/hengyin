@@ -3,11 +3,11 @@
   <view class="task-tabs"><view wx:for="{{tabs}}" wx:key="*this" class="task-tab {{tab === index ? 'task-tab--on' : ''}}" hover-class="task-tab--press" hover-stay-time="60" bindtap="selectTab" data-tab="{{index}}">{{item}}</view></view>
   <view class="task-summary">{{summary}}</view>
   <cy-skeleton wx:if="{{state === 'loading' && !events.length}}" type="card" count="3" />
-  <cy-error class="cy-fade-in" wx:elif="{{state === 'error' && !events.length}}" fill title="活动列表没能打开" sub="网络响应异常，稍后可以重新读取。" retry="重试" bind:retry="retry" />
+  <cy-error load-failure class="cy-fade-in" wx:elif="{{state === 'error' && !events.length}}" fill title="活动列表没能打开" sub="网络响应异常，稍后可以重新读取。" retry="重试" bind:retry="retry" />
   <!-- rebase 并集时 master 的旧「列表/空态」两行和本分支的完整状态分支叠在了一起,
        旧的两行还打断了 wx:if/elif 链。保留下面这套(含 stale/refreshing 与 _participantsText
        等已归一字段),旧块删除 —— 真值门禁正是靠「不许直接读 item.participants」抓到它的。 -->
-  <cy-error class="cy-fade-in" wx:elif="{{state === 'stale' && !events.length}}" fill title="活动列表暂时无法更新" sub="{{staleError}}" retry="重试" bind:retry="retry" />
+  <cy-error load-failure class="cy-fade-in" wx:elif="{{state === 'stale' && !events.length}}" fill title="活动列表暂时无法更新" sub="{{staleError}}" retry="重试" bind:retry="retry" />
   <block wx:else>
     <view wx:if="{{state === 'stale'}}" class="task-stale" aria-role="alert"><text>{{staleError}}</text><view class="task-stale__action" bindtap="retry" aria-role="button" aria-label="重新读取活动列表" hover-class="cy-pressed" hover-stay-time="80">重试</view></view>
     <view wx:elif="{{refreshing}}" class="task-refreshing" aria-role="status">正在更新活动列表…</view>

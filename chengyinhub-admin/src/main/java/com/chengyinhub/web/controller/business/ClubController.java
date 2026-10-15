@@ -4,7 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import com.chengyinhub.business.domain.Club;
 import com.chengyinhub.business.domain.ClubLeader;
@@ -348,6 +348,7 @@ public class ClubController extends BaseController {
     @PreAuthorize("@ss.hasPermi('business:club:audit')")
     @Log(title = "俱乐部审核", businessType = BusinessType.UPDATE)
     @PutMapping("/audit")
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AjaxResult audit(@RequestBody Club club) {
         if (club.getId() == null || club.getStatus() == null) {
             return error("缺少参数");
@@ -368,15 +369,10 @@ public class ClubController extends BaseController {
         }
         db.setStatus(club.getStatus());
         db.setRejectReason(club.getRejectReason());
-        clubService.updateClub(db);
+        if (clubService.updateClub(db) != 1) throw new com.chengyinhub.common.exception.ServiceException("俱乐部审核状态保存失败");
 
         if (club.getStatus() == 1L) {
-            // P1 能力模型:授予 club_leader 能力(幂等);role 列双写作默认视角(过渡期保留)
-            capabilityService.grant(db.getMemberId(), MemberCapability.CAP_CLUB_LEADER, getUserId());
-            UmsMember m = new UmsMember();
-            m.setId(db.getMemberId());
-            m.setRole(IRoleService.ROLE_CLUB); // 通过 → 默认视角(玩家身份保留，userType 不动)
-            umsMemberService.updateUmsMember(m);
+            roleService.changeRole(db.getMemberId(), IRoleService.ROLE_CLUB, getUserId());
         } else if (club.getStatus() == 2L) {
             // 驳回 → 仅当该主理人名下已无其它在营(status=1)俱乐部时,才回收 club 能力
             // (多俱乐部:下架其中一个团不应连锅端掉整个主理人能力)
@@ -385,13 +381,9 @@ public class ClubController extends BaseController {
                 if (c.getStatus() != null && c.getStatus() == 1L) { hasActiveClub = true; break; }
             }
             if (!hasActiveClub) {
-                capabilityService.revoke(db.getMemberId(), MemberCapability.CAP_CLUB_LEADER);
                 UmsMember owner = umsMemberService.selectUmsMemberById(db.getMemberId());
                 if (owner != null && IRoleService.ROLE_CLUB.equals(roleService.resolveRole(owner))) {
-                    UmsMember m = new UmsMember();
-                    m.setId(db.getMemberId());
-                    m.setRole(IRoleService.ROLE_PLAYER); // 默认视角降回玩家
-                    umsMemberService.updateUmsMember(m);
+                    roleService.changeRole(db.getMemberId(), IRoleService.ROLE_PLAYER, getUserId());
                 }
             }
         }

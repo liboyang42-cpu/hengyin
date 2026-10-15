@@ -2,6 +2,7 @@ const modal = require('../../../utils/modal.js');
 const cyToast = require('../../../utils/toast.js');
 const { isAlbumTemplate, ALBUM_ONLY_IN_STORY } = require('../../../utils/album-template.js');
 const app = getApp()
+const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js')
 const publisherIdentity = require('../../../utils/publisher-identity.js')
 /* 结果面板终态停留时长;跳转挂在面板 close 上,时长只此一处 */
 const RESULT_SHEET_MS = 2000
@@ -743,10 +744,22 @@ Page({
   // 俱乐部线读 /api/publish/home 认 role==='club';商家线读 /api/merchant/access/me 认
   // canManageProjects —— 两个身份判的不是同一件事,混着判会把没有项目管理权的店员放进来。
   // 权威回包前保持 checking,失败按 fail-closed 停在可重试错误态。
+  onCreatorLogin() { return retryLogin(this, app, this.retryAccessCheck) },
+
   guardPublisherRole(onAllow) {
+    const owner = memberId(app)
+    if (!owner) {
+      this._accessRequestToken = (this._accessRequestToken || 0) + 1
+      this.setData({ accessState: 'login', accessError: '' })
+      waitForInitialSession(this, app, this.retryAccessCheck)
+      return
+    }
     const that = this
     const token = (this._accessRequestToken || 0) + 1
     this._accessRequestToken = token
+    const recover = (res, status) => !that._unloaded && token === that._accessRequestToken && recoverReadSession(that, app, res,
+      function (anonymous) { this._accessRequestToken++; this._activityLoadToken = (this._activityLoadToken || 0) + 1; this._templateRequestToken = (this._templateRequestToken || 0) + 1;
+        this.setData({ accessState: anonymous ? 'login' : 'checking', accessError: '', tempList: [] }); }, that.retryAccessCheck, status)
     app.sendRequest({
       hideLoading: true,
       silentError: true,
@@ -754,11 +767,16 @@ Page({
       method: 'POST',
       data: {},
       success(res) {
-        if (token !== that._accessRequestToken) return
+        if (token !== that._accessRequestToken || owner !== memberId(app) || that._unloaded) return
         that.onPublisherIdentity(res, onAllow)
       },
-      fail() {
-        if (token === that._accessRequestToken) that._showAccessError()
+      fail(res, status) {
+        if (recover(res, status)) return
+        if (token === that._accessRequestToken && owner === memberId(app) && !that._unloaded) that._showAccessError({ code: failureStatus(res, status), msg: res && res.msg })
+      },
+      successStatusAbnormal(res, status) {
+        if (recover(res, status)) return
+        if (token === that._accessRequestToken && owner === memberId(app) && !that._unloaded) that._showAccessError({ code: failureStatus(res, status), msg: res && res.msg })
       }
     })
   },
@@ -781,6 +799,9 @@ Page({
   },
 
   _showAccessError(res) {
+    const status = failureStatus(res)
+    if (status === 401) { this.setData({ accessState: 'login', accessError: '' }); return }
+    if (status === 403) { this.setData({ accessState: 'denied', deniedReason: res && res.msg || '当前账号不能发布活动' }); return }
     this.setData({
       accessState: 'error',
       accessError: app.getRequestErrorMessage ? app.getRequestErrorMessage(res, '身份校验失败，请重试') : '身份校验失败，请重试'
@@ -808,7 +829,10 @@ Page({
   },
 
   // 页面销毁:让在途发布回调失效,避免 setData / redirect after unload
+  onHide() { this._hidden = true },
+  onShow() { this._hidden = false; if (this._readSessionChanged) { this._readSessionChanged = false; this.retryAccessCheck() } },
   onUnload() {
+    this._unloaded = true
     this._activityIdentityToken = (this._activityIdentityToken || 0) + 1
     this._accessRequestToken = (this._accessRequestToken || 0) + 1
     this._templateRequestToken = (this._templateRequestToken || 0) + 1

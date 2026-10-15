@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Date;
+import java.util.Arrays;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -43,7 +44,7 @@ class AuditBacklogMonitorTaskTest {
 
         task.run();
 
-        verify(alarm, times(1)).alarm(anyString(), anyString());
+        verify(alarm, times(1)).alarmThrottled(org.mockito.ArgumentMatchers.anyString(), anyString(), anyString());
     }
 
     @Test
@@ -53,7 +54,7 @@ class AuditBacklogMonitorTaskTest {
 
         task.run();
 
-        verify(alarm, times(1)).alarm(anyString(), anyString());
+        verify(alarm, times(1)).alarmThrottled(org.mockito.ArgumentMatchers.anyString(), anyString(), anyString());
     }
 
     @Test
@@ -63,6 +64,16 @@ class AuditBacklogMonitorTaskTest {
 
         task.run();
 
-        verify(alarm, never()).alarm(anyString(), anyString());
+        verify(alarm, never()).alarmThrottled(org.mockito.ArgumentMatchers.anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void alertContainsActualIdsAndKeepsMissingQueryResultsUnknown() {
+        when(mapper.countPendingOverdue(any())).thenReturn(2);
+        when(mapper.samplePendingBacklogIds(any())).thenReturn(null);
+        when(mapper.samplePendingOverdueIds(any())).thenReturn(Arrays.asList(88L, null));
+        task.run();
+        verify(alarm).alarmThrottled(org.mockito.ArgumentMatchers.eq("monitor.audit.backlog"), anyString(),
+                org.mockito.ArgumentMatchers.contains("backlogTaskIds=UNKNOWN overdueTaskIds=[88,UNKNOWN]"));
     }
 }

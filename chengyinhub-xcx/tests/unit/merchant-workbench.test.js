@@ -214,8 +214,8 @@ test('工作台状态语义:加载失败落页内 inline error，不再有整屏
 test('负控:把整屏身份闸加回工作台时必须判红', () => {
   const wxml = fs.readFileSync(path.join(__dirname, '../../pages/merchant/index/index.wxml'), 'utf8');
   const mutated = wxml.replace(
-    '<cy-inline-error class="rv-console-error"',
-    '<view class="rv-gate" wx:if="{{consoleState}}"><cy-empty cta="去登录" /></view>\n    <cy-inline-error class="rv-console-error"',
+    '<cy-inline-error load-failure class="rv-console-error"',
+    '<view class="rv-gate" wx:if="{{consoleState}}"><cy-empty cta="去登录" /></view>\n    <cy-inline-error load-failure class="rv-console-error"',
   );
   assert.notEqual(mutated, wxml, '负控锚点失效：找不到工作台页内错误态');
   assert.throws(() => assertWorkbenchStateSemantics(mutated), /整屏身份闸必须删除/);

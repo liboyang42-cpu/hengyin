@@ -294,6 +294,23 @@ class OfficialEventContractTest {
     }
 
     @Test
+    void legacyCompletionNeverChangesProgressOrAwardsEvenWhenCalledRepeatedly() {
+        EventSignupMapper signups = mock(EventSignupMapper.class);
+        OfficialEventMapper events = mock(OfficialEventMapper.class);
+        IGrowthService growth = mock(IGrowthService.class);
+        OfficialEventServiceImpl service = eventService(events, signups, mock(MemberCollectibleMapper.class),
+                mock(ISmsCouponHistoryService.class), growth);
+        for (Integer version : new Integer[] {null, 1, 2}) {
+            OfficialEvent event = event(OfficialEvent.ST_LIVE);
+            event.setContractVersion(version);
+            event.setRewardJson("{\"instantXp\":100}");
+            when(events.selectOfficialEventById(1L)).thenReturn(event);
+            for (int i = 0; i < 5; i++) assertNotNull(service.completeTask(1L, 101L));
+        }
+        org.mockito.Mockito.verifyNoInteractions(signups, growth);
+    }
+
+    @Test
     void progress_V2活动只返回公开汇总而不泄露运营360() {
         OfficialEventMapper eventMapper = mock(OfficialEventMapper.class);
         IOfficialEventV2Service v2 = mock(IOfficialEventV2Service.class);

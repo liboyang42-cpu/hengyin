@@ -1,4 +1,5 @@
 const app = getApp();
+const { currentOwnerId } = require('../../utils/coupon-credential.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
 const datetime = require('../../utils/datetime.js');
 const modal = require('../../utils/modal.js');
@@ -91,6 +92,8 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
+    this._disposed = false;
+    this._visible = true;
     this.setData({ operationScope: options && options.scope === 'MERCHANT' ? 'MERCHANT' : '' });
   },
 
@@ -98,13 +101,28 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
+    this._visible = true;
     merchantTheme.merchantPageShow();
     var that = this
     that.getList()
   },
 
-  onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() { merchantTheme.merchantPageRestore(); },
+  onHide() {
+    this._visible = false;
+    this._listEpoch = (this._listEpoch || 0) + 1;
+    this.setData({ tpShow: false, currentCoupon: {} });
+    merchantTheme.merchantPageRestore();
+  },
+  onUnload() {
+    this._disposed = true;
+    merchantTheme.merchantPageRestore();
+  },
+
+  _isCouponContextCurrent(owner, scope, epoch) {
+    return !this._disposed && this._visible !== false
+      && currentOwnerId(app) === owner
+      && this.data.operationScope === scope && this._listEpoch === epoch;
+  },
 
   /**
    * 用户点击右上角分享
@@ -113,6 +131,19 @@ Page({
   // 获取列表
   getList: function () {
     var that = this;
+    if (that._disposed || that._visible === false) return;
+    const owner = currentOwnerId(app);
+    const scope = that.data.operationScope;
+    const epoch = (that._listEpoch || 0) + 1;
+    that._listEpoch = epoch;
+    if (owner !== that._couponOwner) {
+      that._couponOwner = owner;
+      that.setData({ list: [], tpShow: false, currentCoupon: {} });
+    }
+    if (!owner) {
+      that.setData({ list: [], loadState: 'error', errorMsg: '请先登录' });
+      return;
+    }
     that.setData({ loadState: 'loading', errorMsg: '' });
     app.sendRequest({
       hideLoading: true,
@@ -122,9 +153,10 @@ Page({
       data: {
         keyword: '',
         is_select: 0,
-        scope: that.data.operationScope
+        scope: scope
       },
       success: function (res) {
+        if (!that._isCouponContextCurrent(owner, scope, epoch)) return;
         if ((res.code == "200" || res.code === 200) && Array.isArray(res.data)) {
           const list = res.data.map(normalizeCoupon).filter(Boolean);
           that.setData({
@@ -136,6 +168,7 @@ Page({
         }
       },
       fail: function () {
+        if (!that._isCouponContextCurrent(owner, scope, epoch)) return;
         that.setData({ loadState: 'error', errorMsg: '网络可能不稳定，请稍后再试' });
       },
       complete: function () {
@@ -170,18 +203,24 @@ Page({
     const item = fromRow || this.data.currentCoupon;
     if (!item || !item.id || !item.canStop) return;
     const that = this;
+    const owner = currentOwnerId(app);
+    const scope = that.data.operationScope;
+    const epoch = that._listEpoch;
+    if (!owner
+        || !that._isCouponContextCurrent(owner, scope, epoch)) return;
     modal.show({
       dangerKey: 'merchant.coupon.stop',
       dangerParams: { name: item.name },
       success(r) {
-        if (!r.confirm) return;
+        if (!r.confirm || !that._isCouponContextCurrent(owner, scope, epoch)) return;
         app.sendRequest({
           url: '/api/coupon/stop',
           method: 'POST',
-          data: that.data.operationScope
-            ? { couponId: item.id, scope: that.data.operationScope }
+          data: scope
+            ? { couponId: item.id, scope: scope }
             : { couponId: item.id },
           success(res) {
+            if (!that._isCouponContextCurrent(owner, scope, epoch)) return;
             if (res.code == '200' || res.code === 200) {
               cyToast.success('已停发「' + item.name + '」');
               that.setData({ tpShow: false, currentCoupon: {} });
@@ -191,6 +230,7 @@ Page({
             }
           },
           fail(err) {
+            if (!that._isCouponContextCurrent(owner, scope, epoch)) return;
             cyToast.error((err && err.msg) || '停发结果待确认，已刷新列表');
             that.getList();
           },

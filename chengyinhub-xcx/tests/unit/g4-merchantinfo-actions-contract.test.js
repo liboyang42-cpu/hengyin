@@ -396,3 +396,15 @@ test('主办主页保留自由探索类型和生命周期供封面显示，不�
   assert.equal(page.data.hostTopic.productType, 2);
   assert.equal(page.data.hostTopic.status, 1);
 });
+
+test('主题承接页本站入口仍按 entries 的真实场次跳转，不猜版本也不提交 command', () => {
+  beforeEach();
+  const page = makePage({ topicId: 88, info: {} });
+  page.goStation('pause');
+  const request = findRequest('/api/game/session/merchant/entries');
+  assert.equal(request.method, 'GET');
+  request.success({ code: 200, data: [{ activityId: 71, topicId: 88, activityName: '测试场次', stationCount: 1 }] });
+  request.complete();
+  assert.equal(navigations.at(-1).url, '/pages/merchant/game-node/index?activityId=71&focus=pause');
+  assert.equal(requests.filter(call => call.url === '/api/game/session/command').length, 0);
+});

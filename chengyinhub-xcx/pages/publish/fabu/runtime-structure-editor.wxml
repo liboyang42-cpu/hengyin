@@ -1,0 +1,79 @@
+<!-- 玩法结构编辑层（2026-10-09 协调者设计）。三种内容共用一层：
+     · mode：进行方式单选，沿用创作模式选择的 mode-opt 单选卡（图标 + 名称 + 说明 + 圆点）。
+     · endings：运行结局列表，沿用彩蛋编辑的「卡头 + 删除 / 字段 / 底部添加」。
+     · quests：当前站点的到达地点、工作人员引导与备用站点。
+     头部同其它编辑层：右上「完成」+ ✕；完成写回草稿，✕ 放弃本次改动。 -->
+<cy-sheet show="{{structureEditor.show}}" bind:close="closeStructure" style="--cy-comp-sheet-max-h:calc(100vh - {{chrome.sheetTop + 18}}px);--cy-comp-sheet-role-glass:#f3f4f5">
+ <view class="rt-editor">
+  <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeStructure" aria-role="button" aria-label="关闭{{structureEditor.title}}" hover-class="cy-pressed" hover-stay-time="80">退出</view>
+   <view class="node-sheet__done" bindtap="saveStructure" aria-role="button" aria-label="完成{{structureEditor.title}}" hover-class="cy-pressed" hover-stay-time="80">完成</view>
+
+  </view>
+
+  <block wx:if="{{structureEditor.kind === 'mode'}}">
+   <view class="node-sheet__titlebar">
+    <text class="node-sheet__eyebrow">进行方式</text>
+    <text class="node-sheet__name node-sheet__name--static">队伍怎样一起玩？</text>
+   </view>
+   <cy-inline-error wx:if="{{structureError}}" title="{{structureError}}" />
+   <text wx:if="{{supportMatrixLoading}}" aria-live="polite">正在读取玩法支持范围</text>
+<cy-inline-error load-failure wx:if="{{supportMatrixLoadError}}" title="{{supportMatrixLoadError}}" sub="仍可保存，支持情况以保存结果为准" action="重试" bind:action="retrySupportMatrix" />
+   <view wx:for="{{structureModeOptions}}" wx:key="key" class="node-card mode-opt {{item.reason ? 'rt-disabled' : ''}}" data-key="{{item.key}}" bindtap="chooseStructureMode" aria-role="radio" aria-checked="{{item.selected}}" aria-disabled="{{!!item.reason}}" hover-class="{{item.reason ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
+    <view class="node-card__row">
+     <view class="node-card__ico mode-opt__ico"><cy-icon name="{{item.icon}}" size="32" /></view>
+     <view class="node-card__main">
+      <text class="node-card__title mode-opt__name">{{item.label}}</text>
+      <text class="mode-opt__desc">{{item.summary}}</text>
+      <text wx:if="{{item.reason}}" class="node-binding__error">{{item.reason}}</text>
+     </view>
+     <view class="mode-opt__mark {{item.selected ? 'is-on' : ''}}" aria-hidden="true" />
+    </view>
+   </view>
+   <text class="story-initial__example">与票务人数、自由探索的设置互不影响。</text>
+  </block>
+
+  <block wx:elif="{{structureEditor.kind === 'endings'}}">
+   <view class="rt-title"><text>运行结局</text></view>
+   <cy-inline-error wx:if="{{structureError}}" title="{{structureError}}" />
+   <text class="story-initial__example rt-lead">队伍表决的方案执行后，按这里的结局收场。剧情结局在「剧情结局」中另行编写。</text>
+   <view class="node-card" wx:for="{{structureEndings}}" wx:key="id" wx:for-index="ei">
+    <view class="rt-card-head">
+     <view class="rt-head-title"><text>结局 {{ei + 1}}</text><text wx:if="{{item.isFallback}}" class="rt-tag">默认收尾</text></view>
+     <view class="rt-delete" data-index="{{ei}}" bindtap="removeStructureEnding" aria-role="button" aria-label="删除结局 {{ei + 1}}" hover-class="cy-pressed" hover-stay-time="80">删除</view>
+    </view>
+    <view class="rt-field"><text>名称</text><input value="{{item.title}}" data-index="{{ei}}" data-field="title" bindinput="onStructureEnding" maxlength="80" placeholder="例如：成功撤离" /></view>
+    <view class="rt-field"><text>结局说明</text><textarea value="{{item.summary}}" data-index="{{ei}}" data-field="summary" bindinput="onStructureEnding" maxlength="2000" placeholder="玩家看到的结果说明" fixed /></view>
+    <view class="node-card__row rt-radio-row" data-index="{{ei}}" bindtap="chooseStructureFallbackEnding" aria-role="radio" aria-checked="{{item.isFallback}}" hover-class="cy-pressed" hover-stay-time="80">
+     <view class="node-card__main"><text class="node-card__title">设为默认收尾</text><text class="node-card__value">没有方案通过时，工作人员可用它收尾</text></view>
+     <view class="mode-opt__mark {{item.isFallback ? 'is-on' : ''}}" aria-hidden="true" />
+    </view>
+   </view>
+   <view class="node-pill rt-add" bindtap="addStructureEnding" aria-role="button" aria-label="添加运行结局" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="24" />添加结局</view>
+  </block>
+
+  <block wx:elif="{{structureEditor.kind === 'quests' && structureEditor.quest}}">
+   <view class="rt-title"><text>到达与引导</text></view>
+   <cy-inline-error wx:if="{{structureError}}" title="{{structureError}}" />
+   <view class="node-card">
+    <view class="rt-field"><text>到达地点</text><cy-dropdown topic-editor range="{{structureLocations}}" range-key="label" value="{{structureLocationIndex}}" bind:change="onStructureLocation"><view class="rt-select" aria-role="button" aria-label="选择到达地点">{{structureLocationIndex >= 0 ? structureLocations[structureLocationIndex].label : '选择本主题站点'}}<cy-icon name="chevron-right" size="24" /></view></cy-dropdown></view>
+    <text class="story-initial__example">多个任务选同一地点时，共用该地点的到达核验。</text>
+   </view>
+   <view class="node-card">
+    <view class="node-card__row">
+     <view class="node-card__ico"><cy-icon name="mtab-customers" size="32" /></view>
+     <view class="node-card__main"><text class="node-card__title">工作人员引导答题</text><text class="node-card__value">{{structureGuideAllowed ? '用本站玩法原有的题目，工作人员按同样答案核验' : '本站需先绑定含客观题的玩法'}}</text></view>
+     <cy-switch checked="{{!!structureEditor.quest.guideKey}}" disabled="{{!structureGuideAllowed}}" bindchange="onStructureGuide" accessibility-label="工作人员引导答题" />
+    </view>
+   </view>
+   <view class="node-card">
+    <view class="rt-card-head"><text>预先批准的备用站点</text><text class="rt-count">已选 {{structureFallbackCount || 0}} / 20</text></view>
+    <text class="story-initial__example rt-lead">原站无法继续时，工作人员只能改派到这里选中的站点。</text>
+    <view wx:for="{{structureFallbackNodes}}" wx:key="id" class="node-card__row rt-check-row" data-id="{{item.id}}" bindtap="toggleStructureFallback" aria-role="checkbox" aria-checked="{{item.selected}}" hover-class="cy-pressed" hover-stay-time="80">
+     <view class="node-card__main"><text class="node-card__title">{{item.label}}</text></view>
+     <view class="rt-check {{item.selected ? 'is-on' : ''}}" aria-hidden="true"><cy-icon wx:if="{{item.selected}}" name="check" size="24" /></view>
+    </view>
+    <text wx:if="{{!structureFallbackNodes.length}}" class="node-card__value">请先保存其它站点，再选择备用站点</text>
+   </view>
+  </block>
+ </view>
+</cy-sheet>

@@ -182,6 +182,14 @@
                    and reg.payment_status=2 and reg.registration_status=2)
     </sql>
 
+    <select id="selectActiveTeamIds" resultType="long">
+        select distinct t.id from play_team t
+          join play_team_member m on m.team_id=t.id and m.status=1
+         where t.owner_type=2 and t.owner_id=#{activityId} and t.status in (0,1,2)
+           and <include refid="paidActivityMemberExists"/>
+         order by t.id
+    </select>
+
     <select id="selectSessionByActivity" resultMap="GameSessionResult">
         select <include refid="sessionColumns"/> from game_session where activity_id=#{activityId} limit 1
     </select>
@@ -749,6 +757,12 @@
            and <include refid="paidActivityMemberExists"/>
          group by t.id
          order by t.id
+    </select>
+
+    <select id="selectStoryStates" resultMap="GameStoryResult">
+        select id, game_session_id, owner_type, owner_id, variables_json, applied_choices_json,
+               ending_code, status, revision, create_time, update_time
+          from game_story_state where game_session_id=#{sessionId} order by owner_type, owner_id
     </select>
 
     <select id="selectStoryState" resultMap="GameStoryResult">

@@ -30,7 +30,7 @@ test('活动运营选择器统一到 DS 组件且保持原值与 handler 契约'
   // CU-C-34(用户裁决 B):同名主题在候选里要能区分 ⇒ range-key 换成带起止日期与承接来源的组合文案
   // (文案内容本身由 club-g2a-club-ops-fix-contract 钉住,这里钉的是选择器仍走 DS 组件与原 handler 契约)。
   assert.match(wxml, /<cy-dropdown\b[^>]*range="\{\{topics\}\}"[^>]*range-key="dropdownLabel"[^>]*value="\{\{topicIndex\}\}"[^>]*bind:change="onTopicChange"/)
-  assert.match(wxml, /<cy-date-field\b[^>]*mode="date"[^>]*value="\{\{startDate\}\}"[^>]*start="\{\{minDate\}\}"[^>]*bind:change="onStartDateChange"/)
+  assert.match(wxml, /<cy-date-field\b[^>]*mode="date"[^>]*value="\{\{startDate\}\}"[^>]*start="\{\{editingSeriesId \? futureMinDate : minDate\}\}"[^>]*bind:change="onStartDateChange"/)
   assert.match(wxml, /<cy-date-field\b[^>]*value="\{\{item\}\}"[^>]*data-index="\{\{index\}\}"[^>]*bind:change="onCustomDateChange"/)
   // 5.9:集合时刻是场次退款钟锚点,开场表单必须有时间选择且随请求提交。
   assert.match(wxml, /<cy-date-field\b[^>]*mode="time"[^>]*value="\{\{startTime\}\}"[^>]*bind:change="onStartTimeChange"/)
@@ -90,6 +90,7 @@ test('活动运营页从后端读取系列与版本，并提供未来场次批�
 })
 
 test('系列更新遇到 409 会重新读取列表与详情，绝不沿用旧 version', () => {
+  const futureDate = require('../../utils/datetime.js').chinaDateKey(new Date(Date.now() + 24 * 60 * 60 * 1000))
   let config
   const requests = []
   const appMock = {
@@ -107,7 +108,7 @@ test('系列更新遇到 409 会重新读取列表与详情，绝不沿用旧 ve
             id: 61, clubId: 21, topicId: 31, recurrenceType: 'CUSTOM_DATES',
             defaultLeadMemberId: 51, defaultCapacity: null,
             waitlistEnabled: true, offerMinutes: 30, version: 4,
-            futureDates: ['2026-09-01'],
+            futureDates: [futureDate],
           },
         })
       }
@@ -132,7 +133,7 @@ test('系列更新遇到 409 会重新读取列表与详情，绝不沿用旧 ve
       editingSeriesId: 61,
       editingTopicId: 31,
       recurrenceType: 'CUSTOM_DATES',
-      customDates: ['2026-09-01'],
+      customDates: [futureDate],
       defaultLeadMemberId: 51,
       capacity: '',
       waitlistEnabled: true,
@@ -148,6 +149,7 @@ test('系列更新遇到 409 会重新读取列表与详情，绝不沿用旧 ve
   const update = JSON.parse(requests[0].data)
   assert.equal(update.seriesId, 61)
   assert.equal(update.expectedVersion, 3)
+  assert.deepEqual(update.customDates, [futureDate])
   assert.deepEqual(requests.slice(1).map(item => item.url), [
     '/api/club/event-ops/series/list',
     '/api/club/event-ops/series/detail',
@@ -178,6 +180,55 @@ test('编辑态缺少后端 expectedVersion 时 fail-closed，不得把 null 猜
   vm.submitSeries()
 
   assert.equal(requests.length, 0)
+})
+
+function mountFutureEditor(detail) {
+  let config
+  const requests = []
+  const toasts = []
+  global.getApp = () => ({ globalData: {}, sendRequest(options) {
+    requests.push(options)
+    if (options.url.endsWith('/series/detail')) options.success({ code: 200, data: detail })
+    if (options.complete) options.complete()
+  } })
+  global.Page = value => { config = value }
+  global.wx = { showToast(options) { toasts.push(options) }, stopPullDownRefresh() {}, navigateBack() {} }
+  const modulePath = path.join(root, 'pages/club/event-ops/index.js')
+  delete require.cache[require.resolve(modulePath)]
+  require(modulePath)
+  const vm = Object.assign({}, config, {
+    data: Object.assign({}, config.data, { clubId: 21, canManage: true, topics: [{ id: 31 }], topicIndex: 0 }),
+    setData(patch) { Object.assign(this.data, patch) },
+  })
+  return { vm, requests, toasts }
+}
+
+test('F-L3-05：仅改未来的编辑态不回填、不允许选择今天，避免服务端拒绝或静默取消今天场次', () => {
+  const { chinaDateKey } = require('../../utils/datetime.js')
+  const today = chinaDateKey(new Date())
+  const tomorrow = chinaDateKey(new Date(Date.now() + 24 * 60 * 60 * 1000))
+  const base = { id: 61, clubId: 21, topicId: 31, recurrenceType: 'CUSTOM_DATES', defaultLeadMemberId: 51,
+    defaultCapacity: null, waitlistEnabled: true, offerMinutes: 30, version: 4 }
+
+  const empty = mountFutureEditor(Object.assign({}, base, { futureDates: [] }))
+  empty.vm.loadSeriesDetail(61)
+  assert.deepEqual(empty.vm.data.customDates, [tomorrow], '无未来场次时默认明天，而不是今天')
+  assert.equal(empty.vm.data.startDate, tomorrow)
+  assert.equal(empty.vm.data.futureMinDate, tomorrow)
+
+  const stale = mountFutureEditor(Object.assign({}, base, { futureDates: [today, tomorrow] }))
+  stale.vm.loadSeriesDetail(61)
+  assert.deepEqual(stale.vm.data.customDates, [tomorrow], '今天的场次不进入未来编辑表单')
+
+  stale.vm._expectedVersion = 4
+  stale.vm.setData({ customDates: [today, tomorrow], startTime: '09:00' })
+  stale.vm.submitSeries()
+  assert.ok(stale.requests.every(item => !item.url.endsWith('/series/update-future')), '含今天时不得提交')
+  assert.ok(stale.toasts.length > 0)
+
+  const wxml = read('pages/club/event-ops/index.wxml')
+  assert.equal((wxml.match(/start="\{\{editingSeriesId \? futureMinDate : minDate\}\}"/g) || []).length, 2,
+    '编辑态的两个日期选择器下限都是明天')
 })
 
 test('通知页先预览再发送，明确站内回执、部分失败与失败项重试', () => {
@@ -427,9 +478,11 @@ test('通知人数与权限和预览使用同一场次，未指定场次不伪�
   const counts = requests.at(-1)
   assert.equal(counts.url, '/api/club/event-notification/audience-counts')
   assert.deepEqual(JSON.parse(counts.data), { clubId: 21, activityId: 31 })
-  counts.success({ code: 200, data: { counts: { REGISTERED: 1, WAITLIST: 0, NO_SHOW: 1 } } })
+  counts.success({ code: 200, data: { counts: { ALL_MEMBERS: 2, ADMINS: 1, INACTIVE: 0, REGISTERED: 1, WAITLIST: 0, NO_SHOW: 1 } } })
   assert.equal(scoped.data.audiences.find(x => x.value === 'REGISTERED').countText, '1 人')
   assert.equal(scoped.data.audiences.find(x => x.value === 'WAITLIST').countText, '0 人')
+  assert.equal(scoped.data.audiences.find(x => x.value === 'ADMINS').countText, '1 人')
+  assert.equal(scoped.data.audiences.find(x => x.value === 'INACTIVE').countText, '0 人')
   assert.equal(scoped.data.audiences.find(x => x.value === 'REGISTERED').hint, '')
   scoped.onTitleInput({ detail: { value: '集合提醒' } })
   scoped.onContentInput({ detail: { value: '请按原时间集合' } })
@@ -439,8 +492,10 @@ test('通知人数与权限和预览使用同一场次，未指定场次不伪�
   wide.onLoad({ clubId: '21' })
   requests.at(-1).success({ code: 200, data: { active: true, club: { id: 21 }, permissions: ['club:notify:send'] } })
   assert.equal(JSON.parse(requests.at(-1).data).activityId, null)
-  requests.at(-1).success({ code: 200, data: { counts: { ALL_MEMBERS: 2, REGISTERED: null } } })
+  requests.at(-1).success({ code: 200, data: { counts: { ALL_MEMBERS: 2, ADMINS: 0, INACTIVE: 1, REGISTERED: null, WAITLIST: null, NO_SHOW: null } } })
   assert.equal(wide.data.audiences.find(x => x.value === 'REGISTERED').countText, '')
+  assert.equal(wide.data.audiences.find(x => x.value === 'ADMINS').countText, '0 人')
+  assert.equal(wide.data.audiences.find(x => x.value === 'INACTIVE').countText, '1 人')
   assert.equal(wide.data.audiences.find(x => x.value === 'REGISTERED').disabled, true)
   assert.equal(wide.data.audiences.find(x => x.value === 'REGISTERED').hint, '从具体活动进入后才可选')
   const restricted = page()

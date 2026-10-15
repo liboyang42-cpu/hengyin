@@ -1,5 +1,7 @@
 <!-- autoBack:整页失败只剩原因 + 自动返回,原位留一块空白占住版面,不画第二套错误页 -->
-<block wx:if="{{autoBack}}">
+<!-- loadFailure:加载失败保持空白,不画错误页、不弹半屏、不自动返回 -->
+<view wx:if="{{loadFailure}}" aria-hidden="true" class="cy-error-veil {{fill ? 'cy-error--fill' : ''}}"></view>
+<block wx:elif="{{autoBack}}">
   <view aria-hidden="true" class="cy-error-veil {{fill ? 'cy-error--fill' : ''}}"></view>
   <cy-result-sheet show="{{_sheet}}" kind="fail" title="{{title}}" why="{{sub}}" bind:close="onAutoBack" />
 </block>

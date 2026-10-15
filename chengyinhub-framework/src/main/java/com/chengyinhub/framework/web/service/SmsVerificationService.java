@@ -1,8 +1,6 @@
 package com.chengyinhub.framework.web.service;
 
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -77,6 +75,12 @@ public class SmsVerificationService
             return SendResult.error("发送过于频繁,请稍后再试");
         }
 
+        Long dailyCount = redisCache.incrementWithinWindow("sms_send_phone_day_" + phone, 1, TimeUnit.DAYS);
+        if (dailyCount == null || dailyCount > 10) {
+            redisCache.compareAndDelete(phoneLimitKey, owner);
+            return SendResult.error("今日验证码发送次数已达上限，请明天再试");
+        }
+
         String code = Integer.toString(CODE_MIN + secureRandom.nextInt(CODE_RANGE));
         boolean sent;
         try
@@ -95,7 +99,6 @@ public class SmsVerificationService
         }
 
         redisCache.setCacheObject("sms_" + phone + "_code", code, 5, TimeUnit.MINUTES);
-        resetPhoneVerificationAttempts(phone);
         return SendResult.success("验证码已发送");
     }
 
@@ -138,17 +141,6 @@ public class SmsVerificationService
             redisCache.deleteObject("sms_" + phone + "_code");
         }
         return false;
-    }
-
-    private void resetPhoneVerificationAttempts(String phone)
-    {
-        List<String> keys = new ArrayList<>(PHONE_VERIFY_ATTEMPT_LIMIT);
-        String phonePrefix = "sms_verify_attempt_phone_" + phone;
-        for (int attempt = 1; attempt <= PHONE_VERIFY_ATTEMPT_LIMIT; attempt++)
-        {
-            keys.add(phonePrefix + "_" + attempt);
-        }
-        redisCache.deleteObject(keys);
     }
 
     private AttemptSlot acquireAttemptSlot(String keyPrefix, String owner, int limit)

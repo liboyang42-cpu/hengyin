@@ -16,10 +16,12 @@ test('商家优惠券管理入口显式传 MERCHANT 且列表到新增页不丢 
   assert.match(merchantHome, /\/subpackageMember\/coupon\/coupon\?scope=MERCHANT/)
   assert.match(marketing, /\/subpackageMember\/coupon\/coupon\?scope=MERCHANT/)
   assert.match(couponList, /operationScope/)
-  assert.match(couponList, /scope:\s*that\.data\.operationScope/)
+  assert.match(couponList, /const scope = that\.data\.operationScope/)
+  assert.match(couponList, /scope:\s*scope/)
   assert.match(couponList, /couponInfo\/couponInfo'[\s\S]{0,120}operationScope === 'MERCHANT'[\s\S]{0,80}\?scope=MERCHANT/)
   assert.match(couponInfo, /operationScope/)
-  assert.match(couponInfo, /scope:\s*that\.data\.operationScope/)
+  assert.match(couponInfo, /const context = \{ owner, scope: that\.data\.operationScope \}/)
+  assert.match(couponInfo, /scope:\s*context\.scope/)
 })
 
 test('商家扫码仅对 coupon 核销请求补 MERCHANT，其他扫码合同不被改写', () => {

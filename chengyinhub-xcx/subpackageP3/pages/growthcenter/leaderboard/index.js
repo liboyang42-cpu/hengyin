@@ -2,6 +2,7 @@ const { readReducedMotion } = require('../../../../utils/motion-preference.js');
 // 完整排行榜(从成长中心主页拆出):周/总榜 × 积分/成长榜 切换 + 前三领奖台 + 全量名次
 // 数据:/api/growth/leaderboard。成长中心主页只展示「自己的排名」摘要,点开才到这里看完整榜单。
 const app = getApp()
+const { recoverReadSession } = require('../../../../utils/session/login-reload.js')
 const { isRecord, isRecordList } = require('../../../../utils/response-shape.js')
 
 /* 头像优先级(手册 Utilities §5「优先照片 / Memoji，落回字母」):
@@ -47,6 +48,8 @@ Page({
     reducedMotion: false,
     loading: true,
     errorMsg: '',
+    boardAuthRequired: false,
+    boardAccessDenied: false,
     metric: 'point',   // point | exp
     period: 'total',   // week | total
     unit: '积分',
@@ -57,7 +60,10 @@ Page({
   },
 
   onShow() {
+    this._hidden = false
+    if (this._readSessionChanged) { this._readSessionChanged = false; this.loadBoard() }
 
+    if (this._boardOwner !== undefined && this._boardOwner !== String(app.getUserID && app.getUserID() || '')) this.loadBoard();
     const reducedMotion = readReducedMotion();
 
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
@@ -65,11 +71,14 @@ Page({
   },
 
 
+  onHide() { this._hidden = true },
   onLoad(query) {
     if (query && query.metric === 'exp') this.setData({ metric: 'exp' })
     if (query && query.period === 'week') this.setData({ period: 'week' })
     this.loadBoard()
   },
+
+  onUnload() { this._unloaded = true; this._boardRequestId = (this._boardRequestId || 0) + 1 },
 
   onPullDownRefresh() {
     this.loadBoard(() => wx.stopPullDownRefresh())
@@ -77,7 +86,17 @@ Page({
 
   // 错误态重试:必须真的重新取数。loadBoard 自己会先把 loading 置真、errorMsg 清空,
   // 所以这里不重复 setData —— 重复写反而会掩盖 loadBoard 漏清状态的 bug。
-  onRetry() { this.loadBoard() },
+  onRetry() {
+    if (!this.data.boardAuthRequired) { this.loadBoard(); return }
+    if (this._loginPending) return
+    this._loginPending = true
+    const login = app.getUserID && app.getUserID() && typeof app.reLogin === 'function' ? app.reLogin()
+      : typeof app.firstLogin === 'function' ? app.firstLogin() : null
+    Promise.resolve(login).then(result => {
+      this._loginPending = false
+      if (!this._unloaded && app.getUserID && app.getUserID() && !(result && result.ok === false)) this.loadBoard()
+    }).catch(() => { this._loginPending = false })
+  },
 
   // 空榜 CTA:榜是空的时候唯一有意义的动作是去探索(去挣积分),不是重试。
   goExplore() {
@@ -99,12 +118,32 @@ Page({
   },
 
   loadBoard(done) {
+    if (this._unloaded) { if (typeof done === 'function') done(); return }
+    const owner = String(app.getUserID && app.getUserID() || '')
+    if (this._boardOwner !== undefined && owner !== this._boardOwner) this.setData({ top3: [], rest: [], me: null })
+    this._boardOwner = owner
+    if (!owner || owner === '0') {
+      this._boardRequestId = (this._boardRequestId || 0) + 1
+      this.setData({ loading: false, top3: [], rest: [], me: null, boardAuthRequired: true, boardAccessDenied: false, errorMsg: '登录后可查看完整排行榜' })
+      if (typeof done === 'function') done()
+      return
+    }
     const metric = this.data.metric
     const period = this.data.period
     const requestId = (this._boardRequestId || 0) + 1
     this._boardRequestId = requestId
-    const isCurrent = () => requestId === this._boardRequestId
-    this.setData({ loading: true, errorMsg: '' })
+    const isCurrent = () => !this._unloaded && requestId === this._boardRequestId && owner === String(app.getUserID && app.getUserID() || '')
+    this.setData({ loading: true, errorMsg: '', boardAuthRequired: false, boardAccessDenied: false })
+    const recover = (res, statusCode) => !this._unloaded && requestId === this._boardRequestId && recoverReadSession(this, app, res,
+      function (anonymous) { this._boardRequestId++; this._boardOwner = undefined; this.setData({ top3: [], rest: [], me: null, loading: false, boardAuthRequired: anonymous, boardAccessDenied: false, errorMsg: anonymous ? '登录后可查看完整排行榜' : '' }); if (typeof done === 'function') done() },
+      this.loadBoard, statusCode)
+    const denied = (res, statusCode) => {
+      const code = Number(statusCode || res && (res.code || res.statusCode))
+      if (!isCurrent() || (code !== 401 && code !== 403)) return false
+      this.setData({ top3: [], rest: [], me: null, boardAuthRequired: code === 401, boardAccessDenied: code === 403,
+        errorMsg: code === 401 ? '登录后可查看完整排行榜' : '当前账号无法查看排行榜' })
+      return true
+    }
     app.sendRequest({
       hideLoading: true,
       silentError: true,
@@ -113,18 +152,21 @@ Page({
       data: { metric, period, limit: 50 },
       success: (res) => {
         if (!isCurrent()) return
+        if (denied(res)) return
         if (res.code === 200 || res.code === '200') {
           this.buildBoard(res.data || {}, metric)
         } else {
           this.setData({ errorMsg: (app.getRequestErrorMessage && app.getRequestErrorMessage(res, '排行榜没有加载出来')) || '排行榜没有加载出来' })
         }
       },
-      fail: () => {
-        if (!isCurrent()) return
+      fail: (res, statusCode) => {
+        if (recover(res, statusCode) || !isCurrent()) return
+        if (denied(res, statusCode)) return
         this.setData({ errorMsg: '排行榜没有加载出来' })
       },
-      successStatusAbnormal: (error) => {
-        if (!isCurrent()) return
+      successStatusAbnormal: (error, statusCode) => {
+        if (recover(error, statusCode) || !isCurrent()) return
+        if (denied(error, statusCode)) return
         this.setData({
           errorMsg: (app.getRequestErrorMessage && app.getRequestErrorMessage(error, '排行榜没有加载出来')) || '排行榜没有加载出来'
         })

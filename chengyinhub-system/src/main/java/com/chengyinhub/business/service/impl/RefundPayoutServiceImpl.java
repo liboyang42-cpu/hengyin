@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.utils.StringUtils;
+
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.UUID;
@@ -105,7 +107,12 @@ public class RefundPayoutServiceImpl implements IRefundPayoutService {
             return;
         }
 
-        String expectedRefundNo = "RF" + registration.getId();
+        String expectedRefundNo = refund.getRefundNo();
+        if (StringUtils.isBlank(expectedRefundNo)) expectedRefundNo = "RF" + registration.getId();
+        if (!expectedRefundNo.matches("RF" + registration.getId() + "(?:-[1-9][0-9]*)?")) {
+            refundService.markPayoutResult(refundId, leaseToken, false, "退款编号与原报名不一致，请人工核对");
+            return;
+        }
         if (!ensureRefundNoOrEscalate(refundId, leaseToken, expectedRefundNo)) {
             return;
         }

@@ -13,6 +13,9 @@ public interface AuditTaskMapper {
     AuditTask selectAuditTaskById(Long id);
 
     AuditTask selectAuditTaskByIdForUpdate(Long id);
+    List<AuditTask> selectTopicPublicationTasksForUpdate(@Param("topicId") Long topicId);
+    AuditTask selectLatestTopicPublicationTask(@Param("topicId") Long topicId);
+    int cancelTopicPublicationTaskCas(@Param("id") Long id, @Param("version") Integer version);
     int cancelOpenTemplateTasks(@Param("bizType") String bizType, @Param("bizId") Long bizId);
 
     List<AuditTask> selectAuditTaskList(AuditTask auditTask);
@@ -51,6 +54,9 @@ public interface AuditTaskMapper {
 
     /** 待审(status=0)且已过审核时限(deadline_at &lt; now)的超期条数。 */
     int countPendingOverdue(@Param("now") Date now);
+
+    List<Long> samplePendingBacklogIds(@Param("cutoff") Date cutoff);
+    List<Long> samplePendingOverdueIds(@Param("now") Date now);
 
     /** 某提交人在 since 之后新建的举报单(source_type=report)条数,用于 submitterId 举报限频。 */
     int countRecentReportsBySubmitter(@Param("submitterId") Long submitterId, @Param("since") Date since);

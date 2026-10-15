@@ -4,8 +4,9 @@ import com.chengyinhub.common.annotation.Excel;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Min;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Date;
@@ -35,6 +36,7 @@ public class CouponPublisDTO implements Serializable {
     /** 发行数量 */
     @Schema(description = "发行数量", example = "")
     @NotNull(message = "发行数量不能为空")
+    @Min(value = 1, message = "发行数量必须大于0")
     private Long publishCount;
 
     /** 优惠券类型：0礼品券 1、9折券  2、8折券 3、体验卡 */

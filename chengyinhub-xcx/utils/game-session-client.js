@@ -369,6 +369,7 @@ function createGameSessionClient(options) {
     var action = String(input.action || '');
     if (!perspective || !validActivityId(input.activityId) || !validNodeId(input.nodeId)
       || !validRequestId(requestId) || !validRevision(expectedRevision)
+      || (input.authorityEpoch != null && (!validRevision(input.authorityEpoch) || input.authorityEpoch < 1 || input.authorityEpoch > 2147483647))
       || !/^[A-Z][A-Z0-9_]{2,63}$/.test(action) || !isObject(input.payload || {})) {
       return Promise.resolve({
         status: 'business-error',
@@ -385,6 +386,7 @@ function createGameSessionClient(options) {
       action: action,
       payload: input.payload || {}
     };
+    if (input.authorityEpoch != null) body.authorityEpoch = input.authorityEpoch;
     var task = null;
     var promise = new Promise(function (resolve) {
       task = sendRequest({
@@ -447,6 +449,58 @@ function createGameSessionClient(options) {
     return attachAbort(promise, function () { return task; });
   }
 
+  function loadSharedStaffView(activityId, exported) {
+    if (!validActivityId(activityId)) return Promise.resolve({ status: 'business-error', message: '活动参数无效' });
+    return new Promise(function (resolve) {
+      sendRequest({
+        url: exported ? '/api/game/session/shared/export' : '/api/game/session/shared/control', method: 'GET', data: { activityId: activityId },
+        retry: 1, autoErrorToast: false,
+        success: function (res) {
+          if (Number(res && res.code) !== 200) { resolve(businessResult(res, '运营状态暂时无法读取')); return; }
+          var data = res.data;
+          var epoch = exported ? data && data.authorityEpoch : data && data.run && data.run.authorityEpoch;
+          if (!isObject(data) || !validRevision(data.revision) || !validRevision(epoch) || epoch < 1
+            || (exported ? !sameId(data.activityId, activityId) || !validActivityId(data.sessionId)
+              || !/^[a-f0-9]{64}$/.test(data.configHash || '') || !/^[a-f0-9]{64}$/.test(data.highWaterHash || '')
+              : !Array.isArray(data.teams) || !Array.isArray(data.stations)
+                || (data.availableActions != null && (!Array.isArray(data.availableActions) || data.availableActions.some(function (action) { return typeof action !== 'string'; }))))) {
+            resolve({ status: 'business-error', message: '运营状态数据无效' }); return;
+          }
+          resolve({ status: 'ready', data: data });
+        },
+        fail: function () { resolve({ status: 'network-error', message: '网络异常，请重新读取运营状态' }); },
+        successStatusAbnormal: function () { resolve({ status: 'network-error', message: '网络异常，请重新读取运营状态' }); }
+      });
+    });
+  }
+
+  function anchorSharedRun(activityId) {
+    if (!validActivityId(activityId)) return Promise.resolve({ status: 'business-error', message: '活动参数无效' });
+    return new Promise(function (resolve) {
+      sendRequest({ url: '/api/game/session/shared/export/anchor', method: 'POST', data: { activityId: activityId },
+        header: { 'content-type': 'application/json' }, retry: 0, autoErrorToast: false,
+        success: function (res) {
+          if (Number(res && res.code) !== 200 && !(Number(res && res.code) === 500 && isObject(res.data)
+            && /^GAME_[A-Z0-9_]+$/.test(res.data.reasonCode || ''))) {
+            resolve({ status: 'unknown-write', message: '离线记录结果待核对' }); return;
+          }
+          if (Number(res && res.code) !== 200) { resolve(businessResult(res, '离线记录未开始')); return; }
+          var data = res.data;
+          if (!isObject(data) || !sameId(data.activityId, activityId) || !validActivityId(data.sessionId)
+            || !isObject(data.anchor) || !validRevision(data.authorityEpoch) || data.authorityEpoch < 1
+            || data.anchor.epoch !== data.authorityEpoch || !Number.isSafeInteger(data.anchor.at) || data.anchor.at < 1
+            || data.anchor.configHash !== data.configHash || data.anchor.highWaterHash !== data.highWaterHash
+            || !/^[a-f0-9]{64}$/.test(data.anchor.highWaterHash || '') || !/^[a-f0-9]{64}$/.test(data.anchor.configHash || '')) {
+            resolve({ status: 'unknown-write', message: '离线记录结果待核对' }); return;
+          }
+          resolve({ status: 'ready', data: data });
+        },
+        fail: function () { resolve({ status: 'unknown-write', message: '离线记录结果待核对' }); },
+        successStatusAbnormal: function () { resolve({ status: 'unknown-write', message: '离线记录结果待核对' }); }
+      });
+    });
+  }
+
   function readReceipt(activityId, requestId) {
     if (!validActivityId(activityId) || !validRequestId(requestId)) {
       return Promise.resolve({
@@ -506,6 +560,9 @@ function createGameSessionClient(options) {
     loadMerchantEntries: loadMerchantEntries,
     loadClubRecapExport: loadClubRecapExport,
     loadProjection: loadProjection,
+    loadSharedControl: function (activityId) { return loadSharedStaffView(activityId, false); },
+    loadSharedExport: function (activityId) { return loadSharedStaffView(activityId, true); },
+    anchorSharedRun: anchorSharedRun,
     submitAction: submitAction,
     readReceipt: readReceipt
   };
@@ -540,6 +597,9 @@ module.exports = {
   normalizeClubRecap: normalizeClubRecap,
   normalizeClubRecapExport: normalizeClubRecapExport,
   loadProjection: loadProjection,
+  loadSharedControl: function (activityId) { return appClient().loadSharedControl(activityId); },
+  loadSharedExport: function (activityId) { return appClient().loadSharedExport(activityId); },
+  anchorSharedRun: function (activityId) { return appClient().anchorSharedRun(activityId); },
   submitAction: submitAction,
   readReceipt: readReceipt
 };

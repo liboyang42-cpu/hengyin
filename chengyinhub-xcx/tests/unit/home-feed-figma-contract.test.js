@@ -88,10 +88,11 @@ test('附近活动和即将上线都以真实图片作为卡片主视觉', () =>
   assert.match(wxml, /class="v3-upreview-mask"/);
 });
 
-test('开发预览的 feed 与即将上线只使用微信能渲染的位图资产', () => {
+test('保留设计fixture的位图资产，运行首页不再注入设计假数据', () => {
   const source = read('pages/index/index.js');
-  const mock = source.match(/function buildIndexUiMock\(\) \{([\s\S]*?)\n\}\n\nPage\(/);
-  assert.ok(mock, '首页开发预览数据入口必须存在');
+  assert.doesNotMatch(source, /buildIndexUiMock|_applyIndexUiMock/);
+  const mock = read('tests/fixtures/home-design-preview-source.txt').match(/function buildIndexUiMock\(\) \{([\s\S]*?)\n\}\n\nPage\(/);
+  assert.ok(mock, '设计fixture必须保留供离线设计验证');
   assert.doesNotMatch(mock[1], /figma_cat\d+\.png/, '这些 .png 实际是 SVG，微信 image 会渲染失败');
   assert.match(mock[1], /index-figma\/nearby-card\.jpg/);
   assert.match(mock[1], /index-figma\/reco-hero\.jpg/);

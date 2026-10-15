@@ -1,0 +1,27 @@
+{
+  "zeroHp" : {
+    "episodeId" : "cca11edc-fc56-472e-9a4f-2ca5a48670a8",
+    "policy" : "WAIT",
+    "effectivePolicy" : "WAIT",
+    "phase" : "RECOVERING",
+    "zeroAt" : 1791654067774,
+    "deadlineAt" : 1791654127774,
+    "used" : 0,
+    "limit" : 1,
+    "restoreTo" : 4,
+    "message" : "",
+    "serverNow" : 1791654067774,
+    "thenPolicy" : "THEME_FAIL",
+    "recoveryMemberId" : null,
+    "recoveryMemberName" : "",
+    "allowedActions" : [ "ZERO_HP_SYNC" ],
+    "disabledReason" : ""
+  },
+  "hp" : 0,
+  "status" : "ACTIVE",
+  "teamId" : 90,
+  "isCaptain" : true,
+  "scope" : "TEAM",
+  "authorityEpoch" : 1,
+  "ownerRevision" : 1
+}

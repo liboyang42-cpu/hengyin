@@ -67,7 +67,7 @@ class ApiImReadAuthorizationTest {
 
         assertEquals("操作失败，请稍后重试", result.get(AjaxResult.MSG_TAG));
         verify(clubMemberMapper).selectByClubAndMember(42L, 1L);
-        verify(messageMapper, never()).selectPage(anyLong(), any(), anyInt());
+        verify(messageMapper, never()).selectVisiblePage(anyLong(), anyLong(), any(), anyInt());
     }
 
     @Test
@@ -99,7 +99,7 @@ class ApiImReadAuthorizationTest {
         assertEquals(409, result.get(AjaxResult.CODE_TAG));
         assertEquals("HANGOUT_CLOSED", result.get("errorCode"));
         assertEquals("/subpackageB/pages/im/list/index", result.get("returnPath"));
-        verify(messageMapper, never()).selectPage(anyLong(), any(), anyInt());
+        verify(messageMapper, never()).selectVisiblePage(anyLong(), anyLong(), any(), anyInt());
     }
 
     @Test
@@ -125,7 +125,7 @@ class ApiImReadAuthorizationTest {
         activeHangout.setStatus(0);
         when(conversationMapper.selectImConversationById(100L)).thenReturn(activeHangout);
         when(hangoutMapper.selectStatusById(5L)).thenReturn(0);
-        when(messageMapper.selectPage(100L, 0L, 20)).thenReturn(java.util.Collections.emptyList());
+        when(messageMapper.selectVisiblePage(100L, 1L, 0L, 21)).thenReturn(java.util.Collections.emptyList());
         ApiImController controller = spy(new ApiImController());
         doReturn(1L).when(controller).getAppUserId();
         ReflectionTestUtils.setField(controller, "imService", service);
@@ -133,6 +133,6 @@ class ApiImReadAuthorizationTest {
         AjaxResult result = controller.messages("100", "0", "20");
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
-        verify(messageMapper).selectPage(100L, 0L, 20);
+        verify(messageMapper).selectVisiblePage(100L, 1L, 0L, 21);
     }
 }

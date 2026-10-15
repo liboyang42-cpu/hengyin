@@ -27,11 +27,11 @@ test('拉黑文案不再承诺「设置里解除」', () => {
   assert.match(all, /对方不会收到拉黑提示/, '真实后果要保留')
   // RV-p6 #3:「需要时请联系客服」同样做不到 —— 客服端只有 adminUnblock,只删平台级拉黑(memberId=0),
   // 解不了「我拉黑了谁」。在有黑名单列表接口 + 解除入口之前,只能写真话。
-  assert.match(all, /拉黑后暂不支持解除/, '要如实告知:目前不能解除')
+  assert.match(all, /此会话更多菜单解除拉黑/, '应指向真实会话菜单')
   assert.doesNotMatch(all, /联系客服/, '客服也解不了用户之间的拉黑,不许把人引过去')
 })
 
-test('负控锚点:解除入口真的不存在时,文案里的承诺才是假的', () => {
+test('解除入口指向实际已有unblock调用，不能导向设置或客服', () => {
   // 若将来补了黑名单页,这个测试会失败 —— 那时应把文案改回「可在设置里解除」并删掉本契约。
   const files = []
   const walk = (dir) => {
@@ -45,5 +45,5 @@ test('负控锚点:解除入口真的不存在时,文案里的承诺才是假的
   walk(path.join(ROOT, 'pages'))
   walk(path.join(ROOT, 'subpackageB'))
   const unblockCallers = files.filter((f) => /api\/im\/unblock/.test(fs.readFileSync(f, 'utf8')))
-  assert.deepEqual(unblockCallers, [], '发现了解除入口调用方,文案需要同步改口')
+  assert.deepEqual(unblockCallers, [path.join(ROOT, 'subpackageB/pages/im/chat/index.js')], '解除入口只由真实会话对方归属解析后发起')
 })

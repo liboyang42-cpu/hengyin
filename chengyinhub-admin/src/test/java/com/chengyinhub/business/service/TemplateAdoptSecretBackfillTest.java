@@ -80,6 +80,7 @@ class TemplateAdoptSecretBackfillTest {
         // 能力位本身的正/负控在 CapabilityGuardImplTest,不在这里重复。
         ICapabilityGuard capabilityGuard = mock(ICapabilityGuard.class);
         service = new TemplatePublishServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
         ReflectionTestUtils.setField(service, "memberTemplateService", memberService);
         com.chengyinhub.business.mapper.CmsMemberTemplateMapper lockedMembers = mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class);
         ReflectionTestUtils.setField(service, "memberTemplateMapper", lockedMembers);
@@ -114,6 +115,40 @@ class TemplateAdoptSecretBackfillTest {
         assertTrue(saved.contains("\"answerKey\":\"B\""), "盲品答案必须从源模板补回:" + saved);
         assertTrue(saved.contains("\"poems\""), "签文池必须从源模板补回:" + saved);
         assertTrue(saved.contains("第一行"), "补回的签文内容必须与源一致:" + saved);
+    }
+
+    @Test
+    void sourceOnlyDraftCopiesAuthorConfigInsteadOfClientDefaults() throws Exception {
+        CmsTemplateLibrary source = visibleSource(R3_SOURCE_CONFIG);
+        source.setTitle("源玩法"); source.setDescription("旧描述不能截断");
+        source.setDuration(7L); source.setActivityCategoryids("12");
+        when(libraryService.selectCmsTemplateLibraryById(9001L)).thenReturn(source);
+        CmsTemplatePublishRequest request = adoptedRequest(9001L, "{\"schemaVersion\":1}");
+        request.setAdoptSourceOnly(true); request.setScope("MERCHANT");
+        assertEquals(91L, service.saveOrUpdateDraft(request, 7L, "member7"));
+        CmsMemberTemplate saved = inserted.get();
+        assertEquals(new ObjectMapper().readTree(R3_SOURCE_CONFIG), new ObjectMapper().readTree(saved.getAdvancedConfigJson()));
+        assertEquals("源玩法", saved.getTitle()); assertEquals(7L, saved.getDuration());
+        assertEquals("12", saved.getActivityCategoryids()); assertEquals(7L, saved.getMemberId());
+        assertEquals(9001L, saved.getOriginalTemplateId()); assertEquals(0L, saved.getPublishStatus());
+        assertEquals("MERCHANT", request.getScope());
+        assertFalse(AdvancedGamePublicProjection.safeConfigJson(saved.getAdvancedConfigJson()).contains("answerOrder"));
+    }
+
+    @Test
+    void sourceOnlyDraftRejectsHiddenSourcesExistingIdsAndForeignCoupons() {
+        CmsTemplateLibrary source = visibleSource(SOURCE_CONFIG);
+        when(libraryService.selectCmsTemplateLibraryById(9001L)).thenReturn(source);
+        CmsTemplatePublishRequest request = adoptedRequest(9001L, STRIPPED_CONFIG);
+        request.setAdoptSourceOnly(true); request.setId(10L);
+        assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(request, 7L, "member7"));
+        request.setId(null); source.setPublishStatus(0L);
+        assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(request, 7L, "member7"));
+        source.setPublishStatus(1L); source.setCouponId(99L);
+        assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(request, 7L, "member7"));
+        source.setCouponId(null); source.setRewardRulesJson("[{\"outcomeCode\":\"COMPLETED\",\"couponId\":99}]");
+        assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(request, 7L, "member7"));
+        assertTrue(inserted.get() == null);
     }
 
     @Test

@@ -76,6 +76,8 @@ class RefundSingleSidedDebitTopicGuardTest {
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.FirstReviewPointsClawbackService.class));
         ReflectionTestUtils.setField(svc, "refundApplicationMapper", refundApplicationMapper);
         ReflectionTestUtils.setField(svc, "cmsRegistrationMapper", cmsRegistrationMapper);
+        org.mockito.Mockito.when(cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(org.mockito.ArgumentMatchers.any()))
+                .thenAnswer(call -> cmsRegistrationMapper.selectCmsRegistrationById(call.getArgument(0)));
         when(cmsRegistrationMapper.claimRegistrationRefunded(anyLong(), any(), any())).thenReturn(1);
         ReflectionTestUtils.setField(svc, "cmsTopicMapper", cmsTopicMapper);
         ReflectionTestUtils.setField(svc, "coopOrderMapper", coopOrderMapper);
@@ -105,6 +107,8 @@ class RefundSingleSidedDebitTopicGuardTest {
         when(refundApplicationMapper.selectRefundApplicationById(2L)).thenReturn(refund);
 
         CmsRegistration reg = new CmsRegistration();
+        reg.setPaymentStatus(2);
+        reg.setPayableAmount(new BigDecimal("100"));
         reg.setId(REGISTRATION_ID);
         reg.setOwnerType(1L);
         reg.setOwnerId(TOPIC_ID);

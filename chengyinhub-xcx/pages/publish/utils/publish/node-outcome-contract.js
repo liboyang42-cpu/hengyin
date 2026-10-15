@@ -1,6 +1,6 @@
 'use strict';
 
-const CODE_PATTERN = /^[A-Z][A-Z0-9_]{0,63}$/;
+const CODE_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 
 function parseObject(raw) {
   if (!raw) return null;
@@ -52,7 +52,7 @@ function extract(template) {
   const seen = new Set();
   items.forEach((item) => {
     if (!CODE_PATTERN.test(item.code)) {
-      errors.push({ code: 'INVALID_CODE', message: 'outcomeCode 只能使用大写字母、数字和下划线', source: item.source, sourceKey: item.sourceKey });
+      errors.push({ code: 'INVALID_CODE', message: 'outcomeCode 只能使用1至64位字母、数字、下划线和短横线', source: item.source, sourceKey: item.sourceKey });
     } else if (seen.has(item.code)) {
       errors.push({ code: 'DUPLICATE_CODE', message: 'outcomeCode 不能重复', source: item.source, sourceKey: item.sourceKey });
     }

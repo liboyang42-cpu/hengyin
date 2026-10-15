@@ -1,5 +1,10 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.business.service.ICommunityMediaReceiptService;
+import com.chengyinhub.business.service.IAuditTaskService;
+import com.chengyinhub.business.mapper.AppMediaAssetMapper;
+import com.chengyinhub.business.service.impl.AppMediaAssetService;
+import org.springframework.beans.factory.ObjectProvider;
 import com.chengyinhub.common.config.RuoYiConfig;
 import com.chengyinhub.common.constant.Constants;
 import com.chengyinhub.common.utils.DateUtils;
@@ -118,6 +123,55 @@ class ApiCommonUploadSecurityTest
         assertEquals(HttpStatus.OK, localResult.getStatusCode());
         assertFalse(java.util.Arrays.equals(sourceBytes, localBytes));
         assertFalse(new String(localBytes, "ISO-8859-1").contains("GPSLatitude"));
+    }
+
+    @Test
+    void communityUploadResponseAndReceiptUseStoredImageSize() throws Exception
+    {
+        byte[] sourceBytes = insertExif(jpeg("gps.jpg", 160, 90).getBytes(), "Exif\0\0GPSLatitude=31.2");
+        RecordingOssController controller = new RecordingOssController();
+        controller.appMember = 91L;
+        ICommunityMediaReceiptService receipts = mock(ICommunityMediaReceiptService.class);
+        when(receipts.issue(org.mockito.ArgumentMatchers.anyLong(),
+                org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyLong()))
+                .thenReturn("test-upload-receipt");
+        ReflectionTestUtils.setField(controller, "communityMediaReceiptService", receipts);
+
+        ResponseEntity<AjaxResult> response = controller.uploadOSS(
+                new MockMultipartFile("file", "gps.jpg", "image/jpeg", sourceBytes), UploadImagePolicy.COMMUNITY_POST_BIZ_TYPE, null);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(sourceBytes.length != controller.uploadedBytes.length);
+        long storedSize = controller.uploadedBytes.length;
+        assertEquals(storedSize, response.getBody().get("byteSize"));
+        assertEquals("test-upload-receipt", response.getBody().get("uploadReceipt"));
+        org.mockito.Mockito.verify(receipts).issue(91L, "https://example.test/upload/test.gif", storedSize);
+    }
+
+    @Test
+    void ossStoredSizeFollowsImageSanitizationAndUnchangedAudio() throws Exception
+    {
+        byte[] image = insertExif(jpeg("gps.jpg", 160, 90).getBytes(), "Exif\0\0GPSLatitude=31.2");
+        for (String bizType : new String[] { "image_free", "merchant_aftercare_evidence" })
+        {
+            RecordingOssController controller = new RecordingOssController();
+            AppUploadService service = (AppUploadService) ReflectionTestUtils.getField(controller, "appUploadService");
+            JSONObject uploaded = service.uploadOss(new MockMultipartFile(
+                    "file", "gps.jpg", "image/jpeg", image), bizType);
+            assertTrue(image.length != controller.uploadedBytes.length);
+            assertEquals((long) controller.uploadedBytes.length, uploaded.get("byteSize"));
+        }
+        RecordingOssController controller = pendingAudioController(91L);
+        AppUploadService service = (AppUploadService) ReflectionTestUtils.getField(controller, "appUploadService");
+        byte[] audio = new byte[] { 'I', 'D', '3', 4, 0, 0, 0, 0, 0, 0 };
+        JSONObject uploaded = service.uploadOss(
+                new MockMultipartFile("file", "voice.mp3", "audio/mpeg", audio), null, 91L, null, null);
+        assertEquals((long) audio.length, uploaded.get("byteSize"));
+        assertEquals("HOLD", uploaded.get("reviewState"));
+        assertFalse(uploaded.containsKey("url"));
+        assertEquals(91L, controller.stagedAsset.get("memberId"));
+        assertEquals("AUDIO", controller.stagedAsset.get("mediaType"));
+        org.junit.jupiter.api.Assertions.assertArrayEquals(audio, controller.uploadedBytes);
     }
 
     @Test
@@ -343,9 +397,9 @@ class ApiCommonUploadSecurityTest
     }
 
     @Test
-    void ossKeepsPublishedAudioUploadFormats() throws Exception
+    void ossKeepsSupportedAudioFormatsWhileHoldingThemForReview() throws Exception
     {
-        RecordingOssController controller = new RecordingOssController();
+        RecordingOssController controller = pendingAudioController(91L);
         ResponseEntity<AjaxResult> mp3 = controller.uploadOSS(
                 new MockMultipartFile("file", "voice.mp3", "audio/mpeg", new byte[] { 'I', 'D', '3' }), null, null);
         ResponseEntity<AjaxResult> m4a = controller.uploadOSS(
@@ -357,6 +411,24 @@ class ApiCommonUploadSecurityTest
         assertEquals(HttpStatus.OK, m4a.getStatusCode());
         assertEquals(HttpStatus.OK, aac.getStatusCode());
         assertEquals(3, controller.uploadCount);
+        for (ResponseEntity<AjaxResult> response : java.util.Arrays.asList(mp3, m4a, aac)) {
+            assertEquals("HOLD", response.getBody().get("reviewState"));
+            org.junit.jupiter.api.Assertions.assertNull(response.getBody().get("url"));
+        }
+        assertEquals(91L, controller.stagedAsset.get("memberId"));
+        assertEquals("AUDIO", controller.stagedAsset.get("mediaType"));
+    }
+
+    @Test
+    void anonymousAudioCannotStoreOrIssueReviewedAsset() {
+        RecordingOssController controller = pendingAudioController(0L);
+        ResponseEntity<AjaxResult> result = controller.uploadOSS(new MockMultipartFile(
+                "file", "voice.mp3", "audio/mpeg", new byte[] { 'I', 'D', '3' }), null, null);
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+        assertEquals(400, result.getBody().get(AjaxResult.CODE_TAG));
+        assertEquals(0, controller.uploadCount);
+        assertFalse(controller.uploaded);
+        org.junit.jupiter.api.Assertions.assertNull(controller.stagedAsset);
     }
 
     @Test
@@ -646,12 +718,40 @@ class ApiCommonUploadSecurityTest
         return result;
     }
 
+    private RecordingOssController pendingAudioController(Long currentMemberId) {
+        RecordingOssController controller = new RecordingOssController();
+        controller.appMember = currentMemberId;
+        AppMediaAssetMapper mapper = mock(AppMediaAssetMapper.class);
+        when(mapper.insert(org.mockito.ArgumentMatchers.any())).thenAnswer(call -> {
+            java.util.Map<String, Object> row = call.getArgument(0);
+            assertEquals(91L, row.get("memberId"));
+            assertEquals("AUDIO", row.get("mediaType"));
+            assertEquals("HOLD", row.get("reviewState"));
+            row.put("id", 901L);
+            controller.stagedAsset = row;
+            return 1;
+        });
+        when(mapper.bindAuditTask(901L, 0, 902L)).thenReturn(1);
+        IAuditTaskService audits = mock(IAuditTaskService.class);
+        when(audits.submitSafetyHold(org.mockito.ArgumentMatchers.eq("MEDIA_ASSET"),
+                org.mockito.ArgumentMatchers.eq(901L), org.mockito.ArgumentMatchers.eq(91L),
+                org.mockito.ArgumentMatchers.eq("NORMAL"), org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(902L);
+        ObjectProvider<IAuditTaskService> provider = mock(ObjectProvider.class);
+        when(provider.getObject()).thenReturn(audits);
+        AppMediaAssetService assets = new AppMediaAssetService(mapper, provider);
+        AppUploadService service = (AppUploadService) ReflectionTestUtils.getField(controller, "appUploadService");
+        ReflectionTestUtils.setField(service, "appMediaAssetService", assets);
+        return controller;
+    }
+
     private static final class RecordingOssController extends ApiCommonController
     {
         private boolean uploaded;
         private int uploadCount;
         private byte[] uploadedBytes;
         private Long appMember;
+        private java.util.Map<String, Object> stagedAsset;
 
         @Override
         public Long getAppUserId()
@@ -667,7 +767,11 @@ class ApiCommonUploadSecurityTest
 
         private JSONObject store(MultipartFile file) throws IOException
         {
-            return store(file, "upload/test.gif");
+            String filename = file.getOriginalFilename();
+            String audioExtension = filename != null && filename.matches(".*\\.(mp3|m4a|aac|wav)")
+                    ? filename.substring(filename.lastIndexOf('.') + 1) : null;
+            return store(file, audioExtension == null ? "upload/test.gif"
+                    : "upload/0123456789abcdef0123456789abcdef." + audioExtension);
         }
 
         private JSONObject storeAftercareEvidence(MultipartFile file) throws IOException

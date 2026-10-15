@@ -17,7 +17,7 @@
     title="暂无编辑权限"
     sub="请切换到已审核通过的商家账号后再试"
   />
-  <cy-error
+  <cy-error load-failure
     class="dp-retry cy-fade-in"
     size="lg"
     fill

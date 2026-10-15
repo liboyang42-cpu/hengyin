@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.web.util.matcher.RequestMatcher;
+import com.chengyinhub.framework.security.matcher.LegacyAntRequestMatcher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -73,8 +75,7 @@ public class SecurityConfig
     @Bean
     public AuthenticationManager authenticationManager()
     {
-        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
-        daoAuthenticationProvider.setUserDetailsService(userDetailsService);
+        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider(userDetailsService);
         daoAuthenticationProvider.setPasswordEncoder(bCryptPasswordEncoder());
         return new ProviderManager(daoAuthenticationProvider);
     }
@@ -113,53 +114,53 @@ public class SecurityConfig
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             // 注解标记允许匿名访问的url
             .authorizeHttpRequests((requests) -> {
-                permitAllUrl.getUrls().forEach(url -> requests.antMatchers(url).permitAll());
+                permitAllUrl.getUrls().forEach(url -> requests.requestMatchers(legacyMatchers(url)).permitAll());
 
 //                requests
-//                        .antMatchers("/**").permitAll() // 临时放行所有请求
+//                        .requestMatchers(legacyMatchers("/**")).permitAll() // 临时放行所有请求
 //                        .anyRequest().permitAll();
                 // 对于登录login 注册register 验证码captchaImage 允许匿名访问
-                requests.antMatchers("/login", "/register", "/captchaImage").permitAll()
+                requests.requestMatchers(legacyMatchers("/login", "/register", "/captchaImage")).permitAll()
 
                     // 静态资源，可匿名访问
-                    .antMatchers(HttpMethod.GET, "/", "/*.html", "/**/*.html", "/**/*.css", "/**/*.js", "/profile/**").permitAll()
-                    .antMatchers("/swagger-ui.html", "/swagger-resources/**", "/webjars/**", "/*/api-docs", "/druid/**").permitAll()
-                        .antMatchers("/dev-api/v3/api-docs/**",
+                    .requestMatchers(legacyMatchers(HttpMethod.GET, "/", "/*.html", "/**/*.html", "/**/*.css", "/**/*.js", "/profile/**")).permitAll()
+                    .requestMatchers(legacyMatchers("/swagger-ui.html", "/swagger-resources/**", "/webjars/**", "/*/api-docs", "/druid/**")).permitAll()
+                        .requestMatchers(legacyMatchers("/dev-api/v3/api-docs/**",
                                 "/dev-api/swagger-ui/**",
                                 "/dev-api/webjars/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
-                                "/webjars/**").permitAll()
+                                "/webjars/**")).permitAll()
                         // P0-28 安全:原结算触发端点 /api/common/{activity,topic}_clear 已下线
                         // （仅 .authenticated() 挡不住任意 App 会员越权触发全平台结算,且零调用方）。
                         // 上传会消耗存储并产出公开资源，不能随 /api/common/** 匿名放行。
-                        .antMatchers("/api/common/upload", "/api/common/uploads", "/api/common/uploadOSS").authenticated()
+                        .requestMatchers(legacyMatchers("/api/common/upload", "/api/common/upload/", "/api/common/uploads", "/api/common/uploads/", "/api/common/uploadOSS", "/api/common/uploadOSS/")).authenticated()
                         // 对于APP登录login 允许匿名访问
-                        .antMatchers("/api/creativesquare/list","/api/product/list").permitAll()
+                        .requestMatchers(legacyMatchers("/api/creativesquare/list","/api/product/list")).permitAll()
                         // 首页/广场公开展示列表，Controller 内部按游客 member_id=0 做降级。
-                        .antMatchers("/api/activity/list", "/api/topic/list").permitAll()
+                        .requestMatchers(legacyMatchers("/api/activity/list", "/api/topic/list")).permitAll()
                         // 模板广场公开读:只放行 App/小程序真实使用的聚合、列表、详情和分类。
                         // 严禁改成 /api/template/**，否则 publish/draft/my-list/myinfo 会被匿名放行。
-                        .antMatchers(HttpMethod.POST, "/api/template/homeData", "/api/template/list",
+                        .requestMatchers(legacyMatchers(HttpMethod.POST, "/api/template/homeData", "/api/template/list",
                                 "/api/template/info", "/api/template/topic-template/list",
-                                "/api/template/topic-template/info", "/api/category/list").permitAll()
+                                "/api/template/topic-template/info", "/api/category/list")).permitAll()
                         // 官方活动公开展示:仅 GET 列表/详情匿名可访问(uid() 无登录降级0,Service 仅 memberId>0 查个人态,mapper 过滤草稿,VO 无 PII)。
                         // 精确+单层通配,绝不用 /events/**(会误伤 POST /events/{id}/signup、/complete 刷XP资损)。
-                        .antMatchers(HttpMethod.GET, "/api/official/events", "/api/official/events/*").permitAll()
+                        .requestMatchers(legacyMatchers(HttpMethod.GET, "/api/official/events", "/api/official/events/*")).permitAll()
                         // [P0-安全] 由 /api/login/** 收窄为具体登录入口:/api/login/** 会连带放行任何
                         // 未来新增的 /api/login/xxx(曾放行越权的 /api/login/withopenid)。当前 /api/login/
                         // 下只有 jscode2session 的 /api/login/code 需匿名;密码登录 /api/login 已单列。
-                        .antMatchers("/api/common/**","/api/register","/api/login/code","/api/openid","/api/login","/api/login/phone","/api/login/wechat/app","/api/login/apple","/api/sms/send","/api/findpass","/api/comment/list").permitAll()
+                        .requestMatchers(legacyMatchers("/api/common/**","/api/register","/api/login/code","/api/openid","/api/login","/api/login/phone","/api/login/wechat/app","/api/login/apple","/api/sms/send","/api/findpass","/api/comment/list")).permitAll()
                         // 商家公开主页(脱敏后)匿名可访问
-                        .antMatchers("/api/merchant/public-detail").permitAll()
+                        .requestMatchers(legacyMatchers("/api/merchant/public-detail")).permitAll()
                         // 商家/会员公开资料(白名单 VO,方法内不要求登录):历史分享链接匿名冷启动用。
                         // 精确到两条路径,绝不写成 /api/merchant/** 或 /api/user/**——那会连带放行
                         // 未来新增的任何同前缀接口(/api/user/update、/api/merchant/decor/save …)。
-                        .antMatchers("/api/merchant/public-home", "/api/user/public-info").permitAll()
+                        .requestMatchers(legacyMatchers("/api/merchant/public-home", "/api/user/public-info")).permitAll()
                         // 足迹分享落地页(第二轮拍板 17):只凭随机令牌读已裁剪快照,方法内不取登录态。精确 GET 一条。
-                        .antMatchers(HttpMethod.GET, "/api/roam/share/snapshot").permitAll()
+                        .requestMatchers(legacyMatchers(HttpMethod.GET, "/api/roam/share/snapshot")).permitAll()
                         // 发现商家公开列表(脱敏同 public-detail,方法内不取登录态,强制 status=1):仅精确 POST /list。
-                        .antMatchers(HttpMethod.POST, "/api/merchant/list").permitAll()
+                        .requestMatchers(legacyMatchers(HttpMethod.POST, "/api/merchant/list")).permitAll()
 
                         // 除上面外的所有请求全部需要鉴权认证
                     .anyRequest().authenticated();
@@ -172,6 +173,18 @@ public class SecurityConfig
             .addFilterBefore(corsFilter, JwtAuthenticationTokenFilter.class)
             .addFilterBefore(corsFilter, LogoutFilter.class)
             .build();
+    }
+
+    private static RequestMatcher[] legacyMatchers(String... patterns)
+    {
+        return legacyMatchers(null, patterns);
+    }
+
+    private static RequestMatcher[] legacyMatchers(HttpMethod method, String... patterns)
+    {
+        return java.util.Arrays.stream(patterns)
+                .map(pattern -> new LegacyAntRequestMatcher(pattern, method))
+                .toArray(RequestMatcher[]::new);
     }
 
     /**

@@ -20,7 +20,7 @@
   <scroll-view class="msgs" scroll-y enhanced show-scrollbar="{{false}}"
                scroll-into-view="{{toView}}" scroll-with-animation
                style="top: {{headerH + heroH}}px; bottom: {{inputH}}px;">
-    <cy-inline-error wx:if="{{loadMoreError}}" class="load-more-error" kind="network"
+    <cy-inline-error load-failure wx:if="{{loadMoreError}}" class="load-more-error" kind="network"
                      title="更早消息没有加载" sub="{{loadMoreError}}" action="重试"
                      bind:action="retryLoadMore" />
     <view wx:elif="{{loadingMore}}" class="load-more" aria-live="polite">正在加载更早消息</view>
@@ -30,7 +30,7 @@
     <cy-skeleton wx:if="{{loadState === 'loading'}}" type="list" count="{{4}}" />
     <cy-empty wx:elif="{{loadState === 'missing'}}" class="chat-empty cy-fade-in" kind="missing-param" title="这个会话打不开" sub="链接可能已失效，回消息列表重新进入" />
     <cy-empty wx:elif="{{loadState === 'closed'}}" class="chat-empty cy-fade-in" fill="{{true}}" size="lg" kind="not-found" title="这个组局已结束" sub="聊天已关闭。如有平台处置，可在消息列表的系统通知中查看处理结果。" cta="返回消息列表" bind:cta="returnToMessageList" />
-    <cy-error wx:elif="{{loadState === 'error'}}" class="chat-empty" title="消息没加载出来" sub="{{loadErrorText || '网络或服务暂时不可用，已发出的消息不会丢'}}" retry="重试" bind:retry="retryLoad" />
+    <cy-error load-failure wx:elif="{{loadState === 'error'}}" class="chat-empty" title="消息没加载出来" sub="{{loadErrorText || '网络或服务暂时不可用，已发出的消息不会丢'}}" retry="重试" bind:retry="retryLoad" />
     <cy-empty wx:elif="{{!msgs.length}}" class="chat-empty" kind="empty" title="还没有消息" sub="{{readOnly ? '平台通知会出现在这里' : '发送第一条消息，和对方确认路线、集合点或合作细节'}}" />
 
     <block wx:for="{{msgs}}" wx:key="id">
@@ -125,7 +125,7 @@
           <text wx:if="{{item.timeDivider}}" class="msg-time">{{item.timeDivider}}</text>
           <view class="bubble me {{item.failed?'failed':''}}">
             <image wx:if="{{item.msgType==2}}" class="b-img" src="{{item.content}}" mode="widthFix" lazy-load="true" />
-            <text wx:else>{{item.content}}</text>
+            <text wx:else>{{item.displayContent}}</text>
           </view>
         </view>
         <view wx:if="{{item.sending}}" class="sending"></view>
@@ -141,7 +141,7 @@
           <text wx:if="{{item.displayName || item.timeDivider}}" class="sender-name">{{item.displayName}}{{item.displayName && item.timeDivider ? ' · ' : ''}}{{item.timeDivider}}</text>
           <view class="bubble other">
             <image wx:if="{{item.msgType==2}}" class="b-img" src="{{item.content}}" mode="widthFix" lazy-load="true" />
-            <text wx:else>{{item.content}}</text>
+            <text wx:else>{{item.displayContent}}</text>
           </view>
         </view>
       </view>
@@ -195,7 +195,7 @@
   <cy-sheet show="{{routePickerOpen}}" title="选择路线" bind:close="closeRoutePicker">
     <cy-search placeholder="搜索路线" value="{{routeKeyword}}" bind:input="onRouteSearch" />
     <cy-skeleton wx:if="{{routeLoading}}" type="list" count="{{4}}" />
-    <cy-inline-error wx:elif="{{routeError}}" kind="network" title="路线没有加载" sub="{{routeError}}" action="重试" bind:action="retryRoutes" />
+    <cy-inline-error load-failure wx:elif="{{routeError}}" kind="network" title="路线没有加载" sub="{{routeError}}" action="重试" bind:action="retryRoutes" />
     <cy-empty class="cy-fade-in" wx:elif="{{!routeList.length}}" title="没有找到路线" sub="换个关键词试试" />
     <scroll-view wx:else class="route-picker" scroll-y enhanced show-scrollbar="{{false}}">
       <view class="route-item" wx:for="{{routeList}}" wx:key="id"
@@ -217,4 +217,4 @@
 </view>
 <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
 <!-- 危险动作三段式确认(文案在 utils/danger-actions.js) -->
-<cy-danger-confirm id="dc" bind:confirm="onDangerConfirm" bind:cancel="onDangerCancel" />
+<cy-danger-confirm id="dc" bind:confirm="onDangerConfirm" bind:cancel="onDangerCancel" bind:done="onDangerCancel" />

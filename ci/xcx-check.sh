@@ -11,6 +11,16 @@ cd "$(git rev-parse --show-toplevel)" || exit 1
 XCX_DIR="chengyinhub-xcx"
 [ -d "$XCX_DIR" ] || { echo "找不到 $XCX_DIR"; exit 1; }
 
+# 子门禁的错误输出写进本次独占的临时目录，不写固定的 /tmp 文件名（并发互相覆盖、
+# 沙箱里 /tmp 不可写时会把每个文件都误判红）。mktemp 失败或返回空/仓库内路径时立即停止，
+# 绝不退回当前目录 —— 与 ds-hardcode-gate-selftest.sh 同一判据（F-R2T-01）。
+REPO_ROOT=$(pwd -P)
+XCX_WORK=$(mktemp -d "${TMPDIR:-/tmp}/cy-xcx-check.XXXXXX") || { echo "[xcx-check] 创建临时目录失败" >&2; exit 1; }
+[[ -n "$XCX_WORK" && -d "$XCX_WORK" && "$(basename "$XCX_WORK")" == cy-xcx-check.* ]] || { echo "[xcx-check] 临时目录无效" >&2; exit 1; }
+XCX_WORK=$(cd "$XCX_WORK" && pwd -P) || exit 1
+case "$XCX_WORK/" in "$REPO_ROOT/"*) echo "[xcx-check] 临时目录不能位于源码工作区" >&2; exit 1 ;; esac
+trap 'rm -rf "$XCX_WORK"' EXIT
+
 fail=0
 
 # 失败点名:笼统一句 exit 1 会逼着人回头翻上百行日志找是哪条红的。section() 记下当前子门禁名,
@@ -27,16 +37,16 @@ node ci/xcx-unit-manifest.js --selftest || mark_fail 自证
 
 section "JS 语法检查(node --check)"
 while IFS= read -r f; do
-  if ! node --check "$f" 2>/tmp/xcx_js_err; then
-    echo "FAIL(JS): $f"; sed 's/^/    /' /tmp/xcx_js_err; mark_fail
+  if ! node --check "$f" 2>"$XCX_WORK/js_err"; then
+    echo "FAIL(JS): $f"; sed 's/^/    /' "$XCX_WORK/js_err"; mark_fail
   fi
 done < <(find "$XCX_DIR" -type f -name '*.js' \
           -not -path '*/node_modules/*' -not -path '*/miniprogram_npm/*')
 
 section "JSON 可解析检查"
 while IFS= read -r f; do
-  if ! node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" 2>/tmp/xcx_json_err; then
-    echo "FAIL(JSON): $f"; sed 's/^/    /' /tmp/xcx_json_err; mark_fail
+  if ! node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" 2>"$XCX_WORK/json_err"; then
+    echo "FAIL(JSON): $f"; sed 's/^/    /' "$XCX_WORK/json_err"; mark_fail
   fi
 done < <(find "$XCX_DIR" -type f -name '*.json' \
           -not -path '*/node_modules/*' -not -path '*/miniprogram_npm/*')
@@ -79,6 +89,8 @@ if rg -n '</?(content|invoke)>' "$XCX_DIR" --glob '*.{wxml,wxss,js,json}'; then
 fi
 
 section "DS 硬编码防回潮门(比对 GitHub master 以来的 wxss 新增行)"
+# 先证明自证脚本在 mktemp 失败/返回空/返回仓库内路径时不会改写或暂存真实源文件（F-R2T-01）。
+python3 -m unittest ci/test_ds_selftest_temp_safety.py || mark_fail "临时目录安全回归"
 bash "$XCX_DIR/scripts/ds-hardcode-gate-selftest.sh" || mark_fail 自证   # 先负控:检查器能判红也能判绿
 if ! bash "$XCX_DIR/scripts/ds-hardcode-gate.sh" --ci; then
   mark_fail
@@ -219,8 +231,8 @@ section "截图矩阵体检(双向:矩阵→页面 与 页面→矩阵,外加 bl
 #    而它在 master 上就是红的(STATS 写 247/17/230,实际 245/19/226)——
 #    于是里面那个 2026-08-08 抓到过 7 条退役页的死路由体检等于没通电。
 #    「测试存在但从没被跑过」在本仓是有案底的血案:放进仓库不算数,被点名跑才算。
-if ! node "$XCX_DIR/scripts/shot-matrix.js" > /tmp/xcx_shot_matrix.out 2>&1; then
-  tail -25 /tmp/xcx_shot_matrix.out
+if ! node "$XCX_DIR/scripts/shot-matrix.js" > "$XCX_WORK/shot_matrix.out" 2>&1; then
+  tail -25 "$XCX_WORK/shot_matrix.out"
   mark_fail
 fi
 
@@ -254,6 +266,7 @@ if ! node "$XCX_DIR/tests/lint/ui-integrity.js" --warn-as-error; then
 fi
 
 section "UI 有效性门禁(U1/U3/U4/U5;U2 复用上面的死链按钮门禁)"
+node --test ci/test_ui_validity_u1_mapping.js || mark_fail "U1 路由回归"
 node "$XCX_DIR/scripts/ui-validity-gates.js" --selftest || mark_fail 自证
 if ! node "$XCX_DIR/scripts/ui-validity-gates.js"; then
   mark_fail

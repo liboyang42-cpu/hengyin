@@ -7,7 +7,7 @@
   <cy-page-title title="退款售后" safe-top="{{false}}" />
 
   <cy-skeleton wx:if="{{pageState === 'loading'}}" type="list" count="4" />
-  <cy-error wx:elif="{{pageState === 'error'}}" fill size="lg"
+  <cy-error load-failure wx:elif="{{pageState === 'error'}}" fill size="lg"
             title="售后列表加载失败" sub="{{errorMessage}}"
             retry="重新加载" bind:retry="retry" auto-back />
   <cy-error wx:elif="{{pageState === 'no-permission'}}" fill size="lg"

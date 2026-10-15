@@ -15,9 +15,9 @@
     </view>
 
     <view class="br__opts" wx:if="{{!isEnd}}">
-      <view class="br__opt {{index === 0 ? 'br__opt--first' : ''}} {{picked === index ? 'is-on' : (picked >= 0 ? 'is-off' : '')}}"
+      <view class="br__opt {{index === 0 ? 'br__opt--first' : ''}} {{picked === index ? 'is-on' : (picked >= 0 || !writable ? 'is-off' : '')}}"
             wx:for="{{options}}" wx:key="k" data-i="{{index}}" bindtap="onPick"
-            aria-role="button" aria-label="{{item.t}}"
+            aria-role="button" aria-label="{{item.t}}" aria-disabled="{{!writable || picked >= 0}}"
             hover-class="br__press" hover-stay-time="80">
         <view class="br__k">{{index + 1}}</view>
         <view class="br__t">{{item.t}}</view>

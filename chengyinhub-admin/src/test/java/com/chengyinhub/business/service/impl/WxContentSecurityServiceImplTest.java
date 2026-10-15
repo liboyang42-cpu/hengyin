@@ -157,6 +157,16 @@ class WxContentSecurityServiceImplTest {
         assertEquals("stable-test-token", service.refreshAccessToken());
     }
 
+    @Test
+    void disabledTextDetectionRefusesNonemptyContentInsteadOfPublishingUnchecked() {
+        WxContentSecurityServiceImpl service = new WxContentSecurityServiceImpl();
+        WxPayConfig config = new WxPayConfig();
+        ReflectionTestUtils.setField(config, "secCheckEnabled", false);
+        ReflectionTestUtils.setField(service, "wxConfig", config);
+        assertSame(IWxContentSecurityService.MSG_UNAVAILABLE, service.checkText("待检测内容", "openid"));
+        assertNull(service.checkText("", "openid"));
+    }
+
     private WxContentSecurityServiceImpl enabledTextService(WxContentSecurityServiceImpl service) {
         RedisCache redisCache = mock(RedisCache.class);
         when(redisCache.getCacheObject("wx:mini:access_token")).thenReturn("cached-token");

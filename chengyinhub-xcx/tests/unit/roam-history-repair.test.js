@@ -68,7 +68,7 @@ test('R9-42 历史列表:老记录的字符串里程不再显示为缺失,0 显�
   const rows = definition.methods._sorted.call({
     ...context,
     _sessions: [
-      { ts: 1717243200000, zone: '徐汇', distance: '0.2', shops: 2 },
+      { ts: 1717243200000, finishedAt: Date.now(), zone: '徐汇', distance: '0.2', shops: 2 },
       { ts: 1717243200001, zone: '徐汇', distance: 0, shops: 0 },
       { ts: 1717243200002, zone: '徐汇', distance: 'bad', shops: 1 },
     ],
@@ -198,7 +198,7 @@ test('R9-44 历史详情分享:接收选中 session,打开绑定该记录的分�
     { id: 'roam-session', params: { ts: '1717243200000' }, title: '本次漫游', variant: 'full', theme: 'player' },
   ]
   const session = {
-    ts: 1717243200000, zone: '徐汇', distance: '1.2', shops: 3, explorePct: 40, time: '00:20',
+    ts: 1717243200000, finishedAt: Date.now(), zone: '徐汇', distance: '1.2', shops: 3, explorePct: 40, time: '00:20',
     track: CONTROLLED_TRACK.map((point) => ({ ...point })),
     pois: [{ name: '武康大楼', cat: 'landmark', lat: 38.8841, lng: -76.9990, color: '#fff' }],
   }
@@ -224,7 +224,7 @@ test('R9-44 取消分享回到历史详情,当前漫游状态不变', () => {
   const sessionScene = { id: 'roam-session', params: { ts: '1717243200000' }, title: '本次漫游', variant: 'full', theme: 'player' }
   page.data.sceneStack = [historyScene, sessionScene]
   const session = {
-    ts: 1717243200000, zone: '徐汇', distance: 1.2, shops: 3, explorePct: 40,
+    ts: 1717243200000, finishedAt: Date.now(), zone: '徐汇', distance: 1.2, shops: 3, explorePct: 40,
     track: CONTROLLED_TRACK.map((point) => ({ ...point })), pois: [],
   }
 
@@ -244,7 +244,7 @@ test('R9-44 点遮罩/✕ 关闭分享也回到历史详情,不整个清空场�
   const sessionScene = { id: 'roam-session', params: { ts: '1717243200000' }, title: '本次漫游', variant: 'full', theme: 'player' }
   page.data.sceneStack = [historyScene, sessionScene]
   const session = {
-    ts: 1717243200000, zone: '徐汇', distance: 1.2, shops: 3, explorePct: 40,
+    ts: 1717243200000, finishedAt: Date.now(), zone: '徐汇', distance: 1.2, shops: 3, explorePct: 40,
     track: CONTROLLED_TRACK.map((point) => ({ ...point })), pois: [],
   }
 
@@ -279,7 +279,7 @@ test('R9-44 历史分享的分享源只吃选中记录,不吃当前漫游的 _tr
   page.data.finish = { zone: '本次漫游', shops: 9, distance: '9.9', explorePct: 99, photos: [] }
   page.data.sceneStack = [{ id: 'roam-session', params: { ts: '1717243200000' }, variant: 'full', theme: 'player' }]
   const session = {
-    ts: 1717243200000, zone: '徐汇', distance: 1.2, shops: 3, explorePct: 40,
+    ts: 1717243200000, finishedAt: Date.now(), zone: '徐汇', distance: 1.2, shops: 3, explorePct: 40,
     track: CONTROLLED_TRACK.map((point) => ({ ...point })), pois: [],
   }
 

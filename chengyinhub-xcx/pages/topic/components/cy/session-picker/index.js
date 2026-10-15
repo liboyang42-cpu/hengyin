@@ -13,12 +13,16 @@
 const app = getApp();
 const { ticketWindowText } = require('../../../../../utils/ticket-window.js');
 
+const { chinaParts } = require('../../../../../utils/datetime.js');
+
 const WEEKDAY = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 
 function toDate(value) {
-  if (!value) return null;
-  const d = new Date(String(value).replace(/-/g, '/').replace('T', ' '));
-  return isNaN(d.getTime()) ? null : d;
+  const parts = chinaParts(value);
+  if (!parts) return null;
+  return { getDay: () => new Date(Date.UTC(parts.year, parts.month - 1, parts.day)).getUTCDay(),
+    getFullYear: () => parts.year, getMonth: () => parts.month - 1, getDate: () => parts.day,
+    getHours: () => parts.hours, getMinutes: () => parts.minutes };
 }
 
 /** 「周六 / 12.13」两行。拿不到日期就只留场次名,不编一个日期出来。 */
@@ -62,12 +66,19 @@ Component({
   },
   observers: {
     'show, activities': function (show, activities) {
-      if (!show) return;
+      const reopening = show && !this._pickerShown;
+      this._pickerShown = !!show;
+      if (!show) {
+        this._ticketRequestId = (this._ticketRequestId || 0) + 1;
+        return;
+      }
       const rows = (activities || []).filter((a) => a && a.id).map((a) => ({
         id: a.id,
         name: String(a.name || ''),
         week: dateChip(a).week,
         day: dateChip(a).day,
+        whenText: singleDayText(a),
+        detailText: [chinaParts(a.startDate) ? String(chinaParts(a.startDate).hours).padStart(2, '0') + ':' + String(chinaParts(a.startDate).minutes).padStart(2, '0') : '', String(a.name || '')].filter(Boolean).join(' · '),
       }));
       const single = rows.length === 1;
       this.setData({
@@ -76,8 +87,19 @@ Component({
         singleDayText: single ? singleDayText((activities || [])[0]) : '',
       });
       // 单场次不用选日期,直接进第二步
-      if (single && this.data.pickedActivityId !== rows[0].id) this.pickActivity(rows[0].id);
+      const selectedExists = rows.some((row) => row.id === this.data.pickedActivityId);
+      if (single && (reopening || !selectedExists)) {
+        this.pickActivity(rows[0].id);
+      } else if (reopening && selectedExists) {
+        this.pickActivity(this.data.pickedActivityId);
+      } else if (!selectedExists) {
+        this._ticketRequestId = (this._ticketRequestId || 0) + 1;
+        this.setData({ pickedActivityId: 0, pickedTicketId: 0, tickets: [], totalText: '', ticketsState: 'idle', ticketsError: '', gateClubId: 0 });
+      }
     },
+  },
+  lifetimes: {
+    detached() { this._ticketRequestId = (this._ticketRequestId || 0) + 1; },
   },
   methods: {
     onPickDay(e) {
@@ -87,6 +109,8 @@ Component({
     },
 
     pickActivity(activityId) {
+      const requestId = (this._ticketRequestId || 0) + 1;
+      this._ticketRequestId = requestId;
       // 换了日期,上一场的票种与总价一律作废 —— 留着会让人以为选中的还算数
       this.setData({
         pickedActivityId: activityId,
@@ -95,13 +119,14 @@ Component({
         totalText: '',
         ticketsState: 'loading',
         ticketsError: '',
+        gateClubId: 0,
       });
       const that = this;
       app.sendRequest({
         url: '/api/activity/info', method: 'POST', hideLoading: true, silentError: true,
         data: { id: activityId },
         success(res) {
-          if (that.data.pickedActivityId !== activityId) return;   // 已经切到别的日期
+          if (that._ticketRequestId !== requestId || that.data.pickedActivityId !== activityId) return;
           const d = res && (res.code == 200 || res.code == '200') ? res.data : null;
           if (d && d.gate === true) {
             that.setData({
@@ -150,7 +175,7 @@ Component({
           });
         },
         fail(res) {
-          if (that.data.pickedActivityId !== activityId) return;
+          if (that._ticketRequestId !== requestId || that.data.pickedActivityId !== activityId) return;
           that.setData({
             ticketsState: 'error',
             ticketsError: app.getRequestErrorMessage(res, '票种没读出来，检查网络后重试'),

@@ -1,6 +1,16 @@
 package com.chengyinhub.quartz.service.impl;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import com.chengyinhub.common.utils.spring.SpringUtils;
+import com.chengyinhub.common.exception.ServiceException;
+import com.chengyinhub.quartz.service.MySqlSchedulerCoordinator;
+import com.chengyinhub.quartz.util.MySqlSessionLock;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import java.util.List;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 import org.junit.jupiter.api.Test;
 import org.quartz.Scheduler;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -23,6 +33,9 @@ class SysJobServiceImplSchedulingTest
     private Scheduler scheduler;
     private SysJobMapper mapper;
     private SysJobServiceImpl service;
+    private MySqlSchedulerCoordinator coordinator;
+    private Object originalFactory;
+    public static class Target { public void run() { } }
 
     @BeforeEach
     void setUp()
@@ -32,6 +45,51 @@ class SysJobServiceImplSchedulingTest
         service = new SysJobServiceImpl();
         ReflectionTestUtils.setField(service, "scheduler", scheduler);
         ReflectionTestUtils.setField(service, "jobMapper", mapper);
+        coordinator = mock(MySqlSchedulerCoordinator.class);
+        when(coordinator.definitionLock()).thenReturn(mock(MySqlSessionLock.Lease.class));
+        when(coordinator.isLeader()).thenReturn(true);
+        when(mapper.selectJobAllForUpdate()).thenReturn(List.of());
+        ReflectionTestUtils.setField(service, "coordinator", coordinator);
+        originalFactory = ReflectionTestUtils.getField(SpringUtils.class, "beanFactory");
+        DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
+        factory.registerSingleton("auditTask", new Target());
+        factory.registerAlias("auditTask", "auditAlias");
+        ReflectionTestUtils.setField(SpringUtils.class, "beanFactory", factory);
+    }
+
+    @AfterEach void restoreFactory() { ReflectionTestUtils.setField(SpringUtils.class, "beanFactory", originalFactory); }
+
+    @Test void pausedAliasDuplicateIsRejectedWithoutDeletingOrChangingEitherPlan() throws Exception {
+        SysJob existing = ScheduleUtilsTestFixture.validJob(); existing.setJobId(1L); existing.setStatus("1");
+        SysJob candidate = ScheduleUtilsTestFixture.validJob(); candidate.setInvokeTarget("auditAlias.run()");
+        when(mapper.selectJobAll()).thenReturn(List.of(existing, candidate));
+        assertThrows(ServiceException.class, service::init);
+        when(mapper.selectJobAllForUpdate()).thenReturn(List.of(existing));
+        assertThrows(ServiceException.class, () -> service.insertJob(candidate));
+        assertThrows(ServiceException.class, () -> service.updateJob(candidate));
+        assertThrows(ServiceException.class, () -> service.resumeJob(candidate));
+        verify(mapper, never()).insertJob(any()); verify(mapper, never()).updateJob(any());
+        verify(mapper, never()).deleteJobById(any()); verifyNoInteractions(scheduler);
+        assertEquals("1", existing.getStatus()); assertEquals("0/5 * * * * ?", existing.getCronExpression());
+    }
+
+    @Test void builtinDuplicateIsRejectedBeforeWriting() {
+        SysJob candidate = ScheduleUtilsTestFixture.validJob();
+        when(coordinator.isBuiltin(anyString())).thenReturn(true);
+        assertThrows(ServiceException.class, () -> service.insertJob(candidate));
+        verify(mapper, never()).insertJob(any());
+    }
+
+    @Test void queuedInvocationRechecksCommittedPauseDeleteAndTargetButManualIsExplicit() {
+        SysJob scheduled = ScheduleUtilsTestFixture.validJob();
+        SysJob current = ScheduleUtilsTestFixture.validJob(); current.setStatus("1");
+        when(mapper.selectJobById(99L)).thenReturn(current);
+        assertFalse(service.isCurrentInvocation(scheduled, false));
+        assertTrue(service.isCurrentInvocation(scheduled, true));
+        current.setInvokeTarget("auditTask.missing()");
+        assertThrows(ServiceException.class, () -> service.isCurrentInvocation(scheduled, true));
+        when(mapper.selectJobById(99L)).thenReturn(null);
+        assertFalse(service.isCurrentInvocation(scheduled, true));
     }
 
     @Test

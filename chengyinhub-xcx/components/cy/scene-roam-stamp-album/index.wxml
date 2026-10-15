@@ -14,7 +14,7 @@
     <view class="stkcell stkcell--lock" wx:if="{{noMore}}"><text class="stkcell__lock-t">还没收到</text></view>
   </view>
 
-  <cy-error class="album-state" fill size="lg" wx:if="{{error && !items.length}}" title="集邮册没打开" sub="邮票都还在，只是这次没读到。" retry="重试" bind:retry="retryLoad" />
+  <cy-error load-failure class="album-state" fill size="lg" wx:if="{{error && !items.length}}" title="集邮册没打开" sub="邮票都还在，只是这次没读到。" retry="重试" bind:retry="retryLoad" />
   <cy-skeleton wx:elif="{{loading && !items.length}}" type="card" count="2" />
   <view class="album-empty" wx:elif="{{loaded && total === 0}}"><text class="album-empty__title">还没有邮票</text><text class="album-empty__sub">上街拍一张，城市就进你的册子了</text><view class="album-empty__cta" bindtap="openCamera" aria-role="button" aria-label="打开集邮相机" hover-class="cy-pressed" hover-stay-time="80">打开集邮相机</view></view>
 

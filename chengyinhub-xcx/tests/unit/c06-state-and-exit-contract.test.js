@@ -20,6 +20,12 @@ const path = require('node:path')
 const ROOT = path.resolve(__dirname, '../..')
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
 
+function replaceRequired(source, anchor, replacement) {
+  const mutated = source.replace(anchor, replacement)
+  assert.notEqual(mutated, source, '负控变异必须命中当前真实callback')
+  return mutated
+}
+
 const ALBUM_JS = 'subpackageP3/pages/stamp-album/index/index.js'
 const ALBUM_WXML = 'subpackageP3/pages/stamp-album/index/index.wxml'
 const CHAT_JS = 'subpackageB/pages/im/chat/index.js'
@@ -110,7 +116,7 @@ function assertAlbumStates(js, wxml) {
 
   // ② 失败必须有自己的态 + 一个真的走得通的下一步。整屏失败只属「一枚都没渲染出来」;
   //    已有邮票时那是续页失败,不该把看到的墙换成一张错误页。
-  assert.match(wxml, /<cy-error[^>]*wx:if="\{\{error && !items\.length\}\}"[\s\S]{0,240}?bind:retry="retryLoad"/,
+  assert.match(wxml, /<cy-error[^>]*wx:elif="\{\{error && !items\.length\}\}"[\s\S]{0,240}?bind:retry="retryLoad"/,
     '失败态必须走 cy-error、给重试出口,且整屏形态限定在首屏失败')
   assert.match(wxml, /class="al-more" wx:elif="\{\{error && items\.length\}\}"[^>]*bindtap="retryLoad"/,
     '续页失败必须在页尾给这一页的重试,而不是整屏报错或静默')
@@ -160,8 +166,8 @@ test('C06-1 行为:成功空列表 / 非200 / fail 落三个不同终态', () =>
 })
 
 test('negative control: 不挂 successStatusAbnormal ⇒ HTTP 非 200 卡在骨架且锁死分页', () => {
-  const ctx = loadPage(ALBUM_JS, null, (src) => src.replace(
-    /,\n\s*\/\/ HTTP 层非 200[\s\S]*?successStatusAbnormal\(\) \{ that\.setData\(\{ loading: false, error: true \}\); \}/,
+  const ctx = loadPage(ALBUM_JS, null, (src) => replaceRequired(src,
+    /,\n\s*\/\/ HTTP 层非 200[\s\S]*?successStatusAbnormal\(res, statusCode\) \{ if \(!that\._readOutcome\(res, statusCode, owner, seq\)\) that\.setData\(\{ loading: false, error: true \}\); \}/,
     '',
   ))
   ctx.page.onLoad()
@@ -173,9 +179,9 @@ test('negative control: 不挂 successStatusAbnormal ⇒ HTTP 非 200 卡在骨�
 
 test('negative control: fail 改回 loaded:true(失败伪装成空)必须判红', () => {
   // 真把源码改回病灶形态后跑一遍:失败落进 loaded ⇒ 空态「还没有邮票」会替失败背书。
-  const ctx = loadPage(ALBUM_JS, null, (src) => src.replace(
-    "fail() { that.setData({ loading: false, error: true }); }",
-    "fail() { that.setData({ loading: false, loaded: true }); }",
+  const ctx = loadPage(ALBUM_JS, null, (src) => replaceRequired(src,
+    "fail(res, statusCode) { if (!that._readOutcome(res, statusCode, owner, seq)) that.setData({ loading: false, error: true }); }",
+    "fail(res, statusCode) { if (!that._readOutcome(res, statusCode, owner, seq)) that.setData({ loading: false, loaded: true }); }",
   ))
   ctx.page.onLoad()
   ctx.requests[0].fail()
@@ -266,8 +272,8 @@ test('C06-2 行为:缺参态连轮询也不打后端', () => {
 
 test('negative control: 轮询不看 conversationId ⇒ 坏链接每 8s 拿 0 打后端', () => {
   const ctx = loadPage(CHAT_JS, null, (src) => src.replace(
-    '    if (!this.data.conversationId) return;\n',
-    '',
+    '    if (!this.data.conversationId\n        || !this._isReadContextCurrent(this.data.conversationId, this.data.myId)) return;\n',
+    '    if (!this._isReadContextCurrent(this.data.conversationId, this.data.myId)) return;\n',
   ))
   ctx.page.onLoad({})
   ctx.page.onShow()
@@ -293,15 +299,20 @@ test('C06-2 行为:轮询读到消息即自动解除 error(输入栏不会被永
 })
 
 test('negative control: 轮询不解 error ⇒ 消息在流里、输入栏还是死的', () => {
-  const ctx = loadPage(CHAT_JS, null, (src) => src.replace(
-    "        if (that.data.loadState !== 'ready') that.setData({ loadState: 'ready' });\n",
-    '',
-  ))
+  const anchor = "        if (this.data.loadState !== 'ready') this.setData({ loadState: 'ready' });\n"
+  const ctx = loadPage(CHAT_JS, null, (src) => {
+    const mutated = src.replace(anchor, '')
+    assert.notEqual(mutated, src, '实际轮询恢复锚必须变异成功')
+    return mutated
+  })
   ctx.page.onLoad({ conversationId: '11' })
-  ctx.requests[0].fail()
+  ctx.requests[0].success({ code: 200, data: { list: [{ id: 8, msgType: 1, content: 'baseline', senderId: 3 }], hasMore: false } })
+  ctx.page.setData({ loadState: 'error' })
   ctx.page.pollNew()
-  ctx.requests[1].success({ code: 200, data: { list: [{ id: 9, msgType: 1, content: 'hi', senderId: 3 }] } })
-  assert.equal(ctx.page.data.msgs.length, 1, '变异没生效(消息没进来)')
+  const polls = ctx.requests.filter(request => request.url === '/api/im/messages')
+  polls[1].success({ code: 200, data: { list: [{ id: 9, msgType: 1, content: 'hi', senderId: 3 }], hasMore: false } })
+  assert.equal(ctx.page.data.msgs.length, 2, '变异没生效(消息没进来)')
+  assert.equal(ctx.page._pollInFlight, false)
   assert.throws(
     () => assert.equal(ctx.page.data.loadState, 'ready', '轮询恢复后必须解掉 error'),
     assert.AssertionError,
@@ -430,7 +441,7 @@ test('negative control: 去掉缺参短路 ⇒ 坏链接照样打后端且被说
 
 test('negative control: 去掉 fail 分支 ⇒ 网络失败停在 loading,永远不承认异常', () => {
   const ctx = loadPage(CHAT_JS, null, (src) => src.replace(
-    "      fail(res) {\n        if (requestEpoch !== that._messageRequestEpoch) return;\n        that._setMessageLoadError(res);\n      },\n",
+    "      fail(res) {\n        if (!current()) return;\n        that._pollInFlight = false;\n        that._setMessageLoadError(res);\n      },\n",
     '',
   ))
   ctx.page.onLoad({ conversationId: '11' })
@@ -446,6 +457,7 @@ test('negative control: 去掉 fail 分支 ⇒ 网络失败停在 loading,永远
   healthy.page.onLoad({ conversationId: '11' })
   healthy.requests[0].fail()
   assert.equal(healthy.page.data.loadState, 'error')
+  assert.equal(healthy.page._pollInFlight, false, '失败必须释放首屏/轮询门')
 })
 
 test('negative control: 输入栏解禁 / 名字退回裸 name,各自判红', () => {

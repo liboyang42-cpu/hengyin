@@ -2,6 +2,7 @@
 // utils/modal.js —— 命令式确认弹窗的唯一出口(替代 wx.showModal,2026-09-06 原生弹层全删批次)
 //
 // 调用:modal.show({ title, content, confirmText, cancelText, showCancel, editable, placeholderText, danger, success, fail, complete })
+// editable 时可加 multiline: true(长原因类输入用多行框,仅宿主渲染;回落原生弹窗时忽略)。
 // 参数与回调形状和 wx.showModal 完全一致(success 收 {confirm, cancel, content}),所以调用点只换名字。
 // 额外可选字段 validate(content) → '' | '错误文案':校验不过时不结算,把文案回给用户重填。
 // 渲染:栈顶页里的 <cy-modal-host id="cy-modal-host" />。没有宿主(历史页/单测沙箱)时回落到 wx.showModal ——

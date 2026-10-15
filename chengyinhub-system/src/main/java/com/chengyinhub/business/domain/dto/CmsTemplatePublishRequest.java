@@ -3,10 +3,11 @@ package com.chengyinhub.business.domain.dto;
 import com.chengyinhub.common.annotation.Excel;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * 模板发布请求参数CmsTemplatePublishRequest
@@ -16,11 +17,23 @@ public class CmsTemplatePublishRequest implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    @Schema(description = "显式清空字段：rewardRulesJson、merchantGuide、sensorType、sensorConfig、storyImg")
+    private Set<String> clearFields;
+
+    public Set<String> getClearFields() { return clearFields; }
+    public void setClearFields(Set<String> clearFields) { this.clearFields = clearFields; }
+
     @Schema(description = "业务主体作用域：MERCHANT 表示归属当前商家；留空表示个人")
     private String scope;
 
     @Schema(description = "引用的模板库ID(可为空)", example = "0")
     private Long originalTemplateId;
+
+    /** 仅创建采用草稿：内容从可见公共模板读取，不信任客户端的公开投影。 */
+    private Boolean adoptSourceOnly;
+
+    public Boolean getAdoptSourceOnly() { return adoptSourceOnly; }
+    public void setAdoptSourceOnly(Boolean adoptSourceOnly) { this.adoptSourceOnly = adoptSourceOnly; }
 
     @Schema(description = "模板类别ID", example = "1")
     private Long categoryId;

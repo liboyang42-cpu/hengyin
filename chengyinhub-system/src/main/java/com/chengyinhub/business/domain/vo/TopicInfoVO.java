@@ -15,6 +15,9 @@ import java.util.Map;
  * 公开主题详情白名单。独立于 CmsTopic，实体新增字段不会自动进入公开响应。
  */
 public class TopicInfoVO {
+    private Boolean canResubmitSupplyReview = false;
+    public Boolean getCanResubmitSupplyReview() { return canResubmitSupplyReview; }
+    public void setCanResubmitSupplyReview(Boolean value) { canResubmitSupplyReview = Boolean.TRUE.equals(value); }
     private Long id;
     private Long memberId;
     private Long clubId;
@@ -41,6 +44,7 @@ public class TopicInfoVO {
     private String imgArr;
     private String categoryIds;
     private Integer status;
+    private Integer delFlag;
     private Integer userStatus;
     private Integer merchantStatus;
     private Integer openClubPool;
@@ -182,6 +186,8 @@ public class TopicInfoVO {
     public void setImgArr(String imgArr) { this.imgArr = imgArr; }
     public String getCategoryIds() { return categoryIds; }
     public void setCategoryIds(String categoryIds) { this.categoryIds = categoryIds; }
+    public Integer getDelFlag() { return delFlag; }
+    public void setDelFlag(Integer delFlag) { this.delFlag = delFlag; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
     public Integer getUserStatus() { return userStatus; }

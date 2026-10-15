@@ -35,6 +35,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Service
 public class PhotoCheckVisionService
 {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.ConsentGuard consentGuard;
+    @Autowired private com.chengyinhub.business.service.support.AppMediaReferenceGuard mediaReferences;
+
     private static final Logger log = LoggerFactory.getLogger(PhotoCheckVisionService.class);
 
     /** 给玩家看的理由要短:落 state、进投影、还要下发小程序 */
@@ -73,11 +77,13 @@ public class PhotoCheckVisionService
 
     public PhotoCheckVisionResult review(Long memberId, String imageUrl, String requirement)
     {
+        consentGuard.requireCurrentAgreement(memberId, "photo_model_processing", "object_photo");
         String url = imageUrl == null ? "" : imageUrl.trim();
         if (url.isEmpty())
         {
             return PhotoCheckVisionResult.degraded("照片地址为空");
         }
+        url = mediaReferences.processingUrl(url, memberId, "IMAGE");
         // 供应商的图片限制在发请求前就拒掉,不要发出去等它报错;超限也算降级。
         // 这类拒绝是玩家输入问题,不占额度、不打告警(告警留给我们自己的链路故障)。
         // photoCheck 固定发 base64 data URL(不能发 URL,原因见 VisionImageEncoder 类注释)。

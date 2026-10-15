@@ -1,0 +1,55 @@
+{
+  "votePolicy": "MAJORITY_ACCEPTANCE",
+  "votePhase": "ACCEPTANCE",
+  "plans": [
+    {
+      "endingKey": "leave",
+      "title": "离开",
+      "summary": "安全离开",
+      "materialCost": [
+        {
+          "itemId": "tool",
+          "quantity": 2
+        }
+      ],
+      "operationNodeId": 99,
+      "conditionsMet": true,
+      "proposalKey": "p1",
+      "version": 1,
+      "actions": {
+        "canFund": false,
+        "canVote": false,
+        "canAccept": true,
+        "canExecute": false,
+        "disabledReason": null
+      }
+    }
+  ],
+  "ownMaterials": [
+    {
+      "itemId": "tool",
+      "available": 2,
+      "locked": 0
+    },
+    {
+      "itemId": "clue",
+      "available": 2,
+      "locked": 0
+    }
+  ],
+  "votes": {
+    "1": "REJECT",
+    "2": "REJECT"
+  },
+  "acceptances": {
+    "1": []
+  },
+  "ownVote": {
+    "planKey": "REJECT",
+    "ownSignatureCurrent": true
+  },
+  "ownAcceptance": {
+    "planKeys": [],
+    "ownSignatureCurrent": true
+  }
+}

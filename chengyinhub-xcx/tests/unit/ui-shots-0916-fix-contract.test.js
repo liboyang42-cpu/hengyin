@@ -29,12 +29,13 @@ function loadCouponPage(source) {
   const requests = []
   const modals = []
   vm.runInNewContext(source || read(rel), {
-    getApp: () => ({ sendRequest: (options) => requests.push(options) }),
+    getApp: () => ({ getUserID: () => 42, sendRequest: (options) => requests.push(options) }),
     Page: (value) => { definition = value },
     // 券类型文案走 utils/coupon-form.js 单一真源(资金线 C-38);日期/弹窗/提示取真模块 ——
     // 2026-09-17 起本页有「停发」动作,modal/toast 契约要真跑,不能再一律桩成主题对象。
     require: (id) => {
       if (/coupon-form\.js$/.test(id)) return require(path.join(ROOT, 'utils/coupon-form.js'))
+      if (/coupon-credential\.js$/.test(id)) return require(path.join(ROOT, 'utils/coupon-credential.js'))
       if (/datetime\.js$/.test(id)) return require(path.join(ROOT, 'utils/datetime.js'))
       if (/\/modal\.js$/.test(id)) return { show: (opts) => modals.push(opts) }
       if (/\/toast\.js$/.test(id)) return Object.assign(() => {}, { success() {}, error() {} })
@@ -191,13 +192,13 @@ test('项目刷新失败保留已有项目并提示重试，成功空列表才�
     requests.at(-1).success(response)
     await pending
     assert.equal(component.data.projectPreviewList[0].id, LIVE.id)
-    assert.match(tips.at(-1), /下拉刷新重试/)
+    assert.equal(tips.length, 0, '读取失败不弹出提示')
   }
   const pending = component.loadProjectPreview()
   requests.at(-1).success({ code: 200, data: { rows: [], total: 0 } })
   await pending
   assert.deepEqual(component.data.projectPreviewList, [])
-  assert.equal(tips.length, 2)
+  assert.equal(tips.length, 0)
 })
 
 test('我的项目预览:隐藏已结束项目,档期未知不算结束(与工作台 isEndedProject 同源)', async () => {
@@ -233,7 +234,7 @@ test('我的项目预览:档期未知不给状态章(空文案),不编「进行�
 
 test('我的项目预览负控:状态章退回三元的「已结束/进行中」,未开始必须真红', async () => {
   const source = mutated(read('subpackageMember/components/cy/profile/index.js'),
-    'var statusText = statusLabelOf(item.startDate, item.endDate);',
+    "var statusText = ({ draft: '草稿', pending: '审核中', rejected: '审核未通过', offline: '已下架' })[item.state] || statusLabelOf(item.startDate, item.endDate);",
     "var statusText = isEndedProject(item.startDate, item.endDate) ? '已结束' : '进行中';")
   const data = await previewWith([NOT_STARTED], source)
   assert.equal(data.projectPreviewList[0].statusText, '进行中', '负控应复现「未开始被写成进行中」')
@@ -250,7 +251,7 @@ test('我的项目预览:结束当天仍在预览里,状态章按日历日写「
 
 test('我的项目预览负控:状态章改回毫秒进度判据,结束当天必须真红', async () => {
   const source = mutated(read('subpackageMember/components/cy/profile/index.js'),
-    'var statusText = statusLabelOf(item.startDate, item.endDate);',
+    "var statusText = ({ draft: '草稿', pending: '审核中', rejected: '审核未通过', offline: '已下架' })[item.state] || statusLabelOf(item.startDate, item.endDate);",
     "var statusText = time.percent >= 100 ? '已结束' : '进行中';")
   const { localToday } = require('../../utils/merchant-workbench.js')
   const data = await previewWith([{ id: 9, name: '今天收尾', startDate: '2020-01-01', endDate: localToday() }], source)
@@ -264,7 +265,7 @@ test('我的项目预览:全部结束或成功空列表时隐藏整区,不展示
   const wxml = read('subpackageMember/components/cy/profile/index.wxml')
   const projectSection = wxml.slice(wxml.indexOf('<!-- C7:唯一管理入口'), wxml.indexOf('<!-- 我的资产'))
   assert.match(projectSection, /<block wx:if="\{\{projectPreviewList.length \|\| projectErr\}\}">/)
-  assert.match(projectSection, /<cy-error wx:if="\{\{projectErr\}\}"[\s\S]*bind:retry="reloadProjects"/)
+  assert.match(projectSection, /<cy-error load-failure wx:if="\{\{projectErr\}\}"[\s\S]*bind:retry="reloadProjects"/)
   assert.doesNotMatch(projectSection, /<cy-empty/)
 })
 

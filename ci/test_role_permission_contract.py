@@ -26,6 +26,39 @@ class RolePermissionContractTest(unittest.TestCase):
             self.assertEqual(len(problems), 1)
             self.assertIn("business:x:remove", problems[0])
 
+    def test_conditional_checks_both_permission_arrays_not_business_enum(self):
+        binding = "detailTask.bizType === 'MEDIA_ASSET' ? ['business:mediaReview:approve'] : ['business:audit:review']"
+        self.assertEqual(contract._binding_permissions(binding),
+                         {"business:mediaReview:approve", "business:audit:review"})
+
+    def test_conditional_unknown_permission_in_either_arm_is_rejected(self):
+        for binding in ("kind === 'MEDIA_ASSET' ? ['unknown'] : ['business:audit:review']",
+                        "kind === 'MEDIA_ASSET' ? ['business:audit:review'] : ['unknown']"):
+            with self.subTest(binding=binding):
+                frontend = {value: {"fixture.vue"} for value in contract._binding_permissions(binding)}
+                self.assertEqual(len(contract.layer_problems(frontend, {"business:audit:review"})), 1)
+                self.assertIn("unknown", contract.layer_problems(frontend, {"business:audit:review"})[0])
+
+    def test_bare_enum_named_permission_is_still_checked(self):
+        frontend = {value: {"fixture.vue"} for value in contract._binding_permissions("['MEDIA_ASSET']")}
+        self.assertEqual(len(contract.layer_problems(frontend, set())), 1)
+        self.assertIn("MEDIA_ASSET", contract.layer_problems(frontend, set())[0])
+
+    def test_dynamic_or_partial_permission_arrays_fail_closed(self):
+        for binding in ("permissions", "['business:audit:review', permission]",
+                        "kind ? ['business:audit:review'] : permissions", "['business:audit:review'] || permissions"):
+            with self.subTest(binding=binding), self.assertRaises(ValueError):
+                contract._binding_permissions(binding)
+
+    def test_audit_reports_unsupported_binding_as_failure(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            page = root / "chengyinhub-ui/src/views/x/index.vue"
+            page.parent.mkdir(parents=True)
+            page.write_text('<button v-hasPermi="permissions"/>', encoding="utf-8")
+            self.assertEqual(len(contract.audit(root)), 1)
+            self.assertIn("无法静态核验", contract.audit(root)[0])
+
     def test_negative_control_operator_cannot_receive_fund_review(self):
         sql = contract.ROLE_SQL.read_text(encoding="utf-8")
         policies = contract.role_predicates(sql)
@@ -189,6 +222,37 @@ class AdminEndpointCoverageTest(unittest.TestCase):
                         "    public AjaxResult leak() { return null; }\n}\n")
             problems = contract.admin_endpoint_problems(root)
             self.assertEqual(len(problems), 1, problems)
+
+    def test_guard_after_mapping_and_multiline_annotation_is_recognized(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            self._write(root, "MediaController.java",
+                        "public class C {\n@GetMapping(\"/preview\")\n"
+                        "@PreAuthorize(\n \"@ss.hasPermi('business:mediaReview:query')\"\n)\n"
+                        "public AjaxResult preview() { return null; }\n}\n")
+            self.assertEqual(contract.admin_endpoint_problems(root), [])
+
+    def test_neighbor_method_guard_cannot_authorize_unguarded_method(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            self._write(root, "NeighborController.java",
+                        "public class C {\n@PreAuthorize(\"@ss.hasPermi('business:x:list')\")\n"
+                        "@GetMapping(\"/safe\")\npublic AjaxResult safe() { return null; }\n"
+                        "@GetMapping(\"/leak\")\npublic AjaxResult leak() { return null; }\n}\n")
+            problems = contract.admin_endpoint_problems(root)
+            self.assertEqual(len(problems), 1, problems)
+            self.assertIn("leak()", problems[0])
+
+    def test_following_method_guard_cannot_authorize_unguarded_method(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            self._write(root, "NeighborController.java",
+                        "public class C {\n@GetMapping(\"/leak\")\npublic AjaxResult leak() { return null; }\n"
+                        "@PreAuthorize(\"@ss.hasPermi('business:x:list')\")\n"
+                        "@GetMapping(\"/safe\")\npublic AjaxResult safe() { return null; }\n}\n")
+            problems = contract.admin_endpoint_problems(root)
+            self.assertEqual(len(problems), 1, problems)
+            self.assertIn("leak()", problems[0])
 
     def test_negative_control_class_level_mapping_is_not_an_endpoint(self):
         """★负控：类级 @RequestMapping 是控制器根路径，不是端点。

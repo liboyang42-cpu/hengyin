@@ -125,9 +125,17 @@ public class AuditWorkbenchController extends BaseController {
             ajax.put("revertDeadline", governance.getRevertDeadline());
             ajax.put("serverTime", governance.getServerTime());
         }
+        if (AuditTask.BIZ_MEDIA_ASSET.equals(task.getBizType())) {
+            if (!com.chengyinhub.common.utils.SecurityUtils.hasPermi("business:mediaReview:query"))return error("无媒体审核读取权限");
+            ajax.put("mediaPreviewUrl",appMediaAssetService.reviewerPreview(task.getBizId()));
+            ajax.put("mediaType",com.alibaba.fastjson2.JSON.parseObject(task.getSnapshotJson()).getString("mediaType"));
+        }
         appendJourneyReviewTexts(ajax, task);
         return ajax;
     }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.impl.AppMediaAssetService appMediaAssetService;
 
     /**
      * R12:把旅程新叙事的可读文本追加进审核详情(只追加,不改原有字段)。

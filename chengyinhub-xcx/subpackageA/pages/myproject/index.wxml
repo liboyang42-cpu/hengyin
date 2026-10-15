@@ -15,7 +15,7 @@
       <cy-empty kind="loading" title="项目加载中" fill size="lg" />
     </view>
     <view class="mp-state" wx:elif="{{projectState === 'error'}}">
-      <cy-error title="项目暂时没能加载" sub="{{projectErrorMsg}}" bind:retry="loadProjects" fill size="lg" />
+      <cy-error load-failure title="项目暂时没能加载" sub="{{projectErrorMsg}}" bind:retry="loadProjects" fill size="lg" />
     </view>
     <view wx:if="{{loading && loaded}}" class="mp-refreshing" aria-role="status" aria-live="polite">正在同步最新项目…</view>
 
@@ -115,7 +115,7 @@
     </view>
 
     <cy-skeleton wx:if="{{tplLoading && !tplLoaded}}" type="card" count="{{skeletonItems.length}}" />
-    <cy-error wx:if="{{!tplLoading && tplErrorMsg && !tplLoaded}}" title="{{tplErrorMsg}}" sub="" retry="重试" bind:retry="retryTemplates" />
+    <cy-error load-failure wx:if="{{!tplLoading && tplErrorMsg && !tplLoaded}}" title="{{tplErrorMsg}}" sub="" retry="重试" bind:retry="retryTemplates" />
     <view wx:if="{{tplLoading && tplLoaded}}" class="mp-refreshing" aria-role="status" aria-live="polite">正在同步最新节点玩法…</view>
     <cy-empty wx:if="{{tplLoaded && !tplErrorMsg && tplList.length===0}}" title="还没有节点玩法" sub="发布路线时可以沉淀自己的节点互动，之后在这里复用和管理" />
   </block>

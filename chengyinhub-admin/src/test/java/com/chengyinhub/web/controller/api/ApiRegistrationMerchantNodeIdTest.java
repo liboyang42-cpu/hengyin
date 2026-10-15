@@ -50,6 +50,7 @@ class ApiRegistrationMerchantNodeIdTest {
     private ICmsTopicNodeService nodeSvc;
     private IMerchantAccessService accessSvc;
     private CmsTopic topic;
+    private UmsMember merchant;
 
     private ApiRegistrationMerchantController controller() {
         regSvc = mock(ICmsRegistrationMerchantService.class);
@@ -61,8 +62,9 @@ class ApiRegistrationMerchantNodeIdTest {
                 .thenReturn(new MerchantAccessContext(
                         MEMBER, 11L, MEMBER, MerchantRoleCode.MERCHANT_OWNER));
 
-        UmsMember merchant = new UmsMember();
-        merchant.setUserType(2L);                       // 2=商户会员,否则「商家才能报名」
+        merchant = new UmsMember();
+        merchant.setRole("merchant");
+        merchant.setUserType(1L); // 兼容字段不是权限真源
         when(memberSvc.selectUmsMemberById(MEMBER)).thenReturn(merchant);
 
         topic = new CmsTopic();
@@ -89,6 +91,15 @@ class ApiRegistrationMerchantNodeIdTest {
         ReflectionTestUtils.setField(c, "cmsTopicNodeService", nodeSvc);
         ReflectionTestUtils.setField(c, "merchantAccessService", accessSvc);
         return c;
+    }
+
+    @Test
+    void compatibilityMerchantTypeCannotRegrantOwnerWithPlayerRole() {
+        ApiRegistrationMerchantController c = controller();
+        merchant.setRole("player"); merchant.setUserType(2L);
+        AjaxResult result = c.createRegistration(param(NODE, ProductType.ORIENTEERING));
+        assertEquals("商家才能报名", result.get("msg"));
+        verify(regSvc, never()).insertCmsRegistrationMerchant(any());
     }
 
     @Test

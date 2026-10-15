@@ -83,6 +83,8 @@ class ApiCoopPoolControllerTest {
         ReflectionTestUtils.setField(controller, "notifyService", notifyService);
         ReflectionTestUtils.setField(controller, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(controller, "merchantAccessService", merchantAccessService);
+        ReflectionTestUtils.setField(controller, "wxContentSecurityService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
         commercialTopicPolicy = mock(com.chengyinhub.business.service.support.CommercialTopicPolicy.class);
         when(commercialTopicPolicy.isFreeTopic(any())).thenCallRealMethod();
         ReflectionTestUtils.setField(controller, "clubCoopWindowPolicy",

@@ -30,15 +30,18 @@
   <cy-skeleton wx:if="{{loading}}" type="list" count="{{6}}" />
 
   <!-- 错误 -->
-  <cy-error class="cy-fade-in" wx:elif="{{error}}" title="加载失败" sub="{{errorMsg || '网络好像出了点问题'}}" retry="重试" bind:retry="retryConversations" />
+  <!-- PR10 F-W1-12:未登录(无会话 / 401)给登录引导,不与加载失败一起留白 -->
+  <cy-empty class="cy-fade-in" wx:elif="{{error && loginRequired}}" kind="no-permission" fill size="lg"
+            title="登录后查看消息" sub="登录后可查看私信和系统通知" cta="登录" bind:cta="loginConversations" />
+  <cy-error load-failure class="cy-fade-in" wx:elif="{{error}}" title="加载失败" sub="{{errorMsg || '网络好像出了点问题'}}" retry="重试" bind:retry="retryConversations" />
 
   <!-- 空态 -->
   <cy-empty wx:elif="{{loaded && viewList.length === 0}}"
             fill
             size="lg"
             title="{{activeTab === 'dm' ? '还没有私信' : '还没有系统通知'}}"
-            sub="{{activeTab === 'dm' ? '去广场认识几个同路的人，聊起来就在这儿了' : '报名、审核这些通知会出现在这里'}}"
-            cta="{{activeTab === 'dm' ? '去广场找人' : ''}}"
+            sub="{{activeTab === 'dm' ? (communityPostRead ? '去广场认识几个同路的人，聊起来就在这儿了' : '和其他玩家的聊天会出现在这里') : '报名、审核这些通知会出现在这里'}}"
+            cta="{{activeTab === 'dm' && communityPostRead ? '去广场找人' : ''}}"
             bindcta="onEmptyCta" />
 
   <!-- 列表 -->

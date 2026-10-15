@@ -487,7 +487,8 @@ class RefundPayoutMybatisIntegrationTest {
 
         assertEquals(RefundApplication.PAYOUT_DISPATCH_PENDING,
                 number("SELECT payout_status FROM refund_application WHERE id=20"));
-        verify(alarmService).alarm(eq("退款派发卡滞"), contains("退款单=1"));
+        // F-W3-06:卡滞告警改走按键限频出口，事件名与扫描时卡滞数不变。
+        verify(alarmService).alarmThrottled(eq("monitor.refund.dispatch_stuck"), eq("退款派发卡滞"), contains("退款单=1"));
     }
 
     @Test

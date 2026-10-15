@@ -1,10 +1,6 @@
-/* 节点玩法目录 —— 真源是交互原型「模板编辑页 v2」里的 GROUPS(scratchpad/editor.html 第 982 行起)。
- *
- * 一个节点选择一个主玩法，可再添加可叠加玩法。选择器统一展示，
- * 主玩法互斥；可叠加玩法独立开关，不改变主玩法与完成方式。
- *
- * ⚠️ `section` 必须是 advanced-game-config.js 的段名,`validationMethod` 决定节点
- *    怎么算通关(老链路仍在用)。两者任一写错,玩法会静默配不上或通关判错。
+/* R5 基础目录来自批准的 template-editor-v2-proto.html。
+ * 旧形式 key/section 保持存储与试玩兼容；validationMethod 仅供旧配置识别，
+ * 新作者的参与方式独立选择，不由玩法目录改写。
  */
 
 const advancedGameConfig = require('./advanced-game-config.js');
@@ -19,8 +15,8 @@ const GROUPS = [
   {
     title: '问答类',
     items: [
-      { key: 'qaText', icon: 'edit', label: '文字问答', sub: '出一道题,玩家打字作答', section: 'qa', mode: 'TYPE', validationMethod: 1 },
-      { key: 'qaPick', icon: 'check', label: '选项问答', sub: '2-4 个选项里选一个 · 闭眼盲品也是这套', section: 'qa', mode: 'PICK', validationMethod: 3 },
+      { key: 'qaText', icon: 'edit', label: '文字问答', sub: '出一道题,玩家打字作答', section: 'qa', mode: 'TYPE', validationMethod: 0 },
+      { key: 'qaPick', icon: 'check', label: '选项问答', sub: '2-4 个选项里选一个 · 闭眼盲品也是这套', section: 'qa', mode: 'PICK', validationMethod: 0 },
       { key: 'qaShot', icon: 'camera', label: '拍照打卡', sub: '给一句提示词,玩家拍一张交上来', section: 'qa', mode: 'SHOT', validationMethod: 2 },
       { key: 'branch', icon: 'switch-chapter', label: '分支剧情', sub: '界面和问答一样,只是选项决定下一段', section: 'branch', validationMethod: 0 },
     ],
@@ -92,32 +88,45 @@ const GROUPS = [
 ];
 
 const MODIFIERS = [
-  { key: 'timer', label: '限时挑战', icon: 'clock', sub: '按活动统一时间计时，超时后不能完成', group: '挑战类', modifier: true, badge: '可叠加' },
-  { key: 'leaderboard', label: '排行榜', icon: 'list', sub: '按时间、得分或完成轮数排名', group: '互动类', modifier: true, badge: '可叠加' },
-  { key: 'multiplayer', label: '多人协作', icon: 'list', sub: '按角色和轮次共同完成任务', group: '互动类', modifier: true, badge: '可叠加' },
-  { key: 'timeWindow', label: '时段限定', icon: 'clock', sub: '只在开放时段内允许开局', group: '挑战类', modifier: true, badge: '可叠加' },
-  { key: 'blindTaste', label: '闭眼盲品', icon: 'check', sub: '尝一口再从选项里猜', group: '问答类', modifier: true, badge: '可叠加' },
-  { key: 'silentOrder', label: '沉默点单', icon: 'edit', sub: '全程不说话，商家扫码核销', group: '互动类', modifier: true, badge: '可叠加' },
-  { key: 'diyName', label: '作品命名', icon: 'edit', sub: '给作品取名，提交后审核', group: '互动类', modifier: true, badge: '可叠加' },
-  { key: 'musicCorner', label: '治愈音乐角', icon: 'play', sub: '播放背景音乐，不影响通关', group: '互动类', modifier: true, badge: '可叠加' },
-  { key: 'dailySign', label: '今日城市签', icon: 'edit', sub: '接过上一位来访者留下的城市签', group: '互动类', modifier: true, badge: '可叠加' },
-  { key: 'slowTask', label: '跨日慢任务', icon: 'clock', sub: '隔天回来，继续这一段发现', group: '挑战类', modifier: true, badge: '可叠加' },
+  { key: 'timer', label: '限时挑战', icon: 'clock', modifier: true },
+  { key: 'timeWindow', label: '时段限定', icon: 'clock', modifier: true },
+  { key: 'leaderboard', label: '排行榜', icon: 'list', modifier: true },
+  { key: 'multiplayer', label: '多人协作', icon: 'list', modifier: true, disabled: true, reason: '规则待定义' },
 ];
-const PICKER_GROUPS = GROUPS.map(group => ({
-  title: group.title,
-  items: group.items.concat(MODIFIERS.filter(item => item.group === group.title)),
-}));
+// 旧 key 仍供配置/试玩与存量绑定使用；选择器只列基础玩法。
+const ALL = GROUPS.reduce((acc, group) => acc.concat(group.items), []).filter(item => item.key !== 'scan').concat([
+  { key: 'blindTaste', section: 'blindTaste', label: '闭眼盲品', icon: 'check' },
+  { key: 'dailySign', section: 'dailySign', label: '今日城市签', icon: 'edit' },
+]);
+const CATEGORIES = ['全部', '问答', '推理', '互动', '挑战'];
+const form = (key, label, gameKey) => ({ key, label, gameKey });
+const BASE_GAMES = [
+  { key: 'choice', label: '选项问答', category: '问答', icon: 'check', forms: [form('text', '文字选项', 'qaPick'), form('image', '图片选项', 'pricePair'), form('taste', '闭眼盲品', 'blindTaste'), form('reveal', '到期揭晓', 'predict')] },
+  { key: 'text', label: '文字问答', category: '问答', icon: 'edit', gameKey: 'qaText' },
+  { key: 'photo', label: '拍照', category: '问答', icon: 'camera', forms: [form('checkin', '拍照打卡', 'qaShot'), form('review', '拍照审核', 'photoCheck'), form('card', '拍物成卡', 'objectCard')] },
+  { key: 'random', label: '随机结果', category: '互动', icon: 'gift', forms: [form('coin', '抛硬币', 'coin'), form('dice', '掷骰子', 'dice'), form('cards', '抽卡', 'random')] },
+  { key: 'check', label: '检定', category: '挑战', icon: 'star', forms: [form('tier', '三档难度', 'check'), form('d20', 'D20', 'd20')] },
+  ...['sort', 'match', 'classify'].map(key => Object.assign({}, ALL.find(item => item.key === key), { category: '推理', gameKey: key })),
+  ...['estimate', 'hidden', 'profile'].map(key => Object.assign({}, ALL.find(item => item.key === key), { category: '互动', gameKey: key })),
+  { key: 'sign', label: '签名留存', category: '互动', icon: 'edit', forms: [form('note', '一句留言', 'note'), form('citySign', '今日城市签', 'dailySign')] },
+  Object.assign({}, ALL.find(item => item.key === 'album'), { category: '互动', gameKey: 'album' }),
+  { key: 'bingo', label: '九宫格', category: '互动', icon: 'filter', disabled: true, reason: '在主题里配置' },
+  ...['steps', 'react', 'shake', 'quiet', 'compass', 'shout', 'countdown', 'stopwatch', 'typeIn'].map(key => Object.assign({}, ALL.find(item => item.key === key), { category: '挑战', gameKey: key })),
+];
+const PICKER_GROUPS = CATEGORIES.slice(1).map(title => ({ title, items: BASE_GAMES.filter(item => item.category === title) }));
+function selection(key) {
+  for (const base of BASE_GAMES) {
+    const choice = (base.forms || []).find(item => item.gameKey === key);
+    if (choice || base.gameKey === key) return { baseKey: base.key, formKey: choice ? choice.key : '', forms: base.forms || [] };
+  }
+  return { baseKey: '', formKey: '', forms: [] };
+}
 
-const ALL = GROUPS.reduce((acc, group) => acc.concat(group.items), []);
-
-/* 会真的执行「限时」的玩法。施工文档 §1.4:限时/限次只给真的会执行的玩法 ——
-   给一个不会执行的开关,比不给更坏:商家以为设了,玩家那边什么也没发生。
-   计步(要几天)、竞猜(答案第二天才有)、抽卡/硬币/骰子(一下就完)、
-   扫码(扫完即结束)、九宫格(主题级)都没有可限的东西。 */
-const TIMED_GAMES = ['qaText', 'qaPick', 'qaShot', 'branch', 'estimate', 'pricePair', 'hidden',
+// 限时统一作为附加项；A 批已接通类型与既有类型，旧数据始终保留。
+const TIMED_GAMES = ['qaText', 'qaPick', 'qaShot', 'branch', 'random', 'estimate', 'pricePair', 'hidden',
   'react', 'shake', 'quiet', 'compass', 'countdown', 'stopwatch',
   'react', 'shake', 'quiet', 'shout', 'countdown', 'stopwatch',
-  'sort', 'match', 'classify'];
+  'sort', 'match', 'classify', 'check', 'd20', 'coin', 'dice', 'blindTaste', 'typeIn'];
 
 /** 这个玩法支不支持限时。没选玩法时返回 true(旧模板那条老链路照旧)。 */
 function supportsTimer(key) {
@@ -152,7 +161,7 @@ function findGame(key) {
   for (let i = 0; i < ALL.length; i += 1) {
     if (ALL[i].key === key) return ALL[i];
   }
-  return null;
+  return key === 'scan' ? GROUPS.flatMap(group => group.items).find(item => item.key === 'scan') : null;
 }
 
 /**
@@ -165,6 +174,8 @@ function detectGame(advanced) {
   for (let i = 0; i < ALL.length; i += 1) {
     const item = ALL[i];
     if (!item.section) continue;
+    // R5 branch 是本站反馈，不能抢占主玩法回填；旧独立分支仍按原目录识别。
+    if (item.section === 'branch' && advanced.outcomeRules?.version === 1 && ALL.some(row => row.section !== 'branch' && advanced[row.section]?.enabled)) continue;
     const section = advanced[item.section];
     if (!section || !section.enabled) continue;
     if (item.mode && (section.mode || (item.section === 'diceRoll' ? 'd6' : '')) !== item.mode) continue;
@@ -233,16 +244,8 @@ const DEMO = {
  * 返回「假如选了它」的那份配置(新对象),用于先看再选的试玩。
  * 不改传进来的配置 —— 看完不该在真配置上留下痕迹。
  */
-/**
- * 玩法不支持限时就把限时关掉(就地改,返回同一个对象)。换玩法和打开旧模板都走这里 ——
- * 开关会被 wx:if="{{timerAvailable}}" 藏起来,留着 enabled 就是作者看不见、关不掉,
- * 服务端却照样挂截止时间、到点判超时(validateTimer 不查玩法)。
- * 连带:编辑器配的放宽若因此失效(指向刚被关掉的段),前后端 validateRelax 都会拒存,
- * 而放宽区可能根本不显示 —— 作者删不掉。后台手配的(条件不同)不归编辑器管,原样留着。
- */
-function dropStaleTimer(next, key) {
-  if (next.timer && !supportsTimer(key)) next.timer.enabled = false;
-  if (Array.isArray(next.variants)) next.variants = next.variants.filter((v) => !advancedGameConfig.isEditorVariant(v) || !advancedGameConfig.relaxError(v.relax, next));
+function dropStaleTimer(next) {
+  // 旧 timer / variants 只读保留，打开与切换玩法不能静默删配置。
   return next;
 }
 
@@ -250,8 +253,10 @@ function applyToConfig(advanced, key, options) {
   const game = findGame(key);
   if (!game || !advanced || typeof advanced !== 'object') return null;
   const next = JSON.parse(JSON.stringify(advanced));
+  if (key === 'scan') { next.scan = Object.assign({}, next.scan, { enabled: true }); return next; }
   GAME_SECTIONS.forEach((name) => {
     if (!next[name] || typeof next[name] !== 'object') return;
+    if (name === 'branch' && game.section !== 'branch' && next.outcomeRules?.version === 1) return;
     next[name].enabled = Boolean(game.section && name === game.section);
   });
   /* mode 判别(qa 三条 / photoCheck 两条)必须整段重来:选中带 mode 的玩法就写进去,
@@ -288,4 +293,4 @@ function applyToConfig(advanced, key, options) {
   return next;
 }
 
-module.exports = { GROUPS, MODIFIERS, PICKER_GROUPS, ALL, GAME_SECTIONS, ENCOUNTER_SECTIONS, PLAYKIT_SECTIONS, TIMED_GAMES, supportsTimer, findGame, detectGame, applyToConfig, dropStaleTimer };
+module.exports = { BASE_GAMES, CATEGORIES, selection, GROUPS, MODIFIERS, PICKER_GROUPS, ALL, GAME_SECTIONS, ENCOUNTER_SECTIONS, PLAYKIT_SECTIONS, TIMED_GAMES, supportsTimer, findGame, detectGame, applyToConfig, dropStaleTimer };

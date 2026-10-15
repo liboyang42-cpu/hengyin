@@ -52,6 +52,8 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
 
     @Autowired
     private ClubCrmMapper clubCrmMapper;
+    @Autowired
+    private PiiCryptoService piiCryptoService;
 
     @Autowired
     private IClubService clubService;
@@ -80,7 +82,7 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
             ClubCustomerVO.Profile profile = profiles.get(raw.getMemberId());
             ClubCustomerVO.Row row = new ClubCustomerVO.Row();
             row.setMemberId(raw.getMemberId());
-            row.setDisplayName(raw.getDisplayName());
+            row.setDisplayName(participantDisplayName(null, raw.getDisplayName(), raw.getMemberId()));
             row.setAvatar(raw.getAvatar());
             row.setVerifiedCount(nullToZero(raw.getVerifiedCount()));
             row.setPendingCount(nullToZero(raw.getPendingCount()));
@@ -114,7 +116,7 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
 
         ClubCustomerVO.Summary summary = new ClubCustomerVO.Summary();
         summary.setMemberId(raw.getMemberId());
-        summary.setDisplayName(raw.getDisplayName());
+        summary.setDisplayName(participantDisplayName(null, raw.getDisplayName(), raw.getMemberId()));
         summary.setAvatar(raw.getAvatar());
         summary.setPhoneText(phoneText(raw.getPhone(), canSeePhone));
         summary.setLastInteractionTime(raw.getLastInteractionTime());
@@ -185,7 +187,7 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
         SimpleDateFormat clockFormat = new SimpleDateFormat("HH:mm");
         for (ClubCustomerVO.RawTopicRow raw : raws) {
             String statusCode = topicStatusCode(raw);
-            if ("REFUNDED".equals(statusCode)) {
+            if ("REFUNDED".equals(statusCode) || "CANCELLED".equals(statusCode)) {
                 // 已退款不计入"已售"
             } else {
                 sold++;
@@ -207,7 +209,7 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
             }
             ClubCustomerVO.TopicRow row = new ClubCustomerVO.TopicRow();
             row.setKey("reg-" + raw.getRegistrationId());
-            row.setDisplayName(raw.getDisplayName());
+            row.setDisplayName(participantDisplayName(raw.getParticipantName(), raw.getDisplayName(), raw.getMemberId()));
             row.setAvatar(raw.getAvatar());
             row.setOrderNo(raw.getOrderNo());
             row.setPhoneText(phoneText(raw.getPhone(), canSeePhone));
@@ -321,6 +323,9 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
 
         ClubCustomerVO.RawTopicRow probe = new ClubCustomerVO.RawTopicRow();
         probe.setPaymentStatus(raw.getPaymentStatus());
+        probe.setRegistrationStatus(raw.getRegistrationStatus());
+        probe.setPayableAmount(raw.getPayableAmount());
+        probe.setPointUsed(raw.getPointUsed());
         probe.setVerificationStatus(raw.getVerificationStatus());
         // ⚠️ 这个 probe 少喂一个字段,对应的状态档就永远算不出来。
         //    2026-09-11 加「已评价」时就漏了它 ⇒ railStep=3 成了死分支,而前端第四格文案
@@ -329,7 +334,7 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
         String statusCode = topicStatusCode(probe);
 
         ClubCustomerVO.CheckinDetail out = new ClubCustomerVO.CheckinDetail();
-        out.setDisplayName(raw.getDisplayName());
+        out.setDisplayName(participantDisplayName(raw.getParticipantName(), raw.getDisplayName(), null));
         out.setAvatar(raw.getAvatar());
         out.setPhoneText(phoneText(raw.getPhone(), canSeePhone));
         out.setPhoneVisible(canSeePhone);
@@ -352,7 +357,7 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
         out.setStoreName(blankToDash(raw.getStoreName()));
         out.setOperatorName(blankToDash(raw.getOperatorName()));
         // 履约轨迹:已退款不走轨迹(-1),其余走到哪亮到哪
-        out.setRailStep("REFUNDED".equals(statusCode) ? -1
+        out.setRailStep(("REFUNDED".equals(statusCode) || "CANCELLED".equals(statusCode)) ? -1
                 : ("REVIEWED".equals(statusCode) ? 3
                 : ("VERIFIED".equals(statusCode) ? 2 : ("CONTACTED".equals(statusCode) ? 1 : 0))));
         out.setRegistrationId(registrationId);
@@ -421,7 +426,22 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
         return out;
     }
 
+    private String participantDisplayName(String storedName, String nickname, Long memberId) {
+        if (storedName != null && !storedName.trim().isEmpty()) {
+            String masked = PiiCryptoService.maskName(piiCryptoService.decrypt(storedName));
+            if (masked != null && !masked.trim().isEmpty()) return masked;
+        }
+        String fallback = nickname == null ? "" : nickname.trim();
+        if (fallback.isEmpty() || "城瘾用户".equals(fallback)) {
+            return memberId == null ? "参与人" : "成员#" + memberId;
+        }
+        return fallback;
+    }
+
     private static String topicStatusCode(ClubCustomerVO.RawTopicRow raw) {
+        if (Integer.valueOf(3).equals(raw.getRegistrationStatus())
+                && raw.getPayableAmount() != null && raw.getPayableAmount().signum() == 0
+                && raw.getPointUsed() != null && raw.getPointUsed().longValue() == 0L) return "CANCELLED";
         if (Integer.valueOf(4).equals(raw.getPaymentStatus())) return "REFUNDED";
         // ★2026-09-11:K3 稿画了四步履约轨迹,而第四步「已评价」此前在代码里根本不存在 ——
         //   statusCode 只产出四档、railStep 最大取 2,于是那一格永远灰着,是个装饰性的死节点。
@@ -436,6 +456,7 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
     }
 
     private static String topicStatusText(String statusCode) {
+        if ("CANCELLED".equals(statusCode)) return "已取消";
         if ("REFUNDED".equals(statusCode)) return "已退款";
         if ("REVIEWED".equals(statusCode)) return "已评价";
         if ("VERIFIED".equals(statusCode)) return "已核销";

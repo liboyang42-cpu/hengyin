@@ -1,6 +1,6 @@
 package com.chengyinhub.framework.web.service;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -141,6 +141,10 @@ public class SysLoginService
         {
             AsyncManager.me().execute(AsyncFactory.recordLogininfor(username, Constants.LOGIN_FAIL, MessageUtils.message("not.null")));
             throw new UserNotExistsException();
+        }
+        if (("admin".equalsIgnoreCase(username.trim()) || "ry".equalsIgnoreCase(username.trim()))
+                && java.util.Arrays.asList("admin123", "ry123", "123456", "admin", "ry").contains(password)) {
+            throw new ServiceException("默认管理员口令已停用，请先设置新的安全口令", 403);
         }
         // 密码如果不在指定范围内 错误
         if (password.length() < UserConstants.PASSWORD_MIN_LENGTH

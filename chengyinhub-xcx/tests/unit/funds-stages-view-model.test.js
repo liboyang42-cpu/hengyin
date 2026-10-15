@@ -101,6 +101,110 @@ function stagesSource() {
   return fs.readFileSync(path.join(__dirname, '../../components/cy/funds-stages/index.js'), 'utf8');
 }
 
+function mountStages(sharedApp) {
+  const requests = [], events = []
+  let definition
+  const app = { globalData: sharedApp ? sharedApp.globalData : { user_id: 990001, role: 'merchant', user_type: 2 },
+    getUserID() { return this.globalData.user_id }, sendRequest: o => requests.push(o) }
+  require('node:vm').runInNewContext(stagesSource(), {
+    getApp: () => app, require: () => ({ buildFundsStages }), Component: d => { definition = d },
+  })
+  const comp = Object.assign({}, definition.methods, {
+    data: { ...definition.data, showWithdrawable: true },
+    setData(p) { Object.assign(this.data, p) }, triggerEvent(name, detail) { events.push({ name, detail }) },
+  })
+  return { comp, requests, events, app, definition }
+}
+const walletResponse = amount => ({ code: 200, data: { pendingSettlement: 0,
+  complaintPeriod: [], disputed: 0, withdrawable: amount, amountsKnown: true } })
+
+test('真实请求封装的余额首登和权限拒绝只回传当前账号结果，换号401不自动登录', () => {
+  const h = mountStages(); let logins = 0
+  const client = require('../../utils/transport/request-client.js').createRequestClient({
+    wxRequest: o => { h.requests.push(o); return { abort() {} } }, getBaseUrl: () => 'http://127.0.0.1',
+    getUserID: () => h.app.getUserID(), reLogin: cb => {
+      logins += 1; h.app.globalData.user_id = 990001; cb(true, { isCurrentSession: () => true })
+    },
+  })
+  h.app.sendRequest = o => client.send(o); h.app.globalData.user_id = ''; h.comp.load()
+  h.requests[0].success({ statusCode: 401, data: { code: 401 } })
+  h.requests[1].success({ statusCode: 200, data: walletResponse(60) })
+  assert.strictEqual(h.requests.length, 3); assert.strictEqual(h.comp.data.stages, null)
+  assert.strictEqual(h.events.length, 0)
+  h.requests[2].success({ statusCode: 200, data: walletResponse(20) })
+  assert.strictEqual(h.comp.data.stages.withdrawable, '20.00'); assert.strictEqual(h.events.length, 1)
+  h.comp.load(); h.requests[3].success({ statusCode: 403, data: { msg: '无权限' } })
+  assert.strictEqual(h.comp.data.stages, null); assert.strictEqual(h.events[h.events.length - 1].detail.known, false)
+  h.comp.load(); h.app.globalData.user_id = 990002
+  h.requests[4].success({ statusCode: 401, data: { code: 401 } })
+  assert.strictEqual(logins, 1); assert.strictEqual(h.requests.length, 5); assert.strictEqual(h.comp.data.stages, null)
+})
+
+test('余额换号后重读清除旧值，旧成功/失败不覆盖新余额或重新发出旧可提现事件', () => {
+  const h = mountStages(); h.comp.load(); h.requests[0].success(walletResponse(60))
+  h.comp.load(); const old = h.requests[1]; h.app.globalData.user_id = 990002; h.comp.load()
+  assert.strictEqual(h.comp.data.stages, null); assert.strictEqual(h.comp.data.hasRows, false)
+  h.requests[2].success(walletResponse(20)); const events = h.events.length
+  old.success(walletResponse(60)); old.fail()
+  assert.strictEqual(h.comp.data.stages.withdrawable, '20.00')
+  assert.strictEqual(h.comp.data.state, 'ready'); assert.strictEqual(h.events.length, events)
+})
+
+test('余额身份或角色失效没有新读取时清除显示，不向宿主发送旧账号的金额结论', () => {
+  for (const change of [app => { app.globalData.user_id = 990002 },
+    app => { app.globalData.role = 'player' }, app => { app.globalData.user_type = 1 },
+    app => { app.globalData.user_id = '' }]) {
+    const h = mountStages(); h.comp.load(); change(h.app); h.requests[0].success(walletResponse(60))
+    assert.strictEqual(h.comp.data.stages, null); assert.strictEqual(h.comp.data.hasRows, false)
+    assert.strictEqual(h.events.length, 0); assert.strictEqual(h.requests.length, 1)
+  }
+})
+
+test('余额隐藏或卸载后拒绝在途结果，返回重读，初次show不重复请求', () => {
+  const h = mountStages(); h.definition.lifetimes.attached.call(h.comp)
+  h.definition.pageLifetimes.show.call(h.comp); assert.strictEqual(h.requests.length, 1)
+  h.definition.pageLifetimes.hide.call(h.comp); h.requests[0].success(walletResponse(60))
+  assert.strictEqual(h.comp.data.stages, null); assert.strictEqual(h.events.length, 0)
+  h.definition.pageLifetimes.show.call(h.comp); h.requests[1].success(walletResponse(20))
+  h.definition.lifetimes.detached.call(h.comp); const events = h.events.length
+  h.comp.load(); h.requests[1].fail()
+  assert.strictEqual(h.requests.length, 2); assert.strictEqual(h.comp.data.state, 'ready')
+  assert.strictEqual(h.events.length, events)
+})
+
+test('余额匿名首登只采用当前身份重新读取的金额，刷新开始与失败都使宿主余额未知', () => {
+  const h = mountStages(); h.app.globalData.user_id = ''; h.comp.load()
+  h.app.globalData.user_id = 990001; h.requests[0].success(walletResponse(60))
+  assert.strictEqual(h.requests.length, 2); assert.strictEqual(h.comp.data.stages, null)
+  h.requests[1].success(walletResponse(20)); h.comp.load()
+  assert.strictEqual(h.comp.data.stages, null)
+  assert.strictEqual(h.events[h.events.length - 1].detail.known, false)
+  h.requests[2].fail(); assert.strictEqual(h.comp.data.state, 'error')
+  assert.strictEqual(h.events[h.events.length - 1].detail.positive, false)
+})
+
+test('余额旧组件结果不会把俱乐部新账号的零余额改成可提现', () => {
+  const fs = require('node:fs'), path = require('node:path'), vm = require('node:vm')
+  const requests = []; let definition
+  const app = { globalData: { user_id: 990001, role: 'merchant', user_type: 2 },
+    getUserID() { return this.globalData.user_id }, sendRequest: o => requests.push(o) }
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../../pages/club/settlement/index.js'), 'utf8'), {
+    getApp: () => app, Page: d => { definition = d },
+    require: () => ({ bizFailureMessage: (res, fallback) => fallback }),
+    wx: { stopPullDownRefresh() {} },
+  })
+  const page = { ...definition, data: { ...definition.data }, setData(p) { Object.assign(this.data, p) } }
+  const summary = { code: 200, data: { settledAmountText: '¥20.00', settledAmountStatus: 'verified',
+    unverifiedSettledCount: 0, topics: [], isOwner: true } }
+  page.onLoad({ clubId: 21 }); requests[0].success(summary)
+  const oldChild = mountStages(app); oldChild.comp.triggerEvent = (name, detail) => page.onStages({ detail })
+  oldChild.comp.load(); app.globalData.user_id = 990002; page.loadSummary(); requests[1].success(summary)
+  const child = mountStages(app); child.comp.triggerEvent = (name, detail) => page.onStages({ detail })
+  child.comp.load(); child.requests[0].success(walletResponse(0)); assert.strictEqual(page.data.withdrawState, 'zero')
+  oldChild.requests[0].success(walletResponse(60))
+  assert.strictEqual(page.data.withdrawState, 'zero'); assert.strictEqual(oldChild.comp.data.stages, null)
+})
+
 test('CU-C-92:可提现余额归一化后抛给宿主页(0 ⇒ 不可提、>0 ⇒ 可提)', () => {
   const zero = runStagesLoad(stagesSource(), () => ({
     pending: '', complaintPeriod: [], disputed: '', withdrawable: '0.00', amountsKnown: true,

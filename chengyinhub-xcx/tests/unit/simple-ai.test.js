@@ -10,6 +10,7 @@ let sent = [];
 let pageConfig = null;
 
 global.getApp = () => ({
+  getUserID: () => 7,
   sendRequest: (request) => { sent.push(request); },
   getAuthorization: () => '',
 });

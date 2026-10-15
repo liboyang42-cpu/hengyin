@@ -74,7 +74,21 @@ class ClubWaitlistTokenMybatisIntegrationTest {
         DriverManagerDataSource ds = new DriverManagerDataSource(mysql.databaseUrl(), mysql.user(), mysql.password());
         jdbc = new JdbcTemplate(ds);
         jdbc.execute(tableDdl("sql/migration_club_role_event_ops_20260823.sql",
+                "CREATE TABLE IF NOT EXISTS club_event_series ("));
+        jdbc.execute(tableDdl("sql/migration_club_role_event_ops_20260823.sql",
+                "CREATE TABLE IF NOT EXISTS club_event_occurrence ("));
+        jdbc.execute(tableDdl("sql/migration_club_role_event_ops_20260823.sql",
                 "CREATE TABLE IF NOT EXISTS club_event_waitlist ("));
+        jdbc.execute(tableDdl("sql/migration_club_role_event_ops_20260823.sql",
+                "CREATE TABLE IF NOT EXISTS club_event_notification_campaign ("));
+        jdbc.execute(tableDdl("sql/migration_club_role_event_ops_20260823.sql",
+                "CREATE TABLE IF NOT EXISTS club_event_notification_delivery ("));
+        jdbc.execute(tableDdl("sql/migration_club_role_event_ops_20260823.sql",
+                "CREATE TABLE IF NOT EXISTS club_event_notification_outbox ("));
+        jdbc.execute(tableDdl("../sql/base_schema_20260818.sql", "CREATE TABLE `club` ("));
+        jdbc.execute(tableDdl("../sql/base_schema_20260818.sql", "CREATE TABLE `club_member` ("));
+        jdbc.execute(tableDdl("sql/migration_club_role_governance_20260823.sql",
+                "CREATE TABLE IF NOT EXISTS club_governance_ban ("));
         // The ticket projection joins both real tables to check self-hosted publisher ownership.
         jdbc.execute(tableDdl("../sql/base_schema_20260818.sql", "CREATE TABLE `cms_topic` ("));
         jdbc.execute(tableDdl("../sql/base_schema_20260818.sql", "CREATE TABLE `cms_activity` ("));
@@ -139,6 +153,10 @@ class ClubWaitlistTokenMybatisIntegrationTest {
         service = (IClubWaitlistService) bean;
         orderBridge = (IClubWaitlistOrderBridge) bean;
         epoch = System.currentTimeMillis() / 1000 * 1000;
+        jdbc.update("INSERT INTO club(id,member_id,name,status,del_flag) VALUES(7,999,'waitlist-test',1,0)");
+        jdbc.update("INSERT INTO club_member(id,club_id,member_id,role,status,del_flag) VALUES(1,7,9,0,1,0)");
+        jdbc.update("INSERT INTO cms_activity(id,member_id,name,status,publish_status,del_flag,club_id) "
+                + "VALUES(20,999,'waitlist-activity',1,1,0,7)");
         jdbc.update("INSERT INTO oms_ticket(id,owner_type,owner_id,total_inventory,remaining_inventory,del_flag) VALUES(97,2,20,1,1,0)");
         jdbc.update("INSERT INTO club_event_waitlist(id,club_id,activity_id,ticket_id,member_id,state,joined_at,version) VALUES(61,7,20,97,9,'WAITING',NOW(),0)");
     }
@@ -245,6 +263,10 @@ class ClubWaitlistTokenMybatisIntegrationTest {
     @Test
     void expiryAtStoredBoundaryReleasesInventoryOnlyOnceUnderConcurrency() throws Exception {
         assertTrue(service.promoteNext(20L, 97L, new Date(epoch + 123)));
+        Long offerCampaignId = jdbc.queryForObject(
+                "SELECT id FROM club_event_notification_campaign WHERE audience_type='WAITLIST'", Long.class);
+        assertEquals(1, realMapper.isEligibleNotificationRecipient(
+                offerCampaignId, 7L, 20L, "WAITLIST", 9L));
         Date deadline = realMapper.selectWaitlistById(61L).getOfferExpiresAt();
         assertFalse(service.expireOffered(61L, new Date(deadline.getTime() - 1)));
         assertEquals(0, stock());
@@ -252,6 +274,33 @@ class ClubWaitlistTokenMybatisIntegrationTest {
         assertFalse(service.expireOffered(61L, deadline));
         assertEquals("EXPIRED", state());
         assertEquals(1, stock());
+        assertEquals(2L, jdbc.queryForObject(
+                "SELECT COUNT(*) FROM club_event_notification_campaign", Long.class));
+        assertEquals(1L, jdbc.queryForObject(
+                "SELECT COUNT(*) FROM club_event_notification_campaign WHERE audience_type='ALL_MEMBERS' "
+                        + "AND title='候补名额已过期' "
+                        + "AND content='你的活动候补名额已过期，如仍需参加，请重新加入候补。'", Long.class));
+        assertEquals(2L, jdbc.queryForObject(
+                "SELECT COUNT(*) FROM club_event_notification_delivery WHERE recipient_member_id=9", Long.class));
+        assertEquals(2L, jdbc.queryForObject(
+                "SELECT COUNT(*) FROM club_event_notification_outbox", Long.class));
+
+        Long expiryCampaignId = jdbc.queryForObject(
+                "SELECT id FROM club_event_notification_campaign WHERE audience_type='ALL_MEMBERS'", Long.class);
+        assertEquals(0, realMapper.isEligibleNotificationRecipient(
+                offerCampaignId, 7L, 20L, "WAITLIST", 9L));
+        assertEquals(1, realMapper.isEligibleNotificationRecipient(
+                expiryCampaignId, 7L, 20L, "ALL_MEMBERS", 9L));
+
+        jdbc.update("UPDATE club_member SET del_flag=2 WHERE club_id=7 AND member_id=9");
+        assertEquals(0, realMapper.isEligibleNotificationRecipient(
+                expiryCampaignId, 7L, 20L, "ALL_MEMBERS", 9L));
+        jdbc.update("UPDATE club_member SET del_flag=0 WHERE club_id=7 AND member_id=9");
+        jdbc.update("INSERT INTO club_governance_ban(club_id,target_member_id,status,source_type,ban_reason,"
+                        + "banned_by_member_id,banned_at,ban_request_id,create_time) "
+                        + "VALUES(7,9,'ACTIVE','PLATFORM','eligibility-test',999,NOW(),'waitlist-expiry-test',NOW())");
+        assertEquals(0, realMapper.isEligibleNotificationRecipient(
+                expiryCampaignId, 7L, 20L, "ALL_MEMBERS", 9L));
     }
 
     private int race(java.util.concurrent.Callable<Boolean> operation) throws Exception {

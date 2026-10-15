@@ -12,6 +12,7 @@
 那个真病例文件哪天真被删,引用它的单测就白做了。所以形状照抄、文件自造。
 """
 import json
+import copy
 import hashlib
 import os
 import re
@@ -28,6 +29,8 @@ from migration_gates import (  # noqa: E402
     check_dependency_declared,
     check_dependency_ratchet,
     check_dependency_order,
+    check_manifest_dependency_order,
+    check_schema_manifest_order_source,
     select_added_migrations,
     check_pr_declaration,
     check_sql_text,
@@ -732,6 +735,43 @@ class 门禁2_task_bean注册(unittest.TestCase):
                      '    public void run() {}\n}\n')
         self.assertEqual(find_unregistered_beans(self.root), [])
 
+    def test_leader_schedule_requires_actual_startup_and_matching_typed_callback(self):
+        self._写java("LeaderDemoJob", '@Component\npublic class LeaderDemoJob { public void run() {} }\n')
+        path = os.path.join(self.root, "chengyinhub-admin/src/main/java/com/chengyinhub/web/job/LeaderScheduledJobsConfig.java")
+        os.makedirs(os.path.dirname(path))
+        source = '''import com.chengyinhub.quartz.service.MySqlSchedulerCoordinator;
+@Configuration
+public class LeaderScheduledJobsConfig {
+    private final MySqlSchedulerCoordinator coordinator;
+    private final LeaderDemoJob work;
+    @PostConstruct
+    public void register() {
+        coordinator.registerCron("leaderDemoJob.run()", "0 15 3 * * ?", work::run);
+    }
+}
+'''
+        for method in ('registerCron', 'registerFixedDelay'):
+            with open(path, "w", encoding="utf-8") as target:
+                changed = source.replace('registerCron', method)
+                if method == 'registerFixedDelay':
+                    changed = changed.replace('"0 15 3 * * ?"', 'Duration.ofSeconds(5), Duration.ZERO')
+                target.write(changed)
+            self.assertEqual([], find_unregistered_beans(self.root))
+        for changed in (
+                source.replace('coordinator.registerCron', '// coordinator.registerCron'),
+                source.replace('coordinator.registerCron', 'other.registerCron'),
+                source.replace('leaderDemoJob.run()', 'anotherJob.run()'),
+                source.replace('work::run', 'work::missing'),
+                source.replace('LeaderDemoJob work', 'OtherJob work'),
+                source.replace('@Configuration', ''),
+                source.replace('@PostConstruct', ''),
+                source.replace('coordinator.registerCron', 'if (false) coordinator.registerCron'),
+                source.replace('leaderDemoJob.run()', 'leaderDemoJob.missing()').replace('work::run', 'work::missing')):
+            with self.subTest(changed=changed):
+                with open(path, "w", encoding="utf-8") as target:
+                    target.write(changed)
+                self.assertEqual(['leaderDemoJob'], [bean for bean, _ in find_unregistered_beans(self.root)])
+
     def test_负控_注销SQL不算注册(self):
         """★ 方向陷阱:DELETE FROM sys_job 是【注销】,把它算成「有注册」= 方向搞反。
 
@@ -1079,6 +1119,97 @@ class 依赖声明棘轮(unittest.TestCase):
         """只报第一条 = 修完一条又红一条,人会以为门禁在抖。"""
         lost = check_dependency_ratchet({"a": []}, {"a": ["b", "c", "d"]})
         self.assertEqual(len(lost), 3)
+
+
+class SharedLedgerExecutionOrder(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="ledger-order-gate-")
+        sql = os.path.join(self.tmp, "chengyinhub-admin/sql")
+        os.makedirs(sql)
+        for name in ("a_child", "z_parent"):
+            with open(os.path.join(sql, "migration_" + name + ".sql"), "w") as handle:
+                handle.write("SELECT 1;\n")
+        self.dependencies = {"a_child": ["z_parent"], "z_parent": []}
+        self.batch = ["migration_a_child.sql", "migration_z_parent.sql"]
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def manifest(self, dependencies=None):
+        from migration_ledger import build_manifest
+        return build_manifest(self.tmp, "a" * 40,
+                              dependencies=self.dependencies if dependencies is None else dependencies)
+
+    def test_real_ledger_resolves_filename_conflict_and_covers_all_edges(self):
+        self.assertTrue(check_dependency_order(self.batch, self.batch, self.dependencies))
+        self.assertEqual(check_manifest_dependency_order(self.manifest(), self.batch,
+                                                         self.dependencies), [])
+
+    def test_missing_edge_reversed_order_and_missing_batch_path_are_rejected(self):
+        original = self.manifest()
+        mutations = []
+        missing_edge = copy.deepcopy(original)
+        missing_edge["migrations"][1]["dependsOn"] = []
+        mutations.append(missing_edge)
+        reversed_order = copy.deepcopy(original)
+        reversed_order["migrations"].reverse()
+        for index, migration in enumerate(reversed_order["migrations"], 1):
+            migration["order"] = index
+        mutations.append(reversed_order)
+        missing_path = copy.deepcopy(original)
+        missing_path["migrations"] = missing_path["migrations"][:1]
+        mutations.append(missing_path)
+        duplicate_path = copy.deepcopy(original)
+        duplicate_path["migrations"].append(duplicate_path["migrations"][0])
+        mutations.append(duplicate_path)
+        for manifest in mutations:
+            with self.subTest(manifest=manifest):
+                self.assertTrue(check_manifest_dependency_order(manifest, self.batch,
+                                                                self.dependencies))
+
+    def test_real_ledger_rejects_missing_dependency_and_cycle(self):
+        from migration_ledger import LedgerError
+        for dependencies in ({"a_child": ["absent"]},
+                             {"a_child": ["z_parent"], "z_parent": ["a_child"]}):
+            with self.subTest(dependencies=dependencies), self.assertRaises(LedgerError):
+                self.manifest(dependencies)
+
+    def test_actual_schema_runner_uses_ledger_order_and_mutations_are_rejected(self):
+        with open(os.path.join(REPO_ROOT, "scripts/e2e/build_schema.py"), encoding="utf-8") as handle:
+            source = handle.read()
+        self.assertEqual(check_schema_manifest_order_source(source), [])
+        mutations = [
+            source.replace("from ci.migration_ledger import build_manifest,", "from unrelated import build_manifest,"),
+            source.replace('all_migrations = manifest["migrations"]', 'all_migrations = sorted(manifest["migrations"])'),
+            source.replace("selected = migrations_after_baseline(all_migrations)", "selected = []"),
+            source.replace("for m in ordered:", "for m in reversed(ordered):"),
+            source.replace("for m in ordered:", "ordered.reverse()\n    for m in ordered:"),
+            source.replace("REPO / m[\"path\"], m[\"migrationId\"]", "REPO / \"other.sql\", m[\"migrationId\"]"),
+            source.replace("if not ok and not a.keep_going:", "if False:"),
+            source.replace("if not ok and not a.keep_going:", "if not ok and a.keep_going:"),
+            source.replace("keep_going=a.keep_going, schema_only=True", "keep_going=True, schema_only=True"),
+            source.replace("            ok = run_file(cur, REPO / m", "            run_file(cur, REPO / m"),
+            source.replace("        c.close()", "        c.commit()"),
+            source.replace('    all_migrations = manifest["migrations"]\n'
+                           '    selected = migrations_after_baseline(all_migrations)',
+                           '    selected = migrations_after_baseline(all_migrations)\n'
+                           '    all_migrations = manifest["migrations"]'),
+        ]
+        loop = ('        for m in ordered:\n'
+                '            ok = run_file(cur, REPO / m["path"], m["migrationId"], results,\n'
+                '                          keep_going=a.keep_going, schema_only=True, observations=observations)\n'
+                '            if not ok and not a.keep_going:\n'
+                '                break\n')
+        self.assertIn(loop, source)
+        nested = '        if a.keep_going:\n' + ''.join('    ' + line for line in loop.splitlines(True))
+        mutations.extend([source.replace(loop, nested), source.replace(loop, loop + loop),
+                          source.replace(loop, loop + loop.replace("for m in ordered:",
+                                                                  "for m in reversed(ordered):")),
+                          source.replace(loop, loop.replace("break", "continue"))])
+        for mutated in mutations:
+            with self.subTest(mutation=mutations.index(mutated)):
+                self.assertNotEqual(source, mutated)
+                self.assertTrue(check_schema_manifest_order_source(mutated))
 
 
 class 依赖顺序门禁_选批口径(unittest.TestCase):

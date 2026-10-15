@@ -42,6 +42,7 @@ class TemplateMedalStyleCopyAndBindingContractTest
         IAuditTaskService auditService = mock(IAuditTaskService.class);
         capabilityGuard = mock(ICapabilityGuard.class);
         service = new TemplatePublishServiceImpl();
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
         ReflectionTestUtils.setField(service, "memberTemplateService", memberService);
         com.chengyinhub.business.mapper.CmsMemberTemplateMapper lockedMembers = mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class);
         ReflectionTestUtils.setField(service, "memberTemplateMapper", lockedMembers);
@@ -184,7 +185,7 @@ class TemplateMedalStyleCopyAndBindingContractTest
         canonical.setStatus(1L);
         canonical.setPublishStatus(1L);
         canonical.setMedalName("街角发现者");
-        canonical.setMedalImg("https://cdn.example/medal.png");
+        canonical.setMedalImg("media-asset:1");
         canonical.setMedalStyle("enamel");
         when(libraryService.selectCmsTemplateLibraryById(52L)).thenReturn(source);
         when(memberService.selectCmsMemberTemplateById(601L)).thenReturn(canonical);
@@ -199,7 +200,7 @@ class TemplateMedalStyleCopyAndBindingContractTest
         service.publishTemplateWithTransaction(request, 7L, "member7");
 
         assertEquals("街角发现者", memberRow.get().getMedalName());
-        assertEquals("https://cdn.example/medal.png", memberRow.get().getMedalImg());
+        assertEquals("media-asset:1", memberRow.get().getMedalImg());
         assertEquals("enamel", memberRow.get().getMedalStyle());
         verify(capabilityGuard, never()).checkDesignMedal(7L);
     }

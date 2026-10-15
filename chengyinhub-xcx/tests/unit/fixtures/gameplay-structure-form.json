@@ -1,0 +1,169 @@
+{
+  "name": "末日寒冬",
+  "runtime": {
+    "schemaVersion": 1,
+    "capacity": 6,
+    "allowDiscard": true,
+    "items": [
+      {
+        "id": "imv0785c04i",
+        "kind": "ITEM",
+        "name": "补给包",
+        "image": "https://example.test/supply.png"
+      }
+    ],
+    "chapters": [],
+    "grants": [],
+    "events": [],
+    "hpName": "保温值",
+    "gameplayRuntime": {
+      "runtimeScope": "TEAM",
+      "worldMode": "WORLD_SHARED",
+      "survival": {
+        "zeroHpPolicy": "BLOCK_HP_COST",
+        "actionLimitPolicy": "BLOCK_OVERFLOW"
+      },
+      "acts": [
+        {
+          "actKey": "chapter_101",
+          "completionRule": {
+            "type": "ALL"
+          },
+          "questKeys": [
+            "node_201",
+            "node_202",
+            "node_203"
+          ],
+          "hostUnlock": true
+        }
+      ],
+      "quests": [
+        {
+          "questKey": "node_201",
+          "nodeId": 201,
+          "locationKey": "node_201",
+          "settlementSlot": "node_201",
+          "actKey": "chapter_101"
+        },
+        {
+          "questKey": "node_202",
+          "nodeId": 202,
+          "locationKey": "node_201",
+          "settlementSlot": "node_202",
+          "actKey": "chapter_101",
+          "guideKey": "guide_202",
+          "approvedFallbackNodeIds": [
+            201
+          ]
+        },
+        {
+          "questKey": "node_203",
+          "nodeId": 203,
+          "locationKey": "node_203",
+          "settlementSlot": "node_203",
+          "actKey": "chapter_101"
+        }
+      ]
+    },
+    "templateBindings": {
+      "201": {
+        "templateId": 701,
+        "values": {
+          "value_1": "sys.hp"
+        },
+        "items": {},
+        "slotDigest": "cc6163476681de6102b5e85e093058fe3d653ca248164de8e095cc4c90a035f7"
+      }
+    },
+    "endings": [
+      {
+        "id": "ending_1",
+        "title": "守住据点",
+        "summary": "队伍完成共同目标。",
+        "fallback": false
+      },
+      {
+        "id": "ending_2",
+        "title": "安全撤离",
+        "summary": "现场无法继续时的默认收尾。",
+        "fallback": true
+      }
+    ]
+  },
+  "journeyRules": {
+    "schemaVersion": 1,
+    "stateEnabled": true,
+    "hp": {
+      "enabled": true,
+      "init": 10,
+      "max": 10
+    },
+    "luck": {
+      "enabled": false,
+      "init": 3,
+      "max": 3
+    },
+    "checkEnabled": true,
+    "recovery": {
+      "stationEndIfHurt": 2,
+      "stageRestHpFloor": 6,
+      "stageRestLuckFloor": 1,
+      "exhaustRestHp": 5
+    }
+  },
+  "chapters": [
+    {
+      "id": 101,
+      "name": "第一幕",
+      "nodes": [
+        {
+          "id": 201,
+          "name": "出发站",
+          "templateId": 701,
+          "templateInfo": {
+            "id": 701,
+            "validationMethod": 4,
+            "advancedConfigJson": "{\"schemaVersion\":1,\"interactionRules\":{\"statCosts\":[{\"statKey\":\"value_1\",\"amount\":1}],\"resourceSlots\":[{\"key\":\"value_1\",\"kind\":\"VALUE\",\"label\":\"支付的数值\",\"required\":true}]}}"
+          }
+        },
+        {
+          "id": 202,
+          "name": "线索站",
+          "templateId": 702,
+          "templateInfo": {
+            "id": 702,
+            "validationMethod": 1,
+            "advancedConfigJson": "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"questions\":[{\"title\":\"请阅读现场线索后回答\",\"answer\":\"共同前进\"}],\"maxTries\":0}}"
+          }
+        },
+        {
+          "id": 203,
+          "name": "决定站",
+          "templateId": 703,
+          "templateInfo": {
+            "id": 703,
+            "validationMethod": 4,
+            "advancedConfigJson": "{\"schemaVersion\":1,\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"核对现场并共同决定\"},\"interactionTools\":{\"votePolicy\":\"MAJORITY_ACCEPTANCE\",\"plans\":[{\"title\":\"守住据点\",\"summary\":\"队伍完成共同目标。\",\"endingKey\":\"ending_1\"},{\"title\":\"安全撤离\",\"summary\":\"现场无法继续时的默认收尾。\",\"endingKey\":\"ending_2\"}],\"decidesEnding\":true}}"
+          }
+        }
+      ]
+    }
+  ],
+  "templates": [
+    {
+      "id": 701,
+      "validationMethod": 4,
+      "advancedConfigJson": "{\"schemaVersion\":1,\"interactionRules\":{\"statCosts\":[{\"statKey\":\"value_1\",\"amount\":1}],\"resourceSlots\":[{\"key\":\"value_1\",\"kind\":\"VALUE\",\"label\":\"支付的数值\",\"required\":true}]}}"
+    },
+    {
+      "id": 702,
+      "validationMethod": 1,
+      "advancedConfigJson": "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"questions\":[{\"title\":\"请阅读现场线索后回答\",\"answer\":\"共同前进\"}],\"maxTries\":0}}"
+    },
+    {
+      "id": 703,
+      "validationMethod": 4,
+      "advancedConfigJson": "{\"schemaVersion\":1,\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"核对现场并共同决定\"},\"interactionTools\":{\"votePolicy\":\"MAJORITY_ACCEPTANCE\",\"plans\":[{\"title\":\"守住据点\",\"summary\":\"队伍完成共同目标。\",\"endingKey\":\"ending_1\"},{\"title\":\"安全撤离\",\"summary\":\"现场无法继续时的默认收尾。\",\"endingKey\":\"ending_2\"}],\"decidesEnding\":true}}"
+    }
+  ]
+}

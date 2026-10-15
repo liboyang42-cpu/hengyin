@@ -44,6 +44,8 @@ class MerchantIdentityMybatisIntegrationTest {
     private UmsMemberMapper members;
     private ICapabilityService capabilities;
     private CapabilityServiceImpl capabilityTarget;
+    private RoleServiceImpl roleTarget;
+    private IRoleService canonicalRoles;
     private MemberCapabilityMapper capabilityMapper;
     private MerchantOperatorMapper operators;
 
@@ -93,6 +95,12 @@ class MerchantIdentityMybatisIntegrationTest {
         capabilityMapper = sql.getMapper(MemberCapabilityMapper.class);
         ReflectionTestUtils.setField(caps, "memberCapabilityMapper", sql.getMapper(MemberCapabilityMapper.class));
         manager = new DataSourceTransactionManager(source);
+        roleTarget = new RoleServiceImpl();
+        ReflectionTestUtils.setField(roleTarget, "umsMemberMapper", members);
+        ReflectionTestUtils.setField(roleTarget, "memberCapabilityMapper", capabilityMapper);
+        canonicalRoles = (IRoleService) proxy(roleTarget);
+        ReflectionTestUtils.setField(caps, "umsMemberMapper", members);
+        ReflectionTestUtils.setField(caps, "roleService", canonicalRoles);
         capabilities = (ICapabilityService) proxy(caps);
         operators = mock(MerchantOperatorMapper.class,org.mockito.AdditionalAnswers.delegatesTo(sql.getMapper(MerchantOperatorMapper.class)));
         merchantTarget = new MmsMerchantServiceImpl();
@@ -100,6 +108,7 @@ class MerchantIdentityMybatisIntegrationTest {
         ReflectionTestUtils.setField(merchantTarget, "umsMemberMapper", members);
         ReflectionTestUtils.setField(merchantTarget, "clubMapper", clubMapper);
         ReflectionTestUtils.setField(merchantTarget, "capabilityService", capabilities);
+        ReflectionTestUtils.setField(merchantTarget, "roleService", canonicalRoles);
         ReflectionTestUtils.setField(merchantTarget, "merchantOperatorMapper", operators);
         ReflectionTestUtils.setField(merchantTarget, "umsMemberService", mock(IUmsMemberService.class));
         ReflectionTestUtils.setField(merchantTarget, "merchantOperatorInviteMapper", sql.getMapper(MerchantOperatorInviteMapper.class));
@@ -129,8 +138,8 @@ class MerchantIdentityMybatisIntegrationTest {
         when(accounts.updateUmsMember(any(UmsMember.class))).thenAnswer(c -> members.updateUmsMember(c.getArgument(0)));
         IClubLeaderService leaderService = mock(IClubLeaderService.class);
         when(leaderService.selectClubLeaderByMemberId(anyLong())).thenAnswer(c -> profiles.selectClubLeaderByMemberId(c.getArgument(0)));
-        IRoleService roles = mock(IRoleService.class);
-        when(roles.resolveRole(any(UmsMember.class))).thenAnswer(c -> c.getArgument(0, UmsMember.class).getRole());
+        IRoleService roles = canonicalRoles;
+        ReflectionTestUtils.setField(clubTarget, "roleService", canonicalRoles);
         IClubAccessService access = mock(IClubAccessService.class);
         when(access.require(900L, 42L, null, ClubPermission.MEMBER_MANAGE)).thenReturn(
                 new ClubAccessContext(900L,42L,900L,null,java.util.Collections.singleton(ClubRoleCode.CLUB_OWNER)));
@@ -174,13 +183,16 @@ class MerchantIdentityMybatisIntegrationTest {
 
     @BeforeEach
     void seed() {
+        // PER_CLASS targets survive fault-injection tests; restore real SQL before the canonical-role grant.
+        ReflectionTestUtils.setField(merchantTarget, "umsMemberMapper", members);
+        ReflectionTestUtils.setField(roleTarget, "umsMemberMapper", members);
+        ReflectionTestUtils.setField(roleTarget, "memberCapabilityMapper", capabilityMapper);
         for (String table : new String[]{"merchant_operator_invite","merchant_operator","identity_points_receipt","club_governance_owner_transfer","club_member","member_capability","club","mms_merchant","club_leader","ums_member"}) db.update("DELETE FROM " + table);
         db.update("INSERT INTO ums_member(id,role,user_type,status,del_flag,update_time) VALUES(901,'club',3,1,0,NULL)");
         db.update("INSERT INTO club_leader VALUES(91,901,3,1,0)");
         capabilities.grant(901L, MemberCapability.CAP_CLUB_LEADER, 1L);
         reset(operators);
         when(claimFacts.auditCas(anyLong(),anyString(),anyInt(),anyString(),anyLong(),any(),anyString(),anyString())).thenReturn(0);
-        ReflectionTestUtils.setField(merchantTarget, "umsMemberMapper", members);
         ReflectionTestUtils.setField(merchantTarget,"umsMemberService",mock(IUmsMemberService.class));
     }
 
@@ -194,14 +206,6 @@ class MerchantIdentityMybatisIntegrationTest {
         java.util.concurrent.atomic.AtomicBoolean pauseOnce = new java.util.concurrent.atomic.AtomicBoolean(true);
         ICapabilityService observedCapabilities = mock(ICapabilityService.class,
                 org.mockito.AdditionalAnswers.delegatesTo(capabilities));
-        doAnswer(call -> {
-            boolean result = capabilities.hasCapability(call.getArgument(0), call.getArgument(1));
-            if (pauseOnce.compareAndSet(true, false)) {
-                oldCapabilityRead.countDown();
-                assertTrue(activationCommitted.await(10, TimeUnit.SECONDS), "activation must commit between API reads");
-            }
-            return result;
-        }).when(observedCapabilities).hasCapability(901L, MemberCapability.CAP_CLUB_LEADER);
         IUmsMemberService accounts = mock(IUmsMemberService.class);
         // The fixture has only the member columns needed by this API; JDBC still participates in its real transaction.
         when(accounts.selectUmsMemberById(901L)).thenAnswer(call -> db.queryForObject(
@@ -210,9 +214,15 @@ class MerchantIdentityMybatisIntegrationTest {
                     member.setRole(rs.getString(2)); member.setUserType(rs.getLong(3)); return member;
                 }));
         IUserPermissionService permissions = mock(IUserPermissionService.class);
-        when(permissions.getByRole(anyString())).thenAnswer(call -> new UserPermission());
+        when(permissions.getByRole(anyString())).thenAnswer(call -> {
+            if (pauseOnce.compareAndSet(true, false)) {
+                oldCapabilityRead.countDown();
+                assertTrue(activationCommitted.await(10, TimeUnit.SECONDS));
+            }
+            return new UserPermission();
+        });
         RoleServiceImpl roles = new RoleServiceImpl();
-        ReflectionTestUtils.setField(roles, "capabilityService", capabilities);
+        ReflectionTestUtils.setField(roles, "umsMemberMapper", members);
         ReflectionTestUtils.setField(roles, "userPermissionService", permissions);
         com.chengyinhub.web.controller.api.ApiRoleController target = spy(new com.chengyinhub.web.controller.api.ApiRoleController());
         doReturn(901L).when(target).getAppUserId();
@@ -288,10 +298,15 @@ class MerchantIdentityMybatisIntegrationTest {
     @Test
     void memberIdentityWriteFailureRollsBackInsertedMerchantAndBothCapabilities() {
         UmsMemberMapper failing = mock(UmsMemberMapper.class, org.mockito.AdditionalAnswers.delegatesTo(members));
-        doReturn(0).when(failing).updateUmsMember(any(UmsMember.class));
-        ReflectionTestUtils.setField(merchantTarget, "umsMemberMapper", failing);
-        assertThrows(ServiceException.class, () -> merchants.insertMmsMerchant(activeMerchant()));
-        assertEquals(0, count("mms_merchant")); assertLeaderUnchanged();
+        doReturn(0).when(failing).updateCanonicalRole(anyLong(), anyString(), anyLong());
+        ReflectionTestUtils.setField(roleTarget, "umsMemberMapper", failing);
+        try {
+            assertThrows(ServiceException.class, () -> merchants.insertMmsMerchant(activeMerchant()));
+            assertEquals(0, count("mms_merchant")); assertLeaderUnchanged();
+            verify(failing).updateCanonicalRole(901L, IRoleService.ROLE_MERCHANT, 2L);
+        } finally {
+            ReflectionTestUtils.setField(roleTarget, "umsMemberMapper", members);
+        }
     }
 
     @Test
@@ -300,11 +315,11 @@ class MerchantIdentityMybatisIntegrationTest {
             MemberCapabilityMapper failed = mock(MemberCapabilityMapper.class, org.mockito.AdditionalAnswers.delegatesTo(capabilityMapper));
             if (failRevoke) doReturn(0).when(failed).updateStatus(eq(901L),eq(MemberCapability.CAP_CLUB_LEADER),eq(0),anyLong());
             else doReturn(0).when(failed).insertMemberCapability(any(MemberCapability.class));
-            ReflectionTestUtils.setField(capabilityTarget,"memberCapabilityMapper",failed);
+            ReflectionTestUtils.setField(roleTarget,"memberCapabilityMapper",failed);
             try {
                 assertThrows(ServiceException.class,() -> merchants.insertMmsMerchant(activeMerchant()));
                 assertEquals(0,count("mms_merchant"));assertLeaderUnchanged();
-            } finally {ReflectionTestUtils.setField(capabilityTarget,"memberCapabilityMapper",capabilityMapper);}
+            } finally {ReflectionTestUtils.setField(roleTarget,"memberCapabilityMapper",capabilityMapper);}
         }
     }
 
@@ -326,7 +341,7 @@ class MerchantIdentityMybatisIntegrationTest {
     void memberDisabledOrActiveOperatorCannotActivateAndLeaveNoIdentityMutation() {
         db.update("UPDATE ums_member SET status=0 WHERE id=901");
         assertThrows(ServiceException.class, () -> merchants.insertMmsMerchant(activeMerchant()));
-        assertEquals(0, count("mms_merchant")); assertLeaderUnchanged();
+        assertEquals(0, count("mms_merchant")); assertLeaderUnchanged(0L);
         db.update("UPDATE ums_member SET status=1 WHERE id=901");
         when(operators.selectActiveByMemberIdForUpdate(901L)).thenReturn(new MerchantOperator());
         assertThrows(ServiceException.class, () -> merchants.insertMmsMerchant(activeMerchant()));
@@ -354,7 +369,7 @@ class MerchantIdentityMybatisIntegrationTest {
         for (boolean alreadyRevoked : new boolean[]{false,true}) {
             seed();
             if (alreadyRevoked) capabilities.revoke(901L,MemberCapability.CAP_CLUB_LEADER);
-            else db.update("DELETE FROM member_capability");
+            else { db.update("DELETE FROM member_capability"); db.update("UPDATE ums_member SET role='player',user_type=1 WHERE id=901"); }
             db.update("INSERT INTO mms_merchant(id,member_id,status,account_status,del_flag) VALUES(77,901,0,0,0)");
             ExecutorService other = Executors.newSingleThreadExecutor();
             try {
@@ -578,8 +593,21 @@ class MerchantIdentityMybatisIntegrationTest {
     }
     private void createClub() {Club c = new Club(); c.setMemberId(901L); c.setName("new club"); c.setStatus(0L); c.setDelFlag(0); clubs.insertClubWithinOwnerQuota(c,2);}
     private void assertLeaderUnchanged() {
-        assertTrue(capabilities.hasCapability(901L, MemberCapability.CAP_CLUB_LEADER));
-        assertFalse(capabilities.hasCapability(901L, MemberCapability.CAP_MERCHANT));
+        assertLeaderUnchanged(1L);
+    }
+    private void assertLeaderUnchanged(Long expectedMemberStatus) {
+        assertEquals(expectedMemberStatus, db.queryForObject("SELECT status FROM ums_member WHERE id=901", Long.class));
+        assertEquals(0, db.queryForObject("SELECT del_flag FROM ums_member WHERE id=901", Integer.class));
+        if (Long.valueOf(1L).equals(expectedMemberStatus)) {
+            assertTrue(capabilities.hasCapability(901L, MemberCapability.CAP_CLUB_LEADER));
+            assertFalse(capabilities.hasCapability(901L, MemberCapability.CAP_MERCHANT));
+        } else {
+            assertTrue(capabilities.getCapabilities(901L).isEmpty(), "disabled account has no usable API capabilities");
+        }
+        assertEquals(1, db.queryForObject("SELECT count(*) FROM member_capability WHERE member_id=? AND capability=? AND status=1",
+                Integer.class, 901L, MemberCapability.CAP_CLUB_LEADER));
+        assertEquals(0, db.queryForObject("SELECT count(*) FROM member_capability WHERE member_id=? AND capability=? AND status=1",
+                Integer.class, 901L, MemberCapability.CAP_MERCHANT));
         assertEquals("club", db.queryForObject("SELECT role FROM ums_member WHERE id=901", String.class));
         assertEquals(1, count("club_leader"));
     }

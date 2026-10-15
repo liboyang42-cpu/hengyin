@@ -172,6 +172,22 @@
         where del_flag = 0 and status = 1 and (transfer_batch_id is null or transfer_batch_id = '')
     </select>
 
+
+    <select id="sampleStuckProcessingIds" resultType="java.lang.Long">
+        select id from member_cash_withdraw
+        where del_flag = 0 and status = 0 and coalesce(submit_time, create_time) &lt; #{before}
+        order by id asc limit 20
+    </select>
+    <select id="sampleManualPendingIds" resultType="java.lang.Long">
+        select id from member_cash_withdraw where del_flag = 0 and status in (3, 4)
+        order by id asc limit 20
+    </select>
+    <select id="sampleSuccessWithoutBatchIds" resultType="java.lang.Long">
+        select id from member_cash_withdraw
+        where del_flag = 0 and status = 1 and (transfer_batch_id is null or transfer_batch_id = '')
+        order by id asc limit 20
+    </select>
+
     <!-- D-02 终态守卫:仅当仍处理中(status=0)才转终态,保证 SUCCESS/退款单次性
          P块冻结:冻结中的单一律拦下。定时任务侧 selectPendingForQuery 本就滤掉冻结单,
          但人工 requery 是 selectById→syncOne,不经那道过滤;没有本守卫时冻结单点「重查」

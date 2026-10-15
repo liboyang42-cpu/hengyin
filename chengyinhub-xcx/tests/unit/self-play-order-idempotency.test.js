@@ -14,6 +14,7 @@ function loadTopicPage() {
   const toasts = [];
   const navigations = [];
   const payments = [];
+  const subscriptions = [];
   let pageConfig = null;
 
   // wx 在方法调用时才查全局，所以它必须留到测试跑完；getApp/Page 只在 require 期间需要。
@@ -47,6 +48,7 @@ function loadTopicPage() {
       if (options.success) options.success({ confirm: modalControl.confirm });
     },
     requestPayment: options => { payments.push(options); },
+    requestSubscribeMessage: options => { subscriptions.push(options); },
     navigateTo: options => { navigations.push(options.url); },
     redirectTo: options => { navigations.push(options.url); },
     getSystemInfo: () => {},
@@ -67,7 +69,7 @@ function loadTopicPage() {
     setData(patch) { Object.assign(this.data, patch); }
   });
   vm.data = Object.assign({}, pageConfig.data);
-  return { vm, requests, toasts, navigations, payments, consents, consentControl, modals, modalControl };
+  return { vm, requests, toasts, navigations, payments, consents, consentControl, modals, modalControl, subscriptions };
 }
 
 // 确保每个 page 加载后 workflow 已初始化，否则 _createSelfPlayOrder 里的 workflow.submit 会报错
@@ -303,4 +305,28 @@ test('已购态:/info-to-user 回 isSignUp=1 ⇒ is_join=1(不依赖 URL 参数)
   assert.equal(String(vm.data.is_join), '0');
   info.success({ code: '200', data: Object.assign({}, base, { isSignUp: 1 }) });
   assert.equal(String(vm.data.is_join), '1');
+});
+
+
+test('主题确认点击请求三种真实订阅模板，不等待订阅回包才记录同意建单', async () => {
+  const h=loadTopicPageWithWorkflow();h.vm.data.info={id:500};h.vm.data.selfPlayConsentChecked=true;
+  h.vm.onSelfPlayConfirm();assert.equal(h.subscriptions.length,1);
+  const {TEMPLATES}=require('../../utils/subscribe');
+  assert.deepEqual(h.subscriptions[0].tmplIds,[TEMPLATES.signupSuccess,TEMPLATES.activityStart,TEMPLATES.refund]);
+  assert.equal(h.consents.length,1);await Promise.resolve();assert.equal(h.requests.length,1,'订阅不回包也不阻塞建单');
+});
+test('主题订阅拒绝或API失败不阻塞建单；未勾同意不请求订阅', async () => {
+  for(const failed of [false,true]) {
+    const h=loadTopicPageWithWorkflow();h.vm.data.info={id:500};h.vm.data.selfPlayConsentChecked=true;
+    h.vm.onSelfPlayConfirm();if(failed)h.subscriptions[0].fail({});else h.subscriptions[0].success({});
+    await Promise.resolve();assert.equal(h.requests.length,1);
+  }
+  const h=loadTopicPageWithWorkflow();h.vm.data.info={id:500};h.vm.data.selfPlayConsentChecked=false;
+  h.vm.onSelfPlayConfirm();assert.equal(h.subscriptions.length,0);assert.equal(h.requests.length,0);
+});
+
+
+test('已有同意的连续确认也只请求一次订阅与建单', () => {
+  const h=loadTopicPageWithWorkflow();h.vm.data.info={id:500};h.vm.data.selfPlayConsentChecked=true;h.vm._hostShareConsentReady=true;
+  h.vm.onSelfPlayConfirm();h.vm.onSelfPlayConfirm();assert.equal(h.subscriptions.length,1);assert.equal(h.requests.length,1);
 });

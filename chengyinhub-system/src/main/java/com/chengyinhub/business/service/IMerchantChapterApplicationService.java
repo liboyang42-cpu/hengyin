@@ -15,6 +15,10 @@ public interface IMerchantChapterApplicationService {
     /** 商家撤回自己的待审申请；重复撤回幂等，已通过或已拒绝不可撤。 */
     MerchantChapterApplication withdraw(Long applicationId, Long merchantId);
 
+    MerchantChapterApplication respondInvite(Long applicationId, Long merchantMemberId, boolean accepted);
+
+    MerchantChapterApplication revokeInvite(Long applicationId, Long publisherMemberId);
+
     /**
      * 主办方邀请某商家承接本章节。
      *

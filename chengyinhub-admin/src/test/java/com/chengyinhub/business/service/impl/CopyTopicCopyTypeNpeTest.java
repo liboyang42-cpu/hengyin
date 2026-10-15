@@ -60,6 +60,11 @@ class CopyTopicCopyTypeNpeTest {
         }).when(cmsTopicMapper).insertCmsTopic(any());
 
         svc = new CmsTopicServiceImpl();
+
+        org.springframework.test.util.ReflectionTestUtils.setField(svc, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(svc, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(svc, "cmsTopicMapper", cmsTopicMapper);
         ReflectionTestUtils.setField(svc, "productRoleService", mock(IProductRoleService.class));
         // [W4闭环] copyNodes 会查节点模板决定是否深拷贝;本测试聚焦 copyType 语义,

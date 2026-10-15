@@ -50,12 +50,81 @@ class ApiMerchantNpcVoiceTest {
     private VoiceCloneClient voiceClient;
     private ApiMerchantController controller;
 
+
+    private static final String REGISTRY_AUDIO_KEY = "upload/0123456789abcdef0123456789abcdef.mp3";
+    private static final String REGISTRY_AUDIO_REF = "media-asset:73";
+    private void actualAudioRegistry(String reviewState) {
+        com.chengyinhub.business.mapper.AppMediaAssetMapper assets = mock(com.chengyinhub.business.mapper.AppMediaAssetMapper.class);
+        java.util.Map<String,Object> fact = java.util.Map.of("id",73L,"memberId",MEMBER_ID,"ownerType","APP",
+                "objectKey",REGISTRY_AUDIO_KEY,"mediaType","AUDIO","reviewState",reviewState);
+        when(assets.select(73L)).thenReturn(fact);
+        when(assets.selectByObjectKey(REGISTRY_AUDIO_KEY)).thenReturn(fact);
+        com.chengyinhub.business.service.support.AppMediaReferenceGuard actual = new com.chengyinhub.business.service.support.AppMediaReferenceGuard();
+        org.springframework.test.util.ReflectionTestUtils.setField(actual,"mapper",assets);
+        org.springframework.test.util.ReflectionTestUtils.setField(actual,"assets",mock(com.chengyinhub.business.service.impl.AppMediaAssetService.class));
+        org.springframework.test.util.ReflectionTestUtils.setField(controller,"mediaReferences",actual);
+    }
+
+    @Test void longSignedAliasesOfApprovedSampleReplayPendingAndReadyWithoutAnyProviderOrWrite() {
+        actualAudioRegistry("APPROVED");
+        for (int state : new int[]{1,2}) {
+            NpcProfile row = new NpcProfile();
+            row.setId(NPC_ID); row.setScopeId(MERCHANT_ID);
+            row.setVoiceSample(REGISTRY_AUDIO_REF); row.setVoiceStatus(state);
+            when(npcProfileMapper.selectMerchantNpcList(MERCHANT_ID, null)).thenReturn(new ArrayList<>(Arrays.asList(row)));
+            for (String signature : new String[]{"x", "y"}) {
+                String signed = "https://approved.example/"+REGISTRY_AUDIO_KEY+"?signature="+signature.repeat(320);
+                assertEquals(state, controller.npcVoiceEnroll(body(signed)).get("voiceStatus"));
+            }
+        }
+        org.mockito.Mockito.verifyNoInteractions(voiceClient);
+        verify(npcProfileMapper,never()).updateMerchantNpcVoice(any());
+    }
+
+    @Test void heldSampleCannotUseExistingVoiceStateAsAnApprovalBypass() {
+        actualAudioRegistry("HOLD");
+        NpcProfile row = new NpcProfile();
+        row.setId(NPC_ID); row.setScopeId(MERCHANT_ID);
+        row.setVoiceSample(REGISTRY_AUDIO_REF); row.setVoiceStatus(2);
+        when(npcProfileMapper.selectMerchantNpcList(MERCHANT_ID, null)).thenReturn(new ArrayList<>(Arrays.asList(row)));
+        org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> controller.npcVoiceEnroll(body(REGISTRY_AUDIO_REF)));
+        org.mockito.Mockito.verifyNoInteractions(voiceClient);
+        verify(npcProfileMapper,never()).updateMerchantNpcVoice(any());
+    }
+
+    @Test void newApprovedSampleStoresCanonicalReferenceAndSignsOnlyOnceBeforeMockProviderCall() {
+        actualAudioRegistry("APPROVED");
+        NpcProfile row = new NpcProfile();
+        row.setId(NPC_ID); row.setScopeId(MERCHANT_ID);
+        when(npcProfileMapper.selectMerchantNpcList(MERCHANT_ID, null)).thenReturn(new ArrayList<>(Arrays.asList(row)));
+        when(npcProfileMapper.updateMerchantNpcVoice(any())).thenReturn(1);
+        when(voiceClient.usable()).thenReturn(true);
+        when(voiceClient.enroll("provider-short-sample")).thenReturn("test-voice-id");
+        when(voiceClient.isReady("test-voice-id")).thenReturn(false);
+        try (org.mockito.MockedStatic<com.chengyinhub.common.utils.file.FileOssUploadUtils> signatures =
+                     org.mockito.Mockito.mockStatic(com.chengyinhub.common.utils.file.FileOssUploadUtils.class)) {
+            signatures.when(() -> com.chengyinhub.common.utils.file.FileOssUploadUtils.generateShortLivedPresignedUrl(REGISTRY_AUDIO_KEY,300))
+                    .thenReturn("provider-short-sample");
+            controller.npcVoiceEnroll(body("https://approved.example/"+REGISTRY_AUDIO_KEY+"?signature="+"x".repeat(320)));
+            signatures.verify(() -> com.chengyinhub.common.utils.file.FileOssUploadUtils.generateShortLivedPresignedUrl(REGISTRY_AUDIO_KEY,300),org.mockito.Mockito.times(1));
+        }
+        verify(voiceClient,org.mockito.Mockito.times(1)).enroll("provider-short-sample");
+        ArgumentCaptor<NpcProfile> writes = ArgumentCaptor.forClass(NpcProfile.class);
+        verify(npcProfileMapper,org.mockito.Mockito.times(2)).updateMerchantNpcVoice(writes.capture());
+        assertEquals(REGISTRY_AUDIO_REF,writes.getAllValues().get(0).getVoiceSample());
+    }
+
     @BeforeEach
     void setUp() {
         npcProfileMapper = mock(NpcProfileMapper.class);
         when(npcProfileMapper.updateMerchantNpcVoice(any())).thenReturn(1);
         voiceClient = mock(VoiceCloneClient.class);
         controller = new TestableController(MEMBER_ID);
+        com.chengyinhub.business.service.support.AppMediaReferenceGuard media = mock(com.chengyinhub.business.service.support.AppMediaReferenceGuard.class);
+        when(media.requireAttachment(MEMBER_ID, SAMPLE, true)).thenReturn(SAMPLE);
+        when(media.processingUrl(SAMPLE, MEMBER_ID, "AUDIO")).thenReturn(SAMPLE);
+        ReflectionTestUtils.setField(controller, "mediaReferences", media);
 
         IMerchantAccessService accessService = mock(IMerchantAccessService.class);
         when(accessService.require(MEMBER_ID, MerchantPermission.PROFILE_WRITE))
@@ -63,8 +132,21 @@ class ApiMerchantNpcVoiceTest {
                         MEMBER_ID, MERCHANT_ID, MEMBER_ID, MerchantRoleCode.MERCHANT_OWNER));
 
         ReflectionTestUtils.setField(controller, "npcProfileMapper", npcProfileMapper);
+        ReflectionTestUtils.setField(controller, "consentGuard", mock(com.chengyinhub.business.service.ConsentGuard.class));
         ReflectionTestUtils.setField(controller, "voiceCloneClient", voiceClient);
         ReflectionTestUtils.setField(controller, "merchantAccessService", accessService);
+    }
+
+    @Test
+    void separateConsentRefusalPreventsAnyProviderCallOrMediaWrite() {
+        com.chengyinhub.common.config.ComplianceProperties versions = new com.chengyinhub.common.config.ComplianceProperties();
+        versions.setDocVersions(java.util.Map.of("photo_model_processing", "v1.0", "voice_clone_processing", "v1.0"));
+        com.chengyinhub.business.service.ConsentGuard guard = new com.chengyinhub.business.service.ConsentGuard(
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.IConsentRecordService.class), versions);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "consentGuard", guard);
+        org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> controller.npcVoiceEnroll(body(SAMPLE)));
+        org.mockito.Mockito.verifyNoInteractions(voiceClient);
     }
 
     @Test

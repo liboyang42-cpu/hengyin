@@ -1,0 +1,59 @@
+{
+  "scope": "TEAM",
+  "sessionId": 7,
+  "activityId": 5,
+  "revision": 12,
+  "authorityEpoch": 4,
+  "teamId": 8,
+  "status": "RUNNING",
+  "worldMode": "WORLD_SHARED",
+  "availableActions": [
+    "MANUAL_SIGN"
+  ],
+  "quests": [
+    {
+      "questKey": "q1",
+      "nodeId": 41,
+      "locationKey": "gather",
+      "bindingVersion": 2,
+      "operation": "QUEST_START",
+      "enabled": false,
+      "trustedPass": false,
+      "disabledReason": "NOT_ARRIVED"
+    }
+  ],
+  "activeOperation": {},
+  "run": {
+    "operationStatus": "PAUSED",
+    "authorityMode": "MANUAL",
+    "authorityEpoch": 4,
+    "exitedTeams": {},
+    "manual": {
+      "nextSequence": 3,
+      "signatures": [
+        {
+          "signatureId": "20",
+          "sequence": 3,
+          "occurredAt": 1791576000000,
+          "action": "QUEST_START",
+          "status": "PENDING"
+        },
+        {
+          "signatureId": "18",
+          "sequence": 1,
+          "occurredAt": 1791575000000,
+          "action": "QUEST_START",
+          "status": "VERIFIED"
+        },
+        {
+          "signatureId": "19",
+          "sequence": 2,
+          "occurredAt": 1791575500000,
+          "action": "QUEST_CANCEL",
+          "status": "REJECTED",
+          "reason": "实际事件未发生"
+        }
+      ]
+    }
+  }
+}

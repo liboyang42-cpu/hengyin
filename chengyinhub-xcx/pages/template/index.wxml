@@ -55,7 +55,7 @@
       <view class="tpl-on-search__clear" bindtap="clearTemplateSearch" aria-role="button" aria-label="清除搜索关键词" hover-class="cy-pressed" hover-stay-time="80">清除</view>
     </view>
     <cy-skeleton wx:if="{{ loading && !listLoaded }}" type="list" count="3" />
-    <cy-error class="fill-slot cy-fade-in" wx:elif="{{ errorMsg && !listLoaded }}" fill="{{true}}" size="lg"
+    <cy-error load-failure class="fill-slot cy-fade-in" wx:elif="{{ errorMsg && !listLoaded }}" fill="{{true}}" size="lg"
       title="{{ errorMsg }}" sub="" bindretry="retryTemplateLoad" />
     <!-- 空态把 banner 计入:单条数据时 banner 吃掉唯一内容、两个列表全空,
          只看列表会让空态与 banner 大卡同屏 -->

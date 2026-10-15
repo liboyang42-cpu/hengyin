@@ -17,8 +17,9 @@
               aria-role="img" aria-label="藏品堆，共 {{cards.length}} 件，点一件放大看"></canvas>
       <!-- 失败 / 首屏加载 / 真空态互斥:失败时空态不得替它背书。
            整页失败沿用产品裁决(零按钮说清原因 → 自动返回),所以不挂 retry;切分类失败只提示并退回原分类。 -->
-      <cy-error class="oc-state" fill="{{true}}" size="lg" icon="/images/no_data.svg"
-                wx:if="{{error}}" title="藏品册没打开" sub="卡都还在，只是这次没读到" auto-back />
+  <cy-empty class="oc-state" fill="{{true}}" wx:if="{{readAccess}}" title="{{readAccess === 'login' ? '登录后查看自己的册子' : '当前账号无法查看'}}" sub="{{readAccess === 'login' ? '册子与登录账号关联' : '请返回后重新进入'}}" cta="{{readAccess === 'login' ? '去登录' : ''}}" bind:cta="loginToRead" />
+      <cy-error load-failure class="oc-state" fill="{{true}}" size="lg" icon="/images/no_data.svg"
+                wx:elif="{{error}}" title="藏品册没打开" sub="卡都还在，只是这次没读到" auto-back />
       <cy-skeleton class="oc-state" wx:elif="{{loading && !cards.length}}" type="card" count="{{2}}" />
       <cy-empty class="oc-state" wx:elif="{{loaded && !cards.length}}" fill="{{true}}" size="lg"
                 title="{{filter === '全部' ? '还没有收过东西' : '这一类还没收过东西'}}"

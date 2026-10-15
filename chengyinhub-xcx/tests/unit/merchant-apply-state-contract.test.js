@@ -140,6 +140,8 @@ function loadPage(options = {}) {
         return mod.exports
       }
       if (uiSandbox.isUiModule(request)) return uiSandbox.loadUiModule(request, sandbox)
+      // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
+      if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
       throw new Error(`unexpected require: ${request}`)
     },
   }
@@ -249,7 +251,9 @@ test('资格检查期间登录失效时退出加载态，重试仍须重新确�
   assert.equal(harness.roleCallbacks.length, 2)
   harness.roleCallbacks[1](null)
   assert.equal(harness.page.data.bootstrapState, 'error')
-  assert.match(harness.page.data.bootstrapError, /申请资格/)
+  // 需求变更(F-W1-12):已退出登录的身份重试时给可见的登录说明,而不是按加载失败留白。
+  assert.match(harness.page.data.bootstrapError, /登录后/)
+  assert.equal(harness.page.data.bootstrapErrorKind, 'no-permission')
   assert.equal(harness.requests.length, 0)
 })
 

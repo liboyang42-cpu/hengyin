@@ -14,10 +14,12 @@ const path = require('node:path');
 const PAGE_PATH = path.resolve(__dirname, '../../pages/shezhi/shezhi.js');
 const read = () => fs.readFileSync(PAGE_PATH, 'utf8');
 
-function loadPage(source) {
+function loadPage(source, initialStorage, storageBehavior) {
   let definition = null;
   const requests = [];
-  const cleared = { storage: 0, relaunched: [] };
+  const cleared = { storage: 0, removed: [], relaunched: [] };
+  const storage = { ...(initialStorage || {}) };
+  const behavior = storageBehavior || {};
   const globalData = {
     statusBarHeight: 20, navBarHeight: 44,
     authorization: 'token-live', open_id: 'open', user_id: 9, user_type: 1,
@@ -31,9 +33,21 @@ function loadPage(source) {
   });
   global.Page = (config) => { definition = config; };
   global.wx = {
-    getStorageSync: () => '',
-    setStorageSync() {},
-    clearStorageSync() { cleared.storage += 1; },
+    getStorageSync(key) { return storage[key] == null ? '' : storage[key]; },
+    setStorageSync(key, value) { storage[key] = value; },
+    getStorageInfoSync() {
+      if (behavior.listFailure) throw new Error('storage list failed');
+      return { keys: Object.keys(storage) };
+    },
+    removeStorageSync(key) {
+      if (behavior.removeFailure === key) throw new Error('storage remove failed');
+      cleared.removed.push(key);
+      delete storage[key];
+    },
+    clearStorageSync() {
+      cleared.storage += 1;
+      Object.keys(storage).forEach(key => { delete storage[key]; });
+    },
     reLaunch(options) { cleared.relaunched.push(options && options.url); },
     showToast() {},
     hideLoading() {},
@@ -56,7 +70,7 @@ function loadPage(source) {
     Object.assign(this.data, patch);
     if (cb) cb();
   };
-  return { page, requests, cleared, globalData };
+  return { page, requests, cleared, globalData, storage };
 }
 
 function dangerDialogStub() {
@@ -77,7 +91,8 @@ function confirmLogout(page, dlg) {
 }
 
 test('#16 服务端注销成功才清本地登录态', () => {
-  const { page, requests, cleared, globalData } = loadPage();
+  const { page, requests, cleared, globalData, storage } =
+    loadPage(undefined, { authorization: 'stored-auth', role: 'player' });
   const { dlg, calls } = dangerDialogStub();
 
   confirmLogout(page, dlg);
@@ -89,10 +104,39 @@ test('#16 服务端注销成功才清本地登录态', () => {
 
   requests[0].success({ code: 200 });
 
-  assert.equal(cleared.storage, 1, '服务端确认撤销后必须清本地');
+  assert.equal(cleared.storage, 0, '正常退出不得整库 clear 后搬运业务数据');
+  assert.deepEqual(cleared.removed.sort(),
+    ['authorization', 'role', 'role_permission_cache_v1']);
+  assert.deepEqual(storage, {});
   assert.deepEqual(cleared.relaunched, ['/pages/index/index']);
   assert.equal(globalData.authorization, '', '内存里的 token 也要清');
   assert.equal(globalData.role, '');
+});
+
+test('正常退出后同账号可恢复漫游，不保留凭据且切号不串数据', () => {
+  const initialStorage = {
+    authorization: 'stored-auth',
+    role: 'player',
+    user_id: 9,
+    'roam_memory_v1:9:sessions': [{ sessionId: '34', distance: 1.2 }],
+    'roam_memory_v1:9:recovery': { sessionId: '34', elapsedSeconds: 25 },
+    'roam_memory_v1:10:sessions': [{ sessionId: '52', distance: 0.8 }],
+  };
+  const { page, requests, storage } = loadPage(undefined, initialStorage);
+  const { dlg } = dangerDialogStub();
+
+  confirmLogout(page, dlg);
+  requests[0].success({ code: 200 });
+
+  assert.equal(storage.authorization, undefined, '本地凭据必须随正常退出清除');
+  assert.equal(storage.role, undefined);
+  assert.equal(storage.user_id, undefined);
+  assert.deepEqual(storage['roam_memory_v1:9:sessions'], initialStorage['roam_memory_v1:9:sessions']);
+  assert.deepEqual(storage['roam_memory_v1:9:recovery'], initialStorage['roam_memory_v1:9:recovery']);
+  assert.deepEqual(storage['roam_memory_v1:10:sessions'], initialStorage['roam_memory_v1:10:sessions'],
+    '正常退出不能连带删除设备上另一个玩家的独立漫游历史');
+  assert.equal(storage['roam_memory_v1:10:recovery'], undefined,
+    '不同账号不能读到当前账号恢复记录');
 });
 
 test('#16 弱网/业务失败:不清本地,弹窗给「退出没有完成,请重试」', () => {
@@ -108,6 +152,72 @@ test('#16 弱网/业务失败:不清本地,弹窗给「退出没有完成,请重
   assert.deepEqual(calls.failed, ['退出没有完成，请重试']);
 });
 
+test('退出失败同时保留登录态和漫游业务存档', () => {
+  const initialStorage = {
+    authorization: 'stored-auth',
+    'roam_memory_v1:9:sessions': [{ sessionId: '34' }],
+    'roam_memory_v1:9:recovery': { sessionId: '34', elapsedSeconds: 25 },
+  };
+  const { page, requests, storage } = loadPage(undefined, initialStorage);
+  const { dlg } = dangerDialogStub();
+
+  confirmLogout(page, dlg);
+  requests[0].fail({ errMsg: 'request:fail timeout' });
+
+  assert.deepEqual(storage, initialStorage);
+});
+
+test('本地键列表读取失败时不清内存账号态、不跳首页并允许重试', () => {
+  const initialStorage = {
+    authorization: 'stored-auth',
+    'roam_memory_v1:9:recovery': { sessionId: '34', elapsedSeconds: 25 },
+  };
+  const behavior = { listFailure: true };
+  const { page, requests, storage, globalData, cleared } =
+    loadPage(undefined, initialStorage, behavior);
+  const { dlg, calls } = dangerDialogStub();
+
+  confirmLogout(page, dlg);
+  requests[0].success({ code: 200 });
+
+  assert.deepEqual(storage, initialStorage);
+  assert.equal(globalData.authorization, 'token-live');
+  assert.deepEqual(cleared.relaunched, []);
+  assert.deepEqual(calls.failed, ['本机登录信息清理失败，请重试']);
+});
+
+test('删除本地账号键失败时保留业务原值，重试成功后才清内存并跳首页', () => {
+  const recovery = { sessionId: '34', elapsedSeconds: 25 };
+  const initialStorage = {
+    authorization: 'stored-auth',
+    role: 'player',
+    'roam_memory_v1:9:recovery': recovery,
+  };
+  const behavior = { removeFailure: 'authorization' };
+  const { page, requests, storage, globalData, cleared } =
+    loadPage(undefined, initialStorage, behavior);
+  const { dlg, calls } = dangerDialogStub();
+
+  confirmLogout(page, dlg);
+  requests[0].success({ code: 200 });
+
+  assert.equal(storage['roam_memory_v1:9:recovery'], recovery);
+  assert.equal(storage.authorization, 'stored-auth');
+  assert.equal(globalData.authorization, 'token-live');
+  assert.deepEqual(cleared.relaunched, []);
+  assert.deepEqual(calls.failed, ['本机登录信息清理失败，请重试']);
+
+  behavior.removeFailure = '';
+  confirmLogout(page, dlg);
+  requests[1].fail({ code: 401 }, 401);
+
+  assert.equal(storage.authorization, undefined);
+  assert.equal(storage.role, undefined);
+  assert.equal(storage['roam_memory_v1:9:recovery'], recovery);
+  assert.equal(globalData.authorization, '');
+  assert.deepEqual(cleared.relaunched, ['/pages/index/index']);
+});
+
 test('#16 业务码非 200 同样按失败处理,并透传后端文案', () => {
   const { page, requests, cleared } = loadPage();
   const { dlg, calls } = dangerDialogStub();
@@ -120,7 +230,8 @@ test('#16 业务码非 200 同样按失败处理,并透传后端文案', () => {
 });
 
 test('#16 失败后可重试:第二次成功才清本地', () => {
-  const { page, requests, cleared } = loadPage();
+  const { page, requests, cleared } =
+    loadPage(undefined, { authorization: 'stored-auth', role: 'player' });
   const { dlg } = dangerDialogStub();
 
   confirmLogout(page, dlg);
@@ -130,11 +241,17 @@ test('#16 失败后可重试:第二次成功才清本地', () => {
   confirmLogout(page, dlg);
   assert.equal(requests.length, 2, '重试必须重新发一次服务端注销');
   requests[1].success({ code: 200 });
-  assert.equal(cleared.storage, 1);
+  assert.equal(cleared.storage, 0);
+  assert.deepEqual(cleared.removed.sort(),
+    ['authorization', 'role', 'role_permission_cache_v1']);
 });
 
-test('#16 别的危险动作键走不到注销分支(注销申请/撤销流程不受影响)', () => {
-  const { page, requests, cleared } = loadPage();
+test('#16 注销账号动作不走正常退出保留器', () => {
+  const initialStorage = {
+    authorization: 'stored-auth',
+    'roam_memory_v1:9:recovery': { sessionId: '34', elapsedSeconds: 25 },
+  };
+  const { page, requests, cleared, storage } = loadPage(undefined, initialStorage);
   const { dlg } = dangerDialogStub();
 
   page.selectComponent = (id) => (id === '#dc' ? dlg : null);
@@ -143,6 +260,8 @@ test('#16 别的危险动作键走不到注销分支(注销申请/撤销流程�
 
   assert.equal(requests.length, 0, '非退出键不得触发 /api/logout');
   assert.equal(cleared.storage, 0);
+  assert.deepEqual(storage, initialStorage,
+    '注销账号必须由独立流程处置，不得被正常退出补丁擅自保存或改写数据');
 });
 
 test('#16 负控:撤掉「先服务端确认」守卫(旧行为:success 一律清)必须真红', () => {
@@ -150,7 +269,7 @@ test('#16 负控:撤掉「先服务端确认」守卫(旧行为:success 一律�
   const broken = source.replace(
     `      success(res) {
         if (res && (res.code == 200 || loginExpired(res))) {
-          clearLocalLogin();
+          if (!clearLocalLogin() && dc) dc.failed('本机登录信息清理失败，请重试');
           return;
         }
         const message = (res && res.msg) || '退出没有完成，请重试';
@@ -159,12 +278,15 @@ test('#16 负控:撤掉「先服务端确认」守卫(旧行为:success 一律�
     '      success() { clearLocalLogin(); },');
   assert.notEqual(broken, source, '负控锚点失效:成功分支守卫未命中');
 
-  const { page, requests, cleared } = loadPage(broken);
+  const { page, requests, cleared, globalData } =
+    loadPage(broken, { authorization: 'stored-auth' });
   const { dlg } = dangerDialogStub();
   confirmLogout(page, dlg);
   requests[0].success({ code: 500, msg: '系统繁忙' });
 
-  assert.notEqual(cleared.storage, 0, '旧行为在业务失败时也清本地 —— 这正是拍板要修掉的假退出');
+  assert.deepEqual(cleared.removed, ['authorization', 'role_permission_cache_v1'],
+    '旧行为在业务失败时也清本地 —— 这正是拍板要修掉的假退出');
+  assert.equal(globalData.authorization, '');
 });
 
 
@@ -178,11 +300,13 @@ test('明确登录失效可退出重登，403与网络失败仍保留登录', ()
     ['fail', { code: 403 }, 403, false],
     ['fail', { errMsg: 'request:fail timeout' }, undefined, false],
   ]) {
-    const { page, requests, cleared, globalData } = loadPage();
+    const { page, requests, cleared, globalData } =
+      loadPage(undefined, { authorization: 'stored-auth', role: 'player' });
     const { dlg, calls } = dangerDialogStub();
     confirmLogout(page, dlg);
     requests[0][callback](response, status);
-    assert.equal(cleared.storage, shouldClear ? 1 : 0);
+    assert.equal(cleared.storage, 0, '退出清理不得整库 clear');
+    assert.equal(cleared.removed.length, shouldClear ? 3 : 0);
     assert.equal(globalData.authorization, shouldClear ? '' : 'token-live');
     assert.deepEqual(cleared.relaunched, shouldClear ? ['/pages/index/index'] : []);
     assert.equal(calls.failed.length, shouldClear ? 0 : 1);

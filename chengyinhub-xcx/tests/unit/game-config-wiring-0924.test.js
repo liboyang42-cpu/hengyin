@@ -56,7 +56,7 @@ function dispatcherFields(type) {
   const end = wxml.indexOf('kit.type ===', start + 10)
   const block = wxml.slice(start, end < 0 ? undefined : end)
   const fields = new Set()
-  for (const m of block.matchAll(/kit\.([a-zA-Z]+)/g)) if (m[1] !== 'type') fields.add(m[1])
+  for (const m of block.matchAll(/kit\.([a-zA-Z][a-zA-Z0-9_]*)/g)) if (m[1] !== 'type') fields.add(m[1])
   return [...fields]
 }
 

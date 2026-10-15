@@ -99,6 +99,46 @@ public class RedemptionRewardClawbackService {
     }
 
     /**
+     * 整单核销撤销的冲回(PR10 复审):整单票没有 redemption 行,撤销后这张票一定不再有生效核销,
+     * 所以只冲「到店」那一档 —— 到店积分(eventType=11)+ 到店成长经验(store_verify),并删掉到店成长待办,
+     * 与按章撤销 registrationNoLongerVerified 分支同一套发放事实幂等;不涉及通关奖励。
+     */
+    @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
+    public void clawbackWholeOrderVerification(CmsRegistration registration, Long ownerMemberId,
+                                               String reason, Long operatorUserId, String requestId) {
+        Long memberId = registration.getMemberId();
+        umsMemberMapper.lockMemberById(memberId);
+        Map<String, Object> detail = new LinkedHashMap<>();
+        detail.put("registrationNoLongerVerified", true);
+        detail.put("completionLost", false);
+        detail.put("badge", "KEPT");
+        List<Map<String, Object>> points = new ArrayList<>();
+        detail.put("points", points);
+        Map<String, Object> p = clawPoints(memberId, EVENT_STORE_VERIFY, registration.getId(), "撤销核销冲回:到店核销", "redeem");
+        if (p != null) points.add(p);
+        detail.put("storeVerifyExp", clawStoreVerifyExp(memberId, registration.getId()));
+        storeVerifyGrowthDeliveryMapper.deleteByRegistration(registration.getId());
+
+        BusinessAuditEvent audit = new BusinessAuditEvent();
+        audit.setDomainType("REGISTRATION");
+        audit.setDomainId(registration.getId());
+        audit.setOwnerMemberId(ownerMemberId);
+        audit.setActorType(BusinessAuditEvent.ACTOR_TYPE_SYS_USER);
+        audit.setActorMemberId(operatorUserId);
+        audit.setActorRoleCode("SYS_USER");
+        audit.setAction("REGISTRATION_VERIFY_REWARD_CLAWBACK");
+        audit.setTargetType("CMS_REGISTRATION");
+        audit.setTargetId(registration.getId());
+        audit.setAfterJson(JSON.toJSONString(detail));
+        audit.setReason(reason);
+        audit.setRequestId(requestId);
+        audit.setCreateTime(new Date());
+        if (businessAuditEventMapper.insertBusinessAuditEvent(audit) != 1) {
+            throw new IllegalStateException("冲回审计写入失败");
+        }
+    }
+
+    /**
      * 冲回一笔积分发放(调用方须已锁会员行):摘判重键 → 扣到 0 为止 → 记负向流水,返回请求/实扣。
      * keyTag 区分冲回来源(redeem=撤销核销,refund=FX-10 退款收回首评),写进两处业务键。
      */
@@ -143,6 +183,11 @@ public class RedemptionRewardClawbackService {
                 throw new IllegalStateException("成长经验发放行冲回标记失败 id=" + award.getId());
             }
             requested += Math.max(0, award.getRewardExp() == null ? 0 : award.getRewardExp());
+            int earnedExp = Math.max(0, award.getRewardExp() == null ? 0 : award.getRewardExp());
+            if (earnedExp > 0 && memberGrowthMapper.selectMissionEarnedExpId(memberId, award.getId()) != null
+                    && memberGrowthMapper.revokeMissionEarnedExp(memberId, award.getId(), earnedExp) != 1) {
+                throw new IllegalStateException("任务经验原笔冲回失败 progressId=" + award.getId());
+            }
         }
         int deducted = deductExp(memberId, requested);
         int remaining = deducted;
@@ -172,8 +217,16 @@ public class RedemptionRewardClawbackService {
         if (topicId == null) return null;
         Integer xp = topicCompletionXpAwardMapper.selectXpForUpdate(memberId, topicId);
         if (xp == null || xp <= 0) return null;
-        topicCompletionXpAwardMapper.deleteAward(memberId, topicId);
-        return amounts(null, xp, deductExp(memberId, xp), null);
+        Long earnedExpId = topicCompletionXpAwardMapper.selectEarnedExpId(memberId, topicId);
+        if (topicCompletionXpAwardMapper.deleteAward(memberId, topicId) != 1) {
+            throw new IllegalStateException("通关经验发放事实冲回失败");
+        }
+        int deducted = deductExp(memberId, xp);
+        // 历史直发没有可关联的获得明细，不猜测发放周或给其他奖励扣分。
+        if (earnedExpId != null && memberGrowthMapper.revokeEarnedExp(memberId, earnedExpId, xp) != 1) {
+            throw new IllegalStateException("通关经验原笔冲回失败");
+        }
+        return amounts(null, xp, deducted, earnedExpId);
     }
 
     /**

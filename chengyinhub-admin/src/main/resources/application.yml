@@ -32,12 +32,15 @@ server:
     # tomcat的URI编码
     uri-encoding: UTF-8
     # 连接数满后的排队数，默认为100
-    accept-count: 1000
+    # F-W3-05/F-L6-13:原 800 线程 + 1000 排队对 20 个 DB 连接,高峰时线程全堵在等连接上(最长 60s),
+    # 客户端早已超时重试,表现为整站卡死。收敛到 Spring 默认量级(DB 池的 10 倍),配合 Druid maxWait
+    # 缩短实现快速失败;容量结论仍需同规格压测,可用环境变量回调而不必改包。
+    accept-count: ${CHENGYIN_TOMCAT_ACCEPT_COUNT:200}
     threads:
       # tomcat最大线程数，默认为200
-      max: 800
+      max: ${CHENGYIN_TOMCAT_MAX_THREADS:200}
       # Tomcat启动初始化的线程数，默认值10
-      min-spare: 100
+      min-spare: ${CHENGYIN_TOMCAT_MIN_SPARE:20}
 
 security:
   cors:
@@ -59,6 +62,10 @@ user:
 
 # Spring配置
 spring:
+  # Boot 4 temporary bridge: preserve existing Jackson 2 request/response contracts.
+  http:
+    converters:
+      preferred-json-mapper: jackson2
   # 资源信息
   messages:
     # 国际化资源文件路径
@@ -78,27 +85,29 @@ spring:
       # 热部署开关
       enabled: true
   # redis 配置
-  redis:
-    # 地址
-    host: localhost
-    # 端口，默认为6379
-    port: 6379
-    # 数据库索引
-    database: 0
-    # 密码
-    password:
-    # 连接超时时间
-    timeout: 10s
-    lettuce:
-      pool:
-        # 连接池中的最小空闲连接
-        min-idle: 0
-        # 连接池中的最大空闲连接
-        max-idle: 8
-        # 连接池的最大数据库连接数
-        max-active: 8
-        # #连接池最大阻塞等待时间（使用负值表示没有限制）
-        max-wait: -1ms
+  data:
+    redis:
+      # 地址
+      host: localhost
+      # 端口，默认为6379
+      port: 6379
+      # 数据库索引
+      database: 0
+      # 密码
+      password:
+      # 连接超时时间
+      timeout: 10s
+      lettuce:
+        pool:
+          # 连接池中的最小空闲连接
+          min-idle: 0
+          # 连接池中的最大空闲连接
+          max-idle: 8
+          # 连接池的最大数据库连接数
+          max-active: 8
+          # #连接池最大阻塞等待时间（使用负值表示没有限制）
+          # F-W3-05:原 -1ms 无限等待,Redis 抖动时请求线程无限阻塞;改为有限等待后快速失败并触发连接异常告警。
+          max-wait: ${CHENGYIN_REDIS_POOL_MAX_WAIT:3s}
 
 # token配置
 token:
@@ -107,17 +116,16 @@ token:
   # 令牌密钥 [P0-安全] 改为环境变量注入,不再入库;未设 CHENGYIN_JWT_SECRET 启动即报错(fail-fast)
   secret: ${CHENGYIN_JWT_SECRET}
   # 令牌有效期（默认30分钟）   现在已经改成1天了
-  expireTime: 21600
+  expireTime: 1440
   app:
     # 小程序会话空闲有效期：24 小时
     idleTime: 1440
     # 小程序会话绝对有效期：7 天
     absoluteTime: 10080
 
-# 优惠券出示码 HMAC-SHA256 密钥 [F5] 只占位,不入库。优先 CHENGYIN_COUPON_QR_SECRET;
-# 未单独配置时回落 token.secret(同样无默认、缺失即启动失败)。空白值由 SmsCouponServiceImpl 启动校验拒绝。
+# 优惠券出示码使用独立密钥；缺少配置时仅关闭签发/核验入口，不能借用 JWT 密钥。
 coupon:
-  qr-secret: ${CHENGYIN_COUPON_QR_SECRET:${token.secret}}
+  qr-secret: ${COUPON_QR_SECRET:}
 
 # 提现敏感资料 AES-256-GCM 密钥。仅从环境变量注入；未配置即启动失败，禁止明文降级。
 withdrawal:
@@ -226,7 +234,14 @@ wx:
     merchant-serial-number: 543885FCEFAEC5A282045E304B459179C41251B8
     api-v3-key: ${CHENGYIN_WXPAY_APIV3_KEY}   # [P0-安全] 环境变量注入
     appid: wxdf8fd71ea3c614b4
-    notify-url: https://www.chengyinhub.com/prod-api/api/registration/callback
+    # 支付结果通知:微信下单必须携带。默认留空 = 拒绝下单(「支付回调地址未配置」),
+    # 避免测试/预发环境把支付通知指到生产域名。各环境用 CHENGYIN_WXPAY_NOTIFY_URL 注入自己的回调;
+    # 生产必须显式注入(scripts/production-preflight.sh 校验 HTTPS 且指向 /api/registration/callback)。
+    notify-url: ${CHENGYIN_WXPAY_NOTIFY_URL:}
+    # 退款结果通知(F-L6-16):配置后随 out_refund_no 一并下发 notify_url。默认留空 = 请求不带该字段,
+    # 由商户平台默认退款回调兜底,避免测试/预发环境把退款通知指到生产域名。
+    # 生产必须显式注入 CHENGYIN_WXPAY_REFUND_NOTIFY_URL(scripts/production-preflight.sh 校验)。
+    refund-notify-url: ${CHENGYIN_WXPAY_REFUND_NOTIFY_URL:}
 
   # 新增：微信小程序内容检查配置
   sec-check:
@@ -268,6 +283,8 @@ compliance:
   doc-versions:
     privacy_policy: v2.1
     user_service_agreement: v2.2
+    photo_model_processing: v1.0
+    voice_clone_processing: v1.1   # F-L5C-05:文案新增「非本人声音须已告知并取得声音本人单独同意」,旧同意需重新确认
     community_content_rules: v2.0
     refund_rules: v2.1
     merchant_host_rules: v2.1

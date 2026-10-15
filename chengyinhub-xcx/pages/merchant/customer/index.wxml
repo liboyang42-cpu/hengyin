@@ -51,7 +51,7 @@
   <cy-skeleton wx:elif="{{loading && !rows.length}}" type="card" count="{{4}}" />
   <!-- auto-back 只认首屏:换分群 / 换标签 / 换关键词都会清空 rows 再拉一次,
        那一次失败若也自动退页,分群与群发草稿会跟着页面一起没(审查C A1)。 -->
-  <cy-error class="cy-fade-in cu-state-clear" wx:elif="{{error && !rows.length}}" title="客户名单加载失败" sub="{{error}}" bind:retry="retryLoad" fill="{{true}}" size="lg" auto-back="{{!everLoaded}}" />
+  <cy-error load-failure class="cy-fade-in cu-state-clear" wx:elif="{{error && !rows.length}}" title="客户名单加载失败" sub="{{error}}" bind:retry="retryLoad" fill="{{true}}" size="lg" auto-back="{{!everLoaded}}" />
   <cy-empty class="cy-fade-in cu-state-clear" wx:elif="{{!rows.length}}" kind="empty" fill="{{true}}" size="lg"
             title="{{emptyTitle}}" sub="{{emptySub}}"
             cta="{{emptyCta}}" bind:cta="onEmptyAction" />

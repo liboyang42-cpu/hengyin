@@ -50,6 +50,7 @@ Component({
     state: 'IDLE',
     isThinking: false,
     canSend: false,
+    retryAvailable: false,
     scrollIntoView: '',
   },
 
@@ -80,15 +81,22 @@ Component({
 
       this._invalidate(false);
       const generation = ++this._generation;
-      const requestId = makeRequestId();
-      const userMessage = this._message('user', message);
-      const messages = this._capMessages((this.data.messages || []).concat(userMessage));
+      const retry = this._retryRequested && this._retryMessage
+        && this._retryMessage.bizId === this.properties.sessionId && this._retryMessage.scope === this.properties.scope;
+      this._retryRequested = false;
+      // 新消息重新计自动回查次数;同一条消息的重试沿用已用次数(F-R2S-15)。
+      if (!retry) this._retryCount = 0;
+      const requestId = retry ? this._retryMessage.requestId : makeRequestId();
+      const userMessage = retry ? this._retryMessage.userMessage : this._message('user', message);
+      const messages = retry ? this.data.messages : this._capMessages((this.data.messages || []).concat(userMessage));
+      this._retryMessage = { requestId, message, userMessage, bizId: this.properties.sessionId, scope: this.properties.scope };
       this.setData({
         messages: messages,
         input: '',
         inputCount: 0,
         canSend: false,
         state: 'GENERATING',
+        retryAvailable: false,
         isThinking: true,
         scrollIntoView: 'npc-msg-' + userMessage.id,
       });
@@ -112,6 +120,15 @@ Component({
       });
       // request-client 的控制器覆盖静默重登后的 RequestTask；不直接持有一次 wx.request 的裸 task。
       if (this._isCurrent(generation)) this._requestControl = control;
+    },
+
+    onRetrySend: function () {
+      if (!this._retryMessage || !this.data.retryAvailable) return;
+      const draft = this.data.input;
+      this.setData({ input: this._retryMessage.message });
+      this._retryRequested = true;
+      this.onSend();
+      if (draft) this.setData({ input: draft });
     },
 
     onSheetClose: function () {
@@ -140,10 +157,17 @@ Component({
       }
       this._trackComplete(payload);
       if (payload.outcomeStatus === 'SUCCEEDED' && payload.safetyDecision === 'PASS') {
+        this._retryMessage = null;
+        this._retryCount = 0;
         this._startTypewriter(generation, payload.safeText || '', payload.audioUrl);
         return;
       }
-      this._appendAssistant(payload.safeText || '这次暂时无法回答，请稍后再试。', this._stateOf(payload));
+      const state = this._stateOf(payload);
+      this._appendAssistant(payload.safeText || '这次暂时无法回答，请稍后再试。', state);
+      if (state === 'CHECKING' && (this._retryCount || 0) < 3) {
+        this._retryCount = (this._retryCount || 0) + 1;
+        this._retryTimer = setTimeout(() => { if (this._isCurrent(generation)) this.onRetrySend(); }, this._retryCount * 2000);
+      }
     },
 
     _onNetworkFailure: function (generation) {
@@ -182,6 +206,7 @@ Component({
       this.setData({
         messages: messages,
         state: state || 'FAILED',
+        retryAvailable: !!this._retryMessage && (state === 'FAILED' || state === 'CHECKING'),
         isThinking: false,
         canSend: !!(this.data.input || '').trim(),
         scrollIntoView: 'npc-msg-' + assistant.id,
@@ -197,6 +222,7 @@ Component({
 
     _invalidate: function (showCancelled) {
       const wasActive = this.data.isThinking || this.data.state === 'DELIVERING';
+      if (this._retryTimer) { clearTimeout(this._retryTimer); this._retryTimer = null; }
       this._generation = (this._generation || 0) + 1;
       if (this._typeTimer) {
         clearTimeout(this._typeTimer);
@@ -213,9 +239,11 @@ Component({
 
     _resetForClose: function () {
       this._invalidate(false);
+      this._retryMessage = null;
+      this._retryCount = 0;
       this.setData({
         messages: [], input: '', inputCount: 0, state: 'IDLE', isThinking: false,
-        canSend: false, scrollIntoView: '',
+        canSend: false, retryAvailable: false, scrollIntoView: '',
       });
     },
 

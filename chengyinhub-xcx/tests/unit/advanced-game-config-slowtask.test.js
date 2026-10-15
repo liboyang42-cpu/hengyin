@@ -31,8 +31,12 @@ function serverSections() {
   const code = strip(read(VALIDATOR))
   const found = new Set()
   let m
-  const re = /validate\w+\(\s*root\.get\("(\w+)"\)\s*\)/g
+  // 2026-10-10 R5：validateTimer 增加第二参数（是否 R5 outcomeRules），解析允许后续参数，段名单语义不变。
+  const re = /validate\w+\(\s*root\.get\("(\w+)"\)\s*[,)]/g
   while ((m = re.exec(code))) found.add(m[1])
+  // requires / effects 是根级条件与效果块(多参数校验),不是玩法段;旧单参正则只是碰巧没匹配到它们。
+  // clues 是「线索」工具的名称表(2026-10-11)，同样不是玩法段。
+  for (const rootBlock of ['requires', 'effects', 'clues']) found.delete(rootBlock)
   return found
 }
 
@@ -109,32 +113,22 @@ test('只开 slowTask 一段时,enabledSections 要数到它 —— 数不到就
   assert.notEqual(cfg.serialize(m), '')
 })
 
-test('★编辑页里真有一块 slowTask 表单 —— 段在册但页面没写,商家照样配不了', () => {
-  const wxml = read('pages/publish/temp/index.wxml')
-  assert.ok(wxml.includes('advanced.slowTask.enabled'),
-    '编辑页没有跨日任务的开关 —— 商家打不开这一段')
-  assert.ok(wxml.includes('data-key="slowTask"'), '开关没接到 onAdvancedToggle 的 data-key 上')
-  const bound = boundSlowTaskFields(wxml)
-  const want = [...serverSlowTaskFields()].filter(f => f !== 'enabled')
-  assert.deepEqual(want.filter(f => !bound.includes(f)), [],
-    '这些后端认得的字段在编辑页里没有输入框')
-})
-
-/** 页面上 `data-section="slowTask" data-field="x"` 的绑定(与 onAdvancedField 的形状一致)。 */
-function boundSlowTaskFields(wxml) {
-  const out = []
-  const re = /data-section="slowTask"[^>]*data-field="([^"]+)"/g
-  let m
-  while ((m = re.exec(wxml))) out.push(m[1])
-  return out
-}
-
-test('★负控:字段名写错一个字母,上面的绑定断言真的抓得到', () => {
-  const wxml = read('pages/publish/temp/index.wxml')
-  assert.ok(boundSlowTaskFields(wxml).includes('unlockText'))
-  assert.ok(!boundSlowTaskFields(wxml).includes('unlockTxt'),
-    '负控失效:拼错的名字也被认成已绑定,那条断言是恒真的')
-})
+// R5 已批准移除新建跨日任务；旧段以 legacyRows 只读展示，字段保存仍受合同保护。
+function slowLegacy(config) { return require('../../pages/publish/temp/r5-editor.js').legacyRows(config).find(row => row.path === 'slowTask'); }
+function missingSlowFields(row) { return [...serverSlowTaskFields()].filter(field => !Object.keys(row.value).includes(field)); }
+test('R5 跨日旧段只读展示全部后端字段，不能从新入口编辑或丢失', () => {
+  const wxml = read('pages/publish/temp/index.wxml'), config = cfg.defaultConfig(); config.slowTask.enabled = true; config.slowTask.title = '旧任务'; config.slowTask.unlockText = '旧解锁内容';
+  const row = slowLegacy(config); assert.equal(row.readOnly, true); assert.deepEqual(missingSlowFields(row), []);
+  assert.deepEqual(JSON.parse(row.displayValue), config.slowTask); assert.deepEqual(cfg.parse(cfg.serialize(config)).value.slowTask, config.slowTask);
+  assert.match(wxml, /r5Editor.legacyRows/); assert.match(wxml, /item.displayValue/);
+  assert.doesNotMatch(wxml, /data-key="slowTask"|data-section="slowTask"/);
+});
+test('负控：旧跨日字段拼错会被完整字段保留断言抓到', () => {
+  const config = cfg.defaultConfig(); config.slowTask.enabled = true;
+  const row = slowLegacy(config); assert.deepEqual(missingSlowFields(row), []);
+  row.value.unlockTxt = row.value.unlockText; delete row.value.unlockText;
+  assert.deepEqual(missingSlowFields(row), ['unlockText']);
+});
 
 test('存盘前清洗:没填的选填字段删键,数字字段商家删空时不能把空串存回去', () => {
   const m = cfg.defaultConfig()

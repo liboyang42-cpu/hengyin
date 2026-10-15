@@ -16,6 +16,7 @@ const TIER_LABEL = { easy: '简单', medium: '标准', hard: '困难' };
 /** 重掷条件:掷过、没结算、没重掷过,且幸运还有剩。回执里 luck 缺省时不猜。 */
 function canReroll(receipt) {
   if (!receipt || receipt.settled || receipt.rerolled) return false;
+  if (receipt.r5) return receipt.canReroll === true && receipt.rerollRemaining > 0 && !receipt.pending;
   return Number(receipt.luck) > 0;
 }
 
@@ -30,13 +31,22 @@ Component({
     advantage: { type: Boolean, value: false },
     disadvantage: { type: Boolean, value: false },
     receipt: { type: Object, value: null },  // checkReceiptView() 的产物;没掷时 null
+    r5: { type: Boolean, value: false },
+    allowedActions: { type: Array, value: [] },
+    disabledReason: { type: String, value: '' },
   },
   data: {
+    rollVisible: true,
+    settleVisible: true,
     tierLabel: '',
     rerollVisible: false,
     verdictText: '',
   },
   observers: {
+    'r5, allowedActions': function (r5, allowedActions) {
+      this.setData({ rollVisible: !r5 || (allowedActions || []).includes('ROLL_CHECK'),
+        settleVisible: !r5 || (allowedActions || []).includes('SUBMIT_CHECK') });
+    },
     'show, tier, receipt': function (show, tier, receipt) {
       if (!show) return;
       const r = receipt || null;
@@ -59,6 +69,7 @@ Component({
     /** 掷 / 重掷 / 结算收口成一个事件:页面按 detail.action 分派,与 kitaction 同一手法 */
     onRoll() {
       if (this.data.loading || this.data.receipt) return;
+      if (this.data.r5 && !this.data.allowedActions.includes('ROLL_CHECK')) return;
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
       this.triggerEvent('action', { action: 'roll' });
     },
@@ -68,7 +79,8 @@ Component({
       this.triggerEvent('action', { action: 'reroll' });
     },
     onSettle() {
-      if (this.data.loading || !this.data.receipt || this.data.receipt.settled) return;
+      if (this.data.loading || !this.data.receipt || this.data.receipt.settled || this.data.receipt.pending) return;
+      if (this.data.r5 && !this.data.allowedActions.includes('SUBMIT_CHECK')) return;
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
       this.triggerEvent('action', { action: 'settle' });
     },

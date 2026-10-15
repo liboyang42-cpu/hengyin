@@ -8,14 +8,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
-import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
+import org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration;
+import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
+import org.springframework.boot.jdbc.autoconfigure.DataSourceTransactionManagerAutoConfiguration;
+import org.springframework.boot.quartz.autoconfigure.QuartzAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.resttestclient.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ByteArrayResource;
@@ -55,20 +56,24 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest(classes = AudioUploadBoundaryContractTest.MinimalApp.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
-                "spring.autoconfigure.exclude=com.alibaba.druid.spring.boot.autoconfigure.DruidDataSourceAutoConfigure,org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration"
+                "server.address=127.0.0.1",
+                "spring.autoconfigure.exclude=com.alibaba.druid.spring.boot4.autoconfigure.DruidDataSourceAutoConfigure,org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration"
         })
+@org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate
 class AudioUploadBoundaryContractTest {
 
     private static final int TEN_MIB = 10 * 1024 * 1024;
 
     @SpringBootConfiguration
     @EnableAutoConfiguration(exclude = {
-            org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration.class,
+            org.springframework.boot.security.autoconfigure.actuate.web.servlet.ManagementWebSecurityAutoConfiguration.class,
             DataSourceAutoConfiguration.class,
             DataSourceTransactionManagerAutoConfiguration.class,
-            RedisAutoConfiguration.class,
+            DataRedisAutoConfiguration.class,
             QuartzAutoConfiguration.class,
             SecurityAutoConfiguration.class,
+            org.springframework.boot.security.autoconfigure.web.servlet.ServletWebSecurityAutoConfiguration.class,
+            org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterAutoConfiguration.class,
             UserDetailsServiceAutoConfiguration.class
     })
     @Import(GlobalExceptionHandler.class)
@@ -95,6 +100,9 @@ class AudioUploadBoundaryContractTest {
     @Autowired
     private TestRestTemplate rest;
 
+    @LocalServerPort
+    private int port;
+
     private static final ObjectMapper JSON = new ObjectMapper();
 
     private ByteArrayResource resource(int size, String name) {
@@ -117,7 +125,7 @@ class AudioUploadBoundaryContractTest {
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         ResponseEntity<String> response =
                 rest.postForEntity(path, new HttpEntity<>(body, headers), String.class);
-        assertEquals(200, response.getStatusCodeValue(), "统一响应合同:HTTP 200 承载 AjaxResult");
+        assertEquals(200, response.getStatusCode().value(), "统一响应合同:HTTP 200 承载 AjaxResult");
         return JSON.readTree(response.getBody());
     }
 
@@ -130,7 +138,7 @@ class AudioUploadBoundaryContractTest {
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         try {
             ResponseEntity<String> response =
-                    rest.postForEntity(path, new HttpEntity<>(body, headers), String.class);
+                    rest.postForEntity("http://127.0.0.1:" + port + path, new HttpEntity<>(body, headers), String.class);
             if (response.getBody() == null || response.getBody().isEmpty()) {
                 return null;
             }

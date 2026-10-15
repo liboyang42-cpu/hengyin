@@ -89,6 +89,25 @@ function assertUnknownTemplateFallbackUsesDsIcon(markup) {
     '未知模板不得用 CSS 渐变冒充内容图');
 }
 
+test('七款旧玩法缺图时推荐大卡也有封面，作者图和来源记录保持原样', () => {
+  const { page } = mountTemplatePage('release');
+  page.data.tab = 'game';
+  for (const title of ['闭眼味觉师', '沉默点单', '便利店调酒师', '治愈音乐角', '午夜电台', '低碳行动', '今日城市签']) {
+    const source = { id: 1, title, imgUrl: null };
+    page._gameRows = page.decorateGame([source]);
+    page.rebuildLists();
+    assert.match(page.data.banner.imgUrl, /^\/images\/interaction-templates\/.+\.svg$/, title);
+    assert.equal(source.imgUrl, null, '展示补图不能改来源记录');
+    const author = { id: 2, title, imgUrl: 'https://www.chengyinhub.com/author.jpg' };
+    page._gameRows = page.decorateGame([author]);
+    page.rebuildLists();
+    assert.equal(page.data.banner.imgUrl, author.imgUrl, title);
+  }
+  page._gameRows = page.decorateGame([{ id: 3, title: '未知自定义玩法', imgUrl: '' }]);
+  page.rebuildLists();
+  assert.equal(page.data.banner.imgUrl, '', '未知玩法继续显示明确缺图态');
+});
+
 test('12 个交互模板使用具象游戏图标，未知模板使用设计系统兜底图标', () => {
   // 2026-08-26:首页四刀切退役,玩法走单一列表(gameRows ← decorateGame)。
   // 图标映射这条不变量原样保留,只是取样口从「四个切片」换成「装饰器输出」。
@@ -136,12 +155,13 @@ test('开发数据包含 5 个上海单人自由探索主题，且保持 EXPERIM
   });
 });
 
-test('主题模板接口失败时仅 develop 展示实验预览，release 不伪造数据', () => {
+test('主题模板接口失败时 develop/release 均不注入设计预览', () => {
   const dev = mountTemplatePage('develop');
   dev.page.getTopicTemplates();
   dev.requests[0].fail({ errMsg: 'request:fail' });
-  assert.deepEqual(dev.page._topicRows.map((item) => item.name), TOPIC_NAMES);
-  assert.equal(dev.page._topicRows.every((item) => item._statusText === '实验预览'), true);
+  assert.deepEqual(dev.page._topicRows, []);
+  assert.equal(dev.page.data.banner.id || null, null);
+  assert.match(dev.page.data.errorMsg, /request:fail|主题模板加载失败/);
 
   const release = mountTemplatePage('release');
   release.page.getTopicTemplates();
@@ -149,11 +169,12 @@ test('主题模板接口失败时仅 develop 展示实验预览，release 不伪
   assert.deepEqual(release.page._topicRows, []);
 });
 
-test('主题模板业务失败时 develop 同样回退；真实成功响应始终优先', () => {
+test('主题模板业务失败不回填演示；真实成功响应始终显示', () => {
   const devFailure = mountTemplatePage('develop');
   devFailure.page.getTopicTemplates();
   devFailure.requests[0].success({ code: '500', msg: '服务异常' });
-  assert.deepEqual(devFailure.page._topicRows.map((item) => item.name), TOPIC_NAMES);
+  assert.deepEqual(devFailure.page._topicRows, []);
+  assert.equal(devFailure.page.data.errorMsg, '服务异常');
 
   const live = mountTemplatePage('develop');
   live.page.getTopicTemplates();
@@ -165,11 +186,12 @@ test('主题模板业务失败时 develop 同样回退；真实成功响应始�
   assert.equal(live.page._topicRows[0]._statusText, '');
 });
 
-test('主题模板接口 200 但空列表时仅 develop 展示实验预览', () => {
+test('主题模板接口200空列表在develop/release均为真实空态', () => {
   const dev = mountTemplatePage('develop');
   dev.page.getTopicTemplates();
   dev.requests[0].success({ code: '200', data: [] });
-  assert.deepEqual(dev.page._topicRows.map((item) => item.name), TOPIC_NAMES);
+  assert.deepEqual(dev.page._topicRows, []);
+  assert.equal(dev.page.data.banner.id || null, null);
 
   const release = mountTemplatePage('release');
   release.page.getTopicTemplates();

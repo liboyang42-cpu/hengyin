@@ -2,3 +2,7 @@
 <view wx:if="{{state === 'deny'}}" class="gate" style="padding-top: {{top}}px;" aria-role="alert" aria-live="assertive">
   <cy-result-sheet show="{{_sheet}}" kind="fail" title="暂时不能查看" why="{{reason || '当前账号没有查看权限'}}" bind:close="onExit" />
 </view>
+
+<view wx:if="{{state === 'login'}}" class="gate" style="padding-top: {{top}}px;" aria-role="alert">
+  <cy-empty kind="no-permission" fill size="lg" title="登录后查看" sub="{{reason}}" cta="登录" bind:cta="onLogin" />
+</view>

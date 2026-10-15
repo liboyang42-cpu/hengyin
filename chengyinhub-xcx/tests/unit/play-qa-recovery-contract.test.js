@@ -117,6 +117,7 @@ function makeAppStub() {
   })
   return {
     globalData: { user_id: 9, features: {} },
+    getUserID: () => 9,
     isDevEnv: () => false,
     sendRequest: (opts) => server.onRequest(opts),
     getAuthorization: () => 'token',

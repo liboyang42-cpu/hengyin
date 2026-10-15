@@ -191,3 +191,12 @@ test('协议契约的变异负控确实能变红', () => {
     source.replace('const doc = getDoc(type);', 'const doc = DOCS[type] || DOCS.user_agreement;'),
   ));
 });
+
+
+test('用户服务协议仅在明确同意后生效，正文没有以实际使用推定同意', () => {
+  const { getDoc } = require('../../utils/agreement-docs.js');
+  const agreement = getDoc('user_agreement');
+  const text = agreement.sections.map(section => section.p).join('\n');
+  assert.match(text, /明确选择同意后对你生效/);
+  assert.doesNotMatch(text, /实际使用.*(?:同意|表示)|使用.*即.*同意|勾选同意或/);
+});

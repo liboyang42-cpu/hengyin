@@ -74,7 +74,7 @@ class ApiMerchantDecorDiscoverySyncTest {
         MmsMerchant persisted = new MmsMerchant();
         persisted.setId(77L);
         persisted.setTags("夜间友好");
-        persisted.setCoverImage("https://cdn.example/cover.png");
+        persisted.setCoverImage("media-asset:9");
         when(merchantService.selectMmsMerchantById(77L)).thenReturn(persisted);
         when(merchantService.updateAuthorizedProfile(any(MmsMerchant.class), anyLong(), anyString())).thenReturn(0);
         MmsMerchant request = new MmsMerchant();
@@ -156,6 +156,9 @@ class ApiMerchantDecorDiscoverySyncTest {
     }
 
     private static void injectOwnerAccess(ApiMerchantController controller) {
+        com.chengyinhub.business.service.support.AppMediaReferenceGuard media = mock(com.chengyinhub.business.service.support.AppMediaReferenceGuard.class);
+        when(media.requireAttachment(org.mockito.ArgumentMatchers.eq(9L), anyString(), org.mockito.ArgumentMatchers.eq(true))).thenReturn("media-asset:9");
+        ReflectionTestUtils.setField(controller, "mediaReferences", media);
         IMerchantAccessService access = mock(IMerchantAccessService.class);
         when(access.require(9L, MerchantPermission.PROFILE_WRITE))
                 .thenReturn(new MerchantAccessContext(9L, 77L, 9L,

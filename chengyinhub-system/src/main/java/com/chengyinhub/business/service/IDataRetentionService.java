@@ -7,6 +7,7 @@ import java.util.Date;
  * 分批删除(单批 LIMIT + 逐批提交),避免长事务/锁表。
  */
 public interface IDataRetentionService {
+    int cleanRoamLocations(Date cutoff, int batchSize, int maxBatches);
 
     /**
      * 清理 tms_browse_record(含 IP/UA)中早于 cutoff 的记录。

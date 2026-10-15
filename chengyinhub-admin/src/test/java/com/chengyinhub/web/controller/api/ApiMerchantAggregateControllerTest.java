@@ -278,6 +278,7 @@ class ApiMerchantAggregateControllerTest {
         UmsMemberMapper members = mock(UmsMemberMapper.class);
         UmsMember activeMember = new UmsMember();
         activeMember.setId(10L);
+        activeMember.setRole("merchant");
         activeMember.setStatus(1L);
         activeMember.setDelFlag(0);
         when(members.selectUmsMemberById(10L)).thenReturn(activeMember);

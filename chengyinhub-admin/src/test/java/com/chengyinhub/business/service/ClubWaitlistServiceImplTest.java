@@ -1,6 +1,8 @@
 package com.chengyinhub.business.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.chengyinhub.business.domain.ClubEventCampaign;
+import com.chengyinhub.business.domain.ClubEventDelivery;
 import com.chengyinhub.business.domain.ClubEventSeries;
 import com.chengyinhub.business.domain.ClubWaitlistClaim;
 import com.chengyinhub.business.domain.ClubWaitlistEntry;
@@ -63,6 +65,15 @@ class ClubWaitlistServiceImplTest {
         when(mapper.selectClubOwnerForUpdate(CLUB)).thenReturn(999L);
         when(mapper.selectActiveClubMemberForUpdate(CLUB, MEMBER)).thenReturn(MEMBER);
         when(mapper.countActiveRegistration(MEMBER, ACTIVITY, TICKET)).thenReturn(0);
+        when(mapper.insertCampaign(any(ClubEventCampaign.class))).thenAnswer(invocation -> {
+            invocation.getArgument(0, ClubEventCampaign.class).setId(71L);
+            return 1;
+        });
+        when(mapper.insertDelivery(any(ClubEventDelivery.class))).thenAnswer(invocation -> {
+            invocation.getArgument(0, ClubEventDelivery.class).setId(81L);
+            return 1;
+        });
+        when(mapper.insertOutbox(anyLong(), any(Date.class))).thenReturn(1);
     }
 
     @Test
@@ -103,6 +114,39 @@ class ClubWaitlistServiceImplTest {
         ArgumentCaptor<String> hash = ArgumentCaptor.forClass(String.class);
         verify(mapper).offerWaitingCas(eq(61L), eq(0), hash.capture(), eq(NOW), any());
         assertEquals(64, hash.getValue().length());
+
+        ArgumentCaptor<ClubEventCampaign> campaign = ArgumentCaptor.forClass(ClubEventCampaign.class);
+        verify(mapper).insertCampaign(campaign.capture());
+        assertEquals(CLUB, campaign.getValue().getClubId());
+        assertEquals(ACTIVITY, campaign.getValue().getActivityId());
+        assertEquals("WAITLIST", campaign.getValue().getAudienceType());
+        assertEquals("IN_APP", campaign.getValue().getChannel());
+        assertEquals(Long.valueOf(999L), campaign.getValue().getActorMemberId());
+        assertEquals(1, campaign.getValue().getTotalCount());
+        java.util.UUID.fromString(campaign.getValue().getRequestId());
+        assertEquals("你已获得活动候补名额，请在候补截止时间前完成报名。", campaign.getValue().getContent());
+        org.junit.jupiter.api.Assertions.assertFalse(
+                campaign.getValue().getContent().contains(tokenCodec.token(waiting)));
+
+        ArgumentCaptor<ClubEventDelivery> delivery = ArgumentCaptor.forClass(ClubEventDelivery.class);
+        verify(mapper).insertDelivery(delivery.capture());
+        assertEquals(Long.valueOf(71L), delivery.getValue().getCampaignId());
+        assertEquals(MEMBER, delivery.getValue().getRecipientMemberId());
+        assertEquals("IN_APP", delivery.getValue().getChannel());
+        assertEquals(ClubEventDelivery.PENDING, delivery.getValue().getStatus());
+        verify(mapper).insertOutbox(81L, NOW);
+    }
+
+    @Test
+    void promotionWithoutInventoryDoesNotCreateNotification() {
+        when(ticketMapper.selectOmsTicketByIdForUpdate(TICKET)).thenReturn(ticket(0L));
+
+        org.junit.jupiter.api.Assertions.assertFalse(service.promoteNext(ACTIVITY, TICKET, NOW));
+
+        verify(mapper, never()).selectFirstWaitingForUpdate(anyLong(), anyLong());
+        verify(mapper, never()).insertCampaign(any(ClubEventCampaign.class));
+        verify(mapper, never()).insertDelivery(any(ClubEventDelivery.class));
+        verify(mapper, never()).insertOutbox(anyLong(), any(Date.class));
     }
 
     @Test
@@ -123,6 +167,9 @@ class ClubWaitlistServiceImplTest {
                 61L, 0, ClubWaitlistEntry.WAITING, MEMBER, ACTIVITY, TICKET);
         verify(ticketMapper, never()).deductInventory(anyLong(), anyLong());
         verify(mapper, never()).offerWaitingCas(anyLong(), anyInt(), any(), any(), any());
+        verify(mapper, never()).insertCampaign(any(ClubEventCampaign.class));
+        verify(mapper, never()).insertDelivery(any(ClubEventDelivery.class));
+        verify(mapper, never()).insertOutbox(anyLong(), any(Date.class));
     }
 
     @Test
@@ -214,6 +261,16 @@ class ClubWaitlistServiceImplTest {
         locks.verify(ticketMapper).selectOmsTicketByIdForUpdate(TICKET);
         locks.verify(mapper).selectWaitlistByIdForUpdate(61L);
         verify(ticketMapper, times(1)).restoreInventory(TICKET, 1L);
+
+        ArgumentCaptor<ClubEventCampaign> campaign = ArgumentCaptor.forClass(ClubEventCampaign.class);
+        verify(mapper, times(1)).insertCampaign(campaign.capture());
+        assertEquals("ALL_MEMBERS", campaign.getValue().getAudienceType());
+        assertEquals("候补名额已过期", campaign.getValue().getTitle());
+        assertEquals("你的活动候补名额已过期，如仍需参加，请重新加入候补。", campaign.getValue().getContent());
+        ArgumentCaptor<ClubEventDelivery> delivery = ArgumentCaptor.forClass(ClubEventDelivery.class);
+        verify(mapper, times(1)).insertDelivery(delivery.capture());
+        assertEquals(MEMBER, delivery.getValue().getRecipientMemberId());
+        verify(mapper, times(1)).insertOutbox(81L, NOW);
     }
 
     @Test
@@ -238,6 +295,9 @@ class ClubWaitlistServiceImplTest {
 
         verify(ticketMapper).deductInventory(TICKET, 1L);
         verify(mapper).offerWaitingCas(eq(61L), eq(0), any(), eq(NOW), any());
+        verify(mapper, never()).insertCampaign(any(ClubEventCampaign.class));
+        verify(mapper, never()).insertDelivery(any(ClubEventDelivery.class));
+        verify(mapper, never()).insertOutbox(anyLong(), any(Date.class));
     }
 
     @Test

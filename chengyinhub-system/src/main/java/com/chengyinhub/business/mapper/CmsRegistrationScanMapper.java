@@ -33,6 +33,9 @@ public interface CmsRegistrationScanMapper
      */
     public List<CmsRegistrationScan> selectCmsRegistrationScanList(CmsRegistrationScan cmsRegistrationScan);
 
+    /** 整单核销被后台撤销:把该票的核销台账行(registration_type=1)标为已撤销(status=2),幂等。 */
+    int markWholeOrderScansReversed(@org.apache.ibatis.annotations.Param("registrationId") Long registrationId);
+
     /**
      * 新增商家扫码记录
      * 

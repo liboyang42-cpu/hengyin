@@ -7,6 +7,8 @@
 //    故 pages/privacy 路由页保留不删。
 const toast = require('../../../../utils/toast.js');
 const app = getApp();
+const presencePrivacy = require('../../../../utils/roam-presence-privacy.js');
+const bgTracker = require('../../../../utils/location/bg-tracker.js');
 
 Component({
   options: { multipleSlots: true },
@@ -27,12 +29,27 @@ Component({
       this.triggerEvent('close');
     },
 
+    openOwnMedia() {
+      if (this.data.submitting) return;
+      wx.navigateTo({ url: '/pages/privacy/index', success: () => this.triggerEvent('close'),
+        fail: () => toast('媒体管理暂时打不开，请重试') });
+    },
+
     openPrivacyContract() {
       wx.openPrivacyContract({
         fail() {
           toast('隐私保护指引暂不可用');
         },
       });
+    },
+
+    disablePresenceSharing() {
+      if (this.data.submitting) return;
+      this.setData({ submitting: true });
+      presencePrivacy.setSharing(app, null, false)
+        .then(() => toast('已关闭附近的人位置分享'))
+        .catch(error => toast(error.message))
+        .finally(() => this.setData({ submitting: false }));
     },
 
     withdrawRoamLocationConsent() {
@@ -43,7 +60,7 @@ Component({
         scene: 'roam_location',
         eventType: 'REVOKE',
       }).then(() => {
-        try { wx.stopLocationUpdate(); } catch (e) {}
+        bgTracker.revoke('roam');
         toast('已撤回漫游定位同意');
         this.setData({ submitting: false });
       }).catch(() => {

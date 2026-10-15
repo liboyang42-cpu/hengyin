@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -72,6 +73,8 @@ class MerchantReviewServiceImplTest {
         ReflectionTestUtils.setField(service, "auditTaskService", auditTaskService);
         ReflectionTestUtils.setField(service, "businessAuditEventMapper", businessAudits);
         ReflectionTestUtils.setField(service, "environment", environment);
+        ReflectionTestUtils.setField(service, "wxContentSecurityService", mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
+        ReflectionTestUtils.setField(service, "umsMemberService", mock(com.chengyinhub.business.service.IUmsMemberService.class));
         when(environment.getProperty("CHENGYIN_OSS_ENDPOINT"))
                 .thenReturn("https://oss-cn-hangzhou.aliyuncs.com");
         when(environment.getProperty("CHENGYIN_OSS_BUCKET_NAME")).thenReturn("chengyin-review");
@@ -389,6 +392,21 @@ class MerchantReviewServiceImplTest {
 
         assertEquals(404, error.getCode());
         verify(mapper, never()).replyCas(any(), any(), any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void publicReplyAndUpdateRejectUncheckedTextBeforeAnyWrite() {
+        com.chengyinhub.business.service.IWxContentSecurityService safety =
+                mock(com.chengyinhub.business.service.IWxContentSecurityService.class);
+        when(safety.checkText(anyString(), any())).thenReturn("安全检测不可用");
+        ReflectionTestUtils.setField(service, "wxContentSecurityService", safety);
+        MerchantReview row = review(MERCHANT_OWNER, 2, MerchantReview.STATUS_VISIBLE);
+        when(mapper.selectReviewByIdForUpdate(REVIEW)).thenReturn(row);
+        assertThrows(ServiceException.class, () -> service.reply(PRINCIPAL, replyRequest("unsafe-reply", 2)));
+        verify(mapper, never()).replyCas(any(), any(), any(), any(), any(), any(), any(), any(), any());
+        row.setReplyContent("旧回复");
+        assertThrows(ServiceException.class, () -> service.updateReply(PRINCIPAL, editReplyRequest("unsafe-update", "不应发布的更新", 2)));
+        verify(mapper, never()).updateReplyCas(any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test

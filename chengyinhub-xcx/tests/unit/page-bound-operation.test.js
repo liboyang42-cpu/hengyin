@@ -108,3 +108,79 @@ test('全局选图/选文件与两个直接上传页都接入离页 abort', () =
   assert.match(roam, /const cancelled = \(\) => \(\{ ok: false,[^\n]*cancelled: true \}\)/);
   assert.match(roam, /if \(!current\(\) \|\| \(err && err\.cancelled\)\) return cancelled\(\);/);
 });
+
+function mediaOwnerAppFixture() {
+  const vm = require('node:vm');
+  const { createSessionStore } = require('../../utils/session/session-store.js');
+  const root = path.resolve(__dirname, '../..');
+  let app, choose, chooseFile, finishCrop;
+  const uploads = [], shown = [], callbacks = [], page = {};
+  vm.runInNewContext(fs.readFileSync(path.join(root, 'app.js'), 'utf8'), {
+    App: value => { app = value; }, getCurrentPages: () => [page],
+    wx: { chooseMedia: value => { choose = value; }, chooseMessageFile: value => { chooseFile = value; },
+      uploadFile: value => { uploads.push(value); return { abort() {} }; } },
+    require: file => file === './utils/loading.js' ? { show() {}, hide() {} }
+      : file === './utils/toast.js' ? value => shown.push(value) : require(path.join(root, file)), console
+  }, { filename: 'app.js' });
+  const session = createSessionStore({ target: app.globalData, wx: {
+    getStorageSync() {}, setStorageSync() {}, removeStorageSync() {} } });
+  app.getSession = () => session; app.globalData.siteBaseUrl = 'https://fixture';
+  app.showModal = value => shown.push(value);
+  app.cropAll = () => new Promise(resolve => { finishCrop = resolve; });
+  session.setUserID('7'); session.setAuthorization('A');
+  return { app, uploads, shown, callbacks,
+    switchOwner(id = '9') { session.setUserID(id); session.setAuthorization(id ? 'B' : ''); },
+    chooseImage() { choose.success({ tempFiles: [{ tempFilePath: '/fixture/A-image.png' }] }); },
+    chooseFile() { chooseFile.success({ tempFiles: [{ path: '/fixture/A-doc.pdf', name: 'A-doc.pdf', size: 10 }] }); },
+    failImage() { choose.fail({ errMsg: 'fixture failure' }); },
+    finishCrop() { finishCrop(['/fixture/A-crop.png']); } };
+}
+for (const kind of ['image', 'document', 'crop', 'image-fail']) {
+  test('页面仍在栈中时，换号后的旧 ' + kind + ' 回调不能上传或提示', async () => {
+    const f = mediaOwnerAppFixture();
+    const operation = kind === 'document' ? f.app.chooseDocument(value => f.callbacks.push(value), 1)
+      : f.app.chooseImage(value => f.callbacks.push(value), 1, { skipCrop: kind !== 'crop' });
+    try {
+      if (kind === 'crop') f.chooseImage();
+      f.switchOwner();
+      if (kind === 'document') f.chooseFile();
+      else if (kind === 'crop') { f.finishCrop(); await Promise.resolve(); }
+      else if (kind === 'image-fail') f.failImage();
+      else f.chooseImage();
+      assert.equal(f.uploads.length, 0);
+      assert.equal(f.callbacks.length, 0); assert.deepEqual(f.shown, []);
+      assert.equal(operation.isAborted(), true);
+    } finally { operation.abort(); }
+  });
+}
+test('同页面换号后旧图片上传回包不送给页面', () => {
+  const f = mediaOwnerAppFixture();
+  const operation = f.app.chooseImage(value => f.callbacks.push(value), 1, { skipCrop: true });
+  try {
+    f.chooseImage(); assert.equal(f.uploads.length, 1); f.switchOwner();
+    f.uploads[0].success({ data: JSON.stringify({ code: 200, url: 'https://fixture/A-image.png' }) });
+    assert.equal(f.callbacks.length, 0);
+  } finally { operation.abort(); }
+});
+test('原生图片选择期间退出，不再发起旧图片上传', () => {
+  const f = mediaOwnerAppFixture();
+  const operation = f.app.chooseImage(value => f.callbacks.push(value), 1, { skipCrop: true });
+  try { f.switchOwner(''); f.chooseImage(); assert.equal(f.uploads.length, 0); }
+  finally { operation.abort(); }
+});
+test('onUploadStart同步换号时也不启动旧文件上传', () => {
+  const f = mediaOwnerAppFixture();
+  const operation = f.app.chooseImage(value => f.callbacks.push(value), 1,
+    { skipCrop: true, onUploadStart: () => f.switchOwner() });
+  try { f.chooseImage(); assert.equal(f.uploads.length, 0); }
+  finally { operation.abort(); }
+});
+test('真实App同会员正常选图上传和完成回调保留', () => {
+  const f = mediaOwnerAppFixture();
+  const operation = f.app.chooseImage(value => f.callbacks.push(value), 1, { skipCrop: true });
+  try {
+    f.chooseImage(); f.uploads[0].success({ data: JSON.stringify({ code: 200, url: 'https://fixture/A-image.png' }) });
+    assert.equal(f.callbacks.length, 1); assert.equal(f.callbacks[0][0], 'https://fixture/A-image.png');
+    assert.equal(operation.isFinished(), true);
+  } finally { operation.abort(); }
+});

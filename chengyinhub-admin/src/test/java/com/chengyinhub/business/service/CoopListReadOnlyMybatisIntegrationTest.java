@@ -84,7 +84,9 @@ class CoopListReadOnlyMybatisIntegrationTest {
    String resource=ROOT+"/chengyinhub-system/src/main/resources/mapper/business/CoopInviteMapper.xml";
    try(InputStream in=new FileInputStream(resource)){new XMLMapperBuilder(in,cfg,resource,cfg.getSqlFragments()).parse();}
    SqlSessionTemplate template=new SqlSessionTemplate(new SqlSessionFactoryBuilder().build(cfg));
-   CoopInviteServiceImpl actual=new CoopInviteServiceImpl();ReflectionTestUtils.setField(actual,"coopInviteMapper",template.getMapper(CoopInviteMapper.class));
+   CoopInviteServiceImpl actual=new CoopInviteServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(actual, "commercialReviewService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.ITopicCommercialReviewService.class));ReflectionTestUtils.setField(actual,"coopInviteMapper",template.getMapper(CoopInviteMapper.class));
    ProxyFactory proxy=new ProxyFactory(actual);proxy.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(ds),new AnnotationTransactionAttributeSource()));
    ICoopInviteService service=(ICoopInviteService)proxy.getProxy();
    ApiCoopController controller=new ApiCoopController(){@Override public Long getAppUserId(){return 1L;}};

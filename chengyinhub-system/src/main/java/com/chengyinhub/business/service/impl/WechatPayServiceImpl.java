@@ -49,9 +49,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 /**
  * 微信支付服务实现 (适配新版SDK v3) - 修正版
@@ -65,9 +66,14 @@ public class WechatPayServiceImpl implements IWechatPayService {
     private ICmsRegistrationService registrationService;
 
     @Autowired
+    private AlarmService alarmService;
+
+    @Autowired
+    @Lazy
     private ICoopInviteService coopInviteService;
 
     @Autowired
+    @Lazy
     private com.chengyinhub.business.service.IMerchantCommerceService merchantCommerceService;
 
     /** ObjectProvider 打破 membership 下单依赖 IWechatPayService 形成的启动期依赖环。 */
@@ -354,6 +360,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
         if (!isReady()) {
             throw PaymentPreorderException.definiteFailure("支付服务暂不可用，请稍后再试", null);
         }
+        requireNotifyUrl();
         PrepayRequest request;
         try {
             request = buildPrepayRequest(registration);
@@ -383,6 +390,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
     @Override
     public Map<String, String> createAppOrder(CmsRegistration registration) {
         requireAppChannelAppid();
+        requireNotifyUrl();
         com.wechat.pay.java.service.payments.app.model.PrepayRequest request;
         try {
             request = buildAppPrepayRequest(registration);
@@ -396,6 +404,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
     public Map<String, String> createGenericAppOrder(String outTradeNo, java.math.BigDecimal amountYuan,
                                                       String description) {
         String appAppid = requireAppChannelAppid();
+        requireNotifyUrl();
         com.wechat.pay.java.service.payments.app.model.PrepayRequest request;
         try {
             request = buildGenericAppPrepayRequest(outTradeNo, amountYuan, description, appAppid);
@@ -403,6 +412,20 @@ public class WechatPayServiceImpl implements IWechatPayService {
             throw PaymentPreorderException.definiteFailure("创建 App 支付订单参数异常：" + e.getMessage(), e);
         }
         return prepayApp(request);
+    }
+
+    static final String NOTIFY_URL_MISSING = "支付回调地址未配置";
+
+    /**
+     * 微信支付下单必须携带支付结果通知地址(wx.pay.notify-url,生产由 CHENGYIN_WXPAY_NOTIFY_URL 注入)。
+     * 默认留空:未配置时在调用微信之前明确失败,既不带空值下单,也不会回落到生产回调地址。
+     */
+    private String requireNotifyUrl() {
+        String notifyUrl = wxPayConfig.getNotifyUrl();
+        if (notifyUrl == null || notifyUrl.trim().isEmpty()) {
+            throw PaymentPreorderException.definiteFailure(NOTIFY_URL_MISSING, null);
+        }
+        return notifyUrl.trim();
     }
 
     private String requireAppChannelAppid() {
@@ -440,7 +463,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
         request.setDescription(body);
         request.setAppid(appAppid);
         request.setMchid(wxPayConfig.getMerchantId());
-        request.setNotifyUrl(wxPayConfig.getNotifyUrl());
+        request.setNotifyUrl(requireNotifyUrl());
         return request;
     }
 
@@ -491,7 +514,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
         request.setDescription(body);
         request.setAppid(wxPayConfig.getAppAppid());
         request.setMchid(wxPayConfig.getMerchantId());
-        request.setNotifyUrl(wxPayConfig.getNotifyUrl());
+        request.setNotifyUrl(requireNotifyUrl());
         return request;
     }
 
@@ -499,6 +522,11 @@ public class WechatPayServiceImpl implements IWechatPayService {
     public Map<String, String> createGenericOrder(String outTradeNo, java.math.BigDecimal amountYuan, String description, String openid) {
         if (!isReady()) {
             throw new IllegalStateException("支付服务暂不可用，请稍后再试");
+        }
+        String notifyUrl = wxPayConfig.getNotifyUrl();
+        if (notifyUrl == null || notifyUrl.trim().isEmpty()) {
+            // 与「未就绪」同口径:调用方按 IllegalStateException 展示原因,此时尚未调用微信。
+            throw new IllegalStateException(NOTIFY_URL_MISSING);
         }
         try {
             PrepayRequest request = new PrepayRequest();
@@ -515,7 +543,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
             request.setDescription(body);
             request.setAppid(wxPayConfig.getAppid());
             request.setMchid(wxPayConfig.getMerchantId());
-            request.setNotifyUrl(wxPayConfig.getNotifyUrl());
+            request.setNotifyUrl(notifyUrl.trim());
             return createOrderWithExtension(request);
         } catch (Exception e) {
             throw new RuntimeException("创建微信支付订单异常：" + e.getMessage(), e);
@@ -549,7 +577,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
         request.setDescription(body);
         request.setAppid(wxPayConfig.getAppid());
         request.setMchid(wxPayConfig.getMerchantId());
-        request.setNotifyUrl(wxPayConfig.getNotifyUrl());
+        request.setNotifyUrl(requireNotifyUrl());
 
         return request;
     }
@@ -659,6 +687,8 @@ public class WechatPayServiceImpl implements IWechatPayService {
      */
     @Override
     public String handlePayCallback(String requestBody, Map<String, String> headers) {
+        boolean verifiedNotification = false;
+        String safeReference = "UNKNOWN";
         try {
             // 构造请求参数
             RequestParam requestParam = new RequestParam.Builder()
@@ -671,6 +701,10 @@ public class WechatPayServiceImpl implements IWechatPayService {
 
             // 解析支付通知（含官方验签）
             Transaction transaction = notificationParser.parse(requestParam, Transaction.class);
+            verifiedNotification = true;
+            safeReference = transaction.getOutTradeNo() != null
+                    && transaction.getOutTradeNo().matches("[A-Za-z0-9_-]{1,64}")
+                    ? transaction.getOutTradeNo() : "UNKNOWN";
 
             // 构造结果映射
             Map<String, String> resultMap = new HashMap<>();
@@ -685,20 +719,24 @@ public class WechatPayServiceImpl implements IWechatPayService {
             // 专属业务订单必须先路由；未知 CLM 一律 FAIL，绝不能掉进活动报名回调。
             String result;
             String otn = transaction.getOutTradeNo();
+            String route = "registration";
             IClubMembershipService clubMembershipService = clubMembershipServiceProvider == null
                     ? null : clubMembershipServiceProvider.getIfAvailable();
             if (otn != null && otn.startsWith("CLM")) {
+                route = "club-membership";
                 boolean paid = "SUCCESS".equals(resultMap.get("trade_state"));
                 Integer paidAmountFen = transaction.getAmount() == null ? null : transaction.getAmount().getTotal();
                 result = clubMembershipService != null && clubMembershipService.supportsOutTradeNo(otn)
                         && clubMembershipService.handlePaidInvoice(otn, paid, paidAmountFen,
                         transaction.getTransactionId()) ? "SUCCESS" : "FAIL";
             } else if (merchantCommerceService.supportsOutTradeNo(otn)) {
+                route = "merchant-commerce";
                 boolean paid = "SUCCESS".equalsIgnoreCase(resultMap.get("trade_state"));
                 Integer paidAmountFen = transaction.getAmount() == null ? null : transaction.getAmount().getTotal();
                 result = merchantCommerceService.handlePaidOrder(otn, paid, paidAmountFen,
                         transaction.getTransactionId()) ? "SUCCESS" : "FAIL";
             } else if (otn != null && otn.startsWith("DEP")) {
+                route = "coop-deposit";
                 boolean paid = "SUCCESS".equalsIgnoreCase(resultMap.get("trade_state"));
                 Long depositCents = transaction.getAmount() == null || transaction.getAmount().getTotal() == null
                         ? null : transaction.getAmount().getTotal().longValue();
@@ -715,8 +753,13 @@ public class WechatPayServiceImpl implements IWechatPayService {
             // [P0-资损] 按业务处理结果回 ACK:处理失败必须回 FAIL 触发微信重试,否则掉单
             // (原实现无论 result 如何都回 SUCCESS,业务失败后微信不再通知 → 用户付了钱但订单未处理)
             if (!"SUCCESS".equalsIgnoreCase(result)) {
-                logger.error("微信支付回调业务处理失败,回 FAIL 触发微信重试: out_trade_no={}, result={}",
-                        transaction.getOutTradeNo(), result);
+                String reference = otn != null && otn.matches("[A-Za-z0-9_-]{1,64}") ? otn : "UNKNOWN";
+                logger.error("Verified payment callback failed route={} order={}; returning FAIL", route, reference);
+                // Registration lookup reports its own missing-order event; do not emit the same failure twice.
+                if (!"registration".equals(route)) {
+                    alarmService.alarmThrottled("payment.callback." + route, "支付回调业务订单处理失败",
+                            "route=" + route + " order=" + reference + " result=FAIL");
+                }
                 return "{\"code\": \"FAIL\",\"message\": \"业务处理失败,请重试\"}";
             }
 
@@ -724,9 +767,16 @@ public class WechatPayServiceImpl implements IWechatPayService {
             return "{\"code\": \"SUCCESS\",\"message\": \"成功\"}";
         } catch (ValidationException e) {
             logger.error("微信支付回调签名验证失败", e);
+            // 未验签的请求体不可信：只发固定事件，不带任何请求内容；按事件限频防止伪造请求刷屏。
+            alarmService.alarmThrottled("payment.callback.signature", "支付回调验签失败",
+                    "type=" + e.getClass().getSimpleName() + " result=FAIL");
             return "{\"code\": \"FAIL\",\"message\": \"签名验证失败: " + e.getMessage() + "\"}";
         } catch (Exception e) {
             logger.error("微信支付回调处理异常", e);
+            if (verifiedNotification) {
+                alarmService.alarmThrottled("payment.callback.business_exception", "支付回调业务处理异常",
+                        "order=" + safeReference + " type=" + e.getClass().getSimpleName() + " result=FAIL");
+            }
             return "{\"code\": \"FAIL\",\"message\": \"处理异常: " + e.getMessage() + "\"}";
         }
     }
@@ -794,6 +844,8 @@ public class WechatPayServiceImpl implements IWechatPayService {
 
     @Override
     public String handleRefundCallback(String requestBody, Map<String, String> headers) {
+        boolean verifiedRefund = false;
+        String safeRefundReference = "UNKNOWN";
         try {
             RequestParam requestParam = new RequestParam.Builder()
                     .serialNumber(headers.get("wechatpay-serial"))
@@ -804,6 +856,9 @@ public class WechatPayServiceImpl implements IWechatPayService {
                     .build();
             // 解析退款结果通知(含官方验签),资源解密为 RefundNotification
             RefundNotification notif = notificationParser.parse(requestParam, RefundNotification.class);
+            verifiedRefund = true;
+            safeRefundReference = notif.getOutRefundNo() != null
+                    && notif.getOutRefundNo().matches("[A-Za-z0-9_-]{1,64}") ? notif.getOutRefundNo() : "UNKNOWN";
             Status st = notif.getRefundStatus();
             boolean ok = notif.getOutRefundNo() != null && notif.getOutRefundNo().startsWith("RDEP")
                     ? coopInviteService.handleDepositRefundResult(refundFacts(notif.getOutRefundNo(),
@@ -811,14 +866,22 @@ public class WechatPayServiceImpl implements IWechatPayService {
                     : refundBizService.handleRefundNotify(notif.getOutRefundNo(), st == null ? null : st.name());
             if (!ok) {
                 logger.error("微信退款回调业务处理失败,回 FAIL 触发重试: out_refund_no={}", notif.getOutRefundNo());
+                alarmService.alarmThrottled("refund.callback.failed", "退款回调业务处理失败",
+                        "refund=" + safeRefundReference + " result=FAIL");
                 return "{\"code\": \"FAIL\",\"message\": \"业务处理失败,请重试\"}";
             }
             return "{\"code\": \"SUCCESS\",\"message\": \"成功\"}";
         } catch (ValidationException e) {
             logger.error("微信退款回调签名验证失败", e);
+            alarmService.alarmThrottled("refund.callback.signature", "退款回调验签失败",
+                    "type=" + e.getClass().getSimpleName() + " result=FAIL");
             return "{\"code\": \"FAIL\",\"message\": \"签名验证失败: " + e.getMessage() + "\"}";
         } catch (Exception e) {
             logger.error("微信退款回调处理异常", e);
+            if (verifiedRefund) {
+                alarmService.alarmThrottled("refund.callback.exception", "退款回调业务处理异常",
+                        "refund=" + safeRefundReference + " type=" + e.getClass().getSimpleName() + " result=FAIL");
+            }
             return "{\"code\": \"FAIL\",\"message\": \"处理异常: " + e.getMessage() + "\"}";
         }
     }

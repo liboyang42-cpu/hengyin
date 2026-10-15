@@ -1,0 +1,375 @@
+package com.chengyinhub.framework.config;
+
+import java.time.Instant;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Collections;
+import com.chengyinhub.business.domain.UmsMember;
+import com.chengyinhub.business.mapper.AppMediaAssetMapper;
+import com.chengyinhub.business.service.impl.AppMediaAssetService;
+import com.chengyinhub.business.service.support.AppMediaReferenceGuard;
+import com.chengyinhub.common.annotation.Sensitive;
+import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.common.core.domain.BaseEntity;
+import com.chengyinhub.common.core.domain.entity.AppUser;
+import com.chengyinhub.common.core.domain.model.LoginAppUser;
+import com.chengyinhub.common.core.page.TableDataInfo;
+import com.chengyinhub.common.enums.DesensitizedType;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.http.converter.autoconfigure.HttpMessageConvertersAutoConfiguration;
+import org.springframework.boot.jackson.autoconfigure.JacksonAutoConfiguration;
+import org.springframework.boot.jackson2.autoconfigure.Jackson2AutoConfiguration;
+import org.springframework.boot.jackson2.autoconfigure.Jackson2ObjectMapperBuilderCustomizer;
+import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
+import org.springframework.boot.webmvc.autoconfigure.WebMvcAutoConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
+
+/** Real Boot MVC conversion with both Jackson families; no hand-built MVC mapper. */
+class Boot4JacksonMvcContractTest
+{
+    private static final String PREFERRED_MAPPER = "spring.http.converters.preferred-json-mapper";
+    private static final long LARGE_ID = 9007199254740993L;
+    private static final Instant CREATED = Instant.parse("2026-10-02T00:04:05Z");
+    private static final String APPROVED_URL = "https://signed.example.invalid/upload/0123456789abcdef0123456789abcdef.png?signature=approved";
+    private static final String AUTHOR_PREVIEW = "https://signed.example.invalid/upload/fedcba9876543210fedcba9876543210.png?signature=author11";
+    private static final String ORDINARY_URL = "https://navigation.example.invalid/normal";
+    private static final String ORDINARY_TEXT = "Keep media-asset:8 and https://unregistered.example.invalid/photo.png as text.";
+
+    private final WebApplicationContextRunner runner = new WebApplicationContextRunner()
+            .withInitializer(SupportedStackApplicationProperties::initialize)
+            .withConfiguration(AutoConfigurations.of(JacksonAutoConfiguration.class,
+                    Jackson2AutoConfiguration.class, HttpMessageConvertersAutoConfiguration.class,
+                    WebMvcAutoConfiguration.class))
+            .withUserConfiguration(ContractConfiguration.class);
+
+    @Test
+    void shippedPropertySelectsJackson2ForMvcWhileBothMapperFamiliesExist()
+    {
+        runner.run(context -> {
+            assertThat(context).hasNotFailed();
+            assertThat(context.getEnvironment().getPropertySources()
+                    .get(SupportedStackApplicationProperties.SOURCE_NAME).getProperty(PREFERRED_MAPPER))
+                    .isEqualTo("jackson2");
+            assertThat(context.getEnvironment().getProperty(PREFERRED_MAPPER)).isEqualTo("jackson2");
+            assertThat(context.getBeansOfType(ObjectMapper.class)).hasSize(1);
+            assertThat(context.getBeansOfType(tools.jackson.databind.ObjectMapper.class)).hasSize(1);
+
+            RequestMappingHandlerAdapter adapter = context.getBean(RequestMappingHandlerAdapter.class);
+            HttpMessageConverter<?> writer = adapter.getMessageConverters().stream()
+                    .filter(converter -> converter.canWrite(AjaxResult.class, MediaType.APPLICATION_JSON))
+                    .findFirst().orElseThrow();
+            assertThat(writer).isInstanceOf(MappingJackson2HttpMessageConverter.class);
+            assertThat(((MappingJackson2HttpMessageConverter) writer).getObjectMapper())
+                    .isSameAs(context.getBean(ObjectMapper.class));
+            assertThat(context.getBean(ObjectMapper.class).getSerializationConfig().getTimeZone().getID())
+                    .isEqualTo("Asia/Shanghai");
+
+            HttpMessageConverter<?> reader = adapter.getMessageConverters().stream()
+                    .filter(converter -> converter.canRead(ContractPayload.class, MediaType.APPLICATION_JSON))
+                    .findFirst().orElseThrow();
+            assertThat(reader).isInstanceOf(MappingJackson2HttpMessageConverter.class);
+        });
+    }
+
+    @Test
+    void overridingThePreferenceReallyChangesTheMvcConverter()
+    {
+        runner.withPropertyValues(PREFERRED_MAPPER + "=jackson").run(context -> {
+            assertThat(context).hasNotFailed();
+            HttpMessageConverter<?> writer = context.getBean(RequestMappingHandlerAdapter.class)
+                    .getMessageConverters().stream()
+                    .filter(converter -> converter.canWrite(AjaxResult.class, MediaType.APPLICATION_JSON))
+                    .findFirst().orElseThrow();
+            assertThat(writer).isInstanceOf(JacksonJsonHttpMessageConverter.class);
+        });
+    }
+
+    @Test
+    void mvcPreservesAjaxResultShanghaiDatesLongNumbersAndJackson2Serializer() throws Exception
+    {
+        runner.run(context -> {
+            assertThat(context).hasNotFailed();
+            MockMvc mvc = MockMvcBuilders.webAppContextSetup(context).build();
+            SecurityContextHolder.clearContext();
+            try
+            {
+                String body = mvc.perform(get("/supported-stack-contract"))
+                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+                JsonNode response = context.getBean(ObjectMapper.class).readTree(body);
+                assertThat(response.size()).isEqualTo(3);
+                assertThat(response.get("code").intValue()).isEqualTo(200);
+                assertThat(response.get("msg").textValue()).isEqualTo("操作成功");
+                JsonNode data = response.get("data");
+                assertThat(data.get("id").isIntegralNumber()).isTrue();
+                assertThat(data.get("id").longValue()).isEqualTo(LARGE_ID);
+                assertThat(data.get("createTime").textValue()).isEqualTo("2026-10-02 08:04:05");
+                assertThat(data.get("updateTime").textValue()).isEqualTo("2026-10-02 08:05:05");
+                assertThat(data.get("phone").textValue()).isEqualTo("138****1234");
+                assertThat(data.has("searchValue")).isFalse();
+                assertThat(data.has("params")).isFalse();
+                assertThat(response.has("success")).isFalse();
+                assertThat(response.has("warn")).isFalse();
+                assertThat(response.has("error")).isFalse();
+            }
+            finally
+            {
+                SecurityContextHolder.clearContext();
+            }
+        });
+    }
+
+    @Test
+    void mvcReadsLongAndAnnotatedDateUsingProductionTimezone()
+    {
+        runner.run(context -> {
+            assertThat(context).hasNotFailed();
+            MockMvc mvc = MockMvcBuilders.webAppContextSetup(context).build();
+            String body = mvc.perform(post("/supported-stack-contract")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"id\":9007199254740993,\"createTime\":\"2026-10-02 08:04:05\"}"))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+            JsonNode response = context.getBean(ObjectMapper.class).readTree(body);
+            assertThat(response.get("data").get("id").longValue()).isEqualTo(LARGE_ID);
+            assertThat(response.get("createdEpochMillis").longValue()).isEqualTo(CREATED.toEpochMilli());
+            assertThat(response.get("data").get("createTime").textValue()).isEqualTo("2026-10-02 08:04:05");
+        });
+    }
+
+    @Test
+    void emptyAjaxResultAndPaginationEnvelopeKeepTheirExistingShapes()
+    {
+        runner.run(context -> {
+            assertThat(context).hasNotFailed();
+            MockMvc mvc = MockMvcBuilders.webAppContextSetup(context).build();
+            ObjectMapper mapper = context.getBean(ObjectMapper.class);
+            JsonNode empty = mapper.readTree(mvc.perform(get("/supported-stack-contract/empty"))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+            assertThat(empty.size()).isEqualTo(2);
+            assertThat(empty.get("code").intValue()).isEqualTo(200);
+            assertThat(empty.get("msg").textValue()).isEqualTo("操作成功");
+            assertThat(empty.has("data")).isFalse();
+
+            JsonNode page = mapper.readTree(mvc.perform(get("/supported-stack-contract/page"))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+            assertThat(page.size()).isEqualTo(4);
+            assertThat(page.get("total").isIntegralNumber()).isTrue();
+            assertThat(page.get("total").longValue()).isEqualTo(LARGE_ID);
+            assertThat(page.get("rows").isArray()).isTrue();
+            assertThat(page.get("rows").get(0).longValue()).isEqualTo(LARGE_ID);
+            assertThat(page.get("code").intValue()).isEqualTo(200);
+            assertThat(page.get("msg").textValue()).isEqualTo("查询成功");
+        });
+    }
+
+    @Test
+    void mvcMediaOutputUsesProductionCustomizerAndScopesPrivatePreviewToAuthor()
+    {
+        runner.run(context -> {
+            assertThat(context).hasNotFailed();
+            HttpMessageConverter<?> writer = context.getBean(RequestMappingHandlerAdapter.class)
+                    .getMessageConverters().stream()
+                    .filter(converter -> converter.canWrite(AjaxResult.class, MediaType.APPLICATION_JSON))
+                    .findFirst().orElseThrow();
+            assertThat(writer).isInstanceOf(MappingJackson2HttpMessageConverter.class);
+            assertThat(((MappingJackson2HttpMessageConverter) writer).getObjectMapper())
+                    .isSameAs(context.getBean(ObjectMapper.class));
+            assertThat(context.getBean(AppMediaOutputConfiguration.class)).isNotNull();
+            MockMvc mvc = MockMvcBuilders.webAppContextSetup(context).build();
+            ObjectMapper mapper = context.getBean(ObjectMapper.class);
+            try
+            {
+                // Fixture principals exercise serialization scope, not production login acceptance.
+                // Separate MVC requests in one context also prove previews do not leak from its cache.
+                for (Long viewer : new Long[] { null, 11L, 22L, null })
+                {
+                    SecurityContextHolder.clearContext();
+                    if (viewer != null)
+                    {
+                        AppUser user = new AppUser();
+                        user.setUserId(viewer);
+                        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                                new LoginAppUser(viewer, user), null, Collections.emptyList()));
+                    }
+                    String body = mvc.perform(get("/supported-stack-contract/media"))
+                            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+                    JsonNode response = mapper.readTree(body);
+                    assertThat(response.path("code").intValue()).isEqualTo(200);
+                    JsonNode data = response.path("data");
+                    String held = Long.valueOf(11L).equals(viewer) ? AUTHOR_PREVIEW : "";
+                    assertThat(data.path("member").path("avatar").textValue()).isEqualTo(held);
+                    assertThat(data.path("cover").textValue()).isEqualTo(APPROVED_URL);
+                    assertThat(data.path("imageUrl").textValue()).isEmpty();
+                    assertThat(data.path("frames").get(0).textValue()).isEqualTo(APPROVED_URL);
+                    assertThat(data.path("frames").get(1).textValue()).isEqualTo(held);
+                    assertThat(data.path("tree").path("album").path("images").get(0).path("url").textValue()).isEqualTo(held);
+                    assertThat(data.path("tree").path("fbImgs").get(0).textValue()).isEqualTo(APPROVED_URL);
+                    JsonNode game = mapper.readTree(data.path("advancedConfigJson").textValue());
+                    assertThat(game.path("photoCheck").path("frameUrl").textValue()).isEmpty();
+                    assertThat(game.path("qa").path("options").get(0).path("fbImgs").get(0).textValue()).isEqualTo(held);
+                    assertThat(data.path("url").textValue()).isEqualTo(ORDINARY_URL);
+                    assertThat(data.path("description").textValue()).isEqualTo(ORDINARY_TEXT);
+                    if (!Long.valueOf(11L).equals(viewer)) assertThat(body).doesNotContain(AUTHOR_PREVIEW);
+                }
+                AppMediaAssetService assets = context.getBean(AppMediaAssetService.class);
+                verify(assets, times(4)).approvedUrl(7L);
+                verify(assets, times(1)).ownerPreview(8L, 11L);
+            }
+            finally
+            {
+                SecurityContextHolder.clearContext();
+            }
+        });
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    @Import(AppMediaOutputConfiguration.class)
+    static class ContractConfiguration
+    {
+        @Bean
+        Jackson2ObjectMapperBuilderCustomizer productionJacksonCustomizer()
+        {
+            // Exercise the production bean method without its unrelated global mapper scan.
+            return new ApplicationConfig().jacksonObjectMapperCustomization();
+        }
+
+        @Bean
+        ContractController contractController()
+        {
+            return new ContractController();
+        }
+
+        @Bean
+        AppMediaAssetMapper fixtureMediaMapper()
+        {
+            AppMediaAssetMapper mapper = mock(AppMediaAssetMapper.class);
+            when(mapper.select(7L)).thenReturn(Map.of("id", 7L, "memberId", 11L, "ownerType", "APP",
+                    "reviewState", "APPROVED", "objectKey", "upload/0123456789abcdef0123456789abcdef.png"));
+            when(mapper.select(8L)).thenReturn(Map.of("id", 8L, "memberId", 11L, "ownerType", "APP",
+                    "reviewState", "HOLD", "objectKey", "upload/fedcba9876543210fedcba9876543210.png"));
+            return mapper;
+        }
+
+        @Bean
+        AppMediaAssetService fixtureMediaAssets()
+        {
+            // Only registry readback and final storage signatures are fixtures; guard and MVC are real.
+            AppMediaAssetService assets = mock(AppMediaAssetService.class);
+            when(assets.approvedUrl(7L)).thenReturn(APPROVED_URL);
+            when(assets.ownerPreview(8L, 11L)).thenReturn(AUTHOR_PREVIEW);
+            return assets;
+        }
+
+        @Bean
+        AppMediaReferenceGuard fixtureMediaReferenceGuard()
+        {
+            return new AppMediaReferenceGuard();
+        }
+    }
+
+    @RestController
+    static class ContractController
+    {
+        @GetMapping("/supported-stack-contract")
+        AjaxResult read()
+        {
+            ContractPayload payload = new ContractPayload();
+            payload.setId(LARGE_ID);
+            payload.setCreateTime(Date.from(CREATED));
+            payload.setUpdateTime(Date.from(CREATED.plusSeconds(60)));
+            payload.setSearchValue("must-not-leak");
+            payload.setPhone("13812341234");
+            return AjaxResult.success(payload);
+        }
+
+        @PostMapping("/supported-stack-contract")
+        AjaxResult echo(@RequestBody ContractPayload payload)
+        {
+            return AjaxResult.success(payload).put("createdEpochMillis", payload.getCreateTime().getTime());
+        }
+
+        @GetMapping("/supported-stack-contract/empty")
+        AjaxResult empty()
+        {
+            return AjaxResult.success();
+        }
+
+        @GetMapping("/supported-stack-contract/page")
+        TableDataInfo page()
+        {
+            TableDataInfo page = new TableDataInfo(List.of(LARGE_ID), LARGE_ID);
+            page.setCode(200);
+            page.setMsg("查询成功");
+            return page;
+        }
+
+        @GetMapping("/supported-stack-contract/media")
+        AjaxResult media() throws Exception
+        {
+            UmsMember member = new UmsMember();
+            member.setAvatar("media-asset:8");
+            JsonNode tree = new ObjectMapper().readTree("{\"album\":{\"images\":[{\"url\":\"media-asset:8\"}]},\"fbImgs\":[\"media-asset:7\"]}");
+            String game = "{\"photoCheck\":{\"frameUrl\":\"https://unregistered.example.invalid/frame.png\"},"
+                    + "\"qa\":{\"options\":[{\"fbImgs\":[\"media-asset:8\"]}]}}";
+            return AjaxResult.success(Map.of("member", member, "cover", "media-asset:7",
+                    "imageUrl", "https://unregistered.example.invalid/photo.png",
+                    "frames", List.of("media-asset:7", "media-asset:8"), "tree", tree,
+                    "advancedConfigJson", game, "url", ORDINARY_URL, "description", ORDINARY_TEXT));
+        }
+    }
+
+    static class ContractPayload extends BaseEntity
+    {
+        private Long id;
+
+        @Sensitive(desensitizedType = DesensitizedType.PHONE)
+        private String phone;
+
+        public Long getId()
+        {
+            return id;
+        }
+
+        public void setId(Long id)
+        {
+            this.id = id;
+        }
+
+        public String getPhone()
+        {
+            return phone;
+        }
+
+        public void setPhone(String phone)
+        {
+            this.phone = phone;
+        }
+    }
+}

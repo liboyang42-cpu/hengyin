@@ -1,6 +1,58 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "20261012_member_password_width": [],
+    "20261013_drop_member_pii_backup_tables": [],
+    "20261012_roam_presence_revoke_intent": [
+      "20261012_roam_presence_privacy",
+      "compliance_consent_deregister_20260711",
+      "merchant_onsite_consent_scope_20260815"
+    ],
+    "20261012_roam_presence_revoke_job": [
+      "20261012_roam_presence_revoke_intent"
+    ],
+    "20261012_monitor_missing_jobs": [
+      "metrics_snapshot_20260728",
+      "audit_backlog_monitor_job",
+      "fund_withdraw_reconcile_job",
+      "settlement_reconciliation_job_20260710"
+    ],
+    "20261012_topic_like_unique": [],
+    "20261012_club_join_review": [
+      "club_join_policy_20260809",
+      "club_join_message_20260910"
+    ],
+    "20261012_merchant_commerce_reconcile_job": [
+      "commerce_order_fields_and_verification_review_20260805",
+      "20260821_commerce_order_idempotency"
+    ],
+    "20261012_exp_reward_reversal": [
+      "member_exp_earned_20261011",
+      "20260817_tandianri_r6_product_contracts",
+      "p3_phase_b_player_world_creator"
+    ],
+    "20261012_im_media_visibility": [
+      "im",
+      "im_send_idempotency_20260913",
+      "content_draft_im_poll_20260828",
+      "wx_content_callback_inbox_20260724"
+    ],
+    "20261012_legacy_game_v51_category_collation": [
+      "seed_merchant_game_v51_20260827"
+    ],
+    "20261009_merchant_game_a8_cdn_guard": [
+      "level_editor_fields",
+      "level_editor_story_photo_review"
+    ],
+    "20261012_roam_presence_privacy": [
+      "roam"
+    ],
+    "20261011_npc_voice_version": [
+      "npc_profile"
+    ],
+    "member_exp_earned_20261011": [
+      "p3_phase_b_player_world_creator"
+    ],
     "ordinary_chapter_offer_withdraw_20261003": [
       "perk_ledger_20260716"
     ],
@@ -537,6 +589,9 @@
       "seed_home_solo_activities_20260826"
     ],
     "fix_stale_demo_activity_end_date_20260826": [],
+    "20261007_legacy_game_v51_categories": [
+      "seed_merchant_game_v51_20260827"
+    ],
     "seed_merchant_game_v51_20260827": [
       "20260822_advanced_game_runtime",
       "seed_merchant_game_a8_20260823"
@@ -647,6 +702,67 @@
     ],
     "club_direct_merchant_receivable_20261004": [
       "perk_ledger_20260716"
+    ],
+    "community_legacy_route_snapshot_20261010": [
+      "community_post_platform_20260909",
+      "community_legacy_projection_delflag_20260919",
+      "roam_session_recovery_20260913"
+    ],
+    "20261012_missing_business_menu": [
+      "p2_4_admin_ia_menu",
+      "web_admin_nine_domains_20260719"
+    ],
+    "20261012_missing_role_permission_defaults": [
+      "rbac_role",
+      "m1_permission_full",
+      "p1_rbac_permission_defaults",
+      "city_merchant_node",
+      "r10_merchant_city_nodes_quota",
+      "20260808_player_withdrawable"
+    ],
+    "20261012_roam_location_retention": [
+      "roam"
+    ],
+    "20261012_roam_share_retention": [
+      "20260917_roam_share_snapshot",
+      "20261012_roam_location_retention"
+    ],
+    "20261012_roam_anonymous_shop_visitors": [
+      "roam_shop_visit_20260716",
+      "20261012_roam_claim_fingerprints"
+    ],
+    "20261012_roam_claim_fingerprints": [
+      "roam",
+      "roam_shop_visit_20260716",
+      "city_merchant_node",
+      "20261012_roam_location_retention",
+      "20261012_roam_share_retention"
+    ],
+    "20261012_app_media_asset": [],
+    "20261012_app_media_asset_namespaces": [
+      "20261012_app_media_asset"
+    ],
+    "20261012_media_review_menu": [
+      "20261012_missing_business_menu"
+    ],
+    "20261012_npc_chat_media_asset": [
+      "npc_chat_request_20260722",
+      "20261012_app_media_asset",
+      "20261012_app_media_asset_namespaces"
+    ],
+    "20261013_admin_role_page_grants": [
+      "web_admin_roles_20260719",
+      "20261012_missing_business_menu",
+      "20261012_media_review_menu",
+      "role2_analytics_perm_20260918"
+    ],
+    "20261013_monitor_remaining_jobs": [
+      "club_session_reconciliation_job_20260807",
+      "activity_designer_commission",
+      "coop_deadline_sysjob",
+      "c3_beforestart_job",
+      "sys_job_enable_paused_20260915",
+      "20261012_monitor_missing_jobs"
     ]
   }
 }

@@ -12,6 +12,8 @@ import org.apache.ibatis.annotations.Param;
  */
 public interface CmsTopicLikeMapper 
 {
+    int ensureOwnedLike(@Param("memberId") Long memberId, @Param("topicId") Long topicId);
+    int deleteOwnedLike(@Param("memberId") Long memberId, @Param("topicId") Long topicId);
 
     /**
      * 查询用户点赞数

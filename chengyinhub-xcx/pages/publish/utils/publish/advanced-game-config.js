@@ -375,6 +375,7 @@ function presentError(model) {
   if (PRESENT_VALUES.indexOf(configured) < 0) return '呈现方式只能是内嵌故事流或整屏';
   if (configured === 'inline') {
     for (const section of PRESENT_FULLSCREEN_ONLY) {
+      if (section === 'scan' && (require('./outcome-after.js').mains(model).length || model.branch?.enabled)) continue;
       if (model[section] && model[section].enabled) {
         return section + ' 只能整屏：' + PRESENT_LOCK_REASON + '；内嵌进故事流后判定不成立，请改成整屏';
       }
@@ -654,6 +655,7 @@ function normalizeEffects(effects) {
        等于替作者改了效果语义 —— 那比报一条错更糟(旧玩法段也有过这种教训)。 */
     const op = text(item && item.op) || 'INC';
     return {
+      ...item,
       var: text(item && item.var),
       op: op,
       value: op === 'ADD_TAG' ? text(item && item.value) : Number(item && item.value),
@@ -663,12 +665,13 @@ function normalizeEffects(effects) {
 
 /** 本模块的本地说人话版:文案与服务端 validateEffects 一一对齐。
     effects 可以整块不配(服务端 validateEffects 对 null 直接 return),所以缺省不算错。 */
-function effectError(effects, label) {
+function effectError(effects, label, model) {
   if (effects == null) return '';
   if (!Array.isArray(effects)) return label + '必须是数组';
   if (effects.length > MAX_EFFECTS) return label + '最多配置 ' + MAX_EFFECTS + ' 条';
   for (const item of effects) {
     const op = text(item && item.op);
+    if ((model.interactionRules?.resourceSlots || []).some(slot => slot.kind === 'VALUE' && slot.key === item?.var)) continue;
     if (op === 'ADD_TAG') {
       if (!EFFECT_TAG_PATTERN.test(text(item && item.value))) {
         return label + '的 tag 值必须以 tag. 开头，点号后小写字母开头';
@@ -744,10 +747,13 @@ function parse(raw) {
       if (!Array.isArray(value.check.failEffects)) value.check.failEffects = [];
     }
     if (Array.isArray(value.branch.steps)) {
+      const terminals = value.branch.steps.filter(step => step && step.terminal);
       value.branch.steps = value.branch.steps.map((step) => {
         const normalized = Object.assign({}, step);
         if (normalized.terminal) {
-          normalized.outcomeCode = normalized.outcomeCode || 'COMPLETED';
+          if (normalized.outcomeCode == null) {
+            normalized.outcomeCode = terminals.length === 1 ? 'COMPLETED' : normalized.id;
+          }
           normalized.outcomeLabel = normalized.outcomeLabel || normalized.title || '完成节点';
         }
         return normalized;
@@ -809,7 +815,7 @@ function normalize(model) {
     bt.xp = Number(bt.xp) || 0;
     dropIfBlank(bt, ['steps', 'hint']);
     bt.options = (Array.isArray(bt.options) ? bt.options : [])
-      .map(option => ({ key: text(option && option.key), label: text(option && option.label) }))
+      .map(option => ({ ...option, key: text(option && option.key), label: text(option && option.label) }))
       .filter(option => option.key || option.label);
   }
 
@@ -910,7 +916,7 @@ function normalize(model) {
     // 只能一颗或两颗:两颗只报点数和,拿和去索引六个面会越界,那是另一个玩法
     dr.diceCount = dr.diceCount === 2 ? 2 : 1;
     const faces = Array.isArray(dr.faces) ? dr.faces : [];
-    dr.faces = Array.from({ length: 6 }, (_, i) => text(faces[i]));
+    dr.faces = Array.from({ length: 6 }, (_, i) => faces[i] && typeof faces[i] === 'object' ? Object.assign({}, faces[i], { action: text(faces[i].action) }) : text(faces[i]));
     if (dr.mode === 'd20') {
       // 空值保留给校验，不把删空输入误当成作者选择了 0。
       dr.dc = text(dr.dc) === '' ? '' : Number(dr.dc);
@@ -999,6 +1005,7 @@ function normalize(model) {
     avatar.required = !!avatar.required;
     profile.questions = (Array.isArray(profile.questions) ? profile.questions : []).map((question) => {
       const row = {
+        ...question,
         key: text(question && question.key),
         label: text(question && question.label),
         kind: question && question.kind === 'pick' ? 'pick' : 'text',
@@ -1009,11 +1016,12 @@ function normalize(model) {
         return row;
       }
       row.options = (Array.isArray(question && question.options) ? question.options : []).map((option) => {
-        const item = { key: text(option && option.key), label: text(option && option.label) };
+        const item = { ...option, key: text(option && option.key), label: text(option && option.label) };
         const effects = normalizeEffects(option && option.effects);
         if (effects.length) item.effects = effects;
         return item;
       });
+      delete row.kaccha;
       const kaccha = question && question.kaccha;
       if (kaccha && kaccha.enabled) {
         row.override = { requires: [{ op: 'GTE', var: text(kaccha.var), value: Number(kaccha.gte) }], option: text(kaccha.option) };
@@ -1073,6 +1081,7 @@ function normalize(model) {
 
   if (out.album && out.album.enabled) {
     out.album.images = (Array.isArray(out.album.images) ? out.album.images : []).map(image => ({
+      ...image,
       url: text(image && image.url), line: text(image && image.line),
     }));
   }
@@ -1109,8 +1118,11 @@ function normalize(model) {
     qa.multi = !!qa.multi;
     qa.maxTries = num(qa.maxTries, 0);
     qa.xp = num(qa.xp, 0);
+    // 判断答案对错：缺省 = 开启（旧模板原样）；只有作者关掉时才写 false，不给旧配置补字段
+    if (qa.judge === false) qa.judge = false; else delete qa.judge;
     qa.options = (Array.isArray(qa.options) ? qa.options : []).map((item) => {
       const row = {
+        ...item,
         id: text(item && item.id),
         label: text(item && item.label),
         fb: text(item && item.fb),
@@ -1119,6 +1131,9 @@ function normalize(model) {
       // 选项效果(贴标签等)服务端早就认;以前这里重建选项时把它丢了,手机上一保存就没了(2026-09-24)
       const effects = normalizeEffects(item && item.effects);
       if (effects.length) row.effects = effects;
+      // 选中后的反馈图片（0 至 3 张）；没有就整键不送
+      const fbImgs = (Array.isArray(item && item.fbImgs) ? item.fbImgs : []).map(text).filter(Boolean);
+      if (fbImgs.length) row.fbImgs = fbImgs; else delete row.fbImgs;
       return row;
     });
   }
@@ -1148,12 +1163,13 @@ function normalize(model) {
     pp.maxTries = num(pp.maxTries, 0);
     pp.items = (Array.isArray(pp.items) ? pp.items : []).map((item) => {
       const row = {
+        ...item,
         id: text(item && item.id),
         name: text(item && item.name),
         correct: !!(item && item.correct),
       };
       const imageUrl = text(item && item.imageUrl);
-      if (imageUrl) row.imageUrl = imageUrl;   // 空串会被服务端判成"格式不对"而不是"没填"
+      if (imageUrl) row.imageUrl = imageUrl; else delete row.imageUrl;   // 空串会被服务端判成"格式不对"而不是"没填"
       return row;
     });
   }
@@ -1170,7 +1186,7 @@ function normalize(model) {
        填小了玩家点不中(手指比圈还大),填大了整张图都是答案,而这两种他都试不出来。
        服务端只收 0.03–0.15,这个值取中。 */
     ho.hotspots = (Array.isArray(ho.hotspots) ? ho.hotspots : []).map((spot) => {
-      const row = { id: text(spot && spot.id), label: text(spot && spot.label), r: HOTSPOT_RADIUS };
+      const row = { ...spot, id: text(spot && spot.id), label: text(spot && spot.label), r: HOTSPOT_RADIUS };
       ['x', 'y'].forEach((field) => {
         const parsed = Number(spot && spot[field]);
         if (Number.isFinite(parsed)) row[field] = parsed;
@@ -1188,7 +1204,7 @@ function normalize(model) {
     pd.xp = num(pd.xp, 0);
     dropIfBlank(pd, ['hint']);
     pd.options = (Array.isArray(pd.options) ? pd.options : [])
-      .map(option => ({ key: text(option && option.key), label: text(option && option.label) }))
+      .map(option => ({ ...option, key: text(option && option.key), label: text(option && option.label) }))
       .filter(option => option.key || option.label);
   }
 
@@ -1198,9 +1214,9 @@ function normalize(model) {
   // ===== 推理类三玩法 =====
   /** 「{id,label} 的列表」在三段里形状一样,只有 sort 多一个可选 img。 */
   const idLabelList = (list) => (Array.isArray(list) ? list : []).map((item) => {
-    const row = { id: text(item && item.id), label: text(item && item.label) };
+    const row = { ...item, id: text(item && item.id), label: text(item && item.label) };
     const img = text(item && item.img);
-    if (img) row.img = img;   // 空串会被服务端判成"格式不对"而不是"没填"
+    if (img) row.img = img; else delete row.img;   // 空串会被服务端判成"格式不对"而不是"没填"
     return row;
   });
 
@@ -1244,6 +1260,10 @@ function normalize(model) {
 /** 已清洗模型的校验。文案与服务端 AdvancedGameConfigValidator 对齐,让错误在本页就说清楚。 */
 function validateNormalized(model, opts) {
   if (!model || Number(model.schemaVersion) !== SCHEMA_VERSION) return '高级玩法配置版本不受支持';
+  const outcomeError = require('./outcome-after.js').validate(model);
+  if (outcomeError) return outcomeError;
+  const resourceError = require('./template-tools.js').effectSlotErrors(model)[0];
+  if (resourceError) return resourceError.error;
   // 呈现方式先于各段校验:它说的是「这个玩法长在哪」,是所有段共用的一条总开关
   const presentInvalid = presentError(model);
   if (presentInvalid) return presentInvalid;
@@ -1258,6 +1278,8 @@ function validateNormalized(model, opts) {
   if (model.timer.enabled) {
     const seconds = Number(model.timer.durationSeconds);
     if (!Number.isInteger(seconds) || seconds < 10 || seconds > 86400) return '计时时长须为 10 秒至 24 小时';
+    if (!['FAILED', 'COMPLETED'].includes(model.timer.timeoutResult)) return '请选择超时结果';
+    if (model.timer.timeoutResult === 'COMPLETED' && model.outcomeRules?.version !== 1) return '超时完成须先配置通过/没通过之后';
   }
   if (model.random.enabled) {
     const items = Array.isArray(model.random.items) ? model.random.items : [];
@@ -1280,8 +1302,8 @@ function validateNormalized(model, opts) {
     for (const step of steps) {
       if (!step.id || (!step.terminal && !(step.options || []).length)) return '分支剧情的非终点必须配置选项';
       if (step.terminal) {
-        if (!/^[A-Z][A-Z0-9_]{0,63}$/.test(String(step.outcomeCode || ''))) {
-          return '分支终点 outcomeCode 只能使用大写字母、数字和下划线';
+        if (!KEY_PATTERN.test(String(step.outcomeCode || ''))) {
+          return '分支终点 outcomeCode 只能使用1至64位字母、数字、下划线和短横线';
         }
         if (outcomeCodes.has(step.outcomeCode)) return '分支终点 outcomeCode 不能重复';
         outcomeCodes.add(step.outcomeCode);
@@ -1506,7 +1528,7 @@ function validateNormalized(model, opts) {
        读的人会以为它在守着什么。真正的防线是服务端 validator,它拿到的是原始 JSON。 */
     const faces = Array.isArray(dice.faces) ? dice.faces : [];
     for (let i = 0; i < 6; i++) {
-      const v = text(faces[i]);
+      const v = text(faces[i] && typeof faces[i] === 'object' ? faces[i].action : faces[i]);
       if (!v) return '掷骰子第 ' + (i + 1) + ' 面不能为空';
       if (v.length > 60) return '掷骰子第 ' + (i + 1) + ' 面不能超过 60 字';
     }
@@ -1682,16 +1704,20 @@ function validateNormalized(model, opts) {
         if (!label) return '问答选项文案不能为空';
         if (label.length > 32) return '问答选项文案不能超过 32 字';
         if (text(option && option.fb).length > 120) return '问答选项反馈不能超过 120 字';
+        const fbImgs = option && option.fbImgs;
+        if (fbImgs != null && !Array.isArray(fbImgs)) return '问答选项反馈图片格式不对';
+        if ((fbImgs || []).length > 3) return '每个选项最多 3 张反馈图片';
+        if ((fbImgs || []).some(url => !text(url))) return '问答选项反馈图片地址不能为空';
         if (option && option.correct) correct += 1;
-        const bonusError = effectError(option && option.effects, '问答选项的效果');
+        const bonusError = effectError(option && option.effects, '问答选项的效果', model);
         if (bonusError) return bonusError;
       }
-      /* 单选:正好一个(零个无解、多个等于随便点都对)。
-         多选(2026-09-16 multi):至少一个 —— 零个同样无解,多个是这个开关的本来意思。 */
-      if (!adopted) {
-        if (qa.multi) {
-          if (correct < 1) return '选项问答开了多选,至少要指定一个正确答案';
-        } else if (correct !== 1) return '选项问答必须指定且只指定一个正确答案';
+      /* 与服务端 AdvancedGameConfigValidator 同一合同:
+         单选正好一个;多选至少两个正确且至少一个错误(全对等于随便点都过)。
+         不判断对错时每个选项都有效,原有判断设置原样保留、不参与校验。 */
+      if (!adopted && qa.judge !== false) {
+        const qaError = qaAnswerError(qa);
+        if (qaError) return qaError;
       }
     }
     const maxTries = Number(qa.maxTries);
@@ -1837,7 +1863,7 @@ function validateNormalized(model, opts) {
         optionKeys.add(optionKey);
         if (!text(option && option.label)) return '建档选项文案不能为空';
         // 加成复用现成的 effects 形状(契约 §2.1):校验照 validateEffects,别自创一套
-        const bonusError = effectError(option && option.effects, '建档选项的加成');
+        const bonusError = effectError(option && option.effects, '建档选项的加成', model);
         if (bonusError) return bonusError;
       }
       const override = question.override;   // 编辑页的 kaccha 在 normalize 里已折成服务端形状
@@ -1890,8 +1916,8 @@ function validateNormalized(model, opts) {
     if (text(journeyCheck.skill).length > 200) return '检定技能名不能超过 200 字';
     if (text(journeyCheck.successText).length > 200) return '检定成功文案不能超过 200 字';
     if (text(journeyCheck.failText).length > 200) return '检定失败文案不能超过 200 字';
-    const checkEffectError = effectError(journeyCheck.successEffects, '检定通过效果')
-      || effectError(journeyCheck.failEffects, '检定失败效果');
+    const checkEffectError = effectError(journeyCheck.successEffects, '检定通过效果', model)
+      || effectError(journeyCheck.failEffects, '检定失败效果', model);
     if (checkEffectError) return checkEffectError;
   }
 
@@ -2009,6 +2035,19 @@ function validateNormalized(model, opts) {
 }
 
 /** opts.adoptedFromLibrary:采用公共库模板的场景,允许被服务端剥掉的秘密字段暂空(发布时服务端补回) */
+/** 选项问答「正确答案」与服务端一致的校验;只看判断开启时。返回中文错误或空串。 */
+function qaAnswerError(qa) {
+  if (!qa || qa.mode !== 'PICK' || qa.judge === false) return '';
+  const options = Array.isArray(qa.options) ? qa.options : [];
+  const correct = options.filter(option => option && option.correct).length;
+  if (qa.multi) {
+    if (correct < 2) return '多选问答至少要指定两个正确答案';
+    if (correct >= options.length) return '多选问答不能把全部选项都设为正确答案';
+    return '';
+  }
+  return correct === 1 ? '' : '选项问答必须指定且只指定一个正确答案';
+}
+
 function validate(model, opts) {
   if (!model || typeof model !== 'object') return '高级玩法配置版本不受支持';
   return validateNormalized(normalize(model), opts);
@@ -2022,6 +2061,16 @@ function serialize(model, opts) {
   // 否则本模块不认识的将来机制会被当成空配置,存成空串就地删掉。
   if (!enabledSections(normalized).length && !extraKeys(normalized).length) return '';
   return JSON.stringify(normalized);
+}
+
+// 编辑器展开缺省段供表单使用；存盘只写作者真正改过的键，保留服务端原有的稀疏配置。
+function serializeChanges(model, raw, opts) {
+  if (!raw) return serialize(model, opts);
+  const before = parse(raw).value;
+  if (JSON.stringify(before) === JSON.stringify(model)) return typeof raw === 'string' ? raw : JSON.stringify(raw);
+  const serialized = serialize(model, opts);
+  if (!serialized) return '';
+  return require('./preserve-json-edit.js')(raw, before, model, serialized);
 }
 
 function mergeTopicCompletion(raw, mode, requiredCount) {
@@ -2141,7 +2190,7 @@ function parseTopicCompletion(raw) {
 }
 
 module.exports = { SCHEMA_VERSION, CORE_SECTIONS, KIT_SECTIONS, PLAY_SECTIONS, INFERENCE_SECTIONS, SECTIONS,
-  defaultConfig, parse, validate, serialize, enabledSections, normalize,
+  defaultConfig, parse, validate, qaAnswerError, serialize, serializeChanges, enabledSections, normalize,
   mergeTopicCompletion, parseTopicCompletion,
   BINGO_CELLS, BINGO_DEFAULT_LABELS, BINGO_S_ORDER,
   PHOTO_CHECK_MODES, PHOTO_CARD_STYLES, PHOTO_CARD_FIELDS,

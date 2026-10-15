@@ -12,6 +12,9 @@ public interface IClubPostService
 {
     public ClubPost selectClubPostById(Long id);
 
+    /** 在调用方事务内锁定动态，写入前复核删除状态。 */
+    ClubPost selectClubPostByIdForUpdate(Long id);
+
     public List<ClubPost> selectClubPostList(ClubPost clubPost);
 
     public int insertClubPost(ClubPost clubPost);

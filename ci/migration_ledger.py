@@ -22,6 +22,8 @@ from sql_splitter import split_statements  # noqa: E402
 
 MANAGED_DIR = "chengyinhub-admin/sql"
 MIGRATION_PREFIX = "migration_"
+# Only these explicitly approved new registration repairs are deferred; historical phases remain immutable.
+POST_DEPLOY_MIGRATIONS = {"20261012_merchant_commerce_reconcile_job", "20261012_monitor_missing_jobs", "20261012_roam_presence_revoke_job"}
 BOOTSTRAP_SQL = {
     "sql/quartz.sql",
     "sql/ry_20250522.sql",
@@ -49,6 +51,8 @@ EXPLICIT_MANAGED_SQL = {
         "seed_refund_manual_menu_20260714",
 }
 EXPLICIT_AUXILIARY_SQL = {
+    # Only the reviewed synthetic schema for the disposable, network-isolated startup gate.
+    "ci/upgrade-startup/schema.sql": "TEST_FIXTURE",
     "chengyinhub-admin/sql/_四账映射与守恒规则_20260725.sql": "REFERENCE_ONLY",
     "chengyinhub-admin/sql/seed_official_content_template.sql": "REFERENCE_ONLY",
     "chengyinhub-admin/src/test/resources/it-schema/cms-topic-it-schema.sql": "TEST_FIXTURE",
@@ -76,6 +80,11 @@ EXPLICIT_AUXILIARY_SQL = {
     "chengyinhub-admin/src/test/resources/it-schema/journey-full-flow-it-schema.sql":
         "TEST_FIXTURE",
     "chengyinhub-admin/src/test/resources/it-schema/merchant-chapter-offer-it-schema.sql":
+        "TEST_FIXTURE",
+    "chengyinhub-admin/src/test/resources/it-schema/generic-route-runtime-it-schema.sql":
+        "TEST_FIXTURE",
+    # GameplayReskinMySqlIT独占库：复用真实票/场次DDL补商业策略依赖，不属于生产迁移。
+    "chengyinhub-admin/src/test/resources/it-schema/gameplay-reskin-commercial-it-schema.sql":
         "TEST_FIXTURE",
 }
 IGNORED_DIRS = {".git", "node_modules", "target"}
@@ -177,6 +186,9 @@ def audit_inventory(root):
                 "path": rel,
                 "sha256": _sha256(path),
             })
+            if rel == "chengyinhub-admin/sql/seed_preset_demo.sql":
+                # 保留历史路径/checksum，但演示数据不能进入新的生产执行计划。
+                migrations[-1]["executionScope"] = "TEST_FIXTURE"
             continue
 
         if is_migration_name:
@@ -221,6 +233,7 @@ def audit_inventory(root):
                 "migrationId": migration_id,
                 "path": rel,
                 "sha256": _sha256(path),
+                **({"executionPhase": "POST_DEPLOY"} if migration_id in POST_DEPLOY_MIGRATIONS else {}),
             })
             continue
 
@@ -673,12 +686,18 @@ def plan_release(manifest, history_rows, bootstrap=None, baseline_ids=None):
         row = by_history.get(migration_id)
         state = "PENDING"
         reason = "no history row"
-        if bootstrap_status == "RECONCILIATION_REQUIRED":
+        if migration["path"] == "chengyinhub-admin/sql/seed_preset_demo.sql" and not row:
+            state = "EXCLUDED_TEST_FIXTURE"
+            reason = "demo seed is retained for historical inventory only; never install in production"
+        elif bootstrap_status == "RECONCILIATION_REQUIRED":
             state = "BLOCKED_BOOTSTRAP"
             reason = "existing database has no observed reconciliation baseline"
         elif bootstrap_status == "RECONCILED" and migration_id in baseline_ids and not row:
             state = "BLOCKED_BOOTSTRAP"
             reason = "baseline migration lacks an observed reconciliation history row"
+        elif not row and migration_id in POST_DEPLOY_MIGRATIONS:
+            state = "DEFERRED_POST_DEPLOY"
+            reason = "register only after candidate jar SHA, task bean and health are independently verified"
         elif row:
             if row["path"] != migration["path"] or row["checksum"] != migration["sha256"]:
                 state = "BLOCKED_DRIFT"
@@ -742,6 +761,7 @@ def plan_release(manifest, history_rows, bootstrap=None, baseline_ids=None):
             "applied": counts["APPLIED"],
             "blocked": blocked,
             "executeCount": counts["PENDING"],
+            "deferredPostDeploy": counts["DEFERRED_POST_DEPLOY"],
         },
         "migrations": result,
     }

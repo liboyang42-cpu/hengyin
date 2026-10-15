@@ -11,8 +11,8 @@
   <cy-funds-stages class="section" wx:if="{{summary && summary.isOwner && (state === 'ready' || state === 'empty')}}" bind:stages="onStages" />
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
-  <cy-error wx:elif="{{state === 'network-error'}}" title="网络连接失败" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" />
-  <cy-error wx:elif="{{state === 'error'}}" title="结算数据暂不可用" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" />
+  <cy-error load-failure wx:elif="{{state === 'network-error'}}" title="网络连接失败" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" />
+  <cy-error load-failure wx:elif="{{state === 'error'}}" title="结算数据暂不可用" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" />
   <cy-empty wx:elif="{{state === 'empty'}}" kind="empty" title="还没有平台分润记录" />
 
   <block wx:elif="{{state === 'ready'}}">

@@ -7,7 +7,14 @@
 set -uo pipefail
 
 GATE=$(cd "$(dirname "$0")" && pwd)/ds-hardcode-gate.sh
-TMP=$(mktemp -d)
+TMP=$(mktemp -d "${TMPDIR:-/tmp}/cy-ds-selftest.XXXXXX") || { echo "[selftest] 创建临时目录失败" >&2; exit 1; }
+# 临时目录校验失败时不安装清理钩子，避免误删调用者工作区。
+[[ -n "$TMP" && -d "$TMP" && "$(basename "$TMP")" == cy-ds-selftest.* ]] || { echo "[selftest] 临时目录无效" >&2; exit 1; }
+TMP=$(cd "$TMP" && pwd -P) || exit 1
+REPO=$(git -C "$(dirname "$GATE")" rev-parse --show-toplevel) || exit 1
+REPO=$(cd "$REPO" && pwd -P) || exit 1
+case "$TMP/" in "$REPO/"*) echo "[selftest] 临时目录不能位于源码工作区" >&2; exit 1 ;; esac
+[[ ! -e "$TMP/.git" ]] || { echo "[selftest] 临时目录不能是已有仓库" >&2; exit 1; }
 trap 'rm -rf "$TMP"' EXIT
 
 mkdir -p "$TMP/chengyinhub-xcx/scripts" "$TMP/chengyinhub-xcx/style" "$TMP/chengyinhub-xcx/pages/publish/fabu"

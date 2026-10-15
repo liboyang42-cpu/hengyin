@@ -200,7 +200,7 @@ Page({
     this.setData({ loading: true, loadErrTitle: '', loadErrSub: '' });
     app.sendRequest({
       url: '/api/official/events/' + id, method: 'GET',
-      autoErrorToast: false,   // 落 wx:else 整页 = auto-back 半屏讲原因;保留旧详情的刷新失败在下面手动 toast
+      autoErrorToast: false,   // 落 wx:else 整页留白;保留旧详情的刷新失败同样不提示(F-R2U-01)
       success: (res) => {
         if (seq !== this._fetchSeq) return;
         if (!res || (res.code != 200 && res.code != '200') || !res.data) {
@@ -220,7 +220,6 @@ Page({
             });
           } else {
             this.data.loadErrActionType = 'retry';
-            if (this.data.e) toast(bizFailureMessage(res, '活动内容没加载成功'));
             this.setData({
               loadErrKind: 'data',
               loadErrTitle: '活动内容没加载成功',
@@ -237,7 +236,6 @@ Page({
       fail: () => {
         if (seq !== this._fetchSeq) return;
         this.data.loadErrActionType = 'retry';
-        if (this.data.e) toast('网络没连上');
         this.setData({
           loadErrKind: 'network',
           loadErrTitle: '网络没连上',

@@ -93,6 +93,11 @@ class TopicEditActivityShellTicketSyncChainTest {
                 mock(com.chengyinhub.business.service.IProductRoleService.class));
 
         topicService = new CmsTopicServiceImpl();
+
+        org.springframework.test.util.ReflectionTestUtils.setField(topicService, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(topicService, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(topicService, "quotaService", mock(IQuotaService.class));
         ReflectionTestUtils.setField(topicService, "settlementDebtLedger", mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
         when(topicMapper.updateCmsTopic(any())).thenReturn(1);
@@ -110,8 +115,12 @@ class TopicEditActivityShellTicketSyncChainTest {
         ReflectionTestUtils.setField(topicService, "auditTaskService", mock(IAuditTaskService.class));
         ReflectionTestUtils.setField(topicService, "topicCommercialReviewService",
                 mock(ITopicCommercialReviewService.class));
-        ReflectionTestUtils.setField(topicService, "commercialTopicPolicy",
-                mock(com.chengyinhub.business.service.support.CommercialTopicPolicy.class));
+        com.chengyinhub.business.service.support.CommercialTopicPolicy actualPolicy =
+                new com.chengyinhub.business.service.support.CommercialTopicPolicy(ticketMapper,
+                        (CmsTopicChapterMapper) ReflectionTestUtils.getField(topicService,"cmsTopicChapterMapper"),
+                        mock(com.chengyinhub.business.mapper.MerchantChapterOfferMapper.class),topicMapper);
+        ReflectionTestUtils.setField(topicService, "commercialTopicPolicy", actualPolicy);
+        ReflectionTestUtils.setField(ticketService, "commercialTopicPolicy", actualPolicy);
         ReflectionTestUtils.setField(topicService, "omsTicketService", ticketService);
 
         CmsRegistrationMapper registrationMapper = mock(CmsRegistrationMapper.class);
@@ -141,6 +150,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         when(activityMapper.selectCmsActivityList(any()))
                 .thenReturn(new ArrayList<>(Collections.singletonList(activity)));
         when(activityMapper.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
     }
 
     // ---------- P1 ----------
@@ -150,6 +160,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         Long topicTicketId = seedTopicTicket(TOPIC, LUNCH, PRICE, 30L);
         Long shellTicketId = seedShellTicket(topicTicketId, LUNCH, PRICE, 30L, 5L);
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
         topicService.updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 40)), ME, "me");
 
         OmsTicket shell = row(shellTicketId);
@@ -166,6 +177,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         Long topicTicketId = seedTopicTicket(TOPIC, LUNCH, PRICE, 30L);
         Long shellTicketId = seedShellTicket(topicTicketId, LUNCH, PRICE, 30L, 5L);
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
         topicService.updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 30)), ME, "me");
 
         assertEquals(2, ticketRows.size(), "未改票不得增删任何一行");
@@ -194,6 +206,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         Long topicTicketId = seedTopicTicket(TOPIC, LUNCH, PRICE, 30L);
         Long shellTicketId = seedShellTicket(topicTicketId, LUNCH, PRICE, 30L, 30L);
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
         topicService.updateTopicByOwner(dtoWithTickets(ticketRequest("探店日晚场", PRICE, 20)), ME, "me");
 
         assertNull(row(topicTicketId), "被移出编辑的主题票要真删掉");
@@ -205,6 +218,7 @@ class TopicEditActivityShellTicketSyncChainTest {
     void topicTicketIdentityIsNeverBorrowedFromAnotherTopic() {
         Long foreignTicketId = seedTopicTicket(OTHER_TOPIC, LUNCH, PRICE, 30L);
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
         topicService.updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 30)), ME, "me");
 
         OmsTicket foreign = row(foreignTicketId);
@@ -236,6 +250,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         Long firstShell = seedShellTicket(first, LUNCH, PRICE, 30L, 5L);
         Long secondShell = seedShellTicket(second, LUNCH, PRICE, 30L, 30L);
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
         topicService.updateTopicByOwner(
                 dtoWithTickets(ticketRequest(LUNCH, PRICE, 30), ticketRequest(LUNCH, PRICE, 30)), ME, "me");
 
@@ -307,6 +322,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         foreignShell.setDelFlag(0);
         ticketMapper.insertOmsTicket(foreignShell);
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
         topicService.updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 40)), ME, "me");
 
         assertEquals(Long.valueOf(30L), row(foreignShell.getId()).getTotalInventory(),
@@ -337,6 +353,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         assertEquals(Long.valueOf(25L), published.getRemainingInventory());
 
         // ② 写侧没被毒到:主题编辑仍然点得动
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
         topicService.updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 30)), ME, "me");
         assertEquals(topicTicketId, row(shellTicketId).getSourceTicketId());
     }
@@ -387,6 +404,7 @@ class TopicEditActivityShellTicketSyncChainTest {
             // no-op
         }
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
         topicService.updateTopicByOwner(classicDto(ticketRequest(LUNCH, PRICE, 30)), ME, "me");
 
         assertEquals(topicTicketId, row(selfHostClassicShellTicketId).getSourceTicketId(),

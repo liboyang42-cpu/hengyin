@@ -46,16 +46,28 @@ Component({
     goal: { type: Number, value: 30 },
     timed: { type: Boolean, value: false },
     seconds: { type: Number, value: 12 },
+    challenge: { type: Object, value: null },
+    sharedChallenge: { type: Boolean, value: false },
   },
   data: {
     hits: 0,
     running: false,
+    awaitingResult: false,
     ball: { x: 0, y: 0 },
     trail: [],
     flash: '',
     edges: EDGES,
   },
   observers: {
+    challenge: function (challenge) {
+      if (!challenge) return;
+      this.setData({ awaitingResult: false });
+      if (challenge.success === true) {
+        this._stop(); this._offTilt(); this.setData({ running: false });
+        const stage = this.selectComponent('#cy-play-stage');
+        if (stage) stage.win('挑战已完成');
+      }
+    },
     show: function (show) {
       this._stop();
       if (!show) { this._offTilt(); return; }
@@ -89,7 +101,7 @@ Component({
     },
 
     onStart() {
-      if (this.data.running) return;
+      if (this.data.running || this.data.awaitingResult || this.data.challenge && (this.data.challenge.success || this.data.challenge.disabledReason)) return;
       // 先把「现在这个握法」记成水平,再开局 —— 校准屏由 stage 出,量完它会回调 onRun
       this._zero = null;
       const stage = this.selectComponent('#cy-play-stage');
@@ -104,6 +116,7 @@ Component({
       this._vx = 0; this._vy = 0;   // 静止起步,倾斜了才动
       this._gx = 0; this._gy = 0;
       this._hits = 0;
+      this._submitted = false;
       this.setData({ hits: 0, running: true });
       /* 开表要报给服务端:成绩按服务器时间复核,不先开表提交会被判成「还没开始」。
          设备时钟玩家改得动,所以这一条不能省。 */
@@ -156,16 +169,22 @@ Component({
     },
 
     _finish(won) {
+      if (this._submitted) return;
+      this._submitted = true;
       this._stop(); this._offTilt();
-      this.setData({ running: false });
+      this.setData({ running: false, awaitingResult: !!this.data.challenge });
       const stage = this.selectComponent('#cy-play-stage');
-      if (stage) { if (won) stage.win('撞满了'); else stage.fail(true); }
+      if (stage) {
+        if (this.data.challenge) stage._stopAll(); // 本机目标和超时都不是团队成功事实。
+        else if (won) stage.win('撞满了'); else stage.fail(true);
+      }
       this.triggerEvent('submit', { hits: this._hits || 0, passed: !!won });
     },
+    onSubmitHits() { if (this.data.running && this.data.sharedChallenge) this._finish(false); },
 
     onVerdict(e) {
-      // 限时走到点由 stage 判负,这里只负责把传感器关掉
-      if (e.detail && e.detail.kind === 'fail') { this._stop(); this._offTilt(); this.setData({ running: false }); }
+      // 到点也提交本次部分撞击；去重和全队累计由服务端完成。
+      if (e.detail && e.detail.kind === 'fail') this._finish(false);
       this.triggerEvent('verdict', e.detail);
     },
     onClose() { this._stop(); this._offTilt(); this.triggerEvent('close'); },

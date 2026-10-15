@@ -44,6 +44,80 @@ class RepoFixture(unittest.TestCase):
 
 
 class ManifestContract(RepoFixture):
+    def test_generic_route_runtime_schema_is_explicit_test_fixture(self):
+        path = "chengyinhub-admin/src/test/resources/it-schema/generic-route-runtime-it-schema.sql"
+        self.write(path, "CREATE TABLE topic_route_session(id BIGINT);\n")
+        report = audit_inventory(self.tmp)
+        self.assertEqual([], report['problems'])
+        self.assertEqual([path], [item['path'] for item in report['auxiliarySql']])
+        self.assertEqual('TEST_FIXTURE', report['auxiliarySql'][0]['classification'])
+        self.assertEqual([], report['migrations'])
+
+    def test_gameplay_reskin_commercial_schema_is_only_the_reviewed_fixture(self):
+        path = "chengyinhub-admin/src/test/resources/it-schema/gameplay-reskin-commercial-it-schema.sql"
+        self.write(path, "CREATE TABLE oms_ticket(id BIGINT);\n")
+        report = audit_inventory(self.tmp)
+        self.assertEqual([], report['problems'])
+        self.assertEqual([path], [item['path'] for item in report['auxiliarySql']])
+        self.assertEqual('TEST_FIXTURE', report['auxiliarySql'][0]['classification'])
+        self.assertEqual([], report['migrations'])
+        unknown = "chengyinhub-admin/src/test/resources/it-schema/gameplay-reskin-unreviewed.sql"
+        self.write(unknown, "CREATE TABLE unknown_gameplay(id BIGINT);\n")
+        self.assertIn(("UNMANAGED_SQL_LOCATION", unknown),
+                      {(item['code'], item['path']) for item in audit_inventory(self.tmp)['problems']})
+
+    def test_prelaunch_forward_migrations_require_their_existing_chains(self):
+        declared = json.loads(
+            Path(__file__).with_name("migration-dependencies.json").read_text(encoding="utf-8")
+        )["dependencies"]
+        targets = {
+            "20261012_club_join_review": {"club_join_policy_20260809", "club_join_message_20260910"},
+            "20261012_topic_like_unique": set(),
+            "20261012_exp_reward_reversal": {
+                "member_exp_earned_20261011", "20260817_tandianri_r6_product_contracts",
+                "p3_phase_b_player_world_creator"
+            },
+            "20261012_roam_presence_privacy": {"roam"},
+            "20261012_roam_anonymous_shop_visitors": {
+                "roam_shop_visit_20260716", "20261012_roam_claim_fingerprints"
+            },
+            "20261012_im_media_visibility": {
+                "im", "im_send_idempotency_20260913",
+                "content_draft_im_poll_20260828", "wx_content_callback_inbox_20260724"
+            },
+        }
+        for migration_id, required in targets.items():
+            with self.subTest(migration=migration_id):
+                self.assertEqual(required, set(declared[migration_id]))
+        for migration_id in set(targets) | set().union(*targets.values()):
+            self.write("chengyinhub-admin/sql/migration_" + migration_id + ".sql")
+        dependencies = {name: declared[name] for name in targets}
+        manifest = build_manifest(self.tmp, TARGET, dependencies=dependencies)
+        ids = [item["migrationId"] for item in manifest["migrations"]]
+        for migration_id, required in targets.items():
+            for prerequisite in required:
+                self.assertLess(ids.index(prerequisite), ids.index(migration_id))
+        (self.tmp / "chengyinhub-admin/sql/migration_im.sql").unlink()
+        with self.assertRaises(LedgerError):
+            build_manifest(self.tmp, TARGET, dependencies=dependencies)
+
+    def test_legacy_game_category_repair_runs_after_its_seed(self):
+        repair = "20261007_legacy_game_v51_categories"
+        seed = "seed_merchant_game_v51_20260827"
+        seed_path = self.write("chengyinhub-admin/sql/migration_" + seed + ".sql")
+        self.write("chengyinhub-admin/sql/migration_" + repair + ".sql")
+        declared = json.loads(
+            Path(__file__).with_name("migration-dependencies.json").read_text(encoding="utf-8")
+        )["dependencies"]
+        dependencies = {repair: declared.get(repair, [])}
+        manifest = build_manifest(self.tmp, TARGET, dependencies=dependencies)
+        ids = [item["migrationId"] for item in manifest["migrations"]]
+        self.assertLess(ids.index(seed), ids.index(repair), "分类修复不能在种子插入前空跑")
+        self.assertEqual(manifest["migrations"][1]["dependsOn"], [seed])
+        seed_path.unlink()
+        with self.assertRaises(LedgerError):
+            build_manifest(self.tmp, TARGET, dependencies=dependencies)
+
     def test_manifest_is_deterministic_and_carries_order_dependencies_and_target(self):
         self.write("chengyinhub-admin/sql/migration_beta.sql")
         self.write("chengyinhub-admin/sql/migration_alpha.sql")
@@ -77,6 +151,23 @@ class ManifestContract(RepoFixture):
             codes,
         )
         self.assertIn(("INVALID_EXECUTABLE_PREFIX", "chengyinhub-admin/sql/manual_apply.sql"), codes)
+        with self.assertRaises(LedgerError):
+            build_manifest(self.tmp, TARGET)
+
+    def test_startup_schema_is_exactly_classified_and_unknown_sibling_still_fails(self):
+        fixture = "ci/upgrade-startup/schema.sql"
+        self.write(fixture, "CREATE TABLE sys_config (config_id BIGINT);\n")
+        manifest = build_manifest(self.tmp, TARGET)
+        self.assertEqual(manifest["migrations"], [])
+        self.assertEqual(
+            [(item["path"], item["classification"]) for item in manifest["inventory"]["auxiliarySql"]],
+            [(fixture, "TEST_FIXTURE")],
+        )
+        unknown = "ci/upgrade-startup/unreviewed.sql"
+        self.write(unknown)
+        report = audit_inventory(self.tmp)
+        self.assertIn(("UNMANAGED_SQL_LOCATION", unknown),
+                      {(item["code"], item["path"]) for item in report["problems"]})
         with self.assertRaises(LedgerError):
             build_manifest(self.tmp, TARGET)
 
@@ -555,6 +646,79 @@ class HistoryPlanning(RepoFixture):
                 if version is not None:
                     snapshot["schemaVersion"] = version
                 validate_history_snapshot_source(snapshot)
+
+    def test_retention_structure_repairs_are_pre_deploy_without_enabling_jobs(self):
+        ids = ["20261012_roam_location_retention", "20261012_roam_share_retention", "20261012_roam_claim_fingerprints",
+               "20261012_roam_anonymous_shop_visitors"]
+        for migration_id in ids:
+            self.write("chengyinhub-admin/sql/migration_" + migration_id + ".sql")
+        manifest = build_manifest(self.tmp, TARGET,
+                                  dependencies={"beta": ["alpha"], ids[0]: ["beta"], ids[1]: [ids[0]], ids[2]: [ids[1]], ids[3]: [ids[2]]})
+        for item in manifest["migrations"]:
+            self.assertNotIn("executionPhase", item)
+        plan = plan_release(manifest, [], bootstrap=self.fresh)
+        self.assertEqual(6, plan["summary"]["executeCount"])
+        self.assertEqual(0, plan["summary"]["deferredPostDeploy"])
+
+    def test_npc_moderated_audio_identity_is_pre_deploy_after_real_registry_schema(self):
+        ids = ["npc_chat_request_20260722", "20261012_app_media_asset",
+               "20261012_app_media_asset_namespaces", "20261012_npc_chat_media_asset"]
+        for migration_id in ids:
+            self.write("chengyinhub-admin/sql/migration_" + migration_id + ".sql")
+        dependencies = {"beta": ["alpha"], ids[2]: [ids[1]], ids[3]: ids[:3]}
+        manifest = build_manifest(self.tmp, TARGET, dependencies=dependencies)
+        plan = plan_release(manifest, [], bootstrap=self.fresh)
+        self.assertEqual(6, plan["summary"]["executeCount"])
+        self.assertEqual(0, plan["summary"]["deferredPostDeploy"])
+        npc = next(item for item in manifest["migrations"] if item["migrationId"] == ids[3])
+        self.assertNotIn("executionPhase", npc)
+        self.assertEqual(set(ids[:3]), set(npc["dependsOn"]))
+
+    def test_new_commerce_job_is_post_deploy_without_weakening_bootstrap_or_drift(self):
+        job_id = "20261012_merchant_commerce_reconcile_job"
+        self.write("chengyinhub-admin/sql/migration_" + job_id + ".sql")
+        manifest = build_manifest(self.tmp, TARGET, dependencies={"beta": ["alpha"], job_id: ["beta"]})
+        job = next(item for item in manifest["migrations"] if item["migrationId"] == job_id)
+        self.assertEqual(job["executionPhase"], "POST_DEPLOY")
+        self.assertNotIn("executionPhase", next(item for item in manifest["migrations"]
+                                                if item["migrationId"] == "alpha"))
+        plan = plan_release(manifest, [], bootstrap=self.fresh)
+        self.assertEqual(plan["summary"]["executeCount"], 2)
+        self.assertEqual(plan["summary"]["deferredPostDeploy"], 1)
+        self.assertEqual(next(item for item in plan["migrations"]
+                              if item["migrationId"] == job_id)["state"], "DEFERRED_POST_DEPLOY")
+        rows = [self.row(item) for item in manifest["migrations"]]
+        plan = plan_release(manifest, rows, bootstrap=self.reconciled, baseline_ids=set())
+        self.assertEqual(plan["summary"]["applied"], 3)
+        rows[-1]["checksum"] = "0" * 64
+        plan = plan_release(manifest, rows, bootstrap=self.reconciled, baseline_ids=set())
+        self.assertEqual(next(item for item in plan["migrations"]
+                              if item["migrationId"] == job_id)["state"], "BLOCKED_DRIFT")
+        plan = plan_release(manifest, [])
+        self.assertTrue(all(item["state"] == "BLOCKED_BOOTSTRAP" for item in plan["migrations"]))
+
+    def test_missing_monitor_registration_repair_is_deferred_without_rephasing_legacy_seed(self):
+        repair = "20261012_monitor_missing_jobs"
+        legacy = "audit_backlog_monitor_job"
+        self.write("chengyinhub-admin/sql/migration_" + repair + ".sql")
+        self.write("chengyinhub-admin/sql/migration_" + legacy + ".sql")
+        manifest = build_manifest(self.tmp, TARGET, dependencies={repair: [legacy]})
+        plan = plan_release(manifest, [], bootstrap=self.fresh)
+        states = {row["migrationId"]: row["state"] for row in plan["migrations"]}
+        self.assertEqual("DEFERRED_POST_DEPLOY", states[repair])
+        self.assertEqual("PENDING", states[legacy])
+        self.assertEqual(1, plan["summary"]["deferredPostDeploy"])
+        self.assertNotIn("executionPhase", next(row for row in manifest["migrations"] if row["migrationId"] == legacy))
+
+    def test_demo_seed_is_inventory_only_and_never_a_pending_release_write(self):
+        self.write("chengyinhub-admin/sql/seed_preset_demo.sql")
+        manifest = build_manifest(self.tmp, TARGET, dependencies={"beta": ["alpha"]})
+        demo = next(item for item in manifest["migrations"] if item["migrationId"] == "seed_preset_demo")
+        self.assertEqual(demo["executionScope"], "TEST_FIXTURE")
+        plan = plan_release(manifest, [], bootstrap=self.fresh)
+        self.assertEqual(plan["summary"]["executeCount"], 2)
+        self.assertEqual(next(item for item in plan["migrations"]
+                              if item["migrationId"] == "seed_preset_demo")["state"], "EXCLUDED_TEST_FIXTURE")
 
     def test_reviewed_legacy_managed_path_is_valid_history_metadata(self):
         self.write("chengyinhub-admin/sql/seed_preset_demo.sql")

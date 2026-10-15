@@ -1,6 +1,6 @@
 {
   "navigationStyle": "custom",
-  "usingComponents": {
+  "usingComponents": {"cy-inline-error": "/components/cy/inline-error/index",
     "cy-club-director-broadcast-sheet": "/pages/club/components/club-director-broadcast-sheet/index",
     "cy-club-director-chapter-sheet": "/pages/club/components/club-director-chapter-sheet/index",
     "cy-club-director-end-confirm": "/pages/club/components/club-director-end-confirm/index",

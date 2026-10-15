@@ -138,6 +138,8 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {
         view.put("allowedActions", arrived && !locked
                 ? allowedActions(liveConfig, journey, state, topicCheckEnabled(run, topicId)) : Collections.emptyList());
         view.put("check", check(journey, state));
+        if(themeNodeConfig!=null && themeNodeConfig.path("outcomeRules").path("version").asInt()==1)
+            view.put("config",Collections.singletonMap("outcomeRulesVersion",1));
         view.put("outcomeContract", outcomeContract(journey, liveConfig, run, node.getId(), arrived));
         view.put("fallbackPlan", fallbackPlan());
         view.put("preload", preload(template, node, presentation));

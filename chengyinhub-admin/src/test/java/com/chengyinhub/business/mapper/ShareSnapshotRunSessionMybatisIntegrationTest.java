@@ -10,9 +10,11 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -46,7 +48,14 @@ class ShareSnapshotRunSessionMybatisIntegrationTest {
         DriverManagerDataSource source = new DriverManagerDataSource(
                 config.databaseUrl().replace("/" + config.databaseName() + "?", "/" + database + "?"), config.user(), config.password());
         db = new JdbcTemplate(source);
+        String roam = migration("migration_roam.sql");
+        java.util.regex.Matcher sessionDdl = java.util.regex.Pattern.compile(
+                "CREATE TABLE IF NOT EXISTS roam_session\\s*\\([\\s\\S]*?\\) ENGINE=InnoDB[^;]*;").matcher(roam);
+        assertTrue(sessionDdl.find(), "真实漫游迁移必须包含完整会话DDL");
+        db.execute(sessionDdl.group());
         db.execute(migration("migration_20260917_roam_share_snapshot.sql"));
+        new ResourceDatabasePopulator(new FileSystemResource(
+                "sql/migration_20261012_roam_share_retention.sql")).execute(source);
         db.execute(migration("migration_20260917_player_run_session.sql"));
         db.execute("CREATE TABLE cms_topic(id BIGINT PRIMARY KEY, name VARCHAR(100), img_url VARCHAR(255), del_flag INT)");
         db.execute("CREATE TABLE cms_activity(id BIGINT PRIMARY KEY, topic_id BIGINT, name VARCHAR(100), img_url VARCHAR(255),"
@@ -70,7 +79,7 @@ class ShareSnapshotRunSessionMybatisIntegrationTest {
     @AfterAll void cleanup() { if (database != null && admin != null) admin.execute("DROP DATABASE " + database); }
 
     @BeforeEach void reset() {
-        for (String table : new String[] {"roam_share_snapshot", "player_run_session", "cms_topic", "cms_activity", "cms_registration"}) {
+        for (String table : new String[] {"roam_share_snapshot", "roam_session", "player_run_session", "cms_topic", "cms_activity", "cms_registration"}) {
             db.execute("DELETE FROM " + table);
         }
     }
@@ -98,6 +107,24 @@ class ShareSnapshotRunSessionMybatisIntegrationTest {
         assertEquals(1, snapshots.deleteByMember(9L));
         assertNull(snapshots.selectSnapshotJsonByToken(T2), "作废后令牌读不到");
         assertNotNull(snapshots.selectSnapshotJsonByToken("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), "别人的快照不受影响");
+    }
+
+    @Test void boundSharesRequireRecentFinishedSessionOwnedByTheSameMember() {
+        db.update("INSERT INTO roam_session(id,member_id,status,finished_at) VALUES"
+                + "(1,9,1,NOW()),(2,9,1,DATE_SUB(NOW(),INTERVAL 31 DAY)),"
+                + "(3,8,1,NOW()),(4,9,0,NOW())");
+        for (long session : new long[]{1, 2, 3, 4}) {
+            String token = String.format("%032d", session);
+            snapshots.upsertOwnedSnapshot(token, 9L, session, session, "{\"session\":" + session + "}");
+        }
+        assertEquals("{\"session\":1}", snapshots.selectSnapshotJsonByToken(String.format("%032d", 1)));
+        for (long session : new long[]{2, 3, 4}) {
+            assertNull(snapshots.selectSnapshotJsonByToken(String.format("%032d", session)),
+                    "过期、非本人或未结束会话不得公开快照");
+        }
+        snapshots.upsertSnapshot(T1, 9L, 100L, "{}");
+        db.update("UPDATE roam_share_snapshot SET create_time=DATE_SUB(NOW(),INTERVAL 31 DAY) WHERE share_token=?", T1);
+        assertNull(snapshots.selectSnapshotJsonByToken(T1), "无可证会话的历史快照也受30天保留限制");
     }
 
     @Test void runSessionUpsertReadAndClearAreScoped() {

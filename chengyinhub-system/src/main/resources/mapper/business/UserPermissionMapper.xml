@@ -39,7 +39,6 @@
         select <include refid="permCols" />
         from user_permission
         where role = #{role} and membership_level is null
-        limit 1
     </select>
 
     <select id="selectAll" resultMap="UserPermissionResult">

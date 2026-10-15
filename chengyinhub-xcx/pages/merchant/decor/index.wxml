@@ -25,7 +25,7 @@
   </view>
 
   <view class="dc-state" wx:elif="{{loadState === 'error'}}">
-    <cy-error
+    <cy-error load-failure
       size="lg"
       style="display: flex; flex-direction: column; flex: 1; min-height: 0"
       icon="/images/no_data.svg"
@@ -352,7 +352,7 @@
           >
             <cy-cell arrow-icon="chevron-right" arrow="{{basicEditing}}" bubble-tap title="行业类型" value="{{catNames || '选择行业'}}"  required="{{false}}" />
             <view slot="panel" class="dc-menu">
-              <cy-inline-error kind="error" wx:if="{{categoryError}}" title="行业列表暂未加载" sub="{{categoryError}}" action="重试" bind:action="goCategory" />
+              <cy-inline-error load-failure kind="error" wx:if="{{categoryError}}" title="行业列表暂未加载" sub="{{categoryError}}" action="重试" bind:action="goCategory" />
               <view
                 class="dc-choice"
                 wx:for="{{categoryOptions}}"

@@ -1,0 +1,125 @@
+package com.chengyinhub.business.service.support;
+
+import com.chengyinhub.business.mapper.AppMediaAssetMapper;
+import com.chengyinhub.business.service.impl.AppMediaAssetService;
+import com.chengyinhub.common.exception.ServiceException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
+import java.util.Map;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+class AppMediaReferenceGuardTest {
+    private AppMediaReferenceGuard guard;
+    private AppMediaAssetMapper mapper;
+    private AppMediaAssetService assets;
+    private static final String KEY = "upload/0123456789abcdef0123456789abcdef.glb";
+    @BeforeEach void setup() {
+        guard = new AppMediaReferenceGuard(); mapper = mock(AppMediaAssetMapper.class); assets = mock(AppMediaAssetService.class);
+        ReflectionTestUtils.setField(guard, "mapper", mapper); ReflectionTestUtils.setField(guard, "assets", assets);
+        when(assets.approvedUrl(7L)).thenReturn("approved-storage-url");
+        when(assets.ownerPreview(7L, 11L)).thenReturn("owned-short-preview");
+    }
+    private void state(String state) {
+        Map<String,Object> row = Map.of("id",7L,"memberId",11L,"objectKey",KEY,"reviewState",state,"ownerType","APP");
+        when(mapper.select(7L)).thenReturn(row); when(mapper.selectByObjectKey(KEY)).thenReturn(row);
+    }
+    @Test void draftStoresCanonicalIdAndPublicAttachmentRequiresRealApprovedState() {
+        for (String state : new String[]{"HOLD","REJECTED","UNAVAILABLE"}) {
+            state(state);
+            assertEquals("media-asset:7", guard.requireAttachment(11L,"media-asset:7",false));
+            assertThrows(ServiceException.class, () -> guard.requireAttachment(11L,"media-asset:7",true));
+        }
+        state("APPROVED");assertEquals("media-asset:7",guard.requireAttachment(11L,"media-asset:7",true));
+    }
+    @Test void heldOrRejectedMediaIsAuthorOnlyAndNeverGetsPublicUrl() {
+        for(String state:new String[]{"HOLD","REJECTED","UNAVAILABLE"}) {
+            state(state);
+            assertEquals("",guard.visibleUrl("media-asset:7",null));
+            assertEquals("",guard.visibleUrl("media-asset:7",22L));
+            assertEquals("owned-short-preview",guard.visibleUrl("media-asset:7",11L));
+        }
+        verify(assets,never()).approvedUrl(anyLong());
+    }
+    @Test void approvedMediaResolvesRealStorageRatherThanReturningExternalReference() {
+        state("APPROVED");
+        assertEquals("approved-storage-url",guard.visibleUrl("https://foreign.invalid/"+KEY+"?Signature=untrusted",null));
+        assertEquals("media-asset:7",guard.requireAttachment(11L,"https://foreign.invalid/"+KEY,false));
+        assertEquals("media-asset:7",guard.requireAttachment(22L,"media-asset:7",false));
+    }
+    @Test void unknownLegacyTrustedDomainAndMalformedReferencesDoNotGainApproval() {
+        for(String ref:new String[]{"https://www.chengyinhub.com/prod-api/profile/legacy.png", "https://foreign.invalid/unreviewed.mp3", "media-asset:9999999999999999999", "https://host/upload/%2e%2e/foo.glb", "https://user@host/"+KEY,"https://host/"+KEY+"#other"}) {
+            assertEquals("",guard.visibleUrl(ref,11L));
+            assertThrows(ServiceException.class,()->guard.requireAttachment(11L,ref,false));
+        }
+        verifyNoInteractions(assets);
+    }
+    @Test void systemActorIdCannotBecomeAppPrivateAuthorButApprovedLocalMediaCanBeReused() {
+        String key="/profile/upload/2026/10/12/0123456789abcdef0123456789abcdef.png";
+        Map<String,Object> held=Map.of("id",7L,"memberId",11L,"objectKey",key,"reviewState","HOLD","ownerType","SYSTEM");
+        when(mapper.select(7L)).thenReturn(held);
+        assertEquals("",guard.visibleUrl("media-asset:7",11L));
+        assertThrows(ServiceException.class,()->guard.requireAttachment(11L,"media-asset:7",false));
+        Map<String,Object> approved=Map.of("id",7L,"memberId",11L,"objectKey",key,"reviewState","APPROVED","ownerType","SYSTEM");
+        when(mapper.selectByObjectKey(key)).thenReturn(approved);
+        assertEquals("approved-storage-url",guard.visibleUrl("https://foreign.invalid"+key,null));
+        assertEquals("media-asset:7",guard.requireAttachment(22L,"https://foreign.invalid"+key,true));
+    }
+
+    @Test void missingRegistryAndStorageFailureNeverFallBackToOriginalUrl() {
+        assertEquals("",guard.visibleUrl("media-asset:7",11L));
+        state("APPROVED"); when(assets.approvedUrl(7L)).thenThrow(new IllegalStateException("storage unavailable"));
+        assertThrows(IllegalStateException.class,()->guard.visibleUrl("media-asset:7",11L));
+    }
+    @Test void emptyOptionalFieldRemainsEmptyWithoutQueriesOrSigning() {
+        assertNull(guard.visibleUrl(null,null));assertEquals("",guard.requireAttachment(11L,"",true));
+        verifyNoInteractions(mapper,assets);
+    }
+    @Test void relativeLocalUploadRequiresRegistryAndRequestCacheKeepsAuthorSignaturesScoped() {
+        String local="/profile/upload/2026/10/12/0123456789abcdef0123456789abcdef.png";
+        when(mapper.selectByObjectKey(local)).thenReturn(Map.of("id",7L,"memberId",11L,"ownerType","SYSTEM","reviewState","APPROVED"));
+        assertEquals("approved-storage-url",guard.visibleUrl(local,null));
+        org.springframework.mock.web.MockHttpServletRequest request = new org.springframework.mock.web.MockHttpServletRequest();
+        org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(new org.springframework.web.context.request.ServletRequestAttributes(request));
+        try {
+            state("HOLD");
+            assertEquals("owned-short-preview", guard.visibleUrl("media-asset:7",11L));
+            assertEquals("owned-short-preview", guard.visibleUrl("owned-short-preview",11L));
+            verify(assets,times(1)).ownerPreview(7L,11L);
+            assertEquals("",guard.visibleUrl("owned-short-preview",22L));
+            org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(new org.springframework.web.context.request.ServletRequestAttributes(new org.springframework.mock.web.MockHttpServletRequest()));
+            assertEquals("",guard.visibleUrl("owned-short-preview",11L));
+        } finally { org.springframework.web.context.request.RequestContextHolder.resetRequestAttributes(); }
+    }
+    @Test void supplierUsesReviewedImmutableKeyWithShortSigningAndNeverRawInputHost() {
+        state("APPROVED");
+        try (org.mockito.MockedStatic<com.chengyinhub.common.utils.file.FileOssUploadUtils> signer = mockStatic(com.chengyinhub.common.utils.file.FileOssUploadUtils.class)) {
+            signer.when(() -> com.chengyinhub.common.utils.file.FileOssUploadUtils.generateShortLivedPresignedUrl(KEY,300)).thenReturn("https://real/short-signed");
+            assertEquals("https://real/short-signed",guard.processingUrl("https://foreign.invalid/"+KEY,11L));
+            signer.verify(() -> com.chengyinhub.common.utils.file.FileOssUploadUtils.generateShortLivedPresignedUrl(KEY,300));
+            state("HOLD");
+            assertThrows(ServiceException.class,()->guard.processingUrl("media-asset:7",11L));
+            assertThrows(ServiceException.class,()->guard.processingUrl("media-asset:7",null));
+        }
+    }
+    @Test void realLocalContextPathResolvesRegistryAndSupplierUsesActualDiskKey() {
+        String key="/profile/upload/2026/10/12/0123456789abcdef0123456789abcdef.png";
+        when(mapper.selectByObjectKey(key)).thenReturn(Map.of("id",7L,"memberId",11L,"ownerType","SYSTEM",
+                "reviewState","APPROVED","storageType","LOCAL","objectKey",key));
+        assertEquals("approved-storage-url",guard.visibleUrl("https://foreign.invalid/prod-api"+key,null));
+        assertEquals(key,guard.processingUrl("https://foreign.invalid/prod-api"+key,11L));
+    }
+    @Test void stockRhythmAudioIsVisibleButCannotBecomeAVoiceOrAiProcessingInputWithoutRegistry() {
+        for (String prefix : new String[]{"/audio/merchant-games/","/pages/play/audio/merchant-games/"}) {
+            for (String clip : new String[]{"one","two","three"}) {
+                String reference = prefix+"rhythm-"+clip+".mp3";
+                assertEquals(reference,guard.visibleUrl(reference,null));
+                assertThrows(ServiceException.class,()->guard.requireAttachment(11L,reference,true));
+                assertThrows(ServiceException.class,()->guard.processingUrl(reference,11L,"AUDIO"));
+            }
+        }
+        verifyNoInteractions(mapper,assets);
+    }
+
+}

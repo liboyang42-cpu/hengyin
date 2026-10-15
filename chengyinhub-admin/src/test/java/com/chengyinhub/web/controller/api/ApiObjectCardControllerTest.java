@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.chengyinhub.business.domain.PlayerObjectCard;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.business.service.ObjectCardService;
+import com.chengyinhub.business.service.support.AppMediaReferenceGuard;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -41,6 +42,7 @@ class ApiObjectCardControllerTest {
 
     private ObjectCardService objectCardService;
     private ApiObjectCardController controller;
+    private AppMediaReferenceGuard mediaReferences;
 
     @BeforeEach
     void setUp() {
@@ -52,6 +54,9 @@ class ApiObjectCardControllerTest {
             }
         };
         ReflectionTestUtils.setField(controller, "objectCardService", objectCardService);
+        mediaReferences = mock(AppMediaReferenceGuard.class);
+        ReflectionTestUtils.setField(controller, "mediaReferences", mediaReferences);
+        when(mediaReferences.visibleUrl(any(), eq(MEMBER_ID))).thenAnswer(call -> call.getArgument(0));
     }
 
     // ==================== list ====================
@@ -134,6 +139,31 @@ class ApiObjectCardControllerTest {
         assertTrue(json.contains("window.jpg"), json);
         assertFalse(json.contains("4242"), "memberId 不能出现在回包里:" + json);
         assertFalse(json.contains("memberId"), "同上:" + json);
+    }
+
+    @Test
+    void heldAiOutputIsResolvedForItsOwnerAndNeverReturnedAsAnAssetUrn() {
+        PlayerObjectCard card = card(11L, "已识别物品");
+        card.setCutoutUrl("media-asset:41");
+        when(objectCardService.list(eq(MEMBER_ID), isNull(), anyInt(), anyInt())).thenReturn(Collections.singletonList(card));
+        when(mediaReferences.visibleUrl("media-asset:41", MEMBER_ID)).thenReturn("https://private/cutout?expires=300");
+        String json = JSON.toJSONString(controller.list(1, 20, null));
+        assertTrue(json.contains("expires=300"));
+        assertFalse(json.contains("media-asset:"));
+        verify(mediaReferences).visibleUrl("media-asset:41", MEMBER_ID);
+    }
+
+    @Test
+    void unknownMediaDoesNotLeakThroughCardListOrRename() {
+        PlayerObjectCard card = card(11L, "旧图片");
+        card.setSourceUrl("https://unknown/image.jpg");
+        card.setCutoutUrl("https://unknown/cutout.png");
+        when(mediaReferences.visibleUrl("https://unknown/image.jpg", MEMBER_ID)).thenReturn("");
+        when(mediaReferences.visibleUrl("https://unknown/cutout.png", MEMBER_ID)).thenReturn("");
+        when(objectCardService.list(eq(MEMBER_ID), isNull(), anyInt(), anyInt())).thenReturn(Collections.singletonList(card));
+        when(objectCardService.rename(MEMBER_ID, 11L, "新名称")).thenReturn(card);
+        assertFalse(JSON.toJSONString(controller.list(1, 20, null)).contains("https://unknown"));
+        assertFalse(JSON.toJSONString(controller.rename(11L, "新名称")).contains("https://unknown"));
     }
 
     // ==================== rename ====================

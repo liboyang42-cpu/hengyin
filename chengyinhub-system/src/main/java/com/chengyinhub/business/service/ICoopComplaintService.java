@@ -20,6 +20,8 @@ public interface ICoopComplaintService {
 
     CoopComplaint getById(Long id);
 
+    List<com.chengyinhub.business.domain.vo.CoopComplaintProgressVO> listMine(Long memberId);
+
     /** 先行垫付:平台基础赔付给投诉玩家(→余额),status=ADVANCED。 */
     int advance(Long id, BigDecimal amount, Long handlerId);
 

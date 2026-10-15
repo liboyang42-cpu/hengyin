@@ -187,6 +187,10 @@ class FundIdempotencyConcurrencyTest {
                 .thenReturn(queryFailure);
 
         CashWithdrawServiceImpl service = new CashWithdrawServiceImpl();
+        org.springframework.transaction.PlatformTransactionManager transactions = mock(org.springframework.transaction.PlatformTransactionManager.class);
+        when(transactions.getTransaction(any())).thenReturn(mock(org.springframework.transaction.TransactionStatus.class));
+        ReflectionTestUtils.setField(service, "transactionManager", transactions);
+        when(mapper.updateStatusIfManual(any())).thenReturn(1);
         ReflectionTestUtils.setField(service, "mapper", mapper);
         ReflectionTestUtils.setField(service, "umsMemberService", memberService);
         ReflectionTestUtils.setField(service, "wechatPayService", wechatPayService);

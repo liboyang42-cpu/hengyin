@@ -39,7 +39,8 @@
           <text class="jc__mod-v">{{item.applied ? '生效 ' : '未生效 '}}{{item.value > 0 ? '+' : ''}}{{item.value}}</text>
         </view>
       </view>
-      <view class="jc__hint" wx:if="{{rerollVisible}}">还剩幸运，可以重掷一次</view>
+      <view class="jc__hint" wx:if="{{rerollVisible}}">{{receipt.r5 ? '剩余重掷次数：' + receipt.rerollRemaining : '还剩幸运，可以重掷一次'}}</view>
+      <view class="jc__hint" wx:if="{{receipt.pending}}">结算中，请在原任务确认结果</view>
     </block>
 
     <!-- 结算屏:这才是服务端给的文案 + 失败代价 + 生命/幸运读数 -->
@@ -56,9 +57,10 @@
   </view>
 
   <!-- 底部动作:题面一颗「掷骰」;结果屏「重掷 + 结算」;结算屏「继续」。失败也推进,没有锁死的态 -->
-  <view class="g-btn" wx:if="{{!receipt}}" bindtap="onRoll"
+  <view class="jc__hint" wx:if="{{r5 && disabledReason}}">{{disabledReason}}</view>
+  <view class="g-btn" wx:if="{{!receipt && (!r5 || rollVisible)}}" bindtap="onRoll"
         aria-role="button" aria-label="掷骰" hover-class="g-btn--press" hover-stay-time="80">掷骰</view>
-  <block wx:elif="{{!receipt.settled}}">
+  <block wx:elif="{{receipt && !receipt.settled && !receipt.pending && settleVisible}}">
     <view class="jc__act jc__act--ghost" wx:if="{{rerollVisible}}" bindtap="onReroll"
           aria-role="button" aria-label="花一点幸运重掷" hover-class="g-btn--press" hover-stay-time="80">重掷</view>
     <view class="g-btn jc__act-main {{loading ? 'g-btn--disabled' : ''}}" bindtap="onSettle"

@@ -2,7 +2,7 @@
      铺成三个组件的话,同一处改动要改三遍,而它们的差别只在中间那一块。
      ⚠️ 逐值照原型 playkit.html 的 .hdr / .qabody / .qaopt / .qaentry / .qafb。 -->
 <cy-play-stage id="cy-play-stage" skin="{{theme === 'light' ? 'qa' : 'qadark'}}" show="{{show}}" back-label="退出"
-               limit-seconds="{{limitSeconds}}" tries="{{triesCap}}"
+               limit-seconds="{{finished ? 0 : limitSeconds}}" tries="{{triesCap}}"
                bind:back="onClose" bind:run="onRun" bind:verdict="onVerdict" bind:burn="onBurn">
   <view class="g-col qa {{intro ? 'qa--intro' : ''}} {{burning ? 'qa--burning' : ''}} {{reducedMotion ? 'qa--reduced' : ''}}">
     <!-- 拍照那一档的大字默认回落成题干(见 advanced-game-preview 的 shotLead)。
@@ -36,7 +36,7 @@
         <view class="qa__opt {{item.state}} {{index === 0 ? 'qa__opt--first' : ''}}"
               wx:for="{{optionList}}" wx:key="k"
               data-i="{{index}}" bindtap="onPick"
-              aria-role="button" aria-label="选项 {{item.key}}:{{item.t}}"
+              aria-disabled="{{finished || passed || submitted}}" aria-role="button" aria-label="选项 {{item.key}}:{{item.t}}"
               hover-class="qa__press" hover-stay-time="80">
           <view class="qa__opt-main">
             <view class="qa__opt-k">{{item.key}}</view>
@@ -46,7 +46,8 @@
                  方框、选项 C 多一个播放角标,而玩家永远看不到。要做就连配置一起做。 -->
             <view class="qa__opt-t">{{item.t}}</view>
           </view>
-          <view class="qa__tail"></view>
+          <view class="qa__opt-t" wx:if="{{item.chosen}}">你的选择</view>
+          <view class="qa__opt-t" wx:if="{{item.answer}}">正确答案</view>
         </view>
       </view>
 
@@ -56,18 +57,16 @@
         <view class="qa__shot-note" wx:if="{{shotNote}}">{{shotNote}}</view>
       </block>
 
-      <!-- 反馈是一块实心的话,不是一行浮字:上面一行小字说这是什么,下面才是内容 -->
-      <view class="qa__fb qa__fb-enter" wx:if="{{feedback || (passed && !multi)}}">
-        <view class="qa__fb-h">{{fbHead}}</view>
-        {{feedback}}
-      </view>
-
-      <!-- 多选的服务端回执:整体对错 + 所选项的反馈(服务端没有逐项对错字段,
-           有也由这一块显示)。单选走上面那块,这里一个字段都不碰 —— 行为不变。 -->
-      <view class="qa__fb qa__fb-enter {{passed ? 'qa__fb--ok' : 'qa__fb--no'}}"
-            wx:if="{{multi && attempts > 0}}">
-        <view class="qa__fb-h">{{passed ? '答对了' : '再想想'}}</view>
-        {{feedbackText || (passed ? '' : '还不对,可以再选一次。')}}
+      <view class="qa__shot-note" wx:if="{{submitted && !finished && !passed}}" aria-live="polite">正在确认答案</view>
+      <view class="qa__fb qa__fb-enter {{multi ? (passed ? 'qa__fb--ok' : 'qa__fb--no') : ''}}"
+            wx:if="{{feedback || shownFeedbackImages.length || (judge !== false && !finished && (passed || (multi && attempts > 0)))}}">
+        <view class="qa__fb-h" wx:if="{{judge !== false && !finished}}">{{fbHead}}</view>
+        {{feedback || (judge !== false && multi && attempts > 0 && !finished && !passed ? '还不对,可以再选一次。' : '')}}
+        <view class="qa__media" wx:for="{{shownFeedbackImages}}" wx:key="*this"
+              data-i="{{index}}" bindtap="onPreviewFeedback" aria-role="button" aria-label="查看反馈图片"
+              hover-class="qa__press" hover-stay-time="80">
+          <image class="qa__img" src="{{item}}" mode="aspectFill" />
+        </view>
       </view>
     </view>
   </view>

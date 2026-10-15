@@ -75,6 +75,8 @@ class ClubCoopWindowAlignmentTest {
 
         Object windowPolicy = windowPolicy();
         inviteService = new CoopInviteServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(inviteService, "commercialReviewService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.ITopicCommercialReviewService.class));
         ReflectionTestUtils.setField(inviteService, "coopInviteMapper", inviteMapper);
         ReflectionTestUtils.setField(inviteService, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(inviteService, "clubMapper", clubMapper);

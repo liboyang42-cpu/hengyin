@@ -72,7 +72,8 @@ test('★藏品册页:用共用的物理与映射、分类交给服务端筛、�
 
 test('负控:首屏失败才整页报错,切分类失败只提示并退回原来那一类', () => {
   const js = strip(read('../../subpackageP3/pages/object-cards/index/index.js'))
-  const at = js.indexOf('_failed(previous) {')
+  const at = js.indexOf('_failed(previous, loadSeq) {')
+  assert.ok(at >= 0, '未找到当前 _failed(previous, loadSeq) 签名')
   const body = js.slice(at, js.indexOf('\n  },', at))
   assert.ok(/if \(!this\.data\.loaded\) \{ this\.setData\(\{ loading: false, error: true \}\); return; \}/.test(body), body)
   assert.ok(/filter: previous/.test(body), '切分类失败要退回原来那一类,不然药丸和堆对不上')

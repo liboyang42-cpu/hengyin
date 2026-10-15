@@ -39,7 +39,7 @@ import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import javax.servlet.Filter;
+import jakarta.servlet.Filter;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -208,6 +208,26 @@ class AppSessionSecurityChainTest {
         @Bean
         TokenService tokenService() {
             return mock(TokenService.class);
+        }
+
+        @Bean
+        com.chengyinhub.system.mapper.SysUserMapper sysUserMapper() {
+            return mock(com.chengyinhub.system.mapper.SysUserMapper.class);
+        }
+
+        @Bean
+        com.chengyinhub.framework.web.service.SysPermissionService sysPermissionService() {
+            return mock(com.chengyinhub.framework.web.service.SysPermissionService.class);
+        }
+
+        @Bean
+        com.chengyinhub.system.service.ISysRoleService sysRoleService() {
+            return mock(com.chengyinhub.system.service.ISysRoleService.class);
+        }
+
+        @Bean
+        com.chengyinhub.system.service.ISysMenuService sysMenuService() {
+            return mock(com.chengyinhub.system.service.ISysMenuService.class);
         }
 
         @Bean

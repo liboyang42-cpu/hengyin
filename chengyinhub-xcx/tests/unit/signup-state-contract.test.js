@@ -25,6 +25,8 @@ function loadPage(js = source()) {
     getPageSize: () => 10,
     getTotalPage: (total, size) => Math.ceil(Number(total || 0) / size),
     getRequestErrorMessage: (response, fallback) => (response && response.msg) || fallback,
+    // PR10 F-W1-12:本文件的失败用例都是「已登录账号读失败」;无会话时票夹改给登录引导(见 pr10-review-ui-fixes)。
+    getUserID: () => '1001',
     sendRequest(options) { sandbox.requests.push(options) },
   }
   const context = {
@@ -38,6 +40,8 @@ function loadPage(js = source()) {
     console,
     require(request) {
       if (request === '../../utils/play-engine.js') return require('../../utils/play-engine.js')
+      // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
+      if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
       throw new Error('unexpected require: ' + request)
     },
   }
@@ -194,6 +198,36 @@ test('一路空一路有票:合起来是 ready,有票的那些照常显示', () 
   assert.equal(page.data.ticketList[0].wTitle, '周末场次')
   assert.equal(page.data.ticketList[0].kind, 'activity', 'kind 决定点开跳哪,不能丢')
   assertWalletStatesAreExclusive(wxml())
+})
+
+test('一路空一路失败不能显示没有票，重试只补失败支线', () => {
+  for (const failedType of [1, 2]) {
+    const { page, sandbox } = loadPage()
+    page.onLoad({})
+    const failed = sandbox.requests.find(request => request.data.owner_type === failedType)
+    const empty = sandbox.requests.find(request => request.data.owner_type === 3 - failedType)
+    failed.fail({ errMsg: '请求超时' })
+    assert.equal(page.data.walletState, 'loading', '另一条尚未落定时仍等结果')
+    empty.success({ code: 200, data: { rows: [], total: 0 } })
+    assert.equal(page.data.walletState, 'error', '失败支线没有证明无票')
+    assert.equal(page.data.walletErrorMsg, '请求超时')
+    const count = sandbox.requests.length
+    page.retryWallet()
+    assert.equal(sandbox.requests.length, count + 1)
+    assert.equal(sandbox.requests[count].data.owner_type, failedType)
+    sandbox.requests[count].success({ code: 200, data: { rows: [], total: 0 } })
+    assert.equal(page.data.walletState, 'empty')
+    assert.equal(page.data.walletErrorMsg, '')
+  }
+})
+
+test('一路失败另一路有票仍显示有效票，不被整页错误遮住', () => {
+  const { page, sandbox } = loadPage()
+  page.onLoad({})
+  sandbox.requests.find(request => request.data.owner_type === 1).fail({ errMsg: '请求超时' })
+  sandbox.requests.find(request => request.data.owner_type === 2).success({ code: 200, data: { rows: [{ id: 22, cmsActivity: { name: '正常票' } }], total: 1 } })
+  assert.equal(page.data.walletState, 'ready')
+  assert.deepEqual(Array.from(page.data.ticketList, item => item.id), [22])
 })
 
 test('负控：把 empty 从 wx:elif 改成并列 wx:if 时，互斥契约必须判红', () => {

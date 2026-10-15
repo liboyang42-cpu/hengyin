@@ -23,6 +23,7 @@ function loadSearchResultPage() {
   let definition;
   global.getApp = () => ({
     globalData: {},
+    getUserID: () => 7,
     getImgUrl(value) { return value || ''; },
     sendRequest(options) { requests.push(options); },
   });
@@ -511,17 +512,13 @@ test('负控：把无轨迹条件反成有轨迹时，结算状态契约必须�
   assert.throws(() => assertRoamNoTrackState(mutated), /真实无轨迹结算/);
 });
 
-test('漫游据点失败只陈述据点未加载，不宣称系统离线', () => {
+test('漫游据点读失败留白，写结果未知仍提供真实核对入口', () => {
   const wxml = source('pages/roam/index.wxml');
   const js = source('pages/roam/index.js');
-  // 2026-09-16 C-14:横幅条件扩成 poiOffline || merchantOffline(商家图层失败也进同一条横幅);
-  // 文案与「不宣称系统离线」的口径不变。
-  const poiBanner = wxml.match(/<view class="maptip maptip--offline" wx:if="\{\{\(poiOffline \|\| merchantOffline\)[^>]*>[\s\S]*?<\/view>/);
-  assert.ok(poiBanner);
-  assert.match(poiBanner[0], /据点没加载出来/);
-  assert.doesNotMatch(poiBanner[0], /系统离线|当前离线|网络已断开/);
-  assert.match(js, /readerLabel:\s*'据点没加载出来。本地足迹仍保留，点击重试。'/);
-  // 两个图层各自的失败标记都要真的被写出来,横幅才不是空挂的
+  assert.doesNotMatch(wxml, /poiOffline \|\| merchantOffline/);
+  assert.doesNotMatch(wxml, /据点没加载出来|系统离线|当前离线|网络已断开/);
+  assert.match(wxml, /revealWriteUnknown \|\| recoveryError/);
+  assert.match(wxml, /bindtap="recoverRoam"[\s\S]*点击核对/);
   assert.match(js, /merchantOffline: true/);
-  assert.match(js, /poiOffline: true/);
+  assert.doesNotMatch(js, /poiOffline: true/);
 });

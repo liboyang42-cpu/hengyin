@@ -55,6 +55,9 @@ class NpcChatServiceTest {
     private static final Long USER_TWO = 2003L;
     private static final Long SESSION_ID = 99L;
 
+    private com.chengyinhub.business.mapper.MmsMerchantMapper audioMerchants;
+    private com.chengyinhub.business.service.ai.impl.OssCardCutoutStorage generatedAudio;
+    private AppMediaAssetService audioAssets;
     private NpcChatService service;
     private AiGatewayService aiGatewayService;
     private VoiceCloneClient voiceCloneClient;
@@ -91,7 +94,13 @@ class NpcChatServiceTest {
         globalProfile.setPersona("你是漫游向导。");
         when(npcProfileMapper.selectGlobalNpc()).thenReturn(globalProfile);
 
+        audioMerchants=mock(com.chengyinhub.business.mapper.MmsMerchantMapper.class);
+        generatedAudio=mock(com.chengyinhub.business.service.ai.impl.OssCardCutoutStorage.class);
+        audioAssets=mock(AppMediaAssetService.class);
         service = new NpcChatService();
+        ReflectionTestUtils.setField(service,"audioMerchantMapper",audioMerchants);
+        ReflectionTestUtils.setField(service,"generatedAudioStorage",generatedAudio);
+        ReflectionTestUtils.setField(service,"audioAssets",audioAssets);
         ReflectionTestUtils.setField(service, "aiGatewayService", aiGatewayService);
         ReflectionTestUtils.setField(service, "voiceCloneClient", voiceCloneClient);
         ReflectionTestUtils.setField(service, "npcProfileMapper", npcProfileMapper);
@@ -237,12 +246,12 @@ class NpcChatServiceTest {
     }
 
     @Test
-    void merchantChatReturnsSynthesizedAudioWhenVoiceIsReady() {
+    void merchantAudioRemainsPrivateUntilApprovalAndSameRequestReplaysWithoutSynthesis() {
         NpcProfile profile = new NpcProfile();
         profile.setId(8L);
         profile.setPersona("你是店主。");
         profile.setVoiceId("voice-ready");
-        profile.setVoiceStatus(2);
+        profile.setVoiceStatus(2);profile.setScopeType(2);profile.setScopeId(42L);
         when(npcProfileMapper.selectEnabledByScope(2, 42L)).thenReturn(Collections.singletonList(profile));
         when(merchantNpcFactsBuilder.build(profile, 42L)).thenReturn("【本店事实】\n店名:老周咖啡");
         when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString()))
@@ -250,12 +259,24 @@ class NpcChatServiceTest {
         when(voiceCloneClient.synthesize("voice-ready", "推荐手冲。"))
                 .thenReturn("https://cdn.example/reply.mp3");
 
+        com.chengyinhub.business.domain.MmsMerchant merchant=new com.chengyinhub.business.domain.MmsMerchant();merchant.setMemberId(99L);
+        when(audioMerchants.selectMmsMerchantById(42L)).thenReturn(merchant);
+        when(generatedAudio.stageGeneratedAudio(99L,"https://cdn.example/reply.mp3")).thenReturn(java.util.Map.of("assetId",12L,"reviewState","HOLD"));
+        when(npcChatRequestMapper.bindApprovedTextAudio(eq(USER_ONE),anyString(),eq(12L))).thenReturn(1);
+        when(audioAssets.approvedUrl(12L)).thenThrow(new com.chengyinhub.common.exception.ServiceException("pending"));
         NpcChatReq request = req("merchant-audio", "有什么推荐");
         request.setBizId(42L);
         NpcChatResp response = service.chatWithMerchant(request, USER_ONE, 42L);
 
         assertEquals("推荐手冲。", response.getSafeText());
-        assertEquals("https://cdn.example/reply.mp3", response.getAudioUrl());
+        assertNull(response.getAudioUrl());
+        verify(generatedAudio).stageGeneratedAudio(99L,"https://cdn.example/reply.mp3");
+        NpcChatRequest stored=new NpcChatRequest();stored.setUserId(USER_ONE);stored.setRequestId(request.getRequestId());
+        stored.setStatus("SUCCEEDED");stored.setSafetyDecision("PASS");stored.setSafeText("推荐手冲。");stored.setAudioAssetId(12L);
+        when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE,request.getRequestId())).thenReturn(stored);
+        doReturn("https://owned.example/approved.mp3").when(audioAssets).approvedUrl(12L);
+        assertEquals("https://owned.example/approved.mp3",service.chatWithMerchant(request,USER_ONE,42L).getAudioUrl());
+        verify(voiceCloneClient,times(1)).synthesize("voice-ready","推荐手冲。");
     }
 
     @Test
@@ -264,7 +285,7 @@ class NpcChatServiceTest {
         profile.setId(8L);
         profile.setPersona("你是店主。");
         profile.setVoiceId("voice-ready");
-        profile.setVoiceStatus(2);
+        profile.setVoiceStatus(2);profile.setScopeType(2);profile.setScopeId(42L);
         when(npcProfileMapper.selectEnabledByScope(2, 42L)).thenReturn(Collections.singletonList(profile));
         when(merchantNpcFactsBuilder.build(profile, 42L)).thenReturn("【本店事实】\n店名:老周咖啡");
         when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString()))
@@ -272,6 +293,8 @@ class NpcChatServiceTest {
         when(voiceCloneClient.synthesize("voice-ready", "推荐手冲。"))
                 .thenThrow(new IllegalStateException("tts unavailable"));
 
+        com.chengyinhub.business.domain.MmsMerchant merchant=new com.chengyinhub.business.domain.MmsMerchant();merchant.setMemberId(99L);
+        when(audioMerchants.selectMmsMerchantById(42L)).thenReturn(merchant);
         NpcChatReq request = req("merchant-audio-fallback", "有什么推荐");
         request.setBizId(42L);
         NpcChatResp response = service.chatWithMerchant(request, USER_ONE, 42L);

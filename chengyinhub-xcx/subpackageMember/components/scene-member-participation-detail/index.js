@@ -3,12 +3,15 @@ const cyLoading = require('../../../utils/loading.js');
 const cyToast = require('../../../utils/toast.js');
 const { toTimestamp, chinaDayStart } = require('../../../utils/datetime');
 const { resolveVerificationScan } = require('../../../utils/verification-scan');
+const { resolveVerificationResult } = require('../../../utils/merchant-verification.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { createWriteActionWorkflow } = require('../../../utils/write-action-workflow.js');
 const { offerVerificationReadback } = require('../../../utils/verification-readback.js');
 const { summarizeOrderState, canRequestOrderRefund } = require('../../../utils/order-status.js');
+const { isFreeOrder } = require('../../../utils/order-actual-pay.js');
 const cancellationFeedback = require('../../../utils/cancellation-feedback.js');
+const { isUnknownHttpStatus } = require('../../../utils/transport/failure-envelope.js');
 
 function nonNegativeNumberOrNull(value) {
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return null;
@@ -183,6 +186,8 @@ Component({
                 cyToast('该码含多个章节，请到商家后台核销');
                 return;
               }
+              const verdict = resolveVerificationResult(r, scan.successTitle || '核销');
+              if (verdict.state === 'duplicate') { cyToast(verdict.title + '：' + verdict.message, { icon: 'none' }); return; }
               if (r.code == '200') {
                 cyToast.success(r.msg || scan.successTitle);
               } else {
@@ -419,7 +424,8 @@ Component({
     cancelParticipation() {
       const paid = Number((this.data.info || {}).paymentStatus) === 2;
       modal.show({
-        dangerKey: paid ? 'order.cancel-refund' : 'order.cancel',
+        // F-W5-07:零元单没有钱可退,确认框与订单详情/列表同用「取消报名」文案。
+        dangerKey: paid ? (isFreeOrder(this.data.info) ? 'order.cancel-free' : 'order.cancel-refund') : 'order.cancel',
         dangerParams: {
           deadline: (this.data.info || {}).refundDeadlineDisplay || '已核销或已过开始时间不可退',
         },
@@ -452,8 +458,14 @@ Component({
             cyToast(res.msg || '取消失败', { duration: 2000 });
           }
         },
-        fail: function (res) {
+        fail: function (res, statusCode) {
           cyLoading.hide();
+          if (isUnknownHttpStatus(statusCode)) {
+            cyToast('取消结果暂未确认，正在刷新订单');
+            that.triggerEvent('refresh');
+            that.getData();
+            return;
+          }
           cyToast('网络错误，请重试', { duration: 2000 });
         }
       });

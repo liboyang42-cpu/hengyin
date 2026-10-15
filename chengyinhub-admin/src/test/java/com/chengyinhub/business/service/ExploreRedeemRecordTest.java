@@ -83,12 +83,16 @@ class ExploreRedeemRecordTest {
     @BeforeEach
     void setUp() {
         regMapper = mock(CmsRegistrationMapper.class);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenAnswer(invocation -> reg());
         activityMapper = mock(com.chengyinhub.business.mapper.CmsActivityMapper.class);
         com.chengyinhub.business.domain.CmsActivity activity = new com.chengyinhub.business.domain.CmsActivity();
         activity.setDelFlag(0);
+        activity.setId(800L);
+        activity.setTopicId(TOPIC);
         when(activityMapper.selectCmsActivityByIdForUpdate(800L)).thenReturn(activity);
         scanMapper = mock(CmsRegistrationScanMapper.class);
         perkSvc = mock(IPerkLedgerService.class);
+        when(perkSvc.findReplayableChapterRedemptionIdForUpdate(any(), any(), any(), any())).thenReturn(null);
         settlementSvc = mock(ISettlementEntryService.class);
         payableSvc = mock(IMerchantPayableService.class);
         completionAwardService = mock(ITopicCompletionAwardService.class);
@@ -131,6 +135,7 @@ class ExploreRedeemRecordTest {
         r.setOwnerType(2L);
         r.setOwnerId(800L);   // ③ 的 ownerId 是 activityId
         r.setPaymentStatus(2);
+        r.setRegistrationStatus(2);
         return r;
     }
 
@@ -371,4 +376,65 @@ class ExploreRedeemRecordTest {
         verify(scanMapper, never()).insertCmsRegistrationScan(any());
         verify(regMapper, never()).verifyIfNotVerified(anyLong(), anyLong());
     }
+    @Test
+    void activeSameChapterReplayReturnsOriginalReceiptWithoutAnyNewSideEffect() {
+        when(perkSvc.findReplayableChapterRedemptionIdForUpdate(REG, TOPIC, CH1, MERCHANT)).thenReturn(66L);
+        ExploreChapterRedemptionResult receipt = redeem();
+        assertEquals(66L, receipt.getRedemptionId());
+        org.junit.jupiter.api.Assertions.assertTrue(receipt.isReplayed());
+        assertEquals(0, receipt.getCompletionEarnedXp());
+        verify(perkSvc, never()).resolveRedeemableChapters(anyLong(), anyLong(), anyLong());
+        verify(perkSvc, never()).redeemChapter(anyLong(), anyLong(), anyLong(), anyLong());
+        verify(scanMapper, never()).insertCmsRegistrationScan(any());
+        verify(regMapper, never()).verifyIfNotVerified(anyLong(), anyLong());
+        verify(payableSvc, never()).accrueOnRedemption(anyLong());
+        verify(auditMapper, never()).insertBusinessAuditEvent(any());
+        verify(completionAwardService, never()).grantOnce(any(), any(), any(), any());
+    }
+
+    @Test
+    void activityThenRegistrationThenReplayReadUsesCurrentPaidTicketFacts() {
+        when(perkSvc.findReplayableChapterRedemptionIdForUpdate(REG, TOPIC, CH1, MERCHANT)).thenReturn(66L);
+        redeem();
+        org.mockito.InOrder order = org.mockito.Mockito.inOrder(activityMapper, regMapper, perkSvc);
+        order.verify(activityMapper).selectCmsActivityByIdForUpdate(800L);
+        order.verify(regMapper).selectCmsRegistrationByIdForUpdate(REG);
+        order.verify(regMapper).hasActiveManualRefundCaseForUpdate(REG);
+        order.verify(perkSvc).findReplayableChapterRedemptionIdForUpdate(REG, TOPIC, CH1, MERCHANT);
+    }
+
+    @Test
+    void refundedCancelledAndExpiredCurrentRowsCannotExposeOrReplayAnActiveReceipt() {
+        for (int payment : new int[]{0, 1, 3, 4, 5}) {
+            CmsRegistration current = reg();
+            current.setPaymentStatus(payment);
+            when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(current);
+            assertThrows(IllegalStateException.class, this::redeem);
+        }
+        for (int status : new int[]{1, 3, 4}) {
+            CmsRegistration current = reg();
+            current.setRegistrationStatus(status);
+            when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(current);
+            assertThrows(IllegalStateException.class, this::redeem);
+        }
+        verify(perkSvc, never()).findReplayableChapterRedemptionIdForUpdate(any(), any(), any(), any());
+        verify(perkSvc, never()).redeemChapter(anyLong(), anyLong(), anyLong(), anyLong());
+    }
+
+    @Test
+    void changedTicketOwnerOrRouteAndManualRefundRejectBeforeReplayLookup() {
+        CmsRegistration current = reg();
+        current.setOwnerId(801L);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(current);
+        assertThrows(IllegalStateException.class, this::redeem);
+        current = reg();
+        current.setMemberId(902L);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(current);
+        assertThrows(IllegalStateException.class, this::redeem);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenAnswer(invocation -> reg());
+        when(regMapper.hasActiveManualRefundCaseForUpdate(REG)).thenReturn(true);
+        assertThrows(IllegalStateException.class, this::redeem);
+        verify(perkSvc, never()).findReplayableChapterRedemptionIdForUpdate(any(), any(), any(), any());
+    }
+
 }

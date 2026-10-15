@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +35,8 @@ public class ApiComplianceController extends BaseController {
         Map<String, Set<String>> scenes = new HashMap<>();
         scenes.put("privacy_policy", setOf("app_launch", "roam_location"));
         scenes.put("user_service_agreement", setOf("app_launch"));
+        scenes.put("photo_model_processing", setOf("object_photo"));
+        scenes.put("voice_clone_processing", setOf("merchant_voice"));
         scenes.put("community_content_rules", setOf("publish"));
         scenes.put("refund_rules", setOf("payment"));
         scenes.put("merchant_host_rules", setOf("merchant_onboarding"));
@@ -52,6 +54,8 @@ public class ApiComplianceController extends BaseController {
 
     @Autowired
     private IConsentRecordService consentRecordService;
+    @Autowired
+    private com.chengyinhub.business.service.impl.RoamLocationConsentService roamLocationConsentService;
 
     @Autowired
     private ComplianceProperties complianceProperties;
@@ -86,16 +90,25 @@ public class ApiComplianceController extends BaseController {
                 if (!"MERCHANT".equals(scopeType) || scopeId == null) return error("授权商家范围不合法");
                 consentRecordService.record(memberId, docType, docVersion, scene, scopeType, scopeId,
                         eventType, requestId, IpUtils.getIpAddr(request));
-                ConsentRecord readback = consentRecordService.latest(memberId, docType, scene, scopeType, scopeId);
-                if (!matchesWrite(readback, docType, docVersion, scene, scopeType, scopeId, eventType)) {
+                ConsentRecord readback = consentRecordService.byRequestId(memberId, requestId);
+                if (!matchesWrite(readback, docType, docVersion, scene, scopeType, scopeId, eventType) || !requestId.equals(readback.getRequestId())) {
                     return error("授权状态回读失败");
                 }
                 return success(consentData(readback));
             }
             if (!StringUtils.isEmpty(scopeType) || scopeId != null) return error("授权范围不合法");
+            if ("privacy_policy".equals(docType) && "roam_location".equals(scene)) {
+                String expected = body.containsKey("expectedRequestId") ? value(body,"expectedRequestId") : null;
+                return success(consentData(roamLocationConsentService.record(memberId,eventType,requestId,expected,IpUtils.getIpAddr(request))));
+            }
             consentRecordService.record(memberId, docType, docVersion, scene, eventType, requestId,
                     IpUtils.getIpAddr(request));
-            return success();
+            ConsentRecord readback = consentRecordService.byRequestId(memberId, requestId);
+            if (!matchesWrite(readback, docType, docVersion, scene, null, null, eventType)
+                    || !requestId.equals(readback.getRequestId())) return error("授权状态回读失败");
+            return success(consentData(readback));
+        } catch (com.chengyinhub.business.service.impl.RoamLocationConsentService.ConsentChangedException e) {
+            return AjaxResult.error(409,e.getMessage());
         } catch (IllegalArgumentException e) {
             return error(e.getMessage());
         } catch (RuntimeException e) {
@@ -139,6 +152,7 @@ public class ApiComplianceController extends BaseController {
 
     private static Map<String, Object> consentData(ConsentRecord latest) {
         Map<String, Object> data = new HashMap<>();
+        data.put("requestId", latest.getRequestId());
         data.put("docType", latest.getDocType());
         data.put("docVersion", latest.getDocVersion());
         data.put("scene", latest.getScene());
@@ -152,8 +166,8 @@ public class ApiComplianceController extends BaseController {
     private static boolean matchesWrite(ConsentRecord record, String docType, String docVersion, String scene,
                                         String scopeType, Long scopeId, String eventType) {
         return record != null && docType.equals(record.getDocType()) && docVersion.equals(record.getDocVersion())
-                && scene.equals(record.getScene()) && scopeType.equals(record.getScopeType())
-                && scopeId.equals(record.getScopeId()) && eventType.equals(record.getEventType());
+                && scene.equals(record.getScene()) && java.util.Objects.equals(scopeType, record.getScopeType())
+                && java.util.Objects.equals(scopeId, record.getScopeId()) && eventType.equals(record.getEventType());
     }
 
     private static boolean isMerchantSharing(String docType) {

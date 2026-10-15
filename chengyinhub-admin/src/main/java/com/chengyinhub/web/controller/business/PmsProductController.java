@@ -1,7 +1,7 @@
 package com.chengyinhub.web.controller.business;
 
 import java.util.List;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import com.chengyinhub.business.domain.PmsSku;
 import com.chengyinhub.business.domain.dto.ProductPublishStatusDTO;

@@ -69,3 +69,18 @@ test('到店时间按主题取最近一场俱乐部场次;没俱乐部或没人�
   assert.equal(out[2].visitText, '', '没有俱乐部要来就不写')
   assert.equal(out[3].visitText, undefined, '主办卡不挂到店时间')
 })
+
+test('工作台的公共客户端调用仍仅 GET entries，不从纪元改动产生写请求', async () => {
+  const { createGameSessionClient } = require('../../utils/game-session-client.js')
+  const source = fs.readFileSync(JS_PATH, 'utf8')
+  const body = /\n  loadMerchantGameEntries\(\) \{([\s\S]*?)\n  \},/.exec(source)
+  assert.ok(body)
+  const calls = []
+  const client = createGameSessionClient({ sendRequest(options) { calls.push(options) } })
+  const page = { data: {}, _gameSummaryGeneration: 0, _gameSessionClient: client, setData(patch) { Object.assign(this.data, patch) }, refreshProjectCards() {} }
+  new Function('return function () {' + body[1] + '\n}')().call(page)
+  calls[0].success({ code: 200, data: [{ activityId: 71, topicId: 88, activityName: '测试场次', stationCount: 1 }] })
+  await new Promise(resolve => setImmediate(resolve))
+  assert.equal(page._merchantGameEntries[0].activityId, 71)
+  assert.deepEqual(calls.map(call => [call.method, call.url]), [['GET', '/api/game/session/merchant/entries']])
+})

@@ -1,6 +1,14 @@
 'use strict'
 
+const { pruneSessions, THIRTY_DAYS } = require('./roam-location-retention.js')
 const PREFIX = 'roam_memory_v1'
+const PLAYER_MEMORY_KINDS = ['tiles', 'reveals', 'recovery', 'sessions']
+
+function isPlayerMemoryKey(storageKey) {
+  const parts = typeof storageKey === 'string' ? storageKey.split(':') : []
+  return parts.length === 3 && parts[0] === PREFIX
+    && normalizePlayerId(parts[1]) !== '' && PLAYER_MEMORY_KINDS.indexOf(parts[2]) !== -1
+}
 
 function normalizePlayerId(playerId) {
   const value = String(playerId == null ? '' : playerId).trim()
@@ -51,22 +59,49 @@ function createPlayerRoamMemory(playerId, storage) {
       const tiles = state.tiles && typeof state.tiles === 'object' && !Array.isArray(state.tiles)
         ? state.tiles : {}
       const cursor = Number(state.serverCursor)
-      return { tiles, serverCursor: Number.isSafeInteger(cursor) && cursor > 0 ? cursor : 0 }
+      const recovery = read('recovery', null)
+      const active = recovery && !recovery.finishedAt && Array.isArray(recovery.allTiles) ? recovery.allTiles : []
+      const retained = {}
+      Object.keys(tiles).forEach(tile => {
+        const at = Number(state.retentionAt && state.retentionAt[tile])
+        if ((at > 0 && at > Date.now() - THIRTY_DAYS) || active.includes(tile)) retained[tile] = tiles[tile]
+      })
+      const keptAt = {}
+      Object.keys(retained).forEach(tile => { keptAt[tile] = state.retentionAt && state.retentionAt[tile] || 0 })
+      if (Object.keys(retained).length !== Object.keys(tiles).length && !write('tiles', { ...state, tiles: retained, retentionAt: keptAt }))
+        throw new Error('过期迷雾位置清理未能保存')
+      return { tiles: retained, serverCursor: Number.isSafeInteger(cursor) && cursor > 0 ? cursor : 0 }
     },
-    writeTiles(tiles, serverCursor) {
+    writeTiles(tiles, serverCursor, serverRetentionAt) {
       const values = tiles && typeof tiles === 'object' && !Array.isArray(tiles) ? tiles : {}
       const cursor = Number(serverCursor)
+      const previous = read('tiles', {})
+      const retentionAt = {}
+      Object.keys(values).forEach(tile => { if (previous.retentionAt && tile in previous.retentionAt) retentionAt[tile] = previous.retentionAt[tile] })
+      Object.keys(values).forEach(tile => {
+        if (serverRetentionAt && Number(serverRetentionAt[tile]) > 0) retentionAt[tile] = Number(serverRetentionAt[tile])
+        else if (!(tile in retentionAt)) retentionAt[tile] = previous.tiles && tile in previous.tiles ? 0 : Date.now()
+      })
       return write('tiles', {
         tiles: values,
+        retentionAt,
         serverCursor: Number.isSafeInteger(cursor) && cursor > 0 ? cursor : 0,
       })
     },
     readReveals() {
       const value = read('reveals', [])
-      return Array.isArray(value) ? value : []
+      if (!Array.isArray(value)) return []
+      const retained = value.filter(point => Number(point && point.retentionAt) > Date.now() - THIRTY_DAYS)
+      if (retained.length !== value.length && !write('reveals', retained)) throw new Error('过期定位点清理未能保存')
+      return retained.map(({ retentionAt, ...point }) => point)
     },
     writeReveals(value) {
-      return write('reveals', Array.isArray(value) ? value : [])
+      const previous = read('reveals', [])
+      const key = point => point && [point.lat, point.lng, point.r].join(':')
+      const known = new Map((Array.isArray(previous) ? previous : []).map(point => [key(point), point.retentionAt || 0]))
+      const points = (Array.isArray(value) ? value : []).map(point => ({ ...point,
+        retentionAt: known.has(key(point)) ? known.get(key(point)) : Date.now() }))
+      return write('reveals', points)
     },
     readRecoveryState() {
       const result = readResult('recovery')
@@ -88,7 +123,11 @@ function createPlayerRoamMemory(playerId, storage) {
       if (!result.ok) return { ok: false, sessions: [] }
       const value = result.value
       if (value == null || value === '') return { ok: true, sessions: [] }
-      return Array.isArray(value) ? { ok: true, sessions: value } : { ok: false, sessions: [] }
+      if (!Array.isArray(value)) return { ok: false, sessions: [] }
+      const sessions = pruneSessions(value, read('recovery', null))
+      if (JSON.stringify(sessions) !== JSON.stringify(value) && !write('sessions', sessions))
+        return { ok: false, sessions: [] }
+      return { ok: true, sessions }
     },
     writeSessions(value) {
       try {
@@ -126,4 +165,34 @@ function bindPlayerRoamMemory(holder, app, storage) {
   return holder._roamMemory
 }
 
-module.exports = { bindPlayerRoamMemory, createPlayerRoamMemory, currentPlayerRoamMemory }
+function clearStoragePreservingPlayerRoamMemory(storage) {
+  const target = storage || {}
+  if (typeof target.getStorageInfoSync !== 'function'
+    || typeof target.removeStorageSync !== 'function') return false
+  let keys
+  try {
+    const info = target.getStorageInfoSync()
+    if (!info || !Array.isArray(info.keys)) return false
+    keys = info.keys
+  } catch (_) {
+    return false
+  }
+
+  for (let index = 0; index < keys.length; index += 1) {
+    const storageKey = keys[index]
+    if (isPlayerMemoryKey(storageKey)) continue
+    try {
+      target.removeStorageSync(storageKey)
+    } catch (_) {
+      return false
+    }
+  }
+  return true
+}
+
+module.exports = {
+  bindPlayerRoamMemory,
+  clearStoragePreservingPlayerRoamMemory,
+  createPlayerRoamMemory,
+  currentPlayerRoamMemory,
+}

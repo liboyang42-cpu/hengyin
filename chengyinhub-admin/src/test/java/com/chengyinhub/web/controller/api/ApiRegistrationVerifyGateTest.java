@@ -12,10 +12,12 @@ import com.chengyinhub.business.domain.ClubMember;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.CmsRegistrationMerchant;
+import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CoopOrder;
 import com.chengyinhub.business.mapper.ClubMapper;
 import com.chengyinhub.business.mapper.ClubMemberMapper;
 import com.chengyinhub.business.mapper.CoopOrderMapper;
+import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.service.impl.ClubMemberServiceImpl;
 import com.chengyinhub.business.service.ICmsActivityService;
 import com.chengyinhub.business.service.ICmsRegistrationMerchantService;
@@ -35,6 +37,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -85,6 +88,7 @@ class ApiRegistrationVerifyGateTest {
     private CoopOrderMapper coopOrderMapper;
     private ClubMapper clubMapper;
     private ClubMemberMapper clubMemberMapper;
+    private CmsTopicMapper cmsTopicMapper;
     private IMerchantAccessService merchantAccessService;
     private ApiRegistrationController controller;
 
@@ -97,6 +101,7 @@ class ApiRegistrationVerifyGateTest {
         coopOrderMapper = mock(CoopOrderMapper.class);
         clubMapper = mock(ClubMapper.class);
         clubMemberMapper = mock(ClubMemberMapper.class);
+        cmsTopicMapper = mock(CmsTopicMapper.class);
         merchantAccessService = mock(IMerchantAccessService.class);
         growthSvc = mock(IGrowthService.class);
 
@@ -119,6 +124,12 @@ class ApiRegistrationVerifyGateTest {
         ReflectionTestUtils.setField(realClubMemberSvc, "coopOrderMapper", coopOrderMapper);
         ReflectionTestUtils.setField(realClubMemberSvc, "clubMapper", clubMapper);
         ReflectionTestUtils.setField(realClubMemberSvc, "clubMemberMapper", clubMemberMapper);
+        ReflectionTestUtils.setField(realClubMemberSvc, "cmsTopicMapper", cmsTopicMapper);
+        // 真实主理人判据先回读未删除主题；此套仍测试 club_id 为空的旧合作单路径。
+        CmsTopic existingTopic = new CmsTopic();
+        existingTopic.setId(TOPIC);
+        existingTopic.setDelFlag(0);
+        when(cmsTopicMapper.selectCmsTopicById(TOPIC)).thenReturn(existingTopic);
         IClubAccessService clubAccessService = mock(IClubAccessService.class);
         when(clubAccessService.resolve(anyLong(), anyLong(), eq(null))).thenAnswer(invocation -> {
             Long principal = invocation.getArgument(0);
@@ -564,6 +575,45 @@ class ApiRegistrationVerifyGateTest {
         verify(merchantAccessService, never()).require(anyLong(), any());
     }
 
+    @Test
+    void organizerLeader_missingTopicCannotSettleOrAward() {
+        givenNoWinnerRow();
+        givenOrganizerClub();
+        when(clubMapper.selectClubById(CLUB)).thenReturn(clubOwnedBy(MEMBER));
+        givenGroupActivity(CLUB);
+        when(cmsTopicMapper.selectCmsTopicById(TOPIC)).thenReturn(null);
+
+        AjaxResult result = controller.scanQrCode("topic", CODE, GROUP_ACTIVITY);
+
+        assertEquals("仅俱乐部主理人可核销玩家票", result.get("msg"));
+        verify(cmsTopicMapper).selectCmsTopicById(TOPIC);
+        verify(regSvc, never()).verifyAndSettleForGroupActivity(any(), anyLong(), anyLong());
+        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), any(), any());
+        verify(regSvc, never()).verifyAndSettleForOwnStation(any(), anyLong(), anyLong(), any());
+        verifyNoInteractions(pointsSvc, growthSvc);
+    }
+
+    @Test
+    void organizerLeader_deletedTopicCannotSettleOrAward() {
+        givenNoWinnerRow();
+        givenOrganizerClub();
+        when(clubMapper.selectClubById(CLUB)).thenReturn(clubOwnedBy(MEMBER));
+        givenGroupActivity(CLUB);
+        CmsTopic deletedTopic = new CmsTopic();
+        deletedTopic.setId(TOPIC);
+        deletedTopic.setDelFlag(1);
+        when(cmsTopicMapper.selectCmsTopicById(TOPIC)).thenReturn(deletedTopic);
+
+        AjaxResult result = controller.scanQrCode("topic", CODE, GROUP_ACTIVITY);
+
+        assertEquals("仅俱乐部主理人可核销玩家票", result.get("msg"));
+        verify(cmsTopicMapper).selectCmsTopicById(TOPIC);
+        verify(regSvc, never()).verifyAndSettleForGroupActivity(any(), anyLong(), anyLong());
+        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), any(), any());
+        verify(regSvc, never()).verifyAndSettleForOwnStation(any(), anyLong(), anyLong(), any());
+        verifyNoInteractions(pointsSvc, growthSvc);
+    }
+
     /**
      * 规则 1：同 topic 下 activity 是独立团。组织槽玩家票必须带场次，且走专用事务写入场次事实，
      * 不能再用普通 verifyAndSettle 仅留下「谁扫了」的模糊台账。
@@ -791,5 +841,58 @@ class ApiRegistrationVerifyGateTest {
         controller.scanQrCode("activity", CODE);
 
         verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+    }
+
+    /** F-R2F-01:俱乐部场次开场前 60 分钟之外不能整单核销(避免提前核销被算作已到场/已交付)。 */
+    @Test
+    void clubSessionScanBeforeWindow_rejectedWithoutSettlement() {
+        givenActivityRegistration();
+        CmsActivity club = new CmsActivity();
+        club.setId(ACTIVITY);
+        club.setMemberId(MEMBER);
+        club.setClubId(CLUB);
+        club.setStartDate(new java.util.Date(System.currentTimeMillis() + 2L * 24 * 3600 * 1000));
+        when(activitySvc.selectCmsActivityById(ACTIVITY)).thenReturn(club);
+
+        AjaxResult r = controller.scanQrCode("activity", CODE);
+
+        assertEquals("俱乐部场次开始前60分钟内才可核销", r.get("msg"));
+        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+    }
+
+    /** PR10 复审:时间窗在权限之后 —— 无权扫码方对提前的俱乐部场次拿到的是权限拒绝,不是开场时间提示。 */
+    @Test
+    void clubSessionScanByUnauthorizedMerchant_getsPermissionDenialBeforeTimingHint() {
+        givenActivityRegistration();
+        CmsActivity club = new CmsActivity();
+        club.setId(ACTIVITY);
+        club.setMemberId(OWNER);
+        club.setClubId(CLUB);
+        club.setStartDate(new java.util.Date(System.currentTimeMillis() + 2L * 24 * 3600 * 1000));
+        when(activitySvc.selectCmsActivityById(ACTIVITY)).thenReturn(club);
+
+        AjaxResult r = controller.scanQrCode("activity", CODE);
+
+        assertEquals("该店无权核销本场玩家票；俱乐部带队请扫描领队团码", r.get("msg"));
+        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any(), anyLong(), any());
+    }
+
+    /** 窗口内(含已开场)与非俱乐部活动照常核销。 */
+    @Test
+    void clubSessionVerificationWindowBoundary() {
+        java.util.Date now = new java.util.Date(1_800_000_000_000L);
+        CmsActivity club = new CmsActivity();
+        club.setClubId(CLUB);
+        club.setStartDate(new java.util.Date(now.getTime() + 60L * 60 * 1000));
+        assertNull(ApiRegistrationController.clubSessionVerificationTooEarly(club, now));
+        club.setStartDate(new java.util.Date(now.getTime() + 60L * 60 * 1000 + 1));
+        assertEquals("俱乐部场次开始前60分钟内才可核销",
+                ApiRegistrationController.clubSessionVerificationTooEarly(club, now).get("msg"));
+        club.setStartDate(new java.util.Date(now.getTime() - 1));
+        assertNull(ApiRegistrationController.clubSessionVerificationTooEarly(club, now));
+        CmsActivity ordinary = new CmsActivity();
+        ordinary.setStartDate(new java.util.Date(now.getTime() + 7L * 24 * 3600 * 1000));
+        assertNull(ApiRegistrationController.clubSessionVerificationTooEarly(ordinary, now));
     }
 }

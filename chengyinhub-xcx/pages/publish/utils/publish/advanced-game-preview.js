@@ -297,6 +297,7 @@ const BUILDERS = {
   }),
   typeIn: (c) => ({
     type: 'typein', title: txt(c.title), target: txt(c.target), seconds: num(c.seconds, 0),
+    r5: false, deadlineAt: 0,
     caseSensitive: !!c.caseSensitive, tries: num(c.tries, 0), attempts: 0, passed: false, startConfirmed: false, startFailureSeq: 0,
     terminalSkin: !!c.terminalSkin,   // 终端样式,纯外观
   }),
@@ -323,7 +324,23 @@ const BUILDERS = {
  * 从整份配置里挑出该演的那一段,转成 kit。都没开就返回 null ——
  * 调用方据此回落到基础验证那套预览,而不是画一屏空的。
  */
+/** 一个模板启用了多段客观题（问答/排序/连线/分类）时，预览按段依次走完：后续段挂在 queue 上。 */
+const SEGMENT_SECTIONS = ['qa', 'sort', 'match', 'classify'];
 function buildPreviewKit(config, opts) {
+  const first = buildSinglePreviewKit(config, opts);
+  if (!first || SEGMENT_SECTIONS.indexOf(first.type) < 0) return first;
+  const queue = [];
+  for (const key of PREVIEW_PRIORITY) {
+    if (key === first.type || SEGMENT_SECTIONS.indexOf(key) < 0 || !config[key] || !config[key].enabled || !BUILDERS[key]) continue;
+    const kit = BUILDERS[key](config[key]);
+    if (!kit) continue;
+    kit.present = first.present;
+    queue.push(kit);
+  }
+  if (queue.length) first.queue = queue;
+  return first;
+}
+function buildSinglePreviewKit(config, opts) {
   if (!config || typeof config !== 'object') return null;
   const o = opts || {};
   for (const key of PREVIEW_PRIORITY) {

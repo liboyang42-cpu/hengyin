@@ -41,6 +41,23 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id} for update
     </select>
 
+    <select id="selectTopicPublicationTasksForUpdate" resultMap="AuditTaskResult">
+        <include refid="selectAuditTaskVo"/>
+        where biz_id = #{topicId} and biz_type in ('TOPIC', 'TOPIC_PROJECT_REVIEW', 'TOPIC_SALE_REVIEW')
+          and status in (0, 3)
+        order by id for update
+    </select>
+    <select id="selectLatestTopicPublicationTask" resultMap="AuditTaskResult">
+        <include refid="selectAuditTaskVo"/>
+        where biz_id = #{topicId} and biz_type in ('TOPIC', 'TOPIC_PROJECT_REVIEW', 'TOPIC_SALE_REVIEW')
+        order by id desc limit 1
+    </select>
+    <update id="cancelTopicPublicationTaskCas">
+        update audit_task set status = 4, risk_level = 'SUPPLY_REPLACEMENT',
+            version = version + 1, update_time = now()
+        where id = #{id} and version = #{version} and status in (0, 3)
+          and biz_type in ('TOPIC', 'TOPIC_PROJECT_REVIEW', 'TOPIC_SALE_REVIEW')
+    </update>
     <select id="selectOpenAuditTaskForUpdate" resultMap="AuditTaskResult">
         <include refid="selectAuditTaskVo"/>
         where biz_type = #{bizType} and biz_id = #{bizId} and status in (0, 3)
@@ -148,6 +165,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="countPendingOverdue" resultType="int">
         select count(*) from audit_task
         where status = 0 and deadline_at is not null and deadline_at &lt; #{now}
+    </select>
+
+    <select id="samplePendingBacklogIds" resultType="java.lang.Long">
+        select id from audit_task
+        where status = 0 and submitted_at &lt; #{cutoff}
+        order by id asc limit 20
+    </select>
+    <select id="samplePendingOverdueIds" resultType="java.lang.Long">
+        select id from audit_task
+        where status = 0 and deadline_at is not null and deadline_at &lt; #{now}
+        order by id asc limit 20
     </select>
 
     <!-- 举报限频:某提交人在时间窗内新建的举报单条数(走 idx_audit_submitter) -->

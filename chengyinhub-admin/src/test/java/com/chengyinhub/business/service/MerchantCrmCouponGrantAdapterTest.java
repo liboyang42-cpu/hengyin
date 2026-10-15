@@ -3,7 +3,6 @@ package com.chengyinhub.business.service;
 import com.chengyinhub.business.domain.SmsCoupon;
 import com.chengyinhub.business.mapper.SmsCouponMapper;
 import com.chengyinhub.business.service.impl.MerchantCrmCouponGrantAdapter;
-import com.chengyinhub.common.exception.ServiceException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -56,13 +55,42 @@ class MerchantCrmCouponGrantAdapterTest {
     }
 
     @Test
+    void nullReceiptIsExplicitNotIssuedFailure() {
+        SmsCoupon coupon = new SmsCoupon();
+        coupon.setId(5L);
+        when(mapper.selectOwnedActiveCoupon(OWNER, MERCHANT_A, 5L)).thenReturn(coupon);
+        when(history.grantCouponWithReceipt(MEMBER, coupon)).thenReturn(null);
+
+        MerchantCrmCouponGrantAdapter.GrantRejectedException error = assertThrows(
+                MerchantCrmCouponGrantAdapter.GrantRejectedException.class,
+                () -> adapter.grant(OWNER, MERCHANT_A, MEMBER, 5L));
+
+        assertEquals("COUPON_NOT_ISSUED", error.getFailureCode());
+        verify(history).grantCouponWithReceipt(MEMBER, coupon);
+    }
+
+    @Test
+    void exhaustedCouponFilteredBeforeGrantIsStillExplicitNotIssued() {
+        when(mapper.selectOwnedActiveCoupon(OWNER, MERCHANT_A, 5L)).thenReturn(null);
+
+        MerchantCrmCouponGrantAdapter.GrantRejectedException error = assertThrows(
+                MerchantCrmCouponGrantAdapter.GrantRejectedException.class,
+                () -> adapter.grant(OWNER, MERCHANT_A, MEMBER, 5L));
+
+        assertEquals("COUPON_NOT_ISSUED", error.getFailureCode());
+        verify(history, never()).grantCouponWithReceipt(org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
     void merchantACannotSelectOrGrantMerchantBCouponUnderSameOwner() {
         when(mapper.selectOwnedActiveCoupon(OWNER, MERCHANT_A, 6L)).thenReturn(null);
 
-        ServiceException error = assertThrows(ServiceException.class,
+        MerchantCrmCouponGrantAdapter.GrantRejectedException error = assertThrows(
+                MerchantCrmCouponGrantAdapter.GrantRejectedException.class,
                 () -> adapter.grant(OWNER, MERCHANT_A, MEMBER, 6L));
 
-        assertEquals(404, error.getCode());
+        assertEquals("COUPON_NOT_ISSUED", error.getFailureCode());
         verify(mapper).selectOwnedActiveCoupon(OWNER, MERCHANT_A, 6L);
         verify(mapper, never()).selectOwnedActiveCoupon(OWNER, MERCHANT_B, 6L);
         verify(history, never()).grantCouponWithReceipt(org.mockito.ArgumentMatchers.any(),

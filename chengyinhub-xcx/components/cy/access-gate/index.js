@@ -1,4 +1,5 @@
 const app = getApp();
+const { recoverReadSession } = require('../../../utils/session/login-reload.js');
 const { decideMerchantGate, decideClubGate } = require('../../../utils/access-gate.js');
 
 // 页面级守卫:放一个标签进页面,读 access/me,没权限就整屏盖住,弹零按钮 fail 半屏讲原因,2s 自动出去。
@@ -15,6 +16,7 @@ Component({
     'clubId, activityId'() { if (this.data.kind === 'club') this.check(); },
   },
   lifetimes: {
+    detached() { this._detached = true; this._epoch = (this._epoch || 0) + 1; },
     attached() {
       const pages = getCurrentPages();
       this._page = pages[pages.length - 1];
@@ -23,20 +25,26 @@ Component({
       if (this.data.kind === 'merchant') this.check();
     },
   },
+  pageLifetimes: {
+    hide() { this._hidden = true; },
+    show() { this._hidden = false; if (this._readSessionChanged) { this._readSessionChanged = false; this.check(); } },
+  },
   methods: {
     check() {
       const kind = this.data.kind;
       if (kind === 'club' && !this.data.clubId && !this.data.activityId) return;   // 还没拿到范围,等 observer
+      const owner = String(app.getUserID && app.getUserID() || '');
       const epoch = (this._epoch || 0) + 1;
       this._epoch = epoch;
+      if (!owner || owner === '0') { this.setData({ state: 'login', reason: '登录后才能确认当前账号的查看权限', _sheet: false }); return; }
       const that = this;
       const settle = (decision) => {
-        if (epoch !== that._epoch) return;
+        if (that._detached || epoch !== that._epoch || owner !== String(app.getUserID && app.getUserID() || '')) return;
         const denied = decision.state === 'deny';
         // 面板先随盖层渲染出来,再把 show 翻成 true —— 不赌初值能不能触发 result-sheet 的 2s 计时
         that.setData({
-          state: denied ? 'deny' : (decision.state === 'allow' ? 'allow' : 'unknown'),
-          reason: denied ? decision.reason : '',
+          state: denied ? 'deny' : (decision.state === 'login' ? 'login' : decision.state === 'allow' ? 'allow' : 'unknown'),
+          reason: denied || decision.state === 'login' ? decision.reason : '',
           _sheet: false,
         }, () => { if (denied) that.setData({ _sheet: true }); });
       };
@@ -44,13 +52,21 @@ Component({
       // 不传 silentError:request-client 的静默分支都是「没挂 fail 才弹」,本组件 fail 与
       // successStatusAbnormal 都挂了;autoErrorToast:false 关掉业务失败自动 toast,
       // 可见反馈由本组件的 deny 屏承担(unknown 时刻意不拦,后端仍然拦)。
-      const onMerchant = (res) => settle(decideMerchantGate(res, that.data.need));
-      const onClub = (res) => settle(decideClubGate(res, that.data.clubId, that.data.need));
+      const responseOf = (res, statusCode) => statusCode ? Object.assign({}, res || {}, { code: Number(statusCode) }) : res;
+      const loginFailure = res => Number(res && (res.code || res.statusCode)) === 401;
+      const onMerchant = (res, statusCode) => { const reply = responseOf(res, statusCode); settle(loginFailure(reply) ? { state: 'login', reason: '请登录后查看经营信息' } : decideMerchantGate(reply, that.data.need)); };
+      const onClub = (res, statusCode) => { const reply = responseOf(res, statusCode); settle(loginFailure(reply) ? { state: 'login', reason: '请登录后查看俱乐部信息' } : decideClubGate(reply, that.data.clubId, that.data.need)); };
       // request-client 静默重登失败时以 fail(data, 401) 交回;那不是「响应坏了」,是真的没身份,
       // 必须拦并给去处(审核清单 §6.6「401 后给去处」)。其余失败仍判 unknown,不误锁人。
-      const onFail = (data, statusCode) => settle(Number(statusCode) === 401
-        ? { state: 'deny', reason: '登录已过期，请重新进入' }
-        : { state: 'unknown' });
+      const onFail = (data, statusCode) => {
+        if (that._detached || epoch !== that._epoch) return;
+        if (recoverReadSession(that, app, data, function (anonymous) {
+          this._epoch++; this.setData({ state: anonymous ? 'login' : 'checking', reason: anonymous ? '请登录后查看' : '', _sheet: false });
+        }, that.check, statusCode)) return;
+        const code = Number(statusCode || data && (data.statusCode || data.code));
+        settle(code === 401 ? { state: 'login', reason: '请登录后查看' }
+          : code === 403 ? { state: 'deny', reason: '当前账号没有查看权限' } : { state: 'unknown' });
+      };
       if (kind === 'club') {
         app.sendRequest({
           url: '/api/club/access/me',
@@ -74,6 +90,16 @@ Component({
         successStatusAbnormal: onMerchant,
         fail: onFail,
       });
+    },
+    onLogin() {
+      if (this._loginPending) return;
+      this._loginPending = true;
+      const login = app.getUserID && app.getUserID() && typeof app.reLogin === 'function' ? app.reLogin()
+        : typeof app.firstLogin === 'function' ? app.firstLogin() : null;
+      Promise.resolve(login).then(result => {
+        this._loginPending = false;
+        if (!this._detached && app.getUserID && app.getUserID() && !(result && result.ok === false)) this.check();
+      }).catch(() => { this._loginPending = false; });
     },
     onExit() {
       // 到点收起与点遮罩可能先后到;同页 cy-error auto-back 也可能同时在弹 —— 按页只走一次

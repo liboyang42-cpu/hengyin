@@ -19,7 +19,10 @@ import java.util.Map;
 
 @Service
 public class TopicCompletionAwardServiceImpl implements ITopicCompletionAwardService {
-    @Autowired private ICmsTopicService topicService;
+    // Topic -> route -> completion award also exists; resolve this read edge after bean initialization.
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private ICmsTopicService topicService;
     @Autowired private PlayerBadgeMapper playerBadgeMapper;
     @Autowired private IPointsAwardService pointsAwardService;
     @Autowired private IPlayerProgressionService playerProgressionService;
@@ -105,8 +108,10 @@ public class TopicCompletionAwardServiceImpl implements ITopicCompletionAwardSer
             Map<String, Object> budget = xpBudgetService.computeBudget(topicId);
             int xp = budget.get("remain") instanceof Number ? ((Number) budget.get("remain")).intValue() : 0;
             if (xp > 0) {
-                growthService.addExp(memberId, xp, "通关奖励");
-                if (xpAwardMapper.insert(memberId, topicId, xp, factTime) != 1) {
+                Long earnedExpId = growthService.addCompletionExp(memberId, xp, topicId);
+                if (earnedExpId == null || earnedExpId <= 0
+                        || xpAwardMapper.insert(memberId, topicId, xp, factTime) != 1
+                        || xpAwardMapper.linkEarnedExp(memberId, topicId, earnedExpId) != 1) {
                     throw new IllegalStateException("通关 XP 发放事实写入异常");
                 }
                 result.setEarnedXp(xp);

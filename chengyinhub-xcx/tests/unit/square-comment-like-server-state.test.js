@@ -13,7 +13,11 @@ function loadDetail() {
   global.Page = c => { def = c }
   const mod = require.resolve('../../pages/square/detail/index.js')
   delete require.cache[mod]
-  require(mod)
+  const transport = require.resolve('../../utils/community-post-api');
+  require(transport);
+  const originalTransport = require.cache[transport].exports;
+  require.cache[transport].exports = require('../helpers/community-page-seam');
+  try { require(mod); } finally { require.cache[transport].exports = originalTransport; }
   const page = Object.assign({}, def)
   page.data = { list: [{ id: 5, isLiked: 1, likeCount: 3 }] }
   page.setData = function (patch) { Object.assign(this.data, patch) }

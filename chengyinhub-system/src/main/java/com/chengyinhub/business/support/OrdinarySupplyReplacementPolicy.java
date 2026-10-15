@@ -11,13 +11,15 @@ public final class OrdinarySupplyReplacementPolicy {
     public static void assertOpen(com.chengyinhub.business.domain.CmsTopic topic) {
         com.chengyinhub.business.domain.enums.TopicLifecycleState state =
                 com.chengyinhub.business.domain.enums.TopicLifecycleState.fromCode(topic.getLifecycle());
-        if (state != com.chengyinhub.business.domain.enums.TopicLifecycleState.RECRUITING
+        boolean pendingReview = state == com.chengyinhub.business.domain.enums.TopicLifecycleState.PENDING_REVIEW;
+        if (!pendingReview && state != com.chengyinhub.business.domain.enums.TopicLifecycleState.RECRUITING
                 && state != com.chengyinhub.business.domain.enums.TopicLifecycleState.PRICING
                 && state != com.chengyinhub.business.domain.enums.TopicLifecycleState.SELLING
                 && state != com.chengyinhub.business.domain.enums.TopicLifecycleState.RUNNING) {
             throw new IllegalStateException("当前阶段不能补位，请按取消或售后流程处理");
         }
-        if (!Integer.valueOf(1).equals(topic.getStatus())
+        if ((!Integer.valueOf(1).equals(topic.getStatus())
+                && !(pendingReview && Integer.valueOf(0).equals(topic.getStatus()) && "pro".equals(topic.getPublishMode())))
                 || !Integer.valueOf(0).equals(topic.getUserStatus())
                 || (topic.getCircleThemeCode() != null && !topic.getCircleThemeCode().trim().isEmpty())) {
             throw new IllegalStateException("普通主题须暂停报名后才能补位");

@@ -78,7 +78,7 @@ test('后端只下发封顶的 identityKind,绝不下发账号级 user_type', ()
     'resultMap 必须映射收敛后的 identity_kind')
   // RUN-13 后该投影 join 了 player_growth,列必须带表别名消歧 —— pin 允许可选的 `x.` 前缀,
   // 契约要钉的是「收敛在 SQL 里、值域封顶」,不是别名写法。
-  assert.match(mapper, /CASE WHEN (?:\w+\.)?user_type = 2 THEN 'BIZ' ELSE NULL END AS identity_kind/,
+  assert.match(mapper, /CASE WHEN (?:\w+\.)?role = 'merchant' THEN 'BIZ' ELSE NULL END AS identity_kind/,
     '收敛必须发生在 SQL 里 —— 值域封顶,不靠调用方自觉')
   assert.doesNotMatch(mapper, /<result property="userType"/,
     'user_type 不得出现在公开投影的 resultMap 里')

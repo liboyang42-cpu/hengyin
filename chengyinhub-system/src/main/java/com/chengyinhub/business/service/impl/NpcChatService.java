@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +43,9 @@ import com.chengyinhub.common.utils.uuid.IdUtils;
 @Service
 public class NpcChatService
 {
+    @Autowired private com.chengyinhub.business.mapper.MmsMerchantMapper audioMerchantMapper;
+    @Autowired private com.chengyinhub.business.service.ai.impl.OssCardCutoutStorage generatedAudioStorage;
+    @Autowired private AppMediaAssetService audioAssets;
     private static final Logger log = LoggerFactory.getLogger(NpcChatService.class);
 
     private static final int REQUEST_ID_MAX = 64;
@@ -338,7 +341,7 @@ public class NpcChatService
             NpcChatResp response = finish(processing);
             if ("npc_shop_chat".equals(bizType) || "merchant_npc_chat".equals(bizType))
             {
-                attachVoice(profile, response);
+                attachVoice(processing, profile, response);
             }
             saveLog(processing.getUserId(), processing.getSessionId(), profileId, message, result.getText(), 0,
                     result.getModel(), (int) (System.currentTimeMillis() - startMs));
@@ -370,20 +373,32 @@ public class NpcChatService
     }
 
     /** 合成失败只降级为文字；已经通过内容安全的回答不能被第二个上游反向打成失败。 */
-    private void attachVoice(NpcProfile profile, NpcChatResp response)
+    private void attachVoice(NpcChatRequest request, NpcProfile profile, NpcChatResp response)
     {
         if (profile == null || !Integer.valueOf(2).equals(profile.getVoiceStatus())
-                || !nonBlank(profile.getVoiceId()) || response == null || !nonBlank(response.getSafeText()))
+                || !nonBlank(profile.getVoiceId()) || response == null || !nonBlank(response.getSafeText())
+                || !NpcChatRequest.STATUS_SUCCEEDED.equals(response.getOutcomeStatus()) || !"PASS".equals(response.getSafetyDecision()))
         {
             return;
         }
         try
         {
-            response.setAudioUrl(voiceCloneClient.synthesize(profile.getVoiceId(), response.getSafeText()));
+            if(!Integer.valueOf(2).equals(profile.getScopeType()) || profile.getScopeId()==null
+                    || audioMerchantMapper==null || generatedAudioStorage==null || audioAssets==null)return;
+            com.chengyinhub.business.domain.MmsMerchant merchant=audioMerchantMapper.selectMmsMerchantById(profile.getScopeId());
+            if(merchant==null || merchant.getMemberId()==null || merchant.getMemberId()<=0)return;
+            String vendorUrl=voiceCloneClient.synthesize(profile.getVoiceId(), response.getSafeText());
+            java.util.Map<String,Object> receipt=generatedAudioStorage.stageGeneratedAudio(merchant.getMemberId(),vendorUrl);
+            Object asset=receipt==null?null:receipt.get("assetId");
+            if(!(asset instanceof Number) || npcChatRequestMapper.bindApprovedTextAudio(request.getUserId(),request.getRequestId(),((Number)asset).longValue())!=1)
+                return;
+            request.setAudioAssetId(((Number)asset).longValue());
+            // Initial HOLD is text-only. Only a later actual approval can yield a playable URL.
+            attachApprovedAudio(request,response);
         }
         catch (RuntimeException e)
         {
-            log.warn("[NpcChat] voice synthesis failed profileId={}", profile.getId(), e);
+            log.warn("[NpcChat] voice media unavailable profileId={} exceptionType={}", profile.getId(), e.getClass().getSimpleName());
         }
     }
 
@@ -513,9 +528,17 @@ public class NpcChatService
         {
             return inProgress(state.getRequestId());
         }
-        return response(state.getRequestId(), state.getStatus(), state.getSafetyDecision(), state.getErrorCode(),
+        NpcChatResp result=response(state.getRequestId(), state.getStatus(), state.getSafetyDecision(), state.getErrorCode(),
                 state.getLimitType(), Boolean.TRUE.equals(state.getRetryable()), Boolean.TRUE.equals(state.getAi()),
                 state.getSafeText(), state.getRetryAfterSeconds());
+        attachApprovedAudio(state,result);return result;
+    }
+
+    private void attachApprovedAudio(NpcChatRequest state,NpcChatResp response) {
+        if(audioAssets==null || state.getAudioAssetId()==null || !NpcChatRequest.STATUS_SUCCEEDED.equals(state.getStatus())
+                || !"PASS".equals(state.getSafetyDecision()))return;
+        try {response.setAudioUrl(audioAssets.approvedUrl(state.getAudioAssetId()));}
+        catch(RuntimeException unavailable) {response.setAudioUrl(null);}
     }
 
     private NpcChatResp inProgress(String requestId)

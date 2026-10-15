@@ -90,6 +90,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select count(1) from ums_member_follow where member_id = #{member_id}
     </select>
 
+    <select id="selectMutualFollowCount" resultType="Integer">
+        select count(distinct f.follow_member_id) from ums_member_follow f
+        join ums_member m on m.id = f.follow_member_id and m.del_flag = 0 and m.status = 1
+        where f.member_id = #{memberId} and f.follow_member_id &lt;&gt; #{memberId}
+          and exists (select 1 from ums_member_follow back
+                      where back.member_id = f.follow_member_id and back.follow_member_id = #{memberId})
+    </select>
+
     <select id="selectUmsMemberFansNumByMemberId" resultType="Integer">
         select count(1) from ums_member_follow where follow_member_id = #{member_id}
     </select>

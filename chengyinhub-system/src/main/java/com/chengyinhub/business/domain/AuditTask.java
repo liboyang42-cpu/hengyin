@@ -17,6 +17,7 @@ public class AuditTask extends BaseEntity {
     public static final Integer STATUS_CANCELLED = 4;
 
     /** 内容举报 bizType(对齐既有 submit 约定·大写);软封口径:SQUARE/COMMENT 用 status(下2/复1),CLUB_POST(_COMMENT) 用 del_flag(下2/复0),IM 用 status(BLOCKED/NORMAL) */
+    public static final String BIZ_MEDIA_ASSET = "MEDIA_ASSET";
     public static final String BIZ_SQUARE = "SQUARE";
     /** 新版专业广场帖文；审核结论由帖文生命周期服务以 CAS 方式回写。 */
     public static final String BIZ_COMMUNITY_POST = "COMMUNITY_POST";

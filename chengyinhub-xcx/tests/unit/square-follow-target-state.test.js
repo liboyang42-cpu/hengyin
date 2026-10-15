@@ -50,6 +50,7 @@ function setByPath(target, keyPath, value) {
 function mount(relativePath, kind, options = {}) {
   const requests = []
   const app = Object.assign({
+    canUseCommunity: () => true, // Current-account server-open fixture.
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
     getUserID: () => '9',
     getPageSize: () => 10,
@@ -66,7 +67,7 @@ function mount(relativePath, kind, options = {}) {
     wx: global.wx,
     Page: (d) => { definition = d },
     Component: (d) => { definition = d },
-    require: () => noopModule(),
+    require: id => id.includes('community-post-api') ? require('../helpers/community-page-seam') : noopModule(),
     setInterval: () => 1,
     clearInterval() {},
     setTimeout: () => 1,
@@ -108,6 +109,7 @@ function mountProfile(options = {}) {
   const requests = []
   let definition = null
   const app = {
+    canUseCommunity: () => true, // Current-account server-open fixture.
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
     getUserID: () => '9',
     getUserRole: () => 'player',
@@ -277,6 +279,7 @@ test('负控:个人主页去掉意图态参数时必须判红', () => {
   const requests = []
   let definition = null
   const app = {
+    canUseCommunity: () => true, // Current-account server-open fixture.
     globalData: {},
     getUserID: () => '9',
     getUserRole: () => 'player',
@@ -292,7 +295,7 @@ test('负控:个人主页去掉意图态参数时必须判红', () => {
     getApp: () => app,
     Component: global.Component,
     wx: global.wx,
-    require: (id) => require(path.resolve(path.dirname(path.join(ROOT, PROFILE)), id)),
+    require: (id) => id.includes('community-post-api') ? require('../helpers/community-page-seam') : require(path.resolve(path.dirname(path.join(ROOT, PROFILE)), id)),
     console, Promise, Object, Array, Number, String, Math, Date, isFinite, isNaN, JSON,
   }, { filename: PROFILE })
   const profile = Object.assign({}, definition.methods, { data: JSON.parse(JSON.stringify(definition.data)) })

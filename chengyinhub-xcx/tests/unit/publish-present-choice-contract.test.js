@@ -56,7 +56,7 @@ test('★玩法目录里每个段都有明确档位,没有漏网的默认漂移'
   // 目录里这十个正是「只能全屏」那批 —— 多一个少一个都会被上面两条抓到,
   // 这里再钉一次交集,防有人只改目录不改表
   const lockedInCatalog = catalog.GAME_SECTIONS.filter((s) => cfg.presentInlineLocked(s))
-  assert.deepEqual(lockedInCatalog.sort(), FULLSCREEN_ONLY.filter(s => s !== 'blindTaste').sort()) // 盲品已退出现有创作目录，存量运行态仍需限制内嵌
+  assert.deepEqual(lockedInCatalog.sort(), FULLSCREEN_ONLY.filter(s => s !== 'scan').sort()) // 扫码是参与方式，存量限制等待后端接通
 })
 
 test('★「只能全屏」段配 inline:本地校验必须真拒,并写出原因', () => {
@@ -140,7 +140,7 @@ test('★置灰的开关不是防线就够:applyPresent 对「只能全屏」段
 test('★编辑器真有一块二选一开关,置灰说明与点击 handler 都绑在页面上', () => {
   const wxml = read('pages/publish/temp/index.wxml')
   const js = read('pages/publish/temp/index.js')
-  assert.ok(wxml.includes('这个玩法怎么出现'), '编辑器没有呈现方式这一块')
+  assert.ok(wxml.includes('怎么出现') && wxml.includes('gameConfigOpen'), '编辑器没有呈现方式这一块')
   // 2026-09-22 用户定全页单选改下拉:两档从两颗芯片变成 presentOptions 里的两项
   assert.ok(js.includes("key: 'inline'") && js.includes("key: 'fullscreen'"),
     '二选一的两档没有绑定')

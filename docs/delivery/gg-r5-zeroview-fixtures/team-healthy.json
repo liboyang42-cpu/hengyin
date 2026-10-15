@@ -1,0 +1,28 @@
+{
+  "zeroHp" : {
+    "episodeId" : "2a4a2f4d-4048-4b93-a7e3-a08a84b566b1",
+    "policy" : "STEPS",
+    "effectivePolicy" : "STEPS",
+    "phase" : "HEALTHY",
+    "zeroAt" : 1791654066922,
+    "progress" : 100,
+    "required" : 100,
+    "used" : 1,
+    "limit" : 2,
+    "restoreTo" : 4,
+    "message" : "",
+    "serverNow" : 1791654066922,
+    "thenPolicy" : "THEME_FAIL",
+    "recoveryMemberId" : 8,
+    "recoveryMemberName" : "新队长",
+    "allowedActions" : [ ],
+    "disabledReason" : "当前无需恢复"
+  },
+  "hp" : 4,
+  "status" : "ACTIVE",
+  "teamId" : 90,
+  "isCaptain" : true,
+  "scope" : "TEAM",
+  "authorityEpoch" : 1,
+  "ownerRevision" : 5
+}

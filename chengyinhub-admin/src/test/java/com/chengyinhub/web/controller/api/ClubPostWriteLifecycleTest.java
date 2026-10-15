@@ -16,6 +16,11 @@ import com.chengyinhub.business.service.IClubService;
 import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.business.mapper.AppMediaAssetMapper;
+import com.chengyinhub.business.service.support.AppMediaReferenceGuard;
+import com.chengyinhub.common.exception.ServiceException;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -27,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -50,6 +56,7 @@ class ClubPostWriteLifecycleTest {
     private IClubPostLikeService likeService;
     private IClubPostCommentService commentService;
     private IWxContentSecurityService securityService;
+    private Map<String, Object> reviewedImage;
 
     @BeforeEach
     void setUp() {
@@ -75,6 +82,16 @@ class ClubPostWriteLifecycleTest {
         securityService = mock(IWxContentSecurityService.class);
         when(securityService.checkText(any(), any())).thenReturn(null);
         ReflectionTestUtils.setField(controller, "wxContentSecurityService", securityService);
+        reviewedImage = new HashMap<>();
+        reviewedImage.put("id", 901L);
+        reviewedImage.put("ownerType", "APP");
+        reviewedImage.put("memberId", MEMBER_ID);
+        reviewedImage.put("reviewState", "APPROVED");
+        AppMediaAssetMapper mediaMapper = mock(AppMediaAssetMapper.class);
+        when(mediaMapper.select(901L)).thenReturn(reviewedImage);
+        AppMediaReferenceGuard mediaReferences = new AppMediaReferenceGuard();
+        ReflectionTestUtils.setField(mediaReferences, "mapper", mediaMapper);
+        ReflectionTestUtils.setField(controller, "mediaReferences", mediaReferences);
     }
 
     @Test
@@ -82,7 +99,7 @@ class ClubPostWriteLifecycleTest {
         ClubPost body = new ClubPost();
         body.setClubId(CLUB_ID);
         body.setContent("内容");
-        body.setImages("https://example.invalid/a.jpg");
+        body.setImages("media-asset:901");
         when(postService.insertClubPostInActiveClub(any(), eq(MEMBER_ID)))
                 .thenThrow(new IllegalStateException("俱乐部不存在或已解散"));
 
@@ -92,6 +109,136 @@ class ClubPostWriteLifecycleTest {
         assertEquals("俱乐部不存在或已解散", result.get("msg"));
         verify(postService).insertClubPostInActiveClub(any(), eq(MEMBER_ID));
         verify(securityService, never()).submitMediaCheck(anyInt(), any(), any(), any());
+    }
+
+    @Test
+    void unreviewedOrForeignPendingImageNeverReachesPostWrite() {
+        ClubPost body = new ClubPost();
+        body.setClubId(CLUB_ID);
+        body.setContent("内容");
+        body.setImages("media-asset:901");
+        reviewedImage.put("reviewState", "HOLD");
+        assertEquals(Integer.valueOf(422), assertThrows(ServiceException.class,
+                () -> controller.postCreate(body)).getCode());
+        reviewedImage.put("memberId", 99L);
+        assertEquals(Integer.valueOf(403), assertThrows(ServiceException.class,
+                () -> controller.postCreate(body)).getCode());
+        body.setImages("media-asset:902");
+        assertEquals(Integer.valueOf(422), assertThrows(ServiceException.class,
+                () -> controller.postCreate(body)).getCode());
+        verify(postService, never()).insertClubPostInActiveClub(any(), any());
+        verify(securityService, never()).submitMediaCheck(anyInt(), any(), any(), any());
+    }
+
+    @Test
+    void deletedPostRejectsLikeBeforeAnyLikeWrite() {
+        ClubPost deleted = post();
+        deleted.setDelFlag(2);
+        when(postService.selectClubPostById(POST_ID)).thenReturn(deleted);
+        Club activeClub = new Club();
+        activeClub.setMemberId(MEMBER_ID);
+        when(clubService.selectClubByIdForUpdate(CLUB_ID)).thenReturn(activeClub);
+        ClubPostLike body = new ClubPostLike();
+        body.setPostId(POST_ID);
+
+        AjaxResult result = controller.postLike(body);
+
+        assertEquals(500, result.get("code"));
+        assertEquals("动态不存在", result.get("msg"));
+        verify(likeService, never()).insertClubPostLike(any());
+        verify(likeService, never()).deleteByPostAndMember(any(), any());
+        verify(postService, never()).incrementLikeCount(any(), anyInt());
+    }
+
+    @Test
+    void deletedPostRejectsCommentBeforeInsertOrCounterWrite() {
+        ClubPost deleted = post();
+        deleted.setDelFlag(2);
+        when(postService.selectClubPostById(POST_ID)).thenReturn(deleted);
+        Club activeClub = new Club();
+        activeClub.setMemberId(MEMBER_ID);
+        when(clubService.selectClubByIdForUpdate(CLUB_ID)).thenReturn(activeClub);
+        ClubPostComment body = new ClubPostComment();
+        body.setPostId(POST_ID);
+        body.setContent("评论");
+
+        AjaxResult result = controller.commentCreate(body);
+
+        assertEquals(500, result.get("code"));
+        assertEquals("动态不存在", result.get("msg"));
+        verify(commentService, never()).insertClubPostComment(any());
+        verify(postService, never()).incrementCommentCount(any(), anyInt());
+    }
+
+    @Test
+    void postDeletedWhileLikeWaitsForLockRejectsAllWrites() {
+        when(postService.selectClubPostById(POST_ID)).thenReturn(post());
+        when(clubService.selectClubByIdForUpdate(CLUB_ID)).thenReturn(new Club());
+        ClubPost deleted = post();
+        deleted.setDelFlag(2);
+        when(postService.selectClubPostByIdForUpdate(POST_ID)).thenReturn(deleted);
+        ClubPostLike body = new ClubPostLike();
+        body.setPostId(POST_ID);
+
+        AjaxResult result = controller.postLike(body);
+
+        assertEquals(500, result.get("code"));
+        assertEquals("动态不存在", result.get("msg"));
+        verify(likeService, never()).insertClubPostLike(any());
+        verify(likeService, never()).deleteByPostAndMember(any(), any());
+        verify(postService, never()).incrementLikeCount(any(), anyInt());
+    }
+
+    @Test
+    void postDeletedDuringTextReviewRejectsCommentBeforeWrite() {
+        when(postService.selectClubPostById(POST_ID)).thenReturn(post());
+        when(clubService.selectClubByIdForUpdate(CLUB_ID)).thenReturn(new Club());
+        ClubPost deleted = post();
+        deleted.setDelFlag(2);
+        when(postService.selectClubPostByIdForUpdate(POST_ID)).thenReturn(deleted);
+        ClubPostComment body = new ClubPostComment();
+        body.setPostId(POST_ID);
+        body.setContent("评论");
+
+        AjaxResult result = controller.commentCreate(body);
+
+        assertEquals(500, result.get("code"));
+        assertEquals("动态不存在", result.get("msg"));
+        verify(commentService, never()).insertClubPostComment(any());
+        verify(postService, never()).incrementCommentCount(any(), anyInt());
+    }
+
+    @Test
+    void activePostStillAcceptsLikeAfterLockedRead() {
+        when(postService.selectClubPostById(POST_ID)).thenReturn(post());
+        when(postService.selectClubPostByIdForUpdate(POST_ID)).thenReturn(post());
+        when(clubService.selectClubByIdForUpdate(CLUB_ID)).thenReturn(new Club());
+        ClubPostLike body = new ClubPostLike();
+        body.setPostId(POST_ID);
+
+        assertEquals(200, controller.postLike(body).get("code"));
+
+        verify(postService).selectClubPostByIdForUpdate(POST_ID);
+        verify(likeService).insertClubPostLike(any());
+        verify(postService).incrementLikeCount(POST_ID, 1);
+    }
+
+    @Test
+    void activePostStillAcceptsOwnerCommentAfterLockedRead() {
+        when(postService.selectClubPostById(POST_ID)).thenReturn(post());
+        when(postService.selectClubPostByIdForUpdate(POST_ID)).thenReturn(post());
+        Club club = new Club();
+        club.setMemberId(MEMBER_ID);
+        when(clubService.selectClubByIdForUpdate(CLUB_ID)).thenReturn(club);
+        ClubPostComment body = new ClubPostComment();
+        body.setPostId(POST_ID);
+        body.setContent("评论");
+
+        assertEquals(200, controller.commentCreate(body).get("code"));
+
+        verify(postService).selectClubPostByIdForUpdate(POST_ID);
+        verify(commentService).insertClubPostComment(any());
+        verify(postService).incrementCommentCount(POST_ID, 1);
     }
 
     @Test
@@ -137,29 +284,29 @@ class ClubPostWriteLifecycleTest {
         ClubPost body = new ClubPost();
         body.setClubId(CLUB_ID);
         body.setContent("内容");
-        body.setImages("https://example.invalid/a.jpg");
+        body.setImages("media-asset:901");
 
         assertEquals(200, controller.postCreate(body).get("code"));
 
         verify(postService).insertClubPostInActiveClub(any(), eq(MEMBER_ID));
         verify(securityService, never()).submitMediaCheck(
                 IWxContentSecurityService.BIZ_TYPE_CLUB_POST, POST_ID,
-                "https://example.invalid/a.jpg", null);
+                "media-asset:901", null);
     }
 
     @Test
     void exactUpdateReplayNeverRunsSynchronousMediaDispatchInTheRequest() {
         ClubPost updated = post();
-        updated.setImages("https://example.invalid/a.jpg");
+        updated.setImages("media-asset:901");
         updated.setVersion(3);
         when(postService.updatePost(MEMBER_ID, POST_ID, "新正文",
-                "https://example.invalid/a.jpg", 2, "update-replay-1"))
+                "media-asset:901", 2, "update-replay-1"))
                 .thenReturn(new ClubPostUpdateResult(updated, true),
                         new ClubPostUpdateResult(updated, false));
         ClubPostMutationRequest body = new ClubPostMutationRequest();
         body.setId(POST_ID);
         body.setContent("新正文");
-        body.setImages("https://example.invalid/a.jpg");
+        body.setImages("media-asset:901");
         body.setVersion(2);
         body.setRequestId("update-replay-1");
 
@@ -168,7 +315,7 @@ class ClubPostWriteLifecycleTest {
 
         verify(securityService, never()).submitMediaCheck(
                 IWxContentSecurityService.BIZ_TYPE_CLUB_POST, POST_ID,
-                "https://example.invalid/a.jpg", null);
+                "media-asset:901", null);
     }
 
     @Test

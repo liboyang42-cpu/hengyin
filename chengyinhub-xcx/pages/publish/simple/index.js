@@ -8,6 +8,7 @@
 // 真要重新接线必须先换成 cy-toast / cy-inline-error 通道。
 // 发布落点在 fabu;简易版成功埋点因此也归 fabu 一份(simple 不再自行 track)。
 const app = getApp();
+const { memberId, retryLogin, waitForInitialSession } = require('../../../utils/session/login-reload.js');
 function aiDraftStorageKey() {
   const memberId = app.getUserID && app.getUserID();
   return memberId === null || memberId === undefined || memberId === ''
@@ -19,6 +20,7 @@ const MAX_AI_PLAN_NODES = 3;
 
 Page({
   data: {
+    creatorLoginRequired: false,
     // 导航让位实高:模拟器上 env(safe-area-inset-top) 恒为 0,--cy-safe-top 会矮一半、把自带头压进导航区
     statusBarHeight: 44,
     navBarHeight: 44,
@@ -38,7 +40,26 @@ Page({
     operationScope: '',
   },
 
+  onCreatorLogin() {
+    return retryLogin(this, app, this._resumeCreatorLoad);
+  },
+  _resumeCreatorLoad() { if (this._creatorOwnerChanged()) return; this.onLoad(this._creatorEntryOptions || {}); },
+  _creatorOwnerChanged() {
+    if (!this._creatorOwner || this._creatorOwner === memberId(app)) return false;
+    this.setData({ creatorLoginRequired: true });
+    wx.switchTab({ url: '/pages/template/index' });
+    return true;
+  },
+
   onLoad(options) {
+    this._creatorEntryOptions = options || {};
+    if (!memberId(app)) {
+      this.setData({ creatorLoginRequired: true });
+      waitForInitialSession(this, app, this._resumeCreatorLoad);
+      return;
+    }
+    this._creatorOwner = memberId(app);
+    this.setData({ creatorLoginRequired: false });
     const mode = Number(options && options.mode) === 2 ? 2 : 1;
     // 从模板货架点「配置」过来时带模板名当初始想法:不接住的话这一页是一张白纸,
     // 用户点的是「配置某个主题」,落地却什么都没带过来。手打进来的照旧是空。
@@ -53,8 +74,12 @@ Page({
     this.loadAiQuota();
   },
 
+  onShow() { this._creatorOwnerChanged(); },
+  onUnload() { this._unloaded = true; },
+
   // ===== 简单 AI 对话 =====
   loadAiQuota() {
+    if (!memberId(app)) { this.setData({ creatorLoginRequired: true }); return; }
     app.sendRequest({
       url: '/api/ai/theme/draft/quota',
       method: 'POST',
@@ -71,6 +96,7 @@ Page({
   onAiIdeaInput(e) { this.setData({ aiIdea: e.detail.value, aiError: '' }); },
   useAiPrompt(e) { this.setData({ aiIdea: e.currentTarget.dataset.text || '', aiError: '' }); },
   generateAiPlan() {
+    if (!memberId(app)) { this.setData({ creatorLoginRequired: true }); return; }
     const idea = (this.data.aiIdea || '').trim();
     if (!idea) { this.setData({ aiError: '先说说你想做什么路线。' }); return; }
     if (this.data.aiGenerating) return;

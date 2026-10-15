@@ -29,7 +29,7 @@ test('附近活动只横滑且保持完整轮廓，失败空态留在抽屉内',
   assert.doesNotMatch(WXML, /entryPeekExpanded|toggleEntryPeek|onEntryPeekTouch|entry-peek__cards"[^>]*scroll-y/)
   assert.doesNotMatch(JS, /entryPeekExpanded|toggleEntryPeek|onEntryPeekTouch/)
   assert.doesNotMatch(WXML, />查看全部</)
-  assert.match(WXML, /entry-peek__state[^>]+wx:if="\{\{entryLoadError\}\}"[^>]+bindtap="retryEntryMap"/)
+  assert.match(WXML, /<cy-error wx:if="\{\{entryLoadError\}\}" load-failure="\{\{true\}\}"\s*\/>/)
   assert.match(WXSS, /\.entry-peek\s*\{[^}]*bottom:0[^}]*z-index:223[^}]*height:var\(--entry-peek-h\)[^}]*background:[^}]*var\(--cy-comp-sheet-player-glass\)/s)
   assert.match(WXSS, /\.entry-peek__head\s*\{[^}]*font-size:var\(--cy-type-section-title\)/s)
   assert.match(WXSS, /\.entry-card\s*\{[^}]*height:340rpx/s)
@@ -49,7 +49,7 @@ test('地图入口保留标题和图文漫游按钮，并且不渲染底栏', ()
 })
 
 test('报名按钮使用白色 token，入口弹层按内容定高并统一透明玻璃 token', () => {
-  assert.match(WXML, /entry-sheet__primary[^>]+bindtap="openEntryActivityDetail"[^>]*>去报名</)
+  assert.match(WXML, /entry-sheet__primary[^>]+bindtap="openEntryActivityDetail"[^>]*>\{\{entryActivity\.ended \? '查看详情' : '去报名'\}\}</)
   assert.match(WXSS, /\.entry-sheet__primary\s*\{[^}]*background:\s*var\(--cy-comp-sheet-player-text\)/s)
   assert.match(WXML, /class="psheet \{\{entrySheetIn\?'is-in':''\}\} entry-sheet"/)
   assert.match(WXML, /class="pdim \{\{entrySheetIn\?'is-in':''\}\} entry-sheet__mask"/)
@@ -68,9 +68,9 @@ test('队伍与规则在同一弹层内切换，现场动态直接显示图片',
   assert.match(JS, /openEntryRoamRules\(\)\s*\{\s*this\.setData\(\{\s*entrySheetView:\s*'rules'/)
   assert.doesNotMatch(JS, /openEntryPosts/)
   assert.match(WXML, /现场动态[\s\S]*entryActivity\.dynamicImages/)
-  assert.match(WXML, /wx:if="\{\{entryActivity\.registered\}\}"[^>]*[\s\S]*?发起组队/)
-  assert.match(WXML, /<\/view>\n      <\/view>\n      <view wx:if="\{\{entryActivity\.registered\}\}" class="entry-sheet__create-team"/,
-    '已报名且暂无队伍时也必须能发起组队，入口不能嵌在 teams.length 区块内')
+  assert.match(WXML, /wx:if="\{\{entryActivity\.registered && !entryActivity\.ended\}\}"[^>]*[\s\S]*?发起组队/)
+  assert.match(WXML, /<\/view>\n      <\/view>\n      <view wx:if="\{\{entryActivity\.registered && !entryActivity\.ended\}\}" class="entry-sheet__create-team"/,
+    '未结束且已报名但暂无队伍时也必须能发起组队，入口不能嵌在 teams.length 区块内')
 })
 
 test('六个 Figma 状态都有真实落点', () => {

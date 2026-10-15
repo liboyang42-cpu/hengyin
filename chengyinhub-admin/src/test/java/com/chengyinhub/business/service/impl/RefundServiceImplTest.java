@@ -112,6 +112,7 @@ class RefundServiceImplTest {
         // HF-04(A-32): 保持退款额 ≤ 实付(68)以满足新增的退款额上限校验;本用例意在验证商家/归属解析,金额为增量数据
         refund.setRefundAmount(new BigDecimal("50.00"));
         CmsRegistration registration = new CmsRegistration();
+        registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setId(99L);
         registration.setOwnerType(2L);
         registration.setOwnerId(20L);
@@ -142,6 +143,40 @@ class RefundServiceImplTest {
     }
 
     @Test
+    void rejectedRefundCanBeRetriedAndApprovedAmountsCapSubsequentRefunds() {
+        RefundApplicationMapper refunds = mock(RefundApplicationMapper.class);
+        CmsRegistrationMapper registrations = mock(CmsRegistrationMapper.class);
+        RefundServiceImpl service = service(refunds, registrations, mock(SettlementDetailMapper.class));
+        CmsRegistration paid = paidRegistration99();
+        when(registrations.selectCmsRegistrationById(99L)).thenReturn(paid);
+        when(refunds.insertRefundApplication(any())).thenReturn(1);
+        RefundApplication rejected = refund(10L, 99L, 2L);
+        rejected.setStatus(2);
+        when(refunds.selectRegistrationHistoryForUpdate(99L)).thenReturn(java.util.Collections.singletonList(rejected));
+        RefundApplication retry = refund(null, 99L, 2L);
+        retry.setRefundAmount(new BigDecimal("20.00"));
+        assertEquals(1, service.saveRefund(retry));
+        assertEquals("RF99-10", retry.getRefundNo());
+        assertEquals("registration:99:10", retry.getIdempotencyKey());
+        rejected.setStatus(1);
+        rejected.setRefundAmount(new BigDecimal("20.00"));
+        paid.setPaymentStatus(4);
+        paid.setRegistrationStatus(3);
+        RefundApplication remainder = refund(null, 99L, 2L);
+        remainder.setRefundAmount(new BigDecimal("48.00"));
+        assertEquals(1, service.saveRefund(remainder));
+        RefundApplication excessive = refund(null, 99L, 2L);
+        excessive.setRefundAmount(new BigDecimal("48.01"));
+        assertThrows(IllegalArgumentException.class, () -> service.saveRefund(excessive));
+        rejected.setStatus(0);
+        assertThrows(IllegalStateException.class, () -> service.saveRefund(remainder));
+        rejected.setStatus(2);
+        paid.setPaymentStatus(2);
+        paid.setPayableAmount(null); paid.setTotalAmount(null); paid.setOriginalAmount(null);
+        assertTrue(assertThrows(IllegalStateException.class, () -> service.saveRefund(retry)).getMessage().contains("实付快照缺失"));
+    }
+
+    @Test
     void saveRefundRejectedForUnpaidRegistration() {
         RefundApplicationMapper refundMapper = mock(RefundApplicationMapper.class);
         CmsRegistrationMapper registrationMapper = mock(CmsRegistrationMapper.class);
@@ -149,6 +184,7 @@ class RefundServiceImplTest {
         RefundServiceImpl service = service(refundMapper, registrationMapper, settlementDetailMapper);
         RefundApplication refund = refund(null, 99L, 2L);
         CmsRegistration registration = new CmsRegistration();
+        registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setId(99L);
         registration.setPaymentStatus(1); // 未支付
         when(registrationMapper.selectCmsRegistrationById(99L)).thenReturn(registration);
@@ -165,6 +201,7 @@ class RefundServiceImplTest {
         RefundServiceImpl service = service(refundMapper, registrationMapper, settlementDetailMapper);
         RefundApplication refund = refund(10L, 99L, 2L);
         CmsRegistration registration = new CmsRegistration();
+        registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setId(99L);
         registration.setVerificationStatus(1);
         when(refundMapper.selectRefundApplicationById(10L)).thenReturn(refund);
@@ -182,6 +219,7 @@ class RefundServiceImplTest {
         RefundServiceImpl service = service(refundMapper, registrationMapper, settlementDetailMapper);
         RefundApplication refund = refund(10L, 99L, 2L);
         CmsRegistration registration = new CmsRegistration();
+        registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setId(99L);
         registration.setVerificationStatus(0);
         registration.setPaymentStatus(2);
@@ -217,6 +255,7 @@ class RefundServiceImplTest {
         RefundServiceImpl service = service(refundMapper, registrationMapper, settlementDetailMapper);
         RefundApplication refund = refund(10L, 99L, 2L);
         CmsRegistration registration = new CmsRegistration();
+        registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setId(99L);
         registration.setVerificationStatus(0);
         registration.setPaymentStatus(2);
@@ -237,15 +276,41 @@ class RefundServiceImplTest {
         order.verify(clawback).onRegistrationRefunded(registration);
     }
 
+    /** F-L4-02:系统全额退款只取代待审核申请(CAS 0→2),已批准/已驳回的不动;CAS 落空即失败回滚。 */
+    @Test
+    void systemFullRefundSupersedesOnlyPendingApplications() {
+        RefundApplicationMapper refundMapper = mock(RefundApplicationMapper.class);
+        RefundServiceImpl service = service(refundMapper, mock(CmsRegistrationMapper.class), mock(SettlementDetailMapper.class));
+        RefundApplication pending = refund(10L, 99L, 2L); pending.setStatus(0);
+        RefundApplication approved = refund(11L, 99L, 2L); approved.setStatus(1);
+        RefundApplication rejected = refund(12L, 99L, 2L); rejected.setStatus(2);
+        when(refundMapper.selectRegistrationHistoryForUpdate(99L))
+                .thenReturn(java.util.Arrays.asList(pending, approved, rejected));
+        when(refundMapper.updateRefundStatusIfPending(eq(10L), eq(2), eq(0L), any(), anyString())).thenReturn(1);
+
+        assertEquals(1, service.supersedePendingRegistrationRefunds(99L, "主办方取消活动,全额退款"));
+        verify(refundMapper).updateRefundStatusIfPending(eq(10L), eq(2), eq(0L), any(), anyString());
+        verify(refundMapper, never()).updateRefundStatusIfPending(eq(11L), any(), any(), any(), any());
+        verify(refundMapper, never()).updateRefundStatusIfPending(eq(12L), any(), any(), any(), any());
+
+        when(refundMapper.updateRefundStatusIfPending(eq(10L), eq(2), eq(0L), any(), anyString())).thenReturn(0);
+        assertThrows(IllegalStateException.class, () -> service.supersedePendingRegistrationRefunds(99L, "x"));
+    }
+
     @Test
     void repeatedRefundApprovalDoesNotCreateAdjustment() {
         RefundApplicationMapper refundMapper = mock(RefundApplicationMapper.class);
         CmsRegistrationMapper registrationMapper = mock(CmsRegistrationMapper.class);
         SettlementDetailMapper settlementDetailMapper = mock(SettlementDetailMapper.class);
         RefundServiceImpl service = service(refundMapper, registrationMapper, settlementDetailMapper);
-        when(refundMapper.selectRefundApplicationById(10L)).thenReturn(refund(10L, 99L, 2L));
-        when(registrationMapper.selectCmsRegistrationById(99L)).thenReturn(new CmsRegistration());
-        when(refundMapper.updateRefundStatusIfPending(eq(10L), eq(1), eq(7L), any(), eq("again"))).thenReturn(0);
+        RefundApplication approved = refund(10L, 99L, 2L);
+        approved.setStatus(1);
+        CmsRegistration terminal = paidRegistration99();
+        terminal.setPayableAmount(new BigDecimal("100.00"));
+        terminal.setPaymentStatus(4); terminal.setRegistrationStatus(3);
+        when(refundMapper.selectRefundApplicationById(10L)).thenReturn(approved);
+        when(refundMapper.selectRegistrationHistoryForUpdate(99L)).thenReturn(java.util.Collections.singletonList(approved));
+        when(registrationMapper.selectCmsRegistrationById(99L)).thenReturn(terminal);
 
         int rows = service.reviewRefund(review(10L, 1, "again"), 7L);
 
@@ -264,6 +329,7 @@ class RefundServiceImplTest {
         SettlementDetailMapper settlementDetailMapper = mock(SettlementDetailMapper.class);
         RefundServiceImpl service = service(refundMapper, registrationMapper, settlementDetailMapper);
         CmsRegistration registration = new CmsRegistration();
+        registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setId(99L);
         registration.setVerificationStatus(0);
         CmsRegistration refunded = new CmsRegistration();
@@ -292,6 +358,7 @@ class RefundServiceImplTest {
         SettlementDetailMapper settlementDetailMapper = mock(SettlementDetailMapper.class);
         RefundServiceImpl service = service(refundMapper, registrationMapper, settlementDetailMapper);
         CmsRegistration registration = new CmsRegistration();
+        registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setId(99L);
         registration.setVerificationStatus(0);
         java.util.concurrent.atomic.AtomicInteger paymentStatus = new java.util.concurrent.atomic.AtomicInteger(2);
@@ -303,6 +370,7 @@ class RefundServiceImplTest {
                 .thenAnswer(inv -> paymentStatus.compareAndSet(2, 4) ? 1 : 0);
         when(registrationMapper.selectCmsRegistrationByIdForUpdate(99L)).thenAnswer(inv -> {
             CmsRegistration current = new CmsRegistration();
+            current.setPayableAmount(new BigDecimal("100.00"));
             current.setId(99L);
             current.setPaymentStatus(paymentStatus.get());
             current.setRegistrationStatus(paymentStatus.get() == 4 ? 3 : 2);
@@ -369,13 +437,11 @@ class RefundServiceImplTest {
                            CmsRegistration sub3, List<RefundApplication> sub3Apps) {
         CmsRegistration payer = ticket(1L, 2, 0, "300.00");
         when(registrationMapper.selectCmsRegistrationById(1L)).thenReturn(payer);
-        when(registrationMapper.selectByParentOrderNo("P1"))
+        when(registrationMapper.selectByParentOrderNoForUpdate("P1", 20L))
                 .thenReturn(java.util.Arrays.asList(payer, ticket(2L, 4, 0, "0"), sub3));
-        when(refundMapper.selectRefundApplicationList(org.mockito.ArgumentMatchers.argThat(q -> q != null
-                && Long.valueOf(2L).equals(q.getSourceId()))))
+        when(refundMapper.selectRegistrationHistoryForUpdate(2L))
                 .thenReturn(java.util.Collections.singletonList(app(2L, 1, "100.00")));
-        when(refundMapper.selectRefundApplicationList(org.mockito.ArgumentMatchers.argThat(q -> q != null
-                && Long.valueOf(3L).equals(q.getSourceId()))))
+        when(refundMapper.selectRegistrationHistoryForUpdate(3L))
                 .thenReturn(sub3Apps);
     }
 
@@ -521,6 +587,7 @@ class RefundServiceImplTest {
         RefundServiceImpl service = service(refundMapper, registrationMapper, settlementDetailMapper);
         RefundApplication refund = refund(10L, 99L, 2L);
         CmsRegistration registration = new CmsRegistration();
+        registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setId(99L);
         registration.setPaymentStatus(2);
         registration.setVerificationStatus(0);
@@ -582,6 +649,7 @@ class RefundServiceImplTest {
         RefundApplication refund = refund(10L, 99L, 2L);
         refund.setCreatedByUserId(7L);
         CmsRegistration registration = new CmsRegistration();
+        registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setId(99L);
         when(refundMapper.selectRefundApplicationById(10L)).thenReturn(refund);
         when(registrationMapper.selectCmsRegistrationById(99L)).thenReturn(registration);
@@ -757,6 +825,8 @@ class RefundServiceImplTest {
         ReflectionTestUtils.setField(service, "merchantReferralBountyService",
                 mock(com.chengyinhub.business.service.impl.MerchantReferralBountyService.class));
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", registrationMapper);
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(any()))
+                .thenAnswer(call -> registrationMapper.selectCmsRegistrationById(call.getArgument(0)));
         when(registrationMapper.claimRegistrationRefunded(any(), any(), any())).thenReturn(1);
         ReflectionTestUtils.setField(service, "settlementDetailMapper", settlementDetailMapper);
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activityMapper);
@@ -837,6 +907,7 @@ class RefundServiceImplTest {
 
     private CmsRegistration paidRegistration99() {
         CmsRegistration registration = new CmsRegistration();
+        registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setId(99L);
         registration.setPaymentStatus(2);
         registration.setPayableAmount(new BigDecimal("68.00"));

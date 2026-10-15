@@ -60,12 +60,28 @@ class SmsCouponQrTokenTest {
     }
 
     @Test
-    void missingSecretFailsClosedAtStartupAndAtRuntime() {
+    void previouslyDisplayedJwtSignedCodeRequiresANewIndependentCouponCode() {
+        long now = System.currentTimeMillis() / 1000L;
+        String oldCode = VerifyDynCodeUtil.issueCoupon(301L, now, "fixture-jwt-material");
+        SmsCouponServiceImpl independent = service("fixture-independent-coupon-material");
+        assertNull(independent.verifyCouponQrToken(oldCode));
+        assertEquals(301L, independent.verifyCouponQrToken(independent.generateCouponQrToken(301L)));
+    }
+
+    @Test
+    void missingConfigurationDoesNotInstallAStartupFailureHook() throws Exception {
+        assertFalse(SmsCouponServiceImpl.class.getMethod("requireCouponQrSecret")
+                .isAnnotationPresent(jakarta.annotation.PostConstruct.class));
+    }
+
+    @Test
+    void missingSecretDisablesBothOperationsWithoutAStartupHook() {
         for (String blank : new String[]{null, "", "   "}) {
             SmsCouponServiceImpl s = service(blank);
-            assertThrows(IllegalStateException.class, s::requireCouponQrSecret);
-            assertThrows(IllegalStateException.class, () -> s.generateCouponQrToken(301L));
-            assertNull(s.verifyCouponQrToken("cq1.301.1.x"));
+            assertThrows(com.chengyinhub.common.exception.ServiceException.class, s::requireCouponQrSecret);
+            assertThrows(com.chengyinhub.common.exception.ServiceException.class, () -> s.generateCouponQrToken(301L));
+            assertEquals(503, assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                    () -> s.verifyCouponQrToken("cq1.301.1.x")).getCode());
         }
     }
 }

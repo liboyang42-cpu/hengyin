@@ -90,6 +90,9 @@ public class ClubSessionServiceImpl implements IClubSessionService {
         // 静默落 00:00 会让实际截止比页面承诺早 14+ 小时(晚场最多近 24h),是对外承诺与
         // 实际不符的根因;存量 00:00 场次不回溯改写,仍按现实现计算。
         Date assemblyMoment = assemblyMoment(request);
+        if (!assemblyMoment.after(new Date())) {
+            throw new IllegalArgumentException("集合时间必须晚于当前时间");
+        }
         requireOwnerForUpdate(request.getClubId(), memberId);
         // 9-16 拍板第 2 条:欠款逾期未补足 ⇒ 不能开新场次(场次票款结算给开场主理人)。
         settlementDebtLedger.requireNoOverdueDebt(memberId);

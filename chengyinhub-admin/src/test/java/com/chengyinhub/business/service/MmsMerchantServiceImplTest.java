@@ -50,6 +50,7 @@ class MmsMerchantServiceImplTest {
         ReflectionTestUtils.setField(service, "merchantOperatorMapper", operators);
         ReflectionTestUtils.setField(service, "merchantOperatorInviteMapper", invites);
         ReflectionTestUtils.setField(service, "umsMemberMapper", members);
+        ReflectionTestUtils.setField(service, "roleService", mock(IRoleService.class));
         when(merchants.selectMmsMerchantById(MERCHANT)).thenReturn(currentMerchant());
         when(merchants.selectMmsMerchantByIdForUpdate(MERCHANT)).thenReturn(currentMerchant());
         when(members.lockActiveMemberById(OLD_OWNER)).thenReturn(OLD_OWNER);

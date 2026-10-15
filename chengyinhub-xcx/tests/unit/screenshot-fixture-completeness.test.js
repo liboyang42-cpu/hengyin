@@ -233,9 +233,10 @@ const CONTRACTS = {
     equals: { overviewState: 'ready', overviewLoaded: true, showBadges: true, showBadgeEmpty: false, badgeLoadError: false },
   },
   B70: {
-    sources: ['subpackageP3/pages/growthcenter/index/index.js', 'subpackageP3/pages/growthcenter/index/index.wxml'],
-    paths: ['rankState', 'rankErrorKind', 'errorMsg', 'boardState', 'metric', 'period', 'unit', 'me.rank', 'me.name', 'me.initial', 'me.scoreText', 'me.avatarUrl', 'rankLoaded'],
-    equals: { rankState: 'ready', rankErrorKind: 'data', errorMsg: '', boardState: 'ready', metric: 'point', period: 'total', unit: '积分', 'me.rank': 1, 'me.scoreText': '1,280', rankLoaded: true },
+    sources: ['subpackageP3/pages/growthcenter/leaderboard/index.js', 'subpackageP3/pages/growthcenter/leaderboard/index.wxml'],
+    paths: ['loading', 'errorMsg', 'metric', 'period', 'unit', 'top3', 'rest', 'me.rank', 'me.name', 'me.initial', 'me.scoreText', 'me.avatarUrl'],
+    arrays: ['top3', 'rest'],
+    equals: { loading: false, errorMsg: '', metric: 'point', period: 'total', unit: '积分' },
   },
   B75: {
     sources: ['subpackageP3/pages/growthcenter/leaderboard/index.js', 'subpackageP3/pages/growthcenter/leaderboard/index.wxml'],
@@ -472,8 +473,8 @@ function valueAt(root, contractPath) {
   return contractPath.split('.').reduce((value, key) => (value == null ? undefined : value[key]), root)
 }
 
-function assertSourceConsumes(id, sources, contractPath) {
-  const source = sources.map(read).join('\n')
+function assertSourceConsumes(id, sources, contractPath, readSource = read) {
+  const source = sources.map(readSource).join('\n')
   const tokens = tokensOf(contractPath)
   const escaped = tokens.map(({ key }) => key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
   const arrayAt = tokens.findIndex(({ array }) => array)
@@ -484,34 +485,35 @@ function assertSourceConsumes(id, sources, contractPath) {
   }
 
   const arrayPath = escaped.slice(0, arrayAt + 1).join('\\s*\\.\\s*')
-  const loopPattern = new RegExp(`wx:for\\s*=\\s*["']\\{\\{[^}]*\\b${arrayPath}\\b[^}]*\\}\\}["']`)
-  const loopMatch = loopPattern.exec(source)
+  const loopPattern = new RegExp(`wx:for\\s*=\\s*["']\\{\\{[^}]*\\b${arrayPath}\\b[^}]*\\}\\}["']`, 'g')
+  const loopMatches = [...source.matchAll(loopPattern)]
+  const loopMatch = loopMatches[0]
   assert.ok(loopMatch, `${id}: 源码未按数组渲染契约路径 ${contractPath}`)
   if (tokens.length > arrayAt + 1) {
-    const leaf = escaped[escaped.length - 1]
-    const tagStart = source.lastIndexOf('<', loopMatch.index)
-    const tagEnd = source.indexOf('>', loopMatch.index)
-    const opening = source.slice(tagStart, tagEnd + 1)
-    const itemMatch = opening.match(/wx:for-item\s*=\s*["']([^"']+)["']/)
-    const itemName = (itemMatch && itemMatch[1]) || 'item'
-    const afterOpening = source.slice(tagEnd + 1)
-    const nextLoopMatch = /wx:for\s*=/.exec(afterOpening)
-    const loopBodyEnd = nextLoopMatch ? tagEnd + 1 + nextLoopMatch.index : source.length
-    const loopChunk = source.slice(tagStart, loopBodyEnd)
-    const escapedItem = itemName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const leafInChunk = new RegExp(`\\b${escapedItem}\\s*\\.\\s*${leaf}\\b`)
-    if (!leafInChunk.test(loopChunk)) {
-      // 2026-08-20:循环体把整个 item 交给子组件对象 prop(如 club="{{item}}")时,
-      // 子键消费发生在组件源码里 —— 要求 sources 里声明组件文件,并在其中按 prop 名消费该子键。
-      const propMatch = opening.match(new RegExp(`([a-zA-Z][a-zA-Z0-9-]*)\\s*=\\s*["']\\{\\{\\s*${escapedItem}\\s*\\}\\}["']`))
-      assert.ok(propMatch, `${id}: 源码未在 ${arrayPath} 循环消费子键 ${contractPath}`)
-      const propName = propMatch[1].replace(/-([a-z])/g, (m, c) => c.toUpperCase())
-      assert.match(
-        source,
-        new RegExp(`\\b${propName}\\s*\\.\\s*${leaf}\\b`),
-        `${id}: 源码未在 ${arrayPath} 循环消费子键 ${contractPath}(整对象经 prop ${propName} 传入,但组件源码没消费该子键)`,
-      )
-    }
+    const consumed = loopMatches.some((loopMatch) => {
+      const leaf = escaped[escaped.length - 1]
+      const tagStart = source.lastIndexOf('<', loopMatch.index)
+      const tagEnd = source.indexOf('>', loopMatch.index)
+      const opening = source.slice(tagStart, tagEnd + 1)
+      const itemMatch = opening.match(/wx:for-item\s*=\s*["']([^"']+)["']/)
+      const itemName = (itemMatch && itemMatch[1]) || 'item'
+      const afterOpening = source.slice(tagEnd + 1)
+      const nextLoopMatch = /wx:for\s*=/.exec(afterOpening)
+      const loopBodyEnd = nextLoopMatch ? tagEnd + 1 + nextLoopMatch.index : source.length
+      const loopChunk = source.slice(tagStart, loopBodyEnd)
+      const escapedItem = itemName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const leafInChunk = new RegExp(`\\b${escapedItem}\\s*\\.\\s*${leaf}\\b`)
+      if (!leafInChunk.test(loopChunk)) {
+        // 2026-08-20:循环体把整个 item 交给子组件对象 prop(如 club="{{item}}")时,
+        // 子键消费发生在组件源码里 —— 要求 sources 里声明组件文件,并在其中按 prop 名消费该子键。
+        const propMatch = opening.match(new RegExp(`([a-zA-Z][a-zA-Z0-9-]*)\\s*=\\s*["']\\{\\{\\s*${escapedItem}\\s*\\}\\}["']`))
+        if (!propMatch) return false
+        const propName = propMatch[1].replace(/-([a-z])/g, (m, c) => c.toUpperCase())
+        return new RegExp(`\\b${propName}\\s*\\.\\s*${leaf}\\b`).test(source)
+      }
+      return true
+    })
+    assert.ok(consumed, `${id}: 源码未在 ${arrayPath} 任一循环消费子键 ${contractPath}`)
   }
 }
 
@@ -791,4 +793,26 @@ test('F15 A17/A23/D04 内容态必须喂给真实字段并校验可见文字', (
   const runner = read('scripts/_shot_full_matrix.js')
   assert.match(runner, /want\.textIncludes/)
   assert.match(runner, /rec\.textFailure/)
+})
+
+test('negative control: growth实际指标label移除后消费契约必须判红', () => {
+  const file = 'subpackageP3/pages/growthcenter/index/index.wxml'
+  const source = read(file)
+  const broken = source.replace(/\{\{item\.label\}\}/g, '')
+  assert.notEqual(broken, source, 'label变异必须命中真实指标循环')
+  assert.throws(() => assertSourceConsumes('B68', CONTRACTS.B68.sources, 'overview.stats[].label',
+    (rel) => rel === file ? broken : read(rel)), assert.AssertionError)
+})
+
+
+test('B70本人榜单锚点必须依赖me，缺本人数据的夹具必须判红', () => {
+  const shot = SHOTS.find(item => item.id === 'B70')
+  assert.equal(shot.route, '/subpackageP3/pages/growthcenter/leaderboard/index')
+  assert.equal(SELECTORS.B70.selector, '.gc-row-me')
+  const source = read('subpackageP3/pages/growthcenter/leaderboard/index.wxml')
+  assert.match(source, /<view wx:if="\{\{me\}\}" class="gc-row gc-row-me">/)
+  assert.match(source, /class="gc-row-rank-me"|class="gc-row-rank gc-row-rank-me"/)
+  const broken = JSON.parse(JSON.stringify(FIXTURES))
+  broken.B70.data.me = null
+  assert.throws(() => assertFixtureCompleteness(broken), assert.AssertionError)
 })

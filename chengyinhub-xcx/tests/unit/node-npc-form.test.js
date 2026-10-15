@@ -44,6 +44,8 @@ function load(options = {}) {
     clearTimer: () => {},
   });
   const app = {
+    getUserID: () => '7',
+    requestSeparateConsent: () => options.consentDenied ? Promise.reject(new Error('已拒绝声音克隆')) : Promise.resolve(),
     getUploadClient: () => client,
     sendRequest(opts) {
       const payload = JSON.parse(opts.data || '{}');
@@ -86,6 +88,7 @@ function load(options = {}) {
   component.data = Object.assign(JSON.parse(JSON.stringify(state.def.data)), {
     show: true, nodeId: NODE, nodeName: '幸会咖啡',
   });
+  component._photoMember = component._voiceMember = '7';
   component.setData = function (patch, cb) {
     Object.keys(patch || {}).forEach((key) => setAtPath(this.data, key, patch[key]));
     if (cb) cb();
@@ -286,4 +289,13 @@ test('录音 8MiB / 20 秒:接受并走共享入口的 fileSizes,再发起复刻
   assert.equal(enroll.payload.nodeId, NODE);
   assert.equal(h.component.data.voiceStatus, 1);
   assert.equal(h.component.data.voiceFile, null, '提交成功后不再保留待上传文件');
+});
+
+
+test('拒绝单独声音克隆同意时保留录音且不上传或发起复刻', async () => {
+  const h = load({consentDenied:true});
+  h.component.chooseVoice(); h.chosen.success({tempFiles:[{name:'a.mp3',size:1024,path:'/tmp/a.mp3'}]});
+  await tick(); h.component.uploadVoice(); await tick(); await tick();
+  assert.equal(h.uploads.length,0); assert.equal(h.requests.some(r=>r.url.endsWith('/voice/enroll')),false);
+  assert.ok(h.component.data.voiceFile); assert.equal(h.component.data.voiceBusy,false);
 });

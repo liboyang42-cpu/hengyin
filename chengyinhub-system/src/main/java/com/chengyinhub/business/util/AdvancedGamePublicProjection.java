@@ -1,6 +1,7 @@
 package com.chengyinhub.business.util;
 
 import com.chengyinhub.business.service.support.AdvancedGameConfigValidator;
+import com.chengyinhub.business.service.support.GameplaySupportMatrix;
 import com.chengyinhub.common.utils.StringUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,6 +18,37 @@ public final class AdvancedGamePublicProjection {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private AdvancedGamePublicProjection() {
+    }
+
+    public static ObjectNode guideQuestions(JsonNode config, JsonNode answer) {
+        ObjectNode safe = MAPPER.createObjectNode();
+        int method = answer.path("validationMethod").asInt(-1);
+        if ("ANSWER".equals(GameplaySupportMatrix.basicCompletionKind(config, method))) {
+            ObjectNode basic = safe.putObject("basic").put("mode", method == 1 ? "PICK" : "TYPE");
+            ArrayNode options = basic.putArray("options");
+            if (method == 1) for (String id : new String[]{"A", "B", "C", "D"}) {
+                String label = answer.path("question" + id).asText("");
+                if (!label.trim().isEmpty()) options.addObject().put("id", id).put("label", label);
+            }
+            return safe;
+        }
+        if (config.path("qa").path("enabled").asBoolean()) {
+            copyQa(safe, config.path("qa"));
+            ((ObjectNode) safe.path("qa")).retain("mode", "multi", "title", "options");
+        }
+        if (config.path("sort").path("enabled").asBoolean()) {
+            copySort(safe, config.path("sort"));
+            ((ObjectNode) safe.path("sort")).retain("prompt", "items");
+        }
+        if (config.path("match").path("enabled").asBoolean()) {
+            copyMatch(safe, config.path("match"));
+            ((ObjectNode) safe.path("match")).retain("prompt", "left", "right");
+        }
+        if (config.path("classify").path("enabled").asBoolean()) {
+            copyClassify(safe, config.path("classify"));
+            ((ObjectNode) safe.path("classify")).retain("prompt", "items", "bins");
+        }
+        return safe;
     }
 
     public static String safeConfigJson(String source) {

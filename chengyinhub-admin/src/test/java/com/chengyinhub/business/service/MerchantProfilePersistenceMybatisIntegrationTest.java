@@ -129,6 +129,7 @@ class MerchantProfilePersistenceMybatisIntegrationTest {
     private void agentBackedService(MmsMerchantServiceImpl target, DriverManagerDataSource source) {
         ReflectionTestUtils.setField(target, "clubMapper", mock(com.chengyinhub.business.mapper.ClubMapper.class));
         ReflectionTestUtils.setField(target, "capabilityService", mock(ICapabilityService.class));
+        ReflectionTestUtils.setField(target, "roleService", mock(IRoleService.class));
         ReflectionTestUtils.setField(target, "umsMemberService", mock(IUmsMemberService.class));
         ReflectionTestUtils.setField(target, "umsMemberPointsDetailService", mock(IUmsMemberPointsDetailService.class));
         ReflectionTestUtils.setField(target, "cmsPointsSettingService", mock(ICmsPointsSettingService.class));

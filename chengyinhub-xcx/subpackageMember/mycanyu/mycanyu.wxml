@@ -11,7 +11,7 @@
 
 <view class="canyubox">
   <cy-skeleton wx:if="{{firstLoading}}" type="list" count="4" />
-  <cy-error fill class="cy-fill-state cy-fade-in" size="lg" wx:elif="{{errorMsg && list.length==0}}" title="参与记录没能打开" sub="{{errorMsg}}" bind:retry="onRetry" auto-back />
+  <cy-error load-failure fill class="cy-fill-state cy-fade-in" size="lg" wx:elif="{{errorMsg && list.length==0}}" title="参与记录没能打开" sub="{{errorMsg}}" bind:retry="onRetry" auto-back />
   <cy-empty fill class="cy-fill-state" size="lg" wx:elif="{{list.length==0}}" icon="/images/d_yhqon.png" title="{{activeTab === 'all' ? '暂无参与记录' : '当前筛选暂无参与记录'}}" sub="{{activeTab === 'all' ? '报名后，路线和活动会出现在这里' : '切换其他状态查看参与记录'}}" />
   <view class="canyu-refreshing" wx:if="{{refreshing}}" aria-role="status" aria-live="polite">正在更新参与记录…</view>
 

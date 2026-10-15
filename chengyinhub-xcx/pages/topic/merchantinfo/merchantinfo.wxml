@@ -15,6 +15,11 @@
   <cy-nav-bar custom-back bind:back="goBack" />
   <cy-empty fill size="lg" kind="missing-param" cta="返回上一页" bind:cta="goBack" />
 </block>
+<block wx:elif="{{ projectReadAuth }}">
+  <cy-nav-bar custom-back bind:back="goBack" />
+  <cy-empty wx:if="{{ projectReadAuth === 'login' }}" fill size="lg" kind="login" title="请登录后查看主题" cta="重新登录" bind:cta="retryProjectLogin" />
+  <cy-empty wx:else fill size="lg" kind="error" title="当前账号无权查看" sub="请返回后确认主题及账号权限" cta="返回上一页" bind:cta="goBack" />
+</block>
 <project-host wx:elif="{{ role === 'host' }}"
     hostOwnerType="{{ hostOwnerType || '' }}"
     statusBarHeight="{{ statusBarHeight }}"
@@ -105,7 +110,7 @@
 <!-- ============ 品牌浏览视图（从品牌招募广场进入，看主题详情后报名） ============ -->
 <view class="topic theme-merchant" wx:if="{{ fromMerchantJoin }}">
   <cy-nav-bar />
-  <cy-error class="browse-error" wx:if="{{browseLoadError}}" fill title="加载失败"
+  <cy-error load-failure class="browse-error" wx:if="{{browseLoadError}}" fill title="加载失败"
             sub="{{browseLoadError}}" retry="重试" bind:retry="retryBrowseData" />
   <view class="slide1 {{info.name && (!info.imgUrl || coverFailed) ? 'slide1--no-cover' : ''}}" wx:else>
     <!-- P1-2:封面图挂掉(后台留了 example.com 占位假图)时整屏空白,这里给带主题名的兜底占位 -->
@@ -326,6 +331,8 @@
                 data-chapter-id="{{application.chapterId}}" bindtap="openChapterNodeForm">配置点位</cy-btn>
               <cy-btn wx:if="{{application.canSubmitOffer}}" variant="ghost" size="sm" class="cy-btn-inline"
                 data-chapter-id="{{application.chapterId}}" bindtap="openChapterOfferForm">填写实际供给</cy-btn>
+              <cy-btn wx:if="{{application.canAcceptInvite}}" variant="primary" size="sm" class="cy-btn-inline"
+                data-application-id="{{application.id}}" data-accepted="{{true}}" bindtap="respondChapterInvitation">接受邀请</cy-btn>
               <cy-btn wx:if="{{application.canWithdraw}}" variant="ghost" size="sm" class="cy-btn-inline"
                 data-application-id="{{application.id}}" bindtap="withdrawChapterApplication">{{application.source == 1 ? '拒绝邀请' : '撤回申请'}}</cy-btn>
             </view>

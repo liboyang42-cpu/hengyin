@@ -50,6 +50,8 @@ class CoopPerkTemplateExpiryGateTest {
         templateMapper = mock(CoopPerkTemplateMapper.class);
         CoopInviteMapper inviteMapper = mock(CoopInviteMapper.class);
         service = new CoopInviteServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "commercialReviewService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.ITopicCommercialReviewService.class));
         ReflectionTestUtils.setField(service, "coopPerkMapper", perkMapper);
         ReflectionTestUtils.setField(service, "coopPerkTemplateMapper", templateMapper);
         ReflectionTestUtils.setField(service, "coopInviteMapper", inviteMapper);

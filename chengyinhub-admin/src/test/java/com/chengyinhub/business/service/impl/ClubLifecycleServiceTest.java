@@ -69,6 +69,8 @@ class ClubLifecycleServiceTest {
         ReflectionTestUtils.setField(clubService, "imService", imService);
 
         memberService = new ClubMemberServiceImpl();
+        ReflectionTestUtils.setField(memberService, "businessNotice", mock(com.chengyinhub.business.service.support.CommittedBusinessNotice.class));
+        when(clubMemberMapper.recordJoinReview(any(), any(), any(), any(), any(), any())).thenReturn(1);
         ReflectionTestUtils.setField(memberService, "clubMapper", clubMapper);
         ReflectionTestUtils.setField(memberService, "clubMemberMapper", clubMemberMapper);
         ReflectionTestUtils.setField(memberService, "imService", imService);
@@ -547,6 +549,24 @@ class ClubLifecycleServiceTest {
 
         verify(clubMemberMapper).updateMembershipState(88L, 2, 0, null);
         verify(clubMapper, never()).updateMemberCount(any(), any(Integer.class));
+    }
+
+    @Test
+    void rejectionStoresTrimmedReasonAndAuthenticatedReviewerBeforeNotification() {
+        when(clubMapper.selectClubByIdForUpdate(CLUB_ID)).thenReturn(ownerClub());
+        ClubMember pending = new ClubMember();
+        pending.setId(88L);
+        pending.setStatus(0);
+        when(clubMemberMapper.selectAnyByClubAndMember(CLUB_ID, MEMBER_ID)).thenReturn(pending);
+        memberService.reviewJoinRequest(CLUB_ID, MEMBER_ID, OWNER_ID, false, "  本期名额已满  ");
+        verify(clubMemberMapper).recordJoinReview(eq(CLUB_ID), eq(MEMBER_ID), eq(2),
+                eq("本期名额已满"), eq(OWNER_ID), any(Date.class));
+        com.chengyinhub.business.service.support.CommittedBusinessNotice notices =
+                (com.chengyinhub.business.service.support.CommittedBusinessNotice) ReflectionTestUtils.getField(memberService, "businessNotice");
+        verify(notices).sendAfterCommit(eq(MEMBER_ID), eq("入会申请未通过"),
+                org.mockito.ArgumentMatchers.contains("本期名额已满"), eq("club-join-review"), eq(88L));
+        assertThrows(IllegalArgumentException.class, () ->
+                memberService.reviewJoinRequest(CLUB_ID, MEMBER_ID, OWNER_ID, false, "x".repeat(501)));
     }
 
     @Test

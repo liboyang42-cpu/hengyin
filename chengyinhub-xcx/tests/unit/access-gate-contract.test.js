@@ -42,7 +42,7 @@ test('守卫组件:deny 才整屏盖住,盖层用 modal 档 z 与页面底色,�
   const js = read('components/cy/access-gate/index.js');
   assert.equal((js.match(/hideLoading: true,\s*\n\s*autoErrorToast: false/g) || []).length, 2, '两条分支都不许再弹 toast');
   assert.doesNotMatch(js, /silentError: true/, 'fail 已挂,silentError 是冗余的静默开关');
-  assert.match(js, /Number\(statusCode\) === 401/, '401 必须拦并给去处,不能落进 unknown');
+  assert.match(js, /code === 401/, '401 必须拦并给去处,不能落进 unknown');
   assert.match(js, /url: '\/api\/club\/access\/me'/);
   assert.match(js, /url: '\/api\/merchant\/access\/me'/);
 });
@@ -206,4 +206,29 @@ test('商家守卫的 need 只能取已核实过后端出处的值,拿不准必�
     if (m[1] !== want) bad.push(rel + ' need=' + JSON.stringify(m[1]) + ',应为 ' + JSON.stringify(want));
   }
   assert.deepEqual(bad, []);
+});
+
+function mountGate() {
+  let owner='7', def;const requests=[];
+  const app={getUserID:()=>owner,sendRequest:o=>requests.push(o),firstLogin:()=>{owner='9';return Promise.resolve();}};
+  global.getApp=()=>app;global.Component=d=>def=d;global.wx={};
+  const file=path.join(root,'components/cy/access-gate/index.js');delete require.cache[file];require(file);
+  const gate=Object.assign({},def.methods,{data:Object.assign({},def.data,{kind:'merchant',need:'canReadFinance'}),setData(patch,done){Object.assign(this.data,patch);if(done)done();}});
+  return {gate,requests,app,owner(id){owner=id;}};
+}
+test('共享守卫游客不读私有access并给登录按钮，登录后仍必须通过真实权限判据',async()=>{
+  const h=mountGate();h.owner('');h.gate.check();assert.equal(h.requests.length,0);assert.equal(h.gate.data.state,'login');assert.equal(h.gate.data._sheet,false);
+  h.gate.onLogin();h.gate.onLogin();await Promise.resolve();assert.equal(h.requests.length,1);
+  h.requests[0].success(merchantOk([PERMISSIONS.BASIC_READ]));assert.equal(h.gate.data.state,'deny','登录不能代替finance权限');
+});
+test('共享守卫真实401/403与普通500分别为login/deny/unknown，401不自动退出',()=>{
+  for(const code of [401,403,500]){
+    const h=mountGate();h.gate.check();h.requests[0].successStatusAbnormal({msg:'HTTP反馈'},code);
+    assert.equal(h.gate.data.state,code===401?'login':code===403?'deny':'unknown');assert.equal(h.gate.data._sheet,code===403);
+  }
+});
+test('共享守卫账号切换和卸载后旧回包不能放行，新请求足权限仍可allow',()=>{
+  const h=mountGate();h.gate.check();h.owner('99');h.requests[0].success(merchantOk([PERMISSIONS.FINANCE_READ]));assert.equal(h.gate.data.state,'checking');
+  h.gate.check();h.requests[1].success(merchantOk([PERMISSIONS.FINANCE_READ]));assert.equal(h.gate.data.state,'allow');
+  h.gate.check();h.gate._detached=true;h.requests[2].success({code:401});assert.equal(h.gate.data.state,'allow');
 });

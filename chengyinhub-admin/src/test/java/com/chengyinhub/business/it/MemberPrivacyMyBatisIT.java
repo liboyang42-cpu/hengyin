@@ -63,12 +63,12 @@ class MemberPrivacyMyBatisIT {
     private static final String URL = MybatisItDatabase.url("member_privacy");
     // 2026-08-29 显式新增 identityKind —— 搜索页身份标签(BIZ / CLUB)。
     // 这是从真库读回的投影，扩的是一个在 SQL 里就收敛好的封顶枚举:
-    //   CASE WHEN user_type = 2 THEN 'BIZ' ELSE NULL END AS identity_kind
+    //   CASE WHEN role = 'merchant' THEN 'BIZ' ELSE NULL END AS identity_kind
     // 账号级 user_type 没有被放出来，它仍与 password / phone / openId 一起在
     // ApiUserPublicInfoTest 的匿名禁止列表里。
     private static final Set<String> PUBLIC_KEYS = new TreeSet<>(Arrays.asList(
             "activityNum", "avatar", "caseIntroducton", "casePics", "fansNum",
-            "followNum", "id", "identityKind", "introduction", "isFollow", "joinUserNum",
+            "followNum", "friendNum", "id", "identityKind", "introduction", "isFollow", "joinUserNum",
             "levelId", "likeNum", "nickname", "sysCategoryList", "topicNum"
     ));
 
@@ -137,6 +137,7 @@ class MemberPrivacyMyBatisIT {
             statement.execute("CREATE TABLE " + MEMBER_TABLE + " ("
                     + "id BIGINT PRIMARY KEY,"
                     + "user_type BIGINT NOT NULL,"
+                    + "role VARCHAR(16) NOT NULL DEFAULT 'player',"
                     + "status BIGINT NOT NULL,"
                     + "del_flag INT NOT NULL,"
                     + "invite_user_id VARCHAR(50),"
@@ -255,7 +256,7 @@ class MemberPrivacyMyBatisIT {
             insertMember(session, 1004L, 1L, 2, null, "已删除");
             insertMember(session, 1005L, 1L, 0, null, "公开商户");
             session.getConnection().createStatement().executeUpdate(
-                    "UPDATE " + MEMBER_TABLE + " SET user_type=2 WHERE id=1005");
+                    "UPDATE " + MEMBER_TABLE + " SET role='merchant', user_type=2 WHERE id=1005");
 
             PageHelper.startPage(2, 1);
             List<PublicMemberVO> rows =
@@ -278,13 +279,26 @@ class MemberPrivacyMyBatisIT {
             assertFalse(serialized.contains("内部治理备注"));
 
             PageHelper.clearPage();
+            // 旧 user_type 不能覆盖持久 RBAC：玩家即使旧字段为2仍按玩家公开投影查询。
+            session.getConnection().createStatement().executeUpdate(
+                    "UPDATE " + MEMBER_TABLE + " SET user_type=2 WHERE id=1001");
             List<PublicMemberVO> keywordRows =
                     session.getMapper(PublicMemberMapper.class)
                             .selectPublicMemberList(1L, "第一页");
             assertEquals(1, keywordRows.size(), "keyword 只允许按公开 nickname 搜索");
+            assertEquals(1001L, keywordRows.get(0).getId());
+            assertNull(keywordRows.get(0).getIdentityKind(), "玩家不能因旧 user_type 被显示为商家");
             assertTrue(session.getMapper(PublicMemberMapper.class)
                     .selectPublicMemberList(1L, "第一页姓名").isEmpty(),
                     "真实 name 不得成为公共搜索侧信道");
+
+            session.getConnection().createStatement().executeUpdate(
+                    "UPDATE " + MEMBER_TABLE + " SET user_type=1 WHERE id=1005");
+            List<PublicMemberVO> merchants = session.getMapper(PublicMemberMapper.class)
+                    .selectPublicMemberList(2L, null);
+            assertEquals(1, merchants.size(), "持久商家角色不受旧 user_type=1 影响");
+            assertEquals(1005L, merchants.get(0).getId());
+            assertEquals("BIZ", merchants.get(0).getIdentityKind());
 
             List<PublicMemberVO> allPublicTypes =
                     session.getMapper(PublicMemberMapper.class).selectPublicMemberList(null, null);

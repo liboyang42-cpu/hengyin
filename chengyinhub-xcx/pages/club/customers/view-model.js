@@ -13,6 +13,7 @@ const STATUS_TEXT = Object.freeze({
   PENDING: '待核销',
   CONTACTED: '已接洽',
   REFUNDED: '已退款',
+  CANCELLED: '已取消',
   REGISTERED: '报名记录',
 });
 // 状态色档:已核销=绿(success),待核销/已接洽=warning,已退款=danger。
@@ -21,6 +22,7 @@ const STATUS_TONE = Object.freeze({
   PENDING: 'warning',
   CONTACTED: 'warning',
   REFUNDED: 'danger',
+  CANCELLED: 'muted',
   REGISTERED: 'muted',
 });
 

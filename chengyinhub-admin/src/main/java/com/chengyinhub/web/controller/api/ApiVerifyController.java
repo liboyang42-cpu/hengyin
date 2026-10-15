@@ -200,6 +200,7 @@ public class ApiVerifyController extends BaseController {
         } catch (Exception e) {
             return error("核销码格式错误");
         }
+        roamMapper.lockClaimOwner(playerId);
         CityNodeVO poi = roamMapper.selectMerchantNodeDetail(poiId);
         if (poi == null) return error("据点不存在");
         // roam_poi.merchant_id 是 mms_merchant.id，不能拿登录 memberId 或 Owner memberId 比。

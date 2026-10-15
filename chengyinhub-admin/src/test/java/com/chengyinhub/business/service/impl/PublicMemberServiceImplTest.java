@@ -62,6 +62,7 @@ class PublicMemberServiceImplTest {
         PublicMemberVO member = new PublicMemberVO();
         member.setId(7L);
         member.setNickname("阿岚");
+        member.setFriendNum(2);
         when(mapper.selectPublicMemberById(7L)).thenReturn(member);
 
         IUmsMemberFollowService follows = mock(IUmsMemberFollowService.class);
@@ -79,6 +80,7 @@ class PublicMemberServiceImplTest {
 
         assertEquals(7L, (long) result.getId());
         assertNull(result.getIsFollow(), "匿名读不该带观看者关系字段");
+        assertEquals(2, result.getFriendNum(), "既有公开数量来自mapper，服务不覆盖成0");
         verify(follows, never()).selectUmsMemberFollowList(any(UmsMemberFollow.class));
     }
 

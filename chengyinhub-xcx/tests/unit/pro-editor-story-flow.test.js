@@ -137,7 +137,7 @@ test('故事玩法无需地点，保存并重新打开仍保留玩法位置和�
   page.insertStoryNodeAt({ currentTarget: { dataset: { index: 1, kind: 'game' } } })
   assert.equal(page.data.nodesForm._storyGame, true)
   page.data.nodesForm.name = '角色建档'
-  page.data.nodesForm.templateId = 71
+  page._bindNodeTemplate({ id: 71, title: '角色建档', advancedConfigJson: '{}' })
   page.confrimNode()
   const saved = storyFlow.toPayloadChapter(page.data.formData.chapters[0])
   assert.equal(saved.blocks[1].locationRequired, false, JSON.stringify({ saved, toasts, pending: page.data.pendingMaterials }))
@@ -418,7 +418,7 @@ test('A15：pendingInsertAt 存在页面 data，跳模板编辑页并回传后�
   assert.equal(page.data.pendingInsertAt, 1)
 
   page.onCreateGame()
-  navigated.events.templateCreated({ id: 19, title: '新建玩法' })
+  navigated.events.templateCreated({ id: 19, title: '新建玩法', advancedConfigJson: '{}' })
 
   assert.equal(page.data.pendingInsertAt, 1)
   assert.equal(page.data.nodesForm.templateId, 19)

@@ -98,6 +98,31 @@ test('CU-C-72 榜单空态按当前榜各说一句,不是一句通用的「还�
   assert.equal(failing.data.leaderboardError, '网络不稳定，榜单没能加载出来');
 });
 
+test('榜单排序菜单选择同步请求参数和空态文案，同选项不重复请求', () => {
+  const page = loadPage(DETAIL);
+  page.data.clubId = 7;
+  page._leaderboardSort = 'composite';
+  const options = {
+    mileage: ['里程', '本周还没有人跑出里程'],
+    duration: ['完成用时', '本周还没有人跑出用时'],
+    composite: ['综合', '本周还没有人产生贡献'],
+  };
+  Object.entries(options).forEach(([key, [label, emptyTitle]]) => {
+    page.onRankSortTap();
+    page.onChoiceSheetSelect({ currentTarget: { dataset: { key } } });
+    assert.equal(page._leaderboardSort, key);
+    assert.equal(JSON.parse(sent.data).sortBy, key);
+    assert.equal(page.data.leaderboardSortLabel, label);
+    assert.equal(page.data.choiceSheetShow, false);
+    sent.success({ code: '200', data: [] });
+    assert.equal(page.data.leaderboardEmptyTitle, emptyTitle);
+    const previousRequest = sent;
+    page.onRankSortTap();
+    page.onChoiceSheetSelect({ currentTarget: { dataset: { key } } });
+    assert.equal(sent, previousRequest, '重复选择当前排序不重发请求');
+  });
+});
+
 test('俱乐部成员资料入口:普通成员跳到既有脱敏公开主页', () => {
   const page = loadPage(DETAIL);
   page.data.club = { isOwner: false, viewerIsAdmin: false, id: 7 };

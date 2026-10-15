@@ -1,5 +1,5 @@
 <!-- PR 600 RunCard 正文；标题栏由外层 scene-sheet / 深链页提供。 -->
-<cy-error wx:if="{{state === 'error'}}" fill size="lg" title="漫游记录暂时读不出来" sub="本地记录没有被删除，可以重新读取。" retry="重试" bind:retry="retry" />
+<cy-error load-failure wx:if="{{state === 'error'}}" fill size="lg" title="漫游记录暂时读不出来" sub="本地记录没有被删除，可以重新读取。" retry="重试" bind:retry="retry" />
 <view wx:elif="{{state === 'loading'}}" class="history-loading" aria-role="status">正在读取漫游记录…</view>
 <view wx:else class="hs">
   <view class="hs-sum" wx:if="{{summary.trips}}">

@@ -80,7 +80,8 @@ class PlayKitPhotoCheckRuntimeTest {
         new RuoYiConfig().setProfile(profileDir.toString());
         File uploadDir = profileDir.resolve("upload").toFile();
         assertTrue(uploadDir.mkdirs());
-        Files.write(uploadDir.toPath().resolve("window.jpg"), jpeg(2, 2));
+        Files.createDirectories(profileDir.resolve("upload/2026/10/12"));
+        Files.write(profileDir.resolve("upload/2026/10/12/0123456789abcdef0123456789abcdef.jpg"), jpeg(2, 2));
 
         sessionMapper = mock(GameRuntimeSessionMapper.class);
         attemptMapper = mock(PlayAttemptLogMapper.class);
@@ -104,6 +105,14 @@ class PlayKitPhotoCheckRuntimeTest {
         ReflectionTestUtils.setField(service, "random", (AdvancedGameRandom) bound -> 0);
 
         visionService = new PhotoCheckVisionService();
+        org.springframework.test.util.ReflectionTestUtils.setField(visionService, "consentGuard", org.mockito.Mockito.mock(com.chengyinhub.business.service.ConsentGuard.class));
+        com.chengyinhub.business.mapper.AppMediaAssetMapper reviewedImages = mock(com.chengyinhub.business.mapper.AppMediaAssetMapper.class);
+        when(reviewedImages.selectByObjectKey("/profile/upload/2026/10/12/0123456789abcdef0123456789abcdef.jpg")).thenReturn(Map.of(
+                "id", 101L, "memberId", 1L, "ownerType", "SYSTEM", "reviewState", "APPROVED",
+                "mediaType", "IMAGE", "storageType", "LOCAL", "objectKey", "/profile/upload/2026/10/12/0123456789abcdef0123456789abcdef.jpg"));
+        com.chengyinhub.business.service.support.AppMediaReferenceGuard reviewedMedia = new com.chengyinhub.business.service.support.AppMediaReferenceGuard();
+        ReflectionTestUtils.setField(reviewedMedia, "mapper", reviewedImages);
+        ReflectionTestUtils.setField(visionService, "mediaReferences", reviewedMedia);
         ReflectionTestUtils.setField(service, "photoCheckVisionService", visionService);
 
         CmsTopicNode node = new CmsTopicNode();
@@ -446,7 +455,7 @@ class PlayKitPhotoCheckRuntimeTest {
 
     private Map<String, Object> submit(String key, Map<String, Object> payload) {
         when(attemptMapper.selectByIdempotencyKey(key)).thenReturn(null);
-        payload.put("imageUrl", "/profile/upload/window.jpg");
+        payload.put("imageUrl", "/profile/upload/2026/10/12/0123456789abcdef0123456789abcdef.jpg");
         return service.act(MEMBER_ID, SESSION_ID, session.getVersion(), key, "SUBMIT_PHOTO_CHECK", payload);
     }
 

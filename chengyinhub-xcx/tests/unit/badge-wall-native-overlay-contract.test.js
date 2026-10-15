@@ -16,7 +16,7 @@ function assertCoverBlock(source, cls, label) {
 }
 
 function assertErrorContract(wxml, pageJson) {
-  assert.match(wxml, /<cy-error class="bw-error-state" wx:if="\{\{loadFail \|\| partialFail \|\| \(glFail && viewMode === 'wall'\)\}\}"[\s\S]*retry="重试"[\s\S]*bind:retry="loadData"/)
+  assert.match(wxml, /<cy-error load-failure="\{\{loadFail && !wallAuthRequired && !wallAccessDenied\}\}" class="bw-error-state" wx:if="\{\{loadFail \|\| partialFail \|\| \(glFail && viewMode === 'wall'\)\}\}"[\s\S]*retry="\{\{wallAuthRequired \? \'登录\' : \'重试\'\}\}"[\s\S]*bind:retry="retryWall"/)
   assert.match(wxml, /<scroll-view class="bw-list" scroll-y wx:if="\{\{viewMode === 'list' && badges\.length && !loadFail && !partialFail\}\}"/)
   assert.doesNotMatch(wxml, /bw-err-btn|class="bw-err"/, '自绘错误按钮必须收编 cy-error')
   assert.equal(pageJson.usingComponents && pageJson.usingComponents['cy-error'], '/components/cy/error/index')
@@ -73,7 +73,7 @@ test('负控：把详情 sheet 退回普通 view 必须判红', () => {
 
 test('负控：错误态恢复 bw-err-btn 自绘按钮必须判红', () => {
   const source = read(WXML_PATH)
-  const mutated = source.replace('<cy-error class="bw-error-state"', '<view class="bw-err-btn"')
+  const mutated = source.replace('<cy-error load-failure="{{loadFail && !wallAuthRequired && !wallAccessDenied}}" class="bw-error-state"', '<view class="bw-err-btn"')
   assert.notEqual(mutated, source, '变异锚点失效')
   assert.throws(() => assertErrorContract(mutated, JSON.parse(read(JSON_PATH))))
 })

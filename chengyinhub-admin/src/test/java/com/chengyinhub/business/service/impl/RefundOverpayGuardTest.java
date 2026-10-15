@@ -32,6 +32,7 @@ class RefundOverpayGuardTest {
     private RefundServiceImpl newService(CmsRegistration reg, RefundApplicationMapper appMapper) {
         CmsRegistrationMapper regMapper = mock(CmsRegistrationMapper.class);
         when(regMapper.selectCmsRegistrationById(reg.getId())).thenReturn(reg);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(reg.getId())).thenReturn(reg);
         RefundServiceImpl service = new RefundServiceImpl();
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", regMapper);
         ReflectionTestUtils.setField(service, "refundApplicationMapper", appMapper);

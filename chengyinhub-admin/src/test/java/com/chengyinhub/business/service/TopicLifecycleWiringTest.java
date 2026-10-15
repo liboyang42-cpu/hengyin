@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /** 守住主题生命周期的真实写入口，防止后续又退回散落 setLifecycle。 */
 class TopicLifecycleWiringTest {
@@ -52,11 +53,33 @@ class TopicLifecycleWiringTest {
     @Test
     void topicCreationCannotWriteRecruitingOrdinalAroundCommercialProjectReview() throws Exception {
         String source = WiringSource.read(TOPIC_SERVICE).replaceAll("\\s+", "");
-        String method = between(source, "publicLongcreateTopic(TopicCreateDTOdto,", "publicLongupdateTopicByOwner(");
+        assertCreationCommercialReviewWiring(source);
+    }
 
+    @Test
+    void removingPublishedReviewCallerOrHelperSubmissionFailsTheContract() throws Exception {
+        String source = WiringSource.read(TOPIC_SERVICE).replaceAll("\\s+", "");
+        String disconnected = source.replace("submitPublishedProjectReview(topicId,memberId,dto.getRecruitDeadline());", "");
+        assertFalse(disconnected.equals(source));
+        assertThrows(AssertionError.class, () -> assertCreationCommercialReviewWiring(disconnected));
+        String missingSubmit = source.replace("topicCommercialReviewService.submitProjectReview(topicId,memberId,", "");
+        assertFalse(missingSubmit.equals(source));
+        assertThrows(AssertionError.class, () -> assertCreationCommercialReviewWiring(missingSubmit));
+    }
+
+    private static void assertCreationCommercialReviewWiring(String source) {
+        String method = between(source, "publicLongcreateTopic(TopicCreateDTOdto,", "publicLongupdateTopicByOwner(");
         assertFalse(method.contains("topic.setLifecycle(1)"), "创建主链不得直接写 DRAFT→RECRUITING ordinal");
-        assertTrue(method.contains("topicCommercialReviewService.submitProjectReview(topicId,memberId,TopicLifecycleState.RECRUITING)"),
-                "章节/票落库后必须通过商业立项审 seam 决定直通或 PENDING_REVIEW");
+        assertTrue(method.contains("returncreateTopicInternal(dto,memberId,username,false).getTopicId()"));
+        assertTrue(method.contains("privateTopicBundleSubmitResultVOcreateTopicInternal("));
+        int tickets = method.indexOf("saveTickets(dto.getTickets(),topicId,memberId,username,productType,saveDraft)");
+        int review = method.indexOf("submitPublishedProjectReview(topicId,memberId,dto.getRecruitDeadline())");
+        assertTrue(tickets >= 0 && review > tickets, "票落库后必须通过真实商业立项审接线");
+        String helper = between(source, "privatevoidsubmitPublishedProjectReview(", "privatevoidattachCommercialPublicationState(");
+        assertTrue(helper.contains("commercialTopicPolicy.evaluate(topicId).isCommercial()"));
+        assertTrue(helper.contains("if(!commercial&&recruitDeadline==null)return;"));
+        assertTrue(helper.contains("topicCommercialReviewService.submitProjectReview(topicId,memberId,recruitDeadline!=null?TopicLifecycleState.RECRUITING:TopicLifecycleState.PRICING)"),
+                "商业发布必须按真实招募期限提交立项审，不得直接直通");
     }
 
     private static String between(String source, String startMarker, String endMarker) {

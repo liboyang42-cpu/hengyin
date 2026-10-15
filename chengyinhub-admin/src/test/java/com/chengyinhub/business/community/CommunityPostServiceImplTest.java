@@ -15,6 +15,7 @@ import com.chengyinhub.business.service.IContentSafetyGate;
 import com.chengyinhub.business.service.impl.CommunityPostServiceImpl;
 import com.chengyinhub.business.service.support.CommunityPostLifecyclePolicy;
 import com.chengyinhub.common.exception.ServiceException;
+import com.chengyinhub.common.utils.JsonUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DuplicateKeyException;
@@ -22,12 +23,15 @@ import org.springframework.dao.DuplicateKeyException;
 import java.util.Collections;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -108,6 +112,33 @@ class CommunityPostServiceImplTest {
 
         assertEquals(Integer.valueOf(428), error.getCode());
         verify(safetyGate, never()).decide(any());
+    }
+
+    @Test
+    void editingCheckingPostRefreshesReviewWithSavedVersionAndLifecycle() {
+        CommunityPost checking = draft(7L, 9L, 3);
+        checking.setLifecycle("CHECKING");
+        when(mapper.selectByIdForUpdate(7L)).thenReturn(checking);
+        when(mapper.selectById(7L, 9L)).thenReturn(checking);
+        when(mapper.selectActiveGuideline()).thenReturn(Collections.<String, Object>singletonMap("id", 5L));
+        when(mapper.countGuidelineAck(9L, 5L)).thenReturn(1);
+        when(mapper.updateContentCas(any(), eq(3), eq("CHECKING"), any())).thenReturn(1);
+        CommunityPostRequests.Upsert request = validUpsert();
+        request.setExpectedVersion(3);
+        request.setMediaIds(Arrays.asList(41L, 42L));
+        when(mapper.attachMedia(eq(7L), eq(9L), anyLong(), anyInt(), any())).thenReturn(1);
+        service.edit(9L, 7L, request);
+        verify(mapper).detachMedia(eq(7L), eq(9L), eq(Arrays.asList(41L, 42L)), any());
+
+        IAuditTaskService audits = (IAuditTaskService) org.springframework.test.util.ReflectionTestUtils
+                .getField(service, "auditTaskService");
+        verify(audits).submitSafetyHold(eq(AuditTask.BIZ_COMMUNITY_POST), eq(7L), eq(9L),
+                eq("EDIT_REVIEW"), argThat(snapshot -> {
+                    CommunityPost saved = JsonUtils.parseObject(snapshot, CommunityPost.class);
+                    return Integer.valueOf(4).equals(saved.getVersion()) && "CHECKING".equals(saved.getLifecycle())
+                            && request.getBody().equals(saved.getBody());
+                }));
+        verify(mapper).upsertSearchDocument(eq(7L), eq("HIDDEN"), any());
     }
 
     @Test
@@ -231,6 +262,93 @@ class CommunityPostServiceImplTest {
 
         assertEquals(Integer.valueOf(400), error.getCode());
         verify(mapper, never()).insertPost(any());
+    }
+
+    @Test
+    void legacyMigrationLabelSurvivesEditingWithOrWithoutClientEcho() {
+        for (boolean echo : Arrays.asList(true, false)) {
+            setUp();
+            CommunityPost current = draft(7L, 9L, 3);
+            current.setSafetyLabelsJson("[\"LEGACY_MIGRATED\"]");
+            when(mapper.selectByIdForUpdate(7L)).thenReturn(current);
+            when(mapper.selectById(7L, 9L)).thenReturn(current);
+            when(mapper.updateContentCas(any(), eq(3), eq("DRAFT"), any())).thenReturn(1);
+            CommunityPostRequests.Upsert request = validUpsert();
+            request.setExpectedVersion(3);
+            request.setSafetyLabels(echo ? Arrays.asList("LEGACY_MIGRATED", "WEATHER_RISK")
+                    : Collections.singletonList("WEATHER_RISK"));
+
+            service.edit(9L, 7L, request);
+
+            verify(mapper).updateContentCas(argThat(post -> {
+                List<?> labels = JsonUtils.parseObject(post.getSafetyLabelsJson(), List.class);
+                return labels.size() == 2 && labels.contains("LEGACY_MIGRATED") && labels.contains("WEATHER_RISK");
+            }), eq(3), eq("DRAFT"), any());
+        }
+    }
+
+    @Test
+    void migrationLabelCannotBeForgedOnCreateOrUnmigratedEdit() {
+        CommunityPostRequests.Upsert request = validUpsert();
+        request.setExpectedVersion(3);
+        request.setSafetyLabels(Collections.singletonList("LEGACY_MIGRATED"));
+        assertEquals(Integer.valueOf(400), assertThrows(ServiceException.class,
+                () -> service.createDraft(9L, request)).getCode());
+        CommunityPost current = draft(7L, 9L, 3);
+        current.setSafetyLabelsJson("[]");
+        when(mapper.selectByIdForUpdate(7L)).thenReturn(current);
+        assertEquals(Integer.valueOf(400), assertThrows(ServiceException.class,
+                () -> service.edit(9L, 7L, request)).getCode());
+        verify(mapper, never()).insertPost(any());
+        verify(mapper, never()).updateContentCas(any(), anyInt(), anyString(), any());
+    }
+
+    @Test
+    void migratedEditKeepsInvalidDuplicateAndMergedLabelLimits() {
+        for (List<String> labels : Arrays.asList(
+                Collections.singletonList("PLATFORM_VERIFIED"),
+                Arrays.asList("LEGACY_MIGRATED", "LEGACY_MIGRATED"),
+                Arrays.asList("DANGEROUS_ACTIVITY", "SENSITIVE_CONTENT", "FLASHING_IMAGES", "SPOILER", "WEATHER_RISK"),
+                Arrays.asList("LEGACY_MIGRATED", "DANGEROUS_ACTIVITY", "SENSITIVE_CONTENT", "FLASHING_IMAGES", "SPOILER", "WEATHER_RISK"))) {
+            setUp();
+            CommunityPost current = draft(7L, 9L, 3);
+            current.setSafetyLabelsJson("[\"LEGACY_MIGRATED\"]");
+            when(mapper.selectByIdForUpdate(7L)).thenReturn(current);
+            CommunityPostRequests.Upsert request = validUpsert();
+            request.setExpectedVersion(3);
+            request.setSafetyLabels(labels);
+            assertEquals(Integer.valueOf(400), assertThrows(ServiceException.class,
+                    () -> service.edit(9L, 7L, request)).getCode());
+            verify(mapper, never()).insertRevision(anyLong(), anyLong(), anyInt(), anyString(), anyString(), anyString(), any());
+            verify(mapper, never()).updateContentCas(any(), anyInt(), anyString(), any());
+        }
+    }
+
+    @Test
+    void migratedEditDoesNotRelaxOwnerOrVersionChecks() {
+        for (boolean wrongOwner : Arrays.asList(true, false)) {
+            setUp();
+            CommunityPost current = draft(7L, 9L, 3);
+            current.setSafetyLabelsJson("[\"LEGACY_MIGRATED\"]");
+            when(mapper.selectByIdForUpdate(7L)).thenReturn(current);
+            CommunityPostRequests.Upsert request = validUpsert();
+            request.setExpectedVersion(wrongOwner ? 3 : 2);
+            request.setSafetyLabels(Collections.singletonList("LEGACY_MIGRATED"));
+            assertThrows(ServiceException.class, () -> service.edit(wrongOwner ? 10L : 9L, 7L, request));
+            verify(mapper, never()).updateContentCas(any(), anyInt(), anyString(), any());
+        }
+    }
+
+    @Test
+    void corruptStoredSafetyLabelsCannotBeOverwrittenAsEmpty() {
+        CommunityPost current = draft(7L, 9L, 3);
+        current.setSafetyLabelsJson("{broken");
+        when(mapper.selectByIdForUpdate(7L)).thenReturn(current);
+        CommunityPostRequests.Upsert request = validUpsert();
+        request.setExpectedVersion(3);
+        assertEquals(Integer.valueOf(409), assertThrows(ServiceException.class,
+                () -> service.edit(9L, 7L, request)).getCode());
+        verify(mapper, never()).updateContentCas(any(), anyInt(), anyString(), any());
     }
 
     @Test
@@ -873,7 +991,7 @@ class CommunityPostServiceImplTest {
         Map<String, Object> reply = new HashMap<>();
         reply.put("id", 200L);
         reply.put("parent_id", 100L);
-        when(mapper.selectComments(7L, 9L, null, 20)).thenReturn(Arrays.asList(root, reply));
+        when(mapper.selectComments(7L, 9L, null, 21)).thenReturn(Arrays.asList(root, reply));
 
         Map<String, Object> page = service.comments(9L, 7L, null, 20);
 
@@ -1119,4 +1237,52 @@ class CommunityPostServiceImplTest {
         request.setGuidelineVersionId(5L);
         return request;
     }
+    @Test
+    void completedReferenceFilterUsesBothPublicSnapshotRulesWithoutTruncation() {
+        List<Map<String, Object>> completed = new java.util.ArrayList<>();
+        for (long id = 1; id <= 52; id++) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("dataType", id % 2 == 0 ? 2 : 1);
+            row.put("dataId", id); row.put("completed", true);
+            completed.add(row);
+            when(mapper.selectReferenceSnapshot(id % 2 == 0 ? "TOPIC" : "ACTIVITY", id, 9L))
+                    .thenReturn(Collections.singletonMap("reference_id", id));
+        }
+        assertEquals(completed, service.filterPublicCompletedReferences(9L, completed));
+        when(mapper.selectReferenceSnapshot("ACTIVITY", 1L, 9L)).thenReturn(null);
+        when(mapper.selectReferenceSnapshot("TOPIC", 2L, 9L)).thenReturn(Collections.emptyMap());
+        List<Map<String, Object>> filtered = service.filterPublicCompletedReferences(9L, completed);
+        assertEquals(completed.subList(2, 52), filtered);
+        assertEquals(52, completed.size());
+        assertSame(completed.get(2), filtered.get(0));
+        verify(mapper, never()).selectReferenceOptions(anyString(), anyLong(), anyInt());
+    }
+
+    @Test
+    void completedReferenceFilterRejectsUnknownTypesAndMissingIdentity() {
+        Map<String, Object> unknown = new LinkedHashMap<>();
+        unknown.put("dataType", 3); unknown.put("dataId", 1L);
+        assertTrue(service.filterPublicCompletedReferences(9L, Collections.singletonList(unknown)).isEmpty());
+        unknown.put("dataType", "OTHER");
+        assertTrue(service.filterPublicCompletedReferences(9L, Collections.singletonList(unknown)).isEmpty());
+        unknown.put("dataType", 1);
+        assertTrue(service.filterPublicCompletedReferences(null, Collections.singletonList(unknown)).isEmpty());
+        assertTrue(service.filterPublicCompletedReferences(0L, Collections.singletonList(unknown)).isEmpty());
+        verify(mapper, never()).selectReferenceSnapshot(anyString(), anyLong(), anyLong());
+    }
+
+    @Test
+    void unavailableReferenceStillRejectedByExistingPostWriteGate() {
+        CommunityPostRequests.Upsert request = validUpsert();
+        CommunityPostRequests.Reference reference = new CommunityPostRequests.Reference();
+        reference.setReferenceType("ACTIVITY");
+        reference.setReferenceId(63L);
+        request.setReferences(Collections.singletonList(reference));
+        when(mapper.insertPost(any())).thenReturn(1);
+        ServiceException failure = assertThrows(ServiceException.class, () -> service.createDraft(9L, request));
+        assertEquals(Integer.valueOf(409), failure.getCode());
+        verify(mapper).selectReferenceSnapshot("ACTIVITY", 63L, 9L);
+        verify(mapper, never()).insertReference(any(), any(), any(), any(), any(), any());
+    }
+
 }

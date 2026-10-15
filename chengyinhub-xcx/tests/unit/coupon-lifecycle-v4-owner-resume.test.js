@@ -124,15 +124,37 @@ test('钱包:已落屏列表遇静默换号,宿主 show 必须清掉并重载当
   assert.deepEqual(Array.from(h.instance.data.all, (i) => i._name), ['B账号券'])
 })
 
-test('钱包:同 owner show 保留列表不闪不重载', () => {
+test('钱包:同 owner hide后show重新取得服务器终态', () => {
   const h = mount(WALLET, 'component', { owner: { value: 'member-A' } })
   h.instance.load()
   succeed(h.requests[0], [{ id: 994, couponName: 'A券', useStatus: 0 }])
 
   h.instance.host_hide()
   h.instance.host_show()
-  assert.equal(h.requests.length, 1, '同 owner 不得重复请求')
+  assert.equal(h.requests.length, 2, '隐藏后同 owner 也应刷新')
+  succeed(h.requests[1], [{ id: 994, couponName: 'A券', useStatus: 2 }])
   assert.deepEqual(Array.from(h.instance.data.all, (i) => i._name), ['A券'])
+  assert.equal(h.instance.data.all[0]._canView, false)
+})
+
+test('钱包销毁后旧成功、异常和失败回执都不再写组件，重开仍正常加载', () => {
+  for (const callback of ['success', 'successStatusAbnormal', 'fail']) {
+    const old = mount(WALLET, 'component')
+    old.instance.load()
+    const snapshot = JSON.stringify(old.instance.data)
+    let writes = 0
+    old.instance.setData = () => { writes++ }
+    assert.equal(typeof old.definition.lifetimes.detached, 'function')
+    old.definition.lifetimes.detached.call(old.instance)
+    old.requests[0].opts[callback]({ code: 200, data: [{ id: 995, couponName: '迟到券', useStatus: 0 }] })
+    assert.equal(writes, 0)
+    assert.equal(JSON.stringify(old.instance.data), snapshot)
+    const current = mount(WALLET, 'component')
+    current.definition.lifetimes.attached.call(current.instance)
+    succeed(current.requests[0], [{ id: 996, couponName: '当前券', useStatus: 0 }])
+    assert.equal(current.instance.data.state, 'ready')
+    assert.deepEqual(Array.from(current.instance.data.all, item => item._name), ['当前券'])
+  }
 })
 
 // ---------------------------------------------------------------- 同 owner hide/show 保留
@@ -445,4 +467,24 @@ for (const kind of ['page', 'scene']) {
       assert.equal(h.instance.data.qrState,'ready')
     }
   })
+}
+
+for (const [source, kind, qrField, errorField] of [[QR_PAGE, 'page', 'qrcodeUrl', 'errMsg'], [QR_SCENE, 'component', 'qr', 'errorText']]) {
+  for (const callback of ['success', 'successStatusAbnormal']) {
+    test(`券码独立密钥缺失：${kind}/${callback}立即清掉TTL内旧码并显示停用事实`, () => {
+      const h = mount(source, kind)
+      const i = h.instance
+      if (kind === 'page') { i.data.couponHistoryId = 301; i.refreshToken() }
+      else { i.data.couponHistoryId = '301'; i.start('301') }
+      succeed(h.requests[0], token('OLD-JWT-CODE'))
+      assert.equal(i.data[qrField], 'OLD-JWT-CODE')
+      if (kind === 'page') i.refreshToken()
+      else i.refresh()
+      h.requests.at(-1).opts[callback]({ code: 503, msg: '优惠券出示码暂不可用：独立签名密钥未配置，请联系管理员' })
+      assert.equal(i.data[qrField], '')
+      assert.equal(i.data.countdown, 0)
+      assert.equal(i.data.qrState, 'error')
+      assert.match(i.data[errorField], /独立签名密钥未配置/)
+    })
+  }
 }

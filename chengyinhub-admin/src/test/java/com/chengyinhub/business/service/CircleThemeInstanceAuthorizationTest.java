@@ -29,6 +29,10 @@ class CircleThemeInstanceAuthorizationTest {
         CmsTopicChapterMapper chapterMapper = mock(CmsTopicChapterMapper.class);
         IProductRoleService productRoleService = mock(IProductRoleService.class);
         CmsTopicServiceImpl service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "productRoleService", productRoleService);
@@ -58,6 +62,10 @@ class CircleThemeInstanceAuthorizationTest {
         CmsTopicChapterMapper chapterMapper = mock(CmsTopicChapterMapper.class);
         IProductRoleService productRoleService = mock(IProductRoleService.class);
         CmsTopicServiceImpl service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "productRoleService", productRoleService);
@@ -91,6 +99,10 @@ class CircleThemeInstanceAuthorizationTest {
         CmsTopicMapper topicMapper = mock(CmsTopicMapper.class);
         IProductRoleService productRoleService = mock(IProductRoleService.class);
         CmsTopicServiceImpl service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "productRoleService", productRoleService);
         CmsTopic topic = new CmsTopic();
