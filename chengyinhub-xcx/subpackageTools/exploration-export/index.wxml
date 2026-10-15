@@ -18,7 +18,6 @@
       <cy-date-field mode="date" value="{{endDate}}" start="{{startDate}}" data-field="endDate" bind:change="onField">
         <view class="tu-row" aria-role="button" aria-label="结束日期 {{endDate}}，不含当天" hover-class="cy-pressed" hover-stay-time="80"><view class="tu-row__body"><text class="tu-row__s">结束（不含）</text></view><text class="tu-row__v">{{endDate}}</text></view>
       </cy-date-field>
-      <view class="tu-row"><view class="tu-row__body"><text class="tu-row__s">格式</text></view><text class="tu-row__v">JSONL</text></view>
     </view>
     <view class="tu-btns"><view class="tu-btn tu-btn--w {{busy ? 'is-off' : ''}}" bindtap="prepare" aria-role="button" aria-label="准备导出" hover-class="cy-pressed" hover-stay-time="80">准备导出</view></view>
   </block>

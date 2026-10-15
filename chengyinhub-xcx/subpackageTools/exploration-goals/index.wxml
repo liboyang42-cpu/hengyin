@@ -23,7 +23,6 @@
 
   <!-- 新目标 -->
   <block wx:if="{{creating}}">
-    <view class="tu-sec">新的探索目标</view>
     <view class="gl-seg">
       <view wx:for="{{metrics}}" wx:key="*this" class="gl-seg__i {{metricIndex === index ? 'is-on' : ''}}" data-value="{{index}}" bindtap="pickMetric" aria-role="button" aria-label="目标口径 {{item}}" hover-class="cy-pressed" hover-stay-time="80">{{item}}</view>
     </view>

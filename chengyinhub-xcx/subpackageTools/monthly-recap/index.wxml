@@ -28,7 +28,7 @@
 
   <!-- 单系列周柱:细柱 + 顶部圆角,最高一根标数,其余点按显示;一个系列不画图例 -->
   <block wx:if="{{weeks.length}}">
-    <view class="tu-sec">每周{{kinds[kindIndex]}}<text class="tu-sec__aside">次</text></view>
+    <view class="tu-sec">每周{{kinds[kindIndex]}}</view>
     <view class="mr-chart" aria-role="img" aria-label="{{weeksLabel}}">
       <view class="mr-col" wx:for="{{weeks}}" wx:key="label" data-index="{{index}}" bindtap="pickWeek" aria-role="button" aria-label="{{item.label}} {{item.count || 0}} 次" hover-class="cy-pressed" hover-stay-time="80">
         <text class="mr-val {{item.isMax || weekPicked === index ? 'is-on' : ''}}">{{item.count || 0}}</text>
@@ -38,7 +38,6 @@
     </view>
   </block>
 
-  <view class="tu-sec">记录</view>
   <view class="tu-group" wx:if="{{items.length}}">
     <view class="tu-row cy-rise-in" style="animation-delay: {{index * 60}}ms" wx:for="{{items}}" wx:key="id">
       <view class="tu-row__body"><text class="tu-row__t">{{item.title}}</text><text class="tu-row__s">{{item.dateText}} · {{kinds[kindIndex]}}</text></view>

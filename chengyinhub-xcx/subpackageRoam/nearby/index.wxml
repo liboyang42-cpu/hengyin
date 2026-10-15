@@ -97,7 +97,6 @@
         </view>
       </view>
       <text class="mt-foot" wx:if="{{!applicants.length}}">现在没有待处理的申请</text>
-      <view class="mt-notice mt-notice--plain" aria-role="text">{{leaderFoot}}</view>
     </view>
   </view>
   </block>

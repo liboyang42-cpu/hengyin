@@ -22,7 +22,7 @@
     <view class="mt-err" wx:elif="{{mineError}}" bindtap="reload" aria-role="button" aria-label="队伍没能读到，点按重试" hover-class="cy-pressed" hover-stay-time="80">队伍没能读到 · 点按重试</view>
     <block wx:elif="{{groups.length}}">
       <block wx:for="{{groups}}" wx:for-item="g" wx:key="key">
-        <view class="mt-sec">{{g.title}}<text class="mt-sec__n">{{g.rows.length}}</text></view>
+        <view class="mt-sec">{{g.title}}</view>
         <view class="mt-card cy-rise-in" style="animation-delay: {{index * 60}}ms" wx:for="{{g.rows}}" wx:key="key" data-index="{{index}}" data-group="{{g.key}}" bindtap="openRow"
               aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">
           <view class="mt-card__top">
@@ -46,7 +46,7 @@
   </block>
 
   <block wx:if="{{tab === 'open' || (!loading && !groups.length && !mineError)}}">
-    <view class="mt-sec" wx:if="{{tab === 'mine'}}">附近在招募<text class="mt-sec__n">{{openRows.length}}</text></view>
+    <view class="mt-sec" wx:if="{{tab === 'mine'}}">附近在招募</view>
     <view class="mt-state" wx:if="{{openLoading}}">正在找附近的队伍…</view>
     <view class="mt-err" wx:elif="{{openError}}" bindtap="loadOpen" aria-role="button" aria-label="{{openError}}，点按重试" hover-class="cy-pressed" hover-stay-time="80">{{openError}} · 点按重试</view>
     <view class="mt-card cy-rise-in" style="animation-delay: {{index * 60}}ms" wx:for="{{openRows}}" wx:key="key" data-index="{{index}}" bindtap="openNearbyTeam" aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">

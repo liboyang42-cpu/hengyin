@@ -970825,7 +970825,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:107:bindtap:closeSheet:19",
+      "id": "subpackageRoam/nearby/index.wxml:106:bindtap:closeSheet:19",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -970848,7 +970848,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeSheet",
-        "line": 107,
+        "line": 106,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -970888,11 +970888,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:324"
+        "staticSource": "subpackageRoam/nearby/index.js:323"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:108:catchtap:noop:20",
+      "id": "subpackageRoam/nearby/index.wxml:107:catchtap:noop:20",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -970915,7 +970915,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 108,
+        "line": 107,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -970956,11 +970956,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:329"
+        "staticSource": "subpackageRoam/nearby/index.js:328"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:110:catchtap:closeSheet:21",
+      "id": "subpackageRoam/nearby/index.wxml:109:catchtap:closeSheet:21",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -970983,7 +970983,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "closeSheet",
-        "line": 110,
+        "line": 109,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -971023,11 +971023,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:324"
+        "staticSource": "subpackageRoam/nearby/index.js:323"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:119:bindtap:onMyRowAction:22",
+      "id": "subpackageRoam/nearby/index.wxml:118:bindtap:onMyRowAction:22",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -971050,7 +971050,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onMyRowAction",
-        "line": 119,
+        "line": 118,
         "selectorHint": ".mt-sbtn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -971166,11 +971166,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:522"
+        "staticSource": "subpackageRoam/nearby/index.js:521"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:128:bindtap:closeSheet:23",
+      "id": "subpackageRoam/nearby/index.wxml:127:bindtap:closeSheet:23",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -971193,7 +971193,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeSheet",
-        "line": 128,
+        "line": 127,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -971233,7 +971233,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:324"
+        "staticSource": "subpackageRoam/nearby/index.js:323"
       }
     },
     {
@@ -971333,7 +971333,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:278"
+        "staticSource": "subpackageRoam/nearby/index.js:277"
       }
     },
     {
@@ -971448,11 +971448,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:287"
+        "staticSource": "subpackageRoam/nearby/index.js:286"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:132:catchtap:noop:24",
+      "id": "subpackageRoam/nearby/index.wxml:131:catchtap:noop:24",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -971475,7 +971475,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 132,
+        "line": 131,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -971516,11 +971516,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:329"
+        "staticSource": "subpackageRoam/nearby/index.js:328"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:134:catchtap:closeSheet:25",
+      "id": "subpackageRoam/nearby/index.wxml:133:catchtap:closeSheet:25",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -971543,7 +971543,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "closeSheet",
-        "line": 134,
+        "line": 133,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -971583,11 +971583,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:324"
+        "staticSource": "subpackageRoam/nearby/index.js:323"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:143:bindtap:openTopicPage:26",
+      "id": "subpackageRoam/nearby/index.wxml:142:bindtap:openTopicPage:26",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -971610,7 +971610,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openTopicPage",
-        "line": 143,
+        "line": 142,
         "selectorHint": ".btn2",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -971651,11 +971651,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:562"
+        "staticSource": "subpackageRoam/nearby/index.js:561"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:150:bind:cancel:closeRange:28",
+      "id": "subpackageRoam/nearby/index.wxml:149:bind:cancel:closeRange:28",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -971678,7 +971678,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "closeRange",
-        "line": 150,
+        "line": 149,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -971718,11 +971718,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:307"
+        "staticSource": "subpackageRoam/nearby/index.js:306"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:150:bind:select:onRangePick:27",
+      "id": "subpackageRoam/nearby/index.wxml:149:bind:select:onRangePick:27",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -971745,7 +971745,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onRangePick",
-        "line": 150,
+        "line": 149,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -971833,11 +971833,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:308"
+        "staticSource": "subpackageRoam/nearby/index.js:307"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:155:bind:close:onResultClose:31",
+      "id": "subpackageRoam/nearby/index.wxml:154:bind:close:onResultClose:31",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -971860,7 +971860,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:close",
         "handler": "onResultClose",
-        "line": 155,
+        "line": 154,
         "selectorHint": "cy-result-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -971900,11 +971900,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:537"
+        "staticSource": "subpackageRoam/nearby/index.js:536"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:155:bind:primary:onResultPrimary:29",
+      "id": "subpackageRoam/nearby/index.wxml:154:bind:primary:onResultPrimary:29",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -971927,7 +971927,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:primary",
         "handler": "onResultPrimary",
-        "line": 155,
+        "line": 154,
         "selectorHint": "cy-result-sheet[bind:primary]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -971969,11 +971969,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:538"
+        "staticSource": "subpackageRoam/nearby/index.js:537"
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:155:bind:secondary:onResultClose:30",
+      "id": "subpackageRoam/nearby/index.wxml:154:bind:secondary:onResultClose:30",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -971996,7 +971996,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:secondary",
         "handler": "onResultClose",
-        "line": 155,
+        "line": 154,
         "selectorHint": "cy-result-sheet[bind:secondary]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -972036,7 +972036,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:537"
+        "staticSource": "subpackageRoam/nearby/index.js:536"
       }
     },
     {
@@ -972103,7 +972103,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:303"
+        "staticSource": "subpackageRoam/nearby/index.js:302"
       }
     },
     {
@@ -972170,7 +972170,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:303"
+        "staticSource": "subpackageRoam/nearby/index.js:302"
       }
     },
     {
@@ -972269,7 +972269,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:304"
+        "staticSource": "subpackageRoam/nearby/index.js:303"
       }
     },
     {
@@ -972384,7 +972384,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:121"
+        "staticSource": "subpackageRoam/nearby/index.js:120"
       }
     },
     {
@@ -972451,7 +972451,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:302"
+        "staticSource": "subpackageRoam/nearby/index.js:301"
       }
     },
     {
@@ -972521,7 +972521,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:306"
+        "staticSource": "subpackageRoam/nearby/index.js:305"
       }
     },
     {
@@ -972588,7 +972588,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:324"
+        "staticSource": "subpackageRoam/nearby/index.js:323"
       }
     },
     {
@@ -972656,7 +972656,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:329"
+        "staticSource": "subpackageRoam/nearby/index.js:328"
       }
     },
     {
@@ -972723,7 +972723,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:324"
+        "staticSource": "subpackageRoam/nearby/index.js:323"
       }
     },
     {
@@ -972793,7 +972793,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:111"
+        "staticSource": "subpackageRoam/nearby/index.js:110"
       }
     },
     {
@@ -972897,7 +972897,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:362"
+        "staticSource": "subpackageRoam/nearby/index.js:361"
       }
     },
     {
@@ -973023,7 +973023,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:371"
+        "staticSource": "subpackageRoam/nearby/index.js:370"
       }
     },
     {
@@ -973090,7 +973090,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:324"
+        "staticSource": "subpackageRoam/nearby/index.js:323"
       }
     },
     {
@@ -973158,7 +973158,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:329"
+        "staticSource": "subpackageRoam/nearby/index.js:328"
       }
     },
     {
@@ -973225,7 +973225,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:324"
+        "staticSource": "subpackageRoam/nearby/index.js:323"
       }
     },
     {
@@ -973349,7 +973349,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:461"
+        "staticSource": "subpackageRoam/nearby/index.js:460"
       }
     },
     {
@@ -973473,7 +973473,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:461"
+        "staticSource": "subpackageRoam/nearby/index.js:460"
       }
     },
     {
@@ -975394,7 +975394,7 @@
       }
     },
     {
-      "id": "subpackageTools/capsule/index.wxml:32:bindinput:input:6",
+      "id": "subpackageTools/capsule/index.wxml:31:bindinput:input:6",
       "route": "subpackageTools/capsule/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -975417,7 +975417,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "input",
-        "line": 32,
+        "line": 31,
         "selectorHint": ".tu-field__ta",
         "visibleCondition": null,
         "disabledCondition": "{{busy || pendingCreate}}",
@@ -975461,7 +975461,7 @@
       }
     },
     {
-      "id": "subpackageTools/capsule/index.wxml:44:bindtap:pickUnlock:8",
+      "id": "subpackageTools/capsule/index.wxml:43:bindtap:pickUnlock:8",
       "route": "subpackageTools/capsule/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -975484,7 +975484,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickUnlock",
-        "line": 44,
+        "line": 43,
         "selectorHint": ".tu-chip",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -975528,7 +975528,7 @@
       }
     },
     {
-      "id": "subpackageTools/capsule/index.wxml:46:bind:change:pickCustom:9",
+      "id": "subpackageTools/capsule/index.wxml:45:bind:change:pickCustom:9",
       "route": "subpackageTools/capsule/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -975551,7 +975551,7 @@
         "tag": "cy-date-field",
         "event": "bind:change",
         "handler": "pickCustom",
-        "line": 46,
+        "line": 45,
         "selectorHint": "cy-date-field[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -975595,7 +975595,7 @@
       }
     },
     {
-      "id": "subpackageTools/capsule/index.wxml:51:bindtap:create:10",
+      "id": "subpackageTools/capsule/index.wxml:50:bindtap:create:10",
       "route": "subpackageTools/capsule/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -975618,7 +975618,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "create",
-        "line": 51,
+        "line": 50,
         "selectorHint": ".tu-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -975673,7 +975673,7 @@
       }
     },
     {
-      "id": "subpackageTools/capsule/index.wxml:52:bindtap:toggleCompose:11",
+      "id": "subpackageTools/capsule/index.wxml:51:bindtap:toggleCompose:11",
       "route": "subpackageTools/capsule/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -975696,7 +975696,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleCompose",
-        "line": 52,
+        "line": 51,
         "selectorHint": ".tu-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -975740,7 +975740,7 @@
       }
     },
     {
-      "id": "subpackageTools/capsule/index.wxml:61:bindtap:detail:12",
+      "id": "subpackageTools/capsule/index.wxml:60:bindtap:detail:12",
       "route": "subpackageTools/capsule/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -975763,7 +975763,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "detail",
-        "line": 61,
+        "line": 60,
         "selectorHint": ".cp-card",
         "visibleCondition": "{{item.state === 'OPEN'}}",
         "disabledCondition": null,
@@ -975807,7 +975807,7 @@
       }
     },
     {
-      "id": "subpackageTools/capsule/index.wxml:65:bindtap:lockedTip:13",
+      "id": "subpackageTools/capsule/index.wxml:64:bindtap:lockedTip:13",
       "route": "subpackageTools/capsule/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -975830,7 +975830,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "lockedTip",
-        "line": 65,
+        "line": 64,
         "selectorHint": ".cp-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -975875,7 +975875,7 @@
       }
     },
     {
-      "id": "subpackageTools/capsule/index.wxml:72:bindtap:next:14",
+      "id": "subpackageTools/capsule/index.wxml:71:bindtap:next:14",
       "route": "subpackageTools/capsule/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -975898,7 +975898,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "next",
-        "line": 72,
+        "line": 71,
         "selectorHint": ".tu-more",
         "visibleCondition": "{{hasMore && !busy}}",
         "disabledCondition": null,
@@ -975942,7 +975942,7 @@
       }
     },
     {
-      "id": "subpackageTools/capsule/index.wxml:75:bindtap:toggleCompose:15",
+      "id": "subpackageTools/capsule/index.wxml:74:bindtap:toggleCompose:15",
       "route": "subpackageTools/capsule/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -975965,7 +975965,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleCompose",
-        "line": 75,
+        "line": 74,
         "selectorHint": ".tu-fab",
         "visibleCondition": "{{!composing}}",
         "disabledCondition": null,
@@ -976294,7 +976294,7 @@
       }
     },
     {
-      "id": "subpackageTools/exploration-export/index.wxml:23:bindtap:prepare:6",
+      "id": "subpackageTools/exploration-export/index.wxml:22:bindtap:prepare:6",
       "route": "subpackageTools/exploration-export/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -976317,7 +976317,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "prepare",
-        "line": 23,
+        "line": 22,
         "selectorHint": ".tu-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -976361,7 +976361,7 @@
       }
     },
     {
-      "id": "subpackageTools/exploration-export/index.wxml:39:bindtap:shareFile:7",
+      "id": "subpackageTools/exploration-export/index.wxml:38:bindtap:shareFile:7",
       "route": "subpackageTools/exploration-export/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -976384,7 +976384,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "shareFile",
-        "line": 39,
+        "line": 38,
         "selectorHint": ".tu-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -976428,7 +976428,7 @@
       }
     },
     {
-      "id": "subpackageTools/exploration-export/index.wxml:40:bindtap:saveFile:8",
+      "id": "subpackageTools/exploration-export/index.wxml:39:bindtap:saveFile:8",
       "route": "subpackageTools/exploration-export/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -976451,7 +976451,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "saveFile",
-        "line": 40,
+        "line": 39,
         "selectorHint": ".tu-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -976495,7 +976495,7 @@
       }
     },
     {
-      "id": "subpackageTools/exploration-export/index.wxml:43:bindtap:readNext:9",
+      "id": "subpackageTools/exploration-export/index.wxml:42:bindtap:readNext:9",
       "route": "subpackageTools/exploration-export/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -976518,7 +976518,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "readNext",
-        "line": 43,
+        "line": 42,
         "selectorHint": ".tu-btn",
         "visibleCondition": "{{!fileReady}}",
         "disabledCondition": null,
@@ -976562,7 +976562,7 @@
       }
     },
     {
-      "id": "subpackageTools/exploration-export/index.wxml:44:bindtap:restart:10",
+      "id": "subpackageTools/exploration-export/index.wxml:43:bindtap:restart:10",
       "route": "subpackageTools/exploration-export/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -976585,7 +976585,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "restart",
-        "line": 44,
+        "line": 43,
         "selectorHint": ".tu-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -976965,7 +976965,7 @@
       }
     },
     {
-      "id": "subpackageTools/exploration-goals/index.wxml:28:bindtap:pickMetric:4",
+      "id": "subpackageTools/exploration-goals/index.wxml:27:bindtap:pickMetric:4",
       "route": "subpackageTools/exploration-goals/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -976988,7 +976988,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickMetric",
-        "line": 28,
+        "line": 27,
         "selectorHint": ".gl-seg__i",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -977032,7 +977032,7 @@
       }
     },
     {
-      "id": "subpackageTools/exploration-goals/index.wxml:31:bindtap:stepTarget:5",
+      "id": "subpackageTools/exploration-goals/index.wxml:30:bindtap:stepTarget:5",
       "route": "subpackageTools/exploration-goals/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -977055,7 +977055,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "stepTarget",
-        "line": 31,
+        "line": 30,
         "selectorHint": ".gl-step__b",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -977099,7 +977099,7 @@
       }
     },
     {
-      "id": "subpackageTools/exploration-goals/index.wxml:33:bindtap:stepTarget:6",
+      "id": "subpackageTools/exploration-goals/index.wxml:32:bindtap:stepTarget:6",
       "route": "subpackageTools/exploration-goals/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -977122,7 +977122,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "stepTarget",
-        "line": 33,
+        "line": 32,
         "selectorHint": ".gl-step__b",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -977166,7 +977166,7 @@
       }
     },
     {
-      "id": "subpackageTools/exploration-goals/index.wxml:38:bindtap:pickPeriod:7",
+      "id": "subpackageTools/exploration-goals/index.wxml:37:bindtap:pickPeriod:7",
       "route": "subpackageTools/exploration-goals/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -977189,7 +977189,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickPeriod",
-        "line": 38,
+        "line": 37,
         "selectorHint": ".tu-chip",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -977233,7 +977233,77 @@
       }
     },
     {
-      "id": "subpackageTools/exploration-goals/index.wxml:41:bind:change:onField:8",
+      "id": "subpackageTools/exploration-goals/index.wxml:40:bind:change:onField:8",
+      "route": "subpackageTools/exploration-goals/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageTools/exploration-goals/index.wxml",
+        "js": "subpackageTools/exploration-goals/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-date-field",
+        "event": "bind:change",
+        "handler": "onField",
+        "line": 40,
+        "selectorHint": "cy-date-field[bind:change]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/topic/index/index?id="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageTools/exploration-goals/index.js:32"
+      }
+    },
+    {
+      "id": "subpackageTools/exploration-goals/index.wxml:41:bind:change:onField:9",
       "route": "subpackageTools/exploration-goals/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -977303,77 +977373,7 @@
       }
     },
     {
-      "id": "subpackageTools/exploration-goals/index.wxml:42:bind:change:onField:9",
-      "route": "subpackageTools/exploration-goals/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageTools/exploration-goals/index.wxml",
-        "js": "subpackageTools/exploration-goals/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-date-field",
-        "event": "bind:change",
-        "handler": "onField",
-        "line": 42,
-        "selectorHint": "cy-date-field[bind:change]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "event-contract",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/topic/index/index?id="
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageTools/exploration-goals/index.js:32"
-      }
-    },
-    {
-      "id": "subpackageTools/exploration-goals/index.wxml:45:bindtap:dismissError:10",
+      "id": "subpackageTools/exploration-goals/index.wxml:44:bindtap:dismissError:10",
       "route": "subpackageTools/exploration-goals/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -977396,7 +977396,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "dismissError",
-        "line": 45,
+        "line": 44,
         "selectorHint": ".tu-retry",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -977440,7 +977440,7 @@
       }
     },
     {
-      "id": "subpackageTools/exploration-goals/index.wxml:47:bindtap:create:11",
+      "id": "subpackageTools/exploration-goals/index.wxml:46:bindtap:create:11",
       "route": "subpackageTools/exploration-goals/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -977463,7 +977463,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "create",
-        "line": 47,
+        "line": 46,
         "selectorHint": ".tu-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -977509,7 +977509,7 @@
       }
     },
     {
-      "id": "subpackageTools/exploration-goals/index.wxml:48:bindtap:toggleCreate:12",
+      "id": "subpackageTools/exploration-goals/index.wxml:47:bindtap:toggleCreate:12",
       "route": "subpackageTools/exploration-goals/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -977532,7 +977532,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleCreate",
-        "line": 48,
+        "line": 47,
         "selectorHint": ".tu-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -977576,7 +977576,7 @@
       }
     },
     {
-      "id": "subpackageTools/exploration-goals/index.wxml:54:bindtap:openRecord:13",
+      "id": "subpackageTools/exploration-goals/index.wxml:53:bindtap:openRecord:13",
       "route": "subpackageTools/exploration-goals/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -977599,7 +977599,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openRecord",
-        "line": 54,
+        "line": 53,
         "selectorHint": ".tu-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -977643,7 +977643,7 @@
       }
     },
     {
-      "id": "subpackageTools/exploration-goals/index.wxml:63:bindtap:nextPage:14",
+      "id": "subpackageTools/exploration-goals/index.wxml:62:bindtap:nextPage:14",
       "route": "subpackageTools/exploration-goals/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -977666,7 +977666,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "nextPage",
-        "line": 63,
+        "line": 62,
         "selectorHint": ".tu-more",
         "visibleCondition": "{{hasMore && !busy}}",
         "disabledCondition": null,
@@ -977710,7 +977710,7 @@
       }
     },
     {
-      "id": "subpackageTools/exploration-goals/index.wxml:65:bindtap:toggleCreate:15",
+      "id": "subpackageTools/exploration-goals/index.wxml:64:bindtap:toggleCreate:15",
       "route": "subpackageTools/exploration-goals/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -977733,7 +977733,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleCreate",
-        "line": 65,
+        "line": 64,
         "selectorHint": ".tu-fab",
         "visibleCondition": "{{!creating}}",
         "disabledCondition": null,
@@ -978114,7 +978114,7 @@
       }
     },
     {
-      "id": "subpackageTools/monthly-recap/index.wxml:48:bindtap:next:5",
+      "id": "subpackageTools/monthly-recap/index.wxml:47:bindtap:next:5",
       "route": "subpackageTools/monthly-recap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -978137,7 +978137,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "next",
-        "line": 48,
+        "line": 47,
         "selectorHint": ".tu-more",
         "visibleCondition": "{{hasMore && !busy}}",
         "disabledCondition": null,

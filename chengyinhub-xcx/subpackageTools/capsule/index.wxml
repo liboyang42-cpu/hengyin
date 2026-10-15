@@ -26,7 +26,6 @@
 
   <!-- 写一枚 -->
   <block wx:if="{{composing}}">
-    <view class="tu-sec">写一枚胶囊</view>
     <view class="tu-field">
       <text class="tu-field__l">胶囊正文</text>
       <textarea class="tu-field__ta" value="{{body}}" data-field="body" bindinput="input" maxlength="4000" disabled="{{busy || pendingCreate}}" placeholder="写给那一天的自己…" />
@@ -63,7 +62,7 @@
       <text class="cp-t">打开看看</text>
     </view>
     <view wx:else class="cp-card cy-rise-in" style="animation-delay: {{index * 60}}ms" data-id="{{item.id}}" bindtap="lockedTip" aria-role="button" aria-label="封存中，还有 {{item.daysLeft || 0}} 天开启" hover-class="cy-pressed" hover-stay-time="80">
-      <text class="cp-k">封存中 · {{item.createdText}} 写下</text>
+      <text class="cp-k">{{item.createdText}} 写下</text>
       <text class="cp-days">{{item.daysLeft || 0}} 天</text>
       <text class="cp-m">{{item.unlockText}} 开启</text>
     </view>

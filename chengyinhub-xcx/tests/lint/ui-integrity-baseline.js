@@ -956,7 +956,7 @@ module.exports = {
       // 2026-09-21 端到端收口合入上传重试与账号隔离，既有调用仅位移，理由与数量不变。
       // 2026-09-25 CU-M-183/185/186 同批:merchantinfo.js 那条 info-to-user silentError 调用点 2530→2532,
       //   逐条回读仍是「只为读章节 recruitEnabled、失败不弹全局 toast」这一处,静默理由一字未改,条数 27 不变。
-"f21c5f550f80d6579548ade4fc1c692a3992bf7b2810b9241ba506bb2d47fac3"
+"cb698dfdb331c0fdda4ca24a16666a281f6fae8215299bd2661e9c37e5a4bd4f"
 
     }
   },
@@ -1358,7 +1358,7 @@ module.exports = {
       "chengyinhub-xcx/pages/roam/index.js:4143": "发现奖励卡上附带的附近探店日候选:失败或无候选返回 null,只是奖励卡少一条可选推荐,不影响主流程;弹错会打断奖励反馈；owner=小程序，复核=2026-09-30",
       "chengyinhub-xcx/pages/roam/index.js:4228": "商家打卡提交:失败按 net/unknown/server 分类返回,_sendCheckin 只给一句 toast 并把打卡卡收起(2026-09-16 拍板「漫游打卡不存在失败态」:visit.checkinErr 与 retryCheckin 已删,距离不够在 startVisit 就被拦下),关自动 toast 避免双弹;owner=小程序,复核=2026-09-30",
       "chengyinhub-xcx/pages/roam/index.js:4329": "三店连亮勋章配置读取:失败沿用兜底阈值与文案(SHOP_BADGE_FALLBACK_THRESHOLD),fail-open 不比改动前差;无用户可做的动作；owner=小程序，复核=2026-09-30",
-      "chengyinhub-xcx/subpackageRoam/nearby/index.js:147": "附近队伍地图的主题/活动点位层(/api/roam/hangout/nearby 只取 topic/activity),跟着地图中心走的背景读取:读不到只是这一次少一层主题点,队伍层(/api/team/nearby)有独立可见的 cy-error 重试;弹错等于每拖一下图弹一个框;owner=小程序,复核=2026-09-30",
+      "chengyinhub-xcx/subpackageRoam/nearby/index.js:146": "附近队伍地图的主题/活动点位层(/api/roam/hangout/nearby 只取 topic/activity),跟着地图中心走的背景读取:读不到只是这一次少一层主题点,队伍层(/api/team/nearby)有独立可见的 cy-error 重试;弹错等于每拖一下图弹一个框;owner=小程序,复核=2026-09-30",
       "chengyinhub-xcx/pages/roam/index.js:4755": "漫游分享发到广场的发帖请求:失败由同一 Promise 链接管——业务失败 fail(msg) 出 toast,网络/HTTP 异常与 catch 均提示「到广场核对，暂不要重复发布」并置 squarePostUnknown;关自动 toast 是避免双弹;owner=小程序,复核=2026-09-30",
       // 2026-09-18 合并 github/master(#1088):play/index.js 上方净增 28 行,
       //   loadMilestone 的 /api/play/my-completed 这条 silentError 调用点 5542→5570(门禁实测)。

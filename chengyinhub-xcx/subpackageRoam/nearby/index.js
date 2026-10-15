@@ -68,7 +68,6 @@ Page({
     busy: false,
     applicants: [],
     leaderSub: '',
-    leaderFoot: '',
     myRows: [],
     myLoading: false,
     topic: null,
@@ -166,7 +165,7 @@ Page({
     const listRows = teams.map((t) => { const d = T.decorateTeam(t); const b = BADGE[d.card && d.card.mode] || ['可申请', 'plain'];
       return { teamId: d.teamId, name: d.heading || d.name, sub: d.sub, badge: b[0], tone: b[1], count: d.joinedCount + '/' + d.maxMembers }; });
     this.setData({ loadError: false, headerText: T.headerText(teams.length), listRows, current: next,
-      leaderSub: next ? T.leaderSub(next) : '', leaderFoot: next ? T.leaderFoot(next) : '' });
+      leaderSub: next ? T.leaderSub(next) : '' });
     // 卡片开着的那支队伍刷新后不在了(满员 / 开场 / 审核中,服务端已过滤):卡上的「申请加入」已经不成立,收掉
     if (cur && !row && this.data.sheet === 'team') this.closeSheet();
     this._syncMarkers();
@@ -335,7 +334,7 @@ Page({
     if (!row) return;
     const cur = T.decorateTeam(row);
     if (cur.viewerStatus === 'LEADER') {
-      this.setData({ current: cur, applicants: [], leaderSub: T.leaderSub(cur), leaderFoot: T.leaderFoot(cur) }, () => this._openSheet('leader'));
+      this.setData({ current: cur, applicants: [], leaderSub: T.leaderSub(cur) }, () => this._openSheet('leader'));
       this.loadApplicants();
     } else {
       this.setData({ current: cur }, () => this._openSheet('team'));
