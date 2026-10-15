@@ -1,0 +1,37 @@
+:host { display: block; }
+
+/* 首屏一行 */
+.oc-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cy-space-2) var(--cy-space-4); }
+.oc-row__item { display: flex; align-items: center; gap: var(--cy-space-1-5); min-width: 0; max-width: 100%; }
+.oc-row__name {
+  font-size: var(--cy-type-caption);
+  color: var(--cy-color-text-primary);
+  max-width: 280rpx;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.oc-row__role, .oc-row__more { font-size: var(--cy-type-micro); color: var(--cy-color-text-tertiary); flex: none; }
+.oc-row--cover .oc-row__name { color: var(--cy-comp-oncover-fg); }
+.oc-row--cover .oc-row__role,
+.oc-row--cover .oc-row__more { color: var(--cy-comp-oncover-fg-dim); }
+
+/* 完整列表:灰底页上的白卡,无描边 */
+.oc-sec { display: block; }
+.oc-sec__head { display: flex; align-items: baseline; justify-content: space-between; padding: 0 var(--cy-space-1) var(--cy-space-2); }
+.oc-sec__title { font-size: var(--cy-type-section-title); color: var(--cy-color-text-primary); font-weight: 600; }
+.oc-sec__count { font-size: var(--cy-type-caption); color: var(--cy-color-text-tertiary); }
+.oc-sec__card {
+  background: var(--cy-color-bg-surface);
+  border-radius: var(--cy-radius-lg);
+  padding: var(--cy-space-1) var(--cy-space-4);
+}
+.oc-sec__item { display: flex; align-items: center; gap: var(--cy-space-3); padding: var(--cy-space-3) 0; }
+.oc-sec__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--cy-space-1); }
+.oc-sec__name {
+  font-size: var(--cy-type-body);
+  color: var(--cy-color-text-primary);
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.oc-sec__role { font-size: var(--cy-type-caption); color: var(--cy-color-text-tertiary); }
+.oc-sec__invite { justify-content: space-between; }
+.oc-sec__invite-label { font-size: var(--cy-type-body); color: var(--cy-color-text-disabled); }
+.oc-sec__invite-hint { font-size: var(--cy-type-caption); color: var(--cy-color-text-disabled); }
