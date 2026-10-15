@@ -4,7 +4,8 @@
     "cy-error": "/components/cy/error/index",
     "cy-skeleton": "/components/cy/skeleton/index",
     "cy-icon": "/components/cy/icon/index",
-    "cy-tabs": "/components/cy/tabs/index"
+    "cy-tabs": "/components/cy/tabs/index",
+    "cy-sheet": "/components/cy/sheet/index"
   },
   "styleIsolation": "isolated"
 }
