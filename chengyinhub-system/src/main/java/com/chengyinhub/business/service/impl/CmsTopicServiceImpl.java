@@ -4024,7 +4024,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // 在这一步等价(都是「这次没有地址可落」),完整性由发布闸管(见 assertPublishReady)。
         topic.setAddressName(firstLocationAddress(dto.getChapters()));
 
-        cmsTopicMapper.insertCmsTopic(topic);
+        if (cmsTopicMapper.insertCmsTopic(topic) != 1 || topic.getId() == null || topic.getId() <= 0L) {
+            throw new IllegalStateException("主题创建失败，未生成有效主题身份");
+        }
         syncInitialAttributeKeys(topic);
         Long topicId = topic.getId();
 
