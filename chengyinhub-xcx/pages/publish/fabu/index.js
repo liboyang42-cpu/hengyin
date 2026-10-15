@@ -1151,19 +1151,42 @@ Page({
    * ⚠️ _duration 是本地字段(下划线开头):stripLocalFields 会剥掉,
    *    toPayloadChapter 也只重建 {type,url},所以它进不了 payload,不影响后端块形状。
    */
+  _destroyStoryDurationProbes() {
+    const cleanups = this._storyDurationProbeCleanups || [];
+    this._storyDurationProbeCleanups = [];
+    cleanups.forEach(done => done());
+  },
+
   _fillStoryAudioMeta() {
-    const chapterIndex = this.data.storyEditor.chapterIndex;
-    const chapter = (this.data.formData.chapters || [])[chapterIndex];
-    if (!chapter) return;
-    (chapter.blocks || []).forEach((block, blockIndex) => {
-      if (!block || block.type !== 'audio' || !block.url || block._duration) return;
+    const chapter = (this.data.formData.chapters || [])[this.data.storyEditor.chapterIndex];
+    if (!chapter || !chapter._localId) return;
+    const chapterId = chapter._localId;
+    const memberId = String(app.getUserID() || '');
+    (chapter.blocks || []).forEach((block) => {
+      if (!block || !block.key || block.type !== 'audio' || !block.url || block._duration) return;
+      const blockKey = block.key;
+      const url = block.url;
       const probe = wx.createInnerAudioContext();
-      probe.src = block.url;
+      probe.src = url;
       probe.obeyMuteSwitch = false;
-      const done = () => { try { probe.destroy(); } catch (err) {} };
+      let settled = false;
+      const done = () => {
+        if (settled) return;
+        settled = true;
+        this._storyDurationProbeCleanups = (this._storyDurationProbeCleanups || []).filter(item => item !== done);
+        try { probe.destroy(); } catch (err) {}
+      };
+      this._storyDurationProbeCleanups = (this._storyDurationProbeCleanups || []).concat(done);
       probe.onCanplay(() => {
+        if (settled) return;
+        const chapters = this.data.formData.chapters || [];
+        const chapterIndex = chapters.findIndex(item => item && item._localId === chapterId);
+        const currentChapter = chapters[chapterIndex];
+        const blockIndex = currentChapter ? (currentChapter.blocks || []).findIndex(item => item && item.key === blockKey) : -1;
+        const currentBlock = currentChapter && (currentChapter.blocks || [])[blockIndex];
         const seconds = Math.round(probe.duration || 0);
-        if (seconds > 0) {
+        if (!this._publishPageUnloaded && memberId === String(app.getUserID() || '')
+            && currentBlock && currentBlock.type === 'audio' && currentBlock.url === url && seconds > 0) {
           this.setData({
             [`formData.chapters[${chapterIndex}].blocks[${blockIndex}]._duration`]: seconds,
           });
@@ -2655,6 +2678,7 @@ Page({
   onUnload() {
     this._publishPageUnloaded = true;
     this._destroyChapterDurationAudio();
+    this._destroyStoryDurationProbes();
     this.destroyPreviewAudio();
     if (this._pendingUndoTimer) clearTimeout(this._pendingUndoTimer);
     this._pendingUndoTimer = null;
