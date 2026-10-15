@@ -1,0 +1,81 @@
+{
+  "pack": "CY-FORWARD3-20261015",
+  "repository": "liboyang42-cpu/hengyin",
+  "source_base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+  "mode": "SOURCE_ONLY_NO_MANUAL_VALIDATION",
+  "overall_coordinator_thread": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+  "control_ledger_maintainer_thread": "01a13f3d-608a-745c-83d0-c5139121c02d",
+  "thread_id": null,
+  "max_workers": 6,
+  "initial_independent_source_lanes": 2,
+  "ownership_authority": "User asked local coordinator to prepare a new independent Cloud development pack and coordinate it; six exact paths independently checked unclaimed. C00 records the same grant in its sole global ledger. Refresh for newer conflicts before writing; no general second approval gate.",
+  "initial_item_count": 2,
+  "items": [
+    {
+      "id": "F3-STAT-01",
+      "lane": "STAT",
+      "priority": "P1",
+      "state": "READY_SOURCE_ONLY",
+      "execution": "AUDIT_THEN_FIX",
+      "title": "既有漏斗统计查询日期边界兼容修复",
+      "owned_files": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/AnalyticsControllerTest.java"
+      ],
+      "new_regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/AnalyticsDateContractTest.java",
+      "source_finding": "funnel forwards optional raw dates without format or reversed-range validation. Existing UI initially submits two null dates and allows clearing; these are existing caller contracts, not authorization to choose a new mandatory/max window.",
+      "acceptance": [
+        "Valid and existing empty/one-sided dates remain compatible; malformed supplied dates and reversed complete intervals are rejected before mapper access.",
+        "Existing response startDate/endDate/rows and community-qualified-pilot 1-62 day behavior remain unchanged.",
+        "No mandatory window, arbitrary max duration, silent row truncation, new pagination contract, deduplication policy, UI or Mapper edit."
+      ],
+      "estimated_source_effort_person_days": [
+        0.5,
+        1
+      ],
+      "dependencies": [],
+      "verification": "NOT_RUN"
+    },
+    {
+      "id": "F3-GROW-01",
+      "lane": "GROW",
+      "priority": "P1",
+      "state": "READY_SOURCE_ONLY",
+      "execution": "AUDIT_THEN_FIX",
+      "title": "玩家成长累加与首次建行的并发一致性修复",
+      "owned_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerGrowthMapper.java",
+        "chengyinhub-system/src/main/resources/mapper/business/PlayerGrowthMapper.xml",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerProgressionServiceImplTest.java"
+      ],
+      "new_regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java",
+      "source_finding": "onNodeDone/onTopicComplete select ordinary growth state then overwrite non-null counters; ensureGrowth does select then insert. Confirm reachable caller transaction/lock boundaries before changing.",
+      "acceptance": [
+        "Verify actual callers and existing constraints; if an existing shared transaction/lock already serializes all reachable calls, record counterevidence instead of inventing a bug.",
+        "No lost independent check-in/mileage increments, no stale writeback of unrelated counters, and safe first-row contention under the existing schema.",
+        "Preserve each valid onNodeDone call increment, checkins/5+1 level, existing streak/timezone and topic-completion badge/mileage contract; no new dedup identity or reward policy.",
+        "Read APIs remain ordinary reads; any new write-only locking query is opt-in, with documented transaction/lock order and real-MySQL cases written but not run.",
+        "No DDL/new index/new dependency/Redis lock/member-points or money mapper edit; missing constraints/identity/policy are explicit blockers, never fake badges or silent successful fallbacks."
+      ],
+      "estimated_source_effort_person_days": [
+        2,
+        4
+      ],
+      "dependencies": [],
+      "verification": "NOT_RUN"
+    }
+  ],
+  "delivery_docs": [
+    "docs/verification/mini-forward-cloud-20261015/QUEUE.json",
+    "docs/verification/mini-forward-cloud-20261015/CLAIMS.json",
+    "docs/verification/mini-forward-cloud-20261015/DELIVERY.md"
+  ],
+  "status_rules": [
+    "SOURCE_DELIVERED_UNVERIFIED",
+    "NO_CHANGE_SOURCE_REVIEW",
+    "BLOCKED_DEPENDENCY",
+    "BLOCKED_DECISION"
+  ],
+  "refill": "Complete and push one frozen task, then take a concrete nonduplicate authorized next item. New files/domains require local coordinator transfer. Do not fabricate 50 tasks or create six writers for two shared source groups."
+}
