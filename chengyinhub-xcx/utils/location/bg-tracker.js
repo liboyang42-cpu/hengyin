@@ -23,16 +23,25 @@ var waiters = [];
 var notifying = [];
 
 function notify(batch, callback, value) {
+  var hasError = false;
+  var firstError;
   notifying.push(batch);
   try {
     batch.forEach(function (item) {
       if (item.cancelled) return;
       if (callback === 'success' && owners[item.key] !== item) return;
-      if (item.opts[callback]) item.opts[callback](value);
+      try {
+        if (item.opts[callback]) item.opts[callback](value);
+      } catch (err) {
+        // One consumer must not prevent the remaining live owners from
+        // learning the outcome. Preserve the first thrown value for the caller.
+        if (!hasError) { hasError = true; firstError = err; }
+      }
     });
   } finally {
     notifying.splice(notifying.indexOf(batch), 1);
   }
+  if (hasError) throw firstError;
 }
 
 function count() { return Object.keys(owners).length; }
