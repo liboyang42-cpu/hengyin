@@ -310,3 +310,8 @@ BK-ASSET源码修复为SOURCE_READY，新增VPS套件已通过；**TEST_DEPLOYED
 长期首批公共源码分支codex/mini-longrun-core-20261015：邀请回包上下文、草稿member桶/本人删除、AI未发送stage异常补偿及action Locale.ROOT已有小提交，均未运行验证，不沿用4a/1e结论。精确SHA/新增回归与反证见CORE池。后续未验证源码会使旧生成摘要/门禁行号陈旧，登记待本地统一重建/验证，不能声称旧UI PASS覆盖新提交。
 
 滚动跨队依赖：EXTRA/E03已交公开7cef70bf320c249b966f34cc3908f77912f06780兼容4参freezeEnding及禁止freeze触发额外archive；C00将按原提交集成后由CORE/C06接runtime调用点。CORE/C03-05发现旧plain JourneyStory node引用仅章映射遗漏，需EXTRA/E03域helper兼容重载，先交具体内部合同，不在service复制DSL。C04-14/15与C05-17/18分别是现有RATE_LIMITED原因和模型已调用阶段事实的生产/消费依赖，无新HTTP字段/收费政策，尚未源码签收。全部NOT_RUN。
+
+
+## 长期源码最新checkpoint（覆盖旧状态文字）
+
+[当前恢复入口](LONGRUN_CURRENT.md)与CORE池记录公共adc7c68e9398a61476bbfd57cab7696094d2b61d / PR44；后续一律SOURCE_DELIVERED_UNVERIFIED、NOT_RUN。两队真实计数/文件单写者/跨队合同/未决政策和本地恢复规则均在入口，不以历史通过套用新源码。E04额外接口及三测试、C06 runtime mapper独立当前读、C04暂停投影SQL精确写权已在源表登记；其他原锁不变。

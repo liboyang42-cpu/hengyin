@@ -414,6 +414,13 @@
       "state": "ASSIGNED_SOURCE_ONLY",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "Original shared runtime mapper owner stopped at public1e403b13/4a; XML already CORE/C06. Grant separate current-lock story read method only; existing readOnly projection method unchanged."
+    },
+    "chengyinhub-system/src/main/resources/mapper/business/PlayerRunSessionMapper.xml": {
+      "owner": "CORE/C04",
+      "worker": "a02_sol",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
+      "transfer_evidence": "Existing baseline projection mapper no other lane/Claude active claim; single SQL writer C04. Only monotonic saved_at existing rows. No clear absent row tombstone policy change."
     }
   },
   "reserved_not_transferred": [

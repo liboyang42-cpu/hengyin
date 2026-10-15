@@ -213,3 +213,8 @@ L01–05源码已按精确路径串行提交后续候选eab62274a19f549623ad1818
 ## 用户离线长期滚动源码（最新指令）
 
 [LONGRUN_ROLLING](LONGRUN_ROLLING.md)覆盖等待验证时序。两队各50具体任务已落地，6.1-sol各最多6线，源码精确写权见LONGRUN_SOURCE_OWNERS.json，正式原写者停止/候选证据及跨队契约在协议中。EXTRA6不再只测试文件：已授排期/社区/叙事读/券/订阅收藏/平台工具独占源码；history和participation两退款JS可转，PR20重叠detail仍保留锁。仅静态源码/写必要回归，不手动运行Node/Java/Maven/DB/lint/DevTools/业务验证；原AGENTS编译测试由用户本次明确推迟。现有自动CI保留自然结束、不手动重跑、不等结果派工。新交付SOURCE_DELIVERED_UNVERIFIED/NOT_RUN，合并/迁移/部署/设备仍NO。
+
+
+## 长期源码最新checkpoint（覆盖旧状态文字）
+
+[当前恢复入口](LONGRUN_CURRENT.md)与CORE池记录公共adc7c68e9398a61476bbfd57cab7696094d2b61d / PR44；后续一律SOURCE_DELIVERED_UNVERIFIED、NOT_RUN。两队真实计数/文件单写者/跨队合同/未决政策和本地恢复规则均在入口，不以历史通过套用新源码。E04额外接口及三测试、C06 runtime mapper独立当前读、C04暂停投影SQL精确写权已在源表登记；其他原锁不变。

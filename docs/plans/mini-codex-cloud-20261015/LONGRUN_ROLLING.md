@@ -51,3 +51,8 @@ EXTRA6已在PR16 comment6192852909明确ACK_LONGRUN_SOURCE并确认29源码文�
 CORE首批和补位公共源码截至9c55cda0，已留每项可回退提交；追加具体源切片并如实更新delivered游标。C03-09与05重因已标SUPERSEDED_DUPLICATE，不凑独立项；C06 routeActionId旧键异payload原回放是既定兼容，不另立相反新指纹修复任务。每项源码/反证都未跑新增验证，不能当验收关闭。
 
 EXTRA6/E04申请6193059698的SmsCouponMapper.java及3既有测试已按源表精确转交，可新增tryReserveIssuableCoupon专用库存CAS：沿原NULL兼容status非3/4与原库存条件，0行原路径拒发，异常不吞，旧incrementReceiveCount统计语义不变；只同步fixture/原合同断言，不运行。无业务DDL/新API/费用政策。CORE/C04追加原NpcChatServiceTest仅10项已调用provider却读不到持久结果的错误分类修正，原不泄露答案/无日志/无audio断言保持。
+
+
+## 长期源码最新checkpoint（覆盖旧状态文字）
+
+[当前恢复入口](LONGRUN_CURRENT.md)与CORE池记录公共adc7c68e9398a61476bbfd57cab7696094d2b61d / PR44；后续一律SOURCE_DELIVERED_UNVERIFIED、NOT_RUN。两队真实计数/文件单写者/跨队合同/未决政策和本地恢复规则均在入口，不以历史通过套用新源码。E04额外接口及三测试、C06 runtime mapper独立当前读、C04暂停投影SQL精确写权已在源表登记；其他原锁不变。
