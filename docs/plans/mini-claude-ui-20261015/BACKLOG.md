@@ -178,4 +178,4 @@
 | 120 | 另存为模板 | 「我发布的」主题现有更多菜单加「另存为模板」：`POST /api/template/topic-template/save-as`（`id`、`scope`，取值以控制器/Service 校验为准），二次确认，成功后按返回 `topicId` 回读或跳现有模板页；失败如实提示；没有现成菜单就 BLOCKED | 不碰 fabu/pro-editor（Codex）；照现有菜单项 |
 | 121 | 俱乐部按合作主题开一场 | 俱乐部主理人现有活动/开团入口：`POST /api/club/open-session-topics`（`{clubId}`）列可开主题，选主题+日期后 `POST /api/club/open-session`（`ClubSessionOpenRequest` 字段为准），成功按返回 `activityId` 跳现有活动详情回读；二次确认；非主理人/无主题诚实空态；没有现成入口或需产品决定就 BLOCKED | `pages/club/**`；不碰排期/`ApiClubEventOpsController`（Codex）；不涉及费用 |
 | 122 | 单测与合同测试·第十批 | BL-116–121 新增纯函数/页面处理器单测 + 新调用接口合同测试（路径/方法/字段对照 Java 源码） | tests |
-| 123 | 验收清单更新·第九十批 | 把 BL-108–121 已开 PR 的本地验收清单补进 `ACCEPTANCE.md`（依赖 BL-59 #101、BL-107 #151、BL-115） | docs |
+| 123 | 验收清单更新·第九至十批 | 把 BL-108–121 已开 PR 的本地验收清单补进 `ACCEPTANCE.md`（依赖 BL-59 #101、BL-107 #151、BL-115） | docs |
