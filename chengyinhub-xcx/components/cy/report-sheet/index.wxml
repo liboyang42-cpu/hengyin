@@ -12,8 +12,8 @@
               bind:input="onDescriptionInput" />
     <text class="rs__note">本次举报仅支持文字说明。被举报方看不到你的身份。</text>
     <view class="rs__row">
-      <cy-btn variant="secondary" bindtap="backToPick">换个原因</cy-btn>
-      <cy-btn variant="primary" bindtap="submit">提交举报</cy-btn>
+      <cy-btn class="rs__act" variant="secondary" bindtap="backToPick">换个原因</cy-btn>
+      <cy-btn class="rs__act" variant="primary" bindtap="submit">提交举报</cy-btn>
     </view>
   </view>
 </cy-sheet>
