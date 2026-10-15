@@ -20,7 +20,7 @@ CY-HANDOFF: CODEX / E03
 | `business/service/impl/A03EndingWriteCompatibilityTest.java` | `booleanFallbackStillCompiles`；`malformedFallbackCannotBecomeAnUnconditionalEnding` 拒绝字符串、1、null、对象 | 已覆盖 compiler 的 JSON 类型边界，不复制此单测，不扩大内容政策 |
 | `business/service/support/A03RuntimeEndingCompatibilityTest.java` | 无 priority 末命中；显式 priority 最大、同分末命中；兜底、冻结配置和未知条件 | 已覆盖纯选择算法；不复制 Theme 算法套件 |
 
-新增正文 fixture 有两个同时命中的 JourneyStory 候选，公开 ending 与终态归档均应保留首命中。Theme 末命中及 priority 仍以原测试为准；没有调整算法、按下标重排或把 configVersion 当 schemaVersion。新增测试不建立第二份会话真源；历史兼容输入直接修改本类 scratch 内既有 `topic_route_session.config_snapshot_json`。
+E03-09静态夹具修正：新增正文 fixture 的两个非fallback候选均显式使用合法的 `when:[{var:"sys.hp",op:"GTE",value:1}]`；冻结初始hp=8，两者同时命中，公开 ending 与终态归档均应保留首命中。Theme 末命中及 priority 仍以原测试为准；没有调整算法、按下标重排或把 configVersion 当 schemaVersion。新增测试不建立第二份会话真源；历史兼容输入直接修改本类 scratch 内既有 `topic_route_session.config_snapshot_json`。
 
 ## 新方法与预期
 
@@ -74,3 +74,5 @@ CHENGYIN_ENDING_MYSQL_IT=1 mvn -B -pl chengyinhub-admin -am \
 启用后 host/suffix/凭据缺失、非 MySQL 8.0、mapper/DDL 不在本地、连库/建库失败均直接失败，无 assumption 或 catch 后通过。仅复用 `MybatisItDatabase` 的安全命名与环境读取，不调用其会 DROP/CREATE 的 `url` 方法；复用 `ItSchema` 真实既有夹具/迁移解析及 Spring 事务代理，不改共享工具。scratch 名为 `chengyin_mybatis_a03_ending_snapshot${CHENGYIN_MYBATIS_IT_DB_SUFFIX}`；setup 使用无 `IF NOT EXISTS` 的 `CREATE DATABASE`，库名冲突直接失败，绝不先 DROP 或接管已有库；创建成功后才标记 created。AfterAll 仅在本次创建成功时 DROP 此精确前缀和合法后缀的库，并回读 information_schema 确认 0；冲突失败不会删除已有库。DDL 仅运行时写获准 scratch，不是新增业务迁移。
 
 验收须逐方法读取新生成 Surefire XML；3 方法执行且 skipped=0 才说明启用生效，0 测试/禁用不计通过。当前已知第三方法预计揭示失败，不能预填 3/0/0/0。编译、夹具前提、数据库调用链与实际断言全部未验证。
+
+E03-09修正仅补齐JourneyStoryValidator要求的非fallback条件，不改三方法数或任何old正文/终态断言；未执行解析器、编译、数据库或测试。授权与精确变更见 `docs/verification/mini-longrun-20261015/EXTRA6/E03-09.md`。历史基线预计失败描述只对应原基线，不宣称后续两队修复已经运行验证。

@@ -46,10 +46,10 @@ class A03EndingSnapshotMySqlIT {
     private static final String SUITE = "a03_ending_snapshot";
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final String RULES = "{\"schemaVersion\":1,\"checkEnabled\":true,\"hp\":{\"enabled\":true,\"max\":10,\"init\":8}}";
-    // Two unconditional matches deliberately retain JourneyStory's first-match policy.
+    // Both legal conditions match the frozen initial hp=8; retain JourneyStory's first-match policy.
     private static final String STORY = "{\"schemaVersion\":1,\"ending\":{\"endings\":["
-            + "{\"code\":\"first\",\"title\":\"first title\",\"chapterId\":88},"
-            + "{\"code\":\"second\",\"title\":\"second title\",\"chapterId\":89},"
+            + "{\"code\":\"first\",\"title\":\"first title\",\"chapterId\":88,\"when\":[{\"var\":\"sys.hp\",\"op\":\"GTE\",\"value\":1}]},"
+            + "{\"code\":\"second\",\"title\":\"second title\",\"chapterId\":89,\"when\":[{\"var\":\"sys.hp\",\"op\":\"GTE\",\"value\":1}]},"
             + "{\"code\":\"fallback\",\"title\":\"fallback title\",\"fallback\":true}]}}";
     private static PooledDataSource dataSource;
     private static SqlSessionTemplate sql;
