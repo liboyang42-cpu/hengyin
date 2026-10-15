@@ -15,6 +15,8 @@ Component({
     heroLimit: { type: Number, value: 3 },
     title: { type: String, value: '联合主办' },
     showInviteEntry: { type: Boolean, value: false },
+    // bare:不画自带标题与卡片底,由宿主页用它现有的分段/标题样式包住(2026-10-15 晚用户决定:新功能按现有 UI 做)
+    bare: { type: Boolean, value: false },
   },
   data: { vm: { hero: [], heroMore: 0, list: [], hostCount: 0, hasPending: false } },
   observers: {

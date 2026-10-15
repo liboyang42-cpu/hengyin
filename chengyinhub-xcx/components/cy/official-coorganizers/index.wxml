@@ -9,8 +9,8 @@
 </view>
 
 <!-- 完整列表 -->
-<view wx:elif="{{mode !== 'row' && (vm.list.length || showInviteEntry)}}" class="oc-sec">
-  <view class="oc-sec__head">
+<view wx:elif="{{mode !== 'row' && (vm.list.length || showInviteEntry)}}" class="oc-sec {{bare ? 'oc-sec--bare' : ''}}">
+  <view wx:if="{{!bare}}" class="oc-sec__head">
     <text class="oc-sec__title">{{title}}</text>
     <text wx:if="{{vm.hostCount > 1}}" class="oc-sec__count">{{vm.hostCount}} 方共同主办</text>
   </view>
