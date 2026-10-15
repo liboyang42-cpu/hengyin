@@ -249,8 +249,8 @@ public class ApiClubLeadController extends BaseController {
         // F-L5C-02:集合地点与当日备注给参与者看,与 /broadcast 同一道内容安全闸。
         String opsText = com.chengyinhub.business.service.IWxContentSecurityService.joinText(addr, addrName, note);
         if (!opsText.isEmpty()) {
-            UmsMember actor = umsMemberService.selectUmsMemberById(memberId);
-            String risk = wxContentSecurityService.checkText(opsText, actor == null ? null : actor.getWxOpenId());
+            String risk = com.chengyinhub.business.service.IWxContentSecurityService.checkTextAsMember(wxContentSecurityService, umsMemberService,
+                    memberId, opsText);
             if (risk != null) return error(risk);
         }
         // CR-63(2026-09-15 裁决 15):已售出(有已支付报名)的场次锁集合时间与地点;
@@ -285,8 +285,8 @@ public class ApiClubLeadController extends BaseController {
         if (!memberId.equals(st.getLeaderMemberId())) return error("只有队长可以广播");
         if (text == null || text.trim().isEmpty()) return error("广播内容为空");
         String t = text.trim();
-        UmsMember actor = umsMemberService.selectUmsMemberById(memberId);
-        String risk = wxContentSecurityService.checkText(t, actor == null ? null : actor.getWxOpenId());
+        String risk = com.chengyinhub.business.service.IWxContentSecurityService.checkTextAsMember(wxContentSecurityService, umsMemberService,
+                memberId, t);
         if (risk != null) return error(risk);
         ClubLeadState upd = new ClubLeadState();
         upd.setId(st.getId());

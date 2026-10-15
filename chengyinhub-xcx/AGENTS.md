@@ -30,7 +30,7 @@
 ## 已知坑 / 刻意保留项（**别擅自删**）
 - ✅ `utils/config.js baseImgUrl` 已切正式域名 `https://www.chengyinhub.com/prod-api/profile/`（M0-9 测试域名清零已完成，全仓 `test2.h5.org.cn` 零命中）。历史上曾用 `http://test2.h5.org.cn` 调 UI/测数据，现已清除，勿再回退。
 - ⚠️ `debug_user_view`（`shezhi.js` / `pages/index/index.js`）：**用户有意保留**的身份调试开关（用户/商户视角切换）；上线前再移除。
-- ✅ `useDevUser()` 已被 `isDevEnv()`（envVersion==='develop'）网住——生产只弹真实错误 toast、不产假用户，这是**正确状态**，别清。
+- ✅ 开发版假用户兜底 `useDevUser()` 已删除（F-W1-01）：任何环境登录失败都如实失败、不产假用户；`isDevEnv()`（envVersion==='develop'）只门控开发调试入口，并在体验版/正式版清掉残留 dev-token 会话。**不得重新引入**假用户降级。
 - 身份切换：商户视角默认，`debug_user_view='user'` 强制普通用户视角；改视角逻辑前读懂 index.js:7 / 41 / 376。
 
 ## 工作方式

@@ -1649,10 +1649,6 @@ public class ApiRegistrationController extends BaseController {
                 if (activityOwnerMemberId == null) {
                     return AjaxResult.error("活动主办方数据异常");
                 }
-                AjaxResult tooEarly = clubSessionVerificationTooEarly(cmsActivity, new Date());
-                if (tooEarly != null) {
-                    return tooEarly;
-                }
                 String actorRoleCode = "ACTIVITY_OWNER";
                 if (!activityOwnerMemberId.equals(memberId)) {
                     MerchantAccessContext access = merchantAccessService.require(
@@ -1661,6 +1657,11 @@ public class ApiRegistrationController extends BaseController {
                         return AjaxResult.error("该店无权核销本场玩家票；俱乐部带队请扫描领队团码");
                     }
                     actorRoleCode = access.getRoleCode();
+                }
+                // PR10 复审:时间窗在权限之后判 —— 无权扫码方先拿到权限拒绝,不能借时间提示探测场次开场时间。
+                AjaxResult tooEarly = clubSessionVerificationTooEarly(cmsActivity, new Date());
+                if (tooEarly != null) {
+                    return tooEarly;
                 }
                 // [V2] 重复核销闸 + 入账 + 台账,同一事务(verifyAndSettle)。
                     // 条件置位而非读判:读判挡不住并发双扫。

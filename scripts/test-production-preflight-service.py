@@ -19,7 +19,8 @@ class ServiceEnvironmentTest(unittest.TestCase):
         # 每个变量取不同值：预检会拒绝密钥复用（F-L6-11）。
         configured = {name: "fixture-secret-never-print-" + str(index) for index, name in enumerate(REQUIRED)}
         configured.update(CHENGYIN_WITHDRAWAL_PII_KEY="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
-                          CHENGYIN_TENCENT_MAP_ENABLED="true", TZ="Asia/Shanghai")
+                          CHENGYIN_TENCENT_MAP_ENABLED="true", TZ="Asia/Shanghai",
+                          CHENGYIN_WXPAY_REFUND_NOTIFY_URL="https://api.example.com/prod-api/api/registration/refund-callback")
         for changes, argument, caller_changes, expected in (
                 ({}, "", {}, 0), ({"CHENGYIN_JWT_SECRET": ""}, "", {}, 1),
                 ({}, "-Duser.timezone=UTC", {}, 1), ({"TZ": "UTC"}, "", {}, 1),

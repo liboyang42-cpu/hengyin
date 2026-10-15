@@ -32,6 +32,10 @@
     </update>
     <!-- 拍板4 冲回:删掉这张票的到店成长待办(已发/未发都删)。未发的不再迟到补发;
          已发的删掉后,真到店再核销会重新 enqueue 一份新快照。 -->
+    <!-- 整单核销撤销:尚未发放的到店成长待办作废(核销事实已不存在,不能迟到补发);已发放的不在此删。 -->
+    <delete id="deletePendingByRegistration">
+        delete from store_verify_growth_delivery where registration_id = #{registrationId} and processed_at is null
+    </delete>
     <delete id="deleteByRegistration">
         delete from store_verify_growth_delivery where registration_id = #{registrationId}
     </delete>

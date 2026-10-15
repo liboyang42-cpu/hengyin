@@ -376,6 +376,13 @@ public interface ICmsRegistrationService
     boolean reverseWholeOrderVerification(Long registrationId, String reason, Long operatorUserId);
 
     /**
+     * 同上;撤销同时把核销台账行标为已撤销、作废尚未发放的到店成长待办。
+     * clawbackRewards=true 时与按章撤销同口径冲回这次到店核销已发的积分和经验。
+     */
+    boolean reverseWholeOrderVerification(Long registrationId, String reason, Long operatorUserId,
+                                          boolean clawbackRewards);
+
+    /**
      * [#22 二清闸] 对已存在的单再判一次「这笔钱平台能不能收」,不能收就抛。
      *
      * <p>建单路径的闸在 createRegistration/createSelfPlayPass 内部;这个重载是给**不走建单**的

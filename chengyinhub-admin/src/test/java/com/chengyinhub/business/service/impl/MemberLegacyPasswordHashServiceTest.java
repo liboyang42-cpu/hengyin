@@ -88,23 +88,29 @@ class MemberLegacyPasswordHashServiceTest {
     }
 
     @Test
-    void runnerIsOptInAndNeverBreaksStartup() {
+    void runnerIsOptIn() {
+        // 运行器改为就绪后后台分批(PR10 复审),分批与不阻塞启动的用例见 MemberLegacyPasswordHashRunnerTest。
         MemberLegacyPasswordHashService hashService = mock(MemberLegacyPasswordHashService.class);
         MemberLegacyPasswordHashRunner runner = new MemberLegacyPasswordHashRunner();
         ReflectionTestUtils.setField(runner, "hashService", hashService);
 
         ReflectionTestUtils.setField(runner, "hashLimit", 0);
-        runner.run(null);
-        verifyNoInteractions(hashService);
-
+        runner.onApplicationEvent(null);
         ReflectionTestUtils.setField(runner, "hashLimit", 500);
         ReflectionTestUtils.setField(runner, "jobsEnabled", false);
-        runner.run(null);
+        runner.onApplicationEvent(null);
         verifyNoInteractions(hashService);
+        assertNull(ReflectionTestUtils.getField(runner, "executor"), "关着时不建后台线程");
+    }
 
-        ReflectionTestUtils.setField(runner, "jobsEnabled", true);
-        when(hashService.hashLegacyPasswords(500)).thenThrow(new IllegalStateException("db down"));
-        assertDoesNotThrow(() -> runner.run(null));
-        verify(hashService).hashLegacyPasswords(500);
+    @Test
+    void resumesFromCursorAndReportsLastId() {
+        when(mapper.selectLegacyPlaintextPasswords(7L, 2)).thenReturn(Arrays.asList(row(8L, "p8"), row(12L, "p12")));
+        when(mapper.hashLegacyPasswordIfUnchanged(anyLong(), anyString(), anyString())).thenReturn(1);
+
+        MemberLegacyPasswordHashService.Result result = service.hashLegacyPasswords(7L, 2);
+
+        assertEquals(2, result.getHashed());
+        assertEquals(12L, result.getLastId());
     }
 }

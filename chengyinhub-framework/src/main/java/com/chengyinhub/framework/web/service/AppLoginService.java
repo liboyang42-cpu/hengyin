@@ -119,13 +119,23 @@ public class AppLoginService {
             try {
                 if (umsMemberMapper.upgradePasswordIfMatches(
                         memberId, stored, upgradedPassword) != 1) {
-                    throw passwordFailure(username);
+                    // PR10 复审:CAS 落空不一定是改密 —— MemberLegacyPasswordHashRunner 可能刚把同一明文
+                    // 批量改写成 BCrypt。重读当前口令,仍能用 BCrypt 验过本次输入就照常登录(口令语义未变,
+                    // 不吊销会话);验不过(真被改了/账号失效)才按密码错误失败。
+                    String current = currentBcryptPasswordMatching(memberId, username, password);
+                    if (current == null) {
+                        throw passwordFailure(username);
+                    }
+                    appSessionRegistryService.finishMemberMutation(memberId, mutationId);
+                    mutationId = null;
+                    member.setPassword(current);
+                } else {
+                    appSessionRegistryService.revokeAll(memberId);
+                    appSessionRegistryService.finishMemberMutationAfterTransaction(memberId, mutationId);
+                    mutationId = null;
+                    authenticationEpoch = appSessionRegistryService.currentOrCreateEpoch(memberId);
+                    member.setPassword(upgradedPassword);
                 }
-                appSessionRegistryService.revokeAll(memberId);
-                appSessionRegistryService.finishMemberMutationAfterTransaction(memberId, mutationId);
-                mutationId = null;
-                authenticationEpoch = appSessionRegistryService.currentOrCreateEpoch(memberId);
-                member.setPassword(upgradedPassword);
             } catch (RuntimeException e) {
                 if (mutationId != null) {
                     try {
@@ -158,6 +168,20 @@ public class AppLoginService {
         recordLoginInfo(loginAppUser.getUserId());
         // 生成token
         return appTokenService.createAppToken(loginAppUser);
+    }
+
+    /** 重读会员当前口令:仍是同一手机号、未失效、且已是能验过本次输入的 BCrypt 哈希时返回它,否则 null。 */
+    private String currentBcryptPasswordMatching(Long memberId, String username, String password) {
+        UmsMember current = appUserSevice.selectUmsMemberById(memberId);
+        if (current == null || !memberId.equals(current.getId()) || isInactive(current)
+                || !username.equals(current.getPhone())) {
+            return null;
+        }
+        String hash = current.getPassword();
+        if (hash == null || !hash.startsWith("$2") || !SecurityUtils.matchesPassword(password, hash)) {
+            return null;
+        }
+        return hash;
     }
 
     private ServiceException passwordFailure(String username) {

@@ -208,8 +208,12 @@ public interface RoamMapper {
 
     RoamSession selectActivePresence(@Param("memberId") Long memberId, @Param("freshAfter") Date freshAfter);
 
-    /** 本人最近一次位置心跳(跨会话)。用于拒绝瞬移式的伪造坐标,不对外返回。 */
-    RoamSession selectLatestPresenceFix(@Param("memberId") Long memberId, @Param("since") Date since);
+    /**
+     * 本人在**这场会话**里最近一次被接受的位置心跳。用于拒绝会话内瞬移式的伪造坐标,不对外返回。
+     * 新会话从空基线开始:跨会话(下车后重新开始漫游)不再拿上一场的终点约束,避免高铁出行被拦 1.5 小时。
+     */
+    RoamSession selectLatestPresenceFix(@Param("memberId") Long memberId, @Param("sessionId") Long sessionId,
+                                        @Param("since") Date since);
 
     int updatePresenceVisibility(@Param("id") Long id, @Param("memberId") Long memberId,
                                  @Param("visible") Boolean visible);

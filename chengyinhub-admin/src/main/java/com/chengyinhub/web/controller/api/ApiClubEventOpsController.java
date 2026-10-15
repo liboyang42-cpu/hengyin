@@ -34,8 +34,8 @@ public class ApiClubEventOpsController extends BaseController {
     /** F-L5C-02:对他人可见的文字写入前送检;审不了按 fail-close 拦截。 */
     private String textRisk(Long actorMemberId, String text) {
         if (text == null || text.trim().isEmpty()) return null;
-        com.chengyinhub.business.domain.UmsMember actor = umsMemberService.selectUmsMemberById(actorMemberId);
-        return wxContentSecurityService.checkText(text, actor == null ? null : actor.getWxOpenId());
+        return com.chengyinhub.business.service.IWxContentSecurityService.checkTextAsMember(wxContentSecurityService, umsMemberService,
+                actorMemberId, text);
     }
 
     @PostMapping("/topics")

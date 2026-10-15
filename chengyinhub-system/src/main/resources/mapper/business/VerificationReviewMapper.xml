@@ -58,6 +58,7 @@
                     on registration.owner_type = 2 and activity.id = registration.owner_id
                  where registration.id = #{registrationId}) current_topic
           join cms_registration_scan scan on scan.member_id = #{verifierMemberId} and scan.registration_type = 1
+                                         and ifnull(scan.status, 0) &lt;&gt; 2
           join cms_registration scanned_registration on scanned_registration.id = scan.registration_id
           left join cms_activity scanned_activity
             on scanned_registration.owner_type = 2 and scanned_activity.id = scanned_registration.owner_id

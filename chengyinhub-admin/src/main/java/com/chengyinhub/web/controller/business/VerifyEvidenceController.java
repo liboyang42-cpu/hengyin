@@ -54,6 +54,8 @@ public class VerifyEvidenceController extends BaseController
         probe.setMemberId(memberId);
         probe.setRegistrationId(registrationId);
         probe.setRegistrationType(registrationType);
+        // 只读证据台要看得到已撤销的整单核销台账行(status=2),计数口径照旧排除。
+        probe.getParams().put("includeReversed", Boolean.TRUE);
         return AjaxResult.success(cmsRegistrationScanService.selectCmsRegistrationScanList(probe));
     }
 

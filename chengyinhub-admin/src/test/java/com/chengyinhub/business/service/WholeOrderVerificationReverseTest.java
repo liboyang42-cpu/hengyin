@@ -45,6 +45,9 @@ class WholeOrderVerificationReverseTest {
     private IPerkLedgerService perkLedger;
     private CmsRegistrationServiceImpl service;
     private CmsActivity activity;
+    private CmsRegistrationScanMapper scanMapper;
+    private com.chengyinhub.business.mapper.StoreVerifyGrowthDeliveryMapper deliveryMapper;
+    private com.chengyinhub.business.service.impl.RedemptionRewardClawbackService clawback;
 
     @BeforeEach
     void setUp() {
@@ -57,6 +60,12 @@ class WholeOrderVerificationReverseTest {
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activityMapper);
         ReflectionTestUtils.setField(service, "businessAuditEventMapper", auditMapper);
         ReflectionTestUtils.setField(service, "perkLedgerService", perkLedger);
+        scanMapper = mock(CmsRegistrationScanMapper.class);
+        deliveryMapper = mock(com.chengyinhub.business.mapper.StoreVerifyGrowthDeliveryMapper.class);
+        clawback = mock(com.chengyinhub.business.service.impl.RedemptionRewardClawbackService.class);
+        ReflectionTestUtils.setField(service, "cmsRegistrationScanMapper", scanMapper);
+        ReflectionTestUtils.setField(service, "storeVerifyGrowthDeliveryMapper", deliveryMapper);
+        ReflectionTestUtils.setField(service, "redemptionRewardClawbackService", clawback);
         activity = new CmsActivity();
         activity.setId(ACTIVITY);
         activity.setMemberId(ORGANIZER);
@@ -138,6 +147,39 @@ class WholeOrderVerificationReverseTest {
         assertThrows(IllegalArgumentException.class, () -> service.reverseWholeOrderVerification(REG, "  ", OPERATOR));
         verify(regMapper, never()).clearVerification(anyLong());
         verify(auditMapper, never()).insertBusinessAuditEvent(any());
+        verify(scanMapper, never()).markWholeOrderScansReversed(anyLong());
+        verify(deliveryMapper, never()).deletePendingByRegistration(anyLong());
+    }
+
+    /** PR10 复审:不冲回时也要把核销台账标为已撤销,并作废尚未发放的到店成长待办;已发奖励不动。 */
+    @Test
+    void reversalMarksScanLedgerAndDropsPendingGrowthWithoutClawback() {
+        assertTrue(service.reverseWholeOrderVerification(REG, "店员扫错票", OPERATOR));
+
+        InOrder order = inOrder(regMapper, auditMapper, scanMapper, deliveryMapper);
+        order.verify(regMapper).clearVerification(REG);
+        order.verify(auditMapper).insertBusinessAuditEvent(any());
+        order.verify(scanMapper).markWholeOrderScansReversed(REG);
+        order.verify(deliveryMapper).deletePendingByRegistration(REG);
+        verify(clawback, never()).clawbackWholeOrderVerification(any(), any(), any(), any(), any());
+    }
+
+    /** 勾选冲回:与按章撤销同一套到店积分/经验冲回机制,按撤销代数给审计幂等键。 */
+    @Test
+    void reversalWithClawbackReusesStoreVerifyClawback() {
+        CmsRegistration owner = verified();
+        owner.setMemberId(9009L);
+        when(regMapper.selectCmsRegistrationById(REG)).thenReturn(owner);
+
+        assertTrue(service.reverseWholeOrderVerification(REG, "核错项目", OPERATOR, true));
+
+        verify(scanMapper).markWholeOrderScansReversed(REG);
+        ArgumentCaptor<CmsRegistration> reg = ArgumentCaptor.forClass(CmsRegistration.class);
+        verify(clawback).clawbackWholeOrderVerification(reg.capture(), org.mockito.ArgumentMatchers.eq(ORGANIZER),
+                org.mockito.ArgumentMatchers.eq("核错项目"), org.mockito.ArgumentMatchers.eq(OPERATOR),
+                org.mockito.ArgumentMatchers.eq("registration-verify-clawback-" + REG + "-1"));
+        assertEquals(Long.valueOf(9009L), reg.getValue().getMemberId());
+        verify(deliveryMapper, never()).deletePendingByRegistration(anyLong());
     }
 
     @Test
