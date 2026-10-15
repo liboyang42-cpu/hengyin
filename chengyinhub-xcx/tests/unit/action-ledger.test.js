@@ -551,7 +551,8 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-06 合并弹窗/模板分支与最新主线后按最终源码重建，数值待生成台账后校准。
   // 2026-10-13 小程序底层A/B/C集成重建实测:C包漫游恢复/雾层重试会重启定位采样,生成器把 recoverRoam、
   //   retryScreenFog 两颗 tap 由 local write 改判 external(real-device-required),不进 local 分母。1781 → 1779。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1779)  /* 2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  // 2026-10-15 任务3(漫游与功能入口)新增 8 颗 local tap(官方路线入口/列表/节点、积分明细、举报队伍、清除对话、状态键等),1779 → 1787(台账重建实测)。
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1787)  /* 2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -1373,7 +1374,8 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 2026-09-30 项目铃铛接真实近期动态列表，首次加载失败与保留数据重试新增2个事件合同；重建实测 4396 → 4398。
   // 清空聊天取消确认及互斥的确认分支各新增1个事件合同，tap分母不变。
   // 2026-10-06 合并最新主线与弹窗分支后按生成台账校准。
-  assert.equal(ledger.controlCount, 4432)  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试控件后按最终树重建。 */
+  // 2026-10-15 任务3新增页面/组件控件,按台账重建实测 4432 → 4457。
+  assert.equal(ledger.controlCount, 4457)  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试控件后按最终树重建。 */
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。
