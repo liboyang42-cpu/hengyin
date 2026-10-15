@@ -176,3 +176,7 @@ E02真库组须显式CHENGYIN_E02_22_MYSQL_IT=1、六个CHENGYIN_TEST_MYSQL_HOST
 E01-19已按CORE公共f7e0实际读取证实显式取消DELETE0仍返回失败，精确交原C03（PR16 comment6198507537），不依赖数据库唯一索引或猜重复插入；未改其源、未写新测试、未执行。仅真实新缺陷作为BLOCKED_DEPENDENCY入账，不当可行动项。原leaf范围请求已收窄为原Controller owner修或精确转交。ShopDay RR假设由真实checkin/arrive/photo READ_COMMITTED反证，不作为新任务或随意更改隔离。
 
 E04-07消费源RedemptionRewardClawbackService本就归EXTRA/E04，阻塞现准确为BLOCKED_CONTRACT：发放侧没有持久原historyId、旧日志关联未知；需TopicCompletionCouponReward producer/receipt与旧数据边界，不是再申请消费源，不靠ASC/DESC猜原ID。E02-13同样依赖审核任务内容版本生产者，不能用当前post CAS冒充所审版本绑定。
+
+## 本地474e失败修复接收（单线）
+
+本地回报474e54aea6351856e7e4dd23ab4561932958522d在212/VPS实际34类305项=302通过/1失败/2错误/0跳过，编译通过，exit1 child_command_failed；实际305不同静态304。原结果保留，不套700e。唯一修复线external_e02，其他worker不并修。三个fixture漏stub无回执=null，Mockito Map默认emptyMap先触409；仅修两旧receipt方法与E02_14前提，保403与全部负控，生产不改。修后尚NOT_RUN，未来本地聚焦CommunityPostServiceImplTest/E02_14Test静态56方法计划。具体失败包、路径及状态见QUEUE.failure_repair_queue；不等本地结果才交新源码。

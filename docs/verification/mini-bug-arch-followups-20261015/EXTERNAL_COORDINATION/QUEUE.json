@@ -3584,7 +3584,7 @@
   "thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
   "host_id": "durable",
   "branch": "codex/extra-six-rolling-20261015",
-  "queue_revision": 11,
+  "queue_revision": 12,
   "initial_deliveries": [
     {
       "lane": "E01",
@@ -3638,7 +3638,7 @@
   "resume_instructions": "Read LONGRUN_ROLLING and SOURCE_OWNERS at current control, this queue/CLAIMS, and PR16 newest comments. Inspect branch/worktree git status and remote SHA. Never overwrite uncommitted worker patch. Do not execute tests/lint/compile/DB/CI reruns. Parent serially commits frozen task paths then next same-lane task; replenish only concrete authorized nonduplicate findings, otherwise EXHAUSTED.",
   "active_claims": {
     "E01": null,
-    "E02": null,
+    "E02": "VPS_EXTRA_474e54ae_20261015",
     "E03": null,
     "E04": null,
     "E05": null,
@@ -3666,9 +3666,9 @@
     },
     {
       "slot": "E02",
-      "task": null,
+      "task": "VPS_EXTRA_474e54ae_20261015",
       "worker": "/root/external_e02",
-      "mode": "IDLE_DELIVERED_OR_REAL_NEW_SCOPE_PENDING",
+      "mode": "SOLE_FAILURE_REPAIR_ORIGINAL_WRITER",
       "worktree": "/workspace/hengyin-extra-e02"
     },
     {
@@ -3760,8 +3760,48 @@
     "scope": "C00 sole global ownership coordinator; EXTRA only own QUEUE/CLAIMS/BACKLOG; no merge/deploy/migration/production",
     "real_capacity": "If no genuine authorized independent task is actionable, disclose actual idle count/shortfall; do not fabricate tasks to make five or50"
   },
-  "failure_repair_queue": [],
-  "active_failure_repair": null,
+  "failure_repair_queue": [
+    {
+      "id": "VPS_EXTRA_474e54ae_20261015",
+      "status": "IN_PROGRESS_ORIGINAL_WRITER",
+      "priority": 1,
+      "candidate_sha": "474e54aea6351856e7e4dd23ab4561932958522d",
+      "later_sha_with_same_affected_files": "700e754be0a49431638246036a2298d1d5f3e23e",
+      "environment": "Local VPS task cy-vps-extra-474e54ae-20261015; budget212 1CPU/1536MiB/network none",
+      "actual_results": {
+        "xml_classes": 34,
+        "tests": 305,
+        "passed": 302,
+        "failures": 1,
+        "errors": 2,
+        "skipped": 0,
+        "exit_code": 1,
+        "exit_reason": "child_command_failed",
+        "compile": "PASS_REPORTED_BY_LOCAL"
+      },
+      "evidence_status": "LOCAL_DIRECT_REPORT; public PR24 artifact pending; do not claim logs independently read",
+      "writer": "/root/external_e02",
+      "failure_cases": [
+        "CommunityPostServiceImplTest.concurrentCommentLikeReplayDoesNotEmitDuplicateOutbox",
+        "CommunityPostServiceImplTest.commentLikeAndUnlikeWritePostScopedOutboxEvents",
+        "E02_14Test.publishingExistingCommunityDraftRechecksMembershipBeforeSafetyOrWrites"
+      ],
+      "root_cause": "Mockito missing receipt Map stubs default emptyMap; existing production correctly treats any receipt binding as requiring matching command/aggregate; fixture must explicitly return null for no receipt",
+      "allowed_paths": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostServiceImplTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_14Test.java",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E02-22.md",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E02-14.md"
+      ],
+      "production_change_allowed_for_this_fix": false,
+      "repair_sha": null,
+      "repair_verification": "NOT_RUN",
+      "focused_future_command": "mvn -B -pl chengyinhub-admin -am -Dtest=CommunityPostServiceImplTest,E02_14Test -Dsurefire.failIfNoSpecifiedTests=false test",
+      "planned_static_methods": 56,
+      "no_gate_weakening": "Keep403, command binding and all negative assertions; do not rewrite assertion to409"
+    }
+  ],
+  "active_failure_repair": "VPS_EXTRA_474e54ae_20261015",
   "new_scope_requests": [
     {
       "comment_id": 6198507537,
@@ -3785,5 +3825,26 @@
     "E03-16": "48c39663f63995a4e5365d2d615e40135bdc1ef1",
     "E05-17": "24525416a11f6c2fc24272edf3c13d19cbaa6b05",
     "E02-22": "a8e4c1f5de56c05da8114c9c53e38ec2a5b1adbc"
-  }
+  },
+  "actual_failed_validation_repairs": 1,
+  "actual_new_development_workers": 0,
+  "local_validation_results": [
+    {
+      "candidate_sha": "474e54aea6351856e7e4dd23ab4561932958522d",
+      "task": "VPS_EXTRA_474e54ae_20261015",
+      "actual": {
+        "xml_classes": 34,
+        "tests": 305,
+        "passed": 302,
+        "failures": 1,
+        "errors": 2,
+        "skipped": 0,
+        "exit_code": 1,
+        "exit_reason": "child_command_failed",
+        "compile": "PASS_REPORTED_BY_LOCAL"
+      },
+      "source": "direct local coordinator report",
+      "subsequent_sha_pass_inherited": false
+    }
+  ]
 }

@@ -7,7 +7,7 @@
   "model": "gpt-6.1-sol",
   "active_tasks": {
     "E01": null,
-    "E02": null,
+    "E02": "VPS_EXTRA_474e54ae_20261015",
     "E03": null,
     "E04": null,
     "E05": null,
@@ -559,8 +559,8 @@
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 complete read E01-18@a838241b and E02-20@76bfabcb; original source writers stopped/no WIP; preserve assertions/policy. Mapper CommunityPost only existing nullable notification-preference signature at this grant.",
       "child_writer": "/root/external_e02",
-      "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
+      "active_task": "VPS_EXTRA_474e54ae_20261015",
+      "source_status": "ACTIVE_SOLE_REPAIR_FIXTURE_ONLY",
       "verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImplTest.java": {
@@ -651,9 +651,9 @@
     },
     {
       "slot": "E02",
-      "task": null,
+      "task": "VPS_EXTRA_474e54ae_20261015",
       "worker": "/root/external_e02",
-      "mode": "IDLE_DELIVERED_OR_REAL_NEW_SCOPE_PENDING",
+      "mode": "SOLE_FAILURE_REPAIR_ORIGINAL_WRITER",
       "worktree": "/workspace/hengyin-extra-e02"
     },
     {
@@ -725,8 +725,48 @@
     "scope": "C00 sole global ownership coordinator; EXTRA only own QUEUE/CLAIMS/BACKLOG; no merge/deploy/migration/production",
     "real_capacity": "If no genuine authorized independent task is actionable, disclose actual idle count/shortfall; do not fabricate tasks to make five or50"
   },
-  "active_failure_repair": null,
-  "failure_repair_queue": [],
+  "active_failure_repair": "VPS_EXTRA_474e54ae_20261015",
+  "failure_repair_queue": [
+    {
+      "id": "VPS_EXTRA_474e54ae_20261015",
+      "status": "IN_PROGRESS_ORIGINAL_WRITER",
+      "priority": 1,
+      "candidate_sha": "474e54aea6351856e7e4dd23ab4561932958522d",
+      "later_sha_with_same_affected_files": "700e754be0a49431638246036a2298d1d5f3e23e",
+      "environment": "Local VPS task cy-vps-extra-474e54ae-20261015; budget212 1CPU/1536MiB/network none",
+      "actual_results": {
+        "xml_classes": 34,
+        "tests": 305,
+        "passed": 302,
+        "failures": 1,
+        "errors": 2,
+        "skipped": 0,
+        "exit_code": 1,
+        "exit_reason": "child_command_failed",
+        "compile": "PASS_REPORTED_BY_LOCAL"
+      },
+      "evidence_status": "LOCAL_DIRECT_REPORT; public PR24 artifact pending; do not claim logs independently read",
+      "writer": "/root/external_e02",
+      "failure_cases": [
+        "CommunityPostServiceImplTest.concurrentCommentLikeReplayDoesNotEmitDuplicateOutbox",
+        "CommunityPostServiceImplTest.commentLikeAndUnlikeWritePostScopedOutboxEvents",
+        "E02_14Test.publishingExistingCommunityDraftRechecksMembershipBeforeSafetyOrWrites"
+      ],
+      "root_cause": "Mockito missing receipt Map stubs default emptyMap; existing production correctly treats any receipt binding as requiring matching command/aggregate; fixture must explicitly return null for no receipt",
+      "allowed_paths": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostServiceImplTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_14Test.java",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E02-22.md",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E02-14.md"
+      ],
+      "production_change_allowed_for_this_fix": false,
+      "repair_sha": null,
+      "repair_verification": "NOT_RUN",
+      "focused_future_command": "mvn -B -pl chengyinhub-admin -am -Dtest=CommunityPostServiceImplTest,E02_14Test -Dsurefire.failIfNoSpecifiedTests=false test",
+      "planned_static_methods": 56,
+      "no_gate_weakening": "Keep403, command binding and all negative assertions; do not rewrite assertion to409"
+    }
+  ],
   "external_dependency_requests": {
     "E01-19": {
       "source_owner": "CORE/C03",
