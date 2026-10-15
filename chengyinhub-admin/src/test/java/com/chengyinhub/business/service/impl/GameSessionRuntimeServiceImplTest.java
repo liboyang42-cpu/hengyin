@@ -1305,6 +1305,8 @@ class GameSessionRuntimeServiceImplTest {
         recorded.setId(206L);
         recorded.setStatus("RECORDED");
         when(runtimeMapper.selectActiveSubmission(SESSION, PLAYER, NODE, "CLOCK_PHOTO")).thenReturn(recorded);
+        // Existing submission has no outcome fixture: recovering that new fact requires one successful CAS.
+        when(runtimeMapper.updateSessionCas(anyLong(), anyInt(), anyString(), anyString(), any(), any(), any())).thenReturn(1);
         usePhotoVerifier((url, memberId) -> {
             throw new IllegalStateException("存储故障不应影响已记录的提交");
         });
@@ -1729,7 +1731,8 @@ class GameSessionRuntimeServiceImplTest {
         GameSession current = runningSession(3);
         current.setStatus(GameSession.PREPARING);
         current.setModuleConfigSnapshotJson(runtimeConfigJson());
-        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(initial, current);
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(initial);
+        when(runtimeMapper.selectSessionByActivityForUpdate(ACTIVITY)).thenReturn(current);
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
         when(runtimeMapper.isActiveTeamMember(ACTIVITY, TEAM, PLAYER)).thenReturn(1);
         GameTeamRoleAssignment winner = role("DETECTIVE", "侦探");
