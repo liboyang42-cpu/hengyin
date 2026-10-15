@@ -808,32 +808,44 @@
       "source_owners": "LONGRUN_SOURCE_OWNERS.json",
       "core_initial_count": 50,
       "extra_initial_count": 50,
-      "core_total_created": 161,
+      "core_total_created": 168,
       "core_state_counts": {
-        "SOURCE_DELIVERED_UNVERIFIED": 112,
+        "SOURCE_DELIVERED_UNVERIFIED": 126,
         "NO_CHANGE_SOURCE_REVIEW": 38,
         "BLOCKED_DECISION": 3,
-        "SUPERSEDED_DUPLICATE": 1,
-        "FROZEN_SNAPSHOT_PENDING_PUBLICATION": 6,
-        "READY_SOURCE_ONLY": 1
+        "SUPERSEDED_DUPLICATE": 1
       },
-      "core_current_public_sha": "7e5882addb7269373b2b95daa0a4ceeb4485fd10",
+      "core_current_public_sha": "bda1c4e8db08210b573cac1ee02b0d18c19962b7",
       "core_source_pr": "https://github.com/liboyang42-cpu/hengyin/pull/44",
-      "core_actionable_actual": 1,
+      "core_actionable_actual": 0,
       "target_actionable_per_team": 50,
-      "extra_last_read_control_sha": "ecb5f418d855d1f97c11d80815e1f2abc621dd66",
+      "extra_last_read_control_sha": "e43477b71807951dbdf13353a36617afbe1830fa",
       "extra_last_read_counts": {
-        "history": 84,
-        "source": 20,
-        "no_change": 11,
-        "blocked": 3,
-        "ready": 44,
+        "history": 87,
+        "source": 36,
+        "no_change": 29,
+        "blocked": 7,
+        "ready": 9,
         "claimed": 6
       },
       "auto_refill": "Use source-backed concrete findings; actual smaller pool and EXHAUSTED disclosed, never fabricate defects or idle test jobs",
       "manual_validation": "NOT_RUN_USER_DEFERRED",
       "test_deployed": false,
       "merged": false
+    },
+    "current_source_delivery": {
+      "core_sha": "bda1c4e8db08210b573cac1ee02b0d18c19962b7",
+      "core_pr": 44,
+      "extra_last_read_sha": "e43477b71807951dbdf13353a36617afbe1830fa",
+      "extra_pr": 36,
+      "status": "SOURCE_DELIVERED_UNVERIFIED",
+      "verification": "NOT_RUN_USER_DEFERRED",
+      "test_deployed": false,
+      "merged": false,
+      "core_current_actionable": 0,
+      "target_actionable_per_team": 50,
+      "shortfall_disclosed": true,
+      "new_extra_source_authorization_control": "2f050fd7389f36653a07f742ec7f698687a959ac"
     }
   },
   "followup_lanes": [

@@ -314,4 +314,4 @@ BK-ASSET源码修复为SOURCE_READY，新增VPS套件已通过；**TEST_DEPLOYED
 
 ## 长期源码最新checkpoint（覆盖旧状态文字）
 
-[当前恢复入口](LONGRUN_CURRENT.md)与CORE池记录公共7e5882addb7269373b2b95daa0a4ceeb4485fd10 / PR44；后续一律SOURCE_DELIVERED_UNVERIFIED、NOT_RUN。两队真实计数/文件单写者/跨队合同/未决政策和本地恢复规则均在入口，不以历史通过套用新源码。E04额外接口及三测试、C06 runtime mapper独立当前读、C04暂停投影SQL精确写权已在源表登记；其他原锁不变。
+[当前恢复入口](LONGRUN_CURRENT.md)与CORE池记录公共bda1c4e8db08210b573cac1ee02b0d18c19962b7 / PR44；后续一律SOURCE_DELIVERED_UNVERIFIED、NOT_RUN。两队真实计数/文件单写者/跨队合同/未决政策和本地恢复规则均在入口，不以历史通过套用新源码。E04额外接口及三测试、C06 runtime mapper独立当前读、C04暂停投影SQL精确写权已在源表登记；其他原锁不变。

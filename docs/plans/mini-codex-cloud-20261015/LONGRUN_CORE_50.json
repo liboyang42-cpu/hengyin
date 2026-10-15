@@ -3,12 +3,12 @@
   "team": "CORE",
   "initial_item_count": 50,
   "lane_counts": {
-    "C01": 9,
-    "C02": 9,
-    "C03": 8,
-    "C04": 8,
-    "C05": 8,
-    "C06": 8
+    "C01": 50,
+    "C02": 26,
+    "C03": 24,
+    "C04": 19,
+    "C05": 23,
+    "C06": 26
   },
   "target_actionable_items": 50,
   "max_workers": 6,
@@ -4153,7 +4153,7 @@
       "invariant": "仅确属当前视图的hint/scanning切换复位，原HTTP在途/未知同key不能解锁重发，不泛化清全部写锁",
       "repair_boundary": "Only exact assigned source and task regression/evidence; preserve actual established policy; static candidate no runtime pass claim.",
       "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
-      "state": "FROZEN_SNAPSHOT_PENDING_PUBLICATION",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "b01_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -4161,7 +4161,11 @@
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-own-c01-41.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C01-41.md",
       "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
-      "local_commit_sha": "1ea805aadb8956c290c6374409dff9647719af18"
+      "commit_sha": "02c97aa7d858f242997a986c757a3c163f8e6c60",
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
+      "production_paths_changed": [
+        "chengyinhub-xcx/pages/play/index.js"
+      ]
     },
     {
       "id": "OWN-C01-42",
@@ -4176,7 +4180,7 @@
       "invariant": "原active对象/账号/scope/component与setData续步归属，不猜事件schema",
       "repair_boundary": "Only exact assigned source and task regression/evidence; preserve actual established policy; static candidate no runtime pass claim.",
       "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
-      "state": "FROZEN_SNAPSHOT_PENDING_PUBLICATION",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "b01_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -4184,7 +4188,11 @@
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-own-c01-42.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C01-42.md",
       "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
-      "local_commit_sha": "3b40ca822d73e7d563d86fabc9d5a46a6131322b"
+      "commit_sha": "a2710010531fed82e149e67b32d5370fe21b33ad",
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
+      "production_paths_changed": [
+        "chengyinhub-xcx/pages/play/index.js"
+      ]
     },
     {
       "id": "OWN-C01-43",
@@ -4199,7 +4207,7 @@
       "invariant": "按真实事件字段绑定原scope/session，延迟需原intent，缺字段明确依赖",
       "repair_boundary": "Only exact assigned source and task regression/evidence; preserve actual established policy; static candidate no runtime pass claim.",
       "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
-      "state": "FROZEN_SNAPSHOT_PENDING_PUBLICATION",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "b01_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -4207,7 +4215,11 @@
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-own-c01-43.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C01-43.md",
       "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
-      "local_commit_sha": "642f2cc34a258fd3754ea7ce7fcff7f1452e49ea"
+      "commit_sha": "7bd3708a9285c7f6fd01b68c90565f2ad0006722",
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
+      "production_paths_changed": [
+        "chengyinhub-xcx/pages/play/index.js"
+      ]
     },
     {
       "id": "OWN-C01-44",
@@ -4222,7 +4234,7 @@
       "invariant": "原component/kit/pending归属，保计时/原payload和UNKNOWN不重发",
       "repair_boundary": "Only exact assigned source and task regression/evidence; preserve actual established policy; static candidate no runtime pass claim.",
       "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
-      "state": "FROZEN_SNAPSHOT_PENDING_PUBLICATION",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "b01_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -4230,7 +4242,11 @@
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-own-c01-44.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C01-44.md",
       "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
-      "local_commit_sha": "61a3b3a97885e2fbb251b2d97221e9adb2935a19"
+      "commit_sha": "514f9140f387c8767e8459c417f937517cbb10fe",
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
+      "production_paths_changed": [
+        "chengyinhub-xcx/pages/play/index.js"
+      ]
     },
     {
       "id": "OWN-C01-45",
@@ -4245,7 +4261,7 @@
       "invariant": "保原成功session/version强闸，failure/loading/abort只自己operation",
       "repair_boundary": "Only exact assigned source and task regression/evidence; preserve actual established policy; static candidate no runtime pass claim.",
       "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
-      "state": "FROZEN_SNAPSHOT_PENDING_PUBLICATION",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "b01_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -4253,7 +4269,11 @@
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-own-c01-45.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C01-45.md",
       "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
-      "local_commit_sha": "03dd447e0ca83c8bff79692c953257e25ba390f1"
+      "commit_sha": "69c14cce5badc84ddf7d293fc65d3a122da16ce5",
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
+      "production_paths_changed": [
+        "chengyinhub-xcx/pages/play/index.js"
+      ]
     },
     {
       "id": "OWN-C01-46",
@@ -4268,14 +4288,19 @@
       "invariant": "只真实事件字段能证明归属才修，缺身份则表外producer依赖，不造新字段或改组件UI",
       "repair_boundary": "Only exact assigned source and task regression/evidence; preserve actual established policy; static candidate no runtime pass claim.",
       "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "b01_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-own-c01-46.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C01-46.md",
-      "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE"
+      "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
+      "commit_sha": "2a8f8eb0f71d7e1e31b6c6eae3be8fda9b92ac34",
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
+      "production_paths_changed": [
+        "chengyinhub-xcx/pages/play/index.js"
+      ]
     },
     {
       "title": "双人复核确认与付款并发顺序保护",
@@ -4290,7 +4315,7 @@
       "status": "AUDIT_THEN_FIX",
       "id": "OWN-C04-20",
       "lane": "C04",
-      "state": "FROZEN_SNAPSHOT_PENDING_PUBLICATION",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "a02_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -4302,7 +4327,19 @@
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_20MySqlIT.java"
       ],
       "planned_real_db_cases": "2 methods: original PENDING read -> other connection same maker confirm -> payment false and independent CONFIRMED/no paid audit; distinct confirmer positive PAID. Source only NOT_RUN; explicit CHENGYIN_FUNDS_MYSQL_IT=1, isolated schema.",
-      "local_commit_sha": "b7338d9d5a8713bf4413f165b518d9630b649bd0"
+      "commit_sha": "9e60e0fa6654937c52c93b7adbc12c26056ca7f8",
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
+      "production_paths_changed": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantPayableServiceImpl.java"
+      ],
+      "additional_regression": {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_20MySqlIT.java",
+        "evidence": "docs/verification/mini-longrun-20261015/CORE/OWN-C04-20-realdb.md",
+        "commit_sha": "f9e2932ca4b14e541caba356d2c1b016332f199f",
+        "declared_methods": 2,
+        "verification": "NOT_RUN",
+        "environment_gate": "CHENGYIN_FUNDS_MYSQL_IT=1; explicit isolated MySQL8+ config; local validator chooses approved runtime after user returns"
+      }
     },
     {
       "id": "OWN-C01-47",
@@ -4317,14 +4354,19 @@
       "invariant": "只绑定副作用原scope/load/lifecycle；真实完成事实和奖励规则不改",
       "repair_boundary": "Exact original page and task regression/evidence; only existing reachable effects, no new UI/permissions.",
       "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "b01_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-own-c01-47.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C01-47.md",
-      "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE"
+      "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
+      "commit_sha": "d8b83027756078e3e97ea713bc0b1e1e4ab471df",
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
+      "production_paths_changed": [
+        "chengyinhub-xcx/pages/play/index.js"
+      ]
     },
     {
       "id": "OWN-C01-48",
@@ -4339,14 +4381,19 @@
       "invariant": "冻结原图稿和归属/序列，保原相册授权正常往返，不改UI或相册政策",
       "repair_boundary": "Exact original page and task regression/evidence; only existing reachable effects, no new UI/permissions.",
       "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "b01_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-own-c01-48.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C01-48.md",
-      "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE"
+      "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
+      "commit_sha": "867d2b8a064ec5368a89ebd4da95df4e1a7170c9",
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
+      "production_paths_changed": [
+        "chengyinhub-xcx/pages/play/index.js"
+      ]
     },
     {
       "id": "OWN-C01-49",
@@ -4361,14 +4408,19 @@
       "invariant": "只page原chapter/account/scope后续，不改chapter结束写规则或表外实现",
       "repair_boundary": "Exact original page and task regression/evidence; only existing reachable effects, no new UI/permissions.",
       "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "b01_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-own-c01-49.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C01-49.md",
-      "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE"
+      "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
+      "commit_sha": "53d32dcbf601ac673671c651fea64926f6d10e94",
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
+      "production_paths_changed": [
+        "chengyinhub-xcx/pages/play/index.js"
+      ]
     },
     {
       "id": "OWN-C06-27",
@@ -4384,7 +4436,7 @@
       "invariant": "新增static findCurrent(mapper,memberId,topicId,activityId)复制原private当前局选择/owner检查；find原语义不动，仅原runtime wrapper委托",
       "repair_boundary": "Only exact Scope helper + original runtime + task tests/evidence; no blanket find replacement, no new authorization/status policy.",
       "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "final_review_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -4392,7 +4444,13 @@
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_27Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C06-27.md",
       "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
-      "producer_contract": "CONTRACT_FROZEN; new opt-in static method returns exact scope latest ID regardless RUNNING then caller retains status gate; null activity first original unique default-scope check, then current; legacy find unchanged; publish exact SHA before EXTRA consumers"
+      "producer_contract": "CONTRACT_FROZEN; new opt-in static method returns exact scope latest ID regardless RUNNING then caller retains status gate; null activity first original unique default-scope check, then current; legacy find unchanged; publish exact SHA before EXTRA consumers",
+      "commit_sha": "5162ef45bb42486575619871ff24b4b694941f09",
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
+      "production_paths_changed": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicRouteSessionScope.java"
+      ]
     },
     {
       "id": "OWN-C01-50",
@@ -4407,14 +4465,19 @@
       "invariant": "render前固定原账号/scope/session与finish artwork代次；close回调匹配自己合法transition，不能自失效或导航新页",
       "repair_boundary": "Only original page and task test/evidence; render/transition boundary, no new UI/route policy.",
       "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "b01_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-own-c01-50.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C01-50.md",
-      "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE"
+      "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
+      "commit_sha": "d4c4f51f0e9bf5969c58acd88e2e509044052d21",
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
+      "production_paths_changed": [
+        "chengyinhub-xcx/pages/play/index.js"
+      ]
     },
     {
       "id": "OWN-C03-24",
@@ -4429,7 +4492,7 @@
       "invariant": "仅已证明write前的原输入拒绝使用现有400；不改鉴权判断/服务后异常/媒体后500",
       "repair_boundary": "Exact original writer source only; preserve existing policy. No postwrite exception reclassification.",
       "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "feature_points_rules_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -4437,7 +4500,11 @@
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_24Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C03-24.md",
       "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
-      "source_result": "PENDING_SOURCE_DELIVERY"
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
+      "commit_sha": "d7507d6d23fd70f8ba755da6646c723a995da924",
+      "production_paths_changed": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java"
+      ]
     },
     {
       "id": "OWN-C02-26",
@@ -4453,7 +4520,7 @@
       "invariant": "仅已有topic和真实读回，复用原明确采用服务端稿决定；禁止读回即自动清UNKNOWN或盲重发；新建无identity仍保守",
       "repair_boundary": "Only existing C02 owned sources and task regression/evidence; no new durable marker or storage policy.",
       "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "publish_unknown_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -4461,31 +4528,41 @@
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-own-c02-26.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C02-26.md",
       "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
-      "source_result": "PENDING_SOURCE_REVIEW"
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
+      "commit_sha": "8802324874866caf6ed0183aa6eead1b7ff91e84",
+      "production_paths_changed": [
+        "chengyinhub-xcx/pages/publish/fabu/index.js"
+      ]
     }
   ],
   "refill": "Coordinator adds a concrete nonduplicate authorized task when one is delivered/refuted/blocked; no fabricated defect or empty filler. New IDs never reuse old ones. If no justified candidate remains, record EXHAUSTED rather than invent work.",
-  "total_created_items": 166,
-  "delivered_items": 150,
+  "total_created_items": 168,
+  "delivered_items": 164,
   "refill_progress": "Initial 50 retained historically; actual new nonduplicate source slices appended in waves. Counts reflect delivered history and live remainder, not a claim all tasks were bugs.",
-  "actual_actionable_or_in_progress_items": 1,
+  "actual_actionable_or_in_progress_items": 0,
   "counts_note": "Target actionable pool 50; actual open count disclosed separately, source-backed refill only, no fabricated confirmed defects.",
-  "current_public_source_sha": "7e5882addb7269373b2b95daa0a4ceeb4485fd10",
+  "current_public_source_sha": "bda1c4e8db08210b573cac1ee02b0d18c19962b7",
   "actual_state_counts": {
-    "SOURCE_DELIVERED_UNVERIFIED": 112,
+    "SOURCE_DELIVERED_UNVERIFIED": 126,
     "NO_CHANGE_SOURCE_REVIEW": 38,
     "BLOCKED_DECISION": 3,
-    "SUPERSEDED_DUPLICATE": 1,
-    "FROZEN_SNAPSHOT_PENDING_PUBLICATION": 6,
-    "READY_SOURCE_ONLY": 1
+    "SUPERSEDED_DUPLICATE": 1
   },
   "source_pr": "https://github.com/liboyang42-cpu/hengyin/pull/44",
   "active_claims": {
-    "C01": "OWN-C01-46",
+    "C01": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK",
     "C02": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK",
     "C03": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK",
-    "C04": "OWN-C04-20 real-MySQL regression SOURCE_AUTHORING_ONLY_NOT_RUN",
+    "C04": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK",
     "C05": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK",
     "C06": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK"
-  }
+  },
+  "refill_shortfall": 50,
+  "current_source_scope_producer": {
+    "commit_sha": "5162ef45bb42486575619871ff24b4b694941f09",
+    "method": "TopicRouteSessionScope.findCurrent",
+    "old_find": "UNCHANGED",
+    "verification": "NOT_RUN"
+  },
+  "source_pool_status": "EXHAUSTED_WITH_RECORDED_POLICY_BOUNDARIES"
 }
