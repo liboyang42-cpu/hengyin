@@ -1,3 +1,11 @@
+## 当前E06修复复测排队：NOT_RUN，非源码失败
+
+当前状态一致口径：旧 `ed598258c0f614385940f326099b9626531fab02` 的11类76实际=75PASS/1FAIL仍保留，失败未因push关闭；修复 `b45664de6136eb97c46ed0c86e95fc25686dc1b7` 仅E06_17Test单类5个源码声明，212因another_build_holds_lock返回75/containerId=null，本次实际0项、未编译测试，**NOT_RUN排队**，不是修复失败或通过。
+
+C00已完整读回[PR24公开排队证据](https://github.com/liboyang42-cpu/hengyin/blob/60febdbdcdcc7eed2b445a80f3d1f21d2cd76966/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b45664de/README.md)及admission-refused.json；commit `60febdbdcdcc7eed2b445a80f3d1f21d2cd76966`，源包SHA256 `2ab95e689599d4c67bf1777bb7e00293faf2ef50248ab40b695f393d214c5db3`。本地本次回报无活动Java验证，待正常212准入；Cloud不补跑、不重复改测试或生产源、不绕锁，不再全76。裸SQL疑点保持NEEDS_REACHABILITY/NO_SOURCE_CHANGE，无业务可达证据不计新bug。
+
+跨端仍按已交源码合同读：GET分享读库DataAccessException的HTTP200→503/body500不变，非法token/无行/坏存储仍HTTP200/GONE；真实HTTP/业务/两端/部署未验收。Claude/iOS接收ACK待回，不能据源码或旧四Share方法通过称已上线。第三队普通24PASS/真MySQL11未运行独立记录。
+
 ## E06修复新候选交付／裸SQL疑点裁定
 
 EXTRA原E06已交修复 `b45664de6136eb97c46ed0c86e95fc25686dc1b7`（直接父ed598，原child a9d1dcda7d9944ace6c89000fc2aa5696018fdff），C00实际核对公共compare仅2路径：E06_17Test.java和E06-17.md，生产/依赖0改。夹具增加既有Error querying database标记、保留原裸SQL子串，原generic/HTTP200/no-mapper及Share503与全部负控不变，额外加2条响应不含SQL断言。SOURCE_DELIVERED_UNVERIFIED/修后NOT_RUN，不能把旧75PASS或旧56PASS继承到此SHA。已交本地PR24#6202107770，仅E06_17Test聚焦复测（5是源码声明、实际以fresh XML计），不再全76，无新DB/Redis前提；Cloud不运行。

@@ -2838,6 +2838,33 @@
     "no_global_source_transfer_performed": true,
     "status": "SOURCE_DELIVERED_ORIGINAL_AUTHOR_FROZEN",
     "candidate_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
-    "verification": "NOT_RUN_AFTER_FIX"
+    "verification": "NOT_RUN_ADMISSION_REFUSED",
+    "local_validation": {
+      "candidate_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
+      "status": "NOT_RUN_ADMISSION_REFUSED",
+      "classes": [
+        "com.chengyinhub.business.longrun.E06_17Test"
+      ],
+      "source_declared_tests": 5,
+      "actual_executed_tests": 0,
+      "compilation_started": false,
+      "tests_started": false,
+      "guard_exit_code": 75,
+      "guard_reason": "another_build_holds_lock",
+      "container_id": null,
+      "source_archive_sha256": "2ab95e689599d4c67bf1777bb7e00293faf2ef50248ab40b695f393d214c5db3",
+      "finished_at": "2026-10-15T20:58:53.261865+00:00",
+      "source_failure": false,
+      "result": null,
+      "evidence_pr": 24,
+      "evidence_commit": "60febdbdcdcc7eed2b445a80f3d1f21d2cd76966",
+      "evidence_directory": "docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b45664de/",
+      "C00_read_public_evidence": true,
+      "resource_owner": "local verifier, normal212 admission only",
+      "local_active_java_validation_at_report": false,
+      "no_Cloud_fallback": true,
+      "previous_ed598_failure_remains_open": true,
+      "retry_source_unchanged": true
+    }
   }
 }

@@ -1474,7 +1474,7 @@
         "no_api_change_label_correction": "Path/parameters/envelope unchanged is narrower than no API change; HTTP200->503 is an observable client transport contract change",
         "validation": {
           "owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
-          "status": "FAIL_ONE_UNRELATED_ISOLATION_NEGATIVE_CONTROL",
+          "status": "ED598_76_ONE_FAIL_B456_FIXTURE_REPAIR_5_NOT_RUN_QUEUED",
           "source_declarations": 75,
           "actual_tests": 76,
           "real_http_acceptance": "NOT_RUN",
@@ -1485,7 +1485,34 @@
           "errors": 0,
           "skipped": 0,
           "Share503_and_GONE_privacy_success_passed": 4,
-          "evidence_commit": "77cb3320fbbf47ef061db811fdc51a0a07c462f8"
+          "evidence_commit": "77cb3320fbbf47ef061db811fdc51a0a07c462f8",
+          "latest_repair_validation": {
+            "candidate_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
+            "status": "NOT_RUN_ADMISSION_REFUSED",
+            "classes": [
+              "com.chengyinhub.business.longrun.E06_17Test"
+            ],
+            "source_declared_tests": 5,
+            "actual_executed_tests": 0,
+            "compilation_started": false,
+            "tests_started": false,
+            "guard_exit_code": 75,
+            "guard_reason": "another_build_holds_lock",
+            "container_id": null,
+            "source_archive_sha256": "2ab95e689599d4c67bf1777bb7e00293faf2ef50248ab40b695f393d214c5db3",
+            "finished_at": "2026-10-15T20:58:53.261865+00:00",
+            "source_failure": false,
+            "result": null,
+            "evidence_pr": 24,
+            "evidence_commit": "60febdbdcdcc7eed2b445a80f3d1f21d2cd76966",
+            "evidence_directory": "docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b45664de/",
+            "C00_read_public_evidence": true,
+            "resource_owner": "local verifier, normal212 admission only",
+            "local_active_java_validation_at_report": false,
+            "no_Cloud_fallback": true,
+            "previous_ed598_failure_remains_open": true,
+            "retry_source_unchanged": true
+          }
         },
         "client_receipts": {
           "Claude": "ACK_PENDING",
@@ -1644,7 +1671,7 @@
       "evidence_directory": "docs/verification/mini-bug-arch-20261015/VPS_EXTRA_ed598258/",
       "C00_read_public_evidence": true,
       "repair_owner": "EXTRA6/E06 external_e06",
-      "repair_status": "SOURCE_FIX_DELIVERED_NOT_RUN",
+      "repair_status": "SOURCE_FIX_DELIVERED_NOT_RUN_212_ADMISSION_REFUSED",
       "repair_ack": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6202056607",
       "authorized_repair_paths": [
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E06_17Test.java",
@@ -1714,7 +1741,7 @@
     "extra_repair_slot": {
       "limit": 1,
       "owner": "EXTRA6/E06 external_e06",
-      "status": "SOURCE_DELIVERED_ORIGINAL_AUTHOR_FROZEN_LOCAL_TARGETED_RETEST_PENDING",
+      "status": "SOURCE_FROZEN_LOCAL_RETEST_WAITING_212_LOCK_NO_CODE_REPAIR_NEEDED",
       "ack": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6202056607",
       "other_independent_work": "Continue genuine authorized items; no fabricated READY tasks"
     },
@@ -1725,7 +1752,7 @@
       "child_sha": "a9d1dcda7d9944ace6c89000fc2aa5696018fdff",
       "ack_and_delivery_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6202097241",
       "status": "SOURCE_DELIVERED_UNVERIFIED",
-      "verification": "NOT_RUN_AFTER_FIX",
+      "verification": "NOT_RUN_ADMISSION_REFUSED",
       "C00_compared_public_diff": true,
       "changed_paths": [
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E06_17Test.java",
@@ -1738,12 +1765,39 @@
       "retest_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
       "retest_class": "com.chengyinhub.business.longrun.E06_17Test",
       "source_declarations": 5,
-      "executed_tests": null,
+      "executed_tests": 0,
       "result": null,
       "full76_rerun_required": false,
       "no_inherited_results": true,
       "local_handoff": "PR24 comment6202107770; approved212 only, no new DB/Redis dependency",
-      "cloud_manual_runs": 0
+      "cloud_manual_runs": 0,
+      "local_validation": {
+        "candidate_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
+        "status": "NOT_RUN_ADMISSION_REFUSED",
+        "classes": [
+          "com.chengyinhub.business.longrun.E06_17Test"
+        ],
+        "source_declared_tests": 5,
+        "actual_executed_tests": 0,
+        "compilation_started": false,
+        "tests_started": false,
+        "guard_exit_code": 75,
+        "guard_reason": "another_build_holds_lock",
+        "container_id": null,
+        "source_archive_sha256": "2ab95e689599d4c67bf1777bb7e00293faf2ef50248ab40b695f393d214c5db3",
+        "finished_at": "2026-10-15T20:58:53.261865+00:00",
+        "source_failure": false,
+        "result": null,
+        "evidence_pr": 24,
+        "evidence_commit": "60febdbdcdcc7eed2b445a80f3d1f21d2cd76966",
+        "evidence_directory": "docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b45664de/",
+        "C00_read_public_evidence": true,
+        "resource_owner": "local verifier, normal212 admission only",
+        "local_active_java_validation_at_report": false,
+        "no_Cloud_fallback": true,
+        "previous_ed598_failure_remains_open": true,
+        "retry_source_unchanged": true
+      }
     }
   },
   "followup_lanes": [

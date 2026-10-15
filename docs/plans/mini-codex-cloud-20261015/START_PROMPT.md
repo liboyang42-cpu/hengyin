@@ -1,3 +1,5 @@
+> E06当前：旧ed598的76实际75PASS/1FAIL保留；b456仅测试夹具源修，新单类5声明因212共享锁拒绝准入，实际0项NOT_RUN排队，不关旧失败、不让Cloud替代或重复修改。裸SQL仅NEEDS_REACHABILITY/NO_SOURCE_CHANGE。
+
 > 当前第三队：2babbe28已VPS212编译及普通24实跑PASS；早先锁拒绝保留历史，真MySQL11仍NOT_RUN，未验收并发/HTTP/业务。EXTRA下一ed598258单独待结果，不继承旧通过，Cloud不补跑。
 
 > 第三队验证状态：PR72/2babbe28因212 another_build_holds_lock返回75，containerId=null，执行0；NOT_RUN，不是源码失败。仅本地按正常准入排队，Cloud不替代。两域EXHAUSTED、writer0，不凑6线。
