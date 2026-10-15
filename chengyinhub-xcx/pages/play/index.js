@@ -6051,11 +6051,17 @@ Page({
   // 拆两层(用户裁决:核销≠优惠券页):ensureTicket 只取码;展示层各自决定开哪个面。
   ensureTicket() {
     const that = this;
-    if (this.data.isPreview || this.data.isMock) return;             // 预览/mock 不出码
+    if (!this._isPlayAccountCurrent() || this.data.isPreview || this.data.isMock) return;             // 预览/mock 不出码
     const regId = this.data.regId;
     if (!regId) { this._explainMissingEntryQr(); return; }
+    const owner = this._playOwner, sessionKey = JSON.stringify(this._sessionParams());
+    const sequence = this._ticketIssueSequence = (this._ticketIssueSequence || 0) + 1;
+    const current = () => this._isPlayAccountCurrent() && owner === this._playOwner
+      && !this.data.isPreview && !this.data.isMock && this.data.regId === regId
+      && sequence === this._ticketIssueSequence && sessionKey === JSON.stringify(this._sessionParams());
     this.setData({ ticket: { show: this.data.ticket.show, url: '', code: '', loading: true, expiresAt: 0 } });
     req('/api/verify/dyncode/issue', 'POST', { registrationId: regId }).then((res) => {
+      if (!current()) return;
       if (String(res.code) === '200' && res.data) {
         that.setData({ 'ticket.url': res.data.qrcodeUrl || '', 'ticket.code': res.data.code || '', 'ticket.loading': false, 'ticket.expiresAt': res.data.expiresAt || 0 });
       } else {
