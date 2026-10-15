@@ -1570,6 +1570,16 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         }
         JsonNode blockConfig = nodeBlockConfig(session, completedNode);
         TopicRouteEngine.State state = readEngineState(session.getStateJson());
+        if (!branchOpening && (state.getNodeStates() == null || state.getNodeStates().isEmpty())) {
+            Map<Long, String> fallbackStates = new LinkedHashMap<Long, String>();
+            for (CmsTopicNode node : liveNodes) {
+                String status = state.getCompletedNodeIds().contains(node.getId()) ? TopicRouteState.COMPLETED
+                        : node.getId().equals(state.getCurrentNodeId()) ? TopicRouteState.PLAYABLE
+                        : TopicRouteState.DISCOVERED_LOCKED;
+                fallbackStates.put(node.getId(), status);
+            }
+            state.setNodeStates(fallbackStates);
+        }
         JsonNode requires = blockConfig == null ? null : blockConfig.get("requires");
         if (requires != null && requires.isArray() && requires.size() > 0
                 && !engine.conditionsPass(requires, state)) {
