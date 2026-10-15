@@ -46,6 +46,9 @@ Component({
     },
   lifetimes: {
     attached() {
+      this._cancelDisposed = false;
+      this._cancelGeneration = (this._cancelGeneration || 0) + 1;
+      this._syncCancellationAccount();
       this._skipInitialShow = true;
       const id = trimmedString(String(this.data.recordId == null ? '' : this.data.recordId))
       if (!id) {
@@ -60,6 +63,8 @@ Component({
       this._applyRecordId(id)
     },
     detached() {
+      this._invalidateParticipationCancellation();
+      this._cancelDisposed = true;
       if (this._verificationWorkflow) this._verificationWorkflow.destroy();
     },
   },
@@ -74,6 +79,7 @@ Component({
   },
   pageLifetimes: {
     show() {
+      this._syncCancellationAccount();
       if (this._skipInitialShow) { this._skipInitialShow = false; return; }
       if (this.data.id) this.getData(this.data.id);
     },
@@ -85,8 +91,10 @@ Component({
       const id = trimmedString(String(value == null ? '' : value))
       if (!id) return
       if (String(this.data.id) === id) return
+      this._invalidateParticipationCancellation();
+      this._cancelRecordPending = true;
       // 后到的 id 要把「缺参」态翻回加载中,否则界面还停在死文字上而请求已经在路上。
-      this.setData({ id, loadState: 'loading', loadErrorText: '', errorActionText: '重试' })
+      this.setData({ id, info: {}, loadState: 'loading', loadErrorText: '', errorActionText: '重试' })
       this.getData()
     },
     _submitVerification(key, loadingTitle, options, callback) {
@@ -209,6 +217,7 @@ Component({
           if (requestEpoch !== that._detailRequestEpoch) return;
           if (res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
             const info = res.data;
+            that._cancelRecordPending = false;
 
             // 准备显示数据
             const displayInfo = that.prepareDisplayData(info);
@@ -417,34 +426,76 @@ Component({
 
     // 取消参与：已支付单必须走 cancel-refund(/api/registration/cancel 对已支付单必拒),
     // 文案与订单详情同源(utils/danger-actions.js),退款进度以接口回执为准。
+    _invalidateParticipationCancellation() {
+      if (this._finishCancelPrompt) this._finishCancelPrompt();
+      if (this._finishCancellation) this._finishCancellation();
+      this._cancelGeneration = (this._cancelGeneration || 0) + 1;
+    },
+    _syncCancellationAccount() {
+      const member = app.getUserID && app.getUserID();
+      if (this._cancelMemberId !== undefined && this._cancelMemberId !== member) {
+        this._invalidateParticipationCancellation();
+      }
+      this._cancelMemberId = member;
+    },
     cancelParticipation() {
+      this._syncCancellationAccount();
+      if (this._cancelDisposed || this._cancelRecordPending || !this.data.id
+          || this._cancelPromptOpen || this._finishCancellation) return;
+      const id = this.data.id;
       const paid = Number((this.data.info || {}).paymentStatus) === 2;
+      const member = this._cancelMemberId;
+      const generation = this._cancelGeneration;
+      const isCurrent = () => !this._cancelDisposed && generation === this._cancelGeneration
+        && member === (app.getUserID && app.getUserID()) && String(id) === String(this.data.id);
+      this._cancelPromptOpen = true;
+      const finishCancelPrompt = () => {
+        if (this._finishCancelPrompt !== finishCancelPrompt) return false;
+        this._finishCancelPrompt = null;
+        this._cancelPromptOpen = false;
+        return true;
+      };
+      this._finishCancelPrompt = finishCancelPrompt;
       modal.show({
         dangerKey: paid ? 'order.cancel-refund' : 'order.cancel',
         dangerParams: {
           deadline: (this.data.info || {}).refundDeadlineDisplay || '已核销或已过开始时间不可退',
         },
         success: (res) => {
-          if (res.confirm) {
-            if (paid) subscribe.request(['refund', 'refundRejected']);
-            this.cancelRequest(paid);
-          }
-        }
+          if (!finishCancelPrompt() || !isCurrent() || !res.confirm) return;
+          if (paid) subscribe.request(['refund', 'refundRejected']);
+          this.cancelRequest(paid, id);
+        },
+        fail: finishCancelPrompt,
+        complete: finishCancelPrompt
       });
     },
 
     // 发送取消请求（添加列表刷新）
-    cancelRequest(paid) {
+    cancelRequest(paid, recordId) {
       const that = this;
+      that._syncCancellationAccount();
+      const id = recordId == null ? that.data.id : recordId;
+      if (that._cancelDisposed || that._cancelRecordPending || !id || that._finishCancellation
+          || String(id) !== String(that.data.id)) return;
+      const member = that._cancelMemberId;
+      const generation = that._cancelGeneration;
+      const isCurrent = () => !that._cancelDisposed && generation === that._cancelGeneration
+        && member === (app.getUserID && app.getUserID()) && String(id) === String(that.data.id)
+        && that._finishCancellation === finishCancellation;
       cyLoading.show('取消中...');
-
+      const finishCancellation = () => {
+        if (that._finishCancellation !== finishCancellation) return;
+        that._finishCancellation = null;
+        cyLoading.hide();
+      };
+      that._finishCancellation = finishCancellation;
       app.sendRequest({
         url: paid ? '/api/registration/cancel-refund' : '/api/registration/cancel',
         method: "POST",
-        data: { id: that.data.id },
+        data: { id },
         success: function (res) {
-          cyLoading.hide();
-
+          if (!isCurrent()) return;
           if (res.code == "200") {
             cyToast.success(paid ? cancellationFeedback(res) : '取消成功', { duration: 2000 });
             // 取消成功 ⇒ 关掉详情回到列表,并通知宿主重拉(原来是 navigateBack 猜页面栈)
@@ -455,9 +506,10 @@ Component({
           }
         },
         fail: function (res) {
-          cyLoading.hide();
+          if (!isCurrent()) return;
           cyToast('网络错误，请重试', { duration: 2000 });
-        }
+        },
+        complete: finishCancellation
       });
     },
 
