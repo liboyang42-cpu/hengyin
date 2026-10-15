@@ -17,7 +17,20 @@ class OWN_C06_29Test {
     private TopicRouteSession session;
     private CmsTopic live;
     @BeforeEach void setup() {
-        service=new TopicRouteRuntimeServiceImpl();topics=mock(CmsTopicMapper.class);
+        service=new TopicRouteRuntimeServiceImpl(
+                mock(com.chengyinhub.business.mapper.TopicRouteSessionMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsTopicMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class),
+                mock(com.chengyinhub.business.mapper.PlayerNodeProgressMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsActivityMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class),
+                mock(com.chengyinhub.business.mapper.PlayerActivityRoleMapper.class),
+                mock(com.chengyinhub.business.service.IShopDayProofService.class),
+                () -> 12345L,
+                () -> 10,
+                java.time.Clock.systemUTC(),
+                com.chengyinhub.business.service.support.RouteReachabilityProvider.UNKNOWN);topics=mock(CmsTopicMapper.class);
         ReflectionTestUtils.setField(service,"topicMapper",topics);
         session=new TopicRouteSession();session.setTopicId(20L);
         live=new CmsTopic();live.setId(20L);live.setJourneyRulesJson("{\"schemaVersion\":1,\"checkEnabled\":true}");
