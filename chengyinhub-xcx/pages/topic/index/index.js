@@ -14,6 +14,7 @@ const { haversine } = require('../../../utils/geo.js');
 const marketingConsent = require('../../../utils/marketing-consent-entry.js');
 const ticketSource = require('../../../utils/ticket-source.js');
 const { buildTopicShare, resolveTopicCover } = require('../../../utils/topic-share.js');
+const mediaPreview = require('../../../utils/media-preview.js');
 
 /* 稿 214:689 路线 tab 每两站之间那行「15min 步行」。
    接口没有逐段步行时长,只有站点经纬度 —— 与 pages/club/topic-story 用的是同一份
@@ -1358,10 +1359,7 @@ Page({
   // 预览图片
   previewImage(e) {
     const src = e.currentTarget.dataset.src;
-    wx.previewImage({
-      current: src,
-      urls: this.data.uploadImages
-    });
+    mediaPreview.open(this.data.uploadImages, src);
   },
   
   

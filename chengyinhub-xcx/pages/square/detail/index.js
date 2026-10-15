@@ -17,6 +17,7 @@ const {
 const { remixTopicTemplate } = require('../utils/topic-template-remix.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const { sendUiStateRequest } = require('../../../utils/ui-state-request.js');
+const mediaPreview = require('../../../utils/media-preview.js');
 Page({
   /**
    * 页面的初始数据
@@ -928,10 +929,7 @@ Page({
   previewImage: function (e) {
     const picList = e.currentTarget.dataset.piclist;
     const index = e.currentTarget.dataset.index;
-    wx.previewImage({
-      current: picList[index],
-      urls: picList
-    });
+    mediaPreview.open(picList, picList && picList[index]);
   },
 
   getData: function () {
