@@ -5769,6 +5769,17 @@ Page({
       this.setData({ fmPolyline: base.concat(line) });
     }, { reducedMotion: this.data.reducedMotion });
   },
+  _captureCompletionEffects() {
+    const context = { owner: this._playOwner, sessionKey: JSON.stringify(this._sessionParams()),
+      routeSessionId: String((this._routeState || {}).sessionId || '') };
+    this._completionEffects = context;
+    return context;
+  },
+  _isCompletionEffectCurrent(context) {
+    return !!context && this._completionEffects === context && this._isPlayAccountCurrent()
+      && context.owner === this._playOwner && context.sessionKey === JSON.stringify(this._sessionParams())
+      && context.routeSessionId === String((this._routeState || {}).sessionId || '');
+  },
   onComplete(nodeId, data) {
     if (this._sound) this._sound.sfx('ok');
     const afterProfile = !!this._profileNodeId && String(nodeId) === this._profileNodeId;
@@ -5777,6 +5788,8 @@ Page({
       if (afterProfile) this._showStartState(this._previewStartRows || []);
       return;
     }
+    const effectContext = this._captureCompletionEffects();
+    const effectsCurrent = () => this._isCompletionEffectCurrent(effectContext);
     const storyOpen = this.data.chapterFull && this._isStoryGame(
       (this.data.nodes || []).find((node) => String(node.nodeId) === String(nodeId)));
     // arrival/game 是可并发的两个写域；任一节点完成都不能解除另一写域的在途/待核对锁。
@@ -5804,6 +5817,7 @@ Page({
     const acceptedProjection = hasRouteProjection && this._acceptRouteStateProjection(data.routeState);
     const returnedRouteState = acceptedProjection ? normalizeRouteState(data.routeState) : null;
     const routeState = returnedRouteState || this._routeState;
+    effectContext.routeSessionId = String((routeState || {}).sessionId || '');
     const nodes = hasRouteProjection
       ? applyRouteStateToNodes(catalog, routeState)
       : this.data.nodes.map(patchCompleted);
@@ -5815,10 +5829,10 @@ Page({
     const score = (data && data.xp) || (data && data.score) || node.points || 12;
     // M8 到达双震:两次短震间隔 ~120ms,只强化到达这一处;彩蛋(light)/券(heavy)分级不动
     wx.vibrateShort({ type: 'medium' });
-    setTimeout(() => wx.vibrateShort({ type: 'medium' }), 120);
+    setTimeout(() => { if (effectsCurrent()) wx.vibrateShort({ type: 'medium' }); }, 120);
     // 飞字(双轨文案:探索值升等级,区别于可抵现积分)
     this.setData({ flyScore: true, flyText: '+' + score + ' 探索值' });
-    setTimeout(() => this.setData({ flyScore: false }), 1100);
+    setTimeout(() => { if (effectsCurrent()) this.setData({ flyScore: false }); }, 1100);
     // 标记 just-wrote(手记写入)
     const justId = nodeId;
     this._routeState = routeState;
@@ -5830,9 +5844,10 @@ Page({
       screen: '',
       'sheet.show': false
     }, () => {
+      if (!effectsCurrent()) return;
       this.rebuild();
       if (afterProfile) this._showStartState(startStateRows(routeState, this._vitalsOn));
-      setTimeout(() => this._animateCompletedSegment(nodes, nodeId), 0);
+      setTimeout(() => { if (effectsCurrent()) this._animateCompletedSegment(nodes, nodeId); }, 0);
       this._triggerCelebration('task-complete');
       // M2 夜间提示(自玩 22:00–06:00 后端下发 nightWarning):结果时刻一句,非阻断、自动收
       if (data && data.nightWarning === true) this._flashNightHint();
@@ -5866,11 +5881,12 @@ Page({
       const previewMedal = !!(this.data.isPreview || this.data.isMock);
       if (hasMedalArt && (medalRank || previewMedal)) {
         // 模板勋章弹层;关闭时若已通关由 closeMedal 触发通关卡
+        this._medalCompletionContext = effectContext;
         this.setData({ medal: { show: true, name: node.medalName || '专属徽章', shortName: (node.medalName || '徽章').slice(0, 2), img: node.medalImg, style: node.medalStyle || 'glow', coupon: node.couponId ? '到店出示核销' : '' } });
       } else {
         if (hasMedalArt) this.diegetic('这个节点的名次奖牌已经发完，完成记录已保存');
         if (node.couponId) this.showCoupon('到店出示核销');
-        if (completed) setTimeout(() => this.openFinish(), 600);  // 末站即便配券也要弹通关卡(原 else-if 漏掉)
+        if (completed) setTimeout(() => { if (effectsCurrent()) this.openFinish(); }, 600);  // 末站即便配券也要弹通关卡(原 else-if 漏掉)
       }
       if (newBadges.length || (hasMedalArt && (medalRank || previewMedal))) this._triggerCelebration('medal-earned');
       this.setData({ journalDot: !this.data.showJournal });
@@ -5882,7 +5898,14 @@ Page({
       }
     });
   },
-  closeMedal() { this.setData({ 'medal.show': false }); if (this.data.allDone) setTimeout(() => this.openFinish(), 300); },
+  closeMedal() {
+    const context = this._medalCompletionContext;
+    this._medalCompletionContext = null;
+    this.setData({ 'medal.show': false });
+    if (this.data.allDone && this._isCompletionEffectCurrent(context)) {
+      setTimeout(() => { if (this._isCompletionEffectCurrent(context)) this.openFinish(); }, 300);
+    }
+  },
   // P0 券断链修复:落袋可见(文案+重震动)+ 可点击一跳到卡券包;停留 5s 给足点击窗口
   // M11 掉落分级·重:券=独立 couponBurst 彩带+重震动,不并入完成庆祝语义
   showCoupon(text) {
