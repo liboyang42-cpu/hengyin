@@ -88,6 +88,8 @@ public class AppMediaReferenceGuard {
         Map<String, Object> asset = resolve(reference == null ? "" : reference);
         if (asset == null || !"APPROVED".equals(asset.get("reviewState")))
             throw new ServiceException("媒体尚未审核通过，暂不能处理", 422);
+        if (!owned(asset, memberId))
+            throw new ServiceException("仅上传者可发起该媒体的克隆或第三方处理", 403);
         if (expectedMediaType != null && !expectedMediaType.equals(asset.get("mediaType")))
             throw new ServiceException("媒体格式不符合当前操作", 422);
         String key = String.valueOf(asset.get("objectKey"));

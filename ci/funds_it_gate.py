@@ -254,10 +254,12 @@ EXPECTED = {
     "MissingBusinessSeedsMySqlIT": 4,
     "RoamPresenceRevokeDurabilityMySqlIT": 10,
     "RoamPresenceRevokeJobMySqlIT": 4,
+    "WxBillIngestionPersistenceTest": 6,
 }
 
 # class 短名 -> 该测试类所在源文件(相对仓库根),供 count_test_methods() 自测用。
 SOURCE_FILES = {
+    "WxBillIngestionPersistenceTest": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/WxBillIngestionPersistenceTest.java",
     "MissingBusinessSeedsMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MissingBusinessSeedsMySqlIT.java",
     "RefundRetryAndRemainderMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundRetryAndRemainderMySqlIT.java",
     "SignupNoticeAfterCommitPersistenceMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SignupNoticeAfterCommitPersistenceMySqlIT.java",
