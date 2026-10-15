@@ -471,6 +471,11 @@
           <view class="poi__last">
             <view class="poi__go" catchtap="onShopStripGo" data-id="{{item.id}}"
                   aria-role="button" aria-label="去{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">去这儿</view>
+            <!-- BL-70:谁在这儿打过卡(/api/roam/shop/visitors),沿用原型 .poicard__been 的 poi__who 头像堆;total=0 不渲染 -->
+            <view class="poi__who" wx:if="{{item.visitors}}" aria-label="{{item.visitors.label}}">
+              <image class="poi__face" wx:for="{{item.visitors.faces}}" wx:for-item="face" wx:for-index="fi" wx:key="fi" src="{{face}}" mode="aspectFill" aria-hidden="true" />
+              <text class="poi__more">{{item.visitors.label}}</text>
+            </view>
           </view>
         </view>
         <image class="poi__im" wx:if="{{item.img}}" src="{{item.img}}" mode="aspectFill" />

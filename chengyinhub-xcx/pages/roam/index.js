@@ -57,6 +57,7 @@ function roamMemory(page) {
 // P2 接真:标准 geohash 编码(7 字符 ≈153m 格),与后端 roam_fog_tile.geohash7 对齐,可互通
 // 漫游本地地理数学(geohash 编解码 / 米↔经纬度 / 平面近似距离)收口到 utils/roam-geo(已单测)
 const { geohash7, geohashDecode7, m2lat, m2lng, distM } = require('../../utils/roam-geo.js');
+const { visitorSourceOf, sourceKey, buildVisitorRequests, shapeVisitorRows } = require('../../utils/roam-shop-visitors.js');
 const { fallbackRegion, isPointRevealed, projectRevealCircles } = require('../../utils/roam-screen-fog.js');
 // #22:商家 POI 多路来源 id 命名空间互不相干,同一家店会来多条 → 按店名归组(已单测)
 const { normName, groupMerchantsByName, stampProgress, doneShopCount, selectNearShopGroups } = require('../../utils/roam-poi-group.js');
@@ -500,6 +501,7 @@ Page({
       .filter((p) => p.cat === 'merchant' && p.lat && p.lng)
       .slice(0, 8)
       .map((p) => ({
+        ...(visitorSourceOf(p) || {}),
         id: String(p.regId || p.nodeId || p.name),
         name: p.name,
         address: p.desc || '',
@@ -512,8 +514,32 @@ Page({
     if (!rows.length) { cyToast('这一片还没有合作商家'); return; }
     this.closeScene();
     this.setData({ shopStrip: { rows, idx: 0 } });
+    this._loadShopStripVisitors(rows);
   },
-  closeShopStrip() { this.setData({ shopStrip: { rows: [], idx: 0 } }); },
+  closeShopStrip() {
+    this._shopStripEpoch = (this._shopStripEpoch || 0) + 1;
+    this.setData({ shopStrip: { rows: [], idx: 0 } });
+  },
+  /* BL-70:横滑卡头像堆 + 打卡人数(/api/roam/shop/visitors)。total=0 不展示;
+     失败/迟到回包一律不动卡片 —— 头像堆只是附加信息,不能挡「去这儿」。 */
+  _loadShopStripVisitors(rows) {
+    const epoch = this._shopStripEpoch = (this._shopStripEpoch || 0) + 1;
+    buildVisitorRequests(rows).forEach((body) => {
+      req('/api/roam/shop/visitors', 'POST', {
+        sourceType: String(body.sourceType),
+        sourceIds: body.sourceIds,
+      }, { silentError: true }).then((res) => {
+        if (epoch !== this._shopStripEpoch || !apiOk(res)) return;
+        const byKey = shapeVisitorRows(body.sourceType, res.data);
+        const patch = {};
+        (this.data.shopStrip.rows || []).forEach((row, i) => {
+          const hit = row && row.sourceType === body.sourceType ? byKey[sourceKey(row.sourceType, row.sourceId)] : null;
+          if (hit) patch['shopStrip.rows[' + i + '].visitors'] = hit;
+        });
+        if (Object.keys(patch).length) this.setData(patch);
+      });
+    });
+  },
 
   /* ══ 原型 f-topic(自由探索)/ f-city(城市定向):点带主题的针,出主题半屏 ══
      判据是这枚针挂在哪个主题上 —— productType 1=城市定向 2=自由探索,
