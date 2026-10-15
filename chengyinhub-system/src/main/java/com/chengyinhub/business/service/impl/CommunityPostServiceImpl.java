@@ -329,6 +329,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public List<Map<String, Object>> revisions(Long viewerId, Long postId) {
         requirePrincipal(viewerId);
         CommunityPost post = mapper.selectById(postId, viewerId);
