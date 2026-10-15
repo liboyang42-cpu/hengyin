@@ -541,11 +541,37 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             // R8-STORY:副本章节是新 id,剧情 chapterId 必须跟着重映射,否则副本剧情指向来源主题;
             // R13-NPC:副本 NPC 同样是新 id,call / epilogues 的 npcId 一起重映射。
             remapCopiedJourneyStory(id, newTopicId, originalTopic.getJourneyStoryJson(), npcIdMap);
+            preserveSameOwnerCopiedCompletionRule(originalTopic, newTopic);
         }
         if (copyType >= 3) {
             copyCollaborators(id, newTopicId);
         }
         return newTopicId;
+    }
+
+    /** 完整同作者副本保留通关内容；跨作者奖励引用及仅基本资料复制不在此自动迁移。 */
+    private void preserveSameOwnerCopiedCompletionRule(CmsTopic original, CmsTopic copy) {
+        if (original.getMemberId() == null || !original.getMemberId().equals(copy.getMemberId())
+                || StringUtils.isBlank(original.getCompleteRuleJson())) return;
+        if (copy.getId() == null || copy.getId() <= 0L) {
+            throw new IllegalStateException("完整复制失败，副本主题身份缺失");
+        }
+        CmsTopicNode sourceQuery = new CmsTopicNode();
+        sourceQuery.setTopicId(original.getId());
+        CmsTopicNode copiedQuery = new CmsTopicNode();
+        copiedQuery.setTopicId(copy.getId());
+        int sourceCount = nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(sourceQuery)).size();
+        int copiedCount = nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(copiedQuery)).size();
+        if (sourceCount != copiedCount) {
+            throw new IllegalStateException("完整复制节点数量不一致，未保留通关规则");
+        }
+        CmsTopic patch = new CmsTopic();
+        patch.setId(copy.getId());
+        patch.setCompleteRuleJson(topicCompletionRulePolicy.validateAndNormalize(
+                original.getCompleteRuleJson(), copiedCount, copy.getProductType()));
+        if (cmsTopicMapper.updateCmsTopic(patch) != 1) {
+            throw new IllegalStateException("副本通关规则保存失败");
+        }
     }
 
 
