@@ -5242,22 +5242,30 @@ Page({
   },
   onInput(e) { this.setData({ answerInput: e.detail.value }); },
   selOpt(e) { this.setData({ answerSel: e.currentTarget.dataset.k }); },
+  _isPreferenceContextCurrent(context) {
+    return !!context && this._preferenceContext === context && context.epoch === this._preferenceEpoch
+      && this._isLegacyGameCurrent(context.viewContext);
+  },
   loadPreference(node) {
     if (this.data.isPreview) {
       this.setData({ preference: { loading: false, error: '偏好题结果预览尚未接通，可跳过玩法继续查看故事', steps: [], submitting: false, result: null } });
       return;
     }
+    if (!this._isPlayAccountCurrent() || !node || node.nodeId !== this.data.game.nodeId) return;
     const that = this;
     const nodeId = node.nodeId;
     const epoch = (this._preferenceEpoch || 0) + 1;
     this._preferenceEpoch = epoch;
+    const context = { epoch, nodeId, viewContext: this._legacyGameContext() };
+    this._preferenceContext = context;
+    this._preferenceResultContext = null;
     this.setData({ preference: {
       loading: true, error: '', steps: [], stepIndex: 0, choices: {}, inheritedTags: [],
       answerHere: false, submitting: false, result: null, pendingTag: null,
       tagDisclosure: null, progress: null, availableTagValues: []
     } });
     req('/api/play/preference/' + nodeId, 'GET', this._sessionParams()).then((r) => {
-      if (that._preferenceEpoch !== epoch || that.data.game.nodeId !== nodeId) return;
+      if (!that._isPreferenceContextCurrent(context)) return;
       if (r.code == 200 || r.code == '200') {
         const d = r.data || {};
         that.setData({
@@ -5295,14 +5303,19 @@ Page({
   },
   submitPreference(payload) {
     if (this.data.isPreview) { cyToast('预览中可跳过此玩法'); return; }
-    if (this.data.preference.submitting) return;
+    const context = this._preferenceContext;
+    if (!this._isPreferenceContextCurrent(context) || this.data.preference.submitting) return;
     const that = this;
     const nodeId = this.data.game.nodeId;
-    const epoch = this._preferenceEpoch;
+    const intent = { context };
+    this._preferenceWriteIntent = intent;
+    const current = () => this._preferenceWriteIntent === intent && this._isPreferenceContextCurrent(context);
+    const original = Object.assign({}, payload, { choices: Object.assign({}, payload.choices || {}) });
+    const body = this._routeWritePayload('preference', nodeId, original);
     this.setData({ 'preference.submitting': true, 'preference.error': '' });
-    this._withThoughtSync(() => req('/api/play/preference/' + nodeId + '/submit', 'POST', this._routeWritePayload('preference', nodeId, payload)))
+    this._withThoughtSync(() => req('/api/play/preference/' + nodeId + '/submit', 'POST', Object.assign({}, body, { expectedRouteVersion: normalizeRouteState(this._routeState).version })), current)
       .then((r) => {
-        if (that._preferenceEpoch !== epoch || that.data.game.nodeId !== nodeId) return;
+        if (!current() || r && r.obsolete) return;
         if (r.code == 200 || r.code == '200') {
           that._resolveRouteAction('preference', nodeId);
           const d = r.data || {};
@@ -5312,6 +5325,7 @@ Page({
             that.setData({ 'preference.submitting': false, 'preference.steps': steps, 'preference.stepIndex': steps.length - 1 });
             return;
           }
+          that._preferenceResultContext = { context, nodeId, progress: d.progress || {} };
           that.setData({
             'preference.submitting': false,
             'preference.result': d.evaluation || null,
@@ -5326,6 +5340,10 @@ Page({
           if (!r.netFail && !r.httpFail) that._resolveRouteAction('preference', nodeId);
           that.setData({ 'preference.submitting': false, 'preference.error': r.msg || '结果没有生成，请重试' });
         }
+      }).catch(() => {
+        if (current()) this.setData({ 'preference.submitting': false, 'preference.error': '结果没有生成，请重试' });
+      }).finally(() => {
+        if (this._preferenceWriteIntent === intent) this._preferenceWriteIntent = null;
       });
   },
   confirmPreferenceTag() {
@@ -5372,8 +5390,10 @@ Page({
   },
   skipPreferenceTag() { this.setData({ 'preference.pendingTag': null }); },
   finishPreferenceResult() {
-    const p = this.data.preference;
-    this.onComplete(this.data.game.nodeId, p.progress || {});
+    const result = this._preferenceResultContext;
+    if (!result || !this._isPreferenceContextCurrent(result.context)) return;
+    this._preferenceResultContext = null;
+    this.onComplete(result.nodeId, result.progress);
   },
   _legacyGameContext() {
     return { owner: this._playOwner, sessionKey: JSON.stringify(this._sessionParams()),
