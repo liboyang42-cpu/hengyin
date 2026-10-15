@@ -108,7 +108,9 @@ class E06_17Test {
     void unrelatedControllerDataAccessFailureStillUsesUnchangedGlobalAdvice() throws Exception {
         mvc.perform(get("/e06-17/unrelated"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(500))
-                .andExpect(jsonPath("$.msg").value(UserSafeMessage.GENERIC));
+                .andExpect(jsonPath("$.msg").value(UserSafeMessage.GENERIC))
+                .andExpect(content().string(not(containsString("SQL SELECT"))))
+                .andExpect(content().string(not(containsString("private unrelated table"))));
         verifyNoInteractions(mapper);
     }
 
@@ -116,7 +118,9 @@ class E06_17Test {
     public static class OtherController {
         @GetMapping("/e06-17/unrelated")
         public Object read() {
-            throw new DataAccessResourceFailureException("SQL SELECT private unrelated table");
+            // Match the MyBatis diagnostic marker covered by the existing global advice contract.
+            throw new DataAccessResourceFailureException(
+                    "Error querying database. SQL SELECT private unrelated table");
         }
     }
 }
