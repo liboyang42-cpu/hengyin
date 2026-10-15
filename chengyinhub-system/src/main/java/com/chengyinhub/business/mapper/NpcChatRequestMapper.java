@@ -9,6 +9,12 @@ import com.chengyinhub.business.domain.NpcChatRequest;
 /** NPC Chat requestId 幂等状态 Mapper。 */
 public interface NpcChatRequestMapper
 {
+    /** Existing member row is the persistent serialization point; no new schema or provider lock. */
+    Long lockChatUser(@Param("userId") Long userId);
+
+    /** Erase answer copies and revoke old workers, retaining request identity against paid replay. */
+    int redactChatRequestsByUserId(@Param("userId") Long userId);
+
     NpcChatRequest selectByUserAndRequestId(@Param("userId") Long userId,
                                              @Param("requestId") String requestId);
 
