@@ -31,6 +31,22 @@ public class AnalyticsController extends BaseController {
     @PreAuthorize("@ss.hasPermi('business:analytics:list')")
     @GetMapping("/funnel")
     public AjaxResult funnel(String startDate, String endDate) {
+        final LocalDate start;
+        final LocalDate end;
+        try {
+            start = StringUtils.isNotBlank(startDate) ? LocalDate.parse(startDate) : null;
+            end = StringUtils.isNotBlank(endDate) ? LocalDate.parse(endDate) : null;
+        } catch (DateTimeParseException e) {
+            return error("日期格式必须为 yyyy-MM-dd");
+        }
+        // LocalDate 还接受零年和扩展年份，这里保留正四位年份的日期合同。
+        if ((start != null && (startDate.length() != 10 || start.getYear() < 1))
+                || (end != null && (endDate.length() != 10 || end.getYear() < 1))) {
+            return error("日期格式必须为 yyyy-MM-dd");
+        }
+        if (start != null && end != null && start.isAfter(end)) {
+            return error("开始日期不能晚于结束日期");
+        }
         BizFunnelDaily query = new BizFunnelDaily();
         if (StringUtils.isNotBlank(startDate)) {
             query.getParams().put("beginStatDate", startDate);
