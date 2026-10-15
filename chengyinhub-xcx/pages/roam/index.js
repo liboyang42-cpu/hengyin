@@ -64,7 +64,6 @@ const { npcIconKey, pixelDrawSize, collectNpcIconNeeds, markerAvatar } = require
 // CU-M-54:服务端 POI 行 → 本地点位态(已打卡待核销是独立一档,不能读成 passed)
 const { roamPoiLocalState } = require('../../utils/roam-poi-state.js');
 const { MAP_AVATAR_COLORS } = require('../../utils/play-visual-tokens.js');
-const followRouteCtl = require('./follow-route.js'); // G1 跟随官方路线:逻辑都在这个模块里,本页只接线
 // 本地历史只用于下次打开地图时高亮一处已走过的边缘；不画路线、不上报坐标。
 const { buildFootprintHint } = require('../../utils/roam-footprint-hint.js');
 const { normalizeRunners } = require('../../utils/roam-runners.js');
@@ -317,7 +316,6 @@ Page({
     mapScale: 15,
     markers: [],
     polyline: [],
-    followRoute: null, // 跟随官方路线 HUD 视图模型(pages/roam/follow-route.js 写入)
     sparkCircles: [],
     fogPolys: [],
     fogScreenReady: false,
@@ -954,7 +952,6 @@ Page({
     const playerId = typeof app.getUserID === 'function' ? String(app.getUserID() || '') : '';
     if (this._roamMemory && this._roamMemory.playerId !== playerId) {
       this._stopReal(); this._stopClock();
-      followRouteCtl.exit(this, true);
       this._resetRoamRecoverySession();
       this._roamMemory = null;
       roamMemory(this);
@@ -991,8 +988,6 @@ Page({
       delete getApp().globalData.roamEventMissionCode;
       if (changed || this._eventMissionCode) this._loadBoundEvent(this._eventId);
     }
-    // 官方路线详情「按这条路线开始」的一次性交接(switchTab 不带 query),消费即删
-    followRouteCtl.consume(this, app);
     // 雾遮罩的自愈:.fogscreen-guard 是 inset:0 的不透明层,guard 卡住 = 整页纯黑且 POI 点不动
     // (onPoiTap 首行就按它拦)。多数失败路径都置了 fogScreenError ⇒ 有「点击重试」入口能自救;
     // 但有几条路径会停在 guard:true / error:false —— 入口是 wx:if="{{fogScreenError}}",此时不显示
@@ -2423,7 +2418,6 @@ Page({
         },
       });
     });
-    followRouteCtl.markers(this).forEach((m) => mk.push(m));
     const p = this._player;
     if (p && this.data.mapReady) {
       const playerSize = this._playerAvatarIcon ? 48 : 40;
@@ -2592,7 +2586,6 @@ Page({
    *  不能在没有 session 的起始页单独拍 —— 那张照片会无处安放。 */
   goStartAndShoot() { this._shootAfterStart = true; this.goStart(); },
   openOfficialRoutes() { wx.navigateTo({ url: '/subpackageRoam/official-routes/index' }); },
-  exitFollowRoute() { followRouteCtl.exit(this); },
   goStart() {
     if (this.data.entrySheet) this.closeEntrySheet();
     const { introCards, introCardIdx } = this.data;
@@ -2692,7 +2685,7 @@ Page({
       fogScreenGuard: true,
       fogScreenError: false,
       currentAddress: startTracking ? '当前位置' : '尚未开启定位',
-    }, () => { this._syncPlayHeader(); this._scheduleFootprintHint(); followRouteCtl.onSessionOpened(this); });
+    }, () => { this._syncPlayHeader(); this._scheduleFootprintHint(); });
     if (this._roamOpeningTimer) clearTimeout(this._roamOpeningTimer);
     if (this._roamZoomTimer) {
       clearTimeout(this._roamZoomTimer);
@@ -3497,13 +3490,13 @@ Page({
   _flushTrackLine() {
     if (!this._track || !this._track.length) return;
     this.setData({
-      polyline: followRouteCtl.withRoute(this, [{
+      polyline: [{
         points: this._track.map((q) => ({ latitude: q.lat, longitude: q.lng })),
         color: '#FFFFFF',
         width: 3,
         borderColor: '#FFFFFF66',
         borderWidth: 1,
-      }]),
+      }],
     });
   },
 
@@ -3731,7 +3724,6 @@ Page({
     this._updateHeading(prev, p);
     this._syncStats();
     this._checkNear(p);
-    followRouteCtl.onMove(this, p);
     // 两条都自带节流,放心每步调(原型 otherRunners:地图上跑着别的玩家)
     this._reportPresence(p);
     this._fetchRunners(p);
@@ -3750,13 +3742,13 @@ Page({
     if (!this._lineTimer || now - this._lineTimer >= LINE_MS) {
       this._lineTimer = now;
       if (this._track.length > 1) {
-        patch.polyline = followRouteCtl.withRoute(this, [{
+        patch.polyline = [{
           points: this._track.map((q) => ({ latitude: q.lat, longitude: q.lng })),
           color: '#FFFFFF',
           width: 3,
           borderColor: '#FFFFFF66',
           borderWidth: 1,
-        }]);
+        }];
       }
     }
 
@@ -3923,7 +3915,6 @@ Page({
 
   onMarkerTap(e) {
     if (e.detail.markerId === PLAYER_MK || e.detail.markerId === STATUS_MARKER_ID) return;
-    if (followRouteCtl.tapMarker(this, e.detail.markerId)) return;
     // 别人的头像:id 是 RUNNER_MK_BASE + 下标,按下标回本地那一批取人
     if (e.detail.markerId >= RUNNER_MK_BASE) {
       const row = (this._runners || [])[e.detail.markerId - RUNNER_MK_BASE];
@@ -4544,7 +4535,6 @@ Page({
       return;
     }
     this._stopClock(); this._stopReal();
-    followRouteCtl.exit(this, true);   // 结算屏的轨迹图只画自己走的线,路线叠加随本局结束
     const shops = doneShopCount(this._pois);   // #22:结算屏/足迹卡的探店数同样按店名去重
     const now = new Date();
     const hh = String(now.getHours()).padStart(2, '0');
