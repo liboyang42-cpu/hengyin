@@ -100,6 +100,7 @@ jobs:
               - 'ci/test_quartz_jobs_pause_repair_mysql_integration.py'
               - 'ci/test_migration_historical_schema_forward_fix_mysql_integration.py'
               - 'ci/test_merchant_offer_withdrawal_columns_mysql_integration.py'
+              - 'ci/test_community_legacy_comment_like_counts_mysql_integration.py'
               - 'ci/test_migration_runner_ci_contract.py'
               - 'ci/funds-mysql-it-gate.sh'
               # 改后端 job 自身时必须跑后端测试，不能靠 skipped 通过。
@@ -163,6 +164,7 @@ jobs:
               - 'ci/test_quartz_jobs_pause_repair_mysql_integration.py'
               - 'ci/test_migration_historical_schema_forward_fix_mysql_integration.py'
               - 'ci/test_merchant_offer_withdrawal_columns_mysql_integration.py'
+              - 'ci/test_community_legacy_comment_like_counts_mysql_integration.py'
               - 'ci/sql_splitter.py'
               - 'ci/migration-dependencies.json'
               - 'ci/classify-runtime.sh'

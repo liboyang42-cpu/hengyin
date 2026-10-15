@@ -91,6 +91,7 @@ if [ "$MODE" = "atomic-migration" ]; then
     ci.test_quartz_jobs_pause_repair_mysql_integration.QuartzJobsPauseRepairMysqlIntegrationTest \
     ci.test_migration_historical_schema_forward_fix_mysql_integration.HistoricalSchemaForwardFixMysqlIntegrationTest \
     ci.test_merchant_offer_withdrawal_columns_mysql_integration.MerchantOfferWithdrawalColumnsMysqlIntegrationTest \
+    ci.test_community_legacy_comment_like_counts_mysql_integration.CommunityLegacyCommentLikesMysqlIntegrationTest \
     >"$atomic_it_log" 2>&1
   atomic_it_status=$?
   set -e
@@ -109,8 +110,8 @@ if [ "$MODE" = "atomic-migration" ]; then
     exit 1
   fi
   atomic_ran="$(sed -nE 's/^Ran ([0-9]+) tests? in .*/\1/p' "$atomic_it_log")"
-  if [ "$atomic_ran" -lt 41 ]; then
-    echo "❌ 原子迁移 IT 实际只跑了 $atomic_ran 条(应至少 41 条，fail-closed)" >&2
+  if [ "$atomic_ran" -lt 56 ]; then
+    echo "❌ 原子迁移 IT 实际只跑了 $atomic_ran 条(应至少 56 条，fail-closed)" >&2
     exit 1
   fi
   echo "✅ 原子迁移 IT 实际执行 $atomic_ran 条，skipped=0，回读通过"
