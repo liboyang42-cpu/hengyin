@@ -521,7 +521,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
             mapper.insertComment(postId, memberId, rootId, parentId, repliedToMemberId,
                     request.getClientRequestId(), request.getBody().trim(), "CHECKING", approval, now);
         } catch (DuplicateKeyException e) {
-            replay = mapper.selectCommentByAuthorRequest(memberId, request.getClientRequestId());
+            replay = mapper.selectCommentByAuthorRequestForUpdate(memberId, request.getClientRequestId());
             if (replay == null || !postId.equals(number(value(replay, "post_id")))
                     || !request.getBody().trim().equals(String.valueOf(value(replay, "body")))) {
                 throw error("回复请求号已被使用", 409);

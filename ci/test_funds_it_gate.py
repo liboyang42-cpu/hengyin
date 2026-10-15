@@ -78,6 +78,7 @@ def all_required_clean(directory):
         ("CmsTemplateLibraryAudioPatchMybatisIntegrationTest", 9),
         ("ContentInteractionMybatisIntegrationTest", 18),
         ("CreativeSquarePublishIdempotencyMybatisIntegrationTest", 7),
+        ("CommunityPostCommentIdempotencyMySqlIT", 2),
         ("FollowConcurrencyMybatisIntegrationTest", 4),
         ("FollowEditRaceMybatisIntegrationTest", 7),
         ("NearbyRunnerShopsMybatisIntegrationTest", 5),

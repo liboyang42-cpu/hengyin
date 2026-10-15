@@ -214,6 +214,7 @@ EXPECTED = {
     # 2026-09-18 RV-p3 F3:+1 会员隔离用例(别人的已支付票不能给评价人换分),17 → 18。
     "ContentInteractionMybatisIntegrationTest": 18,
     "CreativeSquarePublishIdempotencyMybatisIntegrationTest": 7,
+    "CommunityPostCommentIdempotencyMySqlIT": 2,
     "FollowConcurrencyMybatisIntegrationTest": 4,
     "FollowEditRaceMybatisIntegrationTest": 7,
     "NearbyRunnerShopsMybatisIntegrationTest": 5,
@@ -352,6 +353,9 @@ SOURCE_FILES = {
     "CreativeSquarePublishIdempotencyMybatisIntegrationTest":
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/"
         "CreativeSquarePublishIdempotencyMybatisIntegrationTest.java",
+    "CommunityPostCommentIdempotencyMySqlIT":
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/"
+        "CommunityPostCommentIdempotencyMySqlIT.java",
     "FollowConcurrencyMybatisIntegrationTest":
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/"
         "FollowConcurrencyMybatisIntegrationTest.java",

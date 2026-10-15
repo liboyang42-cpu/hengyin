@@ -736,6 +736,61 @@ class CommunityPostServiceImplTest {
     }
 
     @Test
+    void duplicateCommentRecoversCommittedWinnerWithCurrentRead() {
+        CommunityPost post = draft(7L, 9L, 3);
+        post.setLifecycle("PUBLISHED");
+        when(mapper.selectById(7L, 9L)).thenReturn(post);
+        CommunityPostRequests.Comment request = new CommunityPostRequests.Comment();
+        request.setClientRequestId("comment-concurrent");
+        request.setBody("并发回复");
+        Map<String, Object> winner = new HashMap<>();
+        winner.put("post_id", 7L);
+        winner.put("body", "并发回复");
+        winner.put("author_approval_state", "VISIBLE");
+        winner.put("lifecycle", "PUBLISHED");
+        when(mapper.selectCommentByAuthorRequest(9L, "comment-concurrent")).thenReturn(null);
+        when(mapper.insertComment(eq(7L), eq(9L), isNull(), isNull(), isNull(),
+                eq("comment-concurrent"), eq("并发回复"), eq("CHECKING"), eq("VISIBLE"), any()))
+                .thenThrow(new DuplicateKeyException("committed winner"));
+        when(mapper.selectCommentByAuthorRequestForUpdate(9L, "comment-concurrent")).thenReturn(winner);
+
+        Map<String, Object> result = service.comment(9L, 7L, request);
+
+        assertEquals("PUBLISHED", result.get("lifecycle"));
+        assertEquals("VISIBLE", result.get("approvalState"));
+        verify(mapper, times(1)).selectCommentByAuthorRequest(9L, "comment-concurrent");
+        verify(mapper).selectCommentByAuthorRequestForUpdate(9L, "comment-concurrent");
+        verify(safetyGate, never()).decide(any());
+        verify(mapper, never()).recomputeCounts(anyLong());
+        verify(mapper, never()).insertOutbox(anyString(), anyLong(), anyString(), anyString(), any());
+    }
+
+    @Test
+    void duplicateCommentCurrentReadStillRejectsChangedBodyOrPost() {
+        CommunityPost post = draft(7L, 9L, 3);
+        post.setLifecycle("PUBLISHED");
+        when(mapper.selectById(7L, 9L)).thenReturn(post);
+        CommunityPostRequests.Comment request = new CommunityPostRequests.Comment();
+        request.setClientRequestId("comment-conflict");
+        request.setBody("请求正文");
+        when(mapper.insertComment(eq(7L), eq(9L), isNull(), isNull(), isNull(),
+                eq("comment-conflict"), eq("请求正文"), eq("CHECKING"), eq("VISIBLE"), any()))
+                .thenThrow(new DuplicateKeyException("committed winner"));
+        for (boolean differentPost : Arrays.asList(false, true)) {
+            Map<String, Object> winner = new HashMap<>();
+            winner.put("post_id", differentPost ? 8L : 7L);
+            winner.put("body", differentPost ? "请求正文" : "不同正文");
+            when(mapper.selectCommentByAuthorRequestForUpdate(9L, "comment-conflict")).thenReturn(winner);
+            ServiceException error = assertThrows(ServiceException.class,
+                    () -> service.comment(9L, 7L, request));
+            assertEquals(Integer.valueOf(409), error.getCode());
+        }
+        verify(safetyGate, never()).decide(any());
+        verify(mapper, never()).recomputeCounts(anyLong());
+        verify(mapper, never()).insertOutbox(anyString(), anyLong(), anyString(), anyString(), any());
+    }
+
+    @Test
     void deletedCommentCannotBeResurrectedByLateAuditCallback() {
         Map<String, Object> comment = new HashMap<>();
         comment.put("id", 17L);
