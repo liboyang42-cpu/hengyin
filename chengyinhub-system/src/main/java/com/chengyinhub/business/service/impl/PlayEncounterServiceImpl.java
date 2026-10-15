@@ -100,7 +100,7 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {
         CmsMemberTemplate template = node.getTemplateId() == null ? null
                 : cmsMemberTemplateService.selectCmsMemberTemplateById(node.getTemplateId());
 
-        TopicRouteSession run = TopicRouteSessionScope.find(topicRouteSessionMapper, memberId, topicId, activityId);
+        TopicRouteSession run = TopicRouteSessionScope.findCurrent(topicRouteSessionMapper, memberId, topicId, activityId);
         if (run == null) {
             throw new ServiceException("这一局还没开始");
         }
