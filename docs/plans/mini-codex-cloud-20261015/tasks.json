@@ -1434,11 +1434,61 @@
       "scope": "Two new source repairs and directly affected original classes",
       "selected_classes_reported": 11,
       "source_declared_tests_reported": 75,
-      "status": "LOCAL_NEXT_SERIAL_VALIDATION_NO_RESULT_REPORTED",
+      "status": "RUNNING_LOCAL_VPS_REPORTED_RESULT_PENDING",
       "actual_executed_tests": null,
       "result": null,
       "not_inherited_from": "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0 targeted56PASS",
-      "execution_not_inferred_from_scheduling": true
+      "execution_not_inferred_from_scheduling": true,
+      "execution_basis": "Latest direct local coordinator report explicitly says11 classes currently under validation; no outcome received"
+    },
+    "shared_backend_client_contracts": {
+      "E06-17": {
+        "id": "E06-17",
+        "kind": "HTTP_TRANSPORT_CONTRACT_CHANGE",
+        "candidate_sha": "ed598258c0f614385940f326099b9626531fab02",
+        "endpoint": "GET /api/roam/share/snapshot",
+        "source_path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamShareController.java",
+        "test_source_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E06_17Test.java",
+        "source_owner": "EXTRA6/E06 original author",
+        "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+        "static_source_and_test_read_by_C00": true,
+        "change": {
+          "trigger": "snapshotMapper.selectSnapshotJsonByToken throws DataAccessException during valid-token GET",
+          "old_http_status": 200,
+          "new_http_status": 503,
+          "body_code": 500,
+          "body_message": "UserSafeMessage.GENERIC",
+          "payload_data": "absent"
+        },
+        "retained": {
+          "invalid_token_missing_row_corrupt_or_privacy_invalid_stored_snapshot": {
+            "http": 200,
+            "body_code": 500,
+            "msg": "这条足迹已不再公开"
+          },
+          "success": "HTTP200/body code200, existing privacy-normalized snapshot",
+          "method_path_parameters_response_envelope": "unchanged",
+          "publish_revoke_global_exception_advice": "unchanged"
+        },
+        "no_api_change_label_correction": "Path/parameters/envelope unchanged is narrower than no API change; HTTP200->503 is an observable client transport contract change",
+        "validation": {
+          "owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+          "status": "LOCAL_11_CLASSES_RUNNING_REPORTED_RESULT_PENDING",
+          "source_declarations": 75,
+          "actual_tests": null,
+          "real_http_acceptance": "NOT_RUN",
+          "database_business_device_acceptance": "NOT_ACCEPTED",
+          "no_inherited_results": "Not covered by e72 targeted56PASS"
+        },
+        "client_receipts": {
+          "Claude": "ACK_PENDING",
+          "iOS": "ACK_PENDING"
+        },
+        "test_deployed": false,
+        "merge": "NOT_DONE",
+        "client_acceptance": "NOT_DONE",
+        "authority_boundary": "Documentation synchronization only; no backend duplicate implementation, shared request-module write grant, UI/native task expansion or product policy"
+      }
     }
   },
   "followup_lanes": [

@@ -1,3 +1,7 @@
+## 跨端合同同步
+
+ed598候选E06-17存在HTTP200→503运输变化，SOURCE_DELIVERED_UNVERIFIED/本地11类正在验/真实HTTP未验，见[BACKEND_CHANGES](BACKEND_CHANGES.md)与[IOS_HANDOFF](IOS_HANDOFF.md)。75仅声明、未得结果；Claude/iOS接收ACK待收，不派重复后端实现。第三队普通24PASS、真MySQL11未验继续独立。
+
 ## 第三队当前普通回归签收：24PASS／真MySQL11未运行
 
 第三队PR72冻结源码 `2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd` 正常准入后，由本地专用VPS212完成七模块编译与两普通类24/24实跑PASS（各12项，0失败/错误/跳过），fresh XML精确类集、guard0/completed和容器清理已确认。C00已完整读回[PR24公开README及summary](https://github.com/liboyang42-cpu/hengyin/blob/fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_2babbe28/README.md)，证据提交 `fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f`，逐类XML、源码与日志哈希已入总控索引。

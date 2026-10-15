@@ -8,6 +8,16 @@
 
 先读本文件，再读 [BACKEND_CHANGES.md](BACKEND_CHANGES.md) 和 [IOS_START_PROMPT.md](IOS_START_PROMPT.md)。[TASKS.md](TASKS.md)与[tasks.json](tasks.json)是共用后端/小程序Codex责任清单；[CLAUDE.md](CLAUDE.md)是小程序UI/新功能边界。原来的“不做iOS”只约束该任务包，不能理解为让你停止iOS工作。
 
+## E06-17 分享快照运输合同及第三队兼容索引
+
+本节同步已交付源码合同，不是新增原生/后端开发权限或部署通知。最新完整说明见[后端总账E06-17](BACKEND_CHANGES.md#e06-17-运输合同同步分享读库异常-http200--503)。
+
+- EXTRA/PR36固定源码 `ed598258c0f614385940f326099b9626531fab02`：GET `/api/roam/share/snapshot` 有效token读库抛DataAccessException时，由HTTP200改为**HTTP503**，body仍AjaxResult.code500/通用文案且无data。非法token/无行/坏存储/隐私失败仍HTTP200及既有GONE，成功读取与匿名隐私闸不变。路径、参数和body形状相同不能掩盖HTTP状态变化，旧`NO_API_CHANGE`标签不代表运输合同不变。
+- 源码状态 **SOURCE_DELIVERED_UNVERIFIED**；本地新11类正在验，尚无结果，**真实HTTP未验**；旧e72两类56PASS不覆盖。TEST_DEPLOYED=NO、合并/部署/两端验收未完成。iOS若实际使用此分享读面，保留既有错误与GONE区别，不因503认定服务端已撤回；不在未部署版本上宣称已可联调，不新增共享请求策略或自动重试政策。
+- 第三队PR72/2babbe28：后台漏斗日期保null/空/blank/单边查询和完整rows，不增加必填/62天/分页；不要求iOS新增后台接口调用。成长修复无新字段/DDL/奖励语义，普通24PASS仅属普通回归，11真MySQL仍NOT_RUN，真实并发/HTTP/业务另验。
+
+Claude/iOS不重复修后端，后端缺陷仍交EXTRA6/E06或第三队原作者；原生源归独立iOS所有者，本文不扩共享请求模块/产品政策写权。此索引已发布不等于对端已读，Claude/iOS合同接收ACK待收。
+
 ## 本次核实的源码基线
 
 | 仓库/分支 | 核实SHA | 说明 |

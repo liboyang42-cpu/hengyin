@@ -1,3 +1,21 @@
+## E06-17 运输合同同步：分享读库异常 HTTP200 → 503
+
+**源码候选 `ed598258c0f614385940f326099b9626531fab02` / [PR36](https://github.com/liboyang42-cpu/hengyin/pull/36)，原源码所有者EXTRA6/E06；SOURCE_DELIVERED_UNVERIFIED。** C00已读该SHA的[Controller](https://github.com/liboyang42-cpu/hengyin/blob/ed598258c0f614385940f326099b9626531fab02/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamShareController.java)、[E06_17Test源码](https://github.com/liboyang42-cpu/hengyin/blob/ed598258c0f614385940f326099b9626531fab02/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E06_17Test.java)及原交付说明。原说明的`NO_API_CHANGE`仅指路径、参数、AjaxResult形状不变；**HTTP状态变化属于可观察的客户端运输合同变化**，不能按无接口变化处理。
+
+| GET `/api/roam/share/snapshot` 情形 | HTTP | body与兼容口径 |
+|---|---|---|
+| 有效token读库调用抛`DataAccessException`（如连接失败/查询超时） | 原200 → **503** | 仍为`AjaxResult.code=500`、`msg=UserSafeMessage.GENERIC`，无data；不将SQL/token/cause放入响应。读失败不证明分享已撤回。 |
+| 非法token、查询无行、坏存储JSON或隐私校验不通过 | 仍200 | 仍为code500、msg“这条足迹已不再公开”（既有GONE），不误转503。 |
+| 合法成功读取 | 仍200 | code200，沿既有隐私量化/字段白名单。 |
+
+此wrapper只在该GET的mapper catch创建；Controller局部handler处理它。POST发布/revoke、其他Controller、全局Advice、权限与请求参数没有更改。Claude/iOS阅读并保留两类失败语义：503为未读到的错误，不能等同服务端明确GONE。此记录不授予共享请求模块、产品策略、自动重试任务或新端点写权；后端问题仍交EXTRA6/E06，客户端不要另做一份后端修复。
+
+当前本地协调者明确回报**新候选11类正在验证**，75仅源码声明、结果尚未回；E06的5个MockMvc源码向量不等同运行中服务/真实网络验收，**真实HTTP未验**。e72旧两类56PASS不覆盖此候选。TEST_DEPLOYED=NO；合并、迁移/部署、真实数据库/身份业务、两端设备验收另列未完成。客户端已收到/合同接收ACK均待回执，不假定看见此索引。
+
+第三队兼容索引：`2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd`日期修复保留null/空/blank/单边查询、完整rows及原pilot口径，只拒非法/反向日期，不加62天/分页要求；这是既有后台漏斗接口，不要求iOS新增调用。成长聚合修复不新增字段、DDL、奖励/等级/里程语义。VPS普通24PASS证据已独立签收；11真MySQL仍NOT_RUN，不能据普通通过宣布成长并发已验收。具体见[第三队交接](THIRD_CLOUD_HANDOFF.md)。
+
+跨端索引：[IOS_HANDOFF](IOS_HANDOFF.md#e06-17-分享快照运输合同及第三队兼容索引)；Claude读取本节与全局源账，不改变现有文件归属。
+
 ## 第三队当前普通回归签收：24PASS／真MySQL11未运行
 
 第三队PR72冻结源码 `2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd` 正常准入后，由本地专用VPS212完成七模块编译与两普通类24/24实跑PASS（各12项，0失败/错误/跳过），fresh XML精确类集、guard0/completed和容器清理已确认。C00已完整读回[PR24公开README及summary](https://github.com/liboyang42-cpu/hengyin/blob/fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_2babbe28/README.md)，证据提交 `fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f`，逐类XML、源码与日志哈希已入总控索引。

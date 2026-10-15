@@ -1,3 +1,7 @@
+## E06-17 跨端合同通知索引（不转写权）
+
+[后端总账](BACKEND_CHANGES.md)与[IOS_HANDOFF](IOS_HANDOFF.md#e06-17-分享快照运输合同及第三队兼容索引)已明确ed598候选GET读库故障HTTP200→503/body500，旧GONE边界不变。EXTRA6/E06仍唯一源码作者；本地新11类正在验、真实HTTP未验。Claude/iOS只接合同通知，ACK待收，不获共享请求/后端/产品新权限。第三队日期与成长兼容口径同步保留。
+
 ## 第三队当前普通回归签收：24PASS／真MySQL11未运行
 
 第三队PR72冻结源码 `2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd` 正常准入后，由本地专用VPS212完成七模块编译与两普通类24/24实跑PASS（各12项，0失败/错误/跳过），fresh XML精确类集、guard0/completed和容器清理已确认。C00已完整读回[PR24公开README及summary](https://github.com/liboyang42-cpu/hengyin/blob/fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_2babbe28/README.md)，证据提交 `fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f`，逐类XML、源码与日志哈希已入总控索引。
