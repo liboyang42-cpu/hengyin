@@ -5,7 +5,7 @@
 ## 当前事实与状态
 
 - 控制仓库/分支：`liboyang42-cpu/hengyin@codex/mini-bugs-backend-cloud-plan-20261015`，复用文档PR16。
-- 业务候选：`codex/mini-bug-arch-integration-20261015@69c281af1ecc3493db5614b74e494b91c7bb0656`，[PR18](https://github.com/liboyang42-cpu/hengyin/pull/18)，未合并。共同worker基线 `d551c6babd018d41aec90dad2c0acaf1c534644d`。
+- 业务候选：`codex/mini-bug-arch-integration-20261015@1e403b135206844a34219753a36e2dee39c7dd59`，[PR18](https://github.com/liboyang42-cpu/hengyin/pull/18)，未合并。共同worker基线 `d551c6babd018d41aec90dad2c0acaf1c534644d`。
 - 已测修复在69c281af达到SOURCE_READY：GitHub CI run38730430052与Funds run38730430072均成功，跳过/未覆盖项见VALIDATION_69c281af.json。任何测试服务/数据库/设备均无部署证据，不能标TEST_DEPLOYED；ASSET新增真库竞态仍待点名。
 - worker最多4路；用户指定模型后，后续worker均显式 `gpt-6.1-sol`。历史所有者已冻结并交补丁后才交接，非因超时释放。
 - 唯一控制写者C00独占本目录全部控制文档，尤其OWNERSHIP.md、BACKEND_CHANGES.md、tasks.json；其他人只能在自己的PR/交付目录交请求。
@@ -30,7 +30,7 @@
 |---|---|---|---|---|---|
 | hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostMapperMyBatisTest.java` | C00（B05已获用户批准） | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
 | hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java` | B03_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
-| hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B03AssetMybatisIntegrationTest.java` | B03_sol（原写者接续） | ASSIGNED | `69c281af1ecc3493db5614b74e494b91c7bb0656` | 仅修setup SQL提取，原业务断言不动；原写者已确认只读等待，C00串行提交；无Cloud Java/DB |
+| hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B03AssetMybatisIntegrationTest.java` | B03_sol（原写者接续） | INTEGRATED | `1e403b135206844a34219753a36e2dee39c7dd59` | 原写者修复后已明确停止，C00单路径提交；7业务方法未变；VPS复测待验，锁未释放 |
 | hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B03PointsAwardServiceTest.java` | B03_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
 | hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B04ClubEventScheduleReadbackTest.java` | B04_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
 | hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PublisherSettlementPointsAwardServiceTest.java` | B03_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
@@ -175,3 +175,5 @@ PR23共享PATCH_PROPOSED给C00（尚未合入）：`chengyinhub-xcx/app.json`、
 69c281af授权VPS首轮：主源码及admin 1313个测试源编译成功；显式B03AssetMybatisIntegrationTest setup失败，Surefire tests=1/failures=0/errors=1/skipped=0，退出1、无OOM，7个业务方法均未执行。原始独立脱敏证据待验证者发布，本轮不将口头/委派报告升级为7通过或TEST_DEPLOYED。根因是base_schema_20260818.sql商家应付表COMMENT内分号被首分号substring截断。单文件修复复用已有可靠断句方式，不改base schema/迁移/业务断言/门禁清单，不关闭套件或静默跳过。
 
 交接只给公共分支、完整SHA、套件/命令与隔离数据库前提；由本地验证协调者按SHA复测并回报。身份/密钥不进GitHub，VPS测试与部署/设备/业务验收继续分层。
+
+B03修复已推送1e403b135206844a34219753a36e2dee39c7dd59，详见[VPS复测交付](VPS_RETEST_1e403b13.md)。已完整读独立PR24 ccbcf93236e386aaf37a1c7ab0d45b6df5fb5ba6，两份文档仅为69c281af首轮setup失败证据，不移植到新SHA当通过。原写者停止/补丁/提交证据齐，仍原锁不转交验证者；本地只读公共候选执行。Cloud临时SSH身份已清理，本地连接独立保留，无需改网络。

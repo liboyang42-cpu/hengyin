@@ -258,3 +258,9 @@ iOS影响：原生WalletCommerce已区别assetPoints非分页与另一个分页p
 - 实际报告：各模块主源码及admin1313个测试源编译成功；点名B03AssetMybatisIntegrationTest BUILD FAILURE，tests=1/failures=0/errors=1/skipped=0、容器退出1、无OOM。7个业务方法未执行，不能计通过，也不能据此判业务并发逻辑失败。独立证据链接待交付。
 - 根因：setup第79行首分号substring在base_schema_20260818.sql第2979行COMMENT字符串内截断CREATE TABLE，MySQL语法错误；不是SSH或DB不可达。B03_sol原写者单文件修提取边界，复用已有方式，业务SQL/断言/base schema/迁移均不变。NO_API_CHANGE。
 - 发布层级：69c281af既有CI源码证据保留；新增B03竞态验证为FIXTURE_BLOCKED，未业务签收。TEST_DEPLOYED仍NO，容器内测试不算部署应用；修复新SHA未经VPS复测不升为该套件通过。其余独立源码/协调任务继续。
+
+### B03夹具修复已交付：1e403b135206844a34219753a36e2dee39c7dd59
+
+已完整消费[PR24](https://github.com/liboyang42-cpu/hengyin/pull/24)两份独立证据，初次69c281af为FAIL_SETUP_SQL_FIXTURE。原写者修复单个测试文件，复用既有行尾分号规则，三个真实DDL完整，七个业务方法/断言逐字保留，C00提交推送1e403b13；无schema/migration/业务/API变化（NO_API_CHANGE）。
+
+精确命令、测试实例/唯一schema、Java21/Maven3.9.11、单Maven容器堆限额、Surefire期望7/0/0/0见[VPS_RETEST_1e403b13.md](VPS_RETEST_1e403b13.md)。新SHA待本地验证协调者复测，不能把Python静态检查/原SHA CI当7项运行通过。测试部署/设备/真实业务/合并仍未签收；本Cloud网络状态不再阻塞授权VPS验证通道。
