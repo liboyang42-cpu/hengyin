@@ -40,6 +40,8 @@ public class AiGatewayServiceImpl implements AiGatewayService
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
     private static final String RATE_KEY_PREFIX = "ai:gen:limit:";
     private static final int BRIEF_MAX = 500;
+    private static final int REVIEW_CHUNK_MAX = 2000;
+    private static final int REVIEW_OVERLAP = 100;
     private static final org.springframework.data.redis.core.script.DefaultRedisScript<Long> RESERVE_QUOTA_SCRIPT =
             new org.springframework.data.redis.core.script.DefaultRedisScript<>(
                     "local ttl=tonumber(ARGV[1]); local limit=tonumber(ARGV[2]); local capped=tonumber(ARGV[3]);\n" +
@@ -134,7 +136,10 @@ public class AiGatewayServiceImpl implements AiGatewayService
         stageQuota(memberId,bizType,reservation,"INPUT_REVIEW_STARTED");
         String secIn;
         try {
-            secIn = wxContentSecurityService.checkText(truncate(userPrompt, 2000), openid);
+            // 两段都可能含业务上下文；审核与 provider 收到的文本保持完整，不截掉后缀。
+            String assembledInput = (systemPrompt == null ? "" : systemPrompt) + "\n"
+                    + (userPrompt == null ? "" : userPrompt);
+            secIn = checkTextFully(assembledInput, openid);
         } catch (RuntimeException unavailable) {
             if (!playerThemeDraft) refundQuota(memberId, bizType, reservation);
             throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
@@ -185,6 +190,10 @@ public class AiGatewayServiceImpl implements AiGatewayService
         {
             stageQuota(memberId,bizType,reservation,"MODEL_STARTED");
             modelText = client.chat(systemPrompt, userPrompt);
+            if (modelText == null || modelText.trim().isEmpty())
+            {
+                throw new IllegalStateException("AI 模型返回为空");
+            }
         }
         catch (RuntimeException e)
         {
@@ -209,13 +218,21 @@ public class AiGatewayServiceImpl implements AiGatewayService
 
         // 4. 出参内容安全
         String secOut;
-        try { secOut = wxContentSecurityService.checkText(modelText, openid); }
+        try { secOut = checkTextFully(modelText, openid); }
         catch(RuntimeException unknownOutput) {
             retainQuota(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
-            throw unknownOutput;
+            throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
+                    "内容审核暂时不可用，请稍后重试", unknownOutput);
         }
         if (secOut != null)
         {
+            if (IWxContentSecurityService.isDetectionUnavailable(secOut))
+            {
+                retainQuota(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
+                saveLog(traceId, memberId, role, bizType, modelName, userPrompt, secOut,
+                        0, latencyMs, tokenIn, tokenOut);
+                throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, secOut);
+            }
             log.info("[AiGateway] output-blocked memberId={} bizType={}", memberId, bizType);
             saveLog(traceId, memberId, role, bizType, modelName, userPrompt, modelText,
                     AiGenerationLog.SAFETY_OUTPUT_BLOCKED, latencyMs, tokenIn, tokenOut);
@@ -439,9 +456,9 @@ public class AiGatewayServiceImpl implements AiGatewayService
         if (llmClientsByBeanName != null)
         {
             LlmClient c = llmClientsByBeanName.get(providerName + "LlmClient");
-            if (c != null) return c;
+            if (c != null) return requireAvailableClient(c, providerName);
             c = llmClientsByBeanName.get(providerName);
-            if (c != null) return c;
+            if (c != null) return requireAvailableClient(c, providerName);
         }
 
         // 兜底:走旧 clientMap
@@ -462,17 +479,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
                 }
             }
         }
-        LlmClient c = m.get(providerName);
-        if (c == null)
-        {
-            log.warn("[AiGateway] unknown provider={}, fallback to mock", providerName);
-            c = m.get("mock");
-        }
-        if (c == null)
-        {
-            throw new AiServiceException("无可用的 AI 模型");
-        }
-        return c;
+        return requireAvailableClient(m.get(providerName), providerName);
     }
 
     /** 旧单 provider 选择(兼容单测/未注入 sceneRouter 场景)。 */
@@ -495,17 +502,40 @@ public class AiGatewayServiceImpl implements AiGatewayService
                 }
             }
         }
-        LlmClient c = m.get(provider);
-        if (c == null)
+        return requireAvailableClient(m.get(provider), provider);
+    }
+
+    /** 生产网关不接受 mock，包括显式配置和按 bean 名误绑定的 mock。测试使用 LlmClient 替身。 */
+    private LlmClient requireAvailableClient(LlmClient client, String provider)
+    {
+        if (provider == null || "mock".equalsIgnoreCase(provider.trim()) || client == null
+                || "mock".equalsIgnoreCase(client.name()))
         {
-            log.warn("[AiGateway] unknown provider={}, fallback to mock", provider);
-            c = m.get("mock");
+            log.warn("[AiGateway] unavailable provider={}", provider);
+            throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
+                    "AI 服务配置缺失，请联系管理员");
         }
-        if (c == null)
+        return client;
+    }
+
+    /** 分段覆盖全部文本，重叠一小段上下文且不切断 UTF-16 代理对；任一段非放行立即停止。 */
+    private String checkTextFully(String text, String openid)
+    {
+        if (text == null || text.isEmpty()) return null;
+        int start = 0;
+        while (start < text.length())
         {
-            throw new AiServiceException("无可用的 AI 模型");
+            int end = Math.min(start + REVIEW_CHUNK_MAX, text.length());
+            if (end < text.length() && Character.isHighSurrogate(text.charAt(end - 1))
+                    && Character.isLowSurrogate(text.charAt(end))) end--;
+            String verdict = wxContentSecurityService.checkText(text.substring(start, end), openid);
+            if (verdict != null) return verdict;
+            if (end == text.length()) return null;
+            start = end - REVIEW_OVERLAP;
+            if (Character.isLowSurrogate(text.charAt(start))
+                    && Character.isHighSurrogate(text.charAt(start - 1))) start--;
         }
-        return c;
+        return null;
     }
 
     private String resolveOpenid(Long memberId)
