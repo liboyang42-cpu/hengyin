@@ -752,16 +752,12 @@ class CommunityPostServiceImplTest {
 
     @Test
     void notificationPreferencesPatchMergesAndGovernanceCannotBeDisabled() {
-        Map<String, Object> before = new HashMap<>();
-        before.put("interaction_enabled", 1);
-        before.put("mention_enabled", 1);
-        before.put("social_enabled", 0);
         Map<String, Object> after = new HashMap<>();
         after.put("interaction_enabled", 1);
         after.put("mention_enabled", 0);
         after.put("social_enabled", 0);
-        when(mapper.selectNotificationPreferences(9L)).thenReturn(before, after);
-        when(mapper.upsertNotificationPreferences(eq(9L), eq(true), eq(false), eq(false), any())).thenReturn(1);
+        when(mapper.selectNotificationPreferences(9L)).thenReturn(after);
+        when(mapper.upsertNotificationPreferences(eq(9L), isNull(), eq(false), isNull(), any())).thenReturn(1);
         CommunityPostRequests.NotificationPreferences request = new CommunityPostRequests.NotificationPreferences();
         request.setMentionEnabled(false);
 
@@ -769,7 +765,7 @@ class CommunityPostServiceImplTest {
 
         assertEquals(Boolean.FALSE, result.get("mentionEnabled"));
         assertEquals(Boolean.TRUE, result.get("governanceEnabled"));
-        verify(mapper).upsertNotificationPreferences(eq(9L), eq(true), eq(false), eq(false), any());
+        verify(mapper).upsertNotificationPreferences(eq(9L), isNull(), eq(false), isNull(), any());
     }
 
     @Test
