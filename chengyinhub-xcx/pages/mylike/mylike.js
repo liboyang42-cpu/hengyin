@@ -49,11 +49,15 @@ Page({
       return;
     }
     // 返回页面后刷新数据；首展交给 onLoad，避免同一页并发两次 page=1。
+    if (this.data.loading) {
+      this._favoriteShowRefresh = { owner: this._favoriteOwner, generation: this._favoriteGeneration };
+      return;
+    }
     this.refreshData();
   },
 
   onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() { this._favoritesDisposed = true; this._favoriteGeneration = (this._favoriteGeneration || 0) + 1; merchantTheme.merchantPageRestore(); },
+  onUnload() { this._favoriteShowRefresh = null; this._favoritesDisposed = true; this._favoriteGeneration = (this._favoriteGeneration || 0) + 1; merchantTheme.merchantPageRestore(); },
 
   _favoriteMember() { return String((app.getUserID && app.getUserID()) || ''); },
   _syncFavoriteAccount() {
@@ -64,6 +68,7 @@ Page({
     this._favoriteGeneration = (this._favoriteGeneration || 0) + 1;
     this._unlikeRequests = Object.create(null); this._postUnlikeRequests = Object.create(null);
     this._stopPullWithCurrent = false;
+    this._favoriteShowRefresh = null;
     this._favoriteLoadedPages = Object.create(null);
     this._favoriteRemovals = { posts: Object.create(null), topics: Object.create(null) };
     this._unlikePrompts = Object.create(null);
@@ -74,6 +79,12 @@ Page({
   _isFavoriteResponseCurrent(owner, generation) {
     return !this._favoritesDisposed && owner === this._favoriteMember()
       && generation === this._favoriteGeneration;
+  },
+
+  _flushFavoriteShowRefresh() {
+    const pending = this._favoriteShowRefresh;
+    this._favoriteShowRefresh = null;
+    if (pending && this._isFavoriteResponseCurrent(pending.owner, pending.generation)) this.refreshData();
   },
 
   _recordFavoriteRemoval(type, id) {
@@ -131,6 +142,10 @@ Page({
     const that = this;
     this._syncFavoriteAccount();
     const owner = this._favoriteOwner; const generation = this._favoriteGeneration;
+    const requestId = (this._favoriteListRequestId || 0) + 1;
+    this._favoriteListRequestId = requestId;
+    const isCurrent = () => that._isFavoriteResponseCurrent(owner, generation)
+      && requestId === that._favoriteListRequestId;
     const removalVersion = that._favoriteRemovalVersion || 0;
     const pageConfig = Object.assign({}, that.data.pageConfig);
     const loadedPages = that._favoriteLoadedPages || (that._favoriteLoadedPages = Object.create(null));
@@ -153,7 +168,7 @@ Page({
         pageSize: pageConfig.pageSize
       },
       success: function (res) {
-        if (!that._isFavoriteResponseCurrent(owner, generation)) return;
+        if (!isCurrent()) return;
         if (res && res.code == '200' && res.data && isRecordList(res.data.rows)) {
           const rows = that._filterFavoriteRead('posts', res.data.rows, removalVersion).map(function (row) {
             row.picList = row.pics ? String(row.pics).split(';').filter(Boolean) : [];
@@ -165,19 +180,20 @@ Page({
         } else finishLoadError(res, '收藏帖文加载失败');
       },
       fail: function (res) {
-        if (!that._isFavoriteResponseCurrent(owner, generation)) return;
+        if (!isCurrent()) return;
         finishLoadError(res, '收藏帖文加载失败');
       },
       successStatusAbnormal: function (res) {
-        if (!that._isFavoriteResponseCurrent(owner, generation)) return;
+        if (!isCurrent()) return;
         finishLoadError(res, '服务暂时不可用，请稍后再试');
       },
       complete: function () {
-        if (!that._isFavoriteResponseCurrent(owner, generation)) return;
+        if (!isCurrent()) return;
         const shouldStopPull = stopPullAfterComplete || that._stopPullWithCurrent;
         that._stopPullWithCurrent = false;
         that.setData({ loading: false, refreshing: false });
         if (shouldStopPull && typeof wx.stopPullDownRefresh === 'function') wx.stopPullDownRefresh();
+        that._flushFavoriteShowRefresh();
       }
     });
   },
@@ -189,6 +205,10 @@ Page({
     const that = this;
     this._syncFavoriteAccount();
     const owner = this._favoriteOwner; const generation = this._favoriteGeneration;
+    const requestId = (this._favoriteListRequestId || 0) + 1;
+    this._favoriteListRequestId = requestId;
+    const isCurrent = () => that._isFavoriteResponseCurrent(owner, generation)
+      && requestId === that._favoriteListRequestId;
     const removalVersion = that._favoriteRemovalVersion || 0;
     const pageConfig = Object.assign({}, that.data.pageConfig);
     const loadedPages = that._favoriteLoadedPages || (that._favoriteLoadedPages = Object.create(null));
@@ -220,7 +240,7 @@ Page({
         pageSize: pageConfig.pageSize
       },
       success: function (res) {
-        if (!that._isFavoriteResponseCurrent(owner, generation)) return;
+        if (!isCurrent()) return;
         if (res && res.code == "200" && res.data && isRecordList(res.data.rows)) {
           let list = that._filterFavoriteRead('topics', res.data.rows, removalVersion);
           
@@ -247,19 +267,20 @@ Page({
         }
       },
       fail: function (res) {
-        if (!that._isFavoriteResponseCurrent(owner, generation)) return;
+        if (!isCurrent()) return;
         finishLoadError(res, '喜欢列表加载失败');
       },
       successStatusAbnormal: function (res) {
-        if (!that._isFavoriteResponseCurrent(owner, generation)) return;
+        if (!isCurrent()) return;
         finishLoadError(res, '服务暂时不可用，请稍后再试');
       },
       complete: function () {
-        if (!that._isFavoriteResponseCurrent(owner, generation)) return;
+        if (!isCurrent()) return;
         const shouldStopPull = stopPullAfterComplete || that._stopPullWithCurrent;
         that._stopPullWithCurrent = false;
         that.setData({ loading: false, refreshing: false });
         if (shouldStopPull && typeof wx.stopPullDownRefresh === 'function') wx.stopPullDownRefresh();
+        that._flushFavoriteShowRefresh();
       }
     });
   },
