@@ -25,6 +25,8 @@ function loadPage(js = source()) {
     getPageSize: () => 10,
     getTotalPage: (total, size) => Math.ceil(Number(total || 0) / size),
     getRequestErrorMessage: (response, fallback) => (response && response.msg) || fallback,
+    // PR10 F-W1-12:本文件的失败用例都是「已登录账号读失败」;无会话时票夹改给登录引导(见 pr10-review-ui-fixes)。
+    getUserID: () => '1001',
     sendRequest(options) { sandbox.requests.push(options) },
   }
   const context = {
@@ -38,6 +40,8 @@ function loadPage(js = source()) {
     console,
     require(request) {
       if (request === '../../utils/play-engine.js') return require('../../utils/play-engine.js')
+      // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
+      if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
       throw new Error('unexpected require: ' + request)
     },
   }

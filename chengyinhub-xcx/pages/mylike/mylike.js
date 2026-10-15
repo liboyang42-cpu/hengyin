@@ -4,6 +4,7 @@ const app = getApp();
 const community = require('../../utils/community-post-api.js').createClient(app, wx);
 const { isRecordList } = require('../../utils/response-shape.js');
 const policy = require('../../utils/identity/identity-policy.js');
+const { isLoginRequired, retryLogin } = require('../../utils/session/login-reload.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
 
 Page({
@@ -23,6 +24,7 @@ Page({
     loading: false,
     refreshing: false,
     errorMsg: '',
+    loginRequired: false,   // PR10 F-W1-12:读失败是未登录(无会话 / 401)⇒ 登录引导,不与加载失败一起留白
     hasMore1: true,
     hasMorePosts: true,
     pageConfig: {
@@ -94,7 +96,7 @@ Page({
     }
     const currentList = that.data.activeFavoriteTab === 'posts' ? that.data.postList : that.data.ztList1;
     const refreshing = that.data.pageConfig.pageNum === 1 && currentList.length > 0;
-    that.setData({ loading: true, refreshing: refreshing, errorMsg: '' });
+    that.setData({ loading: true, refreshing: refreshing, errorMsg: '', loginRequired: false });
     
     if (that.data.activeFavoriteTab === 'posts') that.getPostFavoriteList(stopPullAfterComplete);
     else that.getTopicLikeList(stopPullAfterComplete);
@@ -115,9 +117,10 @@ Page({
     const that = this;
     const pageConfig = that.data.pageConfig;
     const hasOldContent = that.data.postList.length > 0;
-    const finishLoadError = function (res, fallback) {
+    const finishLoadError = function (res, fallback, statusCode) {
       const message = app.getRequestErrorMessage(res, fallback);
-      that.setData({ refreshing: false, errorMsg: hasOldContent ? '' : message });
+      that.setData({ refreshing: false, errorMsg: hasOldContent ? '' : message,
+        loginRequired: !hasOldContent && isLoginRequired(app, res, statusCode) });
     };
     community.request({
       hideLoading: true,
@@ -140,8 +143,8 @@ Page({
           that.setData({ postList: postList, hasMorePosts: res.data.hasMore === true, errorMsg: '' });
         } else finishLoadError(res, '收藏帖文加载失败');
       },
-      fail: function (res) { finishLoadError(res, '收藏帖文加载失败'); },
-      successStatusAbnormal: function (res) { finishLoadError(res, '服务暂时不可用，请稍后再试'); },
+      fail: function (res, statusCode) { finishLoadError(res, '收藏帖文加载失败', statusCode); },
+      successStatusAbnormal: function (res, statusCode) { finishLoadError(res, '服务暂时不可用，请稍后再试', statusCode); },
       complete: function () {
         const shouldStopPull = stopPullAfterComplete || that._stopPullWithCurrent;
         that._stopPullWithCurrent = false;
@@ -158,7 +161,7 @@ Page({
     const that = this;
     const pageConfig = that.data.pageConfig;
     const hasOldContent = that.data.ztList1.length > 0;
-    const finishLoadError = function (res, fallback) {
+    const finishLoadError = function (res, fallback, statusCode) {
       const message = app.getRequestErrorMessage(res, fallback);
       if (hasOldContent) {
         that.setData({
@@ -169,6 +172,7 @@ Page({
         that.setData({
           refreshing: false,
           errorMsg: message,
+          loginRequired: isLoginRequired(app, res, statusCode),
         });
       }
     };
@@ -207,11 +211,11 @@ Page({
           finishLoadError(res, '喜欢列表加载失败');
         }
       },
-      fail: function (res) {
-        finishLoadError(res, '喜欢列表加载失败');
+      fail: function (res, statusCode) {
+        finishLoadError(res, '喜欢列表加载失败', statusCode);
       },
-      successStatusAbnormal: function (res) {
-        finishLoadError(res, '服务暂时不可用，请稍后再试');
+      successStatusAbnormal: function (res, statusCode) {
+        finishLoadError(res, '服务暂时不可用，请稍后再试', statusCode);
       },
       complete: function () {
         const shouldStopPull = stopPullAfterComplete || that._stopPullWithCurrent;
@@ -374,6 +378,11 @@ Page({
         toast.success('分享成功');
       }
     };
+  },
+
+  // 登录引导「登录」:重登成功后从第一页重读当前页签
+  loginFavorites: function() {
+    retryLogin(this, app, this.refreshData);
   },
 
   /**

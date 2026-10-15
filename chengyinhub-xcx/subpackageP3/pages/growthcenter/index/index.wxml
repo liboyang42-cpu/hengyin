@@ -14,7 +14,9 @@
   <view class="gc-score-card">
     <view class="gc-profile-row">
       <view class="gc-score-person">
-        <image class="gc-score-avatar" src="{{profile.avatarUrl || '/images/growthcenter/avatar-default.svg'}}" mode="aspectFill" />
+        <!-- PR10:兜底原指向不存在的 /images/growthcenter/avatar-default.svg ⇒ 无头像成员留一块空位把名字顶偏(p2-04)。
+             改用全站唯一的默认头像 d_profile.png(cy-avatar placeholder 档同一张)。 -->
+        <image class="gc-score-avatar" src="{{profile.avatarUrl || '/images/d_profile.png'}}" mode="aspectFill" />
         <text class="gc-profile-name">{{profile.name}}</text>
       </view>
       <view class="gc-score-line">
@@ -27,7 +29,7 @@
       <text wx:elif="{{rankLoaded}}" class="gc-rank-label">暂无排名</text>
       <text wx:elif="{{rankState === 'loading'}}" class="gc-rank-label gc-muted">正在加载我的排名</text>
       <text wx:else class="gc-rank-label gc-muted">总积分榜</text>
-      <view class="gc-score-link"><text>查看榜单</text><image class="gc-arrow-icon" src="/images/growthcenter/arrow-right.svg" mode="aspectFit" /></view>
+      <view class="gc-score-link"><text>查看榜单</text><cy-icon class="gc-arrow-icon" name="chevron-right" size="32" /></view>
     </view>
   </view>
   <view class="gc-section">
@@ -60,7 +62,7 @@
       </view>
     </view>
     <view wx:elif="{{showBadgeEmpty}}" class="gc-badge-empty">
-      <view class="gc-empty-heading"><image class="gc-star-icon" src="/images/growthcenter/star.svg" mode="aspectFit" /><text>还没有点亮任何徽章</text></view>
+      <view class="gc-empty-heading"><cy-icon class="gc-star-icon" name="star" size="40" /><text>还没有点亮任何徽章</text></view>
       <text class="gc-empty-copy">继续探索城市，第一枚徽章
 会在这里出现</text>
       <view class="gc-explore-button" bindtap="goExplore" aria-role="button" aria-label="去探索" hover-class="gc-row--press" hover-stay-time="80">去探索</view>

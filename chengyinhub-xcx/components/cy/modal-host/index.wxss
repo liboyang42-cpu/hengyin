@@ -13,5 +13,12 @@
   font-size: var(--cy-font-body);
 }
 .mh__placeholder { color: var(--cy-color-text-tertiary); }
+/* PR10 F-L3-09:multiline —— 长原因多行可见;高度约 5 行,底色/边框沿用单行框 */
+.mh__input--multiline {
+  width: 100%;
+  height: 240rpx;
+  padding: var(--cy-space-3);
+  line-height: 1.5;
+}
 /* CU-C-56/58/M-49:原位校验提示,跟输入框同列 */
 .mh__error { display: block; }

@@ -14,6 +14,8 @@ Page({
     userInfo: {},
     settingsAuthRequired: false,
     settingsAccessDenied: false,
+    // PR10 F-L5C-06:社区读闸关(含开关拉取失败)时「我的收藏」只剩主题,副标题不再提帖文
+    communityPostRead: false,
     isMerchantView: false,
     settingsTheme: 'player',
     statusBarHeight: app.globalData.statusBarHeight || 44,
@@ -37,6 +39,7 @@ Page({
 
   onLoad(options) {
     this._skipInitialShow = true;
+    this.syncCommunityEntry();
     this.syncViewStateAndTheme();
     this.getUserData();
     if (options && options.scene) this.openScene(options.scene, { id: options.id });
@@ -46,7 +49,19 @@ Page({
     this._hidden = false;
     this.syncViewStateAndTheme();
     if (this._skipInitialShow) this._skipInitialShow = false;
-    else this.getUserData();
+    else { this.syncCommunityEntry(); this.getUserData(); }
+  },
+
+  // 与 IM 列表 _syncCommunityEntry、收藏页 syncCommunityTab 同一判据:app.canUseCommunity(false),开关稍后到达再补一次
+  syncCommunityEntry() {
+    const memberId = app.getUserID && app.getUserID();
+    const sync = () => {
+      if (this._unloaded || memberId !== (app.getUserID && app.getUserID())) return;
+      this.setData({ communityPostRead: typeof app.canUseCommunity === 'function' && app.canUseCommunity(false) });
+    };
+    const pending = typeof app.loadFeatureFlags === 'function' ? app.loadFeatureFlags() : null;
+    sync();
+    if (pending && typeof pending.then === 'function') pending.then(sync);
   },
 
   onHide() { this._hidden = true; this._userInfoEpoch = (this._userInfoEpoch || 0) + 1; merchantTheme.merchantPageRestore(); },

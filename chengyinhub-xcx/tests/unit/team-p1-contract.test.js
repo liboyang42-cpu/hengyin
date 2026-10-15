@@ -100,6 +100,8 @@ function loadTeamPage(relative) {
       globalData: { statusBarHeight: 20, navBarHeight: 44 },
       sendRequest(request) { requests.push(request) },
       getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
+      // PR10 F-W1-12:本文件的读失败用例都是「已登录账号」;无会话的登录引导见 pr10-review-ui-fixes。
+      getUserID: () => '1001',
     }),
     Page(value) { definition = value },
     wx: {

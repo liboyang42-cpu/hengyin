@@ -145,8 +145,13 @@ page{ background: var(--cy-bg-page);}
   transform: translate(-50%, -50%);
 }
 
+/* PR10 F-W5-10:吸顶后真正露在最上面的是这枚 topbar 返回键(.topbar z-index 100 >
+   .sticky-tab-wrapper 的 --cy-z-sticky 85,下面那枚 .sticky-back 被它整个盖住)。
+   原来 solid 态只把底换成页黑、没给前景色,cy-icon 取 currentColor = 原生 button 默认黑字,
+   于是 DevTools 里是一枚看不见箭头的黑圆(p1-15e)。前景改走主文字 token。 */
 .topbar.solid .titBar .back button {
   background: var(--cy-bg-page);
+  color: var(--cy-color-text-primary);
 }
 
 

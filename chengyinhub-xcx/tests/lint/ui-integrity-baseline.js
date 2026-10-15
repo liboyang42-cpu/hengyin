@@ -1,3 +1,4 @@
+// 2026-10-15 PR10 复查修复(登录引导 / 拒绝原因多行框等):merchant/apply 342→354(u4Dynamic)、im/list 267→274(u4Dynamic)、signup 255→263(u5Silent);逐条连同上下各三行与 ec4e565 原位置逐字相同，条数与理由不变，u4Dynamic / u5Silent digest 按同一算法显式重算。
 // 2026-10-14 合并 E2：app.js 396→384、merchant/customer 502→504、merchant/apply 340→342、templatedetail 219→204 / 336→321、play 6690→6691；逐条连同上下各一行回读与合并前逐字相同，条数与理由不变，digest 按同一算法显式重算。
 // 2026-10-14 合并八路剩余修复：app.js 390→396、square/detail 1150→1163、play 1509→1518 / 6681→6690 逐行回读为同一调用点；templatedetail 219 / 336 取行号与更正后理由。条数与理由不变，u1Variable / u4Dynamic / u5Silent digest 按同一算法显式重算。
 // 2026-10-13 f75→f08：58条逐一映射，仅fabu 12/temp 6处既有调用迁行；锚点、理由、owner与上限不变，含两组相邻锚点碰撞，digest按新键重算。
@@ -790,7 +791,7 @@ module.exports = {
 // 2026-10-07 旧模板采用回读修复：六处既有动态字段仅移行，理由及59条棘轮不变。
 // 2026-10-07：采用请求补 JSON 头与旧后端拒绝分支，两个锚点仅后移5行；上下各7行逐字核对，理由与59项总数不变。
 // 2026-10-14 W5尾项:profile 926→941/1706→1721、templatedetail 218→219/331→336 仅行号下移，同一调用及理由，数量仍58。
-"71944cb257a1ad6e00afb7f35d6c9be05b495ba9a9edd31591d39840e7bb9db5",
+"30683b79d09962a9c7b73e53dd8707cace71d2ab9fc26898a90db4d4bf83842e",
       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点
       //   行号从 2360 移到 2573(见下方 u5Silent 区块的逐条说明)。等量换 key,显式改 digest。
       // 2026-08-16 uifix-play 集成:u5Silent 条数不变(12),只是 play/index.js 的
@@ -976,7 +977,7 @@ module.exports = {
       // 2026-09-21 端到端收口合入上传重试与账号隔离，既有调用仅位移，理由与数量不变。
       // 2026-09-25 CU-M-183/185/186 同批:merchantinfo.js 那条 info-to-user silentError 调用点 2530→2532,
       //   逐条回读仍是「只为读章节 recruitEnabled、失败不弹全局 toast」这一处,静默理由一字未改,条数 27 不变。
-"d0d684aea252dc465cfa90c1c1d8c48c52ab4977b1f39fb5eedf9061d9ae1413"
+"dfaaaa09d13c3b7a126b6280c0d2410ef560c08b67f14f43b6fd4149ef736814"
 
     }
   },
@@ -1266,7 +1267,7 @@ module.exports = {
     // 2026-09-20 合并后按最终源码重钉。
     // (本支) 2026-09-19 用户改判摘除首页搜索入口(goSearch 及其注释 -6 行),锚点 1274→1268 等量换 key,调用点与理由一字未改,digest 显式重算。
     "chengyinhub-xcx/pages/index/index.js:1178": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
-    "chengyinhub-xcx/pages/merchant/apply/index.js:342": "动态 setData 需精确登记：[f]: e.detail.value；owner=小程序，复核=2026-09-30",
+    "chengyinhub-xcx/pages/merchant/apply/index.js:354": "动态 setData 需精确登记：[f]: e.detail.value；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/publish/fabu/index.js:729": "草稿恢复 patch 只含固定 formData/pendingMaterials，并按本地信封是否存在追加固定的分类与起止时间字段；信封值不会成为 setData 字段名；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/publish/fabu/index.js:898": "_storyCommand 固定写 formData.chapters 与 pendingMaterials，uiPatch 的全部调用点都在本文件且传对象字面量/空值，只补 storyEditor、节点抽屉与撤销态等固定键；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/publish/fabu/index.js:2524": "资格同步 patch 固定含 merchantPoolEditable，仅在确证无资格时追加 formData.openMerchantPool=false，不接收动态字段名；owner=小程序，复核=2026-09-30",
@@ -1289,7 +1290,7 @@ module.exports = {
     "chengyinhub-xcx/pages/square/list/index.js:156": "动态 setData 需精确登记：[key]: item；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/square/list/index.js:195": "动态 setData 需精确登记：[key]: currentItem；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js:646": "可承接章节失败态只在 categoryMissing 布尔判定下二选一；两个对象分支的键均在本方法写死，state/error/allChaptersList 被 WXML 消费，loading 是已精确登记的页内控制字段；owner=小程序，复核=2026-09-30",
-    "chengyinhub-xcx/subpackageB/pages/im/list/index.js:267": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
+    "chengyinhub-xcx/subpackageB/pages/im/list/index.js:274": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/subpackageMember/coupon-qr/index.js:227": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.js:201": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/subpackageP3/pages/stamp-camera/index/index.js:74": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
@@ -1357,7 +1358,7 @@ module.exports = {
     // 2026-09-17 广播实现收尾:同文件删掉只写不读的 cast.preview 死状态(净 -1 行),
     //   锚点按门禁实测 1179→1178;调用点上下逐字一致,理由一字未改,条数仍 23。
     "chengyinhub-xcx/pages/topic/merchantapply/index.js:227": "/api/merchant/info 只用来给报名表单补「你的门店」那张卡(稿 133:310):三行都是给主办方看的补充信息,不是提交字段,拉不到就整块不渲染,报名照常填照常交。全局 toast 在这里会被当成「我表单填错了」;owner=小程序,复核=2026-09-30",
-    "chengyinhub-xcx/subpackageMember/signup/index.js:255": "/api/team/my 只用来给票下面那一行「我的队伍 ›」找落点:拉不到就整行不出,票夹本身照常可用。弹全局 toast 会让人以为票没加载出来;owner=小程序,复核=2026-09-30",
+    "chengyinhub-xcx/subpackageMember/signup/index.js:263": "/api/team/my 只用来给票下面那一行「我的队伍 ›」找落点:拉不到就整行不出,票夹本身照常可用。弹全局 toast 会让人以为票没加载出来;owner=小程序,复核=2026-09-30",
     "chengyinhub-xcx/components/cy/scene-member-invite-history/index.js:63": "邀请历史使用本地 request wrapper 将网络/异常状态归一成空响应，列表据此展示无记录而不弹全局错误；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/utils/analytics.js:201": "埋点投递是纯副作用且不应打扰玩家，fail 只回报 onDone(false)；必须显式登记，禁止因非空回调自动安全；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/utils/ui-state-request.js:10": "共用请求封装,静默由调用方接管:各页在 fail 分支写页内错误态与重试,禁止 request-client 再弹一次；owner=小程序，复核=2026-09-30",
