@@ -17,6 +17,9 @@ const { resolveLeadMemberTicket } = require('./utils/lead-ticket-scan.js');
 const { routeColorForKey, ROUTE_BORDER_COLOR } = require('../../utils/play-visual-tokens.js');
 const { getPlayMapState, getPlayRouteNodeState } = require('../../utils/play-state-contract.js');
 const gameSessionClient = require('../../utils/game-session-client.js');
+const audioSession = require('../../utils/audio-session.js'); // 音频打断/恢复 + 长音频不熄屏
+const { createPoller } = require('../../utils/poller.js');     // 带领场进度:退避轮询
+const playAccuracy = require('./utils/play-accuracy.js');       // 到达定位精度阈值(80m)与提示
 const {
   normalizePlayerProjection,
   buildPlayerChoiceInput,
@@ -341,7 +344,7 @@ Page({
     mode: 1, serverMode: 1, modeLabel: '城市定向',
     routeNotice: '', routeRefreshing: false, journeyAttributes: [],
     screen: '',                 // '' | intro | gameLaunch | gamePlay
-    gpsOk: false, gpsHint: '开始后可开启定位，也可扫码到达',
+    gpsOk: false, gpsLowAcc: false, gpsHint: '开始后可开启定位，也可扫码到达',
     // 底部运行栈三态(Figma 3957:12602 / 3962:14212 / 3962:14341)。
     // idle = 进了地图但还没按「开始」;running / paused 跟着 _sessionClock 走,不另存一份真值。
     runState: 'idle',
@@ -581,6 +584,8 @@ Page({
     this._themeHidden = false; this._startThemePoll();
     if (this.data.chapterFull && !this.data.chapterGate.show) this.measureChapter();
     else if (this.data.chapStory.show) this._startStoryDust();
+    if (this.data.chapterFull) audioSession.keepAwake('chapterFull', true);
+    if (this.data.chapStory.show) audioSession.keepAwake('chapStory', true);
     this._resetPackFx();   // onHide 清掉定时器后,四拍/拖拽的中间态标志必须归零,否则包把自己挡死
     if (!this.data.isPreview && !this.data.isMock && (this.data.activityId || this.data.topicId) && !this.data.loading) this.loadData(false);
   },
@@ -735,6 +740,7 @@ Page({
     this._stopTracking();
     this._watching = false;
     this.destroyAudio();
+    audioSession.releaseAwake();
     this._stopShopNpcVoice();
     this._stopLeadPoll();
     // R9-21:先落盘再销毁时钟 —— 暂停/返回页面不算主动离场,未结束的会话要能回来。
@@ -747,10 +753,10 @@ Page({
     this._clearTransientUiTimers();
     if (this._routeDrawStop) this._routeDrawStop();
     // 玩法音频归页面持有(见 _togglePlayKitAudio),页面走了就得销毁,否则背景里一直在放
-    if (this._kitAudio) { this._kitAudio.destroy(); this._kitAudio = null; }
+    if (this._kitAudio) { audioSession.unregister(this._kitAudio); this._kitAudio.destroy(); this._kitAudio = null; }
     // 章节旁白音频与故事流两个 timer 也归页面持有:若卸载时故事流还开着(没走 closeChapStory),
     // 旁白会留在后台继续放、timer 会在卸载后 setData。跟 _kitAudio 一样就地销毁。
-    if (this._chapAudio) { try { this._chapAudio.stop(); this._chapAudio.destroy(); } catch (e) {} this._chapAudio = null; }
+    if (this._chapAudio) { audioSession.unregister(this._chapAudio); try { this._chapAudio.stop(); this._chapAudio.destroy(); } catch (e) {} this._chapAudio = null; }
     if (this._storyTimer) { clearTimeout(this._storyTimer); this._storyTimer = 0; }
     if (this._settleTimer) { clearTimeout(this._settleTimer); this._settleTimer = 0; }
     this._stopStoryDust();
@@ -770,7 +776,7 @@ Page({
     if (this._chMeasureTimer) clearTimeout(this._chMeasureTimer);
     if (this._settleTimer) clearTimeout(this._settleTimer);
     this._storyAt = null;
-    this._clearPackTimers(); this.pauseAudio(); this._stopShopNpcVoice(); this._stopLeadPoll(); this._pauseSessionClock(); this._persistRunSession(); },
+    this._clearPackTimers(); this.pauseAudio(); audioSession.pauseAll(); audioSession.releaseAwake(); this._stopShopNpcVoice(); this._stopLeadPoll(); this._pauseSessionClock(); this._persistRunSession(); },
 
   _clearTransientUiTimers() {
     ['_navBubbleTimer', '_burstTimer', '_couponTimer',
@@ -1326,6 +1332,7 @@ Page({
     });
     if (at >= paras.length && v.chapCover) lines.push({ id: 'img', img: v.chapCover, in: false, dir: 'up', d: 0 });
     this._storyTop = 0;
+    audioSession.keepAwake('chapStory', true);
     this.setData({ chapStory: { show: true, open: false, title: v.chapName || '', lines, thoughtKeys,
       audio: v.audio || '', audioDur: v.audioDur || '', playing: false, barAway: false, frames: 0 } }, () => {
       this._storyTimer = setTimeout(() => {
@@ -1358,6 +1365,7 @@ Page({
     if (this._settleTimer) { clearTimeout(this._settleTimer); this._settleTimer = 0; }
     this._stopStoryDust();
     this._stopChapAudio();
+    audioSession.keepAwake('chapStory', false);
     this.setData({ 'chapStory.open': false });
     this._storyTimer = setTimeout(() => this.setData({ 'chapStory.show': false, 'chapStory.lines': [] }), 260);
   },
@@ -1371,12 +1379,14 @@ Page({
     if (!st.audio) return;
     if (st.playing) { this._stopChapAudio(); return; }
     if (!this._chapAudio) {
-      const ctx = wx.createInnerAudioContext();
+      const ctx = audioSession.register(wx.createInnerAudioContext(), { kind: 'chapter' });
       ctx.src = st.audio;
       // 三个终态都要把按钮态收回去,否则暂停图标会一直亮着
-      ctx.onEnded(() => this.setData({ 'chapStory.playing': false }));
-      ctx.onStop(() => this.setData({ 'chapStory.playing': false }));
-      ctx.onError(() => { this.setData({ 'chapStory.playing': false }); cyToast('这段音频放不出来'); });
+      ctx.onPlay(() => audioSession.keepAwake('chapAudio', true));
+      ctx.onPause(() => audioSession.keepAwake('chapAudio', false));
+      ctx.onEnded(() => { audioSession.keepAwake('chapAudio', false); this.setData({ 'chapStory.playing': false }); });
+      ctx.onStop(() => { audioSession.keepAwake('chapAudio', false); this.setData({ 'chapStory.playing': false }); });
+      ctx.onError(() => { audioSession.keepAwake('chapAudio', false); this.setData({ 'chapStory.playing': false }); cyToast('这段音频放不出来'); });
       this._chapAudio = ctx;
     }
     this._chapAudio.play();
@@ -1384,7 +1394,8 @@ Page({
   },
 
   _stopChapAudio() {
-    if (this._chapAudio) { try { this._chapAudio.stop(); this._chapAudio.destroy(); } catch (e) {} this._chapAudio = null; }
+    if (this._chapAudio) { audioSession.unregister(this._chapAudio); try { this._chapAudio.stop(); this._chapAudio.destroy(); } catch (e) {} this._chapAudio = null; }
+    audioSession.keepAwake('chapAudio', false);
     if (this.data.chapStory.playing) this.setData({ 'chapStory.playing': false });
   },
 
@@ -1844,7 +1855,7 @@ Page({
   _playShopNpcVoice(audioUrl) {
     if (!audioUrl) return;
     this._stopShopNpcVoice();
-    const audio = wx.createInnerAudioContext();
+    const audio = audioSession.register(wx.createInnerAudioContext(), { kind: 'npc' });
     this._shopNpcVoiceAudio = audio;
     audio.src = audioUrl;
     audio.onEnded(() => this._stopShopNpcVoice());
@@ -1854,6 +1865,7 @@ Page({
 
   _stopShopNpcVoice() {
     if (!this._shopNpcVoiceAudio) return;
+    audioSession.unregister(this._shopNpcVoiceAudio);
     try { this._shopNpcVoiceAudio.stop(); this._shopNpcVoiceAudio.destroy(); } catch (e) {}
     this._shopNpcVoiceAudio = null;
   },
@@ -3119,6 +3131,7 @@ Page({
     if (inlineCheck && !(blocks && blocks.length)) items.push({ kind: 'journeyCheck', nodeId: check.nodeId, mood: curMood });
     if (!items.length) push('这一章还没有写下的内容。');
     if (claims.length) this._claimThoughts(claims);
+    audioSession.keepAwake('chapterFull', true);
     this.setData({
       chapterFull: true,
       chapterParas: items.map((item, i) => Object.assign({
@@ -3205,6 +3218,7 @@ Page({
     this._stopStoryDust();
     if (this._settleTimer) clearTimeout(this._settleTimer);
     if (this._chMeasureTimer) clearTimeout(this._chMeasureTimer);
+    audioSession.keepAwake('chapterFull', false);
     this.setData({ chapterFull: false, 'chapterGate.show': false });
   },
 
@@ -4025,7 +4039,8 @@ Page({
   loadTeamProgress() {
     const that = this;
     const options = arguments[0];
-    if (!this.data.activityId || this.data.isPreview || this.data.isMock) return;
+    // 返回 promise:true=本次成功(或被更新的响应顶替,不算失败),false=失败 —— 轮询器据此退避
+    if (!this.data.activityId || this.data.isPreview || this.data.isMock) return Promise.resolve(true);
     const requestEpoch = (this._leadProgressEpoch || 0) + 1;
     this._leadProgressEpoch = requestEpoch;
     const explicitAuditToken = options && options.unlockAuditToken;
@@ -4041,13 +4056,14 @@ Page({
     };
     const markLeadLoadFailure = () => {
       if (claimResponse()) that.setData({ leadLoadError: true });
+      return false;
     };
-    req('/api/club/lead/team-progress', 'GET', { activityId: this.data.activityId }).then((res) => {
+    return req('/api/club/lead/team-progress', 'GET', { activityId: this.data.activityId }).then((res) => {
       // 轮询、手动重试和放行后对账可能并发；旧响应不得覆盖较新的章节真相。
-      if (!claimResponse()) return;
+      if (!claimResponse()) return true;
       if (!(res.code == 200 || res.code == '200') || !res.data) {
         that.setData({ leadLoadError: true });
-        return;
+        return false;
       }
       const d = res.data;
       const unlockAuditDone = unlockAuditToken != null && unlockAuditToken === that._leadUnlockAuditToken;
@@ -4059,7 +4075,7 @@ Page({
           leadUnlockChecking: unlockAuditDone ? false : !!that._leadUnlockChecking,
         });
         that._stopLeadPoll();
-        return;
+        return true;
       }
       // 广播变化时轻提示(一次)
       if (d.broadcast && d.broadcast !== that._lastBroadcast) {
@@ -4081,15 +4097,18 @@ Page({
       if (unlockAuditDone) that._leadUnlockChecking = false;
       if (openedWhileWaiting) that.loadData(false);
       that._startLeadPoll();
+      return true;
     }).catch(markLeadLoadFailure);
   },
+  // 带领场进度轮询:setTimeout 链(utils/poller.js),上一发没回来不叠发;连续失败 4s→8s→10s 退避,成功复位。
   _startLeadPoll() {
-    if (this._leadTimer) return;
-    const that = this;
-    this._leadTimer = setInterval(() => that.loadTeamProgress(), 4000);
+    if (!this._leadPoller) {
+      this._leadPoller = createPoller({ run: () => this.loadTeamProgress(), interval: 4000, maxInterval: 10000 });
+    }
+    this._leadPoller.start();
   },
   _stopLeadPoll() {
-    if (this._leadTimer) { clearInterval(this._leadTimer); this._leadTimer = null; }
+    if (this._leadPoller) this._leadPoller.stop();
   },
   retryLeadProgress() {
     this.setData({ leadLoadError: false }, () => this.loadTeamProgress());
@@ -5918,7 +5937,10 @@ Page({
     const kit = this._kit();
     if (!kit.audioUrl) { cyToast('这一站还没有配曲目'); return; }
     if (!this._kitAudio) {
-      this._kitAudio = wx.createInnerAudioContext();
+      this._kitAudio = audioSession.register(wx.createInnerAudioContext(), { kind: 'kit' });
+      this._kitAudio.onPlay(() => audioSession.keepAwake('kitAudio', true));
+      this._kitAudio.onPause(() => audioSession.keepAwake('kitAudio', false));
+      this._kitAudio.onStop(() => audioSession.keepAwake('kitAudio', false));
       this._kitAudio.onTimeUpdate(() => {
         this.setData({
           'playKit.kit.position': Math.floor(this._kitAudio.currentTime || 0),
@@ -5929,9 +5951,11 @@ Page({
         // 只收播放态:音乐角明确**不判定通关**(2026-08-26 拍板,utils/playkit-view.js:318)。
         // 这里原来还跟一句 _submitPlayKitAction('finished'),但 ACTION_OF 没有 musiccorner:finished,
         // 组件也只发 toggle/close —— 那是一次谁也收不到的空提交(审查 #24)。
+        audioSession.keepAwake('kitAudio', false);
         this.setData({ 'playKit.kit.playing': false });
       });
       this._kitAudio.onError(() => {
+        audioSession.keepAwake('kitAudio', false);
         this.setData({ 'playKit.kit.playing': false });
         cyToast('曲目播放失败');
       });
@@ -6581,22 +6605,27 @@ Page({
   initAudio() {
     if (this._audio) return;
     const that = this;
-    const audio = wx.createInnerAudioContext();
+    const audio = audioSession.register(wx.createInnerAudioContext(), { kind: 'guide' });
     audio.obeyMuteSwitch = false;       // 静音开关下也出声（语音导览属于内容消费）
     audio.onPlay(() => {
+      audioSession.keepAwake('guideAudio', true);
       that.setData({ audioPlaying: true, audioLoading: false, audioError: '' });
     });
     audio.onPause(() => {
+      audioSession.keepAwake('guideAudio', false);
       that.setData({ audioPlaying: false });
     });
     audio.onStop(() => {
+      audioSession.keepAwake('guideAudio', false);
       that.setData({ audioPlaying: false, audioLoading: false });
     });
     audio.onEnded(() => {
+      audioSession.keepAwake('guideAudio', false);
       that.setData({ audioPlaying: false, audioLoading: false });
     });
     audio.onError((err) => {
       const msg = (err && err.errMsg) ? err.errMsg : '音频加载失败';
+      audioSession.keepAwake('guideAudio', false);
       that.setData({ audioPlaying: false, audioLoading: false, audioError: msg });
       cyToast(msg);
     });
@@ -6670,6 +6699,8 @@ Page({
   },
 
   pauseAudio() {
+    // 走统一音频会话:登记过的 ctx(导览/旁白/玩法音乐/NPC 语音)一并暂停,并记下谁在播
+    audioSession.pauseAll();
     if (!this._audio) return;
     try { this._audio.pause(); } catch (e) {}
     // 不清理 audioNodeId——回前台可继续播同一段
@@ -6677,6 +6708,7 @@ Page({
 
   destroyAudio() {
     if (!this._audio) return;
+    audioSession.unregister(this._audio);
     try { this._audio.destroy(); } catch (e) {}
     this._audio = null;
     this.setData({ audioPlaying: false, audioLoading: false, audioError: '', audioNodeId: null });
