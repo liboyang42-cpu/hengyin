@@ -6114,17 +6114,34 @@ Page({
   /** cy-advanced-game 每次拿到权威视图都会抛上来;v5.1 新玩法的 sheet 由本页渲染
    *  (那些壳是独立 sheet,套不进面板自己那层 sheet)。 */
   onAdvancedSession(e) {
+    if (!this._isPlayAccountCurrent()) return;
     const view = e.detail || {};
     const active = this.data.advancedPlay;
     if (!active.show || !active.node
         || (view.nodeId != null && String(view.nodeId) !== String(active.node.nodeId))) return;
+    const component = this.selectComponent('#advancedGame');
+    const state = component && component.data && component.data.state;
+    if (state && view.sessionId != null && state.sessionId != null && String(view.sessionId) !== String(state.sessionId)) return;
+    if (state && view.version != null && state.version != null && String(view.version) !== String(state.version)) return;
+    const previousKit = this._kit();
+    if (view.sessionId != null && previousKit.sessionId != null && String(view.sessionId) === String(previousKit.sessionId)
+        && view.version != null && previousKit.version != null
+        && Number.isFinite(Number(view.version)) && Number.isFinite(Number(previousKit.version))
+        && Number(view.version) < Number(previousKit.version)) return;
+    const context = { owner: this._playOwner, active, component, epoch: this._playLoadEpoch,
+      chapter: this.data.chapter, sessionKey: JSON.stringify(this._sessionParams()) };
+    this._advancedSessionContext = context;
+    const current = () => this._advancedSessionContext === context && this._isPlayAccountCurrent()
+      && context.owner === this._playOwner && context.epoch === this._playLoadEpoch
+      && context.sessionKey === JSON.stringify(this._sessionParams()) && this.data.chapter === context.chapter
+      && this.data.advancedPlay === active && active.show && this.selectComponent('#advancedGame') === component;
     // 故事变量随权威会话视图一起下来(契约 §3.1):{名字} 的取值 = profile 答案 + 已完成 kit 的结果,
     // 由服务端拼成 map。与 /api/play/nodes 那份走同一套合并口径(见 _mergeStoryVars)。
     this._mergeStoryVars(view.vars);
     if (this._freshStoryGame && String(active.node.nodeId) === this._freshStoryGame) {
       this._freshStoryGame = '';
       // 退出前已经做完、只差「继续故事」:重进打开它时直接接上,不让玩家再点一次
-      if (!this.data.isPreview && !this.data.isMock && view.readyForBase === true) setTimeout(() => this.continueStoryGame(), 400);
+      if (!this.data.isPreview && !this.data.isMock && view.readyForBase === true) setTimeout(() => { if (current()) this.continueStoryGame(); }, 400);
     }
     /* profile 提交成功后必须重拉一次 nodes:页面级 nodes 是读一次的快照,刚填的名字不会自己
        回到 _storyVars 里,章节里就还是 {name}。只认这一条上升沿,后续每个会话视图不重拉。 */
@@ -6159,8 +6176,8 @@ Page({
     if (advanceStory) {
       const nodeId = String(active.node.nodeId);
       setTimeout(() => {
-        const current = this.data.advancedPlay;
-        if (current.show && current.node && String(current.node.nodeId) === nodeId
+        const latest = this.data.advancedPlay;
+        if (current() && latest.show && latest.node && String(latest.node.nodeId) === nodeId
             && this.data.playKit.readyForBase) this.continueStoryGame();
       }, this.data.reducedMotion ? 0 : 900);
     }
@@ -6173,13 +6190,16 @@ Page({
       // 先清空再设:入口卡用的就是同一个 id,同值 setData 不会让 scroll-view 再对准一次,
       // 内嵌玩法的题干会停在入口卡当时的位置、被顶到顶栏底下(2026-09-23 整本试玩)。
       const anchor = 'chapter-game-' + this._playKitNodeId;
-      const aim = () => this.setData({ chapterGameAnchor: '' }, () => this.setData({ chapterGameAnchor: anchor }));
+      const aim = () => {
+        if (!current()) return;
+        this.setData({ chapterGameAnchor: '' }, () => { if (current()) this.setData({ chapterGameAnchor: anchor }); });
+      };
       aim();
       // 第一次是带动画的长距离滚动,途中上方段落还在重排(入场标记),实测会偏 95px 停在顶栏底下;
       // 动画结束后再对准一次(短距离,不会再偏)。ponytail: 固定 1200ms(实测 600ms 仍在重排),改动画要跟着改。
       clearTimeout(this._kitAnchorTimer);
       this._kitAnchorTimer = setTimeout(() => {
-        if (this.data.chapterFull && this.data.chapterGameAnchor === anchor) aim();
+        if (current() && this.data.chapterFull && this.data.chapterGameAnchor === anchor) aim();
       }, 1200);
     }
   },
