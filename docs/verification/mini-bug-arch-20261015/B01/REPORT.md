@@ -58,3 +58,9 @@ node --test chengyinhub-xcx/tests/unit/im-foundation-recovery-b.test.js chengyin
 微信开发者工具/真机订阅弹窗、实际来电与锁屏、弱网设备切号、后台定位和音频能力、真实退款/通知下发与独立服务端业务读回、GitHub CI/整合候选均由 C99/设备验收续做。Node 沙箱证明回调/请求次序与本地数据读写，不证明已退款或订阅必达。所有权以最终协调者提交 SHA 为准。
 
 发现旧快照不可读、错误账号读写、重复资产/付款变更时停止推广，回退本 lane 文件变化；不删账本/历史迁移，不回退其他 lane。没有改变资金/隐私/权限政策。
+
+## 集成门禁追加：收藏请求字面配置（2026-10-15 冻结）
+
+根集成人发现 `_favoriteRequest(options)` 动态转发使 U1 无法枚举请求，并使 silentError 的静态回调不可见。按追加授权仅改 mylike.js 和 B01 专属测试：移除动态 sendRequest wrapper，四处恢复 `app.sendRequest({ ... })` 字面配置；用 `_isFavoriteResponseCurrent(owner,generation)` 纯布尔助手，在列表 success/fail/successStatusAbnormal/complete 和取消 success/fail/complete 显式校验原账号、代次及卸载状态。保留主题/帖文稳定ID摘行、在途锁和原请求字段。未加白名单、未改门禁/动作清单/基线。
+
+`b01-lifecycle-account.test.js` 新增 posts/topics × 切号/卸载四项，调用真实加载处理器并依次触发旧 success/fail/abnormal/complete，确认当前页面状态不变。与 mylike-refresh-state、mylike-unlike-inflight-lock-contract 合跑 23/23，fail/cancelled/skipped 均0，实际输出 `mylike-literal-request-tests.txt`。本次 git diff --check 限上述源码/测试无输出退出0。未重新跑全量、Java或DB；设备层仍待验。

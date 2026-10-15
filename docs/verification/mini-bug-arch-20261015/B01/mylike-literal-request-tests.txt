@@ -1,0 +1,31 @@
+✔ interruption → page hide → interruption end cannot replay background audio (2.729549ms)
+✔ topic unlike removes stable ID after a refresh reorders rows (6.854857ms)
+✔ favorites old account list and unlike callbacks cannot change the new account (1.485166ms)
+✔ team progress late response after onHide cannot restart polling (23.9234ms)
+✔ team progress late response after onUnload cannot restart polling (3.448129ms)
+✔ play load response and pause snapshot from A cannot enter B account (10.234212ms)
+✔ refund subscription starts on confirmed gesture and rejection does not block cancelRegistration (6.236621ms)
+✔ refund subscription starts on confirmed gesture and rejection does not block cancelOrder (1.450323ms)
+✔ refund subscription starts on confirmed gesture and rejection does not block cancelParticipation (1.571715ms)
+✔ invite response belonging to A cannot populate B circle-session cache (3.207658ms)
+✔ queued A pause save cannot send under B credentials (7.333627ms)
+✔ A projection late callback cannot write B player-pending state or UI (2.73729ms)
+✔ returning to A play page after account switch leaves the stale session before any reload (2.520273ms)
+✔ A paused server restore late response cannot restore or persist B run (2.536247ms)
+✔ favorites posts late callbacks ignored after account (0.640154ms)
+✔ favorites posts late callbacks ignored after unload (0.406052ms)
+✔ favorites topics late callbacks ignored after account (0.476227ms)
+✔ favorites topics late callbacks ignored after unload (0.293432ms)
+✔ 帖文收藏刷新 502 保留旧卡片与操作，并在 complete 后停止下拉动画 (11.756864ms)
+✔ 并发取消收藏按 ID 删除，顺序或逆序回包均保留未取消项 (1.097001ms)
+✔ 连点两下:第二个确认不得发出第二个 toggle 请求;请求收尾后锁释放 (8.318609ms)
+✔ 取消成功本地摘行;失败不摘行且锁释放 (3.434489ms)
+✔ 负控:摘掉 in-flight 锁,连点必然发出两个 toggle 请求 ⇒ 用例真红 (1.127677ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 151.14775

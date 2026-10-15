@@ -133,3 +133,20 @@ test('A paused server restore late response cannot restore or persist B run', as
   h.account('22'); h.requests[0].success({ code: 200, data: { runState: 'PAUSED', elapsedSeconds: 120, savedAt: 300 } });
   await flush(); assert.ok(!h.page._runStarted); assert.deepEqual(h.writes, []);
 });
+
+for (const activeFavoriteTab of ['posts', 'topics']) {
+  for (const invalidate of ['account', 'unload']) {
+    test('favorites ' + activeFavoriteTab + ' late callbacks ignored after ' + invalidate, () => {
+      const h = load('pages/mylike/mylike.js');
+      h.page.data.activeFavoriteTab = activeFavoriteTab;
+      h.page.loadLikeData();
+      const old = h.requests[0];
+      if (invalidate === 'account') { h.account('22'); h.page.onShow(); }
+      else h.page.onUnload();
+      const state = JSON.parse(JSON.stringify(h.page.data));
+      old.success({ code: 200, data: { rows: [{ id: 111 }] } });
+      old.fail({}); old.successStatusAbnormal({}); old.complete();
+      assert.deepEqual(h.page.data, state);
+    });
+  }
+}

@@ -68,18 +68,9 @@ Page({
       hasMore1: true, hasMorePosts: true, pageConfig: { pageNum: 1, pageSize: 10 } });
     return true;
   },
-  _favoriteRequest(options) {
-    this._syncFavoriteAccount();
-    const member = this._favoriteOwner; const generation = this._favoriteGeneration;
-    const guarded = Object.assign({}, options);
-    ['success', 'fail', 'successStatusAbnormal', 'complete'].forEach(key => {
-      if (typeof options[key] !== 'function') return;
-      guarded[key] = (...args) => {
-        if (this._favoritesDisposed || member !== this._favoriteMember() || generation !== this._favoriteGeneration) return;
-        return options[key](...args);
-      };
-    });
-    return app.sendRequest(guarded);
+  _isFavoriteResponseCurrent(owner, generation) {
+    return !this._favoritesDisposed && owner === this._favoriteMember()
+      && generation === this._favoriteGeneration;
   },
 
   syncViewTheme() {
@@ -125,13 +116,15 @@ Page({
 
   getPostFavoriteList: function(stopPullAfterComplete) {
     const that = this;
+    this._syncFavoriteAccount();
+    const owner = this._favoriteOwner; const generation = this._favoriteGeneration;
     const pageConfig = that.data.pageConfig;
     const hasOldContent = that.data.postList.length > 0;
     const finishLoadError = function (res, fallback) {
       const message = app.getRequestErrorMessage(res, fallback);
       that.setData({ refreshing: false, errorMsg: hasOldContent ? '' : message });
     };
-    that._favoriteRequest({
+    app.sendRequest({
       hideLoading: true,
       silentError: true,
       auth: true,
@@ -143,6 +136,7 @@ Page({
         pageSize: pageConfig.pageSize
       },
       success: function (res) {
+        if (!that._isFavoriteResponseCurrent(owner, generation)) return;
         if (res && res.code == '200' && res.data && isRecordList(res.data.rows)) {
           const rows = res.data.rows.map(function (row) {
             row.picList = row.pics ? String(row.pics).split(';').filter(Boolean) : [];
@@ -152,9 +146,16 @@ Page({
           that.setData({ postList: postList, hasMorePosts: rows.length >= pageConfig.pageSize, errorMsg: '' });
         } else finishLoadError(res, '收藏帖文加载失败');
       },
-      fail: function (res) { finishLoadError(res, '收藏帖文加载失败'); },
-      successStatusAbnormal: function (res) { finishLoadError(res, '服务暂时不可用，请稍后再试'); },
+      fail: function (res) {
+        if (!that._isFavoriteResponseCurrent(owner, generation)) return;
+        finishLoadError(res, '收藏帖文加载失败');
+      },
+      successStatusAbnormal: function (res) {
+        if (!that._isFavoriteResponseCurrent(owner, generation)) return;
+        finishLoadError(res, '服务暂时不可用，请稍后再试');
+      },
       complete: function () {
+        if (!that._isFavoriteResponseCurrent(owner, generation)) return;
         const shouldStopPull = stopPullAfterComplete || that._stopPullWithCurrent;
         that._stopPullWithCurrent = false;
         that.setData({ loading: false, refreshing: false });
@@ -168,6 +169,8 @@ Page({
    */
   getTopicLikeList: function(stopPullAfterComplete) {
     const that = this;
+    this._syncFavoriteAccount();
+    const owner = this._favoriteOwner; const generation = this._favoriteGeneration;
     const pageConfig = that.data.pageConfig;
     const hasOldContent = that.data.ztList1.length > 0;
     const finishLoadError = function (res, fallback) {
@@ -185,7 +188,7 @@ Page({
       }
     };
     
-    that._favoriteRequest({
+    app.sendRequest({
       hideLoading: true,
       silentError: true,
       url: '/api/topic/like_list',
@@ -195,6 +198,7 @@ Page({
         pageSize: pageConfig.pageSize
       },
       success: function (res) {
+        if (!that._isFavoriteResponseCurrent(owner, generation)) return;
         if (res && res.code == "200" && res.data && isRecordList(res.data.rows)) {
           let list = res.data.rows;
           
@@ -220,12 +224,15 @@ Page({
         }
       },
       fail: function (res) {
+        if (!that._isFavoriteResponseCurrent(owner, generation)) return;
         finishLoadError(res, '喜欢列表加载失败');
       },
       successStatusAbnormal: function (res) {
+        if (!that._isFavoriteResponseCurrent(owner, generation)) return;
         finishLoadError(res, '服务暂时不可用，请稍后再试');
       },
       complete: function () {
+        if (!that._isFavoriteResponseCurrent(owner, generation)) return;
         const shouldStopPull = stopPullAfterComplete || that._stopPullWithCurrent;
         that._stopPullWithCurrent = false;
         that.setData({ loading: false, refreshing: false });
@@ -274,11 +281,11 @@ Page({
       title: '提示',
       content: '确定要取消点赞吗？',
       success: function (res) {
+        if (!that._isFavoriteResponseCurrent(owner, generation)) return;
         if (res.confirm) {
-          if (owner !== that._favoriteMember() || generation !== that._favoriteGeneration || that._favoritesDisposed) return;
           if (that._unlikeRequests[requestKey]) return;
           that._unlikeRequests[requestKey] = true;
-          that._favoriteRequest({
+          app.sendRequest({
             url: '/api/topic/like',
             method: "POST",
             data: {
@@ -286,6 +293,7 @@ Page({
               type: 0 // 0表示取消点赞
             },
             success: function (res) {
+              if (!that._isFavoriteResponseCurrent(owner, generation)) return;
               if (res.code == "200") {
                 toast.success('取消点赞成功');
                 
@@ -297,9 +305,11 @@ Page({
               }
             },
             fail: function (res) {
+              if (!that._isFavoriteResponseCurrent(owner, generation)) return;
               toast('网络错误，请重试');
             },
             complete: function () {
+              if (!that._isFavoriteResponseCurrent(owner, generation)) return;
               delete that._unlikeRequests[requestKey];
             }
           });
@@ -310,6 +320,7 @@ Page({
 
   postUnlike: function(e) {
     this._syncFavoriteAccount();
+    const owner = this._favoriteOwner; const generation = this._favoriteGeneration;
     const index = e.detail && e.detail.index;
     const item = this.data.postList[index];
     if (!item || !item.id) return;
@@ -317,7 +328,7 @@ Page({
     this._postUnlikeRequests = this._postUnlikeRequests || Object.create(null);
     if (this._postUnlikeRequests[requestKey]) return;
     this._postUnlikeRequests[requestKey] = true;
-    this._favoriteRequest({
+    app.sendRequest({
       hideLoading: true,
       silentError: true,
       url: '/api/creativesquare/bookmark',
@@ -328,6 +339,7 @@ Page({
         request_id: 'bookmark-' + item.id + '-0-' + Date.now().toString(36)
       },
       success: (res) => {
+        if (!this._isFavoriteResponseCurrent(owner, generation)) return;
         if (!res || res.code != '200') {
           toast((res && res.msg) || '操作失败');
           return;
@@ -335,8 +347,14 @@ Page({
         const postList = this.data.postList.filter(post => String(post.id) !== requestKey);
         this.setData({ postList: postList });
       },
-      fail: () => toast('网络错误，请重试'),
-      complete: () => { delete this._postUnlikeRequests[requestKey]; }
+      fail: () => {
+        if (!this._isFavoriteResponseCurrent(owner, generation)) return;
+        toast('网络错误，请重试');
+      },
+      complete: () => {
+        if (!this._isFavoriteResponseCurrent(owner, generation)) return;
+        delete this._postUnlikeRequests[requestKey];
+      }
     });
   },
 
