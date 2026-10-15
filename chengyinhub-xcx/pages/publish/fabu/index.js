@@ -831,6 +831,11 @@ Page({
   clearLocalDraft() {
     if (this._draftStorageUnavailable) { this._markDraftStorageUnavailable(); return; }
     const memberId = String(app.getUserID() || '');
+    if (this._publishPageUnloaded) return;
+    if (!memberId || String(this.data.draftMemberId || '') !== memberId) {
+      cyToast('请重新进入当前账号的草稿');
+      return;
+    }
     const topicId = this.data.editingTopicId;
     const draftUuid = this.data.draftUuid;
     modal.show({
@@ -840,6 +845,7 @@ Page({
       success: (res) => {
         if (!res.confirm || this._publishPageUnloaded || this._draftStorageUnavailable
             || memberId !== String(app.getUserID() || '')
+            || memberId !== String(this.data.draftMemberId || '')
             || topicId !== this.data.editingTopicId || draftUuid !== this.data.draftUuid) return;
         this._draftAutosaveReady = false;
         this._clearDraftEnvelope();
