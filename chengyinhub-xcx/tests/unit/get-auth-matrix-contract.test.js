@@ -41,6 +41,14 @@ const MATRIX = [
   ['pages/activity/list/index.js', "url: '/api/official/events'", 'optional', 'visitor/member', 'public-list+viewer-personalization'],
   ['pages/activity/list/index.js', "url: '/api/official/my-events'", 'required', 'member', 'self-registration'],
   ['pages/activity/official-mine/index.js', "url: '/api/official/my-published'", 'required', 'publisher', 'self-publisher'],
+  // CL4 主办控制台:publish-check 由后端 canPublish(白名单)+ canReadControlledEvent(本场主办/协办)双重校验,
+  //   非主办一律拒绝;本页与详情页只拿它判断「是否显示主办控件」,不接受前端传身份。
+  ['pages/activity/official-organizer/index.js', "url: `/api/official/v2/events/${this._id}/publish-check`", 'required', 'publisher', 'controlled-event-operator'],
+  ['pages/activity/official-organizer/index.js', "url: '/api/official/events/' + this._id", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
+  ['pages/activity/official-organizer/index.js', "url: '/api/official/my-published'", 'required', 'publisher', 'self-publisher'],
+  ['pages/activity/official-detail/index.js', "url: `/api/official/v2/events/${this.data.id}/publish-check`", 'required', 'publisher', 'controlled-event-operator'],
+  // CL4 N5:NPC 对话导出,身份只取登录态(getAppUserId),端点不收任何用户 ID。
+  ['components/cy/npc-chat/index.js', "url: '/api/ai/npc/chat/data/export'", 'required', 'member', 'self-account'],
   ['pages/activity/official-detail/index.js', "url: '/api/official/events/' + id", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   /* 2026-10-15 任务3:官方路线只读两处(列表/详情)与创作者状态键读取。preset 接口不在 SecurityConfig permitAll,
      走 anyRequest().authenticated();状态键读取由后端按主题归属 + scope 校验(仅创作者本人)。 */
@@ -120,6 +128,7 @@ const VALID_SCOPES = new Set([
   'self-merchant-game-entry', 'club-owned-activity',
   'owned-merchant-resource', 'self-marketing-consent',
   'share-token-snapshot', 'owned-merchant-or-club-receivable',
+  'controlled-event-operator',
 ]);
 
 function productionJsFiles(dir) {
@@ -228,7 +237,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   //   (抽屉资格预探,权限档与上一处相同:required/merchant)⇒ 30 → 31。
   // 客户页退役触达：移除券候选、任务列表、任务详情三处 GET，31 → 28。
   // C3 认领已有门店 sheet 新增 /api/merchant/claims/status GET,29 → 30。
-  assert.equal(directCount, 33, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // CL4:主办控制台 3 条(publish-check / 公开详情 / 我发布的)+ 详情页主办探针 1 条 + NPC 对话导出 1 条,33 → 38。
+  assert.equal(directCount, 38, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(wrapperCount, 22, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(MATRIX.length, directCount + wrapperCount);
 

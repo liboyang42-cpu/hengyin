@@ -30,7 +30,8 @@
         "list/index",
         "official-detail/index",
         "official-inbox/index",
-        "official-mine/index"
+        "official-mine/index",
+        "official-organizer/index"
       ]
     },
     {

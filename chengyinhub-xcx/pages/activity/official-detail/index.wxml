@@ -156,6 +156,12 @@
         </view>
       </view>
 
+      <!-- 主办入口:仅当服务端 publish-check 对当前账号放行(本场主办/协办)才出现,玩家看不到 -->
+      <view wx:if="{{organizerEntry}}" class="od-section od-section--divided">
+        <text class="od-heading">主办控制台</text>
+        <text class="od-copy">你是这场活动的主办方，可以在控制台里排期、暂停/恢复、邀请或转交主办。</text>
+        <view class="od-organizer-entry" bindtap="openOrganizer" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="打开主办控制台">打开主办控制台</view>
+      </view>
       <view class="od-bottom-space"></view>
     </scroll-view>
 

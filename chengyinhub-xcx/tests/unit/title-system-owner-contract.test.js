@@ -46,6 +46,8 @@ const EXPECTED_NAV_ROUTES = [
   'pages/activity/detail/index', 'pages/activity/baoming/baoming', 'pages/activity/list/index',
   'pages/activity/official-detail/index', 'pages/activity/official-inbox/index',
   'pages/activity/official-mine/index',
+  // 2026-10-15 CL4:主办控制台,custom 导航 + cy-nav-bar + cy-page-title 标准二级页
+  'pages/activity/official-organizer/index',
   'subpackageA/pages/myproject/index', 'subpackageA/pages/infomation/infomation',
   'subpackageA/pages/infomationdetail/infomationdetail',
   'subpackageA/pages/assetcenter/income-detail/income-detail', 'subpackageA/pages/assetcenter/earnings/index',
@@ -108,6 +110,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'subpackageRoam/session/index',
   'pages/activity/official-inbox/index',
   'pages/activity/official-mine/index', 'subpackageA/pages/myproject/index',
+  'pages/activity/official-organizer/index',
   'subpackageA/pages/infomation/infomation', 'subpackageA/pages/infomationdetail/infomationdetail',
   'subpackageA/pages/assetcenter/income-detail/income-detail', 'subpackageA/pages/assetcenter/earnings/index',
   'subpackageP3/pages/growthcenter/index/index',
@@ -248,8 +251,9 @@ function assertTitleInventory(readSource = read) {
      cy-page-title 的普通玩家二级页 ⇒ 131+1 = 132;custom 计数同步 132(按实测重取)。 */
   /* 2026-09-24 −1:Phase 0 实验室页随正式页接进玩法删除 ⇒ 132−1 = 131;custom 同步 131(按实测重取)。 */
     /* 2026-10-15 +3:官方路线列表/详情、积分明细三页,均为 custom 导航 + cy-nav-bar + cy-page-title ⇒ 130+3 = 133(按实测重取)。 */
-  assert.equal(rows.length, 133, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 133)
+    /* 2026-10-15 CL4 +1:主办控制台 pages/activity/official-organizer,custom 导航 + cy-nav-bar + cy-page-title ⇒ 133+1 = 134(按实测重取)。 */
+  assert.equal(rows.length, 134, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 134)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

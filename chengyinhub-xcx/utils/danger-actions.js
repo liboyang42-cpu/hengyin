@@ -144,6 +144,71 @@ const DANGER_ACTIONS = {
     alt: null,
     done: { title: '对话记录已清除', text: 'AI 对话记录已从你的账号删除,当前对话也已清空。' },
   },
+  // ===== 官方活动 V2 · 主办控制台(pages/activity/official-organizer)=====
+  // 口径对齐 OfficialEventV2ServiceImpl 的 schedule / inviteOrganizer / transferOrganizer / pause / resume。
+  'official.organizer.schedule': {
+    irreversible: true,
+    title: '提交「{name}」排期?',
+    content: '发布检查通过后,活动从草稿进入已排期,按设定时间对玩家开放。',
+    consequences: [
+      { icon: 'calendar', text: '任务、绑定点位与履约需求一并生效,按报名/开始时间自动推进' },
+      { icon: 'info', text: '排期后活动详情对玩家可见;之后需要停下只能用暂停' },
+      { icon: 'warning', text: '此操作不可撤销,活动无法退回草稿' },
+    ],
+    confirmText: '提交排期',
+    alt: null,
+    done: { title: '活动已排期', text: '已按平台最新记录刷新。' },
+  },
+  'official.organizer.invite': {
+    irreversible: false,
+    title: '邀请会员 {memberId} 成为候任主办?',
+    content: '对方接受后成为候任主办,还要由你再执行受控转交,主办权才会变更。',
+    consequences: [
+      { icon: 'mtab-customers', text: '对方会在「官方活动邀约」里看到这条邀请,可以接受或拒绝' },
+      { icon: 'info', text: '邀请本身不改变当前主办;授权说明会写入活动审计' },
+    ],
+    confirmText: '发送邀请',
+    alt: null,
+    done: { title: '主办邀约已发送', text: '' },
+  },
+  'official.organizer.transfer': {
+    irreversible: true,
+    title: '把「{name}」的主办权转交出去?',
+    content: '转交给关系编号 {partyId} 的候任主办,你会立即退出本场主办。',
+    consequences: [
+      { icon: 'logout', text: '你将不能再排期、暂停、恢复或邀请主办,控制台对你关闭' },
+      { icon: 'mtab-customers', text: '只有已接受邀请的候任主办能被转交;编号不对时平台会拒绝' },
+      { icon: 'warning', text: '此操作不可撤销,只能由新主办重新邀请你才能拿回' },
+    ],
+    confirmText: '确认转交',
+    alt: null,
+    done: { title: '主办方已转交', text: '' },
+  },
+  'official.organizer.pause': {
+    irreversible: false,
+    title: '暂停「{name}」?',
+    content: '暂停后玩家侧显示活动已暂停,通知策略记为待执行。',
+    consequences: [
+      { icon: 'clock', text: '暂停期间不能报名、到达证据不计入、承接方不能变更履约;原定结束时间不变' },
+      { icon: 'bell', text: '填写的通知策略不会自动群发,状态记为「待执行」,需要按策略另行通知' },
+      { icon: 'info', text: '恢复前平台会重新检查主办、履约覆盖和时间窗口;到结束时间仍未恢复会直接转入待结算' },
+    ],
+    confirmText: '暂停活动',
+    alt: null,
+    done: { title: '活动已暂停', text: '已按平台最新记录刷新。' },
+  },
+  'official.organizer.resume': {
+    irreversible: false,
+    title: '恢复「{name}」?',
+    content: '平台会先重新做发布检查,不通过会拒绝恢复并给出原因。',
+    consequences: [
+      { icon: 'check', text: '恢复后活动按当前时间回到对应阶段(已排期/报名中/进行中)' },
+      { icon: 'info', text: '如果活动已过结束时间,会转入待结算而不是恢复运行' },
+    ],
+    confirmText: '恢复活动',
+    alt: null,
+    done: { title: '活动已恢复', text: '已按平台最新记录刷新。' },
+  },
   'team.disband': {
     irreversible: true,
     title: '解散这支队伍?',

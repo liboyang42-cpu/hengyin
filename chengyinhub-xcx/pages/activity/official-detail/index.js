@@ -145,6 +145,7 @@ Page({
     loadErrSub: '',
     loadErrAction: '重试',
     loadErrActionType: 'retry',
+    organizerEntry: false,
   },
 
   onLoad(q) {
@@ -233,6 +234,7 @@ Page({
         const e = this._decorate(res.data);
         this.setData({ e, rewards: this._rewards(e), cta: this._cta(e), countdown: this._countdown(e), boundTopicError: '' });
         this._loadBoundTopicNames(e);
+        this._probeOrganizer(e);
       },
       fail: () => {
         if (seq !== this._fetchSeq) return;
@@ -249,6 +251,30 @@ Page({
         if (seq === this._fetchSeq) this.setData({ loading: false });
       }
     });
+  },
+
+  // 主办入口探针:publish-check 只对本场主办/协办(且在官方白名单内)返回 200,其余一律当作普通玩家,
+  // 不提示、不报错 —— 对绝大多数玩家这本来就是「不是主办」,不是故障。
+  _probeOrganizer(e) {
+    if (!e || !e._isV2) { this.setData({ organizerEntry: false }); return; }
+    const seq = this._fetchSeq;
+    app.sendRequest({
+      url: `/api/official/v2/events/${this.data.id}/publish-check`, method: 'GET',
+      hideLoading: true, autoErrorToast: false,
+      success: (res) => {
+        if (seq !== this._fetchSeq) return;
+        this.setData({ organizerEntry: !!res && (res.code == 200 || res.code == '200') });
+      },
+      fail: () => {
+        if (seq !== this._fetchSeq) return;
+        this.setData({ organizerEntry: false });
+      },
+    });
+  },
+
+  openOrganizer() {
+    if (!this.data.organizerEntry) return;
+    wx.navigateTo({ url: '/pages/activity/official-organizer/index?id=' + this.data.id });
   },
 
   _rewards(e) {

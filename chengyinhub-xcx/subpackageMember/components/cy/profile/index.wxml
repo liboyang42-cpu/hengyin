@@ -641,19 +641,35 @@
   </view>
   <cy-skeleton wx:if="{{pointsSheet.loading}}" type="list" count="{{3}}" />
   <view wx:elif="{{pointsSheet.failed}}" class="pts-loading cy-fade-in" bindtap="loadPointsTasks" hover-class="cy-pressed" hover-stay-time="80">加载失败,点此重试</view>
-  <cy-empty wx:elif="{{pointsSheet.loaded && !pointsSheet.tasks.length}}" title="暂无积分任务" sub="积分规则上线后会出现在这里" />
-  <view wx:else class="pts-list">
+  <cy-empty wx:elif="{{pointsSheet.loaded && !pointsSheet.tasks.length && !pointsSheet.spendRules.length}}" title="暂无积分任务" sub="积分规则上线后会出现在这里" />
+  <block wx:else>
+  <view class="pts-list" wx:if="{{pointsSheet.tasks.length}}">
     <view class="pts-row" wx:for="{{pointsSheet.tasks}}" wx:key="id">
       <view class="pts-row__main">
         <view class="pts-row__name">{{item.title}}</view>
         <view class="pts-row__desc" wx:if="{{item.description}}">{{item.description}}</view>
       </view>
       <view class="pts-row__side">
-        <view class="pts-row__gain">+{{item.points}}</view>
+        <view class="pts-row__gain">{{item.pointsText || '+' + item.points}}</view>
         <view class="pts-row__done {{item.doneCount ? '' : 'is-zero'}}">{{item.doneCount ? '已获 ' + item.doneCount + ' 次' : '待完成'}}</view>
       </view>
     </view>
   </view>
+  <!-- 花分规则(后台 eventType=14 解锁提示):数值同样来自后台积分规则配置,客户端不写死分值 -->
+  <view class="pts-list" wx:if="{{pointsSheet.spendRules.length}}">
+    <view class="pts-hero__label">积分消耗</view>
+    <view class="pts-row" wx:for="{{pointsSheet.spendRules}}" wx:key="id">
+      <view class="pts-row__main">
+        <view class="pts-row__name">{{item.title}}</view>
+        <view class="pts-row__desc" wx:if="{{item.description}}">{{item.description}}</view>
+      </view>
+      <view class="pts-row__side">
+        <view class="pts-row__gain">{{item.pointsText || '-' + item.points + ' / 次'}}</view>
+        <view class="pts-row__done is-zero">{{item.doneCount ? '已用 ' + item.doneCount + ' 次' : '未使用'}}</view>
+      </view>
+    </view>
+  </view>
+  </block>
 </cy-scene-sheet>
 </view>
 

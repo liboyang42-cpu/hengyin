@@ -371,7 +371,7 @@ Component({
     benefits: buildBenefits({}),
     clubOwnedCount: 0,
     pointsStat: { weekPoints: 0, rankPercentage: 0 },
-    pointsSheet: { show: false, loading: false, loaded: false, failed: false, tasks: [] },
+    pointsSheet: { show: false, loading: false, loaded: false, failed: false, tasks: [], spendRules: [] },
 
     growthLevel: 1,
     streakDays: 0,
@@ -1197,26 +1197,26 @@ Component({
     if (sheet.loading) return;
     that.setData({ 'pointsSheet.loading': !sheet.loaded, 'pointsSheet.failed': false });
     req('/api/points/result_list', {}).then(function (res) {
-      if (res.code != '200' || !res.data) {
+      // G4:规则整理收进同目录 points-rules.js(纯函数,有单测)。
+      //   · 赚分任务与花分规则(eventType=14 解锁提示)都取自后台积分规则配置,客户端不写死分值;
+      //     原先这里把 14 直接过滤掉,用户看不到花分口径,现在单列为「积分消耗」。
+      //   · 回包不是数组 / 含非对象行 → 按失败处理,不伪装成「暂无积分任务」。
+      //   · 积分抵扣现金的汇率是服务端常量,没有只读接口,这里不展示也不编造。
+      //     (常量在 CmsRegistrationServiceImpl.POINT_DEDUCT_RATE;规则本身归 Codex B03,本处只读展示)
+      // ⚠️ require 写在这里而不是文件顶部:本文件的 UI-GATE 基线按行号登记,顶部加一行会让后面
+      //   所有登记项整体漂移;就地 require 由运行时缓存,不重复加载。
+      var rules = res.code == '200' ? require('./points-rules.js').splitPointsRules(res.data) : null;
+      if (!rules) {
         // 首次加载失败给显式失败态(可点重试);已有列表则保留旧数据不打扰
         that.setData({ 'pointsSheet.loading': false, 'pointsSheet.failed': !that.data.pointsSheet.loaded });
         return;
       }
-      var tasks = [];
-      for (var i = 0; i < res.data.length; i++) {
-        var r = res.data[i];
-        // 只列赚分任务:启用中;event_type=14(解锁提示)是花分规则,不属于任务
-        if (Number(r.status) !== 1 || Number(r.eventType) === 14) continue;
-        tasks.push({
-          id: r.id,
-          eventType: r.eventType,
-          title: r.title || '',
-          description: r.description || '',
-          points: Number(r.value) || 0,
-          doneCount: Number(r.pointsNum) || 0
-        });
-      }
-      that.setData({ 'pointsSheet.tasks': tasks, 'pointsSheet.loading': false, 'pointsSheet.loaded': true });
+      that.setData({
+        'pointsSheet.tasks': rules.earn,
+        'pointsSheet.spendRules': rules.spend,
+        'pointsSheet.loading': false,
+        'pointsSheet.loaded': true
+      });
     });
   },
 

@@ -105,6 +105,8 @@ Page({
       _city: nonBlank(event.city, '城市待确认'),
       _category: nonBlank(event.category, ''),
       _st: status || '状态待确认',
+      // 只给 V2 合同活动挂主办控制台入口;是否真是本场主办由控制台页的 publish-check 决定
+      _isV2: Number(event.contractVersion) >= 2,
     });
   },
 
@@ -125,5 +127,10 @@ Page({
 
   openEvent(e) {
     wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + e.currentTarget.dataset.id });
+  },
+
+  // 草稿在公开详情里不可见,排期等主办操作统一从控制台进
+  openOrganizer(e) {
+    wx.navigateTo({ url: '/pages/activity/official-organizer/index?id=' + e.currentTarget.dataset.id });
   },
 });

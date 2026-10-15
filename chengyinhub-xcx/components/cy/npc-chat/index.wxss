@@ -3,6 +3,15 @@
 .npc-chat__notice { display: flex; align-items: center; gap: var(--cy-space-1); padding: var(--cy-space-2) 0 var(--cy-space-3); color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); }
 .npc-chat__notice-text { flex: 1; min-width: 0; }
 .npc-chat__clear { flex: none; padding: var(--cy-space-2); margin: calc(var(--cy-space-2) * -1) 0; color: var(--cy-color-text-secondary); text-decoration: underline; }
+.npc-chat__data { display: flex; justify-content: flex-end; gap: var(--cy-space-2); color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); }
+.npc-chat__export-head { display: flex; align-items: center; justify-content: space-between; color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); }
+.npc-chat__export-title { color: var(--cy-color-text-primary); font-size: var(--cy-type-body); font-weight: 700; }
+.npc-chat__export-meta { display: block; margin-top: var(--cy-space-2); color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); line-height: var(--cy-leading-normal); }
+.npc-chat__export-actions { display: flex; gap: var(--cy-space-2); margin-top: var(--cy-space-3); }
+.npc-chat__send--ghost { color: var(--cy-color-text-primary); background: var(--cy-color-action-secondary-bg); }
+.npc-chat__export-row { margin-top: var(--cy-space-3); padding: var(--cy-space-3); border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-surface-subtle); border: 1rpx solid var(--cy-color-border-subtle); }
+.npc-chat__export-time { display: block; color: var(--cy-color-text-tertiary); font-size: var(--cy-type-micro); }
+.npc-chat__export-line { display: block; margin-top: var(--cy-space-1); color: var(--cy-color-text-primary); font-size: var(--cy-type-label); line-height: var(--cy-leading-normal); white-space: pre-wrap; word-break: break-word; }
 .npc-chat__notice .cyi { color: var(--cy-color-text-secondary); flex: none; }
 .npc-chat__messages { flex: 1; min-height: 0; padding: var(--cy-space-2) 0; box-sizing: border-box; }
 .npc-chat__row { display: flex; margin-bottom: var(--cy-space-3); }
