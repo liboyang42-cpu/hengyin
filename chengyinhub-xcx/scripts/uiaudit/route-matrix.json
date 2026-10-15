@@ -3,7 +3,7 @@
   "generatedFrom": "app.json + scene-* 组件扫描",
   "previousBatch": null,
   "counts": {
-    "routes": 136,
+    "routes": 135,
     "scenes": 27,
     "added": 0,
     "removed": 0
@@ -1543,19 +1543,6 @@
     },
     {
       "pagePath": "subpackageMember/report-detail/index",
-      "pkg": "subpackageMember",
-      "tabBar": false,
-      "role": "player",
-      "needsLogin": true,
-      "needsData": true,
-      "dataKeys": [
-        "reportId"
-      ],
-      "hasJs": true,
-      "hasWxml": true
-    },
-    {
-      "pagePath": "subpackageMember/report-appeal/index",
       "pkg": "subpackageMember",
       "tabBar": false,
       "role": "player",

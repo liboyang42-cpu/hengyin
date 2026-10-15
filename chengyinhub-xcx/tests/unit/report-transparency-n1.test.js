@@ -1,4 +1,5 @@
-// CL2 / N1 举报透明化:我的举报、举报详情(举报人 / 被举报方投影)、文字申诉。
+// CL2 / N1 举报透明化:系统消息「举报进度」→ 举报详情(含 cy-sheet 文字申诉)→ 我的举报。
+// 2026-10-15 用户决定:阶段名 已提交/已受理/调查中/已处理/已关闭/申诉中;只做文字申诉;不做被举报方视图;不在「我的」放入口。
 // 合同真源:ApiCommunityTrustController + CommunityTrustServiceImpl + CommunityReport*VO。
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
@@ -14,16 +15,25 @@ const view = require('../../subpackageMember/report-common/view.js')
 const CONTROLLER = 'chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCommunityTrustController.java'
 const SERVICE = 'chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityTrustServiceImpl.java'
 const APPEAL_DTO = 'chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/CommunityReportAppealRequest.java'
-const SUBJECT_VO = 'chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/CommunityReportSubjectVO.java'
+const TRUST_IMPL = SERVICE
+const POST_CTL = 'chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCommunityPostController.java'
+
+const notices = require('../../subpackageB/pages/im/list/report-notices.js')
 
 // ---------- 纯函数映射 ----------
 
-test('N1: 阶段枚举与后端 REPORT_STAGES 完全一致，申诉只在 RESOLVED/CLOSED', () => {
+test('N1: 阶段枚举与后端 REPORT_STAGES 一致，中文名按用户决定，申诉只在 RESOLVED/CLOSED', () => {
   const src = readRepo(SERVICE)
   const m = src.match(/REPORT_STAGES = [\s\S]*?asList\(([\s\S]*?)\)\)\)/)
   assert.ok(m, '后端 REPORT_STAGES 未找到')
   const backend = m[1].match(/"([A-Z_]+)"/g).map((s) => s.replace(/"/g, '')).sort()
   assert.deepEqual(Object.keys(view.STAGES).sort(), backend)
+  const labels = {}
+  for (const k of backend) labels[k] = view.stageLabel(k)
+  assert.deepEqual(labels, {
+    APPEALED: '申诉中', CLOSED: '已关闭', INVESTIGATING: '调查中',
+    RESOLVED: '已处理', SUBMITTED: '已提交', TRIAGED: '已受理',
+  })
   assert.match(src, /STAGE_RESOLVED\.equals\(from\)\s*&& !CommunityReportCase\.STAGE_CLOSED\.equals\(from\)/)
   for (const s of backend) assert.equal(view.canAppeal(s), s === 'RESOLVED' || s === 'CLOSED', s)
   assert.equal(view.canAppeal('resolved'), true)
@@ -48,17 +58,17 @@ test('N1: 举报人投影整形——原因取 taxonomy、无 taxonomy 不露代
     id: 7, targetType: 'MEMBER', reasonCode: 'HARASSMENT', stage: 'INVESTIGATING',
     description: ' 具体事实 ', anonymityPolicy: 'SUBJECT_HIDDEN',
     estimatedResolveAt: '2026-10-16T02:00:00Z', createTime: '2026-10-15T02:00:00Z', decisionSummary: null,
-  }, labels, 'mine', 480)
+  }, labels, 480)
   assert.equal(row.id, '7')
   assert.equal(row.targetText, '用户举报')
   assert.equal(row.reasonText, '骚扰')
-  assert.equal(row.stageText, '核查中')
+  assert.equal(row.stageText, '调查中')
   assert.equal(row.stageTone, 'warning')
   assert.equal(row.description, '具体事实')
   assert.equal(row.privacyText, '被举报方看不到你的身份和举报内容')
   assert.equal(row.etaText, '预计 2026-10-16 10:00 前给出结论')
   assert.equal(row.appealable, false)
-  const noTax = view.normalizeReport({ id: 8, stage: 'RESOLVED', reasonCode: 'HARASSMENT', estimatedResolveAt: '2026-10-16 10:00:00' }, {}, 'mine')
+  const noTax = view.normalizeReport({ id: 8, stage: 'RESOLVED', reasonCode: 'HARASSMENT', estimatedResolveAt: '2026-10-16 10:00:00' }, {})
   assert.equal(noTax.reasonText, '举报原因')
   assert.equal(noTax.etaText, '')
   assert.equal(noTax.appealable, true)
@@ -66,14 +76,6 @@ test('N1: 举报人投影整形——原因取 taxonomy、无 taxonomy 不露代
   assert.equal(view.normalizeReport({ id: 0, stage: 'SUBMITTED' }), null)
   assert.equal(view.normalizeReport({ id: 3 }), null)
   assert.equal(view.normalizeReport([]), null)
-})
-
-test('N1: 被举报方投影不出现描述字段，且后端 SubjectVO 类型上就没有举报人/描述/证据', () => {
-  const row = view.normalizeReport({ id: 9, stage: 'CLOSED', description: '不该出现', targetType: 'MEMBER' }, {}, 'subject')
-  assert.equal(row.description, undefined)
-  assert.match(row.privacyText, /举报人身份与举报内容不会向你展示/)
-  const vo = readRepo(SUBJECT_VO)
-  assert.doesNotMatch(vo, /private .* (description|evidenceAssetIds|reporterMemberId);/)
 })
 
 test('N1: 列表整形整份校验 + 分栏 + 端上分页常量', () => {
@@ -96,7 +98,7 @@ test('N1: 时间线节点——事件标题、公开备注、未终结时末节�
     { eventType: 'APPEALED', fromStage: 'RESOLVED', toStage: 'APPEALED', publicNote: '申诉已受理' },
   ]
   const nodes = view.timelineNodes(timeline, 'APPEALED', 480)
-  assert.deepEqual(nodes.map((n) => n.title), ['举报已提交', '进入「已分派」', '已提交申诉'])
+  assert.deepEqual(nodes.map((n) => n.title), ['举报已提交', '进入「已受理」', '已提交申诉'])
   assert.deepEqual(nodes.map((n) => n.status), ['done', 'done', 'doing'])
   assert.equal(nodes[0].time, '2026-10-15 08:00')
   assert.equal(nodes[0].desc, '举报已受理')
@@ -117,33 +119,61 @@ test('N1: 申诉校验、幂等键长度、回读确认', () => {
   assert.equal(view.appealConfirmed(0, null), false)
 })
 
+test('N1: 系统消息整形——只取带 reportId 的 SYSTEM_GOVERNANCE 举报进度，同一举报留最新一条', () => {
+  const items = [
+    { id: 30, notification_type: 'SYSTEM_GOVERNANCE', payload_json: JSON.stringify({ reportId: 5, action: 'REPORT_STAGE_INVESTIGATING', publicStage: 'IN_REVIEW', publicNote: '平台已开始调查' }), read_at: null, create_time: '2026-10-15T02:00:00Z' },
+    { id: 29, notification_type: 'SYSTEM_GOVERNANCE', payload_json: JSON.stringify({ reportId: 5, action: 'REPORT_RECEIVED', publicNote: '举报已受理' }), read_at: '2026-10-15T01:00:00Z' },
+    { id: 28, notification_type: 'SYSTEM_GOVERNANCE', payload_json: JSON.stringify({ postId: 9, action: 'APPROVED' }) },
+    { id: 27, notification_type: 'INTERACTION', payload_json: JSON.stringify({ reportId: 6, action: 'REPORT_RECEIVED' }) },
+    { id: 26, notification_type: 'SYSTEM_GOVERNANCE', payload_json: '{bad json' },
+    { id: 25, notification_type: 'SYSTEM_GOVERNANCE', payload_json: { reportId: 7, action: 'REPORT_RECEIVED', publicNote: '' }, read_at: '2026-10-14' },
+  ]
+  assert.deepEqual(notices.reportNoticeRows(items), [
+    { key: '30', reportId: '5', title: '平台已开始调查', createTime: '2026-10-15T02:00:00Z', unread: true },
+    { key: '25', reportId: '7', title: '举报进度有更新', createTime: '', unread: false },
+  ])
+  assert.equal(notices.reportNoticeRows(null), null)
+  assert.deepEqual(notices.reportNoticeRows([]), [])
+  assert.equal(notices.reportDetailUrl('5'), '/subpackageMember/report-detail/index?reportId=5')
+  assert.equal(notices.reportDetailUrl('x'), '')
+})
+
 // ---------- 接口合同 ----------
 
-test('N1 合同: 页面只调用控制器里真实存在的 GET/POST 路径', () => {
+test('N1 合同: 只调用控制器里真实存在的路径；系统消息字段与后端 enqueueReportProgress 一致', () => {
   const ctl = readRepo(CONTROLLER)
   assert.match(ctl, /@RequestMapping\("\/api\/community-trust"\)/)
   for (const [ann, p] of [['GetMapping', '/reports/mine'], ['GetMapping', '/reports/{reportId}'],
-    ['GetMapping', '/reports/{reportId}/subject'], ['PostMapping', '/reports/appeal'], ['GetMapping', '/reports/taxonomy']]) {
+    ['PostMapping', '/reports/appeal'], ['GetMapping', '/reports/taxonomy']]) {
     assert.ok(ctl.includes('@' + ann + '("' + p + '")'), ann + ' ' + p)
   }
+  const post = readRepo(POST_CTL)
+  assert.match(post, /@RequestMapping\("\/api\/v1\/community"\)/)
+  assert.match(post, /@GetMapping\("\/notifications"\)/)
+  const impl = readRepo(TRUST_IMPL)
+  for (const key of ['reportId', 'action', 'publicStage', 'publicNote']) assert.match(impl, new RegExp(`payload\\.put\\("${key}"`))
+  assert.match(impl, /payload\.put\("notificationType", "SYSTEM_GOVERNANCE"\)/)
+  assert.match(impl, /enqueueReportProgress\(row, "REPORT_RECEIVED"/)
+  assert.match(impl, /"REPORT_STAGE_" \+ next/)
+
   const mine = read('subpackageMember/report-mine/index.js')
   assert.match(mine, /url: '\/api\/community-trust\/reports\/mine', method: 'GET'/)
-  assert.match(mine, /url: '\/api\/community-trust\/reports\/taxonomy', method: 'GET'/)
   const detail = read('subpackageMember/report-detail/index.js')
-  const subjectUrl = "'/api/community-trust/reports/' + id + '/subject' : '/api/community-trust/reports/' + id,"
-  assert.ok(detail.includes("url: st.mode === 'subject' ? " + subjectUrl))
-  assert.ok(read('subpackageMember/report-appeal/index.js').includes("url: mode === 'subject' ? " + subjectUrl))
-  const appeal = read('subpackageMember/report-appeal/index.js')
-  assert.match(appeal, /url: '\/api\/community-trust\/reports\/appeal', method: 'POST'/)
+  // 模板字面量:ui-integrity 识别为 /reports/:dynamic;ui-validity 的 U1 只扫引号字面量,避免把 '/reports/' + id 截成不存在的 /reports
+  assert.equal((detail.match(/url: `\/api\/community-trust\/reports\/\$\{id\}`, method: 'GET'/g) || []).length, 2)
+  assert.match(detail, /url: '\/api\/community-trust\/reports\/appeal', method: 'POST'/)
+  assert.doesNotMatch(detail + mine, /\/subject|view=subject/, '被举报方视图按用户决定不做')
+  const im = read('subpackageB/pages/im/list/index.js')
+  assert.match(im, /url: '\/api\/v1\/community\/notifications',\s*method: 'GET'/)
 })
 
 test('N1 合同: 申诉请求体只含 DTO 字段，不发证据/URL/actorType', () => {
   const dto = readRepo(APPEAL_DTO)
   const fields = (dto.match(/private \w+ (\w+);/g) || []).map((s) => s.replace(/private \w+ (\w+);/, '$1')).sort()
   assert.deepEqual(fields, ['reason', 'reportId', 'requestId'])
-  const appeal = read('subpackageMember/report-appeal/index.js')
-  assert.match(appeal, /JSON\.stringify\(\{ reportId: this\._reportId, reason, requestId: this\._requestId \}\)/)
-  assert.doesNotMatch(appeal, /evidence|chooseMedia|chooseImage|uploadFile|actorType:/)
+  const detail = read('subpackageMember/report-detail/index.js')
+  assert.match(detail, /JSON\.stringify\(\{ reportId: this\._reportId, reason: checked\.reason, requestId: this\._requestId \}\)/)
+  assert.doesNotMatch(detail, /evidence|chooseMedia|chooseImage|uploadFile|actorType:/)
 })
 
 // ---------- 处理器行为(真实调用页面处理器) ----------
@@ -152,7 +182,6 @@ function loadPage(rel, responder) {
   const file = path.join(xcx, rel)
   const requests = []
   const nav = []
-  let modalOpts = null
   let config = null
   const prev = { getApp: global.getApp, Page: global.Page, wx: global.wx, getCurrentPages: global.getCurrentPages }
   global.getApp = () => ({
@@ -162,7 +191,8 @@ function loadPage(rel, responder) {
   global.Page = (c) => { config = c }
   global.wx = {
     navigateTo: (o) => nav.push(o.url), navigateBack: () => nav.push('back'), redirectTo: (o) => nav.push(o.url),
-    switchTab: (o) => nav.push(o.url), stopPullDownRefresh: () => {}, showToast: () => {}, showModal: (o) => { modalOpts = o },
+    switchTab: (o) => nav.push(o.url), stopPullDownRefresh: () => {}, showToast: () => {}, showModal: () => {},
+    getSystemInfoSync: () => ({ windowWidth: 375 }),
   }
   global.getCurrentPages = () => [{}, {}]
   delete require.cache[file]
@@ -170,17 +200,17 @@ function loadPage(rel, responder) {
   const vm = Object.assign({}, config, { setData(patch, cb) { Object.assign(this.data, patch); if (cb) cb() } })
   vm.data = JSON.parse(JSON.stringify(config.data))
   const restore = () => Object.assign(global, prev)
-  return { vm, requests, nav, modal: () => modalOpts, restore }
+  return { vm, requests, nav, restore }
 }
 
-test('N1 处理器: 详情 403 → 无权限态；被举报方走 /subject', () => {
+test('N1 处理器: 详情 403 → 无权限态；坏参数不发请求', () => {
   const h = loadPage('subpackageMember/report-detail/index.js', (o) => {
     if (o.url.endsWith('/taxonomy')) o.success({ code: 200, data: { reasons: [] } })
     else o.success({ code: 403, msg: '无权访问该记录' })
   })
   try {
-    h.vm.onLoad({ reportId: '12', view: 'subject' })
-    assert.equal(h.requests[0].url, '/api/community-trust/reports/12/subject')
+    h.vm.onLoad({ reportId: '12' })
+    assert.equal(h.requests[0].url, '/api/community-trust/reports/12')
     assert.equal(h.vm.data.state, 'no-permission')
     const h2 = loadPage('subpackageMember/report-detail/index.js', () => {})
     h2.vm.onLoad({ reportId: 'abc' })
@@ -209,73 +239,111 @@ test('N1 处理器: 列表读到后分栏与「加载更多」只在端上展开
   } finally { h.restore() }
 })
 
-test('N1 处理器: 申诉需确认；网络失败后回读确认成功；未确认时同键重试', () => {
+test('N1 处理器: 申诉在 sheet 内先确认再提交；网络失败后回读确认；未确认时同键重试', () => {
   let appealCalls = 0
-  let readCalls = 0
   let appealed = false
-  const h = loadPage('subpackageMember/report-appeal/index.js', (o) => {
+  const h = loadPage('subpackageMember/report-detail/index.js', (o) => {
+    if (o.url.endsWith('/taxonomy')) { o.success({ code: 200, data: { reasons: [] } }); return }
     if (o.url.endsWith('/appeal')) {
       appealCalls += 1
-      if (appealCalls === 1) { o.fail({}); return }
-      appealed = true
+      if (appealCalls > 1) appealed = true
       o.fail({})
       return
     }
-    readCalls += 1
     o.success({ code: 200, data: { id: 5, stage: appealed ? 'APPEALED' : 'RESOLVED', timeline: [] } })
   })
   try {
     h.vm.onLoad({ reportId: '5' })
-    assert.equal(h.vm.data.state, 'form')
-    h.vm.submit()
+    assert.equal(h.vm.data.state, 'ready')
+    assert.equal(h.vm.data.report.appealable, true)
+    h.vm.openAppeal()
+    assert.equal(h.vm.data.sheet, 'form')
+    h.vm.toConfirm()
     assert.equal(h.vm.data.reasonError, '请写下申诉理由')
+    assert.equal(h.vm.data.sheet, 'form')
     h.vm.onReasonInput({ detail: { value: '处理结论与事实不符' } })
-    h.vm.submit()
-    assert.equal(appealCalls, 0, '确认前不得提交')
-    h.modal().success({ confirm: true })
+    h.vm.submitAppeal()
+    assert.equal(appealCalls, 0, '未确认不得提交')
+    h.vm.toConfirm()
+    assert.equal(h.vm.data.sheet, 'confirm')
+    h.vm.submitAppeal()
     assert.equal(appealCalls, 1)
-    assert.equal(h.vm.data.phase, 'unknown', '网络失败且回读没看到申诉 → 未确认')
-    const firstKey = JSON.parse(h.requests.filter((r) => r.url.endsWith('/appeal'))[0].data).requestId
-    h.vm.onUnknownRetry()
-    const secondKey = JSON.parse(h.requests.filter((r) => r.url.endsWith('/appeal'))[1].data).requestId
-    assert.equal(secondKey, firstKey, '同一份说明重试复用幂等键')
-    assert.equal(h.vm.data.phase, 'ok', '回读看到 APPEALED → 成功')
-    assert.ok(readCalls >= 3)
+    assert.equal(h.vm.data.sheet, 'unknown', '网络失败且回读没看到申诉 → 未确认')
+    const keys = () => h.requests.filter((r) => r.url.endsWith('/appeal')).map((r) => JSON.parse(r.data).requestId)
+    h.vm.submitAppeal()
+    assert.equal(keys()[1], keys()[0], '同一份说明重试复用幂等键')
+    assert.equal(h.vm.data.sheet, 'ok', '回读看到 APPEALED → 成功')
+    assert.equal(h.vm.data.report.stageText, '申诉中', '成功后页面以回读为准')
+    assert.equal(h.vm.data.report.appealable, false)
   } finally { h.restore() }
 })
 
-test('N1 处理器: 业务 409 显示后端原因；未出结论的举报不展示申诉表单', () => {
-  const h = loadPage('subpackageMember/report-appeal/index.js', (o) => {
-    if (o.url.endsWith('/appeal')) o.success({ code: 409, msg: '当前举报阶段不允许申诉' })
+test('N1 处理器: 业务 409 显示后端原因并回读；未出结论的举报不给申诉入口', () => {
+  const h = loadPage('subpackageMember/report-detail/index.js', (o) => {
+    if (o.url.endsWith('/taxonomy')) o.success({ code: 200, data: { reasons: [] } })
+    else if (o.url.endsWith('/appeal')) o.success({ code: 409, msg: '当前举报阶段不允许申诉' })
     else o.success({ code: 200, data: { id: 6, stage: 'RESOLVED', timeline: [] } })
   })
   try {
     h.vm.onLoad({ reportId: '6' })
+    h.vm.openAppeal()
     h.vm.onReasonInput({ detail: { value: '有异议' } })
-    h.vm.send('有异议')
-    assert.equal(h.vm.data.phase, 'fail')
+    h.vm.toConfirm()
+    h.vm.submitAppeal()
+    assert.equal(h.vm.data.sheet, 'fail')
     assert.equal(h.vm.data.failText, '当前举报阶段不允许申诉')
+    const before = h.requests.length
+    h.vm.closeSheet()
+    assert.equal(h.vm.data.sheet, '')
+    assert.ok(h.requests.length > before, '明确失败后回读')
   } finally { h.restore() }
-  const h2 = loadPage('subpackageMember/report-appeal/index.js', (o) => {
+  const h2 = loadPage('subpackageMember/report-detail/index.js', (o) => {
     o.success({ code: 200, data: { id: 6, stage: 'INVESTIGATING', timeline: [] } })
   })
   try {
     h2.vm.onLoad({ reportId: '6' })
-    assert.equal(h2.vm.data.state, 'closed')
+    h2.vm.openAppeal()
+    assert.equal(h2.vm.data.sheet, '')
+  } finally { h2.restore() }
+})
+
+test('N1 处理器: 系统 tab 读举报进度通知，点进举报详情；读取失败只在局部报错', () => {
+  const h = loadPage('subpackageB/pages/im/list/index.js', (o) => {
+    if (o.url === '/api/v1/community/notifications') {
+      o.success({ code: 200, data: { items: [{ id: 3, notification_type: 'SYSTEM_GOVERNANCE', payload_json: JSON.stringify({ reportId: 41, action: 'REPORT_STAGE_RESOLVED', publicNote: '已处理' }), read_at: null, create_time: '2026-10-15 10:00:00' }] } })
+    } else if (o.url === '/api/im/conversations') o.success({ code: 200, data: [] })
+  })
+  try {
+    h.vm.fmtTime = () => '10:00'
+    h.vm.loadReportNotices()
+    assert.equal(h.vm.data.reportNotices.length, 1)
+    assert.equal(h.vm.data.reportNotices[0].reportId, '41')
+    assert.equal(h.vm.data.reportNoticeError, '')
+    h.vm.openReportNotice({ currentTarget: { dataset: { reportId: '41' } } })
+    assert.deepEqual(h.nav, ['/subpackageMember/report-detail/index?reportId=41'])
+  } finally { h.restore() }
+  const h2 = loadPage('subpackageB/pages/im/list/index.js', (o) => { o.fail({}) })
+  try {
+    h2.vm.fmtTime = () => ''
+    h2.vm.loadReportNotices()
+    assert.equal(h2.vm.data.reportNoticeError, '举报进度暂时没读到')
   } finally { h2.restore() }
 })
 
 // ---------- 入口与注册 ----------
 
-test('N1 入口: 三页注册在 subpackageMember，设置页有「我的举报」入口', () => {
+test('N1 入口: 只从系统消息进入；不在设置页放入口；两页注册在 subpackageMember', () => {
   const app = JSON.parse(read('app.json'))
   const pages = app.subPackages.find((p) => p.root === 'subpackageMember').pages
-  for (const p of ['report-mine/index', 'report-detail/index', 'report-appeal/index']) assert.ok(pages.includes(p), p)
-  assert.match(read('pages/shezhi/shezhi.wxml'), /id="settings-reports"[^>]*title="我的举报"[^>]*bind:tap="goMyReports"/)
-  assert.match(read('pages/shezhi/shezhi.js'), /goMyReports\(\) \{\s*wx\.navigateTo\(\{ url: '\/subpackageMember\/report-mine\/index' \}\)/)
-  for (const p of ['report-mine', 'report-detail', 'report-appeal']) {
-    const wxml = read('subpackageMember/' + p + '/index.wxml')
-    assert.match(wxml, /<cy-state-shell/, p + ' 四态走 cy-state-shell')
+  for (const p of ['report-mine/index', 'report-detail/index']) assert.ok(pages.includes(p), p)
+  assert.ok(!pages.includes('report-appeal/index'), '申诉改为详情页内 cy-sheet')
+  assert.doesNotMatch(read('pages/shezhi/shezhi.wxml'), /我的举报|report-mine/)
+  const im = read('subpackageB/pages/im/list/index.wxml')
+  assert.match(im, /activeTab === 'sys' && \(reportNotices\.length \|\| reportNoticeError\)/)
+  assert.match(im, /bindtap="openReportNotice"/)
+  assert.match(read('subpackageMember/report-detail/index.wxml'), /<cy-sheet show="\{\{!!sheet\}\}"/)
+  for (const p of ['report-mine', 'report-detail']) {
+    assert.match(read('subpackageMember/' + p + '/index.wxml'), /<cy-state-shell/, p + ' 四态走 cy-state-shell')
     assert.doesNotMatch(read('subpackageMember/' + p + '/index.wxss'), /#[0-9a-fA-F]{3,6}\b/, p + ' 不硬编码颜色')
   }
 })

@@ -12,6 +12,8 @@
     "cy-tag": "/components/cy/tag/index",
     "cy-timeline": "/components/cy/timeline/index",
     "cy-btn": "/components/cy/btn/index",
+    "cy-sheet": "/components/cy/sheet/index",
+    "cy-field": "/components/cy/field/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index"

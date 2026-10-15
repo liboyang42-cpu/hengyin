@@ -15946,7 +15946,7 @@
      "id": "12",
      "targetText": "用户举报",
      "reasonText": "骚扰",
-     "stageText": "核查中",
+     "stageText": "调查中",
      "stageTone": "warning",
      "createText": "2026-10-15 10:30",
      "etaText": "预计 2026-10-17 10:30 前给出结论",
@@ -15974,7 +15974,7 @@
  "D92": {
   "data": {
    "state": "ready",
-   "mode": "mine",
+   "sheet": "",
    "report": {
     "id": "9",
     "targetText": "活动举报",
@@ -16004,33 +16004,14 @@
      "status": "done"
     }
    ],
-   "errorSub": ""
-  },
-  "dropped": [],
-  "switchKeys": [
-   "state",
-   "errorSub"
-  ]
- },
- "D93": {
-  "data": {
-   "state": "form",
-   "mode": "mine",
-   "report": {
-    "id": "9",
-    "targetText": "活动举报",
-    "stageText": "已处理",
-    "stageTone": "done",
-    "decisionSummary": "已下架相关活动"
-   },
-   "reason": "",
+   "errorSub": "",
    "reasonError": "",
-   "phase": "idle",
    "failText": ""
   },
   "dropped": [],
   "switchKeys": [
    "state",
+   "errorSub",
    "reasonError",
    "failText"
   ]

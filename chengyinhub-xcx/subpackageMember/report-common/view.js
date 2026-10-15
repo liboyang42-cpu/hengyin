@@ -8,12 +8,13 @@ const PAGE_SIZE = 20
 const APPEAL_MAX = 1000 // community_report_appeal.reason VARCHAR(1000),服务端 requireText(…, 1000)
 
 const STAGES = {
-  SUBMITTED: { label: '已受理', tone: 'blue', hint: '平台已收到举报，等待分派审核' },
-  TRIAGED: { label: '已分派', tone: 'blue', hint: '已分派给审核人员' },
-  INVESTIGATING: { label: '核查中', tone: 'warning', hint: '平台正在核查相关事实' },
+// 阶段中文名为 2026-10-15 用户确认口径(TASKS.md「用户决定」CL2)。
+  SUBMITTED: { label: '已提交', tone: 'blue', hint: '平台已收到举报，等待受理' },
+  TRIAGED: { label: '已受理', tone: 'blue', hint: '平台已受理，等待调查' },
+  INVESTIGATING: { label: '调查中', tone: 'warning', hint: '平台正在调查相关事实' },
   RESOLVED: { label: '已处理', tone: 'done', hint: '平台已给出处理结论' },
-  CLOSED: { label: '已结案', tone: 'done', hint: '本次举报已结案' },
-  APPEALED: { label: '申诉复核中', tone: 'warning', hint: '申诉已受理，平台会重新核查' },
+  CLOSED: { label: '已关闭', tone: 'done', hint: '本次举报已关闭' },
+  APPEALED: { label: '申诉中', tone: 'warning', hint: '申诉已受理，平台会重新调查' },
 }
 const APPEALABLE = { RESOLVED: 1, CLOSED: 1 }
 const TERMINAL = { RESOLVED: 1, CLOSED: 1 }
@@ -91,8 +92,8 @@ function reasonLabelMap(taxonomy) {
   return map
 }
 
-// view: 'mine'(举报人投影,含本人描述)| 'subject'(被举报方白名单投影,类型上就没有描述/证据)
-function normalizeReport(raw, reasonLabels, view, offsetMinutes) {
+// 举报人本人投影(GET /reports/{id} 或 /reports/mine 的行)。被举报方视图按用户决定不做。
+function normalizeReport(raw, reasonLabels, offsetMinutes) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
   const id = positiveId(raw.id)
   const stage = text(raw.stage).toUpperCase()
@@ -117,13 +118,9 @@ function normalizeReport(raw, reasonLabels, view, offsetMinutes) {
     appealing: stage === 'APPEALED',
     decided: !!TERMINAL[stage],
   }
-  if (view === 'subject') {
-    row.privacyText = '为保护举报人，举报人身份与举报内容不会向你展示'
-  } else {
-    row.description = text(raw.description)
-    row.privacyText = text(raw.anonymityPolicy) === 'SUBJECT_HIDDEN'
-      ? '被举报方看不到你的身份和举报内容' : ''
-  }
+  row.description = text(raw.description)
+  row.privacyText = text(raw.anonymityPolicy) === 'SUBJECT_HIDDEN'
+    ? '被举报方看不到你的身份和举报内容' : ''
   return row
 }
 
@@ -132,7 +129,7 @@ function normalizeList(list, reasonLabels, offsetMinutes) {
   if (!Array.isArray(list)) return null
   const rows = []
   for (let i = 0; i < list.length; i += 1) {
-    const row = normalizeReport(list[i], reasonLabels, 'mine', offsetMinutes)
+    const row = normalizeReport(list[i], reasonLabels, offsetMinutes)
     if (!row) return null
     rows.push(row)
   }

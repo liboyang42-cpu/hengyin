@@ -2,12 +2,12 @@
  * Wave2 截图矩阵（机器可读），供总控在 verify worktree 串行采集。
  *
  * ── 机器统计（唯一真值，由本文件末尾 STATS 断言锁死）──────────────────
- *   total 332
- *   按 priority 计全部行：P0 133 / P1 189 / P2 10
+ *   total 331
+ *   按 priority 计全部行：P0 133 / P1 188 / P2 10
  *   其中 blocked 24（不采集）：P0 9 / P1 7 / P2 8
- *   ⇒ actionable（本轮真要拍）：P0 124 / P1 182 / P2 2 = 308
- *   按域：A 53 / B 69 / C 54 / D 43 / E 27 / F 86
- *   按 control：setData 172 / identity+setData 116 / real-data 37 / real-device 7
+ *   ⇒ actionable（本轮真要拍）：P0 124 / P1 181 / P2 2 = 307
+ *   按域：A 53 / B 69 / C 54 / D 42 / E 27 / F 86
+ *   按 control：setData 171 / identity+setData 116 / real-data 37 / real-device 7
  *     (2026-08-05：A10 由 real-data 改 setData —— 它和 A12 的差别是 picList 空/非空,
  *      不显式注入两张必然拍成同一张)
  *   fixtureVerified 16（只保留当前页面仍全量消费其矩阵键、且在本次源版本
@@ -441,9 +441,8 @@ const RAW = [
   ['D23', 'D23-myinvite-content.png', '/subpackageMember/myinvite/myinvite', 'player', 'normal', { loading: false, loadErr: false, loadMoreError: false, empty: false, total: 2, hasMore: false, rewardReady: true, earnedTotalText: '10', groups: [{ label: '时间待同步', rewardText: '+10 积分', items: [{ id: 1, nickname: '周行', avatar: '', timeText: '邀请时间待同步', statusText: '首购奖励已到账 · 8月7日 10:30', rewardText: '+10 积分' }, { id: 2, nickname: '林野', avatar: '', timeText: '邀请时间待同步', statusText: '已加入 · 首购待完成', rewardText: '待解锁' }] }] }, undefined, { selector: '.ir-row', min: 2 }, 'setData', 'P0', '', '★按 Revolut 126 重做邀请记录 full sheet；被邀人/时间/状态/奖励同排；后端未下发邀请时间时明确待同步', '#inviteHistory'],
   ['D24', 'D24-myinvite-fail.png', '/subpackageMember/myinvite/myinvite', 'player', 'error', { loading: false, loadErr: true, empty: false, groups: [] }, undefined, ERR, 'setData', 'P1', '', '邀请列表失败显示可重试错误态，不误报为空', '#inviteHistory'],
   ['D90', 'D90-points-history-content.png', '/subpackageMember/points-history/index', 'player', 'normal', { state: 'ready', rows: [{ id: '1', reason: '每日签到', delta: 5, deltaText: '+5', income: true, afterText: '余额 15', timeText: '2026-10-01 08:30' }], hasMore: false }, undefined, { selector: '.ph-row', min: 1 }, 'setData', 'P1', '', '积分明细：收支同排、金额带符号、到底提示'],
-  ['D91', 'D91-report-mine-content.png', '/subpackageMember/report-mine/index', 'player', 'normal', { state: 'ready', tab: 'all', rows: [{ id: '12', targetText: '用户举报', reasonText: '骚扰', stageText: '核查中', stageTone: 'warning', createText: '2026-10-15 10:30', etaText: '预计 2026-10-17 10:30 前给出结论', decided: false }, { id: '9', targetText: '活动举报', reasonText: '虚假信息', stageText: '已处理', stageTone: 'done', createText: '2026-10-10 09:00', etaText: '', decided: true }], hasMore: false }, undefined, { selector: '.rp-row', min: 2 }, 'setData', 'P1', '', '我的举报：阶段标签取后端 stage、编号/时间同排、到底提示'],
-  ['D92', 'D92-report-detail-content.png', '/subpackageMember/report-detail/index?reportId=9', 'player', 'normal', { state: 'ready', mode: 'mine', report: { id: '9', targetText: '活动举报', reasonText: '虚假信息', stageText: '已处理', stageTone: 'done', stageHint: '平台已给出处理结论', createText: '2026-10-10 09:00', etaText: '', decisionSummary: '已下架相关活动', description: '活动页写的地点不存在', privacyText: '被举报方看不到你的身份和举报内容', appealable: true, appealing: false }, nodes: [{ title: '举报已提交', time: '2026-10-10 09:00', desc: '举报已受理', status: 'done' }, { title: '进入「已处理」', time: '2026-10-11 15:00', desc: '', status: 'done' }] }, undefined, { selector: '.rd-card', min: 1 }, 'setData', 'P1', '', '举报进度：结论、本人说明、时间线与「提交申诉」入口'],
-  ['D93', 'D93-report-appeal-form.png', '/subpackageMember/report-appeal/index?reportId=9', 'player', 'form', { state: 'form', mode: 'mine', report: { id: '9', targetText: '活动举报', stageText: '已处理', stageTone: 'done', decisionSummary: '已下架相关活动' }, reason: '', reasonError: '', phase: 'idle' }, undefined, { selector: '.ra-card', min: 1 }, 'setData', 'P1', '', '文字申诉表单：处理结论回显、字数上限、仅文字说明提示'],
+  ['D91', 'D91-report-mine-content.png', '/subpackageMember/report-mine/index', 'player', 'normal', { state: 'ready', tab: 'all', rows: [{ id: '12', targetText: '用户举报', reasonText: '骚扰', stageText: '调查中', stageTone: 'warning', createText: '2026-10-15 10:30', etaText: '预计 2026-10-17 10:30 前给出结论', decided: false }, { id: '9', targetText: '活动举报', reasonText: '虚假信息', stageText: '已处理', stageTone: 'done', createText: '2026-10-10 09:00', etaText: '', decided: true }], hasMore: false }, undefined, { selector: '.rp-row', min: 2 }, 'setData', 'P1', '', '我的举报：阶段标签取后端 stage、编号/时间同排、到底提示'],
+  ['D92', 'D92-report-detail-content.png', '/subpackageMember/report-detail/index?reportId=9', 'player', 'normal', { state: 'ready', sheet: '', report: { id: '9', targetText: '活动举报', reasonText: '虚假信息', stageText: '已处理', stageTone: 'done', stageHint: '平台已给出处理结论', createText: '2026-10-10 09:00', etaText: '', decisionSummary: '已下架相关活动', description: '活动页写的地点不存在', privacyText: '被举报方看不到你的身份和举报内容', appealable: true, appealing: false }, nodes: [{ title: '举报已提交', time: '2026-10-10 09:00', desc: '举报已受理', status: 'done' }, { title: '进入「已处理」', time: '2026-10-11 15:00', desc: '', status: 'done' }] }, undefined, { selector: '.rd-card', min: 1 }, 'setData', 'P1', '', '举报进度：结论、本人说明、时间线与「提交申诉」入口（申诉在 cy-sheet 内）'],
   ['D25', 'D25-complaint-form.png', '/subpackageMember/complaint/index', 'player', 'form', null, undefined, TITLE, 'real-data', 'P0', '', '★goComplaint 死入口是否已修，复核'],
   ['D26', 'D26-complaint-submitted.png', '/subpackageMember/complaint/index', 'player', 'success', { submitted: true }, undefined, TITLE, 'setData', 'P1',
     '页面里没有这个状态:subpackageMember/complaint/index.js 的 data 里根本没有 submitted 键,提交成功走的是 wx.showToast + setTimeout(onBack) 直接离开本页,页内不存在「已提交」这一屏。fixtures.json 的 D26 也已把 submitted 列进 dropped ⇒ 注进去的数据与 D25 完全相同,两张必然逐字节同图(2026-08-18 实测撞 md5,重拍多少次都一样)。altVerification:成功分支由 tests/unit/complaint-submit-success-contract.test.js 锁住(成功后必须离开本页、且不能是裸 navigateBack —— 栈长为 1 时要有兜底);表单态本身由 D25 拍到。',
@@ -632,13 +631,13 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-03：收口合并的两条 F95 全字段相同，仅保留一个相册合同；仍未动态验证。
 // 2026-10-15：任务3新增官方线路列表/详情与积分明细三页，补 B90/B91/D90 三条 P1 setData 行；
 // total 326→329、P1 183→186、actionable P1 176→179 / total 302→305、B 67→69、D 39→40、setData 166→169。
-// 2026-10-15：CL2 举报透明化新增我的举报/举报进度/申诉三页，补 D91/D92/D93 三条 P1 setData 行；
-// total 329→332、P1 186→189、actionable P1 179→182 / total 305→308、D 40→43、setData 169→172。
+// 2026-10-15：CL2 举报透明化新增我的举报/举报进度两页（申诉在详情页 cy-sheet 内），补 D91/D92 两条 P1 setData 行；
+// total 329→331、P1 186→188、actionable P1 179→181 / total 305→307、D 40→42、setData 169→171。
 const STATS = {
-  "total": 332,
+  "total": 331,
   "byPriority": {
     "P0": 133,
-    "P1": 189,
+    "P1": 188,
     "P2": 10
   },
   "blockedByPriority": {
@@ -648,21 +647,21 @@ const STATS = {
   },
   "actionable": {
     "P0": 124,
-    "P1": 182,
+    "P1": 181,
     "P2": 2,
-    "total": 308
+    "total": 307
   },
   "blocked": 24,
   "domains": {
     "A": 53,
     "B": 69,
     "C": 54,
-    "D": 43,
+    "D": 42,
     "E": 27,
     "F": 86
   },
   "control": {
-    "setData": 172,
+    "setData": 171,
     "identity+setData": 116,
     "real-data": 37,
     "real-device": 7

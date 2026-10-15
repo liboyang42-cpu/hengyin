@@ -1,3 +1,4 @@
+// 2026-10-15 CL2 举报透明化:im/list 系统 tab 新增举报进度块(+40 行在前),既有拖拽动态 setData 仅行号位移 229→269(调用与理由逐字未改,条数 u4Dynamic 59 不变),等量换 key,u4Dynamic digest 按门禁同一算法重算。
 // 2026-10-15 任务2(外壳/商家):square/list、searchmap、merchantinfo、merchant/apply 仅行号位移(逐条回读调用点与理由未改,条数 u4Dynamic 59 / u5Silent 28 不变),等量换 key,两条 digest 显式重算。
 // 2026-10-13 小程序底层A/B/C集成:B(square/list、analytics)与C(roam)行号漂移,16条既有锚点按交接基线→集成树 difflib 映射
 //   且锚点前后各3行逐字相同等量换key;analytics.js:201→223 为B包把同一 /api/analytics/events/batch 调用包进 try(理由仍准确)人工核对。
@@ -774,7 +775,7 @@ module.exports = {
 // 2026-09-25 CU-M-183/185/186(主办方抽屉台账入口作用域 + 章节控制两行的禁用条件)在 merchantinfo.js
       //   上方加了注释与两个小方法,两条 U4-DYNAMIC 登记点纯行号位移(1807→1809 / 1837→1839)。
       //   逐条回读:仍是 buildPlayerSheet 返回值那两处动态 setData,受控字段与理由一字未改,条数 53 不变。
-"c7a1317b18c1e2725cbca85d63dd85b29b2f725ec9c887f781460cf0171cb7f1",
+"7ec857b196a1a34f2523786e3126def7f2c284503308804ec4bb6a14fcb0d5ba",
       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点
       //   行号从 2360 移到 2573(见下方 u5Silent 区块的逐条说明)。等量换 key,显式改 digest。
       // 2026-08-16 uifix-play 集成:u5Silent 条数不变(12),只是 play/index.js 的
@@ -1273,7 +1274,7 @@ module.exports = {
     "chengyinhub-xcx/pages/square/list/index.js:151": "动态 setData 需精确登记：[key]: item；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/square/list/index.js:210": "动态 setData 需精确登记：[key]: currentItem；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js:435": "可承接章节失败态只在 categoryMissing 布尔判定下二选一；两个对象分支的键均在本方法写死，state/error/allChaptersList 被 WXML 消费，loading 是已精确登记的页内控制字段；owner=小程序，复核=2026-09-30",
-    "chengyinhub-xcx/subpackageB/pages/im/list/index.js:229": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
+    "chengyinhub-xcx/subpackageB/pages/im/list/index.js:269": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/subpackageMember/coupon-qr/index.js:226": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.js:197": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/subpackageP3/pages/stamp-camera/index/index.js:74": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",

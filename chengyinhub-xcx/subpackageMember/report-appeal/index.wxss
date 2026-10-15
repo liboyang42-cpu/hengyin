@@ -1,8 +1,0 @@
-page { background: var(--cy-color-bg-page); }
-.ra { min-height: 100vh; color: var(--cy-color-text-primary); }
-.ra__body { padding: var(--cy-space-3) var(--cy-page-x, var(--cy-space-4)) var(--cy-space-6); display: flex; flex-direction: column; gap: var(--cy-space-4); }
-.ra-card { display: flex; flex-direction: column; gap: var(--cy-space-2); padding: var(--cy-space-4); border-radius: var(--cy-radius-md); background: var(--cy-color-bg-surface); }
-.ra-card__head { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); }
-.ra-card__title { flex: 1; min-width: 0; font-size: var(--cy-type-body); font-weight: 600; word-break: break-all; }
-.ra-card__text { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); word-break: break-all; }
-.ra-note { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }

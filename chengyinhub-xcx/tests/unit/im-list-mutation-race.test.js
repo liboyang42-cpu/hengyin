@@ -16,6 +16,7 @@ function fixture() {
       if (id.includes('response-shape')) return { isBizOk: r => r && r.code == 200, isRecordList: Array.isArray };
       if (id.includes('datetime')) return { toTimestamp: () => NaN };
       if (id.includes('merchant-access-policy')) return { normalizeMerchantAccess: () => ({}) };
+      if (id.includes('report-notices')) return require('../../subpackageB/pages/im/list/report-notices.js');
       throw new Error(id);
     },
   };

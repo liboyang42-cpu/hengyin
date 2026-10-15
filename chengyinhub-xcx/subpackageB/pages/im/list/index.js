@@ -2,6 +2,7 @@ const toast = require('../../../../utils/toast.js');
 const { toTimestamp, chinaDateKey, chinaParts } = require('../../../../utils/datetime');
 const { isRecordList, isBizOk } = require('../../../../utils/response-shape.js');
 const { normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
+const { reportNoticeRows, reportDetailUrl } = require('./report-notices.js');
 const app = getApp();
 
 Page({
@@ -21,6 +22,9 @@ Page({
     tabs: [],
     viewList: [],
     hasUnread: false,
+    // 系统 tab「举报进度」:社区治理通知里的举报进度(见 report-notices.js),点进举报详情
+    reportNotices: [],
+    reportNoticeError: '',
   },
 
   onLoad() {
@@ -36,10 +40,14 @@ Page({
     // 左滑面板总宽 = 3 × 120rpx = 360rpx;rpx→px 换算随屏宽变,不能写死 px(P1-1:大屏机型上曾被写死值压掉)
     this._openPx = Math.round(360 * ((sys.windowWidth || 375) / 750));
     this.loadConversations();
+    this.loadReportNotices();
   },
   onShow() {
     // 从聊天页返回时刷新未读/最后一条
-    if (this.data.loaded) this.loadConversations(true);
+    if (this.data.loaded) {
+      this.loadConversations(true);
+      this.loadReportNotices();
+    }
     this.loadMerchantEntry();
   },
 
@@ -105,6 +113,38 @@ Page({
   },
 
   retryConversations() { this.loadConversations(false); },
+
+  // 举报进度通知独立于 IM 会话:读不到只在系统 tab 显示局部错误,不影响会话列表。
+  loadReportNotices() {
+    const that = this;
+    const epoch = (this._reportNoticeEpoch || 0) + 1;
+    this._reportNoticeEpoch = epoch;
+    app.sendRequest({
+      url: '/api/v1/community/notifications',
+      method: 'GET',
+      data: { limit: 50 },
+      hideLoading: true,
+      silentError: true,
+      success(res) {
+        if (epoch !== that._reportNoticeEpoch) return;
+        const rows = isBizOk(res) && res.data ? reportNoticeRows(res.data.items) : null;
+        if (!rows) { that.setData({ reportNoticeError: '举报进度暂时没读到' }); return; }
+        that.setData({
+          reportNotices: rows.map(function (row) { return Object.assign({}, row, { timeText: that.fmtTime(row.createTime) }); }),
+          reportNoticeError: '',
+        });
+      },
+      fail() {
+        if (epoch !== that._reportNoticeEpoch) return;
+        that.setData({ reportNoticeError: '举报进度暂时没读到' });
+      },
+    });
+  },
+
+  openReportNotice(e) {
+    const url = reportDetailUrl(e && e.currentTarget && e.currentTarget.dataset.reportId);
+    if (url) wx.navigateTo({ url: url });
+  },
 
   // 会话归类(spec 决策 2:客服 type=3 归私信 —— 分 tab 的轴是「能不能回」)
   // 返回 null = 不属于任何 tab,不在小程序里展示。

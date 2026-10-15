@@ -26,13 +26,14 @@ const PLAY_PROGRESS_CONTROLLER = path.resolve(
 // optional = 后端允许匿名，但登录时会按 uid 返回个人态，所以仍使用默认认证；
 // required = 后端 anyRequest().authenticated()，绝不能 auth:false。
 const MATRIX = [
-  // CL2 举报透明化:本人举报列表 / 举报人或被举报会员的详情回读,后端按登录会员派生归属,非当事方 403;
-  //   taxonomy 是登录后的全局原因表(只读、无个人数据)。
+  // CL2 举报透明化:本人举报列表 / 本人举报详情(首读与申诉后回读两处),后端按登录会员派生归属,非举报人 403;
+  //   taxonomy 是登录后的全局原因表(只读、无个人数据);系统 tab 举报进度读本人社区通知(按登录会员派生收件人)。
   ['subpackageMember/report-mine/index.js', "url: '/api/community-trust/reports/mine'", 'required', 'member', 'self-account'],
   ['subpackageMember/report-mine/index.js', "url: '/api/community-trust/reports/taxonomy'", 'required', 'member', 'global-authenticated-read'],
-  ['subpackageMember/report-detail/index.js', "url: st.mode === 'subject'", 'required', 'member', 'self-party'],
+  ['subpackageMember/report-detail/index.js', "st.body = isBizOk(res) ? res.data : null", 'required', 'member', 'self-account'],
   ['subpackageMember/report-detail/index.js', "url: '/api/community-trust/reports/taxonomy'", 'required', 'member', 'global-authenticated-read'],
-  ['subpackageMember/report-appeal/index.js', "url: mode === 'subject'", 'required', 'member', 'self-party'],
+  ['subpackageMember/report-detail/index.js', "success(res) { that._afterAppeal(accepted", 'required', 'member', 'self-account'],
+  ['subpackageB/pages/im/list/index.js', "url: '/api/v1/community/notifications'", 'required', 'member', 'self-account'],
   // C3 认领已有门店:读取本人认领列表,后端按登录会员派生,不接受前端传 memberId。
   ['pages/merchant/components/merchant-claim-sheet/index.js', "url: '/api/merchant/claims/status', method: 'GET'", 'required', 'member', 'self-account'],
   // 俱乐部直付应收只读：商家岗位 FINANCE_READ 派生店主，俱乐部按当前主理人归属校验。
@@ -235,8 +236,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   //   (抽屉资格预探,权限档与上一处相同:required/merchant)⇒ 30 → 31。
   // 客户页退役触达：移除券候选、任务列表、任务详情三处 GET，31 → 28。
   // C3 认领已有门店 sheet 新增 /api/merchant/claims/status GET,29 → 30。
-  // CL2 举报透明化:我的举报(列表+原因表)、举报进度(详情+原因表)、申诉页回读,33 → 38。
-  assert.equal(directCount, 38, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // CL2 举报透明化:我的举报(列表+原因表)、举报进度(详情+原因表+申诉后回读)、系统 tab 举报进度通知,33 → 39。
+  assert.equal(directCount, 39, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(wrapperCount, 22, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(MATRIX.length, directCount + wrapperCount);
 
