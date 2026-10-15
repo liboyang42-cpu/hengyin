@@ -166,3 +166,16 @@
 | 113 | 商家经营台账汇总核对 | 核实 `pages/merchant/ledger` 现用接口；若页面缺少分页/汇总数字而 `POST /api/merchant/orders/ledger`（`MerchantLedgerQuery`：status pending/completed/aftersale、period、pageNum/pageSize，`ORDER_READ`）能提供，则只补现有数字行与分页；已等价则 BLOCKED | 不碰积分/券/应付服务（Codex）；只读 |
 | 114 | 单测与合同测试·第九批 | BL-108–113 新增纯函数/页面处理器单测 + 新调用接口合同测试（路径/方法/字段对照 Java 源码） | tests |
 | 115 | 验收清单更新·第九批 | 把 BL-108–113 已开 PR 的本地验收清单补进 `ACCEPTANCE.md`（依赖 BL-59 #101、BL-107 #151） | docs |
+
+## 第十批（116–123）：监督线补充（后端已有、小程序零调用；不改现有样式、无迁移/新接口）
+
+| # | 名称 | 内容 | 范围提示 |
+|---|---|---|---|
+| 116 | 圈层探索记录卡（只读） | 现有圈层探索流程（已调 `/api/circle-theme/session/*`）结束处读 `GET /api/circle-theme/session/{sessionId}/card`（`circleExploreService.card` 返回为准，仅本人），照现有结果卡/半屏展示；错误按后端文案如实提示；宿主若是 Codex 文件或没有现成结束位置就 BLOCKED | 不改会话运行时服务（Codex）；只读 |
+| 117 | 主题游玩记录卡（只读） | 主题游玩已有的结束/历史入口读 `GET /api/play/theme/card?sessionId=`（`runtime.themeCard` 返回为准），照现有卡片样式展示；**不做** `/api/play/theme/replay`；宿主在 `pages/play/index.js`（Codex）或无现成位置就 BLOCKED（与 BL-94 同宿主时合并说明） | 只读 |
+| 118 | 主题模板详情（只读） | 现有模板货架（已调 `/api/template/topic-template/list`、`/use`）点开时读 `POST /api/template/topic-template/info`（`id`；`TopicTemplateDetailVO`，商家可见 `recruitStatus`），照现有主题详情/半屏结构展示章节→节点；先核实是否已有等价详情，已有则 BLOCKED | 不碰 fabu/pro-editor（Codex） |
+| 119 | 俱乐部承接模板意向 | BL-118 详情里对俱乐部主理人加「我想承接」：`POST /api/template/topic-template/club-interest`（`id`），后端只给创建者发 best-effort 订阅消息、不落状态——成功文案只能写「已提交意向」，**不得写「对方已收到」**；非主理人按后端报错如实提示；不做申请状态回读 | 依赖 BL-118；照现有按钮样式 |
+| 120 | 另存为模板 | 「我发布的」主题现有更多菜单加「另存为模板」：`POST /api/template/topic-template/save-as`（`id`、`scope`，取值以控制器/Service 校验为准），二次确认，成功后按返回 `topicId` 回读或跳现有模板页；失败如实提示；没有现成菜单就 BLOCKED | 不碰 fabu/pro-editor（Codex）；照现有菜单项 |
+| 121 | 俱乐部按合作主题开一场 | 俱乐部主理人现有活动/开团入口：`POST /api/club/open-session-topics`（`{clubId}`）列可开主题，选主题+日期后 `POST /api/club/open-session`（`ClubSessionOpenRequest` 字段为准），成功按返回 `activityId` 跳现有活动详情回读；二次确认；非主理人/无主题诚实空态；没有现成入口或需产品决定就 BLOCKED | `pages/club/**`；不碰排期/`ApiClubEventOpsController`（Codex）；不涉及费用 |
+| 122 | 单测与合同测试·第十批 | BL-116–121 新增纯函数/页面处理器单测 + 新调用接口合同测试（路径/方法/字段对照 Java 源码） | tests |
+| 123 | 验收清单更新·第九十批 | 把 BL-108–121 已开 PR 的本地验收清单补进 `ACCEPTANCE.md`（依赖 BL-59 #101、BL-107 #151、BL-115） | docs |
