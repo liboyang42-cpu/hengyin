@@ -26,8 +26,7 @@
     "cy-privacy-gate": "/components/cy/privacy-gate/index",
     "cy-modal-host": "/components/cy/modal-host/index",
     "cy-inline-error": "/components/cy/inline-error/index",
-    "cy-coop-invite-sheet": "/components/cy/coop-invite-sheet/index",
-    "cy-report-sheet": "/components/cy/report-sheet/index"
+    "cy-coop-invite-sheet": "/components/cy/coop-invite-sheet/index"
   },
   "navigationBarTitleText": "俱乐部",
   "navigationBarBackgroundColor": "#000000",
