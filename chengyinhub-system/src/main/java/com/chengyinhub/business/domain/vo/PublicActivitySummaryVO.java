@@ -15,6 +15,11 @@ public class PublicActivitySummaryVO {
     private Date startDate;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date endDate;
+    /**
+     * F-W5-08:主题自己的自办活动壳(generateSelfHostActivity 生成的公开售卖面),不是俱乐部开的场次。
+     * 玩家购买仍要用它,所以不从列表里删;俱乐部「接下来」场次列表按此过滤。
+     */
+    private boolean selfHostShell;
 
     public static PublicActivitySummaryVO from(CmsActivity source) {
         PublicActivitySummaryVO view = new PublicActivitySummaryVO();
@@ -29,6 +34,29 @@ public class PublicActivitySummaryVO {
         return view;
     }
 
+    /**
+     * 带主题上下文的投影。自办壳的判据与建壳/刷壳同源(CmsTopicServiceImpl.ensureSelfHostActivityShell /
+     * refreshSelfHostActivity 都按「本主题 + 发布者本人」认壳):发布者本人名下、且没有挂俱乐部
+     * (成员限定主题的壳会继承本主题俱乐部)的活动。
+     */
+    public static PublicActivitySummaryVO from(CmsActivity source, com.chengyinhub.business.domain.CmsTopic topic) {
+        PublicActivitySummaryVO view = from(source);
+        view.setSelfHostShell(isSelfHostShell(source, topic));
+        return view;
+    }
+
+    static boolean isSelfHostShell(CmsActivity activity, com.chengyinhub.business.domain.CmsTopic topic) {
+        if (activity == null || topic == null || activity.getMemberId() == null
+                || !activity.getMemberId().equals(topic.getMemberId())) {
+            return false;
+        }
+        Long clubId = activity.getClubId();
+        if (clubId == null || clubId <= 0L) {
+            return true;
+        }
+        return Integer.valueOf(1).equals(topic.getClubMemberOnly()) && clubId.equals(topic.getClubId());
+    }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getName() { return name; }
@@ -41,4 +69,6 @@ public class PublicActivitySummaryVO {
     public void setStartDate(Date startDate) { this.startDate = startDate; }
     public Date getEndDate() { return endDate; }
     public void setEndDate(Date endDate) { this.endDate = endDate; }
+    public boolean isSelfHostShell() { return selfHostShell; }
+    public void setSelfHostShell(boolean selfHostShell) { this.selfHostShell = selfHostShell; }
 }

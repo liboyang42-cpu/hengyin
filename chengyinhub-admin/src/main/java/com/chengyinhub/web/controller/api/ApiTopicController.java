@@ -1696,7 +1696,7 @@ public class ApiTopicController extends BaseController {
             List<PublicActivitySummaryVO> activitySummaries = new ArrayList<>();
             if (visibleActivities != null) {
                 for (CmsActivity activity : visibleActivities) {
-                    activitySummaries.add(PublicActivitySummaryVO.from(activity));
+                    activitySummaries.add(PublicActivitySummaryVO.from(activity, cmsTopic));
                 }
             }
             topicInfoVO.setActivityList(activitySummaries);
