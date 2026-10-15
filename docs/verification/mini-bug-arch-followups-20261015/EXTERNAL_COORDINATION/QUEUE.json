@@ -3737,7 +3737,7 @@
     "claimed": 0,
     "actionable_or_inflight": 0
   },
-  "control_latest_read_sha": "12750a3efbef79fc52db6e8c275ca27e77245839",
+  "control_latest_read_sha": "5730f267c6fc489021fb30333ad5be12ff501faa",
   "publication_transport": "Shell git credentials unavailable after local offline; authorized GitHub Git Data connector publishes text trees/commits with expected-parent nonforced refs. Exact public SHA objects imported for local ancestry; no validation is executed.",
   "worker_assignments": [
     {
@@ -3787,7 +3787,7 @@
   "refill_status": "Continue concrete queued work; replenish proven independent slices or formally transferred modules. Do not count completed/blocked as READY or invent placeholder bugs to assert 50.",
   "lane_domain_status": {
     "E01": "Activity offer preflight and necessary fixtures source delivered; authorized independent candidates exhausted",
-    "E02": "Original-author four-line absent-receipt fixture repair publicly delivered; local targeted retest pending; original474e failure retained, repair NOT_RUN",
+    "E02": "Original three failure methods closed by local e72 targeted56PASS; current/later source not generally validated; repair slot released; cross-ownerE02-23 remains dependency",
     "E03": "E03-18 clues and relation lookup consistency delivered;5 methods NOT_RUN; NODE_COMPLETED follow-on is existing coercion compatibility, not a new task",
     "E04": "Redeem association lock delivered; completion receipt source contract pending",
     "E05": "Restored assigned source and required old fixtures delivered; NOT_RUN; ready for single-line original-author failure repair or next genuine transferred task",
@@ -3846,7 +3846,7 @@
   "failure_repair_queue": [
     {
       "id": "VPS_EXTRA_474e54ae_20261015",
-      "status": "SOURCE_DELIVERED_AWAITING_LOCAL_RETEST",
+      "status": "CLOSED_TARGETED_PASS_REPORTED_BY_LOCAL",
       "priority": 1,
       "candidate_sha": "474e54aea6351856e7e4dd23ab4561932958522d",
       "later_sha_with_same_affected_files": "700e754be0a49431638246036a2298d1d5f3e23e",
@@ -3878,7 +3878,7 @@
       ],
       "production_change_allowed_for_this_fix": false,
       "repair_sha": "4793f2b3acf887b2ccb1da085e08ccf872a7eab3",
-      "repair_verification": "NOT_RUN",
+      "repair_verification": "TARGETED_PASS_ON_E72_ONLY; other SHA not automatically validated",
       "focused_future_command": "mvn -o -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=CommunityPostServiceImplTest,E02_14Test test",
       "planned_static_methods": 56,
       "no_gate_weakening": "Keep403, command binding and all negative assertions; do not rewrite assertion to409",
@@ -3890,7 +3890,7 @@
         "PR16": 6198811213,
         "PR24": 6198811642
       },
-      "actual_retest_count": null,
+      "actual_retest_count": 56,
       "dependencies": "Rolling parent aa36698e39e2e31bb16e4c6807dd30e14230c84a; existing E02-22/E03-16/E05-17 and findCurrent producer already present; CORE later repair chain not imported",
       "published_evidence": {
         "public_commit": "514afe3b26d8c0909c46f5b724dcd0d9795e65c9",
@@ -3913,22 +3913,52 @@
         "count_note": "Static304 is not actual305; StoryServiceImplTest public XML reports26, old static plan25 is not execution evidence"
       },
       "local_targeted_retest": {
-        "status": "PLANNED_BY_LOCAL_NOT_EXECUTED_RESULT",
+        "status": "PASS_REPORTED_BY_LOCAL",
         "candidate_sha": "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0",
         "classes": [
           "com.chengyinhub.business.community.CommunityPostServiceImplTest",
           "com.chengyinhub.business.longrun.E02_14Test"
         ],
         "planned_tests": 56,
-        "actual_tests": null,
-        "verification": "NOT_RUN_NO_LOCAL_RESULT_YET",
+        "actual_tests": 56,
+        "verification": "TARGETED_PASS_ON_E72_ONLY",
         "executor": "local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59",
         "later_changes_excluded": [
           "E03-18",
           "E06-17"
         ],
         "same_affected_files_as_current_source": true,
-        "no_result_inheritance": "No candidate other than frozen e72 receives this future result automatically; E03/E06 candidate129d remains separately NOT_RUN"
+        "no_result_inheritance": "Only exact e72 and two selected classes; not full305, not23 gated/JDBC, not129d or other later source"
+      },
+      "targeted_retest_result": {
+        "candidate_sha": "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0",
+        "task": "VPS_EXTRA_474e54ae_20261015",
+        "scope": "TARGETED_TWO_REPAIRED_CLASSES_ONLY",
+        "classes": [
+          "com.chengyinhub.business.community.CommunityPostServiceImplTest",
+          "com.chengyinhub.business.longrun.E02_14Test"
+        ],
+        "actual": {
+          "tests": 56,
+          "passed": 56,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "xml_classes": 2,
+          "exact_class_set_and_count_match": true,
+          "all_reports_fresh": true,
+          "guard_exit_code": 0,
+          "guard_reason": "completed"
+        },
+        "executor": "local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+        "environment": "Dedicated VPS guard212; local serial execution",
+        "source": "DIRECT_LOCAL_REPORT; public controlled artifact VPS_EXTRA_e72eff7e pending",
+        "evidence_commit": null,
+        "evidence_path_expected": "docs/verification/mini-bug-arch-20261015/VPS_EXTRA_e72eff7e/",
+        "original_three_failure_methods_closed": true,
+        "full305_rerun": false,
+        "later_sha_pass_inherited": false,
+        "gated_or_jdbc_23_pass_claimed": false
       }
     }
   ],
@@ -3999,11 +4029,39 @@
         "actual_skipped": 0,
         "count_note": "Static304 is not actual305; StoryServiceImplTest public XML reports26, old static plan25 is not execution evidence"
       }
+    },
+    {
+      "candidate_sha": "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0",
+      "task": "VPS_EXTRA_474e54ae_20261015",
+      "scope": "TARGETED_TWO_REPAIRED_CLASSES_ONLY",
+      "classes": [
+        "com.chengyinhub.business.community.CommunityPostServiceImplTest",
+        "com.chengyinhub.business.longrun.E02_14Test"
+      ],
+      "actual": {
+        "tests": 56,
+        "passed": 56,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "xml_classes": 2,
+        "exact_class_set_and_count_match": true,
+        "all_reports_fresh": true,
+        "guard_exit_code": 0,
+        "guard_reason": "completed"
+      },
+      "executor": "local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+      "environment": "Dedicated VPS guard212; local serial execution",
+      "source": "DIRECT_LOCAL_REPORT; public controlled artifact VPS_EXTRA_e72eff7e pending",
+      "evidence_commit": null,
+      "evidence_path_expected": "docs/verification/mini-bug-arch-20261015/VPS_EXTRA_e72eff7e/",
+      "original_three_failure_methods_closed": true,
+      "full305_rerun": false,
+      "later_sha_pass_inherited": false,
+      "gated_or_jdbc_23_pass_claimed": false
     }
   ],
-  "pending_local_failure_retests": [
-    "VPS_EXTRA_474e54ae_20261015"
-  ],
+  "pending_local_failure_retests": [],
   "latest_repair_candidate_sha": "4793f2b3acf887b2ccb1da085e08ccf872a7eab3",
   "external_team_read_only_reservations": [
     {
@@ -4035,7 +4093,12 @@
         "/root/stat",
         "/root/grow"
       ],
-      "running_claim": "Two writers at actual third-team ACK snapshot, not independently observed continuous runtime"
+      "running_claim": "Two writers at actual third-team ACK snapshot, not independently observed continuous runtime",
+      "additional_authorized_regression_paths_read_only_to_extra": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/AnalyticsDateContractTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java"
+      ],
+      "scope_correction": "C00 control5730f267 / prior1b6002a1 corrected original PR70 grant:6 existing+2 new regression paths; prior pending-extra-file limitation withdrawn. EXTRA never takes these paths."
     }
   ],
   "latest_discovery_round": {
@@ -4064,5 +4127,13 @@
     "status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RUN; reported by third team, no EXTRA validation or integration",
     "source_comment": 6199241183,
     "scope": "Existing EXTRA read-only reservation retained; observation does not grant or adjudicate extra third-team files"
-  }
+  },
+  "pending_public_validation_evidence": [
+    {
+      "candidate_sha": "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0",
+      "expected_path": "docs/verification/mini-bug-arch-20261015/VPS_EXTRA_e72eff7e/",
+      "result": "LOCAL_TARGETED_PASS56",
+      "public_commit": null
+    }
+  ]
 }
