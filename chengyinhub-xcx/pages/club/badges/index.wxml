@@ -54,9 +54,11 @@
               disabled="{{creating}}" data-field="desc" bind:input="onFormInput"
               error="{{!!formErrors.desc}}" errorText="{{formErrors.desc}}" />
     <text class="form-note">勋章图标沿用平台勋章的默认样式；自定义图标暂不开放。</text>
-    <cy-inline-error wx:if="{{createError}}" title="勋章没有创建" sub="{{createError}}" />
+    <cy-inline-error wx:if="{{createError && createUnknown}}" title="创建结果未确认" sub="{{createError}}"
+                     action="我已核对" bind:action="confirmCreateChecked" />
+    <cy-inline-error wx:elif="{{createError}}" title="勋章没有创建" sub="{{createError}}" />
   </view>
-  <cy-btn slot="footer" variant="primary" loading="{{creating}}" bindtap="submitCreate">创建</cy-btn>
+  <cy-btn slot="footer" variant="primary" loading="{{creating}}" disabled="{{createUnknown}}" bindtap="submitCreate">创建</cy-btn>
 </cy-sheet>
 
 <cy-sheet show="{{memberPickerVisible}}" title="颁给谁？" closable maskClosable bind:close="closeMemberPicker">

@@ -282,8 +282,8 @@ const DANGER_ACTIONS = {
     title: '把「{name}」颁给 {member}?',
     content: '颁发后对方会拿到这枚俱乐部勋章。',
     consequences: [
-      { icon: 'star', text: '勋章记在对方名下，来源标注为本俱乐部' },
-      { icon: 'mtab-customers', text: '同一枚勋章对同一个人只会颁发一次，重复颁发不会多记' },
+      { icon: 'star', text: '这枚勋章会写入对方的勋章记录' },
+      { icon: 'mtab-customers', text: '再次颁发同一枚勋章时，平台会提示对方是否已经拥有' },
       { icon: 'warning', text: '此操作不可撤销，目前没有收回勋章的入口' },
     ],
     confirmText: '颁发勋章',

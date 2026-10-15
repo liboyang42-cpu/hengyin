@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 4501,
+  "controlCount": 4502,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -140747,6 +140747,15 @@
             {
               "selector": "cy-inline-error",
               "index": 2
+            }
+          ]
+        },
+        {
+          "route": "pages/club/badges/index",
+          "segments": [
+            {
+              "selector": "cy-inline-error",
+              "index": 3
             }
           ]
         },
@@ -617923,7 +617932,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:58"
+        "staticSource": "pages/club/badges/index.js:122"
       }
     },
     {
@@ -618030,7 +618039,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:63"
+        "staticSource": "pages/club/badges/index.js:127"
       }
     },
     {
@@ -618137,7 +618146,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:63"
+        "staticSource": "pages/club/badges/index.js:127"
       }
     },
     {
@@ -618204,7 +618213,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:149"
+        "staticSource": "pages/club/badges/index.js:215"
       }
     },
     {
@@ -618259,11 +618268,15 @@
       "targets": {
         "routes": [],
         "apis": [
+          "/api/club/badge/list",
+          "/api/club/detail",
           "/api/club/members",
           "/api/login/code",
           "/api/role/info"
         ],
         "primaryApis": [
+          "/api/club/badge/list",
+          "/api/club/detail",
           "/api/club/members"
         ],
         "auxiliaryApis": [
@@ -618271,6 +618284,18 @@
           "/api/role/info"
         ],
         "apiContracts": [
+          {
+            "url": "/api/club/badge/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/club/detail",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
           {
             "url": "/api/club/members",
             "method": "POST",
@@ -618303,7 +618328,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:222"
+        "staticSource": "pages/club/badges/index.js:320"
       }
     },
     {
@@ -618370,7 +618395,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:154"
+        "staticSource": "pages/club/badges/index.js:221"
       }
     },
     {
@@ -618437,7 +618462,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:159"
+        "staticSource": "pages/club/badges/index.js:226"
       }
     },
     {
@@ -618504,11 +618529,148 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:159"
+        "staticSource": "pages/club/badges/index.js:226"
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:59:bindtap:submitCreate:9",
+      "id": "pages/club/badges/index.wxml:58:bind:action:confirmCreateChecked:9",
+      "route": "pages/club/badges/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/badges/index.wxml",
+        "js": "pages/club/badges/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-inline-error",
+        "event": "bind:action",
+        "handler": "confirmCreateChecked",
+        "line": 58,
+        "selectorHint": "cy-inline-error[bind:action]",
+        "visibleCondition": "{{createError && createUnknown}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/badges/index.js:305"
+      }
+    },
+    {
+      "id": "pages/club/badges/index.wxml:6:bind:back:goBack:0",
+      "route": "pages/club/badges/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/badges/index.wxml",
+        "js": "pages/club/badges/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-nav-bar",
+        "event": "bind:back",
+        "handler": "goBack",
+        "line": 6,
+        "selectorHint": "cy-nav-bar[bind:back]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/talent/list/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/badges/index.js:122"
+      }
+    },
+    {
+      "id": "pages/club/badges/index.wxml:61:bindtap:submitCreate:10",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -618531,10 +618693,10 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitCreate",
-        "line": 59,
+        "line": 61,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
-        "disabledCondition": null,
+        "disabledCondition": "{{createUnknown}}",
         "ariaLabel": null,
         "ariaLabelExpression": null,
         "ariaRole": null,
@@ -618622,81 +618784,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:166"
+        "staticSource": "pages/club/badges/index.js:233"
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:6:bind:back:goBack:0",
-      "route": "pages/club/badges/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/badges/index.wxml",
-        "js": "pages/club/badges/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-nav-bar",
-        "event": "bind:back",
-        "handler": "goBack",
-        "line": 6,
-        "selectorHint": "cy-nav-bar[bind:back]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "event-contract",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/talent/list/index"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/badges/index.js:58"
-      }
-    },
-    {
-      "id": "pages/club/badges/index.wxml:62:bind:close:closeMemberPicker:10",
+      "id": "pages/club/badges/index.wxml:64:bind:close:closeMemberPicker:11",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -618719,7 +618811,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeMemberPicker",
-        "line": 62,
+        "line": 64,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -618759,11 +618851,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:231"
+        "staticSource": "pages/club/badges/index.js:330"
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:67:bind:action:loadMembers:11",
+      "id": "pages/club/badges/index.wxml:69:bind:action:loadMembers:12",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -618786,7 +618878,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "loadMembers",
-        "line": 67,
+        "line": 69,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{membersState === 'error'}}",
         "disabledCondition": null,
@@ -618814,11 +618906,15 @@
       "targets": {
         "routes": [],
         "apis": [
+          "/api/club/badge/list",
+          "/api/club/detail",
           "/api/club/members",
           "/api/login/code",
           "/api/role/info"
         ],
         "primaryApis": [
+          "/api/club/badge/list",
+          "/api/club/detail",
           "/api/club/members"
         ],
         "auxiliaryApis": [
@@ -618826,6 +618922,18 @@
           "/api/role/info"
         ],
         "apiContracts": [
+          {
+            "url": "/api/club/badge/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/club/detail",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
           {
             "url": "/api/club/members",
             "method": "POST",
@@ -618858,11 +618966,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:236"
+        "staticSource": "pages/club/badges/index.js:335"
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:71:bindtap:pickMember:12",
+      "id": "pages/club/badges/index.wxml:73:bindtap:pickMember:13",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -618885,7 +618993,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickMember",
-        "line": 71,
+        "line": 73,
         "selectorHint": ".picker-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -618927,11 +619035,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:264"
+        "staticSource": "pages/club/badges/index.js:366"
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:82:bind:confirm:onConfirmGrant:13",
+      "id": "pages/club/badges/index.wxml:84:bind:confirm:onConfirmGrant:14",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -618954,7 +619062,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmGrant",
-        "line": 82,
+        "line": 84,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -618983,11 +619091,15 @@
         "routes": [],
         "apis": [
           "/api/club/badge/grant",
+          "/api/club/badge/list",
+          "/api/club/detail",
           "/api/login/code",
           "/api/role/info"
         ],
         "primaryApis": [
-          "/api/club/badge/grant"
+          "/api/club/badge/grant",
+          "/api/club/badge/list",
+          "/api/club/detail"
         ],
         "auxiliaryApis": [
           "/api/login/code",
@@ -618996,6 +619108,18 @@
         "apiContracts": [
           {
             "url": "/api/club/badge/grant",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/club/badge/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/club/detail",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -619027,11 +619151,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:274"
+        "staticSource": "pages/club/badges/index.js:376"
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:82:bind:done:onGrantDone:14",
+      "id": "pages/club/badges/index.wxml:84:bind:done:onGrantDone:15",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -619054,7 +619178,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:done",
         "handler": "onGrantDone",
-        "line": 82,
+        "line": 84,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -619094,7 +619218,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:307"
+        "staticSource": "pages/club/badges/index.js:411"
       }
     },
     {

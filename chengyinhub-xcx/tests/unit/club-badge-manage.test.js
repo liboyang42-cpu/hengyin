@@ -12,9 +12,10 @@ const { getDangerAction } = require('../../utils/danger-actions.js');
 let sandbox;
 
 beforeEach(() => {
-  sandbox = { config: null, requests: [], navigations: [], toasts: [], dc: null, chooseImage: null };
+  sandbox = { config: null, requests: [], navigations: [], toasts: [], dc: null, chooseImage: null, userId: 5 };
   global.getApp = () => ({
     globalData: {},
+    getUserID: () => sandbox.userId,
     sendRequest(options) { sandbox.requests.push(options); return { abort() {} }; },
     chooseImage(callback, count, options) { sandbox.chooseImage = { callback, count, options }; },
   });
@@ -52,6 +53,7 @@ function loadPage() {
     busyOn() { this.calls.push(['busyOn']); },
     done(text) { this.calls.push(['done', text]); },
     failed(text) { this.calls.push(['failed', text]); },
+    close() { this.calls.push(['close']); },
   };
   vm.selectComponent = sel => (sel === '#dc' ? sandbox.dc : null);
   return vm;
@@ -174,15 +176,140 @@ test('创建:服务端拒绝(能力位/非主理人)原话展示且保留表单'
   assert.equal(vm.data.form.name, '元老');
 });
 
-test('创建:网络中断按「结果未知」处理并回读列表,不让用户盲目重提', () => {
+function submitName(vm, name) {
+  vm.openCreate();
+  vm.onFormInput({ currentTarget: { dataset: { field: 'name' } }, detail: { value: name } });
+  vm.submitCreate();
+}
+
+test('创建结果未知(断网/5xx):锁住提交,未回读确认前 submitCreate 被拒', () => {
+  for (const settle of [r => r.fail(), r => r.successStatusAbnormal({}, 502)]) {
+    sandbox.requests = [];
+    const vm = loadPage();
+    bootAs(vm, { isOwner: true, badges: BADGES });
+    submitName(vm, '元老');
+    settle(req('/api/club/badge/create')[0]);
+    assert.equal(vm.data.createUnknown, true);
+    assert.equal(vm.data.creating, false);
+    assert.match(vm.data.createError, /结果未确认/);
+    assert.equal(req('/api/club/badge/list').length, 2, '未知后自动回读');
+    vm.submitCreate();
+    vm.submitCreate();
+    assert.equal(req('/api/club/badge/create').length, 1, '未知期间不得再次提交');
+  }
+});
+
+test('结果未知 → 回读出现提交前没有的同名勋章:确认已建成并收起表单', () => {
   const vm = loadPage();
   bootAs(vm, { isOwner: true, badges: BADGES });
-  vm.openCreate();
-  vm.onFormInput({ currentTarget: { dataset: { field: 'name' } }, detail: { value: '元老' } });
-  vm.submitCreate();
+  submitName(vm, '元老');
   req('/api/club/badge/create')[0].fail();
-  assert.match(vm.data.createError, /结果未确认/);
-  assert.equal(req('/api/club/badge/list').length, 2);
+  req('/api/club/badge/list')[1].success({ code: 200, data: [
+    { id: 9, badgeCode: 'CLUB9_9', badgeName: '元老' }, ...BADGES,
+  ] });
+  assert.equal(vm.data.createUnknown, false);
+  assert.equal(vm.data.createVisible, false);
+  assert.equal(vm.data.form.name, '');
+});
+
+test('结果未知 → 回读没看到:保持锁定;用户明确「我已核对」才解锁重提', () => {
+  const vm = loadPage();
+  bootAs(vm, { isOwner: true, badges: BADGES });
+  submitName(vm, '元老');
+  req('/api/club/badge/create')[0].fail();
+  req('/api/club/badge/list')[1].success({ code: 200, data: BADGES });
+  assert.equal(vm.data.createUnknown, true);
+  assert.match(vm.data.createError, /我已核对/);
+  vm.submitCreate();
+  assert.equal(req('/api/club/badge/create').length, 1);
+  vm.confirmCreateChecked();
+  assert.equal(vm.data.createUnknown, false);
+  vm.submitCreate();
+  assert.equal(req('/api/club/badge/create').length, 2);
+  const view = fs.readFileSync(VIEW_PATH, 'utf8');
+  assert.match(view, /disabled="\{\{createUnknown\}\}" bindtap="submitCreate"/);
+  assert.match(view, /action="我已核对" bind:action="confirmCreateChecked"/);
+});
+
+test('HTTP 4xx 是明确失败:不锁定,可直接改后重提', () => {
+  const vm = loadPage();
+  bootAs(vm, { isOwner: true, badges: BADGES });
+  submitName(vm, '元老');
+  req('/api/club/badge/create')[0].successStatusAbnormal({}, 400);
+  assert.equal(vm.data.createUnknown, false);
+  vm.submitCreate();
+  assert.equal(req('/api/club/badge/create').length, 2);
+});
+
+test('换号:迟到响应丢弃,旧身份/名单/弹层/草稿全部清空并按新账号重读', () => {
+  const vm = loadPage();
+  bootAs(vm, { isOwner: true, badges: BADGES });
+  vm.openGrant({ currentTarget: { dataset: { code: 'CLUB9_2' } } });
+  const membersReq = req('/api/club/members')[0];
+  vm.openCreate();
+  vm.onFormInput({ currentTarget: { dataset: { field: 'name' } }, detail: { value: 'A 的草稿' } });
+
+  sandbox.userId = 6; // A 登出,B 登录
+  membersReq.success({ code: 200, data: [{ memberId: 7, nickname: 'A 团成员' }] });
+  assert.deepEqual(vm.data.members, [], 'A 的成员名单不得落到 B');
+  assert.equal(vm.data.isOwner, false);
+  assert.equal(vm.data.createVisible, false);
+  assert.equal(vm.data.memberPickerVisible, false);
+  assert.equal(vm.data.form.name, '');
+  assert.equal(vm.data.badges.length, 0);
+  assert.equal(req('/api/club/detail').length, 2, '按 B 重读身份');
+
+  // B 的回读才生效
+  req('/api/club/detail')[1].success({ code: 200, data: { id: 9, isOwner: false } });
+  req('/api/club/badge/list')[1].success({ code: 200, data: BADGES });
+  assert.equal(vm.data.isOwner, false);
+  assert.equal(vm.data.state, 'ready');
+});
+
+test('换号后回到页面(onShow)也会重置;同号 onShow 不打扰', () => {
+  const vm = loadPage();
+  bootAs(vm, { isOwner: true, badges: BADGES });
+  vm.onShow();
+  assert.equal(req('/api/club/detail').length, 1);
+  sandbox.userId = 6;
+  vm.onShow();
+  assert.equal(vm.data.isOwner, false);
+  assert.equal(req('/api/club/detail').length, 2);
+});
+
+test('换号前发出的创建/颁发,迟到回执不写进新账号页面', () => {
+  const vm = loadPage();
+  bootAs(vm, { isOwner: true, badges: BADGES });
+  submitName(vm, '元老');
+  sandbox.userId = 6;
+  req('/api/club/badge/create')[0].fail();
+  assert.equal(vm.data.createUnknown, false, 'A 的未知态不得带给 B');
+  assert.equal(vm.data.createError, '');
+});
+
+test('刷新后失去主理人身份:收起创建/成员弹层并清掉待执行颁发', () => {
+  for (const settle of [
+    r => r.success({ code: 200, data: { id: 9, isOwner: false } }),
+    r => r.fail(),
+    r => r.successStatusAbnormal({}, 502),
+  ]) {
+    sandbox.requests = [];
+    const vm = loadPage();
+    bootAs(vm, { isOwner: true, badges: BADGES });
+    vm.openGrant({ currentTarget: { dataset: { code: 'CLUB9_2' } } });
+    req('/api/club/members')[0].success({ code: 200, data: [{ memberId: 7, nickname: '阿青' }] });
+    vm.pickMember({ currentTarget: { dataset: { memberId: 7 } } });
+    vm.openCreate();
+    vm.retryLoad();
+    settle(req('/api/club/detail')[1]);
+    assert.equal(vm.data.isOwner, false);
+    assert.equal(vm.data.createVisible, false);
+    assert.equal(vm.data.memberPickerVisible, false);
+    assert.equal(vm.data.grantBadge, null);
+    assert.deepEqual(sandbox.dc.calls[sandbox.dc.calls.length - 1], ['close']);
+    vm.onConfirmGrant({ detail: { key: 'club.badge.grant' } });
+    assert.equal(req('/api/club/badge/grant').length, 0, '失权后不得再发颁发');
+  }
 });
 
 test('图标不开放上传:页面不调上传通道,创建 payload 不带 iconUrl(2026-10-15 用户决定)', () => {
@@ -242,7 +369,8 @@ test('颁发:服务端拒绝与网络失败都留在确认框原地重试', () =
 
   vm.onConfirmGrant({ detail: { key: 'club.badge.grant' } });
   req('/api/club/badge/grant')[1].fail();
-  assert.match(sandbox.dc.calls[sandbox.dc.calls.length - 1][1], /不会重复颁发/);
+  assert.match(sandbox.dc.calls[sandbox.dc.calls.length - 1][1], /重试时平台会提示是否已颁发/);
+  assert.doesNotMatch(fs.readFileSync(PAGE_PATH, 'utf8'), /不会重复颁发/);
 });
 
 test('成员名单失败 → 可重试', () => {
@@ -269,6 +397,8 @@ test('club.badge.grant 已登记为不可逆并写明不可撤销', () => {
   assert.equal(action.irreversible, true);
   assert.equal(action.title, '把「开荒元老」颁给 阿青?');
   assert.ok(action.consequences.some(c => c.text.includes('此操作不可撤销')));
+  // 不承诺未验证的展示口径(团名来源)与并发下的去重
+  assert.ok(action.consequences.every(c => !/来源标注|不会多记/.test(c.text)));
 });
 
 test('俱乐部详情:概览只读入口给成员/主理人,管理入口只给主理人', () => {
