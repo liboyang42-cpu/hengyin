@@ -783,15 +783,23 @@ Page({
       this._publishAttempt = result.envelope.publishAttempt;
     }
     const finish = () => { if (isCurrent()) this._draftAutosaveReady = true; };
-    if (result.status === 'ready') {
+    // Equal (including second-resolution) revisions do not settle a lost write response.
+    // Only an explicit adoption of this known topic's saved version can clear UNKNOWN.
+    const unknownExistingWrite = result.envelope && result.envelope.publishAttempt
+      && result.envelope.publishAttempt.status === 'UNKNOWN'
+      && !!this.data.editingTopicId
+      && String(result.envelope.publishAttempt.topicId || '') === String(this.data.editingTopicId);
+    if (result.status === 'ready' && !unknownExistingWrite) {
       this._applyDraftEnvelope(result.envelope);
       finish();
       return;
     }
-    if (result.status === 'revision_conflict') {
+    if (result.status === 'revision_conflict' || unknownExistingWrite) {
       modal.show({
-        title: '另一端草稿已更新',
-        content: '其他设备上的草稿已更新，是否用本机草稿覆盖？',
+        title: unknownExistingWrite ? '上次发布结果待确认' : '另一端草稿已更新',
+        content: unknownExistingWrite
+          ? '是否保留本机草稿，或使用当前已保存版本？'
+          : '其他设备上的草稿已更新，是否用本机草稿覆盖？',
         confirmText: '使用本地草稿',
         cancelText: '使用已保存版本',
         success: (res) => {
