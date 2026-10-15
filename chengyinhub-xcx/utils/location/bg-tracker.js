@@ -58,6 +58,9 @@ function stopLocation() {
   try {
     wx.stopLocationUpdate({ success: finish, fail: finish, complete: finish });
   } catch (e) {
+    // finish marks completion before starting waiting owners. An exception
+    // from that callback chain must not be swallowed as a stop API failure.
+    if (completed) throw e;
     finish();
   }
 }
