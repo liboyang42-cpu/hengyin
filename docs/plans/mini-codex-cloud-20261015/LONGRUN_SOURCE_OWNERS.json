@@ -912,6 +912,22 @@
       "base_sha": "ab3161f9fd8d5e43e90dda8f3b35abf3ba9fe2bd",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 fully read E03-16@cc39c006 and E05-17@3bd030c9; original CORE source/test writer stopped. Only current-scope dynamic exact fixture alignment; no missing/foreign/activity negative gate masking; no assertion relaxation."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_21MySqlIT.java": {
+      "owner": "CORE/C04",
+      "worker": "feature_points_rules_sol",
+      "state": "REGRESSION_SOURCE_AUTHORING_ONLY",
+      "source_writer": "a02_sol retains all production/old fixture files",
+      "verification": "NOT_RUN",
+      "dependency": "Wait frozen exact public C04-21 producer before publishing regression supplement; no test execution"
+    },
+    "docs/verification/mini-longrun-20261015/CORE/OWN-C04-21-realdb.md": {
+      "owner": "CORE/C04",
+      "worker": "feature_points_rules_sol",
+      "state": "REGRESSION_SOURCE_AUTHORING_ONLY",
+      "source_writer": "a02_sol retains all production/old fixture files",
+      "verification": "NOT_RUN",
+      "dependency": "Wait frozen exact public C04-21 producer before publishing regression supplement; no test execution"
     }
   },
   "reserved_not_transferred": [

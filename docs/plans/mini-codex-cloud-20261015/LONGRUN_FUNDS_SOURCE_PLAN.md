@@ -29,3 +29,5 @@ C05-25精确5生产路径转CORE/C05，三旧fixture单写者C05，C04不得碰�
 两个实现均仅源码和必要回归NOT_RUN。C04/C05先静态盘点实际旧fixture，无必要不改；所有旧断言保留。确需表外路径向C00给准确理由再转交，不批量改旧fixture或为mock保留生产fallback。不执行测试/编译/DB/provider/VPS，交付未验证，不提前合并/部署。
 
 C04-21新增精确MemberCashWithdrawMapper.java/XML current行读，先cash行→member避免终态/冻结后的迟到扣款；原外部回执/拒绝保留，不provider/不扣/不自动退/不markFailed覆盖。赏金用NESTED savepoint保持外层事实可见、原失败不连累核销；源码默认Boot/MyBatis JDBC支持，但实际生产manager/nested能力未验证，不允许REQUIRED/REQUIRES_NEW错误替代。C06-30积分相同周界兄弟投影补充不另算bug；C05-25另写必要真DB审计交错回归，全部NOT_RUN。
+
+C04-22独立接续provider迟到观察：当前源accepted成功返回无条件status0可覆盖同步终态；ambiguous/查询非终态观察也可能覆盖冻结/终态渠道事实。只新增精确id/status0/非frozen的updateReceiptIfProcessing，允许既有五渠道字段，不写status/金额/人工字段；CAS0返回当前原事实，sync停止旧快照超时升级。原终态CAS/状态政策/provider不变，旧3fixture只必要接线保留never断言。三源均已C04独占，不另抢文件。必要回归NOT_RUN，21原快照不可变。

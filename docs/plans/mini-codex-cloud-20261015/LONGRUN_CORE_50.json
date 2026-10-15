@@ -4709,7 +4709,7 @@
       "state": "DELEGATED_SOURCE_IMPLEMENTATION",
       "owner": "feature_coorganizer_sol",
       "verification": "NOT_RUN",
-      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "delivery": "DELEGATED_ANALYSIS_ONLY",
       "source_base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "regression_file": null,
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C05-24-PLAN.md",
@@ -4803,6 +4803,40 @@
       ],
       "cash_late_debit_contract": "cash current row locks first, validate exact actor/amount and original PROCESSING/not frozen; terminal/frozen returns prior receipt/existing rejection, no debit/provider/markFailed overwrite; no new API/state fields",
       "bounty_transaction_contract": "NESTED/JDBC savepoint preserve outer own writes and original caught bonus failures. Default Boot+MyBatis static evidence; actual deployed manager/nested capability remains NOT_VERIFIED, no REQUIRED/REQUIRES_NEW fallback."
+    },
+    {
+      "title": "提现渠道迟到观察不覆盖终态或冻结事实",
+      "source_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MemberCashWithdrawMapper.java",
+        "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml"
+      ],
+      "source_anchor": "withdraw accepted/ambiguous and syncOne PROCESSING/UNKNOWN observer persistence",
+      "trigger": "provider或查询等待期间另一同步/人工已终态/冻结，迟到accepted无条件status0可复活，UNCERTAIN等旧渠道观察可覆盖新事实",
+      "invariant": "独立narrow receipt updater仅id/statusPROCESSING/非frozen+5渠道元数据，无status/金额/手动字段；CAS0读原current持久事实，sync不拿旧w超时升级",
+      "repair_boundary": "Only three already-owned production files, three existing exact old fixtures and task new source regression/evidence; no new external states/API/provider or manual policy.",
+      "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
+      "status": "AUDIT_THEN_FIX",
+      "id": "OWN-C04-22",
+      "lane": "C04",
+      "state": "READY_SOURCE_ONLY",
+      "owner": "a02_sol",
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_base_sha": "df54dc030faa12fed4c0ff6b8e7211b257a44ffc",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_22Test.java",
+      "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C04-22.md",
+      "review_outcome": "BLOCKED_CONTRACT_PROPOSAL",
+      "additional_regression_files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_20MySqlIT.java"
+      ],
+      "planned_real_db_cases": "2 methods: original PENDING read -> other connection same maker confirm -> payment false and independent CONFIRMED/no paid audit; distinct confirmer positive PAID. Source only NOT_RUN; explicit CHENGYIN_FUNDS_MYSQL_IT=1, isolated schema.",
+      "source_result": "CONTRACT_FROZEN_SOURCE_PENDING",
+      "old_fixture_paths": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawServiceTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawStateMachineTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/FundIdempotencyConcurrencyTest.java"
+      ]
     }
   ],
   "refill": "Coordinator adds a concrete nonduplicate authorized task when one is delivered/refuted/blocked; no fabricated defect or empty filler. New IDs never reuse old ones. If no justified candidate remains, record EXHAUSTED rather than invent work.",
