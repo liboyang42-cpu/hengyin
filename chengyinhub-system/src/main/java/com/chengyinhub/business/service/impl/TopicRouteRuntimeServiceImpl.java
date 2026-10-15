@@ -2502,7 +2502,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L) {
             throw new IllegalArgumentException("参数有误");
         }
-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = currentScopedSession(memberId, topicId, activityId);
         if (session == null) throw new IllegalStateException("本局尚未开始");
         requireScope(memberId, topicId, session.getActivityId(),true);
         if (session.getStatus() != null
