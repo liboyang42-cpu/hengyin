@@ -6378,6 +6378,14 @@ Page({
    * 不在本页自己拼请求 —— 幂等键、CAS 版本、unknown 回读那一整套都在组件里,
    * 页面再发一份就会和组件的 version 漂移,漂移之后每次提交都撞"状态已更新"。
    */
+  _isTypeInStartCurrent(pending) {
+    const context = pending && pending.context, kit = this._kit();
+    return !!context && this._typeInStart === pending && this._isPlayAccountCurrent()
+      && context.owner === this._playOwner && context.epoch === this._playLoadEpoch
+      && context.sessionKey === JSON.stringify(this._sessionParams()) && this.data.advancedPlay === context.active
+      && context.active.show && this.selectComponent('#advancedGame') === context.component
+      && kit.type === 'typein' && pending.sessionId === kit.sessionId;
+  },
   _submitPlayKitAction(action, detail) {
     const kit = this._kit();
     /* 拍照问答(qa:shoot)不在服务端动作表里(playkit-view 明确注释:放进去会被当成一步直发,
@@ -6417,11 +6425,14 @@ Page({
        直接把 detail 发过去,服务端读不到字段会按 0 判 —— 不报错,只是永远不通过。 */
     const payload = serverPayload(kit.type, action, detail);
     if (kit.type === 'typein' && action === 'start') {
+      if (!this._isPlayAccountCurrent() || !this.data.advancedPlay.show) return;
+      const context = { owner: this._playOwner, epoch: this._playLoadEpoch,
+        sessionKey: JSON.stringify(this._sessionParams()), active: this.data.advancedPlay, component: game };
       this.setData({ 'playKit.kit.startConfirmed': false });
-      this._typeInStart = { sessionId: kit.sessionId, promise: Promise.resolve(game.action(name, payload)) };
+      this._typeInStart = { sessionId: kit.sessionId, context, promise: Promise.resolve(game.action(name, payload)) };
       const pending = this._typeInStart;
       pending.promise.then(ok => {
-        if (this._typeInStart !== pending || pending.sessionId !== this._kit().sessionId) return;
+        if (!this._isTypeInStartCurrent(pending)) return;
         if (ok === true) this.setData({ 'playKit.kit.startConfirmed': true });
         else if (!this._kit().startConfirmed && !(game.data || {}).unknown && !(game.data || {}).acting) {
           this.onAdvancedActionFail({ detail: { action: name, sessionId: pending.sessionId } });
@@ -6431,10 +6442,10 @@ Page({
     }
     if (kit.type === 'typein' && action === 'submit' && !kit.startConfirmed) {
       const pending = this._typeInStart;
-      if (pending && !pending.submitQueued && pending.sessionId === kit.sessionId && !(game.data || {}).unknown) {
+      if (this._isTypeInStartCurrent(pending) && !pending.submitQueued && !(game.data || {}).unknown) {
         pending.submitQueued = true;
         pending.promise.then(() => {
-          if (this._typeInStart !== pending || pending.sessionId !== this._kit().sessionId
+          if (!this._isTypeInStartCurrent(pending)
               || !this.data.advancedPlay.show || !this._kit().startConfirmed || (game.data || {}).unknown || (game.data || {}).acting) return;
           game.action(name, payload);
         });
