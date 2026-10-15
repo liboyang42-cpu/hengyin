@@ -730,8 +730,8 @@ Page({
   loadReviewDetail(taskId) {
     const epoch = (this._reviewDetailEpoch || 0) + 1;
     this._reviewDetailEpoch = epoch;
-    const url = auditDetailUrl(taskId);
-    if (!url) { this.setData({ reviewDetail: null }); return; }
+    const auditUrl = auditDetailUrl(taskId);
+    if (!auditUrl) { this.setData({ reviewDetail: null }); return; }
     this.setData({ reviewDetail: { state: 'loading', statusLabel: '', timeline: [], error: '' } });
     const settle = (detail) => {
       if (epoch !== this._reviewDetailEpoch) return;
@@ -740,7 +740,7 @@ Page({
     app.sendRequest({
       hideLoading: true,
       silentError: true,
-      url,
+      url: auditUrl,
       method: 'GET',
       success: (res) => {
         const ok = res && (res.code === 200 || res.code === '200');
