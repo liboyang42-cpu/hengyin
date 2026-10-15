@@ -63,8 +63,8 @@ public class ApiRoamShareController extends BaseController {
         // F-L5C-02:快照里的路线名、勋章名、地点名由客户端提交、对任何拿到链接的人可见,公开前送检。
         String secText = shareTexts(normalizedJson);
         if (!secText.isEmpty()) {
-            com.chengyinhub.business.domain.UmsMember author = umsMemberService.selectUmsMemberById(memberId);
-            String risk = wxContentSecurityService.checkText(secText, author == null ? null : author.getWxOpenId());
+            String risk = com.chengyinhub.business.service.IWxContentSecurityService.checkTextAsMember(wxContentSecurityService, umsMemberService,
+                    memberId, secText);
             if (risk != null) return error(risk);
         }
         String normalized = normalizedJson.toJSONString();

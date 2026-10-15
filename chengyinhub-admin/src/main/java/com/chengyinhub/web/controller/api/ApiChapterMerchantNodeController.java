@@ -82,8 +82,8 @@ public class ApiChapterMerchantNodeController extends BaseController {
     /** F-L5C-02:点位文案经主办方准入后直接给玩家看,驳回原因发给商家;写入前送检,审不了按 fail-close 拦截。 */
     private String textRisk(Long actorMemberId, String text) {
         if (text == null || text.trim().isEmpty()) return null;
-        com.chengyinhub.business.domain.UmsMember actor = umsMemberService.selectUmsMemberById(actorMemberId);
-        return wxContentSecurityService.checkText(text, actor == null ? null : actor.getWxOpenId());
+        return com.chengyinhub.business.service.IWxContentSecurityService.checkTextAsMember(wxContentSecurityService, umsMemberService,
+                actorMemberId, text);
     }
 
     @Operation(summary = "商家提交/更新自己在章节下的点位(提交即回到待审)")

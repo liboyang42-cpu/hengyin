@@ -172,6 +172,17 @@ public interface IWxContentSecurityService
     String refreshAccessToken();
 
     /**
+     * 以会员身份送检:按 memberId 取 openid 再调 {@link #checkText}。会员查不到时 openid 为 null,
+     * 由 checkText 按既有口径 fail-closed 拦截。PR10 复审:收拢各写口里重复的「查 openid → checkText」。
+     */
+    static String checkTextAsMember(IWxContentSecurityService security, IUmsMemberService members,
+                                    Long memberId, String text)
+    {
+        com.chengyinhub.business.domain.UmsMember actor = members.selectUmsMemberById(memberId);
+        return security.checkText(text, actor == null ? null : actor.getWxOpenId());
+    }
+
+    /**
      * 拼接多个文本字段为一段送检文本（自动忽略空字段，用换行分隔）。
      * 供各发布接口把「标题+副标题+正文」合并后一次性检测。
      */
