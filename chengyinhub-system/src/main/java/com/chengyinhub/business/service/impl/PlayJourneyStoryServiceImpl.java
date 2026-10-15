@@ -473,7 +473,7 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         if (relationKey == null || state.getVariables() == null) {
             return "neutral";
         }
-        Number value = state.getVariables().get(relationKey);
+        Number value = state.getVariables().get(relationKey.trim());
         if (value == null) {
             return "neutral";
         }
