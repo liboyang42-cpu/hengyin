@@ -1322,6 +1322,8 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
 
     private void freezeThoughtChapters(ObjectNode root, CmsTopic topic, List<CmsTopicNode> nodes, Long openingId) {
         com.fasterxml.jackson.databind.node.ArrayNode frozen = root.putArray("thoughtChapters");
+        // 独立保留结局正文；不加入玩家推进章节列表，读侧仅投影已选结局。
+        ObjectNode endingChapters = root.putObject("endingChapters");
         if (cmsTopicChapterMapper == null) return;
         CmsTopicChapter probe = new CmsTopicChapter(); probe.setTopicId(topic.getId());
         List<CmsTopicChapter> rows = cmsTopicChapterMapper.selectCmsTopicChapterList(probe);
@@ -1334,7 +1336,19 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         int authorIndex=-1;
         for (CmsTopicChapter chapter : chapters) {
             authorIndex++;
-            if (chapter.getId() == null || endingIds.contains(chapter.getId())) continue;
+            if (chapter.getId() == null) continue;
+            if (endingIds.contains(chapter.getId())) {
+                if (topic.getId().equals(chapter.getTopicId())) {
+                    ObjectNode ending = endingChapters.putObject(String.valueOf(chapter.getId()));
+                    ending.put("id", chapter.getId());
+                    ending.put("name", chapter.getName());
+                    ending.put("atmospherePreset", chapter.getAtmospherePreset());
+                    ending.put("audioUrl", chapter.getAudioUrl());
+                    ending.set("blocks", JSON.valueToTree(ChapterBlockReadSupport.resolve(
+                            chapter, Collections.<CmsTopicNode>emptyList())));
+                }
+                continue;
+            }
             Set<Long> nodeIds = new LinkedHashSet<Long>();
             for (CmsTopicNode node : nodes) if (chapter.getId().equals(node.getChapterId())) nodeIds.add(node.getId());
             ObjectNode row = frozen.addObject();
