@@ -876,7 +876,8 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         requirePaidPublisherIdentity(request, memberId);
         CmsActivity currentForCollect = cmsActivityMapper.selectCmsActivityById(request.getId());
         if (currentForCollect != null && currentForCollect.getTopicId() == null) {
-            assertStandalonePaidTicketsCollectible(request, memberId);
+            // PR10 复审:存量收费独立活动不能因收款闸连文字都改不了;编辑只拦「新增收费票/0 元改收费/涨价」。
+            assertStandaloneEditKeepsCollectible(request, memberId);
         }
         syncLiveActivityTickets(request, request.getId(), memberId, username);
         int rows = cmsActivityMapper.updateCmsActivityByOwner(editable);
@@ -903,6 +904,32 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         if (!paid) return;
         if (platformMemberId != null && platformMemberId > 0L && platformMemberId.equals(memberId)) return;
         throw new ServiceException("独立活动暂不支持在线收款(平台正在办理支付资质)，票价只能是 0");
+    }
+
+    /**
+     * 编辑口径的收款闸:存量已收费且价格不升的票原样放行(玩家下单仍由 assertCollectible 兜底),
+     * 只拒绝把收费面扩大的改动 —— 新增收费票、0 元票改收费、在库价基础上涨价。发布仍走全量闸。
+     */
+    private void assertStandaloneEditKeepsCollectible(CmsActivityPublishRequest request, Long memberId) {
+        if (request.getTickets() == null) return;
+        if (platformMemberId != null && platformMemberId > 0L && platformMemberId.equals(memberId)) return;
+        List<OmsTicket> live = null;
+        for (ActivityTicketRequest ticket : request.getTickets()) {
+            if (ticket == null || ticket.getPrice() == null || ticket.getPrice().signum() <= 0) continue;
+            if (live == null) {
+                OmsTicket query = new OmsTicket();
+                query.setOwnerType(2L);
+                query.setOwnerId(request.getId());
+                query.setDelFlag(0);
+                live = omsTicketMapper.selectOmsTicketList(query);
+                if (live == null) live = java.util.Collections.emptyList();
+            }
+            OmsTicket existing = findLiveTicket(live, ticket.getId());
+            if (existing == null || existing.getPrice() == null || existing.getPrice().signum() <= 0
+                    || ticket.getPrice().compareTo(existing.getPrice()) > 0) {
+                throw new ServiceException("独立活动暂不支持在线收款(平台正在办理支付资质)，票价只能是 0");
+            }
+        }
     }
 
     private void requirePaidPublisherIdentity(CmsActivityPublishRequest request, Long memberId) {
