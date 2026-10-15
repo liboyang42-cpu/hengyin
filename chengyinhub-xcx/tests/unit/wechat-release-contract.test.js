@@ -69,6 +69,24 @@ test('privacy contract rejects declaring getFuzzyLocation together with getLocat
   assert.equal(analyzePrivacyContract(BASE_APP, BASE_SOURCE).ok, true);
 });
 
+for (const preciseApi of ['onLocationChange', 'startLocationUpdate', 'startLocationUpdateBackground']) {
+  test(`privacy contract rejects declaring getFuzzyLocation together with unused ${preciseApi}`, () => {
+    const result = analyzePrivacyContract({ requiredPrivateInfos: ['getFuzzyLocation', preciseApi] }, []);
+    assert.equal(result.ok, false);
+    assert.deepEqual(result.missingDeclarations, []);
+    assert.deepEqual(result.permissionProblems,
+      [`getFuzzyLocation and ${preciseApi} cannot both be declared in requiredPrivateInfos`]);
+  });
+}
+
+test('privacy contract accepts fuzzy-only declarations with nonexclusive picker APIs', () => {
+  const result = analyzePrivacyContract({
+    requiredPrivateInfos: ['getFuzzyLocation', 'chooseLocation', 'choosePoi', 'chooseAddress'],
+  }, []);
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.permissionProblems, []);
+});
+
 test('privacy contract turns red when a used location API is removed from app.json', () => {
   const app = { ...BASE_APP, requiredPrivateInfos: BASE_APP.requiredPrivateInfos.filter((name) => name !== 'choosePoi') };
   const result = analyzePrivacyContract(app, BASE_SOURCE);

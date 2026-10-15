@@ -38,11 +38,12 @@ class AccountDeregistrationCompletionPersistenceTest {
             assertNull(f.db.queryForObject("select complete_time from account_deregistration where id=9", Date.class));
             assertEquals("执行异常:IllegalStateException", f.db.queryForObject("select failure_reason from account_deregistration where id=9", String.class));
             verify(f.alarm).alarm(eq("注销执行异常"), anyString());
+            assertEquals(1, f.db.queryForObject("select count(*) from ums_member_address where member_id=1001", Integer.class));
+            assertEquals(1, f.db.queryForObject("select count(*) from ums_member_address where member_id=1002", Integer.class));
             if ("normal".equals(mode)) {
                 assertEquals("fixture-phone", f.db.queryForObject("select phone from ums_member where id=1001", String.class));
                 assertEquals(0, f.db.queryForObject("select del_flag from ums_member where id=1001", Integer.class));
                 assertEquals("NORMAL", f.db.queryForObject("select deregister_status from ums_member where id=1001", String.class));
-                assertEquals(1, f.db.queryForObject("select count(*) from ums_member_address where member_id=1001", Integer.class));
             } else if ("missing".equals(mode)) {
                 assertEquals(0, f.db.queryForObject("select count(*) from ums_member", Integer.class));
             } else {
@@ -59,6 +60,19 @@ class AccountDeregistrationCompletionPersistenceTest {
             assertNotNull(f.db.queryForObject("select complete_time from account_deregistration where id=9", Date.class));
             assertNull(f.db.queryForObject("select phone from ums_member where id=1001", String.class));
             assertEquals(2, f.db.queryForObject("select del_flag from ums_member where id=1001", Integer.class));
+            assertEquals(0, f.db.queryForObject("select count(*) from ums_member_address where member_id=1001", Integer.class));
+            assertEquals(1, f.db.queryForObject("select count(*) from ums_member_address where member_id=1002", Integer.class));
+            verifyNoInteractions(f.alarm);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"missing", "already-anonymous"})
+    void legacyCompletionAlsoDeletesOnlyTheAccountAddresses(String mode) throws Exception {
+        try (Fixture f = new Fixture(mode, false)) {
+            assertEquals(1, f.service.executeDue(new Date()));
+            assertEquals("COMPLETED", f.db.queryForObject("select status from account_deregistration where id=9", String.class));
+            assertNotNull(f.db.queryForObject("select complete_time from account_deregistration where id=9", Date.class));
             assertEquals(0, f.db.queryForObject("select count(*) from ums_member_address where member_id=1001", Integer.class));
             assertEquals(1, f.db.queryForObject("select count(*) from ums_member_address where member_id=1002", Integer.class));
             verifyNoInteractions(f.alarm);
