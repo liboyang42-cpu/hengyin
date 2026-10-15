@@ -615018,7 +615018,7 @@
       }
     },
     {
-      "id": "pages/activity/official-detail/index.wxml:163:bindtap:openOrganizer:2",
+      "id": "pages/activity/official-detail/index.wxml:167:bindtap:openOrganizer:2",
       "route": "pages/activity/official-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -615041,7 +615041,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openOrganizer",
-        "line": 163,
+        "line": 167,
         "selectorHint": ".od-organizer-entry",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -615088,7 +615088,7 @@
       }
     },
     {
-      "id": "pages/activity/official-detail/index.wxml:173:bindtap:onCta:3:variant:explore",
+      "id": "pages/activity/official-detail/index.wxml:177:bindtap:onCta:3:variant:explore",
       "route": "pages/activity/official-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -615119,7 +615119,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCta",
-        "line": 173,
+        "line": 177,
         "selectorHint": ".od-cta",
         "visibleCondition": "{{cta.type !== 'wait' && cta.type !== 'ended'}}",
         "disabledCondition": null,
@@ -615181,7 +615181,7 @@
       }
     },
     {
-      "id": "pages/activity/official-detail/index.wxml:173:bindtap:onCta:3:variant:roam",
+      "id": "pages/activity/official-detail/index.wxml:177:bindtap:onCta:3:variant:roam",
       "route": "pages/activity/official-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -615212,7 +615212,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCta",
-        "line": 173,
+        "line": 177,
         "selectorHint": ".od-cta",
         "visibleCondition": "{{cta.type !== 'wait' && cta.type !== 'ended'}}",
         "disabledCondition": null,
@@ -615260,7 +615260,7 @@
       }
     },
     {
-      "id": "pages/activity/official-detail/index.wxml:173:bindtap:onCta:3:variant:signup",
+      "id": "pages/activity/official-detail/index.wxml:177:bindtap:onCta:3:variant:signup",
       "route": "pages/activity/official-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -615291,7 +615291,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCta",
-        "line": 173,
+        "line": 177,
         "selectorHint": ".od-cta",
         "visibleCondition": "{{cta.type !== 'wait' && cta.type !== 'ended'}}",
         "disabledCondition": null,
@@ -615353,7 +615353,7 @@
       }
     },
     {
-      "id": "pages/activity/official-detail/index.wxml:173:bindtap:onCta:3:variant:theme",
+      "id": "pages/activity/official-detail/index.wxml:177:bindtap:onCta:3:variant:theme",
       "route": "pages/activity/official-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -615384,7 +615384,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCta",
-        "line": 173,
+        "line": 177,
         "selectorHint": ".od-cta",
         "visibleCondition": "{{cta.type !== 'wait' && cta.type !== 'ended'}}",
         "disabledCondition": null,
@@ -615431,7 +615431,7 @@
       }
     },
     {
-      "id": "pages/activity/official-detail/index.wxml:182:bind:back:onLoadErrorBack:5",
+      "id": "pages/activity/official-detail/index.wxml:186:bind:back:onLoadErrorBack:5",
       "route": "pages/activity/official-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -615454,7 +615454,7 @@
         "tag": "cy-state-shell",
         "event": "bind:back",
         "handler": "onLoadErrorBack",
-        "line": 182,
+        "line": 186,
         "selectorHint": "cy-state-shell[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -615501,7 +615501,7 @@
       }
     },
     {
-      "id": "pages/activity/official-detail/index.wxml:182:bind:primary:onLoadErrorAction:4",
+      "id": "pages/activity/official-detail/index.wxml:186:bind:primary:onLoadErrorAction:4",
       "route": "pages/activity/official-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -615524,7 +615524,7 @@
         "tag": "cy-state-shell",
         "event": "bind:primary",
         "handler": "onLoadErrorAction",
-        "line": 182,
+        "line": 186,
         "selectorHint": "cy-state-shell[bind:primary]",
         "visibleCondition": null,
         "disabledCondition": null,
