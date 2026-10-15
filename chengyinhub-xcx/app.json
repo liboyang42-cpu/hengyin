@@ -138,6 +138,7 @@
         "customer/index",
         "game-node/index",
         "customer/detail/index",
+        "verify-records/index",
         "team/index"
       ]
     },

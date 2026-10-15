@@ -3,7 +3,7 @@
   "generatedFrom": "app.json + scene-* 组件扫描",
   "previousBatch": null,
   "counts": {
-    "routes": 133,
+    "routes": 134,
     "scenes": 27,
     "added": 0,
     "removed": 0
@@ -1105,6 +1105,17 @@
       "dataKeys": [
         "customerMemberId"
       ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/verify-records/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
       "hasJs": true,
       "hasWxml": true
     },
