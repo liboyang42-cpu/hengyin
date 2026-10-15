@@ -202447,7 +202447,7 @@
       }
     },
     {
-      "id": "components/cy/npc-chat/index.wxml:17:bindtap:onExportData:1",
+      "id": "components/cy/npc-chat/index.wxml:15:bindtap:onExportData:1",
       "route": "component:components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -202500,7 +202500,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "onExportData",
-        "line": 17,
+        "line": 15,
         "selectorHint": ".npc-chat__clear",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -202576,7 +202576,7 @@
       }
     },
     {
-      "id": "components/cy/npc-chat/index.wxml:18:bindtap:onAskClearData:2",
+      "id": "components/cy/npc-chat/index.wxml:16:bindtap:onAskClearData:2",
       "route": "component:components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -202629,7 +202629,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "onAskClearData",
-        "line": 18,
+        "line": 16,
         "selectorHint": ".npc-chat__clear",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -202675,7 +202675,7 @@
       }
     },
     {
-      "id": "components/cy/npc-chat/index.wxml:26:bindtap:onCloseExport:3",
+      "id": "components/cy/npc-chat/index.wxml:24:bindtap:onCloseExport:3",
       "route": "component:components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -202728,7 +202728,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "onCloseExport",
-        "line": 26,
+        "line": 24,
         "selectorHint": ".npc-chat__clear",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -202772,7 +202772,7 @@
       }
     },
     {
-      "id": "components/cy/npc-chat/index.wxml:29:bind:action:onExportData:4",
+      "id": "components/cy/npc-chat/index.wxml:27:bind:action:onExportData:4",
       "route": "component:components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -202825,7 +202825,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "onExportData",
-        "line": 29,
+        "line": 27,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{exportState === 'error'}}",
         "disabledCondition": null,
@@ -202901,7 +202901,7 @@
       }
     },
     {
-      "id": "components/cy/npc-chat/index.wxml:34:bindtap:onCopyExport:5",
+      "id": "components/cy/npc-chat/index.wxml:32:bindtap:onCopyExport:5",
       "route": "component:components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -202954,7 +202954,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCopyExport",
-        "line": 34,
+        "line": 32,
         "selectorHint": ".npc-chat__send",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -203008,7 +203008,7 @@
       }
     },
     {
-      "id": "components/cy/npc-chat/index.wxml:60:bindconfirm:onSend:7",
+      "id": "components/cy/npc-chat/index.wxml:58:bindconfirm:onSend:7",
       "route": "component:components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -203061,7 +203061,7 @@
         "tag": "textarea",
         "event": "bindconfirm",
         "handler": "onSend",
-        "line": 60,
+        "line": 58,
         "selectorHint": ".npc-chat__input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -203160,7 +203160,7 @@
       }
     },
     {
-      "id": "components/cy/npc-chat/index.wxml:60:bindinput:onInput:6",
+      "id": "components/cy/npc-chat/index.wxml:58:bindinput:onInput:6",
       "route": "component:components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -203213,7 +203213,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 60,
+        "line": 58,
         "selectorHint": ".npc-chat__input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -203257,7 +203257,7 @@
       }
     },
     {
-      "id": "components/cy/npc-chat/index.wxml:63:bindtap:onSend:8",
+      "id": "components/cy/npc-chat/index.wxml:61:bindtap:onSend:8",
       "route": "component:components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -203310,7 +203310,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSend",
-        "line": 63,
+        "line": 61,
         "selectorHint": ".npc-chat__send",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -203409,7 +203409,7 @@
       }
     },
     {
-      "id": "components/cy/npc-chat/index.wxml:66:bind:confirm:onConfirmClearData:9",
+      "id": "components/cy/npc-chat/index.wxml:64:bind:confirm:onConfirmClearData:9",
       "route": "component:components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -203462,7 +203462,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmClearData",
-        "line": 66,
+        "line": 64,
         "selectorHint": "#npc-dc",
         "visibleCondition": null,
         "disabledCondition": null,
