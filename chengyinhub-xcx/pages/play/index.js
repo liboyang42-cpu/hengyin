@@ -4625,19 +4625,30 @@ Page({
     });
   },
   leadBroadcast() {
-    const that = this;
+    if (!this._isPlayAccountCurrent()) return;
+    const context = this._leadOperationContext();
+    const intent = {};
+    this._leadBroadcastIntent = intent;
+    const current = () => this._leadBroadcastIntent === intent && this._isLeadOperationContextCurrent(context);
+    let settled = false;
     cyModal.show({
       title: '队长广播',
       editable: true,
       placeholderText: '对全队说一句…',
-      success(res) {
+      success: (res) => {
+        if (settled || !current()) return;
+        settled = true;
         if (res.confirm && res.content) {
-          req('/api/club/lead/broadcast', 'POST', { activityId: that.data.activityId, text: res.content })
-            .then((r) => { that.diegetic(r.msg || '已广播'); that.loadTeamProgress(); });
+          req('/api/club/lead/broadcast', 'POST', { activityId: context.activityId, text: res.content })
+            .then((r) => {
+              if (!current()) return;
+              this.diegetic(r.msg || '已广播'); this.loadTeamProgress();
+            });
         }
       }
     });
   },
+
   // D-9 队长全团结算:一次核销=全团入结算(到场∩已付)。资金动作,二次确认。
   leadSettle() {
     const that = this;
