@@ -11,13 +11,8 @@
   </view>
 
   <cy-skeleton wx:if="{{pageState === 'loading'}}" type="card" count="3" />
-  <cy-error wx:elif="{{pageState === 'error'}}" fill size="lg"
-            title="退款售后加载失败" sub="{{errorMessage}}"
-            retry="重新加载" bind:retry="retry" auto-back />
-  <cy-error wx:elif="{{pageState === 'no-permission'}}" fill size="lg"
-            title="当前岗位没有售后查看权限"
-            sub="请联系店主调整经营团队权限"
-            retry="" bind:back="onNavBack" auto-back custom-back />
+  <cy-state-shell kind="error" wx:elif="{{pageState === 'error'}}" fill size="lg" title="退款售后加载失败" sub="{{errorMessage}}" primary="重新加载" bind:primary="retry" auto-back />
+  <cy-state-shell kind="error" wx:elif="{{pageState === 'no-permission'}}" fill size="lg" title="当前岗位没有售后查看权限" sub="请联系店主调整经营团队权限" primary="" bind:back="onNavBack" auto-back custom-back />
 
   <scroll-view wx:elif="{{pageState === 'ready'}}" scroll-y class="ac-scroll" enhanced show-scrollbar="{{false}}">
     <view class="ac-content">

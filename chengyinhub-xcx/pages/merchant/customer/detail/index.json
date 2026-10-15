@@ -3,10 +3,9 @@
   "navigationBarTextStyle": "black",
   "backgroundColor": "#F3F4F4",
   "usingComponents": {
+    "cy-state-shell": "/components/cy/state-shell/index",
     "cy-avatar": "/components/cy/avatar/index",
     "cy-btn": "/components/cy/btn/index",
-    "cy-empty": "/components/cy/empty/index",
-    "cy-error": "/components/cy/error/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",
     "cy-skeleton": "/components/cy/skeleton/index",
     "cy-toast": "/components/cy/toast/index",

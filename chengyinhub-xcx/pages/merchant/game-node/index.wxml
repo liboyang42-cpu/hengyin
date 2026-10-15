@@ -18,12 +18,9 @@
   </view>
 
   <cy-skeleton wx:if="{{viewState === 'loading'}}" class="gn-state" type="card" count="{{3}}" />
-  <cy-empty wx:elif="{{viewState === 'empty'}}" class="gn-state cy-fade-in" kind="empty" fill="{{true}}" size="lg"
-            title="暂无本站任务" sub="俱乐部或主办方发出站点邀请后，会显示在这里" />
-  <cy-error wx:elif="{{viewState === 'business-error'}}" class="gn-state cy-fade-in" fill="{{true}}" size="lg"
-            title="暂时不能查看本站" sub="{{errorMessage}}" bind:retry="retryLoad" auto-back />
-  <cy-error wx:elif="{{viewState === 'network-error'}}" class="gn-state cy-fade-in" fill="{{true}}" size="lg"
-            title="本站状态加载失败" sub="{{errorMessage}}" bind:retry="retryLoad" auto-back />
+  <cy-state-shell wx:elif="{{viewState === 'empty'}}" class="gn-state cy-fade-in" kind="empty" fill="{{true}}" size="lg" title="暂无本站任务" sub="俱乐部或主办方发出站点邀请后，会显示在这里" />
+  <cy-state-shell kind="error" primary="重试" wx:elif="{{viewState === 'business-error'}}" class="gn-state cy-fade-in" fill="{{true}}" size="lg" title="暂时不能查看本站" sub="{{errorMessage}}" bind:primary="retryLoad" auto-back />
+  <cy-state-shell kind="error" primary="重试" wx:elif="{{viewState === 'network-error'}}" class="gn-state cy-fade-in" fill="{{true}}" size="lg" title="本站状态加载失败" sub="{{errorMessage}}" bind:primary="retryLoad" auto-back />
 
   <scroll-view wx:elif="{{viewState === 'ready'}}" scroll-y class="gn-scroll cy-fade-in" enhanced show-scrollbar="{{false}}">
     <view class="gn-content">

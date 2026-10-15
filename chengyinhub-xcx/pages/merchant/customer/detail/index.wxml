@@ -7,13 +7,10 @@
   <cy-skeleton wx:if="{{pageState === 'loading'}}" type="card" count="4" />
 
   <!-- E 加载失败(Figma 71:457) -->
-  <cy-error wx:elif="{{pageState === 'error'}}" fill size="lg" title="客户详情加载失败"
-            sub="{{errorMessage || '网络开小差了，稍后再试一次'}}" retry="重新加载" bind:retry="retry" auto-back />
+  <cy-state-shell kind="error" wx:elif="{{pageState === 'error'}}" fill size="lg" title="客户详情加载失败" sub="{{errorMessage || '网络开小差了，稍后再试一次'}}" primary="重新加载" bind:primary="retry" auto-back />
 
   <!-- D 无客户权限(Figma 71:442) -->
-  <cy-empty wx:elif="{{pageState === 'no-permission'}}" fill size="lg" kind="no-permission"
-            title="当前岗位没有客户查看权限" sub="请联系店主在经营团队中调整权限"
-            cta="返回客户列表" bind:cta="onNavBack" />
+  <cy-state-shell wx:elif="{{pageState === 'no-permission'}}" fill size="lg" kind="no-permission" title="当前岗位没有客户查看权限" sub="请联系店主在经营团队中调整权限" primary="返回客户列表" bind:primary="onNavBack" />
 
   <scroll-view wx:elif="{{pageState === 'ready'}}" scroll-y class="cd-scroll cy-fade-in" enhanced show-scrollbar="{{false}}">
     <!-- 客户身份(Figma 71:287) -->
@@ -66,7 +63,7 @@
         </view>
       </view>
       <view class="cd-records-empty" wx:else>
-        <cy-empty kind="empty" title="暂无参与记录" sub="完成报名或核销后会出现在这里" />
+        <cy-state-shell kind="empty" title="暂无参与记录" sub="完成报名或核销后会出现在这里" />
       </view>
     </view>
 

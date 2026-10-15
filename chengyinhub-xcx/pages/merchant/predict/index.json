@@ -5,9 +5,8 @@
   "backgroundColorTop": "#F3F4F4",
   "backgroundColorBottom": "#F3F4F4",
   "usingComponents": {
+    "cy-state-shell": "/components/cy/state-shell/index",
     "cy-badge": "/components/cy/badge/index",
-    "cy-empty": "/components/cy/empty/index",
-    "cy-error": "/components/cy/error/index",
     "cy-icon": "/components/cy/icon/index",
     "cy-modal": "/components/cy/modal/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",

@@ -69,7 +69,7 @@
         <view class="tm-skeleton-card"><cy-skeleton type="list" count="3" /></view>
       </view>
       <view class="tm-state tm-state--section" wx:elif="{{teamState === 'error'}}">
-        <cy-error title="团队名单加载失败" sub="{{teamError}}" bind:retry="retryTeam" />
+        <cy-state-shell kind="error" primary="重试" title="团队名单加载失败" sub="{{teamError}}" bind:primary="retryTeam" />
       </view>
       <block wx:else>
         <view class="tm-list" wx:if="{{operators.length}}">
