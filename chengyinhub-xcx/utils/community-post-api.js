@@ -83,6 +83,7 @@ function createClient(app, wxApi) {
         url: '/api/v1/community/reports', method: 'POST', header: 'application/json',
         data: { targetType: options.url === '/api/comment/report' ? 'COMMENT' : 'CONTENT',
           targetId: data.id, reasonCode: taxonomy.reasons[index].code,
+          description: typeof data.description === 'string' && data.description.trim() ? data.description : taxonomy.reasons[index].label,
           policyVersion: taxonomy.policyVersion, requestId: data.request_id || requestId() },
         ...callbacks
       }));

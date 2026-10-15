@@ -95,6 +95,17 @@ for (const [route, comment] of entries) {
     else assert.equal(h.page.data.list.length, 0);
   });
 }
+test('comment report success removes only its captured ID after the pending list changes', async () => {
+  for (const latest of [[{ id: 61 }, { id: 59 }, { id: 62 }], [{ id: 61 }, { id: 62 }]]) {
+    const h = harness('pages/square/detail', true); await confirm(h); await choose(h);
+    assert.equal(h.calls[1].data.targetId, 59);
+    h.page.data.list = latest;
+    h.calls[1].success({ code: 200, data: { id: 1 } }); await tick();
+    assert.deepEqual(Array.from(h.page.data.list, item => item.id), [61, 62]);
+    assert.equal(h.page.data.nodata, false);
+    assert.deepEqual(h.tips, ['已提交举报']);
+  }
+});
 for (const invalidation of ['unload', 'owner']) {
   test('detail delayed return rechecks ' + invalidation, async () => {
     const h = harness('pages/square/detail', false); await confirm(h); await choose(h);

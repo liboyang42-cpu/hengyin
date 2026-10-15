@@ -715,8 +715,8 @@ Page({
           success(resp) {
             if (!current() || Number(resp && resp.code) === 499) return;
             if (resp.code == '200') {
-              const list = that.data.list.slice();
-              list.splice(index, 1);
+              const list = that.data.list.filter(
+                row => String(row.id) !== String(item.id));
               that.setData({
                 list: list,
                 nodata: list.length < 1

@@ -61,11 +61,13 @@ class CommunityPostCommentIdempotencyMySqlIT {
     private JdbcTemplate jdbc;
     private CommunityPostMapper realMapper;
     private TransactionTemplate tx;
+    private boolean databaseCreated;
 
     @BeforeAll
     void createDatabase() throws Exception {
         try (Connection c = dataSource(MYSQL.adminUrl()).getConnection(); Statement s = c.createStatement()) {
             s.execute("CREATE DATABASE " + MYSQL.databaseName() + " CHARACTER SET utf8mb4");
+            databaseCreated = true;
         }
         dataSource = dataSource(MYSQL.databaseUrl());
         jdbc = new JdbcTemplate(dataSource);
@@ -105,6 +107,7 @@ class CommunityPostCommentIdempotencyMySqlIT {
 
     @AfterAll
     void dropDatabase() throws Exception {
+        if (!databaseCreated) return;
         try (Connection c = dataSource(MYSQL.adminUrl()).getConnection(); Statement s = c.createStatement()) {
             s.execute("DROP DATABASE IF EXISTS " + MYSQL.databaseName());
         }

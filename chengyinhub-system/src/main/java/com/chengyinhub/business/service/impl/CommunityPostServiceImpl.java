@@ -7,6 +7,7 @@ import com.chengyinhub.business.domain.dto.CommunityPostRequests;
 import com.chengyinhub.business.domain.dto.CommunityReportSubmitRequest;
 import com.chengyinhub.business.domain.dto.PublishSafetyRequest;
 import com.chengyinhub.business.domain.dto.SafetyDecision;
+import com.chengyinhub.business.domain.vo.CommunityReportVO;
 import com.chengyinhub.business.mapper.CommunityPostMapper;
 import com.chengyinhub.business.service.CommunityTrustService;
 import com.chengyinhub.business.service.IAuditTaskService;
@@ -766,7 +767,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
             }
             request.setTargetType("CONTENT");
         }
-        return communityTrustService.submitReport(memberId, request);
+        return CommunityReportVO.from(communityTrustService.submitReport(memberId, request));
     }
 
     @Override

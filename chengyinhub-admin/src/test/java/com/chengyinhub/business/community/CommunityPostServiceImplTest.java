@@ -3,6 +3,7 @@ package com.chengyinhub.business.community;
 import com.chengyinhub.business.domain.community.CommunityPost;
 import com.chengyinhub.business.domain.AuditTask;
 import com.chengyinhub.business.domain.CommunityReportCase;
+import com.chengyinhub.business.domain.vo.CommunityReportVO;
 import com.chengyinhub.business.domain.community.CommunityPostFeedQuery;
 import com.chengyinhub.business.domain.dto.CommunityPostRequests;
 import com.chengyinhub.business.domain.dto.CommunityReportSubmitRequest;
@@ -1460,13 +1461,65 @@ class CommunityPostServiceImplTest {
         request.setTargetId(17L);
         request.setReasonCode("HARASSMENT");
         request.setRequestId("report-request-1");
-        when(communityTrustService.submitReport(9L, request)).thenReturn(new CommunityReportCase());
+        when(communityTrustService.submitReport(9L, request)).thenReturn(submittedReport("COMMENT", 17L));
 
-        service.report(9L, request);
+        Object result = service.report(9L, request);
 
         assertEquals("COMMENT", request.getTargetType());
         assertEquals(Long.valueOf(17L), request.getTargetId());
+        assertReporterProjection(result, "COMMENT", 17L);
         verify(communityTrustService).submitReport(9L, request);
+    }
+
+    @Test
+    void contentReportSubmissionUsesTheSamePublicReporterProjection() {
+        CommunityPost post = draft(7L, 11L, 1);
+        post.setLifecycle("PUBLISHED");
+        when(mapper.selectById(7L, 9L)).thenReturn(post);
+        CommunityReportSubmitRequest request = new CommunityReportSubmitRequest();
+        request.setTargetId(7L);
+        request.setRequestId("report-content-request");
+        when(communityTrustService.submitReport(9L, request)).thenReturn(submittedReport("CONTENT", 7L));
+
+        Object result = service.report(9L, request);
+
+        assertEquals("CONTENT", request.getTargetType());
+        assertReporterProjection(result, "CONTENT", 7L);
+        verify(communityTrustService).submitReport(9L, request);
+    }
+
+    private CommunityReportCase submittedReport(String targetType, Long targetId) {
+        CommunityReportCase row = new CommunityReportCase();
+        row.setId(23L);
+        row.setReporterMemberId(9L);
+        row.setTargetType(targetType);
+        row.setTargetId(targetId);
+        row.setStage("SUBMITTED");
+        row.setVersion(0);
+        row.setPolicyVersion("COMMUNITY_REPORT_POLICY_V1");
+        row.setDescription("举报说明");
+        row.setRequestId("internal-request-marker");
+        row.setPayloadHash("internal-payload-digest");
+        row.setPrioritySnapshot("URGENT");
+        row.setFirstResponseMinutesSnapshot(15);
+        return row;
+    }
+
+    private void assertReporterProjection(Object result, String targetType, Long targetId) {
+        assertEquals(CommunityReportVO.class, result.getClass());
+        Map<String, Object> json = com.alibaba.fastjson2.JSON.parseObject(
+                com.alibaba.fastjson2.JSON.toJSONString(result));
+        assertEquals(23L, ((Number) json.get("id")).longValue());
+        assertEquals(targetType, json.get("targetType"));
+        assertEquals(targetId.longValue(), ((Number) json.get("targetId")).longValue());
+        assertEquals("SUBMITTED", json.get("stage"));
+        assertEquals("RECEIVED", json.get("publicStage"));
+        assertEquals(0, json.get("version"));
+        assertEquals("举报说明", json.get("description"));
+        for (String internal : Arrays.asList("reporterMemberId", "requestId", "payloadHash",
+                "prioritySnapshot", "firstResponseMinutesSnapshot", "internalNote", "operatorId")) {
+            assertEquals(false, json.containsKey(internal), internal);
+        }
     }
 
     @Test

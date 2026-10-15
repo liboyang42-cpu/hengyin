@@ -51,11 +51,30 @@ for (const [url, targetType, id] of [['/api/creativesquare/report', 'CONTENT', 5
       assert.equal(call.hideLoading, true); assert.equal(call.silentError, true);
 
     }
-    assert.deepEqual(post.data, { targetType, targetId: id, reasonCode: 'SERVER_REASON', policyVersion: 'server-policy', requestId: 'caller-request' });
+    assert.deepEqual(post.data, { targetType, targetId: id, reasonCode: 'SERVER_REASON', description: '服务端原因', policyVersion: 'server-policy', requestId: 'caller-request' });
     post.success({ code: 200, data: { id: 71 } }); await tick();
     assert.equal(h.results[0].code, 200); assert.equal(h.completions.length, 1);
   });
 }
+
+test('report description preserves caller text or uses the exact selected server reason label', async () => {
+  const taxonomy = { policyVersion: 'selected-policy', reasons: [
+    { label: '未选原因', code: 'FIRST' }, { label: '所选服务端原因', code: 'SELECTED' },
+  ] };
+  for (const [description, expected] of [
+    [undefined, '所选服务端原因'], [null, '所选服务端原因'], ['', '所选服务端原因'],
+    [' \t ', '所选服务端原因'], [42, '所选服务端原因'], ['  用户提供的真实说明  ', '  用户提供的真实说明  '],
+  ]) {
+    const h = harness();
+    h.request({ data: { id: 59, request_id: 'selected-request', description },
+      selectReportReason: labels => { assert.deepEqual(labels, ['未选原因', '所选服务端原因']); return Promise.resolve(1); } });
+    await tick(); h.calls[0].success({ code: 200, data: { reporting: taxonomy } }); await tick();
+    assert.deepEqual(h.calls[1].data, { targetType: 'CONTENT', targetId: 59,
+      reasonCode: 'SELECTED', description: expected, policyVersion: 'selected-policy', requestId: 'selected-request' });
+    h.calls[1].success({ code: 200, data: { id: 71 } }); await tick();
+    assert.equal(h.results[0].code, 200); assert.equal(h.completions.length, 1);
+  }
+});
 
 test('absent taxonomy fails closed before selection or report POST', async () => {
   for (const data of [undefined, {}, { reporting: { reasons: [] } }]) {
