@@ -34,7 +34,7 @@ Component({
       const epoch = this._epoch = (this._epoch || 0) + 1
       this.setData({ phase: 'loading', loadError: '' })
       getApp().sendRequest({
-        url: '/api/merchant/claims/status', method: 'GET', hideLoading: true, silentError: true,
+        url: '/api/merchant/claims/status', method: 'GET', hideLoading: true,
         success: (res) => {
           if (epoch !== this._epoch) return
           if (!isOk(res) || !Array.isArray(res.data)) {
@@ -67,7 +67,7 @@ Component({
       }
       getApp().sendRequest({
         url: '/api/merchant/list', method: 'POST', data: JSON.stringify({ name: kw }),
-        header: { 'Content-Type': 'application/json' }, hideLoading: true, silentError: true,
+        header: { 'Content-Type': 'application/json' }, hideLoading: true,
         success: (res) => {
           const rows = res && res.data && Array.isArray(res.data.rows) ? res.data.rows : (res && Array.isArray(res.data) ? res.data : [])
           done(isOk(res) ? rows.filter((r) => r && r.id).slice(0, 10).map((r) => ({ id: r.id, name: r.name || '未命名门店' })) : [])
@@ -110,7 +110,7 @@ Component({
       const settle = (patch) => this.setData(Object.assign({ submitting: false }, patch))
       getApp().sendRequest({
         url: '/api/merchant/claims/submit', method: 'POST', data: JSON.stringify(claim.buildSubmitBody(form)),
-        header: { 'Content-Type': 'application/json' }, hideLoading: true, silentError: true,
+        header: { 'Content-Type': 'application/json' }, hideLoading: true,
         success: (res) => {
           if (isOk(res)) { this._requestId = ''; settle({}); this.loadStatus(); return }
           settle({ formError: claim.submitErrorMessage(res) })
