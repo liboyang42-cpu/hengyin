@@ -14,6 +14,8 @@ import java.util.function.Supplier;
 @Service
 public class NpcChatWriteService
 {
+    /** Existing NPC lease duration, shared with the heartbeat; only its admission start moves. */
+    static final long LEASE_MILLIS = 20_000L;
     private final NpcChatRequestMapper requests;
     private final NpcChatLogMapper logs;
     private final TransactionTemplate transaction;
@@ -47,6 +49,9 @@ public class NpcChatWriteService
             NpcChatRequest existing = requests.selectByUserAndRequestId(request.getUserId(), request.getRequestId());
             if (existing != null) return existing;
             requests.expireProcessingByUserAndSession(request.getUserId(), request.getSessionId(), timeoutText);
+            // Waiting for the per-user lock must not consume a new request's entire initial lease.
+            // Existing rows returned above are never renewed here, including expired/deleted tombstones.
+            request.setLeaseUntil(new java.util.Date(System.currentTimeMillis() + LEASE_MILLIS));
             if (requests.insertNpcChatRequest(request) != 1) throw new IllegalStateException("NPC request admission failed");
             return requests.selectByUserAndRequestId(request.getUserId(), request.getRequestId());
         });

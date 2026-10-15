@@ -47,7 +47,7 @@ public class NpcChatService
     private static final int REQUEST_ID_MAX = 64;
     private static final int MESSAGE_MAX_CODE_POINTS = 300;
     private static final int SAFE_TEXT_MAX_CODE_POINTS = 160;
-    private static final long LEASE_MILLIS = 20_000L;
+    private static final long LEASE_MILLIS = NpcChatWriteService.LEASE_MILLIS;
     private static final long LEASE_HEARTBEAT_MILLIS = LEASE_MILLIS / 4;
     private static final long MAX_CHAT_ENTITY_ID = Long.MAX_VALUE / 2;
     private static final Pattern UUID_PATTERN = Pattern.compile(
@@ -600,7 +600,6 @@ public class NpcChatService
         state.setRetryable(false);
         state.setAi(true);
         state.setLeaseToken(IdUtils.simpleUUID());
-        state.setLeaseUntil(new Date(System.currentTimeMillis() + LEASE_MILLIS));
         state.setActiveSlot(1);
         return state;
     }
