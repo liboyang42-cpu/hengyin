@@ -20191,32 +20191,6 @@
           "route": "pages/merchant/apply/index",
           "segments": [
             {
-              "selector": "cy-merchant-claim-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 8
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/apply/index",
-          "segments": [
-            {
-              "selector": "cy-merchant-claim-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 9
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/apply/index",
-          "segments": [
-            {
               "selector": "cy-privacy-gate",
               "index": 0
             },
@@ -138562,6 +138536,32 @@
             {
               "selector": "cy-inline-error.submit-error",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/apply/index",
+          "segments": [
+            {
+              "selector": "cy-merchant-claim-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-inline-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/apply/index",
+          "segments": [
+            {
+              "selector": "cy-merchant-claim-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-inline-error",
+              "index": 1
             }
           ]
         },
@@ -666241,7 +666241,7 @@
       }
     },
     {
-      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:16:bindtap:restart:2",
+      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:14:bindtap:restart:2",
       "route": "component:pages/merchant/components/merchant-claim-sheet/index",
       "hostRoutes": [
         "pages/merchant/apply/index"
@@ -666276,7 +666276,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "restart",
-        "line": 16,
+        "line": 14,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{view.state === 'rejected'}}",
         "disabledCondition": null,
@@ -666320,7 +666320,7 @@
       }
     },
     {
-      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:17:bindtap:onClose:3",
+      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:15:bindtap:onClose:3",
       "route": "component:pages/merchant/components/merchant-claim-sheet/index",
       "hostRoutes": [
         "pages/merchant/apply/index"
@@ -666355,7 +666355,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onClose",
-        "line": 17,
+        "line": 15,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -666400,7 +666400,7 @@
       }
     },
     {
-      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:26:bindconfirm:search:5",
+      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:24:bindconfirm:search:5",
       "route": "component:pages/merchant/components/merchant-claim-sheet/index",
       "hostRoutes": [
         "pages/merchant/apply/index"
@@ -666435,7 +666435,7 @@
         "tag": "input",
         "event": "bindconfirm",
         "handler": "search",
-        "line": 26,
+        "line": 24,
         "selectorHint": ".mcs__input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -666511,7 +666511,7 @@
       }
     },
     {
-      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:26:bindinput:onKeyword:4",
+      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:24:bindinput:onKeyword:4",
       "route": "component:pages/merchant/components/merchant-claim-sheet/index",
       "hostRoutes": [
         "pages/merchant/apply/index"
@@ -666546,7 +666546,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onKeyword",
-        "line": 26,
+        "line": 24,
         "selectorHint": ".mcs__input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -666590,7 +666590,7 @@
       }
     },
     {
-      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:27:bindtap:search:6",
+      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:25:bindtap:search:6",
       "route": "component:pages/merchant/components/merchant-claim-sheet/index",
       "hostRoutes": [
         "pages/merchant/apply/index"
@@ -666625,7 +666625,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "search",
-        "line": 27,
+        "line": 25,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -666701,7 +666701,7 @@
       }
     },
     {
-      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:29:bindtap:pick:7",
+      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:27:bindtap:pick:7",
       "route": "component:pages/merchant/components/merchant-claim-sheet/index",
       "hostRoutes": [
         "pages/merchant/apply/index"
@@ -666736,7 +666736,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pick",
-        "line": 29,
+        "line": 27,
         "selectorHint": ".mcs__cand",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -666780,7 +666780,7 @@
       }
     },
     {
-      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:35:bindtap:clearPick:8",
+      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:33:bindtap:clearPick:8",
       "route": "component:pages/merchant/components/merchant-claim-sheet/index",
       "hostRoutes": [
         "pages/merchant/apply/index"
@@ -666815,7 +666815,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "clearPick",
-        "line": 35,
+        "line": 33,
         "selectorHint": ".mcs__link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -666859,7 +666859,7 @@
       }
     },
     {
-      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:36:bindinput:onContactName:9",
+      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:34:bindinput:onContactName:9",
       "route": "component:pages/merchant/components/merchant-claim-sheet/index",
       "hostRoutes": [
         "pages/merchant/apply/index"
@@ -666894,7 +666894,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onContactName",
-        "line": 36,
+        "line": 34,
         "selectorHint": ".mcs__input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -666938,7 +666938,7 @@
       }
     },
     {
-      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:37:bindinput:onContactPhone:10",
+      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:35:bindinput:onContactPhone:10",
       "route": "component:pages/merchant/components/merchant-claim-sheet/index",
       "hostRoutes": [
         "pages/merchant/apply/index"
@@ -666973,7 +666973,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onContactPhone",
-        "line": 37,
+        "line": 35,
         "selectorHint": ".mcs__input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -667017,7 +667017,7 @@
       }
     },
     {
-      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:38:bindinput:onStatement:11",
+      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:36:bindinput:onStatement:11",
       "route": "component:pages/merchant/components/merchant-claim-sheet/index",
       "hostRoutes": [
         "pages/merchant/apply/index"
@@ -667052,7 +667052,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onStatement",
-        "line": 38,
+        "line": 36,
         "selectorHint": ".mcs__area",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -667096,7 +667096,7 @@
       }
     },
     {
-      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:43:bindtap:removeProof:12",
+      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:41:bindtap:removeProof:12",
       "route": "component:pages/merchant/components/merchant-claim-sheet/index",
       "hostRoutes": [
         "pages/merchant/apply/index"
@@ -667131,7 +667131,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "removeProof",
-        "line": 43,
+        "line": 41,
         "selectorHint": ".mcs__proof-x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -667175,7 +667175,7 @@
       }
     },
     {
-      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:45:bindtap:addProof:13",
+      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:43:bindtap:addProof:13",
       "route": "component:pages/merchant/components/merchant-claim-sheet/index",
       "hostRoutes": [
         "pages/merchant/apply/index"
@@ -667213,7 +667213,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "addProof",
-        "line": 45,
+        "line": 43,
         "selectorHint": ".mcs__proof",
         "visibleCondition": "{{proofUrls.length < 10}}",
         "disabledCondition": null,
@@ -667293,7 +667293,7 @@
       }
     },
     {
-      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:48:bindtap:submit:14",
+      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:46:bindtap:submit:14",
       "route": "component:pages/merchant/components/merchant-claim-sheet/index",
       "hostRoutes": [
         "pages/merchant/apply/index"
@@ -667328,7 +667328,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submit",
-        "line": 48,
+        "line": 46,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{submitting}}",
@@ -667415,7 +667415,7 @@
       }
     },
     {
-      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:55:bind:afterleave:onClose:15",
+      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:53:bind:afterleave:onClose:15",
       "route": "component:pages/merchant/components/merchant-claim-sheet/index",
       "hostRoutes": [
         "pages/merchant/apply/index"
@@ -667450,7 +667450,7 @@
         "tag": "page-container",
         "event": "bind:afterleave",
         "handler": "onClose",
-        "line": 55,
+        "line": 53,
         "selectorHint": "page-container[bind:afterleave]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -667495,7 +667495,7 @@
       }
     },
     {
-      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:7:bindtap:retry:1",
+      "id": "pages/merchant/components/merchant-claim-sheet/index.wxml:6:bind:action:retry:1",
       "route": "component:pages/merchant/components/merchant-claim-sheet/index",
       "hostRoutes": [
         "pages/merchant/apply/index"
@@ -667527,12 +667527,12 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
+        "tag": "cy-inline-error",
+        "event": "bind:action",
         "handler": "retry",
-        "line": 7,
-        "selectorHint": "cy-btn[bindtap]",
-        "visibleCondition": null,
+        "line": 6,
+        "selectorHint": "cy-inline-error[bind:action]",
+        "visibleCondition": "{{phase === 'error'}}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": null,
@@ -667546,7 +667546,7 @@
         "ariaCheckedExpression": null
       },
       "actionClass": "read",
-      "interactionMode": "tap",
+      "interactionMode": "event-contract",
       "baseActionClass": "read",
       "effectClasses": [
         "read",

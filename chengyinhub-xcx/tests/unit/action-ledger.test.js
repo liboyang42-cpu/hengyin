@@ -551,7 +551,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-06 合并弹窗/模板分支与最新主线后按最终源码重建，数值待生成台账后校准。
   // 2026-10-13 小程序底层A/B/C集成重建实测:C包漫游恢复/雾层重试会重启定位采样,生成器把 recoverRoam、
   //   retryScreenFog 两颗 tap 由 local write 改判 external(real-device-required),不进 local 分母。1781 → 1779。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1789)  /* 2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1788)  /* 2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -760,7 +760,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-09-27 主页空区隐藏与失败保留旧数据：移除四个旧状态控件。
   // 2026-10-13 小程序底层A/B/C集成重建实测:漫游 recoverRoam / retrySettle 两条 bind:retry 重启定位采样,
   //   改判 external(real-device-required)。2321 → 2319。
-  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2331)  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
+  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2332)  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
   // 商家承接接入 cy-date-range-sheet 后新增 confirm / cancel 两条事件合同，1662 → 1664。
   // 合作页将会话失效与无权限拆为两个 cy-empty CTA，新增 goLogin / goWorkbench 两条事件合同，1664 → 1666。
   //   带一个 bind:cta 首发引导(+1),净 -2;同批新增两条 cy-state-shell 的 bind:primary
