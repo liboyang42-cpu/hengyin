@@ -250,6 +250,13 @@ class CooldownConfigWriteThroughRealConfigServiceTest {
         }
 
         @Override
+        public SysConfig selectFundsPolicyConfigForUpdate(String configKey) {
+            SysConfig probe = new SysConfig();
+            probe.setConfigKey(configKey);
+            return selectConfig(probe);
+        }
+
+        @Override
         public List<SysConfig> selectConfigList(SysConfig probe) {
             List<SysConfig> matched = new ArrayList<SysConfig>();
             for (SysConfig row : rows) {
