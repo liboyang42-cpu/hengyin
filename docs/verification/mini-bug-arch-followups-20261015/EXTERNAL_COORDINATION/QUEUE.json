@@ -7,8 +7,8 @@
     "E02": 18,
     "E03": 14,
     "E04": 12,
-    "E05": 11,
-    "E06": 12
+    "E05": 13,
+    "E06": 13
   },
   "target_actionable_items": 50,
   "max_workers": 6,
@@ -121,10 +121,10 @@
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java",
         "chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
       "owner": "EXTRA6/E01",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_04Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-04.md",
@@ -134,7 +134,8 @@
       "branch": "codex/extra-e01-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e01",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "554ce4b6b10e0043f6bdcfb3abbd2df0993423c6",
+      "regression_methods_written": 0
     },
     {
       "id": "E01-05",
@@ -151,10 +152,10 @@
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java",
         "chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
       "owner": "EXTRA6/E01",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_05Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-05.md",
@@ -164,7 +165,8 @@
       "branch": "codex/extra-e01-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e01",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "bf3db9ccbd070a6959484f47651ff1d0f573f851",
+      "regression_methods_written": 0
     },
     {
       "id": "E01-06",
@@ -180,10 +182,10 @@
       "source_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E01",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_06Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-06.md",
@@ -193,7 +195,12 @@
       "branch": "codex/extra-e01-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e01",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "f5341aeabcd2eea8961416d5d63e14b70fdf184c",
+      "regression_methods_written": 2,
+      "future_focused_command": "mvn -B -pl chengyinhub-admin -am -Dtest=E01_06Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
+      "expected_count_unit": "JUnit methods; environment gates must be explicitly enabled as evidence requires, no skipped methods claimed pass",
+      "future_execution_prerequisites": "NOT AUTHORIZED NOW. Read evidence file for exact database/env/scratch/permissions and distinguish stub/H2/MySQL. Commands are text only, never executed.",
+      "delivery_kind": "REGRESSION_SOURCE_ONLY; production unchanged"
     },
     {
       "id": "E01-07",
@@ -240,10 +247,10 @@
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistTokenCodec.java",
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
       "owner": "EXTRA6/E01",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_08Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-08.md",
@@ -253,7 +260,8 @@
       "branch": "codex/extra-e01-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e01",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "8b60fbf5d9003c17a7863abcd25c06d7c9c7c011",
+      "regression_methods_written": 0
     },
     {
       "id": "E01-09",
@@ -269,10 +277,10 @@
       "source_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E01",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_09Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-09.md",
@@ -282,7 +290,12 @@
       "branch": "codex/extra-e01-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e01",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "bdaa041ed94f63b5ab5b2b703bf348ed50810ca1",
+      "regression_methods_written": 2,
+      "future_focused_command": "mvn -B -pl chengyinhub-admin -am -Dtest=E01_09Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
+      "expected_count_unit": "JUnit methods; environment gates must be explicitly enabled as evidence requires, no skipped methods claimed pass",
+      "future_execution_prerequisites": "NOT AUTHORIZED NOW. Read evidence file for exact database/env/scratch/permissions and distinguish stub/H2/MySQL. Commands are text only, never executed.",
+      "delivery_kind": "REGRESSION_SOURCE_ONLY; production unchanged"
     },
     {
       "id": "E02-01",
@@ -422,20 +435,21 @@
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
         "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml"
       ],
-      "state": "IN_PROGRESS_SOURCE_ONLY",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
       "owner": "EXTRA6/E02",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_05Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-05.md",
       "priority": "P2",
       "estimated_source_effort": "30-120 minutes; no verification included",
-      "assigned_worker": "/root/external_e02",
+      "assigned_worker": null,
       "branch": "codex/extra-e02-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e02",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "f6bc12f6143446c58da7efe96652b26dd592bcdf",
+      "regression_methods_written": 0
     },
     {
       "id": "E02-06",
@@ -452,10 +466,10 @@
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
         "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E02",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-06.md",
@@ -465,7 +479,11 @@
       "branch": "codex/extra-e02-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e02",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "82c7d02bfbacf26df5714d6c121dbddc5951ca89",
+      "regression_methods_written": 1,
+      "future_focused_command": "mvn -B -pl chengyinhub-admin -am -Dtest=E02_06Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
+      "expected_count_unit": "JUnit methods; environment gates must be explicitly enabled as evidence requires, no skipped methods claimed pass",
+      "future_execution_prerequisites": "NOT AUTHORIZED NOW. Read evidence file for exact database/env/scratch/permissions and distinguish stub/H2/MySQL. Commands are text only, never executed."
     },
     {
       "id": "E02-07",
@@ -481,10 +499,10 @@
       "source_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
       "owner": "EXTRA6/E02",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_07Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-07.md",
@@ -494,7 +512,8 @@
       "branch": "codex/extra-e02-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e02",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "bb03bd32589d9b02cbb21696e3ce0da5e9821ee6",
+      "regression_methods_written": 0
     },
     {
       "id": "E02-08",
@@ -510,10 +529,10 @@
       "source_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
       "owner": "EXTRA6/E02",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_08Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-08.md",
@@ -523,7 +542,8 @@
       "branch": "codex/extra-e02-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e02",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "342535ec2132dc78473a3c67ed0cb76788fb092d",
+      "regression_methods_written": 0
     },
     {
       "id": "E02-09",
@@ -540,10 +560,10 @@
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityMediaReceiptServiceImpl.java",
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
       "owner": "EXTRA6/E02",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_09Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-09.md",
@@ -553,7 +573,8 @@
       "branch": "codex/extra-e02-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e02",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "56d18e7b37c08810b4db313fd690d83cafd261b1",
+      "regression_methods_written": 0
     },
     {
       "id": "E03-01",
@@ -701,20 +722,21 @@
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImpl.java",
         "chengyinhub-system/src/main/resources/mapper/business/PlayJourneyReadMapper.xml"
       ],
-      "state": "IN_PROGRESS_SOURCE_ONLY",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
       "owner": "EXTRA6/E03",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_05Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-05.md",
       "priority": "P2",
       "estimated_source_effort": "30-120 minutes; no verification included",
-      "assigned_worker": "/root/external_e03",
+      "assigned_worker": null,
       "branch": "codex/extra-e03-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e03",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "46f0c75b6d18a8ed432bd18b00df24d768ae3ac5",
+      "regression_methods_written": 0
     },
     {
       "id": "E03-06",
@@ -730,10 +752,10 @@
       "source_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/JourneyStory.java"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
       "owner": "EXTRA6/E03",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_06Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-06.md",
@@ -743,7 +765,8 @@
       "branch": "codex/extra-e03-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e03",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "8ac7ca8e3e5383b3e7175dd2c3a074165c44ea58",
+      "regression_methods_written": 0
     },
     {
       "id": "E03-07",
@@ -759,10 +782,10 @@
       "source_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/JourneyStoryValidator.java"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
       "owner": "EXTRA6/E03",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_07Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-07.md",
@@ -772,7 +795,8 @@
       "branch": "codex/extra-e03-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e03",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "4471ffdf3bda1bb437df6679d7de703cc9a72ce7",
+      "regression_methods_written": 0
     },
     {
       "id": "E03-08",
@@ -788,10 +812,10 @@
       "source_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/NodeJourneySnapshot.java"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "BLOCKED_DEPENDENCY",
       "owner": "EXTRA6/E03",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_08Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-08.md",
@@ -801,7 +825,8 @@
       "branch": "codex/extra-e03-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e03",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "8cc062a5782d45758b7a26db35ffedabe018fc7d",
+      "regression_methods_written": 0
     },
     {
       "id": "E04-01",
@@ -952,20 +977,21 @@
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
         "chengyinhub-system/src/main/resources/mapper/business/SmsCouponHistoryMapper.xml"
       ],
-      "state": "IN_PROGRESS_SOURCE_ONLY",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
       "owner": "EXTRA6/E04",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_05Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E04-05.md",
       "priority": "P2",
       "estimated_source_effort": "30-120 minutes; no verification included",
-      "assigned_worker": "/root/external_e04",
+      "assigned_worker": null,
       "branch": "codex/extra-e04-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e04",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "3c186e3cf6128a0f5d1645f3e5335be2ffff2407",
+      "regression_methods_written": 0
     },
     {
       "id": "E04-06",
@@ -981,10 +1007,10 @@
       "source_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E04",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_06Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E04-06.md",
@@ -994,7 +1020,21 @@
       "branch": "codex/extra-e04-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e04",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "ce669a5af4b5231fe9660e44f5e420240f078e56",
+      "regression_methods_written": 2,
+      "future_focused_command": "mvn -B -pl chengyinhub-admin -am -Dtest=E04_06Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
+      "expected_count_unit": "JUnit methods; environment gates must be explicitly enabled as evidence requires, no skipped methods claimed pass",
+      "future_execution_prerequisites": "NOT AUTHORIZED NOW. Read evidence file for exact database/env/scratch/permissions and distinguish stub/H2/MySQL. Commands are text only, never executed.",
+      "former_blocker": "Resolved C00 PR16 comment6194035333 and control 53d50db24b83ec856abb7d998d913c79699934dc",
+      "write_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SmsCouponReverseTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SmsCouponReverseTransactionBoundaryTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B03CouponLifecycleMySqlIT.java",
+        "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_E04_COUPON/README.md",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_06Test.java",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E04-06.md"
+      ]
     },
     {
       "id": "E04-07",
@@ -1010,10 +1050,10 @@
       "source_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "BLOCKED_OWNERSHIP",
       "owner": "EXTRA6/E04",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E04-07.md",
@@ -1023,7 +1063,8 @@
       "branch": "codex/extra-e04-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e04",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "2f3e96b0c8e5456bfc36f1b91416772d1781aa46",
+      "regression_methods_written": 0
     },
     {
       "id": "E04-08",
@@ -1039,10 +1080,10 @@
       "source_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
       "owner": "EXTRA6/E04",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_08Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E04-08.md",
@@ -1052,7 +1093,8 @@
       "branch": "codex/extra-e04-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e04",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "54141c748c9741add0f2005786572f5de10772ef",
+      "regression_methods_written": 0
     },
     {
       "id": "E05-01",
@@ -1098,20 +1140,21 @@
       "source_files": [
         "chengyinhub-xcx/utils/subscribe.js"
       ],
-      "state": "IN_PROGRESS_SOURCE_ONLY",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
       "owner": "EXTRA6/E05",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-e05-02.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-02.md",
       "priority": "P2",
       "estimated_source_effort": "30-120 minutes; no verification included",
-      "assigned_worker": "/root/external_e05",
+      "assigned_worker": null,
       "branch": "codex/extra-e05-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e05",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "60ddc406587baf18ca8d4cbef023cefd98a09075",
+      "regression_methods_written": 0
     },
     {
       "id": "E05-03",
@@ -1219,10 +1262,10 @@
       "source_files": [
         "chengyinhub-xcx/pages/mylike/mylike.js"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E05",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-e05-06.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-06.md",
@@ -1232,7 +1275,11 @@
       "branch": "codex/extra-e05-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e05",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "5c5f4e48e1f7166e999953b27d9847b1e9f6a553",
+      "regression_methods_written": 8,
+      "future_focused_command": "node --test chengyinhub-xcx/tests/unit/longrun-e05-06.test.js",
+      "expected_count_unit": "node:test cases",
+      "future_execution_prerequisites": "NOT AUTHORIZED NOW. Read evidence file for exact database/env/scratch/permissions and distinguish stub/H2/MySQL. Commands are text only, never executed."
     },
     {
       "id": "E05-07",
@@ -1248,10 +1295,10 @@
       "source_files": [
         "chengyinhub-xcx/pages/mylike/mylike.js"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E05",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-e05-07.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-07.md",
@@ -1261,7 +1308,11 @@
       "branch": "codex/extra-e05-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e05",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "81faa4176b874e9379f7a5f59ed1dcdb1c9b0e74",
+      "regression_methods_written": 9,
+      "future_focused_command": "node --test chengyinhub-xcx/tests/unit/longrun-e05-07.test.js",
+      "expected_count_unit": "node:test cases",
+      "future_execution_prerequisites": "NOT AUTHORIZED NOW. Read evidence file for exact database/env/scratch/permissions and distinguish stub/H2/MySQL. Commands are text only, never executed."
     },
     {
       "id": "E05-08",
@@ -1277,10 +1328,10 @@
       "source_files": [
         "chengyinhub-xcx/pages/mylike/mylike.js"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
       "owner": "EXTRA6/E05",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-e05-08.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-08.md",
@@ -1290,7 +1341,8 @@
       "branch": "codex/extra-e05-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e05",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "c0151cffe24eb2c5c3c6c6a1e619282c94d99c83",
+      "regression_methods_written": 0
     },
     {
       "id": "E06-01",
@@ -1336,10 +1388,10 @@
       "source_files": [
         "chengyinhub-xcx/utils/audio-session.js"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
       "owner": "EXTRA6/E06",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-e06-02.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-02.md",
@@ -1349,7 +1401,8 @@
       "branch": "codex/extra-e06-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e06",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "00802fa7ef5f63a5648bd341736605aa1470428f",
+      "regression_methods_written": 0
     },
     {
       "id": "E06-03",
@@ -1425,20 +1478,24 @@
       "source_files": [
         "chengyinhub-xcx/utils/poller.js"
       ],
-      "state": "IN_PROGRESS_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E06",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-e06-05.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-05.md",
       "priority": "P2",
       "estimated_source_effort": "30-120 minutes; no verification included",
-      "assigned_worker": "/root/external_e06",
+      "assigned_worker": null,
       "branch": "codex/extra-e06-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e06",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "ea7cd327999342fb01148b67d3837ecdb497a6ed",
+      "regression_methods_written": 7,
+      "future_focused_command": "node --test chengyinhub-xcx/tests/unit/longrun-e06-05.test.js",
+      "expected_count_unit": "node:test cases",
+      "future_execution_prerequisites": "NOT AUTHORIZED NOW. Read evidence file for exact database/env/scratch/permissions and distinguish stub/H2/MySQL. Commands are text only, never executed."
     },
     {
       "id": "E06-06",
@@ -1454,10 +1511,10 @@
       "source_files": [
         "chengyinhub-xcx/utils/location/last-location.js"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E06",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-e06-06.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-06.md",
@@ -1467,7 +1524,11 @@
       "branch": "codex/extra-e06-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e06",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "f0f1de9b6665237876f2c1233af2000d2289adc8",
+      "regression_methods_written": 4,
+      "future_focused_command": "node --test chengyinhub-xcx/tests/unit/longrun-e06-06.test.js",
+      "expected_count_unit": "node:test cases",
+      "future_execution_prerequisites": "NOT AUTHORIZED NOW. Read evidence file for exact database/env/scratch/permissions and distinguish stub/H2/MySQL. Commands are text only, never executed."
     },
     {
       "id": "E06-07",
@@ -1483,10 +1544,10 @@
       "source_files": [
         "chengyinhub-xcx/utils/location/location-manager.js"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
       "owner": "EXTRA6/E06",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-e06-07.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-07.md",
@@ -1496,7 +1557,8 @@
       "branch": "codex/extra-e06-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e06",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "45d2ea0cc8a055046d47e68aaae19fc083577b32",
+      "regression_methods_written": 0
     },
     {
       "id": "E06-08",
@@ -1573,10 +1635,10 @@
       "source_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
       "owner": "EXTRA6/E01",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_11Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-11.md",
@@ -1587,7 +1649,8 @@
       "branch": "codex/extra-e01-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e01",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "13eee605aa1f0c3f38b507cd5d0a3e9c7a5b6299",
+      "regression_methods_written": 0
     },
     {
       "id": "E02-10",
@@ -1666,10 +1729,10 @@
       "source_files": [
         "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "BLOCKED_DECISION",
       "owner": "EXTRA6/E02",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_12Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-12.md",
@@ -1680,7 +1743,8 @@
       "branch": "codex/extra-e02-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e02",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "6d9e6b1565137d66f81b91cdc5fa2e739b64166b",
+      "regression_methods_written": 0
     },
     {
       "id": "E03-09",
@@ -1715,7 +1779,8 @@
         "docs/verification/mini-longrun-20261015/EXTRA6/E03-09.md"
       ],
       "authorization": "Retained initial E03 whitelist ownership; parent explicitly assigned fixture correction.",
-      "regression_methods_written": 3
+      "regression_methods_written": 3,
+      "delivery_kind": "ORIGINAL_TEST_FIXTURE_ONLY; original method count and business assertions preserved"
     },
     {
       "id": "E04-09",
@@ -1731,7 +1796,7 @@
       "source_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "IN_PROGRESS_SOURCE_ONLY",
       "owner": "EXTRA6/E04",
       "verification": "NOT_RUN",
       "delivery": "PENDING_SOURCE",
@@ -1741,11 +1806,12 @@
       "evidence": "SmsCouponHistoryController.add真实调用；旧回滚用例仅grantCouponById",
       "priority": "P1",
       "estimated_source_effort": "30-120 minutes; verification excluded",
-      "assigned_worker": null,
+      "assigned_worker": "/root/external_e04",
       "branch": "codex/extra-e04-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e04",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": null,
+      "writer_mode": "SOURCE_OWNER"
     },
     {
       "id": "E05-09",
@@ -1885,10 +1951,10 @@
       "source_files": [
         "chengyinhub-xcx/utils/location/bg-tracker.js"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E06",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-e06-11.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-11.md",
@@ -1899,7 +1965,11 @@
       "branch": "codex/extra-e06-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e06",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "6017b3b6dcfa93a248129ff35ccd18545e8e8f31",
+      "regression_methods_written": 4,
+      "future_focused_command": "node --test chengyinhub-xcx/tests/unit/longrun-e06-11.test.js",
+      "expected_count_unit": "node:test cases",
+      "future_execution_prerequisites": "NOT AUTHORIZED NOW. Read evidence file for exact database/env/scratch/permissions and distinguish stub/H2/MySQL. Commands are text only, never executed."
     },
     {
       "id": "E01-12",
@@ -1947,7 +2017,7 @@
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java",
         "chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "IN_PROGRESS_SOURCE_ONLY",
       "owner": "EXTRA6/E01",
       "verification": "NOT_RUN",
       "delivery": "PENDING_SOURCE",
@@ -1957,11 +2027,12 @@
       "evidence": "seriesPolicyByActivity只club/del_flag，join未直接查发布/结束/售卖截止；已有fullActivity用例未覆盖",
       "priority": "P1",
       "estimated_source_effort": "30-120 minutes; no verification",
-      "assigned_worker": null,
+      "assigned_worker": "/root/external_e01",
       "branch": "codex/extra-e01-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e01",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": null,
+      "writer_mode": "SOURCE_OWNER"
     },
     {
       "id": "E02-13",
@@ -1977,10 +2048,10 @@
       "source_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "BLOCKED_DEPENDENCY",
       "owner": "EXTRA6/E02",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_13Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-13.md",
@@ -1991,7 +2062,8 @@
       "branch": "codex/extra-e02-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e02",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "0e95dbd2eb61c217ab23256dcf7ff29103b36528",
+      "regression_methods_written": 0
     },
     {
       "id": "E02-14",
@@ -2008,7 +2080,7 @@
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
         "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "IN_PROGRESS_SOURCE_ONLY",
       "owner": "EXTRA6/E02",
       "verification": "NOT_RUN",
       "delivery": "PENDING_SOURCE",
@@ -2018,11 +2090,12 @@
       "evidence": "validateUpsert检成员，publish未直接重查，需审真实调用者及授权合同",
       "priority": "P1",
       "estimated_source_effort": "30-120 minutes; no verification",
-      "assigned_worker": null,
+      "assigned_worker": "/root/external_e02",
       "branch": "codex/extra-e02-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e02",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": null,
+      "writer_mode": "SOURCE_OWNER"
     },
     {
       "id": "E04-10",
@@ -2039,10 +2112,10 @@
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
         "chengyinhub-system/src/main/resources/mapper/business/SmsCouponHistoryMapper.xml"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E04",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_10Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E04-10.md",
@@ -2053,7 +2126,11 @@
       "branch": "codex/extra-e04-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e04",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "64a2c898c3259a4cfc55370e504e3843bfbb3a8d",
+      "regression_methods_written": 3,
+      "future_focused_command": "mvn -B -pl chengyinhub-admin -am -Dtest=E04_10Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
+      "expected_count_unit": "JUnit methods; environment gates must be explicitly enabled as evidence requires, no skipped methods claimed pass",
+      "future_execution_prerequisites": "NOT AUTHORIZED NOW. Read evidence file for exact database/env/scratch/permissions and distinguish stub/H2/MySQL. Commands are text only, never executed."
     },
     {
       "id": "E03-10",
@@ -2067,10 +2144,10 @@
       "execution": "READ_ONLY_DEPENDENCY_AUDIT; evidence write only; no validation",
       "ownership": "EXTRA6 transferred exact files; one lane writer serially",
       "source_files": [],
-      "state": "READY_SOURCE_ONLY",
+      "state": "BLOCKED_DEPENDENCY",
       "owner": "EXTRA6/E03",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": null,
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-10.md",
@@ -2083,10 +2160,11 @@
       "depends_on": [
         "Implementation owner CORE/C06; this task delivers the source-linked dependency packet only"
       ],
-      "public_sha": null,
+      "public_sha": "d45bd8510a83768de27e67a2285f04587fb72b5b",
       "read_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java"
-      ]
+      ],
+      "regression_methods_written": 0
     },
     {
       "id": "E03-11",
@@ -2102,7 +2180,7 @@
       "source_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/JourneyStory.java"
       ],
-      "state": "BLOCKED_CONTRACT",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E03",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -2116,8 +2194,11 @@
       "branch": "codex/extra-e03-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e03",
       "depends_on": [],
-      "public_sha": "fb6195b7fc2888461af6b408caecf0fc8e08fdf8",
-      "regression_methods_written": 0
+      "public_sha": "c9185cb6027ea04fa8a55ac16191d14f63f6f4d4",
+      "regression_methods_written": 7,
+      "future_focused_command": "mvn -B -pl chengyinhub-admin -am -Dtest=E03_11Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
+      "expected_count_unit": "JUnit methods; environment gates must be explicitly enabled as evidence requires, no skipped methods claimed pass",
+      "future_execution_prerequisites": "NOT AUTHORIZED NOW. Read evidence file for exact database/env/scratch/permissions and distinguish stub/H2/MySQL. Commands are text only, never executed."
     },
     {
       "id": "E01-14",
@@ -2134,21 +2215,25 @@
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java",
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventScheduleMaterializer.java"
       ],
-      "state": "IN_PROGRESS_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E01",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_14Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-14.md",
       "evidence": "E01-03实际调用顺序发现；同日重放测试不排除跨日校验先拒绝",
       "priority": "P2",
       "estimated_source_effort": "30-120 minutes; verification excluded",
-      "assigned_worker": "/root/external_e01",
+      "assigned_worker": null,
       "branch": "codex/extra-e01-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e01",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "d4d07d377136d970ea98ace76650f03c518e85ca",
+      "regression_methods_written": 4,
+      "future_focused_command": "mvn -B -pl chengyinhub-admin -am -Dtest=E01_14Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
+      "expected_count_unit": "JUnit methods; environment gates must be explicitly enabled as evidence requires, no skipped methods claimed pass",
+      "future_execution_prerequisites": "NOT AUTHORIZED NOW. Read evidence file for exact database/env/scratch/permissions and distinguish stub/H2/MySQL. Commands are text only, never executed."
     },
     {
       "id": "E01-15",
@@ -2196,7 +2281,7 @@
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java",
         "chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "IN_PROGRESS_SOURCE_ONLY",
       "owner": "EXTRA6/E01",
       "verification": "NOT_RUN",
       "delivery": "PENDING_SOURCE",
@@ -2206,11 +2291,17 @@
       "evidence": "finishOccurrenceCancellation注释明确整体回滚合同，先核已有集成回归，退款核心只读",
       "priority": "P2",
       "estimated_source_effort": "30-120 minutes; verification excluded",
-      "assigned_worker": null,
+      "assigned_worker": "/root/external_e06",
       "branch": "codex/extra-e01-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e01",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": null,
+      "writer_mode": "REGRESSION_ONLY_SUPPORT",
+      "write_files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_16Test.java",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E01-16.md"
+      ],
+      "business_source_write": "FORBIDDEN to support worker; original E01/E02 writer remains exclusive; report any defect to that writer"
     },
     {
       "id": "E01-17",
@@ -2258,7 +2349,7 @@
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
         "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "IN_PROGRESS_SOURCE_ONLY",
       "owner": "EXTRA6/E02",
       "verification": "NOT_RUN",
       "delivery": "PENDING_SOURCE",
@@ -2268,11 +2359,17 @@
       "evidence": "E02-04提出真实后置调用链，当前@Transactional预期已支持；先核既有回归缺口",
       "priority": "P2",
       "estimated_source_effort": "30-120 minutes; verification excluded",
-      "assigned_worker": null,
+      "assigned_worker": "/root/external_e05",
       "branch": "codex/extra-e02-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e02",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": null,
+      "writer_mode": "REGRESSION_ONLY_SUPPORT",
+      "write_files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_15Test.java",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E02-15.md"
+      ],
+      "business_source_write": "FORBIDDEN to support worker; original E01/E02 writer remains exclusive; report any defect to that writer"
     },
     {
       "id": "E02-16",
@@ -2381,7 +2478,7 @@
       "source_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/JourneyStory.java"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "IN_PROGRESS_SOURCE_ONLY",
       "owner": "EXTRA6/E03",
       "verification": "NOT_RUN",
       "delivery": "PENDING_SOURCE",
@@ -2391,11 +2488,12 @@
       "evidence": "现有public remapNpcIds与真实保存链；区别E03-06章节和E03-11节点映射",
       "priority": "P2",
       "estimated_source_effort": "30-120 minutes; verification excluded",
-      "assigned_worker": null,
+      "assigned_worker": "/root/external_e03",
       "branch": "codex/extra-e03-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e03",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": null,
+      "writer_mode": "SOURCE_OWNER"
     },
     {
       "id": "E03-13",
@@ -2534,10 +2632,10 @@
       "source_files": [
         "chengyinhub-xcx/subpackageMember/components/cy/scene-member-order-history/index.js"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
       "owner": "EXTRA6/E05",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-e05-11.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-11.md",
@@ -2548,7 +2646,8 @@
       "branch": "codex/extra-e05-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e05",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "1aa4fcc437b01c490d0e135d5dd92aa9f1e698ae",
+      "regression_methods_written": 0
     },
     {
       "id": "E06-12",
@@ -2564,10 +2663,10 @@
       "source_files": [
         "chengyinhub-xcx/utils/location/bg-tracker.js"
       ],
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E06",
       "verification": "NOT_RUN",
-      "delivery": "PENDING_SOURCE",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": "chengyinhub-xcx/tests/unit/longrun-e06-12.test.js",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-12.md",
@@ -2578,7 +2677,110 @@
       "branch": "codex/extra-e06-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e06",
       "depends_on": [],
-      "public_sha": null
+      "public_sha": "a2f6da5e465315afed6afc09f9803f972795cec5",
+      "regression_methods_written": 6,
+      "future_focused_command": "node --test chengyinhub-xcx/tests/unit/longrun-e06-12.test.js",
+      "expected_count_unit": "node:test cases",
+      "future_execution_prerequisites": "NOT AUTHORIZED NOW. Read evidence file for exact database/env/scratch/permissions and distinguish stub/H2/MySQL. Commands are text only, never executed."
+    },
+    {
+      "id": "E05-12",
+      "lane": "E05",
+      "status": "AUDIT_THEN_FIX",
+      "title": "返回收藏页的刷新排队",
+      "trigger": "列表在途→真实导航详情取消收藏→返回onShow loading跳过刷新",
+      "invariant": "合并一次当前账号/代次返回刷新，不被旧complete影响",
+      "minimal_fix_boundary": "仅resolveTemplateIds/request解析同一份已配置有序映射；不改模板ID",
+      "policy_blocker": "Per LONGRUN_ROLLING latest precise transfer, history and participation source files are writable; order-detail remains PR20-held read-only. Do not change refund policy, templates, UI layout, authentication, global transport or any unlisted caller.",
+      "execution": "STATIC_SOURCE_ONLY; no validation execution",
+      "ownership": "Root-assigned exact new regression/evidence; business source remains C00 transferred lane owner",
+      "source_files": [
+        "chengyinhub-xcx/pages/mylike/mylike.js"
+      ],
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "owner": "EXTRA6/E05",
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e05-12.test.js",
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-12.md",
+      "priority": "P2",
+      "estimated_source_effort": "30-120 minutes; no verification included",
+      "assigned_worker": null,
+      "branch": "codex/extra-e05-regression-20261015",
+      "worktree": "/workspace/hengyin-extra-e05",
+      "depends_on": [],
+      "public_sha": "2d4801a3dc1fc356e21c2480c017569d7a8d3923",
+      "regression_methods_written": 7,
+      "future_focused_command": "node --test chengyinhub-xcx/tests/unit/longrun-e05-12.test.js",
+      "expected_count_unit": "node:test cases",
+      "future_execution_prerequisites": "NOT AUTHORIZED NOW. Read evidence file for exact database/env/scratch/permissions and distinguish stub/H2/MySQL. Commands are text only, never executed."
+    },
+    {
+      "id": "E05-13",
+      "lane": "E05",
+      "status": "AUDIT_THEN_FIX",
+      "title": "订阅模板未知key继承成员过滤",
+      "trigger": "TEMPLATES普通对象的constructor/toString等继承成员被当已配置模板",
+      "invariant": "沿既有未配置key过滤合同，仅自有配置参与SDK/结果",
+      "minimal_fix_boundary": "仅resolveTemplateIds/request解析同一份已配置有序映射；不改模板ID",
+      "policy_blocker": "Per LONGRUN_ROLLING latest precise transfer, history and participation source files are writable; order-detail remains PR20-held read-only. Do not change refund policy, templates, UI layout, authentication, global transport or any unlisted caller.",
+      "execution": "STATIC_SOURCE_ONLY; no validation execution",
+      "ownership": "Root-assigned exact new regression/evidence; business source remains C00 transferred lane owner",
+      "source_files": [
+        "chengyinhub-xcx/utils/subscribe.js"
+      ],
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "owner": "EXTRA6/E05",
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e05-13.test.js",
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-13.md",
+      "priority": "P2",
+      "estimated_source_effort": "30-120 minutes; no verification included",
+      "assigned_worker": null,
+      "branch": "codex/extra-e05-regression-20261015",
+      "worktree": "/workspace/hengyin-extra-e05",
+      "depends_on": [],
+      "public_sha": "e26a0de948e8a459e81e339986d872aa67e8f113",
+      "regression_methods_written": 4,
+      "future_focused_command": "node --test chengyinhub-xcx/tests/unit/longrun-e05-13.test.js",
+      "expected_count_unit": "node:test cases",
+      "future_execution_prerequisites": "NOT AUTHORIZED NOW. Read evidence file for exact database/env/scratch/permissions and distinguish stub/H2/MySQL. Commands are text only, never executed."
+    },
+    {
+      "id": "E06-13",
+      "lane": "E06",
+      "status": "AUDIT_THEN_FIX",
+      "title": "选址坐标非法类型",
+      "trigger": "hasCoords Number将boolean/array/object当有效轴，normalizePoi输出原类型",
+      "invariant": "拒非法轴类型，保留数值字符串及本模块既定单轴0策略",
+      "minimal_fix_boundary": "仅register同ctx幂等和原entry生命周期",
+      "policy_blocker": "只通用utils模块内部；不自动采集新位置、不启用后台定位、不改权限文案/产品策略或原队play/发布调用者；需改调用者仅交root dependency。",
+      "execution": "STATIC_SOURCE_ONLY; no validation execution",
+      "ownership": "Root-assigned exact new regression/evidence; business source remains C00 transferred lane owner",
+      "source_files": [
+        "chengyinhub-xcx/utils/location/location-manager.js"
+      ],
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "owner": "EXTRA6/E06",
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e06-13.test.js",
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-13.md",
+      "priority": "P2",
+      "estimated_source_effort": "30-120 minutes; no verification included",
+      "assigned_worker": null,
+      "branch": "codex/extra-e06-regression-20261015",
+      "worktree": "/workspace/hengyin-extra-e06",
+      "depends_on": [],
+      "public_sha": "674037af738e8a17ad0055efb326f62536e8c8f4",
+      "regression_methods_written": 5,
+      "future_focused_command": "node --test chengyinhub-xcx/tests/unit/longrun-e06-13.test.js",
+      "expected_count_unit": "node:test cases",
+      "future_execution_prerequisites": "NOT AUTHORIZED NOW. Read evidence file for exact database/env/scratch/permissions and distinguish stub/H2/MySQL. Commands are text only, never executed."
     }
   ],
   "refill": "Coordinator adds a concrete nonduplicate authorized task when one is delivered/refuted/blocked; no fabricated defect or empty filler. New IDs never reuse old ones. If no justified candidate remains, record EXHAUSTED rather than invent work.",
@@ -2586,7 +2788,7 @@
   "thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
   "host_id": "durable",
   "branch": "codex/extra-six-rolling-20261015",
-  "queue_revision": 4,
+  "queue_revision": 5,
   "initial_deliveries": [
     {
       "lane": "E01",
@@ -2639,23 +2841,73 @@
   ],
   "resume_instructions": "Read LONGRUN_ROLLING and SOURCE_OWNERS at current control, this queue/CLAIMS, and PR16 newest comments. Inspect branch/worktree git status and remote SHA. Never overwrite uncommitted worker patch. Do not execute tests/lint/compile/DB/CI reruns. Parent serially commits frozen task paths then next same-lane task; replenish only concrete authorized nonduplicate findings, otherwise EXHAUSTED.",
   "active_claims": {
-    "E01": "E01-14",
-    "E02": "E02-05",
-    "E03": "E03-05",
-    "E04": "E04-05",
-    "E05": "E05-02",
-    "E06": "E06-05"
+    "E01": "E01-13",
+    "E02": "E02-14",
+    "E03": "E03-12",
+    "E04": "E04-09",
+    "E05": "E02-15",
+    "E06": "E01-16"
   },
-  "candidate_sha_before_queue_commit": "4902cc1c7673a3e6c36284061549ade67738c6ba",
+  "candidate_sha_before_queue_commit": "6aff95000d0af499d1501a8b483128558a3a4d9a",
   "actual_counts": {
-    "total_history": 84,
-    "actionable_or_inflight": 50,
-    "ready": 44,
+    "total_history": 87,
+    "actionable_or_inflight": 15,
+    "ready": 9,
     "claimed": 6,
-    "source_delivered": 20,
-    "no_change_source_review": 11,
-    "blocked": 3
+    "source_delivered": 36,
+    "no_change_source_review": 29,
+    "blocked": 7
   },
-  "control_latest_read_sha": "daca836d64a3186861faf412a68e6f930fc01979",
-  "publication_transport": "Shell git credentials unavailable after local offline; authorized GitHub Git Data connector publishes text trees/commits with expected-parent nonforced refs. Exact public SHA objects imported for local ancestry; no validation is executed."
+  "control_latest_read_sha": "53d50db24b83ec856abb7d998d913c79699934dc",
+  "publication_transport": "Shell git credentials unavailable after local offline; authorized GitHub Git Data connector publishes text trees/commits with expected-parent nonforced refs. Exact public SHA objects imported for local ancestry; no validation is executed.",
+  "worker_assignments": [
+    {
+      "slot": "E01",
+      "task": "E01-13",
+      "worker": "/root/external_e01",
+      "mode": "SOURCE_OWNER",
+      "worktree": "/workspace/hengyin-extra-e01"
+    },
+    {
+      "slot": "E02",
+      "task": "E02-14",
+      "worker": "/root/external_e02",
+      "mode": "SOURCE_OWNER",
+      "worktree": "/workspace/hengyin-extra-e02"
+    },
+    {
+      "slot": "E03",
+      "task": "E03-12",
+      "worker": "/root/external_e03",
+      "mode": "SOURCE_OWNER",
+      "worktree": "/workspace/hengyin-extra-e03"
+    },
+    {
+      "slot": "E04",
+      "task": "E04-09",
+      "worker": "/root/external_e04",
+      "mode": "SOURCE_OWNER",
+      "worktree": "/workspace/hengyin-extra-e04"
+    },
+    {
+      "slot": "E05",
+      "task": "E02-15",
+      "worker": "/root/external_e05",
+      "mode": "REGRESSION_ONLY_SUPPORT",
+      "worktree": "/workspace/hengyin-extra-e02"
+    },
+    {
+      "slot": "E06",
+      "task": "E01-16",
+      "worker": "/root/external_e06",
+      "mode": "REGRESSION_ONLY_SUPPORT",
+      "worktree": "/workspace/hengyin-extra-e01"
+    }
+  ],
+  "refill_shortfall": 35,
+  "refill_status": "Continue concrete queued work; replenish proven independent slices or formally transferred modules. Do not count completed/blocked as READY or invent placeholder bugs to assert 50.",
+  "lane_domain_status": {
+    "E05": "Current authorized client source slices delivered; worker supports E02-15 tests only",
+    "E06": "Current tool-domain candidates EXHAUSTED pending new concrete evidence or transfer; worker supports E01-16 tests only"
+  }
 }

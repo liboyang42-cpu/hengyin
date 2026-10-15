@@ -6,12 +6,12 @@
   "max_workers": 6,
   "model": "gpt-6.1-sol",
   "active_tasks": {
-    "E01": "E01-14",
-    "E02": "E02-05",
-    "E03": "E03-05",
-    "E04": "E04-05",
-    "E05": "E05-02",
-    "E06": "E06-05"
+    "E01": "E01-13",
+    "E02": "E02-14",
+    "E03": "E03-12",
+    "E04": "E04-09",
+    "E05": "E02-15",
+    "E06": "E01-16"
   },
   "file_claims": {
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventScheduleMaterializer.java": {
@@ -21,9 +21,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e01",
-      "active_task": "E01-14",
+      "active_task": "E01-13",
       "worktree": "/workspace/hengyin-extra-e01",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java": {
@@ -33,9 +33,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e01",
-      "active_task": "E01-14",
+      "active_task": "E01-13",
       "worktree": "/workspace/hengyin-extra-e01",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml": {
@@ -45,9 +45,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e01",
-      "active_task": "E01-14",
+      "active_task": "E01-13",
       "worktree": "/workspace/hengyin-extra-e01",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java": {
@@ -57,9 +57,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e01",
-      "active_task": "E01-14",
+      "active_task": "E01-13",
       "worktree": "/workspace/hengyin-extra-e01",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistTokenCodec.java": {
@@ -69,9 +69,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e01",
-      "active_task": "E01-14",
+      "active_task": "E01-13",
       "worktree": "/workspace/hengyin-extra-e01",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java": {
@@ -81,9 +81,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e02",
-      "active_task": "E02-05",
+      "active_task": "E02-14",
       "worktree": "/workspace/hengyin-extra-e02",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml": {
@@ -93,9 +93,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e02",
-      "active_task": "E02-05",
+      "active_task": "E02-14",
       "worktree": "/workspace/hengyin-extra-e02",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CreativeSquareCommunityPolicyServiceImpl.java": {
@@ -105,9 +105,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e02",
-      "active_task": "E02-05",
+      "active_task": "E02-14",
       "worktree": "/workspace/hengyin-extra-e02",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityMediaReceiptServiceImpl.java": {
@@ -117,9 +117,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e02",
-      "active_task": "E02-05",
+      "active_task": "E02-14",
       "worktree": "/workspace/hengyin-extra-e02",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImpl.java": {
@@ -129,9 +129,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e03",
-      "active_task": "E03-05",
+      "active_task": "E03-12",
       "worktree": "/workspace/hengyin-extra-e03",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImpl.java": {
@@ -141,9 +141,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e03",
-      "active_task": "E03-05",
+      "active_task": "E03-12",
       "worktree": "/workspace/hengyin-extra-e03",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/resources/mapper/business/PlayJourneyReadMapper.xml": {
@@ -153,9 +153,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e03",
-      "active_task": "E03-05",
+      "active_task": "E03-12",
       "worktree": "/workspace/hengyin-extra-e03",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/JourneyStory.java": {
@@ -165,9 +165,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e03",
-      "active_task": "E03-05",
+      "active_task": "E03-12",
       "worktree": "/workspace/hengyin-extra-e03",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/JourneyStoryValidator.java": {
@@ -177,9 +177,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e03",
-      "active_task": "E03-05",
+      "active_task": "E03-12",
       "worktree": "/workspace/hengyin-extra-e03",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/NodeJourneySnapshot.java": {
@@ -189,9 +189,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e03",
-      "active_task": "E03-05",
+      "active_task": "E03-12",
       "worktree": "/workspace/hengyin-extra-e03",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java": {
@@ -201,9 +201,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e04",
-      "active_task": "E04-05",
+      "active_task": "E04-09",
       "worktree": "/workspace/hengyin-extra-e04",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/resources/mapper/business/SmsCouponMapper.xml": {
@@ -213,9 +213,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e04",
-      "active_task": "E04-05",
+      "active_task": "E04-09",
       "worktree": "/workspace/hengyin-extra-e04",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/resources/mapper/business/SmsCouponHistoryMapper.xml": {
@@ -225,9 +225,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e04",
-      "active_task": "E04-05",
+      "active_task": "E04-09",
       "worktree": "/workspace/hengyin-extra-e04",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/resources/mapper/business/CouponSourceGrantMapper.xml": {
@@ -237,9 +237,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e04",
-      "active_task": "E04-05",
+      "active_task": "E04-09",
       "worktree": "/workspace/hengyin-extra-e04",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java": {
@@ -249,9 +249,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e04",
-      "active_task": "E04-05",
+      "active_task": "E04-09",
       "worktree": "/workspace/hengyin-extra-e04",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-xcx/utils/subscribe.js": {
@@ -261,9 +261,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e05",
-      "active_task": "E05-02",
+      "active_task": null,
       "worktree": "/workspace/hengyin-extra-e05",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "NO_ACTIVE_SOURCE_EDIT; ownership retained by team",
       "verification": "NOT_RUN"
     },
     "chengyinhub-xcx/subpackageMember/components/cy/scene-member-order-history/index.js": {
@@ -273,9 +273,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e05",
-      "active_task": "E05-02",
+      "active_task": null,
       "worktree": "/workspace/hengyin-extra-e05",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "NO_ACTIVE_SOURCE_EDIT; ownership retained by team",
       "verification": "NOT_RUN"
     },
     "chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js": {
@@ -285,9 +285,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e05",
-      "active_task": "E05-02",
+      "active_task": null,
       "worktree": "/workspace/hengyin-extra-e05",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "NO_ACTIVE_SOURCE_EDIT; ownership retained by team",
       "verification": "NOT_RUN"
     },
     "chengyinhub-xcx/pages/mylike/mylike.js": {
@@ -297,9 +297,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e05",
-      "active_task": "E05-02",
+      "active_task": null,
       "worktree": "/workspace/hengyin-extra-e05",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "NO_ACTIVE_SOURCE_EDIT; ownership retained by team",
       "verification": "NOT_RUN"
     },
     "chengyinhub-xcx/utils/audio-session.js": {
@@ -309,9 +309,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e06",
-      "active_task": "E06-05",
+      "active_task": null,
       "worktree": "/workspace/hengyin-extra-e06",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "NO_ACTIVE_SOURCE_EDIT; ownership retained by team",
       "verification": "NOT_RUN"
     },
     "chengyinhub-xcx/utils/poller.js": {
@@ -321,9 +321,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e06",
-      "active_task": "E06-05",
+      "active_task": null,
       "worktree": "/workspace/hengyin-extra-e06",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "NO_ACTIVE_SOURCE_EDIT; ownership retained by team",
       "verification": "NOT_RUN"
     },
     "chengyinhub-xcx/utils/location/last-location.js": {
@@ -333,9 +333,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e06",
-      "active_task": "E06-05",
+      "active_task": null,
       "worktree": "/workspace/hengyin-extra-e06",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "NO_ACTIVE_SOURCE_EDIT; ownership retained by team",
       "verification": "NOT_RUN"
     },
     "chengyinhub-xcx/utils/location/location-manager.js": {
@@ -345,9 +345,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e06",
-      "active_task": "E06-05",
+      "active_task": null,
       "worktree": "/workspace/hengyin-extra-e06",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "NO_ACTIVE_SOURCE_EDIT; ownership retained by team",
       "verification": "NOT_RUN"
     },
     "chengyinhub-xcx/utils/location/bg-tracker.js": {
@@ -357,9 +357,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e06",
-      "active_task": "E06-05",
+      "active_task": null,
       "worktree": "/workspace/hengyin-extra-e06",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "NO_ACTIVE_SOURCE_EDIT; ownership retained by team",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/SmsCouponMapper.java": {
@@ -369,9 +369,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "C00 reserved public frozen baseline, no active claimant in current CY-HANDOFF/PR20 changed files; explicit E04-03 request6193059698; no modifications by current CORE lanes",
       "child_writer": "/root/external_e04",
-      "active_task": "E04-05",
+      "active_task": "E04-09",
       "worktree": "/workspace/hengyin-extra-e04",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SmsCouponDisabledTest.java": {
@@ -381,9 +381,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "C00 reserved public frozen baseline, no active claimant in current CY-HANDOFF/PR20 changed files; explicit E04-03 request6193059698; no modifications by current CORE lanes",
       "child_writer": "/root/external_e04",
-      "active_task": "E04-05",
+      "active_task": "E04-09",
       "worktree": "/workspace/hengyin-extra-e04",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CouponSourceGrantTest.java": {
@@ -393,9 +393,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "C00 reserved public frozen baseline, no active claimant in current CY-HANDOFF/PR20 changed files; explicit E04-03 request6193059698; no modifications by current CORE lanes",
       "child_writer": "/root/external_e04",
-      "active_task": "E04-05",
+      "active_task": "E04-09",
       "worktree": "/workspace/hengyin-extra-e04",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationEquityAtomicityContractTest.java": {
@@ -405,9 +405,9 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "C00 reserved public frozen baseline, no active claimant in current CY-HANDOFF/PR20 changed files; explicit E04-03 request6193059698; no modifications by current CORE lanes",
       "child_writer": "/root/external_e04",
-      "active_task": "E04-05",
+      "active_task": "E04-09",
       "worktree": "/workspace/hengyin-extra-e04",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_status": "ACTIVE_SOURCE_OWNER",
       "verification": "NOT_RUN"
     }
   },
@@ -418,14 +418,84 @@
     "No validation execution; preserve historical evidence without transferring pass claims",
     "Freeze task before parent commits and publishes complete SHA; next same-lane task starts after commit"
   ],
-  "control_latest_read_sha": "daca836d64a3186861faf412a68e6f930fc01979",
+  "control_latest_read_sha": "53d50db24b83ec856abb7d998d913c79699934dc",
   "lane_public_heads": {
-    "E01": "aecd555124f23984b35c9e69229c4e26d1d058f0",
-    "E02": "d875ef8735e7472d2a1e2a5c8695ece70bcd96cb",
-    "E03": "fb6195b7fc2888461af6b408caecf0fc8e08fdf8",
-    "E04": "7e2ccb51bf75598c4441e966ce41b68da2e10cbc",
-    "E05": "a63519ea34c57a27160790934fe5ea39bd624213",
-    "E06": "02f2ae28da30763b671f60dc630a02c24c54f12c"
+    "E01": "13eee605aa1f0c3f38b507cd5d0a3e9c7a5b6299",
+    "E02": "0e95dbd2eb61c217ab23256dcf7ff29103b36528",
+    "E03": "d45bd8510a83768de27e67a2285f04587fb72b5b",
+    "E04": "ce669a5af4b5231fe9660e44f5e420240f078e56",
+    "E05": "e26a0de948e8a459e81e339986d872aa67e8f113",
+    "E06": "00802fa7ef5f63a5648bd341736605aa1470428f"
   },
-  "worker_runtime_note": "Six lanes claimed; a lane may be frozen awaiting parent serial publication rather than model actively generating. Inspect live agent state before reporting running count."
+  "worker_runtime_note": "Six lanes claimed; a lane may be frozen awaiting parent serial publication rather than model actively generating. Inspect live agent state before reporting running count.",
+  "worker_assignments": [
+    {
+      "slot": "E01",
+      "task": "E01-13",
+      "worker": "/root/external_e01",
+      "mode": "SOURCE_OWNER",
+      "worktree": "/workspace/hengyin-extra-e01"
+    },
+    {
+      "slot": "E02",
+      "task": "E02-14",
+      "worker": "/root/external_e02",
+      "mode": "SOURCE_OWNER",
+      "worktree": "/workspace/hengyin-extra-e02"
+    },
+    {
+      "slot": "E03",
+      "task": "E03-12",
+      "worker": "/root/external_e03",
+      "mode": "SOURCE_OWNER",
+      "worktree": "/workspace/hengyin-extra-e03"
+    },
+    {
+      "slot": "E04",
+      "task": "E04-09",
+      "worker": "/root/external_e04",
+      "mode": "SOURCE_OWNER",
+      "worktree": "/workspace/hengyin-extra-e04"
+    },
+    {
+      "slot": "E05",
+      "task": "E02-15",
+      "worker": "/root/external_e05",
+      "mode": "REGRESSION_ONLY_SUPPORT",
+      "worktree": "/workspace/hengyin-extra-e02"
+    },
+    {
+      "slot": "E06",
+      "task": "E01-16",
+      "worker": "/root/external_e06",
+      "mode": "REGRESSION_ONLY_SUPPORT",
+      "worktree": "/workspace/hengyin-extra-e01"
+    }
+  ],
+  "support_new_file_claims": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_15Test.java": {
+      "worker": "/root/external_e05",
+      "task": "E02-15",
+      "worktree": "/workspace/hengyin-extra-e02",
+      "source_edit_allowed": false
+    },
+    "docs/verification/mini-longrun-20261015/EXTRA6/E02-15.md": {
+      "worker": "/root/external_e05",
+      "task": "E02-15",
+      "worktree": "/workspace/hengyin-extra-e02",
+      "source_edit_allowed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_16Test.java": {
+      "worker": "/root/external_e06",
+      "task": "E01-16",
+      "worktree": "/workspace/hengyin-extra-e01",
+      "source_edit_allowed": false
+    },
+    "docs/verification/mini-longrun-20261015/EXTRA6/E01-16.md": {
+      "worker": "/root/external_e06",
+      "task": "E01-16",
+      "worktree": "/workspace/hengyin-extra-e01",
+      "source_edit_allowed": false
+    }
+  }
 }
