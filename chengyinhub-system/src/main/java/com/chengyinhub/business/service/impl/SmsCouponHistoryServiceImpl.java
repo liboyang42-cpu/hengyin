@@ -269,19 +269,14 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
                     coupon.getId(), coupon.getStatus(), memberId);
             return null;
         }
-        Long publishCount = coupon.getPublishCount();
-        if (publishCount != null && publishCount > 0) {
-            // 限量券:原子占坑(receive_count < publish_count 才 +1),返回 0 = 已抢光
-            if (smsCouponMapper.tryIncrementReceiveCount(coupon.getId()) == 0) {
-                logger.warn("券库存耗尽,拒发 couponId={} member={} publishCount={}",
-                        coupon.getId(), memberId, publishCount);
-                return null;
-            }
-        } else {
-            // 不限量券:仅维护领取计数(统计用),不设上限
-            if (smsCouponMapper.incrementReceiveCount(coupon.getId()) != 1) {
-                throw new IllegalStateException("优惠券领取计数更新失败");
-            }
+        // 调用方模板可能早于停发提交；在当前行占库时原子复核发放状态及库存。
+        int reserved = smsCouponMapper.tryReserveIssuableCoupon(coupon.getId());
+        if (reserved == 0) {
+            logger.warn("券当前不可发或库存耗尽,拒发 couponId={} member={}", coupon.getId(), memberId);
+            return null;
+        }
+        if (reserved != 1) {
+            throw new IllegalStateException("优惠券领取计数更新失败");
         }
         SmsCouponHistory h = new SmsCouponHistory();
         h.setMemberId(memberId);
@@ -358,7 +353,7 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
     /**
      * C1 发行上限判定(纯函数,单测友好,亦供只读"是否可领"/对账复用)。
      * publish_count 为 null 或 <=0 视为不限量;>0 时 receive_count 必须 < publish_count 才可再发。
-     * 运行时并发原子性由 SmsCouponMapper.tryIncrementReceiveCount 的条件 UPDATE 保证(与此语义一致)。
+     * 运行时发放原子性由 SmsCouponMapper.tryReserveIssuableCoupon 的当前状态/库存条件 UPDATE 保证。
      */
     public static boolean hasStock(Long receiveCount, Long publishCount) {
         if (publishCount == null || publishCount <= 0) return true;
