@@ -6623,7 +6623,7 @@ Page({
 
   _showPublishUnknown() {
     const reason = this.data.editingTopicId
-      ? '发布结果暂时无法确认，请到项目列表核对原主题。采用服务器版本前不会再次发布，本地草稿已保留。'
+      ? '发布结果暂时无法确认，请到项目列表核对原主题。采用已保存版本前不会再次发布，本地草稿已保留。'
       : '发布结果暂时无法确认，请到项目列表核对。为避免重复创建，当前草稿不会再次发布，内容仍在本机。';
     this.setData({ submitting: false, submitError: reason,
       resultSheet: { show: true, kind: 'fail', title: '发布结果待确认',
