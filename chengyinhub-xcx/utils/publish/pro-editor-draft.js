@@ -124,7 +124,9 @@ function loadDraft(storage, identity, options) {
   }
   var storedRevision = value(envelope.baseRevision);
   var currentRevision = value(options.currentBaseRevision);
-  if (storedRevision && currentRevision && storedRevision !== currentRevision) {
+  var checkingTopicRevision = value(identity && identity.topicId)
+    && Object.prototype.hasOwnProperty.call(options, 'currentBaseRevision');
+  if (checkingTopicRevision && (!storedRevision || !currentRevision || storedRevision !== currentRevision)) {
     return { status: 'revision_conflict', envelope: envelope };
   }
   return { status: 'ready', envelope: envelope };

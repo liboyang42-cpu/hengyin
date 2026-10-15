@@ -97,6 +97,8 @@ test('编辑既有主题时 baseRevision 不一致必须返回冲突而非静默
 
 test('活跃新草稿指针按账号隔离，删除草稿会同时清掉当前账号指针', () => {
   const storage = makeStorage()
+  saveDraft(storage, input({ memberId: 1, draftUuid: 'draft-one' }))
+  saveDraft(storage, input({ memberId: 2, draftUuid: 'draft-two' }))
   rememberActiveNewDraft(storage, 1, 'draft-one')
   rememberActiveNewDraft(storage, 2, 'draft-two')
   assert.equal(readActiveNewDraft(storage, 1), 'draft-one')
