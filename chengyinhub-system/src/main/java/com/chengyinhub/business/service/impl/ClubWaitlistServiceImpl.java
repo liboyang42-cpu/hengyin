@@ -230,6 +230,8 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
     private boolean promoteNextLocked(ClubEventSeries policy, Long lockedOwnerMemberId,
                                       Long activityId, Long ticketId, Date now) {
         if (!Boolean.TRUE.equals(policy.getWaitlistEnabled())) return false;
+        // 只拦新 hold；下架/结束后旧 offer 的取消与释放仍必须提交。前序 policy 已锁同一 activity。
+        if (!activityId.equals(mapper.selectPromotableActivityForUpdate(activityId, policy.getClubId(), now))) return false;
         OmsTicket ticket = requireScopedTicket(
                 ticketMapper.selectOmsTicketByIdForUpdate(ticketId), activityId, ticketId);
         if (ticket.getRemainingInventory() == null || ticket.getRemainingInventory() <= 0) return false;

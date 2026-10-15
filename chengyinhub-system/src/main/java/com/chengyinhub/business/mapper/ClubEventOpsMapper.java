@@ -58,6 +58,10 @@ public interface ClubEventOpsMapper {
     ClubEventCancellationStateVO selectOccurrenceCancellationState(
             @Param("activityId") Long activityId, @Param("clubId") Long clubId);
     int isActiveParticipant(@Param("clubId") Long clubId, @Param("memberId") Long memberId);
+    /** 新 OFFERED 准入；当前锁读，与维护晋升的活动条件一致，不用于旧 hold 释放。 */
+    Long selectPromotableActivityForUpdate(@Param("activityId") Long activityId,
+                                          @Param("clubId") Long clubId,
+                                          @Param("now") java.util.Date now);
     Long selectClubOwnerForUpdate(@Param("clubId") Long clubId);
     Long selectActiveClubMemberForUpdate(@Param("clubId") Long clubId,
                                          @Param("memberId") Long memberId);
