@@ -14,7 +14,6 @@ Page({
   data: {
     statusBarHeight: (app.globalData || {}).statusBarHeight || 20,
     navBarHeight: (app.globalData || {}).navBarHeight || 44,
-    clubId: null,
     clubName: '',
     isOwner: false,
     // loading | ready | empty | error | missing-param
@@ -49,7 +48,7 @@ Page({
       this.setData({ state: 'missing-param' })
       return
     }
-    this.setData({ clubId })
+    this._clubId = clubId
     this.loadAll()
   },
 
@@ -66,7 +65,7 @@ Page({
 
   // 主理人身份与勋章列表各取一次;身份读不到时按「非主理人」处理 —— 宁可少给控件也不多给。
   loadAll() {
-    if (!this.data.clubId) return
+    if (!this._clubId) return
     const cycle = (this._loadCycle || 0) + 1
     this._loadCycle = cycle
     const hadData = this.data.state === 'ready' || this.data.state === 'empty'
@@ -87,7 +86,7 @@ Page({
       autoErrorToast: false,
       url: '/api/club/detail',
       method: 'POST',
-      data: jsonBody({ id: this.data.clubId }),
+      data: jsonBody({ id: this._clubId }),
       header: jsonHeader(),
       success(res) {
         if (that._unloaded || cycle !== that._loadCycle) return
@@ -124,7 +123,7 @@ Page({
       autoErrorToast: false,
       url: '/api/club/badge/list',
       method: 'POST',
-      data: jsonBody({ id: this.data.clubId }),
+      data: jsonBody({ id: this._clubId }),
       header: jsonHeader(),
       success(res) {
         if (that._unloaded || cycle !== that._loadCycle) return
@@ -193,7 +192,7 @@ Page({
 
   submitCreate() {
     if (!this.data.isOwner || this.data.creating || this.data.iconUploading) return
-    const result = clubBadge.validateCreateForm(this.data.form, this.data.clubId)
+    const result = clubBadge.validateCreateForm(this.data.form, this._clubId)
     if (!result.ok) {
       this.setData({ formErrors: result.errors })
       return
@@ -273,7 +272,7 @@ Page({
       autoErrorToast: false,
       url: '/api/club/members',
       method: 'POST',
-      data: jsonBody({ clubId: this.data.clubId }),
+      data: jsonBody({ clubId: this._clubId }),
       header: jsonHeader(),
       success(res) {
         if (that._unloaded) return
@@ -319,7 +318,7 @@ Page({
       autoErrorToast: false,
       url: '/api/club/badge/grant',
       method: 'POST',
-      data: jsonBody({ clubId: this.data.clubId, memberId: pending.member.memberId, badgeCode: pending.badge.badgeCode }),
+      data: jsonBody({ clubId: this._clubId, memberId: pending.member.memberId, badgeCode: pending.badge.badgeCode }),
       header: jsonHeader(),
       success(res) {
         if (!isSuccess(res)) { report(false, (res && res.msg) || '颁发失败'); return }

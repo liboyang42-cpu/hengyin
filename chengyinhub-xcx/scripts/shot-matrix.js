@@ -2,12 +2,12 @@
  * Wave2 截图矩阵（机器可读），供总控在 verify worktree 串行采集。
  *
  * ── 机器统计（唯一真值，由本文件末尾 STATS 断言锁死）──────────────────
- *   total 329
- *   按 priority 计全部行：P0 133 / P1 186 / P2 10
+ *   total 330
+ *   按 priority 计全部行：P0 133 / P1 187 / P2 10
  *   其中 blocked 24（不采集）：P0 9 / P1 7 / P2 8
- *   ⇒ actionable（本轮真要拍）：P0 124 / P1 179 / P2 2 = 305
- *   按域：A 53 / B 69 / C 54 / D 40 / E 27 / F 86
- *   按 control：setData 169 / identity+setData 116 / real-data 37 / real-device 7
+ *   ⇒ actionable（本轮真要拍）：P0 124 / P1 180 / P2 2 = 306
+ *   按域：A 53 / B 69 / C 54 / D 40 / E 27 / F 87
+ *   按 control：setData 169 / identity+setData 117 / real-data 37 / real-device 7
  *     (2026-08-05：A10 由 real-data 改 setData —— 它和 A12 的差别是 picList 空/非空,
  *      不显式注入两张必然拍成同一张)
  *   fixtureVerified 16（只保留当前页面仍全量消费其矩阵键、且在本次源版本
@@ -520,6 +520,7 @@ const RAW = [
   ['F20', 'F20-club-governance-empty.png', '/pages/club/governance/index?clubId=1', 'club', 'empty', { state: 'empty', mode: 'manage', clubName: '城瘾夜行俱乐部', members: [], bans: [], cases: [] }, undefined, { selector: '.page', min: 1 }, 'identity+setData', 'P1', '', '成员治理空态；平台举报/申诉另由行为契约覆盖。'],
   ['F21', 'F21-club-event-ops-empty.png', '/pages/club/event-ops/index?clubId=1', 'club', 'empty', { state: 'ready', canManage: true, canCheckin: false, topics: [], seriesState: 'empty', seriesRows: [], leadOptions: [{ memberId: null, nickname: '主理人（默认）' }], leadIndex: 0 }, undefined, { selector: '.page', min: 1 }, 'identity+setData', 'P1', '', '活动运营无合作主题/无系列态；名册常态需真实 activityId 后补拍。'],
   ['F22', 'F22-club-notify-form.png', '/pages/club/notify/index?clubId=1', 'club', 'form', { state: 'ready', audiences: [{ value: 'ALL_MEMBERS', label: '全体成员', disabled: false }], audienceType: 'ALL_MEMBERS', title: '', content: '', previewState: 'idle', campaign: null }, undefined, { selector: '.page', min: 1 }, 'identity+setData', 'P1', '', '俱乐部站内通知表单初始态；不伪报微信订阅消息可用。'],
+  ['F96', 'F96-club-badges-empty.png', '/pages/club/badges/index?clubId=1', 'club', 'empty', { state: 'empty', isOwner: true, clubName: '城瘾夜行俱乐部', badges: [] }, undefined, { selector: '.page', min: 1 }, 'identity+setData', 'P1', '', '俱乐部勋章主理人空态(CL3);不伪造勋章与颁发记录。'],
   // 当前所有玩家玩法的可见填充态。分母由 cy-playkit.KIT_TYPES、基础任务 vm 分支和
   // cy-advanced-game 四个配置分支的单测自动回读；新增注册类型而漏截图会直接判红。
   ['F32', 'F32-playkit-timewindow.png', '/pages/play/index?mock=1', 'player', 'normal', { show: true, kit: { type: 'timewindow', eyebrow: '午夜限定', glyph: '🌙', title: '午夜电台即将开播', openFrom: '23:00', openTo: '01:00', remainSeconds: 3661, subscribed: true } }, undefined, { selector: 'cy-playkit-timewindow', min: 1 }, 'setData', 'P1', '', '时段限定玩法：开放窗口、权威倒计时与已订阅状态同屏。', 'cy-playkit'],
@@ -629,11 +630,13 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-03：收口合并的两条 F95 全字段相同，仅保留一个相册合同；仍未动态验证。
 // 2026-10-15：任务3新增官方线路列表/详情与积分明细三页，补 B90/B91/D90 三条 P1 setData 行；
 // total 326→329、P1 183→186、actionable P1 176→179 / total 302→305、B 67→69、D 39→40、setData 166→169。
+// 2026-10-15：CL3 新增俱乐部勋章页，补 F96 一条 P1 identity+setData 行；
+// total 329→330、P1 186→187、actionable P1 179→180 / total 305→306、F 86→87、identity+setData 116→117。
 const STATS = {
-  "total": 329,
+  "total": 330,
   "byPriority": {
     "P0": 133,
-    "P1": 186,
+    "P1": 187,
     "P2": 10
   },
   "blockedByPriority": {
@@ -643,9 +646,9 @@ const STATS = {
   },
   "actionable": {
     "P0": 124,
-    "P1": 179,
+    "P1": 180,
     "P2": 2,
-    "total": 305
+    "total": 306
   },
   "blocked": 24,
   "domains": {
@@ -654,11 +657,11 @@ const STATS = {
     "C": 54,
     "D": 40,
     "E": 27,
-    "F": 86
+    "F": 87
   },
   "control": {
     "setData": 169,
-    "identity+setData": 116,
+    "identity+setData": 117,
     "real-data": 37,
     "real-device": 7
   },
