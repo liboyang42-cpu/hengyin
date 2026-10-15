@@ -16,6 +16,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -94,7 +95,14 @@ class OWN_C03_24Test {
         when(topicService.updateTopicByOwner(any(), anyLong(), anyString())).thenReturn(77L);
         org.mockito.Mockito.doThrow(new IllegalStateException("媒体失败"))
                 .when(contentSecurity).submitMediaCheck(org.mockito.ArgumentMatchers.anyInt(), anyLong(), any(), any());
-        assertEquals(500, controller.updateTopic(freeExploreDto()).get(AjaxResult.CODE_TAG));
+        // update's post-write media error is translated by the real HTTP exception advice,
+        // not the service-only catch inside the controller method.
+        IllegalStateException mediaFailure = assertThrows(IllegalStateException.class,
+                () -> controller.updateTopic(freeExploreDto()));
+        AjaxResult response = new com.chengyinhub.framework.web.exception.GlobalExceptionHandler()
+                .handleRuntimeException(mediaFailure,
+                        new org.springframework.mock.web.MockHttpServletRequest("POST", "/api/topic/update"));
+        assertEquals(500, response.get(AjaxResult.CODE_TAG));
         org.mockito.Mockito.verify(topicService).updateTopicByOwner(any(), anyLong(), anyString());
     }
     @Test void loginClassificationIsUnchanged() {
