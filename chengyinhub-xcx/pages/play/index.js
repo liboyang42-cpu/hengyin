@@ -5355,14 +5355,30 @@ Page({
         that.recordGameNetworkFailure('提交没送出去，检查网络后重试', { type: 'answer' });
       });
   },
+  _beginLegacyHint() {
+    const intent = { context: this._legacyGameContext() };
+    this._legacyHintIntent = intent;
+    return intent;
+  },
+  _isLegacyHintCurrent(intent) {
+    return this._legacyHintIntent === intent && this._isLegacyGameCurrent(intent.context);
+  },
+  _finishLegacyHint(intent) {
+    if (this._legacyHintIntent !== intent) return;
+    this._legacyHintIntent = null;
+    if (this._isLegacyGameCurrent(intent.context)) this.setData({ hintUnlocking: false });
+  },
   useHint() {
     const g = this.data.game;
+    if (!this._isPlayAccountCurrent()) return;
     if (!this.data.isPreview && g.puzzleScoring && this.data.mode === 1) {
       if (this.data.hintUnlocking) return;
       const level = this.data.shownHints.length + 1;
+      const intent = this._beginLegacyHint();
       this.setData({ hintUnlocking: true });
       req('/api/play/puzzle/hint', 'POST', Object.assign(this._sessionParams(), { nodeId: g.nodeId, level }))
         .then((r) => {
+          if (!this._isLegacyHintCurrent(intent)) { this._finishLegacyHint(intent); return; }
           if (r.code == 200 || r.code == '200') {
             const hints = Array.isArray(r.data.hints) ? r.data.hints.filter(Boolean)
               : this.data.shownHints.concat([r.data.hint]).filter(Boolean);
@@ -5387,10 +5403,12 @@ Page({
           } else {
             cyToast(r.msg || '提示暂时不可用');
           }
-          this.setData({ hintUnlocking: false });
+          this._finishLegacyHint(intent);
         })
         .catch(() => {
-          this.setData({ hintUnlocking: false });
+          const current = this._isLegacyHintCurrent(intent);
+          this._finishLegacyHint(intent);
+          if (!current) return;
           cyToast('提示没有加载出来，请重试');
         });
       return;
@@ -5406,7 +5424,11 @@ Page({
   unlockHint() {
     if (this.data.isPreview) { this.useHint(); return; }
     const that = this, g = this.data.game;
+    if (!this._isPlayAccountCurrent()) return;
     if (this.data.hintUnlocking) return;
+    const intent = this._beginLegacyHint();
+    const payload = Object.assign({ nodeId: g.nodeId }, this._sessionParams());
+    let confirmed = false;
     this.setData({ hintUnlocking: true }); // 弹窗期间即占位:连点不再叠出第二个弹窗
     cyModal.show({
       title: '解锁提示',
@@ -5414,13 +5436,17 @@ Page({
       confirmText: '解锁',
       cancelText: '再想想',
       success(res) {
-        if (!res.confirm) { that.setData({ hintUnlocking: false }); return; }
+        if (confirmed) return;
+        if (!that._isLegacyHintCurrent(intent)) { that._finishLegacyHint(intent); return; }
+        confirmed = true;
+        if (!res.confirm) { that._finishLegacyHint(intent); return; }
         app.sendRequest({
           url: '/api/play/hint/unlock', method: 'POST',
           // 必须带会话上下文:后端按它验「真的在这场/这个主题里」(与解谜提示同口径),
           // 只发 nodeId 会被拒 —— 否则任何登录用户拿到节点 id 就能读走提示正文。
-          data: Object.assign({ nodeId: g.nodeId }, that._sessionParams()),
+          data: payload,
           success(resp) {
+            if (!that._isLegacyHintCurrent(intent)) return;
             if (resp.code == '200' && resp.data) {
               that.setData({
                 'game.hint1': resp.data.hint1 || '',
@@ -5433,12 +5459,13 @@ Page({
             }
           },
           fail(resp) {
+            if (!that._isLegacyHintCurrent(intent)) return;
             cyToast(app.getRequestErrorMessage(resp, '网络异常，请重试'));
           },
-          complete() { that.setData({ hintUnlocking: false }); }
+          complete() { that._finishLegacyHint(intent); }
         });
       },
-      fail() { that.setData({ hintUnlocking: false }); }
+      fail() { if (!confirmed) that._finishLegacyHint(intent); }
     });
   },
   revealAnswer() {
