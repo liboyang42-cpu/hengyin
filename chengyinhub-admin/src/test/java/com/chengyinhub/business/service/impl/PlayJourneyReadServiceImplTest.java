@@ -90,6 +90,15 @@ class PlayJourneyReadServiceImplTest {
         givenState("{}", "[]");
         when(routeMapper.selectMemberTopicSessions(MEMBER, TOPIC)).thenReturn(java.util.Collections.singletonList(session));
         when(routeMapper.selectMemberTopicSessions(OTHER, TOPIC)).thenReturn(java.util.Collections.singletonList(null));
+        // Resolve the exact current scope from each test's actual, mutable session fixture.
+        when(routeMapper.selectCurrentByOwner(0L, TOPIC, MEMBER)).thenAnswer(inv -> {
+            List<TopicRouteSession> rows = routeMapper.selectMemberTopicSessions(MEMBER, TOPIC);
+            TopicRouteSession current = rows != null && rows.size() == 1 ? rows.get(0) : null;
+            return current != null && Long.valueOf(MEMBER).equals(current.getMemberId())
+                    && Long.valueOf(TOPIC).equals(current.getTopicId())
+                    && Long.valueOf(0L).equals(current.getActivityId()) ? current : null;
+        });
+
 
         when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class))).thenReturn(new ArrayList<CmsTopicNode>());
         when(nodeMapper.selectCmsTopicNodeById(anyLong())).thenReturn(null);

@@ -151,7 +151,7 @@ public class PlayJourneyReadServiceImpl implements IPlayJourneyReadService {
     public Map<String, Object> casebook(Long memberId, Long topicId, Long activityId) {
         requireScope(memberId, topicId);
         CmsTopic topic = requireTopic(topicId);
-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = TopicRouteSessionScope.findCurrent(routeMapper, memberId, topicId, activityId);
         if (session == null) throw new ServiceException("这一局还没开始");
         // 查询和本地校验都限定归属，禁止读取别人的局。
         if (!memberId.equals(session.getMemberId())) throw new ServiceException("无权访问这一局");
@@ -407,7 +407,7 @@ public class PlayJourneyReadServiceImpl implements IPlayJourneyReadService {
     public Map<String, Object> backpack(Long memberId, Long topicId, Long activityId) {
         requireScope(memberId, topicId);
         CmsTopic topic = requireTopic(topicId);
-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = TopicRouteSessionScope.findCurrent(routeMapper, memberId, topicId, activityId);
         requireReadableBackpack(topic, memberId, session);
 
         CompletionFacts progress = progress(memberId, topicId, session == null ? activityId : session.getActivityId());

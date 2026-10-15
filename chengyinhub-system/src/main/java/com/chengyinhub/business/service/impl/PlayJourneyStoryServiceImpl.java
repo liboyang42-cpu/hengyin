@@ -98,7 +98,7 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         }
         CmsTopic topic = requireTopic(topicId);
         // 剧情优先读本局建局冻结值(R11-A);老局快照没有冻结键时回退实时主题配置。
-        TopicRouteSession session = TopicRouteSessionScope.find(sessionMapper, memberId, topicId, activityId);
+        TopicRouteSession session = TopicRouteSessionScope.findCurrent(sessionMapper, memberId, topicId, activityId);
         JourneyStory story = requireStory(topic, session);
         if (story.getStages() == null || story.getStages().isEmpty()) {
             throw new ServiceException("本主题未配置剧情阶段");
@@ -154,7 +154,7 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         }
         CmsTopic topic = requireTopic(topicId);
         // 剧情优先读本局建局冻结值(R11-A);老局快照没有冻结键时回退实时主题配置。
-        TopicRouteSession session = TopicRouteSessionScope.find(sessionMapper, memberId, topicId, activityId);
+        TopicRouteSession session = TopicRouteSessionScope.findCurrent(sessionMapper, memberId, topicId, activityId);
         if (session != null && session.getStatus() != null && session.getStatus() != TopicRouteSession.STATUS_RUNNING) {
             TopicRouteEngine.State frozenState = readState(session);
             if (frozenState.getThemeRuntime().has("result")) {
