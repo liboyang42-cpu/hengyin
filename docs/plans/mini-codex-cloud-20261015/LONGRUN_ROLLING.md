@@ -1,0 +1,39 @@
+# 两队各50项：离线阶段滚动源码协议
+
+CY-HANDOFF: CODEX。协议CY-LONGRUN-SOURCE-20261015-v1；本页覆盖此前等待验证/只有测试写权的时序。用户明确把原AGENTS编译、测试、截图要求推迟到下次本地验证。只做现有bug和共用后端，Claude UI/新功能、独立iOS、Flutter边界不变。
+
+## 已落地的任务池与单写者
+
+- [CORE 50项](LONGRUN_CORE_50.json)：C01/C02各9、C03–C06各8。原队六worker及精确source_files逐项登记。
+- [EXTRA6 50项](LONGRUN_EXTRA6_50.json)：E01/E02各9、E03–E06各8。新队真实thread01a13f9c-e8ba-753e-9c39-03840bb4900b/host durable，已6/6实际启动并收到新模式；承接精确源码，不能仍只等测试/README写权。
+- [精确源码所有者](LONGRUN_SOURCE_OWNERS.json)：两队source文件交集为空，每个文件唯一lane写者；同lane共享文件的任务串行。表外只读，不能用模块通配抢写。当前源码清单可写，不再逐项等待本地或C00一般确认。
+- 每项都有标题、真实路径、触发、不变量、修复边界、政策停止条件；都是AUDIT_THEN_FIX，不是声称100个已确诊bug。确认已修/不成立要留源码依据，不重复实现。
+
+## 基线、源码转交及公共候选
+
+CORE新独立checkout /workspace/hengyin-longrun，分支codex/mini-longrun-core-20261015，基线4a943501262cb533158428d9748d8ac49aaa8950；PR28的在跑CI保留自然完成，不为新工作反复取消/重跑。EXTRA6现有独立worktree/公共1e403b13可继续，精确授权源文件从1e403b13到4a943501没有本批改动；不能把旧base里的其他文件覆盖CORE新修复。
+
+原B01/B03/B04/A03及C00对这些源文件已在c24202f/1e403b13交最终补丁并停止；L01–05在4a943501交付后停止。现按源文件表正式交接。C00保留共同核心归CORE。当前主动读PR20全部路径后确认：订单detail/index.js仍与PR20重叠，不转交；history/index.js与participation-detail/index.js没有该重叠，可从已停止B01转EXTRA6/E05，优先修其规则变更前已报告8项失败的账号/组件代次缺口，不重跑。此前保守冻结三组件的规划由本精确处置覆盖。
+
+EXTRA6协调者获写自己的EXTERNAL_COORDINATION/{BACKLOG.md,QUEUE.json,CLAIMS.json}三文件，复制初始50项并独立维护领取/完成/补位/分支/完整SHA/每文件当前child writer；C00仍独占全局OWNERSHIP、BACKEND_CHANGES及docs/plans控制表。该队可在既定独占源文件内自调度、补任务，不必等Mac或C00逐项同意。C00主动读取PR16/交付PR和专属队列，并将全局合同/依赖归并主账；不假定消息已收到。
+
+两队每项可写其明确regression_file和evidence_file（见JSON），前提是路径尚未存在且未被他人申领；已有测试/共享fixture若不在源表仍只读，需C00精确登记。回归只写不跑，NOT_RUN。新增任务不得用伪缺陷/空标题/重复不变量补数；真无下一可做项记录EXHAUSTED/政策阻塞与恢复指令。
+
+## 六线自动补位
+
+1. 每队协调者按lane领取第一个READY_SOURCE_ONLY；取锁前确认base/原写者停止证据/精确文件。每lane同时一个worker，最多6，全部gpt-6.1-sol，禁止Astra。
+2. worker静态读实际调用链，真实缺陷才最小修改；不成立记NO_CHANGE_SOURCE_REVIEW，不把未执行的回归叫通过。不得跑Node、Java、Maven、DB、lint、DevTools或任何手动业务验证。已自动运行的CI不关闭/弱化，不手动重跑，不等待它补位。
+3. 每项完成立即冻结该补丁、发送精确文件与结果；协调者按明确路径串行小提交、公共完整SHA和草稿PR交SOURCE_DELIVERED_UNVERIFIED。共享工作区worker不得Git切分支/暂存/提交；冻结提交后立即领取下一项，可在等待几秒提交时只读下一项，不等验证。
+4. 没有源修改的有效反证也写专属证据并提交；需要新政策、权限/RBAC、收费/额度、DDL/新依赖、生产/部署授权时记BLOCKED_DECISION，释放该项写入并领取下一项，不能猜政策。跨队文件只交最小补丁提案给所有者，禁止自己改。
+5. 每交付/反证/阻塞一项，协调者从本队已授权文件的实际剩余调用链补一个具体未重复项，目标维持50个可行动/在途任务；分配新递增ID、实际触发和路径，保留原历史，不改已交付SHA含义。若无真实独立候选，明确记录耗尽，不虚构永动任务。
+6. C00串行形成CORE公共候选；EXTRA6串行形成自己候选。跨队依赖只集成精确已交付公共SHA/补丁，保留原小提交和回退链，不因对方叫完成就假定接口/部署可用。
+
+## 已冻结的首个跨队内部修复契约
+
+E03-01已静态报告freezeEnding传session=null导致结束存档绕过endingChapters。EXTRA6/E03拥有PlayJourneyStoryServiceImpl，可增兼容重载 `freezeEnding(Long topicId,String raw,TopicRouteEngine.State state,TopicRouteSession session)`，现有3参入口保留原兼容语义；4参用真实session选择既有快照，HTTP/DTO/结局顺序不变。CORE/C06拥有TopicRouteRuntimeServiceImpl的freezeThemeStory调用点，待对方公开重载提交后串行集成再传已有session；不能向未存在方法盲堆引用。双方在等待这一具体依赖时做其他项，不占空槽。源码未验证，最终一起验证。
+
+## 离线与恢复
+
+不连接VPS/生产，不合并PR、不部署/上传、不执行业务迁移。SOURCE_DELIVERED_UNVERIFIED和NOT_RUN是当前交付状态；原1e403b13 231通过及规则变更前真实Node历史保留，不能套到新SHA。后续自动CI即使通过也只是该自动执行范围，不能替代用户下次集中验收。
+
+用户关闭电脑后，Cloud在平台允许运行时独立继续，不依赖本地中转。平台时长、额度或环境终止时必须推送当前小提交/队列游标/持锁文件/阻塞及下一项恢复指令；不能承诺永久运行。恢复先读本协议、源表、两队队列与PR16最新评论，核远端SHA再从READY续领，不覆盖未提交补丁。

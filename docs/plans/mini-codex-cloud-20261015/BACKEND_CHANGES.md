@@ -302,3 +302,7 @@ BK-ASSET源码修复为SOURCE_READY，新增VPS套件已通过；**TEST_DEPLOYED
 当前公共完整候选4a943501262cb533158428d9748d8ac49aaa8950，[PR28](https://github.com/liboyang42-cpu/hengyin/pull/28)。全量Node8361/8359通过/0失败/2原有跳过，UI-GATE-0 PASS；后台formatter+原相关页面22/22、发布相关97/97、回执目标65/65（重叠不相加）。Node运行代码树d8a0cf8b到当前候选仅文档/CI变动，业务/测试/门禁源码无差异。4480控件ID/分类/1792 local tap未变，459条evidence摘要刷新；25基线行号等量迁移、理由/棘轮未加。详见VALIDATION_FOLLOWUP_4a943501.json。
 
 聚焦GitHub-hosted CI run38738836009已实际启动，预期39项尚无结果；首轮workflow上下文验证失败38738526470保留（无job/无测试），已修step env，不冒充业务失败或通过。L02/BK-AUTHOR聚合读和L03/BK-AI删除屏障须新真库编译/执行证据后再升SOURCE_READY。VPS新集成通道未核，不用离线build替代；TEST_DEPLOYED/运行时HTTP/设备/迁移/部署/合并仍NO。
+
+## 用户离线长期滚动源码（最新指令）
+
+[LONGRUN_ROLLING](LONGRUN_ROLLING.md)覆盖等待验证时序。两队各50具体任务已落地，6.1-sol各最多6线，源码精确写权见LONGRUN_SOURCE_OWNERS.json，正式原写者停止/候选证据及跨队契约在协议中。EXTRA6不再只测试文件：已授排期/社区/叙事读/券/订阅收藏/平台工具独占源码；history和participation两退款JS可转，PR20重叠detail仍保留锁。仅静态源码/写必要回归，不手动运行Node/Java/Maven/DB/lint/DevTools/业务验证；原AGENTS编译测试由用户本次明确推迟。现有自动CI保留自然结束、不手动重跑、不等结果派工。新交付SOURCE_DELIVERED_UNVERIFIED/NOT_RUN，合并/迁移/部署/设备仍NO。

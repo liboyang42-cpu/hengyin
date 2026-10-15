@@ -782,6 +782,22 @@
       "merge": false,
       "migration": false,
       "device_acceptance": false
+    },
+    "mode": "LONGRUN_SOURCE_ONLY_VALIDATION_DEFERRED_BY_USER",
+    "longrun": {
+      "protocol": "LONGRUN_ROLLING.md",
+      "core_pool": "LONGRUN_CORE_50.json",
+      "extra_pool": "LONGRUN_EXTRA6_50.json",
+      "core_count": 50,
+      "extra_count": 50,
+      "core_base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
+      "core_branch": "codex/mini-longrun-core-20261015",
+      "extra_thread": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
+      "workers_per_team": 6,
+      "model": "gpt-6.1-sol",
+      "verification": "NOT_RUN_USER_DEFERRED",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_owners": "LONGRUN_SOURCE_OWNERS.json"
     }
   },
   "followup_lanes": [
