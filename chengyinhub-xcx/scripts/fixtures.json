@@ -15936,5 +15936,40 @@
    "state",
    "rows"
   ]
+ },
+ "F96": {
+  "data": {
+   "state": "empty",
+   "isOwner": true,
+   "clubName": "城瘾夜行俱乐部",
+   "badges": [],
+   "errorKind": "",
+   "errorText": "",
+   "refreshError": "",
+   "formErrors": {
+    "name": false,
+    "desc": false,
+    "icon": false
+   },
+   "createError": "",
+   "iconUploading": false,
+   "membersState": "empty",
+   "membersError": "",
+   "members": []
+  },
+  "dropped": [],
+  "switchKeys": [
+   "state",
+   "errorKind",
+   "errorText",
+   "refreshError",
+   "badges",
+   "formErrors",
+   "createError",
+   "iconUploading",
+   "membersState",
+   "membersError",
+   "members"
+  ]
  }
 }
