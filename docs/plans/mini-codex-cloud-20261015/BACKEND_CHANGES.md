@@ -249,3 +249,12 @@ iOS影响：原生WalletCommerce已区别assetPoints非分页与另一个分页p
 ## PR21 fe00f5c范围收窄（优先于历史CL1/3建议）
 
 已读最新标记交付与仓库所有者PR22决定，详见[范围处置](HANDOFF_SCOPE_fe00f5c.md)。CL1 G1暂缓，要求原写者撤回，不再以“修完七项即可集成”推进；NO_API_CHANGE，未入主候选。CL3图标不改、昵称推荐点选，PR23按范围重审。CL2文字申诉经系统消息，无被举报方/独立我的举报入口。CL4不邀请转交，现有字段才展示主办/协办；新增协办接口为DRAFT且尚无精确文件申请，新功能专属后端可在合同/归属明确后委派Claude，不触共享官方运行时。所有后端部署状态仍NO；当前69c281af CI签收不变。
+
+## B03专用VPS首轮：夹具setup失败，业务尚未运行
+
+用户已明确授权本地VPS验证协调者与C00直接协作，由其使用chengyin-test进行串行验证；无需等待Cloud直连，不改SSH/安全组。本协调者独占源码/控制账，验证者只发布独立脱敏证据。
+
+- 对应公共候选：69c281af1ecc3493db5614b74e494b91c7bb0656；报告环境为独立MySQL8.0.45、无宿主发布端口、任务专属schema，Java21/Maven3.9.11、串行限额，未改原源码。
+- 实际报告：各模块主源码及admin1313个测试源编译成功；点名B03AssetMybatisIntegrationTest BUILD FAILURE，tests=1/failures=0/errors=1/skipped=0、容器退出1、无OOM。7个业务方法未执行，不能计通过，也不能据此判业务并发逻辑失败。独立证据链接待交付。
+- 根因：setup第79行首分号substring在base_schema_20260818.sql第2979行COMMENT字符串内截断CREATE TABLE，MySQL语法错误；不是SSH或DB不可达。B03_sol原写者单文件修提取边界，复用已有方式，业务SQL/断言/base schema/迁移均不变。NO_API_CHANGE。
+- 发布层级：69c281af既有CI源码证据保留；新增B03竞态验证为FIXTURE_BLOCKED，未业务签收。TEST_DEPLOYED仍NO，容器内测试不算部署应用；修复新SHA未经VPS复测不升为该套件通过。其余独立源码/协调任务继续。

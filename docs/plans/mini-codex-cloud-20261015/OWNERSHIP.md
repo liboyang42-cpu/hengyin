@@ -30,7 +30,7 @@
 |---|---|---|---|---|---|
 | hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostMapperMyBatisTest.java` | C00（B05已获用户批准） | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
 | hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java` | B03_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
-| hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B03AssetMybatisIntegrationTest.java` | B03_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
+| hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B03AssetMybatisIntegrationTest.java` | B03_sol（原写者接续） | ASSIGNED | `69c281af1ecc3493db5614b74e494b91c7bb0656` | 仅修setup SQL提取，原业务断言不动；原写者已确认只读等待，C00串行提交；无Cloud Java/DB |
 | hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B03PointsAwardServiceTest.java` | B03_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
 | hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B04ClubEventScheduleReadbackTest.java` | B04_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
 | hengyin | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PublisherSettlementPointsAwardServiceTest.java` | B03_sol | INTEGRATED | `c24202f` | 已收到原所有者停止/冻结及补丁交付；候选PR18，未释放给Claude/iOS |
@@ -167,3 +167,11 @@ PR23共享PATCH_PROPOSED给C00（尚未合入）：`chengyinhub-xcx/app.json`、
 ## 后续范围优先级
 
 [PR21 fe00f5c范围收窄](HANDOFF_SCOPE_fe00f5c.md)覆盖此前冲突描述：G1撤回锁WITHDRAWAL_PENDING非释放；CL3不改图标、推荐点选；CL2仅系统消息进入文字申诉，无被举报方视图；CL4不邀请/转交，新增协办方DRAFT待专属合同/文件。原Claude写者负责撤回/修正，C00不创建第二套UI实现。PR21只读到旧a886快照，不等于接收本轮新控制账。
+
+## B03专用VPS夹具阻塞修复（本轮执行记录）
+
+用户授权本地VPS验证协调者直接协作，已确认本机SSH22认证成功；本Cloud可达性独立未验证，不再等待Cloud网络，也不修改VPS SSH/安全组。验证协调者不写业务/测试源码或控制表，C00/C99仍唯一全局协调者。原写者B03_sol已确认接续并停止在只读状态，以上单文件重新ASSIGNED，其余原锁不变。
+
+69c281af授权VPS首轮：主源码及admin 1313个测试源编译成功；显式B03AssetMybatisIntegrationTest setup失败，Surefire tests=1/failures=0/errors=1/skipped=0，退出1、无OOM，7个业务方法均未执行。原始独立脱敏证据待验证者发布，本轮不将口头/委派报告升级为7通过或TEST_DEPLOYED。根因是base_schema_20260818.sql商家应付表COMMENT内分号被首分号substring截断。单文件修复复用已有可靠断句方式，不改base schema/迁移/业务断言/门禁清单，不关闭套件或静默跳过。
+
+交接只给公共分支、完整SHA、套件/命令与隔离数据库前提；由本地验证协调者按SHA复测并回报。身份/密钥不进GitHub，VPS测试与部署/设备/业务验收继续分层。
