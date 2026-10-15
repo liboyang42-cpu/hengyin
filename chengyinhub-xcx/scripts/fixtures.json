@@ -15936,5 +15936,62 @@
    "state",
    "rows"
   ]
+ },
+ "B92": {
+  "data": {
+   "phase": "ready",
+   "refreshing": false,
+   "view": {
+    "title": "外滩夜行档案",
+    "statusText": "进行中",
+    "controlText": "正常运行",
+    "paused": false,
+    "pausedReason": "",
+    "resumeNote": "",
+    "stateKnown": true
+   },
+   "check": {
+    "known": true,
+    "pass": true,
+    "blockers": [],
+    "risks": []
+   },
+   "avail": {
+    "schedule": {
+     "enabled": false,
+     "hint": "活动已排期，只有草稿可以提交排期"
+    },
+    "invite": {
+     "enabled": true,
+     "hint": ""
+    },
+    "transfer": {
+     "enabled": true,
+     "hint": ""
+    },
+    "pause": {
+     "enabled": true,
+     "hint": ""
+    },
+    "resume": {
+     "enabled": false,
+     "hint": "活动未暂停"
+    }
+   },
+   "busyAction": "",
+   "result": null,
+   "loadErrKind": "",
+   "loadError": "",
+   "formError": {
+    "action": false,
+    "text": false
+   }
+  },
+  "dropped": [],
+  "switchKeys": [
+   "loadErrKind",
+   "loadError",
+   "formError"
+  ]
  }
 }

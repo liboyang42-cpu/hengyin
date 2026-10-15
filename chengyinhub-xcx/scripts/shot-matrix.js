@@ -2,12 +2,12 @@
  * Wave2 截图矩阵（机器可读），供总控在 verify worktree 串行采集。
  *
  * ── 机器统计（唯一真值，由本文件末尾 STATS 断言锁死）──────────────────
- *   total 329
- *   按 priority 计全部行：P0 133 / P1 186 / P2 10
+ *   total 330
+ *   按 priority 计全部行：P0 133 / P1 187 / P2 10
  *   其中 blocked 24（不采集）：P0 9 / P1 7 / P2 8
- *   ⇒ actionable（本轮真要拍）：P0 124 / P1 179 / P2 2 = 305
- *   按域：A 53 / B 69 / C 54 / D 40 / E 27 / F 86
- *   按 control：setData 169 / identity+setData 116 / real-data 37 / real-device 7
+ *   ⇒ actionable（本轮真要拍）：P0 124 / P1 180 / P2 2 = 306
+ *   按域：A 53 / B 70 / C 54 / D 40 / E 27 / F 86
+ *   按 control：setData 170 / identity+setData 116 / real-data 37 / real-device 7
  *     (2026-08-05：A10 由 real-data 改 setData —— 它和 A12 的差别是 picList 空/非空,
  *      不显式注入两张必然拍成同一张)
  *   fixtureVerified 16（只保留当前页面仍全量消费其矩阵键、且在本次源版本
@@ -263,6 +263,7 @@ const RAW = [
   ['B16', 'B16-play-finish.png', '/pages/play/index?mock=city', 'player', 'success', { screen: '' }, undefined, TITLE, 'setData', 'P1', '', '调 openFinish()；需 buildMilestone(n) 才有里程碑轴'],
   ['B90', 'B90-official-routes-content.png', '/subpackageRoam/official-routes/index', 'player', 'normal', { state: 'ready', routes: [{ id: '1', name: '老城慢行', city: '上海', cover: '', metaText: '上海 · 4 km · 1 小时 30 分' }] }, undefined, { selector: '.orl-card', min: 1 }, 'setData', 'P1', '', '官方线路列表：卡片展示名称与城市/距离/时长；加载/空/失败三态由 state 切换'],
   ['B91', 'B91-official-route-content.png', '/subpackageRoam/official-route/index?id=1', 'player', 'normal', { state: 'ready', route: { name: '老城慢行', metaText: '上海 · 4 km', cover: '', nodes: [{ key: 'n1', order: 1, name: '第一站', address: '示例路 1 号', stayText: '20 分钟', lat: null, lng: null, img: '' }] } }, undefined, { selector: '.orr-node', min: 1 }, 'setData', 'P1', '', '官方线路详情：站点序号/地址/参考停留；无坐标站点不可点'],
+  ['B92', 'B92-official-organizer-console.png', '/pages/activity/official-organizer/index?id=7', 'merchant', 'normal', { phase: 'ready', refreshing: false, view: { title: '外滩夜行档案', statusText: '进行中', controlText: '正常运行', paused: false, pausedReason: '', resumeNote: '', stateKnown: true }, check: { known: true, pass: true, blockers: [], risks: [] }, avail: { schedule: { enabled: false, hint: '活动已排期，只有草稿可以提交排期' }, invite: { enabled: true, hint: '' }, transfer: { enabled: true, hint: '' }, pause: { enabled: true, hint: '' }, resume: { enabled: false, hint: '活动未暂停' } }, busyAction: '', result: null }, undefined, { selector: '.oo-card', min: 4 }, 'setData', 'P1', '', 'CL4 主办控制台：排期/暂停/邀请/转交四块齐全，置灰原因可见；真实主办身份须本地连测试服验'],
   ['B17', 'B17-play-flight-cta.png', '/pages/play/index?mock=city', 'player', 'normal', { screen: '' }, undefined, TITLE, 'setData', 'P2',
     '被验对象已不在页面里:selectors 给它的锚点 .start-flight/.start-flight__ready 在 pages/play/index.wxml 里只剩一句注释,起飞过场那套 UI 已收编走;矩阵原注的「等 ≥3.4s」也没有任何 data 键可以直接注入 ⇒ 这一行永远拍成 B12 那张(2026-08-19 实测 B12≈B17 判同一屏)。altVerification:2026-08-20 起 cy-start-cta 组件本体连同 pages/play/index.js 顶部那段常量注释一并删除(全仓零引用),原来那个「两处对齐」的依据已不存在;开始入口的出场时序现在只剩 style/tokens.wxss 的 --cy-motion-flight-cycle 一处,属动画不属截图;玩法首屏由 B12 拍到。',
     '等 ≥3.4s（FLIGHT_CTA_DELAY_MS=3203）；漫游 GO 是有意例外'],
@@ -629,11 +630,13 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-03：收口合并的两条 F95 全字段相同，仅保留一个相册合同；仍未动态验证。
 // 2026-10-15：任务3新增官方线路列表/详情与积分明细三页，补 B90/B91/D90 三条 P1 setData 行；
 // total 326→329、P1 183→186、actionable P1 176→179 / total 302→305、B 67→69、D 39→40、setData 166→169。
+// 2026-10-15：CL4 新增官方活动主办控制台页，补 B92 一条 P1 setData 行；
+// total 329→330、P1 186→187、actionable P1 179→180 / total 305→306、B 69→70、setData 169→170。
 const STATS = {
-  "total": 329,
+  "total": 330,
   "byPriority": {
     "P0": 133,
-    "P1": 186,
+    "P1": 187,
     "P2": 10
   },
   "blockedByPriority": {
@@ -643,21 +646,21 @@ const STATS = {
   },
   "actionable": {
     "P0": 124,
-    "P1": 179,
+    "P1": 180,
     "P2": 2,
-    "total": 305
+    "total": 306
   },
   "blocked": 24,
   "domains": {
     "A": 53,
-    "B": 69,
+    "B": 70,
     "C": 54,
     "D": 40,
     "E": 27,
     "F": 86
   },
   "control": {
-    "setData": 169,
+    "setData": 170,
     "identity+setData": 116,
     "real-data": 37,
     "real-device": 7
