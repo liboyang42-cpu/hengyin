@@ -4952,7 +4952,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
         long totalTime = 0L;
         for (NodeDTO node : nodes) {
-            totalTime += node.getNodeTime();
+            Integer nodeTime = node.getNodeTime();
+            if (nodeTime != null) totalTime += nodeTime;
         }
 
         return totalTime;
