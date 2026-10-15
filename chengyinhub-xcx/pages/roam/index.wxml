@@ -102,8 +102,9 @@
 
     <block wx:elif="{{entrySheet=='roam' && entrySheetView=='main'}}">
       <view class="entry-roam-group"><view class="entry-roam-line"><view class="entry-roam-line__icon"><cy-icon name="route" size="32" /></view><view><text>点亮城市</text><text>边走边揭开地图迷雾</text></view></view>
-      <view class="entry-roam-line"><view class="entry-roam-line__icon"><cy-icon name="gps" size="32" /></view><view><text>使用定位</text><text>用于到点打卡与轨迹记录，可随时停止</text></view></view></view>
-      <view class="entry-sheet__primary" bindtap="goStart" aria-role="button" aria-label="开始漫游" hover-class="cy-pressed" hover-stay-time="80">开始漫游</view>
+      <view class="entry-roam-line"><view class="entry-roam-line__icon"><cy-icon name="gps" size="32" /></view><view><text>使用定位</text><text>用于到点打卡与轨迹记录，可随时停止</text></view></view>
+      <view class="entry-roam-line" wx:if="{{followRoute}}"><view class="entry-roam-line__icon"><cy-icon name="route" size="32" /></view><view><text>跟随官方线路</text><text>{{followRoute.name}} · 共 {{followRoute.total || 0}} 站，开始后在地图上标出站点</text></view></view></view>
+      <view class="entry-sheet__primary" bindtap="goStart" aria-role="button" aria-label="{{followRoute ? '按官方线路开始漫游' : '开始漫游'}}" hover-class="cy-pressed" hover-stay-time="80">开始漫游</view>
       <view class="entry-sheet__secondary" bindtap="openEntryRoamRules" aria-role="button" aria-label="查看漫游规则" hover-class="cy-pressed" hover-stay-time="80">漫游规则</view>
     </block>
 
@@ -273,6 +274,8 @@
                        placeholder="输入地址" bind:pick="onSearchPick" />
 
 <view class="roam-topstack" style="top:{{promptTop}}px">
+<!-- G1 跟随官方路线 HUD:只在地图屏;退出跟随只清叠加,不结束漫游 -->
+<view wx:if="{{screen=='map' && followRoute}}"><cy-follow-route-hud hud="{{followRoute}}" bind:exit="exitFollowRoute" /></view>
 
 <!-- 2026-09-15 地图组队 P 方案:原型 f-hangout「在雾里发现一个局」整卡退场 —— 搭子局已下线,
      这条 120 s 轮询永远推不出东西,留着就是一张点进去落空的死入口。附近的队伍走

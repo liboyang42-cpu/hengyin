@@ -9,3 +9,5 @@ page { background: var(--cy-color-bg-page); }
 .orr-node__name { font-size: var(--cy-type-body); font-weight: 600; }
 .orr-node__sub { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
 .orr-node__img { flex: none; width: 112rpx; height: 112rpx; border-radius: var(--cy-radius-sm); }
+.orr__follow { display: flex; flex-direction: column; gap: var(--cy-space-2); }
+.orr__hint { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }

@@ -55,12 +55,12 @@ test('C5: 路线整形——单位、缺字段、坏坐标', () => {
   assert.deepEqual(detail.nodes.map((n) => [n.order, n.name, n.lat]), [[1, 'A', 31.2], [2, 'B', null], [3, 'C', null]])
 })
 
-test('C5: 官方路线入口与分包页面已注册；未接「按这条路线开始」', () => {
+test('C5: 官方路线入口与分包页面已注册；「按这条线路开始」已接（CL1/G1，见 roam-follow-route.test.js）', () => {
   const app = JSON.parse(read('app.json'))
   const roam = app.subPackages.find((p) => p.root === 'subpackageRoam').pages
   assert.ok(roam.includes('official-routes/index') && roam.includes('official-route/index'))
   assert.match(read('pages/roam/index.wxml'), /bindtap="openOfficialRoutes"/)
-  assert.doesNotMatch(read('subpackageRoam/official-route/index.wxml'), /按这条路线开始/)
+  assert.match(read('subpackageRoam/official-route/index.wxml'), /按这条线路开始/)
 })
 
 test('C6: 集邮册「收到的」走 /api/roam/stamp/received，且两个 tab 分页互不串', () => {

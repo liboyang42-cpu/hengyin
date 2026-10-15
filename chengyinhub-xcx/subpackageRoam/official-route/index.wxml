@@ -11,7 +11,12 @@
       <cy-empty wx:elif="{{state === 'notfound'}}" kind="empty" title="这条线路不存在或已下架" sub="回到列表看看其他线路" />
       <block wx:else>
         <image wx:if="{{route.cover}}" class="orr__cover" src="{{route.cover}}" mode="aspectFill" />
-        <text class="orr__sec">站点（{{route.nodes.length}}）</text>
+        <view class="orr__follow">
+          <cy-btn wx:if="{{canFollow}}" variant="primary" bindtap="startFollow" accessibility-label="按这条线路开始漫游">按这条线路开始</cy-btn>
+          <text class="orr__hint" wx:if="{{followHint}}">{{followHint}}</text>
+          <cy-inline-error wx:if="{{followError}}" kind="error" title="{{followError}}" />
+        </view>
+        <text class="orr__sec">站点（{{route.nodes.length || 0}}）</text>
         <cy-empty wx:if="{{!route.nodes.length}}" kind="empty" title="这条线路还没有站点" sub="" />
         <view class="orr-node" wx:for="{{route.nodes}}" wx:key="key" data-index="{{index}}" bindtap="openNode"
               aria-role="button" aria-label="第{{item.order}}站 {{item.name}}{{item.lat !== null ? '，点击查看位置' : ''}}"

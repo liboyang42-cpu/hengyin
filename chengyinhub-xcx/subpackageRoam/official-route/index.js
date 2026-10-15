@@ -1,9 +1,10 @@
 // 官方路线详情。GET /api/preset/route/info?id=(含站点)。
-// 「按这条路线开始」暂未接:漫游起点页是自由漫游,没有「跟随路线」的入参/状态,
-// 接入需要改 pages/roam 的开局流程,不属于只读接口接线,见 PR 说明。
+// 「按这条路线开始」:把带坐标的站点写进一次性交接(utils/roam-follow-route.js),再 switchTab 回漫游;
+// 漫游页 onShow 消费一次,照常开局并在地图上叠路线。纯前端,不写服务端、不影响结算。
 const app = getApp()
 const { isBizOk } = require('../../utils/response-shape.js')
 const { normalizeRouteDetail } = require('../utils/official-route.js')
+const follow = require('../../utils/roam-follow-route.js')
 
 Page({
   data: {
@@ -11,6 +12,9 @@ Page({
     navBarHeight: app.globalData.navBarHeight,
     state: 'loading', // loading | ready | notfound | error
     route: null,
+    canFollow: false,
+    followHint: '', // 不能跟随时的降级说明;能跟随但有站点缺坐标时的提示
+    followError: '',
   },
   onLoad(options) {
     const id = String((options && options.id) || '')
@@ -36,7 +40,12 @@ Page({
         if (!route) { that.setData({ state: 'error' }); return }
         route.cover = route.previewImg ? app.getImgUrl(route.previewImg) : ''
         route.nodes = route.nodes.map((n) => Object.assign({}, n, { img: n.imgUrl ? app.getImgUrl(n.imgUrl) : '' }))
-        that.setData({ route, state: 'ready' })
+        that._plan = follow.buildFollowPlan(route)
+        const canFollow = !!that._plan.supported
+        const followHint = canFollow
+          ? (that._plan.skipped ? `${that._plan.skipped} 个站点未标注位置，跟随时不会画在地图上` : '')
+          : that._plan.reason
+        that.setData({ route, state: 'ready', canFollow, followHint, followError: '' })
       },
       fail() { if (seq === that._seq) that.setData({ state: 'error' }) },
     })
@@ -45,6 +54,15 @@ Page({
     const node = this.data.route && this.data.route.nodes[Number(e.currentTarget.dataset.index)]
     if (!node || node.lat == null || node.lng == null) return
     wx.openLocation({ latitude: node.lat, longitude: node.lng, name: node.name, address: node.address || '' })
+  },
+  startFollow() {
+    if (!this._plan || !this._plan.supported) return
+    if (!follow.writeHandoff(wx, this._plan, follow.currentOwner(app))) {
+      this.setData({ followError: '线路没能交给漫游页，请再点一次' })
+      return
+    }
+    this.setData({ followError: '' })
+    wx.switchTab({ url: '/pages/roam/index' })
   },
   goBack() {
     if (getCurrentPages().length > 1) wx.navigateBack()
