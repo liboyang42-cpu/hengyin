@@ -2,6 +2,57 @@
 
 > 三方统一协作规则：[CY-COORD-20261015-v1](COORDINATION.md)。当前文件归属与候选见[OWNERSHIP.md](OWNERSHIP.md)；初始规划不等于已领单。最终提示词：[Codex](START_PROMPT.md)、[Claude](CLAUDE_START_PROMPT.md)、[iOS](IOS_START_PROMPT.md)。
 
+## 执行发布记录（2026-10-15，优先于后面的初始规划）
+
+CY-HANDOFF: CODEX。控制协议 `CY-COORD-20261015-v1`；唯一协调者C00/C99。业务草稿 [PR18](https://github.com/liboyang42-cpu/hengyin/pull/18)，worker公共基线 `d551c6babd018d41aec90dad2c0acaf1c534644d`，本次源码候选 `c24202f6`（原 `c236f131` 加两个既有补偿测试的调用前失败前提修正）。精确锁见OWNERSHIP.md；后续纯文档提交不代表新部署。
+
+**本轮没有合并GitHub PR、执行DDL、部署、上传或生产变更。所有 TEST_DEPLOYED 均为 NO，iOS适配/微信设备/独立业务读回均未签收。** 本Cloud没有配置可核实的授权VPS路径和必要身份，未回落生产或自行搭建Java/MySQL。各项fixture是虚构输入，只准源码/fixture适配，不得当服务器已上线。
+
+### 发布层级与证据
+
+| BK | 状态 | 源码及相关责任 | 当前测试/限制 |
+|---|---|---|---|
+| GPS / LIKE / BADGE | CONTRACT_FROZEN | 已评审复用PR12，收入PR18；C00保留核心锁 | 原有方法/合同见下方初始基线；同候选CI正在重验，无真实GPS/两账号读回 |
+| AUTHOR | CONTRACT_FROZEN | B02 `cc9e99c`，配置缺席保真 | 专属5项Java测试交现有CI；首次create丢响应仍UNKNOWN |
+| ASSET | CONTRACT_FROZEN | B03 `cc6a8b9`，锁读及应付CAS | c236f131 Funds MySQL IT run38728912034成功；B03额外opt-in真库用例不在该门禁，未运行，不能推导并发业务已验 |
+| SCHEDULE | CONTRACT_FROZEN | B04/B01 `1352b6a`、`38513c9` | 6项Java用例交CI；既有JS消费8/8；VPS/设备待验 |
+| PRIVACY | CONTRACT_FROZEN | B05 用户批准 `e437a52` | 已删旧详情及编辑历史最小读取修复；两身份mapper用例交CI，无真实旧媒体URL验收 |
+| SESSION | CONTRACT_FROZEN | A01 `38513c9`，内部结局快照 | 客户端game-session回归16/16；命令/回执现有合同，不虚构统一恢复API |
+| AI | CONTRACT_FROZEN（仅下述已固定部分） | A02 `f72ddb1`、`3b53769`，补偿测试 `c24202f6` | c236f131总10095项、失败2、错误0、跳过530；两个失败为旧用例仍按调用后异常退额，已修调用前触发，待新CI |
+| NARRATIVE | CONTRACT_FROZEN | A03 `38513c9`，构造测试修正 `3ee0fd0` | 旧选择策略与快照读侧测试交CI；历史缺快照正文不可追溯 |
+| XCX | SOURCE_READY（仅已运行Node范围） | B01 `0171a6c`、`8a83c83`、`38513c9` | 生命周期/账号/退款/排期相关Node输出在B01；C99 ledger40/40，GET/route31通过，UI-GATE-0 PASS；不是整端真机验收 |
+| EXISTING | CONTRACT_FROZEN（列明原接口部分） | PR14/15兼容集成，C00 | 官方路线只读、积分全量等边界保留；认领材料另列DRAFT |
+| CLAIM-MATERIAL / AI-DELETE / AI-VOICE | DRAFT | 见下方具体待决策项，尚未委派共享核心 | 不启动猜测协议的写接线；不因其他任务阻塞停止独立工作 |
+
+所有行的GitHub合并状态均为 UNMERGED，测试部署 NOT_VERIFIED。相关测试通过后由协调者逐项更新SOURCE_READY；530项跳过不计通过。c236f131后端日志通过现有ci/backend-test.sh保留原 `mvn -B clean test` 和退出码、仅收敛控制台噪声以显露失败；未改workflow/pom/门禁测试列表。动作ID总数4480保持，4项退款控件新增真实订阅授权后改分类，保留原退款POST、重复触发及服务端/设备读回要求。
+
+### 已冻结差异及两端共用fixture
+
+以下对应PR18的 `docs/verification/mini-bug-arch-20261015/<任务>/` 合同/专属测试；早期lane文档中的“尚未运行/前半待做”是提交时快照，以本记录和实际CI SHA为准。未列出的HTTP方法、权限、分页、requestId、version与旧行为均不因本轮自动扩展。
+
+- **BK-AUTHOR（B02→iOS I03/Claude作者端）**：POST `/api/topic/create`、`/v2/create`、`/update`、`/v2/update`（后3同/api/topic前缀），POST `/api/topic/edit-detail`、`/publish-draft` 保持原绑定、AjaxResult和本人/商家PROJECT_MANAGE权限。更新缺席publishMode、teamMode/teamMaxMembers、xpBudget、selfPlay及其未传price/quota保留；显式0仍关闭。仅productType及票mode都缺席时保留类型；chapters/tickets等仍全量替换，不能泛化PATCH。fixture member42/topic700原team2/max3/selfPlay1/price8/quota9/xp6200，最小改名保存后保持；显式关闭生效，teamMode7拒绝。保存重新读edit-detail取得重建章节节点ID/configVersion。没有新增create requestId或全主题revision；首次create丢响应仍未知，不按名称猜成功。
+- **BK-ASSET（B03→iOS I04/I07） NO_API_CHANGE**：新增内部会员积分当前锁读，不改变奖励倍率、NULL eventId幂等、旧订单/资金主体。会员余额NULL拒绝，不coalesce为0。confirm/paid/invoice SQL CAS增加amount_total>0，开票兼有冻结保护；竞态零行false不能当成功，付款双人复核保留。fixture余额100，另业务扣30再奖5应75/流水70→75；两个不同事件各奖5为110，同非空事件一笔；应付100追扣120后不得推进确认/付款/开票。无新HTTP/DTO/分页/requestId/version；未知按原流水/批次读回，不换事件键补发。
+- **BK-SCHEDULE（B04→iOS I09/Claude排期）**：POST `/api/club/event-ops/series/detail`、`/list` 既有data新增可空startTime（上海HH:mm），来自未来有效场次共同时间；无场次或混合14:30/16:45返回null，序列化缺字段同未知。登录+ACTIVITY_MANAGE保留，list仍非分页。fixtureclub21/series61未来00:30读回00:30；切换空/混合系列清空旧值，原必填闸阻止静默09:00保存。`/update-future`仍expectedVersion，保留日期不改时刻，无requestId；`/occurrences`任意报名历史、结算或WAITING/OFFERED/CLAIMED候补使editable=false，不能代替写时CAS。沿原400/409业务异常，不假定HTTP状态。
+- **BK-PRIVACY（B05→iOS I05/Claude内容） NO_API_CHANGE**：用户批准作者分支增加lifecycle不等于DELETED；旧详情和由相同读取链保护的编辑历史不可见。其他作者草稿/审核中状态保留，不切内容链、不放宽RBAC。fixture作者与非作者重读同已删ID均不可见；未删合法公开/作者状态不退化。未证实COMMUNITY解绑变PUBLIC或post-to-post引用泄漏，不编造修复；原媒体独立访问仍未验证。
+- **BK-SESSION（A01→iOS I02）**：GET `/api/game/session/view`、`/receipt`，POST `/command`（同/api/game/session前缀）不新增字段。原activity+member+requestId键、完整命令指纹、expectedRevision保留；同键同信封重放，异信封GAME_IDEMPOTENCY_CONFLICT，新键旧版本GAME_STATE_CONFLICT。APPLIED才确定；PENDING/缺回执/断网保留未知，先读回，不换键。AjaxResult业务code与HTTP状态分开。fixture活动71/站8/revision4/STATION_READY/requestId=a01-ready-71，原capacity12重放只推进一次；改capacity冲突。路线是独立routeActionId/expectedRouteVersion，历史同键异payload仍重放原结果，不能套game指纹承诺。暂停用时savedAt不等于路线version。详情见A01/CLAUDE_CONTRACT.md，无新增分页/epoch/API。
+- **BK-NARRATIVE（A03→iOS I03/Claude创作）**：新局内部configSnapshotJson增加endingChapters，不是公开DTO/新实体；只冻结同主题引用的结局章，读GET `/api/play/journey/ending`、`/stage-end`仅投影本局选中章。键存在但缺章返回null，不实时补；整个键缺失的旧局沿原回退，不能重建已删正文。v2写ending.fallback出现时仅JSON布尔，字符串/1/null拒绝（原400业务校验）。JourneyStory首命中、Theme无priority末命中/显式priority最大且同分末命中保持；schemaVersion/configVersion/发布快照三者不同。fixture旧局冻old title，作者改new title，旧局仍old；空冻结映射不读现行章，历史缺键按旧回退；未知写入拒绝。权限/分页/回执无变化。
+- **BK-AI（A02→iOS I08/Claude）**：原AI创作POST路径/DTO/权限/分页不改；未知场景、缺key/disabled/mock明确UPSTREAM_UNAVAILABLE，内部reason不自动成为新HTTP字段。system+user及完整输出每段2000 UTF-16、重叠100审核，不切代理对；未审核后缀拒绝时chat调用0。缺配置/输入审核不可用等provider调用前失败按原预占回收；MODEL_STARTED后异常/超时/空回复保留UNKNOWN，不退额盲重发；输出已生成审核失败仍保留用量。NPC原requestId回执记PROCESSING/UNKNOWN、reasonCode=REQUEST_OUTCOME_UNKNOWN、retryable=false，不承诺答案已恢复；原请求身份保留。未知tokenOut/tokenEst为null，其他估算不当真实provider计费。fixture缺key→chat0且原日/代次/nonce只补偿一次；调用后timeout→不补偿、不换键；长输入system/后缀违规不调用模型；未知成本不能显示真实0。普通generate仍无客户端requestId/查询新接口，不能自动重试。
+- **BK-XCX（B01） NO_API_CHANGE**：音频中断后hide/end不自动后台续播；隐藏卸载后迟到轮询不复活；点赞按稳定对象ID，账号/局generation隔离缓存与迟到回调。三个退款handler用户手势链先请求既有refund/refundRejected订阅，拒绝/空模板不阻止真实退款；模板未配置仍未配置。WXML/WXSS未改。iOS不用复制小程序API或事件处理。
+- **BK-EXISTING**：POST `/api/points/list`一次全量；POST `/api/roam/stamp/received`；GET `/api/preset/route/list`、`/route/info`仅浏览不是开局。NPC POST `/api/ai/npc/chat/data/delete`现有本人全NPC日志删除返回{deleted:n}，不是彻底删除全部回执/阻止晚到写入承诺。分页/权限仍各原接口，Claude/iOS新增入口需独立核自身适配。
+
+兼容和回退：所有合同两端消费相同任务fixture及例外，不造第二份后端；UI适配源码/fixture另列为待签收。发生旧局结果漂移、旧单不可读、越权、资产重复即停止推广并回退对应最小源码提交；不得删迁移/账本/未决锁。旧服务包没有新startTime时客户端保持未知而非默认保存，新局快照缺键按兼容路径。没有部署记录就不安排“已上线”联调。
+
+### DRAFT与实际请求处置
+
+- **CLAIM-MATERIAL / PR21 CL5**：`uploadOSS.fileName`有源码证明是原OSS对象键，`url`是另签URL；app.chooseImage默认取url，当前claim-sheet未覆盖，merchant-claim把URL作为assetId且固定PHOTO。服务只校验type/id非空及32/255长度、1–10份，无type枚举、对象归属/存在校验；同requestId异指纹业务409由controller转code/msg。历史DDL注释不能作当前业务合同。待原业务确认proofType、上传bizType、审核读取及旧URL兼容的具体fixture；不冻结PHOTO，不要求Claude猜键/先修UI接线。共享上传核心保留Codex；认领专属Service/DTO/Mapper可在合同与精确文件登记后委派Claude，目前未授权其改鉴权/DDL。
+- **AI-DELETE**：现有接口只删日志，safe_text回执仍保留，晚到saveLog可重建；删除屏障/留存变更尚无批准方案，保持DRAFT，不标全量永久删除完成。独立新UI设计可继续。
+- **AI-VOICE**：ASR/TTS独立日池无获准政策；不擅自启用新计费/语音配额。admin Vue的token||0展示会把null误作0，属Claude UI待接，不抢写后台页面。
+- **PR21 CL1–CL4**：已读取d9dc65a全部文档并核PR17/20冲突。精确领取/保留见OWNERSHIP；全roam/utils/pages/club通配申请不批准；event-ops/index.js及NpcChatService等核心仍原所有者。新增举报/徽章页面和专属测试缺精确清单，等待自己的CY-HANDOFF补齐。既有无冲突文件可按登记继续独立设计，不因CL5待定阻塞。
+- **iOS**：已主动查询chengyin-ios开放PR与CY标记，暂无实际交付；已有多个native分支，活动所有者未知，不回收、不选分支，不声称已通知/接收。I01–I11影响使用上述同一合同，原生适配/Swift/设备结果须由其实际SHA交付。
+- **PR17/20**：当前不整包集成。PR20有新DDL和漫游/订单/账本重叠，PR17不同父链且有额外隐私工作，保留原作者；作者的成功/部署声明不算PR18证据。
+
+下文保留启动时原始快照以便审查已有合同来源；其中“计划/未冻结/未运行”不覆盖本执行记录，也不表示当前目标环境状态。
+
 2026年10月15日初始快照。**记录区分已有公共补丁、计划工作、现有接口和实际部署，计划不等于已变更。** 由C00/C99协调者独占更新；后端各worker提交变化片段，iOS agent按记录消费，不并行修改后端独占源码。iOS任务入口见 [IOS_HANDOFF.md](IOS_HANDOFF.md)。
 
 ## 已查询PR状态
