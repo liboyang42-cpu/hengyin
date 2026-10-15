@@ -3861,5 +3861,25 @@
   "pending_local_failure_retests": [
     "VPS_EXTRA_474e54ae_20261015"
   ],
-  "latest_repair_candidate_sha": "4793f2b3acf887b2ccb1da085e08ccf872a7eab3"
+  "latest_repair_candidate_sha": "4793f2b3acf887b2ccb1da085e08ccf872a7eab3",
+  "external_team_read_only_reservations": [
+    {
+      "id": "FORWARD_CLOUD_INITIAL_SIX_PATHS",
+      "owner": "third Cloud; local coordinator assigning; pending_thread, C00 registration pending",
+      "source": "direct local coordinator delegation 01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+      "paths": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/AnalyticsControllerTest.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerGrowthMapper.java",
+        "chengyinhub-system/src/main/resources/mapper/business/PlayerGrowthMapper.xml",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerProgressionServiceImplTest.java"
+      ],
+      "extra_access": "READ_ONLY; not eligible for EXTRA refill or source repair without formal exact transfer",
+      "docs_root": "docs/plans/mini-forward-cloud-20261015/",
+      "purpose": "Independent forward bug fixes in analytics and player progression, not validation or review of old EXTRA patches",
+      "validation": "Local VPS coordinator exclusively; no Cloud manual tests",
+      "global_contract_dependency": "Register via C00 before any cross-owner write"
+    }
+  ]
 }
