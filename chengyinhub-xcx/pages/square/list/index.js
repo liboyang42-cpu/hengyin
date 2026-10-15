@@ -105,7 +105,6 @@ Page({
     navBarHeight: 44,
     mapLatitude: lastLocation.FIXED.latitude,
     mapLongitude: lastLocation.FIXED.longitude,
-    mapLocationHint: '',
     mapScale: 14,
 
     // 新增：页面是否正在刷新
@@ -1038,14 +1037,13 @@ Page({
         lastLocation.save(res);
         that.setData({
           mapLatitude: res.latitude,
-          mapLongitude: res.longitude,
-          mapLocationHint: ''
+          mapLongitude: res.longitude
         });
       },
       onFail: function () {
-        // 兜底：上次成功位置 → 固定坐标，并留「未获取定位」提示
+        // 兜底：上次成功位置 → 固定坐标（本页无地图，不展示提示）
         var fb = lastLocation.resolve();
-        that.setData({ mapLatitude: fb.latitude, mapLongitude: fb.longitude, mapLocationHint: fb.hint });
+        that.setData({ mapLatitude: fb.latitude, mapLongitude: fb.longitude });
       }
     });
   },

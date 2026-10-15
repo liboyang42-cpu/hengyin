@@ -107,16 +107,16 @@ Component({
       const problem = claim.validate(form)
       if (problem) { this.setData({ formError: problem }); return }
       this.setData({ submitting: true, formError: '' })
-      const settle = (patch) => this.setData(Object.assign({ submitting: false }, patch))
+      const settle = (formError) => this.setData({ submitting: false, formError: formError || '' })
       getApp().sendRequest({
         url: '/api/merchant/claims/submit', method: 'POST', data: JSON.stringify(claim.buildSubmitBody(form)),
         header: { 'Content-Type': 'application/json' }, hideLoading: true,
         success: (res) => {
-          if (isOk(res)) { this._requestId = ''; settle({}); this.loadStatus(); return }
-          settle({ formError: claim.submitErrorMessage(res) })
+          if (isOk(res)) { this._requestId = ''; settle(); this.loadStatus(); return }
+          settle(claim.submitErrorMessage(res))
         },
-        fail: () => settle({ formError: '网络异常，请重试（同一份申请不会重复提交）' }),
-        successStatusAbnormal: (res) => settle({ formError: claim.submitErrorMessage(res) }),
+        fail: () => settle('网络异常，请重试（同一份申请不会重复提交）'),
+        successStatusAbnormal: (res) => settle(claim.submitErrorMessage(res)),
       })
     },
   },
