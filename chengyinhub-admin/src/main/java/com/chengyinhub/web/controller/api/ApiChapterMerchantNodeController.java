@@ -291,7 +291,7 @@ public class ApiChapterMerchantNodeController extends BaseController {
         try {
             MerchantAccessContext access = merchantAccessService.require(
                     memberId, MerchantPermission.PROJECT_MANAGE);
-            return success(nodeNpcService.voiceEnroll(access.getOwnerMemberId(),
+            return success(nodeNpcService.voiceEnroll(memberId, access.getOwnerMemberId(),
                     body.getNodeId(), body.getVoiceSample()));
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode(), e.getMessage());

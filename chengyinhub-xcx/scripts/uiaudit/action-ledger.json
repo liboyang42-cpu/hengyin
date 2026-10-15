@@ -688430,7 +688430,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:842"
+        "staticSource": "pages/index/index.js:855"
       }
     },
     {
@@ -688547,7 +688547,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:850"
+        "staticSource": "pages/index/index.js:863"
       }
     },
     {
@@ -688615,7 +688615,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:1078"
+        "staticSource": "pages/index/index.js:1091"
       }
     },
     {
@@ -688761,7 +688761,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:662"
+        "staticSource": "pages/index/index.js:675"
       }
     },
     {
@@ -688829,7 +688829,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:915"
+        "staticSource": "pages/index/index.js:928"
       }
     },
     {
@@ -688897,7 +688897,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:915"
+        "staticSource": "pages/index/index.js:928"
       }
     },
     {
@@ -688964,7 +688964,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:806"
+        "staticSource": "pages/index/index.js:819"
       }
     },
     {
@@ -689081,7 +689081,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:618"
+        "staticSource": "pages/index/index.js:631"
       }
     },
     {
@@ -689151,7 +689151,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:920"
+        "staticSource": "pages/index/index.js:933"
       }
     },
     {
@@ -689223,7 +689223,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:796"
+        "staticSource": "pages/index/index.js:809"
       }
     },
     {
@@ -689293,7 +689293,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:920"
+        "staticSource": "pages/index/index.js:933"
       }
     },
     {
@@ -689361,7 +689361,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:915"
+        "staticSource": "pages/index/index.js:928"
       }
     },
     {
@@ -689429,7 +689429,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:915"
+        "staticSource": "pages/index/index.js:928"
       }
     },
     {
@@ -689507,7 +689507,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:969"
+        "staticSource": "pages/index/index.js:982"
       }
     },
     {
@@ -689616,7 +689616,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:926"
+        "staticSource": "pages/index/index.js:939"
       }
     },
     {
@@ -689694,7 +689694,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:969"
+        "staticSource": "pages/index/index.js:982"
       }
     },
     {
@@ -689714,7 +689714,9 @@
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
+      "requiredCapabilityByBranch": {
+        "denied": "getLocation"
+      },
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
@@ -689736,29 +689738,140 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "external",
       "interactionMode": "event-contract",
-      "baseActionClass": "state",
+      "baseActionClass": "read",
       "effectClasses": [
+        "read",
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "getLocation"
+      ],
+      "successCapabilities": [
+        "getLocation"
+      ],
       "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "routes": [
+          "pages/activity/list/index",
+          "pages/club/apply/index",
+          "pages/merchant/apply/index",
+          "pages/play/index?",
+          "pages/privacy/index",
+          "subpackageMember/signup/index?focusId="
+        ],
+        "apis": [
+          "/api/activity/list",
+          "/api/compliance/consents",
+          "/api/compliance/consents/latest",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/map/reverse-geocode",
+          "/api/play/run-session/list",
+          "/api/registration/my-joined",
+          "/api/role/info",
+          "/api/topic/list",
+          "/api/user/info"
+        ],
+        "primaryApis": [
+          "/api/activity/list",
+          "/api/compliance/consents",
+          "/api/compliance/consents/latest",
+          "/api/config/features",
+          "/api/map/reverse-geocode",
+          "/api/play/run-session/list",
+          "/api/registration/my-joined",
+          "/api/topic/list",
+          "/api/user/info"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/activity/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/compliance/consents",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/compliance/consents/latest",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/map/reverse-geocode",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/run-session/list",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/my-joined",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/topic/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "denied"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "pages/index/index.js:272"
@@ -689831,7 +689944,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:651"
+        "staticSource": "pages/index/index.js:664"
       }
     },
     {
@@ -689898,7 +690011,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:831"
+        "staticSource": "pages/index/index.js:844"
       }
     },
     {
@@ -689965,7 +690078,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:811"
+        "staticSource": "pages/index/index.js:824"
       }
     },
     {
@@ -690036,7 +690149,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:899"
+        "staticSource": "pages/index/index.js:912"
       }
     },
     {

@@ -783,7 +783,17 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // Three real login/permission component actions became visible; tap count stays unchanged.
   // 四个章节确认合同替换原合并事件，点击分母不变，事件合同净增三项。
   // 2026-10-13 三处玩法支持范围读取失败改 load-failure 留白,其 bind:action 重试不可见 -3,2307 → 2304(重建实测)。
-  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2315)  /* 2026-10-15 PR10 复查:七处登录引导 cta/primary、口碑缺参返回 cta、modal-host 多行 bindinput 全是事件合同,+9(重建实测)。 */  /* F-L5C-06 帖文详情社区未开放空态新增返回 CTA,事件合同 +1(与 E2 合并后实测)。 */  /* F-W1-12 口碑管理登录失效可见态新增「重新登录」事件合同 +1。 */  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
+  const homeCitySettled = ledger.controls.find((item) => item.id === 'pages/index/index.wxml:308:bind:settled:onPrivacyGateSettled:25')
+  assert.ok(homeCitySettled, '首页原地同意后的真实定位流程必须留在台账中')
+  assert.equal(homeCitySettled.interactionMode, 'event-contract')
+  assert.equal(homeCitySettled.actionClass, 'external')
+  assert.equal(homeCitySettled.baseActionClass, 'read')
+  assert.equal(homeCitySettled.externalGate, 'real-device-required')
+  assert.deepEqual(homeCitySettled.externalCapabilities, ['getLocation'])
+  assert.deepEqual(homeCitySettled.requiredPlatforms, ['ios', 'android'])
+  assert.equal(ledger.controls.filter((item) => item.interactionMode === 'event-contract').length, 2383)
+  // 首页原地同意后接回真实定位，唯一该事件从 local 转为 external；控件与事件总数不减。
+  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2314)  /* 2026-10-15 PR10 复查:七处登录引导 cta/primary、口碑缺参返回 cta、modal-host 多行 bindinput 全是事件合同,+9(重建实测)。 */  /* F-L5C-06 帖文详情社区未开放空态新增返回 CTA,事件合同 +1(与 E2 合并后实测)。 */  /* F-W1-12 口碑管理登录失效可见态新增「重新登录」事件合同 +1。 */  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
   // 商家承接接入 cy-date-range-sheet 后新增 confirm / cancel 两条事件合同，1662 → 1664。
   // 合作页将会话失效与无权限拆为两个 cy-empty CTA，新增 goLogin / goWorkbench 两条事件合同，1664 → 1666。
   //   带一个 bind:cta 首发引导(+1),净 -2;同批新增两条 cy-state-shell 的 bind:primary

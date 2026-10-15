@@ -269,8 +269,21 @@ Page({
   showPrivacyGate() {
     this.setData({ privacyGateShow: true });
   },
-  onPrivacyGateSettled() {
+  onPrivacyGateSettled(event) {
     this.setData({ privacyGateShow: false });
+    const authorization = (app.globalData || {}).authorization || '';
+    if (!event || !event.detail || event.detail.event !== 'agree'
+        || this._unloaded || this._homeLocationHidden
+        || !app.getUsageConsent || !app.getUsageConsent().granted()
+        || !(Number(app.getUserID()) > 0) || !authorization || authorization === 'dev-token') return;
+    if (isMerchantView()) {
+      this.setData({ _needsRedirect: true });
+      goMerchantHome();
+      return;
+    }
+    this.setData({ _needsRedirect: false, isAppReady: true });
+    this.loadPageData();
+    this.getHomeCityLocation();
   },
 
   /**
