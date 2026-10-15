@@ -153,3 +153,16 @@
 | 105 | 商家可报名主题（只读） | 商家现有合作/找主题入口读 `POST /api/topic/list-to-merchant` 列出可报名主题，点进沿用现有主题详情；先核实是否已有同类列表（`coop/nearby` 等），已有则 BLOCKED；不新增报名写接口 | 照现有主题列表卡片 |
 | 106 | 单测与合同测试·第八批 | BL-100–105 新增纯函数/页面处理器单测 + 新调用接口合同测试（路径/方法/字段对照 Java 源码） | tests |
 | 107 | 验收清单更新·第五至八批 | 把 BL-84–105 已开 PR 的本地验收清单补进 `ACCEPTANCE.md`（依赖 BL-59 #101、BL-83 #126） | docs |
+
+## 第九批（108–115）：监督线补充（后端已有、小程序零调用；不改现有样式、无迁移/新接口）
+
+| # | 名称 | 内容 | 范围提示 |
+|---|---|---|---|
+| 108 | 商家已生效权益（只读） | 商家工作台现有信息块读 `POST /api/merchant/subscription`（`BASIC_READ`，返回 `merchant_subscription` 中 `is_active=1` 的行，字段以 `MerchantSubscription` 实体为准），列出权益名与有效期；**不展示价格、不做购买/续费入口**；空列表不展示；没有现成位置就 BLOCKED | `pages/merchant/**`；资金政策不变 |
+| 109 | 创作者中心（只读） | 个人页现有创作/发布相关信息块读 `POST /api/creator/center`（`ICreatorCenterService.getCenter` 返回为准），只补现有块缺的数字/状态；**不做** `/api/creator/apply` 申请入口（需产品决定）；没有现成块就 BLOCKED | 照现有个人页信息块；不改主标题 |
+| 110 | 为你推荐（只读） | 现有首页/发现页「推荐」类列表若是本地或其他接口拼的，核实能否改读 `POST /api/recommendation/list`（`candidate_type` 默认 topic，`limit`）；卡片沿用现有主题卡；没有现成推荐位或已有等价数据源就 BLOCKED | 不碰 `pages/play/index.js`（Codex） |
+| 111 | 发现页筛选项对齐后端 | 对照 `POST /api/discovery-filter/schema`（`DiscoveryFilterContract.schema(resource)`）核实小程序现有筛选项的取值/文案是否与后端一致；不一致处改前端常量或改为运行时读 schema（失败回退现有常量），**不改筛选 UI 样式**；完全一致则 BLOCKED 并附对照表 | 现有发现/搜索页 |
+| 112 | IP 世界首页与任务（只读） | 若小程序已有 IP 世界/城市世界类入口，读 `POST /api/world/home`（`city_code`、`world_id`）与 `POST /api/world/quests`（`world_id`，只回已发布任务）补齐现有展示；没有现成入口就 BLOCKED，不新造页面 | 字段以 `IIpWorldService` 返回为准 |
+| 113 | 商家经营台账汇总核对 | 核实 `pages/merchant/ledger` 现用接口；若页面缺少分页/汇总数字而 `POST /api/merchant/orders/ledger`（`MerchantLedgerQuery`：status pending/completed/aftersale、period、pageNum/pageSize，`ORDER_READ`）能提供，则只补现有数字行与分页；已等价则 BLOCKED | 不碰积分/券/应付服务（Codex）；只读 |
+| 114 | 单测与合同测试·第九批 | BL-108–113 新增纯函数/页面处理器单测 + 新调用接口合同测试（路径/方法/字段对照 Java 源码） | tests |
+| 115 | 验收清单更新·第九批 | 把 BL-108–113 已开 PR 的本地验收清单补进 `ACCEPTANCE.md`（依赖 BL-59 #101、BL-107 #151） | docs |
