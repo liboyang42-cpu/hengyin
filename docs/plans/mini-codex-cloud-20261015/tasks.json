@@ -183,7 +183,7 @@
       ],
       "claude_boundary": "积分明细/资金中心UI、新领券/储值/提现或支付产品交Claude另行范围；本单不新增业务。",
       "hold_if": "政策单位未定则先证据/方案；需要新唯一索引/DDL或改变鉴权/RBAC另行确认，不改历史迁移。",
-      "state": "1e403b13真实MySQL七项通过，原失败保留；HTTP/真实业务未验"
+      "state": "冻结1e403b13真实MySQL七项通过，原69c失败历史保留；HTTP真实业务未验"
     },
     {
       "id": "B04",
@@ -428,7 +428,7 @@
       ],
       "claude_boundary": "输出Claude可读的稳定后端合同，不接手其UI/新功能，不做iOS/Flutter。",
       "hold_if": "",
-      "state": "B03 VPS七项已签收；普通202及AI真实存储22项待独立报告，未部署/设备/业务签收"
+      "state": "冻结1e403b13本轮VPS自动化矩阵231/231闭环且CI成功；运行时业务/设备/部署未验，后续缺陷另候选"
     }
   ],
   "parallel_policy": {
@@ -588,22 +588,13 @@
     "claude_handoff_pr": 21,
     "claude_ack": "READ_OLD_a886_ONLY_LATEST_ASSIGNMENT_PENDING",
     "ios_handoff": "NO_OPEN_PR_OBSERVED_NOT_UNASSIGNED",
-    "validated_candidate_sha": "69c281af1ecc3493db5614b74e494b91c7bb0656",
-    "github_ci_run": 38730430052,
-    "funds_ci_run": 38730430072,
-    "vps_test_status": "B03_7_PASS_REMAINING_UNIT_202_AI_22_PENDING",
+    "validated_candidate_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+    "github_ci_run": 38733056178,
+    "funds_ci_run": 38733056167,
+    "vps_test_status": "PASS_231_OF_231_FROZEN_CANDIDATE_AUTOMATED_MATRIX_CLOSED",
     "claude_handoff_sha": "fe00f5c6359a641c7cbee42c3dc08daae76ffe41",
     "claude_scope_record": "HANDOFF_SCOPE_fe00f5c.md",
     "cloud_vps_connectivity": "NOT_VERIFIED_INDEPENDENT_NOT_A_DEPENDENCY",
-    "b03_vps_result": {
-      "candidate": "69c281af1ecc3493db5614b74e494b91c7bb0656",
-      "tests": 1,
-      "failures": 0,
-      "errors": 1,
-      "skipped": 0,
-      "business_methods_executed": 0,
-      "evidence": "delegated test report; independent evidence publication pending"
-    },
     "candidate_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
     "vps_failure_evidence_pr": "https://github.com/liboyang42-cpu/hengyin/pull/24",
     "vps_failure_evidence_sha": "ccbcf93236e386aaf37a1c7ab0d45b6df5fb5ba6",
@@ -613,7 +604,8 @@
       "B03_mysql": 7,
       "unit_and_H2": 202,
       "ai_mysql_redis": 22,
-      "status": "planned_not_passed"
+      "total": 231,
+      "status": "observed_passed"
     },
     "b03_vps_pass": {
       "candidate": "1e403b135206844a34219753a36e2dee39c7dd59",
@@ -625,6 +617,67 @@
       "skipped": 0,
       "business_methods_executed": 7,
       "result": "PASS"
-    }
+    },
+    "vps_validation_history": [
+      {
+        "candidate": "69c281af1ecc3493db5614b74e494b91c7bb0656",
+        "tests": 1,
+        "failures": 0,
+        "errors": 1,
+        "skipped": 0,
+        "business_methods_executed": 0,
+        "evidence": "delegated test report; independent evidence publication pending",
+        "result": "FAIL_SETUP_SQL_FIXTURE",
+        "record_kind": "historical_failure_not_current"
+      }
+    ],
+    "current_vps_validation": {
+      "candidate_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+      "result": "PASS",
+      "scope": "frozen candidate selected automated VPS matrix only",
+      "groups": {
+        "B03_mysql": 7,
+        "unit_and_H2": 202,
+        "ai_mysql_redis": 22
+      },
+      "tests": 231,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "evidence_pr": 24,
+      "evidence_commit": "43ca53274b345bf344037e1fe60afa49b8e53dd1",
+      "github_ci": {
+        "run": 38733056178,
+        "status": "success"
+      },
+      "funds_ci": {
+        "run": 38733056167,
+        "status": "success"
+      },
+      "report_mtime_verified": true,
+      "serial_maven_verified": true,
+      "cleanup_verified": true,
+      "test_deployed": false,
+      "not_accepted": [
+        "runtime HTTP business reads with real test identities and deployed SHA/database binding",
+        "WeChat/iOS device acceptance",
+        "merge, business migration, deployment and upload"
+      ],
+      "historical_failure_retained": "69c281af FAIL_SETUP_SQL_FIXTURE; 7 business methods not executed"
+    },
+    "github_ci_status": "SUCCESS",
+    "funds_ci_status": "SUCCESS",
+    "runtime_business_acceptance": "NOT_VERIFIED",
+    "wechat_ios_acceptance": "NOT_VERIFIED",
+    "migration_deployment_upload": "NOT_PERFORMED",
+    "ci_validation_history": [
+      {
+        "candidate": "69c281af1ecc3493db5614b74e494b91c7bb0656",
+        "github_ci_run": 38730430052,
+        "funds_ci_run": 38730430072,
+        "status": "SUCCESS",
+        "record_kind": "historical_ci"
+      }
+    ]
   }
 }

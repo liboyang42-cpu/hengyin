@@ -20,7 +20,7 @@ setup改用项目ItSchema.readStatements/WxPaymentCallbackFencingMySqlIT既有�
 
 ## 本轮结果更新
 
-已读[PR24 f30057dd独立证据](https://github.com/liboyang42-cpu/hengyin/blob/f30057ddc3e7812849121ab0d3d400bc68b0cb0e/docs/verification/mini-bug-arch-20261015/VPS_EXTERNAL_1e403b13/README.md)：1e403b13 B03实跑7/7、零失败/错误/跳过，退出0/无OOM。原失败记录保留；本套无需重复跑。以下命令保留供审查/必要复现，不是要求再跑。其余普通202+AI存储22按矩阵串行，TEST_DEPLOYED及设备/业务仍未验。
+已读[PR24 f30057dd独立证据](https://github.com/liboyang42-cpu/hengyin/blob/f30057ddc3e7812849121ab0d3d400bc68b0cb0e/docs/verification/mini-bug-arch-20261015/VPS_EXTERNAL_1e403b13/README.md)：1e403b13 B03实跑7/7、零失败/错误/跳过，退出0/无OOM。原失败记录保留；本套无需重复跑。以下命令保留供审查/必要复现，不是要求再跑。其余普通202+AI存储22也已在相同SHA按PR24@43ca532签收，231矩阵闭环，TEST_DEPLOYED及设备/业务仍未验。
 
 ## 第一优先：原套件复测
 

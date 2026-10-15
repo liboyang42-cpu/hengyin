@@ -4,9 +4,17 @@ CY-HANDOFF: CODEX；CY-COORD-20261015-v1。源码候选固定 **1e403b135206844a
 
 以下231为本轮**最小选定的测试方法数，不是已通过数，也不等于全部业务/设备验收完成**。源码只读盘点无参数化/重复/动态测试注解；方法内部循环和并发线程不另算case。不把其余530项旧跳过套件全部扩大成本轮任务。
 
+## 最新冻结候选签收：231/231自动化矩阵闭环
+
+公共源码 **1e403b135206844a34219753a36e2dee39c7dd59**；独立证据[PR24@43ca532](https://github.com/liboyang42-cpu/hengyin/blob/43ca53274b345bf344037e1fe60afa49b8e53dd1/docs/verification/mini-bug-arch-20261015/VPS_EXTERNAL_1e403b13/SUMMARY.md)。C00已完整读取SUMMARY、B03 evidence、regression、ai-storage、resources、cleanup：B03真MySQL7＋普通/H2回归202＋AI真实MySQL/Redis22，实际**231/231，失败0/错误0/跳过0**。逐类数量/方法、XML新鲜度、同一源码无补丁、退出0/无OOM均核；三个Maven容器区间不重叠，任务标签核清理5容器和独占网络、拆除前非系统schema=0及Redis DB0键=0，原日志/报告/源码/依赖缓存保留。
+
+同SHA GitHub CI run38733056178、Funds run38733056167全部SUCCESS（10+2 jobs）；当前签收见[VALIDATION_1e403b13.json](VALIDATION_1e403b13.json)。原69c281af setup失败作为历史保留（7业务未运行），未抹除或混入当前通过计数。此前“202+22待报告”仅是历史进度，已由本签收覆盖。
+
+**本轮冻结候选VPS自动化矩阵已闭环；不等于全轮任务/产品完成。TEST_DEPLOYED=NO，运行时HTTP/真实身份业务读回、应用包SHA/数据库绑定、微信/iOS、合并/业务迁移/部署/上传均未验收。** 后续已确认bug/架构缺口另分支、新SHA和聚焦套件，不沿用231签收，不包括Claude暂缓新产品。
+
 ## 顺序与资源
 
-初始顺序为B03夹具复测7项 → 普通回归202项 → AI真实Redis/MySQL22项。B03现已由独立PR24 f30057dd证据签收7/0/0/0，不重复跑；后两组仍待报告。串行单个Maven测试容器，Maven堆640MB/测试堆384MB沿原验证驱动；独占任务数据库/Redis、限额、无宿主发布端口。失败就回传真实报告/C00修复新SHA，不在VPS改源码，不重复全量Maven，不让worker争用VPS。
+初始顺序为B03夹具复测7项 → 普通回归202项 → AI真实Redis/MySQL22项。三组现已由PR24@43ca532完整证据签收，以下顺序/命令是已执行记录，不要求重跑。串行单个Maven测试容器，Maven堆640MB/测试堆384MB沿原验证驱动；独占任务数据库/Redis、限额、无宿主发布端口。失败就回传真实报告/C00修复新SHA，不在VPS改源码，不重复全量Maven，不让worker争用VPS。
 
 每组从完整仓库根按reactor -am运行，使用当前上游源码、不拿缓存旧项目jar；Java21/Maven3.9.11，MySQL8.0.45及实际Redis版本独立记录。-o仅复用授权环境已备依赖；依赖缺失如实报告，不伪造测试通过。
 

@@ -2,6 +2,14 @@
 
 协议：`CY-COORD-20261015-v1`。唯一维护者：本聊天 Codex C00/C99。控制文档使用独立checkout `/workspace/hengyin-coordination`，业务候选在另一checkout；不在worker共享目录切换分支。
 
+## 最新冻结候选签收：231/231自动化矩阵闭环
+
+公共源码 **1e403b135206844a34219753a36e2dee39c7dd59**；独立证据[PR24@43ca532](https://github.com/liboyang42-cpu/hengyin/blob/43ca53274b345bf344037e1fe60afa49b8e53dd1/docs/verification/mini-bug-arch-20261015/VPS_EXTERNAL_1e403b13/SUMMARY.md)。C00已完整读取SUMMARY、B03 evidence、regression、ai-storage、resources、cleanup：B03真MySQL7＋普通/H2回归202＋AI真实MySQL/Redis22，实际**231/231，失败0/错误0/跳过0**。逐类数量/方法、XML新鲜度、同一源码无补丁、退出0/无OOM均核；三个Maven容器区间不重叠，任务标签核清理5容器和独占网络、拆除前非系统schema=0及Redis DB0键=0，原日志/报告/源码/依赖缓存保留。
+
+同SHA GitHub CI run38733056178、Funds run38733056167全部SUCCESS（10+2 jobs）；当前签收见[VALIDATION_1e403b13.json](VALIDATION_1e403b13.json)。原69c281af setup失败作为历史保留（7业务未运行），未抹除或混入当前通过计数。此前“202+22待报告”仅是历史进度，已由本签收覆盖。
+
+**本轮冻结候选VPS自动化矩阵已闭环；不等于全轮任务/产品完成。TEST_DEPLOYED=NO，运行时HTTP/真实身份业务读回、应用包SHA/数据库绑定、微信/iOS、合并/业务迁移/部署/上传均未验收。** 后续已确认bug/架构缺口另分支、新SHA和聚焦套件，不沿用231签收，不包括Claude暂缓新产品。
+
 ## 当前事实与状态
 
 - 控制仓库/分支：`liboyang42-cpu/hengyin@codex/mini-bugs-backend-cloud-plan-20261015`，复用文档PR16。
@@ -178,4 +186,4 @@ PR23共享PATCH_PROPOSED给C00（尚未合入）：`chengyinhub-xcx/app.json`、
 
 B03修复已推送1e403b135206844a34219753a36e2dee39c7dd59，详见[VPS复测交付](VPS_RETEST_1e403b13.md)。已完整读独立PR24 ccbcf93236e386aaf37a1c7ab0d45b6df5fb5ba6，两份文档仅为69c281af首轮setup失败证据，不移植到新SHA当通过。原写者停止/补丁/提交证据齐，仍原锁不转交验证者；本地只读公共候选执行。Cloud临时SSH身份已清理，本地连接独立保留，无需改网络。
 
-B03 1e403b13真实VPS套件已读PR24 f30057dd的独立JSON/README签收7/0/0/0，见[证据](https://github.com/liboyang42-cpu/hengyin/blob/f30057ddc3e7812849121ab0d3d400bc68b0cb0e/docs/verification/mini-bug-arch-20261015/VPS_EXTERNAL_1e403b13/README.md)。原代码锁仍保留，无文件转交或部署；本地验证者继续其余202+22项，C00不占VPS资源。
+B03 1e403b13真实VPS套件已读PR24 f30057dd的独立JSON/README签收7/0/0/0，见[证据](https://github.com/liboyang42-cpu/hengyin/blob/f30057ddc3e7812849121ab0d3d400bc68b0cb0e/docs/verification/mini-bug-arch-20261015/VPS_EXTERNAL_1e403b13/README.md)。原代码锁仍保留，无文件转交或部署；后续202+22现已签收（见顶部最新记录），C00不占VPS资源。
