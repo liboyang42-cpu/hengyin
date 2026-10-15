@@ -590,11 +590,15 @@
   <cy-cell title="分享主页" arrow="{{false}}" bind:tap="onShareProfile" />
   <cy-cell wx:if="{{isSelf}}" title="更换背景图 · 16:9 横图" arrow="{{false}}" bind:tap="onChangeHeroBg" />
   <cy-cell wx:if="{{isSelf}}" title="设置" arrow="{{false}}" bind:tap="onMoreSetting" />
+  <!-- BL-67:商家公开主页信息纠错(问题上报,merchantId=商家档案主键 subjectMerchant.id)。 -->
+  <cy-cell wx:if="{{!isSelf && subjectIsMerchant && subjectMerchant.id}}" title="信息纠错" arrow="{{false}}" bind:tap="onMerchantCorrection" />
   <!-- CU-M-43(2026-09-23 用户裁决 B):「屏蔽」暂不开放。原入口只弹一句「已屏蔽」,
        既不写关系数据也不落本地态,重进页面一切照旧 —— 是句假成功。写口接通前这里不放
        这条 cell,也不用「暂未开放」的理由行占位(不可点的行读起来仍像一个能用的功能)。 -->
 </cy-scene-sheet>
 </view>
+
+<cy-merchant-correction-sheet wx:if="{{!isSelf}}" show="{{correctionShow}}" merchant-id="{{correctionMerchantId}}" bind:close="onCorrectionClose" />
 
 <!-- [P0-2] ③ 选章核销:一商家在同一路线承接多章是常态 ⇒ 交集≥2 时由他自己选,
      选完调 scan_qr_code_chapter。不用 wx.showActionSheet —— 它的 itemList 上限 6 项,
