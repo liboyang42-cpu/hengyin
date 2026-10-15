@@ -27,3 +27,5 @@ C05-24方案归一成唯一实现C04-21，不把同源余额/冻结/ledger问题
 C05-25精确5生产路径转CORE/C05，三旧fixture单写者C05，C04不得碰同PlayerWithdrawalCooldownServiceTest；如需适配先交原writer。只资金专用key当前before锁/审计/写、提交后删除cache防回调倒序；一般配置/API/权限不变。业务小时权威读取须避免失效失败造成永久Redis旧值，选择专用DB语义并如实区分普通RR读与锁定当前读；若采用锁读需追所有caller无config→member反序/锁跨provider。默认48与非法配置原规则保留，不改任何值政策。
 
 两个实现均仅源码和必要回归NOT_RUN。C04/C05先静态盘点实际旧fixture，无必要不改；所有旧断言保留。确需表外路径向C00给准确理由再转交，不批量改旧fixture或为mock保留生产fallback。不执行测试/编译/DB/provider/VPS，交付未验证，不提前合并/部署。
+
+C04-21新增精确MemberCashWithdrawMapper.java/XML current行读，先cash行→member避免终态/冻结后的迟到扣款；原外部回执/拒绝保留，不provider/不扣/不自动退/不markFailed覆盖。赏金用NESTED savepoint保持外层事实可见、原失败不连累核销；源码默认Boot/MyBatis JDBC支持，但实际生产manager/nested能力未验证，不允许REQUIRED/REQUIRES_NEW错误替代。C06-30积分相同周界兄弟投影补充不另算bug；C05-25另写必要真DB审计交错回归，全部NOT_RUN。

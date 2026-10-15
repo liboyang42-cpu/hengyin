@@ -4660,7 +4660,11 @@
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_30Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C06-30.md",
       "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
-      "source_result": "PENDING_SOURCE_DELIVERY"
+      "source_result": "PENDING_SOURCE_DELIVERY",
+      "supplemental_source_paths": [
+        "chengyinhub-system/src/main/resources/mapper/business/UmsMemberPointsDetailMapper.xml"
+      ],
+      "same_root_supplement": "Points-statistics sibling uses identical wrong Sunday offset; source author C06 will freeze 30-points supplement, not another bug count."
     },
     {
       "id": "OWN-C01-51",
@@ -4757,7 +4761,9 @@
         "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MerchantReferralBountyMapper.java",
         "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerWithdrawalCooldownMapper.java",
         "chengyinhub-system/src/main/resources/mapper/business/MerchantReferralBountyMapper.xml",
-        "chengyinhub-system/src/main/resources/mapper/business/PlayerWithdrawalCooldownMapper.xml"
+        "chengyinhub-system/src/main/resources/mapper/business/PlayerWithdrawalCooldownMapper.xml",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MemberCashWithdrawMapper.java",
+        "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml"
       ],
       "source_anchor": "bank intent→member; cash short transaction→provider outside; bounty writer member-first",
       "trigger": "银行与零钱提前冻结常量可漏并发新冻结、流水before/after来自旧balance",
@@ -4794,7 +4800,9 @@
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WithdrawalPayoutStateMybatisTest.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawServiceTest.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WithdrawalStateMachineServiceTest.java"
-      ]
+      ],
+      "cash_late_debit_contract": "cash current row locks first, validate exact actor/amount and original PROCESSING/not frozen; terminal/frozen returns prior receipt/existing rejection, no debit/provider/markFailed overwrite; no new API/state fields",
+      "bounty_transaction_contract": "NESTED/JDBC savepoint preserve outer own writes and original caught bonus failures. Default Boot+MyBatis static evidence; actual deployed manager/nested capability remains NOT_VERIFIED, no REQUIRED/REQUIRES_NEW fallback."
     }
   ],
   "refill": "Coordinator adds a concrete nonduplicate authorized task when one is delivered/refuted/blocked; no fabricated defect or empty filler. New IDs never reuse old ones. If no justified candidate remains, record EXHAUSTED rather than invent work.",

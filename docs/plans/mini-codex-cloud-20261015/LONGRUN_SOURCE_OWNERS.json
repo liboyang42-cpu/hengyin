@@ -851,6 +851,67 @@
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-system/src/main/resources/mapper/business/UmsMemberPointsDetailMapper.xml": {
+      "owner": "CORE/C06",
+      "worker": "final_review_sol",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "transfer_evidence": "Same Sunday week-window defect as C06-30 sibling production points-statistics endpoint; original C00 writer stopped. Only exact two WEEKDAY offsets, no ledger/other SQL."
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MemberCashWithdrawMapper.java": {
+      "owner": "CORE/C04",
+      "worker": "a02_sol",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "transfer_evidence": "C04-21 precise late-debit cash current row lock before member; original C00 stopped; existing terminal/frozen row never overwritten; no new external protocol."
+    },
+    "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml": {
+      "owner": "CORE/C04",
+      "worker": "a02_sol",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "transfer_evidence": "C04-21 precise late-debit cash current row lock before member; original C00 stopped; existing terminal/frozen row never overwritten; no new external protocol."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImplTest.java": {
+      "owner": "EXTRA6/E03",
+      "worker": "EXTRA6/E03",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "ab3161f9fd8d5e43e90dda8f3b35abf3ba9fe2bd",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 fully read E03-16@cc39c006 and E05-17@3bd030c9; original CORE source/test writer stopped. Only current-scope dynamic exact fixture alignment; no missing/foreign/activity negative gate masking; no assertion relaxation."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImplTest.java": {
+      "owner": "EXTRA6/E03",
+      "worker": "EXTRA6/E03",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "ab3161f9fd8d5e43e90dda8f3b35abf3ba9fe2bd",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 fully read E03-16@cc39c006 and E05-17@3bd030c9; original CORE source/test writer stopped. Only current-scope dynamic exact fixture alignment; no missing/foreign/activity negative gate masking; no assertion relaxation."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/SeventhPierFixtureTest.java": {
+      "owner": "EXTRA6/E03",
+      "worker": "EXTRA6/E03",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "ab3161f9fd8d5e43e90dda8f3b35abf3ba9fe2bd",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 fully read E03-16@cc39c006 and E05-17@3bd030c9; original CORE source/test writer stopped. Only current-scope dynamic exact fixture alignment; no missing/foreign/activity negative gate masking; no assertion relaxation."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEncounterControllerTest.java": {
+      "owner": "EXTRA6/E05",
+      "worker": "EXTRA6/E05",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "ab3161f9fd8d5e43e90dda8f3b35abf3ba9fe2bd",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 fully read E03-16@cc39c006 and E05-17@3bd030c9; original CORE source/test writer stopped. Only current-scope dynamic exact fixture alignment; no missing/foreign/activity negative gate masking; no assertion relaxation."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEncounterRoleViewTest.java": {
+      "owner": "EXTRA6/E05",
+      "worker": "EXTRA6/E05",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "ab3161f9fd8d5e43e90dda8f3b35abf3ba9fe2bd",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 fully read E03-16@cc39c006 and E05-17@3bd030c9; original CORE source/test writer stopped. Only current-scope dynamic exact fixture alignment; no missing/foreign/activity negative gate masking; no assertion relaxation."
     }
   },
   "reserved_not_transferred": [
@@ -879,6 +940,8 @@
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantPayableServiceTest.java": "CORE/C04",
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_20MySqlIT.java": "CORE/C04",
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OWN_C02_27Test.java": "CORE/C02",
-    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OWN_C01_51Test.java": "CORE/C01"
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OWN_C01_51Test.java": "CORE/C01",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_30Test.java": "CORE/C06",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_25MySqlIT.java": "CORE/C05"
   }
 }

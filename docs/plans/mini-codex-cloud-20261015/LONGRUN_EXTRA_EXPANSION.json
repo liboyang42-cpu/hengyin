@@ -116,5 +116,20 @@
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistTokenMybatisIntegrationTest.java": "EXTRA6/E01",
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java": "EXTRA6/E02",
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostServiceImplTest.java": "EXTRA6/E02"
+  },
+  "later_fixture_transfers": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImplTest.java": "EXTRA6/E03",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImplTest.java": "EXTRA6/E03",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/SeventhPierFixtureTest.java": "EXTRA6/E03",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEncounterControllerTest.java": "EXTRA6/E05",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEncounterRoleViewTest.java": "EXTRA6/E05"
+  },
+  "comment_like_receipt_contract": {
+    "packet_sha": "76bfabcb46b30c0aa1fe1ddfc13d4c89bd49d7b9",
+    "source_writer": "EXTRA6/E02",
+    "scope": "new immutable COMMENT_LIKE receipts plus still-existing legacy action before UNLIKE; exact mapper methods current-owned reads allowed",
+    "legacy_collision": "Never overwrite mismatched immutable receipt; proceed authorized UNLIKE preserving winner, later LIKE original request returns existing binding409, not resurrection",
+    "irrecoverable": "old action deleted before upgrade and no immutable receipt; no invented history/TTL/DDL",
+    "verification": "NOT_RUN"
   }
 }
