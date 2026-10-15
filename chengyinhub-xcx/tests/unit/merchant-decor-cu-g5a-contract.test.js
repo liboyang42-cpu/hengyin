@@ -42,6 +42,7 @@ function loadPage(relativePath, options = {}) {
     previewImage(payload) { previews.push(payload.urls) },
     setNavigationBarColor() {}, setBackgroundColor() {},
   }
+  global.wx = wx // utils/media-preview.js 经 require 在真实全局取 wx
   const localRequire = createRequire(absolutePath)
   const sandbox = {
     Array, Date, JSON, Math, Number, Object, RegExp, String,

@@ -161,6 +161,7 @@
               <view class="dc-tags">
                 <view
                   wx:for="{{customTagChoices}}"
+                  wx:key="index"
                   class="dc-tag dc-selected"
                   data-t="{{item}}"
                   bindtap="toggleTag"
@@ -178,7 +179,7 @@
             </view>
           </cy-dropdown>
           <view class="dc-tags">
-            <text class="dc-tag" wx:for="{{tags}}">{{item}}</text>
+            <text class="dc-tag" wx:for="{{tags}}" wx:key="index">{{item}}</text>
             <text wx:if="{{!tags.length}}" class="dc-muted">选几个标签，让更多人找到你的店</text>
           </view>
         </view>
