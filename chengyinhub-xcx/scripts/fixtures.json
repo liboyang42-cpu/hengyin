@@ -15936,5 +15936,103 @@
    "state",
    "rows"
   ]
+ },
+ "D91": {
+  "data": {
+   "state": "ready",
+   "tab": "all",
+   "rows": [
+    {
+     "id": "12",
+     "targetText": "用户举报",
+     "reasonText": "骚扰",
+     "stageText": "核查中",
+     "stageTone": "warning",
+     "createText": "2026-10-15 10:30",
+     "etaText": "预计 2026-10-17 10:30 前给出结论",
+     "decided": false
+    },
+    {
+     "id": "9",
+     "targetText": "活动举报",
+     "reasonText": "虚假信息",
+     "stageText": "已处理",
+     "stageTone": "done",
+     "createText": "2026-10-10 09:00",
+     "etaText": "",
+     "decided": true
+    }
+   ],
+   "hasMore": false
+  },
+  "dropped": [],
+  "switchKeys": [
+   "state",
+   "rows"
+  ]
+ },
+ "D92": {
+  "data": {
+   "state": "ready",
+   "mode": "mine",
+   "report": {
+    "id": "9",
+    "targetText": "活动举报",
+    "reasonText": "虚假信息",
+    "stageText": "已处理",
+    "stageTone": "done",
+    "stageHint": "平台已给出处理结论",
+    "createText": "2026-10-10 09:00",
+    "etaText": "",
+    "decisionSummary": "已下架相关活动",
+    "description": "活动页写的地点不存在",
+    "privacyText": "被举报方看不到你的身份和举报内容",
+    "appealable": true,
+    "appealing": false
+   },
+   "nodes": [
+    {
+     "title": "举报已提交",
+     "time": "2026-10-10 09:00",
+     "desc": "举报已受理",
+     "status": "done"
+    },
+    {
+     "title": "进入「已处理」",
+     "time": "2026-10-11 15:00",
+     "desc": "",
+     "status": "done"
+    }
+   ],
+   "errorSub": ""
+  },
+  "dropped": [],
+  "switchKeys": [
+   "state",
+   "errorSub"
+  ]
+ },
+ "D93": {
+  "data": {
+   "state": "form",
+   "mode": "mine",
+   "report": {
+    "id": "9",
+    "targetText": "活动举报",
+    "stageText": "已处理",
+    "stageTone": "done",
+    "decisionSummary": "已下架相关活动"
+   },
+   "reason": "",
+   "reasonError": "",
+   "phase": "idle",
+   "failText": ""
+  },
+  "dropped": [],
+  "switchKeys": [
+   "state",
+   "reasonError",
+   "failText"
+  ]
  }
 }
