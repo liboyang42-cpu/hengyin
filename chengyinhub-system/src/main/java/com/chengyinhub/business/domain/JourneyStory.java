@@ -99,14 +99,20 @@ public class JourneyStory {
             return true;
         }
         JsonNode variable = condition.get("var");
-        if (variable == null || !variable.isTextual() || !variable.asText().startsWith("sys.outcome.")) return false;
+        if (variable == null || !variable.isTextual()) return false;
         String name = variable.asText();
-        if (!name.matches("sys\\.outcome\\.[1-9][0-9]*"))
-            throw new IllegalArgumentException("剧情条件 sys.outcome 节点引用不合法");
+        boolean asked = name.startsWith("sys.asked.");
+        if (!asked && !name.startsWith("sys.outcome.") && !name.startsWith("sys.mistakes.")
+                && !name.startsWith("sys.passed.")) return false;
+        java.util.regex.Matcher reference = java.util.regex.Pattern.compile(asked
+                ? "^sys\\.(asked)\\.([1-9][0-9]*)\\.([A-Za-z0-9_-]{1,32})$"
+                : "^sys\\.(outcome|mistakes|passed)\\.([1-9][0-9]*)$").matcher(name);
+        if (!reference.matches()) throw new IllegalArgumentException("剧情条件系统节点引用不合法");
         final long source;
-        try { source = Long.parseLong(name.substring("sys.outcome.".length())); }
-        catch (NumberFormatException invalid) { throw new IllegalArgumentException("剧情条件 sys.outcome 节点引用不合法", invalid); }
-        object.put("var", "sys.outcome." + mappedNodeId(source, nodeOldToNew));
+        try { source = Long.parseLong(reference.group(2)); }
+        catch (NumberFormatException invalid) { throw new IllegalArgumentException("剧情条件系统节点引用不合法", invalid); }
+        object.put("var", "sys." + reference.group(1) + "." + mappedNodeId(source, nodeOldToNew)
+                + (asked ? "." + reference.group(3) : ""));
         return true;
     }
 
