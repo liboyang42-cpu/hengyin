@@ -1,0 +1,1148 @@
+{
+  "protocol": "CY-LONGRUN-VALIDATION-HANDOFF-20261015-v1",
+  "source_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+  "source_pr": 44,
+  "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
+  "status": "NOT_RUN_USER_DEFERRED",
+  "generation": "static source inventory only; no parser/compiler/test/DB/lint/CI execution",
+  "entries": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_01Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.E03_01Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_11Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.E03_11Test",
+      "declared_test_annotation_count": 7,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_13Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.E04_13Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [
+        "@EnabledIfEnvironmentVariable(named=\"CHENGYIN_FUNDS_MYSQL_IT\",matches=\"1\")"
+      ],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_03Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_03Test",
+      "declared_test_annotation_count": 5,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_05Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_05Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_10Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_10Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_11Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_11Test",
+      "declared_test_annotation_count": 6,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_12Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_12Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_13Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_13Test",
+      "declared_test_annotation_count": 5,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_15Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_15Test",
+      "declared_test_annotation_count": 5,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_16Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_16Test",
+      "declared_test_annotation_count": 6,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_17Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_17Test",
+      "declared_test_annotation_count": 6,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_18Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_18Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_19Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_19Test",
+      "declared_test_annotation_count": 5,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_20Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_20Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_21Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_21Test",
+      "declared_test_annotation_count": 6,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_22Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_22Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_23Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_23Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_24Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_24Test",
+      "declared_test_annotation_count": 6,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_25Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_25Test",
+      "declared_test_annotation_count": 6,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_01Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_01Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_02Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_02Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_07Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_07Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_09Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_09Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_10Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_10Test",
+      "declared_test_annotation_count": 6,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_11Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_11Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_12Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_12Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_13Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_13Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_14Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_14Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_15Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_15Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_16Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_16Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_18Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_18Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_19Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_19Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_RUN_SESSION_ORDER_IT\", matches = \"1\")"
+      ],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_20MySqlIT.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_20MySqlIT",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+      ],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_20Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_20Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_01Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_01Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_09Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_09Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_10Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_10Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_11Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_11Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_15Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_15Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_16Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_16Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_17Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_17Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_18Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_18Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_19Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_19Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_20Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_20Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_21Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_21Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_23Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_23Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_01Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_01Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_05Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_05Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_07Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_07Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_09Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_09Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_10Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_10Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [
+        "@EnabledIfEnvironmentVariable(named=\"CHENGYIN_FUNDS_MYSQL_IT\", matches=\"1\")"
+      ],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_11Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_11Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_13Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_13Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_15Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_15Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_16Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_16Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_17Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_17Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_18Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_18Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_19Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_19Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_20Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_20Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_21Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_21Test",
+      "declared_test_annotation_count": 5,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_22Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_22Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_23Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_23Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_24Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_24Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_25Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_25Test",
+      "declared_test_annotation_count": 5,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_26Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_26Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_27Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_27Test",
+      "declared_test_annotation_count": 7,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_28Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_28Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_29Test.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_29Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest",
+      "declared_test_annotation_count": 122,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NpcChatServiceTest.java",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.service.impl.NpcChatServiceTest",
+      "declared_test_annotation_count": 22,
+      "declared_environment_annotations": [],
+      "discovery_warning": "IT suffix must be explicitly selected; source declaration count is not executed invocation count",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-01.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-02.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-03.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-04.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-05.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-06.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-07.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-08.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-09.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-10.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-11.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-12.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-13.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-14.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-15.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-16.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-17.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-18.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-19.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-20.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-21.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-22.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-23.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-24.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-25.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-26.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-27.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-28.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-29.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-30.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-31.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-32.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-33.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-34.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-35.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-36.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-37.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-38.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-39.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-40.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-41.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-42.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-43.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-44.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-45.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-46.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-47.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-48.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-49.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-50.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-01.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-02.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-03.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-04.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-05.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-06.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-07.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-08.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-09.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-10.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-11.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-12.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-13.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-14.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-15.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-16.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-17.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-18.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-19.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-20.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-21.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-23.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-24.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-25.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-26.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/pro-editor-draft.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/pro-editor-fabu-flow.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/pro-editor-story-flow.test.js",
+      "kind": "NODE_TEST_SOURCE",
+      "status": "NOT_RUN",
+      "invocations": "UNKNOWN_NOT_EXECUTED"
+    }
+  ],
+  "constraints": [
+    "Only source files changed against the recorded base are inventoried; the validator must include impacted existing regressions and shared producer/consumer suites.",
+    "Do not sum annotation declarations as passed or executed cases; parameterized discovery and environment gates are not evaluated.",
+    "Run neither these tests nor build commands until the user returns and local verifier resumes.",
+    "Use then-current AGENTS/shared resource guard and lock; no bare Docker or legacy resource settings. Offline network-none guard cannot execute real MySQL/Redis IT. Require an approved integration channel.",
+    "Select each integration/IT class explicitly and record exact SHA/environment/new report timestamps; no silent skipped IT or old XML accumulation.",
+    "New compile/runtime failures must return to the original source owner, with exact stack and independent evidence; source changes require a new candidate and focused matrix."
+  ],
+  "not_accepted": [
+    "merge",
+    "deployment",
+    "business migration",
+    "runtime HTTP with real identities and deployment/database SHA binding",
+    "WeChat/iOS device flows",
+    "provider/payment/SMS external acceptance"
+  ],
+  "historical_only": {
+    "sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+    "passed": 231,
+    "evidence_pr": 24,
+    "evidence_sha": "43ca53274b345bf344037e1fe60afa49b8e53dd1",
+    "coverage_of_this_candidate": false
+  }
+}

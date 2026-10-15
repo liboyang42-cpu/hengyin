@@ -638,7 +638,7 @@
         "errors": 1,
         "skipped": 0,
         "business_methods_executed": 0,
-        "evidence": "delegated test report; independent evidence publication pending",
+        "evidence": "PR24@ccbcf93236e386aaf37a1c7ab0d45b6df5fb5ba6/docs/verification/mini-bug-arch-20261015/VPS_EXTERNAL_69c281af; historical setup failure retained",
         "result": "FAIL_SETUP_SQL_FIXTURE",
         "record_kind": "historical_failure_not_current"
       }
@@ -808,14 +808,14 @@
       "source_owners": "LONGRUN_SOURCE_OWNERS.json",
       "core_initial_count": 50,
       "extra_initial_count": 50,
-      "core_total_created": 168,
+      "core_total_created": 171,
       "core_state_counts": {
-        "SOURCE_DELIVERED_UNVERIFIED": 126,
+        "SOURCE_DELIVERED_UNVERIFIED": 129,
         "NO_CHANGE_SOURCE_REVIEW": 38,
         "BLOCKED_DECISION": 3,
         "SUPERSEDED_DUPLICATE": 1
       },
-      "core_current_public_sha": "bda1c4e8db08210b573cac1ee02b0d18c19962b7",
+      "core_current_public_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "core_source_pr": "https://github.com/liboyang42-cpu/hengyin/pull/44",
       "core_actionable_actual": 0,
       "target_actionable_per_team": 50,
@@ -834,9 +834,9 @@
       "merged": false
     },
     "current_source_delivery": {
-      "core_sha": "bda1c4e8db08210b573cac1ee02b0d18c19962b7",
+      "core_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "core_pr": 44,
-      "extra_last_read_sha": "e43477b71807951dbdf13353a36617afbe1830fa",
+      "extra_last_read_sha": "27b8e1851484fd6747a6279473f3343619e6e8df",
       "extra_pr": 36,
       "status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN_USER_DEFERRED",
@@ -845,8 +845,11 @@
       "core_current_actionable": 0,
       "target_actionable_per_team": 50,
       "shortfall_disclosed": true,
-      "new_extra_source_authorization_control": "2f050fd7389f36653a07f742ec7f698687a959ac"
-    }
+      "extra_source_authorization": "d3d38ccd70d25727ae6f972f1698254e935fce47",
+      "formal_extra_ack_comment": 6195023061,
+      "validation_handoff": "LONGRUN_VALIDATION_HANDOFF.json"
+    },
+    "manual_validation_current_mode": "DEFERRED_BY_USER_UNTIL_LOCAL_RETURN; no manual build/test/lint/DB/DevTools/CI rerun; automatic CI natural only"
   },
   "followup_lanes": [
     {

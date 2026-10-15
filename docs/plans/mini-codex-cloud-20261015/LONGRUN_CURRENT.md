@@ -2,8 +2,8 @@
 
 CY-HANDOFF: CODEX。此页及LONGRUN_CORE_50.json覆盖本目录较早checkpoint文字。
 
-- CORE公共源码：`bda1c4e8db08210b573cac1ee02b0d18c19962b7`，PR44，分支`codex/mini-longrun-core-20261015`；基线PR28/4a943501。每项保留小提交，当前所有新增回归NOT_RUN，SOURCE_DELIVERED_UNVERIFIED。
-- CORE初始50项保留历史，累计168具体源切片；当前状态计数：`{"SOURCE_DELIVERED_UNVERIFIED": 126, "NO_CHANGE_SOURCE_REVIEW": 38, "BLOCKED_DECISION": 3, "SUPERSEDED_DUPLICATE": 1}`。目标维持50可行动项，实际不足50时如实披露；不能把完成历史当剩余数，也不能把审查数当bug修复数。
+- CORE公共源码：`05d307ec0466988f212187666d7f1e5c3274f434`，PR44，分支`codex/mini-longrun-core-20261015`；基线PR28/4a943501。每项保留小提交，当前所有新增回归NOT_RUN，SOURCE_DELIVERED_UNVERIFIED。
+- CORE初始50项保留历史，累计171具体源切片；当前状态计数：`{"SOURCE_DELIVERED_UNVERIFIED": 129, "NO_CHANGE_SOURCE_REVIEW": 38, "BLOCKED_DECISION": 3, "SUPERSEDED_DUPLICATE": 1}`。目标维持50可行动项，实际不足50时如实披露；不能把完成历史当剩余数，也不能把审查数当bug修复数。
 - 必要回归源码修正单独保留：C06-25 domain imports补齐已公共（精确SHA见该项source_corrections），C05-23夹具schemaVersion在首次公共交付前由原作者修正，NOT_RUN，不称编译/测试通过。
 - EXTRA6独立PR36，最后实际读回e43477b7的持久队列仍87历史项=36源码或回归交付/29反证/7阻塞/9READY+6在途；其中若干claim已在后续源码提交交付，队列尚待原协调者刷新，不能把该checkpoint称当前实时运行数。独立队列仍其唯一维护者；不能假称全已集成CORE。
 - 两队各最多6 worker、gpt-6.1-sol；完成或阻塞后取本lane下一具体项，现域耗尽如实记录并等待明确新线索，不能以测试/泛审计凑修复任务。
@@ -30,12 +30,12 @@ B03新静态真实线索：CORE/C04-20服务前置CONFIRMED状态，沿原SQL/co
 
 Git CLI写凭据失效时使用已连接GitHub Git Data接口发布相同文件树/小提交，公开SHA以实际ref为准；不提取/打印凭据。源码及队列定期公共checkpoint，两队直接PR16对账不依赖Mac。平台时长/额度终止时留下SHA/未发布快照/依赖/下一项；不承诺永久运行。
 
-## 最新跨队写权与补位事实
+## 本checkpoint实际后续与跨队ACK
 
-CORE六个原writer均已报告本切片无WIP/无新的已证实独立缺陷；不是六线持续运行。初始50及后续具体项已按小提交交付，另保留反证/政策阻塞。目标仍50未完成，但实际为0时标EXHAUSTED，不能用重复审查/空任务伪称补满。新真实故障/producer缺口由C00精确派回原owner，完成后立即取有证据的下一项。C03-24已有topic的update写前3文本拒绝、C02-26同revision UNKNOWN明确采用恢复、C01-50结束渲染与关闭意图绑定均已公共；新增验证全NOT_RUN。
+此前168项耗尽后，新收到并已交付CORE/C06-28/29两项坏冻结存储防御隔离、CORE/C03-25确定废弃结局源选择修复。正常freeze不产所述坏值，不夸大为常态业务故障。当前CORE累计171：129源码切片、38反证、3政策阻塞、1重复替代；当前0个已证明可立即行动项，目标50不足如实记录。不是171个通过或129个已验收bug，也不假称六线持续满载。新真实反馈仍派原owner，遇阻取其他已证实项，没依据不造任务。
 
-EXTRA6新增独立后端写权和旧fixture已公开：控制2f050fd7389f36653a07f742ec7f698687a959ac及cc5b7deaad4a37cf1c24fc8ff22d724a1b3f1809的 LONGRUN_EXTRA_EXPANSION.json/.md、SOURCE_OWNERS。E05独占Encounter+分享隐私归一化，E06独占分享快照controller/service/mapperJava/XML；E01追加ClubEventOpsMapper.java，E04追加4个核销旧fixture。原writer已静止，精确转交生效。已直接PR16 comments6194858995/6194881490/6194944388通知，尚未读到对新增扩权的正式ACK，不假定已启动。EXTRA可独立域内补真实项，无需Mac或再次general批准；逐文件新基线和不允许旧文件回灌规则见扩权文档。
+已正式读到EXTRA ACK6195023061，真实child/worktree/分支及findCurrent提取42cd374d登记LONGRUN_EXTRA_EXPANSION.json；E05已处理Encounter，新域E06源码审阅和其他slot不重叠支援已实际开始。E01旧fixture与E02 PATCH接口/旧测试精确转交已公开d3d38ccd70d25727ae6f972f1698254e935fce47，E04旧4fixture/Mapper追加早在2f050fd7生效，无需Mac中转或重复批准。直接PR16 comments6195105232已通知。扩权文件SOURCE_OWNERS只允许指定原source writer；支援slot只写自己的测试/证据，不写相同生产文件。
 
-共享当前局producer公共5162ef45bb42486575619871ff24b4b694941f09，旧find不变；EXTRA E05/E03按当前端点合同选择新findCurrent，历史选择器不能自动替换。Encounter present-null/错类型fail-closed合同已冻：复用现有“玩法配置不可用”，缺失key保留旧fallback，合法空结构/graph merge保留。E01新OFFERED仅对齐原maintenance kind3活动可用合同，旧hold释放不挡；E04仅Service内身份锁定，不冒称token全窗口关闭。全部DRAFT/CONTRACT_FROZEN/SOURCE_DELIVERED_UNVERIFIED分开，TEST_DEPLOYED=NO，合并/两端验收另列未完成。
+E02-19/22旧LIKE身份兼容仍须真实公共packet与准确路径，已请求，不能猜升级前已删身份或新保留政策。E03-15真实保存替换旧结局packet已由原CORE/C03消费为05d307ec0466988f212187666d7f1e5c3274f434；只剔除确定整体替换的旧ending.endings，其他stage/exhibit/disposition严格，E03 helper无改。当前局producer5162ef45、scene冻结fb55e39e都已公共，消费者不得继续按旧adc树重报。EXTRA队列仍只读其自身公共版本，等待其刷新QUEUE/CLAIMS，不把旧6个claim当实时人数。
 
-下一步C00主动读PR16最新评论、EXTRA PR36队列/CLAIMS及两项补权ACK；优先处理确切文件申领、producer/consumer依赖，不重做原所有者修复。EXTRA源码独立候选未整体集成CORE，只有逐项记录的精确公共patch可算已提取。Claude/iOS/Flutter边界保持，遇额外实质政策改动只记录BLOCKED，取下一个真项。
+下一步C00主动读PR16新的CY-HANDOFF、EXTRA队列/CLAIMS，处理精确文件申领和新真实源码反馈，不重复已交付实现。本地回来后的静态交接在LONGRUN_VALIDATION_HANDOFF.md/json，当前不执行任何验证。平台时长/额度停止时以本页公共SHA、唯一文件owner、逐项commit和各自队列恢复；不能承诺无限时自主运行。

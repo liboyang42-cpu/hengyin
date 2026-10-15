@@ -5,10 +5,10 @@
   "lane_counts": {
     "C01": 50,
     "C02": 26,
-    "C03": 24,
+    "C03": 25,
     "C04": 19,
     "C05": 23,
-    "C06": 26
+    "C06": 28
   },
   "target_actionable_items": 50,
   "max_workers": 6,
@@ -4547,7 +4547,7 @@
       "invariant": "缺根key/缺条目保原兼容fallback；present-null/非object复用现有节点玩法配置不可用；合法{}和NodeJourneySnapshot helper不变",
       "repair_boundary": "Only original runtime wrapper plus task unique regression/evidence; preserve existing normal snapshot/default and compatibility policy.",
       "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "final_review_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -4555,7 +4555,11 @@
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_28Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C06-28.md",
       "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
-      "source_result": "PENDING_SOURCE_DELIVERY"
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
+      "commit_sha": "0429e6f5bd90af6ca0648734aae2e6af99778213",
+      "production_paths_changed": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java"
+      ]
     },
     {
       "id": "OWN-C06-29",
@@ -4570,7 +4574,7 @@
       "invariant": "仅present-null复用旅程数值规则不可用；缺key原fallback；非object继续原validator，禁止混称已证live回落",
       "repair_boundary": "Only original runtime wrapper plus task unique regression/evidence; preserve existing normal snapshot/default and compatibility policy.",
       "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "final_review_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -4578,7 +4582,11 @@
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_29Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C06-29.md",
       "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
-      "source_result": "PENDING_SOURCE_DELIVERY"
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
+      "commit_sha": "e89ebf2ba79e809d059d8cf2c9f6812506307baa",
+      "production_paths_changed": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java"
+      ]
     },
     {
       "id": "OWN-C03-25",
@@ -4593,7 +4601,7 @@
       "invariant": "仅确定会整体替换的ending.endings键在remap前移除；保留其他ending字段/stage/exhibit/disposition严格重映；不改变producer缺映射拒绝",
       "repair_boundary": "Exact assigned source and task regression/evidence; preserve existing policy and original source order.",
       "policy_hold": "发现必须改变权限/RBAC、资金/收费、发布/审核、配额/留存政策或新增持久化契约时，仅记录具体缺口，交C00裁决；不得猜政策补实现。",
-      "state": "READY_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "feature_points_rules_sol",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -4601,19 +4609,23 @@
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_25Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C03-25.md",
       "review_outcome": "DELIVERED_SOURCE_OR_NO_CHANGE_EVIDENCE",
-      "source_result": "PENDING_SOURCE_DELIVERY",
-      "external_packet": "814e85fc389dc61dd7a0fb63dd52eb52a77209b5:EXTRA6/E03-15.md"
+      "source_result": "SOURCE_DELIVERED_UNVERIFIED",
+      "external_packet": "814e85fc389dc61dd7a0fb63dd52eb52a77209b5:EXTRA6/E03-15.md",
+      "commit_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "production_paths_changed": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java"
+      ]
     }
   ],
   "refill": "Coordinator adds a concrete nonduplicate authorized task when one is delivered/refuted/blocked; no fabricated defect or empty filler. New IDs never reuse old ones. If no justified candidate remains, record EXHAUSTED rather than invent work.",
-  "total_created_items": 168,
-  "delivered_items": 164,
+  "total_created_items": 171,
+  "delivered_items": 167,
   "refill_progress": "Initial 50 retained historically; actual new nonduplicate source slices appended in waves. Counts reflect delivered history and live remainder, not a claim all tasks were bugs.",
   "actual_actionable_or_in_progress_items": 0,
-  "counts_note": "Target actionable pool 50; actual open count disclosed separately, source-backed refill only, no fabricated confirmed defects.",
-  "current_public_source_sha": "bda1c4e8db08210b573cac1ee02b0d18c19962b7",
+  "counts_note": "Initial50 and cumulative history are concrete source slices/reviews, not remaining actionable bugs or passed cases. Actual current READY/inflight0, target50 shortfall50 disclosed. Source delivered remains unverified.",
+  "current_public_source_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
   "actual_state_counts": {
-    "SOURCE_DELIVERED_UNVERIFIED": 126,
+    "SOURCE_DELIVERED_UNVERIFIED": 129,
     "NO_CHANGE_SOURCE_REVIEW": 38,
     "BLOCKED_DECISION": 3,
     "SUPERSEDED_DUPLICATE": 1
@@ -4634,5 +4646,5 @@
     "old_find": "UNCHANGED",
     "verification": "NOT_RUN"
   },
-  "source_pool_status": "ROLLING_SOURCE_ONLY"
+  "source_pool_status": "EXHAUSTED_WITH_RECORDED_POLICY_BOUNDARIES"
 }
