@@ -233,3 +233,7 @@ PR16 comment6199117749与PR24 comment6199118000已交本地精确6路径/依赖/
 此层证据是本地直接实际回报，完整公共VPS_EXTRA_e72eff7e尚待PR24发布，evidence_commit=null，不编造日志/哈希SHA，也不声称Cloud运行。应用/测试129d08ea66d15423478ce582c13a57dda8c0a27d仍独立SOURCE_DELIVERED_UNVERIFIED/NOT_RUN；无READY项不虚报工位，其他真实授权源不为验证停队。
 
 已读C00控制5730f267c6fc489021fb30333ad5be12ff501faa：第三队原PR70授权实际6既有+2新回归，两新增路径已补全；先前新MySqlIT尚未授写系C00登记遗漏、现已撤回。本队继续对这8精确路径只读，不替第三队裁定/验证/并写。第三2babbe28普通24项只是本地下一排队计划，尚无执行结论，真MySQL11项另门禁。
+
+## e72针对性PASS公开证据链接已补
+
+已实际读取PR24公共提交0e9695fc47689aa73cb1f4a6e8395f0a703ff2d7的[EXTRA e72 README](https://github.com/liboyang42-cpu/hengyin/blob/0e9695fc47689aa73cb1f4a6e8395f0a703ff2d7/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_e72eff7e/README.md)及[summary](https://github.com/liboyang42-cpu/hengyin/blob/0e9695fc47689aa73cb1f4a6e8395f0a703ff2d7/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_e72eff7e/summary.json)。仅固定e72eff7e9ec6309262e55c7cdca56afdcdb86dc0两原失败类56实际PASS，2fresh XML/类集数量及55+1报告哈希、212 exit0/completed均有公开索引；原474e305失败历史保持，未重跑其余32类，23gated/JDBC与后续129d源、第三PR72不继承。此次只补本队交付链接，不写C00总账，不运行验证或修改源码。

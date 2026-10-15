@@ -868,13 +868,20 @@
         },
         "executor": "local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59",
         "environment": "Dedicated VPS guard212; local serial execution",
-        "source": "DIRECT_LOCAL_REPORT; public controlled artifact VPS_EXTRA_e72eff7e pending",
-        "evidence_commit": null,
+        "source": "Public README and summary actually read",
+        "evidence_commit": "0e9695fc47689aa73cb1f4a6e8395f0a703ff2d7",
         "evidence_path_expected": "docs/verification/mini-bug-arch-20261015/VPS_EXTRA_e72eff7e/",
         "original_three_failure_methods_closed": true,
         "full305_rerun": false,
         "later_sha_pass_inherited": false,
-        "gated_or_jdbc_23_pass_claimed": false
+        "gated_or_jdbc_23_pass_claimed": false,
+        "published_evidence_links": {
+          "candidate_sha": "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0",
+          "evidence_commit": "0e9695fc47689aa73cb1f4a6e8395f0a703ff2d7",
+          "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/0e9695fc47689aa73cb1f4a6e8395f0a703ff2d7/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_e72eff7e/README.md",
+          "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/0e9695fc47689aa73cb1f4a6e8395f0a703ff2d7/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_e72eff7e/summary.json",
+          "read_scope": "Public README and summary actually read; exact e72 two-class56 targeted PASS only, no later SHA inheritance"
+        }
       }
     }
   ],
@@ -958,12 +965,14 @@
     "source_comment": 6199241183,
     "scope": "Existing EXTRA read-only reservation retained; observation does not grant or adjudicate extra third-team files"
   },
-  "pending_public_validation_evidence": [
-    {
+  "pending_public_validation_evidence": [],
+  "published_validation_evidence": {
+    "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0": {
       "candidate_sha": "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0",
-      "expected_path": "docs/verification/mini-bug-arch-20261015/VPS_EXTRA_e72eff7e/",
-      "result": "LOCAL_TARGETED_PASS56",
-      "public_commit": null
+      "evidence_commit": "0e9695fc47689aa73cb1f4a6e8395f0a703ff2d7",
+      "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/0e9695fc47689aa73cb1f4a6e8395f0a703ff2d7/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_e72eff7e/README.md",
+      "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/0e9695fc47689aa73cb1f4a6e8395f0a703ff2d7/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_e72eff7e/summary.json",
+      "read_scope": "Public README and summary actually read; exact e72 two-class56 targeted PASS only, no later SHA inheritance"
     }
-  ]
+  }
 }
