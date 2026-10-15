@@ -57,10 +57,10 @@ class OWN_C03_20Test {
         chapter.setName("原章");
         chapter.setRecruitEnabled(0);
         chapter.setMaxMerchant(4);
-        chapter.setSortId(1);
+        chapter.setSortId(1L);
         CmsTopicChapter other = new CmsTopicChapter();
         other.setId(20L); other.setTopicId(SOURCE); other.setName("第二章");
-        other.setSortId(1); other.setRecruitEnabled(0); other.setMaxMerchant(4);
+        other.setSortId(1L); other.setRecruitEnabled(0); other.setMaxMerchant(4);
         // Legal tied sort values: later queries may return a different order.
         when(chapters.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
                 .thenReturn(Arrays.asList(chapter, other), Arrays.asList(other, chapter));
