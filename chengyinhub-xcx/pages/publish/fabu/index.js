@@ -5688,7 +5688,7 @@ Page({
       const existing = previous.find((edge) => edge.fromNodeId === sourceId
         && edge.trigger.type === row.triggerType
         && edge.trigger.outcomeCode === row.code);
-      graph.edges.push(Object.assign({
+      const mappedEdge = Object.assign({
         id: 'mapping_' + sourceId + '_' + row.code,
         conditions: [], effects: [], priority: index, weight: 1,
         once: true, maxVisits: 1, allowLoop: false,
@@ -5696,7 +5696,12 @@ Page({
         fromNodeId: sourceId,
         trigger: { type: row.triggerType, outcomeCode: row.code },
         toNodeId: targetId,
-      }));
+      });
+      if (existing && String(existing.id || '').indexOf('route_') === 0
+          && row.toNodeId && targetId !== nextNodeId) {
+        mappedEdge.id = 'mapping_' + sourceId + '_' + row.code;
+      }
+      graph.edges.push(mappedEdge);
     });
     graph.fallbacks = (graph.fallbacks || []).filter((item) => item.fromNodeId !== sourceId);
     if (nextNodeId) graph.fallbacks.push({ fromNodeId: sourceId, toNodeId: nextNodeId });
