@@ -130,7 +130,7 @@ public class OpenAiCompatibleLlmClient implements LlmClient
         {
             throw new IllegalStateException("AI 模型未启用(" + name + ".enabled=false),请改用 mock 或配置后开启");
         }
-        if (StringUtils.isEmpty(apiKey))
+        if (apiKey == null || apiKey.trim().isEmpty())
         {
             throw new IllegalStateException("AI 模型 " + name + " 未配置 apiKey");
         }
