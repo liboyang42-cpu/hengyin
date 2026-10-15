@@ -253,3 +253,11 @@ PR16#6202097241和PR24#6202097477已回完整SHA/两路径/无新依赖/聚焦�
 已实际读公共PR24@60febdbdcdcc7eed2b445a80f3d1f21d2cd76966的[README](https://github.com/liboyang42-cpu/hengyin/blob/60febdbdcdcc7eed2b445a80f3d1f21d2cd76966/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b45664de/README.md)与[admission-refused.json](https://github.com/liboyang42-cpu/hengyin/blob/60febdbdcdcc7eed2b445a80f3d1f21d2cd76966/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b45664de/admission-refused.json)。冻结b45664de6136eb97c46ed0c86e95fc25686dc1b7仅E06_17Test计划5方法，20:58:53Z因another_build_holds_lock拒绝，exit75/containerId=null；执行0项、未编译/测试，NOT_RUN，不是修复失败/通过，不关闭ed598原76实际75PASS/1FAIL历史。新独占task源码归档哈希见回执，排队等待正常212准入，不碰其他锁/任务、不Cloud替代。
 
 C00总账/跨端索引的旧“11类正在验尚无结果”应更新为“ed598旧76实际1FAIL；b456单类5项NOT_RUN排队”，已通过PR16直接通知原C00，不编辑BACKEND_CHANGES/IOS_HANDOFF。裸SQL疑点保持NEEDS_REACHABILITY/NO_SOURCE_CHANGE，不以人工fixture新增BUG。当前无READY保持EXHAUSTED，未重复改源码或手动验证。
+
+## E06唯一失败按b456单类5项targeted PASS闭环
+
+已实际读公共PR24@b5273c3233d1753c9488edc410e1a1c0d5b29fed的[README](https://github.com/liboyang42-cpu/hengyin/blob/b5273c3233d1753c9488edc410e1a1c0d5b29fed/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b45664de/README.md)与[summary](https://github.com/liboyang42-cpu/hengyin/blob/b5273c3233d1753c9488edc410e1a1c0d5b29fed/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b45664de/summary.json)：仅固定b45664de6136eb97c46ed0c86e95fc25686dc1b7的E06_17Test全部5实际PASS，0failure/0error/0skip、1fresh XML/精确类集、guard0 completed，21:06:06Z—21:08:53Z，精确容器经本地确认清理。归档/日志/XML哈希见QUEUE目标回执；不是Cloud执行。
+
+原ed59876项75PASS/1FAIL历史保持，其唯一失败仅按b456这一类targeted PASS闭环，不称新SHA重跑全76。首次锁拒绝exit75/containerId=null/0项未编译测试的admission_history保留。裸SQL疑点仍NEEDS_REACHABILITY/NO_SOURCE_CHANGE，未证真实业务可达不计新BUG、不改共享源；真实数据库/Redis、运行中HTTP、设备业务、合并部署仍未验收。
+
+唯一E06修复槽已释放，READY0/源码worker0，EXHAUSTED；没有真实独立下一项不凑工位、不泛审计，其他真实授权项不必等验证。只更新本队交付与PR36，C00负责总账/BACKEND_CHANGES/IOS_HANDOFF状态与链接。
