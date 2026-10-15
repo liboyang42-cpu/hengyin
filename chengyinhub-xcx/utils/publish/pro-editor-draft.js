@@ -20,12 +20,14 @@ function createDraftUuid(now, randomValue) {
   return ts + '-' + entropy;
 }
 
-function draftKeyFor(identity) {
+function draftKeyFor(identity, memberId) {
   identity = identity || {};
+  var prefix = DRAFT_PREFIX;
+  if (value(memberId)) prefix += 'member_' + encodeURIComponent(value(memberId)) + '_';
   var topicId = value(identity.topicId);
-  if (topicId) return DRAFT_PREFIX + 'topic_' + encodeURIComponent(topicId);
+  if (topicId) return prefix + 'topic_' + encodeURIComponent(topicId);
   var draftUuid = value(identity.draftUuid);
-  if (draftUuid) return DRAFT_PREFIX + 'new_' + encodeURIComponent(draftUuid);
+  if (draftUuid) return prefix + 'new_' + encodeURIComponent(draftUuid);
   throw new Error('topicId 或 draftUuid 至少提供一个');
 }
 
@@ -58,7 +60,7 @@ function saveDraft(storage, input) {
   if (!memberId) throw new Error('memberId 不能为空');
 
   var identity = { topicId: input.topicId, draftUuid: input.draftUuid };
-  var key = draftKeyFor(identity);
+  var key = draftKeyFor(identity, memberId);
   var formData = clone(input.formData || { chapters: input.chapters || [] }) || { chapters: [] };
   var envelope = {
     memberId: input.memberId,
@@ -86,7 +88,9 @@ function loadDraft(storage, identity, options) {
   if (!storage || typeof storage.getStorageSync !== 'function') {
     return { status: 'missing', envelope: null };
   }
-  var stored = storage.getStorageSync(draftKeyFor(identity));
+  var stored = storage.getStorageSync(draftKeyFor(identity, options.memberId));
+  // Older installs used an unscoped key; read it without moving or deleting another account's data.
+  if (!stored) stored = storage.getStorageSync(draftKeyFor(identity));
   if (!stored || typeof stored !== 'object') return { status: 'missing', envelope: null };
   var envelope = clone(stored);
   if (value(envelope.memberId) !== value(options.memberId)) {
