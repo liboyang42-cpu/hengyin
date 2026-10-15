@@ -29,6 +29,7 @@ class E03_18Test {
     private PlayJourneyReadServiceImpl reads;
     private TopicRouteSession session;
     private CmsTopic topic;
+    private ThemeStateKeyService keys;
     private TopicRouteEngine.State state;
 
     @BeforeEach
@@ -46,7 +47,7 @@ class E03_18Test {
         state = new TopicRouteEngine.State();
         state.getVariables().put("clue.page", Integer.valueOf(1));
         CmsTopicNodeMapper nodes = mock(CmsTopicNodeMapper.class);
-        ThemeStateKeyService keys = mock(ThemeStateKeyService.class);
+        keys = mock(ThemeStateKeyService.class);
         when(keys.listByTopic(700L)).thenReturn(Collections.emptyList());
         NpcProfileService npcs = mock(NpcProfileService.class);
         stories = new PlayJourneyStoryServiceImpl(topics, mock(CmsTopicChapterMapper.class), nodes,
@@ -102,6 +103,42 @@ class E03_18Test {
         Map<String, Object> view = stories.ending(97L, 700L, 0L);
         assertEquals("archived", view.get("code"));
         assertProgress(view, 0, 1);
+    }
+
+    @Test
+    void paddedRelationKeyKeepsRegisteredNpcMappingAndTriStateLinesAcrossReaders() throws Exception {
+        String raw = story(",\"epilogues\":[{\"npcId\":7,\"relationKey\":\" relation.qiao \","
+                + "\"ally\":\"ally line\",\"neutral\":\"neutral line\",\"guarded\":\"guarded line\"}]");
+        assertEquals(raw, validator.validate(raw,
+                JourneyStoryValidator.Context.of(Collections.emptySet(), Collections.singleton(7L))));
+        assertEquals(Collections.singleton("relation.qiao"),
+                com.chengyinhub.business.util.StateKeyRefs.collectJourneyStory(raw));
+        assertEquals(Collections.singleton("relation.qiao"),
+                com.chengyinhub.business.util.StateKeyRefs.collectJourneyStoryRelationKeys(raw));
+        ThemeStateKey registered = new ThemeStateKey();
+        registered.setStateKey("relation.qiao"); registered.setKeyType(ThemeStateKey.TYPE_RELATION);
+        when(keys.listByTopic(700L)).thenReturn(Collections.singletonList(registered));
+        freeze(raw);
+        Integer[] values = {2, -2, 0, null};
+        String[] expected = {"ally", "guarded", "neutral", "neutral"};
+        for (int i = 0; i < values.length; i++) {
+            state.getVariables().clear();
+            if (values[i] != null) state.getVariables().put("relation.qiao", values[i]);
+            session.setStateJson(json.writeValueAsString(state));
+            Map<?, ?> relation = (Map<?, ?>) ((java.util.List<?>) reads.casebook(97L, 700L, 0L)
+                    .get("relations")).get(0);
+            assertEquals(7L, relation.get("npcId"));
+            assertEquals(expected[i], relation.get("state"));
+            for (Map<String, Object> view : java.util.Arrays.asList(
+                    stories.ending(97L, 700L, 0L), stories.freezeEnding(700L, raw, state),
+                    stories.freezeEnding(700L, raw, state, session))) {
+                Map<?, ?> epilogue = (Map<?, ?>) ((java.util.List<?>) view.get("epilogues")).get(0);
+                assertEquals(7L, epilogue.get("npcId"));
+                assertEquals(expected[i], epilogue.get("state"));
+                assertEquals(expected[i] + " line", epilogue.get("line"));
+            }
+        }
+        assertEquals(" relation.qiao ", JourneyStory.parse(raw).getEnding().getEpilogues().get(0).getRelationKey());
     }
 
     private void freeze(String raw) throws Exception {
