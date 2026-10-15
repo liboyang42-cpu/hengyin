@@ -2530,20 +2530,6 @@
       "state": "RESERVED_PENDING_THREAD_ACK",
       "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
       "scope": "Necessary own fixture/new regression source only, preserve old assertions, NOT_RUN"
-    },
-    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerGrowthConcurrencyTest.java": {
-      "owner": "ANALYTICS_THIRD/AN02",
-      "worker": null,
-      "state": "RESERVED_PENDING_THREAD_ACK",
-      "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
-      "scope": "Necessary own fixture/new regression source only, preserve old assertions, NOT_RUN"
-    },
-    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerGrowthConcurrencyMySqlIT.java": {
-      "owner": "ANALYTICS_THIRD/AN02",
-      "worker": null,
-      "state": "RESERVED_PENDING_THREAD_ACK",
-      "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
-      "scope": "Necessary own fixture/new regression source only, preserve old assertions, NOT_RUN"
     }
   },
   "analytics_third_pending": {
@@ -2571,6 +2557,9 @@
         "path": "chengyinhub-system/src/main/resources/mapper/business/BizFunnelDailyMapper.xml",
         "prior": "foundation B / PR4"
       }
-    ]
+    ],
+    "initial_source_file_count": 6,
+    "local_total_coordinator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+    "new_extra_test_grants": false
   }
 }

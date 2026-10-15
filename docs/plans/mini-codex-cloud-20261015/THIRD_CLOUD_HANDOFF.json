@@ -3,7 +3,7 @@
   "team": "ANALYTICS_THIRD",
   "thread_id": null,
   "state": "PENDING_THREAD_NOT_CREATED_BY_C00",
-  "global_source_owner": "C00 only",
+  "global_source_owner": "C00 global register maintainer; local coordinator owns new team scheduling and VPS",
   "local_workflow_and_validation_coordinator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
   "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
   "model": "gpt-6.1-sol",
@@ -51,9 +51,7 @@
         "chengyinhub-system/src/main/resources/mapper/business/PlayerGrowthMapper.xml"
       ],
       "test_paths": [
-        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerProgressionServiceImplTest.java",
-        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerGrowthConcurrencyTest.java",
-        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerGrowthConcurrencyMySqlIT.java"
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerProgressionServiceImplTest.java"
       ],
       "evidence_path": "docs/verification/mini-analytics-cloud-20261015/AN02.md",
       "basis": [
@@ -104,7 +102,7 @@
         ]
       },
       "implementation_contract": "Inside PlayerProgressionServiceImpl and PlayerGrowthMapper Java/XML, make growth mutation a single transaction with real current member-growth row read (cache disabled/flushed) before computing and persisting the aggregate; handle existing unique member initialization without DDL. Keep all growth writers on that same current-read protocol, including onNodeDone and onTopicComplete, and retain existing first-completion/badge guards. An atomic delta plus authoritative readback is an alternative only if unchanged level/streak/threshold semantics are preserved. No caller/source-owned controller needs editing.",
-      "acceptance": "Different-topic legitimate completion mileage10+20 must retain30; crossing onNodeDone/onTopicComplete cannot overwrite independent fields; initialization and same-topic idempotency preserved; existing level/streak/threshold/date semantics unchanged. Source-only regression, actual database validation local.",
+      "acceptance": "Different-topic legitimate completion mileage10+20 must retain30; crossing onNodeDone/onTopicComplete cannot overwrite independent fields; initialization and same-topic idempotency preserved; existing level/streak/threshold/date semantics unchanged. Source-only regression, actual database validation local. New writer first rechecks outer real call-chain locks; concrete counterevidence closes this candidate with no source edit. No additional new test files in initial six-file grant; append necessary regression source to existing test, ask local/C00 exact expansion only if technically needed.",
       "dependencies": [
         "Existing player_growth uk_member; no DDL",
         "TopicCompletionAward/Registration/Progress controllers read-only",
@@ -140,13 +138,9 @@
       "prior": "No active lock, but no justified modification inAN01; read-only until concrete new task claimed"
     }
   ],
-  "test_scope": "Only listed own test files. Existing ApiAnalyticsControllerTest/AnalyticsEventServiceImplTest/AnalyticsAggregationTaskTest/BizFunnelDailyMapperMyBatisTest remain prior owner, no generic directory rights",
+  "test_scope": "Initial grant only existing AnalyticsControllerTest.java and PlayerProgressionServiceImplTest.java; preserve old assertions. No extra new test/helper/source path included.",
   "evidence_and_queue_scope": [
-    "docs/verification/mini-analytics-cloud-20261015/AN01.md",
-    "docs/verification/mini-analytics-cloud-20261015/AN02.md",
-    "docs/verification/mini-analytics-cloud-20261015/COORDINATION/QUEUE.json",
-    "docs/verification/mini-analytics-cloud-20261015/COORDINATION/CLAIMS.json",
-    "docs/verification/mini-analytics-cloud-20261015/COORDINATION/README.md"
+    "Own QUEUE/CLAIMS/DELIVERY documentation paths as precisely named in local startup plan; no C00 control-table writes"
   ],
   "conflict_readback": {
     "observed_open_pr_count": 64,
@@ -547,5 +541,9 @@
     "One file one writer; each task small commits/push fullSHA/paths/dependencies/test sources to PR16 and local coordinator",
     "One repair slot per team; independent other tasks continue without waiting for tests/CI, real task exhaustion honest"
   ],
-  "future_package_note": "Source-based candidates not run/reproduced on DB; actual implementation and local validation remain pending. Whole P048 unbounded-query performance issue not declared solved."
+  "future_package_note": "Source-based candidates not run/reproduced on DB; actual implementation and local validation remain pending. Whole P048 unbounded-query performance issue not declared solved.",
+  "scheduling_coordinator": "LOCAL/01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+  "startup_plan": "docs/plans/mini-forward-cloud-20261015/ (owned by local coordinator, not edited by C00)",
+  "initial_source_file_count": 6,
+  "source_only_boundary": "Exactly6 source/test files; no directory glob. Expanded analytics files remain read-only. Prior proposed extra2 growth test paths revoked before any worker/thread activation."
 }

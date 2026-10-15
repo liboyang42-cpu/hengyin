@@ -333,3 +333,5 @@ CORE `f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c`、EXTRA `a37ce191756ab11896faf4e
 ## 第三Cloud pending_thread精确保留
 
 用户授权新增第三Cloud，当前未创建/未运行；两真实源码任务AN01/AN02与精确路径见THIRD_CLOUD_HANDOFF.json/md。已核64OPEN PR分页文件及真实master blob，新包4生产路径/既有2测试无冲突，C00源表保留给ANALYTICS_THIRD，各一写者；实际thread/child逐路径ACK后生效，无需再次general批准。原CORE/EXTRA/Claude不得写。额外埋点/聚合4历史路径仍原B/旧PR持有，只读待停止/移交，不因目录名泛转权。Cloud不测试/CI/起替代环境，实际VPS交本地。
+
+第三队最新精确收口：本地总控，新队初始仅6源码/既有测试路径（AnalyticsController+AnalyticsControllerTest；PlayerProgressionServiceImpl+PlayerGrowthMapper Java/XML+PlayerProgressionServiceImplTest）。SOURCE_OWNERS已保留pending_thread，不分给CORE/EXTRA，先前两个新增GrowthConcurrency测试路径在无worker激活时撤销；更大埋点/聚合源及其他Mapper/DTO/CI/DDL仍只读。新队真实thread/child逐路径ACK即在清单内开工，无需重复general批准；有反证不改。C00仍唯一控制账维护者。
