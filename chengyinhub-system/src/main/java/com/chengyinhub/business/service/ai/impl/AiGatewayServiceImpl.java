@@ -194,9 +194,16 @@ public class AiGatewayServiceImpl implements AiGatewayService
         long t0 = System.currentTimeMillis();
 
         String modelText;
+        try {
+            stageQuota(memberId,bizType,reservation,"MODEL_STARTED");
+        } catch (RuntimeException stageUnavailable) {
+            // chat has not been invoked; preserve the original unsent compensation path.
+            if (!playerThemeDraft) refundQuota(memberId, bizType, reservation);
+            throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
+                    "AI 服务暂时不可用，请稍后重试", stageUnavailable);
+        }
         try
         {
-            stageQuota(memberId,bizType,reservation,"MODEL_STARTED");
             modelText = client.chat(systemPrompt, userPrompt);
             if (modelText == null || modelText.trim().isEmpty())
             {
