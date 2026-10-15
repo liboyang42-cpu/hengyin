@@ -139,6 +139,9 @@ const CUSTOMER_CHIPS = [
   { value: 'verified', label: '已核销' },
 ];
 
+// 封面高 240px(--ctd-cover-h 480rpx)减去状态栏 + 导航约 88px:封面滚出导航下沿后转实底
+const NAV_SOLID_SCROLL_TOP = 150;
+
 const QUICK_ACTIONS = [
   { key: 'merchant', label: '商家', icon: 'discover-shop' },
   // CU-C-88(用户裁决 A):这个圆钮后面统计的是主题报名/购票参与者(cms_registration),
@@ -153,6 +156,8 @@ Page({
     loaded: false,
     loadError: false,
     chromeClearTop: 0,
+    // PR10 F-W5-08(c):滚过封面后导航转实底(cy-nav-bar scrolled),内容不再从状态栏/返回键底下透出来
+    navScrolled: false,
     topic: {},
     statusKey: 'reviewing',
     statusText: '',
@@ -227,6 +232,12 @@ Page({
     opsTimeSubmitting: false,
     opsTimeDraft: { date: '', time: '' },
     resultSheet: { show: false, kind: 'success', title: '', sub: '', why: '', duration: OPS_RESULT_SHEET_MS },
+  },
+
+  // 与 activity/official-detail 同一做法:只在跨过阈值时 setData 一次,不逐帧传
+  onPageScroll(event) {
+    const next = Number(event && event.scrollTop) > NAV_SOLID_SCROLL_TOP;
+    if (next !== this.data.navScrolled) this.setData({ navScrolled: next });
   },
 
   onLoad(query) {
@@ -600,7 +611,9 @@ Page({
   buildChips(raw, stats) {
     const chips = [];
     if (raw.playModeText) chips.push(raw.playModeText);
-    if (stats.sessionHeadcount > 0) chips.push('本场 ' + stats.sessionHeadcount + ' 人');
+    // PR10 F-W5-08(b):没选定场次时 topic-manage-stats 的 sessionHeadcount 是全部场次之和,
+    // 叫「本场」就是错的 —— 只在已选定一场(导演台对象)时出这枚。
+    if (this._directorActivityId && stats.sessionHeadcount > 0) chips.push('本场 ' + stats.sessionHeadcount + ' 人');
     return chips;
   },
 
@@ -625,8 +638,12 @@ Page({
     // E-06(2026-09-16):真源是 VO 里的 activityList(PublicActivitySummaryVO:id/name/startDate/endDate/addressName)。
     const now = Date.now();
     const rows = (Array.isArray(raw.activityList) ? raw.activityList : [])
-      .filter((s) => !s.cancelTime && toTimestamp(s.endDate || s.startDate) > now)
-      .sort((a, b) => toTimestamp(a.startDate) - toTimestamp(b.startDate));
+      .filter((s) => !s.cancelTime && s.selfHostShell !== true && toTimestamp(s.endDate || s.startDate) > now)
+      // 缺集合时刻的场次排在最后:NaN 参与比较会让 sort 结果不确定。
+      .sort((a, b) => {
+        const ta = toTimestamp(a.startDate), tb = toTimestamp(b.startDate);
+        return (Number.isNaN(ta) ? Infinity : ta) - (Number.isNaN(tb) ? Infinity : tb) || 0;
+      });
     return rows.map((s, i) => ({
       id: s.id || ('s' + i),
       whenText: (() => {

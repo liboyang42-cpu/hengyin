@@ -90,6 +90,15 @@ public interface UmsMemberMapper
             @Param("observedPassword") String observedPassword,
             @Param("upgradedPassword") String upgradedPassword);
 
+    /** 按主键游标读取尚未哈希的存量口令（只返回 id/password），供一次性批量 BCrypt 使用。 */
+    public List<UmsMember> selectLegacyPlaintextPasswords(@Param("afterId") Long afterId,
+            @Param("limit") int limit);
+
+    /** 批量哈希的 CAS：仅当库里仍逐字节等于读到的旧明文时替换为哈希。 */
+    public int hashLegacyPasswordIfUnchanged(@Param("id") Long id,
+            @Param("observedPassword") String observedPassword,
+            @Param("hashedPassword") String hashedPassword);
+
     /**
      * 删除用户
      *

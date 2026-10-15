@@ -1,4 +1,5 @@
 const toast = require('../../utils/toast.js');
+const { isLoginRequired, retryLogin } = require('../../utils/session/login-reload.js');
 const app = getApp();
 // UI-17 返修(2026-09-18):cy-nav-bar 是 fixed(fixed 导航不占文档流),页面正文必须自己让出
 // 导航实高,否则卡片顶端会钻到导航底下被截掉一截(总控截图实证)。拿不到 globalData 时用兜底值。
@@ -38,7 +39,7 @@ Page({
           差异塞进 if,还丢掉各自的分页。 */
     ticketList: [],
     currentSwiperTicket: 0,
-    walletState: 'loading', // loading | ready | error | empty —— 由两条支线的状态合成
+    walletState: 'loading', // loading | ready | error | login | empty —— 由两条支线的状态合成
     walletErrorMsg: '',
     slides: [],
     indicatorDots: true,
@@ -217,6 +218,8 @@ Page({
     else if (ts === 'loading' || as === 'loading') state = 'loading';
     else if (ts === 'error' || as === 'error') state = 'error';
     else state = 'empty';
+    // PR10 F-W1-12:读失败是因为未登录(无会话 / 401)⇒ 登录引导,不是留白的加载失败
+    if (state === 'error' && ((this._topic || {}).login || (this._activity || {}).login)) state = 'login';
     const previous = (this.data.ticketList || [])[this.data.currentSwiperTicket];
     const previousIndex = previous ? list.findIndex(item => item.wKey === previous.wKey) : -1;
     const currentIndex = previousIndex >= 0 ? previousIndex : 0;
@@ -243,6 +246,11 @@ Page({
   retryWallet() {
     if ((this._topic || {}).state === 'error') this.retryTopic();
     if ((this._activity || {}).state === 'error') this.retryActivity();
+  },
+
+  /* 登录引导「登录」:重登成功后重拉失败的支线 */
+  loginWallet() {
+    retryLogin(this, app, this.retryWallet);
   },
 
   /* 我的队伍。票夹一次拉全量,再按 ownerType:ownerId 落到具体那张票上 ——
@@ -303,13 +311,9 @@ Page({
   // 主题swiper切换
   // 活动swiper切换
 
-  // 两路落定后提示单路失败；有票继续显示，没票由 walletState 提供可重试错误态。
-  _reportHalfFailure() {
-    const t = this._topic || {}, a = this._activity || {};
-    if (t.state === 'loading' || a.state === 'loading') return;
-    const failed = [t, a].filter((x) => x.state === 'error');
-    if (failed.length === 1) toast(failed[0].err || '部分票没加载出来');
-  },
+  // F-R2U-01(用户要求):读取失败一律留白。单路失败时继续显示另一路的票,不再弹「部分票没加载出来」;
+  // 两路都失败由 walletState 留白。保留方法名供两路回调统一收口。
+  _reportHalfFailure() {},
 
   getTopicList: function () {
     var that = this;
@@ -350,11 +354,11 @@ Page({
           })
         }
       },
-      fail: function (err) {
+      fail: function (err, statusCode) {
         if (that._unloaded || requestSeq !== that._topicRequestSeq) return;
         // 原为空函数:请求失败被整个吞掉,列表停在 [] ⇒ 页面显示「还没有票!」= 错误伪装成空态
         that._topic = { list: that._topic.list, state: 'error',
-          err: (err && err.errMsg) || '网络开了点小差' };
+          err: (err && err.errMsg) || '网络开了点小差', login: isLoginRequired(app, err, statusCode) };
         that.rebuildTicketList();
       },
       complete: function () {
@@ -416,11 +420,11 @@ Page({
           })
         }
       },
-      fail: function (err) {
+      fail: function (err, statusCode) {
         if (that._unloaded || requestSeq !== that._activityRequestSeq) return;
         // 原为空函数:请求失败被整个吞掉,列表停在 [] ⇒ 页面显示「还没有票!」= 错误伪装成空态
         that._activity = { list: that._activity.list, state: 'error',
-          err: (err && err.errMsg) || '网络开了点小差' };
+          err: (err && err.errMsg) || '网络开了点小差', login: isLoginRequired(app, err, statusCode) };
         that.rebuildTicketList();
       },
       complete: function () {

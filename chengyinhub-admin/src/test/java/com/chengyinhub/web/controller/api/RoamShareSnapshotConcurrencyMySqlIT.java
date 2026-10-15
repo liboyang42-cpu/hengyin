@@ -191,6 +191,11 @@ class RoamShareSnapshotConcurrencyMySqlIT {
         ReflectionTestUtils.setField(controller, "snapshotMapper", mapper);
         ReflectionTestUtils.setField(controller, "privacyService", new RoamSharePrivacyService());
         ReflectionTestUtils.setField(controller, "snapshotService", proxy.getProxy());
+        // 发布前文本送检(F-L5C-02)不在本并发用例范围内：送检桩放行，作者查询返回空。
+        ReflectionTestUtils.setField(controller, "umsMemberService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.IUmsMemberService.class));
+        ReflectionTestUtils.setField(controller, "wxContentSecurityService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
         return controller;
     }
 

@@ -70,7 +70,8 @@ Page({
       pageState: 'loading',
     });
     if (mode === 'public' && !this._merchantRowId) {
-      this.setData({ pageState: 'error', errorMessage: '商家信息不完整' });
+      // PR10 F-W1-12:缺商家参数不是「加载失败」(load-failure 留白),是缺参 —— 给可见说明和返回。
+      this.setData({ pageState: 'missing', errorMessage: '商家信息不完整' });
       return;
     }
     // 管理态是商家页面:未登录先静默登录,失败只留页内错误态,不整屏拦。
@@ -90,7 +91,7 @@ Page({
     ensureSession(app).then(function (ok) {
       if (that._hidden || that._unloaded || entryEpoch !== that._reviewEntryEpoch) return;
       if (!ok || !app.getUserID()) {
-        that.setData({ pageState: 'error', errorMessage: '登录失败，请重试' });
+        that.setData({ pageState: 'login-required', errorMessage: '登录失败，请重试' });
         return;
       }
       that.loadReviews(false);
@@ -101,7 +102,7 @@ Page({
   recoverSession() {
     if (this._hidden || this._unloaded) return;
     if (this._authRetryUsed) {
-      this.setData({ pageState: 'error', errorMessage: '登录已失效，请重新登录' });
+      this.setData({ pageState: 'login-required', errorMessage: '登录已失效，请重新登录' });
       return;
     }
     this._authRetryUsed = true;
@@ -112,7 +113,7 @@ Page({
       if (that._hidden || that._unloaded || entryEpoch !== that._reviewEntryEpoch
           || (app.getUserID() && owner !== String(app.getUserID()))) return;
       if (!ok) {
-        that.setData({ pageState: 'error', errorMessage: '登录失败，请重试' });
+        that.setData({ pageState: 'login-required', errorMessage: '登录失败，请重试' });
         return;
       }
       that.retry();
@@ -151,6 +152,11 @@ Page({
         wx.reLaunch({ url: target.url });
       }
     }
+  },
+
+  // F-W1-12:登录失败不是「加载失败」,留可见的登录说明;重新登录走管理态入口的静默登录。
+  retryLogin() {
+    this.enterManage(false);
   },
 
   retry() {
@@ -239,7 +245,7 @@ Page({
     };
     if (mode === 'manage') {
       app.sendRequest({
-        hideLoading: requestOptions.hideLoading, autoErrorToast: !!append,
+        hideLoading: requestOptions.hideLoading, autoErrorToast: false,
         url: `/api/merchant/reviews/manage?pageNum=${pageNum}&pageSize=20`,
         method: requestOptions.method,
         success: requestOptions.success,
@@ -248,7 +254,7 @@ Page({
       });
     } else {
       app.sendRequest({
-        hideLoading: requestOptions.hideLoading, autoErrorToast: !!append,
+        hideLoading: requestOptions.hideLoading, autoErrorToast: false,
         url: `/api/merchant/reviews/public?merchantRowId=${encodeURIComponent(this._merchantRowId)}&pageNum=${pageNum}&pageSize=20`,
         method: requestOptions.method,
         success: requestOptions.success,

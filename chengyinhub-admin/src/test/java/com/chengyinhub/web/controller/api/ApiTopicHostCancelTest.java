@@ -40,6 +40,7 @@ class ApiTopicHostCancelTest
         doReturn(ME).when(controller).getAppUserId();
         ReflectionTestUtils.setField(controller, "teamGroupService", refundCore);
         ReflectionTestUtils.setField(controller, "merchantAccessService", merchantAccess);
+        ReflectionTestUtils.setField(controller, "wxContentSecurityService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
     }
 
     @Test

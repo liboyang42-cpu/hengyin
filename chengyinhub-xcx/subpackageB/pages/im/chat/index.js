@@ -1,5 +1,7 @@
 const { toTimestamp, chinaDateKey, chinaParts } = require('../../../../utils/datetime');
 const { isRecordList, isBizOk } = require('../../../../utils/response-shape.js');
+const { decodeDisplayText } = require('../../../../utils/display-text.js');
+const { showPermissionGuide } = require('../../../../utils/location/location-manager.js');
 const app = getApp();
 
 // 服务端可见顺序含微秒：不要转 JS Date 丢精度，也不要以客户端时钟推测审批时间。
@@ -321,10 +323,13 @@ Page({
       if (!last || (t - last) > 5 * 60 * 1000) divider = fmtAbs(t);
       last = t;
       let card = null;
+      // 文字按纯文本展示:服务端过滤会把 x<y 存成 x&lt;y。content 保留原值(重排时会再过一遍 decorate,
+      // 不能在原字段上反复解码),气泡读 displayContent。图片消息的 content 是地址,不动。
+      const displayContent = m.msgType == 2 ? m.content : decodeDisplayText(m.content);
       if (m.msgType == 3) {
         try { card = JSON.parse(m.extraJson || '{}'); } catch (e) { card = {}; }
         if (!card.cardType) card.cardType = 'generic';
-        if (card.cardType === 'generic' && !card.title) card.title = m.content || '通知';
+        if (card.cardType === 'generic' && !card.title) card.title = displayContent || '通知';
       }
       /* CU-M-124:这张通用卡过去无条件报成 aria-role=button「查看卡片详情」,但只有
          action / result / bcId 三种tap动作。没有去处的通知(如报名没挂主题的「报名成功」卡)
@@ -333,7 +338,7 @@ Page({
           || (card.result && m.senderId == 0) || card.bcId));
       // 对方气泡上方「名字·时间」一行用的名字:单聊/客服/系统统一用会话对方名(name)。
       // 小程序不露出群聊(见 list/index.js:tabOf),故无需逐条 senderName。
-      return Object.assign({}, m, { timeDivider: divider, card: card, cardTarget: cardTarget,
+      return Object.assign({}, m, { timeDivider: divider, card: card, cardTarget: cardTarget, displayContent: displayContent,
         displayName: that.data.name || '' });
     });
     that.fetchTopics(decorated);
@@ -502,9 +507,9 @@ Page({
       },
       fail(e) {
         if (!current()) return;
-        // 用户取消不提示;权限被拒才引导
-        if (e && String(e.errMsg || '').indexOf('auth deny') >= 0) {
-          app.tips && app.tips('需要位置权限才能发送位置');
+        // 用户取消不提示;权限被拒才引导。F-R2S-10:给出「去设置」恢复入口,授权后回到选址。
+        if (e && /auth (deny|denied)/.test(String(e.errMsg || ''))) {
+          showPermissionGuide(null, () => { if (current()) that.onSendLocation(); });
         }
       },
     });
@@ -623,7 +628,7 @@ Page({
     if (!this._isReadContextCurrent(id, memberId)) return;
     if (this._pendingClear && this._pendingClear.submitting
         && this._isReadContextCurrent(this._pendingClear.conversationId, this._pendingClear.memberId)) return;
-    if (!id) { app.tips && app.tips('无法清空该会话'); return; }
+    if (!id) { app.tips && app.tips('无法隐藏该会话'); return; }
     this._pendingBlock = null;
     this._pendingClear = { conversationId: id, memberId };
     const dc = this.selectComponent && this.selectComponent('#dc');
@@ -752,12 +757,12 @@ Page({
         data: { conversation_id: pending.conversationId },
         success: (res) => {
           if (!current()) return;
-          if (!isBizOk(res)) { failed((res && res.msg) || '清空失败'); return; }
+          if (!isBizOk(res)) { failed((res && res.msg) || '隐藏失败'); return; }
           this._pendingClear = null;
           if (dc) dc.done();
           this._returnAfterClear(pending.conversationId, pending.memberId);
         },
-        fail() { failed('清空失败，请重试'); },
+        fail() { failed('隐藏失败，请重试'); },
       });
       return;
     }

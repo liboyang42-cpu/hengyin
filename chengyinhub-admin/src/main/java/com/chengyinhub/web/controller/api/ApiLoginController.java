@@ -93,6 +93,9 @@ public class ApiLoginController extends BaseController {
     private IUmsMemberService umsMemberService;
 
     @Autowired
+    private com.chengyinhub.business.service.IWxContentSecurityService wxContentSecurityService;
+
+    @Autowired
     private ISysConfigService configService;
 
     @Autowired
@@ -338,10 +341,35 @@ public class ApiLoginController extends BaseController {
     @PostMapping("/userInfo")
     @Anonymous
     public AjaxResult userInfo() {
-        AppUser appUser = getLoginAppUser().getAppUser();
         AjaxResult ajax = AjaxResult.success();
-        ajax.put("appUser", appUser);
+        ajax.put("appUser", userInfoView(getLoginAppUser().getAppUser()));
         return ajax;
+    }
+
+    /** 会话对象只按白名单输出，口令/盐/查询参数等内部字段不进响应（与 Codex 90883a923e 字段集一致）。 */
+    static java.util.Map<String, Object> userInfoView(AppUser appUser) {
+        java.util.Map<String, Object> view = new java.util.LinkedHashMap<>();
+        if (appUser == null) {
+            return view;
+        }
+        view.put("createBy", appUser.getCreateBy());
+        view.put("createTime", appUser.getCreateTime());
+        view.put("updateBy", appUser.getUpdateBy());
+        view.put("updateTime", appUser.getUpdateTime());
+        view.put("remark", appUser.getRemark());
+        view.put("userId", appUser.getUserId());
+        view.put("userName", appUser.getUserName());
+        view.put("nickName", appUser.getNickName());
+        view.put("email", appUser.getEmail());
+        view.put("mobile", appUser.getMobile());
+        view.put("sex", appUser.getSex());
+        view.put("avatar", appUser.getAvatar());
+        view.put("status", appUser.getStatus());
+        view.put("delFlag", appUser.getDelFlag());
+        view.put("loginIp", appUser.getLoginIp());
+        view.put("loginDate", appUser.getLoginDate());
+        view.put("userType", appUser.getUserType());
+        return view;
     }
 
     // [P0-安全] 已移除 /api/login/withopenid:该端点直接拿客户端传入的 openid 签发 token,
@@ -493,6 +521,11 @@ public class ApiLoginController extends BaseController {
             openid = getOpenID(wxcode);
         } catch (RuntimeException e) {
             return AjaxResult.error(WECHAT_SERVICE_UNAVAILABLE);
+        }
+        // F-L5C-02:注册填的名字会出现在公开资料上,与 /user/update 同一道内容安全闸。
+        String nameSecMsg = wxContentSecurityService.checkText(name, openid);
+        if (nameSecMsg != null) {
+            return AjaxResult.error(nameSecMsg);
         }
 
         umsMember = new UmsMember();

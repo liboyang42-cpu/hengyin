@@ -3,6 +3,11 @@ const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadS
 const modal = require('../../../utils/modal.js');
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
 const loading = require('../../../utils/loading.js');
+const { decodeDisplayFields } = require('../../../utils/display-text.js');
+// 回填进输入框的作者文字:服务端过滤会把 x<y 存成 x&lt;y,解码后再回填,保存时提交的就是原文。
+const DECODED_FORM_TEXT = ['title', 'description', 'usageLocation', 'requiredMaterials', 'ruleInstructions',
+  'questionName', 'questionAnswer', 'feedbackText', 'medalName', 'questionA', 'questionB', 'questionC', 'questionD',
+  'hint1', 'hint2', 'answerReveal', 'photoRequireDesc', 'storyText', 'merchantGuide'];
 const toast = require('../../../utils/toast.js');
 const QA_ANSWER_MODES = [{ key: 'single', label: '单选' }, { key: 'multi', label: '多选' }];
 const QA_TRIES = [{ key: 0, label: '不限次数' }, { key: 1, label: '1 次' }, { key: 2, label: '2 次' }, { key: 3, label: '3 次' }, { key: 5, label: '5 次' }, { key: 10, label: '10 次' }];
@@ -3614,7 +3619,7 @@ Page({
       feedbackMethod = templateData.feedbackMethod;
     }
 
-    const formData = {
+    const formData = decodeDisplayFields({
       // 引用别人的模板 = 记下来源 id;编辑自己的模板(scope=my)= 沿用它原有的来源 ——
       // 以前一律写成自己的 id,原地保存后这条就成了「引用了 id 同号的库模板」,
       // 从「我的故事玩法草稿」里消失、还被当成采用来的模板走另一套校验(2026-09-24 走查实证 147/149/154)
@@ -3668,7 +3673,7 @@ Page({
       storyImg: templateData.storyImg == null ? "" : templateData.storyImg,
       storyJson: templateData.storyJson || "",
       status: (templateData.status != null) ? templateData.status : 1
-    };
+    }, DECODED_FORM_TEXT);
 
     // 回填优惠券名称(用于奖励模块展示)
     const couponPatch = {};

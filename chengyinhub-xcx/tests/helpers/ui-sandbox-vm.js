@@ -13,7 +13,9 @@ const path = require('node:path');
 const nodeVm = require('node:vm');
 
 const ROOT = path.resolve(__dirname, '../..');
-const UI_MODULE = /utils\/(toast|loading|modal|datetime|coop-publisher-access|coop-invite-return|roleGuard)\.js$/;
+// PR10 F-W1-12:session/login-reload 是纯函数(只读 app 入参,不碰 wx),页面靠它区分「未登录」与加载失败。
+// PR10 末轮:display-text 是纯函数(只解码用户文字里的 &lt; 等实体,不碰 wx),页面在映射时用它。
+const UI_MODULE = /utils\/(toast|loading|modal|datetime|coop-publisher-access|coop-invite-return|roleGuard|session\/login-reload|display-text)\.js$/;
 const INSTALLED = Symbol('ui-sandbox-vm');
 
 function isUiModule(request) {

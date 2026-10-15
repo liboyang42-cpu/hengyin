@@ -255,6 +255,25 @@
           and password = #{observedPassword}
     </update>
 
+    <select id="selectLegacyPlaintextPasswords" resultMap="UmsMemberResult">
+        select id, password
+        from ums_member
+        where id &gt; #{afterId}
+          and password is not null
+          and password &lt;&gt; ''
+          and password not like '$2%'
+        order by id
+        limit #{limit}
+    </select>
+
+    <update id="hashLegacyPasswordIfUnchanged">
+        update ums_member
+        set password = #{hashedPassword}
+        where id = #{id}
+          and binary password = binary #{observedPassword}
+          and password not like '$2%'
+    </update>
+
     <delete id="deleteUmsMemberById" parameterType="Long">
         delete from ums_member where id = #{id}
     </delete>

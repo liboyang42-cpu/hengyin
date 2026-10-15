@@ -37,7 +37,9 @@ class AlarmThrottleTest {
         verify(redis).setIfAbsent("alarm:attempt:monitor.withdraw.manual", "1", 600, TimeUnit.SECONDS);
     }
 
-    @Test void nullOrFailedRedisIsUnknownAndNeverSuppressesAnAttempt() {
+    // 需求变更:Redis 失效时不再「每次都投递」(会在每个请求上触发 runtime.redis.* 告警、刷屏并占住请求线程),
+    // 改为进程内限频——首次仍投递,同一实例 10 分钟内同一事件不再重复;不同事件互不影响。
+    @Test void nullOrFailedRedisIsUnknownAndFallsBackToLocalThrottle() {
         RedisCache redis = mock(RedisCache.class);
         when(redis.setIfAbsent(anyString(), any(), eq(600), eq(TimeUnit.SECONDS)))
                 .thenReturn(null).thenThrow(new IllegalStateException("synthetic private details"));
@@ -49,7 +51,14 @@ class AlarmThrottleTest {
             alarm.alarmThrottled("monitor.metrics.sample", "sample", "source=app");
             alarm.alarmThrottled("monitor.metrics.sample", "sample", "source=app");
         } finally { logger.detachAppender(logs); logs.stop(); }
-        assertEquals(2, calls.get());
+        assertEquals(1, calls.get(), "首次未知租约仍投递,同窗口内重复尝试由本地限频挡下");
+        alarm.alarmThrottled("monitor.metrics.other", "other", "source=app");
+        assertEquals(2, calls.get(), "不同事件互不抑制");
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, Long> local = (java.util.Map<String, Long>) ReflectionTestUtils.getField(alarm, "localAttempts");
+        local.put("monitor.metrics.sample", System.currentTimeMillis() - 601_000L);
+        alarm.alarmThrottled("monitor.metrics.sample", "sample", "source=app");
+        assertEquals(3, calls.get(), "本地窗口过期后恢复投递");
         assertTrue(logs.list.stream().anyMatch(event -> event.getFormattedMessage().contains("IllegalStateException")));
         assertFalse(logs.list.stream().anyMatch(event -> event.getFormattedMessage().contains("synthetic private details")));
         assertTrue(logs.list.stream().allMatch(event -> event.getThrowableProxy() == null));

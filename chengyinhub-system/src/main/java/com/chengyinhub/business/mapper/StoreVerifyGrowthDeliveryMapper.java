@@ -11,5 +11,6 @@ public interface StoreVerifyGrowthDeliveryMapper {
     List<Long> selectDue();
     int markProcessed(Long registrationId);
     int recordFailure(@Param("registrationId") Long registrationId, @Param("error") String error);
+    int deletePendingByRegistration(@Param("registrationId") Long registrationId);
     int deleteByRegistration(@Param("registrationId") Long registrationId);
 }

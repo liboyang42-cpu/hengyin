@@ -307,7 +307,18 @@ public class ApiTopicController extends BaseController {
      *    与前端的取舍一致:锁态只读不清空,不替用户删图。
      */
     private java.util.List<JourneyReviewTexts.Entry> combinedThemeReviewTexts(TopicCreateDTO dto) {
-        java.util.List<JourneyReviewTexts.Entry> entries=JourneyReviewTexts.collectJourneyStory(dto.getJourneyStory());entries.addAll(JourneyReviewTexts.collectThemeRuntime(dto.getThemeRuntimeConfig()));entries.addAll(JourneyReviewTexts.collectChapters(dto.getChapters()));return entries;
+        java.util.List<JourneyReviewTexts.Entry> entries=JourneyReviewTexts.collectJourneyStory(dto.getJourneyStory());entries.addAll(JourneyReviewTexts.collectThemeRuntime(dto.getThemeRuntimeConfig()));entries.addAll(JourneyReviewTexts.collectChapters(dto.getChapters()));
+        // F-L5C-03:简易版免审直发时,完成勋章名、票种文案、念头规则、宾果格子同样直接给玩家看。
+        entries.addAll(JourneyReviewTexts.collectJourneyRules(dto.getJourneyRules()));
+        entries.addAll(JourneyReviewTexts.collectCompletionRule(dto.getCompleteRuleJson()));
+        if (StringUtils.isNotBlank(dto.getFinishMedalName())) entries.add(new JourneyReviewTexts.Entry("finishMedalName", dto.getFinishMedalName().trim()));
+        if (dto.getTickets() != null) for (com.chengyinhub.business.domain.dto.ActivityTicketRequest ticket : dto.getTickets()) {
+            if (ticket == null) continue;
+            String ticketText = IWxContentSecurityService.joinText(ticket.getName(), ticket.getDescription(),
+                    ticket.getMeetingPoint(), ticket.getMeetingPointAddress(), ticket.getRefundRule());
+            if (StringUtils.isNotBlank(ticketText)) entries.add(new JourneyReviewTexts.Entry("tickets[]", ticketText));
+        }
+        return entries;
     }
     private String checkThemeMedalCapability(Long memberId,String raw) { return checkThemeMedalCapability(memberId,raw,null); }
     private String checkThemeMedalCapability(Long memberId, String raw, String previousRaw) {
@@ -898,6 +909,11 @@ public class ApiTopicController extends BaseController {
         }
         if (actorMemberId == null || actorMemberId <= 0) {
             return error("请先登录");
+        }
+        // F-L5C-02:取消原因会展示给全部已付款玩家,写入前送检。
+        String reasonSecMsg = wxContentSecurityService.checkText(reason, resolveOpenid(actorMemberId));
+        if (reasonSecMsg != null) {
+            return error(reasonSecMsg);
         }
         try {
             Long hostMemberId = resolveProjectOwnerMemberId(actorMemberId, scope);
@@ -1680,7 +1696,7 @@ public class ApiTopicController extends BaseController {
             List<PublicActivitySummaryVO> activitySummaries = new ArrayList<>();
             if (visibleActivities != null) {
                 for (CmsActivity activity : visibleActivities) {
-                    activitySummaries.add(PublicActivitySummaryVO.from(activity));
+                    activitySummaries.add(PublicActivitySummaryVO.from(activity, cmsTopic));
                 }
             }
             topicInfoVO.setActivityList(activitySummaries);
@@ -1937,6 +1953,14 @@ public class ApiTopicController extends BaseController {
                     }
                 }
                 topic.setInviteWindowOpen(open);
+            }
+        }
+        // F-W5-03:「我的」页项目预览读这条列表,草稿(is_draft=1)要与 /api/project/my 同一判据标出来,
+        // 否则草稿按档期被写成「进行中」。只富化本人列表,公开列表不出这个字段。
+        if (!publicList && cmsTopic.getMemberId() != null && !list.isEmpty()) {
+            Set<Long> draftIds = new java.util.HashSet<>(cmsTopicService.selectDraftTopicIds(cmsTopic.getMemberId()));
+            for (CmsTopic topic : list) {
+                topic.setIsDraft(topic.getId() != null && draftIds.contains(topic.getId()));
             }
         }
         TableDataInfo data = getDataTable(list);

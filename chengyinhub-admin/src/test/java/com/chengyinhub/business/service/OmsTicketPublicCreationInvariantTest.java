@@ -63,6 +63,8 @@ class OmsTicketPublicCreationInvariantTest {
         ReflectionTestUtils.setField(service, "omsTicketMapper", ticketMapper);
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activityMapper);
         ReflectionTestUtils.setField(service, "auditTaskService", mock(IAuditTaskService.class));
+        // 收费独立活动只允许平台账号发布(F-W2-01)；本用例只验证票窗口校验，发布者按平台账号构造。
+        ReflectionTestUtils.setField(service, "platformMemberId", 88L);
         when(activityMapper.insertCmsActivity(any(CmsActivity.class))).thenAnswer(invocation -> {
             invocation.getArgument(0, CmsActivity.class).setId(702L);
             return 1;

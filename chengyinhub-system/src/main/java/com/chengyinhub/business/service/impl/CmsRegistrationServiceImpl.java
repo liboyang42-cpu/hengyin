@@ -157,6 +157,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Autowired
     private CmsRegistrationScanMapper cmsRegistrationScanMapper;
 
+    @Autowired
+    private com.chengyinhub.business.mapper.StoreVerifyGrowthDeliveryMapper storeVerifyGrowthDeliveryMapper;
+
+    @Autowired
+    private RedemptionRewardClawbackService redemptionRewardClawbackService;
+
     /** 核销与资金/权益写入同事务的不可变 actor 审计；写失败必须让核销整体回滚。 */
     @Autowired
     private BusinessAuditEventMapper businessAuditEventMapper;
@@ -1624,9 +1630,33 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
      * {@link CommercialTopicPolicy} 单一真源判;免费 UGC 的可报名事实 = 主题在架 + 活动在架未结束
      * (validateAndGetActivity)+ 票种报名截止未到。商业主题或已进入售卖阶段的主题一律回合同二闸。
      */
+    /**
+     * F-W1-05:商业主题未到 SELLING 是「尚未开售」，不是支付故障。玩家侧拿到的必须是这句话，
+     * 而不是内部状态码;其余售卖时间拒绝保持原文。
+     */
+    private void assertCommercialSaleOpen(CmsTopic topic, OmsTicket ticket, Date now) {
+        if (topic != null) {
+            com.chengyinhub.business.domain.enums.TopicLifecycleState state;
+            try {
+                state = com.chengyinhub.business.domain.enums.TopicLifecycleState.fromCode(topic.getLifecycle());
+            } catch (IllegalArgumentException unknownLifecycle) {
+                state = null;
+            }
+            if (state == null || !state.isDirectSaleOpen()) {
+                // PR10 复审:进行中/结算中/已关闭是「已过售卖期」,不能对玩家说「尚未开售」;
+                // 未知状态继续 fail-closed,按未开售文案拦截。
+                if (state != null && state.isSaleStarted()) {
+                    throw new RuntimeException("报名已结束，本主题已停止售卖");
+                }
+                throw new RuntimeException("该主题尚未开售，开售审核通过后才可报名");
+            }
+        }
+        SaleAvailabilityPolicy.assertSellable(topic, ticket, now);
+    }
+
     private void assertRegistrationSellable(CmsActivity activity, CmsTopic topic, OmsTicket ticket, Date now) {
         if (activity == null || !isFreeUgcActivityTopic(activity, topic)) {
-            SaleAvailabilityPolicy.assertSellable(topic, ticket, now);
+            assertCommercialSaleOpen(topic, ticket, now);
             return;
         }
         assertFreeTopicOnShelf(topic);
@@ -2018,7 +2048,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Transactional(rollbackFor = Exception.class)
     public String handleWechatPayCallback(Map<String, String> resultMap) {
         if (resultMap == null) {
-            return "FAIL";
+            return registrationPaymentCallbackFailure(null, "payload_missing");
         }
         String outTradeNo = resultMap.get("out_trade_no");
         String transactionId = resultMap.get("transaction_id");
@@ -2026,7 +2056,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
         if (outTradeNo == null || outTradeNo.trim().isEmpty()
                 || tradeState == null || tradeState.trim().isEmpty()) {
-            return "FAIL";
+            return registrationPaymentCallbackFailure(outTradeNo, "required_field_missing");
         }
 
         // 查询报名记录
@@ -2127,6 +2157,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     private String registrationPaymentCallbackFailure(String outTradeNo, String reason) {
         String reference = outTradeNo != null && outTradeNo.matches("[A-Za-z0-9_-]{1,64}")
                 ? outTradeNo : "INVALID_FORMAT";
+        // AlarmService 只记标题与长度;单号/原因必须自己落一行 WARN,告警未配置时事后才查得到。
+        logger.warn("Registration payment callback returned FAIL order={} reason={}", reference, reason);
         alarmService.alarmThrottled("payment.callback.registration", "支付回调报名处理失败",
                 "order=" + reference + " reason=" + reason + " result=FAIL");
         return "FAIL";
@@ -2846,9 +2878,116 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         writeVerificationAudit("REGISTRATION", registration.getId(), verifierId,
                 actorMemberId, actorRoleCode, action, "CMS_REGISTRATION", registration.getId(),
                 activityId != null ? activityId : (station == null ? null : station.getId()),
-                "registration-redeem-" + registration.getId(),
+                verificationAuditRequestId(registration.getId()),
                 "{\"verificationStatus\":0}", "{\"verificationStatus\":1}");
         growthService.enqueueStoreVerification(registration.getId());
+        return true;
+    }
+
+    static final String WHOLE_ORDER_VERIFY_REVERSE = "REGISTRATION_VERIFY_REVERSE";
+
+    /**
+     * 核销审计幂等键:首次核销沿用原键;每被后台撤销一次,下一次核销换一代键,
+     * 否则 uk_business_audit_request 会让撤销后的重新核销永远写不进审计而整单回滚。
+     */
+    private String verificationAuditRequestId(Long registrationId) {
+        int reversals = wholeOrderReversalCount(registrationId);
+        return "registration-redeem-" + registrationId + (reversals == 0 ? "" : "-r" + reversals);
+    }
+
+    private int wholeOrderReversalCount(Long registrationId) {
+        List<BusinessAuditEvent> events = businessAuditEventMapper.selectByTarget("CMS_REGISTRATION", registrationId);
+        int count = 0;
+        if (events != null) for (BusinessAuditEvent event : events) {
+            if (event != null && "REGISTRATION".equals(event.getDomainType())
+                    && WHOLE_ORDER_VERIFY_REVERSE.equals(event.getAction())) count++;
+        }
+        return count;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean reverseWholeOrderVerification(Long registrationId, String reason, Long operatorUserId) {
+        return reverseWholeOrderVerification(registrationId, reason, operatorUserId, false);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean reverseWholeOrderVerification(Long registrationId, String reason, Long operatorUserId,
+                                                 boolean clawbackRewards) {
+        String why = reason == null ? "" : reason.trim();
+        if (registrationId == null || registrationId <= 0 || operatorUserId == null || operatorUserId <= 0
+                || why.isEmpty() || why.length() > 255) {
+            throw new IllegalArgumentException("订单、撤销原因(1-255字)或操作人无效");
+        }
+        CmsRegistration located = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
+        if (located == null || located.getOwnerId() == null) throw new IllegalStateException("订单不存在");
+        if (located.getPurchaseKind() != null && located.getPurchaseKind() == PurchaseKind.EXPLORE_PASS) {
+            throw new IllegalStateException("探索票请在核销记录中按章撤销");
+        }
+        if (!Long.valueOf(2L).equals(located.getOwnerType())) {
+            throw new IllegalStateException("主题整单核销已计入执行商家结算，请走人工售后处理");
+        }
+        // 锁序与核销/取消一致:activity -> registration。
+        CmsActivity activity = cmsActivityMapper.selectCmsActivityByIdForUpdate(located.getOwnerId());
+        if (activity == null || activity.getMemberId() == null) throw new IllegalStateException("订单关联活动不存在");
+        if (activity.getIsSettlement() != null && activity.getIsSettlement() != 0) {
+            throw new IllegalStateException("活动已结算，不能撤销核销，请走人工售后处理");
+        }
+        CmsRegistration current = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(registrationId);
+        if (current == null || !Long.valueOf(2L).equals(current.getOwnerType())
+                || !located.getOwnerId().equals(current.getOwnerId())) {
+            throw new IllegalStateException("订单归属已变化，请刷新后重试");
+        }
+        if (!Integer.valueOf(1).equals(current.getVerificationStatus())) {
+            throw new IllegalStateException("该订单未核销或已撤销，无需重复撤销");
+        }
+        for (com.chengyinhub.business.domain.Redemption row : perkLedgerService.listRedemptions(registrationId)) {
+            if (row != null && "ACTIVE".equals(row.getStatus())) {
+                throw new IllegalStateException("该票有按章核销流水，请在核销记录中逐条撤销");
+            }
+        }
+        // 条件置位(NOT EXISTS ACTIVE redemption 在 SQL 内当前读判定),0 行 = 状态刚变化。
+        if (cmsRegistrationMapper.clearVerification(registrationId) != 1) {
+            throw new IllegalStateException("核销状态刚发生变化，请刷新后重试");
+        }
+        BusinessAuditEvent audit = new BusinessAuditEvent();
+        audit.setDomainType("REGISTRATION");
+        audit.setDomainId(registrationId);
+        audit.setOwnerMemberId(activity.getMemberId());
+        audit.setActorType(BusinessAuditEvent.ACTOR_TYPE_SYS_USER);
+        audit.setActorMemberId(operatorUserId);
+        audit.setActorRoleCode("SYS_USER");
+        audit.setAction(WHOLE_ORDER_VERIFY_REVERSE);
+        audit.setTargetType("CMS_REGISTRATION");
+        audit.setTargetId(registrationId);
+        audit.setRelationId(activity.getId());
+        audit.setBeforeJson("{\"verificationStatus\":1,\"verifierId\":"
+                + (current.getVerifierId() == null ? "null" : current.getVerifierId()) + "}");
+        audit.setAfterJson("{\"verificationStatus\":0}");
+        audit.setReason(why);
+        int generation = wholeOrderReversalCount(registrationId) + 1;
+        audit.setRequestId("registration-verify-reverse-" + registrationId + "-" + generation);
+        audit.setCreateTime(new Date());
+        if (businessAuditEventMapper.insertBusinessAuditEvent(audit) != 1) {
+            throw new IllegalStateException("撤销核销审计写入失败，撤销已回滚");
+        }
+        // PR10 复审:与按章撤销(redemption→REVERSED)对齐 —— 整单票的核销台账行就是 cms_registration_scan,
+        // 标成已撤销,商家赏金/合作结算证据/核销风控/商家人头都不再把这次扫码算作核销;
+        // 存量无台账行的老单 0 行也不算失败。重新核销时 writeScanLedger 会另落一行新台账。
+        cmsRegistrationScanMapper.markWholeOrderScansReversed(registrationId);
+        if (clawbackRewards) {
+            CmsRegistration owner = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
+            if (owner == null || owner.getMemberId() == null) {
+                throw new IllegalStateException("冲回奖励找不到报名单 registrationId=" + registrationId);
+            }
+            redemptionRewardClawbackService.clawbackWholeOrderVerification(owner, activity.getMemberId(), why,
+                    operatorUserId, "registration-verify-clawback-" + registrationId + "-" + generation);
+        } else {
+            // 未勾冲回:已发的奖励按按章撤销同口径保留;但还在队列里没发的到店成长不能为已撤销的核销迟到补发。
+            storeVerifyGrowthDeliveryMapper.deletePendingByRegistration(registrationId);
+        }
+        logger.info("整单核销已撤销 registrationId={} operatorUserId={}", registrationId, operatorUserId);
         return true;
     }
 

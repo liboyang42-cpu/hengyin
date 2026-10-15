@@ -7,6 +7,7 @@ const cyToast = require('../../../utils/toast.js');
 const motion = require('../../../utils/motion.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const { getScene } = require('../../../utils/scene-registry.js');
+const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
 // 城瘾 · 俱乐部详情页(方案B:俱乐部=经典定向带团组织)
 // 俱乐部信息 + TA 办的经典定向团(/api/club/topics)+ 成员;团卡片点进主题报名页复用现有报名/扫码。
 const { toTimestamp, chinaParts } = require('../../../utils/datetime');
@@ -27,6 +28,7 @@ const { isRecord, bizFailureMessage } = require('../../../utils/response-shape.j
 const { buildMonthCalendar, shiftMonth } = require('../utils/club-event-calendar.js');
 // 帖文卡的 variant 判定与广场共用一份,别在这儿复制
 const { isCompletedShare, hasFeedPlayCover } = require('../../../utils/feed-play-card.js');
+const { decodeDisplayText, decodeDisplayFields } = require('../../../utils/display-text.js');
 // CU-C-60:扫码核销复用全站唯一的路由表(utils/verification-scan)与写闸(防重提/结果未知),
 // 不在本页另写一套解析。
 const { resolveVerificationScan } = require('../../../utils/verification-scan.js');
@@ -408,11 +410,14 @@ function normalizeClubPost(p, clubOwnerId) {
   // 后端投影不出展示字段(被引对象已删/下架)时 sportName 是空,两个判定都会自然判假,
   // 卡片降级成普通图文帖 —— 不会渲染出一张标题空着的成绩卡。
   const ref = Object.assign({}, p, { dataType: p.refType, completed: true });
+  // 正文按纯文本展示,编辑框也从这里回填:解码一次,重新提交的是用户原文,不会越存越长。
+  const content = decodeDisplayText(p.content);
   return Object.assign({}, p, {
     memberId: p.authorMemberId,
     memberNickname: p.nickname,
     memberAvatar: p.avatar,
-    contents: p.content,
+    content: content,
+    contents: content,
     picList: p.images ? String(p.images).split(/[;,]/).filter(Boolean) : [],
     formattedCreateTime: formatPostTime(p.createTime),
     authorBadge: String(p.authorMemberId) === String(clubOwnerId) ? '主理人' : '',
@@ -426,6 +431,10 @@ function normalizeClubPost(p, clubOwnerId) {
 
 function enrichClub(club) {
   if (!club) return club;
+  // 服务端文本过滤会把 x<y 存成 x&lt;y;这几项都按纯文本展示,在这里解码一次。
+  ['name', 'description', 'myJoinReviewReason'].forEach(function (key) {
+    if (typeof club[key] === 'string') club[key] = decodeDisplayText(club[key]);
+  });
   club.levelText = levelTextOf(club.level);
   // 稿 N1b 47:2 / N3 20:137 写的是「42 名成员」,不是光秃秃一个数字
   club.memberCountText = formatMemberCount(club.memberCount);
@@ -548,6 +557,8 @@ Page({
     clubStatsError: '',
     detailLoaded: false,
     notFound: false,
+    // PR10 F-W1-12:未登录(无会话 / 401)读失败给登录引导,其余加载失败仍留白(notFound)
+    loginRequired: false,
     // E-09(2026-09-16):三处「失败渲染成空」的状态位。有错误文案 = 显示错误态+重试,不显示空态。
     postsError: '',
     leaderboardError: '',
@@ -728,7 +739,18 @@ Page({
         if (owned.length === 1) { that.setData({ clubId: Number(owned[0].id) }); that.loadAll(); return; }
         that.setData({ ownerClubs: owned, ownerPickerShow: true, detailLoaded: true });
       },
-      fail() { that.setData({ detailLoaded: true, notFound: true }); }
+      fail(res, statusCode) {
+        if (isLoginRequired(app, res, statusCode)) { that.setData({ detailLoaded: true, notFound: false, loginRequired: true }); return; }
+        that.setData({ detailLoaded: true, notFound: true });
+      }
+    });
+  },
+  // 登录引导「登录」:重登成功后按原入口重读(有 clubId 读详情,owner 入口重新解析)
+  onLoginRetry() {
+    retryLogin(this, app, function () {
+      this.setData({ loginRequired: false, notFound: false, detailLoaded: false });
+      if (this.data.clubId) this.loadAll();
+      else if (this._ownerEntry) this.resolveOwnerEntry();
     });
   },
   onPickOwnerClub(e) {
@@ -1853,7 +1875,7 @@ Page({
           return;
         }
         const rows = res.data.map(function (row) {
-          return Object.assign({}, row, {
+          return Object.assign(decodeDisplayFields(row, ['content']), {
             versionText: '修改前 v' + (Number(row.snapshotVersion || 0) + 1),
             timeText: formatPostTime(row.createTime),
           });
@@ -1929,6 +1951,7 @@ Page({
           canUseManageTab: immediateCanUseManageTab,
           detailLoaded: true,
           notFound: !club,
+          loginRequired: false,
           activeTab: initialTab,
           clubTabs: that.tabsForClub(club, immediateCanUseManageTab),
           tabInitialized: that.data.tabInitialized || !!club,
@@ -1945,9 +1968,13 @@ Page({
           that.revokeClubAccess('idle');
         }
       },
-      fail() {
+      fail(res, statusCode) {
         if (!isCurrent()) return;
         if (opts.preserveSnapshotOnFailure && that.data.club) {
+          return;
+        }
+        if (isLoginRequired(app, res, statusCode)) {
+          that.setData({ detailLoaded: true, notFound: false, loginRequired: true });
           return;
         }
         that.setData({ detailLoaded: true, notFound: true });
@@ -2851,7 +2878,7 @@ Page({
       hideLoading: true, url: '/api/club/post/comment/list', method: 'POST', data: jsonBody({ postId: postId }), header: jsonHeader(),
       success(res) {
         const rows = (res.code == '200' && res.data) || [];
-        that.setData({ comments: rows.map(function (c) { return Object.assign({}, c, { timeText: c.createTime ? String(c.createTime).slice(0, 16).replace('T', ' ') : '' }); }) });
+        that.setData({ comments: rows.map(function (c) { return Object.assign(decodeDisplayFields(c, ['content']), { timeText: c.createTime ? String(c.createTime).slice(0, 16).replace('T', ' ') : '' }); }) });
       },
     });
   },

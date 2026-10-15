@@ -983,3 +983,39 @@ test('玩家选择与原命令重试遇旧纪元：显示服务端提示并重�
     assert.equal(harness.submitCalls.length, 2)
   } finally { harness.cleanup() }
 })
+
+test('F-L3-07:晚到的旧投影不覆盖新状态 —— 请求纪元与同局 revision 单调双重保护', async () => {
+  const harness = loadUnknownWritePlayer()
+  const client = require('../../utils/game-session-client.js')
+  try {
+    const page = harness.page
+    page._loadPlayerGameModule = harness.definition._loadPlayerGameModule
+    page.rebuild = () => {}
+    page._maybeShowRoleCard = () => {}
+    page.data.nodes = []
+    page.data.gameModule = Object.assign({}, page.data.gameModule, { sessionId: 91, revision: 9, write: null })
+    const pending = []
+    client.loadProjection = () => new Promise((resolve) => { pending.push(resolve) })
+
+    page._loadPlayerGameModule()
+    page._loadPlayerGameModule()
+    assert.equal(pending.length, 2)
+    pending[1](readyPlayerProjection(11))
+    await settle()
+    assert.equal(page.data.gameModule.revision, 11)
+    const staleOtherSession = readyPlayerProjection(50)
+    staleOtherSession.data.sessionId = 90
+    pending[0](staleOtherSession)
+    await settle()
+    assert.equal(page.data.gameModule.revision, 11, '先发后到的请求不得回写(即使是另一局的更大 revision)')
+    assert.equal(page.data.gameModule.sessionId, 91)
+
+    page._loadPlayerGameModule()
+    pending[2](readyPlayerProjection(10))
+    await settle()
+    assert.equal(page.data.gameModule.revision, 11, '同局更低 revision 的投影不得回退状态')
+    assert.equal(page.data.gameModule.loading, false)
+  } finally {
+    harness.cleanup()
+  }
+})

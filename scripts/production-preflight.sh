@@ -16,6 +16,8 @@ required=(
   CHENGYIN_OSS_ACCESS_KEY_SECRET
   CHENGYIN_OSS_BUCKET_NAME
   CHENGYIN_TENCENT_MAP_KEY
+  CHENGYIN_WXPAY_REFUND_NOTIFY_URL
+  CHENGYIN_WXPAY_NOTIFY_URL
 )
 missing=()
 
@@ -61,6 +63,35 @@ fi
 
 if [[ ! "$CHENGYIN_WITHDRAWAL_PII_KEY" =~ ^[A-Za-z0-9+/]{43}=$ ]]; then
   echo 'CHENGYIN_WITHDRAWAL_PII_KEY 必须是 Base64 编码的 32 字节 AES-256 密钥' >&2
+  exit 1
+fi
+
+# 退款结果通知默认留空(application.yml);生产必须显式给出 HTTPS 回调,且指向退款回调端点。
+if [[ ! "$CHENGYIN_WXPAY_REFUND_NOTIFY_URL" =~ ^https://[^[:space:]]+/api/registration/refund-callback$ ]]; then
+  echo 'CHENGYIN_WXPAY_REFUND_NOTIFY_URL 必须是指向 /api/registration/refund-callback 的 HTTPS 地址' >&2
+  exit 1
+fi
+
+# 支付结果通知默认留空(application.yml,留空时拒绝下单);生产必须显式给出 HTTPS 回调,且指向支付回调端点。
+if [[ ! "$CHENGYIN_WXPAY_NOTIFY_URL" =~ ^https://[^[:space:]]+/api/registration/callback$ ]]; then
+  echo 'CHENGYIN_WXPAY_NOTIFY_URL 必须是指向 /api/registration/callback 的 HTTPS 地址' >&2
+  exit 1
+fi
+
+# 密钥复用会让一次轮换或一次泄露波及多个能力（F-L6-11）：只比较是否相同，不输出任何值。
+secret_names=(CHENGYIN_JWT_SECRET COUPON_QR_SECRET CHENGYIN_WXPAY_APIV3_KEY CHENGYIN_WXMINI_SECRET
+  CHENGYIN_DRUID_PASSWORD CHENGYIN_DB_PASSWORD CHENGYIN_WITHDRAWAL_PII_KEY CHENGYIN_OSS_ACCESS_KEY_SECRET)
+for ((i = 0; i < ${#secret_names[@]}; i++)); do
+  for ((j = i + 1; j < ${#secret_names[@]}; j++)); do
+    if [[ "${!secret_names[i]}" == "${!secret_names[j]}" ]]; then
+      echo "${secret_names[i]} 与 ${secret_names[j]} 不得复用同一值，请分别注入独立密钥" >&2
+      exit 1
+    fi
+  done
+done
+
+if [[ -n "${ALARM_FAILURE_WEBHOOK:-}" && "${ALARM_FAILURE_WEBHOOK}" == "${ALARM_WEBHOOK}" ]]; then
+  echo 'ALARM_FAILURE_WEBHOOK 必须是独立于 ALARM_WEBHOOK 的告警出口' >&2
   exit 1
 fi
 

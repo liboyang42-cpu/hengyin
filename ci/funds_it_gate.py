@@ -202,7 +202,8 @@ EXPECTED = {
     "MerchantIdentityMybatisIntegrationTest": 21,
     # 2026-09-24 CU-M-78 +1 条(解除招牌主推显式清空 featured_id,真 XML + 真库回读),8 → 9。
     "MerchantProfilePersistenceMybatisIntegrationTest": 9,
-    "StoreVerifyGrowthDeliveryTransactionTest": 3,
+    # 2026-10-15 PR10 复审 +1 条(整单核销撤销:真库标记核销台账已撤销、作废未发放成长待办),3 → 4。
+    "StoreVerifyGrowthDeliveryTransactionTest": 4,
     "RefundNotificationMybatisIntegrationTest": 9,
     "SessionRefundClockMybatisIntegrationTest": 3,
     "SettlementGenerateBatchMybatisIntegrationTest": 3,
@@ -220,7 +221,8 @@ EXPECTED = {
     "CreativeSquarePublishIdempotencyMybatisIntegrationTest": 7,
     "FollowConcurrencyMybatisIntegrationTest": 4,
     "FollowEditRaceMybatisIntegrationTest": 7,
-    "NearbyRunnerShopsMybatisIntegrationTest": 6,
+    # 2026-10-15 PR10 复审 +1 条(瞬移基线按会话取,真库回读),6 → 7。
+    "NearbyRunnerShopsMybatisIntegrationTest": 7,
     # 2026-09-17 拍照一律机审:原 5 条(人工审核三条 CAS)→ 6 条:
     # 通过 CAS 恰好一次 / 存量驳回态同 CAS 转正 / 已完成行永不再通过 /
     # 按 id 取行 / 待审重复插入撞唯一键 / 存量待审行读侧不算完成。
@@ -243,7 +245,7 @@ EXPECTED = {
     # 2026-09-21 CYV-P1-002:主理人转让与活动取消在 MySQL RR/RC 下的锁后权限、
     # 精确 topic/club/activity scope 和并发退款幂等。
     "ClubEventTransferCancellationMySqlIT": 3,
-    "RefundRetryAndRemainderMySqlIT": 4,
+    "RefundRetryAndRemainderMySqlIT": 5,
     "SignupNoticeAfterCommitPersistenceMySqlIT": 5,
     "TopicLikeDesiredStateMySqlIT": 3,
     "MonitorMissingJobsMySqlIT": 3,

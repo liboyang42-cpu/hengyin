@@ -5,6 +5,7 @@ import com.chengyinhub.business.service.IConsentRecordService;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.domain.ConsentRecord;
 import com.chengyinhub.business.domain.UmsMember;
+import com.chengyinhub.business.domain.vo.DeregistrationStatusVO;
 import com.chengyinhub.common.config.ComplianceProperties;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -65,6 +66,12 @@ public class ApiAccountDeregistrationController extends BaseController {
         if (member == null) return error("账号不存在");
         if (StringUtils.isEmpty(requestId) || requestId.length() > 64) {
             return error("请求标识不合法");
+        }
+        // F-R2S-07:首次提交已生效但回包丢失时,验证码已被原子消费;重试先回放已存在的 PENDING,
+        // 不再要求重新验证(只返回本人状态,不产生新的写入)。
+        DeregistrationStatusVO existing = deregistrationService.status(memberId);
+        if (existing != null && "PENDING".equals(existing.getStatus())) {
+            return success(existing);
         }
         String trustedIp = TrustedProxyIpResolver.resolve(request);
         if (member.getPhone() != null && !member.getPhone().trim().isEmpty()) {

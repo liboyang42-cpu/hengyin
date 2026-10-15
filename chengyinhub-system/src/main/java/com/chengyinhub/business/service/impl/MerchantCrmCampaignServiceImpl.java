@@ -59,6 +59,8 @@ public class MerchantCrmCampaignServiceImpl implements IMerchantCrmCampaignServi
     @Autowired private MmsMerchantMapper merchantMapper;
     @Autowired private BusinessAuditEventMapper auditMapper;
     @Autowired private MerchantCrmCampaignClaimTransactionService claimTransactionService;
+    @Autowired private com.chengyinhub.business.service.IWxContentSecurityService wxSec;
+    @Autowired private com.chengyinhub.business.service.IUmsMemberService umsMemberService;
 
     @Override
     public List<MerchantCrmCouponOptionVO> coupons(Long principalMemberId) {
@@ -118,6 +120,14 @@ public class MerchantCrmCampaignServiceImpl implements IMerchantCrmCampaignServi
         MerchantCrmCampaign replay = campaignMapper.selectByRequestId(access.getMerchantId(), requestId);
         if (replay != null) return exactReplay(replay, access.getMerchantId(), principalMemberId, segment.getId(), channel,
                 couponId, title, content, false);
+        // F-L5C-02:触达标题与正文以系统消息卡发给顾客,与 /broadcast 同一道机审闸,审不了按 fail-close 拦截。
+        String securityError = com.chengyinhub.business.service.IWxContentSecurityService.checkTextAsMember(wxSec,
+                umsMemberService, principalMemberId,
+                com.chengyinhub.business.service.IWxContentSecurityService.joinText(title, content));
+        if (securityError != null) {
+            boolean unavailable = com.chengyinhub.business.service.IWxContentSecurityService.isDetectionUnavailable(securityError);
+            throw new ServiceException(securityError, unavailable ? 503 : 400);
+        }
 
         MerchantCrmCustomerQuery query = query(segment);
         query.setMerchantId(access.getMerchantId());

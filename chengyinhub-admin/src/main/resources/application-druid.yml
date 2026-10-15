@@ -23,7 +23,9 @@ spring:
             # 最大连接池数量
             maxActive: 20
             # 配置获取连接等待超时的时间
-            maxWait: 60000
+            # F-W3-05:原 60000(60s)远超客户端超时,池满时请求排队一分钟才报错;改为 5s 快速失败,
+            # 失败由 RuntimeFailureAlarmFilter 以 runtime.db.connection 告警;可用环境变量回调。
+            maxWait: ${CHENGYIN_DB_POOL_MAX_WAIT_MS:5000}
             # 配置连接超时时间
             connectTimeout: 30000
             # 配置网络超时时间

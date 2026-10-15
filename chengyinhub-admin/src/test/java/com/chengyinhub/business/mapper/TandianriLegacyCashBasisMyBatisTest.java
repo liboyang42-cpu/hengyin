@@ -43,8 +43,9 @@ class TandianriLegacyCashBasisMyBatisTest {
                     + "owner_id bigint, owner_type int, payment_status int, registration_status int, "
                     + "verification_status int, payable_amount decimal(10,2))");
             statement.execute("create table cms_activity (id bigint primary key, topic_id bigint, del_flag int)");
+            // status 与真表同列:核销台账读口径排除已撤销(status=2)的整单核销行(PR10 复审)。
             statement.execute("create table cms_registration_scan (registration_id bigint, member_id bigint, "
-                    + "registration_type int)");
+                    + "registration_type int, status int default 0)");
             statement.execute("insert into cms_activity values (201, 23, 0), (202, 23, 1)");
             statement.execute("insert into cms_registration values "
                     + "(1, 11, 23, 1, 2, 2, 1, 100.00), "

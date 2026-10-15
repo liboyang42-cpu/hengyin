@@ -53,6 +53,9 @@ class StoreVerifyGrowthDeliveryTransactionTest {
     private JdbcTemplate db;
     private ICmsRegistrationService registrationService;
     private IPerkLedgerService perkLedgerService;
+    private SqlSessionTemplate sql;
+    private DataSourceTransactionManager tx;
+    private IGrowthService growthService;
 
     @BeforeAll
     void databaseAndServices() throws Exception {
@@ -82,6 +85,13 @@ class StoreVerifyGrowthDeliveryTransactionTest {
                 + "exp_reward INT NOT NULL DEFAULT 0,daily_limit INT NOT NULL DEFAULT 1,status CHAR(1) NOT NULL,"
                 + "sort_no INT NOT NULL DEFAULT 0,create_time DATETIME,update_time DATETIME) ENGINE=InnoDB");
         executeMigration(source, "sql/migration_store_verify_growth_delivery_20260913.sql");
+        // 与 base_schema 同列的核销台账表(整单核销撤销用例要读写真实 status)。
+        db.execute("CREATE TABLE cms_registration_scan(id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,registration_type INT,"
+                + "registration_id INT DEFAULT 0,member_id INT DEFAULT 0,validation_method TINYINT(1) DEFAULT 0,"
+                + "question_answer TEXT,feedback_text TEXT,name VARCHAR(255) DEFAULT '',address VARCHAR(255) DEFAULT '',"
+                + "latitude VARCHAR(255),longitude VARCHAR(255),template_id BIGINT DEFAULT 0,status INT DEFAULT 0,"
+                + "create_by VARCHAR(64),create_time DATETIME,update_by VARCHAR(64),update_time DATETIME)"
+                + " ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(source);
@@ -89,15 +99,17 @@ class StoreVerifyGrowthDeliveryTransactionTest {
         factory.setMapperLocations(
                 new ClassPathResource("mapper/business/CmsRegistrationMapper.xml"),
                 new ClassPathResource("mapper/business/GrowthMissionMapper.xml"),
-                new ClassPathResource("mapper/business/StoreVerifyGrowthDeliveryMapper.xml"));
-        SqlSessionTemplate sql = new SqlSessionTemplate(factory.getObject());
-        DataSourceTransactionManager tx = new DataSourceTransactionManager(source);
+                new ClassPathResource("mapper/business/StoreVerifyGrowthDeliveryMapper.xml"),
+                new ClassPathResource("mapper/business/CmsRegistrationScanMapper.xml"),
+                new ClassPathResource("mapper/business/MerchantReferralBountyMapper.xml"));
+        sql = new SqlSessionTemplate(factory.getObject());
+        tx = new DataSourceTransactionManager(source);
 
         GrowthServiceImpl growthTarget = new GrowthServiceImpl();
         ReflectionTestUtils.setField(growthTarget, "growthMissionMapper", sql.getMapper(GrowthMissionMapper.class));
         ReflectionTestUtils.setField(growthTarget, "storeVerifyGrowthDeliveryMapper",
                 sql.getMapper(StoreVerifyGrowthDeliveryMapper.class));
-        IGrowthService growthService = transactionalProxy(growthTarget, IGrowthService.class, tx);
+        growthService = transactionalProxy(growthTarget, IGrowthService.class, tx);
 
         CmsRegistrationScanMapper scanMapper = mock(CmsRegistrationScanMapper.class);
         when(scanMapper.selectCmsRegistrationScanList(any())).thenReturn(Collections.<CmsRegistrationScan>emptyList());
@@ -184,6 +196,75 @@ class StoreVerifyGrowthDeliveryTransactionTest {
 
         assertEquals(0, db.queryForObject("SELECT verification_status FROM cms_registration WHERE id=501", Integer.class));
         assertEquals(0, db.queryForObject("SELECT count(*) FROM store_verify_growth_delivery", Integer.class));
+    }
+
+    /**
+     * PR10 复审:整单核销撤销在真库里把核销台账行标为已撤销(status=2)、作废未发放的到店成长待办;
+     * 商家赏金人头口径与默认台账列表都不再算它;重新核销另落一行新台账并重新入队。
+     */
+    @Test
+    void wholeOrderReversalMarksScanLedgerAndDropsPendingGrowth() {
+        db.update("DELETE FROM cms_registration_scan");
+        db.update("UPDATE cms_registration SET owner_type=2,owner_id=400 WHERE id=501");
+        CmsRegistrationScanMapper scans = sql.getMapper(CmsRegistrationScanMapper.class);
+        com.chengyinhub.business.mapper.MerchantReferralBountyMapper bounty =
+                sql.getMapper(com.chengyinhub.business.mapper.MerchantReferralBountyMapper.class);
+        com.chengyinhub.business.mapper.CmsActivityMapper activities = mock(com.chengyinhub.business.mapper.CmsActivityMapper.class);
+        com.chengyinhub.business.domain.CmsActivity activity = new com.chengyinhub.business.domain.CmsActivity();
+        activity.setId(400L);
+        activity.setMemberId(77L);
+        activity.setIsSettlement(0);
+        activity.setDelFlag(0);
+        when(activities.selectCmsActivityByIdForUpdate(400L)).thenReturn(activity);
+        BusinessAuditEventMapper auditMapper = mock(BusinessAuditEventMapper.class);
+        when(auditMapper.insertBusinessAuditEvent(any(BusinessAuditEvent.class))).thenReturn(1);
+        CmsRegistrationServiceImpl target = new CmsRegistrationServiceImpl();
+        ReflectionTestUtils.setField(target, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
+        ReflectionTestUtils.setField(target, "cmsActivityMapper", activities);
+        ReflectionTestUtils.setField(target, "cmsRegistrationScanMapper", scans);
+        ReflectionTestUtils.setField(target, "storeVerifyGrowthDeliveryMapper", sql.getMapper(StoreVerifyGrowthDeliveryMapper.class));
+        ReflectionTestUtils.setField(target, "settlementEntryService", mock(ISettlementEntryService.class));
+        ReflectionTestUtils.setField(target, "businessAuditEventMapper", auditMapper);
+        ReflectionTestUtils.setField(target, "merchantReferralBountyService", mock(MerchantReferralBountyService.class));
+        ReflectionTestUtils.setField(target, "verificationRiskService", mock(VerificationRiskService.class));
+        ReflectionTestUtils.setField(target, "perkLedgerService", mock(IPerkLedgerService.class));
+        ReflectionTestUtils.setField(target, "growthService", growthService);
+        ICmsRegistrationService service = transactionalProxy(target, ICmsRegistrationService.class, tx);
+        java.util.Date windowStart = new java.util.Date(System.currentTimeMillis() - 3_600_000L);
+        java.util.Date windowEnd = new java.util.Date(System.currentTimeMillis() + 3_600_000L);
+        CmsRegistration activityTicket = registration();
+        activityTicket.setOwnerType(2L);
+        activityTicket.setOwnerId(400L);
+        activityTicket.setRegistrationStatus(2);
+
+        assertTrue(service.verifyAndSettle(activityTicket, 77L, 77L, 1));
+        assertEquals(1, bounty.countVerifiedHeadsByMerchantInWindow(77L, windowStart, windowEnd));
+        assertEquals(1, db.queryForObject("SELECT count(*) FROM store_verify_growth_delivery WHERE registration_id=501"
+                + " AND processed_at IS NULL", Integer.class));
+
+        assertTrue(service.reverseWholeOrderVerification(501L, "店员扫错票", 1L));
+        assertEquals(0, db.queryForObject("SELECT verification_status FROM cms_registration WHERE id=501", Integer.class));
+        assertEquals(2, db.queryForObject("SELECT status FROM cms_registration_scan WHERE registration_id=501"
+                + " AND registration_type=1", Integer.class));
+        assertEquals(0, db.queryForObject("SELECT count(*) FROM store_verify_growth_delivery WHERE registration_id=501",
+                Integer.class), "撤销后未发放的到店成长待办不能迟到补发");
+        assertEquals(0, bounty.countVerifiedHeadsByMerchantInWindow(77L, windowStart, windowEnd),
+                "已撤销的整单核销不能再算商家赏金人头");
+        CmsRegistrationScan probe = new CmsRegistrationScan();
+        probe.setRegistrationId(501L);
+        assertTrue(scans.selectCmsRegistrationScanList(probe).isEmpty(), "默认台账列表不列已撤销行");
+        probe.getParams().put("includeReversed", Boolean.TRUE);
+        assertEquals(1, scans.selectCmsRegistrationScanList(probe).size(), "证据台显式要求时仍可读回已撤销行");
+        assertEquals("该订单未核销或已撤销，无需重复撤销", assertThrows(IllegalStateException.class,
+                () -> service.reverseWholeOrderVerification(501L, "重复点击", 1L)).getMessage());
+
+        assertTrue(service.verifyAndSettle(activityTicket, 77L, 77L, 1));
+        assertEquals(2, db.queryForObject("SELECT count(*) FROM cms_registration_scan WHERE registration_id=501",
+                Integer.class), "重新核销另落新台账行,保留撤销历史");
+        assertEquals(1, bounty.countVerifiedHeadsByMerchantInWindow(77L, windowStart, windowEnd));
+        assertEquals(1, db.queryForObject("SELECT count(*) FROM store_verify_growth_delivery WHERE registration_id=501"
+                + " AND processed_at IS NULL", Integer.class));
+        db.update("DELETE FROM cms_registration_scan");
     }
 
     private CmsRegistration registration() {

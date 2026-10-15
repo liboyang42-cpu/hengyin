@@ -4,6 +4,7 @@ const toast = require('../../../utils/toast.js');
 const app = getApp();
 const { chinaParts } = require('../../../utils/datetime.js');
 const themeRecords = require('../../../utils/theme-records.js');
+const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
 function recordsRequest(url, method, data, header) {
   return new Promise(resolve => app.sendRequest({ url, method, data, header, hideLoading: true, autoErrorToast: false,
     success: res => resolve(res || {}), successStatusAbnormal: () => resolve({ code: 'fail' }), fail: () => resolve({ code: 'fail', netFail: true }) }));
@@ -21,6 +22,7 @@ const { haversine } = require('../../../utils/geo.js');
 const marketingConsent = require('../../../utils/marketing-consent-entry.js');
 const ticketSource = require('../../../utils/ticket-source.js');
 const { buildTopicShare, resolveTopicCover } = require('../../../utils/topic-share.js');
+const { decodeDisplayText } = require('../../../utils/display-text.js');
 
 /* 稿 214:689 路线 tab 每两站之间那行「15min 步行」。
    接口没有逐段步行时长,只有站点经纬度 —— 与 pages/club/topic-story 用的是同一份
@@ -102,6 +104,8 @@ Page({
     loadError: false,
     topicLoaded: false,
     missingTopicId: false,
+    // PR10 F-W1-12:未登录(无会话 / 401)读失败给登录引导,其余加载失败仍按 load-failure 留白
+    loginRequired: false,
     // 拍板 2026-09-16 #10:发布商家已打烊时,购票/报名入口直接提示「商家暂停营业」
     // (文案与后端 IMerchantBusinessStatusService.MERCHANT_CLOSED_MESSAGE 同源)。
     merchantClosed: false,
@@ -1681,6 +1685,8 @@ Page({
             return;
           }
           res.data['chaptersList'] = normalizeChaptersList(res.data['chaptersList'])
+          // 主题文字按纯文本展示:服务端过滤会把 x<y 存成 x&lt;y,在映射这一处解码。
+          for (const key of ['name', 'subtitle', 'description']) res.data[key] = decodeDisplayText(res.data[key])
           const totalChapterCount = Number(res.data.totalChapterCount || 0)
           const unlockedChapterCount = Number(
             res.data.unlockedChapterCount != null
@@ -1724,6 +1730,7 @@ Page({
             topicLoaded: true,
             everLoaded: true,   // 成功读到过一次:之后的刷新失败留在原页给重试,不 auto-back 把人踢走
             missingTopicId: false,
+            loginRequired: false,
             merchantClosed: res.data.merchantClosed === true,
             loadErrorTitle: '',
             loadErrorSub: '',
@@ -1744,10 +1751,11 @@ Page({
           });
         }
       },
-      fail: function (res) {
+      fail: function (res, statusCode) {
         that.setData({
           loadError: true,
           missingTopicId: false,
+          loginRequired: isLoginRequired(app, res, statusCode),
           loadErrorTitle: '主题详情加载失败',
           loadErrorSub: '网络连接异常，请稍后重试。',
           topicLoaded: false,
@@ -1764,6 +1772,14 @@ Page({
     }
     this.setData({ loadError: false, topicLoaded: false, loadErrorTitle: '', loadErrorSub: '' });
     this.getData();
+  },
+
+  // 登录引导「登录」:重登成功后重读详情
+  onLoginRetry: function () {
+    retryLogin(this, app, function () {
+      this.setData({ loadError: false, loginRequired: false, topicLoaded: false, loadErrorTitle: '', loadErrorSub: '' });
+      this.getData();
+    });
   },
   
   /**
@@ -1826,6 +1842,8 @@ Page({
 
     for (let j = 0; j < chaptersList.length; j++) {
       const chapter = chaptersList[j];
+      chapter.name = decodeDisplayText(chapter.name);
+      chapter.description = decodeDisplayText(chapter.description);
       // 稿 181:715:章节标题下面这行说的是**这一章**的时长 / 地点数 / 玩法数。
       // 原来读的是 info.*(整个主题的合计),挨着章节标题印,看上去就像这一章的 ——
       // 三章会印出三组一模一样的数,零报错。字段在 CmsTopicChapter 上本来就有。
@@ -1845,6 +1863,7 @@ Page({
         ns[n].businessTime = nodeText(ns[n].businessTime);
         ns[n].address = nodeText(ns[n].address);
         ns[n].name = nodeText(ns[n].name);
+        ns[n].description = decodeDisplayText(ns[n].description);
         const firstMerchant = (ns[n].registrationMerchantList || [])[0];
         if (firstMerchant && firstMerchant.mmsMerchant) {
           firstMerchant.mmsMerchant.name = nodeText(firstMerchant.mmsMerchant.name);

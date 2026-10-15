@@ -739,6 +739,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
               WHERE s.registration_id = r.id
                 AND s.member_id = #{merchantId}
                 AND s.registration_type = 1
+                AND IFNULL(s.status, 0) &lt;&gt; 2
           )
     </select>
 
@@ -757,6 +758,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
               WHERE s.registration_id = r.id
                 AND s.member_id = #{merchantId}
                 AND s.registration_type = 1
+                AND IFNULL(s.status, 0) &lt;&gt; 2
           )
     </select>
 
@@ -771,6 +773,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
               WHERE s.registration_id = r.id
                 AND s.member_id = #{merchantId}
                 AND s.registration_type = 1
+                AND IFNULL(s.status, 0) &lt;&gt; 2
           )
     </select>
 
@@ -789,6 +792,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
               WHERE s.registration_id = r.id
                 AND s.member_id = #{merchantId}
                 AND s.registration_type = 1
+                AND IFNULL(s.status, 0) &lt;&gt; 2
           )
     </select>
 

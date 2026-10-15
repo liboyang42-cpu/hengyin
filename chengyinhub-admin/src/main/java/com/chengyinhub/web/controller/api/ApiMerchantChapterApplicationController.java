@@ -33,6 +33,19 @@ public class ApiMerchantChapterApplicationController extends BaseController {
     @Autowired
     private IMerchantAccessService merchantAccessService;
 
+    @Autowired
+    private com.chengyinhub.business.service.IWxContentSecurityService wxContentSecurityService;
+
+    @Autowired
+    private com.chengyinhub.business.service.IUmsMemberService umsMemberService;
+
+    /** F-L5C-02:申请留言、邀请留言、审核备注都给对方看,写入前送检;审不了按 fail-close 拦截。 */
+    private String textRisk(Long actorMemberId, String text) {
+        if (text == null || text.trim().isEmpty()) return null;
+        return com.chengyinhub.business.service.IWxContentSecurityService.checkTextAsMember(wxContentSecurityService, umsMemberService,
+                actorMemberId, text);
+    }
+
     @Operation(summary = "申请承接一个章节（商家）")
     @PostMapping("/apply")
     public AjaxResult apply(@RequestBody(required = false) Map<String, Object> body) {
@@ -41,6 +54,8 @@ public class ApiMerchantChapterApplicationController extends BaseController {
         Long chapterId = toLong(body == null ? null : body.get("chapterId"));
         if (chapterId == null) return error("缺少章节");
         String message = toText(body == null ? null : body.get("message"));
+        String risk = textRisk(memberId, message);
+        if (risk != null) return error(risk);
         try {
             Long ownerMemberId = merchantOwnerMemberId(memberId);
             MerchantChapterApplication application = merchantChapterApplicationService.apply(
@@ -98,7 +113,7 @@ public class ApiMerchantChapterApplicationController extends BaseController {
         }
     }
 
-    @Operation(summary = "邀请商家承接本章节（仅主题原发布者;邀请=预先批准的申请）")
+    @Operation(summary = "邀请商家承接本章节（仅主题原发布者;商家接受后才占名额，主办可撤回）")
     @PostMapping("/invite")
     public AjaxResult invite(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId = currentMemberId();
@@ -108,6 +123,8 @@ public class ApiMerchantChapterApplicationController extends BaseController {
         Long replacementOfOfferId = toLong(body == null ? null : body.get("replacementOfOfferId"));
         if (chapterId == null) return error("缺少章节");
         if (merchantMemberId == null) return error("请选择商家");
+        String inviteRisk = textRisk(memberId, toText(body == null ? null : body.get("message")));
+        if (inviteRisk != null) return error(inviteRisk);
         try {
             Long publisherMemberId = publisherMemberId(memberId, body);
             MerchantChapterApplication invited =
@@ -164,6 +181,8 @@ public class ApiMerchantChapterApplicationController extends BaseController {
         if (applicationId == null) return error("缺少申请");
         if (approved == null) return error("缺少审核结果");
         String auditRemark = toText(body == null ? null : body.get("auditRemark"));
+        String remarkRisk = textRisk(memberId, auditRemark);
+        if (remarkRisk != null) return error(remarkRisk);
         try {
             MerchantChapterApplication application = merchantChapterApplicationService.audit(
                     applicationId, publisherMemberId(memberId, body), approved, auditRemark);

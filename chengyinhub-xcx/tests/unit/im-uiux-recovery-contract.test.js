@@ -873,3 +873,28 @@ test('消息内容给完整导航栏留位，不能把胶囊高度当导航栏�
   assert.equal(h.page.data.navBarHeight, 44)
   assert.equal(h.page.data.statusBarHeight + h.page.data.navBarHeight, 91)
 })
+
+test('F-R2S-10 发送位置被拒绝授权时给出「去设置」恢复入口，授权后回到选址', () => {
+  const LOCATION = path.join(ROOT, 'utils/location/location-manager.js')
+  const manager = require(LOCATION)
+  const realGuide = manager.showPermissionGuide
+  const guides = []
+  manager.showPermissionGuide = (env, onGranted) => guides.push(onGranted)
+  try {
+    const h = loadPage(CHAT_MODULE)
+    const picks = []
+    global.wx.chooseLocation = (options) => picks.push(options)
+    h.page._canSend = () => true
+    h.page._isReadContextCurrent = () => true
+    h.page.onSendLocation()
+    assert.equal(picks.length, 1)
+    picks[0].fail({ errMsg: 'chooseLocation:fail cancel' })
+    assert.equal(guides.length, 0, '用户主动取消不打扰')
+    picks[0].fail({ errMsg: 'chooseLocation:fail auth deny' })
+    assert.equal(guides.length, 1, '权限被拒必须给出去设置入口')
+    guides[0]()
+    assert.equal(picks.length, 2, '授权后回到选址')
+  } finally {
+    manager.showPermissionGuide = realGuide
+  }
+})

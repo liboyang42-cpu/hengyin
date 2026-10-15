@@ -30,6 +30,7 @@ function loadNormalizer() {
     formatPostTime: (v) => String(v || ''),
     isCompletedShare: require(path.join(ROOT, 'utils/feed-play-card.js')).isCompletedShare,
     hasFeedPlayCover: require(path.join(ROOT, 'utils/feed-play-card.js')).hasFeedPlayCover,
+    decodeDisplayText: require(path.join(ROOT, 'utils/display-text.js')).decodeDisplayText,
   }
   vm.runInNewContext(src.slice(start, end) + '\nmodule.exports = normalizeClubPost;', sandbox, { filename: PAGE })
   return sandbox.module.exports

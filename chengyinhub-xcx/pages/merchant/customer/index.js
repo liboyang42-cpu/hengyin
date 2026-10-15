@@ -469,6 +469,8 @@ Page({
           that._renderedQueryKey = '';
           if (isAccessDenied(res)) that._invalidateScopeRequests();
           that._clearScopedData(error, isAccessDenied(res));
+          // F-R2P-02:名单接口的 401/403 是真实权限丧失,与入口 access/me 否认同样给可见的无权限说明。
+          if (isAccessDenied(res)) that.setData({ noPermission: true });
           return;
         }
         const data = res.data;
@@ -519,6 +521,7 @@ Page({
           that._renderedQueryKey = '';
           that._invalidateScopeRequests();
           that._clearScopedData('商家资格已失效', true);
+          that.setData({ noPermission: true });
         } else {
           that.setData({ error: '网络连接失败,请检查网络后重试' });
         }

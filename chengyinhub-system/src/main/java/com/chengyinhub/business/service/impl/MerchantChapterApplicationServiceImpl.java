@@ -244,7 +244,9 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
         if (approved) {
             assertRecruitmentOpen(chapter, topic, invitedResponse && application.getReplacementOfOfferId() != null);
             if (application.getReplacementOfOfferId() != null
-                    && offerMapper.selectReplacementForUpdate(application.getReplacementOfOfferId()) != null) {
+                    && (offerMapper.selectReplacementForUpdate(application.getReplacementOfOfferId()) != null
+                        || hasApprovedReplacement(application.getChapterId(), application.getReplacementOfOfferId(),
+                            application.getId()))) {
                 throw new IllegalStateException("原供给已有确认替补，请刷新后查看");
             }
             assertMatchingActiveMerchant(chapter, application.getMerchantId());
@@ -253,6 +255,10 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
 
         Date handledAt = DateUtils.getNowDate();
         String normalizedRemark = normalizeText(auditRemark, "审核备注");
+        if (!approved && !invitedResponse && normalizedRemark == null) {
+            // F-R2F-05:主办驳回必须说明原因，商家据此修改后重申；通知正文也不会出现空原因
+            throw new IllegalStateException("请填写拒绝原因");
+        }
         int targetStatus = approved ? MerchantChapterApplication.STATUS_APPROVED
                 : MerchantChapterApplication.STATUS_REJECTED;
         if (applicationMapper.updateAudit(application.getId(), targetStatus, normalizedRemark,
@@ -432,14 +438,10 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
             if (offerMapper.selectReplacementForUpdate(replacementOfOfferId) != null) {
                 throw new IllegalStateException("原供给已有确认的替补，请刷新查看当前退出供给");
             }
-            List<MerchantChapterApplication> approved = applicationMapper.selectByChapterAndStatus(
-                    chapterId, MerchantChapterApplication.STATUS_APPROVED);
-            if (approved != null) {
-                for (MerchantChapterApplication row : approved) {
-                    if (replacementOfOfferId.equals(row.getReplacementOfOfferId())) {
-                        throw new IllegalStateException("该供给已有补位邀请，请等待确认或撤回后另邀");
-                    }
-                }
+            // 邀请改为「待商家接受」后，待接受的补位邀请同样占住这条原供给的补位位，
+            // 否则可以对同一退出供给并发发出多份补位邀请、被多家同时接受。
+            if (hasReplacementApplication(chapterId, replacementOfOfferId, null)) {
+                throw new IllegalStateException("该供给已有补位邀请，请等待确认或撤回后另邀");
             }
         }
         assertMatchingActiveMerchant(chapter, merchantMemberId);
@@ -521,6 +523,28 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
         committedNotice.sendAfterCommit(application.getMerchantId(), "章节邀请已撤回", "主办方已撤回待接受的章节邀请",
                 "chapter-invite-revoke", application.getId());
         return application;
+    }
+
+    /** 本章节是否已有指向同一原供给的补位邀请(待接受或已接受)，可排除当前这一条。 */
+    private boolean hasReplacementApplication(Long chapterId, Long replacementOfOfferId, Long excludeId) {
+        return hasReplacementWithStatus(chapterId, replacementOfOfferId, excludeId, MerchantChapterApplication.STATUS_PENDING)
+                || hasApprovedReplacement(chapterId, replacementOfOfferId, excludeId);
+    }
+
+    private boolean hasApprovedReplacement(Long chapterId, Long replacementOfOfferId, Long excludeId) {
+        return hasReplacementWithStatus(chapterId, replacementOfOfferId, excludeId, MerchantChapterApplication.STATUS_APPROVED);
+    }
+
+    private boolean hasReplacementWithStatus(Long chapterId, Long replacementOfOfferId, Long excludeId, int status) {
+        List<MerchantChapterApplication> rows = applicationMapper.selectByChapterAndStatus(chapterId, status);
+        if (rows == null) return false;
+        for (MerchantChapterApplication row : rows) {
+            if (row != null && replacementOfOfferId.equals(row.getReplacementOfOfferId())
+                    && (excludeId == null || !excludeId.equals(row.getId()))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

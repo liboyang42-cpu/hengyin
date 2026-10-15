@@ -253,9 +253,31 @@ class GameSessionIndependentRevisionMySqlIT {
                 ()->runtime.command(GameActorContext.club(88L),action("strict-director-unlock",9,"UNLOCK_CHAPTER"))).getErrorCode());
         assertEquals("GAME_STATE_CONFLICT",assertThrows(GameSessionException.class,
                 ()->runtime.command(GameActorContext.merchant(310L),action("strict-station-ready",9,"STATION_READY"))).getErrorCode());
+        // F-L3-01: VERIFY_SUBMISSION is now guarded by the submission row CAS, not the global revision;
+        // without a pending submission it still rejects before any write.
+        assertEquals("GAME_SUBMISSION_NOT_PENDING",assertThrows(GameSessionException.class,
+                ()->runtime.command(GameActorContext.merchant(310L),action("object-verify-submission",9,"VERIFY_SUBMISSION"))).getErrorCode());
         assertEquals("GAME_STATE_CONFLICT",assertThrows(GameSessionException.class,
-                ()->runtime.command(GameActorContext.merchant(310L),action("strict-verify-submission",9,"VERIFY_SUBMISSION"))).getErrorCode());
+                ()->runtime.command(GameActorContext.merchant(310L),action("future-verify-submission",11,"VERIFY_SUBMISSION"))).getErrorCode());
         assertEquals(0,db.queryForObject("select count(*) from game_command_receipt",Integer.class));
         assertEquals(10,mapper.selectSessionByActivity(70L).getRevision());assertGlobalAndOtherTeamUnchanged();
+    }
+
+    @Test void merchantVerifyAfterOtherTeamProgressDecidesOnlyThatSubmissionOnce() {
+        db.update("insert into game_task_submission(id,game_session_id,activity_id,station_run_id,node_id,team_id,member_id,task_code,evidence_json,status,revision,create_time,update_time) values(81,50,70,60,11,90,7,'CLOCK_TEXT','[\"text:1998\"]','PENDING',0,now(),now())");
+        runtime.command(GameActorContext.player(9L),hint("verify-other-team-hint",10,1));
+        assertEquals(11,mapper.selectSessionByActivity(70L).getRevision());
+        GameSessionCommand verify=action("stale-merchant-verify",10,"VERIFY_SUBMISSION");
+        verify.getPayload().put("submissionId",81L);verify.getPayload().put("decision","REJECT");verify.getPayload().put("reasonCode","BLURRY");
+        assertEquals("APPLIED",runtime.command(GameActorContext.merchant(310L),verify).getOutcome());
+        assertEquals("REJECTED",db.queryForObject("select status from game_task_submission where id=81",String.class));
+        assertEquals(12,mapper.selectSessionByActivity(70L).getRevision());
+        assertTrue(runtime.command(GameActorContext.merchant(310L),verify).isReplayed());
+        GameSessionCommand again=action("second-merchant-verify",12,"VERIFY_SUBMISSION");
+        again.getPayload().put("submissionId",81L);again.getPayload().put("decision","APPROVE");
+        assertEquals("GAME_SUBMISSION_NOT_PENDING",assertThrows(GameSessionException.class,
+                ()->runtime.command(GameActorContext.merchant(310L),again)).getErrorCode());
+        assertNull(mapper.selectPlayerNodeOutcome(50L,7L,11L));
+        assertEquals(12,mapper.selectSessionByActivity(70L).getRevision());
     }
 }

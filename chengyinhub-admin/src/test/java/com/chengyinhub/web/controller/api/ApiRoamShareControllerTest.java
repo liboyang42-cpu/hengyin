@@ -14,6 +14,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -46,6 +47,9 @@ class ApiRoamShareControllerTest {
         when(roam.selectOwnedSessionForUpdate(12L,memberId)).thenReturn(session);
         ReflectionTestUtils.setField(service, "roamMapper", roam);
         ReflectionTestUtils.setField(c, "snapshotService", service);
+        ReflectionTestUtils.setField(c, "wxContentSecurityService",
+                mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
+        ReflectionTestUtils.setField(c, "umsMemberService", mock(com.chengyinhub.business.service.IUmsMemberService.class));
         return c;
     }
 
@@ -53,6 +57,24 @@ class ApiRoamShareControllerTest {
             + "\"explorePct\":12,\"shops\":2,\"medal\":\"城市点亮 50 格\",\"secretHome\":\"不该留下\","
             + "\"track\":[{\"lat\":31.2304567,\"lng\":121.4737123,\"acc\":5},{\"lat\":-90,\"lng\":-180}],"
             + "\"pois\":[{\"name\":\"外滩\",\"cat\":\"landmark\",\"catLabel\":\"地标\",\"lat\":90,\"lng\":180,\"id\":77}]}";
+
+    @Test
+    void publish_rejects_flagged_share_text_before_anything_is_stored() {
+        RoamShareSnapshotMapper mapper = mock(RoamShareSnapshotMapper.class);
+        ApiRoamShareController c = controller(9, mapper);
+        com.chengyinhub.business.service.IWxContentSecurityService sec =
+                mock(com.chengyinhub.business.service.IWxContentSecurityService.class);
+        when(sec.checkText(anyString(), any())).thenReturn("内容含违规信息");
+        ReflectionTestUtils.setField(c, "wxContentSecurityService", sec);
+
+        AjaxResult r = c.publish(1700000000000L, 12L, SNAPSHOT);
+        assertEquals(500, r.get("code"));
+        ArgumentCaptor<String> text = ArgumentCaptor.forClass(String.class);
+        verify(sec).checkText(text.capture(), any());
+        assertTrue(text.getValue().contains("外滩等3处足迹回看") && text.getValue().contains("城市点亮 50 格")
+                && text.getValue().contains("地标"), text.getValue());
+        verify(mapper, never()).upsertOwnedSnapshot(anyString(), anyLong(), anyLong(), any(), anyString());
+    }
 
     @Test
     void publish_normalizes_whitelisted_fields_and_rounds_coordinates() {

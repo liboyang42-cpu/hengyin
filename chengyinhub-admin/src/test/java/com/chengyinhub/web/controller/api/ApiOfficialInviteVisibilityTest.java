@@ -33,6 +33,8 @@ class ApiOfficialInviteVisibilityTest {
         com.chengyinhub.business.access.merchant.IMerchantAccessService access =
                 mock(com.chengyinhub.business.access.merchant.IMerchantAccessService.class);
         ReflectionTestUtils.setField(controller, "merchantAccessService", access);
+        ReflectionTestUtils.setField(controller, "umsMemberService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IUmsMemberService.class));
+        ReflectionTestUtils.setField(controller, "wxContentSecurityService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
         when(access.require(201L, com.chengyinhub.business.access.merchant.MerchantPermission.COOP_MANAGE))
                 .thenReturn(new com.chengyinhub.business.access.merchant.MerchantAccessContext(
                         201L, 8L, 201L,
@@ -70,6 +72,8 @@ class ApiOfficialInviteVisibilityTest {
         com.chengyinhub.business.access.merchant.IMerchantAccessService access =
                 mock(com.chengyinhub.business.access.merchant.IMerchantAccessService.class);
         ReflectionTestUtils.setField(controller, "merchantAccessService", access);
+        ReflectionTestUtils.setField(controller, "umsMemberService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IUmsMemberService.class));
+        ReflectionTestUtils.setField(controller, "wxContentSecurityService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
         when(access.require(201L, com.chengyinhub.business.access.merchant.MerchantPermission.COOP_MANAGE))
                 .thenReturn(new com.chengyinhub.business.access.merchant.MerchantAccessContext(
                         201L, 8L, 201L,
@@ -113,6 +117,8 @@ class ApiOfficialInviteVisibilityTest {
         com.chengyinhub.business.access.merchant.IMerchantAccessService access =
                 mock(com.chengyinhub.business.access.merchant.IMerchantAccessService.class);
         ReflectionTestUtils.setField(controller, "merchantAccessService", access);
+        ReflectionTestUtils.setField(controller, "umsMemberService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IUmsMemberService.class));
+        ReflectionTestUtils.setField(controller, "wxContentSecurityService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
         when(access.require(201L, com.chengyinhub.business.access.merchant.MerchantPermission.COOP_MANAGE))
                 .thenReturn(new com.chengyinhub.business.access.merchant.MerchantAccessContext(
                         201L, 8L, 201L,

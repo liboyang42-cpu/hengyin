@@ -36,6 +36,7 @@ const npcFigure = require('./utils/npc-figure.js');   // 低模人形:几何代�
 const { pickPlayKit, pickJourneyCheck, checkReceiptView, serverAction, serverPayload, dailySignRevealState, applyStoryVars } = require('./utils/playkit-view.js'); // v5.1 新玩法:会话视图→可渲染 kit
 const { canContinue, feedbackWritable, submitAlbum } = require('./utils/playkit-r5-segments.js');
 
+const THOUGHT_SYNC_WAIT_MS = 8000;   // 伏笔/步数同步最长等待,超时不拦玩家动作
 const RUN_HOLD_MS = 3000;   // 主键长按结束:与漫游页 END_HOLD_MS 同一口径
 
 const { buildMilestone } = require('./utils/play-milestone.js'); // C 分享卡里程碑轴(纯函数,已单测)
@@ -614,7 +615,15 @@ Page({
     if (this.data.isPreview || this.data.isMock
         || (!this._thoughtSyncPending && !(this._routeState && this._routeState.thoughtCount > 0) && !(this.data.themeBag || {}).stepEggs)) return write();
     const pendingClaim = this._thoughtSyncPending || Promise.resolve(true);
-    return pendingClaim.then(ok => ok && this._syncThoughts([])).catch(() => false).then(ok => {
+    const synced = pendingClaim.then(ok => ok && this._syncThoughts([])).catch(() => false);
+    // F-R2S-01:微信运动授权/登录/读数回调可能迟迟不回,步数同步最多等这么久,之后照常提交玩家动作。
+    let timer = null;
+    const bounded = new Promise((resolve) => {
+      timer = setTimeout(() => resolve(false), THOUGHT_SYNC_WAIT_MS);
+      synced.then(resolve, () => resolve(false));
+    });
+    return bounded.then(ok => {
+      clearTimeout(timer);
       if (!ok) cyToast('步数暂未同步，仍可继续游玩');
       return write();
     });
@@ -4131,7 +4140,8 @@ Page({
     const markLeadLoadFailure = () => {
       if (claimResponse()) that.setData({ leadLoadError: true });
     };
-    req('/api/club/lead/team-progress', 'GET', { activityId: this.data.activityId }).then((res) => {
+    // F-W1-10:4 秒轮询的读取失败只落到 leadLoadError,不再每轮弹后端 toast(如换号后的「无权查看本场队伍进度」)。
+    req('/api/club/lead/team-progress', 'GET', { activityId: this.data.activityId }, undefined, true).then((res) => {
       // 轮询、手动重试和放行后对账可能并发；旧响应不得覆盖较新的章节真相。
       if (!claimResponse()) return;
       if (!(res.code == 200 || res.code == '200') || !res.data) {

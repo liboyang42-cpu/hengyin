@@ -99,6 +99,9 @@ function loadTeamPage(relative) {
     getApp: () => ({
       globalData: { statusBarHeight: 20, navBarHeight: 44 },
       sendRequest(request) { requests.push(request) },
+      getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
+      // PR10 F-W1-12:本文件的读失败用例都是「已登录账号」;无会话的登录引导见 pr10-review-ui-fixes。
+      getUserID: () => '1001',
     }),
     Page(value) { definition = value },
     wx: {
@@ -390,4 +393,20 @@ test('负控:退回纯文字 loading 或移除加入局部错误时，状态契�
   const missingJoinRecovery = join.replace(/<cy-inline-error\b[^>]*joinError[^>]*\/>/, '')
   assert.notEqual(missingJoinRecovery, join, '加入错误负控锚点失效')
   assert.throws(() => assertTeamStateUx(detail, missingJoinRecovery, ...args.slice(2)), /加入失败/)
+})
+
+test('F-W1-12: surviving 401/403 shows a visible login/permission state; other read failures stay blank kinds', () => {
+  for (const [relative, start] of [['pages/team/detail/index.js', (page) => { page.onLoad({ teamId: '7' }); page.onShow() }],
+                                   ['pages/team/join/index.js', (page) => { page.onLoad({ code: 'abcDEF12' }) }]]) {
+    for (const code of ['401', '403', '500']) {
+      const harness = loadTeamPage(relative)
+      start(harness.page)
+      const request = harness.requests.find((item) => item.url === '/api/team/info')
+      assert.ok(request, relative + ' must read team info')
+      request.success({ code, msg: 'x' })
+      const denied = code !== '500'
+      assert.equal(harness.page.data.errorKind, denied ? 'no-permission' : 'data', relative + ' ' + code)
+      if (denied) assert.match(harness.page.data.error, /登录后/)
+    }
+  }
 })

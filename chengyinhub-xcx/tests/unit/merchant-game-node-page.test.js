@@ -611,3 +611,32 @@ test('商家本站命令纪元经过构造和内存持久化不丢失；旧纪�
   assert.equal(page.data.readyDraft.note, '保留未提交的现场备注')
   assert.equal(page._projection.authorityEpoch, 5)
 })
+
+test('准备结果待核对后回查确认 FAILED：重读站点仍保留未生效的准备表单', async () => {
+  const { page, requests } = createPage()
+  page.onLoad({ activityId: '71' })
+  requests[0].success({ code: 200, data: activeView('ACCEPTED') })
+  await flush()
+  page.setData({ readyDraft: {
+    checklist: [{ code: 'STAFF', label: '工作人员已到位', checked: true }],
+    capacity: '20', serviceDate: '2026-08-23', serviceStartTime: '11:00', serviceEndTime: '17:00', note: '后门入场',
+  } })
+  assert.equal(page.submitReady(), true)
+  const command = JSON.parse(JSON.stringify(requests[1].data))
+  requests[1].fail({ errMsg: 'request:fail timeout' })
+  await flush()
+  assert.equal(page.data.writeState, 'unknown')
+  assert.equal(page.confirmUnknownWrite(), true)
+  requests[2].success({ code: 200, data: {
+    receiptId: 701, activityId: 71, requestId: command.requestId, action: 'STATION_READY',
+    outcome: 'FAILED', reasonCode: 'GAME_STATE_CONFLICT', revision: 4, result: { reason: '状态已变化' },
+  } })
+  await flush()
+  assert.equal(page.data.writeState, 'idle')
+  assert.equal(requests[3].url, '/api/game/session/view')
+  requests[3].success({ code: 200, data: activeView('ACCEPTED') })
+  await flush()
+  assert.equal(page.data.readyDraft.capacity, '20')
+  assert.equal(page.data.readyDraft.serviceStartTime, '11:00')
+  assert.equal(page.data.readyDraft.note, '后门入场')
+})

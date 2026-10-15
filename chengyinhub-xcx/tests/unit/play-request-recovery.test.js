@@ -706,3 +706,29 @@ test('漫游结算重试按结果确定性路由:未知态只回读,确定失败
   page.retrySettle()
   assert.equal(posted, 1, '确定的失败才允许重新结算')
 })
+
+test('F-W1-10:页面卸载后在途的队伍进度回包不会重新拉起 4 秒轮询,且轮询读取静默', async () => {
+  const page = loadPage(PLAY_PAGE)
+  page.data.activityId = 88
+  const intervals = []
+  const realSetInterval = global.setInterval
+  const realClearInterval = global.clearInterval
+  global.setInterval = (fn, ms) => { intervals.push(ms); return { fn } }
+  global.clearInterval = () => {}
+  try {
+    page.loadTeamProgress()
+    assert.equal(requests.length, 1)
+    assert.equal(requests[0].url, '/api/club/lead/team-progress')
+    assert.equal(requests[0].silentError, true, '轮询读取失败不得自动 toast')
+    page.onUnload()
+    requests[0].success({ code: 200, data: { exists: true, status: 1, members: [] } })
+    await new Promise((resolve) => setImmediate(resolve))
+    assert.equal(page._leadTimer || null, null, '卸载后不得重建轮询定时器')
+    assert.deepEqual(intervals, [])
+    page.loadTeamProgress()
+    assert.equal(requests.length, 1, '卸载后不再发起队伍进度请求')
+  } finally {
+    global.setInterval = realSetInterval
+    global.clearInterval = realClearInterval
+  }
+})

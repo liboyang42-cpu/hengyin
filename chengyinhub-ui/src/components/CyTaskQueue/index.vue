@@ -11,7 +11,7 @@
     <div v-if="loading" class="cy-task-queue__state">正在读取任务队列…</div>
     <div v-else-if="error" class="cy-task-queue__state cy-task-queue__state--error">
       {{ error }}
-      <button type="button" @click="$emit('retry')">重新读取</button>
+      <button v-if="retryable" type="button" @click="$emit('retry')">重新读取</button>
     </div>
     <div v-else-if="!items.length" class="cy-task-queue__state">当前没有需要处理的任务</div>
     <ol v-else class="cy-task-queue__list">
@@ -45,7 +45,9 @@ export default {
     description: { type: String, default: '' },
     items: { type: Array, default: () => [] },
     loading: { type: Boolean, default: false },
-    error: { type: String, default: '' }
+    error: { type: String, default: '' },
+    // 无权限等不可重试的状态不显示「重新读取」
+    retryable: { type: Boolean, default: true }
   },
   computed: {
     total() {

@@ -9,6 +9,7 @@ const merchantTheme = require('../../../utils/merchant-theme.js');
 const { createWriteActionWorkflow } = require('../../../utils/write-action-workflow.js');
 const { offerVerificationReadback } = require('../../../utils/verification-readback.js');
 const { summarizeOrderState, canRequestOrderRefund } = require('../../../utils/order-status.js');
+const { isFreeOrder } = require('../../../utils/order-actual-pay.js');
 const cancellationFeedback = require('../../../utils/cancellation-feedback.js');
 const { isUnknownHttpStatus } = require('../../../utils/transport/failure-envelope.js');
 
@@ -423,7 +424,8 @@ Component({
     cancelParticipation() {
       const paid = Number((this.data.info || {}).paymentStatus) === 2;
       modal.show({
-        dangerKey: paid ? 'order.cancel-refund' : 'order.cancel',
+        // F-W5-07:零元单没有钱可退,确认框与订单详情/列表同用「取消报名」文案。
+        dangerKey: paid ? (isFreeOrder(this.data.info) ? 'order.cancel-free' : 'order.cancel-refund') : 'order.cancel',
         dangerParams: {
           deadline: (this.data.info || {}).refundDeadlineDisplay || '已核销或已过开始时间不可退',
         },

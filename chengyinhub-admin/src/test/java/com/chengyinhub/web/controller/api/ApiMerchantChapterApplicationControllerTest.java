@@ -39,6 +39,10 @@ class ApiMerchantChapterApplicationControllerTest {
         controller = new ApiMerchantChapterApplicationController();
         ReflectionTestUtils.setField(controller, "merchantChapterApplicationService", applicationService);
         ReflectionTestUtils.setField(controller, "merchantAccessService", merchantAccessService);
+        ReflectionTestUtils.setField(controller, "wxContentSecurityService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
+        ReflectionTestUtils.setField(controller, "umsMemberService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.IUmsMemberService.class));
         when(merchantAccessService.require(2001L, MerchantPermission.COOP_MANAGE)).thenReturn(
                 new MerchantAccessContext(2001L, 77L, 2000L, MerchantRoleCode.MERCHANT_MANAGER));
     }

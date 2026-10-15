@@ -159,10 +159,11 @@ test('六个代表性状态页的 error/empty/ready 主分支都挂内容淡入'
   const activity = read('subpackageMember/components/cy/scene-play-activity-detail/index.wxml')
   assert.match(activity, /class="cy-fade-in"[^>]*state === 'ready'/)
   // 取消是独立状态，保留原 missing / empty / gate 分支及淡入。
-  for (const state of ['missing', 'empty', 'gate', 'cancelled']) {
+  // PR10 F-W1-12:新增未登录 login 状态(登录引导),同样挂淡入 —— 计数 4 → 5。
+  for (const state of ['missing', 'empty', 'gate', 'cancelled', 'login']) {
     assert.ok(activity.includes('<cy-empty class="cy-fade-in" wx:elif="{{state === \'' + state + '\'}}"'), state)
   }
-  assert.equal((activity.match(/cy-empty class="cy-fade-in"/g) || []).length, 4)
+  assert.equal((activity.match(/cy-empty class="cy-fade-in"/g) || []).length, 5)
   assert.match(activity, /state === 'cancelled'[^>]*title="活动已取消"[^>]*cancelledHasOwnOrder[^>]*bind:cta="onCancelledAction"/)
   const customer = read('pages/merchant/customer/index.wxml')
   // 与上面 4 个页面同用 [^>]* 形:CU-M-148 给这三条状态分支另挂了 cu-state-clear

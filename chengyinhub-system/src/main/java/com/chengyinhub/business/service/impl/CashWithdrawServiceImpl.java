@@ -205,7 +205,10 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         try {
             refundFailedClaim(w, failedAt);
         } catch (Exception e) {
-            markFailed(id, outBatchNo, outDetailNo, "转账失败且退款未成功,待人工:" + safe(err), failedAt, MemberCashWithdraw.STATUS_FAILED_MANUAL);
+            // 回补事务结果可能未知(提交成功但回包丢失):绝不无条件改回 3,否则人工会再补一次。
+            // 只在仍为待人工(3)时补备注;已是 2 则保持终态。
+            noteManualIfStillPending(id, "转账失败且退款未成功,待人工:" + safe(err));
+            logger.error("提现明确失败回补事务异常 id={}", id, e);
             alarmService.alarm("提现待人工", "发起失败且退款异常 id=" + id + " member=" + memberId + " amount=" + amount + " trace=" + traceId);
         }
         throw new IllegalStateException("提现失败:" + (err == null ? "请稍后重试" : err));
@@ -265,11 +268,8 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
                     logger.warn("提现失败已退款 id={} member={} amount={}", id, w.getMemberId(), w.getAmount());
                 }
             } catch (Exception e) {
-                // 退款失败 → 保持待人工 + 告警
-                MemberCashWithdraw m = new MemberCashWithdraw();
-                m.setId(id);
-                m.setManualNote("渠道失败且自动退款失败,待人工:" + safe(e.getMessage()));
-                mapper.updateMemberCashWithdraw(m);
+                // 退款失败 → 保持待人工 + 告警;备注只写到仍为 3 的行,不误导已回补(2)的单
+                noteManualIfStillPending(id, "渠道失败且自动退款失败,待人工:" + safe(e.getMessage()));
                 logger.error("提现失败退款异常 id={} member={} amount={}", id, w.getMemberId(), w.getAmount(), e);
                 alarmService.alarm("提现待人工", "渠道失败且退款失败 id=" + id + " member=" + w.getMemberId() + " amount=" + w.getAmount());
             }
@@ -311,6 +311,18 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         claim.setChannelErrorCode(channelErrorCode);
         claim.setWechatDetailId(wechatDetailId);
         return mapper.updateStatusIfProcessing(claim) == 1;
+    }
+
+    /** 仅当行仍为失败待人工(3)时写备注;按状态 CAS,不改状态。 */
+    private void noteManualIfStillPending(Long id, String note) {
+        try {
+            MemberCashWithdraw m = new MemberCashWithdraw();
+            m.setId(id);
+            m.setManualNote(note);
+            mapper.updateStatusIfManual(m);
+        } catch (Exception noteFailure) {
+            logger.error("提现待人工备注写入失败 id={}", id, noteFailure);
+        }
     }
 
     /** 状态领取与余额回补同事务，失败回滚后才可转人工。 */

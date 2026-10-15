@@ -8,6 +8,8 @@ import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
 import org.quartz.listeners.JobListenerSupport;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 class QuartzFailureAlarmConfigTest {
@@ -21,10 +23,31 @@ class QuartzFailureAlarmConfigTest {
         JobListenerSupport listener = QuartzFailureAlarmConfig.failureListener(alarm);
         listener.jobWasExecuted(context, null);
         verifyNoInteractions(alarm);
-        listener.jobWasExecuted(context, new JobExecutionException("private fixture must stay local"));
-        verify(alarm).alarm("定时任务失败", "job=DEFAULT.TASK_17, errorType=JobExecutionException");
-        doThrow(new IllegalStateException("delivery unavailable")).when(alarm).alarm(anyString(), anyString());
+        listener.jobWasExecuted(context, new JobExecutionException(
+                new IllegalStateException("private fixture must stay local")));
+        verify(alarm).alarmThrottled("job.failure.default.task_17", "定时任务失败",
+                "job=DEFAULT.TASK_17, errorType=IllegalStateException");
+        doThrow(new IllegalStateException("delivery unavailable")).when(alarm)
+                .alarmThrottled(anyString(), anyString(), anyString());
         org.junit.jupiter.api.Assertions.assertDoesNotThrow(() ->
                 listener.jobWasExecuted(context, new JobExecutionException("local failure")));
+    }
+
+    @Test
+    void eventKeyIsAcceptedByAlarmThrottleAndBounded() {
+        String key = QuartzFailureAlarmConfig.eventKey(new JobKey("TASK_CLASS_NAME" + "9".repeat(120), "财务组"));
+        assertTrue(key.matches("[a-z][a-z0-9_.-]{0,79}"), key);
+        assertEquals(80, key.length());
+        assertTrue(QuartzFailureAlarmConfig.eventKey(null).matches("[a-z][a-z0-9_.-]{0,79}"));
+    }
+
+    @Test
+    void reflectionWrappedJobFailureReportsTheRealExceptionType() {
+        Throwable wrapped = new org.quartz.JobExecutionException(
+                new java.lang.reflect.InvocationTargetException(new IllegalStateException("private detail")));
+        org.junit.jupiter.api.Assertions.assertEquals(IllegalStateException.class,
+                QuartzFailureAlarmConfig.rootCause(wrapped).getClass());
+        Throwable plain = new org.quartz.JobExecutionException("no cause");
+        org.junit.jupiter.api.Assertions.assertSame(plain, QuartzFailureAlarmConfig.rootCause(plain));
     }
 }

@@ -752,6 +752,9 @@ Page({
         this.setData({ writeState: 'unknown', writeMessage: message })
         return
       }
+      // 核对确认原「准备」操作未生效时，重读站点后保留本页尚未提交成功的准备表单。
+      this._preservedReadyDraft = failed && pending.action === 'STATION_READY'
+        ? { nodeId: pending.nodeId, draft: this.data.readyDraft } : null
       this._pendingWrite = null
       this._writeWorkflow.reset(pending.key)
       this._clearPersistedWrite()

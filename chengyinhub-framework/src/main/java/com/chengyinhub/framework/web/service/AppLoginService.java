@@ -69,9 +69,11 @@ public class AppLoginService {
             throw passwordFailure(username);
         }
         username = username.trim();
-        if (username.isEmpty()) throw passwordFailure(username);
-        Number failed = redisCache.getCacheObject("app_password_fail_" + username);
-        if (failed != null && failed.longValue() >= 5) {
+        if (username.isEmpty() || username.length() > 128) throw passwordFailure(username);
+        // 先原子占用一次尝试再校验口令（成功后清零），并发请求不能同时越过“读计数→比对”的窗口。
+        Long attempts = redisCache.incrementWithinWindow(
+                "app_password_fail_" + username, 10, java.util.concurrent.TimeUnit.MINUTES);
+        if (attempts == null || attempts > 5) {
             throw new ServiceException("密码错误次数过多，请10分钟后重试");
         }
         UmsMember umsMember = new UmsMember();
@@ -98,7 +100,10 @@ public class AppLoginService {
         if (stored != null && stored.startsWith("$2")) {
             matched = SecurityUtils.matchesPassword(password, stored); // 已是 BCrypt 哈希
         } else {
-            matched = stored != null && stored.equals(password);       // 旧明文口令:兼容比对
+            // 旧明文口令:兼容比对(常量时间)；存量由 MemberLegacyPasswordHashRunner 批量哈希后此分支不再命中
+            matched = stored != null && java.security.MessageDigest.isEqual(
+                    stored.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                    password.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             needUpgrade = matched;
         }
         if (!matched) {
@@ -114,13 +119,23 @@ public class AppLoginService {
             try {
                 if (umsMemberMapper.upgradePasswordIfMatches(
                         memberId, stored, upgradedPassword) != 1) {
-                    throw passwordFailure(username);
+                    // PR10 复审:CAS 落空不一定是改密 —— MemberLegacyPasswordHashRunner 可能刚把同一明文
+                    // 批量改写成 BCrypt。重读当前口令,仍能用 BCrypt 验过本次输入就照常登录(口令语义未变,
+                    // 不吊销会话);验不过(真被改了/账号失效)才按密码错误失败。
+                    String current = currentBcryptPasswordMatching(memberId, username, password);
+                    if (current == null) {
+                        throw passwordFailure(username);
+                    }
+                    appSessionRegistryService.finishMemberMutation(memberId, mutationId);
+                    mutationId = null;
+                    member.setPassword(current);
+                } else {
+                    appSessionRegistryService.revokeAll(memberId);
+                    appSessionRegistryService.finishMemberMutationAfterTransaction(memberId, mutationId);
+                    mutationId = null;
+                    authenticationEpoch = appSessionRegistryService.currentOrCreateEpoch(memberId);
+                    member.setPassword(upgradedPassword);
                 }
-                appSessionRegistryService.revokeAll(memberId);
-                appSessionRegistryService.finishMemberMutationAfterTransaction(memberId, mutationId);
-                mutationId = null;
-                authenticationEpoch = appSessionRegistryService.currentOrCreateEpoch(memberId);
-                member.setPassword(upgradedPassword);
             } catch (RuntimeException e) {
                 if (mutationId != null) {
                     try {
@@ -142,7 +157,7 @@ public class AppLoginService {
         redisCache.deleteObject("app_password_fail_" + username);
         AppUser appUser = new AppUser();
         appUser.setUserId(memberId);
-        appUser.setPassword(member.getPassword());
+        // 会话不保存口令或其哈希：App 会话鉴权只看 token + sessionEpoch，从不读取会话里的口令。
         appUser.setUserName(member.getPhone());
 
         LoginAppUser loginAppUser = new LoginAppUser();
@@ -155,11 +170,22 @@ public class AppLoginService {
         return appTokenService.createAppToken(loginAppUser);
     }
 
-    private ServiceException passwordFailure(String username) {
-        if (username != null && !username.trim().isEmpty() && username.length() <= 128) {
-            redisCache.incrementWithinWindow("app_password_fail_" + username.trim(), 10,
-                    java.util.concurrent.TimeUnit.MINUTES);
+    /** 重读会员当前口令:仍是同一手机号、未失效、且已是能验过本次输入的 BCrypt 哈希时返回它,否则 null。 */
+    private String currentBcryptPasswordMatching(Long memberId, String username, String password) {
+        UmsMember current = appUserSevice.selectUmsMemberById(memberId);
+        if (current == null || !memberId.equals(current.getId()) || isInactive(current)
+                || !username.equals(current.getPhone())) {
+            return null;
         }
+        String hash = current.getPassword();
+        if (hash == null || !hash.startsWith("$2") || !SecurityUtils.matchesPassword(password, hash)) {
+            return null;
+        }
+        return hash;
+    }
+
+    private ServiceException passwordFailure(String username) {
+        // 失败次数已在校验前原子占用（见 login），这里不再重复计数。
         return new ServiceException(AUTHENTICATION_ERROR);
     }
 
@@ -193,7 +219,7 @@ public class AppLoginService {
 
         AppUser appUser = new AppUser();
         appUser.setUserId(memberId);
-        appUser.setPassword(member.getPassword());
+        // 会话不保存口令或其哈希：App 会话鉴权只看 token + sessionEpoch，从不读取会话里的口令。
         appUser.setUserName(member.getPhone());
 
         LoginAppUser loginAppUser = new LoginAppUser();
@@ -227,7 +253,7 @@ public class AppLoginService {
         }
         AppUser appUser = new AppUser();
         appUser.setUserId(member.getId());
-        appUser.setPassword(member.getPassword());
+        // 会话不保存口令或其哈希：App 会话鉴权只看 token + sessionEpoch，从不读取会话里的口令。
         appUser.setUserName(member.getPhone());
 
         LoginAppUser loginAppUser = new LoginAppUser();

@@ -30,6 +30,9 @@
   <cy-skeleton wx:if="{{loading}}" type="list" count="{{6}}" />
 
   <!-- 错误 -->
+  <!-- PR10 F-W1-12:未登录(无会话 / 401)给登录引导,不与加载失败一起留白 -->
+  <cy-empty class="cy-fade-in" wx:elif="{{error && loginRequired}}" kind="no-permission" fill size="lg"
+            title="登录后查看消息" sub="登录后可查看私信和系统通知" cta="登录" bind:cta="loginConversations" />
   <cy-error load-failure class="cy-fade-in" wx:elif="{{error}}" title="加载失败" sub="{{errorMsg || '网络好像出了点问题'}}" retry="重试" bind:retry="retryConversations" />
 
   <!-- 空态 -->

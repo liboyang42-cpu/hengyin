@@ -54,7 +54,7 @@
   <!-- ============ 编辑态 ============ -->
   <scroll-view wx:else scroll-y class="cg-scroll" style="padding-top: {{statusBarHeight + navBarHeight}}px;" enhanced show-scrollbar="{{false}}" scroll-into-view="{{scrollIntoView}}">
     <text wx:if="{{supportMatrixLoading}}" aria-live="polite">正在读取玩法支持范围</text>
-<cy-inline-error class="cg-inline-error" wx:if="{{supportMatrixLoadError}}" title="{{supportMatrixLoadError}}" sub="仍可保存，支持情况以保存结果为准" action="重试" bind:action="retrySupportMatrix" />
+<cy-inline-error load-failure class="cg-inline-error" wx:if="{{supportMatrixLoadError}}" title="{{supportMatrixLoadError}}" sub="仍可保存，支持情况以保存结果为准" action="重试" bind:action="retrySupportMatrix" />
 
     <!-- 封面 + 名字:原型是**同一张卡** —— 上半是 1:1 的大方块封面(斜纹占位 + 圆形 ＋),
          下半是名字输入框(原型 .hero / .hero-cover / .hero-body)。 -->

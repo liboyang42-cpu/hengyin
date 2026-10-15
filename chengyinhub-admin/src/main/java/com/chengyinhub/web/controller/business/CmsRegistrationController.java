@@ -20,6 +20,7 @@ import com.chengyinhub.common.enums.BusinessType;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.dto.RedemptionReverseRequest;
 import com.chengyinhub.business.domain.dto.ParentOrderRedemptionReverseRequest;
+import com.chengyinhub.business.domain.dto.RegistrationVerificationReverseRequest;
 import com.chengyinhub.business.security.AdminPiiProtector;
 import com.chengyinhub.business.service.ICmsRegistrationService;
 import com.chengyinhub.business.service.IPerkLedgerService;
@@ -189,6 +190,23 @@ public class CmsRegistrationController extends BaseController
         List<Long> ids = perkLedgerService.reverseParentOrderRedemptions(request.getParentOrderNo(),
                 request.getReason(), SecurityUtils.getUserId(), Boolean.TRUE.equals(request.getClawbackRewards()));
         return success(ids);
+    }
+
+    /** 撤销活动票整单核销(无按章流水的票);与撤销按章核销同一权限点。 */
+    @PreAuthorize("@ss.hasPermi('business:registration:reverseRedeem')")
+    @Log(title = "撤销整单核销", businessType = BusinessType.UPDATE)
+    @PostMapping("/verification/reverse")
+    public AjaxResult reverseWholeOrderVerification(@RequestBody RegistrationVerificationReverseRequest request) {
+        if (request == null || request.getRegistrationId() == null || request.getRegistrationId() <= 0) {
+            return error("订单不能为空");
+        }
+        try {
+            cmsRegistrationService.reverseWholeOrderVerification(request.getRegistrationId(),
+                    request.getReason(), SecurityUtils.getUserId(), Boolean.TRUE.equals(request.getClawbackRewards()));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return error(e.getMessage());
+        }
+        return success("已撤销");
     }
 
     /**

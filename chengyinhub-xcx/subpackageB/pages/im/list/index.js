@@ -1,7 +1,9 @@
 const toast = require('../../../../utils/toast.js');
 const { toTimestamp, chinaDateKey, chinaParts } = require('../../../../utils/datetime');
 const { isRecordList, isBizOk } = require('../../../../utils/response-shape.js');
+const { decodeDisplayText } = require('../../../../utils/display-text.js');
 const { normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
+const { isLoginRequired, retryLogin } = require('../../../../utils/session/login-reload.js');
 const app = getApp();
 
 Page({
@@ -14,6 +16,7 @@ Page({
     loaded: false,
     error: false,
     errorMsg: '',
+    loginRequired: false,   // PR10 F-W1-12:读失败是未登录 ⇒ 登录引导
     refreshing: false,
     list: [],
     activeTab: 'dm',
@@ -71,7 +74,7 @@ Page({
     if (preserveConfirmed) {
       this.setData({ refreshing: true });
     } else {
-      this.setData({ loading: true, refreshing: false, error: false, errorMsg: '' });
+      this.setData({ loading: true, refreshing: false, error: false, errorMsg: '', loginRequired: false });
     }
     app.sendRequest({
       url: '/api/im/conversations',
@@ -106,14 +109,14 @@ Page({
           that._setConversationError(res, preserveConfirmed);
         }
       },
-      fail(res) {
+      fail(res, statusCode) {
         if (!current()) return;
-        that._setConversationError(res, preserveConfirmed);
+        that._setConversationError(res, preserveConfirmed, statusCode);
       },
     });
   },
 
-  _setConversationError(response, preserveConfirmed) {
+  _setConversationError(response, preserveConfirmed, statusCode) {
     const msg = app.getRequestErrorMessage
       ? app.getRequestErrorMessage(response, '消息加载失败，请重试')
       : ((response && (response.msg || response.errMsg)) || '消息加载失败，请重试');
@@ -121,10 +124,15 @@ Page({
       this.setData({ loading: false, refreshing: false, error: false });
       return;
     }
-    this.setData({ loading: false, refreshing: false, error: true, errorMsg: msg });
+    // PR10 F-W1-12:未登录(无会话 / 401)给登录引导;其余失败仍按 load-failure 留白
+    this.setData({ loading: false, refreshing: false, error: true, errorMsg: msg,
+      loginRequired: isLoginRequired(app, response, statusCode) });
   },
 
   retryConversations() { this.loadConversations(false); },
+  loginConversations() {
+    retryLogin(this, app, function () { if (!this._disposed) this.loadConversations(false); });
+  },
 
   // 会话归类(spec 决策 2:客服 type=3 归私信 —— 分 tab 的轴是「能不能回」)
   // 返回 null = 不属于任何 tab,不在小程序里展示。
@@ -220,8 +228,9 @@ Page({
   fmtPreview(c) {
     const t = c.lastMsgType;
     if (t == 2) return '[图片]';
-    if (t == 3) return String(c.lastMsgText || '[系统卡片]').replace(/[\r\n]+/g, ' ');
-    return String(c.lastMsgText || '').replace(/[\r\n]+/g, ' ');
+    // 预览是纯文本:服务端过滤存下的 &lt; 等在这里解码一次
+    if (t == 3) return decodeDisplayText(String(c.lastMsgText || '[系统卡片]').replace(/[\r\n]+/g, ' '));
+    return decodeDisplayText(String(c.lastMsgText || '').replace(/[\r\n]+/g, ' '));
   },
 
   fmtTime(v) {

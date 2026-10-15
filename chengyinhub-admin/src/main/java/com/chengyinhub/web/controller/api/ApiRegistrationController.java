@@ -1085,6 +1085,26 @@ public class ApiRegistrationController extends BaseController {
         return registrationService.selectByverificationCode(code);
     }
 
+    /** 俱乐部场次整单核销的前置窗口，与集合签到(ClubGatherArrivalPolicy)同为开场前 60 分钟。 */
+    private static final long CLUB_SESSION_VERIFY_LEAD_MS = 60L * 60L * 1000L;
+
+    /**
+     * F-R2F-01:俱乐部场次的票不能在开场前几天被整单核销 —— 核销即「已到场/已交付」，
+     * 提前核销后场次取消就会落入「整单全核销不退」。只约束俱乐部场次的整单核销，③ 按章核销与普通活动不变。
+     *
+     * @return null = 放行；非 null = 直接返回给扫码方的提示
+     */
+    static AjaxResult clubSessionVerificationTooEarly(CmsActivity activity, Date now) {
+        if (activity == null || activity.getClubId() == null || activity.getClubId() <= 0
+                || activity.getStartDate() == null || now == null) {
+            return null;
+        }
+        if (activity.getStartDate().getTime() - now.getTime() > CLUB_SESSION_VERIFY_LEAD_MS) {
+            return AjaxResult.error("俱乐部场次开始前60分钟内才可核销");
+        }
+        return null;
+    }
+
     /**
      * ★★ [资损·根因] {@code type} 与 {@code registration.owner_type} 必须一致。
      *
@@ -1637,6 +1657,11 @@ public class ApiRegistrationController extends BaseController {
                         return AjaxResult.error("该店无权核销本场玩家票；俱乐部带队请扫描领队团码");
                     }
                     actorRoleCode = access.getRoleCode();
+                }
+                // PR10 复审:时间窗在权限之后判 —— 无权扫码方先拿到权限拒绝,不能借时间提示探测场次开场时间。
+                AjaxResult tooEarly = clubSessionVerificationTooEarly(cmsActivity, new Date());
+                if (tooEarly != null) {
+                    return tooEarly;
                 }
                 // [V2] 重复核销闸 + 入账 + 台账,同一事务(verifyAndSettle)。
                     // 条件置位而非读判:读判挡不住并发双扫。

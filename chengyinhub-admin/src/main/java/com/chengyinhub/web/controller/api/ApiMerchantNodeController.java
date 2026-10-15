@@ -218,8 +218,10 @@ public class ApiMerchantNodeController extends BaseController {
         String secMsg = wxSec.checkText(secText, openid);
         if (secMsg != null) return error(secMsg);
         // R12:块配置叙事段(enter/outcome/deliver/... )同样免人工审直发,必须一并送检;命中提示带字段名。
-        String narrativeSecMsg = JourneyReviewTexts.check(wxSec, openid,
-                JourneyReviewTexts.collectBlocks(body.getAdvancedConfigJson()));
+        // F-L5C-02/03:商家节点模板自动通过、可被简易版主题直接引用,选项/提示/故事/勋章等字段同样给玩家看。
+        java.util.List<JourneyReviewTexts.Entry> templateTexts = JourneyReviewTexts.collectTemplateFields(body);
+        templateTexts.addAll(JourneyReviewTexts.collectBlocks(body.getAdvancedConfigJson()));
+        String narrativeSecMsg = JourneyReviewTexts.check(wxSec, openid, templateTexts);
         if (narrativeSecMsg != null) return error(narrativeSecMsg);
 
         try {

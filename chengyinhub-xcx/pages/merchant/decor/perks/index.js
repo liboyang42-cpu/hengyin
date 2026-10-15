@@ -167,7 +167,7 @@ Page({
       loadError: '',
     });
     app.sendRequest({
-      hideLoading: true, autoErrorToast: hasOldContent, url: '/api/coop/perk-template/list', method: 'POST',
+      hideLoading: true, autoErrorToast: false, url: '/api/coop/perk-template/list', method: 'POST',
       data: JSON.stringify({}), header: { 'Content-Type': 'application/json' },
       success(res) {
         if (!isCurrent()) return;

@@ -89,6 +89,67 @@ class RoamPresenceControllerTest {
     }
 
     @Test
+    void presence_refuses_teleporting_coordinates_so_reports_cannot_scan_the_city() {
+        RoamMapper mapper = mock(RoamMapper.class);
+        com.chengyinhub.business.domain.RoamSession last = new com.chengyinhub.business.domain.RoamSession();
+        last.setLastLat(new BigDecimal("31.230"));
+        last.setLastLng(new BigDecimal("121.474"));
+        last.setLastReportAt(new Date(System.currentTimeMillis() - 30_000L));
+        when(mapper.selectLatestPresenceFix(eq(9L), eq(77L), any(Date.class))).thenReturn(last);
+        when(mapper.updatePresence(anyLong(), anyLong(), any(), any(), any(), anyInt())).thenReturn(1);
+        StubController c = controller(mapper);
+
+        // 30 秒前在上海,现在报北京:拒绝,不落库
+        assertEquals(500, c.presence("77", 39.90, 116.40, 0).get("code"));
+        verify(mapper, never()).updatePresence(anyLong(), anyLong(), any(), any(), any(), anyInt());
+        // 正常步行距离照常更新
+        assertEquals(200, c.presence("77", 31.2305, 121.4745, 0).get("code"));
+        verify(mapper).updatePresence(anyLong(), anyLong(), any(), any(), any(Date.class), anyInt());
+    }
+
+    /**
+     * PR10 复审:上一场会话 30 秒前在上海结束,新会话第一跳在北京(真实场景是下车后隔了一段时间才重开)——
+     * 基线按会话取,新会话没有基线就放行;同一新会话里再瞬移回上海仍然拒绝。
+     */
+    @Test
+    void presence_baseline_is_per_session_so_a_new_session_starts_fresh_but_in_session_jumps_are_refused() {
+        RoamMapper mapper = mock(RoamMapper.class);
+        com.chengyinhub.business.domain.RoamSession previousSession = new com.chengyinhub.business.domain.RoamSession();
+        previousSession.setLastLat(new BigDecimal("31.230"));
+        previousSession.setLastLng(new BigDecimal("121.474"));
+        previousSession.setLastReportAt(new Date(System.currentTimeMillis() - 30_000L));
+        when(mapper.selectLatestPresenceFix(eq(9L), eq(77L), any(Date.class))).thenReturn(previousSession);
+        when(mapper.updatePresence(anyLong(), anyLong(), any(), any(), any(), anyInt())).thenReturn(1);
+        StubController c = controller(mapper);
+
+        // 新会话 78 没有基线:在北京开始漫游被接受
+        assertEquals(200, c.presence("78", 39.90, 116.40, 0).get("code"));
+        verify(mapper).selectLatestPresenceFix(eq(9L), eq(78L), any(Date.class));
+
+        // 会话 78 现在有了北京的基线,同场 30 秒后报上海 = 瞬移,拒绝
+        com.chengyinhub.business.domain.RoamSession beijing = new com.chengyinhub.business.domain.RoamSession();
+        beijing.setLastLat(new BigDecimal("39.900"));
+        beijing.setLastLng(new BigDecimal("116.400"));
+        beijing.setLastReportAt(new Date(System.currentTimeMillis() - 30_000L));
+        when(mapper.selectLatestPresenceFix(eq(9L), eq(78L), any(Date.class))).thenReturn(beijing);
+        assertEquals(500, c.presence("78", 31.23, 121.47, 0).get("code"));
+        verify(mapper, org.mockito.Mockito.times(1)).updatePresence(anyLong(), anyLong(), any(), any(), any(), anyInt());
+    }
+
+    @Test
+    void enablingSharingRequiresCurrentRoamLocationAgreement() {
+        RoamMapper mapper = mock(RoamMapper.class);
+        StubController c = controller(mapper);
+        com.chengyinhub.business.service.impl.RoamLocationConsentService location =
+                (com.chengyinhub.business.service.impl.RoamLocationConsentService) ReflectionTestUtils.getField(c, "locationConsent");
+        org.mockito.Mockito.doThrow(new com.chengyinhub.common.exception.ServiceException("请先明确同意漫游定位"))
+                .when(location).requireCurrentAgreement(9L);
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> c.changePresenceVisibility("77", true, "roam-presence-v1"));
+        verify(mapper, never()).updatePresenceVisibility(any(), anyLong(), eq(true));
+    }
+
+    @Test
     void presence_reports_the_same_refusal_whether_the_session_is_someone_elses_or_already_finished() {
         RoamMapper mapper = mock(RoamMapper.class);
         // where 里带 member_id 与 status=0 ⇒ 别人的、已结算的都命中 0 行

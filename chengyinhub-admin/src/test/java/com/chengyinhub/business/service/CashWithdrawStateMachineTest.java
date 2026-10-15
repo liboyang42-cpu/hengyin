@@ -345,6 +345,38 @@ class CashWithdrawStateMachineTest {
         verify(umsMemberService, times(1)).addBalance(eq(9L), any());
     }
 
+    // ⑪b F-L4-05:回补事务提交结果未知(commit 抛异常,库里可能已是 2 且余额已加)。
+    //     兜底分支绝不能无条件把状态改回 3,否则人工双人补单会再加一次余额。
+    @Test
+    void initiateFail_refundCommitUnknown_neverRevertsStatusToManual() {
+        when(mapper.countPendingByMember(9L)).thenReturn(0);
+        stubMemberWithOpenid();
+        when(umsMemberService.deductWithdrawableBalance(eq(9L), any(), any())).thenReturn(true);
+        Map<String, String> res = new HashMap<>();
+        res.put("ok", "false");
+        res.put("error", "转账服务未就绪");
+        when(wechatPayService.transferToBalance(anyString(), anyString(), any(), anyString(), anyString(), anyString())).thenReturn(res);
+        when(mapper.updateStatusIfProcessing(any())).thenReturn(1);
+        org.springframework.transaction.PlatformTransactionManager transactions = mock(org.springframework.transaction.PlatformTransactionManager.class);
+        when(transactions.getTransaction(any())).thenReturn(mock(org.springframework.transaction.TransactionStatus.class));
+        doThrow(new org.springframework.transaction.TransactionSystemException("commit outcome unknown"))
+                .when(transactions).commit(any());
+        ReflectionTestUtils.setField(svc, "transactionManager", transactions);
+
+        assertThrows(IllegalStateException.class, () -> svc.withdraw(9L, new BigDecimal("10.00")));
+
+        ArgumentCaptor<MemberCashWithdraw> plain = ArgumentCaptor.forClass(MemberCashWithdraw.class);
+        verify(mapper, org.mockito.Mockito.atLeast(0)).updateMemberCashWithdraw(plain.capture());
+        assertTrue(plain.getAllValues().stream().noneMatch(v -> v.getStatus() != null),
+                "兜底不得用无条件 update 改状态");
+        ArgumentCaptor<MemberCashWithdraw> manual = ArgumentCaptor.forClass(MemberCashWithdraw.class);
+        verify(mapper, times(2)).updateStatusIfManual(manual.capture());
+        MemberCashWithdraw note = manual.getAllValues().get(1);
+        assertEquals(null, note.getStatus());
+        assertTrue(note.getManualNote().contains("待人工"));
+        verify(alarmService, times(1)).alarm(eq("提现待人工"), anyString());
+    }
+
     // ⑫ 第一人仅登记:失败待人工 → 待复核，不移动余额
     @Test
     void manualRefund_firstOperatorOnlyPreparesReview() {

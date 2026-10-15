@@ -112,6 +112,9 @@ class ApiClubEventOpsControllerTest {
         ReflectionTestUtils.setField(controller, "eventOpsService", ops);
         ReflectionTestUtils.setField(controller, "waitlistService", mock(IClubWaitlistService.class));
         ReflectionTestUtils.setField(controller, "attendanceService", mock(IClubEventAttendanceService.class));
+        ReflectionTestUtils.setField(controller, "umsMemberService", mock(com.chengyinhub.business.service.IUmsMemberService.class));
+        ReflectionTestUtils.setField(controller, "wxContentSecurityService",
+                mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
         ClubEventCancellationRequest cancellation = new ClubEventCancellationRequest();
         cancellation.setClubId(21L);
         cancellation.setActivityId(71L);
@@ -135,5 +138,29 @@ class ApiClubEventOpsControllerTest {
         assertEquals(200, controller.occurrenceStatus(scope).get("code"));
         verify(ops).cancelOccurrence(41L, "co-owner", cancellation);
         verify(ops).getCancellationState(41L, 21L, 71L);
+    }
+
+    /** F-L5C-02:取消原因会发给报名者,送检拦截时不得进入取消流程。 */
+    @Test
+    void flaggedCancellationReasonIsRejectedBeforeCancellation() {
+        IClubEventOpsService ops = mock(IClubEventOpsService.class);
+        ApiClubEventOpsController controller = new ApiClubEventOpsController() {
+            @Override public Long getAppUserId() { return 41L; }
+            @Override public String getAppUserName() { return "co-owner"; }
+        };
+        com.chengyinhub.business.service.IWxContentSecurityService sec =
+                mock(com.chengyinhub.business.service.IWxContentSecurityService.class);
+        when(sec.checkText(eq("违规原因"), org.mockito.ArgumentMatchers.any())).thenReturn("内容含违规信息");
+        ReflectionTestUtils.setField(controller, "eventOpsService", ops);
+        ReflectionTestUtils.setField(controller, "umsMemberService", mock(com.chengyinhub.business.service.IUmsMemberService.class));
+        ReflectionTestUtils.setField(controller, "wxContentSecurityService", sec);
+        ClubEventCancellationRequest cancellation = new ClubEventCancellationRequest();
+        cancellation.setClubId(21L);
+        cancellation.setActivityId(71L);
+        cancellation.setReason("违规原因");
+
+        assertEquals(500, controller.cancelOccurrence(cancellation).get("code"));
+        verify(ops, org.mockito.Mockito.never()).cancelOccurrence(org.mockito.ArgumentMatchers.anyLong(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }
 }

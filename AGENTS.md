@@ -6,9 +6,9 @@
 > 注意：本仓库是 monorepo，根目录同时含**后端 Java 模块**、**小程序 `chengyinhub-xcx/`**、**前端 `chengyinhub-ui/`**、`docs/`。编辑小程序时以 `chengyinhub-xcx/AGENTS.md` 为准（就近覆盖）。
 
 ## 项目结构（带版本）
-- Spring Boot 2.5.15 · Java 8 · Maven 多模块 · MySQL · Redis · Druid · jjwt(JWT) · Quartz
+- Spring Boot 4.1.1 · Java 21（Jakarta EE；pom 的 maven-compiler-plugin 必须保留 `<release>${java.version}</release>` 与 `<parameters>true</parameters>`） · Maven 多模块 · MySQL · Redis · Druid · jjwt(JWT) · Quartz
 - 模块：chengyinhub-admin(入口/接口) · framework(配置/鉴权) · system(业务) · quartz · common · generator · ui(RuoYi-UI 后台 Vue2)
-- 正在进行：① Boot3/Java17 升级（feature/upgrade-boot3，规划中） ② user_type → RBAC role 迁移收尾
+- 正在进行：user_type → RBAC role 迁移收尾（Boot 4.1.1/Java 21 升级已完成，回退不得回到 Boot 2.5/Java 8 的旧 master 制品）
 - 小程序端登录走 AppLoginService（JWT 自动续期，RBAC role 登录即落地为单一真源）
 
 ## 命令
@@ -34,7 +34,7 @@
 ## 已知坑（别再犯 / 别误删）
 - IDOR 已修：`/api/activity/delete`、`/api/activity/update_publish_status` 已有创建者归属校验（`ApiActivityController.java:415-421 / 461-463`）——任何**新增**写接口都要 WHERE 带 owner
 - 手机号绑定根因已修：空号保护 + 稳定版 token（commit c5e491e）；`getPhoneNumber` 付费、只能真机测、错误码 80058
-- 行为校验：`useDevUser()` 已被 `isDevEnv()` 网住——这是**正确状态**，别当成需要清理的 mock
+- 登录兜底：小程序开发版「登录失败就注入假用户/dev-token」的 `useDevUser()` 兜底已删除（F-W1-01）；`isDevEnv()` 只用于开发调试入口，并在体验版/正式版清掉残留的 dev-token 会话。登录失败必须如实失败，**不得重新引入**任何假用户降级
 
 ## 工作方式（对所有任务）
 - 不确定方案/改多文件时：先探索→给计划→再编码（explore→plan→code→commit）

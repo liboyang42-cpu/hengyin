@@ -78,6 +78,7 @@ const loadPage = (rel, options = {}) => {
   const originalSendRequest = appOverrides.sendRequest || (() => {})
   const app = Object.assign({
     getUserID: () => 0,
+    canUseCommunity: () => true, // Current-account server-open fixture (square detail is gated since F-L5C-06).
     getAvatar: () => '',
     getPageSize: () => 10,
     getTotalPage: () => 1,

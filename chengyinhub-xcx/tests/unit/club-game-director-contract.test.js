@@ -108,6 +108,8 @@ function loadClubDetail(activityList) {
         '../../../utils/danger-actions.js': require('../../utils/danger-actions.js'),
       }
       if (modules[request]) return modules[request]
+      // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
+      if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Date,
@@ -148,6 +150,8 @@ function loadDirector(adapter, initialStorage, options) {
       if (request === '../utils/club-game-director-adapter.js') {
         return { createClubGameDirectorAdapter() { throw new Error('测试必须注入 adapter') } }
       }
+      // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
+      if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Date,
@@ -986,6 +990,32 @@ test('CU-C-76:发送被驳回时按原因码出话,认不出才回退通用文�
   assert.match(noRecipient, /报名进场后再发/)
   assert.match(await rejectToast('GAME_STATE_CONFLICT'), /操作未生效，请刷新后重试/,
     '认不出的原因码不得编造解释,保留原通用文案')
+})
+
+test('F-L3-01:写操作被驳回(含版本冲突)后自动重读投影，不让下一次操作继续带旧 revision', async () => {
+  let loads = 0
+  const harness = loadDirector({
+    load() {
+      loads += 1
+      return Promise.resolve(runningClubProjection({
+        availableActions: ['BROADCAST'],
+        teams: [{ teamId: 11, name: '第一队', memberCount: 2 }],
+      }))
+    },
+    submit(input) {
+      return Promise.resolve({ state: 'rejected', requestId: input.requestId, raw: { reasonCode: 'GAME_STATE_CONFLICT' } })
+    },
+    readReceipt() { return Promise.resolve({ state: 'pending' }) },
+  })
+  harness.page.initDirector('701')
+  await settle()
+  const before = loads
+  harness.page.openBroadcast()
+  harness.page.onBroadcastContentInput({ detail: { value: '请集合' } })
+  harness.page.confirmBroadcast()
+  await settle()
+  assert.equal(harness.page.data.writeLocked, false)
+  assert.ok(loads > before, '驳回后必须重新读取导演投影')
 })
 
 test('手动解锁必须填原因，且只提交章节开放动作', async () => {

@@ -152,6 +152,23 @@ class RefundRetryAndRemainderMySqlIT {
         assertEquals(3, db.queryForObject("select count(*) from refund_application", Integer.class));
     }
 
+    /** F-L4-02:玩家/后台待审核申请不能挡住主办方取消的全额退款;取代后新退款单真实落库、可批准,且旧单为驳回。 */
+    @Test
+    void pendingApplicationIsSupersededBySystemFullRefundInsteadOfBlockingCancellation() {
+        paid(99L, null, "68.00");
+        RefundApplication pending = save("20.00");
+        assertThrows(RuntimeException.class, () -> service.saveRefund(request("68.00")));
+        assertEquals(1, service.supersedePendingRegistrationRefunds(99L, "主办方取消活动,全额退款"));
+        RefundApplication full = request("68.00");
+        assertEquals(1, service.saveRefund(full));
+        assertEquals("RF99-" + pending.getId(), full.getRefundNo());
+        assertEquals(1, service.reviewRefund(review(full.getId(), 1), 0L));
+        assertEquals(Integer.valueOf(2), refunds.selectRefundApplicationById(pending.getId()).getStatus());
+        assertEquals(Integer.valueOf(1), refunds.selectRefundApplicationById(full.getId()).getStatus());
+        assertEquals(0, service.supersedePendingRegistrationRefunds(99L, "again"));
+        assertEquals(new BigDecimal("68.00"), db.queryForObject("select sum(refund_amount) from refund_application where status=1", BigDecimal.class));
+    }
+
     @Test
     void twoLegacyPendingEightyRefundsOnOneParentCanApproveOnlyOne() throws Exception {
         paid(99L, "P99", "100.00");

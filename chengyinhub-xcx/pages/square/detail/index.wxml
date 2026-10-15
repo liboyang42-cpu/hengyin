@@ -16,6 +16,9 @@
   <view class="detail-state" wx:elif="{{detailState === 'missing-param'}}">
     <cy-empty class="fill-slot" fill="{{true}}" size="lg" kind="missing-param" title="没有找到这条动态" sub="这个链接可能已失效，请返回上一页，从动态列表重新打开。" cta="返回上一页" bind:cta="goBack" />
   </view>
+  <view class="detail-state" wx:elif="{{detailState === 'closed'}}">
+    <cy-empty class="fill-slot" fill="{{true}}" size="lg" kind="empty" title="社区暂未开放" sub="当前账号还不能查看社区动态，开放后会第一时间上线。" cta="返回上一页" bind:cta="goBack" />
+  </view>
   <view class="detail-state" wx:elif="{{detailState === 'empty'}}">
     <cy-empty class="fill-slot" fill="{{true}}" size="lg" kind="empty" title="这条动态暂不可用" sub="它可能已被删除或暂时无法访问，返回列表看看其他内容。" cta="返回上一页" bind:cta="goBack" />
   </view>

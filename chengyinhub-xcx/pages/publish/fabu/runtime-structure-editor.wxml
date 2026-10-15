@@ -17,7 +17,7 @@
    </view>
    <cy-inline-error wx:if="{{structureError}}" title="{{structureError}}" />
    <text wx:if="{{supportMatrixLoading}}" aria-live="polite">正在读取玩法支持范围</text>
-<cy-inline-error wx:if="{{supportMatrixLoadError}}" title="{{supportMatrixLoadError}}" sub="仍可保存，支持情况以保存结果为准" action="重试" bind:action="retrySupportMatrix" />
+<cy-inline-error load-failure wx:if="{{supportMatrixLoadError}}" title="{{supportMatrixLoadError}}" sub="仍可保存，支持情况以保存结果为准" action="重试" bind:action="retrySupportMatrix" />
    <view wx:for="{{structureModeOptions}}" wx:key="key" class="node-card mode-opt {{item.reason ? 'rt-disabled' : ''}}" data-key="{{item.key}}" bindtap="chooseStructureMode" aria-role="radio" aria-checked="{{item.selected}}" aria-disabled="{{!!item.reason}}" hover-class="{{item.reason ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
     <view class="node-card__row">
      <view class="node-card__ico mode-opt__ico"><cy-icon name="{{item.icon}}" size="32" /></view>

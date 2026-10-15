@@ -71,7 +71,9 @@ public class RateLimiterAspect
         }
         catch (Exception e)
         {
-            throw new RuntimeException("服务器限流异常，请稍候再试");
+            // 保留根因：Redis 连接/池异常要能被 RuntimeFailureAlarmFilter 识别为 runtime.redis.connection 告警，
+            // 而不是一律记成无类型的 RuntimeException。对用户的文案不变。
+            throw new RuntimeException("服务器限流异常，请稍候再试", e);
         }
     }
 

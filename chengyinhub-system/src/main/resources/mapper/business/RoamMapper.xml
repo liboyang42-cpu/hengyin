@@ -224,6 +224,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by last_report_at desc, id desc limit 1
     </select>
 
+    <!-- 本人最近一次心跳坐标(跨会话,含已结算),只用于服务端瞬移校验。 -->
+    <select id="selectLatestPresenceFix" resultMap="RoamSessionResult" useCache="false">
+        select * from roam_session
+        where member_id = #{memberId} and id = #{sessionId} and last_report_at &gt;= #{since}
+          and last_lat is not null and last_lng is not null
+        limit 1
+    </select>
+
     <update id="updatePresenceVisibility">
         update roam_session set presence_visible = #{visible}
         where member_id = #{memberId} and status = 0
