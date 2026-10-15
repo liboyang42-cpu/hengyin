@@ -136,5 +136,9 @@
   "new_third_fourth_cloud_ready_packages": 2,
   "reason": "Two targeted static caller-backed packages now confirmed no current file collision; third coordinator pending thread ACK. No fourth full team pool invented.",
   "scheduling": "one repair slot per team, other5 independent authorized work without waiting; actual exhaustion disclosed; not a claim5 active workers",
-  "new_package_detail": "THIRD_CLOUD_HANDOFF.json: AN01 date inputs, AN02 growth lost-update; prior0 snapshot before targeted discovery retained as history"
+  "new_package_detail": "THIRD_CLOUD_HANDOFF.json: AN01 date inputs, AN02 growth lost-update; prior0 snapshot before targeted discovery retained as history",
+  "third_team_count": 1,
+  "independent_source_packages_for_third_team": 2,
+  "confirmed_additional_fourth_team_packages": 0,
+  "package_count_is_not_cloud_count": true
 }

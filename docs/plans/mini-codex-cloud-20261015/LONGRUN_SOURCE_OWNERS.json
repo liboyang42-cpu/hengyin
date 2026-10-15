@@ -2560,6 +2560,14 @@
     ],
     "initial_source_file_count": 6,
     "local_total_coordinator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
-    "new_extra_test_grants": false
+    "new_extra_test_grants": false,
+    "startup_pr": 70,
+    "startup_sha": "9f96f7a858866dd2a09cd244f90c6f0ecbac5e88",
+    "start_marker": "CY-FORWARD3-20261015",
+    "task_aliases": {
+      "STAT": "AN01",
+      "GROW": "AN02"
+    },
+    "no_new_regression_files_yet": true
   }
 }
