@@ -214,6 +214,9 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         int expectedVersion = requiredVersion(request.getExpectedVersion());
         policy.decide(current, CommunityPostLifecyclePolicy.ACTION_PUBLISH, expectedVersion,
                 memberId.equals(current.getAuthorId()));
+        if (positive(current.getCommunityId()) && mapper.countCommunityMember(memberId, current.getCommunityId()) == 0) {
+            throw error("只能向自己加入的社群发布", 403);
+        }
         if (blank(current.getBody())) throw error("正文应为 1-5000 字", 400);
         requireGuidelineAck(memberId, current.getGuidelineVersionId());
 
