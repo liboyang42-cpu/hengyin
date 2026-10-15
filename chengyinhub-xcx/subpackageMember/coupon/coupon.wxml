@@ -9,6 +9,8 @@
 <cy-error wx:elif="{{loadState === 'error'}}" class="fill-slot cy-fade-in" fill size="lg" title="优惠券加载失败" sub="{{errorMsg}}" retry="重试" bind:retry="retryLoad" auto-back />
 
 <view class="david" wx:else>
+  <!-- BL-77:商家口径的累计领取/核销(/api/merchant/coupon-summary),没有券或读失败不展示 -->
+  <cy-stat-card wx:if="{{summaryItems.length}}" class="coupon-summary" items="{{summaryItems}}" columns="{{2}}" />
   <view class="david_tkb_li" bindtap="tpClick" data-item="{{item}}" wx:for="{{list}}" wx:key="id" hover-class="cy-pressed" hover-stay-time="80">
     <view class="david_tkb_li_con">
       <view class="david_tkb_li_con_top">
