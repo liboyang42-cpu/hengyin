@@ -34,15 +34,20 @@ const STATUS = Object.freeze({
 });
 const warnedUnconfigured = Object.create(null);
 
+// 未知业务 key 不得命中 Object.prototype 的继承成员。
+function configuredTemplateId(key) {
+  return Object.prototype.hasOwnProperty.call(TEMPLATES, key) ? TEMPLATES[key] : undefined;
+}
+
 // 按调用方顺序选择前 3 个不同的已配置模板；重复 key/别名不占授权名额。
 function selectTemplates(keys) {
   var ids = [];
   (keys || []).forEach(function (key) {
-    var id = TEMPLATES[key];
+    var id = configuredTemplateId(key);
     if (id && ids.indexOf(id) < 0 && ids.length < 3) ids.push(id);
   });
   var requestedKeys = (keys || []).filter(function (key, index, all) {
-    return all.indexOf(key) === index && ids.indexOf(TEMPLATES[key]) >= 0;
+    return all.indexOf(key) === index && ids.indexOf(configuredTemplateId(key)) >= 0;
   });
   return { ids: ids, keys: requestedKeys };
 }
@@ -53,7 +58,7 @@ function resolveTemplateIds(keys) {
 
 function unconfiguredKeys(keys) {
   return (keys || []).filter(function (key, index, all) {
-    return !TEMPLATES[key] && all.indexOf(key) === index;
+    return !configuredTemplateId(key) && all.indexOf(key) === index;
   });
 }
 
@@ -86,7 +91,7 @@ function request(keys) {
     var selected = selectTemplates(inputKeys);
     var ids = selected.ids;
     var requestedKeys = selected.keys;
-    var requestedIds = requestedKeys.map(function (key) { return TEMPLATES[key]; });
+    var requestedIds = requestedKeys.map(function (key) { return configuredTemplateId(key); });
     if (!ids.length) {
       resolve(result(STATUS.NOT_CONFIGURED, [], [], [], missingKeys));
       return;
