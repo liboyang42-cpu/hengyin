@@ -3,7 +3,7 @@
 > BL-115：汇总合入 `claude/mini-ui-features-20261015` 的第九批未合并 PR 的「本地验收清单」，原文照抄、不增删；验证阶段由用户统一执行。BLOCKED 项单列。生成方式：读取各 PR 正文（#152–#158）。
 > 本文件是 BL-59（#101）`ACCEPTANCE.md`、BL-83（#126）`ACCEPTANCE-BATCH3-4.md`、BL-107 `ACCEPTANCE-BATCH5-8.md` 的续篇：前述文件均未合并，为免文本冲突单独成文；合并后可原样追加到 `ACCEPTANCE.md` 末尾。
 
-> **依赖与冲突提示**：#158（BL-114）叠在 #152（BL-108）之上，须在 #152 之后合并。#152 如台账按请求 URL 统计，需协调者重建 `action-ledger.json`（新增只读 `POST /api/merchant/subscription`）。
+> **依赖与冲突提示**：#158（BL-114）叠在 #152（BL-108）之上，须在 #152 之后合并。#152 改了装修页 wxml/js，协调者必须重建 `action-ledger.json`（控件数以重建结果为准）；silentError 已在本 PR 内登记。
 
 ## 一、可验收的功能/测试 PR
 
