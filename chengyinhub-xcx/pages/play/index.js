@@ -5209,17 +5209,31 @@ Page({
     }, () => { if (node.vm === 6) this.loadPreference(node); });
   },
   async onAdvancedReady(e) {
-    const node = this.data.advancedPlay.node;
-    if (!node || (e.detail && e.detail.nodeId != null && e.detail.nodeId !== node.nodeId)) return;
+    if (!this._isPlayAccountCurrent()) return;
+    const active = this.data.advancedPlay, node = active.node;
+    if (!active.show || !node || (e.detail && e.detail.nodeId != null && e.detail.nodeId !== node.nodeId)) return;
+    const context = { owner: this._playOwner, sessionKey: JSON.stringify(this._sessionParams()),
+      epoch: this._playLoadEpoch, active, chapter: this.data.chapter,
+      component: this.selectComponent('#advancedGame') };
+    this._advancedReadyIntent = context;
+    const scopeCurrent = () => this._isPlayAccountCurrent() && this._advancedReadyIntent === context
+      && context.owner === this._playOwner && context.epoch === this._playLoadEpoch
+      && context.sessionKey === JSON.stringify(this._sessionParams()) && this.data.chapter === context.chapter;
+    const current = () => scopeCurrent() && this.data.advancedPlay === active
+      && active.show && active.node === node && this.selectComponent('#advancedGame') === context.component;
     // 玩法作答可能更新路线变量和版本，收尾写入前先读取新的权威版本。
     if (!this.data.isPreview && !this.data.isMock
         && this._routeState
         && (this._routeState.routeMode === 'BRANCH_GRAPH' || this._routeState.sessionId)) {
       if (!(await this.refreshRouteState())) return;
-      if (!this.data.advancedPlay.node || this.data.advancedPlay.node.nodeId !== node.nodeId) return;
+      if (!current()) return;
     }
+    if (!current()) return;
     this._advancedReadyNodeId = node.nodeId;
-    this.setData({ advancedPlay: { show: false, node: null }, playKit: { show: false, kit: null }, 'sheet.node': node }, () => {
+    const closed = { show: false, node: null };
+    this.setData({ advancedPlay: closed, playKit: { show: false, kit: null }, 'sheet.node': node }, () => {
+      if (!scopeCurrent() || this.data.advancedPlay !== closed) return;
+      this._advancedReadyIntent = null;
       /* vm 0/5 靠到达收尾;8/9/10(猜数字/猜图/找东西)也是 —— 后端
          ValidationMethod.completesOnArrive 白名单就把这三个算作「arrive 收尾」。
        以前只放 0/5 过,其余全被塞进 startGame:守卫刚被 _advancedReadyNodeId
@@ -5234,6 +5248,7 @@ Page({
     });
   },
   onAdvancedClose() {
+    this._advancedReadyIntent = null;
     const node = this.data.advancedPlay.node;
     this.setData({ advancedPlay: { show: false, node: null },
       playKit: { show: false, kit: null },
