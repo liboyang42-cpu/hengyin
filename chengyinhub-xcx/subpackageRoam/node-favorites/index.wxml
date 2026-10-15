@@ -1,0 +1,25 @@
+<view class="theme-dark orl">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <view class="orl__shell" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar plain custom-back bind:back="goBack" />
+    <cy-page-title title="收藏的据点" subtitle="在据点详情里收藏的商家据点" safe-top="{{false}}" />
+    <view class="orl__body">
+      <cy-skeleton wx:if="{{state === 'loading'}}" type="feed-card" count="3" />
+      <cy-error wx:elif="{{state === 'error'}}" title="收藏没能加载出来" sub="{{errorSub}}" retry="重试" bind:retry="load" />
+      <cy-empty wx:elif="{{state === 'empty'}}" kind="empty" title="还没有收藏的据点" sub="在据点详情里点收藏，就会出现在这里" />
+      <block wx:else>
+        <view class="orl-card" wx:for="{{nodes}}" wx:key="poiId" data-id="{{item.poiId}}" bindtap="openNode"
+              aria-role="button" aria-label="查看据点 {{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
+          <image wx:if="{{item.cover}}" class="orl-card__cover" src="{{item.cover}}" mode="aspectFill" />
+          <view class="orl-card__body">
+            <text class="orl-card__name">{{item.name}}</text>
+            <text class="orl-card__meta" wx:if="{{item.metaText}}">{{item.metaText}}</text>
+            <text class="orl-card__meta" wx:if="{{item.completed}}">已到过</text>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+</view>
