@@ -2425,10 +2425,14 @@ Page({
       ((this.data.gameModule && this.data.gameModule.nodes) || []).forEach((node) => {
         if (!node || !node.nodeId) return;
         previousRuntimeByNode[String(node.nodeId)] = node;
-        if (node.taskEvidence) taskEvidenceByNode[String(node.nodeId)] = node.taskEvidence;
+        if (node.taskEvidence && node.playerTask) taskEvidenceByNode[String(node.nodeId)] = {
+          task: this._playerTaskSignature(node.playerTask), evidence: node.taskEvidence,
+        };
       });
       projection.nodes = projection.nodes.map((node) => Object.assign({}, node, {
-        taskEvidence: taskEvidenceByNode[String(node.nodeId)] || {
+        taskEvidence: node.playerTask && taskEvidenceByNode[String(node.nodeId)]
+          && taskEvidenceByNode[String(node.nodeId)].task === this._playerTaskSignature(node.playerTask)
+          ? taskEvidenceByNode[String(node.nodeId)].evidence : {
           type: node.playerTask ? node.playerTask.inputType : '',
           ready: false,
           text: '',
