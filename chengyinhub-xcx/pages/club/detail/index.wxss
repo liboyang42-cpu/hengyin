@@ -9,7 +9,7 @@ page { background: var(--cy-bg-page); }
   --club-surface: var(--cy-bg-card);
   --club-surface-2: var(--cy-bg-card);
   --club-text: var(--cy-text-title);
-  --club-text-muted: #8a8a8e;
+  --club-text-muted: var(--cy-color-text-tertiary);
   --club-glass: rgba(255, 255, 255, 0.12);
   --club-glass-border: var(--cy-border-card);
 }
@@ -23,7 +23,7 @@ page { background: var(--cy-bg-page); }
      2026-09-02 对稿(Figma 93:9 Hero cover 160px):240 → 320rpx。 */
   height: 320rpx;
   overflow: visible;
-  background: #0a0a0a;
+  background: var(--cy-color-bg-surface);
   /* 必须高于 .profile 的 z-index:2。本元素带 z-index 就会开一个层叠上下文,
      里面 .profile-logo-wrap 的 z-index:10 只在这个上下文内部有效、逃不出去;
      只要本值 <= .profile 的值,挂在封面下沿那半个 logo 就会被 .profile 的
@@ -744,7 +744,7 @@ page { background: var(--cy-bg-page); }
 }
 .comment-send {
   min-height: var(--cy-btn-h); box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; padding: 0 var(--cy-legacy-26); border-radius: var(--cy-radius-pill);
-  background: var(--club-accent); color: #fff; font-size: var(--cy-font-label);
+  background: var(--club-accent); color: var(--cy-color-text-inverse); font-size: var(--cy-font-label);
 }
 .comment-send.disabled { opacity: 0.5; }
 
