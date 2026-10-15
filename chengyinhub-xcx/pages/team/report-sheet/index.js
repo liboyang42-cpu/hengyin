@@ -32,7 +32,7 @@ Component({
         url: '/api/team/report', method: 'POST', hideLoading: true, silentError: true,
         data: JSON.stringify({ teamId, reason }),
         header: { 'Content-Type': 'application/json' },
-        success(res) {
+        success: (res) => {
           if (!isBizOk(res)) {
             this._busy = false
             this.setData({ stage: 'fail', failedText: (res && res.msg) || '举报没有提交成功，请稍后再试' })

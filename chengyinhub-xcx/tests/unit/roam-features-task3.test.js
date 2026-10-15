@@ -86,6 +86,12 @@ test('C2: 举报队伍请求体与入口', () => {
   assert.match(read('pages/team/detail/index.wxml'), /bindtap="openReport"/)
 })
 
+test('C2: 举报回调必须是箭头函数（方法简写里的 this 不是组件）', () => {
+  const src = read('pages/team/report-sheet/index.js')
+  assert.match(src, /success: \(res\) => \{/)
+  assert.doesNotMatch(src, /\bsuccess\(res\) \{/)
+})
+
 test('C4: 积分明细行整形与分页', () => {
   assert.equal(points.normalizeRows({}), null)
   assert.equal(points.normalizeRows([{ changePoints: 'x' }]), null)
