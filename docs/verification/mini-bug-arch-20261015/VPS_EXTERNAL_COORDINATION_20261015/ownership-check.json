@@ -1,0 +1,23 @@
+{
+  "new_cloud_thread": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
+  "receipt_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6192515205",
+  "source_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+  "approved_files": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/A03EndingSnapshotMySqlIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B03CouponLifecycleMySqlIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B04ScheduleReadbackMySqlIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
+    "chengyinhub-xcx/tests/unit/b01-platform-lifecycle-regression.test.js",
+    "chengyinhub-xcx/tests/unit/b01-refund-account-regression.test.js",
+    "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_E01_SCHEDULE/README.md",
+    "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_E02_PRIVACY/README.md",
+    "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_E03_ENDING/README.md",
+    "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_E04_COUPON/README.md",
+    "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_E05_REFUND_ACCOUNT/README.md",
+    "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_E06_PLATFORM/README.md"
+  ],
+  "files_match_authorized_handoff": true,
+  "intersections_with_L01_to_L05_L10": [],
+  "source_write_authorized": false,
+  "ack_status": "RECEIPT_PUBLISHED_AWAITING_C00_CONFIRM"
+}
