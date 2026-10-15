@@ -16,7 +16,7 @@
   </view>
 
   <text class="sk__notice" wx:if="{{notice}}">{{notice}}</text>
-  <text class="sk__notice sk__notice--err" wx:if="{{deleteError}}">{{deleteError}}</text>
+  <cy-inline-error wx:if="{{deleteError}}" title="{{deleteError}}" />
 
   <block wx:if="{{!readOnly}}">
     <view wx:if="{{!adding}}" class="node-pill sk__add" bindtap="onAddOpen" aria-role="button" aria-label="新增状态键" hover-class="cy-pressed" hover-stay-time="80">

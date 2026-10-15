@@ -14,7 +14,7 @@
       <text class="npc-chat__clear" bindtap="onAskClearData" aria-role="button" aria-label="清除我的对话记录" hover-class="cy-pressed" hover-stay-time="80">清除我的对话记录</text>
     </view>
 
-    <text class="npc-chat__clear-err" wx:if="{{clearError}}" aria-role="alert">{{clearError}}</text>
+    <cy-inline-error wx:if="{{clearError}}" title="{{clearError}}" />
     <scroll-view class="npc-chat__messages" scroll-y scroll-into-view="{{scrollIntoView}}" scroll-with-animation>
       <view wx:for="{{messages}}" wx:key="id" id="npc-msg-{{item.id}}" class="npc-chat__row npc-chat__row--{{item.role}}">
         <view class="npc-chat__bubble npc-chat__bubble--{{item.role}}">
