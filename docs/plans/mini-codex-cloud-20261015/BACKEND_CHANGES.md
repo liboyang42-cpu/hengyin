@@ -296,3 +296,9 @@ BK-ASSET源码修复为SOURCE_READY，新增VPS套件已通过；**TEST_DEPLOYED
 [新交付/39项矩阵](https://github.com/liboyang42-cpu/hengyin/blob/eab62274a19f549623ad1818088ba51f23b6ca8e/docs/verification/mini-bug-arch-followups-20261015/C00_HANDOFF.md)：BK-TOPIC edit-detail只读RR聚合快照；BK-AI本人短事务删除屏障、回执擦除/lease撤销、finish与日志原子提交，provider期间不持锁，保留唯一请求/收费事实。HTTP/DTO/权限/分页/单位/ID合同NO_API_CHANGE，无DDL/新依赖。后台unknown token显示与客户端旧回执/发布UNKNOWN沿既有入口，非新增产品。合同CONTRACT_FROZEN，源码已提交但Java/真实MySQL39项尚未跑，不能升级全批SOURCE_READY；TEST_DEPLOYED=NO，运行时HTTP/设备/合并/迁移/部署另列。
 
 本地报告VPS资源规则更新，旧1152MiB裸Docker驱动废止；仅可按已核准守卫/锁运行，离线build入口不支持真库。当前未核到可用新VPS集成入口；新增GitHub-hosted精确39项门禁可独立执行，CI不冒充VPS。六路外部回执已核、授权按原新测试/证据白名单启动，无新API授权。
+
+## 后续PR28实际Node签收/后端CI进行中
+
+当前公共完整候选4a943501262cb533158428d9748d8ac49aaa8950，[PR28](https://github.com/liboyang42-cpu/hengyin/pull/28)。全量Node8361/8359通过/0失败/2原有跳过，UI-GATE-0 PASS；后台formatter+原相关页面22/22、发布相关97/97、回执目标65/65（重叠不相加）。Node运行代码树d8a0cf8b到当前候选仅文档/CI变动，业务/测试/门禁源码无差异。4480控件ID/分类/1792 local tap未变，459条evidence摘要刷新；25基线行号等量迁移、理由/棘轮未加。详见VALIDATION_FOLLOWUP_4a943501.json。
+
+聚焦GitHub-hosted CI run38738836009已实际启动，预期39项尚无结果；首轮workflow上下文验证失败38738526470保留（无job/无测试），已修step env，不冒充业务失败或通过。L02/BK-AUTHOR聚合读和L03/BK-AI删除屏障须新真库编译/执行证据后再升SOURCE_READY。VPS新集成通道未核，不用离线build替代；TEST_DEPLOYED/运行时HTTP/设备/迁移/部署/合并仍NO。

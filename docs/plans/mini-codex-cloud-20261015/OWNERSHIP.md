@@ -203,3 +203,9 @@ L03额外直接构造测试NpcChatUserDataMyBatisIT.java已追加给原A02_sol�
 C00已实际读取PR16 comment6192515205；新Cloud thread01a13f9c-e8ba-753e-9c39-03840bb4900b/host durable。12路径与EXTERNAL_SIX_HANDOFF逐字一致，和当前源码锁无交集；原6 worktree基线均1e403b13。E01–E06状态ACK_RECEIVED_START_AUTHORIZED，按原白名单现在启动，不夺L01–05/L10/Claude/iOS/公共文件。实际启动数尚未回报。
 
 L01–05源码已按精确路径串行提交后续候选eab62274a19f549623ad1818088ba51f23b6ca8e，原写者已停止；不是新已验证候选。L05三份旧测试fabu-route-editor、publish-step3-switches、publish-ticket-sale-fields-wire-contract已精确追加给publish_unknown_sol，仅补真实身份/UUID/存储夹具，未降业务断言；其补丁86524454。
+
+## 后续PR28实际Node签收/后端CI进行中
+
+当前公共完整候选4a943501262cb533158428d9748d8ac49aaa8950，[PR28](https://github.com/liboyang42-cpu/hengyin/pull/28)。全量Node8361/8359通过/0失败/2原有跳过，UI-GATE-0 PASS；后台formatter+原相关页面22/22、发布相关97/97、回执目标65/65（重叠不相加）。Node运行代码树d8a0cf8b到当前候选仅文档/CI变动，业务/测试/门禁源码无差异。4480控件ID/分类/1792 local tap未变，459条evidence摘要刷新；25基线行号等量迁移、理由/棘轮未加。详见VALIDATION_FOLLOWUP_4a943501.json。
+
+聚焦GitHub-hosted CI run38738836009已实际启动，预期39项尚无结果；首轮workflow上下文验证失败38738526470保留（无job/无测试），已修step env，不冒充业务失败或通过。L02/BK-AUTHOR聚合读和L03/BK-AI删除屏障须新真库编译/执行证据后再升SOURCE_READY。VPS新集成通道未核，不用离线build替代；TEST_DEPLOYED/运行时HTTP/设备/迁移/部署/合并仍NO。
