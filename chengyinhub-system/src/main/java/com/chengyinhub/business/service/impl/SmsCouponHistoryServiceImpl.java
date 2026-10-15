@@ -400,6 +400,7 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
      * @return 结果
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int insertSmsCouponHistory(SmsCouponHistory smsCouponHistory)
     {
         smsCouponHistory.setCreateTime(DateUtils.getNowDate());
