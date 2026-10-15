@@ -6,6 +6,7 @@
 const app = getApp();
 const { MAP_STYLE } = require('../../utils/map-style.js');
 const { getCurrentLocation } = require('../../utils/location/location-manager.js');
+const lastLocation = require('../../utils/location/last-location.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const H = require('../../utils/roam-hangout.js');
 const T = require('../utils/map-team.js');
@@ -14,7 +15,8 @@ const modal = require('../../utils/modal.js');
 const M = require('../../utils/roam-hangout-marker.js');
 const { MAP_AVATAR_COLORS } = require('../../utils/play-visual-tokens.js');
 
-const DEFAULT_CENTER = { lat: 31.2304, lng: 121.4737 };   // 定位拿不到时的兜底中心(人民广场),只用于首屏,不落库
+// BL-23:首屏占位走 last-location 的固定坐标;定位失败时 onLoad 换成「上次成功位置 → 固定坐标」
+const DEFAULT_CENTER = { lat: lastLocation.FIXED.latitude, lng: lastLocation.FIXED.longitude };
 /* 稿 591:1020 的角控件写死「范围 1 km」⇒ 首屏默认就是 1 km,不取 /api/team/nearby 的 3000 缺省。
  * data.scale 初值 14 本来就是按 1 km 画的(见 onRangePick 的档位表),原来 3000 与它对不上。 */
 const DEFAULT_RADIUS = 1000;
@@ -87,12 +89,19 @@ Page({
     if (linkedLat != null && linkedLng != null) { const center = { lat: linkedLat, lng: linkedLng }; this.setData({ center, circles: H.buildRangeCircle(center) }); this.refresh(center); this.loadMyTeams(false); return; }
     getCurrentLocation({
       onSuccess(res) {
+        lastLocation.save(res);
         const c = { lat: res.latitude, lng: res.longitude };
         that._me = c;
         that.setData({ center: c, circles: H.buildRangeCircle(c) });
         that.refresh(c);
       },
-      onFail() { that.refresh(that.data.center); },
+      onFail() {
+        const fb = lastLocation.resolve();
+        const c = { lat: fb.latitude, lng: fb.longitude };
+        that.setData({ center: c, circles: H.buildRangeCircle(c) });
+        cyToast(fb.hint);
+        that.refresh(c);
+      },
     }); this.loadMyTeams(false);
   },
 

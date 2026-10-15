@@ -169,7 +169,8 @@ const START_COLOR = '#12B886'; // 起点
 const END_COLOR = '#FA5252';   // 终点
 const DRAFT_COLOR = '#ADB5BD'; // 草稿(未配游戏)
 const SELECTED_COLOR = '#1A1A1A'; // 列表↔地图联动选中态(去紫,与 route-map/topic 同值)
-const MAP_DEFAULT_CENTER = { longitude: 121.4737, latitude: 31.2304 }; // 上海人民广场兜底
+// BL-23:首屏占位与 route-map-view 同一份兜底坐标(last-location 固定坐标);有节点/上次定位后由 buildRouteMapView 覆盖
+const MAP_DEFAULT_CENTER = routeMapView.MAP_DEFAULT_CENTER;
 const UNDO_CAP = 20; // 撤销栈上限
 const IMG_ARR_MAX = 9; // 横版封面张数上限(与门店相册一致)
 // AI 频控超限文案前缀:后端运行时拼上限数字(`今日AI次数已用完(20/天),明天再来吧`),只能前缀匹配
