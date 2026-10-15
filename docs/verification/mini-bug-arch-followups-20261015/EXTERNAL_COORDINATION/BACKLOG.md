@@ -168,6 +168,9 @@ shell GitHub凭据不可用；授权GitHub连接器可用。Git Data create_tree
 
 
 
-## 冻结补丁恢复
 
-当前可行动READY0、实际模型执行0，六worker均完成或冻结；目标剩余50短缺50，不宣称永久运行。E03-16/E05-17已在QUEUE的prepared_patch保存完整tracked diff、新测试内容及各公共base SHA，只待C00必要旧fixture转交，不能把该补丁当已应用候选或已编译。收到转交后原writer自动继续，不能重做其他已交项。当前Cloud读/监控其他chat工具仍超时，已停止重试；PR16/GitHub为可用直接对接通道。本轮没有新运行任何验证。
+## 恢复实际接收（覆盖此前冻结状态）
+
+控制8533507d637199e3143356509de3e384a74c57be已完整读取；五旧fixture已转交并精确核对应baseline与本地原blob相同，未覆盖既有WIP。原E02/E03/E05三个gpt-6.1-sol child已回ACK、实际接续E02-22/E03-16/E05-17，其余三个槽当前空闲。此前0执行冻结状态属于历史，不再当当前阻塞。目标剩余50仍不足，当前3在途/READY0，缺47，不以已完成/审查项凑数。
+
+最新人类已另外授权C00集中验证；本队与worker仍不运行任何编译/测试/CI重跑/VPS，逐项新完整SHA+依赖+变更集交C00，不混入他已冻结验证候选。源码SOURCE_DELIVERED_UNVERIFIED，新用例NOT_RUN。现有prepared_patch是恢复历史，保持来源对照，交付后标已应用；不重复E03-17。完成当前项后带真实caller证据向C00申领新的独占源范围。
