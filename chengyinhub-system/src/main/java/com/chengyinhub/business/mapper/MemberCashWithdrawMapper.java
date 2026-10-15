@@ -14,6 +14,9 @@ public interface MemberCashWithdrawMapper {
 
     public int updateMemberCashWithdraw(MemberCashWithdraw w);
 
+    /** Channel observations only; terminal/frozen original receipts are authoritative. */
+    public int updateReceiptIfProcessing(MemberCashWithdraw w);
+
     public MemberCashWithdraw selectByIdForUpdate(@Param("id") Long id);
 
     public MemberCashWithdraw selectById(@Param("id") Long id);
