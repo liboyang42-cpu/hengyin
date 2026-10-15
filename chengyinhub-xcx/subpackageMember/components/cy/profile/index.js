@@ -347,6 +347,9 @@ Component({
     _avatarSrc: '',
     _avatarInitial: '',
     reportShow: false,
+    reportTargetType: '',
+    reportTargetId: '',
+    reportTitle: '举报',
     subjectIsMerchant: false,
     subjectMerchant: null,
     // 门店 NPC 对话:开关 + 面板可见性。
@@ -1532,7 +1535,14 @@ Component({
 
   onReportMember: function () {
     this.closeMoreMenu();
-    this.setData({ reportShow: true });
+    this.setData({ reportShow: true, reportTargetType: 'MEMBER', reportTargetId: String(this.data.userId || ''), reportTitle: '举报这位用户' });
+  },
+
+  onReportMerchant: function () {
+    var merchantId = this.data.subjectMerchant && this.data.subjectMerchant.id;
+    this.closeMoreMenu();
+    if (merchantId == null || merchantId === '') return;
+    this.setData({ reportShow: true, reportTargetType: 'MERCHANT', reportTargetId: String(merchantId), reportTitle: '举报这家商家' });
   },
 
   onReportClose: function () {

@@ -47,8 +47,16 @@ test('BL-32: 组件走真实接口、无证据上传、回调不用 this 方法�
 test('BL-32: 他人主页「…」里有举报，本人与商家主页不出现', () => {
   const wxml = read('subpackageMember/components/cy/profile/index.wxml')
   assert.match(wxml, /<cy-cell wx:if="\{\{!isSelf && !subjectIsMerchant\}\}" title="举报"[^>]*bind:tap="onReportMember"/)
-  assert.match(wxml, /<cy-report-sheet wx:if="\{\{!isSelf\}\}" show="\{\{reportShow\}\}" target-type="MEMBER" target-id="\{\{userId\}\}"/)
+  assert.match(wxml, /<cy-report-sheet wx:if="\{\{!isSelf\}\}" show="\{\{reportShow\}\}" target-type="\{\{reportTargetType\}\}" target-id="\{\{reportTargetId\}\}"/)
   assert.match(read('subpackageMember/components/cy/profile/index.json'), /"cy-report-sheet": "\/components\/cy\/report-sheet\/index"/)
   const js = read('subpackageMember/components/cy/profile/index.js')
-  assert.match(js, /onReportMember: function \(\) \{\n    this\.closeMoreMenu\(\);\n    this\.setData\(\{ reportShow: true \}\);/)
+  assert.match(js, /onReportMember: function \(\) \{\n    this\.closeMoreMenu\(\);\n    this\.setData\(\{ reportShow: true, reportTargetType: 'MEMBER', reportTargetId: String\(this\.data\.userId \|\| ''\)/)
+})
+
+test('BL-33: 商家公开主页「…」举报商家，targetId 用商家档案主键', () => {
+  const wxml = read('subpackageMember/components/cy/profile/index.wxml')
+  assert.match(wxml, /<cy-cell wx:if="\{\{!isSelf && subjectIsMerchant && subjectMerchant\.id\}\}" title="举报"[^>]*bind:tap="onReportMerchant"/)
+  const js = read('subpackageMember/components/cy/profile/index.js')
+  assert.match(js, /reportTargetType: 'MERCHANT', reportTargetId: String\(merchantId\)/)
+  assert.match(js, /if \(merchantId == null \|\| merchantId === ''\) return;/)
 })
