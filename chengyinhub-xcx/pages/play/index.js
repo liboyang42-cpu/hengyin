@@ -620,11 +620,14 @@ Page({
     if (!this._routeActions) this._routeActions = createRouteActionStore();
     return Object.assign({}, this._sessionParams(), payload || {}, this._routeActions.context(kind, nodeId, this._routeState));
   },
-  _withThoughtSync(write) {
+  _withThoughtSync(write, isCurrent) {
+    const current = () => typeof isCurrent !== 'function' || isCurrent();
+    if (!current()) return Promise.resolve({ obsolete: true });
     if (this.data.isPreview || this.data.isMock
         || (!this._thoughtSyncPending && !(this._routeState && this._routeState.thoughtCount > 0) && !(this.data.themeBag || {}).stepEggs)) return write();
     const pendingClaim = this._thoughtSyncPending || Promise.resolve(true);
-    return pendingClaim.then(ok => ok && this._syncThoughts([])).then(ok => {
+    return pendingClaim.then(ok => current() && ok && this._syncThoughts([], isCurrent)).then(ok => {
+      if (!current()) return { obsolete: true };
       if (ok) return write();
       cyToast('步数未同步，请重试');
       return { code: 'fail', netFail: true, msg: '步数未同步，请重试' };
@@ -3162,14 +3165,19 @@ Page({
     fresh.forEach((k) => { this._thoughtClaimed[k] = true; });
     this._syncThoughts(fresh);
   },
-  _syncThoughts(claim) {
+  _syncThoughts(claim, isCurrent) {
     if (this.data.isPreview || this.data.isMock) return Promise.resolve(true);
-    const releaseClaims = () => claim.forEach((k) => { if (this._thoughtClaimed) delete this._thoughtClaimed[k]; });
-    const sync = () => this._weRunCipher().then((cipher) => {
+    const current = () => typeof isCurrent !== 'function' || isCurrent();
+    const releaseClaims = () => { if (current()) claim.forEach((k) => { if (this._thoughtClaimed) delete this._thoughtClaimed[k]; }); };
+    const sync = () => {
+      if (!current()) return Promise.resolve(false);
+      return this._weRunCipher().then((cipher) => {
+      if (!current()) return false;
       if (cipher === false) { releaseClaims(); return false; }
       if (!claim.length && !cipher) return true;       // 未授权运动:继续正常游玩,使用未应验结局
       return req('/api/play/journey/thought/sync', 'POST', Object.assign({ topicId: this.data.topicId },
         this._sessionParams(), { claim }, cipher || {}), { 'content-type': 'application/json' }).then((res) => {
+        if (!current()) return false;
         if ((res.code == 200 || res.code == '200') && res.data) {
           this._applyRouteState(res.data, () => {
             if (this.data.chapterFull) this.openChapterFull();
@@ -3182,6 +3190,7 @@ Page({
         return false;
       });
     }).catch(() => { releaseClaims(); return false; });
+    };
     // 认领与到站同步串行:先拿到伏笔,再同步步数,最后才提交可能结束本局的动作。
     const pending = (this._thoughtSyncPending || Promise.resolve()).then(sync);
     this._thoughtSyncPending = pending;
@@ -4811,14 +4820,40 @@ Page({
       }
     });
   },
+  _beginRouteWriteContext(channel) {
+    const context = { channel, owner: this._playOwner, sessionKey: JSON.stringify(this._sessionParams()),
+      routeSessionId: String((this._routeState || {}).sessionId || ''), routeActions: this._routeActions };
+    this[channel + 'Intent'] = context;
+    return context;
+  },
+  _isRouteWriteContextCurrent(context) {
+    return this._isPlayAccountCurrent() && context.owner === this._playOwner
+      && this[context.channel + 'Intent'] === context
+      && context.sessionKey === JSON.stringify(this._sessionParams()) && context.routeActions === this._routeActions
+      && (!context.routeSessionId || context.routeSessionId === String((this._routeState || {}).sessionId || ''));
+  },
+  _finishRouteWriteContext(context) {
+    if (this[context.channel + 'Intent'] !== context) return;
+    this[context.channel + 'Intent'] = null;
+    this[context.channel + 'InFlight'] = false;
+  },
+
   arrive(nodeId, via) {
+    if (!this._isPlayAccountCurrent()) return;
     if (this.data.isPreview || this.data.isMock) { this.onComplete(nodeId, {}); return; }
     if (!this.beginArrivalWrite()) return;
     const that = this;
     const loc = this._loc || {};
-    this._withThoughtSync(() => req('/api/play/arrive', 'POST', this._routeWritePayload('arrive', nodeId, { nodeId, longitude: loc.longitude, latitude: loc.latitude, accuracy: playAccuracy.accuracyOf(loc) })))
+    const payload = this._routeWritePayload('arrive', nodeId, { nodeId, longitude: loc.longitude, latitude: loc.latitude, accuracy: playAccuracy.accuracyOf(loc) });
+    const context = this._beginRouteWriteContext('_arrivalWrite');
+    const isCurrent = () => this._isRouteWriteContextCurrent(context);
+    this._withThoughtSync(() => {
+      if (!isCurrent()) return Promise.resolve({ obsolete: true });
+      return req('/api/play/arrive', 'POST', Object.assign({}, payload, { expectedRouteVersion: normalizeRouteState(this._routeState).version }));
+    }, isCurrent)
       .then((r) => {
-        that._arrivalWriteInFlight = false;
+        const current = isCurrent(); that._finishRouteWriteContext(context);
+        if (!current || (r && r.obsolete)) return;
         if (r.code == 200 || r.code == '200') {
           that._resolveRouteAction('arrive', nodeId);
           if (that.data.mode === 2) { that.onShopDayArrived(nodeId, r.data); return; }
@@ -4833,20 +4868,28 @@ Page({
           that.diegetic(r.msg || '还没到这一站附近');
         }
       }).catch(() => {
-        that._arrivalWriteInFlight = false;
+        const current = isCurrent(); that._finishRouteWriteContext(context);
+        if (!current) return;
         that.recordArrivalNetworkFailure('打卡请求没有送达', { type: 'arrive', nodeId, via });
       });
   },
   checkin(nodeId, code, source) {
+    if (!this._isPlayAccountCurrent()) return;
     if (this.data.isPreview || this.data.isMock) { this.onComplete(nodeId, {}); return; }
     const that = this;
     const isGame = source === 'game';
     if (isGame ? !this.beginGameWrite() : !this.beginArrivalWrite()) return;
     const attempt = isGame ? { type: 'gameCheckin', nodeId, code } : null;
-    this._withThoughtSync(() => req('/api/play/checkin', 'POST', this._routeWritePayload('checkin', nodeId, { nodeId, code, registrationId: this.data.regId || undefined })))
+    const payload = this._routeWritePayload('checkin', nodeId, { nodeId, code, registrationId: this.data.regId || undefined });
+    const context = this._beginRouteWriteContext(isGame ? '_gameWrite' : '_arrivalWrite');
+    const isCurrent = () => this._isRouteWriteContextCurrent(context);
+    this._withThoughtSync(() => {
+      if (!isCurrent()) return Promise.resolve({ obsolete: true });
+      return req('/api/play/checkin', 'POST', Object.assign({}, payload, { expectedRouteVersion: normalizeRouteState(this._routeState).version }));
+    }, isCurrent)
       .then((r) => {
-        if (isGame) that._gameWriteInFlight = false;
-        else that._arrivalWriteInFlight = false;
+        const current = isCurrent(); that._finishRouteWriteContext(context);
+        if (!current || (r && r.obsolete)) return;
         // 扫码以"码→节点"为准:用后端返回的 nodeId 点亮(自由定向扫错码不会点亮错节点)
         if (r.code == 200 || r.code == '200') {
           that._resolveRouteAction('checkin', nodeId);
@@ -4872,8 +4915,8 @@ Page({
           that.diegetic(r.msg || '这枚码对不上这一站');
         }
       }).catch(() => {
-        if (isGame) that._gameWriteInFlight = false;
-        else that._arrivalWriteInFlight = false;
+        const current = isCurrent(); that._finishRouteWriteContext(context);
+        if (!current) return;
         if (isGame) that.recordGameNetworkFailure('扫码结果没有送达', attempt);
         else that.recordArrivalNetworkFailure('扫码结果没有送达', { type: 'checkin', nodeId, code });
       });
