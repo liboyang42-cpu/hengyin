@@ -1,0 +1,1108 @@
+{
+  "source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+  "source_pr": 44,
+  "environment": "DEDICATED_TEST_VPS_OFFLINE_GUARD_212",
+  "source_archive_sha256": "1da428f78d02aca65c053b031b5b1e835619e1a656d0c81f47d52fe2eb158f2b",
+  "compile": {
+    "status": "PASS",
+    "reactor_modules": 7,
+    "admin_test_sources": 1392,
+    "guard_exit_code": 0,
+    "compile_log_sha256": "f18af8d7f8596f43efd6c930165b21f5cde89bff3d4043b4c193529626dcf8f9"
+  },
+  "unit": {
+    "status": "FAIL",
+    "counts": {
+      "tests": 483,
+      "failures": 5,
+      "errors": 8,
+      "skipped": 0
+    },
+    "passed": 470,
+    "expected_classes": 83,
+    "actual_report_classes": 83,
+    "exact_class_set_match": true,
+    "all_reports_fresh": true,
+    "started_at": "2026-10-15T17:41:58.180289+00:00",
+    "guard": {
+      "returncode": 1,
+      "stdout": "{\"exitCode\": 1, \"reason\": \"child_command_failed\", \"containerId\": \"c73152890fc47138ebeb5df425f206bef9aa45bee7e0926b803325be43f7bf14\"}\n",
+      "stderr": "",
+      "finished_at": "2026-10-15T17:44:50.635795+00:00"
+    },
+    "log_sha256": "7023cb5ff16334246b8fb551ebce64036809dfb1434dc826caf78c0957a20f43",
+    "failures": [
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C03_22Test",
+        "test": "nodeInsertMustSucceedAndGenerateIdentityBeforeNpcOrRuleWrite",
+        "kind": "failure",
+        "exception": "org.opentest4j.AssertionFailedError",
+        "message": "Unexpected exception type thrown ==> expected: <java.lang.IllegalStateException> but was: <java.lang.NullPointerException>",
+        "relevant_frames": [
+          "at com.chengyinhub.business.longrun.OWN_C03_22Test.nodeInsertMustSucceedAndGenerateIdentityBeforeNpcOrRuleWrite(OWN_C03_22Test.java:113)",
+          "Caused by: java.lang.NullPointerException: Cannot invoke \"java.lang.Long.longValue()\"",
+          "at com.chengyinhub.business.longrun.OWN_C03_22Test.lambda$nodeInsertMustSucceedAndGenerateIdentityBeforeNpcOrRuleWrite$8(OWN_C03_22Test.java:110)",
+          "at com.chengyinhub.business.mapper.CmsTopicNodeMapper$MockitoMock$227156912.insertCmsTopicNode(Unknown Source)",
+          "at com.chengyinhub.business.service.impl.CmsTopicServiceImpl.copyNodes(CmsTopicServiceImpl.java:910)",
+          "at com.chengyinhub.business.service.impl.CmsTopicServiceImpl.copyChaptersAndNodes(CmsTopicServiceImpl.java:757)",
+          "at com.chengyinhub.business.service.impl.CmsTopicServiceImpl.copyCmsTopicWithContentOwner(CmsTopicServiceImpl.java:543)",
+          "at com.chengyinhub.business.service.impl.CmsTopicServiceImpl.copyCmsTopic(CmsTopicServiceImpl.java:454)",
+          "at com.chengyinhub.business.longrun.OWN_C03_22Test.copy(OWN_C03_22Test.java:124)",
+          "at com.chengyinhub.business.longrun.OWN_C03_22Test.lambda$nodeInsertMustSucceedAndGenerateIdentityBeforeNpcOrRuleWrite$9(OWN_C03_22Test.java:113)"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C03_22Test",
+        "test": "chapterInsertMustSucceedAndGenerateIdentityBeforeNodes",
+        "kind": "failure",
+        "exception": "org.opentest4j.AssertionFailedError",
+        "message": "Unexpected exception type thrown ==> expected: <java.lang.IllegalStateException> but was: <java.lang.NullPointerException>",
+        "relevant_frames": [
+          "at com.chengyinhub.business.longrun.OWN_C03_22Test.chapterInsertMustSucceedAndGenerateIdentityBeforeNodes(OWN_C03_22Test.java:101)",
+          "Caused by: java.lang.NullPointerException: Cannot invoke \"java.lang.Long.longValue()\"",
+          "at com.chengyinhub.business.longrun.OWN_C03_22Test.lambda$chapterInsertMustSucceedAndGenerateIdentityBeforeNodes$6(OWN_C03_22Test.java:98)",
+          "at com.chengyinhub.business.mapper.CmsTopicChapterMapper$MockitoMock$205511788.insertCmsTopicChapter(Unknown Source)",
+          "at com.chengyinhub.business.service.impl.CmsTopicServiceImpl.copyChaptersAndNodes(CmsTopicServiceImpl.java:746)",
+          "at com.chengyinhub.business.service.impl.CmsTopicServiceImpl.copyCmsTopicWithContentOwner(CmsTopicServiceImpl.java:543)",
+          "at com.chengyinhub.business.service.impl.CmsTopicServiceImpl.copyCmsTopic(CmsTopicServiceImpl.java:454)",
+          "at com.chengyinhub.business.longrun.OWN_C03_22Test.copy(OWN_C03_22Test.java:124)",
+          "at com.chengyinhub.business.longrun.OWN_C03_22Test.lambda$chapterInsertMustSucceedAndGenerateIdentityBeforeNodes$7(OWN_C03_22Test.java:101)"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C03_24Test",
+        "test": "mediaFailureAfterWriteRemainsUncertain",
+        "kind": "error",
+        "exception": "java.lang.IllegalStateException",
+        "message": "媒体失败",
+        "relevant_frames": [
+          "at com.chengyinhub.web.controller.api.ApiTopicController.updateTopic(ApiTopicController.java:690)",
+          "at com.chengyinhub.web.controller.api.ApiTopicController.updateTopic(ApiTopicController.java:611)",
+          "at com.chengyinhub.business.longrun.OWN_C03_24Test.mediaFailureAfterWriteRemainsUncertain(OWN_C03_24Test.java:97)"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C04_21Test",
+        "test": "bountyFailureRollsBackItsNestedBoundaryAfterMemberThenBountyLock",
+        "kind": "failure",
+        "exception": "org.mockito.exceptions.verification.VerificationInOrderFailure",
+        "message": "\nVerification in order failure:\nmerchantReferralBountyMapper.selectByMerchantMemberIdForUpdate(\n    9L\n);\nWanted 1 time:\n-> at com.chengyinhub.business.longrun.OWN_C04_21Test.bountyFailureRollsBackItsNestedBoundaryAfterMemberThenBountyLock(OWN_C04_21Test.java:181)\nBut was 2 times:\n-> at com.chengyinhub.business.service.impl.MerchantReferralBountyService.lambda$withInviterLock$0(MerchantReferralBountyService.java:152)\n-> at com.chengyinhub.business.service.impl.MerchantReferralBountyService.tryActivate(MerchantReferralBountyService.java:167)\n\n",
+        "relevant_frames": [
+          "-> at com.chengyinhub.business.longrun.OWN_C04_21Test.bountyFailureRollsBackItsNestedBoundaryAfterMemberThenBountyLock(OWN_C04_21Test.java:181)",
+          "-> at com.chengyinhub.business.service.impl.MerchantReferralBountyService.lambda$withInviterLock$0(MerchantReferralBountyService.java:152)",
+          "-> at com.chengyinhub.business.service.impl.MerchantReferralBountyService.tryActivate(MerchantReferralBountyService.java:167)",
+          "at com.chengyinhub.business.longrun.OWN_C04_21Test.bountyFailureRollsBackItsNestedBoundaryAfterMemberThenBountyLock(OWN_C04_21Test.java:181)"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C04_22Test",
+        "test": "lateAcceptedAndAmbiguousReturnOriginalTerminalOrFrozenFacts",
+        "kind": "error",
+        "exception": "org.mockito.exceptions.misusing.UnfinishedStubbingException",
+        "message": "\nUnfinished stubbing detected here:\n-> at com.chengyinhub.business.longrun.OWN_C04_22Test$Fixture.<init>(OWN_C04_22Test.java:111)\n\nE.g. thenReturn() may be missing.\nExamples of correct stubbing:\n    when(mock.isOk()).thenReturn(true);\n    when(mock.isOk()).thenThrow(exception);\n    doThrow(exception).when(mock).someVoidMethod();\nHints:\n 1. missing thenReturn()\n 2. you are trying to stub a final method, which is not supported\n 3. you are stubbing the behaviour of another mock inside before 'thenReturn' instruction is completed\n",
+        "relevant_frames": [
+          "-> at com.chengyinhub.business.longrun.OWN_C04_22Test$Fixture.<init>(OWN_C04_22Test.java:111)",
+          "at com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver.resolve(WithdrawalFrozenAmountResolver.java:58)",
+          "at com.chengyinhub.business.longrun.OWN_C04_22Test$Fixture.<init>(OWN_C04_22Test.java:112)",
+          "at com.chengyinhub.business.longrun.OWN_C04_22Test.lateAcceptedAndAmbiguousReturnOriginalTerminalOrFrozenFacts(OWN_C04_22Test.java:24)"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C04_22Test",
+        "test": "unchangedProcessingReceiptCanLegitimatelyReportZeroAffectedRows",
+        "kind": "error",
+        "exception": "org.mockito.exceptions.misusing.UnfinishedStubbingException",
+        "message": "\nUnfinished stubbing detected here:\n-> at com.chengyinhub.business.longrun.OWN_C04_22Test$Fixture.<init>(OWN_C04_22Test.java:111)\n\nE.g. thenReturn() may be missing.\nExamples of correct stubbing:\n    when(mock.isOk()).thenReturn(true);\n    when(mock.isOk()).thenThrow(exception);\n    doThrow(exception).when(mock).someVoidMethod();\nHints:\n 1. missing thenReturn()\n 2. you are trying to stub a final method, which is not supported\n 3. you are stubbing the behaviour of another mock inside before 'thenReturn' instruction is completed\n",
+        "relevant_frames": [
+          "-> at com.chengyinhub.business.longrun.OWN_C04_22Test$Fixture.<init>(OWN_C04_22Test.java:111)",
+          "at com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver.resolve(WithdrawalFrozenAmountResolver.java:58)",
+          "at com.chengyinhub.business.longrun.OWN_C04_22Test$Fixture.<init>(OWN_C04_22Test.java:112)",
+          "at com.chengyinhub.business.longrun.OWN_C04_22Test.unchangedProcessingReceiptCanLegitimatelyReportZeroAffectedRows(OWN_C04_22Test.java:51)"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C04_22Test",
+        "test": "staleUnknownQueryCannotWriteTerminalReceiptOrEscalateFromOldSnapshot",
+        "kind": "error",
+        "exception": "org.mockito.exceptions.misusing.UnfinishedStubbingException",
+        "message": "\nUnfinished stubbing detected here:\n-> at com.chengyinhub.business.longrun.OWN_C04_22Test$Fixture.<init>(OWN_C04_22Test.java:111)\n\nE.g. thenReturn() may be missing.\nExamples of correct stubbing:\n    when(mock.isOk()).thenReturn(true);\n    when(mock.isOk()).thenThrow(exception);\n    doThrow(exception).when(mock).someVoidMethod();\nHints:\n 1. missing thenReturn()\n 2. you are trying to stub a final method, which is not supported\n 3. you are stubbing the behaviour of another mock inside before 'thenReturn' instruction is completed\n",
+        "relevant_frames": [
+          "-> at com.chengyinhub.business.longrun.OWN_C04_22Test$Fixture.<init>(OWN_C04_22Test.java:111)",
+          "at com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver.resolve(WithdrawalFrozenAmountResolver.java:58)",
+          "at com.chengyinhub.business.longrun.OWN_C04_22Test$Fixture.<init>(OWN_C04_22Test.java:112)",
+          "at com.chengyinhub.business.longrun.OWN_C04_22Test.staleUnknownQueryCannotWriteTerminalReceiptOrEscalateFromOldSnapshot(OWN_C04_22Test.java:63)"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C06_25Test",
+        "test": "journeyReceiptWriteFailureStillThrows",
+        "kind": "error",
+        "exception": "java.lang.NullPointerException",
+        "message": "Cannot invoke \"com.chengyinhub.business.domain.TopicRouteAction.setResponseJson(String)\" because \"this.saved\" is null",
+        "relevant_frames": [
+          "java.lang.NullPointerException: Cannot invoke \"com.chengyinhub.business.domain.TopicRouteAction.setResponseJson(String)\" because \"this.saved\" is null",
+          "at com.chengyinhub.business.longrun.OWN_C06_25Test.lambda$setup$3(OWN_C06_25Test.java:54)",
+          "at com.chengyinhub.business.mapper.TopicRouteSessionMapper$MockitoMock$1853449730.updateActionResponse(Unknown Source)",
+          "at com.chengyinhub.business.longrun.OWN_C06_25Test.journeyReceiptWriteFailureStillThrows(OWN_C06_25Test.java:82)"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C06_25Test",
+        "test": "checkReceiptWriteFailureStillThrows",
+        "kind": "error",
+        "exception": "java.lang.NullPointerException",
+        "message": "Cannot invoke \"com.chengyinhub.business.domain.TopicRouteAction.setResponseJson(String)\" because \"this.saved\" is null",
+        "relevant_frames": [
+          "java.lang.NullPointerException: Cannot invoke \"com.chengyinhub.business.domain.TopicRouteAction.setResponseJson(String)\" because \"this.saved\" is null",
+          "at com.chengyinhub.business.longrun.OWN_C06_25Test.lambda$setup$3(OWN_C06_25Test.java:54)",
+          "at com.chengyinhub.business.mapper.TopicRouteSessionMapper$MockitoMock$1853449730.updateActionResponse(Unknown Source)",
+          "at com.chengyinhub.business.longrun.OWN_C06_25Test.checkReceiptWriteFailureStillThrows(OWN_C06_25Test.java:77)"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C06_29Test",
+        "test": "emptyFrozenObjectPreservesDefaultRulesInsteadOfLiveCheckEnabled",
+        "kind": "error",
+        "exception": "java.lang.IllegalArgumentException",
+        "message": "旅程数值规则版本不支持",
+        "relevant_frames": [
+          "at com.chengyinhub.business.service.support.JourneyRulesValidator.validateAndNormalize(JourneyRulesValidator.java:84)",
+          "at com.chengyinhub.business.domain.JourneyRules.parse(JourneyRules.java:56)",
+          "at com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl.sessionRules(TopicRouteRuntimeServiceImpl.java:1063)",
+          "at com.chengyinhub.business.longrun.OWN_C06_29Test.read(OWN_C06_29Test.java:40)",
+          "at com.chengyinhub.business.longrun.OWN_C06_29Test.emptyFrozenObjectPreservesDefaultRulesInsteadOfLiveCheckEnabled(OWN_C06_29Test.java:59)"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest",
+        "test": "bothLegsHandTheCombinedFrozenAmountToTheAtomicDeduction",
+        "kind": "failure",
+        "exception": "Wanted but not invoked",
+        "message": "\nWanted but not invoked:\niUmsMemberService.deductWithdrawableBalance(\n    900002L,\n    80.00,\n    20\n);\n-> at com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest.bothLegsHandTheCombinedFrozenAmountToTheAtomicDeduction(BothWithdrawalLegsRejectPlayerCooldownTest.java:186)\n\nHowever, there was exactly 1 interaction with this mock:\niUmsMemberService.selectUmsMemberById(\n    900002L\n);\n-> at com.chengyinhub.business.service.impl.CashWithdrawServiceImpl.withdraw(CashWithdrawServiceImpl.java:89)\n\n",
+        "relevant_frames": [
+          "-> at com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest.bothLegsHandTheCombinedFrozenAmountToTheAtomicDeduction(BothWithdrawalLegsRejectPlayerCooldownTest.java:186)",
+          "-> at com.chengyinhub.business.service.impl.CashWithdrawServiceImpl.withdraw(CashWithdrawServiceImpl.java:89)",
+          "at com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest.bothLegsHandTheCombinedFrozenAmountToTheAtomicDeduction(BothWithdrawalLegsRejectPlayerCooldownTest.java:186)"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest",
+        "test": "existingPhotoSubmissionReplayDoesNotReverifyStorage",
+        "kind": "error",
+        "exception": "com.chengyinhub.business.service.GameSessionException",
+        "message": "游戏状态已变化，请刷新后重试",
+        "relevant_frames": [
+          "com.chengyinhub.business.service.GameSessionException: 游戏状态已变化，请刷新后重试",
+          "at com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl.error(GameSessionRuntimeServiceImpl.java:3290)",
+          "at com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl.bumpSession(GameSessionRuntimeServiceImpl.java:1780)",
+          "at com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl.recoverSubmissionOutcome(GameSessionRuntimeServiceImpl.java:2450)",
+          "at com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl.playerSubmit(GameSessionRuntimeServiceImpl.java:932)",
+          "at com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl.dispatch(GameSessionRuntimeServiceImpl.java:360)",
+          "at com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl.command(GameSessionRuntimeServiceImpl.java:294)",
+          "at com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest.existingPhotoSubmissionReplayDoesNotReverifyStorage(GameSessionRuntimeServiceImplTest.java:1312)"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest",
+        "test": "concurrentRoleInsertCollisionReadsActiveWinnerAndCurrentRevision",
+        "kind": "failure",
+        "exception": "org.opentest4j.AssertionFailedError",
+        "message": "expected: <3> but was: <2>",
+        "relevant_frames": [
+          "at com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest.concurrentRoleInsertCollisionReadsActiveWinnerAndCurrentRevision(GameSessionRuntimeServiceImplTest.java:1750)"
+        ]
+      }
+    ],
+    "reports": [
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E03_01Test.xml",
+        "class": "com.chengyinhub.business.longrun.E03_01Test",
+        "sha256": "e66ceb4d88711546de3776de1c6be44f09185d468766d83b00d9f1dda1dcea38",
+        "fresh_since_start": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E03_11Test.xml",
+        "class": "com.chengyinhub.business.longrun.E03_11Test",
+        "sha256": "0535a7367cfefccae02442c79a2f778964c47b2b872dd588b9cc077e3e43acb8",
+        "fresh_since_start": true,
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_03Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C03_03Test",
+        "sha256": "a67fb2baabb742d6e9e7981f0868a482d4f481d2915742526aca9455eea654b8",
+        "fresh_since_start": true,
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_05Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C03_05Test",
+        "sha256": "fab4e54b5e9954ae7c2c55286e344dde5893bcdddb7c9a08918e0dc88554acc0",
+        "fresh_since_start": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_10Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C03_10Test",
+        "sha256": "9dc18466c312f55c42ab4e9dd8279be5caa0239fece5343fca82fe85c3e35ea1",
+        "fresh_since_start": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_11Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C03_11Test",
+        "sha256": "466f56a6cade37b0b48630c720e5b1845b428a7e0ffd57d0c7e8d78300586137",
+        "fresh_since_start": true,
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_12Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C03_12Test",
+        "sha256": "b60b77d9ba3268200c6e512f0239f5b4f6f3d61e76f19edd5d7a63beda9c7f0d",
+        "fresh_since_start": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_13Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C03_13Test",
+        "sha256": "9c712aef066fd9a32d418bfc2cbd7c80478b850c91cd463165bb4e4d7a035f47",
+        "fresh_since_start": true,
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_15Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C03_15Test",
+        "sha256": "9527fbb92127022a61a24f13ee9c338ce48a254f0c496bf7c58e66a9ce7f433d",
+        "fresh_since_start": true,
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_16Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C03_16Test",
+        "sha256": "3169da9226624cc0d2491e6bab34475b9ae76191683ae5983170d1087d68ca7a",
+        "fresh_since_start": true,
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_17Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C03_17Test",
+        "sha256": "4fbc61e38d81c48781765f03bcf1d2cef47809f3567c0df7a3cf624db67bb0af",
+        "fresh_since_start": true,
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_18Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C03_18Test",
+        "sha256": "87cdad9a1555e9a8ad23d3c30fed57c8868e76be51c3f92f4cf38be069a58c9e",
+        "fresh_since_start": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_19Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C03_19Test",
+        "sha256": "792c67a2dce35538c93fc46dc854a64167828e156e5eee468f6b2569cdaf34bf",
+        "fresh_since_start": true,
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_20Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C03_20Test",
+        "sha256": "92a203eaa5d052a6a3b7f1e6388df01ee4529dab07e9cca07f6e20a4a16af8fe",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_21Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C03_21Test",
+        "sha256": "7c557ca1e572b78c0cc975dbfa4ffc8af8f22635fc633ef129ad56e55f6f1700",
+        "fresh_since_start": true,
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_22Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C03_22Test",
+        "sha256": "52cbb05e4767d42ca144d56d49256a8b4bd59eb84ea7481a655203809e58b1ce",
+        "fresh_since_start": true,
+        "tests": 4,
+        "failures": 2,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_23Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C03_23Test",
+        "sha256": "dfba54796ba7b76110ca7105d28a7bd03d890203871d6b9076773392a601535b",
+        "fresh_since_start": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_24Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C03_24Test",
+        "sha256": "cb36ffcb2f82e47911a2dab9f6ece767e1da077d8c2829e79bb6261c610912a4",
+        "fresh_since_start": true,
+        "tests": 6,
+        "failures": 0,
+        "errors": 1,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_25Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C03_25Test",
+        "sha256": "782afb2fe54dd28ee3d0457f2adee52b33eec982a67ce95ad6e9fa09f3bfec4a",
+        "fresh_since_start": true,
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C04_01Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C04_01Test",
+        "sha256": "027acbf7f6f71499c2dca1c2ea58998a8cd38c75367f1e8fb085453fe780df0b",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C04_02Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C04_02Test",
+        "sha256": "9d0e1099950ea94e40af6185be6f5b3774493669268dd7ec52c9de88d3f872d0",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C04_07Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C04_07Test",
+        "sha256": "c0e5f33ba91aa6593a8d52d05fadedc7e4ce52728caea583ea2e808c1c18a900",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C04_09Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C04_09Test",
+        "sha256": "227888dce2dac176286eab0b1cb2beb746a831e2cea637a749f0c876732031be",
+        "fresh_since_start": true,
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C04_10Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C04_10Test",
+        "sha256": "3b7cee4b848ff2015412e5a9464d16380898883f565cb23683139a09d0d29d82",
+        "fresh_since_start": true,
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C04_11Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C04_11Test",
+        "sha256": "f8b621c04263a59ddbd0789e3baf0c69707e7e1bac5a4d0c1cbd454a3eb80554",
+        "fresh_since_start": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C04_12Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C04_12Test",
+        "sha256": "068a071d8af1208aac43153f92ef2e920669be46480ddae80c11b1e1a5c13769",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C04_13Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C04_13Test",
+        "sha256": "b2b8c6beb5b4f9bf76d677433d5d9ab4716012deb04442b13df102ac6230ce10",
+        "fresh_since_start": true,
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C04_14Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C04_14Test",
+        "sha256": "9b78df9035d0b2ac04193d59e3293fe0a6b78ec601ac0780463197e78f79f161",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C04_15Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C04_15Test",
+        "sha256": "132ecdddab5908ea611486a250723e8287f978127eb4d84718492b4e5f2cae2b",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C04_16Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C04_16Test",
+        "sha256": "e915a6810483bb0d56f4ba0a2c4636100df77b495eb57b5e27aed504b901ee80",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C04_18Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C04_18Test",
+        "sha256": "2d6af83706f7020de40b518fa2f15c17d27cc9f0899a1798441731bbd1268ae7",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C04_20Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C04_20Test",
+        "sha256": "97cb43c503ffb98f3a911a8403cbd2fb19930886211ef202631a9c299653ce2f",
+        "fresh_since_start": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C04_21Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C04_21Test",
+        "sha256": "4c8bd2bf853e93eb3ee1be22cda6ebc95186cf35f4b545b19005d23f9442dfd0",
+        "fresh_since_start": true,
+        "tests": 7,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C04_22Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C04_22Test",
+        "sha256": "9179ec8d3b7e277fcff9bfd57b52d95f86376367bd5be08c271f5180a7cdac5f",
+        "fresh_since_start": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 3,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C05_01Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C05_01Test",
+        "sha256": "1cda48fc3c37e9e93ec8e45f35019a96531732c06cb26ef2a1457bb5a3470b81",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C05_09Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C05_09Test",
+        "sha256": "f3b3c2204e16800558186ddb7109c48ab1d8597ecece102299cf6647a1331bb0",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C05_10Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C05_10Test",
+        "sha256": "e15fb045800de5f7532e33e1958952044629b7d848bcc45c251255b3b45aaa02",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C05_11Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C05_11Test",
+        "sha256": "6552cc7cc4244be3fd6cbbc58a64773d420ba6ec6ae1650a194c29dc96c7a1ec",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C05_15Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C05_15Test",
+        "sha256": "ef26627adb4b489dbfc3e48cf2543c92a1251c6babd275f8126d719172c55c7c",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C05_16Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C05_16Test",
+        "sha256": "abf6f9ab6ff9b306bbad6a7e1c6c6d7c68674927bcf7bbfdf2bce9dc00ca08b5",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C05_17Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C05_17Test",
+        "sha256": "38c03a7f306874e68ec28e58c4a1beb5ccdeb2123aeb96df68a0d5ac157116ae",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C05_18Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C05_18Test",
+        "sha256": "2e31b761684d915538986ea5de7bc42d7e711a76c8f071a34165f836997422aa",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C05_19Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C05_19Test",
+        "sha256": "53f1209d3d96fa1418c39c038ca11f25284553d873172753b1ed5d3288dd6866",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C05_20Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C05_20Test",
+        "sha256": "564a61d0ffed6f14ec82b20138e5a620171de0a0d68ab607be54ae4df2668501",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C05_21Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C05_21Test",
+        "sha256": "3775ac636486f6c05909900579efe63c27a272b250c9a71386acf3129a92ce9a",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C05_23Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C05_23Test",
+        "sha256": "b25ab261cdb60b65d23fb33234bedd671e7a4ec303b261a6ab0195538b80ddfe",
+        "fresh_since_start": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C05_25Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C05_25Test",
+        "sha256": "e45881c39b2126e69de271428beb9e073880fd7441dfd5ce0cb16f075c1c7e2a",
+        "fresh_since_start": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_01Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C06_01Test",
+        "sha256": "147a4a011e8d3f6a4b43b904180f64560fa0b36df1fc48ea1f693f6f52ce6b97",
+        "fresh_since_start": true,
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_05Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C06_05Test",
+        "sha256": "6a4c70ea63020089108cebb086b9b3df7ca33b5dceb479fd3bbb5f4b26a242c6",
+        "fresh_since_start": true,
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_07Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C06_07Test",
+        "sha256": "9c515b6869dd85a8fd898c504500021abe3cc3e712c22397fe9c644b35b19cb6",
+        "fresh_since_start": true,
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_09Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C06_09Test",
+        "sha256": "d45bf619da9dbb80a329623b38470bdfe9ac3cd0ee55405eec03d1876c095cf5",
+        "fresh_since_start": true,
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_11Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C06_11Test",
+        "sha256": "b488edc40701d096073fff0ccf90568c84a0693077655e61ac63ef6a7e9d2a00",
+        "fresh_since_start": true,
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_13Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C06_13Test",
+        "sha256": "57496d576ea272ecc08565f50e3710ce6ef6c7e9a61ee92ff7dc707f92661550",
+        "fresh_since_start": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_15Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C06_15Test",
+        "sha256": "9cda237910862a24a12b0a23299dd6018ffc506a8916630545f01b50089d258e",
+        "fresh_since_start": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_16Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C06_16Test",
+        "sha256": "1faf87d419059547d7037ce5d91e1a355b9991b15391b755aafbd2d9c429483b",
+        "fresh_since_start": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_17Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C06_17Test",
+        "sha256": "0cb3613bae341f467995540d4f2f960cc215ffe9571ef597f374e119c94047b5",
+        "fresh_since_start": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_18Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C06_18Test",
+        "sha256": "9fda0bef1343bd0dbb2ab6f2c153c1cc1d8d9b7a4ba15ef615167acebbe0a5da",
+        "fresh_since_start": true,
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_19Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C06_19Test",
+        "sha256": "bd31068e25a02be45db8d06b28e65273c8ce227b2c7fbfe82d85a7067be5c166",
+        "fresh_since_start": true,
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_20Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C06_20Test",
+        "sha256": "7bec18f9ac989813b06520eab3156c4e794b719d54a26d30b7c8d8be0f522ce5",
+        "fresh_since_start": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_21Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C06_21Test",
+        "sha256": "d5a0941fa2c34d25796df4e34a262b4ad474e4b5fe51d6c7b2647b953ad92b3c",
+        "fresh_since_start": true,
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_22Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C06_22Test",
+        "sha256": "f63963269e427a20b9187cda691b0b572bd51a5998abbe8f742e23b50d6819ca",
+        "fresh_since_start": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_23Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C06_23Test",
+        "sha256": "d9a912d1304743897a7a599e15f70812185408446d9816bc19a4782083a9d0da",
+        "fresh_since_start": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_24Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C06_24Test",
+        "sha256": "9468548308dbc78b1fc5c3068637d7c03343bd32e15ab12e20f7654daf36c1e2",
+        "fresh_since_start": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_25Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C06_25Test",
+        "sha256": "ffd1778f439e6605ead7eedb7a79ff52836348b968ca973a975808f4f8e526cb",
+        "fresh_since_start": true,
+        "tests": 5,
+        "failures": 0,
+        "errors": 2,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_26Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C06_26Test",
+        "sha256": "eceafa4f4d7cf5ee0c06535f31a11b583998c7107cf75ee925c778d7025a4bae",
+        "fresh_since_start": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_27Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C06_27Test",
+        "sha256": "6444d3e6e7ddaab3e1976ed14e67aef36fc29775be9c21f1fbe23d552a5a33e5",
+        "fresh_since_start": true,
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_28Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C06_28Test",
+        "sha256": "b96398f97633c03b2e7686bce7b11e7395928dce09ddf2aca98d45b931a9d63a",
+        "fresh_since_start": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_29Test.xml",
+        "class": "com.chengyinhub.business.longrun.OWN_C06_29Test",
+        "sha256": "4a77f017486266e8368576766978fb7de7427df36220c0a338be3da188433e89",
+        "fresh_since_start": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 1,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest.xml",
+        "class": "com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest",
+        "sha256": "1f95a22cd1f7065c44a74084d3397e6a77180d3d7fdade75de4da22574388276",
+        "fresh_since_start": true,
+        "tests": 6,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.CashWithdrawStateMachineTest.xml",
+        "class": "com.chengyinhub.business.service.CashWithdrawStateMachineTest",
+        "sha256": "8a2c03e0905f03bd9e1427f81796ba41f4e4687b949fdcb62cd4b306d79afa34",
+        "fresh_since_start": true,
+        "tests": 30,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.CooldownConfigWriteThroughRealConfigServiceTest.xml",
+        "class": "com.chengyinhub.business.service.CooldownConfigWriteThroughRealConfigServiceTest",
+        "sha256": "92ecc867c90d3cde55aac672f9d6c385522356f87472db8d5e39d5c1afc4af13",
+        "fresh_since_start": true,
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.FundIdempotencyConcurrencyTest.xml",
+        "class": "com.chengyinhub.business.service.FundIdempotencyConcurrencyTest",
+        "sha256": "be603efdaab92dbaa06d5e4445f1070b5d7c1d11f83c22535378f82ee5da5549",
+        "fresh_since_start": true,
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.MerchantReferralBountyTest.xml",
+        "class": "com.chengyinhub.business.service.MerchantReferralBountyTest",
+        "sha256": "5ab20849ba498b846e644a12c47348f882027c82b3b9dec63273a04039a8fae3",
+        "fresh_since_start": true,
+        "tests": 28,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.PlayerWithdrawalCooldownServiceTest.xml",
+        "class": "com.chengyinhub.business.service.PlayerWithdrawalCooldownServiceTest",
+        "sha256": "088e6f85aa40b2d914d534715c758eb095cba8f2ad970a39b726778ff58b4e96",
+        "fresh_since_start": true,
+        "tests": 16,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.BankWithdrawalIdempotencyConcurrencyTest.xml",
+        "class": "com.chengyinhub.business.service.impl.BankWithdrawalIdempotencyConcurrencyTest",
+        "sha256": "57f1d89ee561f244c216e61daf58f6ac6f4fe53e8a9034fa99f68e09557b2992",
+        "fresh_since_start": true,
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.CashWithdrawServiceTest.xml",
+        "class": "com.chengyinhub.business.service.impl.CashWithdrawServiceTest",
+        "sha256": "fe9d9baa58b8e9478c842c14c05c610f956d9ee2f61baffc7c9f8c5024fd6834",
+        "fresh_since_start": true,
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.FundActionPreflightServiceImplTest.xml",
+        "class": "com.chengyinhub.business.service.impl.FundActionPreflightServiceImplTest",
+        "sha256": "936a91cb3b56eab728c9bf2be6fc973136725f0e39a749df71927befcb507c14",
+        "fresh_since_start": true,
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest.xml",
+        "class": "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest",
+        "sha256": "34d11038868ad67a5152536295a01fbadd05623950f74e07ecdbef753faad47f",
+        "fresh_since_start": true,
+        "tests": 122,
+        "failures": 1,
+        "errors": 1,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.NpcChatServiceTest.xml",
+        "class": "com.chengyinhub.business.service.impl.NpcChatServiceTest",
+        "sha256": "eddd3bf6f6ea2b361dfca900b944d22c61e79a9b5ac861e241fa2c36a9c2a6bb",
+        "fresh_since_start": true,
+        "tests": 22,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.OWN_C02_27Test.xml",
+        "class": "com.chengyinhub.business.service.impl.OWN_C02_27Test",
+        "sha256": "21b9e2f8e66ef2687a3b85e2ebf387ab8a0443bce21f12af3f5ca17e1d7e49b3",
+        "fresh_since_start": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.WithdrawalPayoutStateMybatisTest.xml",
+        "class": "com.chengyinhub.business.service.impl.WithdrawalPayoutStateMybatisTest",
+        "sha256": "549dd496877b5a12567a6a813fae7aba69b2be6bd30cbe25251bacd4da0c8a66",
+        "fresh_since_start": true,
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.WithdrawalPiiStorageTest.xml",
+        "class": "com.chengyinhub.business.service.impl.WithdrawalPiiStorageTest",
+        "sha256": "28aad5c2393ebfe4693c84b2985136cb93a12327ef255ce5048adade6e7f3c47",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.WithdrawalStateMachineServiceTest.xml",
+        "class": "com.chengyinhub.business.service.impl.WithdrawalStateMachineServiceTest",
+        "sha256": "b9a490244380868c6122aac21f20aedcf9a3af5ac9f7a535e5f77e71479f4488",
+        "fresh_since_start": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ]
+  },
+  "deferred_gated_or_jdbc_classes": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_13Test.java",
+      "class_name": "com.chengyinhub.business.longrun.E04_13Test",
+      "declared_test_annotations": 2
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_19Test.java",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_19Test",
+      "declared_test_annotations": 4
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_20MySqlIT.java",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_20MySqlIT",
+      "declared_test_annotations": 2
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_21MySqlIT.java",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_21MySqlIT",
+      "declared_test_annotations": 3
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_25MySqlIT.java",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_25MySqlIT",
+      "declared_test_annotations": 4
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_10Test.java",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_10Test",
+      "declared_test_annotations": 2
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_30Test.java",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_30Test",
+      "declared_test_annotations": 5
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OWN_C01_51Test.java",
+      "class_name": "com.chengyinhub.business.service.impl.OWN_C01_51Test",
+      "declared_test_annotations": 5
+    }
+  ],
+  "not_accepted": [
+    "MySQL/Redis integration",
+    "runtime HTTP/business state",
+    "device acceptance",
+    "merge/deployment/migration"
+  ],
+  "resources": {
+    "memory_mib": 1536,
+    "memory_swap_mib": 1536,
+    "cpus": 1,
+    "pids": 256,
+    "network": "none",
+    "min_start_available_mib": 2560,
+    "abort_available_mib": 768,
+    "shared_lock": "java-build.lock",
+    "guard_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba"
+  }
+}
