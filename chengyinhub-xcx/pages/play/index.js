@@ -6075,14 +6075,21 @@ Page({
    * ⚠️ 探测失败一律静默:检定不是通关闸,探测不成功不该打断任何已有路径(打卡/任务/导航都不受影响)。
    */
   _probeJourneyCheck(node) {
-    if (this.data.isPreview || this.data.isMock || !node || node.done) return;
+    if (!this._isPlayAccountCurrent() || this.data.isPreview || this.data.isMock || !node || node.done) return;
     if (!this.data.topicId) return;
     const current = this.data.journeyCheck;
     if (current.show && current.nodeId === node.nodeId) return;
     const epoch = (this._checkProbeEpoch || 0) + 1;
     this._checkProbeEpoch = epoch;
-    req('/api/play/encounter', 'GET', { topicId: this.data.topicId, activityId: this.data.activityId || 0, nodeId: node.nodeId }, undefined, true).then((r) => {
-      if (epoch !== this._checkProbeEpoch) return;
+    const params = { topicId: this.data.topicId, activityId: this.data.activityId || 0, nodeId: node.nodeId };
+    const loadEpoch = this._playLoadEpoch;
+    req('/api/play/encounter', 'GET', params, undefined, true).then((r) => {
+      const sheet = this.data.sheet || {};
+      const currentNode = (this.data.nodes || []).find(item => String(item.nodeId) === String(node.nodeId));
+      if (!this._isPlayAccountCurrent() || epoch !== this._checkProbeEpoch || loadEpoch !== this._playLoadEpoch
+          || params.topicId !== this.data.topicId || params.activityId !== (this.data.activityId || 0)
+          || !sheet.show || !sheet.node || String(sheet.node.nodeId) !== String(node.nodeId)
+          || !currentNode || currentNode.done) return;
       if (!(r.code == 200 || r.code == '200') || !r.data) return;
       const kit = pickJourneyCheck(r.data);
       if (!kit) return;
