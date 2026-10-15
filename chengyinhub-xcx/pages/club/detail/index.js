@@ -28,6 +28,7 @@ const { isRecord, bizFailureMessage } = require('../../../utils/response-shape.j
 const { buildMonthCalendar, shiftMonth } = require('../utils/club-event-calendar.js');
 // 帖文卡的 variant 判定与广场共用一份,别在这儿复制
 const { isCompletedShare, hasFeedPlayCover } = require('../../../utils/feed-play-card.js');
+const { decodeDisplayText, decodeDisplayFields } = require('../../../utils/display-text.js');
 // CU-C-60:扫码核销复用全站唯一的路由表(utils/verification-scan)与写闸(防重提/结果未知),
 // 不在本页另写一套解析。
 const { resolveVerificationScan } = require('../../../utils/verification-scan.js');
@@ -409,11 +410,14 @@ function normalizeClubPost(p, clubOwnerId) {
   // 后端投影不出展示字段(被引对象已删/下架)时 sportName 是空,两个判定都会自然判假,
   // 卡片降级成普通图文帖 —— 不会渲染出一张标题空着的成绩卡。
   const ref = Object.assign({}, p, { dataType: p.refType, completed: true });
+  // 正文按纯文本展示,编辑框也从这里回填:解码一次,重新提交的是用户原文,不会越存越长。
+  const content = decodeDisplayText(p.content);
   return Object.assign({}, p, {
     memberId: p.authorMemberId,
     memberNickname: p.nickname,
     memberAvatar: p.avatar,
-    contents: p.content,
+    content: content,
+    contents: content,
     picList: p.images ? String(p.images).split(/[;,]/).filter(Boolean) : [],
     formattedCreateTime: formatPostTime(p.createTime),
     authorBadge: String(p.authorMemberId) === String(clubOwnerId) ? '主理人' : '',
@@ -427,6 +431,10 @@ function normalizeClubPost(p, clubOwnerId) {
 
 function enrichClub(club) {
   if (!club) return club;
+  // 服务端文本过滤会把 x<y 存成 x&lt;y;这几项都按纯文本展示,在这里解码一次。
+  ['name', 'description', 'myJoinReviewReason'].forEach(function (key) {
+    if (typeof club[key] === 'string') club[key] = decodeDisplayText(club[key]);
+  });
   club.levelText = levelTextOf(club.level);
   // 稿 N1b 47:2 / N3 20:137 写的是「42 名成员」,不是光秃秃一个数字
   club.memberCountText = formatMemberCount(club.memberCount);
@@ -1867,7 +1875,7 @@ Page({
           return;
         }
         const rows = res.data.map(function (row) {
-          return Object.assign({}, row, {
+          return Object.assign(decodeDisplayFields(row, ['content']), {
             versionText: '修改前 v' + (Number(row.snapshotVersion || 0) + 1),
             timeText: formatPostTime(row.createTime),
           });
@@ -2870,7 +2878,7 @@ Page({
       hideLoading: true, url: '/api/club/post/comment/list', method: 'POST', data: jsonBody({ postId: postId }), header: jsonHeader(),
       success(res) {
         const rows = (res.code == '200' && res.data) || [];
-        that.setData({ comments: rows.map(function (c) { return Object.assign({}, c, { timeText: c.createTime ? String(c.createTime).slice(0, 16).replace('T', ' ') : '' }); }) });
+        that.setData({ comments: rows.map(function (c) { return Object.assign(decodeDisplayFields(c, ['content']), { timeText: c.createTime ? String(c.createTime).slice(0, 16).replace('T', ' ') : '' }); }) });
       },
     });
   },

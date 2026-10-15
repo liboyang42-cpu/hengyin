@@ -360,6 +360,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
         if (!isReady()) {
             throw PaymentPreorderException.definiteFailure("支付服务暂不可用，请稍后再试", null);
         }
+        requireNotifyUrl();
         PrepayRequest request;
         try {
             request = buildPrepayRequest(registration);
@@ -389,6 +390,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
     @Override
     public Map<String, String> createAppOrder(CmsRegistration registration) {
         requireAppChannelAppid();
+        requireNotifyUrl();
         com.wechat.pay.java.service.payments.app.model.PrepayRequest request;
         try {
             request = buildAppPrepayRequest(registration);
@@ -402,6 +404,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
     public Map<String, String> createGenericAppOrder(String outTradeNo, java.math.BigDecimal amountYuan,
                                                       String description) {
         String appAppid = requireAppChannelAppid();
+        requireNotifyUrl();
         com.wechat.pay.java.service.payments.app.model.PrepayRequest request;
         try {
             request = buildGenericAppPrepayRequest(outTradeNo, amountYuan, description, appAppid);
@@ -409,6 +412,20 @@ public class WechatPayServiceImpl implements IWechatPayService {
             throw PaymentPreorderException.definiteFailure("创建 App 支付订单参数异常：" + e.getMessage(), e);
         }
         return prepayApp(request);
+    }
+
+    static final String NOTIFY_URL_MISSING = "支付回调地址未配置";
+
+    /**
+     * 微信支付下单必须携带支付结果通知地址(wx.pay.notify-url,生产由 CHENGYIN_WXPAY_NOTIFY_URL 注入)。
+     * 默认留空:未配置时在调用微信之前明确失败,既不带空值下单,也不会回落到生产回调地址。
+     */
+    private String requireNotifyUrl() {
+        String notifyUrl = wxPayConfig.getNotifyUrl();
+        if (notifyUrl == null || notifyUrl.trim().isEmpty()) {
+            throw PaymentPreorderException.definiteFailure(NOTIFY_URL_MISSING, null);
+        }
+        return notifyUrl.trim();
     }
 
     private String requireAppChannelAppid() {
@@ -446,7 +463,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
         request.setDescription(body);
         request.setAppid(appAppid);
         request.setMchid(wxPayConfig.getMerchantId());
-        request.setNotifyUrl(wxPayConfig.getNotifyUrl());
+        request.setNotifyUrl(requireNotifyUrl());
         return request;
     }
 
@@ -497,7 +514,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
         request.setDescription(body);
         request.setAppid(wxPayConfig.getAppAppid());
         request.setMchid(wxPayConfig.getMerchantId());
-        request.setNotifyUrl(wxPayConfig.getNotifyUrl());
+        request.setNotifyUrl(requireNotifyUrl());
         return request;
     }
 
@@ -505,6 +522,11 @@ public class WechatPayServiceImpl implements IWechatPayService {
     public Map<String, String> createGenericOrder(String outTradeNo, java.math.BigDecimal amountYuan, String description, String openid) {
         if (!isReady()) {
             throw new IllegalStateException("支付服务暂不可用，请稍后再试");
+        }
+        String notifyUrl = wxPayConfig.getNotifyUrl();
+        if (notifyUrl == null || notifyUrl.trim().isEmpty()) {
+            // 与「未就绪」同口径:调用方按 IllegalStateException 展示原因,此时尚未调用微信。
+            throw new IllegalStateException(NOTIFY_URL_MISSING);
         }
         try {
             PrepayRequest request = new PrepayRequest();
@@ -521,7 +543,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
             request.setDescription(body);
             request.setAppid(wxPayConfig.getAppid());
             request.setMchid(wxPayConfig.getMerchantId());
-            request.setNotifyUrl(wxPayConfig.getNotifyUrl());
+            request.setNotifyUrl(notifyUrl.trim());
             return createOrderWithExtension(request);
         } catch (Exception e) {
             throw new RuntimeException("创建微信支付订单异常：" + e.getMessage(), e);
@@ -555,7 +577,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
         request.setDescription(body);
         request.setAppid(wxPayConfig.getAppid());
         request.setMchid(wxPayConfig.getMerchantId());
-        request.setNotifyUrl(wxPayConfig.getNotifyUrl());
+        request.setNotifyUrl(requireNotifyUrl());
 
         return request;
     }

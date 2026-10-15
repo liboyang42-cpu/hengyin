@@ -1,4 +1,5 @@
 /** Canonical community transport; legacy-shaped view models are local presentation only. */
+const { decodeDisplayText } = require('./display-text.js');
 const BASE = '/api/v1/community';
 const LIFECYCLE_LABELS = { DRAFT: '草稿', CHECKING: '审核中', LIMITED: '展示受限', HIDDEN: '已隐藏', REMOVED: '已移除' };
 function requestId() { return 'mini-community-' + Date.now() + '-' + Math.random().toString(36).slice(2); }
@@ -8,7 +9,7 @@ function normalizePost(bundle) {
   const post = bundle.post;
   const row = Object.assign({}, post, {
     memberId: post.authorId, memberNickname: post.authorNickname, memberAvatar: post.authorAvatar,
-    contents: post.body, isLiked: post.viewerLiked, isBookmarked: post.viewerBookmarked,
+    contents: decodeDisplayText(post.body), isLiked: post.viewerLiked, isBookmarked: post.viewerBookmarked,
     isFollowTheUser: bundle.viewerFollowing === true ? 1 : bundle.viewerFollowing === false ? 0 : undefined,
     status: post.lifecycle === 'PUBLISHED' ? 1 : post.lifecycle === 'DRAFT' || post.lifecycle === 'CHECKING' ? 0 : post.lifecycle,
     pics: (bundle.media || []).map(m => value(m, 'derivedObjectKey', 'derived_object_key') || value(m, 'objectKey', 'object_key')).filter(Boolean).join(';'),
@@ -36,7 +37,7 @@ function normalizePost(bundle) {
 function normalizeComment(row) {
   return Object.assign({}, row, { memberId: value(row, 'authorId', 'author_id'),
     memberNickname: value(row, 'authorNickname', 'author_nickname'), memberAvatar: value(row, 'authorAvatar', 'author_avatar'),
-    contents: row.body, createTime: value(row, 'createTime', 'create_time'),
+    contents: decodeDisplayText(row.body), createTime: value(row, 'createTime', 'create_time'),
     isLiked: value(row, 'viewerLiked', 'viewer_liked'), likeCount: value(row, 'likeCount', 'like_count'),
     isFollowTheUser: value(row, 'viewerFollowing', 'viewer_following'),
     rootId: value(row, 'rootId', 'root_id'), parentId: value(row, 'parentId', 'parent_id') });

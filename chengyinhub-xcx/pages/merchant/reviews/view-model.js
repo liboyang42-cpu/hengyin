@@ -1,3 +1,5 @@
+const { decodeDisplayText } = require('../../../utils/display-text.js');
+
 function positiveId(value) {
   if (value === null || value === undefined || value === '') return null;
   const text = String(value).trim();
@@ -86,7 +88,8 @@ function shapeReview(raw) {
     version,
     rating,
     stars: [1, 2, 3, 4, 5].map((value) => ({ value, filled: value <= rating })),
-    content: String(raw.content || ''),
+    // 评价与回复按纯文本展示(回复编辑框也从这里回填):服务端过滤会把 x<y 存成 x&lt;y,解码一次。
+    content: decodeDisplayText(String(raw.content || '')),
     imageUrls,
     authorNickname: String(raw.authorNickname || '城瘾玩家'),
     authorAvatar: String(raw.authorAvatar || ''),
@@ -94,7 +97,7 @@ function shapeReview(raw) {
     status,
     statusClass: status === 'VISIBLE' ? 'visible' : (status === 'PENDING_REVIEW' ? 'pending' : 'hidden'),
     statusText: status === 'VISIBLE' ? '公开展示中' : (status === 'PENDING_REVIEW' ? '待平台复核' : '平台已下架'),
-    merchantReply: String(raw.merchantReply || ''),
+    merchantReply: decodeDisplayText(String(raw.merchantReply || '')),
     repliedAtText: formatTime(raw.repliedAt),
     createTimeText: formatTime(raw.createTime),
     canReply: raw.canReply === true,

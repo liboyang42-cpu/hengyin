@@ -28,6 +28,7 @@ if env \
   CHENGYIN_TENCENT_MAP_ENABLED=true \
   CHENGYIN_TENCENT_MAP_KEY=test-map-key \
   CHENGYIN_WXPAY_REFUND_NOTIFY_URL=https://api.example.com/prod-api/api/registration/refund-callback \
+  CHENGYIN_WXPAY_NOTIFY_URL=https://api.example.com/prod-api/api/registration/callback \
   bash "$SCRIPT" --env >"$TMP/invalid-key.log" 2>&1; then
   echo "非法提现密钥时预检不应通过" >&2
   exit 1
@@ -51,6 +52,7 @@ if env \
   CHENGYIN_TENCENT_MAP_ENABLED=true \
   CHENGYIN_TENCENT_MAP_KEY=test-map-key \
   CHENGYIN_WXPAY_REFUND_NOTIFY_URL=https://api.example.com/prod-api/api/registration/refund-callback \
+  CHENGYIN_WXPAY_NOTIFY_URL=https://api.example.com/prod-api/api/registration/callback \
   bash "$SCRIPT" --env >"$TMP/reused.log" 2>&1; then
   echo "券码密钥复用 JWT 密钥时预检不应通过" >&2
   exit 1
@@ -77,6 +79,7 @@ env \
   CHENGYIN_TENCENT_MAP_ENABLED=true \
   CHENGYIN_TENCENT_MAP_KEY=test-map-key \
   CHENGYIN_WXPAY_REFUND_NOTIFY_URL=https://api.example.com/prod-api/api/registration/refund-callback \
+  CHENGYIN_WXPAY_NOTIFY_URL=https://api.example.com/prod-api/api/registration/callback \
   bash "$SCRIPT" --env >"$TMP/valid.log" 2>&1
 grep -q '生产配置预检通过' "$TMP/valid.log"
 
@@ -96,6 +99,7 @@ refund_env=(
   CHENGYIN_OSS_BUCKET_NAME=test-bucket
   CHENGYIN_TENCENT_MAP_ENABLED=true
   CHENGYIN_TENCENT_MAP_KEY=test-map-key
+  CHENGYIN_WXPAY_NOTIFY_URL=https://api.example.com/prod-api/api/registration/callback
 )
 if env -i PATH="$PATH" "${refund_env[@]}" bash "$SCRIPT" --env >"$TMP/refund-missing.log" 2>&1; then
   echo "缺少退款通知地址时预检不应通过" >&2
@@ -111,3 +115,29 @@ for bad in http://api.example.com/prod-api/api/registration/refund-callback \
   fi
   grep -q 'CHENGYIN_WXPAY_REFUND_NOTIFY_URL 必须是指向' "$TMP/refund-bad.log"
 done
+
+# 支付结果通知默认留空(留空时拒绝下单);生产缺失或填成非 HTTPS / 非支付回调端点都必须拦下。
+pay_env=(CHENGYIN_WXPAY_REFUND_NOTIFY_URL=https://api.example.com/prod-api/api/registration/refund-callback)
+for entry in "${refund_env[@]}"; do
+  [[ "$entry" == CHENGYIN_WXPAY_NOTIFY_URL=* ]] || pay_env+=("$entry")
+done
+if env -i PATH="$PATH" "${pay_env[@]}" bash "$SCRIPT" --env >"$TMP/pay-missing.log" 2>&1; then
+  echo "缺少支付通知地址时预检不应通过" >&2
+  exit 1
+fi
+grep -q '缺少必填环境变量: CHENGYIN_WXPAY_NOTIFY_URL$' "$TMP/pay-missing.log"
+for bad in http://api.example.com/prod-api/api/registration/callback \
+           https://api.example.com/prod-api/api/registration/refund-callback \
+           https://api.example.com/prod-api/api/registration/callback/extra \
+           'https://api.example.com/prod api/api/registration/callback'; do
+  if env -i PATH="$PATH" "${pay_env[@]}" CHENGYIN_WXPAY_NOTIFY_URL="$bad" \
+      bash "$SCRIPT" --env >"$TMP/pay-bad.log" 2>&1; then
+    echo "非法支付通知地址时预检不应通过: $bad" >&2
+    exit 1
+  fi
+  grep -q 'CHENGYIN_WXPAY_NOTIFY_URL 必须是指向' "$TMP/pay-bad.log"
+done
+env -i PATH="$PATH" "${pay_env[@]}" \
+  CHENGYIN_WXPAY_NOTIFY_URL=https://api.example.com/prod-api/api/registration/callback \
+  bash "$SCRIPT" --env >"$TMP/pay-valid.log" 2>&1
+grep -q '生产配置预检通过' "$TMP/pay-valid.log"

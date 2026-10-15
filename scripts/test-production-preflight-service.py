@@ -20,13 +20,17 @@ class ServiceEnvironmentTest(unittest.TestCase):
         configured = {name: "fixture-secret-never-print-" + str(index) for index, name in enumerate(REQUIRED)}
         configured.update(CHENGYIN_WITHDRAWAL_PII_KEY="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
                           CHENGYIN_TENCENT_MAP_ENABLED="true", TZ="Asia/Shanghai",
-                          CHENGYIN_WXPAY_REFUND_NOTIFY_URL="https://api.example.com/prod-api/api/registration/refund-callback")
+                          CHENGYIN_WXPAY_REFUND_NOTIFY_URL="https://api.example.com/prod-api/api/registration/refund-callback",
+                          CHENGYIN_WXPAY_NOTIFY_URL="https://api.example.com/prod-api/api/registration/callback")
         for changes, argument, caller_changes, expected in (
                 ({}, "", {}, 0), ({"CHENGYIN_JWT_SECRET": ""}, "", {}, 1),
                 ({}, "-Duser.timezone=UTC", {}, 1), ({"TZ": "UTC"}, "", {}, 1),
                 ({}, "", {"COUPON_QR_SECRET": None}, 0),
                 ({"COUPON_QR_SECRET": ""}, "", {}, 1),
-                ({"COUPON_QR_SECRET": None}, "", {}, 1)):
+                ({"COUPON_QR_SECRET": None}, "", {}, 1),
+                ({"CHENGYIN_WXPAY_NOTIFY_URL": None}, "", {}, 1),
+                ({"CHENGYIN_WXPAY_NOTIFY_URL": "http://api.example.com/prod-api/api/registration/callback"}, "", {}, 1),
+                ({"CHENGYIN_WXPAY_NOTIFY_URL": "https://api.example.com/prod-api/api/registration/refund-callback"}, "", {}, 1)):
             with self.subTest(changes=changes, argument=argument), tempfile.TemporaryDirectory() as temp:
                 service_env = {**os.environ, **configured, **changes}
                 service_env = {name: value for name, value in service_env.items() if value is not None}

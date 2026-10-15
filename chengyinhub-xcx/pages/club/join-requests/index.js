@@ -2,6 +2,7 @@ const modal = require('../../../utils/modal.js');
 const toast = require('../../../utils/toast.js');
 const app = getApp()
 const { isRecordList } = require('../../../utils/response-shape.js')
+const { decodeDisplayText } = require('../../../utils/display-text.js')
 
 function jsonBody(data) { return JSON.stringify(data || {}) }
 function jsonHeader() { return { 'Content-Type': 'application/json' } }
@@ -109,7 +110,8 @@ Page({
             requestTimeText: item.joinTime ? String(item.joinTime).replace('T', ' ').slice(0, 16) : '时间未知',
             // 稿 P3 30:2:申请人写的那句话,用引号裹起来显示。没写就整行不出 ——
             // 空引号会被读成「他写了但没说什么」。
-            joinMessageText: item.joinMessage ? '“' + String(item.joinMessage) + '”' : ''
+            // 服务端过滤会把 x<y 存成 x&lt;y,纯文本展示前解码一次。
+            joinMessageText: item.joinMessage ? '“' + decodeDisplayText(String(item.joinMessage)) + '”' : ''
           })
         })
         that.setData({ state: 'ready', requests: requests, refreshing: false, staleError: '', introText: that.buildIntro(requests.length) })

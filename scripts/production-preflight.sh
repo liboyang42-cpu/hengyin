@@ -17,6 +17,7 @@ required=(
   CHENGYIN_OSS_BUCKET_NAME
   CHENGYIN_TENCENT_MAP_KEY
   CHENGYIN_WXPAY_REFUND_NOTIFY_URL
+  CHENGYIN_WXPAY_NOTIFY_URL
 )
 missing=()
 
@@ -68,6 +69,12 @@ fi
 # 退款结果通知默认留空(application.yml);生产必须显式给出 HTTPS 回调,且指向退款回调端点。
 if [[ ! "$CHENGYIN_WXPAY_REFUND_NOTIFY_URL" =~ ^https://[^[:space:]]+/api/registration/refund-callback$ ]]; then
   echo 'CHENGYIN_WXPAY_REFUND_NOTIFY_URL 必须是指向 /api/registration/refund-callback 的 HTTPS 地址' >&2
+  exit 1
+fi
+
+# 支付结果通知默认留空(application.yml,留空时拒绝下单);生产必须显式给出 HTTPS 回调,且指向支付回调端点。
+if [[ ! "$CHENGYIN_WXPAY_NOTIFY_URL" =~ ^https://[^[:space:]]+/api/registration/callback$ ]]; then
+  echo 'CHENGYIN_WXPAY_NOTIFY_URL 必须是指向 /api/registration/callback 的 HTTPS 地址' >&2
   exit 1
 fi
 
