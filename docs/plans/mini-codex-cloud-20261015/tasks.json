@@ -883,7 +883,32 @@
     "claude_handoff_intake": "CLAUDE_HANDOFF_INTAKE.json",
     "backend_validation_handoff": "BACKEND_VALIDATION_VPS_HANDOFF.json",
     "backend_validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
-    "remaining_development": "LONGRUN_REMAINING.json"
+    "remaining_development": "LONGRUN_REMAINING.json",
+    "longrun_vps_compile": {
+      "candidate_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+      "status": "COMPILE_PASS_REPORTED_BY_LOCAL_VPS_COORDINATOR",
+      "location": "VPS",
+      "reporter_thread": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+      "resource_entry": "budget212 guard/shared lock, reported",
+      "exit_code": 0,
+      "duration": "02:35",
+      "reactor_modules_success": 7,
+      "admin_test_source_files_compiled": 1392,
+      "business_tests_executed": 0,
+      "integration_tests_executed": 0,
+      "guard_container_cleanup": "reported auto cleaned",
+      "public_raw_evidence": "PENDING_LOCAL_PUBLICATION",
+      "evidence_level": "local verifier delegated result; C00 has not read public raw log yet",
+      "not_accepted": [
+        "business regression",
+        "real MySQL/Redis suites",
+        "runtime HTTP",
+        "device acceptance",
+        "deployment",
+        "merge",
+        "migration"
+      ]
+    }
   },
   "followup_lanes": [
     {

@@ -14,3 +14,5 @@ C01_51 gate=true、loopback强要求，nested XML单列；C04_19门禁=1用MYBAT
 原Cloud已运行结果仅标CLOUD_EPHEMERAL，不是批准CI/VPS：原2b主源码编译成功、测试源18诊断、业务执行0；原25ede编译主动终止143（地点规则）。真实原日志/environment.json在docs/verification/mini-backend-validation-20261015，未启动DB/Redis、未触VPS或生产。
 
 每队1修复+5开发：本地失败回原写者，多个失败串行占一个修复槽，其他独立源码完成即push，不等验证；换人需原写者停止与精确路径移交。NOT_RUN照实保留；不足真实任务不凑数、不冒称五线满载。无部署/合并/业务迁移授权。
+
+最新本地VPS反馈：CORE f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c 已按212离线test-compile退出0，02:35，7 reactor模块成功、1392测试源编译通过。此为本地验证者回报，公共原日志尚待其发布；仅COMPILE_PASS，不是业务/真实MySQL/Redis/设备/部署验收，C00不重跑验证。

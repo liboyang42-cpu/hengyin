@@ -4,7 +4,7 @@
 - 后端实际复测仅由本地 `01a13eed-e4d9-77f3-b875-c72d26ea7d59` 按最新212/批准真库入口执行；C00与两队不再手动编译、测试、触发CI或新增专用验证配置，不尝试VPS/Cloud替代。
 - 每队最多6名6.1-sol，1条修复线串行接失败，另5条继续独立源码、完成即push、不等CI/本地签收；原写者优先，换人先精确移交。无真实任务不凑数，实际运行数照实。
 - EXTRA恢复ACK6198215180已收到，之前“五fixture待授权”阻塞已解除；E03/E05已有新公共小提交，不再列未ACK。E02当时已派，后续独立交付另SHA。CORE池仍178历史/实际可行动0，fixture补丁不另算新bug。
-- 立即交本地：[后端移交包](BACKEND_VALIDATION_VPS_HANDOFF.md) / 同名JSON，以及CORE/EXTRA逐类矩阵。原Cloud诊断不作VPS验收；新f7/a37未编译、未执行测试。
+- 立即交本地：[后端移交包](BACKEND_VALIDATION_VPS_HANDOFF.md) / 同名JSON，以及CORE/EXTRA逐类矩阵。原Cloud诊断不作VPS验收；本地最新回报f7已按212完成COMPILE_PASS（02:35、7模块、1392测试源）；公开原日志待其发布，业务/真库测试仍未执行；a37未签收。
 
 以下旧checkpoint是历史，不覆盖上述状态。
 
