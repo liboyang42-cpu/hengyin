@@ -1,5 +1,7 @@
 # 共用后端变化与iOS影响记录
 
+> 三方统一协作规则：[CY-COORD-20261015-v1](COORDINATION.md)。当前文件归属与候选见[OWNERSHIP.md](OWNERSHIP.md)；初始规划不等于已领单。最终提示词：[Codex](START_PROMPT.md)、[Claude](CLAUDE_START_PROMPT.md)、[iOS](IOS_START_PROMPT.md)。
+
 2026年10月15日初始快照。**记录区分已有公共补丁、计划工作、现有接口和实际部署，计划不等于已变更。** 由C00/C99协调者独占更新；后端各worker提交变化片段，iOS agent按记录消费，不并行修改后端独占源码。iOS任务入口见 [IOS_HANDOFF.md](IOS_HANDOFF.md)。
 
 ## 已查询PR状态

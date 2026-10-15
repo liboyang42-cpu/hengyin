@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-15-codex-cloud-v2-ios-handoff",
+  "version": "2026-10-15-codex-cloud-v3-unified-prompts",
   "repository": "liboyang42-cpu/hengyin",
   "plan_branch": "codex/mini-bugs-backend-cloud-plan-20261015",
   "integration_branch": "codex/mini-bug-arch-integration-20261015",
@@ -49,7 +49,8 @@
         "先复核PR12的GPS/显式点赞方向/徽章查询范围及PR13音频/退避，已成立修复复用；PR14/15只做既有变更的兼容集成及限制登记，不继续新功能开发",
         "冻结候选SHA与现有API/DTO/状态/请求身份合同，列文件所有权；把每条历史线索标记复现/已修/误报/裁决不做/待证据，不直接照509个旧编号编码",
         "核Cloud到专用VPS的实际可用路径、测试版本/库和必要身份；只把凭据放环境安全配置。没有路径时继续源码与GitHub托管CI，VPS/真机验收保持待验证",
-        "读取IOS_HANDOFF.md，在BACKEND_CHANGES.md登记共享合同基线与独立iOS影响；不改iOS源码"
+        "读取IOS_HANDOFF.md，在BACKEND_CHANGES.md登记共享合同基线与独立iOS影响；不改iOS源码",
+        "按COORDINATION.md先核三方CY-HANDOFF记录，发布实际候选与OWNERSHIP分配；规划预留不当实际已领，未冻结签名不让调用方猜协议"
       ],
       "acceptance": [
         "已有修复未重复实现，PR12/13成对验证；清楚记录PR14退款授权跳过、官方路线只读、认领材料待确认及动作清单失败项",
@@ -422,7 +423,8 @@
         "每项有改动或无需改动的证据，候选SHA/测试输出/PR/CI与环境目标可对应",
         "至少覆盖实际启用的保存发布、GPS/扫码、退出恢复、积分资产、隐私隔离及AI失败边界；未触达层级标未验证",
         "每个修复小PR或有清晰提交边界的候选草稿PR，发布/合并生产保持待批准；文档只有阶段性完成不得标业务READY",
-        "所有共享后端变化有iOS影响、兼容/fixture及合并/部署状态，未验证层不能写通过"
+        "所有共享后端变化有iOS影响、兼容/fixture及合并/部署状态，未验证层不能写通过",
+        "共享后端变化按协议分层，明确两端适配/合并/部署；文件无双写且转交有原所有者停止和基线证据"
       ],
       "claude_boundary": "输出Claude可读的稳定后端合同，不接手其UI/新功能，不做iOS/Flutter。",
       "hold_if": "",
@@ -435,7 +437,9 @@
     "integration_owner": "C00/C99同一协调者",
     "ci_matrix_max_parallel": 20,
     "vps_java_tests": "serial task-owned resources only",
-    "backend_change_log_owner": "C00/C99协调者独占，各worker提交变化片段"
+    "backend_change_log_owner": "C00/C99协调者独占，各worker提交变化片段",
+    "ownership_registry_owner": "C00/C99",
+    "max_workers_is_capacity_bound": true
   },
   "estimate": {
     "base_person_days": [
@@ -535,5 +539,35 @@
       "BK-NARRATIVE",
       "BK-EXISTING"
     ]
+  },
+  "coordination": {
+    "protocol": "CY-COORD-20261015-v1",
+    "protocol_file": "COORDINATION.md",
+    "ownership_registry": "OWNERSHIP.md",
+    "control_branch": "codex/mini-bugs-backend-cloud-plan-20261015",
+    "control_repo": "liboyang42-cpu/hengyin",
+    "registry_owner": "Codex C00/C99唯一协调者",
+    "initial_execution_state": "RULES_ONLY_PENDING_C00",
+    "prompts": {
+      "CODEX": "START_PROMPT.md",
+      "CLAUDE": "CLAUDE_START_PROMPT.md",
+      "IOS": "IOS_START_PROMPT.md"
+    },
+    "handoff_markers": {
+      "CODEX": "CY-HANDOFF: CODEX",
+      "CLAUDE": "CY-HANDOFF: CLAUDE",
+      "IOS": "CY-HANDOFF: IOS"
+    },
+    "backend_states": [
+      "DRAFT",
+      "CONTRACT_FROZEN",
+      "SOURCE_READY",
+      "TEST_DEPLOYED"
+    ],
+    "merge_status_separate": true,
+    "automatic_notifications": false,
+    "one_writer_per_repo_path": true,
+    "feature_backend_owner": "Claude仅在C00明确分配文件/合同后实现",
+    "shared_workspace_commits": "workers不暂存/切分支/提交；协调者串行收口"
   }
 }

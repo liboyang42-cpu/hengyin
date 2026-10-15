@@ -1,5 +1,7 @@
 # Codex Cloud 任务卡
 
+> 三方统一协作规则：[CY-COORD-20261015-v1](COORDINATION.md)。当前文件归属与候选见[OWNERSHIP.md](OWNERSHIP.md)；初始规划不等于已领单。最终提示词：[Codex](START_PROMPT.md)、[Claude](CLAUDE_START_PROMPT.md)、[iOS](IOS_START_PROMPT.md)。
+
 2026年10月15日。先读 [README.md](README.md) 和 [CLAUDE.md](CLAUDE.md)。本任务不改原生iOS、Flutter；独立iOS agent另管；所有后端修改保持现有客户端合同兼容，但不因此补做两端代码或测试。
 
 ## 文件所有权规则

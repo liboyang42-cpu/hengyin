@@ -1,5 +1,7 @@
 # Codex 与 Claude 的任务边界
 
+> 三方统一协作规则：[CY-COORD-20261015-v1](COORDINATION.md)。当前文件归属与候选见[OWNERSHIP.md](OWNERSHIP.md)；初始规划不等于已领单。最终提示词：[Codex](START_PROMPT.md)、[Claude](CLAUDE_START_PROMPT.md)、[iOS](IOS_START_PROMPT.md)。
+
 2026年10月15日用户确定：先做小程序，后端统一；本任务包不改原生iOS和Flutter，iOS由独立agent继续负责。Codex做已发现的bug和共用后端架构，Claude做UI及新功能。**是否后端文件不是分工依据；新功能专属后端仍归Claude，共用底层合同归Codex。**
 
 ## 现有36包如何拆责

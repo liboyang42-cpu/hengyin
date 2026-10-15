@@ -1,5 +1,7 @@
 # iOS独立agent优化与共用后端交接
 
+> 三方统一协作规则：[CY-COORD-20261015-v1](COORDINATION.md)。当前文件归属与候选见[OWNERSHIP.md](OWNERSHIP.md)；初始规划不等于已领单。最终提示词：[Codex](START_PROMPT.md)、[Claude](CLAUDE_START_PROMPT.md)、[iOS](IOS_START_PROMPT.md)。
+
 2026年10月15日。**iOS由独立agent继续负责，小程序Codex/Claude任务不改iOS代码；后端仍统一。** Flutter仍不在当前工作范围。本文件补充你已在做的iOS任务，不要求重新开始迁移或放弃现有分支。
 
 ## 从哪里开始
