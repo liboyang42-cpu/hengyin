@@ -457,6 +457,7 @@ Page({
     sceneStack: [],
     sceneCurrent: null,
     sceneDirty: false,
+    sceneBackGuardOff: false,
     sceneConfirm: false,
     clubId: null,
     club: null,
@@ -640,6 +641,15 @@ Page({
   cancelSceneDiscard() {
     this.setData({ sceneConfirm: false });
   },
+  // BL-18:同 pages/club/edit —— 确认框开着 ⇒ 继续编辑;有改动 ⇒ 弹放弃确认;仍需守卫则先撤再挂。
+  onSceneNativeBackGuard() {
+    if (this.data.sceneConfirm) this.cancelSceneDiscard();
+    else if (this.data.sceneDirty) this.requestSceneClose();
+    if (this.data.sceneDirty || this.data.sceneConfirm) {
+      this.setData({ sceneBackGuardOff: true });
+      setTimeout(() => { if (!this._sceneGuardDestroyed) this.setData({ sceneBackGuardOff: false }); }, 50);
+    }
+  },
   // 编辑保存成功 ⇒ 重拉俱乐部详情,别让页面停在旧数据上
   onClubEdited() {
     this.setData({ sceneDirty: false, sceneConfirm: false });
@@ -734,7 +744,7 @@ Page({
   onPullDownRefresh() { this.loadAll(function () { wx.stopPullDownRefresh(); }); },
 
   // 页面销毁:作废在途 AI 生成的回调,避免 setData after unload(sendRequest 不可中断)
-  onUnload() { this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1; this._clubAiToken = (this._clubAiToken || 0) + 1; this.clearGroupCodeTimer(); },
+  onUnload() { this._sceneGuardDestroyed = true; this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1; this._clubAiToken = (this._clubAiToken || 0) + 1; this.clearGroupCodeTimer(); },
 
   onRetry() {
     this.setData({ detailLoaded: false, notFound: false, club: null });

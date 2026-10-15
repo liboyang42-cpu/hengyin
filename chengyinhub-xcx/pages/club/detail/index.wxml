@@ -1042,6 +1042,12 @@
   <view class="safe-bottom"></view>
 </view>
 
+<!-- BL-18 物理返回/侧滑守卫:资料编辑弹窗里有未保存修改时,返回先走 dirty 闸,不直接退出详情页 -->
+<page-container
+    show="{{!sceneBackGuardOff && sceneCurrent && sceneCurrent.id === 'club-edit' && (sceneDirty || sceneConfirm)}}"
+    duration="{{0}}" overlay="{{false}}"
+    custom-style="width:0;height:0;background:transparent;pointer-events:none"
+    bind:afterleave="onSceneNativeBackGuard" />
 <!-- 俱乐部编辑 = 三级 ⇒ 页内弹窗,由管理页托管;可写表单 ⇒ 遮罩不可关,走 dirty 闸。 -->
 <view class="club-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'club-edit'}}" catchtouchmove="blockSceneTouch">
   <cy-scene-sheet show="{{true}}" variant="{{sceneCurrent.variant}}" theme="{{sceneCurrent.theme}}" title="{{sceneCurrent.title}}" can-back="{{sceneCurrent.canBack}}" dirty="{{sceneDirty}}" mask-closable="{{false}}" bind:requestclose="requestSceneClose" bind:back="requestSceneClose">
