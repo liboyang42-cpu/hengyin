@@ -164,6 +164,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
 
         // 3. 选模型(场景路由)
         LlmClient client;
+        String modelName;
         try
         {
             client = selectClient(bizType);
@@ -172,6 +173,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
             {
                 ((com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient) client).requireReady();
             }
+            modelName = client == null ? null : client.name();
         }
         catch (RuntimeException e)
         {
@@ -189,7 +191,6 @@ public class AiGatewayServiceImpl implements AiGatewayService
             retainQuota(memberId,bizType,reservation,"CACHE_RESULT");
             return new AiGatewayResult(traceId, "[]", "cache", 0);
         }
-        String modelName = client.name();
         long t0 = System.currentTimeMillis();
 
         String modelText;
