@@ -188,6 +188,14 @@
       <view>{{reviewResult.outcome}}</view>
       <view>原因：{{reviewResult.reason}}</view>
       <view>{{reviewResult.followUp}}</view>
+      <!-- BL-87 审核记录回读(GET /api/audit/{taskId}/detail):只读,沿用本半屏的文字行写法 -->
+      <view wx:if="{{reviewDetail && reviewDetail.state === 'loading'}}" aria-role="status">正在读取审核记录…</view>
+      <cy-inline-error wx:elif="{{reviewDetail && reviewDetail.state === 'error'}}" kind="data"
+                       title="审核记录没有加载" sub="{{reviewDetail.error}}" action="重试" bind:action="retryReviewDetail" />
+      <block wx:elif="{{reviewDetail && reviewDetail.state === 'ready'}}">
+        <view wx:if="{{reviewDetail.statusLabel}}">当前状态：{{reviewDetail.statusLabel}}</view>
+        <view wx:for="{{reviewDetail.timeline}}" wx:key="key">{{item.time}} {{item.label}}{{item.reason ? '：' + item.reason : ''}}</view>
+      </block>
     </view>
   </cy-sheet>
 
