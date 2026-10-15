@@ -3892,7 +3892,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // 1. 提取所有节点用于距离计算
         List<NodeDTO> allNodes = extractNodesForStatistics(dto.getChapters(), chapterFlowV2);
         // 2. 计算总距离
-        BigDecimal totalMileage = calculateTotalDistance(allNodes);
+        BigDecimal totalMileage = calculateTotalDistance(nodesForDistance(allNodes, dto.getChapters(), chapterFlowV2));
 
         // 3. 保存主题基本信息
         CmsTopic topic = new CmsTopic();
@@ -4415,7 +4415,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         patch.setFinishMedalImg(dto.getFinishMedalImg());
         patch.setCompleteRewardCouponId(completeRewardCouponId);
         patch.setTotalTime(calculateTotalTime(allNodes));
-        patch.setTotalMileage(calculateTotalDistance(allNodes));
+        patch.setTotalMileage(calculateTotalDistance(nodesForDistance(allNodes, dto.getChapters(), chapterFlowV2)));
         patch.setLocationCount(Convert.toLong(allNodes.size()));
         patch.setTemplateCount(calculateTemplateCount(allNodes));
         patch.setMerchantStatus(resolveMerchantPoolFlag(dto.getOpenMerchantPool(), memberId));
@@ -4845,6 +4845,29 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             }
         }
         return allNodes;
+    }
+
+    /** 仅V2明确标为故事玩法的节点不参与地点距离；缺坐标实体地点仍保留原0边语义。 */
+    private List<NodeDTO> nodesForDistance(List<NodeDTO> allNodes, List<ChapterDTO> chapters, boolean chapterFlowV2) {
+        if (!chapterFlowV2 || chapters == null) return allNodes;
+        Set<NodeDTO> storyGames = Collections.newSetFromMap(new IdentityHashMap<NodeDTO, Boolean>());
+        for (ChapterDTO chapter : chapters) {
+            if (chapter == null || chapter.getNodes() == null || chapter.getBlocks() == null) continue;
+            for (ChapterBlockDTO block : chapter.getBlocks()) {
+                if (block == null || !"node".equals(block.getType())
+                        || !Boolean.FALSE.equals(block.getLocationRequired())) continue;
+                Integer index = block.getNodeIndex();
+                if (index != null && index >= 0 && index < chapter.getNodes().size()) {
+                    storyGames.add(chapter.getNodes().get(index));
+                }
+            }
+        }
+        if (storyGames.isEmpty()) return allNodes;
+        List<NodeDTO> locations = new ArrayList<NodeDTO>();
+        for (NodeDTO node : allNodes) {
+            if (!storyGames.contains(node)) locations.add(node);
+        }
+        return locations;
     }
 
     private boolean isSimplePublishMode(String publishMode) {
