@@ -388,7 +388,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         session.setCreateTime(now);
         session.setUpdateTime(now);
         if (runtimeMapper.insertSession(session) != 1) {
-            GameSession concurrent = runtimeMapper.selectSessionByActivity(activity.getId());
+            GameSession concurrent = runtimeMapper.selectSessionByActivityForUpdate(activity.getId());
             if (concurrent == null) throw error("GAME_STATE_CONFLICT", "游戏准备失败");
             return result(concurrent, singleton("prepared", false));
         }
