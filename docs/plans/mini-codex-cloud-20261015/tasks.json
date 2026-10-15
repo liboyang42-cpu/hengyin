@@ -724,7 +724,8 @@
         "chengyinhub-system/src/main/resources/mapper/business/NpcChatRequestMapper.xml",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NpcChatServiceTest.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAiNpcChatDataTest.java",
-        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/A02NpcDeleteBarrierMySqlIT.java"
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/A02NpcDeleteBarrierMySqlIT.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/NpcChatUserDataMyBatisIT.java"
       ]
     },
     {

@@ -191,3 +191,5 @@ B03 1e403b13真实VPS套件已读PR24 f30057dd的独立JSON/README签收7/0/0/0�
 ## 用户扩展并行：只补完未完成bug/后端
 
 实际10路逻辑拆分、5源码＋1回归槽及精确路径见[FOLLOWUP_BUG_LANES.md](FOLLOWUP_BUG_LANES.md)，该文件的最新ASSIGNED覆盖原INTEGRATED旧基线锁，原写者/交接证据已列。新工作目录hengyin-followups；冻结hengyin@1e403b13保持供证据复核。N01/N02只读新功能调查已停止，无实现；不纳入用户当前bug/架构范围。
+
+L03额外直接构造测试NpcChatUserDataMyBatisIT.java已追加给原A02_sol，详见线路补充；不动其余owner。L05可选本地publishAttempt最小状态合同已在同文冻结，无新HTTP/数据库字段或敏感存储。

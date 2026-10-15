@@ -97,3 +97,9 @@
 ## 交接证据
 
 旧B01/B02/A02所有者已交原补丁并明确停止（现有锁INTEGRATED），本轮B01/A02原写者接续；L02既有Controller初始预留后未被本轮其他worker编辑，C00按新精确读取端委派；L04/L05新范围仅现有行为bug修复，不夺Claude正在做的CL1–CL5文件。L01只读取证者已停止且无补丁，交原B01。每个文件一个写者，公共门禁/动作账/路由仍C00，不覆盖原冻结树。
+
+## 已明确的最小补充合同/路径
+
+L03追加唯一测试文件 `chengyinhub-admin/src/test/java/com/chengyinhub/business/it/NpcChatUserDataMyBatisIT.java` 给A02_sol：原夹具直接构造NpcChatDataService，必须注入真实事务helper及本人行fixture，不以null fallback绕屏障；原断言和门控保留。
+
+L05准许在既有按member/draftUuid隔离的本地草稿信封增加可选 `publishAttempt:{status:'UNKNOWN',topicId:''|原主题ID}`，无payload/token/新敏感信息。旧信封无此字段沿既有行为。完成本地校验且马上发write前同步持久；存储失败不得发送；能证明未发出则清除，明确业务失败可回idle，成功按旧流程清草稿；网络/卸载等结果未知保留。首次create无ID时不可自动重发/按名称认领，现UI仅提示去项目列表核对，本地草稿不丢，不造后端幂等承诺。已有ID的UNKNOWN按原ID读取只说明服务器事实，不证明原写成功；不得自动把读回覆盖本地编辑或自动解锁。只可复用已有服务端版本/本地草稿冲突确认：用户明确采用服务器版本后清未知并更新真实ID/基线；若保留本地草稿则仍未知，任何继续覆写须明确用户确认及刷新基线，不能仅因HTTP200解锁。复用既有入口/对话框，不新增页面/按钮/产品步骤；现阶段无此确认路径时保留未知限制并如实交付，不偷偷放开重试。
