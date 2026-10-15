@@ -111,7 +111,8 @@ public class NpcChatService
         catch (Exception e)
         {
             log.error("[NpcChat] request state lookup failed userId={} requestId={}", userId, requestId, e);
-            return requestStateUnavailable(requestId);
+            // A failed lookup cannot prove this original ID has never reached the provider.
+            return unavailableOutcome(requestId, true);
         }
         if (existing != null)
         {
@@ -225,7 +226,7 @@ public class NpcChatService
         catch (Exception e)
         {
             log.error("[NpcChat] shop request state lookup failed userId={} requestId={}", userId, rid, e);
-            return requestStateUnavailable(rid);
+            return unavailableOutcome(rid, true);
         }
         if (existing != null)
         {
@@ -589,7 +590,7 @@ public class NpcChatService
             if(stored==null) return null;
             if(!Long.valueOf(-nodeId).equals(stored.getSessionId())) return requestScopeMismatch(requestId);
             return fromStored(stored);
-        } catch(RuntimeException unavailable) { return requestStateUnavailable(requestId); }
+        } catch(RuntimeException unavailable) { return unavailableOutcome(requestId, true); }
     }
 
     private NpcChatResp requestScopeMismatch(String requestId) {
