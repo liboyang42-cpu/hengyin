@@ -34,7 +34,7 @@ test('P4 申请中:只剩次级「撤回申请」+ 失效说明,即使有票也�
   assert.equal(s.primary, null);
   assert.deepEqual(s.secondary, { text: '撤回申请', action: 'withdraw' });
   // 没有 applyExpireTime 时只许说通用规则;写死「24 小时」会撒谎(见 apply-expire-contract.test.js)
-  assert.equal(s.foot, '队长没处理或活动开始时,申请自动失效');
+  assert.equal(s.foot, '开场前未处理会自动失效');
 });
 
 test('P5 队长:进审批模式,不出申请/买票按钮', () => {

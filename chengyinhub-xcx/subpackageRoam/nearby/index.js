@@ -405,8 +405,7 @@ Page({
     // 申请留言(可选,≤200 字;后端 trimToNull + 内容安全机审):
     // 陌生队伍先自报来意,队长在 P5 审批行按留言决定同不同意。空留言照旧只发 teamId。
     modal.show({
-      title: '申请加入「' + cur.name + '」',
-      content: '队长会看到你这句话,一起出发后用微信群沟通。',
+      title: '申请加入这支队伍',
       editable: true,
       placeholderText: '想跟队长说一句(可选):同场打算、几个人…',
       maxlength: 200,

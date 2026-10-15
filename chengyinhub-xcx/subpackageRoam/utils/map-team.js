@@ -57,7 +57,7 @@ function teamCardState(t, now) {
     const left = expireLeft(t && t.applyExpireTime, now);
     return { mode: 'pending', notice: { tone: 'wait', text: '◷ 已申请 · 等队长同意' }, primary: null,
       secondary: { text: '撤回申请', action: 'withdraw' },
-      foot: left ? '队长没处理的话,申请 ' + left + '后自动失效' : '队长没处理或活动开始时,申请自动失效' };
+      foot: left ? left + '后自动失效' : '开场前未处理会自动失效' };
   }
   if (s === 'REJECTED') {
     return { mode: 'rejected', notice: { tone: 'bad', text: '不能再申请这支队伍' }, primary: null, secondary: null, foot: '' };

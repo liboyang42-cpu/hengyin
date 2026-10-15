@@ -190,7 +190,7 @@ test('PENDING / REJECTED 卡片', () => {
   feedTeams(page, [team({ viewerStatus: 'PENDING' }), team({ teamId: 8, viewerStatus: 'REJECTED' })])
   tapTeam(page, 7)
   assert.deepEqual(page.data.current.card.secondary, { text: '撤回申请', action: 'withdraw' })
-  assert.equal(page.data.current.card.foot, '队长没处理或活动开始时,申请自动失效')
+  assert.equal(page.data.current.card.foot, '开场前未处理会自动失效')
   tapTeam(page, 8)
   assert.equal(page.data.current.card.notice.text, '不能再申请这支队伍')
   assert.equal(page.data.current.card.primary, null)

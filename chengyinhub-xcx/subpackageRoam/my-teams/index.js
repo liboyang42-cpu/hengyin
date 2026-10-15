@@ -84,7 +84,7 @@ Page({
             if (!(res && res.code == 200 && Array.isArray(res.data))) { that.setData({ openLoading: false, openError: '附近的队伍没能读到' }); return; }
             const rows = res.data.filter((t) => t && (t.viewerStatus || 'NONE') === 'NONE').map((t) => {
               const d = T.decorateTeam(t);
-              return { key: 'n' + d.teamId, teamId: d.teamId, name: d.name || nameOf(t), avatars: avatarsOf(d.faces, t.joinedCount), members: members(t), sub: d.sub || '', badge: d.card && d.card.mode === 'buy' ? '需购票' : '可申请' };
+              return { key: 'n' + d.teamId, teamId: d.teamId, name: nameOf(t), avatars: avatarsOf(d.faces, t.joinedCount), members: members(t), sub: d.sub || '', badge: d.card && d.card.mode === 'buy' ? '需购票' : '可申请' };
             });
             that.setData({ openLoading: false, openLoaded: true, openRows: rows });
           },

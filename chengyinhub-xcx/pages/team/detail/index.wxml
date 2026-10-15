@@ -16,7 +16,7 @@
     <view class="team-head">
       <view class="team-status {{team.status < 2 ? 'live' : ''}}">{{statusText}}</view>
       <view class="team-title">{{team.title || '一起出发的玩家队伍'}}</view>
-      <view class="team-sub">{{team.joinMode == 2 ? '公开招募 · 陌生人可在附近队伍里申请' : '仅邀请 · 只能通过邀请链接加入'}} · 组队与否不影响活动举行</view>
+      <view class="team-sub">{{team.joinMode == 2 ? '公开招募' : '仅邀请'}} · 组队与否不影响活动举行</view>
       <view class="team-meta">
         <view class="team-meta-item"><text class="team-meta-value">{{team.joinedCount}} / {{team.maxMembers}}</text><text class="team-meta-key">当前成员</text></view>
         <view class="team-meta-item"><text class="team-meta-value">{{expireText || '待定'}}</text><text class="team-meta-key">场次开始</text></view>
