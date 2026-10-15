@@ -2491,12 +2491,12 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if (routeMapper.updateStateCas(session) != 1) {
             throw new ServiceException("路线状态已更新，请刷新后重试", HttpStatus.CONFLICT);
         }
+        // 结算可能授予数值道具；首次返回与原 actionId 重放都使用最终已写状态。
+        putVitals(receipt, session, state);
         Map<String, Object> encounter = encounterView(session, nodeId);
-        if (encounter != null) {
-            receipt.put("encounter", encounter);
-            if (routeMapper.updateActionResponse(action.getId(), write(receipt)) != 1) {
-                throw new IllegalStateException("旅程动作回执保存失败");
-            }
+        if (encounter != null) receipt.put("encounter", encounter);
+        if (routeMapper.updateActionResponse(action.getId(), write(receipt)) != 1) {
+            throw new IllegalStateException("旅程动作回执保存失败");
         }
         return receipt;
     }
@@ -2688,12 +2688,15 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             throw new ServiceException("路线状态已更新，请刷新后重试", HttpStatus.CONFLICT);
         }
         session.setVersion(nextVersion);
+        // 只读最终结算值，避免回填回执时再次修改已经持久化的状态。
+        JourneyRules settledRules = sessionRules(session);
+        receipt.setHp(hpOf(state, settledRules));
+        receipt.setLuck(luckOf(state, settledRules));
+        receipt.setExhausted(isExhausted(state));
         Map<String, Object> encounter = encounterView(session, nodeId);
-        if (encounter != null) {
-            receipt.setEncounter(encounter);
-            if (routeMapper.updateActionResponse(action.getId(), write(receipt)) != 1) {
-                throw new IllegalStateException("检定回执保存失败");
-            }
+        if (encounter != null) receipt.setEncounter(encounter);
+        if (routeMapper.updateActionResponse(action.getId(), write(receipt)) != 1) {
+            throw new IllegalStateException("检定回执保存失败");
         }
         return receipt;
     }
