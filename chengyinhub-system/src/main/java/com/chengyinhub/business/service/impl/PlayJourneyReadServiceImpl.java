@@ -158,15 +158,16 @@ public class PlayJourneyReadServiceImpl implements IPlayJourneyReadService {
 
         TopicRouteEngine.State state = readState(session);
         String frozenRules = NodeJourneySnapshot.journeyRules(session.getConfigSnapshotJson());
+        JourneyRules rules = JourneyRules.parse(frozenRules != null ? frozenRules : topic.getJourneyRulesJson());
         List<ThemeStateKey> keys = JourneyInitialState.visibleKeys(themeStateKeyService.listByTopic(topicId),
-                JourneyRules.parse(frozenRules != null ? frozenRules : topic.getJourneyRulesJson()), session.getConfigSnapshotJson());
+                rules, session.getConfigSnapshotJson());
         String storyJson = casebookStoryJson(topicId, session);
 
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("facts", facts(keys, state));
         data.put("relations", relations(keys, state, topicId, storyJson));
         data.put("costs", costs(keys, state));
-        data.put("log", log(session, topic));
+        data.put("log", log(session, rules));
         int[] optional = optionalClueProgress(storyJson, state);
         data.put("found", Integer.valueOf(optional[0]));
         data.put("total", Integer.valueOf(optional[1]));
@@ -289,13 +290,12 @@ public class PlayJourneyReadServiceImpl implements IPlayJourneyReadService {
      * 纯掷骰(roll)不进日志。同 actionId 只收第一条 —— 重放返回同一份回执、库里也不会有第二行,
      * 这里再去重一次,保证「重放算两次」这种退化不会从读侧漏出来。
      */
-    private List<Map<String, Object>> log(TopicRouteSession session, CmsTopic topic) {
+    private List<Map<String, Object>> log(TopicRouteSession session, JourneyRules rules) {
         List<Map<String, Object>> events = new ArrayList<Map<String, Object>>();
         List<TopicRouteAction> actions = readMapper.selectActionsBySession(session.getId());
         if (actions == null || actions.isEmpty()) return events;
 
         Map<Long, String> names = nodeNames(session.getTopicId());
-        JourneyRules rules = safeRules(topic);
         Integer prevHp = rules.isCheckEnabled() && rules.getHp().isEnabled()
                 ? Integer.valueOf(rules.getHp().getInit()) : null;
         Integer prevLuck = rules.isCheckEnabled() && rules.getLuck().isEnabled()
@@ -383,15 +383,6 @@ public class PlayJourneyReadServiceImpl implements IPlayJourneyReadService {
         String line = prefix + "检定" + verdict;
         String detail = receipt == null ? null : receipt.getText();
         return StringUtils.isBlank(detail) ? line : line + ":" + detail;
-    }
-
-    /** 主题数值规则;坏配置当成没配,案件册不因数值规则不可读而整体失败。 */
-    private static JourneyRules safeRules(CmsTopic topic) {
-        try {
-            return JourneyRules.parse(topic.getJourneyRulesJson());
-        } catch (RuntimeException unusableRules) {
-            return new JourneyRules();
-        }
     }
 
     /**
