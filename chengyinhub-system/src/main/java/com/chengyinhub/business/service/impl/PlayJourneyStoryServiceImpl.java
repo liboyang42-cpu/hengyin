@@ -281,7 +281,12 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         List<com.chengyinhub.business.domain.GameRuntimeSession> rows =
                 gameSessionMapper.selectPlayerSessionsByTopic(activityId, topicId, memberId);
         if (rows == null) return out;
+        // 旧模型缺省实例沿用既有 null→default 兼容；空白不是默认实例，也不是通配。
+        String instance = session.getPlayInstanceId() == null ? "default" : session.getPlayInstanceId();
         for (com.chengyinhub.business.domain.GameRuntimeSession row : rows) {
+            if (row == null) continue;
+            String rowInstance = row.getPlayInstanceId() == null ? "default" : row.getPlayInstanceId();
+            if (!instance.equals(rowInstance)) continue;
             JsonNode config;
             JsonNode state;
             try {
