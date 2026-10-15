@@ -490,16 +490,9 @@
       </view>
     </view>
   </cy-sheet>
-  <view wx:if="{{imageEditor && !discardVisible}}" class="dc-image-layer">
-    <view aria-label="关闭图片编辑" class="dc-image-mask" bindtap="closeImage" hover-class="dc-mask-pressed" />
-    <!-- 顶边复查(2026-09-18):面板在幕布里垂直居中 ⇒ 可用高度要两头都让开胶囊行(2×sheetTop) -->
-    <view class="dc-image-panel" style="max-height:calc(100vh - {{chrome.sheetTop * 2}}px)">
-      <view class="dc-heading">
-        <text>{{imageEditor.key === 'logo' ? '修改 Logo' : '修改封面图'}}</text>
-        <view class="dc-close" bindtap="closeImage" aria-role="button" aria-label="关闭图片编辑" hover-class="cy-pressed">
-          <cy-icon name="close-sm" size="44" />
-        </view>
-      </view>
+  <!-- BL-13:图片编辑改用共享 cy-sheet(标题 + 关闭);点遮罩/✕/下拉都走 closeImage,有改动时照旧弹「还没有保存」 -->
+  <cy-sheet show="{{!!imageEditor && !discardVisible}}" title="{{imageEditor.key === 'logo' ? '修改 Logo' : '修改封面图'}}" bind:close="closeImage">
+    <view class="dc-sheet-content" wx:if="{{imageEditor}}">
       <image
         wx:if="{{imageEditor.value}}"
         class="dc-image-preview {{imageEditor.key === 'logo' ? 'dc-image-preview--logo' : ''}}"
@@ -519,7 +512,7 @@
         </cy-btn>
       </view>
     </view>
-  </view>
+  </cy-sheet>
   <cy-privacy-gate
     show="{{privacyGateShow}}"
     bind:settled="onPrivacyGateSettled"

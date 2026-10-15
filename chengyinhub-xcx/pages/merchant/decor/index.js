@@ -7,7 +7,6 @@ const toast = require('../../../utils/toast.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
-const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
 const { merchantHomeUrl } = require('../../../utils/merchant-home-link.js');
 const { createCheckoutWorkflow, hasCompletePaymentParams } = require('../../../utils/checkout/checkout-workflow.js');
 const { createPaymentVerifier } = require('../../../utils/checkout/payment-verifier.js');
@@ -71,7 +70,6 @@ Page({
     // 还要按 canWriteProfile 收口,所以要拿到 access 投影。
     merchantAccess: inactiveAccess(),
     // 顶边复查(2026-09-18):图片编辑面板居中,90vh 满内容时顶边只有 5vh(33px)会压进胶囊行 ⇒ 用胶囊实测反算上限
-    chrome: { actionTop: 28, actionRight: 12, contentTop: 76, sheetTop: 69 },
     m: null,               // 商家实体
     gallery: [],           // 相册数组(解析自 m.gallery)
     tags: [],              // 已选标签(解析自 m.tags)
@@ -143,11 +141,6 @@ Page({
       statusBarHeight: sys.statusBarHeight || 20,
       navBarHeight: app.globalData.navBarHeight || 44
     });
-    try {
-      const w = (wx.getWindowInfo && wx.getWindowInfo()) || sys;
-      const mb = wx.getMenuButtonBoundingClientRect && wx.getMenuButtonBoundingClientRect();
-      this.setData({ chrome: resolveMenuChrome(w, mb) });
-    } catch (e) { /* 拿不到就留在兜底值 */ }
     const needsProfileWrite = view === 'basic' || view === 'brand' || view === 'qualification';
     const that = this;
     this.loadAccess(function (access) {
