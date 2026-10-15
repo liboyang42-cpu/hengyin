@@ -2761,6 +2761,34 @@ Page({
     });
   },
 
+  _playerTaskSignature(task) {
+    return task ? JSON.stringify([task.taskCode, task.inputType, task.prompt,
+      task.verificationRequired === true, task.completionPolicy || '']) : '';
+  },
+
+  _playerTaskEvidenceContext(node) {
+    const module = this.data.gameModule || {};
+    const requests = this._playerEvidenceRequests = this._playerEvidenceRequests || Object.create(null);
+    const sequence = requests[node.nodeId] = (requests[node.nodeId] || 0) + 1;
+    return { nodeId: node.nodeId, sequence, sessionKey: JSON.stringify(this._sessionParams()),
+      sessionId: module.sessionId, activityId: module.activityId, status: node.status,
+      task: this._playerTaskSignature(node.playerTask),
+      submission: JSON.stringify(node.submission || null) };
+  },
+
+  _isPlayerTaskEvidenceCurrent(context) {
+    if (!this._isPlayAccountCurrent()) return false;
+    const module = this.data.gameModule || {};
+    const node = (module.nodes || []).find(item => item.nodeId === context.nodeId);
+    return module.enabled === true && module.activityId === context.activityId
+      && module.sessionId === context.sessionId
+      && context.sessionKey === JSON.stringify(this._sessionParams())
+      && this._playerEvidenceRequests[context.nodeId] === context.sequence
+      && !!node && node.status === context.status
+      && this._playerTaskSignature(node.playerTask) === context.task
+      && JSON.stringify(node.submission || null) === context.submission;
+  },
+
   _setPlayerTaskEvidence(nodeId, evidence) {
     const nodes = ((this.data.gameModule && this.data.gameModule.nodes) || []).map((node) => (
       node && node.nodeId === nodeId ? Object.assign({}, node, { taskEvidence: evidence }) : node
@@ -2787,9 +2815,11 @@ Page({
     const nodeId = Number(e.currentTarget && e.currentTarget.dataset.node) || 0;
     const node = ((this.data.gameModule && this.data.gameModule.nodes) || []).find((item) => item.nodeId === nodeId);
     if (!node || !node.playerTask || node.playerTask.inputType !== 'SCAN') return;
+    const context = this._playerTaskEvidenceContext(node);
     wx.scanCode({
       onlyFromCamera: true,
       success: (result) => {
+        if (!this._isPlayerTaskEvidenceCurrent(context)) return;
         const value = String((result && result.result) || '').trim().slice(0, 400);
         if (!value) {
           cyToast('没有识别到任务码');
@@ -2802,6 +2832,7 @@ Page({
         });
       },
       fail: (error) => {
+        if (!this._isPlayerTaskEvidenceCurrent(context)) return;
         if (!isScanCancelled(error)) cyToast('未能扫码，请检查相机权限后重试');
       },
     });
