@@ -203625,7 +203625,6 @@
         "routes": [],
         "apis": [
           "/api/ai/npc/chat/data/export",
-          "/api/analytics/events/batch",
           "/api/login/code",
           "/api/role/info"
         ],
@@ -203633,7 +203632,6 @@
           "/api/ai/npc/chat/data/export"
         ],
         "auxiliaryApis": [
-          "/api/analytics/events/batch",
           "/api/login/code",
           "/api/role/info"
         ],
@@ -203641,12 +203639,6 @@
           {
             "url": "/api/ai/npc/chat/data/export",
             "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/analytics/events/batch",
-            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           },
@@ -203872,7 +203864,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/npc-chat/index.js:185"
+        "staticSource": "components/cy/npc-chat/index.js:184"
       }
     },
     {
@@ -203958,7 +203950,6 @@
         "routes": [],
         "apis": [
           "/api/ai/npc/chat/data/export",
-          "/api/analytics/events/batch",
           "/api/login/code",
           "/api/role/info"
         ],
@@ -203966,7 +203957,6 @@
           "/api/ai/npc/chat/data/export"
         ],
         "auxiliaryApis": [
-          "/api/analytics/events/batch",
           "/api/login/code",
           "/api/role/info"
         ],
@@ -203974,12 +203964,6 @@
           {
             "url": "/api/ai/npc/chat/data/export",
             "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/analytics/events/batch",
-            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           },
@@ -204116,7 +204100,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/npc-chat/index.js:174"
+        "staticSource": "components/cy/npc-chat/index.js:173"
       }
     },
     {
@@ -204223,7 +204207,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/npc-chat/index.js:174"
+        "staticSource": "components/cy/npc-chat/index.js:173"
       }
     },
     {
@@ -204764,7 +204748,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/npc-chat/index.js:192"
+        "staticSource": "components/cy/npc-chat/index.js:191"
       }
     },
     {
@@ -204872,7 +204856,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/npc-chat/index.js:221"
+        "staticSource": "components/cy/npc-chat/index.js:220"
       }
     },
     {
