@@ -37,3 +37,9 @@ E03-01已静态报告freezeEnding传session=null导致结束存档绕过endingCh
 不连接VPS/生产，不合并PR、不部署/上传、不执行业务迁移。SOURCE_DELIVERED_UNVERIFIED和NOT_RUN是当前交付状态；原1e403b13 231通过及规则变更前真实Node历史保留，不能套到新SHA。后续自动CI即使通过也只是该自动执行范围，不能替代用户下次集中验收。
 
 用户关闭电脑后，Cloud在平台允许运行时独立继续，不依赖本地中转。平台时长、额度或环境终止时必须推送当前小提交/队列游标/持锁文件/阻塞及下一项恢复指令；不能承诺永久运行。恢复先读本协议、源表、两队队列与PR16最新评论，核远端SHA再从READY续领，不覆盖未提交补丁。
+
+## 首批滚动收口与补位
+
+CORE已有13个独立小提交公开（截至b09d9c45），逐项SHA写回CORE池，全部SOURCE_DELIVERED_UNVERIFIED/NOT_RUN；新增9个来源于当前源码实际调用切片的补位条目，累计创建59，后续持续补。仅新增独立证据/回归且未改业务源的任务冻结后可直接取下一项；改业务源仍等协调者精确提交后再叠写同文件，不能混提交。新增4个旧测试精确写权见源表supplemental_test_owners，仅必要fixture/新合同兼容，保留业务断言，不运行。
+
+EXTRA6已在PR16 comment6192852909明确ACK_LONGRUN_SOURCE并确认29源码文件。E05旧policy_blocker文字已清：history/participation已转交，仅detail保留PR20；以最新源表/专项转交为准。C05-07任务草案要求旧代次一律UNCERTAIN与既有RESOLVED_NO_ACTIVE_RESERVATION实际合同冲突；不改现有额度政策，作为任务文字错误/已有反证处理，不能因本轮草案制造新产品决策。

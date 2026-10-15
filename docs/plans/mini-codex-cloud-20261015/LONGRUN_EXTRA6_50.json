@@ -794,7 +794,7 @@
       "trigger": "重复key、别名同模板、未配置key混合且总数超过3",
       "invariant": "实际tmplIds及requestedKeys一一对应，去重后按原优先级最多3",
       "minimal_fix_boundary": "仅resolveTemplateIds/request解析同一份已配置有序映射；不改模板ID",
-      "policy_blocker": "只候选subscribe.js/mylike.js既有逻辑；不改模板/通知接收政策、鉴权、全局请求、Claude UI。PR20三退款组件原写者未知，仅inspect/dependency，不授写权；需调用者改动交C00。",
+      "policy_blocker": "history/participation已正式精确转交E05；只有detail/index.js与PR20重叠保留原锁。不得改退款政策/接口或表外路径；真实权限决策BLOCKED换项。",
       "execution": "STATIC_SOURCE_ONLY; no validation execution",
       "ownership": "同lane唯一写者串行；C00精确登记后才可写；已有修复先静态核实，NO_CHANGE有效",
       "source_files": [
@@ -816,7 +816,7 @@
       "trigger": "wx返回accept/reject/ban混合或部分模板键缺席",
       "invariant": "accepted/partial/rejected沿原STATUS区分，不把缺失键当accept",
       "minimal_fix_boundary": "仅success回调按实际提交模板映射结果，不改授权产品",
-      "policy_blocker": "只候选subscribe.js/mylike.js既有逻辑；不改模板/通知接收政策、鉴权、全局请求、Claude UI。PR20三退款组件原写者未知，仅inspect/dependency，不授写权；需调用者改动交C00。",
+      "policy_blocker": "history/participation已正式精确转交E05；只有detail/index.js与PR20重叠保留原锁。不得改退款政策/接口或表外路径；真实权限决策BLOCKED换项。",
       "execution": "STATIC_SOURCE_ONLY; no validation execution",
       "ownership": "同lane唯一写者串行；C00精确登记后才可写；已有修复先静态核实，NO_CHANGE有效",
       "source_files": [
@@ -838,7 +838,7 @@
       "trigger": "旧确认框/退款success晚到，账号切换或组件detach后不能发新身份退款或刷新当前列表",
       "invariant": "只允许原账号、原资源、原组件代次响应继续；订阅拒绝不阻断原合法退款",
       "minimal_fix_boundary": "复用原detail已存在的上下文guard模式，保持原端点/退款政策/文案布局；本轮不运行测试",
-      "policy_blocker": "只候选subscribe.js/mylike.js既有逻辑；不改模板/通知接收政策、鉴权、全局请求、Claude UI。PR20三退款组件原写者未知，仅inspect/dependency，不授写权；需调用者改动交C00。",
+      "policy_blocker": "history/participation已正式精确转交E05；只有detail/index.js与PR20重叠保留原锁。不得改退款政策/接口或表外路径；真实权限决策BLOCKED换项。",
       "execution": "STATIC_SOURCE_ONLY; no validation execution",
       "ownership": "同lane唯一写者串行；C00精确登记后才可写；已有修复先静态核实，NO_CHANGE有效",
       "source_files": [
@@ -861,7 +861,7 @@
       "trigger": "cancelParticipation/cancelRequest旧确认或success不能在换号/detach后refresh/back",
       "invariant": "只允许原账号、原资源、原组件代次响应继续；订阅拒绝不阻断原合法退款",
       "minimal_fix_boundary": "复用原detail已存在的上下文guard模式，保持原端点/退款政策/文案布局；本轮不运行测试",
-      "policy_blocker": "只候选subscribe.js/mylike.js既有逻辑；不改模板/通知接收政策、鉴权、全局请求、Claude UI。PR20三退款组件原写者未知，仅inspect/dependency，不授写权；需调用者改动交C00。",
+      "policy_blocker": "history/participation已正式精确转交E05；只有detail/index.js与PR20重叠保留原锁。不得改退款政策/接口或表外路径；真实权限决策BLOCKED换项。",
       "execution": "STATIC_SOURCE_ONLY; no validation execution",
       "ownership": "同lane唯一写者串行；C00精确登记后才可写；已有修复先静态核实，NO_CHANGE有效",
       "source_files": [
@@ -884,7 +884,7 @@
       "trigger": "A列表在途切B且A success/complete较晚返回",
       "invariant": "旧响应既不回填B内容也不解除B请求loading",
       "minimal_fix_boundary": "仅现有member/generation/disposed scope，已由E05修好则NO_CHANGE",
-      "policy_blocker": "只候选subscribe.js/mylike.js既有逻辑；不改模板/通知接收政策、鉴权、全局请求、Claude UI。PR20三退款组件原写者未知，仅inspect/dependency，不授写权；需调用者改动交C00。",
+      "policy_blocker": "history/participation已正式精确转交E05；只有detail/index.js与PR20重叠保留原锁。不得改退款政策/接口或表外路径；真实权限决策BLOCKED换项。",
       "execution": "STATIC_SOURCE_ONLY; no validation execution",
       "ownership": "同lane唯一写者串行；C00精确登记后才可写；已有修复先静态核实，NO_CHANGE有效",
       "source_files": [
@@ -906,7 +906,7 @@
       "trigger": "posts/topics各有分页且refresh与loadMore交错",
       "invariant": "返回只合并当前类型/当前页世代，失败不跳过页或清空已有数据",
       "minimal_fix_boundary": "仅pageConfig请求快照/游标合并和错误恢复，不改后端分页",
-      "policy_blocker": "只候选subscribe.js/mylike.js既有逻辑；不改模板/通知接收政策、鉴权、全局请求、Claude UI。PR20三退款组件原写者未知，仅inspect/dependency，不授写权；需调用者改动交C00。",
+      "policy_blocker": "history/participation已正式精确转交E05；只有detail/index.js与PR20重叠保留原锁。不得改退款政策/接口或表外路径；真实权限决策BLOCKED换项。",
       "execution": "STATIC_SOURCE_ONLY; no validation execution",
       "ownership": "同lane唯一写者串行；C00精确登记后才可写；已有修复先静态核实，NO_CHANGE有效",
       "source_files": [
@@ -928,7 +928,7 @@
       "trigger": "同一取消重复点击或取消在途刷新同类型列表",
       "invariant": "仅原类型实体ID解锁/移除，旧列表不复活已确认取消项",
       "minimal_fix_boundary": "仅既有_unlikeRequests/_postUnlikeRequests和刷新合并，沿原接口",
-      "policy_blocker": "只候选subscribe.js/mylike.js既有逻辑；不改模板/通知接收政策、鉴权、全局请求、Claude UI。PR20三退款组件原写者未知，仅inspect/dependency，不授写权；需调用者改动交C00。",
+      "policy_blocker": "history/participation已正式精确转交E05；只有detail/index.js与PR20重叠保留原锁。不得改退款政策/接口或表外路径；真实权限决策BLOCKED换项。",
       "execution": "STATIC_SOURCE_ONLY; no validation execution",
       "ownership": "同lane唯一写者串行；C00精确登记后才可写；已有修复先静态核实，NO_CHANGE有效",
       "source_files": [
@@ -950,7 +950,7 @@
       "trigger": "onUnload或新一轮onShow后旧success/complete到达",
       "invariant": "旧世代不能setData/停止新刷新状态，首展与回显沿原刷新节奏",
       "minimal_fix_boundary": "仅页面已有生命周期/请求token守卫，不改主题样式/路由",
-      "policy_blocker": "只候选subscribe.js/mylike.js既有逻辑；不改模板/通知接收政策、鉴权、全局请求、Claude UI。PR20三退款组件原写者未知，仅inspect/dependency，不授写权；需调用者改动交C00。",
+      "policy_blocker": "history/participation已正式精确转交E05；只有detail/index.js与PR20重叠保留原锁。不得改退款政策/接口或表外路径；真实权限决策BLOCKED换项。",
       "execution": "STATIC_SOURCE_ONLY; no validation execution",
       "ownership": "同lane唯一写者串行；C00精确登记后才可写；已有修复先静态核实，NO_CHANGE有效",
       "source_files": [

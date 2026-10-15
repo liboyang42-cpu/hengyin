@@ -386,5 +386,11 @@
     "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_COORDINATION/BACKLOG.md",
     "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_COORDINATION/QUEUE.json",
     "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_COORDINATION/CLAIMS.json"
-  ]
+  ],
+  "supplemental_test_owners": {
+    "chengyinhub-xcx/tests/unit/pro-editor-draft.test.js": "CORE/C02",
+    "chengyinhub-xcx/tests/unit/pro-editor-fabu-flow.test.js": "CORE/C02",
+    "chengyinhub-xcx/tests/unit/pro-editor-story-flow.test.js": "CORE/C02",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java": "CORE/C06"
+  }
 }
