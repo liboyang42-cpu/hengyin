@@ -524,6 +524,46 @@
       "base_sha": "f9e2932ca4b14e541caba356d2c1b016332f199f",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 read E01-18/E04-14 packets and exact fixture impacts; no CORE active writer, all original C04/C06 stopped. Only packet minimal repair/synchronization, preserve policy/assertions; NOT_RUN."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistServiceImplTest.java": {
+      "owner": "EXTRA6/E01",
+      "worker": "EXTRA6/E01",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "bda1c4e8db08210b573cac1ee02b0d18c19962b7",
+      "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
+      "transfer_evidence": "C00 complete read E01-18@a838241b and E02-20@76bfabcb; original source writers stopped/no WIP; preserve assertions/policy. Mapper CommunityPost only existing nullable notification-preference signature at this grant."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistPromotionMembershipRaceTransactionTest.java": {
+      "owner": "EXTRA6/E01",
+      "worker": "EXTRA6/E01",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "bda1c4e8db08210b573cac1ee02b0d18c19962b7",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 complete read E01-18@a838241b and E02-20@76bfabcb; original source writers stopped/no WIP; preserve assertions/policy. Mapper CommunityPost only existing nullable notification-preference signature at this grant."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistTokenMybatisIntegrationTest.java": {
+      "owner": "EXTRA6/E01",
+      "worker": "EXTRA6/E01",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "bda1c4e8db08210b573cac1ee02b0d18c19962b7",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 complete read E01-18@a838241b and E02-20@76bfabcb; original source writers stopped/no WIP; preserve assertions/policy. Mapper CommunityPost only existing nullable notification-preference signature at this grant."
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java": {
+      "owner": "EXTRA6/E02",
+      "worker": "EXTRA6/E02",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "bda1c4e8db08210b573cac1ee02b0d18c19962b7",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 complete read E01-18@a838241b and E02-20@76bfabcb; original source writers stopped/no WIP; preserve assertions/policy. Mapper CommunityPost only existing nullable notification-preference signature at this grant."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostServiceImplTest.java": {
+      "owner": "EXTRA6/E02",
+      "worker": "EXTRA6/E02",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "bda1c4e8db08210b573cac1ee02b0d18c19962b7",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 complete read E01-18@a838241b and E02-20@76bfabcb; original source writers stopped/no WIP; preserve assertions/policy. Mapper CommunityPost only existing nullable notification-preference signature at this grant."
     }
   },
   "reserved_not_transferred": [

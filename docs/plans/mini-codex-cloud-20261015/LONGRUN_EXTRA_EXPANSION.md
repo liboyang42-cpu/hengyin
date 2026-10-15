@@ -23,3 +23,14 @@ C00已完整读取公共 ae4113d21e8983d295c68831983de0aa8f875b74 的E01-18和 1
 - EXTRA6/E04：`chengyinhub-admin/src/test/java/com/chengyinhub/business/service/`下 SmsCouponRedemptionAuditTest.java、SmsCouponRedemptionStartTimeTest.java、SmsCouponRedemptionTransactionBoundaryTest.java、CouponLifecycleMybatisIntegrationTest.java。仅同步本队Service首读既有ForUpdate，原权限/时间/审计/零副作用和回滚断言保留。旧普通读后同线程独立撤销窗口已不可达，改撤销先提交→锁读，数量保持；新独立真库方法承担锁等待证据，仅写NOT_RUN。不得把H2/mock当MySQL锁证明。
 
 E04-14只固定Service锁读到提交的当前history关联，不增加token身份版本，也不宣称签发/验签到锁读前窗口已修；旧owner/scope校验谓词不改。两项均SOURCE_DELIVERED_UNVERIFIED/NOT_RUN，无验证、部署、迁移或合并。完整公共源基线f9e2932ca4b14e541caba356d2c1b016332f199f；原EXTRA已交patch必须保留，不能全文件回灌CORE。
+
+
+## 正式ACK与第二批精确fixture/接口转交
+
+已主动读PR16 comment6195023061，EXTRA实际E05/E06 child/worktree/分支及findCurrent生产者提取42cd374d均登记JSON；可确认新增域开始源码工作。其他4个slot支援独占新证据/回归，不能称6个业务源作者同时改同一域。
+
+追加EXTRA6/E01三旧fixture：ClubWaitlistServiceImplTest、ClubWaitlistPromotionMembershipRaceTransactionTest、ClubWaitlistTokenMybatisIntegrationTest（完整路径SOURCE_OWNERS）。前两只按原正常活动前提接新查询，原会员/库存/回滚断言不放宽；H2不冒称真MySQL活动锁。Token真库套件必须seed真实合法activity、日期覆盖原now边界，保留新query真实XML委托，不硬编码恒true。未运行。
+
+追加EXTRA6/E02：CommunityPostMapper.java仅现有upsertNotificationPreferences的三个boolean→Boolean；CommunityPostServiceImplTest.java仅notificationPreferencesPatchMergesAndGovernanceCannotBeDisabled的必要fixture。原Service/XML仍本队source owner。E02-20 nullable PATCH按原合同：无预读、直接原请求nullable；INSERT COALESCE(param,1)，UPDATE COALESCE(原param,当前列)，不准VALUES(default)覆盖未给字段，治理恒开不变；同字段按DB写序，响应不承诺随后提交。保留旧mention/governance/保留字段断言，新独占真库并发回归NOT_RUN。接口表中grant不等于允许其他点赞请求身份新查询；E02-19/22须给精确公共packet/路径后另裁定兼容边界，不猜升级前已删除身份。
+
+E04原4fixture及E01 Mapper.java已在2f050fd7389f36653a07f742ec7f698687a959ac生效，无需重复等批准。以上不新增API/DDL/依赖/权限/收费政策，无编译测试、迁移、部署或合并。
