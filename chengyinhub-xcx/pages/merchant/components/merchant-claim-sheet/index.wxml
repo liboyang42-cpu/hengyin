@@ -2,10 +2,8 @@
   <view class="mcs">
     <view wx:if="{{phase === 'loading'}}" class="mcs__note" aria-role="status" aria-live="polite">正在读取认领状态…</view>
 
-    <view wx:elif="{{phase === 'error'}}" class="mcs__block">
-      <text class="mcs__note">{{loadError}}</text>
-      <cy-btn variant="secondary" bindtap="retry">重试</cy-btn>
-    </view>
+    <cy-inline-error wx:elif="{{phase === 'error'}}" kind="error" title="认领状态读取失败" sub="{{loadError}}"
+                     action="重试" bind:action="retry" />
 
     <block wx:elif="{{view.state !== 'none'}}">
       <view class="mcs__status mcs__status--{{view.state}}">
@@ -40,11 +38,11 @@
         <view class="mcs__proofs">
           <view wx:for="{{proofUrls}}" wx:key="index" class="mcs__proof">
             <image class="mcs__proof-img" src="{{item}}" mode="aspectFill" />
-            <view class="mcs__proof-x" data-i="{{index}}" bindtap="removeProof" aria-role="button" aria-label="删除第{{index + 1}}张" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view>
+            <view class="mcs__proof-x" data-i="{{index}}" bindtap="removeProof" aria-role="button" aria-label="删除第{{index + 1}}张" hover-class="cy-pressed" hover-stay-time="80"><view class="mcs__proof-dot"><cy-icon name="close-sm" size="32" /></view></view>
           </view>
           <view wx:if="{{proofUrls.length < 10}}" class="mcs__proof mcs__proof--add" bindtap="addProof" aria-role="button" aria-label="添加证明图片" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="48" /></view>
         </view>
-        <view wx:if="{{formError}}" class="mcs__error" aria-role="alert">{{formError}}</view>
+        <cy-inline-error wx:if="{{formError}}" kind="error" title="提交未完成" sub="{{formError}}" />
         <cy-btn disabled="{{submitting}}" bindtap="submit">{{submitting ? '提交中…' : '提交认领'}}</cy-btn>
       </block>
     </block>
