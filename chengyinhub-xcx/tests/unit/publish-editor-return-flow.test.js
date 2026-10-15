@@ -164,7 +164,7 @@ test('负控：成功离场误复用 goBack 时，previewVisible 会把用户留
 
 test('创建栈清理后，我的节点玩法页返回仍能回到节点玩法主页', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'subpackageMember/mytemplate/mytemplate.wxml'), 'utf8')
-  assert.match(wxml, /<cy-nav-bar\s+custom-back\s+bind:back="onBack"/)
+  assert.match(wxml, /<cy-nav-bar\s+title="我的节点玩法"\s+custom-back\s+bind:back="onBack"/)
 
   const rootEvents = []
   loadMyTemplatePage(1, rootEvents).onBack()

@@ -5,8 +5,8 @@
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <view class="order-page">
-<cy-nav-bar custom-back bind:back="goBack" />
-<cy-page-title title="我的订单" />
+<cy-nav-bar title="我的订单" custom-back bind:back="goBack" />
+<cy-nav-spacer />
 <view class="order-shell">
   <cy-scene-member-order-history id="orderHistory" bind:open="openScene" />
 </view>

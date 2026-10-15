@@ -18,7 +18,7 @@ function rule(source, selector) {
 }
 
 function assertMyInviteContract(route, scene, wxss, script) {
-  assert.match(route, /<cy-page-title title="邀请记录"/)
+  assert.match(route, /<cy-nav-bar title="邀请记录"/)
   assert.doesNotMatch(route, /<cy-sheet/,
     '邀请记录独立路由不再套常驻半屏（同收益明细 / 提现记录）')
   assert.match(route, /<cy-scene-member-invite-history id="inviteHistory"/)

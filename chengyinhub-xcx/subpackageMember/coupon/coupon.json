@@ -6,7 +6,7 @@
     "cy-footer-bar": "/components/cy/footer-bar/index",
     "cy-icon": "/components/cy/icon/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",
-    "cy-page-title": "/components/cy/page-title/index",
+    "cy-nav-spacer": "/components/cy/nav-spacer/index",
     "cy-skeleton": "/components/cy/skeleton/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",

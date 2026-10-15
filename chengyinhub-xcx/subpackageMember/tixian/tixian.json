@@ -2,7 +2,7 @@
   "usingComponents": {
     "cy-btn": "/components/cy/btn/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",
-    "cy-page-title": "/components/cy/page-title/index",
+    "cy-nav-spacer": "/components/cy/nav-spacer/index",
     "cy-sheet": "/components/cy/sheet/index",
     "cy-scene-member-withdraw-history": "/components/cy/scene-member-withdraw-history/index",
     "cy-skeleton": "/components/cy/skeleton/index",

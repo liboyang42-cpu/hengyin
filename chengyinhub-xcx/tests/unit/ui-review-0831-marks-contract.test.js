@@ -437,13 +437,13 @@ test('同页状态筛选走 chip 药丸，不走 fill 下划线', () => {
 
 test('提现记录和邀请记录深链壳只留一次页面标题', () => {
   const withdraw = read('subpackageMember/tixianjilu/tixianjilu.wxml')
-  assert.match(withdraw, /<cy-page-title title="提现记录"/)
+  assert.match(withdraw, /<cy-nav-bar title="提现记录"/)
   assert.doesNotMatch(withdraw, /<cy-sheet/)
   assert.match(withdraw, /<cy-scene-member-withdraw-history id="withdrawHistory"/)
   assert.doesNotMatch(read('subpackageMember/tixianjilu/tixianjilu.json'), /cy-sheet/)
 
   const invite = read('subpackageMember/myinvite/myinvite.wxml')
-  assert.match(invite, /<cy-page-title title="邀请记录"/)
+  assert.match(invite, /<cy-nav-bar title="邀请记录"/)
   assert.doesNotMatch(invite, /<cy-sheet/)
   assert.match(invite, /<cy-scene-member-invite-history id="inviteHistory"/)
   assert.doesNotMatch(read('subpackageMember/myinvite/myinvite.json'), /cy-sheet/)

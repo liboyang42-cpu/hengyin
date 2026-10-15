@@ -2,8 +2,8 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-  <cy-nav-bar />
-  <cy-page-title title="优惠券" />
+  <cy-nav-bar title="优惠券" />
+  <cy-nav-spacer />
 
 <cy-skeleton wx:if="{{loadState === 'loading'}}" type="list" count="3" />
 <cy-error wx:elif="{{loadState === 'error'}}" class="fill-slot cy-fade-in" fill size="lg" title="优惠券加载失败" sub="{{errorMsg}}" retry="重试" bind:retry="retryLoad" auto-back />

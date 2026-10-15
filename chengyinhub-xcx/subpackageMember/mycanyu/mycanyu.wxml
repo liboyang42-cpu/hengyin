@@ -4,9 +4,8 @@
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <view class="canyu-page">
-<cy-nav-bar custom-back bind:back="onBack" />
+<cy-nav-bar title="我的参与" custom-back bind:back="onBack" />
 <view class="canyu-nav-spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>
-<cy-page-title title="我的参与" safe-top="{{false}}" />
 <cy-tabs active="{{activeTab}}" bind:change="switchTab" tabs="{{tabs}}" variant="fill" />
 
 <view class="canyubox">

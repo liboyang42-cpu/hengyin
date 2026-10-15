@@ -3,8 +3,8 @@
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <view class="myinvite-page">
-  <cy-nav-bar custom-back bind:back="onClose" />
-  <cy-page-title title="邀请记录" />
+  <cy-nav-bar title="邀请记录" custom-back bind:back="onClose" />
+  <cy-nav-spacer />
   <!-- 同提现记录 / 收益明细：独立路由不再套常驻半屏，正文落到标题下方。 -->
   <view class="myinvite-page-body">
     <cy-scene-member-invite-history id="inviteHistory" />

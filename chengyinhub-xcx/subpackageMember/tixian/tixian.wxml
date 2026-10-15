@@ -4,8 +4,8 @@
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <view class="tixian-page">
-  <cy-nav-bar />
-  <cy-page-title title="提现申请" />
+  <cy-nav-bar title="提现申请" />
+  <cy-nav-spacer />
   <view class="tixian-content">
     <view class="tx-history-entry" bindtap="openWithdrawHistory" aria-role="button" aria-label="打开提现记录弹窗" hover-class="cy-pressed" hover-stay-time="80">
       <text>提现记录</text><cy-icon name="arrow-right" size="24" />

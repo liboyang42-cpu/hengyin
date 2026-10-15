@@ -41,7 +41,7 @@ test('non-hero secondary pages use one shared plain-arrow navigation shape', () 
   assertPlainNav(read('subpackageMember/order/order.wxml'), 'order list')
   assertPlainNav(read('pages/merchant/decor/index.wxml'), 'merchant decor')
 
-  assertTitleBelowBack(read('subpackageMember/mycanyu/mycanyu.wxml'), '我的参与', 'canyu-nav-spacer', 'my join')
+  assertCenteredNavTitle(read('subpackageMember/mycanyu/mycanyu.wxml'), '我的参与', 'canyu-nav-spacer', 'my join')
   assert.match(read('subpackageMember/mycanyu/mycanyu.wxml'), /<cy-nav-bar[^>]*custom-back[^>]*bind:back="onBack"/)
   assert.match(read('subpackageMember/mycanyu/mycanyu.json'), /"navigationStyle"\s*:\s*"custom"/)
   assert.match(read('subpackageMember/mycanyu/mycanyu.js'), /switchTab\(\{ url: '\/pages\/member\/index\/index' \}\)/)
@@ -79,6 +79,17 @@ function assertTitleBelowBack(source, title, spacerClass, label) {
     source.indexOf(spacerClass) < source.indexOf('<cy-page-title'),
     `${label} 的大标题必须排在让位块之后`,
   )
+}
+
+// BL-08（2026-10-15 用户决定）：会员分包二级页 = cy-nav-bar 返回 + 居中标题 + 胶囊,
+// 不再在返回钮下叠 cy-page-title 大标题(否则双标题)。让位块仍必须在。
+function assertCenteredNavTitle(source, title, spacerClass, label) {
+  const navTag = source.match(/<cy-nav-bar[\s\S]*?(?:\/>|>)/)
+  assert.ok(navTag, `${label} must render cy-nav`)
+  assert.match(navTag[0], new RegExp(`\\stitle="${title}"`), `${label} 标题必须挂在导航条居中`)
+  const spacer = new RegExp(`class="${spacerClass}" style="height: \\{\\{statusBarHeight \\+ navBarHeight\\}\\}px;"`)
+  assert.match(source, spacer, `${label} 缺少导航让位块,正文会压在固定导航下`)
+  assert.doesNotMatch(source, /<cy-page-title\b/, `${label} 不得再叠 cy-page-title(双标题)`)
 }
 
 // 2026-07-29 规整:publish/simple 自带头的圆形 ‹ 与 cy-nav-bar 的返回钮完全等价(都是
@@ -128,18 +139,18 @@ test('negative control: orderinfo 圆形返回钮回潮必须判红', () => {
   }, assert.AssertionError)
 })
 
-test('negative control: 把标题挂回导航条(双标题)必须判红', () => {
+test('negative control: 标题退回导航条下方大标题(双标题)必须判红', () => {
   const source = read('subpackageMember/mycanyu/mycanyu.wxml')
-  const mutated = source.replace('<cy-nav-bar custom-back', '<cy-nav-bar title="我的参与" custom-back')
+  const mutated = source.replace(/(<view class="canyu-nav-spacer"[^>]*><\/view>\n)/, '$1<cy-page-title title="我的参与" safe-top="{{false}}" />\n')
   assert.notEqual(mutated, source, '变异锚点失效(源码已改动?)')
-  assert.throws(() => assertTitleBelowBack(mutated, '我的参与', 'canyu-nav-spacer', 'my join'), assert.AssertionError)
+  assert.throws(() => assertCenteredNavTitle(mutated, '我的参与', 'canyu-nav-spacer', 'my join'), assert.AssertionError)
 })
 
 test('negative control: 删掉导航让位块(大标题压在固定导航下)必须判红', () => {
   const source = read('subpackageMember/mycanyu/mycanyu.wxml')
   const mutated = source.replace(/<view class="canyu-nav-spacer"[^>]*><\/view>\n/, '')
   assert.notEqual(mutated, source, '变异锚点失效(源码已改动?)')
-  assert.throws(() => assertTitleBelowBack(mutated, '我的参与', 'canyu-nav-spacer', 'my join'), assert.AssertionError)
+  assert.throws(() => assertCenteredNavTitle(mutated, '我的参与', 'canyu-nav-spacer', 'my join'), assert.AssertionError)
 })
 
 test('negative control: group-code 返回钮塞回 selecting 条件容器必须判红', () => {

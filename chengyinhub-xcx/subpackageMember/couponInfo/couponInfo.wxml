@@ -2,8 +2,8 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-  <cy-nav-bar custom-back bind:back="onCancel" />
-  <cy-page-title title="优惠券设置" />
+  <cy-nav-bar title="优惠券设置" custom-back bind:back="onCancel" />
+  <cy-nav-spacer />
   <view class="wp">
     <view class="form">
 

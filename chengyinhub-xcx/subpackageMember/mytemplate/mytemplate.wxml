@@ -4,8 +4,8 @@
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <view class="project">
-  <cy-nav-bar custom-back bind:back="onBack" />
-  <cy-page-title title="我的节点玩法" />
+  <cy-nav-bar title="我的节点玩法" custom-back bind:back="onBack" />
+  <cy-nav-spacer />
   <view class="wp">
     <view class="tablist">
       <!-- 用户原话"这个删除搜索"/"还没有节点玩法向下 正中 删除搜索":两态都不要搜索入口 -->

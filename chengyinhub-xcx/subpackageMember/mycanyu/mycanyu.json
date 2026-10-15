@@ -7,7 +7,6 @@
     "cy-tabs": "/components/cy/tabs/index",
     "cy-badge": "/components/cy/badge/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",
-    "cy-page-title": "/components/cy/page-title/index",
     "cy-scene-sheet": "/components/cy/scene-sheet/index",
     "cy-scene-member-participation-detail": "/subpackageMember/components/scene-member-participation-detail/index",
     "cy-privacy-gate": "/components/cy/privacy-gate/index",

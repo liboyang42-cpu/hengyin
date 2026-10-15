@@ -16,9 +16,12 @@ const ROOT = path.resolve(__dirname, '../..')
 const read = (relativePath) => readResolved(relativePath)
 
 const OWNER_NORMAL = [
-  'subpackageMember/mytemplate/mytemplate',
-  'subpackageMember/myinvite/myinvite',
   'pages/club/join-requests/index',
+]
+// BL-08（2026-10-15 用户决定）：会员分包二级页标题改挂 cy-nav-bar 居中，不再用 cy-page-title。
+const OWNER_CENTERED_NAV = [
+  ['subpackageMember/mytemplate/mytemplate', '我的节点玩法'],
+  ['subpackageMember/myinvite/myinvite', '邀请记录'],
 ]
 const WIZARD_EXCEPTION = 'pages/club/create/index'
 const WIZARD_EXCEPTION_2 = 'pages/club/apply/index'
@@ -101,10 +104,8 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   // 2026-09-06:申请页大标题用回共享 cy-page-title(不再自绘 .ca-q)
   'pages/club/apply/index',
   'pages/shezhi/shezhi', 'pages/shezhi/about/index', 'pages/agreement/index', 'pages/deregister/index', 'pages/userinfo/userinfo',
-  'subpackageMember/mytemplate/mytemplate', 'subpackageMember/coupon/coupon', 'subpackageMember/couponInfo/couponInfo',
-  'subpackageMember/order/order', 'subpackageMember/orderinfo/orderinfo', 'subpackageMember/tixian/tixian',
-  'subpackageMember/tixianjilu/tixianjilu', 'pages/mylike/mylike', 'subpackageMember/mycanyu/mycanyu',
-  'subpackageMember/mycanyuinfo/mycanyuinfo', 'subpackageMember/myinvite/myinvite', 'subpackageMember/complaint/index',
+  'subpackageMember/orderinfo/orderinfo', 'pages/mylike/mylike',
+  'subpackageMember/mycanyuinfo/mycanyuinfo', 'subpackageMember/complaint/index',
   'subpackageRoam/session/index',
   'pages/activity/official-inbox/index',
   'pages/activity/official-mine/index', 'subpackageA/pages/myproject/index',
@@ -286,10 +287,10 @@ test('topicadd 重定向壳保留 app.json 注册，但不再拥有可见导航�
   assert.equal((source.json.usingComponents || {})['cy-page-title'], undefined)
 })
 
-test('负控:myinvite 源码摘掉 page-title 时真实盘点必须判红', () => {
-  const target = 'subpackageMember/myinvite/myinvite.wxml'
+test('负控:complaint 源码摘掉 page-title 时真实盘点必须判红', () => {
+  const target = 'subpackageMember/complaint/index.wxml'
   const original = read(target)
-  const mutated = original.replace('<cy-page-title title="邀请记录" />', '')
+  const mutated = original.replace(/<cy-page-title title="投诉与建议"[^>]*\/>/, '')
   assert.notEqual(mutated, original, '变异锚点失效')
   const readMutated = (relativePath) => relativePath === target ? mutated : read(relativePath)
   assert.throws(() => assertTitleInventory(readMutated), {
@@ -300,6 +301,22 @@ test('负控:myinvite 源码摘掉 page-title 时真实盘点必须判红', () =
 
 test('owner 普通二级页统一使用 cy-nav-bar + cy-page-title', () => {
   OWNER_NORMAL.forEach(assertOwnerNormal)
+})
+
+function assertOwnerCenteredNav([route, title]) {
+  const source = routeSources(route)
+  assert.equal(source.json.navigationStyle, 'custom', `${route} 必须保留 custom 导航`)
+  assert.match(source.wxml, new RegExp(`<cy-nav-bar title="${title}"`), `${route} 标题必须挂在 cy-nav-bar 居中`)
+  assert.doesNotMatch(source.wxml, /<cy-page-title\b/, `${route} 不得再叠一层 cy-page-title(双标题)`)
+  assert.match(source.wxml, /<cy-nav-spacer \/>/, `${route} 必须有导航让位`)
+  assert.equal(source.json.usingComponents['cy-nav-spacer'], '/components/cy/nav-spacer/index')
+  const tokens = classTokens(source.wxml)
+  assert.equal(tokens.includes('h1'), false, `${route} 不得回到裸 .h1 标题`)
+  assert.equal(tokens.includes('cy-h1'), false, `${route} 不得重复绘制 .cy-h1 标题`)
+}
+
+test('BL-08 会员分包二级页使用 cy-nav-bar 居中标题', () => {
+  OWNER_CENTERED_NAV.forEach(assertOwnerCenteredNav)
 })
 
 test('owner 特殊形态保留显式产品裁决:向导问句与 WebGL cover-view 不强塞 page-title', () => {
@@ -318,16 +335,16 @@ test('owner 特殊形态保留显式产品裁决:向导问句与 WebGL cover-vie
 test('负控:owner 普通页回潮裸 .h1 时必须判红', () => {
   const route = 'subpackageMember/myinvite/myinvite'
   const source = routeSources(route)
-  const mutated = source.wxml.replace('<cy-page-title title="邀请记录" />', '<view class="h1">邀请记录</view>\n<cy-page-title title="邀请记录" />')
+  const mutated = source.wxml.replace('<cy-nav-spacer />', '<cy-nav-spacer />\n<view class="h1">邀请记录</view>')
   assert.notEqual(mutated, source.wxml, '变异锚点失效')
   const tokens = classTokens(mutated)
   assert.throws(() => assert.equal(tokens.includes('h1'), false), assert.AssertionError)
 })
 
-test('负控:owner 普通页摘掉 cy-page-title 时必须判红', () => {
+test('负控:BL-08 页面把标题退回 cy-page-title(双标题)时必须判红', () => {
   const route = 'subpackageMember/mytemplate/mytemplate'
   const source = routeSources(route)
-  const mutated = source.wxml.replace('<cy-page-title title="我的节点玩法" />\n', '')
+  const mutated = source.wxml.replace('<cy-nav-spacer />', '<cy-nav-spacer />\n  <cy-page-title title="我的节点玩法" />')
   assert.notEqual(mutated, source.wxml, '变异锚点失效')
-  assert.throws(() => assert.match(mutated, /<cy-page-title\b/), assert.AssertionError)
+  assert.throws(() => assert.doesNotMatch(mutated, /<cy-page-title\b/), assert.AssertionError)
 })

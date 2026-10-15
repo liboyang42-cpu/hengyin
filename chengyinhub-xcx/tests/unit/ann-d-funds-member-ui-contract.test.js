@@ -54,7 +54,7 @@ function assertAnnotationDContract(files) {
   assert.match(files.tixianJs, /openWithdrawHistory\(\)\s*\{\s*this\.setData\(\{ withdrawHistorySheet: true \}\)\s*\}/)
   assert.match(files.tixianJs, /closeWithdrawHistory\(\)\s*\{\s*this\.setData\(\{ withdrawHistorySheet: false \}\)\s*\}/)
 
-  assert.match(files.tixianjiluWxml, /<cy-page-title title="提现记录"/)
+  assert.match(files.tixianjiluWxml, /<cy-nav-bar title="提现记录"/)
   assert.doesNotMatch(files.tixianjiluWxml, /<cy-sheet/, '提现记录深链壳不再套常驻半屏')
   assert.doesNotMatch(files.tixianjiluJson, /cy-sheet/)
   assert.match(files.tixianjiluWxml, /<cy-scene-member-withdraw-history id="withdrawHistory"/)
@@ -68,7 +68,7 @@ function assertAnnotationDContract(files) {
 
   assert.doesNotMatch(files.myinviteWxml, /<cy-sheet/, '邀请记录深链壳不再套常驻半屏')
   assert.doesNotMatch(files.myinviteJson, /cy-sheet/)
-  assert.match(files.myinviteWxml, /<cy-page-title title="邀请记录"/)
+  assert.match(files.myinviteWxml, /<cy-nav-bar title="邀请记录"/)
   assert.match(files.myinviteWxml, /<cy-scene-member-invite-history id="inviteHistory"/)
   assert.match(files.myinviteSceneWxml, /class="ir-row"[\s\S]*class="ir-time"[\s\S]*class="ir-status"[\s\S]*class="ir-reward"/)
   assert.match(files.myinviteSceneJs, /url:\s*'\/api\/user\/invite_list'[\s\S]*url:\s*'\/api\/user\/points\/list'/)
