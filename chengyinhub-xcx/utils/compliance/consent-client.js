@@ -1,3 +1,5 @@
+const { VERSIONS } = require('./usage-consent.js');
+
 function createConsentClient(options) {
   options = options || {};
   const sendRequest = options && options.sendRequest;
@@ -15,7 +17,7 @@ function createConsentClient(options) {
   const settleTimeoutMs = (options && options.settleTimeoutMs) || 10000;
 
   const pending = new Map();
-  const roamIntents = new Map();
+  const locationIntents = new Map();
   function record(input) {
     const docType = input && input.docType;
     const scene = input && input.scene;
@@ -26,22 +28,25 @@ function createConsentClient(options) {
     const owner = options && options.getUserID ? String(options.getUserID() || '') : 'fixture';
     if (!owner) return Promise.reject(new Error('请先登录后记录同意'));
     const key = [owner, docType, scene, eventType, input.scopeType || '', input.scopeId || ''].join('|');
-    const roamScene = docType === 'privacy_policy' && scene === 'roam_location';
-    if (roamScene && input._roamIntent == null) {
-      const generation = (roamIntents.get(owner) || 0) + 1; roamIntents.set(owner, generation);
-      input = Object.assign({}, input, { _roamIntent: generation });
+    const homeScene = docType === 'privacy_policy' && scene === 'home_city_location';
+    const locationScene = docType === 'privacy_policy' && (scene === 'roam_location' || homeScene);
+    const intentKey = [owner, docType, scene].join('|');
+    if (locationScene && input._locationIntent == null) {
+      const generation = (locationIntents.get(intentKey) || 0) + 1;
+      locationIntents.set(intentKey, generation);
+      input = Object.assign({}, input, { _locationIntent: generation });
       if (eventType === 'REVOKE') {
         const agreeKey = [owner, docType, scene, 'AGREE', '', ''].join('|');
         pending.delete(agreeKey); if (options.setPending) options.setPending(agreeKey, null);
       }
     }
-    const intentCurrent = function () { return !roamScene || roamIntents.get(owner) === input._roamIntent; };
-    const roamAgree = docType === 'privacy_policy' && scene === 'roam_location' && eventType === 'AGREE';
+    const intentCurrent = function () { return !locationScene || locationIntents.get(intentKey) === input._locationIntent; };
+    const locationAgree = locationScene && eventType === 'AGREE';
     const saved = pending.get(key) || options && options.getPending && options.getPending(key);
-    if (roamAgree && !input._roamBaseline) {
+    if (locationAgree && !input._locationBaseline) {
       // Freeze the preflight revision with the idempotency key. A timed-out old AGREE never adopts a later REVOKE.
       if (saved && typeof saved === 'object' && typeof saved.expectedRequestId === 'string' && saved.requestId) {
-        return record(Object.assign({}, input, { _roamBaseline: saved }));
+        return record(Object.assign({}, input, { _locationBaseline: saved }));
       }
       return new Promise(function (resolve, reject) {
         let settled = false;
@@ -52,7 +57,7 @@ function createConsentClient(options) {
           }
           const baseline = { requestId: 'consent-' + now() + '-' + random(), expectedRequestId: row ? row.requestId : '' };
           pending.set(key, baseline); if (options.setPending) options.setPending(key, baseline);
-          record(Object.assign({}, input, { _roamBaseline: baseline })).then(resolve, reject);
+          record(Object.assign({}, input, { _locationBaseline: baseline })).then(resolve, reject);
         };
         const timer = setTimeout(function () { finish(new Error('同意记录超时')); }, settleTimeoutMs);
         try { sendRequest({
@@ -61,7 +66,9 @@ function createConsentClient(options) {
           success: function (res) {
             const row = res && res.data;
             if (!res || Number(res.code) !== 200 || row && (row.docType !== docType || row.scene !== scene
-                || typeof row.requestId !== 'string' || !row.requestId || !['AGREE', 'REVOKE'].includes(row.eventType))) {
+                || typeof row.requestId !== 'string' || !row.requestId || !['AGREE', 'REVOKE'].includes(row.eventType)
+                || homeScene && (typeof row.docVersion !== 'string' || !row.docVersion.trim()
+                    || row.scopeType != null || row.scopeId != null))) {
               finish(new Error('定位授权状态读取失败')); return;
             }
             finish(null, row || null);
@@ -71,7 +78,7 @@ function createConsentClient(options) {
         }); } catch (error) { finish(new Error('定位授权状态读取失败')); }
       });
     }
-    let requestId = roamAgree ? input._roamBaseline.requestId : saved;
+    let requestId = locationAgree ? input._locationBaseline.requestId : saved;
     if (requestId && typeof requestId !== 'string') requestId = null;
     if (!requestId) {
       requestId = 'consent-' + now() + '-' + random();
@@ -79,7 +86,7 @@ function createConsentClient(options) {
       if (options && options.setPending) options.setPending(key, requestId);
     }
     const data = { docType, scene, eventType, requestId };
-    if (roamAgree) data.expectedRequestId = input._roamBaseline.expectedRequestId;
+    if (locationAgree) data.expectedRequestId = input._locationBaseline.expectedRequestId;
     if (input.scopeType) data.scopeType = input.scopeType;
     if (input.scopeId != null) data.scopeId = input.scopeId;
     return new Promise(function (resolve, reject) {
@@ -107,6 +114,7 @@ function createConsentClient(options) {
           if (res && Number(res.code) === 200 && row && row.requestId === requestId
               && row.docType === docType && row.scene === scene && row.eventType === eventType
               && typeof row.docVersion === 'string' && row.docVersion.trim()
+              && (!homeScene || row.docVersion === VERSIONS.privacy_policy)
               && (data.scopeType || null) === (row.scopeType || null) && (data.scopeId || null) === (row.scopeId || null)
               && intentCurrent() && (!options.getUserID || owner === String(options.getUserID() || ''))) {
             pending.delete(key);
@@ -114,8 +122,12 @@ function createConsentClient(options) {
             settle(resolve, { requestId: requestId, response: res });
             return;
           }
-          if (docType === 'privacy_policy' && scene === 'roam_location' && res && Number(res.code) === 409) {
-            pending.delete(key); if (options.setPending) options.setPending(key, null);
+          if (locationScene && res && Number(res.code) === 409) {
+            const stored = pending.get(key) || options.getPending && options.getPending(key);
+            const storedId = stored && typeof stored === 'object' ? stored.requestId : stored;
+            if (storedId === requestId) {
+              pending.delete(key); if (options.setPending) options.setPending(key, null);
+            }
           }
           settle(reject, new Error((res && res.msg) || '同意记录失败'));
         },

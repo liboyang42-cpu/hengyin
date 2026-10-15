@@ -19,6 +19,14 @@ const { appendByIndex } = require('../../utils/list-append.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const { isValidMobile } = require('../../utils/form-state.js');
 const phoneReminder = require('../../utils/phone-reminder.js');
+const { VERSIONS } = require('../../utils/compliance/usage-consent.js');
+
+function isHomeCityAgreement(row) {
+  return !!row && row.docType === 'privacy_policy' && row.scene === 'home_city_location'
+    && row.docVersion === VERSIONS.privacy_policy && row.eventType === 'AGREE'
+    && typeof row.requestId === 'string' && !!row.requestId.trim()
+    && row.scopeType == null && row.scopeId == null;
+}
 
 function boundPhoneFromResponse(res) {
   if (!res) return '';
@@ -110,6 +118,7 @@ function captureLocationRequest(page) {
   const scope = {
     epoch: (page._locationEpoch || 0) + 1,
     memberId: normalizeMemberId(app.getUserID()),
+    authorization: (app.globalData || {}).authorization || '',
   };
   page._locationEpoch = scope.epoch;
   return scope;
@@ -117,9 +126,15 @@ function captureLocationRequest(page) {
 
 function isCurrentLocationRequest(page, scope) {
   return !!scope
-    && !page._unloaded
+    && !page._unloaded && !page._homeLocationHidden
     && scope.epoch === (page._locationEpoch || 0)
-    && scope.memberId === normalizeMemberId(app.getUserID());
+    && scope.memberId === normalizeMemberId(app.getUserID())
+    && scope.authorization === ((app.globalData || {}).authorization || '');
+}
+
+function showHomeCityLocationError(page, scope) {
+  hideLocationLoading(page, scope);
+  if (isCurrentLocationRequest(page, scope)) cyToast('暂时无法定位城市，可继续浏览');
 }
 
 function hideLocationLoading(page, scope) {
@@ -248,11 +263,6 @@ Page({
     bannerCurrent: 0,
     activeTab: '0',
     showPhoneModal: false,
-    locationInfo: {
-      latitude: 0,
-      longitude: 0,
-      address: '正在解析地址...'
-    }
   },
 
   // 隐私授权闸:app.js 优先调这里(真弹窗),没有这个方法的页面才回退到 /pages/privacy 路由页。
@@ -296,7 +306,7 @@ Page({
     app.waitForAppReady().then(() => {
       // 登录落地后才知道真实身份:冷缓存冷启动时上面那次同步判定手里根本没有角色快照
       // (restore() 拿不到、登录是异步的),商家会停在玩家首页直到下一次 onShow ——
-      // 2026-08-10 用户真机(体验版)实测的正是这个。必须排在 loadPageData/getHomeLocation
+      // 2026-08-10 用户真机(体验版)实测的正是这个。必须排在 loadPageData/getHomeCityLocation
       // 之前,否则商家先被弹一次定位授权框再被跳走。
       // 本页已不是栈顶(用户自己切走了)就别抢导航。
       if (that._unloaded) return;
@@ -310,7 +320,7 @@ Page({
       }
       that.setData({ isAppReady: true });
       that.loadPageData();
-      that.getHomeLocation();
+      that.getHomeCityLocation();
       that.retryPendingInviter();
     }).catch(err => {
       if (that._unloaded) return;
@@ -376,7 +386,7 @@ Page({
     }
     this.setData({ _needsRedirect: false, isAppReady: true });
     this.loadPageData();
-    this.getHomeLocation();
+    this.getHomeCityLocation();
   },
 
   // A-01:登录落地后补发一次邀请关系(onLoad 时新用户还没有 currentUserId)。
@@ -475,6 +485,9 @@ Page({
    * 页面显示时 - 修复返回页面时的问题
    */
   onShow() {
+    const resumeHomeLocation = this._homeLocationHidden === true;
+    const locationEpochAtShow = this._locationEpoch || 0;
+    this._homeLocationHidden = false;
     this.setData({ fontScaleStyle: readPageStyle() });
     wx.hideTabBar();
 
@@ -528,6 +541,7 @@ Page({
       if (that.data.isAppReady) {
         that.getUserData();
         that.loadContinueExplore();
+        if (resumeHomeLocation && (that._locationEpoch || 0) === locationEpochAtShow) that.getHomeCityLocation();
       }
 
       // 重新启动倒计时定时器
@@ -541,6 +555,12 @@ Page({
    * 页面隐藏时
    */
   onHide() {
+    this._homeLocationHidden = true;
+    this._locationEpoch = (this._locationEpoch || 0) + 1;
+    if (this._locationLoadingEpoch != null) {
+      this._locationLoadingEpoch = null;
+      cyLoading.hide();
+    }
     // 全站暗色默认:离开首页保持深色导航/状态栏(后续页同为暗底)。
     applyTheme('dark');
 
@@ -689,24 +709,13 @@ Page({
       that.loadBottomActivityList(1, true);
     });
     
-    // 附近活动:有定位用经纬度排序;无定位(模拟器/未授权)回退拉通用活动(先放上海内容),不再空着
-    if (that.data.locationInfo.latitude && that.data.locationInfo.longitude) {
-      that.getListData('nearbyActivityList', '/api/activity/list', {
-        is_my: 0,
-        sort_type: 1,
-        pageNum: 1,
-        pageSize: 4,
-        longitude: that.data.locationInfo.longitude,
-        latitude: that.data.locationInfo.latitude
-      });
-    } else {
-      that.getListData('nearbyActivityList', '/api/activity/list', {
-        is_my: 0,
-        sort_type: 2,
-        pageNum: 1,
-        pageSize: 4,
-      });
-    }
+    // 首页定位仅用于确定城市，不把精确坐标用于活动排序。
+    that.getListData('nearbyActivityList', '/api/activity/list', {
+      is_my: 0,
+      sort_type: 2,
+      pageNum: 1,
+      pageSize: 4,
+    });
   },
   
   onReady() {
@@ -1470,160 +1479,106 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     return indexFormat.processTopicDate(list);
   },
 
-  // F-L5C-14(用户决定:全站精确定位):漫游/游玩到点打卡需要精确定位,微信不允许 getFuzzyLocation 与
-  // getLocation 同时声明,首页改走同一条精确定位授权(scope.userLocation),用途仍是推荐附近内容。
-  getHomeLocation() {
-    const that = this;
+  getHomeCityLocation() {
+    if (this._unloaded || this._homeLocationHidden) return;
     const scope = captureLocationRequest(this);
-
-    wx.getSetting({
+    if (!(Number(scope.memberId) > 0) || !scope.authorization || scope.authorization === 'dev-token') return;
+    const that = this;
+    this.setData({ city: '' });
+    app.sendRequest({
+      url: '/api/compliance/consents/latest',
+      method: 'POST',
+      data: JSON.stringify({ docType: 'privacy_policy', scene: 'home_city_location' }),
+      header: { 'Content-Type': 'application/json' },
+      hideLoading: true,
+      autoErrorToast: false,
       success(res) {
         if (!isCurrentLocationRequest(that, scope)) return;
-        const hasAuth = res.authSetting['scope.userLocation'];
-        if (!hasAuth) {
-          that.requestHomeLocationPermission(scope);
+        if (!res || Number(res.code) !== 200) { showHomeCityLocationError(that, scope); return; }
+        const previous = res.data;
+        if (previous && previous.docType === 'privacy_policy' && previous.scene === 'home_city_location'
+            && previous.eventType === 'REVOKE') return;
+        if (isHomeCityAgreement(res.data)) {
+          scope.consentRequestId = res.data.requestId;
+          that.executeHomeCityLocation(scope);
         } else {
-          that.executeGetHomeLocation(scope);
+          that.requestHomeCityConsent(scope);
         }
       },
-      // 原为 setData({errorMsg}),但 errorMsg 全页零渲染 ⇒ 错误写进 data 就死在那里。
-      // 定位失败不阻断页面(附近活动会退成通用列表),故用 toast 让用户至少知道发生了什么。
-      fail(err) {
-        if (!isCurrentLocationRequest(that, scope)) return;
-        cyToast('定位没检查成功，附近活动可能不准', { duration: 3000 });
-      }
+      successStatusAbnormal() { showHomeCityLocationError(that, scope); },
+      fail() { showHomeCityLocationError(that, scope); }
     });
   },
 
-  requestHomeLocationPermission(locationScope) {
+  requestHomeCityConsent(scope) {
     const that = this;
-    const scope = locationScope || captureLocationRequest(this);
-    if (!isCurrentLocationRequest(this, scope)) return;
-
-    wx.authorize({
-      scope: 'scope.userLocation',
-      success() {
-        if (!isCurrentLocationRequest(that, scope)) return;
-        that.executeGetHomeLocation(scope);
-      },
-      fail(err) {
-        if (!isCurrentLocationRequest(that, scope)) return;
-        that.handleAuthFail(scope);
-      }
-    });
-  },
-
-  handleAuthFail(locationScope) {
-    const that = this;
-    const scope = locationScope || captureLocationRequest(this);
     if (!isCurrentLocationRequest(this, scope)) return;
     modal.show({
-      title: '位置权限提示',
-      content: '授权位置可推荐附近活动，也可以继续浏览。是否前往设置开启？',
-      confirmText: '去设置',
-      cancelText: '取消',
-      success(res) {
-        if (!isCurrentLocationRequest(that, scope)) return;
-        if (res.confirm) {
-          wx.openSetting({
-            success(settingRes) {
-              if (!isCurrentLocationRequest(that, scope)) return;
-              const hasAuth = settingRes.authSetting['scope.userLocation'];
-              if (hasAuth) {
-                // 修复:此回调内 this 非页面实例,原 this.executeGetHomeLocation() 会失效
-                that.executeGetHomeLocation(scope);
-              }
-            }
-          });
-        }
+      title: '首页城市定位',
+      content: '同意使用精确位置并发送至服务端转换为首页城市，后续自动定位且不用于附近排序吗？',
+      confirmText: '同意定位',
+      cancelText: '暂不定位',
+      success(result) {
+        if (!result.confirm || !isCurrentLocationRequest(that, scope)) return;
+        Promise.resolve().then(() => {
+          if (!isCurrentLocationRequest(that, scope)) return null;
+          return app.recordConsent({ docType: 'privacy_policy', scene: 'home_city_location', eventType: 'AGREE' });
+        }).then(saved => {
+          if (!isCurrentLocationRequest(that, scope)) return;
+          const row = saved && saved.response && saved.response.data;
+          if (!saved || !saved.response || Number(saved.response.code) !== 200
+              || saved.requestId !== (row && row.requestId) || !isHomeCityAgreement(row)) {
+            throw new Error('城市定位同意记录未完成');
+          }
+          scope.consentRequestId = row.requestId;
+          that.executeHomeCityLocation(scope);
+        }).catch(() => {
+          if (isCurrentLocationRequest(that, scope)) cyToast('定位同意记录未保存，请重试');
+        });
       }
     });
-    // 原这里还 setData 一个全页零渲染的 errorMsg;上面的 showModal 已是用户可见反馈。
   },
 
-  executeGetHomeLocation(locationScope) {
+  executeHomeCityLocation(scope) {
+    if (!isCurrentLocationRequest(this, scope) || !scope.consentRequestId) return;
+    if (typeof wx.getLocation !== 'function') { showHomeCityLocationError(this, scope); return; }
     const that = this;
-    const scope = locationScope || captureLocationRequest(this);
-
-    cyLoading.show('获取位置中...');
+    cyLoading.show('确定城市中...');
     this._locationLoadingEpoch = scope.epoch;
-
-    if (!wx.getLocation) {
-      hideLocationLoading(this, scope);
-      cyToast('微信版本不支持定位，附近可能不准', { duration: 3000 });
-      return;
-    }
-
     wx.getLocation({
       type: 'gcj02',
       success(res) {
         hideLocationLoading(that, scope);
         if (!isCurrentLocationRequest(that, scope)) return;
-        const { latitude, longitude } = res;
-        that.setData({
-          locationInfo: {
-            latitude: latitude.toFixed(6),
-            longitude: longitude.toFixed(6),
-            address: '正在解析地址...'
-          }
-        });
-
-        that.getListData('nearbyActivityList', '/api/activity/list', {
-          is_my: 0,
-          sort_type: 1,
-          pageNum: 1,
-          pageSize: 4,
-          longitude: that.data.locationInfo.longitude,
-          latitude: that.data.locationInfo.latitude
-        });
-
+        const latitude = res && res.latitude;
+        const longitude = res && res.longitude;
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)
+            || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
+          showHomeCityLocationError(that, scope); return;
+        }
         that.reverseGeocode(latitude, longitude, scope);
       },
-      fail(err) {
-        hideLocationLoading(that, scope);
-        if (!isCurrentLocationRequest(that, scope)) return;
-        let errorMsg = '获取位置失败，请重试';
-        switch (err.errCode) {
-          case 1: errorMsg = '位置服务未开启，请检查手机GPS'; break;
-          case 2: errorMsg = '网络错误，请检查网络连接'; break;
-          case 3: errorMsg = '定位超时，请重试'; break;
-          case 4: errorMsg = '位置服务不可用'; break;
-          default: errorMsg = `获取位置失败: ${err.errMsg}`;
-        }
-        cyToast(errorMsg, { duration: 3000 });
-      }
+      fail() { showHomeCityLocationError(that, scope); }
     });
   },
 
-  reverseGeocode(latitude, longitude, locationScope) {
+  reverseGeocode(latitude, longitude, scope) {
     const that = this;
-    const scope = locationScope || captureLocationRequest(this);
+    if (!isCurrentLocationRequest(this, scope) || !scope.consentRequestId) return;
     app.sendRequest({
       url: '/api/map/reverse-geocode',
       method: 'POST',
       hideLoading: true,
+      autoErrorToast: false,
       data: { latitude: latitude, longitude: longitude },
-      success: (res) => {
+      success(res) {
         if (!isCurrentLocationRequest(that, scope)) return;
-        const city = res && (res.code == 200 || res.code == '200') && res.data && res.data.city;
-        if (!city) return;
-        that.setData({ city: city });
-        that.saveInfo(scope);
-      }
-    });
-  },
-
-  saveInfo: function (locationScope) {
-    const that = this;
-    if (!isCurrentLocationRequest(that, locationScope) || !locationScope.memberId) return;
-    const data = { workAddress: that.data.city };
-    app.sendRequest({
-      url: '/api/user/update',
-      data: JSON.stringify(data),
-      method: "POST",
-      header: {
-        'Content-Type': 'application/json'
-      }
+        const city = res && Number(res.code) === 200 && res.data && res.data.city;
+        if (typeof city === 'string' && city.trim()) that.setData({ city: city.trim() });
+        else showHomeCityLocationError(that, scope);
+      },
+      successStatusAbnormal() { showHomeCityLocationError(that, scope); },
+      fail() { showHomeCityLocationError(that, scope); }
     });
   },
 })
