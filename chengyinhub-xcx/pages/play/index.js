@@ -682,6 +682,22 @@ Page({
   },
   _applyRouteState(routeStateInput, callback) {
     const routeState = normalizeRouteState(routeStateInput);
+    let source = routeStateInput;
+    if (typeof source === 'string') {
+      try { source = JSON.parse(source); } catch (e) { source = null; }
+    }
+    const rawVersion = source && typeof source === 'object' && !Array.isArray(source) ? source.version : null;
+    const versionKnown = (typeof rawVersion === 'number' || typeof rawVersion === 'string' && rawVersion.trim() !== '')
+      && Number.isFinite(Number(rawVersion));
+    const previous = this._routeState || {};
+    // Normalization maps legacy null/empty versions to zero; only explicit versions establish a floor.
+    const previousKnown = Number.isFinite(previous.version)
+      && (previous.version > 0 || this._versionedRouteState === previous);
+    if (routeState.sessionId && routeState.sessionId === previous.sessionId && previousKnown
+        && (!versionKnown || routeState.version < previous.version)) {
+      if (callback) callback(false);
+      return false;
+    }
     if (this._routeState.routeMode === 'BRANCH_GRAPH' && routeState.routeMode !== 'BRANCH_GRAPH') {
       this._failClosedRouteState('路线状态暂未同步，请稍后重试', false);
       if (callback) callback(false);
@@ -697,6 +713,7 @@ Page({
       }));
     }
     this._routeState = routeState;
+    this._versionedRouteState = versionKnown ? routeState : null;
     this.setData({
       nodes,
       total: nodes.length,
