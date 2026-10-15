@@ -4550,11 +4550,20 @@ Page({
   // 上传节点照片(抽屉内,多张,存逗号分隔 CSV)
   uploadAddressPic() {
     let that = this;
+    const memberId = String(app.getUserID() || '');
+    const nodeForm = that.data.nodesForm;
+    const chapterLid = that.data.editTargetChapterLid;
+    const nodeLid = that.data.editTargetNodeLid;
     const cur = that.data.nodesForm.imgUrl ? that.data.nodesForm.imgUrl.split(',').filter(Boolean) : [];
     const remain = 9 - cur.length;
     if (remain <= 0) { cyToast('每个节点最多9张'); return; }
     app.chooseImage(function (res) {
-      const next = cur.concat(res).slice(0, 9);
+      if (that._publishPageUnloaded || !that.data.popChapterNodes
+          || memberId !== String(app.getUserID() || '')
+          || nodeForm !== that.data.nodesForm
+          || chapterLid !== that.data.editTargetChapterLid || nodeLid !== that.data.editTargetNodeLid) return;
+      const current = String(that.data.nodesForm.imgUrl || '').split(',').filter(Boolean);
+      const next = current.concat(Array.isArray(res) ? res : []).slice(0, 9);
       that.setData({ 'nodesForm.imgUrl': next.join(',') });
     }, remain, { crop: true, cropScale: NODE_PHOTO_RATIO });
   },
