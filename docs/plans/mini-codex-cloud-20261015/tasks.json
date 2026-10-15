@@ -432,7 +432,7 @@
     }
   ],
   "parallel_policy": {
-    "default_worker_limit": 4,
+    "default_worker_limit": 10,
     "stage_barrier": "已确认bug优先，包括A02前半段；B01–B05及A02已确认bug有修复或明确证据处置后再做架构后半段；需批准项保持阻塞，不冒充完成",
     "integration_owner": "C00/C99同一协调者",
     "ci_matrix_max_parallel": 20,
@@ -440,7 +440,11 @@
     "backend_change_log_owner": "C00/C99协调者独占，各worker提交变化片段",
     "ownership_registry_owner": "C00/C99",
     "max_workers_is_capacity_bound": true,
-    "worker_model": "gpt-6.1-sol"
+    "worker_model": "gpt-6.1-sol",
+    "user_requested_logical_lanes": 10,
+    "runtime_active_worker_limit": 6,
+    "implementation_slots": 5,
+    "regression_fix_slot": 1
   },
   "estimate": {
     "base_person_days": [
@@ -678,6 +682,109 @@
         "status": "SUCCESS",
         "record_kind": "historical_ci"
       }
-    ]
-  }
+    ],
+    "followup_branch": "codex/mini-bug-arch-followups-20261015",
+    "followup_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+    "followup_checkout": "/workspace/hengyin-followups",
+    "followup_scope": "unfinished existing bugs/shared backend only; no new product feature"
+  },
+  "followup_lanes": [
+    {
+      "id": "L01",
+      "title": "现有UNKNOWN恢复：旧回执/投影单调与请求身份",
+      "owner": "B01_sol原写者",
+      "state": "ASSIGNED",
+      "files": [
+        "chengyinhub-xcx/pages/play/index.js",
+        "chengyinhub-xcx/pages/play/utils/player-game-module.js",
+        "chengyinhub-xcx/tests/unit/player-game-session-entry-contract.test.js",
+        "chengyinhub-xcx/tests/unit/player-game-module.test.js"
+      ]
+    },
+    {
+      "id": "L02",
+      "title": "作者edit-detail完整聚合快照读",
+      "owner": "B02补完Sol（feature_points_rules_sol）",
+      "state": "ASSIGNED",
+      "files": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/B02TopicEditDetailSnapshotMyBatisTest.java"
+      ]
+    },
+    {
+      "id": "L03",
+      "title": "NPC本人删除即时屏障/旧回执擦除/防晚到重建",
+      "owner": "A02_sol原写者",
+      "state": "ASSIGNED",
+      "files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatDataService.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatWriteService.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/NpcChatRequestMapper.java",
+        "chengyinhub-system/src/main/resources/mapper/business/NpcChatRequestMapper.xml",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NpcChatServiceTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAiNpcChatDataTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/A02NpcDeleteBarrierMySqlIT.java"
+      ]
+    },
+    {
+      "id": "L04",
+      "title": "AI日志未知token不显示为0并标估算",
+      "owner": "旧bug显示Sol（feature_coorganizer_sol）",
+      "state": "ASSIGNED",
+      "files": [
+        "chengyinhub-ui/src/views/business/ailog/index.vue",
+        "chengyinhub-ui/tests/unit/a02-ailog-usage.test.js"
+      ]
+    },
+    {
+      "id": "L05",
+      "title": "作者create/update丢响应与账号晚响应现有流程修复",
+      "owner": "待启动publish_unknown_sol",
+      "state": "ASSIGNED",
+      "files": [
+        "chengyinhub-xcx/pages/publish/utils/publish/publish-workflow.js",
+        "chengyinhub-xcx/pages/publish/fabu/index.js",
+        "chengyinhub-xcx/utils/publish/pro-editor-draft.js",
+        "chengyinhub-xcx/tests/unit/publish-workflow.test.js",
+        "chengyinhub-xcx/tests/unit/pro-editor-draft.test.js",
+        "chengyinhub-xcx/tests/unit/b02-publish-write-unknown.test.js"
+      ]
+    },
+    {
+      "id": "L06",
+      "title": "排期/候补真实MySQL读回与竞态缺口",
+      "owner": "B04原写者下一空位接续",
+      "state": "QUEUED",
+      "files": []
+    },
+    {
+      "id": "L07",
+      "title": "隐私/旧详情/退出社区真实MySQL隔离验收",
+      "owner": "待实际精确派工",
+      "state": "QUEUED",
+      "files": []
+    },
+    {
+      "id": "L08",
+      "title": "结局/版本/历史快照兼容未闭合链复核",
+      "owner": "A03原写者下一空位接续",
+      "state": "QUEUED",
+      "files": []
+    },
+    {
+      "id": "L09",
+      "title": "B03券库存/限领/退款冲正剩余实际缺口",
+      "owner": "B03原写者下一空位接续",
+      "state": "QUEUED",
+      "files": []
+    },
+    {
+      "id": "L10",
+      "title": "VPS/CI反馈修复专线及集中回归收口",
+      "owner": "C00保留worker槽，按失败原写者即时接续",
+      "state": "RESERVED_FOR_REGRESSION_FIX",
+      "files": []
+    }
+  ]
 }
