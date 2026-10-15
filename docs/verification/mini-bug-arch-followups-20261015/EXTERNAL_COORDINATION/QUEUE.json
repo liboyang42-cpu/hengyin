@@ -4,11 +4,11 @@
   "initial_item_count": 50,
   "lane_counts": {
     "E01": 19,
-    "E02": 22,
-    "E03": 17,
+    "E02": 23,
+    "E03": 18,
     "E04": 15,
     "E05": 17,
-    "E06": 16
+    "E06": 17
   },
   "target_actionable_items": 50,
   "max_workers": 6,
@@ -3547,7 +3547,7 @@
       "title": "显式取消主题收藏并发删除0行错误失败ACK",
       "trigger": "Two real same-member explicit type0 requests both select old like id; first DELETE1 succeeds, second DELETE0 currently reports failure despite existing explicit desired-state idempotency contract",
       "invariant": "Explicit cancel may acknowledge already absent result; preserve legacy toggle, account predicates and exception propagation",
-      "minimal_fix_boundary": "仅materialize日期解析/集合处理，先找真实反例",
+      "minimal_fix_boundary": "Original controller owner repairs explicit type0 DELETE0 ACK or formally transfers that method; preserve toggle/account/error boundaries",
       "policy_blocker": "需改变排期/候补资格、顺位、有效时长、收费退款或鉴权政策时只报dependency；不新增DDL/接口。",
       "execution": "STATIC_SOURCE_ONLY; no validation execution",
       "ownership": "CORE/C03 frozen source ownership retained; no EXTRA business-file write",
@@ -3577,6 +3577,83 @@
       "evidence_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6198507537",
       "evidence_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
       "blocker": "Controller original owner must repair or formally transfer; leaf CRUD grant alone cannot fix this entry-point behavior"
+    },
+    {
+      "id": "E03-18",
+      "lane": "E03",
+      "title": "合法可选线索空白键在结局与案件册计数一致",
+      "state": "IN_PROGRESS_SOURCE",
+      "status": "AUDIT_THEN_FIX",
+      "trigger": "Validator accepts and preserves padded clue key; casebook trims, ending does not, yielding1/1 vs0/1 on same frozen run",
+      "minimal_fix_boundary": "Only normalize lookup with existing String.trim semantics; no JSON rewrite or historical-result recomputation",
+      "owner": "EXTRA6/E03",
+      "source_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImpl.java"
+      ],
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_18Test.java",
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-18.md",
+      "source_base_sha": "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0",
+      "verification": "NOT_RUN",
+      "delivery": "NOT_YET_DELIVERED",
+      "assigned_worker": "/root/external_e03",
+      "branch": "codex/extra-e03-regression-20261015",
+      "worktree": "/workspace/hengyin-extra-e03",
+      "depends_on": [],
+      "public_sha": null,
+      "regression_methods_written": null,
+      "ownership": "Retained C00 source grant; unique new-ID regression/evidence per LONGRUN_EXTRA_EXPANSION; PR16 comment6199009969",
+      "evidence_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199009969"
+    },
+    {
+      "id": "E06-17",
+      "lane": "E06",
+      "title": "分享读库故障保留可重试HTTP错误边界",
+      "state": "IN_PROGRESS_SOURCE",
+      "status": "AUDIT_THEN_FIX",
+      "trigger": "Real GET mapper DataAccessException becomes HTTP200/body500 through global advice and existing caller interprets gone",
+      "minimal_fix_boundary": "GET-specific wrapped data-access exception and local HTTP503 handler; keep prior GONE/success, global advice/client/publish/revoke unchanged",
+      "owner": "EXTRA6/E06",
+      "source_files": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamShareController.java"
+      ],
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E06_17Test.java",
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-17.md",
+      "source_base_sha": "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0",
+      "verification": "NOT_RUN",
+      "delivery": "NOT_YET_DELIVERED",
+      "assigned_worker": "/root/external_e06",
+      "branch": "codex/extra-e06-regression-20261015",
+      "worktree": "/workspace/hengyin-extra-e06",
+      "depends_on": [],
+      "public_sha": null,
+      "regression_methods_written": null,
+      "ownership": "Retained C00 source grant; unique new-ID regression/evidence per LONGRUN_EXTRA_EXPANSION; PR16 comment6199009969",
+      "evidence_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199009969"
+    },
+    {
+      "id": "E02-23",
+      "lane": "E02",
+      "title": "旧广场与新社区独立ID的收藏对象误关联",
+      "state": "BLOCKED_DEPENDENCY",
+      "status": "SOURCE_PACKET_ONLY",
+      "owner": "Existing CreativeSquare/Claude owner; C00 to route",
+      "assigned_worker": null,
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_PACKET_ONLY_NOT_IMPLEMENTED",
+      "source_base_sha": "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0",
+      "source_files": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsCreativeSquareServiceImpl.java",
+        "chengyinhub-system/src/main/resources/mapper/business/ViewCreativeSquareMapper.xml"
+      ],
+      "regression_file": null,
+      "evidence_file": null,
+      "public_sha": null,
+      "trigger": "After one-time legacy migration old publish writes only ums_creative_square; bookmark consumes its independent id as community_post id, yielding404 or another PUBLIC post bookmark when ids collide",
+      "blocker": "No exact source grant; current legacy/new bridge and original writer must be coordinated by C00; no assumed dual-write/DDL/new identity policy",
+      "depends_on": [
+        "C00 confirms existing identity bridge contract and delegates original writer or exact paths"
+      ]
     }
   ],
   "refill": "Coordinator adds a concrete nonduplicate authorized task when one is delivered/refuted/blocked; no fabricated defect or empty filler. New IDs never reuse old ones. If no justified candidate remains, record EXHAUSTED rather than invent work.",
@@ -3584,7 +3661,7 @@
   "thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
   "host_id": "durable",
   "branch": "codex/extra-six-rolling-20261015",
-  "queue_revision": 12,
+  "queue_revision": 13,
   "initial_deliveries": [
     {
       "lane": "E01",
@@ -3639,22 +3716,22 @@
   "active_claims": {
     "E01": null,
     "E02": null,
-    "E03": null,
+    "E03": "E03-18",
     "E04": null,
     "E05": null,
-    "E06": null
+    "E06": "E06-17"
   },
   "candidate_sha_before_queue_commit": "b5eb886676d2bf1f5fcb9a8b5d9d77ac0d5e7036",
   "actual_counts": {
-    "total_history": 106,
+    "total_history": 109,
     "source_delivered": 55,
     "no_change_source_review": 40,
-    "blocked": 7,
+    "blocked": 8,
     "ready": 0,
-    "claimed": 0,
-    "actionable_or_inflight": 0
+    "claimed": 2,
+    "actionable_or_inflight": 2
   },
-  "control_latest_read_sha": "e2163ab8fdd93c9548c74949604c9668c97f03ad",
+  "control_latest_read_sha": "6fd9bf4ca7fd24f58116727fff8b8533a7d145b1",
   "publication_transport": "Shell git credentials unavailable after local offline; authorized GitHub Git Data connector publishes text trees/commits with expected-parent nonforced refs. Exact public SHA objects imported for local ancestry; no validation is executed.",
   "worker_assignments": [
     {
@@ -3673,9 +3750,9 @@
     },
     {
       "slot": "E03",
-      "task": null,
+      "task": "E03-18",
       "worker": "/root/external_e03",
-      "mode": "IDLE_DELIVERED_OR_REAL_NEW_SCOPE_PENDING",
+      "mode": "ACTIVE_SOURCE_DEVELOPMENT_ORIGINAL_WRITER",
       "worktree": "/workspace/hengyin-extra-e03"
     },
     {
@@ -3694,13 +3771,13 @@
     },
     {
       "slot": "E06",
-      "task": null,
+      "task": "E06-17",
       "worker": "/root/external_e06",
-      "mode": "IDLE_DELIVERED_OR_REAL_NEW_SCOPE_PENDING",
+      "mode": "ACTIVE_SOURCE_DEVELOPMENT_ORIGINAL_WRITER",
       "worktree": "/workspace/hengyin-extra-e06"
     }
   ],
-  "refill_shortfall": 50,
+  "refill_shortfall": 48,
   "refill_status": "Continue concrete queued work; replenish proven independent slices or formally transferred modules. Do not count completed/blocked as READY or invent placeholder bugs to assert 50.",
   "lane_domain_status": {
     "E01": "Activity offer preflight and necessary fixtures source delivered; authorized independent candidates exhausted",
@@ -3838,7 +3915,7 @@
     "VPS_EXTRA_474e54ae_20261015": "7b00162a4b54896f0a07058eab57141b1a75b706"
   },
   "actual_failed_validation_repairs": 0,
-  "actual_new_development_workers": 0,
+  "actual_new_development_workers": 2,
   "local_validation_results": [
     {
       "candidate_sha": "474e54aea6351856e7e4dd23ab4561932958522d",
@@ -3879,7 +3956,22 @@
       "docs_root": "docs/plans/mini-forward-cloud-20261015/",
       "purpose": "Independent forward bug fixes in analytics and player progression, not validation or review of old EXTRA patches",
       "validation": "Local VPS coordinator exclusively; no Cloud manual tests",
-      "global_contract_dependency": "Register via C00 before any cross-owner write"
+      "global_contract_dependency": "Register via C00 before any cross-owner write",
+      "plan_public_sha": "9f96f7a858866dd2a09cd244f90c6f0ecbac5e88",
+      "plan_pr": "https://github.com/liboyang42-cpu/hengyin/pull/70",
+      "status": "PENDING_THREAD_ACTUAL_ACK_ONLY",
+      "startup_marker": "CY-FORWARD3-20261015",
+      "third_thread_id": null
     }
-  ]
+  ],
+  "latest_discovery_round": {
+    "base_sha": "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0",
+    "E01": "Clock effective-time semantics unresolved, design candidate only; not a confirmed new bug or new queue item",
+    "E02": "New cross-owner packet E02-23; own media receipt ownership refuted",
+    "E03": "Confirmed independent new source E03-18",
+    "E04": "Expiry endpoint and real source-ID input guards refuted; no new item",
+    "E05": "Existing Encounter/privacy guards hold; no new item",
+    "E06": "Confirmed independent transport-boundary source E06-17",
+    "execution": "STATIC_SOURCE_READING_ONLY; no validation"
+  }
 }
