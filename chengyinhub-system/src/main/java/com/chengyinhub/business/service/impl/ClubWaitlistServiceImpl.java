@@ -147,7 +147,9 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
         // myStatus 自身在事务内；这里沿用统一 series -> club -> ticket -> waitlist 锁序，
         // 成功则真实释放 hold，CAS 竞争失败也会重读并在响应层去掉付款能力。
         expireOffered(entry.getId(), now);
-        ClubWaitlistEntry refreshed = mapper.selectLatestWaitlist(memberId, activityId, ticketId);
+        // 普通 latest 读可能仍在 myStatus 的 RR 旧快照中，把并发已 CLAIMED 的 offer
+        // 再读成 OFFERED 并误标 EXPIRED。沿前面的锁序当前读同一 offer，保留真实终态。
+        ClubWaitlistEntry refreshed = mapper.selectWaitlistByIdForUpdate(entry.getId());
         if (refreshed == null) {
             entry.setState(ClubWaitlistEntry.EXPIRED);
             entry.setOfferToken(null);
