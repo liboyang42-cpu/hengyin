@@ -808,19 +808,18 @@
       "source_owners": "LONGRUN_SOURCE_OWNERS.json",
       "core_initial_count": 50,
       "extra_initial_count": 50,
-      "core_total_created": 140,
+      "core_total_created": 161,
       "core_state_counts": {
-        "SOURCE_DELIVERED_UNVERIFIED": 86,
+        "SOURCE_DELIVERED_UNVERIFIED": 112,
         "NO_CHANGE_SOURCE_REVIEW": 38,
-        "BLOCKED_DEPENDENCY": 1,
-        "BLOCKED_DECISION": 2,
+        "BLOCKED_DECISION": 3,
         "SUPERSEDED_DUPLICATE": 1,
-        "FROZEN_SNAPSHOT_PENDING_PUBLICATION": 8,
-        "READY_SOURCE_ONLY": 4
+        "FROZEN_SNAPSHOT_PENDING_PUBLICATION": 6,
+        "READY_SOURCE_ONLY": 1
       },
-      "core_current_public_sha": "adc7c68e9398a61476bbfd57cab7696094d2b61d",
+      "core_current_public_sha": "7e5882addb7269373b2b95daa0a4ceeb4485fd10",
       "core_source_pr": "https://github.com/liboyang42-cpu/hengyin/pull/44",
-      "core_actionable_actual": 4,
+      "core_actionable_actual": 1,
       "target_actionable_per_team": 50,
       "extra_last_read_control_sha": "ecb5f418d855d1f97c11d80815e1f2abc621dd66",
       "extra_last_read_counts": {
