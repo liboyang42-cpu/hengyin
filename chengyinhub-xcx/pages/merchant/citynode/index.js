@@ -5,6 +5,7 @@ const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const merchantAccessPolicy = require('../../../utils/merchant-access-policy.js');
+const codeTextUtil = require('../../../utils/code-text.js');
 
 function scalarText(value, fallback) {
   if (value === null || value === undefined || value === '') return fallback || '—';
@@ -356,6 +357,7 @@ Page({
         poiId: poiId,
         state: 'loading',
         qrcodeUrl: '',
+        codeText: '',
         nodeName: '',
         errorText: '',
       }
@@ -366,13 +368,16 @@ Page({
         if (requestId !== that._posterRequestId) return;
         const d = (res && res.data) || {};
         const qrcodeUrl = typeof d.qrcodeUrl === 'string' ? d.qrcodeUrl.trim() : '';
-        if (res && (res.code === '200' || res.code === 200) && qrcodeUrl) {
+        // C8:码图缺失但有 code 文本时仍算可用(等宽文本 + 长按复制),仅本页(已鉴权商家)展示
+        const codeText = codeTextUtil.pickCode(d);
+        if (res && (res.code === '200' || res.code === 200) && (qrcodeUrl || codeText)) {
           that.setData({
             posterSheet: {
               show: true,
               poiId: poiId,
               state: 'ready',
               qrcodeUrl: qrcodeUrl,
+              codeText: qrcodeUrl ? '' : codeText,
               nodeName: scalarText(d.nodeName),
               errorText: '',
             }
@@ -397,6 +402,7 @@ Page({
         poiId: poiId,
         state: 'error',
         qrcodeUrl: '',
+        codeText: '',
         nodeName: nodeName,
         errorText: errorText,
       }

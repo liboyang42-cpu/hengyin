@@ -16,6 +16,7 @@ const { isRecordList } = require('../../../utils/response-shape.js');
 
 const { validationMethodLabel } = require('../../../utils/validation-method-labels.js');
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
+const codeTextUtil = require('../../../utils/code-text.js');
 
 function recruitBoundaryLabel(allowed, maxXp) {
   const parts = [];
@@ -264,6 +265,7 @@ Page({
     checkinVisible: false,
     checkinQrState: 'loading',
     checkinQrUrl: '',
+    checkinCode: '',
     checkinErr: '',
     privacyGateShow: false,
   },
@@ -3412,6 +3414,7 @@ Page({
       checkinVisible: false,
       checkinQrState: 'loading',
       checkinQrUrl: '',
+      checkinCode: '',
       checkinErr: '',
     });
   },
@@ -3431,7 +3434,7 @@ Page({
     const epoch = (this._checkinEpoch || 0) + 1;
     this._checkinEpoch = epoch;
     this.clearCheckinTimer();
-    this.setData({ checkinQrState: 'loading', checkinQrUrl: '', checkinErr: '' });
+    this.setData({ checkinQrState: 'loading', checkinQrUrl: '', checkinCode: '', checkinErr: '' });
     app.sendRequest({
       url: '/api/merchant/chapter-node/poster-code',
       method: 'POST',
@@ -3440,10 +3443,12 @@ Page({
       success(res) {
         if (epoch !== that._checkinEpoch) return;
         const data = res && res.data;
-        if (res && (res.code === 200 || res.code === '200') && data && data.qrcodeUrl) {
+        // C8:无码图但有 code 文本时进 ready,由 cy-qr-voucher 显示文本码(长按复制)
+        if (res && (res.code === 200 || res.code === '200') && codeTextUtil.usable(data)) {
           that.setData({
             checkinQrState: 'ready',
             checkinQrUrl: data.qrcodeUrl || '',
+            checkinCode: data.qrcodeUrl ? '' : codeTextUtil.pickCode(data),
             checkinErr: '',
           });
           if (saveAfter) that.saveCheckinImage(data.qrcodeUrl || '');
@@ -3464,6 +3469,8 @@ Page({
       },
     });
   },
+
+  copyCheckinCode() { codeTextUtil.copy(this.data.checkinCode); },
 
   downloadCheckinQr() {
     if (!this._checkinNodeId()) {
