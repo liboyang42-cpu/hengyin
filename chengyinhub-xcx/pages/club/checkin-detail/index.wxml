@@ -3,9 +3,8 @@
      F 无权限、G 加载失败是整屏态;H 是手机号无查看权限的变体(由服务端决定,不是前端分支)。 -->
 <view class="ckd theme-dark">
   <cy-toast id="cy-toast" />
-  <cy-nav-bar plain />
+  <cy-nav-bar title="核销详情" plain />
   <cy-nav-spacer />
-  <cy-page-title title="核销详情" safe-top="{{false}}" flush="{{true}}" />
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="card" count="2" loading-label="正在加载核销详情" />
   <cy-error wx:elif="{{state === 'denied'}}" fill size="lg"

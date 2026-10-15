@@ -91,12 +91,13 @@ test('冻结基线只能减不能加:修好的条目必须及时删掉', () => {
 })
 
 test('负控:把 flush 加回去,门禁必须变红', () => {
-  assert.equal(rootHasHorizontalPadding('pages/club/edit'), false,
+  // 2026-10-15 BL-09:club/edit 改为 cy-nav-bar 居中标题,负控锚点换到仍用 cy-page-title 且根容器无横向内边距的 activity/official-mine。
+  assert.equal(rootHasHorizontalPadding('pages/activity/official-mine'), false,
     '前置条件:该页根容器本来就没有横向内边距,这正是不能传 flush 的理由')
 
-  const wxml = stripWxmlComments(read('pages/club/edit/index.wxml'))
-  const mutated = wxml.replace('<cy-page-title title="编辑资料" safe-top="{{false}}" />',
-                               '<cy-page-title title="编辑资料" safe-top="{{false}}" flush="{{true}}" />')
+  const wxml = stripWxmlComments(read('pages/activity/official-mine/index.wxml'))
+  const mutated = wxml.replace('<cy-page-title title="我发布的" />',
+                               '<cy-page-title title="我发布的" flush="{{true}}" />')
   assert.notEqual(mutated, wxml, '变异没生效:锚点已漂移,这个负控在空转')
   assert.equal(/<cy-page-title[^>]*\bflush\b/.test(mutated), true, '判据认不出 flush,它是橡皮图章')
 })

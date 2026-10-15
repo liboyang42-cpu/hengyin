@@ -4,8 +4,7 @@
   <cy-modal-host id="cy-modal-host" />
   <cy-access-gate id="cy-access-gate" kind="club" need="club:finance:read" club-id="{{clubId}}" />
 <view class="page" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
-  <cy-nav-bar custom-back bind:back="goBack" />
-  <cy-page-title title="俱乐部结算" safe-top="{{false}}" />
+  <cy-nav-bar title="俱乐部结算" custom-back bind:back="goBack" />
   <cy-club-direct-ledger class="section" wx:if="{{clubId}}" kind="club" club-id="{{clubId}}" />
   <!-- 9-16 晚拍板第 5 条 + 9-17 总控:余额三段只给主理人本人,管理员不显示(isOwner 由 summary 接口判定) -->
   <cy-funds-stages class="section" wx:if="{{summary && summary.isOwner && (state === 'ready' || state === 'empty')}}" bind:stages="onStages" />

@@ -59,8 +59,9 @@ test('workbench 深链壳仍使用既有标题系统', () => {
   const style = read('pages/club/workbench/index.wxss')
   assert.equal(config.navigationStyle, 'custom')
   assert.equal(config.usingComponents['cy-nav-bar'], '/components/cy/nav-bar/index')
-  assert.equal(config.usingComponents['cy-page-title'], '/components/cy/page-title/index')
-  assert.match(view, /<cy-nav-bar\s*\/>\s*<cy-page-title\b[^>]*safe-top="\{\{false\}\}"/)
+  // 2026-10-15 BL-09 用户决定:二级页统一 cy-nav-bar 返回 + 居中标题,不再挂左对齐 cy-page-title。
+  assert.match(view, /<cy-nav-bar title="俱乐部管理"\s*\/>/)
+  assert.doesNotMatch(view, /<cy-page-title\b/)
   assert.match(view, /仅服务外部直达/)
   assert.doesNotMatch(style, /--cy-text-primary|--cy-space-xl/, '深链壳不得引用未定义 token')
 })

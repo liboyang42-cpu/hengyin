@@ -3,8 +3,7 @@
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <view class="page" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
-  <cy-nav-bar custom-back bind:back="goBack" />
-  <cy-page-title title="活动运营" safe-top="{{false}}" />
+  <cy-nav-bar title="活动运营" custom-back bind:back="goBack" />
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="4" />
   <!-- 2026-08-26:权限拒绝原来和加载失败共用一个 error 态,渲染成「暂时不可用 + 重新加载」——

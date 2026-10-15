@@ -3,8 +3,7 @@
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <view class="page" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
-  <cy-nav-bar custom-back bind:back="goBack" />
-  <cy-page-title title="报名名册" safe-top="{{false}}" />
+  <cy-nav-bar title="报名名册" custom-back bind:back="goBack" />
 
   <cy-skeleton wx:if="{{permissionState === 'loading'}}" type="list" count="3" loading-label="正在确认报名名册查看权限" />
   <cy-error wx:elif="{{permissionState === 'business-error'}}" fill title="暂时无法确认查看权限" sub="{{permissionError}}" retry="重新检查" bind:retry="retryPermission" auto-back />

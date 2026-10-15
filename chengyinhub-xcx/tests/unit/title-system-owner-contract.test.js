@@ -15,10 +15,10 @@ const { readResolved } = require('../helpers/resolve-profile');
 const ROOT = path.resolve(__dirname, '../..')
 const read = (relativePath) => readResolved(relativePath)
 
+// 2026-10-15 BL-09:club/join-requests 改为 cy-nav-bar 居中标题,撤出本清单。
 const OWNER_NORMAL = [
   'subpackageMember/mytemplate/mytemplate',
   'subpackageMember/myinvite/myinvite',
-  'pages/club/join-requests/index',
 ]
 const WIZARD_EXCEPTION = 'pages/club/create/index'
 const WIZARD_EXCEPTION_2 = 'pages/club/apply/index'
@@ -114,7 +114,10 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'subpackageP3/pages/growthcenter/leaderboard/index', 'subpackageP3/pages/stamp-album/index/index',
   'pages/publish/activity/index',
   'pages/publish/templateadd/templateadd',
-  'pages/club/edit/index', 'pages/club/enroll/index', 'pages/club/checkin-detail/index', 'pages/club/group-code/index', 'pages/club/join-requests/index', 'pages/club/workbench/index', 'pages/club/customers/index', 'pages/club/customer-detail/index', 'pages/club/roles/index', 'pages/club/governance/index', 'pages/club/event-ops/index', 'pages/club/settlement/index', 'pages/club/notify/index',
+  // 2026-10-15 BL-09 用户决定:俱乐部二级页统一 cy-nav-bar 返回 + 居中标题,下列 10 页撤出本清单
+  //   (edit/enroll/checkin-detail/join-requests/workbench/customers/governance/event-ops/settlement/notify);
+  //   group-code 多态带副标题、roles 带活动副标题、customer-detail 的 page-title 是客户名,暂留。
+  'pages/club/group-code/index', 'pages/club/customer-detail/index', 'pages/club/roles/index',
   'pages/topic/pricing/index',
   'pages/team/detail/index', 'pages/team/join/index',
   // 2026-08-30 用户裁决：这 5 个任务页使用「返回独立行 + L1 大标题」。

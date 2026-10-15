@@ -7,8 +7,7 @@
        却会被后端拒,看到的是页内错误而不是权限提示。改为 club:member:manage 对齐。 -->
   <cy-access-gate id="cy-access-gate" kind="club" need="club:member:manage" club-id="{{clubId}}" />
 <view class="page" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
-  <cy-nav-bar custom-back bind:back="goBack" />
-  <cy-page-title title="客户" safe-top="{{false}}" />
+  <cy-nav-bar title="客户" custom-back bind:back="goBack" />
   <!-- 这一行是数据统计,不是标题下的小标题(小标题已全线删除):它随筛选变化,不解释页面。 -->
   <view class="cus-count" wx:if="{{state === 'ready' || state === 'empty'}}">{{countText}}</view>
 
