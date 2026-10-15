@@ -1039,7 +1039,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
                     Object payloadJson = value(row, "payload_json");
                     if (!positive(aggregateId) || eventType == null || payloadJson == null
                             || mapper.upsertMemberGovernanceProjection(aggregateId, eventType.toString(),
-                            payloadJson.toString(), now) != 1) {
+                            payloadJson.toString(), now) <= 0) {
                         throw error("账号治理事件投影失败", 500);
                     }
                 } else {
