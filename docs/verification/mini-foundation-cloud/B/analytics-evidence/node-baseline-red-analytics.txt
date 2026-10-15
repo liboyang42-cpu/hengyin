@@ -1,0 +1,367 @@
+Baseline: e67e72a (isolated source fixture; production worktree untouched)
+Expected nonzero exit: 1
+✔ 迁移:走 app.sendRequest、POST 正确地址、不手拼 Authorization (6.615037ms)
+✔ 白名单:未注册事件不投递(契约#31) (0.643698ms)
+✔ Chat 埋点白名单完整且不携带用户输入或回答原文 (2.35814ms)
+✔ 成功投递后出队;失败保留重试(契约#33) (1.084224ms)
+✔ 并发底线#35:投递中新 track 的事件不被快照覆盖丢失 (1.057434ms)
+✔ F24 A 清会话后 B 不会补发 A 的离线事件，且会重建 session (1.228929ms)
+✔ F24 旧无账号队列只删除不迁给当前账号 (4.301864ms)
+✖ 非合法原批回执不出队 {"code":200} (5.347716ms)
+✖ 非合法原批回执不出队 {"code":200,"data":{"accepted":0}} (0.995648ms)
+✖ 非合法原批回执不出队 {"code":200,"data":{"accepted":"1"}} (0.697667ms)
+✖ 非合法原批回执不出队 {"code":200,"data":{"accepted":2}} (0.816662ms)
+✖ 非合法原批回执不出队 {"code":200,"data":{"accepted":0.5}} (0.687288ms)
+✔ 非合法原批回执不出队 {"code":500,"data":{"accepted":1}} (0.434143ms)
+✖ 部分 accepted 无明细保留全部原批，下次重用键及时间 (1.449413ms)
+✖ 旧回执只移除原对象快照，同键新内容及新排队事件保留 (0.710651ms)
+✖ 重复 success/fail 回调不能删除下一批或释放下一批锁 (0.889977ms)
+✖ enqueue 落盘失败不发送，同进程 flush 重试原事件 (1.193409ms)
+✖ ack 出队落盘失败保留原身份重试且不忙循环 (1.223083ms)
+✖ read 落盘读取失败不得覆盖旧事件 (1.078809ms)
+✖ 账号迟到回执不修改任一队列，新账号使用自己的 actorScope (0.972031ms)
+✖ 账号 A-B-A 的旧代回执不能出队 A 原记录 (1.063028ms)
+✖ 满队列不会挤掉在途原事件，同键重试不覆盖原内容 (0.908902ms)
+✖ 同步请求异常保留原队列并释放单飞锁，可按原身份重试 (1.2255ms)
+✖ A 报名 producer 的原 eventKey 与报名ID进入现有请求协议，显式 idempotencyKey 优先 (1.411915ms)
+✖ 失败原批保留且每轮只发一次，不阻断后批独立原事件 (1.018728ms)
+✖ 未经过埋点的 A-B-A 登录换凭据，原凭据迟到响应也不写队列 (1.4495ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 8
+ℹ fail 18
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 165.427358
+
+✖ failing tests:
+
+test at chengyinhub-xcx/tests/unit/analytics.test.js:135:3
+✖ 非合法原批回执不出队 {"code":200} (5.347716ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/analytics.test.js:138:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/analytics.test.js:135:3
+✖ 非合法原批回执不出队 {"code":200,"data":{"accepted":0}} (0.995648ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/analytics.test.js:138:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/analytics.test.js:135:3
+✖ 非合法原批回执不出队 {"code":200,"data":{"accepted":"1"}} (0.697667ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/analytics.test.js:138:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/analytics.test.js:135:3
+✖ 非合法原批回执不出队 {"code":200,"data":{"accepted":2}} (0.816662ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/analytics.test.js:138:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/analytics.test.js:135:3
+✖ 非合法原批回执不出队 {"code":200,"data":{"accepted":0.5}} (0.687288ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/analytics.test.js:138:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/analytics.test.js:143:1
+✖ 部分 accepted 无明细保留全部原批，下次重用键及时间 (1.449413ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 2
+  
+      at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/analytics.test.js:149:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/analytics.test.js:154:1
+✖ 旧回执只移除原对象快照，同键新内容及新排队事件保留 (0.710651ms)
+  TypeError: Cannot read properties of undefined (reading 'bizId')
+      at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/analytics.test.js:159:31)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at chengyinhub-xcx/tests/unit/analytics.test.js:162:1
+✖ 重复 success/fail 回调不能删除下一批或释放下一批锁 (0.889977ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/analytics.test.js:170:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/analytics.test.js:173:1
+✖ enqueue 落盘失败不发送，同进程 flush 重试原事件 (1.193409ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - false
+  
+      at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/analytics.test.js:175:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/analytics.test.js:184:1
+✖ ack 出队落盘失败保留原身份重试且不忙循环 (1.223083ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 1
+  
+      at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/analytics.test.js:189:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/analytics.test.js:197:1
+✖ read 落盘读取失败不得覆盖旧事件 (1.078809ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'content_view_1791920708761_1486'
+  - 'old'
+  
+      at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/analytics.test.js:203:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'content_view_1791920708761_1486',
+    expected: 'old',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/analytics.test.js:206:1
+✖ 账号迟到回执不修改任一队列，新账号使用自己的 actorScope (0.972031ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/analytics.test.js:211:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/analytics.test.js:216:1
+✖ 账号 A-B-A 的旧代回执不能出队 A 原记录 (1.063028ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/analytics.test.js:224:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/analytics.test.js:227:1
+✖ 满队列不会挤掉在途原事件，同键重试不覆盖原内容 (0.908902ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 1
+  
+      at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/analytics.test.js:230:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/analytics.test.js:240:1
+✖ 同步请求异常保留原队列并释放单飞锁，可按原身份重试 (1.2255ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception.
+  Actual message: "sync transport error"
+      at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/analytics.test.js:242:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: sync transport error
+        at Object.sendRequest (<repository>/chengyinhub-xcx/tests/unit/analytics.test.js:31:50)
+        at postBatch (<baseline-fixture>/utils/analytics.js:196:7)
+        at flush (<baseline-fixture>/utils/analytics.js:236:3)
+        at Object.track (<baseline-fixture>/utils/analytics.js:257:3)
+        at <repository>/chengyinhub-xcx/tests/unit/analytics.test.js:242:39
+        at getActual (node:assert:611:5)
+        at strict.doesNotThrow (node:assert:779:32)
+        at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/analytics.test.js:242:10)
+        at Test.runInAsyncScope (node:async_hooks:227:14)
+        at Test.run (node:internal/test_runner/test:1382:25),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/analytics.test.js:250:1
+✖ A 报名 producer 的原 eventKey 与报名ID进入现有请求协议，显式 idempotencyKey 优先 (1.411915ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'payment_success_1791920708767_7333'
+  - 'payment_success_registration_9'
+                     ^
+  
+      at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/analytics.test.js:255:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'payment_success_1791920708767_7333',
+    expected: 'payment_success_registration_9',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/analytics.test.js:262:1
+✖ 失败原批保留且每轮只发一次，不阻断后批独立原事件 (1.018728ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 2
+  
+      at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/analytics.test.js:271:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/analytics.test.js:281:1
+✖ 未经过埋点的 A-B-A 登录换凭据，原凭据迟到响应也不写队列 (1.4495ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (<repository>/chengyinhub-xcx/tests/unit/analytics.test.js:286:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

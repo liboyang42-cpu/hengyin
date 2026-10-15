@@ -1,0 +1,249 @@
+{
+  "status": "REGENERATED_UNRUN",
+  "createdAt": "2026-10-13T10:26:10.841782-07:00",
+  "sourceCount": 10,
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckVisionServiceTest.java",
+      "baseSha256": "609656c9d58c58a7f3b27c6ff88734d1ee5f1dc43bc9e00ebd02e51e00e6e0b5",
+      "candidateSha256": "401cc0db280c6ed71a6e01f11cddbefb75a2dc29c63333d5b6c345f0e2841a74",
+      "publicStillMatchesBase": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImplTest.java",
+      "baseSha256": "eecfd8cdab655ceb0c1779de0e77e72c615cf509e92505654574c797c1cf2ac5",
+      "candidateSha256": "1360b181d23c9dc192e1cf42fa6b76b63d70152773a8a3da1f14bec30a9ca3bf",
+      "publicStillMatchesBase": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiQuotaReservationRedisIT.java",
+      "baseSha256": null,
+      "candidateSha256": "b0215fd9a66b529fcc3e3a754384af677cb90874963d5d98893d02aa0f070037",
+      "publicStillMatchesBase": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/PhotoCheckQuotaPoolTest.java",
+      "baseSha256": "e8f70fffbf8b7f94124d69a7b981de74c5f678bdfe29909fab39859c0b3df9d2",
+      "candidateSha256": "e8cee3986d60840c96cbf01aa3fe975fd1aeb6cb5e300f314199478e65c5fa54",
+      "publicStillMatchesBase": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorServiceImplTest.java",
+      "baseSha256": "b0bfa071a1442134d071364ce133a3ef632cf3f4ffdb07a8277424b502d2cf4b",
+      "candidateSha256": "cde083865c087b77e9e36e121bde945d42ea110147e078958754c231900c90da",
+      "publicStillMatchesBase": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NpcChatServiceTest.java",
+      "baseSha256": "a33dae7e4586c72c64cf6f24f701746b1683dd855968135ad5ce1ae9f3630b17",
+      "candidateSha256": "0fd890ec7943ae9b712c832f94a485372215d60877ea6883f47504c43fb21025",
+      "publicStillMatchesBase": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiGatewayService.java",
+      "baseSha256": "b2c360b8e2ea4ce8333c77aba977777476c5994530a5533be393e168bb3cc41b",
+      "candidateSha256": "a931d9d5cdd92716f1376c0eac1be618bf70d945955d3a3de956d7dbd42da9b4",
+      "publicStillMatchesBase": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java",
+      "baseSha256": "1a19e6201c8535cc7d14eada1cd519429840e85d188b0f04ceb2426c70f0d03d",
+      "candidateSha256": "c506b9aebcc931e566671544f74baf6a13ffa045c5a3e7cadb21a48254ad2288",
+      "publicStillMatchesBase": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+      "baseSha256": "e02e5fe4f5e917e3de031d1138860715f9b4ec3ed1ab441bd2eb72f063b1f7c7",
+      "candidateSha256": "c200e6882cf40ff160228a9e7b28c2fb3f9a4ab2db5833d4a86af1b787545d3f",
+      "publicStillMatchesBase": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java",
+      "baseSha256": "30b7dda8b572248a13f1c18c37be0f19b73024e30c2a9c509a2be1d8fa29e007",
+      "candidateSha256": "8cbb78e578032d8bdd3b83fd4cb69beb18b393f11be93a5db147a331dd7b2c61",
+      "publicStillMatchesBase": true
+    }
+  ],
+  "tests": [
+    {
+      "selector": "PhotoCheckVisionServiceTest",
+      "declaredTestCount": 13,
+      "methods": [
+        "模型回标准JSON按结论处理",
+        "模型回markdown围栏里的JSON也能解析",
+        "置信度越界收进0到100",
+        "负控_未配置key时降级且绝不能通过",
+        "负控_模型回非JSON时降级",
+        "负控_缺pass或confidence字段时降级",
+        "负控_模型调用抛异常时降级并退还额度",
+        "负控_每日额度超限时降级且不调模型",
+        "负控_额度层故障不拦玩家_照常调模型判定",
+        "负控_图片超限在发请求前就拒掉且不占额度",
+        "负控_扩展名jpg但内容不是图片_判不支持且不发请求",
+        "负控_超过32MB的本地图必须在发请求前拒掉",
+        "结论正常时不动额度退款"
+      ]
+    },
+    {
+      "selector": "AiGatewayServiceImplTest",
+      "declaredTestCount": 32,
+      "methods": [
+        "generateNormalFlowReturnsResult",
+        "playerThemeDraftSkipsGenericQuotaUntilDraftIsValidated",
+        "generateInputSafetyBlockThrowsException",
+        "generateOutputSafetyBlockThrowsException",
+        "generateRateLimitExceededThrowsException",
+        "generateModelErrorStillWritesAuditLog",
+        "missingApiKeyReturnsDiagnosableConfigurationFailure",
+        "modelError_refundsQuota_notUserFault",
+        "noModelAvailable_refundsQuota_configErrorIsOurFault",
+        "unknownInputRejectionKeepsExistingNonRefundPolicy",
+        "normalFlow_doesNotRefund",
+        "rateLimitExceeded_doesNotRefund_alreadyOverAnyway",
+        "refundRequestsAtomicCompensationWithoutStandaloneDelete",
+        "refund_normal_doesNotDeleteKey",
+        "refundUsesSameOriginalDayGenerationAndNonceKeys",
+        "generateReturnsUniqueTraceId",
+        "normalFlowLogsSameTraceIdAsReturned",
+        "inputBlockedLogsTraceIdGeneratedBeforeRateLimit",
+        "outputBlockedLogsNonNullTraceIdAndTokens",
+        "cacheOnlyLogsSameTraceIdAsReturned",
+        "npcChatAndCreationUseDifferentRateKeys",
+        "creationBizTypesShareOneRateKey",
+        "npcUsageDoesNotConsumeCreationQuota",
+        "creationExhaustedDoesNotBlockNpc",
+        "npcRateLimitUsesNpcDailyLimitAndKeepsFrontendMessagePrefix",
+        "npcUnderLimitPasses",
+        "generatePassesOriginalTtlAsIntegerToAtomicReservation",
+        "generateDoesNotRenewTtlOutsideAtomicReservation",
+        "detectionServiceFailureRefundsWithoutCallingProvider",
+        "explicitRiskyInputKeepsQuotaAndTypedBlockedReason",
+        "reviewRequiredRetainsUnknownAndDoesNotRefundOrdinaryPool",
+        "unknownReservationReplyCancelsOnlyItsOwnNonceBeforeProvider"
+      ]
+    },
+    {
+      "selector": "AiQuotaReservationRedisIT",
+      "declaredTestCount": 15,
+      "methods": [
+        "actualGatewayCompensatesAppliedLostReplyOnlyOnce",
+        "notAppliedLostReplyCancelsLateReservationWithoutCreatingCount",
+        "photoUnknownReplyPreservesUnmeteredFallbackAfterActualCompensation",
+        "gatewayOldGenerationCannotRefundRecreatedCounter",
+        "playerOldGenerationCannotRefundRecreatedCounter",
+        "generationLossConservativelyProtectsNewReservations",
+        "missingOldDayDoesNotRecreateAndReplayDoesNotTouchLaterCounter",
+        "invalidCounterRetainsReceiptAndZeroNeverGoesNegative",
+        "productionSerializerUsesIntegerTtlAndRejectsLongBeforeWriting",
+        "positiveCounterTtlDoesNotRenewAndOrdinaryOverLimitStillCounts",
+        "playerConcurrentReservationsCapThreeAndNonceReplayDoesNotIncrement",
+        "concurrentRefundsDebitOnlyOnce",
+        "actualPlayerServiceCompensatesAppliedLostReply",
+        "actualRefundUsesOriginalDayAndRejectsOtherMemberOrPool",
+        "invalidCounterRejectsReserveBeforeReceiptOrCounterChanges"
+      ]
+    },
+    {
+      "selector": "PhotoCheckQuotaPoolTest",
+      "declaredTestCount": 5,
+      "methods": [
+        "photoUsesOwnPoolAndReturnsOpaqueReceipt",
+        "photoUsesThirtyWhileCreationUsesTwenty",
+        "refundUsesExactOriginalReceiptAndRejectsOtherMemberOrPool",
+        "unknownReplyIsServiceFailureAndCompensatesItsOwnNonce",
+        "futureScenesKeepCreationPool"
+      ]
+    },
+    {
+      "selector": "AiCreatorServiceImplTest",
+      "declaredTestCount": 34,
+      "methods": [
+        "merchantPlanDelegatesToTopicPlanModule",
+        "themeDraftNormalFlow",
+        "themeDraftRejectsMockModelForClub",
+        "themeDraftRejectsMockModelForMerchant",
+        "playerThemeDraftReleasesReservationWhenMockModel",
+        "playerThemeDraftCountsOnlyCompleteRealDraft",
+        "playerThemeDraftDoesNotCountIncompleteOutput",
+        "playerThemeDraftFourthRequestIsRejectedBeforeCallingModel",
+        "playerThemeDraftReleasesReservationWhenModelFails",
+        "playerThemeDraftQuotaReturnsRemainingCount",
+        "nodeGenerateNormalFlow",
+        "chapterOverviewNormalFlow",
+        "safetyPrecheckPassCase",
+        "safetyPrecheckContentSecurityBlock",
+        "merchantTaskSuggestNormalFlow",
+        "clubDesignNormalFlow",
+        "resolveRoleForReturnsRole",
+        "resolveRoleForNullMemberReturnsPlayer",
+        "safetyPrecheckParsesFencedResponse",
+        "clubDesignParsesFencedResponse",
+        "merchantTaskSuggestParsesFencedResponse",
+        "safetyPrecheckNullTextDegradesWithoutNpe",
+        "clubDesignNullTextSetsParseError",
+        "merchantTaskSuggestNullTextSetsParseError",
+        "themeDraftAndNodeGenAndChapterOverviewNullTextDegradeWithoutNpe",
+        "safetyPrecheckGarbageTextDegrades",
+        "clubDesignGarbageTextSetsParseError",
+        "merchantTaskSuggestGarbageTextSetsParseError",
+        "merchantTaskSuggestValidJsonWithoutSuggestionsKeepsParseErrorNull",
+        "merchantInsightParsesAndSanitizesSuggestions",
+        "merchantInsightParseFailureThrows",
+        "merchantInsightRejectsMockModel",
+        "playerExplicitInputBlockedKeepsReservation",
+        "playerReviewRequiredUnknownRetainsOldRefundPolicy"
+      ]
+    },
+    {
+      "selector": "NpcChatServiceTest",
+      "declaredTestCount": 16,
+      "methods": [
+        "chatGoesThroughGatewayWithServerDerivedRoamContext",
+        "terminalReplayReturnsSameResultWithoutCallingGatewayAgain",
+        "sameRequestIdForDifferentUsersStartsIndependentRequests",
+        "activeRequestForSameSessionReturnsInProgressWithoutCallingGateway",
+        "gatewayRateLimitBecomesReplayableSafeTerminal",
+        "rejectsSessionOwnedByAnotherUserBeforeGateway",
+        "ignoresClientProfileAndUsesGlobalProfileOnly",
+        "merchantChatUsesApprovedMerchantProfileAndSeparateSessionNamespace",
+        "merchantChatReturnsSynthesizedAudioWhenVoiceIsReady",
+        "merchantChatKeepsSafeTextWhenSynthesisFails",
+        "rejectsNonUuidRequestIdBeforeStateOrGateway",
+        "rejectsWhenNoUsableGlobalProfileExists",
+        "renewsProcessingLeaseAndCancelsHeartbeatAfterTerminalState",
+        "rejectsWhenLeaseHeartbeatCannotStart",
+        "typedInputBlockIsNonRetryableAndNeverSynthesizesAudio",
+        "unknownReviewDecisionKeepsOriginalRetryableFailure"
+      ]
+    }
+  ],
+  "unitSelector": "PhotoCheckVisionServiceTest,AiGatewayServiceImplTest,PhotoCheckQuotaPoolTest,AiCreatorServiceImplTest,NpcChatServiceTest",
+  "redisSelector": "AiQuotaReservationRedisIT",
+  "redisGate": {
+    "CHENGYIN_AI_RESERVATION_REDIS_IT": "1",
+    "CHENGYIN_AI_REDIS_IT_HOST": "127.0.0.1",
+    "CHENGYIN_AI_REDIS_IT_PORT": "explicit task-owned port",
+    "CHENGYIN_AI_REDIS_IT_DATABASE": "explicit task-owned DB 0..15",
+    "CHENGYIN_AI_REDIS_IT_PASSWORD": "optional secret; never copied into artifacts"
+  },
+  "redisCleanup": "Only generated exact member/nonce keys claimed absent beforehand. No scan, flush or shared fixed-key deletion. Uses production RedisConfig serializer. Direct-Lua tests (generationBoundary, concurrency, invalid/missing counters, TTL) are not whole-service E2E; actual Gateway/Photo/Player calls are named separately.",
+  "limitations": [
+    "No Java build/test or Redis execution performed.",
+    "Persistent Redis outage/process crash lacks durable compensation; separate contract requested.",
+    "Input moderation only; output busy and REVIEW_REQUIRED retain original policy.",
+    "Nonce cancellation expires after 172800 seconds.",
+    "Generation protocol safety does not prove arbitrary external restore or mixed legacy writers.",
+    "Redis Lua runtime failure is not universal rollback; known bad argument/counter validation is before writes.",
+    "0 to 1 refreshes original counter TTL as prior behavior; positive-count test cannot prove all paths keep TTL.",
+    "No device, HTTP, deployment or production acceptance."
+  ],
+  "patchSha256": "4573b86042563a65c5a39477dc8c068aa81defee2f55df03e1a7208a9de8d877",
+  "staticValidation": [
+    "All 9 public baseline hashes still match at packaging",
+    "git apply --check against public checkout passed; no patch applied",
+    "All 10 tar members hash verified",
+    "Quota method call sites searched; sole external production caller Photo updated",
+    "Real compilation and execution remain unperformed"
+  ],
+  "publicHandoffNote": "Only candidate.patch is shipped as original bytes. Metadata and prose are sanitized public copies; original unshipped archive/script/contract hashes do not certify these rewritten files. Use checksums.json for shipped attachments."
+}

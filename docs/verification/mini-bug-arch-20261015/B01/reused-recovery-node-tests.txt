@@ -1,0 +1,24 @@
+✔ storage failure blocks sending and preserves current draft (6.520347ms)
+✔ unknown resend first reads original receipt; missing/failed response never blindly resends (1.83267ms)
+✔ found receipt reconciles original bubble without a second write (1.891258ms)
+✔ authoritative not-found retries only the original immutable payload (3.343474ms)
+✔ reentry persists only original IDs and recovers found receipts without chat plaintext (2.620336ms)
+✔ cleared recovery records make late send success unable to rebuild local state (1.420069ms)
+✔ delete success invalidates outstanding message/send callbacks (1.682223ms)
+✔ switched account cannot apply old history, current load, polling or route results (1.749254ms)
+✔ incremental pagination drains every missing segment and preserves displayed readTo (1.964788ms)
+✔ private history route uses safe projection, never privileged normal details, and replaces old cached name (1.400299ms)
+✔ historical route revalidation hides cached names and drops older public response after private result (1.599479ms)
+✔ same-account re-login with different request credential drops old callback (1.220458ms)
+✔ 真实 offset 广场追加按稳定 ID 去重，同时推进原服务端页码 (14.536998ms)
+✔ 整页重复也推进 offset 页码，下一页可继续；空尾页按 total 停止 (2.229157ms)
+✔ 刷新失败保留旧卡，重试成功替换旧卡；迟到原追加不能复活 (2.071188ms)
+✔ 账号迟到响应丢弃，回前台清上一账号私有待审及个人态缓存 (2.152301ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 98.722717

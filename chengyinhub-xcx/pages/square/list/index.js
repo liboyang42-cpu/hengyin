@@ -6,6 +6,7 @@ const app = getApp();
 const RESULT_SHEET_MS = 2000;
 const analytics = require('../../../utils/analytics.js');
 const { pickLocation, getCurrentLocation } = require('../../../utils/location/location-manager.js');
+const lastLocation = require('../../../utils/location/last-location.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { appendByIndex } = require('../../../utils/list-append.js');
 const {
@@ -102,8 +103,8 @@ Page({
     drawerSnapping: false,
     statusBarHeight: 44,
     navBarHeight: 44,
-    mapLatitude: 31.2304,
-    mapLongitude: 121.4737,
+    mapLatitude: lastLocation.FIXED.latitude,
+    mapLongitude: lastLocation.FIXED.longitude,
     mapScale: 14,
 
     // 新增：页面是否正在刷新
@@ -1005,6 +1006,15 @@ Page({
     wx.hideTabBar(); // 重试一次
     // 广场属于玩家内容域：身份只影响能力，不改变页面/原生 chrome 的深色归属。
     merchantTheme.merchantPageRestore();
+    const accountId = String(app.getUserID() || 0);
+    if (this._feedAccount !== undefined && this._feedAccount !== accountId) {
+      // 原接口含本人待审/驳回与个人态；换号不能继续展示上一身份的缓存。
+      this._feedRequestId = (this._feedRequestId || 0) + 1;
+      this._feedRequestInFlight = false;
+      this.setData({ list: [], page_no: 1, hasMore: false, isRefreshing: false,
+        isLoadingMore: false, userId: app.getUserID() || 0 });
+      this.refreshList();
+    }
     // A-05:从详情返回且详情删/改过 → 刷一次首屏,别让用户看到旧卡;没脏标就不动,不每次 onShow 重拉。
     // A-RPT-5:分享直开详情时,栈里没有列表实例、实例置脏落空,详情侧同时写了 app 级脏标,这里一并消费。
     const globalDirty = !!(app.globalData && app.globalData.squareListDirty);
@@ -1024,10 +1034,16 @@ Page({
     var that = this;
     getCurrentLocation({
       onSuccess: function (res) {
+        lastLocation.save(res);
         that.setData({
           mapLatitude: res.latitude,
           mapLongitude: res.longitude
         });
+      },
+      onFail: function () {
+        // 兜底：上次成功位置 → 固定坐标（本页无地图，不展示提示）
+        var fb = lastLocation.resolve();
+        that.setData({ mapLatitude: fb.latitude, mapLongitude: fb.longitude });
       }
     });
   },
@@ -1143,6 +1159,8 @@ Page({
     if (isRefresh && that._feedRequestTask && typeof that._feedRequestTask.abort === 'function') {
       that._feedRequestTask.abort();
     }
+    const requestAccount = String(app.getUserID() || 0);
+    that._feedAccount = requestAccount;
     const requestId = (that._feedRequestId || 0) + 1;
     that._feedRequestId = requestId;
     that._feedRequestInFlight = true;
@@ -1177,9 +1195,17 @@ Page({
         pageSize: app.getPageSize(),
       },
       success: function (res) {
-        if (requestId !== that._feedRequestId) return;
+        if (requestId !== that._feedRequestId || String(app.getUserID() || 0) !== requestAccount) return;
         if (res && res.code == "200" && res.data && isRecordList(res.data.rows)) {
-          let newlist = res.data.rows
+          const seen = Object.create(null);
+          if (isLoadMore) that.data.list.forEach(function (item) { seen[String(item.id)] = true; });
+          let newlist = res.data.rows.filter(function (item) {
+            if (item.id === null || item.id === undefined) return false;
+            const key = String(item.id);
+            if (seen[key]) return false;
+            seen[key] = true;
+            return true;
+          });
           for (let i = 0; i < newlist.length; i++) {
             if (newlist[i]['pics'] != null) {
               // R10-06:清空后的 '' 不得被解析成一个空图片位

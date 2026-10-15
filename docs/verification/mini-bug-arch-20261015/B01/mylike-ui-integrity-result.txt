@@ -1,0 +1,11 @@
+Command: node chengyinhub-xcx/tests/lint/ui-integrity.js --help | head -40
+Note: script does not handle --help; it performed the repo scan. stdout was limited to first 40 lines; stderr below was complete. Pipeline exit 0 is head's exit status, not lint success.
+UI-GATE-0 扫描:578 JS / 340 WXML / 707 backend Mapping
+U1 FAIL:静态路径 766,动态路径 38,变量路径 10,逐项理由 9
+UI-GATE-0:FAIL (6 violations)
+  [U1] chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js:175 受控 wrapper _submitVerification 的首参不是可枚举 /api 字面量
+  [U4] chengyinhub-xcx/pages/play/index.js:1512 动态 setData 未登记,无法核对顶层字段消费
+  [U5] chengyinhub-xcx/pages/play/index.js:6510 silentError:true 调用点未登记允许静默的理由
+  [BASELINE] chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js:174 U1-VARIABLE 基线已未命中，必须删除过期项
+  [BASELINE] chengyinhub-xcx/pages/play/index.js:1487 U4-DYNAMIC 基线已未命中，必须删除过期项
+  [BASELINE] chengyinhub-xcx/pages/play/index.js:6451 U5 基线已未命中，必须删除过期项

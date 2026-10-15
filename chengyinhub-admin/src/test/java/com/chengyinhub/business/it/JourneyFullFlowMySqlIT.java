@@ -573,7 +573,7 @@ class JourneyFullFlowMySqlIT {
      * 若哪天本用例变红(比如又加了一道幂等),说明防线换人了,回来改注释和断言。
      */
     @Test
-    void withoutUniqueActionKeysConcurrentSettleLosesIdempotentReplay() throws Exception {
+    void withoutUniqueActionKeysLockOrderStillReplaysIdempotently() throws Exception {
         ITopicRouteRuntimeService winnerRuntime = runtimeWithDice(fixedDice(D20_FAIL));
         winnerRuntime.state(MEMBER, TOPIC, 0L);
         shopProof.arrived.set(true);
@@ -597,19 +597,20 @@ class JourneyFullFlowMySqlIT {
                 Future<PlayCheckReceipt> loser = pool.submit(() -> loserRuntime.settle(MEMBER, TOPIC, NODE_1, CHECK_ID));
                 assertTrue(loserReadEmptyAction.await(5, TimeUnit.SECONDS),
                         "后到者必须真的读到「还没有 settle 动作」才叫并发");
-                winnerRuntime.settle(MEMBER, TOPIC, NODE_1, CHECK_ID);
+                PlayCheckReceipt winner = winnerRuntime.settle(MEMBER, TOPIC, NODE_1, CHECK_ID);
                 releaseLoser.countDown();
-                ExecutionException refused = assertThrows(ExecutionException.class, () -> loser.get(5, TimeUnit.SECONDS),
-                        "没有唯一键:后到者拿不到重放回执,并发断言(两边同一份结算)就是在这里变红的");
-                assertTrue(refused.getCause() instanceof ServiceException, "实际:" + refused.getCause());
-                assertEquals("路线状态已更新，请刷新后重试", refused.getCause().getMessage(),
-                        "CAS 兜住了第二次扣血,但也只剩 409,幂等没了");
+                // 2026-10-14 集成:防线换人了(见本方法注释末段)。C 包 settle 先 FOR UPDATE 锁 activity→registration,
+                // 后到者在先到者提交后才拿到锁并以锁读看到其动作 ⇒ 即使摘掉两把唯一键,后到者也拿到同一份重放回执。
+                // 唯一键现为纵深防御;本负控改为证明「锁序化后摘键仍幂等」,两把键的还原回读保持不变。
+                PlayCheckReceipt replayed = loser.get(5, TimeUnit.SECONDS);
+                assertTrue(replayed.isSettled());
+                assertEquals(winner.getStateVersion(), replayed.getStateVersion(), "摘键后后到者仍重放同一份结算");
             } finally {
                 releaseLoser.countDown();
                 pool.shutdownNow();
             }
-            assertEquals(1, countSettleActions(), "后到者的动作随事务回滚,库里还是只有先到者那一条");
-            assertEquals(6, hp(), "CAS 至多扣一次:血量不能变成 4");
+            assertEquals(1, countSettleActions(), "锁序化:库里只有先到者那一条 settle 动作");
+            assertEquals(6, hp(), "至多扣一次:血量不能变成 4");
         } finally {
             exec("alter table topic_route_action add unique key uk_topic_route_action"
                     + " (session_id,member_id,action_id)");
@@ -883,8 +884,19 @@ class JourneyFullFlowMySqlIT {
 
         @Override
         public TopicRouteAction selectActionByAction(Long sessionId, Long memberId, String actionId) {
-            TopicRouteAction row = real.selectActionByAction(sessionId, memberId, actionId);
-            if (armed && watchedActionId.equals(actionId) && row == null) {
+            return real.selectActionByAction(sessionId, memberId, actionId);
+        }
+
+        /*
+         * 2026-10-14 集成:C 包 settle 开头先做 activity→registration 当前锁读(FOR UPDATE)。若仍停在
+         * 「读到空动作」处,后到者已握报名行锁,先到者被挡 ⇒ 交错不可能出现(只剩握手超时)。改停在本事务
+         * 第一次一致性读(找局,无锁):RR 快照由此固定,先到者提交后后到者再拿锁,其普通读仍读不到先到者的
+         * settle 动作 —— 与原设计同一个「双方都认为还没有 settle」的并发窗口,断言不变。
+         */
+        @Override
+        public List<TopicRouteSession> selectMemberTopicSessions(Long memberId, Long topicId) {
+            List<TopicRouteSession> rows = real.selectMemberTopicSessions(memberId, topicId);
+            if (armed) {
                 armed = false;
                 readEmpty.countDown();
                 try {
@@ -894,7 +906,7 @@ class JourneyFullFlowMySqlIT {
                     throw new IllegalStateException(e);
                 }
             }
-            return row;
+            return rows;
         }
 
         @Override
@@ -914,12 +926,6 @@ class JourneyFullFlowMySqlIT {
         public TopicRouteSession selectByOwner(Long activityId, Long topicId, Long memberId, String playInstanceId) {
             return real.selectByOwner(activityId, topicId, memberId, playInstanceId);
         }
-
-        @Override
-        public List<TopicRouteSession> selectMemberTopicSessions(Long memberId, Long topicId) {
-            return real.selectMemberTopicSessions(memberId, topicId);
-        }
-
 
         @Override
         public TopicRouteSession selectAccessibleById(Long id, Long memberId) {

@@ -14,6 +14,12 @@ public interface ImConversationMemberMapper
     public ImConversationMember selectByConvAndMember(@Param("conversationId") Long conversationId,
                                                       @Param("memberId") Long memberId);
 
+    ImConversationMember selectByConvAndMemberForUpdate(@Param("conversationId") Long conversationId,
+                                                       @Param("memberId") Long memberId);
+
+    int addUnreadForActiveMember(@Param("conversationId") Long conversationId,
+                                 @Param("memberId") Long memberId, @Param("delta") int delta);
+
     /** 我的会话(按会话最后消息时间倒序) */
     public List<ImConversationMember> selectMyConversations(@Param("memberId") Long memberId);
 
@@ -30,6 +36,9 @@ public interface ImConversationMemberMapper
     /** 已读:清零未读并更新已读位 */
     public int markRead(@Param("conversationId") Long conversationId,
                         @Param("memberId") Long memberId, @Param("lastReadMsgId") Long lastReadMsgId);
+
+    int markReadTo(@Param("conversationId") Long conversationId, @Param("memberId") Long memberId,
+                   @Param("readTo") Long readTo, @Param("unread") int unread);
 
     /** 未读总数 */
     public Integer sumUnread(@Param("memberId") Long memberId);

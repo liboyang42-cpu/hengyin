@@ -198,8 +198,36 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         view.put("found", found[0]);
         view.put("total", found[1]);
         if(session != null) view.put("archive", archive(memberId, topicId, session));
-        view.put("chapter", endingChapter(topicId, chosen, state));
+        view.put("chapter", endingChapter(topicId, chosen, state, session));
         return view;
+    }
+
+    /** 新快照只读取本局结局正文；缺键的历史局保留既有读取行为。 */
+    Map<String, Object> endingChapter(Long topicId, JourneyStory.EndingCase chosen,
+                                      TopicRouteEngine.State state, TopicRouteSession session) {
+        if (chosen == null || chosen.getChapterId() == null) return null;
+        if (session != null && StringUtils.isNotEmpty(session.getConfigSnapshotJson())) {
+            try {
+                JsonNode snapshot = JSON.readTree(session.getConfigSnapshotJson());
+                if (snapshot != null && snapshot.has("endingChapters")) {
+                    JsonNode chapter = snapshot.path("endingChapters").path(String.valueOf(chosen.getChapterId()));
+                    if (!chapter.isObject() || !chapter.path("blocks").isArray()) return null;
+                    List<Object> blocks = JSON.convertValue(chapter.path("blocks"),
+                            new com.fasterxml.jackson.core.type.TypeReference<List<Object>>() {});
+                    Map<String, Object> out = new LinkedHashMap<String, Object>();
+                    out.put("id", chosen.getChapterId());
+                    for (String field : new String[]{"name", "atmospherePreset", "audioUrl"})
+                        out.put(field, chapter.path(field).isNull() ? null : chapter.path(field).asText(null));
+                    out.put("blocks", com.chengyinhub.business.util.ChapterBlockReadSupport.projectForPlayer(
+                            blocks, new java.util.HashSet<Long>(state.getCompletedNodeIds()),
+                            new java.util.HashSet<String>(state.getTags())));
+                    return out;
+                }
+            } catch (Exception unreadable) {
+                throw new ServiceException("本局结局快照不可用");
+            }
+        }
+        return endingChapter(topicId, chosen, state);
     }
 
     /**

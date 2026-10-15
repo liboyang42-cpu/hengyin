@@ -11,6 +11,10 @@ import java.util.List;
 
 /**
  * 主题发布-请求参数
+ *
+ * <p>编辑复用本 DTO 时，未传 publishMode、teamMode/teamMaxMembers、xpBudget、selfPlay
+ * 保留已有配置；显式 0 仍按关闭处理。productType 未传且票中也没有 mode 时保留已有有效类型。
+ * 创建入口继续使用原有默认值，章节/票/合作者集合仍遵守全量替换合同。
  */
 @Schema(description = "主题发布-请求参数")
 public class TopicCreateDTO implements Serializable {

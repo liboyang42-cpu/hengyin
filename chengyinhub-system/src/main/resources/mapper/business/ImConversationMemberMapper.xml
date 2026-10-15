@@ -28,6 +28,19 @@
         where conversation_id = #{conversationId} and member_id = #{memberId} limit 1
     </select>
 
+    <select id="selectByConvAndMemberForUpdate" resultMap="ImConversationMemberResult" useCache="false" flushCache="true">
+        select id, conversation_id, member_id, role, unread_count, last_read_msg_id, muted, deleted, create_time
+        from im_conversation_member
+        where conversation_id = #{conversationId} and member_id = #{memberId} limit 1 for update
+    </select>
+
+    <update id="addUnreadForActiveMember">
+        update im_conversation_member m
+        join im_conversation c on c.id = m.conversation_id and c.status = 0
+        set m.unread_count = m.unread_count + #{delta}
+        where m.conversation_id = #{conversationId} and m.member_id = #{memberId} and m.deleted = 0
+    </update>
+
     <select id="selectMyConversations" resultMap="ImConversationMemberResult">
         select m.id, m.conversation_id, m.member_id, m.role, m.unread_count, m.last_read_msg_id, m.muted, m.deleted, m.create_time
         from im_conversation_member m
@@ -59,6 +72,13 @@
         update im_conversation_member
         set unread_count = 0, last_read_msg_id = #{lastReadMsgId}
         where conversation_id = #{conversationId} and member_id = #{memberId}
+    </update>
+
+    <update id="markReadTo">
+        update im_conversation_member
+        set unread_count = #{unread}, last_read_msg_id = #{readTo}
+        where conversation_id = #{conversationId} and member_id = #{memberId}
+            and deleted = 0 and coalesce(last_read_msg_id, 0) &lt;= #{readTo}
     </update>
 
     <select id="sumUnread" resultType="java.lang.Integer">

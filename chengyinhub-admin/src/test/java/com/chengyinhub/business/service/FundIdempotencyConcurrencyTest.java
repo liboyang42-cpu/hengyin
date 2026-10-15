@@ -152,6 +152,7 @@ class FundIdempotencyConcurrencyTest {
             return 1;
         });
         when(mapper.selectById(withdrawalId)).thenReturn(pending);
+        when(mapper.updateMemberCashWithdraw(any())).thenReturn(1); // A包：原提现单同事务写入 CW/CD 原业务号及终态
         when(mapper.selectPendingForQuery(1)).thenReturn(Collections.singletonList(pending));
         AtomicBoolean statusClaimed = new AtomicBoolean();
         when(mapper.updateStatusIfProcessing(any())).thenAnswer(invocation ->
@@ -189,6 +190,11 @@ class FundIdempotencyConcurrencyTest {
         CashWithdrawServiceImpl service = new CashWithdrawServiceImpl();
         ReflectionTestUtils.setField(service, "mapper", mapper);
         ReflectionTestUtils.setField(service, "umsMemberService", memberService);
+        com.chengyinhub.business.service.impl.CashWithdrawFailureRecoveryService recovery =
+                new com.chengyinhub.business.service.impl.CashWithdrawFailureRecoveryService(); // A包：原提现账与CW/CD号先同事务落库
+        ReflectionTestUtils.setField(recovery, "mapper", mapper);
+        ReflectionTestUtils.setField(recovery, "umsMemberService", memberService);
+        ReflectionTestUtils.setField(service, "failureRecoveryService", recovery);
         ReflectionTestUtils.setField(service, "wechatPayService", wechatPayService);
         ReflectionTestUtils.setField(service, "alarmService", mock(AlarmService.class));
         WxPayConfig payConfig = mock(WxPayConfig.class);

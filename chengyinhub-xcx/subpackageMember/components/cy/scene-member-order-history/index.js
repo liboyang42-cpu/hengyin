@@ -1,4 +1,5 @@
 'use strict'
+const subscribe = require('../../../../utils/subscribe.js');
 
 const modal = require('../../../../utils/modal.js');
 const cyLoading = require('../../../../utils/loading.js');
@@ -245,7 +246,10 @@ Component({
         dangerParams: { deadline: refundDeadlineText(that.data.list[index]) },
         success(res) {
           that._cancelPromptOpen = false
-          if (res.confirm) that.cancelOrderRequest(id, index, status)
+          if (res.confirm) {
+            if (status === 2) subscribe.request(['refund', 'refundRejected'])
+            that.cancelOrderRequest(id, index, status)
+          }
         },
         fail() { that._cancelPromptOpen = false },
         complete() { that._cancelPromptOpen = false },

@@ -143,6 +143,7 @@ class ApiRegistrationCompletionCouponTest
         CmsActivity activity = new CmsActivity();
         activity.setId(ACTIVITY);
         activity.setTopicId(TOPIC);
+        activity.setEndDate(new java.util.Date(System.currentTimeMillis() + 86400000L));
         activity.setMemberId(99L);
         ICmsActivityService activityService = (ICmsActivityService) ReflectionTestUtils.getField(
                 controller, "cmsActivityService");

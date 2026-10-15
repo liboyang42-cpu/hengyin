@@ -1,0 +1,14 @@
+local ttl=tonumber(ARGV[1]); local limit=tonumber(ARGV[2]); local capped=tonumber(ARGV[3]);
+if not ttl or ttl<1 or ttl>86400 or ttl~=math.floor(ttl) or not limit or limit<0 then return redis.error_reply('invalid quota arguments') end;
+local prior=redis.call('GET',KEYS[3]);
+if prior=='0' then return -1 end;
+if prior then local sep=string.find(prior,'|',1,true); if not sep then return -1 end; local gen=string.sub(prior,1,sep-1); if redis.call('EXISTS',KEYS[1])==1 and redis.call('GET',KEYS[2])==gen then return tonumber(string.sub(prior,sep+1)) end; return -1 end;
+local raw=redis.call('GET',KEYS[1]);
+if raw and not (raw=='0' or string.match(raw,'^[1-9]%d*$')) then return redis.error_reply('invalid quota counter') end;
+local used=raw and tonumber(raw) or 0;
+if not used or used>9007199254740990 then return redis.error_reply('quota counter out of range') end;
+if capped==1 and used>=limit then redis.call('SET',KEYS[3],'0','EX',172800); return -2 end;
+local gen=redis.call('GET',KEYS[2]); if not raw or not gen then gen=KEYS[3] end;
+local next=redis.call('INCR',KEYS[1]); if next==1 then redis.call('EXPIRE',KEYS[1],ttl) end;
+local life=redis.call('PTTL',KEYS[1]); if life>0 then redis.call('SET',KEYS[2],gen,'PX',life) elseif life==-1 then redis.call('SET',KEYS[2],gen) else redis.call('DEL',KEYS[2]) end;
+redis.call('SET',KEYS[3],gen..'|'..next,'EX',172800); return next;

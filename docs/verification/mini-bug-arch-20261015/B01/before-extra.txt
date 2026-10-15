@@ -1,0 +1,54 @@
+✖ invite response belonging to A cannot populate B circle-session cache (25.013378ms)
+✔ queued A pause save cannot send under B credentials (7.337988ms)
+✖ A projection late callback cannot write B player-pending state or UI (4.792185ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 1
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 92.454383
+
+✖ failing tests:
+
+test at chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:99:1
+✖ invite response belonging to A cannot populate B circle-session cache (25.013378ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   [
+  +     'circle_session_m22_t8',
+  +     99
+  +   ]
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (/workspace/hengyin/chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:103:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ [ 'circle_session_m22_t8', 99 ] ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:113:1
+✖ A projection late callback cannot write B player-pending state or UI (4.792185ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  '网络异常，请稍后重试' !== ''
+  
+      at TestContext.<anonymous> (/workspace/hengyin/chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:117:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '网络异常，请稍后重试',
+    expected: '',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

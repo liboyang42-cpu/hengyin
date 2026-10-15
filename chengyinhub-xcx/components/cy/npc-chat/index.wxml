@@ -10,9 +10,11 @@
   <view class="npc-chat">
     <view class="npc-chat__notice">
       <cy-icon name="info" size="24" />
-      <text>{{scope === 'merchant' ? '由 AI 生成，仅基于这家店提供的信息回答' : '由 AI 生成，仅基于本次漫游进度回答'}}</text>
+      <text class="npc-chat__notice-text">{{scope === 'merchant' ? '由 AI 生成，仅基于这家店提供的信息回答' : '由 AI 生成，仅基于本次漫游进度回答'}}</text>
+      <text class="npc-chat__clear" bindtap="onAskClearData" aria-role="button" aria-label="清除我的对话记录" hover-class="cy-pressed" hover-stay-time="80">清除我的对话记录</text>
     </view>
 
+    <cy-inline-error wx:if="{{clearError}}" title="{{clearError}}" />
     <scroll-view class="npc-chat__messages" scroll-y scroll-into-view="{{scrollIntoView}}" scroll-with-animation>
       <view wx:for="{{messages}}" wx:key="id" id="npc-msg-{{item.id}}" class="npc-chat__row npc-chat__row--{{item.role}}">
         <view class="npc-chat__bubble npc-chat__bubble--{{item.role}}">
@@ -34,5 +36,6 @@
         <view class="npc-chat__send {{canSend ? '' : 'npc-chat__send--disabled'}}" bindtap="onSend" aria-role="button" aria-label="发送消息" hover-class="cy-pressed" hover-stay-time="80">发送</view>
       </view>
     </view>
+    <cy-danger-confirm id="npc-dc" bind:confirm="onConfirmClearData" />
   </view>
 </cy-sheet>

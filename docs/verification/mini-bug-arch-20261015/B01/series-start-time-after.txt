@@ -1,0 +1,16 @@
+✔ detail and date reschedule preserve 00:30 (7.159401ms)
+✔ detail and date reschedule preserve 18:45 (0.608596ms)
+✔ mixed future times clears previous edit time and refuses a silent write (2.502308ms)
+✔ no future occurrences clears previous edit time and refuses a silent write (0.887526ms)
+✔ omitted field clears previous edit time and refuses a silent write (0.501295ms)
+✔ invalid clock clears previous edit time and refuses a silent write (0.423868ms)
+✔ un-padded clock clears previous edit time and refuses a silent write (0.468004ms)
+✔ unknown time can be saved after an explicit time selection (0.642297ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 69.258385

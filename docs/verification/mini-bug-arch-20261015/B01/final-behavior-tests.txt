@@ -1,0 +1,22 @@
+✔ interruption → page hide → interruption end cannot replay background audio (7.501474ms)
+✔ topic unlike removes stable ID after a refresh reorders rows (5.363916ms)
+✔ favorites old account list and unlike callbacks cannot change the new account (0.96289ms)
+✔ team progress late response after onHide cannot restart polling (20.061766ms)
+✔ team progress late response after onUnload cannot restart polling (2.834327ms)
+✔ play load response and pause snapshot from A cannot enter B account (8.014207ms)
+✔ refund subscription starts on confirmed gesture and rejection does not block cancelRegistration (4.897824ms)
+✔ refund subscription starts on confirmed gesture and rejection does not block cancelOrder (1.121218ms)
+✔ refund subscription starts on confirmed gesture and rejection does not block cancelParticipation (1.438936ms)
+✔ invite response belonging to A cannot populate B circle-session cache (3.097032ms)
+✔ queued A pause save cannot send under B credentials (3.46048ms)
+✔ A projection late callback cannot write B player-pending state or UI (2.612534ms)
+✔ returning to A play page after account switch leaves the stale session before any reload (2.305341ms)
+✔ A paused server restore late response cannot restore or persist B run (2.637871ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 130.531535

@@ -4,8 +4,13 @@
 // 即使落在同一文件也会因 count 改变而转红，必须先说明为何该调用可以跳过 request-client
 // 的统一 toast（调用方已有可见错误态/自管 toast，或本来就是非阻断的后台遥测）。
 module.exports = [
+  { file: 'subpackageRoam/official-routes/index.js', count: 1, reason: '官方路线列表失败落页面 state=error（cy-error 带重试），不再叠加统一 toast。' },
+  { file: 'subpackageRoam/official-route/index.js', count: 1, reason: '路线详情失败落 state=error/notfound 的页内可见态，error 带重试。' },
+  { file: 'subpackageMember/points-history/index.js', count: 1, reason: '积分明细首次失败落 state=error（带重试），下拉刷新失败用自管 toast。' },
+  { file: 'pages/team/report-sheet/index.js', count: 1, reason: '举报失败落结果半屏 fail 态（含后端原因与重试），不再叠加统一 toast。' },
+  { file: 'pages/publish/components/topic-state-keys/index.js', count: 3, reason: '状态键读取落 cy-error 重试；注册失败落表单 formError；删除失败落危险确认的 error 态，均为可见反馈。' },
   { file: 'components/cy/club-direct-ledger/index.js', count: 1, reason: '计酬账目读取失败显示 cy-inline-error 并提供重试；epoch 拒绝过期或切号响应，关闭通道 toast 避免与页内错误提示重复。' },
-  { file: 'components/cy/npc-chat/index.js', count: 1, reason: '聊天组件把失败落到可见 error 状态并允许重试，避免统一 toast 与组件提示重复。' },
+  { file: 'components/cy/npc-chat/index.js', count: 2, reason: '聊天组件把失败落到可见 error 状态并允许重试，避免统一 toast 与组件提示重复。' },
   { file: 'pages/square/components/cy/post-compose/index.js', count: 2, reason: '广场选活动两路列表失败落组件 activityError 并给重试，关掉自动 toast 避免双弹。' },
   { file: 'subpackageMember/components/cy/profile/index.js', count: 1, reason: '公开商家身份探测明确区分非商家与网络错误，并落入组件可见状态。' },
   { file: 'components/cy/scene-game-coupon-wallet/index.js', count: 1, reason: '钱包场景在组件内显示加载失败态，不让底层接口文案覆盖场景提示。' },
@@ -88,7 +93,7 @@ module.exports = [
   { file: 'components/cy/scene-asset-earnings/index.js', count: 1, reason: '资产收益读取失败会切换 state=error，组件渲染错误态而不留在 loading。' },
   { file: 'subpackageA/components/scene-how-to-play-detail/index.js', count: 1, reason: '玩法说明读取失败会清理旧内容并设置 empty=true/loading=false，组件显示可见空错态。' },
   { file: 'subpackageA/pages/myproject/index.js', count: 5, reason: '我的项目读取失败落到 projectState/projectErrorMsg，模板上下架失败显式 toast；取消活动/主题前的退款人数预览(C8-05)失败显式 toast 且不弹确认，新增提交广场失败同样显式 toast 并释放操作锁，五路都可见可重试。' },
-  { file: 'subpackageB/pages/im/chat/index.js', count: 3, reason: '消息首载、更多消息与路线选择三路失败分别落到 loadErrorText、loadMoreError、routeError，当前聊天页均可见。' },
+  { file: 'subpackageB/pages/im/chat/index.js', count: 5, reason: '消息首载、更多消息与路线选择三路失败分别落到 loadErrorText、loadMoreError、routeError，当前聊天页均可见；B包新增 send-receipt 原请求只读回读(失败保持该气泡原失败/未知态与手动重试，不造新请求)与轮询内路线卡隐私重核(失败保持「路线已不可用」占位，每轮 toast 会刷屏)。' },
   { file: 'subpackageB/pages/im/list/index.js', count: 1, reason: '会话列表首载失败落到 error/errorMsg，有快照时落到 staleError，页内显示重试或保留内容提示。' },
   { file: 'subpackageMember/complaint/index.js', count: 2, reason: '投诉对象读取失败落到 errorMsg，投诉提交失败落到 submitError/submitErrorKind，两处均在页内显示。' },
   { file: 'subpackageMember/components/scene-member-participation-detail/index.js', count: 1, reason: '参与详情回包异常或网络失败会切换 loadState=error 并显示 loadErrorText 与重试入口。' },

@@ -52,6 +52,7 @@ function loadDetail() {
         '../../../utils/danger-actions.js': require('../../utils/danger-actions.js'),
       }
       if (modules[request]) return modules[request]
+      if (request === '../../../utils/club-pinned-notice.js') return require('../../utils/club-pinned-notice.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Set,
@@ -100,6 +101,8 @@ function loadSettings() {
     Page(page) { definition = page },
     require(request) {
       const modules = {
+        '../../utils/im-send-recovery.js': { invalidate() {} },
+        '../../utils/roam-cache-epoch.js': require('../../utils/roam-cache-epoch.js'),
         '../../utils/motion.js': require('../../utils/motion.js'),
         '../../utils/motion-preference.js': require('../../utils/motion-preference.js'),
         '../../utils/identity/identity-policy.js': { isMerchantView: () => false },
@@ -114,6 +117,7 @@ function loadSettings() {
         },
       }
       if (modules[request]) return modules[request]
+      if (request === '../../../utils/club-pinned-notice.js') return require('../../utils/club-pinned-notice.js')
       throw new Error(`unexpected require: ${request}`)
     },
     wx: {

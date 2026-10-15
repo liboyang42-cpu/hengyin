@@ -1,0 +1,17 @@
+B02 static-only checks; Java compilation/tests and DB/VPS NOT RUN
+git diff --check exit: 0
+(no whitespace errors)
+XML parse OK: chengyinhub-system/src/main/resources/mapper/business/CmsTopicMapper.xml (read-only; not SQL execution)
+XML parse OK: chengyinhub-system/src/main/resources/mapper/business/CmsTopicChapterMapper.xml (read-only; not SQL execution)
+XML parse OK: chengyinhub-system/src/main/resources/mapper/business/CmsTopicNodeMapper.xml (read-only; not SQL execution)
+New @Test methods: 5
+Frozen source baseline: d551c6babd018d41aec90dad2c0acaf1c534644d
+Known original overwrite expressions, from frozen git object (source evidence, not executed Java):
+normalizeTeamConfig(patch);
+patch.setPublishMode(dto.getPublishMode() != null && !dto.getPublishMode().trim().isEmpty()
+? dto.getPublishMode().trim() : "pro");
+patch.setSelfPlay(0);
+patch.setXpBudget(dto.getXpBudget() != null && dto.getXpBudget() > 0 ? dto.getXpBudget() : 3000);
+Current mini-program submit payload sends no xpBudget (read-only excerpt):
+xpBudget in apiData: False
+No external requests, provider calls, Java builds, DDL, DB connections or device tests were made.

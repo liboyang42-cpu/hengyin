@@ -29,7 +29,7 @@ class ApiPlayRouteContractTest {
         post("revealPuzzle", new Class<?>[]{String.class, String.class, String.class, String.class, Integer.class});
         post("sensorResult", new Class<?>[]{SensorResultRequest.class});
         post("submitPreference", new Class<?>[]{Long.class, PreferenceSubmitRequest.class});
-        post("arrive", new Class<?>[]{String.class, String.class, String.class, String.class, String.class, String.class, Integer.class});
+        post("arrive", new Class<?>[]{String.class, String.class, String.class, String.class, String.class, String.class, Integer.class, String.class});
         post("photo", new Class<?>[]{String.class, String.class, String.class, String.class, String.class, Integer.class});
 
         assertClientCannotChooseRoute(PreferenceSubmitRequest.class);

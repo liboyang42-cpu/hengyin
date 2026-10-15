@@ -1,0 +1,592 @@
+{
+  "version": "2026-10-15-codex-cloud-v3-unified-prompts",
+  "repository": "liboyang42-cpu/hengyin",
+  "plan_branch": "codex/mini-bugs-backend-cloud-plan-20261015",
+  "integration_branch": "codex/mini-bug-arch-integration-20261015",
+  "source_master_sha": "8b7eb814e3db00aa2543fee489fad44f9aa7aec3",
+  "existing_integration_sha": "0b301c9b8d1853a86ed689c701eaad40cb3b70d7",
+  "scope": {
+    "Codex": [
+      "现有bug复核和最小修复",
+      "共用后端兼容架构",
+      "相关测试与集成证据"
+    ],
+    "Claude": [
+      "所有UI设计与布局",
+      "新功能及其专属后端实现",
+      "消费Codex稳定合同"
+    ],
+    "excluded": [
+      "本任务包的原生iOS代码/测试/发布（独立agent另管）",
+      "Flutter代码/测试/发布",
+      "会费/群聊/群投票的小程序恢复",
+      "新依赖、Boot3升级、大范围架构重写",
+      "本批新增数据库迁移及任何生产变更"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "C00",
+      "title": "核公共基线并审查已有PR",
+      "priority": "P0",
+      "stage": 0,
+      "effort_person_days": [
+        2,
+        3
+      ],
+      "depends_on": [],
+      "opt_refs": [
+        "OPT-001",
+        "OPT-002",
+        "OPT-003",
+        "OPT-071"
+      ],
+      "owned_files": [],
+      "existing_test_files": [],
+      "steps": [
+        "读取本目录全部文件与根/小程序AGENTS；复核master、PR11父链及PR12–15的SHA/状态/CI，不能以本机未提交内容或旧文档行号为基线",
+        "在公共历史上创建codex/mini-bug-arch-integration-20261015候选分支，保留本任务文档；评审并按父链组合必要提交，不能直接把PR11或任一子PR当master已包含",
+        "先复核PR12的GPS/显式点赞方向/徽章查询范围及PR13音频/退避，已成立修复复用；PR14/15只做既有变更的兼容集成及限制登记，不继续新功能开发",
+        "冻结候选SHA与现有API/DTO/状态/请求身份合同，列文件所有权；把每条历史线索标记复现/已修/误报/裁决不做/待证据，不直接照509个旧编号编码",
+        "核Cloud到专用VPS的实际可用路径、测试版本/库和必要身份；只把凭据放环境安全配置。没有路径时继续源码与GitHub托管CI，VPS/真机验收保持待验证",
+        "读取IOS_HANDOFF.md，在BACKEND_CHANGES.md登记共享合同基线与独立iOS影响；不改iOS源码",
+        "按COORDINATION.md先核三方CY-HANDOFF记录，发布实际候选与OWNERSHIP分配；规划预留不当实际已领，未冻结签名不让调用方猜协议"
+      ],
+      "acceptance": [
+        "已有修复未重复实现，PR12/13成对验证；清楚记录PR14退款授权跳过、官方路线只读、认领材料待确认及动作清单失败项",
+        "所有worker使用同一公共候选SHA；必要父提交来源清楚，无私有历史或本机WIP混入",
+        "为每个worker记录独占文件与测试，已验证/作者声称/未跑分开，公共候选的合同与所需测试能力有清单"
+      ],
+      "claude_boundary": "不会费/群聊/群投票，不启动原四任务；UI/new-feature增量仍归Claude。",
+      "hold_if": "父PR含无法审查的变更则该依赖保持待处理；无网络不做假的合并/CI成功。",
+      "state": "基线与三方公共PR已核，控制账已发布；Claude/iOS接收回执待交"
+    },
+    {
+      "id": "B01",
+      "title": "小程序已有交互与账号作用域bug",
+      "priority": "P0",
+      "stage": 1,
+      "effort_person_days": [
+        2,
+        4
+      ],
+      "depends_on": [
+        "C00"
+      ],
+      "opt_refs": [
+        "OPT-042",
+        "OPT-053",
+        "OPT-070"
+      ],
+      "owned_files": [
+        "chengyinhub-xcx/utils/subscribe.js",
+        "chengyinhub-xcx/pages/mylike/mylike.js",
+        "chengyinhub-xcx/pages/play/index.js",
+        "chengyinhub-xcx/subpackageMember/components/cy/scene-member-order-detail/index.js",
+        "chengyinhub-xcx/subpackageMember/components/cy/scene-member-order-history/index.js",
+        "chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js"
+      ],
+      "existing_test_files": [
+        "chengyinhub-xcx/tests/unit/mylike-refresh-state.test.js",
+        "chengyinhub-xcx/tests/unit/mylike-unlike-inflight-lock-contract.test.js"
+      ],
+      "steps": [
+        "先核PR13已处理音频/常亮/退避，PR14已处理返回/预览/兜底，不能复制第二份工具；P1-048迟到回调和P1-069游标保护已存在，只回归不重做",
+        "补PR14跳过的退款点击授权：逐个核三个真实cancel-refund入口，在用户点击链请求refund/refundRejected；空模板保持真实未配置状态",
+        "复核mylike按下标删行和请求晚到场景，以稳定对象ID/现有在途锁更新当前列表，避免刷新/排序后误删",
+        "复现后修游玩切账号或退出时旧请求/本地状态串用；来源归因其他工具文件如不在本单所有权，先向C00申领，不广扫式清空storage"
+      ],
+      "acceptance": [
+        "授权发生在用户手势且最多真实模板列表，拒绝授权不撤销已经成立退款申请，不承诺订阅送达",
+        "刷新/排序/重复取消和晚响应不改变另一条记录；账号A的游玩或请求结果不会落入B",
+        "原有音频/后台/定位/返回合同无回退；新增回归测试真实调用处理器，静态字符串断言不能单独关闭行为bug"
+      ],
+      "claude_boundary": "只改既有JS行为与必要测试；新提示、布局、页面、WXML/WXSS由Claude。pages/play交叉变更需C00串行整合。",
+      "hold_if": "",
+      "state": "源码与相关Node回归通过，候选CI及设备待验"
+    },
+    {
+      "id": "B02",
+      "title": "作者保存重开与发布的数据保真bug",
+      "priority": "P0",
+      "stage": 1,
+      "effort_person_days": [
+        3,
+        5
+      ],
+      "depends_on": [
+        "C00"
+      ],
+      "opt_refs": [
+        "OPT-030"
+      ],
+      "owned_files": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/TopicCreateDTO.java"
+      ],
+      "existing_test_files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiTopicSaveDraftContractTest.java"
+      ],
+      "steps": [
+        "先核PR12对ApiTopicController点赞的修复已在候选，保留同文件其他行为；枚举现有create/save/edit/publish真实DTO与Mapper调用",
+        "用已有保存→读回→重开→修改→发布链复现章节/节点ID、顺序、绑定、规则与revision丢失，修确认有效的数据映射/持久化缺口",
+        "固定同一草稿/主题身份，丢响应先读已存事实；保留旧字段和已发布内容，不造新的草稿体系",
+        "若需要新增Mapper/服务修改，由C00先登记独占范围再编辑；公开分支不存在的本地server-draft实现不能作为已交付依赖"
+      ],
+      "acceptance": [
+        "两次编辑/重排后独立读回语义相同，旧作品不被默认值重置；丢响应不重复造主题/章节",
+        "后端编译及针对真实控制器/持久化路径的回归结果明确，前台合同交Claude对接"
+      ],
+      "claude_boundary": "作者页面、保存反馈、状态键UI与预演交Claude；Codex只修后端既有行为，不新增产品规则。",
+      "hold_if": "新增字段/DDL或变更发布政策先出具体方案，不能以新表补洞。",
+      "state": "配置保真已修，Java回归交候选CI；首次create丢响应限制保留"
+    },
+    {
+      "id": "B03",
+      "title": "现有积分券库存与商家账务正确性",
+      "priority": "P0",
+      "stage": 1,
+      "effort_person_days": [
+        4,
+        7
+      ],
+      "depends_on": [
+        "C00"
+      ],
+      "opt_refs": [
+        "OPT-010",
+        "OPT-011",
+        "OPT-013",
+        "OPT-014"
+      ],
+      "owned_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PointsAwardServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantPayableServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantClawbackServiceImpl.java",
+        "chengyinhub-system/src/main/resources/mapper/business/UmsMemberPointsDetailMapper.xml",
+        "chengyinhub-system/src/main/resources/mapper/business/PmsSkuMapper.xml"
+      ],
+      "existing_test_files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantPayableServiceTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantClawbackServiceTest.java"
+      ],
+      "steps": [
+        "沿小程序当前真实报名/核销/积分/券链核调用方、事务和数据库约束，先验证非空eventId三元唯一与现有并发保护，不把先查后写或缺requestId自动判重复入账",
+        "核NULL事件、同用户并发限领、不同业务同时扣同账户、库存与退款追加冲正，先写能复现的并发/事务用例，再做最小修复",
+        "核核销撤销/退款/倒扣对现有商家应付和查询的影响，以账本事实独立对账，历史迁移注释不当当前数据",
+        "cart只在当前小程序真实调用或共享依赖证实相关时纳入；其已有锁/删除CAS保留，丢响应恢复先复用既有订单查询"
+      ],
+      "acceptance": [
+        "相关并发条件下资产/库存/应付守恒，有独立读回，不靠返回200/同进程内存断言",
+        "旧订单快照、当前积分政策和资金主体不变；支付失败/结果未知与通知失败严格区分"
+      ],
+      "claude_boundary": "积分明细/资金中心UI、新领券/储值/提现或支付产品交Claude另行范围；本单不新增业务。",
+      "hold_if": "政策单位未定则先证据/方案；需要新唯一索引/DDL或改变鉴权/RBAC另行确认，不改历史迁移。",
+      "state": "积分锁读与应付CAS已修，真库独立读回待验"
+    },
+    {
+      "id": "B04",
+      "title": "已有系列排期时刻与候补保护bug",
+      "priority": "P1",
+      "stage": 1,
+      "effort_person_days": [
+        2,
+        4
+      ],
+      "depends_on": [
+        "C00"
+      ],
+      "opt_refs": [
+        "OPT-051"
+      ],
+      "owned_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventScheduleMaterializer.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java"
+      ],
+      "existing_test_files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubEventScheduleMaterializerTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiClubEventOpsControllerTest.java"
+      ],
+      "steps": [
+        "读取现有时刻/时区/物化规则，复现保存重开被09:00覆盖、候补遗漏或editable与服务端保护不一致",
+        "只修已有数据保留/状态校验，创建与修改/删除都按同一真实报名和候补事实判断",
+        "核重复生成与并发修改的已有CAS或防重，保留原时区和系列原时刻，不新增排期策略"
+      ],
+      "acceptance": [
+        "非09:00场次保存重开/生成保持时刻，跨日期边界按已有时区合同",
+        "有正式报名或候补的场次均按既有规则受保护，重复调用不重复物化"
+      ],
+      "claude_boundary": "官方草稿/邀请转交/暂停恢复等新入口及排期UI归Claude；本单仅既有bug。",
+      "hold_if": "",
+      "state": "时刻读回与既有JS消费、候补保护已修，Java/设备待验"
+    },
+    {
+      "id": "B05",
+      "title": "已有内容隐私与引用撤回bug",
+      "priority": "P0",
+      "stage": 1,
+      "effort_person_days": [
+        3,
+        5
+      ],
+      "depends_on": [
+        "C00"
+      ],
+      "opt_refs": [
+        "OPT-020"
+      ],
+      "owned_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CommunityPostLifecyclePolicy.java",
+        "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml"
+      ],
+      "existing_test_files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostLifecyclePolicyTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostServiceImplTest.java"
+      ],
+      "steps": [
+        "核当前实际内容链正文/媒体/评论/引用访问，复现删除关联将COMMUNITY变PUBLIC、旧引用快照持续授权等历史线索",
+        "按既有隐私政策恢复应有检查，退群、撤回、原帖变更后的读面/旧链接和缓存一并验证",
+        "不启用另一内容栈、不扩大授权；若修复必需改变RBAC/授权模型，先提交失败用例与最小方案，等待该变更明确批准"
+      ],
+      "acceptance": [
+        "两身份访问原帖与引用、撤回后的相同旧链接结果符合原政策，私密内容不因解绑变公开",
+        "已有公开内容与合法引用仍可用，权限改变没有通过把未知值降级为允许来完成"
+      ],
+      "claude_boundary": "举报/申诉新页面、媒体审核工作台、新内容链切换均归Claude；本单只恢复现有政策。",
+      "hold_if": "AGENTS规定的鉴权/RBAC逻辑改变必须另批；可先完成取证、回归和方案，不擅自落授权变更。",
+      "state": "最小读取修复已获用户批准并应用，候选CI/读回待验"
+    },
+    {
+      "id": "A01",
+      "title": "会话命令回执与结果未知恢复底层",
+      "priority": "P1",
+      "stage": 2,
+      "effort_person_days": [
+        5,
+        8
+      ],
+      "depends_on": [
+        "B01",
+        "B02",
+        "B03",
+        "B04",
+        "B05"
+      ],
+      "opt_refs": [
+        "OPT-040",
+        "OPT-070",
+        "OPT-072"
+      ],
+      "owned_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+        "chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml"
+      ],
+      "existing_test_files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImplTest.java"
+      ],
+      "steps": [
+        "沿已有session/state/query/requestId/CAS与回执链列出成功、明确失败、结果未知、冲突的合同，复用当前存储而非另造一层",
+        "稳定保留原请求身份与指纹；同requestId异命令仍冲突、同命令重放可定位原结果；不在唯一键加action放宽保护",
+        "跨设备恢复先读服务端会话及开始时快照；媒体待上传与有效完成分开，缺必需证据不能发奖",
+        "仅补必要原因码、版本和脱敏trace关联，客户端消费规范交Claude；没有业务需要不引入事件总线/新VM/状态中心"
+      ],
+      "acceptance": [
+        "丢响应重进/重复命令/异命令/过期epoch/晚到响应/第二设备都能按原身份读回事实",
+        "不会另建并行会话真源；现有状态、积分/道具只发生一次有效变更，日志不含坐标原文/聊天/凭据"
+      ],
+      "claude_boundary": "待核对/恢复/人工协助等新UI交Claude；已有必要JS bug修复由B01所有者整合，A01不写页面文件。",
+      "hold_if": "如必须新增持久化字段/索引，先提交合同与兼容方案；本批不执行DDL。",
+      "state": "结局正文新局快照与既有请求合同已交，候选CI/读回待验"
+    },
+    {
+      "id": "A02",
+      "title": "AI网关失败输入审核与用量一致底层",
+      "priority": "P0→P1",
+      "stage": "1修已确认AI bug→2整理用量底层",
+      "effort_person_days": [
+        5,
+        8
+      ],
+      "depends_on": [
+        "C00"
+      ],
+      "opt_refs": [
+        "OPT-080",
+        "OPT-081",
+        "OPT-072"
+      ],
+      "owned_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiSceneRouter.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java"
+      ],
+      "existing_test_files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiSceneRouterContractTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImplTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryServiceTest.java"
+      ],
+      "steps": [
+        "核两个provider选择分支，当前场景缺配置均明确不可用，生产链不能以mock返回成功；测试替身只在测试域",
+        "核组装后的完整输入与审核实际输入边界，禁止只审前2000字符却把后缀送模型；超限按已有能力分段审核或明确拒绝",
+        "沿现有trace/request身份区分provider真实usage与估算，核失败归还、结果未知对账和文本/语音额度分池；不新定价格与留存政策",
+        "PR15的NPC删除入口复用，确认晚到请求与本人全NPC删除语义；必要删除服务文件改动先申领，不能与Claude重复改UI"
+      ],
+      "acceptance": [
+        "缺配置/审核失败/超时不造假成功；未审核后缀不能进入模型请求",
+        "失败额度只归还一次，未知结果不盲退款重发；未知usage不显示成0真实成本",
+        "不发生真实付费provider调用来证明单测，不擅自开启新场景/长期记忆"
+      ],
+      "claude_boundary": "AI创作入口、新对话UI、模型新场景和新功能后端交Claude；共用网关合同由本单维护。",
+      "hold_if": "价格/留存/付费行为与新依赖须明确决策；无真实usage字段能力就标估算，不伪造。",
+      "state": "配置/审核/未知额度修复已交；删除屏障、语音池政策与后台未知展示未闭合",
+      "phase_split": {
+        "bugfix": "C00后即复核/修缺配置mock成功和完整输入审核缺口，不等其他架构",
+        "architecture": "B01–B05有修复或明确证据处置后，再整理用量/额度/留存合同；同一A02所有者串行继续"
+      }
+    },
+    {
+      "id": "A03",
+      "title": "剧情校验结局与内容版本兼容底层",
+      "priority": "P1",
+      "stage": 2,
+      "effort_person_days": [
+        5,
+        8
+      ],
+      "depends_on": [
+        "B01",
+        "B02",
+        "B03",
+        "B04",
+        "B05"
+      ],
+      "opt_refs": [
+        "OPT-031",
+        "OPT-032"
+      ],
+      "owned_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ChapterFlowCompiler.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/JourneyStoryValidator.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeRuntimeConfig.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeRuntimeEngine.java"
+      ],
+      "existing_test_files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/JourneyStoryValidatorTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/ThemeRuntimeEngineTest.java"
+      ],
+      "steps": [
+        "固化每个现有运行时的首命中/显式优先级、平局、fallback和旧内容样本，先确认已实现行为",
+        "修确认有效的校验/兼容缺口；读未知类型可受控降级，未知写入/授权值必须拒绝，不造新DSL",
+        "区分协议schema版本、内容版本与会话开始快照；旧会话继续可读，新内容只影响新开局或显式更新草稿",
+        "不得把数组下标回填成降序优先级而反转旧结局；不强行合并各运行时，新选择策略只出方案"
+      ],
+      "acceptance": [
+        "相同旧样本得到原结局，旧局在内容更新后仍用开始时快照",
+        "无效新写入被拒绝且有可观察原因；协议/内容版本混用不会使全部旧局被拒",
+        "API/数据合同有最小兼容fixture供Claude消费，没有复制出第二套状态键或运行时"
+      ],
+      "claude_boundary": "状态键面板、条件编辑器、结果卡、预演和新玩法归Claude；本单仅后端兼容底层。",
+      "hold_if": "新结局选择语义、旧内容迁移或新表字段须先确认；不自动采用新策略。",
+      "state": "结局写校验与快照读侧已交，历史缺键兼容限制保留"
+    },
+    {
+      "id": "C99",
+      "title": "集中集成验证与Claude接口交接",
+      "priority": "P0",
+      "stage": 3,
+      "effort_person_days": [
+        3,
+        5
+      ],
+      "depends_on": [
+        "A01",
+        "A02",
+        "A03"
+      ],
+      "opt_refs": [
+        "OPT-090",
+        "OPT-091",
+        "OPT-092"
+      ],
+      "owned_files": [],
+      "existing_test_files": [],
+      "steps": [
+        "按文件归属评审各lane结果，在单一候选整合；只由集成人处理公共DTO/迁移目录/请求封装/动作和路由清单/基线",
+        "先跑相关测试，再在候选上集中跑必要门禁和GitHub托管CI；VPS测试串行、隔离资源和限制内存，完整前端套件不由各worker重复跑",
+        "给Claude和独立iOS agent交接口/方法/DTO/错误/版本/权限/幂等/状态与fixture，协调者集中更新BACKEND_CHANGES.md；有新UI或新功能的需求保留Claude责任",
+        "独立VPS业务读回可自动化部分尽量完成；微信真机、设备权限、现场核销、上传和生产发布明确单列待验收，不伪称Cloud已完成"
+      ],
+      "acceptance": [
+        "每项有改动或无需改动的证据，候选SHA/测试输出/PR/CI与环境目标可对应",
+        "至少覆盖实际启用的保存发布、GPS/扫码、退出恢复、积分资产、隐私隔离及AI失败边界；未触达层级标未验证",
+        "每个修复小PR或有清晰提交边界的候选草稿PR，发布/合并生产保持待批准；文档只有阶段性完成不得标业务READY",
+        "所有共享后端变化有iOS影响、兼容/fixture及合并/部署状态，未验证层不能写通过",
+        "共享后端变化按协议分层，明确两端适配/合并/部署；文件无双写且转交有原所有者停止和基线证据"
+      ],
+      "claude_boundary": "输出Claude可读的稳定后端合同，不接手其UI/新功能，不做iOS/Flutter。",
+      "hold_if": "",
+      "state": "PR18；c24202f6补偿用例已修待CI；三方文件/合同已发布，VPS与两端设备未验证"
+    }
+  ],
+  "parallel_policy": {
+    "default_worker_limit": 4,
+    "stage_barrier": "已确认bug优先，包括A02前半段；B01–B05及A02已确认bug有修复或明确证据处置后再做架构后半段；需批准项保持阻塞，不冒充完成",
+    "integration_owner": "C00/C99同一协调者",
+    "ci_matrix_max_parallel": 20,
+    "vps_java_tests": "serial task-owned resources only",
+    "backend_change_log_owner": "C00/C99协调者独占，各worker提交变化片段",
+    "ownership_registry_owner": "C00/C99",
+    "max_workers_is_capacity_bound": true,
+    "worker_model": "gpt-6.1-sol"
+  },
+  "estimate": {
+    "base_person_days": [
+      34,
+      57
+    ],
+    "reserve_fraction": 0.25,
+    "assumption": "3开发+1测试、每周15有效人日；Cloud不承诺固定加速倍数；Claude工作量、外部审批/模板/真机等待另计"
+  },
+  "public_pr_snapshot": [
+    {
+      "baseRefName": "codex/mini-foundation-cloud-handoff-20261013",
+      "headRefName": "claude/mini-foundation-abc-integration-squash-20261014",
+      "headRefOid": "0b301c9b8d1853a86ed689c701eaad40cb3b70d7",
+      "isDraft": true,
+      "mergeCommit": null,
+      "mergedAt": null,
+      "number": 11,
+      "state": "OPEN",
+      "title": "feat: 小程序底层A/B/C集成（CI全绿候选，draft）",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/11",
+      "checks_returned": 0
+    },
+    {
+      "baseRefName": "claude/mini-foundation-abc-integration-squash-20261014",
+      "headRefName": "claude/backend-play-like-badge-20261014",
+      "headRefOid": "a5af41f57fa3771a151f8f662241e432b9233944",
+      "isDraft": true,
+      "mergeCommit": null,
+      "mergedAt": null,
+      "number": 12,
+      "state": "OPEN",
+      "title": "fix: 后端缺陷 B1 定位精度闸 / B4 主题点赞方向 / B5 俱乐部徽章泄漏",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/12",
+      "checks_returned": 0
+    },
+    {
+      "baseRefName": "claude/mini-foundation-abc-integration-squash-20261014",
+      "headRefName": "claude/xcx-play-mechanisms-20261014",
+      "headRefOid": "d6cd231e9354ae6d95aee82d7a262df771a999fa",
+      "isDraft": true,
+      "mergeCommit": null,
+      "mergedAt": null,
+      "number": 13,
+      "state": "OPEN",
+      "title": "fix(xcx): 游玩页底层机制(音频会话/退避轮询/定位精度/长按提示)",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/13",
+      "checks_returned": 0
+    },
+    {
+      "baseRefName": "claude/mini-foundation-abc-integration-squash-20261014",
+      "headRefName": "claude/xcx-shell-merchant-20261014",
+      "headRefOid": "6a96477142867e20bc6f9f87c7813182ba8a1d0f",
+      "isDraft": true,
+      "mergeCommit": null,
+      "mergedAt": null,
+      "number": 14,
+      "state": "OPEN",
+      "title": "fix: 任务2 外壳/商家/俱乐部修复（返回守卫、图片预览、定位兜底、打卡码文本、公告、门店认领）",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/14",
+      "checks_returned": 0
+    },
+    {
+      "baseRefName": "claude/mini-foundation-abc-integration-squash-20261014",
+      "headRefName": "claude/xcx-roam-features-20261014",
+      "headRefOid": "8884a678ea30f21205d9dedda0cf5bc685a0f019",
+      "isDraft": true,
+      "mergeCommit": null,
+      "mergedAt": null,
+      "number": 15,
+      "state": "OPEN",
+      "title": "feat: 任务3 漫游与功能入口（继续漫游/官方路线/收到的邮票/清除对话/举报队伍/积分明细/状态键）",
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/15",
+      "checks_returned": 0
+    }
+  ],
+  "as_of": "2026-10-15 America/Los_Angeles",
+  "independent_ios_handoff": {
+    "repository": "liboyang42-cpu/chengyin-ios",
+    "source_main_sha": "a8d387e206ed3994b6d265b3618db0c293f6ec15",
+    "source_migration_sha": "f0df08598adbd73cdd85089ce4d1e0965e0e070c",
+    "entry": "IOS_HANDOFF.md",
+    "start_prompt": "IOS_START_PROMPT.md",
+    "backend_change_log": "BACKEND_CHANGES.md",
+    "rule": "Codex/小程序Claude不改iOS；共用后端需兼容并向独立iOS agent交付变化与部署证据",
+    "task_count": 12,
+    "watch_items": [
+      "BK-GPS",
+      "BK-LIKE",
+      "BK-BADGE",
+      "BK-AUTHOR",
+      "BK-ASSET",
+      "BK-SCHEDULE",
+      "BK-PRIVACY",
+      "BK-SESSION",
+      "BK-AI",
+      "BK-NARRATIVE",
+      "BK-EXISTING"
+    ]
+  },
+  "coordination": {
+    "protocol": "CY-COORD-20261015-v1",
+    "protocol_file": "COORDINATION.md",
+    "ownership_registry": "OWNERSHIP.md",
+    "control_branch": "codex/mini-bugs-backend-cloud-plan-20261015",
+    "control_repo": "liboyang42-cpu/hengyin",
+    "registry_owner": "Codex C00/C99唯一协调者",
+    "initial_execution_state": "RULES_ONLY_PENDING_C00",
+    "prompts": {
+      "CODEX": "START_PROMPT.md",
+      "CLAUDE": "CLAUDE_START_PROMPT.md",
+      "IOS": "IOS_START_PROMPT.md"
+    },
+    "handoff_markers": {
+      "CODEX": "CY-HANDOFF: CODEX",
+      "CLAUDE": "CY-HANDOFF: CLAUDE",
+      "IOS": "CY-HANDOFF: IOS"
+    },
+    "backend_states": [
+      "DRAFT",
+      "CONTRACT_FROZEN",
+      "SOURCE_READY",
+      "TEST_DEPLOYED"
+    ],
+    "merge_status_separate": true,
+    "automatic_notifications": false,
+    "one_writer_per_repo_path": true,
+    "feature_backend_owner": "Claude仅在C00明确分配文件/合同后实现",
+    "shared_workspace_commits": "workers不暂存/切分支/提交；协调者串行收口"
+  },
+  "execution": {
+    "candidate_branch": "codex/mini-bug-arch-integration-20261015",
+    "frozen_worker_baseline": "d551c6babd018d41aec90dad2c0acaf1c534644d",
+    "source_candidate_sha": "c24202f659e8709a00b513b8e456d101a6b99daf",
+    "draft_pr": "https://github.com/liboyang42-cpu/hengyin/pull/18",
+    "evidence_directory": "docs/verification/mini-bug-arch-20261015",
+    "worker_limit": 4,
+    "worker_model_after_user_selection": "gpt-6.1-sol",
+    "readiness": "SOURCE_CANDIDATE_NOT_BUSINESS_READY",
+    "backend_status": "CONTRACT_FROZEN",
+    "test_deployed": false,
+    "merge_status": "UNMERGED",
+    "coordination_protocol": "CY-COORD-20261015-v1",
+    "control_writer": "C00/C99",
+    "claude_handoff_pr": 21,
+    "claude_ack": "PENDING",
+    "ios_handoff": "NO_OPEN_PR_OBSERVED_NOT_UNASSIGNED"
+  }
+}

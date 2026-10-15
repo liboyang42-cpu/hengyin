@@ -1,0 +1,7 @@
+PASS: unknown route cannot fall back to mock
+PASS: neither provider resolver falls back to mock
+PASS: full assembled input enters review
+PASS: output is reviewed using same complete review helper
+PASS: output review outage classified as unavailable
+PASS: empty provider output cannot succeed
+SOURCE GUARD ONLY: 6/6 passed; Java runtime remains unverified

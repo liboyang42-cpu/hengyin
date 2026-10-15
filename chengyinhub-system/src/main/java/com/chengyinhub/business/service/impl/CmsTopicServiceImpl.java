@@ -4314,6 +4314,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     private void rebuildTopicContent(CmsTopic exist, com.chengyinhub.business.domain.dto.TopicUpdateDTO dto,
                                      Long memberId, String username, boolean chapterFlowV2, boolean draft) {
         Long topicId = exist.getId();
+        preserveOmittedAuthorConfig(exist, dto);
         // 9-15 拍板:写前记下「已发布免费主题」,整包重建后复核;变商业即抛出,整个事务回滚。
         boolean conversionProtected = commercialTopicPolicy.isConversionProtected(exist);
         // 招募截止会把主题送进 RECRUITING(商业轨道),之后不再受保护 ⇒ 同样算转商业。
@@ -4512,6 +4513,32 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // 第一次保存草稿就建等于草稿立即可售。发布时由 publishDraft 补建。
         if (!draft) {
             refreshSelfHostActivity(topicId, memberId, username);
+        }
+    }
+
+    /** 更新沿用已有作者配置；创建时的默认值不能把旧编辑端未认识的字段重置。 */
+    private void preserveOmittedAuthorConfig(CmsTopic exist, TopicCreateDTO dto) {
+        if (dto.getPublishMode() == null) dto.setPublishMode(exist.getPublishMode());
+        if (dto.getTeamMode() == null) dto.setTeamMode(exist.getTeamMode());
+        if (dto.getTeamMaxMembers() == null) dto.setTeamMaxMembers(exist.getTeamMaxMembers());
+        if (dto.getXpBudget() == null) dto.setXpBudget(exist.getXpBudget());
+        if (dto.getSelfPlay() == null) {
+            dto.setSelfPlay(exist.getSelfPlay());
+            if (dto.getSelfPlayPrice() == null) dto.setSelfPlayPrice(exist.getSelfPlayPrice());
+            if (dto.getSelfPlayQuota() == null) dto.setSelfPlayQuota(exist.getSelfPlayQuota());
+        }
+        // 旧客户端仍可用票的 mode 选产品类型；只有请求完全没有模式时才沿用存量真源。
+        boolean hasTicketMode = false;
+        if (dto.getTickets() != null) {
+            for (ActivityTicketRequest ticket : dto.getTickets()) {
+                if (ticket != null && ticket.getMode() != null) {
+                    hasTicketMode = true;
+                    break;
+                }
+            }
+        }
+        if (dto.getProductType() == null && !hasTicketMode && ProductType.isValid(exist.getProductType())) {
+            dto.setProductType(exist.getProductType());
         }
     }
 
@@ -4910,6 +4937,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             return routeNodeMaps;
         }
 
+        long chapterSortId = 0L;
         for (ChapterDTO chapterDTO : chapters) {
             CmsTopicChapter chapter = new CmsTopicChapter();
 
@@ -4922,6 +4950,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             chapter.setId(null);
             // 配色不靠 copyProperties 隐式透传:枚举必须当场收敛(存量别名也在这里被写成新档)
             chapter.setAtmospherePreset(ChapterAtmospherePreset.requireValid(chapterDTO.getAtmospherePreset()));
+            chapter.setSortId(++chapterSortId);
             chapter.setTopicId(topicId);
             chapter.setCreateBy(username);
             chapter.setCreateTime(new Date());
@@ -5134,6 +5163,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             return;
         }
 
+        long nodeSortId = 0L;
         for (NodeDTO nodeDTO : nodes) {
             CmsTopicNode node = new CmsTopicNode();
             BeanUtils.copyProperties(nodeDTO, node);
@@ -5144,6 +5174,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
             node.setTopicId(topicId);
             node.setChapterId(chapterId);
+            node.setSortId(++nodeSortId);
             node.setStatus(1L); // 默认显示
             node.setCheckinCode(java.util.UUID.randomUUID().toString().replace("-", "")); // 节点打卡码
             node.setCreateBy(username);

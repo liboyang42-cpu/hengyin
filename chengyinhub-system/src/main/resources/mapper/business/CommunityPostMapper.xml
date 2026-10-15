@@ -80,7 +80,7 @@
     </sql>
     <sql id="visibilityPolicy">
         AND (
-          p.author_id = #{viewerId}
+          (p.author_id = #{viewerId} AND p.lifecycle&lt;&gt;'DELETED')
           OR (p.lifecycle='PUBLISHED' AND (
             p.audience='PUBLIC'
             OR (p.audience='FOLLOWERS' AND EXISTS(

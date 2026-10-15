@@ -48,24 +48,17 @@ public class AiSceneRouter
         ROUTES = Collections.unmodifiableMap(m);
     }
 
-    /** 兜底 provider */
-    private static final String FALLBACK = "mock";
-
     /**
      * 根据 bizType 解析 provider 名称。
      */
     public String resolve(String bizType)
     {
-        if (bizType == null) return FALLBACK;
         String provider = ROUTES.get(bizType);
         if (provider == null)
         {
-            // ★ 兜底成 mock = 生产静默返回假文案(HTTP 200 + 像模像样的中文 + 真 traceId),
-            // 且因为 mockLlmClient 这个 bean 名真实存在,AiGatewayService 的 bean 名查找会直接命中并返回,
-            // 连它自己那句 log.warn("unknown provider") 都够不着 —— 全链零信号。
-            // chapter_overview 就这样在生产发了三周假 AI 没人发现。漏注册必须留下痕迹。
-            log.warn("[AiSceneRouter] bizType={} 未注册路由,兜底成 {} —— 该场景将返回假数据,请补 ROUTES", bizType, FALLBACK);
-            return FALLBACK;
+            log.warn("[AiSceneRouter] unregistered bizType={}", bizType);
+            throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
+                    "AI 场景未配置，请联系管理员");
         }
         return provider;
     }

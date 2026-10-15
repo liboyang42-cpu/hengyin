@@ -113,6 +113,7 @@ class RewardDropServiceTest {
         RewardDropServiceImpl s = new RewardDropServiceImpl();
         ReflectionTestUtils.setField(s, "ruleMapper", rm);
         ReflectionTestUtils.setField(s, "logMapper", lm);
+        ReflectionTestUtils.setField(s, "couponSourceGrantMapper", mock(com.chengyinhub.business.mapper.CouponSourceGrantMapper.class));
         ReflectionTestUtils.setField(s, "configService", cs);
         return s;
     }
@@ -138,7 +139,7 @@ class RewardDropServiceTest {
         RewardDropLogMapper lm = mock(RewardDropLogMapper.class);
         when(lm.countByUk(anyLong(), anyLong(), anyLong(), anyLong(), any())).thenReturn(0);
         when(rm.selectApplicableRules(anyLong(), any())).thenReturn(Arrays.asList(rule(1, 100, "{\"mult\":2}")));
-        when(lm.insertRewardDropLog(any())).thenReturn(1);
+        when(lm.insertRewardDropLog(any())).thenAnswer(invocation -> { ((RewardDropLog) invocation.getArgument(0)).setId(44L); return 1; });
         RewardDropServiceImpl s = serviceWith(rm, lm, configEnabledAlwaysHit());
 
         Map<String, Object> d = s.rollDrop(1L, 2L, 3L, 0L, 10L);
@@ -155,7 +156,7 @@ class RewardDropServiceTest {
                 eq(IRewardDropService.SCENE_ROAM_MERCHANT_POI))).thenReturn(0);
         when(rm.selectApplicableRules(eq(0L), eq(IRewardDropService.SCENE_ROAM_MERCHANT_POI)))
                 .thenReturn(Arrays.asList(rule(2, 100, "{\"badgeCode\":\"ROAM\"}")));
-        when(lm.insertRewardDropLog(any())).thenReturn(1);
+        when(lm.insertRewardDropLog(any())).thenAnswer(invocation -> { ((RewardDropLog) invocation.getArgument(0)).setId(44L); return 1; });
         RewardDropServiceImpl s = serviceWith(rm, lm, configEnabledAlwaysHit());
 
         Map<String, Object> d = s.rollDrop(1L, 0L, 3L, 9L,
@@ -176,7 +177,7 @@ class RewardDropServiceTest {
                 eq(IRewardDropService.SCENE_TOPIC_NODE))).thenReturn(0);
         when(rm.selectApplicableRules(eq(2L), eq(IRewardDropService.SCENE_TOPIC_NODE)))
                 .thenReturn(Arrays.asList(rule(1, 100, "{\"mult\":2}")));
-        when(lm.insertRewardDropLog(any())).thenReturn(1);
+        when(lm.insertRewardDropLog(any())).thenAnswer(invocation -> { ((RewardDropLog) invocation.getArgument(0)).setId(44L); return 1; });
         RewardDropServiceImpl s = serviceWith(rm, lm, configEnabledAlwaysHit());
 
         Map<String, Object> d = s.rollDrop(1L, 2L, 3L, 0L, 10L);
@@ -201,5 +202,35 @@ class RewardDropServiceTest {
         when(lm.insertRewardDropLog(any())).thenThrow(new DuplicateKeyException("uk"));
         RewardDropServiceImpl s = serviceWith(rm, lm, configEnabledAlwaysHit());
         assertNull(s.rollDrop(1L, 2L, 3L, 0L, 10L)); // 并发抢占失败,不多掉
+    }
+    @Test
+    void recoveryUsesOnlyOriginalCouponPayloadAndLogId() {
+        RewardDropLogMapper logs = mock(RewardDropLogMapper.class);
+        RewardDropLog original = new RewardDropLog(); original.setId(44L); original.setMemberId(7L);
+        original.setDropType(3); original.setParamJson("{\"couponTemplateId\":88}"); original.setSceneKey("roam_merchant_poi");
+        when(logs.selectByUk(7L,0L,8L,9L,"roam_merchant_poi")).thenReturn(original);
+        RewardDropServiceImpl service = serviceWith(mock(RewardDropRuleMapper.class), logs, mock(ISysConfigService.class));
+        Map<String,Object> drop = service.findOriginalDrop(7L,0L,8L,9L,"roam_merchant_poi");
+        assertEquals(44L, drop.get("dropLogId"));
+        assertEquals(88, drop.get("couponTemplateId"));
+        org.mockito.Mockito.verify(logs, org.mockito.Mockito.never()).insertRewardDropLog(any());
+        original.setDropType(1);
+        assertNull(service.findOriginalDrop(7L,0L,8L,9L,"roam_merchant_poi"));
+    }
+    @Test
+    void newCouponDropMustPersistPendingIntentWithSameOriginalLogId() {
+        RewardDropRuleMapper rules = mock(RewardDropRuleMapper.class);
+        RewardDropLogMapper logs = mock(RewardDropLogMapper.class);
+        com.chengyinhub.business.mapper.CouponSourceGrantMapper receipts = mock(com.chengyinhub.business.mapper.CouponSourceGrantMapper.class);
+        when(rules.selectApplicableRules(anyLong(), any())).thenReturn(Arrays.asList(rule(3,100,"{\"couponTemplateId\":88}")));
+        when(logs.insertRewardDropLog(any())).thenAnswer(i -> { ((RewardDropLog)i.getArgument(0)).setId(44L); return 1; });
+        when(receipts.ensureIntent("reward_drop",44L,7L,88L)).thenReturn(1);
+        RewardDropServiceImpl service = serviceWith(rules,logs,configEnabledAlwaysHit());
+        ReflectionTestUtils.setField(service,"couponSourceGrantMapper",receipts);
+        assertEquals(44L,service.rollDrop(7L,0L,8L,9L,"roam_merchant_poi",20L).get("dropLogId"));
+        verify(receipts).ensureIntent("reward_drop",44L,7L,88L);
+        when(receipts.ensureIntent("reward_drop",44L,7L,88L)).thenReturn(0);
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
+                () -> service.rollDrop(7L,0L,8L,9L,"roam_merchant_poi",20L));
     }
 }

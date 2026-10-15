@@ -1,0 +1,6 @@
+No Java/DB/HTTP behavior tests run.
+git apply --check docs/verification/mini-bug-arch-20261015/B05/pending-authorization.patch => exit 0
+
+git diff --check -- chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostMapperMyBatisTest.java docs/verification/mini-bug-arch-20261015/B05 => exit 0
+
+XML parse => PASS (syntax only)

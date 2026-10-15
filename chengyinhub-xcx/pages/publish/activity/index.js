@@ -1,5 +1,6 @@
 const modal = require('../../../utils/modal.js');
 const cyToast = require('../../../utils/toast.js');
+const mediaPreview = require('../../../utils/media-preview.js');
 const { isAlbumTemplate, ALBUM_ONLY_IN_STORY } = require('../../../utils/album-template.js');
 const app = getApp()
 const publisherIdentity = require('../../../utils/publisher-identity.js')
@@ -240,7 +241,7 @@ Page({
     this.setData({ 'formData.imgUrl': '', coverUploading: false, coverErrorIndexes: [] }, () => this.refreshPrimaryActionState());
   },
   onCoverPreview: function () {
-    if (this.data.formData.imgUrl) wx.previewImage({ urls: [this.data.formData.imgUrl] });
+    if (this.data.formData.imgUrl) mediaPreview.open([this.data.formData.imgUrl], this.data.formData.imgUrl);
   },
 
   // 输入框变化处理

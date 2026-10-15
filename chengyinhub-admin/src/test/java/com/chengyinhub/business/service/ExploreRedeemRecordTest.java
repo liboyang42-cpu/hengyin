@@ -86,6 +86,8 @@ class ExploreRedeemRecordTest {
         activityMapper = mock(com.chengyinhub.business.mapper.CmsActivityMapper.class);
         com.chengyinhub.business.domain.CmsActivity activity = new com.chengyinhub.business.domain.CmsActivity();
         activity.setDelFlag(0);
+        activity.setTopicId(TOPIC);
+        activity.setEndDate(new java.util.Date(System.currentTimeMillis() + 86400000L));
         when(activityMapper.selectCmsActivityByIdForUpdate(800L)).thenReturn(activity);
         scanMapper = mock(CmsRegistrationScanMapper.class);
         perkSvc = mock(IPerkLedgerService.class);
@@ -131,6 +133,9 @@ class ExploreRedeemRecordTest {
         r.setOwnerType(2L);
         r.setOwnerId(800L);   // ③ 的 ownerId 是 activityId
         r.setPaymentStatus(2);
+        r.setRegistrationStatus(2);
+        r.setPurchaseKind(3);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(r);
         return r;
     }
 
@@ -143,7 +148,7 @@ class ExploreRedeemRecordTest {
         com.chengyinhub.business.domain.CmsActivity activity = new com.chengyinhub.business.domain.CmsActivity();
         activity.setCancelTime(new java.util.Date());
         when(activityMapper.selectCmsActivityByIdForUpdate(800L)).thenReturn(activity);
-        assertEquals("活动已取消，无法核销", assertThrows(IllegalStateException.class, this::redeem).getMessage());
+        assertEquals("活动已取消，无法使用", assertThrows(IllegalStateException.class, this::redeem).getMessage());
         verify(regMapper, never()).hasActiveManualRefundCaseForUpdate(anyLong());
         verify(perkSvc, never()).redeemChapter(anyLong(), anyLong(), anyLong(), anyLong());
         verify(scanMapper, never()).insertCmsRegistrationScan(any());
@@ -231,7 +236,8 @@ class ExploreRedeemRecordTest {
         redeem();
 
         verify(regMapper).verifyIfNotVerified(REG, MERCHANT);
-        verify(completionAwardService).grantOnce(reg().getMemberId(), TOPIC, reg().getOwnerId(), redemption.getCreateTime());
+        CmsRegistration expected = reg(); // reg() 内含锁读 stub，不能在 verify 参数里调用
+        verify(completionAwardService).grantOnce(expected.getMemberId(), TOPIC, expected.getOwnerId(), redemption.getCreateTime());
     }
 
     @Test

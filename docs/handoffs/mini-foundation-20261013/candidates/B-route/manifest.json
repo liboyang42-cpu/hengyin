@@ -1,0 +1,63 @@
+{
+  "provenance": "Regenerated from current public A-v2 source under approved contract. Lost original B-v2/C package bytes were NOT recovered; old hashes and old test results do not certify this candidate.",
+  "publicHeadAtFreeze": "0f0c32f1edc955f6117108daecbb492652212931",
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImRouteProjectionTest.java",
+      "greenSha256": "163f155f5c274cc9a6eb36a1261b1f4f12598b275e8501157752ad6f7b48b04a",
+      "baseSha256": null,
+      "currentPublicBaseMatches": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImServiceImplTest.java",
+      "greenSha256": "7218e29b2d0713230e764b287ef5fe53bc5807dfe17876b541dfd9357804b38d",
+      "baseSha256": "87269e2edf10de08b16cbfe86804be4edc27b1bcd5f9ca2a6e8cb86b4f8aa1cf",
+      "currentPublicBaseMatches": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ImMessageMapper.java",
+      "greenSha256": "a84986e8baa9f71bea8101d931aa80538e2801bde44e51c54dcfa1005033d152",
+      "baseSha256": "843601cbc290e33aeceb3b97b54211f7fd9f2dc4d8e156fa96be5ec026674232",
+      "currentPublicBaseMatches": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+      "greenSha256": "f555a413c08ddc3b5828de0a7f7c426c48d7bc86b3d621d470d4d707c0ae7912",
+      "baseSha256": "e730a926b3f793e8f7f7fc42a81bcb7213bdd464f477c3a51c3864b43635e758",
+      "currentPublicBaseMatches": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ImMessageMapper.xml",
+      "greenSha256": "f502ed8e574513ff1d26f632bb62cd56f5ba7873e0e7a2f4e633c9f8ba7f18eb",
+      "baseSha256": "0557ec2949b3de1e993705a7cbd8a0b4e24aeda3b88a7399c570a1ea3d48f4a9",
+      "currentPublicBaseMatches": true
+    }
+  ],
+  "unitSelector": "ImRouteProjectionTest,ImServiceImplTest,ImLegacyReadLockTest",
+  "validation": "Static source/patch/XML checks only. Java compile, unit tests and MySQL not run by this worker; root owns VPS.",
+  "redCompatibility": "B: added read-only mapper declaration/XML retained so new tests compile, original A production service unchanged. C: transactionManager injection field only added to unchanged expireDue baseline so identical tests reach original business behavior instead of failing fixture injection.",
+  "redFiles": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImRouteProjectionTest.java",
+      "sha256": "163f155f5c274cc9a6eb36a1261b1f4f12598b275e8501157752ad6f7b48b04a"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImServiceImplTest.java",
+      "sha256": "7218e29b2d0713230e764b287ef5fe53bc5807dfe17876b541dfd9357804b38d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ImMessageMapper.java",
+      "sha256": "a84986e8baa9f71bea8101d931aa80538e2801bde44e51c54dcfa1005033d152"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+      "sha256": "e730a926b3f793e8f7f7fc42a81bcb7213bdd464f477c3a51c3864b43635e758"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ImMessageMapper.xml",
+      "sha256": "f502ed8e574513ff1d26f632bb62cd56f5ba7873e0e7a2f4e633c9f8ba7f18eb"
+    }
+  ],
+  "publicHandoffNote": "Only candidate.patch is shipped as original bytes. Metadata and prose are sanitized public copies; original unshipped archive/script/contract hashes do not certify these rewritten files. Use checksums.json for shipped attachments.",
+  "patchSha256": "da2f0b23fa546fa4f4a06676c63c2c20913a811c4c81b38d825a7ee899a71104"
+}

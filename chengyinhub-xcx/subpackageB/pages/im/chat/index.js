@@ -1,3 +1,4 @@
+const sendRecovery = require('../../../../utils/im-send-recovery.js');
 const { toTimestamp, chinaDateKey, chinaParts } = require('../../../../utils/datetime');
 const { isRecordList, isBizOk } = require('../../../../utils/response-shape.js');
 const app = getApp();
@@ -151,15 +152,26 @@ Page({
     }).exec();
   },
 
+  _viewGuard() {
+    const owner = this.data.myId, conversation = this.data.conversationId;
+    const epoch = this._viewEpoch || 0;
+    const credential = app.globalData && app.globalData.authorization;
+    return () => !this._disposed && !this._deleted && epoch === (this._viewEpoch || 0)
+      && owner === this.data.myId && conversation === this.data.conversationId
+      && (!app.getUserID || app.getUserID() == owner)
+      && credential === (app.globalData && app.globalData.authorization);
+  },
+
   loadMessages(toBottom) {
     const that = this;
+    const current = this._viewGuard();
     const requestEpoch = (this._messageRequestEpoch || 0) + 1;
     this._messageRequestEpoch = requestEpoch;
     app.sendRequest({
       url: '/api/im/messages', method: 'POST', hideLoading: true, silentError: true,
       data: { conversation_id: this.data.conversationId, cursor_id: 0, size: 30 },
       success(res) {
-        if (requestEpoch !== that._messageRequestEpoch) return;
+        if (!current() || requestEpoch !== that._messageRequestEpoch) return;
         if (res && res.code == 200 && res.data && typeof res.data === 'object' && !Array.isArray(res.data)
             && (res.data.list == null || isRecordList(res.data.list))) {
           const list = that.decorate(Array.isArray(res.data.list) ? res.data.list : []);
@@ -167,22 +179,24 @@ Page({
             server.clientMessageId === m.clientMessageId && server.senderId == m.senderId));
           const msgs = list.concat(pending);
           that.setData({ msgs, sending: msgs.some(m => m.sending), hasMore: !!res.data.hasMore, cursor: res.data.nextCursor || 0, loadState: 'ready', loadErrorText: '', loadMoreError: '' });
+          if (that._syncAfter === undefined) that._syncAfter = that.maxLocalId();
           // 拉黑只存服务端:重进会话按回包禁用输入框,不然能打字、一发就失败(3-22)
           if (res.data.blocked === true) {
             that.setData({ disabled: true, disabledText: res.data.blockedByMe === true ? '你已拉黑对方，无法发送消息' : '对方暂不可联系，无法发送消息' });
           }
           if (toBottom) that.scrollBottom();
           that.markRead();
+          that.recoverPending();
           return;
         }
         that._setMessageLoadError(res);
       },
       fail(res) {
-        if (requestEpoch !== that._messageRequestEpoch) return;
+        if (!current() || requestEpoch !== that._messageRequestEpoch) return;
         that._setMessageLoadError(res);
       },
       successStatusAbnormal(res) {
-        if (requestEpoch !== that._messageRequestEpoch) return;
+        if (!current() || requestEpoch !== that._messageRequestEpoch) return;
         that._setMessageLoadError(res);
       },
     });
@@ -208,12 +222,14 @@ Page({
   loadMore() {
     if (!this.data.hasMore || this.data.loadingMore) return;
     const that = this;
+    const current = this._viewGuard();
     const cursor = this.data.cursor;
     this.setData({ loadingMore: true, loadMoreError: '' });
     app.sendRequest({
       url: '/api/im/messages', method: 'POST', hideLoading: true, silentError: true,
       data: { conversation_id: this.data.conversationId, cursor_id: cursor, size: 30 },
       success(res) {
+        if (!current()) return;
         if (res && res.code == 200 && res.data && typeof res.data === 'object' && !Array.isArray(res.data)
             && (res.data.list == null || isRecordList(res.data.list))) {
           that._mergeMessages(Array.isArray(res.data.list) ? res.data.list : [], true);
@@ -222,8 +238,8 @@ Page({
           that._setLoadMoreError(res);
         }
       },
-      fail(res) { that._setLoadMoreError(res); },
-      successStatusAbnormal(res) { that._setLoadMoreError(res); },
+      fail(res) { if (current()) that._setLoadMoreError(res); },
+      successStatusAbnormal(res) { if (current()) that._setLoadMoreError(res); },
     });
   },
 
@@ -275,22 +291,39 @@ Page({
       // route 与 signup 同构,共用现拉
       if (m.card && (m.card.cardType === 'route' || m.card.cardType === 'signup') && m.card.topicId) {
         const id = m.card.topicId;
+        if (m.card.cardType === 'route' && m.content === '路线已不可用') {
+          that._topicEpoch = (that._topicEpoch || 0) + 1;
+          that.setData({ ['topicCache.' + id]: { name: '路线已不可用' } });
+          return;
+        }
+        // 路线名称只来自消息当前投影；详情权限可能允许作者读私密正文。
+        if (m.card.cardType === 'route' && typeof m.content === 'string' && m.content.startsWith('[路线]')) {
+          that.setData({ ['topicCache.' + id]: { name: m.content.replace(/^\[路线\]\s*/, ''), imgUrl: m.card.imgUrl || '', totalMileage: m.card.totalMileage || 0, locationCount: m.card.locationCount || 0 } });
+          return;
+        }
+        if (m.card.cardType === 'route') {
+          that.setData({ ['topicCache.' + id]: { name: '路线已不可用' } });
+          return;
+        }
         // 必须 === undefined:三态里 null 是「已确认下架」的终态答案,不是「还没拉」。
         // 用真值判断会把 null 当没拉过,对已下架主题每批 decorate 重发一次请求。
         if (cache[id] === undefined && ids.indexOf(id) < 0) ids.push(id);
       }
     });
     if (!ids.length) return;
+    const current = this._viewGuard();
+    const topicEpoch = this._topicEpoch || 0;
     ids.forEach(function (id) {
       app.sendRequest({
         url: '/api/topic/info-to-user', method: 'POST', hideLoading: true,
         data: { id: id },
         success(res) {
+          if (!current() || topicEpoch !== (that._topicEpoch || 0)) return;
           const d = (res && res.code == 200) ? res.data : null;
           // 拉不到/已下架 → 记 null,渲染层出降级态「该路线已下架」
           that.setData({ ['topicCache.' + id]: d || null });
         },
-        fail() { that.setData({ ['topicCache.' + id]: null }); },
+        fail() { if (current() && topicEpoch === (that._topicEpoch || 0)) that.setData({ ['topicCache.' + id]: null }); },
       });
     });
   },
@@ -307,8 +340,7 @@ Page({
     if (!content || this.data.sending) return;
     if (!this._canSend()) return;
     if (this._disposed || (app.getUserID && app.getUserID() != this.data.myId)) return;
-    this.setData({ text: '' });
-    this._sendMessage({ msg_type: 1, content });
+    if (this._sendMessage({ msg_type: 1, content })) this.setData({ text: '' });
   },
 
   _sendMessage(message, retryId) {
@@ -321,6 +353,8 @@ Page({
       this._sendSequence = (this._sendSequence || 0) + 1;
       payload.client_message_id = 'im_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2) + '_' + this._sendSequence;
     }
+    const receipt = sendRecovery.begin(owner, conversationId, payload.client_message_id);
+    if (!receipt) { app.tips && app.tips('原消息请求未能保存，请稍后重试'); return false; }
     const tmpId = retryId || 'tmp_' + payload.client_message_id;
     let msgs = this.data.msgs.slice();
     if (retryId) {
@@ -335,8 +369,8 @@ Page({
     }
     this.setData({ msgs, sending: true });
     this.scrollBottom();
-    const current = () => !this._disposed && this.data.myId === owner && this.data.conversationId === conversationId
-      && (!app.getUserID || app.getUserID() == owner);
+    const viewCurrent = this._viewGuard();
+    const current = () => viewCurrent() && sendRecovery.current(receipt);
     const finish = (res) => {
       if (!current()) return;
       const list = this.data.msgs.slice();
@@ -346,6 +380,7 @@ Page({
         const validId = (typeof id === 'number' || (typeof id === 'string' && /^[1-9]\d*$/.test(id)))
           && Number.isSafeInteger(Number(id)) && Number(id) > 0;
         if (isBizOk(res) && validId) {
+          sendRecovery.complete(receipt);
           list.splice(index, 1);
           this.setData({ msgs: list });
           this._mergeMessages([res.data]);
@@ -362,6 +397,7 @@ Page({
       url: '/api/im/send', method: 'POST', hideLoading: true,
       data: payload, success: finish, fail: finish, successStatusAbnormal: finish,
     });
+    return true;
   },
 
   _mergeMessages(incoming, prepend) {
@@ -374,6 +410,12 @@ Page({
       if (index >= 0) { if (!prepend) list[index] = message; }
       else list.push(message);
     });
+    list.sort((a, b) => {
+      const left = Number(a.id), right = Number(b.id);
+      const leftServer = Number.isSafeInteger(left) && left > 0;
+      const rightServer = Number.isSafeInteger(right) && right > 0;
+      return leftServer && rightServer ? left - right : leftServer ? -1 : rightServer ? 1 : 0;
+    });
     this.setData({ msgs: list, sending: list.some(m => m.sending) });
   },
 
@@ -381,7 +423,35 @@ Page({
     const idx = e.currentTarget.dataset.index;
     const m = this.data.msgs[idx];
     if (!m || !m.failed || m.sending || m.senderId != this.data.myId || !m.sendPayload) return;
-    this._sendMessage(m.sendPayload, m.id);
+    const current = this._viewGuard();
+    const receipt = sendRecovery.pending(this.data.myId, this.data.conversationId)
+      .find(r => r.id === m.clientMessageId);
+    if (!receipt) return;
+    this._readReceipt(receipt, result => {
+      if (!current() || !sendRecovery.current(receipt)) return;
+      if (result && result.found && result.message) {
+        this._mergeMessages([result.message]); sendRecovery.complete(receipt);
+      } else if (result && result.found === false) this._sendMessage(m.sendPayload, m.id);
+    });
+  },
+
+  _readReceipt(receipt, done) {
+    const current = this._viewGuard();
+    app.sendRequest({ url: '/api/im/send-receipt', method: 'POST', hideLoading: true, silentError: true,
+      data: { conversation_id: receipt.conversation, client_message_id: receipt.id },
+      success: res => {
+        if (current() && sendRecovery.current(receipt) && isBizOk(res) && res.data) done(res.data);
+      }, fail() {}, successStatusAbnormal() {} });
+  },
+
+  recoverPending() {
+    sendRecovery.pending(this.data.myId, this.data.conversationId).forEach(receipt => {
+      this._readReceipt(receipt, result => {
+        if (result.found && result.message) {
+          this._mergeMessages([result.message]); sendRecovery.complete(receipt);
+        }
+      });
+    });
   },
 
   /* 2026-09-02:原来这两处弹 wx.showActionSheet(系统弹层,设计体系外)。
@@ -446,6 +516,7 @@ Page({
   loadRoutes() {
     const that = this;
     // 竞态守卫:只认最后一次请求的响应,防止先发的旧关键词后到、覆盖新结果
+    const current = this._viewGuard();
     const seq = (this._routeSeq || 0) + 1;
     this._routeSeq = seq;
     this.setData({ routeLoading: true, routeError: '', routeList: [] });
@@ -453,7 +524,7 @@ Page({
       url: '/api/topic/list', method: 'POST', hideLoading: true, silentError: true,
       data: { is_my: 0, keyword: this.data.routeKeyword },
       success(res) {
-        if (seq !== that._routeSeq) return;            // 过期响应,丢弃
+        if (!current() || seq !== that._routeSeq) return;            // 过期响应,丢弃
         if (res && res.code == 200 && res.data && typeof res.data === 'object' && !Array.isArray(res.data)
             && isRecordList(res.data.rows)) {
           that.setData({ routeList: res.data.rows, routeLoading: false, routeError: '' });
@@ -462,7 +533,7 @@ Page({
         that._setRouteError(res);
       },
       fail(res) {
-        if (seq !== that._routeSeq) return;            // 过期响应,丢弃
+        if (!current() || seq !== that._routeSeq) return;            // 过期响应,丢弃
         that._setRouteError(res);
       },
     });
@@ -497,7 +568,10 @@ Page({
   },
 
   markRead() {
-    app.sendRequest({ url: '/api/im/read', method: 'POST', hideLoading: true, data: { conversation_id: this.data.conversationId } });
+    if (!this._viewGuard()()) return;
+    app.sendRequest({ url: '/api/im/read', method: 'POST', hideLoading: true,
+      data: { conversation_id: this.data.conversationId,
+        read_to: this._syncAfter === undefined ? this.maxLocalId() : Math.min(this.maxLocalId(), this._syncAfter) } });
   },
 
   onMore() {
@@ -554,6 +628,8 @@ Page({
       const id = this._pendingClearId;
       if (!id || id !== this.data.conversationId) return;
       this._pendingClearId = null;
+      const current = this._viewGuard();
+      const page = this;
       const dc = this.selectComponent && this.selectComponent('#dc');
       if (dc) dc.busyOn();
       const failed = (message) => {
@@ -565,7 +641,13 @@ Page({
         url: '/api/im/delete', method: 'POST', hideLoading: true,
         data: { conversation_id: id },
         success(res) {
+          if (!current()) return;
           if (!isBizOk(res)) { failed((res && res.msg) || '清空失败'); return; }
+          sendRecovery.abandon(page.data.myId, id);
+          page._deleted = true;
+          page._viewEpoch = (page._viewEpoch || 0) + 1;
+          page.stopPoll();
+          page.setData({ msgs: [], topicCache: {}, sending: false });
           if (dc) dc.done();
           wx.navigateBack({
             fail() { wx.redirectTo({ url: '/subpackageB/pages/im/list/index' }); },
@@ -671,13 +753,38 @@ Page({
     });
     return mx;
   },
-  pollNew() {
+  refreshRouteProjections() {
+    const current = this._viewGuard();
+    const epoch = (this._topicEpoch || 0) + 1;
+    this._topicEpoch = epoch;
+    this.data.msgs.filter(m => m.card && m.card.cardType === 'route' && Number.isSafeInteger(Number(m.id)))
+      .forEach(message => {
+        const id = Number(message.id), topicId = message.card.topicId;
+        // 正在重核/网络未知时不继续展示旧名称；不用正常详情权限恢复历史私密名。
+        this.setData({ ['topicCache.' + topicId]: { name: '路线已不可用' } });
+        app.sendRequest({ url: '/api/im/messages', method: 'POST', hideLoading: true, silentError: true,
+          data: { conversation_id: this.data.conversationId, cursor_id: id + 1, size: 1 },
+          success: res => {
+            if (!current() || epoch !== this._topicEpoch || !isBizOk(res) || !res.data || !Array.isArray(res.data.list)) return;
+            const projected = res.data.list.find(m => Number(m.id) === id);
+            if (projected) this._mergeMessages([projected]);
+          }, fail() {}, successStatusAbnormal() {} });
+      });
+  },
+
+  pollNew(after) {
+    if (!this._viewGuard()() || (this._polling && after === undefined)) return;
     const that = this;
-    const mx = this.maxLocalId();
+    const current = this._viewGuard();
+    const mx = after === undefined ? (this._syncAfter === undefined ? this.maxLocalId() : this._syncAfter) : after;
+    this._polling = true;
+    if (after === undefined) this.refreshRouteProjections();
     app.sendRequest({
       url: '/api/im/messages', method: 'POST', hideLoading: true,
-      data: { conversation_id: this.data.conversationId, cursor_id: 0, size: 15 },
+      data: { conversation_id: this.data.conversationId, after_id: mx, size: 50 },
       success(res) {
+        if (!current()) return;
+        that._polling = false;
         if (!(res && res.code == 200 && res.data && typeof res.data === 'object' && !Array.isArray(res.data)
               && isRecordList(res.data.list))) return;
         // 轮询读到了就是恢复了:必须解掉 error,否则一次瞬时失败会把错误卡钉在实时消息上方、
@@ -690,9 +797,14 @@ Page({
         if (fresh.length) {
           that._mergeMessages(fresh);
           that.scrollBottom();
-          that.markRead();
         }
+        const next = Number(res.data.nextAfter);
+        if (Number.isSafeInteger(next) && next >= mx) that._syncAfter = next;
+        if (fresh.length) that.markRead();
+        if (res.data.hasMore && next > mx) that.pollNew(next);
       },
+      fail() { if (current()) that._polling = false; },
+      successStatusAbnormal() { if (current()) that._polling = false; },
     });
   },
 

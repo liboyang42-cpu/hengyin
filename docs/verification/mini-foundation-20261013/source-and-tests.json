@@ -1,0 +1,365 @@
+{
+  "publicBase": "fafde98723211ccbc12b78a534a0cb2c1685e361",
+  "scope": "PAYING page progress, IM list response races, submitted draft ordering, consent event idempotency, NPC current selfplay pass and post-ASR recheck, legacy IM current locks and exploration NPC end-date cutoff",
+  "sourceFiles": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java",
+      "sha256": "e810046c1cb0d7e685030bbf5d016813e7c175bbc9afc0849fdda72d6f44696f"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/task/OrderClosePayingReconcileTaskContractTest.java",
+      "sha256": "fecda0b85ce12fec4e4eaacd1dfcf3ca89d04a98b66a188dd01ec877e81639a4"
+    },
+    {
+      "path": "chengyinhub-xcx/subpackageB/pages/im/list/index.js",
+      "sha256": "40c93728da42b87c81f2548bee45f715af9123efd35bf887c11994b299f853ce"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/im-list-mutation-race.test.js",
+      "sha256": "148a34ceb4dc132dcf81a94b14ef010e0e110831e50c1770862cfcf1cabb2e42"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+      "sha256": "39a730127d4ec932785f16099987997758c8ee73db7c34dbe74188f17ec21ca1"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDraftSubmittedOrderTest.java",
+      "sha256": "5561cf30b9b9e8483b24080bf64e0116a495fdb264c0de678ee545db30494400"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ConsentRecordMapper.java",
+      "sha256": "4fe278fc0979fde069848227870a8a41232db946a8070224b93280fdc245ff59"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ConsentRecordMapper.xml",
+      "sha256": "e4c9ba0a05e250b1117319a31a645c36d4041530bd8dce769dd962978c0eccde"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ConsentRecordServiceImpl.java",
+      "sha256": "24a9f6a2c0ef3e5ce5deef2dcf0bbf2f146565181a5c70fff567d6be85778606"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ConsentRecordServiceImplTest.java",
+      "sha256": "a6e95bc23e4462282d2084af8214540064aaa0d51a537a1f2e5c146d318b9d7d"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiComplianceControllerTest.java",
+      "sha256": "fa192cbeaeed4414957112a725ccab66685cf01cb32f4c0eb68d30b425ec6e4b"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ConsentRecordIdempotencyMySqlIT.java",
+      "sha256": "698f2f572cb4e6791d33ef76f796de66437b3774637e48011c729768f6024c7d"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiNpcController.java",
+      "sha256": "e2d2701adc934aa6f588dc771f87f63af3c4f0ead7d316a068d7661e5da041e2"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayTeamMapper.java",
+      "sha256": "15f0ddfcf1c5073ca8150c732b62378f78d98d89150ae15d2f682f37a17a37f6"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/PlayTeamMapper.xml",
+      "sha256": "0bb1ed8db91137e23f2f1fb0754b2717c3a2d767b4a0eda14711606db31bca55"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAiNpcVoiceChatFormatTest.java",
+      "sha256": "5e5cf7dcd482aff078c0ef7c3db74e6f8954ee7dd93b22f2a43ae5c20f32662d"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAiNpcPassExpiryTest.java",
+      "sha256": "81ff345974f51bd764024df2c241bcaf8152f78b7ac7bd786d647de5bd5973e5"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/NpcCurrentRegistrationMySqlIT.java",
+      "sha256": "345bb59b5337cf2d19deb3006f25639d5cb3da0170306ab8624c6f8eaf0d568e"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+      "sha256": "e730a926b3f793e8f7f7fc42a81bcb7213bdd464f477c3a51c3864b43635e758"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ImConversationMemberMapper.java",
+      "sha256": "744b21a1ac4d9879bb08c69c08eee53d1ca09163af159d1366009d367f3a98be"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ImConversationMemberMapper.xml",
+      "sha256": "a9fc8c5fdb3c5b4c74778d64d9d7b4d0d174cdaddebfb2a52bc8bdb969ce872b"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ImConversationMapper.xml",
+      "sha256": "bbaf8812abbd3212032f172c59ca01310bdd74aa52e5cfc683013c6ee07625eb"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ImMessageMapper.java",
+      "sha256": "843601cbc290e33aeceb3b97b54211f7fd9f2dc4d8e156fa96be5ec026674232"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ImMessageMapper.xml",
+      "sha256": "0557ec2949b3de1e993705a7cbd8a0b4e24aeda3b88a7399c570a1ea3d48f4a9"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImServiceImplTest.java",
+      "sha256": "87269e2edf10de08b16cbfe86804be4edc27b1bcd5f9ca2a6e8cb86b4f8aa1cf"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImLegacyReadLockTest.java",
+      "sha256": "7a6a9fc26c04a9544f8db590cca189bb86911a794d1287a1f41fa1e768b4d080"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImLegacyReadLockMySqlIT.java",
+      "sha256": "6ed2ead12fc6117b893ac74e65b17c173cb8fba3eed6dd9c95e33c7c0366421b"
+    }
+  ],
+  "backendTests": {
+    "distinctTests": 99,
+    "unitTests": 94,
+    "mysqlTests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "unitSuites": [
+      {
+        "name": "com.chengyinhub.business.service.impl.ConsentRecordServiceImplTest",
+        "tests": "10",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "time": "0.019",
+        "failureMessages": [],
+        "errorMessages": []
+      },
+      {
+        "name": "com.chengyinhub.web.controller.api.ApiComplianceControllerTest",
+        "tests": "8",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "time": "1.191",
+        "failureMessages": [],
+        "errorMessages": []
+      },
+      {
+        "name": "com.chengyinhub.business.task.OrderClosePayingReconcileTaskContractTest",
+        "tests": "2",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "time": "0.863",
+        "failureMessages": [],
+        "errorMessages": []
+      },
+      {
+        "name": "com.chengyinhub.business.service.TopicDraftSubmittedOrderTest",
+        "tests": "2",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "time": "0.044",
+        "failureMessages": [],
+        "errorMessages": []
+      },
+      {
+        "name": "com.chengyinhub.business.service.TopicDraftPartialSaveGateTest",
+        "tests": "19",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "time": "0.185",
+        "failureMessages": [],
+        "errorMessages": []
+      },
+      {
+        "name": "com.chengyinhub.business.service.impl.TopicCreateSaveDraftSideEffectTest",
+        "tests": "4",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "time": "0.467",
+        "failureMessages": [],
+        "errorMessages": []
+      },
+      {
+        "name": "com.chengyinhub.business.service.CmsTopicRoutePublishPolicyTest",
+        "tests": "8",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "time": "0.062",
+        "failureMessages": [],
+        "errorMessages": []
+      },
+      {
+        "name": "com.chengyinhub.business.service.impl.ChapterFlowWriteServiceTest",
+        "tests": "41",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "time": "1.486",
+        "failureMessages": [],
+        "errorMessages": []
+      }
+    ],
+    "mysqlSuite": {
+      "name": "com.chengyinhub.business.service.impl.ConsentRecordIdempotencyMySqlIT",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "schemaSetUnchanged": true,
+      "testSha256": "698f2f572cb4e6791d33ef76f796de66437b3774637e48011c729768f6024c7d"
+    },
+    "context": "94 units passed in the combined snapshot. The initial MySQL fixture had two barrier timeouts; after correcting only that fixture, all 5 MySQL tests passed in a separate invocation. This is not a single 99-test successful invocation."
+  },
+  "nodeTests": {
+    "tests": 28,
+    "failures": 0,
+    "skipped": 0
+  },
+  "notVerified": [
+    "real-identity HTTP",
+    "WeChat DevTools",
+    "physical device",
+    "production deployment"
+  ],
+  "stagedSnapshotVpsCompile": "passed by pre-commit",
+  "sourceCommits": [
+    "0984189e1f08bff0bf91ad1ae59d4b3db3a255b8",
+    "55cd5573c02b67cc61fac7b2896eb2669aa25f29"
+  ],
+  "githubCi": {
+    "previousRun": 38365659866,
+    "head": "1a8726320c4184e10d7f60fe7fd1e896707cefbe",
+    "conclusion": "cancelled",
+    "passedJobs": 9,
+    "cancelledJobs": 1,
+    "currentHead": "7046676 cancelled, 9 jobs passed; latest source needs a new CI run"
+  },
+  "npcTests": {
+    "unitTests": 29,
+    "mysqlTests": 1,
+    "unitSuites": [
+      {
+        "name": "com.chengyinhub.web.controller.api.ApiAiNpcPassExpiryTest",
+        "tests": "6",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "failureMessages": [],
+        "errorMessages": []
+      },
+      {
+        "name": "com.chengyinhub.web.controller.api.ApiAiNpcVoiceChatFormatTest",
+        "tests": "16",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "failureMessages": [],
+        "errorMessages": []
+      },
+      {
+        "name": "com.chengyinhub.web.controller.api.ApiAiNpcChatDataTest",
+        "tests": "2",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "failureMessages": [],
+        "errorMessages": []
+      },
+      {
+        "name": "com.chengyinhub.business.mapper.PlayTeamMapperSqlTest",
+        "tests": "5",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "failureMessages": [],
+        "errorMessages": []
+      }
+    ],
+    "mysqlSuites": [
+      {
+        "name": "com.chengyinhub.business.service.NpcCurrentRegistrationMySqlIT",
+        "tests": "1",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "failureMessages": [],
+        "errorMessages": []
+      }
+    ],
+    "schemaSetUnchanged": true,
+    "redEntry": {
+      "tests": 2,
+      "failures": 2,
+      "errors": 0
+    },
+    "redPostAsr": {
+      "tests": 1,
+      "failures": 1,
+      "errors": 0
+    },
+    "context": "Stubbed ASR/model controller tests plus independent real MySQL query; no real provider, payment or authenticated HTTP proof."
+  },
+  "totalDistinctBackendTests": 193,
+  "imLegacyTests": {
+    "unitSuites": [
+      {
+        "name": "com.chengyinhub.business.service.impl.ImLegacyReadLockTest",
+        "tests": "6",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "failureMessages": [],
+        "errorMessages": []
+      },
+      {
+        "name": "com.chengyinhub.business.service.impl.ImServiceImplTest",
+        "tests": "45",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "failureMessages": [],
+        "errorMessages": []
+      },
+      {
+        "name": "com.chengyinhub.web.controller.api.ApiImReadAuthorizationTest",
+        "tests": "3",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "failureMessages": [],
+        "errorMessages": []
+      },
+      {
+        "name": "com.chengyinhub.business.service.impl.ImAdminAccessTest",
+        "tests": "5",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "failureMessages": [],
+        "errorMessages": []
+      }
+    ],
+    "mysqlSuites": [
+      {
+        "name": "com.chengyinhub.business.service.impl.ImLegacyReadLockMySqlIT",
+        "tests": "5",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "failureMessages": [],
+        "errorMessages": []
+      }
+    ],
+    "unitTests": 59,
+    "mysqlTests": 5,
+    "context": "Initial real MySQL run: 4 passed, 1 fixture assertion failed because close legitimately clears unread while leave preserves it. Changed only IT to independently capture committed removal state; all 5 passed on rerun. Club authority remains a fixture."
+  },
+  "npcExploreSql": {
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "context": "Expanded existing NPC SQL test, not another distinct case. Exact NOW equality uses only the fixture connection session clock; old SQL fails and new SQL passes."
+  }
+}

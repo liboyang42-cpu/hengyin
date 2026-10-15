@@ -1,0 +1,7 @@
+PASS: provider execution failure does not refund
+PASS: provider execution failure is typed unknown
+PASS: unknown output usage is not zero
+PASS: local readiness precedes model stage
+PASS: no exception-message-based configuration refund
+PASS: NPC typed unknown uses existing nonretryable processing outcome
+SOURCE STRUCTURE ONLY: 6/6; Java/runtime/database not executed.

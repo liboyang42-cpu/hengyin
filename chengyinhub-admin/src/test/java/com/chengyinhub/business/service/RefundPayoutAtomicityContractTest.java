@@ -58,7 +58,9 @@ class RefundPayoutAtomicityContractTest {
         RefundApplication dispatching = refund(2L, RefundApplication.PAYOUT_DISPATCHING);
         RefundApplication processing = refund(3L, RefundApplication.PAYOUT_PROCESSING);
         processing.setRefundNo("RF3");
-        when(mapper.selectStalePayoutProcessing(30))
+        // A包对账改为固定本轮上界 + 稳定游标分页(selectStalePayoutProcessingAfter)；同三行落在首页。
+        when(mapper.selectStalePayoutScanUpperBound(30)).thenReturn(3L);
+        when(mapper.selectStalePayoutProcessingAfter(30, 0L, 3L, 200))
                 .thenReturn(Arrays.asList(pending, dispatching, processing));
         RefundReconcileTask task = new RefundReconcileTask();
         ReflectionTestUtils.setField(task, "coopInviteService", mock(ICoopInviteService.class));

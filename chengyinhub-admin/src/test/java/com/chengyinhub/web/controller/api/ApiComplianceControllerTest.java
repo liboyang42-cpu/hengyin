@@ -1,6 +1,10 @@
 package com.chengyinhub.web.controller.api;
 
 import com.chengyinhub.business.domain.ConsentRecord;
+import com.chengyinhub.business.mapper.ConsentRecordMapper;
+import com.chengyinhub.business.service.impl.ConsentRecordServiceImpl;
+import org.springframework.dao.DuplicateKeyException;
+import static org.mockito.ArgumentMatchers.any;
 import com.chengyinhub.business.service.IConsentRecordService;
 import com.chengyinhub.common.config.ComplianceProperties;
 import com.chengyinhub.common.constant.HttpStatus;
@@ -192,6 +196,40 @@ class ApiComplianceControllerTest {
         assertEquals(HttpStatus.ERROR, result.get(AjaxResult.CODE_TAG));
         verify(service, never()).record(eq(1001L), anyString(), anyString(), anyString(),
                 anyString(), eq(null), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void roamConsentDuplicateMustMatchOriginalBeforeReportingSuccess() {
+        ConsentRecordMapper mapper = mock(ConsentRecordMapper.class);
+        ConsentRecord original = new ConsentRecord();
+        original.setMemberId(1001L);
+        original.setDocType("privacy_policy");
+        original.setDocVersion("v2.1");
+        original.setScene("roam_location");
+        original.setEventType("AGREE");
+        original.setRequestId("same-roam-request");
+        when(mapper.insertConsentRecord(any(ConsentRecord.class))).thenThrow(new DuplicateKeyException("private constraint details"));
+        when(mapper.selectByRequestIdForShare("same-roam-request")).thenReturn(original);
+        ConsentRecordServiceImpl service = new ConsentRecordServiceImpl();
+        ReflectionTestUtils.setField(service, "consentRecordMapper", mapper);
+        TestApiComplianceController controller = new TestApiComplianceController();
+        ReflectionTestUtils.setField(controller, "consentRecordService", service);
+        ReflectionTestUtils.setField(controller, "complianceProperties", complianceProps());
+        Map<String, Object> body = new HashMap<>();
+        body.put("docType", "privacy_policy");
+        body.put("scene", "roam_location");
+        body.put("eventType", "REVOKE");
+        body.put("requestId", "same-roam-request");
+        AjaxResult rejected = controller.record(body, mock(HttpServletRequest.class));
+        assertEquals(HttpStatus.ERROR, rejected.get(AjaxResult.CODE_TAG));
+        assertEquals("授权状态暂不可用", rejected.get(AjaxResult.MSG_TAG));
+        assertEquals("AGREE", original.getEventType());
+        body.put("eventType", "AGREE");
+        assertEquals(HttpStatus.SUCCESS, controller.record(body, mock(HttpServletRequest.class)).get(AjaxResult.CODE_TAG));
+        original.setMemberId(2002L);
+        AjaxResult otherIdentity = controller.record(body, mock(HttpServletRequest.class));
+        assertEquals(HttpStatus.ERROR, otherIdentity.get(AjaxResult.CODE_TAG));
+        assertEquals(rejected.get(AjaxResult.MSG_TAG), otherIdentity.get(AjaxResult.MSG_TAG));
     }
 
     private static class TestApiComplianceController extends ApiComplianceController {

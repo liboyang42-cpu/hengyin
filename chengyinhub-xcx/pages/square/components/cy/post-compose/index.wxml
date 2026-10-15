@@ -46,7 +46,7 @@
                     placeholder-class="cmp-ph" />
           <view class="cmp-preview" wx:if="{{picList.length || address || selectedActivity}}">
             <view class="cmp-preview-pics" wx:if="{{picList.length}}">
-            <view class="cmp-pic" wx:for="{{picList}}" wx:key="*this">
+            <view class="cmp-pic" wx:for="{{picList}}" wx:key="index">
               <image class="cmp-pic-img" src="{{item}}" mode="aspectFill" />
               <view class="cmp-chip-x" catchtap="onClearPic" data-inx="{{index}}" aria-role="button" aria-label="删除这张图片" hover-class="cy-pressed" hover-stay-time="80">
                 <cy-icon name="close-sm" size="24" />

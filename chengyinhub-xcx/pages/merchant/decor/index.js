@@ -4,6 +4,7 @@
 //   承接能力存 /api/merchant/coop-profile/save;营业状态存 /api/merchant/business-status/update
 const modal = require('../../../utils/modal.js');
 const toast = require('../../../utils/toast.js');
+const mediaPreview = require('../../../utils/media-preview.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
@@ -61,7 +62,7 @@ function classifyFailure(error, fallback) {
 Page({
   data: {
     view: 'home', basicEditing: false, pageTitle: '品牌中心',
-    imageEditor: null, discardVisible: false, brandImages: [],
+    imageEditor: null, discardVisible: false, backGuardOff: false, brandImages: [],
     categoryOptions: [], categoryDraft: [], categoryError: '',
     tagDraft: [], tagChoices: [],
     statusBarHeight: 20,
@@ -685,6 +686,18 @@ Page({
     else this.setData({'fieldSheet.show': false});
   },
   keepEditing() { this.setData({discardVisible: false}); },
+  // 物理返回守卫(见 wxml 尾部 page-container):先关最上层浮层(放弃确认 > 字段面板 > 图片编辑),不退出装修页
+  onNativeBackGuard() {
+    const d = this.data;
+    if (d.discardVisible) this.keepEditing();
+    else if (d.fieldSheet && d.fieldSheet.show) this.closeFieldSheet();
+    else if (d.imageEditor) this.closeImage();
+    const n = this.data;
+    if (n.imageEditor || (n.fieldSheet && n.fieldSheet.show) || n.discardVisible) {
+      this.setData({backGuardOff: true});
+      setTimeout(() => { if (!this._destroyed) this.setData({backGuardOff: false}); }, 50);
+    }
+  },
   discardField() {
     if(this.data.discardTarget === 'image') this.setData({discardVisible:false,saveError:'',imageEditor:null});
     else this.setData({discardVisible:false,saveError:'','fieldSheet.show':false});
@@ -722,11 +735,11 @@ Page({
   // CU-M-71:执照/品牌图是入驻时提交的只读资料(补交入口在入驻流程)。无图时行上已无箭头,
   // 点击还得给一句稳定解释,别把「没图」当无事发生。说明落在行上的 description,toast 只做反馈。
   previewLicense() {
-    if (this.data.m.businessLicense) wx.previewImage({urls: [this.data.m.businessLicense]});
+    if (this.data.m.businessLicense) mediaPreview.open([this.data.m.businessLicense], this.data.m.businessLicense);
     else toast('入驻时提交，如需更新请联系平台');
   },
   previewBrandImages() {
-    if (this.data.brandImages.length) wx.previewImage({urls: this.data.brandImages});
+    if (this.data.brandImages.length) mediaPreview.open(this.data.brandImages, this.data.brandImages[0]);
     else toast('入驻时提交，如需更新请联系平台');
   },
   onHoursSave(e) { this.saveBrand({businessTime: e.detail.value}, () => this.selectComponent('#business-hours').close()); },

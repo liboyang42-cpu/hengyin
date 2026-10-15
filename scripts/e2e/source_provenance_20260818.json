@@ -1,0 +1,1154 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "737f0c2eab1dab2afaa51944d8654a7f803671c3",
+  "files": [
+    {
+      "path": "chengyinhub-admin/sql/_deploy_ALL_20260704.sql",
+      "sha256": "f1385f280bbf4136e07e9e089a56e2eaab43e332bd5858f7c6d7a9315600eb59"
+    },
+    {
+      "path": "chengyinhub-admin/sql/_deploy_L_batch.sql",
+      "sha256": "f14bcd02b13e5296b236ba540baf594bb598a1fa7502613e9f51c951ec6a87f3"
+    },
+    {
+      "path": "chengyinhub-admin/sql/_deploy_d78f18c_lean.sql",
+      "sha256": "0d4fd6a8a988d66ccb1302d01ac59125dc571f2ca16070f44b278ff4453ab0dc"
+    },
+    {
+      "path": "chengyinhub-admin/sql/_deploy_d78f18c_ordered.sql",
+      "sha256": "2236c8e0ce828a5f56cdc18528ddb532a6b5a98fd99f74db480c1755add5414c"
+    },
+    {
+      "path": "chengyinhub-admin/sql/_deploy_merged_20260704.sql",
+      "sha256": "101007054123ed033967d829cb024cd156537947e9b69c6b6d9b0ae85bd245a9"
+    },
+    {
+      "path": "chengyinhub-admin/sql/_precheck_20260709.sql",
+      "sha256": "e2135ee170dfc6578983dad6f99aac896b004a2d586351dcfc4899165cb2c9ea"
+    },
+    {
+      "path": "chengyinhub-admin/sql/_precheck_addendum_20260708.sql",
+      "sha256": "ff54b01dbc72b9e38f095be9ac8d85e7761a1a8bb01689e74355746ebcf4a5ad"
+    },
+    {
+      "path": "chengyinhub-admin/sql/_precheck_coop_deploy_20260711.sql",
+      "sha256": "a833d533d04ab268dd6e4bf88c774aff26d67147aaf84c03791aee76fceae496"
+    },
+    {
+      "path": "chengyinhub-admin/sql/_precheck_migration_status.sql",
+      "sha256": "d1ffeb565f70b902b8f0e5ea6b8df191e164675770a1282da42140991d8a5320"
+    },
+    {
+      "path": "chengyinhub-admin/sql/_precheck_settlement_claim_conflicts_20260811.sql",
+      "sha256": "fdf8ffba38be3feae6882f69ec20a4974679ab2470d6e514609cf43e752e84a8"
+    },
+    {
+      "path": "chengyinhub-admin/sql/_precheck_topic_content_slot_permission_20260722.sql",
+      "sha256": "bf4a57d19e33ca93e3a55b8359aaf15f505f70fd783a4e4f71583c75011018a6"
+    },
+    {
+      "path": "chengyinhub-admin/sql/_precheck_topic_plaza_recommend_permission_20260723.sql",
+      "sha256": "bfa976fad21bf440b6685cf0715618c1e4e8bbd32b70eea313e0ca07ac034bc7"
+    },
+    {
+      "path": "chengyinhub-admin/sql/_precheck_topic_source_menu_20260722.sql",
+      "sha256": "d9c979f6d061ae6dcacd8533b5406fc16f8ffcc80cbb225c8a1fe62d1c58d732"
+    },
+    {
+      "path": "chengyinhub-admin/sql/bak_cms_topic_schema_20260709.sql",
+      "sha256": "a809bdbc086c5ad4a15941d81a7499a008b82c6f5a5638cd79e7cb954304c489"
+    },
+    {
+      "path": "chengyinhub-admin/sql/bak_topic_content_slot_permission_20260722_rollback.sql",
+      "sha256": "5df3c4324cd3ae2f04c776f2896603caedfc4cb708663126ef434ea8b2f6bdec"
+    },
+    {
+      "path": "chengyinhub-admin/sql/bak_topic_plaza_recommend_permission_20260723_rollback.sql",
+      "sha256": "9b76447e670a95cf72e77c2ff7ea086ccde9387d47cc6c7de163715b596a4cf7"
+    },
+    {
+      "path": "chengyinhub-admin/sql/bak_topic_source_menu_20260722_rollback.sql",
+      "sha256": "e4211eaf1d50bf7d369a2eb3307391a7c0128acd4f1ac55627eeabf97e4f2fcc"
+    },
+    {
+      "path": "chengyinhub-admin/sql/bak_user_permission_20260709.sql",
+      "sha256": "291c2d388b4cfa5c177d952f5d45fca8fd10f88119a4974a8500f9a8ba94b86b"
+    },
+    {
+      "path": "chengyinhub-admin/sql/diag_identity_dual_20260705.sql",
+      "sha256": "05e45430527271d852e3fe48ba85250bfde12b086bff11c1976904d6fdc6eb9d"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260717_recall_job_decommission.sql",
+      "sha256": "4c518865965510822028506c52841ee67d8de96767a16b83076fbc4be8565926"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260804_fix_browse_type_activity.sql",
+      "sha256": "6595a9fad2f3086e6fe40f4daad7b27bbb1f85ec49a9a0a7f47d726c304a6998"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260807_medal_style.sql",
+      "sha256": "f12e2e2b2fad00b535a3c2d15538b8b5d5c8f755e7949549f127be7e086a8d17"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260808_player_withdrawable.sql",
+      "sha256": "3153581f219ff4aeb72c8acb12cd6907ec77b5ab1c5e94a06e99432d636344ec"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260814_tandianri_product_type_backfill.sql",
+      "sha256": "e2944e83e9bc68b776922fb2840b8d8368a0931588a04af25af18ab405910126"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260815_shop_day_organizer_actor.sql",
+      "sha256": "137a8d706489fafa542ed630ba3fd3aa9d142621a35a1f89e5cb4230ece0d468"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260815_tandianri_batch3_funds_core.sql",
+      "sha256": "e8f48efa79dca68a7dc7a1b5c9ce3eefc194a6f67e572ad04ba45aa3f0d085ea"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260815_tandianri_h8_publisher_points_funds.sql",
+      "sha256": "4065026120982846691ea2cf8eb281975ad982bd3d5351d84fb24eb98ed233c8"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260815_tandianri_h8_rate_convergence.sql",
+      "sha256": "ad37eddf8baf2105b15525a41b479426da0d938476457c877cca46a67f2d162f"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260815_tandianri_roam_referral.sql",
+      "sha256": "8129555eba6a172c3d29575a1b7602f0c1b2519ce4aad3826ee5c81e79c98c75"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260815_tandianri_roam_revisit_report_indexes.sql",
+      "sha256": "875d6ede38b5163f5e366e450878c2c95fb1d16eb2febe0484a1d86baf048356"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260815_tandianri_roam_revisit_report_permission.sql",
+      "sha256": "d0a9d1bff58fa109f2260ec3afb833a899909527c3964e7e51ef094f903950a4"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260816_tandianri_batch3_funds_club_compensation.sql",
+      "sha256": "76fe2aee16a28749edc1e8f85951998e9813bf560ff68ba934dbc75768e4800d"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260816_tandianri_batch3_funds_club_payee.sql",
+      "sha256": "10148f72fc1020e6b50c5fcd057b5eba762e31c21ef51251e8cffbb908d3c1f5"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260816_tandianri_batch3_funds_legacy_edition_exemption.sql",
+      "sha256": "c44e6df85b8b5d9c95b4de054d378029890a45c0b375a9afc45ce85683086ac1"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260816_tandianri_batch3_funds_player_cooldown.sql",
+      "sha256": "1c96d6947d62d8bfeedeb876a2230a07f9a5432c49317a1dcfc092c86ba6e0a2"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260817_tandianri_batch3_funds_club_hours_correction.sql",
+      "sha256": "e2d9021ecf46fd2f8a21d9c3550c1ba10cabe369966f2408f6981502f03ee1b4"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260817_tandianri_batch3_funds_ticket_source_payable.sql",
+      "sha256": "753e7129dbe4297d61e00bf29596499a13314c20230185862358147e49921ea6"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260817_tandianri_batch5_admin_menus.sql",
+      "sha256": "79bfc03a68898a1ea478b99e2fc7733119d86ba7147432811123960a3f9636c6"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260817_tandianri_node_checkin_code_unique.sql",
+      "sha256": "e57edf3a7cf9aa0a5b6abcbef054b66fd673502d567f33885fb53f0b3dd1d61d"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260817_tandianri_r6_funds_final_closure.sql",
+      "sha256": "e3b0f9c5808bc45dc03b37bd8c5d4bf3efa0914bf8c1bfc35ed32952b83df15e"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260817_tandianri_r6_product_contracts.sql",
+      "sha256": "e457dcaf65af0cfe0fa45d0570104ac400c66c48726463123d64c622e659bc16"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260817_tandianri_r7_distribution_backfill.sql",
+      "sha256": "abc15af84f5c5f1dec1e1ba3e91e8f85c0fa444cbed4289cec04666cce79acc7"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260817_tandianri_r7_distribution_singleton.sql",
+      "sha256": "2b4bd79d6fb5507ce64951b1cece0d632e8c4eb0838d7734a9b9ba2bdb9aa4a8"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_a13_dual_award_unique.sql",
+      "sha256": "5429f26b7e94a7244073535f8db395c8f552fd79fe908508d8b1fc4c0c555e1a"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_account_deregister_20260711.sql",
+      "sha256": "3c839cfeb46b2d7df33af89722862a277491c0b220b1341a6b429c3c63fd372b"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_activity_cancel.sql",
+      "sha256": "b9978edce19f3929c08bcd3271ef63a050f60386ccb97e2174db23ff73c72053"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_activity_day_note.sql",
+      "sha256": "e62da08a245e67f9e7818bbe7d00dbc2a709a67bbb12ae935e54b67c0f862b8e"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_activity_designer_commission.sql",
+      "sha256": "124c803f9aa60c93eae0a217cf0ec9b984365ba4fff5b4b6a23ac6fbb73b2e76"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_activity_topic_id.sql",
+      "sha256": "d5e345f0a7a331877c27d8e87d5559a7bf88c0fe404dea922bc494a42727fff4"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_ai_generation_log.sql",
+      "sha256": "db5befb253c2e5f35dceb8d2839b2c3ebf5e017c947a13a9c2146b772552e8c1"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_ai_log_menu_20260716.sql",
+      "sha256": "66ff8279b10cb75c728110050e85b368ede4333793538617b0bd1a239fec8001"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_ai_log_token_trace_20260716.sql",
+      "sha256": "d5a98b6b332bd8b880d7b94c053050ce65b004be7006daf20c0d99bad5598db9"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_ai_merchant_match_snapshot.sql",
+      "sha256": "2110b221f32893d202301db017bd0f49085eff3b731d94e356d477b5ea104ff0"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_audit_backlog_monitor_job.sql",
+      "sha256": "973b5d3192556fd0df46dec40cff773c48950a4b86d33b78b974b7ef9814d4cf"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_audit_open_task_guard_20260721.sql",
+      "sha256": "13f982a8b5f9d73586189e218efe302f016884cf2a4d13855a41ba4590a28042"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_c1_per_member_limit.sql",
+      "sha256": "6ebab5390b03d0502f9d8e6198c4dffd33b6fbe60e8f89d26b000c16396f573f"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_c3_autosettle_job.sql",
+      "sha256": "5fba645990ec19e0486396c2b1460a08fc1dd8c1489bdd1bf0f46b48cb073849"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_c3_beforestart_job.sql",
+      "sha256": "5b3315af84a223211167046d7bbbb46dbc4497d30b8759c0b7d243b7fc13ad7e"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_c3_growth_badge_club.sql",
+      "sha256": "802b0221941fe8cf29bf38b13e5966760ace655107334e1e2354289d30aec51e"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_c3_reward_pending.sql",
+      "sha256": "5b1a08f44f0959fd6d172a003dc67d1d6e5ee05216bae80bde1fff3870dbd5fa"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_c3_team_fields.sql",
+      "sha256": "a0faf926ca6dda2c7675d723efafbc4d5642a2d750b1a31de35b03b3d15c9afa"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_c3_team_job.sql",
+      "sha256": "ff4d60b50e6202de587e365816ab012411774a9cf4e07ffdb5713eb7cdbbce59"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_cash_withdraw_maker_checker_20260719.sql",
+      "sha256": "21ef5009bda7c3680db74f55e7f54071ce7231049ce5b84d5c04595f6d7e8e78"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_chapter_merchant_node.sql",
+      "sha256": "07f77eacb203d1de7ffa52a8907c30b4c92018fb2c09d8a3cd929f2cf64da82e"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_chapter_offer_menu_20260721.sql",
+      "sha256": "6a9235ee2fa8af2cd039ff66792ce6b46e12a80892db6f1be20e08ecd0d1b388"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_chapter_recruitment_20260722.sql",
+      "sha256": "d0d7e6332ec85f9759d60fa46f4eb36e561e6570e5640e5940970bf948b87361"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_city_interaction_template.sql",
+      "sha256": "23a171ad35ba7289494774214205aeed72a5eecf8386502c4b04b7b720abe9f4"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_city_merchant_node.sql",
+      "sha256": "5fa7eff2d755d881161074b614985937e9b8ac9a0f10e11eadc9e560f1a00150"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_club.sql",
+      "sha256": "7b844adbac379f83bc09960077b24585bd496ef70f14a29f40a15a293377d145"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_club_apply_fields.sql",
+      "sha256": "4612fc1be535a77b0a3faf4edf4682a4fe3c70a9b64ee09066ba027f4a5274f5"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_club_audit_level.sql",
+      "sha256": "4e967551c6a9d9da9416036521f1b3ddc1710a5f72779e4b2a1453474d69d194"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_club_fields.sql",
+      "sha256": "5028f158a2956926c4aabf6a268747c2b1e78460048f0f15011a113622d10e49"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_club_join_policy_20260809.sql",
+      "sha256": "a06129fbf796f12c109beb57ecf69078f1a3327217288d618fc9f235535d954e"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_club_lead.sql",
+      "sha256": "9fb2cccf9a727887df51c47e587cdb76f851d462e36002069359139dbdc9e993"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_club_leader.sql",
+      "sha256": "f1da3828a59ee572f9d3d04da95e5ee646042bcecfff2382ae7da5fe31b4073d"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_club_leaderboard_contribution_20260716.sql",
+      "sha256": "a8745615c334f81b141a9eafaa386734979791dfbe88f871d607e468440a4792"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_club_menu_grant.sql",
+      "sha256": "70c57f39a4ffff400718184513597f3459bc106c630678b64998c2f80e4095bb"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_club_multi.sql",
+      "sha256": "dc1a48942ab87b7c7782559de4e2c51ec22081b3ab3f53f15cd9838eb4f7f199"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_club_operation_config_20260721.sql",
+      "sha256": "fa88c7ef342d8a1c268bc7b3c2dbebdc49155645de74f592db510bd061abe8c5"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_club_post.sql",
+      "sha256": "0c1f4f36771ca9adfefeab08fbf44842b05aacb2ac4a7ff798a29ab42f1454d8"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_club_post_comment.sql",
+      "sha256": "026f2a930cd84add4e881a022755a06c00ce13cf56dd232a74adb6d89f6645f7"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_club_post_like.sql",
+      "sha256": "76c5bc1a8188fab69019d9e4cd65541eb7c1ab59c34c23f47a4e1500201a6ce5"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_club_session_reconciliation_job_20260807.sql",
+      "sha256": "651a8eebf421880fe1a385e056a8525b40cda6fb3601d20d615c395027c0ce31"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_club_topic_backfill.sql",
+      "sha256": "fa5023daab045f0ea0af1840a6919346b52f55f946c678c7c15225de3e1526c8"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_club_topic_link.sql",
+      "sha256": "030b1355592af30d48d9bcff7df100221d8efbf2e1275c33d72fa20c05c6d43b"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_club_type.sql",
+      "sha256": "7435729a6d429b81c3c620c8d51b1ac4046a85e9803efafabb8b91ef698fee2f"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_commerce_order_fields_and_verification_review_20260805.sql",
+      "sha256": "ca9484c16f4d3d0b9060e99c2d66b2019174f0d68df2c05cfc5f2429e6d3310d"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_compliance_agreement_docs_20260711.sql",
+      "sha256": "62262bdc0afe0dd7bbb85105ed280869c0bf0bfc9abe016660e1ffaab87333be"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_compliance_consent_deregister_20260711.sql",
+      "sha256": "6ce98e2c3d22325d33c15d4af043d8b881ce1665083f2ac3e6ecf63574fb438f"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_compliance_uniqueness_guard_20260712.sql",
+      "sha256": "0919adeea152c54cd1b941540322bca4433b8aacee72cf45038a921ce5f6387f"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_console_menus_20260721.sql",
+      "sha256": "23d7f0ed710d95dd502f6f0b5d2342a0d8b092b53b7ad40950aa68fa09627909"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_coop_complaint.sql",
+      "sha256": "bb305cc67b382e87b2fae5d7e4c550979b75a3f1608c547a92c7140e7ae579b2"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_coop_complaint_menu.sql",
+      "sha256": "9659136b5174d04d36f1b7752a2c6aaad4f4edd38da2199b9f0c54c59e06ca9d"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_coop_deadline_sysjob.sql",
+      "sha256": "25ca928d0b1c7b13a0bfc1b131ca8618b1088b74b6ae29db5da10373806de670"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_coop_deposit.sql",
+      "sha256": "df13f3e5e284e2b9fe625b0024b3a38641a6904a550d964ca11dcac2ef874375"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_coop_group_activity_settlement_20260722.sql",
+      "sha256": "c551cde8cbc1aaea14494867b05a4b334ca72035ef216dc079fb56fa8fe8d5f2"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_coop_group_verify.sql",
+      "sha256": "020d14a85c5707b4b16256007700e617d425ac1003b22519639d31b75bc86dbc"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_coop_group_verify_activity_20260722.sql",
+      "sha256": "85ecf5451a2463be4560157be23074c53746cd21f4d5ddca2f4ed3c79f555a82"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_coop_invite.sql",
+      "sha256": "0851dfada4935bf9eed5562a738af5cf08b5d68354e827e66eaf93f8b21b503c"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_coop_invite_handle_reason_20260805.sql",
+      "sha256": "546dc82daea32d8d109317751ef18ba231167f07269ea5d3e7302fa8c0940680"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_coop_invite_terms_deadline.sql",
+      "sha256": "53bb5aa72cb91eb842d042a6ef390fa68e9e0eb70c28a65a74749f5e4d35b837"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_coop_order_perk_credit.sql",
+      "sha256": "538223097858a139cfbb1a04f94fb237552d0d2b9c8e29f0345d22e4c64e7ca4"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_coop_payout_unique_20260809.sql",
+      "sha256": "9259fdcf0f5cba52eb9d4305449d0e06325c4eaf5af61ba2422754d6db990dcf"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_coop_perk_template.sql",
+      "sha256": "e877292f67982b6e33e5058d0f349493b9bc084e147ab6dfadbdf33659832a77"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_coop_review.sql",
+      "sha256": "b2526e76ab72c0df59b4f77772010b36490fbdcdaacf79736d56532514df1633"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_coop_settlement.sql",
+      "sha256": "63a58a0d1891f8772a90518210a9da1ae52b0f0b2baf0268a7e965abb48dbfbf"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_coop_settlement_line.sql",
+      "sha256": "4a2db426e61cd7b27f4d864fd87aa58a954a72c1f3e0a5a34526859596a7cc6d"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_coupon_dedup.sql",
+      "sha256": "42eeb52ce81d342d7538be70dd2a25596c52eb655a1cb8af04dd7265a6864ca3"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_crm_phone_snapshot_mask.sql",
+      "sha256": "5ca089d01c35f6e79fff0d480d3004b608624fe31e1690256d1ed4cbada131c9"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_d7_topic_rate_20260716.sql",
+      "sha256": "ff1c7d60ee32e5d2243cca56ce233af38efb7cd0a253032b5907df9714fe16dd"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_data_retention_job.sql",
+      "sha256": "e263fb95eb2f83ebc29429aabac9da3db39c16a3b20c589ba8711c6af4514a60"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_deposit_due.sql",
+      "sha256": "557260b191dcec56f0307e5214cbcbd787640a80c7881dfe45c215a99783ef78"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_downshelf_overquota_themes_20260707.sql",
+      "sha256": "d95d43aee668347f82c138768995d1dcd49b3caf4e2332c14da3bd7d9fc08f85"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_fee_snapshot_20260716.sql",
+      "sha256": "0cddbc983f2a457e562da4a8d525ce2a6cc0510b0c73b98a8e3ef1af356a4a6a"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_fix_member_100096_merchant_identity.sql",
+      "sha256": "4ca106dd690c62fa24addc533308e0797e87439328d7165b039c96b6b3375c2c"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_freeexplore_node_narrative.sql",
+      "sha256": "2b03a578cfaaefb9e73e5f72374d9e4f23a1c9d558b556b8fff4b761a188bb09"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_freeexplore_seed_content_demo.sql",
+      "sha256": "7b5a3515979649ff5a2e18d74f057d655d082287f02fceb2788516b52df942bd"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_fund_menu_cashwithdraw.sql",
+      "sha256": "277acefd5b9b3618fd8bad1803af8c2e49d7fc449cb18d38a1195f3151d1cae7"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_fund_perm_withdrawal_split.sql",
+      "sha256": "7edd63b95ae78b81330a8ee638c06c1e2d80b3289d11aab77b55d530e750cb84"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_fund_withdraw_dedup.sql",
+      "sha256": "07c1911f42ea033d2961e6bfdd079d2bcbb8ceb94da107dfe2bb82b6d7ccd4c5"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_fund_withdraw_query_job.sql",
+      "sha256": "5d9f72231474ad0e05366eeb56db40eab0c11ebcb3a2b721e3acc16be210e35c"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_fund_withdraw_reconcile_job.sql",
+      "sha256": "44af88343d1444ec4c3f4a5827c5394b5423fb0401af049dfc231a0717bae70c"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_fund_withdraw_statemachine.sql",
+      "sha256": "77a0853638bf5910705a3d8c581b8acfc01c77edb96a012caeb34d7543f6c27c"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_g0_admin_menu_gap_backfill_20260722.sql",
+      "sha256": "28429487f925710e3eb7e9359eaceaf6c3614985ece9d3221f3b87be7c2ce9f5"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_g5_gift_change_audit_20260723.sql",
+      "sha256": "775cedcd3b0d94a6a42fea73cd6e961c27eeaa6b2d36d08bade2554080522da7"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_hint_unlock_idempotency_20260722.sql",
+      "sha256": "3343e1920fbc3c170af02d1706845f8d4b0c675b3416a83f1dc3e2db0c6bd69e"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_hint_unlock_points_20260721.sql",
+      "sha256": "8a58976def07cd8e0e6cd5d5853cc93fddb01b76967c1fe77f7620db95f99f7e"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_im.sql",
+      "sha256": "159a5c2aac128966bd648d4dddf9b5ec51b8d2d2e8a2e15d4294750802f6e90f"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_im_menu.sql",
+      "sha256": "364142961dc6710297f700d9234173c37049f560527da3b357653d458e01b1df"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_level_editor_fields.sql",
+      "sha256": "8e800a7e14c5b0f5e5b06943e7380084b0e6e182842483a81d3ca99f886ef305"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_level_editor_story_photo_review.sql",
+      "sha256": "1987157d6c58b352304694fe6e743f16964bc498d68268ef893733129de2c02d"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_login_identity.sql",
+      "sha256": "9f59f4591506690ba77b2eb9a2cc689588897a380f03c3681d96316c38de796b"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_m10_feature_flags.sql",
+      "sha256": "eeb2f43d9c038f178a9ff3485049adad583920f059f60aa33938c292f23acbe6"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_m1_3_activity_club.sql",
+      "sha256": "1ba81606032993e9516ec45995ad9b235ca09193d25e44c449e836734d713757"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_m1_permission_full.sql",
+      "sha256": "0b4d60e2d8a010be6937a11646316e186092006641973ce60fda8387c24d21dd"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_m2_self_play.sql",
+      "sha256": "5448b3e56e4fe594f20e5c9873abbb69d6a2901f37a1a18347def3a2c404da7c"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_m5_medal.sql",
+      "sha256": "35e0f2fc71cfc6017cee00c478cc89bdcc63cce445518bd70d26afb84b321bf3"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_m5_npc_egg.sql",
+      "sha256": "b84e45217ecab6b4d299d1cfd32e8c63df6a34b53994e842a088b7e9fe5750d8"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_m6_reward_drop.sql",
+      "sha256": "556876ec247702929f3c096f60f0dd9b29a61fd3b8afcebce2f7e643e2db2f86"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_m7_xp_budget.sql",
+      "sha256": "6fd6e13d7d24099445246741c34ae8d2171356d88a54fb0dc79dd20b1004587e"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_m8_track_draft.sql",
+      "sha256": "f4a34f5de9dfe2677d3f0946786f62d3498a7e374f66ab950ee9dd9bac1bfc68"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_m9_play_attempt_log.sql",
+      "sha256": "a5084ce11fcc39e75f4d6cfb704299e2279868abeb7bb837e8ed7186259ddf47"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_member_capability.sql",
+      "sha256": "320af70eb97c6e79b83ebcc3e98c55ffe8cadd754a5fbc3d7b72714040c8fd2d"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_member_cash_withdraw.sql",
+      "sha256": "11f0479d14a2568fb0337e409b68352ea19341e5559b511224f530afeae2af3b"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_member_cash_withdraw_add_audit_20260719.sql",
+      "sha256": "fef22bb550c2367a13f06696e236e8d0b95bc0d93e73d40336985c92933c8a15"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_member_cash_withdraw_channel_detail_20260725.sql",
+      "sha256": "47eb63f2abc894158c36284cd26a70682f50bac53f03e95633ac43da66896de5"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_member_collectible.sql",
+      "sha256": "91c8f0e5746f03eabe4a663ca20056b56bcdd89133362a2e1c8e9d6647bb41c3"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_member_pii_permission.sql",
+      "sha256": "ff02c237019535d049a811b5cc9c3da65feb6d33d1b4f5c7b01d3d2f78a536db"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_member_visited_poi.sql",
+      "sha256": "394b345f8deddbf7f6a1184a243fca78e885f19c63f22de9f2c982b0a3c9ff2f"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_menu_2031_rename_ticket_20260726.sql",
+      "sha256": "aafd9ed4ac947aa2cf12c86aba77abd5dee6b25c55d42b20925e04c01d48e075"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_menu_2050_coupon_to_supply_20260726.sql",
+      "sha256": "a1035261ba9b97918fa70fba2cb44e1e7fd6c9712062c50ebc433857f8617619"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_merchant_business_status_20260707.sql",
+      "sha256": "04f58a2736ff270f9271b1cc6d021c6ca79c5f35c0f00c36110ab7c7c3aa9901"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_merchant_clawback_20260725.sql",
+      "sha256": "0e2b5c4133e8d13113057757aa8ed3e7f6618dd2c0e1238d2eb902483b4eb5fb"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_merchant_clawback_menu_20260725.sql",
+      "sha256": "5a7179097ca13434f2d06de2f91bbcef07de720f7b09113c3b97fe68c1e33af4"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_merchant_coop_profile.sql",
+      "sha256": "eab47a1f8d823e17c2d6879c9f697427e8456a57893c0c1ab40edd98dd22789f"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_merchant_decor_20260708.sql",
+      "sha256": "5ad75946dfe9f492d88686efe88fb9b9ecb748bd53320a64525ca2253fe08844"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_merchant_geo_20260708.sql",
+      "sha256": "53d4299336f5f501e3bc0c21ecdb6ed1c23f8791614caebcf2e2d42c78fb8419"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_merchant_geo_verified_enum_20260806.sql",
+      "sha256": "c6fbbc237d2fe99244a99b8a9d31e8a8a1af253bb837b314ada1305ee27aa5b0"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_merchant_lead.sql",
+      "sha256": "ea6313833aa6764afaaead8321cc4d3be3149165175b9239c7a10165591a789f"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_merchant_lead_menu.sql",
+      "sha256": "a08bbe4763903b672e16bbd2065fb4eae94d9dab6a8e5d2ad42de9fa9f3c204f"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_merchant_onsite_consent_scope_20260815.sql",
+      "sha256": "a9e8d39d07d5133813d3aeb2601cef2099044b3039f6690e65a8d993c375e242"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_merchant_pool_dispatch.sql",
+      "sha256": "4113a59547c62b5d7a5d28ab8de3448de4b733599000977bb5d53f4f8a8290af"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_merchant_referral_bounty.sql",
+      "sha256": "f42ea6cd3af9bdd995c356ed707734fdac4c05396315945128c33030d6ca3fe1"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_merchant_subscription_20260708.sql",
+      "sha256": "f41206d4f62947ea777cfce8e39aaa3794d5b8199b08c7529680621894101c70"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_metrics_snapshot_20260728.sql",
+      "sha256": "afd32193648e2d4b264840cbe9208d0635dbb015fe22a6104ce9d9a65a1d85eb"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_multi_image_20260711.sql",
+      "sha256": "6278e919324c31003c5383c80f308d2f7dd46c6bad24ac76d4e70a5f3f55c0d8"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_multi_ticket_signup.sql",
+      "sha256": "43fd97027b9f076ac2f33c952eadf45972b93588e80d5e815f059158baceac8d"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_npc_chat_log.sql",
+      "sha256": "f439ca21fc8549efbefc5d27c6414684b7976dd0b4691b831c8348e3aca75c00"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_npc_chat_request_20260722.sql",
+      "sha256": "1d6ecc2786102806389ed6b44ab3d1245e92e57e94fe988e2be0cc6a4afe2494"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_npc_chat_retention_index.sql",
+      "sha256": "96bc32061253f8753db2cf88987219f12986251ec7b53246cb2a4a72573fe97a"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_npc_explore_lines.sql",
+      "sha256": "d202798a105dad1c876dd59804048e072e8f81cf34cd84f594b1f436e6bc88d8"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_npc_governance_v1.sql",
+      "sha256": "17c0b6fb657b00a63be826d1b6e61a6bf4f86922d1f511963e18982ab3300e07"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_npc_line_cache.sql",
+      "sha256": "438a11ef0c5a3f2ff464020952b322285ee82e656b30ae85752d811855997031"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_npc_profile.sql",
+      "sha256": "f78c36e57e726d6a51d76e010ec2c7950e694d488bfdd4dcd1b0ddba9930830b"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_npc_profile_seed_20260716.sql",
+      "sha256": "f607f98b4fab4ababfd9d7cffde66e64846ad48b62c73264de46e6d92e370dd0"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_npc_roam_lines.sql",
+      "sha256": "010e03ee6a1d84fbd0ba0ef87496f936c544c3f4e5139585acaeadbf440063ca"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_official_broadcast.sql",
+      "sha256": "bc8c6accaa02fb5518e4bf6d41c443e35db9fed0c8d69a70f0f5c58ebabbf349"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_official_broadcast_freq_idx_20260727.sql",
+      "sha256": "18fc3d5e30c9033df1ee91a473a068ab9a10685d8a641173d413c81d7b86eefd"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_official_event.sql",
+      "sha256": "8141dc76c077fe35582236e5fb81bbf1cdd3090d721e954a2de1dcac4861a22d"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_official_event_menu.sql",
+      "sha256": "0abca9a8576729914ace3874eaa1b7ae25eef5321d15b971fc0c9c39c2ced4c9"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_official_event_p0_v2_20260722.sql",
+      "sha256": "0f87e31964dd1c5699a71d3768c90a589785717cab29db1bb785809a18e7a28e"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_official_event_sysjob.sql",
+      "sha256": "2fec1800f4de53fc82e11040a1cd85933e06c07cc3ee3ba6a55f791fcdfd9c68"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_open_club_pool.sql",
+      "sha256": "7852d2d8f391532adce6e6cbd9b21a257c1972f4c64c9c719ab89b3acacbfc45"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_order_close_job.sql",
+      "sha256": "829b6fb7023b912b13c64041e61224dad619f8fb9d6893178fe1b3fcb277baeb"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_order_close_job_remark.sql",
+      "sha256": "b6f38b35bc9b802ce235dec5c6ad6aee57071ab35568f18800389bd4466f11e2"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_order_pii_encryption.sql",
+      "sha256": "7aafc58872a9a8c69612671ab8246c854ff3a7c6322a878bdda9019920f17cbb"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_p0_clean_member_security_probe.sql",
+      "sha256": "73ab337ab7dd9ab19941188051dd54123469a070a2a7f790f4781e3e25506a7f"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_p1_funds_core_uniqueness_20260724.sql",
+      "sha256": "bb593959864a62a2866a6ce144af9b151d958c2ac92f05760d6947afa61f2d66"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_p1_funds_spec_contracts_20260724.sql",
+      "sha256": "14cec251e4de93acfe587b5ee06b4ba696b79ad5f34eedfbeb8e53adf66c6bda"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_p1_rbac_permission_defaults.sql",
+      "sha256": "c5b56e72923d92f5578b03ef15125c19347592ced3a11551c30e057bdfd7f486"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_p2_4_admin_ia_menu.sql",
+      "sha256": "e56f1e2ae1227af1ee56f93a48227460b0eea252a0320a2369811d9b37c91743"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_p2_4_t1_role_grants_20260726.sql",
+      "sha256": "264b82fc5a6af112dd85022d25f8593ae5e6f9bb2541181f4bdaf7573125d11c"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_p2_player_growth_badge.sql",
+      "sha256": "9317241bd2ee13f4b83045c126e39ae63c1e09d6df3c328a48c9518a82d6672d"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_p3_phase_b_player_world_creator.sql",
+      "sha256": "fdc5c970d831babce713b0f1b66348918eecceea8b7fb1ab581172e3ce8f1fa4"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_p3_phase_b_retire_energy.sql",
+      "sha256": "abc41adf2a41cefc5735b82be3df80158cee8e4aba609bb13562cd3763e0b5ef"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_p3_phase_c_crm_finance.sql",
+      "sha256": "76ef3bf6f6300442240d75cc5f0f937ff3fe25f2bfdba358e5932e10e3b2b293"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_p3_phase_c_web_rules_refund.sql",
+      "sha256": "d1923359a75673408dd724867db535b699d7d09d7eefb28e458666041dbfdd6f"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_p3_platform_foundation.sql",
+      "sha256": "3a27459afddb12f9290a7beeffab1357c17e00bfdb02861792c69c193c7f36ee"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_p4_badge_def_engine.sql",
+      "sha256": "9eae851a6ac80e085032d878c8b0a9811754b236d488e351febd58c7b745fd2a"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_p5_identity_card_seed.sql",
+      "sha256": "926bc6953404bdcd5c76173a43f8f89c2860e36803e56a15609f15a9bc1494fe"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_p6_roam_stamp.sql",
+      "sha256": "4944c9b2323ee8ac688bcd9b4a62335286d95fba34100800b22334dd65e1a29d"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_p_block_freeze_20260725.sql",
+      "sha256": "dfae004c44722ea9cfa871f0df5dad9d0629ead1cb79776a4c8b8cdb6689d5ce"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_p_block_freeze_menu_20260725.sql",
+      "sha256": "bf83f6b436bba8deb30a004ef87b39578e27e2e035bc319889dd0044074ce6a9"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_perk_ledger_20260716.sql",
+      "sha256": "45edec4fcd03f88e3f114f9a9ec42bb95ef1f0535e4422a051b8fb00858b3d54"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_pii_backfill_job.sql",
+      "sha256": "6e15f403712408c22ee7eeabc5a19cd1446c823ad319bb1c899f3af87c987778"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_pii_view_permission.sql",
+      "sha256": "8e10c58fd55a20d0ba51a0f9f46c904486da67e9257200d0733967aca45bd43a"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_play_progress_points.sql",
+      "sha256": "9732ded4519653e0f3ed8f23f3787616eeb4aa1fe1c2fc91153bc2bb9c7cb2bd"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_player_disable_event_publish_20260708.sql",
+      "sha256": "7543f8bc128bd3402f39bb0924ea3e425971c4e797d6806ca590fa3ab3f1c673"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_player_maxthemes_2_20260707.sql",
+      "sha256": "5e0733960862f4ee85039c3d30f069ca5c0cb52a99485598382484c72cb39b55"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_preset_menu.sql",
+      "sha256": "b0a3532cd4a79a17fd11228979bcc5d5bc67894af3396af23c4ad3c197ac875a"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_preset_route.sql",
+      "sha256": "f49afa1332440e35606580d32961efc0ca5f6edd83b457ddf0487e358b62d88b"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_product_role_20260716.sql",
+      "sha256": "083fefa5577d2b9eba70bd788254242a1c44b0c8d63ede6f5e2c6dcff7a3b5a3"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_product_role_content_owner_guard_20260723.sql",
+      "sha256": "c1b64ff53e25fd33dcf4d3b009c41fa5f8d1a4e92e4864a40046051919e9f5da"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_product_type_purchase_kind_20260716.sql",
+      "sha256": "e5384a1b04de0eb54ad1a4b30e0effd80ff4722fdb976fc9128412c336c8314c"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_r10_merchant_city_nodes_quota.sql",
+      "sha256": "8c6f544a1be51eed97296e043274559490f16a858c211e569ab14a2d4d441533"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_rbac_role.sql",
+      "sha256": "5bb32c2001933a1c96c30a5c758a20f5cf8d3c35a3091dc60907bb6d6644cdda"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_refund_maker_checker_20260718.sql",
+      "sha256": "3a88e62e514ec8d5c80ed5b5b1bde6e47bab9c9309b34164c87ac7c83bfb8f36"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_refund_manual_fallback_20260714.sql",
+      "sha256": "925ff83e3026cbb6d72303b697f495fd33ab164bf425c89fc55efaa4040f3ba8"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_refund_policy_snapshot_20260716.sql",
+      "sha256": "c18ecb555ae48980ae16c118854c2d84f0b52ca9ca0ef197dd4e7f7394c041b6"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_reg_paid_qr_index.sql",
+      "sha256": "d2f7763998d3ae4b1173ba7c55b18ae6bc75448cff29e20942b260774623d5c8"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_registration_pii_encryption.sql",
+      "sha256": "8369c8a444a46d7bf3252fa2a1bc8780703b1aa8257018f0c2830930e51fd67e"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_registration_request_id.sql",
+      "sha256": "f1115d5be63938a9686fd2d299f60eac6d129321f72e6ab5dafde76abc29959b"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_retention_create_time_index.sql",
+      "sha256": "c9050d97be2be1d4afc3d7748d18371340d379756c697b112cfc3e125b22aa5f"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_revshare_fee_cap_20260717.sql",
+      "sha256": "595f2e60ed43d3166e9539321be9fdfc160d7a0b96c3c9212367918e205af39e"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_revshare_payable_20260717.sql",
+      "sha256": "a1169a64058bfb495ca81d0b425bc8302a22e07bc74841caa274af4c3e42e405"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_revshare_payable_menu_20260717.sql",
+      "sha256": "97f9cbc1be6dbef386fa395d50c73479efa70de50dd7a54cd10b6e5ffe24c981"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_reward_drop_scene_20260806.sql",
+      "sha256": "45b6c3334f49c028e612c155ea105798f5427cb00fc60b758d4c0a8603f0c0d5"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_roam.sql",
+      "sha256": "59e89ed0ce46b73acbbf5a03fc586f64ad8d856410732e888d407fd279dc7927"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_roam_ai_content_menu_20260727.sql",
+      "sha256": "94d58ee2c9fd11a66c70adfe9b1448994223e3a725f258ee6128c143b9bab061"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_roam_ai_content_v1_20260723.sql",
+      "sha256": "c833b3fbd46a5a3c30be4a558a9af5220b5ab8c3e95d6a65e61c7b8dce327054"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_roam_merchant_application_20260806.sql",
+      "sha256": "f12b0cd4d755566ba3a06c03ad6438a00d92877bbb7b78b4baf4856acb8f9244"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_roam_npc_feature_flags.sql",
+      "sha256": "f82b5927c17aafa558943dbf867e7b3632d725c77823da6ed2c1f30ecc9a28c4"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_roam_prompt_lines_v2_20260722.sql",
+      "sha256": "9fdad42afab3efe95c15c01d5bfc509c4f7b1e1e6148e056d82856d528d108ab"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_roam_recall_20260806.sql",
+      "sha256": "f53f49fedc01ecf4bbb8a64cf303f872a19915070bb72af7603ac3279ee9fcae"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_roam_shop_visit_20260716.sql",
+      "sha256": "84620eb1621cdf02959558c991cd8dd23964853e149676220bd9ec9ed449f249"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_schema_history_20260724.sql",
+      "sha256": "6c1f47c33e4794e2abdd963db0fc22b2b036fc6c310128b4c1d97ba00879d6b8"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_seed_topic_template_shelf_20260726.sql",
+      "sha256": "7237b2aae6be491e11dbc6cee57af17131f2e0f0762082b510ef25f3647f6331"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_settlement_claim_20260811.sql",
+      "sha256": "4b9d487914fb146fb0d1de7625b398ccbd2143c7fa77d5d7ccc0a471b511394a"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_settlement_decommission_job_20260716.sql",
+      "sha256": "c99c0754fd7e5b5c52c32733cdd67f21c2a8ef1c0b7eddaf4ddef0ddcbac11cc"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_settlement_menu_rename_20260717.sql",
+      "sha256": "97dc5f117c4b10d94dfc75df1059631f1814bd7267b62fc87a2282b6594d8c2c"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_settlement_reconciliation_job_20260710.sql",
+      "sha256": "6dc99379fe93cc0767bef7050979c2fc0074e232b9038ad28f7e92486541af1b"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_settlement_reconciliation_job_deadline_20260725.sql",
+      "sha256": "089e7224a9d7bfe7a29ae90dfeba380398b173c8eb0d06da9a01906b486a2b77"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_settlement_resui_2fix.sql",
+      "sha256": "d39f9d0e186143d28ef8aaa1580f6833de48f174c1e4c202dc97f39e7c38246e"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_settlement_rule_align_20260716.sql",
+      "sha256": "56d221b702c68b781c682f1118890314013b4e0571050b901894b104c560fe8c"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_settlement_rule_topic_club.sql",
+      "sha256": "b026af0bdf35edf975c7d381617d43aefcf6a7d721d53b52799fbc021ffbdf03"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_shop_day_batch_capacity_20260815.sql",
+      "sha256": "2ffe49b47e0b693b763eb8a351bd62ba1f8b0ebc3858d2574dec4c476953660c"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_square_route_preview.sql",
+      "sha256": "c0b2b34ef7e17e4178c05d979bf8af984740251a9cf8e24bc94054547f4650e2"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_team_decommission_job.sql",
+      "sha256": "a6d57fa6710d00b7d916e305fbf7a95ac0cb5dfa3b67e617fa124f81f7b924ab"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_terms_mode_20260716.sql",
+      "sha256": "000c950a3281d2c8203537a973a355f8e426b1434f2ed2939eda602cfd88757d"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_ticket_subtype.sql",
+      "sha256": "bd9b9ed88435c1174351aaa069a26cc0ba821cf0b3d5d7dffdb7319931241e6d"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_topic_audio.sql",
+      "sha256": "e762168c8051f4509fcb9eb6675a511ca526a2b9bbe025a8e925b2840e9ecd63"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_topic_chapter_blocks_20260810.sql",
+      "sha256": "dba64b00b1ee1f2f95d4face6ac89406503c656b2468baa204825be4fafe421b"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_topic_commercial_review_20260814.sql",
+      "sha256": "26b4465ceb5c680b15b34410f5e221ae3a40dd8a7c5c54118ae3919ed985e633"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_topic_completion_coupon_20260722.sql",
+      "sha256": "cd741a6aa1be0a55c80861ebf56171635a539573cf1cd293fcb59f7490dcd21c"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_topic_copy_perm_20260717.sql",
+      "sha256": "047ff8f31e5013952346bae870047a3c403a9b21c5bdd2a30494828df5e0c4e3"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_topic_draft_20260707.sql",
+      "sha256": "ef55fe475dce4e92df086428d1d19c969d43d641aad666550df7db2366a2fb57"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_topic_edition_reopen_request_20260811.sql",
+      "sha256": "01a293cb2137a0366ce19fee895bc61062d08266fa33bb3de3a32bcf13395300"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_topic_lifecycle_recruit.sql",
+      "sha256": "4f4bd6c965de0f751bafc37eb17225a086bbdf21a74c273d17439bd255e06563"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_topic_plaza_recommend_permission_20260723.sql",
+      "sha256": "97d68cd27a9d4b0cd975479dce0e6f69a430c75eaf81f1380eadbd293d53f353"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_topic_sale_canonical15_20260815.sql",
+      "sha256": "a34651dbff71de8e5111c0b52981f4c656e09cc5c9bd54b309a3ad02f5be3c79"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_topic_sale_timeline_20260811.sql",
+      "sha256": "09b51551bf795a5fb2ad75ac0cef91d3aa92b0f8264c87a2db8ae483c13b390e"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_topic_source_menu_20260722.sql",
+      "sha256": "8d11c091fef5fbe98dc2f155d8a4a4037815f834a9365dc041e0ea688ad10e92"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_topic_source_menu_20260722_02_content_slot_permission.sql",
+      "sha256": "87e507999e2ad9059e170db1edf88940501eb6ac444ed1b90948c61690e77777"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_topic_template_20260707.sql",
+      "sha256": "e5d6877340e1abb480ee23fe510ece0a3e2e4f1111600143e2e6eb019fa9f072"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_topic_template_meta_20260726.sql",
+      "sha256": "3be1e223176a8a9d21026fd18a06a1e1a9c75b08c62226c5d45825d8308956bf"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_unify_player_badge_source_20260806.sql",
+      "sha256": "464ab6f56d697d5dc042248998d30ac7da3ed25b12006bf858c7f51b7b5435c2"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_userpermission_menu.sql",
+      "sha256": "16c3460d716494d6affe16c21706a88eb9e245204547915e55ad981fd4080b51"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_verification_qrcode_repair_job.sql",
+      "sha256": "21c70ac205f71243b695572b14ed7cd7654762e85647dd199f068b7bc49a6332"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_view_registration_merchant_ddl.sql",
+      "sha256": "21f49a4f9506314dfe7f513e92cec6d051e1f637e3308868b2dec6a19dd995f4"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_w2_terms_axes_20260811.sql",
+      "sha256": "a357b238a5c4144863fd8bed6369e296bae3ec5256c93bf5af382c992a151ffe"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_web_admin_nine_domains_20260719.sql",
+      "sha256": "d7dfb04a890923dbe6b946393c0c5db62450e56036b67a5c18359563cb11d358"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_web_admin_roles_20260719.sql",
+      "sha256": "b8d10106e02235eea8267c6e2bfaa275fdeb78e6a43bdcc7947d4b16b4945925"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_withdrawal_payout_reference_20260809.sql",
+      "sha256": "4ff02accbab7110d472eb3f4813e505f28b229b3da39a5472c7ae61f4123ab42"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_withdrawal_pii_encryption_20260710.sql",
+      "sha256": "e5d782b510d8f2d9485726112def71b828cf5db56d67acc2b98d85dfb4fdd2b0"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_withdrawal_status_comment_20260810.sql",
+      "sha256": "2d328649be5541e5de27d6e70df450c4c4334b06a98e0b9b47dc23f950eb2882"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_wx_content_callback_inbox_20260724.sql",
+      "sha256": "96002898352da482c3fc5a82a2f52a7e46c15d153859febda307094d53795c00"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_wx_payment_callback_inbox_outbox_20260725.sql",
+      "sha256": "563f3ac0886b3884e1518921d371a15b657fdbdb04d36fe4f2038b5600e618ee"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_wx_trade_bill_download_job_20260726.sql",
+      "sha256": "48c288360d9527b9fd357d6d132a3d6f2a138413b2da036f74f325e772bb60b4"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_wx_trade_bill_snapshot_20260725.sql",
+      "sha256": "713cc0f03ae68d76b6761c2c5fe01fd4781b5ec2800fce8922464ce732fc5db0"
+    },
+    {
+      "path": "chengyinhub-admin/sql/preflight_d78f18c_readonly.sql",
+      "sha256": "799b6581a8711dc4532082a8c878ecd25de5fcaf63ab6c71742ca22157e4725f"
+    },
+    {
+      "path": "chengyinhub-admin/sql/report_coupon_reconciliation.sql",
+      "sha256": "847196c619a24289d769ad06a390c3c640a7e4f2d6a7a53d7415bc9d3968a21d"
+    },
+    {
+      "path": "chengyinhub-admin/sql/seed_official_content_template.sql",
+      "sha256": "d7940dd2b9ce58a1988b5396195731e815df63af69399d6a77a2aed3c4ae6bd6"
+    },
+    {
+      "path": "chengyinhub-admin/sql/seed_preset_demo.sql",
+      "sha256": "5951b0d1b7df86ee88d64aea256fd6cfead7282ec424ae1e762ce408ce04827e"
+    },
+    {
+      "path": "chengyinhub-admin/sql/seed_refund_manual_menu_20260714.sql",
+      "sha256": "886bf11c3464b4ab820e953893b0536f2eb77c9096e3be637c6d2a2acbe98226"
+    },
+    {
+      "path": "sql/base_schema_20260818.sql",
+      "sha256": "da4e67ec02e8f96b9aa9b314a317b4b0c325af497fe79da65636886bea56d3a9"
+    },
+    {
+      "path": "sql/quartz.sql",
+      "sha256": "5a0e64a518eb16a1ffbb65b1569002e41ec3b1639b0d5770468beecc3c05fc52"
+    },
+    {
+      "path": "sql/ry_20250522.sql",
+      "sha256": "2664b5d5bba1742778cb7668d6e25fda8179bdf8b2e597143b6813f3f38c788a"
+    }
+  ]
+}

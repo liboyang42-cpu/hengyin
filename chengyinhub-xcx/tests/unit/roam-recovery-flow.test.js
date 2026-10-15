@@ -175,7 +175,7 @@ test('finish已提交但timeout，冷重进只回读原结果，不重复奖励�
     if (o.url !== '/api/roam/finish') return original(o)
     calls.push({ url: o.url, data: o.data })
     const key = Object.keys(sessions)[0]
-    sessions[key] = { ...sessions[key], state: 'FINISHED', resultComplete: true, result: { totalXp: 7, medal: '原结算徽章' } }
+    sessions[key] = { ...sessions[key], state: 'FINISHED', resultComplete: true, badgeDelivery: [{ badgeCode: 'ROAM_TILES_50', state: 'DELIVERED' }], result: { totalXp: 7, medal: '原结算徽章' } }
     o.fail({ errMsg: 'request:fail timeout' })
   }
   const first = mount(); first._pendingTiles = ['wtw3sjq']; first._pois = []; first._dist = 10
@@ -424,4 +424,157 @@ test('同一漫游页面重建后保留累计用时，旧快照也不会归零',
     if (restored) clearInterval(restored._clock)
     Date.now = originalNow
   }
+})
+
+test('C3 tiles落盘失败保dirty，重试成功只清相同revision', () => {
+  const page = mount(); page._localTiles = { wtw3sjq: 1 }; page._tilesDirty = 1; page._tilesRevision = 1
+  const write = wx.setStorageSync
+  wx.setStorageSync = () => { throw new Error('quota') }
+  assert.equal(page._persistTiles(), false); assert.equal(page._tilesDirty, 1)
+  wx.setStorageSync = (key, value) => {
+    write(key, value)
+    if (key.endsWith(':tiles')) { page._tilesRevision = 2; page._tilesDirty = 2; page._localTiles.wtw3sjr = 1 }
+  }
+  assert.equal(page._persistTiles(), true); assert.equal(page._tilesDirty, 2)
+  wx.setStorageSync = write
+  assert.equal(page._persistTiles(), true); assert.equal(page._tilesDirty, 0)
+  assert.deepEqual(values['roam_memory_v1:9:tiles'].tiles, { wtw3sjq: 1, wtw3sjr: 1 })
+})
+
+test('C3静默落盘不算成功，dirty保留', () => {
+  const page = mount(); page._localTiles = { wtw3sjq: 1 }; page._tilesDirty = 1
+  wx.setStorageSync = () => {}
+  assert.equal(page._persistTiles(), false); assert.equal(page._tilesDirty, 1)
+})
+
+for (const route of ['/api/roam/reveal', '/api/roam/session', '/api/roam/tiles/page', '/api/roam/finish']) {
+  test('C3清缓存使旧' + route + '迟到回包失效，hide不重建恢复', async () => {
+    loseBootstrap = false
+    const page = mount(); page._pendingTiles = ['wtw3sjq']; await page._flushReveal()
+    const oldSid = page._roamSid
+    let inFlight
+    const original = app.sendRequest
+    app.sendRequest = o => { if (o.url === route) { inFlight = o; return } return original(o) }
+    let pending
+    if (route === '/api/roam/reveal') { page._pendingTiles = ['wtw3sjr']; pending = page._flushReveal() }
+    if (route === '/api/roam/session') { page._recoveryNeedsLookup = true; pending = page.recoverRoam() }
+    if (route === '/api/roam/tiles/page') pending = page._fetchRoamTiles()
+    if (route === '/api/roam/finish') pending = page._postRoamFinish(20)
+    await settle(); assert.ok(inFlight)
+    assert.equal(page._roamMemory.clearLocal(), true)
+    assert.deepEqual(page._pendingTiles, []); assert.deepEqual(page._pendingCollectedAt, {})
+    inFlight.success({ code: 200, data: route === '/api/roam/session'
+      ? { state: 'FINISHED', sessionId: SID, clientSessionKey: page._clientSessionKey, result: { totalXp: 100 }, resultComplete: true }
+      : route === '/api/roam/tiles/page' ? { tiles: ['wtw3sjr'], nextAfterId: 1, hasMore: false }
+      : route === '/api/roam/finish' ? { totalXp: 100 } : { sessionId: SID } })
+    await pending; page._sessionClock = { elapsedSeconds: () => 1, isPaused: () => true }; page.onHide(); await settle()
+    assert.deepEqual(values['roam_memory_v1:9:tiles'].tiles, {})
+    assert.equal(values['roam_memory_v1:9:recovery'], null)
+    assert.deepEqual(values['roam_memory_v1:9:sessions'], [])
+    assert.deepEqual(page._pendingTiles, [])
+    assert.equal(page._roamSid, oldSid, 'known active original SID is retained for fresh collection')
+    const cold = mount(); await settle(); assert.deepEqual(cold._pendingTiles, []); assert.equal(cold._roamSid, 0)
+    assert.equal(Object.keys(sessions).length, 1, 'server history retained')
+  })
+}
+
+test('C3清缓存后活动行程只保存新采集，不找回旧pending', async () => {
+  loseBootstrap = false
+  const page = mount(); page._pendingTiles = ['wtw3sjq']; await page._flushReveal()
+  const sid = page._roamSid; page._pendingTiles = ['wtw3sjr']; page._pendingCollectedAt = { wtw3sjr: 1 }
+  page._roamMemory.clearLocal()
+  page._accumulateTile(31.2, 121.5); clearTimeout(page._revealTimer); clearTimeout(page._tilePersistTimer); await settle()
+  assert.equal(page._roamSid, sid)
+  assert.equal(page._pendingTiles.includes('wtw3sjr'), false)
+  assert.deepEqual(values['roam_memory_v1:9:recovery'].pendingTiles, page._pendingTiles)
+})
+
+test('C3结束补传使用原SID的独立记录接口，重复/丢响应不结算发奖励', async () => {
+  loseBootstrap = false
+  const page = mount(); page._pendingTiles = ['wtw3sjq']; await page._flushReveal()
+  page._pendingTiles = ['wtw3sjr']; page._pendingCollectedAt = { wtw3sjr: 1234 }; page._saveRoamRecovery()
+  Object.assign(sessions[Object.keys(sessions)[0]], { state: 'FINISHED', resultComplete: true, result: { totalXp: 7 } })
+  const original = app.sendRequest; let lose = true; const archive = new Set()
+  app.sendRequest = o => {
+    if (o.url !== '/api/roam/session/records') return original(o)
+    calls.push({ url: o.url, data: o.data }); assert.equal(o.data.sessionId, SID)
+    const records = JSON.parse(o.data.records); assert.deepEqual(records, [{ tile: 'wtw3sjr', collectedAt: 1234 }])
+    records.forEach(r => archive.add(r.tile))
+    if (lose) { lose = false; o.fail({}); return }
+    o.success({ code: 200, data: { sessionId: SID, acceptedRecords: 1, evidenceType: 'CLIENT_REPORTED' } })
+  }
+  const cold = mount(); await settle(); assert.deepEqual(cold._pendingTiles, ['wtw3sjr'])
+  assert.equal(values['roam_memory_v1:9:recovery'].sessionId, SID)
+  await cold.recoverRoam(); assert.equal(cold.data.finish.xpAwarded, 7); assert.equal(archive.size, 1)
+  assert.equal(values['roam_memory_v1:9:recovery'], null)
+  assert.equal(calls.filter(c => c.url === '/api/roam/finish').length, 0)
+  assert.equal(calls.filter(c => c.url === '/api/roam/reveal').length, 1)
+})
+
+test('C3旧记录缺采集时间不伪造时间，保原pending供核对', async () => {
+  loseBootstrap = false
+  const page = mount(); page._pendingTiles = ['wtw3sjq']; await page._flushReveal()
+  page._pendingTiles = ['wtw3sjr']; page._saveRoamRecovery()
+  Object.assign(sessions[Object.keys(sessions)[0]], { state: 'FINISHED', resultComplete: true, result: { totalXp: 7 } })
+  const cold = mount(); await settle()
+  assert.deepEqual(cold._pendingTiles, ['wtw3sjr']); assert.match(cold.data.recoveryError, /采集时间缺失/)
+  assert.equal(calls.filter(c => c.url === '/api/roam/session/records').length, 0)
+})
+
+test('C3原key响应另一个SID不得更换原SID或补传', async () => {
+  loseBootstrap = false
+  const page = mount(); page._pendingTiles = ['wtw3sjq']; await page._flushReveal()
+  sessions[Object.keys(sessions)[0]].sessionId = '9007199254740994'
+  page._recoveryNeedsLookup = true; assert.equal(await page.recoverRoam(), false)
+  assert.equal(page._roamSid, SID); assert.match(page.data.recoveryError, /关联/)
+})
+
+test('C7同意回执在停止后迟到不得开启定位', async () => {
+  const page = mount(); let resolveConsent; let starts = 0
+  app.recordConsent = () => new Promise(resolve => { resolveConsent = resolve })
+  const modal = require('../../utils/modal.js')
+  const originalShow = modal.show
+  modal.show = options => options.success({ confirm: true })
+  wx.startLocationUpdate = () => { starts++ }
+  try {
+    page._startReal(); config._stopReal.call(page)
+    resolveConsent(); await settle()
+    assert.equal(starts, 0); assert.equal(page._realOn, false); assert.equal(page._realStartPending, false)
+  } finally { modal.show = originalShow }
+})
+
+test('C7异常跳点不改player，停止后的已排队定位回调不再记轨迹', () => {
+  const page = mount(); page.data.screen = 'map'; page._realOn = true
+  page._realAnchor = { lat: 31.2, lng: 121.5, ts: Date.now() - 1000 }; page._player = { lat: 31.2, lng: 121.5 }
+  page._realTick({ latitude: NaN, longitude: 121.5 })
+  page._realTick({ latitude: 40, longitude: 121.5 })
+  assert.deepEqual(page._player, { lat: 31.2, lng: 121.5 }); assert.deepEqual(page._track, [])
+  config._stopReal.call(page)
+  page._realTick({ latitude: 31.2001, longitude: 121.5 })
+  assert.deepEqual(page._track, [])
+})
+
+test('M0116已成功结算的待交付徽章不伪报到手，独立回读DELIVERED后显示原徽章', () => {
+  const page = mount(); page._roamSid = SID
+  const result = { totalXp: 7, medal: '原50格徽章', shopMedal: { code: 'ROAM_SHOP_STREAK', name: '原三店徽章' },
+    badgeDelivery: [{ badgeCode: 'ROAM_TILES_50', state: 'DUE' }, { badgeCode: 'ROAM_SHOP_STREAK', state: 'DUE' }] }
+  assert.equal(page._applyRoamFinishResult(result, true), true)
+  assert.equal(page.data.finish.xpAwarded, 7); assert.equal(page.data.finish.medal, ''); assert.equal(page.data.finish.shopMedal, null)
+  assert.equal(page._applyRoamFinishResult(result, true, result.badgeDelivery.map(r => ({ ...r, state: 'DELIVERED' }))), true)
+  assert.equal(page.data.finish.medal, '原50格徽章'); assert.equal(page.data.finish.shopMedal.name, '原三店徽章')
+  assert.equal(calls.filter(c => c.url === '/api/roam/finish').length, 0)
+})
+
+test('M0116阈值和DUE不能弹获得徽章，只有原DELIVERED收据可弹', () => {
+  const page = mount(); page._shopBadgeCfg = { name: 'pending badge' }
+  assert.equal(page._popMedal(), false); assert.equal(page.data.medal.show, false)
+  page._shopMedalFromServer = true; page.data.finish.shopMedal = { name: '原已交付徽章', statement: '原文案' }
+  assert.equal(page._popMedal(), true); assert.equal(page.data.medal.name, '原已交付徽章')
+})
+
+test('M0116缺原徽章交付状态是未核，不当已获得', () => {
+  const page = mount()
+  assert.equal(page._applyRoamFinishResult({ totalXp: 7, medal: '未核徽章', shopMedal: { code: 'ROAM_SHOP_STREAK', name: '未核店章' } }, true), true)
+  assert.equal(page.data.finish.medal, ''); assert.equal(page.data.finish.shopMedal, null); assert.equal(page._shopMedalFromServer, false)
+  assert.equal(page._popMedal(), false)
 })

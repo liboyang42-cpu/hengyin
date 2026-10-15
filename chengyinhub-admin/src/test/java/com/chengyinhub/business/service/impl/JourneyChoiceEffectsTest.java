@@ -108,9 +108,11 @@ class JourneyChoiceEffectsTest {
                 .thenReturn(Collections.emptyList());
         when(shopDayProofService.hasArrived(anyLong(), anyLong(), anyLong())).thenReturn(true);
         CmsRegistration pass = new CmsRegistration();
+        pass.setId(9_000_001L); // 真实报名行必有主键；C包当前资格按原ID锁读
         pass.setExpiresAt(null);
         when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class)))
                 .thenReturn(Collections.singletonList(pass));
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.delegateLocks(activityMapper, registrationMapper);
     }
 
     // ==================== 1. 选择结果当场写状态 ====================

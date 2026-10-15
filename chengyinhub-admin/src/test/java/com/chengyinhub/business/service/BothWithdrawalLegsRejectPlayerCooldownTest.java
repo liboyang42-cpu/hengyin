@@ -80,6 +80,11 @@ class BothWithdrawalLegsRejectPlayerCooldownTest {
         wechatLeg = new CashWithdrawServiceImpl();
         ReflectionTestUtils.setField(wechatLeg, "mapper", cashMapper);
         ReflectionTestUtils.setField(wechatLeg, "umsMemberService", umsMemberService);
+        com.chengyinhub.business.service.impl.CashWithdrawFailureRecoveryService recovery =
+                new com.chengyinhub.business.service.impl.CashWithdrawFailureRecoveryService(); // A包：原提现账与CW/CD号先同事务落库
+        ReflectionTestUtils.setField(recovery, "mapper", cashMapper);
+        ReflectionTestUtils.setField(recovery, "umsMemberService", umsMemberService);
+        ReflectionTestUtils.setField(wechatLeg, "failureRecoveryService", recovery);
         ReflectionTestUtils.setField(wechatLeg, "wechatPayService", wechatPayService);
         ReflectionTestUtils.setField(wechatLeg, "alarmService", mock(AlarmService.class));
         { com.chengyinhub.common.config.WxPayConfig __cfg = org.mockito.Mockito.mock(com.chengyinhub.common.config.WxPayConfig.class);
@@ -163,6 +168,7 @@ class BothWithdrawalLegsRejectPlayerCooldownTest {
             return 1;
         });
         when(cashMapper.selectById(500L)).thenReturn(new MemberCashWithdraw());
+        when(cashMapper.updateMemberCashWithdraw(any())).thenReturn(1); // 原提现单写入 CW/CD 原业务号
 
         bankLeg.withdrawalRequest(request("80"), MEMBER, "player");
         try {

@@ -1771,11 +1771,13 @@ Page({
           submitError: '',
           waitlistState: that.data.waitlistOfferId ? 'CONVERTED' : that.data.waitlistState
         }, () => that.refreshPaymentState());
+        const registrationId = data.registrationId || data.id || that._regId || '';
         analytics.track('signup_submit', {
+          eventKey: registrationId ? 'signup_submit_registration_' + registrationId : undefined,
           bizType: 'activity',
           bizId: that.data.activityId,
           properties: {
-            registrationId: data.id || '',
+            registrationId: registrationId,
             payableAmount: data.payableAmount
           }
         });
@@ -1808,11 +1810,13 @@ Page({
         cyLoading.hide();
         // 成功由 finishSignup 把面板改写成 success 态(loading → success 同一块面板),
         // 这里不收 —— 收了会先闪一下空白再弹一次。
+        const registrationId = data.registrationId || data.id || that._regId || '';
         analytics.track('payment_success', {
+          eventKey: registrationId ? 'payment_success_registration_' + registrationId : undefined,
           bizType: 'activity',
           bizId: that.data.activityId,
           properties: {
-            registrationId: data.id || '',
+            registrationId: registrationId,
             payableAmount: data.payableAmount || 0
           }
         });

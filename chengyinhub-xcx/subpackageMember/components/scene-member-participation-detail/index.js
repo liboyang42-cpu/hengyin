@@ -1,3 +1,4 @@
+const subscribe = require('../../../utils/subscribe.js');
 const modal = require('../../../utils/modal.js');
 const cyLoading = require('../../../utils/loading.js');
 const cyToast = require('../../../utils/toast.js');
@@ -425,6 +426,7 @@ Component({
         },
         success: (res) => {
           if (res.confirm) {
+            if (paid) subscribe.request(['refund', 'refundRejected']);
             this.cancelRequest(paid);
           }
         }

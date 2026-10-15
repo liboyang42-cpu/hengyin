@@ -2,6 +2,11 @@ package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.ConsentRecord;
 import com.chengyinhub.business.mapper.ConsentRecordMapper;
+import com.chengyinhub.common.constant.HttpStatus;
+import com.chengyinhub.common.exception.ServiceException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -61,8 +66,73 @@ class ConsentRecordServiceImplTest {
         ConsentRecordServiceImpl service = new ConsentRecordServiceImpl();
         ReflectionTestUtils.setField(service, "consentRecordMapper", mapper);
 
+        ConsentRecord original = originalEvent();
+        original.setEventType("REVOKE");
+        original.setRequestId("consent-request-002");
+        when(mapper.selectByRequestIdForShare("consent-request-002")).thenReturn(original);
         assertEquals(0, service.record(1001L, "privacy_policy", "v1.1", "roam_location",
-                "REVOKE", "consent-request-002", "127.0.0.1"));
+                "REVOKE", "consent-request-002", "127.0.0.2"));
+        verify(mapper).selectByRequestIdForShare("consent-request-002");
+    }
+
+    private static ConsentRecord originalEvent() {
+        ConsentRecord original = new ConsentRecord();
+        original.setMemberId(1001L);
+        original.setDocType("privacy_policy");
+        original.setDocVersion("v1.1");
+        original.setScene("roam_location");
+        original.setEventType("AGREE");
+        original.setRequestId("same-key");
+        return original;
+    }
+
+    @Test
+    void duplicateRequestRejectsAnyDifferentSemanticFieldWithoutExposingOriginal() {
+        List<Consumer<ConsentRecord>> changes = Arrays.asList(
+                r -> r.setMemberId(2002L), r -> r.setDocType("other_doc"),
+                r -> r.setDocVersion("other_version"), r -> r.setScene("other_scene"),
+                r -> r.setScopeType("MERCHANT"), r -> r.setScopeId(3003L),
+                r -> r.setEventType("REVOKE"));
+        for (Consumer<ConsentRecord> change : changes) {
+            ConsentRecord original = originalEvent();
+            change.accept(original);
+            ConsentRecordMapper mapper = mock(ConsentRecordMapper.class);
+            when(mapper.insertConsentRecord(any(ConsentRecord.class))).thenThrow(new DuplicateKeyException("private constraint details"));
+            when(mapper.selectByRequestIdForShare("same-key")).thenReturn(original);
+            ConsentRecordServiceImpl service = new ConsentRecordServiceImpl();
+            ReflectionTestUtils.setField(service, "consentRecordMapper", mapper);
+            ServiceException conflict = assertThrows(ServiceException.class, () -> service.record(
+                    1001L, "privacy_policy", "v1.1", "roam_location", "AGREE", "same-key", "127.0.0.1"));
+            assertEquals(Integer.valueOf(HttpStatus.CONFLICT), conflict.getCode());
+            assertEquals("请求标识已用于其他同意事件", conflict.getMessage());
+        }
+    }
+
+    @Test
+    void duplicateWithoutOriginalFailsClosed() {
+        ConsentRecordMapper mapper = mock(ConsentRecordMapper.class);
+        when(mapper.insertConsentRecord(any(ConsentRecord.class))).thenThrow(new DuplicateKeyException("duplicate"));
+        ConsentRecordServiceImpl service = new ConsentRecordServiceImpl();
+        ReflectionTestUtils.setField(service, "consentRecordMapper", mapper);
+        ServiceException conflict = assertThrows(ServiceException.class, () -> service.record(
+                1001L, "privacy_policy", "v1.1", "roam_location", "AGREE", "same-key", "127.0.0.1"));
+        assertEquals(Integer.valueOf(HttpStatus.CONFLICT), conflict.getCode());
+    }
+
+    @Test
+    void scopedDuplicateComparesOriginalMerchantAndPreservesIdempotentResult() {
+        ConsentRecord original = originalEvent();
+        original.setScopeType("MERCHANT");
+        original.setScopeId(3003L);
+        ConsentRecordMapper mapper = mock(ConsentRecordMapper.class);
+        when(mapper.insertConsentRecord(any(ConsentRecord.class))).thenThrow(new DuplicateKeyException("duplicate"));
+        when(mapper.selectByRequestIdForShare("same-key")).thenReturn(original);
+        ConsentRecordServiceImpl service = new ConsentRecordServiceImpl();
+        ReflectionTestUtils.setField(service, "consentRecordMapper", mapper);
+        assertEquals(0, service.record(1001L, "privacy_policy", "v1.1", "roam_location",
+                "MERCHANT", 3003L, "AGREE", "same-key", "127.0.0.1"));
+        assertThrows(ServiceException.class, () -> service.record(1001L, "privacy_policy", "v1.1", "roam_location",
+                "MERCHANT", 3004L, "AGREE", "same-key", "127.0.0.1"));
     }
 
     @Test

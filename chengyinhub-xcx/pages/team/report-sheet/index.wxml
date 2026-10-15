@@ -1,0 +1,8 @@
+<cy-option-sheet show="{{show && stage === 'pick'}}" title="举报这支队伍" items="{{reasons}}"
+                 confirm-text="提交举报" bind:select="onSelect" bind:cancel="onPickCancel" />
+<cy-result-sheet show="{{show && stage === 'busy'}}" kind="loading" title="正在提交举报" />
+<cy-result-sheet show="{{show && stage === 'ok'}}" kind="success" title="举报已提交"
+                 sub="{{taskId ? '受理编号 ' + taskId + '。' : ''}}平台审核期间，该队伍不会出现在地图上。"
+                 primary-text="知道了" bind:primary="onResultClose" bind:close="onResultClose" />
+<cy-result-sheet show="{{show && stage === 'fail'}}" kind="fail" title="举报没有提交成功" why="{{failedText}}"
+                 primary-text="重试" secondary-text="取消" bind:primary="onRetry" bind:secondary="onResultClose" bind:close="onResultClose" />

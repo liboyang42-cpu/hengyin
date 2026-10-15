@@ -1,0 +1,38 @@
+[
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiGatewayService.java",
+    "sha256": "b2c360b8e2ea4ce8333c77aba977777476c5994530a5533be393e168bb3cc41b"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+    "sha256": "e02e5fe4f5e917e3de031d1138860715f9b4ec3ed1ab441bd2eb72f063b1f7c7"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java",
+    "sha256": "1a19e6201c8535cc7d14eada1cd519429840e85d188b0f04ceb2426c70f0d03d"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java",
+    "sha256": "30b7dda8b572248a13f1c18c37be0f19b73024e30c2a9c509a2be1d8fa29e007"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImplTest.java",
+    "sha256": "eecfd8cdab655ceb0c1779de0e77e72c615cf509e92505654574c797c1cf2ac5"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorServiceImplTest.java",
+    "sha256": "b0bfa071a1442134d071364ce133a3ef632cf3f4ffdb07a8277424b502d2cf4b"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckVisionServiceTest.java",
+    "sha256": "609656c9d58c58a7f3b27c6ff88734d1ee5f1dc43bc9e00ebd02e51e00e6e0b5"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/PhotoCheckQuotaPoolTest.java",
+    "sha256": "e8f70fffbf8b7f94124d69a7b981de74c5f678bdfe29909fab39859c0b3df9d2"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NpcChatServiceTest.java",
+    "sha256": "a33dae7e4586c72c64cf6f24f701746b1683dd855968135ad5ce1ae9f3630b17"
+  }
+]
