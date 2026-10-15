@@ -198,6 +198,20 @@ public final class ThemeRuntimeConfig {
         ObjectNode n = parseDraft(raw); if (n == null) return raw==null?null:""; remap(n, map); return n.toString();
     }
     private static void remap(JsonNode n, Map<Long, Long> map) {
+        Set<JsonNode> stories = Collections.newSetFromMap(new IdentityHashMap<JsonNode, Boolean>());
+        for (JsonNode scene : n.path("scenes")) if (scene.has("journeyStory")) {
+            String mapped = com.chengyinhub.business.domain.JourneyStory.remapNodeIds(
+                    scene.get("journeyStory").toString(), map);
+            try {
+                JsonNode story = JSON.readTree(mapped);
+                ((ObjectNode) scene).set("journeyStory", story);
+                stories.add(story);
+            } catch (Exception ex) { throw new IllegalArgumentException("场景剧情节点复制失败", ex); }
+        }
+        remapRuntime(n, map, stories);
+    }
+    private static void remapRuntime(JsonNode n, Map<Long, Long> map, Set<JsonNode> stories) {
+        if (stories.contains(n)) return;
         if (n.isObject()) {
             if(n.has("var") && n.path("var").asText().matches("sys\\.(passed|outcome|mistakes|damage)\\.[0-9]+")) {String key=n.path("var").asText();int dot=key.lastIndexOf('.');Long target=map.get(Long.valueOf(key.substring(dot+1)));if(target==null)fail("复制时条件节点没有对应目标");((ObjectNode)n).put("var",key.substring(0,dot+1)+target);}
             if(n.has("dispositionNodeId")){Long target=map.get(n.path("dispositionNodeId").asLong());if(target==null)fail("复制时处置节点没有对应目标");((ObjectNode)n).put("dispositionNodeId",target);}
@@ -205,8 +219,8 @@ public final class ThemeRuntimeConfig {
             if(n.has("nodeConfigs")) {
                 ObjectNode renamed=JSON.createObjectNode();n.get("nodeConfigs").fields().forEachRemaining(row->{Long target=map.get(Long.valueOf(row.getKey()));if(target==null)fail("复制时场景节点没有对应目标");renamed.set(String.valueOf(target),row.getValue());});((ObjectNode)n).set("nodeConfigs",renamed);
             }
-            n.elements().forEachRemaining(child -> remap(child, map));
-        } else if (n.isArray()) n.forEach(child -> remap(child, map));
+            n.elements().forEachRemaining(child -> remapRuntime(child, map, stories));
+        } else if (n.isArray()) n.forEach(child -> remapRuntime(child, map, stories));
     }
     public static void assertItemReferences(JsonNode content,ObjectNode config) {
         if(content==null)return;
