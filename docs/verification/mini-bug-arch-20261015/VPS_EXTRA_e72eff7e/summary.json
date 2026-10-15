@@ -1,0 +1,72 @@
+{
+  "source_sha": "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0",
+  "previous_source_sha": "474e54aea6351856e7e4dd23ab4561932958522d",
+  "environment": "DEDICATED_TEST_VPS_OFFLINE_GUARD_212",
+  "status": "PASS",
+  "counts": {
+    "tests": 56,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "exact_classes_match": true,
+  "fresh_reports": true,
+  "source_archive_sha256": "02ae730080c9d68b5ae1d77a0e9940284406e15e6698b2bc29710b85a102381a",
+  "started_at": "2026-10-15T20:27:43.847423+00:00",
+  "command": [
+    "/home/ubuntu/.local/bin/chengyin-build-budget-212",
+    "--name",
+    "cy-budget-212-extra-e72eff7e-retest",
+    "--source",
+    "/home/ubuntu/previews/cy-vps-extra-e72eff7e-20261015/source",
+    "--cache",
+    "/home/ubuntu/previews/cy-vps-extra-e72eff7e-20261015/cache",
+    "--",
+    "mvn",
+    "-o",
+    "-B",
+    "-ntp",
+    "-l",
+    "/home/ubuntu/previews/cy-vps-extra-e72eff7e-20261015/source/vps-targeted.log",
+    "-pl",
+    "chengyinhub-admin",
+    "-am",
+    "-Dmaven.test.skip=false",
+    "-DskipTests=false",
+    "-Dsurefire.failIfNoSpecifiedTests=false",
+    "-DforkCount=1",
+    "-Dtest=com.chengyinhub.business.community.CommunityPostServiceImplTest,com.chengyinhub.business.longrun.E02_14Test",
+    "test"
+  ],
+  "guard": {
+    "returncode": 0,
+    "stdout": "{\"exitCode\": 0, \"reason\": \"completed\", \"containerId\": \"d6204009c576bf78f82034adf4a067310fffc90b5d7e446b77b18f351a07711e\"}\n",
+    "stderr": "",
+    "finished_at": "2026-10-15T20:30:24.385556+00:00"
+  },
+  "log_sha256": "b70e49223df011cc62f665c5c6e84f1702a67bc2a647d5c580497fb3347a4a5a",
+  "reports": [
+    {
+      "class": "com.chengyinhub.business.community.CommunityPostServiceImplTest",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.community.CommunityPostServiceImplTest.xml",
+      "sha256": "8cdd01d7fc09e749aa48bb3f61df93fed55cdb4d41adadbe2bca6ae17ebcd2d1",
+      "fresh": true,
+      "tests": 55,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.E02_14Test",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_14Test.xml",
+      "sha256": "d7295bff775b7de3dd5251c280637cf8f59fe0891c8a88b6b48345063961e88c",
+      "fresh": true,
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "failures": [],
+  "scope_note": "Targeted retest of two repaired classes; does not claim a new 305-case full run or MySQL/runtime acceptance."
+}
