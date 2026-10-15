@@ -5,7 +5,7 @@
   "lane_counts": {
     "E01": 18,
     "E02": 22,
-    "E03": 16,
+    "E03": 17,
     "E04": 15,
     "E05": 17,
     "E06": 16
@@ -197,7 +197,7 @@
       "depends_on": [],
       "public_sha": "f5341aeabcd2eea8961416d5d63e14b70fdf184c",
       "regression_methods_written": 2,
-      "future_focused_command": "mvn -B -pl chengyinhub-admin -am -Dtest=E01_06Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
+      "future_focused_command": "CHENGYIN_FUNDS_MYSQL_IT=1 mvn -B -pl chengyinhub-admin -am -Dtest=E01_06Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
       "expected_count_unit": "JUnit methods; environment gates must be explicitly enabled as evidence requires, no skipped methods claimed pass",
       "future_execution_prerequisites": "NOT AUTHORIZED NOW. Read evidence file for exact database/env/scratch/permissions and distinguish stub/H2/MySQL. Commands are text only, never executed.",
       "delivery_kind": "REGRESSION_SOURCE_ONLY; production unchanged"
@@ -292,7 +292,7 @@
       "depends_on": [],
       "public_sha": "bdaa041ed94f63b5ab5b2b703bf348ed50810ca1",
       "regression_methods_written": 2,
-      "future_focused_command": "mvn -B -pl chengyinhub-admin -am -Dtest=E01_09Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
+      "future_focused_command": "CHENGYIN_FUNDS_MYSQL_IT=1 mvn -B -pl chengyinhub-admin -am -Dtest=E01_09Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
       "expected_count_unit": "JUnit methods; environment gates must be explicitly enabled as evidence requires, no skipped methods claimed pass",
       "future_execution_prerequisites": "NOT AUTHORIZED NOW. Read evidence file for exact database/env/scratch/permissions and distinguish stub/H2/MySQL. Commands are text only, never executed.",
       "delivery_kind": "REGRESSION_SOURCE_ONLY; production unchanged"
@@ -326,7 +326,8 @@
       "worktree": "/workspace/hengyin-extra-e02",
       "depends_on": [],
       "public_sha": "86d1c9da0ecf0df4cc45850efa63dbc8ac6a5a86",
-      "regression_methods_written": 1
+      "regression_methods_written": 1,
+      "future_focused_command": "CHENGYIN_E02_01_MYSQL_IT=1 "
     },
     {
       "id": "E02-02",
@@ -481,7 +482,7 @@
       "depends_on": [],
       "public_sha": "82c7d02bfbacf26df5714d6c121dbddc5951ca89",
       "regression_methods_written": 1,
-      "future_focused_command": "mvn -B -pl chengyinhub-admin -am -Dtest=E02_06Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
+      "future_focused_command": "CHENGYIN_E02_06_MYSQL_IT=1 mvn -B -pl chengyinhub-admin -am -Dtest=E02_06Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
       "expected_count_unit": "JUnit methods; environment gates must be explicitly enabled as evidence requires, no skipped methods claimed pass",
       "future_execution_prerequisites": "NOT AUTHORIZED NOW. Read evidence file for exact database/env/scratch/permissions and distinguish stub/H2/MySQL. Commands are text only, never executed."
     },
@@ -1024,7 +1025,7 @@
       "depends_on": [],
       "public_sha": "ce669a5af4b5231fe9660e44f5e420240f078e56",
       "regression_methods_written": 2,
-      "future_focused_command": "mvn -B -pl chengyinhub-admin -am -Dtest=E04_06Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
+      "future_focused_command": "CHENGYIN_FUNDS_MYSQL_IT=1 mvn -B -pl chengyinhub-admin -am -Dtest=E04_06Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
       "expected_count_unit": "JUnit methods; environment gates must be explicitly enabled as evidence requires, no skipped methods claimed pass",
       "future_execution_prerequisites": "NOT AUTHORIZED NOW. Read evidence file for exact database/env/scratch/permissions and distinguish stub/H2/MySQL. Commands are text only, never executed.",
       "former_blocker": "Resolved C00 PR16 comment6194035333 and control 53d50db24b83ec856abb7d998d913c79699934dc",
@@ -1621,7 +1622,8 @@
       "worktree": "/workspace/hengyin-extra-e01",
       "depends_on": [],
       "public_sha": "f411beada3873c412362d50de0a382675cab4d2f",
-      "regression_methods_written": 3
+      "regression_methods_written": 3,
+      "future_focused_command": "CHENGYIN_FUNDS_MYSQL_IT=1 "
     },
     {
       "id": "E01-11",
@@ -1684,7 +1686,8 @@
       "worktree": "/workspace/hengyin-extra-e02",
       "depends_on": [],
       "public_sha": "f95cc5acc96d96553cea066b30534325413da17f",
-      "regression_methods_written": 1
+      "regression_methods_written": 1,
+      "future_focused_command": "CHENGYIN_E02_10_MYSQL_IT=1 "
     },
     {
       "id": "E02-11",
@@ -1715,7 +1718,8 @@
       "worktree": "/workspace/hengyin-extra-e02",
       "depends_on": [],
       "public_sha": "c8c2a9cca66ef4feb7e0e0044a3f8db4f2dae53b",
-      "regression_methods_written": 1
+      "regression_methods_written": 1,
+      "future_focused_command": "CHENGYIN_E02_11_MYSQL_IT=1 "
     },
     {
       "id": "E02-12",
@@ -1782,7 +1786,8 @@
       ],
       "authorization": "Retained initial E03 whitelist ownership; parent explicitly assigned fixture correction.",
       "regression_methods_written": 3,
-      "delivery_kind": "ORIGINAL_TEST_FIXTURE_ONLY; original method count and business assertions preserved"
+      "delivery_kind": "ORIGINAL_TEST_FIXTURE_ONLY; original method count and business assertions preserved",
+      "future_focused_command": "CHENGYIN_ENDING_MYSQL_IT=1 "
     },
     {
       "id": "E04-09",
@@ -2140,7 +2145,7 @@
       "depends_on": [],
       "public_sha": "64a2c898c3259a4cfc55370e504e3843bfbb3a8d",
       "regression_methods_written": 3,
-      "future_focused_command": "mvn -B -pl chengyinhub-admin -am -Dtest=E04_10Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
+      "future_focused_command": "CHENGYIN_FUNDS_MYSQL_IT=1 mvn -B -pl chengyinhub-admin -am -Dtest=E04_10Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
       "expected_count_unit": "JUnit methods; environment gates must be explicitly enabled as evidence requires, no skipped methods claimed pass",
       "future_execution_prerequisites": "NOT AUTHORIZED NOW. Read evidence file for exact database/env/scratch/permissions and distinguish stub/H2/MySQL. Commands are text only, never executed."
     },
@@ -2394,7 +2399,7 @@
       ],
       "business_source_write": "FORBIDDEN to support worker; original E01/E02 writer remains exclusive; report any defect to that writer",
       "regression_methods_written": 4,
-      "future_focused_command": "mvn -B -pl chengyinhub-admin -am -Dtest=E02_15Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
+      "future_focused_command": "CHENGYIN_E02_15_MYSQL_IT=1 mvn -B -pl chengyinhub-admin -am -Dtest=E02_15Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
       "expected_count_unit": "JUnit methods; no skips claimed pass",
       "future_execution_prerequisites": "NOT AUTHORIZED NOW. Exact environment gates/database/scratch/permissions in evidence; distinguish lookup mocks, H2 and real MySQL. Command is text only."
     },
@@ -2429,7 +2434,7 @@
       "depends_on": [],
       "public_sha": "776746d1db36d4628564a9d874a72c96c51a5123",
       "regression_methods_written": 3,
-      "future_focused_command": "mvn -B -pl chengyinhub-admin -am -Dtest=E02_16Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
+      "future_focused_command": "CHENGYIN_E02_16_MYSQL_IT=1 mvn -B -pl chengyinhub-admin -am -Dtest=E02_16Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
       "expected_count_unit": "JUnit methods; no skips claimed pass",
       "future_execution_prerequisites": "NOT AUTHORIZED NOW. Exact environment gates/database/scratch/permissions in evidence; distinguish lookup mocks, H2 and real MySQL. Command is text only."
     },
@@ -2496,7 +2501,7 @@
       "depends_on": [],
       "public_sha": "0b5529ede643d0cf2baa20c6da4a8ee3b51eddc1",
       "regression_methods_written": 1,
-      "future_focused_command": "mvn -B -pl chengyinhub-admin -am -Dtest=E02_18Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
+      "future_focused_command": "CHENGYIN_E02_18_MYSQL_IT=1 mvn -B -pl chengyinhub-admin -am -Dtest=E02_18Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
       "expected_count_unit": "JUnit methods; no skips claimed pass",
       "future_execution_prerequisites": "NOT AUTHORIZED NOW. Exact environment gates/database/scratch/permissions in evidence; distinguish lookup mocks, H2 and real MySQL. Command is text only."
     },
@@ -2845,7 +2850,7 @@
         "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ClubEventOpsMapper.java",
         "chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml"
       ],
-      "state": "IN_PROGRESS_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E01",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -2854,13 +2859,12 @@
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-18.md",
       "priority": "P2",
       "estimated_source_effort": "30-120 minutes; no verification included",
-      "assigned_worker": "/root/external_e01",
+      "assigned_worker": null,
       "branch": "codex/extra-e01-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e01",
       "depends_on": [],
-      "public_sha": "a838241b61019c8ba3a01ee97d5f73c9b3c99662",
-      "regression_methods_written": 0,
-      "blocker": "Exact ownership or dependency request in public evidence and PR16 comment6195023061; no unauthorized edits",
+      "public_sha": "f4b807958290d5a3cdf34615b9244ab5b9d9a4aa",
+      "regression_methods_written": 5,
       "writer_mode": "SOURCE_OWNER",
       "write_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java",
@@ -2868,7 +2872,10 @@
         "chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_18Test.java",
         "docs/verification/mini-longrun-20261015/EXTRA6/E01-18.md"
-      ]
+      ],
+      "future_focused_command": "CHENGYIN_FUNDS_MYSQL_IT=1 mvn -B -pl chengyinhub-admin -am -Dtest=E01_18Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
+      "expected_count_unit": "JUnit methods; no skips claimed pass",
+      "future_execution_prerequisites": "NOT AUTHORIZED NOW. Exact environment gates/database/scratch/permissions in evidence; distinguish lookup mocks, H2 and real MySQL. Command is text only."
     },
     {
       "id": "E02-19",
@@ -2917,7 +2924,7 @@
         "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java",
         "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml"
       ],
-      "state": "IN_PROGRESS_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E02",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -2926,13 +2933,12 @@
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-20.md",
       "priority": "P1",
       "estimated_source_effort": "30-120 minutes; no verification included",
-      "assigned_worker": "/root/external_e02",
+      "assigned_worker": null,
       "branch": "codex/extra-e02-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e02",
       "depends_on": [],
-      "public_sha": "76bfabcb46b30c0aa1fe1ddfc13d4c89bd49d7b9",
-      "regression_methods_written": 0,
-      "blocker": "Exact ownership or dependency request in public evidence and PR16 comment6195023061; no unauthorized edits",
+      "public_sha": "ef0697487a77184b4c311b5c8c15938132a94e9f",
+      "regression_methods_written": 4,
       "writer_mode": "SOURCE_OWNER",
       "write_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
@@ -2940,7 +2946,10 @@
         "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_20Test.java",
         "docs/verification/mini-longrun-20261015/EXTRA6/E02-20.md"
-      ]
+      ],
+      "future_focused_command": "CHENGYIN_E02_20_MYSQL_IT=1 mvn -B -pl chengyinhub-admin -am -Dtest=E02_20Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
+      "expected_count_unit": "JUnit methods; no skips claimed pass",
+      "future_execution_prerequisites": "NOT AUTHORIZED NOW. Exact environment gates/database/scratch/permissions in evidence; distinguish lookup mocks, H2 and real MySQL. Command is text only."
     },
     {
       "id": "E02-21",
@@ -3020,7 +3029,7 @@
         }
       ],
       "source_files": [],
-      "state": "BLOCKED_DEPENDENCY",
+      "state": "RESOLVED_BY_OTHER_TEAM",
       "owner": "EXTRA6/E03",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -3035,7 +3044,9 @@
       "depends_on": [],
       "public_sha": "814e85fc389dc61dd7a0fb63dd52eb52a77209b5",
       "regression_methods_written": 0,
-      "blocker": "Exact ownership or dependency request in public evidence and PR16 comment6195023061; no unauthorized edits"
+      "blocker": "Exact ownership or dependency request in public evidence and PR16 comment6195023061; no unauthorized edits",
+      "dependency_public_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "note": "C00 CORE C03-25 source selection delivered; NOT_RUN"
     },
     {
       "id": "E03-16",
@@ -3056,7 +3067,10 @@
           "status": "DEPENDENCY_NO_WRITE"
         }
       ],
-      "source_files": [],
+      "source_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImpl.java"
+      ],
       "state": "BLOCKED_OWNERSHIP",
       "owner": "EXTRA6/E03",
       "verification": "NOT_RUN",
@@ -3072,7 +3086,21 @@
       "depends_on": [],
       "public_sha": "cc39c00666e99d472613e86fa37a88a586ec7860",
       "regression_methods_written": 0,
-      "blocker": "Exact ownership or dependency request in public evidence and PR16 comment6195023061; no unauthorized edits"
+      "blocker": "Exact ownership or dependency request in public evidence and PR16 comment6195023061; no unauthorized edits",
+      "preparation": "SOURCE_READY_PENDING_OLD_FIXTURE_TRANSFER; worker frozen; not applied to PR36",
+      "prepared_regression_methods": 4,
+      "prepared_patch": {
+        "base_public_sha": "8be25aebd839c323a6847f80a2afb99f542fa0d2",
+        "tracked_diff": "diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImpl.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImpl.java\nindex 117ea36..f824650 100644\n--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImpl.java\n+++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImpl.java\n@@ -151,7 +151,7 @@ public class PlayJourneyReadServiceImpl implements IPlayJourneyReadService {\n     public Map<String, Object> casebook(Long memberId, Long topicId, Long activityId) {\n         requireScope(memberId, topicId);\n         CmsTopic topic = requireTopic(topicId);\n-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);\n+        TopicRouteSession session = TopicRouteSessionScope.findCurrent(routeMapper, memberId, topicId, activityId);\n         if (session == null) throw new ServiceException(\"这一局还没开始\");\n         // 查询和本地校验都限定归属，禁止读取别人的局。\n         if (!memberId.equals(session.getMemberId())) throw new ServiceException(\"无权访问这一局\");\n@@ -407,7 +407,7 @@ public class PlayJourneyReadServiceImpl implements IPlayJourneyReadService {\n     public Map<String, Object> backpack(Long memberId, Long topicId, Long activityId) {\n         requireScope(memberId, topicId);\n         CmsTopic topic = requireTopic(topicId);\n-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);\n+        TopicRouteSession session = TopicRouteSessionScope.findCurrent(routeMapper, memberId, topicId, activityId);\n         requireReadableBackpack(topic, memberId, session);\n \n         CompletionFacts progress = progress(memberId, topicId, session == null ? activityId : session.getActivityId());\ndiff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImpl.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImpl.java\nindex a97482d..20be328 100644\n--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImpl.java\n+++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImpl.java\n@@ -98,7 +98,7 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {\n         }\n         CmsTopic topic = requireTopic(topicId);\n         // 剧情优先读本局建局冻结值(R11-A);老局快照没有冻结键时回退实时主题配置。\n-        TopicRouteSession session = TopicRouteSessionScope.find(sessionMapper, memberId, topicId, activityId);\n+        TopicRouteSession session = TopicRouteSessionScope.findCurrent(sessionMapper, memberId, topicId, activityId);\n         JourneyStory story = requireStory(topic, session);\n         if (story.getStages() == null || story.getStages().isEmpty()) {\n             throw new ServiceException(\"本主题未配置剧情阶段\");\n@@ -154,7 +154,7 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {\n         }\n         CmsTopic topic = requireTopic(topicId);\n         // 剧情优先读本局建局冻结值(R11-A);老局快照没有冻结键时回退实时主题配置。\n-        TopicRouteSession session = TopicRouteSessionScope.find(sessionMapper, memberId, topicId, activityId);\n+        TopicRouteSession session = TopicRouteSessionScope.findCurrent(sessionMapper, memberId, topicId, activityId);\n         if (session != null && session.getStatus() != null && session.getStatus() != TopicRouteSession.STATUS_RUNNING) {\n             TopicRouteEngine.State frozenState = readState(session);\n             if (frozenState.getThemeRuntime().has(\"result\")) {\ndiff --git a/docs/verification/mini-longrun-20261015/EXTRA6/E03-16.md b/docs/verification/mini-longrun-20261015/EXTRA6/E03-16.md\nindex 38ea5da..d68bb40 100644\n--- a/docs/verification/mini-longrun-20261015/EXTRA6/E03-16.md\n+++ b/docs/verification/mini-longrun-20261015/EXTRA6/E03-16.md\n@@ -1,53 +1,51 @@\n-# E03-16 本队当前旅程读面opt-in findCurrent合同审读\n+# E03-16 四个当前旅程读面opt-in共享findCurrent\n \n CY-HANDOFF: CODEX / E03-16\n \n-结果：**READ_ONLY_CONTRACT_REVIEW / SOURCE_DELIVERED_UNVERIFIED**。所有验证 **NOT_RUN**；NO_API_CHANGE；TEST_DEPLOYED=NO。本阶段只新增此证据，不改任何源码/测试、不改或复制Scope helper。未执行解析器、Java/Maven/Node/DB/lint/DevTools/git或业务验证。\n+状态：**SOURCE_READY_PENDING_OLD_FIXTURE_TRANSFER / SOURCE_DELIVERED_UNVERIFIED**。全部验证 **NOT_RUN**；NO_API_CHANGE；TEST_DEPLOYED=NO。本项当前为父协调者待旧fixture转交的准备补丁，**不公共提交半套**。未执行解析器、Java/Maven/Node/DB/lint/DevTools/git或业务验证。\n \n-授权：EXTRA6当前接口接续审读。C00已允许本队自有源码opt-in公共findCurrent；协调者尚须精确导入依赖并确认旧fixture路径后再实施。本项不提前向本树尚不存在的方法提交调用。E03-10 scene冻结顺序最新CORE已修，按协调者回执去重，不再次申领或报告旧版本缺口。\n+## 依赖与授权\n \n-## 真实共享producer\n+前期只读合同已公共 `cc39c00666e99d472613e86fa37a88a586ec7860`。C00共享producer TopicRouteSessionScope@`5162ef45bb42486575619871ff24b4b694941f09`（blob cf1dd64a0806722b794632db530a0fcef8fb9cb2）已由父精确导入本树为 `8be25aebd839c323a6847f80a2afb99f542fa0d2`，原find无改。E03未改/复制helper，也不需要再次导入；不会向不存在的方法堆引用。\n \n-已通过GitHub连接器读取 [TopicRouteSessionScope.java@5162ef45bb42486575619871ff24b4b694941f09](https://github.com/liboyang42-cpu/hengyin/blob/5162ef45bb42486575619871ff24b4b694941f09/chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicRouteSessionScope.java)，返回blob `cf1dd64a0806722b794632db530a0fcef8fb9cb2`；同时完整读取 `/workspace/hengyin-extra-e05/` 的指定只读导入副本，其findCurrent文本一致。本E03树目前仅有旧find，不能把其它树已导入当本树依赖已存在。\n+E03-17 archive隔离另已公共 `642380e194c4830f6350191e3b498679348b435a`，此项保留其按已给定session实例过滤及null-default兼容。E03-10 scene顺序已由最新CORE修复，不在这里重复。\n \n-真实签名：`public static TopicRouteSession findCurrent(TopicRouteSessionMapper mapper, Long memberId, Long topicId, Long activityId)`。\n+## 真实当前读面与最小改动\n \n-语义：参数沿原正member/topic及非负activity；省略activity时先调用旧find保留“本会员/主题唯一default场次”规则，多场次仍拒绝，不跨场次猜最新；解析同一场次后selectCurrentByOwner，查无current才fallback默认实例；返回后复核member/topic及resolvedActivity。旧find没有改，显式历史消费者不被全局迁移。\n+仅两自有service的四个调用点：\n \n-## 本队四个当前读面及真实时序\n+- PlayJourneyStoryServiceImpl.stageEnd和ending。\n+- PlayJourneyReadServiceImpl.casebook和backpack。\n \n-| 自有service方法 | 公开调用链 | 为什么是current而非history |\n-| --- | --- | --- |\n-| PlayJourneyStoryServiceImpl.stageEnd | ApiPlayJourneyController `/api/play/journey/stage-end`，member/topic/activity/chapter | 读取这一局阶段、stateVersion并刷新Encounter；没有sessionId/history参数 |\n-| PlayJourneyStoryServiceImpl.ending | 同Controller `/api/play/journey/ending`，member/topic/activity | 读取当前局完成/终态；没有历史session选择字段 |\n-| PlayJourneyReadServiceImpl.casebook | ApiPlayJourneyReadController `/casebook`，member/topic/activity | 当前state/冻结story/该session动作日志 |\n-| PlayJourneyReadServiceImpl.backpack | 同Controller `/backpack`，member/topic/activity | 当前deliver及完成事实，不是按sessionId历史奖励查询 |\n+从TopicRouteSessionScope.find改为findCurrent。对应公开Controller只接受member/topic/activity（stage加chapterId），没有历史sessionId，描述为“本局”；default已完成而同scope新replay进行中时，旧find会错读旧局状态/正文，backpack还会混旧叙事与当前进度。\n \n-四方法当前都调用旧TopicRouteSessionScope.find。真实重玩时序：default局已完成并含旧ending/facts；同member/topic/activity重玩生成较新实例running，其冻结故事和进度不同。显式activity请求仍由旧find取default，ending可能提前返回上局终态，casebook读取旧state/log，stageEnd读旧阶段，backpack用旧session叙事。findCurrent opt-in可以让这四入口使用同scope较新实例；较新局未完成时ending应沿原“本局尚未完成”保护，不以旧default补成功。\n+共享findCurrent先保留省略activity时唯一default场次判定，多场次仍拒绝；再查同member/topic/activity当前实例，无current才合法fallback默认实例，返回后仍复核scope。四consumer不自己复制该定位。原未开始/未完成/归属保护、stage当前章门槛、scope歧义以及主题可见性均保留。\n \n-这是E03-05 default/latest线索的**同一根因接续**，不另报跨账号泄漏或重复创建一个Scope实现。member/topic/activity归属与省略activity歧义保护均沿共享helper，不在每个service复写。\n+freezeEnding内部使用已给state/session，不调用Scope，仍includeArchive=false；公开ending现有archive按E03-17给定实例隔离。Theme state/sessionId/card/history等显式历史路径与CORE runtime完全未改。\n \n-## 明确不迁移的历史路径与内部路径\n+## 新回归（真实service求值，非helper镜像）\n \n-ApiThemeRuntimeController.state明确可收sessionId，card按sessionId，history/historyPage显式请求历史；这些在CORE/runtime原owner范围，本队不改。freezeEnding三/四参是内部已有state/session的纯结果求值，不调用Scope，也不通过findCurrent偷偷换session。endingChapter直接读已给定session，已有A03EndingSnapshotReadTest不需改。\n+新增 `chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_16Test.java`，**4方法**，全部NOT_RUN。mapper提供同scope不同default/current数据，求值调用实际两service，Scope用真实已导入helper，未mock current消费者结果：\n \n-stageEnd实时章存在/节点门槛政策仍E03-04未决，不借切Scope放宽。公开ending原archive行为不在freeze持久化增加。不能把当前读面选择与授权/归属/内容撤回政策混成新规则。\n+1. endingDoesNotReplayCompletedDefaultWhileCurrentRunIsUnfinished：default已完成，新replay运行中仍拒绝；将新局完成后读取新code/title。\n+2. stageEndUsesCurrentFrozenStageAndStateVersion：读取current冻结changed/open和version。\n+3. casebookAndBackpackUseCurrentFactsAndFrozenDeliveryWithinResolvedScope：省略activity从唯一scope解析后取current，found=1而不是旧0，背包给current delivery而不是old。\n+4. allCurrentReadersKeepOmittedActivityAmbiguityRejection：两default场次时四入口都拒绝，不调用任意scope current查询。\n \n-## 旧fixture精确同步申请\n+合法故事样本只用fallback结局；测试不引入非法非fallback缺when，也不扩DSL。NodeMerchantOverride.empty仅为既有背包依赖真实空覆盖值，归档/剧情解析/线索求值不mock。不声称HTTP、真MySQL、编译或通过。\n \n-以下既有测试没有本item修改授权，须由协调者确认后才同步；不能只加泛用Mockito让本应无局/越权断言消失：\n+## 必要旧fixture转交仍待父协调者\n \n-1. `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImplTest.java`：多数省略activity测试仅stub selectMemberTopicSessions，session helper有activity=0；切findCurrent后需为同scope current/default读取提供与各用例原session一致的fixture。无局、外人局、未完成等原断言保留。\n-2. `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImplTest.java`：同上，setUp只有default列表stub；current读取必须随个案session/foreign/missing变化，不可固定返回本人局覆盖负控。\n-3. `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/SeventhPierFixtureTest.java`：264/326行附近仅默认列表供实际PlayJourneyStoryServiceImpl读取，需同步明确activity与相同fixture的current定位。\n-4. `chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/JourneyPublishFreezeTest.java`：193/195行已有default selectByOwner及列表动态stored[0]；共享helper当前lookup若无stub会走真实定义的默认fallback，静态不必然破坏原测试；可原作者决定是否显式加current动态stub，避免fixture意外靠fallback掩盖场景。\n+当前未改以下三旧文件，需精确转交后整包同步，不能公共交半套：\n \n-本队新E03_02Test/E03_14Test显式activity=0且已stub selectByOwner，公共helper定义的默认fallback可继续使用；E03_01Test直接freeze无需Scope；首批A03EndingSnapshotMySqlIT与JourneyFullFlowMySqlIT为真实mapper，已有selectCurrentByOwner实现，无需伪造lookup。后续新回归应明确default与current同时存在且内容不同，证明选current，而不是只同步旧fixture让新路径假绿。以上全部未运行。\n+1. `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImplTest.java`\n+2. `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImplTest.java`\n+3. `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/SeventhPierFixtureTest.java`\n \n-## opt-in后仍需独立审计的内层实例读取\n+这些旧测试多数只stub selectMemberTopicSessions，findCurrent在解析同scope后需要current/default fixture；同步必须与各用例实际session、activity、无局/foreign负控联动，不能泛mock固定current成功或删原断言。原session活动值应是明确0/真实活动，不能把损坏null活动偷偷当正常scope。\n \n-backpack.progress当前没有显式传已选session.playInstanceId，PlayerNodeProgressMapper会按同member/topic/activity当前最新实例子查询。opt-in后通常与同scope current一致；并发创建新实例时是否固定整个读取事务需要另按既有一致性合同审计，不在本项创造新锁策略。\n+`JourneyPublishFreezeTest`已有动态default selectByOwner，公共helper的无current fallback可保持原路径，因此不强制抢该旧文件。E03_02/E03_14已有显式default fallback；E03_01直调freeze、A03EndingSnapshotRead直调已有session helper不受lookup影响；真实mapper IT已有current方法，无需改为mock。\n \n-另一个具体边界：PlayJourneyStoryServiceImpl.archive(session)调用GameRuntimeSessionMapper.selectPlayerSessionsByTopic(activity,topic,member)，当前SQL只含member/topic/activity与owner_type=1，**没有play_instance_id过滤**。因此仅切findCurrent不保证身份/照片/笔记档案只来自该实例；它可能遍历同scope多次重玩的个人玩法会话。该SQL表外，当前不能宣称“选current即档案全部隔离已闭合”。若按原注释“只读玩家本人在本局各站留下的东西”继续处理，需C00精确确认mapper/service过滤语义与旧默认实例兼容，再另行派工，不新增或持久化归档内容/留存。\n+## 当前精确冻结范围\n \n-本阶段没有实现上述任一源码修改。本证据已冻结，待协调者导入同producer和登记旧fixture精确权后再开启E03-16实施。\n+只修改PlayJourneyStoryServiceImpl.java、PlayJourneyReadServiceImpl.java，新增E03_16Test.java并更新本证据。共享helper/mapper/Controller/旧fixture无改。已完成本阶段准备，待父获得三旧fixture写权后按路径串行继续；所有新旧回归均NOT_RUN，不据静态准备声称已完整集成或部署。\n",
+        "new_files": [
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_16Test.java",
+            "content": "package com.chengyinhub.business.longrun;\n\nimport com.chengyinhub.business.domain.*;\nimport com.chengyinhub.business.domain.vo.NodeMerchantOverride;\nimport com.chengyinhub.business.mapper.*;\nimport com.chengyinhub.business.service.INodeMerchantOverrideService;\nimport com.chengyinhub.business.service.ISmsCouponService;\nimport com.chengyinhub.business.service.IXpBudgetService;\nimport com.chengyinhub.business.service.impl.NpcProfileService;\nimport com.chengyinhub.business.service.impl.PlayJourneyReadServiceImpl;\nimport com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImpl;\nimport com.chengyinhub.business.service.support.ThemeStateKeyService;\nimport com.chengyinhub.common.exception.ServiceException;\nimport org.junit.jupiter.api.BeforeEach;\nimport org.junit.jupiter.api.Test;\n\nimport java.util.Arrays;\nimport java.util.Collections;\nimport java.util.List;\nimport java.util.Map;\n\nimport static org.junit.jupiter.api.Assertions.*;\nimport static org.mockito.Mockito.*;\n\n/** Real current read-service consumers with distinct default/replay fixtures. All methods NOT_RUN. */\nclass E03_16Test {\n    private TopicRouteSessionMapper sessions;\n    private TopicRouteSession original;\n    private TopicRouteSession current;\n    private PlayJourneyStoryServiceImpl stories;\n    private PlayJourneyReadServiceImpl reads;\n\n    @BeforeEach\n    void setup() {\n        CmsTopicMapper topics = mock(CmsTopicMapper.class);\n        CmsTopic topic = new CmsTopic(); topic.setId(700L);\n        when(topics.selectCmsTopicById(700L)).thenReturn(topic);\n        sessions = mock(TopicRouteSessionMapper.class);\n        original = run(99L, \"default\", \"old\", 0);\n        original.setStatus(TopicRouteSession.STATUS_COMPLETED);\n        original.setVersion(1);\n        current = run(100L, \"replay:99\", \"current\", 1);\n        when(sessions.selectByOwner(0L, 700L, 97L, \"default\")).thenReturn(original);\n        when(sessions.selectCurrentByOwner(0L, 700L, 97L)).thenReturn(current);\n        when(sessions.selectMemberTopicSessions(97L, 700L)).thenReturn(Collections.singletonList(original));\n        CmsTopicChapterMapper chapters = mock(CmsTopicChapterMapper.class);\n        CmsTopicChapter chapter = new CmsTopicChapter(); chapter.setId(77L); chapter.setTopicId(700L);\n        when(chapters.selectCmsTopicChapterById(77L)).thenReturn(chapter);\n        CmsTopicNodeMapper nodes = mock(CmsTopicNodeMapper.class);\n        CmsTopicNode node = new CmsTopicNode(); node.setId(21L); node.setTopicId(700L); node.setChapterId(77L);\n        node.setSortId(1L); node.setName(\"station\");\n        when(nodes.selectCmsTopicNodeList(any(CmsTopicNode.class))).thenReturn(Collections.singletonList(node));\n        ThemeStateKeyService keys = mock(ThemeStateKeyService.class);\n        when(keys.listByTopic(700L)).thenReturn(Collections.emptyList());\n        NpcProfileService npcs = mock(NpcProfileService.class);\n        stories = new PlayJourneyStoryServiceImpl(topics, chapters, nodes, sessions, keys, npcs);\n        INodeMerchantOverrideService overrides = mock(INodeMerchantOverrideService.class);\n        when(overrides.forNode(21L)).thenReturn(NodeMerchantOverride.empty());\n        reads = new PlayJourneyReadServiceImpl(topics, nodes, mock(CmsMemberTemplateMapper.class), sessions,\n                mock(PlayerNodeProgressMapper.class), mock(SmsCouponHistoryMapper.class), mock(PlayJourneyReadMapper.class),\n                npcs, overrides, keys, mock(ISmsCouponService.class), mock(IXpBudgetService.class));\n    }\n\n    @Test\n    void endingDoesNotReplayCompletedDefaultWhileCurrentRunIsUnfinished() {\n        ServiceException failure = assertThrows(ServiceException.class, () -> stories.ending(97L, 700L, 0L));\n        assertEquals(\"本局尚未完成\", failure.getMessage());\n        current.setStatus(TopicRouteSession.STATUS_COMPLETED);\n        Map<String, Object> ending = stories.ending(97L, 700L, 0L);\n        assertEquals(\"current\", ending.get(\"code\"));\n        assertEquals(\"current ending\", ending.get(\"title\"));\n    }\n\n    @Test\n    void stageEndUsesCurrentFrozenStageAndStateVersion() {\n        Map<String, Object> stage = stories.stageEnd(97L, 700L, 0L, 77L);\n        assertEquals(\"[current stage]\", stage.get(\"changed\").toString());\n        assertEquals(\"current open\", stage.get(\"open\"));\n        assertEquals(7, stage.get(\"stateVersion\"));\n    }\n\n    @Test\n    void casebookAndBackpackUseCurrentFactsAndFrozenDeliveryWithinResolvedScope() {\n        // Omitted activity resolves the one original scope, then reads that scope's current run.\n        Map<String, Object> casebook = reads.casebook(97L, 700L, null);\n        assertEquals(1, casebook.get(\"found\"));\n        assertEquals(1, casebook.get(\"total\"));\n        Map<String, Object> backpack = reads.backpack(97L, 700L, 0L);\n        Map<?, ?> row = (Map<?, ?>) ((List<?>) backpack.get(\"nodes\")).get(0);\n        assertEquals(\"current delivery\", row.get(\"reward\"));\n        assertEquals(\"pending\", row.get(\"status\"));\n    }\n\n    @Test\n    void allCurrentReadersKeepOmittedActivityAmbiguityRejection() {\n        TopicRouteSession anotherScope = run(101L, \"default\", \"other\", 1);\n        anotherScope.setActivityId(2L);\n        when(sessions.selectMemberTopicSessions(97L, 700L)).thenReturn(Arrays.asList(original, anotherScope));\n        assertThrows(IllegalArgumentException.class, () -> stories.ending(97L, 700L, null));\n        assertThrows(IllegalArgumentException.class, () -> stories.stageEnd(97L, 700L, null, 77L));\n        assertThrows(IllegalArgumentException.class, () -> reads.casebook(97L, 700L, null));\n        assertThrows(IllegalArgumentException.class, () -> reads.backpack(97L, 700L, null));\n        verify(sessions, never()).selectCurrentByOwner(anyLong(), anyLong(), anyLong());\n    }\n\n    private static TopicRouteSession run(long id, String instance, String label, int clue) {\n        TopicRouteSession run = new TopicRouteSession();\n        run.setId(id); run.setMemberId(97L); run.setTopicId(700L); run.setActivityId(0L);\n        run.setPlayInstanceId(instance); run.setStatus(TopicRouteSession.STATUS_RUNNING); run.setVersion(7);\n        run.setStateJson(\"{\\\"status\\\":\\\"ACTIVE\\\",\\\"completedNodeIds\\\":[21],\\\"variables\\\":{\\\"clue.page\\\":\" + clue + \"},\\\"tags\\\":[]}\");\n        String story = \"{\\\"schemaVersion\\\":1,\\\"stages\\\":[{\\\"chapterId\\\":77,\\\"end\\\":{\\\"changed\\\":[{\\\"text\\\":\\\"\" + label\n                + \" stage\\\"}],\\\"open\\\":\\\"\" + label + \" open\\\"}}],\\\"ending\\\":{\\\"endings\\\":[{\\\"code\\\":\\\"\" + label\n                + \"\\\",\\\"title\\\":\\\"\" + label + \" ending\\\",\\\"fallback\\\":true}],\\\"optionalClues\\\":[\\\"clue.page\\\"]}}\";\n        // Object form is supported by the same frozen-story helper; no new DSL or session source.\n        run.setConfigSnapshotJson(\"{\\\"journeyStory\\\":\" + story + \",\\\"nodeJourney\\\":{\\\"21\\\":{\\\"deliver\\\":{\\\"reward\\\":\\\"\"\n                + label + \" delivery\\\"}}}}\");\n        return run;\n    }\n}\n"
+          }
+        ],
+        "verification": "NOT_RUN",
+        "recovery": "After exact old-fixture grants, use matching base private worktree, preserve existing patch; apply this diff and new test only if absent, then original worker synchronizes authorized old fixtures before candidate delivery."
+      }
     },
     {
       "id": "E04-13",
@@ -3103,7 +3131,7 @@
       "depends_on": [],
       "public_sha": "fbb7b36354f4839d40eda0ca2b32416db9dd7255",
       "regression_methods_written": 2,
-      "future_focused_command": "mvn -B -pl chengyinhub-admin -am -Dtest=E04_13Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
+      "future_focused_command": "CHENGYIN_FUNDS_MYSQL_IT=1 mvn -B -pl chengyinhub-admin -am -Dtest=E04_13Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
       "expected_count_unit": "JUnit methods; no skips claimed pass",
       "future_execution_prerequisites": "NOT AUTHORIZED NOW. Exact environment gates/database/scratch/permissions in evidence; distinguish lookup mocks, H2 and real MySQL. Command is text only."
     },
@@ -3121,7 +3149,7 @@
       "source_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java"
       ],
-      "state": "IN_PROGRESS_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E04",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -3130,19 +3158,21 @@
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E04-14.md",
       "priority": "P1",
       "estimated_source_effort": "30-120 minutes; no verification included",
-      "assigned_worker": "/root/external_e04",
+      "assigned_worker": null,
       "branch": "codex/extra-e04-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e04",
       "depends_on": [],
-      "public_sha": "1b69abff8dec5c4e5cf547a02c3acbcc220db621",
-      "regression_methods_written": 0,
-      "blocker": "Exact ownership or dependency request in public evidence and PR16 comment6195023061; no unauthorized edits",
+      "public_sha": "b53e013623e539760a35665b99a4680c785d5d42",
+      "regression_methods_written": 2,
       "writer_mode": "SOURCE_OWNER",
       "write_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_14Test.java",
         "docs/verification/mini-longrun-20261015/EXTRA6/E04-14.md"
-      ]
+      ],
+      "future_focused_command": "CHENGYIN_FUNDS_MYSQL_IT=1 mvn -B -pl chengyinhub-admin -am -Dtest=E04_14Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
+      "expected_count_unit": "JUnit methods; no skips claimed pass",
+      "future_execution_prerequisites": "NOT AUTHORIZED NOW. Exact environment gates/database/scratch/permissions in evidence; distinguish lookup mocks, H2 and real MySQL. Command is text only."
     },
     {
       "id": "E04-15",
@@ -3289,7 +3319,9 @@
       "policy_blocker": "Per LONGRUN_ROLLING latest precise transfer, history and participation source files are writable; order-detail remains PR20-held read-only. Do not change refund policy, templates, UI layout, authentication, global transport or any unlisted caller.",
       "execution": "STATIC_SOURCE_ONLY; no validation execution",
       "ownership": "同lane唯一写者串行；C00精确登记后才可写；已有修复先静态核实，NO_CHANGE有效",
-      "source_files": [],
+      "source_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayEncounterServiceImpl.java"
+      ],
       "state": "BLOCKED_OWNERSHIP",
       "owner": "EXTRA6/E05",
       "verification": "NOT_RUN",
@@ -3309,7 +3341,21 @@
       "write_files": [
         "docs/verification/mini-longrun-20261015/EXTRA6/E05-17.md"
       ],
-      "blocker": "Exact ownership or dependency request in public evidence and PR16 comment6195023061; no unauthorized edits"
+      "blocker": "Exact ownership or dependency request in public evidence and PR16 comment6195023061; no unauthorized edits",
+      "preparation": "SOURCE_READY_PENDING_OLD_FIXTURE_TRANSFER; worker frozen; not applied to PR36",
+      "prepared_regression_methods": 5,
+      "prepared_patch": {
+        "base_public_sha": "3bd030c9f30ed2e79cb6350ae842fa2ef50a468c",
+        "tracked_diff": "diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayEncounterServiceImpl.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayEncounterServiceImpl.java\nindex e854c9e..5857b72 100644\n--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayEncounterServiceImpl.java\n+++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayEncounterServiceImpl.java\n@@ -100,7 +100,7 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {\n         CmsMemberTemplate template = node.getTemplateId() == null ? null\n                 : cmsMemberTemplateService.selectCmsMemberTemplateById(node.getTemplateId());\n \n-        TopicRouteSession run = TopicRouteSessionScope.find(topicRouteSessionMapper, memberId, topicId, activityId);\n+        TopicRouteSession run = TopicRouteSessionScope.findCurrent(topicRouteSessionMapper, memberId, topicId, activityId);\n         if (run == null) {\n             throw new ServiceException(\"这一局还没开始\");\n         }\ndiff --git a/docs/verification/mini-longrun-20261015/EXTRA6/E05-17.md b/docs/verification/mini-longrun-20261015/EXTRA6/E05-17.md\nindex d78c007..d969cde 100644\n--- a/docs/verification/mini-longrun-20261015/EXTRA6/E05-17.md\n+++ b/docs/verification/mini-longrun-20261015/EXTRA6/E05-17.md\n@@ -44,3 +44,27 @@ ControllerTest只会话activity=0的通用fixture可精确stub(0,TOPIC,MEMBER)\n 当前两旧fixture路径同步是精确依赖申请，不代表授权已经完成；源码producer本树已存在，不需要创建替代helper。E05当前Privacy Unicode任务保持其原独占和串行次序，本支持packet不与其并写。\n \n 证据已冻结回协调者/E05接续；源码/测试/运行时均未验证。\n+\n+## E05消费者源码/新回归本地冻结（旧fixture尚未转交）\n+\n+状态：SOURCE_READY_PENDING_OLD_FIXTURE_TRANSFER；verification=NOT_RUN；NO_API_CHANGE；TEST_DEPLOYED=NO。本状态覆盖上文支持packet的阶段，不表示完整交付、发布或验收。\n+\n+已按正式源码权限仅将PlayEncounterServiceImpl.resolve的TopicRouteSessionScope.find改为公共producer findCurrent；共享helper、mapper/XML、历史接口均不修改。producer为5162ef45bb42486575619871ff24b4b694941f09，先前精确导入42cd374d08676bf570db505a454264d5c4178775已包含。当前最新ended同样是current，不增加status过滤去复活更老running。\n+\n+新business/longrun/E05_17Test.java有5个JUnit方法（全部NOT_RUN），均真实service.resolve公开consumer，lookup/proof为外部mock，未mock替代helper或reader：\n+\n+1. default旧完成冻结无qa、current新running冻结有qa，runId/stateVersion/allowedActions均取新局。\n+2. 最新ended冻结无qa，不回旧running的有qa冻结。\n+3. 当前lookup返回异member/topic/activity均沿helper拒绝，不输出另一局投影。\n+4. 省略activity且多default场次仍先拒绝歧义，不触发current投影。\n+5. 省略唯一activity可取current，无current仍沿producer回默认兼容。\n+\n+这不是复制producer七方法：所有断言通过真实Encounter投影入口，首两项比较不同冻结内容，并保留E05-14损坏reader条件。后续文本命令（未执行）：\n+\n+```sh\n+mvn -pl chengyinhub-admin -am -Dtest=E05_17Test -Dsurefire.failIfNoSpecifiedTests=false test\n+```\n+\n+前提：用户授权Java/Maven集中环境、既有JUnit/Mockito/Spring依赖和公共findCurrent producer；不需要DB服务。预期方法5，实际运行/通过/失败/跳过未知。\n+\n+两旧Controller/RoleView fixture当前仍只读且未改，尚不能称整包完整可交付；等待C00精确停止/转交授权后再由同写者同步必要stub并保留负控。父协调者尚不应发布本地冻结补丁至公共。本项无Java/Node/DB/lint/DevTools/业务验证或git，不等待/重跑CI，无HTTP/设备/部署验收。\n",
+        "new_files": [
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E05_17Test.java",
+            "content": "package com.chengyinhub.business.longrun;\n\nimport com.chengyinhub.business.domain.CmsMemberTemplate;\nimport com.chengyinhub.business.domain.CmsTopicNode;\nimport com.chengyinhub.business.domain.TopicRouteSession;\nimport com.chengyinhub.business.mapper.TopicRouteSessionMapper;\nimport com.chengyinhub.business.service.ICmsMemberTemplateService;\nimport com.chengyinhub.business.service.ICmsTopicChapterService;\nimport com.chengyinhub.business.service.ICmsTopicNodeService;\nimport com.chengyinhub.business.service.IPlayerNodeProgressService;\nimport com.chengyinhub.business.service.IShopDayProofService;\nimport com.chengyinhub.business.service.impl.NpcProfileService;\nimport com.chengyinhub.business.service.impl.PlayEncounterServiceImpl;\nimport com.chengyinhub.common.exception.ServiceException;\nimport org.junit.jupiter.api.BeforeEach;\nimport org.junit.jupiter.api.Test;\nimport org.springframework.test.util.ReflectionTestUtils;\nimport java.util.Collections;\nimport java.util.List;\nimport java.util.Map;\nimport static org.junit.jupiter.api.Assertions.*;\nimport static org.mockito.Mockito.*;\n\n/** NOT_RUN. Real public Encounter consumer; mocks only lookup/proof boundaries. */\nclass E05_17Test {\n    private PlayEncounterServiceImpl service;\n    private TopicRouteSession run;\n    private TopicRouteSessionMapper sessions;\n    private static final String LIVE = \"{\\\"qa\\\":{\\\"enabled\\\":true},\\\"branch\\\":{\\\"enabled\\\":true,\"\n            + \"\\\"steps\\\":[{\\\"terminal\\\":true,\\\"outcomeCode\\\":\\\"LIVE_LATE\\\",\\\"outcomeLabel\\\":\\\"late edit\\\"}]}}\";\n\n    @BeforeEach\n    void setup() {\n        service = new PlayEncounterServiceImpl();\n        ICmsTopicNodeService nodes = mock(ICmsTopicNodeService.class);\n        ICmsMemberTemplateService templates = mock(ICmsMemberTemplateService.class);\n        sessions = mock(TopicRouteSessionMapper.class);\n        IShopDayProofService proof = mock(IShopDayProofService.class);\n        ReflectionTestUtils.setField(service, \"cmsTopicNodeService\", nodes);\n        ReflectionTestUtils.setField(service, \"cmsMemberTemplateService\", templates);\n        ReflectionTestUtils.setField(service, \"topicRouteSessionMapper\", sessions);\n        ReflectionTestUtils.setField(service, \"shopDayProofService\", proof);\n        ReflectionTestUtils.setField(service, \"npcProfileService\", mock(NpcProfileService.class));\n        ReflectionTestUtils.setField(service, \"playerNodeProgressService\", mock(IPlayerNodeProgressService.class));\n        ReflectionTestUtils.setField(service, \"cmsTopicChapterService\", mock(ICmsTopicChapterService.class));\n        CmsTopicNode node = new CmsTopicNode(); node.setId(101L); node.setTopicId(73L); node.setTemplateId(501L);\n        when(nodes.selectCmsTopicNodeById(101L)).thenReturn(node);\n        CmsMemberTemplate template = new CmsMemberTemplate(); template.setId(501L); template.setAdvancedConfigJson(LIVE);\n        when(templates.selectCmsMemberTemplateById(501L)).thenReturn(template);\n        run = new TopicRouteSession(); run.setId(9001L); run.setMemberId(71L); run.setTopicId(73L);\n        run.setActivityId(0L); run.setVersion(3);\n        run.setStateJson(\"{\\\"status\\\":\\\"ACTIVE\\\",\\\"variables\\\":{},\\\"tags\\\":[],\\\"completedNodeIds\\\":[]}\");\n        run.setStatus(TopicRouteSession.STATUS_COMPLETED);\n        run.setConfigSnapshotJson(snapshot(false));\n        when(sessions.selectByOwner(0L, 73L, 71L, \"default\")).thenReturn(run);\n        when(sessions.selectMemberTopicSessions(71L, 73L)).thenReturn(Collections.singletonList(run));\n        when(proof.hasArrived(71L, 0L, 101L)).thenReturn(true);\n    }\n\n    @Test\n    void encounterUsesNewRunningFreezeInsteadOfCompletedDefaultProjection() {\n        TopicRouteSession current = current(9002L, TopicRouteSession.STATUS_RUNNING, true);\n        when(sessions.selectCurrentByOwner(0L, 73L, 71L)).thenReturn(current);\n        Map<String, Object> result = service.resolve(71L, 73L, 0L, 101L);\n        assertEquals(9002L, result.get(\"runId\"));\n        assertEquals(12, result.get(\"stateVersion\"));\n        assertTrue(((List<?>) result.get(\"allowedActions\")).contains(\"qa\"));\n        verify(sessions, never()).selectByOwner(0L, 73L, 71L, \"default\");\n    }\n\n    @Test\n    void latestEndedEncounterDoesNotResurrectOlderRunningFreeze() {\n        run.setStatus(TopicRouteSession.STATUS_RUNNING);\n        run.setConfigSnapshotJson(snapshot(true));\n        when(sessions.selectCurrentByOwner(0L, 73L, 71L))\n                .thenReturn(current(9003L, TopicRouteSession.STATUS_ENDED, false));\n        Map<String, Object> result = service.resolve(71L, 73L, 0L, 101L);\n        assertEquals(9003L, result.get(\"runId\"));\n        assertTrue(((List<?>) result.get(\"allowedActions\")).isEmpty());\n        verify(sessions, never()).selectByOwner(0L, 73L, 71L, \"default\");\n    }\n\n    @Test\n    void encounterRejectsForeignMemberTopicOrActivityFromCurrentLookup() {\n        for (String foreign : new String[]{\"member\", \"topic\", \"activity\"}) {\n            TopicRouteSession current = current(9002L, TopicRouteSession.STATUS_RUNNING, true);\n            if (\"member\".equals(foreign)) current.setMemberId(72L);\n            if (\"topic\".equals(foreign)) current.setTopicId(74L);\n            if (\"activity\".equals(foreign)) current.setActivityId(99L);\n            when(sessions.selectCurrentByOwner(0L, 73L, 71L)).thenReturn(current);\n            ServiceException error = assertThrows(ServiceException.class,\n                    () -> service.resolve(71L, 73L, 0L, 101L), foreign);\n            assertEquals(\"无权访问这一局\", error.getMessage());\n        }\n    }\n\n    @Test\n    void omittedActivityStillRejectsAmbiguousDefaultScopesBeforeCurrentProjection() {\n        TopicRouteSession anotherActivity = current(9004L, TopicRouteSession.STATUS_RUNNING, true);\n        anotherActivity.setActivityId(99L);\n        when(sessions.selectMemberTopicSessions(71L, 73L)).thenReturn(java.util.Arrays.asList(run, anotherActivity));\n        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,\n                () -> service.resolve(71L, 73L, null, 101L));\n        assertEquals(\"存在多个场次，请指定 activityId\", error.getMessage());\n        verify(sessions, never()).selectCurrentByOwner(anyLong(), anyLong(), anyLong());\n    }\n\n    @Test\n    void omittedUniqueActivityProjectsCurrentAndMissingCurrentKeepsDefaultCompatibility() {\n        when(sessions.selectCurrentByOwner(0L, 73L, 71L))\n                .thenReturn(current(9002L, TopicRouteSession.STATUS_RUNNING, true));\n        assertEquals(9002L, service.resolve(71L, 73L, null, 101L).get(\"runId\"));\n        when(sessions.selectCurrentByOwner(0L, 73L, 71L)).thenReturn(null);\n        Map<String, Object> legacy = service.resolve(71L, 73L, null, 101L);\n        assertEquals(9001L, legacy.get(\"runId\"));\n        assertTrue(((List<?>) legacy.get(\"allowedActions\")).isEmpty());\n    }\n\n    private TopicRouteSession current(long id, int status, boolean qa) {\n        TopicRouteSession session = new TopicRouteSession();\n        session.setId(id); session.setMemberId(71L); session.setTopicId(73L); session.setActivityId(0L);\n        session.setStatus(status); session.setVersion(12); session.setPlayInstanceId(\"replay-current\");\n        session.setStateJson(\"{\\\"status\\\":\\\"ACTIVE\\\",\\\"variables\\\":{},\\\"tags\\\":[],\\\"completedNodeIds\\\":[]}\");\n        session.setConfigSnapshotJson(snapshot(qa));\n        return session;\n    }\n    private static String snapshot(boolean qa) {\n        return \"{\\\"nodeJourney\\\":{\\\"101\\\":{\\\"playables\\\":\" + (qa ? \"{\\\"qa\\\":true}\" : \"{}\")\n                + \",\\\"branchOutcomes\\\":[]}},\\\"edges\\\":[]}\";\n    }\n}\n"
+          }
+        ],
+        "verification": "NOT_RUN",
+        "recovery": "After exact old-fixture grants, use matching base private worktree, preserve existing patch; apply this diff and new test only if absent, then original worker synchronizes authorized old fixtures before candidate delivery."
+      }
     },
     {
       "id": "E06-14",
@@ -3394,6 +3440,45 @@
       "depends_on": [],
       "public_sha": "d11375f70dd8ddc5488eb3e7769f5dd1fa49d1ad",
       "regression_methods_written": 0
+    },
+    {
+      "id": "E03-17",
+      "lane": "E03",
+      "status": "AUDIT_THEN_FIX",
+      "title": "同一账号旅程归档按实际局实例隔离",
+      "trigger": "See exact immutable public evidence; candidate is not a confirmed bug",
+      "invariant": "Preserve existing contract; no new API/product/permission policy",
+      "minimal_fix_boundary": "只existing ending快照读取分支，禁止修改完成写事务；freezeEnding session相关共享写入交原队C06，新队不直接改runtime",
+      "policy_blocker": "只读侧/独立helper候选；需动GameSessionRuntime、TopicRouteRuntime、ApiPlay、ApiTopic、CmsTopicService、AI/Npc/Quota仅交root dependency；不重定结局优先级或旧局兼容政策。；JourneyStory及相关DTO/helper不新增或改变公开字段。",
+      "execution": "STATIC_SOURCE_ONLY; no validation execution",
+      "ownership": "C00 must assign exact paths before edits; same-file tasks execute serially; candidate paths do not grant ownership",
+      "dependencies": [
+        {
+          "owner": "original_team_C06",
+          "path": "/workspace/hengyin-followups/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+          "reason": "freezeEnding会话/snapshot写入一致性涉及共享运行时；仅交原队C06处理，新队只读侧取证与最小dependency补丁建议",
+          "status": "DEPENDENCY_NO_WRITE"
+        }
+      ],
+      "source_files": [],
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "owner": "EXTRA6/E03",
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_17Test.java",
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-17.md",
+      "priority": "P1",
+      "estimated_source_effort": "30-120 minutes; no verification included",
+      "assigned_worker": null,
+      "branch": "codex/extra-e03-regression-20261015",
+      "worktree": "/workspace/hengyin-extra-e03",
+      "depends_on": [],
+      "public_sha": "642380e194c4830f6350191e3b498679348b435a",
+      "regression_methods_written": 3,
+      "future_focused_command": "mvn -B -pl chengyinhub-admin -am -Dtest=E03_17Test -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false test",
+      "expected_count_unit": "JUnit methods; no skips claimed pass",
+      "future_execution_prerequisites": "NOT AUTHORIZED NOW. Exact environment gates/database/scratch/permissions in evidence; distinguish lookup mocks, H2 and real MySQL. Command is text only."
     }
   ],
   "refill": "Coordinator adds a concrete nonduplicate authorized task when one is delivered/refuted/blocked; no fabricated defect or empty filler. New IDs never reuse old ones. If no justified candidate remains, record EXHAUSTED rather than invent work.",
@@ -3401,7 +3486,7 @@
   "thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
   "host_id": "durable",
   "branch": "codex/extra-six-rolling-20261015",
-  "queue_revision": 7,
+  "queue_revision": 8,
   "initial_deliveries": [
     {
       "lane": "E01",
@@ -3454,83 +3539,91 @@
   ],
   "resume_instructions": "Read LONGRUN_ROLLING and SOURCE_OWNERS at current control, this queue/CLAIMS, and PR16 newest comments. Inspect branch/worktree git status and remote SHA. Never overwrite uncommitted worker patch. Do not execute tests/lint/compile/DB/CI reruns. Parent serially commits frozen task paths then next same-lane task; replenish only concrete authorized nonduplicate findings, otherwise EXHAUSTED.",
   "active_claims": {
-    "E01": "E01-18",
-    "E02": "E02-20",
+    "E01": null,
+    "E02": null,
     "E03": null,
-    "E04": "E04-14",
+    "E04": null,
     "E05": null,
     "E06": null
   },
-  "candidate_sha_before_queue_commit": "d2b2a8a529c35b5947b10eb5d5fdd14210cf8bb6",
+  "candidate_sha_before_queue_commit": "b5eb886676d2bf1f5fcb9a8b5d9d77ac0d5e7036",
   "actual_counts": {
-    "total_history": 104,
-    "source_delivered": 48,
+    "total_history": 105,
+    "source_delivered": 52,
     "no_change_source_review": 40,
-    "blocked": 11,
+    "blocked": 10,
     "ready": 0,
-    "claimed": 3,
-    "actionable_or_inflight": 3
+    "claimed": 0,
+    "actionable_or_inflight": 0
   },
   "control_latest_read_sha": "d3d38ccd70d25727ae6f972f1698254e935fce47",
   "publication_transport": "Shell git credentials unavailable after local offline; authorized GitHub Git Data connector publishes text trees/commits with expected-parent nonforced refs. Exact public SHA objects imported for local ancestry; no validation is executed.",
   "worker_assignments": [
     {
       "slot": "E01",
-      "task": "E01-18",
-      "mode": "SOURCE_OWNER",
+      "task": null,
+      "mode": "IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING",
       "worktree": "/workspace/hengyin-extra-e01",
       "worker": "/root/external_e01"
     },
     {
       "slot": "E02",
-      "task": "E02-20",
-      "mode": "SOURCE_OWNER",
+      "task": null,
+      "mode": "IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING",
       "worktree": "/workspace/hengyin-extra-e02",
       "worker": "/root/external_e02"
     },
     {
       "slot": "E03",
       "task": null,
-      "mode": "IDLE_AWAITING_EXACT_TRANSFER",
+      "mode": "IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING",
       "worktree": "/workspace/hengyin-extra-e03",
       "worker": "/root/external_e03"
     },
     {
       "slot": "E04",
-      "task": "E04-14",
-      "mode": "SOURCE_OWNER",
+      "task": null,
+      "mode": "IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING",
       "worktree": "/workspace/hengyin-extra-e04",
       "worker": "/root/external_e04"
     },
     {
       "slot": "E05",
       "task": null,
-      "mode": "IDLE_AWAITING_EXACT_TRANSFER",
+      "mode": "IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING",
       "worktree": "/workspace/hengyin-extra-e05",
       "worker": "/root/external_e05"
     },
     {
       "slot": "E06",
       "task": null,
-      "mode": "IDLE_AUTHORIZED_SHARE_CANDIDATES_REVIEWED",
+      "mode": "IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING",
       "worktree": "/workspace/hengyin-extra-e06",
       "worker": "/root/external_e06"
     }
   ],
-  "refill_shortfall": 47,
+  "refill_shortfall": 50,
   "refill_status": "Continue concrete queued work; replenish proven independent slices or formally transferred modules. Do not count completed/blocked as READY or invent placeholder bugs to assert 50.",
   "lane_domain_status": {
-    "E01": "New offer activity preflight source and necessary fixture transfer granted; implementation active",
-    "E02": "PATCH source/nullable interface/fixture granted and active; LIKE extra query still not granted",
-    "E03": "Current scope opt-in pending necessary old fixture transfer; producer ownership retained",
-    "E04": "Redemption lock and4 old fixtures granted; implementation active; reward original receipt still blocked",
-    "E05": "Malformed frozen keys and Unicode fixes delivered; current scope requires2 old fixture grants",
-    "E06": "Share storage/read/revoke reviewed NO_CHANGE, supports E05 privacy evidence only"
+    "E01": "Activity offer preflight and necessary fixtures source delivered; authorized independent candidates exhausted",
+    "E02": "Nullable PATCH delivered; LIKE extra query/legacy identity contract pending C00",
+    "E03": "Archive instance filter delivered; current-scope source prepared but3 old fixtures pending",
+    "E04": "Redeem association lock delivered; completion receipt source contract pending",
+    "E05": "Frozen-key and Unicode fixes delivered; current-scope source prepared but2 old fixtures pending",
+    "E06": "Authorized Share storage/read/revoke candidates refuted; no independent proven item READY"
   },
   "shared_producer": {
     "file": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicRouteSessionScope.java",
     "source_sha": "5162ef45bb42486575619871ff24b4b694941f09",
     "import_public_sha": "42cd374d08676bf570db505a454264d5c4178775",
     "owner": "CORE/C06; read-only dependency"
-  }
+  },
+  "scope_prepared_patch_notice": "Prepared source and new tests are serialized below for lossless recovery only. They are not applied to the candidate tree and are not verified; exact old fixture rights remain required.",
+  "next_priority": [
+    "E03-16 after3 necessary old fixture grants",
+    "E05-17 after2 necessary old fixture grants",
+    "E02-19/E02-22 only after C00 legacy receipt contract and precise interface query grant",
+    "E02-13 original audit-task writer",
+    "E04-07 original completion-coupon receipt producer contract; no guessed original history"
+  ]
 }

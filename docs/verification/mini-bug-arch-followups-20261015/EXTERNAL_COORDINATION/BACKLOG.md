@@ -3,7 +3,7 @@
 CY-HANDOFF: CODEX；真实thread `01a13f9c-e8ba-753e-9c39-03840bb4900b` / durable，Cloud running/connected。
 最新已读扩权 `d3d38ccd70d25727ae6f972f1698254e935fce47`。分支 `codex/extra-six-rolling-20261015`，草稿[PR36](https://github.com/liboyang42-cpu/hengyin/pull/36)。
 
-历史累计104具体项，源码/回归交付48、反证40、阻塞11；READY 0+在途3=3。目标50尚缺47，未补足；完成/反证/阻塞不算剩余任务，候选不算确认bug。
+历史累计105具体项，源码/回归交付52、反证40、阻塞10；READY 0+在途0=0。目标50尚缺50，未补足；完成/反证/阻塞不算剩余任务，候选不算确认bug。
 
 全部新验证NOT_RUN。禁止Java/Maven/Node/lint/DB/DevTools/业务验证或手动CI。SOURCE_DELIVERED_UNVERIFIED，不合并/部署/迁移/生产/VPS；未来命令仅文字。
 
@@ -11,14 +11,14 @@ CY-HANDOFF: CODEX；真实thread `01a13f9c-e8ba-753e-9c39-03840bb4900b` / durabl
 
 |worker gpt-6.1-sol|任务|状态|
 |---|---|---|
-|external_e01|E01-18|SOURCE_OWNER|
-|external_e02|E02-20|SOURCE_OWNER|
-|external_e03|无；等待精确转交|IDLE_AWAITING_EXACT_TRANSFER|
-|external_e04|E04-14|SOURCE_OWNER|
-|external_e05|无；等待精确转交|IDLE_AWAITING_EXACT_TRANSFER|
-|external_e06|无；等待精确转交|IDLE_AUTHORIZED_SHARE_CANDIDATES_REVIEWED|
+|external_e01|无；等待精确转交|IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING|
+|external_e02|无；等待精确转交|IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING|
+|external_e03|无；等待精确转交|IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING|
+|external_e04|无；等待精确转交|IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING|
+|external_e05|无；等待精确转交|IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING|
+|external_e06|无；等待精确转交|IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING|
 
-最多六模型槽；此刻3项在途、3槽空闲，不能写六模型一直运行。待授权时已完成无冲突候选/支援，不能造工作维持运行数。
+最多六模型槽；此刻0模型执行、6槽空闲，E03/E05补丁已冻结等待旧fixture精确转交，不能写六模型一直运行。待授权时已完成无冲突候选/支援，不能造工作维持运行数。
 
 ## 精确队列
 
@@ -113,15 +113,15 @@ CY-HANDOFF: CODEX；真实thread `01a13f9c-e8ba-753e-9c39-03840bb4900b` / durabl
 |E05-12|返回收藏页的刷新排队|SOURCE_DELIVERED_UNVERIFIED|
 |E05-13|订阅模板未知key继承成员过滤|SOURCE_DELIVERED_UNVERIFIED|
 |E06-13|选址坐标非法类型|SOURCE_DELIVERED_UNVERIFIED|
-|E01-18|新OFFERED活动当前可用性与旧hold释放|IN_PROGRESS_SOURCE_ONLY|
+|E01-18|新OFFERED活动当前可用性与旧hold释放|SOURCE_DELIVERED_UNVERIFIED|
 |E02-19|评论LIKE撤销后不可变重放身份审计|BLOCKED_OWNERSHIP|
-|E02-20|通知偏好不相交PATCH原子保留|IN_PROGRESS_SOURCE_ONLY|
+|E02-20|通知偏好不相交PATCH原子保留|SOURCE_DELIVERED_UNVERIFIED|
 |E02-21|初次引用选项和快照权限反证|NO_CHANGE_SOURCE_REVIEW|
 |E02-22|评论旧动作回执兼容精确转交方案|BLOCKED_OWNERSHIP|
-|E03-15|新结局替换前旧引用映射的consumer来源|BLOCKED_DEPENDENCY|
+|E03-15|新结局替换前旧引用映射的consumer来源|RESOLVED_BY_OTHER_TEAM|
 |E03-16|当前旅程读面opt-in公共当前局选择|BLOCKED_OWNERSHIP|
 |E04-13|奖励冲正积分当前锁读|SOURCE_DELIVERED_UNVERIFIED|
-|E04-14|核销首读关联锁与后台编辑竞态|IN_PROGRESS_SOURCE_ONLY|
+|E04-14|核销首读关联锁与后台编辑竞态|SOURCE_DELIVERED_UNVERIFIED|
 |E04-15|冲正真实caller事务和锁序反证|NO_CHANGE_SOURCE_REVIEW|
 |E05-14|冻结玩法键显式损坏禁止回live|SOURCE_DELIVERED_UNVERIFIED|
 |E05-15|分享文本UTF16截断边界|SOURCE_DELIVERED_UNVERIFIED|
@@ -130,12 +130,13 @@ CY-HANDOFF: CODEX；真实thread `01a13f9c-e8ba-753e-9c39-03840bb4900b` / durabl
 |E06-14|分享同足迹重放与50上限反证|NO_CHANGE_SOURCE_REVIEW|
 |E06-15|分享撤销与发布交错反证|NO_CHANGE_SOURCE_REVIEW|
 |E06-16|匿名分享读取GONE与隐私闸反证|NO_CHANGE_SOURCE_REVIEW|
+|E03-17|同一账号旅程归档按实际局实例隔离|SOURCE_DELIVERED_UNVERIFIED|
 
 ## 最近接续与阻塞
 
 C00正式扩权后E05/E06六源码均逐字取7e5882公共路径，本地原内容一致无伪造baseline提交；仅共享findCurrent helper有独立import。E05-14冻结键损坏修复4方法已公共。Share重放/配额/撤销/匿名读取现有guard和真库套件已覆盖，三项反证不复制用例。E05 Unicode实际拆surrogate已由原writer交付3bd030c9f30ed2e79cb6350ae842fa2ef50a468c，4方法NOT_RUN。
 
-最新d3d38控制已释放E01-18 Mapper+3fixture、E04-14四fixture、E02-20 nullable Mapper+单偏好旧fixture，原三writer正实施。E02旧LIKE额外query仍未授予。PR16 comment6195157560给准确packet链接及E03/E05 current scope必要旧fixture申请；当前不改未授权文件。E03-16 opt-in需3个必要旧fixture，依赖producer只导入不改。E03-15 consumer新ending替换前旧引用阻断交CORE原writer。
+最新d3d38控制已释放E01-18 Mapper+3fixture、E04-14四fixture、E02-20 nullable Mapper+单偏好旧fixture，原三writer正实施。E02旧LIKE额外query仍未授予。PR16 comment6195157560给准确packet链接及E03/E05 current scope必要旧fixture申请；当前不改未授权文件。E03-16 opt-in需3个必要旧fixture、E05-17需2个必要旧fixture；两源码/新测试准备补丁已冻结并完整序列化QUEUE.json prepared_patch，未应用PR36，环境丢失也可按base恢复。E03-15已由CORE C03-25在05d307ec0466988f212187666d7f1e5c3274f434源码接续，仍未验证。
 
 ## 首批交付与历史证据
 
@@ -165,3 +166,8 @@ shell GitHub凭据不可用；授权GitHub连接器可用。Git Data create_tree
 平台时长/额度/环境限制导致停止时，留下公共SHA、文件持锁、未提交补丁和下一项；不承诺永久运行。本地未来统一验证，当前不等Mac/验证再派工。未来测试命令只文本，需按证据开独占scratch及环境前提，旧231项或历史Node结果不继承到当前SHA。
 
 
+
+
+## 冻结补丁恢复
+
+当前可行动READY0、实际模型执行0，六worker均完成或冻结；目标剩余50短缺50，不宣称永久运行。E03-16/E05-17已在QUEUE的prepared_patch保存完整tracked diff、新测试内容及各公共base SHA，只待C00必要旧fixture转交，不能把该补丁当已应用候选或已编译。收到转交后原writer自动继续，不能重做其他已交项。当前Cloud读/监控其他chat工具仍超时，已停止重试；PR16/GitHub为可用直接对接通道。本轮没有新运行任何验证。

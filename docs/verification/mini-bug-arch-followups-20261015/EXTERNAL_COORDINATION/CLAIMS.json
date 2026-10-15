@@ -6,10 +6,10 @@
   "max_workers": 6,
   "model": "gpt-6.1-sol",
   "active_tasks": {
-    "E01": "E01-18",
-    "E02": "E02-20",
+    "E01": null,
+    "E02": null,
     "E03": null,
-    "E04": "E04-14",
+    "E04": null,
     "E05": null,
     "E06": null
   },
@@ -46,9 +46,9 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "verification": "NOT_RUN",
       "child_writer": "/root/external_e01",
-      "active_task": "E01-18",
+      "active_task": null,
       "worktree": "/workspace/hengyin-extra-e01",
-      "source_status": "ACTIVE_SOURCE_OWNER"
+      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java": {
       "owner": "EXTRA6/E01",
@@ -58,9 +58,9 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "verification": "NOT_RUN",
       "child_writer": "/root/external_e01",
-      "active_task": "E01-18",
+      "active_task": null,
       "worktree": "/workspace/hengyin-extra-e01",
-      "source_status": "ACTIVE_SOURCE_OWNER"
+      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistTokenCodec.java": {
       "owner": "EXTRA6/E01",
@@ -82,9 +82,9 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "verification": "NOT_RUN",
       "child_writer": "/root/external_e02",
-      "active_task": "E02-20",
+      "active_task": null,
       "worktree": "/workspace/hengyin-extra-e02",
-      "source_status": "ACTIVE_SOURCE_OWNER"
+      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT"
     },
     "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml": {
       "owner": "EXTRA6/E02",
@@ -94,9 +94,9 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "verification": "NOT_RUN",
       "child_writer": "/root/external_e02",
-      "active_task": "E02-20",
+      "active_task": null,
       "worktree": "/workspace/hengyin-extra-e02",
-      "source_status": "ACTIVE_SOURCE_OWNER"
+      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CreativeSquareCommunityPolicyServiceImpl.java": {
       "owner": "EXTRA6/E02",
@@ -202,9 +202,9 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "verification": "NOT_RUN",
       "child_writer": "/root/external_e04",
-      "active_task": "E04-14",
+      "active_task": null,
       "worktree": "/workspace/hengyin-extra-e04",
-      "source_status": "ACTIVE_SOURCE_OWNER"
+      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT"
     },
     "chengyinhub-system/src/main/resources/mapper/business/SmsCouponMapper.xml": {
       "owner": "EXTRA6/E04",
@@ -491,9 +491,9 @@
       "transfer_evidence": "C00 read E01-18/E04-14 packets and exact fixture impacts; no CORE active writer, all original C04/C06 stopped. Only packet minimal repair/synchronization, preserve policy/assertions; NOT_RUN.",
       "verification": "NOT_RUN",
       "child_writer": "/root/external_e01",
-      "active_task": "E01-18",
+      "active_task": null,
       "worktree": "/workspace/hengyin-extra-e01",
-      "source_status": "ACTIVE_SOURCE_OWNER"
+      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SmsCouponRedemptionAuditTest.java": {
       "owner": "EXTRA6/E04",
@@ -595,9 +595,9 @@
       "transfer_evidence": "C00 complete read E01-18@a838241b and E02-20@76bfabcb; original source writers stopped/no WIP; preserve assertions/policy. Mapper CommunityPost only existing nullable notification-preference signature at this grant.",
       "verification": "NOT_RUN",
       "child_writer": "/root/external_e02",
-      "active_task": "E02-20",
+      "active_task": null,
       "worktree": "/workspace/hengyin-extra-e02",
-      "source_status": "ACTIVE_SOURCE_OWNER"
+      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostServiceImplTest.java": {
       "owner": "EXTRA6/E02",
@@ -622,10 +622,10 @@
   ],
   "control_latest_read_sha": "d3d38ccd70d25727ae6f972f1698254e935fce47",
   "lane_public_heads": {
-    "E01": "a838241b61019c8ba3a01ee97d5f73c9b3c99662",
-    "E02": "76bfabcb46b30c0aa1fe1ddfc13d4c89bd49d7b9",
-    "E03": "cc39c00666e99d472613e86fa37a88a586ec7860",
-    "E04": "0325b8fb0c56f7ee266bc01d5490ce6b57b45a0e",
+    "E01": "f4b807958290d5a3cdf34615b9244ab5b9d9a4aa",
+    "E02": "ef0697487a77184b4c311b5c8c15938132a94e9f",
+    "E03": "8be25aebd839c323a6847f80a2afb99f542fa0d2",
+    "E04": "b53e013623e539760a35665b99a4680c785d5d42",
     "E05": "3bd030c9f30ed2e79cb6350ae842fa2ef50a468c",
     "E06": "d11375f70dd8ddc5488eb3e7769f5dd1fa49d1ad"
   },
@@ -633,46 +633,69 @@
   "worker_assignments": [
     {
       "slot": "E01",
-      "task": "E01-18",
-      "mode": "SOURCE_OWNER",
+      "task": null,
+      "mode": "IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING",
       "worktree": "/workspace/hengyin-extra-e01",
       "worker": "/root/external_e01"
     },
     {
       "slot": "E02",
-      "task": "E02-20",
-      "mode": "SOURCE_OWNER",
+      "task": null,
+      "mode": "IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING",
       "worktree": "/workspace/hengyin-extra-e02",
       "worker": "/root/external_e02"
     },
     {
       "slot": "E03",
       "task": null,
-      "mode": "IDLE_AWAITING_EXACT_TRANSFER",
+      "mode": "IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING",
       "worktree": "/workspace/hengyin-extra-e03",
       "worker": "/root/external_e03"
     },
     {
       "slot": "E04",
-      "task": "E04-14",
-      "mode": "SOURCE_OWNER",
+      "task": null,
+      "mode": "IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING",
       "worktree": "/workspace/hengyin-extra-e04",
       "worker": "/root/external_e04"
     },
     {
       "slot": "E05",
       "task": null,
-      "mode": "IDLE_AWAITING_EXACT_TRANSFER",
+      "mode": "IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING",
       "worktree": "/workspace/hengyin-extra-e05",
       "worker": "/root/external_e05"
     },
     {
       "slot": "E06",
       "task": null,
-      "mode": "IDLE_AUTHORIZED_SHARE_CANDIDATES_REVIEWED",
+      "mode": "IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING",
       "worktree": "/workspace/hengyin-extra-e06",
       "worker": "/root/external_e06"
     }
   ],
-  "support_new_file_claims": {}
+  "support_new_file_claims": {},
+  "frozen_prepared_sources": {
+    "E03-16": {
+      "worker": "/root/external_e03",
+      "state": "SOURCE_READY_PENDING_OLD_FIXTURE_TRANSFER",
+      "base_public_sha": "8be25aebd839c323a6847f80a2afb99f542fa0d2",
+      "paths": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImpl.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_16Test.java",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E03-16.md"
+      ]
+    },
+    "E05-17": {
+      "worker": "/root/external_e05",
+      "state": "SOURCE_READY_PENDING_OLD_FIXTURE_TRANSFER",
+      "base_public_sha": "3bd030c9f30ed2e79cb6350ae842fa2ef50a468c",
+      "paths": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayEncounterServiceImpl.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E05_17Test.java",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E05-17.md"
+      ]
+    }
+  }
 }
