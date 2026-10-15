@@ -523,7 +523,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             newTopic.setMemberId(memberId);
         }
 
-        cmsTopicMapper.insertCmsTopic(newTopic);
+        if (cmsTopicMapper.insertCmsTopic(newTopic) != 1
+                || newTopic.getId() == null || newTopic.getId() <= 0L) {
+            throw new IllegalStateException("复制主题失败: 主题写入未生成有效ID");
+        }
         Long newTopicId = newTopic.getId();
         if (RoleEntityType.PLATFORM.equals(forcedContentEntityType)) {
             declareRequiredPlatformContentSlot(newTopicId);
@@ -739,7 +742,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             newChapter.setUpdateTime(new Date());
 
             // 插入新章节
-            cmsTopicChapterMapper.insertCmsTopicChapter(newChapter);
+            if (cmsTopicChapterMapper.insertCmsTopicChapter(newChapter) != 1
+                    || newChapter.getId() == null || newChapter.getId() <= 0L) {
+                throw new IllegalStateException("复制主题失败: 章节写入未生成有效ID");
+            }
 
             // 保存ID映射
             chapterIdMap.put(originalChapter.getId(), newChapter.getId());
@@ -898,7 +904,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             newNode.setUpdateTime(new Date());
 
             // 插入新节点
-            cmsTopicNodeMapper.insertCmsTopicNode(newNode);
+            if (cmsTopicNodeMapper.insertCmsTopicNode(newNode) != 1
+                    || newNode.getId() == null || newNode.getId() <= 0L) {
+                throw new IllegalStateException("复制主题失败: 节点写入未生成有效ID");
+            }
             if (originalNode.getId() != null && newNode.getId() != null) {
                 nodeIdMap.put(originalNode.getId(), newNode.getId());
             }
