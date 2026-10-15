@@ -26,7 +26,7 @@ setup改用项目ItSchema.readStatements/WxPaymentCallbackFencingMySqlIT既有�
 
 - CHENGYIN_FUNDS_MYSQL_IT=1
 - CHENGYIN_TEST_MYSQL_HOST、PORT、USER、PASSWORD均显式设置（PASSWORD变量可显式空，不能缺席）
-- CHENGYIN_TEST_MYSQL_DATABASE（任务专属base）及CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX（非空/唯一）；只允许测试实例，账户须有该测试环境建删临时库权限。套件setup/cleanup会DROP/CREATE其任务schema，不能指向共享/业务库。
+- CHENGYIN_TEST_MYSQL_DATABASE_BASE（任务专属base）及CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX（非空/唯一）；只允许测试实例，账户须有该测试环境建删临时库权限。套件setup/cleanup会DROP/CREATE其任务schema，不能指向共享/业务库。
 - Maven最大堆沿原验证驱动640MB，测试进程384MB；不启动第二个Maven容器争用资源，不部署应用。
 
 从仓库根运行：
@@ -58,6 +58,6 @@ CHECK
 
 ## 后续与分层
 
-本轮其他目标套件/真实MySQL+Redis前提正在按源码盘点，将追加独立清单；先运行以上B03，无需等待Cloud直连。只包含现有bug与共用后端本轮改动，不含Claude暂缓G1等新功能。运行时业务需有明确授权测试服务/身份、源码版本与库绑定证据，不能靠单测代替或未经授权部署；微信/iOS设备另列。
+本轮其余最小选定目标为普通202项、AI真实MySQL/Redis22项；完整类名/精确环境见[VPS_TEST_MATRIX_1e403b13.md](VPS_TEST_MATRIX_1e403b13.md)。先运行以上B03，再串行普通与AI组，无需等待Cloud直连。只包含现有bug与共用后端本轮改动，不含Claude暂缓G1等新功能。运行时业务需有明确授权测试服务/身份、源码版本与库绑定证据，不能靠单测代替或未经授权部署；微信/iOS设备另列。
 
 原69c281af GitHub CI成功保留为原SHA证据；1e403b13新CI/本VPS复测待验。NO_API_CHANGE，TEST_DEPLOYED仍NO。独立验证者只写自己的VPS_EXTERNAL_*文档/PR，不改本控制表；失败直接反馈C00，原写者继续最小修复，直到已授权的可执行验证范围闭合。

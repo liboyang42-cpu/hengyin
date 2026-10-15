@@ -264,3 +264,5 @@ iOS影响：原生WalletCommerce已区别assetPoints非分页与另一个分页p
 已完整消费[PR24](https://github.com/liboyang42-cpu/hengyin/pull/24)两份独立证据，初次69c281af为FAIL_SETUP_SQL_FIXTURE。原写者修复单个测试文件，复用既有行尾分号规则，三个真实DDL完整，七个业务方法/断言逐字保留，C00提交推送1e403b13；无schema/migration/业务/API变化（NO_API_CHANGE）。
 
 精确命令、测试实例/唯一schema、Java21/Maven3.9.11、单Maven容器堆限额、Surefire期望7/0/0/0见[VPS_RETEST_1e403b13.md](VPS_RETEST_1e403b13.md)。新SHA待本地验证协调者复测，不能把Python静态检查/原SHA CI当7项运行通过。测试部署/设备/真实业务/合并仍未签收；本Cloud网络状态不再阻塞授权VPS验证通道。
+
+后续已发布[231项最小VPS测试矩阵](VPS_TEST_MATRIX_1e403b13.md)：7项B03真实MySQL、202普通/H2、22项AI真实MySQL/Redis（计划数非通过数）。AI回环及独占namespace前提已明确，不改测试host校验，不额外纳入旧跳过套件或Claude暂缓功能；运行时与设备未验证项逐条保留。
