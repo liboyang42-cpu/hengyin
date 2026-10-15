@@ -2732,7 +2732,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     public boolean conditionPasses(Long memberId, Long topicId, Long activityId, JsonNode condition) {
         if (condition == null || condition.isNull()) return false;
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L) return false;
-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = currentScopedSession(memberId, topicId, activityId);
         if (session == null
                 || !Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus())) return false;
         return conditionPasses(condition, readEngineState(session.getStateJson()));
