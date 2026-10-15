@@ -5004,10 +5004,12 @@ Page({
     const that = this;
     const isGame = source === 'game';
     if (isGame ? !this.beginGameWrite() : !this.beginArrivalWrite()) return;
-    const attempt = isGame ? { type: 'gameCheckin', nodeId, code } : null;
-    const payload = this._routeWritePayload('checkin', nodeId, { nodeId, code, registrationId: this.data.regId || undefined });
+    const attempt = isGame ? { type: 'gameCheckin', nodeId, code, viewContext: this._legacyGameContext() } : null;
+    const payload = isGame ? this._legacyGameWritePayload('gameCheckin', 'checkin', nodeId, { nodeId, code, registrationId: this.data.regId || undefined })
+      : this._routeWritePayload('checkin', nodeId, { nodeId, code, registrationId: this.data.regId || undefined });
+    if (attempt) attempt.payload = payload;
     const context = this._beginRouteWriteContext(isGame ? '_gameWrite' : '_arrivalWrite');
-    const isCurrent = () => this._isRouteWriteContextCurrent(context);
+    const isCurrent = () => this._isRouteWriteContextCurrent(context) && (!isGame || this._isLegacyGameCurrent(attempt.viewContext));
     this._withThoughtSync(() => {
       if (!isCurrent()) return Promise.resolve({ obsolete: true });
       return req('/api/play/checkin', 'POST', Object.assign({}, payload, { expectedRouteVersion: normalizeRouteState(this._routeState).version }));
@@ -5063,6 +5065,9 @@ Page({
   },
   recordGameNetworkFailure(message, attempt) {
     if (this._gameWriteUnknown) return;
+    if (!attempt) return;
+    if (!attempt.viewContext) attempt.viewContext = this._legacyGameContext();
+    if (!this._isLegacyGameCurrent(attempt.viewContext)) return;
     this._lastGameAttempt = attempt;
     this.setData({ gNetErr: message, gNetRetryable: true, gRetryType: attempt && attempt.type || '', gWriteUnknown: false });
   },
@@ -5089,16 +5094,24 @@ Page({
       });
     }
   },
+  _legacyGameWritePayload(type, kind, nodeId, extra) {
+    const retry = this._retryGameAttempt;
+    if (retry && retry.type === type && retry.payload) return Object.assign({}, retry.payload);
+    return this._routeWritePayload(kind, nodeId, extra);
+  },
   retryGameSubmission() {
-    if (this._gameWriteUnknown) return;
+    if (this._gameWriteUnknown || this._gameWriteInFlight) return;
     const attempt = this._lastGameAttempt;
     this.clearGameNetworkError();
-    if (!attempt) return;
-    if (attempt.type === 'photo') this.submitPhoto(attempt.nodeId, attempt.pic);
-    else if (attempt.type === 'gameCheckin') this.checkin(attempt.nodeId, attempt.code, 'game');
-    else if (attempt.type === 'gameScan') this.scanGame();
-    else if (attempt.type === 'puzzleReveal') this.revealAnswer();
-    else this.submitGame();
+    if (!attempt || !this._isLegacyGameCurrent(attempt.viewContext)) return;
+    this._retryGameAttempt = attempt;
+    try {
+      if (attempt.type === 'photo') this.submitPhoto(attempt.nodeId, attempt.pic);
+      else if (attempt.type === 'gameCheckin') this.checkin(attempt.nodeId, attempt.code, 'game');
+      else if (attempt.type === 'gameScan') this.scanGame();
+      else if (attempt.type === 'puzzleReveal') this.revealAnswer();
+      else if (attempt.type === 'answer') this.submitGame();
+    } finally { if (this._retryGameAttempt === attempt) this._retryGameAttempt = null; }
   },
 
   // ---------- 节点玩法 ----------
@@ -5367,7 +5380,7 @@ Page({
         if (settled || !that._isLegacyGameCurrent(context)) return;
         settled = true;
         that.setData({ scanning: false });
-        if (!isScanCancelled(error)) that.recordGameNetworkFailure('未能打开扫码，请检查相机权限后重试', { type: 'gameScan' });
+        if (!isScanCancelled(error)) that.recordGameNetworkFailure('未能打开扫码，请检查相机权限后重试', { type: 'gameScan', viewContext: context });
       }
     });
   },
@@ -5392,9 +5405,9 @@ Page({
     if (!this.beginGameWrite()) return;
     const context = this._beginRouteWriteContext('_gameWrite');
     const isCurrent = () => this._isRouteWriteContextCurrent(context) && this._isLegacyGameCurrent(viewContext);
-    const payload = this._routeWritePayload('photo', nodeId, { nodeId, picUrl: pic });
+    const payload = this._legacyGameWritePayload('photo', 'photo', nodeId, { nodeId, picUrl: pic });
     const that = this;
-    const attempt = { type: 'photo', nodeId, pic };
+    const attempt = { type: 'photo', nodeId, pic, payload, viewContext };
     this._lastGameAttempt = attempt;
     this._withThoughtSync(() => req('/api/play/photo', 'POST', Object.assign({}, payload, { expectedRouteVersion: normalizeRouteState(this._routeState).version })), isCurrent)
       .then((r) => {
@@ -5426,7 +5439,8 @@ Page({
   submitGame() {
     if (this._gameWriteUnknown) return;
     const g = this.data.game;
-    const answer = g.vm == 3 ? this.data.answerSel : this.data.answerInput;
+    const retry = this._retryGameAttempt;
+    const answer = retry && retry.type === 'answer' ? retry.answer : (g.vm == 3 ? this.data.answerSel : this.data.answerInput);
     if (!answer) return this.setData({ gWrong: true, 'game.feedback': '先把答案填上再提交。' });
     if (this.data.isPreview || this.data.isMock) { this.onComplete(g.nodeId, {}); return; }   // 路线级预览只跳过服务端判题,不跳过空值校验
     const viewContext = this._legacyGameContext();
@@ -5434,7 +5448,8 @@ Page({
     if (!this.beginGameWrite()) return;
     const context = this._beginRouteWriteContext('_gameWrite');
     const isCurrent = () => this._isRouteWriteContextCurrent(context) && this._isLegacyGameCurrent(viewContext);
-    const payload = this._routeWritePayload('answer', g.nodeId, { nodeId: g.nodeId, answer });
+    const payload = this._legacyGameWritePayload('answer', 'answer', g.nodeId, { nodeId: g.nodeId, answer });
+    const attempt = { type: 'answer', nodeId: g.nodeId, answer, payload, viewContext };
     const that = this;
     this._withThoughtSync(() => req('/api/play/answer', 'POST', Object.assign({}, payload, { expectedRouteVersion: normalizeRouteState(this._routeState).version })), isCurrent)
       .then((r) => {
@@ -5446,7 +5461,7 @@ Page({
         // 请求没送到 ≠ 服务端判你答错。原码把 code!=200 一律记 wrongCount++,断网提交两次
         // 就满足 canReveal(wc>=2) —— 系统替你答错两次、直接把答案揭示了。
         else if (r.httpFail) that.recordGameHttpUnknown(r.msg);
-        else if (r.netFail) that.recordGameNetworkFailure('提交没送出去，检查网络后重试', { type: 'answer' });
+        else if (r.netFail) that.recordGameNetworkFailure('提交没送出去，检查网络后重试', attempt);
         else {
           that._resolveRouteAction('answer', g.nodeId);
           that._lastGameAttempt = null;
@@ -5461,7 +5476,7 @@ Page({
         const current = isCurrent();
         that._finishRouteWriteContext(context);
         if (!current) return;
-        that.recordGameNetworkFailure('提交没送出去，检查网络后重试', { type: 'answer' });
+        that.recordGameNetworkFailure('提交没送出去，检查网络后重试', attempt);
       });
   },
   _beginLegacyHint() {
@@ -5588,8 +5603,8 @@ Page({
     if (!this.beginGameWrite()) return;
     const context = this._beginRouteWriteContext('_gameWrite');
     const isCurrent = () => this._isRouteWriteContextCurrent(context) && this._isLegacyGameCurrent(viewContext);
-    const payload = this._routeWritePayload('puzzleReveal', g.nodeId, { nodeId: g.nodeId });
-    const attempt = { type: 'puzzleReveal', nodeId: g.nodeId };
+    const payload = this._legacyGameWritePayload('puzzleReveal', 'puzzleReveal', g.nodeId, { nodeId: g.nodeId });
+    const attempt = { type: 'puzzleReveal', nodeId: g.nodeId, payload, viewContext };
     this._lastGameAttempt = attempt;
     this._withThoughtSync(() => req('/api/play/puzzle/reveal', 'POST', Object.assign({}, payload, { expectedRouteVersion: normalizeRouteState(this._routeState).version })), isCurrent)
       .then((r) => {
