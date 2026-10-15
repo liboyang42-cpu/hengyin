@@ -39,6 +39,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.ResolverStyle;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Date;
@@ -54,6 +55,8 @@ import java.util.LinkedHashSet;
 @Service
 public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ClubEventOpsServiceImpl.class);
+    private static final DateTimeFormatter ASSEMBLY_TIME_FORMAT =
+            DateTimeFormatter.ofPattern("HH:mm").withResolverStyle(ResolverStyle.STRICT);
 
     private final IClubAccessService clubAccessService;
     private final ClubEventScheduleMaterializer scheduleMaterializer;
@@ -975,7 +978,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
      * 两个字段必须是同一个值,否则场次列表显示 00:00、退款钟却按另一个时刻算。
      */
     private Date assemblyMoment(LocalDate date, String startTime) {
-        LocalTime time = LocalTime.parse(startTime, DateTimeFormatter.ofPattern("HH:mm"));
+        LocalTime time = LocalTime.parse(startTime, ASSEMBLY_TIME_FORMAT);
         return Date.from(LocalDateTime.of(date, time).atZone(ZoneId.of("Asia/Shanghai")).toInstant());
     }
 
@@ -984,7 +987,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         String raw = request.getStartTime() == null ? "" : request.getStartTime().trim();
         if (raw.isEmpty()) throw badRequest("请选择集合时刻(HH:mm)");
         try {
-            LocalTime.parse(raw, DateTimeFormatter.ofPattern("HH:mm"));
+            LocalTime.parse(raw, ASSEMBLY_TIME_FORMAT);
         } catch (java.time.DateTimeException malformed) {
             throw badRequest("集合时刻格式应为 HH:mm,实际:" + raw);
         }
