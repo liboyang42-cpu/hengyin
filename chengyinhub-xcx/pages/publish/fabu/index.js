@@ -7111,6 +7111,14 @@ Page({
 
   getTempList: function () {
     var that = this;
+    const memberId = String(app.getUserID() || '');
+    const scope = this.data.operationScope;
+    const epoch = (this._tempListReadEpoch || 0) + 1;
+    this._tempListReadEpoch = epoch;
+    const isCurrent = () => !that._publishPageUnloaded
+      && epoch === that._tempListReadEpoch
+      && memberId === String(app.getUserID() || '') && scope === that.data.operationScope;
+    this.setData({ tempList: [] });
     app.sendRequest({
       hideLoading: true,
       url: '/api/template/my-list',
@@ -7121,6 +7129,7 @@ Page({
         scope: that.data.operationScope,
       },
       success: function (res) {
+        if (!isCurrent()) return;
         if (res.code == "200" && res.data && isRecordList(res.data.rows)) {
           that.setData({
             tempList: res.data.rows,
@@ -7131,6 +7140,7 @@ Page({
         }
       },
       fail: function (res) {
+        if (isCurrent()) that.setData({ tempList: [] });
       },
       complete: function () {
 
