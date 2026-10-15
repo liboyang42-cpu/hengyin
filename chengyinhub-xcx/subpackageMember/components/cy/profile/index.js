@@ -19,6 +19,7 @@ const { offerVerificationReadback } = require('../../../../utils/verification-re
 const { isRecord, isRecordList } = require('../../../../utils/response-shape.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
 const { isEndedProject, statusLabelOf } = require('../../../../utils/merchant-workbench.js');
+const { shapeMerchantSafety } = require('../../../../utils/merchant-safety-summary.js');
 const THEME_EMOJI = ['🍜', '❤️', '📚', '☕', '🌸', '🎮', '📷', '🏯'];
 const MEDAL_EMOJI = {
   ramen: '🍜', coffee: '☕', book: '📚', history: '🏯', spring: '🌸',
@@ -360,6 +361,7 @@ Component({
     merchantTags: [],
     merchantCategories: [],
     merchantHasGeo: false,
+    merchantSafety: null,
     // 招牌主推卡:null = 未设置/已下架/已易主/坏数据,整块不渲染
     featured: null,
     activeTab: 'projects',
@@ -597,6 +599,7 @@ Component({
       merchantTags: [],
       merchantCategories: [],
       merchantHasGeo: false,
+      merchantSafety: null,
       // 合法 initialTab 优先;非法值回退原规则(自己 projects、别人 posts)
       activeTab: initialTab || (isSelf ? 'projects' : 'posts'),
       memberTabs: memberTabs,
@@ -673,9 +676,11 @@ Component({
       merchantTags: [],
       merchantCategories: [],
       merchantHasGeo: false,
+      merchantSafety: null,
       featured: null,
       isMerchantView: false
     });
+    this._merchantSafetyEpoch = (this._merchantSafetyEpoch || 0) + 1;
     applyTheme('dark');
   },
 
@@ -694,6 +699,7 @@ Component({
       merchantTags: parseDisplayList(m.tags),
       merchantCategories: m.sysCategoryList || [],
       merchantHasGeo: hasGeo,
+      merchantSafety: null,
       featured: shapeFeaturedCard(m.featured),
       // 商家公开身份接管身份头:品牌名 / 头像 / 主页封面 / 城市角色 / 品牌口号
       heroImg: m.coverImage || this.data.heroImg,
@@ -701,6 +707,27 @@ Component({
     });
     // 商家主题由被看者决定,与观看者角色无关
     applyTheme('light');
+    this.loadMerchantSafety(m.id);
+  },
+
+  // BL-66:安全感受摘要只读;样本不足/无数据/失败都不展示,不打扰主页
+  loadMerchantSafety: function (merchantId) {
+    var that = this;
+    var id = Number(merchantId);
+    var epoch = this._merchantSafetyEpoch = (this._merchantSafetyEpoch || 0) + 1;
+    if (!Number.isInteger(id) || id <= 0) return;
+    app.sendRequest({
+      url: '/api/community-trust/safety/merchants/' + id,
+      method: 'GET',
+      hideLoading: true,
+      silentError: true,
+      success: function (res) {
+        if (epoch !== that._merchantSafetyEpoch || !that.data.subjectIsMerchant) return;
+        if (!that.data.subjectMerchant || Number(that.data.subjectMerchant.id) !== id) return;
+        that.setData({ merchantSafety: res && res.code == 200 ? shapeMerchantSafety(res.data) : null });
+      },
+      fail: function () {}
+    });
   },
 
   retryMerchantProbe: function () { this.probeSubjectMerchant(); },
