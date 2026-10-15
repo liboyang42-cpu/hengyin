@@ -178,7 +178,7 @@ public class OWN_C04_21Test {
         verify(manager, never()).commit(any());
         InOrder order = inOrder(members, bounty);
         order.verify(members).selectBalanceForUpdate(7L);
-        order.verify(bounty).selectByMerchantMemberIdForUpdate(9L);
+        order.verify(bounty, times(2)).selectByMerchantMemberIdForUpdate(9L);
         order.verify(bounty).markPaidIfPending(eq(3L), any(), any(), any(), any(), any());
     }
 

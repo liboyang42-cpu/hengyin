@@ -167,19 +167,29 @@ class BothWithdrawalLegsRejectPlayerCooldownTest {
         when(withdrawalMapper.insertUmsMemberWithdrawal(any())).thenReturn(1);
         when(umsMemberService.deductWithdrawableBalance(eqMember(), any(), any())).thenReturn(true);
         when(cashMapper.countPendingByMember(MEMBER)).thenReturn(0);
+        java.util.concurrent.atomic.AtomicReference<MemberCashWithdraw> original =
+                new java.util.concurrent.atomic.AtomicReference<>();
         when(cashMapper.insertMemberCashWithdraw(any())).thenAnswer(invocation -> {
-            ((MemberCashWithdraw) invocation.getArgument(0)).setId(500L);
+            MemberCashWithdraw inserted = invocation.getArgument(0);
+            inserted.setId(500L);
+            original.set(inserted);
             return 1;
         });
-        when(cashMapper.selectById(500L)).thenReturn(new MemberCashWithdraw());
+        when(cashMapper.selectById(500L)).thenAnswer(invocation -> original.get());
         when(cashMapper.updateMemberCashWithdraw(any())).thenReturn(1); // 原提现单写入 CW/CD 原业务号
 
+        when(wechatPayService.transferToBalance(any(), any(), any(), any(), any(), any()))
+                .thenReturn(java.util.Collections.singletonMap("ok", "true"));
+        when(cashMapper.updateReceiptIfProcessing(any())).thenReturn(1);
+
         bankLeg.withdrawalRequest(request("80"), MEMBER, "player");
-        try {
-            wechatLeg.withdraw(MEMBER, new BigDecimal("80"));
-        } catch (RuntimeException afterDeduction) {
-            // 转账那一段不是本用例的被测对象；扣款参数已经在下面断言过了。
-        }
+        MemberCashWithdraw current = wechatLeg.withdraw(MEMBER, new BigDecimal("80"));
+        assertSame(original.get(), current, "准入与返回都沿真实插入的原提现单");
+        assertEquals(Long.valueOf(500L), current.getId());
+        assertEquals(Long.valueOf(MEMBER), current.getMemberId());
+        assertEquals(new BigDecimal("80.00"), current.getAmount());
+        assertEquals(Integer.valueOf(MemberCashWithdraw.STATUS_PROCESSING), current.getStatus());
+        assertNull(current.getFrozen(), "沿真实插入默认未冻结状态，不合成准入成功");
 
         verify(umsMemberMapper).deductWithdrawableBalance(MEMBER, new BigDecimal("80"), new BigDecimal("20"));
         // 微信零钱腿会先 setScale(2,DOWN) 再扣，所以是 80.00；关键是第三个实参必须是同一个总冻结额 20。
