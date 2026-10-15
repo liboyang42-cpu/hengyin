@@ -63,3 +63,14 @@ test('无资格(403)如实回显后端文案,不显示成功', () => {
   assert.equal(sheet.data.submitError, '仅真实核销到店记录可提交安全感评分')
   assert.equal(sheet.data.canSubmit, true)
 })
+
+test('BL-89 评价按钮留在原 CTA if/elif/else 链的 else 分支内,不拆开原「已核销」', () => {
+  const wxml = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../pages/play/merchant/index.wxml'), 'utf8')
+  const chain = wxml.slice(wxml.indexOf('wx:elif="{{!node.done}}"'))
+  const elseAt = chain.indexOf('<block wx:else>')
+  assert.ok(elseAt > 0, '最后一个 wx:elif 之后紧接 <block wx:else>')
+  assert.doesNotMatch(chain.slice(0, elseAt).split('\n').slice(1).join('\n'), /wx:if=/, 'elif 与 else 之间不得插入新的 wx:if')
+  const block = chain.slice(elseAt, chain.indexOf('</block>', elseAt))
+  assert.match(block, /<view wx:if="\{\{node\.merchantId\}\}" class="mp-cta__ghost" bindtap="openSafetyRating"/)
+  assert.match(block, /<view class="mp-cta__main is-dead" aria-role="status">已核销<\/view>/)
+})
