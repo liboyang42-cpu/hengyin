@@ -17,7 +17,7 @@
 | 角色/来源 | 实际公共分支与SHA | 处置 |
 |---|---|---|
 | CODEX | 候选69c281af1ecc3493db5614b74e494b91c7bb0656，PR18 | 本协调者实际已启动；将维护CY-HANDOFF: CODEX正文 |
-| CLAUDE | `claude/mini-ui-features-20261015@c6bc2200daefec1f31c00962ab494b0e1b504c00`，PR21 | 已主动读到CY-HANDOFF: CLAUDE更新及两份文档，CL1–5实际申领见下表/CL1审阅；对本次分配的接收回执仍PENDING。认领材料合同DRAFT |
+| CLAUDE | `claude/mini-ui-features-20261015@fe00f5c6359a641c7cbee42c3dc08daae76ffe41`，PR21 | 已主动读到CY-HANDOFF: CLAUDE更新及两份文档，CL1–5实际申领见下表/CL1审阅；对本次分配的接收回执仍PENDING。认领材料合同DRAFT |
 | 额外新功能PR20 | `feature/roam-launch-20261015@49182b74e5fd515f30a09442338b8f5ed4c9b91e` | 含两条新DDL及订单/漫游文件重叠，非本轮自动集成；原所有者未明确停止，不能抢写 |
 | 额外隐私PR17 | `feature/prelaunch-acceptance-20261015@b1f66dbf95dcb172f4c1255e079ba19f35a988e5` | 已读正文；父链不同，作者测试/部署声明未在本候选独立复核，不合并、不夺其文件 |
 | IOS | 当前没有开放PR/带标记交付；远端main=`a8d387e`、migration/native-ios=`f0df085`，另存在work/native-73e-file-transfer=`03facd8`等分支 | 实际活动分支/写入者/未提交工作 UNKNOWN；保留既有iOS所有权，不选择分支、不改源码、不将静态快照当已领取 |
@@ -88,10 +88,10 @@
 
 | 任务 | 仓库及精确路径 | 唯一写者 | 状态/基线 | 依赖及处置 |
 |---|---|---|---|---|
-| CL1 | `hengyin:chengyinhub-xcx/subpackageRoam/official-route/index.js` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
-| CL1 | `hengyin:chengyinhub-xcx/subpackageRoam/official-route/index.json` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
-| CL1 | `hengyin:chengyinhub-xcx/subpackageRoam/official-route/index.wxml` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
-| CL1 | `hengyin:chengyinhub-xcx/subpackageRoam/official-route/index.wxss` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
+| CL1 | `hengyin:chengyinhub-xcx/subpackageRoam/official-route/index.js` | Claude / PR21 | WITHDRAWAL_PENDING；接收回执PENDING；基线 `c24202f` | 按fe00f5c撤G1；原写者交最终补丁/停止证据前保留锁 |
+| CL1 | `hengyin:chengyinhub-xcx/subpackageRoam/official-route/index.json` | Claude / PR21 | WITHDRAWAL_PENDING；接收回执PENDING；基线 `c24202f` | 按fe00f5c撤G1；原写者交最终补丁/停止证据前保留锁 |
+| CL1 | `hengyin:chengyinhub-xcx/subpackageRoam/official-route/index.wxml` | Claude / PR21 | WITHDRAWAL_PENDING；接收回执PENDING；基线 `c24202f` | 按fe00f5c撤G1；原写者交最终补丁/停止证据前保留锁 |
+| CL1 | `hengyin:chengyinhub-xcx/subpackageRoam/official-route/index.wxss` | Claude / PR21 | WITHDRAWAL_PENDING；接收回执PENDING；基线 `c24202f` | 按fe00f5c撤G1；原写者交最终补丁/停止证据前保留锁 |
 | CL1 | `hengyin:chengyinhub-xcx/subpackageRoam/official-routes/index.js` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
 | CL1 | `hengyin:chengyinhub-xcx/subpackageRoam/official-routes/index.json` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
 | CL1 | `hengyin:chengyinhub-xcx/subpackageRoam/official-routes/index.wxml` | Claude / PR21 | ASSIGNED；接收回执PENDING；基线 `c24202f` | 现有只读/布局可独立；新增协议另行冻结，禁止公共文件连带修改 |
@@ -126,13 +126,13 @@
 
 | 仓库 | 精确路径 | 唯一写者 | 状态/基线 | 限制 |
 |---|---|---|---|---|
-| hengyin | `chengyinhub-xcx/pages/roam/components/follow-route-hud/index.js` | Claude CL1 / PR22原写者 | ASSIGNED，原交付64b485a；更新候选69c281af需保留现有锁 | 仅本机地图辅助；按审阅修复，非后端权威完成；不得扩写父目录 |
-| hengyin | `chengyinhub-xcx/pages/roam/components/follow-route-hud/index.json` | Claude CL1 / PR22原写者 | ASSIGNED，原交付64b485a；更新候选69c281af需保留现有锁 | 仅本机地图辅助；按审阅修复，非后端权威完成；不得扩写父目录 |
-| hengyin | `chengyinhub-xcx/pages/roam/components/follow-route-hud/index.wxml` | Claude CL1 / PR22原写者 | ASSIGNED，原交付64b485a；更新候选69c281af需保留现有锁 | 仅本机地图辅助；按审阅修复，非后端权威完成；不得扩写父目录 |
-| hengyin | `chengyinhub-xcx/pages/roam/components/follow-route-hud/index.wxss` | Claude CL1 / PR22原写者 | ASSIGNED，原交付64b485a；更新候选69c281af需保留现有锁 | 仅本机地图辅助；按审阅修复，非后端权威完成；不得扩写父目录 |
-| hengyin | `chengyinhub-xcx/pages/roam/follow-route.js` | Claude CL1 / PR22原写者 | ASSIGNED，原交付64b485a；更新候选69c281af需保留现有锁 | 仅本机地图辅助；按审阅修复，非后端权威完成；不得扩写父目录 |
-| hengyin | `chengyinhub-xcx/utils/roam-follow-route.js` | Claude CL1 / PR22原写者 | ASSIGNED，原交付64b485a；更新候选69c281af需保留现有锁 | 仅本机地图辅助；按审阅修复，非后端权威完成；不得扩写父目录 |
-| hengyin | `chengyinhub-xcx/tests/unit/roam-follow-route.test.js` | Claude CL1 / PR22原写者 | ASSIGNED，原交付64b485a；更新候选69c281af需保留现有锁 | 仅本机地图辅助；按审阅修复，非后端权威完成；不得扩写父目录 |
+| hengyin | `chengyinhub-xcx/pages/roam/components/follow-route-hud/index.js` | Claude CL1 / PR22原写者 | WITHDRAWAL_PENDING，原交付64b485a；更新候选69c281af需保留现有锁 | G1已暂缓，仅原写者撤回；不得继续加功能或扩写父目录 |
+| hengyin | `chengyinhub-xcx/pages/roam/components/follow-route-hud/index.json` | Claude CL1 / PR22原写者 | WITHDRAWAL_PENDING，原交付64b485a；更新候选69c281af需保留现有锁 | G1已暂缓，仅原写者撤回；不得继续加功能或扩写父目录 |
+| hengyin | `chengyinhub-xcx/pages/roam/components/follow-route-hud/index.wxml` | Claude CL1 / PR22原写者 | WITHDRAWAL_PENDING，原交付64b485a；更新候选69c281af需保留现有锁 | G1已暂缓，仅原写者撤回；不得继续加功能或扩写父目录 |
+| hengyin | `chengyinhub-xcx/pages/roam/components/follow-route-hud/index.wxss` | Claude CL1 / PR22原写者 | WITHDRAWAL_PENDING，原交付64b485a；更新候选69c281af需保留现有锁 | G1已暂缓，仅原写者撤回；不得继续加功能或扩写父目录 |
+| hengyin | `chengyinhub-xcx/pages/roam/follow-route.js` | Claude CL1 / PR22原写者 | WITHDRAWAL_PENDING，原交付64b485a；更新候选69c281af需保留现有锁 | G1已暂缓，仅原写者撤回；不得继续加功能或扩写父目录 |
+| hengyin | `chengyinhub-xcx/utils/roam-follow-route.js` | Claude CL1 / PR22原写者 | WITHDRAWAL_PENDING，原交付64b485a；更新候选69c281af需保留现有锁 | G1已暂缓，仅原写者撤回；不得继续加功能或扩写父目录 |
+| hengyin | `chengyinhub-xcx/tests/unit/roam-follow-route.test.js` | Claude CL1 / PR22原写者 | WITHDRAWAL_PENDING，原交付64b485a；更新候选69c281af需保留现有锁 | G1已暂缓，仅原写者撤回；不得继续加功能或扩写父目录 |
 
 PR22中的roam入口JS/WXML为CONFLICT_HELD（PR20原写者未停止）；index.json及四项全局测试/账本为PATCH_PROPOSED给C00串行，均未转交写权。具体名单见审阅文档。PR21新增CL2/3/4仍REQUESTED精确名；CL5保持DRAFT。
 
@@ -163,3 +163,7 @@ PR22中的roam入口JS/WXML为CONFLICT_HELD（PR20原写者未停止）；index.
 | hengyin | `chengyinhub-xcx/tests/unit/profile-edit-state-contract.test.js` | Claude CL3 / PR23 | ASSIGNED；交付a7246947，候选69c281af | 原写者按审阅修复；未授权改后端/共享文件 |
 
 PR23共享PATCH_PROPOSED给C00（尚未合入）：`chengyinhub-xcx/app.json`、`scripts/uiaudit/action-ledger.json`、`scripts/uiaudit/route-matrix.json`、`tests/unit/action-ledger.test.js`、`tests/unit/nav-page-title-spacing-contract.test.js`、`tests/unit/route-matrix-freshness.test.js`、`tests/unit/title-system-owner-contract.test.js`、`utils/danger-actions.js`（后七同chengyinhub-xcx前缀）。它们与PR20真实增量交叉，不由Claude覆盖候选，不按旧1796计数覆盖本候选1792退款范围。原所有者停止/交付记录未取得，未转交。
+
+## 后续范围优先级
+
+[PR21 fe00f5c范围收窄](HANDOFF_SCOPE_fe00f5c.md)覆盖此前冲突描述：G1撤回锁WITHDRAWAL_PENDING非释放；CL3不改图标、推荐点选；CL2仅系统消息进入文字申诉，无被举报方视图；CL4不邀请/转交，新增协办方DRAFT待专属合同/文件。原Claude写者负责撤回/修正，C00不创建第二套UI实现。PR21只读到旧a886快照，不等于接收本轮新控制账。

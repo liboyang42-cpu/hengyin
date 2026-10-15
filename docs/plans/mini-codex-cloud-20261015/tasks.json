@@ -586,11 +586,13 @@
     "coordination_protocol": "CY-COORD-20261015-v1",
     "control_writer": "C00/C99",
     "claude_handoff_pr": 21,
-    "claude_ack": "PENDING",
+    "claude_ack": "READ_OLD_a886_ONLY_LATEST_ASSIGNMENT_PENDING",
     "ios_handoff": "NO_OPEN_PR_OBSERVED_NOT_UNASSIGNED",
     "validated_candidate_sha": "69c281af1ecc3493db5614b74e494b91c7bb0656",
     "github_ci_run": 38730430052,
     "funds_ci_run": 38730430072,
-    "vps_test_status": "SSH_REFUSED_BEFORE_AUTH_WAITING_CONNECTION_CONFIGURATION"
+    "vps_test_status": "SSH_REFUSED_BEFORE_AUTH_WAITING_CONNECTION_CONFIGURATION",
+    "claude_handoff_sha": "fe00f5c6359a641c7cbee42c3dc08daae76ffe41",
+    "claude_scope_record": "HANDOFF_SCOPE_fe00f5c.md"
   }
 }

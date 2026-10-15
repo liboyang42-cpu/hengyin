@@ -245,3 +245,7 @@ iOS影响：原生WalletCommerce已区别assetPoints非分页与另一个分页p
 ### BK-CLUB-UI既有合同与新发现（CL3）
 
 [PR23审阅](HANDOFF_REVIEW_CL3.md)已核方法/JSON与表单绑定、权限、幂等范围、URL/来源语义及失败/未知fixture。NO_API_CHANGE；已有list/create/grant/nickname合同CONTRACT_FROZEN，PR23前端仍待账号隔离/创建未知状态等修复，不是SOURCE_READY。私团badge list仅登录可读、create无内容安全审核、grant无独立受领读面或并发冲突回执，这些新增共享后端线索DRAFT，不在本轮静默改鉴权/审核/产品政策。iconUrl是现有URL合同，不能套CL5 assetId规则；保留超长可恢复错误。15项独立文件给Claude CL3，八项共享补丁由C00统筹并保留PR20原写者。
+
+## PR21 fe00f5c范围收窄（优先于历史CL1/3建议）
+
+已读最新标记交付与仓库所有者PR22决定，详见[范围处置](HANDOFF_SCOPE_fe00f5c.md)。CL1 G1暂缓，要求原写者撤回，不再以“修完七项即可集成”推进；NO_API_CHANGE，未入主候选。CL3图标不改、昵称推荐点选，PR23按范围重审。CL2文字申诉经系统消息，无被举报方/独立我的举报入口。CL4不邀请转交，现有字段才展示主办/协办；新增协办接口为DRAFT且尚无精确文件申请，新功能专属后端可在合同/归属明确后委派Claude，不触共享官方运行时。所有后端部署状态仍NO；当前69c281af CI签收不变。
