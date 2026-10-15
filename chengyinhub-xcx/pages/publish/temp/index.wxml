@@ -1563,13 +1563,8 @@
   </view>
 
   <!-- ============ 添加模块 sheet ============ -->
-  <view class="cg-mask" wx:if="{{ showAddSheet }}" bindtap="closeAddSheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="cg-sheet" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{ showAddSheet }}">
-    <view class="cg-sheet-bar"></view>
-    <view class="cg-sheet-head">
-      <view class="cg-sheet-tit">添加模块</view>
-      <view class="cg-sheet-close" bindtap="closeAddSheet" aria-role="button" aria-label="关闭模块选择" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="44" /></view>
-    </view>
+  <!-- BL-14:自绘 cg-mask + cg-sheet 收编到共享 cy-sheet(标题 + 关闭由组件承担)。 -->
+  <cy-sheet show="{{ showAddSheet }}" title="添加模块" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" bind:close="closeAddSheet">
     <view class="cg-sheet-sub">每种模块最多添加一个</view>
     <view class="cg-sheet-list">
       <view class="cg-sheet-card" wx:for="{{ availableModules }}" wx:key="key" hover-class="cg-sheet-card--pressed" hover-stay-time="80" bindtap="addModule" data-key="{{ item.key }}">
@@ -1582,7 +1577,7 @@
       </view>
     </view>
     <view class="cg-sheet-allin" wx:if="{{ availableModules.length === 0 }}">全部模块已添加</view>
-  </view>
+  </cy-sheet>
 
   <!-- ============ 选择玩法 sheet ============ -->
   <!-- 十九个玩法分五组。每行右边先「预览」再「选择」—— 光看名字挑不出来,
@@ -1628,13 +1623,7 @@
   </view>
 
   <!-- ============ 通用 picker sheet(玩家人数/玩法时长/适用场所) ============ -->
-  <view class="cg-mask" wx:if="{{ pickerSheet.open }}" bindtap="closePickerSheet" aria-role="button" aria-label="关闭选择器" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="cg-sheet picker" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{ pickerSheet.open }}">
-    <view class="cg-sheet-bar"></view>
-    <view class="cg-sheet-head">
-      <view class="cg-sheet-tit">{{ pickerSheet.title }}</view>
-      <view class="cg-sheet-close" bindtap="closePickerSheet" aria-role="button" aria-label="关闭选择器" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="44" /></view>
-    </view>
+  <cy-sheet show="{{ pickerSheet.open }}" title="{{ pickerSheet.title }}" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" bind:close="closePickerSheet">
     <view class="cg-picker-list">
       <view class="cg-picker-li {{ item.active ? 'on' : '' }}" wx:for="{{ pickerSheet.options }}" wx:key="value"
         bindtap="onPickerSheetSelect" data-value="{{ item.value }}" data-label="{{ item.label }}" hover-class="cy-pressed" hover-stay-time="80"
@@ -1642,7 +1631,7 @@
         <text class="cg-picker-label">{{ item.label }}</text><view class="cg-picker-tick" aria-hidden="true"></view>
       </view>
     </view>
-  </view>
+  </cy-sheet>
 
   <cy-category-sheet show="{{categorySheetVisible}}" type="{{4}}" ids="{{categorySheetIds}}"
     bind:select="onCategorySelect" bind:close="onCategorySheetClose" />

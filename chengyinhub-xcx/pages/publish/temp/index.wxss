@@ -788,14 +788,9 @@ page {
   box-sizing: border-box;
   max-height: min(70vh, var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); overflow-y: auto;
 }
-.cg-sheet.picker { padding-left: 0; padding-right: 0; }
 .cg-sheet-bar { width: 76rpx; height: 8rpx; border-radius: 4rpx; background: var(--cy-border-line); margin: 0 auto var(--cy-space-3-5); } /* ds-ok */
 .cg-sheet-tit { font-size: var(--cy-comp-sheet-title-size); font-weight: 700; line-height: var(--cy-comp-sheet-title-leading); color: var(--cy-text-title); margin-bottom: var(--cy-legacy-6); }
 .cg-sheet-tit.center { text-align: left; font-size: var(--cy-comp-sheet-title-size); font-weight: 700; margin-bottom: 16rpx; }
-.cg-sheet-head { display: flex; align-items: center; margin-right: calc(-1 * var(--cy-space-4)); }
-.cg-sheet-head .cg-sheet-tit { flex: 1; min-width: 0; margin-bottom: 0; }
-.cg-sheet-close { flex: none; width: var(--cy-btn-h); height: var(--cy-btn-h); display: flex; align-items: center; justify-content: center; color: var(--cy-text-secondary); }
-.cg-sheet.picker .cg-sheet-head { padding-left: var(--cy-page-x); margin-right: 0; }
 .cg-sheet-sub { font-size: var(--cy-font-label); color: var(--cy-text-secondary); margin-bottom: var(--cy-space-3-5); }
 .cg-sheet-list { display: flex; flex-direction: column; gap: var(--cy-space-2-5); }
 .cg-sheet-card {
@@ -825,7 +820,8 @@ page {
 .cg-sheet-allin { text-align: center; color: var(--cy-text-secondary); font-size: var(--cy-font-body); padding: var(--cy-space-5) 0; }
 
 /* picker 列表 */
-.cg-picker-list { }
+/* BL-14:cy-sheet 面板自带 page-x,行自身也带 page-x;列表负边距抵消,保持原「行通栏」外观 */
+.cg-picker-list { margin: 0 calc(-1 * var(--cy-page-x)); }
 .cg-picker-li {
   padding: var(--cy-space-3) var(--cy-page-x); min-height: var(--cy-btn-h); box-sizing: border-box; font-size: var(--cy-type-body); line-height: var(--cy-leading-normal); color: var(--cy-text-title);
   display: flex; align-items: center; justify-content: space-between;
