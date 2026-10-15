@@ -105,16 +105,14 @@ Page({
 
   /** 不再是主理人(刷新后失权/身份读不到):收起所有管理弹层并清掉待执行的颁发。 */
   applyOwnership(isOwner, clubName) {
-    const patch = { isOwner }
-    if (clubName !== undefined) patch.clubName = clubName
-    if (!isOwner) {
-      this._pendingGrant = null
-      if (this.data.createVisible) patch.createVisible = false
-      if (this.data.memberPickerVisible) patch.memberPickerVisible = false
-      if (this.data.grantBadge) patch.grantBadge = null
-      this.closeDangerConfirm()
+    if (clubName !== undefined) this.setData({ clubName })
+    if (isOwner) {
+      this.setData({ isOwner: true })
+      return
     }
-    this.setData(patch)
+    this._pendingGrant = null
+    this.closeDangerConfirm()
+    this.setData({ isOwner: false, createVisible: false, memberPickerVisible: false, grantBadge: null })
   },
 
   onPullDownRefresh() { this.loadAll() },
