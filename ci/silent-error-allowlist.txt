@@ -177,6 +177,7 @@ chengyinhub-xcx/utils/marketing-consent-entry.js 1  # 支付成功面板/订单�
 chengyinhub-xcx/subpackageA/pages/myproject/index.js 2  # 2026-09-18 C8-05 取消活动/主题前退款人数预览:失败由 paidPlayersOrToast 显式 toast 原因且不弹确认;通用 toast 会双弹
 chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js 1  # 2026-09-24 CU-C-68 本站运营资格探测(probeStationOperable):开抽屉时预探一次 /api/game/session/merchant/entries,只看本商家有没有本站入口。探不到≠没资格,所以失败不弹 toast(弹了会盖在抽屉上且说不清是哪一件事),改为把「本站运营」那组置灰 + stationOpsErrorText 落到抽屉里一行可重试的说明(project-host wxml 消费)
 chengyinhub-xcx/subpackageA/pages/myproject/index.js 1  # 提交广场审核：业务失败和网络失败均显式 toast，complete/fail 释放单次提交锁；关闭通道 toast 避免重复提示，myproject-toggle-cas-guard 覆盖重复点击及失败恢复。
+chengyinhub-xcx/subpackageA/pages/myproject/index.js 1  # BL-120 另存为模板：业务失败按后端文案、网络失败均显式 toast，成功 toast 后回读；complete/fail 释放在途锁，关闭通道 toast 避免双弹，myproject-save-as-template 覆盖
 
 # 2026-09-30 会员分包组件迁移：按实际路径重新核对，旧路径冻结收据保留，不增加冻结额度。
 chengyinhub-xcx/subpackageMember/components/cy/profile/index.js 1  # 商家身份探测失败落 merchantState=network-error，界面区分非商家与网络失败并提供重试；通道 toast 会重复报错。
